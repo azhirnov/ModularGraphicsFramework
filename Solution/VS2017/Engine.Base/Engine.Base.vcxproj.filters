@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Engine\Base\Engine.Base.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Common\Common.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Common\BaseObject.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Tasks\AsyncTask.h">
+      <Filter>Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Tasks\TaskManager.h">
+      <Filter>Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Tasks\AsyncMessage.h">
+      <Filter>Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Common\ThreadID.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Main\MainSystem.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Modules\MessageHandler.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Modules\ModulesFactory.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Tasks\TaskModule.h">
+      <Filter>Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Common\EngineSubSystems.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Threads\ParallelThread.h">
+      <Filter>Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Threads\ThreadManager.h">
+      <Filter>Threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Common\CreateInfo.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Modules\Message.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Common\ModuleMessages.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Common\MessageHelpers.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Common\EModuleGroup.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Modules\Module.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Modules\ModuleAsyncTasks.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{dda43ae8-59b0-45bf-a5ab-a2c9736862ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tasks">
+      <UniqueIdentifier>{e0d8bca4-de3a-4dd3-8803-48a99d8690dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Serializing">
+      <UniqueIdentifier>{bb7eb231-36a0-4a23-9e93-b2dc4480a49c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Time">
+      <UniqueIdentifier>{c4c4af72-909a-452c-989c-595ede6bdc9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{d303ccc0-1a9b-4bc5-a9db-cf651a4d99fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules">
+      <UniqueIdentifier>{8b74cdb6-481c-48c5-9028-b452702f13ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Threads">
+      <UniqueIdentifier>{e91d0642-c913-40c7-870b-1e4ffd907375}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Engine\Base\Tasks\TaskManager.cpp">
+      <Filter>Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Main\MainSystem.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Modules\ModulesFactory.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Tasks\TaskModule.cpp">
+      <Filter>Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Threads\ParallelThread.cpp">
+      <Filter>Threads</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Threads\ThreadManager.cpp">
+      <Filter>Threads</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Modules\MessageHandler.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Modules\Module.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
