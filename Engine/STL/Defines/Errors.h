@@ -1,4 +1,8 @@
-﻿// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+/*
+	ASSERT - debug only, runtime check without side-effects.
+	CHECK_* - debug and release, runtime check with side-effect.
+*/
 
 #pragma once
 

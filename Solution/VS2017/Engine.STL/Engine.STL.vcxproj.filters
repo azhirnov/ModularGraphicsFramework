@@ -671,6 +671,12 @@
     <ClInclude Include="..\..\..\Engine\STL\Experimental\VariantInterface.h">
       <Filter>Experimental</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Experimental\BoolArg.h">
+      <Filter>Experimental</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Experimental\FunctionInfo.h">
+      <Filter>Experimental</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">

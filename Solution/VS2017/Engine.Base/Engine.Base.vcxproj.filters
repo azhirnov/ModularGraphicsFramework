@@ -62,6 +62,24 @@
     <ClInclude Include="..\..\..\Engine\Base\Modules\ModuleAsyncTasks.h">
       <Filter>Modules</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Files\FileManager.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Common\Enums.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Stream\Stream.h">
+      <Filter>Stream</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Stream\StreamManager.h">
+      <Filter>Stream</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Stream\InputStream.h">
+      <Filter>Stream</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Stream\OutputStream.h">
+      <Filter>Stream</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -84,6 +102,12 @@
     </Filter>
     <Filter Include="Threads">
       <UniqueIdentifier>{e91d0642-c913-40c7-870b-1e4ffd907375}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files">
+      <UniqueIdentifier>{2fac2eec-5c19-468f-8cef-0abe38ba0ff4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Stream">
+      <UniqueIdentifier>{e3ebe5ec-fb8c-44a6-beb2-d8f52c32b0df}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +134,18 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Engine\Base\Modules\Module.cpp">
       <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Files\FileManager.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Stream\StreamManager.cpp">
+      <Filter>Stream</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Stream\InputStream.cpp">
+      <Filter>Stream</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Stream\OutputStream.cpp">
+      <Filter>Stream</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

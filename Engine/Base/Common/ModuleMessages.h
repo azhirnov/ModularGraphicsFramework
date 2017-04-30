@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -14,7 +14,7 @@ namespace ModuleMsg
 	
 
 	//
-	// Attach / Detach Module Message
+	// Attach / Detach Module from Parent
 	//
 	struct AttachModule
 	{
@@ -28,7 +28,7 @@ namespace ModuleMsg
 	
 
 	//
-	// On Module Attached / Detached Message
+	// On Module Attached / Detached from Parent
 	//
 	struct OnModuleAttached
 	{
@@ -49,7 +49,7 @@ namespace ModuleMsg
 	struct Link
 	{
 		// find modules and subscribe to events
-		ArrayCRef< Pair<UntypedID_t, ModulePtr> >		modules;
+		ArrayCRef< Pair<UntypedID_t, ModulePtr> >		modules;	// TODO: don't use it, use parent->GetModule
 	};
 
 
@@ -81,18 +81,15 @@ namespace ModuleMsg
 		Out< ModulePtr >		result;
 	};
 	
-
 	//
-	// On System Registered / Unregistered in Modules Factory
+	// Search Modules
 	//
-	struct OnRegistered
+	struct ModulesDeepSearch
 	{
-		Ptr< ModulesFactory >	factory;
-	};
-
-	struct OnUnregistered
-	{
-		Ptr< ModulesFactory >	factory;
+		ArrayCRef<UntypedID_t>		ids;
+		uint						upDeep;
+		uint						downDeep;
+		mutable Array< ModulePtr >*	result;
 	};
 	
 
@@ -132,6 +129,15 @@ namespace ModuleMsg
 	struct RemoveFromManager
 	{
 		ModulePtr	module;
+	};
+
+
+	//
+	// On Module Manager Changed
+	//
+	struct OnManagerChanged
+	{
+		ModulePtr	newManager;
 	};
 
 

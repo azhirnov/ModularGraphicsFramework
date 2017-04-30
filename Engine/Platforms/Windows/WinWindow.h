@@ -1,10 +1,10 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
-#include "Engine/Platforms/Shared/Window.h"
-#include "Engine/Platforms/Shared/Display.h"
-#include "Engine/Platforms/Shared/Platform.h"
+#include "Engine/Platforms/Shared/OS/Window.h"
+#include "Engine/Platforms/Shared/OS/Display.h"
+#include "Engine/Platforms/Shared/OS/Platform.h"
 
 #if defined( PLATFORM_WINDOWS )
 
@@ -26,12 +26,15 @@ namespace Platforms
 											ModuleMsg::Compose
 										> >
 										::Append< MessageListFrom<
+											ModuleMsg::OnManagerChanged,
 											ModuleMsg::WindowSetDescriptor,
 											ModuleMsg::WindowGetDescriptor,
 											ModuleMsg::PlatformCreated,
 											ModuleMsg::WindowGetHandle
 										> >;
-		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
+		using SupportedEvents_t		= MessageListFrom<
+											ModuleMsg::Update,
+											ModuleMsg::Delete,
 											ModuleMsg::WindowDescriptorChanged,
 											ModuleMsg::WindowVisibilityChanged,
 											ModuleMsg::WindowBeforeCreate,
@@ -39,7 +42,7 @@ namespace Platforms
 											ModuleMsg::WindowBeforeDestroy,
 											ModuleMsg::WindowAfterDestroy,
 											ModuleMsg::WindowRawMessage
-										> >;
+										>;
 		
 		using Handle_t				= OS::HiddenOSTypeFrom<void*>;
 		using EVisibility			= CreateInfo::Window::EVisibility;
@@ -67,7 +70,7 @@ namespace Platforms
 
 	// methods
 	public:
-		WinWindow (const SubSystemsRef gs, const CreateInfo::Window &ci);
+		WinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci);
 		~WinWindow ();
 
 		static TModID::type		GetStaticID ()			{ return "win.window"_TModID; }
@@ -75,14 +78,14 @@ namespace Platforms
 
 	// message handlers
 	private:
-		void _Link (const Message< ModuleMsg::Link > &);
-		void _Update (const Message< ModuleMsg::Update > &);
-		void _Delete (const Message< ModuleMsg::Delete > &);
-		void _PlatformCreated (const Message< ModuleMsg::PlatformCreated > &);
-		void _PlatformDeleted (const Message< ModuleMsg::Delete > &);
-		void _WindowSetDescriptor (const Message< ModuleMsg::WindowSetDescriptor > &);
-		void _WindowGetDescriptor (const Message< ModuleMsg::WindowGetDescriptor > &);
-		void _WindowGetHandle (const Message< ModuleMsg::WindowGetHandle > &);
+		bool _Link (const Message< ModuleMsg::Link > &);
+		bool _Update (const Message< ModuleMsg::Update > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _PlatformCreated (const Message< ModuleMsg::PlatformCreated > &);
+		bool _PlatformDeleted (const Message< ModuleMsg::Delete > &);
+		bool _WindowSetDescriptor (const Message< ModuleMsg::WindowSetDescriptor > &);
+		bool _WindowGetDescriptor (const Message< ModuleMsg::WindowGetDescriptor > &);
+		bool _WindowGetHandle (const Message< ModuleMsg::WindowGetHandle > &);
 
 
 	private:

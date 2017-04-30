@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	BaseObject - base class for all modules, systems and other engine classes.
 	BaseObject can be static or dynamic, for dynamic creation use static function,
@@ -27,18 +27,18 @@ namespace Base
 		DEBUG_ONLY(
 			String				_debugName;
 		)
-		const SubSystemsRef		_globalSystems;
+		const GlobalSystemsRef		_globalSystems;
 
 
 	// methods
 	public:
-		BaseObject (const SubSystemsRef gs) :
+		BaseObject (const GlobalSystemsRef gs) :
 			_globalSystems(gs)
 		{}
 		
-		SubSystemsRef	GlobalSystems ()	const	{ return _globalSystems; }
+		GlobalSystemsRef	GlobalSystems ()	const	{ return _globalSystems; }
 
-		StringCRef		GetDebugName ()		const	{ return _debugName; }
+		StringCRef			GetDebugName ()		const	{ return _debugName; }
 
 
 		virtual void SetDebugName (StringCRef name)

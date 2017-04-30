@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Tests\Engine.Base\Main.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\VkApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Engine.Base\Engine.Base.vcxproj">
@@ -29,11 +30,16 @@
       <Project>{73642aa5-aed6-4b0e-a4bb-f9919aba1159}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Common.h" />
+    <ClInclude Include="..\..\..\Tests\Engine.Base\GLApp.h" />
+    <ClInclude Include="..\..\..\Tests\Engine.Base\VkApp.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EBEF46FE-7246-4473-9875-210B14E17BCD}</ProjectGuid>
     <RootNamespace>GGE</RootNamespace>
     <ProjectName>Tests.Engine.Base</ProjectName>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

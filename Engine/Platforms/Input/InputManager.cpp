@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Input/InputManager.h"
 
@@ -15,17 +15,18 @@ namespace Platforms
 	constructor
 =================================================
 */
-	InputManager::InputManager (const SubSystemsRef gs, const CreateInfo::InputManager &ci) :
+	InputManager::InputManager (const GlobalSystemsRef gs, const CreateInfo::InputManager &ci) :
 		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "InputManager" );
 
-		_SubscribeOnMsg( this, &InputManager::_OnModuleAttached );
-		_SubscribeOnMsg( this, &InputManager::_OnModuleDetached );
+		_SubscribeOnMsg( this, &InputManager::_OnModuleAttached_Impl );
+		_SubscribeOnMsg( this, &InputManager::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &InputManager::_AttachModule_Impl );
 		_SubscribeOnMsg( this, &InputManager::_DetachModule_Impl );
-		_SubscribeOnMsg( this, &InputManager::_FindModule_Impl );
-		_SubscribeOnMsg( this, &InputManager::_Update_Impl );
+		_SubscribeOnMsg( this, &InputManager::_FindModule_Empty );
+		_SubscribeOnMsg( this, &InputManager::_ModulesDeepSearch_Empty );
+		_SubscribeOnMsg( this, &InputManager::_Update_Empty );
 		_SubscribeOnMsg( this, &InputManager::_Link_Impl );
 		_SubscribeOnMsg( this, &InputManager::_Compose_Impl );
 		_SubscribeOnMsg( this, &InputManager::_Delete_Impl );
@@ -52,13 +53,14 @@ namespace Platforms
 	_AddToManager
 =================================================
 */
-	void InputManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool InputManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
 	{
-		CHECK_ERR( msg->module, void() );
-		CHECK_ERR( msg->module->GetModuleID() == InputThread::GetStaticID(), void() );
+		CHECK_ERR( msg->module );
+		CHECK_ERR( msg->module->GetModuleID() == InputThread::GetStaticID() );
 		ASSERT( not _threads.IsExist( msg->module ) );
 
 		_threads.Add( msg->module );
+		return true;
 	}
 	
 /*
@@ -66,13 +68,14 @@ namespace Platforms
 	_RemoveFromManager
 =================================================
 */
-	void InputManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool InputManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
-		CHECK_ERR( msg->module, void() );
-		CHECK_ERR( msg->module->GetModuleID() == InputThread::GetStaticID(), void() );
+		CHECK_ERR( msg->module );
+		CHECK_ERR( msg->module->GetModuleID() == InputThread::GetStaticID() );
 		ASSERT( _threads.IsExist( msg->module ) );
 
 		_threads.Erase( msg->module );
+		return true;
 	}
 	
 /*
@@ -80,7 +83,7 @@ namespace Platforms
 	_CreateInputThread
 =================================================
 */
-	ModulePtr InputManager::_CreateInputThread (const SubSystemsRef gs, const CreateInfo::InputThread &ci)
+	ModulePtr InputManager::_CreateInputThread (const GlobalSystemsRef gs, const CreateInfo::InputThread &ci)
 	{
 		return GXTypes::New< InputThread >( gs, ci );
 	}
@@ -90,20 +93,35 @@ namespace Platforms
 	_CreateInputManager
 =================================================
 */
-	ModulePtr InputManager::_CreateInputManager (const SubSystemsRef gs, const CreateInfo::InputManager &ci)
+	ModulePtr InputManager::_CreateInputManager (const GlobalSystemsRef gs, const CreateInfo::InputManager &ci)
 	{
 		return GXTypes::New< InputManager >( gs, ci );
 	}
 	
 /*
 =================================================
-	_RegisterAll
+	Register
 =================================================
 */
-	void InputManager::_RegisterAll (const SubSystemsRef gs)
+	void InputManager::Register (const GlobalSystemsRef gs)
 	{
-		CHECK( gs->Get< ModulesFactory >()->Register( InputManager::GetStaticID(), null, &_CreateInputManager ) );
-		CHECK( gs->Get< ModulesFactory >()->Register( InputThread::GetStaticID(), null, &_CreateInputThread ) );
+		auto	mf = gs->Get< ModulesFactory >();
+
+		CHECK( mf->Register( InputManager::GetStaticID(), &_CreateInputManager ) );
+		CHECK( mf->Register( InputThread::GetStaticID(), &_CreateInputThread ) );
+	}
+	
+/*
+=================================================
+	Unregister
+=================================================
+*/
+	void InputManager::Unregister (const GlobalSystemsRef gs)
+	{
+		auto	mf = gs->Get< ModulesFactory >();
+
+		mf->UnregisterAll< InputManager >();
+		mf->UnregisterAll< InputThread >();
 	}
 
 

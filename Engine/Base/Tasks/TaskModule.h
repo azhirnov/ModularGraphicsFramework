@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	TaskModule - attached to thread and process async messages (short time)
 					and async tasks (long time with progress).
@@ -29,7 +29,8 @@ namespace Base
 											ModuleMsg::Compose
 										> >
 										::Append< MessageListFrom<
-											ModuleMsg::PushAsyncMessage
+											ModuleMsg::PushAsyncMessage,
+											ModuleMsg::OnManagerChanged
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 		using MsgQueue_t			= MtQueue< CircularQueue< AsyncMessage > >;
@@ -48,7 +49,7 @@ namespace Base
 
 	// methods
 	public:
-		TaskModule (const SubSystemsRef gs, const CreateInfo::TaskModule &);
+		TaskModule (const GlobalSystemsRef gs, const CreateInfo::TaskModule &);
 		~TaskModule ();
 
 		static TModID::type		GetStaticID ()			{ return "task.mod"_TModID; }
@@ -56,9 +57,9 @@ namespace Base
 
 	// message handlers
 	private:
-		void _Update (const Message< ModuleMsg::Update > &);
-		void _Delete (const Message< ModuleMsg::Delete > &);
-		void _PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &);
+		bool _Update (const Message< ModuleMsg::Update > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &);
 
 
 	private:

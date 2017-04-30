@@ -1,10 +1,10 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
-#include "Engine/Platforms/Shared/Display.h"
-#include "Engine/Platforms/Shared/Platform.h"
-#include "Engine/Platforms/Common/OSEnums.h"
+#include "Engine/Platforms/Shared/OS/Display.h"
+#include "Engine/Platforms/Shared/OS/Platform.h"
+#include "Engine/Platforms/Shared/OS/OSEnums.h"
 #include "Engine/Platforms/Windows/WinWindow.h"
 #include "Engine/Platforms/Windows/WinKeyInput.h"
 #include "Engine/Platforms/Windows/WinMouseInput.h"
@@ -38,15 +38,14 @@ namespace Platforms
 	// types
 	private:
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
-											//ModuleMsg::OnRegistered,
-											//ModuleMsg::OnUnregistered,
 											ModuleMsg::RequestDisplayParams,
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager
 										> >;
-		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
+		using SupportedEvents_t		= MessageListFrom<
+											ModuleMsg::Delete,
 											ModuleMsg::PlatformCreated
-										> >;
+										>;
 
 		using ModArray_t			= Set< ModulePtr >;
 		using Directories_t			= StaticArray< String, EDirectory::_Count >;
@@ -74,22 +73,23 @@ namespace Platforms
 
 	// methods
 	public:
-		WinPlatform (const SubSystemsRef gs, const CreateInfo::Platform &ci);
+		WinPlatform (const GlobalSystemsRef gs, const CreateInfo::Platform &ci);
 		~WinPlatform ();
 		
 		static GModID::type		GetStaticID ()			{ return "win.platform"_GModID; }
+		
+		static void Register (GlobalSystemsRef);
+		static void Unregister (GlobalSystemsRef);
 
 
 	// message handlers
 	private:
-		void _Delete (const Message< ModuleMsg::Delete > &);
-		void _Compose (const Message< ModuleMsg::Compose > &);
-		//void _Update (const Message< ModuleMsg::Update > &);
-		//void _OnRegistered (const Message< ModuleMsg::OnRegistered > &);
-		//void _OnUnregistered (const Message< ModuleMsg::OnUnregistered > &);
-		void _RequestDisplayParams (const Message< ModuleMsg::RequestDisplayParams > &);
-		void _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		void _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Compose (const Message< ModuleMsg::Compose > &);
+		//bool _Update (const Message< ModuleMsg::Update > &);
+		bool _RequestDisplayParams (const Message< ModuleMsg::RequestDisplayParams > &);
+		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
+		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
 
 	private:
 		bool _IsCreated () const;
@@ -108,13 +108,10 @@ namespace Platforms
 		bool   _ReturnToDefaultResolution ();
 
 	private:
-		friend void RegisterPlatforms ();
-		static void _RegisterAll (SubSystemsRef);
-
-		static ModulePtr _CreateWinPlatform (SubSystemsRef, const CreateInfo::Platform &);
-		static ModulePtr _CreateWinWindow (SubSystemsRef, const CreateInfo::Window &);
-		static ModulePtr _CreateWinKeyInput (SubSystemsRef, const CreateInfo::RawInputHandler &);
-		static ModulePtr _CreateWinMouseInput (SubSystemsRef, const CreateInfo::RawInputHandler &);
+		static ModulePtr _CreateWinPlatform (GlobalSystemsRef, const CreateInfo::Platform &);
+		static ModulePtr _CreateWinWindow (GlobalSystemsRef, const CreateInfo::Window &);
+		static ModulePtr _CreateWinKeyInput (GlobalSystemsRef, const CreateInfo::RawInputHandler &);
+		static ModulePtr _CreateWinMouseInput (GlobalSystemsRef, const CreateInfo::RawInputHandler &);
 	};
 
 

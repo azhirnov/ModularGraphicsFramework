@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Wrapper for std::function.
 */
@@ -56,7 +56,7 @@ namespace GXTypes
 		forceinline void Swap (INOUT Self &other)				{ _func.swap( other._func ); }
 		forceinline void Swap (INOUT Func_t &other)				{ _func.swap( other._func ); }
 
-		forceinline operator bool ()			const			{ return bool(_func); }
+		forceinline explicit operator bool ()	const			{ return bool(_func); }
 
 		forceinline Result_t	operator () ()	const			{ return _func(); }
 

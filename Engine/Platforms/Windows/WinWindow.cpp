@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "WinWindow.h"
 #include "WinPlatform.h"
@@ -20,7 +20,7 @@ namespace Platforms
 	constructor
 =================================================
 */
-	WinWindow::WinWindow (const SubSystemsRef gs, const CreateInfo::Window &ci) :
+	WinWindow::WinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci) :
 		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
 		_createInfo( ci ),
 		_wnd( UninitializedT< HWND >() ),
@@ -29,11 +29,13 @@ namespace Platforms
 	{
 		SetDebugName( "WinWindow" );
 
-		_SubscribeOnMsg( this, &WinWindow::_OnModuleAttached );
-		_SubscribeOnMsg( this, &WinWindow::_OnModuleDetached );
+		_SubscribeOnMsg( this, &WinWindow::_OnModuleAttached_Impl );
+		_SubscribeOnMsg( this, &WinWindow::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &WinWindow::_AttachModule_Impl );
 		_SubscribeOnMsg( this, &WinWindow::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &WinWindow::_OnManagerChanged_Empty );
 		_SubscribeOnMsg( this, &WinWindow::_FindModule_Impl );
+		_SubscribeOnMsg( this, &WinWindow::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &WinWindow::_Delete );
 		_SubscribeOnMsg( this, &WinWindow::_Update );
 		_SubscribeOnMsg( this, &WinWindow::_WindowSetDescriptor );
@@ -43,7 +45,7 @@ namespace Platforms
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		GXTypes::New< AttachModuleToManagerAsyncTask >( this, WinPlatform::GetStaticID() )->Execute();
+		_AttachSelfToManager( null, WinPlatform::GetStaticID(), true );
 
 		if ( _GetManager() )
 		{
@@ -72,13 +74,14 @@ namespace Platforms
 	_Update
 =================================================
 */
-	void WinWindow::_Update (const Message< ModuleMsg::Update > &msg)
+	bool WinWindow::_Update (const Message< ModuleMsg::Update > &msg)
 	{
-		CHECK_ERR( _IsComposedState( GetState() ), void() );
+		CHECK_ERR( _IsComposedState( GetState() ) );
 		
 		_WindowTick();
 
 		_SendForEachAttachments( msg );
+		return true;
 	}
 	
 /*
@@ -86,16 +89,15 @@ namespace Platforms
 	_Delete
 =================================================
 */
-	void WinWindow::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool WinWindow::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
 		_requestQuit	= true;
 		_looping		= false;
 
 		_Destroy();
 
-		Module::_Delete_Impl( msg );
-		
-		GXTypes::New< DetachModuleFromManagerAsyncTask >( this, WinPlatform::GetStaticID() )->Execute();
+		CHECK_ERR( Module::_Delete_Impl( msg ) );
+		return true;
 	}
 
 /*
@@ -103,22 +105,28 @@ namespace Platforms
 	_PlatformCreated
 =================================================
 */
-	void WinWindow::_PlatformCreated (const Message< ModuleMsg::PlatformCreated > &msg)
+	bool WinWindow::_PlatformCreated (const Message< ModuleMsg::PlatformCreated > &msg)
 	{
-		CHECK_ERR( not _IsComposedState( GetState() ), void() );
+		CHECK_ERR( not _IsComposedState( GetState() ) );
 
 		CHECK( _Create( msg.Sender(), msg.Data() ) );
 
-		CHECK( _SetState( _IsCreated() and _looping ? EState::ComposedMutable : EState::ComposingFailed ) );
-
-		// compose attachments
-		if ( _IsComposedState( GetState() ) )
+		if ( _IsCreated() and _looping )
 		{
+			CHECK( _ValidateAllSubscriptions() );
+			CHECK( _SetState( EState::ComposedMutable ) );
+
 			LOG( "window created", ELog::Debug );
 			
 			_SendForEachAttachments( Message< ModuleMsg::Link >{ this, _GetAttachments() } );
 			_SendForEachAttachments( Message< ModuleMsg::Compose >{ this } );
 		}
+		else
+		{
+			CHECK( _SetState( EState::ComposingFailed ) );
+		}
+
+		return true;
 	}
 		
 /*
@@ -126,9 +134,10 @@ namespace Platforms
 	_PlatformDeleted
 =================================================
 */
-	void WinWindow::_PlatformDeleted (const Message< ModuleMsg::Delete > &msg)
+	bool WinWindow::_PlatformDeleted (const Message< ModuleMsg::Delete > &msg)
 	{
 		_Delete( msg );
+		return true;
 	}
 
 /*
@@ -136,9 +145,10 @@ namespace Platforms
 	_WindowSetDescriptor
 =================================================
 */
-	void WinWindow::_WindowSetDescriptor (const Message< ModuleMsg::WindowSetDescriptor > &msg)
+	bool WinWindow::_WindowSetDescriptor (const Message< ModuleMsg::WindowSetDescriptor > &msg)
 	{
 		TODO( "" );
+		return true;
 	}
 
 /*
@@ -146,11 +156,12 @@ namespace Platforms
 	_WindowGetDescriptor
 =================================================
 */
-	void WinWindow::_WindowGetDescriptor (const Message< ModuleMsg::WindowGetDescriptor > &msg)
+	bool WinWindow::_WindowGetDescriptor (const Message< ModuleMsg::WindowGetDescriptor > &msg)
 	{
-		CHECK_ERR( _IsCreated(), void() );
+		CHECK_ERR( _IsCreated() );
 
 		msg->result.Set( _windowDesc );
+		return true;
 	}
 	
 /*
@@ -158,9 +169,10 @@ namespace Platforms
 	_WindowGetDescriptor
 =================================================
 */
-	void WinWindow::_WindowGetHandle (const Message< ModuleMsg::WindowGetHandle > &msg)
+	bool WinWindow::_WindowGetHandle (const Message< ModuleMsg::WindowGetHandle > &msg)
 	{
 		msg->hwnd.Set( _wnd );
+		return true;
 	}
 
 /*
@@ -347,7 +359,7 @@ namespace Platforms
 			{
 				_requestQuit = true;
 
-				Send( Message< ModuleMsg::Delete >() );
+				_SendMsg( Message< ModuleMsg::Delete >() );
 			}
 			else
 				::DispatchMessageA( &msg );

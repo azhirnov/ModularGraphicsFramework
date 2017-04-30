@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -32,35 +32,6 @@ namespace GXTypes
 
 
 	// methods
-	private:
-		void _Create (const T &value)
-		{
-			_Destroy();
-			UnsafeMem::PlacementNew<T>( &_value, value );
-			_isDefined = true;
-		}
-
-		void _Create (T &&value)
-		{
-			_Destroy();
-			UnsafeMem::PlacementNew<T>( &_value, FW<T>( value ) );
-			_isDefined = true;
-		}
-
-		void _Destroy ()
-		{
-			if ( _isDefined )
-			{
-				PlacementDelete( Get() );
-				_isDefined = false;
-			}
-		}
-
-		void _ClearMem ()
-		{
-			DEBUG_ONLY( ZeroMem( _buf ) );
-		}
-
 	public:
 		Optional (GX_DEFCTOR) : _isDefined(false)
 		{
@@ -113,6 +84,13 @@ namespace GXTypes
 		}
 
 
+		Self &	operator =  (T&& value)
+		{
+			_Create( RVREF( value ) );
+			return *this;
+		}
+
+
 		bool	operator == (const Self &other) const
 		{
 			return IsDefined() and other.IsDefined() and Get() == other.Get();
@@ -125,7 +103,7 @@ namespace GXTypes
 		}
 
 
-		operator bool	()			const				{ return IsDefined(); }
+		explicit operator bool	()	const				{ return IsDefined(); }
 
 		T const &	operator * ()	const				{ return Get(); }
 		T &			operator * ()						{ return Get(); }
@@ -160,6 +138,37 @@ namespace GXTypes
 			_Create( RVREF( T() ) );
 			return Get();
 		}
+
+
+	private:
+		void _Create (const T &value)
+		{
+			_Destroy();
+			UnsafeMem::PlacementNew<T>( &_value, value );
+			_isDefined = true;
+		}
+
+		void _Create (T &&value)
+		{
+			_Destroy();
+			UnsafeMem::PlacementNew<T>( &_value, FW<T>( value ) );
+			_isDefined = true;
+		}
+
+		void _Destroy ()
+		{
+			if ( _isDefined )
+			{
+				PlacementDelete( Get() );
+				_isDefined = false;
+			}
+		}
+
+		void _ClearMem ()
+		{
+			DEBUG_ONLY( ZeroMem( _buf ) );
+		}
+
 	};
 	
 

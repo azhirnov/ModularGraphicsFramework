@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Threads/ThreadManager.h"
 #include "Engine/Base/Modules/ModulesFactory.h"
@@ -18,23 +18,22 @@ namespace Base
 	constructor
 =================================================
 */
-	ThreadManager::ThreadManager (const SubSystemsRef gs, const CreateInfo::ThreadManager &info) :
+	ThreadManager::ThreadManager (const GlobalSystemsRef gs, const CreateInfo::ThreadManager &info) :
 		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
 		_currentThread( gs, CreateInfo::Thread{ "MainThread", this } )
 	{
 		SetDebugName( "ThreadManager" );
 
-		_SubscribeOnMsg( this, &ThreadManager::_OnModuleAttached );
-		_SubscribeOnMsg( this, &ThreadManager::_OnModuleDetached );
+		_SubscribeOnMsg( this, &ThreadManager::_OnModuleAttached_Impl );
+		_SubscribeOnMsg( this, &ThreadManager::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &ThreadManager::_AttachModule_Empty );
 		_SubscribeOnMsg( this, &ThreadManager::_DetachModule_Empty );
 		_SubscribeOnMsg( this, &ThreadManager::_FindModule_Empty );
+		_SubscribeOnMsg( this, &ThreadManager::_ModulesDeepSearch_Empty );
 		_SubscribeOnMsg( this, &ThreadManager::_Update );
 		_SubscribeOnMsg( this, &ThreadManager::_Link );
 		_SubscribeOnMsg( this, &ThreadManager::_Compose );
 		_SubscribeOnMsg( this, &ThreadManager::_Delete );
-		_SubscribeOnMsg( this, &ThreadManager::_OnRegistered );
-		_SubscribeOnMsg( this, &ThreadManager::_OnUnregistered );
 		//_SubscribeOnMsg( this, &ThreadManager::_FindThread );
 		_SubscribeOnMsg( this, &ThreadManager::_AddToManager );
 		_SubscribeOnMsg( this, &ThreadManager::_RemoveFromManager );
@@ -63,7 +62,7 @@ namespace Base
 	_Delete
 =================================================
 */
-	void ThreadManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool ThreadManager::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
 		SCOPELOCK( _lock );
 
@@ -75,27 +74,8 @@ namespace Base
 		//_currentThread._SyncUpdate();
 		_currentThread._OnExit();
 
-		Module::_Delete_Impl( msg );
-	}
-
-/*
-=================================================
-	_OnRegistered
-=================================================
-*/
-	void ThreadManager::_OnRegistered (const Message< ModuleMsg::OnRegistered > &msg)
-	{
-		CHECK( msg->factory->Register( ParallelThread::GetStaticID(), null, &ThreadManager::_CreateParallelThread ) );
-	}
-	
-/*
-=================================================
-	_OnUnregistered
-=================================================
-*/
-	void ThreadManager::_OnUnregistered (const Message< ModuleMsg::OnUnregistered > &msg)
-	{
-		msg->factory->Unregister( ParallelThread::GetStaticID() );
+		CHECK_ERR( Module::_Delete_Impl( msg ) );
+		return true;
 	}
 	
 /*
@@ -127,14 +107,15 @@ namespace Base
 	_Link
 =================================================
 */
-	void ThreadManager::_Link (const Message< ModuleMsg::Link > &msg)
+	bool ThreadManager::_Link (const Message< ModuleMsg::Link > &msg)
 	{
-		Module::_Link_Impl( msg );
+		CHECK_ERR( Module::_Link_Impl( msg ) );
 		
 		// TODO: sender is not RC
 		SendToAllThreads( AsyncMessage{ LAMBDA( sender = this ) (const TaskModulePtr &task) {
 								task->GlobalSystems()->Get< ParallelThread >()->Send( Message< ModuleMsg::Link >( sender ) );
 							}} );
+		return true;
 	}
 	
 /*
@@ -142,9 +123,9 @@ namespace Base
 	_Compose
 =================================================
 */
-	void ThreadManager::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool ThreadManager::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
-		Module::_Compose_Impl( msg );
+		CHECK_ERR( Module::_Compose_Impl( msg ) );
 		
 		// TODO: sender is not RC
 		SendToAllThreads( AsyncMessage{ LAMBDA( sender = this ) (const TaskModulePtr &task) {
@@ -152,6 +133,7 @@ namespace Base
 							}} );
 
 		_currentThread._OnEnter();
+		return true;
 	}
 
 /*
@@ -159,13 +141,14 @@ namespace Base
 	_Update
 =================================================
 */
-	void ThreadManager::_Update (const Message< ModuleMsg::Update > &msg)
+	bool ThreadManager::_Update (const Message< ModuleMsg::Update > &msg)
 	{
-		CHECK_ERR( _IsComposedState( GetState() ), void() );
+		CHECK_ERR( _IsComposedState( GetState() ) );
 
 		SCOPELOCK( _lock );
 
 		_currentThread._SyncUpdate();
+		return true;
 	}
 	
 /*
@@ -173,15 +156,16 @@ namespace Base
 	_AddToManager
 =================================================
 */
-	void ThreadManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool ThreadManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
 	{
 		SCOPELOCK( _lock );
 
-		CHECK_ERR( msg->module, void() );
+		CHECK_ERR( msg->module );
 		ASSERT( not _threads.IsExist( msg->module->GetThreadID() ) );
-		CHECK_ERR( msg->module->GetModuleID() == ParallelThread::GetStaticID(), void() );
+		CHECK_ERR( msg->module->GetModuleID() == ParallelThread::GetStaticID() );
 
 		_threads.Add( msg->module->GetThreadID(), msg->module );
+		return true;
 	}
 
 /*
@@ -189,15 +173,16 @@ namespace Base
 	_RemoveFromManager
 =================================================
 */
-	void ThreadManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool ThreadManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		SCOPELOCK( _lock );
 
-		CHECK_ERR( msg->module, void() );
+		CHECK_ERR( msg->module );
 		ASSERT( _threads.IsExist( msg->module->GetThreadID() ) );
-		CHECK_ERR( msg->module->GetModuleID() == ParallelThread::GetStaticID(), void() );
+		CHECK_ERR( msg->module->GetModuleID() == ParallelThread::GetStaticID() );
 
 		_threads.Erase( msg->module->GetThreadID() );
+		return true;
 	}
 
 /*
@@ -205,8 +190,9 @@ namespace Base
 	_FindThread
 =================================================
 *
-	void ThreadManager::_FindThread (const Message< ModuleMsg::FindThread > &msg)
+	bool ThreadManager::_FindThread (const Message< ModuleMsg::FindThread > &msg)
 	{
+		return true;
 	}
 
 /*
@@ -223,13 +209,15 @@ namespace Base
 		ModulePtr					result;
 		Ptr< MainSystem >			main;
 		Ptr< ModulesFactory >		factory;
+		Ptr< FileManager >			fileMngr;
 
 	// methods
-		CreateParallelThreadData (SubSystemsRef gs, const CreateInfo::Thread &info) :
+		CreateParallelThreadData (GlobalSystemsRef gs, const CreateInfo::Thread &info) :
 			info( info ),
 			sync( OS::SyncEvent::MANUAL_RESET ),
 			main( gs->Get<MainSystem>() ),
-			factory( gs->Get<ModulesFactory>() )
+			factory( gs->Get<ModulesFactory>() ),
+			fileMngr( gs->Get<FileManager>() )
 		{}
 	};
 	
@@ -238,9 +226,9 @@ namespace Base
 	_CreateParallelThread
 =================================================
 */
-	ModulePtr ThreadManager::_CreateParallelThread (SubSystemsRef gs, const CreateInfo::Thread &info)
+	ModulePtr ThreadManager::_CreateParallelThread (const GlobalSystemsRef gs, const CreateInfo::Thread &ci)
 	{
-		CreateParallelThreadData	data( gs, info );
+		CreateParallelThreadData	data( gs, ci );
 
 		// start thread and set 'data' to new thread
 		data.thread.Create( &_RunAsync, &data );
@@ -254,19 +242,56 @@ namespace Base
 	
 /*
 =================================================
+	_CreateThreadManager
+=================================================
+*/
+	ModulePtr ThreadManager::_CreateThreadManager (const GlobalSystemsRef gs, const CreateInfo::ThreadManager &ci)
+	{
+		return GXTypes::New< ThreadManager >( gs, ci );
+	}
+	
+/*
+=================================================
+	Register
+=================================================
+*/
+	void ThreadManager::Register (const GlobalSystemsRef gs)
+	{
+		auto	mf = gs->Get< ModulesFactory >();
+
+		CHECK( mf->Register( ParallelThread::GetStaticID(), &_CreateParallelThread ) );
+		CHECK( mf->Register( ThreadManager::GetStaticID(), &_CreateThreadManager ) );
+	}
+	
+/*
+=================================================
+	Unregister
+=================================================
+*/
+	void ThreadManager::Unregister (const GlobalSystemsRef gs)
+	{
+		auto	mf = gs->Get< ModulesFactory >();
+
+		mf->UnregisterAll< ParallelThread >();
+		mf->UnregisterAll< ThreadManager >();
+	}
+
+/*
+=================================================
 	_RunAsync
 =================================================
 */
 	void ThreadManager::_RunAsync (void *d)
 	{
-		EngineSubSystems			global_sys;
+		GlobalSubSystems				global_sys;
 
 		CreateParallelThreadData&	data = *Cast<CreateParallelThreadData *>(d);
 
 		global_sys.GetSetter< MainSystem >().Set( data.main );
 		global_sys.GetSetter< ModulesFactory >().Set( data.factory );
+		global_sys.GetSetter< FileManager >().Set( data.fileMngr );
 
-		auto pt = GXTypes::New< ParallelThread >( SubSystemsRef(global_sys), data.info );
+		auto pt = GXTypes::New< ParallelThread >( GlobalSystemsRef(global_sys), data.info );
 
 		pt->_thread = RVREF( data.thread );
 

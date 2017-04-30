@@ -1,13 +1,18 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
-#include "Engine/Base/Common/Common.h"
+#include "Engine/Base/Common/MessageHelpers.h"
+#include "Engine/Base/Common/Enums.h"
 
 namespace Engine
 {
 namespace CreateInfo
 {
+	template <typename T>	using SingleRead	= ModuleMsg::SingleRead<T>;
+
+	using Engine::Base::ModulePtr;
+
 	
 
 	//
@@ -15,8 +20,8 @@ namespace CreateInfo
 	//
 	struct Thread
 	{
-		String				name;
-		Base::ModulePtr		manager;
+		String			name;
+		ModulePtr		manager;
 	};
 	
 
@@ -26,7 +31,7 @@ namespace CreateInfo
 	struct TaskModule
 	{
 		// TODO: set priority or something else
-		Base::ModulePtr		manager;
+		ModulePtr		manager;
 	};
 	
 

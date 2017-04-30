@@ -1,11 +1,12 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 */
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GpuContext.h"
-#include "Engine/Platforms/Shared/GpuThread.h"
-#include "Engine/Platforms/Shared/Platform.h"
-#include "Engine/Platforms/Shared/Window.h"
-#include "Engine/Platforms/Shared/Input.h"
+#include "Engine/Platforms/Shared/GPU/Context.h"
+#include "Engine/Platforms/Shared/GPU/Thread.h"
+
+#include "Engine/Platforms/Shared/OS/Platform.h"
+#include "Engine/Platforms/Shared/OS/Window.h"
+#include "Engine/Platforms/Shared/OS/Input.h"

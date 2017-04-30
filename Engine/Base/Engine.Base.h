@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 */
 
@@ -11,5 +11,7 @@
 #include "Engine/Base/Tasks/TaskModule.h"
 
 #include "Engine/Base/Threads/ParallelThread.h"
+
+#include "Engine/Base/Stream/Stream.h"
 
 #include "Engine/Base/Main/MainSystem.h"

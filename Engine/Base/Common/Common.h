@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -22,6 +22,7 @@ namespace Engine
 		class ThreadManager;
 		class MainSystem;
 		class AsyncMessage;
+		class FileManager;
 
 		// TODO: FileManager
 		// TODO: Serializer
@@ -36,16 +37,19 @@ namespace Engine
 	namespace ModuleMsg
 	{
 		using namespace Base;
+
+		// never use 'using namespace ModuleMsg' !!!
 	}
 
 	namespace CreateInfo
 	{
-		//using namespace Base;
+		// never use 'using namespace CreateInfo' !!!
 	}
 	
 	namespace Platforms
 	{
 		void RegisterPlatforms ();
+		void UnregisterPlatforms ();
 	}
 	
 	namespace Profilers

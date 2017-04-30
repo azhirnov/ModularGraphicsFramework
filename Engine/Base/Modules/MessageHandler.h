@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -17,6 +17,7 @@ namespace Base
 	{
 	// types
 	private:
+		using uint2		= GXMath::uint2;
 
 		//
 		// Handler interface
@@ -25,10 +26,10 @@ namespace Base
 		{
 		// interface
 			virtual ~IHandler () {}
-			virtual void Send (const VariantCRef &data) = 0;
-			virtual void Subscribe (const VariantRef &callback) = 0;
-			virtual void Unsubscribe (const VariantRef &callback) = 0;
-			virtual void UnsubscribeAll (const ModulePtr &ptr) = 0;
+			virtual uint2 Send (const VariantCRef &data) = 0;
+			virtual void  Subscribe (const VariantRef &callback) = 0;
+			virtual void  Unsubscribe (const VariantRef &callback) = 0;
+			virtual void  UnsubscribeAll (const ModulePtr &ptr) = 0;
 		};
 
 		//
@@ -38,7 +39,7 @@ namespace Base
 		struct HandlerImpl final : public IHandler
 		{
 		// types
-			using Delegate_t	= Delegate< void (const T&) >;
+			using Delegate_t	= Delegate< bool (const T&) >;
 			using Event_t		= Event< Delegate_t >;
 
 		// variables
@@ -53,16 +54,18 @@ namespace Base
 			void Unsubscribe (const VariantRef &cb)		override	{ _event.Remove( RVREF( cb.Get<Delegate_t>() ) ); }
 			void UnsubscribeAll (const ModulePtr &ptr)	override	{ _event.RemoveAllFor( ptr ); }
 
-			void Send (const VariantCRef &data) override
+			uint2 Send (const VariantCRef &data) override
 			{
 				auto const&	msg = data.Get<T>();
+				Event_t		tmp = _event;	// TODO: optimize
+				uint2		count;
 
-				Event_t		tmp = _event;
-
-				FOR( i, tmp ) {
+				FOR( i, tmp )
+				{
 					++msg._numOfSends;
-					tmp.Get(i).Call( msg );
+					++count[ tmp.Get(i).Call( msg ) ];
 				}
+				return count;	// returns count of successfull and unsuccessfull handler calls
 			}
 		};
 
@@ -115,13 +118,13 @@ namespace Base
 		bool Subscribe (const Runtime::VirtualTypeList& validTypes, Types&& ...args);
 
 		template <typename T>
-		bool Subscribe (const Runtime::VirtualTypeList& validTypes, Delegate< void (const Message<T> &)> &&cb);
+		bool Subscribe (const Runtime::VirtualTypeList& validTypes, Delegate< bool (const Message<T> &)> &&cb);
 		
 		template <typename ...Types>
 		bool Unsubscribe (const Runtime::VirtualTypeList& validTypes, Types&& ...args);
 
 		template <typename T>
-		bool Unsubscribe (const Runtime::VirtualTypeList& validTypes, Delegate< void (const Message<T> &)> &&cb);
+		bool Unsubscribe (const Runtime::VirtualTypeList& validTypes, Delegate< bool (const Message<T> &)> &&cb);
 
 		void UnsubscribeAll (const ModulePtr &unit);
 
@@ -133,19 +136,19 @@ namespace Base
 
 	private:
 		template <typename C, typename Class, typename T>
-		Delegate< void (const Message<T> &) >  _CreateDelegate (C *ptr, void (Class:: *fn)(const Message<T> &));
+		Delegate< bool (const Message<T> &) >  _CreateDelegate (C *ptr, bool (Class:: *fn)(const Message<T> &));
 		
 		template <typename C, typename Class, typename T>
-		Delegate< void (const Message<T> &) >  _CreateDelegate (C *ptr, void (Class:: *fn)(const Message<T> &) const);
+		Delegate< bool (const Message<T> &) >  _CreateDelegate (C *ptr, bool (Class:: *fn)(const Message<T> &) const);
 
 		template <typename C, typename Class, typename T>
-		Delegate< void (const Message<T> &) >  _CreateDelegate (const RC<C> &rc, void (Class:: *fn)(const Message<T> &));
+		Delegate< bool (const Message<T> &) >  _CreateDelegate (const RC<C> &rc, bool (Class:: *fn)(const Message<T> &));
 		
 		template <typename C, typename Class, typename T>
-		Delegate< void (const Message<T> &) >  _CreateDelegate (const RC<C> &rc, void (Class:: *fn)(const Message<T> &) const);
+		Delegate< bool (const Message<T> &) >  _CreateDelegate (const RC<C> &rc, bool (Class:: *fn)(const Message<T> &) const);
 		
 		template <typename T>
-		Delegate< void (const Message<T> &) >  _CreateDelegate (void (*fn)(const Message<T> &));
+		Delegate< bool (const Message<T> &) >  _CreateDelegate (bool (*fn)(const Message<T> &));
 	};
 
 
@@ -180,7 +183,7 @@ namespace Base
 =================================================
 */
 	template <typename T>
-	inline bool MessageHandler::Subscribe (const Runtime::VirtualTypeList& validTypes, Delegate< void (const Message<T> &)> &&cb)
+	inline bool MessageHandler::Subscribe (const Runtime::VirtualTypeList& validTypes, Delegate< bool (const Message<T> &)> &&cb)
 	{
 		const TypeId	id		= TypeIdOf< Message<T> >();
 		usize			index	= -1;
@@ -219,7 +222,7 @@ namespace Base
 =================================================
 */
 	template <typename T>
-	inline bool MessageHandler::Unsubscribe (const Runtime::VirtualTypeList& validTypes, Delegate< void (const Message<T> &)> &&cb)
+	inline bool MessageHandler::Unsubscribe (const Runtime::VirtualTypeList& validTypes, Delegate< bool (const Message<T> &)> &&cb)
 	{
 		const TypeId			id = TypeIdOf< Message<T> >();
 		HandlersMap_t::iterator	iter;
@@ -244,31 +247,31 @@ namespace Base
 =================================================
 */
 	template <typename C, typename Class, typename T>
-	forceinline Delegate<void (const Message<T> &)>  MessageHandler::_CreateDelegate (C *ptr, void (Class:: *fn)(const Message<T> &))
+	forceinline Delegate<bool (const Message<T> &)>  MessageHandler::_CreateDelegate (C *ptr, bool (Class:: *fn)(const Message<T> &))
 	{
-		return DelegateBuilder( RC<C>( ptr ), fn );
+		return DelegateBuilder( RC<C>( ptr ), fn );		// only Reference Countable types are supported yet
 	}
 		
 	template <typename C, typename Class, typename T>
-	forceinline Delegate<void (const Message<T> &)>  MessageHandler::_CreateDelegate (C *ptr, void (Class:: *fn)(const Message<T> &) const)
+	forceinline Delegate<bool (const Message<T> &)>  MessageHandler::_CreateDelegate (C *ptr, bool (Class:: *fn)(const Message<T> &) const)
 	{
-		return DelegateBuilder( RC<C>( ptr ), fn );
+		return DelegateBuilder( RC<C>( ptr ), fn );		// only Reference Countable types are supported yet
 	}
 
 	template <typename C, typename Class, typename T>
-	forceinline Delegate<void (const Message<T> &)>  MessageHandler::_CreateDelegate (const RC<C> &rc, void (Class:: *fn)(const Message<T> &))
+	forceinline Delegate<bool (const Message<T> &)>  MessageHandler::_CreateDelegate (const RC<C> &rc, bool (Class:: *fn)(const Message<T> &))
 	{
 		return DelegateBuilder( rc, fn );
 	}
 		
 	template <typename C, typename Class, typename T>
-	forceinline Delegate<void (const Message<T> &)>  MessageHandler::_CreateDelegate (const RC<C> &rc, void (Class:: *fn)(const Message<T> &) const)
+	forceinline Delegate<bool (const Message<T> &)>  MessageHandler::_CreateDelegate (const RC<C> &rc, bool (Class:: *fn)(const Message<T> &) const)
 	{
 		return DelegateBuilder( rc, fn );
 	}
 		
 	template <typename T>
-	forceinline Delegate<void (const Message<T> &)>  MessageHandler::_CreateDelegate (void (*fn)(const Message<T> &))
+	forceinline Delegate<bool (const Message<T> &)>  MessageHandler::_CreateDelegate (bool (*fn)(const Message<T> &))
 	{
 		return DelegateBuilder( fn );
 	}

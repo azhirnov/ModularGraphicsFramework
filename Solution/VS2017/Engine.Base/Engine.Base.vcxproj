@@ -24,16 +24,22 @@
     <ClInclude Include="..\..\..\Engine\Base\Common\CreateInfo.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\EModuleGroup.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\EngineSubSystems.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Common\Enums.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\MessageHelpers.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\ModuleMessages.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\ThreadID.h" />
     <ClInclude Include="..\..\..\Engine\Base\Engine.Base.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Files\FileManager.h" />
     <ClInclude Include="..\..\..\Engine\Base\Main\MainSystem.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\ModuleAsyncTasks.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\ModulesFactory.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\Module.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\MessageHandler.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\Message.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Stream\InputStream.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Stream\OutputStream.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Stream\Stream.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Stream\StreamManager.h" />
     <ClInclude Include="..\..\..\Engine\Base\Tasks\AsyncMessage.h" />
     <ClInclude Include="..\..\..\Engine\Base\Tasks\AsyncTask.h" />
     <ClInclude Include="..\..\..\Engine\Base\Tasks\TaskModule.h" />
@@ -50,10 +56,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Engine\Base\Files\FileManager.cpp" />
     <ClCompile Include="..\..\..\Engine\Base\Main\MainSystem.cpp" />
     <ClCompile Include="..\..\..\Engine\Base\Modules\MessageHandler.cpp" />
     <ClCompile Include="..\..\..\Engine\Base\Modules\ModulesFactory.cpp" />
     <ClCompile Include="..\..\..\Engine\Base\Modules\Module.cpp" />
+    <ClCompile Include="..\..\..\Engine\Base\Stream\InputStream.cpp" />
+    <ClCompile Include="..\..\..\Engine\Base\Stream\OutputStream.cpp" />
+    <ClCompile Include="..\..\..\Engine\Base\Stream\StreamManager.cpp" />
     <ClCompile Include="..\..\..\Engine\Base\Tasks\TaskModule.cpp" />
     <ClCompile Include="..\..\..\Engine\Base\Tasks\TaskManager.cpp" />
     <ClCompile Include="..\..\..\Engine\Base\Threads\ParallelThread.cpp" />
@@ -63,7 +73,7 @@
     <ProjectGuid>{4D750B1B-CE81-4C92-8BFE-40F2ACE23A14}</ProjectGuid>
     <RootNamespace>GGE</RootNamespace>
     <ProjectName>Engine.Base</ProjectName>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -48,7 +48,7 @@ namespace Base
 		void  Cancel ();
 		bool  IsCanceled ();
 		
-		SubSystemsRef	GlobalSystems () const	= delete;
+		GlobalSystemsRef	GlobalSystems () const	= delete;
 
 
 	protected:

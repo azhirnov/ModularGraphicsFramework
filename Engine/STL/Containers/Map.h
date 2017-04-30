@@ -1,4 +1,4 @@
-﻿// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -279,7 +279,7 @@ namespace _types_hidden_
 			
 			FindLastIndex( first, last );
 
-			result = values_range_t( ptr() + first, last - first + 1 );
+			result = values_range_t( &(*this)[first], last - first + 1 );
 			return true;
 		}
 
@@ -293,7 +293,7 @@ namespace _types_hidden_
 			
 			FindLastIndex( first, last );
 
-			result = const_values_range_t( ptr() + first, last - first + 1 );
+			result = const_values_range_t( &(*this)[first], last - first + 1 );
 			return true;
 		}
 

@@ -1,8 +1,8 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
-#include "Engine/Platforms/Shared/Input.h"
+#include "Engine/Platforms/Shared/OS/Input.h"
 
 namespace Engine
 {
@@ -18,14 +18,15 @@ namespace Platforms
 	// types
 	private:
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
-											ModuleMsg::InputKey,
-											ModuleMsg::InputMotion
+											ModuleMsg::InputKeyBind,
+											ModuleMsg::InputMotionBind,
+											ModuleMsg::AddToManager,
+											ModuleMsg::RemoveFromManager,
+											ModuleMsg::OnManagerChanged
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											ModuleMsg::InputKey,		// not recomended to use
-											ModuleMsg::InputMotion,		// not recomended to use
-											ModuleMsg::InputKeyBind,
-											ModuleMsg::InputMotionBind
+											ModuleMsg::InputMotion		// not recomended to use
 										> >;
 
 		using KeyCollback_t			= ModuleMsg::InputKeyBind::Callback_t;
@@ -33,6 +34,8 @@ namespace Platforms
 
 		using MotionCallback_t		= ModuleMsg::InputMotionBind::Callback_t;
 		using MotionBinds_t			= MultiMap< MotionID::type, MotionCallback_t >;
+
+		using ModulesSet_t			= Set< ModulePtr >;
 
 
 	// constants
@@ -43,13 +46,15 @@ namespace Platforms
 		
 	// variables
 	private:
+		ModulesSet_t	_inputs;
+
 		KeyBinds_t		_keyBinds;
 		MotionBinds_t	_motionBinds;
 		
 
 	// methods
 	public:
-		InputThread (const SubSystemsRef gs, const CreateInfo::InputThread &ci);
+		InputThread (const GlobalSystemsRef gs, const CreateInfo::InputThread &ci);
 		~InputThread ();
 		
 		static TModID::type		GetStaticID ()			{ return "input.thrd"_TModID; }
@@ -57,9 +62,13 @@ namespace Platforms
 
 	// message handlers
 	private:
-		void _Delete (const Message< ModuleMsg::Delete > &);
-		void _InputKey (const Message< ModuleMsg::InputKey > &);
-		void _InputMotion (const Message< ModuleMsg::InputMotion > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
+		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _InputKey (const Message< ModuleMsg::InputKey > &);
+		bool _InputMotion (const Message< ModuleMsg::InputMotion > &);
+		bool _InputKeyBind (const Message< ModuleMsg::InputKeyBind > &);
+		bool _InputMotionBind (const Message< ModuleMsg::InputMotionBind > &);
 	};
 
 

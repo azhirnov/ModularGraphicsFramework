@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Threads/ParallelThread.h"
 #include "Engine/Base/Threads/ThreadManager.h"
@@ -18,7 +18,7 @@ namespace Base
 	constructor
 =================================================
 */
-	ParallelThread::ParallelThread (const SubSystemsRef gs, const CreateInfo::Thread &info) :
+	ParallelThread::ParallelThread (const GlobalSystemsRef gs, const CreateInfo::Thread &info) :
 		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
 		_isLooping( false )
 	{
@@ -26,21 +26,20 @@ namespace Base
 
 		GlobalSystems()->GetSetter< ParallelThread >().Set( this );
 
-		_SubscribeOnMsg( this, &ParallelThread::_OnModuleAttached );
-		_SubscribeOnMsg( this, &ParallelThread::_OnModuleDetached );
+		_SubscribeOnMsg( this, &ParallelThread::_OnModuleAttached_Impl );
+		_SubscribeOnMsg( this, &ParallelThread::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &ParallelThread::_AttachModule_Impl );
 		_SubscribeOnMsg( this, &ParallelThread::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &ParallelThread::_OnManagerChanged_Empty );
 		_SubscribeOnMsg( this, &ParallelThread::_FindModule_Impl );
+		_SubscribeOnMsg( this, &ParallelThread::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &ParallelThread::_Link );
 		_SubscribeOnMsg( this, &ParallelThread::_Compose );
 		_SubscribeOnMsg( this, &ParallelThread::_Delete );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		if ( not info.manager )
-			GXTypes::New< AttachModuleToManagerAsyncTask >( this, ThreadManager::GetStaticID() )->Execute()->Wait();
-		else
-			_SetManager( info.manager );
+		_AttachSelfToManager( info.manager, ThreadManager::GetStaticID(), true );
 	}
 	
 /*
@@ -62,11 +61,12 @@ namespace Base
 	_Link
 =================================================
 */
-	void ParallelThread::_Link (const Message< ModuleMsg::Link > &msg)
+	bool ParallelThread::_Link (const Message< ModuleMsg::Link > &msg)
 	{
-		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager(), void() );
+		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
 
-		Module::_Link_Impl( msg );
+		CHECK_ERR( Module::_Link_Impl( msg ) );
+		return true;
 	}
 	
 /*
@@ -74,11 +74,12 @@ namespace Base
 	_Compose
 =================================================
 */
-	void ParallelThread::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool ParallelThread::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
-		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager(), void() );
+		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
 
-		Module::_Compose_Impl( msg );
+		CHECK_ERR( Module::_Compose_Impl( msg ) );
+		return true;
 	}
 
 /*
@@ -86,19 +87,16 @@ namespace Base
 	_Delete
 =================================================
 */
-	void ParallelThread::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool ParallelThread::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
-		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager(), void() );
+		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
 
 		_isLooping = false;
-		
-		Modules_t	tmp = _GetAttachments();
 
 		_SendForEachAttachments( Message< ModuleMsg::Delete >( this ) );
 
-		Module::_Delete_Impl( msg );
-
-		GXTypes::New< DetachModuleFromManagerAsyncTask >( this, ThreadManager::GetStaticID() )->Execute();
+		CHECK_ERR( Module::_Delete_Impl( msg ) );
+		return true;
 	}
 
 /*

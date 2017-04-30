@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -23,14 +23,13 @@ namespace Base
 		//
 		struct IContructor
 		{
-			ModulePtr	_system;
-
-			explicit IContructor (const ModulePtr &unit) : _system(unit) {}
+			IContructor () {}
 			virtual ~IContructor () {}
 
 			virtual bool	  IsValid (TypeId id) const = 0;
-			virtual ModulePtr Call (SubSystemsRef gs, VariantCRef) const = 0;
+			virtual ModulePtr Call (GlobalSystemsRef gs, VariantCRef) const = 0;
 		};
+
 
 		//
 		// Contructor implementation
@@ -39,14 +38,13 @@ namespace Base
 		struct ContructorImpl final : IContructor
 		{
 		// types
-			using CtorMsg_t	= ModulePtr (*) (SubSystemsRef gs, const CtorMsg &);
+			using CtorMsg_t	= ModulePtr (*) (GlobalSystemsRef gs, const CtorMsg &);
 
 		// variables
 			CtorMsg_t	_ctorMsg;
 
 		// methods
-			ContructorImpl (const ModulePtr &unit, CtorMsg_t ctorMsg) :
-				IContructor(unit), _ctorMsg(ctorMsg)
+			explicit ContructorImpl (CtorMsg_t ctor) : _ctorMsg(ctor)
 			{}
 			
 			bool IsValid (TypeId id) const override
@@ -54,7 +52,7 @@ namespace Base
 				return _ctorMsg and id == TypeIdOf<CtorMsg>();
 			}
 
-			ModulePtr Call (SubSystemsRef gs, VariantCRef msg) const override
+			ModulePtr Call (GlobalSystemsRef gs, VariantCRef msg) const override
 			{
 				if ( _ctorMsg and msg.IsType<CtorMsg>() )
 					return _ctorMsg( gs, msg.Get<CtorMsg>() );
@@ -63,47 +61,77 @@ namespace Base
 			}
 		};
 
-
 		using Constructor_t			= VariantInterface< IContructor, sizeof(ContructorImpl<int>) >;
 		using UntypedID_t			= ModuleMsg::UntypedID_t;
-		using CompFamilies_t		= Map< EModuleGroup::type, TypeId >;
-		using CompConstructors_t	= Map< UntypedID_t, Constructor_t >;
+
+
+		//
+		// Constructor ID
+		//
+		struct ConstructorID
+		{
+		// variables
+			UntypedID_t		moduleID;
+			TypeId			createInfoType;
+
+		// methods
+			ConstructorID () {}
+			ConstructorID (UntypedID_t moduleID, TypeId createInfoType) : moduleID(moduleID), createInfoType(createInfoType) {}
+
+			ConstructorID (ConstructorID &&) = default;
+			ConstructorID (const ConstructorID &) = default;
+
+			ConstructorID& operator = (ConstructorID &&) = default;
+			ConstructorID& operator = (const ConstructorID &) = default;
+
+			bool operator == (const ConstructorID &right) const;
+			bool operator >  (const ConstructorID &right) const;
+			bool operator <  (const ConstructorID &right) const;
+		};
+
+
+		using ModGroups_t			= Map< EModuleGroup::type, TypeId >;
+		using ModConstructors_t		= Map< ConstructorID, Constructor_t >;
 
 
 	// variables
 	private:
-		CompConstructors_t		_constructors;
-		CompFamilies_t			_families;
-		OS::Mutex				_lock;
+		ModConstructors_t		_constructors;
+		ModGroups_t				_groups;
+		mutable OS::Mutex		_lock;
 
 
 	// methods
 	public:
 		explicit
-		ModulesFactory (const SubSystemsRef gs);
+		ModulesFactory (const GlobalSystemsRef gs);
 		~ModulesFactory ();
 
 
-		bool Create (UntypedID_t id, SubSystemsRef gs, VariantCRef msg, OUT ModulePtr &result);
+		bool Create (UntypedID_t id, GlobalSystemsRef gs, VariantCRef msg, OUT ModulePtr &result);
 		
 		template <typename CtorMsg>
-		bool Create (UntypedID_t id, SubSystemsRef gs, const CtorMsg &msg, OUT ModulePtr &result);
+		bool Create (UntypedID_t id, GlobalSystemsRef gs, const CtorMsg &msg, OUT ModulePtr &result);
 
 
 		template <typename ModIdType, typename CtorMsg>
-		bool Register (ModIdType id,
-					   const ModulePtr &unit,
-					   ModulePtr (*ctorMsg) (SubSystemsRef gs, const CtorMsg &));
+		bool Register (ModIdType id, ModulePtr (*ctor) (GlobalSystemsRef gs, const CtorMsg &));
+		
+		template <typename Class, typename CtorMsg>
+		bool Unregister ();
 		
 		template <typename Class>
-		bool Unregister ();
-		bool Unregister (UntypedID_t id);
+		bool UnregisterAll ();
 		
-		bool IsRegistered (UntypedID_t id);
+		template <typename Class, typename CtorMsg>
+		bool IsRegistered () const;
 
 
 	private:
-		bool _Register (UntypedID_t id, TypeId typeId, Constructor_t &&ctor);
+		bool _Register (UntypedID_t id, TypeId ctorMsgType, TypeId moduleIdType, Constructor_t &&ctor);
+		bool _Unregister (UntypedID_t id, TypeId ctorMsgType);
+		bool _UnregisterAll (UntypedID_t id);
+		bool _IsRegistered (UntypedID_t id, TypeId ctorMsgType) const;
 	};
 	
 	
@@ -114,7 +142,7 @@ namespace Base
 =================================================
 */
 	template <typename CtorMsg>
-	inline bool ModulesFactory::Create (UntypedID_t id, SubSystemsRef gs, const CtorMsg &msg, OUT ModulePtr &result)
+	inline bool ModulesFactory::Create (UntypedID_t id, GlobalSystemsRef gs, const CtorMsg &msg, OUT ModulePtr &result)
 	{
 		return Create( id, gs, VariantCRef::FromConst(msg), OUT result );
 	}
@@ -125,16 +153,15 @@ namespace Base
 =================================================
 */
 	template <typename ModIdType, typename CtorMsg>
-	inline bool ModulesFactory::Register (ModIdType id,
-										  const ModulePtr &unit,
-										  ModulePtr (*ctorMsg) (SubSystemsRef gs, const CtorMsg &))
+	inline bool ModulesFactory::Register (ModIdType id, ModulePtr (*ctor) (GlobalSystemsRef gs, const CtorMsg &))
 	{
 		STATIC_ASSERT(( not CompileTime::IsSameTypes< ModIdType, UntypedID_t > ));
-		CHECK_ERR( ctorMsg != null );
+		CHECK_ERR( ctor != null );
 
 		return _Register( id,
+						  TypeIdOf<CtorMsg>(),
 						  TypeIdOf<ModIdType>(),
-						  Constructor_t( ContructorImpl<CtorMsg>( unit, ctorMsg ) ) );
+						  Constructor_t( ContructorImpl<CtorMsg>( ctor ) ) );
 	}
 
 /*
@@ -142,15 +169,76 @@ namespace Base
 	Unregister
 =================================================
 */
-	template <typename Class>
+	template <typename Class, typename CtorMsg>
 	inline bool ModulesFactory::Unregister ()
 	{
-		return Unregister( Class::GetStaticID() );
+		return _Unregister( Class::GetStaticID(), TypeIdOf<CtorMsg>() );
 	}
 	
 /*
 =================================================
-	AddModule
+	UnregisterAll
+=================================================
+*/
+	template <typename Class>
+	inline bool ModulesFactory::UnregisterAll ()
+	{
+		return _UnregisterAll( Class::GetStaticID() );
+	}
+
+/*
+=================================================
+	IsRegistered
+=================================================
+*/
+	template <typename Class, typename CtorMsg>
+	inline bool ModulesFactory::IsRegistered () const
+	{
+		return _IsRegistered( Class::GetStaticID(), TypeIdOf<CtorMsg>() );
+	}
+	
+/*
+=================================================
+	ConstructorID::operator ==
+=================================================
+*/
+	inline bool ModulesFactory::ConstructorID::operator == (const ConstructorID &right) const
+	{
+		return	moduleID == right.moduleID and
+				(createInfoType == TypeId() or right.createInfoType == TypeId() or createInfoType == right.createInfoType);
+	}
+	
+/*
+=================================================
+	ConstructorID::operator >
+=================================================
+*/
+	inline bool ModulesFactory::ConstructorID::operator >  (const ConstructorID &right) const 
+	{
+		return	moduleID != right.moduleID ?
+					moduleID > right.moduleID :
+					createInfoType != TypeId() and right.createInfoType != TypeId() ?
+						createInfoType > right.createInfoType :
+						false;			// types are equal
+	}
+	
+/*
+=================================================
+	ConstructorID::operator <
+=================================================
+*/
+	inline bool ModulesFactory::ConstructorID::operator <  (const ConstructorID &right) const
+	{
+		return	moduleID != right.moduleID ?
+					moduleID < right.moduleID :
+					createInfoType != TypeId() and right.createInfoType != TypeId() ?
+						createInfoType < right.createInfoType :
+						false;			// types are equal
+	}
+
+/*
+=================================================
+	Module::AddModule
 =================================================
 */
 	template <typename CreateInfo>
@@ -159,7 +247,7 @@ namespace Base
 		ModulePtr	unit;
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create( id, GlobalSystems(), createInfo, OUT unit ) );
 
-		Send( Message< ModuleMsg::AttachModule >{ this, unit } );
+		_SendMsg( Message< ModuleMsg::AttachModule >{ this, unit } );
 		return true;
 	}
 

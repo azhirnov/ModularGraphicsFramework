@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Tasks/TaskManager.h"
 #include "Engine/Base/Modules/ModulesFactory.h"
@@ -8,30 +8,29 @@ namespace Engine
 namespace Base
 {
 	
-	const Runtime::VirtualTypeList	TaskManager::_msgTypes{ UninitializedT< TaskManager::SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	TaskManager::_eventTypes{ UninitializedT< TaskManager::SupportedEvents_t >() };
+	const Runtime::VirtualTypeList	TaskManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const Runtime::VirtualTypeList	TaskManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	TaskManager::TaskManager (const SubSystemsRef gs, const CreateInfo::TaskManager &info) :
+	TaskManager::TaskManager (const GlobalSystemsRef gs, const CreateInfo::TaskManager &info) :
 		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "TaskManager" );
 
-		_SubscribeOnMsg( this, &TaskManager::_OnModuleAttached );
-		_SubscribeOnMsg( this, &TaskManager::_OnModuleDetached );
+		_SubscribeOnMsg( this, &TaskManager::_OnModuleAttached_Impl );
+		_SubscribeOnMsg( this, &TaskManager::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &TaskManager::_AttachModule_Empty );
 		_SubscribeOnMsg( this, &TaskManager::_DetachModule_Empty );
 		_SubscribeOnMsg( this, &TaskManager::_FindModule_Empty );
+		_SubscribeOnMsg( this, &TaskManager::_ModulesDeepSearch_Empty );
 		_SubscribeOnMsg( this, &TaskManager::_Update_Empty );
 		_SubscribeOnMsg( this, &TaskManager::_Link_Empty );
 		_SubscribeOnMsg( this, &TaskManager::_Compose_Empty );
 		_SubscribeOnMsg( this, &TaskManager::_Delete );
-		_SubscribeOnMsg( this, &TaskManager::_OnRegistered );
-		_SubscribeOnMsg( this, &TaskManager::_OnUnregistered );
 		_SubscribeOnMsg( this, &TaskManager::_AddToManager );
 		_SubscribeOnMsg( this, &TaskManager::_RemoveFromManager );
 		
@@ -52,34 +51,15 @@ namespace Base
 
 /*
 =================================================
-	_OnRegistered
+	_Delete
 =================================================
 */
-	void TaskManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool TaskManager::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
 		_SendForEachAttachments( msg );
 
-		Module::_Delete_Impl( msg );
-	}
-
-/*
-=================================================
-	_OnRegistered
-=================================================
-*/
-	void TaskManager::_OnRegistered (const Message< ModuleMsg::OnRegistered > &msg)
-	{
-		CHECK( msg->factory->Register( TaskModule::GetStaticID(), null, &_CreateTaskModule ) );
-	}
-	
-/*
-=================================================
-	_OnUnregistered
-=================================================
-*/
-	void TaskManager::_OnUnregistered (const Message< ModuleMsg::OnUnregistered > &msg)
-	{
-		CHECK( msg->factory->Unregister( TaskModule::GetStaticID() ) );
+		CHECK_ERR( Module::_Delete_Impl( msg ) );
+		return true;
 	}
 	
 /*
@@ -87,15 +67,16 @@ namespace Base
 	_AddToManager
 =================================================
 */
-	void TaskManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool TaskManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
 	{
 		SCOPELOCK( _lock );
 
-		CHECK_ERR( msg->module, void() );
+		CHECK_ERR( msg->module );
 		ASSERT( not _threads.IsExist( msg->module->GetThreadID() ) );
-		CHECK_ERR( msg->module->GetModuleID() == TaskModule::GetStaticID(), void() );
+		CHECK_ERR( msg->module->GetModuleID() == TaskModule::GetStaticID() );
 
 		_threads.Add( msg->module->GetThreadID(), msg->module );
+		return true;
 	}
 	
 /*
@@ -103,15 +84,16 @@ namespace Base
 	_RemoveFromManager
 =================================================
 */
-	void TaskManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool TaskManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		SCOPELOCK( _lock );
 
-		CHECK_ERR( msg->module, void() );
+		CHECK_ERR( msg->module );
 		ASSERT( _threads.IsExist( msg->module->GetThreadID() ) );
-		CHECK_ERR( msg->module->GetModuleID() == TaskModule::GetStaticID(), void() );
+		CHECK_ERR( msg->module->GetModuleID() == TaskModule::GetStaticID() );
 
 		_threads.Erase( msg->module->GetThreadID() );
+		return true;
 	}
 
 /*
@@ -155,12 +137,48 @@ namespace Base
 	
 /*
 =================================================
+	Register
+=================================================
+*/
+	void TaskManager::Register (const GlobalSystemsRef gs)
+	{
+		auto	mf = gs->Get< ModulesFactory >();
+
+		CHECK( mf->Register( TaskModule::GetStaticID(), &_CreateTaskModule ) );
+		CHECK( mf->Register( TaskManager::GetStaticID(), &_CreateTaskManager ) );
+	}
+	
+/*
+=================================================
+	Unregister
+=================================================
+*/
+	void TaskManager::Unregister (const GlobalSystemsRef gs)
+	{
+		auto	mf = gs->Get< ModulesFactory >();
+
+		mf->UnregisterAll< TaskModule >();
+		mf->UnregisterAll< TaskManager >();
+	}
+
+/*
+=================================================
 	_CreateTaskModule
 =================================================
 */
-	ModulePtr TaskManager::_CreateTaskModule (const SubSystemsRef gs, const CreateInfo::TaskModule &info)
+	ModulePtr TaskManager::_CreateTaskModule (const GlobalSystemsRef gs, const CreateInfo::TaskModule &ci)
 	{
-		return GXTypes::New<TaskModule>( gs, info );
+		return GXTypes::New< TaskModule >( gs, ci );
+	}
+	
+/*
+=================================================
+	_CreateTaskManager
+=================================================
+*/
+	ModulePtr TaskManager::_CreateTaskManager (const GlobalSystemsRef gs, const CreateInfo::TaskManager &ci)
+	{
+		return GXTypes::New< TaskManager >( gs, ci );
 	}
 
 

@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -19,11 +19,11 @@ namespace Base
 
 	// types
 	private:
-		class AddToManagerTask;
-		class RemoveFromManagerTask;
-
 		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
 											ModuleMsg::Update
+										> >
+										::Append< MessageListFrom<
+											ModuleMsg::OnManagerChanged
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 		
@@ -43,7 +43,7 @@ namespace Base
 
 	// methods
 	public:
-		ParallelThread (const SubSystemsRef gs, const CreateInfo::Thread &);
+		ParallelThread (const GlobalSystemsRef gs, const CreateInfo::Thread &);
 		~ParallelThread ();
 
 		static TModID::type		GetStaticID ()			{ return "thread"_TModID; }
@@ -51,9 +51,9 @@ namespace Base
 
 	// message handlers
 	private:
-		void _Link (const Message< ModuleMsg::Link > &);
-		void _Compose (const Message< ModuleMsg::Compose > &);
-		void _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Link (const Message< ModuleMsg::Link > &);
+		bool _Compose (const Message< ModuleMsg::Compose > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
 
 	private:
 		void _OnEnter ();

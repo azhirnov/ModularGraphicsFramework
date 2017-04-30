@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Tasks/TaskModule.h"
 #include "Engine/Base/Tasks/TaskManager.h"
@@ -18,18 +18,20 @@ namespace Base
 	constructor
 =================================================
 */
-	TaskModule::TaskModule (const SubSystemsRef gs, const CreateInfo::TaskModule &info) :
+	TaskModule::TaskModule (const GlobalSystemsRef gs, const CreateInfo::TaskModule &info) :
 		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( GlobalSystems()->Get< ParallelThread >()->GetDebugName() + "_Tasks"_str );
 
 		GlobalSystems()->GetSetter< TaskModule >().Set( this );
 
-		_SubscribeOnMsg( this, &TaskModule::_OnModuleAttached );
-		_SubscribeOnMsg( this, &TaskModule::_OnModuleDetached );
+		_SubscribeOnMsg( this, &TaskModule::_OnModuleAttached_Impl );
+		_SubscribeOnMsg( this, &TaskModule::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &TaskModule::_AttachModule_Empty );
 		_SubscribeOnMsg( this, &TaskModule::_DetachModule_Empty );
+		_SubscribeOnMsg( this, &TaskModule::_OnManagerChanged_Empty );
 		_SubscribeOnMsg( this, &TaskModule::_FindModule_Empty );
+		_SubscribeOnMsg( this, &TaskModule::_ModulesDeepSearch_Empty );
 		_SubscribeOnMsg( this, &TaskModule::_Update );
 		_SubscribeOnMsg( this, &TaskModule::_Delete );
 		_SubscribeOnMsg( this, &TaskModule::_PushAsyncMessage );
@@ -39,12 +41,9 @@ namespace Base
 		_msgQueue.ReserveCurrent( 256 );
 		_msgQueue.ReservePending( 128 );
 
-		if ( not info.manager )
-			GXTypes::New< AttachModuleToManagerAsyncTask >( this, TaskManager::GetStaticID() )->Execute()->Wait();
-		else
-			_SetManager( info.manager );
+		_AttachSelfToManager( info.manager, TaskManager::GetStaticID(), true );
 
-		_SetState( EState::ComposedImmutable );
+		CHECK( _SetState( EState::ComposedImmutable ) );
 	}
 	
 /*
@@ -67,14 +66,15 @@ namespace Base
 	_Update
 =================================================
 */
-	void TaskModule::_Update (const Message< ModuleMsg::Update > &msg)
+	bool TaskModule::_Update (const Message< ModuleMsg::Update > &msg)
 	{
 		//CHECK_ERR( _IsComposedState( GetState() ), void() );
 
-		CHECK_ERR( msg.Sender() and msg.Sender() == _GetParent(), void() );
+		CHECK_ERR( msg.Sender() and msg.Sender() == _GetParent() );
 
 		_Flush();
 		_ProcessMessages();
+		return true;
 	}
 	
 /*
@@ -82,13 +82,12 @@ namespace Base
 	_Delete
 =================================================
 */
-	void TaskModule::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool TaskModule::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
-		CHECK_ERR( msg.Sender() and msg.Sender() == _GetParent(), void() );
+		CHECK_ERR( msg.Sender() and msg.Sender() == _GetParent() );
 
-		Module::_Delete_Impl( msg );
-		
-		GXTypes::New< DetachModuleFromManagerAsyncTask >( this, TaskManager::GetStaticID() )->Execute();
+		CHECK_ERR( Module::_Delete_Impl( msg ) );
+		return true;
 	}
 
 /*
@@ -96,11 +95,12 @@ namespace Base
 	_PushAsyncMessage
 =================================================
 */
-	void TaskModule::_PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg)
+	bool TaskModule::_PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg)
 	{
-		CHECK_ERR( _GetManager(), void() );
+		CHECK_ERR( _GetManager() );
 
 		CHECK( _GetManager().ToPtr< TaskManager >()->PushAsyncMessage( msg ) );
+		return true;
 	}
 
 /*

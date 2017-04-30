@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	StaticRefCountedObject class may be created as static or
 	dynamic object and cast to shared pointer always available and

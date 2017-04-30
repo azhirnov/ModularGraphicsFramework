@@ -1,6 +1,7 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Windows/WinMouseInput.h"
+#include "Engine/Platforms/Input/InputThread.h"
 
 #if defined( PLATFORM_WINDOWS )
 
@@ -19,19 +20,20 @@ namespace Platforms
 	constructor
 =================================================
 */
-	WinMouseInput::WinMouseInput (const SubSystemsRef gs, const CreateInfo::RawInputHandler &ci) :
+	WinMouseInput::WinMouseInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci) :
 		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "WinMouseInput" );
 		
-		_SubscribeOnMsg( this, &WinMouseInput::_OnModuleAttached );
-		_SubscribeOnMsg( this, &WinMouseInput::_OnModuleDetached );
+		_SubscribeOnMsg( this, &WinMouseInput::_OnModuleAttached_Impl );
+		_SubscribeOnMsg( this, &WinMouseInput::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &WinMouseInput::_AttachModule_Impl );
 		_SubscribeOnMsg( this, &WinMouseInput::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &WinMouseInput::_OnManagerChanged_Empty );
 		_SubscribeOnMsg( this, &WinMouseInput::_FindModule_Impl );
+		_SubscribeOnMsg( this, &WinMouseInput::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &WinMouseInput::_Update );
 		_SubscribeOnMsg( this, &WinMouseInput::_Link );
-		_SubscribeOnMsg( this, &WinMouseInput::_Compose_Empty );
 		_SubscribeOnMsg( this, &WinMouseInput::_Delete_Impl );
 		_SubscribeOnMsg( this, &WinMouseInput::_WindowDescriptorChanged );
 		_SubscribeOnMsg( this, &WinMouseInput::_WindowCreated );
@@ -48,6 +50,7 @@ namespace Platforms
 */
 	WinMouseInput::~WinMouseInput ()
 	{
+		LOG( "WinMouseInput finalized", ELog::Debug );
 	}
 
 /*
@@ -55,9 +58,10 @@ namespace Platforms
 	_WindowDescriptorChanged
 =================================================
 */
-	void WinMouseInput::_WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &msg)
+	bool WinMouseInput::_WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &msg)
 	{
 		_surfaceSize = msg->desc.surfaceSize;
+		return true;
 	}
 	
 /*
@@ -65,9 +69,9 @@ namespace Platforms
 	_WindowCreated
 =================================================
 */
-	void WinMouseInput::_WindowCreated (const Message< ModuleMsg::WindowCreated > &msg)
+	bool WinMouseInput::_WindowCreated (const Message< ModuleMsg::WindowCreated > &msg)
 	{
-		CHECK_ERR( msg->hwnd.IsNotNull<HWND>(), void() );
+		CHECK_ERR( msg->hwnd.IsNotNull<HWND>() );
 
 		RAWINPUTDEVICE	Rid[1] = {};
 		
@@ -79,7 +83,8 @@ namespace Platforms
 
 		CHECK( RegisterRawInputDevices( &Rid[0], CountOf(Rid), sizeof(Rid[0]) ) == TRUE );
 
-		CHECK( _SetState( EState::ComposedImmutable ) );
+		CHECK( _Compose( true ) );
+		return true;
 	}
 	
 /*
@@ -87,9 +92,10 @@ namespace Platforms
 	_WindowBeforeDestroy
 =================================================
 */
-	void WinMouseInput::_WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &msg)
+	bool WinMouseInput::_WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &msg)
 	{
-		Send( Message< ModuleMsg::Delete >( this ) );
+		_SendMsg( Message< ModuleMsg::Delete >( this ) );
+		return true;
 	}
 	
 /*
@@ -97,7 +103,7 @@ namespace Platforms
 	_WindowRawMessage
 =================================================
 */
-	void WinMouseInput::_WindowRawMessage (const Message< ModuleMsg::WindowRawMessage > &msg)
+	bool WinMouseInput::_WindowRawMessage (const Message< ModuleMsg::WindowRawMessage > &msg)
 	{
 		// WM_INPUT //
 		if ( msg->uMsg == WM_INPUT )
@@ -128,6 +134,7 @@ namespace Platforms
 		{
 			_mousePos = float2(int2( LOWORD( msg->lParam ), _surfaceSize.y - HIWORD( msg->lParam ) ));
 		}
+		return true;
 	}
 	
 /*
@@ -135,30 +142,42 @@ namespace Platforms
 	_Link
 =================================================
 */
-	void WinMouseInput::_Link (const Message< ModuleMsg::Link > &msg)
+	bool WinMouseInput::_Link (const Message< ModuleMsg::Link > &msg)
 	{
-		Module::_Link_Impl( msg );
-
-		ModulePtr	wnd = _GetParent()->GetModule( WinWindow::GetStaticID() );
-		CHECK_ERR( wnd, void() );
-
-		if ( _IsComposedState( wnd->GetState() ) )
+		CHECK_ERR( Module::_Link_Impl( msg ) );
+		
+		// attach to manager
 		{
-			Message< ModuleMsg::WindowGetHandle >	request_hwnd;
-
-			wnd->Send( request_hwnd );
-
-			if ( request_hwnd->hwnd.Get().IsDefined() and
-				 request_hwnd->hwnd.Get().Get().IsNotNull<HWND>() )
-			{
-				Send( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get().Get() } );
-			}
+			ModulePtr	input = GlobalSystems()->Get< ParallelThread >()->GetModule( InputThread::GetStaticID() );
+			CHECK_ERR( input );
+			
+			_AttachSelfToManager( input, UntypedID_t(), true );
 		}
 
-		wnd->Subscribe( this, &WinMouseInput::_WindowDescriptorChanged );
-		wnd->Subscribe( this, &WinMouseInput::_WindowCreated );
-		wnd->Subscribe( this, &WinMouseInput::_WindowBeforeDestroy );
-		wnd->Subscribe( this, &WinMouseInput::_WindowRawMessage );
+		// subscribe on window events
+		{
+			ModulePtr	wnd = GlobalSystems()->Get< ParallelThread >()->GetModule( WinWindow::GetStaticID() );
+			CHECK_ERR( wnd );
+
+			if ( _IsComposedState( wnd->GetState() ) )
+			{
+				Message< ModuleMsg::WindowGetHandle >	request_hwnd;
+
+				wnd->Send( request_hwnd );
+
+				if ( request_hwnd->hwnd.Get().IsDefined() and
+					 request_hwnd->hwnd.Get().Get().IsNotNull<HWND>() )
+				{
+					_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get().Get() } );
+				}
+			}
+
+			wnd->Subscribe( this, &WinMouseInput::_WindowDescriptorChanged );
+			wnd->Subscribe( this, &WinMouseInput::_WindowCreated );
+			wnd->Subscribe( this, &WinMouseInput::_WindowBeforeDestroy );
+			wnd->Subscribe( this, &WinMouseInput::_WindowRawMessage );
+		}
+		return true;
 	}
 	
 /*
@@ -166,7 +185,7 @@ namespace Platforms
 	_Update
 =================================================
 */
-	void WinMouseInput::_Update (const Message< ModuleMsg::Update > &msg)
+	bool WinMouseInput::_Update (const Message< ModuleMsg::Update > &msg)
 	{
 		// send events to InputThread
 
@@ -182,6 +201,7 @@ namespace Platforms
 		}
 		
 		_mouseDifference.Undefine();
+		return true;
 	}
 	
 

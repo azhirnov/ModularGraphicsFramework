@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Common/Common.h"
 
@@ -17,10 +17,14 @@
 
 #ifdef GRAPHICS_API_OPENGL
 
+#	include "Engine/Platforms/OpenGL/OpenGLContext.h"
+
 #endif	// GRAPHICS_API_OPENGL
 
 
 #ifdef GRAPHICS_API_VULKAN
+
+#	include "Engine/Platforms/Vulkan/VulkanContext.h"
 
 #endif	// GRAPHICS_API_VULKAN
 
@@ -47,22 +51,47 @@ namespace Platforms
 	{
 		auto	ms	= GetMainSystemInstace();
 
-		OSPlatform::_RegisterAll( ms->GlobalSystems() );
-		InputManager::_RegisterAll( ms->GlobalSystems() );
+		OSPlatform::Register( ms->GlobalSystems() );
+		InputManager::Register( ms->GlobalSystems() );
 		
 		#ifdef GRAPHICS_API_OPENGL
-			OpenGLContext::_RegisterAll( ms->GlobalSystems() );
+			OpenGLContext::Register( ms->GlobalSystems() );
 		#endif
 
 		#ifdef GRAPHICS_API_VULKAN
-			VulkanContext::_RegisterAll( ms->GlobalSystems() );
+			VulkanContext::Register( ms->GlobalSystems() );
 		#endif
 
 		#ifdef COMPUTE_API_OPENCL
-			OpenCLContext::_RegisterAll( ms->GlobalSystems() );
+			OpenCLContext::Register( ms->GlobalSystems() );
+		#endif
+	}
+	
+/*
+=================================================
+	UnregisterPlatforms
+=================================================
+*/
+	void UnregisterPlatforms ()
+	{
+		auto	ms	= GetMainSystemInstace();
+
+		OSPlatform::Unregister( ms->GlobalSystems() );
+		InputManager::Unregister( ms->GlobalSystems() );
+		
+		#ifdef GRAPHICS_API_OPENGL
+			OpenGLContext::Unregister( ms->GlobalSystems() );
 		#endif
 
+		#ifdef GRAPHICS_API_VULKAN
+			VulkanContext::Unregister( ms->GlobalSystems() );
+		#endif
+
+		#ifdef COMPUTE_API_OPENCL
+			OpenCLContext::Unregister( ms->GlobalSystems() );
+		#endif
 	}
+
 
 }	// Platforms
 }	// Engine

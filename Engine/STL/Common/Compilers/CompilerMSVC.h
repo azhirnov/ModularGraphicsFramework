@@ -1,4 +1,4 @@
-﻿// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 //
 // see http://en.cppreference.com/w/cpp/compiler_support
 //

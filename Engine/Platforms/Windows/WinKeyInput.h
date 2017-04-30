@@ -1,8 +1,8 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
-#include "Engine/Platforms/Shared/Input.h"
+#include "Engine/Platforms/Shared/OS/Input.h"
 #include "Engine/Platforms/Windows/WinWindow.h"
 
 #if defined( PLATFORM_WINDOWS )
@@ -20,7 +20,11 @@ namespace Platforms
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
+											ModuleMsg::Compose
+										> >
+										::Append< MessageListFrom<
+											ModuleMsg::OnManagerChanged,
 											ModuleMsg::WindowDescriptorChanged,
 											ModuleMsg::WindowCreated,
 											ModuleMsg::WindowBeforeDestroy,
@@ -46,7 +50,7 @@ namespace Platforms
 
 	// methods
 	public:
-		WinKeyInput (const SubSystemsRef gs, const CreateInfo::RawInputHandler &ci);
+		WinKeyInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
 		~WinKeyInput ();
 		
 		static OModID::type		GetStaticID ()			{ return "win.keys"_OModID; }
@@ -54,12 +58,12 @@ namespace Platforms
 
 	// message handlers
 	private:
-		void _WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &);
-		void _WindowCreated (const Message< ModuleMsg::WindowCreated > &);
-		void _WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &);
-		void _WindowRawMessage (const Message< ModuleMsg::WindowRawMessage > &);
-		void _Link (const Message< ModuleMsg::Link > &);
-		void _Update (const Message< ModuleMsg::Update > &);
+		bool _WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &);
+		bool _WindowCreated (const Message< ModuleMsg::WindowCreated > &);
+		bool _WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &);
+		bool _WindowRawMessage (const Message< ModuleMsg::WindowRawMessage > &);
+		bool _Link (const Message< ModuleMsg::Link > &);
+		bool _Update (const Message< ModuleMsg::Update > &);
 	};
 
 

@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -195,11 +195,11 @@ namespace _types_hidden_
 	template <typename C, typename K, template <typename T> class S, bool U>
 	inline void MapUtils<C,K,S,U>::FindLastIndex (usize first, OUT usize &idx) const
 	{
-		key_t const &	key = _memory[first];
+		key_t const &	key = _memory[first].first;
 
 		idx = first;
 
-		for (usize i = first+1; i < this->LastIndex() and key == _memory[i]; ++i) {
+		for (usize i = first+1; i < this->LastIndex() and key == _memory[i].first; ++i) {
 			idx = i;
 		}
 	}

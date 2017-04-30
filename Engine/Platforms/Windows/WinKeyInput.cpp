@@ -1,6 +1,7 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Windows/WinKeyInput.h"
+#include "Engine/Platforms/Input/InputThread.h"
 
 #if defined( PLATFORM_WINDOWS )
 
@@ -21,19 +22,20 @@ namespace Platforms
 	constructor
 =================================================
 */
-	WinKeyInput::WinKeyInput (const SubSystemsRef gs, const CreateInfo::RawInputHandler &ci) :
+	WinKeyInput::WinKeyInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci) :
 		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "WinKeyInput" );
 
-		_SubscribeOnMsg( this, &WinKeyInput::_OnModuleAttached );
-		_SubscribeOnMsg( this, &WinKeyInput::_OnModuleDetached );
+		_SubscribeOnMsg( this, &WinKeyInput::_OnModuleAttached_Impl );
+		_SubscribeOnMsg( this, &WinKeyInput::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &WinKeyInput::_AttachModule_Impl );
 		_SubscribeOnMsg( this, &WinKeyInput::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &WinKeyInput::_OnManagerChanged_Empty );
 		_SubscribeOnMsg( this, &WinKeyInput::_FindModule_Impl );
+		_SubscribeOnMsg( this, &WinKeyInput::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &WinKeyInput::_Update );
 		_SubscribeOnMsg( this, &WinKeyInput::_Link );
-		_SubscribeOnMsg( this, &WinKeyInput::_Compose_Empty );
 		_SubscribeOnMsg( this, &WinKeyInput::_Delete_Impl );
 		_SubscribeOnMsg( this, &WinKeyInput::_WindowDescriptorChanged );
 		_SubscribeOnMsg( this, &WinKeyInput::_WindowCreated );
@@ -50,6 +52,7 @@ namespace Platforms
 */
 	WinKeyInput::~WinKeyInput ()
 	{
+		LOG( "WinKeyInput finalized", ELog::Debug );
 	}
 	
 /*
@@ -57,8 +60,9 @@ namespace Platforms
 	_WindowDescriptorChanged
 =================================================
 */
-	void WinKeyInput::_WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &msg)
+	bool WinKeyInput::_WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &msg)
 	{
+		return true;
 	}
 	
 /*
@@ -66,9 +70,9 @@ namespace Platforms
 	_WindowCreated
 =================================================
 */
-	void WinKeyInput::_WindowCreated (const Message< ModuleMsg::WindowCreated > &msg)
+	bool WinKeyInput::_WindowCreated (const Message< ModuleMsg::WindowCreated > &msg)
 	{
-		CHECK_ERR( msg->hwnd.IsNotNull<HWND>(), void() );
+		CHECK_ERR( msg->hwnd.IsNotNull<HWND>() );
 
 		RAWINPUTDEVICE	Rid[1] = {};
 		
@@ -80,7 +84,8 @@ namespace Platforms
 
 		CHECK( RegisterRawInputDevices( &Rid[0], CountOf(Rid), sizeof(Rid[0]) ) == TRUE );
 
-		CHECK( _SetState( EState::ComposedImmutable ) );
+		CHECK( _Compose( true ) );
+		return true;
 	}
 	
 /*
@@ -88,9 +93,10 @@ namespace Platforms
 	_WindowBeforeDestroy
 =================================================
 */
-	void WinKeyInput::_WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &msg)
+	bool WinKeyInput::_WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &msg)
 	{
-		Send( Message< ModuleMsg::Delete >( this ) );
+		_SendMsg( Message< ModuleMsg::Delete >( this ) );
+		return true;
 	}
 	
 /*
@@ -98,7 +104,7 @@ namespace Platforms
 	_WindowRawMessage
 =================================================
 */
-	void WinKeyInput::_WindowRawMessage (const Message< ModuleMsg::WindowRawMessage > &msg)
+	bool WinKeyInput::_WindowRawMessage (const Message< ModuleMsg::WindowRawMessage > &msg)
 	{
 		// WM_INPUT //
 		if ( msg->uMsg == WM_INPUT )
@@ -116,7 +122,8 @@ namespace Platforms
 					const KeyID::type	key		= _MapKey( p_data->data.keyboard );
 					const bool			down	= (p_data->data.keyboard.Flags & RI_KEY_BREAK) == 0;
 
-					_pendingKeys.PushBack( ModuleMsg::InputKey( key, down ? 1.0f : -1.0f ) );
+					if ( not (key == KeyID::Unknown and p_data->data.keyboard.VKey == 0xFF) )
+						_pendingKeys.PushBack( ModuleMsg::InputKey( key, down ? 1.0f : -1.0f ) );
 				}
 				else
 
@@ -126,7 +133,7 @@ namespace Platforms
 					const int			wheel_delta = short( p_data->data.mouse.usButtonData ) / WHEEL_DELTA;
 					const KeyID::type	key			= (wheel_delta > 0 ? "mouse wheel+"_KeyID : "mouse wheel-"_KeyID);
 
-					for (int i = Min( 3, Abs(wheel_delta) ); i >= 0; --i)
+					for (int i = Min( 3, Abs(wheel_delta) ); i > 0; --i)
 					{
 						_pendingKeys.PushBack( ModuleMsg::InputKey( key, 1.0f ) );
 						_pendingKeys.PushBack( ModuleMsg::InputKey( key, -1.0f ) );
@@ -154,12 +161,18 @@ namespace Platforms
 			else
 			if ( msg->uMsg == WM_XBUTTONDOWN or msg->uMsg == WM_XBUTTONUP )
 			{
-				usize	keys	= GET_KEYSTATE_WPARAM( msg->wParam );
-				usize	btn		= GET_XBUTTON_WPARAM( msg->wParam );
+				const uint	btn = GET_XBUTTON_WPARAM( msg->wParam );
 
-				_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 3"_KeyID, msg->uMsg == WM_XBUTTONDOWN ? 1.0f : -1.0f ) );
+				if ( btn & XBUTTON1 )
+					_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 3"_KeyID, msg->uMsg == WM_XBUTTONDOWN ? 1.0f : -1.0f ) );
+				else
+				if ( btn & XBUTTON2 )
+					_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 4"_KeyID, msg->uMsg == WM_XBUTTONDOWN ? 1.0f : -1.0f ) );
+				else
+					WARNING( "unknown mouse button" );
 			}
 		}
+		return true;
 	}
 	
 /*
@@ -167,30 +180,42 @@ namespace Platforms
 	_Link
 =================================================
 */
-	void WinKeyInput::_Link (const Message< ModuleMsg::Link > &msg)
+	bool WinKeyInput::_Link (const Message< ModuleMsg::Link > &msg)
 	{
-		Module::_Link_Impl( msg );
+		CHECK_ERR( Module::_Link_Impl( msg ) );
 
-		ModulePtr	wnd = _GetParent()->GetModule( WinWindow::GetStaticID() );
-		CHECK_ERR( wnd, void() );
-
-		if ( _IsComposedState( wnd->GetState() ) )
+		// attach to manager
 		{
-			Message< ModuleMsg::WindowGetHandle >	request_hwnd;
+			ModulePtr	input = GlobalSystems()->Get< ParallelThread >()->GetModule( InputThread::GetStaticID() );
+			CHECK_ERR( input );
 
-			wnd->Send( request_hwnd );
-
-			if ( request_hwnd->hwnd.Get().IsDefined() and
-				 request_hwnd->hwnd.Get().Get().IsNotNull<HWND>() )
-			{
-				Send( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get().Get() } );
-			}
+			_AttachSelfToManager( input, UntypedID_t(), true );
 		}
 
-		wnd->Subscribe( this, &WinKeyInput::_WindowDescriptorChanged );
-		wnd->Subscribe( this, &WinKeyInput::_WindowCreated );
-		wnd->Subscribe( this, &WinKeyInput::_WindowBeforeDestroy );
-		wnd->Subscribe( this, &WinKeyInput::_WindowRawMessage );
+		// subscribe on window events
+		{
+			ModulePtr	wnd = GlobalSystems()->Get< ParallelThread >()->GetModule( WinWindow::GetStaticID() );
+			CHECK_ERR( wnd );
+
+			if ( _IsComposedState( wnd->GetState() ) )
+			{
+				Message< ModuleMsg::WindowGetHandle >	request_hwnd;
+
+				wnd->Send( request_hwnd );
+
+				if ( request_hwnd->hwnd.Get().IsDefined() and
+					 request_hwnd->hwnd.Get().Get().IsNotNull<HWND>() )
+				{
+					_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get().Get() } );
+				}
+			}
+
+			wnd->Subscribe( this, &WinKeyInput::_WindowDescriptorChanged );
+			wnd->Subscribe( this, &WinKeyInput::_WindowCreated );
+			wnd->Subscribe( this, &WinKeyInput::_WindowBeforeDestroy );
+			wnd->Subscribe( this, &WinKeyInput::_WindowRawMessage );
+		}
+		return true;
 	}
 	
 /*
@@ -198,7 +223,7 @@ namespace Platforms
 	_Update
 =================================================
 */
-	void WinKeyInput::_Update (const Message< ModuleMsg::Update > &msg)
+	bool WinKeyInput::_Update (const Message< ModuleMsg::Update > &msg)
 	{
 		// send events to InputThread
 
@@ -206,6 +231,9 @@ namespace Platforms
 		{
 			_SendEvent( Message< ModuleMsg::InputKey >( this, _pendingKeys[i].key, _pendingKeys[i].pressure ) );
 		}
+
+		_pendingKeys.Clear();
+		return true;
 	}
 	
 /*
@@ -216,6 +244,8 @@ namespace Platforms
 	static KeyID::type  _MapKey (const RAWKEYBOARD &kb)
 	{
 		ASSERT( kb.VKey < 256 );
+
+		// TODO: change 8 and 16 to constant
 
 		const uint	code = kb.VKey << (kb.Flags & RI_KEY_E0 ? 8 : (kb.Flags & RI_KEY_E1 ? 16 : 0));
 
@@ -231,30 +261,32 @@ namespace Platforms
 			case VK_BACK				: return "backspace"_KeyID;
 			case VK_TAB					: return "tab"_KeyID;
 			case VK_CLEAR				: return "clear"_KeyID;
-			case VK_RETURN				: return "return"_KeyID;
-			case VK_SHIFT				: return "shift"_KeyID;
-			case VK_CONTROL				: return "ctrl"_KeyID;
-			case VK_MENU				: return "menu"_KeyID;
+			case VK_RETURN				: return "enter"_KeyID;
+			case VK_SHIFT				: return "shift"_KeyID;		// left and right shift		// TODO: fix it
+			case VK_CONTROL				: return "l-ctrl"_KeyID;
+			case (VK_CONTROL << 8)		: return "r-ctrl"_KeyID;
+			case VK_MENU				: return "l-alt"_KeyID;
+			case (VK_MENU << 8)			: return "r-alt"_KeyID;
 			case VK_PAUSE				: return "pause"_KeyID;
 			case VK_CAPITAL				: return "caps lock"_KeyID;
 			//case VK_KANA				: return "kana"_KeyID;
 			//case VK_HANGUL			: return "hangul"_KeyID;
 			case VK_ESCAPE				: return "escape"_KeyID;
 			case VK_SPACE				: return "space"_KeyID;
-			case VK_PRIOR				: return "page up"_KeyID;
-			case VK_NEXT				: return "page down"_KeyID;
-			case VK_END					: return "end"_KeyID;
-			case VK_HOME				: return "home"_KeyID;
-			case VK_LEFT				: return "arrow left"_KeyID;
-			case VK_UP					: return "arrow up"_KeyID;
-			case VK_RIGHT				: return "arrow right"_KeyID;
-			case VK_DOWN				: return "arrow down"_KeyID;
+			case (VK_PRIOR << 8)		: return "page up"_KeyID;
+			case (VK_NEXT << 8)			: return "page down"_KeyID;
+			case (VK_END << 8)			: return "end"_KeyID;
+			case (VK_HOME << 8)			: return "home"_KeyID;
+			case (VK_LEFT << 8)			: return "arrow left"_KeyID;
+			case (VK_UP << 8)			: return "arrow up"_KeyID;
+			case (VK_RIGHT << 8)		: return "arrow right"_KeyID;
+			case (VK_DOWN << 8)			: return "arrow down"_KeyID;
 			case VK_SELECT				: return "select"_KeyID;
 			case VK_PRINT				: return "print"_KeyID;
 			case VK_EXECUTE				: return "execute"_KeyID;
 			case VK_SNAPSHOT			: return "print screen"_KeyID;
-			case VK_INSERT				: return "insert"_KeyID;
-			case VK_DELETE				: return "delete"_KeyID;
+			case (VK_INSERT << 8)		: return "insert"_KeyID;
+			case (VK_DELETE << 8)		: return "delete"_KeyID;
 			case VK_HELP				: return "help"_KeyID;
 			case 0x30					: return "0"_KeyID;
 			case 0x31					: return "1"_KeyID;
@@ -293,9 +325,12 @@ namespace Platforms
 			case 0x59					: return "Y"_KeyID;
 			case 0x5A					: return "Z"_KeyID;
 			case VK_LWIN				: return "l-win"_KeyID;
-			case VK_RWIN				: return "r-win"_KeyID;
-			case VK_APPS				: return "apps"_KeyID;
+			case (VK_RWIN << 8)			: return "r-win"_KeyID;
+			case VK_APPS				: return "l-apps"_KeyID;
+			case (VK_APPS << 8)			: return "r-apps"_KeyID;
 			case VK_SLEEP				: return "sleep"_KeyID;
+				
+			case (VK_RETURN << 8)		: return "numpad enter"_KeyID;
 			case VK_NUMPAD0				: return "numpad 0"_KeyID;
 			case VK_NUMPAD1				: return "numpad 1"_KeyID;
 			case VK_NUMPAD2				: return "numpad 2"_KeyID;
@@ -308,10 +343,22 @@ namespace Platforms
 			case VK_NUMPAD9				: return "numpad 9"_KeyID;
 			case VK_MULTIPLY			: return "numpad *"_KeyID;
 			case VK_ADD					: return "numpad +"_KeyID;
-			case VK_SEPARATOR			: return "numpad seperator"_KeyID;
+			case VK_SEPARATOR			: return "numpad sep"_KeyID;
 			case VK_SUBTRACT			: return "numpad -"_KeyID;
 			case VK_DECIMAL				: return "numpad ."_KeyID;
+			case (VK_DIVIDE << 8)		:
 			case VK_DIVIDE				: return "numpad /"_KeyID;
+			case VK_END					: return "numpad end"_KeyID;
+			case VK_LEFT				: return "numpad left"_KeyID;
+			case VK_UP					: return "numpad up"_KeyID;
+			case VK_RIGHT				: return "numpad right"_KeyID;
+			case VK_DOWN				: return "numpad down"_KeyID;
+			case VK_HOME				: return "numpad home"_KeyID;
+			case VK_PRIOR				: return "numpad pg.up"_KeyID;
+			case VK_NEXT				: return "numpad pg.dn"_KeyID;
+			case VK_INSERT				: return "numpad ins"_KeyID;
+			case VK_DELETE				: return "numpad del"_KeyID;
+
 			case VK_F1					: return "F1"_KeyID;
 			case VK_F2					: return "F2"_KeyID;
 			case VK_F3					: return "F3"_KeyID;
@@ -340,8 +387,8 @@ namespace Platforms
 			case VK_SCROLL				: return "scroll lock"_KeyID;
 			case VK_LSHIFT				: return "l-shift"_KeyID;
 			case VK_RSHIFT				: return "r-shift"_KeyID;
-			case VK_LCONTROL			: return "l-ctrl"_KeyID;
-			case VK_RCONTROL			: return "r-cntrl"_KeyID;
+			//case VK_LCONTROL			: return "l-ctrl"_KeyID;
+			//case VK_RCONTROL			: return "r-ctrl"_KeyID;
 			case VK_LMENU				: return "l-menu"_KeyID;
 			case VK_RMENU				: return "r-menu"_KeyID;
 

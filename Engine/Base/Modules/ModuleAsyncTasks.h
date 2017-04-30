@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -17,7 +17,7 @@ namespace Base
 	{
 	// variables
 	private:
-		const UntypedID_t		_mngrID;
+		const UntypedID_t	_mngrID;
 
 
 	// methods
@@ -27,6 +27,11 @@ namespace Base
 			_mngrID( managerID )
 		{}
 
+		AttachModuleToManagerAsyncTask (const ModulePtr &self, const ModulePtr &manager) :
+			AsyncTask( self, manager ),
+			_mngrID( manager->GetModuleID() )
+		{}
+
 		void PostExecute (const ModulePtr &self, ModulePtr &&result) override
 		{
 			self->_SetManager( result );
@@ -34,7 +39,9 @@ namespace Base
 		
 		void ExecuteInBackground (const ModulePtr &mainSystem, OUT ModulePtr &result) override
 		{
-			result = mainSystem->GetModule( _mngrID );
+			result = (_mngrID == mainSystem->GetModuleID()) ? 
+						mainSystem :
+						mainSystem->GetModule( _mngrID );	// TODO: use deep search
 
 			if ( result )
 				result->Send( Message< ModuleMsg::AddToManager >{ this, CurrentThreadModule() } );
@@ -51,7 +58,7 @@ namespace Base
 	{
 	// variables
 	private:
-		const UntypedID_t		_mngrID;
+		const UntypedID_t	_mngrID;
 		
 
 	// methods
@@ -61,6 +68,11 @@ namespace Base
 			_mngrID( managerID )
 		{}
 
+		DetachModuleFromManagerAsyncTask (const ModulePtr &self, const ModulePtr &manager) :
+			AsyncTask( self, manager ),
+			_mngrID( manager->GetModuleID() )
+		{}
+
 		void PostExecute (const ModulePtr &self, UninitializedType &&) override
 		{
 			self->_SetManager( null );
@@ -68,7 +80,9 @@ namespace Base
 		
 		void ExecuteInBackground (const ModulePtr &mainSystem, OUT UninitializedType &) override
 		{
-			ModulePtr	result = mainSystem->GetModule( _mngrID );
+			ModulePtr	result = (_mngrID == mainSystem->GetModuleID()) ?
+									mainSystem :
+									mainSystem->GetModule( _mngrID );	// TODO: use deep search
 			
 			if ( result )
 				result->Send( Message< ModuleMsg::RemoveFromManager >{ this, CurrentThreadModule() } );

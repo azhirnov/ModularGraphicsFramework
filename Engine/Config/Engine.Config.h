@@ -1,11 +1,9 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
 
 // Emulators //
-
-//#define GX_ANDROID_EMULATOR	// not supported
 
 //-------------------------------------------------------------------
 
@@ -13,15 +11,13 @@
 
 // Options //
 
-#define GX_ENABLE_PROFILING
+//#define GX_ENABLE_PROFILING
 
-//#define GX_AUDIO_IN_SEPARATE_THREAD	// not supported
-
-#define GX_USE_LODEPNG
+//#define GX_USE_LODEPNG
 
 // Graphics
-//#define GRAPHICS_API_OPENGL		450		// 4.x
-//#define GRAPHICS_API_VULKAN		100		// 1.x
+#define GRAPHICS_API_OPENGL			450		// 4.x
+#define GRAPHICS_API_VULKAN			100		// 1.x
 //#define GRAPHICS_API_OPENGLES		200		// 2.x		// not supported
 //#define GRAPHICS_API_DIRECTX		110		// 11.x		// not supported
 //#define COMPUTE_API_OPENCL		120		// 1.x or 2.x

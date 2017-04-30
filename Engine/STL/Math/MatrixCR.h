@@ -1,4 +1,4 @@
-﻿// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 
 	//
@@ -88,11 +88,11 @@
 		template <usize Q>
 		Matrix<T,Q,R>	operator *  (const Matrix<T,Q,C> &right) const;
 
-		row_t			operator *  (const col_t &v) const;
+		col_t			operator *  (const row_t &v) const;
 
-		friend col_t	operator *  (const row_t &v, const Self &m)
+		friend row_t	operator *  (const col_t &v, const Self &m)
 		{
-			col_t	ret;
+			row_t	ret;
 		
 			for (usize c = 0; c < C; ++c)
 			for (usize r = 0; r < R; ++r)
@@ -359,9 +359,9 @@
 
 		
 	template <typename T>
-	inline typename Matrix<T,C,R>::row_t  Matrix<T,C,R>::operator *  (const col_t &v) const
+	inline typename Matrix<T,C,R>::col_t  Matrix<T,C,R>::operator *  (const row_t &v) const
 	{
-		row_t	ret;
+		col_t	ret;
 		
 		for (usize r = 0; r < R; ++r)
 		for (usize c = 0; c < C; ++c)

@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -87,7 +87,7 @@ namespace ModuleMsg
 
 
 	//
-	// Message Input with single read op
+	// Message Input with single read op (move-ctor available)
 	//
 	template <typename T>
 	struct SingleRead
@@ -101,14 +101,41 @@ namespace ModuleMsg
 	public:
 		SingleRead (T &&value) : _value(RVREF(value)), _isDefined(true) {}
 		SingleRead (SingleRead &&other) : _value(RVREF(other._value)), _isDefined(other._isDefined) { other._isDefined = false; }
-
-		//SingleRead (const T& value) : _value(value), _isDefined(true) {}
-		//SingleRead (const SingleRead &other) : _value(other._value), _isDefined(other._isDefined) {}
+		SingleRead (const SingleRead &other) : _value(RVREF(other._value)), _isDefined(other._isDefined) { other._isDefined = false; }
 
 		T& Get () const
 		{
 			ASSERT( _isDefined );
 			_isDefined = false;
+			return _value;
+		}
+	};
+
+
+	//
+	// Message Output with single write op
+	//
+	template <typename T>
+	struct SingleWrite
+	{
+	// variables
+	private:
+		mutable Optional<T>		_value;
+
+	// methods
+	public:
+		SingleWrite () : _value() {}
+
+		void Set (T &&value) const
+		{
+			ASSERT( not _value.IsDefined() );
+
+			if ( not _value.IsDefined() )
+				_value = RVREF( value );
+		}
+
+		Optional<T>& Get ()
+		{
 			return _value;
 		}
 	};

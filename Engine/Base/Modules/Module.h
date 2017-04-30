@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -13,7 +13,7 @@ namespace Base
 {
 
 	//
-	// Module interface
+	// Base Module
 	//
 
 	class Module : public BaseObject
@@ -58,6 +58,7 @@ namespace Base
 											ModuleMsg::OnModuleAttached,
 											ModuleMsg::OnModuleDetached,
 											ModuleMsg::FindModule,
+											ModuleMsg::ModulesDeepSearch,
 											ModuleMsg::Link,
 											ModuleMsg::Compose,
 											ModuleMsg::Update,
@@ -97,7 +98,7 @@ namespace Base
 
 		template <typename ...Types>
 		bool Subscribe (Types&& ...args);
-		
+
 		template <typename ...Types>
 		bool Unsubscribe (Types&& ...args);
 		
@@ -120,7 +121,7 @@ namespace Base
 		
 	// hidden methods
 	protected:
-		Module (const SubSystemsRef gs, UntypedID_t id,
+		Module (const GlobalSystemsRef gs, UntypedID_t id,
 				 const Runtime::VirtualTypeList *msgTypes,
 				 const Runtime::VirtualTypeList *eventTypes);
 
@@ -129,14 +130,20 @@ namespace Base
 		bool _Attach (const ModulePtr &unit);
 		bool _Detach (const ModulePtr &unit);
 		void _DetachAllAttachments ();
-		void _SelfDetach ();
-		void _DeferredDelete (const TaskModulePtr &);
+		void _DetachSelfFromParent ();
+		void _DetachSelfFromManager ();
+
+		//bool _AttachSelfToManager (const ModulePtr &mngr, bool sync);
+		//bool _AttachSelfToManager (UntypedID_t id, bool sync);
+		bool _AttachSelfToManager (const ModulePtr &mngr, UntypedID_t id = 0, bool wait = true);
 
 		void _SetManager (const ModulePtr &mngr);
 		bool _SetState (EState newState);
 
 		bool _ValidateMsgSubscriptions ();
 		bool _ValidateAllSubscriptions ();
+
+		bool _Compose (bool immutable);
 		
 		template <typename T>			bool _SendMsg (const Message<T> &msg);
 		template <typename T>			bool _SendEvent (const Message<T> &msg);
@@ -156,25 +163,28 @@ namespace Base
 
 	// message handlers with implementation
 	protected:
-		void _OnModuleAttached (const Message< ModuleMsg::OnModuleAttached > &);
-		void _OnModuleDetached (const Message< ModuleMsg::OnModuleDetached > &);
-		void _AttachModule_Impl (const Message< ModuleMsg::AttachModule > &);
-		void _DetachModule_Impl (const Message< ModuleMsg::DetachModule > &);
-		void _FindModule_Impl (const Message< ModuleMsg::FindModule > &);
-		void _Update_Impl (const Message< ModuleMsg::Update > &);
-		void _Link_Impl (const Message< ModuleMsg::Link > &);
-		void _Compose_Impl (const Message< ModuleMsg::Compose > &);
-		void _Delete_Impl (const Message< ModuleMsg::Delete > &);
+		bool _OnModuleAttached_Impl (const Message< ModuleMsg::OnModuleAttached > &);
+		bool _OnModuleDetached_Impl (const Message< ModuleMsg::OnModuleDetached > &);
+		bool _AttachModule_Impl (const Message< ModuleMsg::AttachModule > &);
+		bool _DetachModule_Impl (const Message< ModuleMsg::DetachModule > &);
+		bool _FindModule_Impl (const Message< ModuleMsg::FindModule > &);
+		bool _ModulesDeepSearch_Impl (const Message< ModuleMsg::ModulesDeepSearch > &);
+		bool _Update_Impl (const Message< ModuleMsg::Update > &);
+		bool _Link_Impl (const Message< ModuleMsg::Link > &);
+		bool _Compose_Impl (const Message< ModuleMsg::Compose > &);
+		bool _Delete_Impl (const Message< ModuleMsg::Delete > &);
 
 	// message handlers without implementation
 	protected:
-		void _AttachModule_Empty (const Message< ModuleMsg::AttachModule > &);
-		void _DetachModule_Empty (const Message< ModuleMsg::DetachModule > &);
-		void _FindModule_Empty (const Message< ModuleMsg::FindModule > &);
-		void _Update_Empty (const Message< ModuleMsg::Update > &);
-		void _Link_Empty (const Message< ModuleMsg::Link > &);
-		void _Compose_Empty (const Message< ModuleMsg::Compose > &);
-		void _Delete_Empty (const Message< ModuleMsg::Delete > &);
+		bool _AttachModule_Empty (const Message< ModuleMsg::AttachModule > &);
+		bool _DetachModule_Empty (const Message< ModuleMsg::DetachModule > &);
+		bool _OnManagerChanged_Empty (const Message< ModuleMsg::OnManagerChanged > &);
+		bool _FindModule_Empty (const Message< ModuleMsg::FindModule > &);
+		bool _ModulesDeepSearch_Empty (const Message< ModuleMsg::ModulesDeepSearch > &);
+		bool _Update_Empty (const Message< ModuleMsg::Update > &);
+		bool _Link_Empty (const Message< ModuleMsg::Link > &);
+		bool _Compose_Empty (const Message< ModuleMsg::Compose > &);
+		bool _Delete_Empty (const Message< ModuleMsg::Delete > &);
 	};
 	
 	
@@ -187,12 +197,19 @@ namespace Base
 	template <typename T>
 	forceinline bool Module::Send (const Message<T> &msg)
 	{
-		return _SendMsg( msg );
+		// only sync message supported
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
+		return _msgHandler.Send( msg );
 	}
 	
 /*
 =================================================
 	_SendMsg
+----
+	send message and in debug check if this message is supported,
+	it is recomended to use this method instead of 'Send'
+	when you send message to oneself.
 =================================================
 */
 	template <typename T>
@@ -200,7 +217,7 @@ namespace Base
 	{
 		// only sync message supported
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
-		//ASSERT( GetSupportedMessages().HasType( TypeIdOf< Message<T> >() ) );
+		ASSERT( GetSupportedMessages().HasType( TypeIdOf< Message<T> >() ) );
 
 		return _msgHandler.Send( msg );
 	}
@@ -208,6 +225,8 @@ namespace Base
 /*
 =================================================
 	_SendEvent
+----
+	send message to subscribers (and to oneself if subscribed)
 =================================================
 */
 	template <typename T>
@@ -230,7 +249,7 @@ namespace Base
 	{
 		return _SubscribeOnEvent( FW<Types>( args )... );
 	}
-
+	
 /*
 =================================================
 	Unsubscribe
@@ -248,6 +267,8 @@ namespace Base
 /*
 =================================================
 	_SubscribeOnMsg
+----
+	subscribe to messages from oneself.
 =================================================
 */
 	template <typename ...Types>
@@ -262,6 +283,9 @@ namespace Base
 /*
 =================================================
 	_SubscribeOnEvent
+----
+	subscribe external handlers for messages from
+	self module.
 =================================================
 */
 	template <typename ...Types>
@@ -285,7 +309,7 @@ namespace Base
 		//CHECK_ERR( not _lockAttachments );
 		//SCOPE_SETTER( _lockAttachments = true, false );
 
-		Modules_t	tmp = _attachments;
+		Modules_t	tmp = _attachments;		// TODO: optimize
 
 		FOR( i, tmp )
 		{

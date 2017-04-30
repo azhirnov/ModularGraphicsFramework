@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	EngineSubSystems class used for access to engine systems at any place in code.
 */
@@ -56,7 +56,7 @@ namespace Base
 	// SubSystems TypeList
 	//
 
-	template <typename Typelist>
+	template <ulong UID, typename Typelist>
 	struct SubSystemsTypeList
 	{
 	private:
@@ -76,22 +76,25 @@ namespace Base
 
 	public:
 		template <typename Typelist2>
-		using Append = SubSystemsTypeList< typename _Append< Typelist2 >::type >;
+		using Append = SubSystemsTypeList< UID, typename _Append< Typelist2 >::type >;
 		
 		template <typename Type>
-		static constexpr usize IndexOf = _IndexOf< Type >::value;
+		static constexpr usize	IndexOf = _IndexOf< Type >::value;
+
+		static constexpr ulong	ID		= UID;
 	};
 	
-	template <typename Typelist>
+	template <ulong UID, typename Typelist>
 	template <typename Type>
-	constexpr usize SubSystemsTypeList< Typelist >::IndexOf;
+	constexpr usize SubSystemsTypeList< UID, Typelist >::IndexOf;
 
 
 	
 	// Global
-	using GlobalSystemsTypeList_t		= SubSystemsTypeList< CompileTime::TypeListFrom<
+	using GlobalSystemsTypeList_t		= SubSystemsTypeList< "global"_StringToID, CompileTime::TypeListFrom<
 												Base::MainSystem,		// is it needed here?
-												Base::ModulesFactory
+												Base::ModulesFactory,
+												Base::FileManager
 											> >;
 
 	// PerThread
@@ -106,6 +109,7 @@ namespace Base
 	// All Engine subsystems
 	//
 
+	template <ulong UID>
 	class EngineSubSystems : public Noncopyable
 	{
 	// types
@@ -137,7 +141,10 @@ namespace Base
 			}
 		};
 
-		using ItemsArray_t	= StaticArray< Item, GlobalConst::Base_MaxSubSystems >;
+		using ItemsArray_t			= StaticArray< Item, GlobalConst::Base_MaxSubSystems >;
+		using Self					= EngineSubSystems< UID >;
+
+		static constexpr ulong ID	= UID;
 
 
 	// variables
@@ -168,21 +175,22 @@ namespace Base
 	};
 
 
-	using SubSystemsRef	= Base::ConstReference< EngineSubSystems >;
+	using GlobalSubSystems		= EngineSubSystems< "global"_StringToID >;
+	using GlobalSystemsRef	= Base::ConstReference< GlobalSubSystems >;
 
 
 #	define GX_SUBSYSTEM_DECL( _typelist_, _type_, _availableFor_ ) \
 		namespace Engine \
 		{ \
-			template <> \
-			struct EngineSubSystems::Setter< _type_ > \
+			template <> template <> \
+			struct EngineSubSystems<_typelist_::ID>::Setter< _type_ > \
 			{ \
 				friend class _type_; \
 				friend class _availableFor_; \
-				Setter (EngineSubSystems *ss) : _ss(ss) {} \
+				Setter (EngineSubSystems<_typelist_::ID> *ss) : _ss(ss) {} \
 				\
 			private: \
-				EngineSubSystems *_ss; \
+				EngineSubSystems<_typelist_::ID> *_ss; \
 				\
 				void Set (_type_ *ptr) \
 				{ \
@@ -190,8 +198,8 @@ namespace Base
 				} \
 			}; \
 			\
-			template <> \
-			inline Ptr< _type_ > EngineSubSystems::Get () const \
+			template <> template <> \
+			inline Ptr< _type_ > EngineSubSystems<_typelist_::ID>::Get () const \
 			{ \
 				ASSERT( _CheckThread() ); \
 				return this->_items[ _typelist_::IndexOf< _type_ > ].Get< _type_ >(); \
@@ -203,6 +211,7 @@ namespace Base
 
 GX_SUBSYSTEM_DECL( GlobalSystemsTypeList_t,		Base::MainSystem,		Base::ThreadManager );
 GX_SUBSYSTEM_DECL( GlobalSystemsTypeList_t,		Base::ModulesFactory,	Base::ThreadManager );
+GX_SUBSYSTEM_DECL( GlobalSystemsTypeList_t,		Base::FileManager,		Base::ThreadManager );
 
 GX_SUBSYSTEM_DECL( PerThreadSystemsTypeList_t,	Base::TaskModule,		Base::TaskModule );
 GX_SUBSYSTEM_DECL( PerThreadSystemsTypeList_t,	Base::ParallelThread,	Base::ParallelThread );

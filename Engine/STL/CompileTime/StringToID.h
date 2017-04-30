@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -19,6 +19,9 @@ namespace CompileTime
 		{
 			using type = ulong;
 
+#			define _ON_ERROR( _msg_ )	(throw std::logic_error(_msg_))
+//#			define _ON_ERROR( _msg_ )	(type(-1))
+
 		// constants
 		private:
 			static const uint	_MAX_OFFSET		= sizeof(type) * 8;
@@ -32,31 +35,95 @@ namespace CompileTime
 			
 		// methods
 		private:
-			forceinline static constexpr type _Hash (const char c, const size_t shift)
+			forceinline static constexpr type _Hash1 (const char c, const size_t shift)
 			{
 				return
 					(c >= 'A' and c <= 'Z')	? type(c - 'A' + 1) << shift				:	// map A-Z
 					(c >= 'a' and c <= 'z') ? type(c - 'a' + 1) << shift				:	// map a-z
 					(c == '.')				? type(c - '.' + 'Z' - 'A' + 2) << shift	:	// map .
 					(c == '-')				? type(c - '-' + 'Z' - 'A' + 3) << shift	:	// map -
-					(c == '/')				? type(c - '/' + 'Z' - 'A' + 4) << shift	:	// map /
-					(c == '*')				? type(c - '*' + 'Z' - 'A' + 5) << shift	:	// map *
+					(c == '+')				? type(c - '+' + 'Z' - 'A' + 4) << shift	:	// map +
+					(c == '_')				? type(c - '_' + 'Z' - 'A' + 5) << shift	:	// map _
 					(c == '\0' or c == ' ')	? 0											:
-					(throw std::logic_error("unsupported char"));
+					type(-1);
+					//_ON_ERROR( "unsupported char" );
 			}
 
 
-			forceinline static char _RevHash (const ubyte hash)
+			forceinline static constexpr type _Hash2 (const char c, const size_t shift)
 			{
-				static const ubyte	az_size = ('Z' - 'A' + 1);
+				return
+					(c >= '0' and c <= '9')	? type(c - '0'  + 1) << shift				:	// map 0-9
+					(c == '*')				? type(c - '*'  + '9' - '0' +  2) << shift	:	// map *
+					(c == '/')				? type(c - '/'  + '9' - '0' +  3) << shift	:	// map /
+					(c == '!')				? type(c - '!'  + '9' - '0' +  4) << shift	:	// map !
+					(c == '?')				? type(c - '?'  + '9' - '0' +  5) << shift	:	// map ?
+					(c == '~')				? type(c - '~'  + '9' - '0' +  6) << shift	:	// map ~
+					(c == '"')				? type(c - '"'  + '9' - '0' +  7) << shift	:	// map "
+					(c == '[')				? type(c - '['  + '9' - '0' +  8) << shift	:	// map [
+					(c == ']')				? type(c - ']'  + '9' - '0' +  9) << shift	:	// map ]
+					(c == '(')				? type(c - '('  + '9' - '0' + 10) << shift	:	// map (
+					(c == ')')				? type(c - ')'  + '9' - '0' + 11) << shift	:	// map )
+					(c == '\\')				? type(c - '\\' + '9' - '0' + 12) << shift	:	// map \ 
+					(c == '$')				? type(c - '$'  + '9' - '0' + 13) << shift	:	// map $
+					(c == '&')				? type(c - '&'  + '9' - '0' + 14) << shift	:	// map &
+					(c == '|')				? type(c - '|'  + '9' - '0' + 15) << shift	:	// map |
+					(c == '^')				? type(c - '^'  + '9' - '0' + 16) << shift	:	// map ^
+					(c == '<')				? type(c - '<'  + '9' - '0' + 17) << shift	:	// map <
+					(c == '>')				? type(c - '>'  + '9' - '0' + 18) << shift	:	// map >
+					(c == ':')				? type(c - ':'  + '9' - '0' + 19) << shift	:	// map :
+					(c == ';')				? type(c - ';'  + '9' - '0' + 20) << shift	:	// map ;
+					(c == '=')				? type(c - '='  + '9' - '0' + 21) << shift	:	// map =
+					(c == '%')				? type(c - '%'  + '9' - '0' + 22) << shift	:	// map %
+					(c == '\0' or c == ' ')	? 0											:
+					type(-1);
+					//_ON_ERROR( "unsupported char" );
+			}
+
+
+			forceinline static char _RevHash1 (const ubyte hash)
+			{
+				const int	az_size = ('Z' - 'A');
 
 				return
 					(hash == 0)				? ' '			:
-					(hash <  az_size)		? 'A' + hash-1	:
-					(hash == az_size + 1)	? '.'			:
-					(hash == az_size + 2)	? '-'			:
-					(hash == az_size + 3)	? '/'			:
-					(hash == az_size + 4)	? '*'			:
+					(hash <= az_size + 1)	? 'A' + hash-1	:
+					(hash == az_size + 2)	? '.'			:
+					(hash == az_size + 3)	? '-'			:
+					(hash == az_size + 4)	? '+'			:
+					(hash == az_size + 5)	? '_'			:
+					'#';
+			}
+
+
+			forceinline static char _RevHash2 (const ubyte hash)
+			{
+				const int	zn_size = ('9' - '0');
+
+				return
+					(hash == 0)				? ' '			:
+					(hash <= zn_size + 1)	? '0' + hash-1	:
+					(hash == zn_size + 2)	? '*'			:
+					(hash == zn_size + 3)	? '/'			:
+					(hash == zn_size + 4)	? '!'			:
+					(hash == zn_size + 5)	? '?'			:
+					(hash == zn_size + 6)	? '~'			:
+					(hash == zn_size + 7)	? '"'			:
+					(hash == zn_size + 8)	? '['			:
+					(hash == zn_size + 9)	? ']'			:
+					(hash == zn_size + 10)	? '('			:
+					(hash == zn_size + 11)	? ')'			:
+					(hash == zn_size + 12)	? '\\'			:
+					(hash == zn_size + 13)	? '$'			:
+					(hash == zn_size + 14)	? '&'			:
+					(hash == zn_size + 15)	? '|'			:
+					(hash == zn_size + 16)	? '^'			:
+					(hash == zn_size + 17)	? '<'			:
+					(hash == zn_size + 18)	? '>'			:
+					(hash == zn_size + 19)	? ':'			:
+					(hash == zn_size + 20)	? ';'			:
+					(hash == zn_size + 21)	? '='			:
+					(hash == zn_size + 22)	? '%'			:
 					'#';
 			}
 
@@ -66,13 +133,24 @@ namespace CompileTime
 				return
 					(i >= size or str[i] == '\0') ?
 						0 :
-						(off >= _MAX_OFFSET) ?
-							(throw std::logic_error("overflow")) :
-							(str[i] >= '0' and str[i] <= '9') ? 
-								(_NUMERIC << off) | (type(str[i] - '0') << (off + _SYMBOL_SIZE)) |
-									_RecursiveHash( str, i+1, off + _SYMBOL_SIZE*2, size ) :	// TODO: check overflow
-								_Hash( str[i], off ) | _RecursiveHash( str, i+1, off + _SYMBOL_SIZE, size );
+
+					// error
+					(off >= _MAX_OFFSET) ?
+						_ON_ERROR( "overflow" ) :
+
+					// try map to laters
+					(_Hash1( str[i], off ) != type(-1)) ?
+						(_Hash1( str[i], off ) | _RecursiveHash( str, i+1, off + _SYMBOL_SIZE, size )) :
+
+					// try map to numerics
+					(off + _SYMBOL_SIZE < _MAX_OFFSET and _Hash2( str[i], off + _SYMBOL_SIZE ) != type(-1)) ?
+						((_NUMERIC << off) | _Hash2( str[i], off + _SYMBOL_SIZE ) | _RecursiveHash( str, i+1, off + _SYMBOL_SIZE*2, size )) :
+
+					// error
+					_ON_ERROR( "unsupported char" );
 			}
+
+#			undef _ON_ERROR
 
 			
 		// methods
@@ -103,11 +181,11 @@ namespace CompileTime
 					{
 						off += _SYMBOL_SIZE;
 
-						result << char( '0' + ((hash >> off) & _SYMBOL_MASK) );
+						result << _RevHash2( (hash >> off) & _SYMBOL_MASK );
 						continue;
 					}
 
-					result << _RevHash( sym );
+					result << _RevHash1( sym );
 				}
 
 				return result;
@@ -159,4 +237,7 @@ namespace CompileTime
 	*/
 
 }	// CompileTime
+
+	DECL_STRING_TO_ID( StringToID, 0 );
+
 }	// GX_STL

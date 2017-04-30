@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -72,6 +72,9 @@ namespace Base
 
 		T const *		operator -> ()		const	{ return &_data; }
 		T *				operator -> ()				{ return &_data; }
+
+		T const &		operator * ()		const	{ return _data; }
+		T &				operator * ()				{ return _data; }
 	};
 
 	

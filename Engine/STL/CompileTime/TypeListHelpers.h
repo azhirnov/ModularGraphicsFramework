@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -173,8 +173,8 @@ namespace CompileTime
 		template <typename T0, typename T1>
 		struct _ToSameCapacity
 		{
-			static const uint	c0 = TypeDescriptor::GetCapacity<T0>;	//TypeInfo<T0>::Count();
-			static const uint	c1 = TypeDescriptor::GetCapacity<T1>;	//TypeInfo<T1>::Count();
+			static const uint	c0 = TypeDescriptor::GetCapacity<T0>;
+			static const uint	c1 = TypeDescriptor::GetCapacity<T1>;
 			
 			typedef typename TypeInfo<T0>::inner_type				t0;
 			typedef typename TypeInfo<T1>::inner_type				t1;
@@ -228,22 +228,17 @@ namespace CompileTime
 									typename NearUInt::FromType< Type > >	hw_left;
 
 				// set same capacity
-				//*
 				typedef _ToSameCapacity< hw_left, PrevFuncResult >	_same_capacity;
 
 				typedef typename _same_capacity::left	left;
 				typedef typename _same_capacity::right	right;
-				/*/
-				typedef hw_left			left;
-				typedef PrevFuncResult	right;
-				//*/
 
 				// calc type index
 				static const usize	left_size	= SizeOf<left>::bytes;
 				static const usize	right_size	= SizeOf<right>::bytes;
 				
-				static const uint	left_count = TypeDescriptor::GetCapacity< left >;		//TypeInfo< left >::Count();
-				static const uint	right_count = TypeDescriptor::GetCapacity< right >;		//TypeInfo< right >::Count();
+				static const uint	left_count = TypeDescriptor::GetCapacity< left >;
+				static const uint	right_count = TypeDescriptor::GetCapacity< right >;
 
 				static const uint	type_index =
 					( not UseCppStandard and IsSameTypes< left, right > ) ? 0 :

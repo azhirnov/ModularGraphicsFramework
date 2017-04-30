@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -18,8 +18,6 @@ namespace Base
 	// types
 	private:
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
-											ModuleMsg::OnRegistered,
-											ModuleMsg::OnUnregistered,
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager
 											//ModuleMsg::FindThread
@@ -44,29 +42,31 @@ namespace Base
 
 	// methods
 	public:
-		ThreadManager (const SubSystemsRef gs, const CreateInfo::ThreadManager &info);
+		ThreadManager (const GlobalSystemsRef gs, const CreateInfo::ThreadManager &info);
 		~ThreadManager ();
 
 		bool SendToAllThreads (AsyncMessage &&msg);
 
 		static GModID::type	GetStaticID ()		{ return "thread.mngr"_GModID; }
+		
+		static void Register (GlobalSystemsRef);
+		static void Unregister (GlobalSystemsRef);
 
 
 	// message handlers
 	private:
-		void _OnRegistered (const Message< ModuleMsg::OnRegistered > &);
-		void _OnUnregistered (const Message< ModuleMsg::OnUnregistered > &);
-		//void _FindThread (const Message< ModuleMsg::FindThread > &);
-		void _Link (const Message< ModuleMsg::Link > &);
-		void _Compose (const Message< ModuleMsg::Compose > &);
-		void _Delete (const Message< ModuleMsg::Delete > &);
-		void _Update (const Message< ModuleMsg::Update > &);
-		void _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		void _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		//bool _FindThread (const Message< ModuleMsg::FindThread > &);
+		bool _Link (const Message< ModuleMsg::Link > &);
+		bool _Compose (const Message< ModuleMsg::Compose > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Update (const Message< ModuleMsg::Update > &);
+		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
+		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
 
 
 	private:
-		static ModulePtr _CreateParallelThread (SubSystemsRef, const CreateInfo::Thread &);
+		static ModulePtr _CreateParallelThread (GlobalSystemsRef, const CreateInfo::Thread &);
+		static ModulePtr _CreateThreadManager (GlobalSystemsRef, const CreateInfo::ThreadManager &);
 
 		static void _RunAsync (void *);
 	};

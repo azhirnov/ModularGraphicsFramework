@@ -25,22 +25,48 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Engine\Platforms\Common\Common.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Common\GraphicsEnums.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Common\OSEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Engine.Platforms.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Input\InputManager.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Input\InputThread.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\gl4.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4BaseModule.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Device.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Texture.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\OpenGLContext.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\OpenGLThread.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\Display.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GpuContext.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GpuThread.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\Input.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\Platform.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\ScreenCoords.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\Window.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinLibrary.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinContext.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Buffer.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Context.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Framebuffer.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Memory.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Program.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\RenderPass.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\RenderStateEnums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Sampler.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\TextureEnums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Objects.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Texture.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Thread.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\MipmapLevel.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\MultiSamples.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\PixelFormatEnums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Display.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Input.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\OSEnums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Platform.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\ScreenCoords.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Window.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Enums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Library.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Device.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Memory.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_platform.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_utils.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\VulkanContext.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\VulkanThread.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Windows\VkWinSurface.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinKeyInput.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinMouseInput.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinPlatform.h" />
@@ -49,7 +75,21 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Engine\Platforms\Input\InputManager.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Input\InputThread.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\gl4.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Device.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Texture.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\OpenGLContext.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\OpenGLThread.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinLibrary.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinContext.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Shared\Main.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Device.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Memory.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_platform.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\VulkanContext.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\VulkanThread.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Windows\VkWinSurface.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinKeyInput.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinMouseInput.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinPlatform.cpp" />
@@ -59,7 +99,7 @@
     <ProjectGuid>{73642AA5-AED6-4B0E-A4BB-F9919ABA1159}</ProjectGuid>
     <RootNamespace>GGE</RootNamespace>
     <ProjectName>Engine.Platforms</ProjectName>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

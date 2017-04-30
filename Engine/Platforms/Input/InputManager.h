@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -39,23 +39,23 @@ namespace Platforms
 
 	// methods
 	public:
-		InputManager (const SubSystemsRef gs, const CreateInfo::InputManager &ci);
+		InputManager (const GlobalSystemsRef gs, const CreateInfo::InputManager &ci);
 		~InputManager ();
 		
 		static GModID::type		GetStaticID ()			{ return "input.mngr"_GModID; }
+		
+		static void Register (GlobalSystemsRef);
+		static void Unregister (GlobalSystemsRef);
 
 		
 	// message handlers
 	private:
-		void _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		void _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
+		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
 		
 	private:
-		friend void RegisterPlatforms ();
-		static void _RegisterAll (SubSystemsRef);
-
-		static ModulePtr _CreateInputThread (SubSystemsRef, const CreateInfo::InputThread &);
-		static ModulePtr _CreateInputManager (SubSystemsRef, const CreateInfo::InputManager &);
+		static ModulePtr _CreateInputThread (GlobalSystemsRef, const CreateInfo::InputThread &);
+		static ModulePtr _CreateInputManager (GlobalSystemsRef, const CreateInfo::InputManager &);
 	};
 
 

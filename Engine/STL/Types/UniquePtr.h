@@ -1,4 +1,4 @@
-﻿// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -128,7 +128,7 @@ namespace GXTypes
 		}
 
 		
-		forceinline operator bool () const
+		forceinline explicit operator bool () const
 		{
 			return IsNotNull();
 		}

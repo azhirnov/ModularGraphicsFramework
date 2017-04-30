@@ -11,21 +11,6 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinWindow.h">
       <Filter>Windows</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\Window.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Common\OSEnums.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\Display.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\Platform.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GpuContext.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\VulkanThread.h">
       <Filter>Vulkan</Filter>
     </ClInclude>
@@ -38,29 +23,122 @@
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\OpenGLContext.h">
       <Filter>OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GpuThread.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\ScreenCoords.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinMouseInput.h">
       <Filter>Windows</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinKeyInput.h">
       <Filter>Windows</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Common\GraphicsEnums.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\Input.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\Platforms\Input\InputManager.h">
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Engine\Platforms\Input\InputThread.h">
       <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\gl4.h">
+      <Filter>OpenGL\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinLibrary.h">
+      <Filter>OpenGL\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinContext.h">
+      <Filter>OpenGL\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Display.h">
+      <Filter>Shared\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Input.h">
+      <Filter>Shared\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Platform.h">
+      <Filter>Shared\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\ScreenCoords.h">
+      <Filter>Shared\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Window.h">
+      <Filter>Shared\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\OSEnums.h">
+      <Filter>Shared\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\PixelFormatEnums.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\MultiSamples.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Device.h">
+      <Filter>OpenGL\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Texture.h">
+      <Filter>OpenGL\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\MipmapLevel.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\TextureEnums.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4BaseModule.h">
+      <Filter>OpenGL\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Windows\VkWinSurface.h">
+      <Filter>Vulkan\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Library.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_platform.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_utils.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Device.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Enums.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\RenderStateEnums.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Buffer.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Context.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Memory.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Objects.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Texture.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Thread.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Framebuffer.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Sampler.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\RenderPass.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Program.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Memory.h">
+      <Filter>Vulkan\Impl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +166,24 @@
     <Filter Include="Input">
       <UniqueIdentifier>{ed4b210c-8e79-4b37-b22a-7ca57fb74805}</UniqueIdentifier>
     </Filter>
+    <Filter Include="OpenGL\Impl">
+      <UniqueIdentifier>{bd29c2c5-462f-48f3-839f-71d82fd47f4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL\Windows">
+      <UniqueIdentifier>{1a0404f8-3ca2-4a6f-a8f6-d674d1ae6400}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vulkan\Impl">
+      <UniqueIdentifier>{efc7329a-3bef-4476-b6e4-57d93afb993e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vulkan\Windows">
+      <UniqueIdentifier>{56d9acc5-a8b9-4666-a63b-a025a084aca2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared\GPU">
+      <UniqueIdentifier>{12fb9329-1839-4e0d-9bdd-134a93154d26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared\OS">
+      <UniqueIdentifier>{0f738aac-a234-4dd5-9b2a-3dcf975e9537}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinWindow.cpp">
@@ -95,9 +191,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinPlatform.cpp">
       <Filter>Windows</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Engine\Platforms\Shared\Main.cpp">
-      <Filter>Shared</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinMouseInput.cpp">
       <Filter>Windows</Filter>
@@ -110,6 +203,51 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Engine\Platforms\Input\InputManager.cpp">
       <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\OpenGLThread.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\OpenGLContext.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\gl4.cpp">
+      <Filter>OpenGL\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinLibrary.cpp">
+      <Filter>OpenGL\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\VulkanThread.cpp">
+      <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\VulkanContext.cpp">
+      <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinContext.cpp">
+      <Filter>OpenGL\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Shared\Main.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Device.cpp">
+      <Filter>OpenGL\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Texture.cpp">
+      <Filter>OpenGL\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Windows\VkWinSurface.cpp">
+      <Filter>Vulkan\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_platform.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Device.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Memory.cpp">
+      <Filter>Vulkan\Impl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

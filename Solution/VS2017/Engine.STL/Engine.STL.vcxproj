@@ -93,10 +93,12 @@
     <ClInclude Include="..\..\..\Engine\STL\Dimensions\PowerOfTwoValue.h" />
     <ClInclude Include="..\..\..\Engine\STL\Dimensions\RadiansAndDegrees.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\ArgHelpers.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Experimental\BoolArg.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\ChunkArray.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\FastMath.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\Fixed.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\Float.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Experimental\FunctionInfo.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\Mutable.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\ScopeSetter.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\Signature.h" />
@@ -277,7 +279,7 @@
     <ProjectGuid>{C8E74AF8-726B-4A6C-B58D-32BDD2CE9E82}</ProjectGuid>
     <RootNamespace>GGE</RootNamespace>
     <ProjectName>Engine.STL</ProjectName>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

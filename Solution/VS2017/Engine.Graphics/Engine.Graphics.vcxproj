@@ -36,7 +36,7 @@
     <ProjectGuid>{6283E429-4AF6-44B4-949D-124D3E314794}</ProjectGuid>
     <RootNamespace>GGE</RootNamespace>
     <ProjectName>Engine.Graphics</ProjectName>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

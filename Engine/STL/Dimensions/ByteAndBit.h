@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -16,6 +16,11 @@ namespace GXTypes
 	typedef Bytes<isize>	BytesI;
 	typedef Bits<usize>		BitsU;
 	typedef Bits<isize>		BitsI;
+
+	typedef Bytes<ulong>	BytesUL;
+	typedef Bytes<ilong>	BytesL;
+	typedef Bits<ulong>		BitsUL;
+	typedef Bits<ilong>		BitsL;
 
 
 
@@ -46,12 +51,13 @@ namespace GXTypes
 	public:
 		constexpr Bytes (GX_DEFCTOR) : _value(0) {}
 
-		explicit
-		constexpr Bytes (T value) : _value(value) {}
+		explicit constexpr Bytes (T value) : _value(value) {}
 		
 		template <typename B>
-		explicit
-		constexpr Bytes (Bits<B> bits);
+		explicit constexpr Bytes (Bits<B> bits);
+
+		template <typename B>
+		explicit constexpr Bytes (Bytes<B> bytes) : _value( (T)(B)bytes ) {}
 
 		constexpr Bits<T> ToBits () const;
 		
@@ -147,12 +153,13 @@ namespace GXTypes
 	public:
 		constexpr Bits (GX_DEFCTOR) : _value(0) {}
 
-		explicit
-		constexpr Bits (T value) : _value(value) {}
+		explicit constexpr Bits (T value) : _value(value) {}
 		
 		template <typename B>
-		explicit
-		constexpr Bits (Bytes<B> bytes);
+		explicit constexpr Bits (Bytes<B> bytes);
+		
+		template <typename B>
+		explicit constexpr Bits (Bits<B> bits) : _value( (T)(B)bits ) {}
 
 		constexpr Bytes<T> ToBytes () const;
 		

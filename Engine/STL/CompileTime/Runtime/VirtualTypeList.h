@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Runtime reflection of TypeList
 */
@@ -68,7 +68,6 @@ namespace Runtime
 		template <typename T>
 		VirtualTypeList (UninitializedT<T>);
 		
-
 		usize	Count ()			const		{ return _Internal()->Count(); }
 		bool	Empty ()			const		{ return Count() == 0; }
 
@@ -77,6 +76,12 @@ namespace Runtime
 		TypeId	Get (usize index)	const		{ return _Internal()->Get( index ); }
 		usize	IndexOf (TypeId id)	const		{ return _Internal()->IndexOf( id ); }
 		bool	HasType (TypeId id)	const		{ return IndexOf( id ) != -1; }
+
+		template <typename T>
+		usize	IndexOf ()			const		{ return IndexOf( TypeIdOf<T>() ); }
+		
+		template <typename T>
+		bool	HasType ()			const		{ return IndexOf<T>() != -1; }
 
 		String	ToString ()			const		{ return _Internal()->ToString(); }
 

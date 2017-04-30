@@ -2,5 +2,25 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="..\..\..\Tests\Engine.Base\Main.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\VkApp.cpp">
+      <Filter>VK</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="GL">
+      <UniqueIdentifier>{59105dbe-bcd1-466f-82f5-f99f726df1f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VK">
+      <UniqueIdentifier>{0b330672-cbc9-49a5-ad06-1e3dea21e946}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Tests\Engine.Base\GLApp.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Tests\Engine.Base\VkApp.h">
+      <Filter>VK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Common.h" />
   </ItemGroup>
 </Project>

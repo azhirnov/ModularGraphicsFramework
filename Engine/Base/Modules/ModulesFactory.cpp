@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Modules/ModulesFactory.h"
 
@@ -12,7 +12,7 @@ namespace Base
 	constructor
 =================================================
 */
-	ModulesFactory::ModulesFactory (const SubSystemsRef gs) :
+	ModulesFactory::ModulesFactory (const GlobalSystemsRef gs) :
 		BaseObject( gs )
 	{
 		SetDebugName( "ModulesFactory" );
@@ -20,7 +20,7 @@ namespace Base
 		GlobalSystems()->GetSetter< ModulesFactory >().Set( this );
 
 		_constructors.Reserve( 128 );
-		_families.Reserve( EModuleGroup::_Count );
+		_groups.Reserve( EModuleGroup::_Count );
 	}
 	
 /*
@@ -30,6 +30,9 @@ namespace Base
 */
 	ModulesFactory::~ModulesFactory ()
 	{
+		_constructors.Clear();
+		_groups.Clear();
+
 		GlobalSystems()->GetSetter< ModulesFactory >().Set( null );
 	}
 	
@@ -38,13 +41,13 @@ namespace Base
 	Create
 =================================================
 */
-	bool ModulesFactory::Create (UntypedID_t id, SubSystemsRef gs, VariantCRef msg, OUT ModulePtr &result)
+	bool ModulesFactory::Create (UntypedID_t id, GlobalSystemsRef gs, VariantCRef msg, OUT ModulePtr &result)
 	{
 		SCOPELOCK( _lock );
 
-		CompConstructors_t::const_iterator	iter;
+		ModConstructors_t::const_iterator	iter;
 
-		if ( _constructors.Find( id, OUT iter ) and
+		if ( _constructors.Find( ConstructorID( id, msg.GetValueTypeId() ), OUT iter ) and
 			 iter->second->IsValid( msg.GetValueTypeId() ) )
 		{
 			result = iter->second->Call( gs, msg );
@@ -52,7 +55,8 @@ namespace Base
 			return result.IsNotNull();
 		}
 
-		RETURN_ERR( "module '" << ToString( GModID::type( id ) ) << "' is not registered" );
+		RETURN_ERR( "module '" << ToString( GModID::type( id ) ) << "' with '" <<
+					ToString( msg.GetValueTypeId() ) << "' create info is not registered" );
 	}
 	
 /*
@@ -60,59 +64,47 @@ namespace Base
 	_Register
 =================================================
 */
-	bool ModulesFactory::_Register (UntypedID_t id, TypeId typeId, Constructor_t &&ctor)
+	bool ModulesFactory::_Register (UntypedID_t id, TypeId ctorMsgType, TypeId moduleIdType, Constructor_t &&ctor)
 	{
 		SCOPELOCK( _lock );
 
-		const EModuleGroup::type	family	= EModuleGroup::type( id & EModuleGroup::_Mask );
-		const ModulePtr			owner	= ctor->_system;
+		const EModuleGroup::type	group	= EModuleGroup::type( id & EModuleGroup::_Mask );
 
-		CHECK_ERR( family < EModuleGroup::_Count );
+		CHECK_ERR( group < EModuleGroup::_Count );
+		CHECK_ERR( ctorMsgType != TypeId() );
 
 
-		// check if family already registered with different type
-		CompFamilies_t::const_iterator	iter;
+		// check if group already registered with different type
+		ModGroups_t::const_iterator	iter;
 
-		if ( _families.Find( family, OUT iter ) )
+		if ( _groups.Find( group, OUT iter ) )
 		{
-			CHECK_ERR( iter->second == typeId );
+			CHECK_ERR( iter->second == moduleIdType );
 		}
 		else
-			_families.Add( family, typeId );
+			_groups.Add( group, moduleIdType );
 
 
 		// add constructors
-		CHECK_ERR( not _constructors.IsExist( id ) );
+		CHECK_ERR( not _constructors.IsExist( ConstructorID( id, ctorMsgType ) ) );
 
-		_constructors.Add( RVREF(id), RVREF(ctor) );
-
-
-		// send message
-		if ( owner )
-		{
-			owner->Send( Message< ModuleMsg::OnRegistered >{ this, this } );
-		}
+		_constructors.Add( RVREF(ConstructorID( id, ctorMsgType )), RVREF(ctor) );
 		return true;
 	}
 	
 /*
 =================================================
-	Unregister
+	_Unregister
 =================================================
 */
-	bool ModulesFactory::Unregister (UntypedID_t id)
+	bool ModulesFactory::_Unregister (UntypedID_t id, TypeId ctorMsgType)
 	{
 		SCOPELOCK( _lock );
 
-		CompConstructors_t::iterator	iter;
+		ModConstructors_t::iterator	iter;
 
-		if ( _constructors.Find( id, OUT iter ) )
+		if ( _constructors.Find( ConstructorID( id, ctorMsgType ), OUT iter ) )
 		{
-			if ( iter->second.IsCreated() and iter->second->_system )
-			{
-				iter->second->_system->Send( Message< ModuleMsg::OnUnregistered >{ this, this } );
-			}
-
 			_constructors.EraseFromIter( iter );
 			return true;
 		}
@@ -122,14 +114,37 @@ namespace Base
 	
 /*
 =================================================
-	IsRegistered
+	_UnregisterAll
 =================================================
 */
-	bool ModulesFactory::IsRegistered (UntypedID_t id)
+	bool ModulesFactory::_UnregisterAll (UntypedID_t id)
 	{
 		SCOPELOCK( _lock );
 
-		return _constructors.IsExist( id );
+		usize	idx = 0;
+
+		if ( _constructors.FindIndex( ConstructorID( id, TypeId() ), OUT idx ) )
+		{
+			for (usize i = idx; i < _constructors.Count() and _constructors[i].first.moduleID == id;)
+			{
+				_constructors.EraseFromIndex( i );
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+/*
+=================================================
+	_IsRegistered
+=================================================
+*/
+	bool ModulesFactory::_IsRegistered (UntypedID_t id, TypeId ctorMsgType) const
+	{
+		SCOPELOCK( _lock );
+
+		return _constructors.IsExist( ConstructorID( id, ctorMsgType ) );
 	}
 
 

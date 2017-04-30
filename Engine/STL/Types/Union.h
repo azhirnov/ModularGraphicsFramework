@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -91,7 +91,7 @@ namespace GXTypes
 		Self& operator = (const Self &right);
 		Self& operator = (Self &&right);
 		
-		operator bool () const							{ return IsDefined(); }
+		explicit operator bool () const					{ return IsDefined(); }
 
 
 		// Type Access //

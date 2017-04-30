@@ -1,4 +1,4 @@
-﻿// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	STL is my vision of C++ code and programming style for
 	more readable, more safely code on C++.
@@ -215,6 +215,8 @@
 #include "Experimental/ScopeSetter.h"
 #include "Experimental/FastMath.h"
 #include "Experimental/VariantInterface.h"
+#include "Experimental/BoolArg.h"
+#include "Experimental/FunctionInfo.h"
 
 
 // Debug //

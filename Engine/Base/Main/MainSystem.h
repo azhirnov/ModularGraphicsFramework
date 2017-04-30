@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	MainSystem - this class contains all global systems.
 */
@@ -8,6 +8,7 @@
 #include "Engine/Base/Modules/ModulesFactory.h"
 #include "Engine/Base/Tasks/TaskManager.h"
 #include "Engine/Base/Threads/ThreadManager.h"
+#include "Engine/Base/Files/FileManager.h"
 
 namespace Engine
 {
@@ -27,6 +28,7 @@ namespace Base
 											ModuleMsg::AttachModule,
 											ModuleMsg::DetachModule,
 											ModuleMsg::FindModule,
+											ModuleMsg::ModulesDeepSearch,
 											ModuleMsg::Link,
 											ModuleMsg::Compose,
 											ModuleMsg::Update,
@@ -53,16 +55,15 @@ namespace Base
 	private:
 		_FinalChecks		_finalChecks;
 
-		EngineSubSystems	_globalSystems;
-
 		ModulesFactory		_factory;
 		TaskManager			_taskMngr;
 		ThreadManager		_threadMngr;
+		FileManager			_fileMngr;
 
 
 	// methods
 	public:
-		explicit MainSystem (const SubSystemsRef gs);
+		explicit MainSystem (const GlobalSystemsRef gs);
 		~MainSystem ();
 
 		static GModID::type		GetStaticID ()		{ return "main"_GModID; }
@@ -70,11 +71,11 @@ namespace Base
 
 	// message handlers
 	private:
-		void _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
 
 	private:
-		static ModulePtr _CreateThreadManager (SubSystemsRef, const CreateInfo::ThreadManager &);
-		static ModulePtr _CreateTaskManager (SubSystemsRef, const CreateInfo::TaskManager &);
+		static ModulePtr _CreateThreadManager (GlobalSystemsRef, const CreateInfo::ThreadManager &);
+		static ModulePtr _CreateTaskManager (GlobalSystemsRef, const CreateInfo::TaskManager &);
 	};
 
 

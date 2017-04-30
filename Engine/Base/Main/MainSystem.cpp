@@ -1,6 +1,7 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Main/MainSystem.h"
+#include "Engine/Base/Stream/StreamManager.h"
 
 namespace Engine
 {
@@ -17,8 +18,8 @@ namespace Base
 */
 	Ptr<Module>  GetMainSystemInstace ()
 	{
-		static EngineSubSystems	global_systems;
-		static MainSystem		main_system{ SubSystemsRef(&global_systems) };
+		static GlobalSubSystems		global_systems;
+		static MainSystem			main_system{ GlobalSystemsRef(global_systems) };
 		return &main_system;
 	}
 
@@ -27,11 +28,12 @@ namespace Base
 	constructor
 =================================================
 */
-	MainSystem::MainSystem (const SubSystemsRef gs) :
+	MainSystem::MainSystem (const GlobalSystemsRef gs) :
 		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
 		_factory( GlobalSystems() ),
 		_taskMngr( GlobalSystems(), CreateInfo::TaskManager() ),
-		_threadMngr( GlobalSystems(), CreateInfo::ThreadManager() )
+		_threadMngr( GlobalSystems(), CreateInfo::ThreadManager() ),
+		_fileMngr( GlobalSystems() )
 	{
 		SetDebugName( "MainSystem" );
 
@@ -40,6 +42,7 @@ namespace Base
 		_SubscribeOnMsg( this, &MainSystem::_AttachModule_Impl );
 		_SubscribeOnMsg( this, &MainSystem::_DetachModule_Impl );
 		_SubscribeOnMsg( this, &MainSystem::_FindModule_Impl );
+		_SubscribeOnMsg( this, &MainSystem::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &MainSystem::_Update_Impl );
 		_SubscribeOnMsg( this, &MainSystem::_Link_Impl );
 		_SubscribeOnMsg( this, &MainSystem::_Compose_Impl );
@@ -47,8 +50,9 @@ namespace Base
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		CHECK( _factory.Register( ThreadManager::GetStaticID(), &_threadMngr, &_CreateThreadManager ) );
-		CHECK( _factory.Register( TaskManager::GetStaticID(),   &_taskMngr,   &_CreateTaskManager   ) );
+		TaskManager::Register( GlobalSystems() );
+		ThreadManager::Register( GlobalSystems() );
+		StreamManager::Register( GlobalSystems() );
 
 		_Attach( &_taskMngr );
 		_Attach( &_threadMngr );
@@ -64,8 +68,9 @@ namespace Base
 */
 	MainSystem::~MainSystem ()
 	{
-		_factory.Unregister<ThreadManager>();
-		_factory.Unregister<TaskManager>();
+		StreamManager::Unregister( GlobalSystems() );
+		ThreadManager::Unregister( GlobalSystems() );
+		TaskManager::Unregister( GlobalSystems() );
 
 		GlobalSystems()->GetSetter< MainSystem >().Set( null );
 		
@@ -89,13 +94,14 @@ namespace Base
 	_Delete
 =================================================
 */
-	void MainSystem::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool MainSystem::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
 		_threadMngr.Send( msg );
 
 		_SendForEachAttachments( msg );
 
-		Module::_Delete_Impl( msg );
+		CHECK_ERR( Module::_Delete_Impl( msg ) );
+		return true;
 	}
 
 /*
@@ -103,7 +109,7 @@ namespace Base
 	_CreateThreadManager
 =================================================
 */
-	ModulePtr MainSystem::_CreateThreadManager (SubSystemsRef gs, const CreateInfo::ThreadManager &info)
+	ModulePtr MainSystem::_CreateThreadManager (GlobalSystemsRef gs, const CreateInfo::ThreadManager &info)
 	{
 		return GXTypes::New<ThreadManager>( gs, info );
 	}
@@ -113,7 +119,7 @@ namespace Base
 	_CreateTaskManager
 =================================================
 */
-	ModulePtr MainSystem::_CreateTaskManager (SubSystemsRef gs, const CreateInfo::TaskManager &info)
+	ModulePtr MainSystem::_CreateTaskManager (GlobalSystemsRef gs, const CreateInfo::TaskManager &info)
 	{
 		return GXTypes::New<TaskManager>( gs, info );
 	}
