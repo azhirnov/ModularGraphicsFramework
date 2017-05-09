@@ -87,6 +87,12 @@ namespace _types_hidden_
 
 		bool FindFirstIndex (const key_t &key, OUT usize &idx) const;
 		void FindLastIndex (usize first, OUT usize &idx) const;
+		
+		template <typename TKey2>
+		bool FindFirstIndex2 (const TKey2 &key, OUT usize &idx) const;
+
+		template <typename TKey2>
+		void FindLastIndex2 (const TKey2 &key, usize firstIdx, OUT usize &idx) const;
 
 		bool Erase (const key_t &key);
 		void EraseFromIndex (usize index);
@@ -99,6 +105,10 @@ namespace _types_hidden_
 
 		void Resize (usize uSize)						{ _memory.Resize( uSize, false ); }
 		void Reserve (usize uSize)						{ _memory.Reserve( uSize ); }
+
+		
+		static constexpr bool	IsLinearMemory ()			{ return Container::IsLinearMemory(); }
+		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStaticMemory(); }
 
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
@@ -187,6 +197,37 @@ namespace _types_hidden_
 		return _FindIndex< cmp_t >( key, OUT idx );
 	}
 	
+/*
+=================================================
+	FindFirstIndex2
+=================================================
+*/
+	template <typename C, typename K, template <typename T> class Search, bool U>
+	template <typename TKey2>
+	inline bool MapUtils<C,K,Search,U>::FindFirstIndex2 (const TKey2 &key, OUT usize &idx) const
+	{
+		typedef Search< TKey2 >		cmp_t;
+		return _FindIndex< cmp_t >( key, OUT idx );
+	}
+	
+/*
+=================================================
+	FindLastIndex2
+=================================================
+*/
+	template <typename C, typename K, template <typename T> class Search, bool U>
+	template <typename TKey2>
+	inline void MapUtils<C,K,Search,U>::FindLastIndex2 (const TKey2 &key, usize firstIdx, OUT usize &idx) const
+	{
+		ASSERT( key == _memory[firstIdx].first );
+
+		idx = firstIdx;
+
+		for (usize i = firstIdx+1; i < this->LastIndex() and key == _memory[i].first; ++i) {
+			idx = i;
+		}
+	}
+
 /*
 =================================================
 	FindLastIndex

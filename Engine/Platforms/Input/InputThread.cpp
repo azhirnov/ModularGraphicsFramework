@@ -17,7 +17,7 @@ namespace Platforms
 =================================================
 */
 	InputThread::InputThread (const GlobalSystemsRef gs, const CreateInfo::InputThread &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "InputThread" );
 

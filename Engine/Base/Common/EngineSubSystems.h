@@ -175,7 +175,7 @@ namespace Base
 	};
 
 
-	using GlobalSubSystems		= EngineSubSystems< "global"_StringToID >;
+	using GlobalSubSystems	= EngineSubSystems< "global"_StringToID >;
 	using GlobalSystemsRef	= Base::ConstReference< GlobalSubSystems >;
 
 

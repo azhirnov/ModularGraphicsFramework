@@ -181,7 +181,7 @@ namespace GXTypes
 		bool			Empty ()		const	{ return _count == 0; }
 		usize			Count ()		const	{ return _count; }
 		usize			Capacity ()		const	{ return _size; }
-		usize			MaxCapacity ()	const	{ return _memory.MaxSize(); }	// max available for allocation count of elements
+		constexpr usize	MaxCapacity ()	const	{ return _memory.MaxSize(); }	// max available for allocation count of elements
 		BytesU			Size ()			const	{ return BytesU( Count() * sizeof(T) ); }
 		BytesU			FullSize ()		const	{ return BytesU( Capacity() * sizeof(T) ); }
 		usize			LastIndex ()	const	{ return Count()-1; }
@@ -199,7 +199,8 @@ namespace GXTypes
 		bool IsEnd (const_iterator iter)	const;
 
 
-		static constexpr bool	IsLinearMemory ()	{ return true; }
+		static constexpr bool	IsLinearMemory ()			{ return true; }
+		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStatic(); }
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{

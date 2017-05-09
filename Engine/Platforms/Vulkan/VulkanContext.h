@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/GPU/Context.h"
+#include "Engine/Platforms/Shared/GPU/Texture.h"
 #include "Engine/Platforms/Vulkan/VulkanThread.h"
 
 #if defined( GRAPHICS_API_VULKAN )
@@ -64,6 +65,17 @@ namespace Platforms
 
 		static ModulePtr _CreateVulkanThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
 		static ModulePtr _CreateVulkanContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
+		static ModulePtr _CreateVk1Memory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
+		static ModulePtr _CreateVk1Buffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);
+		static ModulePtr _CreateVk1Texture (GlobalSystemsRef, const CreateInfo::GpuTexture &);
+		static ModulePtr _CreateVk1Sampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr _CreateVk1RenderPass (GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
+		static ModulePtr _CreateVk1Framebuffer (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
+		static ModulePtr _CreateVk1CommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
+		static ModulePtr _CreateVk1GraphicsPipeline (GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
+		static ModulePtr _CreateVk1ShaderModules (GlobalSystemsRef, const CreateInfo::GpuShaderModulesFromFile &);
+		static ModulePtr _CreateVk1ShaderModules2 (GlobalSystemsRef, const CreateInfo::GpuShaderModulesFromBuffer &);
+		static ModulePtr _CreateVk1CommandBufferBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBufferBuilder &);
 	};
 
 

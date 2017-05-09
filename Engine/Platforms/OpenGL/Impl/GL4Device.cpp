@@ -9,21 +9,6 @@ namespace Engine
 {
 namespace PlatformGL
 {
-	
-/*
-=================================================
-	constructor
-=================================================
-*/
-	GL4BaseModule::GL4BaseModule (const GlobalSystemsRef gs,
-								  UntypedID_t id,
-								  const Runtime::VirtualTypeList *msgTypes,
-								  const Runtime::VirtualTypeList *eventTypes) :
-		Module( gs, id, msgTypes, eventTypes ),
-		_glSystems( gs->Get< ParallelThread >()->GetModule( OpenGLThread::GetStaticID() )
-						.ToPtr< OpenGLThread >()->GetDevice()->GLSystems() )
-	{
-	}
 
 /*
 =================================================

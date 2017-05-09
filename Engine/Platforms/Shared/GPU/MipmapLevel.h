@@ -13,7 +13,7 @@ namespace Platforms
 	// Mipmap Level
 	//
 	
-	struct MipmapLevel
+	struct MipmapLevel : CompileTime::PODStruct
 	{
 	// types
 	private:

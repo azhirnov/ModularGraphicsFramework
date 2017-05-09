@@ -15,14 +15,14 @@
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformVK
 {
 
 	//
-	// Vulkan Wrapper
+	// Vulkan Device
 	//
 
-	struct Vk1Device
+	class Vk1Device final : public BaseObject
 	{
 	// types
 	public:
@@ -45,38 +45,28 @@ namespace Platforms
 
 		struct QueueFamilyIndices
 		{
-		// variables
-			vk::uint32_t	graphics;
-			vk::uint32_t	compute;
-			vk::uint32_t	transfer;
-			vk::uint32_t	present;
-
-		// methods
-			QueueFamilyIndices () :
-				graphics( -1 ),
-				compute( -1 ),
-				transfer( -1 ),
-				present( -1 )
-			{}
+			vk::uint32_t	graphics	= -1;
+			vk::uint32_t	compute		= -1;
+			vk::uint32_t	transfer	= -1;
+			vk::uint32_t	present		= -1;
 		};
 
 
 	private:
-		struct SwapChainBuffer
+		class Vk1SystemFramebuffer;
+
+		struct SwapChainBuffer : CompileTime::PODStruct
 		{
-		// variables
-			vk::VkImage		image;
-			vk::VkImageView	view;
-			
-		// methods
-			SwapChainBuffer () : image(0), view(0)
-			{}
+			vk::VkImage		image	= VK_NULL_HANDLE;
+			vk::VkImageView	view	= VK_NULL_HANDLE;
 		};
+
+		static const uint	MAX_SWAPCHAIN_SIZE = 8;
 		
-		using SwapChainBuffers_t	= Array< SwapChainBuffer >;
-		using _ConstCharPtrBuffer_t	= ArrayRef< const char *>;
-		using Framebuffers_t		= Array< vk::VkFramebuffer >;
+		using SwapChainBuffers_t	= FixedSizeArray< SwapChainBuffer, MAX_SWAPCHAIN_SIZE >;
+		using Framebuffers_t		= FixedSizeArray< ModulePtr, MAX_SWAPCHAIN_SIZE >;
 		using CommandBuffers_t		= Array< vk::VkCommandBuffer >;
+		using _ConstCharPtrBuffer_t	= ArrayRef< const char *>;
 
 		using ExtensionNames_t		= _ConstCharPtrBuffer_t;
 		using ValidationLayers_t	= _ConstCharPtrBuffer_t;
@@ -86,6 +76,8 @@ namespace Platforms
 
 	// variables
 	private:
+		const VkSystemsRef						_vkSystems;
+
 		vk::VkPhysicalDeviceProperties			_deviceProperties;
 		vk::VkPhysicalDeviceFeatures			_deviceFeatures;
 		vk::VkPhysicalDeviceMemoryProperties	_deviceMemoryProperties;
@@ -104,17 +96,23 @@ namespace Platforms
 		vk::VkDeviceMemory				_depthStencilMemory;
 		vk::VkImageView					_depthStencilView;
 
+		EPixelFormat::type				_colorPixelFormat;
+		EPixelFormat::type				_depthStencilPixelFormat;
+
 		vk::VkFormat					_colorFormat;
 		vk::VkColorSpaceKHR				_colorSpace;
 		vk::VkFormat					_depthStencilFormat;
 
 		QueueFamilyIndices				_queueFamilyIndices;
 
-		vk::VkCommandPool				_commandPool;
-		CommandBuffers_t				_commandBuffers;
+		ModulePtr						_commandBuilder;
+		CommandBuffers_t				_tempCmdBuffers;
 
-		vk::VkRenderPass				_renderPass;
+		ModulePtr						_renderPass;
 		Framebuffers_t					_framebuffers;
+
+		uint							_currentImageIndex;
+		bool							_graphicsQueueSubmited;
 
 		vk::VkSemaphore					_imageAvailable;
 		vk::VkSemaphore					_renderFinished;
@@ -126,7 +124,7 @@ namespace Platforms
 
 	// methods
 	public:
-		Vk1Device ();
+		Vk1Device (const GlobalSystemsRef gs, const VkSystemsRef vkSys);
 		~Vk1Device ();
 
 		bool CreateInstance (StringCRef applicationName, vk::uint32_t applicationVersion, vk::uint32_t vulkanVersion,
@@ -145,15 +143,23 @@ namespace Platforms
 		void DeviceWaitIdle ();
 
 		bool CreateSwapchain (const uint2 &size, bool vsync, vk::uint32_t imageArrayLayers = 1,
-							  vk::VkFormat depthStencilFormat = vk::VK_FORMAT_UNDEFINED);
+							  EPixelFormat::type depthStencilFormat = Uninitialized);
 		bool RecreateSwapchain (const uint2 &size);
 		bool RecreateSwapchain ();
 		bool DestroySwapchain ();
 
-		bool SetSurface (vk::VkSurfaceKHR surface, vk::VkFormat colorFormat, vk::VkColorSpaceKHR colorSpace);
+		bool SetSurface (vk::VkSurfaceKHR surface, EPixelFormat::type colorFormat);
 		bool DestroySurface ();
 
-		bool DrawFrame ();
+		bool BeginFrame ();
+		bool EndFrame ();
+		//bool EndFrame (const ModulePtr &framebuffer);
+		bool IsFrameStarted () const;
+
+		bool SubmitGraphicsQueue (ArrayCRef< ModulePtr > cmdBuffers);
+		bool SubmitComputeQueue (ArrayCRef< ModulePtr > cmdBuffers);
+
+		//bool DrawFrame ();
 		
 		bool GetMemoryTypeIndex (vk::uint32_t memoryTypeBits, vk::VkMemoryPropertyFlags flags, OUT vk::uint32_t &index) const;
 
@@ -163,19 +169,23 @@ namespace Platforms
 		bool IsSurfaceCreated ()		const						{ return _surface		 != VK_NULL_HANDLE; }
 		bool IsSwapchainCreated ()		const						{ return _swapchain		 != VK_NULL_HANDLE; }
 		bool IsDebugCallbackCreated ()	const						{ return _debugCallback	 != VK_NULL_HANDLE; }
+		
+		VkSystemsRef			VkSystems ()				const	{ return _vkSystems; }
 
 		vk::VkInstance			GetInstance ()				const	{ return _instance; }
 		vk::VkPhysicalDevice	GetPhyiscalDevice ()		const	{ return _physicalDevice; }
-		vk::VkDevice			GetDevice ()				const	{ return _logicalDevice; }
+		vk::VkDevice			GetLogicalDevice ()			const	{ return _logicalDevice; }
 		vk::VkSurfaceKHR		GetSurface ()				const	{ return _surface; }
 		vk::VkSwapchainKHR		GetSwapchain ()				const	{ return _swapchain; }
 		vk::VkFormat			GetColorFormat ()			const	{ return _colorFormat; }
 		vk::VkColorSpaceKHR		GetColorSpace ()			const	{ return _colorSpace; }
 		vk::VkFormat			GetDepthStencilFormat ()	const	{ return _depthStencilFormat; }
-		vk::VkRenderPass		GetDefaultRenderPass ()		const	{ return _renderPass; }
-		vk::VkCommandPool		GetCommandPool ()			const	{ return _commandPool; }
+
+		ModulePtr				GetDefaultRenderPass ()		const	{ return _renderPass; }
+		ModulePtr				GetCommandBuilder ()		const	{ return _commandBuilder; }
+		ModulePtr				GetCurrentFramebuffer ()	const	{ return _framebuffers[ _currentImageIndex ]; }
+
 		QueueFamilyIndices		GetQueueFamilyIndices ()	const	{ return _queueFamilyIndices; }
-		//vk::VkDebugReportCallbackEXT	GetDebugCallback ()	const	{ return _debugCallback; }
 		uint2 const&			GetSurfaceSize ()			const	{ return _surfaceSize; }
 
 		vk::VkQueue				GetGraphicsQueue ()			const;
@@ -183,8 +193,8 @@ namespace Platforms
 		vk::VkQueue				GetTransferQueue ()			const;
 		vk::VkQueue				GetPresentQueue ()			const;
 		
-		ArrayCRef< vk::VkCommandBuffer >			GetCommandBuffers ()	const	{ return _commandBuffers; }
-		ArrayCRef< vk::VkFramebuffer >				GetFramebuffers ()		const	{ return _framebuffers; }
+		//ArrayCRef< ModulePtr >						GetCommandBuffers ()	const	{ return _commandBuffers; }
+		//ArrayCRef< ModulePtr >						GetFramebuffers ()		const	{ return _framebuffers; }
 		vk::VkPhysicalDeviceProperties const&		GetDeviceProperties ()	const	{ return _deviceProperties; }
 		vk::VkPhysicalDeviceFeatures const&			GetDeviceFeatures ()	const	{ return _deviceFeatures; }
 		vk::VkPhysicalDeviceMemoryProperties const&	GetMemoryProperties ()	const	{ return _deviceMemoryProperties; }
@@ -208,7 +218,7 @@ namespace Platforms
 		void _DeleteRenderPass ();
 
 		bool _CreateColorAttachment (OUT SwapChainBuffers_t &imageBuffers) const;
-		bool _CreateDepthStencilAttachment (vk::VkFormat depthStencilFormat);
+		bool _CreateDepthStencilAttachment (EPixelFormat::type depthStencilFormat);
 		void _DeleteDepthStencilAttachment ();
 
 		bool _CreateFramebuffers (OUT Framebuffers_t &frameBuffers) const;
@@ -217,7 +227,6 @@ namespace Platforms
 		bool _CreateSemaphores ();
 		void _DestroySemaphores ();
 
-		bool _CreateCommandPool ();
 		bool _CreateCommandBuffers ();
 		void _DeleteCommandBuffers ();
 
@@ -258,7 +267,7 @@ namespace Platforms
 	};
 
 	
-}	// Platforms
+}	// PlatformVK
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN

@@ -188,7 +188,8 @@ namespace Base
 		const TypeId	id		= TypeIdOf< Message<T> >();
 		usize			index	= -1;
 
-		CHECK_ERR( validTypes.HasType( id ) );
+		if ( not validTypes.HasType( id ) )
+			RETURN_ERR( "Can't subscribe for event '" << ToString( id ) << "'" );
 
 		// create handler
 		if ( not _handlers.FindIndex( id, OUT index ) )
@@ -227,7 +228,8 @@ namespace Base
 		const TypeId			id = TypeIdOf< Message<T> >();
 		HandlersMap_t::iterator	iter;
 		
-		CHECK_ERR( validTypes.HasType( id ) );
+		if ( not validTypes.HasType( id ) )
+			RETURN_ERR( "Can't unsubscribe for event '" << ToString( id ) << "'" );
 
 		if ( _handlers.Find( id, OUT iter ) )
 		{

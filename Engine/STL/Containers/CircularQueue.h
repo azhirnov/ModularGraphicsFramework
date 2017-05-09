@@ -140,7 +140,8 @@ namespace GXTypes
 		usize	LastIndex ()	const				{ return Count()-1; }
 		
 
-		static constexpr bool	IsLinearMemory ()	{ return true; }	// TODO: false ?
+		static constexpr bool	IsLinearMemory ()			{ return false; }
+		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStatic(); }
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{

@@ -147,71 +147,6 @@ namespace Platforms
 		static StringCRef ToString (type value);
 	};
 
-
-	struct EAddressMode
-	{
-		enum type : uint
-		{
-			Clamp = 0,
-			ClampToEdge = Clamp,
-			ClampToBorder,
-			Repeat,
-			MirroredRepeat,
-			MirroredClamp,
-			ClampUnnorm,
-
-			_Count,
-			Unknown	= uint(-1),
-		};
-
-		static StringCRef ToString (type value);
-	};
-
-
-	struct EFilter
-	{
-		enum type : uint
-		{
-			Unknown				= 0,
-
-			_MIN_NEAREST		= 1 << 8,
-			_MIN_LINEAR			= 1 << 9,
-			_MAG_NEAREST		= 1 << 10,
-			_MAG_LINEAR			= 1 << 11,
-			_MIP_NEAREST		= 1 << 12,
-			_MIP_LINEAR			= 1 << 13,
-			_ANISOTROPIC		= 1 << 14,
-			_A_FACTOR_MASK		= 0xFF,
-
-			_MIP_MASK			= _MIP_NEAREST | _MIP_LINEAR,
-			_MIN_MASK			= _MIN_NEAREST | _MIN_LINEAR,
-			_MAG_MASK			= _MAG_NEAREST | _MAG_LINEAR,
-
-			MinMagMipNearest				= _MIN_NEAREST | _MAG_NEAREST | _MIP_NEAREST,
-			MinMagNearest_MipLinear			= _MIN_NEAREST | _MAG_NEAREST | _MIP_LINEAR,
-			MinNearest_MagLinear_MipNearest	= _MIN_NEAREST | _MAG_LINEAR  | _MIP_NEAREST,
-			MinNearest_MagMipLinear			= _MIN_NEAREST | _MAG_LINEAR  | _MIP_LINEAR,
-			MinLinear_MagMipNearest			= _MIN_LINEAR  | _MAG_NEAREST | _MIP_NEAREST,
-			MinLinear_MagNearest_MipLinear	= _MIN_LINEAR  | _MAG_NEAREST | _MIP_LINEAR,
-			MinMagLinear_MipNearest			= _MIN_LINEAR  | _MAG_LINEAR  | _MIP_NEAREST,
-			MinMagMipLinear					= _MIN_LINEAR  | _MAG_LINEAR  | _MIP_LINEAR,
-			Anisotropic_2					= _ANISOTROPIC | MinMagMipLinear | 2,
-			Anisotropic_4					= _ANISOTROPIC | MinMagMipLinear | 4,
-			Anisotropic_8					= _ANISOTROPIC | MinMagMipLinear | 8,
-			Anisotropic_12					= _ANISOTROPIC | MinMagMipLinear | 12,
-			Anisotropic_16					= _ANISOTROPIC | MinMagMipLinear | 16,
-		};
-
-		GX_ENUM_BIT_OPERATIONS( type );
-
-		static StringCRef ToString (type value);
-
-		static bool IsMipmapLinear (type value);
-		static bool IsMinLinear (type value);
-		static bool IsMagLinear (type value);
-		static uint GetAnisotropic (type value);
-	};
-
 	
 	struct EPrimitive
 	{
@@ -240,56 +175,13 @@ namespace Platforms
 			Back		= 2,
 			FontAndBack	= Front | Back,
 
-			Unknown		= 0,
+			//Unknown		= (1u << 31),
 		};
 
 		GX_ENUM_BIT_OPERATIONS( type );
 		
 		static StringCRef ToString (type value);
 	};
-
-	
-	struct EVertexInputRate
-	{
-		enum type : uint
-		{
-			Vertex	= 0,
-			Instance,
-
-			_Count,
-			Unknown		= uint(-1),
-		};
-	};
-	
-
-	/*struct EFragOutput
-	{
-		enum type : uint
-		{
-			Unknown		= 0,
-			Int4		= EValueTypeInfo::Int4,
-			UInt4		= EValueTypeInfo::UInt4,
-			Float4		= EValueTypeInfo::Float4,
-		};
-
-		static type From (EPixelFormat::type fmt);
-		static StringCRef ToString (type value);
-	};*/
-	
-
-	/*struct EPointSpriteCoordOrigin
-	{
-		enum type : uint
-		{
-			UpperLeft	= 0,
-			LowerLeft,
-
-			_Count,
-			Unknown		= uint(-1),
-		};
-
-		static StringCRef ToString (type value);
-	};*/
 	
 
 	struct EPipelineDynamicState
@@ -312,6 +204,29 @@ namespace Platforms
 
 		using bits = EnumSet< EPipelineDynamicState >;
 	};
+	
+
+
+//-----------------------------------------------------------------------------//
+// ECompareFunc
+	
+	inline StringCRef ECompareFunc::ToString (type value)
+	{
+		switch ( value )
+		{
+			case ECompareFunc::None		:	return "None";
+			case ECompareFunc::Never	:	return "Never";
+			case ECompareFunc::Less		:	return "Less";
+			case ECompareFunc::Equal	:	return "Equal";
+			case ECompareFunc::LEqual	:	return "LessEqual";
+			case ECompareFunc::Greater	:	return "Greater";
+			case ECompareFunc::NotEqual	:	return "NotEqual";
+			case ECompareFunc::GEqual	:	return "GreaterEqual";
+			case ECompareFunc::Always	:	return "Always";
+		}
+		RETURN_ERR( "invalid compare function type", "unknown" );
+	}
+
 
 }	// Platforms
 }	// Engine

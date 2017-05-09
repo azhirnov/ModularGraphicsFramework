@@ -2,32 +2,25 @@
 
 #pragma once
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformVK
 {
 
 	//
 	// Vulkan Memory
 	//
 
-	class Vk1Memory final : public Module
+	class Vk1Memory final : public Vk1BaseModule
 	{
 	// types
 	private:
-		using SupportedMessages_t	= MessageListFrom< 
-											ModuleMsg::AttachModule,
-											ModuleMsg::DetachModule,
-											ModuleMsg::OnModuleAttached,
-											ModuleMsg::OnModuleDetached,
-											ModuleMsg::FindModule,
-											ModuleMsg::ModulesDeepSearch,
-											ModuleMsg::Delete,
+		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::GetStreamDescriptor,
 											ModuleMsg::ReadFromStream,
 											ModuleMsg::WriteToStream,
@@ -35,12 +28,14 @@ namespace Platforms
 											ModuleMsg::FlushGpuMemoryRange,
 											ModuleMsg::UnmapGpuMemory,
 											ModuleMsg::CopyGpuMemory
-										>;
+										> >;
 
-		using SupportedEvents_t		= MessageListFrom<
+		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t::Append< MessageListFrom<
 											ModuleMsg::DataRegionChanged,
-											ModuleMsg::Delete
-										>;
+											ModuleMsg::OnGpuMemoryBindingChanged
+										> >;
+
+		using EBindingState			= ModuleMsg::OnGpuMemoryBindingChanged::EBindingState;
 
 
 	// constants
@@ -51,8 +46,17 @@ namespace Platforms
 
 	// variables
 	private:
-		GpuMemoryDescriptor		_descr;
+		vk::VkDeviceMemory		_mem;
+		ubyte *					_mappedPtr;
+
+		BytesUL					_size;
+		BytesUL					_mappedOffset;
+		BytesUL					_mappedSize;
+		
+		EGpuMemory::bits		_flags;
 		EMemoryAccess::bits		_access;
+		uint					_heapIndex;
+		EBindingState			_binding;
 		bool					_isMapped;
 
 
@@ -73,10 +77,20 @@ namespace Platforms
 		bool _FlushGpuMemoryRange (const Message< ModuleMsg::FlushGpuMemoryRange > &);
 		bool _UnmapGpuMemory (const Message< ModuleMsg::UnmapGpuMemory > &);
 		bool _CopyGpuMemory (const Message< ModuleMsg::CopyGpuMemory > &);
+		bool _Compose (const Message< ModuleMsg::Compose > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+
+	private:
+		bool _IsCreated () const;
+		bool _AllocForImage ();
+		bool _AllocForBuffer ();
+		void _FreeMemory ();
+
+		static EMemoryAccess::bits _GpuMemoryToMemoryAccess (EGpuMemory::bits flags);
 	};
 
 
-}	// Platforms
+}	// PlatformVK
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN

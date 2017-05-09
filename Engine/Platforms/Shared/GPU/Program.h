@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Common/Common.h"
+#include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
 
 namespace Engine
 {

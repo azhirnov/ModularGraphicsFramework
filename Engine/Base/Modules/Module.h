@@ -19,7 +19,7 @@ namespace Base
 	class Module : public BaseObject
 	{
 	// types
-	protected:
+	public:
 		enum class EState
 		{
 			// it is recording state, add modules to build object.
@@ -43,10 +43,44 @@ namespace Base
 			IncompleteAttachment,	// current module can't find necessary modules.
 		};
 
+	protected:
+		using UntypedID_t	= ulong;
 
-		using UntypedID_t			= ulong;
-		using Modules_t				= Map< UntypedID_t, ModulePtr >;		// TODO: fixed map ?
-		using ModulesRef_t			= ArrayCRef< Pair<UntypedID_t, ModulePtr> >;
+		struct ModuleInfo
+		{
+		// variables
+			UntypedID_t		id;
+			uint			order;
+
+		// methods
+			ModuleInfo (UntypedID_t id, uint order) : id(id), order(order) {}
+
+			bool operator == (const ModuleInfo &right) const	{ return id == right.id and order == right.order; }
+			bool operator >  (const ModuleInfo &right) const	{ return id != right.id ? id > right.id : order > right.order; }
+			bool operator <  (const ModuleInfo &right) const	{ return id != right.id ? id < right.id : order < right.order; }
+		};
+
+		struct ModuleSearchByID
+		{
+		// variables
+			UntypedID_t		id;
+
+		// methods
+			explicit ModuleSearchByID (UntypedID_t id) : id(id) {}
+
+			bool operator == (const ModuleInfo &right) const	{ return id == right.id; }
+			bool operator >  (const ModuleInfo &right) const	{ return id > right.id; }
+			bool operator <  (const ModuleInfo &right) const	{ return id < right.id; }
+		};
+
+		struct ModuleConfig
+		{
+			UntypedID_t		id;
+			uint			maxParents;
+		};
+
+		using AttachedModules_t		= MultiMap< ModuleInfo, ModulePtr >;		// TODO: fixed map ?
+		using ParentModules_t		= Set< ModulePtr >;							// TODO: fixed set ?
 
 		template <typename ...Types>
 		using MessageListFrom		= CompileTime::TypeListFrom< Message<Types>... >;
@@ -72,21 +106,24 @@ namespace Base
 											ModuleMsg::Update,
 											ModuleMsg::Delete
 										>;
-		
+
+	private:
 		class AttachModuleToManagerAsyncTask;
 		class DetachModuleFromManagerAsyncTask;
+		struct _FindModuleWithTypelist_Func;
 
 
 	// variables
 	private:
 		MessageHandler					_msgHandler;
 		ModulePtr						_manager;
-		ModulePtr						_parent;
-		Modules_t						_attachments;
-		//bool							_lockAttachments;
+		ParentModules_t					_parents;
+		AttachedModules_t				_attachments;
+		uint							_attachmentCounter;
 		EState							_state;
 		const ThreadID					_ownThread;		// TODO: use Atomic<> ?
 		const UntypedID_t				_compId;
+		const uint						_maxParents;
 		const Runtime::VirtualTypeList&	_supportedMessages;
 		const Runtime::VirtualTypeList&	_supportedEvents;
 
@@ -109,6 +146,8 @@ namespace Base
 
 		ModulePtr GetModule (UntypedID_t id);
 		
+		template <typename ...MsgTypes>
+		ModulePtr GetModule ();
 
 		Runtime::VirtualTypeList const&		GetSupportedMessages ()		const	{ return _supportedMessages; }
 		Runtime::VirtualTypeList const&		GetSupportedEvents ()		const	{ return _supportedEvents; }
@@ -121,21 +160,21 @@ namespace Base
 		
 	// hidden methods
 	protected:
-		Module (const GlobalSystemsRef gs, UntypedID_t id,
-				 const Runtime::VirtualTypeList *msgTypes,
-				 const Runtime::VirtualTypeList *eventTypes);
+		Module (const GlobalSystemsRef gs,
+				const ModuleConfig &config,
+				const Runtime::VirtualTypeList *msgTypes,
+				const Runtime::VirtualTypeList *eventTypes);
 
 		~Module ();
 
 		bool _Attach (const ModulePtr &unit);
 		bool _Detach (const ModulePtr &unit);
 		void _DetachAllAttachments ();
-		void _DetachSelfFromParent ();
-		void _DetachSelfFromManager ();
+		void _DetachSelfFromParent (const ModulePtr &parent);
+		void _DetachSelfFromAllParents ();
 
-		//bool _AttachSelfToManager (const ModulePtr &mngr, bool sync);
-		//bool _AttachSelfToManager (UntypedID_t id, bool sync);
 		bool _AttachSelfToManager (const ModulePtr &mngr, UntypedID_t id = 0, bool wait = true);
+		void _DetachSelfFromManager ();
 
 		void _SetManager (const ModulePtr &mngr);
 		bool _SetState (EState newState);
@@ -143,7 +182,7 @@ namespace Base
 		bool _ValidateMsgSubscriptions ();
 		bool _ValidateAllSubscriptions ();
 
-		bool _Compose (bool immutable);
+		bool _Compose (bool immutable);		// TODO: rename
 		
 		template <typename T>			bool _SendMsg (const Message<T> &msg);
 		template <typename T>			bool _SendEvent (const Message<T> &msg);
@@ -152,13 +191,16 @@ namespace Base
 		template <typename ...Types>	bool _SubscribeOnMsg (Types&& ...args);
 		template <typename ...Types>	bool _SubscribeOnEvent (Types&& ...args);
 
+		template <typename Typelist> static bool _FindModuleWithEvents (const AttachedModules_t &modules, OUT ModulePtr &result);
+		template <typename Typelist> static bool _FindModuleWithMessages (const AttachedModules_t &modules, OUT ModulePtr &result);
+
 		static bool _IsMutableState (EState state);		// is module editable?
 		static bool _IsComposedState (EState state);	// is module completed?
 		static bool _IsErrorState (EState state);		// is module initialization failed?
 
-		ModulePtr const&	_GetParent ()		const	{ return _parent; }
-		ModulePtr const&	_GetManager ()		const	{ return _manager; }
-		Modules_t const&	_GetAttachments ()	const	{ return _attachments; }
+		ParentModules_t const&		_GetParents ()		const	{ return _parents; }
+		ModulePtr const&			_GetManager ()		const	{ return _manager; }
+		AttachedModules_t const&	_GetAttachments ()	const	{ return _attachments; }
 
 
 	// message handlers with implementation
@@ -217,7 +259,9 @@ namespace Base
 	{
 		// only sync message supported
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
-		ASSERT( GetSupportedMessages().HasType( TypeIdOf< Message<T> >() ) );
+
+		if ( not GetSupportedMessages().HasType( TypeIdOf< Message<T> >() ) )
+			RETURN_ERR( "Unsupported message type '" << ToString( TypeIdOf<T>() ) << "'" );
 
 		return _msgHandler.Send( msg );
 	}
@@ -234,7 +278,9 @@ namespace Base
 	{
 		// only sync message supported
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
-		ASSERT( GetSupportedEvents().HasType( TypeIdOf< Message<T> >() ) );
+		
+		if ( not GetSupportedEvents().HasType( TypeIdOf< Message<T> >() ) )
+			RETURN_ERR( "Unsupported event type '" << ToString( TypeIdOf<T>() ) << "'" );
 
 		return _msgHandler.Send( msg );
 	}
@@ -306,10 +352,8 @@ namespace Base
 	forceinline bool Module::_SendForEachAttachments (const Message<DataType> &msg)
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
-		//CHECK_ERR( not _lockAttachments );
-		//SCOPE_SETTER( _lockAttachments = true, false );
 
-		Modules_t	tmp = _attachments;		// TODO: optimize
+		AttachedModules_t	tmp = _attachments;		// TODO: optimize
 
 		FOR( i, tmp )
 		{
@@ -317,6 +361,93 @@ namespace Base
 		}
 		return true;
 	}
+	
+/*
+=================================================
+	_FindModuleWithTypelist_Func
+=================================================
+*/
+	struct Module::_FindModuleWithTypelist_Func
+	{
+	// variables
+		const Runtime::VirtualTypeList&		_typelist;
+		bool								result	= true;
+
+	// methods
+		_FindModuleWithTypelist_Func (Runtime::VirtualTypeList const& typelist) :
+			_typelist( typelist )
+		{}
+		
+		template <typename T, usize Index>
+		void Process ()
+		{
+			result &= _typelist.HasType< T >();
+		}
+	};
+
+/*
+=================================================
+	_FindModuleWithEvents
+=================================================
+*/
+	template <typename Typelist>
+	inline bool Module::_FindModuleWithEvents (const AttachedModules_t &modules, OUT ModulePtr &result)
+	{
+		STATIC_ASSERT( CompileTime::IsTypeList< Typelist > );
+
+		FOR( i, modules )
+		{
+			_FindModuleWithTypelist_Func	func{ modules[i].second->GetSupportedEvents() };
+
+			Typelist::RuntimeForEach( func );
+
+			if ( func.result )
+			{
+				result = modules[i].second;
+				return true;
+			}
+		}
+		return false;
+	}
+		
+/*
+=================================================
+	_FindModuleWithMessages
+=================================================
+*/
+	template <typename Typelist>
+	inline bool Module::_FindModuleWithMessages (const AttachedModules_t &modules, OUT ModulePtr &result)
+	{
+		STATIC_ASSERT( CompileTime::IsTypeList< Typelist > );
+
+		FOR( i, modules )
+		{
+			_FindModuleWithTypelist_Func	func{ modules[i].second->GetSupportedMessages() };
+
+			Typelist::RuntimeForEach( func );
+
+			if ( func.result )
+			{
+				result = modules[i].second;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+/*
+=================================================
+	GetModule
+=================================================
+*/
+	template <typename ...MsgTypes>
+	inline ModulePtr Module::GetModule ()
+	{
+		ModulePtr	result;
+		CHECK_ERR( _FindModuleWithMessages< MessageListFrom< MsgTypes... > >( _GetAttachments(), OUT result ) );
+		return result;
+	}
+
 	
 }	// Base
 }	// Engine

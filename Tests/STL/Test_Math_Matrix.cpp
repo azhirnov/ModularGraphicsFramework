@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/STL/Engine.STL.h"
 
@@ -29,7 +29,7 @@ static Matrix<T,Q,R> Mul (const Matrix<T,C,R> &left, const Matrix<T,Q,C> &right)
 }
 
 
-extern void Test_Math_Matrix ()
+void Matrix_Test1 ()
 {
 	float4x4	mat = float4x4::Identity();
 	float4		v( 1.0f, 2.0f, 3.0f, 4.0f );
@@ -46,4 +46,18 @@ extern void Test_Math_Matrix ()
 	float4x4	mat4 = Mul( mat1, mat2 );
 
 	ASSERT( mat3 == mat4 );
+}
+
+
+void Matrix_Test2 ()
+{
+	float3 v1 = float4() * float3x4();
+	float4 v2 = float3x4() * float3();
+}
+
+
+extern void Test_Math_Matrix ()
+{
+	Matrix_Test1();
+	Matrix_Test2();
 }

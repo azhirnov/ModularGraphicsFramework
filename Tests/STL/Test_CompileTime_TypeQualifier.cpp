@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/STL/Engine.STL.h"
 
@@ -129,4 +129,7 @@ extern void Test_CompileTime_TypeQualifier ()
 	
 	STATIC_ASSERT( IsCtorAvailable< CopyQualTest > );
 	STATIC_ASSERT( IsDtorAvailable< CopyQualTest > );
+
+	using PODUnion_t = GXTypes::Union< GXMath::float4, GXMath::uint4 >;
+	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier<PODUnion_t>::value  == ETypeQualifier::Def_ComplexPOD );
 }

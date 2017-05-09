@@ -30,11 +30,40 @@ namespace ModuleMsg
 		Out (Out &&) = default;
 		Out (const Out &) = default;
 
-		void Set (const T &val)	const	{ _value = val; }
-		void Set (T &&val)		const	{ _value = FW<T>(val); }
+		void Set (const T &val)		const	{ _value = val; }
+		void Set (T &&val)			const	{ _value = FW<T>(val); }
 
 		// available only for sender
-		Optional<T>&	Get ()			{ return _value; }
+		bool			IsDefined ()		{ return _value.IsDefined(); }
+		Optional<T>&	GetOptional ()		{ return _value; }
+		T &				Get ()				{ return _value.Get(); }
+		T				Get (const T& def)	{ return _value.Get( def ); }
+
+		bool MoveTo (OUT T &dst)
+		{
+			if ( _value.IsDefined() )
+			{
+				dst = RVREF( _value.Get() );
+				_value.Undefine();
+				return true;
+			}
+			return false;
+		}
+
+		bool MoveTo (OUT Optional<T> &dst)
+		{
+			dst.Undefine();
+
+			if ( _value.IsDefined() )
+			{
+				dst = RVREF( _value );
+				return true;
+			}
+			return false;
+		}
+
+		friend void		operator << (OUT T& dst, Out<T> &src)				{ src.MoveTo( OUT dst ); }
+		friend void		operator << (OUT Optional<T> &dst, Out<T> &src)		{ src.MoveTo( OUT dst ); }
 	};
 
 
@@ -60,12 +89,12 @@ namespace ModuleMsg
 	//
 	// Message Response
 	//
-	template <typename T>
+	template <typename ...Args>
 	struct Response
 	{
 	// types
 	public:
-		using Callback = Delegate< void (const T&) >;
+		using Callback = Delegate< void (Args&&...) >;
 
 
 	// variables
@@ -82,7 +111,7 @@ namespace ModuleMsg
 		Response (Response &&) = default;
 		Response () = delete;
 
-		void Call (const T &data) const		{ return _cb.SafeCall( data ); }
+		void Call (Args&& ...args) const	{ return _cb.SafeCall( FW<Args>( args )... ); }
 	};
 
 
@@ -113,7 +142,7 @@ namespace ModuleMsg
 
 
 	//
-	// Message Output with single write op
+	// Message Output with single write op (move-ctor available)
 	//
 	template <typename T>
 	struct SingleWrite

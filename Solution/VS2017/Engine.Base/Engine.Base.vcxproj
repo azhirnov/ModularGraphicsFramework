@@ -73,7 +73,7 @@
     <ProjectGuid>{4D750B1B-CE81-4C92-8BFE-40F2ACE23A14}</ProjectGuid>
     <RootNamespace>GGE</RootNamespace>
     <ProjectName>Engine.Base</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

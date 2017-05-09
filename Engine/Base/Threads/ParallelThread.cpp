@@ -19,7 +19,7 @@ namespace Base
 =================================================
 */
 	ParallelThread::ParallelThread (const GlobalSystemsRef gs, const CreateInfo::Thread &info) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
 		_isLooping( false )
 	{
 		SetDebugName( info.name );

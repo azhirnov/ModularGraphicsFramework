@@ -22,8 +22,8 @@ namespace Base
 
 	// methods
 	public:
-		AttachModuleToManagerAsyncTask (const ModulePtr &self, UntypedID_t managerID) :
-			AsyncTask( self, self->GlobalSystems()->Get<MainSystem>().ptr() ),
+		AttachModuleToManagerAsyncTask (const ModulePtr &self, const ModulePtr &where, UntypedID_t managerID) :
+			AsyncTask( self, where ),
 			_mngrID( managerID )
 		{}
 
@@ -37,11 +37,13 @@ namespace Base
 			self->_SetManager( result );
 		}
 		
-		void ExecuteInBackground (const ModulePtr &mainSystem, OUT ModulePtr &result) override
+		void ExecuteInBackground (const ModulePtr &where, OUT ModulePtr &result) override
 		{
-			result = (_mngrID == mainSystem->GetModuleID()) ? 
-						mainSystem :
-						mainSystem->GetModule( _mngrID );	// TODO: use deep search
+			result = (_mngrID == where->GetModuleID()) ? 
+						where :
+						where->GetModule( _mngrID );
+
+			ASSERT( result );
 
 			if ( result )
 				result->Send( Message< ModuleMsg::AddToManager >{ this, CurrentThreadModule() } );
@@ -63,10 +65,10 @@ namespace Base
 
 	// methods
 	public:
-		DetachModuleFromManagerAsyncTask (const ModulePtr &self, UntypedID_t managerID) :
+		/*DetachModuleFromManagerAsyncTask (const ModulePtr &self, UntypedID_t managerID) :
 			AsyncTask( self, self->GlobalSystems()->Get<MainSystem>().ptr() ),
 			_mngrID( managerID )
-		{}
+		{}*/
 
 		DetachModuleFromManagerAsyncTask (const ModulePtr &self, const ModulePtr &manager) :
 			AsyncTask( self, manager ),
@@ -78,11 +80,11 @@ namespace Base
 			self->_SetManager( null );
 		}
 		
-		void ExecuteInBackground (const ModulePtr &mainSystem, OUT UninitializedType &) override
+		void ExecuteInBackground (const ModulePtr &manager, OUT UninitializedType &) override
 		{
-			ModulePtr	result = (_mngrID == mainSystem->GetModuleID()) ?
-									mainSystem :
-									mainSystem->GetModule( _mngrID );	// TODO: use deep search
+			ModulePtr	result = (_mngrID == manager->GetModuleID()) ?
+									manager :
+									manager->GetModule( _mngrID );
 			
 			if ( result )
 				result->Send( Message< ModuleMsg::RemoveFromManager >{ this, CurrentThreadModule() } );

@@ -20,8 +20,13 @@ namespace Platforms
 =================================================
 */
 	VulkanThread::VulkanThread (const GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
-		_settings( ci.settings )
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
+		_settings( ci.settings ),
+		_device( GlobalSystems(), VkSystems() ),
+		_samplerCache( _device.VkSystems() ),
+		_pipelineCache( _device.VkSystems() ),
+		_renderPassCache( _device.VkSystems() ),
+		_updateInProgress( false )
 	{
 		SetDebugName( "VulkanThread" );
 		
@@ -35,11 +40,16 @@ namespace Platforms
 		_SubscribeOnMsg( this, &VulkanThread::_Update );
 		_SubscribeOnMsg( this, &VulkanThread::_Link );
 		_SubscribeOnMsg( this, &VulkanThread::_Delete );
+		_SubscribeOnMsg( this, &VulkanThread::_GpuThreadBeginFrame );
+		_SubscribeOnMsg( this, &VulkanThread::_GpuThreadEndFrame );
+		_SubscribeOnMsg( this, &VulkanThread::_SubmitGraphicsQueueCommands );
 		_SubscribeOnMsg( this, &VulkanThread::_WindowCreated );
 		_SubscribeOnMsg( this, &VulkanThread::_WindowBeforeDestroy );
 		_SubscribeOnMsg( this, &VulkanThread::_WindowDescriptorChanged );
 		
 		CHECK( _ValidateMsgSubscriptions() );
+
+		VkSystems()->GetSetter< VulkanThread >().Set( this );
 		
 		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
 
@@ -56,6 +66,8 @@ namespace Platforms
 		LOG( "VulkanThread finalized", ELog::Debug );
 
 		ASSERT( _window.IsNull() );
+
+		VkSystems()->GetSetter< VulkanThread >().Set( null );
 	}
 	
 /*
@@ -67,7 +79,7 @@ namespace Platforms
 	{
 		CHECK_ERR( _IsMutableState( GetState() ) );
 
-		_window = _GetParent()->GetModule( WinWindow::GetStaticID() );
+		_window = _GetParents().Front()->GetModule( WinWindow::GetStaticID() );
 		CHECK_ERR( _window );
 
 		_window->Subscribe( this, &VulkanThread::_WindowCreated );
@@ -82,9 +94,9 @@ namespace Platforms
 
 			_window->Send( request_hwnd );
 
-			if ( request_hwnd->hwnd.Get().IsDefined() )
+			if ( request_hwnd->hwnd.IsDefined() )
 			{
-				_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get().Get() } );
+				_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get() } );
 			}
 		}
 		return true;
@@ -97,12 +109,20 @@ namespace Platforms
 */
 	bool VulkanThread::_Update (const Message< ModuleMsg::Update > &msg)
 	{
+		/*if ( not _IsComposedState( GetState() ) )
+			return true;
+		
+		CHECK_ERR( _device.BeginFrame() );
+		_updateInProgress = true;
+
 		CHECK_ERR( Module::_Update_Impl( msg ) );
 
-		// swap buffers
+		CHECK_ERR( _device.EndFrame() );
+		_updateInProgress = false;
+		*/
 		return true;
 	}
-	
+
 /*
 =================================================
 	_Delete
@@ -113,6 +133,52 @@ namespace Platforms
 		_DetachWindow();
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
+		return true;
+	}
+	
+/*
+=================================================
+	_GpuThreadBeginFrame
+=================================================
+*/
+	bool VulkanThread::_GpuThreadBeginFrame (const Message< ModuleMsg::GpuThreadBeginFrame > &msg)
+	{
+		CHECK_ERR( not _device.IsFrameStarted() );
+		CHECK_ERR( _device.BeginFrame() );
+
+		msg->framebuffer.Set( _device.GetCurrentFramebuffer() );
+		return true;
+	}
+	
+/*
+=================================================
+	_GpuThreadEndFrame
+=================================================
+*/
+	bool VulkanThread::_GpuThreadEndFrame (const Message< ModuleMsg::GpuThreadEndFrame > &msg)
+	{
+		CHECK_ERR( _device.IsFrameStarted() );
+
+		if ( msg->framebuffer )
+			CHECK_ERR( msg->framebuffer == _device.GetCurrentFramebuffer() );
+
+		if ( not msg->commands.Empty() )
+			CHECK_ERR( _device.SubmitGraphicsQueue( msg->commands ) );
+
+		CHECK_ERR( _device.EndFrame() );
+		return true;
+	}
+
+/*
+=================================================
+	_SubmitGraphicsQueueCommands
+=================================================
+*/
+	bool VulkanThread::_SubmitGraphicsQueueCommands (const Message< ModuleMsg::SubmitGraphicsQueueCommands > &msg)
+	{
+		CHECK_ERR( _device.IsFrameStarted() );
+
+		CHECK_ERR( _device.SubmitGraphicsQueue( msg->commands ) );
 		return true;
 	}
 
@@ -142,6 +208,7 @@ namespace Platforms
 	bool VulkanThread::_CreateDevice (const ModuleMsg::WindowCreated &msg)
 	{
 		using namespace vk;
+		using namespace PlatformVK;
 
 		// create instance
 		{
@@ -165,12 +232,10 @@ namespace Platforms
 
 		// create surface
 		{
-			VkSurfaceKHR	surface		= VK_NULL_HANDLE;
-			VkFormat		color_fmt	= Vk1Enum( _settings.colorFmt );
-			VkColorSpaceKHR	color_space	= VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;	// EPixelFormat::IsNonLinear( _settings.format );
-			
+			VkSurfaceKHR	surface	= VK_NULL_HANDLE;
+
 			_surface.Create( _device.GetInstance(), msg.hwnd, OUT surface );
-			CHECK_ERR( _device.SetSurface( surface, color_fmt, color_space ) );
+			CHECK_ERR( _device.SetSurface( surface, _settings.colorFmt ) );
 		}
 
 		// create device
@@ -203,6 +268,8 @@ namespace Platforms
 
 			_SendEvent( Message< ModuleMsg::GpuDeviceBeforeDestory >{ this } );
 		}
+
+		_pipelineCache.DestroyCache();
 
 		_device.DestroySwapchain();
 		_device.DestroySurface();

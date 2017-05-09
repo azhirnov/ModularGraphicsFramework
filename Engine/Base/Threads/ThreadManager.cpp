@@ -19,7 +19,7 @@ namespace Base
 =================================================
 */
 	ThreadManager::ThreadManager (const GlobalSystemsRef gs, const CreateInfo::ThreadManager &info) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
 		_currentThread( gs, CreateInfo::Thread{ "MainThread", this } )
 	{
 		SetDebugName( "ThreadManager" );

@@ -18,7 +18,7 @@ namespace Base
 =================================================
 */
 	OutputStream::OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleDetached_Impl );
@@ -50,7 +50,7 @@ namespace Base
 =================================================
 */
 	OutputStream::OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleDetached_Impl );
@@ -63,7 +63,6 @@ namespace Base
 		_SubscribeOnMsg( this, &OutputStream::_WriteToFileStream );
 		
 		CHECK( _ValidateMsgSubscriptions() );
-
 
 		CHECK( ci.file );
 

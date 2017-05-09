@@ -5,19 +5,26 @@
 
 #if defined( GRAPHICS_API_VULKAN )
 
+#include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBufferBuilder.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1SystemFramebuffer.h"
+
 using namespace vk;
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformVK
 {
-	
+
 /*
 =================================================
 	constructor
 =================================================
 */
-	Vk1Device::Vk1Device () :
+	Vk1Device::Vk1Device (const GlobalSystemsRef gs, const VkSystemsRef vkSys) :
+		BaseObject( gs ),
+		_vkSystems( vkSys ),
 		_instance( VK_NULL_HANDLE ),
 		_physicalDevice( VK_NULL_HANDLE ),
 		_logicalDevice( VK_NULL_HANDLE ),
@@ -25,19 +32,31 @@ namespace Platforms
 		_swapchain( VK_NULL_HANDLE ),
 		_vsync( false ),
 		_debugCallback( VK_NULL_HANDLE ),
+		_colorPixelFormat( EPixelFormat::Unknown ),
+		_depthStencilPixelFormat( EPixelFormat::Unknown ),
 		_colorFormat( VK_FORMAT_UNDEFINED ),
 		_colorSpace( VK_COLOR_SPACE_MAX_ENUM_KHR ),
 		_imageAvailable( VK_NULL_HANDLE ),
 		_renderFinished( VK_NULL_HANDLE ),
 		_enableDebugMarkers( false ),
-		_commandPool( VK_NULL_HANDLE ),
 		_depthStencilImage( VK_NULL_HANDLE ),
 		_depthStencilMemory( VK_NULL_HANDLE ),
 		_depthStencilView( VK_NULL_HANDLE ),
 		_depthStencilFormat( VK_FORMAT_UNDEFINED ),
-		_renderPass( VK_NULL_HANDLE )
+		_renderPass( VK_NULL_HANDLE ),
+		_currentImageIndex( -1 ),
+		_graphicsQueueSubmited( false )
 	{
+		SetDebugName( "Vk1Device" );
+
 		_imageBuffers.Reserve( 8 );
+
+		VkSystems()->GetSetter< Vk1Device >().Set( this );
+
+		CHECK( GlobalSystems()->Get< ModulesFactory >()->Register(
+			Vk1SystemFramebuffer::GetStaticID(),
+			&Vk1SystemFramebuffer::CreateModule
+		) );
 	}
 	
 /*
@@ -47,12 +66,16 @@ namespace Platforms
 */
 	Vk1Device::~Vk1Device ()
 	{
+		GlobalSystems()->Get< ModulesFactory >()->UnregisterAll<Vk1SystemFramebuffer>();
+
 		CHECK( not IsInstanceCreated() );
 		CHECK( not HasPhyiscalDevice() );
 		CHECK( not IsDeviceCreated() );
 		CHECK( not IsSurfaceCreated() );
 		CHECK( not IsSwapchainCreated() );
 		CHECK( not IsDebugCallbackCreated() );
+
+		VkSystems()->GetSetter< Vk1Device >().Set( null );
 	}
 
 /*
@@ -94,7 +117,7 @@ namespace Platforms
 		instance_create_info.ppEnabledLayerNames		= layers.ptr();
 
 
-		VK_CHECK( vkCreateInstance( &instance_create_info, null, &_instance ) );
+		VK_CHECK( vkCreateInstance( &instance_create_info, null, OUT &_instance ) );
 		return true;
 	}
 	
@@ -137,7 +160,7 @@ namespace Platforms
 		dbg_callback_info.flags			= flags;
 		dbg_callback_info.pfnCallback	= &_DebugReportCallback;
 
-		VK_CHECK( vkCreateDebugReportCallbackEXT( _instance, &dbg_callback_info, null, &_debugCallback ) );
+		VK_CHECK( vkCreateDebugReportCallbackEXT( _instance, &dbg_callback_info, null, OUT &_debugCallback ) );
 		return true;
 	}
 	
@@ -295,7 +318,7 @@ namespace Platforms
 			device_info.ppEnabledExtensionNames	= device_extensions.ptr();
 		}
 
-		VK_CHECK( vkCreateDevice( _physicalDevice, &device_info, null, &_logicalDevice ) );
+		VK_CHECK( vkCreateDevice( _physicalDevice, &device_info, null, OUT &_logicalDevice ) );
 
 		if ( &_deviceFeatures != &enabledFeatures )
 			_deviceFeatures = enabledFeatures;
@@ -339,7 +362,7 @@ namespace Platforms
 	CreateSwapchain
 =================================================
 */
-	bool Vk1Device::CreateSwapchain (const uint2 &size, bool vsync, vk::uint32_t imageArrayLayers, VkFormat depthStencilFormat)
+	bool Vk1Device::CreateSwapchain (const uint2 &size, bool vsync, vk::uint32_t imageArrayLayers, EPixelFormat::type depthStencilFormat)
 	{
 		CHECK_ERR( HasPhyiscalDevice() );
 		CHECK_ERR( IsDeviceCreated() );
@@ -372,7 +395,7 @@ namespace Platforms
 		_GetSharingMode( OUT swapchain_info.imageSharingMode );
 		_GetImageUsage( OUT swapchain_info.imageUsage );
 
-		VK_CHECK( vkCreateSwapchainKHR( _logicalDevice, &swapchain_info, null, &_swapchain ) );
+		VK_CHECK( vkCreateSwapchainKHR( _logicalDevice, &swapchain_info, null, OUT &_swapchain ) );
 
 		_surfaceSize.x	= swapchain_info.imageExtent.width;
 		_surfaceSize.y	= swapchain_info.imageExtent.height;
@@ -389,7 +412,6 @@ namespace Platforms
 		CHECK_ERR( _CreateRenderPass() );
 		CHECK_ERR( _CreateFramebuffers( OUT _framebuffers ) );
 		CHECK_ERR( _CreateSemaphores() );
-		CHECK_ERR( _CreateCommandPool() );
 		CHECK_ERR( _CreateCommandBuffers() );
 
 		return true;
@@ -428,8 +450,10 @@ namespace Platforms
 		CHECK_ERR( IsDeviceCreated() );
 
 		_DeleteSwapchain( _swapchain, _imageBuffers );
-		_DeleteFramebuffers( _framebuffers );
-		_DeleteRenderPass();
+		_framebuffers.Clear();
+		
+		_renderPass = null;
+
 		_DeleteDepthStencilAttachment();
 		_DeleteCommandBuffers();
 		_DestroySemaphores();
@@ -443,15 +467,20 @@ namespace Platforms
 	SetSurface
 =================================================
 */
-	bool Vk1Device::SetSurface (VkSurfaceKHR surface,  VkFormat requiredFormat, VkColorSpaceKHR requiredColorSpace)
+	bool Vk1Device::SetSurface (vk::VkSurfaceKHR surface, EPixelFormat::type colorFmt)
 	{
 		CHECK_ERR( surface != VK_NULL_HANDLE );
 		CHECK_ERR( HasPhyiscalDevice() );
 		CHECK_ERR( not IsSurfaceCreated() );
 
+		const VkFormat			required_format			= Vk1Enum( colorFmt );
+		const VkColorSpaceKHR	required_color_space	= VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;	// EPixelFormat::IsNonLinear( _settings.format );
+
 		_surface = surface;
 
-		CHECK_ERR( _ChooseColorFormat( OUT _colorFormat, OUT _colorSpace, requiredFormat, requiredColorSpace ) );
+		CHECK_ERR( _ChooseColorFormat( OUT _colorFormat, OUT _colorSpace, required_format, required_color_space ) );
+
+		_colorPixelFormat = Vk1Enum( _colorFormat );
 		return true;
 	}
 	
@@ -470,7 +499,10 @@ namespace Platforms
 
 		vkDestroySurfaceKHR( _instance, _surface, null );
 
-		_surface = VK_NULL_HANDLE;
+		_surface			= VK_NULL_HANDLE;
+		_colorFormat		= VK_FORMAT_UNDEFINED;
+		_colorSpace			= VK_COLOR_SPACE_MAX_ENUM_KHR;
+		_colorPixelFormat	= EPixelFormat::Unknown;
 		return true;
 	}
 	
@@ -529,12 +561,161 @@ namespace Platforms
 		vkGetDeviceQueue( _logicalDevice, _queueFamilyIndices.present, 0, &queue );
 		return queue;
 	}
+	
+/*
+=================================================
+	BeginFrame
+=================================================
+*/
+	bool Vk1Device::BeginFrame ()
+	{
+		_graphicsQueueSubmited	= false;
+		_currentImageIndex		= -1;
+
+		vk::uint32_t	image_index = -1;
+		VkResult		result		= vkAcquireNextImageKHR( _logicalDevice, _swapchain, vk::uint64_t(-1), _imageAvailable,
+															 VK_NULL_HANDLE, OUT &image_index );
+
+		if ( result == VK_SUCCESS )
+		{}
+		else
+		if ( result == VK_ERROR_OUT_OF_DATE_KHR or
+			 result == VK_SUBOPTIMAL_KHR )
+		{
+			CHECK_ERR( RecreateSwapchain() );
+			return false;
+		}
+		else
+		{
+			if ( not Vk1_CheckErrors( result, "vkAcquireNextImageKHR", GX_FUNCTION_NAME, __FILE__, __LINE__ ) )
+				return false;
+		}
+
+		_currentImageIndex = image_index;
+		return true;
+	}
+	
+/*
+=================================================
+	EndFrame
+=================================================
+*/
+	bool Vk1Device::EndFrame ()
+	{
+		CHECK_ERR( _currentImageIndex < _framebuffers.Count() );
+		
+		VkPresentInfoKHR	present_info		= {};
+		VkSwapchainKHR		swap_chains[]		= { _swapchain };
+		VkSemaphore			signal_semaphores[] = { _renderFinished };
+
+		present_info.sType			= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		present_info.swapchainCount	= CountOf( swap_chains );
+		present_info.pSwapchains	= swap_chains;
+		present_info.pImageIndices	= &_currentImageIndex;
+
+		if ( _graphicsQueueSubmited ) {
+			present_info.waitSemaphoreCount	= CountOf( signal_semaphores );
+			present_info.pWaitSemaphores	= signal_semaphores;
+		}
+		else {
+			present_info.waitSemaphoreCount	= 0;
+			present_info.pWaitSemaphores	= null;
+		}
+
+		VK_CHECK( vkQueuePresentKHR( GetGraphicsQueue(), &present_info ) );
+		
+		_graphicsQueueSubmited	= false;
+		_currentImageIndex		= -1;
+		return true;
+	}
+	
+/*
+=================================================
+	EndFrame
+=================================================
+*
+	bool Vk1Device::EndFrame (const ModulePtr &framebuffer)
+	{
+		// check if framebuffer is current
+		CHECK_ERR
+		//CHECK_ERR( framebuffer.ToPtr< Vk1SystemFramebuffer >()->GetImageIndex() == _currentImageIndex );
+
+		return EndFrame();
+	}
+
+/*
+=================================================
+	IsFrameStarted
+=================================================
+*/
+	bool Vk1Device::IsFrameStarted () const
+	{
+		return _currentImageIndex < _framebuffers.Count();
+	}
+
+/*
+=================================================
+	SubmitGraphicsQueue
+=================================================
+*/
+	bool Vk1Device::SubmitGraphicsQueue (ArrayCRef< ModulePtr > cmdBuffers)
+	{
+		CHECK_ERR( _currentImageIndex < _framebuffers.Count() );
+
+		// get command buffer IDs
+		_tempCmdBuffers.Clear();
+		_tempCmdBuffers.Reserve( cmdBuffers.Count() );
+
+		FOR( i, cmdBuffers )
+		{
+			Message< ModuleMsg::GetGpuCommandBufferID >	id_request;
+			cmdBuffers[i]->Send( id_request );
+
+			VkCommandBuffer	cmd = id_request->result.Get( VK_NULL_HANDLE );
+
+			if ( cmd != VK_NULL_HANDLE )
+				_tempCmdBuffers.PushBack( cmd );
+		}
+
+		CHECK_ERR( not _tempCmdBuffers.Empty() );
+
+
+		// submit command buffers to grpahics queue
+		VkSubmitInfo			submit_info			= {};
+		VkSemaphore				wait_semaphores[]	= { _imageAvailable };
+		VkPipelineStageFlags	wait_stages[]		= { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+		VkSemaphore				signal_semaphores[] = { _renderFinished };
+
+		submit_info.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit_info.waitSemaphoreCount		= CountOf( wait_semaphores );
+		submit_info.pWaitSemaphores			= wait_semaphores;
+		submit_info.pWaitDstStageMask		= wait_stages;
+		submit_info.commandBufferCount		= _tempCmdBuffers.Count();
+		submit_info.pCommandBuffers			= _tempCmdBuffers.ptr();
+		submit_info.signalSemaphoreCount	= CountOf( signal_semaphores );
+		submit_info.pSignalSemaphores		= signal_semaphores;
+
+		VK_CHECK( vkQueueSubmit( GetGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE ) );
+
+		_graphicsQueueSubmited = true;
+		return true;
+	}
+	
+/*
+=================================================
+	SubmitComputeQueue
+=================================================
+*/
+	bool Vk1Device::SubmitComputeQueue (ArrayCRef< ModulePtr > cmdBuffers)
+	{
+		return false;
+	}
 
 /*
 =================================================
 	DrawFrame
 =================================================
-*/
+*
 	bool Vk1Device::DrawFrame ()
 	{
 		vk::uint32_t	image_index = -1;
@@ -560,13 +741,14 @@ namespace Platforms
 		VkSemaphore				wait_semaphores[]	= { _imageAvailable };
 		VkPipelineStageFlags	wait_stages[]		= { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		VkSemaphore				signal_semaphores[] = { _renderFinished };
+		VkCommandBuffer			cmd_buffers[]		= { _commandBuffers[ image_index ].ToPtr< Vk1CommandBuffer >()->GetCmdBufferID() };
 
 		submit_info.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submit_info.waitSemaphoreCount		= 1;
 		submit_info.pWaitSemaphores			= wait_semaphores;
 		submit_info.pWaitDstStageMask		= wait_stages;
-		submit_info.commandBufferCount		= 1;
-		submit_info.pCommandBuffers			= &_commandBuffers[ image_index ];
+		submit_info.commandBufferCount		= CountOf( cmd_buffers );
+		submit_info.pCommandBuffers			= cmd_buffers;
 		submit_info.signalSemaphoreCount	= 1;
 		submit_info.pSignalSemaphores		= signal_semaphores;
 
@@ -768,7 +950,7 @@ namespace Platforms
 			buffers[i].image			= images[i];
 			color_attachment_view.image	= buffers[i].image;
 			
-			VK_CHECK( vkCreateImageView( _logicalDevice, &color_attachment_view, null, &buffers[i].view ) );
+			VK_CHECK( vkCreateImageView( _logicalDevice, &color_attachment_view, null, OUT &buffers[i].view ) );
 		}
 
 		return true;
@@ -779,9 +961,9 @@ namespace Platforms
 	_CreateDepthStencilAttachment
 =================================================
 */
-	bool Vk1Device::_CreateDepthStencilAttachment (vk::VkFormat depthStencilFormat)
+	bool Vk1Device::_CreateDepthStencilAttachment (EPixelFormat::type depthStencilFormat)
 	{
-		if ( depthStencilFormat == VK_FORMAT_UNDEFINED )
+		if ( depthStencilFormat == EPixelFormat::Unknown )
 		{
 			_DeleteDepthStencilAttachment();
 			return true;
@@ -791,13 +973,15 @@ namespace Platforms
 		CHECK_ERR( _depthStencilImage != VK_NULL_HANDLE );
 		CHECK_ERR( _depthStencilMemory != VK_NULL_HANDLE );
 
+		VkFormat				depth_stencil_fmt	= Vk1Enum( depthStencilFormat );
+
 		VkMemoryRequirements	mem_reqs = {};
 
 		VkImageCreateInfo		image_info = {};
 		image_info.sType		= VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		image_info.pNext		= null;
 		image_info.imageType	= VK_IMAGE_TYPE_2D;
-		image_info.format		= depthStencilFormat;
+		image_info.format		= depth_stencil_fmt;
 		image_info.extent		= { _surfaceSize.x, _surfaceSize.y, 1 };
 		image_info.mipLevels	= 1;
 		image_info.arrayLayers	= 1;
@@ -826,7 +1010,7 @@ namespace Platforms
 		depth_stencil_view.sType	= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		depth_stencil_view.pNext	= null;
 		depth_stencil_view.viewType	= VK_IMAGE_VIEW_TYPE_2D;
-		depth_stencil_view.format	= depthStencilFormat;
+		depth_stencil_view.format	= depth_stencil_fmt;
 		depth_stencil_view.flags	= 0;
 		depth_stencil_view.image	= _depthStencilImage;
 
@@ -837,9 +1021,10 @@ namespace Platforms
 		depth_stencil_view.subresourceRange.baseArrayLayer	= 0;
 		depth_stencil_view.subresourceRange.layerCount		= 1;
 
-		VK_CHECK( vkCreateImageView( _logicalDevice, &depth_stencil_view, null, &_depthStencilView ) );
+		VK_CHECK( vkCreateImageView( _logicalDevice, &depth_stencil_view, null, OUT &_depthStencilView ) );
 
-		_depthStencilFormat = depthStencilFormat;
+		_depthStencilFormat			= depth_stencil_fmt;
+		_depthStencilPixelFormat	= depthStencilFormat;
 		return true;
 	}
 	
@@ -850,7 +1035,8 @@ namespace Platforms
 */
 	void Vk1Device::_DeleteDepthStencilAttachment ()
 	{
-		_depthStencilFormat = VK_FORMAT_UNDEFINED;
+		_depthStencilFormat			= VK_FORMAT_UNDEFINED;
+		_depthStencilPixelFormat	= EPixelFormat::Unknown;
 
 		if ( _depthStencilView != VK_NULL_HANDLE )
 		{
@@ -903,107 +1089,81 @@ namespace Platforms
 */
 	bool Vk1Device::_CreateRenderPass ()
 	{
-		CHECK_ERR( _renderPass == VK_NULL_HANDLE );
+		CHECK_ERR( not _renderPass );
 
+		using Builder = RenderPassDescrBuilder;
+		
 		const bool	has_depth = (_depthStencilView != VK_NULL_HANDLE);
 
-		FixedSizeArray<VkAttachmentDescription, 2>	attachments;
+		Builder		builder;
+		auto		subpass	= builder.AddSubpass();
 
-		VkAttachmentDescription		color_info = {};
-		color_info.format			= _colorFormat;
-		color_info.samples			= VK_SAMPLE_COUNT_1_BIT;
-		color_info.loadOp			= VK_ATTACHMENT_LOAD_OP_CLEAR;
-		color_info.storeOp			= VK_ATTACHMENT_STORE_OP_STORE;
-		color_info.stencilLoadOp	= VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		color_info.stencilStoreOp	= VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		color_info.initialLayout	= VK_IMAGE_LAYOUT_UNDEFINED;
-		color_info.finalLayout		= VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-		VkAttachmentDescription		depth_stencil_info = {};
-		depth_stencil_info.format			= _depthStencilFormat;
-		depth_stencil_info.samples			= VK_SAMPLE_COUNT_1_BIT;
-		depth_stencil_info.loadOp			= VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_stencil_info.storeOp			= VK_ATTACHMENT_STORE_OP_STORE;
-		depth_stencil_info.stencilLoadOp	= VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depth_stencil_info.stencilStoreOp	= VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_stencil_info.initialLayout	= VK_IMAGE_LAYOUT_UNDEFINED;
-		depth_stencil_info.finalLayout		= VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference		color_reference = {};
-		color_reference.attachment	= 0;
-		color_reference.layout		= VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference		depth_stencil_reference = {};
-		depth_stencil_reference.attachment	= 1;
-		depth_stencil_reference.layout		= VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription		subpass_descr = {};
-		subpass_descr.pipelineBindPoint			= VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass_descr.colorAttachmentCount		= 1;
-		subpass_descr.pColorAttachments			= &color_reference;
-		subpass_descr.pDepthStencilAttachment	= has_depth ? &depth_stencil_reference : null;
-		subpass_descr.inputAttachmentCount		= 0;
-		subpass_descr.pInputAttachments			= null;
-		subpass_descr.preserveAttachmentCount	= 0;
-		subpass_descr.pPreserveAttachments		= null;
-		subpass_descr.pResolveAttachments		= null;
-
-
-		FixedSizeArray<VkSubpassDependency, 2>	dependencies;
-
-		VkSubpassDependency			color_dependency = {};
-		color_dependency.srcSubpass			= VK_SUBPASS_EXTERNAL;
-		color_dependency.dstSubpass			= 0;
-		color_dependency.srcStageMask		= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-		color_dependency.dstStageMask		= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		color_dependency.srcAccessMask		= VK_ACCESS_MEMORY_READ_BIT;
-		color_dependency.dstAccessMask		= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		color_dependency.dependencyFlags	= VK_DEPENDENCY_BY_REGION_BIT;
-		
-		VkSubpassDependency			depth_stencil_dependency = {};
-		depth_stencil_dependency.srcSubpass			= 0;
-		depth_stencil_dependency.dstSubpass			= VK_SUBPASS_EXTERNAL;
-		depth_stencil_dependency.srcStageMask		= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		depth_stencil_dependency.dstStageMask		= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-		depth_stencil_dependency.srcAccessMask		= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		depth_stencil_dependency.dstAccessMask		= VK_ACCESS_MEMORY_READ_BIT;
-		depth_stencil_dependency.dependencyFlags	= VK_DEPENDENCY_BY_REGION_BIT;
-		
-
-		attachments.PushBack( color_info );
-		dependencies.PushBack( color_dependency );
-
+		// depth attachment
 		if ( has_depth )
 		{
-			attachments.PushBack( depth_stencil_info );
-			dependencies.PushBack( depth_stencil_dependency );
+			Builder::DepthStencilAttachment_t	attach;
+			Builder::AttachmentRef_t			attach_ref;
+			Builder::SubpassDependency_t		dep;
+			
+			attach.format			= _depthStencilPixelFormat;
+			attach.loadOp			= EAttachmentLoadOp::Clear;
+			attach.storeOp			= EAttachmentStoreOp::Store;
+			attach.stencilLoadOp	= EAttachmentLoadOp::None;
+			attach.stencilStoreOp	= EAttachmentStoreOp::None;
+			attach.initialLayout	= EImageLayout::Undefined;
+			attach.finalLayout		= EImageLayout::DepthStencilAttachmentOptimal;
+			builder.SetDepthStencilAttachment( attach );
+
+			attach_ref.index		= Builder::AttachmentIndex(1);
+			attach_ref.layout		= EImageLayout::DepthStencilAttachmentOptimal;
+			subpass.SetDepthStencilAttachment( attach_ref );
+
+			dep.srcPass				= Builder::SubpassIndex(0);
+			dep.srcStage			= EPipelineStage::bits() | EPipelineStage::ColorAttachmentOutput;
+			dep.srcAccess			= ESubpassAccess::bits() | ESubpassAccess::ColorAttachmentRead | ESubpassAccess::ColorAttachmentWrite;
+			dep.dstPass				= Builder::SubpassIndexExternal;
+			dep.dstStage			= EPipelineStage::bits() | EPipelineStage::BottomOfPipe;
+			dep.dstAccess			= ESubpassAccess::bits() | ESubpassAccess::MemoryRead;
+			dep.dependency			= ESubpassDependency::bits() | ESubpassDependency::ByRegion;
+			builder.AddDependency( dep );
 		}
 
-		VkRenderPassCreateInfo	render_pass_info = {};
-		render_pass_info.sType				= VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		render_pass_info.attachmentCount	= uint(attachments.Count());
-		render_pass_info.pAttachments		= attachments.ptr();
-		render_pass_info.subpassCount		= 1;
-		render_pass_info.pSubpasses			= &subpass_descr;
-		render_pass_info.dependencyCount	= uint(dependencies.Count());
-		render_pass_info.pDependencies		= dependencies.ptr();
-
-		VK_CHECK( vkCreateRenderPass( _logicalDevice, &render_pass_info, null, OUT &_renderPass ) );
-		return true;
-	}
-	
-/*
-=================================================
-	_DeleteRenderPass
-=================================================
-*/
-	void Vk1Device::_DeleteRenderPass ()
-	{
-		if ( _renderPass != VK_NULL_HANDLE )
+		// color attachment
 		{
-			vkDestroyRenderPass( _logicalDevice, _renderPass, null );
-			_renderPass = VK_NULL_HANDLE;
+			Builder::ColorAttachment_t		attach;
+			Builder::AttachmentRef_t		attach_ref;
+			Builder::SubpassDependency_t	dep;
+
+			attach.format			= _colorPixelFormat;
+			attach.loadOp			= EAttachmentLoadOp::Clear;
+			attach.storeOp			= EAttachmentStoreOp::Store;
+			attach.initialLayout	= EImageLayout::Undefined;
+			attach.finalLayout		= EImageLayout::PresentSrc;
+			builder.AddColorAttachment( attach );
+
+			attach_ref.index		= Builder::AttachmentIndex(0);
+			attach_ref.layout		= EImageLayout::ColorAttachmentOptimal;
+			subpass.AddColorAttachment( attach_ref );
+
+			dep.srcPass				= Builder::SubpassIndexExternal;
+			dep.srcStage			= EPipelineStage::bits() | EPipelineStage::BottomOfPipe;
+			dep.srcAccess			= ESubpassAccess::bits() | ESubpassAccess::MemoryRead;
+			dep.dstPass				= Builder::SubpassIndex(0);
+			dep.dstStage			= EPipelineStage::bits() | EPipelineStage::ColorAttachmentOutput;
+			dep.dstAccess			= ESubpassAccess::bits() | ESubpassAccess::ColorAttachmentRead | ESubpassAccess::ColorAttachmentWrite;
+			dep.dependency			= ESubpassDependency::bits() | ESubpassDependency::ByRegion;
+			builder.AddDependency( dep );
 		}
+
+		ModulePtr	module;
+		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+					Vk1RenderPass::GetStaticID(),
+					GlobalSystems(),
+					CreateInfo::GpuRenderPass{ null, builder.Finish() },
+					OUT module ) );
+
+		_renderPass = module;
+		return true;
 	}
 
 /*
@@ -1015,27 +1175,24 @@ namespace Platforms
 	{
 		CHECK_ERR( not _imageBuffers.Empty() );
 		CHECK_ERR( frameBuffers.Empty() );
-		CHECK_ERR( _renderPass != VK_NULL_HANDLE );
+		CHECK_ERR( _renderPass );
 
 		frameBuffers.Resize( _imageBuffers.Count() );
 		
-		VkImageView					attachments[2];
-		VkFramebufferCreateInfo		fb_info	= {};
-
-		fb_info.sType			= VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-		fb_info.renderPass		= _renderPass;
-		fb_info.attachmentCount	= 1 + uint(_depthStencilView != VK_NULL_HANDLE);
-		fb_info.pAttachments	= attachments;
-		fb_info.width			= _surfaceSize.x;
-		fb_info.height			= _surfaceSize.y;
-		fb_info.layers			= 1;
-
 		FOR( i, frameBuffers )
 		{
-			attachments[0] = _imageBuffers[i].view;
-			attachments[1] = _depthStencilView;
+			auto fb = GXTypes::New< Vk1SystemFramebuffer >( GlobalSystems(), VkSystems() );
 
-			VK_CHECK( vkCreateFramebuffer( _logicalDevice, &fb_info, null, OUT &frameBuffers[i] ) );
+			fb->Send( Message< ModuleMsg::AttachModule >{ null, _renderPass } );
+
+			CHECK_ERR( fb->CreateFramebuffer( _surfaceSize, uint(i),
+											  _renderPass.ToPtr< Vk1RenderPass >()->GetRenderPassID(),
+											  _imageBuffers[i].view, _colorPixelFormat,
+											  _depthStencilView, _depthStencilPixelFormat,
+											  ETexture::Tex2D
+			) );
+
+			frameBuffers[i] = fb;
 		}
 		return true;
 	}
@@ -1047,10 +1204,13 @@ namespace Platforms
 */
 	void Vk1Device::_DeleteFramebuffers (INOUT Framebuffers_t &frameBuffers) const
 	{
+		Message< ModuleMsg::Delete >	msg;
+
 		FOR( i, frameBuffers )
 		{
-			vkDestroyFramebuffer( _logicalDevice, frameBuffers[i], null );
+			frameBuffers[i]->Send( msg );
 		}
+
 		frameBuffers.Clear();
 	}
 
@@ -1060,7 +1220,7 @@ namespace Platforms
 =================================================
 */
 	bool Vk1Device::_ChooseColorFormat (OUT VkFormat &colorFormat, OUT VkColorSpaceKHR &colorSpace,
-												const VkFormat requiredFormat, const VkColorSpaceKHR requiredColorSpace) const
+										const VkFormat requiredFormat, const VkColorSpaceKHR requiredColorSpace) const
 	{
 		vk::uint32_t				count		= 0;
 		Array< VkSurfaceFormatKHR >	surf_formats;
@@ -1364,7 +1524,7 @@ namespace Platforms
 
 		Array< VkQueueFamilyProperties >	queue_family_props;
 		Set< vk::uint32_t >					unique_indices;
-		const float							default_queue_priority	= 1.0f;	// high priority
+		static const float					default_queue_priority	= 1.0f;	// high priority
 		
 		CHECK_ERR( _GetQueueFamilyProperties( OUT queue_family_props ) );
 
@@ -1468,8 +1628,8 @@ namespace Platforms
 		VkSemaphoreCreateInfo	info = {};
 		info.sType	= VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-		VK_CHECK( vkCreateSemaphore( _logicalDevice, &info, null, &_imageAvailable ) );
-		VK_CHECK( vkCreateSemaphore( _logicalDevice, &info, null, &_renderFinished ) );
+		VK_CHECK( vkCreateSemaphore( _logicalDevice, &info, null, OUT &_imageAvailable ) );
+		VK_CHECK( vkCreateSemaphore( _logicalDevice, &info, null, OUT &_renderFinished ) );
 		return true;
 	}
 	
@@ -1492,23 +1652,6 @@ namespace Platforms
 			_renderFinished = VK_NULL_HANDLE;
 		}
 	}
-
-/*
-=================================================
-	_CreateCommandPool
-=================================================
-*/
-	bool Vk1Device::_CreateCommandPool ()
-	{
-		VkCommandPoolCreateInfo		pool_info = {};
-
-		pool_info.sType				= VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		pool_info.queueFamilyIndex	= _queueFamilyIndices.graphics;
-		pool_info.flags				= 0;
-
-		VK_CHECK( vkCreateCommandPool( _logicalDevice, &pool_info, null, &_commandPool ) );
-		return true;
-	}
 	
 /*
 =================================================
@@ -1519,28 +1662,12 @@ namespace Platforms
 	{
 		CHECK_ERR( not _framebuffers.Empty() );
 
-		_commandBuffers.Resize( _framebuffers.Count(), false );
+		Message< ModuleMsg::Link >		link_msg;
+		Message< ModuleMsg::Compose >	comp_msg;
 
-		VkCommandBufferAllocateInfo		alloc_info = {};
-
-		alloc_info.sType				= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		alloc_info.commandPool			= _commandPool;
-		alloc_info.level				= VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		alloc_info.commandBufferCount	= (vk::uint32_t) _commandBuffers.Count();
-
-		VK_CHECK( vkAllocateCommandBuffers( _logicalDevice, &alloc_info, _commandBuffers.ptr() ) );
-
-
-		/*FOR( i, _commandBuffers )
-		{
-			VkCommandBufferBeginInfo	begin_info = {};
-
-			begin_info.sType			= VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			begin_info.flags			= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-			begin_info.pInheritanceInfo	= null;
-
-			VK_CALL( vkBeginCommandBuffer( _commandBuffers[i], &begin_info ) );
-		}*/
+		_commandBuilder = GXTypes::New< Vk1CommandBufferBuilder >( GlobalSystems(), CreateInfo::GpuCommandBufferBuilder{} );
+		_commandBuilder->Send( link_msg );
+		_commandBuilder->Send( comp_msg );
 		return true;
 	}
 	
@@ -1551,17 +1678,12 @@ namespace Platforms
 */
 	void Vk1Device::_DeleteCommandBuffers ()
 	{
-		if ( not _commandBuffers.Empty() )
-		{
-			vkFreeCommandBuffers( _logicalDevice, _commandPool, _commandBuffers.Count(), _commandBuffers.ptr() );
-			_commandBuffers.Clear();
-		}
+		Message< ModuleMsg::Delete >	msg;
 
-		if ( _commandPool != VK_NULL_HANDLE )
-		{
-			vkDestroyCommandPool( _logicalDevice, _commandPool, null );
-			_commandPool = VK_NULL_HANDLE;
-		}
+		if ( _commandBuilder )
+			_commandBuilder->Send( msg );
+
+		_commandBuilder	= null;
 	}
 
 /*
@@ -1690,7 +1812,7 @@ namespace Platforms
 	}
 	
 	
-}	// Platforms
+}	// PlatformVK
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN

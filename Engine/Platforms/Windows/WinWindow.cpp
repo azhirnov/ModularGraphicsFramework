@@ -21,7 +21,7 @@ namespace Platforms
 =================================================
 */
 	WinWindow::WinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci ),
 		_wnd( UninitializedT< HWND >() ),
 		_requestQuit( false ),
@@ -118,7 +118,7 @@ namespace Platforms
 
 			LOG( "window created", ELog::Debug );
 			
-			_SendForEachAttachments( Message< ModuleMsg::Link >{ this, _GetAttachments() } );
+			_SendForEachAttachments( Message< ModuleMsg::Link >{ this } );
 			_SendForEachAttachments( Message< ModuleMsg::Compose >{ this } );
 		}
 		else
@@ -186,9 +186,9 @@ namespace Platforms
 		auto	request = Message<ModuleMsg::RequestDisplayParams>( this );
 
 		sender->Send( request );
-		CHECK_ERR( request->result.Get().IsDefined() );
+		CHECK_ERR( request->result.IsDefined() );
 
-		Display const&	disp = *request->result.Get().Get();
+		Display const&	disp = *request->result.Get();
 
 
 		// validate create info

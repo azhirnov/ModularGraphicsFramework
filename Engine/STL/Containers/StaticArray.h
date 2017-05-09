@@ -127,6 +127,8 @@ namespace GXTypes
 		
 
 		static constexpr bool	IsLinearMemory ()	{ return true; }
+		static constexpr bool	IsStaticMemory ()	{ return true; }
+
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{

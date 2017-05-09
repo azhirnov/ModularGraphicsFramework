@@ -31,8 +31,8 @@ namespace _types_hidden_
 
 		typedef Ptr< const Value >					const_iterator;
 
-		typedef ArrayRef< Value >						values_range_t;
-		typedef ArrayCRef< Value >				const_values_range_t;
+		typedef ArrayRef< Value >					values_range_t;
+		typedef ArrayCRef< Value >					const_values_range_t;
 
 
 	private:
@@ -221,26 +221,6 @@ namespace _types_hidden_
 		}
 
 
-		/*template <typename Key>
-		bool LinearSearch (const Key &key) const
-		{
-			const_iterator	iter;
-			return LinearSearch( key, iter );
-		}
-
-		template <typename Key>
-		bool LinearSearch (const Key &key, OUT const_iterator &result) const
-		{
-			FOR( i, _memory ) {
-				if ( key == _memory[i] ) {
-					result = &_memory[i];
-					return true;
-				}
-			}
-			return false;
-		}*/
-
-
 		values_range_t  GetRange (usize first, usize last)
 		{
 			return _memory.SubArray( first, last - first + 1 );
@@ -260,10 +240,79 @@ namespace _types_hidden_
 		void Reserve (usize uSize)			{ _memory.Reserve( uSize ); }
 		
 		
+		static constexpr bool	IsLinearMemory ()			{ return _MapUtils_t::IsLinearMemory(); }
+		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStaticMemory(); }
+
+
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{
 			SwapValues( left._memory, right._memory );
 		}
+
+
+	private:
+		template <typename KeyT>
+		bool _FindFirstIndex2 (const KeyT &key, OUT usize &idx) const
+		{
+			return _memory.FindFirstIndex2( key, OUT idx );
+		}
+		
+		template <typename KeyT>
+		void _FindLastIndex2 (const KeyT &key, usize first, OUT usize &idx) const
+		{
+			return _memory.FindLastIndex2( key, first, OUT idx );
+		}
+
+		template <typename KeyT>
+		bool _Find2 (const KeyT &key, OUT const_iterator &result) const
+		{
+			usize	idx;
+			
+			if ( not _FindFirstIndex2( key, OUT idx ) )
+				return false;
+			
+			result = &(*this)[ idx ];
+			return true;
+		}
+
+		template <typename KeyT>
+		bool _FindAll2 (const KeyT &key, OUT values_range_t &result)
+		{
+			usize	first;
+			usize	last;
+
+			if ( not FindFirstIndex2( key, OUT first ) )
+				return false;
+			
+			FindLastIndex2( key, first, OUT last );
+
+			result = values_range_t( ptr() + first, last - first + 1 );
+			return true;
+		}
+
+
+		struct _CustomSearch
+		{
+			Self &	_ref;
+
+			_CustomSearch (Self &ref) : _ref(ref) {}
+			
+			template <typename KeyT>
+			bool FindFirstIndex (const KeyT &key, OUT usize &idx) const		{ return _ref._FindFirstIndex2( key, OUT idx ); }
+			
+			template <typename KeyT>
+			void FindLastIndex (const KeyT &key, usize first, OUT usize &idx) const	{ return _ref._FindLastIndex2( key, first, OUT idx ); }
+
+			template <typename KeyT>
+			bool Find (const KeyT &key, OUT const_iterator &result) const	{ return _ref._Find2( key, OUT result ); }
+
+			template <typename KeyT>
+			bool FindAll (const KeyT &key, OUT values_range_t &result)		{ return _ref._FindAll2( key, OUT result ); }
+		};
+
+
+	public:
+		_CustomSearch CustomSearch ()	{ return _CustomSearch( *this ); }
 	};
 
 }	// _types_hidden_

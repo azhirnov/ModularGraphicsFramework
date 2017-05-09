@@ -330,7 +330,9 @@ namespace GXTypes
 		void Convert (OUT TString<T2,S2,A2> &str) const;
 
 		
-		static constexpr bool	IsLinearMemory ()	{ return true; }
+		static constexpr bool	IsLinearMemory ()			{ return true; }
+		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStatic(); }
+
 
 		inline friend bool operator == (const T * const left, const Self &right)
 		{

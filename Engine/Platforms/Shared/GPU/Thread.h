@@ -37,5 +37,55 @@ namespace ModuleMsg
 	};
 
 
+	//
+	// Begin / End Frame
+	//
+	struct GpuThreadBeginFrame
+	{
+		Out< ModulePtr >	framebuffer;	// returns current framebuffer
+	};
+
+	struct GpuThreadEndFrame
+	{
+	// types
+		using Commands_t	= FixedSizeArray< ModulePtr, 32 >;
+		
+	// variables
+		Commands_t			commands;		// (optional) commands to submit before present frame
+		ModulePtr			framebuffer;	// (optional) must be null or framebuffer returned by GpuThreadBeginFrame
+
+	// methods
+		GpuThreadEndFrame ()
+		{}
+
+		explicit GpuThreadEndFrame (const ModulePtr &framebuffer) : framebuffer(framebuffer)
+		{}
+
+		GpuThreadEndFrame (const ModulePtr &framebuffer, std::initializer_list< ModulePtr > list) :
+			framebuffer(framebuffer), commands( list )
+		{}
+	};
+
+
+	//
+	// Submit Commands
+	//
+	struct SubmitGraphicsQueueCommands
+	{
+	// types
+		using Commands_t	= FixedSizeArray< ModulePtr, 32 >;
+
+	// variables
+		Commands_t		commands;
+
+	// methods
+		explicit SubmitGraphicsQueueCommands (const ModulePtr &cmd) : commands({ cmd })
+		{}
+
+		SubmitGraphicsQueueCommands (std::initializer_list< ModulePtr > list) : commands( list )
+		{}
+	};
+
+
 }	// ModuleMsg
 }	// Engine

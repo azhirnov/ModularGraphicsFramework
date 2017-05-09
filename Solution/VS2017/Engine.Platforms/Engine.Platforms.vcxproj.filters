@@ -116,9 +116,6 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Memory.h">
       <Filter>Shared\GPU</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Objects.h">
-      <Filter>Shared\GPU</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Texture.h">
       <Filter>Shared\GPU</Filter>
     </ClInclude>
@@ -138,6 +135,72 @@
       <Filter>Shared\GPU</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Memory.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1BaseModule.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Texture.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Buffer.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\BufferEnums.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\RenderState.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\RenderPassEnums.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\SamplerEnums.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1RenderPass.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Sampler.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Pipeline.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Pipeline.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\VertexAttribs.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\VertexEnums.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\VertexDescr.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ShaderEnums.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\CommandBuffer.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuffer.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Framebuffer.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Messages.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1ShaderModules.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1SystemFramebuffer.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBufferBuilder.h">
       <Filter>Vulkan\Impl</Filter>
     </ClInclude>
   </ItemGroup>
@@ -160,9 +223,6 @@
     <Filter Include="Shared">
       <UniqueIdentifier>{e042a45b-d35d-4d99-8afc-94d4fa6b1ce1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Oculus">
-      <UniqueIdentifier>{223d88e2-6a84-46f6-a8da-dd7a194a721c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Input">
       <UniqueIdentifier>{ed4b210c-8e79-4b37-b22a-7ca57fb74805}</UniqueIdentifier>
     </Filter>
@@ -183,6 +243,9 @@
     </Filter>
     <Filter Include="Shared\OS">
       <UniqueIdentifier>{0f738aac-a234-4dd5-9b2a-3dcf975e9537}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VR">
+      <UniqueIdentifier>{223d88e2-6a84-46f6-a8da-dd7a194a721c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -247,6 +310,51 @@
       <Filter>Vulkan\Impl</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Memory.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4BaseModule.cpp">
+      <Filter>OpenGL\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1BaseModule.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Texture.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\Texture.cpp">
+      <Filter>Shared\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Buffer.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\RenderState.cpp">
+      <Filter>Shared\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\RenderPass.cpp">
+      <Filter>Shared\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\Sampler.cpp">
+      <Filter>Shared\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1RenderPass.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Sampler.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Pipeline.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuffer.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Framebuffer.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1ShaderModules.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBufferBuilder.cpp">
       <Filter>Vulkan\Impl</Filter>
     </ClCompile>
   </ItemGroup>

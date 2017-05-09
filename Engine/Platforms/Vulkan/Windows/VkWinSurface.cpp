@@ -8,7 +8,7 @@
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformVK
 {
 	using namespace vk;
 	
@@ -49,7 +49,7 @@ namespace Platforms
 		surface_info.hinstance	= ::GetModuleHandle( (LPCSTR) null );
 		surface_info.hwnd		= windowHandle.Get<HWND>();
 		
-		VK_CHECK( vkCreateWin32SurfaceKHR( instance, &surface_info, null, &surface ) );
+		VK_CHECK( vkCreateWin32SurfaceKHR( instance, &surface_info, null, OUT &surface ) );
 		return true;
 	}
 	
@@ -74,7 +74,7 @@ namespace Platforms
 	}
 
 
-}	// Platforms
+}	// PlatformVK
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN and PLATFORM_WINDOWS

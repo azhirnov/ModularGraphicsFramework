@@ -20,7 +20,7 @@ namespace Platforms
 =================================================
 */
 	OpenGLThread::OpenGLThread (const GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
 		_settings( ci.settings )
 	{
 		SetDebugName( "OpenGLThread" );
@@ -67,7 +67,7 @@ namespace Platforms
 	{
 		CHECK_ERR( _IsMutableState( GetState() ) );
 
-		_window = _GetParent()->GetModule( WinWindow::GetStaticID() );
+		_window = _GetParents().Front()->GetModule( WinWindow::GetStaticID() );
 		CHECK_ERR( _window );
 
 		_window->Subscribe( this, &OpenGLThread::_WindowCreated );
@@ -83,7 +83,7 @@ namespace Platforms
 
 			if ( request_hwnd->hwnd.Get().IsDefined() )
 			{
-				_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get().Get() } );
+				_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get() } );
 			}
 		}
 		return true;

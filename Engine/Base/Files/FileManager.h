@@ -25,19 +25,19 @@ namespace Base
 		FileManager (const GlobalSystemsRef gs);
 		~FileManager ();
 
-		bool OpenForRead (StringCRef filename, RFilePtr &file) const;
-		bool OpenForWrite (StringCRef filename, WFilePtr &file) const;
-		bool OpenForAppend (StringCRef filename, WFilePtr &file) const;
-		bool CreateFile (StringCRef filename, WFilePtr &file) const;
+		bool OpenForRead (StringCRef filename, OUT RFilePtr &file) const;
+		bool OpenForWrite (StringCRef filename, OUT WFilePtr &file) const;
+		bool OpenForAppend (StringCRef filename, OUT WFilePtr &file) const;
+		bool CreateFile (StringCRef filename, OUT WFilePtr &file) const;
 
 		//bool OpenForDecrypt (StringCRef filename, RFilePtr &file, StringCRef password) const;
 		//bool CreateEncryptFile (StringCRef filename, WFilePtr &file, StringCRef password) const;
 
-		bool CreateMemFile (WFilePtr &file, BytesU reserve = BytesU()) const;
+		bool CreateMemFile (OUT WFilePtr &file, BytesU reserve = BytesU()) const;
 		bool SaveMemFile (StringCRef filename, const WFilePtr &file) const;
 		bool ReadToMem (StringCRef filename, RFilePtr &file) const;
-		bool ReadToMem (const RFilePtr &fromFile, RFilePtr &toFile) const;
-		bool ReadToMemIfSmall (const RFilePtr &fromFile, RFilePtr &toFile) const;
+		bool ReadToMem (const RFilePtr &fromFile, OUT RFilePtr &toFile) const;
+		bool ReadToMemIfSmall (const RFilePtr &fromFile, OUT RFilePtr &toFile) const;
 
 		bool CopyFile (const RFilePtr &fromFile, const WFilePtr &toFile) const;
 		bool CopyFile (StringCRef fromFilename, StringCRef toFilename) const;
@@ -49,7 +49,7 @@ namespace Base
 		bool SetCurrentDirectory (StringCRef dir) const;
 		bool GetCurrentDirectory (OUT String &dir) const;
 
-		bool OpenResource (StringCRef resname, RFilePtr &file) const;
+		bool OpenResource (StringCRef resname, OUT RFilePtr &file) const;
 
 		bool IsFileExist (StringCRef filename) const;
 		bool IsResourceExist (StringCRef filename) const;

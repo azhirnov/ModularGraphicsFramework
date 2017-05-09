@@ -33,7 +33,7 @@ namespace GXTypes
 
 		template <typename T>
 		struct _GetDefaultValueForUninitialized2< T, 0 > {
-			static T Get ()		{ return UninitializedType(); }
+			static T Get ()		{ return T(); }
 		};
 
 		template <typename T>

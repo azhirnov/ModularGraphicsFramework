@@ -172,8 +172,11 @@ namespace GXTypes
 		TStringRef<const T>	GetInterval (const T* begin, const T* end) const;
 
 
-
 		bool				Intersects (TStringRef<const T> other) const;
+		
+
+		static constexpr bool	IsLinearMemory ()	{ return true; }
+		static constexpr bool	IsStaticMemory ()	{ return false; }
 
 	private:
 		static bool _Equals (const T *left, const T *right, usize length);

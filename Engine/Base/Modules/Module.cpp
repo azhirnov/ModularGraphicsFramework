@@ -2,6 +2,7 @@
 
 #include "Engine/Base/Modules/Module.h"
 #include "Engine/Base/Tasks/TaskModule.h"
+#include "Engine/Base/Threads/ParallelThread.h"
 #include "Engine/Base/Modules/ModuleAsyncTasks.h"
 
 namespace Engine
@@ -14,16 +15,18 @@ namespace Base
 	constructor
 =================================================
 */
-	Module::Module (const GlobalSystemsRef gs, UntypedID_t id,
+	Module::Module (const GlobalSystemsRef gs,
+					const ModuleConfig &config,
 					const Runtime::VirtualTypeList *msgTypes,
 					const Runtime::VirtualTypeList *eventTypes) :
 		BaseObject( gs ),
-		_compId( id ),
+		_compId( config.id ),
+		_maxParents( config.maxParents ),
 		_supportedMessages( *msgTypes ),
 		_supportedEvents( *eventTypes ),
+		_attachmentCounter( 0 ),
 		_state( EState::Initial ),
 		_ownThread( ThreadID::GetCurrent() )
-		//_lockAttachments( false )
 	{
 	}
 	
@@ -37,7 +40,7 @@ namespace Base
 		ASSERT( GetState() == EState::Deleting );
 
 		CHECK( _attachments.Empty() );
-		CHECK( _parent.IsNull() );
+		CHECK( _parents.Empty() );
 		CHECK( _manager.IsNull() );
 	}
 	
@@ -60,23 +63,31 @@ namespace Base
 	{
 		CHECK_ERR( unit );
 		CHECK_ERR( _IsMutableState( GetState() ) );
-		//CHECK_ERR( not _lockAttachments );
 
-		Modules_t::iterator	iter;
-		
-		if ( _attachments.Find( unit->GetModuleID(), OUT iter ) )
+		// global and per-thread modules must be unique
+		const bool	must_be_unique	= ((unit->GetModuleID() & GModID::_IDMask) == GModID::_ID) or
+									  ((unit->GetModuleID() & TModID::_IDMask) == TModID::_ID);
+
+		if ( must_be_unique )
 		{
-			// TODO: perfomance warning
-			if ( iter->second == unit )
+			AttachedModules_t::iterator	iter;
+		
+			if ( _attachments.CustomSearch().Find( ModuleSearchByID( unit->GetModuleID() ), OUT iter ) )
 			{
-				LOG( "module already attached!", ELog::Debug );
-				return true;
-			}
+				// TODO: perfomance warning
+				if ( iter->second == unit )
+				{
+					LOG( "module already attached!", ELog::Debug );
+					return true;
+				}
 
-			RETURN_ERR( "module with ID '" << ToString( (GModID::type) unit->GetModuleID() ) << "' is alredy attached" );
+				RETURN_ERR( "module with ID '" << ToString( (GModID::type) unit->GetModuleID() ) << "' is alredy attached" );
+			}
 		}
 
-		_attachments.Add( unit->GetModuleID(), unit );
+		_attachments.Add( ModuleInfo( unit->GetModuleID(), _attachmentCounter ), unit );
+
+		++_attachmentCounter;
 
 		_SendForEachAttachments( Message< ModuleMsg::OnModuleAttached >{ this, this, unit } );
 		return true;
@@ -90,21 +101,35 @@ namespace Base
 	bool Module::_Detach (const ModulePtr &unit)
 	{
 		CHECK_ERR( unit );
-		CHECK_ERR( GetState() != EState::ComposedImmutable );
-		//CHECK_ERR( not _lockAttachments );
-		
-		Modules_t::iterator	iter;
-		
-		if ( _attachments.Find( unit->GetModuleID(), OUT iter ) )
+		//CHECK_ERR( GetState() != EState::ComposedImmutable );
+
+		auto	search		= _attachments.CustomSearch();
+		usize	first_idx	= -1;
+		usize	last_idx	= -1;
+		usize	found_idx	= -1;
+		auto	key			= ModuleSearchByID( unit->GetModuleID() );
+
+		if ( search.FindFirstIndex( key, OUT first_idx ) )
 		{
-			CHECK_ERR( iter->second == unit );
+			search.FindLastIndex( key, first_idx, OUT last_idx );
+
+			for (usize i = first_idx; i <= last_idx; ++i)
+			{
+				if ( _attachments[i].second == unit )
+				{
+					found_idx = i;
+					break;
+				}
+			}
 		}
-		else
+		
+		if ( found_idx == -1 ) {
 			RETURN_ERR( "module is not attached" );
+		}
 
 		_SendForEachAttachments( Message< ModuleMsg::OnModuleDetached >{ this, this, unit } );
 
-		_attachments.Erase( unit->GetModuleID() );
+		_attachments.EraseFromIndex( found_idx );
 		return true;
 	}
 	
@@ -115,8 +140,6 @@ namespace Base
 */
 	void Module::_DetachAllAttachments ()
 	{
-		//CHECK_ERR( not _lockAttachments, void() );
-
 		for (; not _attachments.Empty();)
 		{
 			_Detach( _attachments.Back().second );
@@ -128,14 +151,27 @@ namespace Base
 	_DetachSelfFromParent
 =================================================
 */
-	void Module::_DetachSelfFromParent ()
+	void Module::_DetachSelfFromParent (const ModulePtr &parent)
 	{
-		if ( _parent )
+		if ( parent )
 		{
-			CHECK( _parent->Send( Message< ModuleMsg::DetachModule >( this, this ) ) );
+			CHECK( parent->Send( Message< ModuleMsg::DetachModule >( this, this ) ) );
 		}
 	}
 	
+/*
+=================================================
+	_DetachSelfFromAllParents
+=================================================
+*/
+	void Module::_DetachSelfFromAllParents ()
+	{
+		for (; not _parents.Empty(); )
+		{
+			CHECK( _parents.Back()->Send( Message< ModuleMsg::DetachModule >( this, this ) ) );
+		}
+	}
+
 /*
 =================================================
 	_DetachSelfFromManager
@@ -169,6 +205,8 @@ namespace Base
 	{
 		SHARED_POINTER_TYPE( AttachModuleToManagerAsyncTask )	task;
 
+
+
 		// attach to known manager
 		if ( mngr )
 		{
@@ -190,7 +228,12 @@ namespace Base
 		{
 			ASSERT( id != UntypedID_t(0) or id != UntypedID_t(-1) );
 
-			task = GXTypes::New< AttachModuleToManagerAsyncTask >( this, id );
+			ModulePtr	where =	TModID::_ID == (GetModuleID() & TModID::_IDMask) ?  ModulePtr( GlobalSystems()->Get<MainSystem>() ) :
+								OModID::_ID == (GetModuleID() & OModID::_IDMask) ?  ModulePtr( GlobalSystems()->Get<ParallelThread>() ) :
+								null;
+			CHECK_ERR( where );
+
+			task = GXTypes::New< AttachModuleToManagerAsyncTask >( this, where, id );
 		}
 
 		task->Execute();
@@ -354,7 +397,7 @@ namespace Base
 		Message< ModuleMsg::FindModule >	request{ this, id };
 		_SendMsg( request );
 
-		return request->result.Get().Get( null );
+		return request->result.Get( null );
 	}
 
 /*
@@ -364,9 +407,9 @@ namespace Base
 */
 	bool Module::_FindModule_Impl (const Message< ModuleMsg::FindModule > &msg)
 	{
-		Modules_t::iterator	iter;
+		AttachedModules_t::iterator	iter;
 
-		if ( _attachments.Find( msg->id, OUT iter ) )
+		if ( _attachments.CustomSearch().Find( ModuleSearchByID( msg->id ), OUT iter ) )
 		{
 			msg->result.Set( iter->second );
 		}
@@ -415,7 +458,7 @@ namespace Base
 	{
 		CHECK_ERR( _IsMutableState( GetState() ) );
 
-		_SendForEachAttachments( Message< ModuleMsg::Link >{ this, _attachments } );
+		_SendForEachAttachments( msg );
 
 		CHECK( _SetState( EState::Linked ) );
 		return true;
@@ -441,7 +484,7 @@ namespace Base
 		// TODO: unsubscribe
 
 		_DetachAllAttachments();
-		_DetachSelfFromParent();
+		_DetachSelfFromAllParents();
 
 		// TODO: how to send Delete message to subscribers?
 		_msgHandler.Clear();
@@ -475,10 +518,10 @@ namespace Base
 	{
 		if ( msg->attachedModule == this )
 		{
-			CHECK( _parent == null );
+			CHECK_ERR( _parents.Count() < _maxParents );
 			CHECK( _SetState( EState::Initial ) );
 
-			_parent = msg->parent;
+			_parents.Add( msg->parent );
 		}
 		return true;
 	}
@@ -492,10 +535,10 @@ namespace Base
 	{
 		if ( msg->detachedModule == this )
 		{
-			CHECK( _parent == msg->parent );
+			CHECK( _parents.IsExist( msg->parent ) );
 			CHECK( _SetState( EState::Initial ) );
 
-			_parent	= null;
+			_parents.Erase( msg->parent );
 		}
 		else
 		{

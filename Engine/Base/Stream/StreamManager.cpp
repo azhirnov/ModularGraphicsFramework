@@ -19,7 +19,7 @@ namespace Base
 =================================================
 */
 	StreamManager::StreamManager (const GlobalSystemsRef gs, const CreateInfo::StreamManager &info) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "StreamManager" );
 

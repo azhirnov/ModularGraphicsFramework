@@ -18,7 +18,7 @@ namespace Base
 =================================================
 */
 	InputStream::InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -50,7 +50,7 @@ namespace Base
 =================================================
 */
 	InputStream::InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -83,7 +83,7 @@ namespace Base
 =================================================
 */
 	InputStream::InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );

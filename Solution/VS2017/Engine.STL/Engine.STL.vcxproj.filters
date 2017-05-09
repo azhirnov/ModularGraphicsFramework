@@ -181,9 +181,6 @@
     <ClInclude Include="..\..\..\Engine\STL\Dimensions\RadiansAndDegrees.h">
       <Filter>Dimensions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\ArgHelpers.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\Experimental\FastMath.h">
       <Filter>Experimental</Filter>
     </ClInclude>
@@ -596,12 +593,6 @@
     <ClInclude Include="..\..\..\Engine\STL\Types\Delegate.h">
       <Filter>Types</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\Tuple.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\ChunkArray.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\Math\3D\AxisAlignedBox.h">
       <Filter>Math\3D</Filter>
     </ClInclude>
@@ -656,9 +647,6 @@
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantCRef.h">
       <Filter>Types</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\Mutable.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\Experimental\StaticVariant.h">
       <Filter>Experimental</Filter>
     </ClInclude>
@@ -669,9 +657,6 @@
       <Filter>CompileTime</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\Experimental\VariantInterface.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\BoolArg.h">
       <Filter>Experimental</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\Experimental\FunctionInfo.h">

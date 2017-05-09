@@ -23,7 +23,7 @@ namespace Platforms
 =================================================
 */
 	WinKeyInput::WinKeyInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "WinKeyInput" );
 
@@ -203,10 +203,10 @@ namespace Platforms
 
 				wnd->Send( request_hwnd );
 
-				if ( request_hwnd->hwnd.Get().IsDefined() and
-					 request_hwnd->hwnd.Get().Get().IsNotNull<HWND>() )
+				if ( request_hwnd->hwnd.IsDefined() and
+					 request_hwnd->hwnd.Get().IsNotNull<HWND>() )
 				{
-					_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get().Get() } );
+					_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get() } );
 				}
 			}
 

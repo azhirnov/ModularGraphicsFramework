@@ -33,8 +33,10 @@ namespace Base
 	OpenForRead
 =================================================
 */
-	bool FileManager::OpenForRead (StringCRef filename, RFilePtr &file) const
+	bool FileManager::OpenForRead (StringCRef filename, OUT RFilePtr &file) const
 	{
+		file = null;
+
 		File::HddRFilePtr	rfile = File::HddRFile::New();
 
 		if ( IsFileExist( filename ) )
@@ -55,8 +57,10 @@ namespace Base
 	OpenForWrite
 =================================================
 */
-	bool FileManager::OpenForWrite (StringCRef filename, WFilePtr &file) const
+	bool FileManager::OpenForWrite (StringCRef filename, OUT WFilePtr &file) const
 	{
+		file = null;
+
 		File::HddWFilePtr	wfile = File::HddWFile::New();
 		
 		if ( IsFileExist( filename ) )
@@ -77,8 +81,10 @@ namespace Base
 	OpenForAppend
 =================================================
 */
-	bool FileManager::OpenForAppend (StringCRef filename, WFilePtr &file) const
+	bool FileManager::OpenForAppend (StringCRef filename, OUT WFilePtr &file) const
 	{
+		file = null;
+
 		File::HddWFilePtr	wfile = File::HddWFile::New();
 		
 		if ( IsFileExist( filename ) )
@@ -99,8 +105,10 @@ namespace Base
 	CreateFile
 =================================================
 */
-	bool FileManager::CreateFile (StringCRef filename, WFilePtr &file) const
+	bool FileManager::CreateFile (StringCRef filename, OUT WFilePtr &file) const
 	{
+		file = null;
+
 		File::HddWFilePtr	wfile = File::HddWFile::New();
 		
 		if ( not wfile->Open( filename ) )
@@ -167,8 +175,10 @@ namespace Base
 	CreateMemFile
 =================================================
 */
-	bool FileManager::CreateMemFile (WFilePtr &file, BytesU reserve) const
+	bool FileManager::CreateMemFile (OUT WFilePtr &file, BytesU reserve) const
 	{
+		file = null;
+
 		File::MemWFilePtr	wfile = File::MemWFile::New();
 
 		CHECK_ERR( wfile->Create( reserve ) );
@@ -198,7 +208,7 @@ namespace Base
 	ReadToMem
 =================================================
 */
-	bool FileManager::ReadToMem (StringCRef filename, RFilePtr &file) const
+	bool FileManager::ReadToMem (StringCRef filename, OUT RFilePtr &file) const
 	{
 		RFilePtr	rfile;
 		CHECK_ERR( OpenForRead( filename, rfile ) );
@@ -215,8 +225,10 @@ namespace Base
 	ReadToMem
 =================================================
 */
-	bool FileManager::ReadToMem (const RFilePtr &fromFile, RFilePtr &toFile) const
+	bool FileManager::ReadToMem (const RFilePtr &fromFile, OUT RFilePtr &toFile) const
 	{
+		toFile = null;
+
 		CHECK_ERR( fromFile and fromFile->IsOpened() );
 
 		File::MemRFilePtr	mfile;
@@ -231,8 +243,10 @@ namespace Base
 	ReadToMemIfSmall
 =================================================
 */
-	bool FileManager::ReadToMemIfSmall (const RFilePtr &fromFile, RFilePtr &toFile) const
+	bool FileManager::ReadToMemIfSmall (const RFilePtr &fromFile, OUT RFilePtr &toFile) const
 	{
+		toFile = null;
+
 		CHECK_ERR( fromFile and fromFile->IsOpened() );
 
 		const usize	max_size = 1 << 20;	// 1Mb

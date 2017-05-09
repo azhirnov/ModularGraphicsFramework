@@ -64,45 +64,39 @@ namespace GXTypes
 
 		~Union ();
 
-		TypeId  GetCurrentTypeId () const;
-
-		usize GetCurrentIndex () const;
-
 		bool IsDefined () const;
-		
-		void const * GetPointer () const;
-
-		BytesU GetSizeOf () const;
-
 		bool IsSame (const Self &other) const;
-
 		void Destroy ();
 
-		VariantRef  GetVariantRef ()					{ return VariantRef::FromVoid( _data, GetCurrentTypeId() ); }
+		TypeId			GetCurrentTypeId ()		const;
+		usize			GetCurrentIndex ()		const		{ return _currentIndex; }
+		BytesU			GetSizeOf ()			const;
+		BinArrayCRef	GetData ()				const		{ return BinArrayCRef::From( _data ); }	// TODO: use GetSizeOf ?
+		VariantRef		GetVariantRef ()					{ return VariantRef::FromVoid( _data, GetCurrentTypeId() ); }
 
 
 		bool operator == (const Self &right) const;
 		bool operator >  (const Self &right) const;
 		bool operator <  (const Self &right) const;
-		bool operator != (const Self &right) const		{ return not (*this == right); }
-		bool operator >= (const Self &right) const		{ return not (*this <  right); }
-		bool operator <= (const Self &right) const		{ return not (*this >  right); }
+		bool operator != (const Self &right) const			{ return not (*this == right); }
+		bool operator >= (const Self &right) const			{ return not (*this <  right); }
+		bool operator <= (const Self &right) const			{ return not (*this >  right); }
 
 		Self& operator = (const Self &right);
 		Self& operator = (Self &&right);
 		
-		explicit operator bool () const					{ return IsDefined(); }
+		explicit operator bool () const						{ return IsDefined(); }
 
 
 		// Type Access //
-		template <typename T>		Self &  Create (const T &value);
-		template <typename T>		Self &  Create2 (T &&value);
-		template <typename T>		Self &	Set (const T &value);
+		template <typename T>		Self &		Create (const T &value);
+		template <typename T>		Self &		Create2 (T &&value);
+		template <typename T>		Self &		Set (const T &value);
 
-		template <typename Func>	void	Apply (Func& func);
-		template <typename Func>	void	Apply (const Func& func) const;
+		template <typename Func>	void		Apply (Func& func);
+		template <typename Func>	void		Apply (const Func& func) const;
 
-		template <typename T>		bool	Is () const;
+		template <typename T>		bool		Is () const;
 
 		template <typename T>		T &			Get ();
 		template <typename T>		T const &	Get () const;
@@ -392,17 +386,6 @@ namespace GXTypes
 		TypeList_t::RuntimeForEach( func );
 		return func.id;
 	}
-		
-/*
-=================================================
-	GetCurrentIndex
-=================================================
-*/
-	template <typename ...Types>
-	inline usize Union<Types...>::GetCurrentIndex () const
-	{
-		return _currentIndex;
-	}
 	
 /*
 =================================================
@@ -413,17 +396,6 @@ namespace GXTypes
 	inline bool Union<Types...>::IsDefined () const
 	{
 		return _currentIndex != INVALID_INDEX;
-	}
-	
-/*
-=================================================
-	GetPointer
-=================================================
-*/
-	template <typename ...Types>
-	inline void const * Union<Types...>::GetPointer () const
-	{
-		return _data;
 	}
 	
 /*

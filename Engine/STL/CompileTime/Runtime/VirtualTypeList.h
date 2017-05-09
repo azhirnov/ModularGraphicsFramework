@@ -46,6 +46,7 @@ namespace Runtime
 		struct _TypelistImpl_Get;
 		struct _TypelistImpl_IndexOf;
 		struct _TypelistImpl_ToString;
+		struct _CompareWithTypelist_Func;
 
 		using DymmyTypeList = CompileTime::TypeList< CompileTime::TypeListEnd >;
 
@@ -82,6 +83,12 @@ namespace Runtime
 		
 		template <typename T>
 		bool	HasType ()			const		{ return IndexOf<T>() != -1; }
+
+		template <typename Typelist>
+		bool	HasAllTypes ()		const;
+
+		template <typename Typelist>
+		bool	HasAnyType ()		const;
 
 		String	ToString ()			const		{ return _Internal()->ToString(); }
 
@@ -165,6 +172,25 @@ namespace Runtime
 			str << (Index == 0 ? "" : " || ") << typeid(T).name();
 		}
 	};
+		
+
+	//
+	// Compare With Typelist
+	//
+	struct VirtualTypeList::_CompareWithTypelist_Func
+	{
+		VirtualTypeList const&	_vtl;
+		uint					count;
+
+		_CompareWithTypelist_Func (const VirtualTypeList &vtl) : _vtl(vtl), count(0)
+		{}
+		
+		template <typename T, usize Index>
+		void Process ()
+		{
+			count += uint( _vtl.HasType< T >() );
+		}
+	};
 
 
 /*
@@ -224,6 +250,40 @@ namespace Runtime
 
 		T::RuntimeForEach( func );
 		return func.str;
+	}
+	
+/*
+=================================================
+	HasAllTypes
+=================================================
+*/
+	template <typename Typelist>
+	inline bool VirtualTypeList::HasAllTypes () const
+	{
+		STATIC_ASSERT( CompileTime::IsTypeList< Typelist > );
+
+		_CompareWithTypelist_Func	func( *this );
+
+		Typelist::RuntimeForEach( func );
+
+		return Typelist::Length == func.count;
+	}
+	
+/*
+=================================================
+	HasAnyType
+=================================================
+*/
+	template <typename Typelist>
+	inline bool VirtualTypeList::HasAnyType () const
+	{
+		STATIC_ASSERT( CompileTime::IsTypeList< Typelist > );
+		
+		_CompareWithTypelist_Func	func( *this );
+
+		Typelist::RuntimeForEach( func );
+
+		return func.count != 0;
 	}
 
 

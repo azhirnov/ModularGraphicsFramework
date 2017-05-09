@@ -8,8 +8,10 @@
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformVK
 {
+	using namespace Platforms;
+
 
 	//
 	// Vulkan Windows Surface
@@ -32,10 +34,10 @@ namespace Platforms
 	};
 
 
-	using VkSurface		= VkWinSurface;
+	using Vk1Surface	= VkWinSurface;
 
 
-}	// Platforms
+}	// PlatformVK
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN and PLATFORM_WINDOWS

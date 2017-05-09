@@ -60,9 +60,11 @@ namespace GXTypes
 		}
 
 
-		T *			Pointer ()			{ return _memory; }
+		T *				Pointer ()			{ return _memory; }
 
-		T const *	Pointer ()	const	{ return _memory; }
+		T const *		Pointer ()	const	{ return _memory; }
+
+		constexpr bool	IsStatic ()	const	{ return false; }
 
 
 		bool Allocate (INOUT usize &size, bool allowReserve = true) noexcept
@@ -171,14 +173,16 @@ namespace GXTypes
 		}
 
 
-		T *			Pointer ()			{ return _memory; }
+		T *				Pointer ()			{ return _memory; }
 
-		T const *	Pointer ()	const	{ return _memory; }
+		T const *		Pointer ()	const	{ return _memory; }
+
+		constexpr bool	IsStatic ()	const	{ return true; }
 
 
 		bool Allocate (INOUT usize &size, bool = false) noexcept
 		{
-			CHECK( size < ArraySize );
+			CHECK( size <= ArraySize );
 
 			size = ArraySize;
 			return true;
@@ -191,7 +195,7 @@ namespace GXTypes
 		}
 
 
-		usize MaxSize () const
+		constexpr usize MaxSize () const
 		{
 			return ArraySize;
 		}
@@ -289,9 +293,11 @@ namespace GXTypes
 		}
 
 
-		T *			Pointer ()			{ return _memory; }
+		T *				Pointer ()			{ return _memory; }
 
-		T const *	Pointer ()	const	{ return _memory; }
+		T const *		Pointer ()	const	{ return _memory; }
+
+		constexpr bool	IsStatic ()	const	{ return false; }
 
 
 		bool Allocate (INOUT usize &size, bool allowReserve = true) noexcept
@@ -299,19 +305,20 @@ namespace GXTypes
 			const usize	required_size	= size;
 			const usize	min_size		= GlobalConst::STL_MemContainerResizingMinSize;
 
+			if ( size <= FIXED_SIZE )
+			{
+				_memory = _buf;
+				size	= FIXED_SIZE;
+
+				return size >= required_size;
+			}
+
 			if ( size > FIXED_SIZE and allowReserve )
 			{
 				const usize	nom	= GlobalConst::STL_MemContainerResizingNominator;
 				const usize	den	= GlobalConst::STL_MemContainerResizingDenominator;
 				
 				size += (size * nom + den - 1) / den + min_size;
-			}
-
-			if ( size <= FIXED_SIZE )
-			{
-				_memory = _buf;
-
-				return size >= required_size;
 			}
 
 			return Allocator_t::Allocate( _memory, size ) and size >= required_size;

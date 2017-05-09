@@ -10,12 +10,55 @@
 #include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
 #include "Engine/Platforms/Shared/GPU/TextureEnums.h"
 #include "Engine/Platforms/Shared/GPU/MultiSamples.h"
+#include "Engine/Platforms/Shared/GPU/Memory.h"
+#include "Engine/Platforms/Shared/GPU/Buffer.h"
+#include "Engine/Platforms/Shared/GPU/Sampler.h"
+#include "Engine/Platforms/Shared/GPU/RenderPass.h"
+#include "Engine/Platforms/Shared/GPU/VertexAttribs.h"
+#include "Engine/Platforms/Shared/GPU/Program.h"
+#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
 
 namespace Engine
 {
 namespace Platforms
 {
+	class VulkanThread;
+
+}	// Platforms
+
+namespace PlatformVK
+{
+	using namespace Platforms;
+
+	using VkSubSystems	= EngineSubSystems< "vulkan 1"_StringToID >;
+	using VkSystemsRef	= ConstReference< VkSubSystems >;
+
+	class Vk1Device;
 	
+/*
+=================================================
+	MemoryPropertyFlags
+=================================================
+*/
+	inline vk::VkMemoryPropertyFlags  Vk1Enum (EGpuMemory::bits value)
+	{
+		using namespace vk;
+
+		VkMemoryPropertyFlags	result = 0;
+
+		if ( value.Get( EGpuMemory::LocalInGPU ) )
+			result |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+		if ( value.Get( EGpuMemory::CoherentWithCPU ) )
+			result |= (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+		if ( value.Get( EGpuMemory::CachedInCPU ) )
+			result |= (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+
+		return result;
+	}
+
 /*
 =================================================
 	LogicOp
@@ -174,7 +217,6 @@ namespace Platforms
 	inline bool Vk1Enum (EPolygonFace::type value, OUT vk::VkCullModeFlagBits &cullMode)
 	{
 		using namespace vk;
-		CHECK_ERR( value != EPolygonFace::Unknown );
 
 		cullMode = VK_CULL_MODE_NONE;
 
@@ -195,7 +237,6 @@ namespace Platforms
 	inline bool Vk1Enum (EPolygonFace::type value, OUT vk::VkStencilFaceFlagBits &stencilFaceMask)
 	{
 		using namespace vk;
-		CHECK_ERR( value != EPolygonFace::Unknown );
 
 		stencilFaceMask = VkStencilFaceFlagBits(0);
 
@@ -205,6 +246,7 @@ namespace Platforms
 		if ( EnumEq( value, EPolygonFace::Back ) )
 			stencilFaceMask = VkStencilFaceFlagBits( stencilFaceMask | VK_STENCIL_FACE_BACK_BIT );
 
+		CHECK_ERR( stencilFaceMask != 0 );
 		return true;
 	}
 
@@ -239,7 +281,7 @@ namespace Platforms
 =================================================
 	BorderColor
 =================================================
-*
+*/
 	inline vk::VkBorderColor  Vk1Enum (ESamplerBorderColor::type value)
 	{
 		using namespace vk;
@@ -321,7 +363,7 @@ namespace Platforms
 =================================================
 	BufferUsage
 =================================================
-*
+*/
 	inline vk::VkBufferUsageFlags  Vk1Enum (EBufferUsage::bits values)
 	{
 		using namespace vk;
@@ -357,7 +399,7 @@ namespace Platforms
 =================================================
 	BufferSparse
 =================================================
-*
+*/
 	inline bool  Vk1Enum (OUT vk::VkBufferCreateFlagBits flags, ESparseMemory::bits values)
 	{
 		using namespace vk;
@@ -390,7 +432,7 @@ namespace Platforms
 =================================================
 	ImageSparse
 =================================================
-*
+*/
 	inline bool  Vk1Enum (OUT vk::VkImageCreateFlagBits flags, ESparseMemory::bits values)
 	{
 		using namespace vk;
@@ -441,7 +483,7 @@ namespace Platforms
 =================================================
 	ShaderStage
 =================================================
-*
+*/
 	inline vk::VkShaderStageFlagBits  Vk1Enum (EShader::type value)
 	{
 		using namespace vk;
@@ -493,7 +535,7 @@ namespace Platforms
 =================================================
 	AttachmentLoadOp
 =================================================
-*
+*/
 	inline vk::VkAttachmentLoadOp  Vk1Enum (EAttachmentLoadOp::type value)
 	{
 		using namespace vk;
@@ -512,7 +554,7 @@ namespace Platforms
 =================================================
 	AttachmentStoreOp
 =================================================
-*
+*/
 	inline vk::VkAttachmentStoreOp  Vk1Enum (EAttachmentStoreOp::type value)
 	{
 		using namespace vk;
@@ -530,7 +572,7 @@ namespace Platforms
 =================================================
 	ImageLayout
 =================================================
-*
+*/
 	inline vk::VkImageLayout  Vk1Enum (EImageLayout::type value)
 	{
 		using namespace vk;
@@ -556,7 +598,7 @@ namespace Platforms
 =================================================
 	SubpassDependency
 =================================================
-*
+*/
 	inline vk::VkDependencyFlags  Vk1Enum (ESubpassDependency::bits values)
 	{
 		using namespace vk;
@@ -585,7 +627,7 @@ namespace Platforms
 =================================================
 	PipelineStage
 =================================================
-*
+*/
 	inline vk::VkPipelineStageFlags  Vk1Enum (EPipelineStage::bits values)
 	{
 		using namespace vk;
@@ -611,7 +653,7 @@ namespace Platforms
 				case EPipelineStage::FragmentShader			: flags |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;					break;
 				case EPipelineStage::EarlyFragmentTests		: flags |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;				break;
 				case EPipelineStage::LateFragmentTests		: flags |= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;				break;
-				case EPipelineStage::ColorAttachments		: flags |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;			break;
+				case EPipelineStage::ColorAttachmentOutput	: flags |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;			break;
 				case EPipelineStage::ComputeShader			: flags |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;					break;
 				case EPipelineStage::Transfer				: flags |= VK_PIPELINE_STAGE_TRANSFER_BIT;							break;
 				case EPipelineStage::BottomOfPipe			: flags |= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;					break;
@@ -626,7 +668,7 @@ namespace Platforms
 =================================================
 	SubpassAccess
 =================================================
-*
+*/
 	inline vk::VkAccessFlags  Vk1Enum (ESubpassAccess::bits values)
 	{
 		using namespace vk;
@@ -669,7 +711,7 @@ namespace Platforms
 =================================================
 	ImageUsage
 =================================================
-*
+*/
 	inline vk::VkImageUsageFlags  Vk1Enum (EImageUsage::bits values)
 	{
 		using namespace vk;
@@ -698,74 +740,100 @@ namespace Platforms
 		}
 		return flags;
 	}
+		
+/*
+=================================================
+	ImageViewType
+=================================================
+*/
+	inline vk::VkImageViewType  Vk1Enum (ETexture::type value)
+	{
+		using namespace vk;
+		
+		switch ( value )
+		{
+			case ETexture::Tex1D		: return VK_IMAGE_VIEW_TYPE_1D;
+			case ETexture::Tex1DArray	: return VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+			case ETexture::Tex2D		: return VK_IMAGE_VIEW_TYPE_2D;
+			case ETexture::Tex2DArray	: return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+			//case ETexture::Tex2DMS
+			//case ETexture::Tex2DMSArray
+			case ETexture::TexCube		: return VK_IMAGE_VIEW_TYPE_CUBE;
+			case ETexture::TexCubeArray	: return VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+			case ETexture::Tex3D		: return VK_IMAGE_VIEW_TYPE_3D;
+			//case ETexture::Buffer
+		}
+
+		RETURN_ERR( "unsupported image view type", VK_IMAGE_VIEW_TYPE_MAX_ENUM );
+	}
 
 /*
 =================================================
 	Format
 =================================================
-*
-	inline vk::VkFormat  Vk1Enum (EAttribute::type value)
+*/
+	inline vk::VkFormat  Vk1Enum (EVertexAttribute::type value)
 	{
 		using namespace vk;
 
 		switch ( value )
 		{
-			case EAttribute::Byte			: return VK_FORMAT_R8_SINT;
-			case EAttribute::Byte2			: return VK_FORMAT_R8G8_SINT;
-			case EAttribute::Byte3			: return VK_FORMAT_R8G8B8_SINT;
-			case EAttribute::Byte4			: return VK_FORMAT_R8G8B8A8_SINT;
-			case EAttribute::Byte_Norm		: return VK_FORMAT_R8_SNORM;
-			case EAttribute::Byte2_Norm		: return VK_FORMAT_R8G8_SNORM;
-			case EAttribute::Byte3_Norm		: return VK_FORMAT_R8G8B8_SNORM;
-			case EAttribute::Byte4_Norm		: return VK_FORMAT_R8G8B8A8_SNORM;
-			case EAttribute::UByte			: return VK_FORMAT_R8_UINT;
-			case EAttribute::UByte2			: return VK_FORMAT_R8G8_UINT;
-			case EAttribute::UByte3			: return VK_FORMAT_R8G8B8_UINT;
-			case EAttribute::UByte4			: return VK_FORMAT_R8G8B8A8_UINT;
-			case EAttribute::UByte_Norm		: return VK_FORMAT_R8_UNORM;
-			case EAttribute::UByte2_Norm	: return VK_FORMAT_R8G8_UNORM;
-			case EAttribute::UByte3_Norm	: return VK_FORMAT_R8G8B8_UNORM;
-			case EAttribute::UByte4_Norm	: return VK_FORMAT_R8G8B8A8_UNORM;
-			case EAttribute::Short			: return VK_FORMAT_R16_SINT;
-			case EAttribute::Short2			: return VK_FORMAT_R16G16_SINT;
-			case EAttribute::Short3			: return VK_FORMAT_R16G16B16_SINT;
-			case EAttribute::Short4			: return VK_FORMAT_R16G16B16A16_SINT;
-			case EAttribute::Short_Norm		: return VK_FORMAT_R16_SNORM;
-			case EAttribute::Short2_Norm	: return VK_FORMAT_R16G16_SNORM;
-			case EAttribute::Short3_Norm	: return VK_FORMAT_R16G16B16_SNORM;
-			case EAttribute::Short4_Norm	: return VK_FORMAT_R16G16B16A16_SNORM;
-			case EAttribute::UShort			: return VK_FORMAT_R16_UINT;
-			case EAttribute::UShort2		: return VK_FORMAT_R16G16_UINT;
-			case EAttribute::UShort3		: return VK_FORMAT_R16G16B16_UINT;
-			case EAttribute::UShort4		: return VK_FORMAT_R16G16B16A16_UINT;
-			case EAttribute::UShort_Norm	: return VK_FORMAT_R16_UNORM;
-			case EAttribute::UShort2_Norm	: return VK_FORMAT_R16G16_UNORM;
-			case EAttribute::UShort3_Norm	: return VK_FORMAT_R16G16B16_UNORM;
-			case EAttribute::UShort4_Norm	: return VK_FORMAT_R16G16B16A16_UNORM;
-			case EAttribute::Int			: return VK_FORMAT_R32_SINT;
-			case EAttribute::Int2			: return VK_FORMAT_R32G32_SINT;
-			case EAttribute::Int3			: return VK_FORMAT_R32G32B32_SINT;
-			case EAttribute::Int4			: return VK_FORMAT_R32G32B32A32_SINT;
-			case EAttribute::UInt			: return VK_FORMAT_R32_UINT;
-			case EAttribute::UInt2			: return VK_FORMAT_R32G32_UINT;
-			case EAttribute::UInt3			: return VK_FORMAT_R32G32B32_UINT;
-			case EAttribute::UInt4			: return VK_FORMAT_R32G32B32A32_UINT;
-			case EAttribute::Long			: return VK_FORMAT_R64_SINT;
-			case EAttribute::Long2			: return VK_FORMAT_R64G64_SINT;
-			case EAttribute::Long3			: return VK_FORMAT_R64G64B64_SINT;
-			case EAttribute::Long4			: return VK_FORMAT_R64G64B64A64_SINT;
-			case EAttribute::ULong			: return VK_FORMAT_R64_UINT;
-			case EAttribute::ULong2			: return VK_FORMAT_R64G64_UINT;
-			case EAttribute::ULong3			: return VK_FORMAT_R64G64B64_UINT;
-			case EAttribute::ULong4			: return VK_FORMAT_R64G64B64A64_UINT;
-			case EAttribute::Float			: return VK_FORMAT_R32_SFLOAT;
-			case EAttribute::Float2			: return VK_FORMAT_R32G32_SFLOAT;
-			case EAttribute::Float3			: return VK_FORMAT_R32G32B32_SFLOAT;
-			case EAttribute::Float4			: return VK_FORMAT_R32G32B32A32_SFLOAT;
-			case EAttribute::Double			: return VK_FORMAT_R64_SFLOAT;
-			case EAttribute::Double2		: return VK_FORMAT_R64G64_SFLOAT;
-			case EAttribute::Double3		: return VK_FORMAT_R64G64B64_SFLOAT;
-			case EAttribute::Double4		: return VK_FORMAT_R64G64B64A64_SFLOAT;
+			case EVertexAttribute::Byte			: return VK_FORMAT_R8_SINT;
+			case EVertexAttribute::Byte2		: return VK_FORMAT_R8G8_SINT;
+			case EVertexAttribute::Byte3		: return VK_FORMAT_R8G8B8_SINT;
+			case EVertexAttribute::Byte4		: return VK_FORMAT_R8G8B8A8_SINT;
+			case EVertexAttribute::Byte_Norm	: return VK_FORMAT_R8_SNORM;
+			case EVertexAttribute::Byte2_Norm	: return VK_FORMAT_R8G8_SNORM;
+			case EVertexAttribute::Byte3_Norm	: return VK_FORMAT_R8G8B8_SNORM;
+			case EVertexAttribute::Byte4_Norm	: return VK_FORMAT_R8G8B8A8_SNORM;
+			case EVertexAttribute::UByte		: return VK_FORMAT_R8_UINT;
+			case EVertexAttribute::UByte2		: return VK_FORMAT_R8G8_UINT;
+			case EVertexAttribute::UByte3		: return VK_FORMAT_R8G8B8_UINT;
+			case EVertexAttribute::UByte4		: return VK_FORMAT_R8G8B8A8_UINT;
+			case EVertexAttribute::UByte_Norm	: return VK_FORMAT_R8_UNORM;
+			case EVertexAttribute::UByte2_Norm	: return VK_FORMAT_R8G8_UNORM;
+			case EVertexAttribute::UByte3_Norm	: return VK_FORMAT_R8G8B8_UNORM;
+			case EVertexAttribute::UByte4_Norm	: return VK_FORMAT_R8G8B8A8_UNORM;
+			case EVertexAttribute::Short		: return VK_FORMAT_R16_SINT;
+			case EVertexAttribute::Short2		: return VK_FORMAT_R16G16_SINT;
+			case EVertexAttribute::Short3		: return VK_FORMAT_R16G16B16_SINT;
+			case EVertexAttribute::Short4		: return VK_FORMAT_R16G16B16A16_SINT;
+			case EVertexAttribute::Short_Norm	: return VK_FORMAT_R16_SNORM;
+			case EVertexAttribute::Short2_Norm	: return VK_FORMAT_R16G16_SNORM;
+			case EVertexAttribute::Short3_Norm	: return VK_FORMAT_R16G16B16_SNORM;
+			case EVertexAttribute::Short4_Norm	: return VK_FORMAT_R16G16B16A16_SNORM;
+			case EVertexAttribute::UShort		: return VK_FORMAT_R16_UINT;
+			case EVertexAttribute::UShort2		: return VK_FORMAT_R16G16_UINT;
+			case EVertexAttribute::UShort3		: return VK_FORMAT_R16G16B16_UINT;
+			case EVertexAttribute::UShort4		: return VK_FORMAT_R16G16B16A16_UINT;
+			case EVertexAttribute::UShort_Norm	: return VK_FORMAT_R16_UNORM;
+			case EVertexAttribute::UShort2_Norm	: return VK_FORMAT_R16G16_UNORM;
+			case EVertexAttribute::UShort3_Norm	: return VK_FORMAT_R16G16B16_UNORM;
+			case EVertexAttribute::UShort4_Norm	: return VK_FORMAT_R16G16B16A16_UNORM;
+			case EVertexAttribute::Int			: return VK_FORMAT_R32_SINT;
+			case EVertexAttribute::Int2			: return VK_FORMAT_R32G32_SINT;
+			case EVertexAttribute::Int3			: return VK_FORMAT_R32G32B32_SINT;
+			case EVertexAttribute::Int4			: return VK_FORMAT_R32G32B32A32_SINT;
+			case EVertexAttribute::UInt			: return VK_FORMAT_R32_UINT;
+			case EVertexAttribute::UInt2		: return VK_FORMAT_R32G32_UINT;
+			case EVertexAttribute::UInt3		: return VK_FORMAT_R32G32B32_UINT;
+			case EVertexAttribute::UInt4		: return VK_FORMAT_R32G32B32A32_UINT;
+			case EVertexAttribute::Long			: return VK_FORMAT_R64_SINT;
+			case EVertexAttribute::Long2		: return VK_FORMAT_R64G64_SINT;
+			case EVertexAttribute::Long3		: return VK_FORMAT_R64G64B64_SINT;
+			case EVertexAttribute::Long4		: return VK_FORMAT_R64G64B64A64_SINT;
+			case EVertexAttribute::ULong		: return VK_FORMAT_R64_UINT;
+			case EVertexAttribute::ULong2		: return VK_FORMAT_R64G64_UINT;
+			case EVertexAttribute::ULong3		: return VK_FORMAT_R64G64B64_UINT;
+			case EVertexAttribute::ULong4		: return VK_FORMAT_R64G64B64A64_UINT;
+			case EVertexAttribute::Float		: return VK_FORMAT_R32_SFLOAT;
+			case EVertexAttribute::Float2		: return VK_FORMAT_R32G32_SFLOAT;
+			case EVertexAttribute::Float3		: return VK_FORMAT_R32G32B32_SFLOAT;
+			case EVertexAttribute::Float4		: return VK_FORMAT_R32G32B32A32_SFLOAT;
+			case EVertexAttribute::Double		: return VK_FORMAT_R64_SFLOAT;
+			case EVertexAttribute::Double2		: return VK_FORMAT_R64G64_SFLOAT;
+			case EVertexAttribute::Double3		: return VK_FORMAT_R64G64B64_SFLOAT;
+			case EVertexAttribute::Double4		: return VK_FORMAT_R64G64B64A64_SFLOAT;
 
 		}
 		RETURN_ERR( "invalid attrib format", VK_FORMAT_MAX_ENUM );
@@ -776,135 +844,180 @@ namespace Platforms
 	Format
 =================================================
 */
+#	define VK_PIXEL_FORMATS( _builder_ ) \
+		_builder_( Unknown,				VK_FORMAT_UNDEFINED ) \
+		_builder_( RGBA16_SNorm,		VK_FORMAT_R16G16B16A16_SNORM ) \
+		_builder_( RGBA8_SNorm,			VK_FORMAT_R8G8B8A8_SNORM ) \
+		_builder_( RGB16_SNorm,			VK_FORMAT_R16G16B16_SNORM ) \
+		_builder_( RGB8_SNorm,			VK_FORMAT_R8G8B8_SNORM ) \
+		_builder_( RG16_SNorm,			VK_FORMAT_R16G16_SNORM ) \
+		_builder_( RG8_SNorm,			VK_FORMAT_R8G8_SNORM ) \
+		_builder_( R16_SNorm,			VK_FORMAT_R16_SNORM ) \
+		_builder_( R8_SNorm,			VK_FORMAT_R8_SNORM ) \
+		_builder_( RGBA16_UNorm,		VK_FORMAT_R16G16B16A16_UNORM ) \
+		_builder_( RGBA8_UNorm,			VK_FORMAT_R8G8B8A8_UNORM ) \
+		_builder_( RGB16_UNorm,			VK_FORMAT_R16G16B16_UNORM ) \
+		_builder_( RGB8_UNorm,			VK_FORMAT_R8G8B8_UNORM ) \
+		_builder_( RG16_UNorm,			VK_FORMAT_R16G16_UNORM ) \
+		_builder_( RG8_UNorm,			VK_FORMAT_R8G8_UNORM ) \
+		_builder_( R16_UNorm,			VK_FORMAT_R16_UNORM ) \
+		_builder_( R8_UNorm,			VK_FORMAT_R8_UNORM ) \
+		_builder_( RGB10_A2_UNorm,		VK_FORMAT_A2B10G10R10_UNORM_PACK32 ) \
+		_builder_( RGBA4_UNorm,			VK_FORMAT_R4G4B4A4_UNORM_PACK16 ) \
+		_builder_( RGB5_A1_UNorm,		VK_FORMAT_R5G5B5A1_UNORM_PACK16 ) \
+		_builder_( RGB_5_6_5_UNorm,		VK_FORMAT_R5G6B5_UNORM_PACK16 ) \
+		_builder_( BGR8_UNorm,			VK_FORMAT_B8G8R8_UNORM ) \
+		_builder_( BGRA8_UNorm,			VK_FORMAT_B8G8R8A8_UNORM ) \
+		_builder_( sRGB8,				VK_FORMAT_R8G8B8_SRGB ) \
+		_builder_( sRGB8_A8,			VK_FORMAT_R8G8B8A8_SRGB ) \
+		_builder_( R8I,					VK_FORMAT_R8_SINT ) \
+		_builder_( RG8I,				VK_FORMAT_R8G8_SINT ) \
+		_builder_( RGB8I,				VK_FORMAT_R8G8B8_SINT ) \
+		_builder_( RGBA8I,				VK_FORMAT_R8G8B8A8_SINT ) \
+		_builder_( R16I,				VK_FORMAT_R16_SINT ) \
+		_builder_( RG16I,				VK_FORMAT_R16G16_SINT ) \
+		_builder_( RGB16I,				VK_FORMAT_R16G16B16_SINT ) \
+		_builder_( RGBA16I,				VK_FORMAT_R16G16B16A16_SINT ) \
+		_builder_( R32I,				VK_FORMAT_R32_SINT ) \
+		_builder_( RG32I,				VK_FORMAT_R32G32_SINT ) \
+		_builder_( RGB32I,				VK_FORMAT_R32G32B32_SINT ) \
+		_builder_( RGBA32I,				VK_FORMAT_R32G32B32A32_UINT ) \
+		_builder_( R8U,					VK_FORMAT_R8_UINT ) \
+		_builder_( RG8U,				VK_FORMAT_R8G8_UINT ) \
+		_builder_( RGB8U,				VK_FORMAT_R8G8B8_UINT ) \
+		_builder_( RGBA8U,				VK_FORMAT_R8G8B8A8_UINT ) \
+		_builder_( R16U,				VK_FORMAT_R16_UINT ) \
+		_builder_( RG16U,				VK_FORMAT_R16G16_UINT ) \
+		_builder_( RGB16U,				VK_FORMAT_R16G16B16_UINT ) \
+		_builder_( RGBA16U,				VK_FORMAT_R16G16B16A16_UINT ) \
+		_builder_( R32U,				VK_FORMAT_R32_UINT ) \
+		_builder_( RG32U,				VK_FORMAT_R32G32_UINT ) \
+		_builder_( RGB32U,				VK_FORMAT_R32G32B32_UINT ) \
+		_builder_( RGBA32U,				VK_FORMAT_R32G32B32A32_SINT ) \
+		_builder_( RGB10_A2U,			VK_FORMAT_A2B10G10R10_UINT_PACK32 ) \
+		_builder_( R16F,				VK_FORMAT_R16_SFLOAT ) \
+		_builder_( RG16F,				VK_FORMAT_R16G16_SFLOAT ) \
+		_builder_( RGB16F,				VK_FORMAT_R16G16B16_SFLOAT ) \
+		_builder_( RGBA16F,				VK_FORMAT_R16G16B16A16_SFLOAT ) \
+		_builder_( R32F,				VK_FORMAT_R32_SFLOAT ) \
+		_builder_( RG32F,				VK_FORMAT_R32G32_SFLOAT ) \
+		_builder_( RGB32F,				VK_FORMAT_R32G32B32_SFLOAT ) \
+		_builder_( RGBA32F,				VK_FORMAT_R32G32B32A32_SFLOAT ) \
+		_builder_( RGB_11_11_10F,		VK_FORMAT_B10G11R11_UFLOAT_PACK32 ) \
+		_builder_( Depth16,				VK_FORMAT_D16_UNORM ) \
+		_builder_( Depth24,				VK_FORMAT_X8_D24_UNORM_PACK32 ) \
+		/*_builder_( Depth32,			VK_FORMAT_D32_SFLOAT ) */ \
+		_builder_( Depth32F,			VK_FORMAT_D32_SFLOAT ) \
+		_builder_( Depth16_Stencil8,	VK_FORMAT_D16_UNORM_S8_UINT ) \
+		_builder_( Depth24_Stencil8,	VK_FORMAT_D24_UNORM_S8_UINT ) \
+		_builder_( Depth32F_Stencil8,	VK_FORMAT_D32_SFLOAT_S8_UINT ) \
+		_builder_( BC1_RGB8_UNorm,		VK_FORMAT_BC1_RGB_UNORM_BLOCK ) \
+		_builder_( BC1_RGB8_A1_UNorm,	VK_FORMAT_BC1_RGBA_UNORM_BLOCK ) \
+		_builder_( BC2_RGBA8_UNorm,		VK_FORMAT_BC2_UNORM_BLOCK ) \
+		_builder_( BC3_RGBA8_UNorm,		VK_FORMAT_BC3_UNORM_BLOCK ) \
+		_builder_( BC4_RED8_SNorm,		VK_FORMAT_BC4_SNORM_BLOCK ) \
+		_builder_( BC4_RED8_UNorm,		VK_FORMAT_BC4_UNORM_BLOCK ) \
+		_builder_( BC5_RG8_SNorm,		VK_FORMAT_BC5_SNORM_BLOCK ) \
+		_builder_( BC5_RG8_UNorm,		VK_FORMAT_BC5_UNORM_BLOCK ) \
+		_builder_( BC7_RGBA8_UNorm,		VK_FORMAT_BC7_UNORM_BLOCK ) \
+		_builder_( BC7_SRGB8_A8_UNorm,	VK_FORMAT_BC7_SRGB_BLOCK ) \
+		_builder_( BC6H_RGB16F,			VK_FORMAT_BC6H_SFLOAT_BLOCK ) \
+		_builder_( BC6H_RGB16F_Unsigned,VK_FORMAT_BC6H_UFLOAT_BLOCK ) \
+		_builder_( ETC2_RGB8_UNorm,		VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK ) \
+		_builder_( ECT2_SRGB8_UNorm,	VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK ) \
+		_builder_( ETC2_RGB8_A1_UNorm,	VK_FORMAT_ETC2_R8G8B8A1_UNORM_BLOCK ) \
+		_builder_( ETC2_SRGB8_A1_UNorm,	VK_FORMAT_ETC2_R8G8B8A1_SRGB_BLOCK ) \
+		_builder_( ETC2_RGBA8_UNorm,	VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK ) \
+		_builder_( ETC2_SRGB8_A8_UNorm,	VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK ) \
+		_builder_( EAC_R11_SNorm,		VK_FORMAT_EAC_R11_SNORM_BLOCK ) \
+		_builder_( EAC_R11_UNorm,		VK_FORMAT_EAC_R11_UNORM_BLOCK ) \
+		_builder_( EAC_RG11_SNorm,		VK_FORMAT_EAC_R11G11_SNORM_BLOCK ) \
+		_builder_( EAC_RG11_UNorm,		VK_FORMAT_EAC_R11G11_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_4x4,		VK_FORMAT_ASTC_4x4_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_5x4,		VK_FORMAT_ASTC_5x4_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_5x5,		VK_FORMAT_ASTC_5x5_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_6x5,		VK_FORMAT_ASTC_6x5_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_6x6,		VK_FORMAT_ASTC_6x6_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_8x5,		VK_FORMAT_ASTC_8x5_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_8x6,		VK_FORMAT_ASTC_8x6_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_8x8,		VK_FORMAT_ASTC_8x8_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_10x5,		VK_FORMAT_ASTC_10x5_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_10x6,		VK_FORMAT_ASTC_10x6_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_10x8,		VK_FORMAT_ASTC_10x8_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_10x10,		VK_FORMAT_ASTC_10x10_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_12x10,		VK_FORMAT_ASTC_12x10_UNORM_BLOCK ) \
+		_builder_( ASTC_RGBA_12x12,		VK_FORMAT_ASTC_12x12_UNORM_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_4x4,	VK_FORMAT_ASTC_4x4_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_5x4,	VK_FORMAT_ASTC_5x4_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_5x5,	VK_FORMAT_ASTC_5x5_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_6x5,	VK_FORMAT_ASTC_6x5_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_6x6,	VK_FORMAT_ASTC_6x6_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_8x5,	VK_FORMAT_ASTC_8x5_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_8x6,	VK_FORMAT_ASTC_8x6_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_8x8,	VK_FORMAT_ASTC_8x8_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_10x5,	VK_FORMAT_ASTC_10x5_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_10x6,	VK_FORMAT_ASTC_10x6_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_10x8,	VK_FORMAT_ASTC_10x8_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_10x10,	VK_FORMAT_ASTC_10x10_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_12x10,	VK_FORMAT_ASTC_12x10_SRGB_BLOCK ) \
+		_builder_( ASTC_SRGB8_A8_12x12,	VK_FORMAT_ASTC_12x12_SRGB_BLOCK )
+			
+/*
+=================================================
+	Format
+=================================================
+*/
 	inline vk::VkFormat  Vk1Enum (EPixelFormat::type value)
 	{
 		using namespace vk;
 
+#		define FMT_BUILDER( _engineFmt_, _vkFormat_ ) \
+			case EPixelFormat::_engineFmt_ : return _vkFormat_;
+
 		switch ( value )
 		{
-			case EPixelFormat::Unknown				: return VK_FORMAT_UNDEFINED;
-			case EPixelFormat::RGBA16_SNorm			: return VK_FORMAT_R16G16B16A16_SNORM;
-			case EPixelFormat::RGBA8_SNorm			: return VK_FORMAT_R8G8B8A8_SNORM;
-			case EPixelFormat::RGB16_SNorm			: return VK_FORMAT_R16G16B16_SNORM;
-			case EPixelFormat::RGB8_SNorm			: return VK_FORMAT_R8G8B8_SNORM;
-			case EPixelFormat::RG16_SNorm			: return VK_FORMAT_R16G16_SNORM;
-			case EPixelFormat::RG8_SNorm			: return VK_FORMAT_R8G8_SNORM;
-			case EPixelFormat::R16_SNorm			: return VK_FORMAT_R16_SNORM;
-			case EPixelFormat::R8_SNorm				: return VK_FORMAT_R8_SNORM;
-			case EPixelFormat::RGBA16_UNorm			: return VK_FORMAT_R16G16B16A16_UNORM;
-			case EPixelFormat::RGBA8_UNorm			: return VK_FORMAT_R8G8B8A8_UNORM;
-			case EPixelFormat::RGB16_UNorm			: return VK_FORMAT_R16G16B16_UNORM;
-			case EPixelFormat::RGB8_UNorm			: return VK_FORMAT_R8G8B8_UNORM;
-			case EPixelFormat::RG16_UNorm			: return VK_FORMAT_R16G16_UNORM;
-			case EPixelFormat::RG8_UNorm			: return VK_FORMAT_R8G8_UNORM;
-			case EPixelFormat::R16_UNorm			: return VK_FORMAT_R16_UNORM;
-			case EPixelFormat::R8_UNorm				: return VK_FORMAT_R8_UNORM;
-			case EPixelFormat::RGB10_A2_UNorm		: return VK_FORMAT_A2B10G10R10_UNORM_PACK32;
-			case EPixelFormat::RGBA4_UNorm			: return VK_FORMAT_R4G4B4A4_UNORM_PACK16;
-			case EPixelFormat::RGB5_A1_UNorm		: return VK_FORMAT_R5G5B5A1_UNORM_PACK16;
-			case EPixelFormat::RGB_5_6_5_UNorm		: return VK_FORMAT_R5G6B5_UNORM_PACK16;
-			case EPixelFormat::BGR8_UNorm			: return VK_FORMAT_B8G8R8_UNORM;
-			case EPixelFormat::BGRA8_UNorm			: return VK_FORMAT_B8G8R8A8_UNORM;
-			case EPixelFormat::sRGB8				: return VK_FORMAT_R8G8B8_SRGB;
-			case EPixelFormat::sRGB8_A8				: return VK_FORMAT_R8G8B8A8_SRGB;
-			case EPixelFormat::R8I					: return VK_FORMAT_R8_SINT;
-			case EPixelFormat::RG8I					: return VK_FORMAT_R8G8_SINT;
-			case EPixelFormat::RGB8I				: return VK_FORMAT_R8G8B8_SINT;
-			case EPixelFormat::RGBA8I				: return VK_FORMAT_R8G8B8A8_SINT;
-			case EPixelFormat::R16I					: return VK_FORMAT_R16_SINT;
-			case EPixelFormat::RG16I				: return VK_FORMAT_R16G16_SINT;
-			case EPixelFormat::RGB16I				: return VK_FORMAT_R16G16B16_SINT;
-			case EPixelFormat::RGBA16I				: return VK_FORMAT_R16G16B16A16_SINT;
-			case EPixelFormat::R32I					: return VK_FORMAT_R32_SINT;
-			case EPixelFormat::RG32I				: return VK_FORMAT_R32G32_SINT;
-			case EPixelFormat::RGB32I				: return VK_FORMAT_R32G32B32_SINT;
-			case EPixelFormat::RGBA32I				: return VK_FORMAT_R32G32B32A32_UINT;
-			case EPixelFormat::R8U					: return VK_FORMAT_R8_UINT;
-			case EPixelFormat::RG8U					: return VK_FORMAT_R8G8_UINT;
-			case EPixelFormat::RGB8U				: return VK_FORMAT_R8G8B8_UINT;
-			case EPixelFormat::RGBA8U				: return VK_FORMAT_R8G8B8A8_UINT;
-			case EPixelFormat::R16U					: return VK_FORMAT_R16_UINT;
-			case EPixelFormat::RG16U				: return VK_FORMAT_R16G16_UINT;
-			case EPixelFormat::RGB16U				: return VK_FORMAT_R16G16B16_UINT;
-			case EPixelFormat::RGBA16U				: return VK_FORMAT_R16G16B16A16_UINT;
-			case EPixelFormat::R32U					: return VK_FORMAT_R32_UINT;
-			case EPixelFormat::RG32U				: return VK_FORMAT_R32G32_UINT;
-			case EPixelFormat::RGB32U				: return VK_FORMAT_R32G32B32_UINT;
-			case EPixelFormat::RGBA32U				: return VK_FORMAT_R32G32B32A32_SINT;
-			case EPixelFormat::RGB10_A2U			: return VK_FORMAT_A2B10G10R10_UINT_PACK32;
-			case EPixelFormat::R16F					: return VK_FORMAT_R16_SFLOAT;
-			case EPixelFormat::RG16F				: return VK_FORMAT_R16G16_SFLOAT;
-			case EPixelFormat::RGB16F				: return VK_FORMAT_R16G16B16_SFLOAT;
-			case EPixelFormat::RGBA16F				: return VK_FORMAT_R16G16B16A16_SFLOAT;
-			case EPixelFormat::R32F					: return VK_FORMAT_R32_SFLOAT;
-			case EPixelFormat::RG32F				: return VK_FORMAT_R32G32_SFLOAT;
-			case EPixelFormat::RGB32F				: return VK_FORMAT_R32G32B32_SFLOAT;
-			case EPixelFormat::RGBA32F				: return VK_FORMAT_R32G32B32A32_SFLOAT;
-			case EPixelFormat::RGB_11_11_10F		: return VK_FORMAT_B10G11R11_UFLOAT_PACK32;
-			case EPixelFormat::Depth16				: return VK_FORMAT_D16_UNORM;
-			case EPixelFormat::Depth24				: return VK_FORMAT_X8_D24_UNORM_PACK32;
-			case EPixelFormat::Depth32				:	// TODO: remove?
-			case EPixelFormat::Depth32F				: return VK_FORMAT_D32_SFLOAT;
-			case EPixelFormat::Depth16_Stencil8		: return VK_FORMAT_D16_UNORM_S8_UINT;
-			case EPixelFormat::Depth24_Stencil8		: return VK_FORMAT_D24_UNORM_S8_UINT;
-			case EPixelFormat::Depth32F_Stencil8	: return VK_FORMAT_D32_SFLOAT_S8_UINT;
-			case EPixelFormat::BC1_RGB8_UNorm		: return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
-			case EPixelFormat::BC1_RGB8_A1_UNorm	: return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
-			case EPixelFormat::BC2_RGBA8_UNorm		: return VK_FORMAT_BC2_UNORM_BLOCK;
-			case EPixelFormat::BC3_RGBA8_UNorm		: return VK_FORMAT_BC3_UNORM_BLOCK;
-			case EPixelFormat::BC4_RED8_SNorm		: return VK_FORMAT_BC4_SNORM_BLOCK;
-			case EPixelFormat::BC4_RED8_UNorm		: return VK_FORMAT_BC4_UNORM_BLOCK;
-			case EPixelFormat::BC5_RG8_SNorm		: return VK_FORMAT_BC5_SNORM_BLOCK;
-			case EPixelFormat::BC5_RG8_UNorm		: return VK_FORMAT_BC5_UNORM_BLOCK;
-			case EPixelFormat::BC7_RGBA8_UNorm		: return VK_FORMAT_BC7_UNORM_BLOCK;
-			case EPixelFormat::BC7_SRGB8_A8_UNorm	: return VK_FORMAT_BC7_SRGB_BLOCK;
-			case EPixelFormat::BC6H_RGB16F			: return VK_FORMAT_BC6H_SFLOAT_BLOCK;
-			case EPixelFormat::BC6H_RGB16F_Unsigned	: return VK_FORMAT_BC6H_UFLOAT_BLOCK;
-			case EPixelFormat::ETC2_RGB8_UNorm		: return VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK;
-			case EPixelFormat::ECT2_SRGB8_UNorm		: return VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK;
-			case EPixelFormat::ETC2_RGB8_A1_UNorm	: return VK_FORMAT_ETC2_R8G8B8A1_UNORM_BLOCK;
-			case EPixelFormat::ETC2_SRGB8_A1_UNorm	: return VK_FORMAT_ETC2_R8G8B8A1_SRGB_BLOCK;
-			case EPixelFormat::ETC2_RGBA8_UNorm		: return VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK;
-			case EPixelFormat::ETC2_SRGB8_A8_UNorm	: return VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK;
-			case EPixelFormat::EAC_R11_SNorm		: return VK_FORMAT_EAC_R11_SNORM_BLOCK;
-			case EPixelFormat::EAC_R11_UNorm		: return VK_FORMAT_EAC_R11_UNORM_BLOCK;
-			case EPixelFormat::EAC_RG11_SNorm		: return VK_FORMAT_EAC_R11G11_SNORM_BLOCK;
-			case EPixelFormat::EAC_RG11_UNorm		: return VK_FORMAT_EAC_R11G11_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_4x4		: return VK_FORMAT_ASTC_4x4_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_5x4		: return VK_FORMAT_ASTC_5x4_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_5x5		: return VK_FORMAT_ASTC_5x5_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_6x5		: return VK_FORMAT_ASTC_6x5_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_6x6		: return VK_FORMAT_ASTC_6x6_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_8x5		: return VK_FORMAT_ASTC_8x5_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_8x6		: return VK_FORMAT_ASTC_8x6_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_8x8		: return VK_FORMAT_ASTC_8x8_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_10x5		: return VK_FORMAT_ASTC_10x5_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_10x6		: return VK_FORMAT_ASTC_10x6_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_10x8		: return VK_FORMAT_ASTC_10x8_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_10x10		: return VK_FORMAT_ASTC_10x10_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_12x10		: return VK_FORMAT_ASTC_12x10_UNORM_BLOCK;
-			case EPixelFormat::ASTC_RGBA_12x12		: return VK_FORMAT_ASTC_12x12_UNORM_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_4x4	: return VK_FORMAT_ASTC_4x4_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_5x4	: return VK_FORMAT_ASTC_5x4_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_5x5	: return VK_FORMAT_ASTC_5x5_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_6x5	: return VK_FORMAT_ASTC_6x5_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_6x6	: return VK_FORMAT_ASTC_6x6_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_8x5	: return VK_FORMAT_ASTC_8x5_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_8x6	: return VK_FORMAT_ASTC_8x6_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_8x8	: return VK_FORMAT_ASTC_8x8_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_10x5	: return VK_FORMAT_ASTC_10x5_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_10x6	: return VK_FORMAT_ASTC_10x6_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_10x8	: return VK_FORMAT_ASTC_10x8_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_10x10	: return VK_FORMAT_ASTC_10x10_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_12x10	: return VK_FORMAT_ASTC_12x10_SRGB_BLOCK;
-			case EPixelFormat::ASTC_SRGB8_A8_12x12	: return VK_FORMAT_ASTC_12x12_SRGB_BLOCK;
+			VK_PIXEL_FORMATS( FMT_BUILDER )
 		}
+
+#		undef FMT_BUILDER
 
 		RETURN_ERR( "invalid pixel format", VK_FORMAT_MAX_ENUM );
 	}
 
+/*
+=================================================
+	Format
+=================================================
+*/
+	inline EPixelFormat::type  Vk1Enum (vk::VkFormat value)
+	{
+		using namespace vk;
+		
+#		define FMT_BUILDER( _engineFmt_, _vkFormat_ ) \
+			case _vkFormat_ : return EPixelFormat::_engineFmt_;
 
-}	// Platforms
+		switch ( value )
+		{
+			VK_PIXEL_FORMATS( FMT_BUILDER )
+		}
+
+#		undef FMT_BUILDER
+
+		RETURN_ERR( "invalid pixel format" );
+	}
+
+#	undef VK_PIXEL_FORMATS
+
+
+}	// PlatformVK
+
+	using VkSystemsTypeList_t	= SubSystemsTypeList< "vulkan 1"_StringToID, CompileTime::TypeListFrom<
+											Platforms::VulkanThread,
+											PlatformVK::Vk1Device
+										> >;
 }	// Engine
+
+GX_SUBSYSTEM_DECL( VkSystemsTypeList_t,		Platforms::VulkanThread,		Platforms::VulkanThread );
+GX_SUBSYSTEM_DECL( VkSystemsTypeList_t,		PlatformVK::Vk1Device,			PlatformVK::Vk1Device );
 
 #endif	// GRAPHICS_API_VULKAN

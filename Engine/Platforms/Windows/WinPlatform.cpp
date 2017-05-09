@@ -21,7 +21,7 @@ namespace Platforms
 =================================================
 */
 	WinPlatform::WinPlatform (const GlobalSystemsRef gs, const CreateInfo::Platform &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
 		_instance( UninitializedT< HMODULE >() ),
 		_createInfo( ci )
 	{
@@ -85,6 +85,8 @@ namespace Platforms
 		CHECK_ERR( not _IsCreated() );
 
 		CHECK( _Create() );
+
+		// TODO: send to attachemnt?
 
 		CHECK( _ValidateAllSubscriptions() );
 		CHECK( _SetState( EState::ComposedImmutable ) );

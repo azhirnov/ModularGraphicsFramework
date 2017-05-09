@@ -21,15 +21,16 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef S						Strategy;
-		typedef MC						MemoryContainer_t;
-		typedef T						value_t;
-		typedef Stack<T,S,MC>			Self;
+		using Strategy			= S;
+		using MemoryContainer_t	= MC;
+		using value_t			= T;
+		using Self				= Stack<T,S,MC>;
+		using Container_t		= Array<T,S,MC>;
 
 
 	// variables
 	private:
-		Array<T,S,MC>	_memory;
+		Container_t		_memory;
 
 
 	// methods
@@ -71,7 +72,9 @@ namespace GXTypes
 		Self &	operator =  (const Self &right)	= default;
 		
 
-		static constexpr bool	IsLinearMemory ()		{ return Array<T,S,MC>::IsLinearMemory(); }
+		static constexpr bool	IsLinearMemory ()			{ return Container_t::IsLinearMemory(); }
+		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStatic(); }
+
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{

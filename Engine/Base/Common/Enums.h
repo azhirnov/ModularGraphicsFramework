@@ -27,27 +27,5 @@ namespace Base
 	};
 
 
-	/*struct EStream
-	{
-		enum type : uint
-		{
-			// all data is contained in memory
-			Memory,
-
-			// data is fixed size in memory buffer in which data loaded from ram/vram/file/url
-			MemoryStream,
-
-			// all data is contained in video memory
-			VideoMemory,
-
-			// data is fixed size in video memory buffer in which data loaded from ram/vram/file/url
-			VideoMemoryStream,
-
-			_Count,
-			Unknown = uint(-1)
-		};
-	};*/
-
-
 }	// Base
 }	// Engine

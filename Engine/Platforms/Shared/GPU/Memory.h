@@ -33,10 +33,15 @@ namespace Platforms
 	// GPU Memory Descriptor
 	//
 
-	struct GpuMemoryDescriptor
+	struct GpuMemoryDescriptor : CompileTime::PODStruct
 	{
+	// variables
 		BytesUL				size;
 		EGpuMemory::bits	flags;
+
+	// methods
+		GpuMemoryDescriptor (GX_DEFCTOR) {}
+		GpuMemoryDescriptor (BytesUL size, EGpuMemory::bits flags) : size(size), flags(flags) {}
 	};
 
 }	// Platforms
@@ -51,12 +56,12 @@ namespace CreateInfo
 	struct GpuMemory
 	{
 		ModulePtr						gpuThread;
-		BytesUL							size;
+		BytesUL							maxSize;
 		Platforms::EGpuMemory::bits		memFlags;
 		Base::EMemoryAccess::bits		access;
 	};
 	
-	struct GpuMemoryForObject
+	/*struct GpuMemoryForObject
 	{
 		ModulePtr						gpuThread;
 		ModulePtr						inStream;		// to initialize gpu memory
@@ -69,7 +74,7 @@ namespace CreateInfo
 		ModulePtr						gpuThread;
 		Platforms::EGpuMemory::bits		memFlags;
 		// TODO
-	};
+	};*/
 
 }	// CreateInfo
 
@@ -135,6 +140,25 @@ namespace ModuleMsg
 		BinArrayCRef		data;
 		Out< BytesUL >		wasWritten;
 	};*/
+	
+
+	//
+	// On GPU Memory Binding State Changed
+	//
+	struct OnGpuMemoryBindingChanged
+	{
+	// types
+		enum class EBindingState
+		{
+			Unbinded,
+			BindedToImage,
+			BindedToBuffer,
+		};
+
+	// variables
+		ModulePtr			targetObject;	// image or buffer
+		EBindingState		newState;
+	};
 
 }	// ModuleMsg
 }	// Engine

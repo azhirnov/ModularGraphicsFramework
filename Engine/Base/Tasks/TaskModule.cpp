@@ -19,7 +19,7 @@ namespace Base
 =================================================
 */
 	TaskModule::TaskModule (const GlobalSystemsRef gs, const CreateInfo::TaskModule &info) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( GlobalSystems()->Get< ParallelThread >()->GetDebugName() + "_Tasks"_str );
 
@@ -70,7 +70,7 @@ namespace Base
 	{
 		//CHECK_ERR( _IsComposedState( GetState() ), void() );
 
-		CHECK_ERR( msg.Sender() and msg.Sender() == _GetParent() );
+		CHECK_ERR( msg.Sender() and _GetParents().IsExist( msg.Sender() ) );
 
 		_Flush();
 		_ProcessMessages();
@@ -84,7 +84,7 @@ namespace Base
 */
 	bool TaskModule::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
-		CHECK_ERR( msg.Sender() and msg.Sender() == _GetParent() );
+		CHECK_ERR( msg.Sender() and _GetParents().IsExist( msg.Sender() ) );
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
 		return true;

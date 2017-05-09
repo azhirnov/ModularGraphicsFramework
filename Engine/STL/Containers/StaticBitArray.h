@@ -89,6 +89,9 @@ namespace GXTypes
 		// remove bit
 		Self &	operator ^= (index_t i)				{ return Reset( i ); }
 		Self	operator ^  (index_t i) const		{ return Self(*this).Reset( i ); }
+		
+		bool	IsZero ()		const;
+		bool	IsNotZero ()	const				{ return not IsZero(); }
 
 		bool	Empty ()		const				{ return false; }
 		usize	Count ()		const				{ return C; }
@@ -102,6 +105,8 @@ namespace GXTypes
 		
 
 		static constexpr bool	IsLinearMemory ()	{ return true; }
+		static constexpr bool	IsStaticMemory ()	{ return true; }
+
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{
@@ -263,7 +268,22 @@ namespace GXTypes
 		ASSUME( index < Count() );
 		return _memory[ _ToArrayIndex( index ) ].Get( _ToElemIndex( index ) );
 	}
+	
+/*
+=================================================
+	IsZero
+=================================================
+*/
+	template <usize C, typename I>
+	inline bool  StaticBitArray<C,I>::IsZero () const
+	{
+		bool	is_zero = true;
 
+		FOR( i, _memory ) {
+			is_zero &= (_memory[i] == 0);
+		}
+		return is_zero;
+	}
 
 	
 /*

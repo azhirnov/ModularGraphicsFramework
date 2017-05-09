@@ -18,7 +18,7 @@ namespace Platforms
 =================================================
 */
 	OpenGLContext::OpenGLContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci )
 	{
 		SetDebugName( "OpenGLContext" );

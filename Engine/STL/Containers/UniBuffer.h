@@ -101,6 +101,9 @@ namespace GXTypes
 		bool  IsExist (const E &value) const;
 
 		bool  Intersects (const Self &other) const;
+
+		static constexpr bool	IsLinearMemory ()	{ return false; }
+		static constexpr bool	IsStaticMemory ()	{ return false; }
 	};
 
 

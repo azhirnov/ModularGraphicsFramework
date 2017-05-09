@@ -18,7 +18,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Texture::GL4Texture (const GlobalSystemsRef gs, const CreateInfo::GpuTexture &ci) :
-		GL4BaseModule( gs, GLSystemsRef(null), GetStaticID(), &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ci.gpuThread, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_texID( 0 )
 	{
@@ -37,7 +37,7 @@ namespace PlatformGL
 		
 		//_AttachSelfToManager( ci.gpuThread, OpenGLThread::GetStaticID(), true );
 
-		Send( Message< ModuleMsg::AttachModule >{ this, ci.dataSource } );
+		//_SendMsg( Message< ModuleMsg::AttachModule >{ this, ci.dataSource } );
 	}
 	
 /*

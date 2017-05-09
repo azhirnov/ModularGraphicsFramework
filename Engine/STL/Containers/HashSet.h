@@ -214,7 +214,11 @@ namespace _types_hidden_
 		void Resize (usize uSize)					{ _memory.Resize( uSize, false ); }
 		void Reserve (usize size)					{ _memory.Reserve( size ); }
 		
+
+		static constexpr bool	IsLinearMemory ()			{ return _MapUtils_t::IsLinearMemory(); }
+		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStaticMemory(); }
 		
+
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{
 			SwapValues( left._memory, right._memory );

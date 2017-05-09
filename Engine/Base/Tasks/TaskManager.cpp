@@ -17,7 +17,7 @@ namespace Base
 =================================================
 */
 	TaskManager::TaskManager (const GlobalSystemsRef gs, const CreateInfo::TaskManager &info) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "TaskManager" );
 

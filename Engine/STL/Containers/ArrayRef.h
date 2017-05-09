@@ -168,6 +168,7 @@ namespace GXTypes
 		static Self FromValue (B &ref);
 
 		static constexpr bool	IsLinearMemory ()	{ return true; }
+		static constexpr bool	IsStaticMemory ()	{ return false; }
 	};
 	
 

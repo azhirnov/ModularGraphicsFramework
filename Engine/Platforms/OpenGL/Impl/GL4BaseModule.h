@@ -36,18 +36,21 @@ namespace PlatformGL
 	// methods
 	public:
 		GL4BaseModule (const GlobalSystemsRef gs,
-					   UntypedID_t id,
+					   const ModuleConfig &config,
+					   const Runtime::VirtualTypeList *msgTypes,
+					   const Runtime::VirtualTypeList *eventTypes);
+
+		GL4BaseModule (const GlobalSystemsRef gs,
+					   const ModulePtr &gpuThread,
+					   const ModuleConfig &config,
 					   const Runtime::VirtualTypeList *msgTypes,
 					   const Runtime::VirtualTypeList *eventTypes);
 
 		GL4BaseModule (const GlobalSystemsRef gs,
 					   const GLSystemsRef glSys,
-					   UntypedID_t id,
+					   const ModuleConfig &config,
 					   const Runtime::VirtualTypeList *msgTypes,
-					   const Runtime::VirtualTypeList *eventTypes) :
-			Module( gs, id, msgTypes, eventTypes ),
-			_glSystems( glSys )
-		{}
+					   const Runtime::VirtualTypeList *eventTypes);
 
 		GLSystemsRef	GLSystems ()	const	{ return _glSystems; }
 	};

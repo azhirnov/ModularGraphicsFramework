@@ -9,6 +9,9 @@
 
 #include "Engine/Platforms/Vulkan/Windows/VkWinSurface.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 
 namespace Engine
 {
@@ -30,7 +33,10 @@ namespace Platforms
 											ModuleMsg::OnManagerChanged,
 											ModuleMsg::WindowCreated,
 											ModuleMsg::WindowBeforeDestroy,
-											ModuleMsg::WindowDescriptorChanged
+											ModuleMsg::WindowDescriptorChanged,
+											ModuleMsg::GpuThreadBeginFrame,
+											ModuleMsg::GpuThreadEndFrame,
+											ModuleMsg::SubmitGraphicsQueueCommands
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											ModuleMsg::GpuDeviceCreated,
@@ -38,6 +44,14 @@ namespace Platforms
 										> >;
 		
 		using VideoSettings_t		= CreateInfo::GpuContext;
+
+		using Surface				= PlatformVK::Vk1Surface;
+		using Device				= PlatformVK::Vk1Device;
+		using SamplerCache			= PlatformVK::Vk1SamplerCache;
+		using PipelineCache			= PlatformVK::Vk1PipelineCache;
+		using RenderPassCache		= PlatformVK::Vk1RenderPassCache;
+		using VkSubSystems			= PlatformVK::VkSubSystems;
+		using VkSystemsRef			= PlatformVK::VkSystemsRef;
 
 
 	// constants
@@ -48,20 +62,34 @@ namespace Platforms
 		
 	// variables
 	private:
+		VkSubSystems		_vkSystems;
+
 		VideoSettings_t		_settings;
 
 		ModulePtr			_window;
 
-		VkSurface			_surface;
-		Vk1Device			_device;
+		Surface				_surface;
+		Device				_device;
+
+		SamplerCache		_samplerCache;
+		PipelineCache		_pipelineCache;
+		RenderPassCache		_renderPassCache;
 		
+		bool				_updateInProgress;
+
 
 	// methods
 	public:
 		VulkanThread (const GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
 		~VulkanThread ();
 		
-		Ptr< Vk1Device >		GetDevice ()			{ return &_device; }
+		VkSystemsRef			VkSystems ()	const	{ return VkSystemsRef(&_vkSystems); }
+
+		Ptr< Device >			GetDevice ()			{ return &_device; }
+
+		Ptr< SamplerCache >		GetSamplerCache ()		{ return &_samplerCache; }
+		Ptr< PipelineCache >	GetPipelineCache ()		{ return &_pipelineCache; }
+		Ptr< RenderPassCache >	GetRenderPassCache ()	{ return &_renderPassCache; }
 
 		static TModID::type		GetStaticID ()			{ return "vk1.thrd"_TModID; }
 		
@@ -71,6 +99,10 @@ namespace Platforms
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Update (const Message< ModuleMsg::Update > &);
+
+		bool _GpuThreadBeginFrame (const Message< ModuleMsg::GpuThreadBeginFrame > &);
+		bool _GpuThreadEndFrame (const Message< ModuleMsg::GpuThreadEndFrame > &);
+		bool _SubmitGraphicsQueueCommands (const Message< ModuleMsg::SubmitGraphicsQueueCommands > &);
 
 		bool _WindowCreated (const Message< ModuleMsg::WindowCreated > &);
 		bool _WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &);

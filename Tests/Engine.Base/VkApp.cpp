@@ -88,12 +88,125 @@ bool VkApp::_OnMotion (const Message< ModuleMsg::InputMotion > &msg)
 }
 
 
+#ifdef USE_WRAPPERS
+
 bool VkApp::_Draw (const Message< ModuleMsg::Update > &msg)
 {
 	auto			vkthread	= ms->GlobalSystems()->Get< ParallelThread >()->GetModule( "vk1.thrd"_TModID );
-	Ptr<Vk1Device>	vkdev		= vkthread.ToPtr< VulkanThread >()->GetDevice();
+	Ptr<Vk1Device>	device		= vkthread.ToPtr< VulkanThread >()->GetDevice();
 
-	vkdev->DrawFrame();
+	Message< ModuleMsg::GpuThreadBeginFrame >	begin_frame;
+	vkthread->Send( begin_frame );
+
+	ModulePtr	framebuffer	= begin_frame->framebuffer.Get();								//device->GetCurrentFramebuffer();
+	ModulePtr	render_pass	= framebuffer->GetModule< ModuleMsg::GetGpuRenderPassID >();	//device->GetDefaultRenderPass();
+	auto		builder		= device->GetCommandBuilder();
+	RectU		area		= RectU( 0, 0, device->GetSurfaceSize().x, device->GetSurfaceSize().y );
+
+	builder->Send( Message< ModuleMsg::CommandBufferBegin >{} );
+	builder->Send( Message< ModuleMsg::CommandBufferBeginRenderPass >{ null, render_pass, framebuffer, area } );
+	builder->Send( Message< ModuleMsg::CommandBufferBindPipeline >{ null, graphicsPipeline } );
+	builder->Send( Message< ModuleMsg::CommandBufferSetViewport >{ null, uint2(), device->GetSurfaceSize(), float2(0.0f, 1.0f) } );
+	builder->Send( Message< ModuleMsg::CommandBufferSetScissor >{ null, area } );
+	builder->Send( Message< ModuleMsg::CommandBufferDraw >{ null, 3u, 1u } );
+	builder->Send( Message< ModuleMsg::CommandBufferEndRenderPass >{} );
+
+	Message< ModuleMsg::CommandBufferEnd >	cmd_end = {};
+	builder->Send( cmd_end );
+
+	vkthread->Send( Message< ModuleMsg::SubmitGraphicsQueueCommands >{ null, { cmd_end->cmdBuffer.Get() }} );
+
+	vkthread->Send( Message< ModuleMsg::GpuThreadEndFrame >{} );
+	return true;
+}
+
+
+bool VkApp::_CreatePipeline ()
+{
+	auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
+
+	CHECK_ERR( factory->Create(
+					"vk1.shaders"_OModID,
+					ms->GlobalSystems(),
+					CreateInfo::GpuShaderModulesFromFile{
+						null,
+						{ "shader.spv.frag"_str, "shader.spv.vert"_str }
+					},
+					OUT shaderModules )
+	);
+
+	GraphicsPipelineDescriptor	descr;
+
+	descr.patchControlPoints	= 0;
+	descr.dynamicStates			= EPipelineDynamicState::bits() | EPipelineDynamicState::Viewport | EPipelineDynamicState::Scissor;
+
+	descr.renderState.inputAssembly.topology	= EPrimitive::TriangleList;
+	descr.renderState.rasterization.polygonMode	= EPolygonMode::Fill;
+
+
+	CHECK_ERR( factory->Create(
+					"vk1.g-ppln"_OModID,
+					ms->GlobalSystems(),
+					CreateInfo::GraphicsPipeline{
+						null,
+						descr,
+						shaderModules,
+						null,
+						0
+					},
+					OUT graphicsPipeline )
+	);
+	return true;
+}
+
+
+bool VkApp::_VkInit (const Message< ModuleMsg::GpuDeviceCreated > &msg)
+{
+	auto	vkthread = ms->GlobalSystems()->Get< ParallelThread >()->GetModule( "vk1.thrd"_TModID );
+
+	CHECK_ERR( _CreatePipeline() );
+
+	ModulePtr	mem_module;
+	ModulePtr	tex_module;
+
+	CHECK_ERR( vkthread->GlobalSystems()->Get< ModulesFactory >()->Create(
+					"vk1.memory"_OModID,
+					vkthread->GlobalSystems(),
+					CreateInfo::GpuMemory{	vkthread,
+											BytesUL::FromMb( 128 ),
+											EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+											EMemoryAccess::bits() | EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
+					OUT mem_module ) );
+
+	CHECK_ERR( vkthread->GlobalSystems()->Get< ModulesFactory >()->Create(
+					"vk1.texture"_OModID,
+					vkthread->GlobalSystems(),
+					CreateInfo::GpuTexture{	vkthread,
+											TextureDescriptor{
+												ETexture::Tex2D,
+												uint4( 128, 128, 0, 0 ),
+												EPixelFormat::RGBA8_UNorm,
+												EImageUsage::bits() | EImageUsage::Sampled
+											} },
+					OUT tex_module ) );
+
+	tex_module->Send( Message< ModuleMsg::AttachModule >{ null, mem_module } );
+	tex_module->Send( Message< ModuleMsg::Link >() );
+	tex_module->Send( Message< ModuleMsg::Compose >() );
+	return true;
+}
+
+
+bool VkApp::_VkDelete (const Message< ModuleMsg::GpuDeviceBeforeDestory > &msg)
+{
+	return true;
+}
+
+#else
+
+
+bool VkApp::_Draw (const Message< ModuleMsg::Update > &msg)
+{
 	return true;
 }
 
@@ -107,7 +220,7 @@ static bool CompileShader (Ptr< Vk1Device > device, BinArrayCRef spvSource, OUT 
 	shader_info.codeSize	= (usize) spvSource.Size();
 	shader_info.pCode		= (vk::uint32_t*) spvSource.ptr();
 
-	VK_CHECK( vkCreateShaderModule( device->GetDevice(), &shader_info, null, OUT &shader ) );
+	VK_CHECK( vkCreateShaderModule( device->GetLogicalDevice(), &shader_info, null, OUT &shader ) );
 	return true;
 }
 
@@ -117,7 +230,7 @@ bool VkApp::_CompileShaders (Ptr< Vk1Device > device)
 	RFilePtr	file;
 	BinaryArray	data;
 
-	CHECK_ERR( ms->GlobalSystems()->Get< FileManager >()->OpenForRead( "frag.spv", OUT file ) );
+	CHECK_ERR( ms->GlobalSystems()->Get< FileManager >()->OpenForRead( "shader.spv.frag", OUT file ) );
 
 	data.Resize( (usize) file->Size() );
 	file->Read( BinArrayRef( data ) );
@@ -125,7 +238,7 @@ bool VkApp::_CompileShaders (Ptr< Vk1Device > device)
 	CHECK_ERR( CompileShader( device, data, OUT fshader ) );
 
 
-	CHECK_ERR( ms->GlobalSystems()->Get< FileManager >()->OpenForRead( "vert.spv", OUT file ) );
+	CHECK_ERR( ms->GlobalSystems()->Get< FileManager >()->OpenForRead( "shader.spv.vert", OUT file ) );
 
 	data.Resize( (usize) file->Size() );
 	file->Read( BinArrayRef( data ) );
@@ -219,7 +332,7 @@ bool VkApp::_CreatePipeline (Ptr< Vk1Device > device)
     pipeline_layout_info.setLayoutCount			= 0;
     pipeline_layout_info.pushConstantRangeCount	= 0;
 
-    VK_CHECK( vkCreatePipelineLayout( device->GetDevice(), &pipeline_layout_info, null, OUT &pipelineLayout ) );
+    VK_CHECK( vkCreatePipelineLayout( device->GetLogicalDevice(), &pipeline_layout_info, null, OUT &pipelineLayout ) );
 
     VkGraphicsPipelineCreateInfo	pipeline_info = {};
     pipeline_info.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -232,12 +345,11 @@ bool VkApp::_CreatePipeline (Ptr< Vk1Device > device)
     pipeline_info.pMultisampleState		= &multisampling;
     pipeline_info.pColorBlendState		= &color_blending;
     pipeline_info.layout				= pipelineLayout;
-    pipeline_info.renderPass			= device->GetDefaultRenderPass();
+    pipeline_info.renderPass			= device->GetDefaultRenderPass().ToPtr< Vk1RenderPass >()->GetRenderPassID();
     pipeline_info.subpass				= 0;
     pipeline_info.basePipelineHandle	= VK_NULL_HANDLE;
 
-    VK_CHECK( vkCreateGraphicsPipelines( device->GetDevice(), VK_NULL_HANDLE, 1, &pipeline_info, null, OUT &graphicsPipeline ) );
-
+    VK_CHECK( vkCreateGraphicsPipelines( device->GetLogicalDevice(), VK_NULL_HANDLE, 1, &pipeline_info, null, OUT &graphicsPipeline ) );
 	return true;
 }
 
@@ -245,6 +357,9 @@ bool VkApp::_CreatePipeline (Ptr< Vk1Device > device)
 bool VkApp::_InitCommandBuffers (Ptr< Vk1Device > device)
 {
 	using namespace vk;
+
+	const uint2		scr_size	= device->GetSurfaceSize();
+	const float2	vp_size		= float2( scr_size );
 
 	FOR( i, device->GetCommandBuffers() )
 	{
@@ -256,22 +371,31 @@ bool VkApp::_InitCommandBuffers (Ptr< Vk1Device > device)
 
         VK_CALL( vkBeginCommandBuffer( cmd, &begin_info ) );
 
-        VkClearValue				clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
+		Message< ModuleMsg::GetGpuFramebufferID >	fb_request;
+		device->GetFramebuffers()[i]->Send( fb_request );
+
+        VkClearValue				clear_color		 = { 0.0f, 0.0f, 0.0f, 1.0f };
         VkRenderPassBeginInfo		render_pass_info = {};
         render_pass_info.sType				= VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        render_pass_info.renderPass			= device->GetDefaultRenderPass();
-        render_pass_info.framebuffer		= device->GetFramebuffers()[i];
+        render_pass_info.renderPass			= device->GetDefaultRenderPass().ToPtr< Vk1RenderPass >()->GetRenderPassID();
+        render_pass_info.framebuffer		= fb_request->result.Get( VK_NULL_HANDLE );
         render_pass_info.renderArea.offset	= { 0, 0 };
         render_pass_info.renderArea.extent	= { device->GetSurfaceSize().x, device->GetSurfaceSize().y };
         render_pass_info.clearValueCount	= 1;
         render_pass_info.pClearValues		= &clear_color;
 
         vkCmdBeginRenderPass( cmd, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE );
+		{
+			VkViewport	viewport{ 0, 0, vp_size.x, vp_size.y, 0.0f, 1.0f };
+			vkCmdSetViewport( cmd, 0, 1, &viewport );
+
+			VkRect2D	scissor{ VkOffset2D{ 0, 0 }, VkExtent2D{ scr_size.x, scr_size.y } };
+			vkCmdSetScissor( cmd, 0, 1, &scissor );
 
             vkCmdBindPipeline( cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline );
 
             vkCmdDraw( cmd, 3, 1, 0, 0 );
-
+		}
         vkCmdEndRenderPass( cmd );
 
         VK_CALL( vkEndCommandBuffer( cmd ) );
@@ -287,7 +411,6 @@ bool VkApp::_VkInit (const Message< ModuleMsg::GpuDeviceCreated > &msg)
 
 	CHECK_ERR( _CreatePipeline( vkdev ) );
 	CHECK_ERR( _InitCommandBuffers( vkdev ) );
-
 	return true;
 }
 
@@ -295,32 +418,35 @@ bool VkApp::_VkInit (const Message< ModuleMsg::GpuDeviceCreated > &msg)
 bool VkApp::_VkDelete (const Message< ModuleMsg::GpuDeviceBeforeDestory > &msg)
 {
 	using namespace vk;
-	
+
 	auto			vkthread	= ms->GlobalSystems()->Get< ParallelThread >()->GetModule( "vk1.thrd"_TModID );
 	Ptr<Vk1Device>	device		= vkthread.ToPtr< VulkanThread >()->GetDevice();
 
 	if ( graphicsPipeline )
 	{
-		vkDestroyPipeline( device->GetDevice(), graphicsPipeline, null );
+		vkDestroyPipeline( device->GetLogicalDevice(), graphicsPipeline, null );
 		graphicsPipeline = VK_NULL_HANDLE;
 	}
 
 	if ( pipelineLayout )
 	{
-		vkDestroyPipelineLayout( device->GetDevice(), pipelineLayout, null );
+		vkDestroyPipelineLayout( device->GetLogicalDevice(), pipelineLayout, null );
 		pipelineLayout = VK_NULL_HANDLE;
 	}
 
 	if ( vshader )
 	{
-		vkDestroyShaderModule( device->GetDevice(), vshader, null );
+		vkDestroyShaderModule( device->GetLogicalDevice(), vshader, null );
 		vshader = VK_NULL_HANDLE;
 	}
 
 	if ( fshader )
 	{
-		vkDestroyShaderModule( device->GetDevice(), fshader, null );
+		vkDestroyShaderModule( device->GetLogicalDevice(), fshader, null );
 		fshader = VK_NULL_HANDLE;
 	}
+
 	return true;
 }
+
+#endif

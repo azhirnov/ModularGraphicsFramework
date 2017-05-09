@@ -49,7 +49,7 @@ namespace ModuleMsg
 	struct Link
 	{
 		// find modules and subscribe to events
-		ArrayCRef< Pair<UntypedID_t, ModulePtr> >		modules;	// TODO: don't use it, use parent->GetModule
+		//ArrayCRef< Pair<UntypedID_t, ModulePtr> >		modules;	// TODO: don't use it, use parent->GetModule
 	};
 
 
@@ -59,6 +59,8 @@ namespace ModuleMsg
 	struct Compose
 	{
 		// this is the last chance to initialize module.
+
+		bool		makeImmutable	= false;
 	};
 
 	

@@ -16,7 +16,7 @@ namespace Platforms
 =================================================
 */
 	InputManager::InputManager (const GlobalSystemsRef gs, const CreateInfo::InputManager &ci) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "InputManager" );
 

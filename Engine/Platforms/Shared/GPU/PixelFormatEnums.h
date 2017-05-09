@@ -330,257 +330,172 @@ namespace Platforms
 	}	// _platforms_hidden_
 
 
-	struct EVertexAttribute
-	{
-		enum type : uint
-		{
-			NormalizedFlag	= _platforms_hidden_::EValueTypeInfo::_NORM,
-
-			Byte			= _platforms_hidden_::EValueTypeInfo::Byte,
-			Byte2			= _platforms_hidden_::EValueTypeInfo::Byte2,
-			Byte3			= _platforms_hidden_::EValueTypeInfo::Byte3,
-			Byte4			= _platforms_hidden_::EValueTypeInfo::Byte4,
-			
-			Byte_Norm		= Byte  | NormalizedFlag,
-			Byte2_Norm		= Byte2 | NormalizedFlag,
-			Byte3_Norm		= Byte3 | NormalizedFlag,
-			Byte4_Norm		= Byte4 | NormalizedFlag,
-
-			UByte			= _platforms_hidden_::EValueTypeInfo::UByte,
-			UByte2			= _platforms_hidden_::EValueTypeInfo::UByte2,
-			UByte3			= _platforms_hidden_::EValueTypeInfo::UByte3,
-			UByte4			= _platforms_hidden_::EValueTypeInfo::UByte4,
-			
-			UByte_Norm		= UByte  | NormalizedFlag,
-			UByte2_Norm		= UByte2 | NormalizedFlag,
-			UByte3_Norm		= UByte3 | NormalizedFlag,
-			UByte4_Norm		= UByte4 | NormalizedFlag,
-			
-			Short			= _platforms_hidden_::EValueTypeInfo::Short,
-			Short2			= _platforms_hidden_::EValueTypeInfo::Short2,
-			Short3			= _platforms_hidden_::EValueTypeInfo::Short3,
-			Short4			= _platforms_hidden_::EValueTypeInfo::Short4,
-			
-			Short_Norm		= Short  | NormalizedFlag,
-			Short2_Norm		= Short2 | NormalizedFlag,
-			Short3_Norm		= Short3 | NormalizedFlag,
-			Short4_Norm		= Short4 | NormalizedFlag,
-			
-			UShort			= _platforms_hidden_::EValueTypeInfo::UShort,
-			UShort2			= _platforms_hidden_::EValueTypeInfo::UShort2,
-			UShort3			= _platforms_hidden_::EValueTypeInfo::UShort3,
-			UShort4			= _platforms_hidden_::EValueTypeInfo::UShort4,
-			
-			UShort_Norm		= UShort   | NormalizedFlag,
-			UShort2_Norm	= UShort2 | NormalizedFlag,
-			UShort3_Norm	= UShort3 | NormalizedFlag,
-			UShort4_Norm	= UShort4 | NormalizedFlag,
-			
-			Int				= _platforms_hidden_::EValueTypeInfo::Int,
-			Int2			= _platforms_hidden_::EValueTypeInfo::Int2,
-			Int3			= _platforms_hidden_::EValueTypeInfo::Int3,
-			Int4			= _platforms_hidden_::EValueTypeInfo::Int4,
-			
-			Int_Norm		= Int  | NormalizedFlag,
-			Int2_Norm		= Int2 | NormalizedFlag,
-			Int3_Norm		= Int3 | NormalizedFlag,
-			Int4_Norm		= Int4 | NormalizedFlag,
-			
-			UInt			= _platforms_hidden_::EValueTypeInfo::UInt,
-			UInt2			= _platforms_hidden_::EValueTypeInfo::UInt2,
-			UInt3			= _platforms_hidden_::EValueTypeInfo::UInt3,
-			UInt4			= _platforms_hidden_::EValueTypeInfo::UInt4,
-			
-			UInt_Norm		= UInt  | NormalizedFlag,
-			UInt2_Norm		= UInt2 | NormalizedFlag,
-			UInt3_Norm		= UInt3 | NormalizedFlag,
-			UInt4_Norm		= UInt4 | NormalizedFlag,
-			
-			Half			= _platforms_hidden_::EValueTypeInfo::Half,
-			Half2			= _platforms_hidden_::EValueTypeInfo::Half2,
-			Half3			= _platforms_hidden_::EValueTypeInfo::Half3,
-			Half4			= _platforms_hidden_::EValueTypeInfo::Half4,
-
-			Float			= _platforms_hidden_::EValueTypeInfo::Float,
-			Float2			= _platforms_hidden_::EValueTypeInfo::Float2,
-			Float3			= _platforms_hidden_::EValueTypeInfo::Float3,
-			Float4			= _platforms_hidden_::EValueTypeInfo::Float4,
-			
-			Double			= _platforms_hidden_::EValueTypeInfo::Double,
-			Double2			= _platforms_hidden_::EValueTypeInfo::Double2,
-			Double3			= _platforms_hidden_::EValueTypeInfo::Double3,
-			Double4			= _platforms_hidden_::EValueTypeInfo::Double4,
-
-			Unknown			= uint(-1),
-		};
-	};
-
-
-	struct EIndex
-	{
-		enum type : uint
-		{
-			UByte		= 0,
-			UShort,
-			UInt,
-
-			_Count,
-			Unknown		= uint(-1),
-		};
-	};
-
-
 	struct EPixelFormat
 	{
+	private:
+		using _vtypeinfo	= _platforms_hidden_::EValueTypeInfo;
+
+	public:
 		enum type : uint
 		{
 			// flags
-			Rev_Flag				= _platforms_hidden_::EValueTypeInfo::_REVERSE,
-			sRGB_Flag				= _platforms_hidden_::EValueTypeInfo::_SRGB,
+			Rev_Flag				= _vtypeinfo::_REVERSE,
+			sRGB_Flag				= _vtypeinfo::_SRGB,
 
 			// signed normalized
-			RGBA16_SNorm			= _platforms_hidden_::EValueTypeInfo::RGBA16_SNorm,
-			RGBA8_SNorm				= _platforms_hidden_::EValueTypeInfo::RGBA8_SNorm,
-			RGB16_SNorm				= _platforms_hidden_::EValueTypeInfo::RGB16_SNorm,
-			RGB8_SNorm				= _platforms_hidden_::EValueTypeInfo::RGB8_SNorm,
-			RG16_SNorm				= _platforms_hidden_::EValueTypeInfo::RG16_SNorm,
-			RG8_SNorm				= _platforms_hidden_::EValueTypeInfo::RG8_SNorm,
-			R16_SNorm				= _platforms_hidden_::EValueTypeInfo::R16_SNorm,
-			R8_SNorm				= _platforms_hidden_::EValueTypeInfo::R8_SNorm,
+			RGBA16_SNorm			= _vtypeinfo::RGBA16_SNorm,
+			RGBA8_SNorm				= _vtypeinfo::RGBA8_SNorm,
+			RGB16_SNorm				= _vtypeinfo::RGB16_SNorm,
+			RGB8_SNorm				= _vtypeinfo::RGB8_SNorm,
+			RG16_SNorm				= _vtypeinfo::RG16_SNorm,
+			RG8_SNorm				= _vtypeinfo::RG8_SNorm,
+			R16_SNorm				= _vtypeinfo::R16_SNorm,
+			R8_SNorm				= _vtypeinfo::R8_SNorm,
 			
 			// unsigned normalized
-			RGBA16_UNorm			= _platforms_hidden_::EValueTypeInfo::RGBA16_UNorm,
-			RGBA8_UNorm				= _platforms_hidden_::EValueTypeInfo::RGBA8_UNorm,
-			RGB16_UNorm				= _platforms_hidden_::EValueTypeInfo::RGB16_UNorm,
-			RGB8_UNorm				= _platforms_hidden_::EValueTypeInfo::RGB8_UNorm,
-			RG16_UNorm				= _platforms_hidden_::EValueTypeInfo::RG16_UNorm,
-			RG8_UNorm				= _platforms_hidden_::EValueTypeInfo::RG8_UNorm,
-			R16_UNorm				= _platforms_hidden_::EValueTypeInfo::R16_UNorm,
-			R8_UNorm				= _platforms_hidden_::EValueTypeInfo::R8_UNorm,
-			RGB10_A2_UNorm			= _platforms_hidden_::EValueTypeInfo::RGB10_A2_UNorm,
-			RGBA4_UNorm				= _platforms_hidden_::EValueTypeInfo::RGBA4_UNorm,
-			RGB5_A1_UNorm			= _platforms_hidden_::EValueTypeInfo::RGB5_A1_UNorm,
-			RGB_5_6_5_UNorm			= _platforms_hidden_::EValueTypeInfo::RGB_5_6_5_UNorm,
+			RGBA16_UNorm			= _vtypeinfo::RGBA16_UNorm,
+			RGBA8_UNorm				= _vtypeinfo::RGBA8_UNorm,
+			RGB16_UNorm				= _vtypeinfo::RGB16_UNorm,
+			RGB8_UNorm				= _vtypeinfo::RGB8_UNorm,
+			RG16_UNorm				= _vtypeinfo::RG16_UNorm,
+			RG8_UNorm				= _vtypeinfo::RG8_UNorm,
+			R16_UNorm				= _vtypeinfo::R16_UNorm,
+			R8_UNorm				= _vtypeinfo::R8_UNorm,
+			RGB10_A2_UNorm			= _vtypeinfo::RGB10_A2_UNorm,
+			RGBA4_UNorm				= _vtypeinfo::RGBA4_UNorm,
+			RGB5_A1_UNorm			= _vtypeinfo::RGB5_A1_UNorm,
+			RGB_5_6_5_UNorm			= _vtypeinfo::RGB_5_6_5_UNorm,
 
 			// BGRA
 			BGR8_UNorm				= RGB8_SNorm | Rev_Flag,
 			BGRA8_UNorm				= RGBA8_SNorm | Rev_Flag,
 			
 			// sRGB
-			sRGB8					= _platforms_hidden_::EValueTypeInfo::RGB8_UNorm | sRGB_Flag,
-			sRGB8_A8				= _platforms_hidden_::EValueTypeInfo::RGBA8_UNorm | sRGB_Flag,
+			sRGB8					= _vtypeinfo::RGB8_UNorm | sRGB_Flag,
+			sRGB8_A8				= _vtypeinfo::RGBA8_UNorm | sRGB_Flag,
 
 			// signed integer
-			R8I						= _platforms_hidden_::EValueTypeInfo::Byte,
-			RG8I					= _platforms_hidden_::EValueTypeInfo::Byte2,
-			RGB8I					= _platforms_hidden_::EValueTypeInfo::Byte3,
-			RGBA8I					= _platforms_hidden_::EValueTypeInfo::Byte4,
-			R16I					= _platforms_hidden_::EValueTypeInfo::Short,
-			RG16I					= _platforms_hidden_::EValueTypeInfo::Short2,
-			RGB16I					= _platforms_hidden_::EValueTypeInfo::Short3,
-			RGBA16I					= _platforms_hidden_::EValueTypeInfo::Short4,
-			R32I					= _platforms_hidden_::EValueTypeInfo::Int,
-			RG32I					= _platforms_hidden_::EValueTypeInfo::Int2,
-			RGB32I					= _platforms_hidden_::EValueTypeInfo::Int3,
-			RGBA32I					= _platforms_hidden_::EValueTypeInfo::Int4,
+			R8I						= _vtypeinfo::Byte,
+			RG8I					= _vtypeinfo::Byte2,
+			RGB8I					= _vtypeinfo::Byte3,
+			RGBA8I					= _vtypeinfo::Byte4,
+			R16I					= _vtypeinfo::Short,
+			RG16I					= _vtypeinfo::Short2,
+			RGB16I					= _vtypeinfo::Short3,
+			RGBA16I					= _vtypeinfo::Short4,
+			R32I					= _vtypeinfo::Int,
+			RG32I					= _vtypeinfo::Int2,
+			RGB32I					= _vtypeinfo::Int3,
+			RGBA32I					= _vtypeinfo::Int4,
 			
 			// unsigned integer
-			R8U						= _platforms_hidden_::EValueTypeInfo::UByte,
-			RG8U					= _platforms_hidden_::EValueTypeInfo::UByte2,
-			RGB8U					= _platforms_hidden_::EValueTypeInfo::UByte3,
-			RGBA8U					= _platforms_hidden_::EValueTypeInfo::UByte4,
-			R16U					= _platforms_hidden_::EValueTypeInfo::UShort,
-			RG16U					= _platforms_hidden_::EValueTypeInfo::UShort2,
-			RGB16U					= _platforms_hidden_::EValueTypeInfo::UShort3,
-			RGBA16U					= _platforms_hidden_::EValueTypeInfo::UShort4,
-			R32U					= _platforms_hidden_::EValueTypeInfo::UInt,
-			RG32U					= _platforms_hidden_::EValueTypeInfo::UInt2,
-			RGB32U					= _platforms_hidden_::EValueTypeInfo::UInt3,
-			RGBA32U					= _platforms_hidden_::EValueTypeInfo::UInt4,
-			RGB10_A2U				= _platforms_hidden_::EValueTypeInfo::RGB10_A2U,
+			R8U						= _vtypeinfo::UByte,
+			RG8U					= _vtypeinfo::UByte2,
+			RGB8U					= _vtypeinfo::UByte3,
+			RGBA8U					= _vtypeinfo::UByte4,
+			R16U					= _vtypeinfo::UShort,
+			RG16U					= _vtypeinfo::UShort2,
+			RGB16U					= _vtypeinfo::UShort3,
+			RGBA16U					= _vtypeinfo::UShort4,
+			R32U					= _vtypeinfo::UInt,
+			RG32U					= _vtypeinfo::UInt2,
+			RGB32U					= _vtypeinfo::UInt3,
+			RGBA32U					= _vtypeinfo::UInt4,
+			RGB10_A2U				= _vtypeinfo::RGB10_A2U,
 			
 			// float
-			R16F					= _platforms_hidden_::EValueTypeInfo::Half,
-			RG16F					= _platforms_hidden_::EValueTypeInfo::Half2,
-			RGB16F					= _platforms_hidden_::EValueTypeInfo::Half3,
-			RGBA16F					= _platforms_hidden_::EValueTypeInfo::Half4,
-			R32F					= _platforms_hidden_::EValueTypeInfo::Float,
-			RG32F					= _platforms_hidden_::EValueTypeInfo::Float2,
-			RGB32F					= _platforms_hidden_::EValueTypeInfo::Float3,
-			RGBA32F					= _platforms_hidden_::EValueTypeInfo::Float4,
-			RGB_11_11_10F			= _platforms_hidden_::EValueTypeInfo::RGB_11_11_10F,
+			R16F					= _vtypeinfo::Half,
+			RG16F					= _vtypeinfo::Half2,
+			RGB16F					= _vtypeinfo::Half3,
+			RGBA16F					= _vtypeinfo::Half4,
+			R32F					= _vtypeinfo::Float,
+			RG32F					= _vtypeinfo::Float2,
+			RGB32F					= _vtypeinfo::Float3,
+			RGBA32F					= _vtypeinfo::Float4,
+			RGB_11_11_10F			= _vtypeinfo::RGB_11_11_10F,
 
 			// depth stencil
-			Depth16					= _platforms_hidden_::EValueTypeInfo::Depth16,
-			Depth24					= _platforms_hidden_::EValueTypeInfo::Depth24,
-			Depth32					= _platforms_hidden_::EValueTypeInfo::Depth32,
-			Depth32F				= _platforms_hidden_::EValueTypeInfo::Depth32F,
-			Depth16_Stencil8		= _platforms_hidden_::EValueTypeInfo::Depth16_Stencil8,
-			Depth24_Stencil8		= _platforms_hidden_::EValueTypeInfo::Depth24_Stencil8,
-			Depth32F_Stencil8		= _platforms_hidden_::EValueTypeInfo::Depth32F_Stencil8,
+			Depth16					= _vtypeinfo::Depth16,
+			Depth24					= _vtypeinfo::Depth24,
+			Depth32					= _vtypeinfo::Depth32,
+			Depth32F				= _vtypeinfo::Depth32F,
+			Depth16_Stencil8		= _vtypeinfo::Depth16_Stencil8,
+			Depth24_Stencil8		= _vtypeinfo::Depth24_Stencil8,
+			Depth32F_Stencil8		= _vtypeinfo::Depth32F_Stencil8,
 			
 			// compressed
-			BC1_RGB8_UNorm			= _platforms_hidden_::EValueTypeInfo::BC1_RGB8_UNorm,
-			BC1_RGB8_A1_UNorm		= _platforms_hidden_::EValueTypeInfo::BC1_RGB8_A1_UNorm,
-			BC2_RGBA8_UNorm			= _platforms_hidden_::EValueTypeInfo::BC2_RGBA8_UNorm,
-			BC3_RGBA8_UNorm			= _platforms_hidden_::EValueTypeInfo::BC3_RGBA8_UNorm,
-			BC4_RED8_SNorm			= _platforms_hidden_::EValueTypeInfo::BC4_RED8_SNorm,
-			BC4_RED8_UNorm			= _platforms_hidden_::EValueTypeInfo::BC4_RED8_UNorm,
-			BC5_RG8_SNorm			= _platforms_hidden_::EValueTypeInfo::BC5_RG8_SNorm,
-			BC5_RG8_UNorm			= _platforms_hidden_::EValueTypeInfo::BC5_RG8_UNorm,
-			BC7_RGBA8_UNorm			= _platforms_hidden_::EValueTypeInfo::BC7_RGBA8_UNorm,
-			BC7_SRGB8_A8_UNorm		= _platforms_hidden_::EValueTypeInfo::BC7_SRGB8_A8_UNorm,
-			BC6H_RGB16F				= _platforms_hidden_::EValueTypeInfo::BC6H_RGB16F,
-			BC6H_RGB16F_Unsigned	= _platforms_hidden_::EValueTypeInfo::BC6H_RGB16F_Unsigned,
-			ETC2_RGB8_UNorm			= _platforms_hidden_::EValueTypeInfo::ETC2_RGB8_UNorm,
-			ECT2_SRGB8_UNorm		= _platforms_hidden_::EValueTypeInfo::ECT2_SRGB8_UNorm,
-			ETC2_RGB8_A1_UNorm		= _platforms_hidden_::EValueTypeInfo::ETC2_RGB8_A1_UNorm,
-			ETC2_SRGB8_A1_UNorm		= _platforms_hidden_::EValueTypeInfo::ETC2_SRGB8_A1_UNorm,
-			ETC2_RGBA8_UNorm		= _platforms_hidden_::EValueTypeInfo::ETC2_RGBA8_UNorm,
-			ETC2_SRGB8_A8_UNorm		= _platforms_hidden_::EValueTypeInfo::ETC2_SRGB8_A8_UNorm,
-			EAC_R11_SNorm			= _platforms_hidden_::EValueTypeInfo::EAC_R11_SNorm,
-			EAC_R11_UNorm			= _platforms_hidden_::EValueTypeInfo::EAC_R11_UNorm,
-			EAC_RG11_SNorm			= _platforms_hidden_::EValueTypeInfo::EAC_RG11_SNorm,
-			EAC_RG11_UNorm			= _platforms_hidden_::EValueTypeInfo::EAC_RG11_UNorm,
-			ASTC_RGBA_4x4			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_4x4,
-			ASTC_RGBA_5x4			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_5x4,
-			ASTC_RGBA_5x5			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_5x5,
-			ASTC_RGBA_6x5			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_6x5,
-			ASTC_RGBA_6x6			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_6x6,
-			ASTC_RGBA_8x5			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_8x5,
-			ASTC_RGBA_8x6			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_8x6,
-			ASTC_RGBA_8x8			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_8x8,
-			ASTC_RGBA_10x5			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_10x5,
-			ASTC_RGBA_10x6			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_10x6,
-			ASTC_RGBA_10x8			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_10x8,
-			ASTC_RGBA_10x10			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_10x10,
-			ASTC_RGBA_12x10			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_12x10,
-			ASTC_RGBA_12x12			= _platforms_hidden_::EValueTypeInfo::ASTC_RGBA_12x12,
-			ASTC_SRGB8_A8_4x4		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_4x4,
-			ASTC_SRGB8_A8_5x4		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_5x4,
-			ASTC_SRGB8_A8_5x5		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_5x5,
-			ASTC_SRGB8_A8_6x5		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_6x5,
-			ASTC_SRGB8_A8_6x6		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_6x6,
-			ASTC_SRGB8_A8_8x5		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_8x5,
-			ASTC_SRGB8_A8_8x6		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_8x6,
-			ASTC_SRGB8_A8_8x8		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_8x8,
-			ASTC_SRGB8_A8_10x5		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_10x5,
-			ASTC_SRGB8_A8_10x6		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_10x6,
-			ASTC_SRGB8_A8_10x8		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_10x8,
-			ASTC_SRGB8_A8_10x10		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_10x10,
-			ASTC_SRGB8_A8_12x10		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_12x10,
-			ASTC_SRGB8_A8_12x12		= _platforms_hidden_::EValueTypeInfo::ASTC_SRGB8_A8_12x12,
+			BC1_RGB8_UNorm			= _vtypeinfo::BC1_RGB8_UNorm,
+			BC1_RGB8_A1_UNorm		= _vtypeinfo::BC1_RGB8_A1_UNorm,
+			BC2_RGBA8_UNorm			= _vtypeinfo::BC2_RGBA8_UNorm,
+			BC3_RGBA8_UNorm			= _vtypeinfo::BC3_RGBA8_UNorm,
+			BC4_RED8_SNorm			= _vtypeinfo::BC4_RED8_SNorm,
+			BC4_RED8_UNorm			= _vtypeinfo::BC4_RED8_UNorm,
+			BC5_RG8_SNorm			= _vtypeinfo::BC5_RG8_SNorm,
+			BC5_RG8_UNorm			= _vtypeinfo::BC5_RG8_UNorm,
+			BC7_RGBA8_UNorm			= _vtypeinfo::BC7_RGBA8_UNorm,
+			BC7_SRGB8_A8_UNorm		= _vtypeinfo::BC7_SRGB8_A8_UNorm,
+			BC6H_RGB16F				= _vtypeinfo::BC6H_RGB16F,
+			BC6H_RGB16F_Unsigned	= _vtypeinfo::BC6H_RGB16F_Unsigned,
+			ETC2_RGB8_UNorm			= _vtypeinfo::ETC2_RGB8_UNorm,
+			ECT2_SRGB8_UNorm		= _vtypeinfo::ECT2_SRGB8_UNorm,
+			ETC2_RGB8_A1_UNorm		= _vtypeinfo::ETC2_RGB8_A1_UNorm,
+			ETC2_SRGB8_A1_UNorm		= _vtypeinfo::ETC2_SRGB8_A1_UNorm,
+			ETC2_RGBA8_UNorm		= _vtypeinfo::ETC2_RGBA8_UNorm,
+			ETC2_SRGB8_A8_UNorm		= _vtypeinfo::ETC2_SRGB8_A8_UNorm,
+			EAC_R11_SNorm			= _vtypeinfo::EAC_R11_SNorm,
+			EAC_R11_UNorm			= _vtypeinfo::EAC_R11_UNorm,
+			EAC_RG11_SNorm			= _vtypeinfo::EAC_RG11_SNorm,
+			EAC_RG11_UNorm			= _vtypeinfo::EAC_RG11_UNorm,
+			ASTC_RGBA_4x4			= _vtypeinfo::ASTC_RGBA_4x4,
+			ASTC_RGBA_5x4			= _vtypeinfo::ASTC_RGBA_5x4,
+			ASTC_RGBA_5x5			= _vtypeinfo::ASTC_RGBA_5x5,
+			ASTC_RGBA_6x5			= _vtypeinfo::ASTC_RGBA_6x5,
+			ASTC_RGBA_6x6			= _vtypeinfo::ASTC_RGBA_6x6,
+			ASTC_RGBA_8x5			= _vtypeinfo::ASTC_RGBA_8x5,
+			ASTC_RGBA_8x6			= _vtypeinfo::ASTC_RGBA_8x6,
+			ASTC_RGBA_8x8			= _vtypeinfo::ASTC_RGBA_8x8,
+			ASTC_RGBA_10x5			= _vtypeinfo::ASTC_RGBA_10x5,
+			ASTC_RGBA_10x6			= _vtypeinfo::ASTC_RGBA_10x6,
+			ASTC_RGBA_10x8			= _vtypeinfo::ASTC_RGBA_10x8,
+			ASTC_RGBA_10x10			= _vtypeinfo::ASTC_RGBA_10x10,
+			ASTC_RGBA_12x10			= _vtypeinfo::ASTC_RGBA_12x10,
+			ASTC_RGBA_12x12			= _vtypeinfo::ASTC_RGBA_12x12,
+			ASTC_SRGB8_A8_4x4		= _vtypeinfo::ASTC_SRGB8_A8_4x4,
+			ASTC_SRGB8_A8_5x4		= _vtypeinfo::ASTC_SRGB8_A8_5x4,
+			ASTC_SRGB8_A8_5x5		= _vtypeinfo::ASTC_SRGB8_A8_5x5,
+			ASTC_SRGB8_A8_6x5		= _vtypeinfo::ASTC_SRGB8_A8_6x5,
+			ASTC_SRGB8_A8_6x6		= _vtypeinfo::ASTC_SRGB8_A8_6x6,
+			ASTC_SRGB8_A8_8x5		= _vtypeinfo::ASTC_SRGB8_A8_8x5,
+			ASTC_SRGB8_A8_8x6		= _vtypeinfo::ASTC_SRGB8_A8_8x6,
+			ASTC_SRGB8_A8_8x8		= _vtypeinfo::ASTC_SRGB8_A8_8x8,
+			ASTC_SRGB8_A8_10x5		= _vtypeinfo::ASTC_SRGB8_A8_10x5,
+			ASTC_SRGB8_A8_10x6		= _vtypeinfo::ASTC_SRGB8_A8_10x6,
+			ASTC_SRGB8_A8_10x8		= _vtypeinfo::ASTC_SRGB8_A8_10x8,
+			ASTC_SRGB8_A8_10x10		= _vtypeinfo::ASTC_SRGB8_A8_10x10,
+			ASTC_SRGB8_A8_12x10		= _vtypeinfo::ASTC_SRGB8_A8_12x10,
+			ASTC_SRGB8_A8_12x12		= _vtypeinfo::ASTC_SRGB8_A8_12x12,
 
 			Unknown					= uint(-1),
 		};
 		
 	// utils
-		inline static bool IsCompressed (type value);
+		static constexpr bool IsCompressed		(type value);
 
-		inline static bool IsLinear (type value);
-		inline static bool IsNonLinear (type value);
+		static constexpr bool IsLinear			(type value);
+		static constexpr bool IsNonLinear		(type value);
 
-		inline static BitsVec<usize, 4> BitsPerChannel (type value);
+		static constexpr bool IsColor			(type value);
+		static constexpr bool IsDepth			(type value);
+		static constexpr bool IsStencil			(type value);
+		static constexpr bool IsDepthStencil	(type value);
+
+		static constexpr bool HasDepth			(type value);
+		static constexpr bool HasStencil		(type value);
+
+		static constexpr uint ColorChannelsCount (type value);
+
+		static BitsVec<usize, 4>	BitsPerChannel	(type value);
+		static BitsU				BitPerPixel		(type value);
 	};
 	
 
@@ -588,25 +503,25 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPixelFormat
 
-	inline bool EPixelFormat::IsCompressed (type value)
+	inline constexpr bool EPixelFormat::IsCompressed (type value)
 	{
-		return EnumEq( value, _platforms_hidden_::EValueTypeInfo::_COMPRESSED );
+		return EnumEq( value, _vtypeinfo::_COMPRESSED );
 	}
 	
 
-	inline bool EPixelFormat::IsLinear (type value)
+	inline constexpr bool EPixelFormat::IsLinear (type value)
 	{
 		return not IsNonLinear( value );
 	}
 
 
-	inline bool EPixelFormat::IsNonLinear (type value)
+	inline constexpr bool EPixelFormat::IsNonLinear (type value)
 	{
 		return EnumEq( value, sRGB_Flag );
 	}
 
 
-	inline BitsVec<usize, 4> EPixelFormat::BitsPerChannel (type value)
+	inline BitsVec<usize, 4>  EPixelFormat::BitsPerChannel (type value)
 	{
 		using vtype	= _platforms_hidden_::EValueTypeInfo;
 
@@ -649,6 +564,57 @@ namespace Platforms
 		}
 
 		return BitsVec<usize, 4>( size );
+	}
+		
+
+	inline BitsU  EPixelFormat::BitPerPixel (type value)
+	{
+		return BitsPerChannel( value ).Sum();
+	}
+		
+
+	inline constexpr uint EPixelFormat::ColorChannelsCount (type value)
+	{
+		return	( value & _vtypeinfo::_COL_MASK ) >= _vtypeinfo::_R and
+				( value & _vtypeinfo::_COL_MASK ) <= _vtypeinfo::_RGBA ?
+					( ( value & _vtypeinfo::_COL_MASK ) >> _vtypeinfo::_COL_OFF ) :
+					0;
+	}
+
+	
+	inline constexpr bool EPixelFormat::IsColor (type value)
+	{
+		return ColorChannelsCount( value ) > 0;
+	}
+
+
+	inline constexpr bool EPixelFormat::IsDepth (type value)
+	{
+		return ( value & _vtypeinfo::_COL_MASK ) == _vtypeinfo::_DEPTH;
+	}
+
+
+	inline constexpr bool EPixelFormat::IsStencil (type value)
+	{
+		return ( value & _vtypeinfo::_COL_MASK ) == _vtypeinfo::_STENCIL;
+	}
+
+
+	inline constexpr bool EPixelFormat::IsDepthStencil (type value)
+	{
+		return ( value & _vtypeinfo::_COL_MASK ) == _vtypeinfo::_DEPTH_STENCIL;
+	}
+	
+
+	inline constexpr bool EPixelFormat::HasDepth (type value)
+	{
+		return IsDepth( value ) or IsDepthStencil( value );
+	}
+
+
+	inline constexpr bool EPixelFormat::HasStencil (type value)
+	{
+		return IsStencil( value ) or IsDepthStencil( value );
 	}
 
 

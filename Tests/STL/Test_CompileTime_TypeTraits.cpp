@@ -1,4 +1,4 @@
-// Copyright © 2014-2017  Zhirnov Andrey. All rights reserved.
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/STL/Engine.STL.h"
 
@@ -54,6 +54,15 @@ static int Test3 (CompileTime::SwitchType< (sizeof(T) > 2), T, void > a)				{ re
 
 template <typename T>
 static float Test3 (CompileTime::SwitchType< (sizeof(T) <= 2), T, void > a)				{ return 2.0f; }
+
+
+void StaticFunc1 ()				{}
+bool StaticFunc2 (int)			{ return true; }
+
+struct Test4 {
+	void Method1 ()				{}
+	int  Method2 (float, int)	{ return 0; }
+};
 
 
 extern void Test_CompileTime_TypeTraits ()
@@ -283,4 +292,21 @@ extern void Test_CompileTime_TypeTraits ()
 
 	// SwitchType //
 	int	c = Test3< decltype(param) >( param );
+
+
+	// FunctionInfo //
+	using fi0 = FunctionInfo< decltype(StaticFunc1) >;
+	STATIC_ASSERT(( IsSameTypes< fi0::result, void > ));
+	STATIC_ASSERT(( IsSameTypes< fi0::clazz, void > ));
+	STATIC_ASSERT( fi0::args::Length == 0 );
+
+	using fi1 = FunctionInfo< decltype(&Test4::Method1) >;
+	STATIC_ASSERT(( IsSameTypes< fi1::result, void > ));
+	STATIC_ASSERT(( IsSameTypes< fi1::clazz, Test4 > ));
+	STATIC_ASSERT( fi1::args::Length == 0 );
+
+	using fi2 = FunctionInfo< decltype(&Test4::Method2) >;
+	STATIC_ASSERT(( IsSameTypes< fi2::result, int > ));
+	STATIC_ASSERT(( IsSameTypes< fi2::clazz, Test4 > ));
+	STATIC_ASSERT( fi2::args::Length == 2 );
 }

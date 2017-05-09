@@ -29,7 +29,7 @@ namespace Base
 =================================================
 */
 	MainSystem::MainSystem (const GlobalSystemsRef gs) :
-		Module( gs, GetStaticID(), &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ GetStaticID(), 0 }, &_msgTypes, &_eventTypes ),
 		_factory( GlobalSystems() ),
 		_taskMngr( GlobalSystems(), CreateInfo::TaskManager() ),
 		_threadMngr( GlobalSystems(), CreateInfo::ThreadManager() ),
