@@ -62,7 +62,7 @@ namespace GXTypes
 
 		StaticArray (Self &&other) = default;
 
-		StaticArray (std::initializer_list<T> list);
+		StaticArray (InitializerList<T> list);
 
 		T		*	ptr ()										{ return _memory; }
 		const T	*	ptr () const								{ return _memory; }
@@ -221,7 +221,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, usize C, typename S>
-	inline StaticArray<T,C,S>::StaticArray (std::initializer_list<T> list)
+	inline StaticArray<T,C,S>::StaticArray (InitializerList<T> list)
 	{
 		Copy( ArrayCRef<T>( list ) );
 	}
@@ -394,7 +394,7 @@ namespace GXTypes
 		{
 			typedef CompileTime::TypeListFrom< Types... >	list;
 
-			typedef StaticArray< typename list::Front, list::Length >	type;
+			typedef StaticArray< typename list::Front, list::Count >	type;
 
 			STATIC_ASSERT( list::AllAreSame );
 		};

@@ -45,7 +45,7 @@ namespace GXTypes
 
 	// variables
 	private:
-		T	*	_ptr;
+		T *		_ptr;
 		
 
 	// methods
@@ -95,6 +95,11 @@ namespace GXTypes
 
 			_Inc();
 		}
+
+
+		ReferenceCounter (Ptr<T> ptr) :
+			ReferenceCounter( ptr.RawPtr() )
+		{}
 
 
 		ReferenceCounter (Self &&sRC) : _ptr(sRC._ptr)
@@ -165,6 +170,13 @@ namespace GXTypes
 			_Inc();
 			return *this;
 		}
+		
+
+		template <typename T2>
+		forceinline Self & operator = (Ptr<T> right)
+		{
+			return Self::operator= ( right.RawPtr() );
+		}
 
 		
 		forceinline explicit operator bool () const
@@ -175,46 +187,26 @@ namespace GXTypes
 
 		forceinline T * operator -> () const
 		{
-			ASSUME( _ptr != null );
-			return _ptr;
+			return ptr();
 		}
 
 
 		forceinline T & operator * () const
 		{
-			ASSUME( _ptr != null );
-			return *_ptr;
+			return *ptr();
 		}
 
 
 		forceinline T * ptr () const
 		{
 			ASSUME( _ptr != null );
-			return _ptr;
+			return RawPtr();
 		}
 
 		forceinline T * RawPtr () const
 		{
-			return _ptr;
+			return const_cast< T* >( _ptr );
 		}
-
-
-		forceinline T* & raw_ref ()
-		{
-			return _ptr;
-		}
-
-		forceinline T* const & raw_ref () const
-		{
-			return _ptr;
-		}
-
-
-		//const T * const c_ptr () const
-		//{
-		//	ASSUME( _ptr != null );
-		//	return _ptr;
-		//}
 
 
 		forceinline bool Empty () const
@@ -232,15 +224,6 @@ namespace GXTypes
 			return ( _ptr != null );
 		}
 
-		template <typename T2>
-		forceinline T2 To ()
-		{
-			typedef typename T2::value_t	type_t;
-			STATIC_ASSERT( typename T2::_is_ref_counter(true) );
-
-			_CheckCast< type_t >( _ptr );
-			return T2( (type_t *)_ptr );
-		}
 
 		template <typename T2>
 		forceinline const T2 To () const
@@ -249,21 +232,14 @@ namespace GXTypes
 			STATIC_ASSERT( typename T2::_is_ref_counter(true) );
 
 			_CheckCast< type_t >( _ptr );
-			return T2( (type_t *)_ptr );
+			return T2( static_cast< type_t *>( RawPtr() ) );
 		}
 
 		template <typename T2>
-		forceinline T2 * ToPtr () const
+		forceinline Ptr<T2> ToPtr () const
 		{
 			_CheckCast<T2>( _ptr );
-			return (T2 *) ptr();
-		}
-
-		template <typename T2>
-		forceinline T2 const * ToCPtr () const
-		{
-			_CheckCast<T2 const>( _ptr );
-			return (T2 const *) ptr();
+			return static_cast< T2 *>( RawPtr() );
 		}
 
 		forceinline int GetRefCount () const

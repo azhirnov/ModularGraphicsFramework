@@ -19,10 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Tests\Engine.Base\Main.cpp" />
-    <ClCompile Include="..\..\..\Tests\Engine.Base\VkApp.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Engine.Base\Engine.Base.vcxproj">
       <Project>{4d750b1b-ce81-4c92-8bfe-40f2ace23a14}</Project>
     </ProjectReference>
@@ -31,9 +27,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Main.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\OpenGL\GLApp.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\OpenGL\Test.GLWindow.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\Test.VkWindow.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Window\Test.Window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="..\..\..\Tests\Engine.Base\Common.h" />
-    <ClInclude Include="..\..\..\Tests\Engine.Base\GLApp.h" />
-    <ClInclude Include="..\..\..\Tests\Engine.Base\VkApp.h" />
+    <ClInclude Include="..\..\..\Tests\Engine.Base\OpenGL\GLApp.h" />
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EBEF46FE-7246-4473-9875-210B14E17BCD}</ProjectGuid>
@@ -46,27 +50,27 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

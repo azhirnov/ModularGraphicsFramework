@@ -20,8 +20,14 @@ namespace PlatformGL
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t;
-		using SupportedEvents_t		= Module::SupportedEvents_t;
+		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											ModuleMsg::GetGpuTextureDescriptor,
+											ModuleMsg::GetGLTextureID
+										> >;
+
+		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
+
+		using Utils					= TextureUtils;
 
 		
 	// constants
@@ -33,7 +39,7 @@ namespace PlatformGL
 	// variables
 	private:
 		TextureDescriptor		_descr;
-		gl::GLuint				_texID;
+		gl::GLuint				_imageId;
 		
 
 	// methods
@@ -42,6 +48,26 @@ namespace PlatformGL
 		~GL4Texture ();
 
 		static OModID::type		GetStaticID ()			{ return "gl4.texture"_OModID; }
+
+
+	//protected:
+		TextureDescriptor const&	GetDescriptor ()	const	{ return _descr; }
+		gl::GLuint					GetImageID ()		const	{ return _imageId; }
+
+
+	// message handlers
+	private:
+		bool _Link (const Message< ModuleMsg::Link > &);
+		bool _Compose (const  Message< ModuleMsg::Compose > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _GetGLTextureID (const Message< ModuleMsg::GetGLTextureID > &);
+		bool _GetGpuTextureDescriptor (const Message< ModuleMsg::GetGpuTextureDescriptor > &);
+
+	private:
+		bool _IsCreated () const;
+
+		bool _CreateTexture ();
+		void _DestroyTexture ();
 	};
 
 

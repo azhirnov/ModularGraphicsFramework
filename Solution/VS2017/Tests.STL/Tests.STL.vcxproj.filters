@@ -114,6 +114,15 @@
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_StringToID.cpp">
       <Filter>CompileTime</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Tests\STL\Test_Types_Time.cpp">
+      <Filter>Types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_Sequence.cpp">
+      <Filter>CompileTime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Tests\STL\Test_Algorithms_InvokeWithVariant.cpp">
+      <Filter>Algorithms</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Tests\STL\Debug.h" />
@@ -136,6 +145,9 @@
     </Filter>
     <Filter Include="Types">
       <UniqueIdentifier>{79645f2f-d23b-4a10-b2ee-b84b7ea809f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithms">
+      <UniqueIdentifier>{9b7639bf-4981-4834-9aad-8f0957230c0e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

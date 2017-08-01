@@ -22,6 +22,7 @@ namespace Base
 	// types
 	public:
 		using Sender_t		= BaseObjectPtr;
+		using Self			= Message<T>;
 
 
 	// variables
@@ -34,14 +35,6 @@ namespace Base
 	// methods
 	public:
 		Message()
-		{}
-
-		Message (const Sender_t &sender, const T &data) :
-			_sender(sender), _data(data)
-		{}
-
-		Message (const Sender_t &sender, T &&data) :
-			_sender(sender), _data(RVREF(data))
 		{}
 		
 		Message (const Message<T> &other) :
@@ -60,11 +53,21 @@ namespace Base
 		}
 
 		template <typename ...ArgTypes>
-		explicit
-		Message (const Sender_t &sender, ArgTypes ...args) :
-			_sender(sender),
+		explicit Message (ArgTypes&& ...args) :
 			_data{ FW<ArgTypes>( args )... }
 		{}
+
+		Self const&		From (const Sender_t sender) const
+		{
+			_sender = sender;
+			return *this;
+		}
+
+		Self &			From (const Sender_t sender)
+		{
+			_sender = sender;
+			return *this;
+		}
 
 		T const&		Data ()				const	{ return _data; }
 		bool			IsDiscarded ()		const	{ return _numOfSends == 0; }

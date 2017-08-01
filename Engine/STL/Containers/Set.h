@@ -70,6 +70,11 @@ namespace _types_hidden_
 		BaseSet (Self &&other) : _memory( RVREF( other._memory ) )
 		{}
 
+		BaseSet (InitializerList<key_t> list)
+		{
+			AddArray( ArrayCRef<key_t>( list ) );
+		}
+
 
 		operator		const_values_range_t () const
 		{

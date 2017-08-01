@@ -21,7 +21,7 @@ namespace PlatformVK
 	// types
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											ModuleMsg::GetGpuShaderModuleIDs
+											ModuleMsg::GetVkShaderModuleIDs
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
@@ -52,7 +52,7 @@ namespace PlatformVK
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGpuShaderModuleIDs (const Message< ModuleMsg::GetGpuShaderModuleIDs > &);
+		bool _GetVkShaderModuleIDs (const Message< ModuleMsg::GetVkShaderModuleIDs > &);
 
 	private:
 		bool _IsCreated () const;

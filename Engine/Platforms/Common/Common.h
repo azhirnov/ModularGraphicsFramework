@@ -10,7 +10,41 @@ namespace Platforms
 {
 	using namespace Engine::Base;
 	using namespace GX_STL::GXMath;
-
+	
+	struct FramebufferDescriptor;
+	struct GpuMemoryDescriptor;
+	struct GraphicsPipelineDescriptor;
+	struct RenderPassDescriptor;
+	struct RenderState;
+	struct SamplerDescriptor;
+	struct TextureDescriptor;
 
 }	// Platforms
+
+
+namespace CreateInfo
+{
+	struct InputManager;
+	struct InputThread;
+	struct RawInputHandler;
+	
+	struct Platform;
+	struct Window;
+
+	struct GpuBuffer;
+	struct GpuCommandBuffer;
+	struct GpuCommandBuilder;
+	struct GpuContext;
+	struct GpuFramebuffer;
+	struct GpuMemory;
+	struct GraphicsPipeline;
+	struct ComputePipeline;
+	struct GpuShaderModulesFromFile;
+	struct GpuShaderModulesFromBuffer;
+	struct GpuRenderPass;
+	struct GpuSampler;
+	struct GpuTexture;
+	struct GpuThread;
+
+}	// CreateInfo
 }	// Engine

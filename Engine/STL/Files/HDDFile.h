@@ -60,7 +60,7 @@ namespace File
 		// RFile //
 		virtual BytesU ReadBuf (void * buf, BytesU size) override
 		{
-			return BytesU( fread( buf, 1, usize(size), _file ) );
+			return BytesU( fread( buf, 1, usize(size), _file.ptr() ) );
 		}
 
 

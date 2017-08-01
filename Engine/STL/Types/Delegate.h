@@ -38,7 +38,8 @@ namespace GXTypes
 		struct DelegateInterface< Ret (Args...) >
 		{
 		// types
-			typedef DelegateInterface< Ret (Args...) >	Interface_t;
+			using Interface_t	= DelegateInterface< Ret (Args...) >;
+
 
 		// methods
 			virtual ~DelegateInterface ()				{}
@@ -101,8 +102,8 @@ namespace GXTypes
 		{
 		// types
 		public:
-			typedef StaticDelegate< Ret, Args... >		Self;
-			typedef Ret (* Function_t) (Args...);
+			using Self			= StaticDelegate< Ret, Args... >;
+			using Function_t	= Ret (*) (Args...);
 
 		// variables
 		private:
@@ -138,9 +139,9 @@ namespace GXTypes
 		{
 		// types
 		public:
-			typedef MemberDelegate< C, Class, Ret, Args... >	Self;
-			typedef C											Ptr_t;
-			typedef Ret (Class:: *Function_t) (Args...);
+			using Self			= MemberDelegate< C, Class, Ret, Args... >;
+			using Ptr_t			= C;
+			using Function_t	= Ret (Class:: *) (Args...);
 
 		// variables
 		private:
@@ -178,9 +179,9 @@ namespace GXTypes
 		{
 		// types
 		public:
-			typedef MemberDelegateConst< C, Class, Ret, Args... >	Self;
-			typedef C												Ptr_t;
-			typedef Ret (Class:: *Function_t) (Args...) const;
+			using Self			= MemberDelegateConst< C, Class, Ret, Args... >;
+			using Ptr_t			= C;
+			using Function_t	= Ret (Class:: *) (Args...) const;
 			
 		// variables
 		private:
@@ -222,11 +223,16 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef Delegate< Ret (Args...), BufSize >	Self;
-		typedef Ret									Result_t;
+		using Self			= Delegate< Ret (Args...), BufSize >;
+		using Result_t		= Ret;
+		using Args_t		= CompileTime::TypeListFrom< Args..., CompileTime::TypeListEnd >;
+		using Function_t	= Ret (Args...);
+
+		// use references for heavy objects!!!
+		//STATIC_ASSERT( Args_t::MaxSizeOf() <= sizeof(ulong) );
 
 	private:
-		typedef _types_hidden_::DelegateInterface< Ret (Args...) >	_Interface_t;
+		using _Interface_t	= _types_hidden_::DelegateInterface< Ret (Args...) >;
 		
 		union _Storage_t {
 			ulong	maxAlign;
@@ -285,10 +291,10 @@ namespace GXTypes
 
 		forceinline bool		IsValid ()							const	{ return _IsCreated() DEBUG_ONLY( and _Internal()->IsValid() ); }
 
-		forceinline Result_t	operator () (Args&&... args)		const	{ ASSERT( IsValid() );  return _Internal()->Call( FW<Args>(args)... ); }
+		forceinline Result_t	operator () (Args... args)			const	{ ASSERT( IsValid() );  return _Internal()->Call( FW<Args>(args)... ); }
 		
-		forceinline Result_t	Call (Args&&... args)				const	{ ASSERT( IsValid() );	return _Internal()->Call( FW<Args>(args)... ); }
-		forceinline Result_t	SafeCall (Args&&... args)			const	{ return IsValid() ? _Internal()->Call( FW<Args>(args)... ) : Result_t(); }
+		forceinline Result_t	Call (Args... args)					const	{ ASSERT( IsValid() );	return _Internal()->Call( FW<Args>(args)... ); }
+		forceinline Result_t	SafeCall (Args... args)				const	{ return IsValid() ? _Internal()->Call( FW<Args>(args)... ) : Result_t(); }
 
 		forceinline TypeId		GetType ()							const	{ return IsValid() ? _Internal()->TypeIdOf() : TypeId(); }
 
@@ -352,7 +358,7 @@ namespace GXTypes
 	public:
 		forceinline static Self  Create (Ret (*fn) (Args...)) noexcept
 		{
-			typedef _types_hidden_::StaticDelegate< Ret, Args... >	DI;
+			using DI = _types_hidden_::StaticDelegate< Ret, Args... >;
 
 			Self	del;
 			PlacementNew<DI>( del._Data(), DI( fn ) );
@@ -364,7 +370,7 @@ namespace GXTypes
 		{
 			STATIC_ASSERT(( _types_hidden_::FB_IsSame< C, Class > ));
 
-			typedef _types_hidden_::MemberDelegate< C, Class, Ret, Args... >	DI;
+			using DI = _types_hidden_::MemberDelegate< C, Class, Ret, Args... >;
 
 			Self	del;
 			PlacementNew<DI>( del._Data(), DI( classPtr, fn ) );
@@ -376,7 +382,7 @@ namespace GXTypes
 		{
 			STATIC_ASSERT(( _types_hidden_::FB_IsSame< C, Class > ));
 
-			typedef _types_hidden_::MemberDelegateConst< C, Class, Ret, Args... >	DI;
+			using DI = _types_hidden_::MemberDelegateConst< C, Class, Ret, Args... >;
 
 			Self	del;
 			PlacementNew<DI>( del._Data(), DI( classPtr, fn ) );
@@ -419,10 +425,12 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef Ret (* Function_t) (Args...);
-		typedef Delegate< Ret (Args...), BufSize >	Delegate_t;
-		typedef Event< Ret (Args...), BufSize >		Self;
-		typedef Array< Delegate_t >					DelegateArray_t;
+		using Function_t		= Ret (Args...);
+		using Delegate_t		= Delegate< Ret (Args...), BufSize >;
+		using Self				= Event< Ret (Args...), BufSize >;
+		using DelegateArray_t	= Array< Delegate_t >;
+		using Args_t			= CompileTime::TypeListFrom< Args..., CompileTime::TypeListEnd >;
+		using Result_t			= Ret;
 
 
 	// variables

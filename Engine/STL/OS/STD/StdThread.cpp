@@ -93,7 +93,7 @@ namespace OS
 	Sleep
 =================================================
 */
-	void CurrentThread::Sleep (TimeU time)
+	void CurrentThread::Sleep (TimeL time)
 	{
 		std::this_thread::sleep_for( std::chrono::duration<uint, std::nano>( time.NanoSeconds() ) );
 	}

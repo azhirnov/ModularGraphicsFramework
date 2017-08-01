@@ -93,7 +93,7 @@ namespace Platforms
 
 		LOG( "platform created", ELog::Debug );
 
-		_SendEvent( Message< ModuleMsg::PlatformCreated >{ this, _instance, _className } );
+		_SendEvent( Message< ModuleMsg::PlatformCreated >{ _instance, _className, _display } );
 		return true;
 	}
 	
@@ -136,7 +136,16 @@ namespace Platforms
 
 		if ( _IsCreated() )
 		{
-			msg->module->Send( Message< ModuleMsg::PlatformCreated >{ this, _instance, _className } );
+			GlobalSystems()->Get< TaskModule >()->Send( Message< ModuleMsg::PushAsyncMessage >{
+				AsyncMessage{ LAMBDA(
+					target = msg->module,
+					msg = Message< ModuleMsg::PlatformCreated >{ _instance, _className, _display } ) (const TaskModulePtr &)
+				{
+					target->Send( msg );
+
+				}},
+				msg->module->GetThreadID()
+			});
 		}
 		return true;
 	}
@@ -195,7 +204,7 @@ namespace Platforms
 */
 	ModulePtr WinPlatform::_CreateWinPlatform (const GlobalSystemsRef gs, const CreateInfo::Platform &ci)
 	{
-		return GXTypes::New< WinPlatform >( gs, ci );
+		return New< WinPlatform >( gs, ci );
 	}
 
 /*
@@ -205,7 +214,7 @@ namespace Platforms
 */
 	ModulePtr WinPlatform::_CreateWinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci)
 	{
-		return GXTypes::New< WinWindow >( gs, ci );
+		return New< WinWindow >( gs, ci );
 	}
 	
 /*
@@ -215,7 +224,7 @@ namespace Platforms
 */
 	ModulePtr WinPlatform::_CreateWinKeyInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
 	{
-		return GXTypes::New< WinKeyInput >( gs, ci );
+		return New< WinKeyInput >( gs, ci );
 	}
 	
 /*
@@ -225,7 +234,7 @@ namespace Platforms
 */
 	ModulePtr WinPlatform::_CreateWinMouseInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
 	{
-		return GXTypes::New< WinMouseInput >( gs, ci );
+		return New< WinMouseInput >( gs, ci );
 	}
 
 /*

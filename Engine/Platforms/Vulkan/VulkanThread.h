@@ -30,10 +30,13 @@ namespace Platforms
 											ModuleMsg::Compose
 										> >
 										::Append< MessageListFrom<
+											ModuleMsg::AddToManager,
+											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
 											ModuleMsg::WindowCreated,
 											ModuleMsg::WindowBeforeDestroy,
 											ModuleMsg::WindowDescriptorChanged,
+											ModuleMsg::WindowVisibilityChanged,
 											ModuleMsg::GpuThreadBeginFrame,
 											ModuleMsg::GpuThreadEndFrame,
 											ModuleMsg::SubmitGraphicsQueueCommands
@@ -75,7 +78,7 @@ namespace Platforms
 		PipelineCache		_pipelineCache;
 		RenderPassCache		_renderPassCache;
 		
-		bool				_updateInProgress;
+		bool				_isWindowVisible;
 
 
 	// methods
@@ -99,6 +102,8 @@ namespace Platforms
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Update (const Message< ModuleMsg::Update > &);
+		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
+		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
 
 		bool _GpuThreadBeginFrame (const Message< ModuleMsg::GpuThreadBeginFrame > &);
 		bool _GpuThreadEndFrame (const Message< ModuleMsg::GpuThreadEndFrame > &);
@@ -106,6 +111,7 @@ namespace Platforms
 
 		bool _WindowCreated (const Message< ModuleMsg::WindowCreated > &);
 		bool _WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &);
+		bool _WindowVisibilityChanged (const Message< ModuleMsg::WindowVisibilityChanged > &);
 		bool _WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &);
 
 	private:

@@ -2,7 +2,6 @@
 
 #include "Engine/STL/Engine.STL.h"
 #include "Debug.h"
-#include <algorithm>
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;

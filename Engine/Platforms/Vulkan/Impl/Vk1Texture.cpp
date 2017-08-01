@@ -39,8 +39,8 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Texture::_Delete );
 		_SubscribeOnMsg( this, &Vk1Texture::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1Texture::_GpuDeviceBeforeDestory );
-		_SubscribeOnMsg( this, &Vk1Texture::_GetGpuTextureID );
-		_SubscribeOnMsg( this, &Vk1Texture::_GetGpuTextureView );
+		_SubscribeOnMsg( this, &Vk1Texture::_GetVkTextureID );
+		_SubscribeOnMsg( this, &Vk1Texture::_GetVkTextureView );
 		_SubscribeOnMsg( this, &Vk1Texture::_GetGpuTextureDescriptor );
 		_SubscribeOnMsg( this, &Vk1Texture::_OnGpuMemoryBindingChanged );
 		
@@ -48,7 +48,7 @@ namespace PlatformVK
 
 		_AttachSelfToManager( ci.gpuThread, VulkanThread::GetStaticID(), true );
 
-		_ValidateDescriptor( INOUT _descr );
+		Utils::ValidateDescriptor( INOUT _descr );
 	}
 	
 /*
@@ -98,7 +98,7 @@ namespace PlatformVK
 
 		CHECK_ERR( _CreateTexture() );
 
-		_SendForEachAttachments( Message< ModuleMsg::Compose >{ this } );
+		_SendForEachAttachments( msg );
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
@@ -227,10 +227,10 @@ namespace PlatformVK
 
 /*
 =================================================
-	_GetGpuTextureID
+	_GetVkTextureID
 =================================================
 */
-	bool Vk1Texture::_GetGpuTextureID (const Message< ModuleMsg::GetGpuTextureID > &msg)
+	bool Vk1Texture::_GetVkTextureID (const Message< ModuleMsg::GetVkTextureID > &msg)
 	{
 		msg->result.Set( _imageId );
 		msg->defaultView.Set( _imageView );
@@ -239,10 +239,10 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetGpuTextureView
+	_GetVkTextureView
 =================================================
 */
-	bool Vk1Texture::_GetGpuTextureView (const Message< ModuleMsg::GetGpuTextureView > &msg)
+	bool Vk1Texture::_GetVkTextureView (const Message< ModuleMsg::GetVkTextureView > &msg)
 	{
 		msg->result.Set( _imageView );
 		return true;
@@ -312,16 +312,6 @@ namespace PlatformVK
 				return vk::VK_IMAGE_TYPE_3D;
 		}
 		return vk::VK_IMAGE_TYPE_MAX_ENUM;
-	}
-	
-/*
-=================================================
-	_ValidateDescriptor
-=================================================
-*/
-	void Vk1Texture::_ValidateDescriptor (INOUT TextureDescriptor &descr)
-	{
-		descr.dimension = Max( descr.dimension, uint4(1) );
 	}
 
 

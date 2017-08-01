@@ -25,7 +25,7 @@ namespace PlatformVK
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::GetGpuSamplerDescriptor,
-											ModuleMsg::GetGpuSamplerID
+											ModuleMsg::GetVkSamplerID
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
@@ -61,7 +61,7 @@ namespace PlatformVK
 	private:
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGpuSamplerID (const Message< ModuleMsg::GetGpuSamplerID > &);
+		bool _GetVkSamplerID (const Message< ModuleMsg::GetVkSamplerID > &);
 		bool _GetGpuSamplerDescriptor (const Message< ModuleMsg::GetGpuSamplerDescriptor > &);
 
 	private:

@@ -4,7 +4,6 @@
 
 #include "Engine/STL/CompileTime/NewTypeInfo.h"
 
-
 namespace GX_STL
 {
 namespace GXMath

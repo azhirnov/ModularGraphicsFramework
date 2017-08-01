@@ -70,7 +70,39 @@ namespace PlatformGL
 		Module( gs, config, msgTypes, eventTypes ),
 		_glSystems( glSys )
 	{}
+	
+/*
+=================================================
+	_OnManagerChanged
+=================================================
+*/
+	bool GL4BaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
+	{
+		if ( msg->newManager )
+			msg->newManager->Subscribe( this, &GL4BaseModule::_GpuDeviceBeforeDestory );
+		return true;
+	}
+	
+/*
+=================================================
+	_DestroyResources
+=================================================
+*/
+	void GL4BaseModule::_DestroyResources ()
+	{
+		_SendMsg( Message< ModuleMsg::Delete >() );
+	}
 
+/*
+=================================================
+	_GpuDeviceBeforeDestory
+=================================================
+*/
+	bool GL4BaseModule::_GpuDeviceBeforeDestory (const Message< ModuleMsg::GpuDeviceBeforeDestory > &msg)
+	{
+		_DestroyResources();
+		return true;
+	}
 
 }	// PlatformGL
 }	// Engine

@@ -42,7 +42,8 @@ namespace ModuleMsg
 	//
 	struct GpuThreadBeginFrame
 	{
-		Out< ModulePtr >	framebuffer;	// returns current framebuffer
+		Out< ModulePtr >	framebuffer;		// returns current framebuffer
+		Out< ModulePtr >	commandBuilder;		// this builder destroys all command buffer before resize swapchain
 	};
 
 	struct GpuThreadEndFrame
@@ -61,7 +62,7 @@ namespace ModuleMsg
 		explicit GpuThreadEndFrame (const ModulePtr &framebuffer) : framebuffer(framebuffer)
 		{}
 
-		GpuThreadEndFrame (const ModulePtr &framebuffer, std::initializer_list< ModulePtr > list) :
+		GpuThreadEndFrame (const ModulePtr &framebuffer, InitializerList< ModulePtr > list) :
 			framebuffer(framebuffer), commands( list )
 		{}
 	};
@@ -82,7 +83,7 @@ namespace ModuleMsg
 		explicit SubmitGraphicsQueueCommands (const ModulePtr &cmd) : commands({ cmd })
 		{}
 
-		SubmitGraphicsQueueCommands (std::initializer_list< ModulePtr > list) : commands( list )
+		SubmitGraphicsQueueCommands (InitializerList< ModulePtr > list) : commands( list )
 		{}
 	};
 

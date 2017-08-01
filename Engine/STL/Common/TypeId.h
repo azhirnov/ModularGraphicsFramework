@@ -5,7 +5,6 @@
 #include "Engine/STL/Common/Types.h"
 #include "Engine/STL/CompileTime/TypeQualifier.h"
 #include "Engine/STL/Algorithms/Hash.h"
-#include <typeindex>
 
 namespace GX_STL
 {

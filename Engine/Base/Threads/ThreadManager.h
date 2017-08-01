@@ -17,6 +17,9 @@ namespace Base
 	{
 	// types
 	private:
+		SHARED_POINTER( ParallelThread );
+		SHARED_POINTER( ThreadManager );
+
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager
@@ -25,6 +28,8 @@ namespace Base
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 		using Threads_t				= Map< ThreadID, ModulePtr >;
+
+		using CallInThreadFunc_t	= void (*) (const ThreadManagerPtr &mngr, const ModulePtr &thread, const ModulePtr &task);
 		
 
 	// constants
@@ -45,7 +50,7 @@ namespace Base
 		ThreadManager (const GlobalSystemsRef gs, const CreateInfo::ThreadManager &info);
 		~ThreadManager ();
 
-		bool SendToAllThreads (AsyncMessage &&msg);
+		bool SendToAllThreads (CallInThreadFunc_t func);
 
 		static GModID::type	GetStaticID ()		{ return "thread.mngr"_GModID; }
 		

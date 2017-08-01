@@ -39,6 +39,8 @@ namespace ModuleMsg
 		T &				Get ()				{ return _value.Get(); }
 		T				Get (const T& def)	{ return _value.Get( def ); }
 
+		T *				operator -> ()		{ return _value.GetPtr(); }
+
 		bool MoveTo (OUT T &dst)
 		{
 			if ( _value.IsDefined() )

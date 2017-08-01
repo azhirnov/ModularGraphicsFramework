@@ -662,6 +662,18 @@
     <ClInclude Include="..\..\..\Engine\STL\Experimental\FunctionInfo.h">
       <Filter>Experimental</Filter>
     </ClInclude>
+    <ClInclude Include="Header.h">
+      <Filter>CompileTime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\CompileTime\Sequence.h">
+      <Filter>CompileTime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Algorithms\InvokeWithVariant.h">
+      <Filter>Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Types\VariantRefIndexedContainer.h">
+      <Filter>Types</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">

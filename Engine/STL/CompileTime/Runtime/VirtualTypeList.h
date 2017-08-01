@@ -110,7 +110,7 @@ namespace Runtime
 
 	// methods
 	public:
-		usize	Count ()			const override		{ return T::Length; }
+		usize	Count ()			const override		{ return T::Count; }
 		BytesU	MaxSizeOf ()		const override		{ return BytesU( T::MaxSizeOf() ); }
 		TypeId	Get (usize index)	const override;
 		usize	IndexOf (TypeId id)	const override;
@@ -266,7 +266,7 @@ namespace Runtime
 
 		Typelist::RuntimeForEach( func );
 
-		return Typelist::Length == func.count;
+		return Typelist::Count == func.count;
 	}
 	
 /*

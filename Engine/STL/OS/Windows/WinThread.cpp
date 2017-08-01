@@ -28,6 +28,31 @@ namespace OS
 	
 /*
 =================================================
+	constructor
+=================================================
+*/
+	CurrentThread::CurrentThread (CurrentThread &&other) :
+		_thread( RVREF( other._thread ) ),
+		_id( other._id )
+	{
+		other._id = 0;
+	}
+	
+/*
+=================================================
+	operator =
+=================================================
+*/
+	CurrentThread& CurrentThread::operator = (CurrentThread &&right)
+	{
+		_thread		= RVREF( right._thread );
+		_id			= right._id;
+		right._id	= 0;
+		return *this;
+	}
+
+/*
+=================================================
 	IsValid
 =================================================
 */
@@ -61,9 +86,9 @@ namespace OS
 	Sleep
 =================================================
 */
-	void CurrentThread::Sleep (TimeU time)
+	void CurrentThread::Sleep (TimeL time)
 	{
-		::Sleep( time.MilliSeconds() );
+		::Sleep( (uint) time.MilliSeconds() );
 	}
 
 //-----------------------------------------------------------------------------
@@ -94,6 +119,38 @@ namespace OS
 		Create( proc, param );
 	}
 		
+/*
+=================================================
+	constructor
+=================================================
+*/
+	Thread::Thread (Thread &&other) :
+		CurrentThread( RVREF( other ) ),
+		_proc( other._proc ),
+		_parameter( other._parameter )
+	{
+		other._proc			= null;
+		other._parameter	= null;
+	}
+	
+/*
+=================================================
+	operator =
+=================================================
+*/
+	Thread& Thread::operator = (Thread &&right)
+	{
+		CurrentThread::operator= ( RVREF(right) );
+		
+		_proc				= right._proc;
+		_parameter			= right._parameter;
+
+		right._proc			= null;
+		right._parameter	= null;
+
+		return *this;
+	}
+
 /*
 =================================================
 	destructor

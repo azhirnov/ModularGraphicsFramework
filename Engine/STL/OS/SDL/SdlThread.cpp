@@ -84,7 +84,7 @@ namespace OS
 	Sleep
 =================================================
 */
-	void CurrentThread::Sleep (TimeU time)
+	void CurrentThread::Sleep (TimeL time)
 	{
 		::SDL_Delay( time.MilliSeconds() );
 	}
@@ -96,7 +96,7 @@ namespace OS
 */
 	void CurrentThread::Yield ()
 	{
-		Sleep( TimeU::FromMilliSeconds( 1 ) );
+		Sleep( TimeL::FromMilliSeconds( 1 ) );
 	}
 	
 /*

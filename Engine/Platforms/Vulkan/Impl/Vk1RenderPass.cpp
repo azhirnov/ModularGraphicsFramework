@@ -40,7 +40,7 @@ namespace PlatformVK
 		}
 		
 		// create new render pass
-		auto	result = GXTypes::New< Vk1RenderPass >( gs, ci );
+		auto	result = New< Vk1RenderPass >( gs, ci );
 		
 		result->Send( Message< ModuleMsg::Link >() );
 		result->Send( Message< ModuleMsg::Compose >() );
@@ -81,7 +81,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1RenderPass::_Delete );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GpuDeviceBeforeDestory );
-		_SubscribeOnMsg( this, &Vk1RenderPass::_GetGpuRenderPassID );
+		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkRenderPassID );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetGpuRenderPassDescriptor );
 
 		CHECK( _ValidateMsgSubscriptions() );
@@ -110,7 +110,7 @@ namespace PlatformVK
 
 		CHECK_ERR( _CreateRenderPass() );
 
-		_SendForEachAttachments( Message< ModuleMsg::Compose >{ this } );
+		_SendForEachAttachments( msg );
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
@@ -133,10 +133,10 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetGpuRenderPassID
+	_GetVkRenderPassID
 =================================================
 */
-	bool Vk1RenderPass::_GetGpuRenderPassID (const Message< ModuleMsg::GetGpuRenderPassID > &msg)
+	bool Vk1RenderPass::_GetVkRenderPassID (const Message< ModuleMsg::GetVkRenderPassID > &msg)
 	{
 		msg->result.Set( _renderPassId );
 		return true;

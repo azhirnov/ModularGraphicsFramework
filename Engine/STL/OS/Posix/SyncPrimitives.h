@@ -300,7 +300,7 @@ namespace OS
 			return pthread_cond_wait( &_cv, &cs._mutex ) == 0;
 		}
 
-		bool Wait (CriticalSection &cs, TimeU time)
+		bool Wait (CriticalSection &cs, TimeL time)
 		{
 			ASSERT( IsValid() );
 

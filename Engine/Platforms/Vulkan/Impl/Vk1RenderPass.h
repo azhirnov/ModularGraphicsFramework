@@ -22,7 +22,7 @@ namespace PlatformVK
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::GetGpuRenderPassDescriptor,
-											ModuleMsg::GetGpuRenderPassID
+											ModuleMsg::GetVkRenderPassID
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
@@ -58,7 +58,7 @@ namespace PlatformVK
 	private:
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGpuRenderPassID (const Message< ModuleMsg::GetGpuRenderPassID > &);
+		bool _GetVkRenderPassID (const Message< ModuleMsg::GetVkRenderPassID > &);
 		bool _GetGpuRenderPassDescriptor (const Message< ModuleMsg::GetGpuRenderPassDescriptor > &);
 
 	private:

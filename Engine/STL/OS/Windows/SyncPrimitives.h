@@ -173,7 +173,7 @@ namespace OS
 		void Signal ();
 		void Broadcast ();
 
-		bool Wait (CriticalSection &cs, TimeU time);
+		bool Wait (CriticalSection &cs, TimeL time);
 	};
 
 
@@ -219,9 +219,9 @@ namespace OS
 		bool Pulse ();
 
 
-		bool Wait (TimeU time);
+		bool Wait (TimeL time);
 
-		static int WaitEvents (ArrayRef<Self *> events, bool waitAll, TimeU time);
+		static int WaitEvents (ArrayRef<Self *> events, bool waitAll, TimeL time);
 
 
 		/*ScopeLock GetScopeLock()

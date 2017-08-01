@@ -10,7 +10,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1Framebuffer.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1ShaderModules.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBufferBuilder.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuilder.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -112,7 +112,7 @@ namespace Platforms
 		CHECK( mf->Register( PlatformVK::Vk1ShaderModules::GetStaticID(), &_CreateVk1ShaderModules ) );
 		CHECK( mf->Register( PlatformVK::Vk1ShaderModules::GetStaticID(), &_CreateVk1ShaderModules2 ) );
 		CHECK( mf->Register( PlatformVK::Vk1GraphicsPipeline::GetStaticID(), &_CreateVk1GraphicsPipeline ) );
-		CHECK( mf->Register( PlatformVK::Vk1CommandBufferBuilder::GetStaticID(), &_CreateVk1CommandBufferBuilder ) );
+		CHECK( mf->Register( PlatformVK::Vk1CommandBuilder::GetStaticID(), &_CreateVk1CommandBuilder ) );
 	}
 	
 /*
@@ -135,7 +135,7 @@ namespace Platforms
 		mf->UnregisterAll< PlatformVK::Vk1CommandBuffer >();
 		mf->UnregisterAll< PlatformVK::Vk1ShaderModules >();
 		mf->UnregisterAll< PlatformVK::Vk1GraphicsPipeline >();
-		mf->UnregisterAll< PlatformVK::Vk1CommandBufferBuilder >();
+		mf->UnregisterAll< PlatformVK::Vk1CommandBuilder >();
 	}
 
 /*
@@ -150,27 +150,27 @@ namespace Platforms
 
 	ModulePtr VulkanContext::_CreateVulkanThread (const GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
-		return GXTypes::New< VulkanThread >( gs, ci );
+		return New< VulkanThread >( gs, ci );
 	}
 	
 	ModulePtr VulkanContext:: _CreateVulkanContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
-		return GXTypes::New< VulkanContext >( gs, ci );
+		return New< VulkanContext >( gs, ci );
 	}
 
 	ModulePtr VulkanContext::_CreateVk1Memory (const GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
 	{
-		return GXTypes::New< PlatformVK::Vk1Memory >( gs, ci );
+		return New< PlatformVK::Vk1Memory >( gs, ci );
 	}
 	
 	ModulePtr VulkanContext::_CreateVk1Buffer (const GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
 	{
-		return GXTypes::New< PlatformVK::Vk1Buffer >( gs, ci );
+		return New< PlatformVK::Vk1Buffer >( gs, ci );
 	}
 
 	ModulePtr VulkanContext::_CreateVk1Texture (const GlobalSystemsRef gs, const CreateInfo::GpuTexture &ci)
 	{
-		return GXTypes::New< PlatformVK::Vk1Texture >( gs, ci );
+		return New< PlatformVK::Vk1Texture >( gs, ci );
 	}
 
 	ModulePtr VulkanContext::_CreateVk1Sampler (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
@@ -196,27 +196,27 @@ namespace Platforms
 	
 	ModulePtr VulkanContext::_CreateVk1Framebuffer (const GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci)
 	{
-		return GXTypes::New< PlatformVK::Vk1Framebuffer >( gs, ci );
+		return New< PlatformVK::Vk1Framebuffer >( gs, ci );
 	}
 
 	ModulePtr VulkanContext::_CreateVk1CommandBuffer (const GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
 	{
-		return GXTypes::New< PlatformVK::Vk1CommandBuffer >( gs, ci );
+		return New< PlatformVK::Vk1CommandBuffer >( gs, ci );
 	}
 
 	ModulePtr VulkanContext::_CreateVk1ShaderModules (const GlobalSystemsRef gs, const CreateInfo::GpuShaderModulesFromFile &ci)
 	{
-		return GXTypes::New< PlatformVK::Vk1ShaderModules >( gs, ci );
+		return New< PlatformVK::Vk1ShaderModules >( gs, ci );
 	}
 
 	ModulePtr VulkanContext::_CreateVk1ShaderModules2 (const GlobalSystemsRef gs, const CreateInfo::GpuShaderModulesFromBuffer &ci)
 	{
-		return GXTypes::New< PlatformVK::Vk1ShaderModules >( gs, ci );
+		return New< PlatformVK::Vk1ShaderModules >( gs, ci );
 	}
 	
-	ModulePtr VulkanContext::_CreateVk1CommandBufferBuilder (const GlobalSystemsRef gs, const CreateInfo::GpuCommandBufferBuilder &ci)
+	ModulePtr VulkanContext::_CreateVk1CommandBuilder (const GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
 	{
-		return GXTypes::New< PlatformVK::Vk1CommandBufferBuilder >( gs, ci );
+		return New< PlatformVK::Vk1CommandBuilder >( gs, ci );
 	}
 
 

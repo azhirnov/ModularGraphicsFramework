@@ -118,6 +118,7 @@ namespace GXTypes
 	template <typename T, usize ArraySize>
 	struct StaticMemoryContainer : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, T >
 	{
+		STATIC_ASSERT( ArraySize > 0 );
 		STATIC_ASSERT( CompileTime::IsMemCopyAvailable<T> );
 		STATIC_ASSERT( ArraySize * sizeof(T) <= GlobalConst::STL_MemContainerMaxStaticSize );
 
@@ -136,11 +137,6 @@ namespace GXTypes
 			T		_values[ SIZE ];
 		};
 
-		union {
-			T *						_memory;
-			TMemoryViewer<T, SIZE>	_memView;
-		};
-
 
 	// methods
 	private:
@@ -148,13 +144,11 @@ namespace GXTypes
 		void operator = (const Self &) = delete;
 
 	public:
-		StaticMemoryContainer () :
-			_memory((T*) _buf)
+		StaticMemoryContainer ()
 		{}
 		
 
-		StaticMemoryContainer (Self &&other) :
-			_memory((T*) _buf)
+		StaticMemoryContainer (Self &&other)
 		{
 			MoveFrom( other );
 		}
@@ -173,9 +167,9 @@ namespace GXTypes
 		}
 
 
-		T *				Pointer ()			{ return _memory; }
+		T *				Pointer ()			{ return _values; }
 
-		T const *		Pointer ()	const	{ return _memory; }
+		T const *		Pointer ()	const	{ return _values; }
 
 		constexpr bool	IsStatic ()	const	{ return true; }
 
@@ -233,6 +227,7 @@ namespace GXTypes
 	template <typename T, usize FixedArraySize, typename A = TDefaultAllocator<T>>
 	struct MixedMemoryContainer : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, T >
 	{
+		STATIC_ASSERT( FixedArraySize > 0 );
 		STATIC_ASSERT( CompileTime::IsMemCopyAvailable<T> );
 		STATIC_ASSERT( FixedArraySize * sizeof(T) <= GlobalConst::STL_MemContainerMaxStaticSize );
 

@@ -126,6 +126,7 @@ namespace Base
 		template <typename Class, typename CtorMsg>
 		bool IsRegistered () const;
 
+		void Clear ();
 
 	private:
 		bool _Register (UntypedID_t id, TypeId ctorMsgType, TypeId moduleIdType, Constructor_t &&ctor);
@@ -244,10 +245,16 @@ namespace Base
 	template <typename CreateInfo>
 	inline bool Module::AddModule (UntypedID_t id, const CreateInfo &createInfo)
 	{
+		return AddModule( StringCRef(), id, createInfo );
+	}
+
+	template <typename CreateInfo>
+	inline bool Module::AddModule (StringCRef name, UntypedID_t id, const CreateInfo &createInfo)
+	{
 		ModulePtr	unit;
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create( id, GlobalSystems(), createInfo, OUT unit ) );
 
-		_SendMsg( Message< ModuleMsg::AttachModule >{ this, unit } );
+		CHECK_ERR( _SendMsg( Message< ModuleMsg::AttachModule >{ name, unit }.From( this ) ) );
 		return true;
 	}
 

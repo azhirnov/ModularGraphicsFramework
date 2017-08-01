@@ -36,6 +36,8 @@ namespace GXMath
 	template <typename T>
 	struct Radians : public CompileTime::CopyQualifiers< T >
 	{
+		STATIC_ASSERT( CompileTime::IsScalar<T> );
+
 	// types
 	public:
 		typedef Radians<T>		Self;
@@ -94,6 +96,8 @@ namespace GXMath
 	template <typename T>
 	struct Degrees : public CompileTime::CopyQualifiers< T >
 	{
+		STATIC_ASSERT( CompileTime::IsScalar<T> );
+
 	// types
 	public:
 		typedef Degrees<T>		Self;

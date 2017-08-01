@@ -114,7 +114,7 @@ namespace Platforms
 */
 	ModulePtr OpenGLContext::_CreateOpenGLThread (const GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
-		return GXTypes::New< OpenGLThread >( gs, ci );
+		return New< OpenGLThread >( gs, ci );
 	}
 	
 /*
@@ -124,7 +124,7 @@ namespace Platforms
 */
 	ModulePtr OpenGLContext:: _CreateOpenGLContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
-		return GXTypes::New< OpenGLContext >( gs, ci );
+		return New< OpenGLContext >( gs, ci );
 	}
 
 

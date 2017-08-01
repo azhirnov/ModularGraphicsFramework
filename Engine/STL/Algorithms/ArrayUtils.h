@@ -15,9 +15,21 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, usize I>
-	constexpr forceinline usize CountOf (const T (&)[I])
+	constexpr forceinline usize  CountOf (const T (&)[I])
 	{
 		return I;
+	}
+	
+	template <typename T, T First, T ...Values>
+	constexpr forceinline usize  CountOf ()
+	{
+		return sizeof...(Values) + 1;
+	}
+	
+	template <typename ...Types>
+	constexpr forceinline usize  CountOf ()
+	{
+		return sizeof...(Types);
 	}
 
 

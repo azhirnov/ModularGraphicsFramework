@@ -2,25 +2,16 @@
 
 #pragma once
 
-#include "Engine/Platforms/Common/Common.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
+#include "Engine/Platforms/Shared/GPU/Thread.h"
 
 #if defined( GRAPHICS_API_OPENGL )
-
-#include "Engine/Platforms/OpenGL/Impl/gl4.h"
 
 namespace Engine
 {
 namespace PlatformGL
 {
-	using namespace Platforms;
-
-	using GLSubSystems	= EngineSubSystems< "opengl 4"_StringToID >;
-	using GLSystemsRef	= ConstReference< GLSubSystems >;
-
-	class GL4Device;
-	class GL4StateManager;
-
-
 
 	//
 	// OpenGL Base Module
@@ -28,6 +19,22 @@ namespace PlatformGL
 
 	class GL4BaseModule : public Module
 	{
+	// types
+	protected:
+		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
+											ModuleMsg::Update
+										> >
+										::Append< MessageListFrom<
+											ModuleMsg::OnManagerChanged,
+											ModuleMsg::GpuDeviceBeforeDestory
+										> >;
+
+		using SupportedEvents_t		= MessageListFrom<
+											ModuleMsg::Compose,
+											ModuleMsg::Delete
+										>;
+
+
 	// variables
 	private:
 		const GLSystemsRef		_glSystems;
@@ -53,19 +60,23 @@ namespace PlatformGL
 					   const Runtime::VirtualTypeList *eventTypes);
 
 		GLSystemsRef	GLSystems ()	const	{ return _glSystems; }
+
+
+	protected:
+		Ptr< OpenGLThread >		GetGpuThread ()			{ return GLSystems()->Get< OpenGLThread >(); }
+		Ptr< GL4Device >		GetDevice ()			{ return GLSystems()->Get< GL4Device >(); }
+		
+		virtual void _DestroyResources ();
+
+
+	// message handlers
+	protected:
+		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
+		bool _GpuDeviceBeforeDestory (const Message< ModuleMsg::GpuDeviceBeforeDestory > &);
 	};
 
 
 }	// PlatformGL
-
-	using GLSystemsTypeList_t	= SubSystemsTypeList< "opengl 4"_StringToID, CompileTime::TypeListFrom<
-											PlatformGL::GL4Device,
-											PlatformGL::GL4StateManager
-										> >;
-
 }	// Engine
-
-GX_SUBSYSTEM_DECL( GLSystemsTypeList_t,		PlatformGL::GL4Device,			PlatformGL::GL4Device );
-GX_SUBSYSTEM_DECL( GLSystemsTypeList_t,		PlatformGL::GL4StateManager,	PlatformGL::GL4StateManager );
 
 #endif	// GRAPHICS_API_OPENGL

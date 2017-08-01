@@ -20,8 +20,27 @@ namespace CreateInfo
 	//
 	struct Thread
 	{
-		String			name;
-		ModulePtr		manager;
+	// types
+		using OnStartThreadFunc_t	= std::function< void (const ModulePtr &thread) >;
+
+	// variables
+		String								name;
+		ModulePtr							manager;
+		SingleRead< OnStartThreadFunc_t >	onStarted;		// this function must be as fast as possible
+
+	// methods
+		Thread (StringCRef name, const ModulePtr &mngr) :
+			name( name ),
+			manager( mngr ),
+			onStarted( OnStartThreadFunc_t() )
+		{}
+		
+		template <typename FN, typename ...Args>
+		Thread (StringCRef name, const ModulePtr &mngr, FN func, Args&& ...args) :
+			name( name ),
+			manager( mngr ),
+			onStarted(std::bind( func, FW<Args>(args)..., std::placeholders::_1 ))
+		{}
 	};
 	
 

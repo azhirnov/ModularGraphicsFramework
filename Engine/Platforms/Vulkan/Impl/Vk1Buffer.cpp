@@ -37,7 +37,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Buffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1Buffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GpuDeviceBeforeDestory );
-		_SubscribeOnMsg( this, &Vk1Buffer::_GetGpuBufferID );
+		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkBufferID );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetGpuBufferDescriptor );
 		_SubscribeOnMsg( this, &Vk1Buffer::_OnGpuMemoryBindingChanged );
 
@@ -93,7 +93,7 @@ namespace PlatformVK
 
 		CHECK_ERR( _CreateBuffer() );
 
-		_SendForEachAttachments( Message< ModuleMsg::Compose >{ this } );
+		_SendForEachAttachments( msg );
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
@@ -127,10 +127,10 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetGpuBufferID
+	_GetVkBufferID
 =================================================
 */
-	bool Vk1Buffer::_GetGpuBufferID (const Message< ModuleMsg::GetGpuBufferID > &msg)
+	bool Vk1Buffer::_GetVkBufferID (const Message< ModuleMsg::GetVkBufferID > &msg)
 	{
 		msg->result.Set( _bufferId );
 		return true;

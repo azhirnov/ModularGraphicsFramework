@@ -53,7 +53,7 @@ namespace OS
 
 		static usize GetCurrentThreadId ();
 
-		static void Sleep (TimeU time);
+		static void Sleep (TimeL time);
 
 		static void Yield ();
 	};
@@ -112,7 +112,7 @@ namespace OS
 
 		static usize GetCurrentThreadId ()	{ return CurrentThread::GetCurrentThreadId(); }
 
-		static void Sleep (TimeU time)		{ return CurrentThread::Sleep( time ); }
+		static void Sleep (TimeL time)		{ return CurrentThread::Sleep( time ); }
 
 		static void Yield ()				{ return CurrentThread::Yield(); }
 	};

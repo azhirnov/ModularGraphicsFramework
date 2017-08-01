@@ -139,7 +139,7 @@ namespace Base
 
 		msg->wasWritten.Set( BytesUL( written ) );
 
-		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ this, EMemoryAccess::CpuWrite, offset, written } );
+		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ EMemoryAccess::CpuWrite, offset, written } );
 		return true;
 	}
 	

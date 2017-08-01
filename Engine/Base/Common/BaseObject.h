@@ -48,11 +48,9 @@ namespace Base
 
 
 	protected:
-		template <typename T, typename ...Args>
-		forceinline SHARED_POINTER_TYPE(T)  New (Args ...args) const noexcept
-		{
-			return GX_STL::GXTypes::New<T>( GlobalSystems(), FW<Args>(args)... );
-		}
+		// helper to capture sender
+		template <typename MsgType>
+		bool SendTo (const ModulePtr &target, const MsgType &msg) const;
 	};
 
 

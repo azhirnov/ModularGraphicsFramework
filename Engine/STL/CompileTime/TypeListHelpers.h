@@ -17,6 +17,49 @@ namespace CompileTime
 	
 	namespace _ctime_hidden_
 	{
+		template <typename T, typename RightTL>
+		struct _TypeListFrom_Append
+		{
+			using type	= typename TypeList< T, RightTL >;
+		};
+
+		template <typename Left, typename Right, typename RightTL>
+		struct _TypeListFrom_Append< TypeList<Left, Right>, RightTL >
+		{
+			using type	= typename TTypeList_Append< TypeList<Left, Right>, RightTL >::type;
+		};
+
+		template <typename T, typename ...Types>
+		struct _TypeListFrom
+		{
+			using _next = typename _TypeListFrom< Types... >::type;
+			using type	= typename _TypeListFrom_Append< T, _next >::type;
+		};
+
+		template <typename Left, typename Right>
+		struct _TypeListFrom< TypeList<Left, Right> >
+		{
+			using type	= TypeList<Left, Right>;
+		};
+
+		template <typename T>
+		struct _TypeListFrom<T>
+		{
+			using type	= TypeList< T >;
+		};
+	}
+
+	template <typename ...Types>
+	using TypeListFrom = typename _ctime_hidden_::_TypeListFrom< Types... >::type;
+
+
+
+	//
+	// Type List From Type Lists
+	//
+	/*
+	namespace _ctime_hidden_
+	{
 		template <typename T, typename ...Types>
 		struct _TypeListFrom
 		{
@@ -32,7 +75,7 @@ namespace CompileTime
 
 	template <typename ...Types>
 	using TypeListFrom = typename _ctime_hidden_::_TypeListFrom< Types... >::type;
-
+	*/
 
 
 	//
@@ -68,6 +111,8 @@ namespace CompileTime
 		template <typename Typelist>
 		struct CopyQualifiersFromTypeList
 		{
+			STATIC_ASSERT( IsTypeList<Typelist> );
+
 			template <usize, typename Type, typename PrevFuncResult, typename>
 			struct _TypeList_GetMainQualifier
 			{
@@ -104,7 +149,7 @@ namespace CompileTime
 		{
 			typedef typename TypeListFrom< Types... >		TypeList_t;
 
-			STATIC_ASSERT( Index < TypeList_t::Length );
+			STATIC_ASSERT( Index < TypeList_t::Count );
 
 			typedef typename TypeList_t::template Get< Index >	type;
 		};

@@ -49,6 +49,10 @@ namespace GXTypes
 
 		bool	operator == (const Self &right) const	{ return first == right.first and second == right.second; }
 		bool	operator != (const Self &right)	const	{ return not (*this == right); }
+		bool	operator >  (const Self &right) const	{ return first != right.first ? first > right.first : second > right.second; }
+		bool	operator <  (const Self &right) const	{ return first != right.first ? first < right.first : second < right.second; }
+		bool	operator >= (const Self &right) const	{ return not (*this < right); }
+		bool	operator <= (const Self &right) const	{ return not (*this > right); }
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{
@@ -56,8 +60,27 @@ namespace GXTypes
 			SwapValues( left.second,	right.second );
 		}
 	};
+	
 
 	
+/*
+=================================================
+	MakePair
+=================================================
+*/
+	template <typename FirstType, typename SecondType>
+	Pair<FirstType, SecondType>  MakePair (const FirstType &first, const SecondType &second)
+	{
+		return Pair<FirstType, SecondType>( first, second );
+	}
+
+	template <typename FirstType, typename SecondType>
+	Pair<FirstType, SecondType>  MakePair (FirstType &&first, SecondType &&second)
+	{
+		return Pair<FirstType, SecondType>( FW<FirstType>( first ), FW<SecondType>( second ) );
+	}
+	
+
 /*
 =================================================
 	Hash

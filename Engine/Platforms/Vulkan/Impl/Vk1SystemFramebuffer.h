@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 #include "Engine/Platforms/Shared/GPU/Framebuffer.h"
 #include "Engine/Platforms/Vulkan/VulkanThread.h"
 
@@ -28,7 +27,7 @@ namespace PlatformVK
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::GetGpuFramebufferDescriptor,
-											ModuleMsg::GetGpuFramebufferID
+											ModuleMsg::GetVkFramebufferID
 										> >;
 
 		using SupportedEvents_t		= MessageListFrom< ModuleMsg::Delete >;
@@ -70,7 +69,7 @@ namespace PlatformVK
 	// message handlers
 	private:
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGpuFramebufferID (const Message< ModuleMsg::GetGpuFramebufferID > &);
+		bool _GetVkFramebufferID (const Message< ModuleMsg::GetVkFramebufferID > &);
 		bool _GetGpuFramebufferDescriptor (const Message< ModuleMsg::GetGpuFramebufferDescriptor > &);
 
 	private:
@@ -103,7 +102,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GpuDeviceBeforeDestory );
-		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetGpuFramebufferID );
+		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetVkFramebufferID );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetGpuFramebufferDescriptor );
 
 		CHECK( _ValidateMsgSubscriptions() );
@@ -146,11 +145,11 @@ namespace PlatformVK
 		if ( has_depth )
 		{
 			attachments.PushBack( depthStencilView );
-			_descr.depthStencilAttachment = { imageType, ERenderTarget::FromPixelFormat( depthStencilFormat ) };
+			_descr.depthStencilAttachment = { "depth", imageType, ERenderTarget::FromPixelFormat( depthStencilFormat ) };
 		}
 
 		attachments.PushBack( colorView );
-		_descr.colorAttachments.PushBack({ imageType, ERenderTarget::FromPixelFormat( colorFormat, 0 ) });
+		_descr.colorAttachments.PushBack({ "color", imageType, ERenderTarget::FromPixelFormat( colorFormat, 0 ) });
 
 
 		VkFramebufferCreateInfo	fb_info = {};
@@ -182,10 +181,10 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetGpuFramebufferID
+	_GetVkFramebufferID
 =================================================
 */
-	bool Vk1Device::Vk1SystemFramebuffer::_GetGpuFramebufferID (const Message< ModuleMsg::GetGpuFramebufferID > &msg)
+	bool Vk1Device::Vk1SystemFramebuffer::_GetVkFramebufferID (const Message< ModuleMsg::GetVkFramebufferID > &msg)
 	{
 		msg->result.Set( _framebufferId );
 		return true;

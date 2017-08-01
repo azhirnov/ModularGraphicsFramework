@@ -26,31 +26,20 @@ namespace PlatformVK
 	{
 	// types
 	public:
-
-		// TODO: separate compute queue and graphics & compute & present queue,
-		//		 may be it is not needed, check docs...
-		/*struct EQueueFamily
+		struct EQueueFamily
 		{
 			enum type : uint
 			{
 				Graphics = 0,
 				Compute,
 				Transfer,
+				SparseBinding,
 				Present,
 				_Count
 			};
+
+			using bits = EnumBitfield< EQueueFamily >;
 		};
-
-		struct */
-
-		struct QueueFamilyIndices
-		{
-			vk::uint32_t	graphics	= -1;
-			vk::uint32_t	compute		= -1;
-			vk::uint32_t	transfer	= -1;
-			vk::uint32_t	present		= -1;
-		};
-
 
 	private:
 		class Vk1SystemFramebuffer;
@@ -103,7 +92,9 @@ namespace PlatformVK
 		vk::VkColorSpaceKHR				_colorSpace;
 		vk::VkFormat					_depthStencilFormat;
 
-		QueueFamilyIndices				_queueFamilyIndices;
+		vk::VkQueue						_queue;
+		vk::uint32_t					_queueIndex;
+		EQueueFamily::bits				_queueFamily;
 
 		ModulePtr						_commandBuilder;
 		CommandBuffers_t				_tempCmdBuffers;
@@ -137,8 +128,8 @@ namespace PlatformVK
 		bool ChoosePhysicalDevice (StringCRef name = StringCRef());
 		bool WritePhysicalDeviceInfo () const;
 
-		bool CreateDevice (const vk::VkPhysicalDeviceFeatures &enabledFeatures, vk::VkQueueFlags requestedQueueTypes,
-						   bool useSwapchain, ExtensionNames_t ext = ExtensionNames_t());
+		bool CreateDevice (const vk::VkPhysicalDeviceFeatures &enabledFeatures, EQueueFamily::bits queueFamilies,
+						   ExtensionNames_t ext = ExtensionNames_t());
 		bool DestroyDevice ();
 		void DeviceWaitIdle ();
 
@@ -151,15 +142,14 @@ namespace PlatformVK
 		bool SetSurface (vk::VkSurfaceKHR surface, EPixelFormat::type colorFormat);
 		bool DestroySurface ();
 
+		bool CreateQueue ();
+		void DestroyQueue ();
+		bool SubmitQueue (ArrayCRef< ModulePtr > cmdBuffers);
+
 		bool BeginFrame ();
 		bool EndFrame ();
 		//bool EndFrame (const ModulePtr &framebuffer);
 		bool IsFrameStarted () const;
-
-		bool SubmitGraphicsQueue (ArrayCRef< ModulePtr > cmdBuffers);
-		bool SubmitComputeQueue (ArrayCRef< ModulePtr > cmdBuffers);
-
-		//bool DrawFrame ();
 		
 		bool GetMemoryTypeIndex (vk::uint32_t memoryTypeBits, vk::VkMemoryPropertyFlags flags, OUT vk::uint32_t &index) const;
 
@@ -169,6 +159,7 @@ namespace PlatformVK
 		bool IsSurfaceCreated ()		const						{ return _surface		 != VK_NULL_HANDLE; }
 		bool IsSwapchainCreated ()		const						{ return _swapchain		 != VK_NULL_HANDLE; }
 		bool IsDebugCallbackCreated ()	const						{ return _debugCallback	 != VK_NULL_HANDLE; }
+		bool IsQueueCreated ()			const						{ return _queue			 != VK_NULL_HANDLE; }
 		
 		VkSystemsRef			VkSystems ()				const	{ return _vkSystems; }
 
@@ -185,16 +176,12 @@ namespace PlatformVK
 		ModulePtr				GetCommandBuilder ()		const	{ return _commandBuilder; }
 		ModulePtr				GetCurrentFramebuffer ()	const	{ return _framebuffers[ _currentImageIndex ]; }
 
-		QueueFamilyIndices		GetQueueFamilyIndices ()	const	{ return _queueFamilyIndices; }
 		uint2 const&			GetSurfaceSize ()			const	{ return _surfaceSize; }
 
-		vk::VkQueue				GetGraphicsQueue ()			const;
-		vk::VkQueue				GetComputeQueue ()			const;
-		vk::VkQueue				GetTransferQueue ()			const;
-		vk::VkQueue				GetPresentQueue ()			const;
+		vk::VkQueue				GetQueue ()					const	{ return _queue; }
+		vk::uint32_t			GetQueueIndex ()			const	{ return _queueIndex; }
+		EQueueFamily::bits		GetQueueFamily ()			const	{ return _queueFamily; }
 		
-		//ArrayCRef< ModulePtr >						GetCommandBuffers ()	const	{ return _commandBuffers; }
-		//ArrayCRef< ModulePtr >						GetFramebuffers ()		const	{ return _framebuffers; }
 		vk::VkPhysicalDeviceProperties const&		GetDeviceProperties ()	const	{ return _deviceProperties; }
 		vk::VkPhysicalDeviceFeatures const&			GetDeviceFeatures ()	const	{ return _deviceFeatures; }
 		vk::VkPhysicalDeviceMemoryProperties const&	GetMemoryProperties ()	const	{ return _deviceMemoryProperties; }
@@ -238,18 +225,12 @@ namespace PlatformVK
 		// Device
 		bool _GetDeviceExtensions (OUT Array<String> &ext) const;
 
+		// Queue
+		bool _ChooseQueueIndex (INOUT EQueueFamily::bits &family, OUT vk::uint32_t &index) const;
 		bool _GetQueueFamilyProperties (OUT Array<vk::VkQueueFamilyProperties> &prop) const;
-		bool _GetQueueFamilyIndex (OUT vk::uint32_t &index, vk::VkQueueFlags queueFlags, const Array<vk::VkQueueFamilyProperties> &props) const;
-
-		bool _ChooseGraphicsQueueFamilyIndex (OUT vk::uint32_t &index, const Array<vk::VkQueueFamilyProperties> &props) const;
-		bool _ChooseComputeQueueFamilyIndex (OUT vk::uint32_t &index, const Array<vk::VkQueueFamilyProperties> &props) const;
-		bool _ChooseTransferQueueFamilyIndex (OUT vk::uint32_t &index, const Array<vk::VkQueueFamilyProperties> &props) const;
-		bool _ChooseGraphicsAndPresentQueueFamilyIndex (OUT vk::uint32_t &graphicsIndex, OUT vk::uint32_t &presentIndex,
-														const Array<vk::VkQueueFamilyProperties> &props) const;
-
 		bool _GetQueueCreateInfos (OUT Array<vk::VkDeviceQueueCreateInfo> &queueCreateInfos,
-								   OUT QueueFamilyIndices &queueFamilyIndices,
-								   vk::VkQueueFlags queueTypes, bool requirePresent) const;
+								   INOUT EQueueFamily::bits &family,
+								   OUT vk::uint32_t &queueIndex) const;
 
 		// DebugReport
 		static VKAPI_ATTR vk::VkBool32 VKAPI_CALL _DebugReportCallback (vk::VkDebugReportFlagsEXT flags,

@@ -27,7 +27,7 @@ namespace GXTypes
 		
 	// variables
 	private:
-		T *	_ptr;
+		T *		_ptr;
 
 
 	// methods
@@ -66,11 +66,11 @@ namespace GXTypes
 
 		forceinline operator T * () const
 		{
-			return _ptr;
+			return ptr();
 		}
 		
 
-		forceinline operator T *& ()
+		forceinline explicit operator T *& ()
 		{
 			return _ptr;
 		}
@@ -78,20 +78,13 @@ namespace GXTypes
 
 		forceinline T * operator -> () const
 		{
-			ASSUME( _ptr != null );
-			return _ptr;
+			return ptr();
 		}
 
 
 		forceinline T & operator * () const
 		{
-			ASSUME( _ptr != null );
-			return *_ptr;
-		}
-
-		forceinline T ** operator & ()
-		{
-			return &_ptr;
+			return *ptr();
 		}
 
 
@@ -101,27 +94,16 @@ namespace GXTypes
 		}
 
 
-		forceinline T *& ref ()
+		forceinline T * ptr () const
 		{
-			return _ptr;
-		}
-
-		forceinline T* const & ref () const
-		{
-			return _ptr;
+			ASSUME( _ptr != null );
+			return RawPtr();
 		}
 
 
-		forceinline T * ptr ()
+		forceinline T * RawPtr () const
 		{
-			ASSERT( _ptr != null );
-			return _ptr;
-		}
-
-		forceinline const T * const ptr () const
-		{
-			ASSERT( _ptr != null );
-			return _ptr;
+			return const_cast< T* >( _ptr );
 		}
 
 
@@ -137,11 +119,18 @@ namespace GXTypes
 
 
 		template <typename T2>
-		forceinline T2 To ()
+		forceinline T2  To () const
 		{
 			STATIC_ASSERT( typename T2::_is_simple_ptr(true) );
 			_CheckCast< typename T2::value_t, value_t >( _ptr );
-			return T2( (typename T2::value_t *) _ptr );
+			return T2( (typename T2::value_t *) RawPtr() );
+		}
+
+		template <typename R>
+		forceinline R *  ToPtr () const
+		{
+			_CheckCast< R, value_t >( _ptr );
+			return ptr();
 		}
 		
 
@@ -153,21 +142,6 @@ namespace GXTypes
 		forceinline bool operator < (const Self &right) const
 		{
 			return _ptr < right._ptr;
-		}
-
-
-		template <typename R>
-		forceinline R *			ToPtr ()	const
-		{
-			_CheckCast< R, value_t >( _ptr );
-			return (R *)ptr();
-		}
-		
-		template <typename R>
-		forceinline R const *	ToCPtr ()	const
-		{
-			_CheckCast< R const, value_t >( _ptr );
-			return (R const *)ptr();
 		}
 	};
 	

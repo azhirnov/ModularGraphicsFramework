@@ -16,7 +16,7 @@ extern void Test_OS_Date ()
 	OS::Date	d0 = d;
 	ASSERT( d0 == d );
 
-	OS::Thread::Sleep( TimeU::FromMilliSeconds(1000) );
+	OS::Thread::Sleep( TimeL::FromMilliSeconds(1000) );
 	d0.Now();
 
 	ASSERT( d0 != d  );

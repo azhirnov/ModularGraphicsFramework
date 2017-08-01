@@ -20,6 +20,7 @@ namespace Base
 */
 	ParallelThread::ParallelThread (const GlobalSystemsRef gs, const CreateInfo::Thread &info) :
 		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
+		_onStarted( RVREF( info.onStarted.Get() ) ),
 		_isLooping( false )
 	{
 		SetDebugName( info.name );
@@ -38,8 +39,6 @@ namespace Base
 		_SubscribeOnMsg( this, &ParallelThread::_Delete );
 		
 		CHECK( _ValidateMsgSubscriptions() );
-
-		_AttachSelfToManager( info.manager, ThreadManager::GetStaticID(), true );
 	}
 	
 /*
@@ -49,6 +48,8 @@ namespace Base
 */
 	ParallelThread::~ParallelThread ()
 	{
+		CHECK( GetThreadID() == ThreadID::GetCurrent() );
+
 		LOG( "ParallelThread finalized", ELog::Debug );
 
 		GlobalSystems()->GetSetter< ParallelThread >().Set( null );
@@ -93,7 +94,7 @@ namespace Base
 
 		_isLooping = false;
 
-		_SendForEachAttachments( Message< ModuleMsg::Delete >( this ) );
+		_SendForEachAttachments( Message< ModuleMsg::Delete >{} );
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
 		return true;
@@ -111,6 +112,12 @@ namespace Base
 		_isLooping	= true;
 		
 		_timer.Start();
+		
+		if ( _onStarted )
+		{
+			_onStarted( this );
+			_onStarted = null;
+		}
 	}
 
 /*
@@ -127,7 +134,7 @@ namespace Base
 			const TimeD		dt = _timer.GetTimeDelta();		_timer.Start();
 
 			// update attached modules
-			_SendForEachAttachments( Message<ModuleMsg::Update>{ this, dt } );
+			_SendForEachAttachments( Message< ModuleMsg::Update >{ dt } );
 
 			// calc time to sleep
 			const TimeD		upd_dt = _timer.GetTimeDelta();
@@ -136,7 +143,7 @@ namespace Base
 			if ( factor > 0.5 )
 				OS::Thread::Yield();
 			else
-				OS::Thread::Sleep( TimeU::FromMilliSeconds( 10 ) );
+				OS::Thread::Sleep( TimeL::FromMilliSeconds( 10 ) );
 		}
 	}
 	
@@ -147,12 +154,12 @@ namespace Base
 */
 	void ParallelThread::_OnExit ()
 	{
-		CHECK( GetThreadID() == ThreadID::GetCurrent() );
+		/*CHECK( GetThreadID() == ThreadID::GetCurrent() );
 
 		const TimeD		dt = _timer.GetTimeDelta();		_timer.Start();
 
 		// last update to proccess messages
-		_SendForEachAttachments( Message<ModuleMsg::Update>{ this, dt } );
+		_SendForEachAttachments( Message< ModuleMsg::Update >{ dt } );*/
 	}
 	
 /*
@@ -168,7 +175,7 @@ namespace Base
 		const TimeD		dt = _timer.GetTimeDelta();		_timer.Start();
 
 		// update attached modules
-		_SendForEachAttachments( Message<ModuleMsg::Update>{ this, dt } );
+		_SendForEachAttachments( Message< ModuleMsg::Update >{ dt } );
 	}
 
 

@@ -23,6 +23,7 @@
 #include "CompileTime/TypeList.h"
 #include "CompileTime/TypeTraits.h"
 #include "CompileTime/StringToID.h"
+#include "CompileTime/Sequence.h"
 
 
 // Runtime //
@@ -74,6 +75,7 @@
 #include "Algorithms/StringParser.h"
 #include "Algorithms/StringUtils.h"
 #include "Algorithms/Swap.h"
+#include "Algorithms/InvokeWithVariant.h"
 
 
 // Types //
@@ -85,6 +87,7 @@
 #include "Types/Union.h"
 #include "Types/VariantRef.h"
 #include "Types/VariantCRef.h"
+#include "Types/VariantRefIndexedContainer.h"
 #include "Types/Noncopyable.h"
 #include "Types/Noninstancable.h"
 #include "Types/Limit.h"

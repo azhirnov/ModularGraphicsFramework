@@ -11,28 +11,28 @@ namespace GXTypes
 {
 
 	// integer types
-	typedef	wchar_t				wchar;
-	typedef signed char			byte;
-	//typedef signed short		short;
-	//typedef signed int		int;
-	typedef	signed long long	ilong;
+	using wchar		= wchar_t;
+	using byte		= signed char;
+	//using short	= signed short;
+	//using int		= signed int;
+	using ilong		= signed long long;
 
-	typedef unsigned char		ubyte;
-	typedef	unsigned short		ushort;
-	typedef unsigned int		uint;
-	typedef unsigned long long	ulong;
+	using ubyte		= unsigned char;
+	using ushort	= unsigned short;
+	using uint		= unsigned int;
+	using ulong		= unsigned long long;
 
 
 	// pointer & size type
 #if PLATFORM_BITS == 16
-	typedef unsigned short		usize;
-	typedef signed short		isize;
+	using usize		= unsigned short;
+	using isize		= signed short;
 #elif PLATFORM_BITS == 32
-	typedef unsigned int		usize;
-	typedef signed int			isize;
+	using usize		= unsigned int;
+	using isize		= signed int;
 #elif PLATFORM_BITS == 64
-	typedef unsigned long long	usize;
-	typedef signed long long	isize;
+	using usize		= unsigned long long;
+	using isize		= signed long long;
 #endif
 
 	// check size types
@@ -41,8 +41,17 @@ namespace GXTypes
 
 
 	// null pointer
-	typedef std::nullptr_t		NullPtr_t;
+	using NullPtr_t			= std::nullptr_t;
 	
+
+	// initializer list
+#ifdef COMPILER_MSVC
+#	define InitializerList	std::initializer_list
+#else
+	template <typename T>
+	using InitializerList	= std::initializer_list<T>;
+#endif
+
 
 	// Bytes and Bits
 	template <typename T> struct Bytes;

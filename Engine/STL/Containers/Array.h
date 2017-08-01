@@ -64,7 +64,7 @@ namespace GXTypes
 		Array (Self &&other);
 		Array (const Self &other);
 		Array (ArrayCRef<T> other);
-		Array (std::initializer_list<T> list);
+		Array (InitializerList<T> list);
 
 		~Array ()														{ Free(); }
 
@@ -280,7 +280,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline Array<T,S,MC>::Array (std::initializer_list<T> list) : _count(0), _size(0)
+	inline Array<T,S,MC>::Array (InitializerList<T> list) : _count(0), _size(0)
 	{
 		Copy( ArrayCRef<T>( list ) );
 	}

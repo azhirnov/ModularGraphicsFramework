@@ -21,6 +21,8 @@ namespace Base
 	TaskModule::TaskModule (const GlobalSystemsRef gs, const CreateInfo::TaskModule &info) :
 		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
 	{
+		//STATIC_ASSERT( MsgQueue_t::queue_t::Strategy
+
 		SetDebugName( GlobalSystems()->Get< ParallelThread >()->GetDebugName() + "_Tasks"_str );
 
 		GlobalSystems()->GetSetter< TaskModule >().Set( this );
@@ -41,7 +43,23 @@ namespace Base
 		_msgQueue.ReserveCurrent( 256 );
 		_msgQueue.ReservePending( 128 );
 
-		_AttachSelfToManager( info.manager, TaskManager::GetStaticID(), true );
+		// attach to manager
+		_SetManager( info.manager );
+
+		if ( _GetManager()->GetThreadID() == GetThreadID() )
+		{
+			_GetManager()->Send( Message< ModuleMsg::AddToManager >{ this } );
+		}
+		else
+		{
+			CHECK( _PushAsyncMessage( Message< ModuleMsg::PushAsyncMessage >{
+						AsyncMessage{
+							LAMBDA( mngr = _GetManager(), task = ModulePtr(this) ) (const TaskModulePtr &) {
+								mngr->Send( Message< ModuleMsg::AddToManager >{ task } );
+							}
+						}, _GetManager()->GetThreadID()
+			}) );
+		}
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 	}
@@ -53,6 +71,8 @@ namespace Base
 */
 	TaskModule::~TaskModule ()
 	{
+		CHECK( GetThreadID() == ThreadID::GetCurrent() );
+
 		LOG( "TaskModule finalized", ELog::Debug );
 
 		GlobalSystems()->GetSetter< TaskModule >().Set( null );
@@ -68,9 +88,8 @@ namespace Base
 */
 	bool TaskModule::_Update (const Message< ModuleMsg::Update > &msg)
 	{
-		//CHECK_ERR( _IsComposedState( GetState() ), void() );
-
-		CHECK_ERR( msg.Sender() and _GetParents().IsExist( msg.Sender() ) );
+		//ASSERT( _IsComposedState( GetState() ), void() );
+		ASSERT( msg.Sender() and _GetParents().IsExist( msg.Sender() ) );
 
 		_Flush();
 		_ProcessMessages();
@@ -84,9 +103,16 @@ namespace Base
 */
 	bool TaskModule::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
-		CHECK_ERR( msg.Sender() and _GetParents().IsExist( msg.Sender() ) );
+		ASSERT( msg.Sender() and _GetParents().IsExist( msg.Sender() ) );
+		
+		_DetachSelfFromManager();
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
+		
+		ASSERT( _msgQueue.GetCurrentQueueCount() == 0 );
+		ASSERT( _msgQueue.GetPendingQueueCount() == 0 );
+
+		_msgQueue.ClearAll();
 		return true;
 	}
 
@@ -97,6 +123,7 @@ namespace Base
 */
 	bool TaskModule::_PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg)
 	{
+		CHECK_ERR( GetState() != EState::Deleting );
 		CHECK_ERR( _GetManager() );
 
 		CHECK( _GetManager().ToPtr< TaskManager >()->PushAsyncMessage( msg ) );

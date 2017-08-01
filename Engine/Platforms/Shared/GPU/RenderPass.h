@@ -38,6 +38,7 @@ namespace Platforms
 		struct ColorAttachment_t : CompileTime::PODStruct
 		{
 		// variables
+			StaticString<64>			name;
 			EPixelFormat::type			format;
 			MultiSamples				samples;
 			EAttachmentLoadOp::type		loadOp;			// for color and depth
@@ -79,6 +80,7 @@ namespace Platforms
 		struct AttachmentRef_t : CompileTime::PODStruct
 		{
 		// variables
+			//StaticString<64>	name;
 			AttachmentIndex		index;
 			EImageLayout::type	layout;
 
@@ -157,7 +159,6 @@ namespace Platforms
 		ArrayCRef< Subpass_t >				Subpasses ()				const	{ return _subpasses; }
 		ArrayCRef< SubpassDependency_t >	Dependencies ()				const	{ return _dependencies; }
 		DepthStencilAttachment_t const&		DepthStencilAttachment ()	const	{ return _depthStencilAttachment; }
-		//HashResult						GetHash ()					const	{ return _hash; }
 
 		// compare without hash
 		bool operator == (const Self &right) const;
@@ -195,7 +196,7 @@ namespace Platforms
 		{
 		// variables
 		private:
-			Subpass_t &	_valueRef;
+			Subpass_t &		_valueRef;
 
 		// methods
 		public:
@@ -237,7 +238,8 @@ namespace Platforms
 		{}
 
 		Self& AddColorAttachment (const ColorAttachment_t &value);
-		Self& AddColorAttachment (EPixelFormat::type		format,
+		Self& AddColorAttachment (StringCRef				name,
+								  EPixelFormat::type		format,
 								  MultiSamples				samples,
 								  EAttachmentLoadOp::type	loadOp,
 								  EAttachmentStoreOp::type	storeOp,
@@ -245,7 +247,8 @@ namespace Platforms
 								  EImageLayout::type		finalLayout);
 
 		Self& SetDepthStencilAttachment (const DepthStencilAttachment_t &value);
-		Self& SetDepthStencilAttachment (EPixelFormat::type			format,
+		Self& SetDepthStencilAttachment (StringCRef					name,
+										 EPixelFormat::type			format,
 										 MultiSamples				samples,
 										 EAttachmentLoadOp::type	depthLoadOp,
 										 EAttachmentStoreOp::type	depthStoreOp,
@@ -302,7 +305,8 @@ namespace ModuleMsg
 	
 
 	// platform-dependent
-	struct GetGpuRenderPassID;
+	struct GetVkRenderPassID;
+	struct GetGLRenderPassID;
 
 
 }	// ModuleMsg

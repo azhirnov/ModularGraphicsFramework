@@ -3,7 +3,6 @@
 #pragma once
 
 #include "ArrayRef.h"
-#include <string>
 
 namespace GX_STL
 {

@@ -11,6 +11,7 @@ namespace Engine
 namespace ModuleMsg
 {
 	using UntypedID_t	= CompileTime::NearUInt::FromType< GModID::type >;
+	using ModuleName_t	= StaticString<64>;
 	
 
 	//
@@ -18,7 +19,13 @@ namespace ModuleMsg
 	//
 	struct AttachModule
 	{
-		ModulePtr	newModule;
+	// variables
+		ModuleName_t	name;
+		ModulePtr		newModule;
+
+	// methods
+		explicit AttachModule (const ModulePtr &unit);
+		AttachModule (StringCRef name, const ModulePtr &unit);
 	};
 	
 	struct DetachModule
@@ -32,14 +39,16 @@ namespace ModuleMsg
 	//
 	struct OnModuleAttached
 	{
-		ModulePtr	parent;
-		ModulePtr	attachedModule;
+		ModulePtr		parent;
+		ModuleName_t	name;
+		ModulePtr		attachedModule;
 	};
 
 	struct OnModuleDetached
 	{
-		ModulePtr	parent;
-		ModulePtr	detachedModule;
+		ModulePtr		parent;
+		ModuleName_t	name;
+		ModulePtr		detachedModule;
 	};
 	
 
@@ -48,8 +57,6 @@ namespace ModuleMsg
 	//
 	struct Link
 	{
-		// find modules and subscribe to events
-		//ArrayCRef< Pair<UntypedID_t, ModulePtr> >		modules;	// TODO: don't use it, use parent->GetModule
 	};
 
 

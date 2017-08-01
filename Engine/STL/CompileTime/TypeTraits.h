@@ -564,7 +564,7 @@ namespace TypeTraits
 	{
 		return static_cast< typename RValueRef<T>::type >( arg );
 	}
-
+	
 /*
 =================================================
 	Forward

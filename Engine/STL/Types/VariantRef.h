@@ -17,7 +17,7 @@ namespace GXTypes
 	// Variant Reference
 	//
 
-	struct VariantRef
+	struct VariantRef : CompileTime::FastCopyable
 	{
 	// types
 	private:
@@ -28,8 +28,8 @@ namespace GXTypes
 
 	// variables
 	private:
-		mutable void *	_reference;
-		TypeId			_typeId;
+		void *		_reference;
+		TypeId		_typeId;
 
 
 	// methods
@@ -113,7 +113,7 @@ namespace GXTypes
 		forceinline T *			GetPtr () const
 		{
 			CHECK( IsType<T>() );
-			return static_cast<T *>( _reference );
+			return const_cast< T* >( static_cast< T const *>( _reference ) );
 		}
 
 
@@ -131,6 +131,11 @@ namespace GXTypes
 		}
 	};
 
+
+
+	//
+	// Hash
+	//
 	
 	template <>
 	struct Hash< VariantRef > : private Hash< void* >

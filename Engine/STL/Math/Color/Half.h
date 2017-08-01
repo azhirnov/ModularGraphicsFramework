@@ -6,6 +6,7 @@
 #include "Engine/STL/Common/AllFunc.h"
 #include "Engine/STL/CompileTime/NewTypeInfo.h"
 #include "Engine/STL/Algorithms/Hash.h"
+#include "Engine/STL/Math/Vec.h"
 
 namespace GX_STL
 {
@@ -146,7 +147,11 @@ namespace GXTypes
 	};
 
 
-	typedef THalf	half;
+	typedef THalf							half;
+	typedef GXMath::Vec< half,		1 >		half1;
+	typedef GXMath::Vec< half,		2 >		half2;
+	typedef GXMath::Vec< half,		3 >		half3;
+	typedef GXMath::Vec< half,		4 >		half4;
 
 
 

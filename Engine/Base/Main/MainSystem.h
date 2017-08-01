@@ -44,6 +44,9 @@ namespace Base
 			~_FinalChecks ();
 		};
 
+		SHARED_POINTER( TaskManager );
+		SHARED_POINTER( ThreadManager );
+
 		
 	// constants
 	private:
@@ -56,8 +59,8 @@ namespace Base
 		_FinalChecks		_finalChecks;
 
 		ModulesFactory		_factory;
-		TaskManager			_taskMngr;
-		ThreadManager		_threadMngr;
+		TaskManagerPtr		_taskMngr;
+		ThreadManagerPtr	_threadMngr;
 		FileManager			_fileMngr;
 
 
@@ -74,6 +77,9 @@ namespace Base
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 
 	private:
+		void _Create ();
+		void _Destroy ();
+
 		static ModulePtr _CreateThreadManager (GlobalSystemsRef, const CreateInfo::ThreadManager &);
 		static ModulePtr _CreateTaskManager (GlobalSystemsRef, const CreateInfo::TaskManager &);
 	};

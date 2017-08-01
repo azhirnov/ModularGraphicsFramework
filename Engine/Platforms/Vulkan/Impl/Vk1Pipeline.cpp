@@ -42,7 +42,7 @@ namespace PlatformVK
 	{
 		// TODO: validate and cache
 
-		auto	result = GXTypes::New< Vk1GraphicsPipeline >( gs, ci );
+		auto	result = New< Vk1GraphicsPipeline >( gs, ci );
 		
 		result->Send( Message< ModuleMsg::Link >() );
 		result->Send( Message< ModuleMsg::Compose >() );
@@ -575,7 +575,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_Delete );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GpuDeviceBeforeDestory );
-		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetGraphicsPipelineID );
+		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkGraphicsPipelineID );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetGraphicsPipelineDescriptor );
 		
 		CHECK( _ValidateMsgSubscriptions() );
@@ -604,7 +604,7 @@ namespace PlatformVK
 
 		CHECK_ERR( _CreatePipeline() );
 
-		_SendForEachAttachments( Message< ModuleMsg::Compose >{ this } );
+		_SendForEachAttachments( msg );
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
@@ -627,10 +627,10 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetGraphicsPipelineID
+	_GetVkGraphicsPipelineID
 =================================================
 */
-	bool Vk1GraphicsPipeline::_GetGraphicsPipelineID (const Message< ModuleMsg::GetGraphicsPipelineID > &msg)
+	bool Vk1GraphicsPipeline::_GetVkGraphicsPipelineID (const Message< ModuleMsg::GetVkGraphicsPipelineID > &msg)
 	{
 		msg->result.Set( _pipelineId );
 		return true;
@@ -679,11 +679,11 @@ namespace PlatformVK
 
 		
 		// get render pass id
-		Message< ModuleMsg::GetGpuRenderPassID >			rp_request;
+		Message< ModuleMsg::GetVkRenderPassID >			rp_request;
 		Message< ModuleMsg::GetGpuRenderPassDescriptor >	descr_request;
 
-		_renderPass->Send( rp_request );
-		_renderPass->Send( descr_request );
+		SendTo( _renderPass, rp_request );
+		SendTo( _renderPass, descr_request );
 
 		RenderPassDescriptor	rp_descr;	rp_descr << descr_request->result;
 		VkRenderPass			rp			= rp_request->result.Get( VK_NULL_HANDLE );
@@ -691,10 +691,10 @@ namespace PlatformVK
 		
 
 		// get shader modules
-		Message< ModuleMsg::GetGpuShaderModuleIDs >				shaders_request;
-		Array< ModuleMsg::GetGpuShaderModuleIDs::ShaderModule >	modules;
+		Message< ModuleMsg::GetVkShaderModuleIDs >				shaders_request;
+		Array< ModuleMsg::GetVkShaderModuleIDs::ShaderModule >	modules;
 
-		_shaders->Send( shaders_request );
+		SendTo( _shaders, shaders_request );
 
 		shaders_request->result.MoveTo( OUT modules );
 		CHECK_ERR( not modules.Empty() );

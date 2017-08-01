@@ -19,6 +19,7 @@ namespace Platforms
 		struct AttachmentInfo : CompileTime::PODStruct
 		{
 		// variables
+			StaticString<64>		name;
 			ETexture::type			imageType;
 			ERenderTarget::type		target;
 
@@ -26,7 +27,8 @@ namespace Platforms
 			AttachmentInfo () : imageType(Uninitialized), target(Uninitialized)
 			{}
 
-			AttachmentInfo (ETexture::type imageType, ERenderTarget::type target) : imageType(imageType), target(target)
+			AttachmentInfo (StringCRef name, ETexture::type imageType, ERenderTarget::type target) :
+				name(name), imageType(imageType), target(target)
 			{}
 
 			bool IsEnabled () const		{ return imageType != ETexture::Unknown and target != ERenderTarget::Unknown; }
@@ -82,7 +84,8 @@ namespace ModuleMsg
 
 	
 	// platform-dependent
-	struct GetGpuFramebufferID;
+	struct GetVkFramebufferID;
+	struct GetGLFramebufferID;
 
 
 	//

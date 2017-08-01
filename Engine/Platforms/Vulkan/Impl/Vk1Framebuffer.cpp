@@ -37,7 +37,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GpuDeviceBeforeDestory );
-		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetGpuFramebufferID );
+		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetVkFramebufferID );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetGpuFramebufferDescriptor );
 
 		CHECK( _ValidateMsgSubscriptions() );
@@ -66,7 +66,7 @@ namespace PlatformVK
 	{
 		CHECK_ERR( GetState() == EState::Linked );
 
-		_SendForEachAttachments( Message< ModuleMsg::Compose >{ this } );
+		_SendForEachAttachments( msg );
 
 		CHECK_ERR( _CreateFramebuffer() );
 		
@@ -91,10 +91,10 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetGpuFramebufferID
+	_GetVkFramebufferID
 =================================================
 */
-	bool Vk1Framebuffer::_GetGpuFramebufferID (const Message< ModuleMsg::GetGpuFramebufferID > &msg)
+	bool Vk1Framebuffer::_GetVkFramebufferID (const Message< ModuleMsg::GetVkFramebufferID > &msg)
 	{
 		msg->result.Set( _framebufferId );
 		return true;
@@ -129,12 +129,18 @@ namespace PlatformVK
 	struct Vk1Framebuffer::AttachmentInfo : CompileTime::PODStruct
 	{
 	// variables
+		ModuleName_t		name;
 		vk::VkImageView		view	= VK_NULL_HANDLE;
 		EPixelFormat::type	format	= EPixelFormat::Unknown;
+		MultiSamples		samples;
 
 	// methods
-		AttachmentInfo () {}
-		AttachmentInfo (vk::VkImageView view, EPixelFormat::type format) : view(view), format(format) {}
+		AttachmentInfo ()
+		{}
+
+		AttachmentInfo (const ModuleName_t &name, vk::VkImageView view, EPixelFormat::type format, MultiSamples samples) :
+			name(name), view(view), format(format), samples(samples)
+		{}
 
 		bool IsEnabled ()	const	{ return view == VK_NULL_HANDLE; }
 	};
@@ -150,8 +156,8 @@ namespace PlatformVK
 
 		CHECK_ERR( not _IsCreated() );
 
-		using RenderPassMessages_t		= MessageListFrom< ModuleMsg::GetGpuRenderPassDescriptor, ModuleMsg::GetGpuRenderPassID >;
-		using ImageViewMessages_t		= MessageListFrom< ModuleMsg::GetGpuTextureDescriptor, ModuleMsg::GetGpuTextureView >;
+		using RenderPassMessages_t		= MessageListFrom< ModuleMsg::GetGpuRenderPassDescriptor, ModuleMsg::GetVkRenderPassID >;
+		using ImageViewMessages_t		= MessageListFrom< ModuleMsg::GetGpuTextureDescriptor, ModuleMsg::GetVkTextureView >;
 		using Attachments_t				= FixedSizeArray< VkImageView, GlobalConst::Graphics_MaxColorBuffers + 1 >;
 		using ColorAttachmentInfos_t	= FixedSizeArray< AttachmentInfo, GlobalConst::Graphics_MaxColorBuffers >;
 
@@ -164,7 +170,8 @@ namespace PlatformVK
 		// search for render pass and images
 		FOR( i, _GetAttachments() )
 		{
-			ModulePtr const&	mod = _GetAttachments()[i].second;
+			ModuleName_t const&		name	= _GetAttachments()[i].first;
+			ModulePtr const&		mod		= _GetAttachments()[i].second;
 
 			if ( not _IsComposedState( mod->GetState() ) )
 				continue;
@@ -173,11 +180,11 @@ namespace PlatformVK
 			if ( render_pass == VK_NULL_HANDLE and
 				 mod->GetSupportedMessages().HasAllTypes< RenderPassMessages_t >() )
 			{
-				Message< ModuleMsg::GetGpuRenderPassID >			rp_request;
+				Message< ModuleMsg::GetVkRenderPassID >				rp_request;
 				Message< ModuleMsg::GetGpuRenderPassDescriptor >	descr_request;
 
-				mod->Send( rp_request );
-				mod->Send( descr_request );
+				SendTo( mod, rp_request );
+				SendTo( mod, descr_request );
 
 				if ( descr_request->result.IsDefined() and
 					 rp_request->result.Get( VK_NULL_HANDLE ) != VK_NULL_HANDLE )
@@ -191,10 +198,10 @@ namespace PlatformVK
 			if ( mod->GetSupportedMessages().HasAllTypes< ImageViewMessages_t >() )
 			{
 				Message< ModuleMsg::GetGpuTextureDescriptor >	descr_request;
-				Message< ModuleMsg::GetGpuTextureView >			view_request;
+				Message< ModuleMsg::GetVkTextureView >			view_request;
 
-				mod->Send( descr_request );
-				mod->Send( view_request );
+				SendTo( mod, descr_request );
+				SendTo( mod, view_request );
 
 				if ( descr_request->result.IsDefined() and
 					 view_request->result.IsDefined() )
@@ -206,13 +213,13 @@ namespace PlatformVK
 					if ( EPixelFormat::HasDepth( descr.format ) or
 						 EPixelFormat::HasStencil( descr.format ) )
 					{
-						depth_stencil_attachment = AttachmentInfo{ view, descr.format };
+						depth_stencil_attachment = AttachmentInfo{ name, view, descr.format, descr.samples };
 					}
 
 					// add color attachment
 					if ( EPixelFormat::IsColor( descr.format ) )
 					{
-						color_attachments.PushBack( AttachmentInfo{ view, descr.format } );
+						color_attachments.PushBack( AttachmentInfo{ name, view, descr.format, descr.samples } );
 					}
 				}
 			}
@@ -253,10 +260,39 @@ namespace PlatformVK
 	_CreateRenderPassByAttachment
 =================================================
 */
-	bool Vk1Framebuffer::_CreateRenderPassByAttachment (ArrayCRef<AttachmentInfo> colorAttach, const AttachmentInfo &depthStencilAttach,
+	bool Vk1Framebuffer::_CreateRenderPassByAttachment (ArrayCRef<AttachmentInfo> colorAttachment,
+														const AttachmentInfo &depthStencilAttachment,
 														OUT vk::VkRenderPass &renderPass)
 	{
-		return false;
+		RenderPassDescrBuilder	builder;
+
+		FOR( i, colorAttachment )
+		{
+			builder.AddColorAttachment( colorAttachment[i].name,
+										colorAttachment[i].format,
+										colorAttachment[i].samples,
+										EAttachmentLoadOp::None,
+										EAttachmentStoreOp::None,
+										EImageLayout::Undefined,
+										EImageLayout::ColorAttachmentOptimal );
+		}
+
+		ModulePtr	module;
+
+		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+			Vk1RenderPass::GetStaticID(),
+			GlobalSystems(),
+			CreateInfo::GpuRenderPass{ VkSystems()->Get< VulkanThread >(), builder.Finish() },
+			OUT module
+		) );
+
+		Message< ModuleMsg::GetVkRenderPassID >	rp_request;
+		module->Send( rp_request );
+
+		renderPass << rp_request->result;
+		CHECK_ERR( renderPass != VK_NULL_HANDLE );
+
+		return true;
 	}
 
 /*
@@ -272,6 +308,7 @@ namespace PlatformVK
 		{
 			CHECK_ERR( depthStencilAttachment.IsEnabled() );
 			CHECK_ERR( depthStencilAttachment.format == rpDescr.DepthStencilAttachment().format );
+			CHECK_ERR( depthStencilAttachment.name == rpDescr.DepthStencilAttachment().name );
 		}
 		else
 		{
@@ -283,7 +320,9 @@ namespace PlatformVK
 
 		FOR( i, rpDescr.ColorAttachments() )
 		{
+			CHECK_ERR( colorAttachment[i].IsEnabled() );
 			CHECK_ERR( colorAttachment[i].format == rpDescr.ColorAttachments()[i].format );
+			CHECK_ERR( colorAttachment[i].name == rpDescr.ColorAttachments()[i].name );
 		}
 
 		return true;

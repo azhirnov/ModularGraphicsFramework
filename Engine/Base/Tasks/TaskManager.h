@@ -19,7 +19,7 @@ namespace Base
 	private:
 		SHARED_POINTER( TaskModule );
 
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append<	MessageListFrom<
+		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager
 										> >;

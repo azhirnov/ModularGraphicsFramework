@@ -4,7 +4,6 @@
 
 #include "Engine/STL/Common/Types.h"
 #include "Engine/STL/CompileTime/TypeTraits.h"
-#include <functional>
 
 namespace GX_STL
 {

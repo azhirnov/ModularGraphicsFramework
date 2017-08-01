@@ -114,7 +114,7 @@ namespace GXMath
 	struct TPhysicsDimensionsList : public Noninstancable
 	{
 	// checks
-		STATIC_ASSERT( DimensionsTypeList::Length == EPhysicsDimension::_Count );
+		STATIC_ASSERT( DimensionsTypeList::Count == EPhysicsDimension::_Count );
 		STATIC_ASSERT( DimensionsTypeList::template Get< EPhysicsDimension::Seconds   >::DIMENSION == EPhysicsDimension::Seconds   );
 		STATIC_ASSERT( DimensionsTypeList::template Get< EPhysicsDimension::Kilograms >::DIMENSION == EPhysicsDimension::Kilograms );
 		STATIC_ASSERT( DimensionsTypeList::template Get< EPhysicsDimension::Meters    >::DIMENSION == EPhysicsDimension::Meters    );

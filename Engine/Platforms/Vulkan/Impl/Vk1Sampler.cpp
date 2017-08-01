@@ -95,7 +95,7 @@ namespace PlatformVK
 		create_info.gpuThread	= ci.gpuThread;
 		create_info.descr		= builder.Finish();
 
-		auto result = GXTypes::New< Vk1Sampler >( gs, create_info );
+		auto result = New< Vk1Sampler >( gs, create_info );
 
 		result->Send( Message< ModuleMsg::Link >() );
 		result->Send( Message< ModuleMsg::Compose >() );
@@ -136,7 +136,7 @@ namespace PlatformVK
 		//_SubscribeOnMsg( this, &Vk1Sampler::_Delete );
 		_SubscribeOnMsg( this, &Vk1Sampler::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GpuDeviceBeforeDestory );
-		_SubscribeOnMsg( this, &Vk1Sampler::_GetGpuSamplerID );
+		_SubscribeOnMsg( this, &Vk1Sampler::_GetVkSamplerID );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetGpuSamplerDescriptor );
 
 		CHECK( _ValidateMsgSubscriptions() );
@@ -188,10 +188,10 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetGpuSamplerID
+	_GetVkSamplerID
 =================================================
 */
-	bool Vk1Sampler::_GetGpuSamplerID (const Message< ModuleMsg::GetGpuSamplerID > &msg)
+	bool Vk1Sampler::_GetVkSamplerID (const Message< ModuleMsg::GetVkSamplerID > &msg)
 	{
 		msg->result.Set( _samplerId );
 		return true;

@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Engine\Shaders\Engine.Shaders.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Common\Common.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Node.h">
+      <Filter>Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\NodeTypes.h">
+      <Filter>Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\NodeFuncs.h">
+      <Filter>Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\ShaderNodes.h">
+      <Filter>Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Pipeline\Pipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\ImageType.hpp">
+      <Filter>Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\AllNodeFuncs.h">
+      <Filter>Shader\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Pipeline\VkPipelineCompiler.h">
+      <Filter>Pipeline\compilers\VK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Pipeline\GL4PipelineCompiler.h">
+      <Filter>Pipeline\compilers\GL4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\ImageType.h">
+      <Filter>Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\NodeTypes.hpp">
+      <Filter>Shader</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{635a6715-1ea8-4a4a-aa03-8e32a91dc863}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FrameGraph">
+      <UniqueIdentifier>{cad88f06-120f-4b6e-b149-8813e44c4acd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass">
+      <UniqueIdentifier>{d2ebc6de-9ead-4324-b2d4-ef7673822c4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pipeline">
+      <UniqueIdentifier>{b388f2d4-5bac-4d41-974f-a042d840ae50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{af65661b-8f1d-4834-a9b2-b6082ace4442}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pipeline\compilers">
+      <UniqueIdentifier>{74c318ca-b174-4034-9953-e11116737f11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pipeline\compilers\VK">
+      <UniqueIdentifier>{03f59b64-1fc5-45d9-924e-8f72b55f0622}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pipeline\compilers\GL4">
+      <UniqueIdentifier>{f8f992c5-6d91-487e-ad40-ad2a0002ee38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Generated">
+      <UniqueIdentifier>{912e2f87-4e37-46e7-a00e-eddbac50eaea}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\Node.cpp">
+      <Filter>Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\ShaderNodes.cpp">
+      <Filter>Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Shaders\Pipeline\Pipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\NodeFuncs.cpp">
+      <Filter>Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\CLNodeFuncs.cpp">
+      <Filter>Shader\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\CPPNodeFuncs.cpp">
+      <Filter>Shader\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\GLSLNodeFuncs.cpp">
+      <Filter>Shader\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\VKNodeFuncs.cpp">
+      <Filter>Shader\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Shaders\Pipeline\VkPipelineCompiler.cpp">
+      <Filter>Pipeline\compilers\VK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Shaders\Pipeline\GL4PipelineCompiler.cpp">
+      <Filter>Pipeline\compilers\GL4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\AllNodeFuncs.cpp">
+      <Filter>Shader\Generated</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -510,11 +510,12 @@ namespace OS
 	Wait
 =================================================
 */
-	bool ConditionVariable::Wait (CriticalSection &cs, TimeU time)
+	bool ConditionVariable::Wait (CriticalSection &cs, TimeL time)
 	{
 		ASSERT( IsValid() );
-		return _SleepConditionVariableCS(	&_cv.Get<CONDITION_VARIABLE>(),
-											&cs._crSection.Get<CRITICAL_SECTION>(), time.MilliSeconds() ) == TRUE;
+		return _SleepConditionVariableCS( &_cv.Get<CONDITION_VARIABLE>(),
+										  &cs._crSection.Get<CRITICAL_SECTION>(),
+										  (uint) time.MilliSeconds() ) == TRUE;
 	}
 
 //-----------------------------------------------------------------------------
@@ -577,9 +578,9 @@ namespace OS
 	Wait
 =================================================
 */
-	bool SyncEvent::Wait (TimeU time)
+	bool SyncEvent::Wait (TimeL time)
 	{
-		return ::WaitForSingleObject( _event.Get<HANDLE>(), time.MilliSeconds() ) == WAIT_OBJECT_0;
+		return ::WaitForSingleObject( _event.Get<HANDLE>(), (uint) time.MilliSeconds() ) == WAIT_OBJECT_0;
 	}
 	
 /*
@@ -587,7 +588,7 @@ namespace OS
 	WaitEvents
 =================================================
 */
-	int SyncEvent::WaitEvents (ArrayRef<Self *> events, bool waitAll, TimeU time)
+	int SyncEvent::WaitEvents (ArrayRef<Self *> events, bool waitAll, TimeL time)
 	{
 		FixedSizeArray< HANDLE, 16 >	events_arr;
 
@@ -595,7 +596,7 @@ namespace OS
 			events_arr.PushBack( events[i]->_event.Get<HANDLE>() );
 		}
 
-		DWORD	res		= ::WaitForMultipleObjects( (DWORD)events_arr.Count(), events_arr.ptr(), waitAll, time.MilliSeconds() );
+		DWORD	res		= ::WaitForMultipleObjects( (DWORD)events_arr.Count(), events_arr.ptr(), waitAll, (uint) time.MilliSeconds() );
 		bool	success	= (res >= WAIT_OBJECT_0 and res <= WAIT_OBJECT_0 + events_arr.Count());
 
 		return success ? res - WAIT_OBJECT_0 : -1;

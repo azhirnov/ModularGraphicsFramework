@@ -4,6 +4,7 @@
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
+#include "Engine/Platforms/Shared/GPU/RenderPass.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -22,7 +23,7 @@ namespace PlatformVK
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::GetGraphicsPipelineDescriptor,
-											ModuleMsg::GetGraphicsPipelineID
+											ModuleMsg::GetVkGraphicsPipelineID
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
@@ -63,7 +64,7 @@ namespace PlatformVK
 	private:
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGraphicsPipelineID (const Message< ModuleMsg::GetGraphicsPipelineID > &);
+		bool _GetVkGraphicsPipelineID (const Message< ModuleMsg::GetVkGraphicsPipelineID > &);
 		bool _GetGraphicsPipelineDescriptor (const Message< ModuleMsg::GetGraphicsPipelineDescriptor > &);
 
 	private:
@@ -125,7 +126,7 @@ namespace PlatformVK
 	private:
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetComputePipelineID (const Message< ModuleMsg::GetGraphicsPipelineID > &);
+		bool _GetComputePipelineID (const Message< ModuleMsg::GetComputePipelineID > &);
 		bool _GetGpuPipelineDescriptor (const Message< ModuleMsg::GetGpuRenderPassDescriptor > &);
 
 	private:
@@ -152,7 +153,7 @@ namespace PlatformVK
 		using DynamicStates		= EPipelineDynamicState::bits;
 		using Vk1DynamicStates	= StaticArray< vk::VkDynamicState, EPipelineDynamicState::_Count >;
 		using Attachment_t		= StaticArray< vk::VkPipelineColorBlendAttachmentState, RenderState::ColorBuffersState::ColorBuffers_t::STATIC_COUNT >;
-		using ShaderModule		= ModuleMsg::GetGpuShaderModuleIDs::ShaderModule;
+		using ShaderModule		= ModuleMsg::GetVkShaderModuleIDs::ShaderModule;
 		using Viewports_t		= FixedSizeArray< vk::VkViewport, 16 >;
 		using Scissors_t		= FixedSizeArray< vk::VkRect2D, 16 >;
 

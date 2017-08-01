@@ -151,6 +151,12 @@ static void StringParser_CalculateNumberOfLines ()
 {
 	usize	lines = StringParser::CalculateNumberOfLines( "1\n2\n3\r\n4\r\n5\n6\n7\r8\n9\n10" );
 	ASSERT( lines == 10 );
+
+	lines = StringParser::CalculateNumberOfLines( "1" );
+	ASSERT( lines == 1 );
+
+	lines = StringParser::CalculateNumberOfLines( "1\n2\n" );
+	ASSERT( lines == 2 );
 }
 
 
@@ -180,6 +186,21 @@ static void StringParser_DecreaceIndent ()
 }
 
 
+static void StringParser_MoveToLine ()
+{
+	usize pos = 0;
+
+	StringParser::MoveToLine( "1\n2\n3\r\n4\r\n5\n6\n7\r8\n9\n10", pos = 0, 0 );
+	ASSERT( pos == 0 );
+	
+	StringParser::MoveToLine( "1\n2\n3\r\n4\r\n5\n6\n7\r8\n9\n10", pos = 0, 1 );
+	ASSERT( pos == 2 );
+
+	StringParser::MoveToLine( "1\n2\n3\r\n4\r\n5\n6\n7\r8\n9\n10", pos = 0, 9 );
+	ASSERT( pos == 20 );
+}
+
+
 extern void Test_Types_StringParser ()
 {
 	StringParser_ToEndOfLine();
@@ -195,4 +216,5 @@ extern void Test_Types_StringParser ()
 	StringParser_CalculateNumberOfLines();
 	StringParser_IncreaceIndent();
 	StringParser_DecreaceIndent();
+	StringParser_MoveToLine();
 }

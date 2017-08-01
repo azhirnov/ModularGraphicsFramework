@@ -95,7 +95,7 @@ namespace Platforms
 */
 	bool WinKeyInput::_WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &msg)
 	{
-		_SendMsg( Message< ModuleMsg::Delete >( this ) );
+		_SendMsg( Message< ModuleMsg::Delete >{} );
 		return true;
 	}
 	
@@ -201,12 +201,12 @@ namespace Platforms
 			{
 				Message< ModuleMsg::WindowGetHandle >	request_hwnd;
 
-				wnd->Send( request_hwnd );
+				SendTo( wnd, request_hwnd );
 
 				if ( request_hwnd->hwnd.IsDefined() and
 					 request_hwnd->hwnd.Get().IsNotNull<HWND>() )
 				{
-					_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get() } );
+					_SendMsg( Message< ModuleMsg::WindowCreated >{ WindowDesc(), request_hwnd->hwnd.Get() } );
 				}
 			}
 
@@ -229,7 +229,7 @@ namespace Platforms
 
 		FOR( i, _pendingKeys )
 		{
-			_SendEvent( Message< ModuleMsg::InputKey >( this, _pendingKeys[i].key, _pendingKeys[i].pressure ) );
+			_SendEvent( Message< ModuleMsg::InputKey >{ _pendingKeys[i].key, _pendingKeys[i].pressure } );
 		}
 
 		_pendingKeys.Clear();

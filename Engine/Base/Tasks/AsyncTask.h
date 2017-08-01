@@ -26,6 +26,7 @@ namespace Base
 		using ResultType	= ResultT;
 		using ProgressType	= ProgressT;
 		using Self			= AsyncTask< ResultType, ProgressType >;
+		using SelfPtr		= SHARED_POINTER_TYPE( Self );
 
 
 	// variables
@@ -95,7 +96,8 @@ namespace Base
 		_event( OS::SyncEvent::MANUAL_RESET ),
 		_isCanceled( false ),
 		_onCanceledCalled( false ),
-		_isSync( _targetThreadModule->GetThreadID() == _currentThreadModule->GetThreadID() )
+		_isSync( _targetThreadModule->GetThreadID() == _currentThreadModule->GetThreadID() ),
+		_result()
 	{
 	}
 	
@@ -120,7 +122,8 @@ namespace Base
 	template <typename R, typename P>
 	inline bool AsyncTask<R,P>::Wait ()
 	{
-		return _event.Wait( TimeU::FromSeconds( 60 ) );
+		// TODO: add profiling
+		return _event.Wait( TimeL::FromSeconds( 60 ) );
 	}
 		
 /*
@@ -132,7 +135,7 @@ namespace Base
 	inline AsyncTask<R,P>*  AsyncTask<R,P>::Execute ()
 	{
 		ASSERT( _currentThreadModule->GetThreadID() == ThreadID::GetCurrent() );
-
+		
 		if ( IsCanceled() )
 		{
 			_OnCanceled();
@@ -154,10 +157,11 @@ namespace Base
 			return this;
 		}
 
-		CHECK( _currentThreadModule->GlobalSystems()->Get< TaskModule >()->
-			Send( Message< ModuleMsg::PushAsyncMessage >{
-				this,
-				AsyncMessage{ &AsyncTask::_RunAsync, this },
+		auto	task_mod = _currentThreadModule->GlobalSystems()->Get< TaskModule >();
+		CHECK_ERR( task_mod, this );
+
+		CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+				AsyncMessage{ &AsyncTask::_RunAsync, SelfPtr(this) },
 				_targetThreadModule->GetThreadID()
 			} )
 		);
@@ -195,18 +199,19 @@ namespace Base
 	inline void AsyncTask<R,P>::PublishProgress (ProgressType &&value)
 	{
 		ASSERT( _targetThreadModule->GetThreadID() == ThreadID::GetCurrent() );
-		
+
 		// target thread is current
 		if ( _isSync )
 		{
 			UpdateProgress( _currentThreadModule, RVREF( value ) );
 			return;
 		}
+		
+		auto	task_mod = _targetThreadModule->GlobalSystems()->Get< TaskModule >();
+		CHECK_ERR( task_mod, );
 
-		CHECK( _targetThreadModule->GlobalSystems()->Get< TaskModule >()->
-			Send( Message< ModuleMsg::PushAsyncMessage >{
-				this,
-				AsyncMessage{ &AsyncTask::_UpdateProgress, this, RVREF(value) },
+		CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+				AsyncMessage{ &AsyncTask::_UpdateProgress, SelfPtr(this), RVREF(value) },
 				_currentThreadModule->GetThreadID()
 			} )
 		);
@@ -234,9 +239,9 @@ namespace Base
 			return;
 		}
 
-		PostExecute( _currentThreadModule, RVREF( _result ) );
-
 		_event.Signal();
+
+		PostExecute( _currentThreadModule, RVREF( _result ) );
 	}
 	
 /*
@@ -248,40 +253,41 @@ namespace Base
 	inline void AsyncTask<R,P>::_RunAsync (const TaskModulePtr &)
 	{
 		ASSERT( _targetThreadModule->GetThreadID() == ThreadID::GetCurrent() );
-		
+
+		auto	task_mod = _targetThreadModule->GlobalSystems()->Get< TaskModule >();
+		CHECK_ERR( task_mod, void() );
+
 		if ( IsCanceled() )
 		{
-			CHECK( _targetThreadModule->GlobalSystems()->Get< TaskModule >()->
-				Send( Message< ModuleMsg::PushAsyncMessage >{
-					this,
-					AsyncMessage{ &AsyncTask::_OnCanceled, this },
+			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+					AsyncMessage{ &AsyncTask::_OnCanceled, SelfPtr(this) },
 					_currentThreadModule->GetThreadID()
 				} )
 			);
 			return;
 		}
-
+		
 		ExecuteInBackground( _targetThreadModule, OUT _result );
 		
 		if ( IsCanceled() )
 		{
-			CHECK( _targetThreadModule->GlobalSystems()->Get< TaskModule >()->
-				Send( Message< ModuleMsg::PushAsyncMessage >{
-					this,
-					AsyncMessage{ &AsyncTask::_OnCanceled, this },
+			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+					AsyncMessage{ &AsyncTask::_OnCanceled, SelfPtr(this) },
 					_currentThreadModule->GetThreadID()
 				} )
 			);
-			return;
+		}
+		else
+		{
+			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+					AsyncMessage{ &AsyncTask::_PostExecute, SelfPtr(this) },
+					_currentThreadModule->GetThreadID()
+				} )
+			);
 		}
 
-		CHECK( _targetThreadModule->GlobalSystems()->Get< TaskModule >()->
-			Send( Message< ModuleMsg::PushAsyncMessage >{
-				this,
-				AsyncMessage{ &AsyncTask::_PostExecute, this },
-				_currentThreadModule->GetThreadID()
-			} )
-		);
+		// unlock '_currentThreadModule' thread 
+		_event.Signal();
 	}
 	
 /*
@@ -308,8 +314,6 @@ namespace Base
 		ASSERT( _currentThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
 		PostExecute( _currentThreadModule, RVREF( _result ) );
-
-		_event.Signal();
 	}
 	
 /*

@@ -298,15 +298,15 @@ extern void Test_CompileTime_TypeTraits ()
 	using fi0 = FunctionInfo< decltype(StaticFunc1) >;
 	STATIC_ASSERT(( IsSameTypes< fi0::result, void > ));
 	STATIC_ASSERT(( IsSameTypes< fi0::clazz, void > ));
-	STATIC_ASSERT( fi0::args::Length == 0 );
+	STATIC_ASSERT( fi0::args::Count == 0 );
 
 	using fi1 = FunctionInfo< decltype(&Test4::Method1) >;
 	STATIC_ASSERT(( IsSameTypes< fi1::result, void > ));
 	STATIC_ASSERT(( IsSameTypes< fi1::clazz, Test4 > ));
-	STATIC_ASSERT( fi1::args::Length == 0 );
+	STATIC_ASSERT( fi1::args::Count == 0 );
 
 	using fi2 = FunctionInfo< decltype(&Test4::Method2) >;
 	STATIC_ASSERT(( IsSameTypes< fi2::result, int > ));
 	STATIC_ASSERT(( IsSameTypes< fi2::clazz, Test4 > ));
-	STATIC_ASSERT( fi2::args::Length == 2 );
+	STATIC_ASSERT( fi2::args::Count == 2 );
 }

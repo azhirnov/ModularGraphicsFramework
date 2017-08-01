@@ -60,6 +60,8 @@ namespace Platforms
 		
 		static BytesU	GetImageSize (EPixelFormat::type format, ETexture::type type, const uint4 &dim, BytesU xAlign, BytesU xyAlign);
 		static BytesU	GetImageSize (EPixelFormat::type format, ETexture::type type, const uint3 &size, BytesU xAlign, BytesU xyAlign);
+		
+		static void		ValidateDescriptor (INOUT TextureDescriptor &descr);
 	};
 
 }	// Platforms
@@ -94,8 +96,9 @@ namespace ModuleMsg
 
 	
 	// platform-dependent
-	struct GetGpuTextureID;
-	struct GetGpuTextureView;
+	struct GetVkTextureID;
+	struct GetGLTextureID;
+	struct GetVkTextureView;
 
 
 }	// ModuleMsg

@@ -7,7 +7,7 @@
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBufferBuilder.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuilder.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1SystemFramebuffer.h"
 
 using namespace vk;
@@ -43,7 +43,9 @@ namespace PlatformVK
 		_depthStencilMemory( VK_NULL_HANDLE ),
 		_depthStencilView( VK_NULL_HANDLE ),
 		_depthStencilFormat( VK_FORMAT_UNDEFINED ),
-		_renderPass( VK_NULL_HANDLE ),
+		_queue( VK_NULL_HANDLE ),
+		_queueIndex( -1 ),
+		_queueFamily(),
 		_currentImageIndex( -1 ),
 		_graphicsQueueSubmited( false )
 	{
@@ -277,10 +279,11 @@ namespace PlatformVK
 =================================================
 */
 	bool Vk1Device::CreateDevice (const VkPhysicalDeviceFeatures &enabledFeatures,
-								   VkQueueFlags requestedQueueTypes,
-								   bool useSwapchain,
+								   EQueueFamily::bits queueFamilies,
 								   ExtensionNames_t enabledExtensions)
 	{
+		const bool useSwapchain = queueFamilies.Get( EQueueFamily::Present );
+
 		CHECK_ERR( HasPhyiscalDevice() );
 		CHECK_ERR( useSwapchain == IsSurfaceCreated() );
 		CHECK_ERR( not IsDeviceCreated() );
@@ -289,10 +292,12 @@ namespace PlatformVK
 		Array< VkDeviceQueueCreateInfo >	queue_infos;
 		Array< const char * >				device_extensions	= enabledExtensions;
 		VkDeviceCreateInfo					device_info			= {};
+		
+		_queueFamily = queueFamilies;
+		_queueIndex  = -1;
 
 		CHECK_ERR( _GetDeviceExtensions( OUT supported_extensions ) );
-		CHECK_ERR( _GetQueueCreateInfos( OUT queue_infos, OUT _queueFamilyIndices,
-										 requestedQueueTypes, useSwapchain ) );
+		CHECK_ERR( _GetQueueCreateInfos( OUT queue_infos, INOUT _queueFamily, OUT _queueIndex ) );
 
 		if ( useSwapchain )
 		{
@@ -338,6 +343,7 @@ namespace PlatformVK
 
 		CHECK_ERR( IsInstanceCreated() );
 		CHECK_ERR( not IsSwapchainCreated() );
+		CHECK_ERR( not IsQueueCreated() );
 		
 		vkDestroyDevice( _logicalDevice, null );
 
@@ -508,60 +514,105 @@ namespace PlatformVK
 	
 /*
 =================================================
-	GetGraphicsQueue
+	_ChooseQueueIndex
 =================================================
 */
-	VkQueue Vk1Device::GetGraphicsQueue () const
+	bool Vk1Device::_ChooseQueueIndex (INOUT EQueueFamily::bits &family, OUT vk::uint32_t &index) const
 	{
-		CHECK( _queueFamilyIndices.graphics != -1 );
+		Array< VkQueueFamilyProperties >	queue_family_props;
+		CHECK_ERR( _GetQueueFamilyProperties( OUT queue_family_props ) );
+		
+		FOR( i, queue_family_props )
+		{
+			EQueueFamily::bits	flags;
 
-		VkQueue	queue;
-		vkGetDeviceQueue( _logicalDevice, _queueFamilyIndices.graphics, 0, &queue );
-		return queue;
+			VkBool32	supports_present = false;
+			VK_CALL( vkGetPhysicalDeviceSurfaceSupportKHR( _physicalDevice, i, _surface, &supports_present ) );
+
+			if ( supports_present )
+				flags |= EQueueFamily::Present;
+
+			if ( queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT )
+			{
+				flags |= EQueueFamily::Graphics;
+			}
+	
+			if ( queue_family_props[i].queueFlags & VK_QUEUE_COMPUTE_BIT )
+			{
+				flags |= EQueueFamily::Compute;
+			}
+			
+			if ( queue_family_props[i].queueFlags & VK_QUEUE_TRANSFER_BIT )
+			{
+				flags |= EQueueFamily::Transfer;
+			}
+			
+			if ( queue_family_props[i].queueFlags & VK_QUEUE_SPARSE_BINDING_BIT )
+			{
+				flags |= EQueueFamily::SparseBinding;
+			}
+
+			if ( flags == family )
+			{
+				index = i;
+				return true;
+			}
+		}
+
+		// TODO: find nearest queue family
+
+		RETURN_ERR( "no suitable queue family found!" );
 	}
 	
 /*
 =================================================
-	GetComputeQueue
+	_GetQueueCreateInfos
 =================================================
 */
-	VkQueue Vk1Device::GetComputeQueue () const
+	bool Vk1Device::_GetQueueCreateInfos (OUT Array<VkDeviceQueueCreateInfo> &queueCreateInfos,
+										  INOUT EQueueFamily::bits &queueFamily,
+										  OUT vk::uint32_t &queueIndex) const
 	{
-		CHECK( _queueFamilyIndices.compute != -1 );
+		static const float	default_queue_priority	= 1.0f;	// high priority
 
-		VkQueue	queue;
-		vkGetDeviceQueue( _logicalDevice, _queueFamilyIndices.compute, 0, &queue );
-		return queue;
+		CHECK_ERR( _ChooseQueueIndex( INOUT queueFamily, OUT queueIndex ) );
+
+		VkDeviceQueueCreateInfo		queue_info = {};
+		queue_info.sType			= VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queue_info.queueFamilyIndex	= queueIndex;
+		queue_info.queueCount		= 1;
+		queue_info.pQueuePriorities	= &default_queue_priority;
+
+		queueCreateInfos.PushBack( queue_info );
+		return true;
+	}
+
+/*
+=================================================
+	CreateQueue
+=================================================
+*/
+	bool Vk1Device::CreateQueue ()
+	{
+		CHECK_ERR( IsDeviceCreated() );
+		CHECK_ERR( not IsQueueCreated() );
+
+		vkGetDeviceQueue( _logicalDevice, _queueIndex, 0, OUT &_queue );
+		return true;
 	}
 	
 /*
 =================================================
-	GetTransferQueue
+	DestroyQueue
 =================================================
 */
-	VkQueue Vk1Device::GetTransferQueue () const
+	void Vk1Device::DestroyQueue ()
 	{
-		CHECK( _queueFamilyIndices.transfer != -1 );
-
-		VkQueue	queue;
-		vkGetDeviceQueue( _logicalDevice, _queueFamilyIndices.transfer, 0, &queue );
-		return queue;
+		_queue			= VK_NULL_HANDLE;
+		_queueIndex		= -1;
+		_queueFamily	= EQueueFamily::bits();
 	}
-	
-/*
-=================================================
-	GetPresentQueue
-=================================================
-*/
-	VkQueue Vk1Device::GetPresentQueue () const
-	{
-		CHECK( _queueFamilyIndices.present != -1 );
 
-		VkQueue	queue;
-		vkGetDeviceQueue( _logicalDevice, _queueFamilyIndices.present, 0, &queue );
-		return queue;
-	}
-	
 /*
 =================================================
 	BeginFrame
@@ -569,6 +620,8 @@ namespace PlatformVK
 */
 	bool Vk1Device::BeginFrame ()
 	{
+		CHECK_ERR( IsSwapchainCreated() );
+
 		_graphicsQueueSubmited	= false;
 		_currentImageIndex		= -1;
 
@@ -602,6 +655,7 @@ namespace PlatformVK
 */
 	bool Vk1Device::EndFrame ()
 	{
+		CHECK_ERR( IsSwapchainCreated() );
 		CHECK_ERR( _currentImageIndex < _framebuffers.Count() );
 		
 		VkPresentInfoKHR	present_info		= {};
@@ -622,7 +676,7 @@ namespace PlatformVK
 			present_info.pWaitSemaphores	= null;
 		}
 
-		VK_CHECK( vkQueuePresentKHR( GetGraphicsQueue(), &present_info ) );
+		VK_CHECK( vkQueuePresentKHR( GetQueue(), &present_info ) );
 		
 		_graphicsQueueSubmited	= false;
 		_currentImageIndex		= -1;
@@ -655,12 +709,13 @@ namespace PlatformVK
 
 /*
 =================================================
-	SubmitGraphicsQueue
+	SubmitQueue
 =================================================
 */
-	bool Vk1Device::SubmitGraphicsQueue (ArrayCRef< ModulePtr > cmdBuffers)
+	bool Vk1Device::SubmitQueue (ArrayCRef< ModulePtr > cmdBuffers)
 	{
 		CHECK_ERR( _currentImageIndex < _framebuffers.Count() );
+		CHECK_ERR( IsQueueCreated() );
 
 		// get command buffer IDs
 		_tempCmdBuffers.Clear();
@@ -668,8 +723,8 @@ namespace PlatformVK
 
 		FOR( i, cmdBuffers )
 		{
-			Message< ModuleMsg::GetGpuCommandBufferID >	id_request;
-			cmdBuffers[i]->Send( id_request );
+			Message< ModuleMsg::GetVkCommandBufferID >	id_request;
+			SendTo( cmdBuffers[i], id_request );
 
 			VkCommandBuffer	cmd = id_request->result.Get( VK_NULL_HANDLE );
 
@@ -695,20 +750,10 @@ namespace PlatformVK
 		submit_info.signalSemaphoreCount	= CountOf( signal_semaphores );
 		submit_info.pSignalSemaphores		= signal_semaphores;
 
-		VK_CHECK( vkQueueSubmit( GetGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE ) );
+		VK_CHECK( vkQueueSubmit( GetQueue(), 1, &submit_info, VK_NULL_HANDLE ) );
 
 		_graphicsQueueSubmited = true;
 		return true;
-	}
-	
-/*
-=================================================
-	SubmitComputeQueue
-=================================================
-*/
-	bool Vk1Device::SubmitComputeQueue (ArrayCRef< ModulePtr > cmdBuffers)
-	{
-		return false;
 	}
 
 /*
@@ -885,9 +930,7 @@ namespace PlatformVK
 */
 	void Vk1Device::_GetSharingMode (OUT VkSharingMode &sharingMode) const
 	{
-		sharingMode = _queueFamilyIndices.present == _queueFamilyIndices.graphics ?
-							VK_SHARING_MODE_EXCLUSIVE :
-							VK_SHARING_MODE_CONCURRENT;
+		sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	}
 
 /*
@@ -1089,7 +1132,10 @@ namespace PlatformVK
 */
 	bool Vk1Device::_CreateRenderPass ()
 	{
-		CHECK_ERR( not _renderPass );
+		//CHECK_ERR( not _renderPass );
+
+		if ( _renderPass )
+			return true;
 
 		using Builder = RenderPassDescrBuilder;
 		
@@ -1181,9 +1227,9 @@ namespace PlatformVK
 		
 		FOR( i, frameBuffers )
 		{
-			auto fb = GXTypes::New< Vk1SystemFramebuffer >( GlobalSystems(), VkSystems() );
+			auto fb = New< Vk1SystemFramebuffer >( GlobalSystems(), VkSystems() );
 
-			fb->Send( Message< ModuleMsg::AttachModule >{ null, _renderPass } );
+			SendTo( fb, Message< ModuleMsg::AttachModule >{ _renderPass } );
 
 			CHECK_ERR( fb->CreateFramebuffer( _surfaceSize, uint(i),
 											  _renderPass.ToPtr< Vk1RenderPass >()->GetRenderPassID(),
@@ -1208,7 +1254,7 @@ namespace PlatformVK
 
 		FOR( i, frameBuffers )
 		{
-			frameBuffers[i]->Send( msg );
+			SendTo( frameBuffers[i], msg );
 		}
 
 		frameBuffers.Clear();
@@ -1337,7 +1383,7 @@ namespace PlatformVK
 =================================================
 	_GetQueueFamilyIndex
 =================================================
-*/
+*
 	bool Vk1Device::_GetQueueFamilyIndex (OUT vk::uint32_t &index, VkQueueFlags queueFlags,
 										   const Array<VkQueueFamilyProperties> &queueFamilyProperties) const
 	{
@@ -1386,7 +1432,7 @@ namespace PlatformVK
 =================================================
 	_ChooseGraphicsAndPresentQueueFamilyIndex
 =================================================
-*/
+*
 	bool Vk1Device::_ChooseGraphicsAndPresentQueueFamilyIndex (OUT vk::uint32_t &graphicsIndex, OUT vk::uint32_t &presentIndex,
 																const Array<VkQueueFamilyProperties> &properties) const
 	{
@@ -1425,7 +1471,7 @@ namespace PlatformVK
 =================================================
 	_ChooseGraphicsQueueFamilyIndex
 =================================================
-*/
+*
 	bool Vk1Device::_ChooseGraphicsQueueFamilyIndex (OUT vk::uint32_t &index, const Array<VkQueueFamilyProperties> &properties) const
 	{
 		index = -1;
@@ -1446,7 +1492,7 @@ namespace PlatformVK
 =================================================
 	_ChooseComputeQueueFamilyIndex
 =================================================
-*/
+*
 	bool Vk1Device::_ChooseComputeQueueFamilyIndex (OUT vk::uint32_t &index, const Array<VkQueueFamilyProperties> &properties) const
 	{
 		vk::uint32_t	alt_idx = -1;
@@ -1480,7 +1526,7 @@ namespace PlatformVK
 =================================================
 	_ChooseTransferQueueFamilyIndex
 =================================================
-*/
+*
 	bool Vk1Device::_ChooseTransferQueueFamilyIndex (OUT vk::uint32_t &index, const Array<VkQueueFamilyProperties> &properties) const
 	{
 		vk::uint32_t	alt_idx = -1;
@@ -1515,7 +1561,7 @@ namespace PlatformVK
 =================================================
 	_GetQueueCreateInfos
 =================================================
-*/
+*
 	bool Vk1Device::_GetQueueCreateInfos (OUT Array<VkDeviceQueueCreateInfo> &queueCreateInfos,
 										   OUT QueueFamilyIndices &queueFamilyIndices,
 										   VkQueueFlags queueTypes, bool requirePresent) const
@@ -1622,8 +1668,13 @@ namespace PlatformVK
 */
 	bool Vk1Device::_CreateSemaphores ()
 	{
-		CHECK_ERR( _imageAvailable == VK_NULL_HANDLE );
-		CHECK_ERR( _renderFinished == VK_NULL_HANDLE );
+		if ( _imageAvailable != VK_NULL_HANDLE and
+			 _renderFinished != VK_NULL_HANDLE )
+		{
+			return true;
+		}
+		//CHECK_ERR( _imageAvailable == VK_NULL_HANDLE );
+		//CHECK_ERR( _renderFinished == VK_NULL_HANDLE );
 
 		VkSemaphoreCreateInfo	info = {};
 		info.sType	= VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -1665,9 +1716,9 @@ namespace PlatformVK
 		Message< ModuleMsg::Link >		link_msg;
 		Message< ModuleMsg::Compose >	comp_msg;
 
-		_commandBuilder = GXTypes::New< Vk1CommandBufferBuilder >( GlobalSystems(), CreateInfo::GpuCommandBufferBuilder{} );
-		_commandBuilder->Send( link_msg );
-		_commandBuilder->Send( comp_msg );
+		_commandBuilder = New< Vk1CommandBuilder >( GlobalSystems(), CreateInfo::GpuCommandBuilder{} );
+		SendTo( _commandBuilder, link_msg );
+		SendTo( _commandBuilder, comp_msg );
 		return true;
 	}
 	
@@ -1681,7 +1732,7 @@ namespace PlatformVK
 		Message< ModuleMsg::Delete >	msg;
 
 		if ( _commandBuilder )
-			_commandBuilder->Send( msg );
+			SendTo( _commandBuilder, msg );
 
 		_commandBuilder	= null;
 	}

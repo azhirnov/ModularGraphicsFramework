@@ -2,32 +2,12 @@
 
 #pragma once
 
-#include "Engine/Platforms/Common/Common.h"
+#include "Engine/Platforms/Shared/GPU/MemoryEnums.h"
 
 namespace Engine
 {
 namespace Platforms
 {
-	//
-	// GPU Memory Flags
-	//
-
-	struct EGpuMemory
-	{
-		enum type : uint
-		{
-			LocalInGPU,
-			CoherentWithCPU,
-			CachedInCPU,
-			//LazilyAllocated,
-
-			_Count,
-			Unknown = uint(-1)
-		};
-
-		using bits = EnumBitfield< EGpuMemory >;
-	};
-
 
 	//
 	// GPU Memory Descriptor

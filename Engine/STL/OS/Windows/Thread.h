@@ -47,8 +47,10 @@ namespace OS
 
 	// methods
 	protected:
-		explicit
-		CurrentThread (const Handle_t &thread, usize id) : _thread(thread), _id(id)
+		CurrentThread (CurrentThread &&other);
+		CurrentThread& operator = (CurrentThread &&right);
+
+		explicit CurrentThread (const Handle_t &thread, usize id) : _thread(thread), _id(id)
 		{}
 
 	public:
@@ -71,11 +73,11 @@ namespace OS
 
 		static usize GetCurrentThreadId ();
 
-		static void Sleep (TimeU time);
+		static void Sleep (TimeL time);
 
 		static void Yield ()
 		{
-			Sleep( TimeU::FromMilliSeconds(1) );
+			Sleep( TimeL::FromMilliSeconds(1) );
 		}
 	};
 
@@ -107,11 +109,13 @@ namespace OS
 
 	public:
 		Thread ();
-
-		explicit
-		Thread (PThreadProc_t proc, void *param = null);
-		
+		Thread (const Thread &) = delete;
+		Thread (Thread &&other);
+		explicit Thread (PThreadProc_t proc, void *param = null);
 		~Thread ();
+
+		Thread& operator = (const Thread &) = delete;
+		Thread& operator = (Thread &&right);
 
 		bool Create (PThreadProc_t proc, void *param = null);
 		bool Delete ();

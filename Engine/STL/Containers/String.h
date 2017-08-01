@@ -258,7 +258,7 @@ namespace GXTypes
 		BytesU			LengthInBytes ()					const		{ return BytesU( sizeof(T) * Length() ); }
 		BytesU			Size ()								const		{ return BytesU( sizeof(T) * _Count() ); }
 		usize			Capacity ()							const		{ return _size; }
-		usize			MaxCapacity ()						const		{ return _memory.MaxSize(); }	// max available for allocation count of elements
+		constexpr usize	MaxCapacity ()						const		{ return _memory.MaxSize(); }	// max available for allocation count of elements
 		BytesU			FullSize ()							const		{ return BytesU( _size * sizeof(T) ); }
 		bool			Empty ()							const		{ return Length() == 0; }
 
@@ -777,7 +777,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline void TString<T,S,MC>::Clear ()
 	{
-		if ( _memory.Pointer() == null or _size == 0 )
+		if ( _memory.Pointer() == null or _length == 0 )
 			return;
 
 		_memory.Pointer()[0] = 0;
@@ -918,7 +918,8 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline void TString<T,S,MC>::Reserve (usize length)
 	{
-		usize size = length + 1;
+		usize	size		= length + 1;
+		bool	was_empty	= Empty();
 
 		if ( size > _memory.MaxSize() )
 			size = _memory.MaxSize();
@@ -927,6 +928,9 @@ namespace GXTypes
 			return;
 
 		_Reallocate( size, false );
+
+		if ( was_empty )
+			_memory.Pointer()[_length] = 0;
 	}
 	
 /*
@@ -972,7 +976,8 @@ namespace GXTypes
 		if ( not Find( value, pos, start ) )
 			return false;
 
-		return Erase( pos, str.Length() );
+		Erase( pos, value.Length() );
+		return true;
 	}
 	
 /*

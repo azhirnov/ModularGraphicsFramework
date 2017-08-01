@@ -131,13 +131,13 @@ namespace GXTypes
 		void GetParts (OUT ArrayRef<T> &part0, OUT ArrayRef<T> &part1);
 		void GetParts (OUT ArrayCRef<T> &part0, OUT ArrayCRef<T> &part1) const;
 
-		usize	Count ()		const;
-		BytesU	Size ()			const				{ return BytesU( sizeof(T) * Count() ); }
-		usize	Capacity ()		const				{ return _size-1; }
-		usize	MaxCapacity ()	const				{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		BytesU	FullSize ()		const				{ return BytesU( sizeof(T) * Capacity() ); }
-		bool	Empty ()		const				{ return _first == _end; }
-		usize	LastIndex ()	const				{ return Count()-1; }
+		usize			Count ()		const;
+		BytesU			Size ()			const				{ return BytesU( sizeof(T) * Count() ); }
+		usize			Capacity ()		const				{ return _size-1; }
+		constexpr usize	MaxCapacity ()	const				{ return _memory.MaxSize(); }	// max available for allocation count of elements
+		BytesU			FullSize ()		const				{ return BytesU( sizeof(T) * Capacity() ); }
+		bool			Empty ()		const				{ return _first == _end; }
+		usize			LastIndex ()	const				{ return Count()-1; }
 		
 
 		static constexpr bool	IsLinearMemory ()			{ return false; }

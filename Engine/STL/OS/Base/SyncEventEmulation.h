@@ -104,7 +104,7 @@ namespace OS
 			return res;
 		}
 
-		bool Wait (TimeU time)
+		bool Wait (TimeL time)
 		{
 			ASSERT( IsValid() );
 			bool	res = false;
@@ -131,7 +131,7 @@ namespace OS
 			return res;
 		}
 
-		static int WaitEvents (ArrayCRef<Self *> events, bool waitAll, TimeU time)
+		static int WaitEvents (ArrayCRef<Self *> events, bool waitAll, TimeL time)
 		{
 			TODO( "WaitEvents" );
 			return -1;

@@ -19,26 +19,26 @@ struct BuildTypeList
 extern void Test_CompileTime_TypeList ()
 {
 	typedef TypeListFrom< ubyte, short, uint, ilong, float, half, double >		typeList0;
-	STATIC_ASSERT( typeList0::Length == 7 );
+	STATIC_ASSERT( typeList0::Count == 7 );
 	STATIC_ASSERT( (typeList0::IsType<0, ubyte >) );
 	STATIC_ASSERT( (typeList0::IsType<1, short >) );
 	STATIC_ASSERT( (typeList0::IsType<3, ilong >) );
 	STATIC_ASSERT( (typeList0::IsType<6, double >) );
 
 	typedef typeList0::PushBack< int >							typeList1;
-	STATIC_ASSERT( typeList1::Length == 8 );
+	STATIC_ASSERT( typeList1::Count == 8 );
 	STATIC_ASSERT(( IsSameTypes< typeList1::Back, int > ));
 
 	typedef typeList0::PushFront< long double >					typeList2;
-	STATIC_ASSERT( typeList2::Length == 8 );
+	STATIC_ASSERT( typeList2::Count == 8 );
 	STATIC_ASSERT(( IsSameTypes< typeList2::Front, long double > ));
 
 	typedef typeList0::PopBack									typeList3;
-	STATIC_ASSERT( typeList3::Length == 6 );
+	STATIC_ASSERT( typeList3::Count == 6 );
 	STATIC_ASSERT(( IsSameTypes< typeList3::Back, half > ));
 
 	typedef typeList0::PopFront									typeList4;
-	STATIC_ASSERT( typeList4::Length == 6 );
+	STATIC_ASSERT( typeList4::Count == 6 );
 	STATIC_ASSERT(( IsSameTypes< typeList4::Front, short > ));
 
 	typedef typeList0::PushBack< short >::PushBack< float >		typeList5;
@@ -60,7 +60,7 @@ extern void Test_CompileTime_TypeList ()
 	STATIC_ASSERT( typeList9::Equal< typeList10 > );
 
 	typedef typeList10::Append< TypeListFrom< ulong > >			typeList11;
-	STATIC_ASSERT( typeList11::Length == 3 );
+	STATIC_ASSERT( typeList11::Count == 3 );
 	STATIC_ASSERT( typeList11::IndexOf< short > == 0 );
 	STATIC_ASSERT( typeList11::IndexOf< uint > == 1 );
 	STATIC_ASSERT( typeList11::IndexOf< ulong > == 2 );
@@ -82,7 +82,7 @@ extern void Test_CompileTime_TypeList ()
 	STATIC_ASSERT( typeList22::Empty );
 
 	typedef typeList0::Erase<float>								typeList23;
-	STATIC_ASSERT( typeList23::Length == 6 );
+	STATIC_ASSERT( typeList23::Count == 6 );
 	STATIC_ASSERT(( typeList23::IsType<0, ubyte > ));
 	STATIC_ASSERT(( typeList23::IsType<1, short > ));
 	STATIC_ASSERT(( typeList23::IsType<3, ilong > ));
@@ -90,7 +90,7 @@ extern void Test_CompileTime_TypeList ()
 	STATIC_ASSERT(( typeList23::IsType<5, double > ));
 
 	typedef typeList0::Erase< TypeListFrom<short, float> >		typeList24;
-	STATIC_ASSERT( typeList24::Length == 5 );
+	STATIC_ASSERT( typeList24::Count == 5 );
 	STATIC_ASSERT(( typeList24::IsType<0, ubyte > ));
 	STATIC_ASSERT(( typeList24::IsType<2, ilong > ));
 	STATIC_ASSERT(( typeList24::IsType<3, half > ));
@@ -98,7 +98,7 @@ extern void Test_CompileTime_TypeList ()
 	
 	typedef TypeListFrom< ubyte, float, short, int, short, ubyte, float >		typeList25;
 	typedef typeList25::Minimize::type											typeList26;
-	STATIC_ASSERT( typeList26::Length == 4 );
+	STATIC_ASSERT( typeList26::Count == 4 );
 	STATIC_ASSERT( typeList26::HasType<ubyte > );
 	STATIC_ASSERT( typeList26::HasType<float > );
 	STATIC_ASSERT( typeList26::HasType<short > );
@@ -107,5 +107,13 @@ extern void Test_CompileTime_TypeList ()
 	typedef TypeListFrom< TypeListEnd >::Minimize::type		typeList27;
 	STATIC_ASSERT( typeList27::Empty );
 
-	//Debug::TypeListToString< typeList26 >::Show();
+	typedef TypeListFrom< int, uint, TypeListFrom< float, double > >	typeList28;
+	STATIC_ASSERT( typeList28::Count == 4 );
+	STATIC_ASSERT( typeList28::IndexOf< int > == 0 );
+	STATIC_ASSERT( typeList28::IndexOf< uint > == 1 );
+	STATIC_ASSERT( typeList28::IndexOf< float > == 2 );
+	STATIC_ASSERT( typeList28::IndexOf< double > == 3 );
+
+	//Debug::TypeListToString< typeList28 >::Show();
+
 }

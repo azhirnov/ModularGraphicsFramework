@@ -1,7 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBufferBuilder.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuilder.h"
 #include "Engine/Platforms/Vulkan/VulkanThread.h"
 
 #if defined( GRAPHICS_API_VULKAN )
@@ -39,7 +39,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GpuDeviceBeforeDestory );
-		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetGpuCommandBufferID );
+		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetVkCommandBufferID );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetGpuCommandBufferDescriptor );
 
 		CHECK( _ValidateMsgSubscriptions() );
@@ -66,7 +66,7 @@ namespace PlatformVK
 	{
 		CHECK_ERR( GetState() == EState::Linked );
 
-		_SendForEachAttachments( Message< ModuleMsg::Compose >{ this } );
+		_SendForEachAttachments( msg );
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
@@ -96,10 +96,10 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetGpuCommandBufferID
+	_GetVkCommandBufferID
 =================================================
 */
-	bool Vk1CommandBuffer::_GetGpuCommandBufferID (const Message< ModuleMsg::GetGpuCommandBufferID > &msg)
+	bool Vk1CommandBuffer::_GetVkCommandBufferID (const Message< ModuleMsg::GetVkCommandBufferID > &msg)
 	{
 		msg->result.Set( _cmdId );
 		return true;

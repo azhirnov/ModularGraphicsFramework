@@ -259,7 +259,7 @@ namespace OS
 			return result != -1;
 		}
 
-		bool Wait (const CriticalSection &mutex, TimeU time)
+		bool Wait (const CriticalSection &mutex, TimeL time)
 		{
 			int result = ::SDL_CondWaitTimeout( _cv, mutex._mutex, time.MilliSeconds() );
 			ASSERT( result != -1 );

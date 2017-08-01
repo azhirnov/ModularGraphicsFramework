@@ -2,22 +2,21 @@
 
 #pragma once
 
-#include "vulkan1.h"
+#include "Engine/Platforms/Vulkan/Impl/vulkan1.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
-#include "Engine/Platforms/Shared/GPU/RenderStateEnums.h"
-#include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
-#include "Engine/Platforms/Shared/GPU/TextureEnums.h"
+#include "Engine/Platforms/Shared/GPU/BufferEnums.h"
+#include "Engine/Platforms/Shared/GPU/CommandEnums.h"
+#include "Engine/Platforms/Shared/GPU/MemoryEnums.h"
 #include "Engine/Platforms/Shared/GPU/MultiSamples.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Sampler.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/Shared/GPU/VertexAttribs.h"
-#include "Engine/Platforms/Shared/GPU/Program.h"
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
+#include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
+#include "Engine/Platforms/Shared/GPU/RenderPassEnums.h"
+#include "Engine/Platforms/Shared/GPU/RenderStateEnums.h"
+#include "Engine/Platforms/Shared/GPU/SamplerEnums.h"
+#include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
+#include "Engine/Platforms/Shared/GPU/TextureEnums.h"
+#include "Engine/Platforms/Shared/GPU/VertexEnums.h"
 
 namespace Engine
 {
@@ -765,6 +764,36 @@ namespace PlatformVK
 		}
 
 		RETURN_ERR( "unsupported image view type", VK_IMAGE_VIEW_TYPE_MAX_ENUM );
+	}
+		
+/*
+=================================================
+	ImageAspectFlags
+=================================================
+*/
+	inline vk::VkImageAspectFlags  Vk1Enum (EImageAspect::bits values)
+	{
+		using namespace vk;
+
+		VkImageAspectFlags	flags = 0;
+
+		FOR( i, values )
+		{
+			auto t = EImageAspect::type(i);
+			
+			if ( not values.Get( t ) )
+				continue;
+			
+			switch ( t )
+			{
+				case EImageAspect::Color	: flags |= VK_IMAGE_ASPECT_COLOR_BIT;		break;
+				case EImageAspect::Depth	: flags |= VK_IMAGE_ASPECT_DEPTH_BIT;		break;
+				case EImageAspect::Stencil	: flags |= VK_IMAGE_ASPECT_STENCIL_BIT;		break;
+				case EImageAspect::Metadata	: flags |= VK_IMAGE_ASPECT_METADATA_BIT;	break;
+				default						: RETURN_ERR( "invalid image aspect type", VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM );
+			}
+		}
+		return flags;
 	}
 
 /*

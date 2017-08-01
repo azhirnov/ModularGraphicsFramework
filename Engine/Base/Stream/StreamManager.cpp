@@ -84,7 +84,7 @@ namespace Base
 */
 	ModulePtr StreamManager::_CreateStreamManager (GlobalSystemsRef gs, const CreateInfo::StreamManager &ci)
 	{
-		return GXTypes::New< StreamManager >( gs, ci );
+		return New< StreamManager >( gs, ci );
 	}
 	
 /*
@@ -94,7 +94,7 @@ namespace Base
 */
 	ModulePtr StreamManager::_CreateInStreamFromFile (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci)
 	{
-		return GXTypes::New< InputStream >( gs, ci );
+		return New< InputStream >( gs, ci );
 	}
 	
 /*
@@ -104,7 +104,7 @@ namespace Base
 */
 	ModulePtr StreamManager::_CreateInStreamFromUri (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci)
 	{
-		return GXTypes::New< InputStream >( gs, ci );
+		return New< InputStream >( gs, ci );
 	}
 	
 /*
@@ -114,7 +114,7 @@ namespace Base
 */
 	ModulePtr StreamManager::_CreateInStreamFromMemory (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci)
 	{
-		return GXTypes::New< InputStream >( gs, ci );
+		return New< InputStream >( gs, ci );
 	}
 	
 /*
@@ -124,7 +124,7 @@ namespace Base
 */
 	ModulePtr StreamManager::_CreateOutStreamFromFile (GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci)
 	{
-		return GXTypes::New< OutputStream >( gs, ci );
+		return New< OutputStream >( gs, ci );
 	}
 	
 /*
@@ -134,7 +134,7 @@ namespace Base
 */
 	ModulePtr StreamManager::_CreateOutStreamFromUri (GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci)
 	{
-		return GXTypes::New< OutputStream >( gs, ci );
+		return New< OutputStream >( gs, ci );
 	}
 
 }	// Base

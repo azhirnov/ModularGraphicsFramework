@@ -94,7 +94,7 @@ namespace Platforms
 */
 	bool WinMouseInput::_WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &msg)
 	{
-		_SendMsg( Message< ModuleMsg::Delete >( this ) );
+		_SendMsg( Message< ModuleMsg::Delete >{} );
 		return true;
 	}
 	
@@ -163,12 +163,12 @@ namespace Platforms
 			{
 				Message< ModuleMsg::WindowGetHandle >	request_hwnd;
 
-				wnd->Send( request_hwnd );
+				SendTo( wnd, request_hwnd );
 
 				if ( request_hwnd->hwnd.IsDefined() and
 					 request_hwnd->hwnd.Get().IsNotNull<HWND>() )
 				{
-					_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get() } );
+					_SendMsg( Message< ModuleMsg::WindowCreated >{ WindowDesc(), request_hwnd->hwnd.Get() } );
 				}
 			}
 
@@ -194,10 +194,10 @@ namespace Platforms
 			float2	diff = _mouseDifference.Get( float2() );
 
 			if ( IsNotZero( diff.x ) )
-				_SendEvent( Message< ModuleMsg::InputMotion >( this, "mouse.x"_MotionID, diff.x, _mousePos.x ) );
+				_SendEvent( Message< ModuleMsg::InputMotion >{ "mouse.x"_MotionID, diff.x, _mousePos.x } );
 			
 			if ( IsNotZero( diff.y ) )
-				_SendEvent( Message< ModuleMsg::InputMotion >( this, "mouse.y"_MotionID, diff.y, _mousePos.y ) );
+				_SendEvent( Message< ModuleMsg::InputMotion >{ "mouse.y"_MotionID, diff.y, _mousePos.y } );
 		}
 		
 		_mouseDifference.Undefine();

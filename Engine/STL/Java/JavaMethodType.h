@@ -61,7 +61,7 @@ namespace  Java
 			typedef R						result_t;
 			typedef JavaMethodResult< R >	result_wrap_t;
 			
-			static const uint	NUM_ARGS	= type_list_t::Length::value;
+			static const uint	NUM_ARGS	= type_list_t::Count::value;
 
 		private:
 			struct _ProcessTypeList

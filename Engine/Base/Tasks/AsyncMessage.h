@@ -22,7 +22,7 @@ namespace Base
 	// types
 	public:
 		using Self		= AsyncMessage;
-		using Func_t	= std::function< void (const TaskModulePtr &) >;
+		using Func_t	= std::function< void (const TaskModulePtr &) >;	// TODO: change to ModulePtr
 
 
 	// variables
@@ -43,7 +43,7 @@ namespace Base
 		{}
 
 		template <typename FN, typename ...Args>
-		explicit AsyncMessage (FN func, Args ...args) noexcept :
+		explicit AsyncMessage (FN func, Args&& ...args) noexcept :
 			_func(std::bind( func, FW<Args>(args)..., std::placeholders::_1 ))
 		{}
 		
@@ -54,10 +54,10 @@ namespace Base
 		Self& operator = (const Self &)	= default;
 
 
-		void Process (const TaskModulePtr &thread) const noexcept
+		void Process (const TaskModulePtr &task) const noexcept
 		{
 			ASSERT( bool(_func) );
-			return _func( thread );
+			return _func( task );
 		}
 	};
 
@@ -78,21 +78,28 @@ namespace ModuleMsg
 		ThreadID					altTarget;
 
 	// methods
-		PushAsyncMessage (AsyncMessage &&msg, ThreadID target, ThreadID altTarget = ThreadID()) :
+		PushAsyncMessage (AsyncMessage &&msg, ThreadID target) :
+			asyncMsg( RVREF(msg) ), target(target), altTarget(target)
+		{}
+
+		PushAsyncMessage (AsyncMessage &&msg, ThreadID target, ThreadID altTarget) :
 			asyncMsg( RVREF(msg) ), target(target), altTarget(altTarget)
 		{}
 
 		template <typename T>
 		PushAsyncMessage (const ModulePtr &target, Message<T> &&msg) :
-			asyncMsg( std::bind( &_Call<T>, target, RVREF( msg ), std::placeholders::_3 ) ),
+			asyncMsg( std::bind( &_Call<T>, target, RVREF( msg ), std::placeholders::_1 ) ),
 			target(target->GetThreadID()),
-			altTarget()
+			altTarget(target->GetThreadID())
 		{}
 
 
 	private:
 		template <typename T>
-		static void _Call (const ModulePtr &target, const Message<T> &msg, const TaskModulePtr &) { target->Send<T>( msg ); }
+		static void _Call (const ModulePtr &target, const Message<T> &msg, const TaskModulePtr &)
+		{
+			target->Send<T>( msg );
+		}
 	};
 
 }	// ModuleMsg

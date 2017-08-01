@@ -93,13 +93,13 @@ namespace GXTypes
 		bool	IsZero ()		const;
 		bool	IsNotZero ()	const				{ return not IsZero(); }
 
-		bool	Empty ()		const				{ return false; }
-		usize	Count ()		const				{ return C; }
-		usize	Capacity ()		const				{ return C; }
-		usize	MaxCapacity ()	const				{ return Capacity(); }
-		BytesU	Size ()			const				{ return _memory.Size(); }
-		BytesU	FullSize ()		const				{ return _memory.FullSize(); }
-		usize	LastIndex ()	const				{ return Count()-1; }
+		constexpr bool		Empty ()		const	{ return false; }
+		constexpr usize		Count ()		const	{ return C; }
+		constexpr usize		Capacity ()		const	{ return C; }
+		constexpr usize		MaxCapacity ()	const	{ return Capacity(); }
+		constexpr BytesU	Size ()			const	{ return _memory.Size(); }
+		constexpr BytesU	FullSize ()		const	{ return _memory.FullSize(); }
+		constexpr usize		LastIndex ()	const	{ return Count()-1; }
 
 		operator ArrayCRef<value_t> () const		{ return _memory; }
 		

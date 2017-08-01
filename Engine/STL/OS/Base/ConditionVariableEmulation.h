@@ -46,7 +46,7 @@ namespace OS
 			_broadcast.Pulse();
 		}
 		
-		bool Wait (CriticalSection &cs, TimeU time)
+		bool Wait (CriticalSection &cs, TimeL time)
 		{
 			cs.Unlock();
 
@@ -113,7 +113,7 @@ namespace OS
 				_broadcast.Signal();
 		}
 		
-		bool Wait (CriticalSection &cs, TimeU time)
+		bool Wait (CriticalSection &cs, TimeL time)
 		{
 			_cs.Lock();
 			++_waiters;

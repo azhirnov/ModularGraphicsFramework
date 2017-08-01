@@ -14,7 +14,7 @@ namespace ModuleMsg
 	//
 	// Get GPU Buffer ID
 	//
-	struct GetGpuBufferID
+	struct GetVkBufferID
 	{
 		Out< vk::VkBuffer >		result;
 	};
@@ -23,7 +23,7 @@ namespace ModuleMsg
 	//
 	// Get GPU Framebuffer ID
 	//
-	struct GetGpuFramebufferID
+	struct GetVkFramebufferID
 	{
 		Out< vk::VkFramebuffer >	result;
 	};
@@ -32,7 +32,7 @@ namespace ModuleMsg
 	//
 	// Get GPU Graphics Pipeline ID
 	//
-	struct GetGraphicsPipelineID
+	struct GetVkGraphicsPipelineID
 	{
 		Out< vk::VkPipeline >		result;
 	};
@@ -41,7 +41,7 @@ namespace ModuleMsg
 	//
 	// Get GPU Render Pass ID
 	//
-	struct GetGpuRenderPassID
+	struct GetVkRenderPassID
 	{
 		Out< vk::VkRenderPass >		result;
 	};
@@ -50,7 +50,7 @@ namespace ModuleMsg
 	//
 	// Get GPU Sampler ID
 	//
-	struct GetGpuSamplerID
+	struct GetVkSamplerID
 	{
 		Out< vk::VkSampler >	result;
 	};
@@ -59,7 +59,7 @@ namespace ModuleMsg
 	//
 	// Get GPU Texture ID
 	//
-	struct GetGpuTextureID
+	struct GetVkTextureID
 	{
 		Out< vk::VkImage >		result;
 		Out< vk::VkImageView >	defaultView;
@@ -69,7 +69,7 @@ namespace ModuleMsg
 	//
 	// Get GPU Texture View
 	//
-	struct GetGpuTextureView
+	struct GetVkTextureView
 	{
 		Out< vk::VkImageView >	result;
 	};
@@ -78,7 +78,7 @@ namespace ModuleMsg
 	//
 	// Get GPU Shader Module IDs
 	//
-	struct GetGpuShaderModuleIDs
+	struct GetVkShaderModuleIDs
 	{
 		struct ShaderModule
 		{
@@ -94,42 +94,50 @@ namespace ModuleMsg
 	//
 	// Get GPU Command Buffer ID
 	//
-	struct GetGpuCommandBufferID
+	struct GetVkCommandBufferID
 	{
 		Out< vk::VkCommandBuffer >	result;
 	};
 
 
-	struct CommandBufferBeginRenderPassID
+	struct GpuCmdBeginRenderPassID
 	{
+		// TODO
 	};
 
-	struct CommandBufferBindGraphicsPipelineID
+	struct GpuCmdBindGraphicsPipelineID
 	{
+		// TODO
 	};
 
-	struct CommandBufferBindComputePipelineID
+	struct GpuCmdBindComputePipelineID
 	{
+		// TODO
 	};
 
-	struct CommandBufferBindVertexBufferIDs
+	struct GpuCmdBindVertexBufferIDs
 	{
+		// TODO
 	};
 	
-	struct CommandBufferBindIndexBufferID
+	struct GpuCmdBindIndexBufferID
 	{
+		// TODO
 	};
 
-	struct CommandBufferDrawIndirectID
+	struct GpuCmdDrawIndirectID
 	{
+		// TODO
 	};
 
-	struct CommandBufferDrawIndexedIndirectID
+	struct GpuCmdDrawIndexedIndirectID
 	{
+		// TODO
 	};
 
-	struct CommandBufferExecuteID
+	struct GpuCmdExecuteID
 	{
+		// TODO
 	};
 
 

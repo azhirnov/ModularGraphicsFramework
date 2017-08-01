@@ -4,6 +4,7 @@
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
+#include "Engine/Platforms/Shared/GPU/Memory.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -22,7 +23,7 @@ namespace PlatformVK
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::GetGpuBufferDescriptor,
-											ModuleMsg::GetGpuBufferID,
+											ModuleMsg::GetVkBufferID,
 											ModuleMsg::OnGpuMemoryBindingChanged
 										> >;
 
@@ -60,7 +61,7 @@ namespace PlatformVK
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGpuBufferID (const Message< ModuleMsg::GetGpuBufferID > &);
+		bool _GetVkBufferID (const Message< ModuleMsg::GetVkBufferID > &);
 		bool _GetGpuBufferDescriptor (const Message< ModuleMsg::GetGpuBufferDescriptor > &);
 		bool _OnGpuMemoryBindingChanged (const Message< ModuleMsg::OnGpuMemoryBindingChanged > &);
 

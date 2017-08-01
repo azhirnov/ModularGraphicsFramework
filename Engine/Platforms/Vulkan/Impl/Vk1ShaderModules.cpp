@@ -34,7 +34,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1ShaderModules::_Delete );
 		_SubscribeOnMsg( this, &Vk1ShaderModules::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1ShaderModules::_GpuDeviceBeforeDestory );
-		_SubscribeOnMsg( this, &Vk1ShaderModules::_GetGpuShaderModuleIDs );
+		_SubscribeOnMsg( this, &Vk1ShaderModules::_GetVkShaderModuleIDs );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -67,7 +67,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1ShaderModules::_Delete );
 		_SubscribeOnMsg( this, &Vk1ShaderModules::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1ShaderModules::_GpuDeviceBeforeDestory );
-		_SubscribeOnMsg( this, &Vk1ShaderModules::_GetGpuShaderModuleIDs );
+		_SubscribeOnMsg( this, &Vk1ShaderModules::_GetVkShaderModuleIDs );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -108,12 +108,12 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetGpuShaderModuleIDs
+	_GetVkShaderModuleIDs
 =================================================
 */
-	bool Vk1ShaderModules::_GetGpuShaderModuleIDs (const Message< ModuleMsg::GetGpuShaderModuleIDs > &msg)
+	bool Vk1ShaderModules::_GetVkShaderModuleIDs (const Message< ModuleMsg::GetVkShaderModuleIDs > &msg)
 	{
-		using ShaderModule = ModuleMsg::GetGpuShaderModuleIDs::ShaderModule;
+		using ShaderModule = ModuleMsg::GetVkShaderModuleIDs::ShaderModule;
 
 		Array< ShaderModule >	result;		result.Resize( _modules.Count(), false );
 

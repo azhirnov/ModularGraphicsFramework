@@ -29,9 +29,9 @@ namespace CreateInfo
 		
 		enum class EVisibility
 		{
-			Visible,		// visible and focused
-			Unfocused,		// may be visible
-			Invisible,		// minimized
+			VisibleFocused,		// visible and focused
+			VisibleUnfocused,	// may be visible
+			Invisible,			// minimized
 		};
 
 		using EWindowOrientation	= Platforms::EDisplayOrientation;
@@ -39,11 +39,27 @@ namespace CreateInfo
 
 	// variables
 		String						caption;
-		EWindowFlags::bits			flags				= EWindowFlags::bits().Set( EWindowFlags::Resizable );
-		GXMath::uint2				surfaceSize			= GXMath::uint2( 800, 600 );
-		GXMath::int2				position			= MinValue<GXMath::int2>();
-		EVisibility					initialVisibility	= EVisibility::Visible;
-		EWindowOrientation::type	orientation			= EWindowOrientation::Default;
+		EWindowFlags::bits			flags;
+		GXMath::uint2				surfaceSize;
+		GXMath::int2				position;
+		EVisibility					initialVisibility;
+		EWindowOrientation::type	orientation;
+
+	// methods
+		explicit
+		Window (StringCRef					caption				= StringCRef(),
+				EWindowFlags::bits			flags				= EWindowFlags::bits() | EWindowFlags::Resizable,
+				GXMath::uint2				surfaceSize			= GXMath::uint2( 800, 600 ),
+				GXMath::int2				position			= MinValue<GXMath::int2>(),
+				EVisibility					initialVisibility	= EVisibility::VisibleFocused,
+				EWindowOrientation::type	orientation			= EWindowOrientation::Default) :
+			caption(caption),
+			flags(flags),
+			surfaceSize(surfaceSize),
+			position(position),
+			initialVisibility(initialVisibility),
+			orientation(orientation)
+		{}
 	};
 
 }	// CreateInfo
@@ -67,7 +83,7 @@ namespace Platforms
 		uint2						size;
 		uint2						surfaceSize;
 		int2						position;
-		EVisibility					visibility		= EVisibility::Visible;
+		EVisibility					visibility		= EVisibility::VisibleFocused;
 		EWindowOrientation::type	orientation		= EWindowOrientation::Default;
 	};
 	

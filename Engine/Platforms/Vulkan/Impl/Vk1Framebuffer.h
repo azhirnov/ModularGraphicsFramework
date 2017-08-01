@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 #include "Engine/Platforms/Shared/GPU/Framebuffer.h"
 
 #if defined( GRAPHICS_API_VULKAN )
@@ -23,7 +22,7 @@ namespace PlatformVK
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::GetGpuFramebufferDescriptor,
-											ModuleMsg::GetGpuFramebufferID
+											ModuleMsg::GetVkFramebufferID
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
@@ -60,7 +59,7 @@ namespace PlatformVK
 	private:
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGpuFramebufferID (const Message< ModuleMsg::GetGpuFramebufferID > &);
+		bool _GetVkFramebufferID (const Message< ModuleMsg::GetVkFramebufferID > &);
 		bool _GetGpuFramebufferDescriptor (const Message< ModuleMsg::GetGpuFramebufferDescriptor > &);
 
 	private:

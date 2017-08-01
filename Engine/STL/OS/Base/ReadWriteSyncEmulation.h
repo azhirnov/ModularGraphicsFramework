@@ -42,13 +42,13 @@ namespace OS
 		
 		void LockWrite ()
 		{
-			_sELocked.Wait( TimeU(-1) );
+			_sELocked.Wait( TimeL(-1) );
 			_sCSWrite.Lock();
 		}
 
 		bool TryLockWrite ()
 		{
-			return ( _sELocked.Wait( TimeU::FromMilliSeconds(10) ) and _sCSWrite.TryLock() );
+			return ( _sELocked.Wait( TimeL::FromMilliSeconds(10) ) and _sCSWrite.TryLock() );
 		}
 
 		void UnlockWrite ()

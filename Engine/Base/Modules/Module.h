@@ -44,43 +44,10 @@ namespace Base
 		};
 
 	protected:
-		using UntypedID_t	= ulong;
-
-		struct ModuleInfo
-		{
-		// variables
-			UntypedID_t		id;
-			uint			order;
-
-		// methods
-			ModuleInfo (UntypedID_t id, uint order) : id(id), order(order) {}
-
-			bool operator == (const ModuleInfo &right) const	{ return id == right.id and order == right.order; }
-			bool operator >  (const ModuleInfo &right) const	{ return id != right.id ? id > right.id : order > right.order; }
-			bool operator <  (const ModuleInfo &right) const	{ return id != right.id ? id < right.id : order < right.order; }
-		};
-
-		struct ModuleSearchByID
-		{
-		// variables
-			UntypedID_t		id;
-
-		// methods
-			explicit ModuleSearchByID (UntypedID_t id) : id(id) {}
-
-			bool operator == (const ModuleInfo &right) const	{ return id == right.id; }
-			bool operator >  (const ModuleInfo &right) const	{ return id > right.id; }
-			bool operator <  (const ModuleInfo &right) const	{ return id < right.id; }
-		};
-
-		struct ModuleConfig
-		{
-			UntypedID_t		id;
-			uint			maxParents;
-		};
-
-		using AttachedModules_t		= MultiMap< ModuleInfo, ModulePtr >;		// TODO: fixed map ?
-		using ParentModules_t		= Set< ModulePtr >;							// TODO: fixed set ?
+		using UntypedID_t			= ModuleMsg::UntypedID_t;
+		using ModuleName_t			= ModuleMsg::ModuleName_t;
+		using AttachedModules_t		= Array<Pair< ModuleName_t, ModulePtr >>;
+		using ParentModules_t		= FixedSizeSet< ModulePtr, 16 >;
 
 		template <typename ...Types>
 		using MessageListFrom		= CompileTime::TypeListFrom< Message<Types>... >;
@@ -106,6 +73,12 @@ namespace Base
 											ModuleMsg::Update,
 											ModuleMsg::Delete
 										>;
+
+		struct ModuleConfig
+		{
+			UntypedID_t		id;
+			uint			maxParents;
+		};
 
 	private:
 		class AttachModuleToManagerAsyncTask;
@@ -144,7 +117,11 @@ namespace Base
 		template <typename CreateInfo>
 		bool AddModule (UntypedID_t id, const CreateInfo &createInfo);
 
+		template <typename CreateInfo>
+		bool AddModule (StringCRef name, UntypedID_t id, const CreateInfo &createInfo);
+
 		ModulePtr GetModule (UntypedID_t id);
+		ModulePtr GetModule (StringCRef name);
 		
 		template <typename ...MsgTypes>
 		ModulePtr GetModule ();
@@ -167,7 +144,7 @@ namespace Base
 
 		~Module ();
 
-		bool _Attach (const ModulePtr &unit);
+		bool _Attach (const ModuleName_t &name, const ModulePtr &unit);
 		bool _Detach (const ModulePtr &unit);
 		void _DetachAllAttachments ();
 		void _DetachSelfFromParent (const ModulePtr &parent);
@@ -183,6 +160,8 @@ namespace Base
 		bool _ValidateAllSubscriptions ();
 
 		bool _Compose (bool immutable);		// TODO: rename
+
+		void _ClearMessageHandlers ();
 		
 		template <typename T>			bool _SendMsg (const Message<T> &msg);
 		template <typename T>			bool _SendEvent (const Message<T> &msg);
@@ -282,7 +261,7 @@ namespace Base
 		if ( not GetSupportedEvents().HasType( TypeIdOf< Message<T> >() ) )
 			RETURN_ERR( "Unsupported event type '" << ToString( TypeIdOf<T>() ) << "'" );
 
-		return _msgHandler.Send( msg );
+		return _msgHandler.Send( msg.From( this ) );
 	}
 
 /*
@@ -357,7 +336,7 @@ namespace Base
 
 		FOR( i, tmp )
 		{
-			tmp[i].second->Send( msg );
+			tmp[i].second->Send( msg.From( this ) );
 		}
 		return true;
 	}
@@ -447,7 +426,17 @@ namespace Base
 		CHECK_ERR( _FindModuleWithMessages< MessageListFrom< MsgTypes... > >( _GetAttachments(), OUT result ) );
 		return result;
 	}
-
+	
+/*
+=================================================
+	SendTo
+=================================================
+*/
+	template <typename MsgType>
+	forceinline bool BaseObject::SendTo (const ModulePtr &target, const MsgType &msg) const
+	{
+		return target->Send( msg.From( BaseObjectPtr( const_cast<BaseObject *>(this) ) ) );
+	}
 	
 }	// Base
 }	// Engine

@@ -185,7 +185,7 @@ namespace Base
 
 		msg->result.Set( _cache.SubArray( 0, readn ) );
 
-		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ this, EMemoryAccess::CpuRead, offset, BytesU(readn) } );
+		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ EMemoryAccess::CpuRead, offset, BytesU(readn) } );
 		return true;
 	}
 	
@@ -202,7 +202,7 @@ namespace Base
 
 		msg->result.Set( _cache.SubArray( usize(offset), usize(size) ) );
 
-		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ this, EMemoryAccess::CpuRead, offset, size } );
+		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ EMemoryAccess::CpuRead, offset, size } );
 		return true;
 	}
 

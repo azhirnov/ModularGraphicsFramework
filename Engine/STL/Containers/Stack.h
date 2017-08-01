@@ -60,10 +60,10 @@ namespace GXTypes
 		void Set (const T &value)						{ _memory.Set( _memory.LastIndex(), value ); }
 		void Set (T &&value)							{ _memory.Set( _memory.LastIndex(), RVREF( value ) ); }
 
-		usize Capacity ()		const					{ return _memory.Capacity(); }
-		usize MaxCapacity ()	const					{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		usize Count ()			const					{ return _memory.Count(); }
-		void  Clear ()									{ _memory.Resize(1); }
+		usize			Capacity ()		const			{ return _memory.Capacity(); }
+		constexpr usize MaxCapacity ()	const			{ return _memory.MaxSize(); }	// max available for allocation count of elements
+		usize			Count ()		const			{ return _memory.Count(); }
+		void			Clear ()						{ _memory.Resize(1); }
 
 		bool operator == (ArrayCRef<T> right) const		{ return ArrayCRef<T>(*this) == right; }
 		bool operator != (ArrayCRef<T> right) const		{ return not ((*this) == right); }

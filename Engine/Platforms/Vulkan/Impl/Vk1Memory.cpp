@@ -113,9 +113,8 @@ namespace PlatformVK
 		CHECK_ERR( not _IsCreated() );
 
 		// request image ID
-		Message< ModuleMsg::GetGpuTextureID >	msg;
-
-		_GetParents().Front()->Send( msg );
+		Message< ModuleMsg::GetVkTextureID >	msg;
+		SendTo( _GetParents().Front(), msg );
 
 		VkImage	img_id	= msg->result.Get( VkImage(VK_NULL_HANDLE) );
 		CHECK_ERR( img_id != VK_NULL_HANDLE );
@@ -155,9 +154,8 @@ namespace PlatformVK
 		CHECK_ERR( not _IsCreated() );
 
 		// request image ID
-		Message< ModuleMsg::GetGpuBufferID >	msg;
-
-		_GetParents().Front()->Send( msg );
+		Message< ModuleMsg::GetVkBufferID >	msg;
+		SendTo( _GetParents().Front(), msg );
 
 		VkBuffer	buf_id	= msg->result.Get( VkBuffer(VK_NULL_HANDLE) );
 		CHECK_ERR( buf_id != VK_NULL_HANDLE );
@@ -225,13 +223,13 @@ namespace PlatformVK
 
 		ModulePtr const&	parent = _GetParents().Front();
 
-		if ( parent->GetSupportedMessages().HasType< ModuleMsg::GetGpuTextureID >() )
+		if ( parent->GetSupportedMessages().HasType< ModuleMsg::GetVkTextureID >() )
 		{
 			CHECK( _AllocForImage() );
 			CHECK( Module::_Compose_Impl( msg ) );
 		}
 		else
-		if ( parent->GetSupportedMessages().HasType< ModuleMsg::GetGpuBufferID >() )
+		if ( parent->GetSupportedMessages().HasType< ModuleMsg::GetVkBufferID >() )
 		{
 			CHECK( _AllocForBuffer() );
 			CHECK( Module::_Compose_Impl( msg ) );
@@ -239,7 +237,7 @@ namespace PlatformVK
 
 		if ( _IsComposedState( GetState() ) )
 		{
-			CHECK( _SendEvent( Message< ModuleMsg::OnGpuMemoryBindingChanged >{ this, parent, _binding } ) );
+			CHECK( _SendEvent( Message< ModuleMsg::OnGpuMemoryBindingChanged >{ parent, _binding } ) );
 		}
 		else
 		{
@@ -280,7 +278,7 @@ namespace PlatformVK
 
 		msg->result.Set( BinArrayCRef( _mappedPtr + offset, size ) );
 
-		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ this, EMemoryAccess::CpuRead, BytesU(offset), BytesU(size) } );
+		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ EMemoryAccess::CpuRead, BytesU(offset), BytesU(size) } );
 		return true;
 	}
 	
@@ -301,7 +299,7 @@ namespace PlatformVK
 
 		msg->wasWritten.Set( BytesUL(size) );
 
-		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ this, EMemoryAccess::CpuWrite, BytesU(offset), BytesU(size) } );
+		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ EMemoryAccess::CpuWrite, BytesU(offset), BytesU(size) } );
 		return true;
 	}
 	

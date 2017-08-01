@@ -79,11 +79,11 @@ namespace Platforms
 		{
 			Message< ModuleMsg::WindowGetHandle >	request_hwnd;
 
-			_window->Send( request_hwnd );
+			SendTo( _window, request_hwnd );
 
 			if ( request_hwnd->hwnd.Get().IsDefined() )
 			{
-				_SendMsg( Message< ModuleMsg::WindowCreated >{ this, WindowDesc(), request_hwnd->hwnd.Get() } );
+				_SendMsg( Message< ModuleMsg::WindowCreated >{ WindowDesc(), request_hwnd->hwnd.Get() } );
 			}
 		}
 		return true;
@@ -146,7 +146,7 @@ namespace Platforms
 
 		CHECK_ERR( _device.Initialize() );
 
-		_SendEvent( Message< ModuleMsg::GpuDeviceCreated >{ this } );
+		_SendEvent( Message< ModuleMsg::GpuDeviceCreated >{} );
 		return true;
 	}
 
@@ -159,7 +159,7 @@ namespace Platforms
 	{
 		if ( _device.IsInitialized() )
 		{
-			_SendEvent( Message< ModuleMsg::GpuDeviceBeforeDestory >{ this } );
+			_SendEvent( Message< ModuleMsg::GpuDeviceBeforeDestory >{} );
 		}
 
 		_device.Deinitialize();

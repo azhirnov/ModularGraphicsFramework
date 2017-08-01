@@ -8,6 +8,7 @@
 #include "Engine/Platforms/Shared/GPU/Thread.h"
 
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
+#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Shared/GPU/Framebuffer.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"

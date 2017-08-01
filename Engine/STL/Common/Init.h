@@ -18,6 +18,12 @@
 #include <stdlib.h>
 #include <new>
 #include <chrono>
+#include <initializer_list>
+#include <algorithm>
+#include <functional>
+#include <typeindex>
+#include <vector>
+#include <string>
 
 
 namespace GX_STL

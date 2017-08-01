@@ -109,7 +109,7 @@ namespace Platforms
 	{
 		CHECK_ERR( not _IsComposedState( GetState() ) );
 
-		CHECK( _Create( msg.Sender(), msg.Data() ) );
+		CHECK( _Create( _GetManager(), msg.Data() ) );
 
 		if ( _IsCreated() and _looping )
 		{
@@ -118,8 +118,8 @@ namespace Platforms
 
 			LOG( "window created", ELog::Debug );
 			
-			_SendForEachAttachments( Message< ModuleMsg::Link >{ this } );
-			_SendForEachAttachments( Message< ModuleMsg::Compose >{ this } );
+			_SendForEachAttachments( Message< ModuleMsg::Link >{} );
+			_SendForEachAttachments( Message< ModuleMsg::Compose >{} );
 		}
 		else
 		{
@@ -182,14 +182,7 @@ namespace Platforms
 */
 	bool WinWindow::_Create (const ModulePtr &sender, const ModuleMsg::PlatformCreated &platformInfo)
 	{
-		// request display info
-		auto	request = Message<ModuleMsg::RequestDisplayParams>( this );
-
-		sender->Send( request );
-		CHECK_ERR( request->result.IsDefined() );
-
-		Display const&	disp = *request->result.Get();
-
+		Display const&	disp = platformInfo.display;
 
 		// validate create info
 		{
@@ -203,22 +196,21 @@ namespace Platforms
 
 		
 		// allow subscribers to change settings
-		auto const					msg		= Message< ModuleMsg::WindowBeforeCreate >( this, _createInfo );
+		auto const					msg		= Message< ModuleMsg::WindowBeforeCreate >{ _createInfo };
 		CreateInfo::Window const&	info	= msg->editable;
 
 		_SendEvent( msg );
 
 
 		// crate window
-		CHECK_ERR( _CreateWindow( disp, info, platformInfo.className, platformInfo.inst ) );
+		CHECK_ERR( _CreateWindow( disp, info, platformInfo.className, platformInfo.instance ) );
 
 		CHECK_ERR( _UpdateDescriptor() );
 
 
 		// send event
-		_SendEvent( Message< ModuleMsg::WindowCreated >{ this, _windowDesc, _wnd } );
-
-		_SendEvent( Message< ModuleMsg::WindowDescriptorChanged >{ this, _windowDesc } );
+		_SendEvent( Message< ModuleMsg::WindowCreated >{ _windowDesc, _wnd } );
+		_SendEvent( Message< ModuleMsg::WindowDescriptorChanged >{ _windowDesc } );
 
 
 		// start window message loop
@@ -323,12 +315,12 @@ namespace Platforms
 
 		switch ( flags )
 		{
-			case EVisibility::Visible :
+			case EVisibility::VisibleFocused :
 				::SetForegroundWindow( _wnd.Get<HWND>() );
 				::ShowWindow( _wnd.Get<HWND>(), SW_SHOWNA );
 				break;
 
-			case EVisibility::Unfocused :
+			case EVisibility::VisibleUnfocused :
 				::ShowWindow( _wnd.Get<HWND>(), SW_SHOWNOACTIVATE );
 				break;
 
@@ -373,14 +365,14 @@ namespace Platforms
 */
 	isize WinWindow::_ProcessMessage (uint uMsg, usize wParam, isize lParam)
 	{
-		Message< ModuleMsg::WindowRawMessage >	msg{ this, uMsg, wParam, lParam };
+		Message< ModuleMsg::WindowRawMessage >	msg{ uMsg, wParam, lParam };
 		
 		// WM_PAINT //
-		if ( uMsg == WM_PAINT and _windowDesc.visibility == EVisibility::Visible )
+		if ( uMsg == WM_PAINT and _windowDesc.visibility == EVisibility::VisibleFocused )
 		{
 			msg->wasProcessed = true;
 
-			TODO( "" );
+			//TODO( "" );
 			//_Update( true );
 		}
 		else
@@ -391,7 +383,7 @@ namespace Platforms
 			msg->wasProcessed = true;
 
 			_UpdateDescriptor();
-			_SendEvent( Message< ModuleMsg::WindowDescriptorChanged >{ this, _windowDesc } );
+			_SendEvent( Message< ModuleMsg::WindowDescriptorChanged >{ _windowDesc } );
 		}
 		else
 
@@ -400,8 +392,8 @@ namespace Platforms
 		{
 			msg->wasProcessed = true;
 
-			_windowDesc.visibility = EVisibility::Unfocused;
-			_SendEvent( Message< ModuleMsg::WindowVisibilityChanged >{ this, _windowDesc.visibility } );
+			_windowDesc.visibility = EVisibility::VisibleUnfocused;
+			_SendEvent( Message< ModuleMsg::WindowVisibilityChanged >{ _windowDesc.visibility } );
 		}
 		else
 
@@ -410,8 +402,8 @@ namespace Platforms
 		{
 			msg->wasProcessed = true;
 			
-			_windowDesc.visibility = EVisibility::Visible;
-			_SendEvent( Message< ModuleMsg::WindowVisibilityChanged >{ this, _windowDesc.visibility } );
+			_windowDesc.visibility = EVisibility::VisibleFocused;
+			_SendEvent( Message< ModuleMsg::WindowVisibilityChanged >{ _windowDesc.visibility } );
 		}
 		else
 			
@@ -420,16 +412,14 @@ namespace Platforms
 		{
 			msg->wasProcessed = true;
 
-			if ( wParam != SIZE_MINIMIZED )
+			if ( wParam == SIZE_MINIMIZED )
 			{
 				_windowDesc.visibility = EVisibility::Invisible;
-				_SendEvent( Message< ModuleMsg::WindowVisibilityChanged >{ this, _windowDesc.visibility } );
+				_SendEvent( Message< ModuleMsg::WindowVisibilityChanged >{ _windowDesc.visibility } );
 			}
-			else
-			{
-				_UpdateDescriptor();
-				_SendEvent( Message< ModuleMsg::WindowDescriptorChanged >{ this, _windowDesc } );
-			}
+
+			_UpdateDescriptor();
+			_SendEvent( Message< ModuleMsg::WindowDescriptorChanged >{ _windowDesc } );
 		}
 		else
 
@@ -461,16 +451,21 @@ namespace Platforms
 	{
 		CHECK_ERR( _IsCreated() );
 
+		auto	hwnd	= _wnd.Get<HWND>();
 		RECT	win_rect = {0,0,0,0};
-		::GetWindowRect( _wnd.Get<HWND>(), &win_rect );
 
+		::GetWindowRect( hwnd, &win_rect );
 		_windowDesc.position	= int2( win_rect.left, win_rect.top );
 		_windowDesc.size		= uint2( win_rect.right - win_rect.left, win_rect.bottom - win_rect.top );
 		
-		::GetClientRect( _wnd.Get<HWND>(), &win_rect );
-
+		::GetClientRect( hwnd, &win_rect );
 		_windowDesc.surfaceSize	= uint2( win_rect.right - win_rect.left, win_rect.bottom - win_rect.top );
 
+		_windowDesc.visibility	= 
+				IsZero( _windowDesc.surfaceSize )	?	EVisibility::Invisible			:
+				hwnd == ::GetForegroundWindow()		?	EVisibility::VisibleFocused		:
+				::IsWindowVisible( hwnd )			?	EVisibility::VisibleUnfocused	:
+														EVisibility::Invisible;
 		return true;
 	}
 	
@@ -527,14 +522,14 @@ namespace Platforms
 		{
 			::SetWindowLongPtrA( _wnd.Get<HWND>(), GWLP_WNDPROC, (LONG_PTR) ::DefWindowProcA );
 
-			_SendEvent( Message< ModuleMsg::WindowBeforeDestroy >{ this } );
+			_SendEvent( Message< ModuleMsg::WindowBeforeDestroy >{} );
 
 			::DestroyWindow( _wnd.Get<HWND>() );
 			_wnd = null;
 
 			LOG( "window destroyed", ELog::Debug );
 
-			_SendEvent( Message< ModuleMsg::WindowAfterDestroy >{ this } );
+			_SendEvent( Message< ModuleMsg::WindowAfterDestroy >{} );
 		}
 	}
 

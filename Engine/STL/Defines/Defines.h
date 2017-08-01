@@ -166,21 +166,21 @@
 
 // for each
 #define FOR( _counter_, _container_ ) \
-	for (usize _counter_ = 0; _counter_ < (_container_).Count(); ++_counter_)
+	for (GX_STL::GXTypes::usize _counter_ = 0; _counter_ < (_container_).Count(); ++_counter_)
 
 #define FORv( _counter_, _value_, _container_ ) \
-	for (usize _counter_ = (_value_); _counter_ < (_container_).Count(); ++_counter_)
+	for (GX_STL::GXTypes::usize _counter_ = (_value_); _counter_ < (_container_).Count(); ++_counter_)
 
 // TODO: deprecated?
 //#define FORc( _counter_, _container_ ) \
 //	for (; _counter_ < (_container_).Count(); ++_counter_)
 
 #define FOR_rev( _counter_, _container_ ) \
-	for (usize _counter_ = (_container_).Count()-1; _counter_ < (_container_).Count(); --_counter_)
+	for (GX_STL::GXTypes::usize _counter_ = (_container_).Count()-1; _counter_ < (_container_).Count(); --_counter_)
 
 // TODO: deprecated?
 //#define FORv_rev( _counter_, _value_, _container_ ) \
-//	for (usize _counter_ = (_value_); _counter_ < (_container_).Count(); --_counter_)
+//	for (GX_STL::GXTypes::usize _counter_ = (_value_); _counter_ < (_container_).Count(); --_counter_)
 
 // TODO: deprecated?
 //#define FORc_rev( _counter_, _container_ ) \
@@ -190,11 +190,11 @@
 
 // range for
 #define FOR_range( _counter_, _begin_, _end_ ) \
-	for (usize _counter_ = _begin_; _counter_ < _end_; ++_counter_)
+	for (GX_STL::GXTypes::usize _counter_ = _begin_; _counter_ < _end_; ++_counter_)
 
 // TODO: deprecated?
 //#define FOR_range_rev( _counter_, _begin_, _end_ ) \
-//	for (usize _counter_ = _end_-1; (_counter_ >= _begin_ and _counter_ < _end_); --_counter_)
+//	for (GX_STL::GXTypes::usize _counter_ = _end_-1; (_counter_ >= _begin_ and _counter_ < _end_); --_counter_)
 
 // TODO: deprecated?
 //#define FOR_range_t( _type_, _counter_, _begin_, _end_ ) \

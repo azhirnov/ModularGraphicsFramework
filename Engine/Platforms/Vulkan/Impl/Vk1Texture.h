@@ -23,13 +23,12 @@ namespace PlatformVK
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::GetGpuTextureDescriptor,
-											ModuleMsg::GetGpuTextureID,
-											ModuleMsg::GetGpuTextureView,
+											ModuleMsg::GetVkTextureID,
+											ModuleMsg::GetVkTextureView,
 											ModuleMsg::OnGpuMemoryBindingChanged
 										> >;
 
-		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;  /*::Append< MessageListFrom<
-										> >;*/
+		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
 
 		using Utils					= TextureUtils;
 
@@ -67,8 +66,8 @@ namespace PlatformVK
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGpuTextureID (const Message< ModuleMsg::GetGpuTextureID > &);
-		bool _GetGpuTextureView (const Message< ModuleMsg::GetGpuTextureView > &);
+		bool _GetVkTextureID (const Message< ModuleMsg::GetVkTextureID > &);
+		bool _GetVkTextureView (const Message< ModuleMsg::GetVkTextureView > &);
 		bool _GetGpuTextureDescriptor (const Message< ModuleMsg::GetGpuTextureDescriptor > &);
 		bool _OnGpuMemoryBindingChanged (const Message< ModuleMsg::OnGpuMemoryBindingChanged > &);
 
@@ -78,8 +77,6 @@ namespace PlatformVK
 		bool _CreateTexture ();
 		bool _CreateView ();
 		void _DestroyAll ();
-
-		static void _ValidateDescriptor (INOUT TextureDescriptor &descr);
 
 		static vk::VkImageType  _GetImageType (ETexture::type type);
 	};

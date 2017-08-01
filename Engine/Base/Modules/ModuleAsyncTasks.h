@@ -13,7 +13,7 @@ namespace Base
 	// Attach Module to Manager Async Task
 	//
 
-	class Module::AttachModuleToManagerAsyncTask : public AsyncTask< ModulePtr >
+	class Module::AttachModuleToManagerAsyncTask final : public AsyncTask< ModulePtr >
 	{
 	// variables
 	private:
@@ -46,7 +46,7 @@ namespace Base
 			ASSERT( result );
 
 			if ( result )
-				result->Send( Message< ModuleMsg::AddToManager >{ this, CurrentThreadModule() } );
+				CHECK( SendTo( result, Message< ModuleMsg::AddToManager >{ CurrentThreadModule() } ) );
 		}
 	};
 	
@@ -56,7 +56,7 @@ namespace Base
 	// Detach Module from Manager Async Task
 	//
 	
-	class Module::DetachModuleFromManagerAsyncTask : public AsyncTask<>
+	class Module::DetachModuleFromManagerAsyncTask final : public AsyncTask<>
 	{
 	// variables
 	private:
@@ -65,11 +65,6 @@ namespace Base
 
 	// methods
 	public:
-		/*DetachModuleFromManagerAsyncTask (const ModulePtr &self, UntypedID_t managerID) :
-			AsyncTask( self, self->GlobalSystems()->Get<MainSystem>().ptr() ),
-			_mngrID( managerID )
-		{}*/
-
 		DetachModuleFromManagerAsyncTask (const ModulePtr &self, const ModulePtr &manager) :
 			AsyncTask( self, manager ),
 			_mngrID( manager->GetModuleID() )
@@ -87,7 +82,7 @@ namespace Base
 									manager->GetModule( _mngrID );
 			
 			if ( result )
-				result->Send( Message< ModuleMsg::RemoveFromManager >{ this, CurrentThreadModule() } );
+				CHECK( SendTo( result, Message< ModuleMsg::RemoveFromManager >{ CurrentThreadModule() } ) );
 		}
 	};
 

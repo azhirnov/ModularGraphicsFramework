@@ -100,6 +100,7 @@ namespace GXTypes
 */
 	const bool		Logger::_perThreadColors	= true;
 	const bool		Logger::_allowSkipErrors	= true;
+	const bool		Logger::_allowCaching		= false;
 	
 	TimeD			Logger::_MinTimeDeltaToSkipError ()		{ return TimeD::FromSeconds( 5.0 ); }
 
@@ -515,9 +516,10 @@ namespace GXTypes
 */
 	bool Logger::_CmpWithCache (ELog::type type, StringCRef file, usize threadId, int line)
 	{
-		if ( _lastType == type						and
+		if ( _allowCaching							and
+			 _lastType == type						and
 			 not EnumEq( type, ELog::SpoilerFlag )	and
-			 //not ELog::IsError( type )				and
+			 //not ELog::IsError( type )			and
 			 _lastSrcFile == file					and
 			 _lastThreadId == threadId				and
 			 _lastLine == line )

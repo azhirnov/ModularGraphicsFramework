@@ -30,12 +30,22 @@ namespace Base
 */
 	ModulesFactory::~ModulesFactory ()
 	{
-		_constructors.Clear();
-		_groups.Clear();
+		Clear();
 
 		GlobalSystems()->GetSetter< ModulesFactory >().Set( null );
 	}
 	
+/*
+=================================================
+	Clear
+=================================================
+*/
+	void ModulesFactory::Clear ()
+	{
+		_constructors.Clear();
+		_groups.Clear();
+	}
+
 /*
 =================================================
 	Create

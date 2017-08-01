@@ -85,7 +85,7 @@ namespace Platforms
 */
 	ModulePtr InputManager::_CreateInputThread (const GlobalSystemsRef gs, const CreateInfo::InputThread &ci)
 	{
-		return GXTypes::New< InputThread >( gs, ci );
+		return New< InputThread >( gs, ci );
 	}
 	
 /*
@@ -95,7 +95,7 @@ namespace Platforms
 */
 	ModulePtr InputManager::_CreateInputManager (const GlobalSystemsRef gs, const CreateInfo::InputManager &ci)
 	{
-		return GXTypes::New< InputManager >( gs, ci );
+		return New< InputManager >( gs, ci );
 	}
 	
 /*

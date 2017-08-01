@@ -82,6 +82,11 @@ namespace _types_hidden_
 		
 		BaseHashMap (Self &&other) : _memory( RVREF( other._memory ) )
 		{}
+		
+		BaseHashMap (InitializerList<pair_t> list)
+		{
+			AddArray( ArrayCRef<pair_t>( list ) );
+		}
 
 
 		const_pair_t &			operator [] (usize i)
@@ -154,7 +159,7 @@ namespace _types_hidden_
 		usize Add (const key_t &key, const value_t &value)
 		{
 			const key_hash_t	hash = _hash( key );
-			return _memory.AddOrReplace( RVREF(triple_t( hash, key, value )) );
+			return _memory.AddOrReplace( RVREF(triple_t( hash, pair_t( key, value ))) );
 		}
 
 		usize Add (key_t &&key, value_t &&value)

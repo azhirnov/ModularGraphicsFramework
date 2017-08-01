@@ -75,6 +75,11 @@ namespace _types_hidden_
 		
 		BaseHashSet (Self &&other) : _memory( RVREF( other._memory ) )
 		{}
+		
+		BaseHashSet (InitializerList<key_t> list)
+		{
+			AddArray( ArrayCRef<key_t>( list ) );
+		}
 
 
 		Value const &	operator [] (usize i) const

@@ -132,4 +132,7 @@ extern void Test_CompileTime_TypeQualifier ()
 
 	using PODUnion_t = GXTypes::Union< GXMath::float4, GXMath::uint4 >;
 	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier<PODUnion_t>::value  == ETypeQualifier::Def_ComplexPOD );
+
+	//const auto ststr_type = _ctime_hidden_::_GetTypeQualifier< StaticMemoryContainer<char, 16> >::value;
+	//STATIC_ASSERT( ststr_type	== ETypeQualifier::Def_FastCopyable );
 }

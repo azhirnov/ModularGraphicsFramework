@@ -83,19 +83,44 @@ namespace Platforms
 		switch ( target )
 		{
 			case ETexture::Buffer :
-			case ETexture::Tex1D :			return uint4( dim.x, 0, 0, 0 );
-				
+			case ETexture::Tex1D :
+			{
+				ASSERT( IsNotZero( dim.x ) );
+				ASSERT( All( dim.yzw() <= 1 ) );
+				return uint4( dim.x, 0, 0, 0 );
+			}	
 			case ETexture::Tex2DMSArray :
 			case ETexture::Tex2DMS :
-			case ETexture::Tex2D :			return uint4( dim.xy(), 0, 0 );
-
-			case ETexture::TexCube :		return uint4( dim.xy(), 6, 0 );
-
-			case ETexture::Tex2DArray :		return uint4( dim.xy(), 0, dim.w );
-
-			case ETexture::Tex3D :			return uint4( dim.xyz(), 0 );
-
-			case ETexture::TexCubeArray :	return uint4( dim.xy(), 6, dim.w );
+			case ETexture::Tex2D :
+			{
+				ASSERT( IsNotZero( dim.xy() ) );
+				ASSERT( All( dim.zw() <= 1 ) );
+				return uint4( dim.xy(), 0, 0 );
+			}
+			case ETexture::TexCube :
+			{
+				ASSERT( IsNotZero( dim.xy() ) );
+				ASSERT( dim.z == 6 and dim.w <= 1 );
+				return uint4( dim.xy(), 6, 0 );
+			}
+			case ETexture::Tex2DArray :
+			{
+				ASSERT( IsNotZero( dim.xyw() ) );
+				ASSERT( dim.z <= 1 );
+				return uint4( dim.xy(), 0, dim.w );
+			}
+			case ETexture::Tex3D :
+			{
+				ASSERT( IsNotZero( dim.xyz() ) );
+				ASSERT( dim.w <= 1 );
+				return uint4( dim.xyz(), 0 );
+			}
+			case ETexture::TexCubeArray :
+			{
+				ASSERT( IsNotZero( dim.xyw() ) );
+				ASSERT( dim.z == 6 );
+				return uint4( dim.xy(), 6, dim.w );
+			}
 		}
 
 		RETURN_ERR( "invalid texture type" );
@@ -175,6 +200,30 @@ namespace Platforms
 	BytesU TextureUtils::GetImageSize (EPixelFormat::type format, ETexture::type type, const uint4 &dim, BytesU xAlign, BytesU xyAlign)
 	{
 		return GetImageSize( format, type, ConvertSize( type, dim ), xAlign, xyAlign );
+	}
+	
+/*
+=================================================
+	ValidateDescriptor
+=================================================
+*/
+	void TextureUtils::ValidateDescriptor (INOUT TextureDescriptor &descr)
+	{
+		descr.dimension = ValidateDimension( descr.target, descr.dimension );
+		descr.dimension = Max( descr.dimension, uint4(1) );
+
+		if ( ETexture::IsMultisampled( descr.target ) )
+		{
+			ASSERT( descr.samples > MultiSamples(1) );
+			ASSERT( descr.maxLevel == MipmapLevel(1) );
+			descr.maxLevel = MipmapLevel(1);
+		}
+		else
+		{
+			ASSERT( descr.samples <= MultiSamples(1) );
+			descr.samples = MultiSamples(1);
+			descr.maxLevel = MipmapLevel( Max( descr.maxLevel.Get(), 1u ) );
+		}
 	}
 
 

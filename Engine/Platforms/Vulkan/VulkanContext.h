@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/GPU/Context.h"
-#include "Engine/Platforms/Shared/GPU/Texture.h"
 #include "Engine/Platforms/Vulkan/VulkanThread.h"
 
 #if defined( GRAPHICS_API_VULKAN )
@@ -75,7 +74,7 @@ namespace Platforms
 		static ModulePtr _CreateVk1GraphicsPipeline (GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
 		static ModulePtr _CreateVk1ShaderModules (GlobalSystemsRef, const CreateInfo::GpuShaderModulesFromFile &);
 		static ModulePtr _CreateVk1ShaderModules2 (GlobalSystemsRef, const CreateInfo::GpuShaderModulesFromBuffer &);
-		static ModulePtr _CreateVk1CommandBufferBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBufferBuilder &);
+		static ModulePtr _CreateVk1CommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
 	};
 
 

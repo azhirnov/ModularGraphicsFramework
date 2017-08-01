@@ -29,7 +29,7 @@ namespace CompileTime
 	struct TypeListEnd final : Noninstancable {};
 
 	template <typename T>
-	static constexpr bool IsTypeList = IsBaseOf< _ctime_hidden_::TypeListBase, typename TypeTraits::GetBaseType< T > >;
+	static constexpr bool IsTypeList = IsBaseOf< _ctime_hidden_::TypeListBase, typename TypeTraits::GetBaseType< T > >;;
 
 
 
@@ -400,8 +400,8 @@ namespace CompileTime
 		template <typename LeftTypelist, typename RightTypelist, usize Index, bool IsEnd = false>
 		struct TTypeList_Append2
 		{
-			static const usize	llen	= LeftTypelist::Length;
-			static const usize	rlen	= RightTypelist::Length;
+			static const usize	llen	= LeftTypelist::Count;
+			static const usize	rlen	= RightTypelist::Count;
 			static const usize	nextIdx = Index + 1;
 
 			typedef typename SwitchType< (Index < llen),
@@ -422,7 +422,9 @@ namespace CompileTime
 		template <typename LeftTypelist, typename RightTypelist>
 		struct TTypeList_Append
 		{
-			typedef typename TTypeList_Append2< LeftTypelist, RightTypelist, 0, (LeftTypelist::Length + RightTypelist::Length == 0) >::type	type;
+			STATIC_ASSERT( IsTypeList<LeftTypelist> and IsTypeList<RightTypelist> );
+
+			typedef typename TTypeList_Append2< LeftTypelist, RightTypelist, 0, (LeftTypelist::Count + RightTypelist::Count == 0) >::type	type;
 		};
 		
 

@@ -220,7 +220,7 @@ namespace Platforms
 
 		// methods
 			MultisampleState (GX_DEFCTOR) :
-				samples( 1 ),				minSampleShading(),
+				samples( 1 ),				minSampleShading(),		sampleShading( false ),
 				alphaToCoverage( false ),	alphaToOne( false )
 			{}
 

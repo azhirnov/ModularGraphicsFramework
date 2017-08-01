@@ -171,7 +171,8 @@ namespace Platforms
 	}
 
 	RenderPassDescrBuilder&
-		RenderPassDescrBuilder::AddColorAttachment (EPixelFormat::type			format,
+		RenderPassDescrBuilder::AddColorAttachment (StringCRef					name,
+													EPixelFormat::type			format,
 													MultiSamples				samples,
 													EAttachmentLoadOp::type		loadOp,
 													EAttachmentStoreOp::type	storeOp,
@@ -179,6 +180,7 @@ namespace Platforms
 													EImageLayout::type			finalLayout)
 	{
 		ColorAttachment_t	tmp;
+		tmp.name			= name;
 		tmp.format			= format;
 		tmp.samples			= samples;
 		tmp.loadOp			= loadOp;
@@ -203,7 +205,8 @@ namespace Platforms
 	}
 
 	RenderPassDescrBuilder&
-		RenderPassDescrBuilder::SetDepthStencilAttachment (EPixelFormat::type		format,
+		RenderPassDescrBuilder::SetDepthStencilAttachment (StringCRef				name,
+														   EPixelFormat::type		format,
 														   MultiSamples				samples,
 														   EAttachmentLoadOp::type	depthLoadOp,
 														   EAttachmentStoreOp::type depthStoreOp,
@@ -213,6 +216,7 @@ namespace Platforms
 														   EImageLayout::type		finalLayout)
 	{
 		DepthStencilAttachment_t	tmp;
+		tmp.name			= name;
 		tmp.format			= format;
 		tmp.samples			= samples;
 		tmp.loadOp			= depthLoadOp;

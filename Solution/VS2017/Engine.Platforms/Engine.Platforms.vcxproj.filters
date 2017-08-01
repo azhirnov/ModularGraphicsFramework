@@ -200,8 +200,26 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1SystemFramebuffer.h">
       <Filter>Vulkan\Impl</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBufferBuilder.h">
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuilder.h">
       <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\CommandEnums.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\TexArrLayer.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\MemoryEnums.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Enums.h">
+      <Filter>OpenGL\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Messages.h">
+      <Filter>OpenGL\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Sampler.h">
+      <Filter>OpenGL\Impl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -354,8 +372,11 @@
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1ShaderModules.cpp">
       <Filter>Vulkan\Impl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBufferBuilder.cpp">
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuilder.cpp">
       <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Sampler.cpp">
+      <Filter>OpenGL\Impl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -17,7 +17,7 @@ namespace GXTypes
 	// Variant Constant Reference
 	//
 
-	struct VariantCRef
+	struct VariantCRef : CompileTime::FastCopyable
 	{
 	// types
 	private:
@@ -131,7 +131,12 @@ namespace GXTypes
 		}
 	};
 
+
 	
+	//
+	// Hash
+	//
+
 	template <>
 	struct Hash< VariantCRef > : private Hash< void* >
 	{

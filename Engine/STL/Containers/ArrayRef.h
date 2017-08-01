@@ -5,8 +5,6 @@
 #include "CopyStrategy.h"
 #include "Engine/STL/CompileTime/NewTypeInfo.h"
 
-#include <vector>
-
 namespace GX_STL
 {
 namespace GXTypes
@@ -62,7 +60,7 @@ namespace GXTypes
 		ArrayRef (Self &&other) = default;
 		ArrayRef (const Self &other) = default;
 		
-		ArrayRef (std::initializer_list<C> list);
+		ArrayRef (InitializerList<C> list);
 
 		template <template <typename ...> class LinearMemoryContainerType, typename ...Types>
 		ArrayRef (LinearMemoryContainerType< C, Types... > &container);
@@ -233,7 +231,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline ArrayRef<T>::ArrayRef (std::initializer_list<C> list) :
+	inline ArrayRef<T>::ArrayRef (InitializerList<C> list) :
 		_memory( list.begin() ), _count( list.size() )
 	{
 		ASSERT( _count == 0 or _memory != null );

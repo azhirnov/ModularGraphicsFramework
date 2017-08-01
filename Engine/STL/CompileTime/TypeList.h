@@ -84,11 +84,11 @@ namespace CompileTime
 		using ReverseForEach	= typename _ctime_hidden_::TTypeList_CompileTimeReverseForEach< Self, Self, 0, Func, InitType >::type;
 
 		
-		// Length
-		static constexpr usize	Length	= _ctime_hidden_::TTypeList_Length< Self >::value;
+		// Count
+		static constexpr usize	Count	= _ctime_hidden_::TTypeList_Length< Self >::value;
 
 		// Empty
-		static constexpr bool	Empty	= Length == 0;
+		static constexpr bool	Empty	= Count == 0;
 
 
 		// Get
@@ -99,7 +99,7 @@ namespace CompileTime
 		using Front		= typename _GetNoCheck< 0 >::type;
 
 		// Back
-		using Back		= typename _GetNoCheck< Length-1 >::type;
+		using Back		= typename _GetNoCheck< Count-1 >::type;
 
 		// PushBack
 		template <typename Type>
@@ -110,14 +110,14 @@ namespace CompileTime
 		using PushFront	= typename _PushFront< Type >::type;
 
 		// SubList
-		template <usize First, usize Count>
-		using SubList	= typename _ctime_hidden_::TTypeList_SubList< Self, First, Count >::type;
+		template <usize First, usize ListCount>
+		using SubList	= typename _ctime_hidden_::TTypeList_SubList< Self, First, ListCount >::type;
 
 		// PopBack
-		using PopBack	= typename SubList< 0, Length-1 >;
+		using PopBack	= typename SubList< 0, Count-1 >;
 
 		// PopFront
-		using PopFront	= typename SubList< 1, Length-1 >;
+		using PopFront	= typename SubList< 1, Count-1 >;
 
 		// Append
 		template <typename Typelist>
@@ -149,7 +149,7 @@ namespace CompileTime
 
 		// Equal
 		template <typename TTypeList>
-		static constexpr bool	Equal			= (Length == TTypeList::Length) and
+		static constexpr bool	Equal			= (Count == TTypeList::Count) and
 													ForEach< _ctime_hidden_::TTypeList_Equal< TTypeList >::Func, ValueToType<bool, true> >::value;
 		// IsType
 		template <usize Index, typename Type>

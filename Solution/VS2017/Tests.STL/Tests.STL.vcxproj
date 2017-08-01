@@ -20,7 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Tests\STL\Main.cpp" />
+    <ClCompile Include="..\..\..\Tests\STL\Test_Algorithms_InvokeWithVariant.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_MainType.cpp" />
+    <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_Sequence.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_StaticFloat.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_StringToID.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_TemplateMath.cpp" />
@@ -57,6 +59,7 @@
     <ClCompile Include="..\..\..\Tests\STL\Test_Types_FileAddress.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Types_Function.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Types_StringParser.cpp" />
+    <ClCompile Include="..\..\..\Tests\STL\Test_Types_Time.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Types_Union.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -81,27 +84,27 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

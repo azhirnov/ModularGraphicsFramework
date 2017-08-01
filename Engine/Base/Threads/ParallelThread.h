@@ -27,6 +27,8 @@ namespace Base
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 		
+		using OnStartThreadFunc_t	= CreateInfo::Thread::OnStartThreadFunc_t;
+
 
 	// constants
 	private:
@@ -36,9 +38,10 @@ namespace Base
 
 	// variables
 	private:
-		OS::Thread			_thread;
-		TimeProfilerD		_timer;
-		bool				_isLooping;
+		OS::Thread				_thread;
+		OnStartThreadFunc_t		_onStarted;
+		TimeProfilerD			_timer;
+		bool					_isLooping;
 
 
 	// methods

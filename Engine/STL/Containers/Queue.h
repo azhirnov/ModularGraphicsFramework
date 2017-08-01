@@ -123,13 +123,13 @@ namespace GXTypes
 		void EraseFromFront (usize count);
 		void EraseFromBack (usize count);
 
-		usize	Count ()		const				{ return Empty() ? 0 : _last - _first + 1; }
-		BytesU	Size ()			const				{ return BytesU( sizeof(T) * Count() ); }
-		usize	Capacity ()		const				{ return _size; }
-		usize	MaxCapacity ()	const				{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		BytesU	FullSize ()		const				{ return BytesU( sizeof(T) * Capacity() ); }
-		bool	Empty ()		const				{ return _first > _last; }
-		usize	LastIndex ()	const				{ return Count()-1; }
+		usize			Count ()		const				{ return Empty() ? 0 : _last - _first + 1; }
+		BytesU			Size ()			const				{ return BytesU( sizeof(T) * Count() ); }
+		usize			Capacity ()		const				{ return _size; }
+		constexpr usize	MaxCapacity ()	const				{ return _memory.MaxSize(); }	// max available for allocation count of elements
+		BytesU			FullSize ()		const				{ return BytesU( sizeof(T) * Capacity() ); }
+		bool			Empty ()		const				{ return _first > _last; }
+		usize			LastIndex ()	const				{ return Count()-1; }
 		
 
 		static constexpr bool	IsLinearMemory ()			{ return true; }

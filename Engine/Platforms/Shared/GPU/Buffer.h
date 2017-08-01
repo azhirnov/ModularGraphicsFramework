@@ -55,7 +55,8 @@ namespace ModuleMsg
 
 	
 	// platform-dependent
-	struct GetGpuBufferID;
+	struct GetVkBufferID;
+	struct GetGLBufferID;
 
 
 }	// ModuleMsg

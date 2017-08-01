@@ -136,7 +136,8 @@ namespace ModuleMsg
 	
 
 	// platform-dependent
-	struct GetGpuSamplerID;
+	struct GetVkSamplerID;
+	struct GetGLSamplerID;
 
 
 }	// ModuleMsg

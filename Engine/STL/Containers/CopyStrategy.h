@@ -168,7 +168,7 @@ namespace GXTypes
 	template <typename T>
 	struct AutoDetectCopyStrategy : public Noninstancable
 	{
-			STATIC_ASSERT( not CompileTime::IsNoncopyable<T> );
+		STATIC_ASSERT( not CompileTime::IsNoncopyable<T> );
 
 		static const bool _is_fastcopy	= CompileTime::IsMemCopyAvailable<T>;
 		static const bool _is_pod		= _is_fastcopy and not CompileTime::IsCtorAvailable<T> and not CompileTime::IsDtorAvailable<T>;

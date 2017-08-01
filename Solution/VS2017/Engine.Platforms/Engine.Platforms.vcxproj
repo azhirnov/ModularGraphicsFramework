@@ -31,6 +31,9 @@
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\gl4.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4BaseModule.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Device.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Enums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Messages.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Sampler.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Texture.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\OpenGLContext.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\OpenGLThread.h" />
@@ -38,9 +41,11 @@
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinContext.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Buffer.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\BufferEnums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\CommandEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Context.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Framebuffer.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Memory.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\MemoryEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Pipeline.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Program.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\RenderPass.h" />
@@ -50,6 +55,7 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Sampler.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\SamplerEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ShaderEnums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\TexArrLayer.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\TextureEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\CommandBuffer.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Texture.h" />
@@ -69,7 +75,7 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1BaseModule.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Buffer.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuffer.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBufferBuilder.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuilder.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Enums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Framebuffer.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Library.h" />
@@ -99,6 +105,7 @@
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\gl4.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4BaseModule.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Device.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Sampler.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Texture.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\OpenGLThread.cpp" />
@@ -112,7 +119,7 @@
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1BaseModule.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Buffer.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuffer.cpp" />
-    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBufferBuilder.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuilder.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Device.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Framebuffer.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Memory.cpp" />
@@ -142,27 +149,27 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

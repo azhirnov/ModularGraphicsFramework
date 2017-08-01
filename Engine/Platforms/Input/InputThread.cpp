@@ -65,6 +65,8 @@ namespace Platforms
 		_motionBinds.Clear();
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
+
+		_inputs.Clear();
 		return true;
 	}
 	

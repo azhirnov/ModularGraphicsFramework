@@ -49,6 +49,7 @@ namespace GXTypes
 		// config
 		static const bool		_perThreadColors;
 		static const bool		_allowSkipErrors;
+		static const bool		_allowCaching;
 
 
 	// methods

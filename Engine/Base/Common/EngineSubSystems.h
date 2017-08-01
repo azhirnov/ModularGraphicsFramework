@@ -28,7 +28,7 @@ namespace Base
 
 	// variables
 	private:
-		mutable Ptr< T >	_value;
+		Ptr< T >	_value;
 
 
 	// methods
@@ -118,9 +118,11 @@ namespace Base
 
 		struct Item
 		{
+		private:
 			mutable void *	ptr = null;
 			TypeId			id;
 
+		public:
 			template <typename T>
 			void Set (T *p)
 			{
@@ -136,7 +138,7 @@ namespace Base
 			template <typename T>
 			Ptr<T> Get () const
 			{
-				ASSERT( TypeIdOf<T>() == id );
+				ASSERT( ptr == null or TypeIdOf<T>() == id );
 				return reinterpret_cast< T *>( ptr );
 			}
 		};

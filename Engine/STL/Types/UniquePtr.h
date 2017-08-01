@@ -36,7 +36,7 @@ namespace GXTypes
 
 	// variables
 	private:
-		T	*_ptr;
+		T *		_ptr;
 
 
 	// methods
@@ -58,7 +58,14 @@ namespace GXTypes
 
 		explicit UniquePtr (T *p) : _ptr(p)
 		{}
+
+
+		explicit UniquePtr (Ptr<T> p) : _ptr( p.RawPtr() )
+		{}
 		
+
+		UniquePtr (const Self &) = delete;
+
 
 		UniquePtr (Self &&other) : _ptr(other._ptr)
 		{
@@ -99,8 +106,14 @@ namespace GXTypes
 		}
 
 
+		forceinline Self & operator = (Ptr<T> right)
+		{
+			return Self::operator= ( right.RawPtr() );
+		}
+
+
 		template <typename T2>
-		forceinline Self & operator = (UniquePtr<T2,B,S> &right)
+		forceinline Self & operator = (UniquePtr<T2,B,S> &&right)
 		{
 			if ( (void*)_ptr == (void*)right._ptr ) {
 				WARNING( "" );
@@ -114,7 +127,7 @@ namespace GXTypes
 		}
 
 
-		forceinline Self & operator = (Self &right)
+		forceinline Self & operator = (Self &&right)
 		{
 			if ( _ptr == right._ptr ) {
 				WARNING( "" );
@@ -126,8 +139,11 @@ namespace GXTypes
 			right._ptr = null;
 			return *this;
 		}
-
 		
+
+		Self& operator = (const Self &right) = delete;
+		
+
 		forceinline explicit operator bool () const
 		{
 			return IsNotNull();
@@ -136,34 +152,20 @@ namespace GXTypes
 
 		forceinline T * operator -> () const
 		{
-			ASSUME( _ptr != null );
-			return _ptr;
+			return ptr();
 		}
 
 
 		forceinline T & operator * () const
 		{
-			ASSUME( _ptr != null );
-			return *_ptr;
+			return *ptr();
 		}
 
 
-		forceinline T *& ref()
-		{
-			return _ptr;
-		}
-
-
-		forceinline T * ptr()
+		forceinline T * ptr() const
 		{
 			ASSUME( _ptr != null );
-			return _ptr;
-		}
-
-		forceinline const T * const ptr() const
-		{
-			ASSUME( _ptr != null );
-			return _ptr;
+			return const_cast< T* >( _ptr );
 		}
 
 
@@ -188,13 +190,6 @@ namespace GXTypes
 		forceinline void Reset()
 		{
 			_ptr = null;
-		}
-
-
-		template <typename T2>
-		forceinline UniquePtr<T2,B,S> To()
-		{
-			return UniquePtr<T2,B,S>(this);
 		}
 		
 

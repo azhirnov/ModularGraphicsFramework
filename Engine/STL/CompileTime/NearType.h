@@ -40,7 +40,8 @@ namespace CompileTime
 	
 	struct NearInt : Noninstancable
 	{
-	private:
+	//private:	// becouse of bug in VS2017
+	public:
 		template <usize SizeValue>
 		struct _FromSize {
 			typedef typename CompileTime::SwitchType< (SizeValue <= sizeof(byte)), byte,
@@ -89,7 +90,8 @@ namespace CompileTime
 
 	struct NearUInt : Noninstancable
 	{
-	private:
+	//private:	// becouse of bug in VS2017
+	public:
 		template <usize SizeValue>
 		struct _FromSize {
 			typedef typename CompileTime::SwitchType< (SizeValue <= sizeof(ubyte)), ubyte,
@@ -143,7 +145,8 @@ namespace CompileTime
 	
 	struct LargerInt : Noninstancable
 	{
-	private:
+	//private:	// becouse of bug in VS2017
+	public:
 		template <usize Size>
 		struct _FromSize {
 			typedef typename NearInt::FromSize< Clamp< uint, (Size << 1), sizeof(byte), sizeof(ilong) > >	type;
@@ -178,7 +181,8 @@ namespace CompileTime
 	
 	struct LargerUInt : Noninstancable
 	{
-	private:
+	//private:	// becouse of bug in VS2017
+	public:
 		template <usize Size>
 		struct _FromSize {
 			typedef typename NearUInt::FromSize< Clamp< uint, (Size << 1), sizeof(ubyte), sizeof(ulong) > >	type;
@@ -218,7 +222,8 @@ namespace CompileTime
 	
 	struct LesserInt : Noninstancable
 	{
-	private:
+	//private:	// becouse of bug in VS2017
+	public:
 		template <usize Size>
 		struct _FromSize {
 			typedef typename NearInt::FromSize< Clamp< uint, (Size >> 1), sizeof(byte), sizeof(ilong) > >	type;
@@ -253,7 +258,8 @@ namespace CompileTime
 	
 	struct LesserUInt : Noninstancable
 	{
-	private:
+	//private:	// becouse of bug in VS2017
+	public:
 		template <usize Size>
 		struct _FromSize {
 			typedef typename NearUInt::FromSize< Clamp< uint, (Size >> 1), sizeof(ubyte), sizeof(ulong) > >	type;
@@ -293,7 +299,8 @@ namespace CompileTime
 
 	struct NearFloat : Noninstancable
 	{
-	private:
+	//private:	// becouse of bug in VS2017
+	public:
 		template <usize Size>
 		struct _FromSize {
 			typedef typename CompileTime::SwitchType< (Size <= sizeof(float)), float,

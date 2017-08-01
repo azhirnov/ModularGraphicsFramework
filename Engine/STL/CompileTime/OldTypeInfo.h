@@ -248,7 +248,8 @@ namespace CompileTime
 		template <typename T>
 		struct IsScalar {
 			static const bool	value = ( int(TypeInfo< T >::FLAGS) & int(_ctime_hidden_::VECTOR) ) == 0 and
-										GetCapacity<T> == 1;
+										GetCapacity<T> == 1 and
+										not IsVoid<T>::value;
 		};
 
 

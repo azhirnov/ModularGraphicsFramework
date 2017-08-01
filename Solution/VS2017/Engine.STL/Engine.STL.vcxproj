@@ -25,6 +25,7 @@
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\FileAddress.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\Filters\GaussianFilter.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\Hash.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Algorithms\InvokeWithVariant.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\Sorts.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\StringParser.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\StringUtils.h" />
@@ -40,6 +41,7 @@
     <ClInclude Include="..\..\..\Engine\STL\Common\Uninitialized.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\CompileTimeChecks.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\CompileTimeDebug.h" />
+    <ClInclude Include="..\..\..\Engine\STL\CompileTime\Sequence.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\Runtime\VirtualTypeList.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\StaticFractional.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\NearType.h" />
@@ -240,6 +242,8 @@
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantCRef.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantRef.h" />
     <ClInclude Include="..\..\..\Engine\STL\Engine.STL.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Types\VariantRefIndexedContainer.h" />
+    <ClInclude Include="Header.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Engine.Config\Engine.Config.vcxproj">
@@ -281,27 +285,27 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

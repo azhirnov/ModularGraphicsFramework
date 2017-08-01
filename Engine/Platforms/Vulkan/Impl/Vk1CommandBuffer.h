@@ -18,22 +18,22 @@ namespace PlatformVK
 
 	class Vk1CommandBuffer final : public Vk1BaseModule
 	{
-		friend class Vk1CommandBufferBuilder;
+		friend class Vk1CommandBuilder;
 
 	// types
 	private:
 		SHARED_POINTER( Vk1BaseModule );
-		SHARED_POINTER( Vk1CommandBufferBuilder );
+		SHARED_POINTER( Vk1CommandBuilder );
 
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::GetGpuCommandBufferDescriptor,
-											ModuleMsg::GetGpuCommandBufferID
+											ModuleMsg::GetVkCommandBufferID
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
 		
 		using UsedResources			= Set< Vk1BaseModulePtr >;
-		using BuilderPtr			= Vk1CommandBufferBuilderPtr;
+		using BuilderPtr			= Vk1CommandBuilderPtr;
 
 		struct ERecordingState
 		{
@@ -83,7 +83,7 @@ namespace PlatformVK
 	private:
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGpuCommandBufferID (const Message< ModuleMsg::GetGpuCommandBufferID > &);
+		bool _GetVkCommandBufferID (const Message< ModuleMsg::GetVkCommandBufferID > &);
 		bool _GetGpuCommandBufferDescriptor (const Message< ModuleMsg::GetGpuCommandBufferDescriptor > &);
 
 	private:

@@ -20,8 +20,19 @@ namespace ModuleMsg
 	//
 	struct PlatformCreated
 	{
-		OS::HiddenOSTypeFrom<void*>		inst;
+	// variables
+		OS::HiddenOSTypeFrom<void*>		instance;
 		String							className;
+		Platforms::Display				display;
+
+	// methods
+		PlatformCreated (const OS::HiddenOSTypeFrom<void*> &instance,
+						 StringCRef							className,
+						 const Platforms::Display			&display) :
+			instance(instance),
+			className(className),
+			display(display)
+		{}
 	};
 
 }	// ModuleMsg

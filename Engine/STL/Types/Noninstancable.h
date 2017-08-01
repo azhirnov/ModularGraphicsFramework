@@ -15,7 +15,7 @@ namespace GXTypes
 
 	class Noninstancable
 	{
-	private:
+	protected:
 		Noninstancable () = delete;
 
 		//~Noninstancable () = delete;
@@ -24,9 +24,9 @@ namespace GXTypes
 
 		Noninstancable (Noninstancable &&) = delete;
 
-		void operator = (const Noninstancable &) = delete;
+		Noninstancable& operator = (const Noninstancable &) = delete;
 
-		void operator = (Noninstancable &&) = delete;
+		Noninstancable& operator = (Noninstancable &&) = delete;
 	};
 
 

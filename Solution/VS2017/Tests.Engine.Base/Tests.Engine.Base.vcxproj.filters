@@ -1,25 +1,40 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="OpenGL">
+      <UniqueIdentifier>{37067c1d-e11f-4c0b-8c71-8d7d38c17433}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vulkan">
+      <UniqueIdentifier>{e7c02309-5d7c-4f73-968e-669581bd0fe1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Window">
+      <UniqueIdentifier>{f35d16bf-f8bc-4ec7-a150-77fd03f5a523}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Window\Test.Window.cpp">
+      <Filter>Window</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.cpp">
+      <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Tests\Engine.Base\OpenGL\GLApp.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Tests\Engine.Base\OpenGL\Test.GLWindow.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\Tests\Engine.Base\Main.cpp" />
-    <ClCompile Include="..\..\..\Tests\Engine.Base\VkApp.cpp">
-      <Filter>VK</Filter>
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\Test.VkWindow.cpp">
+      <Filter>Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="GL">
-      <UniqueIdentifier>{59105dbe-bcd1-466f-82f5-f99f726df1f8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="VK">
-      <UniqueIdentifier>{0b330672-cbc9-49a5-ad06-1e3dea21e946}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\Tests\Engine.Base\GLApp.h">
-      <Filter>GL</Filter>
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.h">
+      <Filter>Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Tests\Engine.Base\VkApp.h">
-      <Filter>VK</Filter>
+    <ClInclude Include="..\..\..\Tests\Engine.Base\OpenGL\GLApp.h">
+      <Filter>OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Tests\Engine.Base\Common.h" />
   </ItemGroup>

@@ -80,6 +80,7 @@
 #pragma warning (error: 4456)			// declaration of 'identifier' hides previous local declaration
 #pragma warning (error: 4129)			// 'character': unrecognized character escape sequence
 #pragma warning (error: 4702)			// unreachable code
+#pragma warning (error: 4522)			// multiple assignment operators specified
 
 
 // to check some errors
@@ -290,6 +291,13 @@
 // notify compiler to generate error if function result unused
 #if COMPILER_VERSION >= 1700
 #	define GX_CHECK_RESULT					_Check_return_	// Compile with '/analize' key
+#endif
+
+
+#if COMPILER_VERSION <= 1910
+#	define constexpr_if			if
+#else
+#	define constexpr_if			constexpr if
 #endif
 
 //-------------------------------------------------------------------

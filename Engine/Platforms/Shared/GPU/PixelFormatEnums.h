@@ -494,6 +494,7 @@ namespace Platforms
 
 		static constexpr uint ColorChannelsCount (type value);
 
+		static StringCRef			ToString		(type value);
 		static BitsVec<usize, 4>	BitsPerChannel	(type value);
 		static BitsU				BitPerPixel		(type value);
 	};
@@ -615,6 +616,130 @@ namespace Platforms
 	inline constexpr bool EPixelFormat::HasStencil (type value)
 	{
 		return IsStencil( value ) or IsDepthStencil( value );
+	}
+	
+
+	inline StringCRef  EPixelFormat::ToString (type value)
+	{
+		switch ( value )
+		{
+			case RGBA16_SNorm : return "RGBA16_SNorm";
+			case RGBA8_SNorm : return "RGBA8_SNorm";
+			case RGB16_SNorm : return "RGB16_SNorm";
+			case RGB8_SNorm : return "RGB8_SNorm";
+			case RG16_SNorm : return "RG16_SNorm";
+			case RG8_SNorm : return "RG8_SNorm";
+			case R16_SNorm : return "R16_SNorm";
+			case R8_SNorm : return "R8_SNorm";
+			case RGBA16_UNorm : return "RGBA16_UNorm";
+			case RGBA8_UNorm : return "RGBA8_UNorm";
+			case RGB16_UNorm : return "RGB16_UNorm";
+			case RGB8_UNorm : return "RGB8_UNorm";
+			case RG16_UNorm : return "RG16_UNorm";
+			case RG8_UNorm : return "RG8_UNorm";
+			case R16_UNorm : return "R16_UNorm";
+			case R8_UNorm : return "R8_UNorm";
+			case RGB10_A2_UNorm : return "RGB10_A2_UNorm";
+			case RGBA4_UNorm : return "RGBA4_UNorm";
+			case RGB5_A1_UNorm : return "RGB5_A1_UNorm";
+			case RGB_5_6_5_UNorm : return "RGB_5_6_5_UNorm";
+			case BGR8_UNorm : return "BGR8_UNorm";
+			case BGRA8_UNorm : return "BGRA8_UNorm";
+			case sRGB8 : return "sRGB8";
+			case sRGB8_A8 : return "sRGB8_A8";
+			case R8I : return "R8I";
+			case RG8I : return "RG8I";
+			case RGB8I : return "RGB8I";
+			case RGBA8I : return "RGBA8I";
+			case R16I : return "R16I";
+			case RG16I : return "RG16I";
+			case RGB16I : return "RGB16I";
+			case RGBA16I : return "RGBA16I";
+			case R32I : return "R32I";
+			case RG32I : return "RG32I";
+			case RGB32I : return "RGB32I";
+			case RGBA32I : return "RGBA32I";
+			case R8U : return "R8U";
+			case RG8U : return "RG8U";
+			case RGB8U : return "RGB8U";
+			case RGBA8U : return "RGBA8U";
+			case R16U : return "R16U";
+			case RG16U : return "RG16U";
+			case RGB16U : return "RGB16U";
+			case RGBA16U : return "RGBA16U";
+			case R32U : return "R32U";
+			case RG32U : return "RG32U";
+			case RGB32U : return "RGB32U";
+			case RGBA32U : return "RGBA32U";
+			case RGB10_A2U : return "RGB10_A2U";
+			case R16F : return "R16F";
+			case RG16F : return "RG16F";
+			case RGB16F : return "RGB16F";
+			case RGBA16F : return "RGBA16F";
+			case R32F : return "R32F";
+			case RG32F : return "RG32F";
+			case RGB32F : return "RGB32F";
+			case RGBA32F : return "RGBA32F";
+			case RGB_11_11_10F : return "RGB_11_11_10F";
+			case Depth16 : return "Depth16";
+			case Depth24 : return "Depth24";
+			case Depth32 : return "Depth32";
+			case Depth32F : return "Depth32F";
+			case Depth16_Stencil8 : return "Depth16_Stencil8";
+			case Depth24_Stencil8 : return "Depth24_Stencil8";
+			case Depth32F_Stencil8 : return "Depth32F_Stencil8";
+			case BC1_RGB8_UNorm : return "BC1_RGB8_UNorm";
+			case BC1_RGB8_A1_UNorm : return "BC1_RGB8_A1_UNorm";
+			/*case BC2_RGBA8_UNorm
+			case BC3_RGBA8_UNorm
+			case BC4_RED8_SNorm
+			case BC4_RED8_UNorm
+			case BC5_RG8_SNorm
+			case BC5_RG8_UNorm
+			case BC7_RGBA8_UNorm
+			case BC7_SRGB8_A8_UNorm
+			case BC6H_RGB16F
+			case BC6H_RGB16F_Unsigned
+			case ETC2_RGB8_UNorm
+			case ECT2_SRGB8_UNorm
+			case ETC2_RGB8_A1_UNorm
+			case ETC2_SRGB8_A1_UNorm
+			case ETC2_RGBA8_UNorm
+			case ETC2_SRGB8_A8_UNorm
+			case EAC_R11_SNorm
+			case EAC_R11_UNorm
+			case EAC_RG11_SNorm
+			case EAC_RG11_UNorm
+			case ASTC_RGBA_4x4
+			case ASTC_RGBA_5x4
+			case ASTC_RGBA_5x5
+			case ASTC_RGBA_6x5
+			case ASTC_RGBA_6x6
+			case ASTC_RGBA_8x5
+			case ASTC_RGBA_8x6
+			case ASTC_RGBA_8x8
+			case ASTC_RGBA_10x5
+			case ASTC_RGBA_10x6
+			case ASTC_RGBA_10x8
+			case ASTC_RGBA_10x10
+			case ASTC_RGBA_12x10
+			case ASTC_RGBA_12x12
+			case ASTC_SRGB8_A8_4x4
+			case ASTC_SRGB8_A8_5x4
+			case ASTC_SRGB8_A8_5x5
+			case ASTC_SRGB8_A8_6x5
+			case ASTC_SRGB8_A8_6x6
+			case ASTC_SRGB8_A8_8x5
+			case ASTC_SRGB8_A8_8x6
+			case ASTC_SRGB8_A8_8x8
+			case ASTC_SRGB8_A8_10x5
+			case ASTC_SRGB8_A8_10x6
+			case ASTC_SRGB8_A8_10x8
+			case ASTC_SRGB8_A8_10x10
+			case ASTC_SRGB8_A8_12x10
+			case ASTC_SRGB8_A8_12x12*/
+		}
+		RETURN_ERR( "unknown pixel format " << String().FormatI( value, 16 ) );
 	}
 
 

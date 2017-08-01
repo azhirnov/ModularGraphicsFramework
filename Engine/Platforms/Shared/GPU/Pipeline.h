@@ -103,8 +103,10 @@ namespace ModuleMsg
 
 
 	// platform-dependent
-	struct GetGraphicsPipelineID;
-	struct GetComputePipelineID;
+	struct GetVkGraphicsPipelineID;
+	struct GetGLGraphicsPipelineID;
+	struct GetVkComputePipelineID;
+	struct GetGLComputePipelineID;
 
 
 }	// ModuleMsg

@@ -52,6 +52,14 @@ namespace GXTypes
 			UnsafeMem::MemCopy( _data, other._data, SizeOf(_data) );
 		}
 
+		DeferredType (Self &&other) :
+			_typeid( other._typeid ),
+			_isDefined( other._isDefined )
+		{
+			UnsafeMem::MemCopy( _data, other._data, SizeOf(_data) );
+			other._Destroy();
+		}
+
 		~DeferredType ()
 		{
 			_Destroy();
@@ -80,6 +88,17 @@ namespace GXTypes
 
 			UnsafeMem::MemCopy( _data, other._data, SizeOf(_data) );
 			_isDefined = other._isDefined;
+			return *this;
+		}
+
+		forceinline Self& operator = (Self &&other)
+		{
+			ASSERT( _typeid == other._typeid );
+
+			UnsafeMem::MemCopy( _data, other._data, SizeOf(_data) );
+			_isDefined = other._isDefined;
+
+			other._Destroy();
 			return *this;
 		}
 
@@ -190,6 +209,8 @@ namespace GXTypes
 
 		DeferredType (const Self &other) = delete;
 
+		DeferredType (Self &&other) = delete;	// TODO
+
 		~DeferredType ()
 		{
 			if ( IsDefined() and _destructor != null )
@@ -215,6 +236,7 @@ namespace GXTypes
 		}
 		
 		forceinline Self& operator = (const Self &other) = delete;
+		forceinline Self& operator = (Self &&other) = delete;
 
 
 	private:

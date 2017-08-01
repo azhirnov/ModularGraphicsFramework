@@ -19,6 +19,7 @@ extern void Test_CompileTime_StaticFloat ();
 extern void Test_CompileTime_TypeQualifier ();
 extern void Test_CompileTime_MainType ();
 extern void Test_CompileTime_StringToID ();
+extern void Test_CompileTime_Sequence ();
 
 extern void Test_Runtime_VirtualTypelist ();
 
@@ -50,6 +51,9 @@ extern void Test_Types_Function ();
 extern void Test_Types_StringParser ();
 extern void Test_Types_Union ();
 extern void Test_Types_Cast ();
+extern void Test_Types_Time ();
+
+extern void Test_Algorithms_InvokeWithVariant ();
 
 extern void Test_OS_Date ();
 extern void Test_OS_FileSystem ();
@@ -74,6 +78,7 @@ void main ()
 	Test_CompileTime_StaticFloat();
 	Test_CompileTime_TypeQualifier();
 	Test_CompileTime_StringToID();
+	Test_CompileTime_Sequence();
 
 	Test_Runtime_VirtualTypelist();
 
@@ -104,6 +109,9 @@ void main ()
 	Test_Types_StringParser();
 	Test_Types_Union();
 	Test_Types_Cast();
+	Test_Types_Time();
+
+	Test_Algorithms_InvokeWithVariant();
 
 	Test_OS_Date();
 	Test_OS_FileSystem();

@@ -6,7 +6,6 @@
 #pragma once
 
 #include "Engine/STL/CompileTime/TypeTraits.h"
-#include <functional>
 
 namespace GX_STL
 {

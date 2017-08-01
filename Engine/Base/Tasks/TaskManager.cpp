@@ -59,6 +59,10 @@ namespace Base
 		_SendForEachAttachments( msg );
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
+
+		SCOPELOCK( _lock );
+		_threads.Clear();
+
 		return true;
 	}
 	
@@ -120,7 +124,9 @@ namespace Base
 		}
 
 		// find low load thread
-		if ( not iter and not _threads.Empty() )
+		if ( not iter and
+			 not _threads.Empty() and
+			 (msg->target == ThreadID() or msg->altTarget == ThreadID()) )
 		{
 			TODO("");
 			iter = &_threads.Front();
@@ -132,7 +138,7 @@ namespace Base
 			return true;
 		}
 
-		return false;
+		RETURN_ERR( "can't find any thread to process message" );
 	}
 	
 /*
@@ -168,7 +174,8 @@ namespace Base
 */
 	ModulePtr TaskManager::_CreateTaskModule (const GlobalSystemsRef gs, const CreateInfo::TaskModule &ci)
 	{
-		return GXTypes::New< TaskModule >( gs, ci );
+		CHECK_ERR( ci.manager );
+		return New< TaskModule >( gs, ci );
 	}
 	
 /*
@@ -178,7 +185,7 @@ namespace Base
 */
 	ModulePtr TaskManager::_CreateTaskManager (const GlobalSystemsRef gs, const CreateInfo::TaskManager &ci)
 	{
-		return GXTypes::New< TaskManager >( gs, ci );
+		return New< TaskManager >( gs, ci );
 	}
 
 

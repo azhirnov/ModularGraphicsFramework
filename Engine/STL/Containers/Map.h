@@ -75,6 +75,10 @@ namespace _types_hidden_
 		BaseMap (Self &&other) : _memory( RVREF( other._memory ) )
 		{}
 		
+		BaseMap (InitializerList<pair_t> list)
+		{
+			AddArray( ArrayCRef<pair_t>( list ) );
+		}
 
 		operator	ArrayCRef< pair_t > () const
 		{
@@ -199,6 +203,13 @@ namespace _types_hidden_
 			return _memory.AddOrSkip( RVREF( value ) );
 		}
 
+
+		void AddArray (ArrayCRef<pair_t> value)
+		{
+			FOR( i, value ) {
+				Add( value[i] );
+			}
+		}
 
 		void AddArray (const_values_range_t value)
 		{

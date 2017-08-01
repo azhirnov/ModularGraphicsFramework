@@ -60,7 +60,7 @@ namespace OS
 
 		static usize GetCurrentThreadId ();
 
-		static void Sleep (TimeU time);
+		static void Sleep (TimeL time);
 
 		static void Yield ();
 
