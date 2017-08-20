@@ -62,6 +62,7 @@ namespace  Java
 			Ptr< JavaVM >	vm = GetJavaVM();
 			CHECK_ERR( vm.IsNotNull() );
 				
+			// TODO: WTF?
 			Detach();
 
 			_env = null;

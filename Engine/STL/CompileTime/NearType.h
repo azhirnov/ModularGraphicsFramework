@@ -40,7 +40,7 @@ namespace CompileTime
 	
 	struct NearInt : Noninstancable
 	{
-	//private:	// becouse of bug in VS2017
+	//private:	// becouse of bug in VS 15.2
 	public:
 		template <usize SizeValue>
 		struct _FromSize {
@@ -90,7 +90,7 @@ namespace CompileTime
 
 	struct NearUInt : Noninstancable
 	{
-	//private:	// becouse of bug in VS2017
+	//private:	// becouse of bug in VS 15.2
 	public:
 		template <usize SizeValue>
 		struct _FromSize {
@@ -145,7 +145,7 @@ namespace CompileTime
 	
 	struct LargerInt : Noninstancable
 	{
-	//private:	// becouse of bug in VS2017
+	//private:	// becouse of bug in VS 15.2
 	public:
 		template <usize Size>
 		struct _FromSize {
@@ -181,7 +181,7 @@ namespace CompileTime
 	
 	struct LargerUInt : Noninstancable
 	{
-	//private:	// becouse of bug in VS2017
+	//private:	// becouse of bug in VS 15.2
 	public:
 		template <usize Size>
 		struct _FromSize {
@@ -222,7 +222,7 @@ namespace CompileTime
 	
 	struct LesserInt : Noninstancable
 	{
-	//private:	// becouse of bug in VS2017
+	//private:	// becouse of bug in VS 15.2
 	public:
 		template <usize Size>
 		struct _FromSize {
@@ -258,7 +258,7 @@ namespace CompileTime
 	
 	struct LesserUInt : Noninstancable
 	{
-	//private:	// becouse of bug in VS2017
+	//private:	// becouse of bug in VS 15.2
 	public:
 		template <usize Size>
 		struct _FromSize {
@@ -299,7 +299,7 @@ namespace CompileTime
 
 	struct NearFloat : Noninstancable
 	{
-	//private:	// becouse of bug in VS2017
+	//private:	// becouse of bug in VS 15.2
 	public:
 		template <usize Size>
 		struct _FromSize {

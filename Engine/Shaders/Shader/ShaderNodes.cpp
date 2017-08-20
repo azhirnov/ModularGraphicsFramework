@@ -1,16 +1,12 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Shaders/Shader/ShaderNodes.h"
+#include "Engine/Shaders/Pipeline/Pipeline.h"
 
 namespace ShaderEditor
 {
 namespace _ShaderNodesHidden_
 {
-
-	struct NodeGetter
-	{
-		static ISrcNodePtr Get (const Node &node)	{ return node._self; }
-	};
 
 	struct NodeGraph
 	{
@@ -126,7 +122,7 @@ namespace ShaderNodes
 */
 	Shader::ShaderCompiler&  Shader::ShaderCompiler::operator << (const Node &node)
 	{
-		_nodes << _ShaderNodesHidden_::NodeGetter::Get( node );
+		_nodes << Helpers::NodeGetter::Get( node );
 		return *this;
 	}
 		
@@ -228,6 +224,8 @@ namespace ShaderNodes
 /*
 =================================================
 	_ProcessGraphPass2
+----
+	TODO: optimize
 =================================================
 */
 	bool Shader::ShaderCompiler::_ProcessGraphPass2 (uint passIndex, INOUT NodeArray_t &allNodes) const
@@ -267,23 +265,6 @@ namespace ShaderNodes
 								continue;
 							}
 						}
-
-						
-						/*for (usize c = 0; c < i; ++c)
-						{
-							if ( (field->Type() == ENodeType::Vector or field->Type() == ENodeType::Struct) and
-									field->Parent() == allNodes[c] )
-							{
-								allNodes.Erase( c );
-								//--c;
-
-								ASSERT( allNodes[i-1] == node );
-								allNodes.Insert( field->Parent(), i );
-
-								completed = false;
-								continue;
-							}
-						}*/
 
 						if ( not completed )
 							break;
@@ -615,10 +596,12 @@ namespace ShaderNodes
 	constructor
 =================================================
 */
-	Shader::Shader (EShader::type shaderType) :
+	Shader::Shader (struct PipelineNodes::Pipeline *pipeline, EShader::type shaderType) :
 		Node( null, "root", GX_STL::GXTypes::String( EShader::ToString( shaderType ) ) << " shader", ENodeType::Root ),
 		_shaderType( shaderType )
-	{}
+	{
+		pipeline->AddShader( this );
+	}
 
 /*
 =================================================

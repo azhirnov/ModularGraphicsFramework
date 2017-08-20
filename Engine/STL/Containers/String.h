@@ -179,11 +179,11 @@ namespace GXTypes
 
 		void EraseFromBack (usize count);
 
-		bool Find (TStringRef<const T> value, OUT usize &pos, usize start = 0)	const	{ return TStringRef<const T>(*this).Find( value, pos, start ); }
-		bool Find (const T value, OUT usize &pos, usize start = 0)				const	{ return TStringRef<const T>(*this).Find( value, pos, start ); }
+		bool Find (TStringRef<const T> value, OUT usize &pos, usize start = 0)	const	{ return TStringRef<const T>(*this).Find( value, OUT pos, start ); }
+		bool Find (const T value, OUT usize &pos, usize start = 0)				const	{ return TStringRef<const T>(*this).Find( value, OUT pos, start ); }
 		
-		bool FindIC (TStringRef<const T> value, OUT usize &pos, usize start = 0)const	{ return TStringRef<const T>(*this).FindIC( value, pos, start ); }
-		bool FindIC (const T value, OUT usize &pos, usize start = 0)			const	{ return TStringRef<const T>(*this).FindIC( value, pos, start ); }
+		bool FindIC (TStringRef<const T> value, OUT usize &pos, usize start = 0)const	{ return TStringRef<const T>(*this).FindIC( value, OUT pos, start ); }
+		bool FindIC (const T value, OUT usize &pos, usize start = 0)			const	{ return TStringRef<const T>(*this).FindIC( value, OUT pos, start ); }
 
 		bool FindAndDelete (TStringRef<const T> value, OUT usize &pos, usize start = 0);
 
@@ -971,7 +971,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline bool TString<T,S,MC>::FindAndDelete (TStringRef<const T> value, usize &pos, usize start)
+	inline bool TString<T,S,MC>::FindAndDelete (TStringRef<const T> value, OUT usize &pos, usize start)
 	{
 		if ( not Find( value, pos, start ) )
 			return false;
@@ -986,7 +986,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline bool TString<T,S,MC>::FindAndChange (TStringRef<const T> searchStr, TStringRef<const T> newStr, usize &pos, usize start)
+	inline bool TString<T,S,MC>::FindAndChange (TStringRef<const T> searchStr, TStringRef<const T> newStr, OUT usize &pos, usize start)
 	{
 		usize	u_len = GXMath::Min( searchStr.Length(), newStr.Length() ),
 				i = 0;
@@ -1277,7 +1277,7 @@ namespace GXTypes
 */
 	template <typename T, typename S, typename MC>
 	template <typename T2, typename S2, typename A2>
-	inline void TString<T,S,MC>::Convert (TString<T2,S2,A2> &str) const
+	inline void TString<T,S,MC>::Convert (OUT TString<T2,S2,A2> &str) const
 	{
 		str.Reserve( _length + 4 );
 

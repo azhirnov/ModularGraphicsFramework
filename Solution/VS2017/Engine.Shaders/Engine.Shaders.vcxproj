@@ -21,30 +21,51 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Engine\Shaders\Common\Common.h" />
     <ClInclude Include="..\..\..\Engine\Shaders\Engine.Shaders.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Pipeline\BasePipelineCompiler.h" />
     <ClInclude Include="..\..\..\Engine\Shaders\Pipeline\GL4PipelineCompiler.h" />
     <ClInclude Include="..\..\..\Engine\Shaders\Pipeline\Pipeline.h" />
     <ClInclude Include="..\..\..\Engine\Shaders\Pipeline\VkPipelineCompiler.h" />
-    <ClInclude Include="..\..\..\Engine\Shaders\Shader\AllNodeFuncs.h" />
-    <ClInclude Include="..\..\..\Engine\Shaders\Shader\ImageType.h" />
-    <ClInclude Include="..\..\..\Engine\Shaders\Shader\ImageType.hpp" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\BufferTypes.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.0.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.1.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.10.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.11.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.2.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.3.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.4.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.5.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.6.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.7.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.8.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.9.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.Shared.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\GLSLNodeFuncs.Shared.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Generated\VecSwizzle.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\Helpers.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\ImageTypes.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\ImageTypes.hpp" />
     <ClInclude Include="..\..\..\Engine\Shaders\Shader\Node.h" />
-    <ClInclude Include="..\..\..\Engine\Shaders\Shader\NodeFuncs.h" />
-    <ClInclude Include="..\..\..\Engine\Shaders\Shader\NodeTypes.h" />
-    <ClInclude Include="..\..\..\Engine\Shaders\Shader\NodeTypes.hpp" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\OtherTypes.h" />
     <ClInclude Include="..\..\..\Engine\Shaders\Shader\ShaderNodes.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\VecTypes.h" />
+    <ClInclude Include="..\..\..\Engine\Shaders\Shader\VecTypes.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Engine\Shaders\Pipeline\GL4PipelineCompiler.cpp" />
     <ClCompile Include="..\..\..\Engine\Shaders\Pipeline\Pipeline.cpp" />
     <ClCompile Include="..\..\..\Engine\Shaders\Pipeline\VkPipelineCompiler.cpp" />
-    <ClCompile Include="..\..\..\Engine\Shaders\Shader\AllNodeFuncs.cpp" />
-    <ClCompile Include="..\..\..\Engine\Shaders\Shader\CLNodeFuncs.cpp" />
-    <ClCompile Include="..\..\..\Engine\Shaders\Shader\CPPNodeFuncs.cpp" />
-    <ClCompile Include="..\..\..\Engine\Shaders\Shader\GLSLNodeFuncs.cpp" />
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\Generated\AllNodeFuncs.0.cpp" />
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\Generated\GLSLNodeFuncs.0.cpp" />
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\Generated\GLSLNodeFuncs.1.cpp" />
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\Generated\GLSLNodeFuncs.2.cpp" />
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\Generated\GLSLNodeFuncs.3.cpp" />
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\Generated\GLSLNodeFuncs.4.cpp" />
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\Generated\GLSLNodeFuncs.5.cpp" />
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\Generated\GLSLNodeFuncs.6.cpp" />
+    <ClCompile Include="..\..\..\Engine\Shaders\Shader\Generated\GLSLNodeFuncs.cpp" />
     <ClCompile Include="..\..\..\Engine\Shaders\Shader\Node.cpp" />
-    <ClCompile Include="..\..\..\Engine\Shaders\Shader\NodeFuncs.cpp" />
     <ClCompile Include="..\..\..\Engine\Shaders\Shader\ShaderNodes.cpp" />
-    <ClCompile Include="..\..\..\Engine\Shaders\Shader\VKNodeFuncs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Engine.Platforms\Engine.Platforms.vcxproj">
@@ -126,7 +147,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -148,7 +169,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -179,7 +200,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>
@@ -212,7 +233,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>

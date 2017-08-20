@@ -28,11 +28,13 @@ namespace CompileTime
 		{
 			usize	_index;
 
-			constexpr explicit _Iterator (usize i = 0) : _index(i)	{}
-			constexpr operator usize () const						{ return _index; }
-			constexpr usize	operator * () const						{ return _index; }
-			_Iterator		operator ++ ()							{ ++_index;  return *this; }
-			_Iterator		operator ++ (int)						{ _Iterator res(*this);  ++(*this);  return res; }
+			constexpr explicit _Iterator (usize i = 0) : _index(i)		{}
+			//constexpr  operator usize () const					{ return { Values...}[_index]; }
+			constexpr T		operator * () const							{ return *((InitializerList<T>{ Values...}).begin() + _index); }
+			_Iterator		operator ++ ()								{ ++_index;  return *this; }
+			_Iterator		operator ++ (int)							{ _Iterator res(*this);  ++(*this);  return res; }
+			constexpr bool	operator == (const _Iterator &right) const	{ return _index == right._index; }
+			constexpr bool	operator != (const _Iterator &right) const	{ return not (*this == right); }
 		};
 
 
@@ -47,9 +49,9 @@ namespace CompileTime
 
 		// for 'range based for'
 		constexpr _Iterator	begin () const					{ return _Iterator(0); }
-		constexpr _Iterator	end () const					{ return _Iterator(Count-1); }
+		constexpr _Iterator	end () const					{ return _Iterator(Count); }
 
-		constexpr T			operator [] (usize index) const	{ return { Values...}[index]; }
+		constexpr T			operator [] (usize index) const	{ ASSERT(index < Count); return *_Iterator(index); }
 	};
 	
 

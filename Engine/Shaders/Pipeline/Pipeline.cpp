@@ -31,6 +31,56 @@ namespace PipelineNodes
 		
 /*
 =================================================
+	constructor
+=================================================
+*/
+	Pipeline::Pipeline ()
+	{
+	}
+	
+/*
+=================================================
+	_CompileShaders
+=================================================
+*/
+	bool Pipeline::_CompileShaders ()
+	{
+		FOR( i, _attachedShaders ) 
+		{
+			CHECK_ERR( _attachedShaders[i].second->_Compile() );
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	AddShader
+=================================================
+*/
+	bool Pipeline::AddShader (ShaderNodes::Shader* shader)
+	{
+		CHECK_ERR( shader );
+		CHECK_ERR( not _attachedShaders.IsExist( shader->_shaderType ) );
+
+		_attachedShaders.Add( shader->_shaderType, shader );
+		return true;
+	}
+	
+//=============================================================================
+
+
+	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	GraphicsPipeline::GraphicsPipeline ()
+	{
+	}
+
+/*
+=================================================
 	Run
 =================================================
 */
@@ -42,6 +92,15 @@ namespace PipelineNodes
 //=============================================================================
 
 
+	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	ComputePipeline::ComputePipeline ()
+	{
+	}
 
 /*
 =================================================

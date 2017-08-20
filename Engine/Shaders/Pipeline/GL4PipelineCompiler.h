@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Shaders/Pipeline/Pipeline.h"
+#include "Engine/Shaders/Pipeline/BasePipelineCompiler.h"
 
 namespace ShaderEditor
 {
@@ -13,18 +13,10 @@ namespace PipelineNodes
 	// OpenGL 4 Pipeline Compiler
 	//
 
-	class GL4PipelineCompiler final : public GX_STL::GXTypes::StaticRefCountedObject
+	class GL4PipelineCompiler final : public BasePipelineCompiler
 	{
 	// types
 	private:
-		template <typename T>				using Array	= GX_STL::GXTypes::Array<T>;
-		template <typename F, typename S>	using Pair	= GX_STL::GXTypes::Pair< F, S >;
-
-		using usize			= GX_STL::GXTypes::usize;
-		using NodePtr		= _ShaderNodesHidden_::ISrcNodePtr;
-		using String		= GX_STL::GXTypes::String;
-		using StringCRef	= GX_STL::GXTypes::StringCRef;
-
 		struct TextureInfo : Pair< NodePtr, NodePtr >
 		{
 			TextureInfo (const NodePtr &image, const NodePtr &sampler) :
@@ -51,13 +43,9 @@ namespace PipelineNodes
 			{}
 		};
 		
-		using NodeInfoMap	= GX_STL::GXTypes::Map< NodePtr, NodeInfo >;
-		using TexturesMap	= GX_STL::GXTypes::Map< TextureInfo, NodeInfo >;
-		using ENodeType		= _ShaderNodesHidden_::ISrcNode::ENodeType;
-		using ModulePtr		= Engine::Base::ModulePtr;
-		using FuncSources	= GX_STL::GXTypes::HashSet< String >;
-		using GLuint		= GX_STL::GXTypes::uint;
-		using EShader		= Engine::Platforms::EShader;
+		using NodeInfoMap	= Map< NodePtr, NodeInfo >;
+		using TexturesMap	= Map< TextureInfo, NodeInfo >;
+		using FuncSources	= HashSet< String >;
 
 
 	// variables
@@ -75,7 +63,7 @@ namespace PipelineNodes
 	public:
 		GL4PipelineCompiler ();
 
-		bool Compile (const Array<NodePtr> &nodes, EShader::type shaderType, OUT ModulePtr &program);
+		bool Compile (const Array<NodePtr> &nodes, EShader::type shaderType, OUT ModulePtr &program) override;
 
 
 	private:
@@ -85,6 +73,7 @@ namespace PipelineNodes
 		bool _CompilePass0 (EShader::type shaderType, OUT String &src);
 		bool _CompilePass1 (const Array<NodePtr> &nodes, OUT String &src);
 		bool _CompilePass2 (const Array<NodePtr> &nodes, OUT String &src);
+		bool _CompilePass3 (OUT String &src);
 
 		// to GLSL type
 		String	_VecTypeName (const NodePtr &node) const;

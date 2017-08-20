@@ -113,7 +113,7 @@ namespace CompileTime
 			String	s;
 			s << String().FormatI( N, 10 );
 
-			if ( N != 0 and D > 1 )
+			if_constexpr ( N != 0 and D > 1 )
 				s << '/' << String().FormatI( D, 10 );
 			
 			return s;

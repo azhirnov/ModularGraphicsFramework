@@ -23,11 +23,24 @@ namespace PipelineNodes
 
 		//using CompiledShader	= ShaderNodes::Shader::CompiledShader;
 
+	private:
+		using EShader			= Engine::Platforms::EShader;
+		using AttachedShaders_t	= GX_STL::GXTypes::Map< EShader::type, ShaderNodes::Shader* >;
+
+
+	// variables
+	private:
+		AttachedShaders_t	_attachedShaders;
+
 
 	// methods
 	protected:
-		Pipeline ()
-		{}
+		Pipeline ();
+
+		bool _CompileShaders ();
+
+	public:
+		bool AddShader (ShaderNodes::Shader* shader);
 	};
 
 
@@ -45,8 +58,7 @@ namespace PipelineNodes
 
 	// methods
 	protected:
-		GraphicsPipeline ()
-		{}
+		GraphicsPipeline ();
 
 	public:
 		void Run (const GX_STL::GXMath::uint3 &areaSize);
@@ -67,8 +79,7 @@ namespace PipelineNodes
 
 	// methods
 	protected:
-		ComputePipeline ()
-		{}
+		ComputePipeline ();
 
 	public:
 		void Run (const GX_STL::GXMath::uint3 &globalSize,

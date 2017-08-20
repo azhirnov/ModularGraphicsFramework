@@ -202,7 +202,7 @@ namespace _ShaderNodesHidden_
 				break;
 
 			case ENodeType::Function :
-				CHECK_ERR( _value.Is<String>() or not _value.IsDefined() );
+				CHECK_ERR( _value.Is<FuncInfo>() );
 				break;
 
 			default :
@@ -298,6 +298,43 @@ namespace _ShaderNodesHidden_
 
 		_apiName = name;
 	}
+	
+/*
+=================================================
+	GetSource
+=================================================
+*/
+	bool  NodeFunctions::GetSource (StringCRef signature, OUT String &src) const
+	{
+		Functions_t::const_iterator	iter;
+
+		usize	in_pos	= ~0u;
+		usize	out_pos	= ~0u;
+
+		signature.Find( "_in", OUT in_pos, 0 );
+		signature.Find( "_out", OUT out_pos, 0 );
+
+		StringCRef	name = signature.SubString( 0, Min( in_pos, out_pos ) );
+
+		if ( _funcs.Find( name, OUT iter ) )
+		{
+			CHECK_ERR( iter->second.sourceGen( signature, OUT src ) );
+			return true;
+		}
+
+		if ( not _apiName.Empty() )
+		{
+			String	sig;	sig << _apiName << '.' << name;
+
+			if ( _funcs.Find( sig, OUT iter ) )
+			{
+				CHECK_ERR( iter->second.sourceGen( signature, OUT src ) );
+				return true;
+			}
+		}
+
+		RETURN_ERR( "can't find function with signature '" << signature << "'" );
+	}
 
 /*
 =================================================
@@ -322,6 +359,24 @@ namespace _ShaderNodesHidden_
 
 		CHECK_ERR( iter->second.Call( nodes, shaderType, OUT program ) );
 		return true;
+	}
+	
+/*
+=================================================
+	Register
+=================================================
+*/
+	bool  NodeFunctions::Register (StringCRef name, const Func_t &func, const SourceGen_t &srcGen)
+	{
+		CHECK_ERR( not _funcs.IsExist( name ) );
+
+		_funcs.Add( name, { func, srcGen } );
+		return true;
+	}
+	
+	bool  NodeFunctions::Register (StringCRef name, Func_t::Function_t *func, SourceGen_t::Function_t *srcGen)
+	{
+		return Register( name, DelegateBuilder( func ), DelegateBuilder( srcGen ) );
 	}
 
 /*

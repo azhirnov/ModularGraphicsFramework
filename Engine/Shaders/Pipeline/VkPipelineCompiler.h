@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Shaders/Pipeline/Pipeline.h"
+#include "Engine/Shaders/Pipeline/BasePipelineCompiler.h"
 
 namespace ShaderEditor
 {
@@ -13,15 +13,10 @@ namespace PipelineNodes
 	// Vulkan Pipeline Compiler
 	//
 
-	class VkPipelineCompiler final : public GX_STL::GXTypes::StaticRefCountedObject
+	class VkPipelineCompiler final : public BasePipelineCompiler
 	{
 	// types
 	private:
-		template <typename T>				using Array	= GX_STL::GXTypes::Array<T>;
-
-		using NodePtr		= _ShaderNodesHidden_::ISrcNodePtr;
-		using ModulePtr		= Engine::Base::ModulePtr;
-		using EShader		= Engine::Platforms::EShader;
 
 
 	// variables
@@ -32,7 +27,7 @@ namespace PipelineNodes
 	public:
 		VkPipelineCompiler ();
 		
-		bool Compile (const Array<NodePtr> &nodes, EShader::type shaderType, OUT ModulePtr &program);
+		bool Compile (const Array<NodePtr> &nodes, EShader::type shaderType, OUT ModulePtr &program) override;
 	};
 
 

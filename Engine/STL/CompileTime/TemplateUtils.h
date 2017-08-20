@@ -8,6 +8,14 @@ namespace GX_STL
 {
 namespace CompileTime
 {
+	
+	//
+	// Order (to fix bug in VS 15.3.0)
+	//
+	template <typename T>
+	using Order = T;
+
+
 
 	//
 	// Switch Type

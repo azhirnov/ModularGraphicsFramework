@@ -41,7 +41,7 @@ extern void Test_CompileTime_TypeList ()
 	STATIC_ASSERT( typeList4::Count == 6 );
 	STATIC_ASSERT(( IsSameTypes< typeList4::Front, short > ));
 
-	typedef typeList0::PushBack< short >::PushBack< float >		typeList5;
+	typedef Order< typeList0::PushBack< short > >::PushBack< float >		typeList5;
 	STATIC_ASSERT( typeList5::FirstIndexOf< short > == 1 );
 	STATIC_ASSERT( typeList5::LastIndexOf< short > == 7 );
 	
@@ -64,6 +64,15 @@ extern void Test_CompileTime_TypeList ()
 	STATIC_ASSERT( typeList11::IndexOf< short > == 0 );
 	STATIC_ASSERT( typeList11::IndexOf< uint > == 1 );
 	STATIC_ASSERT( typeList11::IndexOf< ulong > == 2 );
+
+	typedef Order< typeList10::Append< TypeListFrom< ulong, float > >>::Append< TypeListFrom< double, bool > >	typeList12;
+	STATIC_ASSERT( typeList12::Count == 6 );
+	STATIC_ASSERT( typeList12::IndexOf< short > == 0 );
+	STATIC_ASSERT( typeList12::IndexOf< uint > == 1 );
+	STATIC_ASSERT( typeList12::IndexOf< ulong > == 2 );
+	STATIC_ASSERT( typeList12::IndexOf< float > == 3 );
+	STATIC_ASSERT( typeList12::IndexOf< double > == 4 );
+	STATIC_ASSERT( typeList12::IndexOf< bool > == 5 );
 
 	typedef ValueListFrom< int, 0, 1, 2, 3 >					valueList0;
 	STATIC_ASSERT( valueList0::Get<0>::value == 0 );

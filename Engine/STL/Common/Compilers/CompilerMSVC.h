@@ -48,7 +48,7 @@
 #pragma warning (disable: 4503)			// decorated name length exceeded, name was truncated (for debug info???)
 #pragma warning (disable: 4838)			// conversion from int to uint
 //#pragma warning (disable: 4251)		// class '%class_name%' must have dll-interface...
-
+#pragma warning (disable: 4984)			// 'if constexpr' is a C++17 language extension
 
 // disable warnings for level 4
 #pragma warning (disable: 4201)			// nonstandard extension used : nameless struct/union
@@ -294,10 +294,10 @@
 #endif
 
 
-#if COMPILER_VERSION <= 1910
-#	define constexpr_if			if
+#if COMPILER_VERSION >= 1911
+#	define if_constexpr			if constexpr
 #else
-#	define constexpr_if			constexpr if
+#	define if_constexpr			if
 #endif
 
 //-------------------------------------------------------------------

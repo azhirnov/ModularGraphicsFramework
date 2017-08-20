@@ -377,6 +377,18 @@ namespace GXTypes
 			return del;
 		}
 
+		/*template <typename C, typename Class>
+		forceinline static Self  Create (C &&classPtr, Ret (Class:: *fn) (Args...)) noexcept
+		{
+			STATIC_ASSERT(( _types_hidden_::FB_IsSame< C, Class > ));
+
+			using DI = _types_hidden_::MemberDelegate< C, Class, Ret, Args... >;
+
+			Self	del;
+			PlacementNew<DI>( del._Data(), DI( FW<C>(classPtr), fn ) );
+			return del;
+		}*/
+
 		template <typename C, typename Class>
 		forceinline static Self  Create (const C &classPtr, Ret (Class:: *fn) (Args...) const) noexcept
 		{
@@ -388,6 +400,18 @@ namespace GXTypes
 			PlacementNew<DI>( del._Data(), DI( classPtr, fn ) );
 			return del;
 		}
+
+		/*template <typename C, typename Class>
+		forceinline static Self  Create (C &&classPtr, Ret (Class:: *fn) (Args...) const) noexcept
+		{
+			STATIC_ASSERT(( _types_hidden_::FB_IsSame< C, Class > ));
+
+			using DI = _types_hidden_::MemberDelegateConst< C, Class, Ret, Args... >;
+
+			Self	del;
+			PlacementNew<DI>( del._Data(), DI( FW<C>(classPtr), fn ) );
+			return del;
+		}*/
 	};
 
 
@@ -408,11 +432,23 @@ namespace GXTypes
 		return Delegate< Ret (Args...) >::Create( classPtr, fn );
 	}
 
+	/*template <typename C, typename Class, typename Ret, typename ...Args>
+	forceinline Delegate< Ret (Args...) >  DelegateBuilder (C &&classPtr, Ret (Class:: *fn) (Args...)) noexcept
+	{
+		return Delegate< Ret (Args...) >::Create( FW<C>(classPtr), fn );
+	}*/
+
 	template <typename C, typename Class, typename Ret, typename ...Args>
 	forceinline Delegate< Ret (Args...) >  DelegateBuilder (const C &classPtr, Ret (Class:: *fn) (Args...) const) noexcept
 	{
 		return Delegate< Ret (Args...) >::Create( classPtr, fn );
 	}
+
+	/*template <typename C, typename Class, typename Ret, typename ...Args>
+	forceinline Delegate< Ret (Args...) >  DelegateBuilder (C &&classPtr, Ret (Class:: *fn) (Args...) const) noexcept
+	{
+		return Delegate< Ret (Args...) >::Create( FW<C>(classPtr), fn );
+	}*/
 
 
 

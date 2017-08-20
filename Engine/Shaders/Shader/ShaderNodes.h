@@ -2,7 +2,11 @@
 
 #pragma once
 
-#include "Engine/Shaders/Shader/NodeFuncs.h"
+#include "Engine/Shaders/Shader/VecTypes.h"
+#include "Engine/Shaders/Shader/ImageTypes.h"
+#include "Engine/Shaders/Shader/BufferTypes.h"
+#include "Engine/Shaders/Shader/OtherTypes.h"
+#include "Engine/Shaders/Shader/Generated/AllNodeFuncs.h"
 
 namespace ShaderEditor
 {
@@ -32,14 +36,14 @@ namespace ShaderNodes
 
 	// methods
 	protected:
-		explicit Shader (EShader::type shaderType);
+		explicit Shader (struct PipelineNodes::Pipeline *pipeline, EShader::type shaderType);
 
 		virtual void  Main () const = 0;
 
+		virtual bool _Compile ();
+
 	public:
 		bool AddOutputNode (const Node &node);
-
-		virtual bool _Compile ();
 	};
 
 
@@ -79,8 +83,8 @@ namespace ShaderNodes
 
 	// methods
 	public:
-		ComputeShader () :
-			Shader( EShader::Compute ),
+		explicit ComputeShader (PipelineNodes::Pipeline *pipeline) :
+			Shader( pipeline, EShader::Compute ),
 			cs_globalIndexSize{ CS_GetGlobalIndexSize() },		cs_globalIndex{ CS_GetGlobalIndex() },
 			cs_localIndexSize{ CS_GetLocalIndexSize() },		cs_localIndex{ CS_GetLocalIndex() },
 			cs_groupIndexSize{ CS_GetGroupIndexSize() },		cs_groupIndex{ CS_GetGroupIndex() },
@@ -103,15 +107,17 @@ namespace ShaderNodes
 		const Int		vs_instanceID;
 		const Int		vs_vertexID;
 
-		Float4			vs_position	{ this, "vs_position" };
-
 
 	// methods
 	public:
-		VertexShader () :
-			Shader( EShader::Vertex ),
+		explicit VertexShader (PipelineNodes::Pipeline *pipeline) :
+			Shader( pipeline, EShader::Vertex ),
 			vs_instanceID( VS_GetInstanceID() ),	vs_vertexID( VS_GetVertexID() )
 		{}
+
+		void SetPosition (const Float4 &value) {
+			return VS_SetPosition( *this, value );
+		}
 	};
 
 
@@ -127,19 +133,27 @@ namespace ShaderNodes
 		const Int		tc_invocationID;
 		const Int		tc_patchVerticesIn;
 		const Int		tc_primitiveID;
-		
-		Float4			tc_position			{ this, "tc_position" };
-		Float2			tc_tessLevelInner	{ this, "tc_tessLevelInner" };
-		Float4			tc_tessLevelOuter	{ this, "tc_tessLevelOuter" };
 
 
 	// methods
 	public:
-		TessControlShader () :
-			Shader( EShader::TessControl ),
+		explicit TessControlShader (PipelineNodes::Pipeline *pipeline) :
+			Shader( pipeline, EShader::TessControl ),
 			tc_invocationID( TCS_GetInvocationID() ),	tc_patchVerticesIn( TCS_GetPatchVerticesIn() ),
 			tc_primitiveID( TCS_GetPrimitiveID() )
 		{}
+
+		void SetPosition (const Float4 &value) {
+			return TCS_SetPosition( *this, value );
+		}
+
+		void SetTessLevelInner (const Float2 &value) {
+			return TCS_SetTessLevelInner( *this, value );
+		}
+
+		void SetTessLevelOuter (const Float4 &value) {
+			return TCS_SetTessLevelOuter( *this, value );
+		}
 	};
 
 
@@ -158,18 +172,23 @@ namespace ShaderNodes
 		const Float2	te_tessLevelInner;
 		const Float4	te_tessLevelOuter;
 
-		Float			te_pointSize	{ this, "te_pointSize" };
-		Float4			te_position		{ this, "te_position" };
-
 
 	// methods
 	public:
-		TessEvaluationShader () :
-			Shader( EShader::TessEvaluation ),
+		explicit TessEvaluationShader (PipelineNodes::Pipeline *pipeline) :
+			Shader( pipeline, EShader::TessEvaluation ),
 			te_patchVerticesIn( TES_GetPatchVerticesIn() ),		te_primitiveID( TES_GetPrimitiveID() ),
 			te_tessCoord( TES_GetTessCoord() ),					te_tessLevelInner( TES_GetTessLevelInner() ),
 			te_tessLevelOuter( TES_GetTessLevelOuter() )
 		{}
+
+		void SetPointSize (const Float &value) {
+			return TES_SetPointSize( *this, value );
+		}
+
+		void SetPosition (const Float4 &value) {
+			return TES_SetPosition( *this, value );
+		}
 	};
 
 
@@ -184,19 +203,33 @@ namespace ShaderNodes
 	protected:
 		const Int	gs_primitiveIDIn;
 
-		Int			gs_layer			{ this, "gs_layer" };
-		Float		gs_pointSize		{ this, "gs_pointSize" };
-		Float4		gs_position			{ this, "gs_position" };
-		Int			gs_primitiveID		{ this, "gs_primitiveID" };
-		Int			gs_viewportIndex	{ this, "gs_viewportIndex" };
-
 
 	// methods
 	public:
-		GeometryShader () :
-			Shader( EShader::Geometry ),
-			gs_primitiveIDIn( GS_GetPrimitiveIDIn() )
+		explicit GeometryShader (PipelineNodes::Pipeline *pipeline) :
+			Shader( pipeline, EShader::Geometry ),
+			gs_primitiveIDIn( GS_GetPrimitiveID() )
 		{}
+
+		void SetLayer (const Int &value) {
+			return GS_SetLayer( *this, value );
+		}
+
+		void SetPointSize (const Float &value) {
+			return GS_SetPointSize( *this, value );
+		}
+
+		void SetPosition (const Float4 &value) {
+			return GS_SetPosition( *this, value );
+		}
+
+		void SetPrimitiveID (const Int &value) {
+			return GS_SetPrimitiveID( *this, value );
+		}
+
+		void SetViewportIndex (const Int &value) {
+			return GS_SetViewportIndex( *this, value );
+		}
 	};
 
 
@@ -223,19 +256,21 @@ namespace ShaderNodes
 		//const Float2			samplePosition;
 		const Int		fs_viewportIndex;
 
-		Float			fs_fragDepth	{ this, "fs_fragDepth" };
-
 		
 	// methods
 	public:
-		FragmentShader () :
-			Shader( EShader::Fragment ),
+		explicit FragmentShader (PipelineNodes::Pipeline *pipeline) :
+			Shader( pipeline, EShader::Fragment ),
 			fs_screenResolution( FS_GetScreenResolution() ),	fs_fragCoord( FS_GetFragCoord() ),
 			fs_frontFacing( FS_GetFrontFacing() ),				fs_helperInvocation( FS_GetHelperInvocation() ),
 			fs_layer( FS_GetLayerIndex() ),						fs_numSamples( FS_GetNumSamples() ),
 			fs_pointCoord( FS_GetPointCoord() ),				fs_primitiveID( FS_GetPrimitiveID() ),
 			fs_sampleID( FS_GetSampleID() ),					fs_viewportIndex( FS_GetViewportIndex() )
 		{}
+
+		void SetFragmentDepth (const Float &value) {
+			return FS_SetFragmentDepth( *this, value );
+		}
 	};
 
 

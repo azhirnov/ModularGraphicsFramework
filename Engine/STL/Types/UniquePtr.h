@@ -32,6 +32,7 @@ namespace GXTypes
 	public:
 		typedef UniquePtr< T, B, S >	Self;
 		typedef T						value_t;
+		typedef bool					_is_uniqueptr;
 		
 
 	// variables
@@ -244,6 +245,14 @@ namespace GXTypes
 			return base_t::operator ()( x.ptr() );
 		}
 	};
+	
+
+	template <typename T, typename ...Args>
+	inline UniquePtr<T>  MakeUnique (Args&& ...args)
+	{
+		return UniquePtr<T>(new T( FW<Args>(args)... ));
+	}
+
 
 }	// GXTypes
 }	// GX_STL

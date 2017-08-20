@@ -289,17 +289,17 @@ namespace GXTypes
 		{
 			if ( left.GetCurrentIndex() == Index )
 			{
-				constexpr_if ( CmpType == 0 )
+				if_constexpr ( CmpType == 0 )
 				{
 					result = ( left.Get<T>() == right.Get<T>() );
 				}
 				else
-				constexpr_if ( CmpType == 1 )
+				if_constexpr ( CmpType == 1 )
 				{
 					result = ( left.Get<T>() <  right.Get<T>() );
 				}
 				else
-				constexpr_if ( CmpType == 2 )
+				if_constexpr ( CmpType == 2 )
 				{
 					result = ( left.Get<T>() >  right.Get<T>() );
 				}
@@ -665,7 +665,7 @@ namespace GXTypes
 		if ( not IsDefined() )
 			return;
 		
-		constexpr_if ( CompileTime::IsDtorAvailable< Self > )
+		if_constexpr ( CompileTime::IsDtorAvailable< Self > )
 		{
 			_TypeList_Destroy	func( _data, _currentIndex );
 			TypeList_t::RuntimeForEach( func );
@@ -698,7 +698,7 @@ namespace GXTypes
 		if ( not other.IsDefined() )
 			return;
 
-		constexpr_if ( CompileTime::IsMemCopyAvailable< Self > )
+		if_constexpr ( CompileTime::IsMemCopyAvailable< Self > )
 		{
 			UnsafeMem::MemMove( _data, other._data, SizeOf(_data) );
 			_currentIndex = other._currentIndex;
@@ -721,7 +721,7 @@ namespace GXTypes
 		if ( not other.IsDefined() )
 			return;
 		
-		constexpr_if ( CompileTime::IsMemCopyAvailable< Self > )
+		if_constexpr ( CompileTime::IsMemCopyAvailable< Self > )
 		{
 			UnsafeMem::MemMove( _data, other._data, SizeOf(_data) );
 			other._currentIndex = INVALID_INDEX;

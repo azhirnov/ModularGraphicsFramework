@@ -1,7 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Shaders/Pipeline/GL4PipelineCompiler.h"
-#include "Engine/Shaders/Shader/ImageType.h"
+#include "Engine/Shaders/Shader/ImageTypes.h"
 #include "Engine/Platforms/OpenGL/Impl/gl4.h"
 
 namespace ShaderEditor
@@ -125,10 +125,7 @@ namespace PipelineNodes
 		CHECK_ERR( _CompilePass0( shaderType, OUT hdr ) );
 		CHECK_ERR( _CompilePass1( allNodes, OUT src ) );
 		CHECK_ERR( _CompilePass2( allNodes, OUT src ) );
-
-		FOR( i, _funcSources ) {
-			hdr << _funcSources[i];
-		}
+		CHECK_ERR( _CompilePass3( OUT hdr ) );
 
 		FOR( i, _imageNodes ) {
 			hdr << _imageNodes[i].second.uniform << "  " << _imageNodes[i].second.name << ";\n";
@@ -154,6 +151,8 @@ namespace PipelineNodes
 /*
 =================================================
 	_CompilePass0
+----
+	generate preprocessor
 =================================================
 */
 	bool GL4PipelineCompiler::_CompilePass0 (EShader::type shaderType, OUT String &src)
@@ -193,6 +192,8 @@ namespace PipelineNodes
 /*
 =================================================
 	_CompilePass1
+----
+	find images, buffers, textures and set binding indices
 =================================================
 */
 	bool GL4PipelineCompiler::_CompilePass1 (const Array<NodePtr> &allNodes, OUT String &src)
@@ -241,7 +242,7 @@ namespace PipelineNodes
 
 				case ENodeType::Function :
 				{
-					if ( node->TypeName().StartsWith( "GL4.texture" ) )
+					if ( node->TypeName().StartsWith( "GLSL.texture" ) )
 					{
 						NodePtr	image;
 						NodePtr	sampler;
@@ -261,7 +262,7 @@ namespace PipelineNodes
 						_textureNodes.Add({ image, sampler }, _textureNodes.Count() );
 					}
 
-					if ( node->TypeName().StartsWith( "GL4.image" ) )
+					if ( node->TypeName().StartsWith( "GLSL.image" ) )
 					{
 						NodePtr	image;
 
@@ -285,7 +286,7 @@ namespace PipelineNodes
 					{
 						const String	glsl_type = _VecTypeName( node );
 
-						src << "\tconst " << glsl_type << " node_" << NodeGraph::GetNodeIndex( node )
+						src << "\tconst " << glsl_type << " " << _NodeName( node )
 							<< " = " << glsl_type << "(" << _GetConstValue( node ) << ");\n";
 					}
 					break;
@@ -296,15 +297,15 @@ namespace PipelineNodes
 		FOR( i, _imageNodes ) {
 			auto&	img = _imageNodes[i];
 
+			img.second.name		= img.first->Name();
 			_ImageTypeName( img.first, img.second.bindingIndex, OUT img.second.typeName, OUT img.second.uniform );
-			img.second.name		= _imageNodes[i].first->Name();
 		}
 
 		FOR( i, _bufferNodes ) {
 			auto&	buf = _bufferNodes[i];
 
+			buf.second.name		= buf.first->Name();
 			_BufferTypeName( buf.first, buf.second.bindingIndex, OUT buf.second.typeName, OUT buf.second.uniform );
-			buf.second.name		= _bufferNodes[i].first->Name();
 		}
 
 		FOR( i, _textureNodes ) {
@@ -316,6 +317,8 @@ namespace PipelineNodes
 			CHECK_ERR( tex_names.Find( tex.first, OUT iter ) );
 
 			tex.second.name	= iter->second.name;
+
+			ASSERT( not tex.second.name.Empty() );
 		}
 
 		src << '\n';
@@ -325,12 +328,12 @@ namespace PipelineNodes
 /*
 =================================================
 	_CompilePass2
+----
+	generate source from nodes
 =================================================
 */
 	bool GL4PipelineCompiler::_CompilePass2 (const Array<NodePtr> &allNodes, OUT String &src)
 	{
-		using NodeGraph		= _ShaderNodesHidden_::NodeGraph;
-
 		"void main ()\n{\n" >> src;
 		
 		FOR_rev( i, allNodes )
@@ -350,7 +353,7 @@ namespace PipelineNodes
 				case ENodeType::Vector :
 				case ENodeType::Struct :
 				{
-					src << "\tconst " << _VecTypeName( node ) << " node_" << NodeGraph::GetNodeIndex( node ) << " = ";
+					src << "\tconst " << _VecTypeName( node ) << " " << _NodeName( node ) << " = ";
 
 					if ( node->Parent() and node->Parent()->Type() == ENodeType::Function )
 					{
@@ -398,6 +401,94 @@ namespace PipelineNodes
 	
 /*
 =================================================
+	_CompilePass3
+----
+	parse functions sources to find dependencies
+	TODO: optimize
+=================================================
+*/
+	bool GL4PipelineCompiler::_CompilePass3 (OUT String &src)
+	{
+		using StringParser = GX_STL::GXTypes::StringParser;
+
+		// find dependencies
+		Array< StringCRef >		tokens;
+
+		FOR( i, _funcSources )
+		{
+			for (usize pos = 0; _funcSources[i].Find( '$', pos, pos ); ++pos)
+			{
+				usize		p2 = 0;
+				StringCRef	str;
+				StringParser::ReadLineToEnd( _funcSources[i].SubString( pos ), p2, OUT str );
+
+				StringParser::DivideString_CPP( str, OUT tokens );
+				CHECK_ERR( tokens.Count() > 2 and tokens[0] == "$" );
+
+				String	func_src;
+				if ( _ShaderNodesHidden_::NodeFunctions::Instance()->GetSource( tokens[1], OUT func_src ) )
+				{
+					if ( not _funcSources.IsExist( func_src ) )
+					{
+						_funcSources.Add( func_src );
+						i = -1;
+						break;
+					}
+				}
+			}
+		}
+
+		// write function headers only
+		src << "// functions forward declarations\n";
+
+		String	tmp;
+
+		FOR( i, _funcSources )
+		{
+			usize	pos;
+			CHECK_ERR( _funcSources[i].Find( '{', OUT pos ) );
+
+			tmp = _funcSources[i].SubString( 0, pos );
+			
+			// minimize string
+			while (tmp.FindAndDelete( "\n", OUT pos )) {}
+			while (tmp.FindAndDelete( "\r", OUT pos )) {}
+			while (tmp.FindAndChange( "\t", " ", OUT pos )) {}
+			while (tmp.FindAndChange( "  ", " ", OUT pos )) {}
+			if ( tmp.Back() == ' ' )	tmp.PopBack();
+
+			src << tmp << ";\n";
+		}
+
+		// write full source
+		src << "\n// functions sources\n";
+
+		FOR( i, _funcSources )
+		{
+			// replace signatures
+			tmp = _funcSources[i];
+
+			for (usize pos = 0; tmp.Find( '$', pos, pos ); ++pos)
+			{
+				usize	p1 = ~0u;
+				usize	p2 = ~0u;
+				usize	p3 = ~0u;
+				CHECK_ERR( tmp.Find( '(', OUT p1, pos ) and (tmp.Find( "_in", OUT p2, pos ) or tmp.Find( "_out", OUT p3, pos )) );
+
+				p2 = GX_STL::GXMath::Min( p2, p3 );
+				CHECK_ERR( p1 > p2 );
+
+				tmp.Erase( pos, 1 );		// remove '$'
+				tmp.Erase( p2-1, p1 - p2 );	// remove in/out args
+			}
+
+			src << tmp << "\n\n";
+		}
+		return true;
+	}
+
+/*
+=================================================
 	_VecTypeName
 =================================================
 */
@@ -405,7 +496,7 @@ namespace PipelineNodes
 	{
 		//CHECK_ERR( node and (node->Type() == ENodeType::Scalar or node->Type() == ENodeType::Vector) );
 		
-		return node->TypeName();
+		return ToLowerCase( node->TypeName() );
 	}
 
 /*
@@ -426,47 +517,47 @@ namespace PipelineNodes
 		
 		if ( fmt.Empty() )
 		{
-			LOG( (String("used default image format for 'node_") << _ShaderNodesHidden_::NodeGraph::GetNodeIndex( imgNode )).cstr(),
-				 GX_STL::ELog::Debug );
+			LOG( (String("used default image format for '") << _NodeName( imgNode ) << "'").cstr(), GX_STL::ELog::Debug );
 
-			if ( tokens[3] == "float4" )	fmt = "rgba32f";	else
-			if ( tokens[3] == "float3" )	fmt = "rgb32f";		else
-			if ( tokens[3] == "float2" )	fmt = "rg32f";		else
-			if ( tokens[3] == "float" )		fmt = "r32f";		else
-			if ( tokens[3] == "int4" )		fmt = "rgba32i";	else
-			if ( tokens[3] == "int3" )		fmt = "rgb32i";		else
-			if ( tokens[3] == "int2" )		fmt = "rg32i";		else
-			if ( tokens[3] == "int" )		fmt = "r32i";		else
-			if ( tokens[3] == "uint4" )		fmt = "rgba32ui";	else
-			if ( tokens[3] == "uint3" )		fmt = "rgb32ui";	else
-			if ( tokens[3] == "uint2" )		fmt = "rg32ui";		else
-			if ( tokens[3] == "uint" )		fmt = "r32ui";		else
-											RETURN_ERR( "unknown image format" );
+			// depends of _TypeName function
+			if ( tokens[3].EqualsIC( "float4" ) )	fmt = "rgba32f";	else
+			if ( tokens[3].EqualsIC( "float3" ) )	fmt = "rgb32f";		else
+			if ( tokens[3].EqualsIC( "float2" ) )	fmt = "rg32f";		else
+			if ( tokens[3].EqualsIC( "float" ) )	fmt = "r32f";		else
+			if ( tokens[3].EqualsIC( "int4" ) )		fmt = "rgba32i";	else
+			if ( tokens[3].EqualsIC( "int3" ) )		fmt = "rgb32i";		else
+			if ( tokens[3].EqualsIC( "int2" ) )		fmt = "rg32i";		else
+			if ( tokens[3].EqualsIC( "int" ) )		fmt = "r32i";		else
+			if ( tokens[3].EqualsIC( "uint4" ) )	fmt = "rgba32ui";	else
+			if ( tokens[3].EqualsIC( "uint3" ) )	fmt = "rgb32ui";	else
+			if ( tokens[3].EqualsIC( "uint2" ) )	fmt = "rg32ui";		else
+			if ( tokens[3].EqualsIC( "uint" ) )		fmt = "r32ui";		else
+													RETURN_ERR( "unknown image format" );
 		}
 
 		uniformName << ", " << fmt << ") ";
 		
-		if ( tokens[2] == ShaderNodes::ReadOnly<int>::Name() )				uniformName << "readonly";			else
-		if ( tokens[2] == ShaderNodes::WriteOnly<int>::Name() )				uniformName << "writeonly";			else
-		if ( tokens[2] == ShaderNodes::Coherent<int>::Name() )				uniformName << "coherent";			else
-		if ( tokens[2] == ShaderNodes::Volatile<int>::Name() )				uniformName << "volatile";			else
-		if ( tokens[2] == ShaderNodes::Restrict<int>::Name() )				uniformName << "restrict";
+		if ( tokens[2] == ShaderNodes::ReadOnly::Name() )				uniformName << "readonly";			else
+		if ( tokens[2] == ShaderNodes::WriteOnly::Name() )				uniformName << "writeonly";			else
+		if ( tokens[2] == ShaderNodes::Coherent::Name() )				uniformName << "coherent";			else
+		if ( tokens[2] == ShaderNodes::Volatile::Name() )				uniformName << "volatile";			else
+		if ( tokens[2] == ShaderNodes::Restrict::Name() )				uniformName << "restrict";
 
 		uniformName << " uniform ";
 		
-		if ( tokens[3].StartsWithIC( "float" ) )							;									else
-		if ( tokens[3].StartsWithIC( "int" ) )								uniformName << "i";					else
-		if ( tokens[3].StartsWithIC( "uint" ) )								uniformName << "ui";
+		if ( tokens[3].StartsWithIC( "float" ) )						;									else
+		if ( tokens[3].StartsWithIC( "int" ) )							uniformName << "i";					else
+		if ( tokens[3].StartsWithIC( "uint" ) )							uniformName << "ui";
 
-		if ( tokens[1] == ShaderNodes::ImageType1D<int>::Name() )			uniformName << "image1D";			else
-		if ( tokens[1] == ShaderNodes::ImageType1DArray<int>::Name() )		uniformName << "image1DArray";		else
-		if ( tokens[1] == ShaderNodes::ImageType2D<int>::Name() )			uniformName << "image2D";			else
-		if ( tokens[1] == ShaderNodes::ImageType2DArray<int>::Name() )		uniformName << "image2DArray";		else
-		if ( tokens[1] == ShaderNodes::ImageType2DMS<int>::Name() )			uniformName << "image2DMS";			else
-		if ( tokens[1] == ShaderNodes::ImageType2DMSArray<int>::Name() )	uniformName << "image2DMSArray";	else
-		if ( tokens[1] == ShaderNodes::ImageTypeCube<int>::Name() )			uniformName << "imageCube";			else
-		if ( tokens[1] == ShaderNodes::ImageTypeCubeArray<int>::Name() )	uniformName << "imageCubeArray";	else
-		if ( tokens[1] == ShaderNodes::ImageType3D<int>::Name() )			uniformName << "image3D";
+		if ( tokens[1] == ShaderNodes::ImageType1D::Name() )			uniformName << "image1D";			else
+		if ( tokens[1] == ShaderNodes::ImageType1DArray::Name() )		uniformName << "image1DArray";		else
+		if ( tokens[1] == ShaderNodes::ImageType2D::Name() )			uniformName << "image2D";			else
+		if ( tokens[1] == ShaderNodes::ImageType2DArray::Name() )		uniformName << "image2DArray";		else
+		if ( tokens[1] == ShaderNodes::ImageType2DMS::Name() )			uniformName << "image2DMS";			else
+		if ( tokens[1] == ShaderNodes::ImageType2DMSArray::Name() )		uniformName << "image2DMSArray";	else
+		if ( tokens[1] == ShaderNodes::ImageTypeCube::Name() )			uniformName << "imageCube";			else
+		if ( tokens[1] == ShaderNodes::ImageTypeCubeArray::Name() )		uniformName << "imageCubeArray";	else
+		if ( tokens[1] == ShaderNodes::ImageType3D::Name() )			uniformName << "image3D";
 		
 		usize	pos;
 		typeName = uniformName;
@@ -530,22 +621,22 @@ namespace PipelineNodes
 		Array<StringCRef>	tokens;
 		GX_STL::GXTypes::StringParser::Tokenize( texNode->TypeName(), '_', tokens );
 
-		CHECK_ERR( tokens.Count() == 4 and tokens[0] == "image" );
-		CHECK_ERR( tokens[2] == ShaderNodes::ReadOnly<int>::Name() );
+		CHECK_ERR( tokens.Count() == 4 and tokens[0].EqualsIC( "image" ) );
+		CHECK_ERR( tokens[2] == ShaderNodes::ReadOnly::Name() );
 
-		if ( tokens[3].StartsWithIC( "float" ) )							;								else
-		if ( tokens[3].StartsWithIC( "int" ) )								typeName << "i";				else
-		if ( tokens[3].StartsWithIC( "uint" ) )								typeName << "ui";
+		if ( tokens[3].StartsWithIC( "float" ) )						;								else
+		if ( tokens[3].StartsWithIC( "int" ) )							typeName << "i";				else
+		if ( tokens[3].StartsWithIC( "uint" ) )							typeName << "ui";
 
-		if ( tokens[1] == ShaderNodes::ImageType1D<int>::Name() )			typeName << "sampler1D";		else
-		if ( tokens[1] == ShaderNodes::ImageType1DArray<int>::Name() )		typeName << "sampler1DArray";	else
-		if ( tokens[1] == ShaderNodes::ImageType2D<int>::Name() )			typeName << "sampler2D";		else
-		if ( tokens[1] == ShaderNodes::ImageType2DArray<int>::Name() )		typeName << "sampler2DArray";	else
-		if ( tokens[1] == ShaderNodes::ImageType2DMS<int>::Name() )			typeName << "sampler2DMS";		else
-		if ( tokens[1] == ShaderNodes::ImageType2DMSArray<int>::Name() )	typeName << "sampler2DMSArray";	else
-		if ( tokens[1] == ShaderNodes::ImageTypeCube<int>::Name() )			typeName << "samplerCube";		else
-		if ( tokens[1] == ShaderNodes::ImageTypeCubeArray<int>::Name() )	typeName << "samplerCubeArray";	else
-		if ( tokens[1] == ShaderNodes::ImageType3D<int>::Name() )			typeName << "sampler3D";
+		if ( tokens[1] == ShaderNodes::ImageType1D::Name() )			typeName << "sampler1D";		else
+		if ( tokens[1] == ShaderNodes::ImageType1DArray::Name() )		typeName << "sampler1DArray";	else
+		if ( tokens[1] == ShaderNodes::ImageType2D::Name() )			typeName << "sampler2D";		else
+		if ( tokens[1] == ShaderNodes::ImageType2DArray::Name() )		typeName << "sampler2DArray";	else
+		if ( tokens[1] == ShaderNodes::ImageType2DMS::Name() )			typeName << "sampler2DMS";		else
+		if ( tokens[1] == ShaderNodes::ImageType2DMSArray::Name() )		typeName << "sampler2DMSArray";	else
+		if ( tokens[1] == ShaderNodes::ImageTypeCube::Name() )			typeName << "samplerCube";		else
+		if ( tokens[1] == ShaderNodes::ImageTypeCubeArray::Name() )		typeName << "samplerCubeArray";	else
+		if ( tokens[1] == ShaderNodes::ImageType3D::Name() )			typeName << "sampler3D";
 
 		uniformName << "layout (binding=" << index << ")  uniform " << typeName;
 		return true;
@@ -630,13 +721,15 @@ namespace PipelineNodes
 		usize	arg		= 0;
 		String	str;
 		
-		if ( node->TypeName().StartsWithIC( "GL4." ) )
-			str << node->TypeName().SubString( StringCRef("GL4.").Length() ) << "( ";
+		if ( node->TypeName().StartsWithIC( "GLSL." ) )
+		{
+			str << node->TypeName().SubString( StringCRef("GLSL.").Length() ) << "( ";
+		}
 		else
 			str << node->TypeName() << "( ";
 
 		// special cases
-		if ( node->TypeName().StartsWithIC( "GL4.texture" ) )
+		if ( node->TypeName().StartsWithIC( "GLSL.texture" ) )
 		{
 			NodePtr	image;
 			NodePtr	sampler;
@@ -687,12 +780,28 @@ namespace PipelineNodes
 
 		str << " )";
 
-		auto const&	value = _ShaderNodesHidden_::NodeGraph::GetConst( node );
+		// add function source
+		if ( not node->TypeName().StartsWithIC( "GLSL." ) )
+		{
+			using FuncInfo = _ShaderNodesHidden_::ISrcNode::FuncInfo;
 
-		if ( value.Is<String>() ) {
-			_funcSources.Add( value.Get<String>() );
+			String		func_src;
+			String		signature	= node->TypeName();
+			FuncInfo	info		= _ShaderNodesHidden_::NodeGraph::GetConst( node ).Get<FuncInfo>();
+
+			CHECK_ERR( node->Fields().Count() );
+
+			FOR( j, node->Fields() ) {
+				signature << (j < info.inArgsCount ? "_in" : "_out") << node->Fields()[j]->TypeName();
+			}
+
+			if ( _ShaderNodesHidden_::NodeFunctions::Instance()->GetSource( signature, OUT func_src ) )
+			{
+				if ( not func_src.Empty() ) {
+					_funcSources.Add( func_src );
+				}
+			}
 		}
-
 		return str;
 	}
 
@@ -729,6 +838,11 @@ namespace PipelineNodes
 		}
 
 		void operator () (const GX_STL::GXTypes::String &val) const
+		{
+			WARNING( "invalid const value" );
+		}
+
+		void operator () (const _ShaderNodesHidden_::ISrcNode::FuncInfo &val) const
 		{
 			WARNING( "invalid const value" );
 		}

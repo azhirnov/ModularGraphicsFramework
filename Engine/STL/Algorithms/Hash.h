@@ -4,6 +4,7 @@
 
 #include "Engine/STL/Common/Types.h"
 #include "Engine/STL/CompileTime/TypeTraits.h"
+#include <xstddef>
 
 namespace GX_STL
 {
@@ -48,22 +49,22 @@ namespace GXTypes
 		constexpr explicit HashResult (usize val) : _value(val) {}
 
 
-		value_t  Get () const
+		value_t  Get () const noexcept
 		{
 			return _value;
 		}
 
-		Self operator ~ () const
+		Self operator ~ () const noexcept
 		{
 			return Self( ~_value );
 		}
 
-		Self operator + (const Self &right) const
+		Self operator + (const Self &right) const noexcept
 		{
 			return Self(*this) += right;
 		}
 
-		Self& operator += (const Self &right)
+		Self& operator += (const Self &right) noexcept
 		{
 			_value ^= GXMath::_math_hidden_::_BitRotateLeft( right._value, 1 );
 			return *this;
@@ -76,11 +77,15 @@ namespace GXTypes
 
 	namespace _types_hidden_
 	{
-		inline static HashResult HashForMemoryBlock (const ubyte *ptr, usize count)
+		inline static HashResult HashForMemoryBlock (const ubyte *ptr, usize count) noexcept
 		{
 			// MS Visual C++ std implementation
-			#if defined(COMPILER_MSVC) and defined(_HASH_SEQ_DEFINED)
+			#if defined(COMPILER_MSVC)
+			# if defined(_HASH_SEQ_DEFINED)
 				return (HashResult) std::_Hash_seq( ptr, count );
+			# elif COMPILER_VERSION >= 1911
+				return (HashResult) std::_Hash_bytes( ptr, count );
+			# endif
 			#else
 				#error "hash function not defined!"
 			#endif
@@ -101,7 +106,7 @@ namespace GXTypes
 
 		typedef typename TypeTraits::RemoveConstVolatile< T >	key_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return (result_t) std::hash< key_t >()( x );
 		}
@@ -115,7 +120,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline HashResult  HashOf (const T &x)
+	inline HashResult  HashOf (const T &x) noexcept
 	{
 		return Hash<T>()( x );
 	}

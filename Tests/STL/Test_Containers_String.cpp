@@ -43,8 +43,36 @@ static void String_LessThan_SortLikeInFileSystem ()
 }
 
 
+static void String_Find1 ()
+{
+	String	s1 = "12345\n6789\n";
+	String	s2 = "\n";
+	usize	p = 0;
+
+	ASSERT( s1.Find( s2, OUT p, 0 ) );
+	ASSERT( s1.Find( s2, OUT p, p+1 ) );
+
+	p = 0;
+	ASSERT( s1.Find( s2[0], OUT p, 0 ) );
+	ASSERT( s1.Find( s2[0], OUT p, p+1 ) );
+}
+
+
+static void String_Find2 ()
+{
+	String	s1 = "1234aaaa56789aaa";
+	String	s2 = "aaaa";
+	usize	p = 0;
+
+	ASSERT( s1.Find( s2, OUT p, 0 ) );
+	ASSERT( not s1.Find( s2, OUT p, p+1 ) );
+}
+
+
 extern void Test_Containers_String ()
 {
 	String_StartsWith_EndsWith();
 	String_LessThan_SortLikeInFileSystem();
+	String_Find1();
+	String_Find2();
 }

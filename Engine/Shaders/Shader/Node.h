@@ -8,10 +8,18 @@ namespace ShaderEditor
 {
 namespace ShaderNodes
 {
+	using uint		= GX_STL::GXTypes::uint;
+	using ilong		= GX_STL::GXTypes::ilong;
+	using ulong		= GX_STL::GXTypes::ulong;
+
+	template <typename T, uint I>	struct NVec;
+
+	// for swizzling
 	template <typename T, typename ...Args>
-	inline T  VecCtor (const Args& ...args);
+	inline T  NVecCtor (const Args& ...args);
 
 }	// ShaderNodes
+
 
 namespace _ShaderNodesHidden_
 {
@@ -32,7 +40,6 @@ namespace _ShaderNodesHidden_
 		friend struct NodeGraph;
 
 	// types
-
 	public:
 		using Name_t	= StaticString< 128 >;
 
@@ -88,6 +95,20 @@ namespace _ShaderNodesHidden_
 			bool operator <  (const SamplerUnit &right) const	{ return sampler <  right.sampler; }
 		};
 
+		struct FuncInfo
+		{
+			ushort		inArgsCount		= 0;
+			ushort		outArgsCount	= 0;
+
+			FuncInfo (usize in, usize out) :
+				inArgsCount(ushort(in)), outArgsCount(ushort(out))
+			{}
+
+			bool operator == (const FuncInfo &right) const	{ return inArgsCount == right.inArgsCount and outArgsCount == right.outArgsCount; }
+			bool operator >  (const FuncInfo &right) const	{ return inArgsCount != right.inArgsCount ? inArgsCount > right.inArgsCount : outArgsCount > right.outArgsCount; }
+			bool operator <  (const FuncInfo &right) const	{ return inArgsCount != right.inArgsCount ? inArgsCount < right.inArgsCount : outArgsCount < right.outArgsCount; }
+		};
+
 
 	private:
 		struct _CopyVariantToUnion_Func;
@@ -95,7 +116,7 @@ namespace _ShaderNodesHidden_
 		using ModulePtr	= Engine::Base::ModulePtr;
 		using Fields_t	= Array< ISrcNodePtr >;
 		using Value_t	= Union< bool, int, uint, ilong, ulong, float, double,
-								 ImageUnit, BufferUnit, SamplerUnit, String >;
+								 ImageUnit, BufferUnit, SamplerUnit, FuncInfo >;
 
 
 	// variables
@@ -218,7 +239,7 @@ namespace _ShaderNodesHidden_
 			_AddFields( args... );
 		}
 		
-		static Name_t  _Typename ()		{ return "output"; }
+		static Name_t  _Typename ()		{ return "Sync"; }
 	};
 
 
@@ -231,19 +252,23 @@ namespace _ShaderNodesHidden_
 	{
 	// methods
 	public:
-		explicit FunctionNode (StringCRef funcName, StringCRef funcSource = "") :
-			Node( null, "", funcName, ENodeType::Function )
+		explicit FunctionNode (StringCRef funcName, usize inArgsCount, usize outArgsCount) :		// TODO: signature may be too long for static string
+			Node( null, "", funcName, ENodeType::Function, ~0u,
+				  VariantCRef::FromConst( ISrcNode::FuncInfo(inArgsCount, outArgsCount) ) )
 		{
-			if ( not funcSource.Empty() ) {
-				_SelfNode()->SetConstant( String(funcSource) );
-			}
 		}
 
 		template <typename ...Args>
-		FunctionNode (StringCRef funcName, StringCRef funcSource, const Args& ...args) :
-			FunctionNode( funcName, funcSource )
+		explicit FunctionNode (StringCRef funcName, uint outArgsCount, const Args& ...args) :
+			FunctionNode( funcName, CompileTime::TypeListFrom< Args... >::Count, outArgsCount )
 		{
 			_AddFields( args... );
+		}
+
+		template <typename T>
+		void AddField (const T &arg)
+		{
+			_AddFields( arg );
 		}
 	};
 
@@ -252,7 +277,7 @@ namespace _ShaderNodesHidden_
 	//
 	// Barrier
 	//
-
+	/*
 	struct Barrier : Node
 	{
 	// methods
@@ -265,7 +290,7 @@ namespace _ShaderNodesHidden_
 		{
 			_AddFields( args... );
 		}
-	};
+	};*/
 
 
 
@@ -301,10 +326,7 @@ namespace _ShaderNodesHidden_
 
 	// methods
 	public:
-		Property ()
-		{}
-
-		explicit Property (Class *classPtr) :
+		explicit Property (const Class *classPtr) :
 			_offset( ubyte( ReferenceCast<usize>(this) - ReferenceCast<usize>(classPtr) ) )
 		{
 			ASSERT( (void *)this > (void *)classPtr );
@@ -312,92 +334,68 @@ namespace _ShaderNodesHidden_
 
 		forceinline operator T () const
 		{
-			return ShaderNodes::VecCtor<T>( Args::Get( _GetClass() )... );
+			Class const* cl = _GetClass();
+			return ShaderNodes::NVecCtor<T>( Args::Get( cl )... );
 		}
 
 	private:
+		Property () = delete;
 		Property (const Self &) = delete;
 		Property (Self &&) = delete;
 
 		Self& operator = (const Self &) = delete;
 		Self& operator = (Self &&) = delete;
 
-		forceinline Class* _GetClass () const
+		forceinline Class const* _GetClass () const
 		{
-			return (Class *)( ((byte *)this) - _offset );
+			return (Class const *)( ((byte const *)this) - _offset );
 		}
 	};
 
 
 
 	//
-	// MemberToType (helper for Property)
+	// ClassToType and MemberToType (helpers for Property)
 	//
 
 	template <typename Class, typename Field, Field (Class::*member)>
 	struct MemberToType
 	{
-		static Field const&  Get (Class *classPtr)
+		static Field const&  Get (const Class *classPtr)
 		{
 			return classPtr->*member;
 		}
 	};
 
-
-
-	//
-	// Pixel Format
-	//
-
-	struct _PixelFormatBase;
-
-	template <typename T, bool Norm>
-	struct PixelFormat
+	template <typename Class>
+	struct ClassToType
 	{
-		using Name_t	= ISrcNode::Name_t;
-
-		static const uint	Channels			=	CompileTime::TypeDescriptor::GetCapacity<T>;
-
-		static const bool	IsSignedInteger		=	not Norm						and
-													CompileTime::IsInteger< T >		and
-													CompileTime::IsSigned< T >;
-
-		static const bool	IsUnsignedInteger	=	not Norm						and
-													CompileTime::IsInteger< T >		and
-													CompileTime::IsUnsigned< T >;
-
-		static const bool	IsFloat				=	not Norm						and
-													CompileTime::IsFloat< T >;
-
-		static const bool	IsNormalized		=	Norm					and
-													not IsSignedInteger		and
-													not IsUnsignedInteger	and
-													not IsFloat;
-
-		static const bool	IsSignedNormalized	=	IsNormalized	and
-													CompileTime::IsSigned< T >;
-		
-		static const bool	IsUnsignedNormalized =	IsNormalized	and
-													CompileTime::IsUnsigned< T >;
-
-		static Name_t		Name ();
+		static Class const&  Get (const Class *classPtr)
+		{
+			return *classPtr;
+		}
 	};
 
-	template <typename T>
-	constexpr bool	IsPixelFormat	= CompileTime::IsBaseOf< _PixelFormatBase, T >;
-	
 
 
 	//
 	// Functions
 	//
 
-	class NodeFunctions
+	class NodeFunctions final
 	{
 	// types
 	private:
 		using Func_t		= Delegate< bool (ArrayCRef<VariantCRef> in, ArrayRef<VariantRef> out) >;
-		using Functions_t	= HashMap< String, Func_t >;
+		using SourceGen_t	= Delegate< bool (StringCRef sig, OUT String &src) >;
+
+		struct FuncInfo
+		{
+			Func_t			funcNodeCtor;
+			SourceGen_t		sourceGen;
+		};
+
+		using Functions_t	= HashMap< String, FuncInfo >;
 
 		using ModulePtr		= Engine::Base::ModulePtr;
 		using EShader		= Engine::Platforms::EShader;
@@ -435,19 +433,20 @@ namespace _ShaderNodesHidden_
 		template <typename Result, typename ...Args>
 		Result Build (StringCRef name, const Args& ...args) const;
 
+		bool GetSource (StringCRef signature, OUT String &src) const;
+
 		bool Compile (const Array<ISrcNodePtr> &nodes, EShader::type shaderType, OUT ModulePtr &program) const;
 		
-		//template <typename ...Args>
-		//void Build (StringCRef name, Args&& ...args) const;
+		bool Register (StringCRef name, const Func_t &func, const SourceGen_t &srcGen);
+		bool Register (StringCRef name, Func_t::Function_t *func, SourceGen_t::Function_t *srcGen);
 
-		template <typename ...Args>
-		bool Register (StringCRef name, bool (*func) (Args... args));
 		void UnregisterAll ();
 
 		bool RegisterCompiler (StringCRef name, const CompileFunc_t &compiler);
 		void UnregisterCompilers ();
 
 		static Ptr<NodeFunctions>	Instance ();
+
 
 	private:
 		template <typename InArgTypeList, typename OutArgTypeList>
@@ -510,8 +509,7 @@ namespace _ShaderNodesHidden_
 		STATIC_ASSERT(( ArgList::OutArgs::Count == 1 and
 						CompileTime::IsSameTypes< ArgList::OutArgs::Get<0>, Result& > ));
 
-		const String				sig2 = String(_apiName) << '.' << name;
-		const String				sig = _BuildSignature< ArgList::InArgs, ArgList::OutArgs >( sig2 );
+		const String				sig = String(_apiName) << '.' << name;
 		Functions_t::const_iterator	iter;
 		InArray_t					in_args_arr;
 		OutArray_t					out_args_arr;
@@ -519,17 +517,12 @@ namespace _ShaderNodesHidden_
 
 		if ( not _funcs.Find( sig, OUT iter ) )
 		{
-			// TODO:
-			//if ( not _funcs.Find( sig2, OUT iter ) )
-			//{
-			//}
-
 			RETURN_ERR( "can't find function with signature \"" << sig << "\"" );
 		}
 
 		_BuildRefArray( OUT in_args_arr, OUT out_args_arr, &result, &args... );
 
-		CHECK_ERR( iter->second.Call( in_args_arr, out_args_arr ) );
+		CHECK_ERR( iter->second.funcNodeCtor.Call( in_args_arr, out_args_arr ) );
 		return result;
 	}
 	
@@ -632,41 +625,22 @@ namespace _ShaderNodesHidden_
 
 /*
 =================================================
-	Register
-=================================================
-*/
-	template <typename ...Args>
-	inline bool  NodeFunctions::Register (StringCRef name, bool (*func) (Args... args))
-	{
-		using ArgList	= _ArgTypeToInOut< Args... >;
-		using FuncWrap	= _FuncWrapper< decltype(func), ArgList::InArgs, ArgList::OutArgs >;
-
-		const String	sig = _BuildSignature< ArgList::InArgs, ArgList::OutArgs >( name );
-
-		CHECK_ERR( not _funcs.IsExist( sig ) );
-
-		_funcs.Add( sig, DelegateBuilder( new FuncWrap( func ), &FuncWrap::Call ) );
-		return true;
-	}
-
-/*
-=================================================
 	_NodeTypeToString
 =================================================
 */
 	template <typename T>
 	struct NodeFunctions::_NodeTypeToString {
-		forceinline static String  Get ()	{ return String() << " $" << T::_Typename(); }	// input
+		forceinline static String  Get ()	{ return String() << "_in" << T::_Typename(); }		// input
 	};
 
 	template <typename T>
 	struct NodeFunctions::_NodeTypeToString< const T& > {
-		forceinline static String  Get ()	{ return String() << " $" << T::_Typename(); }	// input
+		forceinline static String  Get ()	{ return String() << "_in" << T::_Typename(); }		// input
 	};
 	
 	template <typename T>
 	struct NodeFunctions::_NodeTypeToString< T &> {
-		forceinline static String  Get ()	{ return String() << " @" << T::_Typename(); }	// output
+		forceinline static String  Get ()	{ return String() << "_out" << T::_Typename(); }	// output
 	};
 
 /*
@@ -723,50 +697,6 @@ namespace _ShaderNodesHidden_
 			constRefArr << VariantCRef::FromConst( *first );
 		else
 			refArr << VariantRef::FromConst( *first );
-	}
-//=============================================================================
-
-
-	
-/*
-=================================================
-	Name
-=================================================
-*/
-	template <typename T, bool N>
-	inline typename PixelFormat<T,N>::Name_t  PixelFormat<T,N>::Name ()
-	{
-		STATIC_ASSERT( CompileTime::IsScalar<T> );
-		STATIC_ASSERT( Channels >= 1 and Channels <= 4 );
-
-		Name_t	result;
-
-		switch ( Channels )
-		{
-			case 1 :	result << "R";		break;
-			case 2 :	result << "RG";		break;
-			case 3 :	result << "RGB";	break;
-			case 4 :	result << "RGBA";	break;
-			default :	WARNING( "unknown format" );
-		}
-
-		switch ( sizeof(T) )
-		{
-			case 1 :	result << "8";		break;
-			case 2 :	result << "16";		break;
-			case 4 :	result << "32";		break;
-			case 8 :	result << "64";		break;
-			default :	WARNING( "unknown format" );
-		}
-
-		if ( IsSignedNormalized )			result << "_SNorm";		else
-		if ( IsUnsignedNormalized )			result << "_UNorm";		else
-		if ( IsFloat )						result << "F";			else
-		if ( IsSignedInteger )				result << "I";			else
-		if ( IsUnsignedInteger )			result << "U";			else
-											WARNING( "unknown format" );
-
-		return result;
 	}
 //=============================================================================
 

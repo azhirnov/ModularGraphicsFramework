@@ -26,52 +26,52 @@ namespace OS
 
 		// T //
 		template <typename T>
-		forceinline static T  AtomicOp::Inc (volatile T & left) {
+		forceinline static T  Inc (volatile T & left) {
 			return Inc( type_cast( left ) );
 		}
 
 		template <typename T>
-		forceinline static T  AtomicOp::Dec (volatile T & left) {
+		forceinline static T  Dec (volatile T & left) {
 			return Dec( type_cast( left ) );
 		}
 
 		template <typename T>
-		forceinline static T  AtomicOp::Add (volatile T & left, const T& right) {
+		forceinline static T  Add (volatile T & left, const T& right) {
 			return Add( type_cast( left ), ctype_cast( right ) );
 		}
 
 		template <typename T>
-		forceinline static T  AtomicOp::Sub (volatile T & left, const T& right) {
+		forceinline static T  Sub (volatile T & left, const T& right) {
 			return Sub( type_cast( left ), ctype_cast( right ) );
 		}
 
 		template <typename T>
-		forceinline static T  AtomicOp::Set (volatile T & left, const T& right) {
+		forceinline static T  Set (volatile T & left, const T& right) {
 			return rtype_cast( Set( itype_cast( left ), ctype_cast( right ) ) );
 		}
 
 		template <typename T>
-		forceinline static T  AtomicOp::CmpEx (volatile T & left, const T& right, const T& cmp) {
+		forceinline static T  CmpEx (volatile T & left, const T& right, const T& cmp) {
 			return rtype_cast( CmpEx( itype_cast( left ), ctype_cast( right ), ctype_cast( cmp ) ) );
 		}
 
 		template <typename T>
-		forceinline static T  AtomicOp::Or (volatile T & left, const T& right) {
+		forceinline static T  Or (volatile T & left, const T& right) {
 			return Or( type_cast( left ), ctype_cast( right ) );
 		}
 
 		template <typename T>
-		forceinline static T  AtomicOp::Xor (volatile T & left, const T& right) {
+		forceinline static T  Xor (volatile T & left, const T& right) {
 			return Xor( type_cast( left ), ctype_cast( right ) );
 		}
 
 		template <typename T>
-		forceinline static T  AtomicOp::And (volatile T & left, const T& right) {
+		forceinline static T  And (volatile T & left, const T& right) {
 			return And( type_cast( left ), ctype_cast( right ) );
 		}
 		
 		template <typename T>
-		forceinline static T  AtomicOp::Get (volatile T const & left) {
+		forceinline static T  Get (volatile T const & left) {
 			::_ReadWriteBarrier();
 			return left;
 		}

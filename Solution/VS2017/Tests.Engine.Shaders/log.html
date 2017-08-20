@@ -1,34 +1,35 @@
 <html> <head> <title> log </title> </head> <body BGCOLOR="#ffffff"><p><PRE><font face="Lucida Console, Times New Roman"size="2" color="#000000">
-</font><font color="#007F00">I</font><font color="#909090"> - 2017/08/01 - 23:06:52 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: Shaders\Shader\ShaderNodes.cpp, line: 551)
-</font><font color="#007F00"><details open><summary>int3  node_1("localCoordSize") - Vector = CS_GetLocalCoordSize { node_1 }</summary>int3  node_2("localCoord") - Vector = CS_GetLocalCoord { node_2 }
-float3  node_3("out") - Vector = GL4.float3 { node_2, node_3 }
-float3  node_4("out") - Vector = GL4.float3 { node_1, node_4 }
-float3  node_5("out") - Vector = Div { node_3, node_4, node_5 }
-image_2D_RO_float4  node_6("image") - Image
-sampler  node_7("sampler") - Sampler
-float2  node_8("out") - Vector = GL4.float2 { node_5, node_8 }
-float4  node_9("out") - Vector = GL4.texture { node_6, node_7, node_8, node_9 }
-float2  node_10("out") - Vector = GL4.float2 { node_9, node_10 }
-image_2D_RO_float4  node_11("image0") - Image
-int2  node_12("out") - Vector = GL4.int2 { node_2, node_12 }
-float4  node_13("out") - Vector = GL4.imageLoad { node_11, node_12, node_13 }
-float2  node_14("out") - Vector = GL4.float2 { node_13, node_14 }
-texture  node_15("diffuseMap") - Struct { node_6, node_7 }
-float2  node_16("out") - Vector = GL4.float2 { node_10.x, node_10.y, node_16 }
-float2  node_17("out") - Vector = GL4.float2 { node_14.x, node_14.y, node_17 }
-float2  node_18("out") - Vector = Add { node_16, node_17, node_18 }
-float  node_19("out") - Scalar = Add { node_9.z, node_13.z, node_19 }
-float  node_20("") - Scalar
-int2  node_21("out") - Vector = GL4.int2 { node_2, node_21 }
-float4  node_22("out") - Vector = GL4.float4 { node_18, node_19, node_20, node_22 }
-image_2D_Coh_float4  node_23("outImage1") - Image
-output  node_24("") - ShaderOutput = GL4.imageStore { node_23, node_21, node_22, node_24 }</details></font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/01 - 23:06:52 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: Platforms\Windows\WinPlatform.cpp, line: 94)
+</font><font color="#007F00">I</font><font color="#909090"> - 2017/08/20 - 15:19:09 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: Shaders\Shader\ShaderNodes.cpp, line: 532)
+</font><font color="#007F00"><details open><summary>Int3  node_1("localCoordSize") - Vector = CS_GetLocalCoordSize { node_1 }</summary>Int3  node_2("localCoord") - Vector = CS_GetLocalCoord { node_2 }
+Float3  node_3("Float3Ctor.out") - Vector = GLSL.float3 { node_2, node_3 }
+Float3  node_4("Float3Ctor.out") - Vector = GLSL.float3 { node_1, node_4 }
+Float3  node_5("Div.out") - Vector = Div { node_3, node_4, node_5 }
+Bool3  node_6("IsNotZero.out") - Vector = IsNotZero { node_2, node_6 }
+Image_2D_RO_Float4  node_7("image") - Image
+Sampler  node_8("sampler") - Sampler
+Float2  node_9("Float2Ctor.out") - Vector = GLSL.float2 { node_5, node_9 }
+Float4  node_10("TextureSample.out") - Vector = GLSL.texture { node_7, node_8, node_9, node_10 }
+Float2  node_11("Float2Ctor.out") - Vector = GLSL.float2 { node_10, node_11 }
+Image_2D_RO_Float4  node_12("image0") - Image
+Int2  node_13("Int2Ctor.out") - Vector = GLSL.int2 { node_6, node_13 }
+Float4  node_14("ImageLoad.out") - Vector = GLSL.imageLoad { node_12, node_13, node_14 }
+Float2  node_15("Float2Ctor.out") - Vector = GLSL.float2 { node_14, node_15 }
+Texture  node_16("diffuseMap") - Struct { node_7, node_8 }
+Float2  node_17("Float2Ctor.out") - Vector = GLSL.float2 { node_11.x, node_11.y, node_17 }
+Float2  node_18("Float2Ctor.out") - Vector = GLSL.float2 { node_15.x, node_15.y, node_18 }
+Float2  node_19("Add.out") - Vector = Add { node_17, node_18, node_19 }
+Float  node_20("Add.out") - Scalar = Add { node_10.z, node_14.z, node_20 }
+Float  node_21("") - Scalar
+Int2  node_22("Int2Ctor.out") - Vector = GLSL.int2 { node_2, node_22 }
+Float4  node_23("Float4Ctor.out") - Vector = GLSL.float4 { node_19, node_20, node_21, node_23 }
+Image_2D_Coh_Float4  node_24("outImage1") - Image
+Sync  node_25("") - ShaderOutput = GLSL.imageStore { node_24, node_22, node_23, node_25 }</details></font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/20 - 15:19:09 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: Platforms\Windows\WinPlatform.cpp, line: 94)
 </font><font color="#0000AB">platform created
-</font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/01 - 23:06:53 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: OpenGL\Impl\gl4.cpp, line: 60)
+</font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/20 - 15:19:10 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: OpenGL\Impl\gl4.cpp, line: 60)
 </font><font color="#0000AB">Can't get address of glNamedBufferPageCommitmentARB
-</font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/01 - 23:06:53 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: OpenGL\Impl\gl4.cpp, line: 97)
+</font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/20 - 15:19:10 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: OpenGL\Impl\gl4.cpp, line: 97)
 </font><font color="#0000AB">While get address of OpenGL functions: 1 missing, 725 successfully.
-</font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/01 - 23:06:53 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: OpenGL\Impl\gl4.cpp, line: 244)
+</font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/20 - 15:19:10 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: OpenGL\Impl\gl4.cpp, line: 244)
 </font><font color="#0000AB"><details><summary>OpenGL info</summary>---------------
 Renderer:                GeForce GTX 980 Ti/PCIe/SSE2
 Version:                 4.5.0 NVIDIA 375.95
@@ -66,7 +67,7 @@ Aliased line width:      1.0 - 10.0
 Smooth line width:       1.0 - 1.0
 Smooth line granularity: 0.125
 Point size:              1.0 - 189.875
-Point size granularity:  0.125</details></font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/01 - 23:06:53 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: OpenGL\Impl\gl4.cpp, line: 263)
+Point size granularity:  0.125</details></font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/20 - 15:19:10 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: OpenGL\Impl\gl4.cpp, line: 263)
 </font><font color="#0000AB"><details><summary>OpenGL Extensions</summary>---------------
 GL_AMD_multi_draw_indirect, GL_AMD_seamless_cubemap_per_texture, GL_AMD_vertex_shader_viewport_index, GL_AMD_vertex_shader_layer,
 GL_ARB_arrays_of_arrays, GL_ARB_base_instance, GL_ARB_bindless_texture, GL_ARB_blend_func_extended,
@@ -156,13 +157,13 @@ GL_NV_vertex_program2, GL_NV_vertex_program2_option, GL_NV_vertex_program3, GL_N
 GL_NV_viewport_swizzle, GL_NVX_conditional_render, GL_NVX_gpu_memory_info, GL_NVX_multigpu_info,
 GL_NVX_nvenc_interop, GL_NV_shader_thread_group, GL_NV_shader_thread_shuffle, GL_KHR_blend_equation_advanced,
 GL_KHR_blend_equation_advanced_coherent, GL_SGIS_generate_mipmap, GL_SGIS_texture_lod, GL_SGIX_depth_texture,
-GL_SGIX_shadow, GL_SUN_slice_accum, GL_WIN_swap_hint, WGL_EXT_swap_control</details></font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/01 - 23:06:53 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: Platforms\Windows\WinWindow.cpp, line: 119)
+GL_SGIX_shadow, GL_SUN_slice_accum, GL_WIN_swap_hint, WGL_EXT_swap_control</details></font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/20 - 15:19:10 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: Platforms\Windows\WinWindow.cpp, line: 119)
 </font><font color="#0000AB">window created
-</font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/01 - 23:06:53 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: Shaders\Pipeline\GL4PipelineCompiler.cpp, line: 430)
-</font><font color="#0000AB">used default image format for 'node_11
-</font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/01 - 23:06:53 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: Shaders\Pipeline\GL4PipelineCompiler.cpp, line: 430)
-</font><font color="#0000AB">used default image format for 'node_23
-</font><font color="#007F00">I</font><font color="#909090"> - 2017/08/01 - 23:06:53 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: Shaders\Pipeline\GL4PipelineCompiler.cpp, line: 148)
+</font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/20 - 15:19:10 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: Shaders\Pipeline\GL4PipelineCompiler.cpp, line: 520)
+</font><font color="#0000AB">used default image format for 'image0'
+</font><font color="#0000AB">D</font><font color="#909090"> - 2017/08/20 - 15:19:10 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: Shaders\Pipeline\GL4PipelineCompiler.cpp, line: 520)
+</font><font color="#0000AB">used default image format for 'outImage1'
+</font><font color="#007F00">I</font><font color="#909090"> - 2017/08/20 - 15:19:10 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: Shaders\Pipeline\GL4PipelineCompiler.cpp, line: 145)
 </font><font color="#007F00"><details open><summary>#version 450 core</summary>
 #extension GL_ARB_shading_language_420pack: enable
 #extension GL_ARB_gpu_shader_int64 : require
@@ -224,25 +225,31 @@ layout (local_size_variable) in;
 #define SH_FRAGMENT         4
 #define SH_COMPUTE          5
 
-#if SHADER == SH_COMPUTE
+// functions forward declarations
+float3 Div (const float3 x, const float3 y);
+float2 Add (const float2 x, const float2 y);
+bool3 IsNotZero (const int3 x);
+int3 CS_GetLocalCoordSize ();
+bool3 Equal (const int3 x, const int3 y);
+bool3 IsZero (const int3 x);
+int3 CS_GetLocalCoord ();
+float Add (const float x, const float y);
+bool3 Not (const bool3 x);
 
-int CS_GetLocalIndex ()
-{
-	return int( gl_LocalInvocationIndex );
+// functions sources
+float3 Div (const float3 x, const float3 y) {
+	return float3(x) / float3(y);
 }
 
-int3 CS_GetGlobalCoord ()
-{
-	return int3( gl_GlobalInvocationID );
+float2 Add (const float2 x, const float2 y) {
+	return float2(x) + float2(y);
 }
 
-int3 CS_GetGroupCoordSize ()
-{
-	return int3( gl_NumWorkGroups );
+bool3 IsNotZero (const int3 x) {
+	return Not( IsZero(x) );
 }
 
-int3 CS_GetLocalCoordSize ()
-{
+int3 CS_GetLocalCoordSize () {
 #ifdef GL_ARB_compute_variable_group_size
 	return int3( gl_LocalGroupSizeARB );
 #else
@@ -250,65 +257,24 @@ int3 CS_GetLocalCoordSize ()
 #endif
 }
 
-int3 CS_GetGlobalCoordSize ()
-{
-	return CS_GetGroupCoordSize() * CS_GetLocalCoordSize();
+bool3 Equal (const int3 x, const int3 y) {
+	return equal( int3(x), int3(y) );
 }
 
-int3 CS_GetLocalCoord ()
-{
+bool3 IsZero (const int3 x) {
+	return Equal( x, int3(0) );
+}
+
+int3 CS_GetLocalCoord () {
 	return int3( gl_LocalInvocationID );
 }
 
-int3 CS_GetGroupCoord ()
-{
-	return int3( gl_WorkGroupID );
-}
-
-int CS_GetGlobalIndex ()
-{
-	int3 coord = CS_GetGlobalCoord();
-	int3 size  = CS_GetGlobalCoordSize();
-	return coord.x + (coord.y * size.x) + (coord.z * size.x * size.y);
-}
-
-int CS_GetGlobalIndexSize ()
-{
-	int3 size  = CS_GetGlobalCoordSize();
-	return size.x * size.y * size.z;
-}
-
-int CS_GetLocalIndexSize ()
-{
-	int3 size  = CS_GetLocalCoordSize();
-	return size.x * size.y * size.z;
-}
-
-int CS_GetGroupIndex ()
-{
-	int3 coord = CS_GetGroupCoord();
-	int3 size  = CS_GetGroupCoordSize();
-	return coord.x + (coord.y * size.x) + (coord.z * size.x * size.y);
-}
-
-int CS_GetGroupIndexSize ()
-{
-	int3 size  = CS_GetGroupCoordSize();
-	return size.x * size.y * size.z;
-}
-#endif	// SH_COMPUTE
-
-	
-float3 Div (const float3 x, const float3 y) {
-	return (x) / (y);
-}
-
 float Add (const float x, const float y) {
-	return (x) + (y);
+	return float(x) + float(y);
 }
 
-float2 Add (const float2 x, const float2 y) {
-	return (x) + (y);
+bool3 Not (const bool3 x) {
+	return ! (x);
 }
 
 layout (binding=1, rgba32f) readonly uniform image2D  image0;
@@ -317,26 +283,27 @@ layout (binding=0)  uniform sampler2D  diffuseMap;
 
 void main ()
 {
-	const float node_20 = float(1.0);
+	const float node_21 = float(1.0);
 
 	const int3 node_1 = CS_GetLocalCoordSize(  );
 	const int3 node_2 = CS_GetLocalCoord(  );
 	const float3 node_3 = float3( node_2 );
 	const float3 node_4 = float3( node_1 );
 	const float3 node_5 = Div( node_3, node_4 );
-	const float2 node_8 = float2( node_5 );
-	const float4 node_9 = texture( diffuseMap, node_8 );
-	const float2 node_10 = float2( node_9 );
-	const int2 node_12 = int2( node_2 );
-	const float4 node_13 = imageLoad( image0, node_12 );
-	const float2 node_14 = float2( node_13 );
-	const float2 node_16 = float2( node_10.x, node_10.y );
-	const float2 node_17 = float2( node_14.x, node_14.y );
-	const float2 node_18 = Add( node_16, node_17 );
-	const float node_19 = Add( node_9.z, node_13.z );
-	const int2 node_21 = int2( node_2 );
-	const float4 node_22 = float4( node_18, node_19, node_20 );
-	imageStore( outImage1, node_21, node_22 );
+	const bool3 node_6 = IsNotZero( node_2 );
+	const float2 node_9 = float2( node_5 );
+	const float4 node_10 = texture( diffuseMap, node_9 );
+	const float2 node_11 = float2( node_10 );
+	const int2 node_13 = int2( node_6 );
+	const float4 node_14 = imageLoad( image0, node_13 );
+	const float2 node_15 = float2( node_14 );
+	const float2 node_17 = float2( node_11.x, node_11.y );
+	const float2 node_18 = float2( node_15.x, node_15.y );
+	const float2 node_19 = Add( node_17, node_18 );
+	const float node_20 = Add( node_10.z, node_14.z );
+	const int2 node_22 = int2( node_2 );
+	const float4 node_23 = float4( node_19, node_20, node_21 );
+	imageStore( outImage1, node_22, node_23 );
 }
-</details></font><font color="#FF0000">E</font><font color="#909090"> - 2017/08/01 - 23:06:53 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001ED0]</font><font color="#909090"> - (file: Shaders\Shader\Node.cpp, line: 187)
+</details></font><font color="#FF0000">E</font><font color="#909090"> - 2017/08/20 - 15:19:10 - </font><font color="#909090"; style="background-color: #FFFFFF">[00001834]</font><font color="#909090"> - (file: Shaders\Shader\Node.cpp, line: 187)
 </font><font color="#FF0000">Error: _value.Is&lt;ImageUnit&gt;() &amp;&amp; _value.Get&lt;ImageUnit&gt;().image.IsNotNull() &amp;&amp; _value.Get&lt;ImageUnit&gt;().image-&gt;GetSupportedMessages().HasAllTypes&lt; CompileTime::TypeListFrom&lt; Engine::ModuleMsg::GetGpuTextureDescriptor &gt; &gt;(), in function: ShaderEditor::_ShaderNodesHidden_::ISrcNode::_ValidateConstant.

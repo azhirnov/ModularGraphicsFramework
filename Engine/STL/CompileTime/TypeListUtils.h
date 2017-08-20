@@ -29,7 +29,7 @@ namespace CompileTime
 	struct TypeListEnd final : Noninstancable {};
 
 	template <typename T>
-	static constexpr bool IsTypeList = IsBaseOf< _ctime_hidden_::TypeListBase, typename TypeTraits::GetBaseType< T > >;;
+	static constexpr bool IsTypeList = IsBaseOf< _ctime_hidden_::TypeListBase, typename TypeTraits::GetBaseType< T > >;
 
 
 

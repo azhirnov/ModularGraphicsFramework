@@ -141,7 +141,7 @@ public:
 		event_t		e;
 
 		{
-			Test5Ptr t = new Test5();
+			const Test5Ptr t = new Test5();
 
 			d = DelegateBuilder( t, &Test5::Func );
 			f = FunctionBuilder( t, &Test5::Func, 1, 2 );

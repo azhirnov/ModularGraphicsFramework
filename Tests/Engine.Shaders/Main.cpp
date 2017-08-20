@@ -6,7 +6,7 @@ using namespace ShaderEditor::ShaderNodes;
 using namespace ShaderEditor::PipelineNodes;
 	
 	
-template <template <typename> class AccessType, typename PixelType>
+template <typename AccessType, typename PixelType>
 using Image2D	= Image< ImageType2D, AccessType, PixelType >;
 
 template <typename PixelType>
@@ -48,7 +48,8 @@ public:
 
 		//PushConstants< Constants >		constants	{ this, "constants" };
 
-		MyComputeShader ()
+		MyComputeShader (ShaderEditor::PipelineNodes::Pipeline *pipeline) :
+			ComputeShader( pipeline )
 		{}
 
 	private:
@@ -59,14 +60,19 @@ public:
 			Float	constColor{ 1.0f };
 
 			Float4	color0 = diffuseMap.Sample( Float2Ctor( Float3Ctor(cs_localCoord) / Float3Ctor(cs_localCoordSize) ) );
-			Float4	color1 = image0.Load( Int2Ctor(cs_localCoord) );
+			Float4	color1 = image0.Load( Int2Ctor(IsNotZero(cs_localCoord)) );
 			//Float4	color2 = color0;
 
 			//constants->scale = color0.xy;
 
 			//outBuf.Write( index, color0.x );
+			
+			Float2 p0 = Float2Ctor(color0).xy;
+			Float2 p1 = Float2Ctor(color1).xy;
+			Float2 p2 = p0 + p1;
+			
 			outImage1.Store( Int2Ctor(cs_localCoord),
-							 Float4Ctor( Float2Ctor(color0).xy + Float2Ctor(color1).xy, color0.z + color1.z, constColor ) );
+							 Float4Ctor( p2, color0.z + color1.z, constColor ) );
 		}
 	};
 
@@ -74,11 +80,11 @@ public:
 public:
 	MyPipeline ()
 	{
-		compute._Compile();
+		_CompileShaders();
 	}
 
 
-	MyComputeShader	compute;
+	MyComputeShader	compute { this };
 };
 
 

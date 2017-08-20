@@ -603,14 +603,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool  TStringRef<T>::Find (TStringRef<const T> value, usize &pos, usize start) const
+	inline bool  TStringRef<T>::Find (TStringRef<const T> value, OUT usize &pos, usize start) const
 	{
 		if ( Empty() or value.Empty() )
 			return false;
 
 		usize	j = 0;
 
-		for (usize i = start; i < _count-2; ++i)
+		for (usize i = start; i < Length(); ++i)
 		{
 			while ( value[j] == _memory[i+j] and i+j < _count-1 and j < value.Length() )
 			{
@@ -631,12 +631,12 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool  TStringRef<T>::Find (const T tValue, usize &pos, usize start) const
+	inline bool  TStringRef<T>::Find (const T tValue, OUT usize &pos, usize start) const
 	{
 		if ( Empty() )
 			return false;
 
-		for (usize i = start; i < _count-2; ++i)
+		for (usize i = start; i < Length(); ++i)
 		{
 			if ( _memory[i] == tValue ) {
 				pos = i;
@@ -652,14 +652,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool  TStringRef<T>::FindIC (TStringRef<const T> value, usize &pos, usize start) const
+	inline bool  TStringRef<T>::FindIC (TStringRef<const T> value, OUT usize &pos, usize start) const
 	{
 		if ( Empty() or value.Empty() )
 			return false;
 
 		usize	j = 0;
 
-		for (usize i = start; i < _count-2; ++i)
+		for (usize i = start; i < Length(); ++i)
 		{
 			while ( StringUtils::ToLower( value[j] ) == StringUtils::ToLower( _memory[i+j] ) and
 					i+j < _count-1 and j < value.Length() )
@@ -681,14 +681,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool  TStringRef<T>::FindIC (const T tValue, usize &pos, usize start) const
+	inline bool  TStringRef<T>::FindIC (const T tValue, OUT usize &pos, usize start) const
 	{
 		if ( Empty() )
 			return false;
 
 		const T	val = StringUtils::ToLower( tValue );
 
-		for (usize i = start; i < _count-2; ++i)
+		for (usize i = start; i < Length(); ++i)
 		{
 			if ( StringUtils::ToLower( _memory[i] ) == val ) {
 				pos = i;

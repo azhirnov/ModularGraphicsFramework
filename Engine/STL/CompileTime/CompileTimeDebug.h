@@ -55,7 +55,7 @@ namespace Debug
 			template <typename T, usize Index>
 			void Process ()
 			{
-				if ( Index > 0 )
+				if_constexpr ( Index > 0 )
 					result << divider;
 
 				result << '[' << Index << "] " << typeid(T).name();
