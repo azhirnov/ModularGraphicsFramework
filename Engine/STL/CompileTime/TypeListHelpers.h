@@ -133,8 +133,11 @@ namespace CompileTime
 	// Copy Qualifier Type
 	//
 
+	template <typename Typelist>
+	using CopyQualifiersTL =  typename _ctime_hidden_::CopyQualifiersFromTypeList< Typelist >::type;
+
 	template <typename ...Types>
-	using CopyQualifiers =  typename _ctime_hidden_::CopyQualifiersFromTypeList< typename TypeListFrom< Types... > >::type;
+	using CopyQualifiers =  CopyQualifiersTL< typename TypeListFrom< Types... > >;
 
 
 

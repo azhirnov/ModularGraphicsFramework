@@ -475,7 +475,7 @@ namespace Platforms
 			ASTC_SRGB8_A8_12x10		= _vtypeinfo::ASTC_SRGB8_A8_12x10,
 			ASTC_SRGB8_A8_12x12		= _vtypeinfo::ASTC_SRGB8_A8_12x12,
 
-			Unknown					= uint(-1),
+			Unknown					= ~0u,
 		};
 		
 	// utils
@@ -499,6 +499,108 @@ namespace Platforms
 		static BitsU				BitPerPixel		(type value);
 	};
 	
+
+
+	struct EPixelFormatClass
+	{
+		enum type : uint
+		{
+			Unknown				= 0,
+
+			R					= 1 << 0,
+			RG					= 1 << 1,
+			RGB					= 1 << 2,
+			RGBA				= 1 << 3,
+			AnyColorChannels	= R | RG | RGB | RGBA,
+			Depth				= 1 << 4,
+			DepthStencil		= 1 << 5,
+			AnyDepthStencil		= Depth | DepthStencil,
+			AnyChannel			= AnyColorChannels | AnyDepthStencil,
+
+			LinearColorSpace	= 1 << 6,
+			NonLinearColorSpace	= 1 << 7,
+			AnyColorSpace		= LinearColorSpace | NonLinearColorSpace,
+
+			Float64				= 1 << 8,
+			Float32				= 1 << 9,
+			Float16				= 1 << 10,
+			AnyFloat			= Float64 | Float32 | Float16,
+
+			Int32				= 1 << 11,
+			Int16				= 1 << 12,
+			Int8				= 1 << 13,
+			PackedInt			= 1 << 14,		// 11_11_10, 4_4_4_4, ...
+			AnyInt				= Int32 | Int16 | Int8 | PackedInt,
+			UInt32				= 1 << 15,
+			UInt16				= 1 << 16,
+			UInt8				= 1 << 17,
+			PackedUInt			= 1 << 18,		// 11_11_10, 4_4_4_4, ...
+			AnyUInt				= UInt32 | UInt16 | UInt8 | PackedUInt,
+			AnyInteger			= AnyInt | AnyUInt,
+
+			UNorm16				= 1 << 19,
+			UNorm8				= 1 << 20,
+			PackedUNorm			= 1 << 21,
+			AnyUNorm			= UNorm16 | UNorm8 | PackedUNorm,
+			SNorm16				= 1 << 22,
+			SNorm8				= 1 << 23,
+			PackedSNorm			= 1 << 24,
+			AnySNorm			= SNorm16 | SNorm8 | PackedSNorm,
+			AnyNorm				= AnyUNorm | AnySNorm,
+
+			AnyType				= AnyFloat | AnyInteger | AnyNorm,
+
+			Any					= AnyChannel | AnyType | AnyColorSpace,
+		};
+
+		GX_ENUM_BIT_OPERATIONS( type );
+
+		static type  From (EPixelFormat::type value);
+		static bool  StrongComparison (type value, type mask);
+		static bool  WeakComparison (type value, type mask);
+	};
+	
+
+
+	struct EFragOutput
+	{
+	private:
+		using _vtypeinfo	= _platforms_hidden_::EValueTypeInfo;
+
+	public:
+		enum type : uint
+		{
+			Unknown		= 0,
+			Int4		= _vtypeinfo::Int4,
+			UInt4		= _vtypeinfo::UInt4,
+			Float4		= _vtypeinfo::Float4,
+		};
+
+		//inline static type From (EPixelFormat::type fmt);
+		//inline static StringCRef ToString (type value);
+	};
+
+
+	
+//-----------------------------------------------------------------------------//
+// EFragOutput
+	/*
+	inline EFragOutput::type  EFragOutput::From (EPixelFormat::type fmt)
+	{
+		CHECK_ERR( EPixelFormat::Format::IsColor( fmt ), EFragOutput::Unknown );
+
+		if ( EPixelFormat::ValueType::IsSignedInteger( fmt ) )
+			return EFragOutput::Int4;
+
+		if ( EPixelFormat::ValueType::IsUnsignedInteger( fmt ) )
+			return EFragOutput::UInt4;
+
+		if ( EPixelFormat::ValueType::IsFloat( fmt ) )
+			return EFragOutput::Float4;
+
+		RETURN_ERR( "invalid pixel format" );
+	}
+	*/
 
 
 //-----------------------------------------------------------------------------//
@@ -619,127 +721,85 @@ namespace Platforms
 	}
 	
 
-	inline StringCRef  EPixelFormat::ToString (type value)
+
+//-----------------------------------------------------------------------------//
+// EPixelFormatClass
+	
+	inline EPixelFormatClass::type  EPixelFormatClass::From (EPixelFormat::type value)
 	{
-		switch ( value )
+		using VTI	= _platforms_hidden_::EValueTypeInfo;
+
+		type	result = Unknown;
+
+		switch ( value & VTI::_COL_MASK )
 		{
-			case RGBA16_SNorm : return "RGBA16_SNorm";
-			case RGBA8_SNorm : return "RGBA8_SNorm";
-			case RGB16_SNorm : return "RGB16_SNorm";
-			case RGB8_SNorm : return "RGB8_SNorm";
-			case RG16_SNorm : return "RG16_SNorm";
-			case RG8_SNorm : return "RG8_SNorm";
-			case R16_SNorm : return "R16_SNorm";
-			case R8_SNorm : return "R8_SNorm";
-			case RGBA16_UNorm : return "RGBA16_UNorm";
-			case RGBA8_UNorm : return "RGBA8_UNorm";
-			case RGB16_UNorm : return "RGB16_UNorm";
-			case RGB8_UNorm : return "RGB8_UNorm";
-			case RG16_UNorm : return "RG16_UNorm";
-			case RG8_UNorm : return "RG8_UNorm";
-			case R16_UNorm : return "R16_UNorm";
-			case R8_UNorm : return "R8_UNorm";
-			case RGB10_A2_UNorm : return "RGB10_A2_UNorm";
-			case RGBA4_UNorm : return "RGBA4_UNorm";
-			case RGB5_A1_UNorm : return "RGB5_A1_UNorm";
-			case RGB_5_6_5_UNorm : return "RGB_5_6_5_UNorm";
-			case BGR8_UNorm : return "BGR8_UNorm";
-			case BGRA8_UNorm : return "BGRA8_UNorm";
-			case sRGB8 : return "sRGB8";
-			case sRGB8_A8 : return "sRGB8_A8";
-			case R8I : return "R8I";
-			case RG8I : return "RG8I";
-			case RGB8I : return "RGB8I";
-			case RGBA8I : return "RGBA8I";
-			case R16I : return "R16I";
-			case RG16I : return "RG16I";
-			case RGB16I : return "RGB16I";
-			case RGBA16I : return "RGBA16I";
-			case R32I : return "R32I";
-			case RG32I : return "RG32I";
-			case RGB32I : return "RGB32I";
-			case RGBA32I : return "RGBA32I";
-			case R8U : return "R8U";
-			case RG8U : return "RG8U";
-			case RGB8U : return "RGB8U";
-			case RGBA8U : return "RGBA8U";
-			case R16U : return "R16U";
-			case RG16U : return "RG16U";
-			case RGB16U : return "RGB16U";
-			case RGBA16U : return "RGBA16U";
-			case R32U : return "R32U";
-			case RG32U : return "RG32U";
-			case RGB32U : return "RGB32U";
-			case RGBA32U : return "RGBA32U";
-			case RGB10_A2U : return "RGB10_A2U";
-			case R16F : return "R16F";
-			case RG16F : return "RG16F";
-			case RGB16F : return "RGB16F";
-			case RGBA16F : return "RGBA16F";
-			case R32F : return "R32F";
-			case RG32F : return "RG32F";
-			case RGB32F : return "RGB32F";
-			case RGBA32F : return "RGBA32F";
-			case RGB_11_11_10F : return "RGB_11_11_10F";
-			case Depth16 : return "Depth16";
-			case Depth24 : return "Depth24";
-			case Depth32 : return "Depth32";
-			case Depth32F : return "Depth32F";
-			case Depth16_Stencil8 : return "Depth16_Stencil8";
-			case Depth24_Stencil8 : return "Depth24_Stencil8";
-			case Depth32F_Stencil8 : return "Depth32F_Stencil8";
-			case BC1_RGB8_UNorm : return "BC1_RGB8_UNorm";
-			case BC1_RGB8_A1_UNorm : return "BC1_RGB8_A1_UNorm";
-			/*case BC2_RGBA8_UNorm
-			case BC3_RGBA8_UNorm
-			case BC4_RED8_SNorm
-			case BC4_RED8_UNorm
-			case BC5_RG8_SNorm
-			case BC5_RG8_UNorm
-			case BC7_RGBA8_UNorm
-			case BC7_SRGB8_A8_UNorm
-			case BC6H_RGB16F
-			case BC6H_RGB16F_Unsigned
-			case ETC2_RGB8_UNorm
-			case ECT2_SRGB8_UNorm
-			case ETC2_RGB8_A1_UNorm
-			case ETC2_SRGB8_A1_UNorm
-			case ETC2_RGBA8_UNorm
-			case ETC2_SRGB8_A8_UNorm
-			case EAC_R11_SNorm
-			case EAC_R11_UNorm
-			case EAC_RG11_SNorm
-			case EAC_RG11_UNorm
-			case ASTC_RGBA_4x4
-			case ASTC_RGBA_5x4
-			case ASTC_RGBA_5x5
-			case ASTC_RGBA_6x5
-			case ASTC_RGBA_6x6
-			case ASTC_RGBA_8x5
-			case ASTC_RGBA_8x6
-			case ASTC_RGBA_8x8
-			case ASTC_RGBA_10x5
-			case ASTC_RGBA_10x6
-			case ASTC_RGBA_10x8
-			case ASTC_RGBA_10x10
-			case ASTC_RGBA_12x10
-			case ASTC_RGBA_12x12
-			case ASTC_SRGB8_A8_4x4
-			case ASTC_SRGB8_A8_5x4
-			case ASTC_SRGB8_A8_5x5
-			case ASTC_SRGB8_A8_6x5
-			case ASTC_SRGB8_A8_6x6
-			case ASTC_SRGB8_A8_8x5
-			case ASTC_SRGB8_A8_8x6
-			case ASTC_SRGB8_A8_8x8
-			case ASTC_SRGB8_A8_10x5
-			case ASTC_SRGB8_A8_10x6
-			case ASTC_SRGB8_A8_10x8
-			case ASTC_SRGB8_A8_10x10
-			case ASTC_SRGB8_A8_12x10
-			case ASTC_SRGB8_A8_12x12*/
+			case VTI::_R				: result |= R;				break;
+			case VTI::_RG				: result |= RG;				break;
+			case VTI::_RGB				: result |= RGB;			break;
+			case VTI::_RGBA				: result |= RGBA;			break;
+			case VTI::_DEPTH			: result |= Depth;			break;
+			case VTI::_DEPTH_STENCIL	: result |= DepthStencil;	break;
+			//case VTI::_STENCIL			: result |= Stencil;		break;
+			default						: RETURN_ERR( "unsupported channels type" );
 		}
-		RETURN_ERR( "unknown pixel format " << String().FormatI( value, 16 ) );
+
+		switch ( value & (VTI::_TYPE_MASK | VTI::_UNSIGNED | VTI::_NORM) )
+		{
+			case VTI::_BYTE | VTI::_NORM			: result |= SNorm8;			break;
+			case VTI::_SHORT | VTI::_NORM			: result |= SNorm16;		break;
+			case VTI::_UBYTE | VTI::_NORM			: result |= UNorm8;			break;
+			case VTI::_USHORT | VTI::_NORM			: result |= UNorm16;		break;
+			case VTI::_BYTE							: result |= Int8;			break;
+			case VTI::_SHORT						: result |= Int16;			break;
+			case VTI::_INT							: result |= Int32;			break;
+			case VTI::_HALF							: result |= Float16;		break;
+			case VTI::_FLOAT						: result |= Float32;		break;
+			case VTI::_UBYTE						: result |= UInt8;			break;
+			case VTI::_USHORT						: result |= UInt16;			break;
+			case VTI::_UINT							: result |= UInt32;			break;
+			case VTI::_INT_10_10_10_2				: result |= PackedInt;		break;
+			case VTI::_INT_10_10_10_2 | VTI::_NORM	: result |= PackedSNorm;	break;
+			case VTI::_FLOAT_11_11_10				: result |= PackedUNorm;	break;
+			case VTI::_USHORT_4_4_4_4				: result |= PackedUInt;		break;
+			case VTI::_USHORT_5_5_5_1				: result |= PackedUInt;		break;
+			case VTI::_USHORT_5_6_5					: result |= PackedUInt;		break;
+			case VTI::_INT_10_10_10					: result |= PackedInt;		break;
+			case VTI::_USHORT_5_5_5					: result |= PackedUInt;		break;
+			case VTI::_INT24						: result |= PackedInt;		break;
+			case VTI::_DEPTH_16_STENCIL_8			: result |= PackedUInt;		break;
+			case VTI::_DEPTH_24_STENCIL_8			: result |= PackedUInt;		break;
+			case VTI::_FLOAT_DEPTH_32_STENCIL_8		: result |= PackedUInt;		break;
+			//case VTI::_BOOL
+			//case VTI::_LONG
+			//case VTI::_ULONG
+			//case VTI::_DOUBLE
+			default								: RETURN_ERR( "unsupported data type" );
+		}
+
+		if ( value & VTI::_SRGB )
+			result |= NonLinearColorSpace;
+		else
+			result |= LinearColorSpace;
+
+		return result;
+	}
+
+	
+	inline bool  EPixelFormatClass::StrongComparison (type value, type mask)
+	{
+		const bool	channels_equals		= !!((value & mask) & AnyChannel);
+		const bool	color_space_equals	= !!((value & mask) & AnyColorSpace);
+		const bool	types_equals		= !!((value & mask) & AnyType);
+		return	channels_equals and color_space_equals and types_equals;
+	}
+
+
+	inline bool  EPixelFormatClass::WeakComparison (type value, type mask)
+	{
+		const bool	channels_equals		= (value & AnyChannel) == 0 or !!((value & mask) & AnyChannel);
+		const bool	color_space_equals	= (value & AnyColorSpace) == 0 or !!((value & mask) & AnyColorSpace);
+		const bool	types_equals		= (value & AnyType) == 0 or !!((value & mask) & AnyType);
+		return	channels_equals and color_space_equals and types_equals;
 	}
 
 

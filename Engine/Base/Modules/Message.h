@@ -30,6 +30,7 @@ namespace Base
 		T					_data;
 		mutable Sender_t	_sender;
 		mutable usize		_numOfSends	= 0;
+		mutable bool		_async		= false;
 
 
 	// methods
@@ -53,17 +54,25 @@ namespace Base
 		}
 
 		template <typename ...ArgTypes>
-		explicit Message (ArgTypes&& ...args) :
-			_data{ FW<ArgTypes>( args )... }
-		{}
+		Message (ArgTypes&& ...args) : _data{ FW<ArgTypes>( args )... }
+		{
+			STATIC_ASSERT(( not CompileTime::IsSameTypesWithoutQualifiers< typename CompileTime::TypeListFrom<ArgTypes...>::Front, Self > ));
+		}
 
-		Self const&		From (const Sender_t sender) const
+		// set async flag to disable default checks for thread and write your own synchronization
+		Self &	Async (bool isAsync = true)
+		{
+			_async = isAsync;
+			return *this;
+		}
+
+		Self &	From (const Sender_t sender)
 		{
 			_sender = sender;
 			return *this;
 		}
 
-		Self &			From (const Sender_t sender)
+		Self const&	From (const Sender_t sender) const
 		{
 			_sender = sender;
 			return *this;
@@ -71,6 +80,7 @@ namespace Base
 
 		T const&		Data ()				const	{ return _data; }
 		bool			IsDiscarded ()		const	{ return _numOfSends == 0; }
+		bool			IsAsync ()			const	{ return _async; }
 		Sender_t const&	Sender ()			const	{ return _sender; }
 
 		T const *		operator -> ()		const	{ return &_data; }

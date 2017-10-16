@@ -24,8 +24,8 @@ namespace PlatformGL
 											ModuleMsg::Delete
 										> >
 										::Append< MessageListFrom<
-											ModuleMsg::GetGpuSamplerDescriptor,
-											ModuleMsg::GetGLSamplerID
+											GpuMsg::GetSamplerDescriptor,
+											GpuMsg::GetGLSamplerID
 										> >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
@@ -49,8 +49,6 @@ namespace PlatformGL
 		GL4Sampler (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
 		~GL4Sampler ();
 
-		static OModID::type			GetStaticID ()				{ return "gl4.sampler"_OModID; }
-
 
 	//protected:
 		SamplerDescriptor const&	GetDescriptor ()	const	{ return _descr; }
@@ -61,8 +59,8 @@ namespace PlatformGL
 	private:
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGLSamplerID (const Message< ModuleMsg::GetGLSamplerID > &);
-		bool _GetGpuSamplerDescriptor (const Message< ModuleMsg::GetGpuSamplerDescriptor > &);
+		bool _GetGLSamplerID (const Message< GpuMsg::GetGLSamplerID > &);
+		bool _GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &);
 
 	private:
 		bool _IsCreated () const;

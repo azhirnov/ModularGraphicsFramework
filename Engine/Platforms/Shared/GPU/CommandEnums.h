@@ -19,10 +19,10 @@ namespace Platforms
 			Metadata,
 			
 			_Count,
-			Unknown	= uint(-1),
+			Unknown	= ~0u,
 		};
 
-		using bits = EnumBitfield< EImageAspect >;
+		GX_ENUM_BITFIELD( EImageAspect );
 	};
 
 }	// Platforms

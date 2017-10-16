@@ -263,10 +263,10 @@ namespace Platforms
 	RenderPassDescrBuilder&
 		RenderPassDescrBuilder::AddDependency (uint						srcPass,
 											   EPipelineStage::bits		srcStage,
-											   ESubpassAccess::bits		srcAccess,
+											   EPipelineAccess::bits	srcAccess,
 											   uint						dstPass,
 											   EPipelineStage::bits		dstStage,
-											   ESubpassAccess::bits		dstAccess,
+											   EPipelineAccess::bits	dstAccess,
 											   ESubpassDependency::bits	dependency)
 	{
 		SubpassDependency_t		tmp;

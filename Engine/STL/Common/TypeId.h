@@ -122,7 +122,7 @@ namespace GXTypes
 		typedef Hash< TypeTraits::ResultOf< decltype(&key_t::Get) > >	base_t;
 		typedef base_t::result_t										result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t()( x.Get() );
 		}

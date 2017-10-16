@@ -20,7 +20,7 @@ namespace PlatformVK
 		if ( gpuThread )
 			return gpuThread.ToPtr< VulkanThread >()->GetDevice()->VkSystems();
 
-		ModulePtr const&	gpu_thread = gs->Get< ParallelThread >()->GetModule( VulkanThread::GetStaticID() );
+		ModulePtr const&	gpu_thread = gs->Get< ParallelThread >()->GetModuleByID( Platforms::VkThreadModuleID );
 		
 		if ( gpu_thread )
 			return gpu_thread.ToPtr< VulkanThread >()->GetDevice()->VkSystems();
@@ -80,7 +80,11 @@ namespace PlatformVK
 	bool Vk1BaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
 	{
 		if ( msg->newManager )
-			msg->newManager->Subscribe( this, &Vk1BaseModule::_GpuDeviceBeforeDestory );
+			msg->newManager->Subscribe( this, &Vk1BaseModule::_DeviceBeforeDestroy );
+		
+		if ( msg->oldManager )
+			msg->oldManager->UnsubscribeAll( this );
+
 		return true;
 	}
 	
@@ -91,17 +95,28 @@ namespace PlatformVK
 */
 	void Vk1BaseModule::_DestroyResources ()
 	{
-		_SendMsg( Message< ModuleMsg::Delete >() );
+		_SendMsg< ModuleMsg::Delete >({});
 	}
 
 /*
 =================================================
-	_GpuDeviceBeforeDestory
+	_DeviceBeforeDestroy
 =================================================
 */
-	bool Vk1BaseModule::_GpuDeviceBeforeDestory (const Message< ModuleMsg::GpuDeviceBeforeDestory > &msg)
+	bool Vk1BaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &msg)
 	{
 		_DestroyResources();
+		return true;
+	}
+	
+/*
+=================================================
+	_GetVkLogicDevice
+=================================================
+*/
+	bool Vk1BaseModule::_GetVkLogicDevice (const Message< GpuMsg::GetVkLogicDevice > &msg)
+	{
+		msg->result.Set( GetLogicalDevice() );
 		return true;
 	}
 

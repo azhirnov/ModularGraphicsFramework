@@ -17,7 +17,7 @@ extern void Test_GLWindow ()
 
 		app.Quit();
 	}
-	GetMainSystemInstace()->Send( Message< ModuleMsg::Delete >() );
+	GetMainSystemInstace()->Send< ModuleMsg::Delete >({});
 
 	WARNING( "OpenGL Window test succeeded!" );
 }

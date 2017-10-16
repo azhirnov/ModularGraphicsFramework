@@ -67,8 +67,8 @@ extern void Test_Math_Bit ()
 
 
 	Bitfield<10>	g;
-	g.SetAll( true );	usize	g0 = g;				ASSERT( g0 == ToMask<uint>( 10_bit ) );
-	g.SetAll( false );	usize	g1 = g;				ASSERT( g1 == 0 );
+	g.SetAll( true );	usize	g0 = (uint) g;		ASSERT( g0 == ToMask<uint>( 10_bit ) );
+	g.SetAll( false );	usize	g1 = (uint) g;		ASSERT( g1 == 0 );
 	g.Set( 2 );			usize	g2 = g.MinIndex();	ASSERT( g2 == 2 );
 	g.Set( 1 );			usize	g3 = g.MinIndex();	ASSERT( g3 == 1 );
 	g.Set( 3 );			usize	g4 = g.MaxIndex();	ASSERT( g4 == 3 );

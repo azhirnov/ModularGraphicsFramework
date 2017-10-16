@@ -30,6 +30,6 @@ private:
 	bool _OnMotion (const Message< ModuleMsg::InputMotion > &msg);
 	bool _Draw (const Message< ModuleMsg::Update > &msg);
 
-	bool _GLInit (const Message< ModuleMsg::GpuDeviceCreated > &msg);
-	bool _GLDelete (const Message< ModuleMsg::GpuDeviceBeforeDestory > &msg);
+	bool _GLInit (const Message< GpuMsg::DeviceCreated > &msg);
+	bool _GLDelete (const Message< GpuMsg::DeviceBeforeDestroy > &msg);
 };

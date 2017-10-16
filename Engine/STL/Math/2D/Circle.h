@@ -239,10 +239,9 @@ namespace GXTypes
 		typedef GXMath::Circle<T>			key_t;
 		typedef typename Hash<T>::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
-			return	Hash< typename GXMath::Circle<T>::vec_t >::operator ()( x.Center() ) +
-					Hash< T >::operator ()( x.Radius() );
+			return	HashOf( x.Center() ) + HashOf( x.Radius() );
 		}
 	};
 

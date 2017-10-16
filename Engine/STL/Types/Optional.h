@@ -93,7 +93,7 @@ namespace GXTypes
 
 		bool	operator == (const Self &other) const
 		{
-			return IsDefined() and other.IsDefined() and Get() == other.Get();
+			return IsDefined() and other.IsDefined() and All( Get() == other.Get() );
 		}
 
 
@@ -180,7 +180,7 @@ namespace GXTypes
 		typedef Hash<T>						base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return x ? base_t::operator ()( x.Get() ) : result_t();
 		}

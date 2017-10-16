@@ -13,125 +13,46 @@ namespace Platforms
 	// Vertex Attribs
 	//
 
-	class VertexAttribs final : public CompileTime::PODStruct		// TODO: copy from StaticArray
+	class VertexAttribs final : public CompileTime::CopyQualifiers< FixedSizeHashMap<StaticString<32>, int, 1> >
 	{
 	// types
 	public:
-		enum AttribIndex : uint {};
-		enum BindingIndex : uint {};
+		using Self		= VertexAttribs;
+		using Name_t	= StaticString<32>;
 
-		using Self	= VertexAttribs;
-		
+		enum AttribIndex : uint {
+			AttribIndex_Unknown	= ~0u,
+		};
+
 
 	private:
 		//
 		// Attrib
 		//
-		struct Attrib : public CompileTime::PODStruct
+		struct Attrib final : public CompileTime::CopyQualifiers< Name_t >
 		{
 		// variables
-			EVertexAttribute::type	type;
+			Name_t					buffer;		// buffer name to set buffer binding index to attribute
 			AttribIndex				index;
-			BytesU					offset;
-			BindingIndex			bindingIndex;
-			bool					enabled;
+			EVertexAttribute::type	type;		// float|int <1,2,3,4,...> available
 
 		// methods
-			Attrib (GX_DEFCTOR) :
-				type( EVertexAttribute::Unknown ),
-				index( AttribIndex(-1) ),
-				offset( 0 ),
-				bindingIndex( BindingIndex(0) ),
-				enabled( false )
-			{}
+			Attrib (GX_DEFCTOR);
+			explicit Attrib (EVertexAttribute::type type, AttribIndex index, StringCRef buffer = StringCRef());
 
-			Attrib (AttribIndex index, EVertexAttribute::type type, BytesU offset, BindingIndex bindingIndex) :
-				type( type ),
-				index( index ),
-				offset( offset ),
-				bindingIndex( bindingIndex ),
-				enabled( true )
-			{}
-
-			bool IsEnabled () const
-			{
-				return index != AttribIndex(-1) and enabled;
-			}
-
-			/*EVertexAttribute::type ToVSInputType () const
-			{
-				return EVertexAttribute::ValueType::ToVSInputType( type );
-			}*/
-
-			bool operator == (const Attrib &right) const
-			{
-				return	IsEnabled()		== right.IsEnabled() and (
-						IsEnabled()
-						? (	type		== right.type		and
-							index		== right.index		and
-							offset		== right.offset		and
-							bindingIndex== right.bindingIndex )
-						: true );
-			}
-
-			bool operator != (const Attrib &right) const
-			{
-				return not (*this == right);
-			}
+			bool operator == (const Attrib &right) const;
+			bool operator >  (const Attrib &right) const;
+			bool operator <  (const Attrib &right) const;
 		};
 
-
-		//
-		// Buffer Binding
-		//
-		struct Binding : public CompileTime::PODStruct
-		{
-		// variables
-			BindingIndex			index;
-			BytesU					stride;
-			EVertexInputRate::type	rate;
-			bool					enabled;
-
-		// methods
-			Binding (GX_DEFCTOR) :
-				index( BindingIndex(-1) ), stride( 0 ), rate( EVertexInputRate::Unknown ), enabled( false )
-			{}
-
-			Binding (BindingIndex index, BytesU stride, EVertexInputRate::type rate) :
-				index(index), stride(stride), rate(rate), enabled(true)
-			{}
-
-			bool IsEnabled () const
-			{
-				return index != BindingIndex(-1) and enabled;
-			}
-
-			bool operator == (const Binding &right) const
-			{
-				return	IsEnabled()		== right.IsEnabled() and (
-						IsEnabled()
-						? (	index		== right.index		and
-							stride		== right.stride		and
-							rate		== right.rate )
-						:	true );
-			}
-
-			bool operator != (const Binding &right) const
-			{
-				return not (*this == right);
-			}
-		};
-
-
-		using Attribs			= StaticArray< Attrib, GlobalConst::Graphics_MaxAttribs >;
-		using BufferBindings	= StaticArray< Binding, GlobalConst::Graphics_MaxAttribs >;
-		using PairRef			= Pair< Attrib const&, Binding const& >;
+		using Attribs	= FixedSizeHashMap< Name_t, Attrib, GlobalConst::Graphics_MaxAttribs >;
+		using PairPtr	= Ptr< const Pair<const Name_t, Attrib> >;
+		using PairRef	= Pair<const Name_t, Attrib> const&;
 
 
 	// variables
 	private:
-		Attribs				_attribs;
-		BufferBindings		_bindings;
+		Attribs		_attribs;
 
 
 	// methods
@@ -139,89 +60,135 @@ namespace Platforms
 		VertexAttribs (GX_DEFCTOR)
 		{}
 		
+		Self & Add (StringCRef name, EVertexAttribute::type type, uint index, StringCRef buffer = StringCRef());
 
-		Self & Add (AttribIndex index, EVertexAttribute::type type, BytesU offset, BindingIndex bindingIndex = BindingIndex(0))
-		{
-			// attrib allready defined
-			ASSERT( _attribs[index].index == AttribIndex(-1) );
-			ASSERT( bindingIndex < _bindings.Count() );
-
-			_attribs[index] = Attrib( index, type, offset, bindingIndex );
-			return *this;
-		}
+		Self & Add (StringCRef name, EVertexAttribute::type type, StringCRef buffer = StringCRef());
 		
-
-		template <typename ClassType, typename ValueType>
-		Self & Add (AttribIndex index, ValueType ClassType:: *vertex, BindingIndex bindingIndex = BindingIndex(0))
-		{
-			// attrib allready defined
-			ASSERT( _attribs[index].index == AttribIndex(-1) );
-			ASSERT( bindingIndex < _bindings.Count() );
-
-			_attribs[index] = Attrib( index,
-									  VertexDescr< ValueType >::attrib,
-									  OffsetOf( vertex ),
-									  bindingIndex );
-			return *this;
-		}
+		template <typename ValueType>
+		Self & Add (StringCRef name, StringCRef buffer = StringCRef());
 		
+		template <typename ValueType>
+		Self & Add (StringCRef name, bool norm, StringCRef buffer = StringCRef());
 
-		template <typename ClassType, typename ValueType>
-		Self & Add (AttribIndex index, ValueType ClassType:: *vertex, bool norm, BindingIndex bindingIndex = BindingIndex(0))
-		{
-			// attrib allready defined
-			ASSERT( _attribs[index].index == AttribIndex(-1) );
-			ASSERT( bindingIndex < _bindings.Count() );
+		PairPtr  Get (StringCRef name) const;
 
-			_attribs[index] = Attrib( index,
-									  EVertexAttribute::SetNormalized( VertexDescr< ValueType >::attrib, norm ),
-									  OffsetOf( vertex ),
-									  bindingIndex );
-			return *this;
+		bool IsExist (StringCRef name) const {
+			return _attribs.IsExist( name );
 		}
 
-
-		Self & Bind (BindingIndex bindingIndex, BytesU stride, EVertexInputRate::type rate = EVertexInputRate::Vertex)
-		{
-			ASSERT( _bindings[bindingIndex].index == BindingIndex(-1) );
-
-			_bindings[bindingIndex] = Binding( bindingIndex, stride, rate );
-			return *this;
-		}
-
-
-		void Clear ()
-		{
+		void Clear () {
 			_attribs.Clear();
-			_bindings.Clear();
 		}
 
-
-		usize Count () const
-		{
+		usize Count () const {
 			return _attribs.Count();
 		}
 
-
-		PairRef  operator [] (usize i) const
-		{
-			return PairRef( _attribs[i], _bindings[i] );
-		}
-
-
-		bool operator == (const VertexAttribs &right) const
-		{
-			FOR( i, _attribs )
-			{
-				if ( _attribs[i]  != right._attribs[i]  or
-					 _bindings[i] != right._bindings[i] )
-				{
-					return false;
-				}
-			}
-			return true;
+		PairRef  operator [] (usize index) const {
+			return _attribs[index];
 		}
 	};
+	
+
+	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	inline VertexAttribs::Attrib::Attrib (UninitializedType) : 
+		index( AttribIndex_Unknown ), type( EVertexAttribute::Unknown )
+	{}
+
+	inline VertexAttribs::Attrib::Attrib (EVertexAttribute::type type, AttribIndex index, StringCRef buffer) :
+		type( type ), index( index ), buffer( buffer )
+	{}
+	
+/*
+=================================================
+	operator ==
+=================================================
+*/
+	inline bool VertexAttribs::Attrib::operator == (const Attrib &right) const
+	{
+		return	type	== right.type	and
+				index	== right.index	and
+				buffer	== right.buffer;
+	}
+	
+/*
+=================================================
+	operator >
+=================================================
+*/
+	inline bool VertexAttribs::Attrib::operator >  (const Attrib &right) const
+	{
+		return	type	!= right.type	?	type	> right.type	:
+				index	!= right.index	?	index	> right.index	:
+											buffer	> right.buffer;
+	}
+	
+/*
+=================================================
+	operator <
+=================================================
+*/
+	inline bool VertexAttribs::Attrib::operator <  (const Attrib &right) const
+	{
+		return	type	!= right.type	?	type	< right.type	:
+				index	!= right.index	?	index	< right.index	:
+											buffer	< right.buffer;
+	}
+//-----------------------------------------------------------------------------
+
+
+	
+/*
+=================================================
+	Add
+=================================================
+*/
+	inline VertexAttribs &  VertexAttribs::Add (StringCRef name, EVertexAttribute::type type, uint index, StringCRef buffer)
+	{
+		ASSERT( not _attribs.IsExist( name ) );
+		_attribs.Add( name, Attrib{ type, AttribIndex(index), buffer } );
+		return *this;
+	}
+
+	inline VertexAttribs &  VertexAttribs::Add (StringCRef name, EVertexAttribute::type type, StringCRef buffer)
+	{
+		return Add( name, type, (uint)_attribs.Count(), buffer );
+	}
+		
+/*
+=================================================
+	Add
+=================================================
+*/
+	template <typename ValueType>
+	inline VertexAttribs &  VertexAttribs::Add (StringCRef name, StringCRef buffer)
+	{
+		return Add( name, VertexDescr< ValueType >::attrib, buffer );
+	}
+		
+	template <typename ValueType>
+	inline VertexAttribs &  VertexAttribs::Add (StringCRef name, bool norm, StringCRef buffer)
+	{
+		return Add( name, EVertexAttribute::SetNormalized( VertexDescr< ValueType >::attrib, norm ), buffer );
+	}
+	
+/*
+=================================================
+	Get
+=================================================
+*/
+	inline VertexAttribs::PairPtr  VertexAttribs::Get (StringCRef name) const
+	{
+		Attribs::const_iterator  iter;
+		_attribs.Find( name, OUT iter );
+		return iter;
+	}
+//-----------------------------------------------------------------------------
 
 
 }	// Platforms

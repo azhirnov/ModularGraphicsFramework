@@ -8,7 +8,7 @@
 
 namespace Engine
 {
-namespace ModuleMsg
+namespace GpuMsg
 {
 
 	//
@@ -39,9 +39,9 @@ namespace ModuleMsg
 
 
 	//
-	// Get GPU Texture ID
+	// Get GPU Image ID
 	//
-	struct GetGLTextureID
+	struct GetGLImageID
 	{
 		Out< gl::GLuint >		result;
 	};
@@ -113,7 +113,7 @@ namespace ModuleMsg
 	};
 	*/
 
-}	// ModuleMsg
+}	// GpuMsg
 }	// Engine
 
 #endif	// GRAPHICS_API_OPENGL

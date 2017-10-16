@@ -41,12 +41,12 @@ namespace Base
 		{
 			result = (_mngrID == where->GetModuleID()) ? 
 						where :
-						where->GetModule( _mngrID );
+						where->GetModuleByID( _mngrID );
 
 			ASSERT( result );
 
 			if ( result )
-				CHECK( SendTo( result, Message< ModuleMsg::AddToManager >{ CurrentThreadModule() } ) );
+				CHECK( SendTo< ModuleMsg::AddToManager >( result, { CurrentThreadModule() } ));
 		}
 	};
 	
@@ -79,10 +79,10 @@ namespace Base
 		{
 			ModulePtr	result = (_mngrID == manager->GetModuleID()) ?
 									manager :
-									manager->GetModule( _mngrID );
+									manager->GetModuleByID( _mngrID );
 			
 			if ( result )
-				CHECK( SendTo( result, Message< ModuleMsg::RemoveFromManager >{ CurrentThreadModule() } ) );
+				CHECK( SendTo< ModuleMsg::RemoveFromManager >( result, { CurrentThreadModule() } ));
 		}
 	};
 

@@ -22,7 +22,7 @@ namespace Platforms
 			ClampUnnorm,
 
 			_Count,
-			Unknown	= uint(-1),
+			Unknown	= ~0u,
 		};
 
 		static StringCRef ToString (type value);
@@ -78,19 +78,19 @@ namespace Platforms
 	{
 		enum type : uint
 		{
-			Float		= 1 << 0,
-			Int			= 1 << 1,
+			Float,
+			Int,
+			Transparent,
+			Black,
+			White,
 
-			Transparent	= 1 << 8,
-			Black		= 1 << 9,
-			White		= 1 << 10,
-
-			Unknown		= 0,
+			_Count,
+			Unknown		= ~0u,
 		};
 
-		static String ToString (type value);
+		GX_ENUM_BITFIELD( ESamplerBorderColor );
 
-		GX_ENUM_BIT_OPERATIONS( type );
+		static String ToString (bits value);
 	};
 
 	
@@ -100,27 +100,6 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EFilter
 	
-	inline StringCRef EFilter::ToString (type value)
-	{
-		switch ( value )
-		{
-			case EFilter::MinMagMipNearest					:	return "MinMagMipNearest";
-			case EFilter::MinMagNearest_MipLinear			:	return "MinMagNearest_MipLinear";
-			case EFilter::MinNearest_MagLinear_MipNearest	:	return "MinNearest_MagLinear_MipNearest";
-			case EFilter::MinNearest_MagMipLinear			:	return "MinNearest_MagMipLinear";
-			case EFilter::MinLinear_MagMipNearest			:	return "MinLinear_MagMipNearest";
-			case EFilter::MinLinear_MagNearest_MipLinear	:	return "MinLinear_MagNearest_MipLinear";
-			case EFilter::MinMagLinear_MipNearest			:	return "MinMagLinear_MipNearest";
-			case EFilter::MinMagMipLinear					:	return "MinMagMipLinear";
-			case EFilter::Anisotropic_2						:	return "Anisotropic_2";
-			case EFilter::Anisotropic_4						:	return "Anisotropic_4";
-			case EFilter::Anisotropic_8						:	return "Anisotropic_8";
-			case EFilter::Anisotropic_12					:	return "Anisotropic_12";
-			case EFilter::Anisotropic_16					:	return "Anisotropic_16";
-		}
-		RETURN_ERR( "invalid filter type", "unknown" );
-	}
-
 	inline constexpr bool EFilter::IsMipmapLinear (type value)
 	{
 		return EnumEq( value, EFilter::_MIP_LINEAR );
@@ -139,50 +118,6 @@ namespace Platforms
 	inline constexpr uint EFilter::GetAnisotropic (type value)
 	{
 		return EnumEq( value, EFilter::_ANISOTROPIC ) ? uint(value & _A_FACTOR_MASK) : 0;
-	}
-
-
-
-//-----------------------------------------------------------------------------//
-// EAddressMode
-	
-	inline StringCRef EAddressMode::ToString (type value)
-	{
-		switch ( value )
-		{
-			case EAddressMode::ClampToEdge		:	return "ClampToEdge";
-			case EAddressMode::ClampToBorder	:	return "ClampToBorder";
-			case EAddressMode::Repeat			:	return "Repeat";
-			case EAddressMode::MirroredRepeat	:	return "MirroredRepeat";
-			case EAddressMode::MirroredClamp	:	return "MirroredClamp";
-			case EAddressMode::ClampUnnorm		:	return "ClampUnnorm";
-		}
-		RETURN_ERR( "invalid wrap mode", "unknown" );
-	}
-	
-
-
-//-----------------------------------------------------------------------------//
-// ESamplerBorderColor
-	
-	inline String ESamplerBorderColor::ToString (type value)
-	{
-		String	str;
-
-		if ( EnumEq( value, ESamplerBorderColor::Int ) )
-			str << "Int";
-		else
-			str << "Float";
-
-		if ( EnumEq( value, ESamplerBorderColor::Black ) )
-			str << "Black";
-		else
-		if ( EnumEq( value, ESamplerBorderColor::White ) )
-			str << "White";
-		else
-			str << "Transparent";
-
-		return str;
 	}
 
 

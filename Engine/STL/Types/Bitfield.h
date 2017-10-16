@@ -4,6 +4,7 @@
 
 #include "Engine/STL/CompileTime/NewTypeInfo.h"
 #include "Engine/STL/Math/MathFunc.h"
+#include "Engine/STL/Defines/OperatorHelpers.h"
 
 namespace GX_STL
 {
@@ -20,10 +21,10 @@ namespace GXTypes
 	// types
 	public:
 		struct BitRef;
-		typedef Bitfield< B, IndexType >						Self;
-		typedef typename CompileTime::NearUInt::FromBits< B >	T;
-		typedef T												value_t;
-		typedef IndexType										index_t;
+		using Self		= Bitfield< B, IndexType >;
+		using T			= typename CompileTime::NearUInt::FromBits< CompileTime::Max< uint, B, 32 > >;
+		using value_t	= T;
+		using index_t	= IndexType;
 
 
 	// variables
@@ -33,83 +34,90 @@ namespace GXTypes
 		//  ||||||||||||
 		// B-1         0
 		
-		static const T	_MAX_VALUE = CompileTime::ToMask< T, B >;
+		static constexpr T	_MAX_VALUE = CompileTime::ToMask< T, B >;
 
 
 	// methods
 	public:
-		Bitfield (GX_DEFCTOR): _bits( T(0) )		{}
+		constexpr Bitfield (GX_DEFCTOR): _bits( T(0) )		{}
 
 		explicit
-		Bitfield (const T bits): _bits(bits)		{}
+		constexpr Bitfield (const T bits): _bits(bits)		{}
 		
-		Bitfield (Self &&other) = default;
-		Bitfield (const Self &other) = default;
+		constexpr Bitfield (Self &&other) = default;
+		constexpr Bitfield (const Self &other) = default;
 
-		bool	Get (index_t i) const				{ ASSUME(i<B);  return !!( _bits & (T(1) << i) ); }
-		Self &	Set (index_t i)						{ ASSUME(i<B);  _bits |= T(1) << i;  return *this; }
-		Self &	Reset (index_t i)					{ ASSUME(i<B);  _bits ^= T(1) << i;  return *this; }
-		Self &	SetAt (index_t i, bool bit)			{ ASSUME(i<B); (_bits &= ~(T(1) << i)) |= T(bit) << i;  return *this; }
+		constexpr bool		Get (index_t i) const				{ ASSUME(i<B);  return !!( _bits & (T(1) << i) ); }
+		constexpr Self &	Set (index_t i)						{ ASSUME(i<B);  _bits |= (T(1) << i);  return *this; }
+		constexpr Self &	Reset (index_t i)					{ ASSUME(i<B);  _bits &= ~(T(1) << i);  return *this; }
+		constexpr Self &	SetAt (index_t i, bool bit)			{ ASSUME(i<B); (_bits &= ~(T(1) << i)) |= (T(bit) << i);  return *this; }
 
-		Self &	And (index_t i, bool bit)			{ ASSUME(i<B);  _bits &= T(bit) << i;  return *this; }
-		Self &	Or (index_t i, bool bit)			{ ASSUME(i<B);  _bits |= T(bit) << i;  return *this; }
-		Self &	Xor (index_t i, bool bit)			{ ASSUME(i<B);  _bits ^= T(bit) << i;  return *this; }
+		constexpr Self &	And (index_t i, bool bit)			{ ASSUME(i<B);  _bits &= (T(bit) << i);  return *this; }
+		constexpr Self &	Or (index_t i, bool bit)			{ ASSUME(i<B);  _bits |= (T(bit) << i);  return *this; }
+		constexpr Self &	Xor (index_t i, bool bit)			{ ASSUME(i<B);  _bits ^= (T(bit) << i);  return *this; }
 
-		Self &	SetAll (bool bit = true)			{ _bits = bit ? _MAX_VALUE : T(0);  return *this; }
+		constexpr Self &	SetAll (bool bit = true)			{ _bits = bit ? _MAX_VALUE : T(0);  return *this; }
 
-		bool	IsZero ()	const					{ return _bits == 0; }
-		bool	IsNotZero () const					{ return _bits != 0; }
-		bool	Empty ()	const					{ return IsZero(); }
+		constexpr bool		IsZero ()	const					{ return _bits == 0; }
+		constexpr bool		IsNotZero () const					{ return _bits != 0; }
+		constexpr bool		Empty ()	const					{ return IsZero(); }
 
-		index_t	MinIndex () const					{ return (index_t) GXMath::BitScanForward( _bits ); }
-		index_t	MaxIndex () const					{ return (index_t) GXMath::BitScanReverse( _bits ); }
+		constexpr index_t	MinIndex () const					{ return (index_t) GXMath::BitScanForward( _bits ); }
+		constexpr index_t	MaxIndex () const					{ return (index_t) GXMath::BitScanReverse( _bits ); }
 
-		operator T () const							{ return _bits; }
+		explicit constexpr operator uint () const				{ return Cast<uint>(_bits); }
+		explicit constexpr operator ulong () const				{ return Cast<usize>(_bits); }
 
-		static usize Count ()						{ return B; }
+		static constexpr usize Count ()							{ return B; }
 
-		Self	operator ~  ()	const				{ return Self( ~_bits ); }
+		constexpr Self	operator ~  ()	const					{ return Self( ~_bits ); }
 
-		Self &	operator =  (Self &&right) = default;
-		Self &	operator =  (const Self &right) = default;
+		constexpr Self &	operator =  (Self &&right) = default;
+		constexpr Self &	operator =  (const Self &right) = default;
 		
 		// add bit
-		Self &	operator |= (index_t i)				{ return Set( i ); }
-		Self	operator |  (index_t i) const		{ return Self(*this).Set( i ); }
+				  Self &	operator |= (index_t i)				{ return Set( i ); }
+		constexpr Self		operator |  (index_t i) const		{ return Self(*this).Set( i ); }
 		
 		// remove bit
-		Self &	operator ^= (index_t i)				{ return Reset( i ); }
-		Self	operator ^  (index_t i) const		{ return Self(*this).Reset( i ); }
+				  Self &	operator ^= (index_t i)				{ return Reset( i ); }
+		constexpr Self		operator ^  (index_t i) const		{ return Self(*this).Reset( i ); }
 
-		bool 	operator [] (index_t i) const		{ return Get( i ); }
-		BitRef	operator [] (index_t i)				{ ASSUME(i < B);  return BitRef( *this, i ); }
+		constexpr bool 		operator [] (index_t i) const		{ return Get( i ); }
+				  BitRef	operator [] (index_t i)				{ ASSUME(i < B);  return BitRef( *this, i ); }
 		
 
-		forceinline void SetInterval (index_t first, index_t last)
+		_GX_DIM_CMP_OPERATORS_SELF( _bits );
+		_GX_DIM_OPERATORS_SELF( |,	_bits );
+		_GX_DIM_OPERATORS_SELF( &,	_bits );
+		_GX_DIM_OPERATORS_SELF( ^,	_bits );
+
+
+		forceinline constexpr void SetInterval (index_t first, index_t last)
 		{
 			ASSUME( first <= last and last < B );
 			_bits |= GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
 		}
 
-		forceinline void ResetInterval (index_t first, index_t last)
+		forceinline constexpr void ResetInterval (index_t first, index_t last)
 		{
 			ASSUME( first <= last and last < B );
-			_bits ^= GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
+			_bits &= ~GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
 		}
 
-		forceinline bool HasInterval (index_t first, index_t last) const
+		forceinline constexpr bool HasInterval (index_t first, index_t last) const
 		{
 			ASSUME( first <= last and last < B );
 			const T	mask = GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
 			return (_bits & mask) == mask;
 		}
 
-		forceinline bool HasAll () const
+		forceinline constexpr bool HasAll () const
 		{
 			return HasInterval( 0, B-1 );
 		}
 
-		forceinline bool BitsEq (const Self &right) const
+		forceinline constexpr bool BitsEq (const Self &right) const
 		{
 			// Compare only setted bits!
 			// Warning: not same result as right.BitsEq( *this )
@@ -117,7 +125,7 @@ namespace GXTypes
 			return (_bits & right._bits) == right._bits;
 		}
 
-		forceinline bool AnyBitEq (const Self &right) const
+		forceinline constexpr bool AnyBitEq (const Self &right) const
 		{
 			return (_bits & right._bits) != 0;
 		}
@@ -162,7 +170,7 @@ namespace GXTypes
 			}
 
 			template <typename C>
-			operator C () const
+			explicit operator C () const
 			{
 				return C( _Get() );
 			}

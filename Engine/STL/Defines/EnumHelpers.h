@@ -66,3 +66,10 @@
 
 
 #define GX_ENUM_ADD_OPERATIONS( _type_ )	__GX_ENUM_ADD_OPERATIONS( _type_, forceinline friend )
+
+
+// enum bitfield
+#define GX_ENUM_BITFIELD( _type_ ) \
+	using bits = EnumBitfield< _type_ >; \
+	friend constexpr bits operator | (type left, type right)	{ return bits().Set( left ).Set( right ); }
+

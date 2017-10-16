@@ -20,7 +20,7 @@ namespace PlatformGL
 		if ( gpuThread )
 			return gpuThread.ToPtr< OpenGLThread >()->GetDevice()->GLSystems();
 
-		ModulePtr const&	gpu_thread = gs->Get< ParallelThread >()->GetModule( OpenGLThread::GetStaticID() );
+		ModulePtr const&	gpu_thread = gs->Get< ParallelThread >()->GetModuleByID( GLThreadModuleID );
 		
 		if ( gpu_thread )
 			return gpu_thread.ToPtr< OpenGLThread >()->GetDevice()->GLSystems();
@@ -79,7 +79,11 @@ namespace PlatformGL
 	bool GL4BaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
 	{
 		if ( msg->newManager )
-			msg->newManager->Subscribe( this, &GL4BaseModule::_GpuDeviceBeforeDestory );
+			msg->newManager->Subscribe( this, &GL4BaseModule::_DeviceBeforeDestroy );
+
+		if ( msg->oldManager )
+			msg->oldManager->UnsubscribeAll( this );
+
 		return true;
 	}
 	
@@ -90,15 +94,15 @@ namespace PlatformGL
 */
 	void GL4BaseModule::_DestroyResources ()
 	{
-		_SendMsg( Message< ModuleMsg::Delete >() );
+		_SendMsg< ModuleMsg::Delete >({});
 	}
 
 /*
 =================================================
-	_GpuDeviceBeforeDestory
+	_DeviceBeforeDestroy
 =================================================
 */
-	bool GL4BaseModule::_GpuDeviceBeforeDestory (const Message< ModuleMsg::GpuDeviceBeforeDestory > &msg)
+	bool GL4BaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &msg)
 	{
 		_DestroyResources();
 		return true;

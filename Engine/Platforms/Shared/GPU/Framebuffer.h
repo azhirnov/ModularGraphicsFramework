@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GPU/TextureEnums.h"
+#include "Engine/Platforms/Shared/GPU/ImageEnums.h"
+#include "Engine/Platforms/Shared/GPU/IDs.h"
 
 namespace Engine
 {
@@ -20,18 +21,18 @@ namespace Platforms
 		{
 		// variables
 			StaticString<64>		name;
-			ETexture::type			imageType;
+			EImage::type			imageType;
 			ERenderTarget::type		target;
 
 		// methods
 			AttachmentInfo () : imageType(Uninitialized), target(Uninitialized)
 			{}
 
-			AttachmentInfo (StringCRef name, ETexture::type imageType, ERenderTarget::type target) :
+			AttachmentInfo (StringCRef name, EImage::type imageType, ERenderTarget::type target) :
 				name(name), imageType(imageType), target(target)
 			{}
 
-			bool IsEnabled () const		{ return imageType != ETexture::Unknown and target != ERenderTarget::Unknown; }
+			bool IsEnabled () const		{ return imageType != EImage::Unknown and target != ERenderTarget::Unknown; }
 		};
 
 		using Attachments_t = FixedSizeArray< AttachmentInfo, GlobalConst::Graphics_MaxColorBuffers >;
@@ -71,13 +72,13 @@ namespace CreateInfo
 }	// CreateInfo
 
 
-namespace ModuleMsg
+namespace GpuMsg
 {
 	
 	//
-	// Get GPU Framebuffer Descriptor
+	// Get Framebuffer Descriptor
 	//
-	struct GetGpuFramebufferDescriptor
+	struct GetFramebufferDescriptor
 	{
 		Out< Platforms::FramebufferDescriptor >		result;
 	};
@@ -97,5 +98,5 @@ namespace ModuleMsg
 	};*/
 
 
-}	// ModuleMsg
+}	// GpuMsg
 }	// Engine

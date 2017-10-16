@@ -1,11 +1,10 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "WinPlatform.h"
-#include "WinWindow.h"
+#include "Engine/Platforms/Windows/WinPlatform.h"
 
 #if defined( PLATFORM_WINDOWS )
 
-#include <Windows.h>
+#include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace Engine
 {
@@ -21,7 +20,7 @@ namespace Platforms
 =================================================
 */
 	WinPlatform::WinPlatform (const GlobalSystemsRef gs, const CreateInfo::Platform &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ WinPlatformModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_instance( UninitializedT< HMODULE >() ),
 		_createInfo( ci )
 	{
@@ -79,12 +78,12 @@ namespace Platforms
 */
 	bool WinPlatform::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
 		CHECK_ERR( GetState() == EState::Linked );
 
-		// can't recteate platform
-		CHECK_ERR( not _IsCreated() );
-
-		CHECK( _Create() );
+		CHECK_COMPOSING( _Create() );
 
 		// TODO: send to attachemnt?
 
@@ -93,7 +92,7 @@ namespace Platforms
 
 		LOG( "platform created", ELog::Debug );
 
-		_SendEvent( Message< ModuleMsg::PlatformCreated >{ _instance, _className, _display } );
+		_SendEvent< ModuleMsg::PlatformCreated >({ _instance, _className, _display });
 		return true;
 	}
 	
@@ -129,14 +128,14 @@ namespace Platforms
 		//SCOPELOCK( _lock );
 
 		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == WinWindow::GetStaticID() );
+		CHECK_ERR( msg->module->GetModuleID() == WinWindowModuleID );
 		ASSERT( not _windows.IsExist( msg->module ) );
 
 		_windows.Add( msg->module );
 
 		if ( _IsCreated() )
 		{
-			GlobalSystems()->Get< TaskModule >()->Send( Message< ModuleMsg::PushAsyncMessage >{
+			GlobalSystems()->Get< TaskModule >()->Send< ModuleMsg::PushAsyncMessage >({
 				AsyncMessage{ LAMBDA(
 					target = msg->module,
 					msg = Message< ModuleMsg::PlatformCreated >{ _instance, _className, _display } ) (const TaskModulePtr &)
@@ -160,7 +159,7 @@ namespace Platforms
 		//SCOPELOCK( _lock );
 
 		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == WinWindow::GetStaticID() );
+		CHECK_ERR( msg->module->GetModuleID() == WinWindowModuleID );
 		ASSERT( _windows.IsExist( msg->module ) );
 
 		_windows.Erase( msg->module );
@@ -176,10 +175,10 @@ namespace Platforms
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		CHECK( mf->Register( WinPlatform::GetStaticID(), &_CreateWinPlatform ) );
-		CHECK( mf->Register( WinWindow::GetStaticID(), &_CreateWinWindow ) );
-		CHECK( mf->Register( WinKeyInput::GetStaticID(), &_CreateWinKeyInput ) );
-		CHECK( mf->Register( WinMouseInput::GetStaticID(), &_CreateWinMouseInput ) );
+		CHECK( mf->Register( WinPlatformModuleID, &_CreateWinPlatform ) );
+		CHECK( mf->Register( WinWindowModuleID, &_CreateWinWindow ) );
+		CHECK( mf->Register( WinKeyInputModuleID, &_CreateWinKeyInput ) );
+		CHECK( mf->Register( WinMouseInputModuleID, &_CreateWinMouseInput ) );
 	}
 	
 /*
@@ -191,10 +190,10 @@ namespace Platforms
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		mf->UnregisterAll< WinPlatform >();
-		mf->UnregisterAll< WinWindow >();
-		mf->UnregisterAll< WinKeyInput >();
-		mf->UnregisterAll< WinMouseInput >();
+		mf->UnregisterAll( WinPlatformModuleID );
+		mf->UnregisterAll( WinWindowModuleID );
+		mf->UnregisterAll( WinKeyInputModuleID );
+		mf->UnregisterAll( WinMouseInputModuleID );
 	}
 
 /*
@@ -205,36 +204,6 @@ namespace Platforms
 	ModulePtr WinPlatform::_CreateWinPlatform (const GlobalSystemsRef gs, const CreateInfo::Platform &ci)
 	{
 		return New< WinPlatform >( gs, ci );
-	}
-
-/*
-=================================================
-	_CreateWinWindow
-=================================================
-*/
-	ModulePtr WinPlatform::_CreateWinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci)
-	{
-		return New< WinWindow >( gs, ci );
-	}
-	
-/*
-=================================================
-	_CreateWinKeyInput
-=================================================
-*/
-	ModulePtr WinPlatform::_CreateWinKeyInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
-	{
-		return New< WinKeyInput >( gs, ci );
-	}
-	
-/*
-=================================================
-	_CreateWinMouseInput
-=================================================
-*/
-	ModulePtr WinPlatform::_CreateWinMouseInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
-	{
-		return New< WinMouseInput >( gs, ci );
 	}
 
 /*
@@ -254,7 +223,7 @@ namespace Platforms
 */
 	bool WinPlatform::_Create ()
 	{
-		_Destroy();
+		CHECK_ERR( not _IsCreated() );
 
 		_instance = ::GetModuleHandle( (LPCSTR) null );
 

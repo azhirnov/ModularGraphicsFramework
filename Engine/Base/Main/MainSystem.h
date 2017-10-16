@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Engine/Base/Modules/ModulesFactory.h"
+#include "Engine/Base/Modules/IDs.h"
 #include "Engine/Base/Tasks/TaskManager.h"
 #include "Engine/Base/Threads/ThreadManager.h"
 #include "Engine/Base/Files/FileManager.h"
@@ -68,8 +69,6 @@ namespace Base
 	public:
 		explicit MainSystem (const GlobalSystemsRef gs);
 		~MainSystem ();
-
-		static GModID::type		GetStaticID ()		{ return "main"_GModID; }
 		
 
 	// message handlers

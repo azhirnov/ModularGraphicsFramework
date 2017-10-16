@@ -222,7 +222,8 @@ namespace GXTypes
 	template <typename A, typename B>
 	constexpr forceinline BytesU OffsetOf (A (B::*member))
 	{
-		return BytesU( (usize) &reinterpret_cast< char const volatile &>( ((B*)null)->*member ) );
+		return BytesU( offsetof( B, (*member) ) );
+		//return BytesU( (usize) &reinterpret_cast< char const volatile &>( ((B*)null)->*member ) );
 	}
 
 
@@ -362,7 +363,7 @@ namespace GXTypes
 
 		result_t operator () (const key_t &x) const
 		{
-			return base_t::operator ()( x );
+			return base_t::operator ()( (T)x );
 		}
 	};
 
@@ -376,7 +377,7 @@ namespace GXTypes
 
 		result_t operator () (const key_t &x) const
 		{
-			return base_t::operator ()( x );
+			return base_t::operator ()( (T)x );
 		}
 	};
 

@@ -18,7 +18,7 @@ namespace Platforms
 =================================================
 */
 	OpenGLContext::OpenGLContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ GLContextModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci )
 	{
 		SetDebugName( "OpenGLContext" );
@@ -59,7 +59,7 @@ namespace Platforms
 	bool OpenGLContext::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == OpenGLThread::GetStaticID() );
+		CHECK_ERR( msg->module->GetModuleID() == GLThreadModuleID );
 		ASSERT( not _threads.IsExist( msg->module ) );
 
 		_threads.Add( msg->module );
@@ -74,7 +74,7 @@ namespace Platforms
 	bool OpenGLContext::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == OpenGLThread::GetStaticID() );
+		CHECK_ERR( msg->module->GetModuleID() == GLThreadModuleID );
 		ASSERT( _threads.IsExist( msg->module ) );
 
 		_threads.Erase( msg->module );
@@ -90,8 +90,11 @@ namespace Platforms
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		CHECK( mf->Register( OpenGLContext::GetStaticID(), &_CreateOpenGLContext ) );
-		CHECK( mf->Register( OpenGLThread::GetStaticID(), &_CreateOpenGLThread ) );
+		CHECK( mf->Register( GLContextModuleID, &_CreateOpenGLContext ) );
+		CHECK( mf->Register( GLThreadModuleID, &_CreateOpenGLThread ) );
+		
+		if ( not mf->IsRegistered< CreateInfo::PipelineTemplate >( PipelineTemplateModuleID ) )
+			CHECK( mf->Register( PipelineTemplateModuleID, &_CreatePipelineTemplate ) );
 	}
 	
 /*
@@ -103,8 +106,10 @@ namespace Platforms
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		mf->UnregisterAll< OpenGLContext >();
-		mf->UnregisterAll< OpenGLThread >();
+		mf->UnregisterAll( GLContextModuleID );
+		mf->UnregisterAll( GLThreadModuleID );
+
+		//mf->UnregisterAll< Platforms::PipelineTemplate >();	// TODO
 	}
 
 /*
@@ -117,12 +122,7 @@ namespace Platforms
 		return New< OpenGLThread >( gs, ci );
 	}
 	
-/*
-=================================================
-	_CreateOpenGLContext
-=================================================
-*/
-	ModulePtr OpenGLContext:: _CreateOpenGLContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+	ModulePtr OpenGLContext::_CreateOpenGLContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
 		return New< OpenGLContext >( gs, ci );
 	}

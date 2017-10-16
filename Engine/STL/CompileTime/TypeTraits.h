@@ -84,6 +84,27 @@ namespace TypeTraits
 			static const bool	is_array		= true;
 		};
 
+		template <typename T, usize I>
+		struct _TypeQualifierInfo <T const [I]> : _BaseTypeQualifierInfo<const T>
+		{
+			typedef T			input_type[I];
+			static const bool	is_array		= true;
+		};
+		
+		template <typename T, usize I>
+		struct _TypeQualifierInfo <T volatile [I]> : _BaseTypeQualifierInfo<volatile T>
+		{
+			typedef T			input_type[I];
+			static const bool	is_array		= true;
+		};
+		
+		template <typename T, usize I>
+		struct _TypeQualifierInfo <T volatile const [I]> : _BaseTypeQualifierInfo<volatile const T>
+		{
+			typedef T			input_type[I];
+			static const bool	is_array		= true;
+		};
+
 		template <typename T>
 		struct _TypeQualifierInfo <T &&> : _BaseTypeQualifierInfo<T>
 		{

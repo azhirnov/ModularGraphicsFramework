@@ -96,6 +96,7 @@ extern void Test_CompileTime_TypeQualifier ()
 	STATIC_ASSERT( IsPOD< PodTypeNoQual > );
 	STATIC_ASSERT( IsPOD< UnionPodTypeNoQual > );
 	STATIC_ASSERT( not IsPOD< Test > );
+	STATIC_ASSERT( IsPOD< const char[3] > );
 
 	const ETypeQualifier::type val0 = _ctime_hidden_::_SwitchStrongerQualifier< ETypeQualifier::Def_SimplePOD, ETypeQualifier::Def_SimplePOD >::value;
 	STATIC_ASSERT( val0 == ETypeQualifier::Def_SimplePOD );
@@ -107,11 +108,22 @@ extern void Test_CompileTime_TypeQualifier ()
 	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier<int>::value   == ETypeQualifier::Def_SimplePOD );
 	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier<ulong>::value == ETypeQualifier::Def_SimplePOD );
 	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier<float>::value == ETypeQualifier::Def_SimplePOD );
+	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier<const char [4]>::value == ETypeQualifier::Def_SimplePOD );
+	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier<volatile const char [4]>::value == ETypeQualifier::Def_SimplePOD );
 	
 	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier< MemoryContainer<char> >::value	== ETypeQualifier::Def_FastCopyable );
 	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier< String >::value					== ETypeQualifier::Def_FastCopyable );
 	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier< Array<int> >::value				== ETypeQualifier::Def_FastCopyable );
 	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier< ETestEnum >::value				== ETypeQualifier::Def_SimplePOD );
+
+	STATIC_ASSERT(( _ctime_hidden_::_GetTypeQualifier< StaticMemoryContainer<int, 2> >::value	== ETypeQualifier::Def_FastCopyable ));
+	STATIC_ASSERT(( _ctime_hidden_::_GetTypeQualifier< FixedSizeArray<int, 2> >::value			== ETypeQualifier::Def_FastCopyable ));
+	STATIC_ASSERT(( _ctime_hidden_::_GetTypeQualifier< StaticString<8> >::value					== ETypeQualifier::Def_FastCopyable ));
+	STATIC_ASSERT(( _ctime_hidden_::_GetTypeQualifier< FixedSizeSet<String, 4> >::value			== ETypeQualifier::Def_FastCopyable ));
+
+	STATIC_ASSERT(( _ctime_hidden_::_GetTypeQualifier< GXTypes::Pair<StaticString<8>, int> >::value			== ETypeQualifier::Def_FastCopyable ));
+	STATIC_ASSERT(( _ctime_hidden_::_GetTypeQualifier< Hash<int> >::value									== ETypeQualifier::Def_FastCopyable ));
+	STATIC_ASSERT(( _ctime_hidden_::_GetTypeQualifier< FixedSizeHashMap<StaticString<8>, int, 5> >::value	== ETypeQualifier::Def_FastCopyable ));
 
 	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier< PodTest >::value			== ETypeQualifier::Def_SimplePOD );
 	STATIC_ASSERT( _ctime_hidden_::_GetTypeQualifier< FastCopyableTest >::value	== ETypeQualifier::Def_FastCopyable );

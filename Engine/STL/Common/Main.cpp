@@ -64,11 +64,6 @@ namespace GXTypes
 #if not defined( GX_THREADSAFE_STATIC_SUPPORTED )
 	OS::Mutex			SingletonMultiThread::_mutex;
 #endif
-	
-DEBUG_ONLY(
-	Set<RefCountedObject*>	RefCountedObject::_objectRefs;
-	OS::Mutex				RefCountedObject::_mutex;
-)
 
 }	// GXTypes
 }	// GX_STL

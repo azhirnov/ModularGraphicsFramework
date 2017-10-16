@@ -10,6 +10,14 @@ namespace Engine
 {
 namespace ModuleMsg
 {
+	using GModID		= Base::GModID;
+	using TModID		= Base::TModID;
+	using OModID		= Base::OModID;
+
+	//using ThreadID	= Base::ThreadID;
+
+	using ModulePtr		= Base::ModulePtr;
+
 	using UntypedID_t	= CompileTime::NearUInt::FromType< GModID::type >;
 	using ModuleName_t	= StaticString<64>;
 	
@@ -22,6 +30,7 @@ namespace ModuleMsg
 	// variables
 		ModuleName_t	name;
 		ModulePtr		newModule;
+		// TODO: deletable flag?
 
 	// methods
 		explicit AttachModule (const ModulePtr &unit);
@@ -67,7 +76,7 @@ namespace ModuleMsg
 	{
 		// this is the last chance to initialize module.
 
-		bool		makeImmutable	= false;
+		//bool		makeImmutable	= false;
 	};
 
 	
@@ -86,9 +95,21 @@ namespace ModuleMsg
 	//
 	struct FindModule
 	{
-		UntypedID_t				id;
+		StringCRef				name;
 		Out< ModulePtr >		result;
 	};
+
+
+	//
+	// Find Module with Messages and Events
+	//
+	struct FindModuleByTypes
+	{
+		Runtime::VirtualTypeList	messages;
+		Runtime::VirtualTypeList	events;
+		Out< ModulePtr >			result;
+	};
+
 	
 	//
 	// Search Modules
@@ -96,6 +117,19 @@ namespace ModuleMsg
 	struct ModulesDeepSearch
 	{
 		ArrayCRef<UntypedID_t>		ids;
+		uint						upDeep;
+		uint						downDeep;
+		mutable Array< ModulePtr >*	result;
+	};
+
+	
+	//
+	// Search Modules with Messages and Events
+	//
+	struct ModulesDeepSearchByTypes
+	{
+		Runtime::VirtualTypeList	messages;
+		Runtime::VirtualTypeList	events;
 		uint						upDeep;
 		uint						downDeep;
 		mutable Array< ModulePtr >*	result;
@@ -146,7 +180,8 @@ namespace ModuleMsg
 	//
 	struct OnManagerChanged
 	{
-		ModulePtr	newManager;
+		ModulePtr	oldManager;		// unsubscribe from old manager events
+		ModulePtr	newManager;		// subscribe to new manager events
 	};
 
 

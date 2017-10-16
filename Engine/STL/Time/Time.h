@@ -34,6 +34,19 @@ namespace GXTypes
 	typedef Time<double>	TimeD;
 	typedef Time<uint>		TimeU;
 	typedef Time<ulong>		TimeL;
+	
+	constexpr TimeL operator "" _nanoSec (unsigned long long value)		{ return TimeL::FromNanoSeconds( value ); }
+	constexpr TimeD operator "" _nanoSec (long double value)			{ return TimeD::FromNanoSeconds( (double)value ); }
+	
+	constexpr TimeL operator "" _microSec (unsigned long long value)		{ return TimeL::FromMicroSeconds( value ); }
+	constexpr TimeD operator "" _microSec (long double value)			{ return TimeD::FromMicroSeconds( (double)value ); }
+
+	constexpr TimeL operator "" _miliSec (unsigned long long value)		{ return TimeL::FromMilliSeconds( value ); }
+	constexpr TimeD operator "" _miliSec (long double value)			{ return TimeD::FromMilliSeconds( (double)value ); }
+	
+	constexpr TimeL operator "" _sec (unsigned long long value)			{ return TimeL::FromSeconds( value ); }
+	constexpr TimeD operator "" _sec (long double value)				{ return TimeD::FromSeconds( (double)value ); }
+
 
 }	// GXTypes
 }	// GX_STL

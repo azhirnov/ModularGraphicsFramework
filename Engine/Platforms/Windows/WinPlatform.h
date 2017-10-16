@@ -5,38 +5,12 @@
 #include "Engine/Platforms/Shared/OS/Display.h"
 #include "Engine/Platforms/Shared/OS/Platform.h"
 #include "Engine/Platforms/Shared/OS/OSEnums.h"
-#include "Engine/Platforms/Windows/WinWindow.h"
-#include "Engine/Platforms/Windows/WinKeyInput.h"
-#include "Engine/Platforms/Windows/WinMouseInput.h"
+#include "Engine/Platforms/Windows/WinMessages.h"
 
 #if defined( PLATFORM_WINDOWS )
 
 namespace Engine
 {
-namespace ModuleMsg
-{
-	//
-	// Platform Created Message
-	//
-	struct PlatformCreated
-	{
-	// variables
-		OS::HiddenOSTypeFrom<void*>		instance;
-		String							className;
-		Platforms::Display				display;
-
-	// methods
-		PlatformCreated (const OS::HiddenOSTypeFrom<void*> &instance,
-						 StringCRef							className,
-						 const Platforms::Display			&display) :
-			instance(instance),
-			className(className),
-			display(display)
-		{}
-	};
-
-}	// ModuleMsg
-
 namespace Platforms
 {
 
@@ -86,8 +60,6 @@ namespace Platforms
 	public:
 		WinPlatform (const GlobalSystemsRef gs, const CreateInfo::Platform &ci);
 		~WinPlatform ();
-		
-		static GModID::type		GetStaticID ()			{ return "win.platform"_GModID; }
 		
 		static void Register (GlobalSystemsRef);
 		static void Unregister (GlobalSystemsRef);

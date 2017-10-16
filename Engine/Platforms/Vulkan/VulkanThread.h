@@ -3,15 +3,17 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/GPU/Thread.h"
-#include "Engine/Platforms/Windows/WinWindow.h"
+#include "Engine/Platforms/Windows/WinMessages.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
 #include "Engine/Platforms/Vulkan/Windows/VkWinSurface.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Fence.h"
 
 namespace Engine
 {
@@ -37,13 +39,15 @@ namespace Platforms
 											ModuleMsg::WindowBeforeDestroy,
 											ModuleMsg::WindowDescriptorChanged,
 											ModuleMsg::WindowVisibilityChanged,
-											ModuleMsg::GpuThreadBeginFrame,
-											ModuleMsg::GpuThreadEndFrame,
-											ModuleMsg::SubmitGraphicsQueueCommands
+											GpuMsg::ThreadBeginFrame,
+											GpuMsg::ThreadEndFrame,
+											GpuMsg::SubmitGraphicsQueueCommands,
+											GpuMsg::GetVkLogicDevice
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
-											ModuleMsg::GpuDeviceCreated,
-											ModuleMsg::GpuDeviceBeforeDestory
+											GpuMsg::DeviceCreated,
+											GpuMsg::DeviceBeforeDestroy
+											// TODO: device lost event
 										> >;
 		
 		using VideoSettings_t		= CreateInfo::GpuContext;
@@ -52,9 +56,44 @@ namespace Platforms
 		using Device				= PlatformVK::Vk1Device;
 		using SamplerCache			= PlatformVK::Vk1SamplerCache;
 		using PipelineCache			= PlatformVK::Vk1PipelineCache;
+		using LayoutCache			= PlatformVK::Vk1PipelineLayoutCache;
 		using RenderPassCache		= PlatformVK::Vk1RenderPassCache;
 		using VkSubSystems			= PlatformVK::VkSubSystems;
 		using VkSystemsRef			= PlatformVK::VkSystemsRef;
+
+		//
+		// Command Buffers Life Control
+		//
+		struct CmdBufferLifeControl
+		{
+		// types
+			struct PerFrame
+			{
+				Array< ModulePtr >			cmdBuffers;
+				PlatformVK::Vk1FencePtr		fence;
+				uint						imageIndex = 0;		// index of image in swapchain
+			};
+			using PerFrameData_t		= StaticArray< PerFrame, 8 >;
+			using FrameIndex_t			= Limit< uint, LimitStrategy::Wrap >;
+			using CommandBuffers_t		= Array< vk::VkCommandBuffer >;
+
+		// variables
+			CommandBuffers_t	tempCmdBuffers;
+			PerFrameData_t		perFrameData;
+			FrameIndex_t		frameIndex		{ 0, 0, 3 };
+
+		// methods
+			CmdBufferLifeControl (const VkSystemsRef vkSys);
+			~CmdBufferLifeControl ();
+
+			bool SubmitQueue (Ptr<Device> dev, ArrayCRef<ModulePtr> cmdBuffers);
+			void FreeBuffers (uint len);
+
+			bool Resize (uint size);
+			void FreeAll ();
+
+			void Destroy ();
+		};
 
 
 	// constants
@@ -65,20 +104,23 @@ namespace Platforms
 		
 	// variables
 	private:
-		VkSubSystems		_vkSystems;
+		VkSubSystems			_vkSystems;
 
-		VideoSettings_t		_settings;
+		VideoSettings_t			_settings;
 
-		ModulePtr			_window;
+		ModulePtr				_window;
 
-		Surface				_surface;
-		Device				_device;
+		Surface					_surface;
+		Device					_device;
 
-		SamplerCache		_samplerCache;
-		PipelineCache		_pipelineCache;
-		RenderPassCache		_renderPassCache;
+		SamplerCache			_samplerCache;
+		PipelineCache			_pipelineCache;
+		LayoutCache				_layoutCache;
+		RenderPassCache			_renderPassCache;
 		
-		bool				_isWindowVisible;
+		CmdBufferLifeControl	_cmdControl;
+
+		bool					_isWindowVisible;
 
 
 	// methods
@@ -86,15 +128,14 @@ namespace Platforms
 		VulkanThread (const GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
 		~VulkanThread ();
 		
-		VkSystemsRef			VkSystems ()	const	{ return VkSystemsRef(&_vkSystems); }
+		VkSystemsRef			VkSystems ()	const		{ return VkSystemsRef(&_vkSystems); }
 
-		Ptr< Device >			GetDevice ()			{ return &_device; }
+		Ptr< Device >			GetDevice ()				{ return &_device; }
 
-		Ptr< SamplerCache >		GetSamplerCache ()		{ return &_samplerCache; }
-		Ptr< PipelineCache >	GetPipelineCache ()		{ return &_pipelineCache; }
-		Ptr< RenderPassCache >	GetRenderPassCache ()	{ return &_renderPassCache; }
-
-		static TModID::type		GetStaticID ()			{ return "vk1.thrd"_TModID; }
+		Ptr< SamplerCache >		GetSamplerCache ()			{ return &_samplerCache; }
+		Ptr< PipelineCache >	GetPipelineCache ()			{ return &_pipelineCache; }
+		Ptr< LayoutCache >		GetLayoutCache ()			{ return &_layoutCache; }
+		Ptr< RenderPassCache >	GetRenderPassCache ()		{ return &_renderPassCache; }
 		
 
 	// message handlers
@@ -105,14 +146,16 @@ namespace Platforms
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
 
-		bool _GpuThreadBeginFrame (const Message< ModuleMsg::GpuThreadBeginFrame > &);
-		bool _GpuThreadEndFrame (const Message< ModuleMsg::GpuThreadEndFrame > &);
-		bool _SubmitGraphicsQueueCommands (const Message< ModuleMsg::SubmitGraphicsQueueCommands > &);
+		bool _ThreadBeginFrame (const Message< GpuMsg::ThreadBeginFrame > &);
+		bool _ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &);
+		bool _SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &);
 
 		bool _WindowCreated (const Message< ModuleMsg::WindowCreated > &);
 		bool _WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &);
 		bool _WindowVisibilityChanged (const Message< ModuleMsg::WindowVisibilityChanged > &);
 		bool _WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &);
+		
+		bool _GetVkLogicDevice (const Message< GpuMsg::GetVkLogicDevice > &);
 
 	private:
 		bool _CreateDevice (const ModuleMsg::WindowCreated &msg);

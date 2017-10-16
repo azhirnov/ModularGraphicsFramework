@@ -7,7 +7,7 @@
 #if defined( GRAPHICS_API_VULKAN )
 
 # if defined( PLATFORM_WINDOWS )
-#	include <Windows.h>
+#	include "Engine/STL/OS/Windows/WinHeader.h"
 # endif
 
 namespace vk

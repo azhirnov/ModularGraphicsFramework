@@ -17,10 +17,13 @@ namespace Platforms
 	struct RenderPassDescriptor;
 	struct RenderState;
 	struct SamplerDescriptor;
-	struct TextureDescriptor;
+	struct ImageDescriptor;
 
 }	// Platforms
 
+namespace GpuMsg {
+	using namespace ModuleMsg;
+}
 
 namespace CreateInfo
 {
@@ -43,7 +46,7 @@ namespace CreateInfo
 	struct GpuShaderModulesFromBuffer;
 	struct GpuRenderPass;
 	struct GpuSampler;
-	struct GpuTexture;
+	struct GpuImage;
 	struct GpuThread;
 
 }	// CreateInfo

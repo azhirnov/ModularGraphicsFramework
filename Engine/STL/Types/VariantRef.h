@@ -134,6 +134,46 @@ namespace GXTypes
 
 
 	//
+	// Variant Array Ref		// TODO
+	//
+	/*
+	struct VariantArrayRef
+	{
+	// variables
+	private:
+		void *		_reference;
+		TypeId		_typeId;
+		
+
+	// methods
+	public:
+		VariantArrayRef (GX_DEFCTOR) : _reference(null)
+		{}
+
+		template <typename T>
+		explicit VariantArrayRef (ArrayRef<T> &ref) :
+			_reference( static_cast<void *>( &ref ) ),
+			_typeId( TypeIdOf<T>() )
+		{}
+
+		forceinline TypeId		GetValueTypeId () const
+		{
+			return _typeId;
+		}
+
+
+		template <typename T>
+		forceinline ArrayRef<T> &	Get () const
+		{
+			CHECK( IsType<T>() );
+			return *GetPtr<T>();
+		}
+
+	};
+	*/
+
+
+	//
 	// Hash
 	//
 	
@@ -144,7 +184,7 @@ namespace GXTypes
 		typedef Hash< void* >		base_t;
 		typedef base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			// must be compilation error!
 

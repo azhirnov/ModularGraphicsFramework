@@ -2,7 +2,9 @@
 
 #pragma once
 
+#include "Engine/Base/Modules/IDs.h"
 #include "Engine/Base/Tasks/TaskModule.h"
+#include "Engine/Base/Tasks/AsyncMessage.h"
 
 namespace Engine
 {
@@ -21,10 +23,21 @@ namespace Base
 
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
-											ModuleMsg::RemoveFromManager
+											ModuleMsg::AddTaskSchedulerToManager,
+											ModuleMsg::RemoveFromManager,
+											ModuleMsg::PushAsyncMessage
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
-		using TaskThreads_t			= Map< ThreadID, TaskModulePtr >;
+
+		using AsyncPushFunc_t		= ModuleMsg::AddTaskSchedulerToManager::Func_t;
+
+
+		struct TaskModuleInfo
+		{
+			ModulePtr			module;
+			AsyncPushFunc_t		asyncPushMsg;
+		};
+		using TaskThreads_t			= Map< ThreadID, TaskModuleInfo >;
 		
 
 	// constants
@@ -44,10 +57,6 @@ namespace Base
 		TaskManager (const GlobalSystemsRef gs, const CreateInfo::TaskManager &);
 		~TaskManager ();
 
-		bool PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg);
-
-		static GModID::type	GetStaticID ()		{ return "task.mngr"_GModID; }
-
 		static void Register (GlobalSystemsRef);
 		static void Unregister (GlobalSystemsRef);
 
@@ -57,6 +66,8 @@ namespace Base
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _AddTaskSchedulerToManager (const Message< ModuleMsg::AddTaskSchedulerToManager > &);
+		bool _PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg);
 
 	private:
 		static ModulePtr _CreateTaskModule (GlobalSystemsRef, const CreateInfo::TaskModule &);

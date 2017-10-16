@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/OS/OSEnums.h"
+#include "Engine/Platforms/Shared/OS/IDs.h"
 
 namespace Engine
 {

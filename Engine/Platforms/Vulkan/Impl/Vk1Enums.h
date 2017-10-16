@@ -15,8 +15,9 @@
 #include "Engine/Platforms/Shared/GPU/RenderStateEnums.h"
 #include "Engine/Platforms/Shared/GPU/SamplerEnums.h"
 #include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
-#include "Engine/Platforms/Shared/GPU/TextureEnums.h"
+#include "Engine/Platforms/Shared/GPU/ImageEnums.h"
 #include "Engine/Platforms/Shared/GPU/VertexEnums.h"
+#include "Engine/Platforms/Shared/GPU/ObjectEnums.h"
 
 namespace Engine
 {
@@ -46,13 +47,13 @@ namespace PlatformVK
 
 		VkMemoryPropertyFlags	result = 0;
 
-		if ( value.Get( EGpuMemory::LocalInGPU ) )
+		if ( value[ EGpuMemory::LocalInGPU ] )
 			result |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-		if ( value.Get( EGpuMemory::CoherentWithCPU ) )
+		if ( value[ EGpuMemory::CoherentWithCPU ] )
 			result |= (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-		if ( value.Get( EGpuMemory::CachedInCPU ) )
+		if ( value[ EGpuMemory::CachedInCPU ] )
 			result |= (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
 
 		return result;
@@ -281,32 +282,32 @@ namespace PlatformVK
 	BorderColor
 =================================================
 */
-	inline vk::VkBorderColor  Vk1Enum (ESamplerBorderColor::type value)
+	inline vk::VkBorderColor  Vk1Enum (ESamplerBorderColor::bits value)
 	{
 		using namespace vk;
 
-		if ( EnumEq( value, ESamplerBorderColor::Int ) )
+		// int
+		if ( value[ ESamplerBorderColor::Int ] )
 		{
-			// int
-			if ( EnumEq( value, ESamplerBorderColor::Black ) )
+			if ( value[ ESamplerBorderColor::Black ] )
 				return VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 			
-			if ( EnumEq( value, ESamplerBorderColor::White ) )
+			if ( value[ ESamplerBorderColor::White ] )
 				return VK_BORDER_COLOR_INT_OPAQUE_WHITE;
 
-			//if ( EnumEq( value, ESamplerBorderColor::Transparent ) )
+			//if ( value[ ESamplerBorderColor::Transparent ] )
 				return VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
 		}
+		// float
 		else
 		{
-			// float
-			if ( EnumEq( value, ESamplerBorderColor::Black ) )
+			if ( value[ ESamplerBorderColor::Black ] )
 				return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
 			
-			if ( EnumEq( value, ESamplerBorderColor::White ) )
+			if ( value[ ESamplerBorderColor::White ] )
 				return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
-			//if ( EnumEq( value, ESamplerBorderColor::Transparent ) )
+			//if ( value[ ESamplerBorderColor::Transparent ] )
 				return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 		}
 	}
@@ -371,9 +372,9 @@ namespace PlatformVK
 
 		FOR( i, values )
 		{
-			auto t = EBufferUsage::type(i);
+			const auto t = EBufferUsage::type(i);
 
-			if ( not values.Get( t ) )
+			if ( not values[t] )
 				continue;
 
 			switch ( t )
@@ -408,9 +409,9 @@ namespace PlatformVK
 
 		FOR( i, values )
 		{
-			auto t = ESparseMemory::type(i);
+			const auto t = ESparseMemory::type(i);
 
-			if ( not values.Get( t ) )
+			if ( not values[t] )
 				continue;
 
 			switch ( t )
@@ -441,9 +442,9 @@ namespace PlatformVK
 
 		FOR( i, values )
 		{
-			auto t = ESparseMemory::type(i);
+			const auto t = ESparseMemory::type(i);
 
-			if ( not values.Get( t ) )
+			if ( not values[t] )
 				continue;
 
 			switch ( t )
@@ -606,9 +607,9 @@ namespace PlatformVK
 
 		FOR( i, values )
 		{
-			auto t = ESubpassDependency::type(i);
+			const auto t = ESubpassDependency::type(i);
 
-			if ( not values.Get( t ) )
+			if ( not values[t] )
 				continue;
 
 			switch ( t )
@@ -633,11 +634,17 @@ namespace PlatformVK
 
 		VkPipelineStageFlags	flags = 0;
 
+		if ( values == EPipelineStage::AllCommands )
+			return VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+
+		if ( values == EPipelineStage::AllGraphics )
+			return VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+
 		FOR( i, values )
 		{
-			auto t = EPipelineStage::type(i);
+			const auto t = EPipelineStage::type(i);
 
-			if ( not values.Get( t ) )
+			if ( not values[t] )
 				continue;
 
 			switch ( t )
@@ -665,10 +672,42 @@ namespace PlatformVK
 		
 /*
 =================================================
-	SubpassAccess
+	ShaderStage
 =================================================
 */
-	inline vk::VkAccessFlags  Vk1Enum (ESubpassAccess::bits values)
+	inline vk::VkShaderStageFlagBits  Vk1Enum (EShader::bits values)
+	{
+		using namespace vk;
+
+		VkShaderStageFlags	flags = 0;
+
+		FOR( i, values )
+		{
+			const auto	t = EShader::type(i);
+
+			if ( not values[t] )
+				continue;
+
+			switch ( t )
+			{
+				case EShader::Vertex :			flags |= VK_SHADER_STAGE_VERTEX_BIT;					break;
+				case EShader::TessControl :		flags |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;		break;
+				case EShader::TessEvaluation :	flags |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;	break;
+				case EShader::Geometry :		flags |= VK_SHADER_STAGE_GEOMETRY_BIT;					break;
+				case EShader::Fragment :		flags |= VK_SHADER_STAGE_FRAGMENT_BIT;					break;
+				case EShader::Compute :			flags |= VK_SHADER_STAGE_COMPUTE_BIT;					break;
+				default :						RETURN_ERR( "unknown shader type!", VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM );
+			}
+		}
+		return VkShaderStageFlagBits(flags);
+	}
+
+/*
+=================================================
+	PipelineAccess
+=================================================
+*/
+	inline vk::VkAccessFlags  Vk1Enum (EPipelineAccess::bits values)
 	{
 		using namespace vk;
 
@@ -676,30 +715,30 @@ namespace PlatformVK
 
 		FOR( i, values )
 		{
-			auto t = ESubpassAccess::type(i);
+			const auto t = EPipelineAccess::type(i);
 
-			if ( not values.Get( t ) )
+			if ( not values[t] )
 				continue;
 
 			switch ( t )
 			{
-				case ESubpassAccess::IndirectCommandRead			: flags |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;				break;
-				case ESubpassAccess::IndexRead						: flags |= VK_ACCESS_INDEX_READ_BIT;						break;
-				case ESubpassAccess::VertexAttributeRead			: flags |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;				break;
-				case ESubpassAccess::UniformRead					: flags |= VK_ACCESS_UNIFORM_READ_BIT;						break;
-				case ESubpassAccess::InputAttachmentRead			: flags |= VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;				break;
-				case ESubpassAccess::ShaderRead						: flags |= VK_ACCESS_SHADER_READ_BIT;						break;
-				case ESubpassAccess::ShaderWrite					: flags |= VK_ACCESS_SHADER_WRITE_BIT;						break;
-				case ESubpassAccess::ColorAttachmentRead			: flags |= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;				break;
-				case ESubpassAccess::ColorAttachmentWrite			: flags |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;			break;
-				case ESubpassAccess::DepthStencilAttachmentRead		: flags |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;		break;
-				case ESubpassAccess::DepthStencilAttachmentWrite	: flags |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;	break;
-				case ESubpassAccess::TransferRead					: flags |= VK_ACCESS_TRANSFER_READ_BIT;						break;
-				case ESubpassAccess::TransferWrite					: flags |= VK_ACCESS_TRANSFER_WRITE_BIT;					break;
-				case ESubpassAccess::HostRead						: flags |= VK_ACCESS_HOST_READ_BIT;							break;
-				case ESubpassAccess::HostWrite						: flags |= VK_ACCESS_HOST_WRITE_BIT;						break;
-				case ESubpassAccess::MemoryRead						: flags |= VK_ACCESS_MEMORY_READ_BIT;						break;
-				case ESubpassAccess::MemoryWrite					: flags |= VK_ACCESS_MEMORY_WRITE_BIT;						break;
+				case EPipelineAccess::IndirectCommandRead			: flags |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;				break;
+				case EPipelineAccess::IndexRead						: flags |= VK_ACCESS_INDEX_READ_BIT;						break;
+				case EPipelineAccess::VertexAttributeRead			: flags |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;				break;
+				case EPipelineAccess::UniformRead					: flags |= VK_ACCESS_UNIFORM_READ_BIT;						break;
+				case EPipelineAccess::InputAttachmentRead			: flags |= VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;				break;
+				case EPipelineAccess::ShaderRead					: flags |= VK_ACCESS_SHADER_READ_BIT;						break;
+				case EPipelineAccess::ShaderWrite					: flags |= VK_ACCESS_SHADER_WRITE_BIT;						break;
+				case EPipelineAccess::ColorAttachmentRead			: flags |= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;				break;
+				case EPipelineAccess::ColorAttachmentWrite			: flags |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;			break;
+				case EPipelineAccess::DepthStencilAttachmentRead	: flags |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;		break;
+				case EPipelineAccess::DepthStencilAttachmentWrite	: flags |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;	break;
+				case EPipelineAccess::TransferRead					: flags |= VK_ACCESS_TRANSFER_READ_BIT;						break;
+				case EPipelineAccess::TransferWrite					: flags |= VK_ACCESS_TRANSFER_WRITE_BIT;					break;
+				case EPipelineAccess::HostRead						: flags |= VK_ACCESS_HOST_READ_BIT;							break;
+				case EPipelineAccess::HostWrite						: flags |= VK_ACCESS_HOST_WRITE_BIT;						break;
+				case EPipelineAccess::MemoryRead					: flags |= VK_ACCESS_MEMORY_READ_BIT;						break;
+				case EPipelineAccess::MemoryWrite					: flags |= VK_ACCESS_MEMORY_WRITE_BIT;						break;
 				default												: RETURN_ERR( "invalid access type", VK_ACCESS_FLAG_BITS_MAX_ENUM );
 			}
 		}
@@ -719,9 +758,9 @@ namespace PlatformVK
 
 		FOR( i, values )
 		{
-			auto t = EImageUsage::type(i);
+			const auto t = EImageUsage::type(i);
 			
-			if ( not values.Get( t ) )
+			if ( not values[t] )
 				continue;
 
 			switch ( t )
@@ -745,22 +784,22 @@ namespace PlatformVK
 	ImageViewType
 =================================================
 */
-	inline vk::VkImageViewType  Vk1Enum (ETexture::type value)
+	inline vk::VkImageViewType  Vk1Enum (EImage::type value)
 	{
 		using namespace vk;
 		
 		switch ( value )
 		{
-			case ETexture::Tex1D		: return VK_IMAGE_VIEW_TYPE_1D;
-			case ETexture::Tex1DArray	: return VK_IMAGE_VIEW_TYPE_1D_ARRAY;
-			case ETexture::Tex2D		: return VK_IMAGE_VIEW_TYPE_2D;
-			case ETexture::Tex2DArray	: return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-			//case ETexture::Tex2DMS
-			//case ETexture::Tex2DMSArray
-			case ETexture::TexCube		: return VK_IMAGE_VIEW_TYPE_CUBE;
-			case ETexture::TexCubeArray	: return VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
-			case ETexture::Tex3D		: return VK_IMAGE_VIEW_TYPE_3D;
-			//case ETexture::Buffer
+			case EImage::Tex1D		: return VK_IMAGE_VIEW_TYPE_1D;
+			case EImage::Tex1DArray	: return VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+			case EImage::Tex2D		: return VK_IMAGE_VIEW_TYPE_2D;
+			case EImage::Tex2DArray	: return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+			//case EImage::Tex2DMS
+			//case EImage::Tex2DMSArray
+			case EImage::TexCube		: return VK_IMAGE_VIEW_TYPE_CUBE;
+			case EImage::TexCubeArray	: return VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+			case EImage::Tex3D		: return VK_IMAGE_VIEW_TYPE_3D;
+			//case EImage::Buffer
 		}
 
 		RETURN_ERR( "unsupported image view type", VK_IMAGE_VIEW_TYPE_MAX_ENUM );
@@ -779,9 +818,9 @@ namespace PlatformVK
 
 		FOR( i, values )
 		{
-			auto t = EImageAspect::type(i);
+			const auto t = EImageAspect::type(i);
 			
-			if ( not values.Get( t ) )
+			if ( not values[t] )
 				continue;
 			
 			switch ( t )
@@ -794,6 +833,49 @@ namespace PlatformVK
 			}
 		}
 		return flags;
+	}
+	
+/*
+=================================================
+	GpuObject
+=================================================
+*/
+	inline vk::VkDebugReportObjectTypeEXT  Vk1Enum (EGpuObject::type value)
+	{
+		using namespace vk;
+
+		switch ( value )
+		{
+			case EGpuObject::Instance :				return VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT;
+			case EGpuObject::PhysicalDevice :		return VK_DEBUG_REPORT_OBJECT_TYPE_PHYSICAL_DEVICE_EXT;
+			case EGpuObject::Device :				return VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_EXT;
+			case EGpuObject::Queue :				return VK_DEBUG_REPORT_OBJECT_TYPE_QUEUE_EXT;
+			case EGpuObject::Semaphore :			return VK_DEBUG_REPORT_OBJECT_TYPE_SEMAPHORE_EXT;
+			case EGpuObject::CommandBuffer :		return VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT;
+			case EGpuObject::Fence :				return VK_DEBUG_REPORT_OBJECT_TYPE_FENCE_EXT;
+			case EGpuObject::DeviceMemory :			return VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_MEMORY_EXT;
+			case EGpuObject::Buffer :				return VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT;
+			case EGpuObject::Image :				return VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT;
+			case EGpuObject::Event :				return VK_DEBUG_REPORT_OBJECT_TYPE_EVENT_EXT;
+			case EGpuObject::QueryPool :			return VK_DEBUG_REPORT_OBJECT_TYPE_QUERY_POOL_EXT;
+			case EGpuObject::BufferView :			return VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_VIEW_EXT;
+			case EGpuObject::ImageView :			return VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_VIEW_EXT;
+			case EGpuObject::ShaderModule :			return VK_DEBUG_REPORT_OBJECT_TYPE_SHADER_MODULE_EXT;
+			case EGpuObject::PipelineCache :		return VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_CACHE_EXT;
+			case EGpuObject::PipelineLayout :		return VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_LAYOUT_EXT;
+			case EGpuObject::RenderPass :			return VK_DEBUG_REPORT_OBJECT_TYPE_RENDER_PASS_EXT;
+			case EGpuObject::Pipeline :				return VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_EXT;
+			case EGpuObject::Sampler :				return VK_DEBUG_REPORT_OBJECT_TYPE_SAMPLER_EXT;
+			case EGpuObject::DescriptorSetLayout :	return VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT_EXT;
+			case EGpuObject::DescriptorPool :		return VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_POOL_EXT;
+			case EGpuObject::DescriptorSet :		return VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_SET_EXT;
+			case EGpuObject::Framebuffer :			return VK_DEBUG_REPORT_OBJECT_TYPE_FRAMEBUFFER_EXT;
+			case EGpuObject::CommandPool :			return VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_POOL_EXT;
+			case EGpuObject::Surface :				return VK_DEBUG_REPORT_OBJECT_TYPE_SURFACE_KHR_EXT;
+			case EGpuObject::Swapchain :			return VK_DEBUG_REPORT_OBJECT_TYPE_SWAPCHAIN_KHR_EXT;
+			case EGpuObject::Display :				return VK_DEBUG_REPORT_OBJECT_TYPE_DISPLAY_KHR_EXT;
+		}
+		RETURN_ERR( "invalid object type", VK_DEBUG_REPORT_OBJECT_TYPE_MAX_ENUM_EXT );
 	}
 
 /*
@@ -863,7 +945,6 @@ namespace PlatformVK
 			case EVertexAttribute::Double2		: return VK_FORMAT_R64G64_SFLOAT;
 			case EVertexAttribute::Double3		: return VK_FORMAT_R64G64B64_SFLOAT;
 			case EVertexAttribute::Double4		: return VK_FORMAT_R64G64B64A64_SFLOAT;
-
 		}
 		RETURN_ERR( "invalid attrib format", VK_FORMAT_MAX_ENUM );
 	}

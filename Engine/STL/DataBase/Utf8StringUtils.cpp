@@ -43,7 +43,7 @@ namespace GXDataBase
 		int				unicode;
 	} Letter;
 
-	static Letter g_letters[] = {
+	static const Letter g_letters[] = {
 		{0x82, 0x201A}, // SINGLE LOW-9 QUOTATION MARK
 		{0x83, 0x0453}, // CYRILLIC SMALL LETTER GJE
 		{0x84, 0x201E}, // DOUBLE LOW-9 QUOTATION MARK

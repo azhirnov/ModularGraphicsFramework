@@ -27,14 +27,14 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Common\Common.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Engine.Platforms.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Input\InputManager.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Input\InputThread.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\gl4.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4BaseModule.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Device.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Enums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Messages.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Pipeline.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Sampler.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Texture.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Image.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\OpenGLContext.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\OpenGLThread.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinLibrary.h" />
@@ -43,11 +43,15 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\BufferEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\CommandEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Context.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Enums.ToString.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\FragmentOutputState.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Framebuffer.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\IDs.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Memory.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\MemoryEnums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ObjectEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Pipeline.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Program.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\PipelineLayout.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\RenderPass.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\RenderPassEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\RenderState.h" />
@@ -55,10 +59,10 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Sampler.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\SamplerEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ShaderEnums.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\TexArrLayer.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\TextureEnums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ImgArrLayer.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ImageEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\CommandBuffer.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Texture.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Image.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\Thread.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\MipmapLevel.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\MultiSamples.h" />
@@ -66,38 +70,34 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\VertexAttribs.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\VertexEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\VertexDescr.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\VertexInputState.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Display.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\IDs.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Input.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\OSEnums.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Platform.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\ScreenCoords.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\Window.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1BaseModule.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Buffer.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuffer.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuilder.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Enums.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Framebuffer.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Fence.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Library.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Device.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Memory.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Messages.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Pipeline.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1PipelineCache.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1PipelineLayout.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1RenderPass.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Sampler.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1ShaderModules.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1SystemFramebuffer.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Texture.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_platform.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_utils.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\VulkanContext.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\VulkanThread.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Windows\VkWinSurface.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinKeyInput.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinMouseInput.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinMessages.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinPlatform.h" />
-    <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinWindow.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Engine\Platforms\Input\InputManager.cpp" />
@@ -105,17 +105,21 @@
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\gl4.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4BaseModule.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Device.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Pipeline.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Sampler.cpp" />
-    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Texture.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Image.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\OpenGLThread.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinLibrary.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\OpenGL\Windows\GLWinContext.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\Pipeline.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\PipelineLayout.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\RenderPass.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\RenderState.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\Sampler.cpp" />
-    <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\Texture.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\Image.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Shared\Main.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Shared\Modules\PipelineTemplate.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1BaseModule.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Buffer.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuffer.cpp" />
@@ -124,10 +128,12 @@
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Framebuffer.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Memory.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Pipeline.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1PipelineCache.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1PipelineLayout.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1PipelineResourceTable.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1RenderPass.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Sampler.cpp" />
-    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1ShaderModules.cpp" />
-    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Texture.cpp" />
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Image.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_platform.cpp" />
     <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\VulkanContext.cpp" />
@@ -189,11 +195,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <TargetName>$(ProjectName)d</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>$(ProjectName)64d</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -213,6 +219,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -234,6 +241,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -264,6 +272,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>
@@ -296,6 +305,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>

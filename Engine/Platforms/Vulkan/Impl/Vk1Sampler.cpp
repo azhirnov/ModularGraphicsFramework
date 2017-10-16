@@ -1,7 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -28,7 +27,7 @@ namespace PlatformVK
 */
 	Vk1SamplerCache::Vk1SamplerPtr  Vk1SamplerCache::Create (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
-		SamplerDescrBuilder	builder( ci.descr );
+		SamplerDescriptor::Builder	builder( ci.descr );
 
 		const bool		unnorm_coords = (builder.AddressMode().x == EAddressMode::ClampUnnorm) or
 										(builder.AddressMode().y == EAddressMode::ClampUnnorm);
@@ -67,7 +66,7 @@ namespace PlatformVK
 					// unnormalized coords supports only with ClampToEdge addressing mode
 					ASSERT( i == 2 or builder.AddressMode()[i] == EAddressMode::ClampUnnorm );
 
-					builder.SetAddressMode( i, EAddressMode::ClampUnnorm );
+					builder.SetAddressMode( uint(i), EAddressMode::ClampUnnorm );
 				}
 			}
 		}
@@ -97,8 +96,7 @@ namespace PlatformVK
 
 		auto result = New< Vk1Sampler >( gs, create_info );
 
-		result->Send( Message< ModuleMsg::Link >() );
-		result->Send( Message< ModuleMsg::Compose >() );
+		ModuleUtils::Initialize( {result}, null );
 
 		CHECK_ERR( result->GetState() == Module::EState::ComposedImmutable );
 
@@ -106,6 +104,21 @@ namespace PlatformVK
 		return result;
 	}
 	
+/*
+=================================================
+	Destroy
+=================================================
+*/
+	void Vk1SamplerCache::Destroy ()
+	{
+		Message< ModuleMsg::Delete >	del_msg;
+
+		FOR( i, _samplers ) {
+			_samplers[i].samp->Send( del_msg );
+		}
+
+		_samplers.Clear();
+	}
 //-----------------------------------------------------------------------------
 
 
@@ -119,7 +132,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Sampler::Vk1Sampler (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkSamplerModuleID, ~0u }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_samplerId( VK_NULL_HANDLE )
 	{
@@ -133,15 +146,16 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Sampler::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &Vk1Sampler::_Link_Impl );
 		_SubscribeOnMsg( this, &Vk1Sampler::_Compose );
-		//_SubscribeOnMsg( this, &Vk1Sampler::_Delete );
+		_SubscribeOnMsg( this, &Vk1Sampler::_Delete );
 		_SubscribeOnMsg( this, &Vk1Sampler::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1Sampler::_GpuDeviceBeforeDestory );
+		_SubscribeOnMsg( this, &Vk1Sampler::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetVkSamplerID );
-		_SubscribeOnMsg( this, &Vk1Sampler::_GetGpuSamplerDescriptor );
+		_SubscribeOnMsg( this, &Vk1Sampler::_GetSamplerDescriptor );
+		_SubscribeOnMsg( this, &Vk1Sampler::_GetVkLogicDevice );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VulkanThread::GetStaticID(), true );
+		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
 	}
 	
 /*
@@ -161,9 +175,12 @@ namespace PlatformVK
 */
 	bool Vk1Sampler::_Compose (const  Message< ModuleMsg::Compose > &msg)
 	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
 		CHECK_ERR( GetState() == EState::Linked );
 
-		CHECK_ERR( _CreateSampler() );
+		CHECK_COMPOSING( _CreateSampler() );
 
 		_SendForEachAttachments( msg );
 		
@@ -191,7 +208,7 @@ namespace PlatformVK
 	_GetVkSamplerID
 =================================================
 */
-	bool Vk1Sampler::_GetVkSamplerID (const Message< ModuleMsg::GetVkSamplerID > &msg)
+	bool Vk1Sampler::_GetVkSamplerID (const Message< GpuMsg::GetVkSamplerID > &msg)
 	{
 		msg->result.Set( _samplerId );
 		return true;
@@ -199,10 +216,10 @@ namespace PlatformVK
 
 /*
 =================================================
-	_GetGpuSamplerDescriptor
+	_GetSamplerDescriptor
 =================================================
 */
-	bool Vk1Sampler::_GetGpuSamplerDescriptor (const Message< ModuleMsg::GetGpuSamplerDescriptor > &msg)
+	bool Vk1Sampler::_GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &msg)
 	{
 		msg->result.Set( _descr );
 		return true;
@@ -263,6 +280,8 @@ namespace PlatformVK
 		info.unnormalizedCoordinates	= unnorm_coords;
 
 		VK_CHECK( vkCreateSampler( GetLogicalDevice(), &info, null, OUT &_samplerId ) );
+
+		GetDevice()->SetObjectName( _samplerId, GetDebugName(), EGpuObject::Sampler );
 		return true;
 	}
 	

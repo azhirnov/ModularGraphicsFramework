@@ -89,9 +89,10 @@ namespace CompileTime
 			static const uint	a		= all & Q::WithCtor ? share | Q::WithCtor : share;
 			static const uint	b		= all & Q::WithDtor ? a | Q::WithDtor : a;
 			static const uint	c		= all & Q::Noncopyable ? b | Q::Noncopyable : b;
+			static const uint	d		= all & Q::WithCompareOp ? c | Q::WithCompareOp : c;
 
 		public:
-			static const ETypeQualifier::type	value = ETypeQualifier::type( c );
+			static const ETypeQualifier::type	value = ETypeQualifier::type( d );
 		};
 
 	}	// _ctime_hidden_
@@ -102,6 +103,7 @@ namespace CompileTime
 
 	using PODStruct		= _ctime_hidden_::_TypeQualifier< ETypeQualifier::Def_ComplexPOD >;
 	using FastCopyable	= _ctime_hidden_::_TypeQualifier< ETypeQualifier::Def_FastCopyable >;
+	using ComplexType	= _ctime_hidden_::_TypeQualifier< ETypeQualifier::Def_Complex >;
 
 
 	template <typename T>

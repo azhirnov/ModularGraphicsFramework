@@ -372,7 +372,7 @@ namespace CompileTime
 		static constexpr type	Min()		{ return false; }
 		
 		static constexpr type	Epsilon()	{ return type(0); }
-		static constexpr uint	SignBit()	{ return uint(-1); }
+		static constexpr uint	SignBit()	{ return ~0u; }
 		static constexpr uint	Count()		{ return 1; }
 	};
 
@@ -420,7 +420,7 @@ namespace CompileTime
 		static constexpr type	Min()		{ return type(0); }
 		
 		static constexpr type	Epsilon()	{ return type(0); }
-		static constexpr uint	SignBit()	{ return uint(-1); }
+		static constexpr uint	SignBit()	{ return ~0u; }
 		static constexpr uint	Count()		{ return 1; }
 	};
 
@@ -492,7 +492,7 @@ namespace CompileTime
 		static constexpr type	Min()		{ return type(0); }
 		
 		static constexpr type	Epsilon()	{ return type(0); }
-		static constexpr uint	SignBit()	{ return uint(-1); }
+		static constexpr uint	SignBit()	{ return ~0u; }
 		static constexpr uint	Count()		{ return 1; }
 	};
 
@@ -543,7 +543,7 @@ namespace CompileTime
 		static constexpr type	Min()		{ return type(0); }
 		
 		static constexpr type	Epsilon()	{ return type(0); }
-		static constexpr uint	SignBit()	{ return uint(-1); }
+		static constexpr uint	SignBit()	{ return ~0u; }
 		static constexpr uint	Count()		{ return 1; }
 	};
 
@@ -591,7 +591,7 @@ namespace CompileTime
 		static constexpr type	Min()		{ return 0; }
 		
 		static constexpr type	Epsilon()	{ return type(0); }
-		static constexpr uint	SignBit()	{ return uint(-1); }
+		static constexpr uint	SignBit()	{ return ~0u; }
 		static constexpr uint	Count()		{ return 1; }
 	};
 

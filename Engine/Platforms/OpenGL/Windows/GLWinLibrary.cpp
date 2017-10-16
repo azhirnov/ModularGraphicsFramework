@@ -4,7 +4,7 @@
 
 #if defined( GRAPHICS_API_OPENGL ) and defined( PLATFORM_WINDOWS )
 
-#include <Windows.h>
+#include "Engine/STL/OS/Windows/WinHeader.h"
 #include "External/opengl/wglext.h"
 
 namespace Engine

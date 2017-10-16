@@ -47,8 +47,8 @@ namespace GXTypes
 		static void		AddNameToPath (INOUT String &path, StringCRef name);
 		static void		AddExtensionToName (INOUT String &filename, StringCRef ext);
 
-		static String &	BuildPath (OUT String &result, StringCRef path, StringCRef nameWithExt);
-		static String &	BuildPath (OUT String &result, StringCRef path, StringCRef name, StringCRef ext);
+		static String	BuildPath (StringCRef path, StringCRef nameWithExt);
+		static String	BuildPath (StringCRef path, StringCRef name, StringCRef ext);
 
 	private:
 		static usize	_GetExtensionPos (StringCRef filename);

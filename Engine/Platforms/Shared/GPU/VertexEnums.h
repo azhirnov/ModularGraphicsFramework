@@ -114,8 +114,10 @@ namespace Platforms
 			Double3			= _vtypeinfo::Double3,
 			Double4			= _vtypeinfo::Double4,
 
-			Unknown			= uint(-1),
+			Unknown			= ~0u,
 		};
+
+		static type  ToDstType (type src);
 	};
 	
 
@@ -127,7 +129,7 @@ namespace Platforms
 			UInt,
 
 			_Count,
-			Unknown		= uint(-1),
+			Unknown		= ~0u,
 		};
 	};
 	
@@ -140,9 +142,45 @@ namespace Platforms
 			Instance,
 
 			_Count,
-			Unknown		= uint(-1),
+			Unknown		= ~0u,
 		};
 	};
+
+
+	
+//-----------------------------------------------------------------------------//
+// EVertexAttribute
+
+	 inline EVertexAttribute::type  EVertexAttribute::ToDstType (type value)
+	 {
+		const type	count	= type( value & _vtypeinfo::_COL_MASK );
+		const bool	norm	= EnumEq( value, _vtypeinfo::_NORM );
+		const type	ftype	= type( _vtypeinfo::_FLOAT | count );
+
+		ASSERT( count >= _vtypeinfo::_COL1 and count <= _vtypeinfo::_COL4 );
+
+		switch ( value & (_vtypeinfo::_TYPE_MASK | _vtypeinfo::_UNSIGNED) )
+		{
+			case _vtypeinfo::_BYTE	:
+			case _vtypeinfo::_SHORT	:
+			case _vtypeinfo::_INT	:
+				return norm ? ftype : type( _vtypeinfo::_INT | count );
+
+			case _vtypeinfo::_UBYTE	:
+			case _vtypeinfo::_USHORT	:
+			case _vtypeinfo::_UINT	:
+				return norm ? ftype : type( _vtypeinfo::_UINT | count );
+
+			case _vtypeinfo::_HALF	:
+			case _vtypeinfo::_FLOAT	:
+				return type( _vtypeinfo::_FLOAT | count );
+
+			case _vtypeinfo::_DOUBLE :
+				return type( _vtypeinfo::_DOUBLE | count );
+		}
+			
+		RETURN_ERR( "invalid attrib type", ftype );
+	 }
 
 
 }	// Platforms

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Base/Threads/ParallelThread.h"
+#include "Engine/Base/Threads/ParallelThreadImpl.h"
 
 namespace Engine
 {
@@ -17,17 +17,24 @@ namespace Base
 	{
 	// types
 	private:
-		SHARED_POINTER( ParallelThread );
+		SHARED_POINTER( ParallelThreadImpl );
 		SHARED_POINTER( ThreadManager );
 
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
+											ModuleMsg::AddThreadToManager,
 											ModuleMsg::RemoveFromManager
 											//ModuleMsg::FindThread
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
-		using Threads_t				= Map< ThreadID, ModulePtr >;
+		struct ThreadInfo
+		{
+			ModulePtr				thread;
+			Delegate<void ()>		wait;
+		};
+
+		using Threads_t				= Map< ThreadID, ThreadInfo >;
 
 		using CallInThreadFunc_t	= void (*) (const ThreadManagerPtr &mngr, const ModulePtr &thread, const ModulePtr &task);
 		
@@ -41,7 +48,7 @@ namespace Base
 	// variables
 	private:
 		Threads_t			_threads;
-		ParallelThread		_currentThread;
+		ParallelThreadImpl	_currentThread;
 		OS::Mutex			_lock;
 
 
@@ -51,8 +58,6 @@ namespace Base
 		~ThreadManager ();
 
 		bool SendToAllThreads (CallInThreadFunc_t func);
-
-		static GModID::type	GetStaticID ()		{ return "thread.mngr"_GModID; }
 		
 		static void Register (GlobalSystemsRef);
 		static void Unregister (GlobalSystemsRef);
@@ -66,6 +71,7 @@ namespace Base
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _Update (const Message< ModuleMsg::Update > &);
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
+		bool _AddThreadToManager (const Message< ModuleMsg::AddThreadToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
 
 

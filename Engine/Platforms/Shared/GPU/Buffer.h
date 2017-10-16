@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/GPU/BufferEnums.h"
+#include "Engine/Platforms/Shared/GPU/IDs.h"
 
 namespace Engine
 {
@@ -21,7 +22,8 @@ namespace Platforms
 
 	// methods
 		BufferDescriptor (GX_DEFCTOR) {}
-		BufferDescriptor (BytesUL size, EBufferUsage::bits usage) : size(size), usage(usage) {}
+		BufferDescriptor (Bytes<ulong> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
+		BufferDescriptor (Bytes<uint> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
 	};
 
 }	// Platforms
@@ -37,18 +39,19 @@ namespace CreateInfo
 	{
 		ModulePtr						gpuThread;
 		Platforms::BufferDescriptor		descr;
+		bool							allocMemory		= false;	// set 'true' to automaticaly create memory object
 	};
 
 }	// CreateInfo
 
 
-namespace ModuleMsg
+namespace GpuMsg
 {
 
 	//
-	// Get GPU Buffer Descriptor
+	// Get Buffer Descriptor
 	//
-	struct GetGpuBufferDescriptor
+	struct GetBufferDescriptor
 	{
 		Out< Platforms::BufferDescriptor >	result;
 	};
@@ -59,5 +62,5 @@ namespace ModuleMsg
 	struct GetGLBufferID;
 
 
-}	// ModuleMsg
+}	// GpuMsg
 }	// Engine

@@ -749,7 +749,7 @@ namespace GXTypes
 		typedef Hash< GXMath::Vec<T,4> >	base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x.xyzw() );
 		}

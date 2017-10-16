@@ -31,7 +31,7 @@ namespace GXTypes
 		{
 			_CheckArgs< typename VariantArrays::Typelist_t... >();
 
-			return _Call( func, varArrays..., CompileTime::IndexSequenceSize< VariantArrays::Typelist_t::Count >()... );
+			return _Call( func, varArrays..., CompileTime::IndexSequenceFromSize< VariantArrays::Typelist_t::Count >()... );
 		}
 
 

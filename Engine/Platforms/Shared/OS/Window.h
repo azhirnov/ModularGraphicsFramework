@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/OS/OSEnums.h"
+#include "Engine/Platforms/Shared/OS/IDs.h"
 
 namespace Engine
 {
@@ -24,7 +25,7 @@ namespace CreateInfo
 				_Count,
 			};
 
-			using bits = EnumBitfield< EWindowFlags >;
+			GX_ENUM_BITFIELD( EWindowFlags );
 		};
 		
 		enum class EVisibility

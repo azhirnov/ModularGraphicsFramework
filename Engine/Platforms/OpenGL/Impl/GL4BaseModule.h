@@ -26,7 +26,7 @@ namespace PlatformGL
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											ModuleMsg::GpuDeviceBeforeDestory
+											GpuMsg::DeviceBeforeDestroy
 										> >;
 
 		using SupportedEvents_t		= MessageListFrom<
@@ -72,7 +72,7 @@ namespace PlatformGL
 	// message handlers
 	protected:
 		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _GpuDeviceBeforeDestory (const Message< ModuleMsg::GpuDeviceBeforeDestory > &);
+		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
 	};
 
 

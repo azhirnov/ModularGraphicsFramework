@@ -242,7 +242,8 @@ namespace GXTypes
 
 	// variables
 	private:
-		_Storage_t	_storage;
+		_Storage_t				_storage;
+		DEBUG_ONLY( TypeId		_dbgType );
 
 
 	// methods
@@ -281,10 +282,9 @@ namespace GXTypes
 			return *this;
 		}
 
-		template <typename T>
-		forceinline bool EqualPointers (const T &ptr)
+		forceinline bool EqualPointers (const void *ptr) const
 		{
-			return IsValid() and _Internal()->ClassPtr() == (void const *) &(*ptr);
+			return IsValid() and _Internal()->ClassPtr() == ptr;
 		}
 
 		forceinline operator	bool ()								const	{ return IsValid(); }
@@ -333,6 +333,7 @@ namespace GXTypes
 		{
 			if ( other._IsCreated() )
 			{
+				DEBUG_ONLY( _dbgType = other._dbgType );
 				other._Internal()->MoveTo( _Data() );
 				other._Clear();
 			}
@@ -343,7 +344,10 @@ namespace GXTypes
 		forceinline void _Copy (const Self &other)
 		{
 			if ( other._IsCreated() )
+			{
+				DEBUG_ONLY( _dbgType = other._dbgType );
 				other._Internal()->CopyTo( _Data() );
+			}
 			else
 				_Clear();
 		}
@@ -351,6 +355,7 @@ namespace GXTypes
 		forceinline void _Clear ()
 		{
 			_storage.maxAlign = 0;
+			DEBUG_ONLY( _dbgType = TypeId() );
 		}
 
 
@@ -362,6 +367,7 @@ namespace GXTypes
 
 			Self	del;
 			PlacementNew<DI>( del._Data(), DI( fn ) );
+			DEBUG_ONLY( del._dbgType = TypeIdOf( fn ) );
 			return del;
 		}
 
@@ -374,6 +380,7 @@ namespace GXTypes
 
 			Self	del;
 			PlacementNew<DI>( del._Data(), DI( classPtr, fn ) );
+			DEBUG_ONLY( del._dbgType = TypeIdOf( fn ) );
 			return del;
 		}
 
@@ -386,6 +393,7 @@ namespace GXTypes
 
 			Self	del;
 			PlacementNew<DI>( del._Data(), DI( FW<C>(classPtr), fn ) );
+			DEBUG_ONLY( del._dbgType = TypeIdOf( fn ) );
 			return del;
 		}*/
 
@@ -398,6 +406,7 @@ namespace GXTypes
 
 			Self	del;
 			PlacementNew<DI>( del._Data(), DI( classPtr, fn ) );
+			DEBUG_ONLY( del._dbgType = TypeIdOf( fn ) );
 			return del;
 		}
 
@@ -410,6 +419,7 @@ namespace GXTypes
 
 			Self	del;
 			PlacementNew<DI>( del._Data(), DI( FW<C>(classPtr), fn ) );
+			DEBUG_ONLY( del._dbgType = TypeIdOf( fn ) );
 			return del;
 		}*/
 	};
@@ -525,8 +535,7 @@ namespace GXTypes
 		forceinline Delegate_t const&	Get (usize index)		const		{ return _delegates[index]; }
 
 
-		template <typename T>
-		forceinline void RemoveAllFor (const T &ptr)
+		forceinline void RemoveAllFor (const void *ptr)
 		{
 			FOR( i, _delegates )
 			{

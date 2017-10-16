@@ -4,7 +4,7 @@
 
 #if defined( GRAPHICS_API_OPENGL ) and defined( PLATFORM_WINDOWS )
 
-#include <Windows.h>
+#include "Engine/STL/OS/Windows/WinHeader.h"
 #include "External/opengl/wglext.h"
 
 #pragma comment (lib, "opengl32.lib")
@@ -162,7 +162,7 @@ namespace PlatformGL
 			
 				if ( c >= '0' and c <= '9' )
 				{
-					num = StringUtils::ToFloat( tokens[i] );
+					num = StringUtils::ToFloat(String( tokens[i] ));
 					break;
 				}
 			}
@@ -187,8 +187,8 @@ namespace PlatformGL
 		uint2	version;
 		CHECK_ERR( _GetApiVersion( vs, version ) );
 
-		const auto	color_bits			= EPixelFormat::BitsPerChannel( vs.colorFmt ).To< usize4 >();
-		const auto	depth_stencil_bits	= EPixelFormat::BitsPerChannel( vs.depthStencilFmt ).To< usize2 >();
+		const auto	color_bits			= EPixelFormat::BitsPerChannel( vs.colorFmt ).To< uint4 >();
+		const auto	depth_stencil_bits	= EPixelFormat::BitsPerChannel( vs.depthStencilFmt ).To< uint2 >();
 
 
 		const HDC	dc	= _deviceContext.Get<HDC>();

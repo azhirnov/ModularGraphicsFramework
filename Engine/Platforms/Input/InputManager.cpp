@@ -16,7 +16,7 @@ namespace Platforms
 =================================================
 */
 	InputManager::InputManager (const GlobalSystemsRef gs, const CreateInfo::InputManager &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ InputManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "InputManager" );
 
@@ -56,7 +56,7 @@ namespace Platforms
 	bool InputManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == InputThread::GetStaticID() );
+		CHECK_ERR( msg->module->GetModuleID() == InputThreadModuleID );
 		ASSERT( not _threads.IsExist( msg->module ) );
 
 		_threads.Add( msg->module );
@@ -71,21 +71,11 @@ namespace Platforms
 	bool InputManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == InputThread::GetStaticID() );
+		CHECK_ERR( msg->module->GetModuleID() == InputThreadModuleID );
 		ASSERT( _threads.IsExist( msg->module ) );
 
 		_threads.Erase( msg->module );
 		return true;
-	}
-	
-/*
-=================================================
-	_CreateInputThread
-=================================================
-*/
-	ModulePtr InputManager::_CreateInputThread (const GlobalSystemsRef gs, const CreateInfo::InputThread &ci)
-	{
-		return New< InputThread >( gs, ci );
 	}
 	
 /*
@@ -107,8 +97,8 @@ namespace Platforms
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		CHECK( mf->Register( InputManager::GetStaticID(), &_CreateInputManager ) );
-		CHECK( mf->Register( InputThread::GetStaticID(), &_CreateInputThread ) );
+		CHECK( mf->Register( InputManagerModuleID, &_CreateInputManager ) );
+		CHECK( mf->Register( InputThreadModuleID, &_CreateInputThread ) );
 	}
 	
 /*
@@ -120,8 +110,8 @@ namespace Platforms
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		mf->UnregisterAll< InputManager >();
-		mf->UnregisterAll< InputThread >();
+		mf->UnregisterAll( InputManagerModuleID );
+		mf->UnregisterAll( InputThreadModuleID );
 	}
 
 

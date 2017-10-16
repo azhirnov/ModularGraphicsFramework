@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\ArrayUtils.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Algorithms\Comparison.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\Crypt\SimpleCrypt.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\Enum.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\FileAddress.h" />
@@ -243,7 +244,6 @@
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantRef.h" />
     <ClInclude Include="..\..\..\Engine\STL\Engine.STL.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantRefIndexedContainer.h" />
-    <ClInclude Include="Header.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Engine.Config\Engine.Config.vcxproj">
@@ -326,12 +326,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetExt>.lib</TargetExt>
-    <TargetName>$(ProjectName)_d</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetExt>.lib</TargetExt>
-    <TargetName>$(ProjectName)_d</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -355,6 +355,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -382,6 +383,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>true</FloatingPointExceptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -419,6 +421,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <CreateHotpatchableImage>true</CreateHotpatchableImage>
       <ControlFlowGuard>false</ControlFlowGuard>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -456,6 +459,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <CreateHotpatchableImage>true</CreateHotpatchableImage>
       <ControlFlowGuard>false</ControlFlowGuard>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

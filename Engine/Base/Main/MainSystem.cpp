@@ -29,7 +29,7 @@ namespace Base
 =================================================
 */
 	MainSystem::MainSystem (const GlobalSystemsRef gs) :
-		Module( gs, ModuleConfig{ GetStaticID(), 0 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ MainSystemModuleID, 0 }, &_msgTypes, &_eventTypes ),
 		_factory( GlobalSystems() ),
 		_fileMngr( GlobalSystems() )
 	{
@@ -97,11 +97,11 @@ namespace Base
 		ThreadManager::Register( GlobalSystems() );
 		StreamManager::Register( GlobalSystems() );
 
-		Send( Message< ModuleMsg::AttachModule >{ _taskMngr } );
-		Send( Message< ModuleMsg::AttachModule >{ _threadMngr } );
+		_SendMsg< ModuleMsg::AttachModule >({ _taskMngr });
+		_SendMsg< ModuleMsg::AttachModule >({ _threadMngr });
 		
 		GlobalSystems()->Get< ParallelThread >()->
-			AddModule( StringCRef(), TaskModule::GetStaticID(), CreateInfo::TaskModule{ _taskMngr } );
+			AddModule( StringCRef(), TaskModuleModuleID, CreateInfo::TaskModule{ _taskMngr } );
 	}
 	
 /*
@@ -112,9 +112,9 @@ namespace Base
 	void MainSystem::_Destroy ()
 	{
 		// delete thread manager at first
-		_threadMngr->Send( Message< ModuleMsg::Delete >{} );
+		_threadMngr->Send< ModuleMsg::Delete >({});
 
-		_SendForEachAttachments( Message< ModuleMsg::Delete >{} );
+		_SendForEachAttachments< ModuleMsg::Delete >({});
 
 		_DetachAllAttachments();
 		_ClearMessageHandlers();

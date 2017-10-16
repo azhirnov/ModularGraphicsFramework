@@ -21,8 +21,8 @@ namespace PlatformVK
 	// types
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											ModuleMsg::GetGpuRenderPassDescriptor,
-											ModuleMsg::GetVkRenderPassID
+											GpuMsg::GetRenderPassDescriptor,
+											GpuMsg::GetVkRenderPassID
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
@@ -46,20 +46,15 @@ namespace PlatformVK
 		Vk1RenderPass (const GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
 		~Vk1RenderPass ();
 
-		static OModID::type			GetStaticID ()				{ return "vk1.renpass"_OModID; }
-
-
-	//protected:
 		RenderPassDescriptor const&	GetDescriptor ()	const	{ return _descr; }
-		vk::VkRenderPass			GetRenderPassID ()	const	{ return _renderPassId; }
 
 
 	// message handlers
 	private:
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetVkRenderPassID (const Message< ModuleMsg::GetVkRenderPassID > &);
-		bool _GetGpuRenderPassDescriptor (const Message< ModuleMsg::GetGpuRenderPassDescriptor > &);
+		bool _GetVkRenderPassID (const Message< GpuMsg::GetVkRenderPassID > &);
+		bool _GetRenderPassDescriptor (const Message< GpuMsg::GetRenderPassDescriptor > &);
 
 	private:
 		bool _IsCreated () const;
@@ -115,6 +110,8 @@ namespace PlatformVK
 		explicit Vk1RenderPassCache (VkSystemsRef vkSys);
 
 		Vk1RenderPassPtr	Create (const GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
+
+		void Destroy ();
 
 		VkSystemsRef		VkSystems ()			const	{ return _vkSystems; }
 		Ptr<Vk1Device>		GetDevice ()			const	{ return _vkSystems->Get< Vk1Device >(); }

@@ -21,7 +21,7 @@ namespace _types_hidden_
 				typename S,
 				typename MC
 			 >
-	struct BaseMap : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, MC >
+	struct BaseMap : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, MC >	// TODO: copy qualifiers from _MapUtils_t
 	{
 	// types
 	public:
@@ -458,10 +458,10 @@ namespace _types_hidden_
 		private Hash< ArrayCRef< Pair<const K, T> > >
 	{
 		typedef _types_hidden_::BaseMap< K, T, IsUnique, S, MC >	key_t;
-		typedef ArrayCRef< Pair<const K, T> >					base_t;
+		typedef ArrayCRef< Pair<const K, T> >						base_t;
 		typedef typename base_t::result_t							result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

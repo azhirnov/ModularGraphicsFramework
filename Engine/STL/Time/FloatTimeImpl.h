@@ -18,19 +18,26 @@
 
 	// methods
 	public:
-		Time (GX_DEFCTOR) : _time(0.0) {}
+		constexpr Time (GX_DEFCTOR) : _time(0.0) {}
 
 		explicit
 		constexpr Time (const T &value) : _time(value) {}
 		
+		constexpr Time (Self &&other) = default;
+		constexpr Time (const Self &other) = default;
+
+		constexpr Self& operator = (Self &&right) = default;
+		constexpr Self& operator = (const Self &right) = default;
+
 		template <typename B>
+		constexpr explicit
 		Time (const Time<B> &value) : _time(0)
 		{
 			SetTime( value );
 		}
 
 		template <typename B>
-		forceinline Self &	SetTime (const B &time)
+		forceinline constexpr Self&	SetTime (const B &time)
 		{
 			if ( time.GetSecondsPowerOf10() <= 0 )		return SetSeconds( (T) time.Seconds() );
 			if ( time.GetSecondsPowerOf10() <= 3 )		return SetMilliSeconds( (T) time.MilliSeconds() );
@@ -40,28 +47,28 @@
 		}
 
 		template <typename B>
-		static Self	FromTime (const B &time)			{ return Self().SetTime( time ); }
+		static constexpr Self	FromTime (const B &time)			{ return Self().SetTime( time ); }
 
-		static Self	FromSeconds (const T &value)		{ return Self().SetSeconds( value ); }
-		static Self	FromMilliSeconds (const T &value)	{ return Self().SetMilliSeconds( value ); }
-		static Self	FromMicroSeconds (const T &value)	{ return Self().SetMicroSeconds( value ); }
-		static Self	FromNanoSeconds (const T &value)	{ return Self().SetNanoSeconds( value ); }
+		static constexpr Self	FromSeconds (const T &value)		{ return Self().SetSeconds( value ); }
+		static constexpr Self	FromMilliSeconds (const T &value)	{ return Self().SetMilliSeconds( value ); }
+		static constexpr Self	FromMicroSeconds (const T &value)	{ return Self().SetMicroSeconds( value ); }
+		static constexpr Self	FromNanoSeconds (const T &value)	{ return Self().SetNanoSeconds( value ); }
 		
-		Self &	SetSeconds (const T &value)				{ _time = value;				return *this; }
-		Self &	SetMilliSeconds (const T &value)		{ _time = value * T(1.0e-3);	return *this; }
-		Self &	SetMicroSeconds (const T &value)		{ _time = value * T(1.0e-6);	return *this; }
-		Self &	SetNanoSeconds (const T &value)			{ _time = value * T(1.0e-9);	return *this; }
+		constexpr Self&	SetSeconds (const T &value)					{ _time = value;				return *this; }
+		constexpr Self&	SetMilliSeconds (const T &value)			{ _time = value * T(1.0e-3);	return *this; }
+		constexpr Self&	SetMicroSeconds (const T &value)			{ _time = value * T(1.0e-6);	return *this; }
+		constexpr Self&	SetNanoSeconds (const T &value)				{ _time = value * T(1.0e-9);	return *this; }
 
-		T		Hours ()						const	{ return _time / T(3600); }
-		T		Minutes ()						const	{ return _time / T(60); }
-		T		Seconds ()						const	{ return _time; }
-		T		MilliSeconds ()					const	{ return _time * T(1.0e+3); }
-		T		MicroSeconds ()					const	{ return _time * T(1.0e+6); }
-		T		NanoSeconds ()					const	{ return _time * T(1.0e+9); }
+		constexpr T		Hours ()						const		{ return _time / T(3600); }
+		constexpr T		Minutes ()						const		{ return _time / T(60); }
+		constexpr T		Seconds ()						const		{ return _time; }
+		constexpr T		MilliSeconds ()					const		{ return _time * T(1.0e+3); }
+		constexpr T		MicroSeconds ()					const		{ return _time * T(1.0e+6); }
+		constexpr T		NanoSeconds ()					const		{ return _time * T(1.0e+9); }
 		
-		bool	IsZero ()						const	{ return GXMath::IsZero( _time ); }
+		constexpr bool	IsZero ()						const		{ return GXMath::IsZero( _time ); }
 		
-		explicit operator T ()					const	{ return Seconds(); }
+		explicit operator T ()							const		{ return Seconds(); }
 
 		_GX_DIM_CMP_OPERATORS_SELF( _time );
 		_GX_DIM_CMP_OPERATORS_TYPE( _time, value_t, );
@@ -85,7 +92,7 @@
 		typedef Hash<T>				base_t;
 		typedef base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x.Seconds() );
 		}

@@ -30,6 +30,7 @@
     <ClCompile Include="..\..\..\Tests\Engine.Base\Main.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\OpenGL\GLApp.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\OpenGL\Test.GLWindow.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Pipelines\default.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\Test.VkWindow.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Window\Test.Window.cpp" />
@@ -37,6 +38,9 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Tests\Engine.Base\Common.h" />
     <ClInclude Include="..\..\..\Tests\Engine.Base\OpenGL\GLApp.h" />
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\all_pipelines.h" />
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\common.h" />
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\shared_types.h" />
     <ClInclude Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -90,11 +94,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <TargetName>$(ProjectName)d</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>$(ProjectName)64d</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -114,6 +118,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -135,6 +140,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -165,6 +171,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>
@@ -197,6 +204,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>

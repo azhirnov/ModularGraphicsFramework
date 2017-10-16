@@ -98,9 +98,10 @@ namespace GXTypes
 	Logger config for fast rebuild
 =================================================
 */
-	const bool		Logger::_perThreadColors	= true;
-	const bool		Logger::_allowSkipErrors	= true;
-	const bool		Logger::_allowCaching		= false;
+	const bool		Logger::_perThreadColors		= true;
+	const bool		Logger::_allowSkipErrors		= true;
+	const bool		Logger::_allowCaching			= false;
+	const uint		Logger::_minSizeForAutoSpolier	= 100;
 	
 	TimeD			Logger::_MinTimeDeltaToSkipError ()		{ return TimeD::FromSeconds( 5.0 ); }
 
@@ -407,7 +408,7 @@ namespace GXTypes
 		SCOPE_SETTER( _lockRecursion = true, false );
 
 		const usize	thread_id	 = OS::Thread::GetCurrentThreadId();
-		const bool	with_spoiler = EnumEq( type, ELog::SpoilerFlag );
+		const bool	with_spoiler = EnumEq( type, ELog::SpoilerFlag ) or msg.Length() > _minSizeForAutoSpolier;
 		const bool	prev_cached	 = _cached;
 		const bool	is_cached	 = _CmpWithCache( type, file, thread_id, line );
 

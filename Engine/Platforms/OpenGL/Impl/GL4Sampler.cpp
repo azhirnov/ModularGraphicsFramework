@@ -49,7 +49,7 @@ namespace PlatformGL
 			_Initialize();
 		}
 
-		SamplerDescrBuilder	builder( ci.descr );
+		SamplerDescriptor::Builder	builder( ci.descr );
 
 		const bool		unnorm_coords = (builder.AddressMode().x == EAddressMode::ClampUnnorm) or
 										(builder.AddressMode().y == EAddressMode::ClampUnnorm);
@@ -88,7 +88,7 @@ namespace PlatformGL
 					// unnormalized coords supports only with ClampToEdge addressing mode
 					ASSERT( i == 2 or builder.AddressMode()[i] == EAddressMode::ClampUnnorm );
 
-					builder.SetAddressMode( i, EAddressMode::ClampUnnorm );
+					builder.SetAddressMode( uint(i), EAddressMode::ClampUnnorm );
 				}
 			}
 		}
@@ -118,8 +118,7 @@ namespace PlatformGL
 
 		auto result = New< GL4Sampler >( gs, create_info );
 
-		result->Send( Message< ModuleMsg::Link >() );
-		result->Send( Message< ModuleMsg::Compose >() );
+		ModuleUtils::Initialize({ result });
 
 		CHECK_ERR( result->GetState() == Module::EState::ComposedImmutable );
 
@@ -140,7 +139,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Sampler::GL4Sampler (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
-		GL4BaseModule( gs, ci.gpuThread, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ci.gpuThread, ModuleConfig{ GLSamplerModuleID, ~0u }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_samplerId( 0 )
 	{
@@ -155,13 +154,13 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Sampler::_Link_Impl );
 		_SubscribeOnMsg( this, &GL4Sampler::_Compose );
 		_SubscribeOnMsg( this, &GL4Sampler::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4Sampler::_GpuDeviceBeforeDestory );
+		_SubscribeOnMsg( this, &GL4Sampler::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4Sampler::_GetGLSamplerID );
-		_SubscribeOnMsg( this, &GL4Sampler::_GetGpuSamplerDescriptor );
+		_SubscribeOnMsg( this, &GL4Sampler::_GetSamplerDescriptor );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, OpenGLThread::GetStaticID(), true );
+		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
 	}
 	
 /*
@@ -181,9 +180,12 @@ namespace PlatformGL
 */
 	bool GL4Sampler::_Compose (const  Message< ModuleMsg::Compose > &msg)
 	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already linked
+
 		CHECK_ERR( GetState() == EState::Linked );
 
-		CHECK_ERR( _CreateSampler() );
+		CHECK_COMPOSING( _CreateSampler() );
 
 		_SendForEachAttachments( msg );
 		
@@ -211,7 +213,7 @@ namespace PlatformGL
 	_GetGLSamplerID
 =================================================
 */
-	bool GL4Sampler::_GetGLSamplerID (const Message< ModuleMsg::GetGLSamplerID > &msg)
+	bool GL4Sampler::_GetGLSamplerID (const Message< GpuMsg::GetGLSamplerID > &msg)
 	{
 		msg->result.Set( _samplerId );
 		return true;
@@ -219,10 +221,10 @@ namespace PlatformGL
 
 /*
 =================================================
-	_GetGpuSamplerDescriptor
+	_GetSamplerDescriptor
 =================================================
 */
-	bool GL4Sampler::_GetGpuSamplerDescriptor (const Message< ModuleMsg::GetGpuSamplerDescriptor > &msg)
+	bool GL4Sampler::_GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &msg)
 	{
 		msg->result.Set( _descr );
 		return true;

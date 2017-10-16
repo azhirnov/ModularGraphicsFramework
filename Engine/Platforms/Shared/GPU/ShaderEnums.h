@@ -21,32 +21,13 @@ namespace Platforms
 			Compute,
 
 			_Count,
-			Unknown		= uint(-1),
+			Unknown		= ~0u,
 		};
 
-		using bits = EnumBitfield< EShader >;
+		GX_ENUM_BITFIELD( EShader );
 
 		static StringCRef ToString (type value);
 	};
-
-
-
-//-----------------------------------------------------------------------------//
-// EShader
-	
-	inline StringCRef EShader::ToString (type value)
-	{
-		switch ( value )
-		{
-			case EShader::Vertex			:	return "Vertex";
-			case EShader::TessControl		:	return "TessellationControl";
-			case EShader::TessEvaluation	:	return "TessellationEvaluation";
-			case EShader::Geometry			:	return "Geometry";
-			case EShader::Fragment			:	return "Fragment";
-			case EShader::Compute			:	return "Compute";
-		}
-		RETURN_ERR( "invalid shader type", "unknown" );
-	}
 
 
 }	// Platforms

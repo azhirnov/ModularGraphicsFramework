@@ -371,24 +371,24 @@ namespace GXMath
 
 		template <>
 		struct _IsZero_impl<true> {
-			template <typename T>	forceinline static bool is_zero (const T& x)	{ return x == T(0); }
+			template <typename T>	forceinline static constexpr bool is_zero (const T& x)	{ return x == T(0); }
 		};
 
 		template <>
 		struct _IsZero_impl<false> {
-			template <typename T>	forceinline static bool is_zero (const T& x)	{ return Abs(x) <= Epsilon<T>(); }
+			template <typename T>	forceinline static constexpr bool is_zero (const T& x)	{ return Abs(x) <= Epsilon<T>(); }
 		};
 
 		template <typename T>
 		struct _IsZero {
-			forceinline static bool is_zero (const T& x) {
+			forceinline static constexpr bool is_zero (const T& x) {
 				return _IsZero_impl< CompileTime::IsInteger<T> >::is_zero( x );
 			}
 		};
 	}
 
 	template <typename T>
-	forceinline bool IsZero (const T& x)
+	forceinline constexpr bool IsZero (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -396,13 +396,13 @@ namespace GXMath
 	}
 
 	template <>
-	forceinline bool IsZero (const bool& x)
+	forceinline constexpr bool IsZero (const bool& x)
 	{
 		return not x;
 	}
 
 	template <typename T, usize I>
-	forceinline bool IsZero (const Vec<T,I>& x)
+	forceinline constexpr bool IsZero (const Vec<T,I>& x)
 	{
 		return All( x.IsZero() );
 	}
@@ -413,13 +413,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline bool IsNotZero (const T& x)
+	forceinline constexpr bool IsNotZero (const T& x)
 	{
 		return not IsZero( x );
 	}
 
 	template <>
-	forceinline bool IsNotZero (const bool& x)
+	forceinline constexpr bool IsNotZero (const bool& x)
 	{
 		return x;
 	}
@@ -436,21 +436,21 @@ namespace GXMath
 		struct _Equals_impl
 		{
 			template <typename T>
-			forceinline static bool eq (const T& a, const T& b)
+			forceinline static constexpr bool eq (const T& a, const T& b)
 			{ 
 				return a == b;
 			}
 
 			template <typename T>
-			forceinline static bool eqa (const T& a, const T& b, uint ac)
+			forceinline static constexpr bool eqa (const T& a, const T& b, uint ac)
 			{
 				typedef typename CompileTime::NearUInt::FromType<T>	uint_t;
 				return uint_t( Abs( a - b ) ) <= ( uint_t(1) << ac );
 			}
 		};
 
-		template <typename T>	struct _FloatAccuracy			{ static const uint	value = CompileTime::SizeOf<T>::bits / 3; };
-		template <>				struct _FloatAccuracy<double>	{ static const uint	value = CompileTime::SizeOf<double>::bits * 2 / 3; };
+		template <typename T>	struct _FloatAccuracy			{ static constexpr uint	value = CompileTime::SizeOf<T>::bits / 3; };
+		template <>				struct _FloatAccuracy<double>	{ static constexpr uint	value = CompileTime::SizeOf<double>::bits * 2 / 3; };
 
 		
 		// float
@@ -458,13 +458,13 @@ namespace GXMath
 		struct _Equals_impl<true>
 		{
 			template <typename T>
-			forceinline static bool eq (const T& a, const T& b)
+			forceinline static constexpr bool eq (const T& a, const T& b)
 			{
 				return eqa( a, b, _FloatAccuracy<T>::value );
 			}
 
 			template <typename T>
-			forceinline static bool eqa (const T& a, const T& b, uint ac)
+			forceinline static constexpr bool eqa (const T& a, const T& b, uint ac)
 			{
 				typedef typename CompileTime::NearInt::FromType<T>	int_t;
 				typedef typename CompileTime::NearUInt::FromType<T>	uint_t;
@@ -484,12 +484,12 @@ namespace GXMath
 		template <typename T>
 		struct _Equals
 		{
-			forceinline static bool eq (const T& a, const T& b)
+			forceinline static constexpr bool eq (const T& a, const T& b)
 			{
 				return _Equals_impl< CompileTime::IsFloat<T> >::eq( a, b );
 			}
 
-			forceinline static bool eqa (const T& a, const T& b, uint ac)
+			forceinline static constexpr bool eqa (const T& a, const T& b, uint ac)
 			{
 				return _Equals_impl< CompileTime::IsFloat<T> >::eqa( a, b, ac );
 			}
@@ -497,7 +497,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	forceinline bool Equals (const T& a, const T& b)
+	forceinline constexpr bool Equals (const T& a, const T& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -505,7 +505,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I>
-	inline Vec<bool,I>  Equals (const Vec<T,I> &a, const Vec<T,I> &b)
+	inline constexpr Vec<bool,I>  Equals (const Vec<T,I> &a, const Vec<T,I> &b)
 	{
 		Vec<bool,I>		ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i] );
@@ -732,22 +732,22 @@ namespace GXMath
 		template <usize C>
 		struct _AnyAllMost_impl
 		{
-			template <typename T, usize I>	forceinline static bool Any (const GXMath::Vec<T,I> &v)		{ return _AnyAllMost_impl<C-1>::Any( v ) | GXMath::IsNotZero( v[C] ); }
-			template <typename T, usize I>	forceinline static bool All (const GXMath::Vec<T,I> &v)		{ return _AnyAllMost_impl<C-1>::All( v ) & GXMath::IsNotZero( v[C] ); }
+			template <typename T, usize I>	forceinline static constexpr bool Any (const GXMath::Vec<T,I> &v)	{ return _AnyAllMost_impl<C-1>::Any( v ) | GXMath::IsNotZero( v[C] ); }
+			template <typename T, usize I>	forceinline static constexpr bool All (const GXMath::Vec<T,I> &v)	{ return _AnyAllMost_impl<C-1>::All( v ) & GXMath::IsNotZero( v[C] ); }
 		};
 		
 		template <>
 		struct _AnyAllMost_impl<0>
 		{
-			template <typename T, usize I>	forceinline static bool Any (const GXMath::Vec<T,I> &v)		{ return GXMath::IsNotZero( v[0] ); }
-			template <typename T, usize I>	forceinline static bool All (const GXMath::Vec<T,I> &v)		{ return GXMath::IsNotZero( v[0] ); }
+			template <typename T, usize I>	forceinline static constexpr bool Any (const GXMath::Vec<T,I> &v)	{ return GXMath::IsNotZero( v[0] ); }
+			template <typename T, usize I>	forceinline static constexpr bool All (const GXMath::Vec<T,I> &v)	{ return GXMath::IsNotZero( v[0] ); }
 		};
 
 		template <typename T, usize I>
 		struct _AnyAllMost
 		{
-			forceinline static bool  All(const GXMath::Vec<T,I> &v)		{ return _AnyAllMost_impl<I-1>::All( v ); }
-			forceinline static bool  Any(const GXMath::Vec<T,I> &v)		{ return _AnyAllMost_impl<I-1>::Any( v ); }
+			forceinline static constexpr bool  All(const GXMath::Vec<T,I> &v)		{ return _AnyAllMost_impl<I-1>::All( v ); }
+			forceinline static constexpr bool  Any(const GXMath::Vec<T,I> &v)		{ return _AnyAllMost_impl<I-1>::Any( v ); }
 		};
 	}
 	
@@ -757,13 +757,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline bool All (const T& x)
+	forceinline constexpr bool All (const T& x)
 	{
 		return IsNotZero( x );
 	}
 
 	template <typename T, usize I>
-	forceinline bool All (const Vec<T,I> &x)
+	forceinline constexpr bool All (const Vec<T,I> &x)
 	{
 		return _math_hidden_::_AnyAllMost<T,I>::All( x );
 	}
@@ -774,13 +774,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline bool Any (const T& x)
+	forceinline constexpr bool Any (const T& x)
 	{
 		return IsNotZero( x );
 	}
 
 	template <typename T, usize I>
-	forceinline bool Any (const Vec<T,I> &x)
+	forceinline constexpr bool Any (const Vec<T,I> &x)
 	{
 		return _math_hidden_::_AnyAllMost<T,I>::Any( x );
 	}
@@ -2304,7 +2304,9 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
 
-		return T( ((value + (T(align)-1)) / T(align)) * T(align) );
+		const T	a = (T) Max( align, 1u );
+
+		return T( ((value + (a-1)) / a) * a );
 	}
 
 	template <typename T, usize I>

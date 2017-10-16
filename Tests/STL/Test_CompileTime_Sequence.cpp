@@ -9,7 +9,7 @@ using namespace GX_STL::CompileTime;
 
 static void Sequence_RangeForTest ()
 {
-	using IdxSeq = IndexSequenceSize<10>;
+	using IdxSeq = IndexSequenceFromSize<10>;
 	STATIC_ASSERT( IdxSeq::Count == 10 );
 
 	usize idx = 0;
@@ -21,7 +21,7 @@ static void Sequence_RangeForTest ()
 	ASSERT( idx == IdxSeq::Count );
 
 	
-	using IdxSeq2 = IndexSequenceRange<2, 8>;
+	using IdxSeq2 = IndexSequenceFromRange<2, 8>;
 	STATIC_ASSERT( IdxSeq2::Count == 7 );
 
 	idx = 0;
@@ -38,7 +38,7 @@ static void Sequence_SizeTest ()
 {
 	using Typelist = TypeListFrom< int, float, uint, double >;
 
-	const uint	count1 = CompileTime::IndexSequenceSize< Typelist::Count >::Count;
+	const uint	count1 = CompileTime::IndexSequenceFromSize< Typelist::Count >::Count;
 	const uint	count2 = Typelist::Count;
 	STATIC_ASSERT( count1 == count2 );
 }

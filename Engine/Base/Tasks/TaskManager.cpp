@@ -17,7 +17,7 @@ namespace Base
 =================================================
 */
 	TaskManager::TaskManager (const GlobalSystemsRef gs, const CreateInfo::TaskManager &info) :
-		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ TaskManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "TaskManager" );
 
@@ -33,6 +33,8 @@ namespace Base
 		_SubscribeOnMsg( this, &TaskManager::_Delete );
 		_SubscribeOnMsg( this, &TaskManager::_AddToManager );
 		_SubscribeOnMsg( this, &TaskManager::_RemoveFromManager );
+		_SubscribeOnMsg( this, &TaskManager::_AddTaskSchedulerToManager );
+		_SubscribeOnMsg( this, &TaskManager::_PushAsyncMessage );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 	}
@@ -73,13 +75,22 @@ namespace Base
 */
 	bool TaskManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
 	{
+		RETURN_ERR( "use 'AddTaskSchedulerToManager' message instead of 'AddToManager'" );
+	}
+	
+/*
+=================================================
+	_AddTaskSchedulerToManager
+=================================================
+*/
+	bool TaskManager::_AddTaskSchedulerToManager (const Message< ModuleMsg::AddTaskSchedulerToManager > &msg)
+	{
 		SCOPELOCK( _lock );
 
 		CHECK_ERR( msg->module );
 		ASSERT( not _threads.IsExist( msg->module->GetThreadID() ) );
-		CHECK_ERR( msg->module->GetModuleID() == TaskModule::GetStaticID() );
 
-		_threads.Add( msg->module->GetThreadID(), msg->module );
+		_threads.Add( msg->module->GetThreadID(), { msg->module, RVREF(msg->asyncPushMsg.Get()) } );
 		return true;
 	}
 	
@@ -94,18 +105,23 @@ namespace Base
 
 		CHECK_ERR( msg->module );
 		ASSERT( _threads.IsExist( msg->module->GetThreadID() ) );
-		CHECK_ERR( msg->module->GetModuleID() == TaskModule::GetStaticID() );
 
-		_threads.Erase( msg->module->GetThreadID() );
+		usize	idx;
+		if ( _threads.FindIndex( msg->module->GetThreadID(), OUT idx ) )
+		{
+			ASSERT( _threads[idx].second.module == msg->module );
+
+			_threads.EraseFromIndex( idx );
+		}
 		return true;
 	}
 
 /*
 =================================================
-	PushAsyncMessage
+	_PushAsyncMessage
 =================================================
 */
-	bool TaskManager::PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg)
+	bool TaskManager::_PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg)
 	{
 		SCOPELOCK( _lock );
 
@@ -134,7 +150,7 @@ namespace Base
 
 		if ( iter )
 		{
-			iter->second->_Push( RVREF( msg->asyncMsg.Get() ) );
+			iter->second.asyncPushMsg( RVREF( msg->asyncMsg.Get() ) );
 			return true;
 		}
 
@@ -150,8 +166,8 @@ namespace Base
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		CHECK( mf->Register( TaskModule::GetStaticID(), &_CreateTaskModule ) );
-		CHECK( mf->Register( TaskManager::GetStaticID(), &_CreateTaskManager ) );
+		CHECK( mf->Register( TaskModuleModuleID, &_CreateTaskModule ) );
+		CHECK( mf->Register( TaskManagerModuleID, &_CreateTaskManager ) );
 	}
 	
 /*
@@ -163,19 +179,8 @@ namespace Base
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		mf->UnregisterAll< TaskModule >();
-		mf->UnregisterAll< TaskManager >();
-	}
-
-/*
-=================================================
-	_CreateTaskModule
-=================================================
-*/
-	ModulePtr TaskManager::_CreateTaskModule (const GlobalSystemsRef gs, const CreateInfo::TaskModule &ci)
-	{
-		CHECK_ERR( ci.manager );
-		return New< TaskModule >( gs, ci );
+		mf->UnregisterAll( TaskModuleModuleID );
+		mf->UnregisterAll( TaskManagerModuleID );
 	}
 	
 /*

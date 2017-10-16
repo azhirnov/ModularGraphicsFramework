@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/GPU/MemoryEnums.h"
+#include "Engine/Platforms/Shared/GPU/IDs.h"
 
 namespace Engine
 {
@@ -35,10 +36,23 @@ namespace CreateInfo
 
 	struct GpuMemory
 	{
-		ModulePtr						gpuThread;
-		BytesUL							maxSize;
-		Platforms::EGpuMemory::bits		memFlags;
-		Base::EMemoryAccess::bits		access;
+		using EGpuMemory	= Platforms::EGpuMemory;
+		using EMemoryAccess	= Platforms::EMemoryAccess;
+
+	// variables
+		ModulePtr				gpuThread;
+		BytesUL					maxSize;
+		EGpuMemory::bits		memFlags;
+		EMemoryAccess::bits		access;
+		
+	// methods
+		GpuMemory (const ModulePtr &gpuThread, Bytes<ulong> maxSize, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+			gpuThread(gpuThread), maxSize(maxSize), memFlags(memFlags), access(access)
+		{}
+
+		GpuMemory (const ModulePtr &gpuThread, Bytes<uint> maxSize, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+			gpuThread(gpuThread), maxSize(maxSize), memFlags(memFlags), access(access)
+		{}
 	};
 	
 	/*struct GpuMemoryForObject
@@ -59,13 +73,13 @@ namespace CreateInfo
 }	// CreateInfo
 
 
-namespace ModuleMsg
+namespace GpuMsg
 {
 
 	//
 	// Make GPU Memory visible by CPU
 	//
-	struct MapGpuMemoryToCpu
+	struct MapMemoryToCpu
 	{
 		BytesUL			offset;
 		BytesUL			size;
@@ -75,14 +89,14 @@ namespace ModuleMsg
 	//
 	// Hide GPU Memory
 	//
-	struct UnmapGpuMemory
+	struct UnmapMemory
 	{};
 
 
 	//
 	// Flush GPU Memory Range
 	//
-	struct FlushGpuMemoryRange
+	struct FlushMemoryRange
 	{
 		BytesUL			offset;
 		BytesUL			size;
@@ -92,7 +106,7 @@ namespace ModuleMsg
 	//
 	// Copy GPU Memory
 	//
-	struct CopyGpuMemory
+	struct CopyMemory
 	{
 		ModulePtr		srcMemory;
 		BytesUL			srcOffset;
@@ -125,7 +139,7 @@ namespace ModuleMsg
 	//
 	// On GPU Memory Binding State Changed
 	//
-	struct OnGpuMemoryBindingChanged
+	struct OnMemoryBindingChanged
 	{
 	// types
 		enum class EBindingState
@@ -140,5 +154,5 @@ namespace ModuleMsg
 		EBindingState		newState;
 	};
 
-}	// ModuleMsg
+}	// GpuMsg
 }	// Engine

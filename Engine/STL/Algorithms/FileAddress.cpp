@@ -69,7 +69,8 @@ namespace GXTypes
 	{
 		const isize	name_pos = _SafeInc( _GetNamePos( filename ), filename );
 		const isize ext_pos  = _GetExtensionPos( filename );
-		return StringCRef( filename.cstr() + name_pos, GXMath::Max( ext_pos - name_pos, 0 ) );
+		const usize len		 = (ext_pos >= name_pos ? ext_pos - name_pos : filename.Length() - name_pos);
+		return StringCRef( filename.cstr() + name_pos, len );
 	}
 	
 /*
@@ -79,7 +80,8 @@ namespace GXTypes
 */
 	StringCRef  FileAddress::GetExtension (StringCRef filename)
 	{
-		const usize ext_pos = _SafeInc( _GetExtensionPos( filename ), filename );
+		const usize	name_pos = _SafeInc( _GetNamePos( filename ), filename );
+		const usize ext_pos  = GXMath::Max( name_pos, _SafeInc( _GetExtensionPos( filename ), filename ) );
 		return StringCRef( filename.ptr() + ext_pos, filename.Length() - ext_pos );
 	}
 	
@@ -375,7 +377,7 @@ namespace GXTypes
 */
 	void  FileAddress::AddNameToPath (INOUT String &path, StringCRef name)
 	{
-		return AddDirectoryToPath( path, name );
+		return AddDirectoryToPath( INOUT path, name );
 	}
 	
 /*
@@ -402,10 +404,10 @@ namespace GXTypes
 	BuildPath
 =================================================
 */
-	String &  FileAddress::BuildPath (OUT String &result, StringCRef path, StringCRef nameWithExt)
+	String  FileAddress::BuildPath (StringCRef path, StringCRef nameWithExt)
 	{
-		result = path;
-		AddNameToPath( result, nameWithExt );
+		String	result = path;
+		AddNameToPath( INOUT result, nameWithExt );
 		return result;
 	}
 
@@ -414,11 +416,11 @@ namespace GXTypes
 	BuildPath
 =================================================
 */
-	String &  FileAddress::BuildPath (OUT String &result, StringCRef path, StringCRef name, StringCRef ext)
+	String  FileAddress::BuildPath (StringCRef path, StringCRef name, StringCRef ext)
 	{
-		result = path;
-		AddNameToPath( result, name );
-		AddExtensionToName( result, ext );
+		String	result = path;
+		AddNameToPath( INOUT result, name );
+		AddExtensionToName( INOUT result, ext );
 		return result;
 	}
 

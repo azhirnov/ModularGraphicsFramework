@@ -4,6 +4,7 @@
 
 #include "Engine/Platforms/Shared/GPU/Context.h"
 #include "Engine/Platforms/OpenGL/OpenGLThread.h"
+#include "Engine/Platforms/Shared/GPU/Pipeline.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -47,8 +48,6 @@ namespace Platforms
 		OpenGLContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
 		~OpenGLContext ();
 		
-		static GModID::type		GetStaticID ()			{ return "gl4.ctx"_GModID; }
-		
 		static void Register (GlobalSystemsRef);
 		static void Unregister (GlobalSystemsRef);
 
@@ -61,6 +60,7 @@ namespace Platforms
 	private:
 		static ModulePtr _CreateOpenGLThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
 		static ModulePtr _CreateOpenGLContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
+		static ModulePtr _CreatePipelineTemplate (GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
 	};
 
 

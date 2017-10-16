@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/OpenGL/OpenGLThread.h"
 #include "Engine/Platforms/OpenGL/OpenGLContext.h"
-#include "Engine/Platforms/Windows/WinWindow.h"
+#include "Engine/Platforms/Windows/WinMessages.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -20,7 +20,7 @@ namespace Platforms
 =================================================
 */
 	OpenGLThread::OpenGLThread (const GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ GLThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_settings( ci.settings )
 	{
 		SetDebugName( "OpenGLThread" );
@@ -43,7 +43,7 @@ namespace Platforms
 
 		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
 
-		_AttachSelfToManager( ci.context, OpenGLContext::GetStaticID(), true );
+		_AttachSelfToManager( ci.context, GLContextModuleID, true );
 	}
 	
 /*
@@ -65,13 +65,19 @@ namespace Platforms
 */
 	bool OpenGLThread::_Link (const Message< ModuleMsg::Link > &msg)
 	{
-		CHECK_ERR( _IsMutableState( GetState() ) );
+		if ( _IsComposedOrLinkedState( GetState() ) )
+			return true;	// already linked
 
-		_window = _GetParents().Front()->GetModule( WinWindow::GetStaticID() );
-		CHECK_ERR( _window );
+		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+
+		// TODO: use SearchModule message
+		// TODO: reset to initial state if window was detached
+		_window = _GetParents().Front()->GetModuleByID( WinWindowModuleID );
+		CHECK_ATTACHMENT( _window );
 
 		_window->Subscribe( this, &OpenGLThread::_WindowCreated );
 		_window->Subscribe( this, &OpenGLThread::_WindowBeforeDestroy );
+		_window->Subscribe( this, &OpenGLThread::_WindowDescriptorChanged );
 		
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 
@@ -83,7 +89,7 @@ namespace Platforms
 
 			if ( request_hwnd->hwnd.Get().IsDefined() )
 			{
-				_SendMsg( Message< ModuleMsg::WindowCreated >{ WindowDesc(), request_hwnd->hwnd.Get() } );
+				_SendMsg< ModuleMsg::WindowCreated >({ WindowDesc(), request_hwnd->hwnd.Get() });
 			}
 		}
 		return true;
@@ -116,7 +122,7 @@ namespace Platforms
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
 		return true;
 	}
-	
+
 /*
 =================================================
 	_WindowCreated
@@ -126,7 +132,7 @@ namespace Platforms
 	{
 		if ( _CreateDevice( *msg ) )
 		{
-			CHECK( _Compose( true ) );
+			CHECK( _DefCompose( true ) );
 		}
 		else
 		{
@@ -146,7 +152,7 @@ namespace Platforms
 
 		CHECK_ERR( _device.Initialize() );
 
-		_SendEvent( Message< ModuleMsg::GpuDeviceCreated >{} );
+		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
 		return true;
 	}
 
@@ -159,7 +165,7 @@ namespace Platforms
 	{
 		if ( _device.IsInitialized() )
 		{
-			_SendEvent( Message< ModuleMsg::GpuDeviceBeforeDestory >{} );
+			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
 		}
 
 		_device.Deinitialize();
@@ -197,6 +203,20 @@ namespace Platforms
 			_window = null;
 		}
 	}
+	
+/*
+=================================================
+	_IsWindow
+=================================================
+*
+	bool OpenGLThread::_IsWindow (const ModulePtr &mod)
+	{
+		using WindowEventList_t		= MessageListFrom< ModuleMsg::WindowCreated, ModuleMsg::WindowBeforeDestroy >;
+		using WindowMsgList_t		= MessageListFrom< ModuleMsg::WindowGetHandle >;
+
+		return	mod->GetSupportedEvents().HasAllTypes< WindowEventList_t >() and
+				mod->GetSupportedMessages().HasAllTypes< WindowMsgList_t >();
+	}*/
 
 
 }	// Platforms

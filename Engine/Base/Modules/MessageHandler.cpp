@@ -24,6 +24,8 @@ namespace Base
 */
 	bool MessageHandler::Send (VariantCRef msgRef)
 	{
+		SCOPELOCK( _lock );
+
 		HandlersMap_t::iterator	iter;
 
 		if ( _handlers.Find( msgRef.GetValueTypeId(), OUT iter ) )
@@ -45,23 +47,9 @@ namespace Base
 */
 	void MessageHandler::Clear ()
 	{
-		_handlers.Clear();
-	}
-	
-/*
-=================================================
-	UnsubscribeAll
-=================================================
-*/
-	void MessageHandler::UnsubscribeAll (const ModulePtr &ptr)
-	{
-		FOR( i, _handlers )
-		{
-			// TODO: may be it is not a good idea
-			//CHECK_ERR( not _handlers[i].second.locked, void() );
+		SCOPELOCK( _lock );
 
-			_handlers[i].second->UnsubscribeAll( ptr );
-		}
+		_handlers.Clear();
 	}
 
 /*
@@ -73,6 +61,8 @@ namespace Base
 */
 	bool MessageHandler::Validate (const Runtime::VirtualTypeList &typelist) const
 	{
+		SCOPELOCK( _lock );
+
 		// is all handlers presented in typelist?
 		FOR( i, _handlers )
 		{
@@ -102,6 +92,8 @@ namespace Base
 */
 	bool MessageHandler::Validate (const Runtime::VirtualTypeList &msgTypes, const Runtime::VirtualTypeList &eventTypes) const
 	{
+		SCOPELOCK( _lock );
+
 		// is all handlers presented in typelist?
 		FOR( i, _handlers )
 		{

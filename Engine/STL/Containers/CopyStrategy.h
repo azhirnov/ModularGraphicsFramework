@@ -24,7 +24,7 @@ namespace GXTypes
 	{
 	
 		//
-		// Copy Strategy with MemCopy & MemMove
+		// Copy Strategy with MemMove
 		//
 
 		template <typename T>
@@ -33,6 +33,7 @@ namespace GXTypes
 			STATIC_ASSERT(	CompileTime::IsMemCopyAvailable<T> and
 							not CompileTime::IsNoncopyable<T> );
 
+			// create default elements
 			static void Create (T *ptr, usize count)
 			{
 				for (usize i = 0; i < count; ++i) {
@@ -47,6 +48,7 @@ namespace GXTypes
 				}
 			}
 
+			// copy elements from one memblock to other memblock
 			static void Copy (T *to, const T * const from, const usize count)
 			{
 				for (usize i = 0; i < count; ++i) {
@@ -54,6 +56,7 @@ namespace GXTypes
 				}
 			}
 
+			// move elements from one memblock to other memblock
 			static void Move (T *to, T *from, const usize count)
 			{
 				for (usize i = 0; i < count; ++i) {
@@ -61,9 +64,17 @@ namespace GXTypes
 				}
 			}
 			
+			// replace elements inside memory block
 			static void Replace (T *to, T *from, const usize count)
 			{
 				UnsafeMem::MemMove( to, from, SizeOf<T>() * count );
+
+				DEBUG_ONLY( 
+				for (T* t = from; t+1 < from + count; ++t) {
+					if (t < to or t >= to + count) {
+						UnsafeMem::ZeroMem( t, SizeOf<T>() );
+					}
+				})
 			}
 		};
 
@@ -79,7 +90,8 @@ namespace GXTypes
 			STATIC_ASSERT( (CompileTime::IsCtorAvailable<T> or
 							CompileTime::IsDtorAvailable<T>) and
 							not CompileTime::IsNoncopyable<T> );
-
+			
+			// create default elements
 			static void Create (T *ptr, usize count)
 			{
 				for (usize i = 0; i < count; ++i) {
@@ -93,14 +105,16 @@ namespace GXTypes
 					PlacementDelete( ptr[i] );
 				}
 			}
-
+			
+			// copy elements from one memblock to other memblock
 			static void Copy (T *to, const T * const from, const usize count)
 			{
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( to+i, from[i] );
 				}
 			}
-
+			
+			// move elements from one memblock to other memblock
 			static void Move (T *to, T *from, const usize count)
 			{
 				for (usize i = 0; i < count; ++i) {
@@ -108,11 +122,12 @@ namespace GXTypes
 				}
 			}
 			
+			// replace elements inside memory block
 			static void Replace (T *to, T *from, const usize count)
 			{
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( to+i, RVREF( from[i] ) );
-					PlacementDelete( from[i] );
+					PlacementDelete( from[i] );	// TODO: is it needed?
 				}
 			}
 		};
@@ -131,7 +146,8 @@ namespace GXTypes
 							not CompileTime::IsCtorAvailable<T>  and
 							not CompileTime::IsDtorAvailable<T>  and
 							not CompileTime::IsNoncopyable<T> );
-
+			
+			// create default elements
 			static void Create (T *ptr, usize count)
 			{
 				UnsafeMem::ZeroMem( ptr, SizeOf<T>() * count );
@@ -141,20 +157,30 @@ namespace GXTypes
 			{
 				DEBUG_ONLY( UnsafeMem::ZeroMem( ptr, SizeOf<T>() * count ) );
 			}
-
+			
+			// copy elements from one memblock to other memblock
 			static void Copy (T *to, const T * const from, const usize count)
 			{
 				UnsafeMem::MemCopy( to, from, SizeOf<T>() * count );
 			}
-
+			
+			// move elements from one memblock to other memblock
 			static void Move (T *to, T * from, const usize count)
 			{
 				UnsafeMem::MemMove( to, from, SizeOf<T>() * count );
 			}
 			
+			// replace elements inside memory block
 			static void Replace (T *to, T *from, const usize count)
 			{
 				Move( to, from, count );
+				
+				DEBUG_ONLY( 
+				for (T* t = from; t+1 < from + count; ++t) {
+					if (t < to or t >= to + count) {
+						UnsafeMem::ZeroMem( t, SizeOf<T>() );
+					}
+				})
 			}
 		};
 

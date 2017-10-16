@@ -1,16 +1,72 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Windows/WinKeyInput.h"
-#include "Engine/Platforms/Input/InputThread.h"
+#include "Engine/Platforms/Shared/OS/Input.h"
+#include "Engine/Platforms/Windows/WinMessages.h"
+#include "Engine/Platforms/Windows/WinPlatform.h"
 
 #if defined( PLATFORM_WINDOWS )
 
-#include <Windows.h>
+#include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace Engine
 {
 namespace Platforms
 {
+
+	//
+	// Windows Key Input
+	//
+
+	class WinKeyInput final : public Module
+	{
+	// types
+	private:
+		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
+											ModuleMsg::Compose
+										> >
+										::Append< MessageListFrom<
+											ModuleMsg::OnManagerChanged,
+											ModuleMsg::WindowDescriptorChanged,
+											ModuleMsg::WindowCreated,
+											ModuleMsg::WindowBeforeDestroy,
+											ModuleMsg::WindowRawMessage
+										> >;
+		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
+											ModuleMsg::InputKey
+										> >;
+
+		using Keys_t	= Array< ModuleMsg::InputKey >;	// TODO: use static array
+
+
+	// constants
+	private:
+		static const Runtime::VirtualTypeList	_msgTypes;
+		static const Runtime::VirtualTypeList	_eventTypes;
+
+		
+	// variables
+	private:
+		Keys_t		_pendingKeys;	// store keys and send in Update
+
+
+	// methods
+	public:
+		WinKeyInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
+		~WinKeyInput ();
+
+
+	// message handlers
+	private:
+		bool _WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &);
+		bool _WindowCreated (const Message< ModuleMsg::WindowCreated > &);
+		bool _WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &);
+		bool _WindowRawMessage (const Message< ModuleMsg::WindowRawMessage > &);
+		bool _Link (const Message< ModuleMsg::Link > &);
+		bool _Update (const Message< ModuleMsg::Update > &);
+	};
+//-----------------------------------------------------------------------------
+
+
 	
 	static KeyID::type _MapKey (const RAWKEYBOARD &);
 
@@ -23,7 +79,7 @@ namespace Platforms
 =================================================
 */
 	WinKeyInput::WinKeyInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ WinKeyInputModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "WinKeyInput" );
 
@@ -82,9 +138,9 @@ namespace Platforms
 		Rid[0].dwFlags		= 0;	// RIDEV_INPUTSINK | RIDEV_NOHOTKEYS | RIDEV_NOLEGACY | RIDEV_REMOVE;
 		Rid[0].hwndTarget	= msg->hwnd.Get<HWND>();
 
-		CHECK( RegisterRawInputDevices( &Rid[0], CountOf(Rid), sizeof(Rid[0]) ) == TRUE );
+		CHECK( RegisterRawInputDevices( &Rid[0], (UINT) CountOf(Rid), sizeof(Rid[0]) ) == TRUE );
 
-		CHECK( _Compose( true ) );
+		CHECK( _DefCompose( true ) );
 		return true;
 	}
 	
@@ -95,7 +151,7 @@ namespace Platforms
 */
 	bool WinKeyInput::_WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &msg)
 	{
-		_SendMsg( Message< ModuleMsg::Delete >{} );
+		_SendMsg< ModuleMsg::Delete >({});
 		return true;
 	}
 	
@@ -186,7 +242,7 @@ namespace Platforms
 
 		// attach to manager
 		{
-			ModulePtr	input = GlobalSystems()->Get< ParallelThread >()->GetModule( InputThread::GetStaticID() );
+			ModulePtr	input = GlobalSystems()->Get< ParallelThread >()->GetModuleByID( InputThreadModuleID );
 			CHECK_ERR( input );
 
 			_AttachSelfToManager( input, UntypedID_t(), true );
@@ -194,8 +250,10 @@ namespace Platforms
 
 		// subscribe on window events
 		{
-			ModulePtr	wnd = GlobalSystems()->Get< ParallelThread >()->GetModule( WinWindow::GetStaticID() );
-			CHECK_ERR( wnd );
+			// TODO: use SearchModule message
+			// TODO: reset to initial state if window was detached
+			ModulePtr	wnd = GlobalSystems()->Get< ParallelThread >()->GetModuleByID( WinWindowModuleID );
+			CHECK_ATTACHMENT( wnd );
 
 			if ( _IsComposedState( wnd->GetState() ) )
 			{
@@ -206,7 +264,7 @@ namespace Platforms
 				if ( request_hwnd->hwnd.IsDefined() and
 					 request_hwnd->hwnd.Get().IsNotNull<HWND>() )
 				{
-					_SendMsg( Message< ModuleMsg::WindowCreated >{ WindowDesc(), request_hwnd->hwnd.Get() } );
+					_SendMsg< ModuleMsg::WindowCreated >({ WindowDesc(), request_hwnd->hwnd.Get() });
 				}
 			}
 
@@ -229,7 +287,7 @@ namespace Platforms
 
 		FOR( i, _pendingKeys )
 		{
-			_SendEvent( Message< ModuleMsg::InputKey >{ _pendingKeys[i].key, _pendingKeys[i].pressure } );
+			_SendEvent< ModuleMsg::InputKey >({ _pendingKeys[i].key, _pendingKeys[i].pressure });
 		}
 
 		_pendingKeys.Clear();
@@ -432,7 +490,14 @@ namespace Platforms
 
 		return KeyID::Unknown;
 	}
+//-----------------------------------------------------------------------------
 
+
+	
+	ModulePtr WinPlatform::_CreateWinKeyInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
+	{
+		return New< WinKeyInput >( gs, ci );
+	}
 
 }	// Platforms
 }	// Engine

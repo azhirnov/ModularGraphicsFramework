@@ -38,8 +38,11 @@ namespace Base
 		
 		GlobalSystemsRef	GlobalSystems ()	const	{ return _globalSystems; }
 
-		StringCRef			GetDebugName ()		const	{ return _debugName; }
-
+		StringCRef			GetDebugName ()		const
+		{
+			DEBUG_ONLY( return _debugName; )
+			RELEASE_ONLY( return ""; )
+		}
 
 		virtual void SetDebugName (StringCRef name)
 		{
@@ -49,8 +52,8 @@ namespace Base
 
 	protected:
 		// helper to capture sender
-		template <typename MsgType>
-		bool SendTo (const ModulePtr &target, const MsgType &msg) const;
+		template <typename T>
+		bool SendTo (const ModulePtr &target, const Message<T> &msg) const;
 	};
 
 

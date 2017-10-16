@@ -19,10 +19,10 @@ namespace Platforms
 			//LazilyAllocated,
 
 			_Count,
-			Unknown = uint(-1)
+			Unknown = ~0u
 		};
 
-		using bits = EnumBitfield< EGpuMemory >;
+		GX_ENUM_BITFIELD( EGpuMemory );
 	};
 
 }	// Platforms

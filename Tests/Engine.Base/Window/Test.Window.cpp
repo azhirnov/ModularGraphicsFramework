@@ -21,16 +21,16 @@ public:
 	void Initialize (const ModulePtr &thread)
 	{
 		if ( not thread->GlobalSystems()->Get< TaskModule >() )
-			thread->AddModule( TaskModule::GetStaticID(), CreateInfo::TaskModule{ taskMngr } );
+			thread->AddModule( TaskModuleModuleID, CreateInfo::TaskModule{ taskMngr } );
 
-		thread->AddModule( "win.window"_TModID, CreateInfo::Window{ name } );
-		thread->AddModule( "input.thrd"_TModID, CreateInfo::InputThread() );
+		thread->AddModule( WinWindowModuleID, CreateInfo::Window{ name } );
+		thread->AddModule( InputThreadModuleID, CreateInfo::InputThread() );
 
-		auto	window	= thread->GetModule( "win.window"_TModID );
-		auto	input	= thread->GetModule( "input.thrd"_TModID );
+		auto	window	= thread->GetModuleByID( WinWindowModuleID );
+		auto	input	= thread->GetModuleByID( InputThreadModuleID );
 	
-		window->AddModule( "win.keys"_OModID, CreateInfo::RawInputHandler() );
-		window->AddModule( "win.mouse"_OModID, CreateInfo::RawInputHandler() );
+		window->AddModule( WinKeyInputModuleID, CreateInfo::RawInputHandler() );
+		window->AddModule( WinMouseInputModuleID, CreateInfo::RawInputHandler() );
 
 		window->Subscribe( this, &WindowApp::_OnWindowClosed );
 		window->Subscribe( this, &WindowApp::_OnWindowUpdate );
@@ -44,7 +44,7 @@ public:
 	// only for main thread
 	bool Update ()
 	{
-		GetMainSystemInstace()->Send( Message< ModuleMsg::Update >() );
+		GetMainSystemInstace()->Send< ModuleMsg::Update >({});
 		return looping;
 	}
 	
@@ -77,13 +77,13 @@ extern void Test_Window ()
 	
 	CHECK( ms->GlobalSystems()->Get< FileManager >()->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
 	
-	ms->AddModule( "win.platform"_GModID, CreateInfo::Platform() );
-	ms->AddModule( "input.mngr"_GModID, CreateInfo::InputManager() );
-	ms->AddModule( "stream.mngr"_GModID, CreateInfo::StreamManager() );
+	ms->AddModule( WinPlatformModuleID, CreateInfo::Platform() );
+	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager() );
+	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager() );
 	
 	{
 		auto	thread		= ms->GlobalSystems()->Get< ParallelThread >();
-		auto	task_mngr	= ms->GetModule( "task.mngr"_GModID );
+		auto	task_mngr	= ms->GetModuleByID( TaskManagerModuleID );
 
 		WindowAppPtr	app1 = New< WindowApp >( task_mngr, "window-0" );
 		WindowAppPtr	app2 = New< WindowApp >( task_mngr, "window-1" );
@@ -92,7 +92,7 @@ extern void Test_Window ()
 		
 		// create second thread with window
 		CHECK( ms->GlobalSystems()->Get< ModulesFactory >()->Create(
-					ParallelThread::GetStaticID(),
+					ParallelThreadModuleID,
 					ms->GlobalSystems(),
 					CreateInfo::Thread{
 						"SecondThread",
@@ -107,8 +107,7 @@ extern void Test_Window ()
 		thread = null;
 
 		// finish initialization
-		ms->Send( Message< ModuleMsg::Link >() );
-		ms->Send( Message< ModuleMsg::Compose >() );
+		ModuleUtils::Initialize({ ms });
 
 		// main loop
 		for (; app1->Update();) {}
@@ -116,7 +115,7 @@ extern void Test_Window ()
 		app1->Quit();
 	}
 
-	ms->Send( Message< ModuleMsg::Delete >() );
+	ms->Send< ModuleMsg::Delete >({});
 
 	WARNING( "Window test succeeded!" );
 }

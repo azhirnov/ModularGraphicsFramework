@@ -1,13 +1,78 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Base/Stream/InputStream.h"
+#include "Engine/Base/Stream/Stream.h"
+#include "Engine/Base/Modules/Module.h"
 #include "Engine/Base/Files/FileManager.h"
+#include "Engine/Base/Stream/StreamManager.h"
 
 namespace Engine
 {
 namespace Base
 {
 	using namespace GXMath;
+	
+	
+	//
+	// Input Stream Module
+	//
+
+	class InputStream final : public Module
+	{
+	// types
+	private:
+		using SupportedMessages_t	= MessageListFrom< 
+											ModuleMsg::AttachModule,
+											ModuleMsg::DetachModule,
+											ModuleMsg::OnModuleAttached,
+											ModuleMsg::OnModuleDetached,
+											ModuleMsg::FindModule,
+											ModuleMsg::ModulesDeepSearch,
+											ModuleMsg::Delete,
+											ModuleMsg::GetStreamDescriptor,
+											ModuleMsg::ReadFromStream
+										>;
+
+		using SupportedEvents_t		= MessageListFrom<
+											ModuleMsg::DataRegionChanged,
+											ModuleMsg::Delete
+										>;
+
+
+	// constants
+	private:
+		static const Runtime::VirtualTypeList	_msgTypes;
+		static const Runtime::VirtualTypeList	_eventTypes;
+
+
+	// variables
+	private:
+		File::RFilePtr	_file;
+		BinaryArray		_cache;
+
+
+	// methods
+	public:
+		InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci);
+		InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci);
+		InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci);
+		~InputStream ();
+
+
+	// message handlers
+	private:
+		bool _GetFileStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &);
+		bool _GetMemStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &);
+		bool _ReadFromFileStream (const Message< ModuleMsg::ReadFromStream > &);
+		bool _ReadFromMemStream (const Message< ModuleMsg::ReadFromStream > &);
+
+	private:
+		void _CreateCache ();
+
+		static BytesU	_MaxCacheSize ()	{ return BytesU::FromMb( 1 ); }
+	};
+//-----------------------------------------------------------------------------
+
+
 	
 	const Runtime::VirtualTypeList	InputStream::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const Runtime::VirtualTypeList	InputStream::_eventTypes{ UninitializedT< SupportedEvents_t >() };
@@ -18,7 +83,7 @@ namespace Base
 =================================================
 */
 	InputStream::InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ InputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -50,7 +115,7 @@ namespace Base
 =================================================
 */
 	InputStream::InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ InputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -83,7 +148,7 @@ namespace Base
 =================================================
 */
 	InputStream::InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ InputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -185,7 +250,7 @@ namespace Base
 
 		msg->result.Set( _cache.SubArray( 0, readn ) );
 
-		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ EMemoryAccess::CpuRead, offset, BytesU(readn) } );
+		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuRead, offset, BytesU(readn) });
 		return true;
 	}
 	
@@ -202,10 +267,31 @@ namespace Base
 
 		msg->result.Set( _cache.SubArray( usize(offset), usize(size) ) );
 
-		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ EMemoryAccess::CpuRead, offset, size } );
+		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuRead, offset, size });
 		return true;
 	}
+//-----------------------------------------------------------------------------
+	
+	
+/*
+=================================================
+	_CreateInputStream*
+=================================================
+*/
+	ModulePtr StreamManager::_CreateInStreamFromFile (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci)
+	{
+		return New< InputStream >( gs, ci );
+	}
+	
+	ModulePtr StreamManager::_CreateInStreamFromUri (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci)
+	{
+		return New< InputStream >( gs, ci );
+	}
 
+	ModulePtr StreamManager::_CreateInStreamFromMemory (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci)
+	{
+		return New< InputStream >( gs, ci );
+	}
 
 }	// Base
 }	// Engine

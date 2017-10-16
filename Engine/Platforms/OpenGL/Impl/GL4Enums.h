@@ -15,7 +15,7 @@
 #include "Engine/Platforms/Shared/GPU/RenderStateEnums.h"
 #include "Engine/Platforms/Shared/GPU/SamplerEnums.h"
 #include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
-#include "Engine/Platforms/Shared/GPU/TextureEnums.h"
+#include "Engine/Platforms/Shared/GPU/ImageEnums.h"
 #include "Engine/Platforms/Shared/GPU/VertexEnums.h"
 
 namespace Engine
@@ -39,26 +39,47 @@ namespace PlatformGL
 	enum GL4PixelFormat {};
 	enum GL4PixelType {};
 	enum GL4TextureTarget {};
+	enum GL4Shader {};
 
 	
+/*
+=================================================
+	Shader
+=================================================
+*/
+	inline GL4Shader GL4Enum (EShader::type value)
+	{
+		switch ( value )
+		{
+			case EShader::Vertex			:	return (GL4Shader) gl::GL_VERTEX_SHADER;
+			case EShader::TessControl		:	return (GL4Shader) gl::GL_TESS_CONTROL_SHADER;
+			case EShader::TessEvaluation	:	return (GL4Shader) gl::GL_TESS_EVALUATION_SHADER;
+			case EShader::Geometry			:	return (GL4Shader) gl::GL_GEOMETRY_SHADER;
+			case EShader::Fragment			:	return (GL4Shader) gl::GL_FRAGMENT_SHADER;
+			case EShader::Compute			:	return (GL4Shader) gl::GL_COMPUTE_SHADER;
+		}
+
+		RETURN_ERR( "invalid shader type", GL4Shader() );
+	}
+
 /*
 =================================================
 	TextureTarget
 =================================================
 */
-	inline GL4TextureTarget GL4Enum (ETexture::type value)
+	inline GL4TextureTarget GL4Enum (EImage::type value)
 	{
 		switch ( value )
 		{
-			case ETexture::Tex1D			:	return (GL4TextureTarget) gl::GL_TEXTURE_1D;
-			case ETexture::Tex2D			:	return (GL4TextureTarget) gl::GL_TEXTURE_2D;
-			case ETexture::Tex2DArray		:	return (GL4TextureTarget) gl::GL_TEXTURE_2D_ARRAY;
-			case ETexture::Tex2DMS			:	return (GL4TextureTarget) gl::GL_TEXTURE_2D_MULTISAMPLE;
-			case ETexture::Tex2DMSArray		:	return (GL4TextureTarget) gl::GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
-			case ETexture::TexCube			:	return (GL4TextureTarget) gl::GL_TEXTURE_CUBE_MAP;
-			case ETexture::TexCubeArray		:	return (GL4TextureTarget) gl::GL_TEXTURE_CUBE_MAP_ARRAY;
-			case ETexture::Tex3D			:	return (GL4TextureTarget) gl::GL_TEXTURE_3D;
-			case ETexture::Buffer			:	return (GL4TextureTarget) gl::GL_TEXTURE_BUFFER;
+			case EImage::Tex1D			:	return (GL4TextureTarget) gl::GL_TEXTURE_1D;
+			case EImage::Tex2D			:	return (GL4TextureTarget) gl::GL_TEXTURE_2D;
+			case EImage::Tex2DArray		:	return (GL4TextureTarget) gl::GL_TEXTURE_2D_ARRAY;
+			case EImage::Tex2DMS		:	return (GL4TextureTarget) gl::GL_TEXTURE_2D_MULTISAMPLE;
+			case EImage::Tex2DMSArray	:	return (GL4TextureTarget) gl::GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+			case EImage::TexCube		:	return (GL4TextureTarget) gl::GL_TEXTURE_CUBE_MAP;
+			case EImage::TexCubeArray	:	return (GL4TextureTarget) gl::GL_TEXTURE_CUBE_MAP_ARRAY;
+			case EImage::Tex3D			:	return (GL4TextureTarget) gl::GL_TEXTURE_3D;
+			case EImage::Buffer			:	return (GL4TextureTarget) gl::GL_TEXTURE_BUFFER;
 		}
 
 		RETURN_ERR( "invalid texture target", GL4TextureTarget() );

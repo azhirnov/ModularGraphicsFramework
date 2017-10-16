@@ -79,9 +79,12 @@ namespace GXTypes
 	{
 		template <typename T1, typename T2>
 		struct FB_IsRawTypesSame {
-			static const bool	value = CompileTime::IsSameTypes< T1, T2 > or
-										CompileTime::IsBaseOf< T1, T2 > or
-										CompileTime::IsBaseOf< T2, T1 >;
+			using Left	= TypeTraits::RemoveConstVolatile< T1 >;
+			using Right	= TypeTraits::RemoveConstVolatile< T2 >;
+
+			static const bool	value = CompileTime::IsSameTypes< Left, Right > or
+										CompileTime::IsBaseOf< Left, Right > or
+										CompileTime::IsBaseOf< Right, Left >;
 		};
 
 		template <typename T, typename C, bool IsPtr>

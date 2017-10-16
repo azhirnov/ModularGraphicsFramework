@@ -284,9 +284,9 @@ namespace GXTypes
 		T const		&	operator [] (usize i) const;
 
 		Self &			operator =  (const char *right)					{ Copy( TStringRef<const T>( right ) );	return *this; }
-		Self &			operator =  (TStringRef<const T> right)			{ Copy( right );			return *this; }
-		Self &			operator =  (const Self &right)					{ Copy( right );			return *this; }
-		Self &			operator =  (Self &&right)						{ _Move( RVREF(right) );	return *this; }
+		Self &			operator =  (TStringRef<const T> right)			{ Copy( right );					return *this; }
+		Self &			operator =  (const Self &right)					{ Copy( right );					return *this; }
+		Self &			operator =  (Self &&right)						{ Free();  _Move( RVREF(right) );	return *this; }
 
 		template <typename B>
 		Self &			operator =  (const B &right)					{ Copy( Self( right ) );	return *this; }
@@ -866,7 +866,7 @@ namespace GXTypes
 		if ( pos >= Length() or count == 0 )
 			RET_VOID;
 		
-		if ( pos + count > _length )
+		if ( pos + count > _length )	// TODO: check overflow
 			count = _length - pos;
 
 		_length -= count;
@@ -1356,7 +1356,7 @@ namespace GXTypes
 		typedef Hash< ArrayCRef<T> >		base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

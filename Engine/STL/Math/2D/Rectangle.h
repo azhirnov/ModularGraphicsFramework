@@ -385,7 +385,7 @@ namespace GXMath
 	template <typename T>
 	inline bool Rectangle<T>::IsInnerRect (const Self &other) const
 	{
-		// this other in other other	// autoreplace?		// TODO: fix comment
+		// this rect in other rect
 		return ( (left >= other.left) & (right <= other.right) & (bottom >= other.bottom) & (top <= other.top) );
 	}
 	
@@ -634,7 +634,7 @@ namespace GXTypes
 		typedef Hash< typename GXMath::Rectangle<T>::vec4_t >	base_t;
 		typedef typename base_t::result_t						result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x.ToVec4() );
 		}

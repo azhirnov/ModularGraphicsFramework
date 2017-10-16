@@ -178,7 +178,7 @@ namespace GXTypes
 		typedef Hash< typename key_t::value_t >		base_t;
 		typedef typename base_t::result_t			result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			// TODO: is min and max limits needed here?
 			return base_t::operator ()( x.Value() );

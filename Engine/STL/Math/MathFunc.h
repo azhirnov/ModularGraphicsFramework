@@ -44,12 +44,12 @@ namespace GXMath
 	// Compare operations
 	//
 	
-	template <typename T>				inline bool		All (const T& x);
-	template <typename T>				inline bool		Any (const T& x);
+	template <typename T>			constexpr bool		All (const T& x);
+	template <typename T>			constexpr bool		Any (const T& x);
 	//template <typename T>				inline bool		Most (const T& x);
-	template <typename T>				inline bool		IsZero (const T& x);
-	template <typename T>				inline bool		IsNotZero (const T& x);
-	template <typename T>				inline bool		Equals (const T& a, const T& b);
+	template <typename T>			constexpr bool		IsZero (const T& x);
+	template <typename T>			constexpr bool		IsNotZero (const T& x);
+	template <typename T>			constexpr bool		Equals (const T& a, const T& b);
 	
 
 

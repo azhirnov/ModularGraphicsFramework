@@ -2,8 +2,6 @@
 
 #include "Engine/Base/Stream/StreamManager.h"
 #include "Engine/Base/Main/MainSystem.h"
-#include "Engine/Base/Stream/InputStream.h"
-#include "Engine/Base/Stream/OutputStream.h"
 
 namespace Engine
 {
@@ -19,7 +17,7 @@ namespace Base
 =================================================
 */
 	StreamManager::StreamManager (const GlobalSystemsRef gs, const CreateInfo::StreamManager &info) :
-		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ StreamManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "StreamManager" );
 
@@ -55,12 +53,12 @@ namespace Base
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		CHECK( mf->Register( StreamManager::GetStaticID(), &_CreateStreamManager ) );
-		CHECK( mf->Register( InputStream::GetStaticID(), &_CreateInStreamFromFile ) );
-		CHECK( mf->Register( InputStream::GetStaticID(), &_CreateInStreamFromUri ) );
-		CHECK( mf->Register( InputStream::GetStaticID(), &_CreateInStreamFromMemory ) );
-		CHECK( mf->Register( OutputStream::GetStaticID(), &_CreateOutStreamFromFile ) );
-		CHECK( mf->Register( OutputStream::GetStaticID(), &_CreateOutStreamFromUri ) );
+		CHECK( mf->Register( StreamManagerModuleID, &_CreateStreamManager ) );
+		CHECK( mf->Register( InputStreamModuleID, &_CreateInStreamFromFile ) );
+		CHECK( mf->Register( InputStreamModuleID, &_CreateInStreamFromUri ) );
+		CHECK( mf->Register( InputStreamModuleID, &_CreateInStreamFromMemory ) );
+		CHECK( mf->Register( OutputStreamModuleID, &_CreateOutStreamFromFile ) );
+		CHECK( mf->Register( OutputStreamModuleID, &_CreateOutStreamFromUri ) );
 	}
 	
 /*
@@ -72,9 +70,9 @@ namespace Base
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		mf->UnregisterAll< StreamManager >();
-		mf->UnregisterAll< OutputStream >();
-		mf->UnregisterAll< InputStream >();
+		mf->UnregisterAll( StreamManagerModuleID );
+		mf->UnregisterAll( OutputStreamModuleID );
+		mf->UnregisterAll( InputStreamModuleID );
 	}
 	
 /*
@@ -85,56 +83,6 @@ namespace Base
 	ModulePtr StreamManager::_CreateStreamManager (GlobalSystemsRef gs, const CreateInfo::StreamManager &ci)
 	{
 		return New< StreamManager >( gs, ci );
-	}
-	
-/*
-=================================================
-	_CreateInStreamFromFile
-=================================================
-*/
-	ModulePtr StreamManager::_CreateInStreamFromFile (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci)
-	{
-		return New< InputStream >( gs, ci );
-	}
-	
-/*
-=================================================
-	_CreateInStreamFromUri
-=================================================
-*/
-	ModulePtr StreamManager::_CreateInStreamFromUri (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci)
-	{
-		return New< InputStream >( gs, ci );
-	}
-	
-/*
-=================================================
-	_CreateInStreamFromMemory
-=================================================
-*/
-	ModulePtr StreamManager::_CreateInStreamFromMemory (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci)
-	{
-		return New< InputStream >( gs, ci );
-	}
-	
-/*
-=================================================
-	_CreateOutStreamFromFile
-=================================================
-*/
-	ModulePtr StreamManager::_CreateOutStreamFromFile (GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci)
-	{
-		return New< OutputStream >( gs, ci );
-	}
-	
-/*
-=================================================
-	_CreateOutStreamFromUri
-=================================================
-*/
-	ModulePtr StreamManager::_CreateOutStreamFromUri (GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci)
-	{
-		return New< OutputStream >( gs, ci );
 	}
 
 }	// Base

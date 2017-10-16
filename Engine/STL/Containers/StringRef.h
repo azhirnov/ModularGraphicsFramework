@@ -103,7 +103,7 @@ namespace GXTypes
 
 		T		*	ptr ();
 		T const	*	ptr ()					const;
-		T const	*	cstr ()					const	{ return ptr(); }
+		T const	*	cstr ()					const	{ ASSERT( IsNullTerminated() ); return ptr(); }
 		
 		T		&	Back ()							{ return (*this)[ Length()-1 ]; }
 		T const	&	Back ()					const	{ return (*this)[ Length()-1 ]; }
@@ -286,7 +286,7 @@ namespace GXTypes
 		if ( Length() != right.Length() )
 			return false;
 
-		if ( right.ptr() == _memory or _count == 0 )
+		if ( _count == 0 or right.ptr() == _memory )
 			return true;
 
 		return _Equals( _memory, right.ptr(), Length() );
@@ -706,7 +706,7 @@ namespace GXTypes
 	template <typename T>
 	inline bool  TStringRef<T>::IsNullTerminated () const
 	{
-		return not Empty() and (*this)[ Length() ] == T(0);
+		return _memory == null or ( _count > 0 and (*this)[ _count-1 ] == T(0));
 	}
 
 /*
@@ -959,7 +959,7 @@ namespace GXTypes
 		typedef Hash< ArrayCRef<T> >		base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const TStringRef<T> &x) const
+		result_t operator () (const TStringRef<T> &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

@@ -117,14 +117,14 @@ namespace Base
 		template <typename ModIdType, typename CtorMsg>
 		bool Register (ModIdType id, ModulePtr (*ctor) (GlobalSystemsRef gs, const CtorMsg &));
 		
-		template <typename Class, typename CtorMsg>
-		bool Unregister ();
+		template <typename CtorMsg, typename ModIdType>
+		bool Unregister (ModIdType id);
 		
-		template <typename Class>
-		bool UnregisterAll ();
+		template <typename ModIdType>
+		bool UnregisterAll (ModIdType id);
 		
-		template <typename Class, typename CtorMsg>
-		bool IsRegistered () const;
+		template <typename CtorMsg, typename ModIdType>
+		bool IsRegistered (ModIdType id) const;
 
 		void Clear ();
 
@@ -170,10 +170,10 @@ namespace Base
 	Unregister
 =================================================
 */
-	template <typename Class, typename CtorMsg>
-	inline bool ModulesFactory::Unregister ()
+	template <typename CtorMsg, typename ModIdType>
+	inline bool ModulesFactory::Unregister (ModIdType id)
 	{
-		return _Unregister( Class::GetStaticID(), TypeIdOf<CtorMsg>() );
+		return _Unregister( id, TypeIdOf<CtorMsg>() );
 	}
 	
 /*
@@ -181,10 +181,10 @@ namespace Base
 	UnregisterAll
 =================================================
 */
-	template <typename Class>
-	inline bool ModulesFactory::UnregisterAll ()
+	template <typename ModIdType>
+	inline bool ModulesFactory::UnregisterAll (ModIdType id)
 	{
-		return _UnregisterAll( Class::GetStaticID() );
+		return _UnregisterAll( id );
 	}
 
 /*
@@ -192,10 +192,10 @@ namespace Base
 	IsRegistered
 =================================================
 */
-	template <typename Class, typename CtorMsg>
-	inline bool ModulesFactory::IsRegistered () const
+	template <typename CtorMsg, typename ModIdType>
+	inline bool ModulesFactory::IsRegistered (ModIdType id) const
 	{
-		return _IsRegistered( Class::GetStaticID(), TypeIdOf<CtorMsg>() );
+		return _IsRegistered( id, TypeIdOf<CtorMsg>() );
 	}
 	
 /*
@@ -254,7 +254,7 @@ namespace Base
 		ModulePtr	unit;
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create( id, GlobalSystems(), createInfo, OUT unit ) );
 
-		CHECK_ERR( _SendMsg( Message< ModuleMsg::AttachModule >{ name, unit }.From( this ) ) );
+		CHECK_ERR( _SendMsg< ModuleMsg::AttachModule >({ name, unit }) );
 		return true;
 	}
 

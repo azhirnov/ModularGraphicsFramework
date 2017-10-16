@@ -10,6 +10,9 @@
     <Filter Include="Window">
       <UniqueIdentifier>{f35d16bf-f8bc-4ec7-a150-77fd03f5a523}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Pipelines">
+      <UniqueIdentifier>{a88667d4-bedc-4320-b8ff-cadd02f17cd8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Tests\Engine.Base\Window\Test.Window.cpp">
@@ -28,6 +31,9 @@
     <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\Test.VkWindow.cpp">
       <Filter>Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Pipelines\default.cpp">
+      <Filter>Pipelines</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.h">
@@ -37,5 +43,14 @@
       <Filter>OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Tests\Engine.Base\Common.h" />
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\all_pipelines.h">
+      <Filter>Pipelines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\common.h">
+      <Filter>Pipelines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\shared_types.h">
+      <Filter>Pipelines</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

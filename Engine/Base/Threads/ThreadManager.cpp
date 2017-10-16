@@ -2,7 +2,7 @@
 
 #include "Engine/Base/Threads/ThreadManager.h"
 #include "Engine/Base/Modules/ModulesFactory.h"
-#include "Engine/Base/Tasks/TaskManager.h"
+#include "Engine/Base/Modules/ModuleUtils.h"
 #include "Engine/Base/Main/MainSystem.h"
 
 namespace Engine
@@ -19,7 +19,7 @@ namespace Base
 =================================================
 */
 	ThreadManager::ThreadManager (const GlobalSystemsRef gs, const CreateInfo::ThreadManager &info) :
-		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ ThreadManagerModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_currentThread( gs, CreateInfo::Thread{ "MainThread", null } )
 	{
 		SetDebugName( "ThreadManager" );
@@ -36,12 +36,14 @@ namespace Base
 		_SubscribeOnMsg( this, &ThreadManager::_Delete );
 		//_SubscribeOnMsg( this, &ThreadManager::_FindThread );
 		_SubscribeOnMsg( this, &ThreadManager::_AddToManager );
+		_SubscribeOnMsg( this, &ThreadManager::_AddThreadToManager );
 		_SubscribeOnMsg( this, &ThreadManager::_RemoveFromManager );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 		
 		_currentThread._SetManager( this );
-		CHECK( SendTo( this, Message< ModuleMsg::AddToManager >{ &_currentThread } ) );
+		CHECK( SendTo< ModuleMsg::AddThreadToManager >( this, 
+					{&_currentThread, DelegateBuilder( &_currentThread, &ParallelThreadImpl::_Wait )} ) );
 	}
 	
 /*
@@ -77,7 +79,7 @@ namespace Base
 
 		FOR( i, _threads )
 		{
-			_threads[i].second.ToPtr< ParallelThread >()->_thread.Wait();
+			_threads[i].second.wait();
 		}
 
 		_threads.Clear();
@@ -91,21 +93,23 @@ namespace Base
 */
 	bool ThreadManager::SendToAllThreads (CallInThreadFunc_t func)
 	{
+		using TaskMngrMsgList = MessageListFrom< ModuleMsg::AddTaskSchedulerToManager >;
+
 		SCOPELOCK( _lock );
 
-		auto	task_mngr = GlobalSystems()->Get< MainSystem >()->GetModule( TaskManager::GetStaticID() ).ToPtr< TaskManager >();
+		auto	task_mngr = GlobalSystems()->Get< MainSystem >()->GetModuleByMsgList< TaskMngrMsgList >();
 		CHECK_ERR( task_mngr );
 
 		FOR( i, _threads )
 		{
-			task_mngr->PushAsyncMessage( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( task_mngr->Send( Message< ModuleMsg::PushAsyncMessage >{
 					AsyncMessage{
-						LAMBDA( func, mngr = ModulePtr(this), thread = _threads[i].second ) (const TaskModulePtr &task) {
+						LAMBDA( func, mngr = ModulePtr(this), thread = _threads[i].second.thread ) (const TaskModulePtr &task) {
 							func( mngr, thread, task );
 					} },
 					_threads[i].first
-				}.From( this )
-			);
+				}.From( this ).Async()
+			));
 		}
 		return true;
 	}
@@ -130,7 +134,7 @@ namespace Base
 */
 	bool ThreadManager::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
-		CHECK_ERR( Module::_Compose_Impl( msg ) );
+		CHECK_ERR( Module::_DefCompose( false ) );
 		
 		SendTo( &_currentThread, msg );
 
@@ -160,13 +164,22 @@ namespace Base
 */
 	bool ThreadManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
 	{
+		RETURN_ERR( "use 'AddThreadToManager' instead of 'AddToManager'" );
+	}
+	
+/*
+=================================================
+	_AddThreadToManager
+=================================================
+*/
+	bool ThreadManager::_AddThreadToManager (const Message< ModuleMsg::AddThreadToManager > &msg)
+	{
 		SCOPELOCK( _lock );
 
 		CHECK_ERR( msg->module );
 		ASSERT( not _threads.IsExist( msg->module->GetThreadID() ) );
-		CHECK_ERR( msg->module->GetModuleID() == ParallelThread::GetStaticID() );
 
-		_threads.Add( msg->module->GetThreadID(), msg->module );
+		_threads.Add( msg->module->GetThreadID(), { msg->module, RVREF(msg->wait.Get()) } );
 		return true;
 	}
 
@@ -181,9 +194,14 @@ namespace Base
 
 		CHECK_ERR( msg->module );
 		ASSERT( _threads.IsExist( msg->module->GetThreadID() ) );
-		CHECK_ERR( msg->module->GetModuleID() == ParallelThread::GetStaticID() );
 
-		_threads.Erase( msg->module->GetThreadID() );
+		usize	idx;
+		if ( _threads.FindIndex( msg->module->GetThreadID(), OUT idx ) )
+		{
+			ASSERT( _threads[idx].second.thread == msg->module );
+
+			_threads.EraseFromIndex( idx );
+		}
 		return true;
 	}
 
@@ -196,7 +214,7 @@ namespace Base
 	{
 		return true;
 	}
-
+	
 /*
 =================================================
 	CreateParallelThreadData
@@ -209,6 +227,7 @@ namespace Base
 		OS::Thread					thread;
 		OS::SyncEvent				sync;
 		ModulePtr					result;
+		Delegate<void ()>			waitFunc;
 		Ptr< MainSystem >			main;
 		Ptr< ModulesFactory >		factory;
 		Ptr< FileManager >			fileMngr;
@@ -234,17 +253,17 @@ namespace Base
 		ModulePtr	mngr = ci.manager;
 
 		// get manager from current thread
-		if ( not mngr and gs->Get< ParallelThread >() )
+		/*if ( not mngr and gs->Get< ParallelThread >() )
 		{
-			mngr = gs->Get< ParallelThread >()->_GetManager();
-		}
+			mngr = gs->Get< ParallelThread >()->_GetManager();	// TODO
+		}*/
 
 		// get manager from global variable
 		if ( not mngr and
 			 gs->Get< MainSystem >() and
 			 gs->Get< MainSystem >()->GetThreadID() == ThreadID::GetCurrent() )
 		{
-			mngr = gs->Get< MainSystem >()->GetModule( ThreadManager::GetStaticID() );
+			mngr = gs->Get< MainSystem >()->GetModuleByID( ThreadManagerModuleID );
 		}
 
 		CHECK_ERR( mngr );
@@ -259,11 +278,11 @@ namespace Base
 		// data will changed in other thread, so we can't modify anything, you should wait for signal.
 		CHECK_ERR( data.sync.Wait( TimeL::FromSeconds( 10 ) ) );
 		
-		CHECK( mngr->Send( Message< ModuleMsg::AddToManager >{ data.result } ) );
+		CHECK( mngr->Send< ModuleMsg::AddThreadToManager >({ data.result, RVREF(data.waitFunc) }) );
 		
 		return data.result;
 	}
-	
+
 /*
 =================================================
 	_CreateThreadManager
@@ -283,8 +302,8 @@ namespace Base
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		CHECK( mf->Register( ParallelThread::GetStaticID(), &_CreateParallelThread ) );
-		CHECK( mf->Register( ThreadManager::GetStaticID(), &_CreateThreadManager ) );
+		CHECK( mf->Register( ParallelThreadModuleID, &_CreateParallelThread ) );
+		CHECK( mf->Register( ThreadManagerModuleID, &_CreateThreadManager ) );
 	}
 	
 /*
@@ -296,8 +315,8 @@ namespace Base
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
-		mf->UnregisterAll< ParallelThread >();
-		mf->UnregisterAll< ThreadManager >();
+		mf->UnregisterAll( ParallelThreadModuleID );
+		mf->UnregisterAll( ThreadManagerModuleID );
 	}
 
 /*
@@ -307,8 +326,8 @@ namespace Base
 */
 	void ThreadManager::_RunAsync (void *d)
 	{
-		GlobalSubSystems	global_sys;
-		ParallelThreadPtr	pt;
+		GlobalSubSystems		global_sys;
+		ParallelThreadImplPtr	pt;
 
 		// in this scope 'data' is valid, after call data.sync.Signal() 'data' may be invalidated
 		{
@@ -318,11 +337,13 @@ namespace Base
 			global_sys.GetSetter< ModulesFactory >().Set( data.factory );
 			global_sys.GetSetter< FileManager >().Set( data.fileMngr );
 
-			pt = New< ParallelThread >( GlobalSystemsRef(global_sys), data.info );
+			pt = New< ParallelThreadImpl >( GlobalSystemsRef(global_sys), data.info );
 
-			pt->_thread = RVREF( data.thread );
+			pt->_thread		= RVREF( data.thread );
 
-			data.result = pt;
+			data.result		= pt;
+			data.waitFunc	= DelegateBuilder( pt, &ParallelThreadImpl::_Wait );
+
 			pt->_SetManager( data.info.manager );
 
 			data.sync.Signal();
@@ -330,12 +351,11 @@ namespace Base
 		
 		pt->_OnEnter();
 
-		pt->Send( Message< ModuleMsg::Link >{}.From( pt->_GetManager() ) );
-		pt->Send( Message< ModuleMsg::Compose >{}.From( pt->_GetManager() ) );
+		ModuleUtils::Initialize( {pt}, pt->_GetManager() );
 
 		pt->_Loop();
 
-		ModulePtr	task_mod = pt->GetModule( TaskModule::GetStaticID() );
+		ModulePtr	task_mod = pt->GetModuleByID( TaskModuleModuleID );
 
 		pt->_OnExit();
 

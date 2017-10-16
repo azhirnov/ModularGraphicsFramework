@@ -241,6 +241,12 @@ namespace CompileTime
 	};
 
 
+	template <typename A, typename B>
+	inline usize constexpr Offsetof (A B::*member)
+	{
+		constexpr B object {};
+		return usize(&(object.*member)) - usize(&object);
+	}
 
 }	// CompileTime
 }	// GX_STL

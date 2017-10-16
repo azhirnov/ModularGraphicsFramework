@@ -20,7 +20,7 @@ namespace _types_hidden_
 				typename S,
 				typename MC
 			 >
-	struct BaseSet : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, MC >
+	struct BaseSet : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, MC >	// TODO: copy qualifiers from _MapUtils_t
 	{
 	// types
 	public:
@@ -360,7 +360,7 @@ namespace _types_hidden_
 		typedef Hash< ArrayCRef<Value> >							base_t;
 		typedef typename base_t::result_t							result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

@@ -8,15 +8,24 @@
 
 namespace Engine
 {
-namespace ModuleMsg
+namespace GpuMsg
 {
+
+	//
+	// Get Logic Device
+	//
+	struct GetVkLogicDevice
+	{
+		Out< vk::VkDevice >			result;
+	};
+
 
 	//
 	// Get GPU Buffer ID
 	//
 	struct GetVkBufferID
 	{
-		Out< vk::VkBuffer >		result;
+		Out< vk::VkBuffer >			result;
 	};
 	
 
@@ -36,7 +45,45 @@ namespace ModuleMsg
 	{
 		Out< vk::VkPipeline >		result;
 	};
+
+
+	//
+	// Get GPU Compute Pipeline ID
+	//
+	struct GetVkComputePipelineID
+	{
+		Out< vk::VkPipeline >		result;
+	};
 	
+
+	//
+	// Get GPU Pipeline Layout
+	//
+	struct GetVkPipelineLayoutID
+	{
+		Out< vk::VkPipelineLayout >	result;
+	};
+
+
+	//
+	// Get Descriptor Layout IDs
+	//
+	struct GetVkDescriptorLayouts
+	{
+		using IDs	= FixedSizeArray< vk::VkDescriptorSetLayout, 8 >;
+
+		Out< IDs >					result;
+	};
+
+
+	//
+	// Get GPU Pipeline Resource Table ID (DescriptorSet)
+	//
+	struct GetVkPipelineResourceTableID
+	{
+		Out< vk::VkDescriptorSet >	result;
+	};
+
 
 	//
 	// Get GPU Render Pass ID
@@ -52,26 +99,26 @@ namespace ModuleMsg
 	//
 	struct GetVkSamplerID
 	{
-		Out< vk::VkSampler >	result;
+		Out< vk::VkSampler >		result;
 	};
 
 
 	//
-	// Get GPU Texture ID
+	// Get GPU Image ID
 	//
-	struct GetVkTextureID
+	struct GetVkImageID
 	{
-		Out< vk::VkImage >		result;
-		Out< vk::VkImageView >	defaultView;
+		Out< vk::VkImage >			result;
+		Out< vk::VkImageView >		defaultView;
 	};
 
 
 	//
-	// Get GPU Texture View
+	// Get GPU Image View
 	//
-	struct GetVkTextureView
+	struct GetVkImageView
 	{
-		Out< vk::VkImageView >	result;
+		Out< vk::VkImageView >		result;
 	};
 
 
@@ -96,52 +143,20 @@ namespace ModuleMsg
 	//
 	struct GetVkCommandBufferID
 	{
-		Out< vk::VkCommandBuffer >	result;
+		Out< vk::VkCommandBuffer >		result;
 	};
 
 
-	struct GpuCmdBeginRenderPassID
+	//
+	// Get GPU Command Pool ID
+	//
+	struct GetVkCommandPoolID
 	{
-		// TODO
-	};
-
-	struct GpuCmdBindGraphicsPipelineID
-	{
-		// TODO
-	};
-
-	struct GpuCmdBindComputePipelineID
-	{
-		// TODO
-	};
-
-	struct GpuCmdBindVertexBufferIDs
-	{
-		// TODO
-	};
-	
-	struct GpuCmdBindIndexBufferID
-	{
-		// TODO
-	};
-
-	struct GpuCmdDrawIndirectID
-	{
-		// TODO
-	};
-
-	struct GpuCmdDrawIndexedIndirectID
-	{
-		// TODO
-	};
-
-	struct GpuCmdExecuteID
-	{
-		// TODO
+		Out< vk::VkCommandPool >		result;
 	};
 
 
-}	// ModuleMsg
+}	// GpuMsg
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN

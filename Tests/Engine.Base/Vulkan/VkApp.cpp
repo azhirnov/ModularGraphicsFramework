@@ -1,6 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "VkApp.h"
+#include "../Pipelines/all_pipelines.h"
 
 
 VkApp::VkApp ()
@@ -13,23 +14,23 @@ VkApp::VkApp ()
 
 void VkApp::Initialize ()
 {
-	ms->AddModule( "win.platform"_GModID, CreateInfo::Platform() );
-	ms->AddModule( "input.mngr"_GModID, CreateInfo::InputManager() );
-	ms->AddModule( "stream.mngr"_GModID, CreateInfo::StreamManager() );
-	ms->AddModule( "vk1.ctx"_GModID, CreateInfo::GpuContext() );
+	ms->AddModule( WinPlatformModuleID, CreateInfo::Platform() );
+	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager() );
+	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager() );
+	ms->AddModule( VkContextModuleID, CreateInfo::GpuContext() );
 
 	auto	thread	= ms->GlobalSystems()->Get< ParallelThread >();
 	
-	thread->AddModule( "win.window"_TModID, CreateInfo::Window() );
-	thread->AddModule( "input.thrd"_TModID, CreateInfo::InputThread() );
-	thread->AddModule( "vk1.thrd"_TModID, CreateInfo::GpuThread() );
+	thread->AddModule( WinWindowModuleID, CreateInfo::Window() );
+	thread->AddModule( InputThreadModuleID, CreateInfo::InputThread() );
+	thread->AddModule( VkThreadModuleID, CreateInfo::GpuThread() );
 
-	auto	window		= thread->GetModule( "win.window"_TModID );
-	auto	input		= thread->GetModule( "input.thrd"_TModID );
-	auto	vkthread	= thread->GetModule( "vk1.thrd"_TModID );
+	auto	window		= thread->GetModuleByID( WinWindowModuleID );
+	auto	input		= thread->GetModuleByID( InputThreadModuleID );
+	auto	vkthread	= thread->GetModuleByID( VkThreadModuleID );
 
-	window->AddModule( "win.keys"_OModID, CreateInfo::RawInputHandler() );
-	window->AddModule( "win.mouse"_OModID, CreateInfo::RawInputHandler() );
+	window->AddModule( WinKeyInputModuleID, CreateInfo::RawInputHandler() );
+	window->AddModule( WinMouseInputModuleID, CreateInfo::RawInputHandler() );
 
 	window->Subscribe( this, &VkApp::_OnWindowClosed );
 	input->Subscribe( this, &VkApp::_OnKey );
@@ -39,21 +40,42 @@ void VkApp::Initialize ()
 	vkthread->Subscribe( this, &VkApp::_VkDelete );
 
 	// finish initialization
-	ms->Send( Message< ModuleMsg::Link >() );
-	ms->Send( Message< ModuleMsg::Compose >() );
+	ModuleUtils::Initialize({ ms });
 }
 
 
 void VkApp::Quit ()
 {
+	Message< ModuleMsg::Delete >	del_msg;
+
+	if ( pipelineTemplate )
+		pipelineTemplate->Send( del_msg );
+
+	auto	thread		= ms->GlobalSystems()->Get< ParallelThread >();
+	auto	window		= thread->GetModuleByID( WinWindowModuleID );
+	auto	input		= thread->GetModuleByID( InputThreadModuleID );
+	auto	vkthread	= thread->GetModuleByID( VkThreadModuleID );
+
+	if ( window )
+		window->UnsubscribeAll( this );
+	
+	if ( input )
+		input->UnsubscribeAll( this );
+	
+	if ( vkthread )
+		vkthread->UnsubscribeAll( this );
+
 	looping = false;
 }
 
 
 bool VkApp::Update ()
 {
-	ms->Send( Message< ModuleMsg::Update >() );
-	return looping;
+	if ( not looping )
+		return false;
+
+	ms->Send< ModuleMsg::Update >({});
+	return true;
 }
 
 
@@ -83,152 +105,191 @@ bool VkApp::_OnMotion (const Message< ModuleMsg::InputMotion > &msg)
 
 bool VkApp::_Draw (const Message< ModuleMsg::Update > &msg)
 {
-	auto	vkthread	= ms->GlobalSystems()->Get< ParallelThread >()->GetModule( "vk1.thrd"_TModID );
+	if ( not looping )
+		return false;
 
-	Message< ModuleMsg::GpuThreadBeginFrame >	begin_frame;
+	auto	vkthread	= ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( VkThreadModuleID );
+
+	Message< GpuMsg::ThreadBeginFrame >	begin_frame;
 	vkthread->Send( begin_frame );
 
-	ModulePtr	framebuffer	= begin_frame->framebuffer.Get();
-	ModulePtr	builder		= begin_frame->commandBuilder.Get();
-	ModulePtr	render_pass	= framebuffer->GetModule< ModuleMsg::GetVkRenderPassID >();
+	ModulePtr	framebuffer	= begin_frame->result->framebuffer;
+	ModulePtr	builder		= begin_frame->result->commandBuilder;
+	ModulePtr	render_pass	= framebuffer->GetModuleByMsg< GpuMsg::GetVkRenderPassID >();
 
-	Message< ModuleMsg::GetGpuFramebufferDescriptor >	fb_descr_request;
+	Message< GpuMsg::GetFramebufferDescriptor >	fb_descr_request;
 	framebuffer->Send( fb_descr_request );
 
 	auto const&	fb_descr	= fb_descr_request->result.Get();
 	RectU		area		= RectU( 0, 0, fb_descr.size.x, fb_descr.size.y );
 
-	builder->Send( Message< ModuleMsg::GpuCmdBegin >{} );
-	builder->Send( Message< ModuleMsg::GpuCmdBeginRenderPass >{ render_pass, framebuffer, area } );
-	builder->Send( Message< ModuleMsg::GpuCmdBindPipeline >{ graphicsPipeline } );
-	builder->Send( Message< ModuleMsg::GpuCmdSetViewport >{ uint2(), fb_descr.size, float2(0.0f, 1.0f) } );
-	builder->Send( Message< ModuleMsg::GpuCmdSetScissor >{ area } );
-	builder->Send( Message< ModuleMsg::GpuCmdDraw >{ 3u, 1u } );
-	builder->Send( Message< ModuleMsg::GpuCmdEndRenderPass >{} );
+	builder->Send< GpuMsg::CmdBegin >({ false, cmdBuffers[cmdBufIndex++ % cmdBuffers.Count()] });
 
-	Message< ModuleMsg::GpuCmdEnd >	cmd_end = {};
+	// clear image
+	{
+		builder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::bits() | EPipelineStage::Transfer,
+					  EImageLayout::Undefined, EImageLayout::TransferDstOptimal, texture, EImageAspect::bits() | EImageAspect::Color });
+
+		builder->Send< GpuMsg::CmdClearColorImage >({ texture, EImageLayout::TransferDstOptimal, float4(0.5f) });
+
+		builder->Send< GpuMsg::CmdPipelineBarrier >({  EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::AllGraphics,
+					  EImageLayout::TransferDstOptimal, EImageLayout::ShaderReadOnlyOptimal, texture, EImageAspect::bits() | EImageAspect::Color });
+	}
+
+	builder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, framebuffer, area });
+	builder->Send< GpuMsg::CmdBindGraphicsPipeline >({ graphicsPipeline });
+	builder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ resourceTable });
+	builder->Send< GpuMsg::CmdSetViewport >({ uint2(), fb_descr.size, float2(0.0f, 1.0f) });
+	builder->Send< GpuMsg::CmdSetScissor >({ area });
+	builder->Send< GpuMsg::CmdDraw >({ 3u, 1u });
+	builder->Send< GpuMsg::CmdEndRenderPass >({});
+
+	Message< GpuMsg::CmdEnd >	cmd_end = {};
 	builder->Send( cmd_end );
 
-	vkthread->Send( Message< ModuleMsg::GpuThreadEndFrame >{ framebuffer,
-															 InitializerList<ModulePtr>{ cmd_end->cmdBuffer.Get(null) }
-	} );
+	vkthread->Send< GpuMsg::ThreadEndFrame >({ framebuffer, InitializerList<ModulePtr>{ cmd_end->cmdBuffer.Get(null) } });
 	return true;
 }
 
 
 bool VkApp::_CreatePipeline ()
 {
+	auto	vkthread = ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( VkThreadModuleID );
 	auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
 
-	CHECK_ERR( factory->Create(
-					"vk1.shaders"_OModID,
-					ms->GlobalSystems(),
-					CreateInfo::GpuShaderModulesFromFile{
-						null,
-						{ "Vulkan/shader.spv.frag"_str, "Vulkan/shader.spv.vert"_str }
-					},
-					OUT shaderModules )
-	);
-
-	GraphicsPipelineDescriptor	descr;
-
-	descr.patchControlPoints	= 0;
-	descr.dynamicStates			= EPipelineDynamicState::bits() | EPipelineDynamicState::Viewport | EPipelineDynamicState::Scissor;
-
-	descr.renderState.inputAssembly.topology	= EPrimitive::TriangleList;
-	descr.renderState.rasterization.polygonMode	= EPolygonMode::Fill;
-
+	CreateInfo::PipelineTemplate	pp_templ;
+	Pipelines::Create_default( OUT pp_templ.descr );
 
 	CHECK_ERR( factory->Create(
-					"vk1.g-ppln"_OModID,
+					PipelineTemplateModuleID,
 					ms->GlobalSystems(),
-					CreateInfo::GraphicsPipeline{
-						null,
-						descr,
-						shaderModules,
-						null,
-						0
-					},
-					OUT graphicsPipeline )
+					pp_templ,
+					OUT pipelineTemplate )
 	);
+
+	Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
+
+	create_gpp->gpuThread	= vkthread;
+	create_gpp->topology	= EPrimitive::TriangleList;
+	
+	pipelineTemplate->Send( create_gpp );
+	graphicsPipeline = create_gpp->result.Get();
+
+	CHECK_ERR( factory->Create(
+					VkPipelineResourceTableModuleID,
+					ms->GlobalSystems(),
+					CreateInfo::PipelineResourceTable(),
+					OUT resourceTable )
+	);
+
+	resourceTable->Send< ModuleMsg::AttachModule >({ "pipeline", graphicsPipeline });
+	resourceTable->Send< ModuleMsg::AttachModule >({ "un_ColorTexture", texture });
+	resourceTable->Send< ModuleMsg::AttachModule >({ "un_ColorTexture.sampler", sampler });
 	return true;
 }
 
 
-bool VkApp::_VkInit (const Message< ModuleMsg::GpuDeviceCreated > &msg)
+bool VkApp::_CreateCmdBuffers ()
 {
-	auto	vkthread = ms->GlobalSystems()->Get< ParallelThread >()->GetModule( "vk1.thrd"_TModID );
-	auto	factory	 = vkthread->GlobalSystems()->Get< ModulesFactory >();
+	auto	vkthread = ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( VkThreadModuleID );
+	auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
 
-	CHECK_ERR( _CreatePipeline() );
-	
-	/*CHECK_ERR( vkthread->GlobalSystems()->Get< ModulesFactory >()->Create(
-					"vk1.cmdbld"_OModID,
+	CHECK_ERR( factory->Create(
+					VkCommandBuilderModuleID,
 					vkthread->GlobalSystems(),
 					CreateInfo::GpuCommandBuilder{ vkthread },
-					OUT commandBuilder ) );*/
+					OUT cmdBuilder )
+	);
+	
+	cmdBufIndex = 0;
+	cmdBuffers.Resize( 6 );
+
+	FOR( i, cmdBuffers )
+	{
+		CHECK_ERR( factory->Create(
+						VkCommandBufferModuleID,
+						vkthread->GlobalSystems(),
+						CreateInfo::GpuCommandBuffer{ vkthread },
+						OUT cmdBuffers[i] )
+		);
+		cmdBuilder->Send< ModuleMsg::AttachModule >({ ""_str << i, cmdBuffers[i] });
+	}
+	return true;
+}
+
+
+bool VkApp::_VkInit (const Message< GpuMsg::DeviceCreated > &msg)
+{
+	auto	vkthread = ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( VkThreadModuleID );
+	auto	factory	 = vkthread->GlobalSystems()->Get< ModulesFactory >();
 
 	ModulePtr	texmem_module;
 	ModulePtr	bufmem_module;
-	ModulePtr	tex_module;
 	ModulePtr	buf_module;
 
 	CHECK_ERR( factory->Create(
-					"vk1.memory"_OModID,
+					VkMemoryModuleID,
 					vkthread->GlobalSystems(),
 					CreateInfo::GpuMemory{	vkthread,
-											BytesUL::FromMb( 128 ),
+											128_Mb,
 											EGpuMemory::bits() | EGpuMemory::LocalInGPU,
-											EMemoryAccess::bits() | EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
+											EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
 					OUT texmem_module ) );
 
 	CHECK_ERR( factory->Create(
-					"vk1.memory"_OModID,
+					VkMemoryModuleID,
 					vkthread->GlobalSystems(),
 					CreateInfo::GpuMemory{	vkthread,
-											BytesUL::FromMb( 128 ),
+											128_Mb,
 											EGpuMemory::bits() | EGpuMemory::LocalInGPU,
-											EMemoryAccess::bits() | EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
+											EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
 					OUT bufmem_module ) );
 
 	CHECK_ERR( factory->Create(
-					"vk1.texture"_OModID,
+					VkImageModuleID,
 					vkthread->GlobalSystems(),
-					CreateInfo::GpuTexture{	vkthread,
-											TextureDescriptor{
-												ETexture::Tex2D,
+					CreateInfo::GpuImage{	vkthread,
+											ImageDescriptor{
+												EImage::Tex2D,
 												uint4( 128, 128, 0, 0 ),
 												EPixelFormat::RGBA8_UNorm,
-												EImageUsage::bits() | EImageUsage::Sampled
+												EImageUsage::bits() | EImageUsage::Sampled | EImageUsage::TransferDst
 											} },
-					OUT tex_module ) );
+					OUT texture ) );
 
 	CHECK_ERR( factory->Create(
-					"vk1.buffer"_OModID,
+					VkSamplerModuleID,
+					vkthread->GlobalSystems(),
+					CreateInfo::GpuSampler{ vkthread,
+											SamplerDescriptor::Builder()
+												.SetAddressMode( EAddressMode::Clamp )
+												.SetFilter( EFilter::MinMagMipLinear )
+												.Finish()
+										  },
+					OUT sampler ) );
+
+	CHECK_ERR( factory->Create(
+					VkBufferModuleID,
 					vkthread->GlobalSystems(),
 					CreateInfo::GpuBuffer{	vkthread,
 											BufferDescriptor{
-												BytesUL(1024),
+												1024_b,
 												EBufferUsage::bits() | EBufferUsage::Vertex
 											} },
 					OUT buf_module ) );
 
-	tex_module->Send( Message< ModuleMsg::AttachModule >{ texmem_module } );
-	buf_module->Send( Message< ModuleMsg::AttachModule >{ bufmem_module } );
+	texture->Send< ModuleMsg::AttachModule >({ texmem_module });
+	buf_module->Send< ModuleMsg::AttachModule >({ bufmem_module });
+	
+	CHECK_ERR( _CreatePipeline() );
+	CHECK_ERR( _CreateCmdBuffers() );
 
-	Array<ModulePtr>	to_initialize{ /*commandBuilder,*/ tex_module, buf_module };
-
-	FOR( i, to_initialize )
-	{
-		to_initialize[i]->Send( Message< ModuleMsg::Link >() );
-		to_initialize[i]->Send( Message< ModuleMsg::Compose >() );
-	}
-
+	CHECK_ERR( ModuleUtils::Initialize( { texture, sampler, buf_module, graphicsPipeline, resourceTable, cmdBuilder } ) );
 	return true;
 }
 
 
-bool VkApp::_VkDelete (const Message< ModuleMsg::GpuDeviceBeforeDestory > &msg)
+bool VkApp::_VkDelete (const Message< GpuMsg::DeviceBeforeDestroy > &msg)
 {
 	return true;
 }

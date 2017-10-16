@@ -130,7 +130,14 @@ namespace _types_hidden_
 
 		bool			operator == (const Self &right) const
 		{
-			return _memory == right._memory;
+			if ( Count() != right.Count() )
+				return false;
+
+			for (usize i = 0; i < Count(); ++i) {
+				if ( (*this)[i] != right[i] )
+					return false;
+			}
+			return true;
 		}
 
 		bool			operator != (const Self &right) const
@@ -335,7 +342,7 @@ namespace _types_hidden_
 		typedef Hash< ArrayCRef<Pair< typename H::result_t, Pair<K, T> > > >		base_t;
 		typedef typename base_t::result_t											result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

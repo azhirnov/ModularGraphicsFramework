@@ -62,6 +62,24 @@ namespace CompileTime
 		{
 			static const bool	value = _IsPOD<T>::value;
 		};
+		
+		template <typename T, usize I>
+		struct _IsPOD< T const [I] >
+		{
+			static const bool	value = _IsPOD<T>::value;
+		};
+		
+		template <typename T, usize I>
+		struct _IsPOD< T volatile [I] >
+		{
+			static const bool	value = _IsPOD<T>::value;
+		};
+		
+		template <typename T, usize I>
+		struct _IsPOD< T const volatile [I] >
+		{
+			static const bool	value = _IsPOD<T>::value;
+		};
 	
 		template <>	struct _IsPOD< PODType >	{ static const bool	value = true; };
 		template <>	struct _IsPOD< bool >		{ static const bool	value = true; };

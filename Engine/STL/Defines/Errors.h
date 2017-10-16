@@ -32,19 +32,15 @@
 		{ __GX_LOG( _text_, ::GX_STL::ELog::_DefError );  return (_ret_); }
 
 #	define __GX_CHECK_ERRX( _cond_, _text_, _level_, _ret_ ) \
-		{ \
-			if ( not (_cond_) ) { \
-				__GX_LOG( _text_, (_level_) ); \
-				return (_ret_); \
-			} \
-		}
+		{ if ( not (_cond_) ) { \
+			__GX_LOG( _text_, (_level_) ); \
+			return (_ret_); \
+		}}
 
 #	define __GX_CHECK_WARN( _cond_, _text_, _level_ ) \
-		{ \
-			if ( not (_cond_) ) { \
-				__GX_LOG( _text_, (_level_) ); \
-			} \
-		}
+		{ if ( not (_cond_) ) { \
+			__GX_LOG( _text_, (_level_) ); \
+		}}
 
 #endif	// __GX_FAST__
 		
@@ -85,9 +81,9 @@
 
 	// assert
 #	define __ASSERT2( _cond_, _text_, _level_ ) \
-		if ( not (_cond_) ) { \
+		{ if ( not (_cond_) ) { \
 			LOG( _text_, _level_ ); \
-		}
+		}}
 
 #	define ASSERT( ... ) \
 		__ASSERT2(	AUXDEF_GETARG_0( __VA_ARGS__ ), \
@@ -118,13 +114,13 @@
 
 #else
 #	define CHECK_ALLOC_RE( _func_, _onException_, _text_ ) \
-		try { \
+		{try { \
 			_func_; \
 		} catch(...) \
 		{ \
 			LOG( _text_, ::GX_STL::ELog::Error ); \
 			_onException_; \
-		}
+		}}
 
 #endif	// __GX_NO_EXCEPTIONS__
 

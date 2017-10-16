@@ -20,10 +20,10 @@ namespace Base
 			GpuWrite,
 
 			_Count,
-			Unknown		= uint(-1)
+			Unknown		= ~0u
 		};
 
-		using bits = EnumBitfield< EMemoryAccess >;
+		GX_ENUM_BITFIELD( EMemoryAccess );
 	};
 
 

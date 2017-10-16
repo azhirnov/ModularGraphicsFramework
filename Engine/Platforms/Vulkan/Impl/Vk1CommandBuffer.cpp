@@ -1,8 +1,8 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuilder.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
+#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/VulkanContext.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -11,6 +11,84 @@ namespace Engine
 namespace PlatformVK
 {
 	
+	//
+	// Vulkan Command Buffer
+	//
+
+	class Vk1CommandBuffer final : public Vk1BaseModule
+	{
+	// types
+	private:
+		SHARED_POINTER( Vk1BaseModule );
+
+		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetCommandBufferDescriptor,
+											GpuMsg::GetVkCommandBufferID,
+											GpuMsg::SetCommandBufferState,
+											GpuMsg::GetCommandBufferState,
+											GpuMsg::SetCommandBufferDependency
+										> >;
+
+		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t::Append< MessageListFrom<
+											GpuMsg::OnCommandBufferStateChanged
+										> >;
+		
+		using CmdPoolMsgList_t		= MessageListFrom< GpuMsg::GetVkCommandPoolID >;
+
+		using UsedResources_t		= Set< ModulePtr >;
+		using ERecordingState		= GpuMsg::SetCommandBufferState::EState;
+
+
+	// constants
+	private:
+		static const Runtime::VirtualTypeList	_msgTypes;
+		static const Runtime::VirtualTypeList	_eventTypes;
+
+
+	// variables
+	private:
+		CommandBufferDescriptor		_descr;
+		vk::VkCommandBuffer			_cmdId;
+		
+		UsedResources_t				_resources;
+		ERecordingState				_recordingState;
+
+
+	// methods
+	public:
+		Vk1CommandBuffer (const GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci);
+		~Vk1CommandBuffer ();
+
+
+	// message handlers
+	private:
+		bool _Compose (const  Message< ModuleMsg::Compose > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _OnModuleAttached (const Message< ModuleMsg::OnModuleAttached > &);
+		bool _OnModuleDetached (const Message< ModuleMsg::OnModuleDetached > &);
+		bool _GetVkCommandBufferID (const Message< GpuMsg::GetVkCommandBufferID > &);
+		bool _GetCommandBufferDescriptor (const Message< GpuMsg::GetCommandBufferDescriptor > &);
+		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
+		bool _SetCommandBufferState (const Message< GpuMsg::SetCommandBufferState > &);
+		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
+		
+	private:
+		bool _IsCreated () const;
+		bool _CreateCmdBuffer ();
+		void _DestroyCmdBuffer ();
+		
+		bool _Submit ();
+		bool _BeginRecording ();
+		bool _EndRecording ();
+		bool _ResetCmdBuffer ();
+		bool _OnCompleted ();
+
+		void _ChangeState (ERecordingState newState);
+	};
+//-----------------------------------------------------------------------------
+
+
+
 	const Runtime::VirtualTypeList	Vk1CommandBuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const Runtime::VirtualTypeList	Vk1CommandBuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
@@ -20,16 +98,15 @@ namespace PlatformVK
 =================================================
 */
 	Vk1CommandBuffer::Vk1CommandBuffer (const GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkCommandBufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
-		_builder( ci.builder ),
 		_cmdId( VK_NULL_HANDLE ),
 		_recordingState( ERecordingState::Deleted )
 	{
 		SetDebugName( "Vk1CommandBuffer" );
 
-		_SubscribeOnMsg( this, &Vk1CommandBuffer::_OnModuleAttached_Impl );
-		_SubscribeOnMsg( this, &Vk1CommandBuffer::_OnModuleDetached_Impl );
+		_SubscribeOnMsg( this, &Vk1CommandBuffer::_OnModuleAttached );
+		_SubscribeOnMsg( this, &Vk1CommandBuffer::_OnModuleDetached );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_AttachModule_Impl );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_DetachModule_Impl );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_FindModule_Impl );
@@ -38,13 +115,17 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_Compose );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GpuDeviceBeforeDestory );
+		_SubscribeOnMsg( this, &Vk1CommandBuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetVkCommandBufferID );
-		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetGpuCommandBufferDescriptor );
+		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetCommandBufferDescriptor );
+		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetVkLogicDevice );
+		_SubscribeOnMsg( this, &Vk1CommandBuffer::_SetCommandBufferDependency );
+		_SubscribeOnMsg( this, &Vk1CommandBuffer::_SetCommandBufferState );
+		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetCommandBufferState );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VulkanThread::GetStaticID(), true );
+		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
 	}
 	
 /*
@@ -64,6 +145,9 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuffer::_Compose (const  Message< ModuleMsg::Compose > &msg)
 	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
 		CHECK_ERR( GetState() == EState::Linked );
 
 		_SendForEachAttachments( msg );
@@ -71,14 +155,9 @@ namespace PlatformVK
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
 
-		if ( _CreateCmdBuffer() )
-		{
-			CHECK( _SetState( EState::ComposedMutable ) );
-		}
-		else
-		{
-			CHECK( _SetState( EState::ComposingFailed ) );
-		}
+		CHECK_COMPOSING( _CreateCmdBuffer() );
+
+		CHECK( _SetState( EState::ComposedMutable ) );
 		return true;
 	}
 	
@@ -96,10 +175,49 @@ namespace PlatformVK
 	
 /*
 =================================================
+	_OnModuleAttached
+=================================================
+*/
+	bool Vk1CommandBuffer::_OnModuleAttached (const Message< ModuleMsg::OnModuleAttached > &msg)
+	{
+		if ( msg->attachedModule == this			and
+			 _OnAttachedToParent( msg->parent )		and
+			 msg->parent->GetSupportedMessages().HasAllTypes< CmdPoolMsgList_t >() )
+		{
+			CHECK( _SetState( EState::Initial ) );
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_OnModuleDetached
+=================================================
+*/
+	bool Vk1CommandBuffer::_OnModuleDetached (const Message< ModuleMsg::OnModuleDetached > &msg)
+	{
+		if ( msg->detachedModule == this )
+		{
+			if ( msg->parent->GetSupportedMessages().HasAllTypes< CmdPoolMsgList_t >() )
+			{
+				_DestroyCmdBuffer();
+				CHECK( _SetState( EState::Initial ) );
+			}
+			_OnDetachedFromParent( msg->parent );
+		}
+		else
+		{
+			UnsubscribeAll( msg->detachedModule );
+		}
+		return true;
+	}
+
+/*
+=================================================
 	_GetVkCommandBufferID
 =================================================
 */
-	bool Vk1CommandBuffer::_GetVkCommandBufferID (const Message< ModuleMsg::GetVkCommandBufferID > &msg)
+	bool Vk1CommandBuffer::_GetVkCommandBufferID (const Message< GpuMsg::GetVkCommandBufferID > &msg)
 	{
 		msg->result.Set( _cmdId );
 		return true;
@@ -107,15 +225,59 @@ namespace PlatformVK
 
 /*
 =================================================
-	_GetGpuCommandBufferDescriptor
+	_GetCommandBufferDescriptor
 =================================================
 */
-	bool Vk1CommandBuffer::_GetGpuCommandBufferDescriptor (const Message< ModuleMsg::GetGpuCommandBufferDescriptor > &msg)
+	bool Vk1CommandBuffer::_GetCommandBufferDescriptor (const Message< GpuMsg::GetCommandBufferDescriptor > &msg)
 	{
 		msg->result.Set( _descr );
 		return true;
 	}
 	
+/*
+=================================================
+	_SetCommandBufferDependency
+=================================================
+*/
+	bool Vk1CommandBuffer::_SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &msg)
+	{
+		_resources = RVREF( msg->resources.Get() );
+		return true;
+	}
+
+/*
+=================================================
+	_GetCommandBufferDescriptor
+=================================================
+*/
+	bool Vk1CommandBuffer::_SetCommandBufferState (const Message< GpuMsg::SetCommandBufferState > &msg)
+	{
+		if ( _IsCreated() )
+		{
+			switch ( msg->newState )
+			{
+				case ERecordingState::Initial :		CHECK( _ResetCmdBuffer() );	break;
+				case ERecordingState::Recording :	CHECK( _BeginRecording() );	break;
+				case ERecordingState::Executable :	CHECK( _EndRecording() );	break;
+				case ERecordingState::Pending :		CHECK( _Submit() );			break;
+				case ERecordingState::Completed :	CHECK( _OnCompleted() );	break;
+				default :							WARNING( "unsupported state" );
+			}
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_GetCommandBufferDescriptor
+=================================================
+*/
+	bool Vk1CommandBuffer::_GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &msg)
+	{
+		msg->result.Set( _recordingState );
+		return true;
+	}
+
 /*
 =================================================
 	_IsCreated
@@ -135,24 +297,60 @@ namespace PlatformVK
 	{
 		using namespace vk;
 
-		CHECK_ERR( _builder );
 		CHECK_ERR( not _IsCreated() );
-
-		// delete command buffer when deleted command pool
-		_builder->Subscribe( this, &Vk1CommandBuffer::_Delete );
 		
-		VkCommandBufferAllocateInfo	info = {};
+		ModulePtr	builder;
+		CHECK_ERR( _FindParentWithMessages< CmdPoolMsgList_t >( _GetParents(), OUT builder ) );
 
+		Message< GpuMsg::GetVkCommandPoolID >	req_pool_id;
+		SendTo( builder, req_pool_id );
+
+		VkCommandBufferAllocateInfo	info = {};
 		info.sType				= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		info.pNext				= null;
-		info.commandPool		= _builder->GetCmdPoolID();
+		info.commandPool		<< req_pool_id->result;
 		info.level				= _descr.isSecondary ? VK_COMMAND_BUFFER_LEVEL_SECONDARY : VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		info.commandBufferCount	= 1;
 
 		VK_CHECK( vkAllocateCommandBuffers( GetLogicalDevice(), &info, OUT &_cmdId ) );
+		
+		GetDevice()->SetObjectName( (uint64_t)_cmdId, GetDebugName(), EGpuObject::CommandBuffer );
 
-		_recordingState	= ERecordingState::Initial;
+		_ChangeState( ERecordingState::Initial );
 		return true;
+	}
+
+/*
+=================================================
+	_DestroyCmdBuffer
+=================================================
+*/
+	void Vk1CommandBuffer::_DestroyCmdBuffer ()
+	{
+		using namespace vk;
+		
+		if ( _cmdId	!= VK_NULL_HANDLE )
+		{
+			ModulePtr	builder;
+			CHECK_ERR( _FindParentWithMessages< CmdPoolMsgList_t >( _GetParents(), OUT builder ), void() );
+
+			Message< GpuMsg::GetVkCommandPoolID >	req_pool_id;
+			SendTo( builder, req_pool_id );
+
+			VkDevice		dev		= GetLogicalDevice();
+			VkCommandPool	pool;	pool << req_pool_id->result;
+
+			if ( dev  != VK_NULL_HANDLE and pool != VK_NULL_HANDLE )
+			{
+				vkFreeCommandBuffers( dev, pool, 1, &_cmdId );
+			}
+		}
+
+		_cmdId	= VK_NULL_HANDLE;
+		_descr	= Uninitialized;
+
+		_ChangeState( ERecordingState::Deleted );
+		_resources.Clear();
 	}
 	
 /*
@@ -166,37 +364,17 @@ namespace PlatformVK
 
 		CHECK_ERR( _IsCreated() );
 
+		if ( _recordingState == ERecordingState::Initial )
+			return true;
+
+		CHECK_ERR( _recordingState == ERecordingState::Pending );
+
 		VK_CHECK( vkResetCommandBuffer( _cmdId, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT ) );
 
-		_recordingState	= ERecordingState::Initial;
-		return true;
-	}
-
-/*
-=================================================
-	_DestroyCmdBuffer
-=================================================
-*/
-	void Vk1CommandBuffer::_DestroyCmdBuffer ()
-	{
-		using namespace vk;
-
-		auto	dev		= GetLogicalDevice();
-		auto	pool	= _builder ? _builder->GetCmdPoolID() : VK_NULL_HANDLE;
-
-		if ( dev != VK_NULL_HANDLE	and
-			 pool != VK_NULL_HANDLE	and
-			 _cmdId != VK_NULL_HANDLE )
-		{
-			vkFreeCommandBuffers( dev, pool, 1, &_cmdId );
-		}
-
-		_cmdId			= VK_NULL_HANDLE;
-		_builder		= null;
-		_descr			= Uninitialized;
-		_recordingState	= ERecordingState::Deleted;
-
+		_ChangeState( ERecordingState::Initial );
 		_resources.Clear();
+
+		return true;
 	}
 
 /*
@@ -206,11 +384,12 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuffer::_Submit ()
 	{
+		using namespace vk;
+
 		CHECK_ERR( _IsCreated() );
+		CHECK_ERR( _recordingState == ERecordingState::Executable );
 
-		_recordingState	= ERecordingState::Pending;
-
-		TODO( "" );
+		_ChangeState( ERecordingState::Pending );
 		return true;
 	}
 	
@@ -221,21 +400,11 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuffer::_BeginRecording ()
 	{
-		using namespace vk;
-
 		CHECK_ERR( _IsCreated() );
-		CHECK_ERR( _recordingState == ERecordingState::Initial );
+		CHECK_ERR( _recordingState == ERecordingState::Initial or
+				  (_recordingState == ERecordingState::Executable and _descr.implicitResetable) );
 
-		VkCommandBufferBeginInfo	cmd_info = {};
-
-		cmd_info.sType				= VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cmd_info.pNext				= null;
-		cmd_info.flags				= VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		cmd_info.pInheritanceInfo	= null;	// TODO
-
-		VK_CHECK( vkBeginCommandBuffer( _cmdId, &cmd_info ) );
-
-		_recordingState	= ERecordingState::Recording;
+		_ChangeState( ERecordingState::Recording );
 		return true;
 	}
 	
@@ -250,15 +419,53 @@ namespace PlatformVK
 
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _recordingState == ERecordingState::Recording );
-		
-		VK_CHECK( vkEndCommandBuffer( _cmdId ) );
 
-		_recordingState	= ERecordingState::Executable;
+		_ChangeState( ERecordingState::Executable );
 		return true;
 	}
+	
+/*
+=================================================
+	_OnCompleted
+=================================================
+*/
+	bool Vk1CommandBuffer::_OnCompleted ()
+	{
+		using namespace vk;
+		
+		CHECK_ERR( _IsCreated() );
+		CHECK_ERR( _recordingState == ERecordingState::Pending );
 
+		_resources.Clear();
+
+		_ChangeState( ERecordingState::Executable );
+		return true;
+	}
+		
+/*
+=================================================
+	_ChangeState
+=================================================
+*/
+	void Vk1CommandBuffer::_ChangeState (ERecordingState newState)
+	{
+		const auto	old_state = _recordingState;
+
+		_recordingState = newState;
+
+		_SendEvent< GpuMsg::OnCommandBufferStateChanged >({ old_state, newState });
+	}
 
 }	// PlatformVK
+//-----------------------------------------------------------------------------
+
+namespace Platforms
+{
+	ModulePtr VulkanContext::_CreateVk1CommandBuffer (const GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
+	{
+		return New< PlatformVK::Vk1CommandBuffer >( gs, ci );
+	}
+}	// Platforms
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN

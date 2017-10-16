@@ -73,21 +73,21 @@ namespace ModuleMsg
 	struct PushAsyncMessage
 	{
 	// variables
-		SingleRead< AsyncMessage >	asyncMsg;
-		ThreadID					target;
-		ThreadID					altTarget;
+		SingleRead< Base::AsyncMessage >	asyncMsg;
+		Base::ThreadID						target;
+		Base::ThreadID						altTarget;
 
 	// methods
-		PushAsyncMessage (AsyncMessage &&msg, ThreadID target) :
+		PushAsyncMessage (Base::AsyncMessage &&msg, Base::ThreadID target) :
 			asyncMsg( RVREF(msg) ), target(target), altTarget(target)
 		{}
 
-		PushAsyncMessage (AsyncMessage &&msg, ThreadID target, ThreadID altTarget) :
+		PushAsyncMessage (Base::AsyncMessage &&msg, Base::ThreadID target, Base::ThreadID altTarget) :
 			asyncMsg( RVREF(msg) ), target(target), altTarget(altTarget)
 		{}
 
 		template <typename T>
-		PushAsyncMessage (const ModulePtr &target, Message<T> &&msg) :
+		PushAsyncMessage (const ModulePtr &target, Base::Message<T> &&msg) :
 			asyncMsg( std::bind( &_Call<T>, target, RVREF( msg ), std::placeholders::_1 ) ),
 			target(target->GetThreadID()),
 			altTarget(target->GetThreadID())
@@ -96,10 +96,25 @@ namespace ModuleMsg
 
 	private:
 		template <typename T>
-		static void _Call (const ModulePtr &target, const Message<T> &msg, const TaskModulePtr &)
+		static void _Call (const ModulePtr &target, const Base::Message<T> &msg, const Base::TaskModulePtr &)
 		{
 			target->Send<T>( msg );
 		}
+	};
+	
+
+	//
+	// Add Task Scheduler to Manager
+	//
+	struct AddTaskSchedulerToManager : AddToManager
+	{
+		using Func_t			= Delegate< usize (Base::AsyncMessage &&) >;		// must be internally synchronized function
+
+		SingleRead< Func_t >	asyncPushMsg;
+
+		AddTaskSchedulerToManager (const ModulePtr &mod, Func_t &&func) :
+			AddToManager{ mod }, asyncPushMsg( RVREF(func) )
+		{}
 	};
 
 }	// ModuleMsg

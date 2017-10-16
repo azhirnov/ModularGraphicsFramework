@@ -17,7 +17,7 @@ namespace GXTypes
 				typename S = typename AutoDetectCopyStrategy<T>::type,
 				typename MC = MemoryContainer<T>
 			 >
-	struct Stack : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, MC >
+	struct Stack : public CompileTime::CopyQualifiers< Array<T,S,MC> >
 	{
 	// types
 	public:
@@ -131,7 +131,7 @@ namespace GXTypes
 		typedef Hash< ArrayCRef<T> >		base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

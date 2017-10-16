@@ -3,9 +3,10 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/GPU/RenderPassEnums.h"
-#include "Engine/Platforms/Shared/GPU/TextureEnums.h"
+#include "Engine/Platforms/Shared/GPU/ImageEnums.h"
 #include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
 #include "Engine/Platforms/Shared/GPU/MultiSamples.h"
+#include "Engine/Platforms/Shared/GPU/IDs.h"
 
 namespace Engine
 {
@@ -123,11 +124,11 @@ namespace Platforms
 		// variables
 			SubpassIndex				srcPass;
 			EPipelineStage::bits		srcStage;
-			ESubpassAccess::bits		srcAccess;
+			EPipelineAccess::bits		srcAccess;
 
 			SubpassIndex				dstPass;
 			EPipelineStage::bits		dstStage;
-			ESubpassAccess::bits		dstAccess;
+			EPipelineAccess::bits		dstAccess;
 
 			ESubpassDependency::bits	dependency;
 
@@ -263,10 +264,10 @@ namespace Platforms
 		Self& AddDependency (const SubpassDependency_t &value);
 		Self& AddDependency (uint						srcPass,
 							 EPipelineStage::bits		srcStage,
-							 ESubpassAccess::bits		srcAccess,
+							 EPipelineAccess::bits		srcAccess,
 							 uint						dstPass,
 							 EPipelineStage::bits		dstStage,
-							 ESubpassAccess::bits		dstAccess,
+							 EPipelineAccess::bits		dstAccess,
 							 ESubpassDependency::bits	dependency);
 
 		// validate, calculate hash and return
@@ -292,13 +293,13 @@ namespace CreateInfo
 }	// CreateInfo
 
 
-namespace ModuleMsg
+namespace GpuMsg
 {
 
 	//
-	// Get GPU Render Pass Descriptor
+	// Get Render Pass Descriptor
 	//
-	struct GetGpuRenderPassDescriptor
+	struct GetRenderPassDescriptor
 	{
 		Out< Platforms::RenderPassDescriptor >	result;
 	};
@@ -309,5 +310,5 @@ namespace ModuleMsg
 	struct GetGLRenderPassID;
 
 
-}	// ModuleMsg
+}	// GpuMsg
 }	// Engine

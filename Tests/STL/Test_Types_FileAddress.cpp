@@ -80,4 +80,7 @@ extern void Test_Types_FileAddress ()
 	
 	name1 = name + ".";
 	FileAddress::AddExtensionToName( name1, "ext" );		ASSERT( name1 == name + ".ext" );
+
+	String	name2 = FileAddress::GetName( "../out/common" );	ASSERT( name2 == "common" );
+	String	name3 = FileAddress::GetName( "../out/common" );	ASSERT( name3 == "common" );
 }

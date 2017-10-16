@@ -27,7 +27,7 @@ struct Hash< Value >
 {
 	typedef usize	result_t;
 
-	result_t operator () (const Value &) const
+	result_t operator () (const Value &) const noexcept
 	{
 		return 0;
 	}

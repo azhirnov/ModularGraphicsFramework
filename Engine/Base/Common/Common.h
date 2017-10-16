@@ -5,6 +5,7 @@
 #include "Engine/STL/Engine.STL.h"
 #include "Engine/Config/Engine.Config.h"
 #include "Engine/Config/Engine.Version.h"
+#include "Engine/Base/Common/Defines.h"
 
 
 namespace Engine
@@ -32,12 +33,12 @@ namespace Engine
 		SHARED_POINTER( ModulesFactory );
 
 		Ptr<Module>  GetMainSystemInstace ();
+
+		template <typename T> struct Message;
 	}
 	
 	namespace ModuleMsg
 	{
-		using namespace Base;
-
 		// never use 'using namespace ModuleMsg' !!!
 	}
 

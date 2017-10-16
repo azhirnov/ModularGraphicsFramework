@@ -24,7 +24,7 @@ namespace GXTypes
 		typedef Hash< ArrayCRef<T> >		base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( base_t::key_t( x.ptr(), x.Count() ) );
 		}

@@ -5,6 +5,7 @@
 #include "Engine/Base/Common/Enums.h"
 #include "Engine/Base/Common/CreateInfo.h"
 #include "Engine/Base/Common/ModuleMessages.h"
+#include "Engine/Base/Modules/IDs.h"
 
 namespace Engine
 {
@@ -82,7 +83,7 @@ namespace ModuleMsg
 	//
 	struct GetStreamDescriptor
 	{
-		Out< StreamDescriptor >		result;
+		Out< Base::StreamDescriptor >		result;
 	};
 
 
@@ -113,6 +114,9 @@ namespace ModuleMsg
 	//
 	struct DataRegionChanged
 	{
+	// types
+		using EMemoryAccess		= Base::EMemoryAccess;
+
 	// variables
 		EMemoryAccess::type		access	= EMemoryAccess::Unknown;
 		BytesUL					offset;

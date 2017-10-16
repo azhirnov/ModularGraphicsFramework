@@ -24,7 +24,7 @@ namespace GXTypes
 				usize C,
 				typename S = typename AutoDetectCopyStrategy<T>::type
 			 >
-	struct StaticArray : public CompileTime::CopyQualifiers< CompileTime::PODStruct, T >
+	struct StaticArray final : public CompileTime::CopyQualifiers< CompileTime::PODStruct, T >
 	{
 		STATIC_ASSERT( C > 0, "invalid array size" );
 
@@ -379,7 +379,7 @@ namespace GXTypes
 		typedef Hash< ArrayCRef<T> >		base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

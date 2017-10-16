@@ -18,7 +18,7 @@ namespace Platforms
 			Clear,
 
 			_Count,
-			Unknown	= uint(-1),
+			Unknown	= ~0u,
 		};
 	};
 
@@ -31,7 +31,7 @@ namespace Platforms
 			Store,
 
 			_Count,
-			Unknown	= uint(-1),
+			Unknown	= ~0u,
 		};
 	};
 
@@ -57,14 +57,20 @@ namespace Platforms
 			Host,
 
 			_Count,
-			Unknown = uint(-1),
+			Unknown = ~0u,
 		};
 
-		using bits = EnumBitfield< EPipelineStage >;
+		GX_ENUM_BITFIELD( EPipelineStage );
+
+		static constexpr bits	AllGraphics =	bits() | TopOfPipe | DrawIndirect | VertexInput | VertexShader | TessControlShader |
+												TessEvaluationShader | GeometryShader | FragmentShader | EarlyFragmentTests |
+												LateFragmentTests | ColorAttachmentOutput | BottomOfPipe;
+		static constexpr bits	AllCommands	=	bits().SetAll();
 	};
 
 
-	struct ESubpassAccess
+	// TODO: rename
+	struct EPipelineAccess
 	{
 		enum type : uint
 		{
@@ -89,10 +95,10 @@ namespace Platforms
 			//CommandProcessWrite,
 
 			_Count,
-			Unknown = uint(-1),
+			Unknown = ~0u,
 		};
 
-		using bits = EnumBitfield< ESubpassAccess >;
+		GX_ENUM_BITFIELD( EPipelineAccess );
 	};
 
 
@@ -105,10 +111,10 @@ namespace Platforms
 			DeviceGroup,
 
 			_Count,
-			Unknown = uint(-1),
+			Unknown = ~0u,
 		};
 
-		using bits = EnumBitfield< ESubpassDependency >;
+		GX_ENUM_BITFIELD( ESubpassDependency );
 	};
 
 }	// Platforms

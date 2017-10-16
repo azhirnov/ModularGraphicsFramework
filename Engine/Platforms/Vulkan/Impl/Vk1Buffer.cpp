@@ -1,8 +1,9 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1Buffer.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Memory.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
+#include "Engine/Platforms/Shared/GPU/Buffer.h"
+#include "Engine/Platforms/Shared/GPU/Memory.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/VulkanContext.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -10,6 +11,66 @@ namespace Engine
 {
 namespace PlatformVK
 {
+	
+	//
+	// Vulkan Buffer
+	//
+
+	class Vk1Buffer final : public Vk1BaseModule
+	{
+	// types
+	private:
+		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetBufferDescriptor,
+											GpuMsg::GetVkBufferID
+											//GpuMsg::OnMemoryBindingChanged
+										> >;
+
+		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
+		
+		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
+
+
+	// constants
+	private:
+		static const Runtime::VirtualTypeList	_msgTypes;
+		static const Runtime::VirtualTypeList	_eventTypes;
+
+
+	// variables
+	private:
+		BufferDescriptor		_descr;
+		vk::VkBuffer			_bufferId;
+		bool					_isBindedToMemory;
+
+
+	// methods
+	public:
+		Vk1Buffer (const GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci);
+		~Vk1Buffer ();
+
+
+	// message handlers
+	private:
+		bool _Link (const Message< ModuleMsg::Link > &);
+		bool _Compose (const  Message< ModuleMsg::Compose > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
+		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _GetVkBufferID (const Message< GpuMsg::GetVkBufferID > &);
+		bool _GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &);
+		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+
+	private:
+		bool _IsCreated () const;
+		bool _CreateBuffer ();
+
+		void _DestroyAll ();
+		void _OnMemoryUnbinded ();
+	};
+//-----------------------------------------------------------------------------
+
+
 	
 	const Runtime::VirtualTypeList	Vk1Buffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const Runtime::VirtualTypeList	Vk1Buffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
@@ -20,7 +81,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Buffer::Vk1Buffer (const GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkBufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_bufferId( VK_NULL_HANDLE )
 	{
@@ -28,22 +89,25 @@ namespace PlatformVK
 
 		_SubscribeOnMsg( this, &Vk1Buffer::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &Vk1Buffer::_OnModuleDetached_Impl );
-		_SubscribeOnMsg( this, &Vk1Buffer::_AttachModule_Impl );
-		_SubscribeOnMsg( this, &Vk1Buffer::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &Vk1Buffer::_AttachModule );
+		_SubscribeOnMsg( this, &Vk1Buffer::_DetachModule );
 		_SubscribeOnMsg( this, &Vk1Buffer::_FindModule_Impl );
 		_SubscribeOnMsg( this, &Vk1Buffer::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &Vk1Buffer::_Link );
 		_SubscribeOnMsg( this, &Vk1Buffer::_Compose );
 		_SubscribeOnMsg( this, &Vk1Buffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1Buffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1Buffer::_GpuDeviceBeforeDestory );
+		_SubscribeOnMsg( this, &Vk1Buffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkBufferID );
-		_SubscribeOnMsg( this, &Vk1Buffer::_GetGpuBufferDescriptor );
-		_SubscribeOnMsg( this, &Vk1Buffer::_OnGpuMemoryBindingChanged );
+		_SubscribeOnMsg( this, &Vk1Buffer::_GetBufferDescriptor );
+		//_SubscribeOnMsg( this, &Vk1Buffer::_OnMemoryBindingChanged );
+		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkLogicDevice );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VulkanThread::GetStaticID(), true );
+		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
+
+		ASSERT( ci.allocMemory == false );	// TODO
 	}
 	
 /*
@@ -63,20 +127,15 @@ namespace PlatformVK
 */
 	bool Vk1Buffer::_Link (const Message< ModuleMsg::Link > &msg)
 	{
-		CHECK_ERR( _IsMutableState( GetState() ) );
-		
-		using RequestedEvents_t = MessageListFrom< ModuleMsg::OnGpuMemoryBindingChanged >;
+		if ( _IsComposedOrLinkedState( GetState() ) )
+			return true;	// already linked
+
+		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
 		ModulePtr	mem;
-		CHECK( _FindModuleWithEvents< RequestedEvents_t >( _GetAttachments(), OUT mem ) );
+		CHECK_ATTACHMENT( _FindModuleWithEvents< MemoryEvents_t >( _GetAttachments(), OUT mem ) );
 
-		if ( not mem )
-		{
-			CHECK( _SetState( EState::LinkageFailed ) );
-			return false;
-		}
-
-		mem->Subscribe( this, &Vk1Buffer::_OnGpuMemoryBindingChanged );
+		mem->Subscribe( this, &Vk1Buffer::_OnMemoryBindingChanged );
 
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 		return true;
@@ -89,9 +148,12 @@ namespace PlatformVK
 */
 	bool Vk1Buffer::_Compose (const  Message< ModuleMsg::Compose > &msg)
 	{
+		if ( _IsComposedState( GetState() ) or _IsCreated() )
+			return true;	// already composed
+
 		CHECK_ERR( GetState() == EState::Linked );
 
-		CHECK_ERR( _CreateBuffer() );
+		CHECK_COMPOSING( _CreateBuffer() );
 
 		_SendForEachAttachments( msg );
 		
@@ -109,17 +171,51 @@ namespace PlatformVK
 */
 	bool Vk1Buffer::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
-		_DestroyBuffer();
+		_DestroyAll();
 
 		return Module::_Delete_Impl( msg );
 	}
 	
 /*
 =================================================
-	_GetGpuBufferDescriptor
+	_AttachModule
 =================================================
 */
-	bool Vk1Buffer::_GetGpuBufferDescriptor (const Message< ModuleMsg::GetGpuBufferDescriptor > &msg)
+	bool Vk1Buffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	{
+		CHECK( _Attach( msg->name, msg->newModule, true ) );
+
+		if ( msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_OnMemoryUnbinded();
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_DetachModule
+=================================================
+*/
+	bool Vk1Buffer::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	{
+		CHECK( _Detach( msg->oldModule ) );
+
+		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_OnMemoryUnbinded();
+		}
+		return true;
+	}
+
+/*
+=================================================
+	_GetBufferDescriptor
+=================================================
+*/
+	bool Vk1Buffer::_GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &msg)
 	{
 		msg->result.Set( _descr );
 		return true;
@@ -130,7 +226,7 @@ namespace PlatformVK
 	_GetVkBufferID
 =================================================
 */
-	bool Vk1Buffer::_GetVkBufferID (const Message< ModuleMsg::GetVkBufferID > &msg)
+	bool Vk1Buffer::_GetVkBufferID (const Message< GpuMsg::GetVkBufferID > &msg)
 	{
 		msg->result.Set( _bufferId );
 		return true;
@@ -138,14 +234,14 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_OnGpuMemoryBindingChanged
+	_OnMemoryBindingChanged
 =================================================
 */
-	bool Vk1Buffer::_OnGpuMemoryBindingChanged (const Message< ModuleMsg::OnGpuMemoryBindingChanged > &msg)
+	bool Vk1Buffer::_OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &msg)
 	{
-		CHECK_ERR( GetState() == EState::Linked or _IsComposedState( GetState() ) );
+		CHECK_ERR( _IsComposedOrLinkedState( GetState() ) );
 
-		using EBindingState = ModuleMsg::OnGpuMemoryBindingChanged::EBindingState;
+		using EBindingState = GpuMsg::OnMemoryBindingChanged::EBindingState;
 
 		if (  msg->targetObject == this )
 		{
@@ -183,6 +279,7 @@ namespace PlatformVK
 		using namespace vk;
 
 		CHECK_ERR( not _IsCreated() );
+		_OnMemoryUnbinded();
 
 		// create buffer
 		VkBufferCreateInfo	info = {};
@@ -195,15 +292,17 @@ namespace PlatformVK
 		info.sharingMode	= VK_SHARING_MODE_EXCLUSIVE;
 
 		VK_CHECK( vkCreateBuffer( GetLogicalDevice(), &info, null, OUT &_bufferId ) );
+
+		GetDevice()->SetObjectName( _bufferId, GetDebugName(), EGpuObject::Buffer );
 		return true;
 	}
 	
 /*
 =================================================
-	_DestroyBuffer
+	_DestroyAll
 =================================================
 */
-	void Vk1Buffer::_DestroyBuffer ()
+	void Vk1Buffer::_DestroyAll ()
 	{
 		using namespace vk;
 
@@ -214,12 +313,32 @@ namespace PlatformVK
 			vkDestroyBuffer( dev, _bufferId, null );
 		}
 
+		_OnMemoryUnbinded();
+
 		_bufferId	= VK_NULL_HANDLE;
 		_descr		= Uninitialized;
 	}
-
+	
+/*
+=================================================
+	_OnMemoryUnbinded
+=================================================
+*/
+	void Vk1Buffer::_OnMemoryUnbinded ()
+	{
+		_isBindedToMemory = false;
+	}
 
 }	// PlatformVK
+//-----------------------------------------------------------------------------
+
+namespace Platforms
+{
+	ModulePtr VulkanContext::_CreateVk1Buffer (const GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
+	{
+		return New< PlatformVK::Vk1Buffer >( gs, ci );
+	}
+}	// Platforms
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN

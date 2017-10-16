@@ -26,7 +26,8 @@ namespace PlatformVK
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											ModuleMsg::GpuDeviceBeforeDestory
+											GpuMsg::DeviceBeforeDestroy,
+											GpuMsg::GetVkLogicDevice
 										> >;
 
 		using SupportedEvents_t		= MessageListFrom<
@@ -73,7 +74,8 @@ namespace PlatformVK
 	// message handlers
 	protected:
 		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _GpuDeviceBeforeDestory (const Message< ModuleMsg::GpuDeviceBeforeDestory > &);
+		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _GetVkLogicDevice (const Message< GpuMsg::GetVkLogicDevice > &);
 		//bool _LinkToMemory (const Message< ModuleMsg::Link > &);
 	};
 

@@ -81,6 +81,9 @@
 #pragma warning (error: 4129)			// 'character': unrecognized character escape sequence
 #pragma warning (error: 4702)			// unreachable code
 #pragma warning (error: 4522)			// multiple assignment operators specified
+#pragma warning (error: 4273)			// inconsistent dll linage
+#pragma warning (error: 4473)			// not enough argument passed for format string
+#pragma warning (error: 4474)			// too many arguments passed for fomat string
 
 
 // to check some errors

@@ -24,10 +24,10 @@ namespace Platforms
 			Indirect,			// in shader: read-only				// DrawIndirect or DispatchIndirect in GL
 
 			_Count,
-			Unknown		= uint(-1),
+			Unknown		= ~0u,
 		};
 
-		using bits	= EnumBitfield< EBufferUsage >;
+		GX_ENUM_BITFIELD( EBufferUsage );
 	};
 
 
@@ -41,10 +41,10 @@ namespace Platforms
 			Aliased,
 
 			_Count,
-			Unknown		= uint(-1),
+			Unknown		= ~0u,
 		};
 
-		using bits	= EnumBitfield< ESparseMemory >;
+		GX_ENUM_BITFIELD( ESparseMemory );
 	};
 
 

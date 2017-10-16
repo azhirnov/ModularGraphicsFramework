@@ -31,7 +31,7 @@ namespace Platforms
 			SrcAlphaSaturate,			// rgb * min( src.a, dst.a ), a * 1
 			
 			_Count,
-			Unknown	= uint(-1),
+			Unknown	= ~0u,
 		};
 
 		static StringCRef ToString (type value);
@@ -50,7 +50,7 @@ namespace Platforms
 			Max,			// max(S,D)
 			
 			_Count,
-			Unknown	= uint(-1),
+			Unknown	= ~0u,
 		};
 
 		// TODO: add from https://www.opengl.org/registry/specs/KHR/blend_equation_advanced.txt
@@ -82,7 +82,7 @@ namespace Platforms
 			OrInverted,			// ~S | D
 
 			_Count,
-			Unknown	= uint(-1),
+			Unknown	= ~0u,
 		};
 
 		static StringCRef ToString (type value);
@@ -104,7 +104,7 @@ namespace Platforms
 			Always,			// true
 			
 			_Count,
-			Unknown	= uint(-1),
+			Unknown	= ~0u,
 		};
 
 		static StringCRef ToString (type value);
@@ -125,7 +125,7 @@ namespace Platforms
 			Invert,			// ~s
 			
 			_Count,
-			Unknown	= uint(-1),
+			Unknown	= ~0u,
 		};
 
 		static StringCRef ToString (type value);
@@ -141,7 +141,7 @@ namespace Platforms
 			Fill,
 
 			_Count,
-			Unknown	= uint(-1),
+			Unknown	= ~0u,
 		};
 
 		static StringCRef ToString (type value);
@@ -157,10 +157,13 @@ namespace Platforms
 			LineStrip,
 			TriangleList,
 			TriangleStrip,
+			Patch,
 
 			_Count,
-			Unknown		= uint(-1),
+			Unknown		= ~0u,
 		};
+
+		GX_ENUM_BITFIELD( EPrimitive );
 
 		static StringCRef ToString (type value);
 	};
@@ -171,14 +174,14 @@ namespace Platforms
 		enum type : uint
 		{
 			None		= 0,
-			Front		= 1,
-			Back		= 2,
+			Front		= 1	<< 0,
+			Back		= 1 << 1,
 			FontAndBack	= Front | Back,
 
 			//Unknown		= (1u << 31),
 		};
 
-		GX_ENUM_BIT_OPERATIONS( type );
+		GX_ENUM_BIT_OPERATIONS( type );		// TODO: use GX_ENUM_BITFIELD
 		
 		static StringCRef ToString (type value);
 	};
@@ -188,7 +191,7 @@ namespace Platforms
 	{
 		enum type : uint
 		{
-			Viewport	= 0,
+			Viewport,
 			Scissor,
 			LineWidth,
 			DepthBias,
@@ -199,33 +202,11 @@ namespace Platforms
 			StencilReference,
 
 			_Count,
-			Unknown		= uint(-1),
+			Unknown		= ~0u,
 		};
 
-		using bits = EnumSet< EPipelineDynamicState >;
+		GX_ENUM_BITFIELD( EPipelineDynamicState );
 	};
-	
-
-
-//-----------------------------------------------------------------------------//
-// ECompareFunc
-	
-	inline StringCRef ECompareFunc::ToString (type value)
-	{
-		switch ( value )
-		{
-			case ECompareFunc::None		:	return "None";
-			case ECompareFunc::Never	:	return "Never";
-			case ECompareFunc::Less		:	return "Less";
-			case ECompareFunc::Equal	:	return "Equal";
-			case ECompareFunc::LEqual	:	return "LessEqual";
-			case ECompareFunc::Greater	:	return "Greater";
-			case ECompareFunc::NotEqual	:	return "NotEqual";
-			case ECompareFunc::GEqual	:	return "GreaterEqual";
-			case ECompareFunc::Always	:	return "Always";
-		}
-		RETURN_ERR( "invalid compare function type", "unknown" );
-	}
 
 
 }	// Platforms

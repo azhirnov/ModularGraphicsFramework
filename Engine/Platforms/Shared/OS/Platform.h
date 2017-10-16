@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/OS/Display.h"
+#include "Engine/Platforms/Shared/OS/IDs.h"
 
 namespace Engine
 {
@@ -25,7 +26,7 @@ namespace CreateInfo
 				_Count,
 			};
 
-			using bits = EnumBitfield< EPlatformFlags >;
+			GX_ENUM_BITFIELD( EPlatformFlags );
 		};
 
 

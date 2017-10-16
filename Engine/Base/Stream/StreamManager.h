@@ -3,8 +3,6 @@
 #pragma once
 
 #include "Engine/Base/Stream/Stream.h"
-#include "Engine/Base/Stream/InputStream.h"
-#include "Engine/Base/Stream/OutputStream.h"
 
 namespace Engine
 {
@@ -33,8 +31,6 @@ namespace Base
 	public:
 		StreamManager (const GlobalSystemsRef gs, const CreateInfo::StreamManager &info);
 		~StreamManager ();
-
-		static GModID::type	GetStaticID ()		{ return "stream.mngr"_GModID; }
 		
 		static void Register (GlobalSystemsRef);
 		static void Unregister (GlobalSystemsRef);

@@ -112,16 +112,16 @@ namespace CompileTime
 	//
 
 	template <usize ...I>
-	using IndexSequence			= Sequence< usize, I... >;
+	using IndexSequence				= Sequence< usize, I... >;
 
 	template <usize First, usize Last>
-	using IndexSequenceRange	= SequenceRange< usize, First, Last >;
+	using IndexSequenceFromRange	= SequenceRange< usize, First, Last >;
 
 	template <usize Count>
-	using IndexSequenceSize		= IndexSequenceRange< 0u, Count-1 >;
+	using IndexSequenceFromSize		= IndexSequenceFromRange< 0u, Count-1 >;
 
 	template <typename ...Types>
-	using IndexSequenceFor		= IndexSequenceSize< sizeof...(Types) >;
+	using IndexSequenceFor			= IndexSequenceFromSize< sizeof...(Types) >;
 
 
 }	// CompileTime

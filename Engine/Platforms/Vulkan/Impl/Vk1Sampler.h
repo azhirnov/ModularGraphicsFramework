@@ -20,12 +20,12 @@ namespace PlatformVK
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Erase< MessageListFrom<
+		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t/*::Erase< MessageListFrom<
 											ModuleMsg::Delete
-										> >
+										> >*/
 										::Append< MessageListFrom<
-											ModuleMsg::GetGpuSamplerDescriptor,
-											ModuleMsg::GetVkSamplerID
+											GpuMsg::GetSamplerDescriptor,
+											GpuMsg::GetVkSamplerID
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
@@ -49,20 +49,15 @@ namespace PlatformVK
 		Vk1Sampler (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
 		~Vk1Sampler ();
 
-		static OModID::type			GetStaticID ()				{ return "vk1.sampler"_OModID; }
-
-
-	//protected:
 		SamplerDescriptor const&	GetDescriptor ()	const	{ return _descr; }
-		vk::VkSampler				GetSamplerID ()		const	{ return _samplerId; }
 
 
 	// message handlers
 	private:
 		bool _Compose (const  Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetVkSamplerID (const Message< ModuleMsg::GetVkSamplerID > &);
-		bool _GetGpuSamplerDescriptor (const Message< ModuleMsg::GetGpuSamplerDescriptor > &);
+		bool _GetVkSamplerID (const Message< GpuMsg::GetVkSamplerID > &);
+		bool _GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &);
 
 	private:
 		bool _IsCreated () const;
@@ -97,7 +92,7 @@ namespace PlatformVK
 
 		struct SamplerSearch
 		{
-			SamplerDescriptor	descr;
+			SamplerDescriptor const&	descr;
 
 			explicit SamplerSearch (const SamplerDescriptor &s) : descr(s) {}
 
@@ -120,6 +115,8 @@ namespace PlatformVK
 		explicit Vk1SamplerCache (VkSystemsRef vkSys);
 
 		Vk1SamplerPtr	Create (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
+
+		void Destroy ();
 
 		VkSystemsRef	VkSystems ()			const	{ return _vkSystems; }
 		Ptr<Vk1Device>	GetDevice ()			const	{ return _vkSystems->Get< Vk1Device >(); }

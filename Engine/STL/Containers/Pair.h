@@ -96,7 +96,7 @@ namespace GXTypes
 		typedef Pair< FirstType, SecondType >	key_t;
 		typedef Hash< FirstType >::result_t		result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return	Hash< FirstType >::operator ()( x.first ) +
 					Hash< SecondType >::operator ()( x.second );

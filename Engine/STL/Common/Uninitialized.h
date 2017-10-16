@@ -59,7 +59,7 @@ namespace GXTypes
 								0;
 			}
 
-			static T GetDefault ()
+			static constexpr T GetDefault ()
 			{
 				constexpr int	idx = GetIndex();
 
@@ -75,15 +75,18 @@ namespace GXTypes
 
 	struct UninitializedType
 	{
+		constexpr UninitializedType ()
+		{}
+
 		template <typename T>
-		operator T () const
+		constexpr operator T () const
 		{
 			return _types_hidden_::_GetDefaultValueForUninitialized<T>::GetDefault();
 		}
 	};
 
 
-	static const UninitializedType	Uninitialized = UninitializedType();
+	static constexpr UninitializedType	Uninitialized = UninitializedType();
 
 
 

@@ -78,14 +78,13 @@ namespace OS
 	bool FileSystem::_Search (StringCRef name, uint depth, OUT String &result)
 	{
 		String	tmp;
-		String	fname;	  
 
 		if ( _SearchForward<B>( "", name, depth, result ) )
 			return true;
 
 		for (uint i = 0; i < depth; ++i)
 		{
-			FileAddress::BuildPath( fname, tmp, name );
+			const String	fname = FileAddress::BuildPath( tmp, name );
 
 			if ( B::IsExist( fname ) ) {
 				result = RVREF( fname );

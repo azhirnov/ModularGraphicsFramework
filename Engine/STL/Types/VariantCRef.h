@@ -144,7 +144,7 @@ namespace GXTypes
 		typedef Hash< void* >		base_t;
 		typedef base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			// must be compilation error!
 

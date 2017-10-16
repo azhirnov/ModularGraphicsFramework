@@ -4,6 +4,7 @@
 
 #include "Engine/Platforms/Shared/GPU/SamplerEnums.h"
 #include "Engine/Platforms/Shared/GPU/RenderStateEnums.h"
+#include "Engine/Platforms/Shared/GPU/IDs.h"
 
 namespace Engine
 {
@@ -14,21 +15,21 @@ namespace Platforms
 	// Sampler Descriptor
 	//
 
-	struct SamplerDescriptor : CompileTime::PODStruct
+	struct SamplerDescriptor final : CompileTime::PODStruct
 	{
-		friend struct SamplerDescrBuilder;
-
 	// types
 	public:
 		using AddressMode_t	= Vec< EAddressMode::type, 3 >;
 		using Self			= SamplerDescriptor;
+
+		struct Builder;
 
 
 	// variables
 	private:
 		AddressMode_t				_addressMode;
 		EFilter::type				_filter;
-		ESamplerBorderColor::type	_borderColor;
+		ESamplerBorderColor::bits	_borderColor;
 		ECompareFunc::type			_compareOp;		// TODO: check: Some implementations will default to shader state if this member does not match
 		//float						_mipLodBias;
 		//float2					_lodRange;
@@ -41,7 +42,7 @@ namespace Platforms
 
 		SamplerDescriptor (EAddressMode::type addressMode,
 						   EFilter::type filter,
-						   ESamplerBorderColor::type borderColor = ESamplerBorderColor::Unknown,
+						   ESamplerBorderColor::bits borderColor = Uninitialized,
 						   //float mipLodBias = 0.0f,
 						   //const float2 &lodRange = float2(),
 						   ECompareFunc::type compareOp = ECompareFunc::None);
@@ -52,7 +53,7 @@ namespace Platforms
 
 		AddressMode_t const&		AddressMode ()	const	{ return _addressMode; }
 		EFilter::type				Filter ()		const	{ return _filter; }
-		ESamplerBorderColor::type	BorderColor ()	const	{ return _borderColor; }
+		ESamplerBorderColor::bits	BorderColor ()	const	{ return _borderColor; }
 		ECompareFunc::type			CompareOp ()	const	{ return _compareOp; }
 
 		DEBUG_ONLY( String ToString () const );
@@ -64,46 +65,39 @@ namespace Platforms
 	// Sampler Descriptor Builder
 	//
 
-	struct SamplerDescrBuilder
+	struct SamplerDescriptor::Builder final
 	{
-	// types
-	public:
-		using Self			= SamplerDescrBuilder;
-		using AddressMode_t	= SamplerDescriptor::AddressMode_t;
-
-		
 	// variables
 	private:
 		SamplerDescriptor	_state;
-		bool			_changed;
+		bool				_changed	= true;
 
 
 	// methods
 	public:
-		SamplerDescrBuilder () : _state(), _changed(true) {}
+		Builder () {}
 
-		explicit SamplerDescrBuilder (const SamplerDescriptor &state) : _state(state), _changed(true) {}
+		explicit Builder (const SamplerDescriptor &state) : _state(state) {}
 
-		Self& SetAddressMode (EAddressMode::type u, EAddressMode::type v, EAddressMode::type w);
-		Self& SetAddressMode (EAddressMode::type uvw);
-		Self& SetAddressMode (uint index, EAddressMode::type value);
-		Self& SetAddressMode (const AddressMode_t &uvw);
+		Builder& SetAddressMode (EAddressMode::type u, EAddressMode::type v, EAddressMode::type w);
+		Builder& SetAddressMode (EAddressMode::type uvw);
+		Builder& SetAddressMode (uint index, EAddressMode::type value);
+		Builder& SetAddressMode (const AddressMode_t &uvw);
 
-		Self& SetFilter (EFilter::type value);
+		Builder& SetFilter (EFilter::type value);
 
-		Self& SetBorderColor (ESamplerBorderColor::type value);
+		Builder& SetBorderColor (ESamplerBorderColor::bits value);
 
-		Self& SetCompareOp (ECompareFunc::type value);
+		Builder& SetCompareOp (ECompareFunc::type value);
 		
 		AddressMode_t const&		AddressMode ()	const	{ return _state._addressMode; }
 		EFilter::type				Filter ()		const	{ return _state._filter; }
-		ESamplerBorderColor::type	BorderColor ()	const	{ return _state._borderColor; }
+		ESamplerBorderColor::bits	BorderColor ()	const	{ return _state._borderColor; }
 		ECompareFunc::type			CompareOp ()	const	{ return _state._compareOp; }
 
 		// validate, calculate hash and return
 		SamplerDescriptor const& Finish ();
 	};
-
 
 }	// Platforms
 
@@ -124,12 +118,12 @@ namespace CreateInfo
 }	// CreateInfo
 
 
-namespace ModuleMsg
+namespace GpuMsg
 {
 	//
-	// Get GPU Sampler Descriptor
+	// Get Sampler Descriptor
 	//
-	struct GetGpuSamplerDescriptor
+	struct GetSamplerDescriptor
 	{
 		Out< Platforms::SamplerDescriptor >		result;
 	};
@@ -140,5 +134,5 @@ namespace ModuleMsg
 	struct GetGLSamplerID;
 
 
-}	// ModuleMsg
+}	// GpuMsg
 }	// Engine

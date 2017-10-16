@@ -98,6 +98,8 @@ namespace GXTypes
 
 		void MoveFrom (INOUT Self &other)
 		{
+			Deallocate();
+
 			this->_memory	= other._memory;
 			other._memory	= null;
 		}

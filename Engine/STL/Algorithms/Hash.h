@@ -4,6 +4,7 @@
 
 #include "Engine/STL/Common/Types.h"
 #include "Engine/STL/CompileTime/TypeTraits.h"
+#include "Engine/STL/CompileTime/TypeQualifier.h"
 #include <xstddef>
 
 namespace GX_STL
@@ -11,7 +12,7 @@ namespace GX_STL
 
 // BitRotateLeft depends of Bits
 // Bits depends of Hash
-// hidden _BitRotateLeft not depends of this
+// hidden _BitRotateLeft not depends of both
 namespace GXMath
 {
 namespace _math_hidden_
@@ -29,7 +30,7 @@ namespace GXTypes
 	// Hash Result
 	//
 
-	struct HashResult
+	struct HashResult final : public CompileTime::PODStruct
 	{
 	// types
 	private:
@@ -100,7 +101,7 @@ namespace GXTypes
 	//
 
 	template <typename T>
-	struct Hash
+	struct Hash : public CompileTime::FastCopyable
 	{
 		typedef HashResult	result_t;
 

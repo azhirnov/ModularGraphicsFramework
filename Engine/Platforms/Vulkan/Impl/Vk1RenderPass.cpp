@@ -1,7 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -41,16 +40,30 @@ namespace PlatformVK
 		
 		// create new render pass
 		auto	result = New< Vk1RenderPass >( gs, ci );
-		
-		result->Send( Message< ModuleMsg::Link >() );
-		result->Send( Message< ModuleMsg::Compose >() );
-		
+
+		ModuleUtils::Initialize( {result}, null );
+
 		CHECK_ERR( result->GetState() == Module::EState::ComposedImmutable );
 
 		_renderPasses.Add( SearchableRenderPass( result ) );
 		return result;
 	}
 	
+/*
+=================================================
+	Destroy
+=================================================
+*/
+	void Vk1RenderPassCache::Destroy ()
+	{
+		Message< ModuleMsg::Delete >	del_msg;
+
+		FOR( i, _renderPasses ) {
+			_renderPasses[i].rp->Send( del_msg );
+		}
+
+		_renderPasses.Clear();
+	}
 //-----------------------------------------------------------------------------
 
 
@@ -64,7 +77,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1RenderPass::Vk1RenderPass (const GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkRenderPassModuleID, ~0u }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_renderPassId( VK_NULL_HANDLE )
 	{
@@ -80,13 +93,14 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1RenderPass::_Compose );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_Delete );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1RenderPass::_GpuDeviceBeforeDestory );
+		_SubscribeOnMsg( this, &Vk1RenderPass::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkRenderPassID );
-		_SubscribeOnMsg( this, &Vk1RenderPass::_GetGpuRenderPassDescriptor );
+		_SubscribeOnMsg( this, &Vk1RenderPass::_GetRenderPassDescriptor );
+		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkLogicDevice );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VulkanThread::GetStaticID(), true );
+		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
 	}
 	
 /*
@@ -106,9 +120,12 @@ namespace PlatformVK
 */
 	bool Vk1RenderPass::_Compose (const  Message< ModuleMsg::Compose > &msg)
 	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
 		CHECK_ERR( GetState() == EState::Linked );
 
-		CHECK_ERR( _CreateRenderPass() );
+		CHECK_COMPOSING( _CreateRenderPass() );
 
 		_SendForEachAttachments( msg );
 		
@@ -136,7 +153,7 @@ namespace PlatformVK
 	_GetVkRenderPassID
 =================================================
 */
-	bool Vk1RenderPass::_GetVkRenderPassID (const Message< ModuleMsg::GetVkRenderPassID > &msg)
+	bool Vk1RenderPass::_GetVkRenderPassID (const Message< GpuMsg::GetVkRenderPassID > &msg)
 	{
 		msg->result.Set( _renderPassId );
 		return true;
@@ -144,10 +161,10 @@ namespace PlatformVK
 
 /*
 =================================================
-	_GetGpuRenderPassDescriptor
+	_GetRenderPassDescriptor
 =================================================
 */
-	bool Vk1RenderPass::_GetGpuRenderPassDescriptor (const Message< ModuleMsg::GetGpuRenderPassDescriptor > &msg)
+	bool Vk1RenderPass::_GetRenderPassDescriptor (const Message< GpuMsg::GetRenderPassDescriptor > &msg)
 	{
 		msg->result.Set( _descr );
 		return true;
@@ -230,13 +247,13 @@ namespace PlatformVK
 			descr.flags						= 0;	// TODO
 			descr.pipelineBindPoint			= VK_PIPELINE_BIND_POINT_GRAPHICS;
 
-			descr.colorAttachmentCount		= subpass.colors.Count();
+			descr.colorAttachmentCount		= (uint32_t) subpass.colors.Count();
 			descr.pColorAttachments			= subpass.colors.Empty() ? null : color_attach_ref.ptr() + color_attach_ref.Count();
 
-			descr.inputAttachmentCount		= subpass.inputs.Count();
+			descr.inputAttachmentCount		= (uint32_t) subpass.inputs.Count();
 			descr.pInputAttachments			= subpass.inputs.Empty() ? null : input_attach_ref.ptr() + input_attach_ref.Count();
 
-			descr.preserveAttachmentCount	= subpass.preserves.Count();
+			descr.preserveAttachmentCount	= (uint32_t) subpass.preserves.Count();
 			descr.pPreserveAttachments		= subpass.preserves.Empty() ? null : PointerSafeCast<vk::uint32_t>( subpass.preserves.ptr() );
 
 			descr.pResolveAttachments		= subpass.resolve.IsEnabled() ?
@@ -299,14 +316,16 @@ namespace PlatformVK
 
 		VkRenderPassCreateInfo	info = {};
 		info.sType				= VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		info.attachmentCount	= attachments.Count();
+		info.attachmentCount	= (uint32_t) attachments.Count();
 		info.pAttachments		= attachments.RawPtr();
-		info.subpassCount		= subpasses.Count();
+		info.subpassCount		= (uint32_t) subpasses.Count();
 		info.pSubpasses			= subpasses.RawPtr();
-		info.dependencyCount	= dependencies.Count();
+		info.dependencyCount	= (uint32_t) dependencies.Count();
 		info.pDependencies		= dependencies.RawPtr();
 		
 		VK_CHECK( vkCreateRenderPass( GetLogicalDevice(), &info, null, OUT &_renderPassId ) );
+
+		GetDevice()->SetObjectName( _renderPassId, GetDebugName(), EGpuObject::RenderPass );
 		return true;
 	}
 	

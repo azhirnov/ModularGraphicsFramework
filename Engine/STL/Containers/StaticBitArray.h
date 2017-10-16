@@ -15,7 +15,7 @@ namespace GXTypes
 	//
 
 	template <usize C, typename IndexType = usize>
-	struct StaticBitArray : public CompileTime::FastCopyable
+	struct StaticBitArray final : public CompileTime::CopyQualifiers< StaticArray< Bitfield<32>, 1 > >
 	{
 		STATIC_ASSERT( C > 0, "invalid array size" );
 
@@ -299,7 +299,7 @@ namespace GXTypes
 		typedef Hash< ArrayCRef<typename key_t::value_t > >	base_t;
 		typedef typename base_t::result_t					result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

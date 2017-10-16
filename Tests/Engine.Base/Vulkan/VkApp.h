@@ -13,10 +13,15 @@ public:
 
 private:
 	bool				looping		= true;
+	uint				cmdBufIndex	= 0;
 
 	ModulePtr			graphicsPipeline;
-	ModulePtr			shaderModules;
-	//ModulePtr			commandBuilder;
+	ModulePtr			pipelineTemplate;
+	ModulePtr			resourceTable;
+	ModulePtr			texture;
+	ModulePtr			sampler;
+	Array<ModulePtr>	cmdBuffers;
+	ModulePtr			cmdBuilder;
 
 
 // methods
@@ -32,8 +37,9 @@ private:
 	bool _OnKey (const Message< ModuleMsg::InputKey > &);
 	bool _OnMotion (const Message< ModuleMsg::InputMotion > &);
 	bool _Draw (const Message< ModuleMsg::Update > &);
-	bool _VkInit (const Message< ModuleMsg::GpuDeviceCreated > &);
-	bool _VkDelete (const Message< ModuleMsg::GpuDeviceBeforeDestory > &);
+	bool _VkInit (const Message< GpuMsg::DeviceCreated > &);
+	bool _VkDelete (const Message< GpuMsg::DeviceBeforeDestroy > &);
 	
 	bool _CreatePipeline ();
+	bool _CreateCmdBuffers ();
 };

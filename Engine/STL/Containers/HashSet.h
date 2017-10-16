@@ -272,10 +272,10 @@ namespace _types_hidden_
 		private Hash< ArrayCRef<Pair< typename H::result_t, Value > > >
 	{
 		typedef _types_hidden_::BaseHashSet< Value, IsUnique, H, S, MC >	key_t;
-		typedef Hash< ArrayCRef<Pair< typename H::result_t, Value > > >	base_t;
+		typedef Hash< ArrayCRef<Pair< typename H::result_t, Value > > >		base_t;
 		typedef typename base_t::result_t									result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

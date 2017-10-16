@@ -40,11 +40,6 @@ namespace GXTypes
 	private:
 		Atomic< int >		_atomicCounter;
 
-		DEBUG_ONLY(
-			static Set< Self *>	_objectRefs;
-			static OS::Mutex	_mutex;
-		)
-
 
 	// methods
 	private:
@@ -55,22 +50,35 @@ namespace GXTypes
 		forceinline void _DebugAddRef ()
 		{
 			DEBUG_ONLY(
-				SCOPELOCK( _mutex );
-				_objectRefs.Add( this );
+				SCOPELOCK( _GetMutex() );
+				_GetObjectRefs().Add( this );
 			)
 		}
 
 		forceinline void _DebugRemoveRef ()
 		{
 			DEBUG_ONLY(
-				SCOPELOCK( _mutex );
+				SCOPELOCK( _GetMutex() );
 
 				usize	idx;
-				if ( _objectRefs.FindIndex( this, idx ) ) {
-					_objectRefs.EraseFromIndex( idx );
+				if ( _GetObjectRefs().FindIndex( this, idx ) ) {
+					_GetObjectRefs().EraseFromIndex( idx );
 				}
 			)
 		}
+
+		DEBUG_ONLY(
+		static Set< Self *>& _GetObjectRefs ()
+		{
+			static Set< Self *>		s_instance;
+			return s_instance;
+		}
+
+		static OS::Mutex& _GetMutex ()
+		{
+			static OS::Mutex	s_mutex;
+			return s_mutex;
+		})
 
 	protected:
 		RefCountedObject (): _atomicCounter(0)
@@ -104,9 +112,11 @@ namespace GXTypes
 		DEBUG_ONLY(
 		static void s_ChenckNotReleasedObjects (uint refValue = 0)
 		{
-			SCOPELOCK( _mutex );
+			SCOPELOCK( _GetMutex() );
 
-			if ( _objectRefs.Count() != refValue )
+			auto& objects = _GetObjectRefs();
+
+			if ( objects.Count() != refValue )
 			{
 				GX_BREAK_POINT();
 			}

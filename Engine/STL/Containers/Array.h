@@ -93,12 +93,17 @@ namespace GXTypes
 		friend Self &	operator >> (T &&left, Self &right)				{ right.PushFront( RVREF(left) );  return right; }
 		friend Self &	operator >> (Self &&left, Self &right)			{ right.Insert( RVREF(left), 0 );  return right; }
 		
-		Self &			operator =  (ArrayCRef<T> right)				{ Copy( right );			return *this; }
-		Self &			operator =  (const Self &right)					{ Copy( right );			return *this; }
-		Self &			operator =  (Self &&right)						{ _Move( RVREF(right) );	return *this; }
+		Self &			operator =  (ArrayCRef<T> right)				{ Copy( right );					return *this; }
+		Self &			operator =  (const Self &right)					{ Copy( right );					return *this; }
+		Self &			operator =  (Self &&right)						{ Free();  _Move( RVREF(right) );	return *this; }
 
 		bool			operator == (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) == right; }
 		bool			operator != (ArrayCRef<T> right) const			{ return not ( (*this) == right ); }
+		
+		bool			operator >  (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) >  right; }
+		bool			operator >= (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) >= right; }
+		bool			operator <  (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) <  right; }
+		bool			operator <= (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) <= right; }
 
 		
 		bool At (usize index, OUT T & value) const;
@@ -258,7 +263,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline Array<T,S,MC>::Array (Self &&other)
+	inline Array<T,S,MC>::Array (Self &&other) : _count(0), _size(0)
 	{
 		_Move( RVREF(other) );
 	}
@@ -967,7 +972,7 @@ namespace GXTypes
 		typedef Hash< ArrayCRef<T> >		base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

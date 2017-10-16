@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Input/InputThread.h"
+#include "Engine/Platforms/Shared/OS/Input.h"
 
 namespace Engine
 {
@@ -41,8 +41,6 @@ namespace Platforms
 	public:
 		InputManager (const GlobalSystemsRef gs, const CreateInfo::InputManager &ci);
 		~InputManager ();
-		
-		static GModID::type		GetStaticID ()			{ return "input.mngr"_GModID; }
 		
 		static void Register (GlobalSystemsRef);
 		static void Unregister (GlobalSystemsRef);

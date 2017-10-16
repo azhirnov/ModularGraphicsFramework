@@ -4,6 +4,7 @@
 
 #include "Engine/Platforms/Common/Common.h"
 #include "Engine/Platforms/Shared/GPU/Context.h"
+#include "Engine/Platforms/Shared/GPU/IDs.h"
 
 namespace Engine
 {
@@ -23,16 +24,16 @@ namespace CreateInfo
 }	// CreateInfo
 
 
-namespace ModuleMsg
+namespace GpuMsg
 {
 	//
 	// GPU Device Created / Destroyed
 	//
-	struct GpuDeviceCreated
+	struct DeviceCreated
 	{
 	};
 
-	struct GpuDeviceBeforeDestory
+	struct DeviceBeforeDestroy
 	{
 	};
 
@@ -40,13 +41,17 @@ namespace ModuleMsg
 	//
 	// Begin / End Frame
 	//
-	struct GpuThreadBeginFrame
+	struct ThreadBeginFrame
 	{
-		Out< ModulePtr >	framebuffer;		// returns current framebuffer
-		Out< ModulePtr >	commandBuilder;		// this builder destroys all command buffer before resize swapchain
+		struct Data {
+			ModulePtr	framebuffer;		// returns current framebuffer
+			ModulePtr	commandBuilder;		// this builder destroys all command buffer before resize swapchain
+			uint		index;				// index of image in swapchain
+		};
+		Out< Data >		result;
 	};
 
-	struct GpuThreadEndFrame
+	struct ThreadEndFrame
 	{
 	// types
 		using Commands_t	= FixedSizeArray< ModulePtr, 32 >;
@@ -56,13 +61,13 @@ namespace ModuleMsg
 		ModulePtr			framebuffer;	// (optional) must be null or framebuffer returned by GpuThreadBeginFrame
 
 	// methods
-		GpuThreadEndFrame ()
+		ThreadEndFrame ()
 		{}
 
-		explicit GpuThreadEndFrame (const ModulePtr &framebuffer) : framebuffer(framebuffer)
+		explicit ThreadEndFrame (const ModulePtr &framebuffer) : framebuffer(framebuffer)
 		{}
 
-		GpuThreadEndFrame (const ModulePtr &framebuffer, InitializerList< ModulePtr > list) :
+		ThreadEndFrame (const ModulePtr &framebuffer, InitializerList< ModulePtr > list) :
 			framebuffer(framebuffer), commands( list )
 		{}
 	};
@@ -88,5 +93,5 @@ namespace ModuleMsg
 	};
 
 
-}	// ModuleMsg
+}	// GpuMsg
 }	// Engine

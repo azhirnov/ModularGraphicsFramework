@@ -89,6 +89,10 @@ namespace GXTypes
 		
 		bool		operator == (const Self &right) const;
 		bool		operator != (const Self &right) const;
+		bool		operator >  (const Self &right) const;
+		bool		operator >= (const Self &right) const;
+		bool		operator <  (const Self &right) const;
+		bool		operator <= (const Self &right) const;
 
 		bool		operator ! ()	const		{ return not Empty(); }
 
@@ -394,6 +398,56 @@ namespace GXTypes
 	
 /*
 =================================================
+	operator >
+=================================================
+*/
+	template <typename T>
+	inline bool ArrayRef<T>::operator >  (const Self &right) const
+	{
+		if ( Count() != right.Count() )
+			return (Count() > right.Count());
+
+		FOR( i, right )
+		{
+			if ( _memory[i] != right._memory[i] )
+				return (_memory[i] > right._memory[i]);
+		}
+		return false;	// equals
+	}
+	
+	template <typename T>
+	inline bool ArrayRef<T>::operator >= (const Self &right) const
+	{
+		return not (*this < right);
+	}
+	
+/*
+=================================================
+	operator <
+=================================================
+*/
+	template <typename T>
+	inline bool ArrayRef<T>::operator <  (const Self &right) const
+	{
+		if ( Count() != right.Count() )
+			return (Count() < right.Count());
+
+		FOR( i, right )
+		{
+			if ( _memory[i] != right._memory[i] )
+				return (_memory[i] < right._memory[i]);
+		}
+		return false;	// equals
+	}
+	
+	template <typename T>
+	inline bool ArrayRef<T>::operator <= (const Self &right) const
+	{
+		return not (*this > right);
+	}
+
+/*
+=================================================
 	Equals
 =================================================
 */
@@ -636,9 +690,9 @@ namespace GXTypes
 		typedef Hash<T>						base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
-			result_t	value = ~Hash<usize>()( x.Count() );
+			result_t	value = ~HashOf( x.Count() );
 
 			if ( CompileTime::IsPOD<T> )
 			{

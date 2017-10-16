@@ -114,12 +114,12 @@ struct ImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static BytesU AlignedRowSize (const T rowSize, BytesU bytePerPixel, BytesU rowAlign)
+	static BytesU AlignedRowSize (const T rowPixels, BytesU bytePerPixel, BytesU rowAlign)
 	{
 		typedef CompileTime::MainType<T, BytesU::value_t>	main_t;
 
 		CompileTime::MustBeInteger<T>();
-		return (BytesU) GXMath::AlignToLarge( Max( rowSize, T(1) ) * (main_t)bytePerPixel, rowAlign );
+		return (BytesU) GXMath::AlignToLarge( Max( rowPixels, T(1) ) * (main_t)bytePerPixel, rowAlign );
 	}
 	
 /*

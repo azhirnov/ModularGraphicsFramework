@@ -74,11 +74,17 @@
     <ClInclude Include="..\..\..\Engine\Base\Stream\StreamManager.h">
       <Filter>Stream</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Base\Stream\InputStream.h">
-      <Filter>Stream</Filter>
+    <ClInclude Include="..\..\..\Engine\Base\Modules\ModuleUtils.h">
+      <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Base\Stream\OutputStream.h">
-      <Filter>Stream</Filter>
+    <ClInclude Include="..\..\..\Engine\Base\Common\Defines.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Modules\IDs.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Threads\ParallelThreadImpl.h">
+      <Filter>Threads</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -90,9 +96,6 @@
     </Filter>
     <Filter Include="Serializing">
       <UniqueIdentifier>{bb7eb231-36a0-4a23-9e93-b2dc4480a49c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Time">
-      <UniqueIdentifier>{c4c4af72-909a-452c-989c-595ede6bdc9f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Main">
       <UniqueIdentifier>{d303ccc0-1a9b-4bc5-a9db-cf651a4d99fd}</UniqueIdentifier>
@@ -123,9 +126,6 @@
     <ClCompile Include="..\..\..\Engine\Base\Tasks\TaskModule.cpp">
       <Filter>Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Engine\Base\Threads\ParallelThread.cpp">
-      <Filter>Threads</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Engine\Base\Threads\ThreadManager.cpp">
       <Filter>Threads</Filter>
     </ClCompile>
@@ -146,6 +146,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Engine\Base\Stream\OutputStream.cpp">
       <Filter>Stream</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Base\Threads\ParallelThreadImpl.cpp">
+      <Filter>Threads</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

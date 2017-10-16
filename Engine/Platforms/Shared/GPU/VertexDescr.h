@@ -109,7 +109,8 @@ namespace Platforms
 	{
 		typedef Vec<T,I>						type;
 		static const EVertexAttribute::type		attrib	= EVertexAttribute::type( (VertexDescr< typename type::value_t >
-															::attrib & EValueTypeInfo::_TYPE_FLAG_MASK) | (I << EValueTypeInfo::_COL_OFF) );
+															::attrib & _platforms_hidden_::EValueTypeInfo::_TYPE_FLAG_MASK) |
+																(I << _platforms_hidden_::EValueTypeInfo::_COL_OFF) );
 	};
 
 

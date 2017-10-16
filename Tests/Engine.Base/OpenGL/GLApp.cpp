@@ -13,23 +13,23 @@ GLApp::GLApp ()
 
 void GLApp::Initialize ()
 {
-	ms->AddModule( "win.platform"_GModID, CreateInfo::Platform() );
-	ms->AddModule( "input.mngr"_GModID, CreateInfo::InputManager() );
-	ms->AddModule( "stream.mngr"_GModID, CreateInfo::StreamManager() );
-	ms->AddModule( "gl4.ctx"_GModID, CreateInfo::GpuContext() );
+	ms->AddModule( WinPlatformModuleID, CreateInfo::Platform() );
+	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager() );
+	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager() );
+	ms->AddModule( GLContextModuleID, CreateInfo::GpuContext() );
 
 	auto	thread	= ms->GlobalSystems()->Get< ParallelThread >();
 	
-	thread->AddModule( "win.window"_TModID, CreateInfo::Window() );
-	thread->AddModule( "input.thrd"_TModID, CreateInfo::InputThread() );
-	thread->AddModule( "gl4.thrd"_TModID, CreateInfo::GpuThread() );
+	thread->AddModule( WinWindowModuleID, CreateInfo::Window() );
+	thread->AddModule( InputThreadModuleID, CreateInfo::InputThread() );
+	thread->AddModule( GLThreadModuleID, CreateInfo::GpuThread() );
 
-	auto	window		= thread->GetModule( "win.window"_TModID );
-	auto	input		= thread->GetModule( "input.thrd"_TModID );
-	auto	glthread	= thread->GetModule( "gl4.thrd"_TModID );
+	auto	window		= thread->GetModuleByID( WinWindowModuleID );
+	auto	input		= thread->GetModuleByID( InputThreadModuleID );
+	auto	glthread	= thread->GetModuleByID( GLThreadModuleID );
 
-	window->AddModule( "win.keys"_OModID, CreateInfo::RawInputHandler() );
-	window->AddModule( "win.mouse"_OModID, CreateInfo::RawInputHandler() );
+	window->AddModule( WinKeyInputModuleID, CreateInfo::RawInputHandler() );
+	window->AddModule( WinMouseInputModuleID, CreateInfo::RawInputHandler() );
 
 	window->Subscribe( this, &GLApp::_OnWindowClosed );
 	input->Subscribe( this, &GLApp::_OnKey );
@@ -45,8 +45,7 @@ void GLApp::Initialize ()
 
 
 	// finish initialization
-	ms->Send( Message< ModuleMsg::Link >() );
-	ms->Send( Message< ModuleMsg::Compose >() );
+	ModuleUtils::Initialize({ ms });
 }
 
 
@@ -58,7 +57,7 @@ void GLApp::Quit ()
 
 bool GLApp::Update ()
 {
-	ms->Send( Message< ModuleMsg::Update >() );
+	ms->Send< ModuleMsg::Update >({});
 	return looping;
 }
 
@@ -99,7 +98,7 @@ bool GLApp::_Draw (const Message< ModuleMsg::Update > &msg)
 }
 
 
-bool GLApp::_GLInit (const Message< ModuleMsg::GpuDeviceCreated > &msg)
+bool GLApp::_GLInit (const Message< GpuMsg::DeviceCreated > &msg)
 {
 	using namespace gl;
 
@@ -110,7 +109,7 @@ bool GLApp::_GLInit (const Message< ModuleMsg::GpuDeviceCreated > &msg)
 }
 
 
-bool GLApp::_GLDelete (const Message< ModuleMsg::GpuDeviceBeforeDestory > &msg)
+bool GLApp::_GLDelete (const Message< GpuMsg::DeviceBeforeDestroy > &msg)
 {
 	using namespace gl;
 

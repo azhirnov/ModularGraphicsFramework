@@ -9,6 +9,7 @@
 #include "Engine/STL/Dimensions/Percentage.h"
 #include "Engine/STL/Dimensions/PhysicsValue.h"
 #include "Engine/STL/Math/Vec.h"
+#include "Engine/STL/Math/Matrix.h"
 #include "Engine/STL/Math/Color/Color.h"
 #include "Engine/STL/Math/Quaternion.h"
 #include "Engine/STL/Math/2D/Rectangle.h"
@@ -49,7 +50,7 @@ namespace GXTypes
 			String	str;
 
 			FOR( i, value ) {
-				str << (i > 0 ? ", " : "") << value[i];
+				str << (i ? ", " : "") << value[i];
 			}
 			return str;
 		}
@@ -64,7 +65,7 @@ namespace GXTypes
 			String	str;
 
 			FOR( i, value ) {
-				str << (i > 0 ? ", " : "") << s_aNames[i + nameType] << ": " << value[i];
+				str << (i ? ", " : "") << s_aNames[i + nameType] << ": " << value[i];
 			}
 			return str;
 		}
@@ -83,6 +84,28 @@ namespace GXTypes
 			return _types_hidden_::VecToStringShort( value );
 		else
 			return _types_hidden_::VecToStringShortLong( value );
+	}
+	
+/*
+=================================================
+	ToString (Matrix)
+=================================================
+*/
+	template <typename T, usize C, usize R>
+	inline String  ToString (const GXMath::Matrix<T,C,R> &value)
+	{
+		String	str;
+
+		for (usize c = 0; c < C; ++c)
+		{
+			str << (c ? ", " : "") << "(";
+
+			for (usize r = 0; r < R; ++r) {
+				str << (r ? ", " : "") << ToString( value(c,r) );
+			}
+			str << ")";
+		}
+		return str;
 	}
 
 /*
@@ -277,12 +300,12 @@ namespace GXTypes
 
 /*
 =================================================
-	ToString (Degrees)
+	ToString (Date)
 =================================================
 */
 	inline String  ToString (const OS::Date &value)
 	{
-		return value.ToString( "yyyy/mm.dm - hh:mi:ss ms" );
+		return value.ToString( "yyyy/mm/dm - hh:mi:ss" );
 	}
 	
 /*
@@ -334,6 +357,21 @@ namespace GXTypes
 	inline String  ToString (const ReferenceCounter<T,B,S> &value)
 	{
 		return String().FormatI( ReferenceCast<usize>( value.RawPtr() ), 16 );
+	}
+	
+/*
+=================================================
+	ToString (ArrayCRef)
+=================================================
+*/
+	template <typename T>
+	inline String  ToString (ArrayCRef<T> arr)
+	{
+		String	str;	str.Reserve( arr.Count() * 4 );
+		FOR( i, arr ) {
+			str << (i ? ", " : "") << '(' << ToString( arr[i] ) << ')';
+		}
+		return str;
 	}
 
 

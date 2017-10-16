@@ -70,7 +70,7 @@
 
 // Debug Console //
 #if not defined(__GX_FAST__)
-#	define DEBUG_CONSOLE( _msg_ )		__debug_console_write( (_msg_), __FILE__, __LINE__ )
+#	define DEBUG_CONSOLE( _msg_ )		::GX_STL::__debug_console_write( (_msg_), __FILE__, __LINE__ )
 #else
 #	define DEBUG_CONSOLE( _msg_ )		{}
 #endif

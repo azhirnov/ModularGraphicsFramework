@@ -1,13 +1,73 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Base/Stream/OutputStream.h"
+#include "Engine/Base/Stream/Stream.h"
+#include "Engine/Base/Modules/Module.h"
 #include "Engine/Base/Files/FileManager.h"
+#include "Engine/Base/Stream/StreamManager.h"
 
 namespace Engine
 {
 namespace Base
 {
 	using namespace GXMath;
+	
+	
+	//
+	// Output Stream Module
+	//
+
+	class OutputStream final : public Module
+	{
+	// types
+	private:
+		using SupportedMessages_t	= MessageListFrom< 
+											ModuleMsg::AttachModule,
+											ModuleMsg::DetachModule,
+											ModuleMsg::OnModuleAttached,
+											ModuleMsg::OnModuleDetached,
+											ModuleMsg::FindModule,
+											ModuleMsg::ModulesDeepSearch,
+											ModuleMsg::Delete,
+											ModuleMsg::GetStreamDescriptor,
+											ModuleMsg::WriteToStream
+										>;
+
+		using SupportedEvents_t		= MessageListFrom< 
+											ModuleMsg::DataRegionChanged,
+											ModuleMsg::Delete
+										>;
+
+
+	// constants
+	private:
+		static const Runtime::VirtualTypeList	_msgTypes;
+		static const Runtime::VirtualTypeList	_eventTypes;
+
+
+	// variables
+	private:
+		File::WFilePtr	_file;
+		BinaryArray		_cache;
+
+
+	// methods
+	public:
+		OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci);
+		OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci);
+		//OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamToMemory &ci);
+		~OutputStream ();
+
+
+	// message handlers
+	private:
+		bool _GetFileStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &);
+		bool _GetMemStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &);
+		bool _WriteToFileStream (const Message< ModuleMsg::WriteToStream > &);
+		bool _WriteToMemStream (const Message< ModuleMsg::WriteToStream > &);
+	};
+//-----------------------------------------------------------------------------
+
+
 	
 	const Runtime::VirtualTypeList	OutputStream::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const Runtime::VirtualTypeList	OutputStream::_eventTypes{ UninitializedT< SupportedEvents_t >() };
@@ -18,7 +78,7 @@ namespace Base
 =================================================
 */
 	OutputStream::OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ OutputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleDetached_Impl );
@@ -50,7 +110,7 @@ namespace Base
 =================================================
 */
 	OutputStream::OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ OutputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleDetached_Impl );
@@ -139,7 +199,7 @@ namespace Base
 
 		msg->wasWritten.Set( BytesUL( written ) );
 
-		_SendEvent( Message< ModuleMsg::DataRegionChanged >{ EMemoryAccess::CpuWrite, offset, written } );
+		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, offset, written });
 		return true;
 	}
 	
@@ -158,6 +218,22 @@ namespace Base
 		return true;
 	}
 	*/
+//-----------------------------------------------------------------------------
+	
+/*
+=================================================
+	_CreateOutputStream*
+=================================================
+*/
+	ModulePtr StreamManager::_CreateOutStreamFromFile (GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci)
+	{
+		return New< OutputStream >( gs, ci );
+	}
+	
+	ModulePtr StreamManager::_CreateOutStreamFromUri (GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci)
+	{
+		return New< OutputStream >( gs, ci );
+	}
 
 }	// Base
 }	// Engine

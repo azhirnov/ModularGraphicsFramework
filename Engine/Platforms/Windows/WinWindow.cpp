@@ -1,16 +1,110 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "WinWindow.h"
-#include "WinPlatform.h"
+#include "Engine/Platforms/Shared/OS/Window.h"
+#include "Engine/Platforms/Shared/OS/Display.h"
+#include "Engine/Platforms/Shared/OS/Platform.h"
+#include "Engine/Platforms/Windows/WinMessages.h"
+#include "Engine/Platforms/Windows/WinPlatform.h"
 
 #if defined( PLATFORM_WINDOWS )
 
-#include <Windows.h>
+#include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace Engine
 {
 namespace Platforms
 {
+
+	//
+	// Windows Window
+	//
+
+	class WinWindow final : public Module
+	{
+	// types
+	private:
+		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
+											ModuleMsg::Link,
+											ModuleMsg::Compose
+										> >
+										::Append< MessageListFrom<
+											ModuleMsg::OnManagerChanged,
+											ModuleMsg::WindowSetDescriptor,
+											ModuleMsg::WindowGetDescriptor,
+											ModuleMsg::PlatformCreated,
+											ModuleMsg::WindowGetHandle
+										> >;
+		using SupportedEvents_t		= MessageListFrom<
+											ModuleMsg::Update,
+											ModuleMsg::Delete,
+											ModuleMsg::WindowDescriptorChanged,
+											ModuleMsg::WindowVisibilityChanged,
+											ModuleMsg::WindowBeforeCreate,
+											ModuleMsg::WindowCreated,
+											ModuleMsg::WindowBeforeDestroy,
+											ModuleMsg::WindowAfterDestroy,
+											ModuleMsg::WindowRawMessage
+										>;
+		
+		using Handle_t				= OS::HiddenOSTypeFrom<void*>;
+		using EVisibility			= CreateInfo::Window::EVisibility;
+		
+
+	// constants
+	private:
+		static const Runtime::VirtualTypeList	_msgTypes;
+		static const Runtime::VirtualTypeList	_eventTypes;
+
+
+	// variables
+	private:
+		CreateInfo::Window	_createInfo;
+
+		WindowDesc			_windowDesc;
+		
+		Handle_t			_wnd;	// HWND
+
+		TimeProfilerD		_timer;
+
+		bool				_requestQuit;
+		bool				_looping;
+
+
+	// methods
+	public:
+		WinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci);
+		~WinWindow ();
+		
+
+	// message handlers
+	private:
+		bool _Update (const Message< ModuleMsg::Update > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _PlatformCreated (const Message< ModuleMsg::PlatformCreated > &);
+		bool _PlatformDeleted (const Message< ModuleMsg::Delete > &);
+		bool _WindowSetDescriptor (const Message< ModuleMsg::WindowSetDescriptor > &);
+		bool _WindowGetDescriptor (const Message< ModuleMsg::WindowGetDescriptor > &);
+		bool _WindowGetHandle (const Message< ModuleMsg::WindowGetHandle > &);
+
+
+	private:
+		bool _IsCreated () const;
+		bool _Create (const ModulePtr &sender, const ModuleMsg::PlatformCreated &platformInfo);
+		bool _CreateWindow (const Display &disp, const CreateInfo::Window &info, StringCRef className, Handle_t instance);
+		
+		isize _ProcessMessage (uint uMsg, usize wParam, isize lParam);
+
+		void _ShowWindow (EVisibility flags);
+		void _StartMessageProc ();
+		void _WindowTick ();
+
+		bool _UpdateDescriptor ();
+		//void _Resize ();
+		void _Destroy ();
+	};
+//-----------------------------------------------------------------------------
+
+
 
 	const Runtime::VirtualTypeList	WinWindow::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const Runtime::VirtualTypeList	WinWindow::_eventTypes{ UninitializedT< SupportedEvents_t >() };
@@ -21,7 +115,7 @@ namespace Platforms
 =================================================
 */
 	WinWindow::WinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci) :
-		Module( gs, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ WinWindowModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci ),
 		_wnd( UninitializedT< HWND >() ),
 		_requestQuit( false ),
@@ -45,7 +139,7 @@ namespace Platforms
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( null, WinPlatform::GetStaticID(), true );
+		_AttachSelfToManager( null, WinPlatformModuleID, true );
 
 		if ( _GetManager() )
 		{
@@ -118,8 +212,8 @@ namespace Platforms
 
 			LOG( "window created", ELog::Debug );
 			
-			_SendForEachAttachments( Message< ModuleMsg::Link >{} );
-			_SendForEachAttachments( Message< ModuleMsg::Compose >{} );
+			_SendForEachAttachments< ModuleMsg::Link >({});
+			_SendForEachAttachments< ModuleMsg::Compose >({});
 		}
 		else
 		{
@@ -209,8 +303,8 @@ namespace Platforms
 
 
 		// send event
-		_SendEvent( Message< ModuleMsg::WindowCreated >{ _windowDesc, _wnd } );
-		_SendEvent( Message< ModuleMsg::WindowDescriptorChanged >{ _windowDesc } );
+		_SendEvent< ModuleMsg::WindowCreated >({ _windowDesc, _wnd });
+		_SendEvent< ModuleMsg::WindowDescriptorChanged >({ _windowDesc });
 
 
 		// start window message loop
@@ -351,7 +445,7 @@ namespace Platforms
 			{
 				_requestQuit = true;
 
-				_SendMsg( Message< ModuleMsg::Delete >() );
+				_SendMsg< ModuleMsg::Delete >({});
 			}
 			else
 				::DispatchMessageA( &msg );
@@ -383,7 +477,7 @@ namespace Platforms
 			msg->wasProcessed = true;
 
 			_UpdateDescriptor();
-			_SendEvent( Message< ModuleMsg::WindowDescriptorChanged >{ _windowDesc } );
+			_SendEvent< ModuleMsg::WindowDescriptorChanged >({ _windowDesc });
 		}
 		else
 
@@ -393,7 +487,7 @@ namespace Platforms
 			msg->wasProcessed = true;
 
 			_windowDesc.visibility = EVisibility::VisibleUnfocused;
-			_SendEvent( Message< ModuleMsg::WindowVisibilityChanged >{ _windowDesc.visibility } );
+			_SendEvent< ModuleMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
 		}
 		else
 
@@ -403,7 +497,7 @@ namespace Platforms
 			msg->wasProcessed = true;
 			
 			_windowDesc.visibility = EVisibility::VisibleFocused;
-			_SendEvent( Message< ModuleMsg::WindowVisibilityChanged >{ _windowDesc.visibility } );
+			_SendEvent< ModuleMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
 		}
 		else
 			
@@ -415,11 +509,11 @@ namespace Platforms
 			if ( wParam == SIZE_MINIMIZED )
 			{
 				_windowDesc.visibility = EVisibility::Invisible;
-				_SendEvent( Message< ModuleMsg::WindowVisibilityChanged >{ _windowDesc.visibility } );
+				_SendEvent< ModuleMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
 			}
 
 			_UpdateDescriptor();
-			_SendEvent( Message< ModuleMsg::WindowDescriptorChanged >{ _windowDesc } );
+			_SendEvent< ModuleMsg::WindowDescriptorChanged >({ _windowDesc });
 		}
 		else
 
@@ -522,17 +616,24 @@ namespace Platforms
 		{
 			::SetWindowLongPtrA( _wnd.Get<HWND>(), GWLP_WNDPROC, (LONG_PTR) ::DefWindowProcA );
 
-			_SendEvent( Message< ModuleMsg::WindowBeforeDestroy >{} );
+			_SendEvent< ModuleMsg::WindowBeforeDestroy >({});
 
 			::DestroyWindow( _wnd.Get<HWND>() );
 			_wnd = null;
 
 			LOG( "window destroyed", ELog::Debug );
 
-			_SendEvent( Message< ModuleMsg::WindowAfterDestroy >{} );
+			_SendEvent< ModuleMsg::WindowAfterDestroy >({});
 		}
 	}
+//-----------------------------------------------------------------------------
+	
 
+
+	ModulePtr WinPlatform::_CreateWinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci)
+	{
+		return New< WinWindow >( gs, ci );
+	}
 
 }	// Platforms
 }	// Engine

@@ -5,6 +5,7 @@
 #include "Engine/STL/CompileTime/TypeList.h"
 #include "Engine/STL/CompileTime/NewTypeInfo.h"
 #include "VariantRef.h"
+#include "Engine/STL/Algorithms/Comparison.h"
 
 namespace GX_STL
 {
@@ -23,7 +24,7 @@ namespace GXTypes
 		using TypeList_t	= typename CompileTime::TypeListFrom< Types... >;
 		using Self			= Union< Types... >;
 
-		static const uint		INVALID_INDEX = uint(-1);
+		static const uint		INVALID_INDEX = ~0u;
 		
 	private:
 		struct _TypeList_Destroy;
@@ -51,6 +52,7 @@ namespace GXTypes
 	private:
 		alignas(_DataAlign)	char	_data[ _DataSize ];
 		uint						_currentIndex;
+		DEBUG_ONLY( TypeId			_dbgType );
 
 
 	// methods
@@ -225,19 +227,19 @@ namespace GXTypes
 	template <typename ...Types>
 	struct Union<Types...>::_TypeList_Copy
 	{
-		Self const& left;
-		Self &		right;
+		Self const& src;
+		Self &		dst;
 
-		_TypeList_Copy (Self const &left, Self &right) :
-			left(left), right(right)
+		_TypeList_Copy (Self const &src, Self &dst) :
+			src(src), dst(dst)
 		{}
 			
 		template <typename T, usize Index>
 		forceinline void Process ()
 		{
-			if ( left.GetCurrentIndex() == Index )
+			if ( src.GetCurrentIndex() == Index )
 			{
-				right.Create( left.Get<T>() );
+				dst.Create( src.Get<T>() );
 			}
 		}
 	};
@@ -250,19 +252,19 @@ namespace GXTypes
 	template <typename ...Types>
 	struct Union<Types...>::_TypeList_Move
 	{
-		Self &		left;
-		Self &		right;
+		Self &		src;
+		Self &		dst;
 
-		_TypeList_Move (Self &left, Self &right) :
-			left(left), right(right)
+		_TypeList_Move (Self &src, Self &dst) :
+			src(src), dst(dst)
 		{}
 			
 		template <typename T, usize Index>
 		forceinline void Process ()
 		{
-			if ( left.GetCurrentIndex() == Index )
+			if ( src.GetCurrentIndex() == Index )
 			{
-				right.Create2( RVREF( left.Get<T>() ) );
+				dst.Create2( RVREF( src.Get<T>() ) );
 			}
 		}
 	};
@@ -291,17 +293,17 @@ namespace GXTypes
 			{
 				if_constexpr ( CmpType == 0 )
 				{
-					result = ( left.Get<T>() == right.Get<T>() );
+					result = Comparison::Equal( left.Get<T>(), right.Get<T>() );
 				}
 				else
 				if_constexpr ( CmpType == 1 )
 				{
-					result = ( left.Get<T>() <  right.Get<T>() );
+					result = Comparison::Less( left.Get<T>(), right.Get<T>() );
 				}
 				else
 				if_constexpr ( CmpType == 2 )
 				{
-					result = ( left.Get<T>() >  right.Get<T>() );
+					result = Comparison::Greater( left.Get<T>(), right.Get<T>() );
 				}
 
 				STATIC_ASSERT( CmpType < 3 );
@@ -342,7 +344,7 @@ namespace GXTypes
 */
 	template <typename ...Types>
 	inline Union<Types...>::Union (Self &&other) :
-		_currentIndex(other._currentIndex)
+		_currentIndex(INVALID_INDEX)
 	{
 		DEBUG_ONLY( ZeroMem( _data ) );
 
@@ -426,6 +428,7 @@ namespace GXTypes
 		STATIC_ASSERT( sizeof(value) <= sizeof(_data) );
 
 		_currentIndex = TypeList_t::IndexOf<T>;
+		DEBUG_ONLY( _dbgType = TypeIdOf<T>() );
 			
 		UnsafeMem::PlacementNew<T>( _data, value );
 		return *this;
@@ -444,6 +447,7 @@ namespace GXTypes
 		Destroy();
 
 		_currentIndex = TypeList_t::IndexOf<T>;
+		DEBUG_ONLY( _dbgType = TypeIdOf<T>() );
 			
 		UnsafeMem::PlacementNew<T>( _data, RVREF( value ) );
 		return *this;
@@ -670,9 +674,11 @@ namespace GXTypes
 			_TypeList_Destroy	func( _data, _currentIndex );
 			TypeList_t::RuntimeForEach( func );
 		}
-
+		
+		DEBUG_ONLY( _dbgType = TypeId() );
 		DEBUG_ONLY( ZeroMem( _data ) );
-		_currentIndex	= INVALID_INDEX;
+
+		_currentIndex = INVALID_INDEX;
 	}
 	
 /*
@@ -698,7 +704,7 @@ namespace GXTypes
 		if ( not other.IsDefined() )
 			return;
 
-		if_constexpr ( CompileTime::IsMemCopyAvailable< Self > )
+		if_constexpr ( not CompileTime::IsCtorAvailable< Self > and CompileTime::IsMemCopyAvailable< Self > )
 		{
 			UnsafeMem::MemMove( _data, other._data, SizeOf(_data) );
 			_currentIndex = other._currentIndex;
@@ -724,6 +730,7 @@ namespace GXTypes
 		if_constexpr ( CompileTime::IsMemCopyAvailable< Self > )
 		{
 			UnsafeMem::MemMove( _data, other._data, SizeOf(_data) );
+			_currentIndex = other._currentIndex;
 			other._currentIndex = INVALID_INDEX;
 		}
 		else
@@ -748,10 +755,10 @@ namespace GXTypes
 		typedef Hash< BinArrayCRef >		base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			// TODO: it is not same as Hash( union.Get<T>() )
-			return base_t::operator ()( BinArrayCRef::FromVoid( x.GetPointer(), x.GetSizeOf() ) );
+			return base_t::operator ()( x.GetData() );
 		}
 	};
 

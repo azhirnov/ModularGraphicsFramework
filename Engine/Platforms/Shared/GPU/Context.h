@@ -4,6 +4,8 @@
 
 #include "Engine/Platforms/Shared/GPU/MultiSamples.h"
 #include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
+#include "Engine/Platforms/Shared/GPU/ObjectEnums.h"
+#include "Engine/Platforms/Shared/GPU/IDs.h"
 
 namespace Engine
 {
@@ -30,7 +32,7 @@ namespace CreateInfo
 				_Count
 			};
 
-			using bits = EnumBitfield< EFlags >;
+			GX_ENUM_BITFIELD( EFlags );
 		};
 
 		using EPixelFormat	= Platforms::EPixelFormat;
@@ -59,9 +61,10 @@ namespace CreateInfo
 }	// CreateInfo
 
 
-namespace ModuleMsg
+namespace GpuMsg
 {
+	
+	struct GetVkLogicDevice;
 
-
-}	// ModuleMsg
+}	// GpuMsg
 }	// Engine

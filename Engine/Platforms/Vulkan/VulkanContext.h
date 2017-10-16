@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/GPU/Context.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
+#include "Engine/Platforms/Shared/GPU/Pipeline.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -47,8 +47,6 @@ namespace Platforms
 		VulkanContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
 		~VulkanContext ();
 		
-		static GModID::type		GetStaticID ()			{ return "vk1.ctx"_GModID; }
-		
 		static void Register (GlobalSystemsRef);
 		static void Unregister (GlobalSystemsRef);
 
@@ -64,17 +62,18 @@ namespace Platforms
 
 		static ModulePtr _CreateVulkanThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
 		static ModulePtr _CreateVulkanContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
+		static ModulePtr _CreateVk1Image (GlobalSystemsRef, const CreateInfo::GpuImage &);
 		static ModulePtr _CreateVk1Memory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
 		static ModulePtr _CreateVk1Buffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);
-		static ModulePtr _CreateVk1Texture (GlobalSystemsRef, const CreateInfo::GpuTexture &);
 		static ModulePtr _CreateVk1Sampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
 		static ModulePtr _CreateVk1RenderPass (GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
 		static ModulePtr _CreateVk1Framebuffer (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
+		static ModulePtr _CreatePipelineTemplate (GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
 		static ModulePtr _CreateVk1CommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
-		static ModulePtr _CreateVk1GraphicsPipeline (GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
-		static ModulePtr _CreateVk1ShaderModules (GlobalSystemsRef, const CreateInfo::GpuShaderModulesFromFile &);
-		static ModulePtr _CreateVk1ShaderModules2 (GlobalSystemsRef, const CreateInfo::GpuShaderModulesFromBuffer &);
 		static ModulePtr _CreateVk1CommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
+		static ModulePtr _CreateVk1ComputePipeline (GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+		static ModulePtr _CreateVk1GraphicsPipeline (GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
+		static ModulePtr _CreateVk1PipelineResourceTable (GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
 	};
 
 

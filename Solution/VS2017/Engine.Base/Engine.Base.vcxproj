@@ -22,6 +22,7 @@
     <ClInclude Include="..\..\..\Engine\Base\Common\BaseObject.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\Common.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\CreateInfo.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Common\Defines.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\EModuleGroup.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\EngineSubSystems.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\Enums.h" />
@@ -31,13 +32,13 @@
     <ClInclude Include="..\..\..\Engine\Base\Engine.Base.h" />
     <ClInclude Include="..\..\..\Engine\Base\Files\FileManager.h" />
     <ClInclude Include="..\..\..\Engine\Base\Main\MainSystem.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Modules\IDs.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\ModuleAsyncTasks.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\ModulesFactory.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\Module.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\MessageHandler.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\Message.h" />
-    <ClInclude Include="..\..\..\Engine\Base\Stream\InputStream.h" />
-    <ClInclude Include="..\..\..\Engine\Base\Stream\OutputStream.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Modules\ModuleUtils.h" />
     <ClInclude Include="..\..\..\Engine\Base\Stream\Stream.h" />
     <ClInclude Include="..\..\..\Engine\Base\Stream\StreamManager.h" />
     <ClInclude Include="..\..\..\Engine\Base\Tasks\AsyncMessage.h" />
@@ -45,6 +46,7 @@
     <ClInclude Include="..\..\..\Engine\Base\Tasks\TaskModule.h" />
     <ClInclude Include="..\..\..\Engine\Base\Tasks\TaskManager.h" />
     <ClInclude Include="..\..\..\Engine\Base\Threads\ParallelThread.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Threads\ParallelThreadImpl.h" />
     <ClInclude Include="..\..\..\Engine\Base\Threads\ThreadManager.h" />
   </ItemGroup>
   <ItemGroup>
@@ -66,7 +68,7 @@
     <ClCompile Include="..\..\..\Engine\Base\Stream\StreamManager.cpp" />
     <ClCompile Include="..\..\..\Engine\Base\Tasks\TaskModule.cpp" />
     <ClCompile Include="..\..\..\Engine\Base\Tasks\TaskManager.cpp" />
-    <ClCompile Include="..\..\..\Engine\Base\Threads\ParallelThread.cpp" />
+    <ClCompile Include="..\..\..\Engine\Base\Threads\ParallelThreadImpl.cpp" />
     <ClCompile Include="..\..\..\Engine\Base\Threads\ThreadManager.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -120,11 +122,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <TargetName>$(ProjectName)d</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>$(ProjectName)64d</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -144,6 +146,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -165,6 +168,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -195,6 +199,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>
@@ -227,6 +232,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>

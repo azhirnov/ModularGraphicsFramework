@@ -1,8 +1,10 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1Framebuffer.h"
-#include "Engine/Platforms/Shared/GPU/Texture.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
+#include "Engine/Platforms/Shared/GPU/Image.h"
+#include "Engine/Platforms/Shared/GPU/RenderPass.h"
+#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/VulkanContext.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -10,6 +12,65 @@ namespace Engine
 {
 namespace PlatformVK
 {
+	
+	//
+	// Vulkan Framebuffer
+	//
+
+	class Vk1Framebuffer final : public Vk1BaseModule
+	{
+	// types
+	private:
+		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetFramebufferDescriptor,
+											GpuMsg::GetVkFramebufferID
+										> >;
+
+		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
+		
+		struct AttachmentInfo;
+
+	// constants
+	private:
+		static const Runtime::VirtualTypeList	_msgTypes;
+		static const Runtime::VirtualTypeList	_eventTypes;
+
+
+	// variables
+	private:
+		FramebufferDescriptor		_descr;
+
+		vk::VkFramebuffer			_framebufferId;
+
+
+	// methods
+	public:
+		Vk1Framebuffer (const GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci);
+		~Vk1Framebuffer ();
+
+
+	// message handlers
+	private:
+		bool _Compose (const  Message< ModuleMsg::Compose > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _GetVkFramebufferID (const Message< GpuMsg::GetVkFramebufferID > &);
+		bool _GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &);
+
+	private:
+		bool _IsCreated () const;
+		bool _CreateFramebuffer ();
+		void _DestroyFramebuffer ();
+
+		bool _CreateRenderPassByAttachment (ArrayCRef<AttachmentInfo> colorAttach, const AttachmentInfo &depthStencilAttach,
+											OUT vk::VkRenderPass &renderPass);
+		bool _ValidateAttachment (const RenderPassDescriptor &rpDescr, ArrayCRef<AttachmentInfo> colorAttach,
+								  const AttachmentInfo &depthStencilAttach);
+
+		static void _ValidateDescriptor (INOUT FramebufferDescriptor &descr);
+	};
+//-----------------------------------------------------------------------------
+
+
 	
 	const Runtime::VirtualTypeList	Vk1Framebuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const Runtime::VirtualTypeList	Vk1Framebuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
@@ -20,7 +81,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Framebuffer::Vk1Framebuffer (const GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ GetStaticID(), ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkFramebufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_framebufferId( VK_NULL_HANDLE )
 	{
@@ -36,13 +97,14 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_Compose );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1Framebuffer::_GpuDeviceBeforeDestory );
+		_SubscribeOnMsg( this, &Vk1Framebuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetVkFramebufferID );
-		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetGpuFramebufferDescriptor );
+		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetFramebufferDescriptor );
+		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetVkLogicDevice );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VulkanThread::GetStaticID(), true );
+		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
 
 		_ValidateDescriptor( INOUT _descr );
 	}
@@ -64,11 +126,14 @@ namespace PlatformVK
 */
 	bool Vk1Framebuffer::_Compose (const  Message< ModuleMsg::Compose > &msg)
 	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
 		CHECK_ERR( GetState() == EState::Linked );
 
 		_SendForEachAttachments( msg );
 
-		CHECK_ERR( _CreateFramebuffer() );
+		CHECK_COMPOSING( _CreateFramebuffer() );
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
@@ -94,7 +159,7 @@ namespace PlatformVK
 	_GetVkFramebufferID
 =================================================
 */
-	bool Vk1Framebuffer::_GetVkFramebufferID (const Message< ModuleMsg::GetVkFramebufferID > &msg)
+	bool Vk1Framebuffer::_GetVkFramebufferID (const Message< GpuMsg::GetVkFramebufferID > &msg)
 	{
 		msg->result.Set( _framebufferId );
 		return true;
@@ -102,10 +167,10 @@ namespace PlatformVK
 
 /*
 =================================================
-	_GetGpuFramebufferDescriptor
+	_GetFramebufferDescriptor
 =================================================
 */
-	bool Vk1Framebuffer::_GetGpuFramebufferDescriptor (const Message< ModuleMsg::GetGpuFramebufferDescriptor > &msg)
+	bool Vk1Framebuffer::_GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &msg)
 	{
 		msg->result.Set( _descr );
 		return true;
@@ -156,8 +221,8 @@ namespace PlatformVK
 
 		CHECK_ERR( not _IsCreated() );
 
-		using RenderPassMessages_t		= MessageListFrom< ModuleMsg::GetGpuRenderPassDescriptor, ModuleMsg::GetVkRenderPassID >;
-		using ImageViewMessages_t		= MessageListFrom< ModuleMsg::GetGpuTextureDescriptor, ModuleMsg::GetVkTextureView >;
+		using RenderPassMessages_t		= MessageListFrom< GpuMsg::GetRenderPassDescriptor, GpuMsg::GetVkRenderPassID >;
+		using ImageViewMessages_t		= MessageListFrom< GpuMsg::GetImageDescriptor, GpuMsg::GetVkImageView >;
 		using Attachments_t				= FixedSizeArray< VkImageView, GlobalConst::Graphics_MaxColorBuffers + 1 >;
 		using ColorAttachmentInfos_t	= FixedSizeArray< AttachmentInfo, GlobalConst::Graphics_MaxColorBuffers >;
 
@@ -180,34 +245,34 @@ namespace PlatformVK
 			if ( render_pass == VK_NULL_HANDLE and
 				 mod->GetSupportedMessages().HasAllTypes< RenderPassMessages_t >() )
 			{
-				Message< ModuleMsg::GetVkRenderPassID >				rp_request;
-				Message< ModuleMsg::GetGpuRenderPassDescriptor >	descr_request;
+				Message< GpuMsg::GetVkRenderPassID >		req_id;
+				Message< GpuMsg::GetRenderPassDescriptor >	req_descr;
 
-				SendTo( mod, rp_request );
-				SendTo( mod, descr_request );
+				SendTo( mod, req_id );
+				SendTo( mod, req_descr );
 
-				if ( descr_request->result.IsDefined() and
-					 rp_request->result.Get( VK_NULL_HANDLE ) != VK_NULL_HANDLE )
+				if ( req_descr->result.IsDefined() and
+					 req_id->result.Get( VK_NULL_HANDLE ) != VK_NULL_HANDLE )
 				{
-					render_pass			<< rp_request->result;
-					render_pass_descr	<< descr_request->result;
+					render_pass			<< req_id->result;
+					render_pass_descr	<< req_descr->result;
 				}
 			}
 
 			// add attachment
 			if ( mod->GetSupportedMessages().HasAllTypes< ImageViewMessages_t >() )
 			{
-				Message< ModuleMsg::GetGpuTextureDescriptor >	descr_request;
-				Message< ModuleMsg::GetVkTextureView >			view_request;
+				Message< GpuMsg::GetImageDescriptor >	req_descr;
+				Message< GpuMsg::GetVkImageView >		req_view;
 
-				SendTo( mod, descr_request );
-				SendTo( mod, view_request );
+				SendTo( mod, req_descr );
+				SendTo( mod, req_view );
 
-				if ( descr_request->result.IsDefined() and
-					 view_request->result.IsDefined() )
+				if ( req_descr->result.IsDefined() and
+					 req_view->result.IsDefined() )
 				{
-					auto const&		descr	= descr_request->result.Get();
-					VkImageView		view	= view_request->result.Get();
+					auto const&		descr	= req_descr->result.Get();
+					VkImageView		view	= req_view->result.Get();
 
 					// set depth stencil attachment
 					if ( EPixelFormat::HasDepth( descr.format ) or
@@ -246,12 +311,15 @@ namespace PlatformVK
 		
 		fb_info.sType			= VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		fb_info.renderPass		= render_pass;
-		fb_info.attachmentCount	= attachments.Count();
+		fb_info.attachmentCount	= (uint32_t) attachments.Count();
 		fb_info.pAttachments	= attachments.RawPtr();
 		fb_info.width			= _descr.size.x;
 		fb_info.height			= _descr.size.y;
 		fb_info.layers			= _descr.layers;
+		
+		VK_CHECK( vkCreateFramebuffer( GetLogicalDevice(), &fb_info, null, OUT &_framebufferId ) );
 
+		GetDevice()->SetObjectName( _framebufferId, GetDebugName(), EGpuObject::Framebuffer );
 		return true;
 	}
 	
@@ -280,16 +348,16 @@ namespace PlatformVK
 		ModulePtr	module;
 
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-			Vk1RenderPass::GetStaticID(),
+			Platforms::VkRenderPassModuleID,
 			GlobalSystems(),
-			CreateInfo::GpuRenderPass{ VkSystems()->Get< VulkanThread >(), builder.Finish() },
+			CreateInfo::GpuRenderPass{ null, builder.Finish() },
 			OUT module
 		) );
 
-		Message< ModuleMsg::GetVkRenderPassID >	rp_request;
-		module->Send( rp_request );
+		Message< GpuMsg::GetVkRenderPassID >	req_id;
+		SendTo( module, req_id );
 
-		renderPass << rp_request->result;
+		renderPass << req_id->result;
 		CHECK_ERR( renderPass != VK_NULL_HANDLE );
 
 		return true;
@@ -360,8 +428,16 @@ namespace PlatformVK
 		descr.layers	= Max( descr.layers, 1u );
 	}
 
-
 }	// PlatformVK
+//-----------------------------------------------------------------------------
+
+namespace Platforms
+{
+	ModulePtr VulkanContext::_CreateVk1Framebuffer (const GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci)
+	{
+		return New< PlatformVK::Vk1Framebuffer >( gs, ci );
+	}
+}	// Platforms
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN

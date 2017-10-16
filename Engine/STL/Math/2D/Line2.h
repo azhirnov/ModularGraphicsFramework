@@ -712,10 +712,9 @@ namespace GXTypes
 		typedef Hash< typename GXMath::Line2<T>::vec_t >	base_t;
 		typedef typename base_t::result_t					result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
-			return	base_t::operator ()( x.Begin() ) +
-					base_t::operator ()( x.End() );
+			return	base_t::operator ()( x.Begin() ) + base_t::operator ()( x.End() );
 		}
 	};
 

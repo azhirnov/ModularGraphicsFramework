@@ -1,6 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/RenderState.h"
+#include "Engine/Platforms/Shared/GPU/Enums.ToString.h"
 
 namespace Engine
 {
@@ -16,15 +17,34 @@ DEBUG_ONLY(
 	{
 		return String( "\tColorBuffer {\n" )
 			<< "\t	blend:             " << blend << '\n'
-			<< "\t	blendFuncSrcColor: " << EBlendFunc::ToString( blendFuncSrcColor ) << '\n'
-			<< "\t	blendFuncSrcAlpha: " << EBlendFunc::ToString( blendFuncSrcAlpha ) << '\n'
-			<< "\t	blendFuncDstColor: " << EBlendFunc::ToString( blendFuncDstColor ) << '\n'
-			<< "\t	blendFuncDstAlpha: " << EBlendFunc::ToString( blendFuncDstAlpha ) << '\n'
-			<< "\t	blendModeColor:    " << EBlendEq::ToString( blendModeColor )      << '\n'
-			<< "\t	blendModeAlpha:    " << EBlendEq::ToString( blendModeAlpha )      << '\n'
+			<< "\t	blendFuncSrcColor: " << EBlendFunc::ToString( blendFuncSrc.color ) << '\n'
+			<< "\t	blendFuncSrcAlpha: " << EBlendFunc::ToString( blendFuncSrc.alpha ) << '\n'
+			<< "\t	blendFuncDstColor: " << EBlendFunc::ToString( blendFuncDst.color ) << '\n'
+			<< "\t	blendFuncDstAlpha: " << EBlendFunc::ToString( blendFuncDst.alpha ) << '\n'
+			<< "\t	blendModeColor:    " << EBlendEq::ToString( blendMode.color )      << '\n'
+			<< "\t	blendModeAlpha:    " << EBlendEq::ToString( blendMode.alpha )      << '\n'
 			<< "\t	colorMask:       (" << GXTypes::ToString( colorMask ) << ")\n}";
 	}
 )	// DEBUG_ONLY
+
+/*
+=================================================
+	ColorBuffer::operator ==
+=================================================
+*/
+	bool RenderState::ColorBuffer::operator == (const Self &right) const
+	{
+		return	blend	==	right.blend		and
+				(not blend ? true : (
+					blendFuncSrc	== right.blendFuncSrc	and
+					blendFuncDst	== right.blendFuncDst	and
+					blendMode		== right.blendMode		and
+					All( colorMask	== right.colorMask )
+				));
+	}
+//-----------------------------------------------------------------------------
+
+
 
 /*
 =================================================
@@ -49,6 +69,21 @@ DEBUG_ONLY(
 
 /*
 =================================================
+	operator ==
+=================================================
+*/
+	bool RenderState::ColorBuffersState::operator == (const Self &right) const
+	{
+		return	All( blendColor	== right.blendColor )	and
+					 logicOp	== right.logicOp		and
+					 buffers	== right.buffers;
+	}
+//-----------------------------------------------------------------------------
+
+
+
+/*
+=================================================
 	ToString
 =================================================
 */
@@ -56,12 +91,30 @@ DEBUG_ONLY(
 	String RenderState::DepthBufferState::ToString () const
 	{
 		return String( "DepthBufferState {\n" )
-			<< "	test:  " << test << '\n'
-			<< "	func:  " << ECompareFunc::ToString( func ) << '\n'
-			<< "	range: (" << GXTypes::ToString( range ) << ")\n"
-			<< "	write: " << write << "\n}";
+			<< "	enabled:  " << enabled << '\n'
+			<< "	func:     " << ECompareFunc::ToString( func ) << '\n'
+			<< "	range:    (" << GXTypes::ToString( range ) << ")\n"
+			<< "	write:    " << write << "\n}";
 	}
 )	// DEBUG_ONLY
+
+/*
+=================================================
+	operator ==
+=================================================
+*/
+	bool RenderState::DepthBufferState::operator == (const Self &right) const
+	{
+		return	enabled		== right.enabled	and
+				(not enabled ? true : (
+					write	== right.write	and
+					func	== right.func	and
+					range	== right.range
+				));
+	}
+//-----------------------------------------------------------------------------
+
+
 
 /*
 =================================================
@@ -84,6 +137,25 @@ DEBUG_ONLY(
 
 /*
 =================================================
+	operator ==
+=================================================
+*/
+	bool RenderState::StencilFaceState::operator == (const Self &right) const
+	{
+		return	sfail		== right.sfail		and
+				dfail		== right.dfail		and
+				dppass		== right.dppass		and
+				func		== right.func		and
+				funcRef		== right.funcRef	and
+				funcMask	== right.funcMask	and
+				mask		== right.mask;
+	}
+//-----------------------------------------------------------------------------
+
+
+
+/*
+=================================================
 	ToString
 =================================================
 */
@@ -91,12 +163,29 @@ DEBUG_ONLY(
 	String RenderState::StencilBufferState::ToString () const
 	{
 		return String( "StencilBufferState {\n" )
-			<< "	test:  " << test << '\n'
-			<< "	front: " << front.ToString() << '\n'
-			<< "	back:  " << back.ToString() << "\n}";
+			<< "	enabled:  " << enabled << '\n'
+			<< "	front:    " << front.ToString() << '\n'
+			<< "	back:     " << back.ToString() << "\n}";
 
 	}
 )	// DEBUG_ONLY
+
+/*
+=================================================
+	operator ==
+=================================================
+*/
+	bool RenderState::StencilBufferState::operator == (const Self &right) const
+	{
+		return	enabled		== right.enabled	and
+				(not enabled ? true : (
+					front	== right.front		and
+					back	== right.back
+				));
+	}
+//-----------------------------------------------------------------------------
+
+
 
 /*
 =================================================
@@ -111,6 +200,20 @@ DEBUG_ONLY(
 			<< "	primitiveRestart: " << primitiveRestart << "\n}";
 	}
 )	// DEBUG_ONLY
+
+/*
+=================================================
+	operator ==
+=================================================
+*/
+	bool RenderState::InputAssemblyState::operator == (const Self &right) const
+	{
+		return	topology			== right.topology	and
+				primitiveRestart	== right.primitiveRestart;
+	}
+//-----------------------------------------------------------------------------
+
+
 
 /*
 =================================================
@@ -136,6 +239,29 @@ DEBUG_ONLY(
 
 /*
 =================================================
+	operator ==
+=================================================
+*/
+	bool RenderState::RasterizationState::operator == (const Self &right) const
+	{
+		return	polygonMode		== right.polygonMode			and
+				(polygonMode	!= EPolygonMode::Line ?	true :
+					lineWidth	== right.lineWidth)				and
+				depthBiasConstFactor	== right.depthBiasConstFactor	and		// TODO
+				depthBiasClamp			== right.depthBiasClamp			and
+				depthBiasSlopeFactor	== right.depthBiasSlopeFactor	and
+				depthBias				== right.depthBias				and
+				depthClamp				== right.depthClamp				and
+				rasterizerDiscard		== right.rasterizerDiscard		and
+				frontFaceCCW			== right.frontFaceCCW			and
+				cullMode				== right.cullMode;
+	}
+//-----------------------------------------------------------------------------
+
+
+
+/*
+=================================================
 	ToString
 =================================================
 */
@@ -150,6 +276,23 @@ DEBUG_ONLY(
 			<< "	alphaToOne:       " << alphaToOne << "\n}";
 	}
 )	// DEBUG_ONLY
+
+/*
+=================================================
+	operator ==
+=================================================
+*/
+	bool RenderState::MultisampleState::operator == (const Self &right) const
+	{
+		return	samples				== right.samples			and
+				minSampleShading	== right.minSampleShading	and
+				sampleShading		== right.sampleShading		and
+				alphaToCoverage		== right.alphaToCoverage	and
+				alphaToOne			== right.alphaToOne;
+	}
+//-----------------------------------------------------------------------------
+
+
 
 /*
 =================================================
@@ -168,6 +311,22 @@ DEBUG_ONLY(
 					<< multisample.ToString();
 	}
 )	// DEBUG_ONLY
+
+/*
+=================================================
+	operator ==
+=================================================
+*/
+	bool RenderState::operator == (const Self &right) const
+	{
+		return	color			== right.color			and
+				depth			== right.depth			and
+				stencil			== right.stencil		and
+				inputAssembly	== right.inputAssembly	and
+				rasterization	== right.rasterization	and
+				multisample		== right.multisample;
+	}
+//-----------------------------------------------------------------------------
 
 }	// Platforms
 }	// Engine

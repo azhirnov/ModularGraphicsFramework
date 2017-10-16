@@ -16,7 +16,7 @@ extern void Test_VkWindow ()
 
 		app.Quit();
 	}
-	GetMainSystemInstace()->Send( Message< ModuleMsg::Delete >() );
+	GetMainSystemInstace()->Send< ModuleMsg::Delete >({});
 
 	WARNING( "Vulkan Window test succeeded!" );
 }

@@ -5,10 +5,9 @@
 
 #if defined( GRAPHICS_API_VULKAN )
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1CommandBuilder.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1SystemFramebuffer.h"
+#include "Engine/Platforms/Shared/GPU/RenderPass.h"
+#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 
 using namespace vk;
 
@@ -44,9 +43,9 @@ namespace PlatformVK
 		_depthStencilView( VK_NULL_HANDLE ),
 		_depthStencilFormat( VK_FORMAT_UNDEFINED ),
 		_queue( VK_NULL_HANDLE ),
-		_queueIndex( -1 ),
+		_queueIndex( ~0u ),
 		_queueFamily(),
-		_currentImageIndex( -1 ),
+		_currentImageIndex( ~0u ),
 		_graphicsQueueSubmited( false )
 	{
 		SetDebugName( "Vk1Device" );
@@ -56,7 +55,7 @@ namespace PlatformVK
 		VkSystems()->GetSetter< Vk1Device >().Set( this );
 
 		CHECK( GlobalSystems()->Get< ModulesFactory >()->Register(
-			Vk1SystemFramebuffer::GetStaticID(),
+			VkSystemFramebufferModuleID,
 			&Vk1SystemFramebuffer::CreateModule
 		) );
 	}
@@ -68,7 +67,7 @@ namespace PlatformVK
 */
 	Vk1Device::~Vk1Device ()
 	{
-		GlobalSystems()->Get< ModulesFactory >()->UnregisterAll<Vk1SystemFramebuffer>();
+		GlobalSystems()->Get< ModulesFactory >()->UnregisterAll( VkSystemFramebufferModuleID );
 
 		CHECK( not IsInstanceCreated() );
 		CHECK( not HasPhyiscalDevice() );
@@ -289,6 +288,7 @@ namespace PlatformVK
 		CHECK_ERR( not IsDeviceCreated() );
 
 		Array< String >						supported_extensions;
+		Array< String >						instance_extensions;
 		Array< VkDeviceQueueCreateInfo >	queue_infos;
 		Array< const char * >				device_extensions	= enabledExtensions;
 		VkDeviceCreateInfo					device_info			= {};
@@ -296,6 +296,7 @@ namespace PlatformVK
 		_queueFamily = queueFamilies;
 		_queueIndex  = -1;
 
+		CHECK_ERR( _GetInstanceExtensions( OUT instance_extensions ) );
 		CHECK_ERR( _GetDeviceExtensions( OUT supported_extensions ) );
 		CHECK_ERR( _GetQueueCreateInfos( OUT queue_infos, INOUT _queueFamily, OUT _queueIndex ) );
 
@@ -306,7 +307,8 @@ namespace PlatformVK
 			device_extensions << VK_KHR_SWAPCHAIN_EXTENSION_NAME;
 		}
 
-		if ( supported_extensions.IsExist( VK_EXT_DEBUG_MARKER_EXTENSION_NAME ) )
+		// NVIDIA does not add this extension to device extensions
+		//if ( supported_extensions.IsExist( VK_EXT_DEBUG_MARKER_EXTENSION_NAME ) )
 		{
 			device_extensions.PushBack( VK_EXT_DEBUG_MARKER_EXTENSION_NAME );
 			_enableDebugMarkers = true;
@@ -328,6 +330,20 @@ namespace PlatformVK
 		if ( &_deviceFeatures != &enabledFeatures )
 			_deviceFeatures = enabledFeatures;
 
+		// write extensions to log
+		{
+			String	log = "Vulkan extensions:";
+
+			FOR( i, instance_extensions ) {
+				log << (i ? ", " : "") << ((i&3) ? "" : "\n") << instance_extensions[i];
+			}
+			FOR( i, supported_extensions ) {
+				log << (i ? ", " : "") << ((i&3) ? "" : "\n") << supported_extensions[i];
+			}
+			log << "\n------------------------";
+
+			LOG( log.cstr(), ELog::Info | ELog::SpoilerFlag );
+		}
 		return true;
 	}
 	
@@ -527,7 +543,7 @@ namespace PlatformVK
 			EQueueFamily::bits	flags;
 
 			VkBool32	supports_present = false;
-			VK_CALL( vkGetPhysicalDeviceSurfaceSupportKHR( _physicalDevice, i, _surface, &supports_present ) );
+			VK_CALL( vkGetPhysicalDeviceSurfaceSupportKHR( _physicalDevice, uint32_t(i), _surface, &supports_present ) );
 
 			if ( supports_present )
 				flags |= EQueueFamily::Present;
@@ -554,7 +570,7 @@ namespace PlatformVK
 
 			if ( flags == family )
 			{
-				index = i;
+				index = uint32_t(i);
 				return true;
 			}
 		}
@@ -663,12 +679,12 @@ namespace PlatformVK
 		VkSemaphore			signal_semaphores[] = { _renderFinished };
 
 		present_info.sType			= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		present_info.swapchainCount	= CountOf( swap_chains );
+		present_info.swapchainCount	= (uint32_t) CountOf( swap_chains );
 		present_info.pSwapchains	= swap_chains;
 		present_info.pImageIndices	= &_currentImageIndex;
 
 		if ( _graphicsQueueSubmited ) {
-			present_info.waitSemaphoreCount	= CountOf( signal_semaphores );
+			present_info.waitSemaphoreCount	= (uint32_t) CountOf( signal_semaphores );
 			present_info.pWaitSemaphores	= signal_semaphores;
 		}
 		else {
@@ -682,20 +698,6 @@ namespace PlatformVK
 		_currentImageIndex		= -1;
 		return true;
 	}
-	
-/*
-=================================================
-	EndFrame
-=================================================
-*
-	bool Vk1Device::EndFrame (const ModulePtr &framebuffer)
-	{
-		// check if framebuffer is current
-		CHECK_ERR
-		//CHECK_ERR( framebuffer.ToPtr< Vk1SystemFramebuffer >()->GetImageIndex() == _currentImageIndex );
-
-		return EndFrame();
-	}
 
 /*
 =================================================
@@ -706,112 +708,38 @@ namespace PlatformVK
 	{
 		return _currentImageIndex < _framebuffers.Count();
 	}
-
+	
 /*
 =================================================
 	SubmitQueue
+----
+	this method used for submit command buffers with synchronization between frame changes,
+	if you don't need sync, use GetQueue() and write your own submission.
 =================================================
 */
-	bool Vk1Device::SubmitQueue (ArrayCRef< ModulePtr > cmdBuffers)
+	bool Vk1Device::SubmitQueue (ArrayCRef<vk::VkCommandBuffer> cmdBuffers, vk::VkFence fence)
 	{
 		CHECK_ERR( _currentImageIndex < _framebuffers.Count() );
 		CHECK_ERR( IsQueueCreated() );
 
-		// get command buffer IDs
-		_tempCmdBuffers.Clear();
-		_tempCmdBuffers.Reserve( cmdBuffers.Count() );
-
-		FOR( i, cmdBuffers )
-		{
-			Message< ModuleMsg::GetVkCommandBufferID >	id_request;
-			SendTo( cmdBuffers[i], id_request );
-
-			VkCommandBuffer	cmd = id_request->result.Get( VK_NULL_HANDLE );
-
-			if ( cmd != VK_NULL_HANDLE )
-				_tempCmdBuffers.PushBack( cmd );
-		}
-
-		CHECK_ERR( not _tempCmdBuffers.Empty() );
-
-
-		// submit command buffers to grpahics queue
+		// submit command buffers to grpahics/compute queue
 		VkSubmitInfo			submit_info			= {};
 		VkSemaphore				wait_semaphores[]	= { _imageAvailable };
 		VkPipelineStageFlags	wait_stages[]		= { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		VkSemaphore				signal_semaphores[] = { _renderFinished };
 
 		submit_info.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.waitSemaphoreCount		= CountOf( wait_semaphores );
+		submit_info.waitSemaphoreCount		= (uint32_t) CountOf( wait_semaphores );
 		submit_info.pWaitSemaphores			= wait_semaphores;
 		submit_info.pWaitDstStageMask		= wait_stages;
-		submit_info.commandBufferCount		= _tempCmdBuffers.Count();
-		submit_info.pCommandBuffers			= _tempCmdBuffers.ptr();
-		submit_info.signalSemaphoreCount	= CountOf( signal_semaphores );
+		submit_info.commandBufferCount		= (uint32_t) cmdBuffers.Count();
+		submit_info.pCommandBuffers			= cmdBuffers.RawPtr();
+		submit_info.signalSemaphoreCount	= (uint32_t) CountOf( signal_semaphores );
 		submit_info.pSignalSemaphores		= signal_semaphores;
 
-		VK_CHECK( vkQueueSubmit( GetQueue(), 1, &submit_info, VK_NULL_HANDLE ) );
+		VK_CHECK( vkQueueSubmit( GetQueue(), 1, &submit_info, fence ) );
 
 		_graphicsQueueSubmited = true;
-		return true;
-	}
-
-/*
-=================================================
-	DrawFrame
-=================================================
-*
-	bool Vk1Device::DrawFrame ()
-	{
-		vk::uint32_t	image_index = -1;
-		VkResult		result		= vkAcquireNextImageKHR( _logicalDevice, _swapchain, vk::uint64_t(-1), _imageAvailable,
-															 VK_NULL_HANDLE, &image_index );
-
-		if ( result == VK_SUCCESS )
-		{}
-		else
-		if ( result == VK_ERROR_OUT_OF_DATE_KHR or
-			 result == VK_SUBOPTIMAL_KHR )
-		{
-			CHECK_ERR( RecreateSwapchain() );
-			return true;
-		}
-		else
-		{
-			if ( not Vk1_CheckErrors( result, "vkAcquireNextImageKHR", GX_FUNCTION_NAME, __FILE__, __LINE__ ) )
-				return false;
-		}
-
-		VkSubmitInfo			submit_info			= {};
-		VkSemaphore				wait_semaphores[]	= { _imageAvailable };
-		VkPipelineStageFlags	wait_stages[]		= { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		VkSemaphore				signal_semaphores[] = { _renderFinished };
-		VkCommandBuffer			cmd_buffers[]		= { _commandBuffers[ image_index ].ToPtr< Vk1CommandBuffer >()->GetCmdBufferID() };
-
-		submit_info.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.waitSemaphoreCount		= 1;
-		submit_info.pWaitSemaphores			= wait_semaphores;
-		submit_info.pWaitDstStageMask		= wait_stages;
-		submit_info.commandBufferCount		= CountOf( cmd_buffers );
-		submit_info.pCommandBuffers			= cmd_buffers;
-		submit_info.signalSemaphoreCount	= 1;
-		submit_info.pSignalSemaphores		= signal_semaphores;
-
-		VK_CHECK( vkQueueSubmit( GetGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE ) );
-		
-		
-		VkPresentInfoKHR	present_info	= {};
-		VkSwapchainKHR		swap_chains[]	= { _swapchain };
-
-		present_info.sType				= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		present_info.waitSemaphoreCount	= 1;
-		present_info.pWaitSemaphores	= signal_semaphores;
-		present_info.swapchainCount		= 1;
-		present_info.pSwapchains		= swap_chains;
-		present_info.pImageIndices		= &image_index;
-
-		VK_CHECK( vkQueuePresentKHR( GetGraphicsQueue(), &present_info ) );
-
 		return true;
 	}
 
@@ -822,8 +750,8 @@ namespace PlatformVK
 */
 	void Vk1Device::_GetSwapChainExtent (OUT VkExtent2D &extent, const VkSurfaceCapabilitiesKHR &surfaceCaps) const
 	{
-		if ( surfaceCaps.currentExtent.width  == -1 and
-			 surfaceCaps.currentExtent.height == -1 )
+		if ( surfaceCaps.currentExtent.width  == ~0u and
+			 surfaceCaps.currentExtent.height == ~0u )
 		{
 			// keep window size
 		}
@@ -964,10 +892,10 @@ namespace PlatformVK
 		vk::uint32_t		count = 0;
 		Array< VkImage >	images;
 
-		VK_CHECK( vkGetSwapchainImagesKHR( _logicalDevice, _swapchain, &count, null ) );
+		VK_CHECK( vkGetSwapchainImagesKHR( _logicalDevice, _swapchain, OUT &count, null ) );
 		images.Resize( count );
 
-		VK_CHECK( vkGetSwapchainImagesKHR( _logicalDevice, _swapchain, &count, images.ptr() ) );
+		VK_CHECK( vkGetSwapchainImagesKHR( _logicalDevice, _swapchain, &count, OUT images.ptr() ) );
 		buffers.Resize( count );
 
 		FOR( i, buffers )
@@ -978,12 +906,9 @@ namespace PlatformVK
 			color_attachment_view.viewType		= VK_IMAGE_VIEW_TYPE_2D;
 			color_attachment_view.flags			= 0;
 			color_attachment_view.format		= _colorFormat;
-			color_attachment_view.components	= {
-				VK_COMPONENT_SWIZZLE_R,
-				VK_COMPONENT_SWIZZLE_G,
-				VK_COMPONENT_SWIZZLE_B,
-				VK_COMPONENT_SWIZZLE_A
-			};
+			color_attachment_view.components	= { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G,
+													VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+
 			color_attachment_view.subresourceRange.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT;
 			color_attachment_view.subresourceRange.baseMipLevel		= 0;
 			color_attachment_view.subresourceRange.levelCount		= 1;
@@ -1033,7 +958,7 @@ namespace PlatformVK
 		image_info.usage		= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		image_info.flags		= 0;
 
-		VK_CHECK( vkCreateImage( _logicalDevice, &image_info, nullptr, OUT &_depthStencilImage ) );
+		VK_CHECK( vkCreateImage( _logicalDevice, &image_info, null, OUT &_depthStencilImage ) );
 		vkGetImageMemoryRequirements( _logicalDevice, _depthStencilImage, OUT &mem_reqs );
 
 
@@ -1127,6 +1052,28 @@ namespace PlatformVK
 	
 /*
 =================================================
+	SetObjectName
+=================================================
+*/
+	bool Vk1Device::SetObjectName (vk::uint64_t id, StringCRef name, EGpuObject::type type) const
+	{
+		using namespace vk;
+
+		if ( name.Empty() or id == VK_NULL_HANDLE or not _enableDebugMarkers )
+			return false;
+
+		VkDebugMarkerObjectNameInfoEXT	info = {};
+		info.sType			= VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT;
+		info.objectType		= Vk1Enum( type );
+		info.object			= id;
+		info.pObjectName	= name.cstr();
+
+		VK_CALL( vkDebugMarkerSetObjectNameEXT( GetLogicalDevice(), &info ) );
+		return true;
+	}
+
+/*
+=================================================
 	_CreateRenderPass
 =================================================
 */
@@ -1166,10 +1113,10 @@ namespace PlatformVK
 
 			dep.srcPass				= Builder::SubpassIndex(0);
 			dep.srcStage			= EPipelineStage::bits() | EPipelineStage::ColorAttachmentOutput;
-			dep.srcAccess			= ESubpassAccess::bits() | ESubpassAccess::ColorAttachmentRead | ESubpassAccess::ColorAttachmentWrite;
+			dep.srcAccess			= EPipelineAccess::bits() | EPipelineAccess::ColorAttachmentRead | EPipelineAccess::ColorAttachmentWrite;
 			dep.dstPass				= Builder::SubpassIndexExternal;
 			dep.dstStage			= EPipelineStage::bits() | EPipelineStage::BottomOfPipe;
-			dep.dstAccess			= ESubpassAccess::bits() | ESubpassAccess::MemoryRead;
+			dep.dstAccess			= EPipelineAccess::bits() | EPipelineAccess::MemoryRead;
 			dep.dependency			= ESubpassDependency::bits() | ESubpassDependency::ByRegion;
 			builder.AddDependency( dep );
 		}
@@ -1193,17 +1140,17 @@ namespace PlatformVK
 
 			dep.srcPass				= Builder::SubpassIndexExternal;
 			dep.srcStage			= EPipelineStage::bits() | EPipelineStage::BottomOfPipe;
-			dep.srcAccess			= ESubpassAccess::bits() | ESubpassAccess::MemoryRead;
+			dep.srcAccess			= EPipelineAccess::bits() | EPipelineAccess::MemoryRead;
 			dep.dstPass				= Builder::SubpassIndex(0);
 			dep.dstStage			= EPipelineStage::bits() | EPipelineStage::ColorAttachmentOutput;
-			dep.dstAccess			= ESubpassAccess::bits() | ESubpassAccess::ColorAttachmentRead | ESubpassAccess::ColorAttachmentWrite;
+			dep.dstAccess			= EPipelineAccess::bits() | EPipelineAccess::ColorAttachmentRead | EPipelineAccess::ColorAttachmentWrite;
 			dep.dependency			= ESubpassDependency::bits() | ESubpassDependency::ByRegion;
 			builder.AddDependency( dep );
 		}
 
 		ModulePtr	module;
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-					Vk1RenderPass::GetStaticID(),
+					Platforms::VkRenderPassModuleID,
 					GlobalSystems(),
 					CreateInfo::GpuRenderPass{ null, builder.Finish() },
 					OUT module ) );
@@ -1225,17 +1172,20 @@ namespace PlatformVK
 
 		frameBuffers.Resize( _imageBuffers.Count() );
 		
+		Message< GpuMsg::GetVkRenderPassID >	req_id;
+		SendTo( _renderPass, req_id );
+
 		FOR( i, frameBuffers )
 		{
 			auto fb = New< Vk1SystemFramebuffer >( GlobalSystems(), VkSystems() );
 
-			SendTo( fb, Message< ModuleMsg::AttachModule >{ _renderPass } );
+			SendTo< ModuleMsg::AttachModule >( fb, { _renderPass } );
 
 			CHECK_ERR( fb->CreateFramebuffer( _surfaceSize, uint(i),
-											  _renderPass.ToPtr< Vk1RenderPass >()->GetRenderPassID(),
+											  *(req_id->result),
 											  _imageBuffers[i].view, _colorPixelFormat,
 											  _depthStencilView, _depthStencilPixelFormat,
-											  ETexture::Tex2D
+											  EImage::Tex2D
 			) );
 
 			frameBuffers[i] = fb;
@@ -1252,8 +1202,7 @@ namespace PlatformVK
 	{
 		Message< ModuleMsg::Delete >	msg;
 
-		FOR( i, frameBuffers )
-		{
+		FOR( i, frameBuffers ) {
 			SendTo( frameBuffers[i], msg );
 		}
 
@@ -1355,21 +1304,23 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetDeviceExtensions
+	_GetInstanceExtensions
 =================================================
 */
-	bool Vk1Device::_GetDeviceExtensions (OUT Array<String> &supportedExtensions) const
+	bool Vk1Device::_GetInstanceExtensions (OUT Array<String> &supportedExtensions) const
 	{
 		vk::uint32_t					count = 0;
 		Array<VkExtensionProperties>	extensions;
 
-		VK_CALL( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, &count, null ) );
+		supportedExtensions.Clear();
+		VK_CALL( vkEnumerateInstanceExtensionProperties( null, &count, null ) );
 
 		if ( count > 0 )
 		{
 			extensions.Resize( count );
+			supportedExtensions.Reserve( count );
 
-			VK_CHECK( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, &count, extensions.ptr() ) );
+			VK_CHECK( vkEnumerateInstanceExtensionProperties( null, &count, extensions.ptr() ) );
 
 			FOR( i, extensions )
 			{
@@ -1381,247 +1332,29 @@ namespace PlatformVK
 
 /*
 =================================================
-	_GetQueueFamilyIndex
+	_GetDeviceExtensions
 =================================================
-*
-	bool Vk1Device::_GetQueueFamilyIndex (OUT vk::uint32_t &index, VkQueueFlags queueFlags,
-										   const Array<VkQueueFamilyProperties> &queueFamilyProperties) const
+*/
+	bool Vk1Device::_GetDeviceExtensions (OUT Array<String> &supportedExtensions) const
 	{
-		index = -1;
+		vk::uint32_t					count = 0;
+		Array<VkExtensionProperties>	extensions;
 
-		if ( queueFlags & VK_QUEUE_COMPUTE_BIT )
+		supportedExtensions.Clear();
+		VK_CALL( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, &count, null ) );
+
+		if ( count > 0 )
 		{
-			FOR( i, queueFamilyProperties )
+			extensions.Resize( count );
+			supportedExtensions.Reserve( count );
+
+			VK_CHECK( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, &count, extensions.ptr() ) );
+
+			FOR( i, extensions )
 			{
-				if ( (queueFamilyProperties[i].queueFlags & queueFlags) == queueFlags and
-					 (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0 )
-				{
-					index = i;
-					return true;
-				}
+				supportedExtensions << extensions[i].extensionName;
 			}
 		}
-
-		if ( queueFlags & VK_QUEUE_TRANSFER_BIT )
-		{
-			FOR( i, queueFamilyProperties )
-			{
-				if ( (queueFamilyProperties[i].queueFlags & queueFlags) == queueFlags and
-					 (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0 and
-					 (queueFamilyProperties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) == 0 )
-				{
-					index = i;
-					return true;
-				}
-			}
-		}
-		
-		FOR( i, queueFamilyProperties )
-		{
-			if ( (queueFamilyProperties[i].queueFlags & queueFlags) == queueFlags )
-			{
-				index = i;
-				return true;
-			}
-		}
-
-		RETURN_ERR( "no supported queue family found" );
-	}
-	
-/*
-=================================================
-	_ChooseGraphicsAndPresentQueueFamilyIndex
-=================================================
-*
-	bool Vk1Device::_ChooseGraphicsAndPresentQueueFamilyIndex (OUT vk::uint32_t &graphicsIndex, OUT vk::uint32_t &presentIndex,
-																const Array<VkQueueFamilyProperties> &properties) const
-	{
-		graphicsIndex	= -1;
-		presentIndex	= -1;
-
-		vk::uint32_t	both = -1;
-
-		FOR( i, properties )
-		{
-			VkBool32	supports_present = false;
-			VK_CALL( vkGetPhysicalDeviceSurfaceSupportKHR( _physicalDevice, i, _surface, &supports_present ) );
-
-			if ( supports_present )
-				presentIndex = i;
-
-			if ( properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT )
-			{
-				graphicsIndex = i;
-
-				if ( supports_present )
-					both = i;
-			}
-		}
-
-		if ( both != -1 )
-		{
-			graphicsIndex = presentIndex = both;
-		}
-
-		CHECK_ERR( graphicsIndex != -1 and presentIndex != -1 );
-		return true;
-	}
-	
-/*
-=================================================
-	_ChooseGraphicsQueueFamilyIndex
-=================================================
-*
-	bool Vk1Device::_ChooseGraphicsQueueFamilyIndex (OUT vk::uint32_t &index, const Array<VkQueueFamilyProperties> &properties) const
-	{
-		index = -1;
-		
-		FOR( i, properties )
-		{
-			if ( properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT )
-			{
-				index = i;
-				return true;
-			}
-		}
-
-		RETURN_ERR( "can't find graphics queue family index" );
-	}
-
-/*
-=================================================
-	_ChooseComputeQueueFamilyIndex
-=================================================
-*
-	bool Vk1Device::_ChooseComputeQueueFamilyIndex (OUT vk::uint32_t &index, const Array<VkQueueFamilyProperties> &properties) const
-	{
-		vk::uint32_t	alt_idx = -1;
-
-		index = -1;
-		
-		FOR( i, properties )
-		{
-			if ( properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT )
-			{
-				if ( (properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0 )
-				{
-					index = i;
-					return true;
-				}
-
-				alt_idx = i;
-			}
-		}
-
-		if ( index == -1 and alt_idx != -1 )
-		{
-			index = alt_idx;
-			return true;
-		}
-		
-		RETURN_ERR( "can't find compute queue family index" );
-	}
-	
-/*
-=================================================
-	_ChooseTransferQueueFamilyIndex
-=================================================
-*
-	bool Vk1Device::_ChooseTransferQueueFamilyIndex (OUT vk::uint32_t &index, const Array<VkQueueFamilyProperties> &properties) const
-	{
-		vk::uint32_t	alt_idx = -1;
-
-		index = -1;
-
-		FOR( i, properties )
-		{
-			if ( properties[i].queueFlags & VK_QUEUE_TRANSFER_BIT )
-			{
-				if ( (properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0 and
-					 (properties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) == 0 )
-				{
-					index = i;
-					return true;
-				}
-
-				alt_idx = i;
-			}
-		}
-		
-		if ( index == -1 and alt_idx != -1 )
-		{
-			index = alt_idx;
-			return true;
-		}
-		
-		RETURN_ERR( "can't find transfer queue family index" );
-	}
-
-/*
-=================================================
-	_GetQueueCreateInfos
-=================================================
-*
-	bool Vk1Device::_GetQueueCreateInfos (OUT Array<VkDeviceQueueCreateInfo> &queueCreateInfos,
-										   OUT QueueFamilyIndices &queueFamilyIndices,
-										   VkQueueFlags queueTypes, bool requirePresent) const
-	{
-		queueFamilyIndices = QueueFamilyIndices();
-
-		Array< VkQueueFamilyProperties >	queue_family_props;
-		Set< vk::uint32_t >					unique_indices;
-		static const float					default_queue_priority	= 1.0f;	// high priority
-		
-		CHECK_ERR( _GetQueueFamilyProperties( OUT queue_family_props ) );
-
-		// graphics
-		if ( queueTypes & VK_QUEUE_GRAPHICS_BIT )
-		{
-			if ( requirePresent )
-			{
-				CHECK_ERR( _ChooseGraphicsAndPresentQueueFamilyIndex( OUT queueFamilyIndices.graphics,
-																	  OUT queueFamilyIndices.present,
-																	  queue_family_props ) );
-
-				unique_indices.Add( queueFamilyIndices.graphics );
-				unique_indices.Add( queueFamilyIndices.present );
-			}
-			else
-			{
-				CHECK_ERR( _ChooseGraphicsQueueFamilyIndex( OUT queueFamilyIndices.graphics, queue_family_props ) );
-
-				unique_indices.Add( queueFamilyIndices.graphics );
-			}
-		}
-		
-		// compute
-		if ( queueTypes & VK_QUEUE_COMPUTE_BIT )
-		{
-			CHECK_ERR( _ChooseComputeQueueFamilyIndex( OUT queueFamilyIndices.compute, queue_family_props ) );
-
-			unique_indices.Add( queueFamilyIndices.compute );
-		}
-		
-		// transfer
-		if ( queueTypes & VK_QUEUE_TRANSFER_BIT )
-		{
-			CHECK_ERR( _ChooseTransferQueueFamilyIndex( OUT queueFamilyIndices.transfer, queue_family_props ) );
-
-			unique_indices.Add( queueFamilyIndices.transfer );
-		}
-
-
-		FOR( i, unique_indices )
-		{
-			VkDeviceQueueCreateInfo		queue_info = {};
-			queue_info.sType			= VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-			queue_info.queueFamilyIndex	= unique_indices[i];
-			queue_info.queueCount		= 1;
-			queue_info.pQueuePriorities	= &default_queue_priority;
-
-			queueCreateInfos.PushBack( queue_info );
-		}
-
 		return true;
 	}
 	
@@ -1673,8 +1406,6 @@ namespace PlatformVK
 		{
 			return true;
 		}
-		//CHECK_ERR( _imageAvailable == VK_NULL_HANDLE );
-		//CHECK_ERR( _renderFinished == VK_NULL_HANDLE );
 
 		VkSemaphoreCreateInfo	info = {};
 		info.sType	= VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -1713,12 +1444,14 @@ namespace PlatformVK
 	{
 		CHECK_ERR( not _framebuffers.Empty() );
 
-		Message< ModuleMsg::Link >		link_msg;
-		Message< ModuleMsg::Compose >	comp_msg;
+		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+			Platforms::VkCommandBuilderModuleID,
+			GlobalSystems(),
+			CreateInfo::GpuCommandBuilder{},
+			OUT _commandBuilder )
+		);
 
-		_commandBuilder = New< Vk1CommandBuilder >( GlobalSystems(), CreateInfo::GpuCommandBuilder{} );
-		SendTo( _commandBuilder, link_msg );
-		SendTo( _commandBuilder, comp_msg );
+		ModuleUtils::Initialize( {_commandBuilder}, this );
 		return true;
 	}
 	
@@ -1729,10 +1462,8 @@ namespace PlatformVK
 */
 	void Vk1Device::_DeleteCommandBuffers ()
 	{
-		Message< ModuleMsg::Delete >	msg;
-
 		if ( _commandBuilder )
-			SendTo( _commandBuilder, msg );
+			SendTo< ModuleMsg::Delete >( _commandBuilder, {} );
 
 		_commandBuilder	= null;
 	}
@@ -1796,7 +1527,7 @@ namespace PlatformVK
 	ELog::type Vk1Device::_DebugReportFlagsToLogType (vk::VkDebugReportFlagBitsEXT flags)
 	{
 		if ( EnumEq( flags, VK_DEBUG_REPORT_ERROR_BIT_EXT ) )
-			return ELog::Error;
+			return ELog::Warning;
 
 		if ( EnumEq( flags, VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT ) )
 			return ELog::Debug;

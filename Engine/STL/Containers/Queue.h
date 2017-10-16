@@ -81,9 +81,9 @@ namespace GXTypes
 		T		&	operator [] (usize i);
 		T const	&	operator [] (usize i) const;
 
-		Self &		operator =  (ArrayCRef<T> right)					{ Copy( right );				return *this; }
-		Self &		operator =  (const Self &right)						{ Copy( right );				return *this; }
-		Self &		operator =  (Self &&right)							{ _Move( RVREF( right ) );		return *this; }
+		Self &		operator =  (ArrayCRef<T> right)					{ Copy( right );					return *this; }
+		Self &		operator =  (const Self &right)						{ Copy( right );					return *this; }
+		Self &		operator =  (Self &&right)							{ Free();  _Move( RVREF( right ) );	return *this; }
 
 		Self &		operator << (const T& right)						{ PushBack( right );			return *this; }
 		Self &		operator << (Self &&right)							{ AppendBack( RVREF( right ) );	return *this; }
@@ -719,7 +719,7 @@ namespace GXTypes
 		typedef Hash< ArrayCRef<T> >		base_t;
 		typedef typename base_t::result_t	result_t;
 
-		result_t operator () (const key_t &x) const
+		result_t operator () (const key_t &x) const noexcept
 		{
 			return base_t::operator ()( x );
 		}

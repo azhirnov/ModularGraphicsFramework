@@ -50,6 +50,7 @@ namespace GXTypes
 		static const bool		_perThreadColors;
 		static const bool		_allowSkipErrors;
 		static const bool		_allowCaching;
+		static const uint		_minSizeForAutoSpolier;
 
 
 	// methods

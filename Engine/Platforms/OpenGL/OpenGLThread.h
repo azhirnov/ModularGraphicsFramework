@@ -6,7 +6,7 @@
 
 #if defined( GRAPHICS_API_OPENGL )
 
-#include "Engine/Platforms/Windows/WinWindow.h"
+#include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinContext.h"
 
@@ -33,8 +33,8 @@ namespace Platforms
 											ModuleMsg::WindowDescriptorChanged
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
-											ModuleMsg::GpuDeviceCreated,
-											ModuleMsg::GpuDeviceBeforeDestory
+											GpuMsg::DeviceCreated,
+											GpuMsg::DeviceBeforeDestroy
 										> >;
 
 		using VideoSettings_t		= CreateInfo::GpuContext;
@@ -64,8 +64,6 @@ namespace Platforms
 		~OpenGLThread ();
 		
 		Ptr< GLDevice >			GetDevice ()			{ return &_device; }
-		
-		static TModID::type		GetStaticID ()			{ return "gl4.thrd"_TModID; }
 
 
 	// message handlers
@@ -73,6 +71,11 @@ namespace Platforms
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Update (const Message< ModuleMsg::Update > &);
+		
+		bool _OnModuleAttached (const Message< ModuleMsg::OnModuleAttached > &);
+		bool _OnModuleDetached (const Message< ModuleMsg::OnModuleDetached > &);
+		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
+		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 
 		bool _WindowCreated (const Message< ModuleMsg::WindowCreated > &);
 		bool _WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &);
@@ -81,6 +84,8 @@ namespace Platforms
 	private:
 		bool _CreateDevice (const ModuleMsg::WindowCreated &);
 		void _DetachWindow ();
+
+		static bool _IsWindow (const ModulePtr &mod);
 	};
 
 

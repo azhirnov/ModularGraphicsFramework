@@ -4,28 +4,18 @@
 
 
 #if defined( PLATFORM_WINDOWS )
-
 #	include "Engine/Platforms/Windows/WinPlatform.h"
-#	include "Engine/Platforms/Windows/WinWindow.h"
-#	include "Engine/Platforms/Windows/WinKeyInput.h"
-#	include "Engine/Platforms/Windows/WinMouseInput.h"
-
 	using OSPlatform = Engine::Platforms::WinPlatform;
-
 #endif	// PLATFORM_WINDOWS
 
 
 #ifdef GRAPHICS_API_OPENGL
-
 #	include "Engine/Platforms/OpenGL/OpenGLContext.h"
-
 #endif	// GRAPHICS_API_OPENGL
 
 
 #ifdef GRAPHICS_API_VULKAN
-
 #	include "Engine/Platforms/Vulkan/VulkanContext.h"
-
 #endif	// GRAPHICS_API_VULKAN
 
 

@@ -14,41 +14,53 @@ namespace Platforms
 	// Render State
 	//
 	
-	struct RenderState : public CompileTime::PODStruct		// TODO: copy from StaticArray<...>
+	struct RenderState final : public CompileTime::PODStruct		// TODO: copy from StaticArray<...>
 	{
 	// types
 	public:
+		using Self	= RenderState;
+
 
 		//
 		// Color Buffer
 		//
-		struct ColorBuffer : public CompileTime::PODStruct
+		struct ColorBuffer final : public CompileTime::PODStruct
 		{
 		// types
 			using Self	= ColorBuffer;
 
+			template <typename T>
+			struct _Pair final
+			{
+				using type = typename T::type;
+
+				type	color;
+				type	alpha;
+
+				_Pair (GX_DEFCTOR) : color(T::Unknown), alpha(T::Unknown) {}
+				_Pair (type rgba) : color(rgba), alpha(rgba) {}
+				_Pair (type rgb, type a) : color(rgb), alpha(a) {}
+
+				bool operator == (const _Pair<T> &right) const;
+			};
+
+
 		// variables
-			EBlendFunc::type	blendFuncSrcColor,
-								blendFuncSrcAlpha,
-								blendFuncDstColor,
-								blendFuncDstAlpha;
-			EBlendEq::type		blendModeColor,
-								blendModeAlpha;
+			_Pair< EBlendFunc >	blendFuncSrc,
+								blendFuncDst;
+			_Pair< EBlendEq >	blendMode;
 			bool4				colorMask;
 			bool				blend;
 		
 		// methods
 			ColorBuffer (GX_DEFCTOR) :
-				blendFuncSrcColor( EBlendFunc::One ),	blendFuncSrcAlpha( EBlendFunc::One ),
-				blendFuncDstColor( EBlendFunc::Zero ),	blendFuncDstAlpha( EBlendFunc::Zero ),
-				blendModeColor( EBlendEq::Add ),		blendModeAlpha( EBlendEq::Add ),
-				colorMask( true ),						blend( false )
+				blendFuncSrc( EBlendFunc::One, EBlendFunc::One ),
+				blendFuncDst( EBlendFunc::Zero,	EBlendFunc::Zero ),
+				blendMode( EBlendEq::Add, EBlendEq::Add ),
+				colorMask( true ),	blend( false )
 			{}
 
-			Self& SetBlendFuncSrc (EBlendFunc::type value);
-			Self& SetBlendFuncDst (EBlendFunc::type value);
-
-			Self& SetBlendMode (EBlendEq::type value);
+			bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -56,7 +68,7 @@ namespace Platforms
 		//
 		// Color Buffers State
 		//
-		struct ColorBuffersState : public CompileTime::PODStruct
+		struct ColorBuffersState final : public CompileTime::PODStruct
 		{
 		// types
 			using ColorBuffers_t	= StaticArray< ColorBuffer, GlobalConst::Graphics_MaxColorBuffers >;
@@ -87,6 +99,8 @@ namespace Platforms
 			Self& SetBlendMode (EBlendEq::type value);
 
 			Self& SetColorMask (bool4 value);
+			
+			bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -94,8 +108,11 @@ namespace Platforms
 		//
 		// Stencil Face State
 		//
-		struct StencilFaceState : public CompileTime::PODStruct
+		struct StencilFaceState final : public CompileTime::PODStruct
 		{
+		// types
+			using Self	= StencilFaceState;
+
 		// variables
 			EStencilOp::type	sfail,
 								dfail,
@@ -109,9 +126,11 @@ namespace Platforms
 			StencilFaceState (GX_DEFCTOR) :
 				sfail( EStencilOp::Keep ),		dfail( EStencilOp::Keep ),
 				dppass( EStencilOp::Keep ),		func( ECompareFunc::Always ),
-				funcRef( 0 ),					funcMask( -1 ),
-				mask( -1 )
+				funcRef( 0 ),					funcMask( ~0u ),
+				mask( ~0u )
 			{}
+			
+			bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -119,17 +138,22 @@ namespace Platforms
 		//
 		// Stencil Buffer State
 		//
-		struct StencilBufferState : public CompileTime::PODStruct
+		struct StencilBufferState final : public CompileTime::PODStruct
 		{
+		// types
+			using Self	= StencilBufferState;
+
 		// variables
 			StencilFaceState	front;
 			StencilFaceState	back;
-			bool				test;
+			bool				enabled;
 
 		// methods
 			StencilBufferState (GX_DEFCTOR) :
-				front(), back(), test( false )
+				front(), back(), enabled( false )
 			{}
+			
+			bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -137,37 +161,47 @@ namespace Platforms
 		//
 		// Depth Buffer State
 		//
-		struct DepthBufferState : public CompileTime::PODStruct
+		struct DepthBufferState final : public CompileTime::PODStruct
 		{
+		// types
+			using Self	= DepthBufferState;
+
 		// variables
 			ECompareFunc::type	func;
 			Optional<float2>	range;
 			bool				write;
-			bool				test;
+			bool				enabled;
 
 		// methods
 			DepthBufferState (GX_DEFCTOR) :
 				func( ECompareFunc::LEqual ),	range(),
-				write( true ),					test( false )
+				write( true ),					enabled( false )
 			{}
 				
+			bool operator == (const Self &right) const;
+
 			DEBUG_ONLY( String ToString () const; )
 		};
 
 		//
 		// Input Assembly State
 		//
-		struct InputAssemblyState : public CompileTime::PODStruct
+		struct InputAssemblyState final : public CompileTime::PODStruct
 		{
+		// types
+			using Self	= InputAssemblyState;
+
 		// variables
 			EPrimitive::type	topology;
-			bool				primitiveRestart;
+			bool				primitiveRestart;	// if 'true' then index with -1 value will restarting the assembly of primitives
 
 		// methods
 			InputAssemblyState (GX_DEFCTOR) :
 				topology( EPrimitive::Unknown ),
 				primitiveRestart( false )
 			{}
+			
+			bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -175,8 +209,11 @@ namespace Platforms
 		//
 		// Rasterization State
 		//
-		struct RasterizationState : public CompileTime::PODStruct
+		struct RasterizationState final : public CompileTime::PODStruct
 		{
+		// types
+			using Self	= RasterizationState;
+
 		// variables
 			EPolygonMode::type	polygonMode;
 
@@ -201,6 +238,8 @@ namespace Platforms
 				depthClamp( false ),				rasterizerDiscard( false ),
 				cullMode( EPolygonFace::None ),		frontFaceCCW( true )
 			{}
+			
+			bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -208,8 +247,11 @@ namespace Platforms
 		//
 		// Multisample State
 		//
-		struct MultisampleState : public CompileTime::PODStruct
+		struct MultisampleState final : public CompileTime::PODStruct
 		{
+		// types
+			using Self	= MultisampleState;
+
 		// variables
 			MultiSamples		samples;
 			UNormClamped<float>	minSampleShading;
@@ -223,6 +265,8 @@ namespace Platforms
 				samples( 1 ),				minSampleShading(),		sampleShading( false ),
 				alphaToCoverage( false ),	alphaToOne( false )
 			{}
+			
+			bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -242,49 +286,26 @@ namespace Platforms
 	public:
 		RenderState (GX_DEFCTOR)
 		{}
+		
+		bool operator == (const Self &right) const;
 
 		DEBUG_ONLY( String ToString () const; )
 	};
-
-			
-	
-/*
-=================================================
-	SetBlendFuncSrc
-=================================================
-*/
-	inline RenderState::ColorBuffer&  RenderState::ColorBuffer::SetBlendFuncSrc (EBlendFunc::type value)
-	{
-		blendFuncSrcColor = blendFuncSrcAlpha = value;
-		return *this;
-	}
-	
-/*
-=================================================
-	SetBlendFuncDst
-=================================================
-*/
-	inline RenderState::ColorBuffer&  RenderState::ColorBuffer::SetBlendFuncDst (EBlendFunc::type value)
-	{
-		blendFuncDstColor = blendFuncDstAlpha = value;
-		return *this;
-	}
-	
-/*
-=================================================
-	SetBlendMode
-=================================================
-*/
-	inline RenderState::ColorBuffer&  RenderState::ColorBuffer::SetBlendMode (EBlendEq::type value)
-	{
-		blendModeColor = blendModeAlpha = value;
-		return *this;
-	}
-
-//-----------------------------------------------------------------------------
 	
 
 	
+/*
+=================================================
+	operator ==
+=================================================
+*/
+	template <typename T>
+	inline bool RenderState::ColorBuffer::_Pair<T>::operator == (const _Pair<T> &right) const
+	{
+		return	color == right.color and
+				alpha == right.alpha;
+	}
+
 /*
 =================================================
 	SetBlendMode
@@ -306,7 +327,7 @@ namespace Platforms
 	inline RenderState::ColorBuffersState&  RenderState::ColorBuffersState::SetBlendFuncSrcColor (EBlendFunc::type value)
 	{
 		FOR( i, buffers ) {
-			buffers[i].blendFuncSrcColor = value;
+			buffers[i].blendFuncSrc.color = value;
 		}
 		return *this;
 	}
@@ -319,7 +340,7 @@ namespace Platforms
 	inline RenderState::ColorBuffersState&  RenderState::ColorBuffersState::SetBlendFuncSrcAlpha (EBlendFunc::type value)
 	{
 		FOR( i, buffers ) {
-			buffers[i].blendFuncSrcAlpha = value;
+			buffers[i].blendFuncSrc.alpha = value;
 		}
 		return *this;
 	}
@@ -332,7 +353,7 @@ namespace Platforms
 	inline RenderState::ColorBuffersState&  RenderState::ColorBuffersState::SetBlendFuncSrc (EBlendFunc::type value)
 	{
 		FOR( i, buffers ) {
-			buffers[i].SetBlendFuncSrc( value );
+			buffers[i].blendFuncSrc = value;
 		}
 		return *this;
 	}
@@ -345,7 +366,7 @@ namespace Platforms
 	inline RenderState::ColorBuffersState&  RenderState::ColorBuffersState::SetBlendFuncDstColor (EBlendFunc::type value)
 	{
 		FOR( i, buffers ) {
-			buffers[i].blendFuncDstColor = value;
+			buffers[i].blendFuncDst.color = value;
 		}
 		return *this;
 	}
@@ -358,7 +379,7 @@ namespace Platforms
 	inline RenderState::ColorBuffersState&  RenderState::ColorBuffersState::SetBlendFuncDstAlpha (EBlendFunc::type value)
 	{
 		FOR( i, buffers ) {
-			buffers[i].blendFuncDstAlpha = value;
+			buffers[i].blendFuncDst.alpha = value;
 		}
 		return *this;
 	}
@@ -371,7 +392,7 @@ namespace Platforms
 	inline RenderState::ColorBuffersState&  RenderState::ColorBuffersState::SetBlendFuncDst (EBlendFunc::type value)
 	{
 		FOR( i, buffers ) {
-			buffers[i].SetBlendFuncDst( value );
+			buffers[i].blendFuncDst = value;
 		}
 		return *this;
 	}
@@ -384,7 +405,7 @@ namespace Platforms
 	inline RenderState::ColorBuffersState&  RenderState::ColorBuffersState::SetBlendModeColor (EBlendEq::type value)
 	{
 		FOR( i, buffers ) {
-			buffers[i].blendModeColor = value;
+			buffers[i].blendMode.color = value;
 		}
 		return *this;
 	}
@@ -397,7 +418,7 @@ namespace Platforms
 	inline RenderState::ColorBuffersState&  RenderState::ColorBuffersState::SetBlendModeAlpha (EBlendEq::type value)
 	{
 		FOR( i, buffers ) {
-			buffers[i].blendModeAlpha = value;
+			buffers[i].blendMode.alpha = value;
 		}
 		return *this;
 	}
@@ -410,7 +431,7 @@ namespace Platforms
 	inline RenderState::ColorBuffersState&  RenderState::ColorBuffersState::SetBlendMode (EBlendEq::type value)
 	{
 		FOR( i, buffers ) {
-			buffers[i].SetBlendMode( value );
+			buffers[i].blendMode = value;
 		}
 		return *this;
 	}

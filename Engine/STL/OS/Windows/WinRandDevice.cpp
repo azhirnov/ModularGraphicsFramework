@@ -114,7 +114,7 @@ namespace OS
 */
 	bool PlatformRandomDevice::_Generate (ubyte *ptr, usize size) const
 	{
-			return CryptGenRandom( _prov.Get<HCRYPTPROV>(), (DWORD) size, ptr ) == TRUE;
+		return CryptGenRandom( _prov.Get<HCRYPTPROV>(), (DWORD) size, ptr ) == TRUE;
 	}
 
 

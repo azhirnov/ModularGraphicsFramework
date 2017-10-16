@@ -29,7 +29,7 @@ namespace Base
 			virtual uint2 Send (const VariantCRef &data) = 0;
 			virtual void  Subscribe (const VariantRef &callback) = 0;
 			virtual void  Unsubscribe (const VariantRef &callback) = 0;
-			virtual void  UnsubscribeAll (const ModulePtr &ptr) = 0;
+			virtual void  UnsubscribeAll (const void *ptr) = 0;
 		};
 
 		//
@@ -52,7 +52,7 @@ namespace Base
 
 			void Subscribe (const VariantRef &cb)		override	{ _event.Add( RVREF( cb.Get<Delegate_t>() ) ); }
 			void Unsubscribe (const VariantRef &cb)		override	{ _event.Remove( RVREF( cb.Get<Delegate_t>() ) ); }
-			void UnsubscribeAll (const ModulePtr &ptr)	override	{ _event.RemoveAllFor( ptr ); }
+			void UnsubscribeAll (const void *ptr)		override	{ _event.RemoveAllFor( ptr ); }
 
 			uint2 Send (const VariantCRef &data) override
 			{
@@ -101,7 +101,9 @@ namespace Base
 
 	// variables
 	private:
-		HandlersMap_t	_handlers;
+		HandlersMap_t		_handlers;
+
+		mutable OS::Mutex	_lock;
 
 
 	// methods
@@ -125,8 +127,10 @@ namespace Base
 
 		template <typename T>
 		bool Unsubscribe (const Runtime::VirtualTypeList& validTypes, Delegate< bool (const Message<T> &)> &&cb);
-
-		void UnsubscribeAll (const ModulePtr &unit);
+		
+		template <typename T>
+		void UnsubscribeAll (const T &unit);
+		void UnsubscribeAll (const void *ptr);
 
 		void Clear ();
 		
@@ -191,6 +195,8 @@ namespace Base
 		if ( not validTypes.HasType( id ) )
 			RETURN_ERR( "Can't subscribe for event '" << ToString( id ) << "'" );
 
+		SCOPELOCK( _lock );
+
 		// create handler
 		if ( not _handlers.FindIndex( id, OUT index ) )
 		{
@@ -230,6 +236,8 @@ namespace Base
 		
 		if ( not validTypes.HasType( id ) )
 			RETURN_ERR( "Can't unsubscribe for event '" << ToString( id ) << "'" );
+		
+		SCOPELOCK( _lock );
 
 		if ( _handlers.Find( id, OUT iter ) )
 		{
@@ -241,6 +249,34 @@ namespace Base
 		}
 
 		return false;
+	}
+	
+/*
+=================================================
+	UnsubscribeAll
+=================================================
+*/
+	template <typename T>
+	inline void MessageHandler::UnsubscribeAll (const T &ptr)
+	{
+		SCOPELOCK( _lock );
+
+		FOR( i, _handlers )
+		{
+			// TODO: may be it is not a good idea
+			//CHECK_ERR( not _handlers[i].second.locked, void() );
+
+			_handlers[i].second->UnsubscribeAll( (const void *) &(*ptr) );
+		}
+	}
+
+	inline void MessageHandler::UnsubscribeAll (const void *ptr)
+	{
+		SCOPELOCK( _lock );
+
+		FOR( i, _handlers ) {
+			_handlers[i].second->UnsubscribeAll( ptr );
+		}
 	}
 	
 /*

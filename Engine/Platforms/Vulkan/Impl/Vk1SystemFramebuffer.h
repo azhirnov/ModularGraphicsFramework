@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Shared/GPU/Framebuffer.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -26,8 +26,8 @@ namespace PlatformVK
 											ModuleMsg::Compose
 										> >
 										::Append< MessageListFrom<
-											ModuleMsg::GetGpuFramebufferDescriptor,
-											ModuleMsg::GetVkFramebufferID
+											GpuMsg::GetFramebufferDescriptor,
+											GpuMsg::GetVkFramebufferID
 										> >;
 
 		using SupportedEvents_t		= MessageListFrom< ModuleMsg::Delete >;
@@ -55,11 +55,9 @@ namespace PlatformVK
 								vk::VkRenderPass renderPass,
 								vk::VkImageView colorView, EPixelFormat::type colorFormat,
 								vk::VkImageView depthStencilView, EPixelFormat::type depthStencilFormat,
-								ETexture::type imageType);
+								EImage::type imageType);
 
 		static ModulePtr CreateModule (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &)	{ return null; }
-
-		static OModID::type				GetStaticID ()					{ return "vk1.sys-fb"_OModID; }
 		
 		FramebufferDescriptor const&	GetDescriptor ()		const	{ return _descr; }
 		vk::VkFramebuffer				GetFramebufferID ()		const	{ return _framebufferId; }
@@ -69,8 +67,8 @@ namespace PlatformVK
 	// message handlers
 	private:
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetVkFramebufferID (const Message< ModuleMsg::GetVkFramebufferID > &);
-		bool _GetGpuFramebufferDescriptor (const Message< ModuleMsg::GetGpuFramebufferDescriptor > &);
+		bool _GetVkFramebufferID (const Message< GpuMsg::GetVkFramebufferID > &);
+		bool _GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &);
 
 	private:
 		bool _IsCreated () const;
@@ -87,9 +85,9 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Device::Vk1SystemFramebuffer::Vk1SystemFramebuffer (const GlobalSystemsRef gs, const VkSystemsRef vkSys) :
-		Vk1BaseModule( gs, vkSys, ModuleConfig{ GetStaticID(), 1 }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, vkSys, ModuleConfig{ VkSystemFramebufferModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_framebufferId( VK_NULL_HANDLE ),
-		_index( -1 )
+		_index( ~0u )
 	{
 		SetDebugName( "Vk1SystemFramebuffer" );
 
@@ -101,13 +99,14 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GpuDeviceBeforeDestory );
+		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetVkFramebufferID );
-		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetGpuFramebufferDescriptor );
+		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetFramebufferDescriptor );
+		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetVkLogicDevice );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( null, VulkanThread::GetStaticID(), true );
+		_AttachSelfToManager( null, Platforms::VkThreadModuleID, true );
 	}
 	
 /*
@@ -129,7 +128,7 @@ namespace PlatformVK
 															 vk::VkRenderPass renderPass,
 															 vk::VkImageView colorView, EPixelFormat::type colorFormat,
 															 vk::VkImageView depthStencilView, EPixelFormat::type depthStencilFormat,
-															 ETexture::type imageType)
+															 EImage::type imageType)
 	{
 		using namespace vk;
 
@@ -155,13 +154,15 @@ namespace PlatformVK
 		VkFramebufferCreateInfo	fb_info = {};
 		fb_info.sType			= VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		fb_info.renderPass		= renderPass;
-		fb_info.attachmentCount	= attachments.Count();
+		fb_info.attachmentCount	= (uint32_t) attachments.Count();
 		fb_info.pAttachments	= attachments.ptr();
 		fb_info.width			= surfaceSize.x;
 		fb_info.height			= surfaceSize.y;
 		fb_info.layers			= 1;
 
 		VK_CHECK( vkCreateFramebuffer( GetLogicalDevice(), &fb_info, null, OUT &_framebufferId ) );
+		
+		GetDevice()->SetObjectName( _framebufferId, GetDebugName(), EGpuObject::Framebuffer );
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 		return true;
@@ -184,7 +185,7 @@ namespace PlatformVK
 	_GetVkFramebufferID
 =================================================
 */
-	bool Vk1Device::Vk1SystemFramebuffer::_GetVkFramebufferID (const Message< ModuleMsg::GetVkFramebufferID > &msg)
+	bool Vk1Device::Vk1SystemFramebuffer::_GetVkFramebufferID (const Message< GpuMsg::GetVkFramebufferID > &msg)
 	{
 		msg->result.Set( _framebufferId );
 		return true;
@@ -192,10 +193,10 @@ namespace PlatformVK
 
 /*
 =================================================
-	_GetGpuFramebufferDescriptor
+	_GetFramebufferDescriptor
 =================================================
 */
-	bool Vk1Device::Vk1SystemFramebuffer::_GetGpuFramebufferDescriptor (const Message< ModuleMsg::GetGpuFramebufferDescriptor > &msg)
+	bool Vk1Device::Vk1SystemFramebuffer::_GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &msg)
 	{
 		msg->result.Set( _descr );
 		return true;

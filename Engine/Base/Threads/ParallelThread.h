@@ -6,6 +6,23 @@
 
 namespace Engine
 {
+namespace ModuleMsg
+{
+
+	//
+	// Add Thread To Manager
+	//
+	struct AddThreadToManager : AddToManager
+	{
+		SingleRead< Delegate<void ()> >		wait;	// wait for complete
+
+		AddThreadToManager (const ModulePtr &mod, Delegate<void ()> &&waitFunc) :
+			AddToManager{ mod }, wait{ RVREF(waitFunc) }
+		{}
+	};
+
+}	// ModuleMsg
+
 namespace Base
 {
 
@@ -13,56 +30,15 @@ namespace Base
 	// Parallel Thread
 	//
 
-	class ParallelThread final : public Module
+	class ParallelThread : public Module
 	{
-		friend class ThreadManager;
-
-	// types
-	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >
-										::Append< MessageListFrom<
-											ModuleMsg::OnManagerChanged
-										> >;
-		using SupportedEvents_t		= Module::SupportedEvents_t;
-		
-		using OnStartThreadFunc_t	= CreateInfo::Thread::OnStartThreadFunc_t;
-
-
-	// constants
-	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
-
-
-	// variables
-	private:
-		OS::Thread				_thread;
-		OnStartThreadFunc_t		_onStarted;
-		TimeProfilerD			_timer;
-		bool					_isLooping;
-
-
-	// methods
 	public:
-		ParallelThread (const GlobalSystemsRef gs, const CreateInfo::Thread &);
+		ParallelThread (const GlobalSystemsRef gs,
+						const ModuleConfig &config,
+						const Runtime::VirtualTypeList *msgTypes,
+						const Runtime::VirtualTypeList *eventTypes);
+
 		~ParallelThread ();
-
-		static TModID::type		GetStaticID ()			{ return "thread"_TModID; }
-
-
-	// message handlers
-	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-
-	private:
-		void _OnEnter ();
-		void _Loop ();
-		void _OnExit ();
-		void _SyncUpdate ();
 	};
 
 

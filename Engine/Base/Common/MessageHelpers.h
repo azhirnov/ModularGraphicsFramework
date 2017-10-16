@@ -40,6 +40,7 @@ namespace ModuleMsg
 		T				Get (const T& def)	{ return _value.Get( def ); }
 
 		T *				operator -> ()		{ return _value.GetPtr(); }
+		T &				operator * ()		{ return _value.Get(); }
 
 		bool MoveTo (OUT T &dst)
 		{
@@ -184,7 +185,7 @@ namespace ModuleMsg
 			NoDiscard,
 
 			_Count,
-			Unknown	= uint(-1)
+			Unknown	= ~0u
 		};
 
 		using bits = EnumBitfield< EMessageFlags >;

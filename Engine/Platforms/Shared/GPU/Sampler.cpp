@@ -1,6 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Sampler.h"
+#include "Engine/Platforms/Shared/GPU/Enums.ToString.h"
 
 namespace Engine
 {
@@ -28,7 +29,7 @@ namespace Platforms
 */
 	SamplerDescriptor::SamplerDescriptor (EAddressMode::type addressMode,
 										  EFilter::type filter,
-										  ESamplerBorderColor::type borderColor,
+										  ESamplerBorderColor::bits borderColor,
 										  //float mipLodBias = 0.0f,
 										  //const float2 &lodRange = float2(),
 										  ECompareFunc::type compareOp ) :
@@ -118,7 +119,7 @@ namespace Platforms
 	SetAddressMode
 =================================================
 */
-	SamplerDescrBuilder&  SamplerDescrBuilder::SetAddressMode (EAddressMode::type u, EAddressMode::type v, EAddressMode::type w)
+	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetAddressMode (EAddressMode::type u, EAddressMode::type v, EAddressMode::type w)
 	{
 		_state._addressMode.x = u;
 		_state._addressMode.y = v;
@@ -127,19 +128,19 @@ namespace Platforms
 		return *this;
 	}
 
-	SamplerDescrBuilder&  SamplerDescrBuilder::SetAddressMode (EAddressMode::type uvw)
+	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetAddressMode (EAddressMode::type uvw)
 	{
 		return SetAddressMode( uvw, uvw, uvw );
 	}
 	
-	SamplerDescrBuilder&  SamplerDescrBuilder::SetAddressMode (uint index, EAddressMode::type value)
+	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetAddressMode (uint index, EAddressMode::type value)
 	{
 		_state._addressMode[index] = value;
 		_changed = true;
 		return *this;
 	}
 
-	SamplerDescrBuilder&  SamplerDescrBuilder::SetAddressMode (const AddressMode_t &uvw)
+	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetAddressMode (const AddressMode_t &uvw)
 	{
 		return SetAddressMode( uvw.x, uvw.y, uvw.z );
 	}
@@ -149,7 +150,7 @@ namespace Platforms
 	SetFilter
 =================================================
 */
-	SamplerDescrBuilder&  SamplerDescrBuilder::SetFilter (EFilter::type value)
+	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetFilter (EFilter::type value)
 	{
 		_state._filter = value;
 		_changed = true;
@@ -161,7 +162,7 @@ namespace Platforms
 	SetBorderColor
 =================================================
 */
-	SamplerDescrBuilder&  SamplerDescrBuilder::SetBorderColor (ESamplerBorderColor::type value)
+	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetBorderColor (ESamplerBorderColor::bits value)
 	{
 		_state._borderColor = value;
 		_changed = true;
@@ -173,7 +174,7 @@ namespace Platforms
 	SetCompareOp
 =================================================
 */
-	SamplerDescrBuilder&  SamplerDescrBuilder::SetCompareOp (ECompareFunc::type value)
+	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetCompareOp (ECompareFunc::type value)
 	{
 		_state._compareOp = value;
 		_changed = true;
@@ -185,7 +186,7 @@ namespace Platforms
 	Finish
 =================================================
 */
-	SamplerDescriptor const&  SamplerDescrBuilder::Finish ()
+	SamplerDescriptor const&  SamplerDescriptor::Builder::Finish ()
 	{
 		if ( _changed )
 		{

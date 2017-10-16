@@ -38,7 +38,7 @@ namespace PlatformVK
 				_Count
 			};
 
-			using bits = EnumBitfield< EQueueFamily >;
+			GX_ENUM_BITFIELD( EQueueFamily );
 		};
 
 	private:
@@ -97,7 +97,6 @@ namespace PlatformVK
 		EQueueFamily::bits				_queueFamily;
 
 		ModulePtr						_commandBuilder;
-		CommandBuffers_t				_tempCmdBuffers;
 
 		ModulePtr						_renderPass;
 		Framebuffers_t					_framebuffers;
@@ -144,14 +143,16 @@ namespace PlatformVK
 
 		bool CreateQueue ();
 		void DestroyQueue ();
-		bool SubmitQueue (ArrayCRef< ModulePtr > cmdBuffers);
+
+		bool SubmitQueue (ArrayCRef<vk::VkCommandBuffer> cmdBuffers, vk::VkFence fence = VK_NULL_HANDLE);
 
 		bool BeginFrame ();
 		bool EndFrame ();
-		//bool EndFrame (const ModulePtr &framebuffer);
 		bool IsFrameStarted () const;
 		
 		bool GetMemoryTypeIndex (vk::uint32_t memoryTypeBits, vk::VkMemoryPropertyFlags flags, OUT vk::uint32_t &index) const;
+
+		bool SetObjectName (vk::uint64_t id, StringCRef name, EGpuObject::type type) const;
 
 		bool IsInstanceCreated ()		const						{ return _instance		 != VK_NULL_HANDLE; }
 		bool HasPhyiscalDevice ()		const						{ return _physicalDevice != VK_NULL_HANDLE; }
@@ -175,6 +176,8 @@ namespace PlatformVK
 		ModulePtr				GetDefaultRenderPass ()		const	{ return _renderPass; }
 		ModulePtr				GetCommandBuilder ()		const	{ return _commandBuilder; }
 		ModulePtr				GetCurrentFramebuffer ()	const	{ return _framebuffers[ _currentImageIndex ]; }
+		uint					GetImageIndex ()			const	{ return _currentImageIndex; }
+		uint					GetSwapchainLength ()		const	{ return _framebuffers.Count(); }
 
 		uint2 const&			GetSurfaceSize ()			const	{ return _surfaceSize; }
 
@@ -217,6 +220,8 @@ namespace PlatformVK
 		bool _CreateCommandBuffers ();
 		void _DeleteCommandBuffers ();
 
+		// Instance
+		bool _GetInstanceExtensions (OUT Array<String> &ext) const;
 
 		// Surface
 		bool _ChooseColorFormat (OUT vk::VkFormat &colorFormat, OUT vk::VkColorSpaceKHR &colorSpace,

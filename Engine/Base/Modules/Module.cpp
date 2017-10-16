@@ -42,30 +42,21 @@ namespace Base
 		CHECK( _parents.Empty() );
 		CHECK( _manager.IsNull() );
 	}
-	
-/*
-=================================================
-	UnsubscribeAll
-=================================================
-*/
-	void Module::UnsubscribeAll (const ModulePtr &unit)
-	{
-		_msgHandler.UnsubscribeAll( unit );
-	}
 
 /*
 =================================================
 	_Attach
 =================================================
 */
-	bool Module::_Attach (const ModuleName_t &name, const ModulePtr &unit)
+	bool Module::_Attach (const ModuleName_t &name, const ModulePtr &unit, bool mustBeUniqueID)
 	{
 		CHECK_ERR( unit );
 		CHECK_ERR( _IsMutableState( GetState() ) );
 
 		// global and per-thread modules must be unique
 		const bool	must_be_unique	= ((unit->GetModuleID() & GModID::_IDMask) == GModID::_ID) or
-									  ((unit->GetModuleID() & TModID::_IDMask) == TModID::_ID);
+									  ((unit->GetModuleID() & TModID::_IDMask) == TModID::_ID) or
+										mustBeUniqueID;
 		
 		FOR( i, _attachments )
 		{
@@ -75,7 +66,7 @@ namespace Base
 				return true;
 			}
 
-			if ( _attachments[i].first == name )
+			if ( not name.Empty() and _attachments[i].first == name )
 			{
 				RETURN_ERR( "module with name: \"" << name << "\" is already attached!" );
 			}
@@ -86,7 +77,7 @@ namespace Base
 
 		_attachments.PushBack({ name, unit });
 
-		_SendForEachAttachments( Message< ModuleMsg::OnModuleAttached >{ this, name, unit } );
+		_SendForEachAttachments< ModuleMsg::OnModuleAttached >({ this, name, unit });
 		return true;
 	}
 	
@@ -103,7 +94,7 @@ namespace Base
 		{
 			if ( _attachments[i].second == unit )
 			{
-				_SendForEachAttachments( Message< ModuleMsg::OnModuleDetached >{ this, _attachments[i].first, unit } );
+				_SendForEachAttachments< ModuleMsg::OnModuleDetached >({ this, _attachments[i].first, unit });
 
 				_attachments.Erase( i );
 				return true;
@@ -134,7 +125,7 @@ namespace Base
 	{
 		if ( parent )
 		{
-			CHECK( SendTo( parent, Message< ModuleMsg::DetachModule >{ this } ) );
+			CHECK( SendTo< ModuleMsg::DetachModule >( parent, { this }) );
 		}
 	}
 	
@@ -147,8 +138,34 @@ namespace Base
 	{
 		for (; not _parents.Empty(); )
 		{
-			CHECK( SendTo( _parents.Back(), Message< ModuleMsg::DetachModule >{ this } ) );
+			CHECK( SendTo< ModuleMsg::DetachModule >( _parents.Back(), { this }) );
 		}
+	}
+	
+/*
+=================================================
+	_OnAttachedToParent
+=================================================
+*/
+	bool Module::_OnAttachedToParent (const ModulePtr &parent)
+	{
+		CHECK_ERR( _parents.Count() < _maxParents );
+
+		_parents.Add( parent );
+		return true;
+	}
+	
+/*
+=================================================
+	_OnDetachedFromParent
+=================================================
+*/
+	bool Module::_OnDetachedFromParent (const ModulePtr &parent)
+	{
+		CHECK( _parents.IsExist( parent ) );
+
+		_parents.Erase( parent );
+		return true;
 	}
 
 /*
@@ -163,7 +180,7 @@ namespace Base
 
 		if ( _manager->GetThreadID() == this->GetThreadID() )
 		{
-			SendTo( _manager, Message< ModuleMsg::RemoveFromManager >{ this } );
+			SendTo< ModuleMsg::RemoveFromManager >( _manager, { this } );
 
 			_SetManager( null );
 		}
@@ -192,7 +209,7 @@ namespace Base
 			if ( mngr->GetThreadID() == this->GetThreadID() )
 			{
 				// single-thread optimization
-				SendTo( mngr, Message< ModuleMsg::AddToManager >{ this } );
+				SendTo< ModuleMsg::AddToManager >( mngr, { this } );
 
 				_SetManager( mngr );
 				return true;
@@ -232,6 +249,8 @@ namespace Base
 		// don't forget to remove self from previous manager
 		ASSERT( _manager == null or mngr == null );
 
+		Message< ModuleMsg::OnManagerChanged >	msg{ _manager, mngr };
+
 		_manager = mngr;
 
 		if ( _manager )
@@ -241,8 +260,7 @@ namespace Base
 			CHECK( (_manager->GetModuleID() & mask) < (this->GetModuleID() & mask) );
 		}
 
-		// TODO: add before/after messages?
-		_SendMsg( Message< ModuleMsg::OnManagerChanged >{ _manager } );
+		CHECK( _SendMsg( msg ) );
 	}
 
 /*
@@ -259,10 +277,21 @@ namespace Base
 		if ( _state == EState::Deleting )
 			RETURN_ERR( "can't change 'deleteing' state" );
 
+		// immutable state can be changed only to deleting state
+		if ( _state == EState::ComposedImmutable )
+		{
+			if ( newState == EState::Deleting )
+			{
+				_state = newState;
+				return true;
+			}
+			RETURN_ERR( "can't change state of immutable object!" );
+		}
+
 		// change to initial, deleting or error state
 		if ( newState == EState::Initial or
 			 newState == EState::Deleting or
-			_IsErrorState( newState ) )
+			 _IsErrorState( newState ) )
 		{
 			_state = newState;
 			return true;
@@ -313,14 +342,17 @@ namespace Base
 	
 /*
 =================================================
-	_Compose
+	_DefCompose
 =================================================
 */
-	bool Module::_Compose (bool immutable)
+	bool Module::_DefCompose (bool immutable)
 	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already linked
+
 		CHECK_ERR( GetState() == EState::Linked );
 
-		_SendForEachAttachments( Message< ModuleMsg::Compose >{}.From( this ) );
+		_SendForEachAttachments< ModuleMsg::Compose >({});
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
@@ -364,23 +396,37 @@ namespace Base
 	
 /*
 =================================================
+	_IsComposedOrLinkedState
+=================================================
+*/
+	bool Module::_IsComposedOrLinkedState (EState state)
+	{
+		return	state == EState::Linked				or
+				state == EState::ComposedMutable	or
+				state == EState::ComposedImmutable;
+	}
+
+/*
+=================================================
 	_IsErrorState
 =================================================
 */
 	bool Module::_IsErrorState (EState state)
 	{
-		return	state == EState::LinkageFailed			or
+		return	state == EState::LinkingFailed			or
 				state == EState::ComposingFailed		or
 				state == EState::IncompleteAttachment;
 	}
 
 /*
 =================================================
-	GetModule
+	GetModuleByID
 =================================================
 */
-	ModulePtr Module::GetModule (UntypedID_t id)
+	ModulePtr Module::GetModuleByID (UntypedID_t id)
 	{
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
 		FOR( i, _attachments )
 		{
 			if ( _attachments[i].second->GetModuleID() == id )
@@ -396,6 +442,8 @@ namespace Base
 */
 	ModulePtr Module::GetModule (StringCRef name)
 	{
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
 		FOR( i, _attachments )
 		{
 			if ( _attachments[i].first == name )
@@ -411,7 +459,7 @@ namespace Base
 */
 	bool Module::_FindModule_Impl (const Message< ModuleMsg::FindModule > &msg)
 	{
-		msg->result.Set( GetModule( msg->id ) );
+		msg->result.Set( GetModule( msg->name ) );
 		return true;
 	}
 	
@@ -433,7 +481,7 @@ namespace Base
 */
 	bool Module::_AttachModule_Impl (const Message< ModuleMsg::AttachModule > &msg)
 	{
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg->name, msg->newModule, false ) );
 		return true;
 	}
 	
@@ -447,7 +495,7 @@ namespace Base
 		CHECK( _Detach( msg->oldModule ) );
 		return true;
 	}
-	
+
 /*
 =================================================
 	_Link_Impl
@@ -455,7 +503,10 @@ namespace Base
 */
 	bool Module::_Link_Impl (const Message< ModuleMsg::Link > &msg)
 	{
-		CHECK_ERR( _IsMutableState( GetState() ) );
+		if ( _IsComposedOrLinkedState( GetState() ) )
+			return true;	// already linked
+
+		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
 		_SendForEachAttachments( msg );
 
@@ -470,7 +521,7 @@ namespace Base
 */
 	bool Module::_Compose_Impl (const Message< ModuleMsg::Compose > &msg)
 	{
-		return _Compose( false );
+		return _DefCompose( false );
 	}
 	
 /*
@@ -480,18 +531,16 @@ namespace Base
 */
 	bool Module::_Delete_Impl (const Message< ModuleMsg::Delete > &msg)
 	{
-		// TODO: unsubscribe
-
 		_DetachAllAttachments();
 		_DetachSelfFromAllParents();
-
-		// TODO: how to send Delete message to subscribers?
-		_msgHandler.Clear();
-		//_msgHandler.UnsubscribeAll( this );
 
 		CHECK( _SetState( EState::Deleting ) );
 
 		_DetachSelfFromManager();
+
+		//_msgHandler.UnsubscribeAll( this );
+		_msgHandler.Clear();
+
 		return true;
 	}
 
@@ -517,10 +566,7 @@ namespace Base
 	{
 		if ( msg->attachedModule == this )
 		{
-			CHECK_ERR( _parents.Count() < _maxParents );
-			CHECK( _SetState( EState::Initial ) );
-
-			_parents.Add( msg->parent );
+			_OnAttachedToParent( msg->parent );
 		}
 		return true;
 	}
@@ -534,10 +580,7 @@ namespace Base
 	{
 		if ( msg->detachedModule == this )
 		{
-			CHECK( _parents.IsExist( msg->parent ) );
-			CHECK( _SetState( EState::Initial ) );
-
-			_parents.Erase( msg->parent );
+			_OnDetachedFromParent( msg->parent );
 		}
 		else
 		{

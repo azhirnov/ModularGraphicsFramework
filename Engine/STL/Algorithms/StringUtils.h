@@ -11,40 +11,78 @@ namespace GXTypes
 {
 namespace StringUtils
 {
-
-	//
-	// IsUpper, IsLower
-	//
-
+	
+/*
+=================================================
+	IsUpper
+=================================================
+*/
 	template <typename T>
 	constexpr forceinline bool IsUpper (const T &c)
 	{
 		return ( c >= T('A') and c <= T('Z') );
 	}
-
-
+	
+/*
+=================================================
+	IsLower
+=================================================
+*/
 	template <typename T>
 	constexpr forceinline bool IsLower (const T &c)
 	{
 		return ( c >= T('a') and c <= T('z') );
 	}
-
-
-	//
-	// ToUpper, ToLower
-	//
-
+	
+/*
+=================================================
+	ToUpper
+=================================================
+*/
 	template <typename T>
 	constexpr forceinline T ToUpper (const T &c)
 	{
 		return ( IsLower( c ) ? c + T('A' - 'a') : c );
 	}
-
-
+	
+/*
+=================================================
+	ToLower
+=================================================
+*/
 	template <typename T>
 	constexpr forceinline T ToLower (const T &c)
 	{
 		return ( IsUpper( c ) ? c + T('a' - 'A') : c );
+	}
+	
+/*
+=================================================
+	ConvertArrayToString
+----
+	write array values as string (binary format)
+=================================================
+*/
+	template <typename T>
+	inline String  ConvertArrayToString (ArrayCRef<T> arr)
+	{
+		String	str;
+		str.Reserve( (usize)arr.Size() * 4 );
+
+		FOR( i, arr )
+		{
+			for (usize j = 0; j < sizeof(T); ++j)
+			{
+				T const&	t    = arr[i];
+				const char	i0   = (t >> (j*8)) & 0xF;
+				const char	i1   = (t >> (j*8 + 4)) & 0xF;
+
+				const char	c[5] = { '\\', 'x', (i0>9 ? 'A'+i0-10 : '0'+i0), (i1>9 ? 'A'+i1-10 : '0'+i1), '\0' };
+
+				str << StringCRef( c, 4 );
+			}
+		}
+		return str;
 	}
 
 	/*
@@ -424,47 +462,6 @@ namespace StringUtils
 		}
 
 		return i;
-	}
-
-	/*
-	template <typename T>
-	inline TStringRef<const T> GetFieldName (TStringRef<const T> str)
-	{
-		FOR_rev( i, str ) {
-			if ( str[i] == T('.') or str[i] == T('>') )	// find '.' or '->'
-				return TStringRef<const T>( ( str.cstr() + i+1 ), str.Length() - i-1 );
-		}
-		return str;
-	}
-
-	/*
-	template <typename T>
-	inline String  BytesToString (const Bytes<T> value)
-	{
-		const T	kb	= T(1) << 14;
-		const T mb	= T(1) << 24;
-		const T	gb	= T(1) << GXMath::Min( T(34), T(Bits<T>::SizeOf<T>())-1 );
-		const T	val	= (T) value;
-
-		if ( val < kb )	return String().FormatI( val,       3, ' ' ) << " b";
-		if ( val < mb )	return String().FormatI( val >> 10, 3, ' ' ) << " Kb";
-		if ( val < gb )	return String().FormatI( val >> 20, 3, ' ' ) << " Mb";
-						return String().FormatI( val >> 30, 3, ' ' ) << " Gb";
-	}
-
-
-	template <typename T>
-	inline String  BitsToString (const Bits<T> value)
-	{
-		const T	kb	= T(1) << 14;
-		const T mb	= T(1) << 24;
-		const T	gb	= T(1) << GXMath::Min( T(34), T(Bits<T>::SizeOf<T>()-1) );
-		const T	val	= (T) value;
-
-		if ( val < kb )	return String().FormatI( val,       3, ' ' ) << " bit";
-		if ( val < mb )	return String().FormatI( val >> 10, 3, ' ' ) << " Kbit";
-		if ( val < gb )	return String().FormatI( val >> 20, 3, ' ' ) << " Mbit";
-						return String().FormatI( val >> 30, 3, ' ' ) << " Gbit";
 	}*/
 
 
