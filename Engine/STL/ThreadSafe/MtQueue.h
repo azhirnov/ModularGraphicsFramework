@@ -25,7 +25,7 @@ namespace GXTypes
 	// types
 	public:
 		typedef QueueType						queue_t;
-		typedef typename QueueType::value_t		value_t;
+		typedef typename QueueType::Value_t		Value_t;
 		typedef MtQueue< QueueType >			Self;
 
 
@@ -113,7 +113,7 @@ namespace GXTypes
 		}
 		
 
-		usize Flush ()
+		usize Flush () noexcept
 		{
 			SCOPELOCK( _lockPendingQueue );
 
@@ -129,7 +129,7 @@ namespace GXTypes
 		}
 
 		
-		usize Push (const value_t &x)
+		usize Push (const Value_t &x)
 		{
 			SCOPELOCK( _lockPendingQueue );
 			_pendingQueue.PushBack( x );
@@ -137,7 +137,7 @@ namespace GXTypes
 		}
 
 
-		usize Push (value_t &&x)
+		usize Push (Value_t &&x)
 		{
 			SCOPELOCK( _lockPendingQueue );
 			_pendingQueue.PushBack( RVREF( x ) );
@@ -161,7 +161,7 @@ namespace GXTypes
 		}
 		
 		
-		usize Append (ArrayCRef<value_t> q)
+		usize Append (ArrayCRef<Value_t> q)
 		{
 			SCOPELOCK( _lockPendingQueue );
 			_pendingQueue.AppendBack( q );
@@ -170,9 +170,9 @@ namespace GXTypes
 
 
 		template <typename Op>
-		bool Process (Op op)
+		bool Process (Op op) noexcept
 		{
-			value_t	x;
+			Value_t	x;
 			{
 				SCOPELOCK( _lockCurrentQueue );
 
@@ -189,9 +189,9 @@ namespace GXTypes
 
 		
 		template <typename Op>
-		usize ProcessAll (Op op)
+		usize ProcessAll (Op op) noexcept
 		{
-			value_t	x;
+			Value_t	x;
 			usize	counter = 0;
 			bool	empty	= false;
 
@@ -228,13 +228,13 @@ namespace GXTypes
 	private:
 		typedef MtQueue< QueueType >			parent_t;
 		typedef QueueType						queue_t;
-		typedef typename QueueType::value_t		value_t;
+		typedef typename QueueType::Value_t		Value_t;
 		typedef MtShortQueue< QueueType >		Self;
 
 
 	// methods
 	private:
-		void _TryFlush ()
+		void _TryFlush () noexcept
 		{
 			// Warning: _lockPendingQueue must be locked!
 
@@ -252,7 +252,7 @@ namespace GXTypes
 
 
 	public:
-		usize Push (const value_t &x)	// override
+		usize Push (const Value_t &x)	// override
 		{
 			SCOPELOCK( parent_t::_lockPendingQueue );
 			parent_t::_pendingQueue.PushBack( x );
@@ -261,7 +261,7 @@ namespace GXTypes
 		}
 		
 
-		usize Push (value_t &&x)	// override
+		usize Push (Value_t &&x)	// override
 		{
 			SCOPELOCK( parent_t::_lockPendingQueue );
 			parent_t::_pendingQueue.PushBack( RVREF( x ) );
@@ -286,7 +286,7 @@ namespace GXTypes
 		}
 
 
-		void Append (ArrayCRef<value_t> q)	// override
+		void Append (ArrayCRef<Value_t> q)	// override
 		{
 			SCOPELOCK( parent_t::_lockPendingQueue );
 			parent_t::_pendingQueue.AppendBack( q );
@@ -304,7 +304,7 @@ namespace GXTypes
 		// inherit parent_t::Process
 
 		template <typename Op>
-		usize ProcessAll (Op op)	// override
+		usize ProcessAll (Op op) noexcept	// override
 		{
 			SCOPELOCK( parent_t::_lockCurrentQueue );
 			usize	counter = 0;

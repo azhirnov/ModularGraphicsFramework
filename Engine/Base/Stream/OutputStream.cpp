@@ -40,8 +40,8 @@ namespace Base
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -52,9 +52,9 @@ namespace Base
 
 	// methods
 	public:
-		OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci);
-		OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci);
-		//OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamToMemory &ci);
+		OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci);
+		OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci);
+		//OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamToMemory &ci);
 		~OutputStream ();
 
 
@@ -69,15 +69,15 @@ namespace Base
 
 
 	
-	const Runtime::VirtualTypeList	OutputStream::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	OutputStream::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	OutputStream::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	OutputStream::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	OutputStream::OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci) :
+	OutputStream::OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci) :
 		Module( gs, ModuleConfig{ OutputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleAttached_Impl );
@@ -109,7 +109,7 @@ namespace Base
 	constructor
 =================================================
 */
-	OutputStream::OutputStream (const GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci) :
+	OutputStream::OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci) :
 		Module( gs, ModuleConfig{ OutputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleAttached_Impl );

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/STL/Common/AllFunc.h"
+#include "Engine/STL/Defines/MemberDetector.h"
 
 namespace GX_STL
 {
@@ -31,7 +32,43 @@ namespace GXTypes
 	{
 		return sizeof...(Types);
 	}
+	
+/*
+=================================================
+	CountOf (Any Container)
+=================================================
+*/
+	namespace _types_hidden_
+	{
+		GX_CREATE_MEMBER_DETECTOR( Count );
+		GX_CREATE_MEMBER_DETECTOR( size );
 
+		template <typename T>			struct IsStaticArray			{ static const bool  value = false; };
+		template <typename T>			struct IsStaticArray< T[] >		{ static const bool  value = true; };
+		template <typename T, usize I>	struct IsStaticArray< T[I] >	{ static const bool  value = true; };
+
+		template <typename T>
+		static constexpr bool	HasCountMethod = typename CompileTime::SwitchType< not IsStaticArray<T>::value,
+														CompileTime::DeferredTemplate< Detect_Count, T >,
+														CompileTime::TypeToType< CompileTime::ValueToType< bool, false >> >::type::value;
+		
+		template <typename T>
+		static constexpr bool	HasStdSizeMethod = typename CompileTime::SwitchType< not IsStaticArray<T>::value,
+														CompileTime::DeferredTemplate< Detect_size, T >,
+														CompileTime::TypeToType< CompileTime::ValueToType< bool, false >> >::type::value;
+	}	// _types_hidden_
+
+	template <typename Arr>
+	constexpr forceinline usize CountOf (const Arr &arr, CompileTime::EnableIf< _types_hidden_::HasCountMethod<Arr>, int > = 0)
+	{
+		return arr.Count();
+	}
+
+	template <typename Arr>
+	constexpr forceinline usize CountOf (const Arr &arr, CompileTime::EnableIf< _types_hidden_::HasStdSizeMethod<Arr>, int > = 0)
+	{
+		return arr.size();
+	}
 
 }	// GXTypes
 }	// GX_STL

@@ -20,7 +20,7 @@ namespace GXTypes
 	// types
 	public:
 		typedef Ptr<T>		Self;
-		typedef T			value_t;
+		typedef T			Value_t;
 		typedef T *			value_ptr_t;
 		typedef bool		_is_simple_ptr;
 
@@ -122,14 +122,14 @@ namespace GXTypes
 		forceinline T2  To () const
 		{
 			STATIC_ASSERT( typename T2::_is_simple_ptr(true) );
-			_CheckCast< typename T2::value_t, value_t >( _ptr );
-			return T2( (typename T2::value_t *) RawPtr() );
+			_CheckCast< typename T2::Value_t, Value_t >( _ptr );
+			return T2( (typename T2::Value_t *) RawPtr() );
 		}
 
 		template <typename R>
 		forceinline R *  ToPtr () const
 		{
-			_CheckCast< R, value_t >( _ptr );
+			_CheckCast< R, Value_t >( _ptr );
 			return ptr();
 		}
 		

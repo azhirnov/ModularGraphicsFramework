@@ -40,8 +40,8 @@ namespace Base
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -52,9 +52,9 @@ namespace Base
 
 	// methods
 	public:
-		InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci);
-		InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci);
-		InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci);
+		InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci);
+		InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci);
+		InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci);
 		~InputStream ();
 
 
@@ -74,15 +74,15 @@ namespace Base
 
 
 	
-	const Runtime::VirtualTypeList	InputStream::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	InputStream::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	InputStream::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	InputStream::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	InputStream::InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci) :
+	InputStream::InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci) :
 		Module( gs, ModuleConfig{ InputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
@@ -114,7 +114,7 @@ namespace Base
 	constructor
 =================================================
 */
-	InputStream::InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci) :
+	InputStream::InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci) :
 		Module( gs, ModuleConfig{ InputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
@@ -147,7 +147,7 @@ namespace Base
 	constructor
 =================================================
 */
-	InputStream::InputStream (const GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci) :
+	InputStream::InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci) :
 		Module( gs, ModuleConfig{ InputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );

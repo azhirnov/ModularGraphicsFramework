@@ -22,8 +22,8 @@ namespace Base
 	public:
 		TaskModule (const GlobalSystemsRef gs,
 					const ModuleConfig &config,
-					const Runtime::VirtualTypeList *msgTypes,
-					const Runtime::VirtualTypeList *eventTypes);
+					const TypeIdList *msgTypes,
+					const TypeIdList *eventTypes);
 
 		~TaskModule ();
 	};

@@ -78,9 +78,9 @@ namespace OS
 	// methods
 	public:
 		ConditionVariableEmulation_v2 () :
+		  _waiters(0),
 		  _signal( SyncEvent::AUTO_RESET ),
-		  _broadcast( SyncEvent::MANUAL_RESET ),
-		  _waiters(0)
+		  _broadcast( SyncEvent::MANUAL_RESET )
 		{
 		}
 

@@ -16,8 +16,8 @@ namespace Platforms
 	SamplerDescriptor::SamplerDescriptor (UninitializedType) :
 		_addressMode( EAddressMode::Clamp ),
 		_filter( EFilter::MinMagMipLinear ),
-		_compareOp( ECompareFunc::None ),
-		_borderColor( ESamplerBorderColor::Unknown )
+		_borderColor( ESamplerBorderColor::Unknown ),
+		_compareOp( ECompareFunc::None )
 		//_mipLodBias( 0.0f ),
 		//_lodRange( 0.0f )
 	{}

@@ -32,7 +32,7 @@ namespace OS
 	// Current Thread
 	//
 
-	struct CurrentThread
+	struct _STL_EXPORT_ CurrentThread
 	{
 	// varables
 	protected:
@@ -64,7 +64,7 @@ namespace OS
 	// Thread
 	//
 
-	struct Thread
+	struct _STL_EXPORT_ Thread
 	{
 	// types
 	public:
@@ -100,7 +100,7 @@ namespace OS
 		bool SetPriority (EThreadPriority::type priority) const;
 
 		bool Create (PThreadProc_t proc, void *param = null);
-		bool Delete ();
+		bool Delete () noexcept;
 		
 		// call in ThreadProc only
 		//void Exit (uint exitCode = UNKNOWN_EXIT_CODE);
@@ -108,7 +108,7 @@ namespace OS
 		//!!! not destroy objects in ThreadProc
 		bool Terminate ();
 
-		bool Wait ();
+		bool Wait () noexcept;
 
 		static usize GetCurrentThreadId ()	{ return CurrentThread::GetCurrentThreadId(); }
 

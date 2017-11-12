@@ -13,7 +13,7 @@ namespace GXMath
 {
 	
 	// Rectangle
-	template <typename T> struct Rectangle;
+	template <typename T, ulong UID = 0> struct Rectangle;
 
 	typedef Rectangle< float   >	RectF;
 	typedef Rectangle< double  >	RectD;
@@ -24,7 +24,7 @@ namespace GXMath
 
 
 	// Line 2D
-	template <typename T> struct Line2;
+	template <typename T, ulong UID = 0> struct Line2;
 
 	//typedef Line2< half   >		Line2H;
 	typedef Line2< float  >			Line2F;
@@ -33,7 +33,7 @@ namespace GXMath
 
 	
 	// Circle
-	template <typename T> struct Circle;
+	template <typename T, ulong UID = 0> struct Circle;
 
 	//typedef Circle< half   >		CircleH;
 	typedef Circle< float  >		CircleF;

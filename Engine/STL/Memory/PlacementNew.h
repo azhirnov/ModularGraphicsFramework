@@ -20,7 +20,7 @@ namespace GXTypes
 	namespace _types_hidden_
 	{
 		template <typename T>
-		forceinline bool IsAlignedMem (void *ptr)
+		forceinline bool IsAlignedMem (void *ptr) noexcept
 		{
 			enum { ALIGN = /*alignof(T)*/ sizeof(void *) };
 			return (sizeof(T) < ALIGN) or IsAlignedPointer< ALIGN >( ptr );

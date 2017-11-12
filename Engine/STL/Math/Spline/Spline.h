@@ -22,12 +22,12 @@ namespace Spline
 	{
 	// types
 	public:
-		typedef VecType						vec_t;
-		typedef typename VecType::value_t	value_t;
+		typedef VecType						Vec_t;
+		typedef typename VecType::Value_t	Value_t;
 		
 	// variables
 	private:
-		vec_t	_p0, _p1, _p2, _p3;
+		Vec_t	_p0, _p1, _p2, _p3;
 		
 	// methods
 	public:
@@ -36,9 +36,9 @@ namespace Spline
 		void Create ()
 		{
 			// Cubic Hermite Spline
-			template <typename T, ubyte I>
-			static Vec<T,I>  CubicHermite(const Vec<T,I> &p0, const Vec<T,I> &tangent0,
-										   const Vec<T,I> &p1, const Vec<T,I> &tangent1,
+			template <typename T, usize I>
+			static Vec<T,I,U>  CubicHermite(const Vec<T,I,U> &p0, const Vec<T,I,U> &tangent0,
+										   const Vec<T,I,U> &p1, const Vec<T,I,U> &tangent1,
 										   const T& a)
 			{
 				const T	a2 = a * a;
@@ -51,9 +51,9 @@ namespace Spline
 			}
 		}
 
-		vec_t Interpolate (T a) const
+		Vec_t Interpolate (T a) const
 		{
-			return vec_t();
+			return Vec_t();
 		}
 	};
 	*/
@@ -68,26 +68,26 @@ namespace Spline
 	{
 	// types
 	public:
-		typedef VecType						vec_t;
-		typedef typename VecType::value_t	value_t;
+		typedef VecType						Vec_t;
+		typedef typename VecType::Value_t	Value_t;
 
 	// variables
 	private:
-		vec_t	_c0, _c1, _c2, _c3;
+		Vec_t	_c0, _c1, _c2, _c3;
 
 	// methods
 	public:
 		CentripetalCatmullRom ()
 		{}
 		
-		CentripetalCatmullRom (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		CentripetalCatmullRom (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
 			Create( p0, p1, p2, p3 );
 		}
 
-		void Create (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		void Create (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
-			typedef value_t	T;
+			typedef Value_t	T;
 
 			T const	p	= T(0.25);
 			T const e	= T(1e-4);
@@ -100,8 +100,8 @@ namespace Spline
 			if ( dt0 < e )	dt0 = dt1;
 			if ( dt2 < e )	dt2 = dt1;
 
-			vec_t const	t1 = ( (p1 - p0) / dt0 - (p2 - p0) / (dt0 + dt1) + (p2 - p1) / dt1 ) * dt1;
-			vec_t const	t2 = ( (p2 - p1) / dt1 - (p3 - p1) / (dt1 + dt2) + (p3 - p2) / dt2 ) * dt1;
+			Vec_t const	t1 = ( (p1 - p0) / dt0 - (p2 - p0) / (dt0 + dt1) + (p2 - p1) / dt1 ) * dt1;
+			Vec_t const	t2 = ( (p2 - p1) / dt1 - (p3 - p1) / (dt1 + dt2) + (p3 - p2) / dt2 ) * dt1;
 
 			_c0 = p1;
 			_c1 = t1;
@@ -109,7 +109,7 @@ namespace Spline
 			_c3 = T(2) * p1 - T(2) * p2 + t1 + t2;
 		}
 
-		vec_t Interpolate (value_t a) const
+		Vec_t Interpolate (Value_t a) const
 		{
 			return (_c0) + (_c1 * a) + (_c2 * a * a) + (_c3 * a * a * a);
 		}
@@ -126,26 +126,26 @@ namespace Spline
 	{
 	// types
 	public:
-		typedef VecType						vec_t;
-		typedef typename VecType::value_t	value_t;
+		typedef VecType						Vec_t;
+		typedef typename VecType::Value_t	Value_t;
 		
 	// variables
 	private:
-		vec_t	_c0, _c1, _c2, _c3;
+		Vec_t	_c0, _c1, _c2, _c3;
 
 	// methods
 	public:
 		ChordalCatmullRom ()
 		{}
 
-		ChordalCatmullRom (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		ChordalCatmullRom (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
 			Create( p0, p1, p2, p3 );
 		}
 
-		void Create (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		void Create (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
-			typedef value_t	T;
+			typedef Value_t	T;
 
 			_c0	= ( T(2.0) * p1 );
 			_c1 = ( -p0 + p2 );
@@ -153,9 +153,9 @@ namespace Spline
 			_c3 = ( -p0 + T(3.0) * p1 - T(3.0) * p2 + p3 );
 		}
 
-		vec_t Interpolate (value_t a) const
+		Vec_t Interpolate (Value_t a) const
 		{
-			return value_t(0.5) * ( (_c0) + (_c1 * a) + (_c2 * a * a) + (_c3 * a * a * a) );
+			return Value_t(0.5) * ( (_c0) + (_c1 * a) + (_c2 * a * a) + (_c3 * a * a * a) );
 		}
 	};
 
@@ -170,24 +170,24 @@ namespace Spline
 	{
 	// types
 	public:
-		typedef VecType						vec_t;
-		typedef typename VecType::value_t	value_t;
+		typedef VecType						Vec_t;
+		typedef typename VecType::Value_t	Value_t;
 		
 	// variables
 	private:
-		vec_t	_c0, _c1, _c2, _c3;
+		Vec_t	_c0, _c1, _c2, _c3;
 
 	// methods
 	public:
 		Unknown ()
 		{}
 
-		Unknown (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		Unknown (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
 			Create( p0, p1, p2, p3 );
 		}
 
-		void Create (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		void Create (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
 			_c0 = (p3 - p2) - (p0 - p1);
 			_c1 = (p0 - p1) - _c0;
@@ -195,7 +195,7 @@ namespace Spline
 			_c3 = p1;
 		}
 
-		vec_t Interpolate (value_t a) const
+		Vec_t Interpolate (Value_t a) const
 		{
 			return (_c0 * a * a * a) + (_c1 * a * a) + (_c2 * a) + _c3;
 		}
@@ -207,24 +207,24 @@ namespace Spline
 	{
 	// types
 	public:
-		typedef VecType						vec_t;
-		typedef typename VecType::value_t	value_t;
+		typedef VecType						Vec_t;
+		typedef typename VecType::Value_t	Value_t;
 		
 	// variables
 	private:
-		vec_t	_c0, _c1, _c2, _c3;
+		Vec_t	_c0, _c1, _c2, _c3;
 
 	// methods
 	public:
 		Unknown ()
 		{}
 
-		Unknown (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		Unknown (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
 			Create( p0, p1, p2, p3 );
 		}
 
-		void Create (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		void Create (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
 			_c0 = (p1 - p2) * T(1.5) + (p3 - p0) * T(0.5);
 			_c1 = p1 * T(-2.5) + p2 * T(2) - p3 * T(0.5) + p0;
@@ -232,7 +232,7 @@ namespace Spline
 			_c3 = p1;
 		}
 
-		vec_t Interpolate (value_t a) const
+		Vec_t Interpolate (Value_t a) const
 		{
 			return (_c0 * a * a * a) + (_c1 * a * a) + (_c2 * a) + _c3;
 		}
@@ -249,26 +249,26 @@ namespace Spline
 	{
 	// types
 	public:
-		typedef VecType						vec_t;
-		typedef typename VecType::value_t	value_t;
+		typedef VecType						Vec_t;
+		typedef typename VecType::Value_t	Value_t;
 
 	// variables
 	private:
-		vec_t	_c0, _c1, _c2, _c3;
+		Vec_t	_c0, _c1, _c2, _c3;
 
 	// methods
 	public:
 		BSpline ()
 		{}
 		
-		BSpline (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		BSpline (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
 			Create( p0, p1, p2, p3 );
 		}
 
-		void Create (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		void Create (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
-			typedef value_t	T;
+			typedef Value_t	T;
 
 			_c3 = (p3 - p0) / T(6) + (p1 - p2) / T(2);
 			_c2 = (p0 + p2) / T(2) - p1;
@@ -276,7 +276,7 @@ namespace Spline
 			_c0 = (p0 + T(4) * p1 + p2) / T(6);
 		}
 
-		vec_t Interpolate (value_t a) const
+		Vec_t Interpolate (Value_t a) const
 		{
 			return (_c3 * a * a * a) + (_c2 * a * a) + (_c1 * a) + _c0;
 		}
@@ -293,24 +293,24 @@ namespace Spline
 	{
 	// types
 	public:
-		typedef VecType						vec_t;
-		typedef typename VecType::value_t	value_t;
+		typedef VecType						Vec_t;
+		typedef typename VecType::Value_t	Value_t;
 
 	// variables
 	private:
-		vec_t	_c0, _c1, _c2, _c3;
+		Vec_t	_c0, _c1, _c2, _c3;
 
 	// methods
 	public:
 		CubicSpline ()
 		{}
 		
-		CubicSpline (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		CubicSpline (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
 			Create( p0, p1, p2, p3 );
 		}
 
-		void Create (const vec_t &p0, const vec_t &p1, const vec_t &p2, const vec_t &p3)
+		void Create (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2, const Vec_t &p3)
 		{
 			_c0 = p0;
 			_c1 = p1;
@@ -318,7 +318,7 @@ namespace Spline
 			_c3 = p3;
 		}
 
-		vec_t Interpolate (value_t a) const
+		Vec_t Interpolate (Value_t a) const
 		{
 			return	((_c3 - _c2) - (_c0 - _c1)) * a * a * a +
 					(_c3 - _c2) * a * a +

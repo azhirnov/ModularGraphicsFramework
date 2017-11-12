@@ -34,13 +34,13 @@ struct ImageUtils : public Noninstancable
 	AlignDimension
 =================================================
 */
-	template <typename T, ubyte I, typename B>
-	static Vec<T,I> AlignDimension (const Vec<T,I> &size, const B& align)
+	template <typename T, typename B, usize I, ulong U>
+	static Vec<T,I,U> AlignDimension (const Vec<T,I,U> &size, const B& align)
 	{
 		CompileTime::MustBeInteger<T>();
 		ASSERT( IsPowerOfTwo( align ) and "align must be a power of 2" );
 
-		Vec<T,I>	res;
+		Vec<T,I,U>	res;
 		uint		align_po2 = IntLog2( align );
 
 		FOR( i, res ) {
@@ -116,7 +116,7 @@ struct ImageUtils : public Noninstancable
 	template <typename T>
 	static BytesU AlignedRowSize (const T rowPixels, BytesU bytePerPixel, BytesU rowAlign)
 	{
-		typedef CompileTime::MainType<T, BytesU::value_t>	main_t;
+		typedef CompileTime::MainType<T, BytesU::Value_t>	main_t;
 
 		CompileTime::MustBeInteger<T>();
 		return (BytesU) GXMath::AlignToLarge( Max( rowPixels, T(1) ) * (main_t)bytePerPixel, rowAlign );
@@ -214,7 +214,7 @@ struct ImageUtils : public Noninstancable
 					const SrcType *	s = UnsafeMem::MovePointer< SrcType >( src, i );
 					DstType *		d = UnsafeMem::MovePointer< DstType >( dst, j );
 						
-					ColorFormat::ColorFormatConverter::Convert( *d, *s );
+					ColorFormatUtils::ColorFormatConverter::Convert( *d, *s );
 				}
 			}
 		}
@@ -254,7 +254,7 @@ struct ImageUtils : public Noninstancable
 					const BytesU	j = dst_y_off + SizeOf<DstType>() * (x + dst_off.x);
 					DstType *		d = UnsafeMem::MovePointer< DstType >( dst, j );
 						
-					ColorFormat::ColorFormatConverter::Convert( *d, color );
+					ColorFormatUtils::ColorFormatConverter::Convert( *d, color );
 				}
 			}
 		}

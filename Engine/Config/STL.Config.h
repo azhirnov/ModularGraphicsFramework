@@ -5,7 +5,6 @@
 // Define this in project preprocessor only //
 //#define __GX_DEBUG__
 //#define __GX_FAST__
-//#define __GX_BUILD_DLL__	// not supported now
 //#define __GX_NO_EXCEPTIONS__
 #define __GX_BUILD_LIB__
 //-------------------------------------------------------------------
@@ -13,10 +12,6 @@
 
 // Checks //
 #if defined(__GX_DEBUG__) && defined(__GX_FAST__)
-#	error Incorrect project configuration!
-#endif
-
-#if defined(__GX_BUILD_LIB__) && defined(__GX_BUILD_DLL__)
 #	error Incorrect project configuration!
 #endif
 
@@ -36,6 +31,10 @@
 
 
 // Options //
+
+// enable type identifier based on builtin 'typeid'
+#define GX_USE_STD_TYPEID
+
 
 // compile time calculation of types limits, otherwise used constant values.
 //#define GX_MATH_REAL_LIMITS

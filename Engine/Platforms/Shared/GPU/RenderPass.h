@@ -17,13 +17,14 @@ namespace Platforms
 	// Render Pass Descriptor
 	//
 	
-	struct RenderPassDescriptor : CompileTime::FastCopyable
+	struct _ENGINE_PLATFORMS_EXPORT_ RenderPassDescriptor final : CompileTime::FastCopyable
 	{
 		friend struct RenderPassDescrBuilder;
 
 	// types
 	public:
-		using Self	= RenderPassDescriptor;
+		using Self		= RenderPassDescriptor;
+		using Name_t	= StaticString<64>;
 
 		enum AttachmentIndex : uint {};
 		enum SubpassIndex : uint { SubpassIndexExternal = uint(1u << 31) };
@@ -39,7 +40,7 @@ namespace Platforms
 		struct ColorAttachment_t : CompileTime::PODStruct
 		{
 		// variables
-			StaticString<64>			name;
+			Name_t						name;
 			EPixelFormat::type			format;
 			MultiSamples				samples;
 			EAttachmentLoadOp::type		loadOp;			// for color and depth
@@ -50,7 +51,7 @@ namespace Platforms
 		// methods
 			ColorAttachment_t (GX_DEFCTOR) :
 				format( EPixelFormat::Unknown ),			samples(),
-				loadOp( EAttachmentLoadOp::None ),			storeOp( EAttachmentStoreOp::None ),
+				loadOp( EAttachmentLoadOp::Unknown ),		storeOp( EAttachmentStoreOp::Unknown ),
 				initialLayout( EImageLayout::Undefined ),	finalLayout( EImageLayout::Undefined )
 			{}
 		};
@@ -68,7 +69,7 @@ namespace Platforms
 		// methods
 			DepthStencilAttachment_t (GX_DEFCTOR) :
 				ColorAttachment_t(),
-				stencilLoadOp( EAttachmentLoadOp::None ),	stencilStoreOp( EAttachmentStoreOp::None )
+				stencilLoadOp( EAttachmentLoadOp::Unknown ),	stencilStoreOp( EAttachmentStoreOp::Unknown )
 			{}
 
 			bool IsEnabled () const		{ return format != EPixelFormat::Unknown; }
@@ -81,21 +82,20 @@ namespace Platforms
 		struct AttachmentRef_t : CompileTime::PODStruct
 		{
 		// variables
-			//StaticString<64>	name;
-			AttachmentIndex		index;
+			Name_t				name;
 			EImageLayout::type	layout;
 
 
 		// methods
 			AttachmentRef_t (GX_DEFCTOR) :
-				index( AttachmentIndex(-1) ),	layout( EImageLayout::Undefined )
+				layout( EImageLayout::Undefined )
 			{}
 
-			bool IsEnabled () const		{ return index != AttachmentIndex(-1); }
+			bool IsEnabled () const		{ return not name.Empty(); }
 		};
 
 		using AttachmentsRef_t		= FixedSizeArray< AttachmentRef_t, MAX_COLOR_ATTACHMENTS >;
-		using PreserveAttachments_t	= FixedSizeArray< AttachmentIndex, MAX_COLOR_ATTACHMENTS >;
+		using PreserveAttachments_t	= FixedSizeArray< Name_t, MAX_COLOR_ATTACHMENTS >;
 
 
 		//
@@ -104,6 +104,7 @@ namespace Platforms
 		struct Subpass_t : CompileTime::PODStruct
 		{
 		// variables
+			Name_t					name;
 			AttachmentsRef_t		colors;
 			AttachmentRef_t			depthStencil;
 			AttachmentsRef_t		inputs;
@@ -112,6 +113,9 @@ namespace Platforms
 			
 		// methods
 			Subpass_t (GX_DEFCTOR)
+			{}
+
+			explicit Subpass_t (StringCRef name) : name(name)
 			{}
 		};
 
@@ -122,24 +126,23 @@ namespace Platforms
 		struct SubpassDependency_t : CompileTime::PODStruct
 		{
 		// variables
-			SubpassIndex				srcPass;
+			Name_t						srcPass;
 			EPipelineStage::bits		srcStage;
 			EPipelineAccess::bits		srcAccess;
 
-			SubpassIndex				dstPass;
+			Name_t						dstPass;
 			EPipelineStage::bits		dstStage;
 			EPipelineAccess::bits		dstAccess;
 
 			ESubpassDependency::bits	dependency;
 
 		// methods
-			SubpassDependency_t (GX_DEFCTOR) :
-				srcPass( SubpassIndex(-1) ),	dstPass( SubpassIndex(-1) )
+			SubpassDependency_t (GX_DEFCTOR)
 			{}
 		};
 
 		using ColorAttachments_t	= FixedSizeArray< ColorAttachment_t, MAX_COLOR_ATTACHMENTS >;
-		using Subpasses_t			= FixedSizeArray< Subpass_t, MAX_SUBPASSES >;
+		using Subpasses_t			= Array< Subpass_t >;
 		using Dependencies_t		= FixedSizeArray< SubpassDependency_t, MAX_DEPENDENCIES >;
 
 
@@ -161,7 +164,6 @@ namespace Platforms
 		ArrayCRef< SubpassDependency_t >	Dependencies ()				const	{ return _dependencies; }
 		DepthStencilAttachment_t const&		DepthStencilAttachment ()	const	{ return _depthStencilAttachment; }
 
-		// compare without hash
 		bool operator == (const Self &right) const;
 		bool operator >  (const Self &right) const;
 		bool operator <  (const Self &right) const;
@@ -177,23 +179,25 @@ namespace Platforms
 	// Render Pass Descriptor Builder
 	//
 
-	struct RenderPassDescrBuilder
+	struct _ENGINE_PLATFORMS_EXPORT_ RenderPassDescrBuilder final
 	{
 	// types
 	public:
 		using Self						= RenderPassDescrBuilder;
+		using Name_t					= RenderPassDescriptor::Name_t;
 		using Subpass_t					= RenderPassDescriptor::Subpass_t;
 		using AttachmentRef_t			= RenderPassDescriptor::AttachmentRef_t;
 		using ColorAttachment_t			= RenderPassDescriptor::ColorAttachment_t;
 		using DepthStencilAttachment_t	= RenderPassDescriptor::DepthStencilAttachment_t;
 		using SubpassDependency_t		= RenderPassDescriptor::SubpassDependency_t;
-		using SubpassIndex				= RenderPassDescriptor::SubpassIndex;
-		using AttachmentIndex			= RenderPassDescriptor::AttachmentIndex;
+		//using SubpassIndex				= RenderPassDescriptor::SubpassIndex;
+		//using AttachmentIndex			= RenderPassDescriptor::AttachmentIndex;
 
-		static const SubpassIndex	SubpassIndexExternal	= RenderPassDescriptor::SubpassIndexExternal;
+		//static const SubpassIndex	SubpassIndexExternal	= RenderPassDescriptor::SubpassIndexExternal;
 
+		struct SimpleBuilder;
 
-		struct SubpassBuilder
+		struct SubpassBuilder final
 		{
 		// variables
 		private:
@@ -204,22 +208,22 @@ namespace Platforms
 			SubpassBuilder (Subpass_t &value) : _valueRef(value) {}
 			
 			SubpassBuilder& AddColorAttachment (const AttachmentRef_t &value);
-			SubpassBuilder& AddColorAttachment (uint				   index,
+			SubpassBuilder& AddColorAttachment (StringCRef			   name,
 												EImageLayout::type	   layout);
 			
 			SubpassBuilder& SetDepthStencilAttachment (const AttachmentRef_t &value);
-			SubpassBuilder& SetDepthStencilAttachment (uint					  index,
+			SubpassBuilder& SetDepthStencilAttachment (StringCRef			  name,
 													   EImageLayout::type	  layout);
 
 			SubpassBuilder& AddInputAttachment (const AttachmentRef_t &value);
-			SubpassBuilder& AddInputAttachment (uint				   index,
+			SubpassBuilder& AddInputAttachment (StringCRef			   name,
 												EImageLayout::type	   layout);
 
 			SubpassBuilder& SetResolveAttachment (const AttachmentRef_t &value);
-			SubpassBuilder& SetResolveAttachment (uint					 index,
+			SubpassBuilder& SetResolveAttachment (StringCRef			 name,
 												  EImageLayout::type	 layout);
 
-			SubpassBuilder& AddPreserveAttachment (uint value);
+			SubpassBuilder& AddPreserveAttachment (StringCRef name);
 		};
 
 
@@ -259,7 +263,7 @@ namespace Platforms
 										 EImageLayout::type			finalLayout);
 
 		Self& AddSubpass (const Subpass_t &value);
-		SubpassBuilder AddSubpass ();
+		SubpassBuilder AddSubpass (StringCRef name);
 
 		Self& AddDependency (const SubpassDependency_t &value);
 		Self& AddDependency (uint						srcPass,
@@ -272,7 +276,67 @@ namespace Platforms
 
 		// validate, calculate hash and return
 		RenderPassDescriptor const& Finish ();
+
+		// default render pass for presenting to screen
+		static RenderPassDescriptor CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt);
+
+		// simplified builder
+		static SimpleBuilder CreateForFramebuffer ();
 	};
+
+
+	//
+	// Simple Builder
+	//
+	struct _ENGINE_PLATFORMS_EXPORT_ RenderPassDescrBuilder::SimpleBuilder final
+	{
+		friend struct RenderPassDescrBuilder;
+
+	// types
+	private:
+		struct DefaultAttachment : CompileTime::FastCopyable
+		{
+		// variables
+			Name_t				name;
+			EPixelFormat::type	format	= EPixelFormat::Unknown;
+			MultiSamples		samples;
+			
+		// methods
+			DefaultAttachment () {}
+			DefaultAttachment (StringCRef name, EPixelFormat::type fmt) : name(name), format(fmt) {}
+			DefaultAttachment (StringCRef name, EPixelFormat::type fmt, uint samp) : name(name), format(fmt), samples(samp) {}
+		};
+		using DefAttachments_t	= FixedSizeArray< DefaultAttachment, GlobalConst::Graphics_MaxColorBuffers+1 >;
+		using Self				= SimpleBuilder;
+
+
+	// variables
+	private:
+		RenderPassDescrBuilder	_builder;
+		DefAttachments_t		_attachments;
+		bool					_hasDepth	= false;
+		bool					_hasStencil	= false;
+
+
+	// methods
+	private:
+		SimpleBuilder () {}
+
+	public:
+		SimpleBuilder (Self &&) = default;
+		SimpleBuilder (const Self &) = default;
+
+		Self&	Add (StringCRef name, EPixelFormat::type fmt, uint samp = 1)		{ return Add( name, fmt, MultiSamples(samp) ); }
+
+		Self&	Add (StringCRef name, EPixelFormat::type fmt, MultiSamples samp = MultiSamples());
+
+		RenderPassDescriptor const& Finish ();
+	};
+
+	inline RenderPassDescrBuilder::SimpleBuilder  RenderPassDescrBuilder::CreateForFramebuffer () {
+		return SimpleBuilder();
+	}
+
 
 }	// Platforms
 
@@ -303,11 +367,6 @@ namespace GpuMsg
 	{
 		Out< Platforms::RenderPassDescriptor >	result;
 	};
-	
-
-	// platform-dependent
-	struct GetVkRenderPassID;
-	struct GetGLRenderPassID;
 
 
 }	// GpuMsg

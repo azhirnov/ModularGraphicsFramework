@@ -20,6 +20,7 @@ extern void Test_CompileTime_TypeQualifier ();
 extern void Test_CompileTime_MainType ();
 extern void Test_CompileTime_StringToID ();
 extern void Test_CompileTime_Sequence ();
+extern void Test_CompileTime_Map ();
 
 extern void Test_Runtime_VirtualTypelist ();
 
@@ -31,6 +32,8 @@ extern void Test_Containers_Set ();
 extern void Test_Containers_List ();
 extern void Test_Containers_Map ();
 extern void Test_Containers_HashSet ();
+extern void Test_Containers_IndexedArray ();
+extern void Test_Containers_Adaptors ();
 
 extern void Test_Dimensions_PhysicsValue ();
 
@@ -79,6 +82,7 @@ void main ()
 	Test_CompileTime_TypeQualifier();
 	Test_CompileTime_StringToID();
 	Test_CompileTime_Sequence();
+	Test_CompileTime_Map();
 
 	Test_Runtime_VirtualTypelist();
 
@@ -89,6 +93,8 @@ void main ()
 	Test_Containers_Set();
 	Test_Containers_Map();
 	Test_Containers_HashSet();
+	Test_Containers_IndexedArray();
+	Test_Containers_Adaptors();
 
 	Test_Dimensions_PhysicsValue();
 

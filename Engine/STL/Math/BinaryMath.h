@@ -24,18 +24,18 @@ namespace GXMath
 		return x << ( usize(shift) & (CompileTime::SizeOf<T>::bits - 1) );
 	}
 	
-	template <typename T, usize I>
-	inline Vec<T,I>  SafeLeftBitShift (const Vec<T,I> &x, const Vec<BitsU,I>& shift)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SafeLeftBitShift (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeLeftBitShift( x[i], shift[i] );
 		return ret;
 	}
 	
-	template <typename T, usize I>
-	inline Vec<T,I>  SafeLeftBitShift (const Vec<T,I> &x, BitsU shift)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SafeLeftBitShift (const Vec<T,I,U> &x, BitsU shift)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeLeftBitShift( x[i], shift );
 		return ret;
 	}
@@ -55,18 +55,18 @@ namespace GXMath
 		return x >> ( usize(shift) & (CompileTime::SizeOf<T>::bits - 1) );
 	}
 	
-	template <typename T, usize I>
-	inline Vec<T,I>  SafeRightBitShift (const Vec<T,I> &x, const Vec<BitsU,I>& shift)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SafeRightBitShift (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeRightBitShift( x[i], shift[i] );
 		return ret;
 	}
 	
-	template <typename T, usize I>
-	inline Vec<T,I>  SafeRightBitShift (const Vec<T,I> &x, BitsU shift)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SafeRightBitShift (const Vec<T,I,U> &x, BitsU shift)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeLeftBitShift( x[i], shift );
 		return ret;
 	}
@@ -102,18 +102,18 @@ namespace GXMath
 		return (T) _math_hidden_::_BitRotateLeft( Unsigned_t(x), usize(shift) );
 	}
 
-	template <typename T, usize I>
-	inline T  BitRotateLeft (const Vec<T,I> &x, const Vec<BitsU,I>& shift)
+	template <typename T, usize I, ulong U>
+	inline T  BitRotateLeft (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BitRotateLeft( x[i], shift[i] );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline T  BitRotateLeft (const Vec<T,I> &x, BitsU shift)
+	template <typename T, usize I, ulong U>
+	inline T  BitRotateLeft (const Vec<T,I,U> &x, BitsU shift)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BitRotateLeft( x[i], shift );
 		return ret;
 	}
@@ -149,18 +149,18 @@ namespace GXMath
 		return (T) _math_hidden_::_BitRotateRight( Unsigned_t(x), int(shift) );
 	}
 
-	template <typename T, usize I>
-	inline T  BitRotateRight (const Vec<T,I> &x, const Vec<BitsU,I>& shift)
+	template <typename T, usize I, ulong U>
+	inline T  BitRotateRight (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BitRotateLeft( x[i], shift[i] );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline T  BitRotateRight (const Vec<T,I> &x, BitsU shift)
+	template <typename T, usize I, ulong U>
+	inline T  BitRotateRight (const Vec<T,I,U> &x, BitsU shift)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BitRotateLeft( x[i], shift );
 		return ret;
 	}
@@ -176,10 +176,10 @@ namespace GXMath
 		return SafeLeftBitShift( T(1), (usize)bitIndex );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  ToBit (const Vec<BitsU,I> &bitIndex)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ToBit (const Vec<BitsU,I,U> &bitIndex)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ToBit<T>( bitIndex[i] );
 		return ret;
 	}
@@ -208,11 +208,11 @@ namespace GXMath
 			}
 		};
 		
-		template <typename T, usize I>
-		struct _ToMask< Vec<T,I> > {
-			forceinline static Vec<T,I> Get (const BitsU lastBitIndex)
+		template <typename T, usize I, ulong U>
+		struct _ToMask< Vec<T,I,U> > {
+			forceinline static Vec<T,I,U> Get (const BitsU lastBitIndex)
 			{
-				Vec<T,I>		ret;
+				Vec<T,I,U>		ret;
 				FOR( i, ret )	ret[i] = _ToMask<T>::Get( lastBitIndex );
 				return ret;
 			}
@@ -225,10 +225,10 @@ namespace GXMath
 		return _math_hidden_::_ToMask<T>::Get( lastBitIndex );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  ToMask (const Vec<BitsU,I> &lastBitIndex)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ToMask (const Vec<BitsU,I,U> &lastBitIndex)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ToMask<T>( lastBitIndex[i] );
 		return ret;
 	}
@@ -249,11 +249,11 @@ namespace GXMath
 			}
 		};
 		
-		template <typename T, usize I>
-		struct _ToMask2< Vec<T,I> > {
-			forceinline static Vec<T,I> Get (const BitsU first, const BitsU last)
+		template <typename T, usize I, ulong U>
+		struct _ToMask2< Vec<T,I,U> > {
+			forceinline static Vec<T,I,U> Get (const BitsU first, const BitsU last)
 			{
-				Vec<T,I>		ret;
+				Vec<T,I,U>		ret;
 				FOR( i, ret )	ret[i] = _ToMask2<T>::Get( first, last );
 				return ret;
 			}
@@ -266,10 +266,10 @@ namespace GXMath
 		return _math_hidden_::_ToMask2<T>::Get( first, last );
 	}
 	
-	template <typename T, usize I>
-	inline Vec<T,I>  ToMask (const Vec<BitsU,I> first, const Vec<BitsU,I> last)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ToMask (const Vec<BitsU,I,U> first, const Vec<BitsU,I,U> last)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ToMask<T>( first[i], last[i] );
 		return ret;
 	}
@@ -290,11 +290,11 @@ namespace GXMath
 			}
 		};
 		
-		template <typename T, usize I>
-		struct _GetMaskForType< Vec<T,I> > {
-			forceinline static Vec<T,I> Get ()
+		template <typename T, usize I, ulong U>
+		struct _GetMaskForType< Vec<T,I,U> > {
+			forceinline static Vec<T,I,U> Get ()
 			{
-				Vec<T,I>		ret;
+				Vec<T,I,U>		ret;
 				FOR( i, ret )	ret[i] = _GetMaskForType<T>::Get();
 				return ret;
 			}
@@ -350,10 +350,10 @@ namespace GXMath
 		return _math_hidden_::_RecursiveBitScanReverse< CompileTime::SizeOf<utype>::bits-1 >::Get( value ) - 1;
 	}
 
-	template <typename T, usize I>
-	inline Vec<uint,I>  IntLog2 (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<uint,I,U>  IntLog2 (const Vec<T,I,U> &x)
 	{
-		Vec<uint,I>		ret;
+		Vec<uint,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntLog2( x[i] );
 		return ret;
 	}
@@ -369,10 +369,10 @@ namespace GXMath
 		return BitsU( IntLog2( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<BitsU,I> BitScanReverse (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<BitsU,I,U> BitScanReverse (const Vec<T,I,U> &x)
 	{
-		Vec<BitsU,I>	ret;
+		Vec<BitsU,I,U>	ret;
 		FOR( i, x )		ret[i] = BitScanReverse( x[i] );
 		return ret;
 	}
@@ -418,10 +418,10 @@ namespace GXMath
 		return BitsU( _math_hidden_::_RecursiveBitScanForward< CompileTime::SizeOf<utype>::bits-1 >::Get( value ) - 1 );
 	}
 
-	template <typename T, usize I>
-	inline Vec<BitsU,I> BitScanForward (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<BitsU,I,U> BitScanForward (const Vec<T,I,U> &x)
 	{
-		Vec<BitsU,I>	ret;
+		Vec<BitsU,I,U>	ret;
 		FOR( i, x )		ret[i] = BitScanForward( x[i] );
 		return ret;
 	}
@@ -473,10 +473,10 @@ namespace GXMath
 		return _math_hidden_::_RecursiveReverseBitOrder< CompileTime::SizeOf<utype>::bits >::Get( x, ~T(0) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I> ReverseBitOrder (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U> ReverseBitOrder (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>	ret;
+		Vec<T,I,U>	ret;
 		FOR( i, x )	ret[i] = ReverseBitOrder( x[i] );
 		return ret;
 	}

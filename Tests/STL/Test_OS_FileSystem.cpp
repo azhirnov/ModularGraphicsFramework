@@ -18,7 +18,7 @@ static void TestGetAllFiles ()
 
 static void TestFolderSearch ()
 {
-	ASSERT( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine/Compute", 5 ) );
+	ASSERT( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Base", 4 ) );
 
 	ASSERT( OS::FileSystem::IsFileExist( "Main.cpp" ) );
 }
@@ -26,7 +26,7 @@ static void TestFolderSearch ()
 
 static void TestRecursiveFileSearch ()
 {
-	ASSERT( OS::FileSystem::FindAndSetCurrentDir( "Tests/STL", 5 ) );
+	ASSERT( OS::FileSystem::FindAndSetCurrentDir( "Tests/STL", 4 ) );
 
 	Array<String>	file_names;
 	auto			filter = LAMBDA()(StringCRef fname) -> bool

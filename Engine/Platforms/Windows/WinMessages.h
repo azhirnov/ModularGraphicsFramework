@@ -10,39 +10,31 @@
 
 namespace Engine
 {
-namespace ModuleMsg
-{
-
-	//
-	// On Window Created Message
-	//
-	struct WindowCreated
-	{
-		Platforms::WindowDesc			descr;
-		OS::HiddenOSTypeFrom<void*>		hwnd;
-	};
-	
+namespace OSMsg
+{	
 
 	//
 	// Request Window Handle
 	//
-	struct WindowGetHandle
+	struct GetWinWindowHandle
 	{
-		Out< OS::HiddenOSTypeFrom<void*> >	hwnd;
+		using HWND_t = OS::HiddenOSTypeFrom<void*>;
+
+		Out< HWND_t >	result;
 	};
 
 
 	//
 	// Window Raw Message from OS
 	//
-	struct WindowRawMessage
+	struct OnWinWindowRawMessage
 	{
 		const uint		uMsg			= 0;
 		const usize		wParam			= 0;
 		const isize		lParam			= 0;
 		mutable bool	wasProcessed	= false;
 
-		WindowRawMessage (uint uMsg, usize wParam, isize lParam) :
+		OnWinWindowRawMessage (uint uMsg, usize wParam, isize lParam) :
 			uMsg(uMsg), wParam(wParam), lParam(lParam)
 		{}
 	};
@@ -51,25 +43,23 @@ namespace ModuleMsg
 	//
 	// Platform Created Message
 	//
-	struct PlatformCreated
+	struct OnWinPlatformCreated
 	{
+	// types
+		using HMODULE_t		= OS::HiddenOSTypeFrom<void*>;
+
 	// variables
-		OS::HiddenOSTypeFrom<void*>		instance;
-		String							className;
-		Platforms::Display				display;
+		HMODULE_t		instance;
+		String			className;
 
 	// methods
-		PlatformCreated (const OS::HiddenOSTypeFrom<void*> &instance,
-						 StringCRef							className,
-						 const Platforms::Display			&display) :
-			instance(instance),
-			className(className),
-			display(display)
+		OnWinPlatformCreated (HMODULE_t instance, StringCRef className) :
+			instance(instance), className(className)
 		{}
 	};
 
 
-}	// ModuleMsg
+}	// OSMsg
 }	// Engine
 
 #endif	// PLATFORM_WINDOWS

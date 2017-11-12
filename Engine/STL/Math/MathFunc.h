@@ -94,6 +94,7 @@ namespace GXMath
 	//
 
 	template <typename T, typename B>	inline T		Lerp (const T& x, const T& y, const B& factor);
+	template <typename T, typename B>	inline T		IncLerp (const T& x1, const T& endX, const B& factor1, const B& factor);
 	template <typename T>				inline T		InvLerp (const T& x, const T& y, const T& interpolated);
 	template <typename T, typename B>	inline T		BiLerp (const T& v0, const T& v1, const T& v2, const T& v3, const B& factorX, const B& factorY);
 

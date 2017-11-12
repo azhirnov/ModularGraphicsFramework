@@ -166,7 +166,7 @@ namespace CompileTime
 			}
 
 
-			static StString_t ReverseHash (const type id)
+			static StString_t ReverseHash (const type id) noexcept
 			{
 				StString_t	result;
 				const type	hash	= (id >> _OFFSET);

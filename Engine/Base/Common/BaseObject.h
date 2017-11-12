@@ -20,19 +20,19 @@ namespace Base
 	// Base Object
 	//
 
-	class BaseObject : public StaticRefCountedObject
+	class _ENGINE_BASE_EXPORT_ BaseObject : public StaticRefCountedObject
 	{
 	// variables
 	private:
 		DEBUG_ONLY(
-			String				_debugName;
+			String					_debugName;
 		)
 		const GlobalSystemsRef		_globalSystems;
 
 
 	// methods
 	public:
-		BaseObject (const GlobalSystemsRef gs) :
+		BaseObject (GlobalSystemsRef gs) :
 			_globalSystems(gs)
 		{}
 		

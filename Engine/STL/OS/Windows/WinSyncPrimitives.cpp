@@ -355,8 +355,8 @@ namespace OS
 	}
 
 
-	static BOOL CALLBACK DefSleepConditionVariableCS (INOUT PCONDITION_VARIABLE cv,
-									INOUT PCRITICAL_SECTION cs, DWORD dwMilliseconds)
+	static BOOL CALLBACK DefSleepConditionVariableCS (INOUT PCONDITION_VARIABLE /*cv*/,
+									INOUT PCRITICAL_SECTION /*cs*/, DWORD /*dwMilliseconds*/)
 	{
 		//CriticalSection	tmp( *cs );
 		//BOOL	res = HandleToPointer< TDefConditionVariable >( cv )->Wait( tmp, dwMilliseconds );

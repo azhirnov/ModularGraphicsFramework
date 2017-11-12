@@ -12,7 +12,7 @@ namespace Base
 	constructor
 =================================================
 */
-	ModulesFactory::ModulesFactory (const GlobalSystemsRef gs) :
+	ModulesFactory::ModulesFactory (GlobalSystemsRef gs) :
 		BaseObject( gs )
 	{
 		SetDebugName( "ModulesFactory" );
@@ -51,7 +51,7 @@ namespace Base
 	Create
 =================================================
 */
-	bool ModulesFactory::Create (UntypedID_t id, GlobalSystemsRef gs, VariantCRef msg, OUT ModulePtr &result)
+	bool ModulesFactory::Create (UntypedID_t id, GlobalSystemsRef gs, VariantCRef msg, OUT ModulePtr &result) noexcept
 	{
 		SCOPELOCK( _lock );
 
@@ -115,7 +115,7 @@ namespace Base
 
 		if ( _constructors.Find( ConstructorID( id, ctorMsgType ), OUT iter ) )
 		{
-			_constructors.EraseFromIter( iter );
+			_constructors.EraseByIter( iter );
 			return true;
 		}
 
@@ -137,7 +137,7 @@ namespace Base
 		{
 			for (usize i = idx; i < _constructors.Count() and _constructors[i].first.moduleID == id;)
 			{
-				_constructors.EraseFromIndex( i );
+				_constructors.EraseByIndex( i );
 			}
 			return true;
 		}
@@ -155,6 +155,31 @@ namespace Base
 		SCOPELOCK( _lock );
 
 		return _constructors.IsExist( ConstructorID( id, ctorMsgType ) );
+	}
+	
+/*
+=================================================
+	_Search
+=================================================
+*/
+	bool ModulesFactory::_Search (TypeId ctorMsgType, StringCRef startsWith, OUT Array<UntypedID_t> &result) const
+	{
+		SCOPELOCK( _lock );
+
+		result.Clear();
+
+		FOR( i, _constructors )
+		{
+			if ( _constructors[i].first.createInfoType == ctorMsgType )
+			{
+				if ( startsWith.Empty() or
+					 ToString(GModID::type( _constructors[i].first.moduleID )).StartsWithIC( startsWith ) )
+				{
+					result.PushBack( _constructors[i].first.moduleID );
+				}
+			}
+		}
+		return true;
 	}
 
 

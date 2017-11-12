@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -10,28 +11,6 @@ namespace Engine
 {
 namespace PlatformVK
 {
-
-	//
-	// Vulkan Base Object
-	//
-
-	class Vk1BaseObject : public StaticRefCountedObject
-	{
-	// variables
-	private:
-		const VkSystemsRef		_vkSystems;
-
-	// emthods
-	public:
-		explicit Vk1BaseObject (const VkSystemsRef vkSys) : _vkSystems(vkSys) {}
-
-		VkSystemsRef		VkSystems ()	const	{ return _vkSystems; }
-
-		Ptr< Vk1Device >	GetDevice ()			{ return VkSystems()->Get< Vk1Device >(); }
-		vk::VkDevice		GetLogicalDevice ()		{ return GetDevice()->GetLogicalDevice(); }
-	};
-
-
 
 	//
 	// Vulan Fence
@@ -45,8 +24,8 @@ namespace PlatformVK
 
 	// emthods
 	public:
-		explicit Vk1Fence (const VkSystemsRef vkSys) :
-			Vk1BaseObject( vkSys ), _fenceId( VK_NULL_HANDLE )
+		explicit Vk1Fence (Ptr<Vk1Device> dev) :
+			Vk1BaseObject( dev ), _fenceId( VK_NULL_HANDLE )
 		{}
 
 		~Vk1Fence ()
@@ -64,7 +43,7 @@ namespace PlatformVK
 			fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 			fence_info.flags = signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
 
-			VK_CHECK( vkCreateFence( GetLogicalDevice(), &fence_info, null, OUT &_fenceId ) );
+			VK_CHECK( vkCreateFence( GetVkDevice(), &fence_info, null, OUT &_fenceId ) );
 			return true;
 		}
 
@@ -74,7 +53,7 @@ namespace PlatformVK
 			if ( IsCreated() )
 			{
 				using namespace vk;
-				vkDestroyFence( GetLogicalDevice(), _fenceId, null );
+				vkDestroyFence( GetVkDevice(), _fenceId, null );
 				_fenceId = VK_NULL_HANDLE;
 			}
 		}
@@ -96,7 +75,7 @@ namespace PlatformVK
 		{
 			using namespace vk;
 			CHECK_ERR( IsCreated() );
-			VK_CHECK( vkWaitForFences( GetLogicalDevice(), 1, &_fenceId, VK_TRUE, timeout.NanoSeconds() ) );
+			VK_CHECK( vkWaitForFences( GetVkDevice(), 1, &_fenceId, VK_TRUE, timeout.NanoSeconds() ) );
 			return true;
 		}
 
@@ -105,7 +84,7 @@ namespace PlatformVK
 		{
 			using namespace vk;
 			CHECK_ERR( IsCreated() );
-			VK_CHECK( vkResetFences( GetLogicalDevice(), 1, &_fenceId ) );
+			VK_CHECK( vkResetFences( GetVkDevice(), 1, &_fenceId ) );
 			return true;
 		}
 
@@ -115,7 +94,7 @@ namespace PlatformVK
 			using namespace vk;
 			CHECK_ERR( IsCreated() );
 
-			VkResult res = vkGetFenceStatus( GetLogicalDevice(), _fenceId );
+			VkResult res = vkGetFenceStatus( GetVkDevice(), _fenceId );
 
 			switch ( res ) {
 				case VK_SUCCESS :		return true;	// signaled

@@ -29,6 +29,7 @@ namespace Platforms
 		};
 
 		static constexpr bool IsMultisampled (type value);
+		static constexpr bool IsArray (type value);
 
 		static StringCRef ToString (type value);
 	};
@@ -75,6 +76,8 @@ namespace Platforms
 			_Count,
 			Unknown = ~0u,
 		};
+
+		static constexpr bool IsPresent (type value);
 	};
 
 
@@ -112,7 +115,22 @@ namespace Platforms
 	{
 		return value == Tex2DMS or value == Tex2DMSArray;
 	}
+	
+	inline constexpr bool EImage::IsArray (type value)
+	{
+		return	value == Tex1DArray		or value == Tex2DArray	or
+				value == Tex2DMSArray	or value == TexCubeArray;
+	}
 
+
+//-----------------------------------------------------------------------------//
+// EImageLayout
+	
+	inline constexpr bool EImageLayout::IsPresent (type value)
+	{
+		// TODO: add other present layouts
+		return value == PresentSrc;
+	}
 
 
 //-----------------------------------------------------------------------------//

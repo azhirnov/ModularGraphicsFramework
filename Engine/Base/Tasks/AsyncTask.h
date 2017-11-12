@@ -26,28 +26,28 @@ namespace Base
 		using ResultType	= ResultT;
 		using ProgressType	= ProgressT;
 		using Self			= AsyncTask< ResultType, ProgressType >;
-		using SelfPtr		= SHARED_POINTER_TYPE( Self );
+		using SelfPtr		= SharedPointerType<Self>;
 
 
 	// variables
 	private:
-		ModulePtr		_currentThreadModule;		// module in thread where waiting task result and updates progress 
-		ModulePtr		_targetThreadModule;		// module in thread where task will be schedule
+		ModulePtr				_currentThreadModule;		// module in thread where waiting task result and updates progress 
+		ModulePtr				_targetThreadModule;		// module in thread where task will be schedule
 
-		OS::SyncEvent	_event;
-		Atomic<bool>	_isCanceled;
-		Atomic<bool>	_onCanceledCalled;
-		Atomic<bool>	_isSync;					// if current and target threads are same
+		mutable OS::SyncEvent	_event;
+		mutable Atomic<bool>	_isCanceled;
+		mutable Atomic<bool>	_onCanceledCalled;
+		mutable Atomic<bool>	_isSync;					// if current and target threads are same
 
-		ResultType		_result;
+		ResultType				_result;
 
 
 	// methods
 	public:
-		bool  Wait ();
-		Self* Execute ();
-		void  Cancel ();
-		bool  IsCanceled ();
+		Self* Execute ()	noexcept;
+		void  Cancel ()		noexcept;
+		bool  Wait ()		const noexcept;
+		bool  IsCanceled ()	const noexcept;
 		
 		GlobalSystemsRef	GlobalSystems () const	= delete;
 
@@ -56,18 +56,18 @@ namespace Base
 		AsyncTask (const ModulePtr &currentThreadModule, const ModulePtr &targetThreadModule);
 		~AsyncTask ();
 
-		void PublishProgress (ProgressType &&);
+		void PublishProgress (ProgressType &&) noexcept;
 
 		ModulePtr const&	CurrentThreadModule ()		{ return _currentThreadModule; }
 		ModulePtr const&	TargetThreadModule ()		{ return _targetThreadModule; }
 
 
 	private:
-		void _RunSync ();
-		void _RunAsync (const TaskModulePtr &);
-		void _OnCanceled (const TaskModulePtr & = null);
-		void _UpdateProgress (const TaskModulePtr &, ProgressType &&);
-		void _PostExecute (const TaskModulePtr &);
+		void _RunSync () noexcept;
+		void _RunAsync (GlobalSystemsRef) noexcept;
+		void _OnCanceled (GlobalSystemsRef = GlobalSystemsRef(null)) noexcept;
+		void _UpdateProgress (GlobalSystemsRef, ProgressType &&) noexcept;
+		void _PostExecute (GlobalSystemsRef) noexcept;
 
 
 	// interface
@@ -120,7 +120,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline bool AsyncTask<R,P>::Wait ()
+	inline bool AsyncTask<R,P>::Wait () const noexcept
 	{
 		// TODO: add profiling
 		return _event.Wait( TimeL::FromSeconds( 60 ) );
@@ -132,7 +132,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline AsyncTask<R,P>*  AsyncTask<R,P>::Execute ()
+	inline AsyncTask<R,P>*  AsyncTask<R,P>::Execute () noexcept
 	{
 		ASSERT( _currentThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 		
@@ -160,10 +160,10 @@ namespace Base
 		auto	task_mod = _currentThreadModule->GlobalSystems()->Get< TaskModule >();
 		CHECK_ERR( task_mod, this );
 
-		CHECK( task_mod->Send< ModuleMsg::PushAsyncMessage >({
-				AsyncMessage{ &AsyncTask::_RunAsync, SelfPtr(this) },
-				_targetThreadModule->GetThreadID()
-			})
+		CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+					AsyncMessage{ &AsyncTask::_RunAsync, SelfPtr(this) },
+					_targetThreadModule->GetThreadID()
+				}.Async())
 		);
 		return this;
 	}
@@ -174,7 +174,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline void AsyncTask<R,P>::Cancel ()
+	inline void AsyncTask<R,P>::Cancel () noexcept
 	{
 		_isCanceled = true;
 	}
@@ -185,7 +185,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline bool AsyncTask<R,P>::IsCanceled ()
+	inline bool AsyncTask<R,P>::IsCanceled () const noexcept
 	{
 		return _isCanceled;
 	}
@@ -196,7 +196,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline void AsyncTask<R,P>::PublishProgress (ProgressType &&value)
+	inline void AsyncTask<R,P>::PublishProgress (ProgressType &&value) noexcept
 	{
 		ASSERT( _targetThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
@@ -211,9 +211,9 @@ namespace Base
 		CHECK_ERR( task_mod, );
 
 		CHECK( task_mod->Send< ModuleMsg::PushAsyncMessage >({
-				AsyncMessage{ &AsyncTask::_UpdateProgress, SelfPtr(this), RVREF(value) },
-				_currentThreadModule->GetThreadID()
-			})
+					AsyncMessage{ &AsyncTask::_UpdateProgress, SelfPtr(this), RVREF(value) },
+					_currentThreadModule->GetThreadID()
+				}.Async())
 		);
 	}
 	
@@ -223,7 +223,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline void AsyncTask<R,P>::_RunSync ()
+	inline void AsyncTask<R,P>::_RunSync () noexcept
 	{
 		if ( IsCanceled() )
 		{
@@ -250,7 +250,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline void AsyncTask<R,P>::_RunAsync (const TaskModulePtr &)
+	inline void AsyncTask<R,P>::_RunAsync (GlobalSystemsRef) noexcept
 	{
 		ASSERT( _targetThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
@@ -259,10 +259,10 @@ namespace Base
 
 		if ( IsCanceled() )
 		{
-			CHECK( task_mod->Send< ModuleMsg::PushAsyncMessage >({
-					AsyncMessage{ &AsyncTask::_OnCanceled, SelfPtr(this) },
-					_currentThreadModule->GetThreadID()
-				})
+			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+						AsyncMessage{ &AsyncTask::_OnCanceled, SelfPtr(this) },
+						_currentThreadModule->GetThreadID()
+					}.Async())
 			);
 			return;
 		}
@@ -271,18 +271,18 @@ namespace Base
 		
 		if ( IsCanceled() )
 		{
-			CHECK( task_mod->Send< ModuleMsg::PushAsyncMessage >({
-					AsyncMessage{ &AsyncTask::_OnCanceled, SelfPtr(this) },
-					_currentThreadModule->GetThreadID()
-				})
+			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+						AsyncMessage{ &AsyncTask::_OnCanceled, SelfPtr(this) },
+						_currentThreadModule->GetThreadID()
+					}.Async())
 			);
 		}
 		else
 		{
-			CHECK( task_mod->Send< ModuleMsg::PushAsyncMessage >({
-					AsyncMessage{ &AsyncTask::_PostExecute, SelfPtr(this) },
-					_currentThreadModule->GetThreadID()
-				})
+			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+						AsyncMessage{ &AsyncTask::_PostExecute, SelfPtr(this) },
+						_currentThreadModule->GetThreadID()
+					}.Async())
 			);
 		}
 
@@ -296,7 +296,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline void AsyncTask<R,P>::_UpdateProgress (const TaskModulePtr &, ProgressType &&value)
+	inline void AsyncTask<R,P>::_UpdateProgress (GlobalSystemsRef, ProgressType &&value) noexcept
 	{
 		ASSERT( _currentThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
@@ -309,7 +309,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline void AsyncTask<R,P>::_PostExecute (const TaskModulePtr &)
+	inline void AsyncTask<R,P>::_PostExecute (GlobalSystemsRef) noexcept
 	{
 		ASSERT( _currentThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
@@ -322,7 +322,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline void AsyncTask<R,P>::_OnCanceled (const TaskModulePtr &)
+	inline void AsyncTask<R,P>::_OnCanceled (GlobalSystemsRef) noexcept
 	{
 		ASSERT( _currentThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 

@@ -14,10 +14,15 @@ namespace ModuleMsg
 	//
 	struct AddThreadToManager : AddToManager
 	{
-		SingleRead< Delegate<void ()> >		wait;	// wait for complete
+	// types
+		using BlockingWaitFunc_t	= Delegate< void () >;
 
-		AddThreadToManager (const ModulePtr &mod, Delegate<void ()> &&waitFunc) :
-			AddToManager{ mod }, wait{ RVREF(waitFunc) }
+	// variables
+		ReadOnce< BlockingWaitFunc_t >		wait;	// wait for complete
+
+	// methods
+		AddThreadToManager (const ModulePtr &mod, BlockingWaitFunc_t &&waitFunc) :
+			AddToManager{ mod },  wait{ RVREF(waitFunc) }
 		{}
 	};
 
@@ -35,8 +40,8 @@ namespace Base
 	public:
 		ParallelThread (const GlobalSystemsRef gs,
 						const ModuleConfig &config,
-						const Runtime::VirtualTypeList *msgTypes,
-						const Runtime::VirtualTypeList *eventTypes);
+						const TypeIdList *msgTypes,
+						const TypeIdList *eventTypes);
 
 		~ParallelThread ();
 	};

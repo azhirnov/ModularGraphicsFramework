@@ -19,8 +19,8 @@ namespace GXMath
 	// types
 	public:
 		typedef Frustum<T>		Self;
-		typedef T				value_t;
-		typedef Vec<T,3>		vec3_t;
+		typedef T				Value_t;
+		typedef Vec<T,3>		Vec3_t;
 
 		struct EPlane
 		{
@@ -49,10 +49,10 @@ namespace GXMath
 		void Setup (const Matrix<T,4,4> &viewProjMat);
 
 		bool IsVisible (const AABBox<T> &box) const;
-		bool IsVisible (const vec3_t &point) const;
+		bool IsVisible (const Vec3_t &point) const;
 		//bool IsVisible (const Frustum<T> &frustum) const;
-		bool IsVisible (const vec3_t &center, T radius) const;
-		bool IsVisible (const vec3_t &center, const vec3_t &halfextents) const;
+		bool IsVisible (const Vec3_t &center, T radius) const;
+		bool IsVisible (const Vec3_t &center, const Vec3_t &halfextents) const;
 
 		template <typename T2>
 		Frustum<T2> Convert () const;

@@ -20,7 +20,7 @@ namespace GXTypes
 	// types
 	public:
 		typedef UniBuffer<T>		Self;
-		typedef T					value_t;
+		typedef T					Value_t;
 		
 	private:
 		typedef typename TypeTraits::CopyConstToPointer< T, void *>		void_ptr_t;

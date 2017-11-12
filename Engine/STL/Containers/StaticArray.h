@@ -24,17 +24,17 @@ namespace GXTypes
 				usize C,
 				typename S = typename AutoDetectCopyStrategy<T>::type
 			 >
-	struct StaticArray final : public CompileTime::CopyQualifiers< CompileTime::PODStruct, T >
+	struct StaticArray : public CompileTime::CopyQualifiers< CompileTime::PODStruct, T >
 	{
 		STATIC_ASSERT( C > 0, "invalid array size" );
 
 	// types
 	public:
-		typedef StaticArray<T,C,S>		Self;
-		typedef S						Strategy;
-		typedef T						value_t;
-		typedef	T *						iterator;
-		typedef const T *				const_iterator;
+		using Self				= StaticArray<T,C,S>;
+		using Strategy_t		= S;
+		using Value_t			= T;
+		using iterator			= T *;
+		using const_iterator	= const T *;
 		
 		static const usize	STATIC_COUNT	= C;
 		static const usize	STATIC_SIZE		= C * sizeof(T);
@@ -42,27 +42,26 @@ namespace GXTypes
 
 	// variables
 	protected:
-		T	_memory[C];
+		union {
+			T		_memory[C];
+			char	_buffer[ sizeof(T)*C ];
+		};
 
 
 	// methods
 	private:
-		void _Create (const T *pMem, usize count);
+		void _Move (Self &&other);
 
 	public:
 		StaticArray (GX_DEFCTOR);
-
+		StaticArray (Self &&other);
 		StaticArray (const Self &other);
-
-		explicit
-		StaticArray (const T& value);
-
-		explicit
-		StaticArray (ArrayCRef<T> other);
-
-		StaticArray (Self &&other) = default;
-
 		StaticArray (InitializerList<T> list);
+
+		explicit StaticArray (const T& value);
+		explicit StaticArray (ArrayCRef<T> other);
+
+		~StaticArray ();
 
 		T		*	ptr ()										{ return _memory; }
 		const T	*	ptr () const								{ return _memory; }
@@ -77,8 +76,8 @@ namespace GXTypes
 		bool		operator == (ArrayCRef<T> right) const		{ return ArrayCRef<T>(*this) == right; }
 		bool		operator != (ArrayCRef<T> right) const		{ return not ( *this == right ); }
 		
-		Self &		operator =  (Self &&right)		= default;
-		Self &		operator =  (const Self &right)	= default;
+		Self &		operator =  (Self &&right)					{ _Move( RVREF(right) );  return *this; }
+		Self &		operator =  (const Self &right)				{ Copy( right );  return *this; }
 
 		operator	ArrayRef<T> ()								{ return ArrayRef<T>( _memory, Count() ); }
 		operator	ArrayCRef<T> () const						{ return ArrayCRef<T>( _memory, Count() ); }
@@ -148,7 +147,7 @@ namespace GXTypes
 	template <typename T, usize C, typename S>
 	inline StaticArray<T,C,S>::StaticArray (UninitializedType)
 	{
-		Strategy::Create( _memory, Count() );
+		Strategy_t::Create( _memory, Count() );
 	}
 		
 /*
@@ -159,7 +158,7 @@ namespace GXTypes
 	template <typename T, usize C, typename S>
 	inline StaticArray<T,C,S>::StaticArray (const StaticArray<T,C,S> &other)
 	{
-		Strategy::Copy( _memory, other._memory, Count() );
+		Strategy_t::Copy( _memory, other._memory, Count() );
 	}
 	
 /*
@@ -173,6 +172,40 @@ namespace GXTypes
 		Copy( other );
 	}
 	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	template <typename T, usize C, typename S>
+	inline StaticArray<T,C,S>::StaticArray (Self &&other)
+	{
+		_Move( RVREF(other) );
+	}
+	
+/*
+=================================================
+	_Move
+=================================================
+*/
+	template <typename T, usize C, typename S>
+	inline void StaticArray<T,C,S>::_Move (Self &&other)
+	{
+		// call move-ctor, but don't call destructor for elements in 'other'
+		Strategy_t::Move( _memory, other._memory, Count() );
+	}
+
+/*
+=================================================
+	destructor
+=================================================
+*/
+	template <typename T, usize C, typename S>
+	inline StaticArray<T,C,S>::~StaticArray ()
+	{
+		Strategy_t::Destroy( _memory, Count() );
+	}
+
 /*
 =================================================
 	constructor
@@ -193,12 +226,12 @@ namespace GXTypes
 		if ( other.Count() > Count() )
 		{
 			WARNING( "source array is too big!" );
-			Strategy::Copy( _memory, other.ptr(), Count() );
+			Strategy_t::Copy( _memory, other.ptr(), Count() );
 		}
 		else
 		{
-			Strategy::Copy( _memory, other.ptr(), other.Count());
-			Strategy::Create( _memory + other.Count(), Count() - other.Count() );
+			Strategy_t::Copy( _memory, other.ptr(), other.Count());
+			Strategy_t::Create( _memory + other.Count(), Count() - other.Count() );
 		}
 	}
 	
@@ -211,7 +244,7 @@ namespace GXTypes
 	inline StaticArray<T,C,S>::StaticArray (const T& value)
 	{
 		for (usize i = 0; i < Count(); ++i) {
-			Strategy::Copy( _memory + i, &value, 1 );
+			Strategy_t::Copy( _memory + i, &value, 1 );
 		}
 	}
 	
@@ -254,7 +287,7 @@ namespace GXTypes
 	inline bool StaticArray<T,C,S>::At (usize index, T & value) const
 	{
 		if ( index >= Count() )  return false;
-		Strategy::Copy( &value, &_memory + index, 1 );
+		Strategy_t::Copy( &value, &_memory + index, 1 );
 		return true;
 	}
 	
@@ -267,7 +300,7 @@ namespace GXTypes
 	inline bool StaticArray<T,C,S>::Set (usize index, const T &value)
 	{
 		if ( index >= Count() ) return false;
-		Strategy::Copy( _memory + index, &value, 1 );
+		Strategy_t::Copy( _memory + index, &value, 1 );
 		return true;
 	}
 	
@@ -275,7 +308,7 @@ namespace GXTypes
 	inline bool StaticArray<T,C,S>::Set (usize index, T&& value)
 	{
 		if ( index >= Count() ) return false;
-		Strategy::Move( _memory + index, &value, 1 );
+		Strategy_t::Move( _memory + index, &value, 1 );
 		return true;
 	}
 	
@@ -298,8 +331,8 @@ namespace GXTypes
 	template <typename T, usize C, typename S>
 	inline void StaticArray<T,C,S>::Clear ()
 	{
-		Strategy::Destroy( _memory, Count() );
-		Strategy::Create(  _memory, Count() );
+		Strategy_t::Destroy( _memory, Count() );
+		Strategy_t::Create(  _memory, Count() );
 	}
 	
 /*
@@ -314,9 +347,9 @@ namespace GXTypes
 			RET_VOID;
 
 		T	temp;
-		Strategy::Replace( &temp,				_memory + second,	1 );
-		Strategy::Replace( _memory + second,	_memory + first,	1 );
-		Strategy::Replace( _memory + first,		&temp,				1 );
+		Strategy_t::Replace( &temp,				_memory + second,	1 );
+		Strategy_t::Replace( _memory + second,	_memory + first,	1 );
+		Strategy_t::Replace( _memory + first,	&temp,				1 );
 	}
 	
 /*
@@ -375,18 +408,21 @@ namespace GXTypes
 	struct Hash< StaticArray<T,C,S> > :
 		private Hash< ArrayCRef<T> >
 	{
-		typedef StaticArray<T,C,S>			key_t;
-		typedef Hash< ArrayCRef<T> >		base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef StaticArray<T,C,S>			Key_t;
+		typedef Hash< ArrayCRef<T> >		Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x );
+			return Base_t::operator ()( x );
 		}
 	};
 
-
-
+/*
+=================================================
+	MakeStaticArray
+=================================================
+*/
 	namespace _types_hidden_
 	{
 		template <typename ...Types>

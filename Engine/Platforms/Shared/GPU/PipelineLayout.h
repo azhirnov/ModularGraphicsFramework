@@ -4,6 +4,7 @@
 
 #include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
 #include "Engine/Platforms/Shared/GPU/ImageEnums.h"
+#include "Engine/Platforms/Shared/GPU/VertexEnums.h"
 
 namespace Engine
 {
@@ -14,7 +15,7 @@ namespace Platforms
 	// Pipeline Layout Descriptor
 	//
 
-	struct PipelineLayoutDescriptor final : CompileTime::PODStruct
+	struct _ENGINE_PLATFORMS_EXPORT_ PipelineLayoutDescriptor final : CompileTime::PODStruct
 	{
 	// types
 	public:
@@ -28,15 +29,15 @@ namespace Platforms
 		{
 			Name_t					name;
 			EShader::bits			stageFlags;
-			uint					binding			= ~0u;
-			uint					descriptorSet	= 0;
+			uint					binding			= ~0u;		// binding index or location of uniform
+			uint					descriptorSet	= 0;		// vulkan only
 		};
 
 
 		struct TextureUniform final : BaseUniform
 		{
 		// variables
-			EImage::type			dimension		= EImage::Unknown;
+			EImage::type			textureType		= EImage::Unknown;
 			EPixelFormatClass::type	format			= EPixelFormatClass::Any;
 
 		// methods
@@ -49,6 +50,7 @@ namespace Platforms
 		struct SamplerUniform final : BaseUniform
 		{
 		// variables
+			// TODO
 
 		// methods
 			bool operator == (const SamplerUniform &right) const;
@@ -72,7 +74,7 @@ namespace Platforms
 		struct ImageUniform final : BaseUniform
 		{
 		// variables
-			EImage::type			dimension		= EImage::Unknown;
+			EImage::type			imageType		= EImage::Unknown;
 			EPixelFormat::type		format			= EPixelFormat::Unknown;
 			bool					writeAccess		= false;
 			bool					readAccess		= true;
@@ -115,6 +117,7 @@ namespace Platforms
 		};
 
 
+		// vulkan only
 		struct PushConstant final
 		{
 		// variables
@@ -130,7 +133,21 @@ namespace Platforms
 		};
 
 
-		using Uniform_t		= Union< TextureUniform, SamplerUniform, ImageUniform,
+		// opengl and opencl only
+		struct Uniform final : BaseUniform
+		{
+		// variables
+			EVertexAttribute::type	valueType	= EVertexAttribute::Unknown;	// TODO: matrix support
+			uint					arraySize	= 1;
+
+		// methods
+			bool operator == (const Uniform &right) const;
+			bool operator >  (const Uniform &right) const;
+			bool operator <  (const Uniform &right) const;
+		};
+
+
+		using Uniform_t		= Union< TextureUniform, SamplerUniform, ImageUniform, Uniform,
 									 UniformBuffer, StorageBuffer, PushConstant, SubpassInput >;
 		using Uniforms_t	= Array< Uniform_t >;
 
@@ -161,7 +178,7 @@ namespace Platforms
 	// Pipeline Layout Descriptor Builder
 	//
 
-	struct PipelineLayoutDescriptor::Builder
+	struct _ENGINE_PLATFORMS_EXPORT_ PipelineLayoutDescriptor::Builder
 	{
 	// variables
 	private:

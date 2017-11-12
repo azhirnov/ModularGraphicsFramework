@@ -20,7 +20,7 @@ namespace OS
 	constructor
 =================================================
 */
-	PerfomanceTimer::PerfomanceTimer () :
+	PerformanceTimer::PerformanceTimer () :
 		_liFreq( UninitializedT<LARGE_INTEGER>() )
 	{
 		QueryPerformanceFrequency( &_liFreq.Get<LARGE_INTEGER>() );
@@ -31,7 +31,7 @@ namespace OS
 	GetTime
 =================================================
 */
-	TimeD PerfomanceTimer::GetTime () const
+	TimeD PerformanceTimer::GetTime () const
 	{
 		LARGE_INTEGER	perf_counter;
 		QueryPerformanceCounter( &perf_counter );
@@ -43,7 +43,7 @@ namespace OS
 	GetTimeMicroSec
 =================================================
 */
-	TimeL PerfomanceTimer::GetTimeMicroSec () const
+	TimeL PerformanceTimer::GetTimeMicroSec () const
 	{
 		LARGE_INTEGER	perf_counter;
 		QueryPerformanceCounter( &perf_counter );

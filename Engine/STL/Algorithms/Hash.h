@@ -34,8 +34,8 @@ namespace GXTypes
 	{
 	// types
 	private:
-		typedef HashResult		Self;
-		typedef usize			value_t;
+		using Self		= HashResult;
+		using Value_t	= usize;
 
 
 	// variables
@@ -50,7 +50,7 @@ namespace GXTypes
 		constexpr explicit HashResult (usize val) : _value(val) {}
 
 
-		value_t  Get () const noexcept
+		Value_t  Get () const noexcept
 		{
 			return _value;
 		}
@@ -103,13 +103,12 @@ namespace GXTypes
 	template <typename T>
 	struct Hash : public CompileTime::FastCopyable
 	{
-		typedef HashResult	result_t;
+		using Result_t	= HashResult;
+		using Key_t		= typename TypeTraits::RemoveConstVolatile< T >;
 
-		typedef typename TypeTraits::RemoveConstVolatile< T >	key_t;
-
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return (result_t) std::hash< key_t >()( x );
+			return (Result_t) std::hash< Key_t >()( x );
 		}
 	};
 

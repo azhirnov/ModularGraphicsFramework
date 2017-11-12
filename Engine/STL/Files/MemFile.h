@@ -41,7 +41,7 @@ namespace File
 
 
 		// RFile //
-		virtual BytesU ReadBuf (void * buf, BytesU size) override
+		virtual BytesU ReadBuf (void * buf, BytesU size) noexcept override
 		{
 			if ( not _opened )
 				return BytesU(-1);
@@ -57,23 +57,23 @@ namespace File
 
 
 		// BaseFile //
-		virtual void Close () override
+		virtual void Close () noexcept override
 		{
 			return _Close();
 		}
 
-		virtual bool IsOpened () const override
+		virtual bool IsOpened () const noexcept override
 		{
 			return _opened;
 		}
 		
-		virtual bool SeekSet (BytesU offset) override
+		virtual bool SeekSet (BytesU offset) noexcept override
 		{
 			ASSERT( offset <= _mem.Size() );
 			return _SetPos( offset );
 		}
 
-		virtual bool SeekCur (BytesI offset) override
+		virtual bool SeekCur (BytesI offset) noexcept override
 		{
 			usize new_pos = usize(_pos) + isize(offset);
 
@@ -81,28 +81,28 @@ namespace File
 			return _SetPos( BytesU( new_pos ) );
 		}
 
-		virtual bool SeekEnd (BytesU offset) override
+		virtual bool SeekEnd (BytesU offset) noexcept override
 		{
 			ASSERT( offset <= _mem.Size() );
 			return _SetPos( BytesU(_mem.Count()) - offset );
 		}
 
-		virtual BytesU RemainingSize () const override
+		virtual BytesU RemainingSize () const noexcept override
 		{
 			return BytesU(_mem.Count()) - _pos;
 		}
 
-		virtual BytesU Size () const override
+		virtual BytesU Size () const noexcept override
 		{
 			return _mem.Size();
 		}
 
-		virtual BytesU Pos () const override
+		virtual BytesU Pos () const noexcept override
 		{
 			return _pos;
 		}
 		
-		virtual bool IsEOF () const override
+		virtual bool IsEOF () const noexcept override
 		{
 			return Pos() >= Size();
 		}
@@ -276,7 +276,7 @@ namespace File
 		}
 
 
-		bool CreateFromMemWFile (const SHARED_POINTER_TYPE( BaseMemWFile ) &file, EFlag flag);
+		bool CreateFromMemWFile (const SharedPointerType< BaseMemWFile > &file, EFlag flag);
 		
 
 		BinArrayCRef GetData () const
@@ -309,7 +309,7 @@ namespace File
 
 
 		// WFile //
-		virtual BytesU WriteBuf (const void * buf, BytesU size) override
+		virtual BytesU WriteBuf (const void * buf, BytesU size) noexcept override
 		{
 			if ( not _opened )
 				return BytesU( -1 );
@@ -325,29 +325,29 @@ namespace File
 			return size;
 		}
 		
-		virtual void Flush () override
+		virtual void Flush () noexcept override
 		{
 		}
 
 		
 		// BaseFile //
-		virtual void Close () override
+		virtual void Close () noexcept override
 		{
 			return _Close();
 		}
 
-		virtual bool IsOpened () const override
+		virtual bool IsOpened () const noexcept override
 		{
 			return _opened;
 		}
 		
-		virtual bool SeekSet (BytesU offset) override
+		virtual bool SeekSet (BytesU offset) noexcept override
 		{
 			ASSERT( offset <= _mem.Size() );
 			return _SetPos( offset );
 		}
 
-		virtual bool SeekCur (BytesI offset) override
+		virtual bool SeekCur (BytesI offset) noexcept override
 		{
 			usize new_pos = usize(_pos) + isize(offset);
 
@@ -355,28 +355,28 @@ namespace File
 			return _SetPos( BytesU( new_pos ) );
 		}
 
-		virtual bool SeekEnd (BytesU offset) override
+		virtual bool SeekEnd (BytesU offset) noexcept override
 		{
 			ASSERT( offset <= _mem.Size() );
 			return _SetPos( _mem.Count() - offset );
 		}
 
-		virtual BytesU RemainingSize () const override
+		virtual BytesU RemainingSize () const noexcept override
 		{
 			return BytesU(_mem.Count()) - _pos;
 		}
 
-		virtual BytesU Size () const override
+		virtual BytesU Size () const noexcept override
 		{
 			return _mem.Size();
 		}
 
-		virtual BytesU Pos () const override
+		virtual BytesU Pos () const noexcept override
 		{
 			return _pos;
 		}
 		
-		virtual bool IsEOF () const override
+		virtual bool IsEOF () const noexcept override
 		{
 			return Pos() >= Size();
 		}
@@ -418,7 +418,7 @@ namespace File
 	};
 
 	
-	inline bool MemRFile::CreateFromMemWFile (const SHARED_POINTER_TYPE( BaseMemWFile ) &file, EFlag flag)
+	inline bool MemRFile::CreateFromMemWFile (const SharedPointerType< BaseMemWFile > &file, EFlag flag)
 	{
 		CHECK_ERR( file );
 		return CreateFromArray( file->_mem, flag );

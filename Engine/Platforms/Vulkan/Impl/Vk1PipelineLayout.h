@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -15,7 +16,7 @@ namespace PlatformVK
 	// Vulkan Pipeline Layout
 	//
 
-	class Vk1PipelineLayout final : public RefCountedObject
+	class Vk1PipelineLayout final : public Vk1BaseObject
 	{
 		friend class Vk1PipelineLayoutCache;
 
@@ -37,11 +38,11 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1PipelineLayout ();
+		explicit Vk1PipelineLayout (Ptr<Vk1Device> dev);
 		~Vk1PipelineLayout ();
 
-		bool Create (const PipelineLayoutDescriptor &layout, vk::VkDevice dev);
-		void Destroy (vk::VkDevice dev);
+		bool Create (const PipelineLayoutDescriptor &layout);
+		void Destroy ();
 
 		PipelineLayoutDescriptor const&			GetDescriptor ()			const	{ return _layoutDescr; }
 		vk::VkPipelineLayout					GetLayoutID ()				const	{ return _layoutId; }
@@ -50,10 +51,10 @@ namespace PlatformVK
 	private:
 		void _Init (const PipelineLayoutDescriptor &layout);
 
-		void _DestroyLayout (vk::VkDevice dev);
-		void _DestroyLayoutDescriptors (vk::VkDevice dev);
+		void _DestroyLayout ();
+		void _DestroyLayoutDescriptors ();
 			
-		bool _CreateLayoutDescriptors (const PipelineLayoutDescriptor &layout, vk::VkDevice dev);
+		bool _CreateLayoutDescriptors (const PipelineLayoutDescriptor &layout);
 	};
 	
 	
@@ -62,7 +63,7 @@ namespace PlatformVK
 	// Vulkan Pipeline Layout Cache
 	//
 
-	class Vk1PipelineLayoutCache final
+	class Vk1PipelineLayoutCache final : public Vk1BaseObject
 	{
 	// types
 	private:
@@ -93,16 +94,13 @@ namespace PlatformVK
 
 	// variables
 	private:
-		Layouts_t			_layouts;
-		const VkSystemsRef	_vkSystems;
+		Layouts_t		_layouts;
 
 
 	// methods
 	public:
-		explicit Vk1PipelineLayoutCache (VkSystemsRef vkSys);
+		explicit Vk1PipelineLayoutCache (Ptr<Vk1Device> dev);
 		~Vk1PipelineLayoutCache ();
-		
-		VkSystemsRef			VkSystems ()	const	{ return _vkSystems; }
 
 		Vk1PipelineLayoutPtr	Create (const PipelineLayoutDescriptor &layout);
 

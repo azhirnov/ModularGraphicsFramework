@@ -76,7 +76,7 @@ namespace GXTypes
 =================================================
 */
 	inline StringParser::_CStyleParser::_CStyleParser () :
-		_mode(NONE), _size(0), _prev(' ')
+		_size(0), _prev(' '), _prevPrev(' '), _mode(NONE)
 	{}
 
 /*

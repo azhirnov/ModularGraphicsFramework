@@ -16,10 +16,10 @@ namespace OS
 	
 
 	//
-	// Perfomance Timer
+	// Performance Timer
 	//
 
-	struct PerfomanceTimer
+	struct _STL_EXPORT_ PerformanceTimer
 	{
 	// types
 	private:
@@ -33,7 +33,7 @@ namespace OS
 
 	// methods
 	public:
-		PerfomanceTimer ();
+		PerformanceTimer ();
 
 		// seconds
 		TimeD GetTime () const;
@@ -47,13 +47,13 @@ namespace OS
 	
 
 	template <>
-	inline TimeL  PerfomanceTimer::Get (const TimeL &) const
+	inline TimeL  PerformanceTimer::Get (const TimeL &) const
 	{
 		return GetTimeMicroSec();
 	}
 	
 	template <>
-	inline TimeD  PerfomanceTimer::Get (const TimeD &) const
+	inline TimeD  PerformanceTimer::Get (const TimeD &) const
 	{
 		return GetTime();
 	}

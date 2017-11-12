@@ -17,12 +17,12 @@ namespace Base
 	// File System
 	//
 
-	class FileManager final : public BaseObject
+	class _ENGINE_BASE_EXPORT_ FileManager final : public BaseObject
 	{
 	// methods
 	public:
 		explicit
-		FileManager (const GlobalSystemsRef gs);
+		FileManager (GlobalSystemsRef gs);
 		~FileManager ();
 
 		bool OpenForRead (StringCRef filename, OUT RFilePtr &file) const;

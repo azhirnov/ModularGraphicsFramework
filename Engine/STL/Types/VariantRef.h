@@ -38,7 +38,7 @@ namespace GXTypes
 		{}
 		
 		template <typename T>
-		forceinline VariantRef (T &ref, NonVariantRef<T> dummy = 0) :
+		forceinline VariantRef (T &ref, NonVariantRef<T> = 0) :
 			_reference( static_cast<void *>( &ref ) ),
 			_typeId( TypeIdOf<T>() )
 		{
@@ -180,17 +180,17 @@ namespace GXTypes
 	template <>
 	struct Hash< VariantRef > : private Hash< void* >
 	{
-		typedef VariantRef			key_t;
-		typedef Hash< void* >		base_t;
-		typedef base_t::result_t	result_t;
+		typedef VariantRef			Key_t;
+		typedef Hash< void* >		Base_t;
+		typedef Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &) const noexcept
 		{
 			// must be compilation error!
 
 			//STATIC_WARNING("hash not supported for variant reference type!");
-			//return result_t();
-			//return base_t::operator ()( x.RawPtr() );
+			//return Result_t();
+			//return Base_t::operator ()( x.RawPtr() );
 		}
 	};
 

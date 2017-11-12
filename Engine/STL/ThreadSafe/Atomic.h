@@ -26,7 +26,7 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef T				value_t;
+		typedef T				Value_t;
 		typedef Atomic<T>		Self;
 
 	private:
@@ -106,7 +106,7 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef T				value_t;
+		typedef T				Value_t;
 		typedef Atomic<T>		Self;
 
 	private:

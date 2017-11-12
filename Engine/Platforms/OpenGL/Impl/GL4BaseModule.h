@@ -2,14 +2,29 @@
 
 #pragma once
 
-#include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
 #include "Engine/Platforms/Shared/GPU/Thread.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
 namespace Engine
 {
+namespace GpuMsg
+{
+	//
+	// Get Private Classes
+	//
+	struct GetGLPrivateClasses
+	{
+		struct Classes {
+			PlatformGL::GL4Device *		device	= null;
+		};
+
+		Out< Classes >		result;
+	};
+}	// GpuMsg
+
 namespace PlatformGL
 {
 
@@ -26,7 +41,10 @@ namespace PlatformGL
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											GpuMsg::DeviceBeforeDestroy
+											GpuMsg::DeviceBeforeDestroy,
+											GpuMsg::GetDeviceInfo,
+											GpuMsg::GetGLDeviceInfo,
+											GpuMsg::GetGLPrivateClasses
 										> >;
 
 		using SupportedEvents_t		= MessageListFrom<
@@ -34,45 +52,29 @@ namespace PlatformGL
 											ModuleMsg::Delete
 										>;
 
-
 	// variables
 	private:
-		const GLSystemsRef		_glSystems;
-		
+		Ptr< GL4Device >		_glDevice;
+
 
 	// methods
 	public:
 		GL4BaseModule (const GlobalSystemsRef gs,
 					   const ModuleConfig &config,
-					   const Runtime::VirtualTypeList *msgTypes,
-					   const Runtime::VirtualTypeList *eventTypes);
-
-		GL4BaseModule (const GlobalSystemsRef gs,
-					   const ModulePtr &gpuThread,
-					   const ModuleConfig &config,
-					   const Runtime::VirtualTypeList *msgTypes,
-					   const Runtime::VirtualTypeList *eventTypes);
-
-		GL4BaseModule (const GlobalSystemsRef gs,
-					   const GLSystemsRef glSys,
-					   const ModuleConfig &config,
-					   const Runtime::VirtualTypeList *msgTypes,
-					   const Runtime::VirtualTypeList *eventTypes);
-
-		GLSystemsRef	GLSystems ()	const	{ return _glSystems; }
-
+					   const TypeIdList *msgTypes,
+					   const TypeIdList *eventTypes);
 
 	protected:
-		Ptr< OpenGLThread >		GetGpuThread ()			{ return GLSystems()->Get< OpenGLThread >(); }
-		Ptr< GL4Device >		GetDevice ()			{ return GLSystems()->Get< GL4Device >(); }
-		
-		virtual void _DestroyResources ();
+		Ptr< GL4Device >	GetDevice ()	const	{ return _glDevice; }
 
 
 	// message handlers
 	protected:
 		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
 		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
+		bool _GetGLDeviceInfo (const Message< GpuMsg::GetGLDeviceInfo > &);
+		bool _GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &);
 	};
 
 

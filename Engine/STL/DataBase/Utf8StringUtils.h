@@ -15,7 +15,7 @@ namespace GXDataBase
 	// UTF-8 String Utils
 	//
 
-	struct Utf8StringUtils
+	struct _STL_EXPORT_ Utf8StringUtils
 	{
 		static void EncodeToWindows1251 (StringCRef src, OUT String &dst);
 

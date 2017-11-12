@@ -28,25 +28,25 @@ namespace  Java
 		template <typename R>
 		struct JavaMethodCaller
 		{
-			typedef R													result_t;
+			typedef R													Result_t;
 			typedef JavaMethodResult< R >								result_wrap_t;
-			typedef JavaMethodCaller< typename JniTypeName< R >::type >	base_t;
-			typedef typename base_t::result_t							base_result_t;
-			typedef typename base_t::result_wrap_t						base_result_wrap_t;
+			typedef JavaMethodCaller< typename JniTypeName< R >::type >	Base_t;
+			typedef typename Base_t::Result_t							base_result_t;
+			typedef typename Base_t::result_wrap_t						base_result_wrap_t;
 			
 			static result_wrap_t	CallStatic (const JavaClass &javaClass, jmethodID methodID, va_list args)
 			{
-				return (result_t) (base_result_t) base_t::CallStatic( javaClass, methodID, args );
+				return (Result_t) (base_result_t) Base_t::CallStatic( javaClass, methodID, args );
 			}
 			
 			static result_wrap_t	CallNonvirtual (const JavaObject &obj, const JavaClass &javaClass, jmethodID methodID, va_list args)
 			{
-				return (result_t) (base_result_t) base_t::CallNonvirtual( obj, javaClass, methodID, args );
+				return (Result_t) (base_result_t) Base_t::CallNonvirtual( obj, javaClass, methodID, args );
 			}
 			
 			static result_wrap_t	Call (const JavaObject &obj, jmethodID methodID, va_list args)
 			{
-				return (result_t) (base_result_t) base_t::Call( obj, methodID, args );
+				return (Result_t) (base_result_t) Base_t::Call( obj, methodID, args );
 			}
 		};
 
@@ -55,7 +55,7 @@ namespace  Java
 			template <> \
 			struct JavaMethodCaller< _type_ > \
 			{ \
-				typedef _type_						result_t; \
+				typedef _type_						Result_t; \
 				typedef JavaMethodResult< _type_ >	result_wrap_t; \
 				\
 				static result_wrap_t	CallStatic (const JavaClass &javaClass, jmethodID methodID, va_list args) \
@@ -90,7 +90,7 @@ namespace  Java
 		template <>
 		struct JavaMethodCaller< void >
 		{
-			typedef void						result_t;
+			typedef void						Result_t;
 			typedef JavaMethodResult< void >	result_wrap_t;
 			
 			static result_wrap_t	CallStatic (const JavaClass &javaClass, jmethodID methodID, va_list args)
@@ -116,7 +116,7 @@ namespace  Java
 		template <>
 		struct JavaMethodCaller< jstring >
 		{
-			typedef jstring						result_t;
+			typedef jstring						Result_t;
 			typedef JavaMethodResult< jstring >	result_wrap_t;
 			
 			static result_wrap_t	CallStatic (const JavaClass &javaClass, jmethodID methodID, va_list args)
@@ -197,7 +197,7 @@ namespace  Java
 		// types
 		private:
 			typedef JavaMethodType< Func >				method_t;
-			typedef typename method_t::result_t			result_t;
+			typedef typename method_t::Result_t			Result_t;
 			typedef typename method_t::result_wrap_t	result_wrap_t;
 
 
@@ -263,17 +263,17 @@ namespace  Java
 
 
 		protected:
-			result_t _Call (int empty, ...) const
+			Result_t _Call (int empty, ...) const
 			{
-				CHECK_ERR( IsNotNull(), result_t() );
+				CHECK_ERR( IsNotNull(), Result_t() );
 
 				va_list args;
 				va_start( args, empty );
 
-				result_wrap_t result = JavaMethodCaller< result_t >::CallStatic( _class, _methodID, args );
+				result_wrap_t result = JavaMethodCaller< Result_t >::CallStatic( _class, _methodID, args );
 
 				va_end( args );
-				return (result_t) result;
+				return (Result_t) result;
 			}
 		};
 
@@ -289,7 +289,7 @@ namespace  Java
 		// types
 		private:
 			typedef JavaMethodType< Func >				method_t;
-			typedef typename method_t::result_t			result_t;
+			typedef typename method_t::Result_t			Result_t;
 			typedef typename method_t::result_wrap_t	result_wrap_t;
 
 
@@ -357,17 +357,17 @@ namespace  Java
 
 
 		protected:
-			result_t _Call (int empty, ...) const
+			Result_t _Call (int empty, ...) const
 			{
-				CHECK_ERR( IsNotNull(), result_t() );
+				CHECK_ERR( IsNotNull(), Result_t() );
 
 				va_list args;
 				va_start( args, empty );
 
-				result_wrap_t result = JavaMethodCaller< result_t >::Call( _obj, _methodID, args );
+				result_wrap_t result = JavaMethodCaller< Result_t >::Call( _obj, _methodID, args );
 
 				va_end( args );
-				return (result_t) result;
+				return (Result_t) result;
 			}
 		};
 
@@ -383,7 +383,7 @@ namespace  Java
 		// types
 		private:
 			typedef JavaMethodType< Func >				method_t;
-			typedef typename method_t::result_t			result_t;
+			typedef typename method_t::Result_t			Result_t;
 			typedef typename method_t::result_wrap_t	result_wrap_t;
 
 
@@ -471,16 +471,16 @@ namespace  Java
 	{ \
 	private: \
 		typedef JavaStaticMethod< _result_ (_templateArgs_) >					Self; \
-		typedef _java_hidden_::JavaStaticMethod< _result_ (_templateArgs_) >		base_t; \
+		typedef _java_hidden_::JavaStaticMethod< _result_ (_templateArgs_) >		Base_t; \
 		\
 	public: \
-		JavaStaticMethod () : base_t()	{} \
-		JavaStaticMethod (const JavaClass &javaClass, StringCRef methodName) : base_t( javaClass, methodName ) {} \
+		JavaStaticMethod () : Base_t()	{} \
+		JavaStaticMethod (const JavaClass &javaClass, StringCRef methodName) : Base_t( javaClass, methodName ) {} \
 		\
 		_funcTemplate_ \
 		_result_ Call (_funcArgsDecl_) const \
 		{ \
-			return base_t::_Call( _funcArgs_ ); \
+			return Base_t::_Call( _funcArgs_ ); \
 		} \
 	}; \
 	\
@@ -490,16 +490,16 @@ namespace  Java
 	{ \
 	public: \
 		typedef JavaMethod< _result_ (_templateArgs_) >					Self; \
-		typedef _java_hidden_::JavaMethod< _result_ (_templateArgs_) >	base_t; \
+		typedef _java_hidden_::JavaMethod< _result_ (_templateArgs_) >	Base_t; \
 		\
 	public: \
-		JavaMethod () : base_t()	{} \
-		JavaMethod (const JavaObject &obj, StringCRef methodName) : base_t( obj, methodName )	{} \
+		JavaMethod () : Base_t()	{} \
+		JavaMethod (const JavaObject &obj, StringCRef methodName) : Base_t( obj, methodName )	{} \
 		\
 		_funcTemplate_ \
 		_result_ Call (_funcArgsDecl_) const \
 		{ \
-			return base_t::_Call( _funcArgs_ ); \
+			return Base_t::_Call( _funcArgs_ ); \
 		} \
 	}; \
 	\
@@ -509,16 +509,16 @@ namespace  Java
 	{ \
 	public: \
 		typedef JavaObjectConstructor< _result_ (_templateArgs_) >					Self; \
-		typedef _java_hidden_::JavaObjectConstructor< _result_ (_templateArgs_) >	base_t; \
+		typedef _java_hidden_::JavaObjectConstructor< _result_ (_templateArgs_) >	Base_t; \
 		\
 	public: \
 		explicit \
-		JavaObjectConstructor (const JavaClass &javaClass) : base_t(javaClass) {} \
+		JavaObjectConstructor (const JavaClass &javaClass) : Base_t(javaClass) {} \
 		\
 		_funcTemplate_ \
 		JavaObject Call (_funcArgsDecl_) const \
 		{ \
-			return JavaObject( base_t::_Call( _funcArgs_ ) ); \
+			return JavaObject( Base_t::_Call( _funcArgs_ ) ); \
 		} \
 		\
 		STATIC_ASSERT( CompileTime::IsVoid< _result_ >(), "result type must be void" ); \

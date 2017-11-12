@@ -14,20 +14,21 @@ namespace GXMath
 	// Line
 	//
 
-	template <typename T>
+	template <typename T, ulong U>
 	struct Line2 : public CompileTime::CopyQualifiers< T >
 	{
 	// types
 	public:
-		typedef Line2< T >		Self;
-		typedef Vec<T,2>		vec_t;
-		typedef T				value_t;
+		typedef Line2< T, U >	Self;
+		typedef Vec<T,2,U>		Vec_t;
+		typedef T				Value_t;
+		typedef Rectangle<T,U>	Rect_t;
 
 
 	// variables
 	private:
-		vec_t	_p0;
-		vec_t	_p1;
+		Vec_t	_p0;
+		Vec_t	_p1;
 
 
 	// methods
@@ -35,70 +36,70 @@ namespace GXMath
 		Line2 (GX_DEFCTOR) {}
 
 		explicit
-		Line2 (const vec_t &end) : _p0(), _p1(end) {}
+		Line2 (const Vec_t &end) : _p0(), _p1(end) {}
 
-		Line2 (const vec_t &begin, const vec_t &end) : _p0(begin), _p1(end) {}
+		Line2 (const Vec_t &begin, const Vec_t &end) : _p0(begin), _p1(end) {}
 
 		bool	operator == (const Self &right) const;
 		bool	operator != (const Self &right) const;
 
-		vec_t &			Begin ()				{ return _p0; }
-		vec_t const &	Begin ()		const	{ return _p0; }
+		Vec_t &			Begin ()				{ return _p0; }
+		Vec_t const &	Begin ()		const	{ return _p0; }
 
-		vec_t &			End ()					{ return _p1; }
-		vec_t const &	End ()			const	{ return _p1; }
+		Vec_t &			End ()					{ return _p1; }
+		Vec_t const &	End ()			const	{ return _p1; }
 
 		T				Length ()		const	{ return _p1.Distance( _p0 ); }
-		vec_t			Vector ()		const	{ return (_p1 - _p0); }
-		vec_t			Direction ()	const	{ return Vector().Normalized(); }
-		vec_t			Center ()		const	{ return (Begin() + End()) * T(0.5); }
+		Vec_t			Vector ()		const	{ return (_p1 - _p0); }
+		Vec_t			Direction ()	const	{ return Vector().Normalized(); }
+		Vec_t			Center ()		const	{ return (Begin() + End()) * T(0.5); }
 
 		Self Invert ()					const	{ return Self( _p1, _p0 ); }
 
-		Self Move (const vec_t &delta)	const	{ return Self( _p0 + delta, _p1 + delta ); }
+		Self Move (const Vec_t &delta)	const	{ return Self( _p0 + delta, _p1 + delta ); }
 
 		void GetEquation (OUT T &k, OUT T &b) const;
 		void GetEquation (OUT T &a, OUT T &b, OUT T &c) const;
-		void GetBoundingRect (OUT Rectangle<T> &boundRect) const;
+		void GetBoundingRect (OUT Rect_t &boundRect) const;
 
 		T	GetXfromY (T y) const;
 		T	GetYfromX (T x) const;
 
-		vec_t	GetFromY (T y) const;
-		vec_t	GetFromX (T x) const;
+		Vec_t	GetFromY (T y) const;
+		Vec_t	GetFromX (T x) const;
 
-		bool IsInnerPoint (const vec_t &point) const;
+		bool IsInnerPoint (const Vec_t &point) const;
 		bool IsInnerLine (const Self &line) const;
 
 		bool IntersectLine (const Self &other) const;
-		bool IntersectRect (const Rectangle<T> &other) const;
+		bool IntersectRect (const Rect_t &other) const;
 
-		bool GetVecIntersection (const Self &other, OUT vec_t &result) const;
-		bool GetLineIntersection (const Self &other, OUT vec_t &result) const;
-		bool GetRectIntersection (const Rectangle<T> &other, OUT vec_t &result0, OUT vec_t &result1) const;
+		bool GetVecIntersection (const Self &other, OUT Vec_t &result) const;
+		bool GetLineIntersection (const Self &other, OUT Vec_t &result) const;
+		bool GetRectIntersection (const Rect_t &other, OUT Vec_t &result0, OUT Vec_t &result1) const;
 
-		bool GetRayIntersection (const Self &other, OUT vec_t &res) const;
+		bool GetRayIntersection (const Self &other, OUT Vec_t &res) const;
 
-		bool IsPointInBoundingRects (const Self &other, const vec_t &point) const;
+		bool IsPointInBoundingRects (const Self &other, const Vec_t &point) const;
 
 		Radians<T>	AngleBetweenLines (const Self &other) const;	// angle of other line rotation by this line in a clockwise 
 		T			CosBetweenLines (const Self &other) const;
-		Self		Reflection (const vec_t &normal) const;
+		Self		Reflection (const Vec_t &normal) const;
 
-		bool	PerpendicularBase (const vec_t &point, OUT vec_t &base)	const;
-		bool	Perpendicular (const vec_t &point, OUT Self &result) const;
-		T		MinDistance (const vec_t &point) const;
+		bool	PerpendicularBase (const Vec_t &point, OUT Vec_t &base)	const;
+		bool	Perpendicular (const Vec_t &point, OUT Self &result) const;
+		T		MinDistance (const Vec_t &point) const;
 		
-		vec_t	Normal () const;
-		vec_t	LeftNormal () const;
-		vec_t	RightNormal () const;
-		vec_t	GetInterpolationPoint (T value)	const	{ return Lerp( _p0, _p1, value ); }
+		Vec_t	Normal () const;
+		Vec_t	LeftNormal () const;
+		Vec_t	RightNormal () const;
+		Vec_t	GetInterpolationPoint (T value)	const	{ return Lerp( _p0, _p1, value ); }
 
 
 		static bool _CropLine (const Self &src, Self &dst);
 
 	private:
-		bool _IntersectRect (const Rectangle<T> &other, OUT vec_t &res0, OUT vec_t &res1) const;
+		bool _IntersectRect (const Rect_t &other, OUT Vec_t &res0, OUT Vec_t &res1) const;
 	};
 
 
@@ -110,14 +111,14 @@ namespace GXMath
 	operator ==
 =================================================
 */
-	template <typename T>
-	inline bool	Line2<T>::operator == (const Self &right) const
+	template <typename T, ulong U>
+	inline bool	Line2<T,U>::operator == (const Self &right) const
 	{
 		return All( Begin() == right.Begin() ) and All( End() == right.End() );
 	}
 	
-	template <typename T>
-	inline bool	Line2<T>::operator != (const Self &right) const
+	template <typename T, ulong U>
+	inline bool	Line2<T,U>::operator != (const Self &right) const
 	{
 		return not ( (*this) == right );
 	}
@@ -127,8 +128,8 @@ namespace GXMath
 	GetEquation
 =================================================
 */
-	template <typename T>
-	inline void Line2<T>::GetEquation (OUT T &outK, OUT T &outB) const
+	template <typename T, ulong U>
+	inline void Line2<T,U>::GetEquation (OUT T &outK, OUT T &outB) const
 	{
 		// y = Kx + B
 
@@ -153,8 +154,8 @@ namespace GXMath
 	GetEquation
 =================================================
 */
-	template <typename T>
-	inline void Line2<T>::GetEquation (OUT T &a, OUT T &b, OUT T &c) const
+	template <typename T, ulong U>
+	inline void Line2<T,U>::GetEquation (OUT T &a, OUT T &b, OUT T &c) const
 	{
 		// Ax + By + C = 0
 
@@ -168,8 +169,8 @@ namespace GXMath
 	GetXfromY
 =================================================
 */
-	template <typename T>
-	inline T Line2<T>::GetXfromY (T y) const
+	template <typename T, ulong U>
+	inline T Line2<T,U>::GetXfromY (T y) const
 	{
 		// ax + by + c = 0 -> x = -(by + c) / a
 
@@ -183,8 +184,8 @@ namespace GXMath
 	GetYfromX
 =================================================
 */
-	template <typename T>
-	inline T  Line2<T>::GetYfromX (T x) const
+	template <typename T, ulong U>
+	inline T  Line2<T,U>::GetYfromX (T x) const
 	{
 		// y = kx + b
 		T	k, b;
@@ -197,10 +198,10 @@ namespace GXMath
 	GetFromY
 =================================================
 */
-	template <typename T>
-	inline typename Line2<T>::vec_t  Line2<T>::GetFromY (T y) const
+	template <typename T, ulong U>
+	inline typename Line2<T,U>::Vec_t  Line2<T,U>::GetFromY (T y) const
 	{
-		return vec_t( GetXfromY( y ), y );
+		return Vec_t( GetXfromY( y ), y );
 	}
 	
 /*
@@ -208,10 +209,10 @@ namespace GXMath
 	GetFromX
 =================================================
 */
-	template <typename T>
-	inline typename Line2<T>::vec_t  Line2<T>::GetFromX (T x) const
+	template <typename T, ulong U>
+	inline typename Line2<T,U>::Vec_t  Line2<T,U>::GetFromX (T x) const
 	{
-		return vec_t( x, GetYfromX( x ) );
+		return Vec_t( x, GetYfromX( x ) );
 	}
 		
 /*
@@ -219,11 +220,11 @@ namespace GXMath
 	PerpendicularBase
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::PerpendicularBase (const vec_t &p, OUT vec_t &base) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::PerpendicularBase (const Vec_t &p, OUT Vec_t &base) const
 	{
-		vec_t	vec		= End() - Begin();
-		vec_t	vecSqr	= vec * vec;
+		Vec_t	vec		= End() - Begin();
+		Vec_t	vecSqr	= vec * vec;
 
 		base.x = ( Begin().x * vecSqr.y + p.x * vecSqr.x + vec.x * vec.y * (p.y - Begin().y) ) / (vecSqr.y + vecSqr.x);
 		base.y = vec.x * (p.x - base.x) / vec.y + p.y;
@@ -236,10 +237,10 @@ namespace GXMath
 	Perpendicular
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::Perpendicular (const vec_t &point, OUT Self &result) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::Perpendicular (const Vec_t &point, OUT Self &result) const
 	{
-		vec_t	base;
+		Vec_t	base;
 
 		if ( not PerpendicularBase( point, base ) )
 		{
@@ -256,8 +257,8 @@ namespace GXMath
 	MinDistance
 =================================================
 */
-	template <typename T>
-	inline T  Line2<T>::MinDistance (const vec_t &point) const
+	template <typename T, ulong U>
+	inline T  Line2<T,U>::MinDistance (const Vec_t &point) const
 	{
 		T	a, b, c;
 		GetEquation( a, b, c );
@@ -272,11 +273,11 @@ namespace GXMath
 	Normal
 =================================================
 */
-	template <typename T>
-	inline Vec<T,2>  Line2<T>::Normal () const
+	template <typename T, ulong U>
+	inline Vec<T,2,U>  Line2<T,U>::Normal () const
 	{
-		const vec_t	v = Vector();
-		return ( v.x >= T(0) ? vec_t( -v.y, v.x ) : vec_t( v.y, -v.x ) ).Normalized();
+		const Vec_t	v = Vector();
+		return ( v.x >= T(0) ? Vec_t( -v.y, v.x ) : Vec_t( v.y, -v.x ) ).Normalized();
 	}
 	
 /*
@@ -284,11 +285,11 @@ namespace GXMath
 	LeftNormal
 =================================================
 */
-	template <typename T>
-	inline Vec<T,2>  Line2<T>::LeftNormal () const
+	template <typename T, ulong U>
+	inline Vec<T,2,U>  Line2<T,U>::LeftNormal () const
 	{
-		const vec_t	v = Vector();
-		return vec_t( -v.y, v.x ).Normalized();
+		const Vec_t	v = Vector();
+		return Vec_t( -v.y, v.x ).Normalized();
 	}
 	
 /*
@@ -296,11 +297,11 @@ namespace GXMath
 	RightNormal
 =================================================
 */
-	template <typename T>
-	inline Vec<T,2>  Line2<T>::RightNormal () const
+	template <typename T, ulong U>
+	inline Vec<T,2,U>  Line2<T,U>::RightNormal () const
 	{
-		const vec_t	v = Vector();
-		return vec_t( v.y, -v.x ).Normalized();
+		const Vec_t	v = Vector();
+		return Vec_t( v.y, -v.x ).Normalized();
 	}
 	
 /*
@@ -308,10 +309,10 @@ namespace GXMath
 	GetBoundingRect
 =================================================
 */
-	template <typename T>
-	inline void Line2<T>::GetBoundingRect (Rectangle<T> &boundRect) const
+	template <typename T, ulong U>
+	inline void Line2<T,U>::GetBoundingRect (OUT Rect_t &boundRect) const
 	{
-		boundRect = Rectangle<T>( StaticArrayBuilder::Create( Begin(), End() ) );
+		boundRect = Rect_t( StaticArrayBuilder::Create( Begin(), End() ) );
 		boundRect.Stretch( Vector().Max() /* T(0.01)*/ );
 	}
 	
@@ -320,10 +321,10 @@ namespace GXMath
 	IsInnerPoint
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::IsInnerPoint (const vec_t &point) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::IsInnerPoint (const Vec_t &point) const
 	{
-		Rectangle<T>	r;
+		Rect_t	r;
 		GetBoundingRect( r );
 	
 		if ( not r.IsInnerPoint( point ) )
@@ -339,10 +340,10 @@ namespace GXMath
 	IsInnerLine
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::IsInnerLine (const Self &line) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::IsInnerLine (const Self &line) const
 	{
-		Rectangle<T>	r;
+		Rect_t	r;
 		GetBoundingRect( r );
 	
 		if ( not r.IsInnerPoint( line.Begin() ) or
@@ -363,10 +364,10 @@ namespace GXMath
 	IntersectLine
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::IntersectLine (const Self &other) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::IntersectLine (const Self &other) const
 	{
-		vec_t	res;
+		Vec_t	res;
 		return GetLineIntersection( other, res );
 	}
 	
@@ -375,10 +376,10 @@ namespace GXMath
 	IntersectRect
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::IntersectRect (const Rectangle<T> &other) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::IntersectRect (const Rect_t &other) const
 	{
-		vec_t	res0, res1;
+		Vec_t	res0, res1;
 		return _IntersectRect( other, res0, res1 );
 	}
 	
@@ -387,11 +388,11 @@ namespace GXMath
 	IsPointInBoundingRects
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::IsPointInBoundingRects (const Self &other, const vec_t &point) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::IsPointInBoundingRects (const Self &other, const Vec_t &point) const
 	{
-		Rectangle<T>	r0;
-		Rectangle<T>	r1;
+		Rect_t	r0;
+		Rect_t	r1;
 		this->GetBoundingRect( r0 );
 		other.GetBoundingRect( r1 );
 		return r0.IsInnerPoint( point ) and r1.IsInnerPoint( point );
@@ -402,10 +403,10 @@ namespace GXMath
 	GetVecIntersection
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::GetVecIntersection (const Self &other, OUT vec_t &result) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::GetVecIntersection (const Self &other, OUT Vec_t &result) const
 	{
-		result = vec_t();
+		result = Vec_t();
 		return GetRayIntersection( other, result );
 	}
 	
@@ -414,10 +415,10 @@ namespace GXMath
 	GetLineIntersection
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::GetLineIntersection (const Self &other, OUT vec_t &result) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::GetLineIntersection (const Self &other, OUT Vec_t &result) const
 	{
-		result = vec_t();
+		result = Vec_t();
 		return GetRayIntersection( other, result ) and IsPointInBoundingRects( other, result );
 	}
 	
@@ -426,8 +427,8 @@ namespace GXMath
 	GetRectIntersection
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::GetRectIntersection (const Rectangle<T> &other, OUT vec_t &res0, OUT vec_t &res1) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::GetRectIntersection (const Rect_t &other, OUT Vec_t &res0, OUT Vec_t &res1) const
 	{
 		return _IntersectRect( other, res0, res1 );
 	}
@@ -437,8 +438,8 @@ namespace GXMath
 	GetRayIntersection
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::GetRayIntersection (const Self &other, OUT vec_t &res) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::GetRayIntersection (const Self &other, OUT Vec_t &res) const
 	{
 		const T	x12 = this->Begin().x - this->End().x;
 		const T	y12 = this->Begin().y - this->End().y;
@@ -468,19 +469,19 @@ namespace GXMath
 	_IntersectRect
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::_IntersectRect (const Rectangle<T> &other, OUT vec_t &res0, OUT vec_t &res1) const
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::_IntersectRect (const Rect_t &other, OUT Vec_t &res0, OUT Vec_t &res1) const
 	{
-		Rectangle<T>	r;
+		Rect_t	r;
 		GetBoundingRect( r );
 		
 		if ( not other.IntersectRect( r ) )
 			return false;
 
-		vec_t *		results[4]	= { &res0, &res1, /* for safety: */ &res0, &res1 };
+		Vec_t *		results[4]	= { &res0, &res1, /* for safety: */ &res0, &res1 };
 		int			i			= 0;
 		bool		res			= false;
-		vec_t		tmp;
+		Vec_t		tmp;
 
 		if ( GetLineIntersection( Self( other.LeftBottom(), other.LeftTop() ), tmp ) and other.IsInnerPoint( tmp ) )
 		{
@@ -514,10 +515,10 @@ namespace GXMath
 	_CropLine
 =================================================
 */
-	template <typename T>
-	inline bool Line2<T>::_CropLine (const Self &src, Self &dst)
+	template <typename T, ulong U>
+	inline bool Line2<T,U>::_CropLine (const Self &src, Self &dst)
 	{
-		vec_t	i;
+		Vec_t	i;
 
 		if ( src.GetLineIntersection( dst, i ) )
 		{
@@ -532,11 +533,11 @@ namespace GXMath
 	AngleBetweenLines
 =================================================
 */
-	template <typename T>
-	inline Radians<T>  Line2<T>::AngleBetweenLines (const Self &other) const
+	template <typename T, ulong U>
+	inline Radians<T>  Line2<T,U>::AngleBetweenLines (const Self &other) const
 	{
-		const vec_t	v0 = Vector();
-		const vec_t	v1 = other.Vector();
+		const Vec_t	v0 = Vector();
+		const Vec_t	v1 = other.Vector();
 
 		if ( All( v0 == v1 ) )
 			return T(0);
@@ -556,11 +557,11 @@ namespace GXMath
 	CosBetweenLines
 =================================================
 */
-	template <typename T>
-	inline T Line2<T>::CosBetweenLines (const Self &other) const
+	template <typename T, ulong U>
+	inline T Line2<T,U>::CosBetweenLines (const Self &other) const
 	{
-		const vec_t	v0 = Vector();
-		const vec_t	v1 = other.Vector();
+		const Vec_t	v0 = Vector();
+		const Vec_t	v1 = other.Vector();
 
 		if ( All( v0 == v1 ) )
 			return T(1);	// cos(0)
@@ -576,8 +577,8 @@ namespace GXMath
 	Reflection
 =================================================
 */
-	template <typename T>
-	inline Line2<T>  Line2<T>::Reflection (const vec_t &normal) const
+	template <typename T, ulong U>
+	inline Line2<T,U>  Line2<T,U>::Reflection (const Vec_t &normal) const
 	{
 		/*      this
 			|  /
@@ -599,8 +600,8 @@ namespace GXMath
 	IsInnerLine
 =================================================
 */
-	template <typename T>
-	inline bool Rectangle<T>::IsInnerLine (const Line2<T> &other) const
+	template <typename T, ulong U>
+	inline bool Rectangle<T,U>::IsInnerLine (const Line2<T,U> &other) const
 	{
 		return IsInnerPoint( other.Begin() ) & IsInnerPoint( other.End() );
 	}
@@ -610,8 +611,8 @@ namespace GXMath
 	IntersectLine
 =================================================
 */
-	template <typename T>
-	inline bool Rectangle<T>::IntersectLine (const Line2<T> &other) const
+	template <typename T, ulong U>
+	inline bool Rectangle<T,U>::IntersectLine (const Line2<T,U> &other) const
 	{
 		return other.IntersectRect( *this );
 	}
@@ -621,8 +622,8 @@ namespace GXMath
 	GetLineIntersection
 =================================================
 */
-	template <typename T>
-	inline bool Rectangle<T>::GetLineIntersection (const Line2<T> &other, OUT Vec<T,2> &result0, OUT Vec<T,2> &result1) const
+	template <typename T, ulong U>
+	inline bool Rectangle<T,U>::GetLineIntersection (const Line2<T,U> &other, OUT Vec<T,2,U> &result0, OUT Vec<T,2,U> &result1) const
 	{
 		return other.GetRectIntersection( *this, result0, result1 );
 	}
@@ -632,8 +633,8 @@ namespace GXMath
 	CropLine
 =================================================
 */
-	template <typename T>
-	inline bool Rectangle<T>::CropLine (OUT Line2<T> &other) const
+	template <typename T, ulong U>
+	inline bool Rectangle<T,U>::CropLine (OUT Line2<T,U> &other) const
 	{
 		if ( IntersectLine( other ) )
 		{
@@ -648,10 +649,10 @@ namespace GXMath
 	Left
 =================================================
 */
-	template <typename T>
-	inline Line2<T>  Rectangle<T>::Left () const
+	template <typename T, ulong U>
+	inline Line2<T,U>  Rectangle<T,U>::Left () const
 	{
-		return line_t( LeftBottom(), LeftTop() );
+		return Line_t( LeftBottom(), LeftTop() );
 	}
 	
 /*
@@ -659,10 +660,10 @@ namespace GXMath
 	Right
 =================================================
 */
-	template <typename T>
-	inline Line2<T>  Rectangle<T>::Right () const
+	template <typename T, ulong U>
+	inline Line2<T,U>  Rectangle<T,U>::Right () const
 	{
-		return line_t( RightTop(), RightBottom() );
+		return Line_t( RightTop(), RightBottom() );
 	}
 	
 /*
@@ -670,10 +671,10 @@ namespace GXMath
 	Bottom
 =================================================
 */
-	template <typename T>
-	inline Line2<T>  Rectangle<T>::Bottom () const
+	template <typename T, ulong U>
+	inline Line2<T,U>  Rectangle<T,U>::Bottom () const
 	{
-		return line_t( RightBottom(), LeftBottom() );
+		return Line_t( RightBottom(), LeftBottom() );
 	}
 		
 /*
@@ -681,10 +682,10 @@ namespace GXMath
 	Top
 =================================================
 */
-	template <typename T>
-	inline Line2<T>  Rectangle<T>::Top () const
+	template <typename T, ulong U>
+	inline Line2<T,U>  Rectangle<T,U>::Top () const
 	{
-		return line_t( LeftTop(), RightTop() );
+		return Line_t( LeftTop(), RightTop() );
 	}
 	
 /*
@@ -692,10 +693,10 @@ namespace GXMath
 	ToLine
 =================================================
 *
-	template <typename T>
-	inline Line2<T>  Rectangle<T>::ToLine (EEdge i) const
+	template <typename T, ulong U>
+	inline Line2<T,U>  Rectangle<T,U>::ToLine (EEdge i) const
 	{
-		return line_t( (*this)(i & 3), (*this)((i+1) & 3) );
+		return Line_t( (*this)(i & 3), (*this)((i+1) & 3) );
 	}
 	*/
 
@@ -704,17 +705,17 @@ namespace GXMath
 namespace GXTypes
 {
 	
-	template <typename T>
-	struct Hash< GXMath::Line2<T> > :
-		private Hash< typename GXMath::Line2<T>::vec_t >
+	template <typename T, ulong U>
+	struct Hash< GXMath::Line2<T,U> > :
+		private Hash< typename GXMath::Line2<T,U>::Vec_t >
 	{
-		typedef GXMath::Circle<T>							key_t;
-		typedef Hash< typename GXMath::Line2<T>::vec_t >	base_t;
-		typedef typename base_t::result_t					result_t;
+		typedef GXMath::Line2<T,U>				Key_t;
+		typedef Hash< typename Key_t::Vec_t >	Base_t;
+		typedef typename Base_t::Result_t		Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return	base_t::operator ()( x.Begin() ) + base_t::operator ()( x.End() );
+			return	Base_t::operator ()( x.Begin() ) + Base_t::operator ()( x.End() );
 		}
 	};
 

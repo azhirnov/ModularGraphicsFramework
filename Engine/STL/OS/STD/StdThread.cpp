@@ -206,7 +206,7 @@ namespace OS
 	Delete
 =================================================
 */
-	bool Thread::Delete ()
+	bool Thread::Delete () noexcept
 	{
 		if ( IsValid() )
 		{
@@ -234,10 +234,10 @@ namespace OS
 	Wait
 =================================================
 */
-	bool Thread::Wait ()
+	bool Thread::Wait () noexcept
 	{
 		ASSERT( IsValid() );
-		_thread.join();
+		_thread.join();			// TODO: catch exceptions
 		return true;
 	}
 

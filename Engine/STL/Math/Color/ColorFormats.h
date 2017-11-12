@@ -32,7 +32,7 @@ namespace GXMath
 		};};
 
 
-#	if GX_COLOR_FORMAT_HIGH_PRECISION
+#	ifdef GX_COLOR_FORMAT_HIGH_PRECISION
 		typedef ilong4	IntFormat;
 		typedef double4	FloatFormat;
 #	else
@@ -102,7 +102,7 @@ namespace GXMath
 
 			IntFormat MaxValue() const
 			{
-				return ToMask< IntFormat::value_t >( Max( sizeInBits - int(isSigned), IntFormat() ).To<BitsVec<usize,4>>() );
+				return ToMask< IntFormat::Value_t >( Max( sizeInBits - int(isSigned), IntFormat() ).To<BitsVec<usize,4>>() );
 			}
 
 			FloatFormat MaxValueF() const
@@ -127,8 +127,8 @@ namespace GXMath
 
 			IntFormat Clamp (const IntFormat &value) const
 			{
-				typedef Vec< CompileTime::NearInt::FromType< IntFormat::value_t >, 4 >	sign_t;
-				typedef Vec< CompileTime::NearUInt::FromType< IntFormat::value_t >, 4 >	unsign_t;
+				typedef Vec< CompileTime::NearInt::FromType< IntFormat::Value_t >, 4 >	sign_t;
+				typedef Vec< CompileTime::NearUInt::FromType< IntFormat::Value_t >, 4 >	unsign_t;
 
 				return isSigned ?
 						GXMath::Clamp( value, MinValue(), MaxValue() ) :
@@ -198,7 +198,7 @@ namespace GXMath
 			FloatFormat Clamp (const FloatFormat &value) const
 			{
 				FloatFormat	ret;
-				FOR( i, ret )	ret[i] = Max( value[i], FloatFormat::value_t(0) );
+				FOR( i, ret )	ret[i] = Max( value[i], FloatFormat::Value_t(0) );
 				return ret;
 			}
 		};
@@ -242,7 +242,7 @@ namespace GXMath
 			template <typename SrcColorType, typename DstColorType>
 			static void NormIntToNormInt (DstColorType &dst, const SrcColorType &src)
 			{
-				typedef IntFormat::value_t	int_t;
+				typedef IntFormat::Value_t	Int_t;
 
 				MustBeInteger< SrcColorType >();
 				MustBeInteger< DstColorType >();
@@ -254,11 +254,11 @@ namespace GXMath
 				IntFormat const		shift = sfmt.GetShiftTo( dfmt );
 				IntFormat const		scolor(src);
 				IntFormat			dcolor;
-				int_t const			one = int_t(1);
+				Int_t const			one = Int_t(1);
 
 				FOR( i, dcolor )
 				{
-					int_t const	half_val = ( one << Max( Abs(shift[i])-1, 0 ) ) - 1;
+					Int_t const	half_val = ( one << Max( Abs(shift[i])-1, 0 ) ) - 1;
 
 					dcolor[i] = shift[i] >= 0 ?
 								(scolor[i] << +shift[i]) + half_val :
@@ -282,7 +282,7 @@ namespace GXMath
 				IntColorFormatInfo const	sfmt(src);
 
 				IntFormat const		scolor(src);
-				IntFormat			dcolor = Round< IntFormat::value_t >( scolor.To<FloatFormat>() / sfmt.MaxValueF() );
+				IntFormat			dcolor = Round< IntFormat::Value_t >( scolor.To<FloatFormat>() / sfmt.MaxValueF() );
 				
 				dst = dfmt.Clamp( dcolor );
 			}*/
@@ -359,7 +359,7 @@ namespace GXMath
 				FloatColorFormatInfo const	sfmt(src);
 				IntColorFormatInfo const	dfmt(dst);
 				FloatFormat const			scolor(src);
-				IntFormat   const			dcolor = Round< IntFormat::value_t >( scolor );
+				IntFormat   const			dcolor = Round< IntFormat::Value_t >( scolor );
 
 				dst = dfmt.Clamp( dcolor );
 			}
@@ -502,14 +502,16 @@ namespace GXMath
 		template <typename T, bool Normalized = false>
 		struct RedI : BaseColor<T, Normalized>
 		{
+			using Result_t = IntFormat;
+
 			T	r;
 
 			RedI () : r(0) {}
 			RedI (T R) : r(R) {}
 			RedI (const IntFormat &c) : r(c[0]) {}
 
-			operator IntFormat () const				{ return IntFormat( r, 0, 0, 0 ); }
-			operator IntColorFormatInfo () const	{ return IntColorFormatInfo::SimpleType<T,1>( *this ); }
+			operator IntFormat () const						{ return IntFormat( r, 0, 0, 0 ); }
+			explicit operator IntColorFormatInfo () const	{ return IntColorFormatInfo::SimpleType<T,1>( *this ); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -525,14 +527,16 @@ namespace GXMath
 		template <typename T, bool Normalized = false>
 		struct RGi : BaseColor<T, Normalized>
 		{
+			using Result_t = IntFormat;
+
 			T	r, g;
 
 			RGi () : r(0), g(0) {}
 			RGi (T R, T G) : r(R), g(G) {}
 			RGi (const IntFormat &c) : r(c[0]), g(c[1]) {}
 
-			operator IntFormat () const				{ return IntFormat( r, g, 0, 0 ); }
-			operator IntColorFormatInfo () const	{ return IntColorFormatInfo::SimpleType<T,2>( *this ); }
+			operator IntFormat () const						{ return IntFormat( r, g, 0, 0 ); }
+			explicit operator IntColorFormatInfo () const	{ return IntColorFormatInfo::SimpleType<T,2>( *this ); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -548,14 +552,16 @@ namespace GXMath
 		template <typename T, bool Normalized = false>
 		struct RGBi : BaseColor<T, Normalized>
 		{
+			using Result_t = IntFormat;
+
 			T	r, g, b;
 
 			RGBi () : r(0), g(0), b(0) {}
 			RGBi (T R, T G, T B) : r(R), g(G), b(B) {}
 			RGBi (const IntFormat &c) : r(c[0]), g(c[1]), b(c[2]) {}
 
-			operator IntFormat () const				{ return IntFormat( r, g, b, 0 ); }
-			operator IntColorFormatInfo () const	{ return IntColorFormatInfo::SimpleType<T,3>( *this ); }
+			operator IntFormat () const						{ return IntFormat( r, g, b, 0 ); }
+			explicit operator IntColorFormatInfo () const	{ return IntColorFormatInfo::SimpleType<T,3>( *this ); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -571,14 +577,16 @@ namespace GXMath
 		template <typename T, bool Normalized = false>
 		struct RGBAi : BaseColor<T, Normalized>
 		{
+			using Result_t = IntFormat;
+
 			T	r, g, b, a;
 
 			RGBAi () : r(0), g(0), b(0), a(0) {}
 			RGBAi (T R, T G, T B, T A) : r(R), g(G), b(B), a(A) {}
 			RGBAi (const IntFormat &c) : r(c[0]), g(c[1]), b(c[2]), a(c[3]) {}
 
-			operator IntFormat () const				{ return IntFormat( r, g, b, a ); }
-			operator IntColorFormatInfo () const	{ return IntColorFormatInfo::SimpleType<T,4>( *this ); }
+			operator IntFormat () const						{ return IntFormat( r, g, b, a ); }
+			explicit operator IntColorFormatInfo () const	{ return IntColorFormatInfo::SimpleType<T,4>( *this ); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -594,6 +602,8 @@ namespace GXMath
 		template <bool Normalized = false>
 		struct RGBA4u
 		{
+			using Result_t = IntFormat;
+
 			enum { format = EColorFormatDescriptor::UINT | (Normalized ? EColorFormatDescriptor::NORMALIZED : 0) };
 
 			struct Bits {
@@ -611,8 +621,8 @@ namespace GXMath
 			RGBA4u (ubyte R, ubyte G, ubyte B, ubyte A)	{ bits.r = R;  bits.g = G;  bits.b = B;  bits.a = A; }
 			RGBA4u (const IntFormat &c)					{ bits.r = c[0];  bits.g = c[1];  bits.b = c[2];  bits.a = c[3]; }
 		
-			operator IntFormat () const					{ return IntFormat( bits.r, bits.g, bits.b, bits.a ); }
-			operator IntColorFormatInfo () const		{ return IntColorFormatInfo::PackedType< 4, 4, 4, 4 >(*this); }
+			operator IntFormat () const						{ return IntFormat( bits.r, bits.g, bits.b, bits.a ); }
+			explicit operator IntColorFormatInfo () const	{ return IntColorFormatInfo::PackedType< 4, 4, 4, 4 >(*this); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -628,6 +638,8 @@ namespace GXMath
 		template <bool Normalized = false>
 		struct RGBA4u_Rev
 		{
+			using Result_t = IntFormat;
+
 			enum { format = EColorFormatDescriptor::UINT | (Normalized ? EColorFormatDescriptor::NORMALIZED : 0) };
 
 			struct Bits {
@@ -646,7 +658,7 @@ namespace GXMath
 			RGBA4u_Rev (const IntFormat &c)					{ bits.r = c[0];  bits.g = c[1];  bits.b = c[2];  bits.a = c[3]; }
 		
 			operator IntFormat () const						{ return IntFormat( bits.r, bits.g, bits.b, bits.a ); }
-			operator IntColorFormatInfo () const			{ return IntColorFormatInfo::PackedType< 4, 4, 4, 4 >(*this); }
+			explicit operator IntColorFormatInfo () const	{ return IntColorFormatInfo::PackedType< 4, 4, 4, 4 >(*this); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -662,6 +674,8 @@ namespace GXMath
 		template <bool Normalized = false>
 		struct RGB5_A1u
 		{
+			using Result_t = IntFormat;
+
 			enum { format = EColorFormatDescriptor::UINT | (Normalized ? EColorFormatDescriptor::NORMALIZED : 0) };
 
 			struct Bits {
@@ -680,7 +694,7 @@ namespace GXMath
 			RGB5_A1u (const IntFormat &c)					{ bits.r = c[0];  bits.g = c[1];  bits.b = c[2];  bits.a = c[3]; }
 		
 			operator IntFormat () const						{ return IntFormat( bits.r, bits.g, bits.b, bits.a ); }
-			operator IntColorFormatInfo () const			{ return IntColorFormatInfo::PackedType< 5, 5, 5, 1 >(*this); }
+			explicit operator IntColorFormatInfo () const	{ return IntColorFormatInfo::PackedType< 5, 5, 5, 1 >(*this); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -696,6 +710,8 @@ namespace GXMath
 		template <bool Normalized = false>
 		struct RGB5_A1u_Rev
 		{
+			using Result_t = IntFormat;
+
 			enum { format = EColorFormatDescriptor::UINT | (Normalized ? EColorFormatDescriptor::NORMALIZED : 0) };
 
 			struct Bits {
@@ -714,7 +730,7 @@ namespace GXMath
 			RGB5_A1u_Rev (const IntFormat &c)					{ bits.r = c[0];  bits.g = c[1];  bits.b = c[2];  bits.a = c[3]; }
 		
 			operator IntFormat () const							{ return IntFormat( bits.r, bits.g, bits.b, bits.a ); }
-			operator IntColorFormatInfo () const				{ return IntColorFormatInfo::PackedType< 5, 5, 5, 1 >(*this); }
+			explicit operator IntColorFormatInfo () const		{ return IntColorFormatInfo::PackedType< 5, 5, 5, 1 >(*this); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -730,6 +746,8 @@ namespace GXMath
 		template <bool Normalized = false>
 		struct R5_G6_B5u
 		{
+			using Result_t = IntFormat;
+
 			enum { format = EColorFormatDescriptor::UINT | (Normalized ? EColorFormatDescriptor::NORMALIZED : 0) };
 
 			struct Bits {
@@ -746,8 +764,8 @@ namespace GXMath
 			R5_G6_B5u (ubyte R, ubyte G, ubyte B)	{ bits.r = R;  bits.g = G;  bits.b = B; }
 			R5_G6_B5u (const IntFormat &c)			{ bits.r = c[0];  bits.g = c[1];  bits.b = c[2]; }
 
-			operator IntFormat () const				{ return IntFormat( bits.r, bits.g, bits.b, 0 ); }
-			operator IntColorFormatInfo () const	{ return IntColorFormatInfo::PackedType< 5, 6, 5, 0 >(*this); }
+			operator IntFormat () const						{ return IntFormat( bits.r, bits.g, bits.b, 0 ); }
+			explicit operator IntColorFormatInfo () const	{ return IntColorFormatInfo::PackedType< 5, 6, 5, 0 >(*this); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -763,6 +781,8 @@ namespace GXMath
 		template <bool Normalized = false>
 		struct R5_G6_B5u_Rev
 		{
+			using Result_t = IntFormat;
+
 			enum { format = EColorFormatDescriptor::UINT | (Normalized ? EColorFormatDescriptor::NORMALIZED : 0) };
 
 			struct Bits {
@@ -779,8 +799,8 @@ namespace GXMath
 			R5_G6_B5u_Rev (ubyte R, ubyte G, ubyte B)	{ bits.r = R;  bits.g = G;  bits.b = B; }
 			R5_G6_B5u_Rev (const IntFormat &c)			{ bits.r = c[0];  bits.g = c[1];  bits.b = c[2]; }
 
-			operator IntFormat () const					{ return IntFormat( bits.r, bits.g, bits.b, 0 ); }
-			operator IntColorFormatInfo () const		{ return IntColorFormatInfo::PackedType< 5, 6, 5, 0 >(*this); }
+			operator IntFormat () const						{ return IntFormat( bits.r, bits.g, bits.b, 0 ); }
+			explicit operator IntColorFormatInfo () const	{ return IntColorFormatInfo::PackedType< 5, 6, 5, 0 >(*this); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -796,6 +816,8 @@ namespace GXMath
 		template <bool Normalized = false>
 		struct RGB10_A2u
 		{
+			using Result_t = IntFormat;
+
 			enum { format = EColorFormatDescriptor::UINT | (Normalized ? EColorFormatDescriptor::NORMALIZED : 0) };
 
 			struct Bits {
@@ -814,7 +836,7 @@ namespace GXMath
 			RGB10_A2u (const IntFormat &c)						{ bits.r = c[0];  bits.g = c[1];  bits.b = c[2];  bits.a = c[3]; }
 
 			operator IntFormat () const							{ return IntFormat( bits.r, bits.g, bits.b, bits.a ); }
-			operator IntColorFormatInfo () const				{ return IntColorFormatInfo::PackedType< 10, 10, 10, 2 >(*this); }
+			explicit operator IntColorFormatInfo () const		{ return IntColorFormatInfo::PackedType< 10, 10, 10, 2 >(*this); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -830,6 +852,8 @@ namespace GXMath
 		template <bool Normalized = false>
 		struct RGB10_A2u_Rev
 		{
+			using Result_t = IntFormat;
+
 			enum { format = EColorFormatDescriptor::UINT | (Normalized ? EColorFormatDescriptor::NORMALIZED : 0) };
 
 			struct Bits {
@@ -848,7 +872,7 @@ namespace GXMath
 			RGB10_A2u_Rev (const IntFormat &c)						{ bits.r = c[0];  bits.g = c[1];  bits.b = c[2];  bits.a = c[3]; }
 
 			operator IntFormat () const								{ return IntFormat( bits.r, bits.g, bits.b, bits.a ); }
-			operator IntColorFormatInfo () const					{ return IntColorFormatInfo::PackedType< 10, 10, 10, 2 >(*this); }
+			explicit operator IntColorFormatInfo () const			{ return IntColorFormatInfo::PackedType< 10, 10, 10, 2 >(*this); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -869,9 +893,11 @@ namespace GXMath
 		template <bool Normalized = false>
 		struct R11_G11_B10f
 		{
+			using Result_t = FloatFormat;
+
 			enum { format = EColorFormatDescriptor::UFLOAT | (Normalized ? EColorFormatDescriptor::NORMALIZED : 0) };
 
-			typedef r11g11b10f_t::vec3_t	vec3_t;
+			typedef r11g11b10f_t::Vec3_t	Vec3_t;
 
 			r11g11b10f_t	data;
 
@@ -879,8 +905,8 @@ namespace GXMath
 			R11_G11_B10f (float R, float G, float B)	{ data.SetR(R);  data.SetG(G);  data.SetB(B); }
 			R11_G11_B10f (const FloatFormat &c)			{ data.SetR(c[0]);  data.SetG(c[1]);  data.SetB(c[2]); }
 
-			operator FloatFormat () const				{ return vec3_t(data).To<FloatFormat>(); }
-			operator FloatColorFormatInfo () const		{ return FloatColorFormatInfo::PackedType( FloatFormat(*this) ); }
+			operator FloatFormat () const						{ return Vec3_t(data).To<FloatFormat>(); }
+			explicit operator FloatColorFormatInfo () const		{ return FloatColorFormatInfo::PackedType( FloatFormat(*this) ); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -896,9 +922,11 @@ namespace GXMath
 		template <bool Normalized = false>
 		struct RGB9_E5f_Rev
 		{
+			using Result_t = FloatFormat;
+
 			enum { format = EColorFormatDescriptor::UFLOAT | (Normalized ? EColorFormatDescriptor::NORMALIZED : 0) };
 
-			typedef rgb9_e5_t::vec3_t	vec3_t;
+			typedef rgb9_e5_t::Vec3_t	Vec3_t;
 
 			rgb9_e5_t	data;
 
@@ -906,8 +934,8 @@ namespace GXMath
 			RGB9_E5f_Rev (float R, float G, float B)	{ data.Set( R, G, B ); }
 			RGB9_E5f_Rev (const FloatFormat &c)			{ data.Set( c[0], c[1], c[2] ); }
 
-			operator FloatFormat () const				{ return vec3_t(data).To<FloatFormat>(); }
-			operator FloatColorFormatInfo () const		{ return FloatColorFormatInfo::PackedType( FloatFormat(*this) ); }
+			operator FloatFormat () const						{ return Vec3_t(data).To<FloatFormat>(); }
+			explicit operator FloatColorFormatInfo () const		{ return FloatColorFormatInfo::PackedType( FloatFormat(*this) ); }
 			
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -925,14 +953,16 @@ namespace GXMath
 		template <typename T, bool Normalized = false>
 		struct RedF : BaseColor<T, Normalized>
 		{
+			using Result_t = FloatFormat;
+
 			T	r;
 
 			RedF () : r(0) {}
 			RedF (T R) : r(R) {}
 			RedF (const FloatFormat &c)				{ r = c[0]; }
 
-			operator FloatFormat () const			{ return FloatFormat( r, 0, 0, 0 ); }
-			operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
+			operator FloatFormat () const					{ return FloatFormat( r, 0, 0, 0 ); }
+			explicit operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -948,14 +978,16 @@ namespace GXMath
 		template <typename T, bool Normalized = false>
 		struct RGf : BaseColor<T, Normalized>
 		{
+			using Result_t = FloatFormat;
+
 			T	r, g;
 
 			RGf () : r(0), g(0)						{}
 			RGf (T R, T G) : r(R), g(G)				{}
 			RGf (const FloatFormat &c)				{ r = c[0];  g = c[1]; }
 
-			operator FloatFormat () const			{ return FloatFormat( r, g, 0, 0 ); }
-			operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
+			operator FloatFormat () const					{ return FloatFormat( r, g, 0, 0 ); }
+			explicit operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -971,14 +1003,16 @@ namespace GXMath
 		template <typename T, bool Normalized = false>
 		struct RGBf : BaseColor<T, Normalized>
 		{
+			using Result_t = FloatFormat;
+
 			T	r, g, b;
 
 			RGBf () : r(0), g(0), b(0)				{}
 			RGBf (T R, T G, T B) : r(R), g(G), b(B) {}
 			RGBf (const FloatFormat &c)				{ r = c[0];  g = c[1];  b = c[2]; }
 
-			operator FloatFormat () const			{ return FloatFormat( r, g, b, 0 ); }
-			operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
+			operator FloatFormat () const					{ return FloatFormat( r, g, b, 0 ); }
+			explicit operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -994,14 +1028,16 @@ namespace GXMath
 		template <typename T, bool Normalized = false>
 		struct RGBAf : BaseColor<T, Normalized>
 		{
+			using Result_t = FloatFormat;
+
 			T	r, g, b, a;
 
 			RGBAf () : r(0), g(0), b(0), a(0) {}
 			RGBAf (T R, T G, T B, T A) : r(R), g(G), b(B), a(A) {}
 			RGBAf (const FloatFormat &c)			{ r = c[0];  g = c[1];  b = c[2];  a = c[3]; }
 
-			operator FloatFormat () const			{ return FloatFormat( r, g, b, a ); }
-			operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
+			operator FloatFormat () const					{ return FloatFormat( r, g, b, a ); }
+			explicit operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
 
 			template <typename ColorType>
 			bool operator == (const ColorType &right) const
@@ -1130,18 +1166,17 @@ namespace GXMath
 
 		typedef _color_hidden_::R11_G11_B10f<true>		R11_G11_B10f_Norm;
 		typedef _color_hidden_::RGB9_E5f_Rev<true>		RGB9_E5f_Rev_Norm;
-		
 
+	}	// ColorFormat
+	
+	namespace ColorFormatUtils
+	{
 		typedef _color_hidden_::IntFormat				IntFormat;
 		typedef	_color_hidden_::FloatFormat				FloatFormat;
 
 		typedef _color_hidden_::IntColorFormatInfo		IntColorFormatInfo;
 		typedef _color_hidden_::FloatColorFormatInfo	FloatColorFormatInfo;
 		typedef _color_hidden_::ColorFormatConverter	ColorFormatConverter;
-
-
-		
-
 
 		
 		//
@@ -1156,14 +1191,10 @@ namespace GXMath
 			static const bool	_is_float	= (format & _color_hidden_::EColorFormatDescriptor::FLOAT) != 0;
 
 		// types
-			typedef T															color_t;
-			typedef ColorSwizzle< T, R, G, B, A >								Self;
-
-			typedef typename CompileTime::SwitchType<
-					_is_float, FloatFormat, IntFormat >							format_t;
-
-			typedef typename CompileTime::SwitchType<
-					_is_float, FloatColorFormatInfo, IntColorFormatInfo >		info_t;
+			using color_t	= T;
+			using Self		= ColorSwizzle< T, R, G, B, A >;
+			using format_t	= typename CompileTime::SwitchType<	_is_float, FloatFormat, IntFormat >;
+			using info_t	= typename CompileTime::SwitchType< _is_float, FloatColorFormatInfo, IntColorFormatInfo >;
 
 		// variables
 			color_t		_color;
@@ -1179,7 +1210,7 @@ namespace GXMath
 				return format_t( c[R&3], c[G&3], c[B&3], c[A&3] );
 			}
 
-			operator info_t () const
+			explicit operator info_t () const
 			{
 				return info_t( _color ).template GetSwizzledFormat< R, G, B, A >();
 			}
@@ -1191,7 +1222,7 @@ namespace GXMath
 			}
 		};
 
-	}	// ColorFormat
+	}	// ColorFormatUtils
 
 
 }	// GXMath

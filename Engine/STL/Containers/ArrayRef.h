@@ -22,12 +22,11 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef T					value_t;
-		typedef ArrayRef<T>			Self;
+		using Value_t		= T;
+		using Self			= ArrayRef<T>;
 
-		typedef typename TypeTraits::CopyConstToPointer< T, void *>		void_ptr_t;
-		
-		typedef typename TypeTraits::RemoveConst<T>		C;
+		using void_ptr_t	= typename TypeTraits::CopyConstToPointer< T, void *>;
+		using C				= typename TypeTraits::RemoveConst<T>;
 
 	private:
 		struct _CompareElements
@@ -122,8 +121,8 @@ namespace GXTypes
 
 
 		// iterators
-		typedef	T *			iterator;
-		typedef const T *	const_iterator;
+		using iterator			= T *;
+		using const_iterator	= const T *;
 
 		bool			IsBegin (const_iterator iter) const;
 		bool			IsEnd (const_iterator iter) const;
@@ -174,8 +173,8 @@ namespace GXTypes
 	};
 	
 
-	typedef ArrayRef< const ubyte >		BinArrayCRef;
-	typedef ArrayRef< ubyte >			BinArrayRef;
+	using BinArrayCRef	= ArrayRef< const ubyte >;
+	using BinArrayRef	= ArrayRef< ubyte >;
 
 	template <typename T>
 	using ArrayCRef = ArrayRef< const T >;
@@ -309,7 +308,7 @@ namespace GXTypes
 	static ArrayRef<T>  ArrayRef<T>::FromStd (const std::vector<B> &vec)
 	{
 		if ( not vec.empty() )
-			return FromVoid( (void_ptr_t) &vec[0], vec.size() * sizeof(B) );
+			return FromVoid( (void_ptr_t) &vec[0], vec.size() * SizeOf<B>() );
 		else
 			return ArrayRef<T>();
 	}
@@ -686,13 +685,13 @@ namespace GXTypes
 	template <typename T>
 	struct Hash< ArrayRef<T> > : private Hash<T>
 	{
-		typedef ArrayRef<T>					key_t;
-		typedef Hash<T>						base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef ArrayRef<T>					Key_t;
+		typedef Hash<T>						Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			result_t	value = ~HashOf( x.Count() );
+			Result_t	value = ~HashOf( x.Count() );
 
 			if ( CompileTime::IsPOD<T> )
 			{
@@ -700,7 +699,7 @@ namespace GXTypes
 			}
 			else
 			{
-				base_t	hasher;
+				Base_t	hasher;
 
 				FOR( i, x ) {
 					value += hasher( x[i] );

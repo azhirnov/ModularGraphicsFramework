@@ -18,7 +18,7 @@ namespace GXTypes
 	namespace _types_hidden_
 	{
 		template <typename T>
-		forceinline usize StrLength (const T *str);
+		forceinline usize StrLength (const T *str) noexcept;
 
 	}	// _types_hidden_
 
@@ -43,7 +43,7 @@ namespace GXTypes
 	// types
 	public:
 		typedef TStringRef<T>		Self;
-		typedef T					value_t;
+		typedef T					Value_t;
 
 		typedef typename TypeTraits::RemoveConst<T>		C;
 
@@ -925,7 +925,7 @@ namespace GXTypes
 	namespace _types_hidden_
 	{
 		template <typename T>
-		forceinline usize StrLength (const T *str)
+		forceinline usize StrLength (const T *str) noexcept
 		{
 			usize	i = 0;
 
@@ -938,7 +938,7 @@ namespace GXTypes
 		}
 
 		template <>
-		forceinline usize StrLength (const char *str)
+		forceinline usize StrLength (const char *str) noexcept
 		{
 			return ::strlen( str );
 		}
@@ -955,13 +955,13 @@ namespace GXTypes
 	struct Hash< TStringRef<T> > :
 		private Hash< ArrayCRef<T> >
 	{
-		typedef TStringRef<T>				key_t;
-		typedef Hash< ArrayCRef<T> >		base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef TStringRef<T>				Key_t;
+		typedef Hash< ArrayCRef<T> >		Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const TStringRef<T> &x) const noexcept
+		Result_t operator () (const TStringRef<T> &x) const noexcept
 		{
-			return base_t::operator ()( x );
+			return Base_t::operator ()( x );
 		}
 	};
 

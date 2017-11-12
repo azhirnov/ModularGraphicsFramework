@@ -1,5 +1,5 @@
 // This is generated file
-// Created at: 2017/10/13 - 15:49:03
+// Created at: 2017/10/17 - 12:23:33
 
 #pragma once
 
@@ -10,5 +10,8 @@ namespace Pipelines
 {
 // From file 'default.cpp'
 void Create_default (PipelineTemplateDescriptor& descr);
+
+// From file 'default2.cpp'
+void Create_default2 (PipelineTemplateDescriptor& descr);
 
 };

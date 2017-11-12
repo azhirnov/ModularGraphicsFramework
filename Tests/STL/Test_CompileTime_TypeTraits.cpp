@@ -14,11 +14,11 @@ struct Test
 	
 	const int memberConst = 1;
 
-	float MemberFunc1 ()							{ return 0.0f; }
-	int MemberFunc2 (int i, float f)				{ return 0; }
-	int MemberFuncConst (int i, float f) const		{ return 0; }
+	float MemberFunc1 ()						{ return 0.0f; }
+	int MemberFunc2 (int, float)				{ return 0; }
+	int MemberFuncConst (int, float) const		{ return 0; }
 
-	virtual void VirtMemberFunc (double d)			{}
+	virtual void VirtMemberFunc (double)		{}
 };
 
 typedef int Test::*Test_memberVar;
@@ -36,28 +36,30 @@ enum ETestEnum {};
 
 // EnableIf //
 template <typename T>
-static int Test1 (T a, CompileTime::EnableIf< (sizeof(T) > 2), int > dummy = 0)			{ return 1; }
+static int Test1 (T a, CompileTime::EnableIf< (sizeof(T) > 2), int > = 0)			{ return 1; }
 
 template <typename T>
-static float Test1 (T b, CompileTime::EnableIf< (sizeof(T) <= 2), int > dummy = 0)		{ return 2.0f; }
+static float Test1 (T b, CompileTime::EnableIf< (sizeof(T) <= 2), int > = 0)		{ return 2.0f; }
 
 template <typename T>
-static int Test2 (T a, CompileTime::EnableIf< (IsPointer<T>), int > dummy = 0)			{ return 4; }
+static int Test2 (T a, CompileTime::EnableIf< (IsPointer<T>), int > = 0)			{ return 4; }
 
 template <typename T>
-static float Test2 (T b, CompileTime::EnableIf< (not IsPointer<T>), int > dummy = 0)	{ return 5.0f; }
+static float Test2 (T b, CompileTime::EnableIf< (not IsPointer<T>), int > = 0)		{ return 5.0f; }
 
 
 // SwitchType //
 template <typename T>
-static int Test3 (CompileTime::SwitchType< (sizeof(T) > 2), T, void > a)				{ return 1; }
+static int Test3 (CompileTime::SwitchType< (sizeof(T) > 2), T, void >)				{ return 1; }
 
 template <typename T>
-static float Test3 (CompileTime::SwitchType< (sizeof(T) <= 2), T, void > a)				{ return 2.0f; }
+static float Test3 (CompileTime::SwitchType< (sizeof(T) <= 2), T, void >)				{ return 2.0f; }
 
 
 void StaticFunc1 ()				{}
 bool StaticFunc2 (int)			{ return true; }
+int StaticFunc3 (float) noexcept { return 1; }
+int StaticFunc4 (double) throw() { return 2; }
 
 struct Test4 {
 	void Method1 ()				{}
@@ -309,4 +311,16 @@ extern void Test_CompileTime_TypeTraits ()
 	STATIC_ASSERT(( IsSameTypes< fi2::result, int > ));
 	STATIC_ASSERT(( IsSameTypes< fi2::clazz, Test4 > ));
 	STATIC_ASSERT( fi2::args::Count == 2 );
+	
+	using fi3 = FunctionInfo< decltype(StaticFunc3) >;
+	STATIC_ASSERT(( IsSameTypes< fi3::result, int > ));
+	STATIC_ASSERT(( IsSameTypes< fi3::clazz, void > ));
+	STATIC_ASSERT( fi3::args::Count == 1 );
+	STATIC_ASSERT(( IsSameTypes< fi3::args::Front, float > ));
+	
+	using fi4 = FunctionInfo< decltype(StaticFunc4) >;
+	STATIC_ASSERT(( IsSameTypes< fi4::result, int > ));
+	STATIC_ASSERT(( IsSameTypes< fi4::clazz, void > ));
+	STATIC_ASSERT( fi4::args::Count == 1 );
+	STATIC_ASSERT(( IsSameTypes< fi4::args::Front, double > ));
 }

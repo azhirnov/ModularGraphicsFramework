@@ -3,19 +3,6 @@
 #pragma once
 
 
-#ifndef GX_EXPORT
-# ifdef __GX_BUILD_LIB__
-#	define GX_EXPORT
-# else
-#	ifdef __GX_BUILD_DLL__
-#		define GX_EXPORT				GX_DLL_EXPORT
-#	else
-#		define GX_EXPORT				GX_DLL_IMPORT
-#	endif
-# endif	// __GX_BUILD_LIB__
-#endif	// GX_EXPORT
-
-
 #if not defined( CALLBACK )
 #	ifdef PLATFORM_WINDOWS
 #		define CALLBACK					__stdcall
@@ -60,6 +47,10 @@
 #endif
 
 
+// Check function result //
+#define CHECKRES(...)					GX_CHECK_RESULT __VA_ARGS__
+
+
 // Assume //
 #if defined(__GX_FAST__)
 #	define ASSUME( _condition_ )		GX_ASSUME( _condition_ )
@@ -74,6 +65,10 @@
 #else
 #	define DEBUG_CONSOLE( _msg_ )		{}
 #endif
+
+
+// Throw //
+#define THROW							noexcept(false)
 
 
 // Static Assert //
@@ -166,25 +161,25 @@
 
 // for each
 #define FOR( _counter_, _container_ ) \
-	for (GX_STL::GXTypes::usize _counter_ = 0; _counter_ < (_container_).Count(); ++_counter_)
+	for (GX_STL::GXTypes::usize _counter_ = 0; _counter_ < GX_STL::GXTypes::CountOf(_container_); ++_counter_)
 
 #define FORv( _counter_, _value_, _container_ ) \
-	for (GX_STL::GXTypes::usize _counter_ = (_value_); _counter_ < (_container_).Count(); ++_counter_)
+	for (GX_STL::GXTypes::usize _counter_ = (_value_); _counter_ < GX_STL::GXTypes::CountOf(_container_); ++_counter_)
 
 // TODO: deprecated?
 //#define FORc( _counter_, _container_ ) \
-//	for (; _counter_ < (_container_).Count(); ++_counter_)
+//	for (; _counter_ < GX_STL::GXTypes::CountOf(_container_); ++_counter_)
 
 #define FOR_rev( _counter_, _container_ ) \
-	for (GX_STL::GXTypes::usize _counter_ = (_container_).Count()-1; _counter_ < (_container_).Count(); --_counter_)
+	for (GX_STL::GXTypes::usize _counter_ = GX_STL::GXTypes::CountOf(_container_)-1; _counter_ < GX_STL::GXTypes::CountOf(_container_); --_counter_)
 
 // TODO: deprecated?
 //#define FORv_rev( _counter_, _value_, _container_ ) \
-//	for (GX_STL::GXTypes::usize _counter_ = (_value_); _counter_ < (_container_).Count(); --_counter_)
+//	for (GX_STL::GXTypes::usize _counter_ = (_value_); _counter_ < GX_STL::GXTypes::CountOf(_container_); --_counter_)
 
 // TODO: deprecated?
 //#define FORc_rev( _counter_, _container_ ) \
-//	for (; _counter_ < (_container_).Count(); --_counter_)
+//	for (; _counter_ < GX_STL::GXTypes::CountOf(_container_); --_counter_)
 
 
 

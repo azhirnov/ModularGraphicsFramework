@@ -32,7 +32,29 @@ namespace GXMath
 	template <typename T, typename B>
 	inline T Lerp (const T& x, const T& y, const B& factor)
 	{
-		return T(factor) * (y - x) + x;
+		//return T(factor) * (y - x) + x;
+		return x * (T(1) - T(factor)) + y * T(factor);
+	}
+	
+/*
+=================================================
+	IncLerpToEnd
+----
+	incremental linear interpolation from current to end value.
+=================================================
+*/
+	template <typename T, typename B>
+	inline T IncLerp (const T& x1, const T& endX, const B& factor1, const B& factor)
+	{
+		/*
+		x1 = Lerp( startX, endX, factor1 ) = startX * (1 - factor1) + endX * factor1;
+		x2 = Lerp( startX, endX, factor ) = startX * (1 - factor) + endX * factor;
+		startX = (x1 - factor1 * endX) / (1 - factor1);
+		x2 = (x1 - factor1 * endX) / (1 - factor1) * (1 - factor) + endX * factor;
+		*/
+		ASSERT( Equals( factor1, B(1) ) );
+		const T k = T( (B(1) - factor) / (B(1) - factor1) );
+		return (x1 - T(factor1) * endX) + endX * T(factor);
 	}
 
 /*
@@ -61,8 +83,8 @@ namespace GXMath
 	inverse bilinear interpolation
 =================================================
 *
-	template <typename T, usize I>
-	inline Vec<T,2>  InvBiLerp (const Vec<T,I>& v0, const Vec<T,I>& v1, const Vec<T,I>& v2, const Vec<T,I>& v3, const Vec<T,I>& interpolated)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,2>  InvBiLerp (const Vec<T,I,U>& v0, const Vec<T,I,U>& v1, const Vec<T,I,U>& v2, const Vec<T,I,U>& v3, const Vec<T,I,U>& interpolated)
 	{
 	}
 	*/

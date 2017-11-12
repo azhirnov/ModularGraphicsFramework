@@ -38,7 +38,7 @@ namespace GXTypes
 	public:
 		typedef StaticBitArray< C, IndexType >		Self;
 		typedef _elem_ref_t							BitRef;
-		typedef _elem_t								value_t;
+		typedef _elem_t								Value_t;
 		typedef IndexType							index_t;
 		
 		static const usize	STATIC_COUNT = C;
@@ -101,7 +101,7 @@ namespace GXTypes
 		constexpr BytesU	FullSize ()		const	{ return _memory.FullSize(); }
 		constexpr usize		LastIndex ()	const	{ return Count()-1; }
 
-		operator ArrayCRef<value_t> () const		{ return _memory; }
+		operator ArrayCRef<Value_t> () const		{ return _memory; }
 		
 
 		static constexpr bool	IsLinearMemory ()	{ return true; }
@@ -293,15 +293,15 @@ namespace GXTypes
 */
 	template <usize C, typename I>
 	struct Hash< StaticBitArray<C,I> > :
-		private Hash< ArrayCRef<typename StaticBitArray<C,I>::value_t > >
+		private Hash< ArrayCRef<typename StaticBitArray<C,I>::Value_t > >
 	{
-		typedef StaticBitArray<C,I>							key_t;
-		typedef Hash< ArrayCRef<typename key_t::value_t > >	base_t;
-		typedef typename base_t::result_t					result_t;
+		typedef StaticBitArray<C,I>							Key_t;
+		typedef Hash< ArrayCRef<typename Key_t::Value_t > >	Base_t;
+		typedef typename Base_t::Result_t					Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x );
+			return Base_t::operator ()( x );
 		}
 	};
 

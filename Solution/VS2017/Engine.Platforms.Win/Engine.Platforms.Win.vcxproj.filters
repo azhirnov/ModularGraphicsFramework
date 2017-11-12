@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinPlatform.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinMessages.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Windows\WinDisplay.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Windows">
+      <UniqueIdentifier>{a8d27de4-1fd9-4caa-92a3-5ed009265a88}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinWindow.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinPlatform.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinMouseInput.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinKeyInput.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Windows\WinDisplay.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

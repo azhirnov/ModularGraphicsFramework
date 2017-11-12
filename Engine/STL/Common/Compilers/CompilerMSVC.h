@@ -13,7 +13,7 @@
 #define COMPILER_VERSION		_MSC_VER
 
 /*
-	MSVC++ 15.0 _MSC_VER == 2000 (Visual Studio 2017)
+	MSVC++ 15.0 _MSC_VER == 1910 (Visual Studio 2017)
 	MSVC++ 14.0 _MSC_VER == 1900 (Visual Studio 2015)
 	MSVC++ 12.0 _MSC_VER == 1800 (Visual Studio 2013)
 	MSVC++ 11.0 _MSC_VER == 1700 (Visual Studio 2012)
@@ -61,6 +61,24 @@
 //#pragma warning (disable: 4480)		// nonstandard extension used: specifying underlying type for enum
 //#pragma warning (disable: 4189)		// 'variable': local variable is initialized but not referenced
 
+// disable warnings for level All
+#pragma warning (disable: 4514)			// unreferenced inline function has been removed
+#pragma warning (disable: 4623)			// default constructor was implicitly defined as deleted
+#pragma warning (disable: 4625)			// copy constructor was implicitly defined as deleted
+#pragma warning (disable: 4626)			// assignment operator was implicitly defined as deleted
+#pragma warning (disable: 5026)			// move constructor was implicitly defined as deleted
+#pragma warning (disable: 5027)			// move assignment operator was implicitly defined as deleted
+#pragma warning (disable: 4820)			// 'size' bytes padding added after data member 'name'
+#pragma warning (disable: 4710)			// function not inlined
+#pragma warning (disable: 4714)			// function '...' marked as __forceinline not inlined
+#pragma warning (disable: 4251)			// '...' class '...' needs to have dll-interface to be used by clients of class '...'
+
+// enable warnings
+#ifndef __GX_DEBUG__
+#pragma warning (default: 5038)			// data member '...' will be initialized after data member '...'
+#pragma warning (default: 4668)			// '...' is not defined as a preprocessor macro, replacing with '0' for '#if/#elif'
+#pragma warning (default: 4100)			// unreferenced formal parameter
+#endif
 
 // warning to errors
 #pragma warning (error: 4018)			// signed/unsigned mismatch
@@ -84,16 +102,16 @@
 #pragma warning (error: 4273)			// inconsistent dll linage
 #pragma warning (error: 4473)			// not enough argument passed for format string
 #pragma warning (error: 4474)			// too many arguments passed for fomat string
-
+#pragma warning (error: 4238)			// nonstandard extension used: class rvalue used as lvalue
 
 // to check some errors
 #if 1
-#	pragma warning (disable: 4100)		// unreferenced formal parameter
 #	pragma warning (disable: 4310)		// cast truncates constant value
 #	pragma warning (disable: 4245)		// 'return': conversion from signed to unsigned
 #	pragma warning (disable: 4365)		// signed/unsigned mismatch
 #	pragma warning (disable: 4389)		// '==': signed/unsigned mismatch
 #	pragma warning (disable: 4505)		// unreferenced local function has been removed
+#	pragma warning (disable: 4063)		// case 'number' is not a valid value for switch of enum 'type'
 #else
 #	pragma warning (error: 4100)		// unreferenced formal parameter
 #	pragma warning (error: 4310)		// cast truncates constant value
@@ -101,6 +119,7 @@
 #	pragma warning (error: 4365)		// signed/unsigned mismatch
 #	pragma warning (error: 4389)		// '==': signed/unsigned mismatch
 #	pragma warning (error: 4505)		// unreferenced local function has been removed
+//#pragma warning (error: 4774)			// format string expected in argument '...' is not a string literal
 
 	// not all enums listed in switch block
 #	pragma warning (error: 4061)
@@ -176,6 +195,10 @@
 // pragma directive inside the macro
 #define GX_PRAGMA( ... )			__pragma( __VA_ARGS__ )
 
+// branch prediction optimization (not supported in VS)
+#define GX_BRANCH_EXPECT( _expr_ )			(_expr_)
+#define GX_BRANCH_EXPECT_FALSE( _expr_ )	(_expr_)
+
 //-------------------------------------------------------------------
 
 
@@ -186,6 +209,7 @@
 #if COMPILER_VERSION > 1800
 #	define GX_CONSTEXPR_SUPPORTED			1
 #endif
+
 
 // final, constexpr, noexcept
 #if COMPILER_VERSION <= 1800
@@ -278,7 +302,7 @@
 
 
 // deprecated attribute
-#if COMPILER_VERSION >= 2000
+#if COMPILER_VERSION >= 2000	// TODO
 #	define GX_DEPRECATED( _reason_ )		[[ deprecated(_reason_) ]]
 #else
 #	define GX_DEPRECATED( _reason_ )
@@ -292,15 +316,26 @@
 
 
 // notify compiler to generate error if function result unused
-#if COMPILER_VERSION >= 1700
+#if COMPILER_VERSION >= 2000	// TODO
+#	define GX_CHECK_RESULT					[[nodiscard]]
+#elif COMPILER_VERSION >= 1700
 #	define GX_CHECK_RESULT					_Check_return_	// Compile with '/analize' key
+#else
+#	define GX_CHECK_RESULT
 #endif
 
 
+// if constexpr
 #if COMPILER_VERSION >= 1911
 #	define if_constexpr			if constexpr
 #else
 #	define if_constexpr			if
+#endif
+
+
+// 'auto' keyword in template parameters
+#if COMPILER_VERSION >= 2000
+#	define GX_AUTO_IN_TEMPLATE_SUPPORTED	1
 #endif
 
 //-------------------------------------------------------------------

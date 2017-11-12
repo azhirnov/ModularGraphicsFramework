@@ -11,18 +11,18 @@ namespace Engine
 namespace Platforms
 {
 	
-	const Runtime::VirtualTypeList	WinPlatform::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	WinPlatform::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	WinPlatform::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	WinPlatform::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	WinPlatform::WinPlatform (const GlobalSystemsRef gs, const CreateInfo::Platform &ci) :
+	WinPlatform::WinPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci) :
 		Module( gs, ModuleConfig{ WinPlatformModuleID, 1 }, &_msgTypes, &_eventTypes ),
-		_instance( UninitializedT< HMODULE >() ),
-		_createInfo( ci )
+		_createInfo( ci ),
+		_instance( UninitializedT< HMODULE >() )
 	{
 		SetDebugName( "WinPlatform" );
 
@@ -36,9 +36,9 @@ namespace Platforms
 		_SubscribeOnMsg( this, &WinPlatform::_Link_Empty );
 		_SubscribeOnMsg( this, &WinPlatform::_Compose );
 		_SubscribeOnMsg( this, &WinPlatform::_Delete );
-		_SubscribeOnMsg( this, &WinPlatform::_RequestDisplayParams );
 		_SubscribeOnMsg( this, &WinPlatform::_AddToManager );
 		_SubscribeOnMsg( this, &WinPlatform::_RemoveFromManager );
+		_SubscribeOnMsg( this, &WinPlatform::_GetDisplays );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 	}
@@ -76,7 +76,7 @@ namespace Platforms
 	_Compose
 =================================================
 */
-	bool WinPlatform::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool WinPlatform::_Compose (const Message< ModuleMsg::Compose > &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -85,36 +85,27 @@ namespace Platforms
 
 		CHECK_COMPOSING( _Create() );
 
-		// TODO: send to attachemnt?
-
 		CHECK( _ValidateAllSubscriptions() );
 		CHECK( _SetState( EState::ComposedImmutable ) );
 
 		LOG( "platform created", ELog::Debug );
 
-		_SendEvent< ModuleMsg::PlatformCreated >({ _instance, _className, _display });
-		return true;
-	}
-	
-/*
-=================================================
-	_Update
-=================================================
-*
-	bool WinPlatform::_Update (const Message< ModuleMsg::Update > &msg)
-	{
-		// do nothing
-		return true;
-	}
+		_SendEvent< OSMsg::OnWinPlatformCreated >({ _instance, _className });
 
-/*
-=================================================
-	_RequestDisplayParams
-=================================================
-*/
-	bool WinPlatform::_RequestDisplayParams (const Message< ModuleMsg::RequestDisplayParams > &msg)
-	{
-		msg->result.Set( &_display );
+		// async message
+		FOR( i, _windows )
+		{
+			CHECK( GlobalSystems()->Get< TaskModule >()->Send( Message< ModuleMsg::PushAsyncMessage >{
+						AsyncMessage{ LAMBDA(
+							target = _windows[i],
+							msg = Message< OSMsg::OnWinPlatformCreated >{ _instance, _className } ) (GlobalSystemsRef)
+						{
+							target->Send( msg );
+						}},
+						_windows[i]->GetThreadID()
+					}.Async())
+			);
+		}
 		return true;
 	}
 	
@@ -125,8 +116,6 @@ namespace Platforms
 */
 	bool WinPlatform::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
 	{
-		//SCOPELOCK( _lock );
-
 		CHECK_ERR( msg->module );
 		CHECK_ERR( msg->module->GetModuleID() == WinWindowModuleID );
 		ASSERT( not _windows.IsExist( msg->module ) );
@@ -135,16 +124,16 @@ namespace Platforms
 
 		if ( _IsCreated() )
 		{
-			GlobalSystems()->Get< TaskModule >()->Send< ModuleMsg::PushAsyncMessage >({
-				AsyncMessage{ LAMBDA(
-					target = msg->module,
-					msg = Message< ModuleMsg::PlatformCreated >{ _instance, _className, _display } ) (const TaskModulePtr &)
-				{
-					target->Send( msg );
-
-				}},
-				msg->module->GetThreadID()
-			});
+			CHECK( GlobalSystems()->Get< TaskModule >()->Send( Message< ModuleMsg::PushAsyncMessage >{
+						AsyncMessage{ LAMBDA(
+							target = msg->module,
+							msg = Message< OSMsg::OnWinPlatformCreated >{ _instance, _className } ) (GlobalSystemsRef)
+						{
+							target->Send( msg );
+						}},
+						msg->module->GetThreadID()
+					}.Async())
+			);
 		}
 		return true;
 	}
@@ -156,8 +145,6 @@ namespace Platforms
 */
 	bool WinPlatform::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
-		//SCOPELOCK( _lock );
-
 		CHECK_ERR( msg->module );
 		CHECK_ERR( msg->module->GetModuleID() == WinWindowModuleID );
 		ASSERT( _windows.IsExist( msg->module ) );
@@ -171,7 +158,7 @@ namespace Platforms
 	Register
 =================================================
 */
-	void WinPlatform::Register (const GlobalSystemsRef gs)
+	void WinPlatform::Register (GlobalSystemsRef gs)
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
@@ -186,7 +173,7 @@ namespace Platforms
 	Unregister
 =================================================
 */
-	void WinPlatform::Unregister (const GlobalSystemsRef gs)
+	void WinPlatform::Unregister (GlobalSystemsRef gs)
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
@@ -201,7 +188,7 @@ namespace Platforms
 	_CreateWinPlatform
 =================================================
 */
-	ModulePtr WinPlatform::_CreateWinPlatform (const GlobalSystemsRef gs, const CreateInfo::Platform &ci)
+	ModulePtr WinPlatform::_CreateWinPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci)
 	{
 		return New< WinPlatform >( gs, ci );
 	}
@@ -234,8 +221,19 @@ namespace Platforms
 		{
 			CHECK_ERR( _SetScreenResolution( _createInfo.resolution, _createInfo.frequency ) );
 		}
+		return true;
+	}
+	
+/*
+=================================================
+	_GetDisplays
+=================================================
+*/
+	bool WinPlatform::_GetDisplays (const Message< OSMsg::GetDisplays > &msg)
+	{
+		_display.Update();
 
-		_UpdateDisplayParams();
+		msg->result.Set( _display.GetDisplays() );
 		return true;
 	}
 	
@@ -293,63 +291,6 @@ namespace Platforms
 		CHECK_ERR( ::RegisterClassExA( &window_class ) != 0 );
 
 		return true;
-	}
-	
-/*
-=================================================
-	_UpdateDisplayParams
-=================================================
-*/
-	void WinPlatform::_UpdateDisplayParams ()
-	{
-		_display.SetResolution( _GetScreenResolution() );
-		_display.SetPhysicsSize( _ScreenPhysicalSize() );
-		_display.SetPixelsPerInch( _display.CalcPixelsPerInch().Max() );
-		_display.SetOrientation( _display.IsHorizontal() ? EDisplayOrientation::Landscape : EDisplayOrientation::Portrait );
-		_display.SetFrequency( _GetDisplayFrequency() );
-	}
-	
-/*
-=================================================
-	_GetScreenResolution
-=================================================
-*/
-	uint2 WinPlatform::_GetScreenResolution () const
-	{
-		return uint2( ::GetSystemMetrics( SM_CXSCREEN ),
-					  ::GetSystemMetrics( SM_CYSCREEN ) );
-	}
-	
-/*
-=================================================
-	_ScreenPhysicalSize
-=================================================
-*/
-	float2 WinPlatform::_ScreenPhysicalSize () const
-	{
-		float2	size;
-		HDC		hDCScreen	= ::GetDC( null );
-		
-		size.x = (float) ::GetDeviceCaps( hDCScreen, HORZSIZE );
-		size.y = (float) ::GetDeviceCaps( hDCScreen, VERTSIZE );
-		
-		::ReleaseDC( null, hDCScreen );
-		return size * 0.001f;
-	}
-	
-/*
-=================================================
-	_GetDisplayFrequency
-=================================================
-*/
-	uint WinPlatform::_GetDisplayFrequency () const
-	{
-		HDC		hDCScreen	= ::GetDC( null );
-		
-		uint freq = ::GetDeviceCaps( hDCScreen, VREFRESH );
-		
-		::ReleaseDC( null, hDCScreen );
-		return freq;
 	}
 
 /*

@@ -76,6 +76,13 @@ namespace Platforms
 			return _outputs[ index ];
 		}
 
+		Ptr<const FragOutput> operator () (StringCRef name) const
+		{
+			FragOutputs_t::const_iterator	iter;
+			_outputs.Find( name, OUT iter );
+			return iter ? &iter->second : null;
+		}
+
 		Self& Add (StringCRef name, EFragOutput::type type) {
 			return Add( name, type, (uint)_outputs.Count() );
 		}

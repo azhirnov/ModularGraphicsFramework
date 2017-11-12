@@ -19,7 +19,7 @@ namespace Platforms
 		return	stageFlags		== right.stageFlags		and
 				binding			== right.binding		and
 				descriptorSet	== right.descriptorSet	and
-				dimension		== right.dimension		and
+				textureType		== right.textureType	and
 				format			== right.format			and
 				name			== right.name;
 	}
@@ -34,7 +34,7 @@ namespace Platforms
 		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
 				binding			!= right.binding		?	binding			> right.binding			:
 				descriptorSet	!= right.descriptorSet	?	descriptorSet	> right.descriptorSet	:
-				dimension		!= right.dimension		?	dimension		> right.dimension		:
+				textureType		!= right.textureType	?	textureType		> right.textureType		:
 				format			!= right.format			?	format			> right.format			:
 															name			> right.name;
 	}
@@ -49,7 +49,7 @@ namespace Platforms
 		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
 				binding			!= right.binding		?	binding			< right.binding			:
 				descriptorSet	!= right.descriptorSet	?	descriptorSet	< right.descriptorSet	:
-				dimension		!= right.dimension		?	dimension		< right.dimension		:
+				textureType		!= right.textureType	?	textureType		< right.textureType		:
 				format			!= right.format			?	format			< right.format			:
 															name			< right.name;
 	}
@@ -151,7 +151,7 @@ namespace Platforms
 		return	stageFlags		== right.stageFlags		and
 				binding			== right.binding		and
 				descriptorSet	== right.descriptorSet	and
-				dimension		== right.dimension		and
+				imageType		== right.imageType		and
 				format			== right.format			and
 				writeAccess		== right.writeAccess	and
 				readAccess		== right.readAccess		and
@@ -168,7 +168,7 @@ namespace Platforms
 		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
 				binding			!= right.binding		?	binding			> right.binding			:
 				descriptorSet	!= right.descriptorSet	?	descriptorSet	> right.descriptorSet	:
-				dimension		!= right.dimension		?	dimension		> right.dimension		:
+				imageType		!= right.imageType		?	imageType		> right.imageType		:
 				format			!= right.format			?	format			> right.format			:
 				writeAccess		!= right.writeAccess	?	writeAccess		> right.writeAccess		:
 				readAccess		!= right.readAccess		?	readAccess		> right.readAccess		:
@@ -185,7 +185,7 @@ namespace Platforms
 		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
 				binding			!= right.binding		?	binding			< right.binding			:
 				descriptorSet	!= right.descriptorSet	?	descriptorSet	< right.descriptorSet	:
-				dimension		!= right.dimension		?	dimension		< right.dimension		:
+				imageType		!= right.imageType		?	imageType		< right.imageType			:
 				format			!= right.format			?	format			< right.format			:
 				writeAccess		!= right.writeAccess	?	writeAccess		< right.writeAccess		:
 				readAccess		!= right.readAccess		?	readAccess		< right.readAccess		:
@@ -333,6 +333,54 @@ namespace Platforms
 													name		< right.name;
 	}
 //-----------------------------------------------------------------------------
+	
+
+
+/*
+=================================================
+	Uniform::operator <
+=================================================
+*/
+	bool PipelineLayoutDescriptor::Uniform::operator == (const Uniform &right) const
+	{
+		return	stageFlags		== right.stageFlags		and
+				binding			== right.binding		and
+				descriptorSet	== right.descriptorSet	and
+				valueType		== right.valueType		and
+				arraySize		== right.arraySize		and
+				name			== right.name;
+	}
+
+/*
+=================================================
+	Uniform::operator <
+=================================================
+*/
+	bool PipelineLayoutDescriptor::Uniform::operator >  (const Uniform &right) const
+	{
+		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
+				binding			!= right.binding		?	binding			> right.binding			:
+				descriptorSet	!= right.descriptorSet	?	descriptorSet	> right.descriptorSet	:
+				valueType		!= right.valueType		?	valueType		> right.valueType		:
+				arraySize		!= right.arraySize		?	arraySize		> right.arraySize		:
+															name			> right.name;
+	}
+
+/*
+=================================================
+	Uniform::operator <
+=================================================
+*/
+	bool PipelineLayoutDescriptor::Uniform::operator <  (const Uniform &right) const
+	{
+		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
+				binding			!= right.binding		?	binding			< right.binding			:
+				descriptorSet	!= right.descriptorSet	?	descriptorSet	< right.descriptorSet	:
+				valueType		!= right.valueType		?	valueType		< right.valueType		:
+				arraySize		!= right.arraySize		?	arraySize		< right.arraySize		:
+															name			< right.name;
+	}
+//-----------------------------------------------------------------------------
 
 
 
@@ -342,12 +390,12 @@ namespace Platforms
 =================================================
 */
 	PipelineLayoutDescriptor::Builder&
-		PipelineLayoutDescriptor::Builder::AddTexture (StringCRef name, EImage::type dimension, EPixelFormatClass::type format,
+		PipelineLayoutDescriptor::Builder::AddTexture (StringCRef name, EImage::type textureType, EPixelFormatClass::type format,
 														uint binding, uint set, EShader::bits stageFlags)
 	{
 		TextureUniform	tex;
 		tex.name			= name;
-		tex.dimension		= dimension;
+		tex.textureType		= textureType;
 		tex.format			= format;
 		tex.binding			= binding;
 		tex.descriptorSet	= set;
@@ -365,12 +413,12 @@ namespace Platforms
 =================================================
 */
 	PipelineLayoutDescriptor::Builder&
-		PipelineLayoutDescriptor::Builder::AddImage (StringCRef name, EImage::type dimension, EPixelFormat::type format,
+		PipelineLayoutDescriptor::Builder::AddImage (StringCRef name, EImage::type imageType, EPixelFormat::type format,
 													 bool writeAccess, bool readAccess, uint binding, uint set, EShader::bits stageFlags)
 	{
 		ImageUniform	img;
 		img.name			= name;
-		img.dimension		= dimension;
+		img.imageType		= imageType;
 		img.format			= format;
 		img.writeAccess		= writeAccess;
 		img.readAccess		= readAccess;

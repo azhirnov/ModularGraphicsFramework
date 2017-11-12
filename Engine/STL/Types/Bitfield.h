@@ -23,7 +23,7 @@ namespace GXTypes
 		struct BitRef;
 		using Self		= Bitfield< B, IndexType >;
 		using T			= typename CompileTime::NearUInt::FromBits< CompileTime::Max< uint, B, 32 > >;
-		using value_t	= T;
+		using Value_t	= T;
 		using index_t	= IndexType;
 
 
@@ -208,15 +208,15 @@ namespace GXTypes
 	
 	template <usize B, typename IT>
 	struct Hash < Bitfield< B, IT > > :
-		private Hash< typename Bitfield< B, IT >::value_t >
+		private Hash< typename Bitfield< B, IT >::Value_t >
 	{
-		typedef Bitfield<B>						key_t;
-		typedef Hash< typename key_t::value_t >	base_t;
-		typedef typename base_t::result_t		result_t;
+		typedef Bitfield<B>						Key_t;
+		typedef Hash< typename Key_t::Value_t >	Base_t;
+		typedef typename Base_t::Result_t		Result_t;
 
-		result_t operator () (const key_t &x) const
+		Result_t operator () (const Key_t &x) const
 		{
-			return base_t::operator ()( x );
+			return Base_t::operator ()( x );
 		}
 	};
 

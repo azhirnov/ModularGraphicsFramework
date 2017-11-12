@@ -31,7 +31,7 @@ namespace GXTypes
 	// types
 	public:
 		typedef UniquePtr< T, B, S >	Self;
-		typedef T						value_t;
+		typedef T						Value_t;
 		typedef bool					_is_uniqueptr;
 		
 
@@ -234,15 +234,15 @@ namespace GXTypes
 	
 	template <typename T, typename B, typename S>
 	struct Hash< UniquePtr< T, B, S > > :
-		private Hash< typename UniquePtr<T,B,S>::value_t const * >
+		private Hash< typename UniquePtr<T,B,S>::Value_t const * >
 	{
-		typedef UniquePtr< T, B, S >						key_t;
-		typedef Hash< typename key_t::value_t const * >		base_t;
-		typedef typename base_t::result_t					result_t;
+		typedef UniquePtr< T, B, S >						Key_t;
+		typedef Hash< typename Key_t::Value_t const * >		Base_t;
+		typedef typename Base_t::Result_t					Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x.ptr() );
+			return Base_t::operator ()( x.ptr() );
 		}
 	};
 	

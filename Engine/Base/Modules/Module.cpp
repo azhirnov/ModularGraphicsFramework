@@ -17,15 +17,15 @@ namespace Base
 */
 	Module::Module (const GlobalSystemsRef gs,
 					const ModuleConfig &config,
-					const Runtime::VirtualTypeList *msgTypes,
-					const Runtime::VirtualTypeList *eventTypes) :
+					const TypeIdList *msgTypes,
+					const TypeIdList *eventTypes) :
 		BaseObject( gs ),
+		_state( EState::Initial ),
+		_ownThread( ThreadID::GetCurrent() ),
 		_compId( config.id ),
 		_maxParents( config.maxParents ),
 		_supportedMessages( *msgTypes ),
-		_supportedEvents( *eventTypes ),
-		_state( EState::Initial ),
-		_ownThread( ThreadID::GetCurrent() )
+		_supportedEvents( *eventTypes )
 	{
 	}
 	
@@ -181,11 +181,22 @@ namespace Base
 		if ( _manager->GetThreadID() == this->GetThreadID() )
 		{
 			SendTo< ModuleMsg::RemoveFromManager >( _manager, { this } );
-
-			_SetManager( null );
 		}
 		else
-			New< DetachModuleFromManagerAsyncTask >( this, _manager )->Execute();
+		{
+			auto	task_mod = GlobalSystems()->Get< TaskModule >();
+
+			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+						AsyncMessage{	LAMBDA( mngr = _manager, self = ModulePtr(this) ) (GlobalSystemsRef)
+										{
+											mngr->Send< ModuleMsg::RemoveFromManager >({ self });
+										}},
+						_manager->GetThreadID()
+					}.Async())
+			);
+		}
+
+		_SetManager( null );
 	}
 	
 /*
@@ -199,7 +210,7 @@ namespace Base
 */
 	bool Module::_AttachSelfToManager (const ModulePtr &mngr, UntypedID_t id, bool wait)
 	{
-		SHARED_POINTER_TYPE( AttachModuleToManagerAsyncTask )	task;
+		SharedPointerType<AttachModuleToManagerAsyncTask>	task;
 
 		// attach to known manager
 		if ( mngr )
@@ -347,9 +358,6 @@ namespace Base
 */
 	bool Module::_DefCompose (bool immutable)
 	{
-		if ( _IsComposedState( GetState() ) )
-			return true;	// already linked
-
 		CHECK_ERR( GetState() == EState::Linked );
 
 		_SendForEachAttachments< ModuleMsg::Compose >({});
@@ -369,6 +377,44 @@ namespace Base
 	void Module::_ClearMessageHandlers ()
 	{
 		_msgHandler.Clear();
+	}
+	
+/*
+=================================================
+	_FindAttachment
+=================================================
+*/
+	bool Module::_FindAttachment (ArrayCRef<TypeId> messages, ArrayCRef<TypeId> events, OUT ModulePtr &result) const
+	{
+		FOR( i, _attachments )
+		{
+			if ( _attachments[i].second->GetSupportedMessages().HasAllTypes( messages ) and
+				 _attachments[i].second->GetSupportedEvents().HasAllTypes( events ) )
+			{
+				result = _attachments[i].second;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+/*
+=================================================
+	_FindParent
+=================================================
+*/
+	bool Module::_FindParent (ArrayCRef<TypeId> messages, ArrayCRef<TypeId> events, OUT ModulePtr &result) const
+	{
+		FOR( i, _parents )
+		{
+			if ( _parents[i]->GetSupportedMessages().HasAllTypes( messages ) and
+				 _parents[i]->GetSupportedEvents().HasAllTypes( events ) )
+			{
+				result = _parents[i];
+				return true;
+			}
+		}
+		return false;
 	}
 
 /*
@@ -437,10 +483,10 @@ namespace Base
 	
 /*
 =================================================
-	GetModule
+	GetModuleByName
 =================================================
 */
-	ModulePtr Module::GetModule (StringCRef name)
+	ModulePtr Module::GetModuleByName (StringCRef name)
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 
@@ -459,7 +505,7 @@ namespace Base
 */
 	bool Module::_FindModule_Impl (const Message< ModuleMsg::FindModule > &msg)
 	{
-		msg->result.Set( GetModule( msg->name ) );
+		msg->result.Set( GetModuleByName( msg->name ) );
 		return true;
 	}
 	
@@ -468,7 +514,7 @@ namespace Base
 	_ModulesDeepSearch_Impl
 =================================================
 */
-	bool Module::_ModulesDeepSearch_Impl (const Message< ModuleMsg::ModulesDeepSearch > &msg)
+	bool Module::_ModulesDeepSearch_Impl (const Message< ModuleMsg::ModulesDeepSearch > &)
 	{
 		TODO( "" );
 		return false;
@@ -511,6 +557,7 @@ namespace Base
 		_SendForEachAttachments( msg );
 
 		CHECK( _SetState( EState::Linked ) );
+
 		return true;
 	}
 	
@@ -519,9 +566,13 @@ namespace Base
 	_Compose_Impl
 =================================================
 */
-	bool Module::_Compose_Impl (const Message< ModuleMsg::Compose > &msg)
+	bool Module::_Compose_Impl (const Message< ModuleMsg::Compose > &)
 	{
-		return _DefCompose( false );
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
+		CHECK( _DefCompose( false ) );
+		return true;
 	}
 	
 /*
@@ -529,7 +580,7 @@ namespace Base
 	_Delete_Impl
 =================================================
 */
-	bool Module::_Delete_Impl (const Message< ModuleMsg::Delete > &msg)
+	bool Module::_Delete_Impl (const Message< ModuleMsg::Delete > &)
 	{
 		_DetachAllAttachments();
 		_DetachSelfFromAllParents();
@@ -538,7 +589,6 @@ namespace Base
 
 		_DetachSelfFromManager();
 
-		//_msgHandler.UnsubscribeAll( this );
 		_msgHandler.Clear();
 
 		return true;
@@ -584,6 +634,7 @@ namespace Base
 		}
 		else
 		{
+			// TODO: msg->detachedModule->UnsubscribeAll( this ); ?
 			_msgHandler.UnsubscribeAll( msg->detachedModule );
 		}
 		return true;
@@ -644,7 +695,7 @@ namespace Base
 	_Update_Empty
 =================================================
 */
-	bool Module::_Update_Empty (const Message< ModuleMsg::Update > &msg)
+	bool Module::_Update_Empty (const Message< ModuleMsg::Update > &)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		return true;
@@ -655,8 +706,11 @@ namespace Base
 	_Compose_Empty
 =================================================
 */
-	bool Module::_Compose_Empty (const Message< ModuleMsg::Compose > &msg)
+	bool Module::_Compose_Empty (const Message< ModuleMsg::Compose > &)
 	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
 		CHECK_ERR( GetState() == EState::Linked );
 
 		CHECK( _SetState( EState::ComposedMutable ) );
@@ -668,9 +722,10 @@ namespace Base
 	_Link_Empty
 =================================================
 */
-	bool Module::_Link_Empty (const Message< ModuleMsg::Link > &msg)
+	bool Module::_Link_Empty (const Message< ModuleMsg::Link > &)
 	{
-		CHECK_ERR( _IsMutableState( GetState() ) );
+		if ( _IsComposedOrLinkedState( GetState() ) )
+			return true;	// already linked
 
 		CHECK( _SetState( EState::Linked ) );
 		return true;
@@ -681,7 +736,7 @@ namespace Base
 	_Delete_Empty
 =================================================
 */
-	bool Module::_Delete_Empty (const Message< ModuleMsg::Delete > &msg)
+	bool Module::_Delete_Empty (const Message< ModuleMsg::Delete > &)
 	{
 		CHECK( _SetState( EState::Deleting ) );
 
@@ -690,22 +745,4 @@ namespace Base
 	}
 
 }	// Base
-	
-namespace ModuleMsg
-{
-/*
-=================================================
-	AttachModule
-=================================================
-*/
-	AttachModule::AttachModule (const ModulePtr &unit) :
-		AttachModule( StringCRef(), unit )
-	{}
-
-	AttachModule::AttachModule (StringCRef name, const ModulePtr &unit) :
-		name( name.Empty() ? ModuleName_t("id: ") << ToString(GModID::type( unit->GetModuleID() )) : name ),
-		newModule( unit )
-	{}
-
-}	// ModuleMsg
 }	// Engine

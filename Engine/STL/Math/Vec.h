@@ -14,7 +14,7 @@ namespace GXMath
 {
 
 	
-#	define VEC_UN_OPERATOR( _op_ ) \
+#	define VEC_OP_UNARY( _op_ ) \
 		\
 		const Self	operator _op_ () const \
 		{ \
@@ -23,56 +23,52 @@ namespace GXMath
 			return ret; \
 		}
 
-
-#	define VEC_BIN_OPERATOR( _op_ ) \
-		Self &		operator _op_##= (const Self& right) \
-		{ \
-			FOR( i, *this )	 (*this)[i] _op_##= right[i]; \
-			return *this; \
-		} \
-		const Self	operator _op_  (const Self& right) const \
-		{ \
-			Self	ret; \
-			FOR( i, *this )	 ret[i] = ( (*this)[i] _op_ right[i] ); \
-			return ret; \
-		} \
-		Self &		operator _op_##= (const T& right) \
-		{ \
-			FOR( i, *this )	 (*this)[i] _op_##= right; \
-			return *this; \
-		} \
-		const Self	operator _op_  (const T& right) const \
-		{ \
-			Self	ret; \
-			FOR( i, *this )	 ret[i] = ( (*this)[i] _op_ right ); \
-			return ret; \
-		} \
-		friend const Self operator _op_ (const T& left, const Self& right) \
-		{ \
-			return Self(left) _op_ right; \
-		}
-
-#	define VEC_BIN_OPERATOR2( _op_ ) \
-		\
-		Self	operator _op_  (const T& right) const \
-		{ \
-			Self	ret; \
-			FOR( i, *this )	 ret[i] = ( (*this)[i] _op_ right ); \
-			return ret; \
-		} \
+#	define VEC_OP_BINARY_( _op_ ) \
 		\
 		Self	operator _op_  (const Self& right) const \
 		{ \
 			Self	ret; \
 			FOR( i, *this )	 ret[i] = ( (*this)[i] _op_ right[i] ); \
 			return ret; \
+		}
+
+#	define VEC_OP_BINARY_A( _op_ ) \
+		\
+		Self &		operator _op_##= (const Self& right) \
+		{ \
+			FOR( i, *this )	 (*this)[i] _op_##= right[i]; \
+			return *this; \
+		}
+		
+#	define VEC_OP_BINARY_SCALAR_( _op_, _scalar_ ) \
+		\
+		Self	operator _op_  (const _scalar_& right) const \
+		{ \
+			Self	ret; \
+			FOR( i, *this )	 ret[i] = ( (*this)[i] _op_ right ); \
+			return ret; \
 		} \
 		\
-		friend Self operator _op_ (const T& left, const Self& right) \
+		friend Self operator _op_ (const _scalar_& left, const Self& right) \
 		{ \
 			return Self(left) _op_ right; \
 		}
 
+#	define VEC_OP_BINARY_SCALAR_A( _op_, _scalar_ ) \
+		\
+		Self &		operator _op_##= (const _scalar_& right) \
+		{ \
+			FOR( i, *this )	 (*this)[i] _op_##= right; \
+			return *this; \
+		}
+
+#	define VEC_OP_BINARY( _op_ ) \
+		VEC_OP_BINARY_( _op_ ) \
+		VEC_OP_BINARY_A( _op_ )
+
+#	define VEC_OP_BINARY_SCALAR( _op_, _scalar_ ) \
+		VEC_OP_BINARY_SCALAR_( _op_, _scalar_ ) \
+		VEC_OP_BINARY_SCALAR_A( _op_, _scalar_ )
 
 	
 #define I	1
@@ -96,33 +92,36 @@ namespace GXMath
 
 	
 
-	template <typename T>
-	inline Vec<T,3> Cross (const Vec<T,3> &left, const Vec<T,3> &right)
+	template <typename T, ulong U>
+	inline Vec<T,3,U>  Cross (const Vec<T,3,U> &left, const Vec<T,3,U> &right)
 	{
-		return Vec<T,3>( left.y * right.z - right.y * left.z,
-						 left.z * right.x - right.z * left.x,
-						 left.x * right.y - right.x * left.y );
+		return Vec<T,3,U>(	left.y * right.z - right.y * left.z,
+							left.z * right.x - right.z * left.x,
+							left.x * right.y - right.x * left.y );
 	}
 
 	
-	template <typename T>
-	inline T Cross (const Vec<T,2> &left, const Vec<T,2> &right)
+	template <typename T, ulong U>
+	inline auto  Cross (const Vec<T,2,U> &left, const Vec<T,2,U> &right)
 	{
 		return left.x * right.y - left.y * right.x;
 	}
 
 
-	template <typename T, usize I>
-	inline T  Dot (const Vec<T,I> &left, const Vec<T,I> &right)
+	template <typename T, usize I, ulong U>
+	inline auto  Dot (const Vec<T,I,U> &left, const Vec<T,I,U> &right)
 	{
 		return left.Dot( right );
 	}
 
-
-#	undef VEC_UN_OPERATOR
-#	undef VEC_BIN_OPERATOR
-#	undef VEC_BIN_OPERATOR2
-
+	
+#	undef VEC_OP_UNARY
+#	undef VEC_OP_BINARY_
+#	undef VEC_OP_BINARY_A
+#	undef VEC_OP_BINARY_SCALAR_
+#	undef VEC_OP_BINARY_SCALAR_A
+#	undef VEC_OP_BINARY
+#	undef VEC_OP_BINARY_SCALAR
 
 }	// GXMath
 
@@ -132,17 +131,17 @@ namespace GXTypes
 	//
 	// Hash
 	//
-	template <typename T, usize I>
-	struct Hash< GXMath::Vec<T,I> > :
+	template <typename T, usize I, ulong U>
+	struct Hash< GXMath::Vec<T,I,U> > :
 		private Hash< ArrayCRef<T> >
 	{
-		typedef GXMath::Vec<T,I>			key_t;
-		typedef Hash< ArrayCRef<T> >		base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef GXMath::Vec<T,I,U>			Key_t;
+		typedef Hash< ArrayCRef<T> >		Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( ArrayCRef<T>( x.ptr(), x.Count() ) );
+			return Base_t::operator ()( ArrayCRef<T>( x.ptr(), x.Count() ) );
 		}
 	};
 
@@ -151,26 +150,26 @@ namespace GXTypes
 	// IsNaN, IsInfinity, IsFinite
 	//
 
-	template <typename T, usize I>
-	inline GXMath::Vec<bool,I>  IsNaN (const GXMath::Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline GXMath::Vec<bool,I,U>  IsNaN (const GXMath::Vec<T,I,U>& x)
 	{
-		GXMath::Vec<bool,I>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = IsNaN( x[i] );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline GXMath::Vec<bool,I>  IsInfinity (const GXMath::Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline GXMath::Vec<bool,I,U>  IsInfinity (const GXMath::Vec<T,I,U>& x)
 	{
-		GXMath::Vec<bool,I>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = IsInfinity( x[i] );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline GXMath::Vec<bool,I>  IsFinite (const GXMath::Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline GXMath::Vec<bool,I,U>  IsFinite (const GXMath::Vec<T,I,U>& x)
 	{
-		GXMath::Vec<bool,I>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = IsFinite( x[i] );
 		return ret;
 	}
@@ -183,18 +182,18 @@ namespace CompileTime
 	//
 	// TypeInfo
 	//
-	template <typename T, usize I>
-	struct TypeInfo < GXMath::Vec<T,I> >
+	template <typename T, usize I, ulong U>
+	struct TypeInfo < GXMath::Vec<T,I,U> >
 	{
 	private:
 		typedef CompileTime::TypeInfo<T>	_value_type_info;
 
 	public:
-		typedef GXMath::Vec<T,I>	type;
+		typedef GXMath::Vec<T,I,U>	type;
 		typedef T					inner_type;
 		
 		template <typename OtherType>
-		using CreateWith =  GXMath::Vec< OtherType, I >;
+		using CreateWith =  GXMath::Vec< OtherType, I, U >;
 
 		enum {
 			FLAGS	= (int)_value_type_info::FLAGS | (int)GX_STL::CompileTime::_ctime_hidden_::VECTOR,
@@ -211,23 +210,23 @@ namespace CompileTime
 	};
 
 	
-	template <typename T, usize I>
-	struct TypeDescriptor::IsFloat< GXMath::Vec<T,I> >			{ static const bool  value = IsFloat<T>::value; };
+	template <typename T, usize I, ulong U>
+	struct TypeDescriptor::IsFloat< GXMath::Vec<T,I,U> >		{ static const bool  value = IsFloat<T>::value; };
 	
-	template <typename T, usize I>
-	struct TypeDescriptor::IsInteger< GXMath::Vec<T,I> >		{ static const bool  value = IsInteger<T>::value; };
+	template <typename T, usize I, ulong U>
+	struct TypeDescriptor::IsInteger< GXMath::Vec<T,I,U> >		{ static const bool  value = IsInteger<T>::value; };
 	
-	template <typename T, usize I>
-	struct TypeDescriptor::IsSigned< GXMath::Vec<T,I> >			{ static const bool  value = IsSigned<T>::value; };
+	template <typename T, usize I, ulong U>
+	struct TypeDescriptor::IsSigned< GXMath::Vec<T,I,U> >		{ static const bool  value = IsSigned<T>::value; };
 	
-	template <typename T, usize I>
-	struct TypeDescriptor::IsUnsigned< GXMath::Vec<T,I> >		{ static const bool  value = IsUnsigned<T>::value; };
+	template <typename T, usize I, ulong U>
+	struct TypeDescriptor::IsUnsigned< GXMath::Vec<T,I,U> >		{ static const bool  value = IsUnsigned<T>::value; };
 	
-	template <typename T, usize I>
-	struct TypeDescriptor::IsFixed< GXMath::Vec<T,I> >			{ static const bool  value = IsFixed<T>::value; };
+	template <typename T, usize I, ulong U>
+	struct TypeDescriptor::IsFixed< GXMath::Vec<T,I,U> >		{ static const bool  value = IsFixed<T>::value; };
 	
-	template <typename T, usize I>
-	struct TypeDescriptor::IsSoftware< GXMath::Vec<T,I> >		{ static const bool  value = IsSoftware<T>::value; };
+	template <typename T, usize I, ulong U>
+	struct TypeDescriptor::IsSoftware< GXMath::Vec<T,I,U> >		{ static const bool  value = IsSoftware<T>::value; };
 
 }	// CompileTime
 

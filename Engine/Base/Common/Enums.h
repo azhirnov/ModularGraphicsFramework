@@ -24,6 +24,10 @@ namespace Base
 		};
 
 		GX_ENUM_BITFIELD( EMemoryAccess );
+
+		static constexpr bits	CpuReadWrite	= bits().Set( CpuRead ).Set( CpuWrite );
+		static constexpr bits	GpuReadWrite	= bits().Set( GpuRead ).Set( GpuWrite );
+		static constexpr bits	All				= CpuReadWrite | GpuReadWrite;
 	};
 
 

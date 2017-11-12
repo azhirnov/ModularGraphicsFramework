@@ -26,24 +26,28 @@ namespace Platforms
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											ModuleMsg::WindowDescriptorChanged,
-											ModuleMsg::WindowCreated,
-											ModuleMsg::WindowBeforeDestroy,
-											ModuleMsg::WindowRawMessage
+											OSMsg::WindowDescriptorChanged,
+											OSMsg::WindowCreated,
+											OSMsg::WindowBeforeDestroy,
+											OSMsg::OnWinWindowRawMessage
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											ModuleMsg::InputMotion
 										> >;
 
+		using WindowMsgList_t		= MessageListFrom< OSMsg::GetWinWindowHandle >;
+		using WindowEventList_t		= MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::OnWinWindowRawMessage >;
+
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 		
 	// variables
 	private:
+		ModulePtr			_window;
 		uint2				_surfaceSize;
 		Optional<float2>	_mouseDifference;
 		float2				_mousePos;
@@ -51,32 +55,36 @@ namespace Platforms
 
 	// methods
 	public:
-		WinMouseInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
+		WinMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
 		~WinMouseInput ();
 
 
 	// message handlers
 	private:
-		bool _WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &);
-		bool _WindowCreated (const Message< ModuleMsg::WindowCreated > &);
-		bool _WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &);
-		bool _WindowRawMessage (const Message< ModuleMsg::WindowRawMessage > &);
+		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
+		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
+		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
+		bool _OnWinWindowRawMessage (const Message< OSMsg::OnWinWindowRawMessage > &);
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Update (const Message< ModuleMsg::Update > &);
+		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+
+	private:
+		void _Destroy ();
 	};
 //-----------------------------------------------------------------------------
 
 
 	
-	const Runtime::VirtualTypeList	WinMouseInput::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	WinMouseInput::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	WinMouseInput::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	WinMouseInput::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	WinMouseInput::WinMouseInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci) :
+	WinMouseInput::WinMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
 		Module( gs, ModuleConfig{ WinMouseInputModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "WinMouseInput" );
@@ -84,7 +92,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &WinMouseInput::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &WinMouseInput::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &WinMouseInput::_AttachModule_Impl );
-		_SubscribeOnMsg( this, &WinMouseInput::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &WinMouseInput::_DetachModule );
 		_SubscribeOnMsg( this, &WinMouseInput::_OnManagerChanged_Empty );
 		_SubscribeOnMsg( this, &WinMouseInput::_FindModule_Impl );
 		_SubscribeOnMsg( this, &WinMouseInput::_ModulesDeepSearch_Impl );
@@ -94,9 +102,11 @@ namespace Platforms
 		_SubscribeOnMsg( this, &WinMouseInput::_WindowDescriptorChanged );
 		_SubscribeOnMsg( this, &WinMouseInput::_WindowCreated );
 		_SubscribeOnMsg( this, &WinMouseInput::_WindowBeforeDestroy );
-		_SubscribeOnMsg( this, &WinMouseInput::_WindowRawMessage );
+		_SubscribeOnMsg( this, &WinMouseInput::_OnWinWindowRawMessage );
 		
 		CHECK( _ValidateMsgSubscriptions() );
+
+		_AttachSelfToManager( null, InputThreadModuleID, false );
 	}
 	
 /*
@@ -114,7 +124,7 @@ namespace Platforms
 	_WindowDescriptorChanged
 =================================================
 */
-	bool WinMouseInput::_WindowDescriptorChanged (const Message< ModuleMsg::WindowDescriptorChanged > &msg)
+	bool WinMouseInput::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
 	{
 		_surfaceSize = msg->desc.surfaceSize;
 		return true;
@@ -125,9 +135,10 @@ namespace Platforms
 	_WindowCreated
 =================================================
 */
-	bool WinMouseInput::_WindowCreated (const Message< ModuleMsg::WindowCreated > &msg)
+	bool WinMouseInput::_WindowCreated (const Message< OSMsg::WindowCreated > &)
 	{
-		CHECK_ERR( msg->hwnd.IsNotNull<HWND>() );
+		Message< OSMsg::GetWinWindowHandle >	req_hwnd;
+		SendTo( _window, req_hwnd );
 
 		RAWINPUTDEVICE	Rid[1] = {};
 		
@@ -135,11 +146,11 @@ namespace Platforms
 		Rid[0].usUsagePage	= 0x01;
 		Rid[0].usUsage		= 0x02;
 		Rid[0].dwFlags		= 0;
-		Rid[0].hwndTarget	= msg->hwnd.Get<HWND>();
+		Rid[0].hwndTarget	= req_hwnd->result->Get<HWND>();
 
 		CHECK( RegisterRawInputDevices( &Rid[0], (UINT) CountOf(Rid), sizeof(Rid[0]) ) == TRUE );
 
-		CHECK( _DefCompose( true ) );
+		CHECK( _DefCompose( false ) );
 		return true;
 	}
 	
@@ -148,18 +159,20 @@ namespace Platforms
 	_WindowBeforeDestroy
 =================================================
 */
-	bool WinMouseInput::_WindowBeforeDestroy (const Message< ModuleMsg::WindowBeforeDestroy > &msg)
+	bool WinMouseInput::_WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &)
 	{
+		_Destroy();
+
 		_SendMsg< ModuleMsg::Delete >({});
 		return true;
 	}
 	
 /*
 =================================================
-	_WindowRawMessage
+	_OnWinWindowRawMessage
 =================================================
 */
-	bool WinMouseInput::_WindowRawMessage (const Message< ModuleMsg::WindowRawMessage > &msg)
+	bool WinMouseInput::_OnWinWindowRawMessage (const Message< OSMsg::OnWinWindowRawMessage > &msg)
 	{
 		// WM_INPUT //
 		if ( msg->uMsg == WM_INPUT )
@@ -202,38 +215,19 @@ namespace Platforms
 	{
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 		
-		// attach to manager
-		{
-			ModulePtr	input = GlobalSystems()->Get< ParallelThread >()->GetModuleByID( InputThreadModuleID );
-			CHECK_ERR( input );
-			
-			_AttachSelfToManager( input, UntypedID_t(), true );
-		}
-
 		// subscribe on window events
 		{
-			// TODO: use SearchModule message
-			// TODO: reset to initial state if window was detached
-			ModulePtr	wnd = GlobalSystems()->Get< ParallelThread >()->GetModuleByID( WinWindowModuleID );
-			CHECK_ATTACHMENT( wnd );
+			CHECK_ATTACHMENT(( _window = GetParentByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
 
-			if ( _IsComposedState( wnd->GetState() ) )
+			if ( _IsComposedState( _window->GetState() ) )
 			{
-				Message< ModuleMsg::WindowGetHandle >	request_hwnd;
-
-				SendTo( wnd, request_hwnd );
-
-				if ( request_hwnd->hwnd.IsDefined() and
-					 request_hwnd->hwnd.Get().IsNotNull<HWND>() )
-				{
-					_SendMsg< ModuleMsg::WindowCreated >({ WindowDesc(), request_hwnd->hwnd.Get() });
-				}
+				_SendMsg< OSMsg::WindowCreated >({});
 			}
 
-			wnd->Subscribe( this, &WinMouseInput::_WindowDescriptorChanged );
-			wnd->Subscribe( this, &WinMouseInput::_WindowCreated );
-			wnd->Subscribe( this, &WinMouseInput::_WindowBeforeDestroy );
-			wnd->Subscribe( this, &WinMouseInput::_WindowRawMessage );
+			_window->Subscribe( this, &WinMouseInput::_WindowDescriptorChanged );
+			_window->Subscribe( this, &WinMouseInput::_WindowCreated );
+			_window->Subscribe( this, &WinMouseInput::_WindowBeforeDestroy );
+			_window->Subscribe( this, &WinMouseInput::_OnWinWindowRawMessage );
 		}
 		return true;
 	}
@@ -243,7 +237,7 @@ namespace Platforms
 	_Update
 =================================================
 */
-	bool WinMouseInput::_Update (const Message< ModuleMsg::Update > &msg)
+	bool WinMouseInput::_Update (const Message< ModuleMsg::Update > &)
 	{
 		// send events to InputThread
 
@@ -261,11 +255,39 @@ namespace Platforms
 		_mouseDifference.Undefine();
 		return true;
 	}
+	
+/*
+=================================================
+	_DetachModule
+=================================================
+*/
+	bool WinMouseInput::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	{
+		if ( _Detach( msg->oldModule ) and msg->oldModule == _window )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_Destroy();
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_Destroy
+=================================================
+*/
+	void WinMouseInput::_Destroy ()
+	{
+		if ( _window )
+			_window->UnsubscribeAll( this );
+
+		_window = null;
+	}
 //-----------------------------------------------------------------------------
 	
 
 
-	ModulePtr WinPlatform::_CreateWinMouseInput (const GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
+	ModulePtr WinPlatform::_CreateWinMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
 	{
 		return New< WinMouseInput >( gs, ci );
 	}

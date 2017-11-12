@@ -14,30 +14,120 @@ namespace Base
 */
 	MessageHandler::MessageHandler ()
 	{
-		_handlers.Reserve( 8 );
+		_handlers.Reserve( 64 );
 	}
 	
 /*
 =================================================
-	Send
+	_Send
 =================================================
 */
-	bool MessageHandler::Send (VariantCRef msgRef)
+	bool MessageHandler::_Send (VariantCRef msg)
+	{
+		using FixedMapRange_t	= Array< HandlersMap_t::const_pair_t >;	//FixedSizeArray< HandlersMap_t::const_pair_t, 32 >;
+		
+		FixedMapRange_t	temp;	temp.Reserve( 32 );
+
+		{
+			SCOPELOCK( _lock );
+
+			usize	first;
+			if ( _handlers.FindFirstIndex( msg.GetValueTypeId(), OUT first ) )
+			{
+				for (usize i = first; i < _handlers.Count() and _handlers[i].first == msg.GetValueTypeId(); ++i)
+				{
+					temp.PushBack( _handlers[i] );
+				}
+			}
+		}
+		
+		FOR( i, temp )
+		{
+			auto&	handler = temp[i].second;
+
+			handler.func( handler.ptr, handler.data, msg );
+		}
+		return not temp.Empty();
+	}
+	
+/*
+=================================================
+	_Subscribe
+=================================================
+*/
+	bool MessageHandler::_Subscribe (const TypeIdList& validTypes, TypeId id, Handler &&handler)
+	{
+		if ( not validTypes.HasType( id ) )
+			RETURN_ERR( "Can't subscribe for event '" << ToString( id ) << "'" );
+
+		SCOPELOCK( _lock );
+		
+		usize	first;
+		if ( _handlers.FindFirstIndex( id, OUT first ) )
+		{
+			for (usize i = first; i < _handlers.Count() and _handlers[i].first == id; ++i)
+			{
+				if ( MemCmp( _handlers[i].second, handler ) == 0 )
+				{
+					_handlers.EraseByIndex( i );
+					break;
+				}
+			}
+		}
+
+		_handlers.Add( id, RVREF(handler) );
+		return true;
+	}
+	
+/*
+=================================================
+	_CopySubscriptions
+=================================================
+*/
+	bool MessageHandler::_CopySubscriptions (const TypeIdList& validTypes, const ObjectPtr_t &obj, const MessageHandler &other, ArrayCRef<TypeId> ids)
+	{
+		SCOPELOCK( other._lock );
+
+		FOR( j, ids )
+		{
+			uint	copied = 0;
+			usize	first;
+
+			if ( other._handlers.FindFirstIndex( ids[j], OUT first ) )
+			{
+				for (usize i = first; i < other._handlers.Count() and other._handlers[i].first == ids[j]; ++i)
+				{
+					if ( other._handlers[i].second.ptr == obj )
+					{
+						_Subscribe( validTypes, ids[j], Handler(other._handlers[i].second) );
+						copied++;
+					}
+				}
+			}
+
+			if ( copied == 0 )
+				RETURN_ERR( "Handler for message '" << ToString( ids[j] ) << "' is not exist" );
+		}
+		return true;
+	}
+
+/*
+=================================================
+	UnsubscribeAll
+=================================================
+*/
+	void MessageHandler::UnsubscribeAll (const ObjectPtr_t &ptr)
 	{
 		SCOPELOCK( _lock );
 
-		HandlersMap_t::iterator	iter;
-
-		if ( _handlers.Find( msgRef.GetValueTypeId(), OUT iter ) )
+		FOR( i, _handlers )
 		{
-			//CHECK_ERR( not iter->second.locked );
-			//SCOPE_SETTER( iter->second.locked = true, false );
-
-			iter->second->Send( msgRef );
-			return true;
+			if ( _handlers[i].second.ptr == ptr )
+			{
+				_handlers.EraseByIndex( i );
+				--i;
+			}
 		}
-
-		return false;
 	}
 
 /*
@@ -59,7 +149,7 @@ namespace Base
 	it is too slow
 =================================================
 */
-	bool MessageHandler::Validate (const Runtime::VirtualTypeList &typelist) const
+	bool MessageHandler::Validate (const TypeIdList &typelist) const
 	{
 		SCOPELOCK( _lock );
 
@@ -90,7 +180,7 @@ namespace Base
 	it is too slow
 =================================================
 */
-	bool MessageHandler::Validate (const Runtime::VirtualTypeList &msgTypes, const Runtime::VirtualTypeList &eventTypes) const
+	bool MessageHandler::Validate (const TypeIdList &msgTypes, const TypeIdList &eventTypes) const
 	{
 		SCOPELOCK( _lock );
 

@@ -28,23 +28,22 @@ namespace _types_hidden_
 
 	// types
 	public:
-		typedef MapUtils< Container, KeyType, Search, IsUnique >	Self;
-
-		typedef typename Container::value_t							value_t;
-		typedef KeyType												key_t;
+		using Self		= MapUtils< Container, KeyType, Search, IsUnique >;
+		using Value_t	= typename Container::Value_t;
+		using Key_t		= KeyType;
 		
 
 	private:
 		struct _ValueRVRef
 		{
-			typedef value_t			type;
-			static value_t &&		To (value_t *val)			{ return RVREF( *val ); }
+			typedef Value_t			type;
+			static Value_t &&		To (Value_t *val)			{ return RVREF( *val ); }
 		};
 		
 		struct _ValueConstRef
 		{
-			typedef value_t const	type;
-			static value_t const&	To (value_t const *val)		{ return *val; }
+			typedef Value_t const	type;
+			static Value_t const&	To (Value_t const *val)		{ return *val; }
 		};
 
 
@@ -73,19 +72,19 @@ namespace _types_hidden_
 		usize			LastIndex ()			const	{ return _memory.LastIndex(); }
 		BytesU			Size ()					const	{ return _memory.Size(); }
 		
-		value_t const &	operator [] (usize i)	const	{ return _memory[i]; }
-		value_t &		operator [] (usize i)			{ return _memory[i]; }
+		Value_t const &	operator [] (usize i)	const	{ return _memory[i]; }
+		Value_t &		operator [] (usize i)			{ return _memory[i]; }
 
-		operator ArrayCRef<value_t> () const			{ return _memory; }
-		operator ArrayRef<value_t> ()					{ return _memory; }
+		operator ArrayCRef<Value_t> () const			{ return _memory; }
+		operator ArrayRef<Value_t> ()					{ return _memory; }
 
-		usize AddOrReplace (const value_t &value);
-		usize AddOrReplace (value_t &&value);
+		usize AddOrReplace (const Value_t &value);
+		usize AddOrReplace (Value_t &&value);
 		
-		usize AddOrSkip (const value_t &value);
-		usize AddOrSkip (value_t &&value);
+		usize AddOrSkip (const Value_t &value);
+		usize AddOrSkip (Value_t &&value);
 
-		bool FindFirstIndex (const key_t &key, OUT usize &idx) const;
+		bool FindFirstIndex (const Key_t &key, OUT usize &idx) const;
 		void FindLastIndex (usize first, OUT usize &idx) const;
 		
 		template <typename TKey2>
@@ -94,11 +93,11 @@ namespace _types_hidden_
 		template <typename TKey2>
 		void FindLastIndex2 (const TKey2 &key, usize firstIdx, OUT usize &idx) const;
 
-		bool Erase (const key_t &key);
-		void EraseFromIndex (usize index);
+		bool Erase (const Key_t &key);
+		void EraseByIndex (usize index);
 		
-		usize GetIndex (Ptr<const value_t> iter) const;
-		//usize GetIndex (Ptr<value_t> iter) const;
+		usize GetIndex (Ptr<const Value_t> iter) const;
+		//usize GetIndex (Ptr<Value_t> iter) const;
 
 		void Free ()									{ _memory.Free(); }
 		void Clear ()									{ _memory.Clear(); }
@@ -139,9 +138,9 @@ namespace _types_hidden_
 =================================================
 */
 	template <typename C, typename K, template <typename T> class Search, bool IsUnique>
-	inline usize MapUtils<C,K,Search,IsUnique>::AddOrReplace (const value_t &value)
+	inline usize MapUtils<C,K,Search,IsUnique>::AddOrReplace (const Value_t &value)
 	{
-		typedef Search< key_t >	cmp_t;
+		typedef Search< Key_t >	cmp_t;
 		return IsUnique ?	_AddOrChange< cmp_t, _ValueConstRef, /*KeepSource*/false >( &value ) :
 							_Add< cmp_t, _ValueConstRef >( &value );
 	}
@@ -152,9 +151,9 @@ namespace _types_hidden_
 =================================================
 */
 	template <typename C, typename K, template <typename T> class Search, bool IsUnique>
-	inline usize MapUtils<C,K,Search,IsUnique>::AddOrReplace (value_t &&value)
+	inline usize MapUtils<C,K,Search,IsUnique>::AddOrReplace (Value_t &&value)
 	{
-		typedef Search< key_t >	cmp_t;
+		typedef Search< Key_t >	cmp_t;
 		return IsUnique ?	_AddOrChange< cmp_t, _ValueRVRef, /*KeepSource*/false >( &value ) :
 							_Add< cmp_t, _ValueRVRef >( &value );
 	}
@@ -165,9 +164,9 @@ namespace _types_hidden_
 =================================================
 */
 	template <typename C, typename K, template <typename T> class Search, bool IsUnique>
-	inline usize MapUtils<C,K,Search,IsUnique>::AddOrSkip (const value_t &value)
+	inline usize MapUtils<C,K,Search,IsUnique>::AddOrSkip (const Value_t &value)
 	{
-		typedef Search< key_t >	cmp_t;
+		typedef Search< Key_t >	cmp_t;
 		return IsUnique ?	_AddOrChange< cmp_t, _ValueConstRef, /*KeepSource*/true >( &value ) :
 							_Add< cmp_t, _ValueConstRef >( &value );
 	}
@@ -178,9 +177,9 @@ namespace _types_hidden_
 =================================================
 */
 	template <typename C, typename K, template <typename T> class Search, bool IsUnique>
-	inline usize MapUtils<C,K,Search,IsUnique>::AddOrSkip (value_t &&value)
+	inline usize MapUtils<C,K,Search,IsUnique>::AddOrSkip (Value_t &&value)
 	{
-		typedef Search< key_t >	cmp_t;
+		typedef Search< Key_t >	cmp_t;
 		return IsUnique ?	_AddOrChange< cmp_t, _ValueRVRef, /*KeepSource*/true >( &value ) :
 							_Add< cmp_t, _ValueRVRef >( &value );
 	}
@@ -191,9 +190,9 @@ namespace _types_hidden_
 =================================================
 */
 	template <typename C, typename K, template <typename T> class Search, bool U>
-	inline bool MapUtils<C,K,Search,U>::FindFirstIndex (const key_t &key, OUT usize &idx) const
+	inline bool MapUtils<C,K,Search,U>::FindFirstIndex (const Key_t &key, OUT usize &idx) const
 	{
-		typedef Search< key_t >		cmp_t;
+		typedef Search< Key_t >		cmp_t;
 		return _FindIndex< cmp_t >( key, OUT idx );
 	}
 	
@@ -236,7 +235,7 @@ namespace _types_hidden_
 	template <typename C, typename K, template <typename T> class S, bool U>
 	inline void MapUtils<C,K,S,U>::FindLastIndex (usize first, OUT usize &idx) const
 	{
-		key_t const &	key = _memory[first].first;
+		Key_t const &	key = _memory[first].first;
 
 		idx = first;
 
@@ -251,7 +250,7 @@ namespace _types_hidden_
 =================================================
 */
 	template <typename C, typename K, template <typename T> class S, bool U>
-	inline bool MapUtils<C,K,S,U>::Erase (const key_t &key)
+	inline bool MapUtils<C,K,S,U>::Erase (const Key_t &key)
 	{
 		usize	idx = -1;
 
@@ -264,11 +263,11 @@ namespace _types_hidden_
 	
 /*
 =================================================
-	EraseFromIndex
+	EraseByIndex
 =================================================
 */
 	template <typename C, typename K, template <typename T> class S, bool U>
-	inline void MapUtils<C,K,S,U>::EraseFromIndex (usize index)
+	inline void MapUtils<C,K,S,U>::EraseByIndex (usize index)
 	{
 		_memory.Erase( index );
 	}
@@ -279,15 +278,15 @@ namespace _types_hidden_
 =================================================
 */
 	template <typename C, typename K, template <typename T> class S, bool U>
-	inline usize MapUtils<C,K,S,U>::GetIndex (Ptr<const value_t> iter) const
+	inline usize MapUtils<C,K,S,U>::GetIndex (Ptr<const Value_t> iter) const
 	{
-		return _memory.GetIndex( *(const value_t *) iter.ptr() );
+		return _memory.GetIndex( *(const Value_t *) iter.ptr() );
 	}
 	/*
 	template <typename C, typename K, template <typename T> class S, bool U>
-	inline usize MapUtils<C,K,S,U>::GetIndex (Ptr<value_t> iter) const
+	inline usize MapUtils<C,K,S,U>::GetIndex (Ptr<Value_t> iter) const
 	{
-		return _memory.GetIndex( *(const value_t *) iter.ptr() );
+		return _memory.GetIndex( *(const Value_t *) iter.ptr() );
 	}
 	*/
 /*

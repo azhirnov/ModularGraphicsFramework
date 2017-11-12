@@ -21,9 +21,9 @@ namespace GXTypes
 	{
 	// types
 	public:
-		using Strategy			= S;
+		using Strategy_t			= S;
 		using MemoryContainer_t	= MC;
-		using value_t			= T;
+		using Value_t			= T;
 		using Self				= Stack<T,S,MC>;
 		using Container_t		= Array<T,S,MC>;
 
@@ -127,13 +127,13 @@ namespace GXTypes
 	struct Hash< Stack<T,S,MC> > :
 		private Hash< ArrayCRef<T> >
 	{
-		typedef Stack<T,S,MC>				key_t;
-		typedef Hash< ArrayCRef<T> >		base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef Stack<T,S,MC>				Key_t;
+		typedef Hash< ArrayCRef<T> >		Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x );
+			return Base_t::operator ()( x );
 		}
 	};
 

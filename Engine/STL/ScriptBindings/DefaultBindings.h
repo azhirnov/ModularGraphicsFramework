@@ -44,7 +44,7 @@ namespace GXScript
 	// Default Bindings
 	//
 
-	struct DefaultBindings
+	struct _STL_EXPORT_ DefaultBindings
 	{
 		static void BindMath (AngelScript::asIScriptEngine *se);
 

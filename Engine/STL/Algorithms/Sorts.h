@@ -11,7 +11,7 @@ namespace GXTypes
 {
 
 	//
-	// Sort Compare
+	// Default Sort Comparator
 	//
 
 	template <typename T>
@@ -27,7 +27,7 @@ namespace GXTypes
 	namespace _sort_hidden_ \
 	{ \
 		template <typename CmpOp, typename T> \
-		forceinline void _name_ (ArrayRef<T> arr, CmpOp cmp) \
+		forceinline void _name_ (ArrayRef<T> arr, const CmpOp &cmp) \
 		{ \
 			STATIC_ASSERT( not TypeTraits::IsConst<T> ); \
 			\
@@ -39,15 +39,15 @@ namespace GXTypes
 	template <template <typename ...> class LinearMemoryContainer, typename ...Types> \
 	forceinline void _name_ (LinearMemoryContainer<Types...> &arr) \
 	{ \
-		typedef typename LinearMemoryContainer<Types...>::value_t	T; \
+		using T	= typename LinearMemoryContainer<Types...>::Value_t; \
 		TSortCmp<T>	cmp; \
 		_sort_hidden_::_name_( ArrayRef<T>( arr ), cmp ); \
 	} \
 	\
 	template <typename CmpOp, template <typename ...> class LinearMemoryContainer, typename ...Types> \
-	forceinline void _name_ (LinearMemoryContainer<Types...> &arr, CmpOp cmp) \
+	forceinline void _name_ (LinearMemoryContainer<Types...> &arr, const CmpOp &cmp) \
 	{ \
-		typedef typename LinearMemoryContainer<Types...>::value_t	T; \
+		using T	= typename LinearMemoryContainer<Types...>::Value_t; \
 		_sort_hidden_::_name_( ArrayRef<T>( arr ), cmp ); \
 	}
 
@@ -60,18 +60,18 @@ namespace GXTypes
 	namespace _sort_hidden_
 	{
 		template <typename T, typename C>
-		inline void BubbleSort (T * pArray, const usize uCount, C sCmp)
+		inline void BubbleSort (T * pArray, const usize count, const C &sCmp)
 		{
-			if ( uCount == 0 )
+			if ( count == 0 )
 				return;
 
-			ArrayRef<T>	arr( pArray, uCount );
+			ArrayRef<T>	arr( pArray, count );
 			bool		b_flag = true;
 
 			while ( b_flag )
 			{
 				b_flag = false;
-				for (usize i = 0; i < uCount-1; ++i)
+				for (usize i = 0; i < count-1; ++i)
 				{
 					if ( sCmp( arr[i], arr[i+1] ) )
 					{
@@ -93,9 +93,9 @@ namespace GXTypes
 	namespace _sort_hidden_
 	{
 		template <typename T, typename C>
-		inline void SelectSort (T * pArray, const usize uCount, C sCmp) 
+		inline void SelectSort (T * pArray, const usize count, const C &sCmp) 
 		{
-			if ( uCount == 0 )
+			if ( count == 0 )
 				return;
 
 			usize		a			= 0,
@@ -103,15 +103,15 @@ namespace GXTypes
 						c			= 0;
 			bool		exchange	= false;
 			T			temp;
-			ArrayRef<T>	arr( pArray, uCount );
+			ArrayRef<T>	arr( pArray, count );
 		
-			for (a = 0; a < uCount-1; ++a)
+			for (a = 0; a < count-1; ++a)
 			{
 				exchange = false;
 				c		 = a;
 				temp	 = arr[a];
 
-				for (b = a+1; b < uCount; ++b) 
+				for (b = a+1; b < count; ++b) 
 				{
 					if ( sCmp( temp, arr[b] ) )
 					{
@@ -140,16 +140,16 @@ namespace GXTypes
 	namespace _sort_hidden_
 	{
 		template <typename T, typename C>
-		inline void InsertionSort (T * pArray, const usize uCount, C sCmp)
+		inline void InsertionSort (T * pArray, const usize count, const C &sCmp)
 		{
-			if ( uCount == 0 )
+			if ( count == 0 )
 				return;
 
 			isize		i	= 0;
 			T			temp;
-			ArrayRef<T>	arr( pArray, uCount );
+			ArrayRef<T>	arr( pArray, count );
 
-			for (usize j = 1; j < uCount; ++j)
+			for (usize j = 1; j < count; ++j)
 			{
 				temp = arr[j];
 				i	 = j-1;
@@ -174,19 +174,19 @@ namespace GXTypes
 	namespace _sort_hidden_
 	{
 		template <typename T, typename C>
-		inline void ShakerSort (T * pArray, const usize uCount, C sCmp)
+		inline void ShakerSort (T * pArray, const usize count, const C &sCmp)
 		{
-			if ( uCount == 0 )
+			if ( count == 0 )
 				return;
 
 			usize		i			= 0;
 			bool		exchange	= false;
-			ArrayRef<T>	arr( pArray, uCount );
+			ArrayRef<T>	arr( pArray, count );
 
 			do {
 				exchange = false;
 
-				for (i = uCount-1; i > 0; --i)
+				for (i = count-1; i > 0; --i)
 				{
 					if ( not sCmp( arr[i], arr[i-1] ) )
 					{
@@ -195,7 +195,7 @@ namespace GXTypes
 					}
 				}
 			
-				for (i = 1; i < uCount; ++i)
+				for (i = 1; i < count; ++i)
 				{
 					if ( not sCmp( arr[i], arr[i-1] ) )
 					{
@@ -218,9 +218,9 @@ namespace GXTypes
 	namespace _sort_hidden_
 	{
 		template <typename T, typename C>
-		inline void ShellSort (T * pArray, const usize uCount, C sCmp)
+		inline void ShellSort (T * pArray, const usize count, const C &sCmp)
 		{
-			if ( uCount == 0 )
+			if ( count == 0 )
 				return;
 
 			usize		i	= 0,
@@ -229,13 +229,13 @@ namespace GXTypes
 						k	= 0;
 			T			temp;
 			char		a[5] = { 8, 5, 3, 2, 1 };
-			ArrayRef<T>	arr( pArray, uCount );
+			ArrayRef<T>	arr( pArray, count );
 
 			for (k = 0; k < 5; ++k)
 			{
 				gap = a[k];
 
-				for (i = gap; i < uCount; ++i)
+				for (i = gap; i < count; ++i)
 				{
 					temp = RVREF( arr[i] );
 
@@ -259,7 +259,7 @@ namespace GXTypes
 	namespace _sort_hidden_
 	{
 		template <typename T, typename C>
-		inline void _QuickSort (ArrayRef<T> sArray, const isize iLeft, const isize iRight, C sCmp)
+		inline void _QuickSort (ArrayRef<T> sArray, const isize iLeft, const isize iRight, const C &sCmp)
 		{
 			isize	i	= iLeft,
 					j	= iRight,
@@ -292,12 +292,12 @@ namespace GXTypes
 		}
 	
 		template <typename T, typename C>
-		void QuickSort (T * pArray, const usize uCount, C sCmp)
+		void QuickSort (T * pArray, const usize count, C sCmp)
 		{
-			if ( uCount == 0 )
+			if ( count == 0 )
 				return;
 		
-			_QuickSort( ArrayRef<T>( pArray, uCount ), 0, uCount-1, sCmp );
+			_QuickSort( ArrayRef<T>( pArray, count ), 0, count-1, sCmp );
 		}
 	}	// _sort_hidden_
 	
@@ -311,10 +311,10 @@ namespace GXTypes
 	namespace _sort_hidden_
 	{
 		template <typename T, typename C>
-		inline void Sort (T * pArray, const usize uCount, C sCmp)
+		inline void Sort (T * pArray, const usize count, const C &sCmp)
 		{
-			_sort_hidden_::QuickSort( pArray, uCount, sCmp );
-			//_sort_hidden_::ShellSort( pArray, uCount, sCmp );
+			_sort_hidden_::QuickSort( pArray, count, sCmp );
+			//_sort_hidden_::ShellSort( pArray, count, sCmp );
 		}
 	}	// _sort_hidden_
 	
@@ -328,7 +328,7 @@ namespace GXTypes
 	namespace _sort_hidden_
 	{
 		template <typename CmpOp, typename T, typename I>
-		inline void _SortArrayIndices (ArrayCRef<T> arr, ArrayRef<I> idxs, CmpOp cmp)
+		inline void _SortArrayIndices (ArrayCRef<T> arr, ArrayRef<I> idxs, const CmpOp &cmp)
 		{
 			CompileTime::MustBeInteger<I>();
 
@@ -374,14 +374,14 @@ namespace GXTypes
 	template <typename ArrayType, typename IndicesArrayType>
 	inline void SortArrayIndices (const ArrayType &arr, INOUT IndicesArrayType &indices)
 	{
-		TSortCmp< ArrayType::value_t >	cmp;
-		_SortArrayIndices( ArrayCRef<ArrayType::value_t>( arr ), ArrayRef<IndicesArrayType::value_t>( indices ), cmp );
+		TSortCmp< ArrayType::Value_t >	cmp;
+		_SortArrayIndices( ArrayCRef<ArrayType::Value_t>( arr ), ArrayRef<IndicesArrayType::Value_t>( indices ), cmp );
 	}
 
 	template <typename CmpOp, typename ArrayType, typename IndicesArrayType>
-	inline void SortArrayIndices (const ArrayType &arr, INOUT IndicesArrayType &indices, CmpOp cmp)
+	inline void SortArrayIndices (const ArrayType &arr, INOUT IndicesArrayType &indices, const CmpOp &cmp)
 	{
-		_SortArrayIndices( ArrayCRef<ArrayType::value_t>( arr ), ArrayRef<IndicesArrayType::value_t>( indices ), cmp );
+		_SortArrayIndices( ArrayCRef<ArrayType::Value_t>( arr ), ArrayRef<IndicesArrayType::Value_t>( indices ), cmp );
 	}
 
 

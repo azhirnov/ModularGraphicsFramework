@@ -10,13 +10,6 @@ namespace GX_STL
 namespace GXMath
 {
 
-	//template <typename T>	struct Radians;		// liternals:	rad
-	//template <typename T>	struct Degrees;		// literals:	deg
-
-	//template <typename T, usize I>	using RadiansVec = Vec< Radians<T>, I >;
-	//template <typename T, usize I>	using DegreesVec = Vec< Degrees<T>, I >;
-
-
 	typedef Radians<real>			Rad;
 	typedef RadiansVec< real, 2 >	Rad2;
 	typedef RadiansVec< real, 3 >	Rad3;
@@ -41,7 +34,7 @@ namespace GXMath
 	// types
 	public:
 		typedef Radians<T>		Self;
-		typedef T				value_t;
+		typedef T				Value_t;
 
 
 	// variables
@@ -73,7 +66,7 @@ namespace GXMath
 		Self	ToInterval (Self minValue, Self maxValue) const;
 
 		_GX_DIM_ALL_FLOAT_OPERATORS_SELF( _value )
-		_GX_DIM_ALL_FLOAT_OPERATORS_TYPE( _value, value_t, )
+		_GX_DIM_ALL_FLOAT_OPERATORS_TYPE( _value, Value_t, )
 
 		static constexpr Self	Pi (T scale)		{ return Self( GXMath::Pi<T> * scale ); }	// Pi * x
 		static constexpr Self	Pi ()				{ return Self( GXMath::Pi<T> ); }			// Pi
@@ -101,7 +94,7 @@ namespace GXMath
 	// types
 	public:
 		typedef Degrees<T>		Self;
-		typedef T				value_t;
+		typedef T				Value_t;
 
 
 	// variables
@@ -301,13 +294,13 @@ namespace GXMath
 	template <typename T>
 	struct ::GX_STL::GXTypes::Hash< GXMath::Radians<T> > : private Hash<T>
 	{
-		typedef GXMath::Radians<T>			key_t;
-		typedef Hash<T>						base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef GXMath::Radians<T>			Key_t;
+		typedef Hash<T>						Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const
+		Result_t operator () (const Key_t &x) const
 		{
-			return base_t::operator ()( x.ref() );
+			return Base_t::operator ()( x.ref() );
 		}
 	};
 	
@@ -315,13 +308,13 @@ namespace GXMath
 	template <typename T>
 	struct ::GX_STL::GXTypes::Hash< GXMath::Degrees<T> > : private Hash<T>
 	{
-		typedef GXMath::Degrees<T>			key_t;
-		typedef Hash<T>						base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef GXMath::Degrees<T>			Key_t;
+		typedef Hash<T>						Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const
+		Result_t operator () (const Key_t &x) const
 		{
-			return base_t::operator ()( x.ref() );
+			return Base_t::operator ()( x.ref() );
 		}
 	};
 

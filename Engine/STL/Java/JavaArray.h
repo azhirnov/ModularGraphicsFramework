@@ -24,7 +24,7 @@ namespace  Java
 		{ \
 		/* types */ \
 		public: \
-			typedef _type_			value_t; \
+			typedef _type_			Value_t; \
 			typedef _type_##Array	jarray_t; \
 		\
 		/* variables */ \
@@ -87,7 +87,7 @@ namespace  Java
 			const _type_ *	ptr ()				const	{ return _data; } \
 			_type_ *		ptr ()						{ ASSERT( not _readOnly );  return _data; } \
 			usize			Count ()			const	{ return _count; } \
-			usize			Size ()				const	{ return _count * sizeof(value_t); } \
+			usize			Size ()				const	{ return _count * sizeof(Value_t); } \
 			bool			IsReadOnly ()		const	{ return _readOnly; } \
 			\
 			jarray_t		jarray ()			const	{ ASSUME( _arr != null ); return _arr; } \
@@ -102,7 +102,7 @@ namespace  Java
 			template <typename B> \
 			ArrayCRef< B >	To () const \
 			{ \
-				STATIC_ASSERT( sizeof(B) == sizeof(value_t) ); \
+				STATIC_ASSERT( sizeof(B) == sizeof(Value_t) ); \
 				return ArrayCRef< B >( (B *)ptr(), Count() ); \
 			} \
 			\

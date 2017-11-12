@@ -14,7 +14,7 @@ namespace Platforms
 	// Render State
 	//
 	
-	struct RenderState final : public CompileTime::PODStruct		// TODO: copy from StaticArray<...>
+	struct _ENGINE_PLATFORMS_EXPORT_ RenderState final : public CompileTime::PODStruct		// TODO: copy from StaticArray<...>
 	{
 	// types
 	public:
@@ -227,8 +227,8 @@ namespace Platforms
 			bool				depthClamp;
 			bool				rasterizerDiscard;
 
-			bool				frontFaceCCW;
 			EPolygonFace::type	cullMode;
+			bool				frontFaceCCW;
 
 		// methods
 			RasterizationState (GX_DEFCTOR) :
@@ -250,10 +250,13 @@ namespace Platforms
 		struct MultisampleState final : public CompileTime::PODStruct
 		{
 		// types
-			using Self	= MultisampleState;
+			using Self			= MultisampleState;
+			using SampleMask	= StaticArray< uint, 4 >;
 
 		// variables
+			SampleMask			sampleMask;
 			MultiSamples		samples;
+
 			UNormClamped<float>	minSampleShading;
 			bool				sampleShading;
 
@@ -262,6 +265,7 @@ namespace Platforms
 
 		// methods
 			MultisampleState (GX_DEFCTOR) :
+				sampleMask{ ~0u, ~0u, ~0u, ~0u },
 				samples( 1 ),				minSampleShading(),		sampleShading( false ),
 				alphaToCoverage( false ),	alphaToOne( false )
 			{}

@@ -111,9 +111,9 @@ namespace ModuleMsg
 		using Callback_t	= Delegate< void (const InputKey &) >;
 
 	// variables
-		SingleRead< Callback_t >	cb;
-		KeyID::type					key		= KeyID::Unknown;
-		EKeyState					state	= EKeyState::OnKeyDown;
+		ReadOnce< Callback_t >	cb;
+		KeyID::type				key		= KeyID::Unknown;
+		EKeyState				state	= EKeyState::OnKeyDown;
 
 	// methods
 		InputKeyBind (Callback_t &&cb, KeyID::type key, EKeyState state) :
@@ -132,8 +132,8 @@ namespace ModuleMsg
 		using Callback_t	= Delegate< void (const InputMotion &) >;
 
 	// variables
-		SingleRead< Callback_t >	cb;
-		MotionID::type				motion	= MotionID::Unknown;
+		ReadOnce< Callback_t >	cb;
+		MotionID::type			motion	= MotionID::Unknown;
 
 	// methods
 		InputMotionBind (Callback_t &&cb, MotionID::type motion) :

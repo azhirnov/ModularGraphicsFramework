@@ -27,10 +27,10 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef S						Strategy;
-		typedef MC						MemoryContainer_t;
-		typedef T						value_t;
-		typedef CircularQueue<T,S,MC>	Self;
+		using Strategy_t		= S;
+		using MemoryContainer_t	= MC;
+		using Value_t			= T;
+		using Self				= CircularQueue<T,S,MC>;
 
 
 	// variables
@@ -251,12 +251,12 @@ namespace GXTypes
 		if ( _first > _end )
 		{
 			usize	off = old_size - _first;
-			Strategy::Replace( _memory.Pointer(), old_memcont.Pointer() + _first, off );
-			Strategy::Replace( _memory.Pointer() + off, old_memcont.Pointer(), _end );
+			Strategy_t::Replace( _memory.Pointer(), old_memcont.Pointer() + _first, off );
+			Strategy_t::Replace( _memory.Pointer() + off, old_memcont.Pointer(), _end );
 		}
 		else
 		{
-			Strategy::Replace( _memory.Pointer(), old_memcont.Pointer() + _first, _end - _first );
+			Strategy_t::Replace( _memory.Pointer(), old_memcont.Pointer() + _first, _end - _first );
 		}
 		
 		_first = 0;
@@ -369,7 +369,7 @@ namespace GXTypes
 		if ( cnt+2 >= _size )
 			_Reallocate( _size+1, true );
 		
-		Strategy::Copy( _memory.Pointer() + _end, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + _end, &value, 1 );
 		_end = _WrapIndex( _end + 1 );
 	}
 	
@@ -384,7 +384,7 @@ namespace GXTypes
 		if ( Count()+2 >= _size )
 			_Reallocate( _size+1, true );
 		
-		Strategy::Move( _memory.Pointer() + _end, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + _end, &value, 1 );
 		_end = _WrapIndex( _end + 1 );
 	}
 	
@@ -400,7 +400,7 @@ namespace GXTypes
 			_Reallocate( _size+1, true );
 		
 		_first = _WrapIndex( _first - 1 );
-		Strategy::Copy( _memory.Pointer() + _first, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + _first, &value, 1 );
 	}
 	
 /*
@@ -415,7 +415,7 @@ namespace GXTypes
 			_Reallocate( _size+1, true );
 
 		_first = _WrapIndex( _first - 1 );
-		Strategy::Move( _memory.Pointer() + _first, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + _first, &value, 1 );
 	}
 		
 /*
@@ -429,7 +429,7 @@ namespace GXTypes
 		if ( not Empty() )
 		{
 			_end = _WrapIndex( _end - 1 );
-			Strategy::Destroy( _memory.Pointer() + _end, 1 );
+			Strategy_t::Destroy( _memory.Pointer() + _end, 1 );
 		}
 	}
 	
@@ -443,7 +443,7 @@ namespace GXTypes
 	{
 		if ( not Empty() )
 		{
-			Strategy::Destroy( _memory.Pointer() + _first, 1 );
+			Strategy_t::Destroy( _memory.Pointer() + _first, 1 );
 			_first = _WrapIndex( _first + 1 );
 		}
 	}
@@ -468,8 +468,8 @@ namespace GXTypes
 
 		if ( Empty() )
 		{
-			if ( TypeTraits::IsConst<B> )	Strategy::Copy( _memory.Pointer(), pArray, count );
-			else							Strategy::Move( _memory.Pointer(), (T*)pArray, count );
+			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray, count );
+			else							Strategy_t::Move( _memory.Pointer(), (T*)pArray, count );
 
 			_first = 0;
 			_end   = count;
@@ -479,8 +479,8 @@ namespace GXTypes
 		{
 			usize	count = GXMath::Min( count, _first );
 
-			if ( TypeTraits::IsConst<B> )	Strategy::Copy( _memory.Pointer() + _first - count, pArray + count - count, count );
-			else							Strategy::Move( _memory.Pointer() + _first - count, (T*)pArray + count - count, count );
+			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - count, pArray + count - count, count );
+			else							Strategy_t::Move( _memory.Pointer() + _first - count, (T*)pArray + count - count, count );
 
 			_first -= count;
 			
@@ -489,14 +489,14 @@ namespace GXTypes
 				count   = count - count;
 				_first = _size - count;
 
-				if ( TypeTraits::IsConst<B> )	Strategy::Copy( _memory.Pointer() + _first, pArray, count );
-				else							Strategy::Move( _memory.Pointer() + _first, (T*)pArray, count );
+				if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first, pArray, count );
+				else							Strategy_t::Move( _memory.Pointer() + _first, (T*)pArray, count );
 			}
 		}
 		else
 		{
-			if ( TypeTraits::IsConst<B> )	Strategy::Copy( _memory.Pointer() + _first - count, pArray, count );
-			else							Strategy::Move( _memory.Pointer() + _first - count, (T*)pArray, count );
+			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - count, pArray, count );
+			else							Strategy_t::Move( _memory.Pointer() + _first - count, (T*)pArray, count );
 
 			_first -= count;
 		}
@@ -522,8 +522,8 @@ namespace GXTypes
 
 		if ( Empty() )
 		{
-			if ( TypeTraits::IsConst<B> )	Strategy::Copy( _memory.Pointer(), pArray, count );
-			else							Strategy::Move( _memory.Pointer(), (T*)pArray, count );
+			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray, count );
+			else							Strategy_t::Move( _memory.Pointer(), (T*)pArray, count );
 
 			_first = 0;
 			_end   = count;
@@ -533,8 +533,8 @@ namespace GXTypes
 		{
 			usize	cnt = GXMath::Min( count, _size - _end );
 
-			if ( TypeTraits::IsConst<B> )	Strategy::Copy( _memory.Pointer() + _end, pArray, cnt );
-			else							Strategy::Move( _memory.Pointer() + _end, (T*)pArray, cnt );
+			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, cnt );
+			else							Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, cnt );
 
 			_end += cnt;
 			
@@ -542,14 +542,14 @@ namespace GXTypes
 			{
 				_end = count - cnt;
 
-				if ( TypeTraits::IsConst<B> )	Strategy::Copy( _memory.Pointer(), pArray + cnt, count - cnt );
-				else							Strategy::Move( _memory.Pointer(), (T*)pArray + cnt, count - cnt );
+				if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray + cnt, count - cnt );
+				else							Strategy_t::Move( _memory.Pointer(), (T*)pArray + cnt, count - cnt );
 			}
 		}
 		else
 		{
-			if ( TypeTraits::IsConst<B> )	Strategy::Copy( _memory.Pointer() + _end, pArray, count );
-			else							Strategy::Move( _memory.Pointer() + _end, (T*)pArray, count );
+			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, count );
+			else							Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, count );
 
 			_end += count;
 		}
@@ -680,12 +680,12 @@ namespace GXTypes
 
 			if ( first_del > _end )
 			{
-				Strategy::Destroy( _memory.Pointer() + first_del, _size - first_del );
-				Strategy::Destroy( _memory.Pointer(), _end );
+				Strategy_t::Destroy( _memory.Pointer() + first_del, _size - first_del );
+				Strategy_t::Destroy( _memory.Pointer(), _end );
 			}
 			else
 			{
-				Strategy::Destroy( _memory.Pointer() + first_del, old_count - newSize );
+				Strategy_t::Destroy( _memory.Pointer() + first_del, old_count - newSize );
 			}
 
 			_end = first_del;
@@ -699,12 +699,12 @@ namespace GXTypes
 		
 		if ( first_uninit > _end )
 		{
-			Strategy::Create( _memory.Pointer() + first_uninit, _size - first_uninit );
-			Strategy::Create( _memory.Pointer(), _end );
+			Strategy_t::Create( _memory.Pointer() + first_uninit, _size - first_uninit );
+			Strategy_t::Create( _memory.Pointer(), _end );
 		}
 		else
 		{
-			Strategy::Create( _memory.Pointer() + first_uninit, newSize - old_count );
+			Strategy_t::Create( _memory.Pointer() + first_uninit, newSize - old_count );
 		}
 	}
 	
@@ -761,12 +761,12 @@ namespace GXTypes
 			else
 			if ( _first > _end )
 			{
-				Strategy::Destroy( _memory.Pointer() + _first, _size - _first );
-				Strategy::Destroy( _memory.Pointer(), _end );
+				Strategy_t::Destroy( _memory.Pointer() + _first, _size - _first );
+				Strategy_t::Destroy( _memory.Pointer(), _end );
 			}
 			else
 			{
-				Strategy::Destroy( _memory.Pointer() + _first, Count() );
+				Strategy_t::Destroy( _memory.Pointer() + _first, Count() );
 			}
 			_memory.Deallocate();
 		}
@@ -789,12 +789,12 @@ namespace GXTypes
 			else
 			if ( _first > _end )
 			{
-				Strategy::Destroy( _memory.Pointer() + _first, _size - _first );
-				Strategy::Destroy( _memory.Pointer(), _end );
+				Strategy_t::Destroy( _memory.Pointer() + _first, _size - _first );
+				Strategy_t::Destroy( _memory.Pointer(), _end );
 			}
 			else
 			{
-				Strategy::Destroy( _memory.Pointer() + _first, Count() );
+				Strategy_t::Destroy( _memory.Pointer() + _first, Count() );
 			}
 		}
 		_first = _end = 0;
@@ -890,17 +890,17 @@ namespace GXTypes
 	struct Hash< CircularQueue<T,S,MC> > :
 		private Hash< ArrayCRef<T> >
 	{
-		typedef CircularQueue<T,S,MC>		key_t;
-		typedef Hash< ArrayCRef<T> >		base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef CircularQueue<T,S,MC>		Key_t;
+		typedef Hash< ArrayCRef<T> >		Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
 			typedef ArrayCRef<T>	Buf_t;
 
-			base_t::key_t	part0;
-			base_t::key_t	part1;
-			base_t			hasher;
+			Base_t::Key_t	part0;
+			Base_t::Key_t	part1;
+			Base_t			hasher;
 
 			x.GetParts( part0, part1 );
 

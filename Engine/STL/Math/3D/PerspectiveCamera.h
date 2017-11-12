@@ -25,8 +25,8 @@ namespace GXMath
 		typedef Quaternion<T>			quat_t;
 		typedef Matrix<T,4,4>			mat4_t;
 
-		typedef Vec<T,3>				vec3_t;
-		typedef Vec<T,2>				vec2_t;
+		typedef Vec<T,3>				Vec3_t;
+		typedef Vec<T,2>				Vec2_t;
 
 		typedef Radians<T>				radians_t;
 		typedef RadiansVec<T,2>			radians2_t;
@@ -57,7 +57,7 @@ namespace GXMath
 		radians3_t		_rotationMaxAngle;
 		bool3			_rotationLimitMask;
 
-		vec2_t			_clipPlanes;			// near, far
+		Vec2_t			_clipPlanes;			// near, far
 		radians_t		_fovY;
 		T				_viewAspect;			// width/height
 		T				_zoom;
@@ -67,7 +67,7 @@ namespace GXMath
 
 	// methods
 	protected:
-		vec3_t	&		_Position ()				{ return _transform.Position(); }
+		Vec3_t	&		_Position ()				{ return _transform.Position(); }
 		quat_t	&		_Orientation ()				{ return _transform.Orientation(); }
 		transform_t	&	_Transform ()				{ return _transform; }
 		mat4_t	&		_ProjMatrix ()				{ return _projMatrix; }
@@ -83,7 +83,7 @@ namespace GXMath
 		radians3_t const &	RotationMinAngle ()	const	{ return _rotationMinAngle; }
 		radians3_t const &	RotationMaxAngle ()	const	{ return _rotationMaxAngle; }
 
-		vec3_t const &		Position ()			const	{ return _transform.Position(); }
+		Vec3_t const &		Position ()			const	{ return _transform.Position(); }
 		quat_t const &		Orientation ()		const	{ return _transform.Orientation(); }
 		mat4_t const &		ViewMatrix ()		const	{ return _viewMatrix; }
 		transform_t const &	Transform ()		const	{ return _transform; }
@@ -94,11 +94,11 @@ namespace GXMath
 
 		mat4_t const		GetModelMatrix ()	const;
 
-		vec3_t	const		GetAxisX ()			const	{ return vec3_t( _viewMatrix(0,0), _viewMatrix(1,0), _viewMatrix(2,0) ); }
-		vec3_t	const		GetAxisY ()			const	{ return vec3_t( _viewMatrix(0,1), _viewMatrix(1,1), _viewMatrix(2,1) ); }
-		vec3_t	const		GetAxisZ ()			const	{ return vec3_t( _viewMatrix(0,2), _viewMatrix(1,2), _viewMatrix(2,2) ); }
+		Vec3_t	const		GetAxisX ()			const	{ return Vec3_t( _viewMatrix(0,0), _viewMatrix(1,0), _viewMatrix(2,0) ); }
+		Vec3_t	const		GetAxisY ()			const	{ return Vec3_t( _viewMatrix(0,1), _viewMatrix(1,1), _viewMatrix(2,1) ); }
+		Vec3_t	const		GetAxisZ ()			const	{ return Vec3_t( _viewMatrix(0,2), _viewMatrix(1,2), _viewMatrix(2,2) ); }
 
-		vec2_t const &		ClipPlanes ()		const	{ return _clipPlanes; }
+		Vec2_t const &		ClipPlanes ()		const	{ return _clipPlanes; }
 		T					GetAspect ()		const	{ return _viewAspect; }
 
 		radians_t			GetDefaultFovY()	const	{ return _fovY; }
@@ -108,14 +108,14 @@ namespace GXMath
 
 		T					VisibilityRange ()	const	{ return _clipPlanes.y - _clipPlanes.x; }
 
-		void Create (const transform_t &transform, radians_t fovY, T viewAspect, const vec2_t &clipPlanes);
-		void Create (const transform_t &transform, const vec2_t &viewSize, T distanceInMeters, const vec2_t &clipPlanes);
+		void Create (const transform_t &transform, radians_t fovY, T viewAspect, const Vec2_t &clipPlanes);
+		void Create (const transform_t &transform, const Vec2_t &viewSize, T distanceInMeters, const Vec2_t &clipPlanes);
 	
-		void SetClipPlanes (const vec2_t &clipPlanes);
+		void SetClipPlanes (const Vec2_t &clipPlanes);
 		void Recalculate ();
 
 		void Resize (radians_t fovY, T viewAspect);
-		void Resize (const vec2_t &viewSize, T distanceInMeters);
+		void Resize (const Vec2_t &viewSize, T distanceInMeters);
 
 		void Increase (T newZoom = T(1));
 
@@ -126,26 +126,26 @@ namespace GXMath
 		// FPS Camera //
 		void RotateFPS (const radians2_t &rotation);
 		void RotateFPS (const degrees2_t &rotation);
-		void MoveFPS (const vec3_t &delta);
-		void TransformFPS (const vec3_t &delta, vec3_t &pos);
+		void MoveFPS (const Vec3_t &delta);
+		void TransformFPS (const Vec3_t &delta, Vec3_t &pos);
 
 		// Free FPS Camera //
-		void MoveFPSFree (const vec3_t &delta);
-		void TransformFPSFree (const vec3_t &delta, vec3_t &pos);
+		void MoveFPSFree (const Vec3_t &delta);
+		void TransformFPSFree (const Vec3_t &delta, Vec3_t &pos);
 
 		// Flight Camera //
 		void RotateFlight (const radians3_t &rotation);
 		void RotateFlight (const degrees3_t &rotation);
-		void MoveFlight (const vec3_t &delta);
-		void TransformFlight (const vec3_t &delta, vec3_t &pos);
+		void MoveFlight (const Vec3_t &delta);
+		void TransformFlight (const Vec3_t &delta, Vec3_t &pos);
 
 		// Other //
-		void MoveToPosition (const vec3_t &pos);
+		void MoveToPosition (const Vec3_t &pos);
 
 
-		static const vec3_t UpDir ()		{ return vec3_t( T(0), T(1), T(0) ); }
-		static const vec3_t RightDir ()		{ return vec3_t( T(1), T(0), T(0) ); }
-		static const vec3_t ForwardDir ()	{ return vec3_t( T(0), T(0), T(1) ); }
+		static const Vec3_t UpDir ()		{ return Vec3_t( T(0), T(1), T(0) ); }
+		static const Vec3_t RightDir ()		{ return Vec3_t( T(1), T(0), T(0) ); }
+		static const Vec3_t ForwardDir ()	{ return Vec3_t( T(0), T(0), T(1) ); }
 	};
 
 	
@@ -187,7 +187,7 @@ namespace GXMath
 	template <typename T>
 	inline Frustum<T> const &  PerspectiveCamera<T>::Frustum ()
 	{
-		if ( _changed.Get( EChangedFlag::Frustum ) )
+		if ( _changed[ EChangedFlag::Frustum ] )
 		{
 			_frustum.Setup( ViewProjMatrix() );
 			_changed.Reset( EChangedFlag::Frustum );
@@ -204,7 +204,7 @@ namespace GXMath
 	template <typename T>
 	inline const Matrix<T,4,4> & PerspectiveCamera<T>::ViewProjMatrix ()
 	{
-		if ( _changed.Get( EChangedFlag::ViewProjMat ) )
+		if ( _changed[ EChangedFlag::ViewProjMat ] )
 		{
 			_cachedViewProj = _projMatrix * _viewMatrix;
 			_changed.Reset( EChangedFlag::ViewProjMat );
@@ -219,7 +219,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::Create (const transform_t &transform, radians_t fovY, T viewAspect, const vec2_t &clipPlanes)
+	inline void PerspectiveCamera<T>::Create (const transform_t &transform, radians_t fovY, T viewAspect, const Vec2_t &clipPlanes)
 	{
 		_zoom		= T(1);
 		_transform	= transform;
@@ -234,7 +234,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::Create (const transform_t &transform, const vec2_t &viewSize, T distanceInMeters, const vec2_t &clipPlanes)
+	inline void PerspectiveCamera<T>::Create (const transform_t &transform, const Vec2_t &viewSize, T distanceInMeters, const Vec2_t &clipPlanes)
 	{
 		_zoom		= T(1);
 		_transform	= transform;
@@ -249,7 +249,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::SetClipPlanes (const vec2_t &clipPlanes)
+	inline void PerspectiveCamera<T>::SetClipPlanes (const Vec2_t &clipPlanes)
 	{
 		_clipPlanes = clipPlanes;
 
@@ -289,7 +289,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::Resize (const vec2_t &viewSize, T distanceInMeters)
+	inline void PerspectiveCamera<T>::Resize (const Vec2_t &viewSize, T distanceInMeters)
 	{
 		_fovY		 = 2 * ATan( viewSize.y / (2 * distanceInMeters) );
 		_viewAspect	 = viewSize.x / viewSize.y;
@@ -426,9 +426,9 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::TransformFPS (const vec3_t &delta, vec3_t &pos)
+	inline void PerspectiveCamera<T>::TransformFPS (const Vec3_t &delta, Vec3_t &pos)
 	{
-		vec3_t const	forwards = Cross( UpDir(), GetAxisX() ).Normalized();
+		Vec3_t const	forwards = Cross( UpDir(), GetAxisX() ).Normalized();
 		
 		pos += forwards   * delta.x;
 		pos += GetAxisX() * delta.y;
@@ -441,7 +441,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::MoveFPS (const vec3_t &delta)
+	inline void PerspectiveCamera<T>::MoveFPS (const Vec3_t &delta)
 	{
 		TransformFPS( delta, _Position() );
 	}
@@ -456,7 +456,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::TransformFPSFree (const vec3_t &delta, vec3_t &pos)
+	inline void PerspectiveCamera<T>::TransformFPSFree (const Vec3_t &delta, Vec3_t &pos)
 	{
 		pos += GetAxisZ() * -delta.x;
 		pos += GetAxisX() *  delta.y;
@@ -469,7 +469,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::MoveFPSFree (const vec3_t &delta)
+	inline void PerspectiveCamera<T>::MoveFPSFree (const Vec3_t &delta)
 	{
 		TransformFPSFree( delta, _Position() );
 	}
@@ -518,7 +518,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::TransformFlight (const vec3_t &delta, vec3_t &pos)
+	inline void PerspectiveCamera<T>::TransformFlight (const Vec3_t &delta, Vec3_t &pos)
 	{
 		pos += GetAxisX() *  delta.y;
 		pos += UpDir()    *  delta.z;
@@ -526,7 +526,7 @@ namespace GXMath
 	}
 	
 	template <typename T>
-	inline void PerspectiveCamera<T>::MoveFlight (const vec3_t &delta)
+	inline void PerspectiveCamera<T>::MoveFlight (const Vec3_t &delta)
 	{
 		TransformFlight( delta, _Position() );
 	}
@@ -537,7 +537,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::MoveToPosition (const vec3_t &pos)
+	inline void PerspectiveCamera<T>::MoveToPosition (const Vec3_t &pos)
 	{
 		_Position() = pos;
 	}

@@ -373,6 +373,8 @@ namespace Platforms
 			// sRGB
 			sRGB8					= _vtypeinfo::RGB8_UNorm | sRGB_Flag,
 			sRGB8_A8				= _vtypeinfo::RGBA8_UNorm | sRGB_Flag,
+			sBGR8					= _vtypeinfo::RGB8_UNorm | sRGB_Flag | Rev_Flag,
+			sBGR8_A8				= _vtypeinfo::RGBA8_UNorm | sRGB_Flag | Rev_Flag,
 
 			// signed integer
 			R8I						= _vtypeinfo::Byte,
@@ -491,6 +493,11 @@ namespace Platforms
 
 		static constexpr bool HasDepth			(type value);
 		static constexpr bool HasStencil		(type value);
+
+		static constexpr bool IsFloat			(type value);
+		static constexpr bool IsIntNorm			(type value);	// snorm or unorm
+		static constexpr bool IsInt				(type value);
+		static constexpr bool IsUInt			(type value);
 
 		static constexpr uint ColorChannelsCount (type value);
 
@@ -622,12 +629,33 @@ namespace Platforms
 	{
 		return EnumEq( value, sRGB_Flag );
 	}
+	
+	inline constexpr bool EPixelFormat::IsFloat (type value)
+	{
+		const uint val = (value & _vtypeinfo::_TYPE_MASK);
+		return	val == _vtypeinfo::_HALF		or
+				val == _vtypeinfo::_FLOAT		or
+				val == _vtypeinfo::_DOUBLE		or
+				val == _vtypeinfo::_FLOAT_11_11_10;		// TODO: compressed formats
+	}
 
+	inline constexpr bool EPixelFormat::IsIntNorm (type value)
+	{
+		return EnumEq( value, _vtypeinfo::_NORM ) and not IsFloat( value );
+	}
+
+	inline constexpr bool EPixelFormat::IsUInt (type value)
+	{
+		return not EnumEq( value, _vtypeinfo::_NORM ) and EnumEq( value, _vtypeinfo::_UNSIGNED ) and IsFloat( value );
+	}
+
+	inline constexpr bool EPixelFormat::IsInt (type value)
+	{
+		return not EnumEq( value, _vtypeinfo::_NORM ) and not EnumEq( value, _vtypeinfo::_UNSIGNED ) and IsFloat( value );
+	}
 
 	inline BitsVec<usize, 4>  EPixelFormat::BitsPerChannel (type value)
 	{
-		using vtype	= _platforms_hidden_::EValueTypeInfo;
-
 		if ( IsCompressed( value ) ) {
 			TODO( "" );
 			return BitsVec<usize, 4>( 1_bit );
@@ -635,28 +663,28 @@ namespace Platforms
 		
 		usize4	size;
 
-		switch ( value & vtype::_TYPE_MASK )
+		switch ( value & _vtypeinfo::_TYPE_MASK )
 		{
-			case vtype::_BYTE :						size = usize4( 8 );					break;
-			case vtype::_SHORT :					size = usize4( 16 );				break;
-			case vtype::_INT :						size = usize4( 32 );				break;
-			case vtype::_HALF :						size = usize4( 16 );				break;
-			case vtype::_FLOAT :					size = usize4( 32 );				break;
-			case vtype::_DOUBLE :					size = usize4( 64 );				break;
-			case vtype::_INT_10_10_10_2 :			size = usize4( 10, 10, 10, 2 );		break;
-			case vtype::_FLOAT_11_11_10 :			size = usize4( 11, 11, 10, 0 );		break;
-			case vtype::_USHORT_4_4_4_4 :			size = usize4( 4, 4, 4, 4 );		break;
-			case vtype::_USHORT_5_5_5_1 :			size = usize4( 5, 5, 5, 1 );		break;
-			case vtype::_USHORT_5_6_5 :				size = usize4( 5, 6, 5, 0 );		break;
-			case vtype::_INT_10_10_10 :				size = usize4( 10, 10, 10, 0 );		break;
-			case vtype::_USHORT_5_5_5 :				size = usize4( 5, 5, 5, 0 );		break;
-			case vtype::_INT24 :					size = usize4( 24, 0, 0, 0 );		break;
-			case vtype::_DEPTH_24_STENCIL_8 :		size = usize4( 24, 8, 0, 0 );		break;
-			case vtype::_FLOAT_DEPTH_32_STENCIL_8 :	size = usize4( 32, 8, 0, 0 );		break;
-			default :								RETURN_ERR( "unknown type!" );
+			case _vtypeinfo::_BYTE :						size = usize4( 8 );					break;
+			case _vtypeinfo::_SHORT :						size = usize4( 16 );				break;
+			case _vtypeinfo::_INT :							size = usize4( 32 );				break;
+			case _vtypeinfo::_HALF :						size = usize4( 16 );				break;
+			case _vtypeinfo::_FLOAT :						size = usize4( 32 );				break;
+			case _vtypeinfo::_DOUBLE :						size = usize4( 64 );				break;
+			case _vtypeinfo::_INT_10_10_10_2 :				size = usize4( 10, 10, 10, 2 );		break;
+			case _vtypeinfo::_FLOAT_11_11_10 :				size = usize4( 11, 11, 10, 0 );		break;
+			case _vtypeinfo::_USHORT_4_4_4_4 :				size = usize4( 4, 4, 4, 4 );		break;
+			case _vtypeinfo::_USHORT_5_5_5_1 :				size = usize4( 5, 5, 5, 1 );		break;
+			case _vtypeinfo::_USHORT_5_6_5 :				size = usize4( 5, 6, 5, 0 );		break;
+			case _vtypeinfo::_INT_10_10_10 :				size = usize4( 10, 10, 10, 0 );		break;
+			case _vtypeinfo::_USHORT_5_5_5 :				size = usize4( 5, 5, 5, 0 );		break;
+			case _vtypeinfo::_INT24 :						size = usize4( 24, 0, 0, 0 );		break;
+			case _vtypeinfo::_DEPTH_24_STENCIL_8 :			size = usize4( 24, 8, 0, 0 );		break;
+			case _vtypeinfo::_FLOAT_DEPTH_32_STENCIL_8 :	size = usize4( 32, 8, 0, 0 );		break;
+			default :										RETURN_ERR( "unknown type!" );
 		}
 
-		const uint	col_chans	= (value & vtype::_COL_MASK) >> vtype::_COL_OFF;
+		const uint	col_chans	= (value & _vtypeinfo::_COL_MASK) >> _vtypeinfo::_COL_OFF;
 
 		if ( col_chans > 0 )
 		{

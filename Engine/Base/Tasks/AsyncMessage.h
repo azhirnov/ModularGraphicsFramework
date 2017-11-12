@@ -22,7 +22,7 @@ namespace Base
 	// types
 	public:
 		using Self		= AsyncMessage;
-		using Func_t	= std::function< void (const TaskModulePtr &) >;	// TODO: change to ModulePtr
+		using Func_t	= std::function< void (GlobalSystemsRef) >;
 
 
 	// variables
@@ -32,19 +32,19 @@ namespace Base
 
 	// methods
 	public:
-		AsyncMessage (GX_DEFCTOR) noexcept : _func()
+		AsyncMessage (GX_DEFCTOR) : _func{}
 		{}
 
-		explicit AsyncMessage (Func_t &&func) noexcept : _func( RVREF(func) )
+		explicit AsyncMessage (Func_t &&func) : _func{ RVREF(func) }
 		{}
 		
 		template <typename FN>
-		explicit AsyncMessage (FN value) noexcept : _func(value)
+		explicit AsyncMessage (FN value) : _func{value}
 		{}
 
 		template <typename FN, typename ...Args>
-		explicit AsyncMessage (FN func, Args&& ...args) noexcept :
-			_func(std::bind( func, FW<Args>(args)..., std::placeholders::_1 ))
+		explicit AsyncMessage (FN func, Args&& ...args) :
+			_func{std::bind( func, FW<Args>(args)..., std::placeholders::_1 )}
 		{}
 		
 		AsyncMessage (Self &&)			= default;
@@ -54,10 +54,10 @@ namespace Base
 		Self& operator = (const Self &)	= default;
 
 
-		void Process (const TaskModulePtr &task) const noexcept
+		void Process (GlobalSystemsRef gs) const noexcept
 		{
 			ASSERT( bool(_func) );
-			return _func( task );
+			return _func( gs );
 		}
 	};
 
@@ -73,30 +73,30 @@ namespace ModuleMsg
 	struct PushAsyncMessage
 	{
 	// variables
-		SingleRead< Base::AsyncMessage >	asyncMsg;
+		ReadOnce< Base::AsyncMessage >		asyncMsg;
 		Base::ThreadID						target;
 		Base::ThreadID						altTarget;
 
 	// methods
 		PushAsyncMessage (Base::AsyncMessage &&msg, Base::ThreadID target) :
-			asyncMsg( RVREF(msg) ), target(target), altTarget(target)
+			asyncMsg{ RVREF(msg) }, target{ target }, altTarget{ target }
 		{}
 
 		PushAsyncMessage (Base::AsyncMessage &&msg, Base::ThreadID target, Base::ThreadID altTarget) :
-			asyncMsg( RVREF(msg) ), target(target), altTarget(altTarget)
+			asyncMsg{ RVREF(msg) }, target{ target }, altTarget{ altTarget }
 		{}
 
 		template <typename T>
 		PushAsyncMessage (const ModulePtr &target, Base::Message<T> &&msg) :
-			asyncMsg( std::bind( &_Call<T>, target, RVREF( msg ), std::placeholders::_1 ) ),
-			target(target->GetThreadID()),
-			altTarget(target->GetThreadID())
+			asyncMsg{LAMBDA( targ = target, m = RVREF(msg) ) (GlobalSystemsRef) { _Call<T>( targ, m ); }},
+			target{ target->GetThreadID() },
+			altTarget{ target->GetThreadID() }
 		{}
 
 
 	private:
 		template <typename T>
-		static void _Call (const ModulePtr &target, const Base::Message<T> &msg, const Base::TaskModulePtr &)
+		static void _Call (const ModulePtr &target, const Base::Message<T> &msg)
 		{
 			target->Send<T>( msg );
 		}
@@ -110,7 +110,7 @@ namespace ModuleMsg
 	{
 		using Func_t			= Delegate< usize (Base::AsyncMessage &&) >;		// must be internally synchronized function
 
-		SingleRead< Func_t >	asyncPushMsg;
+		ReadOnce< Func_t >		asyncPushMsg;
 
 		AddTaskSchedulerToManager (const ModulePtr &mod, Func_t &&func) :
 			AddToManager{ mod }, asyncPushMsg( RVREF(func) )

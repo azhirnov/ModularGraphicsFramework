@@ -13,7 +13,7 @@ namespace GXScript
 
 	namespace _script_hidden_
 	{
-		struct OperatorBinderHelper
+		struct _STL_EXPORT_ OperatorBinderHelper
 		{
 		public:
 			enum EUnaryOperator

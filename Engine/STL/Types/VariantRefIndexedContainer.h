@@ -19,8 +19,8 @@ namespace GXTypes
 	template <typename Container, typename Typelist>
 	struct VariantRefIndexedContainer
 	{
-		STATIC_ASSERT(( CompileTime::IsSameTypesWithoutQualifiers< typename Container::value_t, VariantRef> or
-						CompileTime::IsSameTypesWithoutQualifiers< typename Container::value_t, VariantCRef> ));
+		STATIC_ASSERT(( CompileTime::IsSameTypesWithoutQualifiers< typename Container::Value_t, VariantRef> or
+						CompileTime::IsSameTypesWithoutQualifiers< typename Container::Value_t, VariantCRef> ));
 
 	// types
 	public:
@@ -29,7 +29,7 @@ namespace GXTypes
 		using Typelist_t	= Typelist;
 		
 		template <usize I>	using Value_t		= TypeTraits::RemoveReference< typename Typelist::template Get<I> >;
-		template <usize I>	using ValueRef_t	= TypeTraits::ResultOf< decltype(&Container::value_t::template Get< Value_t<I> >) >;
+		template <usize I>	using ValueRef_t	= TypeTraits::ResultOf< decltype(&Container::Value_t::template Get< Value_t<I> >) >;
 
 
 	// variables

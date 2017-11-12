@@ -37,7 +37,7 @@ namespace GXMath
 */
 	static void InitializeAllRandomGenerators ()
 	{
-		typedef CompileTime::TypeListFrom< GXMath::DefaultRandomEngine, GXMath::PlatformRandomEngine >	engine_list;
+		using engine_list	= CompileTime::TypeListFrom< GXMath::DefaultRandomEngine, GXMath::PlatformRandomEngine >;
 
 		InitializeAllRandomGenerators_Op	op;
 		engine_list::RuntimeForEach( op );

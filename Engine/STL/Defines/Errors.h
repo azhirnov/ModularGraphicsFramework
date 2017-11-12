@@ -20,25 +20,27 @@
 #	define __GX_RETURN_ERR( _text_, _ret_, ... ) \
 		{ return (_ret_); }
 
-#	define __GX_CHECK_ERRX( _cond_, _text_, _level_, _ret_ ) \
-		{ (void)( _cond_ ); }
+#	define __GX_CHECK_ERRX( _expr_, _text_, _level_, _ret_ ) \
+		{ (void)( _expr_ ); }
 
-#	define __GX_CHECK_WARN( _cond_, _text_, _level_ ) \
-		{ (void)( _cond_ ); }
+#	define __GX_CHECK_WARN( _expr_, _text_, _level_ ) \
+		{ (void)( _expr_ ); }
 
 #else
 		
 #	define __GX_RETURN_ERR( _text_, _ret_, ... ) \
 		{ __GX_LOG( _text_, ::GX_STL::ELog::_DefError );  return (_ret_); }
 
-#	define __GX_CHECK_ERRX( _cond_, _text_, _level_, _ret_ ) \
-		{ if ( not (_cond_) ) { \
+#	define __GX_CHECK_ERRX( _expr_, _text_, _level_, _ret_ ) \
+		{ if (GX_BRANCH_EXPECT( _expr_ )) {}\
+		  else { \
 			__GX_LOG( _text_, (_level_) ); \
 			return (_ret_); \
 		}}
 
-#	define __GX_CHECK_WARN( _cond_, _text_, _level_ ) \
-		{ if ( not (_cond_) ) { \
+#	define __GX_CHECK_WARN( _expr_, _text_, _level_ ) \
+		{ if (GX_BRANCH_EXPECT( _expr_ )) {} \
+		  else { \
 			__GX_LOG( _text_, (_level_) ); \
 		}}
 
@@ -80,8 +82,9 @@
 
 
 	// assert
-#	define __ASSERT2( _cond_, _text_, _level_ ) \
-		{ if ( not (_cond_) ) { \
+#	define __ASSERT2( _expr_, _text_, _level_ ) \
+		{ if (GX_BRANCH_EXPECT( _expr_ )) {} \
+		  else { \
 			LOG( _text_, _level_ ); \
 		}}
 

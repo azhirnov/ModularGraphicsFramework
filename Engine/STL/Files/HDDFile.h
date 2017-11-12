@@ -48,7 +48,7 @@ namespace File
 		}
 
 
-		bool Open (StringCRef address)
+		bool Open (StringCRef address) noexcept
 		{
 			Close();
 			_name = address;
@@ -58,39 +58,39 @@ namespace File
 
 
 		// RFile //
-		virtual BytesU ReadBuf (void * buf, BytesU size) override
+		virtual BytesU ReadBuf (void * buf, BytesU size) noexcept override
 		{
 			return BytesU( fread( buf, 1, usize(size), _file.ptr() ) );
 		}
 
 
 		// BaseFile //
-		virtual void Close () override
+		virtual void Close () noexcept override
 		{
 			return _Close();
 		}
 
-		virtual bool IsOpened () const override
+		virtual bool IsOpened () const noexcept override
 		{
 			return _file.IsNotNull();
 		}
 
-		virtual bool SeekSet (BytesU offset) override
+		virtual bool SeekSet (BytesU offset) noexcept override
 		{
 			return fseek( _file, int(offset), SEEK_SET ) == 0;
 		}
 
-		virtual bool SeekCur (BytesI offset) override
+		virtual bool SeekCur (BytesI offset) noexcept override
 		{
 			return fseek( _file, int(offset), SEEK_CUR ) == 0;
 		}
 
-		virtual bool SeekEnd (BytesU offset) override
+		virtual bool SeekEnd (BytesU offset) noexcept override
 		{
 			return fseek( _file, int(offset), SEEK_END ) == 0;
 		}
 		
-		virtual BytesU RemainingSize () const override
+		virtual BytesU RemainingSize () const noexcept override
 		{
 			usize	size = 0;
 			int		pos  = ftell( _file );
@@ -102,7 +102,7 @@ namespace File
 			return BytesU( size - pos );
 		}
 
-		virtual BytesU Size () const override
+		virtual BytesU Size () const noexcept override
 		{
 			usize	size = 0;
 			int		pos  = ftell( _file );
@@ -114,12 +114,12 @@ namespace File
 			return BytesU( size );
 		}
 
-		virtual BytesU Pos () const override
+		virtual BytesU Pos () const noexcept override
 		{
 			return BytesU( ftell( _file ) );
 		}
 		
-		virtual bool IsEOF () const override
+		virtual bool IsEOF () const noexcept override
 		{
 			return Pos() >= Size();
 		}
@@ -202,7 +202,7 @@ namespace File
 		}
 
 
-		bool Open (StringCRef address, EOpenFlags::type flags = EOpenFlags::None)
+		bool Open (StringCRef address, EOpenFlags::type flags = EOpenFlags::None) noexcept
 		{
 			char	mode[8]	= {0};
 			int		pos		= 0;
@@ -228,44 +228,44 @@ namespace File
 
 
 		// WFile //
-		virtual BytesU WriteBuf (const void * buf, BytesU size) override
+		virtual BytesU WriteBuf (const void * buf, BytesU size) noexcept override
 		{
 			return BytesU( fwrite( buf, 1, usize(size), _file ) );
 		}
 		
-		virtual void Flush () override
+		virtual void Flush () noexcept override
 		{
 			fflush( _file );
 		}
 
 
 		// BaseFile //
-		virtual void Close () override
+		virtual void Close () noexcept override
 		{
 			return _Close();
 		}
 
-		virtual bool IsOpened () const override
+		virtual bool IsOpened () const noexcept override
 		{
 			return _file.IsNotNull();
 		}
 
-		virtual bool SeekSet (BytesU offset) override
+		virtual bool SeekSet (BytesU offset) noexcept override
 		{
 			return fseek( _file, int(offset), SEEK_SET ) == 0;
 		}
 
-		virtual bool SeekCur (BytesI offset) override
+		virtual bool SeekCur (BytesI offset) noexcept override
 		{
 			return fseek( _file, int(offset), SEEK_CUR ) == 0;
 		}
 
-		virtual bool SeekEnd (BytesU offset) override
+		virtual bool SeekEnd (BytesU offset) noexcept override
 		{
 			return fseek( _file, int(offset), SEEK_END ) == 0;
 		}
 		
-		virtual BytesU RemainingSize () const override
+		virtual BytesU RemainingSize () const noexcept override
 		{
 			usize	size = 0;
 			int		pos  = ftell( _file );
@@ -277,7 +277,7 @@ namespace File
 			return BytesU( size - pos );
 		}
 
-		virtual BytesU Size () const override
+		virtual BytesU Size () const noexcept override
 		{
 			usize	size = 0;
 			int		pos  = ftell( _file );
@@ -289,12 +289,12 @@ namespace File
 			return BytesU( size );
 		}
 
-		virtual BytesU Pos () const override
+		virtual BytesU Pos () const noexcept override
 		{
 			return BytesU( ftell( _file ) );
 		}
 		
-		virtual bool IsEOF () const override
+		virtual bool IsEOF () const noexcept override
 		{
 			return Pos() >= Size();
 		}

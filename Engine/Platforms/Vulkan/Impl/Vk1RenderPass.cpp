@@ -1,6 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
+#include "Engine/Platforms/Vulkan/VulkanContext.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -8,76 +9,71 @@ namespace Engine
 {
 namespace PlatformVK
 {
+
 	
-/*
-=================================================
-	constructor
-=================================================
-*/
-	Vk1RenderPassCache::Vk1RenderPassCache (VkSystemsRef vkSys) :
-		_vkSystems( vkSys )
+	//
+	// Vulkan Render Pass
+	//
+
+	class Vk1RenderPass final : public Vk1BaseModule
 	{
-		_renderPasses.Reserve( 64 );
-	}
-	
-/*
-=================================================
-	Create
-=================================================
-*/
-	Vk1RenderPassCache::Vk1RenderPassPtr  Vk1RenderPassCache::Create (const GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
-	{
-		// TODO: validate
-		
-		// find cached render pass
-		RenderPasses_t::const_iterator	iter;
+	// types
+	private:
+		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetRenderPassDescriptor,
+											GpuMsg::GetVkRenderPassID
+										> >;
 
-		if ( _renderPasses.CustomSearch().Find( RenderPassSearch( ci.descr ), OUT iter ) and
-			 iter->rp->GetState() == Module::EState::ComposedImmutable )
-		{
-			return iter->rp;
-		}
-		
-		// create new render pass
-		auto	result = New< Vk1RenderPass >( gs, ci );
+		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
 
-		ModuleUtils::Initialize( {result}, null );
 
-		CHECK_ERR( result->GetState() == Module::EState::ComposedImmutable );
+	// constants
+	private:
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
-		_renderPasses.Add( SearchableRenderPass( result ) );
-		return result;
-	}
-	
-/*
-=================================================
-	Destroy
-=================================================
-*/
-	void Vk1RenderPassCache::Destroy ()
-	{
-		Message< ModuleMsg::Delete >	del_msg;
 
-		FOR( i, _renderPasses ) {
-			_renderPasses[i].rp->Send( del_msg );
-		}
+	// variables
+	private:
+		RenderPassDescriptor	_descr;
 
-		_renderPasses.Clear();
-	}
+		vk::VkRenderPass		_renderPassId;
+
+
+	// methods
+	public:
+		Vk1RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
+		~Vk1RenderPass ();
+
+		RenderPassDescriptor const&	GetDescriptor ()	const	{ return _descr; }
+
+
+	// message handlers
+	private:
+		bool _Compose (const Message< ModuleMsg::Compose > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _GetVkRenderPassID (const Message< GpuMsg::GetVkRenderPassID > &);
+		bool _GetRenderPassDescriptor (const Message< GpuMsg::GetRenderPassDescriptor > &);
+
+	private:
+		bool _IsCreated () const;
+		bool _CreateRenderPass ();
+		void _DestroyRenderPass ();
+	};
 //-----------------------------------------------------------------------------
 
 
-	
-	const Runtime::VirtualTypeList	Vk1RenderPass::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	Vk1RenderPass::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+
+	const TypeIdList	Vk1RenderPass::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	Vk1RenderPass::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	Vk1RenderPass::Vk1RenderPass (const GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkRenderPassModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+	Vk1RenderPass::Vk1RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ VkRenderPassModuleID, ~0u }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_renderPassId( VK_NULL_HANDLE )
 	{
@@ -96,7 +92,9 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1RenderPass::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkRenderPassID );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetRenderPassDescriptor );
-		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkLogicDevice );
+		_SubscribeOnMsg( this, &Vk1RenderPass::_GetDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkPrivateClasses );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -118,7 +116,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1RenderPass::_Compose (const  Message< ModuleMsg::Compose > &msg)
+	bool Vk1RenderPass::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -196,6 +194,7 @@ namespace PlatformVK
 		using AttachmentsRef2	= FixedSizeArray< VkAttachmentReference, RenderPassDescriptor::MAX_SUBPASSES >;
 		using Subpasses			= FixedSizeArray< VkSubpassDescription, RenderPassDescriptor::MAX_SUBPASSES >;
 		using Dependencies		= FixedSizeArray< VkSubpassDependency, RenderPassDescriptor::MAX_DEPENDENCIES >;
+		using Preserves			= FixedSizeArray< uint32_t, RenderPassDescriptor::MAX_COLOR_ATTACHMENTS * RenderPassDescriptor::MAX_SUBPASSES >;
 
 		Attachments				attachments;
 		AttachmentsRef			color_attach_ref;
@@ -204,6 +203,33 @@ namespace PlatformVK
 		AttachmentsRef2			resolve_attach_ref;
 		Subpasses				subpasses;
 		Dependencies			dependencies;
+		Preserves				preserves;
+
+		static const char		external_pass[] = "external";
+
+		auto	FindAttachmentIndex =	LAMBDA( this ) (StringCRef name) -> uint32_t
+										{{
+											if ( _descr.DepthStencilAttachment().name == name )
+												return _descr.ColorAttachments().Count();
+
+											FOR( i, _descr.ColorAttachments() ) {
+												if ( _descr.ColorAttachments()[i].name == name )
+													return i;
+											}
+											RETURN_ERR( "Attachement '" << name << "' not found", ~0u );	// return any invalid value
+										}};
+
+		auto	FindSubpassIndex	=	LAMBDA( this ) (StringCRef name) -> uint32_t
+										{{
+											if ( name.EqualsIC( external_pass ) )
+												return VK_SUBPASS_EXTERNAL;
+
+											FOR( i, _descr.Subpasses() ) {
+												if ( _descr.Subpasses()[i].name == name )
+													return i;
+											}
+											RETURN_ERR( "Subpass '" << name << "' not found", VK_SUBPASS_EXTERNAL-1 ); // return any invalid value
+										}};
 
 		if ( _descr.DepthStencilAttachment().IsEnabled() )
 		{
@@ -244,29 +270,29 @@ namespace PlatformVK
 			auto const&		subpass = _descr.Subpasses()[i];
 
 			VkSubpassDescription	descr = {};
-			descr.flags						= 0;	// TODO
-			descr.pipelineBindPoint			= VK_PIPELINE_BIND_POINT_GRAPHICS;
+			descr.flags						= 0;	// no flags, only vendor specific flags exists
+			descr.pipelineBindPoint			= VK_PIPELINE_BIND_POINT_GRAPHICS;	// only graphics subpasses are supported (vulkan spec 1.0)
 
 			descr.colorAttachmentCount		= (uint32_t) subpass.colors.Count();
-			descr.pColorAttachments			= subpass.colors.Empty() ? null : color_attach_ref.ptr() + color_attach_ref.Count();
+			descr.pColorAttachments			= subpass.colors.Empty() ? null : color_attach_ref.RawPtr() + color_attach_ref.Count();
 
 			descr.inputAttachmentCount		= (uint32_t) subpass.inputs.Count();
-			descr.pInputAttachments			= subpass.inputs.Empty() ? null : input_attach_ref.ptr() + input_attach_ref.Count();
+			descr.pInputAttachments			= subpass.inputs.Empty() ? null : input_attach_ref.RawPtr() + input_attach_ref.Count();
 
 			descr.preserveAttachmentCount	= (uint32_t) subpass.preserves.Count();
-			descr.pPreserveAttachments		= subpass.preserves.Empty() ? null : PointerSafeCast<vk::uint32_t>( subpass.preserves.ptr() );
+			descr.pPreserveAttachments		= preserves.Empty() ? null : preserves.RawPtr() + preserves.Count();
 
 			descr.pResolveAttachments		= subpass.resolve.IsEnabled() ?
-												resolve_attach_ref.ptr() + resolve_attach_ref.Count() :
+												resolve_attach_ref.RawPtr() + resolve_attach_ref.Count() :
 												null;
 			descr.pDepthStencilAttachment	= subpass.depthStencil.IsEnabled() ?
-												depth_stencil_attach_ref.ptr() + depth_stencil_attach_ref.Count() :
+												depth_stencil_attach_ref.RawPtr() + depth_stencil_attach_ref.Count() :
 												null;
 
 			FOR( j, subpass.colors )
 			{
 				VkAttachmentReference	att_desc = {};
-				att_desc.attachment		= subpass.colors[j].index;
+				att_desc.attachment		= FindAttachmentIndex( subpass.colors[j].name );
 				att_desc.layout			= Vk1Enum( subpass.colors[j].layout );
 				color_attach_ref.PushBack( att_desc );
 			}
@@ -274,15 +300,20 @@ namespace PlatformVK
 			FOR( j, subpass.inputs )
 			{
 				VkAttachmentReference	att_desc = {};
-				att_desc.attachment		= subpass.inputs[j].index;
+				att_desc.attachment		= FindAttachmentIndex( subpass.inputs[j].name );
 				att_desc.layout			= Vk1Enum( subpass.inputs[j].layout );
 				input_attach_ref.PushBack( att_desc );
+			}
+
+			FOR( j, subpass.preserves )
+			{
+				preserves << FindAttachmentIndex( subpass.preserves[j] );
 			}
 			
 			if ( subpass.depthStencil.IsEnabled() )
 			{
 				VkAttachmentReference	att_desc = {};
-				att_desc.attachment		= subpass.depthStencil.index;
+				att_desc.attachment		= FindAttachmentIndex( subpass.depthStencil.name );
 				att_desc.layout			= Vk1Enum( subpass.depthStencil.layout );
 				depth_stencil_attach_ref.PushBack( att_desc );
 			}
@@ -290,7 +321,7 @@ namespace PlatformVK
 			if ( subpass.resolve.IsEnabled() )
 			{
 				VkAttachmentReference	att_desc = {};
-				att_desc.attachment		= subpass.resolve.index;
+				att_desc.attachment		= FindAttachmentIndex( subpass.resolve.name );
 				att_desc.layout			= Vk1Enum( subpass.resolve.layout );
 				resolve_attach_ref.PushBack( att_desc );
 			}
@@ -304,10 +335,10 @@ namespace PlatformVK
 
 			VkSubpassDependency	descr = {};
 			descr.dependencyFlags	= Vk1Enum( dep.dependency );
-			descr.srcSubpass		= dep.srcPass == RenderPassDescriptor::SubpassIndexExternal ? VK_SUBPASS_EXTERNAL : uint(dep.srcPass);
+			descr.srcSubpass		= FindSubpassIndex( dep.srcPass );
 			descr.srcStageMask		= Vk1Enum( dep.srcStage );
 			descr.srcAccessMask		= Vk1Enum( dep.srcAccess );
-			descr.dstSubpass		= dep.dstPass == RenderPassDescriptor::SubpassIndexExternal ? VK_SUBPASS_EXTERNAL : uint(dep.dstPass);
+			descr.dstSubpass		= FindSubpassIndex( dep.dstPass );
 			descr.dstStageMask		= Vk1Enum( dep.dstStage );
 			descr.dstAccessMask		= Vk1Enum( dep.dstAccess );
 
@@ -323,7 +354,7 @@ namespace PlatformVK
 		info.dependencyCount	= (uint32_t) dependencies.Count();
 		info.pDependencies		= dependencies.RawPtr();
 		
-		VK_CHECK( vkCreateRenderPass( GetLogicalDevice(), &info, null, OUT &_renderPassId ) );
+		VK_CHECK( vkCreateRenderPass( GetVkDevice(), &info, null, OUT &_renderPassId ) );
 
 		GetDevice()->SetObjectName( _renderPassId, GetDebugName(), EGpuObject::RenderPass );
 		return true;
@@ -338,7 +369,7 @@ namespace PlatformVK
 	{
 		using namespace vk;
 
-		auto	dev = GetLogicalDevice();
+		auto	dev = GetVkDevice();
 
 		if ( dev != VK_NULL_HANDLE and _renderPassId != VK_NULL_HANDLE )
 		{
@@ -348,9 +379,106 @@ namespace PlatformVK
 		_renderPassId	= VK_NULL_HANDLE;
 		_descr			= Uninitialized;
 	}
+//-----------------------------------------------------------------------------
 
+	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	inline bool Vk1RenderPassCache::SearchableRenderPass::operator == (const SearchableRenderPass &right) const	{ return rp->GetDescriptor() == right.rp->GetDescriptor(); }
+	inline bool Vk1RenderPassCache::SearchableRenderPass::operator >  (const SearchableRenderPass &right) const	{ return rp->GetDescriptor() >  right.rp->GetDescriptor(); }
+	inline bool Vk1RenderPassCache::SearchableRenderPass::operator <  (const SearchableRenderPass &right) const	{ return rp->GetDescriptor() <  right.rp->GetDescriptor(); }
+//-----------------------------------------------------------------------------
+	
+
+/*
+=================================================
+	constructor
+=================================================
+*/		
+	inline bool Vk1RenderPassCache::RenderPassSearch::operator == (const SearchableRenderPass &right) const	{ return descr == right.rp->GetDescriptor(); }
+	inline bool Vk1RenderPassCache::RenderPassSearch::operator >  (const SearchableRenderPass &right) const	{ return descr >  right.rp->GetDescriptor(); }
+	inline bool Vk1RenderPassCache::RenderPassSearch::operator <  (const SearchableRenderPass &right) const	{ return descr <  right.rp->GetDescriptor(); }
+//-----------------------------------------------------------------------------
+
+	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	Vk1RenderPassCache::Vk1RenderPassCache (Ptr<Vk1Device> dev) :
+		Vk1BaseObject( dev )
+	{
+		_renderPasses.Reserve( 64 );
+	}
+	
+/*
+=================================================
+	Create
+=================================================
+*/
+	Vk1RenderPassCache::Vk1RenderPassPtr  Vk1RenderPassCache::Create (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
+	{
+		// TODO: validate
+		
+		// find cached render pass
+		RenderPasses_t::const_iterator	iter;
+
+		if ( _renderPasses.CustomSearch().Find( RenderPassSearch( ci.descr ), OUT iter ) and
+			 iter->rp->GetState() == Module::EState::ComposedImmutable )
+		{
+			return iter->rp;
+		}
+		
+		// create new render pass
+		auto	result = New< Vk1RenderPass >( gs, ci );
+
+		ModuleUtils::Initialize( {result}, null );
+
+		CHECK_ERR( result->GetState() == Module::EState::ComposedImmutable );
+
+		_renderPasses.Add( SearchableRenderPass( result ) );
+		return result;
+	}
+	
+/*
+=================================================
+	Destroy
+=================================================
+*/
+	void Vk1RenderPassCache::Destroy ()
+	{
+		Message< ModuleMsg::Delete >	del_msg;
+
+		FOR( i, _renderPasses ) {
+			_renderPasses[i].rp->Send( del_msg );
+		}
+
+		_renderPasses.Clear();
+	}
 
 }	// PlatformVK
+//-----------------------------------------------------------------------------
+
+namespace Platforms
+{
+
+	ModulePtr VulkanContext::_CreateVk1RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
+	{
+		ModulePtr	mod;
+		CHECK_ERR( mod = gs->Get< ParallelThread >()->GetModuleByMsg< MessageListFrom< GpuMsg::GetVkPrivateClasses > >() );
+
+		Message< GpuMsg::GetVkPrivateClasses >	req_cl;
+		mod->Send( req_cl );
+		CHECK_ERR( req_cl->result.IsDefined() and req_cl->result->renderPassCache );
+
+		return req_cl->result->renderPassCache->Create( gs, ci );
+	}
+
+}	// Platforms
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN

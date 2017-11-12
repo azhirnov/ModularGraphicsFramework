@@ -52,7 +52,8 @@ namespace PlatformVK
 		};
 
 		using DescriptorPoolSizes_t	= FixedSizeArray< vk::VkDescriptorPoolSize, vk::VK_DESCRIPTOR_TYPE_RANGE_SIZE >;
-		using LayoutMsgList_t		= MessageListFrom< GpuMsg::GetVkPipelineLayoutID >;
+		using LayoutMsgList_t		= MessageListFrom< GpuMsg::GetVkPipelineLayoutID, GpuMsg::GetPipelineLayoutDescriptor,
+														GpuMsg::GetVkDescriptorLayouts >;
 
 		using ResourceDescr_t		= Union< ImageDescr, BufferDescr, TextureBufferDescr >;
 		using ResourceDescrArray_t	= Array< ResourceDescr_t >;
@@ -63,8 +64,8 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -72,11 +73,12 @@ namespace PlatformVK
 		vk::VkDescriptorPool	_descriptorPoolId;
 		vk::VkDescriptorSet		_descriptorSetId;
 		ResourceDescrArray_t	_resources;
+		ModulePtr				_layout;
 
 
 	// methods
 	public:
-		Vk1PipelineResourceTable (const GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci);
+		Vk1PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci);
 		~Vk1PipelineResourceTable ();
 
 
@@ -102,16 +104,16 @@ namespace PlatformVK
 
 
 	
-	const Runtime::VirtualTypeList	Vk1PipelineResourceTable::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	Vk1PipelineResourceTable::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	Vk1PipelineResourceTable::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	Vk1PipelineResourceTable::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	Vk1PipelineResourceTable::Vk1PipelineResourceTable (const GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkPipelineResourceTableModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+	Vk1PipelineResourceTable::Vk1PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ VkPipelineResourceTableModuleID, ~0u }, &_msgTypes, &_eventTypes ),
 		_descriptorPoolId( VK_NULL_HANDLE ),
 		_descriptorSetId( VK_NULL_HANDLE )
 	{
@@ -128,7 +130,9 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_Delete );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_DeviceBeforeDestroy );
-		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkLogicDevice );
+		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkPipelineLayoutID );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkDescriptorLayouts );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetPipelineLayoutDescriptor );
@@ -154,15 +158,14 @@ namespace PlatformVK
 	_Link
 =================================================
 */
-	bool Vk1PipelineResourceTable::_Link (const Message< ModuleMsg::Link > &msg)
+	bool Vk1PipelineResourceTable::_Link (const Message< ModuleMsg::Link > &)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
-		ModulePtr	layout;
-		CHECK_ATTACHMENT( _FindModuleWithMessages< LayoutMsgList_t >( _GetAttachments(), OUT layout ) );
+		CHECK_ATTACHMENT( _layout = GetModuleByMsg< LayoutMsgList_t >() );
 		
 		CHECK( _SetState( EState::Linked ) );
 		return true;
@@ -179,11 +182,8 @@ namespace PlatformVK
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
-
-		// get layout
-		ModulePtr	layout;
-		CHECK_COMPOSING( _FindModuleWithMessages< LayoutMsgList_t >( _GetAttachments(), OUT layout ) );
-
+		
+		CHECK_COMPOSING( _layout );
 		CHECK_COMPOSING( _CreateResourceTable() and _UpdateResourceTable() );
 
 		_SendForEachAttachments( msg );
@@ -216,11 +216,7 @@ namespace PlatformVK
 */
 	bool Vk1PipelineResourceTable::_GetVkDescriptorLayouts (const Message< GpuMsg::GetVkDescriptorLayouts > &msg)
 	{
-		ModulePtr	layout;
-		CHECK_ERR( _FindModuleWithMessages< LayoutMsgList_t >( _GetAttachments(), OUT layout ) );
-
-		SendTo( layout, msg );
-		return true;
+		return _layout ? SendTo( _layout, msg ) : false;
 	}
 	
 /*
@@ -230,11 +226,7 @@ namespace PlatformVK
 */
 	bool Vk1PipelineResourceTable::_GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &msg)
 	{
-		ModulePtr	layout;
-		CHECK_ERR( _FindModuleWithMessages< LayoutMsgList_t >( _GetAttachments(), OUT layout ) );
-
-		SendTo( layout, msg );
-		return true;
+		return _layout ? SendTo( _layout, msg ) : false;
 	}
 	
 /*
@@ -244,11 +236,7 @@ namespace PlatformVK
 */
 	bool Vk1PipelineResourceTable::_GetVkPipelineLayoutID (const Message< GpuMsg::GetVkPipelineLayoutID > &msg)
 	{
-		ModulePtr	layout;
-		CHECK_ERR( _FindModuleWithMessages< LayoutMsgList_t >( _GetAttachments(), OUT layout ) );
-
-		SendTo( layout, msg );
-		return true;
+		return _layout ? SendTo( _layout, msg ) : false;
 	}
 	
 /*
@@ -269,6 +257,8 @@ namespace PlatformVK
 */
 	bool Vk1PipelineResourceTable::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
 	{
+		CHECK_ERR( msg->newModule );
+
 		// pipeline layout must be unique
 		bool	is_layout = msg->newModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >();
 
@@ -309,6 +299,7 @@ namespace PlatformVK
 		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
 		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
 		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
+		using Uniform			= PipelineLayoutDescriptor::Uniform;
 		using ImageMsgList		= MessageListFrom< GpuMsg::GetVkImageView >;
 		using SamplerMsgList	= MessageListFrom< GpuMsg::GetVkSamplerID >;
 		using BufferMsgList		= MessageListFrom< GpuMsg::GetVkBufferID >;
@@ -323,15 +314,24 @@ namespace PlatformVK
 
 	// methods
 		_CreateResourceDescriptor_Func (OUT ResourceDescrArray_t &resources, OUT DescriptorPoolSizes_t &poolSizes, Vk1PipelineResourceTable& self, uint set) :
-			resources( resources ),	self( self ),
+			self( self ), resources( resources ),
 			poolSizes( poolSizes ),	set( set )
 		{}
 		
 		void operator () (const PushConstant &pc) const
-		{}
+		{
+			WARNING( "not supported" );
+		}
 		
 		void operator () (const SubpassInput &sp) const
-		{}
+		{
+			WARNING( "not supported" );
+		}
+		
+		void operator () (const Uniform &un) const
+		{
+			WARNING( "not supported" );
+		}
 		
 /*
 =================================================
@@ -391,7 +391,7 @@ namespace PlatformVK
 				self.SendTo( samp_mod, req_sampler );
 
 				ImageDescriptor	tex_descr;	tex_descr << req_img_descr->result;
-				CHECK( tex_descr.target == tex.dimension );
+				CHECK( tex_descr.imageType == tex.textureType );
 				CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( tex_descr.format ) ) );
 
 				// TODO: use default sampler
@@ -543,15 +543,12 @@ namespace PlatformVK
 	bool Vk1PipelineResourceTable::_CreateResourceTable ()
 	{
 		using namespace vk;
-		
-		ModulePtr	layout;
-		CHECK_ERR( _FindModuleWithMessages< LayoutMsgList_t >( _GetAttachments(), OUT layout ) );
 
 		Message< GpuMsg::GetPipelineLayoutDescriptor >	req_descr;
 		Message< GpuMsg::GetVkDescriptorLayouts >		req_layouts;
 
-		SendTo( layout, req_descr );
-		SendTo( layout, req_layouts );
+		SendTo( _layout, req_descr );
+		SendTo( _layout, req_layouts );
 
 		PipelineLayoutDescriptor			layout_descr;	layout_descr << req_descr->result;
 		GpuMsg::GetVkDescriptorLayouts::IDs	descr_layouts;	descr_layouts << req_layouts->result;
@@ -584,7 +581,7 @@ namespace PlatformVK
 		pool_info.pPoolSizes		= pool_sizes.RawPtr();
 		pool_info.maxSets			= 1;
 
-		VK_CHECK( vkCreateDescriptorPool( GetLogicalDevice(), &pool_info, nullptr, OUT &_descriptorPoolId ) );
+		VK_CHECK( vkCreateDescriptorPool( GetVkDevice(), &pool_info, null, OUT &_descriptorPoolId ) );
 		
 		GetDevice()->SetObjectName( _descriptorPoolId, GetDebugName(), EGpuObject::DescriptorPool );
 
@@ -597,7 +594,7 @@ namespace PlatformVK
 		alloc_info.pSetLayouts			= descr_layouts.RawPtr();
 		alloc_info.descriptorSetCount	= (uint) descr_layouts.Count();
 
-		VK_CHECK( vkAllocateDescriptorSets( GetLogicalDevice(), &alloc_info, OUT &_descriptorSetId ) );
+		VK_CHECK( vkAllocateDescriptorSets( GetVkDevice(), &alloc_info, OUT &_descriptorSetId ) );
 
 		GetDevice()->SetObjectName( _descriptorSetId, GetDebugName(), EGpuObject::DescriptorSet );
 		return true;
@@ -683,31 +680,34 @@ namespace PlatformVK
 			_resources[i].Apply( func );
 		}
 		
-		vkUpdateDescriptorSets( GetLogicalDevice(), (uint)write_descr.Count(), write_descr.RawPtr(), 0, null );
+		vkUpdateDescriptorSets( GetVkDevice(), (uint)write_descr.Count(), write_descr.RawPtr(), 0, null );
 		return true;
 	}
 
 /*
 =================================================
-	_CreateResourceTable
+	_DestroyResourceTable
 =================================================
 */
 	void Vk1PipelineResourceTable::_DestroyResourceTable ()
 	{
 		using namespace vk;
 
-		/*if ( _descriptorSetId != VK_NULL_HANDLE )
+		auto	dev = GetVkDevice();
+
+		/*if ( dev != VK_NULL_HANDLE and _descriptorSetId != VK_NULL_HANDLE )
 		{
-			VK_CALL( vkFreeDescriptorSets( GetLogicalDevice(), _descriptorPoolId, 1, &_descriptorSetId ) );
+			VK_CALL( vkFreeDescriptorSets( dev, _descriptorPoolId, 1, &_descriptorSetId ) );
 		}*/
 
-		if ( _descriptorPoolId != VK_NULL_HANDLE )
+		if ( dev != VK_NULL_HANDLE and _descriptorPoolId != VK_NULL_HANDLE )
 		{
-			vkDestroyDescriptorPool( GetLogicalDevice(), _descriptorPoolId, null );
+			vkDestroyDescriptorPool( dev, _descriptorPoolId, null );
 		}
 
-		_descriptorSetId  = VK_NULL_HANDLE;
-		_descriptorPoolId = VK_NULL_HANDLE;
+		_descriptorSetId	= VK_NULL_HANDLE;
+		_descriptorPoolId	= VK_NULL_HANDLE;
+		_layout				= null;
 
 		_resources.Clear();
 	}
@@ -727,7 +727,7 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanContext::_CreateVk1PipelineResourceTable (const GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
+	ModulePtr VulkanContext::_CreateVk1PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
 	{
 		return New< PlatformVK::Vk1PipelineResourceTable >( gs, ci );
 	}

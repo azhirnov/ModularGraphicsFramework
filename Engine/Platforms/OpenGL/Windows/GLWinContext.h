@@ -21,7 +21,9 @@ namespace PlatformGL
 	{
 	// types
 	private:
-		using Handle_t			= OS::HiddenOSTypeFrom<void*>;
+		using HWND_t			= OS::HiddenOSTypeFrom<void*>;
+		using HDC_t				= OS::HiddenOSTypeFrom<void*>;
+		using HGLRC_t			= OS::HiddenOSTypeFrom<void*>;
 		using FuncPtr_t			= OS::HiddenOSTypeFrom<void*>;
 		using VideoSettings_t	= CreateInfo::GpuContext;
 		using EFlags			= VideoSettings_t::EFlags;
@@ -35,16 +37,16 @@ namespace PlatformGL
 		FuncPtr_t		wglCreateContextAttribs;	// PFNWGLCREATECONTEXTATTRIBSARBPROC
 		bool			swapControlSupported;
 
-		Handle_t		_window;
-		Handle_t		_deviceContext;				// HDC
-		Handle_t		_renderContext;				// HGLRC
+		HWND_t			_window;
+		HDC_t			_deviceContext;
+		HGLRC_t			_renderContext;
 
 		
 	// methods
 	public:
 		GLWinContext ();
 
-		bool Create (const Handle_t &wnd, INOUT VideoSettings_t &vs);
+		bool Create (const HWND_t &wnd, INOUT VideoSettings_t &vs);
 		void Destroy ();
 
 		void MakeCurrent ();

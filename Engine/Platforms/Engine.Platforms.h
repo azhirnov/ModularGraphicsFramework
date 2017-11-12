@@ -1,5 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
+	Abstraction level for OS, Graphics API, Compute API and other.
 */
 
 #pragma once
@@ -20,4 +21,9 @@
 #include "Engine/Platforms/Shared/OS/Window.h"
 #include "Engine/Platforms/Shared/OS/Input.h"
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
+//#include "Engien/Platforms/DirectX/Impl/DX11Messages.h"
+//#include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
+//#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
+//#include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
+//#include "Engine/Platforms/Soft/Impl/SWMessages.h"
+//#include "Engine/Platforms/Windows/WinMessages.h"

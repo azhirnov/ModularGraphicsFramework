@@ -6,6 +6,7 @@
 #include "Engine/STL/Containers/ArrayRef.h"
 #include "Engine/STL/Containers/Array.h"
 #include "Engine/STL/Containers/StaticArray.h"
+#include "Engine/STL/Algorithms/ArrayUtils.h"
 #include "Engine/STL/Math/Mathematics.h"
 #include "Engine/STL/Math/Vec.h"
 
@@ -18,8 +19,7 @@ namespace GXTypes
 	// File Address Utils
 	//
 
-	// TODO: rename to FileAddress
-	struct FileAddress
+	struct _STL_EXPORT_ FileAddress
 	{
 	// methods
 	public:

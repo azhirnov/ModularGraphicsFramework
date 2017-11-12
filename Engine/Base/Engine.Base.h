@@ -6,7 +6,6 @@
 
 #include "Engine/Base/Modules/Module.h"
 #include "Engine/Base/Modules/ModulesFactory.h"
-#include "Engine/Base/Modules/ModuleAsyncTasks.h"
 #include "Engine/Base/Modules/ModuleUtils.h"
 
 #include "Engine/Base/Tasks/TaskModule.h"

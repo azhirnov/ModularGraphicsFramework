@@ -31,15 +31,15 @@ namespace GXMath
 			template <typename T>	forceinline static T abs (const T& val)
 			{
 			#if 1
-				typedef typename CompileTime::NearUInt::FromType<T>	uint_t;
-				const uint_t mask = ((uint_t(1) << (CompileTime::SizeOf<T>::bits-1))-1);
+				typedef typename CompileTime::NearUInt::FromType<T>	UInt_t;
+				const UInt_t mask = ((UInt_t(1) << (CompileTime::SizeOf<T>::bits-1))-1);
 
 				// if val == MinValue result is undefined, remove sign bit anyway
 				return ::abs( val ) & mask;
 
 			#elif 0
 				// from http://graphics.stanford.edu/~seander/bithacks.html#IntegerAbs
-				typedef typename CompileTime::NearUInt::FromType<T>	uint_t;
+				typedef typename CompileTime::NearUInt::FromType<T>	UInt_t;
 
 				const T	mask = val >> (CompileTime::SizeOf<T>::bits-1);
 				return (val + mask) ^ mask;
@@ -74,12 +74,12 @@ namespace GXMath
 				return (T) ::abs( _float_t(val) );
 
 			#else
-				typedef typename CompileTime::NearUInt::FromType<T>	int_t;
+				typedef typename CompileTime::NearUInt::FromType<T>	Int_t;
 			
-				static const int_t	mask = ~( int_t(1) << CompileTime::TypeDescriptor::template GetTypeInfo<T>::SignBit() );
+				static const Int_t	mask = ~( Int_t(1) << CompileTime::TypeDescriptor::template GetTypeInfo<T>::SignBit() );
 
 				T	ret( val );
-				ReferenceCast< int_t >( ret ) &= mask;
+				ReferenceCast< Int_t >( ret ) &= mask;
 				return ret;
 			#endif
 			}
@@ -103,10 +103,10 @@ namespace GXMath
 		return _math_hidden_::_Abs<T>::abs( x );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Abs (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Abs (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Abs( x[i] );
 		return ret;
 	}
@@ -126,10 +126,10 @@ namespace GXMath
 		return ( x < T(0) ? T(-1) : T(1) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Sign (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Sign (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Sign<T>( x[i] );
 		return ret;
 	}
@@ -149,10 +149,10 @@ namespace GXMath
 		return T( x > T(0) ) - T( x < T(0) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  SignOrZero (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SignOrZero (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SignOrZero( x[i] );
 		return ret;
 	}
@@ -177,13 +177,13 @@ namespace GXMath
 			template <typename T>
 			static T setsign (const T& x, bool s)
 			{
-				typedef typename CompileTime::NearUInt::FromType<T>	uint_t;
+				typedef typename CompileTime::NearUInt::FromType<T>	UInt_t;
 				
 				const uint	u_sign_bit	= CompileTime::TypeDescriptor::template GetTypeInfo<T>::SignBit();
 
 				T	ret(x);
-				ReferenceCast<uint_t>( ret ) &= ~( uint_t(1) << u_sign_bit );
-				ReferenceCast<uint_t>( ret ) |=  ( uint_t(s) << u_sign_bit );
+				ReferenceCast<UInt_t>( ret ) &= ~( UInt_t(1) << u_sign_bit );
+				ReferenceCast<UInt_t>( ret ) |=  ( UInt_t(s) << u_sign_bit );
 				return ret;
 			}
 		};
@@ -243,18 +243,18 @@ namespace GXMath
 		return _math_hidden_::_SetSign<T>::setsign( x, sign );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  SetSign (const Vec<T,I> &x, bool sign)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SetSign (const Vec<T,I,U> &x, bool sign)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SetSign( x[i], sign );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  SetSign (const Vec<T,I> &x, const Vec<bool,I> &sign)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SetSign (const Vec<T,I,U> &x, const Vec<bool,I,U> &sign)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SetSign( x[i], sign[i] );
 		return ret;
 	}
@@ -279,13 +279,13 @@ namespace GXMath
 			template <typename T>
 			static T copysign (const T& x, const T& s)
 			{
-				typedef typename CompileTime::NearUInt::FromType<T>	uint_t;
+				typedef typename CompileTime::NearUInt::FromType<T>	UInt_t;
 				
-				const uint_t	u_sign_mask	= uint_t(1) << CompileTime::TypeDescriptor::template GetTypeInfo<T>::SignBit();
+				const UInt_t	u_sign_mask	= UInt_t(1) << CompileTime::TypeDescriptor::template GetTypeInfo<T>::SignBit();
 
 				T	ret(x);
-				ReferenceCast<uint_t>( ret ) &= ~u_sign_mask;
-				ReferenceCast<uint_t>( ret ) |=  ReferenceCast<uint_t>( s ) & u_sign_mask;
+				ReferenceCast<UInt_t>( ret ) &= ~u_sign_mask;
+				ReferenceCast<UInt_t>( ret ) |=  ReferenceCast<UInt_t>( s ) & u_sign_mask;
 				return ret;
 			}
 		};
@@ -344,10 +344,10 @@ namespace GXMath
 		return _math_hidden_::_CopySign<T>::copysign( to, from );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  CopySign (const Vec<T,I> &from, const Vec<T,I> &to)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  CopySign (const Vec<T,I,U> &from, const Vec<T,I,U> &to)
 	{
-		Vec<T,I>	ret;
+		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = CopySign( from[i], to[i] );
 		return ret;
 	}
@@ -401,8 +401,8 @@ namespace GXMath
 		return not x;
 	}
 
-	template <typename T, usize I>
-	forceinline constexpr bool IsZero (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	forceinline constexpr bool IsZero (const Vec<T,I,U>& x)
 	{
 		return All( x.IsZero() );
 	}
@@ -444,8 +444,8 @@ namespace GXMath
 			template <typename T>
 			forceinline static constexpr bool eqa (const T& a, const T& b, uint ac)
 			{
-				typedef typename CompileTime::NearUInt::FromType<T>	uint_t;
-				return uint_t( Abs( a - b ) ) <= ( uint_t(1) << ac );
+				typedef typename CompileTime::NearUInt::FromType<T>	UInt_t;
+				return UInt_t( Abs( a - b ) ) <= ( UInt_t(1) << ac );
 			}
 		};
 
@@ -466,18 +466,18 @@ namespace GXMath
 			template <typename T>
 			forceinline static constexpr bool eqa (const T& a, const T& b, uint ac)
 			{
-				typedef typename CompileTime::NearInt::FromType<T>	int_t;
-				typedef typename CompileTime::NearUInt::FromType<T>	uint_t;
+				typedef typename CompileTime::NearInt::FromType<T>	Int_t;
+				typedef typename CompileTime::NearUInt::FromType<T>	UInt_t;
 
-				int_t	i_a = ReferenceCast<int_t>(a);
-				int_t	i_b	= ReferenceCast<int_t>(b);
+				Int_t	i_a = ReferenceCast<Int_t>(a);
+				Int_t	i_b	= ReferenceCast<Int_t>(b);
 
-				if ( i_a < int_t(0) )	i_a = MinValue<int_t>() - i_a;
-				if ( i_b < int_t(0) )	i_b = MinValue<int_t>() - i_b;
+				if ( i_a < Int_t(0) )	i_a = MinValue<Int_t>() - i_a;
+				if ( i_b < Int_t(0) )	i_b = MinValue<Int_t>() - i_b;
 
-				uint_t	diff = (uint_t)Abs( i_a - i_b );
+				UInt_t	diff = (UInt_t)Abs( i_a - i_b );
 
-				return ( diff <= ( uint_t(1) << ac ) );
+				return ( diff <= ( UInt_t(1) << ac ) );
 			}
 		};
 		
@@ -504,10 +504,10 @@ namespace GXMath
 		return _math_hidden_::_Equals<T>::eq( a, b );
 	}
 
-	template <typename T, usize I>
-	inline constexpr Vec<bool,I>  Equals (const Vec<T,I> &a, const Vec<T,I> &b)
+	template <typename T, usize I, ulong U>
+	inline constexpr Vec<bool,I,U>  Equals (const Vec<T,I,U> &a, const Vec<T,I,U> &b)
 	{
-		Vec<bool,I>		ret;
+		Vec<bool,I,U>		ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i] );
 		return ret;
 	}
@@ -525,10 +525,10 @@ namespace GXMath
 		return _math_hidden_::_Equals<T>::eqa( a, b, accuracy );
 	}
 
-	template <typename T, usize I>
-	inline Vec<bool,I>  EqualsWithError (const Vec<T,I> &a, const Vec<T,I> &b, /*Bits*/uint accuracy)
+	template <typename T, usize I, ulong U>
+	inline Vec<bool,I,U>  EqualsWithError (const Vec<T,I,U> &a, const Vec<T,I,U> &b, /*Bits*/uint accuracy)
 	{
-		Vec<bool,I>		ret;
+		Vec<bool,I,U>		ret;
 		FOR( i, ret )	ret[i] = EqualsWithError( a[i], b[i], accuracy );
 		return ret;
 	}
@@ -570,11 +570,11 @@ namespace GXMath
 		return _math_hidden_::_MiddleValue< T, CompileTime::IsFloat<T>, CompileTime::IsSigned<T> >::Get( T(a), T(b) );
 	}
 
-	template <typename A, typename B, usize I>
-	inline Vec< typename CompileTime::MainType<A,B>, I >  MiddleValue (const Vec<A,I>& a, const Vec<B,I>& b)
+	template <typename A, typename B, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B>, I, U >  MiddleValue (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = MiddleValue( a[i], b[i] );
 		return ret;
 	}
@@ -593,20 +593,20 @@ namespace GXMath
 		return Min( maxValue, Max( value, minValue ) );
 	}
 
-	template <typename A, typename B, typename C, usize I>
-	inline Vec< typename CompileTime::MainType<A,B,C>, I >  Clamp (const Vec<A,I>& value, const Vec<B,I>& minValue, const Vec<C,I>& maxValue)
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Clamp (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Clamp( value[i], minValue[i], maxValue[i] );
 		return ret;
 	}
 
-	template <typename A, typename B, typename C, usize I>
-	inline Vec< typename CompileTime::MainType<A,B,C>, I >  Clamp (const Vec<A,I>& value, const B& minValue, const C& maxValue)
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Clamp (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Clamp( value[i], minValue, maxValue );
 		return ret;
 	}
@@ -636,20 +636,20 @@ namespace GXMath
 				( value > maxValue ?  T(value) : T(maxValue) ) );
 	}
 	
-	template <typename A, typename B, typename C, usize I>
-	inline Vec< typename CompileTime::MainType<A,B,C>, I >  ClampOut (const Vec<A,I>& value, const Vec<B,I>& minValue, const Vec<C,I>& maxValue)
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  ClampOut (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ClampOut( value[i], minValue[i], maxValue[i] );
 		return ret;
 	}
 	
-	template <typename A, typename B, typename C, usize I>
-	inline Vec< typename CompileTime::MainType<A,B,C>, I >  ClampOut (const Vec<A,I>& value, const B& minValue, const C& maxValue)
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  ClampOut (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ClampOut( value[i], minValue, maxValue );
 		return ret;
 	}
@@ -704,20 +704,20 @@ namespace GXMath
 		return _math_hidden_::_Wrap_Impl< T, CompileTime::IsInteger<T> >::Get( T(value), T(minValue), T(maxValue) );
 	}
 
-	template <typename A, typename B, typename C, usize I>
-	inline Vec< typename CompileTime::MainType<A,B,C>, I >  Wrap (const Vec<A,I>& value, const Vec<B,I>& minValue, const Vec<C,I>& maxValue)
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Wrap (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Wrap( value[i], minValue[i], maxValue[i] );
 		return ret;
 	}
 
-	template <typename A, typename B, typename C, usize I>
-	inline Vec< typename CompileTime::MainType<A,B,C>, I >  Wrap (const Vec<A,I>& value, const B& minValue, const C& maxValue)
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Wrap (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Wrap( value[i], minValue, maxValue );
 		return ret;
 	}
@@ -732,22 +732,22 @@ namespace GXMath
 		template <usize C>
 		struct _AnyAllMost_impl
 		{
-			template <typename T, usize I>	forceinline static constexpr bool Any (const GXMath::Vec<T,I> &v)	{ return _AnyAllMost_impl<C-1>::Any( v ) | GXMath::IsNotZero( v[C] ); }
-			template <typename T, usize I>	forceinline static constexpr bool All (const GXMath::Vec<T,I> &v)	{ return _AnyAllMost_impl<C-1>::All( v ) & GXMath::IsNotZero( v[C] ); }
+			template <typename T, usize I, ulong U>	forceinline static constexpr bool Any (const GXMath::Vec<T,I,U> &v)	{ return _AnyAllMost_impl<C-1>::Any( v ) | GXMath::IsNotZero( v[C] ); }
+			template <typename T, usize I, ulong U>	forceinline static constexpr bool All (const GXMath::Vec<T,I,U> &v)	{ return _AnyAllMost_impl<C-1>::All( v ) & GXMath::IsNotZero( v[C] ); }
 		};
 		
 		template <>
 		struct _AnyAllMost_impl<0>
 		{
-			template <typename T, usize I>	forceinline static constexpr bool Any (const GXMath::Vec<T,I> &v)	{ return GXMath::IsNotZero( v[0] ); }
-			template <typename T, usize I>	forceinline static constexpr bool All (const GXMath::Vec<T,I> &v)	{ return GXMath::IsNotZero( v[0] ); }
+			template <typename T, usize I, ulong U>	forceinline static constexpr bool Any (const GXMath::Vec<T,I,U> &v)	{ return GXMath::IsNotZero( v[0] ); }
+			template <typename T, usize I, ulong U>	forceinline static constexpr bool All (const GXMath::Vec<T,I,U> &v)	{ return GXMath::IsNotZero( v[0] ); }
 		};
 
-		template <typename T, usize I>
+		template <typename T, usize I, ulong U>
 		struct _AnyAllMost
 		{
-			forceinline static constexpr bool  All(const GXMath::Vec<T,I> &v)		{ return _AnyAllMost_impl<I-1>::All( v ); }
-			forceinline static constexpr bool  Any(const GXMath::Vec<T,I> &v)		{ return _AnyAllMost_impl<I-1>::Any( v ); }
+			forceinline static constexpr bool  All(const GXMath::Vec<T,I,U> &v)		{ return _AnyAllMost_impl<I-1>::All( v ); }
+			forceinline static constexpr bool  Any(const GXMath::Vec<T,I,U> &v)		{ return _AnyAllMost_impl<I-1>::Any( v ); }
 		};
 	}
 	
@@ -762,10 +762,10 @@ namespace GXMath
 		return IsNotZero( x );
 	}
 
-	template <typename T, usize I>
-	forceinline constexpr bool All (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	forceinline constexpr bool All (const Vec<T,I,U> &x)
 	{
-		return _math_hidden_::_AnyAllMost<T,I>::All( x );
+		return _math_hidden_::_AnyAllMost<T,I,U>::All( x );
 	}
 
 /*
@@ -779,10 +779,10 @@ namespace GXMath
 		return IsNotZero( x );
 	}
 
-	template <typename T, usize I>
-	forceinline constexpr bool Any (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	forceinline constexpr bool Any (const Vec<T,I,U> &x)
 	{
-		return _math_hidden_::_AnyAllMost<T,I>::Any( x );
+		return _math_hidden_::_AnyAllMost<T,I,U>::Any( x );
 	}
 	
 /*
@@ -799,11 +799,11 @@ namespace GXMath
 		return a > b ? T(a) : T(b);
 	}
 
-	template <typename A, typename B, usize I>
-	inline Vec< typename CompileTime::MainType<A,B>, I >  Max (const Vec<A,I> &a, const Vec<B,I> &b)
+	template <typename A, typename B, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B>, I, U >  Max (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Max( a[i], b[i] );
 		return ret;
 	}
@@ -834,11 +834,11 @@ namespace GXMath
 		return a > b ? T(b) : T(a);
 	}
 
-	template <typename A, typename B, usize I>
-	inline Vec< typename CompileTime::MainType<A,B>, I >  Min (const Vec<A,I> &a, const Vec<B,I> &b)
+	template <typename A, typename B, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B>, I, U >  Min (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Min( a[i], b[i] );
 		return ret;
 	}
@@ -869,11 +869,11 @@ namespace GXMath
 		return Abs(a) > Abs(b) ? T(b) : T(a);
 	}
 
-	template <typename A, typename B, usize I>
-	inline Vec< typename CompileTime::MainType<A,B>, I >  MinAbs (const Vec<A,I> &a, const Vec<B,I> &b)
+	template <typename A, typename B, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B>, I, U >  MinAbs (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = MinAbs( a[i], b[i] );
 		return ret;
 	}
@@ -892,11 +892,11 @@ namespace GXMath
 		return Abs(a) > Abs(b) ? T(a) : T(b);
 	}
 
-	template <typename A, typename B, usize I>
-	inline Vec< typename CompileTime::MainType<A,B>, I >  MaxAbs (const Vec<A,I> &a, const Vec<B,I> &b)
+	template <typename A, typename B, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B>, I, U >  MaxAbs (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = MaxAbs( a[i], b[i] );
 		return ret;
 	}
@@ -920,10 +920,10 @@ namespace GXMath
 		tMax = res ? T(a) : T(b);
 	}
 
-	template <typename A, typename B, usize I>
+	template <typename A, typename B, usize I, ulong U>
 	inline void	MinMax (OUT Vec< typename CompileTime::MainType<A,B>, I >& tMin,
 						OUT Vec< typename CompileTime::MainType<A,B>, I >& tMax,
-						const Vec<A,I>& a, const Vec<B,I>& b)
+						const Vec<A,I,U>& a, const Vec<B,I,U>& b)
 	{
 		FOR( i, a ) {
 			MinMax( tMin[i], tMax[i], a[i], b[i] );
@@ -947,11 +947,11 @@ namespace GXMath
 		return Min( a, b );
 	}
 
-	template <typename A, typename B, usize I>
-	inline Vec< typename CompileTime::MainType<A,B>, I >  MinMag (const Vec<A,I>& a, const Vec<B,I>& b)
+	template <typename A, typename B, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B>, I, U >  MinMag (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = MinMag( a[i], b[i] );
 		return ret;
 	}
@@ -973,11 +973,11 @@ namespace GXMath
 		return Max( a, b );
 	}
 
-	template <typename A, typename B, usize I>
-	inline Vec< typename CompileTime::MainType<A,B>, I >  MaxMag (const Vec<A,I>& a, const Vec<B,I>& b)
+	template <typename A, typename B, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B>, I, U >  MaxMag (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = MaxMag( a[i], b[i] );
 		return ret;
 	}
@@ -993,11 +993,11 @@ namespace GXMath
 		return Min( Max( a, b ), Max( b, c ) );
 	}
 
-	template <typename A, typename B, typename C, usize I>
-	inline Vec< typename CompileTime::MainType<A,B,C>, I >  Mid (const Vec<A,I>& a, const Vec<B,I>& b, const Vec<C,I>& c)
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Mid (const Vec<A,I,U>& a, const Vec<B,I,U>& b, const Vec<C,I,U>& c)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Mid( a[i], b[i], c[i] );
 		return ret;
 	}
@@ -1018,10 +1018,10 @@ namespace GXMath
 		return (T) ::pow( _float_t( x ), _float_t( y ) );
 	}
 
-	template <typename T, typename B, usize I>
-	inline Vec<T,I>  Pow (const Vec<T,I>& x, const Vec<B,I>& y)
+	template <typename T, typename B, usize I, ulong U>
+	inline Vec<T,I,U>  Pow (const Vec<T,I,U>& x, const Vec<B,I,U>& y)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Pow( x[i], y[i] );
 		return ret;
 	}
@@ -1041,10 +1041,10 @@ namespace GXMath
 		return (T) ::log( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Ln (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Ln (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Ln( x[i] );
 		return ret;
 	}
@@ -1059,10 +1059,10 @@ namespace GXMath
 			return Log( x, T( Base ) );
 		}
 
-		template <uint Base, typename T, usize I>
-		inline Vec<T,I>  Log (const Vec<T,I>& x)
+		template <uint Base, typename T, usize I, ulong U>
+		inline Vec<T,I,U>  Log (const Vec<T,I,U>& x)
 		{
-			Vec<T,I>		ret;
+			Vec<T,I,U>		ret;
 			FOR( i, ret )	ret[i] = Log<Base>( x[i] );
 			return ret;
 		}
@@ -1081,18 +1081,18 @@ namespace GXMath
 		return Ln( x ) / Ln( base );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Log (const Vec<T,I>& x, const T& base)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Log (const Vec<T,I,U>& x, const T& base)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Log( x[i], base );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Log (const Vec<T,I>& x, const Vec<T,I>& base)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Log (const Vec<T,I,U>& x, const Vec<T,I,U>& base)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Log( x[i], base[i] );
 		return ret;
 	}
@@ -1111,10 +1111,10 @@ namespace GXMath
 		return Ln( x ) / base;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Log2 (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Log2 (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Log2( x[i] );
 		return ret;
 	}
@@ -1134,10 +1134,10 @@ namespace GXMath
 		return (T) ::log10( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Log10 (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Log10 (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Log10( x[i] );
 		return ret;
 	}
@@ -1156,10 +1156,10 @@ namespace GXMath
 		return (T) ::exp( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Exp (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Exp (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Exp( x[i] );
 		return ret;
 	}
@@ -1178,10 +1178,10 @@ namespace GXMath
 		return (T) ::pow( _float_t( 2 ), _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Exp2 (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Exp2 (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Exp2( x[i] );
 		return ret;
 	}
@@ -1200,10 +1200,10 @@ namespace GXMath
 		return (T) ::pow( _float_t( 10 ), _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Exp10 (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Exp10 (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Exp10( x[i] );
 		return ret;
 	}
@@ -1222,10 +1222,10 @@ namespace GXMath
 		return ( T(1) << ( IntLog2(x) + not IsPowerOfTwo(x) ) ) * Sign(x);
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  CeilPowerOfTwo (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  CeilPowerOfTwo (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = CeilPowerOfTwo( x[i] );
 		return ret;
 	}
@@ -1244,10 +1244,10 @@ namespace GXMath
 		return ( T(1) << IntLog2(x) ) * Sign(x);
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  FloorPowerOfTwo (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  FloorPowerOfTwo (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = FloorPowerOfTwo( x[i] );
 		return ret;
 	}
@@ -1271,10 +1271,10 @@ namespace GXMath
 		return ( absx >= c ? a : b ) * Sign( x );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  NearPowerOfTwo (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  NearPowerOfTwo (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = NearPowerOfTwo( x[i] );
 		return ret;
 	}
@@ -1294,10 +1294,10 @@ namespace GXMath
 		return ( a != 0 and ( (a & (a - 1)) == 0 ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<bool,I>  IsPowerOfTwo (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<bool,I,U>  IsPowerOfTwo (const Vec<T,I,U> &x)
 	{
-		Vec<bool,I>		ret;
+		Vec<bool,I,U>		ret;
 		FOR( i, ret )	ret[i] = IsPowerOfTwo( x[i] );
 		return ret;
 	}
@@ -1313,10 +1313,10 @@ namespace GXMath
 		return x * x;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Square (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Square (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Square( x[i] );
 		return ret;
 	}
@@ -1345,10 +1345,10 @@ namespace GXMath
 	}
 #endif
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Sqrt (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Sqrt (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Sqrt( x[i] );
 		return ret;
 	}
@@ -1372,10 +1372,10 @@ namespace GXMath
 	}
 #endif
 
-	template <typename T, usize I>
-	inline Vec<T,I>  InvSqrt (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  InvSqrt (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = InvSqrt( x[i] );
 		return ret;
 	}
@@ -1393,10 +1393,10 @@ namespace GXMath
 		return ( x < T(0) ? -Square(x) : Square(x) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  SquareSign (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SquareSign (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SquareSign( x[i] );
 		return ret;
 	}
@@ -1467,11 +1467,11 @@ namespace GXMath
 		return _math_hidden_::ModNearType< A, B, CompileTime::IsInteger<T> >::Mod( left, right );
 	}
 
-	template <typename A, typename B, usize I>
-	inline Vec< typename CompileTime::MainType<A,B>, I >  Mod (const Vec<A,I> &left, const Vec<B,I> &right)
+	template <typename A, typename B, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B>, I, U >  Mod (const Vec<A,I,U> &left, const Vec<B,I,U> &right)
 	{
 		typedef typename CompileTime::MainType<A,B>		T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Mod( left[i], right[i] );
 		return ret;
 	}
@@ -1491,11 +1491,11 @@ namespace GXMath
 		return _math_hidden_::ModNearType< A, B, CompileTime::IsInteger<T> >::SafeMod( left, right, defValue );
 	}
 
-	template <typename A, typename B, usize I, typename C>
-	inline Vec< typename CompileTime::MainType<A,B>, I >  SafeMod (const Vec<A,I> &left, const Vec<B,I> &right, const C& defValue)
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B>, I, U >  SafeMod (const Vec<A,I,U> &left, const Vec<B,I,U> &right, const C& defValue)
 	{
 		typedef typename CompileTime::MainType<A,B>		T;
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeMod( left[i], right[i], defValue );
 		return ret;
 	}
@@ -1515,10 +1515,10 @@ namespace GXMath
 		return (T) ::floor( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Floor (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Floor (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Floor( x[i] );
 		return ret;
 	}
@@ -1538,10 +1538,10 @@ namespace GXMath
 		return (T) ::ceil( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Ceil (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Ceil (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Ceil( x[i] );
 		return ret;
 	}
@@ -1573,10 +1573,10 @@ namespace GXMath
 	#endif
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Fract (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Fract (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Fract( x[i] );
 		return ret;
 	}
@@ -1601,10 +1601,10 @@ namespace GXMath
 	#endif
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Trunc (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Trunc (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Trunc( x[i] );
 		return ret;
 	}
@@ -1623,11 +1623,11 @@ namespace GXMath
 		ModF_Result (T i, T f) : intgr(i), fract(f) {}
 	};
 
-	template <typename T, usize I>
-	struct ModF_Result< Vec<T,I> >
+	template <typename T, usize I, ulong U>
+	struct ModF_Result< Vec<T,I,U> >
 	{
-		Vec<T,I>	intgr;
-		Vec<T,I>	fract;
+		Vec<T,I,U>	intgr;
+		Vec<T,I,U>	fract;
 	};
 
 	template <typename T>
@@ -1644,10 +1644,10 @@ namespace GXMath
 		return ModF_Result<T>( i, f );
 	}
 
-	template <typename T, usize I>
-	inline ModF_Result< Vec<T,I> >  ModF (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline ModF_Result< Vec<T,I,U> >  ModF (const Vec<T,I,U> &x)
 	{
-		ModF_Result< Vec<T,I> >		ret;
+		ModF_Result< Vec<T,I,U> >		ret;
 
 		FOR( i, ret )
 		{
@@ -1719,10 +1719,10 @@ namespace GXMath
 		return _math_hidden_::_Round< T, T >( x );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Round (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Round (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Round( x[i] );
 		return ret;
 	}
@@ -1741,10 +1741,10 @@ namespace GXMath
 		return _math_hidden_::_Round< R, T >( x );
 	}
 
-	template <typename R, typename T, usize I>
-	inline Vec<R,I>  RoundTo (const Vec<T,I> &x)
+	template <typename R, typename T, usize I, ulong U>
+	inline Vec<R,I,U>  RoundTo (const Vec<T,I,U> &x)
 	{
-		Vec<R,I>		ret;
+		Vec<R,I,U>		ret;
 		FOR( i, ret )	ret[i] = RoundTo<R>( x[i] );
 		return ret;
 	}
@@ -1761,8 +1761,8 @@ namespace GXMath
 		return _math_hidden_::_Round< typename CompileTime::NearInt::FromType<T>, T >( val );
 	}
 
-	template <typename T, usize I>
-	inline Vec< typename CompileTime::NearInt::FromType<T>, I >  RoundToInt (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec< typename CompileTime::NearInt::FromType<T>, I >  RoundToInt (const Vec<T,I,U> &x)
 	{
 		Vec< typename CompileTime::NearInt::FromType<T>, I >	ret;
 		FOR( i, ret )	ret[i] = RoundToInt( x[i] );
@@ -1781,8 +1781,8 @@ namespace GXMath
 		return _math_hidden_::_Round< typename CompileTime::NearUInt::FromType<T>, T >( val );
 	}
 
-	template <typename T, usize I>
-	inline Vec< typename CompileTime::NearUInt::FromType<T>, I >  RoundToUInt (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec< typename CompileTime::NearUInt::FromType<T>, I >  RoundToUInt (const Vec<T,I,U> &x)
 	{
 		Vec< typename CompileTime::NearUInt::FromType<T>, I >	ret;
 		FOR( i, ret )	ret[i] = RoundToUInt( x[i] );
@@ -1802,10 +1802,10 @@ namespace GXMath
 		return Round( x / base ) * base;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  RoundTo (const Vec<T,I> &x, const T& base)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  RoundTo (const Vec<T,I,U> &x, const T& base)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = RoundTo( x[i] );
 		return ret;
 	}
@@ -1823,10 +1823,10 @@ namespace GXMath
 		return IsNotZero(right) ? (left / right) : defVal;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  SafeDiv (const Vec<T,I> &left, const Vec<T,I> &right, const T& defVal)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SafeDiv (const Vec<T,I,U> &left, const Vec<T,I,U> &right, const T& defVal)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeDiv( left[i], right[i], defVal );
 		return ret;
 	}
@@ -1842,21 +1842,21 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		ASSERT( x >= T(0) );
 
-		typedef CompileTime::NearUInt::FromType<T>	uint_t;
+		typedef CompileTime::NearUInt::FromType<T>	UInt_t;
 
-		const uint_t	count	= RoundToUInt( x );
+		const UInt_t	count	= RoundToUInt( x );
 		T				result  = T(1);
 
-		for (uint_t i = 2; i <= count; ++i) {
+		for (UInt_t i = 2; i <= count; ++i) {
 			result *= T(i);
 		}
 		return result;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  IntFactorial (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  IntFactorial (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntFactorial( x[i] );
 		return ret;
 	}
@@ -1872,21 +1872,21 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		ASSERT( x >= T(0) );
 		
-		typedef CompileTime::NearUInt::FromType<T>	uint_t;
+		typedef CompileTime::NearUInt::FromType<T>	UInt_t;
 
-		const uint_t	count	= RoundToUInt( x );
+		const UInt_t	count	= RoundToUInt( x );
 		T				result  = T(1);
 
-		for (uint_t i = 1; i < count; ++i) {
+		for (UInt_t i = 1; i < count; ++i) {
 			result *= Pow( T(count-i+1), T(i) );
 		}
 		return result;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  IntSuperFactorial (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  IntSuperFactorial (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntSuperFactorial( x[i] );
 		return ret;
 	}
@@ -1902,21 +1902,21 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		ASSERT( x >= T(0) );
 		
-		typedef CompileTime::NearUInt::FromType<T>	uint_t;
+		typedef CompileTime::NearUInt::FromType<T>	UInt_t;
 
-		const uint_t	count	= RoundToUInt( x );
+		const UInt_t	count	= RoundToUInt( x );
 		T				result  = T(1);
 
-		for (uint_t i = 2; i <= count; ++i) {
+		for (UInt_t i = 2; i <= count; ++i) {
 			result *= Pow( T(i), T(i) );
 		}
 		return result;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  IntHyperFactorial (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  IntHyperFactorial (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntHyperFactorial( x[i] );
 		return ret;
 	}
@@ -1932,22 +1932,22 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		ASSERT( x >= T(0) );
 		
-		typedef CompileTime::NearUInt::FromType<T>	uint_t;
+		typedef CompileTime::NearUInt::FromType<T>	UInt_t;
 
-		const uint_t	val		= RoundToUInt( x );
-		const uint_t	count	= val / 2;
+		const UInt_t	val		= RoundToUInt( x );
+		const UInt_t	count	= val / 2;
 		T				result  = T(1);
 
-		for (uint_t i = 0; i < count; ++i) {
+		for (UInt_t i = 0; i < count; ++i) {
 			result *= ( T(val) - T(2*i) );
 		}
 		return result;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  IntDoubleFactorial (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  IntDoubleFactorial (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntDoubleFactorial( x[i] );
 		return ret;
 	}
@@ -1963,10 +1963,10 @@ namespace GXMath
 		return IntFactorial( x - T(1) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  IntGammaFunction (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  IntGammaFunction (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntGammaFunction( x[i] );
 		return ret;
 	}
@@ -1982,10 +1982,10 @@ namespace GXMath
 		return Ln( Abs( IntGammaFunction( x ) ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  IntLnGammaFunction (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  IntLnGammaFunction (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntLnGammaFunction( x[i] );
 		return ret;
 	}
@@ -2001,10 +2001,10 @@ namespace GXMath
 		return (T) FastFactorial( double(x) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Factorial (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Factorial (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Factorial( x[i] );
 		return ret;
 	}
@@ -2020,10 +2020,10 @@ namespace GXMath
 		return (T) FastGammaFunction( double(x) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Gamma (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Gamma (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Gamma( x[i] );
 		return ret;
 	}
@@ -2039,10 +2039,10 @@ namespace GXMath
 		return (T) FastLnGammaFunction( double(x) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  LnGamma (const Vec<T,I>& x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  LnGamma (const Vec<T,I,U>& x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = LnGammaFunction( x[i] );
 		return ret;
 	}
@@ -2061,10 +2061,10 @@ namespace GXMath
 		return ( x & T(1) ) == T(1);
 	}
 
-	template <typename T, usize I>
-	inline Vec<bool,I>  IsOdd (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<bool,I,U>  IsOdd (const Vec<T,I,U> &x)
 	{
-		Vec<bool,I>		ret;
+		Vec<bool,I,U>		ret;
 		FOR( i, ret )	ret[i] = IsOdd( x[i] );
 		return ret;
 	}
@@ -2083,10 +2083,10 @@ namespace GXMath
 		return ( x & T(1) ) == T(0);
 	}
 
-	template <typename T, usize I>
-	inline Vec<bool,I>  IsEven (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<bool,I,U>  IsEven (const Vec<T,I,U> &x)
 	{
-		Vec<bool,I>		ret;
+		Vec<bool,I,U>		ret;
 		FOR( i, ret )	ret[i] = IsEven( x[i] );
 		return ret;
 	}
@@ -2105,10 +2105,10 @@ namespace GXMath
 		return ( x | T(1) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  ToOdd (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ToOdd (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ToOdd( x[i] );
 		return ret;
 	}
@@ -2127,10 +2127,10 @@ namespace GXMath
 		return ( x & ~T(1) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  ToEven (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ToEven (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ToEven( x[i] );
 		return ret;
 	}
@@ -2149,18 +2149,18 @@ namespace GXMath
 		return x < edge ? T(0) : T(1);
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Step (const Vec<T,I> &x, const Vec<T,I> &edge)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Step (const Vec<T,I,U> &x, const Vec<T,I,U> &edge)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Step( x[i], edge[i] );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Step (const Vec<T,I> &x, const T &edge)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Step (const Vec<T,I,U> &x, const T &edge)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Step( x[i], edge );
 		return ret;
 	}
@@ -2180,18 +2180,18 @@ namespace GXMath
 		return Clamp( (x - edge0) / (edge1 - edge0), T(0), T(1) );
 	}
 	
-	template <typename T, usize I>
-	inline Vec<T,I>  LinearStep (const Vec<T,I> &x, const Vec<T,I> &edge0, const Vec<T,I> &edge1)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  LinearStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = LinearStep( x[i], edge0[i], edge1[i] );
 		return ret;
 	}
 	
-	template <typename T, usize I>
-	inline Vec<T,I>  LinearStep (const Vec<T,I> &x, const T &edge0, const T &edge1)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  LinearStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = LinearStep( x[i], edge0, edge1 );
 		return ret;
 	}
@@ -2212,18 +2212,18 @@ namespace GXMath
 		return t * t * (T(3) - T(2) * t);
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  SmoothStep (const Vec<T,I> &x, const Vec<T,I> &edge0, const Vec<T,I> &edge1)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SmoothStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SmoothStep( x[i], edge0[i], edge1[i] );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  SmoothStep (const Vec<T,I> &x, const T &edge0, const T &edge1)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SmoothStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SmoothStep( x[i], edge0, edge1 );
 		return ret;
 	}
@@ -2243,18 +2243,18 @@ namespace GXMath
 		return T(1) - Abs( LinearStep( x, edge0, edge1 ) - T(0.5) ) * T(2);
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  BumpStep (const Vec<T,I> &x, const Vec<T,I> &edge0, const Vec<T,I> &edge1)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  BumpStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BumpStep( x[i], edge0[i], edge1[i] );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  BumpStep (const Vec<T,I> &x, const T &edge0, const T &edge1)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  BumpStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BumpStep( x[i], edge0, edge1 );
 		return ret;
 	}
@@ -2275,18 +2275,18 @@ namespace GXMath
 		return t * t * (T(3) - T(2) * t);
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  SmoothBumpStep (const Vec<T,I> &x, const Vec<T,I> &edge0, const Vec<T,I> &edge1)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SmoothBumpStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SmoothBumpStep( x[i], edge0[i], edge1[i] );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  SmoothBumpStep (const Vec<T,I> &x, const T &edge0, const T &edge1)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SmoothBumpStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SmoothBumpStep( x[i], edge0, edge1 );
 		return ret;
 	}
@@ -2309,10 +2309,10 @@ namespace GXMath
 		return T( ((value + (a-1)) / a) * a );
 	}
 
-	template <typename T, usize I>
-	Vec<T,I>  AlignToLarge (const Vec<T,I>& value, const usize align)
+	template <typename T, usize I, ulong U>
+	Vec<T,I,U>  AlignToLarge (const Vec<T,I,U>& value, const usize align)
 	{
-		Vec<T,I> res;
+		Vec<T,I,U> res;
 		FOR( i, res )	res[i] = AlignToLarge( value[i], align );
 		return res;
 	}

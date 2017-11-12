@@ -88,7 +88,7 @@ namespace File
 	public:
 		typedef A							CryptAlgorithm;
 		typedef RCryptFile<A>				Self;
-		typedef SHARED_POINTER_TYPE( Self )	RCryptFilePtr;
+		typedef SharedPointerType<Self>		RCryptFilePtr;
 
 
 	// variables
@@ -159,7 +159,7 @@ namespace File
 	public:
 		typedef A							CryptAlgorithm;
 		typedef WCryptFile<A>				Self;
-		typedef SHARED_POINTER_TYPE( Self )	WCryptFilePtr;
+		typedef SharedPointerType<Self>		WCryptFilePtr;
 
 
 	// variables

@@ -27,26 +27,26 @@ namespace GXTypes
 		template <typename T, typename B>
 		struct _PointerCast< T *, B >
 		{
-			typedef B *	result_t;
+			using Result_t	= B *;
 
-			forceinline constexpr static result_t Cast (T * val) {
-				return static_cast< result_t >( static_cast< void * >( val ) );
+			forceinline constexpr static Result_t Cast (T * val) {
+				return static_cast< Result_t >( static_cast< void * >( val ) );
 			}
 		};
 		
 		template <typename T, typename B>
 		struct _PointerCast < const T *, B >
 		{
-			typedef const B *	result_t;
+			using Result_t	= const B *;
 
-			forceinline constexpr static result_t Cast (const T * val) {
-				return static_cast< result_t >( static_cast< const void * const >( val ) );
+			forceinline constexpr static Result_t Cast (const T * val) {
+				return static_cast< Result_t >( static_cast< const void * const >( val ) );
 			}
 		};
 	}	// _types_hidden_
 
 	template <typename T, typename B>
-	forceinline constexpr typename _types_hidden_::_PointerCast< B, T >::result_t  PointerCast (B val)
+	forceinline constexpr typename _types_hidden_::_PointerCast< B, T >::Result_t  PointerCast (B val)
 	{
 		STATIC_ASSERT( TypeTraits::IsPointer<B>, "argument must be pointer" );
 		return _types_hidden_::_PointerCast< B, T >::Cast( val );
@@ -58,7 +58,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename R, typename B>
-	forceinline constexpr typename _types_hidden_::_PointerCast< B, R >::result_t  PointerSafeCast (B val)
+	forceinline constexpr typename _types_hidden_::_PointerCast< B, R >::Result_t  PointerSafeCast (B val)
 	{
 		STATIC_ASSERT( sizeof(R) == sizeof(TypeTraits::RemovePointer<B>) );
 		return PointerCast<R,B>( val );

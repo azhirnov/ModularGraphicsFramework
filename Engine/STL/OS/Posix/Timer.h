@@ -15,10 +15,10 @@ namespace OS
 #	ifdef PLATFORM_BASE_POSIX_SHELL
 
 	//
-	// Perfomance Timer
+	// Performance Timer
 	//
 	
-	struct PerfomanceTimer
+	struct PerformanceTimer
 	{
 		// seconds
 		TimeD GetTime () const
@@ -42,13 +42,13 @@ namespace OS
 	
 
 	template <>
-	inline TimeL  PerfomanceTimer::Get (const TimeL &) const
+	inline TimeL  PerformanceTimer::Get (const TimeL &) const
 	{
 		return GetTimeMicroSec();
 	}
 	
 	template <>
-	inline TimeD  PerfomanceTimer::Get (const TimeD &) const
+	inline TimeD  PerformanceTimer::Get (const TimeD &) const
 	{
 		return GetTime();
 	}

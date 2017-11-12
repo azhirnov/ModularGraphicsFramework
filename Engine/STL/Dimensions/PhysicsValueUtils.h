@@ -101,7 +101,7 @@ namespace GXMath
 			typedef typename CompileTime::StaticFloatPoint< typename LeftScale::mantissa_t, 
 								typename LeftScale::exponent_t, 1, 0 >::Simplify							scale_t;
 
-			typedef typename CompileTime::Fractional< typename LeftPower::value_t, 1, 1 >::Simplified		power_t;
+			typedef typename CompileTime::Fractional< typename LeftPower::Value_t, 1, 1 >::Simplified		power_t;
 			
 			static ValueType Get (const ValueType &left, const ValueType &right)
 			{
@@ -130,7 +130,7 @@ namespace GXMath
 			typedef typename CompileTime::StaticFloatPoint< typename LeftScale::mantissa_t, 
 								typename LeftScale::exponent_t, 1, 0 >::Simplify							scale_t;
 
-			typedef typename CompileTime::Fractional< typename LeftPower::value_t, 1, 1 >::Simplified		power_t;
+			typedef typename CompileTime::Fractional< typename LeftPower::Value_t, 1, 1 >::Simplified		power_t;
 			
 			static ValueType Get (const ValueType &left, const ValueType &right)
 			{
@@ -164,7 +164,7 @@ namespace GXMath
 			typedef typename RightScale::template Pow< RightPower::Round::value >	rscale_t;
 
 			typedef typename lscale_t::template Mul< rscale_t >											scale_t;
-			typedef typename CompileTime::Fractional< typename LeftPower::value_t, 1, 1 >::Simplified	power_t;
+			typedef typename CompileTime::Fractional< typename LeftPower::Value_t, 1, 1 >::Simplified	power_t;
 			
 			static ValueType Get (const ValueType &left, const ValueType &right) {
 				return left * right;
@@ -177,7 +177,7 @@ namespace GXMath
 			typedef typename CompileTime::StaticFloatPoint< typename LeftScale::mantissa_t, 
 								typename LeftScale::exponent_t, 1, 0 >::Simplify							scale_t;
 
-			typedef typename CompileTime::Fractional< typename LeftPower::value_t, 1, 1 >::Simplified		power_t;
+			typedef typename CompileTime::Fractional< typename LeftPower::Value_t, 1, 1 >::Simplified		power_t;
 
 			static ValueType Get (const ValueType &left, const ValueType &right)
 			{
@@ -211,7 +211,7 @@ namespace GXMath
 			typedef typename RightScale::template Pow< RightPower::Round::value >	rscale_t;
 
 			typedef typename lscale_t::template Div< rscale_t >											scale_t;
-			typedef typename CompileTime::Fractional< typename LeftPower::value_t, 1, 1 >::Simplified	power_t;
+			typedef typename CompileTime::Fractional< typename LeftPower::Value_t, 1, 1 >::Simplified	power_t;
 			
 			static ValueType Get (const ValueType &left, const ValueType &right) {
 				return left / right;
@@ -224,7 +224,7 @@ namespace GXMath
 			typedef typename CompileTime::StaticFloatPoint< typename LeftScale::mantissa_t, 
 								typename LeftScale::exponent_t, 1, 0 >::Simplify							scale_t;
 
-			typedef typename CompileTime::Fractional< typename LeftPower::value_t, 1, 1 >::Simplified		power_t;
+			typedef typename CompileTime::Fractional< typename LeftPower::Value_t, 1, 1 >::Simplified		power_t;
 
 			static ValueType Get (const ValueType &left, const ValueType &right)
 			{
@@ -239,13 +239,13 @@ namespace GXMath
 		template <typename Scale, typename Power>
 		struct DimensionConversion_Simplify_Zero {
 			typedef typename CompileTime::StaticFloatPoint< typename Scale::mantissa_t, typename Scale::exponent_t, 0, 0 >	scale_t;
-			typedef typename CompileTime::Fractional< typename Power::value_t, 1, 1 >										power_t;
+			typedef typename CompileTime::Fractional< typename Power::Value_t, 1, 1 >										power_t;
 		};
 
 		template <typename Scale, typename Power>
 		struct DimensionConversion_Simplify_One {
 			typedef typename CompileTime::StaticFloatPoint< typename Scale::mantissa_t, typename Scale::exponent_t, 1, 0 >	scale_t;
-			typedef typename CompileTime::Fractional< typename Power::value_t, 1, 1 >										power_t;
+			typedef typename CompileTime::Fractional< typename Power::Value_t, 1, 1 >										power_t;
 		};
 
 		template <typename Scale, typename Power>

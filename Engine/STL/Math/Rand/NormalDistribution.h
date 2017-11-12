@@ -31,8 +31,8 @@ namespace GXMath
 		static T Int (const T expectedValue, const T standartDeviation)
 		{
 			CompileTime::MustBeInteger<T>();
-			typedef CompileTime::NearFloat::FromType<T>	float_t;
-			return Round<T>( Float( float_t(expectedValue), float_t(standartDeviation) ) );
+			typedef CompileTime::NearFloat::FromType<T>	Float_t;
+			return Round<T>( Float( Float_t(expectedValue), Float_t(standartDeviation) ) );
 		}
 		
 

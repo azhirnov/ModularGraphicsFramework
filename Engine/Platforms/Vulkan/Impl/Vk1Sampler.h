@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
 #include "Engine/Platforms/Shared/GPU/Sampler.h"
 
 #if defined( GRAPHICS_API_VULKAN )
@@ -11,73 +12,16 @@ namespace Engine
 {
 namespace PlatformVK
 {
-	
-	//
-	// Vulkan Sampler
-	//
-
-	class Vk1Sampler final : public Vk1BaseModule
-	{
-	// types
-	private:
-		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t/*::Erase< MessageListFrom<
-											ModuleMsg::Delete
-										> >*/
-										::Append< MessageListFrom<
-											GpuMsg::GetSamplerDescriptor,
-											GpuMsg::GetVkSamplerID
-										> >;
-
-		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
-
-
-	// constants
-	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
-
-
-	// variables
-	private:
-		SamplerDescriptor	_descr;
-
-		vk::VkSampler		_samplerId;
-
-
-	// methods
-	public:
-		Vk1Sampler (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
-		~Vk1Sampler ();
-
-		SamplerDescriptor const&	GetDescriptor ()	const	{ return _descr; }
-
-
-	// message handlers
-	private:
-		bool _Compose (const  Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetVkSamplerID (const Message< GpuMsg::GetVkSamplerID > &);
-		bool _GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &);
-
-	private:
-		bool _IsCreated () const;
-		bool _CreateSampler ();
-		void _DestroySampler ();
-		
-		void _DestroyResources () override;
-	};
-
-
 
 	//
 	// Vulkan Sampler Cache
 	//
 
-	class Vk1SamplerCache final
+	class Vk1SamplerCache final : public Vk1BaseObject
 	{
 	// types
 	private:
-		SHARED_POINTER( Vk1Sampler );
+		using Vk1SamplerPtr = SharedPointerType< class Vk1Sampler >;
 
 		struct SearchableSampler
 		{
@@ -85,9 +29,9 @@ namespace PlatformVK
 
 			explicit SearchableSampler (const Vk1SamplerPtr &s) : samp(s) {}
 
-			bool operator == (const SearchableSampler &right) const	{ return samp->GetDescriptor() == right.samp->GetDescriptor(); }
-			bool operator >  (const SearchableSampler &right) const	{ return samp->GetDescriptor() >  right.samp->GetDescriptor(); }
-			bool operator <  (const SearchableSampler &right) const	{ return samp->GetDescriptor() <  right.samp->GetDescriptor(); }
+			bool operator == (const SearchableSampler &right) const;
+			bool operator >  (const SearchableSampler &right) const;
+			bool operator <  (const SearchableSampler &right) const;
 		};
 
 		struct SamplerSearch
@@ -96,9 +40,9 @@ namespace PlatformVK
 
 			explicit SamplerSearch (const SamplerDescriptor &s) : descr(s) {}
 
-			bool operator == (const SearchableSampler &right) const	{ return descr == right.samp->GetDescriptor(); }
-			bool operator >  (const SearchableSampler &right) const	{ return descr >  right.samp->GetDescriptor(); }
-			bool operator <  (const SearchableSampler &right) const	{ return descr <  right.samp->GetDescriptor(); }
+			bool operator == (const SearchableSampler &right) const;
+			bool operator >  (const SearchableSampler &right) const;
+			bool operator <  (const SearchableSampler &right) const;
 		};
 
 		using Samplers_t	= Set< SearchableSampler >;
@@ -106,20 +50,16 @@ namespace PlatformVK
 
 	// variables
 	private:
-		Samplers_t				_samplers;
-		const VkSystemsRef		_vkSystems;
+		Samplers_t		_samplers;
 
 
 	// methods
 	public:
-		explicit Vk1SamplerCache (VkSystemsRef vkSys);
+		explicit Vk1SamplerCache (Ptr<Vk1Device> dev);
 
-		Vk1SamplerPtr	Create (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
+		Vk1SamplerPtr	Create (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
 
 		void Destroy ();
-
-		VkSystemsRef	VkSystems ()			const	{ return _vkSystems; }
-		Ptr<Vk1Device>	GetDevice ()			const	{ return _vkSystems->Get< Vk1Device >(); }
 
 		// device features
 		bool	SupportAnisotropyFiltering ()	const	{ return GetDevice()->GetDeviceFeatures().samplerAnisotropy == VK_TRUE; }

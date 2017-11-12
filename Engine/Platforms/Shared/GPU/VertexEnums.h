@@ -118,6 +118,15 @@ namespace Platforms
 		};
 
 		static type  ToDstType (type src);
+
+		static type  SetNormalized (type value, bool norm);
+
+		struct ValueType
+		{
+			static bool IsInteger(type value);
+			static bool IsFloat  (type value);
+			static bool IsDouble (type value);
+		};
 	};
 	
 
@@ -131,6 +140,10 @@ namespace Platforms
 			_Count,
 			Unknown		= ~0u,
 		};
+
+		template <typename T>	static constexpr type From ();
+
+		static BytesU	Sizeof (type value);
 	};
 	
 
@@ -181,7 +194,44 @@ namespace Platforms
 			
 		RETURN_ERR( "invalid attrib type", ftype );
 	 }
+	 
+	inline EVertexAttribute::type  EVertexAttribute::SetNormalized (type value, bool norm)
+	{
+		return type( (value & ~NormalizedFlag) | (norm ? NormalizedFlag : 0) );
+	}
+	
+	inline bool EVertexAttribute::ValueType::IsInteger (type value)
+	{
+		return	EnumEqMask( ToDstType( value ), _vtypeinfo::_INT,  _vtypeinfo::_TYPE_MASK ) or
+				EnumEqMask( ToDstType( value ), _vtypeinfo::_UINT, _vtypeinfo::_TYPE_MASK );
+	}
 
+	inline bool EVertexAttribute::ValueType::IsFloat (type value)
+	{
+		return EnumEqMask( ToDstType( value ), _vtypeinfo::_FLOAT, _vtypeinfo::_TYPE_MASK );
+	}
+
+	inline bool EVertexAttribute::ValueType::IsDouble (type value)
+	{
+		return EnumEqMask( ToDstType( value ), _vtypeinfo::_DOUBLE, _vtypeinfo::_TYPE_MASK );
+	}
+		
+
+//-----------------------------------------------------------------------------//
+// EIndex
+
+	template <>	inline constexpr EIndex::type  EIndex::From< ushort > ()	{ return UShort; }
+	template <>	inline constexpr EIndex::type  EIndex::From< uint > ()		{ return UInt; }
+	
+	inline BytesU EIndex::Sizeof (type value)
+	{
+		switch ( value )
+		{
+			case EIndex::UShort :	return BytesU::SizeOf<ushort>();
+			case EIndex::UInt :		return BytesU::SizeOf<uint>();
+		}
+		RETURN_ERR( "unknown index type!" );
+	}
 
 }	// Platforms
 }	// Engine

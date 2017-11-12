@@ -36,7 +36,7 @@ namespace PlatformGL
 	Create
 =================================================
 */
-	bool GLWinContext::Create (const Handle_t &wnd, INOUT VideoSettings_t &vs)
+	bool GLWinContext::Create (const HWND_t &wnd, INOUT VideoSettings_t &vs)
 	{
 		Destroy();
 		
@@ -128,51 +128,20 @@ namespace PlatformGL
 */
 	bool GLWinContext::_GetApiVersion (const VideoSettings_t &vs, OUT uint2 &version)
 	{
-		version = uint2();
+		using namespace CreateInfo;
 
-		const auto	api_version = CreateInfo::GAPI::ToString( vs.version );
-
-		Array< StringCRef >	tokens;
-		StringParser::DivideString_CPP( api_version, OUT tokens );
-
-		// check api name
+		switch ( vs.version )
 		{
-			bool	is_gl = false;
-
-			if ( tokens.Count() > 1 and (tokens[0].EqualsIC( "GL" ) or tokens[0].EqualsIC( "opengl" )) )
-			{
-				is_gl = true;
-			}
-
-			if ( tokens.Count() > 2 and (tokens[1].EqualsIC( "ES" )) )
-			{
-				is_gl = false;
-			}
-
-			CHECK_ERR( is_gl );
+			case "GL 4.3"_GAPI :
+			case "opengl 4.3"_GAPI :	version = uint2(4,3);	break;
+			case "GL 4.4"_GAPI :
+			case "opengl 4.4"_GAPI :	version = uint2(4,4);	break;
+			case "GL 4.5"_GAPI :
+			case "opengl 4.5"_GAPI :	version = uint2(4,5);	break;
+			case "GL 4.6"_GAPI :
+			case "opengl 4.6"_GAPI :	version = uint2(4,6);	break;
+			default :					RETURN_ERR( "unsupported OpenGL version" );
 		}
-
-		// check api version
-		{
-			float	num = 0.0f;
-
-			FOR( i, tokens )
-			{
-				const char	c = tokens[i].Front();
-			
-				if ( c >= '0' and c <= '9' )
-				{
-					num = StringUtils::ToFloat(String( tokens[i] ));
-					break;
-				}
-			}
-
-			version[0] = (uint) Floor( num );
-			version[1] = (uint) (Fract( num ) * 10.0f);
-
-			CHECK_ERR( version[0] >= 2 and version[0] <= 4 and version[1] <= 5 );
-		}
-
 		return true;
 	}
 
@@ -221,10 +190,10 @@ namespace PlatformGL
 			WGL_DEPTH_BITS_ARB,					depth_stencil_bits[0],
 			WGL_STENCIL_BITS_ARB,				depth_stencil_bits[1],
 			WGL_DOUBLE_BUFFER_ARB,				true,
-			WGL_STEREO_ARB,						vs.flags.Get( EFlags::Stereo ),
+			WGL_STEREO_ARB,						false,	//vs.flags[ EFlags::Stereo ],
 			WGL_PIXEL_TYPE_ARB,					WGL_TYPE_RGBA_ARB,
-			//WGL_SAMPLE_BUFFERS_ARB,				vs.samples > 1 ? true : false,	// TODO
-			//WGL_SAMPLES_ARB,					vs.samples,
+			WGL_SAMPLE_BUFFERS_ARB,				vs.samples.Get() > 1 ? true : false,
+			WGL_SAMPLES_ARB,					vs.samples.Get(),
             WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB,	true,
 			0,0
 		};
@@ -237,7 +206,7 @@ namespace PlatformGL
 			int		pixelFormat	= 0;
 			uint	numFormats	= 0;
 			int		valid		= wglChoosePixelFormat.Get<PFNWGLCHOOSEPIXELFORMATARBPROC>()
-										( dc, ctx_int_attribs, ctx_float_attribs, 1, &pixelFormat, &numFormats );
+										( dc, ctx_int_attribs, ctx_float_attribs, 1, OUT &pixelFormat, OUT &numFormats );
 
 			if ( valid != 0 and numFormats > 0 )
 				rv = pixelFormat;
@@ -262,9 +231,9 @@ namespace PlatformGL
 		if ( rv != 0 )
 		{
 			pixformat		= rv;
-			//vs.depthBits	= (GpuContext::EDepthFromat) ctx_int_attribs[11];
+			//vs.depthBits	= (GpuContext::EDepthFromat) ctx_int_attribs[11];		// TODO
 			//vs.stencilBits	= (GpuContext::EStencilFormat) ctx_int_attribs[13];
-			//vs.samples	= (ubyte) ctx_int_attribs[21];
+			vs.samples	= MultiSamples( ctx_int_attribs[21] );
 			
 			if ( not DescribePixelFormat( dc, pixformat, sizeof(pfd), &pfd ) )
 				LOG( "Can't describe pixel format", ELog::Warning );
@@ -280,8 +249,8 @@ namespace PlatformGL
 			WGL_CONTEXT_MAJOR_VERSION_ARB, version[0],
 			WGL_CONTEXT_MINOR_VERSION_ARB, version[1],
 			WGL_CONTEXT_FLAGS_ARB,         WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB |
-												(vs.flags.Get( EFlags::DebugContext ) ? WGL_CONTEXT_DEBUG_BIT_ARB : 0) |
-												(vs.flags.Get( EFlags::NoErrorContext ) ? CONTEXT_FLAG_NO_ERROR_BIT_KHR : 0),
+												(vs.flags[ EFlags::DebugContext ] ? WGL_CONTEXT_DEBUG_BIT_ARB : 0) |
+												(vs.flags[ EFlags::NoErrorContext ] ? CONTEXT_FLAG_NO_ERROR_BIT_KHR : 0),
 			WGL_CONTEXT_PROFILE_MASK_ARB,  is_core_version ?
 												WGL_CONTEXT_CORE_PROFILE_BIT_ARB :
 												WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
@@ -337,7 +306,7 @@ namespace PlatformGL
 		// set vertical synchronization
 		if ( swapControlSupported )
 		{
-			CHECK( wglSwapInterval.Get<PFNWGLSWAPINTERVALEXTPROC>()( int(vs.flags.Get( EFlags::VSync )) ) == TRUE );
+			CHECK( wglSwapInterval.Get<PFNWGLSWAPINTERVALEXTPROC>()( int(vs.flags[ EFlags::VSync ]) ) == TRUE );
 
 			vs.flags.SetAt( EFlags::VSync, wglGetSwapInterval.Get<PFNWGLGETSWAPINTERVALEXTPROC>()() != 0 );
 		}

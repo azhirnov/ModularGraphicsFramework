@@ -9,6 +9,11 @@
 #include "Engine/Platforms/Shared/GPU/PipelineLayout.h"
 #include "Engine/Platforms/Shared/GPU/IDs.h"
 
+namespace SWShaderLang
+{
+	class SWShaderHelper;
+}
+
 namespace Engine
 {
 namespace Platforms
@@ -18,7 +23,7 @@ namespace Platforms
 	// Graphics Pipeline Descriptor
 	//
 
-	struct GraphicsPipelineDescriptor final : CompileTime::FastCopyable
+	struct _ENGINE_PLATFORMS_EXPORT_ GraphicsPipelineDescriptor final : CompileTime::FastCopyable
 	{
 	// variables
 		VertexInputState				vertexInput;
@@ -28,7 +33,7 @@ namespace Platforms
 		PipelineLayoutDescriptor		layout;
 		uint							patchControlPoints;
 		uint							subpass;
-		// TODO: specialization constants
+		// TODO: specialization constants, viewports
 
 	// methods
 		GraphicsPipelineDescriptor (GX_DEFCTOR);
@@ -48,11 +53,11 @@ namespace Platforms
 	// Compute Pipeline Descriptor
 	//
 
-	struct ComputePipelineDescriptor final : CompileTime::FastCopyable
+	struct _ENGINE_PLATFORMS_EXPORT_ ComputePipelineDescriptor final : CompileTime::FastCopyable
 	{
 	// variables
 		PipelineLayoutDescriptor		layout;
-		uint							subpass;
+		uint3							localGroupSize;
 		// TODO: specialization constants
 
 	// methods
@@ -60,7 +65,7 @@ namespace Platforms
 
 		explicit
 		ComputePipelineDescriptor (const PipelineLayoutDescriptor &layout,
-									uint subpass = 0);
+								   const uint3 &localGroupSize);
 	};
 
 
@@ -69,19 +74,22 @@ namespace Platforms
 	// Pipeline Template Descriptor
 	//
 
-	struct PipelineTemplateDescriptor final : CompileTime::FastCopyable
+	struct _ENGINE_PLATFORMS_EXPORT_ PipelineTemplateDescriptor final : CompileTime::FastCopyable
 	{
 	// types
-		struct ShaderSource
+		struct _ENGINE_PLATFORMS_EXPORT_ ShaderSource
 		{
 		// types
 			struct ESource { enum type {
 				GLSL,
 				SPIRV,
+				OpenCL,
+				SoftRenderer,
 				_Count
 			}; };
 
-			using Data		= Union< uint, String, BinaryArray, Array<uint> >;
+			using SWInvoke	= void (*) (const SWShaderLang::SWShaderHelper &);
+			using Data		= Union< uint, String, BinaryArray, Array<uint>, SWInvoke >;
 			using Sources	= StaticArray< Data, ESource::_Count >;
 			
 		// variables
@@ -92,12 +100,15 @@ namespace Platforms
 
 			void StringGLSL (StringCRef data);
 			void StringSPIRV (StringCRef data);
+			void StringCL (StringCRef data);
 			void ArraySPIRV (ArrayCRef<uint> data);
 			bool FileSPIRV (const RFilePtr &file);
+			void FuncSW (const SWInvoke &func);
 
-
-			StringCRef		GetGLSL () const;
-			ArrayCRef<uint>	GetSPIRV () const;
+			StringCRef		GetGLSL ()	const;
+			ArrayCRef<uint>	GetSPIRV ()	const;
+			StringCRef		GetCL ()	const;
+			SWInvoke		GetSW ()	const;
 		};
 
 		using Sources = StaticArray< ShaderSource, EShader::_Count >;
@@ -112,6 +123,7 @@ namespace Platforms
 		PipelineLayoutDescriptor		layout;
 		uint							patchControlPoints;
 		uint							subpass;
+		uint3							localGroupSize;
 		EPrimitive::bits				supportedPrimitives;
 		EShader::bits					supportedShaders;
 
@@ -124,6 +136,7 @@ namespace Platforms
 		ShaderSource& TessEvaluation ()		{ return shaders[ EShader::TessEvaluation ]; }
 		ShaderSource& Geometry ()			{ return shaders[ EShader::Geometry ]; }
 		ShaderSource& Fragment ()			{ return shaders[ EShader::Fragment ]; }
+		ShaderSource& Compute ()			{ return shaders[ EShader::Compute ]; }
 	};
 
 }	// Platforms
@@ -185,7 +198,7 @@ namespace CreateInfo
 		ModulePtr		gpuThread;
 
 	// methods
-		PipelineResourceTable () {}
+		//PipelineResourceTable () {}
 	};
 
 }	// CreateInfo
@@ -211,22 +224,6 @@ namespace GpuMsg
 	};
 
 
-	// platform-dependent
-	struct GetVkGraphicsPipelineID;
-	struct GetGLGraphicsPipelineID;
-
-	struct GetVkComputePipelineID;
-	struct GetGLComputePipelineID;
-
-	struct GetVkShaderModuleIDs;
-	struct GetGLShaderModuleIDs;
-
-	struct GetVkPipelineLayoutID;
-	struct GetVkDescriptorLayouts;
-
-	struct GetVkPipelineResourceTableID;
-
-
 	//
 	// Get Pipeline Layout Descriptor
 	//
@@ -234,6 +231,13 @@ namespace GpuMsg
 	{
 		Out< Platforms::PipelineLayoutDescriptor >	result;
 	};
+
+
+	//
+	// Update Resources in Pipeline Resource Table
+	//
+	struct PipelineResourceTableUpdate
+	{};
 
 	
 	//
@@ -269,6 +273,7 @@ namespace GpuMsg
 	{
 	// variables
 		Out< ModulePtr >				result;
+		UntypedID_t						moduleID	= 0;
 		ModulePtr						gpuThread;
 		ModulePtr						renderPass;
 		Platforms::VertexInputState		vertexInput;
@@ -277,11 +282,14 @@ namespace GpuMsg
 	// methods
 		CreateGraphicsPipeline (GX_DEFCTOR) {}
 
-		CreateGraphicsPipeline (const ModulePtr &gpuThread, const ModulePtr &renderPass,
+		CreateGraphicsPipeline (UntypedID_t moduleID,
+								const ModulePtr &gpuThread,
+								const ModulePtr &renderPass,
 								const Platforms::VertexInputState &vertexInput,
 								Platforms::EPrimitive::type topology) :
-			gpuThread(gpuThread),		renderPass(renderPass),
-			vertexInput(vertexInput),	topology(topology)
+			moduleID(moduleID),			gpuThread(gpuThread),
+			renderPass(renderPass),		vertexInput(vertexInput),
+			topology(topology)
 		{}
 	};
 
@@ -293,13 +301,15 @@ namespace GpuMsg
 	{
 	// variables
 		Out< ModulePtr >		result;
+		UntypedID_t				moduleID	= 0;
 		ModulePtr				gpuThread;
 		
 	// methods
 		CreateComputePipeline (GX_DEFCTOR) {}
 
-		explicit CreateComputePipeline (const ModulePtr &gpuThread) :
-			gpuThread(gpuThread)
+		explicit CreateComputePipeline (UntypedID_t moduleID,
+										const ModulePtr &gpuThread = null) :
+			moduleID(moduleID),		gpuThread(gpuThread)
 		{}
 	};
 

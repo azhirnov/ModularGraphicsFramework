@@ -39,7 +39,6 @@ namespace CreateInfo
 	{
 		ModulePtr						gpuThread;
 		Platforms::BufferDescriptor		descr;
-		bool							allocMemory		= false;	// set 'true' to automaticaly create memory object
 	};
 
 }	// CreateInfo
@@ -55,11 +54,6 @@ namespace GpuMsg
 	{
 		Out< Platforms::BufferDescriptor >	result;
 	};
-
-	
-	// platform-dependent
-	struct GetVkBufferID;
-	struct GetGLBufferID;
 
 
 }	// GpuMsg

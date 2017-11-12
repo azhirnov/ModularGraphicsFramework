@@ -21,37 +21,37 @@ namespace GXMath
 
 	// types
 	public:
-		typedef Vec<T,3>			vec_t;
+		typedef Vec<T,3>			Vec_t;
 		typedef Quaternion<T>		quat_t;
 		typedef Matrix<T,4,4>		mat_t;
-		typedef T					value_t;
+		typedef T					Value_t;
 		typedef Transformation<T>	Self;
 			
 
 	// variables
 	private:
 		quat_t		_orientation;
-		vec_t		_position;
-		//vec_t		_scale;
-		value_t		_scale;
+		Vec_t		_position;
+		//Vec_t		_scale;
+		Value_t		_scale;
 
 
 	// methods
 	public:
 		Transformation (GX_DEFCTOR) : _scale(T(1)) {}
 		Transformation (const Self &tr);
-		Transformation (const vec_t &pos, const quat_t &orient, const T &scale = T(1));
-		//Transformation (const vec_t &pos, const quat_t &orient, const vec_t &scale = vec_t(T(1)));
+		Transformation (const Vec_t &pos, const quat_t &orient, const T &scale = T(1));
+		//Transformation (const Vec_t &pos, const quat_t &orient, const Vec_t &scale = Vec_t(T(1)));
 		explicit Transformation (const mat_t &mat);
 
-		vec_t		 &	Position ()									{ return _position; }
+		Vec_t		 &	Position ()									{ return _position; }
 		quat_t		 &	Orientation ()								{ return _orientation; }
-		value_t		 &	GetScale ()									{ return _scale; }
+		Value_t		 &	GetScale ()									{ return _scale; }
 
-		const vec_t	 &	Position ()		const						{ return _position; }
+		const Vec_t	 &	Position ()		const						{ return _position; }
 		const quat_t &	Orientation ()	const						{ return _orientation; }
-		//const vec_t  &	GetScale ()		const						{ return _scale; }
-		value_t			GetScale ()		const						{ return _scale; }
+		//const Vec_t  &	GetScale ()		const						{ return _scale; }
+		Value_t			GetScale ()		const						{ return _scale; }
 
 		Self &	operator += (const Self &right);
 		Self	operator +  (const Self &right)	const;
@@ -65,28 +65,28 @@ namespace GXMath
 		bool	operator >  (const Self &right) const;
 		bool	operator <  (const Self &right) const;
 
-		Self &	Move (const vec_t &delta);
+		Self &	Move (const Vec_t &delta);
 		Self &	Rotate (const quat_t &delta);
-		Self &	Scale (const vec_t &scale);
+		Self &	Scale (const Vec_t &scale);
 
 		Self &	Inverse ();
 		Self	Inversed ()	const;
 
 		void	GetMatrix (OUT mat_t &matrix) const;
-		void	GetModelMatrix (const vec_t &pos, OUT mat_t &matrix) const;
+		void	GetModelMatrix (const Vec_t &pos, OUT mat_t &matrix) const;
 
 		bool	IsZero () const;
 
-		vec_t	Transform (const vec_t &point)			const	{ return GetGlobalPosition( point ); }
+		Vec_t	Transform (const Vec_t &point)			const	{ return GetGlobalPosition( point ); }
 
 
 		// local space to global
-		vec_t	GetGlobalVector (const vec_t &local)	const;
-		vec_t	GetGlobalPosition (const vec_t &local)	const;
+		Vec_t	GetGlobalVector (const Vec_t &local)	const;
+		Vec_t	GetGlobalPosition (const Vec_t &local)	const;
 
 		// global space to local
-		vec_t	GetLocalVector (const vec_t &global)	const;
-		vec_t	GetLocalPosition (const vec_t &global)	const;
+		Vec_t	GetLocalVector (const Vec_t &global)	const;
+		Vec_t	GetLocalPosition (const Vec_t &global)	const;
 		
 
 		template <typename T2>
@@ -102,17 +102,17 @@ namespace GXMath
 */
 	template <typename T>
 	inline Transformation<T>::Transformation (const Self &tr) :
-		_position(tr._position), _orientation(tr._orientation), _scale(tr._scale)
+		_orientation(tr._orientation), _position(tr._position), _scale(tr._scale)
 	{}
 	
 	template <typename T>
 	inline Transformation<T>::Transformation (const Vec<T,3> &pos, const Quaternion<T> &orient, const T &scale) :
-		_position(pos), _orientation(orient), _scale(scale)
+		_orientation(orient), _position(pos), _scale(scale)
 	{}
 
 	template <typename T>
 	inline Transformation<T>::Transformation (const Matrix<T,4,4> &mat) :
-		_position( mat.GetTranslation() ), _orientation( mat ), _scale( T(1) )
+		_orientation( mat ), _position( mat.GetTranslation() ), _scale( T(1) )
 	{}
 	
 /*
@@ -238,7 +238,7 @@ namespace GXMath
 	template <typename T>
 	inline void Transformation<T>::GetMatrix (OUT mat_t &matrix) const
 	{
-		GetModelMatrix( vec_t(), matrix );
+		GetModelMatrix( Vec_t(), matrix );
 	}
 	
 /*
@@ -247,11 +247,11 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void Transformation<T>::GetModelMatrix (const vec_t &cameraPos, OUT mat_t &matrix) const
+	inline void Transformation<T>::GetModelMatrix (const Vec_t &cameraPos, OUT mat_t &matrix) const
 	{
 		matrix = Matrix<T,4,4>::FromQuat( Orientation() );
 		matrix.Translation() = _position - cameraPos;
-		matrix = matrix * mat_t::Scale( vec_t( _scale ) );
+		matrix = matrix * mat_t::Scale( Vec_t( _scale ) );
 	}
 	
 /*
@@ -304,7 +304,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Transformation<T> & Transformation<T>::Scale (const vec_t &scale)
+	inline Transformation<T> & Transformation<T>::Scale (const Vec_t &scale)
 	{
 		_scale *= scale;
 		return *this;

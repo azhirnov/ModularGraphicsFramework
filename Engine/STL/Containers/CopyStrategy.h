@@ -34,14 +34,14 @@ namespace GXTypes
 							not CompileTime::IsNoncopyable<T> );
 
 			// create default elements
-			static void Create (T *ptr, usize count)
+			static void Create (T *ptr, usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( ptr + i );
 				}
 			}
 
-			static void Destroy (T *ptr, usize count)
+			static void Destroy (T *ptr, usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					PlacementDelete( ptr[i] );
@@ -49,7 +49,7 @@ namespace GXTypes
 			}
 
 			// copy elements from one memblock to other memblock
-			static void Copy (T *to, const T * const from, const usize count)
+			static void Copy (T *to, const T * const from, const usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( to+i, from[i] );
@@ -57,7 +57,7 @@ namespace GXTypes
 			}
 
 			// move elements from one memblock to other memblock
-			static void Move (T *to, T *from, const usize count)
+			static void Move (T *to, T *from, const usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( to+i, RVREF( from[i] ) );
@@ -65,14 +65,18 @@ namespace GXTypes
 			}
 			
 			// replace elements inside memory block
-			static void Replace (T *to, T *from, const usize count)
+			static void Replace (T *to, T *from, const usize count, bool inSingleMemBlock = false) noexcept
 			{
 				UnsafeMem::MemMove( to, from, SizeOf<T>() * count );
 
-				DEBUG_ONLY( 
-				for (T* t = from; t+1 < from + count; ++t) {
-					if (t < to or t >= to + count) {
-						UnsafeMem::ZeroMem( t, SizeOf<T>() );
+				// clear old values after replace
+				GX_UNUSED( inSingleMemBlock );
+				DEBUG_ONLY(
+				if ( inSingleMemBlock ) {
+					for (T* t = from; t < from + count; ++t) {
+						if (t < to or t >= to + count) {
+							UnsafeMem::ZeroMem( t, SizeOf<T>() );
+						}
 					}
 				})
 			}
@@ -92,14 +96,14 @@ namespace GXTypes
 							not CompileTime::IsNoncopyable<T> );
 			
 			// create default elements
-			static void Create (T *ptr, usize count)
+			static void Create (T *ptr, usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( ptr + i );
 				}
 			}
 
-			static void Destroy (T *ptr, usize count)
+			static void Destroy (T *ptr, usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					PlacementDelete( ptr[i] );
@@ -107,7 +111,7 @@ namespace GXTypes
 			}
 			
 			// copy elements from one memblock to other memblock
-			static void Copy (T *to, const T * const from, const usize count)
+			static void Copy (T *to, const T * const from, const usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( to+i, from[i] );
@@ -115,7 +119,7 @@ namespace GXTypes
 			}
 			
 			// move elements from one memblock to other memblock
-			static void Move (T *to, T *from, const usize count)
+			static void Move (T *to, T *from, const usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( to+i, RVREF( from[i] ) );
@@ -123,8 +127,10 @@ namespace GXTypes
 			}
 			
 			// replace elements inside memory block
-			static void Replace (T *to, T *from, const usize count)
+			static void Replace (T *to, T *from, const usize count, bool inSingleMemBlock = false) noexcept
 			{
+				GX_UNUSED( inSingleMemBlock );
+
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( to+i, RVREF( from[i] ) );
 					PlacementDelete( from[i] );	// TODO: is it needed?
@@ -148,37 +154,41 @@ namespace GXTypes
 							not CompileTime::IsNoncopyable<T> );
 			
 			// create default elements
-			static void Create (T *ptr, usize count)
+			static void Create (T *ptr, usize count) noexcept
 			{
 				UnsafeMem::ZeroMem( ptr, SizeOf<T>() * count );
 			}
 
-			static void Destroy (T *ptr, usize count)
+			static void Destroy (T *ptr, usize count) noexcept
 			{
 				DEBUG_ONLY( UnsafeMem::ZeroMem( ptr, SizeOf<T>() * count ) );
 			}
 			
 			// copy elements from one memblock to other memblock
-			static void Copy (T *to, const T * const from, const usize count)
+			static void Copy (T *to, const T * const from, const usize count) noexcept
 			{
 				UnsafeMem::MemCopy( to, from, SizeOf<T>() * count );
 			}
 			
 			// move elements from one memblock to other memblock
-			static void Move (T *to, T * from, const usize count)
+			static void Move (T *to, T * from, const usize count) noexcept
 			{
 				UnsafeMem::MemMove( to, from, SizeOf<T>() * count );
 			}
 			
 			// replace elements inside memory block
-			static void Replace (T *to, T *from, const usize count)
+			static void Replace (T *to, T *from, const usize count, bool inSingleMemBlock = false) noexcept
 			{
 				Move( to, from, count );
-				
-				DEBUG_ONLY( 
-				for (T* t = from; t+1 < from + count; ++t) {
-					if (t < to or t >= to + count) {
-						UnsafeMem::ZeroMem( t, SizeOf<T>() );
+
+				// clear old values after replace
+				GX_UNUSED( inSingleMemBlock );
+				DEBUG_ONLY(
+				if ( inSingleMemBlock ) {
+					for (T* t = from; t < from + count; ++t) {
+						if (t < to or t >= to + count) {
+							UnsafeMem::ZeroMem( t, SizeOf<T>() );
+						}
 					}
 				})
 			}

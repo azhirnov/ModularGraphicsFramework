@@ -24,10 +24,10 @@ namespace GXMath
 #define MATRIX_METHODS() \
 		Matrix (T _00, T _10, T _20, T _30, \
 				T _01, T _11, T _21, T _31); \
-		Matrix (const col_t &c0, \
-				const col_t &c1, \
-				const col_t &c2, \
-				const col_t &c3); \
+		Matrix (const Col_t &c0, \
+				const Col_t &c1, \
+				const Col_t &c2, \
+				const Col_t &c3); \
 
 
 #include "MatrixCR.h"
@@ -37,8 +37,8 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (T _00, T _10, T _20, T _30,
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (T _00, T _10, T _20, T _30,
 								   T _01, T _11, T _21, T _31)
 	{
 		_v[0][0] = _00;		_v[1][0] = _10;		_v[2][0] = _20;		_v[3][0] = _30;
@@ -50,11 +50,11 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (const col_t &c0,
-								   const col_t &c1,
-								   const col_t &c2,
-								   const col_t &c3)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (const Col_t &c0,
+								   const Col_t &c1,
+								   const Col_t &c2,
+								   const Col_t &c3)
 	{
 		UnsafeMem::MemCopy( _v[0], c0.ptr(), sizeof(T)*R );
 		UnsafeMem::MemCopy( _v[1], c1.ptr(), sizeof(T)*R );
@@ -79,10 +79,10 @@ namespace GXMath
 		Matrix (T _00, T _10, T _20, T _30, \
 				T _01, T _11, T _21, T _31, \
 				T _02, T _12, T _22, T _32); \
-		Matrix (const col_t &c0, \
-				const col_t &c1, \
-				const col_t &c2, \
-				const col_t &c3); \
+		Matrix (const Col_t &c0, \
+				const Col_t &c1, \
+				const Col_t &c2, \
+				const Col_t &c3); \
 
 
 #include "MatrixCR.h"
@@ -92,8 +92,8 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (T _00, T _10, T _20, T _30,
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (T _00, T _10, T _20, T _30,
 								   T _01, T _11, T _21, T _31,
 								   T _02, T _12, T _22, T _32)
 	{
@@ -107,11 +107,11 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (const col_t &c0,
-								   const col_t &c1,
-								   const col_t &c2,
-								   const col_t &c3)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (const Col_t &c0,
+								   const Col_t &c1,
+								   const Col_t &c2,
+								   const Col_t &c3)
 	{
 		UnsafeMem::MemCopy( _v[0], c0.ptr(), sizeof(T)*R );
 		UnsafeMem::MemCopy( _v[1], c1.ptr(), sizeof(T)*R );
@@ -137,26 +137,26 @@ namespace GXMath
 				T _01, T _11, T _21, T _31, \
 				T _02, T _12, T _22, T _32, \
 				T _03, T _13, T _23, T _33); \
-		Matrix (const col_t &c0, \
-				const col_t &c1, \
-				const col_t &c2, \
-				const col_t &c3); \
+		Matrix (const Col_t &c0, \
+				const Col_t &c1, \
+				const Col_t &c2, \
+				const Col_t &c3); \
 		\
 		Self		Inverse () const; \
 		\
 		Self		ToBillboard () const; \
-		static Self	SphericalBillboard (const Vec<T,3> &cameraPos, const Vec<T,3> &pos); \
+		static Self	SphericalBillboard (const Vec3_t &cameraPos, const Vec3_t &pos); \
 		\
-		static Self	BuildPerspective (const Radians<T>& fovY, const T& screenAspect, const Vec<T,2> &clipPlanes); \
-		static Self	BuildRealPerspective (const Vec<T,2> &screenSize, const Vec<T,2> &clipPlanes, const T& dist); \
-		static Self	BuildOrtho (const Rectangle<T> &rect, const Vec<T,2> &clipPlanes); \
+		static Self	BuildPerspective (const Radians<T>& fovY, const T& screenAspect, const Vec2_t &clipPlanes); \
+		static Self	BuildRealPerspective (const Vec2_t &screenSize, const Vec2_t &clipPlanes, const T& dist); \
+		static Self	BuildOrtho (const Rectangle<T> &rect, const Vec2_t &clipPlanes); \
 		static Self	BuildOrtho2D (const Rectangle<T> &rect); \
-		static Self	BuildFrustum (const Rectangle<T> &rect, const Vec<T,2> &clipPlanes); \
-		static Self	BuildLookAt (const Vec<T,3> &pos, const Vec<T,3> &center, const Vec<T,3> &upVec); \
+		static Self	BuildFrustum (const Rectangle<T> &rect, const Vec2_t &clipPlanes); \
+		static Self	BuildLookAt (const Vec3_t &pos, const Vec3_t &center, const Vec3_t &upVec); \
 		/*Self		GetTextureMatrix () const;*/ \
 		\
-		static Vec<T,3> Project (const Vec<T,3> &pos, const Self &mvp, const Rectangle<T> &viewport); \
-		static Vec<T,3> UnProject (const Vec<T,3> &pos, const Self &mvpInverse, const Rectangle<T> &viewport); \
+		static Vec3_t Project (const Vec3_t &pos, const Self &mvp, const Rectangle<T> &viewport); \
+		static Vec3_t UnProject (const Vec3_t &pos, const Self &mvpInverse, const Rectangle<T> &viewport); \
 
 
 #include "MatrixCR.h"
@@ -166,8 +166,8 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (T _00, T _10, T _20, T _30,
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (T _00, T _10, T _20, T _30,
 								   T _01, T _11, T _21, T _31,
 								   T _02, T _12, T _22, T _32,
 								   T _03, T _13, T _23, T _33)
@@ -183,11 +183,11 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (const col_t &c0,
-								   const col_t &c1,
-								   const col_t &c2,
-								   const col_t &c3)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (const Col_t &c0,
+								   const Col_t &c1,
+								   const Col_t &c2,
+								   const Col_t &c3)
 	{
 		UnsafeMem::MemCopy( _v[0], c0.ptr(), sizeof(T)*R );
 		UnsafeMem::MemCopy( _v[1], c1.ptr(), sizeof(T)*R );
@@ -200,8 +200,8 @@ namespace GXMath
 	Inverse
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::Inverse () const
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Inverse () const
 	{
 		const T s00 = _v[2][2] * _v[3][3] - _v[3][2] * _v[2][3];
 		const T s01 = _v[2][1] * _v[3][3] - _v[3][1] * _v[2][3];
@@ -254,8 +254,8 @@ namespace GXMath
 	ToBillboard
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::ToBillboard () const
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::ToBillboard () const
 	{
 		return Self(
 			1,				0,				0,				(*this)(3,0),
@@ -269,15 +269,15 @@ namespace GXMath
 	SphericalBillboard
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::SphericalBillboard (const Vec<T,3> &cameraPos, const Vec<T,3> &pos)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::SphericalBillboard (const Vec3_t &cameraPos, const Vec3_t &pos)
 	{
-		Vec<T,3>		v_look_at( 0, 0, 1 ),
-						v_obj_to_cam_proj( cameraPos.x - pos.x, 0, cameraPos.z - pos.z ),
-						v_obj_to_cam,
-						v_up_aux;
-		Matrix<T,4,4>	s_mv;
-		T				t_angle_cosine;
+		Vec3_t	v_look_at( 0, 0, 1 ),
+				v_obj_to_cam_proj( cameraPos.x - pos.x, 0, cameraPos.z - pos.z ),
+				v_obj_to_cam,
+				v_up_aux;
+		Self	s_mv;
+		T		t_angle_cosine;
 
 
 		v_obj_to_cam_proj.Normalize();
@@ -294,9 +294,9 @@ namespace GXMath
 		if ( (t_angle_cosine < (T)0.9999) and (t_angle_cosine > (T)-0.9999) )
 		{
 			if ( v_obj_to_cam.y < (T)0 )
-				s_mv *= Rotation( acos(t_angle_cosine), Vec<T,3>( 1, 0, 0 ) );
+				s_mv *= Rotation( acos(t_angle_cosine), Vec3_t( 1, 0, 0 ) );
 			else
-				s_mv *= Rotation( acos(t_angle_cosine), Vec<T,3>( -1, 0, 0 ) );
+				s_mv *= Rotation( acos(t_angle_cosine), Vec3_t( -1, 0, 0 ) );
 		}
 
 		return s_mv;
@@ -307,8 +307,8 @@ namespace GXMath
 	BuildPerspective
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::BuildPerspective (const Radians<T>& fovY, const T& screenAspect, const Vec<T,2> &clipPlanes)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildPerspective (const Radians<T>& fovY, const T& screenAspect, const Vec2_t &clipPlanes)
 	{
 		const T	f = T(1) / Tan( fovY * T(0.5) ),
 				A = ( clipPlanes.y + clipPlanes.x ) / ( clipPlanes.x - clipPlanes.y ),
@@ -328,8 +328,8 @@ namespace GXMath
 	dist		- distance from eyes to screen in meters
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::BuildRealPerspective (const Vec<T,2> &screenSize, const Vec<T,2> &clipPlanes, const T& dist)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildRealPerspective (const Vec2_t &screenSize, const Vec2_t &clipPlanes, const T& dist)
 	{
 
 		const T	asp	= screenSize.x / screenSize.y,
@@ -348,8 +348,8 @@ namespace GXMath
 	BuildOrtho
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::BuildOrtho (const Rectangle<T> &rect, const Vec<T,2> &clipPlanes)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildOrtho (const Rectangle<T> &rect, const Vec2_t &clipPlanes)
 	{
 		const T	tx = - ( rect.right + rect.left ) / ( rect.right - rect.left ),
 				ty = - ( rect.top + rect.bottom ) / ( rect.top - rect.bottom ),
@@ -369,10 +369,10 @@ namespace GXMath
 	BuildOrtho2D
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::BuildOrtho2D (const Rectangle<T> &rect)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildOrtho2D (const Rectangle<T> &rect)
 	{
-		return BuildOrtho( rect, Vec<T,2>( -1, 1 ) );
+		return BuildOrtho( rect, Vec2_t( -1, 1 ) );
 	}
 	
 /*
@@ -380,8 +380,8 @@ namespace GXMath
 	BuildFrustum
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::BuildFrustum (const Rectangle<T> &rect, const Vec<T,2> &clipPlanes)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildFrustum (const Rectangle<T> &rect, const Vec2_t &clipPlanes)
 	{
 		const T	sx = ( T(2) * clipPlanes.x ) / ( rect.left - rect.right ),
 				sy = ( T(2) * clipPlanes.x ) / ( rect.top - rect.bottom ),
@@ -401,10 +401,10 @@ namespace GXMath
 	BuildLookAt
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::BuildLookAt (const Vec<T,3> &pos, const Vec<T,3> &center, const Vec<T,3> &upVec)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildLookAt (const Vec3_t &pos, const Vec3_t &center, const Vec3_t &upVec)
 	{
-		const Vec<T,3>	f = ( pos - center ).Normalized(),
+		const Vec3_t	f = ( pos - center ).Normalized(),
 						s = Cross( upVec, f ).Normalized(),
 						u = Cross( f, s ).Normalized();
 
@@ -419,8 +419,8 @@ namespace GXMath
 	GetTextureMatrix
 =================================================
 *
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::GetTextureMatrix () const
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::GetTextureMatrix () const
 	{
 		return Self(	(*this)(0,0),	(*this)(1,0),	0,	(*this)(3,0),
 						(*this)(0,1),	(*this)(1,1),	0,	(*this)(3,1),
@@ -433,11 +433,11 @@ namespace GXMath
 	Project
 =================================================
 */
-	template <typename T>
-	inline Vec<T,3> Matrix<T,C,R>::Project (const Vec<T,3> &pos, const Matrix<T,C,R> &mvp, const Rectangle<T> &viewport)
+	template <typename T, ulong U>
+	inline Vec<T,3,U> Matrix<T,C,R,U>::Project (const Vec3_t &pos, const Self &mvp, const Rectangle<T> &viewport)
 	{
-		Vec<T,4>		temp	= mvp * Vec<T,4>( pos, T(1) );
-		Vec<T,2> const	size	= viewport.Size();
+		Vec4_t			temp	= mvp * Vec4_t( pos, T(1) );
+		Vec2_t const	size	= viewport.Size();
 
 		temp  /= temp.w;
 		temp   = temp * T(0.5) + T(0.5);
@@ -452,11 +452,11 @@ namespace GXMath
 	UnProject
 =================================================
 */
-	template <typename T>
-	inline Vec<T,3> Matrix<T,C,R>::UnProject (const Vec<T,3> &pos, const Matrix<T,C,R> &mvpInverse, const Rectangle<T> &viewport)
+	template <typename T, ulong U>
+	inline Vec<T,3,U> Matrix<T,C,R,U>::UnProject (const Vec3_t &pos, const Self &mvpInverse, const Rectangle<T> &viewport)
 	{
-		Vec<T,4>		temp	= Vec<T,4>( pos, T(1) );
-		Vec<T,2> const	size	= viewport.Size();
+		Vec4_t			temp	= Vec4_t( pos, T(1) );
+		Vec2_t const	size	= viewport.Size();
 
 		temp.x	= (temp.x - viewport.left) / size.x;
 		temp.y	= (temp.y - viewport.bottom) / size.y;

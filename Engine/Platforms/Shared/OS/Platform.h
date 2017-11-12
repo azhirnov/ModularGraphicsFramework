@@ -44,21 +44,19 @@ namespace CreateInfo
 }	// CreateInfo
 
 
-namespace ModuleMsg
+namespace OSMsg
 {
-	
-	// platform-dependent
-	struct PlatformCreated;
-
 
 	//
-	// Request Display Params Message
+	// Get Displays
 	//
-	struct RequestDisplayParams
+	struct GetDisplays
 	{
-		Out< Platforms::Display const *>	result;
+		using Displays_t = FixedSizeArray< Platforms::Display, 8 >;
+
+		Out< Displays_t >	result;
 	};
 
 
-}	// ModuleMsg
+}	// OSMsg
 }	// Engine

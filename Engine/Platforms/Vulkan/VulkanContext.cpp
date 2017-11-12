@@ -1,10 +1,9 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/VulkanContext.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -13,15 +12,15 @@ namespace Engine
 namespace Platforms
 {
 	
-	const Runtime::VirtualTypeList	VulkanContext::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	VulkanContext::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	VulkanContext::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	VulkanContext::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	VulkanContext::VulkanContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
+	VulkanContext::VulkanContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
 		Module( gs, ModuleConfig{ VkContextModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci )
 	{
@@ -63,7 +62,8 @@ namespace Platforms
 	bool VulkanContext::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == Platforms::VkThreadModuleID );
+		CHECK_ERR( msg->module->GetSupportedMessages().HasAllTypes< VkThreadMsgList_t >() );
+		CHECK_ERR( msg->module->GetSupportedEvents().HasAllTypes< VkThreadEventList_t >() );
 		ASSERT( not _threads.IsExist( msg->module ) );
 
 		_threads.Add( msg->module );
@@ -78,7 +78,8 @@ namespace Platforms
 	bool VulkanContext::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == Platforms::VkThreadModuleID );
+		//CHECK_ERR( msg->module->GetSupportedMessages().HasAllTypes< VkThreadMsgList_t >() );
+		//CHECK_ERR( msg->module->GetSupportedEvents().HasAllTypes< VkThreadEventList_t >() );
 		ASSERT( _threads.IsExist( msg->module ) );
 
 		_threads.Erase( msg->module );
@@ -90,7 +91,7 @@ namespace Platforms
 	Register
 =================================================
 */
-	void VulkanContext::Register (const GlobalSystemsRef gs)
+	void VulkanContext::Register (GlobalSystemsRef gs)
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
@@ -117,7 +118,7 @@ namespace Platforms
 	Unregister
 =================================================
 */
-	void VulkanContext::Unregister (const GlobalSystemsRef gs)
+	void VulkanContext::Unregister (GlobalSystemsRef gs)
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
@@ -140,50 +141,12 @@ namespace Platforms
 
 /*
 =================================================
-	_Create***
+	_CreateVulkanContext
 =================================================
-*/
-	inline Ptr< VulkanThread >  _GetVulkanThread (const GlobalSystemsRef gs, const ModulePtr &gpuThread)
-	{
-		return (gpuThread ? gpuThread : gs->Get< ParallelThread >()->GetModuleByID( Platforms::VkThreadModuleID )).ToPtr< VulkanThread >();
-	}
-
-	ModulePtr VulkanContext::_CreateVulkanThread (const GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
-	{
-		return New< VulkanThread >( gs, ci );
-	}
-	
-	ModulePtr VulkanContext:: _CreateVulkanContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+*/	
+	ModulePtr VulkanContext:: _CreateVulkanContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
 		return New< VulkanContext >( gs, ci );
-	}
-
-	ModulePtr VulkanContext::_CreateVk1Sampler (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
-	{
-		auto thread = _GetVulkanThread( gs, ci.gpuThread );
-		CHECK_ERR( thread );
-		return thread->GetSamplerCache()->Create( gs, ci );
-	}
-
-	ModulePtr VulkanContext::_CreateVk1RenderPass (const GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
-	{
-		auto thread = _GetVulkanThread( gs, ci.gpuThread );
-		CHECK_ERR( thread );
-		return thread->GetRenderPassCache()->Create( gs, ci );
-	}
-
-	ModulePtr VulkanContext::_CreateVk1GraphicsPipeline (const GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
-	{
-		auto thread = _GetVulkanThread( gs, ci.gpuThread );
-		CHECK_ERR( thread );
-		return thread->GetPipelineCache()->Create( gs, ci );
-	}
-		
-	ModulePtr VulkanContext::_CreateVk1ComputePipeline (const GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
-	{
-		auto thread = _GetVulkanThread( gs, ci.gpuThread );
-		CHECK_ERR( thread );
-		return thread->GetPipelineCache()->Create( gs, ci );
 	}
 
 

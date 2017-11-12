@@ -29,7 +29,7 @@ namespace GXMath
 	// types
 	public:
 		typedef Percentage<T>		Self;
-		typedef T					value_t;
+		typedef T					Value_t;
 
 
 	// variables
@@ -104,13 +104,13 @@ namespace GXMath
 	template <typename T>
 	struct ::GX_STL::GXTypes::Hash< GXMath::Percentage<T> > : private Hash<T>
 	{
-		typedef GXMath::Percentage<T>		key_t;
-		typedef Hash<T>						base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef GXMath::Percentage<T>		Key_t;
+		typedef Hash<T>						Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const
+		Result_t operator () (const Key_t &x) const
 		{
-			return base_t::operator ()( x.GetPercents() );
+			return Base_t::operator ()( x.GetPercents() );
 		}
 	};
 

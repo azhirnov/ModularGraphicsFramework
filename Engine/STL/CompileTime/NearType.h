@@ -38,7 +38,7 @@ namespace CompileTime
 	// Near Integer Type
 	//
 	
-	struct NearInt : Noninstancable
+	struct NearInt : GXTypes::Noninstancable
 	{
 	//private:	// becouse of bug in VS 15.2
 	public:
@@ -88,7 +88,7 @@ namespace CompileTime
 		using FromType = typename _FromType<T>::type;
 	};
 
-	struct NearUInt : Noninstancable
+	struct NearUInt : GXTypes::Noninstancable
 	{
 	//private:	// becouse of bug in VS 15.2
 	public:
@@ -143,7 +143,7 @@ namespace CompileTime
 	// Larger Integer Type
 	//
 	
-	struct LargerInt : Noninstancable
+	struct LargerInt : GXTypes::Noninstancable
 	{
 	//private:	// becouse of bug in VS 15.2
 	public:
@@ -179,7 +179,7 @@ namespace CompileTime
 	};
 
 	
-	struct LargerUInt : Noninstancable
+	struct LargerUInt : GXTypes::Noninstancable
 	{
 	//private:	// becouse of bug in VS 15.2
 	public:
@@ -220,7 +220,7 @@ namespace CompileTime
 	// Lesser Integer Type
 	//
 	
-	struct LesserInt : Noninstancable
+	struct LesserInt : GXTypes::Noninstancable
 	{
 	//private:	// becouse of bug in VS 15.2
 	public:
@@ -256,7 +256,7 @@ namespace CompileTime
 	};
 
 	
-	struct LesserUInt : Noninstancable
+	struct LesserUInt : GXTypes::Noninstancable
 	{
 	//private:	// becouse of bug in VS 15.2
 	public:
@@ -297,7 +297,7 @@ namespace CompileTime
 	// Near Float Type
 	//
 
-	struct NearFloat : Noninstancable
+	struct NearFloat : GXTypes::Noninstancable
 	{
 	//private:	// becouse of bug in VS 15.2
 	public:

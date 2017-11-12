@@ -1,7 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/OpenGL/Impl/GL4Sampler.h"
-#include "Engine/Platforms/OpenGL/OpenGLThread.h"
+#include "Engine/Platforms/OpenGL/OpenGLContext.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -10,13 +10,289 @@ namespace Engine
 namespace PlatformGL
 {
 	
+	//
+	// OpenGL Sampler
+	//
+
+	class GL4Sampler final : public GL4BaseModule
+	{
+	// types
+	private:
+		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetSamplerDescriptor,
+											GpuMsg::GetGLSamplerID
+										> >;
+
+		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
+
+
+	// constants
+	private:
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
+
+
+	// variables
+	private:
+		SamplerDescriptor	_descr;
+
+		gl::GLuint			_samplerId;
+
+
+	// methods
+	public:
+		GL4Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
+		~GL4Sampler ();
+
+		SamplerDescriptor const&	GetDescriptor ()	const	{ return _descr; }
+
+
+	// message handlers
+	private:
+		bool _Compose (const Message< ModuleMsg::Compose > &);
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _GetGLSamplerID (const Message< GpuMsg::GetGLSamplerID > &);
+		bool _GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &);
+
+	private:
+		bool _IsCreated () const;
+		bool _CreateSampler ();
+		void _DestroySampler ();
+	};
+//-----------------------------------------------------------------------------
+
+
+
+	const TypeIdList	GL4Sampler::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	GL4Sampler::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+
 /*
 =================================================
 	constructor
 =================================================
 */
-	GL4SamplerCache::GL4SamplerCache (GLSystemsRef glSys) :
-		_glSystems( glSys ),
+	GL4Sampler::GL4Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
+		GL4BaseModule( gs, ModuleConfig{ GLSamplerModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		_descr( ci.descr ),
+		_samplerId( 0 )
+	{
+		SetDebugName( "GL4Sampler" );
+
+		_SubscribeOnMsg( this, &GL4Sampler::_OnModuleAttached_Impl );
+		_SubscribeOnMsg( this, &GL4Sampler::_OnModuleDetached_Impl );
+		_SubscribeOnMsg( this, &GL4Sampler::_AttachModule_Impl );
+		_SubscribeOnMsg( this, &GL4Sampler::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &GL4Sampler::_FindModule_Impl );
+		_SubscribeOnMsg( this, &GL4Sampler::_ModulesDeepSearch_Impl );
+		_SubscribeOnMsg( this, &GL4Sampler::_Link_Impl );
+		_SubscribeOnMsg( this, &GL4Sampler::_Compose );
+		_SubscribeOnMsg( this, &GL4Sampler::_Delete );
+		_SubscribeOnMsg( this, &GL4Sampler::_OnManagerChanged );
+		_SubscribeOnMsg( this, &GL4Sampler::_DeviceBeforeDestroy );
+		_SubscribeOnMsg( this, &GL4Sampler::_GetGLSamplerID );
+		_SubscribeOnMsg( this, &GL4Sampler::_GetSamplerDescriptor );
+		_SubscribeOnMsg( this, &GL4Sampler::_GetDeviceInfo );
+		_SubscribeOnMsg( this, &GL4Sampler::_GetGLDeviceInfo );
+		_SubscribeOnMsg( this, &GL4Sampler::_GetGLPrivateClasses );
+
+		CHECK( _ValidateMsgSubscriptions() );
+
+		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
+	}
+	
+/*
+=================================================
+	destructor
+=================================================
+*/
+	GL4Sampler::~GL4Sampler ()
+	{
+		ASSERT( not _IsCreated() );
+	}
+	
+/*
+=================================================
+	_Compose
+=================================================
+*/
+	bool GL4Sampler::_Compose (const Message< ModuleMsg::Compose > &msg)
+	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already linked
+
+		CHECK_ERR( GetState() == EState::Linked );
+
+		CHECK_COMPOSING( _CreateSampler() );
+
+		_SendForEachAttachments( msg );
+		
+		// very paranoic check
+		CHECK( _ValidateAllSubscriptions() );
+
+		CHECK( _SetState( EState::ComposedImmutable ) );
+		return true;
+	}
+	
+/*
+=================================================
+	_Delete
+=================================================
+*/
+	bool GL4Sampler::_Delete (const Message< ModuleMsg::Delete > &msg)
+	{
+		_DestroySampler();
+
+		return Module::_Delete_Impl( msg );
+	}
+	
+/*
+=================================================
+	_GetGLSamplerID
+=================================================
+*/
+	bool GL4Sampler::_GetGLSamplerID (const Message< GpuMsg::GetGLSamplerID > &msg)
+	{
+		msg->result.Set( _samplerId );
+		return true;
+	}
+
+/*
+=================================================
+	_GetSamplerDescriptor
+=================================================
+*/
+	bool GL4Sampler::_GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &msg)
+	{
+		msg->result.Set( _descr );
+		return true;
+	}
+	
+/*
+=================================================
+	_IsCreated
+=================================================
+*/
+	bool GL4Sampler::_IsCreated () const
+	{
+		return _samplerId != 0;
+	}
+	
+/*
+=================================================
+	_CreateSampler
+=================================================
+*/
+	bool GL4Sampler::_CreateSampler ()
+	{
+		using namespace gl;
+
+		CHECK_ERR( not _IsCreated() );
+
+		// create sampler
+		GL_CALL( glGenSamplers( 1, &_samplerId ) );
+		CHECK_ERR( _samplerId != 0 );
+
+		// wrap
+		GL_CALL( glSamplerParameteri( _samplerId, GL_TEXTURE_WRAP_S, GL4Enum( _descr.AddressMode().x ) ) );
+		GL_CALL( glSamplerParameteri( _samplerId, GL_TEXTURE_WRAP_T, GL4Enum( _descr.AddressMode().y ) ) );
+		GL_CALL( glSamplerParameteri( _samplerId, GL_TEXTURE_WRAP_R, GL4Enum( _descr.AddressMode().z ) ) );
+		
+		// border color
+		if ( _descr.BorderColor()[ ESamplerBorderColor::Int ] )
+		{
+			uint4	color;
+			CHECK_ERR( GL4Enum( _descr.BorderColor(), OUT color ) );
+			GL_CALL( glSamplerParameteriv( _samplerId, GL_TEXTURE_BORDER_COLOR, (GLint const*) color.ptr() ) );
+		}
+		else
+		{
+			float4	color;
+			CHECK_ERR( GL4Enum( _descr.BorderColor(), OUT color ) );
+			GL_CALL( glSamplerParameterfv( _samplerId, GL_TEXTURE_BORDER_COLOR, color.ptr() ) );
+		}
+
+		// filtering
+		GL4MinFilter	min_filter;
+		GL4MagFilter	mag_filter;
+
+		CHECK_ERR( GL4Enum( _descr.Filter(), OUT min_filter, OUT mag_filter ) );
+
+		GL_CALL( glSamplerParameteri( _samplerId, GL_TEXTURE_MIN_FILTER, min_filter ) );
+		GL_CALL( glSamplerParameteri( _samplerId, GL_TEXTURE_MAG_FILTER, mag_filter ) );
+
+		// anisotropy
+		const uint	aniso = EFilter::GetAnisotropic( _descr.Filter() );
+
+		if ( aniso > 0 )
+		{
+			GL_CALL( glSamplerParameteri( _samplerId, GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso ) );
+		}
+
+		// compare func
+		if ( _descr.CompareOp() != ECompareFunc::None )
+		{
+			GL_CALL( glSamplerParameteri( _samplerId, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE ) );
+			GL_CALL( glSamplerParameteri( _samplerId, GL_TEXTURE_COMPARE_FUNC, GL4Enum( _descr.CompareOp() ) ) );
+		}
+		else
+		{
+			GL_CALL( glSamplerParameteri( _samplerId, GL_TEXTURE_COMPARE_MODE, GL_NONE ) );
+		}
+		
+		GetDevice()->SetObjectName( _samplerId, GetDebugName(), EGpuObject::Sampler );
+		return true;
+	}
+	
+/*
+=================================================
+	_DestroySampler
+=================================================
+*/
+	void GL4Sampler::_DestroySampler ()
+	{
+		using namespace gl;
+		
+		if ( _samplerId != 0 ) {
+			GL_CALL( glDeleteSamplers( 1, &_samplerId ) );
+		}
+
+		_samplerId	= 0;
+		_descr		= Uninitialized;
+	}
+//-----------------------------------------------------------------------------
+	
+
+	
+/*
+=================================================
+	SearchableSampler
+=================================================
+*/
+	inline bool GL4SamplerCache::SearchableSampler::operator == (const SearchableSampler &right) const	{ return samp->GetDescriptor() == right.samp->GetDescriptor(); }
+	inline bool GL4SamplerCache::SearchableSampler::operator >  (const SearchableSampler &right) const	{ return samp->GetDescriptor() >  right.samp->GetDescriptor(); }
+	inline bool GL4SamplerCache::SearchableSampler::operator <  (const SearchableSampler &right) const	{ return samp->GetDescriptor() <  right.samp->GetDescriptor(); }
+		
+//-----------------------------------------------------------------------------
+
+
+/*
+=================================================
+	SamplerSearch
+=================================================
+*/	
+	inline bool GL4SamplerCache::SamplerSearch::operator == (const SearchableSampler &right) const	{ return descr == right.samp->GetDescriptor(); }
+	inline bool GL4SamplerCache::SamplerSearch::operator >  (const SearchableSampler &right) const	{ return descr >  right.samp->GetDescriptor(); }
+	inline bool GL4SamplerCache::SamplerSearch::operator <  (const SearchableSampler &right) const	{ return descr <  right.samp->GetDescriptor(); }
+	
+//-----------------------------------------------------------------------------
+
+
+/*
+=================================================
+	constructor
+=================================================
+*/
+	GL4SamplerCache::GL4SamplerCache () :
 		_maxAnisotropy( 0 ),
 		_initialized( false )
 	{
@@ -42,7 +318,7 @@ namespace PlatformGL
 	Create
 =================================================
 */
-	GL4SamplerCache::GL4SamplerPtr  GL4SamplerCache::Create (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
+	GL4SamplerCache::GL4SamplerPtr  GL4SamplerCache::Create (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
 		if ( not _initialized )
 		{
@@ -125,196 +401,17 @@ namespace PlatformGL
 		_samplers.Add( SearchableSampler( result ) );
 		return result;
 	}
-	
-//-----------------------------------------------------------------------------
-
-
-	
-	const Runtime::VirtualTypeList	GL4Sampler::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	GL4Sampler::_eventTypes{ UninitializedT< SupportedEvents_t >() };
-
-/*
-=================================================
-	constructor
-=================================================
-*/
-	GL4Sampler::GL4Sampler (const GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
-		GL4BaseModule( gs, ci.gpuThread, ModuleConfig{ GLSamplerModuleID, ~0u }, &_msgTypes, &_eventTypes ),
-		_descr( ci.descr ),
-		_samplerId( 0 )
-	{
-		SetDebugName( "GL4Sampler" );
-
-		_SubscribeOnMsg( this, &GL4Sampler::_OnModuleAttached_Impl );
-		_SubscribeOnMsg( this, &GL4Sampler::_OnModuleDetached_Impl );
-		_SubscribeOnMsg( this, &GL4Sampler::_AttachModule_Impl );
-		_SubscribeOnMsg( this, &GL4Sampler::_DetachModule_Impl );
-		_SubscribeOnMsg( this, &GL4Sampler::_FindModule_Impl );
-		_SubscribeOnMsg( this, &GL4Sampler::_ModulesDeepSearch_Impl );
-		_SubscribeOnMsg( this, &GL4Sampler::_Link_Impl );
-		_SubscribeOnMsg( this, &GL4Sampler::_Compose );
-		_SubscribeOnMsg( this, &GL4Sampler::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4Sampler::_DeviceBeforeDestroy );
-		_SubscribeOnMsg( this, &GL4Sampler::_GetGLSamplerID );
-		_SubscribeOnMsg( this, &GL4Sampler::_GetSamplerDescriptor );
-
-		CHECK( _ValidateMsgSubscriptions() );
-
-		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
-	}
-	
-/*
-=================================================
-	destructor
-=================================================
-*/
-	GL4Sampler::~GL4Sampler ()
-	{
-		ASSERT( not _IsCreated() );
-	}
-	
-/*
-=================================================
-	_Compose
-=================================================
-*/
-	bool GL4Sampler::_Compose (const  Message< ModuleMsg::Compose > &msg)
-	{
-		if ( _IsComposedState( GetState() ) )
-			return true;	// already linked
-
-		CHECK_ERR( GetState() == EState::Linked );
-
-		CHECK_COMPOSING( _CreateSampler() );
-
-		_SendForEachAttachments( msg );
-		
-		// very paranoic check
-		CHECK( _ValidateAllSubscriptions() );
-
-		CHECK( _SetState( EState::ComposedImmutable ) );
-		return true;
-	}
-	
-/*
-=================================================
-	_Delete
-=================================================
-*/
-	bool GL4Sampler::_Delete (const Message< ModuleMsg::Delete > &msg)
-	{
-		_DestroySampler();
-
-		return Module::_Delete_Impl( msg );
-	}
-	
-/*
-=================================================
-	_GetGLSamplerID
-=================================================
-*/
-	bool GL4Sampler::_GetGLSamplerID (const Message< GpuMsg::GetGLSamplerID > &msg)
-	{
-		msg->result.Set( _samplerId );
-		return true;
-	}
-
-/*
-=================================================
-	_GetSamplerDescriptor
-=================================================
-*/
-	bool GL4Sampler::_GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &msg)
-	{
-		msg->result.Set( _descr );
-		return true;
-	}
-	
-/*
-=================================================
-	_IsCreated
-=================================================
-*/
-	bool GL4Sampler::_IsCreated () const
-	{
-		return _samplerId != 0;
-	}
-	
-/*
-=================================================
-	_CreateSampler
-=================================================
-*/
-	bool GL4Sampler::_CreateSampler ()
-	{
-		using namespace gl;
-
-		CHECK_ERR( not _IsCreated() );
-		/*
-		const bool	unnorm_coords = (_descr.AddressMode().x == EAddressMode::ClampUnnorm) or
-									(_descr.AddressMode().y == EAddressMode::ClampUnnorm);
-
-		VkSamplerCreateInfo	info = {};
-
-		info.sType			= VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		info.flags			= 0;
-		
-		info.magFilter		= EFilter::IsMagLinear( _descr.Filter() ) ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
-		info.minFilter		= EFilter::IsMinLinear( _descr.Filter() ) ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
-		info.mipmapMode		= EFilter::IsMipmapLinear( _descr.Filter() ) ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST;
-
-		info.addressModeU	= Vk1Enum( _descr.AddressMode().x );
-		info.addressModeV	= Vk1Enum( _descr.AddressMode().y );
-		info.addressModeW	= Vk1Enum( _descr.AddressMode().z );
-
-		info.borderColor	= Vk1Enum( _descr.BorderColor() );
-
-		if ( not unnorm_coords )
-		{
-			info.mipLodBias			= 0.0f;	// TODO
-			info.minLod				= 0.0f;	// TODO
-			info.maxLod				= 1024.0f;	// TODO
-
-			info.compareEnable		= _descr.CompareOp() != ECompareFunc::None;
-			info.compareOp			= info.compareEnable ? Vk1Enum( _descr.CompareOp() ) : VK_COMPARE_OP_ALWAYS;
-
-			info.anisotropyEnable	= EnumEq( _descr.Filter(), EFilter::_ANISOTROPIC );
-			info.maxAnisotropy		= 1.0;	// TODO
-		}
-
-		info.unnormalizedCoordinates	= unnorm_coords;
-
-		VK_CHECK( vkCreateSampler( GetLogicalDevice(), &info, null, OUT &_samplerId ) );*/
-		return true;
-	}
-	
-/*
-=================================================
-	_DestroySampler
-=================================================
-*/
-	void GL4Sampler::_DestroySampler ()
-	{
-		using namespace gl;
-
-
-
-		_samplerId	= 0;
-		_descr		= Uninitialized;
-	}
-	
-/*
-=================================================
-	_DestroyResources
-=================================================
-*/
-	void GL4Sampler::_DestroyResources ()
-	{
-		_DestroySampler();
-	}
-
 
 }	// PlatformGL
+//-----------------------------------------------------------------------------
+
+namespace Platforms
+{
+	ModulePtr OpenGLContext::_CreateGL4Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
+	{
+		return New< PlatformGL::GL4Sampler >( gs, ci );
+	}
+}	// Platforms
 }	// Engine
 
 #endif	// GRAPHICS_API_OPENGL

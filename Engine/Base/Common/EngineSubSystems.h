@@ -71,7 +71,7 @@ namespace Base
 		template <typename Typelist2>
 		struct _Append {
 			STATIC_ASSERT( CompileTime::IsTypeList< Typelist2 > );
-			typedef typename Typelist::template Append< Typelist2 >	type;
+			using type	= typename Typelist::template Append< Typelist2 >;
 		};
 
 	public:
@@ -99,8 +99,8 @@ namespace Base
 
 	// PerThread
 	using PerThreadSystemsTypeList_t	= GlobalSystemsTypeList_t::Append< CompileTime::TypeListFrom<
-												Base::TaskModule,		// epic fail for abstract modules, but I need a type for access to typelist
-												Base::ParallelThread	// epic fail for abstract modules, but I need a type for access to typelist
+												Base::TaskModule,
+												Base::ParallelThread
 											> >;
 
 
@@ -136,7 +136,7 @@ namespace Base
 			}
 
 			template <typename T>
-			Ptr<T> Get () const
+			forceinline Ptr<T> Get () const
 			{
 				ASSERT( ptr == null or TypeIdOf<T>() == id );
 				return reinterpret_cast< T *>( ptr );
@@ -201,7 +201,7 @@ namespace Base
 			}; \
 			\
 			template <> template <> \
-			inline Ptr< _type_ > EngineSubSystems<_typelist_::ID>::Get () const \
+			forceinline Ptr< _type_ > EngineSubSystems<_typelist_::ID>::Get () const \
 			{ \
 				ASSERT( _CheckThread() ); \
 				return this->_items[ _typelist_::IndexOf< _type_ > ].Get< _type_ >(); \

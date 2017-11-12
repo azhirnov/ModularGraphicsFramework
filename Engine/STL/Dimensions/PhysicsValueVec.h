@@ -11,7 +11,7 @@ namespace GX_STL
 namespace GXMath
 {
 	
-	template <typename T, usize I>
+	template <typename T, usize I, ulong U = 0>
 	struct PhysicsValueVec;
 
 
@@ -44,10 +44,10 @@ namespace GXMath
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale,
-			  usize I
+			  usize I, ulong U
 			 >
 	inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
-		operator * (const Vec<ValueType,I> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
+		operator * (const Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
 		FOR( i, ret )	ret[i] = left[i] * right;
@@ -62,10 +62,10 @@ namespace GXMath
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale,
-			  usize I
+			  usize I, ulong U
 			 >
 	inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
-		operator * (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const Vec<ValueType,I> &right)
+		operator * (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const Vec<ValueType,I,U> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
 		FOR( i, ret )	ret[i] = left * right[i];
@@ -80,10 +80,10 @@ namespace GXMath
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale,
-			  usize I
+			  usize I, ulong U
 			 >
 	inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
-		operator / (const Vec<ValueType,I> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
+		operator / (const Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
 		FOR( i, ret )	ret[i] = left[i] / right;
@@ -98,10 +98,10 @@ namespace GXMath
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale,
-			  usize I
+			  usize I, ulong U
 			 >
 	inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
-		operator / (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const Vec<ValueType,I> &right)
+		operator / (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const Vec<ValueType,I,U> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
 		FOR( i, ret )	ret[i] = left / right[i];
@@ -131,12 +131,12 @@ namespace GXMath
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale,
-			  usize I
+			  usize I, ulong U
 			 >
-	inline Vec<bool,I>  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
+	inline Vec<bool,I,U>  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
 								 const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b)
 	{
-		Vec<bool,I>	ret;
+		Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i] );
 		return ret;
 	}
@@ -165,13 +165,13 @@ namespace GXMath
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale,
-			  usize I
+			  usize I, ulong U
 			 >
-	inline Vec<bool,I>  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
+	inline Vec<bool,I,U>  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
 								 const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b,
 								 /*Bits*/uint accuracy)
 	{
-		Vec<bool,I>	ret;
+		Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i], accuracy );
 		return ret;
 	}
@@ -184,16 +184,16 @@ namespace GXTypes
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale,
-			  usize I
+			  usize I, ulong U
 			 >
-	struct ::GX_STL::CompileTime::TypeInfo < GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I > >
+	struct ::GX_STL::CompileTime::TypeInfo < GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > >
 	{
 	private:
 		typedef CompileTime::TypeInfo< ValueType >	_value_type_info;
 
 	public:
-		typedef GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I >	type;
-		typedef GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >								inner_type;
+		typedef GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U >	type;
+		typedef GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >									inner_type;
 		
 		template <typename OtherType>
 		using CreateWith =  GXMath::PhysicsValueVec< GXMath::PhysicsValue< OtherType, Dimensions, ValueScale >, I >;
@@ -214,18 +214,18 @@ namespace GXTypes
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale,
-			  usize I
+			  usize I, ulong U
 			 >
-	struct Hash< GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I > > :
-		private Hash< GXMath::Vec< ValueType, I > >
+	struct Hash< GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > > :
+		private Hash< GXMath::Vec< ValueType, I, U > >
 	{
-		typedef GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I >	key_t;
-		typedef Hash< GXMath::Vec< ValueType, I > >														base_t;
-		typedef typename base_t::result_t																result_t;
+		typedef GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U >	Key_t;
+		typedef Hash< GXMath::Vec< ValueType, I, U > >														Base_t;
+		typedef typename Base_t::Result_t																	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x.ref() );
+			return Base_t::operator ()( x.ref() );
 		}
 	};
 	

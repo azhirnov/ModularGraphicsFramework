@@ -15,7 +15,7 @@ namespace GXTypes
 	// String Parser
 	//
 
-	struct StringParser
+	struct _STL_EXPORT_ StringParser
 	{
 	public:
 		// move cursor //

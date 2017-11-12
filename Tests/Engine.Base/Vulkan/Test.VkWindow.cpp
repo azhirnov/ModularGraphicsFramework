@@ -18,5 +18,5 @@ extern void Test_VkWindow ()
 	}
 	GetMainSystemInstace()->Send< ModuleMsg::Delete >({});
 
-	WARNING( "Vulkan Window test succeeded!" );
+	//WARNING( "Vulkan Window test succeeded!" );
 }

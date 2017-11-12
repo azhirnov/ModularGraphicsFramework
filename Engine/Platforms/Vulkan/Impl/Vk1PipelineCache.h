@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -15,7 +16,7 @@ namespace PlatformVK
 	// Vulkan Pipeline Cache
 	//
 
-	class Vk1PipelineCache final
+	class Vk1PipelineCache final : public Vk1BaseObject
 	{
 	// types
 	private:
@@ -53,18 +54,14 @@ namespace PlatformVK
 		Vk1DynamicStates								_tempDynamicStates;
 		Attachment_t									_tempAttachments;
 
-		const VkSystemsRef								_vkSystems;
-
 
 	// methods
 	public:
-		explicit Vk1PipelineCache (VkSystemsRef vkSys);
+		explicit Vk1PipelineCache (Ptr<Vk1Device> dev);
 		~Vk1PipelineCache ();
 
-		Vk1GraphicsPipelinePtr	Create (const GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci);
-		Vk1ComputePipelinePtr	Create (const GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
-
-		VkSystemsRef	VkSystems ()	const	{ return _vkSystems; }
+		Vk1GraphicsPipelinePtr	Create (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci);
+		Vk1ComputePipelinePtr	Create (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
 
 		bool CreatePipeline (OUT vk::VkPipeline &pipelineId,
 							 ArrayCRef< ShaderModule > shaders,
@@ -85,7 +82,7 @@ namespace PlatformVK
 
 
 	private:
-		bool _CreatePipelineCache (vk::VkDevice dev);
+		bool _CreatePipelineCache ();
 		void _DestroyPipelineCache ();
 
 		void _DestroyPipelines ();

@@ -44,27 +44,27 @@ namespace CreateInfo
 
 	struct InStreamFromFile
 	{
-		File::RFilePtr					file;
+		File::RFilePtr				file;
 	};
 
 	struct OutStreamFromFile
 	{
-		File::WFilePtr					file;
+		File::WFilePtr				file;
 	};
 
 	struct InStreamFromUri
 	{
-		SingleRead< String >			uri;	// local file name or internet address
+		ReadOnce< String >			uri;	// local file name or internet address
 	};
 
 	struct OutStreamFromUri
 	{
-		SingleRead< String >			uri;	// local file name or internet address
+		ReadOnce< String >			uri;	// local file name or internet address
 	};
 
 	struct InStreamFromMemory
 	{
-		SingleRead< BinaryArray >		memory;
+		ReadOnce< BinaryArray >		memory;
 	};
 
 	struct OutStreamToMemory
@@ -103,9 +103,16 @@ namespace ModuleMsg
 	//
 	struct WriteToStream
 	{
+	// variables
 		BytesUL				offset;
 		BinArrayCRef		data;
 		Out< BytesUL >		wasWritten;
+
+	// methods
+		WriteToStream () {}
+		explicit WriteToStream (BinArrayCRef data, BytesU offset = 0_b) : offset(offset), data(data) {}
+		template <typename T>			explicit WriteToStream (ArrayCRef<T> arr, BytesU offset = 0_b) : offset(offset), data(BinArrayCRef::From(arr)) {}
+		template <typename B, usize I>	explicit WriteToStream (const B (&arr)[I], BytesU offset = 0_b) : offset(offset), data(BinArrayCRef::From(arr)) {}
 	};
 
 

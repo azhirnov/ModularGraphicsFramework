@@ -1,7 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLThread.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -9,24 +8,6 @@ namespace Engine
 {
 namespace PlatformGL
 {
-	
-/*
-=================================================
-	GetGLSubSystems
-=================================================
-*/
-	forceinline GLSystemsRef GetGLSubSystems (const GlobalSystemsRef gs, const ModulePtr &gpuThread)
-	{
-		if ( gpuThread )
-			return gpuThread.ToPtr< OpenGLThread >()->GetDevice()->GLSystems();
-
-		ModulePtr const&	gpu_thread = gs->Get< ParallelThread >()->GetModuleByID( GLThreadModuleID );
-		
-		if ( gpu_thread )
-			return gpu_thread.ToPtr< OpenGLThread >()->GetDevice()->GLSystems();
-
-		return GLSystemsRef(null);
-	}
 
 /*
 =================================================
@@ -35,41 +16,11 @@ namespace PlatformGL
 */
 	GL4BaseModule::GL4BaseModule (const GlobalSystemsRef gs,
 								  const ModuleConfig &config,
-								  const Runtime::VirtualTypeList *msgTypes,
-								  const Runtime::VirtualTypeList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes ),
-		_glSystems( GetGLSubSystems( gs, null ) )
+								  const TypeIdList *msgTypes,
+								  const TypeIdList *eventTypes) :
+		Module( gs, config, msgTypes, eventTypes )
 	{
 	}
-	
-/*
-=================================================
-	constructor
-=================================================
-*/
-	GL4BaseModule::GL4BaseModule (const GlobalSystemsRef gs,
-								  const ModulePtr &gpuThread,
-								  const ModuleConfig &config,
-								  const Runtime::VirtualTypeList *msgTypes,
-								  const Runtime::VirtualTypeList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes ),
-		_glSystems( GetGLSubSystems( gs, gpuThread ) )		
-	{
-	}
-	
-/*
-=================================================
-	constructor
-=================================================
-*/
-	GL4BaseModule::GL4BaseModule (const GlobalSystemsRef gs,
-								  const GLSystemsRef glSys,
-								  const ModuleConfig &config,
-								  const Runtime::VirtualTypeList *msgTypes,
-								  const Runtime::VirtualTypeList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes ),
-		_glSystems( glSys )
-	{}
 	
 /*
 =================================================
@@ -78,23 +29,22 @@ namespace PlatformGL
 */
 	bool GL4BaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
 	{
+		_glDevice = null;
+
 		if ( msg->newManager )
+		{
 			msg->newManager->Subscribe( this, &GL4BaseModule::_DeviceBeforeDestroy );
+
+			Message< GpuMsg::GetGLPrivateClasses >	req_dev;
+			msg->newManager->Send( req_dev );
+
+			_glDevice = req_dev->result->device;
+		}
 
 		if ( msg->oldManager )
 			msg->oldManager->UnsubscribeAll( this );
 
 		return true;
-	}
-	
-/*
-=================================================
-	_DestroyResources
-=================================================
-*/
-	void GL4BaseModule::_DestroyResources ()
-	{
-		_SendMsg< ModuleMsg::Delete >({});
 	}
 
 /*
@@ -102,10 +52,42 @@ namespace PlatformGL
 	_DeviceBeforeDestroy
 =================================================
 */
-	bool GL4BaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &msg)
+	bool GL4BaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
 	{
-		_DestroyResources();
+		_SendMsg< ModuleMsg::Delete >({});
+
+		_glDevice = null;
 		return true;
+	}
+	
+/*
+=================================================
+	_GetDeviceInfo
+=================================================
+*/
+	bool GL4BaseModule::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
+	{
+		return _GetManager() ? _GetManager()->Send( msg ) : false;
+	}
+	
+/*
+=================================================
+	_GetGLDeviceInfo
+=================================================
+*/
+	bool GL4BaseModule::_GetGLDeviceInfo (const Message< GpuMsg::GetGLDeviceInfo > &msg)
+	{
+		return _GetManager() ? _GetManager()->Send( msg ) : false;
+	}
+	
+/*
+=================================================
+	_GetGLPrivateClasses
+=================================================
+*/
+	bool GL4BaseModule::_GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &msg)
+	{
+		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}
 
 }	// PlatformGL

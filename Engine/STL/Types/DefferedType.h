@@ -15,7 +15,7 @@ namespace GXTypes
 	//
 	
 	template <usize Size, usize Align, bool WithDestructor = false>
-	struct DeferredType : Noncopyable
+	struct DeferredType : CompileTime::FastCopyable
 	{
 	// types
 	private:
@@ -76,7 +76,7 @@ namespace GXTypes
 			return *this;
 		}
 
-		forceinline Self& operator = (NullPtr_t value)
+		forceinline Self& operator = (NullPtr_t)
 		{
 			_Destroy();
 			return *this;
@@ -145,20 +145,20 @@ namespace GXTypes
 		{}
 
 		template <typename T>
-		forceinline void _Create ()
+		forceinline void _Create () noexcept
 		{
 			PlacementNew<T>( BinArrayRef( _data ) );
 			_isDefined = true;
 		}
 
 		template <typename T>
-		forceinline void _Create (const T &value)
+		forceinline void _Create (const T &value) noexcept
 		{
 			PlacementNew<T>( BinArrayRef( _data ), value );
 			_isDefined = true;
 		}
 
-		forceinline void _Destroy ()
+		forceinline void _Destroy () noexcept
 		{
 			if ( IsDefined() )
 			{
@@ -241,7 +241,7 @@ namespace GXTypes
 
 	private:
 		template <typename T>
-		forceinline void _Create ()
+		forceinline void _Create () noexcept
 		{
 			Base_t::_Create<T>();
 
@@ -250,14 +250,14 @@ namespace GXTypes
 
 
 		template <typename T>
-		forceinline void _Create (const T &value)
+		forceinline void _Create (const T &value) noexcept
 		{
 			Base_t::_Create( value );
 
 			_destructor	= &_CallDestructor<T>;
 		}
 
-		forceinline void _Destroy ()
+		forceinline void _Destroy () noexcept
 		{
 			if ( IsDefined() and _destructor != null )
 				_destructor( _data );

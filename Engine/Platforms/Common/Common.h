@@ -4,6 +4,14 @@
 
 #include "Engine/Base/Engine.Base.h"
 
+#ifdef __GX_BUILD_LIB__
+#	define _ENGINE_PLATFORMS_EXPORT_
+#elif defined( __GX_ENGINE_PLATFORMS_BUILD__ )
+#	define _ENGINE_PLATFORMS_EXPORT_		GX_DLL_EXPORT
+#else
+#	define _ENGINE_PLATFORMS_EXPORT_		GX_DLL_IMPORT
+#endif
+
 namespace Engine
 {
 namespace Platforms
@@ -18,10 +26,17 @@ namespace Platforms
 	struct RenderState;
 	struct SamplerDescriptor;
 	struct ImageDescriptor;
+	
+	_ENGINE_PLATFORMS_EXPORT_ void RegisterPlatforms ();
+	_ENGINE_PLATFORMS_EXPORT_ void UnregisterPlatforms ();
 
 }	// Platforms
 
 namespace GpuMsg {
+	using namespace ModuleMsg;
+}
+
+namespace OSMsg {
 	using namespace ModuleMsg;
 }
 

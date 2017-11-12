@@ -104,11 +104,11 @@ namespace Platforms
 
 
 	// Vector types
-	template <typename T, usize I>
-	struct VertexDescr < Vec<T,I> >
+	template <typename T, usize I, ulong U>
+	struct VertexDescr < Vec<T,I,U> >
 	{
-		typedef Vec<T,I>						type;
-		static const EVertexAttribute::type		attrib	= EVertexAttribute::type( (VertexDescr< typename type::value_t >
+		typedef Vec<T,I,U>						type;
+		static const EVertexAttribute::type		attrib	= EVertexAttribute::type( (VertexDescr< typename type::Value_t >
 															::attrib & _platforms_hidden_::EValueTypeInfo::_TYPE_FLAG_MASK) |
 																(I << _platforms_hidden_::EValueTypeInfo::_COL_OFF) );
 	};

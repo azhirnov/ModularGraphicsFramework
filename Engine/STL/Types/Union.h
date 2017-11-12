@@ -4,8 +4,8 @@
 
 #include "Engine/STL/CompileTime/TypeList.h"
 #include "Engine/STL/CompileTime/NewTypeInfo.h"
+#include "Engine/STL/Algorithms/Comparators.h"
 #include "VariantRef.h"
-#include "Engine/STL/Algorithms/Comparison.h"
 
 namespace GX_STL
 {
@@ -68,13 +68,14 @@ namespace GXTypes
 
 		bool IsDefined () const;
 		bool IsSame (const Self &other) const;
-		void Destroy ();
+		void Destroy () noexcept;
 
 		TypeId			GetCurrentTypeId ()		const;
 		usize			GetCurrentIndex ()		const		{ return _currentIndex; }
 		BytesU			GetSizeOf ()			const;
 		BinArrayCRef	GetData ()				const		{ return BinArrayCRef::From( _data ); }	// TODO: use GetSizeOf ?
 		VariantRef		GetVariantRef ()					{ return VariantRef::FromVoid( _data, GetCurrentTypeId() ); }
+		VariantCRef		GetVariantRef ()		const		{ return VariantCRef::FromVoid( _data, GetCurrentTypeId() ); }
 
 
 		bool operator == (const Self &right) const;
@@ -91,12 +92,12 @@ namespace GXTypes
 
 
 		// Type Access //
-		template <typename T>		Self &		Create (const T &value);
-		template <typename T>		Self &		Create2 (T &&value);
-		template <typename T>		Self &		Set (const T &value);
+		template <typename T>		Self &		Create (const T &value) noexcept;
+		template <typename T>		Self &		Create2 (T &&value) noexcept;
+		template <typename T>		Self &		Set (const T &value) noexcept;
 
-		template <typename Func>	void		Apply (Func& func);
-		template <typename Func>	void		Apply (const Func& func) const;
+		template <typename Func>	void		Apply (Func& func) noexcept;
+		template <typename Func>	void		Apply (const Func& func) const noexcept;
 
 		template <typename T>		bool		Is () const;
 
@@ -109,8 +110,8 @@ namespace GXTypes
 
 
 	private:
-		void _Copy (const Self &other);
-		void _Move (Self &&other);
+		void _Copy (const Self &other) noexcept;
+		void _Move (Self &&other) noexcept;
 
 		template <typename T>
 		static void _HasType ();
@@ -129,7 +130,7 @@ namespace GXTypes
 		const usize	index;
 		void *		ptr;
 
-		_TypeList_Destroy (void *ptr, usize index) : ptr(ptr), index(index)
+		_TypeList_Destroy (void *ptr, usize index) : index(index), ptr(ptr)
 		{}
 
 		template <typename T, usize Index>
@@ -177,7 +178,7 @@ namespace GXTypes
 		usize		sizeOf;
 		const usize	index;
 
-		_TypeList_GetSizeOf (usize index) : index(index), sizeOf(0)
+		_TypeList_GetSizeOf (usize index) : sizeOf(0), index(index)
 		{}
 			
 		template <typename T, usize Index>
@@ -204,17 +205,17 @@ namespace GXTypes
 		const usize	index;
 
 		_TypeList_Apply (Func func, Data data, usize index) :
-			func(func), data(data), index(index)
+			data(data), func(func), index(index)
 		{}
 
 		template <typename T, usize Index>
 		forceinline void Process ()
 		{
-			using result_t	= TypeTraits::CopyConstToPointer< Data, T *>;
+			using Result_t	= TypeTraits::CopyConstToPointer< Data, T *>;
 
 			if ( index == Index )
 			{
-				func( *reinterpret_cast< result_t >( data ) );
+				func( *reinterpret_cast< Result_t >( data ) );
 			}
 		}
 	};
@@ -289,21 +290,23 @@ namespace GXTypes
 		template <typename T, usize Index>
 		forceinline void Process ()
 		{
+			using Comp = GXTypes::Comparator<T>;
+
 			if ( left.GetCurrentIndex() == Index )
 			{
 				if_constexpr ( CmpType == 0 )
 				{
-					result = Comparison::Equal( left.Get<T>(), right.Get<T>() );
+					result = Comp( left.Get<T>() ) == Comp( right.Get<T>() );
 				}
 				else
 				if_constexpr ( CmpType == 1 )
 				{
-					result = Comparison::Less( left.Get<T>(), right.Get<T>() );
+					result = Comp( left.Get<T>() ) < Comp( right.Get<T>() );
 				}
 				else
 				if_constexpr ( CmpType == 2 )
 				{
-					result = Comparison::Greater( left.Get<T>(), right.Get<T>() );
+					result = Comp( left.Get<T>() ) > Comp( right.Get<T>() );
 				}
 
 				STATIC_ASSERT( CmpType < 3 );
@@ -420,7 +423,7 @@ namespace GXTypes
 */
 	template <typename ...Types>
 	template <typename T>
-	forceinline Union<Types...> &  Union<Types...>::Create (const T &value)
+	forceinline Union<Types...> &  Union<Types...>::Create (const T &value) noexcept
 	{
 		_HasType<T>();
 		Destroy();
@@ -441,7 +444,7 @@ namespace GXTypes
 */
 	template <typename ...Types>
 	template <typename T>
-	forceinline Union<Types...> &  Union<Types...>::Create2 (T &&value)
+	forceinline Union<Types...> &  Union<Types...>::Create2 (T &&value) noexcept
 	{
 		_HasType<T>();
 		Destroy();
@@ -550,7 +553,7 @@ namespace GXTypes
 */
 	template <typename ...Types>
 	template <typename T>
-	forceinline Union<Types...> &  Union<Types...>::Set (const T &value)
+	forceinline Union<Types...> &  Union<Types...>::Set (const T &value) noexcept
 	{
 		Get<T>() = value;
 		return *this;
@@ -563,7 +566,7 @@ namespace GXTypes
 */
 	template <typename ...Types>
 	template <typename Func>
-	forceinline void Union<Types...>::Apply (Func& func)
+	forceinline void Union<Types...>::Apply (Func& func) noexcept
 	{
 		ASSERT( IsDefined() );
 		_TypeList_Apply< Func&, void* >	iter( func, _data, _currentIndex );
@@ -577,7 +580,7 @@ namespace GXTypes
 */
 	template <typename ...Types>
 	template <typename Func>
-	forceinline void Union<Types...>::Apply (const Func& func) const
+	forceinline void Union<Types...>::Apply (const Func& func) const noexcept
 	{
 		ASSERT( IsDefined() );
 		_TypeList_Apply< const Func&, void const * const >	iter( func, _data, _currentIndex );
@@ -664,7 +667,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename ...Types>
-	forceinline void Union<Types...>::Destroy ()
+	forceinline void Union<Types...>::Destroy () noexcept
 	{
 		if ( not IsDefined() )
 			return;
@@ -699,7 +702,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename ...Types>
-	forceinline void Union<Types...>::_Copy (const Self &other)
+	forceinline void Union<Types...>::_Copy (const Self &other) noexcept
 	{
 		if ( not other.IsDefined() )
 			return;
@@ -722,7 +725,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename ...Types>
-	forceinline void Union<Types...>::_Move (Self &&other)
+	forceinline void Union<Types...>::_Move (Self &&other) noexcept
 	{
 		if ( not other.IsDefined() )
 			return;
@@ -751,14 +754,14 @@ namespace GXTypes
 	struct Hash< Union<Types...> > :
 		private Hash< BinArrayCRef >
 	{
-		typedef Union<Types...>				key_t;
-		typedef Hash< BinArrayCRef >		base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef Union<Types...>				Key_t;
+		typedef Hash< BinArrayCRef >		Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
 			// TODO: it is not same as Hash( union.Get<T>() )
-			return base_t::operator ()( x.GetData() );
+			return Base_t::operator ()( x.GetData() );
 		}
 	};
 

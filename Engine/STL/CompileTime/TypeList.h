@@ -162,11 +162,11 @@ namespace CompileTime
 		// MaxAlignOf
 		static constexpr usize	MaxAlignOf ()	{ return ForEach< _ctime_hidden_::TTypeList_MaxAlign, ValueToType<usize, 0> >::value; }
 
-		// IsAllSameAs
+		// AllAreSameAs
 		template <typename Type>
 		static constexpr bool	AllAreSameAs	= ForEach< _ctime_hidden_::TTypeList_IsAllSameAs<Type>::Func,
 															ValueToType< bool, true > >::value;
-		// IsAllSame
+		// AllAreSame
 		static constexpr bool	AllAreSame		= AllAreSameAs< Front >;
 
 
@@ -185,7 +185,7 @@ namespace CompileTime
 		
 		// RuntimeForEach
 		template <typename Func>
-		static void RuntimeForEach (Func &func)
+		static void RuntimeForEach (Func &func) noexcept
 		{
 			_ctime_hidden_::TTypeList_ForEach< Self, Func, 0 >::Iterate( func );
 		}

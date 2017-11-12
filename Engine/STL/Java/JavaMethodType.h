@@ -58,7 +58,7 @@ namespace  Java
 		// types
 		public:
 			typedef Typelist				type_list_t;
-			typedef R						result_t;
+			typedef R						Result_t;
 			typedef JavaMethodResult< R >	result_wrap_t;
 			
 			static const uint	NUM_ARGS	= type_list_t::Count::value;

@@ -8,8 +8,8 @@ namespace Engine
 namespace Base
 {
 	
-	const Runtime::VirtualTypeList	MainSystem::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	MainSystem::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	MainSystem::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	MainSystem::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 	
 /*
 =================================================
@@ -28,7 +28,7 @@ namespace Base
 	constructor
 =================================================
 */
-	MainSystem::MainSystem (const GlobalSystemsRef gs) :
+	MainSystem::MainSystem (GlobalSystemsRef gs) :
 		Module( gs, ModuleConfig{ MainSystemModuleID, 0 }, &_msgTypes, &_eventTypes ),
 		_factory( GlobalSystems() ),
 		_fileMngr( GlobalSystems() )
@@ -75,7 +75,7 @@ namespace Base
 	_Create
 =================================================
 */
-	void MainSystem::_Create ()
+	void MainSystem::_Create () noexcept
 	{
 		_taskMngr	= New<TaskManager>( GlobalSystems(), CreateInfo::TaskManager() );
 		_threadMngr = New<ThreadManager>( GlobalSystems(), CreateInfo::ThreadManager() );
@@ -109,7 +109,7 @@ namespace Base
 	_Destroy
 =================================================
 */
-	void MainSystem::_Destroy ()
+	void MainSystem::_Destroy () noexcept
 	{
 		// delete thread manager at first
 		_threadMngr->Send< ModuleMsg::Delete >({});
@@ -118,10 +118,6 @@ namespace Base
 
 		_DetachAllAttachments();
 		_ClearMessageHandlers();
-
-		//StreamManager::Unregister( GlobalSystems() );
-		//ThreadManager::Unregister( GlobalSystems() );
-		//TaskManager::Unregister( GlobalSystems() );
 
 		_factory.Clear();
 

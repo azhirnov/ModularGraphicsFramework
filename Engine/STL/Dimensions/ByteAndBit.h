@@ -37,9 +37,9 @@ namespace GXTypes
 	// types
 	public:
 		typedef Bytes<T>							Self;
-		typedef T									value_t;
-		typedef CompileTime::NearInt::FromType<T>	int_t;
-		typedef CompileTime::NearUInt::FromType<T>	uint_t;
+		typedef T									Value_t;
+		typedef CompileTime::NearInt::FromType<T>	Int_t;
+		typedef CompileTime::NearUInt::FromType<T>	UInt_t;
 
 
 	// variables
@@ -80,14 +80,29 @@ namespace GXTypes
 						void *	ToVoidPtr ()			{ return ReferenceCast<void *>( usize( *this ) ); }
 		constexpr const void *	ToVoidPtr ()	const	{ return ReferenceCast<const void *>( usize( *this ) ); }
 
-		friend void const*	operator + (void const *left, const Bytes<T> &right)
+		// move any pointer
+		template <typename B>
+		friend B const*	operator + (B const *left, const Bytes<T> &right)
 		{
-			return Cast<void const*>( Cast<byte const*>(left) + _value );
+			return Cast<B const*>( Cast<byte const*>(left) + _value );
 		}
 		
-		friend void *		operator + (void *left, const Bytes<T> &right)
+		template <typename B>
+		friend B *		operator + (B *left, const Bytes<T> &right)
 		{
-			return Cast<void *>( Cast<byte *>(left) + _value );
+			return Cast<B *>( Cast<byte *>(left) + _value );
+		}
+
+		template <typename B>
+		friend B const*	operator - (B const *left, const Bytes<T> &right)
+		{
+			return Cast<B const*>( Cast<byte const*>(left) - _value );
+		}
+		
+		template <typename B>
+		friend B *		operator - (B *left, const Bytes<T> &right)
+		{
+			return Cast<B *>( Cast<byte *>(left) - _value );
 		}
 
 
@@ -122,7 +137,7 @@ namespace GXTypes
 
 
 		_GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value );
-		_GX_DIM_ALL_INTEGER_OPERATORS_TYPE( _value, value_t, );
+		_GX_DIM_ALL_INTEGER_OPERATORS_TYPE( _value, Value_t, );
 	};
 
 
@@ -139,9 +154,9 @@ namespace GXTypes
 	// types
 	public:
 		typedef Bits<T>								Self;
-		typedef T									value_t;
-		typedef CompileTime::NearInt::FromType<T>	int_t;
-		typedef CompileTime::NearUInt::FromType<T>	uint_t;
+		typedef T									Value_t;
+		typedef CompileTime::NearInt::FromType<T>	Int_t;
+		typedef CompileTime::NearUInt::FromType<T>	UInt_t;
 
 
 	// variables
@@ -188,7 +203,7 @@ namespace GXTypes
 
 
 		_GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value );
-		_GX_DIM_ALL_INTEGER_OPERATORS_TYPE( _value, value_t, );
+		_GX_DIM_ALL_INTEGER_OPERATORS_TYPE( _value, Value_t, );
 	};
 
 
@@ -222,7 +237,14 @@ namespace GXTypes
 	template <typename A, typename B>
 	constexpr forceinline BytesU OffsetOf (A (B::*member))
 	{
-		return BytesU( offsetof( B, (*member) ) );
+		static const union U {
+			B		b;
+			int		tmp;
+			U () : tmp(0) {}
+		} u;
+		return BytesU( usize(&(u.b.*member)) - usize(&u.b) );
+
+		//return BytesU( offsetof( B, *member ) );
 		//return BytesU( (usize) &reinterpret_cast< char const volatile &>( ((B*)null)->*member ) );
 	}
 
@@ -299,87 +321,89 @@ namespace GXTypes
 	constexpr BitsU  operator "" _bit (unsigned long long value)	{ return BitsU(usize(value)); }
 
 	
-	
-/*
-=================================================
-	TypeInfo
-=================================================
-*/
-	template <typename T>
-	struct ::GX_STL::CompileTime::TypeInfo< Bytes<T> >
-	{
-		typedef Bytes<T>	type;
-		typedef T			inner_type;
-		
-		template <typename OtherType>
-		using CreateWith = Bytes< OtherType >;
-
-		enum {
-			FLAGS	= (int)TypeInfo< inner_type >::FLAGS | int(_ctime_hidden_::WRAPPER),
-		};
-		
-		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }
-		static constexpr type	Min()		{ return type( TypeInfo< inner_type >::Min() ); }
-		
-		static constexpr type	Epsilon()	{ return type( TypeInfo< inner_type >::Epsilon() ); }
-		static constexpr uint	SignBit()	{ return TypeInfo< inner_type >::SignBit(); }
-		static constexpr uint	Count()		{ return TypeInfo< inner_type >::Count(); }
-	};
-
-
-	template <typename T>
-	struct ::GX_STL::CompileTime::TypeInfo< Bits<T> >
-	{
-		typedef Bits<T>		type;
-		typedef T			inner_type;
-		
-		template <typename OtherType>
-		using CreateWith = Bits< OtherType >;
-
-		enum {
-			FLAGS	= (int)TypeInfo< inner_type >::FLAGS | int(_ctime_hidden_::WRAPPER),
-		};
-		
-		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }
-		static constexpr type	Min()		{ return type( TypeInfo< inner_type >::Min() ); }
-		
-		static constexpr type	Epsilon()	{ return type( TypeInfo< inner_type >::Epsilon() ); }
-		static constexpr uint	SignBit()	{ return TypeInfo< inner_type >::SignBit(); }
-		static constexpr uint	Count()		{ return TypeInfo< inner_type >::Count(); }
-	};
-
-	
 /*
 =================================================
 	Hash
 =================================================
 */
 	template <typename T>
-	struct ::GX_STL::GXTypes::Hash< Bytes<T> > : private Hash<T>
+	struct Hash< Bytes<T> > : private Hash<T>
 	{
-		typedef Bytes<T>					key_t;
-		typedef Hash<T>						base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef Bytes<T>					Key_t;
+		typedef Hash<T>						Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const
+		Result_t operator () (const Key_t &x) const
 		{
-			return base_t::operator ()( (T)x );
+			return Base_t::operator ()( (T)x );
 		}
 	};
 
 
 	template <typename T>
-	struct ::GX_STL::GXTypes::Hash< Bits<T> > : private Hash<T>
+	struct Hash< Bits<T> > : private Hash<T>
 	{
-		typedef Bits<T>						key_t;
-		typedef Hash<T>						base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef Bits<T>						Key_t;
+		typedef Hash<T>						Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const
+		Result_t operator () (const Key_t &x) const
 		{
-			return base_t::operator ()( (T)x );
+			return Base_t::operator ()( (T)x );
 		}
 	};
 
 }	// GXTypes
+
+namespace CompileTime
+{
+/*
+=================================================
+	TypeInfo
+=================================================
+*/
+	template <typename T>
+	struct TypeInfo< GXTypes::Bytes<T> >
+	{
+		typedef GXTypes::Bytes<T>	type;
+		typedef T					inner_type;
+		
+		template <typename OtherType>
+		using CreateWith = GXTypes::Bytes< OtherType >;
+
+		enum {
+			FLAGS	= (int)TypeInfo< inner_type >::FLAGS | int(_ctime_hidden_::WRAPPER),
+		};
+		
+		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }
+		static constexpr type	Min()		{ return type( TypeInfo< inner_type >::Min() ); }
+		
+		static constexpr type	Epsilon()	{ return type( TypeInfo< inner_type >::Epsilon() ); }
+		static constexpr uint	SignBit()	{ return TypeInfo< inner_type >::SignBit(); }
+		static constexpr uint	Count()		{ return TypeInfo< inner_type >::Count(); }
+	};
+
+
+	template <typename T>
+	struct TypeInfo< GXTypes::Bits<T> >
+	{
+		typedef GXTypes::Bits<T>	type;
+		typedef T					inner_type;
+		
+		template <typename OtherType>
+		using CreateWith = GXTypes::Bits< OtherType >;
+
+		enum {
+			FLAGS	= (int)TypeInfo< inner_type >::FLAGS | int(_ctime_hidden_::WRAPPER),
+		};
+		
+		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }
+		static constexpr type	Min()		{ return type( TypeInfo< inner_type >::Min() ); }
+		
+		static constexpr type	Epsilon()	{ return type( TypeInfo< inner_type >::Epsilon() ); }
+		static constexpr uint	SignBit()	{ return TypeInfo< inner_type >::SignBit(); }
+		static constexpr uint	Count()		{ return TypeInfo< inner_type >::Count(); }
+	};
+
+}	// CompileTime
 }	// GX_STL

@@ -21,14 +21,14 @@ namespace PlatformVK
 	{
 	// types
 	public:
-		using Handle_t	= OS::HiddenOSTypeFrom<void*>;
+		using HWND_t	= OS::HiddenOSTypeFrom<void*>;
 
 	// methods
 	public:
 		VkWinSurface ();
 		~VkWinSurface ();
 
-		bool Create (vk::VkInstance instance, const Handle_t &windowHandle, OUT vk::VkSurfaceKHR &surface);
+		bool Create (vk::VkInstance instance, const HWND_t &windowHandle, OUT vk::VkSurfaceKHR &surface);
 		void Destroy ();
 		void RequestExtensions (INOUT Array<const char*> &ext);
 	};

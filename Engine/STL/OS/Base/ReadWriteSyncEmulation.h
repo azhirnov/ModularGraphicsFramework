@@ -29,7 +29,7 @@ namespace OS
 	// methods
 	public:
 		ReadWriteSyncEmulation ():
-			_iCounter(0), _sELocked( SyncEvent::INIT_STATE_SIGNALED )
+			_sELocked( SyncEvent::INIT_STATE_SIGNALED ), _iCounter(0)
 		{}
 
 		~ReadWriteSyncEmulation ()

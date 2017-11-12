@@ -16,13 +16,13 @@ namespace Base
 	template <typename T>
 	struct Message final
 	{
-		//friend class Module;
 		friend class MessageHandler;
 
 	// types
 	public:
 		using Sender_t		= BaseObjectPtr;
 		using Self			= Message<T>;
+		using Data_t		= T;
 
 
 	// variables
@@ -66,13 +66,13 @@ namespace Base
 			return *this;
 		}
 
-		Self &	From (const Sender_t sender)
+		Self &	From (const Sender_t &sender)
 		{
 			_sender = sender;
 			return *this;
 		}
 
-		Self const&	From (const Sender_t sender) const
+		Self const&	From (const Sender_t &sender) const
 		{
 			_sender = sender;
 			return *this;

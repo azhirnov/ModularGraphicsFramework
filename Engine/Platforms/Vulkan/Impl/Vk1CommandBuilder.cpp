@@ -15,6 +15,9 @@ namespace Engine
 {
 namespace PlatformVK
 {
+	using namespace vk;
+
+
 
 	//
 	// Vulkan Command Buffer Builder
@@ -69,6 +72,9 @@ namespace PlatformVK
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
+		
+		using CmdBufferMsg_t		= MessageListFrom< GpuMsg::SetCommandBufferDependency, GpuMsg::SetCommandBufferState,
+														GpuMsg::GetCommandBufferState >;
 
 		using DynamicStates_t		= EPipelineDynamicState::bits;
 		//using Layout_t			= Optional< Vk1PipelineLayoutPtr >;
@@ -85,17 +91,17 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
 	private:
-		vk::VkCommandPool		_cmdPool;
+		VkCommandPool			_cmdPool;
 
 		UsedResources_t			_resources;
 		ModulePtr				_cmdBuffer;		// current command buffer
-		vk::VkCommandBuffer		_cmdId;			// cached id
+		VkCommandBuffer			_cmdId;			// cached id
 		EScope					_scope;
 
 		//Layout_t				_currGraphicsLayout;
@@ -109,13 +115,13 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1CommandBuilder (const GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci);
+		Vk1CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci);
 		~Vk1CommandBuilder ();
 
 
 	// message handlers
 	private:
-		bool _Compose (const  Message< ModuleMsg::Compose > &);
+		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
 		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
@@ -165,10 +171,13 @@ namespace PlatformVK
 		bool _CreateCmdBufferPool ();
 		void _DestroyCmdBufferPool ();
 		
-		bool _BindDescriptorSet (const ModulePtr &resourceTable, uint firstIndex, vk::VkPipelineBindPoint bindPoint);
+		bool _BindDescriptorSet (const ModulePtr &resourceTable, uint firstIndex, VkPipelineBindPoint bindPoint);
 
 		bool _CheckGraphicsPipeline ();
 		bool _CheckComputePipeline ();
+
+		bool _CheckGraphicsWritableResources ();
+		bool _CheckComputeWritableResources ();
 
 		bool _CheckDynamicState (EPipelineDynamicState::type state) const;
 		bool _CheckCompatibility (const FramebufferDescriptor &fbDescr,
@@ -178,33 +187,33 @@ namespace PlatformVK
 
 
 	
-	using Viewports_t				= FixedSizeArray< vk::VkViewport, GlobalConst::Graphics_MaxColorBuffers >;
-	using Scissors_t				= FixedSizeArray< vk::VkRect2D, GlobalConst::Graphics_MaxColorBuffers >;
-	using ClearValues_t				= FixedSizeArray< vk::VkClearValue, GlobalConst::Graphics_MaxColorBuffers >;
-	using VertexBuffers_t			= FixedSizeArray< vk::VkBuffer, GlobalConst::Graphics_MaxAttribs >;
-	using CmdBuffers_t				= FixedSizeArray< vk::VkCommandBuffer, GpuMsg::CmdExecute::CmdBuffers_t::MemoryContainer_t::SIZE >;
-	using BufferCopyRegions_t		= FixedSizeArray< vk::VkBufferCopy, GpuMsg::CmdCopyBuffer::Regions_t::MemoryContainer_t::SIZE >;
-	using ImageCopyRegions_t		= FixedSizeArray< vk::VkImageCopy, GpuMsg::CmdCopyImage::Regions_t::MemoryContainer_t::SIZE >;
-	using BufImgCopyRegions_t		= FixedSizeArray< vk::VkBufferImageCopy, GpuMsg::CmdCopyBufferToImage::Regions_t::MemoryContainer_t::SIZE >;
-	using ImgBlitRegions_t			= FixedSizeArray< vk::VkImageBlit, GpuMsg::CmdBlitImage::Regions_t::MemoryContainer_t::SIZE >;
-	using ClearAttachments_t		= FixedSizeArray< vk::VkClearAttachment, GpuMsg::CmdClearAttachments::Attachments_t::MemoryContainer_t::SIZE >;
-	using ClearRects_t				= FixedSizeArray< vk::VkClearRect, GpuMsg::CmdClearAttachments::ClearRects_t::MemoryContainer_t::SIZE >;
-	using ImageRanges_t				= FixedSizeArray< vk::VkImageSubresourceRange, GpuMsg::CmdClearColorImage::Ranges_t::MemoryContainer_t::SIZE >;
-	using MemoryBarriers_t			= FixedSizeArray< vk::VkMemoryBarrier, GpuMsg::CmdPipelineBarrier::MAX_BARRIERS >;
-	using ImageMemoryBarriers_t		= FixedSizeArray< vk::VkImageMemoryBarrier, GpuMsg::CmdPipelineBarrier::MAX_BARRIERS >;
-	using BufferMemoryBarriers_t	= FixedSizeArray< vk::VkBufferMemoryBarrier, GpuMsg::CmdPipelineBarrier::MAX_BARRIERS >;
+	using Viewports_t				= FixedSizeArray< VkViewport, GlobalConst::Graphics_MaxColorBuffers >;
+	using Scissors_t				= FixedSizeArray< VkRect2D, GlobalConst::Graphics_MaxColorBuffers >;
+	using ClearValues_t				= FixedSizeArray< VkClearValue, GlobalConst::Graphics_MaxColorBuffers >;
+	using VertexBuffers_t			= FixedSizeArray< VkBuffer, GlobalConst::Graphics_MaxAttribs >;
+	using CmdBuffers_t				= FixedSizeArray< VkCommandBuffer, GpuMsg::CmdExecute::CmdBuffers_t::MemoryContainer_t::SIZE >;
+	using BufferCopyRegions_t		= FixedSizeArray< VkBufferCopy, GpuMsg::CmdCopyBuffer::Regions_t::MemoryContainer_t::SIZE >;
+	using ImageCopyRegions_t		= FixedSizeArray< VkImageCopy, GpuMsg::CmdCopyImage::Regions_t::MemoryContainer_t::SIZE >;
+	using BufImgCopyRegions_t		= FixedSizeArray< VkBufferImageCopy, GpuMsg::CmdCopyBufferToImage::Regions_t::MemoryContainer_t::SIZE >;
+	using ImgBlitRegions_t			= FixedSizeArray< VkImageBlit, GpuMsg::CmdBlitImage::Regions_t::MemoryContainer_t::SIZE >;
+	using ClearAttachments_t		= FixedSizeArray< VkClearAttachment, GpuMsg::CmdClearAttachments::Attachments_t::MemoryContainer_t::SIZE >;
+	using ClearRects_t				= FixedSizeArray< VkClearRect, GpuMsg::CmdClearAttachments::ClearRects_t::MemoryContainer_t::SIZE >;
+	using ImageRanges_t				= FixedSizeArray< VkImageSubresourceRange, GpuMsg::CmdClearColorImage::Ranges_t::MemoryContainer_t::SIZE >;
+	using MemoryBarriers_t			= FixedSizeArray< VkMemoryBarrier, GpuMsg::CmdPipelineBarrier::MAX_BARRIERS >;
+	using ImageMemoryBarriers_t		= FixedSizeArray< VkImageMemoryBarrier, GpuMsg::CmdPipelineBarrier::MAX_BARRIERS >;
+	using BufferMemoryBarriers_t	= FixedSizeArray< VkBufferMemoryBarrier, GpuMsg::CmdPipelineBarrier::MAX_BARRIERS >;
 
 
-	const Runtime::VirtualTypeList	Vk1CommandBuilder::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	Vk1CommandBuilder::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	Vk1CommandBuilder::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	Vk1CommandBuilder::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	Vk1CommandBuilder::Vk1CommandBuilder (const GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkCommandBuilderModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+	Vk1CommandBuilder::Vk1CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ VkCommandBuilderModuleID, ~0u }, &_msgTypes, &_eventTypes ),
 		_cmdPool( VK_NULL_HANDLE ),		_cmdId( VK_NULL_HANDLE ),
 		_scope( EScope::None ),			_subpassIndex( 0 ),
 		_maxSubpasses( 0 )
@@ -221,7 +230,9 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_Compose );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_Delete );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1CommandBuilder::_GetVkLogicDevice );
+		_SubscribeOnMsg( this, &Vk1CommandBuilder::_GetDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1CommandBuilder::_GetVkDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1CommandBuilder::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_GetVkCommandPoolID );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_GetCommandBufferState );
@@ -286,7 +297,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1CommandBuilder::_Compose (const  Message< ModuleMsg::Compose > &msg)
+	bool Vk1CommandBuilder::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -360,8 +371,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetViewport (const Message< GpuMsg::CmdSetViewport > &msg)
 	{
-		using namespace vk;
-		
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::Viewport ) );
 
@@ -371,9 +380,9 @@ namespace PlatformVK
 		{
 			auto const&	vp = msg->viewports[i];
 
-			viewports[i] = VkViewport{	float(vp.offset.x), float(vp.offset.y),
-										float(vp.size.x),   float(vp.size.y),
-										vp.depthRange.x,    vp.depthRange.y   };
+			viewports[i] = VkViewport{	float(vp.rect.left),    float(vp.rect.bottom),
+										float(vp.rect.Width()), float(vp.rect.Height()),
+										vp.depthRange.x,        vp.depthRange.y   };
 		}
 
 		vkCmdSetViewport( _cmdId, msg->firstViewport, (uint32_t)viewports.Count(), viewports.ptr() );
@@ -387,8 +396,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetScissor (const Message< GpuMsg::CmdSetScissor > &msg)
 	{
-		using namespace vk;
-		
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::Scissor ) );
 
@@ -413,8 +420,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetDepthBounds (const Message< GpuMsg::CmdSetDepthBounds > &msg)
 	{
-		using namespace vk;
-		
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::DepthBounds ) );
 
@@ -429,8 +434,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetBlendColor (const Message< GpuMsg::CmdSetBlendColor > &msg)
 	{
-		using namespace vk;
-		
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::BlendConstants ) );
 		
@@ -445,8 +448,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetDepthBias (const Message< GpuMsg::CmdSetDepthBias > &msg)
 	{
-		using namespace vk;
-		
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::DepthBias ) );
 		
@@ -461,8 +462,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetLineWidth (const Message< GpuMsg::CmdSetLineWidth > &msg)
 	{
-		using namespace vk;
-		
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::LineWidth ) );
 		
@@ -477,8 +476,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetStencilCompareMask (const Message< GpuMsg::CmdSetStencilCompareMask > &msg)
 	{
-		using namespace vk;
-		
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::StencilCompareMask ) );
 		
@@ -496,8 +493,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetStencilWriteMask (const Message< GpuMsg::CmdSetStencilWriteMask > &msg)
 	{
-		using namespace vk;
-		
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::StencilWriteMask ) );
 		
@@ -515,8 +510,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetStencilReference (const Message< GpuMsg::CmdSetStencilReference > &msg)
 	{
-		using namespace vk;
-		
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::StencilReference ) );
 		
@@ -534,8 +527,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBegin (const Message< GpuMsg::CmdBegin > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( not _cmdBuffer );
 		CHECK_ERR( _scope == EScope::None );
 		
@@ -545,6 +536,8 @@ namespace PlatformVK
 			// it is bad practice, becouse command buffer depends of other commands pool
 			//ASSERT( msg->targetCmdBuffer->_GetParents().IsExist( this ) );
 			
+			CHECK_ERR( msg->targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
+
 			_cmdBuffer = msg->targetCmdBuffer;
 		}
 		else
@@ -600,8 +593,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdEnd (const Message< GpuMsg::CmdEnd > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		
@@ -625,12 +616,10 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBeginRenderPass (const Message< GpuMsg::CmdBeginRenderPass > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->framebuffer );
 		CHECK_ERR( msg->renderPass );
-		CHECK_ERR( _scope == EScope::Command );
 
 		// requests
 		Message< GpuMsg::GetVkFramebufferID >		req_fb;
@@ -707,10 +696,8 @@ namespace PlatformVK
 	_CmdEndRenderPass
 =================================================
 */
-	bool Vk1CommandBuilder::_CmdEndRenderPass (const Message< GpuMsg::CmdEndRenderPass > &msg)
+	bool Vk1CommandBuilder::_CmdEndRenderPass (const Message< GpuMsg::CmdEndRenderPass > &)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 
@@ -728,10 +715,8 @@ namespace PlatformVK
 	_CmdNextSubpass
 =================================================
 */
-	bool Vk1CommandBuilder::_CmdNextSubpass (const Message< GpuMsg::CmdNextSubpass > &msg)
+	bool Vk1CommandBuilder::_CmdNextSubpass (const Message< GpuMsg::CmdNextSubpass > &)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( ++_subpassIndex < _maxSubpasses );
@@ -747,8 +732,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBindGraphicsPipeline (const Message< GpuMsg::CmdBindGraphicsPipeline > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( msg->pipeline );
@@ -780,7 +763,7 @@ namespace PlatformVK
 	_CmdBindComputePipeline
 =================================================
 */
-	bool Vk1CommandBuilder::_CmdBindComputePipeline (const Message< GpuMsg::CmdBindComputePipeline > &msg)
+	bool Vk1CommandBuilder::_CmdBindComputePipeline (const Message< GpuMsg::CmdBindComputePipeline > &)
 	{
 		TODO( "" );
 		return false;
@@ -815,12 +798,10 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBindVertexBuffers (const Message< GpuMsg::CmdBindVertexBuffers > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 
-		CompileTime::MustBeSameSize< VkDeviceSize, decltype(msg->offsets)::value_t >();
+		CompileTime::MustBeSameSize< VkDeviceSize, decltype(msg->offsets)::Value_t >();
 
 		VertexBuffers_t		buffers;	buffers.Resize( msg->vertexBuffers.Count() );
 
@@ -835,7 +816,7 @@ namespace PlatformVK
 			SendTo( vb, req_id );
 			SendTo( vb, req_descr );
 
-			CHECK_ERR( req_descr->result.Get().usage.Get( EBufferUsage::Vertex ) );
+			CHECK_ERR( req_descr->result->usage[ EBufferUsage::Vertex ] );
 
 			buffers[i] << req_id->result;
 			
@@ -846,7 +827,7 @@ namespace PlatformVK
 								msg->firstBinding,
 								(uint32_t) buffers.Count(),
 								buffers.ptr(),
-								reinterpret_cast< VkDeviceSize const *>( msg->offsets.ptr() ) );
+								PointerCast< VkDeviceSize const >( msg->offsets.ptr() ) );
 		return true;
 	}
 	
@@ -868,8 +849,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBindIndexBuffer (const Message< GpuMsg::CmdBindIndexBuffer > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( msg->indexBuffer );
@@ -881,7 +860,7 @@ namespace PlatformVK
 		SendTo( msg->indexBuffer, req_id );
 		SendTo( msg->indexBuffer, req_descr );
 		
-		CHECK_ERR( req_descr->result.Get().usage.Get( EBufferUsage::Index ) );
+		CHECK_ERR( req_descr->result->usage[ EBufferUsage::Index ] );
 		
 		_resources.Add( msg->indexBuffer );
 
@@ -910,8 +889,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdDraw (const Message< GpuMsg::CmdDraw > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( _CheckGraphicsPipeline() );
@@ -921,6 +898,8 @@ namespace PlatformVK
 				   msg->instanceCount,
 				   msg->firstVertex,
 				   msg->firstInstance );
+
+		_CheckGraphicsWritableResources();
 		return true;
 	}
 	
@@ -931,8 +910,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdDrawIndexed (const Message< GpuMsg::CmdDrawIndexed > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( _CheckGraphicsPipeline() );
@@ -940,9 +917,11 @@ namespace PlatformVK
 		vkCmdDrawIndexed( _cmdId,
 						  msg->indexCount,
 						  msg->instanceCount,
-						  msg->firstVertex,
+						  msg->firstIndex,
 						  msg->vertexOffset,
 						  msg->firstInstance );
+
+		_CheckGraphicsWritableResources();
 		return true;
 	}
 	
@@ -953,8 +932,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdDrawIndirect (const Message< GpuMsg::CmdDrawIndirect > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( msg->indirectBuffer );
@@ -967,7 +944,7 @@ namespace PlatformVK
 		SendTo( msg->indirectBuffer, req_id );
 		SendTo( msg->indirectBuffer, req_descr );
 		
-		CHECK_ERR( req_descr->result.Get().usage.Get( EBufferUsage::Indirect ) );
+		CHECK_ERR( req_descr->result->usage[ EBufferUsage::Indirect ] );
 		
 		_resources.Add( msg->indirectBuffer );
 
@@ -975,7 +952,9 @@ namespace PlatformVK
 							req_id->result.Get( VK_NULL_HANDLE ),
 							(VkDeviceSize) msg->offset,
 							msg->drawCount,
-							(vk::uint32_t) msg->stride );
+							(uint32_t) msg->stride );
+
+		_CheckGraphicsWritableResources();
 		return true;
 	}
 	
@@ -986,8 +965,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdDrawIndexedIndirect (const Message< GpuMsg::CmdDrawIndexedIndirect > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( msg->indirectBuffer );
@@ -1000,7 +977,7 @@ namespace PlatformVK
 		SendTo( msg->indirectBuffer, req_id );
 		SendTo( msg->indirectBuffer, req_descr );
 		
-		CHECK_ERR( req_descr->result.Get().usage.Get( EBufferUsage::Indirect ) );
+		CHECK_ERR( req_descr->result->usage[ EBufferUsage::Indirect ] );
 		
 		_resources.Add( msg->indirectBuffer );
 
@@ -1008,7 +985,9 @@ namespace PlatformVK
 								  req_id->result.Get( VK_NULL_HANDLE ),
 								  (VkDeviceSize) msg->offset,
 								  msg->drawCount,
-								  (vk::uint32_t) msg->stride );
+								  (uint32_t) msg->stride );
+
+		_CheckGraphicsWritableResources();
 		return true;
 	}
 	
@@ -1041,8 +1020,14 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdDispatch (const Message< GpuMsg::CmdDispatch > &msg)
 	{
-		TODO( "" );
-		return false;
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( _CheckComputePipeline() );
+
+		vkCmdDispatch( _cmdId, msg->groupCount.x, msg->groupCount.y, msg->groupCount.z );
+
+		_CheckComputeWritableResources();
+		return true;
 	}
 	
 /*
@@ -1050,7 +1035,7 @@ namespace PlatformVK
 	_CmdDispatchIndirect
 =================================================
 */
-	bool Vk1CommandBuilder::_CmdDispatchIndirect (const Message< GpuMsg::CmdDispatchIndirect > &msg)
+	bool Vk1CommandBuilder::_CmdDispatchIndirect (const Message< GpuMsg::CmdDispatchIndirect > &)
 	{
 		TODO( "" );
 		return false;
@@ -1085,8 +1070,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdExecute (const Message< GpuMsg::CmdExecute > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 
@@ -1098,14 +1081,21 @@ namespace PlatformVK
 			
 			// TODO: check result
 			Message< GpuMsg::GetVkCommandBufferID >		req_id;
+			Message< GpuMsg::GetCommandBufferState >	req_state;
+
 			SendTo( cmd, req_id );
+			SendTo( cmd, req_state );
+
+			CHECK( req_state->result.Get() == GpuMsg::GetCommandBufferState::EState::Executable );
 
 			cmd_buffers.PushBack( req_id->result.Get( VK_NULL_HANDLE ) );
 
 			_resources.Add( cmd );
 		}
 			
-		vkCmdExecuteCommands( _cmdId, (uint32_t) cmd_buffers.Count(), cmd_buffers.ptr() );
+		CHECK_ERR( not cmd_buffers.Empty() );
+		vkCmdExecuteCommands( _cmdId, (uint32_t) cmd_buffers.Count(), cmd_buffers.RawPtr() );
+
 		return true;
 	}
 	
@@ -1127,7 +1117,7 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBindGraphicsResourceTable (const Message< GpuMsg::CmdBindGraphicsResourceTable > &msg)
 	{
-		return _BindDescriptorSet( msg->resourceTable, msg->index, vk::VK_PIPELINE_BIND_POINT_GRAPHICS );
+		return _BindDescriptorSet( msg->resourceTable, msg->index, VK_PIPELINE_BIND_POINT_GRAPHICS );
 	}
 	
 /*
@@ -1137,7 +1127,7 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBindComputeResourceTable (const Message< GpuMsg::CmdBindComputeResourceTable > &msg)
 	{
-		return _BindDescriptorSet( msg->resourceTable, msg->index, vk::VK_PIPELINE_BIND_POINT_COMPUTE );
+		return _BindDescriptorSet( msg->resourceTable, msg->index, VK_PIPELINE_BIND_POINT_COMPUTE );
 	}
 	
 /*
@@ -1145,10 +1135,8 @@ namespace PlatformVK
 	_BindDescriptorSet
 =================================================
 */
-	bool Vk1CommandBuilder::_BindDescriptorSet (const ModulePtr &resourceTable, uint firstIndex, vk::VkPipelineBindPoint bindPoint)
+	bool Vk1CommandBuilder::_BindDescriptorSet (const ModulePtr &resourceTable, uint firstIndex, VkPipelineBindPoint bindPoint)
 	{
-		using namespace vk;
-		
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( resourceTable );
@@ -1164,7 +1152,7 @@ namespace PlatformVK
 
 		_resources.Add( resourceTable );
 
-		vk::VkDescriptorSet		descr_set;	descr_set << req_id->result;
+		VkDescriptorSet		descr_set;	descr_set << req_id->result;
 
 		vkCmdBindDescriptorSets( _cmdId,
 								 bindPoint,
@@ -1182,8 +1170,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdCopyBuffer (const Message< GpuMsg::CmdCopyBuffer > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->srcBuffer and msg->dstBuffer );
@@ -1199,8 +1185,8 @@ namespace PlatformVK
 		SendTo( msg->srcBuffer, req_src_descr );
 		SendTo( msg->dstBuffer, req_dst_descr );
 		
-		CHECK_ERR( req_src_descr->result.Get().usage.Get( EBufferUsage::TransferSrc ) );
-		CHECK_ERR( req_dst_descr->result.Get().usage.Get( EBufferUsage::TransferDst ) );
+		CHECK_ERR( req_src_descr->result->usage[ EBufferUsage::TransferSrc ] );
+		CHECK_ERR( req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
 
 		BufferCopyRegions_t	regions;
 
@@ -1234,8 +1220,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdCopyImage (const Message< GpuMsg::CmdCopyImage > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->srcImage and msg->dstImage );
@@ -1251,8 +1235,8 @@ namespace PlatformVK
 		SendTo( msg->srcImage, req_src_descr );
 		SendTo( msg->dstImage, req_dst_descr );
 		
-		CHECK_ERR( req_src_descr->result.Get().usage.Get( EImageUsage::TransferSrc ) );
-		CHECK_ERR( req_dst_descr->result.Get().usage.Get( EImageUsage::TransferDst ) );
+		CHECK_ERR( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
+		CHECK_ERR( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
 
 		ImageCopyRegions_t	regions;
 
@@ -1298,8 +1282,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdCopyBufferToImage (const Message< GpuMsg::CmdCopyBufferToImage > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->srcBuffer and msg->dstImage );
@@ -1315,8 +1297,8 @@ namespace PlatformVK
 		SendTo( msg->dstImage, req_dst_id );
 		SendTo( msg->dstImage, req_dst_descr );
 		
-		CHECK_ERR( req_src_descr->result.Get().usage.Get( EBufferUsage::TransferSrc ) );
-		CHECK_ERR( req_dst_descr->result.Get().usage.Get( EImageUsage::TransferDst ) );
+		CHECK_ERR( req_src_descr->result->usage[ EBufferUsage::TransferSrc ] );
+		CHECK_ERR( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
 
 		BufImgCopyRegions_t	regions;
 
@@ -1358,8 +1340,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdCopyImageToBuffer (const Message< GpuMsg::CmdCopyImageToBuffer > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->srcImage and msg->dstBuffer );
@@ -1375,8 +1355,8 @@ namespace PlatformVK
 		SendTo( msg->srcImage, req_src_id );
 		SendTo( msg->srcImage, req_src_descr );
 		
-		CHECK_ERR( req_src_descr->result.Get().usage.Get( EImageUsage::TransferSrc ) );
-		CHECK_ERR( req_dst_descr->result.Get().usage.Get( EBufferUsage::TransferDst ) );
+		CHECK_ERR( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
+		CHECK_ERR( req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
 
 		BufImgCopyRegions_t	regions;
 
@@ -1418,8 +1398,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBlitImage (const Message< GpuMsg::CmdBlitImage > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->srcImage and msg->dstImage );
@@ -1435,8 +1413,8 @@ namespace PlatformVK
 		SendTo( msg->srcImage, req_src_descr );
 		SendTo( msg->dstImage, req_dst_descr );
 		
-		CHECK_ERR( req_src_descr->result.Get().usage.Get( EImageUsage::TransferSrc ) );
-		CHECK_ERR( req_dst_descr->result.Get().usage.Get( EImageUsage::TransferDst ) );
+		CHECK_ERR( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
+		CHECK_ERR( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
 
 		ImgBlitRegions_t	regions;
 
@@ -1483,8 +1461,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < 65536_b );
@@ -1496,7 +1472,7 @@ namespace PlatformVK
 		SendTo( msg->dstBuffer, req_id );
 		SendTo( msg->dstBuffer, req_descr );
 		
-		CHECK_ERR( req_descr->result.Get().usage.Get( EBufferUsage::TransferDst ) );
+		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
 		
 		_resources.Add( msg->dstBuffer );
 
@@ -1515,8 +1491,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdFillBuffer (const Message< GpuMsg::CmdFillBuffer > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->dstBuffer );
@@ -1528,7 +1502,7 @@ namespace PlatformVK
 		SendTo( msg->dstBuffer, req_id );
 		SendTo( msg->dstBuffer, req_descr );
 		
-		CHECK_ERR( req_descr->result.Get().usage.Get( EBufferUsage::TransferDst ) );
+		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
 		
 		_resources.Add( msg->dstBuffer );
 
@@ -1547,8 +1521,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdClearAttachments (const Message< GpuMsg::CmdClearAttachments > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 
@@ -1595,8 +1567,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->image );
@@ -1608,7 +1578,7 @@ namespace PlatformVK
 		SendTo( msg->image, req_id );
 		SendTo( msg->image, req_descr );
 		
-		CHECK_ERR( req_descr->result.Get().usage.Get( EImageUsage::TransferDst ) );
+		CHECK_ERR( req_descr->result->usage[ EImageUsage::TransferDst ] );
 
 		ImageRanges_t		ranges;
 		VkClearColorValue	clear_value;
@@ -1646,8 +1616,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdClearDepthStencilImage (const Message< GpuMsg::CmdClearDepthStencilImage > &msg)
 	{
-		using namespace vk;
-
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->image );
@@ -1659,7 +1627,7 @@ namespace PlatformVK
 		SendTo( msg->image, req_id );
 		SendTo( msg->image, req_descr );
 		
-		CHECK_ERR( req_descr->result.Get().usage.Get( EImageUsage::TransferDst ) );
+		CHECK_ERR( req_descr->result->usage[ EImageUsage::TransferDst ] );
 
 		ImageRanges_t				ranges;
 		VkClearDepthStencilValue	clear_value;
@@ -1699,8 +1667,9 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &msg)
 	{
-		using namespace vk;
-		
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command );
+
 		MemoryBarriers_t		mem_barriers;
 		ImageMemoryBarriers_t	img_barriers;
 		BufferMemoryBarriers_t	buf_barriers;
@@ -1794,8 +1763,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CreateCmdBufferPool ()
 	{
-		using namespace vk;
-
 		CHECK_ERR( not _IsCreated() );
 
 		VkCommandPoolCreateInfo		pool_info	= {};
@@ -1803,7 +1770,7 @@ namespace PlatformVK
 		pool_info.queueFamilyIndex	= GetDevice()->GetQueueIndex();
 		pool_info.flags				= VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-		VK_CHECK( vkCreateCommandPool( GetLogicalDevice(), &pool_info, null, OUT &_cmdPool ) );
+		VK_CHECK( vkCreateCommandPool( GetVkDevice(), &pool_info, null, OUT &_cmdPool ) );
 
 		GetDevice()->SetObjectName( _cmdPool, GetDebugName(), EGpuObject::CommandPool );
 		return true;
@@ -1816,9 +1783,7 @@ namespace PlatformVK
 */
 	void Vk1CommandBuilder::_DestroyCmdBufferPool ()
 	{
-		using namespace vk;
-
-		auto	dev = GetLogicalDevice();
+		auto	dev = GetVkDevice();
 
 		if ( dev != VK_NULL_HANDLE and _cmdPool != VK_NULL_HANDLE )
 		{
@@ -1854,6 +1819,28 @@ namespace PlatformVK
 		// TODO
 		return true;
 	}
+	
+/*
+=================================================
+	_CheckGraphicsWritableResources
+=================================================
+*/
+	bool Vk1CommandBuilder::_CheckGraphicsWritableResources ()
+	{
+		// TODO
+		return true;
+	}
+	
+/*
+=================================================
+	_CheckComputeWritableResources
+=================================================
+*/
+	bool Vk1CommandBuilder::_CheckComputeWritableResources ()
+	{
+		// TODO
+		return true;
+	}
 
 /*
 =================================================
@@ -1871,15 +1858,15 @@ namespace PlatformVK
 =================================================
 */
 	bool Vk1CommandBuilder::_CheckCompatibility (const FramebufferDescriptor &fb,
-													   const RenderPassDescriptor &rp) const
+												 const RenderPassDescriptor &rp) const
 	{
 		CHECK_ERR( fb.colorAttachments.Count() == rp.ColorAttachments().Count() );
 		CHECK_ERR( fb.depthStencilAttachment.IsEnabled() == rp.DepthStencilAttachment().IsEnabled() );
 
 		FOR( i, fb.colorAttachments )
 		{
-			CHECK_ERR( fb.colorAttachments[i].target == 
-							ERenderTarget::FromPixelFormat( rp.ColorAttachments()[i].format, uint(i) ) );
+			//CHECK_ERR( fb.colorAttachments[i].imageType == 
+			//				ERenderTarget::FromPixelFormat( rp.ColorAttachments()[i].format, uint(i) ) );
 
 			CHECK_ERR( EImage::IsMultisampled( fb.colorAttachments[i].imageType ) ==
 							(rp.ColorAttachments()[i].samples > MultiSamples(1)) );
@@ -1887,8 +1874,8 @@ namespace PlatformVK
 
 		if ( fb.depthStencilAttachment.IsEnabled() )
 		{
-			CHECK_ERR( fb.depthStencilAttachment.target == 
-							ERenderTarget::FromPixelFormat( rp.DepthStencilAttachment().format ) );
+			//CHECK_ERR( fb.depthStencilAttachment.imageType == 
+			//				ERenderTarget::FromPixelFormat( rp.DepthStencilAttachment().format ) );
 
 			CHECK_ERR( EImage::IsMultisampled( fb.depthStencilAttachment.imageType ) ==
 							(rp.DepthStencilAttachment().samples > MultiSamples(1)) );
@@ -1902,7 +1889,7 @@ namespace PlatformVK
 	
 namespace Platforms
 {
-	ModulePtr VulkanContext::_CreateVk1CommandBuilder (const GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
+	ModulePtr VulkanContext::_CreateVk1CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
 	{
 		return New< PlatformVK::Vk1CommandBuilder >( gs, ci );
 	}

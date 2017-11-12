@@ -109,9 +109,9 @@ namespace GXTypes
 	// types
 	public:
 		typedef TString<T,S,MC>		Self;
-		typedef S					Strategy;
+		typedef S					Strategy_t;
 		typedef MC					MemoryContainer_t;
-		typedef T					value_t;
+		typedef T					Value_t;
 
 
 	// variables
@@ -482,7 +482,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline TString<T,S,MC>::TString (const int value): _size(0), _length(0)
+	inline TString<T,S,MC>::TString (const int value): _length(0), _size(0)
 	{
 		FormatI( value, GlobalConst::STL_StringDefaultRadix );
 	}
@@ -493,7 +493,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline TString<T,S,MC>::TString (const uint uValue): _size(0), _length(0)
+	inline TString<T,S,MC>::TString (const uint uValue): _length(0), _size(0)
 	{
 		FormatI( uValue, GlobalConst::STL_StringDefaultRadix );
 	}
@@ -504,7 +504,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline TString<T,S,MC>::TString (const ilong value): _size(0), _length(0)
+	inline TString<T,S,MC>::TString (const ilong value): _length(0), _size(0)
 	{
 		FormatI( value, GlobalConst::STL_StringDefaultRadix );
 	}
@@ -515,7 +515,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline TString<T,S,MC>::TString (const ulong value): _size(0), _length(0)
+	inline TString<T,S,MC>::TString (const ulong value): _length(0), _size(0)
 	{
 		FormatI( value, GlobalConst::STL_StringDefaultRadix );
 	}
@@ -526,7 +526,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline TString<T,S,MC>::TString (const float fValue): _size(0), _length(0)
+	inline TString<T,S,MC>::TString (const float fValue): _length(0), _size(0)
 	{
 		FormatF( fValue, StringFormatF().Fmt<float>().CutZeros() );
 	}
@@ -537,7 +537,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline TString<T,S,MC>::TString (const double dValue): _size(0), _length(0)
+	inline TString<T,S,MC>::TString (const double dValue): _length(0), _size(0)
 	{
 		FormatF( dValue, StringFormatF().Fmt<double>().CutZeros() );
 	}
@@ -577,7 +577,7 @@ namespace GXTypes
 			return;
 		}
 
-		Strategy::Replace( _memory.Pointer(), old_memcont.Pointer(), old_count );
+		Strategy_t::Replace( _memory.Pointer(), old_memcont.Pointer(), old_count );
 
 		_length = old_count - 1;
 	}
@@ -665,7 +665,7 @@ namespace GXTypes
 
 		_length += str.Length();
 
-		Strategy::Copy( _memory.Pointer() + u_old, str.ptr(), str.Length() );
+		Strategy_t::Copy( _memory.Pointer() + u_old, str.ptr(), str.Length() );
 		_memory.Pointer()[_length] = 0;
 	}
 	
@@ -751,7 +751,7 @@ namespace GXTypes
 
 		_length = GXMath::Min( _size-1, str.Length() );
 
-		Strategy::Copy( _memory.Pointer(), str.ptr(), _length );
+		Strategy_t::Copy( _memory.Pointer(), str.ptr(), _length );
 
 		_memory.Pointer()[_length] = 0;
 	}
@@ -828,19 +828,19 @@ namespace GXTypes
 
 			_length = GXMath::Min( _size-1, _length );
 
-			Strategy::Replace( _memory.Pointer(), old_memcont.Pointer(), pos );
-			Strategy::Replace( _memory.Pointer() + pos + str.Length(), old_memcont.Pointer() + pos, _length - str.Length() - pos );
+			Strategy_t::Replace( _memory.Pointer(), old_memcont.Pointer(), pos );
+			Strategy_t::Replace( _memory.Pointer() + pos + str.Length(), old_memcont.Pointer() + pos, _length - str.Length() - pos );
 		}
 		else
 		{
 			// TODI: optimize
 			isize	i_temp = pos + str.Length();
 			for (isize i = _length; i >= i_temp; --i) {
-				Strategy::Replace( _memory.Pointer() + i, _memory.Pointer() + i - str.Length(), 1 );
+				Strategy_t::Replace( _memory.Pointer() + i, _memory.Pointer() + i - str.Length(), 1, true );
 			}
 		}
 
-		Strategy::Copy( _memory.Pointer() + pos, str.ptr(), str.Length() );
+		Strategy_t::Copy( _memory.Pointer() + pos, str.ptr(), str.Length() );
 		_memory.Pointer()[_length] = 0;
 	}
 	
@@ -872,8 +872,9 @@ namespace GXTypes
 		_length -= count;
 
 		for (usize i = 0; i < _length - pos; ++i) {
-			Strategy::Replace( _memory.Pointer() + pos + i, _memory.Pointer() + pos + count + i, 1 );
+			Strategy_t::Replace( _memory.Pointer() + pos + i, _memory.Pointer() + pos + count + i, 1, true );
 		}
+		_memory.Pointer()[_length] = 0;
 	}
 	
 /*
@@ -918,8 +919,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline void TString<T,S,MC>::Reserve (usize length)
 	{
-		usize	size		= length + 1;
-		bool	was_empty	= Empty();
+		usize	size = length + 1;
 
 		if ( size > _memory.MaxSize() )
 			size = _memory.MaxSize();
@@ -928,9 +928,7 @@ namespace GXTypes
 			return;
 
 		_Reallocate( size, false );
-
-		if ( was_empty )
-			_memory.Pointer()[_length] = 0;
+		_memory.Pointer()[_length] = 0;
 	}
 	
 /*
@@ -1139,7 +1137,7 @@ namespace GXTypes
 
 		if ( _Count() < align )
 		{
-			Strategy::Replace( _memory.Pointer() + align - _Count(), _memory.Pointer(), _Count() );
+			Strategy_t::Replace( _memory.Pointer() + align - _Count(), _memory.Pointer(), _Count(), true );
 		
 			for (uint i = 0; i < align - _Count(); ++i)
 			{
@@ -1147,6 +1145,7 @@ namespace GXTypes
 			}
 			_length = align-1;
 		}
+		_memory.Pointer()[_length] = 0;
 		return *this;
 	}
 	
@@ -1352,13 +1351,13 @@ namespace GXTypes
 	struct Hash< TString<T,S,MC> > :
 		private Hash< ArrayCRef<T> >
 	{
-		typedef TString<T,S,MC>				key_t;
-		typedef Hash< ArrayCRef<T> >		base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef TString<T,S,MC>				Key_t;
+		typedef Hash< ArrayCRef<T> >		Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x );
+			return Base_t::operator ()( x );
 		}
 	};
 

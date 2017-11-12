@@ -24,8 +24,8 @@ namespace Platforms
 															uint patchControlPoints,
 															uint subpass) :
 		vertexInput(vertexInput),		renderState(renderState),
-		layout(layout),					fragOutput(fragOutput),
-		dynamicStates(dynamicStates),	patchControlPoints(patchControlPoints),
+		dynamicStates(dynamicStates),	fragOutput(fragOutput),
+		layout(layout),					patchControlPoints(patchControlPoints),
 		subpass(subpass)
 	{}
 //-----------------------------------------------------------------------------
@@ -37,12 +37,12 @@ namespace Platforms
 	constructor
 =================================================
 */
-	ComputePipelineDescriptor::ComputePipelineDescriptor (UninitializedType) :
-		subpass(0)
+	ComputePipelineDescriptor::ComputePipelineDescriptor (UninitializedType)
 	{}
 
-	ComputePipelineDescriptor::ComputePipelineDescriptor (const PipelineLayoutDescriptor &layout, uint subpass) :
-		layout(layout), subpass(subpass)
+	ComputePipelineDescriptor::ComputePipelineDescriptor (const PipelineLayoutDescriptor &layout,
+														  const uint3 &localGroupSize) :
+		layout(layout), localGroupSize(localGroupSize)
 	{}
 //-----------------------------------------------------------------------------
 	
@@ -66,6 +66,16 @@ namespace Platforms
 	void PipelineTemplateDescriptor::ShaderSource::StringGLSL (StringCRef data)
 	{
 		src[ ESource::GLSL ].Create2( String(data) );
+	}
+	
+/*
+=================================================
+	StringCL
+=================================================
+*/
+	void PipelineTemplateDescriptor::ShaderSource::StringCL (StringCRef data)
+	{
+		src[ ESource::OpenCL ].Create2( String(data) );
 	}
 
 /*
@@ -105,6 +115,16 @@ namespace Platforms
 		StringSPIRV( str );
 		return true;
 	}
+	
+/*
+=================================================
+	FuncSW
+=================================================
+*/
+	void PipelineTemplateDescriptor::ShaderSource::FuncSW (const SWInvoke &func)
+	{
+		src[ ESource::SoftRenderer ].Create( func );
+	}
 
 /*
 =================================================
@@ -118,7 +138,7 @@ namespace Platforms
 		if ( data.Is< String >() )
 			return data.Get< String >();
 
-		RETURN_ERR( "no glsl source!" );
+		RETURN_ERR( "no GLSL source!" );
 	}
 	
 /*
@@ -133,7 +153,38 @@ namespace Platforms
 		if ( data.Is< Array<uint> >() )
 			return data.Get< Array<uint> >();
 
-		RETURN_ERR( "no spir-v binary!" );
+		RETURN_ERR( "no SPIR-V binary!" );
+	}
+		
+/*
+=================================================
+	GetCL
+=================================================
+*/
+	StringCRef  PipelineTemplateDescriptor::ShaderSource::GetCL () const
+	{
+		const auto&		data = src[ ESource::OpenCL ];
+
+		if ( data.Is< String >() )
+			return data.Get< String >();
+
+		RETURN_ERR( "no CL source" );
+	}
+	
+/*
+=================================================
+	GetSW
+=================================================
+*/
+	PipelineTemplateDescriptor::ShaderSource::SWInvoke
+		PipelineTemplateDescriptor::ShaderSource::GetSW () const
+	{
+		const auto&		data = src[ ESource::SoftRenderer ];
+
+		if ( data.Is< SWInvoke >() )
+			return data.Get< SWInvoke >();
+
+		RETURN_ERR( "no SW function" );
 	}
 
 }	// Platforms

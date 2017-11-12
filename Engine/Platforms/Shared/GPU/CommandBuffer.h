@@ -68,11 +68,6 @@ namespace CreateInfo
 namespace GpuMsg
 {
 
-	// platform-dependent
-	struct GetVkCommandBufferID;
-	struct GetVkCommandPoolID;
-
-
 	//
 	// Get Command Buffer Descriptor
 	//
@@ -126,7 +121,7 @@ namespace GpuMsg
 	//
 	struct SetCommandBufferDependency
 	{
-		SingleRead< Set<ModulePtr> >	resources;
+		ReadOnce< Set<ModulePtr> >		resources;
 	};
 
 
@@ -138,22 +133,14 @@ namespace GpuMsg
 	// types
 		struct Viewport : CompileTime::PODStruct
 		{
-			GXMath::uint2	offset;
-			GXMath::uint2	size;
+			GXMath::RectU	rect;
 			GXMath::float2	depthRange;
 
-			Viewport (const GXMath::uint2 &offset, const GXMath::uint2 &size, const GXMath::float2 &depth) :
-				offset(offset), size(size), depthRange(depth)
-			{}
-
-			Viewport (const GXMath::RectU &rect, const GXMath::float2 &depth) :
-				offset( rect.LeftBottom() ),
-				size( rect.Size() ),
-				depthRange( depth )
-			{}
+			Viewport () {}
+			Viewport (const GXMath::RectU &rect, const GXMath::float2 &depth) : rect(rect), depthRange(depth) {}
 		};
 
-		using Viewports_t	= FixedSizeArray< Viewport, GlobalConst::Graphics_MaxColorBuffers >;
+		using Viewports_t	= FixedSizeArray< Viewport, GlobalConst::Graphics_MaxViewports >;
 
 
 	// variables
@@ -161,12 +148,11 @@ namespace GpuMsg
 		uint			firstViewport	= 0;
 
 	// methods
-		CmdSetViewport (const GXMath::uint2 &offset,
-						const GXMath::uint2 &size,
+		CmdSetViewport (const GXMath::RectU &rect,
 						const GXMath::float2 &depthRange,
 						uint firstViewport = 0)
 		{
-			viewports.PushBack( Viewport( offset, size, depthRange ) );
+			viewports.PushBack( Viewport( rect, depthRange ) );
 			this->firstViewport = firstViewport;
 		}
 
@@ -182,7 +168,7 @@ namespace GpuMsg
 	struct CmdSetScissor
 	{
 	// types
-		using Scissors_t	= FixedSizeArray< GXMath::RectU, GlobalConst::Graphics_MaxColorBuffers >;
+		using Scissors_t	= FixedSizeArray< GXMath::RectU, GlobalConst::Graphics_MaxViewports >;
 
 	// variables
 		Scissors_t		scissors;
@@ -275,8 +261,14 @@ namespace GpuMsg
 	//
 	struct CmdBegin
 	{
+	// variables
 		bool							isSecondary		= false;
 		ModulePtr						targetCmdBuffer	= null;
+
+	// methods
+		CmdBegin () {}
+		explicit CmdBegin (bool secondary) : isSecondary(secondary) {}
+		explicit CmdBegin (const ModulePtr &target) : targetCmdBuffer(target) {}
 	};
 
 
@@ -307,17 +299,14 @@ namespace GpuMsg
 		};
 
 		using ClearValue_t	= Union< GXMath::float4, GXMath::uint4, GXMath::int4, DepthStencil >;
-		using ClearValues_t	= FixedSizeArray< ClearValue_t, GlobalConst::Graphics_MaxColorBuffers >;
+		using ClearValues_t	= FixedSizeArray< ClearValue_t, GlobalConst::Graphics_MaxColorBuffers+1 >;
 
 	// variables
 		ModulePtr		renderPass;
 		ModulePtr		framebuffer;
 		GXMath::RectU	area;
-		ClearValues_t	clearValues;
+		ClearValues_t	clearValues;	// TODO: map names to indices ?
 	};
-	
-	// platform-dependent
-	struct CmdBeginRenderPassID;
 
 
 	//
@@ -348,10 +337,6 @@ namespace GpuMsg
 	{
 		ModulePtr	pipeline;
 	};
-	
-	// platform-dependent
-	struct CmdBindGraphicsPipelineID;
-	struct CmdBindComputePipelineID;
 
 
 	//
@@ -367,10 +352,14 @@ namespace GpuMsg
 		Buffers_t		vertexBuffers;
 		Offsets_t		offsets;
 		uint			firstBinding	= 0;
+
+	// methods
+		explicit CmdBindVertexBuffers (const ModulePtr &vb, BytesUL off = Uninitialized)
+		{
+			vertexBuffers.PushBack( vb );
+			offsets.PushBack( off );
+		}
 	};
-	
-	// platform-dependent
-	struct CmdBindVertexBufferIDs;
 
 
 	//
@@ -378,13 +367,19 @@ namespace GpuMsg
 	//
 	struct CmdBindIndexBuffer
 	{
-		ModulePtr					indexBuffer;
-		BytesUL						offset;
-		Platforms::EIndex::type		indexType;
+	// types
+		using EIndex	= Platforms::EIndex;
+
+	// variables
+		ModulePtr		indexBuffer;
+		BytesUL			offset;
+		EIndex::type	indexType		= EIndex::Unknown;
+
+	// methods
+		CmdBindIndexBuffer (const ModulePtr &ib, EIndex::type type, BytesUL off = Uninitialized) :
+			indexBuffer(ib), offset(off), indexType(type)
+		{}
 	};
-	
-	// platform-dependent
-	struct CmdBindIndexBufferID;
 
 
 	//
@@ -414,7 +409,7 @@ namespace GpuMsg
 	// variables
 		uint	indexCount;
 		uint	instanceCount;
-		uint	firstVertex;
+		uint	firstIndex;
 		int		vertexOffset;
 		uint	firstInstance;
 
@@ -422,11 +417,11 @@ namespace GpuMsg
 		explicit
 		CmdDrawIndexed (uint indexCount,
 						uint instanceCount	= 1,
-						uint firstVertex	= 0,
+						uint firstIndex		= 0,
 						int  vertexOffset	= 0,
 						uint firstInstance	= 0) :
 			indexCount(indexCount),		instanceCount(instanceCount),
-			firstVertex(firstVertex),	vertexOffset(vertexOffset),
+			firstIndex(firstIndex),		vertexOffset(vertexOffset),
 			firstInstance(firstInstance)
 		{}
 	};
@@ -446,10 +441,6 @@ namespace GpuMsg
 		uint		drawCount;
 		BytesU		stride;
 	};
-	
-	// platform-dependent
-	struct CmdDrawIndirectID;
-	struct CmdDrawIndexedIndirectID;
 
 
 	//
@@ -465,9 +456,6 @@ namespace GpuMsg
 		ModulePtr		indirectBuffer;
 		BytesU			offset;
 	};
-	
-	struct CmdDispatchID;
-	struct CmdDispatchIndirectID;
 
 
 	//
@@ -481,9 +469,6 @@ namespace GpuMsg
 	// variables
 		CmdBuffers_t	cmdBuffers;
 	};
-	
-	// platform-dependent
-	struct CmdExecuteID;
 
 
 	//
@@ -517,7 +502,8 @@ namespace GpuMsg
 
 		// methods
 			Region () {}
-			Region (BytesUL srcOffset, BytesUL dstOffset, BytesUL size) {}
+			Region (BytesU srcOffset, BytesU dstOffset, BytesU size) : srcOffset(srcOffset), dstOffset(dstOffset), size(size) {}
+			Region (BytesUL srcOffset, BytesUL dstOffset, BytesUL size) : srcOffset(srcOffset), dstOffset(dstOffset), size(size) {}
 		};
 
 		using Regions_t	= FixedSizeArray< Region, 8 >;
@@ -617,7 +603,7 @@ namespace GpuMsg
 		{
 			// src
 			BytesUL		bufferOffset;
-			uint		bufferRowLength;
+			uint		bufferRowLength;		// TODO: bytes?
 			uint		bufferImageHeight;
 			// dst
 			ImageLayers	imageLayers;
@@ -753,23 +739,33 @@ namespace GpuMsg
 	struct CmdClearAttachments
 	{
 	// types
-		using EImageAspect	= Platforms::EImageAspect;
-		using ClearValue_t	= CmdBeginRenderPass::ClearValue_t;
-		using ImgArrLayer	= Platforms::ImgArrLayer;
-		using RectU			= GXMath::RectU;
+		using EImageAspect		= Platforms::EImageAspect;
+		using DepthStencil_t	= CmdBeginRenderPass::DepthStencil;
+		using ClearValue_t		= CmdBeginRenderPass::ClearValue_t;
+		using ImgArrLayer		= Platforms::ImgArrLayer;
+		using RectU				= GXMath::RectU;
 
 		struct Attachment : CompileTime::PODStruct
 		{
 			EImageAspect::bits	aspectMask;
-			uint				attachmentIdx;
+			uint				attachmentIdx	= 0;
 			ClearValue_t		clearValue;
+
+			Attachment () {}
+			Attachment (EImageAspect::bits aspect, uint idx, const GXMath::float4 &color) : aspectMask(aspect), attachmentIdx(idx), clearValue(color) {}
+			Attachment (EImageAspect::bits aspect, uint idx, const GXMath::int4 &color) : aspectMask(aspect), attachmentIdx(idx), clearValue(color) {}
+			Attachment (EImageAspect::bits aspect, uint idx, const GXMath::uint4 &color) : aspectMask(aspect), attachmentIdx(idx), clearValue(color) {}
+			Attachment (EImageAspect::bits aspect, uint idx, float depth, uint stencil) : aspectMask(aspect), attachmentIdx(idx), clearValue(DepthStencil_t{depth, stencil}) {}
 		};
 
 		struct ClearRect : CompileTime::PODStruct
 		{
 			RectU			rect;
 			ImgArrLayer		baseLayer;
-			uint			layerCount;
+			uint			layerCount	= 1;
+
+			ClearRect () {}
+			ClearRect (const RectU &rect, ImgArrLayer layer = ImgArrLayer(0), uint count = 1) : rect(rect), baseLayer(layer), layerCount(count) {}
 		};
 
 		using Attachments_t		= FixedSizeArray< Attachment, GlobalConst::Graphics_MaxColorBuffers >;
@@ -779,6 +775,9 @@ namespace GpuMsg
 	// variables
 		Attachments_t	attachments;
 		ClearRects_t	clearRects;
+
+	// methods
+		CmdClearAttachments () {}
 	};
 
 
@@ -807,11 +806,11 @@ namespace GpuMsg
 			ImageRange () {}
 
 			explicit ImageRange (EImageAspect::bits aspect, MipmapLevel mip = Uninitialized, ImgArrLayer layer = Uninitialized) :
-				aspectMask(aspect), baseMipLevel(mip), levelCount(1), baseLayer(layer), layerCount(1)
+				aspectMask(aspect), baseMipLevel(mip), baseLayer(layer), levelCount(1), layerCount(1)
 			{}
 			
 			ImageRange (EImageAspect::bits aspect, MipmapLevel baseMipLevel, uint levelCount, ImgArrLayer baseLayer, uint layerCount) :
-				aspectMask(aspect), baseMipLevel(baseMipLevel), levelCount(levelCount), baseLayer(baseLayer), layerCount(layerCount)
+				aspectMask(aspect), baseMipLevel(baseMipLevel), baseLayer(baseLayer), levelCount(levelCount), layerCount(layerCount)
 			{}
 		};
 		using Ranges_t		= FixedSizeArray< ImageRange, 16 >;

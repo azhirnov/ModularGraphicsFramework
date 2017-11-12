@@ -28,22 +28,22 @@ namespace GXScript
 		template <typename T>
 		struct BaseVecCtors
 		{
-			static void Ctor1 (void *mem, typename T::value_t value)
+			static void Ctor1 (void *mem, typename T::Value_t value)
 			{
 				new( mem ) T( value );
 			}
 			
-			static void Ctor2 (void *mem, Vec< typename T::value_t, 2 > value)
+			static void Ctor2 (void *mem, Vec< typename T::Value_t, 2 > value)
 			{
 				new( mem ) T( value );
 			}
 			
-			static void Ctor3 (void *mem, Vec< typename T::value_t, 3 > value)
+			static void Ctor3 (void *mem, Vec< typename T::Value_t, 3 > value)
 			{
 				new( mem ) T( value );
 			}
 			
-			static void Ctor4 (void *mem, Vec< typename T::value_t, 4 > value)
+			static void Ctor4 (void *mem, Vec< typename T::Value_t, 4 > value)
 			{
 				new( mem ) T( value );
 			}
@@ -60,11 +60,11 @@ namespace GXScript
 			
 			static void Init (ClassBinder< Vec< T, 2 > > &binder)
 			{
-				typedef Vec< T, 2 >	vec_t;
-				typedef T			value_t;
+				typedef Vec< T, 2 >	Vec_t;
+				typedef T			Value_t;
 
-				binder.AddProperty( &vec_t::x, "x" );
-				binder.AddProperty( &vec_t::y, "y" );
+				binder.AddProperty( &Vec_t::x, "x" );
+				binder.AddProperty( &Vec_t::y, "y" );
 
 				binder.AddConstructor( &Ctor1 );
 				binder.AddConstructor( &Ctor3 );
@@ -89,12 +89,12 @@ namespace GXScript
 
 			static void Init (ClassBinder< Vec< T, 3 > > &binder)
 			{
-				typedef Vec< T, 3 >	vec_t;
-				typedef T			value_t;
+				typedef Vec< T, 3 >	Vec_t;
+				typedef T			Value_t;
 
-				binder.AddProperty( &vec_t::x, "x" );
-				binder.AddProperty( &vec_t::y, "y" );
-				binder.AddProperty( &vec_t::z, "z" );
+				binder.AddProperty( &Vec_t::x, "x" );
+				binder.AddProperty( &Vec_t::y, "y" );
+				binder.AddProperty( &Vec_t::z, "z" );
 
 				binder.AddConstructor( &Ctor1 );
 				binder.AddConstructor( &Ctor2 );
@@ -125,13 +125,13 @@ namespace GXScript
 
 			static void Init (ClassBinder< Vec< T, 4 > > &binder)
 			{
-				typedef Vec< T, 4 >	vec_t;
-				typedef T			value_t;
+				typedef Vec< T, 4 >	Vec_t;
+				typedef T			Value_t;
 
-				binder.AddProperty( &vec_t::x, "x" );
-				binder.AddProperty( &vec_t::y, "y" );
-				binder.AddProperty( &vec_t::z, "z" );
-				binder.AddProperty( &vec_t::w, "w" );
+				binder.AddProperty( &Vec_t::x, "x" );
+				binder.AddProperty( &Vec_t::y, "y" );
+				binder.AddProperty( &Vec_t::z, "z" );
+				binder.AddProperty( &Vec_t::w, "w" );
 
 				binder.AddConstructor( &Ctor1 );
 				binder.AddConstructor( &Ctor2 );
@@ -153,39 +153,39 @@ namespace GXScript
 		template <typename T>
 		void BindVecFloatOperators (ClassBinder<T> &binder)
 		{
-			typedef typename ClassBinder<T>::type			vec_t;
-			typedef typename vec_t::value_t					value_t;
+			typedef typename ClassBinder<T>::type			Vec_t;
+			typedef typename Vec_t::Value_t					Value_t;
 			typedef typename ClassBinder<T>::OperatorBinder	op_t;
 			
 			binder.Operators()
-				.PreInc< vec_t &>()
-				.PreDec< vec_t &>()
-				.PostInc< const vec_t >()
-				.PostDec< const vec_t >()
+				.PreInc< Vec_t &>()
+				.PreDec< Vec_t &>()
+				.PostInc< const Vec_t >()
+				.PostDec< const Vec_t >()
 
-				//.Assign< const vec_t &>()
-				.AddAssign< const vec_t &>()					.AddAssign< const value_t &>()
-				.SubAssign< const vec_t &>()					.SubAssign< const value_t &>()
-				.MulAssign< const vec_t &>()					.MulAssign< const value_t &>()
-				.DivAssign< const vec_t &>()					.DivAssign< const value_t &>()
-				.ModAssign< const vec_t &>()					.ModAssign< const value_t &>()
+				//.Assign< const Vec_t &>()
+				.AddAssign< const Vec_t &>()					.AddAssign< const Value_t &>()
+				.SubAssign< const Vec_t &>()					.SubAssign< const Value_t &>()
+				.MulAssign< const Vec_t &>()					.MulAssign< const Value_t &>()
+				.DivAssign< const Vec_t &>()					.DivAssign< const Value_t &>()
+				.ModAssign< const Vec_t &>()					.ModAssign< const Value_t &>()
 
-				.Add< const vec_t &, const vec_t >()			.Add< const value_t &, const vec_t >()
-				.Sub< const vec_t &, const vec_t >()			.Sub< const value_t &, const vec_t >()
-				.Mul< const vec_t &, const vec_t >()			.Mul< const value_t &, const vec_t >()
-				.Div< const vec_t &, const vec_t >()			.Div< const value_t &, const vec_t >()
-				.Mod< const vec_t &, const vec_t >()			.Mod< const value_t &, const vec_t >()
+				.Add< const Vec_t &, const Vec_t >()			.Add< const Value_t &, const Vec_t >()
+				.Sub< const Vec_t &, const Vec_t >()			.Sub< const Value_t &, const Vec_t >()
+				.Mul< const Vec_t &, const Vec_t >()			.Mul< const Value_t &, const Vec_t >()
+				.Div< const Vec_t &, const Vec_t >()			.Div< const Value_t &, const Vec_t >()
+				.Mod< const Vec_t &, const Vec_t >()			.Mod< const Value_t &, const Vec_t >()
 
-				.BinaryRight( op_t::OP_ADD, static_cast< const vec_t (*) (const value_t&, const vec_t&) >( &operator + ) )
-				.BinaryRight( op_t::OP_SUB, static_cast< const vec_t (*) (const value_t&, const vec_t&) >( &operator - ) )
-				.BinaryRight( op_t::OP_MUL, static_cast< const vec_t (*) (const value_t&, const vec_t&) >( &operator * ) )
-				.BinaryRight( op_t::OP_DIV, static_cast< const vec_t (*) (const value_t&, const vec_t&) >( &operator / ) )
-				.BinaryRight( op_t::OP_MOD, static_cast< const vec_t (*) (const value_t&, const vec_t&) >( &operator % ) )
+				.BinaryRight( op_t::OP_ADD, static_cast< const Vec_t (*) (const Value_t&, const Vec_t&) >( &operator + ) )
+				.BinaryRight( op_t::OP_SUB, static_cast< const Vec_t (*) (const Value_t&, const Vec_t&) >( &operator - ) )
+				.BinaryRight( op_t::OP_MUL, static_cast< const Vec_t (*) (const Value_t&, const Vec_t&) >( &operator * ) )
+				.BinaryRight( op_t::OP_DIV, static_cast< const Vec_t (*) (const Value_t&, const Vec_t&) >( &operator / ) )
+				.BinaryRight( op_t::OP_MOD, static_cast< const Vec_t (*) (const Value_t&, const Vec_t&) >( &operator % ) )
 				
-				.Index( static_cast< const value_t& (vec_t::*)(usize) const >( &vec_t::operator [] ) )
-				.Index( static_cast< value_t& (vec_t::*)(usize) >( &vec_t::operator [] ) )
+				.Index( static_cast< const Value_t& (Vec_t::*)(usize) const >( &Vec_t::operator [] ) )
+				.Index( static_cast< Value_t& (Vec_t::*)(usize) >( &Vec_t::operator [] ) )
 
-				.Equals< const vec_t& >( &CompareVectors )
+				.Equals< const Vec_t& >( &CompareVectors )
 				;
 		}
 
@@ -193,46 +193,46 @@ namespace GXScript
 		template <typename T>
 		void BindVecIntegerOperators (ClassBinder<T> &binder)
 		{
-			typedef typename ClassBinder<T>::type	vec_t;
-			typedef typename vec_t::value_t			value_t;
+			typedef typename ClassBinder<T>::type	Vec_t;
+			typedef typename Vec_t::Value_t			Value_t;
 
 			BindVecFloatOperators( binder );
 			
 			binder.Operators()
-				.Inverse< const vec_t >()
-				.Not< const vec_t >()
+				.Inverse< const Vec_t >()
+				.Not< const Vec_t >()
 
-				.AndAssign< const vec_t &>()					.AndAssign< const value_t &>()
-				.OrAssign< const vec_t &>()						.OrAssign< const value_t &>()
-				.XorAssign< const vec_t &>()					.XorAssign< const value_t &>()
-				.ShiftLeftAssign< const vec_t &>()				.ShiftLeftAssign< const value_t &>()
-				.ShiftRightAssign< const vec_t &>()				.ShiftRightAssign< const value_t &>()
+				.AndAssign< const Vec_t &>()					.AndAssign< const Value_t &>()
+				.OrAssign< const Vec_t &>()						.OrAssign< const Value_t &>()
+				.XorAssign< const Vec_t &>()					.XorAssign< const Value_t &>()
+				.ShiftLeftAssign< const Vec_t &>()				.ShiftLeftAssign< const Value_t &>()
+				.ShiftRightAssign< const Vec_t &>()				.ShiftRightAssign< const Value_t &>()
 
-				.Or< const vec_t &, const vec_t >()				.Or< const value_t &, const vec_t >()
-				.Xor< const vec_t &, const vec_t >()			.Xor< const value_t &, const vec_t >()
-				.ShiftLeft< const vec_t &, const vec_t >()		.ShiftLeft< const value_t &, const vec_t >()
-				.ShiftRight< const vec_t &, const vec_t >()		.ShiftRight< const value_t &, const vec_t >()
+				.Or< const Vec_t &, const Vec_t >()				.Or< const Value_t &, const Vec_t >()
+				.Xor< const Vec_t &, const Vec_t >()			.Xor< const Value_t &, const Vec_t >()
+				.ShiftLeft< const Vec_t &, const Vec_t >()		.ShiftLeft< const Value_t &, const Vec_t >()
+				.ShiftRight< const Vec_t &, const Vec_t >()		.ShiftRight< const Value_t &, const Vec_t >()
 
-				/*.AddR< const value_t &, const vec_t >()
-				.SubR< const value_t &, const vec_t >()
-				.MulR< const value_t &, const vec_t >()
-				.DivR< const value_t &, const vec_t >()
-				.ModR< const value_t &, const vec_t >()
-				.OrR< const value_t &, const vec_t >()
-				.XorR< const value_t &, const vec_t >()
-				.ShiftLeftR< const value_t &, const vec_t >()
-				.ShiftRightR< const value_t &, const vec_t >()*/
+				/*.AddR< const Value_t &, const Vec_t >()
+				.SubR< const Value_t &, const Vec_t >()
+				.MulR< const Value_t &, const Vec_t >()
+				.DivR< const Value_t &, const Vec_t >()
+				.ModR< const Value_t &, const Vec_t >()
+				.OrR< const Value_t &, const Vec_t >()
+				.XorR< const Value_t &, const Vec_t >()
+				.ShiftLeftR< const Value_t &, const Vec_t >()
+				.ShiftRightR< const Value_t &, const Vec_t >()*/
 				;
 		}
 		
 #		define _ADD_METHOD( _name_ ) \
-			binder.AddMethod( &vec_t::_name_, TOSTRING( _name_ ) )
+			binder.AddMethod( &Vec_t::_name_, TOSTRING( _name_ ) )
 
 		template <typename T>
 		void BindVecFloatMethods (ClassBinder<T> &binder)
 		{
-			typedef typename ClassBinder<T>::type	vec_t;
-			typedef typename vec_t::value_t			value_t;
+			typedef typename ClassBinder<T>::type	Vec_t;
+			typedef typename Vec_t::Value_t			Value_t;
 
 			_ADD_METHOD( Length );
 			_ADD_METHOD( LengthSqr );
@@ -260,8 +260,8 @@ namespace GXScript
 		template <typename T>
 		void BindVecIntMethods (ClassBinder<T> &binder)
 		{
-			typedef typename ClassBinder<T>::type	vec_t;
-			typedef typename vec_t::value_t			value_t;
+			typedef typename ClassBinder<T>::type	Vec_t;
+			typedef typename Vec_t::Value_t			Value_t;
 
 			_ADD_METHOD( Sum );
 			_ADD_METHOD( SumAbs );
@@ -277,7 +277,7 @@ namespace GXScript
 #		define _ADD_FUNC( _type_, _name_ ) \
 			se.AddFunction< _type_ >( &_name_, TOSTRING( _name_ ) )
 
-		template <typename T, ubyte I>
+		template <typename T, usize I>
 		static Vec<T,I> ModVec (const Vec<T,I> &left, const Vec<T,I> &right)
 		{
 			return GXMath::Mod<T,T,I>( left, right );
@@ -355,7 +355,7 @@ namespace GXScript
 		template <typename T>
 		void BindVecFloatFuncs (Ptr< AngelScript::asIScriptEngine > eng)
 		{
-			typedef typename T::value_t	V;
+			typedef typename T::Value_t	V;
 			enum { C = T::STATIC_COUNT };
 
 			ScriptEngine	se( eng );
@@ -386,7 +386,7 @@ namespace GXScript
 		template <typename T>
 		void BindVecIntFuncs (Ptr< AngelScript::asIScriptEngine > eng)
 		{
-			typedef typename T::value_t	V;
+			typedef typename T::Value_t	V;
 			enum { C = T::STATIC_COUNT };
 
 			ScriptEngine	se( eng );
@@ -421,12 +421,12 @@ namespace GXScript
 			_ADD_FUNC( T (*)(),						Exp );
 			_ADD_FUNC( T (*)(),						ReciporalPi );
 			
-			typedef Vec<T,2>	vec2_t;
+			typedef Vec<T,2>	Vec2_t;
 
-			_ADD_FUNC( vec2_t (*)(const T &),		SinCos );
-			_ADD_FUNC( vec2_t (*)(const T &),		ASinCos );
-			_ADD_FUNC( vec2_t (*)(const T &),		SinCosH );
-			_ADD_FUNC( vec2_t (*)(const T &),		ASinCosH );
+			_ADD_FUNC( Vec2_t (*)(const T &),		SinCos );
+			_ADD_FUNC( Vec2_t (*)(const T &),		ASinCos );
+			_ADD_FUNC( Vec2_t (*)(const T &),		SinCosH );
+			_ADD_FUNC( Vec2_t (*)(const T &),		ASinCosH );
 
 			_ADD_FUNC( bool (*) (const T&, const T&),					Equals );
 			_ADD_FUNC( bool (*) (const T&, const T&, const uint&),		Equals );
@@ -519,8 +519,8 @@ namespace GXScript
 
 			InitVecFields<T>::Init( binder );
 
-			VecSwitch< CompileTime::IsFloat< typename T::value_t >(),
-						CompileTime::IsSameTypes< typename T::value_t, bool >
+			VecSwitch< CompileTime::IsFloat< typename T::Value_t >(),
+						CompileTime::IsSameTypes< typename T::Value_t, bool >
 					 >::BindVec( binder );
 		}
 

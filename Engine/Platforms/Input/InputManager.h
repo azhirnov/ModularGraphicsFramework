@@ -28,8 +28,8 @@ namespace Platforms
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 		
 	// variables
@@ -39,11 +39,11 @@ namespace Platforms
 
 	// methods
 	public:
-		InputManager (const GlobalSystemsRef gs, const CreateInfo::InputManager &ci);
+		InputManager (GlobalSystemsRef gs, const CreateInfo::InputManager &ci);
 		~InputManager ();
 		
-		static void Register (GlobalSystemsRef);
-		static void Unregister (GlobalSystemsRef);
+		static _ENGINE_PLATFORMS_EXPORT_ void Register (GlobalSystemsRef);
+		static _ENGINE_PLATFORMS_EXPORT_ void Unregister (GlobalSystemsRef);
 
 		
 	// message handlers

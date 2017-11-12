@@ -21,7 +21,7 @@ namespace GXTypes
 	public:
 		typedef MemoryContainer< T, A >		Self;
 		typedef A							Allocator_t;
-		typedef T							value_t;
+		typedef T							Value_t;
 
 
 	// variables
@@ -80,7 +80,11 @@ namespace GXTypes
 				size += (size * nom + den - 1) / den + min_size;
 			}
 
-			return Allocator_t::Allocate( _memory, size ) and size >= required_size;
+			if ( not (Allocator_t::Allocate( _memory, size ) and size >= required_size) )
+				return false;
+
+			DEBUG_ONLY( UnsafeMem::ZeroMem( _memory, BytesU(size) ) );
+			return true;
 		}
 
 
@@ -96,7 +100,7 @@ namespace GXTypes
 		}
 		
 
-		void MoveFrom (INOUT Self &other)
+		void MoveFrom (INOUT Self &other) noexcept
 		{
 			Deallocate();
 
@@ -105,7 +109,7 @@ namespace GXTypes
 		}
 
 
-		void SwapMemory (Self &other)
+		void SwapMemory (Self &other) noexcept
 		{
 			SwapValues( _memory, other._memory );
 		}
@@ -127,7 +131,7 @@ namespace GXTypes
 	// types
 	public:
 		typedef StaticMemoryContainer< T, ArraySize >	Self;
-		typedef T										value_t;
+		typedef T										Value_t;
 
 		static const usize	SIZE = ArraySize;
 
@@ -197,7 +201,7 @@ namespace GXTypes
 		}
 		
 
-		void MoveFrom (INOUT Self &other)
+		void MoveFrom (INOUT Self &other) noexcept
 		{
 			Deallocate();
 
@@ -206,13 +210,13 @@ namespace GXTypes
 		}
 
 
-		void SwapMemory (INOUT Self &other)
+		void SwapMemory (INOUT Self &other) noexcept
 		{
 			TODO( "SwapMemory" );
 
 			ubyte tmp;
 
-			// TODO
+			// TODO: optimize
 			for (usize i = 0; i < sizeof(_buf); ++i)
 			{
 				SwapValuesWithTemp( this->_buf[i], other._buf[i], tmp );
@@ -237,7 +241,7 @@ namespace GXTypes
 	public:
 		typedef MixedMemoryContainer<T,FixedArraySize,A>	Self;
 		typedef A											Allocator_t;
-		typedef T											value_t;
+		typedef T											Value_t;
 
 		static const usize	FIXED_SIZE = FixedArraySize;
 
@@ -318,7 +322,11 @@ namespace GXTypes
 				size += (size * nom + den - 1) / den + min_size;
 			}
 
-			return Allocator_t::Allocate( _memory, size ) and size >= required_size;
+			if ( not (Allocator_t::Allocate( _memory, size ) and size >= required_size) )
+				return false;
+			
+			DEBUG_ONLY( UnsafeMem::ZeroMem( _memory, BytesU(size) ) );
+			return true;
 		}
 
 
@@ -341,7 +349,7 @@ namespace GXTypes
 		}
 		
 
-		void MoveFrom (INOUT Self &other)
+		void MoveFrom (INOUT Self &other) noexcept
 		{
 			Deallocate();
 
@@ -361,7 +369,7 @@ namespace GXTypes
 		}
 
 
-		void SwapMemory (INOUT Self &other)
+		void SwapMemory (INOUT Self &other) noexcept
 		{
 			const bool	this_in_static_mem	= this->_IsInStaticMemory();
 			const bool	other_in_static_mem	= other._IsInStaticMemory();
@@ -376,6 +384,7 @@ namespace GXTypes
 
 			ubyte tmp;
 
+			// TODO: optimize
 			for (usize i = 0; i < sizeof(_buf); ++i)
 			{
 				SwapValuesWithTemp( this->_buf[i], other._buf[i], tmp );

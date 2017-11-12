@@ -27,7 +27,7 @@ namespace gl
 		_retType_ GL4_APIENTRY glDefault##_funcName_ _funcParams_ \
 		{ \
 			using namespace Engine; \
-			LOG( "Used dummy function gl" TOSTRING( _funcName_ ), ELog::Debug ); \
+			LOG( "Used dummy function gl" TOSTRING( _funcName_ ), ELog::Warning ); \
 			return _retValue_; \
 		}
 	

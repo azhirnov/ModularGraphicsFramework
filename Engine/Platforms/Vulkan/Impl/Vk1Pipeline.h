@@ -40,8 +40,8 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -55,15 +55,13 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1GraphicsPipeline (const GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci);
+		Vk1GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci);
 		~Vk1GraphicsPipeline ();
-
-		Descriptor const&		GetDescriptor ()	const	{ return _descr; }
 
 
 	// message handlers
 	private:
-		bool _Compose (const  Message< ModuleMsg::Compose > &);
+		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _GetVkGraphicsPipelineID (const Message< GpuMsg::GetVkGraphicsPipelineID > &);
 		bool _GetGraphicsPipelineDescriptor (const Message< GpuMsg::GetGraphicsPipelineDescriptor > &);
@@ -75,6 +73,7 @@ namespace PlatformVK
 		bool _IsCreated () const;
 		bool _CreatePipeline ();
 		void _DestroyPipeline ();
+		bool _ValidateRenderPass () const;
 	};
 	
 
@@ -102,8 +101,8 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -116,13 +115,13 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1ComputePipeline (const GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
+		Vk1ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
 		~Vk1ComputePipeline ();
 
 
 	// message handlers
 	private:
-		bool _Compose (const  Message< ModuleMsg::Compose > &);
+		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _GetVkComputePipelineID (const Message< GpuMsg::GetVkComputePipelineID > &);
 		bool _GetComputePipelineDescriptor (const Message< GpuMsg::GetComputePipelineDescriptor > &);

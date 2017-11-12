@@ -15,7 +15,7 @@ namespace OS
 	// Random Device
 	//
 
-	struct PlatformRandomDevice
+	struct _STL_EXPORT_ PlatformRandomDevice
 	{
 	// types
 	private:

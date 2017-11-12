@@ -22,6 +22,7 @@
     <ClCompile Include="..\..\..\Tests\STL\Main.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Algorithms_InvokeWithVariant.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_MainType.cpp" />
+    <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_Map.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_Sequence.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_StaticFloat.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_StringToID.cpp" />
@@ -30,9 +31,11 @@
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_TypeList.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_TypeQualifier.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_TypeTraits.cpp" />
+    <ClCompile Include="..\..\..\Tests\STL\Test_Containers_Adaptors.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Containers_Array.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Containers_CircularQueue.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Containers_HashSet.cpp" />
+    <ClCompile Include="..\..\..\Tests\STL\Test_Containers_IndexedArray.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Containers_List.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Containers_Map.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Containers_Queue.cpp" />
@@ -148,7 +151,6 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -170,7 +172,6 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>true</FloatingPointExceptions>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -180,7 +181,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -201,7 +202,6 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>
@@ -214,7 +214,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -235,7 +235,6 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>

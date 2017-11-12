@@ -21,7 +21,7 @@ namespace Base
 	// Main System
 	//
 
-	class MainSystem final : public Module
+	class _ENGINE_BASE_EXPORT_ MainSystem final : public Module
 	{
 	// types
 	private:
@@ -51,8 +51,8 @@ namespace Base
 		
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -67,7 +67,7 @@ namespace Base
 
 	// methods
 	public:
-		explicit MainSystem (const GlobalSystemsRef gs);
+		explicit MainSystem (GlobalSystemsRef gs);
 		~MainSystem ();
 		
 
@@ -76,8 +76,8 @@ namespace Base
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 
 	private:
-		void _Create ();
-		void _Destroy ();
+		void _Create () noexcept;
+		void _Destroy () noexcept;
 
 		static ModulePtr _CreateThreadManager (GlobalSystemsRef, const CreateInfo::ThreadManager &);
 		static ModulePtr _CreateTaskManager (GlobalSystemsRef, const CreateInfo::TaskManager &);

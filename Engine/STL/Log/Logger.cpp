@@ -1,12 +1,12 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Logger.h"
+#include "Engine/STL/Log/Logger.h"
 #include "Engine/STL/ThreadSafe/Singleton.h"
 #include "Engine/STL/Algorithms/StringParser.h"
 #include "Engine/STL/Math/Rand/Pseudorandom.h"
 #include "Engine/STL/Math/MathTypeCast.h"
 #include "Engine/STL/OS/OSLowLevel.h"
-#include "Engine/STL/Experimental/ScopeSetter.h"
+#include "Engine/STL/Types/ScopeSetter.h"
 
 namespace GX_STL
 {

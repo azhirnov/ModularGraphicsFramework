@@ -12,11 +12,23 @@ namespace GpuMsg
 {
 
 	//
-	// Get Logic Device
+	// Get Device Info
 	//
-	struct GetVkLogicDevice
+	struct GetVkDeviceInfo
 	{
-		Out< vk::VkDevice >			result;
+		struct Info {
+			vk::VkInstance			instance			= VK_NULL_HANDLE;
+			vk::VkPhysicalDevice	physicalDevice		= VK_NULL_HANDLE;
+			vk::VkDevice			logicalDevice		= VK_NULL_HANDLE;
+			vk::VkQueue				graphicsQueue		= VK_NULL_HANDLE;
+			uint					graphicsQueueIndex	= 0;
+			vk::VkQueue				computeQueue		= VK_NULL_HANDLE;
+			uint					computeQueueIndex	= 0;
+			vk::VkQueue				transferQueue		= VK_NULL_HANDLE;
+			uint					transferQueueIndex	= 0;
+		};
+
+		Out< Info >			result;
 	};
 
 
@@ -35,6 +47,15 @@ namespace GpuMsg
 	struct GetVkFramebufferID
 	{
 		Out< vk::VkFramebuffer >	result;
+	};
+
+
+	//
+	// Get GPU Memory ID
+	//
+	struct GetVkMemoryID
+	{
+		Out< vk::VkDeviceMemory >	result;
 	};
 
 
@@ -127,14 +148,15 @@ namespace GpuMsg
 	//
 	struct GetVkShaderModuleIDs
 	{
-		struct ShaderModule
+		struct ShaderModule : CompileTime::PODStruct
 		{
 			StaticString<64>			entry;
-			vk::VkShaderModule			id;
-			Platforms::EShader::type	type;
+			vk::VkShaderModule			id		= 0;
+			Platforms::EShader::type	type	= Platforms::EShader::Unknown;;
 		};
+		using Shaders_t		= FixedSizeArray< ShaderModule, Platforms::EShader::_Count >;
 
-		Out< Array< ShaderModule > >	result;
+		Out< Shaders_t >	result;
 	};
 
 	

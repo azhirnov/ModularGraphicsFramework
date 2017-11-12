@@ -8,15 +8,15 @@ namespace Engine
 namespace Base
 {
 	
-	const Runtime::VirtualTypeList	TaskManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	TaskManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	TaskManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	TaskManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	TaskManager::TaskManager (const GlobalSystemsRef gs, const CreateInfo::TaskManager &info) :
+	TaskManager::TaskManager (GlobalSystemsRef gs, const CreateInfo::TaskManager &) :
 		Module( gs, ModuleConfig{ TaskManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "TaskManager" );
@@ -73,7 +73,7 @@ namespace Base
 	_AddToManager
 =================================================
 */
-	bool TaskManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool TaskManager::_AddToManager (const Message< ModuleMsg::AddToManager > &)
 	{
 		RETURN_ERR( "use 'AddTaskSchedulerToManager' message instead of 'AddToManager'" );
 	}
@@ -111,7 +111,7 @@ namespace Base
 		{
 			ASSERT( _threads[idx].second.module == msg->module );
 
-			_threads.EraseFromIndex( idx );
+			_threads.EraseByIndex( idx );
 		}
 		return true;
 	}
@@ -121,9 +121,10 @@ namespace Base
 	_PushAsyncMessage
 =================================================
 */
-	bool TaskManager::_PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg)
+	bool TaskManager::_PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg) noexcept
 	{
 		SCOPELOCK( _lock );
+		ASSERT( msg.IsAsync() );
 
 		TaskThreads_t::iterator	iter;
 
@@ -162,7 +163,7 @@ namespace Base
 	Register
 =================================================
 */
-	void TaskManager::Register (const GlobalSystemsRef gs)
+	void TaskManager::Register (GlobalSystemsRef gs)
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
@@ -175,7 +176,7 @@ namespace Base
 	Unregister
 =================================================
 */
-	void TaskManager::Unregister (const GlobalSystemsRef gs)
+	void TaskManager::Unregister (GlobalSystemsRef gs)
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
@@ -188,7 +189,7 @@ namespace Base
 	_CreateTaskManager
 =================================================
 */
-	ModulePtr TaskManager::_CreateTaskManager (const GlobalSystemsRef gs, const CreateInfo::TaskManager &ci)
+	ModulePtr TaskManager::_CreateTaskManager (GlobalSystemsRef gs, const CreateInfo::TaskManager &ci)
 	{
 		return New< TaskManager >( gs, ci );
 	}

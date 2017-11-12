@@ -86,6 +86,12 @@
     <ClInclude Include="..\..\..\Engine\Base\Threads\ParallelThreadImpl.h">
       <Filter>Threads</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Modules\Module.inl.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Base\Common\TypeIdList.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">

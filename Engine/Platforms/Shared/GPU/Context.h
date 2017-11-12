@@ -9,10 +9,14 @@
 
 namespace Engine
 {
-namespace CreateInfo
+namespace Platforms
 {
 	DECL_STRING_TO_ID( GAPI, 10 );
 
+}	// Platforms
+
+namespace CreateInfo
+{
 
 	//
 	// GPU Context Create Info
@@ -27,7 +31,6 @@ namespace CreateInfo
 			{
 				DebugContext,
 				NoErrorContext,
-				Stereo,
 				VSync,
 				_Count
 			};
@@ -37,6 +40,7 @@ namespace CreateInfo
 
 		using EPixelFormat	= Platforms::EPixelFormat;
 		using MultiSamples	= Platforms::MultiSamples;
+		using GAPI			= Platforms::GAPI;
 
 
 	// variables
@@ -48,23 +52,22 @@ namespace CreateInfo
 		EPixelFormat::type	depthStencilFmt;
 
 		MultiSamples		samples;
+		uint				swapchainLength;
 
 
 	// methods
-		GpuContext (GX_DEFCTOR) :
-			version( "GL 4.5"_GAPI ),
-			colorFmt( EPixelFormat::RGBA8_UNorm ),
-			depthStencilFmt( EPixelFormat::Depth24 )
+		GpuContext (GAPI::type			version			= GAPI::type(0),
+					EFlags::bits		flags			= EFlags::bits(),
+					EPixelFormat::type	colorFmt		= EPixelFormat::RGBA8_UNorm,
+					EPixelFormat::type	depthStencilFmt	= EPixelFormat::Depth24,
+					MultiSamples		samples			= MultiSamples(),
+					StringCRef			deviceName		= StringCRef(),
+					uint				swapchainLength	= 0) :
+			device{ deviceName },	version{ version },		flags{ flags },
+			colorFmt{ colorFmt },	depthStencilFmt{ depthStencilFmt },
+			samples{ samples },		swapchainLength{ swapchainLength }
 		{}
 	};
 
 }	// CreateInfo
-
-
-namespace GpuMsg
-{
-	
-	struct GetVkLogicDevice;
-
-}	// GpuMsg
 }	// Engine

@@ -17,29 +17,33 @@
 #include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
 #include "Engine/Platforms/Shared/GPU/ImageEnums.h"
 #include "Engine/Platforms/Shared/GPU/VertexEnums.h"
+#include "Engine/Platforms/Shared/GPU/ObjectEnums.h"
 
 namespace Engine
 {
-namespace Platforms
-{
-	class OpenGLThread;
-
-}	// Platforms
-
 namespace PlatformGL
 {
 	using namespace Platforms;
-
-	using GLSubSystems	= EngineSubSystems< "opengl 4"_StringToID >;
-	using GLSystemsRef	= ConstReference< GLSubSystems >;
-
-	class GL4Device;
 	
 	enum GL4InternalPixelFormat {};
 	enum GL4PixelFormat {};
 	enum GL4PixelType {};
 	enum GL4TextureTarget {};
 	enum GL4Shader {};
+	enum GL4ShaderBits {};
+	enum GL4Primitive {};
+	enum GL4Index {};
+	enum GL4VertexAttribType {};
+	enum GL4BlendFunc {};
+	enum GL4BlendEq {};
+	enum GL4LogicOp {};
+	enum GL4CompareFunc {};
+	enum GL4StencilOp {};
+	enum GL4MinFilter {};
+	enum GL4MagFilter {};
+	enum GL4AddressMode {};
+	enum GL4Object {};
+	enum GL4BufferUsage {};
 
 	
 /*
@@ -64,6 +68,36 @@ namespace PlatformGL
 
 /*
 =================================================
+	ShaderBits
+=================================================
+*/
+	inline GL4ShaderBits GL4Enum (EShader::bits values)
+	{
+		gl::GLbitfield	flags = 0;
+
+		FOR( i, values )
+		{
+			const auto	t = EShader::type(i);
+
+			if ( not values[t] )
+				continue;
+
+			switch ( t )
+			{
+				case EShader::Vertex :			flags |= gl::GL_VERTEX_SHADER_BIT;				break;
+				case EShader::TessControl :		flags |= gl::GL_TESS_CONTROL_SHADER_BIT;		break;
+				case EShader::TessEvaluation :	flags |= gl::GL_TESS_EVALUATION_SHADER_BIT;		break;
+				case EShader::Geometry :		flags |= gl::GL_GEOMETRY_SHADER_BIT;			break;
+				case EShader::Fragment :		flags |= gl::GL_FRAGMENT_SHADER_BIT;			break;
+				case EShader::Compute :			flags |= gl::GL_COMPUTE_SHADER_BIT;				break;
+				default :						RETURN_ERR( "invalid shader type", GL4ShaderBits() );
+			}
+		}
+		return GL4ShaderBits(flags);
+	}
+
+/*
+=================================================
 	TextureTarget
 =================================================
 */
@@ -82,7 +116,322 @@ namespace PlatformGL
 			case EImage::Buffer			:	return (GL4TextureTarget) gl::GL_TEXTURE_BUFFER;
 		}
 
-		RETURN_ERR( "invalid texture target", GL4TextureTarget() );
+		RETURN_ERR( "invalid texture type", GL4TextureTarget() );
+	}
+	
+/*
+=================================================
+	Primitive
+=================================================
+*/
+	inline GL4Primitive GL4Enum (EPrimitive::type value)
+	{
+		switch ( value )
+		{
+			case EPrimitive::Point			:	return (GL4Primitive) gl::GL_POINTS;
+			case EPrimitive::LineList		:	return (GL4Primitive) gl::GL_LINES;
+			case EPrimitive::LineStrip		:	return (GL4Primitive) gl::GL_LINE_STRIP;
+			case EPrimitive::TriangleList	:	return (GL4Primitive) gl::GL_TRIANGLES;
+			case EPrimitive::TriangleStrip	:	return (GL4Primitive) gl::GL_TRIANGLE_STRIP;
+			case EPrimitive::Patch			:	return (GL4Primitive) gl::GL_PATCHES;
+		}
+
+		RETURN_ERR( "invalid primitive type", GL4Primitive(0) );
+	}
+
+/*
+=================================================
+	IndexType
+=================================================
+*/
+	inline GL4Index GL4Enum (EIndex::type value)
+	{
+		switch ( value )
+		{
+			case EIndex::UShort	:	return (GL4Index) gl::GL_UNSIGNED_SHORT;
+			case EIndex::UInt	:	return (GL4Index) gl::GL_UNSIGNED_INT;
+		}
+
+		RETURN_ERR( "invalid index type", GL4Index() );
+	}
+
+/*
+=================================================
+	LogicOp
+=================================================
+*/
+	inline GL4LogicOp GL4Enum (ELogicOp::type value)
+	{
+		switch ( value )
+		{
+			case ELogicOp::Clear		: return (GL4LogicOp) gl::GL_CLEAR;
+			case ELogicOp::Set			: return (GL4LogicOp) gl::GL_SET;
+			case ELogicOp::Copy			: return (GL4LogicOp) gl::GL_COPY;
+			case ELogicOp::CopyInverted	: return (GL4LogicOp) gl::GL_COPY_INVERTED;
+			case ELogicOp::Noop			: return (GL4LogicOp) gl::GL_NOOP;
+			case ELogicOp::Invert		: return (GL4LogicOp) gl::GL_INVERT;
+			case ELogicOp::And			: return (GL4LogicOp) gl::GL_AND;
+			case ELogicOp::NotAnd		: return (GL4LogicOp) gl::GL_NAND;
+			case ELogicOp::Or			: return (GL4LogicOp) gl::GL_OR;
+			case ELogicOp::NotOr		: return (GL4LogicOp) gl::GL_NOR;
+			case ELogicOp::Xor			: return (GL4LogicOp) gl::GL_XOR;
+			case ELogicOp::Equiv		: return (GL4LogicOp) gl::GL_EQUIV;
+			case ELogicOp::AndReverse	: return (GL4LogicOp) gl::GL_AND_REVERSE;
+			case ELogicOp::AndInverted	: return (GL4LogicOp) gl::GL_AND_INVERTED;
+			case ELogicOp::OrReverse	: return (GL4LogicOp) gl::GL_OR_REVERSE;
+			case ELogicOp::OrInverted	: return (GL4LogicOp) gl::GL_OR_INVERTED;
+		}
+
+		RETURN_ERR( "invalid logical operation", GL4LogicOp() );
+	}
+
+/*
+=================================================
+	BlendEq
+=================================================
+*/
+	inline GL4BlendEq GL4Enum (EBlendEq::type value)
+	{
+		switch ( value )
+		{
+			case EBlendEq::Add		:	return (GL4BlendEq) gl::GL_FUNC_ADD;
+			case EBlendEq::Sub		:	return (GL4BlendEq) gl::GL_FUNC_SUBTRACT;
+			case EBlendEq::RevSub	:	return (GL4BlendEq) gl::GL_FUNC_REVERSE_SUBTRACT;
+			case EBlendEq::Min		:	return (GL4BlendEq) gl::GL_MIN;
+			case EBlendEq::Max		:	return (GL4BlendEq) gl::GL_MAX;
+		}
+
+		RETURN_ERR( "invalid blend equation", GL4BlendEq() );
+	}
+
+/*
+=================================================
+	BlendFunc
+=================================================
+*/
+	inline GL4BlendFunc GL4Enum (EBlendFunc::type value)
+	{
+		switch ( value )
+		{
+			case EBlendFunc::Zero					:	return (GL4BlendFunc) gl::GL_ZERO;
+			case EBlendFunc::One					:	return (GL4BlendFunc) gl::GL_ONE;
+			case EBlendFunc::SrcColor				:	return (GL4BlendFunc) gl::GL_SRC_COLOR;
+			case EBlendFunc::OneMinusSrcColor		:	return (GL4BlendFunc) gl::GL_ONE_MINUS_SRC_COLOR;
+			case EBlendFunc::DstColor				:	return (GL4BlendFunc) gl::GL_DST_COLOR;
+			case EBlendFunc::OneMinusDstColor		:	return (GL4BlendFunc) gl::GL_ONE_MINUS_DST_COLOR;
+			case EBlendFunc::SrcAlpha				:	return (GL4BlendFunc) gl::GL_SRC_ALPHA;
+			case EBlendFunc::OneMinusSrcAlpha		:	return (GL4BlendFunc) gl::GL_ONE_MINUS_SRC_ALPHA;
+			case EBlendFunc::DstAlpha				:	return (GL4BlendFunc) gl::GL_DST_ALPHA;
+			case EBlendFunc::OneMinusDstAlpha		:	return (GL4BlendFunc) gl::GL_ONE_MINUS_DST_ALPHA;
+			case EBlendFunc::ConstColor				:	return (GL4BlendFunc) gl::GL_CONSTANT_COLOR;
+			case EBlendFunc::OneMinusConstColor		:	return (GL4BlendFunc) gl::GL_ONE_MINUS_CONSTANT_COLOR;
+			case EBlendFunc::ConstAlpha				:	return (GL4BlendFunc) gl::GL_CONSTANT_ALPHA;
+			case EBlendFunc::OneMinusConstAlpha		:	return (GL4BlendFunc) gl::GL_ONE_MINUS_CONSTANT_ALPHA;
+			case EBlendFunc::SrcAlphaSaturate		:	return (GL4BlendFunc) gl::GL_SRC_ALPHA_SATURATE;
+		}
+
+		RETURN_ERR( "invalid blend func", GL4BlendFunc() );
+	}
+	
+/*
+=================================================
+	CompareFunc
+=================================================
+*/
+	inline GL4CompareFunc GL4Enum (ECompareFunc::type value)
+	{
+		switch ( value )
+		{
+			case ECompareFunc::None		:	return (GL4CompareFunc) gl::GL_NONE;
+			case ECompareFunc::Never	:	return (GL4CompareFunc) gl::GL_NEVER;
+			case ECompareFunc::Less		:	return (GL4CompareFunc) gl::GL_LESS;
+			case ECompareFunc::Equal	:	return (GL4CompareFunc) gl::GL_EQUAL;
+			case ECompareFunc::LEqual	:	return (GL4CompareFunc) gl::GL_LEQUAL;
+			case ECompareFunc::Greater	:	return (GL4CompareFunc) gl::GL_GREATER;
+			case ECompareFunc::NotEqual	:	return (GL4CompareFunc) gl::GL_NOTEQUAL;
+			case ECompareFunc::GEqual	:	return (GL4CompareFunc) gl::GL_GEQUAL;
+			case ECompareFunc::Always	:	return (GL4CompareFunc) gl::GL_ALWAYS;
+		}
+
+		RETURN_ERR( "invalid compare function", GL4CompareFunc() );
+	}
+	
+/*
+=================================================
+	StencilOp
+=================================================
+*/
+	inline GL4StencilOp GL4Enum (EStencilOp::type value)
+	{
+		switch ( value )
+		{
+			case EStencilOp::Keep		:	return (GL4StencilOp) gl::GL_KEEP;
+			case EStencilOp::Zero		:	return (GL4StencilOp) gl::GL_ZERO;
+			case EStencilOp::Replace	:	return (GL4StencilOp) gl::GL_REPLACE;
+			case EStencilOp::Incr		:	return (GL4StencilOp) gl::GL_INCR;
+			case EStencilOp::IncrWrap	:	return (GL4StencilOp) gl::GL_INCR_WRAP;
+			case EStencilOp::Decr		:	return (GL4StencilOp) gl::GL_DECR;
+			case EStencilOp::DecrWrap	:	return (GL4StencilOp) gl::GL_DECR_WRAP;
+			case EStencilOp::Invert		:	return (GL4StencilOp) gl::GL_INVERT;
+		}
+
+		RETURN_ERR( "invalid stencil op", GL4StencilOp() );
+	}
+
+/*
+=================================================
+	WrapMode
+=================================================
+*/
+	inline GL4AddressMode GL4Enum (EAddressMode::type value)
+	{
+		switch ( value )
+		{
+			case EAddressMode::Clamp			:	return (GL4AddressMode) gl::GL_CLAMP_TO_EDGE;
+			case EAddressMode::ClampToBorder	:	return (GL4AddressMode) gl::GL_CLAMP_TO_BORDER;
+			case EAddressMode::MirroredRepeat	:	return (GL4AddressMode) gl::GL_MIRRORED_REPEAT;
+			case EAddressMode::Repeat			:	return (GL4AddressMode) gl::GL_REPEAT;
+			case EAddressMode::MirroredClamp	:	return (GL4AddressMode) gl::GL_MIRROR_CLAMP_TO_EDGE;
+		}
+
+		RETURN_ERR( "invalid address mode", GL4AddressMode() );
+	}
+	
+	
+/*
+=================================================
+	Filter
+=================================================
+*/
+	inline bool GL4Enum (EFilter::type value, OUT GL4MinFilter &minFilter, OUT GL4MagFilter &magFilter)
+	{
+		static const uint	min_mask = (EFilter::_MIN_NEAREST | EFilter::_MIN_LINEAR | EFilter::_MIP_NEAREST | EFilter::_MIP_LINEAR);
+		static const uint	mag_mask = (EFilter::_MAG_NEAREST | EFilter::_MAG_LINEAR);
+
+		minFilter	= GL4MinFilter();
+		magFilter	= GL4MagFilter();
+
+		switch ( value & min_mask )
+		{
+			case EFilter::_MIN_NEAREST							:	minFilter = (GL4MinFilter) gl::GL_NEAREST;					break;
+			case EFilter::_MIN_LINEAR							:	minFilter = (GL4MinFilter) gl::GL_LINEAR;					break;
+			case EFilter::_MIN_NEAREST | EFilter::_MIP_NEAREST	:	minFilter = (GL4MinFilter) gl::GL_NEAREST_MIPMAP_NEAREST;	break;
+			case EFilter::_MIN_LINEAR  | EFilter::_MIP_NEAREST	:	minFilter = (GL4MinFilter) gl::GL_LINEAR_MIPMAP_NEAREST;	break;
+			case EFilter::_MIN_NEAREST | EFilter::_MIP_LINEAR	:	minFilter = (GL4MinFilter) gl::GL_NEAREST_MIPMAP_LINEAR;	break;
+			case EFilter::_MIN_LINEAR  | EFilter::_MIP_LINEAR	:	minFilter = (GL4MinFilter) gl::GL_LINEAR_MIPMAP_LINEAR;		break;
+			default												:	RETURN_ERR( "invalid min and mip filtering flags" );
+		}
+
+		switch ( value & mag_mask )
+		{
+			case EFilter::_MAG_NEAREST	:	magFilter = (GL4MagFilter) gl::GL_NEAREST;	break;
+			case EFilter::_MAG_LINEAR	:	magFilter = (GL4MagFilter) gl::GL_LINEAR;	break;
+			default						:	RETURN_ERR( "invalid mag filtering flag" );
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	BorderColor
+=================================================
+*/
+	inline bool  GL4Enum (ESamplerBorderColor::bits value, OUT uint4 &intColor)
+	{
+		// int
+		CHECK_ERR( value[ ESamplerBorderColor::Int ] );
+		
+		if ( value[ ESamplerBorderColor::Black ] )
+			intColor = uint4(0, 0, 0, ~0u);
+		else
+		if ( value[ ESamplerBorderColor::White ] )
+			intColor = uint4(~0u);
+		else
+		//if ( value[ ESamplerBorderColor::Transparent ] )
+			intColor = uint4(0);
+
+		return true;
+	}
+
+	inline bool  GL4Enum (ESamplerBorderColor::bits value, OUT float4 &color)
+	{
+		// float
+		CHECK_ERR( not value[ ESamplerBorderColor::Int ] );
+		
+		if ( value[ ESamplerBorderColor::Black ] )
+			color = float4(0.0f, 0.0f, 0.0f, 1.0f);
+		else
+		if ( value[ ESamplerBorderColor::White ] )
+			color = float4(1.0f);
+		else
+		//if ( value[ ESamplerBorderColor::Transparent ] )
+			color = float4(0.0f);
+
+		return true;
+	}
+
+/*
+=================================================
+	VertexAttribute
+=================================================
+*/
+	inline bool GL4Enum (EVertexAttribute::type value, OUT GL4VertexAttribType &type, OUT uint &count, OUT bool &norm)
+	{
+		using _vtypeinfo	= _platforms_hidden_::EValueTypeInfo;
+
+		type	= GL4VertexAttribType();
+		count	= 0;
+
+		const bool	is_unsigned = EnumEq( value, _vtypeinfo::_UNSIGNED );
+
+		count = ( (value & _vtypeinfo::_COL_MASK) >> _vtypeinfo::_COL_OFF );
+		CHECK_ERR( count >= 1 and count <= 4 );
+
+		norm = EnumEq( value, _vtypeinfo::_NORM );
+
+		switch ( value & _vtypeinfo::_TYPE_MASK )
+		{
+			case _vtypeinfo::_BYTE		:	type = (GL4VertexAttribType) (is_unsigned ? gl::GL_UNSIGNED_BYTE  : gl::GL_BYTE);	break;
+			case _vtypeinfo::_SHORT		:	type = (GL4VertexAttribType) (is_unsigned ? gl::GL_UNSIGNED_SHORT : gl::GL_SHORT);	break;
+			case _vtypeinfo::_INT		:	type = (GL4VertexAttribType) (is_unsigned ? gl::GL_UNSIGNED_INT   : gl::GL_INT);	break;
+			case _vtypeinfo::_HALF		:	type = (GL4VertexAttribType) gl::GL_HALF_FLOAT;										break;
+			case _vtypeinfo::_FLOAT		:	type = (GL4VertexAttribType) gl::GL_FLOAT;											break;
+			case _vtypeinfo::_DOUBLE	:	type = (GL4VertexAttribType) gl::GL_DOUBLE;											break;
+			default						:	RETURN_ERR( "invalid attrib type" );
+		}
+		return true;
+	}
+
+/*
+=================================================
+	Object
+=================================================
+*/
+	inline GL4Object GL4Enum (EGpuObject::type value)
+	{
+		switch ( value )
+		{
+			case EGpuObject::Buffer :		return (GL4Object) gl::GL_BUFFER;
+			case EGpuObject::Image :		return (GL4Object) gl::GL_TEXTURE;
+			case EGpuObject::ShaderModule :	return (GL4Object) gl::GL_SHADER;
+			case EGpuObject::Pipeline :		return (GL4Object) gl::GL_PROGRAM_PIPELINE;
+			case EGpuObject::Sampler :		return (GL4Object) gl::GL_SAMPLER;
+			case EGpuObject::Framebuffer :	return (GL4Object) gl::GL_FRAMEBUFFER;
+			case EGpuObject::VertexArray :	return (GL4Object) gl::GL_VERTEX_ARRAY;
+			case EGpuObject::Query :		return (GL4Object) gl::GL_QUERY;
+		}
+		RETURN_ERR( "invalid object type", GL4Object() );
+	}
+	
+/*
+=================================================
+	BufferUsage
+=================================================
+*/
+	inline GL4BufferUsage GL4Enum (EBufferUsage::bits value)
+	{
+		// TODO
+		return (GL4BufferUsage) gl::GL_DYNAMIC_DRAW;
 	}
 
 /*
@@ -296,14 +645,6 @@ namespace PlatformGL
 	}
 	
 }	// PlatformGL
-
-	using GLSystemsTypeList_t	= SubSystemsTypeList< "opengl 4"_StringToID, CompileTime::TypeListFrom<
-											Platforms::OpenGLThread,
-											PlatformGL::GL4Device
-										> >;
 }	// Engine
-
-GX_SUBSYSTEM_DECL( GLSystemsTypeList_t,		Platforms::OpenGLThread,		Platforms::OpenGLThread );
-GX_SUBSYSTEM_DECL( GLSystemsTypeList_t,		PlatformGL::GL4Device,			PlatformGL::GL4Device );
 
 #endif	// GRAPHICS_API_OPENGL

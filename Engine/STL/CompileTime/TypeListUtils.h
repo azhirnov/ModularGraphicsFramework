@@ -18,7 +18,7 @@ namespace CompileTime
 
 	namespace _ctime_hidden_
 	{
-		struct TypeListBase : public Noninstancable
+		struct TypeListBase : public GXTypes::Noninstancable
 		{};
 	}
 
@@ -26,7 +26,7 @@ namespace CompileTime
 	template <typename Left, typename Right>
 	struct TypeList;
 
-	struct TypeListEnd final : Noninstancable {};
+	struct TypeListEnd final : GXTypes::Noninstancable {};
 
 	template <typename T>
 	static constexpr bool IsTypeList = IsBaseOf< _ctime_hidden_::TypeListBase, typename TypeTraits::GetBaseType< T > >;

@@ -20,14 +20,14 @@ namespace GXMath
 	// types
 	public:
 		typedef Line3< T >		Self;
-		typedef Vec<T,3>		vec_t;
-		typedef T				value_t;
+		typedef Vec<T,3>		Vec_t;
+		typedef T				Value_t;
 
 
 	// variables
 	private:
-		vec_t	_p0;
-		vec_t	_p1;
+		Vec_t	_p0;
+		Vec_t	_p1;
 
 
 	// methods
@@ -35,33 +35,33 @@ namespace GXMath
 		Line3 (GX_DEFCTOR) {}
 
 		explicit
-		Line3 (const vec_t &end) : _p0(), _p1(end) {}
+		Line3 (const Vec_t &end) : _p0(), _p1(end) {}
 
-		Line3 (const vec_t &begin, const vec_t &end) : _p0(begin), _p1(end) {}
+		Line3 (const Vec_t &begin, const Vec_t &end) : _p0(begin), _p1(end) {}
 
 		bool	operator == (const Self &right) const;
 		bool	operator != (const Self &right) const;
 
-		vec_t &			Begin ()				{ return _p0; }
-		vec_t const &	Begin ()		const	{ return _p0; }
+		Vec_t &			Begin ()				{ return _p0; }
+		Vec_t const &	Begin ()		const	{ return _p0; }
 
-		vec_t &			End ()					{ return _p1; }
-		vec_t const &	End ()			const	{ return _p1; }
+		Vec_t &			End ()					{ return _p1; }
+		Vec_t const &	End ()			const	{ return _p1; }
 
 		T				Length ()		const	{ return _p1.Distance( _p0 ); }
-		vec_t			Vector ()		const	{ return (_p1 - _p0); }
-		vec_t			Direction ()	const	{ return Vector().Normalized(); }
-		vec_t			Center ()		const	{ return (Begin() + End()) * T(0.5); }
+		Vec_t			Vector ()		const	{ return (_p1 - _p0); }
+		Vec_t			Direction ()	const	{ return Vector().Normalized(); }
+		Vec_t			Center ()		const	{ return (Begin() + End()) * T(0.5); }
 		
-		vec_t	GetInterpolationPoint (T value)	const	{ return Lerp( _p0, _p1, value ); }
+		Vec_t	GetInterpolationPoint (T value)	const	{ return Lerp( _p0, _p1, value ); }
 		
-		T		MinDistance (const vec_t &point) const;
+		T		MinDistance (const Vec_t &point) const;
 
 		Self	Invert ()					const	{ return Self( _p1, _p0 ); }
 
-		Self	Move (const vec_t &delta)	const	{ return Self( _p0 + delta, _p1 + delta ); }
+		Self	Move (const Vec_t &delta)	const	{ return Self( _p0 + delta, _p1 + delta ); }
 
-		Self	Reflection (const vec_t &normal) const;
+		Self	Reflection (const Vec_t &normal) const;
 	};
 
 	
@@ -93,7 +93,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Line3<T>  Line3<T>::Reflection (const vec_t &normal) const
+	inline Line3<T>  Line3<T>::Reflection (const Vec_t &normal) const
 	{
 		/*      this
 			|  /
@@ -113,10 +113,10 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline T  Line3<T>::MinDistance (const vec_t &point) const
+	inline T  Line3<T>::MinDistance (const Vec_t &point) const
 	{
 		// a, b, c
-		const vec_t	d = End() - Begin();
+		const Vec_t	d = End() - Begin();
 
 		// (c*(p.y - b.y) - b*(p.z - b.z))^2 + (a*(p.z - b.z) - c*(p.x - b.x))^2 + (b*(p.x - b.x) - a*(p.y - b.y))^2
 		const T		a = Square( d.z * (point.y - Begin().y) - d.y * (point.z - Begin().z) ) +
@@ -137,16 +137,16 @@ namespace GXTypes
 	
 	template <typename T>
 	struct Hash< GXMath::Line3<T> > :
-		private Hash< typename GXMath::Line3<T>::vec_t >
+		private Hash< typename GXMath::Line3<T>::Vec_t >
 	{
-		typedef GXMath::Line3<T>							key_t;
-		typedef Hash< typename GXMath::Line3<T>::vec_t >	base_t;
-		typedef typename base_t::result_t					result_t;
+		typedef GXMath::Line3<T>							Key_t;
+		typedef Hash< typename GXMath::Line3<T>::Vec_t >	Base_t;
+		typedef typename Base_t::Result_t					Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return	base_t::operator ()( x.Begin() ) +
-					base_t::operator ()( x.End() );
+			return	Base_t::operator ()( x.Begin() ) +
+					Base_t::operator ()( x.End() );
 		}
 	};
 

@@ -16,16 +16,16 @@ namespace OS
 {
 	
 	//
-	// Perfomance Timer
+	// Performance Timer
 	//
 
-	struct PerfomanceTimer
+	struct PerformanceTimer
 	{
 	private:
 		ulong	_freq;
 
 	public:
-		PerfomanceTimer ()
+		PerformanceTimer ()
 		{
 			_freq = ::SDL_GetPerformanceFrequency();
 		}
@@ -48,13 +48,13 @@ namespace OS
 	
 
 	template <>
-	forceinline TimeL  PerfomanceTimer::Get (const TimeL &) const
+	forceinline TimeL  PerformanceTimer::Get (const TimeL &) const
 	{
 		return GetTimeMicroSec();
 	}
 	
 	template <>
-	forceinline TimeD  PerfomanceTimer::Get (const TimeD &) const
+	forceinline TimeD  PerformanceTimer::Get (const TimeD &) const
 	{
 		return GetTime();
 	}

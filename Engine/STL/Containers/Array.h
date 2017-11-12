@@ -30,12 +30,12 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef Array<T,S,MC>		Self;
-		typedef S					Strategy;
-		typedef MC					MemoryContainer_t;
-		typedef T					value_t;
-		typedef	T *					iterator;
-		typedef const T *			const_iterator;
+		using Self				= Array<T,S,MC>;
+		using Strategy_t			= S;
+		using MemoryContainer_t	= MC;
+		using Value_t			= T;
+		using iterator			= T *;
+		using const_iterator	= const T *;
 
 
 	// variables
@@ -217,7 +217,7 @@ namespace GXTypes
 	};
 	
 
-	typedef Array< ubyte >		BinaryArray;
+	using BinaryArray	= Array< ubyte >;
 
 
 	template <typename T, usize Size>
@@ -328,10 +328,10 @@ namespace GXTypes
 			return;
 		}
 
-		Strategy::Replace( _memory.Pointer(), old_memcont.Pointer(), new_count );
+		Strategy_t::Replace( _memory.Pointer(), old_memcont.Pointer(), new_count );
 
 		if ( new_count < _count )
-			Strategy::Destroy( old_memcont.Pointer() + new_count, _count - new_count );
+			Strategy_t::Destroy( old_memcont.Pointer() + new_count, _count - new_count );
 
 		_count = new_count;
 	}
@@ -384,27 +384,27 @@ namespace GXTypes
 			CHECK( _memory.Allocate( INOUT _size ) );
 			_count = GXMath::Min( _count, _size );
 
-			Strategy::Replace( _memory.Pointer(), old_memcont.Pointer(), pos );
-			Strategy::Replace( _memory.Pointer() + pos + count, old_memcont.Pointer() + pos, num_move );
+			Strategy_t::Replace( _memory.Pointer(), old_memcont.Pointer(), pos );
+			Strategy_t::Replace( _memory.Pointer() + pos + count, old_memcont.Pointer() + pos, num_move );
 		}
 		else
 		// move
 		{
 			// if not intersected
 			if ( num_move <= count ) {
-				Strategy::Replace( _memory.Pointer() + pos + count, _memory.Pointer() + pos, num_move );
+				Strategy_t::Replace( _memory.Pointer() + pos + count, _memory.Pointer() + pos, num_move, true );
 			}
 			else {
 				for (usize i = 0; i < num_move; ++i) {
-					Strategy::Replace( _memory.Pointer() + _count-1 - i, _memory.Pointer() + _count-1 - count - i, 1 );
+					Strategy_t::Replace( _memory.Pointer() + _count-1 - i, _memory.Pointer() + _count-1 - count - i, 1, true );
 				}
 			}
 		}
 
 		if ( TypeTraits::IsConst<B> )
-			Strategy::Copy( _memory.Pointer() + pos, pArray, count );
+			Strategy_t::Copy( _memory.Pointer() + pos, pArray, count );
 		else
-			Strategy::Move( _memory.Pointer() + pos, (T *) pArray, count );
+			Strategy_t::Move( _memory.Pointer() + pos, (T *) pArray, count );
 	}
 	
 /*
@@ -416,7 +416,7 @@ namespace GXTypes
 	inline bool Array<T,S,MC>::At (usize index, T & value) const
 	{
 		if ( index >= Count() )  return false;
-		Strategy::Copy( &value, _memory.Pointer() + index, 1 );
+		Strategy_t::Copy( &value, _memory.Pointer() + index, 1 );
 		return true;
 	}
 	
@@ -429,7 +429,7 @@ namespace GXTypes
 	inline bool Array<T,S,MC>::Set (usize index, const T &value)
 	{
 		if ( index >= Count() ) return false;
-		Strategy::Copy( _memory.Pointer() + index, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + index, &value, 1 );
 		return true;
 	}
 	
@@ -442,7 +442,7 @@ namespace GXTypes
 	inline bool Array<T,S,MC>::Set (usize index, T&& value)
 	{
 		if ( index >= Count() ) return false;
-		Strategy::Move( _memory.Pointer() + index, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + index, &value, 1 );
 		return true;
 	}
 	
@@ -552,7 +552,7 @@ namespace GXTypes
 	{
 		if ( _memory.Pointer() != null )
 		{
-			Strategy::Destroy( _memory.Pointer(), _count );
+			Strategy_t::Destroy( _memory.Pointer(), _count );
 			_memory.Deallocate();
 		}
 		_count = 0;
@@ -569,7 +569,7 @@ namespace GXTypes
 	{
 		if ( _memory.Pointer() != null )
 		{
-			Strategy::Destroy( _memory.Pointer(), _count );
+			Strategy_t::Destroy( _memory.Pointer(), _count );
 		}
 		_count = 0;
 	}
@@ -590,8 +590,8 @@ namespace GXTypes
 
 		_count -= count;
 
-		Strategy::Destroy( _memory.Pointer() + pos, count );
-		Strategy::Replace( _memory.Pointer() + pos, _memory.Pointer() + pos + count, _count - pos );
+		Strategy_t::Destroy( _memory.Pointer() + pos, count );
+		Strategy_t::Replace( _memory.Pointer() + pos, _memory.Pointer() + pos + count, _count - pos, true );
 	}
 	
 /*
@@ -609,7 +609,7 @@ namespace GXTypes
 			return;
 		}
 
-		Strategy::Destroy( _memory.Pointer() + _count - count, count );
+		Strategy_t::Destroy( _memory.Pointer() + _count - count, count );
 		_count -= count;
 	}
 	
@@ -636,8 +636,8 @@ namespace GXTypes
 		// move from back
 		for (; j >= u_max and i < u_max; --j or ++i)
 		{
-			Strategy::Destroy( _memory.Pointer() + i, 1 );
-			Strategy::Replace( _memory.Pointer() + i, _memory.Pointer() + j );
+			Strategy_t::Destroy( _memory.Pointer() + i, 1 );
+			Strategy_t::Replace( _memory.Pointer() + i, _memory.Pointer() + j, true );
 		}
 
 		if ( i == u_max )
@@ -646,7 +646,7 @@ namespace GXTypes
 		// delete
 		for (; j >= i; --j)
 		{
-			Strategy::Destroy( _memory.Pointer() + j, 1 );
+			Strategy_t::Destroy( _memory.Pointer() + j, 1 );
 		}
 	}
 	
@@ -702,8 +702,8 @@ namespace GXTypes
 			PopBack();
 		else
 		{
-			Strategy::Destroy( _memory.Pointer() + pos, 1 );
-			Strategy::Replace( _memory.Pointer() + pos, &Back(), 1 );
+			Strategy_t::Destroy( _memory.Pointer() + pos, 1 );
+			Strategy_t::Replace( _memory.Pointer() + pos, &Back(), 1, true );
 			--_count;
 		}
 	}
@@ -719,7 +719,7 @@ namespace GXTypes
 		if ( _count >= _size )
 			_Reallocate( _count + 1 );
 
-		Strategy::Copy( _memory.Pointer() + _count, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + _count, &value, 1 );
 		++_count;
 	}
 	
@@ -734,7 +734,7 @@ namespace GXTypes
 		if ( _count >= _size )
 			_Reallocate( _count + 1 );
 
-		Strategy::Move( _memory.Pointer() + _count, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + _count, &value, 1 );
 		++_count;
 	}
 	
@@ -750,7 +750,7 @@ namespace GXTypes
 
 		if ( _count != 0 ) {
 			--_count;
-			Strategy::Destroy( _memory.Pointer() + _count, 1 );
+			Strategy_t::Destroy( _memory.Pointer() + _count, 1 );
 		}
 	}
 
@@ -798,13 +798,13 @@ namespace GXTypes
 
 		if ( newSize < _count )
 		{
-			Strategy::Destroy( _memory.Pointer() + newSize, _count - newSize );
+			Strategy_t::Destroy( _memory.Pointer() + newSize, _count - newSize );
 			_count = newSize;
 			return;
 		}
 
 		_Reallocate( newSize, allowReserve );
-		Strategy::Create( _memory.Pointer() + _count, newSize - _count );
+		Strategy_t::Create( _memory.Pointer() + _count, newSize - _count );
 		_count = newSize;
 	}
 	
@@ -837,9 +837,9 @@ namespace GXTypes
 			RET_VOID;
 
 		T	temp;
-		Strategy::Replace( &temp,						_memory.Pointer() + second,	1 );
-		Strategy::Replace( _memory.Pointer() + second,	_memory.Pointer() + first,	1 );
-		Strategy::Replace( _memory.Pointer() + first,	&temp,						1 );
+		Strategy_t::Replace( &temp,							_memory.Pointer() + second,	1 );
+		Strategy_t::Replace( _memory.Pointer() + second,	_memory.Pointer() + first,	1 );
+		Strategy_t::Replace( _memory.Pointer() + first,		&temp,						1 );
 	}
 	
 /*
@@ -968,13 +968,13 @@ namespace GXTypes
 	struct Hash< Array<T,S,MC> > :
 		private Hash< ArrayCRef<T> >
 	{
-		typedef Array<T,S,MC>				key_t;
-		typedef Hash< ArrayCRef<T> >		base_t;
-		typedef typename base_t::result_t	result_t;
+		using Key_t		= Array<T,S,MC>;
+		using Base_t	= Hash< ArrayCRef<T> >;
+		using Result_t	= typename Base_t::Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x );
+			return Base_t::operator ()( x );
 		}
 	};
 

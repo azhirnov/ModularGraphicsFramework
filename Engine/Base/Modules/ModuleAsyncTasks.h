@@ -43,46 +43,11 @@ namespace Base
 						where :
 						where->GetModuleByID( _mngrID );
 
-			ASSERT( result );
+			if ( not result )
+				LOG( ("Module '"_str << ToString(GModID::type( _mngrID )) << "' not found").cstr(), ELog::Warning );
 
 			if ( result )
 				CHECK( SendTo< ModuleMsg::AddToManager >( result, { CurrentThreadModule() } ));
-		}
-	};
-	
-
-
-	//
-	// Detach Module from Manager Async Task
-	//
-	
-	class Module::DetachModuleFromManagerAsyncTask final : public AsyncTask<>
-	{
-	// variables
-	private:
-		const UntypedID_t	_mngrID;
-		
-
-	// methods
-	public:
-		DetachModuleFromManagerAsyncTask (const ModulePtr &self, const ModulePtr &manager) :
-			AsyncTask( self, manager ),
-			_mngrID( manager->GetModuleID() )
-		{}
-
-		void PostExecute (const ModulePtr &self, UninitializedType &&) override
-		{
-			self->_SetManager( null );
-		}
-		
-		void ExecuteInBackground (const ModulePtr &manager, OUT UninitializedType &) override
-		{
-			ModulePtr	result = (_mngrID == manager->GetModuleID()) ?
-									manager :
-									manager->GetModuleByID( _mngrID );
-			
-			if ( result )
-				CHECK( SendTo< ModuleMsg::RemoveFromManager >( result, { CurrentThreadModule() } ));
 		}
 	};
 

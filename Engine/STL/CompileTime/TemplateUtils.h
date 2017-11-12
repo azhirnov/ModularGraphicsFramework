@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/STL/Common/Types.h"
+#include "Engine/STL/CompileTime/CompileTimeTypes.h"
 
 namespace GX_STL
 {
@@ -25,12 +25,12 @@ namespace CompileTime
 	{
 		template <bool Switch, typename IfTrue, typename IfFalse>
 		struct _SwitchType {
-			typedef IfFalse	type;
+			using type	= IfFalse;
 		};
 
 		template <typename IfTrue, typename IfFalse>
 		struct _SwitchType< true, IfTrue, IfFalse > {
-			typedef IfTrue	type;
+			using type	= IfTrue;
 		};
 	}
 	
@@ -46,9 +46,9 @@ namespace CompileTime
 	template <typename T, T Value>
 	struct ValueToType
 	{
-		typedef ValueToType< T, Value >		Self;
+		using Self	= ValueToType< T, Value >;
+		using type	= T;
 
-		typedef T		type;
 		static const T	value = Value;
 	};
 
@@ -60,14 +60,14 @@ namespace CompileTime
 
 	template <bool Switch, typename IfTrue, typename IfFalse>
 	struct SwitchValue {
-		typedef typename IfFalse::type	type;
-		static const type	value = IfFalse::value;
+		using type					= typename IfFalse::type;
+		static const type	value	= IfFalse::value;
 	};
 
 	template <typename IfTrue, typename IfFalse>
 	struct SwitchValue< true, IfTrue, IfFalse > {
-		typedef typename IfTrue::type	type;
-		static const type	value = IfTrue::value;
+		using type					= typename IfTrue::type;
+		static const type	value	= IfTrue::value;
 	};
 
 
@@ -120,12 +120,12 @@ namespace CompileTime
 	{
 		template <bool Condition, typename T = void>
 		struct _EnableIf {
-			typedef T	type;
+			using type	= T;
 		};
 
 		template <typename T>
 		struct _EnableIf <false, T> {
-			typedef void	type;
+			using type	= void;
 		};
 	}
 
@@ -146,13 +146,12 @@ namespace CompileTime
 			 >
 	struct Pair
 	{
-		typedef Pair< FirstType, First, SecondType, Second >	Self;
+		using Self		= Pair< FirstType, First, SecondType, Second >;
+		using First_t	= FirstType;
+		using Second_t	= SecondType;
 
-		typedef FirstType		first_t;
-		typedef SecondType		second_t;
-
-		static const first_t	first	= First;
-		static const second_t	second	= Second;
+		static const First_t	first	= First;
+		static const Second_t	second	= Second;
 	};
 
 
@@ -237,16 +236,30 @@ namespace CompileTime
 	template <template <typename ...> class Templ, typename ...Types>
 	struct DeferredTemplate
 	{
-		typedef Templ< Types... >	type;
+		using type	= Templ< Types... >;
 	};
 
 
-	template <typename A, typename B>
+	//
+	// Type to Type
+	//
+	template <typename T>
+	struct TypeToType
+	{
+		using type = T;
+	};
+
+
+	//
+	// Offset Of
+	//
+	/*template <typename A, typename B>
 	inline usize constexpr Offsetof (A B::*member)
 	{
 		constexpr B object {};
 		return usize(&(object.*member)) - usize(&object);
-	}
+	}*/
+
 
 }	// CompileTime
 }	// GX_STL

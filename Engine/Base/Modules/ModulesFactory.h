@@ -13,7 +13,7 @@ namespace Base
 	// Modules Factory
 	//
 
-	class ModulesFactory final : public BaseObject
+	class _ENGINE_BASE_EXPORT_ ModulesFactory final : public BaseObject
 	{
 	// types
 	private:
@@ -98,21 +98,21 @@ namespace Base
 	private:
 		ModConstructors_t		_constructors;
 		ModGroups_t				_groups;
-		mutable OS::Mutex		_lock;
+		mutable OS::Mutex		_lock;		// TODO: read-write sync
 
 
 	// methods
 	public:
-		explicit
-		ModulesFactory (const GlobalSystemsRef gs);
+		explicit ModulesFactory (GlobalSystemsRef gs);
 		~ModulesFactory ();
 
-
-		bool Create (UntypedID_t id, GlobalSystemsRef gs, VariantCRef msg, OUT ModulePtr &result);
+		bool Create (UntypedID_t id, GlobalSystemsRef gs, VariantCRef msg, OUT ModulePtr &result) noexcept;
 		
 		template <typename CtorMsg>
-		bool Create (UntypedID_t id, GlobalSystemsRef gs, const CtorMsg &msg, OUT ModulePtr &result);
+		bool Create (UntypedID_t id, GlobalSystemsRef gs, const CtorMsg &msg, OUT ModulePtr &result) noexcept;
 
+		template <typename CtorMsg>
+		bool Search (StringCRef startsWith, OUT Array<UntypedID_t> &result) const;
 
 		template <typename ModIdType, typename CtorMsg>
 		bool Register (ModIdType id, ModulePtr (*ctor) (GlobalSystemsRef gs, const CtorMsg &));
@@ -133,6 +133,7 @@ namespace Base
 		bool _Unregister (UntypedID_t id, TypeId ctorMsgType);
 		bool _UnregisterAll (UntypedID_t id);
 		bool _IsRegistered (UntypedID_t id, TypeId ctorMsgType) const;
+		bool _Search (TypeId ctorMsgType, StringCRef startsWith, OUT Array<UntypedID_t> &result) const;
 	};
 	
 	
@@ -143,7 +144,7 @@ namespace Base
 =================================================
 */
 	template <typename CtorMsg>
-	inline bool ModulesFactory::Create (UntypedID_t id, GlobalSystemsRef gs, const CtorMsg &msg, OUT ModulePtr &result)
+	inline bool ModulesFactory::Create (UntypedID_t id, GlobalSystemsRef gs, const CtorMsg &msg, OUT ModulePtr &result) noexcept
 	{
 		return Create( id, gs, VariantCRef::FromConst(msg), OUT result );
 	}
@@ -198,6 +199,17 @@ namespace Base
 		return _IsRegistered( id, TypeIdOf<CtorMsg>() );
 	}
 	
+/*
+=================================================
+	Search
+=================================================
+*/
+	template <typename CtorMsg>
+	inline bool ModulesFactory::Search (StringCRef startsWith, OUT Array<UntypedID_t> &result) const
+	{
+		return _Search( TypeIdOf<CtorMsg>(), startsWith, OUT result );
+	}
+
 /*
 =================================================
 	ConstructorID::operator ==

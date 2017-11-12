@@ -20,7 +20,7 @@ namespace GXTypes
 	// Logger
 	//
 
-	class Logger
+	class _STL_EXPORT_ Logger
 	{
 	// types
 	private:
@@ -35,7 +35,7 @@ namespace GXTypes
 		String					_buffer;
 		String					_projectFolder;		// project folder name for cuting full file path to short internal path
 		ThreadUniqueColor_t		_threadColors;
-		OS::PerfomanceTimer		_timer;
+		OS::PerformanceTimer	_timer;
 		TimeD					_skipErrorMoument;
 		bool					_lockRecursion;
 

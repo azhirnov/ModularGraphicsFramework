@@ -16,7 +16,7 @@ namespace OS
 	// Library
 	//
 
-	struct Library
+	struct _STL_EXPORT_ Library
 	{
 	// types
 	private:

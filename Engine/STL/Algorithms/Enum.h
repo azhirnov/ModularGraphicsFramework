@@ -21,8 +21,7 @@ namespace GXTypes
 		STATIC_ASSERT( TypeTraits::IsEnum< T2 > );
 		STATIC_ASSERT( TypeTraits::IsEnum< T3 > );
 
-		typedef typename CompileTime::NearUInt::FromSize<
-			CompileTime::MaxFrom< usize, sizeof(T1), sizeof(T2), sizeof(T3) >() >	T;
+		using T	= typename CompileTime::NearUInt::FromSize< CompileTime::MaxFrom< usize, sizeof(T1), sizeof(T2), sizeof(T3) >() >;
 
 		return ( T(left) & T(mask) ) == ( T(right) & T(mask) );
 	}
@@ -38,8 +37,7 @@ namespace GXTypes
 		STATIC_ASSERT( TypeTraits::IsEnum< T1 > );
 		STATIC_ASSERT( TypeTraits::IsEnum< T2 > );
 
-		typedef typename CompileTime::NearUInt::FromSize<
-			CompileTime::Max< usize, sizeof(T1), sizeof(T2) > >		T;
+		using T	= typename CompileTime::NearUInt::FromSize< CompileTime::Max< usize, sizeof(T1), sizeof(T2) > >;
 
 		return ( T(left) & T(right) ) == T(right);
 	}
@@ -55,8 +53,7 @@ namespace GXTypes
 		STATIC_ASSERT( TypeTraits::IsEnum< T1 > );
 		STATIC_ASSERT( TypeTraits::IsEnum< T2 > );
 
-		typedef typename CompileTime::NearUInt::FromSize<
-			CompileTime::MaxFrom< usize, sizeof(T1), sizeof(T2) >() >	T;
+		using T	= typename CompileTime::NearUInt::FromSize< CompileTime::MaxFrom< usize, sizeof(T1), sizeof(T2) >() >;
 
 		return ( T(left) & T(right) ) != T(0);
 	}

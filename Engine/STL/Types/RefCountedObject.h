@@ -12,13 +12,7 @@ namespace GX_STL
 namespace GXTypes
 {
 
-#	define SHARED_POINTER_TYPE( _name_ ) \
-		::GX_STL::GXTypes::ReferenceCounter< _name_, \
-			::GX_STL::GXTypes::RefCountedObject, \
-			::GX_STL::GXTypes::SharedPointerStrategy< ::GX_STL::GXTypes::RefCountedObject > >
-
-#	define SHARED_POINTER( _name_ ) \
-		typedef SHARED_POINTER_TYPE( _name_ )	_name_##Ptr;
+#	define SHARED_POINTER( _name_ )		using _name_##Ptr = ::GX_STL::GXTypes::SharedPointerType< _name_ >;
 
 
 
@@ -26,7 +20,7 @@ namespace GXTypes
 	// Reference Counted Object
 	//
 
-	class RefCountedObject : public CompileTime::TypeQualifier< CompileTime::ETypeQualifier::Def_Noncopyable >
+	class _STL_EXPORT_ RefCountedObject : public CompileTime::TypeQualifier< CompileTime::ETypeQualifier::Def_Noncopyable >
 	{
 		friend class  StaticRefCountedObject;
 		friend struct SharedPointerStrategy< RefCountedObject >;
@@ -62,19 +56,19 @@ namespace GXTypes
 
 				usize	idx;
 				if ( _GetObjectRefs().FindIndex( this, idx ) ) {
-					_GetObjectRefs().EraseFromIndex( idx );
+					_GetObjectRefs().EraseByIndex( idx );
 				}
 			)
 		}
 
 		DEBUG_ONLY(
-		static Set< Self *>& _GetObjectRefs ()
+		static Set< Self *>& _GetObjectRefs () noexcept
 		{
 			static Set< Self *>		s_instance;
 			return s_instance;
 		}
 
-		static OS::Mutex& _GetMutex ()
+		static OS::Mutex& _GetMutex () noexcept
 		{
 			static OS::Mutex	s_mutex;
 			return s_mutex;
@@ -132,6 +126,10 @@ namespace GXTypes
 		forceinline static void DecRef (RefCountedObject *ptr)	{ ptr->_ReleaseRef(); }
 		forceinline static int  Count  (RefCountedObject *ptr)	{ return ptr->_GetRefCount(); }
 	};
+	
+
+	template <typename T>
+	using SharedPointerType = ReferenceCounter< T, RefCountedObject, SharedPointerStrategy< RefCountedObject > >;
 
 
 }	// GXTypes

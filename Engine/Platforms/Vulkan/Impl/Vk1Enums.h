@@ -21,20 +21,9 @@
 
 namespace Engine
 {
-namespace Platforms
-{
-	class VulkanThread;
-
-}	// Platforms
-
 namespace PlatformVK
 {
 	using namespace Platforms;
-
-	using VkSubSystems	= EngineSubSystems< "vulkan 1"_StringToID >;
-	using VkSystemsRef	= ConstReference< VkSubSystems >;
-
-	class Vk1Device;
 	
 /*
 =================================================
@@ -542,9 +531,9 @@ namespace PlatformVK
 
 		switch ( value )
 		{
-			case EAttachmentLoadOp::None	: return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-			case EAttachmentLoadOp::Load	: return VK_ATTACHMENT_LOAD_OP_LOAD;
-			case EAttachmentLoadOp::Clear	: return VK_ATTACHMENT_LOAD_OP_CLEAR;
+			case EAttachmentLoadOp::Invalidate :	return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			case EAttachmentLoadOp::Load :			return VK_ATTACHMENT_LOAD_OP_LOAD;
+			case EAttachmentLoadOp::Clear :			return VK_ATTACHMENT_LOAD_OP_CLEAR;
 		}
 
 		RETURN_ERR( "invalid load op type", VK_ATTACHMENT_LOAD_OP_MAX_ENUM );
@@ -561,8 +550,8 @@ namespace PlatformVK
 
 		switch ( value )
 		{
-			case EAttachmentStoreOp::None	: return VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			case EAttachmentStoreOp::Store	: return VK_ATTACHMENT_STORE_OP_STORE;
+			case EAttachmentStoreOp::Invalidate :	return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			case EAttachmentStoreOp::Store :		return VK_ATTACHMENT_STORE_OP_STORE;
 		}
 
 		RETURN_ERR( "invalid store op type", VK_ATTACHMENT_STORE_OP_MAX_ENUM );
@@ -1120,14 +1109,6 @@ namespace PlatformVK
 
 
 }	// PlatformVK
-
-	using VkSystemsTypeList_t	= SubSystemsTypeList< "vulkan 1"_StringToID, CompileTime::TypeListFrom<
-											Platforms::VulkanThread,
-											PlatformVK::Vk1Device
-										> >;
 }	// Engine
-
-GX_SUBSYSTEM_DECL( VkSystemsTypeList_t,		Platforms::VulkanThread,		Platforms::VulkanThread );
-GX_SUBSYSTEM_DECL( VkSystemsTypeList_t,		PlatformVK::Vk1Device,			PlatformVK::Vk1Device );
 
 #endif	// GRAPHICS_API_VULKAN

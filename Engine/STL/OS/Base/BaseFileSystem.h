@@ -16,7 +16,7 @@ namespace OS
 	// Base File System
 	//
 
-	struct FileSystem : OSFileSystem
+	struct _STL_EXPORT_ FileSystem final : OSFileSystem
 	{
 	// methods
 	public:

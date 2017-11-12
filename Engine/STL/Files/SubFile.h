@@ -47,7 +47,7 @@ namespace File
 		
 
 		// RFile //
-		virtual BytesU ReadBuf (void * buf, BytesU size) override
+		virtual BytesU ReadBuf (void * buf, BytesU size) noexcept override
 		{
 			BytesU	result = _file->ReadBufFrom( buf, size, _offset + _pos );
 			_pos += result;
@@ -56,7 +56,7 @@ namespace File
 		
 
 		// BaseFile //
-		virtual void Close () override
+		virtual void Close () noexcept override
 		{
 			_file	= null;
 			_offset	= BytesU();
@@ -64,18 +64,18 @@ namespace File
 			_pos	= BytesU();
 		}
 		
-		virtual bool IsOpened () const override
+		virtual bool IsOpened () const noexcept override
 		{
 			return _file.IsNotNull();
 		}
 
-		virtual bool SeekSet (BytesU offset) override
+		virtual bool SeekSet (BytesU offset) noexcept override
 		{
 			ASSERT( offset <= _size );
 			return _SetPos( _offset + offset );
 		}
 
-		virtual bool SeekCur (BytesI offset) override
+		virtual bool SeekCur (BytesI offset) noexcept override
 		{
 			usize new_pos = usize(_pos) + isize(offset);
 
@@ -83,28 +83,28 @@ namespace File
 			return _SetPos( BytesU( new_pos ) );
 		}
 
-		virtual bool SeekEnd (BytesU offset) override
+		virtual bool SeekEnd (BytesU offset) noexcept override
 		{
 			ASSERT( offset <= _size );
 			return _SetPos( _offset + _size - offset );
 		}
 		
-		virtual BytesU RemainingSize () const override
+		virtual BytesU RemainingSize () const noexcept override
 		{
 			return _size - _pos;
 		}
 
-		virtual BytesU Size () const override
+		virtual BytesU Size () const noexcept override
 		{
 			return _size;
 		}
 
-		virtual BytesU Pos () const override
+		virtual BytesU Pos () const noexcept override
 		{
 			return _pos;
 		}
 		
-		virtual bool IsEOF () const override
+		virtual bool IsEOF () const noexcept override
 		{
 			return Pos() >= Size();
 		}
@@ -177,7 +177,7 @@ namespace File
 		
 
 		// WFile //
-		virtual BytesU WriteBuf (const void * buf, BytesU size) override
+		virtual BytesU WriteBuf (const void * buf, BytesU size) noexcept override
 		{
 			const BytesU	pos		= _file->Pos();
 			const BytesU	new_pos = BytesU( _offset + _pos );
@@ -192,14 +192,14 @@ namespace File
 			return result;
 		}
 		
-		virtual void Flush () override
+		virtual void Flush () noexcept override
 		{
 			_file->Flush();
 		}
 
 
 		// BaseFile //
-		virtual void Close () override
+		virtual void Close () noexcept override
 		{
 			_file	= null;
 			_offset	= BytesU();
@@ -207,18 +207,18 @@ namespace File
 			_pos	= BytesU();
 		}
 		
-		virtual bool IsOpened () const override
+		virtual bool IsOpened () const noexcept override
 		{
 			return _file.IsNotNull();
 		}
 		
-		virtual bool SeekSet (BytesU offset) override
+		virtual bool SeekSet (BytesU offset) noexcept override
 		{
 			ASSERT( offset <= _size );
 			return _SetPos( _offset + offset );
 		}
 
-		virtual bool SeekCur (BytesI offset) override
+		virtual bool SeekCur (BytesI offset) noexcept override
 		{
 			usize new_pos = usize(_pos) + isize(offset);
 			
@@ -226,28 +226,28 @@ namespace File
 			return _SetPos( BytesU( new_pos ) );
 		}
 
-		virtual bool SeekEnd (BytesU offset) override
+		virtual bool SeekEnd (BytesU offset) noexcept override
 		{
 			ASSERT( offset <= _size );
 			return _SetPos( _offset + _size - offset );
 		}
 		
-		virtual BytesU RemainingSize () const override
+		virtual BytesU RemainingSize () const noexcept override
 		{
 			return BytesU( _size - _pos );
 		}
 
-		virtual BytesU Size () const override
+		virtual BytesU Size () const noexcept override
 		{
 			return BytesU( _size );
 		}
 
-		virtual BytesU Pos () const override
+		virtual BytesU Pos () const noexcept override
 		{
 			return BytesU( _pos );
 		}
 		
-		virtual bool IsEOF () const override
+		virtual bool IsEOF () const noexcept override
 		{
 			return Pos() >= Size();
 		}

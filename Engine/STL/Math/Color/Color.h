@@ -39,35 +39,35 @@ namespace GXMath
 
 	// methods
 	public:
-		template <typename T, usize I>	static	Vec<T,I>	Saturate (const Vec<T,I> &x);
-		template <typename T, usize I>	static	Vec<T,I>	Normalize (const Vec<T,I> &x);
+		template <typename T, usize I, ulong U>	static	Vec<T,I,U>	Saturate (const Vec<T,I,U> &x);
+		template <typename T, usize I, ulong U>	static	Vec<T,I,U>	Normalize (const Vec<T,I,U> &x);
 
-		template <typename T, usize I>	static	Vec<T,I>	Random ();
-		template <typename T, usize I>	static	Vec<T,I>	Random (const Vec<T,I> &minValue, const Vec<T,I> &maxValue);
+		template <typename T, usize I, ulong U>	static	Vec<T,I,U>	Random ();
+		template <typename T, usize I, ulong U>	static	Vec<T,I,U>	Random (const Vec<T,I,U> &minValue, const Vec<T,I,U> &maxValue);
 
-		template <typename T, usize I>	static	T			Luminance (const Vec<T,I> &x);
-		template <typename T, usize I>	static	T			LuminanceNorm (const Vec<T,I> &x);
+		template <typename T, usize I, ulong U>	static	T			Luminance (const Vec<T,I,U> &x);
+		template <typename T, usize I, ulong U>	static	T			LuminanceNorm (const Vec<T,I,U> &x);
 
-		template <typename T, usize I>	static	T			Negative (const Vec<T,I> &x);
-		template <typename T, usize I>	static	T			NegativeAlpha (const Vec<T,I> &x);
-		template <typename T, usize I>	static	T			AdjustContrast (const Vec<T,I> &x, T k);
-		template <typename T, usize I>	static	T			AdjustSaturation (const Vec<T,I> &x, T k);
+		template <typename T, usize I, ulong U>	static	T			Negative (const Vec<T,I,U> &x);
+		template <typename T, usize I, ulong U>	static	T			NegativeAlpha (const Vec<T,I,U> &x);
+		template <typename T, usize I, ulong U>	static	T			AdjustContrast (const Vec<T,I,U> &x, T k);
+		template <typename T, usize I, ulong U>	static	T			AdjustSaturation (const Vec<T,I,U> &x, T k);
 		
 		// conversion to non linear color space
-		template <typename T, usize I>	static	Vec<T,I>	ToSRGB (const Vec<T,I> &x);
-		template <typename T, usize I>	static	Vec<T,I>	FromSRGB (const Vec<T,I> &x);
+		template <typename T, usize I, ulong U>	static	Vec<T,I,U>	ToSRGB (const Vec<T,I,U> &x);
+		template <typename T, usize I, ulong U>	static	Vec<T,I,U>	FromSRGB (const Vec<T,I,U> &x);
 
-		template <typename T>			static	Vec<T,4>	FromRGBA8 (uint x);
-		template <typename T>			static	uint		ToRGBA8 (const Vec<T,4> &x);
+		template <typename T>			static	Vec<T,4>			FromRGBA8 (uint x);
+		template <typename T>			static	uint				ToRGBA8 (const Vec<T,4> &x);
 
-										static	float3		RGBtoHSV (const float3 &rgb);
-										static	float3		HSVtoRGB (const float3 &hsv);
-										static	float3		RainbowRGB (const float x);
+										static	float3				RGBtoHSV (const float3 &rgb);
+										static	float3				HSVtoRGB (const float3 &hsv);
+										static	float3				RainbowRGB (const float x);
 
-		template <typename B, typename T, usize I>
-										static	Vec<B,I>	Convert (const Vec<T,I> &x);
+		template <typename B, typename T, usize I, ulong U>
+										static	Vec<B,I,U>			Convert (const Vec<T,I,U> &x);
 
-		template <typename T>			static	Matrix<T,4,4>	SaturationMat (const T& x);
+		template <typename T>			static	Matrix<T,4,4>		SaturationMat (const T& x);
 	};
 
 
@@ -105,14 +105,14 @@ namespace GXMath
 		color4u &	FromIntRGBA (uint rgba)		{ *this = ReferenceCast<color4u>( rgba ).ABGR();  return *this; }
 		color4u &	FromIntRGB  (uint rgb)		{ return FromIntRGBA( (rgb << 8) | 0xFF ); }
 
-		value_t		R ()	const				{ return (*this)[0]; }
-		value_t &	R ()						{ return (*this)[0]; }
-		value_t		G ()	const				{ return (*this)[1]; }
-		value_t &	G ()						{ return (*this)[1]; }
-		value_t		B ()	const				{ return (*this)[2]; }
-		value_t &	B ()						{ return (*this)[2]; }
-		value_t		A ()	const				{ return (*this)[3]; }
-		value_t &	A ()						{ return (*this)[3]; }
+		Value_t		R ()	const				{ return (*this)[0]; }
+		Value_t &	R ()						{ return (*this)[0]; }
+		Value_t		G ()	const				{ return (*this)[1]; }
+		Value_t &	G ()						{ return (*this)[1]; }
+		Value_t		B ()	const				{ return (*this)[2]; }
+		Value_t &	B ()						{ return (*this)[2]; }
+		Value_t		A ()	const				{ return (*this)[3]; }
+		Value_t &	A ()						{ return (*this)[3]; }
 
 		color4u		BGRA ()	const				{ return color4u( z, y, x, w ); }
 		color4u		ABGR ()	const				{ return color4u( w, z, y, x ); }
@@ -312,14 +312,14 @@ namespace GXMath
 		operator float4 & ()			{ return ReferenceCast< float4 >( *this ); }
 		operator float4   () const		{ return float4( x, y, z, w ); }
 
-		value_t		R ()	const		{ return (*this)[0]; }
-		value_t &	R ()				{ return (*this)[0]; }
-		value_t		G ()	const		{ return (*this)[1]; }
-		value_t &	G ()				{ return (*this)[1]; }
-		value_t		B ()	const		{ return (*this)[2]; }
-		value_t &	B ()				{ return (*this)[2]; }
-		value_t		A ()	const		{ return (*this)[3]; }
-		value_t &	A ()				{ return (*this)[3]; }
+		Value_t		R ()	const		{ return (*this)[0]; }
+		Value_t &	R ()				{ return (*this)[0]; }
+		Value_t		G ()	const		{ return (*this)[1]; }
+		Value_t &	G ()				{ return (*this)[1]; }
+		Value_t		B ()	const		{ return (*this)[2]; }
+		Value_t &	B ()				{ return (*this)[2]; }
+		Value_t		A ()	const		{ return (*this)[3]; }
+		Value_t &	A ()				{ return (*this)[3]; }
 	};
 
 	
@@ -329,15 +329,15 @@ namespace GXMath
 	
 
 
-	template <typename T, usize I>
-	inline Vec<T,I>  ColorUtils::Saturate (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ColorUtils::Saturate (const Vec<T,I,U> &x)
 	{
 		return Clamp( x, Limits<T>::Min(), Limits<T>::Max() );
 	}
 
 
-	template <typename T, usize I>
-	inline Vec<T,I>  ColorUtils::Normalize (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ColorUtils::Normalize (const Vec<T,I,U> &x)
 	{
 		typedef typename CompileTime::MainType< T, float >	main_t;
 		
@@ -347,97 +347,97 @@ namespace GXMath
 		if ( IsZero( t_max ) )
 			return x;
 
-		Vec<T,I>	ret;
+		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = T( x[i] / t_max + s_tAdd );
 		return ret;
 	}
 
 	
-	template <typename T, usize I>
-	inline Vec<T,I>  ColorUtils::Random ()
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ColorUtils::Random ()
 	{
-		Vec<T,I>	ret;
+		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = GXMath::Random::Range( Limits<T>::Min(), Limits<T>::Max() );
 		return ret;
 	}
 	
 
-	template <typename T, usize I>
-	inline Vec<T,I>  ColorUtils::Random (const Vec<T,I> &minValue, const Vec<T,I> &maxValue)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ColorUtils::Random (const Vec<T,I,U> &minValue, const Vec<T,I,U> &maxValue)
 	{
-		ASSERT( All( minValue >= Vec<T,I>( Limits<T>::Min() ) ) );
-		ASSERT( All( maxValue <= Vec<T,I>( Limits<T>::Max() ) ) );
+		ASSERT( All( minValue >= Vec<T,I,U>( Limits<T>::Min() ) ) );
+		ASSERT( All( maxValue <= Vec<T,I,U>( Limits<T>::Max() ) ) );
 
-		Vec<T,I>	ret;
+		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = GXMath::Random::Range( minValue, maxValue );
 		return ret;
 	}
 
 
-	template <typename T, usize I>
-	inline T  ColorUtils::Luminance (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline T  ColorUtils::Luminance (const Vec<T,I,U> &x)
 	{
 		return Dot( Vec<T,3>( x ), LuminanceK<T>::Get() );
 	}
 
 
-	template <typename T, usize I>
-	inline T  ColorUtils::LuminanceNorm (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline T  ColorUtils::LuminanceNorm (const Vec<T,I,U> &x)
 	{
 		return Clamp( Luminance( x ), Limits<T>::Min(), Limits<T>::Max() );
 	}
 
 
-	template <typename T, usize I>
-	inline T  ColorUtils::Negative (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline T  ColorUtils::Negative (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>	ret;
+		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = i < 3 ? Limits<T>::Max() - x[i] : x[i];
 		return ret;
 	}
 
 
-	template <typename T, usize I>
-	inline T  ColorUtils::NegativeAlpha (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline T  ColorUtils::NegativeAlpha (const Vec<T,I,U> &x)
 	{
-		return Vec<T,I>( Limits<T>::Max() ) - x;
+		return Vec<T,I,U>( Limits<T>::Max() ) - x;
 	}
 
 
-	template <typename T, usize I>
-	inline T  ColorUtils::AdjustContrast (const Vec<T,I> &x, T k)
+	template <typename T, usize I, ulong U>
+	inline T  ColorUtils::AdjustContrast (const Vec<T,I,U> &x, T k)
 	{
 		static const T		s_tMiddle	= Limits<T>::Max() / 2;
-		Vec<T,I>	ret;
+		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = i < 3 ? s_tMiddle + k * ( x[i] - s_tMiddle ) : x[i];
 		return ret;
 	}
 
 
-	template <typename T, usize I>
-	inline T  ColorUtils::AdjustSaturation (const Vec<T,I> &x, T k)
+	template <typename T, usize I, ulong U>
+	inline T  ColorUtils::AdjustSaturation (const Vec<T,I,U> &x, T k)
 	{
 		const T		lum		= Luminance( x );
-		Vec<T,I>	ret;
+		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = i < 3 ? lum + k * ( x[i] - lum ) : x[i];
 		return ret;
 	}
 
 		
-	template <typename T, usize I>
-	inline Vec<T,I>  ColorUtils::ToSRGB (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ColorUtils::ToSRGB (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>	ret;
+		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = i < 3 ? ( x[i] <= T(0.0031308) ?  T(12.92) * x[i] :
 											T(1.055) * Pow( x[i], T(0.41666) ) - T(0.0055) ) : T(0);
 		return ret;
 	}
 
 
-	template <typename T, usize I>
-	inline Vec<T,I>  ColorUtils::FromSRGB (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  ColorUtils::FromSRGB (const Vec<T,I,U> &x)
 	{
-		Vec<T,I>	ret;
+		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = i < 3 ? ( x[i] <= T(0.04045) ?  x[i] / T(12.92) :
 											Pow( ( x[i] + T(0.055) ) / T(1.055), T(0.41666) ) ) : T(0);
 		return ret;
@@ -496,15 +496,15 @@ namespace GXMath
 	}
 
 
-	template <typename B, typename T, usize I>
-	inline Vec<B,I>  ColorUtils::Convert (const Vec<T,I> &x)
+	template <typename B, typename T, usize I, ulong U>
+	inline Vec<B,I,U>  ColorUtils::Convert (const Vec<T,I,U> &x)
 	{
 		typedef typename CompileTime::MainType< B, T, float >		main_t;
 
 		static const main_t		s_tK   = (main_t)Limits<B>::Max() / (main_t)Limits<T>::Max();
 		static const main_t		s_tAdd = main_t( CompileTime::IsInteger<B> ? 0.5 : 0 );
 
-		Vec<B,I>	ret;
+		Vec<B,I,U>	ret;
 		FOR( i, ret )	ret[i] = B( x[i] * s_tK + s_tAdd );
 		return ret;
 	}

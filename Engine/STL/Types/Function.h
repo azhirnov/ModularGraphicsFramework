@@ -49,23 +49,23 @@ namespace GXTypes
 		forceinline Self& operator = (const Self &) = default;
 		forceinline Self& operator = (Self &&) = default;
 
-		forceinline Self& operator = (const Func_t &other)		{ _func = other;		return *this; }
-		forceinline Self& operator = (Func_t &&other)			{ _func = RVREF(other);	return *this; }
+		forceinline Self& operator = (const Func_t &other) noexcept	{ _func = other;		return *this; }
+		forceinline Self& operator = (Func_t &&other) noexcept		{ _func = RVREF(other);	return *this; }
 
-		forceinline void Swap (INOUT Self &other)				{ _func.swap( other._func ); }
-		forceinline void Swap (INOUT Func_t &other)				{ _func.swap( other._func ); }
+		forceinline void Swap (INOUT Self &other)					{ _func.swap( other._func ); }
+		forceinline void Swap (INOUT Func_t &other)					{ _func.swap( other._func ); }
 
-		forceinline explicit operator bool ()	const			{ return bool(_func); }
+		forceinline explicit operator bool ()	const				{ return bool(_func); }
 
-		forceinline Result_t	operator () ()	const			{ return _func(); }
+		forceinline Result_t	operator () ()	const noexcept		{ return _func(); }
 
-		forceinline bool		IsValid ()		const			{ return bool(_func); }
+		forceinline bool		IsValid ()		const				{ return bool(_func); }
 
-		forceinline Result_t	Call ()			const			{ ASSERT( IsValid() );  return _func(); }
+		forceinline Result_t	Call ()			const noexcept		{ ASSERT( IsValid() );  return _func(); }
 
-		forceinline Result_t	SafeCall ()		const			{ return IsValid() ? _func() : Result_t(); }
-
-		forceinline TypeId		GetType ()		const			{ return _func.target_type(); }
+		forceinline Result_t	SafeCall ()		const noexcept		{ return IsValid() ? _func() : Result_t(); }
+		
+		forceinline TypeId		GetType ()		const				{ return _func.target_type(); }
 	};
 
 
@@ -94,7 +94,7 @@ namespace GXTypes
 
 		template <typename T, typename C>
 		struct FB_GetBaseClass< T, C, false > {
-			static const bool	value = FB_IsRawTypesSame< typename T::value_t, C >::value;
+			static const bool	value = FB_IsRawTypesSame< typename T::Value_t, C >::value;
 		};
 		
 		template <typename T, typename C>

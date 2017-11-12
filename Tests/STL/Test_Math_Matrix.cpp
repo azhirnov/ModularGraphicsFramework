@@ -7,10 +7,10 @@ using namespace GX_STL::GXTypes;
 using namespace GX_STL::GXMath;
 
 
-template <typename T, usize C, usize R, usize Q>
-static Matrix<T,Q,R> Mul (const Matrix<T,C,R> &left, const Matrix<T,Q,C> &right)
+template <typename T, usize C, usize R, usize Q, ulong U>
+static Matrix<T,Q,R,U> Mul (const Matrix<T,C,R,U> &left, const Matrix<T,Q,C,U> &right)
 {
-	Matrix<T,Q,R>	result;
+	Matrix<T,Q,R,U>	result;
 
 	for (uint r = 0; r < R; ++r)
 	{

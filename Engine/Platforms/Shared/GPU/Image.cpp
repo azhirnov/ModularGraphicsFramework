@@ -78,9 +78,9 @@ namespace Platforms
 	ValidateDimension
 =================================================
 */
-	uint4  ImageUtils::ValidateDimension (EImage::type target, const uint4 &dim)
+	uint4  ImageUtils::ValidateDimension (EImage::type imageType, const uint4 &dim)
 	{
-		switch ( target )
+		switch ( imageType )
 		{
 			case EImage::Buffer :
 			case EImage::Tex1D :
@@ -131,24 +131,24 @@ namespace Platforms
 	LevelDimension
 =================================================
 */
-	uint4 ImageUtils::LevelDimension (EImage::type target, const uint4 &dim, uint level)
+	uint4 ImageUtils::LevelDimension (EImage::type imageType, const uint4 &dim, uint level)
 	{
-		ASSERT( level == 0 or (target == EImage::Tex2DMS or target == EImage::Tex2DMSArray) );
+		ASSERT( level == 0 or (imageType == EImage::Tex2DMS or imageType == EImage::Tex2DMSArray) );
 
-		switch ( target )
+		switch ( imageType )
 		{
 			case EImage::Buffer :
-			case EImage::Tex1D :			return uint4( Max( dim.x >> level, 1u ), 0, 0, 0 );
+			case EImage::Tex1D :			return Max( uint4( dim.x >> level, 0, 0, 0 ), uint4(1) );
 
-			case EImage::Tex2D :			return uint4( Max( dim.xy() >> level, uint2(1) ), 0, 0 );
+			case EImage::Tex2D :			return Max( uint4( dim.xy() >> level, 0, 0 ), uint4(1) );
 
-			case EImage::TexCube :			return uint4( Max( dim.xy() >> level, uint2(1) ), 6, 0 );
+			case EImage::TexCube :			return Max( uint4( dim.xy() >> level, 6, 0 ), uint4(1) );
 
-			case EImage::Tex2DArray :		return uint4( Max( dim.xy() >> level, uint2(1) ), 0, dim.w );
+			case EImage::Tex2DArray :		return Max( uint4( dim.xy() >> level, 0, dim.w ), uint4(1) );
 
-			case EImage::Tex3D :			return uint4( Max( dim.xyz() >> level, uint3(1) ), 0 );
+			case EImage::Tex3D :			return Max( uint4( dim.xyz() >> level, 0 ), uint4(1) );
 
-			case EImage::TexCubeArray :		return uint4( Max( dim.xy() >> level, uint2(1) ), 6, dim.w );
+			case EImage::TexCubeArray :		return Max( uint4( dim.xy() >> level, 6, dim.w ), uint4(1) );
 
 			//case EImage::Tex2DMSArray :
 			//case EImage::Tex2DMS :	// not supported for multisampled texture
@@ -162,9 +162,9 @@ namespace Platforms
 	NumberOfMipmaps
 =================================================
 */	
-	uint ImageUtils::NumberOfMipmaps (EImage::type target, const uint4 &dim)
+	uint ImageUtils::NumberOfMipmaps (EImage::type imageType, const uint4 &dim)
 	{
-		switch ( target )
+		switch ( imageType )
 		{
 			case EImage::Buffer :
 			case EImage::Tex2DMS :
@@ -187,7 +187,7 @@ namespace Platforms
 	GetImageSize
 =================================================
 */
-	BytesU ImageUtils::GetImageSize (EPixelFormat::type format, EImage::type type, const uint3 &size, BytesU xAlign, BytesU xyAlign)
+	BytesU ImageUtils::GetImageSize (EPixelFormat::type format, EImage::type, const uint3 &size, BytesU xAlign, BytesU xyAlign)
 	{
 		CHECK_ERR( not EPixelFormat::IsCompressed( format ), BytesU() );
 
@@ -209,10 +209,10 @@ namespace Platforms
 */
 	void ImageUtils::ValidateDescriptor (INOUT ImageDescriptor &descr)
 	{
-		descr.dimension = ValidateDimension( descr.target, descr.dimension );
+		descr.dimension = ValidateDimension( descr.imageType, descr.dimension );
 		descr.dimension = Max( descr.dimension, uint4(1) );
 
-		if ( EImage::IsMultisampled( descr.target ) )
+		if ( EImage::IsMultisampled( descr.imageType ) )
 		{
 			ASSERT( descr.samples > MultiSamples(1) );
 			ASSERT( descr.maxLevel == MipmapLevel(1) );
@@ -222,7 +222,7 @@ namespace Platforms
 		{
 			ASSERT( descr.samples <= MultiSamples(1) );
 			descr.samples = MultiSamples(1);
-			descr.maxLevel = MipmapLevel( Max( descr.maxLevel.Get(), 1u ) );
+			descr.maxLevel = MipmapLevel( Clamp( descr.maxLevel.Get(), 1u, NumberOfMipmaps( descr.imageType, descr.dimension ) ));
 		}
 	}
 

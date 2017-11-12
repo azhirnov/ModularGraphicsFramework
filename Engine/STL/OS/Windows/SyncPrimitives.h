@@ -22,7 +22,7 @@ namespace OS
 	// Critical Section
 	//
 
-	struct CriticalSection
+	struct _STL_EXPORT_ CriticalSection
 	{
 		friend struct ConditionVariable;
 
@@ -79,7 +79,7 @@ namespace OS
 	// Single Read, Multiple Write (with WinXP support)
 	//
 
-	struct ReadWriteSync
+	struct _STL_EXPORT_ ReadWriteSync
 	{
 		friend struct ConditionVariable;
 
@@ -137,7 +137,7 @@ namespace OS
 	// Condition Variable
 	//
 
-	struct ConditionVariable
+	struct _STL_EXPORT_ ConditionVariable
 	{
 	// types
 	public:
@@ -182,7 +182,7 @@ namespace OS
 	// Synchronization Event
 	//
 	
-	struct SyncEvent
+	struct _STL_EXPORT_ SyncEvent
 	{
 	// types
 	public:
@@ -249,7 +249,7 @@ namespace OS
 	// Semaphore
 	//
 
-	struct Semaphore
+	struct _STL_EXPORT_ Semaphore
 	{
 	// types
 	public:

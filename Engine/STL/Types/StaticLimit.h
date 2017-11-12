@@ -48,7 +48,7 @@ namespace GXTypes
 	// types
 	public:
 		typedef StaticLimit< T, MinLimit, MaxLimit, S >	Self;
-		typedef S< T >										Strategy;
+		typedef S< T >										Strategy_t;
 
 
 	// variables
@@ -60,7 +60,7 @@ namespace GXTypes
 	private:
 		void _Validate ()
 		{
-			Strategy::Validate( OUT _value, Min(), Max() );
+			Strategy_t::Validate( OUT _value, Min(), Max() );
 		}
 
 		STATIC_ASSERT( MinLimit < MaxLimit, "incorrect values" );
@@ -143,14 +143,14 @@ namespace GXTypes
 	template <typename T, T MinLimit, T MaxLimit, template <typename> class S>
 	struct Hash< StaticLimit< T, MinLimit, MaxLimit, S > > : private Hash<T>
 	{
-		typedef StaticLimit< T, MinLimit, MaxLimit, S >		key_t;
-		typedef Hash<T>										base_t;
-		typedef typename base_t::result_t					result_t;
+		typedef StaticLimit< T, MinLimit, MaxLimit, S >		Key_t;
+		typedef Hash<T>										Base_t;
+		typedef typename Base_t::Result_t					Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
 			// TODO: is min and max limits needed here?
-			return base_t::operator ()( x.Value() );
+			return Base_t::operator ()( x.Value() );
 		}
 	};
 

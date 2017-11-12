@@ -26,60 +26,60 @@ namespace GXMath
 
 	// types
 	public:	
-		typedef ValueType												value_t;
+		typedef ValueType												Value_t;
 		typedef Dimensions												dimensions_t;	// PhysDimList
 		typedef ValueScale												value_scale_t;	// PhysicsDimensionScale::BaseConversion
-		typedef PhysicsValue< value_t, dimensions_t, value_scale_t >	Self;
+		typedef PhysicsValue< Value_t, dimensions_t, value_scale_t >	Self;
 
 	private:
 		template <typename D, typename S>
 		struct _Add {
-			typedef PhysicsValue< value_t, D, S >											Right;
+			typedef PhysicsValue< Value_t, D, S >											Right;
 			typedef typename value_scale_t::template _Add4< typename Right::value_scale_t >	conv_add_op_t;
-			typedef PhysicsValue< value_t,
+			typedef PhysicsValue< Value_t,
 						typename dimensions_t::template Add< Right::dimensions_t >,
 						typename conv_add_op_t::type >										type;
 
-			static value_t Get (const value_t &left, const value_t &right) {
+			static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_add_op_t::Get( left, right );
 			}
 		};
 		
 		template <typename D, typename S>
 		struct _Sub {
-			typedef PhysicsValue< value_t, D, S >											Right;
+			typedef PhysicsValue< Value_t, D, S >											Right;
 			typedef typename value_scale_t::template _Sub4< typename Right::value_scale_t >	conv_sub_op_t;
-			typedef PhysicsValue< value_t,
+			typedef PhysicsValue< Value_t,
 						typename dimensions_t::template Sub< Right::dimensions_t >,
 						typename conv_sub_op_t::type >										type;
 
-			static value_t Get (const value_t &left, const value_t &right) {
+			static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_sub_op_t::Get( left, right );
 			}
 		};
 		
 		template <typename D, typename S>
 		struct _Mul {
-			typedef PhysicsValue< value_t, D, S >											Right;
+			typedef PhysicsValue< Value_t, D, S >											Right;
 			typedef typename value_scale_t::template _Mul4< typename Right::value_scale_t >	conv_mul_op_t;
-			typedef PhysicsValue< value_t,
+			typedef PhysicsValue< Value_t,
 						typename dimensions_t::template Mul< Right::dimensions_t >,
 						typename conv_mul_op_t::type >										type;
 
-			static value_t Get (const value_t &left, const value_t &right) {
+			static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_mul_op_t::Get( left, right );
 			}
 		};
 		
 		template <typename D, typename S>
 		struct _Div {
-			typedef PhysicsValue< value_t, D, S >											Right;
+			typedef PhysicsValue< Value_t, D, S >											Right;
 			typedef typename value_scale_t::template _Div4< typename Right::value_scale_t >	conv_div_op_t;
-			typedef PhysicsValue< value_t,
+			typedef PhysicsValue< Value_t,
 						typename dimensions_t::template Div< Right::dimensions_t >,
 						typename conv_div_op_t::type >										type;
 
-			static value_t Get (const value_t &left, const value_t &right) {
+			static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_div_op_t::Get( left, right );
 			}
 		};
@@ -87,7 +87,7 @@ namespace GXMath
 		template <isize PowNum, isize PowDenom = 1>
 		struct _Pow {
 			typedef typename CompileTime::Fractional32< PowNum, PowDenom >		pow_t;
-			typedef PhysicsValue< value_t,
+			typedef PhysicsValue< Value_t,
 						typename dimensions_t::template Power< pow_t >,
 						typename value_scale_t::template Pow< pow_t > >			type;
 		};
@@ -105,7 +105,7 @@ namespace GXMath
 
 	// variables
 	private:
-		value_t		_value;
+		Value_t		_value;
 
 
 	// methods
@@ -113,19 +113,19 @@ namespace GXMath
 		constexpr PhysicsValue (GX_DEFCTOR) : _value(0) {}
 	
 		explicit
-		constexpr PhysicsValue (value_t value) : _value(value) {}
+		constexpr PhysicsValue (Value_t value) : _value(value) {}
 
 		constexpr PhysicsValue (const Self &other) : _value(other.ref()) {}
 		
 		template <typename S>
-		PhysicsValue (const PhysicsValue< value_t, dimensions_t, S > &other) :
+		PhysicsValue (const PhysicsValue< Value_t, dimensions_t, S > &other) :
 			_value(other.ToScale< value_scale_t >().ref())
 		{}
 
-		value_t &		ref ()							{ return _value; }
-		value_t const &	ref ()			const			{ return _value; }
+		Value_t &		ref ()							{ return _value; }
+		Value_t const &	ref ()			const			{ return _value; }
 
-		value_t			Get ()			const			{ return value_scale_t::Func::Get( _value ); }
+		Value_t			Get ()			const			{ return value_scale_t::Func::Get( _value ); }
 
 		Self	operator -  ()			const			{ return Self( -_value ); }
 
@@ -146,57 +146,57 @@ namespace GXMath
 		Self	operator +  (const Self &right)	const	{ return Self( _value + right.ref() ); }
 		Self	operator -  (const Self &right)	const	{ return Self( _value - right.ref() ); }
 
-		Self &	operator *= (value_t right)				{ _value *= right;  return *this; }
-		Self &	operator /= (value_t right)				{ _value /= right;  return *this; }
+		Self &	operator *= (Value_t right)				{ _value *= right;  return *this; }
+		Self &	operator /= (Value_t right)				{ _value /= right;  return *this; }
 
-		Self	operator *  (value_t right)		const	{ return Self( _value * right ); }
-		Self	operator /  (value_t right)		const	{ return Self( _value / right ); }
+		Self	operator *  (Value_t right)		const	{ return Self( _value * right ); }
+		Self	operator /  (Value_t right)		const	{ return Self( _value / right ); }
 
 		
 		template <typename D, typename S>
-		typename _Add< D, S >::type  operator +  (const PhysicsValue<value_t,D,S> &right) const
+		typename _Add< D, S >::type  operator +  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			typedef _Add< D, S >			add_op;
-			typedef typename add_op::type	result_t;
+			typedef typename add_op::type	Result_t;
 
-			return result_t( add_op::Get( _value, right.ref() ) );
+			return Result_t( add_op::Get( _value, right.ref() ) );
 		}
 		
 		template <typename D, typename S>
-		typename _Sub< D, S >::type  operator -  (const PhysicsValue<value_t,D,S> &right) const
+		typename _Sub< D, S >::type  operator -  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			typedef _Sub< D, S >			sub_op;
-			typedef typename sub_op::type	result_t;
+			typedef typename sub_op::type	Result_t;
 
-			return result_t( sub_op::Get( _value, right.ref() ) );
+			return Result_t( sub_op::Get( _value, right.ref() ) );
 		}
 		
 		template <typename D, typename S>
-		typename _Mul< D, S >::type  operator *  (const PhysicsValue<value_t,D,S> &right) const
+		typename _Mul< D, S >::type  operator *  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			typedef _Mul< D, S >			mul_op;
-			typedef typename mul_op::type	result_t;
+			typedef typename mul_op::type	Result_t;
 
-			return result_t( mul_op::Get( _value, right.ref() ) );
+			return Result_t( mul_op::Get( _value, right.ref() ) );
 		}
 		
 		template <typename D, typename S>
-		typename _Div< D, S >::type  operator /  (const PhysicsValue<value_t,D,S> &right) const
+		typename _Div< D, S >::type  operator /  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			typedef _Div< D, S >			div_op;
-			typedef typename div_op::type	result_t;
+			typedef typename div_op::type	Result_t;
 
-			return result_t( div_op::Get( _value, right.ref() ) );
+			return Result_t( div_op::Get( _value, right.ref() ) );
 		}
 
 
-		friend Self	operator * (value_t left, const Self &right)
+		friend Self	operator * (Value_t left, const Self &right)
 		{
 			return Self( left * right.ref() );
 		}
 	
 
-		friend SelfInversed	operator / (value_t left, const Self &right)
+		friend SelfInversed	operator / (Value_t left, const Self &right)
 		{
 			return SelfInversed( left / right.ref() );
 		}
@@ -205,20 +205,20 @@ namespace GXMath
 		template <isize PowNum, isize PowDenom>
 		typename _Pow< PowNum, PowDenom >::type  Pow () const
 		{
-			typedef typename _Pow< PowNum, PowDenom >::type						result_t;
+			typedef typename _Pow< PowNum, PowDenom >::type						Result_t;
 			typedef typename CompileTime::Fractional32< PowNum, PowDenom >		pow_t;
-			typedef typename CompileTime::NearFloat::FromType<ValueType>		float_t;
+			typedef typename CompileTime::NearFloat::FromType<ValueType>		Float_t;
 
-			return result_t( GXMath::Pow( _value, pow_t::ToFloat< float_t >() ) );
+			return Result_t( GXMath::Pow( _value, pow_t::ToFloat< Float_t >() ) );
 		}
 		
 
 		template <isize Power>
 		typename _Pow< Power >::type  Pow () const
 		{
-			typedef typename CompileTime::NearFloat::FromType<ValueType>		float_t;
+			typedef typename CompileTime::NearFloat::FromType<ValueType>		Float_t;
 
-			return typename _Pow< Power >::type( GXMath::Pow( _value, float_t( Power ) ) );
+			return typename _Pow< Power >::type( GXMath::Pow( _value, Float_t( Power ) ) );
 		}
 
 
@@ -236,7 +236,7 @@ namespace GXMath
 
 		SelfInversed  Inverse () const
 		{
-			return value_t(1) / (*this);
+			return Value_t(1) / (*this);
 		}
 
 
@@ -278,20 +278,20 @@ namespace GXMath
 		{
 			STATIC_ASSERT( dimensions_t::Equal< typename T::dimensions_t >::value );
 
-			typedef typename CompileTime::MainType< value_t, typename T::value_t >		main_value_t;
+			typedef typename CompileTime::MainType< Value_t, typename T::Value_t >		main_value_t;
 			typedef typename value_scale_t::To< main_value_t >							scale1_t;
 			typedef typename T::value_scale_t::To< main_value_t >						scale2_t;
 			typedef typename scale1_t::_Div4< scale2_t >								div_op_t;
 
-			return T( (T::value_t) div_op_t::Get( _value, main_value_t(1) ) );
+			return T( (T::Value_t) div_op_t::Get( _value, main_value_t(1) ) );
 		}
 
 
 		template <typename ToValueScale>
-		PhysicsValue< value_t, dimensions_t, ToValueScale >	ToScale () const
+		PhysicsValue< Value_t, dimensions_t, ToValueScale >	ToScale () const
 		{
-			return PhysicsValue< value_t, dimensions_t, ToValueScale >(
-						Get() / ToValueScale::Func::Get( value_t(1) ) );
+			return PhysicsValue< Value_t, dimensions_t, ToValueScale >(
+						Get() / ToValueScale::Func::Get( Value_t(1) ) );
 		}
 	};
 	
@@ -309,10 +309,10 @@ namespace GXMath
 	{
 	// types
 	public:
-		typedef ValueType													value_t;
+		typedef ValueType													Value_t;
 		typedef DefaultPhysicsDimensionsList::CreateNonDimensional			dimensions_t;
 		typedef ValueScale													value_scale_t;
-		typedef PhysicsValue< value_t, dimensions_t, value_scale_t >		Self;
+		typedef PhysicsValue< Value_t, dimensions_t, value_scale_t >		Self;
 		
 		STATIC_ASSERT( dimensions_t::IsNonDimensional::value );
 
@@ -323,7 +323,7 @@ namespace GXMath
 
 	// variables
 	private:
-		value_t		_value;
+		Value_t		_value;
 
 
 	// methods
@@ -331,17 +331,17 @@ namespace GXMath
 		constexpr PhysicsValue (GX_DEFCTOR) : _value(0) {}
 	
 		explicit
-		constexpr PhysicsValue (value_t value) : _value(value) {}
+		constexpr PhysicsValue (Value_t value) : _value(value) {}
 
 		constexpr PhysicsValue (const Self &other) : _value(other.ref()) {}
 		
 
-		value_t &		ref ()							{ return _value; }
-		value_t const &	ref ()			const			{ return _value; }
+		Value_t &		ref ()							{ return _value; }
+		Value_t const &	ref ()			const			{ return _value; }
 
-		value_t			Get ()			const			{ return value_scale_t::Func::Get( _value ); }
+		Value_t			Get ()			const			{ return value_scale_t::Func::Get( _value ); }
 
-		operator value_t ()				const			{ return Get(); }
+		operator Value_t ()				const			{ return Get(); }
 
 		Self &	operator =  (const Self &right)			{ _value = right.ref();  return *this; }
 
@@ -358,48 +358,48 @@ namespace GXMath
 		Self	operator +  (const Self &right)	const	{ return Self( _value + right.ref() ); }
 		Self	operator -  (const Self &right)	const	{ return Self( _value - right.ref() ); }
 
-		Self &	operator *= (value_t right)				{ _value *= right;  return *this; }
-		Self &	operator /= (value_t right)				{ _value /= right;  return *this; }
+		Self &	operator *= (Value_t right)				{ _value *= right;  return *this; }
+		Self &	operator /= (Value_t right)				{ _value /= right;  return *this; }
 		
-		Self	operator *  (value_t right)		const	{ return Self( _value * right ); }
-		Self	operator /  (value_t right)		const	{ return Self( _value / right ); }
+		Self	operator *  (Value_t right)		const	{ return Self( _value * right ); }
+		Self	operator /  (Value_t right)		const	{ return Self( _value / right ); }
 
 
-		friend Self	operator * (value_t left, const Self &right)
+		friend Self	operator * (Value_t left, const Self &right)
 		{
 			return Self( left * right.ref() );
 		}
 	
-		friend SelfInversed	operator / (value_t left, const Self &right)
+		friend SelfInversed	operator / (Value_t left, const Self &right)
 		{
 			return SelfInversed( left / right.ref() );
 		}
 
 
 		template <isize PowNum, isize PowDenom>
-		value_t  Pow () const
+		Value_t  Pow () const
 		{
 			typedef typename CompileTime::Fractional32< PowNum, PowDenom >		pow_t;
-			typedef typename CompileTime::NearFloat::FromType< value_t >		float_t;
+			typedef typename CompileTime::NearFloat::FromType< Value_t >		Float_t;
 
-			return GXMath::Pow( Get(), pow_t::ToFloat< float_t >() );
+			return GXMath::Pow( Get(), pow_t::ToFloat< Float_t >() );
 		}
 		
 
 		template <isize Power>
-		value_t  Pow () const
+		Value_t  Pow () const
 		{
 			return GXMath::Pow< Power >( Get() );
 		}
 
 
-		value_t  Square () const
+		Value_t  Square () const
 		{
 			return GXMath::Square( Get() );
 		}
 
 
-		value_t  Sqrt () const
+		Value_t  Sqrt () const
 		{
 			return GXMath::Sqrt( Get() );
 		}
@@ -407,7 +407,7 @@ namespace GXMath
 
 		SelfInversed  Inverse () const
 		{
-			return SelfInversed( value_t(1) / _value );
+			return SelfInversed( Value_t(1) / _value );
 		}
 
 
@@ -463,13 +463,13 @@ namespace GXMath
 			 >
 	struct ::GX_STL::GXTypes::Hash< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale > > : private Hash< ValueType >
 	{
-		typedef GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >	key_t;
-		typedef Hash< ValueType >											base_t;
-		typedef typename base_t::result_t									result_t;
+		typedef GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >	Key_t;
+		typedef Hash< ValueType >											Base_t;
+		typedef typename Base_t::Result_t									Result_t;
 
-		result_t operator () (const key_t &x) const
+		Result_t operator () (const Key_t &x) const
 		{
-			return base_t::operator ()( x.ref() );
+			return Base_t::operator ()( x.ref() );
 		}
 	};
 

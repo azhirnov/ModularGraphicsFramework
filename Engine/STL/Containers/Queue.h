@@ -27,10 +27,10 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef S				Strategy;
-		typedef MC				MemoryContainer_t;
-		typedef T				value_t;
-		typedef Queue<T,S,MC>	Self;
+		using Strategy_t		= S;
+		using MemoryContainer_t	= MC;
+		using Value_t			= T;
+		using Self				= Queue<T,S,MC>;
 		
 
 	// variables
@@ -159,7 +159,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline Queue<T,S,MC>::Queue (UninitializedType) : _size(0), _first(0), _last(-1) {}
+	inline Queue<T,S,MC>::Queue (UninitializedType) : _first(0), _last(-1), _size(0) {}
 		
 /*
 =================================================
@@ -167,7 +167,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline Queue<T,S,MC>::Queue (const Self &other) : _size(0), _first(0), _last(-1)
+	inline Queue<T,S,MC>::Queue (const Self &other) : _first(0), _last(-1), _size(0)
 	{
 		Copy( other );
 	}
@@ -178,7 +178,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline Queue<T,S,MC>::Queue (Self &&other)
+	inline Queue<T,S,MC>::Queue (Self &&other) : _first(0), _last(-1), _size(0)
 	{
 		_Move( RVREF( other ) );
 	}
@@ -189,7 +189,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline Queue<T,S,MC>::Queue (ArrayCRef<T> other) : _size(0), _first(0), _last(-1)
+	inline Queue<T,S,MC>::Queue (ArrayCRef<T> other) : _first(0), _last(-1), _size(0)
 	{
 		Copy( other );
 	}
@@ -237,10 +237,10 @@ namespace GXTypes
 		if ( old_memcont.Pointer() == null or old_count == 0 )
 			return;
 
-		Strategy::Replace( _memory.Pointer() + _first, old_memcont.Pointer() + old_first, new_count );
+		Strategy_t::Replace( _memory.Pointer() + _first, old_memcont.Pointer() + old_first, new_count );
 
 		if ( new_count < old_count )
-			Strategy::Destroy( old_memcont.Pointer() + old_first + old_count, old_count - new_count );
+			Strategy_t::Destroy( old_memcont.Pointer() + old_first + old_count, old_count - new_count );
 	}
 	
 /*
@@ -289,7 +289,7 @@ namespace GXTypes
 			const isize	new_first = free_space;
 
 			for (usize i = 0; i < Count(); ++i) {
-				Strategy::Replace( _memory.Pointer() + new_first + i, _memory.Pointer() + _first + i, 1 );
+				Strategy_t::Replace( _memory.Pointer() + new_first + i, _memory.Pointer() + _first + i, 1, true );
 			}
 
 			_last -= _first - new_first - offset;
@@ -322,7 +322,7 @@ namespace GXTypes
 			const isize	new_first = offset + free_space;
 
 			for (isize i = Count()-1; i >= 0; --i) {
-				Strategy::Replace( _memory.Pointer() + new_first + i, _memory.Pointer() + _first + i, 1 );
+				Strategy_t::Replace( _memory.Pointer() + new_first + i, _memory.Pointer() + _first + i, 1, true );
 			}
 
 			_last += new_first - _first;
@@ -419,14 +419,14 @@ namespace GXTypes
 	inline void Queue<T,S,MC>::PushBack (const T &value)
 	{
 		_ReplaceToLeft();
-		Strategy::Copy( _memory.Pointer() + _last, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + _last, &value, 1 );
 	}
 	
 	template <typename T, typename S, typename MC>
 	inline void Queue<T,S,MC>::PushBack (T &&value)
 	{
 		_ReplaceToLeft();
-		Strategy::Move( _memory.Pointer() + _last, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + _last, &value, 1 );
 	}
 	
 /*
@@ -438,14 +438,14 @@ namespace GXTypes
 	inline void Queue<T,S,MC>::PushFront (const T &value)
 	{
 		_ReplaceToRight();
-		Strategy::Copy( _memory.Pointer() + _first, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + _first, &value, 1 );
 	}
 
 	template <typename T, typename S, typename MC>
 	inline void Queue<T,S,MC>::PushFront (T &&value)
 	{
 		_ReplaceToRight();
-		Strategy::Move( _memory.Pointer() + _first, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + _first, &value, 1 );
 	}
 	
 /*
@@ -457,7 +457,7 @@ namespace GXTypes
 	inline void Queue<T,S,MC>::PopBack ()
 	{
 		if ( _first <= _last ) {
-			Strategy::Destroy( _memory.Pointer() + _last, 1 );
+			Strategy_t::Destroy( _memory.Pointer() + _last, 1 );
 			--_last;
 		}
 	}
@@ -471,7 +471,7 @@ namespace GXTypes
 	inline void Queue<T,S,MC>::PopFront ()
 	{
 		if ( _first <= _last ) {
-			Strategy::Destroy( _memory.Pointer() + _first, 1 );
+			Strategy_t::Destroy( _memory.Pointer() + _first, 1 );
 			++_first;
 		}
 	}
@@ -497,13 +497,13 @@ namespace GXTypes
 		
 		if ( newSize < old_count )
 		{
-			Strategy::Destroy( _memory.Pointer() + _first + newSize, old_count - newSize );
+			Strategy_t::Destroy( _memory.Pointer() + _first + newSize, old_count - newSize );
 			_last = _first + newSize-1;
 			return;
 		}
 
 		_Reallocate( newSize );
-		Strategy::Create( _memory.Pointer() + _first + old_count, newSize - old_count );
+		Strategy_t::Create( _memory.Pointer() + _first + old_count, newSize - old_count );
 		_last = _first + newSize-1;
 	}
 	
@@ -534,7 +534,7 @@ namespace GXTypes
 	{
 		if ( _memory.Pointer() != null )
 		{
-			Strategy::Destroy( _memory.Pointer() + _first, Count() );
+			Strategy_t::Destroy( _memory.Pointer() + _first, Count() );
 			_memory.Deallocate();
 		}
 		_first	= 0;
@@ -551,7 +551,7 @@ namespace GXTypes
 	inline void Queue<T,S,MC>::Clear ()
 	{
 		if ( _memory.Pointer() != null ) {
-			Strategy::Destroy( _memory.Pointer() + _first, Count() );
+			Strategy_t::Destroy( _memory.Pointer() + _first, Count() );
 		}
 		_first	= _CalcFirstOffset( _size );
 		_last	= _first-1;
@@ -583,7 +583,7 @@ namespace GXTypes
 		_first  = _CalcFirstOffset( _size );
 		_last	 = GXMath::Min( _first + count, _size );
 
-		Strategy::Copy( _memory.Pointer() + _first, arrayPtr, Count() );
+		Strategy_t::Copy( _memory.Pointer() + _first, arrayPtr, Count() );
 	}
 		
 /*
@@ -598,7 +598,7 @@ namespace GXTypes
 			RET_VOID;
 
 		_ReplaceToRight( other.Count() );
-		Strategy::Copy( _memory.Pointer() + _first, other.ptr(), other.Count() );
+		Strategy_t::Copy( _memory.Pointer() + _first, other.ptr(), other.Count() );
 	}
 		
 /*
@@ -613,7 +613,7 @@ namespace GXTypes
 			RET_VOID;
 
 		_ReplaceToRight( other.Count() );
-		Strategy::Move( _memory.Pointer() + _first, other.ptr(), other.Count() );
+		Strategy_t::Move( _memory.Pointer() + _first, other.ptr(), other.Count() );
 	}
 		
 /*
@@ -628,7 +628,7 @@ namespace GXTypes
 			return;
 
 		_ReplaceToLeft( other.Count() );
-		Strategy::Copy( _memory.Pointer() + _last - other.Count() + 1, other.ptr(), other.Count() );
+		Strategy_t::Copy( _memory.Pointer() + _last - other.Count() + 1, other.ptr(), other.Count() );
 	}
 		
 /*
@@ -643,7 +643,7 @@ namespace GXTypes
 			return;
 
 		_ReplaceToLeft( other.Count() );
-		Strategy::Move( _memory.Pointer() + _last - other.Count() + 1, other.ptr(), other.Count() );
+		Strategy_t::Move( _memory.Pointer() + _last - other.Count() + 1, other.ptr(), other.Count() );
 	}
 	
 /*
@@ -665,15 +665,15 @@ namespace GXTypes
 		if ( pos <= (u_count - pos - count) )
 		{
 			// erase from left
-			Strategy::Destroy( _memory.Pointer() + _first + pos, count );
-			Strategy::Replace( _memory.Pointer() + _first + pos, _memory.Pointer() + _first, pos );
+			Strategy_t::Destroy( _memory.Pointer() + _first + pos, count );
+			Strategy_t::Replace( _memory.Pointer() + _first + pos, _memory.Pointer() + _first, pos, true );
 			_first += count;
 		}
 		else
 		{
 			// erase from right
-			Strategy::Destroy( _memory.Pointer() + _first + pos, count );
-			Strategy::Replace( _memory.Pointer() + _first + pos, _memory.Pointer() + _last - pos - count, u_count - pos - count );
+			Strategy_t::Destroy( _memory.Pointer() + _first + pos, count );
+			Strategy_t::Replace( _memory.Pointer() + _first + pos, _memory.Pointer() + _last - pos - count, u_count - pos - count, true );
 			_last -= count;
 		}
 	}
@@ -715,13 +715,13 @@ namespace GXTypes
 	struct Hash< Queue<T,S,MC> > :
 		private Hash< ArrayCRef<T> >
 	{
-		typedef Queue<T,S,MC>				key_t;
-		typedef Hash< ArrayCRef<T> >		base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef Queue<T,S,MC>				Key_t;
+		typedef Hash< ArrayCRef<T> >		Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x );
+			return Base_t::operator ()( x );
 		}
 	};
 

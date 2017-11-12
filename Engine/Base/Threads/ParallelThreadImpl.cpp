@@ -1,8 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Threads/ParallelThreadImpl.h"
-#include "Engine/Base/Modules/ModuleAsyncTasks.h"
-
 
 namespace Engine
 {
@@ -15,9 +13,9 @@ namespace Base
 =================================================
 */
 	ParallelThread::ParallelThread (const GlobalSystemsRef gs,
-					const ModuleConfig &config,
-					const Runtime::VirtualTypeList *msgTypes,
-					const Runtime::VirtualTypeList *eventTypes) :
+									const ModuleConfig &config,
+									const TypeIdList *msgTypes,
+									const TypeIdList *eventTypes) :
 		Module( gs, config, msgTypes, eventTypes )
 	{
 		GlobalSystems()->GetSetter< ParallelThread >().Set( this );
@@ -30,21 +28,23 @@ namespace Base
 */
 	ParallelThread::~ParallelThread ()
 	{
-		GlobalSystems()->GetSetter< ParallelThread >().Set( null );
+		if ( GetThreadID() == ThreadID::GetCurrent() ) {
+			GlobalSystems()->GetSetter< ParallelThread >().Set( null );
+		}
 	}
 //-----------------------------------------------------------------------------
 
 
 	
-	const Runtime::VirtualTypeList	ParallelThreadImpl::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	ParallelThreadImpl::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	ParallelThreadImpl::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	ParallelThreadImpl::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	ParallelThreadImpl::ParallelThreadImpl (const GlobalSystemsRef gs, const CreateInfo::Thread &info) :
+	ParallelThreadImpl::ParallelThreadImpl (GlobalSystemsRef gs, const CreateInfo::Thread &info) :
 		ParallelThread( gs, ModuleConfig{ ParallelThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_onStarted( RVREF( info.onStarted.Get() ) ),
 		_isLooping( false )
@@ -72,8 +72,6 @@ namespace Base
 */
 	ParallelThreadImpl::~ParallelThreadImpl ()
 	{
-		CHECK( GetThreadID() == ThreadID::GetCurrent() );
-
 		LOG( "ParallelThread finalized", ELog::Debug );
 
 		ASSERT( not _isLooping );
@@ -99,9 +97,12 @@ namespace Base
 */
 	bool ParallelThreadImpl::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
 		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
 
-		CHECK_ERR( Module::_DefCompose( false ) );
+		CHECK( Module::_DefCompose( false ) );
 		return true;
 	}
 
@@ -116,9 +117,9 @@ namespace Base
 
 		_isLooping = false;
 
-		_SendForEachAttachments< ModuleMsg::Delete >({});
+		_SendForEachAttachments( msg );
 
-		CHECK_ERR( Module::_Delete_Impl( msg ) );
+		_DetachSelfFromManager();
 		return true;
 	}
 
@@ -137,7 +138,7 @@ namespace Base
 		
 		if ( _onStarted )
 		{
-			_onStarted( this );
+			_onStarted( this->GlobalSystems() );
 			_onStarted = null;
 		}
 	}
@@ -182,8 +183,20 @@ namespace Base
 
 		// last update to proccess messages
 		_SendForEachAttachments< ModuleMsg::Update >({ dt });
+
+		CHECK( Module::_Delete_Impl( Message< ModuleMsg::Delete >{} ) );
 	}
 	
+/*
+=================================================
+	_Wait
+=================================================
+*/
+	void ParallelThreadImpl::_Wait ()
+	{
+		_thread.Wait();
+	}
+
 /*
 =================================================
 	_SyncUpdate
@@ -199,15 +212,14 @@ namespace Base
 		// update attached modules
 		_SendForEachAttachments< ModuleMsg::Update >({ dt });
 	}
-	
+
 /*
 =================================================
-	_Wait
+	_NoWait
 =================================================
 */
-	void ParallelThreadImpl::_Wait ()
+	void ParallelThreadImpl::_NoWait ()
 	{
-		_thread.Wait();
 	}
 
 }	// Base

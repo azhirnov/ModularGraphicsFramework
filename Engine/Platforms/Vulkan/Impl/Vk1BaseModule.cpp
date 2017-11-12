@@ -1,7 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -9,25 +8,7 @@ namespace Engine
 {
 namespace PlatformVK
 {
-	
-/*
-=================================================
-	GetVkSubSystems
-=================================================
-*/
-	forceinline VkSystemsRef GetVkSubSystems (const GlobalSystemsRef gs, const ModulePtr &gpuThread)
-	{
-		if ( gpuThread )
-			return gpuThread.ToPtr< VulkanThread >()->GetDevice()->VkSystems();
 
-		ModulePtr const&	gpu_thread = gs->Get< ParallelThread >()->GetModuleByID( Platforms::VkThreadModuleID );
-		
-		if ( gpu_thread )
-			return gpu_thread.ToPtr< VulkanThread >()->GetDevice()->VkSystems();
-
-		return VkSystemsRef(null);
-	}
-	
 /*
 =================================================
 	constructor
@@ -35,40 +16,9 @@ namespace PlatformVK
 */
 	Vk1BaseModule::Vk1BaseModule (const GlobalSystemsRef gs,
 								  const ModuleConfig &config,
-								  const Runtime::VirtualTypeList *msgTypes,
-								  const Runtime::VirtualTypeList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes ),
-		_vkSystems( GetVkSubSystems( gs, null ) )
-	{
-	}
-		
-/*
-=================================================
-	constructor
-=================================================
-*/
-	Vk1BaseModule::Vk1BaseModule (const GlobalSystemsRef gs,
-								  const ModulePtr &gpuThread,
-								  const ModuleConfig &config,
-								  const Runtime::VirtualTypeList *msgTypes,
-								  const Runtime::VirtualTypeList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes ),
-		_vkSystems( GetVkSubSystems( gs, null ) )
-	{
-	}
-	
-/*
-=================================================
-	constructor
-=================================================
-*/
-	Vk1BaseModule::Vk1BaseModule (const GlobalSystemsRef gs,
-								  const VkSystemsRef vkSys,
-								  const ModuleConfig &config,
-								  const Runtime::VirtualTypeList *msgTypes,
-								  const Runtime::VirtualTypeList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes ),
-		_vkSystems( vkSys )
+								  const TypeIdList *msgTypes,
+								  const TypeIdList *eventTypes) :
+		Module( gs, config, msgTypes, eventTypes )
 	{
 	}
 	
@@ -79,23 +29,22 @@ namespace PlatformVK
 */
 	bool Vk1BaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
 	{
+		_vkDevice = null;
+
 		if ( msg->newManager )
+		{
 			msg->newManager->Subscribe( this, &Vk1BaseModule::_DeviceBeforeDestroy );
+
+			Message< GpuMsg::GetVkPrivateClasses >	req_dev;
+			msg->newManager->Send( req_dev );
+
+			_vkDevice = req_dev->result->device;
+		}
 		
 		if ( msg->oldManager )
 			msg->oldManager->UnsubscribeAll( this );
 
 		return true;
-	}
-	
-/*
-=================================================
-	_DestroyResources
-=================================================
-*/
-	void Vk1BaseModule::_DestroyResources ()
-	{
-		_SendMsg< ModuleMsg::Delete >({});
 	}
 
 /*
@@ -103,23 +52,43 @@ namespace PlatformVK
 	_DeviceBeforeDestroy
 =================================================
 */
-	bool Vk1BaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &msg)
+	bool Vk1BaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
 	{
-		_DestroyResources();
+		_SendMsg< ModuleMsg::Delete >({});
+
+		_vkDevice = null;
 		return true;
 	}
 	
 /*
 =================================================
-	_GetVkLogicDevice
+	_GetDeviceInfo
 =================================================
 */
-	bool Vk1BaseModule::_GetVkLogicDevice (const Message< GpuMsg::GetVkLogicDevice > &msg)
+	bool Vk1BaseModule::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
 	{
-		msg->result.Set( GetLogicalDevice() );
-		return true;
+		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}
-
+	
+/*
+=================================================
+	_GetVkDeviceInfo
+=================================================
+*/
+	bool Vk1BaseModule::_GetVkDeviceInfo (const Message< GpuMsg::GetVkDeviceInfo > &msg)
+	{
+		return _GetManager() ? _GetManager()->Send( msg ) : false;
+	}
+	
+/*
+=================================================
+	_GetVkPrivateClasses
+=================================================
+*/
+	bool Vk1BaseModule::_GetVkPrivateClasses (const Message< GpuMsg::GetVkPrivateClasses > &msg)
+	{
+		return _GetManager() ? _GetManager()->Send( msg ) : false;
+	}
 
 }	// PlatformVK
 }	// Engine

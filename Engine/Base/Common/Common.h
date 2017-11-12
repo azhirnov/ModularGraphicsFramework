@@ -7,6 +7,13 @@
 #include "Engine/Config/Engine.Version.h"
 #include "Engine/Base/Common/Defines.h"
 
+#ifdef __GX_BUILD_LIB__
+#	define _ENGINE_BASE_EXPORT_
+#elif defined( __GX_ENGINE_BASE_BUILD__ )
+#	define _ENGINE_BASE_EXPORT_		GX_DLL_EXPORT
+#else
+#	define _ENGINE_BASE_EXPORT_		GX_DLL_IMPORT
+#endif
 
 namespace Engine
 {
@@ -32,7 +39,7 @@ namespace Engine
 		SHARED_POINTER( TaskModule );
 		SHARED_POINTER( ModulesFactory );
 
-		Ptr<Module>  GetMainSystemInstace ();
+		_ENGINE_BASE_EXPORT_ Ptr<Module>  GetMainSystemInstace ();
 
 		template <typename T> struct Message;
 	}
@@ -49,8 +56,8 @@ namespace Engine
 	
 	namespace Platforms
 	{
-		void RegisterPlatforms ();
-		void UnregisterPlatforms ();
+		//void RegisterPlatforms ();
+		//void UnregisterPlatforms ();
 	}
 	
 	namespace Profilers
@@ -63,6 +70,8 @@ namespace Engine
 	
 	namespace Graphics
 	{
+		//void RegisterGraphics ();
+		//void UnregisterGraphics ();
 	}
 	
 	namespace Audio

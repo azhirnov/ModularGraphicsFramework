@@ -34,15 +34,15 @@ namespace GXMath
 	// Quaternion
 	//
 
-	template <typename T>
+	template <typename T, ulong U>
 	struct Quaternion : public CompileTime::CopyQualifiers< T >
 	{
 		// types
-		typedef Quaternion<T>		Self;
-		typedef T					value_t;
-		typedef Vec<T,3>			vec3_t;
-		typedef Matrix<T,3,3>		mat3_t;
-		typedef Matrix<T,4,4>		mat4_t;
+		typedef Quaternion<T,U>		Self;
+		typedef T					Value_t;
+		typedef Vec<T,3,U>			Vec3_t;
+		typedef Matrix<T,3,3,U>		mat3_t;
+		typedef Matrix<T,4,4,U>		mat4_t;
 		typedef bool				_is_quaternion;
 
 
@@ -55,7 +55,7 @@ namespace GXMath
 		Quaternion (const mat3_t &matrix);
 		Quaternion (const mat4_t &matrix);
 		Quaternion (T x, T y, T z, T w): x(x), y(y), z(z), w(w) {}
-		Quaternion (const vec3_t &vec, T w): x(vec.x), y(vec.y), z(vec.z), w(w) {}
+		Quaternion (const Vec3_t &vec, T w): x(vec.x), y(vec.y), z(vec.z), w(w) {}
 
 		// unary operators
 		Self		operator - () const;
@@ -69,7 +69,7 @@ namespace GXMath
 		bool		operator != (const Self &right)	const;
 
 		Self		operator *  (const Self &right)	const;
-		vec3_t		operator *  (const vec3_t &right) const;
+		Vec3_t		operator *  (const Vec3_t &right) const;
 		Self &		operator *= (const Self &right);
 		
 		_QUAT_OPERATOR( +  );
@@ -91,8 +91,8 @@ namespace GXMath
 		static usize Count ()						{ return 4; }
 
 		Self &	Set (Radians<T> x, Radians<T> y, Radians<T> z);
-		Self &	Set (const RadiansVec<T,3> &angle);
-		Self &	Set (const DegreesVec<T,3> &angle);
+		Self &	Set (const RadiansVec<T,3,U> &angle);
+		Self &	Set (const DegreesVec<T,3,U> &angle);
 		
 		T		Dot (const Self &right) const;
 
@@ -101,21 +101,21 @@ namespace GXMath
 		Self	Normalized () const;
 		Self &	Normalize ();
 		
-		vec3_t	GetDirection () const;
+		Vec3_t	GetDirection () const;
 
 		Self &	Inverse ();
 		Self	Inversed () const;
 
-		Self &	FromAngleAxis (Radians<T> angle, const vec3_t &axis);
+		Self &	FromAngleAxis (Radians<T> angle, const Vec3_t &axis);
 
-		void	ToAngleAxis (OUT Radians<T> &angle, OUT vec3_t &axis) const;
-		void	ToEuler (OUT RadiansVec<T,3> &euler) const;
+		void	ToAngleAxis (OUT Radians<T> &angle, OUT Vec3_t &axis) const;
+		void	ToEuler (OUT RadiansVec<T,3,U> &euler) const;
 
-		//Self & FromSpherical (const Vec<T,2> &sAngles);
-		//void	ToSpherical (Vec<T,2> &sAngles) const;
+		//Self & FromSpherical (const Vec<T,2,U> &sAngles);
+		//void	ToSpherical (Vec<T,2,U> &sAngles) const;
 
 		Self &	MakeIdentity ();
-		Self &	RotationFromTo (const vec3_t &fromDir, const vec3_t &toDir);
+		Self &	RotationFromTo (const Vec3_t &fromDir, const Vec3_t &toDir);
 
 		Self &	RotationX (Radians<T> angle);	// pitch
 		Self &	RotationY (Radians<T> angle);	// yaw
@@ -125,8 +125,8 @@ namespace GXMath
 		Self &	RotationY (Degrees<T> angle)		{ return RotationY( angle.ToRadians() ); }
 		Self &	RotationZ (Degrees<T> angle)		{ return RotationZ( angle.ToRadians() ); }
 
-		Self &	Rotation (const RadiansVec<T,3> &angle);
-		Self &	Rotation (const DegreesVec<T,3> &angle);
+		Self &	Rotation (const RadiansVec<T,3,U> &angle);
+		Self &	Rotation (const DegreesVec<T,3,U> &angle);
 
 		template <typename T2>
 		const Quaternion<T2> Convert () const;
@@ -134,17 +134,17 @@ namespace GXMath
 		template <typename B>
 		const B	To () const;
 
-		Vec<T,4>	xyzw () const		{ return Vec<T,4>( x, y, z, w ); }
-		Vec<T,2>	xy ()	const		{ return Vec<T,2>( x, y ); }
-		Vec<T,3>	xyz ()	const		{ return Vec<T,3>( x, y, z ); }
+		Vec<T,4,U>	xyzw () const		{ return Vec<T,4,U>( x, y, z, w ); }
+		Vec<T,2,U>	xy ()	const		{ return Vec<T,2,U>( x, y ); }
+		Vec<T,3,U>	xyz ()	const		{ return Vec<T,3,U>( x, y, z ); }
 	};
 
 	
 
 //--------------------------- Math Func ---------------------------//
 	
-	template <typename T>
-	inline bool IsZero (const Quaternion<T>& val)
+	template <typename T, ulong U>
+	inline bool IsZero (const Quaternion<T,U>& val)
 	{
 		return val.IsZero();
 	}
@@ -158,8 +158,8 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T>::Quaternion (const mat3_t &matrix): x(0), y(0), z(0), w(1)
+	template <typename T, ulong U>
+	inline Quaternion<T,U>::Quaternion (const mat3_t &matrix): x(0), y(0), z(0), w(1)
 	{
 		T			s		= T(0);
 		const T		trace	= right(0,0) + right(1,1) + right(2,2);
@@ -207,8 +207,8 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T>::Quaternion (const mat4_t &matrix): x(0), y(0), z(0), w(1)
+	template <typename T, ulong U>
+	inline Quaternion<T,U>::Quaternion (const mat4_t &matrix): x(0), y(0), z(0), w(1)
 	{
 		T			s		= T(0);
 		const T		trace	= right(0,0) + right(1,1) + right(2,2);
@@ -256,8 +256,8 @@ namespace GXMath
 	operator []
 =================================================
 */
-	template <typename T>
-	inline T & Quaternion<T>::operator [] (usize index)
+	template <typename T, ulong U>
+	inline T & Quaternion<T,U>::operator [] (usize index)
 	{
 		ASSUME( index < 4 );
 		return ptr()[index];
@@ -268,8 +268,8 @@ namespace GXMath
 	operator []
 =================================================
 */
-	template <typename T>
-	inline const T & Quaternion<T>::operator [] (usize index) const
+	template <typename T, ulong U>
+	inline const T & Quaternion<T,U>::operator [] (usize index) const
 	{
 		ASSUME( index < 4 );
 		return ptr()[index];
@@ -280,8 +280,8 @@ namespace GXMath
 	operator ==
 =================================================
 */
-	template <typename T>
-	inline bool Quaternion<T>::operator == (const Self &right) const
+	template <typename T, ulong U>
+	inline bool Quaternion<T,U>::operator == (const Self &right) const
 	{
 		return ( Equals( x, right.x ) and Equals( y, right.y ) and
 				 Equals( z, right.z ) and Equals( w, right.w ) );
@@ -292,8 +292,8 @@ namespace GXMath
 	operator !=
 =================================================
 */
-	template <typename T>
-	inline bool Quaternion<T>::operator != (const Self &right) const
+	template <typename T, ulong U>
+	inline bool Quaternion<T,U>::operator != (const Self &right) const
 	{
 		return not ( *this == right );
 	}
@@ -303,8 +303,8 @@ namespace GXMath
 	operator !
 =================================================
 */
-	template <typename T>
-	inline bool Quaternion<T>::operator ! () const
+	template <typename T, ulong U>
+	inline bool Quaternion<T,U>::operator ! () const
 	{
 		// TODO: WTF?
 		return not x and not y and not z and not w;
@@ -315,8 +315,8 @@ namespace GXMath
 	operator *
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> Quaternion<T>::operator * (const Self &right) const
+	template <typename T, ulong U>
+	inline Quaternion<T,U> Quaternion<T,U>::operator * (const Self &right) const
 	{
 		return Self(*this) *= right;
 	}
@@ -326,12 +326,12 @@ namespace GXMath
 	operator *
 =================================================
 */
-	template <typename T>
-	inline Vec<T,3> Quaternion<T>::operator * (const vec3_t &right) const
+	template <typename T, ulong U>
+	inline Vec<T,3,U> Quaternion<T,U>::operator * (const Vec3_t &right) const
 	{
-		vec3_t const	qvec(x, y, z);
-		vec3_t const	uv  = Cross( qvec, right );
-		vec3_t const	uuv = Cross( qvec, uv );
+		Vec3_t const	qvec(x, y, z);
+		Vec3_t const	uv  = Cross( qvec, right );
+		Vec3_t const	uuv = Cross( qvec, uv );
 
 		return right + ((uv * w) + uuv) * T(2);
 	}
@@ -341,8 +341,8 @@ namespace GXMath
 	operator *=
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::operator *= (const Self &right)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::operator *= (const Self &right)
 	{
 		Self const	p(*this);
 		Self const&	q = right;
@@ -359,8 +359,8 @@ namespace GXMath
 	Dot
 =================================================
 */
-	template <typename T>
-	inline T Quaternion<T>::Dot (const Self &right) const
+	template <typename T, ulong U>
+	inline T Quaternion<T,U>::Dot (const Self &right) const
 	{
 		return (x * right.x) + (y * right.y) + (z * right.z) + (w * right.w);
 	}
@@ -370,12 +370,12 @@ namespace GXMath
 	Set
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> &  Quaternion<T>::Set (Radians<T> xAngle, Radians<T> yAngle, Radians<T> zAngle)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> &  Quaternion<T,U>::Set (Radians<T> xAngle, Radians<T> yAngle, Radians<T> zAngle)
 	{
-		const Vec<T,2>	scr = SinCos( xAngle * T(0.5) );
-		const Vec<T,2>	scp = SinCos( yAngle * T(0.5) );
-		const Vec<T,2>	scy = SinCos( zAngle * T(0.5) );
+		const Vec<T,2,U>	scr = SinCos( xAngle * T(0.5) );
+		const Vec<T,2,U>	scp = SinCos( yAngle * T(0.5) );
+		const Vec<T,2,U>	scy = SinCos( zAngle * T(0.5) );
 
 		const T	cpcy = scp[1] * scy[1];
 		const T	spcy = scp[0] * scy[1];
@@ -390,17 +390,17 @@ namespace GXMath
 		return Normalize();
 	}
 	
-	template <typename T>
-	inline Quaternion<T> &  Quaternion<T>::Set (const RadiansVec<T,3> &angle)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> &  Quaternion<T,U>::Set (const RadiansVec<T,3,U> &angle)
 	{
 		return Set( angle.x, angle.y, angle.z );
 	}
 	
 
-	template <typename T>
-	inline Quaternion<T> &	Quaternion<T>::Set (const DegreesVec<T,3> &angle)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> &	Quaternion<T,U>::Set (const DegreesVec<T,3,U> &angle)
 	{
-		return Set( angle.To< RadiansVec<T,3> >() );
+		return Set( angle.To< RadiansVec<T,3,U> >() );
 	}
 
 /*
@@ -408,8 +408,8 @@ namespace GXMath
 	IsZero
 =================================================
 */
-	template <typename T>
-	inline bool Quaternion<T>::IsZero () const
+	template <typename T, ulong U>
+	inline bool Quaternion<T,U>::IsZero () const
 	{
 		return ( GXMath::IsZero(x) and GXMath::IsZero(y) and GXMath::IsZero(z) and GXMath::Equals( w, T(1) ) );
 	}
@@ -419,8 +419,8 @@ namespace GXMath
 	Normalize
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::Normalize ()
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::Normalize ()
 	{
 		const T	n = x*x + y*y + z*z + w*w;
 
@@ -430,8 +430,8 @@ namespace GXMath
 		return ( *this *= T(1) / Sqrt(n) );
 	}
 
-	template <typename T>
-	inline Quaternion<T> Quaternion<T>::Normalized () const
+	template <typename T, ulong U>
+	inline Quaternion<T,U> Quaternion<T,U>::Normalized () const
 	{
 		return Self(*this).Normalize();
 	}
@@ -441,10 +441,10 @@ namespace GXMath
 	GetDirection
 =================================================
 */
-	template <typename T>
-	inline Vec<T,3> Quaternion<T>::GetDirection () const
+	template <typename T, ulong U>
+	inline Vec<T,3,U> Quaternion<T,U>::GetDirection () const
 	{
-		return vec3_t(	T(2) * x * z + T(2) * y * w,
+		return Vec3_t(	T(2) * x * z + T(2) * y * w,
 						T(2) * z * y - T(2) * x * w,
 						T(1) - T(2) * x * x - T(2) * y * y );
 	}
@@ -454,8 +454,8 @@ namespace GXMath
 	Inverse
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::Inverse ()
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::Inverse ()
 	{
 		x = -x;
 		y = -y;
@@ -463,14 +463,14 @@ namespace GXMath
 		return *this;
 	}
 	
-	template <typename T>
-	inline Quaternion<T> Quaternion<T>::Inversed () const
+	template <typename T, ulong U>
+	inline Quaternion<T,U> Quaternion<T,U>::Inversed () const
 	{
 		return Self( *this ).Inverse();
 	}
 
-	template <typename T>
-	inline Quaternion<T> Quaternion<T>::operator - () const
+	template <typename T, ulong U>
+	inline Quaternion<T,U> Quaternion<T,U>::operator - () const
 	{
 		return Inversed();
 	}
@@ -480,10 +480,10 @@ namespace GXMath
 	Slerp
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T>  Slerp (const Quaternion<T> &qx, const Quaternion<T> &qy, T factor)
+	template <typename T, ulong U>
+	inline Quaternion<T,U>  Slerp (const Quaternion<T,U> &qx, const Quaternion<T,U> &qy, T factor)
 	{
-		Quaternion<T>	qz			= qy;
+		Quaternion<T,U>	qz			= qy;
 		T				cos_theta	= Dot( qx, qy );
 
 		if ( cos_theta < T(0) )
@@ -494,7 +494,7 @@ namespace GXMath
 
 		if ( cos_theta > T(1) - Epsilon<T>() )
 		{
-			return Quaternion<T>( Lerp( qx.x, qy.x, factor ),
+			return Quaternion<T,U>( Lerp( qx.x, qy.x, factor ),
 								  Lerp( qx.y, qy.y, factor ),
 								  Lerp( qx.z, qy.z, factor ),
 								  Lerp( qx.w, qy.w, factor ) );
@@ -513,8 +513,8 @@ namespace GXMath
 	FromAngleAxis
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::FromAngleAxis (Radians<T> angle, const vec3_t &axis)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::FromAngleAxis (Radians<T> angle, const Vec3_t &axis)
 	{
 		const T	half_angle	= T(0.5) * angle;
 		const T	sin			= Sin( half_angle );
@@ -532,8 +532,8 @@ namespace GXMath
 	ToAngleAxis
 =================================================
 */
-	template <typename T>
-	inline void Quaternion<T>::ToAngleAxis (OUT Radians<T> &angle, OUT vec3_t &axis) const
+	template <typename T, ulong U>
+	inline void Quaternion<T,U>::ToAngleAxis (OUT Radians<T> &angle, OUT Vec3_t &axis) const
 	{
 		const T scale = Sqrt( x*x + y*y + z*z );
 
@@ -560,8 +560,8 @@ namespace GXMath
 	ToEuler
 =================================================
 */
-	template <typename T>
-	inline void Quaternion<T>::ToEuler (OUT RadiansVec<T,3> &euler) const
+	template <typename T, ulong U>
+	inline void Quaternion<T,U>::ToEuler (OUT RadiansVec<T,3,U> &euler) const
 	{
 		const T	sqw = w*w;
 		const T	sqx = x*x;
@@ -578,8 +578,8 @@ namespace GXMath
 	MakeIdentity
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::MakeIdentity ()
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::MakeIdentity ()
 	{
 		w = T(1);
 		x = T(0);
@@ -593,11 +593,11 @@ namespace GXMath
 	RotationFromTo
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::RotationFromTo (const vec3_t &fromDir, const vec3_t &toDir)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::RotationFromTo (const Vec3_t &fromDir, const Vec3_t &toDir)
 	{
-		const vec3_t	v0 = fromDir.Normalized();
-		const vec3_t	v1 = toDir.Normalized();
+		const Vec3_t	v0 = fromDir.Normalized();
+		const Vec3_t	v1 = toDir.Normalized();
 		const T			d  = Dot( v0, v1 );
 
 		if ( d >= T(1) )
@@ -607,21 +607,21 @@ namespace GXMath
 		else
 		if ( d <= T(-1) )
 		{
-			vec3_t	axis( T(1), T(0), T(0) );
+			Vec3_t	axis( T(1), T(0), T(0) );
 
-			axis = Cross( axis, vec3_t( x, y, z ) );
+			axis = Cross( axis, Vec3_t( x, y, z ) );
 
 			if ( IsZero( axis.Length() ) )
 			{
 				axis.Set( Radians<T>(0), Radians<T>(1), Radians<T>(0) );
-				axis.Cross( vec3_t( x, y, z ) );
+				axis.Cross( Vec3_t( x, y, z ) );
 			}
 			return FromAngleAxis( Pi<T>, axis );
 		}
 
 		const T			s	 = Sqrt( (1 + d) * T(2) );
 		const T			invs = T(1) / s;
-		const vec3_t	c	 = v0.Cross(v1) * invs;
+		const Vec3_t	c	 = v0.Cross(v1) * invs;
 		
 		x = c.x;
 		y = c.y;
@@ -636,8 +636,8 @@ namespace GXMath
 	RotationX
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::RotationX (Radians<T> angle)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::RotationX (Radians<T> angle)
 	{
 		const Radians<T>	half_angle = angle * T(0.5);
 
@@ -654,8 +654,8 @@ namespace GXMath
 	RotationY
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::RotationY (Radians<T> angle)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::RotationY (Radians<T> angle)
 	{
 		const Radians<T>	half_angle = angle * T(0.5);
 
@@ -672,8 +672,8 @@ namespace GXMath
 	RotationZ
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::RotationZ (Radians<T> angle)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::RotationZ (Radians<T> angle)
 	{
 		const Radians<T>	half_angle = angle * T(0.5);
 
@@ -690,17 +690,17 @@ namespace GXMath
 	Rotation
 =================================================
 */
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::Rotation (const RadiansVec<T,3> &angle)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::Rotation (const RadiansVec<T,3,U> &angle)
 	{
 		*this = Self().RotationX( angle.x ) * Self().RotationY( angle.y ) * Self().RotationZ( angle.z );
 		return *this;
 	}
 	
-	template <typename T>
-	inline Quaternion<T> & Quaternion<T>::Rotation (const DegreesVec<T,3> &angle)
+	template <typename T, ulong U>
+	inline Quaternion<T,U> & Quaternion<T,U>::Rotation (const DegreesVec<T,3,U> &angle)
 	{
-		return Rotation( angle.To< RadiansVec<T,3> >() );
+		return Rotation( angle.To< RadiansVec<T,3,U> >() );
 	}
 
 /*
@@ -708,9 +708,9 @@ namespace GXMath
 	Convert
 =================================================
 */
-	template <typename T>
+	template <typename T, ulong U>
 	template <typename T2>
-	inline const Quaternion<T2>  Quaternion<T>::Convert () const
+	inline const Quaternion<T2>  Quaternion<T,U>::Convert () const
 	{
 		return Quaternion<T2>( (T2)x, (T2)y, (T2)z, (T2)w );
 	}
@@ -720,13 +720,13 @@ namespace GXMath
 	To
 =================================================
 */
-	template <typename T>
+	template <typename T, ulong U>
 	template <typename B>
-	inline const B  Quaternion<T>::To () const
+	inline const B  Quaternion<T,U>::To () const
 	{
 		STATIC_ASSERT( B::_is_quaternion(true), "type is not quaternion" );
 
-		return Convert< B::value_t >();
+		return Convert< B::Value_t >();
 	}
 
 
@@ -741,17 +741,17 @@ namespace GXMath
 namespace GXTypes
 {
 	
-	template <typename T>
-	struct Hash< GXMath::Quaternion<T> > :
-		private Hash< GXMath::Vec<T,4> >
+	template <typename T, ulong U>
+	struct Hash< GXMath::Quaternion<T,U> > :
+		private Hash< GXMath::Vec<T,4,U> >
 	{
-		typedef GXMath::Quaternion<T>		key_t;
-		typedef Hash< GXMath::Vec<T,4> >	base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef GXMath::Quaternion<T,U>		Key_t;
+		typedef Hash< GXMath::Vec<T,4,U> >	Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x.xyzw() );
+			return Base_t::operator ()( x.xyzw() );
 		}
 	};
 

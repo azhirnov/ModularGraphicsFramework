@@ -36,7 +36,7 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	bool VkWinSurface::Create (VkInstance instance, const Handle_t &windowHandle, OUT VkSurfaceKHR &surface)
+	bool VkWinSurface::Create (VkInstance instance, const HWND_t &windowHandle, OUT VkSurfaceKHR &surface)
 	{
 		CHECK_ERR( instance != VK_NULL_HANDLE );
 		CHECK_ERR( windowHandle.IsNotNull<HWND>() );

@@ -19,8 +19,8 @@ namespace GXMath
 	// types
 	public:
 		typedef Plane<T>	Self;
-		typedef T			value_t;
-		typedef Vec<T,3>	vec3_t;
+		typedef T			Value_t;
+		typedef Vec<T,3>	Vec3_t;
 		
 		struct ESide
 		{
@@ -44,17 +44,17 @@ namespace GXMath
 	// methods
 	public:
 		Plane ();
-		Plane (const vec3_t &normal, const T& dist);
-		Plane (const vec3_t &p0, const vec3_t &p1, const vec3_t &p2);
+		Plane (const Vec3_t &normal, const T& dist);
+		Plane (const Vec3_t &p0, const Vec3_t &p1, const Vec3_t &p2);
 
-		void Set (const vec3_t &normal, const T& dist);
-		void Set (const vec3_t &p0, const vec3_t &p1, const vec3_t &p2);
+		void Set (const Vec3_t &normal, const T& dist);
+		void Set (const Vec3_t &p0, const Vec3_t &p1, const Vec3_t &p2);
 
-		void GetPerpendiculars (OUT vec3_t &n0, OUT vec3_t &n1, OUT vec3_t &n2) const;
+		void GetPerpendiculars (OUT Vec3_t &n0, OUT Vec3_t &n1, OUT Vec3_t &n2) const;
 
-		_ESide_t		Intersect (const vec3_t &point) const;
+		_ESide_t		Intersect (const Vec3_t &point) const;
 		_ESide_t		Intersect (const AABBox<T> &box) const;
-		_ESide_t		Intersect (const vec3_t &center, const vec3_t &halfextent) const;
+		_ESide_t		Intersect (const Vec3_t &center, const Vec3_t &halfextent) const;
 		
 		Vec<T,3> &		Normal ()				{ return _normal; }
 		Vec<T,3> const&	Normal ()	const		{ return _normal; }
@@ -62,8 +62,8 @@ namespace GXMath
 		T const &		Distance ()	const		{ return _dist; }
 
 		Self &			Normalize ();
-		T				Distance (const vec3_t &point) const;
-		vec3_t			Project (const vec3_t &point) const;
+		T				Distance (const Vec3_t &point) const;
+		Vec3_t			Project (const Vec3_t &point) const;
 
 		bool			operator == (const Self &right) const;
 		bool			operator != (const Self &right) const;
@@ -251,11 +251,11 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void Plane<T>::GetPerpendiculars (OUT vec3_t &n0, OUT vec3_t &n1, OUT vec3_t &n2) const
+	inline void Plane<T>::GetPerpendiculars (OUT Vec3_t &n0, OUT Vec3_t &n1, OUT Vec3_t &n2) const
 	{
-		n0 = Cross( -vec3_t(T(0), T(0), T(1)), _normal ).Normalized();
-		n1 = Cross( -vec3_t(T(0), T(1), T(0)), _normal ).Normalized();
-		n2 = Cross( -vec3_t(T(1), T(0), T(0)), _normal ).Normalized();
+		n0 = Cross( -Vec3_t(T(0), T(0), T(1)), _normal ).Normalized();
+		n1 = Cross( -Vec3_t(T(0), T(1), T(0)), _normal ).Normalized();
+		n2 = Cross( -Vec3_t(T(1), T(0), T(0)), _normal ).Normalized();
 	}
 
 

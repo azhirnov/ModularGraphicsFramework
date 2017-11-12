@@ -70,7 +70,7 @@ namespace GXScript
 		struct ScriptTypeInfo < _templ_ > \
 		{ \
 			typedef _templ_				type; \
-			typedef ScriptTypeInfo<T>	base_t; \
+			typedef ScriptTypeInfo<T>	Base_t; \
 			\
 			static void Name (INOUT String &s)		{ _buildName_; } \
 			static void ArgName (INOUT String &s)	{ _buildArg_; } \
@@ -79,10 +79,10 @@ namespace GXScript
 	/*
 #	define GX_DECL_SCRIPT_TYPE_EXT( _type_, _name_, _refName_, _refConstName_ ) \
 		GX_DECL_SCRIPT_TYPE( _type_, _name_ ); \
-		GX_DECL_SCRIPT_WRAP( const _type_ &,	ARGS( base_t::Name( s );  s << ' ' << _refConstName_ ) ); \
-		GX_DECL_SCRIPT_WRAP( _type_ &,			ARGS( base_t::Name( s );  s << ' ' << _refName_		 ) ); \
-		GX_DECL_SCRIPT_WRAP( const _type_ *,	ARGS( base_t::Name( s );  s << ' ' << _refConstName_ ) ); \
-		GX_DECL_SCRIPT_WRAP( _type_ *,			ARGS( base_t::Name( s );  s << ' ' << _refName_		 ) );
+		GX_DECL_SCRIPT_WRAP( const _type_ &,	ARGS( Base_t::Name( s );  s << ' ' << _refConstName_ ) ); \
+		GX_DECL_SCRIPT_WRAP( _type_ &,			ARGS( Base_t::Name( s );  s << ' ' << _refName_		 ) ); \
+		GX_DECL_SCRIPT_WRAP( const _type_ *,	ARGS( Base_t::Name( s );  s << ' ' << _refConstName_ ) ); \
+		GX_DECL_SCRIPT_WRAP( _type_ *,			ARGS( Base_t::Name( s );  s << ' ' << _refName_		 ) );
 	*/
 
 
@@ -115,54 +115,54 @@ namespace GXScript
 	GX_DECL_SCRIPT_WRAP( const T,
 						ARGS(
 							s << "const ";
-							base_t::Name( s );
+							Base_t::Name( s );
 						),
 						ARGS(
 							s << "const ";
-							base_t::Name( s );
+							Base_t::Name( s );
 						));
 
 	GX_DECL_SCRIPT_WRAP( const T &,
 						ARGS(
 							s << "const ";
-							base_t::Name( s );
+							Base_t::Name( s );
 							s << " &";
 						),
 						ARGS(
 							s << "const ";
-							base_t::Name( s );
+							Base_t::Name( s );
 							s << " &in";
 						));
 		
 	GX_DECL_SCRIPT_WRAP( T &,
 						ARGS(
-							base_t::Name( s );
+							Base_t::Name( s );
 							s << " &";
 						),
 						ARGS(
-							base_t::Name( s );
+							Base_t::Name( s );
 							s << " &out";
 						));
 		
 	GX_DECL_SCRIPT_WRAP( const T *,
 						ARGS(
 							s << "const ";
-							base_t::Name( s );
+							Base_t::Name( s );
 							s << " &";
 						),
 						ARGS(
 							s << "const ";
-							base_t::Name( s );
+							Base_t::Name( s );
 							s << " &in";
 						));
 		
 	GX_DECL_SCRIPT_WRAP( T *,
 						ARGS(
-							base_t::Name( s );
+							Base_t::Name( s );
 							s << " &";
 						),
 						ARGS(
-							base_t::Name( s );
+							Base_t::Name( s );
 							s << " &out";
 						));
 

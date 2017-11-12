@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\VulkanContext.h">
+      <Filter>Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Windows\VkWinSurface.h">
+      <Filter>Vulkan\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Library.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_platform.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_utils.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Device.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Enums.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1BaseModule.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1RenderPass.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Sampler.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Pipeline.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Messages.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1SystemFramebuffer.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1PipelineCache.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1PipelineLayout.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Fence.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1BaseObject.h">
+      <Filter>Vulkan\Impl</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Vulkan">
+      <UniqueIdentifier>{5306d89f-a0ef-4dfa-ba5e-1ab1b69f7be2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vulkan\Impl">
+      <UniqueIdentifier>{efc7329a-3bef-4476-b6e4-57d93afb993e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vulkan\Windows">
+      <UniqueIdentifier>{56d9acc5-a8b9-4666-a63b-a025a084aca2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\VulkanThread.cpp">
+      <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\VulkanContext.cpp">
+      <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Windows\VkWinSurface.cpp">
+      <Filter>Vulkan\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\vulkan1_platform.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Device.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Memory.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1BaseModule.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Buffer.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1RenderPass.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Sampler.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Pipeline.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuffer.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Framebuffer.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1CommandBuilder.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1PipelineCache.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1Image.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1PipelineResourceTable.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1PipelineLayout.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Vulkan\Impl\Vk1MemoryManager.cpp">
+      <Filter>Vulkan\Impl</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -22,12 +22,12 @@ namespace GXMath
 #define MATRIX_METHODS() \
 		Matrix (T _00, T _10, T _20, \
 				T _01, T _11, T _21); \
-		Matrix (const col_t &c0, \
-				const col_t &c1, \
-				const col_t &c2); \
+		Matrix (const Col_t &c0, \
+				const Col_t &c1, \
+				const Col_t &c2); \
 		\
-		static Self	BuildTextureMatrix (const T& a, const Vec<T,2> &center, \
-										   const Vec<T,2> &pos, const Vec<T,2> &scale); \
+		static Self	BuildTextureMatrix (const T& a, const Vec<T,2,U> &center, \
+										   const Vec<T,2,U> &pos, const Vec<T,2,U> &scale); \
 
 
 #include "MatrixCR.h"
@@ -37,8 +37,8 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (T _00, T _10, T _20,
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (T _00, T _10, T _20,
 								   T _01, T _11, T _21)
 	{
 		_v[0][0] = _00;		_v[1][0] = _10;		_v[2][0] = _20;
@@ -50,10 +50,10 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (const col_t &c0,
-								   const col_t &c1,
-								   const col_t &c2)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (const Col_t &c0,
+								   const Col_t &c1,
+								   const Col_t &c2)
 	{
 		UnsafeMem::MemCopy( _v[0], c0.ptr(), sizeof(T)*R );
 		UnsafeMem::MemCopy( _v[1], c1.ptr(), sizeof(T)*R );
@@ -65,12 +65,12 @@ namespace GXMath
 	BuildTextureMatrix
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::BuildTextureMatrix (const T& a, const Vec<T,2> &center,
-															  const Vec<T,2> &pos, const Vec<T,2> &scale)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildTextureMatrix (const T& a, const Vec2_t &center,
+															  const Vec2_t &pos, const Vec2_t &scale)
 	{
 		Self			m;
-		const Vec<T,2>	sc = SinCos( a );
+		const Vec2_t	sc = SinCos( a );
 
 		m(0,0) = sc[1] * scale.x;
 		m(0,1) = sc[0] * scale.y;
@@ -101,9 +101,9 @@ namespace GXMath
 		Matrix (T _00, T _10, T _20, \
 				T _01, T _11, T _21, \
 				T _02, T _12, T _22); \
-		Matrix (const col_t &c0, \
-				const col_t &c1, \
-				const col_t &c2); \
+		Matrix (const Col_t &c0, \
+				const Col_t &c1, \
+				const Col_t &c2); \
 		\
 		Self		Inverse() const; \
 		\
@@ -117,8 +117,8 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (T _00, T _10, T _20,
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (T _00, T _10, T _20,
 								   T _01, T _11, T _21,
 								   T _02, T _12, T _22)
 	{
@@ -132,10 +132,10 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (const col_t &c0,
-								   const col_t &c1,
-								   const col_t &c2)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (const Col_t &c0,
+								   const Col_t &c1,
+								   const Col_t &c2)
 	{
 		UnsafeMem::MemCopy( _v[0], c0.ptr(), sizeof(T)*R );
 		UnsafeMem::MemCopy( _v[1], c1.ptr(), sizeof(T)*R );
@@ -147,8 +147,8 @@ namespace GXMath
 	Inverse
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::Inverse () const
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Inverse () const
 	{
 		const Self	inv( _v[1][1] * _v[2][2] - _v[2][1] * _v[1][2],
 						 _v[1][2] * _v[2][0] - _v[2][2] * _v[1][0],
@@ -172,8 +172,8 @@ namespace GXMath
 	BuildCubeFace
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::BuildCubeFace (ubyte uFace)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildCubeFace (ubyte uFace)
 	{
 		// real3( -0.5..0.5, -0.5...0.5, 0.5 ) * BuildCubeFace( ... )
 
@@ -212,9 +212,9 @@ namespace GXMath
 				T _01, T _11, T _21, \
 				T _02, T _12, T _22, \
 				T _03, T _13, T _23); \
-		Matrix (const col_t &c0, \
-				const col_t &c1, \
-				const col_t &c2); \
+		Matrix (const Col_t &c0, \
+				const Col_t &c1, \
+				const Col_t &c2); \
 
 
 #include "MatrixCR.h"
@@ -224,8 +224,8 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (T _00, T _10, T _20,
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (T _00, T _10, T _20,
 								   T _01, T _11, T _21,
 								   T _02, T _12, T _22,
 								   T _03, T _13, T _23)
@@ -241,10 +241,10 @@ namespace GXMath
 	constructor
 =================================================
 */
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (const col_t &c0,
-								   const col_t &c1,
-								   const col_t &c2)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (const Col_t &c0,
+								   const Col_t &c1,
+								   const Col_t &c2)
 	{
 		UnsafeMem::MemCopy( _v[0], c0.ptr(), sizeof(T)*R );
 		UnsafeMem::MemCopy( _v[1], c1.ptr(), sizeof(T)*R );

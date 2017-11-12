@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Types.h"
+#include "Engine/STL/Common/TypeId.h"
 #include "Engine/STL/Math/MathFunc.h"
 #include "Engine/STL/CompileTime/PlainOldDataType.h"
 
@@ -59,10 +59,10 @@ namespace GXTypes
 	// Memory Operations
 	//
 
-	template <typename T, usize I>		inline void ZeroMem (T (&tArr)[I]);
-	template <typename T>				inline void ZeroMem (T &val);
+	template <typename T, usize I>		inline void ZeroMem (T (&tArr)[I]) noexcept;
+	template <typename T>				inline void ZeroMem (T &val) noexcept;
 	
-	template <typename T0, typename T1>	inline void MemCopy (T0 &dst, const T1 &src);
+	template <typename T0, typename T1>	inline void MemCopy (T0 &dst, const T1 &src) noexcept;
 
 	
 }	// GXTypes

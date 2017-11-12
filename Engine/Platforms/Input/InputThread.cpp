@@ -38,8 +38,8 @@ namespace Platforms
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 		
 	// variables
@@ -52,7 +52,7 @@ namespace Platforms
 
 	// methods
 	public:
-		InputThread (const GlobalSystemsRef gs, const CreateInfo::InputThread &ci);
+		InputThread (GlobalSystemsRef gs, const CreateInfo::InputThread &ci);
 		~InputThread ();
 		
 
@@ -70,15 +70,15 @@ namespace Platforms
 
 
 	
-	const Runtime::VirtualTypeList	InputThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	InputThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	InputThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	InputThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	InputThread::InputThread (const GlobalSystemsRef gs, const CreateInfo::InputThread &ci) :
+	InputThread::InputThread (GlobalSystemsRef gs, const CreateInfo::InputThread &) :
 		Module( gs, ModuleConfig{ InputThreadModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "InputThread" );
@@ -101,7 +101,7 @@ namespace Platforms
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( null, InputManagerModuleID, true );
+		_AttachSelfToManager( null, InputManagerModuleID, false );
 	}
 	
 /*
@@ -227,7 +227,7 @@ namespace Platforms
 */
 	bool InputThread::_InputKeyBind (const Message< ModuleMsg::InputKeyBind > &msg)
 	{
-		_keyBinds.Add( RVREF(msg->key), KeyBinds_t::value_t( RVREF(msg->state), RVREF(msg->cb.Get()) ) );
+		_keyBinds.Add( RVREF(msg->key), KeyBinds_t::Value_t( RVREF(msg->state), RVREF(msg->cb.Get()) ) );
 		return true;
 	}
 	
@@ -245,7 +245,7 @@ namespace Platforms
 	
 
 
-	ModulePtr InputManager::_CreateInputThread (const GlobalSystemsRef gs, const CreateInfo::InputThread &ci)
+	ModulePtr InputManager::_CreateInputThread (GlobalSystemsRef gs, const CreateInfo::InputThread &ci)
 	{
 		return New< InputThread >( gs, ci );
 	}

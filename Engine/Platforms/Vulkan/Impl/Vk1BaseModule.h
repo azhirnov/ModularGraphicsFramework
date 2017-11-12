@@ -12,6 +12,34 @@ namespace Engine
 {
 namespace PlatformVK
 {
+	class Vk1SamplerCache;
+	class Vk1PipelineCache;
+	class Vk1PipelineLayoutCache;
+	class Vk1RenderPassCache;
+
+}	// PlatformVK
+
+namespace GpuMsg
+{
+	//
+	// Get Private Classes
+	//
+	struct GetVkPrivateClasses
+	{
+		struct Classes {
+			PlatformVK::Vk1Device *					device			= null;
+			PlatformVK::Vk1SamplerCache *			samplerCache	= null;
+			PlatformVK::Vk1PipelineCache *			pipelineCache	= null;
+			PlatformVK::Vk1PipelineLayoutCache *	layoutCache		= null;
+			PlatformVK::Vk1RenderPassCache *		renderPassCache	= null;
+		};
+
+		Out< Classes >		result;
+	};
+}	// GpuMsg
+
+namespace PlatformVK
+{
 
 	//
 	// Vulkan Base Module
@@ -27,7 +55,9 @@ namespace PlatformVK
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
 											GpuMsg::DeviceBeforeDestroy,
-											GpuMsg::GetVkLogicDevice
+											GpuMsg::GetDeviceInfo,
+											GpuMsg::GetVkDeviceInfo,
+											GpuMsg::GetVkPrivateClasses
 										> >;
 
 		using SupportedEvents_t		= MessageListFrom<
@@ -38,45 +68,29 @@ namespace PlatformVK
 
 	// variables
 	private:
-		const VkSystemsRef		_vkSystems;
+		Ptr< Vk1Device >	_vkDevice;
 		
 
 	// methods
 	public:
 		Vk1BaseModule (const GlobalSystemsRef gs,
 					   const ModuleConfig &config,
-					   const Runtime::VirtualTypeList *msgTypes,
-					   const Runtime::VirtualTypeList *eventTypes);
-		
-		Vk1BaseModule (const GlobalSystemsRef gs,
-					   const ModulePtr &gpuThread,
-					   const ModuleConfig &config,
-					   const Runtime::VirtualTypeList *msgTypes,
-					   const Runtime::VirtualTypeList *eventTypes);
-
-		Vk1BaseModule (const GlobalSystemsRef gs,
-					   const VkSystemsRef vkSys,
-					   const ModuleConfig &config,
-					   const Runtime::VirtualTypeList *msgTypes,
-					   const Runtime::VirtualTypeList *eventTypes);
-
-		VkSystemsRef	VkSystems ()	const	{ return _vkSystems; }
+					   const TypeIdList *msgTypes,
+					   const TypeIdList *eventTypes);
 
 
 	protected:
-		Ptr< VulkanThread >	GetGpuThread ()			{ return VkSystems()->Get< VulkanThread >(); }
-		Ptr< Vk1Device >	GetDevice ()			{ return VkSystems()->Get< Vk1Device >(); }
-		vk::VkDevice		GetLogicalDevice ()		{ return GetDevice()->GetLogicalDevice(); }
-		
-		virtual void _DestroyResources ();
+		Ptr< Vk1Device >	GetDevice ()	const	{ return _vkDevice; }
+		vk::VkDevice		GetVkDevice ()	const	{ return _vkDevice ? _vkDevice->GetLogicalDevice() : 0; }
 
 
 	// message handlers
 	protected:
 		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
 		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
-		bool _GetVkLogicDevice (const Message< GpuMsg::GetVkLogicDevice > &);
-		//bool _LinkToMemory (const Message< ModuleMsg::Link > &);
+		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
+		bool _GetVkDeviceInfo (const Message< GpuMsg::GetVkDeviceInfo > &);
+		bool _GetVkPrivateClasses (const Message< GpuMsg::GetVkPrivateClasses > &);
 	};
 
 

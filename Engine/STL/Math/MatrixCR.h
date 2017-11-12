@@ -5,28 +5,31 @@
 	// Matrix
 	//
 	
-	template <typename T>
-	struct Matrix<T,C,R> : public CompileTime::CopyQualifiers< T >
+	template <typename T, ulong U>
+	struct Matrix<T,C,R,U> : public CompileTime::CopyQualifiers< T >
 	{
 	// types
 	public:
-		typedef Matrix< T, C, R >			Self;
-		typedef Matrix< T, R, C >			transpose_t;
-		typedef T							value_t;
-		typedef Vec< T, R >					col_t;
-		typedef Vec< T, C >					row_t;
-		typedef Vec< T, (R > 2 ? 3 : R) >	col3_t;
-		typedef T							arr2_t[C][R];
-		typedef T							arr_t[C*R];
-		typedef col_t						cols_t[C];
+		using Self			= Matrix< T, C, R, U >;
+		using Transposed_t	= Matrix< T, R, C, U >;
+		using Value_t		= T;
+		using Col_t			= Vec< T, R, U >;
+		using Row_t			= Vec< T, C, U >;
+		using Col3_t		= Vec< T, (R > 2 ? 3 : R), U >;
+		using Arr2_t		= T[C][R];
+		using Arr_t			= T[C*R];
+		using Cols_t		= Col_t[C];
+		using Vec2_t		= Vec< T, 2, U >;
+		using Vec3_t		= Vec< T, 3, U >;
+		using Vec4_t		= Vec< T, 4, U >;
 
-		typedef Vec< T, (R > C ? (C < 3 ? C : 3) : (R < 3 ? R : 3)) >	scale_t;
-		typedef bool						_is_matrix;
+		using Scale_t		= Vec< T, (R > C ? (C < 3 ? C : 3) : (R < 3 ? R : 3)), U >;
+		using _is_matrix	= bool;
 
 
 	// variables
 	private:
-		arr2_t	_v;
+		Arr2_t	_v;
 
 		//		  c0  c1  c2  c3
 		//	r0	| 1 | 2 | 3 | X |	1 - left
@@ -44,7 +47,7 @@
 		Matrix (GX_DEFCTOR);
 		Matrix (const Self &m);
 		explicit Matrix (const T& val);
-		//explicit Matrix (const cols_t &columns);
+		//explicit Matrix (const Cols_t &columns);
 
 		MATRIX_METHODS();
 
@@ -63,8 +66,8 @@
 		// binary operators
 		T &				operator [] (usize i);
 		T const &		operator [] (usize i) const;
-		col_t &			operator () (usize c);
-		col_t const &	operator () (usize c) const;
+		Col_t &			operator () (usize c);
+		Col_t const &	operator () (usize c) const;
 		T &				operator () (usize c, usize r);
 		T const &		operator () (usize c, usize r) const;
 
@@ -83,16 +86,16 @@
 		MAT_BIN_OPERATOR_SCALAR( % );
 
 		template <usize Q>
-		Self &			operator *= (const Matrix<T,Q,C> &right);
+		Self &			operator *= (const Matrix<T,Q,C,U> &right);
 
 		template <usize Q>
-		Matrix<T,Q,R>	operator *  (const Matrix<T,Q,C> &right) const;
+		Matrix<T,Q,R,U>	operator *  (const Matrix<T,Q,C,U> &right) const;
 
-		col_t			operator *  (const row_t &v) const;
+		Col_t			operator *  (const Row_t &v) const;
 
-		friend row_t	operator *  (const col_t &v, const Self &m)
+		friend Row_t	operator *  (const Col_t &v, const Self &m)
 		{
-			row_t	ret;
+			Row_t	ret;
 		
 			for (usize c = 0; c < C; ++c)
 			for (usize r = 0; r < R; ++r)
@@ -110,23 +113,23 @@
 		T *				ptr ()									{ return PointerCast< T >( this ); }
 		T const *		ptr ()		const						{ return PointerCast< T >( this ); }
 
-		arr2_t &		ref ()									{ return _v; }
-		arr2_t const &	ref ()		const						{ return _v; }
+		Arr2_t &		ref ()									{ return _v; }
+		Arr2_t const &	ref ()		const						{ return _v; }
 
-		//cols_t &		columns ()								{ return *PointerCast< cols_t >( this ); }
-		//cols_t const &	columns ()	const						{ return *PointerCast< cols_t >( this ); }
+		//Cols_t &		columns ()								{ return *PointerCast< Cols_t >( this ); }
+		//Cols_t const &	columns ()	const					{ return *PointerCast< Cols_t >( this ); }
 
-		//arr_t &			array_ref ()								{ return *PointerCast< arr_t >( this ); }
-		//arr_t const &	array_ref ()	const						{ return *PointerCast< arr_t >( this ); }
+		//Arr_t &			array_ref ()						{ return *PointerCast< Arr_t >( this ); }
+		//Arr_t const &	array_ref ()	const					{ return *PointerCast< Arr_t >( this ); }
 		
-		row_t			Row (uint i)	const;
-		col_t const &	Column (uint i) const;
+		Row_t			Row (uint i)	const;
+		Col_t const &	Column (uint i) const;
 
 		template <usize nA>
-		static Self	FromEuler (const Vec<T,nA> &a);
+		static Self	FromEuler (const Vec<T,nA,U> &a);
 
 		template <usize nC, usize nR, usize nA>
-		static Self	FromEuler (const Vec<T,nA> &a);
+		static Self	FromEuler (const Vec<T,nA,U> &a);
 
 		template <usize nC, usize nR>
 		static Self	RotationX (const T& a);
@@ -141,46 +144,46 @@
 		static Self	RotationZ (const T& a);
 
 		template <usize nC, usize nR>
-		static Self	FromQuat (const Quaternion<T> &q);
-		static Self	FromQuat (const Quaternion<T> &q);
+		static Self	FromQuat (const Quaternion<T,U> &q);
+		static Self	FromQuat (const Quaternion<T,U> &q);
 
-		static Self	Scale (const scale_t &s);
+		static Self	Scale (const Scale_t &s);
 
-		static Self	Translate (const col3_t &t);
+		static Self	Translate (const Col3_t &t);
 
 		static Self	Identity ();
 		static Self	Zero ();
 		
-		col3_t const &	Translation () const	{ return *PointerCast< col3_t >( &((*this)(C-1)) ); }
-		col3_t		 &	Translation ()			{ return *PointerCast< col3_t >( &((*this)(C-1)) ); }
+		Col3_t const &	Translation () const	{ return *PointerCast< Col3_t >( &((*this)(C-1)) ); }
+		Col3_t		 &	Translation ()			{ return *PointerCast< Col3_t >( &((*this)(C-1)) ); }
 		
-		transpose_t		Transpose () const;
+		Transposed_t		Transpose () const;
 
 		template <typename B>
-		Matrix<B,C,R>	Convert () const;
+		Matrix<B,C,R,U>	Convert () const;
 
 		template <typename B>
 		B				To () const;
 
 		template <typename B, usize X, usize Y>
-		Self &			Inject (const Matrix<B,X,Y> &m);
+		Self &			Inject (const Matrix<B,X,Y,U> &m);
 	
 		template <typename B, usize X, usize Y>
-		Self &			InjectTr (const Matrix<B,X,Y> &m);	// copy transform to last column
+		Self &			InjectTr (const Matrix<B,X,Y,U> &m);	// copy transform to last column
 	};
 
 
 
 	
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (UninitializedType)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (UninitializedType)
 	{
 		DEBUG_ONLY( _GenNoise() );
 	}
 
 		
-	template <typename T>
-	inline void Matrix<T,C,R>::_GenNoise ()
+	template <typename T, ulong U>
+	inline void Matrix<T,C,R,U>::_GenNoise ()
 	{
 		// set noise to matrix elements
 		DEBUG_ONLY(
@@ -193,78 +196,78 @@
 	}
 
 
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (const T& val)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (const T& val)
 	{
 		for (usize i = 0; i < Count(); ++i)
 			(*this)[i] = val;
 	}
 
 
-	template <typename T>
-	inline Matrix<T,C,R>::Matrix (const Self &m)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>::Matrix (const Self &m)
 	{
 		UnsafeMem::MemCopy( ptr(), m.ptr(), SizeOf(m) );
 	}
 	
 
-	//template <typename T>
-	//inline Matrix<T,C,R>::Matrix (const cols_t &columns)
+	//template <typename T, ulong U>
+	//inline Matrix<T,C,R,U>::Matrix (const Cols_t &columns)
 	//{
 	//	UnsafeMem::MemCopy( ptr(), &columns[0], SizeOf(columns) );
 	//}
 
 
-	template <typename T>
-	inline T &  Matrix<T,C,R>::operator [] (usize i)
+	template <typename T, ulong U>
+	inline T &  Matrix<T,C,R,U>::operator [] (usize i)
 	{
 		ASSUME( i < Count() );
 		return ptr()[i];
 	}
 
 		
-	template <typename T>
-	inline T const &  Matrix<T,C,R>::operator [] (usize i)	const
+	template <typename T, ulong U>
+	inline T const &  Matrix<T,C,R,U>::operator [] (usize i)	const
 	{
 		ASSUME( i < Count() );
 		return ptr()[i];
 	}
 
 		
-	template <typename T>
-	inline typename Matrix<T,C,R>::col_t &  Matrix<T,C,R>::operator () (usize c)
+	template <typename T, ulong U>
+	inline typename Matrix<T,C,R,U>::Col_t &  Matrix<T,C,R,U>::operator () (usize c)
 	{
 		ASSUME( c < NumColumns() );
-		return *PointerCast< col_t >( _v[c] );
+		return *PointerCast< Col_t >( _v[c] );
 	}
 
 		
-	template <typename T>
-	inline typename Matrix<T,C,R>::col_t const &  Matrix<T,C,R>::operator () (usize c) const
+	template <typename T, ulong U>
+	inline typename Matrix<T,C,R,U>::Col_t const &  Matrix<T,C,R,U>::operator () (usize c) const
 	{
 		ASSUME( c < NumColumns() );
-		return *PointerCast< col_t >( _v[c] );
+		return *PointerCast< Col_t >( _v[c] );
 	}
 		
 
-	template <typename T>
-	inline T &  Matrix<T,C,R>::operator () (usize c, usize r)
+	template <typename T, ulong U>
+	inline T &  Matrix<T,C,R,U>::operator () (usize c, usize r)
 	{
 		ASSUME( r < NumRows() and c < NumColumns() );
 		return _v[c][r];
 	}
 
 		
-	template <typename T>
-	inline T const &  Matrix<T,C,R>::operator () (usize c, usize r) const
+	template <typename T, ulong U>
+	inline T const &  Matrix<T,C,R,U>::operator () (usize c, usize r) const
 	{
 		ASSUME( r < NumRows() and c < NumColumns() );
 		return _v[c][r];
 	}
 	
 		
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::operator -  () const
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::operator -  () const
 	{
 		Self	ret;
 		FOR( i, *this )		ret[i] = -(*this)[i];
@@ -272,8 +275,8 @@
 	}
 
 		
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::operator ~  () const
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::operator ~  () const
 	{
 		Self	ret;
 		FOR( i, *this )		ret[i] = ~(*this)[i];
@@ -281,8 +284,8 @@
 	}
 
 		
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::operator !  () const
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::operator !  () const
 	{
 		Self	ret;
 		FOR( i, *this )		ret[i] = not (*this)[i];
@@ -290,24 +293,24 @@
 	}
 
 		
-	template <typename T>
-	inline Matrix<T,C,R> &  Matrix<T,C,R>::operator ++ ()
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U> &  Matrix<T,C,R,U>::operator ++ ()
 	{
 		FOR( i, *this )		++(*this)[i];
 		return *this;
 	}
 
 		
-	template <typename T>
-	inline Matrix<T,C,R> &  Matrix<T,C,R>::operator -- ()
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U> &  Matrix<T,C,R,U>::operator -- ()
 	{
 		FOR( i, *this )		--(*this)[i];
 		return *this;
 	}
 
 		
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::operator ++ (int) const
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::operator ++ (int) const
 	{
 		Self	ret;
 		++(*this);
@@ -315,8 +318,8 @@
 	}
 
 		
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::operator -- (int) const
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::operator -- (int) const
 	{
 		Self	ret;
 		--(*this);
@@ -324,8 +327,8 @@
 	}
 
 		
-	template <typename T>
-	inline bool  Matrix<T,C,R>::operator == (const Self &right) const
+	template <typename T, ulong U>
+	inline bool  Matrix<T,C,R,U>::operator == (const Self &right) const
 	{
 		bool			ret = true;
 		FOR( i, *this )	ret &= (*this)[i] == right[i];
@@ -333,24 +336,24 @@
 	}
 
 		
-	template <typename T>
-	inline bool  Matrix<T,C,R>::operator != (const Self &right) const
+	template <typename T, ulong U>
+	inline bool  Matrix<T,C,R,U>::operator != (const Self &right) const
 	{
 		return not ( *this == right );
 	}
 
 		
-	template <typename T>
+	template <typename T, ulong U>
 	template <usize Q>
-	inline Matrix<T,C,R> &  Matrix<T,C,R>::operator *= (const Matrix<T,Q,C> &right)
+	inline Matrix<T,C,R,U> &  Matrix<T,C,R,U>::operator *= (const Matrix<T,Q,C,U> &right)
 	{
 		return ( *this = *this * right );
 	}
 
 		
-	template <typename T>
+	template <typename T, ulong U>
 	template <usize Q>
-	inline Matrix<T,Q,R>  Matrix<T,C,R>::operator *  (const Matrix<T,Q,C> &right) const
+	inline Matrix<T,Q,R,U>  Matrix<T,C,R,U>::operator *  (const Matrix<T,Q,C,U> &right) const
 	{
 		Matrix<T,Q,R>	ret;
 		TMatMul<T,C,R,Q>( ret.ref(), ref(), right.ref() );
@@ -358,10 +361,10 @@
 	}
 
 		
-	template <typename T>
-	inline typename Matrix<T,C,R>::col_t  Matrix<T,C,R>::operator *  (const row_t &v) const
+	template <typename T, ulong U>
+	inline typename Matrix<T,C,R,U>::Col_t  Matrix<T,C,R,U>::operator *  (const Row_t &v) const
 	{
-		col_t	ret;
+		Col_t	ret;
 		
 		for (usize r = 0; r < R; ++r)
 		for (usize c = 0; c < C; ++c)
@@ -371,12 +374,12 @@
 	}
 	
 		
-	template <typename T>
-	inline typename Matrix<T,C,R>::row_t  Matrix<T,C,R>::Row (uint r) const
+	template <typename T, ulong U>
+	inline typename Matrix<T,C,R,U>::Row_t  Matrix<T,C,R,U>::Row (uint r) const
 	{
 		ASSERT( r < R );
 
-		row_t	row;
+		Row_t	row;
 
 		for (usize c = 0; c < C; ++c)
 			row[c] = (*this)(c, r);
@@ -385,25 +388,25 @@
 	}
 	
 
-	template <typename T>
-	inline typename Matrix<T,C,R>::col_t const &  Matrix<T,C,R>::Column (uint c) const
+	template <typename T, ulong U>
+	inline typename Matrix<T,C,R,U>::Col_t const &  Matrix<T,C,R,U>::Column (uint c) const
 	{
 		ASSERT( c < C );
-		return *PointerCast< cols_t >( this )[c];
+		return *PointerCast< Cols_t >( this )[c];
 	}
 
 	
-	template <typename T>
+	template <typename T, ulong U>
 	template <usize nA>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::FromEuler (const Vec<T,nA> &a)
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::FromEuler (const Vec<T,nA,U> &a)
 	{
 		return FromEuler<C,R>( a );
 	}
 	
 	
-	template <typename T>
+	template <typename T, ulong U>
 	template <usize nC, usize nR, usize nA>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::FromEuler (const Vec<T,nA> &a)
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::FromEuler (const Vec<T,nA,U> &a)
 	{
 		Self	ret;
 		MatFromEuler::Get< nC, nR >( ret._v, a );
@@ -411,9 +414,9 @@
 	}
 	
 
-	template <typename T>
+	template <typename T, ulong U>
 	template <usize nC, usize nR>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::RotationX (const T& a)
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationX (const T& a)
 	{
 		Self	ret;
 		MatRotationX::Get< nC, nR >( ret._v, a );
@@ -421,16 +424,16 @@
 	}
 
 	
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::RotationX (const T& a)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationX (const T& a)
 	{
 		return RotationX< C, R >( a );
 	}
 		
 	
-	template <typename T>
+	template <typename T, ulong U>
 	template <usize nC, usize nR>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::RotationY (const T& a)
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationY (const T& a)
 	{
 		Self	ret;
 		MatRotationY::Get< nC, nR >( ret._v, a );
@@ -438,16 +441,16 @@
 	}
 
 	
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::RotationY (const T& a)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationY (const T& a)
 	{
 		return RotationY< C, R >( a );
 	}
 		
 	
-	template <typename T>
+	template <typename T, ulong U>
 	template <usize nC, usize nR>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::RotationZ (const T& a)
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationZ (const T& a)
 	{
 		Self	ret;
 		MatRotationZ::Get< nC, nR >( ret._v, a );
@@ -455,16 +458,16 @@
 	}
 
 	
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::RotationZ (const T& a)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationZ (const T& a)
 	{
 		return RotationZ< C, R >( a );
 	}
 	
 
-	template <typename T>
+	template <typename T, ulong U>
 	template <usize nC, usize nR>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::FromQuat (const Quaternion<T> &q)
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::FromQuat (const Quaternion<T,U> &q)
 	{
 		Self	ret;
 		MatFromQuat::Get< nC, nR >( ret._v, q );
@@ -472,15 +475,15 @@
 	}
 	
 
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::FromQuat (const Quaternion<T> &q)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::FromQuat (const Quaternion<T,U> &q)
 	{
 		return FromQuat< C, R >( q );
 	}
 	
 
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::Identity ()
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Identity ()
 	{
 		Self	ret;
 		MatIdentity::Get( ret._v );
@@ -488,8 +491,8 @@
 	}
 
 	
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::Zero ()
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Zero ()
 	{
 		Self	ret;
 		UnsafeMem::ZeroMem( &ret, sizeof(ret) );
@@ -497,17 +500,17 @@
 	}
 	
 
-	template <typename T>
-	inline Matrix<T,R,C>  Matrix<T,C,R>::Transpose () const
+	template <typename T, ulong U>
+	inline Matrix<T,R,C,U>  Matrix<T,C,R,U>::Transpose () const
 	{
-		transpose_t	ret;
+		Transposed_t	ret;
 		MatTranspose::Get( ret._v, _v );
 		return ret;
 	}
 
 	
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::Scale (const scale_t &s)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Scale (const Scale_t &s)
 	{
 		Self	ret;
 		MatScale::Get( ret._v, s );
@@ -515,8 +518,8 @@
 	}
 	
 
-	template <typename T>
-	inline Matrix<T,C,R>  Matrix<T,C,R>::Translate (const col3_t &t)
+	template <typename T, ulong U>
+	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Translate (const Col3_t &t)
 	{
 		Self	ret;
 		MatTranslate::Get( ret._v, t );
@@ -524,19 +527,19 @@
 	}
 	
 	
-	template <typename T>
+	template <typename T, ulong U>
 	template <typename B>
-	inline Matrix<B,C,R>  Matrix<T,C,R>::Convert () const
+	inline Matrix<B,C,R,U>  Matrix<T,C,R,U>::Convert () const
 	{
-		Matrix<B,C,R>	ret;
+		Matrix<B,C,R,U>	ret;
 		FOR( i, *this )	ret[i] = B( (*this)[i] );
 		return ret;
 	}
 	
 
-	template <typename T>
+	template <typename T, ulong U>
 	template <typename B>
-	inline B  Matrix<T,C,R>::To () const
+	inline B  Matrix<T,C,R,U>::To () const
 	{
 		STATIC_ASSERT( typename B::_is_matrix(true), "type is not matrix type" );
 
@@ -546,9 +549,9 @@
 	}
 
 	
-	template <typename T>
+	template <typename T, ulong U>
 	template <typename B, usize X, usize Y>
-	inline Matrix<T,C,R> &  Matrix<T,C,R>::Inject (const Matrix<B,X,Y> &m)
+	inline Matrix<T,C,R,U> &  Matrix<T,C,R,U>::Inject (const Matrix<B,X,Y,U> &m)
 	{
 		const usize	col = Min<usize>( C, X );
 		const usize	row = Min<usize>( R, Y );
@@ -561,9 +564,9 @@
 	}
 	
 
-	template <typename T>
+	template <typename T, ulong U>
 	template <typename B, usize X, usize Y>
-	inline Matrix<T,C,R> &  Matrix<T,C,R>::InjectTr (const Matrix<B,X,Y> &m)
+	inline Matrix<T,C,R,U> &  Matrix<T,C,R,U>::InjectTr (const Matrix<B,X,Y,U> &m)
 	{
 		STATIC_ASSERT( C > 1 and R > 1 and X > 1 and Y > 1, "incorrect parameters" );
 

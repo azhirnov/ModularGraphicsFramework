@@ -44,8 +44,8 @@ namespace GXTypes
 */
 	namespace _types_hidden_
 	{
-		template <typename T, usize I>
-		inline String  VecToStringShort (const GXMath::Vec<T,I> &value)
+		template <typename T, usize I, ulong U>
+		inline String  VecToStringShort (const GXMath::Vec<T,I,U> &value)
 		{
 			String	str;
 
@@ -55,8 +55,8 @@ namespace GXTypes
 			return str;
 		}
 
-		template <typename T, usize I>
-		inline String  VecToStringShortLong (const GXMath::Vec<T,I> &value, uint nameType = 0)
+		template <typename T, usize I, ulong U>
+		inline String  VecToStringShortLong (const GXMath::Vec<T,I,U> &value, uint nameType = 0)
 		{
 			static const char	s_aNames[] = {	'x', 'y', 'z', 'w',
 												'r', 'g', 'b', 'a' };
@@ -77,8 +77,8 @@ namespace GXTypes
 	ToString (Vec)
 =================================================
 */
-	template <typename T, usize I>
-	inline String  ToString (const GXMath::Vec<T,I> &value, bool shortly = true)
+	template <typename T, usize I, ulong U>
+	inline String  ToString (const GXMath::Vec<T,I,U> &value, bool shortly = true)
 	{
 		if ( shortly )
 			return _types_hidden_::VecToStringShort( value );
@@ -91,8 +91,8 @@ namespace GXTypes
 	ToString (Matrix)
 =================================================
 */
-	template <typename T, usize C, usize R>
-	inline String  ToString (const GXMath::Matrix<T,C,R> &value)
+	template <typename T, usize C, usize R, ulong U>
+	inline String  ToString (const GXMath::Matrix<T,C,R,U> &value)
 	{
 		String	str;
 

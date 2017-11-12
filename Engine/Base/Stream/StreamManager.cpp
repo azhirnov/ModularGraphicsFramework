@@ -8,15 +8,15 @@ namespace Engine
 namespace Base
 {
 	
-	const Runtime::VirtualTypeList	StreamManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	StreamManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	StreamManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	StreamManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	StreamManager::StreamManager (const GlobalSystemsRef gs, const CreateInfo::StreamManager &info) :
+	StreamManager::StreamManager (GlobalSystemsRef gs, const CreateInfo::StreamManager &) :
 		Module( gs, ModuleConfig{ StreamManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "StreamManager" );

@@ -750,7 +750,7 @@ namespace GXMath
 		};
 		
 
-		template <typename T, usize C, usize R>
+		template <typename T, usize C, usize R, ulong U>
 		static void  Get(T (&t)[R][C], const T (&m)[C][R])
 		{
 			typedef T mat_t[C][R];

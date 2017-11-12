@@ -38,7 +38,7 @@ namespace GXTypes
 	//
 
 	template <usize UID, typename T = int>
-	struct TDebugInstCounter
+	struct TDebugInstCounter : CompileTime::FastCopyable
 	{
 		typedef TDebugInstCounter<UID,T>	Self;
 
@@ -154,13 +154,13 @@ namespace GXTypes
 	template <usize UID, typename T>
 	struct Hash< TDebugInstCounter<UID, T> > : private Hash<T>
 	{
-		typedef TDebugInstCounter<UID, T>	key_t;
-		typedef Hash<T>						base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef TDebugInstCounter<UID, T>	Key_t;
+		typedef Hash<T>						Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x.secondVal );
+			return Base_t::operator ()( x.secondVal );
 		}
 	};
 
@@ -192,3 +192,17 @@ namespace GXTypes
 
 }	// GXTypes
 }	// GX_STL
+
+
+namespace std
+{
+	template <GX_STL::GXTypes::usize UID, typename T>
+	struct hash< GX_STL::GXTypes::TDebugInstCounter<UID, T> >
+	{
+		inline std::size_t operator() (const GX_STL::GXTypes::TDebugInstCounter<UID, T>& k) const
+		{
+			return GX_STL::GXTypes::HashOf( k ).Get();
+		}
+	};
+
+}	// std

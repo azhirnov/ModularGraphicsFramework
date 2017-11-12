@@ -19,5 +19,5 @@ extern void Test_GLWindow ()
 	}
 	GetMainSystemInstace()->Send< ModuleMsg::Delete >({});
 
-	WARNING( "OpenGL Window test succeeded!" );
+	//WARNING( "OpenGL Window test succeeded!" );
 }

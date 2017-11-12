@@ -5,7 +5,6 @@
 #include "Engine/Base/Tasks/AsyncMessage.h"
 #include "Engine/Base/Tasks/TaskManager.h"
 #include "Engine/Base/Threads/ParallelThread.h"
-#include "Engine/Base/Modules/ModuleAsyncTasks.h"
 
 namespace Engine
 {
@@ -17,10 +16,10 @@ namespace Base
 	constructor
 =================================================
 */
-	TaskModule::TaskModule (const GlobalSystemsRef gs,
+	TaskModule::TaskModule (GlobalSystemsRef gs,
 							const ModuleConfig &config,
-							const Runtime::VirtualTypeList *msgTypes,
-							const Runtime::VirtualTypeList *eventTypes) :
+							const TypeIdList *msgTypes,
+							const TypeIdList *eventTypes) :
 		Module( gs, config, msgTypes, eventTypes )
 	{
 		GlobalSystems()->GetSetter< TaskModule >().Set( this );
@@ -33,8 +32,9 @@ namespace Base
 */
 	TaskModule::~TaskModule ()
 	{
-
-		GlobalSystems()->GetSetter< TaskModule >().Set( null );
+		if ( GetThreadID() == ThreadID::GetCurrent() ) {
+			GlobalSystems()->GetSetter< TaskModule >().Set( null );
+		}
 	}
 //-----------------------------------------------------------------------------
 
@@ -64,8 +64,8 @@ namespace Base
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -75,7 +75,7 @@ namespace Base
 
 	// methods
 	public:
-		TaskModuleImpl (const GlobalSystemsRef gs, const CreateInfo::TaskModule &);
+		TaskModuleImpl (GlobalSystemsRef gs, const CreateInfo::TaskModule &);
 		~TaskModuleImpl ();
 
 
@@ -83,7 +83,7 @@ namespace Base
 	private:
 		bool _Update (const Message< ModuleMsg::Update > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &);
+		bool _PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &) noexcept;
 
 
 	private:
@@ -97,15 +97,15 @@ namespace Base
 
 
 
-	const Runtime::VirtualTypeList	TaskModuleImpl::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	TaskModuleImpl::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	TaskModuleImpl::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	TaskModuleImpl::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	TaskModuleImpl::TaskModuleImpl (const GlobalSystemsRef gs, const CreateInfo::TaskModule &info) :
+	TaskModuleImpl::TaskModuleImpl (GlobalSystemsRef gs, const CreateInfo::TaskModule &info) :
 		TaskModule( gs, ModuleConfig{ TaskModuleModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( GlobalSystems()->Get< ParallelThread >()->GetDebugName() + "_Tasks"_str );
@@ -137,11 +137,12 @@ namespace Base
 		{
 			CHECK( _PushAsyncMessage( Message< ModuleMsg::PushAsyncMessage >{
 						AsyncMessage{
-							LAMBDA( mngr = _GetManager(), task = TaskModuleImplPtr(this) ) (const TaskModulePtr &) {
+							LAMBDA( mngr = _GetManager(), task = TaskModuleImplPtr(this) ) (GlobalSystemsRef) {
 								mngr->Send< ModuleMsg::AddTaskSchedulerToManager >({ task, DelegateBuilder(task, &TaskModuleImpl::_Push) });
 							}
 						}, _GetManager()->GetThreadID()
-			}) );
+					}.Async())
+			);
 		}
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
@@ -154,8 +155,6 @@ namespace Base
 */
 	TaskModuleImpl::~TaskModuleImpl ()
 	{
-		CHECK( GetThreadID() == ThreadID::GetCurrent() );
-
 		LOG( "TaskModule finalized", ELog::Debug );
 
 		ASSERT( _msgQueue.GetCurrentQueueCount() == 0 );
@@ -186,14 +185,18 @@ namespace Base
 	{
 		ASSERT( msg.Sender() and _GetParents().IsExist( msg.Sender() ) );
 		
-		_DetachSelfFromManager();
+		_Push(AsyncMessage{ LAMBDA( this ) (GlobalSystemsRef)
+							{
+								_DetachSelfFromManager();
 
-		CHECK_ERR( Module::_Delete_Impl( msg ) );
+								CHECK( Module::_Delete_Impl( Message< ModuleMsg::Delete >{} ) );
 		
-		ASSERT( _msgQueue.GetCurrentQueueCount() == 0 );
-		ASSERT( _msgQueue.GetPendingQueueCount() == 0 );
+								ASSERT( _msgQueue.GetCurrentQueueCount() == 0 );
+								ASSERT( _msgQueue.GetPendingQueueCount() == 0 );
 
-		_msgQueue.ClearAll();
+								_msgQueue.ClearAll();
+							}
+			});
 		return true;
 	}
 
@@ -202,12 +205,13 @@ namespace Base
 	_PushAsyncMessage
 =================================================
 */
-	bool TaskModuleImpl::_PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg)
+	bool TaskModuleImpl::_PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg) noexcept
 	{
 		CHECK_ERR( GetState() != EState::Deleting );
 		CHECK_ERR( _GetManager() );
+		ASSERT( msg.IsAsync() );
 
-		CHECK( _GetManager()->Send< ModuleMsg::PushAsyncMessage >( RVREF(msg) ) );
+		CHECK( _GetManager()->Send< ModuleMsg::PushAsyncMessage >( msg ) );
 		return true;
 	}
 
@@ -252,7 +256,7 @@ namespace Base
 */
 	usize TaskModuleImpl::_ProcessMessages ()
 	{
-		return _msgQueue.ProcessAll( LAMBDA(this) (const AsyncMessage &op) {{ op.Process( this ); }} );
+		return _msgQueue.ProcessAll( LAMBDA(this) (const AsyncMessage &op) {{ op.Process( this->GlobalSystems() ); }} );
 	}
 //-----------------------------------------------------------------------------
 	
@@ -263,7 +267,7 @@ namespace Base
 	_CreateTaskModule
 =================================================
 */
-	ModulePtr TaskManager::_CreateTaskModule (const GlobalSystemsRef gs, const CreateInfo::TaskModule &ci)
+	ModulePtr TaskManager::_CreateTaskModule (GlobalSystemsRef gs, const CreateInfo::TaskModule &ci)
 	{
 		CHECK_ERR( ci.manager );
 		return New< TaskModuleImpl >( gs, ci );

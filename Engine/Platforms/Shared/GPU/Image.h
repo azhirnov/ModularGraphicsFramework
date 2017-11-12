@@ -19,26 +19,28 @@ namespace Platforms
 	struct ImageDescriptor : CompileTime::PODStruct
 	{
 	// variables
-		EImage::type		target;
-		uint4				dimension;
+		EImage::type		imageType;
+		uint4				dimension;	// width, height, depth, layers
 		EPixelFormat::type	format;
 		EImageUsage::bits	usage;
 		MipmapLevel			maxLevel;
 		MultiSamples		samples;
+		//BytesU			xAlign;		// ignored if used staging buffer
+		//BytesU			xyAlign;
 
 	// methods
-		ImageDescriptor (GX_DEFCTOR) : target( EImage::Unknown ), format( EPixelFormat::Unknown )
+		ImageDescriptor (GX_DEFCTOR) : imageType( EImage::Unknown ), format( EPixelFormat::Unknown )
 		{}
 
-		ImageDescriptor  (EImage::type			target,
+		ImageDescriptor  (EImage::type			imageType,
 						  const uint4	&		dimension,
 						  EPixelFormat::type	format,
 						  EImageUsage::bits		usage,
 						  MipmapLevel			maxLevel	= Uninitialized,
 						  MultiSamples			samples		= Uninitialized) :
-			target(target),		dimension(dimension),
-			format(format),		usage(usage),
-			maxLevel(maxLevel),	samples(samples)
+			imageType(imageType),	dimension(dimension),
+			format(format),			usage(usage),
+			maxLevel(maxLevel),		samples(samples)
 		{}
 	};
 
@@ -48,12 +50,12 @@ namespace Platforms
 	// Image Utils
 	//
 
-	class ImageUtils final
+	class _ENGINE_PLATFORMS_EXPORT_ ImageUtils final
 	{
 	public:
-		static uint4	ValidateDimension (EImage::type target, const uint4 &dim);
-		static uint4	LevelDimension (EImage::type target, const uint4 &dim, uint level);
-		static uint		NumberOfMipmaps (EImage::type target, const uint4 &dim);
+		static uint4	ValidateDimension (EImage::type imageType, const uint4 &dim);
+		static uint4	LevelDimension (EImage::type imageType, const uint4 &dim, uint level);
+		static uint		NumberOfMipmaps (EImage::type imageType, const uint4 &dim);
 			
 		static uint3	ConvertOffset (EImage::type imgType, const uint4 &offset);
 		static uint4	ConvertSize (EImage::type imgType, const uint3 &size);
@@ -79,7 +81,6 @@ namespace CreateInfo
 	{
 		ModulePtr						gpuThread;
 		Platforms::ImageDescriptor		descr;
-		bool							allocMemory		= false;	// set 'true' to automaticaly create memory object
 	};
 
 
@@ -109,12 +110,6 @@ namespace GpuMsg
 	{
 		Out< Platforms::EImageLayout::type >	result;
 	};
-
-	
-	// platform-dependent
-	struct GetVkImageID;
-	struct GetGLImageID;
-	struct GetVkImageView;
 
 
 }	// GpuMsg

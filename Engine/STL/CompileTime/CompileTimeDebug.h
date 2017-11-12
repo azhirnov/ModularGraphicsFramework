@@ -46,10 +46,10 @@ namespace Debug
 	private:
 		struct Func
 		{
-			const StringCRef	divider;
-			String				result;
+			const GXTypes::StringCRef	divider;
+			GXTypes::String				result;
 
-			explicit Func (StringCRef divider) : divider(divider)
+			explicit Func (GXTypes::StringCRef divider) : divider(divider)
 			{}
 
 			template <typename T, usize Index>
@@ -63,7 +63,7 @@ namespace Debug
 		};
 
 	public:
-		static String ToString (StringCRef divider = "\n")
+		static GXTypes::String ToString (GXTypes::StringCRef divider = "\n")
 		{
 			Func func( divider );
 			Typelist::RuntimeForEach( func );

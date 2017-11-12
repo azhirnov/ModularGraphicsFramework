@@ -27,13 +27,13 @@ namespace GXTypes
 		template <typename T, typename R>
 		struct _PtrMove< T *, R >
 		{
-			typedef R *	result_t;
+			typedef R *	Result_t;
 
-			static result_t  Move (T * val, isize offset) {
+			static Result_t  Move (T * val, isize offset) {
 				return PointerCast< R >( PointerCast< ubyte >( val ) + offset );
 			}
 
-			static result_t  Move (T * val, usize offset) {
+			static Result_t  Move (T * val, usize offset) {
 				return PointerCast< R >( PointerCast< ubyte >( val ) + offset );
 			}
 		};
@@ -41,13 +41,13 @@ namespace GXTypes
 		template <typename T, typename R>
 		struct _PtrMove < const T *, R >
 		{
-			typedef const R *	result_t;
+			typedef const R *	Result_t;
 
-			static result_t  Move (const T * val, isize offset) {
+			static Result_t  Move (const T * val, isize offset) {
 				return PointerCast< R >( PointerCast< ubyte >( val ) + offset );
 			}
 
-			static result_t  Move (const T * val, usize offset) {
+			static Result_t  Move (const T * val, usize offset) {
 				return PointerCast< R >( PointerCast< ubyte >( val ) + offset );
 			}
 		};
@@ -62,14 +62,14 @@ namespace GXTypes
 =================================================
 */
 		template <typename R, typename T>
-		forceinline typename _types_hidden_::_PtrMove< T, R >::result_t  MovePointer (T ptr, BytesI offset)
+		forceinline typename _types_hidden_::_PtrMove< T, R >::Result_t  MovePointer (T ptr, BytesI offset)
 		{
 			STATIC_ASSERT( TypeTraits::IsPointer<T>, "argument must be pointer" );
 			return _types_hidden_::_PtrMove< T, R >::Move( ptr, (isize)offset );
 		}
 
 		template <typename R, typename T>
-		forceinline typename _types_hidden_::_PtrMove< T, R >::result_t  MovePointer (T ptr, BytesU offset)
+		forceinline typename _types_hidden_::_PtrMove< T, R >::Result_t  MovePointer (T ptr, BytesU offset)
 		{
 			STATIC_ASSERT( TypeTraits::IsPointer<T>, "argument must be pointer" );
 			return _types_hidden_::_PtrMove< T, R >::Move( ptr, (usize)offset );

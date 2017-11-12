@@ -35,10 +35,10 @@ namespace CompileTime
 		static const T	N	= Numerator / _GCD;
 		static const T	D	= Denominator / _GCD;
 		
-		typedef T												value_t;
-		typedef typename NearFloat::FromSize< sizeof(T)*2 >		float_t;
-		typedef Fractional< T, Numerator, Denominator >			Self;
-		typedef Fractional< T, N, D >							Simplified;
+		using Value_t		= T;
+		using Float_t		= typename NearFloat::FromSize< sizeof(T)*2 >;
+		using Self			= Fractional< T, Numerator, Denominator >;
+		using Simplified	= Fractional< T, N, D >;
 
 
 	// static values
@@ -108,22 +108,22 @@ namespace CompileTime
 			return FT( N ) / FT( D );
 		}
 
-		static String ToString ()
+		static GXTypes::String ToString ()
 		{
-			String	s;
-			s << String().FormatI( N, 10 );
+			GXTypes::String	s;
+			s << GXTypes::String().FormatI( N, 10 );
 
 			if_constexpr ( N != 0 and D > 1 )
-				s << '/' << String().FormatI( D, 10 );
+				s << '/' << GXTypes::String().FormatI( D, 10 );
 			
 			return s;
 		}
 
 	// methods
 	public:
-		operator float_t () const
+		operator Float_t () const
 		{
-			return ToFloat< float_t >();
+			return ToFloat< Float_t >();
 		}
 	};
 

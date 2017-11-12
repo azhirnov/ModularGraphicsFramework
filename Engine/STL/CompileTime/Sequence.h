@@ -87,27 +87,6 @@ namespace CompileTime
 
 
 	//
-	// Sequence From
-	//
-	/*
-	namespace _ctime_hidden_
-	{
-		template <typename T>
-		struct _SequenceFromValueList
-		{
-		};
-
-	}	// _ctime_hidden_
-
-
-	template <typename ValueList>
-	struct SequenceFrom
-	{
-	};*/
-
-
-
-	//
 	// Index Sequence
 	//
 

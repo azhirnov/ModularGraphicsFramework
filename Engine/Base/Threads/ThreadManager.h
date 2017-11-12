@@ -27,37 +27,40 @@ namespace Base
 											//ModuleMsg::FindThread
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
+		
+		using TaskMsgList_t			= MessageListFrom< ModuleMsg::Update, ModuleMsg::PushAsyncMessage >;
+
+		using CallInThreadFunc_t	= void (*) (const ThreadManagerPtr &mngr, const ModulePtr &thread, GlobalSystemsRef gs);
+		using BlockingWaitThread_t	= ModuleMsg::AddThreadToManager::BlockingWaitFunc_t;
 
 		struct ThreadInfo
 		{
 			ModulePtr				thread;
-			Delegate<void ()>		wait;
+			BlockingWaitThread_t	wait;
 		};
 
 		using Threads_t				= Map< ThreadID, ThreadInfo >;
 
-		using CallInThreadFunc_t	= void (*) (const ThreadManagerPtr &mngr, const ModulePtr &thread, const ModulePtr &task);
-		
+		struct CreateParallelThreadData;
+
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
 	private:
-		Threads_t			_threads;
-		ParallelThreadImpl	_currentThread;
-		OS::Mutex			_lock;
+		Threads_t				_threads;
+		ParallelThreadImplPtr	_currentThread;
+		OS::Mutex				_lock;
 
 
 	// methods
 	public:
-		ThreadManager (const GlobalSystemsRef gs, const CreateInfo::ThreadManager &info);
+		ThreadManager (GlobalSystemsRef gs, const CreateInfo::ThreadManager &info);
 		~ThreadManager ();
-
-		bool SendToAllThreads (CallInThreadFunc_t func);
 		
 		static void Register (GlobalSystemsRef);
 		static void Unregister (GlobalSystemsRef);
@@ -76,6 +79,8 @@ namespace Base
 
 
 	private:
+		bool _SendToAllThreads (CallInThreadFunc_t func, bool exceptMain = false);
+
 		static ModulePtr _CreateParallelThread (GlobalSystemsRef, const CreateInfo::Thread &);
 		static ModulePtr _CreateThreadManager (GlobalSystemsRef, const CreateInfo::ThreadManager &);
 

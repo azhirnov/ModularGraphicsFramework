@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 
 #if defined( GRAPHICS_API_VULKAN )
@@ -11,68 +12,16 @@ namespace Engine
 {
 namespace PlatformVK
 {
-	
-	//
-	// Vulkan Render Pass
-	//
-
-	class Vk1RenderPass final : public Vk1BaseModule
-	{
-	// types
-	private:
-		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetRenderPassDescriptor,
-											GpuMsg::GetVkRenderPassID
-										> >;
-
-		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
-
-
-	// constants
-	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
-
-
-	// variables
-	private:
-		RenderPassDescriptor	_descr;
-
-		vk::VkRenderPass		_renderPassId;
-
-
-	// methods
-	public:
-		Vk1RenderPass (const GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
-		~Vk1RenderPass ();
-
-		RenderPassDescriptor const&	GetDescriptor ()	const	{ return _descr; }
-
-
-	// message handlers
-	private:
-		bool _Compose (const  Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetVkRenderPassID (const Message< GpuMsg::GetVkRenderPassID > &);
-		bool _GetRenderPassDescriptor (const Message< GpuMsg::GetRenderPassDescriptor > &);
-
-	private:
-		bool _IsCreated () const;
-		bool _CreateRenderPass ();
-		void _DestroyRenderPass ();
-	};
-
-	
 
 	//
 	// Vulkan Render Pass Cache
 	//
 
-	class Vk1RenderPassCache final
+	class Vk1RenderPassCache final : public Vk1BaseObject
 	{
 	// types
 	private:
-		SHARED_POINTER( Vk1RenderPass );
+		using Vk1RenderPassPtr = SharedPointerType< class Vk1RenderPass >;
 		
 		struct SearchableRenderPass
 		{
@@ -80,9 +29,9 @@ namespace PlatformVK
 
 			explicit SearchableRenderPass (const Vk1RenderPassPtr &rp) : rp(rp) {}
 
-			bool operator == (const SearchableRenderPass &right) const	{ return rp->GetDescriptor() == right.rp->GetDescriptor(); }
-			bool operator >  (const SearchableRenderPass &right) const	{ return rp->GetDescriptor() >  right.rp->GetDescriptor(); }
-			bool operator <  (const SearchableRenderPass &right) const	{ return rp->GetDescriptor() <  right.rp->GetDescriptor(); }
+			bool operator == (const SearchableRenderPass &right) const;
+			bool operator >  (const SearchableRenderPass &right) const;
+			bool operator <  (const SearchableRenderPass &right) const;
 		};
 
 		struct RenderPassSearch
@@ -91,9 +40,9 @@ namespace PlatformVK
 
 			explicit RenderPassSearch (const RenderPassDescriptor &s) : descr(s) {}
 
-			bool operator == (const SearchableRenderPass &right) const	{ return descr == right.rp->GetDescriptor(); }
-			bool operator >  (const SearchableRenderPass &right) const	{ return descr >  right.rp->GetDescriptor(); }
-			bool operator <  (const SearchableRenderPass &right) const	{ return descr <  right.rp->GetDescriptor(); }
+			bool operator == (const SearchableRenderPass &right) const;
+			bool operator >  (const SearchableRenderPass &right) const;
+			bool operator <  (const SearchableRenderPass &right) const;
 		};
 
 		using RenderPasses_t	= Set< SearchableRenderPass >;
@@ -102,19 +51,15 @@ namespace PlatformVK
 	// variables
 	private:
 		RenderPasses_t			_renderPasses;
-		const VkSystemsRef		_vkSystems;
 
 
 	// methods
 	public:
-		explicit Vk1RenderPassCache (VkSystemsRef vkSys);
+		explicit Vk1RenderPassCache (Ptr<Vk1Device> dev);
 
-		Vk1RenderPassPtr	Create (const GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
+		Vk1RenderPassPtr	Create (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
 
 		void Destroy ();
-
-		VkSystemsRef		VkSystems ()			const	{ return _vkSystems; }
-		Ptr<Vk1Device>		GetDevice ()			const	{ return _vkSystems->Get< Vk1Device >(); }
 	};
 
 

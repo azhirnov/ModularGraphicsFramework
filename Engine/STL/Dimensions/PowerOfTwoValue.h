@@ -24,7 +24,7 @@ namespace GXMath
 	// types
 	public:
 		typedef PowOf2Value<T>		Self;
-		typedef T					value_t;
+		typedef T					Value_t;
 
 
 	// variables

@@ -19,7 +19,7 @@ namespace GXTypes
 	// types
 	public:
 		using Self		= Optional< T >;
-		using value_t	= T;
+		using Value_t	= T;
 
 
 	// variables
@@ -93,7 +93,7 @@ namespace GXTypes
 
 		bool	operator == (const Self &other) const
 		{
-			return IsDefined() and other.IsDefined() and All( Get() == other.Get() );
+			return IsDefined() and other.IsDefined() and GXMath::All( Get() == other.Get() );
 		}
 
 
@@ -116,8 +116,9 @@ namespace GXTypes
 
 		T const &	Get ()			const				{ ASSERT( IsDefined() );  return _value; }
 		T &			Get ()								{ ASSERT( IsDefined() );  return _value; }
-		T const		Get (const T& defaultValue)	const	{ return IsDefined() ? Get() : defaultValue; }
-		//T &&		Get (T&& defaultValue)				{ return IsDefined() ? RVREF(_value) : FW<T>(defaultValue); }
+
+		T const		Get (const T defaultValue)	const	{ return IsDefined() ? Get() : defaultValue; }
+		T const&	Get (T& defaultValue) const			{ return IsDefined() ? _value : defaultValue; }
 
 		T *			GetPtrOrNull ()						{ return IsDefined() ? GetPtr() : null; }
 		T const *	GetPtrOrNUll ()	const				{ return IsDefined() ? GetPtr() : null; }
@@ -140,23 +141,41 @@ namespace GXTypes
 			return Get();
 		}
 
+		T &			GetOrCreate ()
+		{
+			if ( not IsDefined() )	CreateDefault();
+			return Get();
+		}
+
+		T &			GetOrCreate (const T& defaultValue)
+		{
+			if ( not IsDefined() )	_Create( defaultValue );
+			return Get();
+		}
+
+		T &			GetOrCreate (T&& defaultValue)
+		{
+			if ( not IsDefined() )	_Create( RVREF(defaultValue) );
+			return Get();
+		}
+
 
 	private:
-		void _Create (const T &value)
+		void _Create (const T &value) noexcept
 		{
 			_Destroy();
 			UnsafeMem::PlacementNew<T>( &_value, value );
 			_isDefined = true;
 		}
 
-		void _Create (T &&value)
+		void _Create (T &&value) noexcept
 		{
 			_Destroy();
 			UnsafeMem::PlacementNew<T>( &_value, FW<T>( value ) );
 			_isDefined = true;
 		}
 
-		void _Destroy ()
+		void _Destroy () noexcept
 		{
 			if ( _isDefined )
 			{
@@ -169,20 +188,41 @@ namespace GXTypes
 		{
 			DEBUG_ONLY( ZeroMem( _buf ) );
 		}
-
 	};
-	
 
+	
+/*
+=================================================
+	OptionalFrom
+=================================================
+*/
+	template <typename T>
+	inline Optional<T> OptionalFrom (const T &value, bool isDefined = true)
+	{
+		return isDefined ? Optional<T>( value ) : Optional<T>();
+	}
+
+	template <typename T>
+	inline Optional<T> OptionalFrom (T &&value, bool isDefined = true)
+	{
+		return isDefined ? Optional<T>( RVREF(value) ) : Optional<T>();
+	}
+	
+/*
+=================================================
+	Hash
+=================================================
+*/
 	template <typename T>
 	struct Hash< Optional<T> > : private Hash<T>
 	{
-		typedef Optional<T>					key_t;
-		typedef Hash<T>						base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef Optional<T>					Key_t;
+		typedef Hash<T>						Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return x ? base_t::operator ()( x.Get() ) : result_t();
+			return x ? Base_t::operator ()( x.Get() ) : Result_t();
 		}
 	};
 

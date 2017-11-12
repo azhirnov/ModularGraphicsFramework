@@ -43,6 +43,8 @@ namespace Platforms
 			//DebugReport,
 			Display,
 			//DisplayMode,
+			VertexArray,		// OpenGL only
+			Query,				// OpenGL only
 
 			Unknown		= ~0u
 		};

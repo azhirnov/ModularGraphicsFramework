@@ -123,6 +123,15 @@
     <ClCompile Include="..\..\..\Tests\STL\Test_Algorithms_InvokeWithVariant.cpp">
       <Filter>Algorithms</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Tests\STL\Test_CompileTime_Map.cpp">
+      <Filter>CompileTime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Tests\STL\Test_Containers_IndexedArray.cpp">
+      <Filter>Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Tests\STL\Test_Containers_Adaptors.cpp">
+      <Filter>Containers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Tests\STL\Debug.h" />

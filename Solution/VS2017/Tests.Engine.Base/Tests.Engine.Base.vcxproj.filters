@@ -13,6 +13,12 @@
     <Filter Include="Pipelines">
       <UniqueIdentifier>{a88667d4-bedc-4320-b8ff-cadd02f17cd8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="OpenCL">
+      <UniqueIdentifier>{2852e72c-b740-4690-abb2-2fbe0a7359cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SoftRenderer">
+      <UniqueIdentifier>{9e9c9ae5-b7ec-45c6-ad76-fc171186c3dd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Tests\Engine.Base\Window\Test.Window.cpp">
@@ -33,6 +39,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Tests\Engine.Base\Pipelines\default.cpp">
       <Filter>Pipelines</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Pipelines\default2.cpp">
+      <Filter>Pipelines</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Tests\Engine.Base\OpenCL\Test.CLCompute.cpp">
+      <Filter>OpenCL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -35,7 +35,7 @@ namespace GXMath
 
 
 	// Vector
-	template <typename T, usize I>	struct Vec;
+	template <typename T, usize I, ulong UID = 0> struct Vec;
 
 	// Vec1
 	typedef Vec< float,		1 >		float1;
@@ -111,7 +111,7 @@ namespace GXMath
 	
 
 	// Matrix
-	template <typename T, usize C, usize R>	struct Matrix;
+	template <typename T, usize C, usize R, ulong UID = 0> struct Matrix;
 
 	// Matrix2x2
 	typedef Matrix< float,	2, 2 >		float2x2;
@@ -169,7 +169,7 @@ namespace GXMath
 
 
 	// Quaternion
-	template <typename T> struct Quaternion;
+	template <typename T, ulong UID = 0> struct Quaternion;
 
 	typedef Quaternion< float >			fquat;
 	typedef Quaternion< double >		dquat;
@@ -178,15 +178,15 @@ namespace GXMath
 
 
 	// Dimensions
-	template <typename T, usize I>	using BytesVec = Vec< Bytes<T>, I >;
-	template <typename T, usize I>	using BitsVec = Vec< Bits<T>, I >;
+	template <typename T, usize I, ulong UID = 0>	using BytesVec = Vec< Bytes<T>, I, UID >;
+	template <typename T, usize I, ulong UID = 0>	using BitsVec = Vec< Bits<T>, I, UID >;
 
 
 	template <typename T>	struct Radians;
 	template <typename T>	struct Degrees;
 
-	template <typename T, usize I>	using RadiansVec = Vec< Radians<T>, I >;
-	template <typename T, usize I>	using DegreesVec = Vec< Degrees<T>, I >;
+	template <typename T, usize I, ulong UID = 0>	using RadiansVec = Vec< Radians<T>, I, UID >;
+	template <typename T, usize I, ulong UID = 0>	using DegreesVec = Vec< Degrees<T>, I, UID >;
 
 
 }	// GXMath

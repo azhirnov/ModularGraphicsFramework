@@ -6,22 +6,27 @@
 #if defined( PLATFORM_WINDOWS )
 #	include "Engine/Platforms/Windows/WinPlatform.h"
 	using OSPlatform = Engine::Platforms::WinPlatform;
-#endif	// PLATFORM_WINDOWS
+#endif
 
 
 #ifdef GRAPHICS_API_OPENGL
 #	include "Engine/Platforms/OpenGL/OpenGLContext.h"
-#endif	// GRAPHICS_API_OPENGL
+#endif
 
 
 #ifdef GRAPHICS_API_VULKAN
 #	include "Engine/Platforms/Vulkan/VulkanContext.h"
-#endif	// GRAPHICS_API_VULKAN
+#endif
 
 
 #ifdef COMPUTE_API_OPENCL
+#	include "Engine/Platforms/OpenCL/OpenCLContext.h"
+#endif
 
-#endif	// COMPUTE_API_OPENCL
+
+#ifdef GRAPHICS_API_DIRECTX
+#	include "Engine/Platforms/DirectX/DirectXContext.h"
+#endif
 
 
 #include "Engine/Platforms/Input/InputManager.h"
@@ -55,6 +60,10 @@ namespace Platforms
 		#ifdef COMPUTE_API_OPENCL
 			OpenCLContext::Register( ms->GlobalSystems() );
 		#endif
+
+		#ifdef GRAPHICS_API_DIRECTX
+			DirectXContext::Register( ms->GlobalSystems() );
+		#endif
 	}
 	
 /*
@@ -79,6 +88,10 @@ namespace Platforms
 
 		#ifdef COMPUTE_API_OPENCL
 			OpenCLContext::Unregister( ms->GlobalSystems() );
+		#endif
+
+		#ifdef GRAPHICS_API_DIRECTX
+			DirectXContext::Unregister( ms->GlobalSystems() );
 		#endif
 	}
 

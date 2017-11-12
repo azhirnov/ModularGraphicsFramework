@@ -6,6 +6,7 @@ using namespace GX_STL;
 using namespace GX_STL::GXTypes;
 using namespace GX_STL::GXMath;
 using namespace GX_STL::GXMath::ColorFormat;
+using namespace GX_STL::GXMath::ColorFormatUtils;
 
 typedef IntColorFormatInfo		IFormatInfo;
 typedef FloatColorFormatInfo	FFormatInfo;

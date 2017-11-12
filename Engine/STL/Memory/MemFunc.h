@@ -22,7 +22,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T0, typename T1>
-	forceinline bool CheckPointersAliasing (const T0 *begin0, const T0 *end0, const T1 *begin1, const T1 *end1)
+	forceinline bool CheckPointersAliasing (const T0 *begin0, const T0 *end0, const T1 *begin1, const T1 *end1) noexcept
 	{
 		ASSERT( begin0 <= end0 );
 		ASSERT( begin1 <= end1 );
@@ -39,7 +39,7 @@ namespace GXTypes
 	memory blocks must not intersects
 =================================================
 */
-		forceinline void * MemCopy (void *dst, const void *src, BytesU size)
+		forceinline void * MemCopy (void *dst, const void *src, BytesU size) noexcept
 		{
 			// TODO: add checks
 			ASSERT( not CheckPointersAliasing( (ubyte *)dst, (ubyte *)dst + usize(size),
@@ -55,7 +55,7 @@ namespace GXTypes
 	memory blocks may intersects
 =================================================
 */
-		forceinline void * MemMove (void *dst, const void *src, BytesU size)
+		forceinline void * MemMove (void *dst, const void *src, BytesU size) noexcept
 		{
 			// TODO: add checks
 			return ::memmove( dst, src, usize(size) );
@@ -66,7 +66,7 @@ namespace GXTypes
 	MemCmp
 =================================================
 */
-		forceinline int MemCmp (const void *left, const void *right, BytesU size)
+		forceinline int MemCmp (const void *left, const void *right, BytesU size) noexcept
 		{
 			// TODO: add checks
 			return ::memcmp( left, right, usize(size) );
@@ -77,7 +77,7 @@ namespace GXTypes
 	ZeroMem
 =================================================
 */
-		forceinline void ZeroMem (void *dst, BytesU size)
+		forceinline void ZeroMem (void *dst, BytesU size) noexcept
 		{
 			::memset( dst, 0, usize(size) );
 		}
@@ -93,7 +93,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T0, typename T1>
-	inline void MemCopy (T0 &dst, const T1 &src)
+	inline void MemCopy (T0 &dst, const T1 &src) noexcept
 	{
 		STATIC_ASSERT( CompileTime::IsPOD<T0> );
 		STATIC_ASSERT( CompileTime::IsPOD<T1> );
@@ -113,7 +113,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T0, typename T1>
-	inline void MemMove (T0 &dst, const T1 &src)
+	inline void MemMove (T0 &dst, const T1 &src) noexcept
 	{
 		STATIC_ASSERT( CompileTime::IsPOD<T0> );
 		STATIC_ASSERT( CompileTime::IsPOD<T1> );
@@ -131,7 +131,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T0, typename T1>
-	inline int MemCmp (const T0 &left, const T1 &right)
+	inline int MemCmp (const T0 &left, const T1 &right) noexcept
 	{
 		STATIC_ASSERT( sizeof(left) == sizeof(right) );
 
@@ -147,14 +147,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, usize I>
-	inline void ZeroMem (T (&arr)[I])
+	inline void ZeroMem (T (&arr)[I]) noexcept
 	{
 		STATIC_ASSERT( CompileTime::IsZeroMemAvailable<T> );
 		UnsafeMem::ZeroMem( arr, I * SizeOf<T>() );
 	}
 
 	template <typename T>
-	inline void ZeroMem (T &val)
+	inline void ZeroMem (T &val) noexcept
 	{
 		STATIC_ASSERT( CompileTime::IsZeroMemAvailable<T> );
 		UnsafeMem::ZeroMem( &val, SizeOf(val) );

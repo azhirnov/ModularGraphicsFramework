@@ -28,7 +28,7 @@ namespace File
 		{}
 
 
-		static SHARED_POINTER_TYPE( MtRFile )  New (const RFilePtr &file)
+		static SharedPointerType< MtRFile >  New (const RFilePtr &file)
 		{
 			ASSERT( file->GetType() != EFile::Multithreaded );
 			return new MtRFile( file );
@@ -36,13 +36,13 @@ namespace File
 
 		
 		// RFile //
-		virtual BytesU ReadBuf (void * buf, BytesU size) override
+		virtual BytesU ReadBuf (void * buf, BytesU size) noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->ReadBuf( buf, size );
 		}
 		
-		virtual BytesU ReadBufFrom (void * buf, BytesU size, BytesU offset) override
+		virtual BytesU ReadBufFrom (void * buf, BytesU size, BytesU offset) noexcept override
 		{
 			SCOPELOCK( _lock );
 
@@ -57,55 +57,55 @@ namespace File
 
 
 		// BaseFile //
-		virtual void Close () override
+		virtual void Close () noexcept override
 		{
 			SCOPELOCK( _lock );
 			_file->Close();
 		}
 		
-		virtual bool IsOpened () const override
+		virtual bool IsOpened () const noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file.IsNotNull();
 		}
 
-		virtual bool SeekSet (BytesU offset) override
+		virtual bool SeekSet (BytesU offset) noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->SeekSet( offset );
 		}
 
-		virtual bool SeekCur (BytesI offset) override
+		virtual bool SeekCur (BytesI offset) noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->SeekCur( offset );
 		}
 
-		virtual bool SeekEnd (BytesU offset) override
+		virtual bool SeekEnd (BytesU offset) noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->SeekEnd( offset );
 		}
 		
-		virtual BytesU RemainingSize () const override
+		virtual BytesU RemainingSize () const noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->RemainingSize();
 		}
 
-		virtual BytesU Size () const override
+		virtual BytesU Size () const noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->Size();
 		}
 
-		virtual BytesU Pos () const override
+		virtual BytesU Pos () const noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->Pos();
 		}
 		
-		virtual bool IsEOF () const override
+		virtual bool IsEOF () const noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->IsEOF();
@@ -143,7 +143,7 @@ namespace File
 		{}
 
 
-		static SHARED_POINTER_TYPE( MtWFile )  New (const WFilePtr &file)
+		static SharedPointerType< MtWFile >  New (const WFilePtr &file)
 		{
 			ASSERT( file->GetType() != EFile::Multithreaded );
 			return new MtWFile( file );
@@ -151,13 +151,13 @@ namespace File
 
 		
 		// WFile //
-		virtual BytesU WriteBuf (const void * buf, BytesU size) override
+		virtual BytesU WriteBuf (const void * buf, BytesU size) noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->WriteBuf( buf, size );
 		}
 
-		virtual void Flush () override
+		virtual void Flush () noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->Flush();
@@ -165,55 +165,55 @@ namespace File
 		
 
 		// BaseFile //
-		virtual void Close () override
+		virtual void Close () noexcept override
 		{
 			SCOPELOCK( _lock );
 			_file->Close();
 		}
 		
-		virtual bool IsOpened () const override
+		virtual bool IsOpened () const noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file.IsNotNull();
 		}
 
-		virtual bool SeekSet (BytesU offset) override
+		virtual bool SeekSet (BytesU offset) noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->SeekSet( offset );
 		}
 
-		virtual bool SeekCur (BytesI offset) override
+		virtual bool SeekCur (BytesI offset) noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->SeekCur( offset );
 		}
 
-		virtual bool SeekEnd (BytesU offset) override
+		virtual bool SeekEnd (BytesU offset) noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->SeekEnd( offset );
 		}
 		
-		virtual BytesU RemainingSize () const override
+		virtual BytesU RemainingSize () const noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->RemainingSize();
 		}
 
-		virtual BytesU Size () const override
+		virtual BytesU Size () const noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->Size();
 		}
 
-		virtual BytesU Pos () const override
+		virtual BytesU Pos () const noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->Pos();
 		}
 		
-		virtual bool IsEOF () const override
+		virtual bool IsEOF () const noexcept override
 		{
 			SCOPELOCK( _lock );
 			return _file->IsEOF();

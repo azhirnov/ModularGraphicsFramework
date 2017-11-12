@@ -1,7 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -9,13 +8,15 @@ namespace Engine
 {
 namespace PlatformVK
 {
+	using namespace vk;
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	Vk1PipelineLayout::Vk1PipelineLayout () :
+	Vk1PipelineLayout::Vk1PipelineLayout (Ptr<Vk1Device> dev) :
+		Vk1BaseObject( dev ),
 		_layoutId( VK_NULL_HANDLE )
 	{
 	}
@@ -35,17 +36,13 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	bool Vk1PipelineLayout::Create (const PipelineLayoutDescriptor &descr, vk::VkDevice device)
+	bool Vk1PipelineLayout::Create (const PipelineLayoutDescriptor &descr)
 	{
-		using namespace vk;
-
-		CHECK_ERR( device );
-
-		Destroy( device );
+		Destroy();
 
 		_layoutDescr = descr;
 
-		CHECK_ERR( _CreateLayoutDescriptors( descr, device ) );
+		CHECK_ERR( _CreateLayoutDescriptors( descr ) );
 		
 		VkPipelineLayoutCreateInfo			layout_info = {};
 		layout_info.sType					= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -54,9 +51,9 @@ namespace PlatformVK
 		layout_info.pushConstantRangeCount	= (uint) _pushConstRanges.Count();
 		layout_info.pPushConstantRanges		= _pushConstRanges.RawPtr();
 
-		VK_CHECK( vkCreatePipelineLayout( device, &layout_info, null, OUT &_layoutId ) );
+		VK_CHECK( vkCreatePipelineLayout( GetVkDevice(), &layout_info, null, OUT &_layoutId ) );
 
-		//GetDevice()->SetObjectName( _layoutId, GetDebugName(), EGpuObject::PipelineLayout );	// TODO
+		GetDevice()->SetObjectName( _layoutId, "Vk1PipelineLayout", EGpuObject::PipelineLayout );
 		return true;
 	}
 	
@@ -75,6 +72,7 @@ namespace PlatformVK
 		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
 		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
 		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
+		using Uniform			= PipelineLayoutDescriptor::Uniform;
 
 
 	// variables
@@ -91,9 +89,7 @@ namespace PlatformVK
 
 		void operator () (const TextureUniform &tex) const
 		{
-			using namespace vk;
-
-			ASSERT( tex.dimension != EImage::Buffer );	// type must be VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER or VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER
+			ASSERT( tex.textureType != EImage::Buffer );	// type must be VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER or VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER
 
 			if ( set != tex.descriptorSet )
 				return;
@@ -110,8 +106,6 @@ namespace PlatformVK
 
 		void operator () (const SamplerUniform &samp) const
 		{
-			using namespace vk;
-			
 			if ( set != samp.descriptorSet )
 				return;
 
@@ -127,8 +121,6 @@ namespace PlatformVK
 
 		void operator () (const ImageUniform &img) const
 		{
-			using namespace vk;
-			
 			if ( set != img.descriptorSet )
 				return;
 
@@ -144,8 +136,6 @@ namespace PlatformVK
 
 		void operator () (const UniformBuffer &buf) const
 		{
-			using namespace vk;
-			
 			if ( set != buf.descriptorSet )
 				return;
 
@@ -161,8 +151,6 @@ namespace PlatformVK
 
 		void operator () (const StorageBuffer &buf) const
 		{
-			using namespace vk;
-			
 			if ( set != buf.descriptorSet )
 				return;
 
@@ -178,8 +166,6 @@ namespace PlatformVK
 
 		void operator () (const PushConstant &pc) const
 		{
-			using namespace vk;
-
 			if ( set != 0 )
 				return;
 
@@ -196,8 +182,15 @@ namespace PlatformVK
 		{
 			if ( set != sp.descriptorSet )
 				return;
-
+			
+			WARNING( "not supported" );
 			// TODO: VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
+		}
+		
+
+		void operator () (const Uniform &un) const
+		{
+			WARNING( "not supported" );
 		}
 	};
 	
@@ -206,10 +199,10 @@ namespace PlatformVK
 	Destroy
 =================================================
 */
-	void Vk1PipelineLayout::Destroy (vk::VkDevice device)
+	void Vk1PipelineLayout::Destroy ()
 	{
-		_DestroyLayout( device );
-		_DestroyLayoutDescriptors( device );
+		_DestroyLayout();
+		_DestroyLayoutDescriptors();
 
 		_pushConstRanges.Clear();
 	}
@@ -219,10 +212,8 @@ namespace PlatformVK
 	_CreateLayoutDescriptors
 =================================================
 */
-	bool Vk1PipelineLayout::_CreateLayoutDescriptors (const PipelineLayoutDescriptor &descr, vk::VkDevice device)
+	bool Vk1PipelineLayout::_CreateLayoutDescriptors (const PipelineLayoutDescriptor &descr)
 	{
-		using namespace vk;
-
 		DescriptorBindings	descr_binding;
 
 		CHECK_ERR( descr.GetUniforms().Count() <= DescriptorBindings::MemoryContainer_t::SIZE );
@@ -244,7 +235,7 @@ namespace PlatformVK
 			descriptor_info.pBindings		= descr_binding.RawPtr();
 			descriptor_info.bindingCount	= (uint) descr_binding.Count();
 
-			VK_CHECK( vkCreateDescriptorSetLayout (device, &descriptor_info, null, OUT &descriptor_layout ) );
+			VK_CHECK( vkCreateDescriptorSetLayout( GetVkDevice(), &descriptor_info, null, OUT &descriptor_layout ) );
 			_descriptorIds.PushBack( descriptor_layout );
 		}
 		return true;
@@ -255,9 +246,12 @@ namespace PlatformVK
 	_DestroyLayoutDescriptors
 =================================================
 */
-	void Vk1PipelineLayout::_DestroyLayoutDescriptors (vk::VkDevice device)
+	void Vk1PipelineLayout::_DestroyLayoutDescriptors ()
 	{
-		using namespace vk;
+		auto	device = GetVkDevice();
+
+		if ( device == VK_NULL_HANDLE )
+			return;
 
 		FOR( i, _descriptorIds ) {
 			vkDestroyDescriptorSetLayout( device, _descriptorIds[i], null );
@@ -270,11 +264,11 @@ namespace PlatformVK
 	_DestroyLayout
 =================================================
 */
-	void Vk1PipelineLayout::_DestroyLayout (vk::VkDevice device)
+	void Vk1PipelineLayout::_DestroyLayout ()
 	{
-		using namespace vk;
+		auto	device = GetVkDevice();
 
-		if ( _layoutId != VK_NULL_HANDLE )
+		if ( device != VK_NULL_HANDLE and _layoutId != VK_NULL_HANDLE )
 		{
 			vkDestroyPipelineLayout( device, _layoutId, null );
 		}
@@ -290,8 +284,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1PipelineLayoutCache::Vk1PipelineLayoutCache (VkSystemsRef vkSys) :
-		_vkSystems( vkSys )
+	Vk1PipelineLayoutCache::Vk1PipelineLayoutCache (Ptr<Vk1Device> dev) :
+		Vk1BaseObject( dev )
 	{
 	}
 	
@@ -314,15 +308,14 @@ namespace PlatformVK
 	{
 		using LayoutIter_t	= Layouts_t::const_iterator;
 
-		vk::VkDevice			device	= VkSystems()->Get< Vk1Device >()->GetLogicalDevice();
-		Vk1PipelineLayoutPtr	res		= new Vk1PipelineLayout();
+		Vk1PipelineLayoutPtr	res		= New< Vk1PipelineLayout >( GetDevice() );
 		LayoutIter_t			iter;
 
 		if ( _layouts.CustomSearch().Find( LayoutSearch(descr), OUT iter ) ) {
 			return iter->ptr;
 		}
 
-		CHECK_ERR( res->Create( descr, device ) );
+		CHECK_ERR( res->Create( descr ) );
 		_layouts.Add( SearchableLayout(res) );
 
 		return res;
@@ -335,11 +328,9 @@ namespace PlatformVK
 */
 	void Vk1PipelineLayoutCache::Destroy ()
 	{
-		vk::VkDevice	device = VkSystems()->Get< Vk1Device >()->GetLogicalDevice();
-
 		FOR( i, _layouts )
 		{
-			_layouts[i].ptr->Destroy( device );
+			_layouts[i].ptr->Destroy();
 		}
 		_layouts.Clear();
 	}

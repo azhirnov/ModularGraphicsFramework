@@ -18,15 +18,15 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef FirstType						first_t;
-		typedef SecondType						second_t;
-		typedef Pair< FirstType, SecondType >	Self;
+		using First_t	= FirstType;
+		using Second_t	= SecondType;
+		using Self		= Pair< FirstType, SecondType >;
 
 
 	// variables
 	public:
-		first_t		first;
-		second_t	second;
+		First_t		first;
+		Second_t	second;
 
 
 	// methods
@@ -90,13 +90,13 @@ namespace GXTypes
 	struct Hash< Pair< FirstType, SecondType > > :
 		private Hash< FirstType >, private Hash< SecondType >
 	{
-		STATIC_ASSERT(( CompileTime::IsSameTypes< typename Hash< FirstType >::result_t,
-													typename Hash< SecondType >::result_t > ));
+		STATIC_ASSERT(( CompileTime::IsSameTypes< typename Hash< FirstType >::Result_t,
+													typename Hash< SecondType >::Result_t > ));
 
-		typedef Pair< FirstType, SecondType >	key_t;
-		typedef Hash< FirstType >::result_t		result_t;
+		typedef Pair< FirstType, SecondType >	Key_t;
+		typedef Hash< FirstType >::Result_t		Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
 			return	Hash< FirstType >::operator ()( x.first ) +
 					Hash< SecondType >::operator ()( x.second );

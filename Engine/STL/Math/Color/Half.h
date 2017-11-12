@@ -34,7 +34,7 @@ namespace GXTypes
 	// types
 	public:
 		typedef THalf	Self;
-		typedef ushort	int_t;
+		typedef ushort	Int_t;
 
 		struct THalfBits
 		{
@@ -180,7 +180,7 @@ namespace GXTypes
 #	if 0
 		// fast conversion
 
-		float_t	f;
+		Float_t	f;
 		f._bits.s = _bits.s;
 		f._bits.e = _bits.e + (127 - 15);
 		f._bits.m = _bits.m << (23-10);
@@ -236,7 +236,7 @@ namespace GXTypes
 #	if 0
 		// fast conversion
 
-		float_t	f(F);
+		Float_t	f(F);
 		_bits.s = f._bits.s;
 		_bits.e = f._bits.e - (127 - 15);
 		_bits.m = f._bits.m >> (23-10);
@@ -312,15 +312,15 @@ namespace GXTypes
 	
 	template <>
 	struct Hash< THalf > :
-		private Hash< THalf::int_t >
+		private Hash< THalf::Int_t >
 	{
-		typedef THalf						key_t;
-		typedef Hash< key_t::int_t >		base_t;
-		typedef typename base_t::result_t	result_t;
+		typedef THalf						Key_t;
+		typedef Hash< Key_t::Int_t >		Base_t;
+		typedef typename Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x.GetU() );
+			return Base_t::operator ()( x.GetU() );
 		}
 	};
 	

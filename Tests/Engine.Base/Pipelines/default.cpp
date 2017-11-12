@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'd:\projects\activeprojects\p034_engine2\external\pipelinecompiler\tests\pipelines\default.cpp'
-// Created at: 2017/10/13 - 15:49:03
+// Created at: 2017/10/17 - 12:23:35
 
 #include "all_pipelines.h"
 
@@ -22,7 +22,7 @@ void Create_default (PipelineTemplateDescriptor& descr)
 
 	descr.layout = PipelineLayoutDescriptor::Builder()
 			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::RGBA | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 0, 0, EShader::bits() | EShader::Fragment )
-			.Finish();
+	.Finish();
 
 	descr.Vertex().StringGLSL( 
 R"#(#version 450 core
@@ -33,13 +33,6 @@ out gl_PerVertex {
 	vec4 gl_Position;
 	float gl_PointSize;
 	float gl_ClipDistance[1];
-	vec4 gl_ClipVertex;
-	vec4 gl_FrontColor;
-	vec4 gl_BackColor;
-	vec4 gl_FrontSecondaryColor;
-	vec4 gl_BackSecondaryColor;
-	vec4 gl_TexCoord[1];
-	float gl_FogFragCoord;
 	float gl_CullDistance[1];
 } ;
 layout(location=1) out vec3 v_Color;

@@ -42,6 +42,8 @@ namespace ModuleMsg
 		T *				operator -> ()		{ return _value.GetPtr(); }
 		T &				operator * ()		{ return _value.Get(); }
 
+		explicit operator bool ()			{ return IsDefined(); }
+
 		bool MoveTo (OUT T &dst)
 		{
 			if ( _value.IsDefined() )
@@ -84,8 +86,16 @@ namespace ModuleMsg
 		InOut () : Out() {}
 		InOut (InOut &&) = default;
 		InOut (const InOut &) = default;
+		
+		// available for sender and receiver
+		bool			IsDefined ()	const	{ return _value.IsDefined(); }
+		Optional<T> &	GetOptional ()	const	{ return _value; }
+		T &				Get ()			const	{ return _value.Get(); }
+		
+		T *				operator -> ()	const	{ return _value.GetPtr(); }
+		T &				operator * ()	const	{ return _value.Get(); }
 
-		Optional<T> const&	Get ()	const	{ return _value; }
+		explicit operator bool ()		const	{ return IsDefined(); }
 	};
 
 
@@ -122,7 +132,7 @@ namespace ModuleMsg
 	// Message Input with single read op (move-ctor available)
 	//
 	template <typename T>
-	struct SingleRead
+	struct ReadOnce
 	{
 	// variables
 	private:
@@ -131,9 +141,9 @@ namespace ModuleMsg
 
 	// methods
 	public:
-		SingleRead (T &&value) : _value(RVREF(value)), _isDefined(true) {}
-		SingleRead (SingleRead &&other) : _value(RVREF(other._value)), _isDefined(other._isDefined) { other._isDefined = false; }
-		SingleRead (const SingleRead &other) : _value(RVREF(other._value)), _isDefined(other._isDefined) { other._isDefined = false; }
+		ReadOnce (T &&value) : _value(RVREF(value)), _isDefined(true) {}
+		ReadOnce (ReadOnce &&other) : _value(RVREF(other._value)), _isDefined(other._isDefined) { other._isDefined = false; }
+		ReadOnce (const ReadOnce &other) : _value(RVREF(other._value)), _isDefined(other._isDefined) { other._isDefined = false; }
 
 		T& Get () const
 		{
@@ -148,7 +158,7 @@ namespace ModuleMsg
 	// Message Output with single write op (move-ctor available)
 	//
 	template <typename T>
-	struct SingleWrite
+	struct WriteOnce
 	{
 	// variables
 	private:
@@ -156,7 +166,7 @@ namespace ModuleMsg
 
 	// methods
 	public:
-		SingleWrite () : _value() {}
+		WriteOnce () : _value() {}
 
 		void Set (T &&value) const
 		{

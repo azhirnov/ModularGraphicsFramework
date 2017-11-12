@@ -24,6 +24,8 @@
 #include "CompileTime/TypeTraits.h"
 #include "CompileTime/StringToID.h"
 #include "CompileTime/Sequence.h"
+#include "CompileTime/Map.h"
+//#include "CompileTime/FunctionInfo.h"
 
 
 // Runtime //
@@ -56,6 +58,8 @@
 #include "Containers/HashSet.h"
 #include "Containers/HashMap.h"
 #include "Containers/UniBuffer.h"
+#include "Containers/IndexedArray.h"
+#include "Containers/Adaptors.h"
 
 
 // Algorithms/Crypt //
@@ -68,6 +72,7 @@
 
 // Algorithms //
 #include "Algorithms/ArrayUtils.h"
+#include "Algorithms/Comparators.h"
 #include "Algorithms/FileAddress.h"
 #include "Algorithms/Enum.h"
 #include "Algorithms/Hash.h"
@@ -87,6 +92,7 @@
 #include "Types/Union.h"
 #include "Types/VariantRef.h"
 #include "Types/VariantCRef.h"
+#include "Types/VariantInterface.h"
 #include "Types/VariantRefIndexedContainer.h"
 #include "Types/Noncopyable.h"
 #include "Types/Noninstancable.h"
@@ -95,6 +101,7 @@
 #include "Types/RefCountedObject.h"
 #include "Types/ReferenceCounter.h"
 #include "Types/StaticRefCountedObject.h"
+#include "Types/ScopeSetter.h"
 
 
 // Dimensions //
@@ -215,10 +222,7 @@
 
 // Experimental //
 #include "Experimental/Unroll.h"
-#include "Experimental/ScopeSetter.h"
 #include "Experimental/FastMath.h"
-#include "Experimental/VariantInterface.h"
-#include "Experimental/FunctionInfo.h"
 
 
 // Debug //

@@ -89,7 +89,7 @@ namespace OS
 			PROV_DSS_DH, PROV_DH_SCHANNEL, PROV_FORTEZZA, PROV_MS_EXCHANGE, PROV_SSL
 		};
 
-		for (usize i = 0; i < CountOf(types); ++i)
+		FOR( i, types )
 		{
 			if ( _CreateFromType( types[i] ) )
 				return true;

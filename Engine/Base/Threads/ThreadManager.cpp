@@ -10,17 +10,18 @@ namespace Engine
 namespace Base
 {
 	
-	const Runtime::VirtualTypeList	ThreadManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	ThreadManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	ThreadManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	ThreadManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	ThreadManager::ThreadManager (const GlobalSystemsRef gs, const CreateInfo::ThreadManager &info) :
+	ThreadManager::ThreadManager (GlobalSystemsRef gs, const CreateInfo::ThreadManager &) :
 		Module( gs, ModuleConfig{ ThreadManagerModuleID, 1 }, &_msgTypes, &_eventTypes ),
-		_currentThread( gs, CreateInfo::Thread{ "MainThread", null } )
+		//_currentThread( gs, CreateInfo::Thread{ "MainThread", null } )
+		_currentThread{New<ParallelThreadImpl>( gs, CreateInfo::Thread{ "MainThread", null } )}
 	{
 		SetDebugName( "ThreadManager" );
 
@@ -41,9 +42,10 @@ namespace Base
 		
 		CHECK( _ValidateMsgSubscriptions() );
 		
-		_currentThread._SetManager( this );
-		CHECK( SendTo< ModuleMsg::AddThreadToManager >( this, 
-					{&_currentThread, DelegateBuilder( &_currentThread, &ParallelThreadImpl::_Wait )} ) );
+		_currentThread->_SetManager( this );
+		CHECK( SendTo< ModuleMsg::AddThreadToManager >( this,
+					{ _currentThread, DelegateBuilder( _currentThread, &ParallelThreadImpl::_NoWait ) }
+				));
 	}
 	
 /*
@@ -65,47 +67,59 @@ namespace Base
 */
 	bool ThreadManager::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
-		SCOPELOCK( _lock );
-
-		SendToAllThreads(
-			LAMBDA() (const ThreadManagerPtr &mngr, const ModulePtr &thread, const ModulePtr &task) {
+		_SendToAllThreads(
+			LAMBDA() (const ThreadManagerPtr &mngr, const ModulePtr &thread, GlobalSystemsRef) {
 				thread->Send( Message< ModuleMsg::Delete >{}.From( mngr ) );
-			}
+			},
+			true
 		);
+		
+		// all secondary threads must be finished before deleting main thread
+		{
+			SCOPELOCK( _lock );
 
-		_currentThread._OnExit();
+			FOR( i, _threads )
+			{
+				_threads[i].second.wait();
+				
+				_SendForEachAttachments< ModuleMsg::Update >({ TimeD::FromNanoSeconds(1.0) });
+			}
+		}
+
+		SendTo( _currentThread, msg );
+		_currentThread->_OnExit();
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
 
-		FOR( i, _threads )
-		{
-			_threads[i].second.wait();
-		}
-
 		_threads.Clear();
+		
+		_currentThread = null;
 		return true;
 	}
 	
 /*
 =================================================
-	SendToAllThreads
+	_SendToAllThreads
 =================================================
 */
-	bool ThreadManager::SendToAllThreads (CallInThreadFunc_t func)
+	bool ThreadManager::_SendToAllThreads (CallInThreadFunc_t func, bool exceptMain)
 	{
 		using TaskMngrMsgList = MessageListFrom< ModuleMsg::AddTaskSchedulerToManager >;
 
 		SCOPELOCK( _lock );
 
-		auto	task_mngr = GlobalSystems()->Get< MainSystem >()->GetModuleByMsgList< TaskMngrMsgList >();
+		auto	task_mngr = GlobalSystems()->Get< MainSystem >()->GetModuleByMsg< TaskMngrMsgList >();
 		CHECK_ERR( task_mngr );
 
 		FOR( i, _threads )
 		{
+			if ( exceptMain and _threads[i].second.thread == _currentThread )
+				continue;
+
 			CHECK( task_mngr->Send( Message< ModuleMsg::PushAsyncMessage >{
 					AsyncMessage{
-						LAMBDA( func, mngr = ModulePtr(this), thread = _threads[i].second.thread ) (const TaskModulePtr &task) {
-							func( mngr, thread, task );
+						LAMBDA( func, mngr = ModulePtr(this), thread = _threads[i].second.thread ) (GlobalSystemsRef gs) {
+							func( mngr, thread, gs );
 					} },
 					_threads[i].first
 				}.From( this ).Async()
@@ -123,7 +137,7 @@ namespace Base
 	{
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 		
-		SendTo( &_currentThread, msg );
+		SendTo( _currentThread, msg );
 		return true;
 	}
 	
@@ -134,11 +148,14 @@ namespace Base
 */
 	bool ThreadManager::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
 		CHECK_ERR( Module::_DefCompose( false ) );
 		
-		SendTo( &_currentThread, msg );
+		SendTo( _currentThread, msg );
 
-		_currentThread._OnEnter();
+		_currentThread->_OnEnter();
 		return true;
 	}
 
@@ -147,13 +164,13 @@ namespace Base
 	_Update
 =================================================
 */
-	bool ThreadManager::_Update (const Message< ModuleMsg::Update > &msg)
+	bool ThreadManager::_Update (const Message< ModuleMsg::Update > &)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
 		SCOPELOCK( _lock );
 
-		_currentThread._SyncUpdate();
+		_currentThread->_SyncUpdate();
 		return true;
 	}
 	
@@ -162,7 +179,7 @@ namespace Base
 	_AddToManager
 =================================================
 */
-	bool ThreadManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool ThreadManager::_AddToManager (const Message< ModuleMsg::AddToManager > &)
 	{
 		RETURN_ERR( "use 'AddThreadToManager' instead of 'AddToManager'" );
 	}
@@ -200,7 +217,7 @@ namespace Base
 		{
 			ASSERT( _threads[idx].second.thread == msg->module );
 
-			_threads.EraseFromIndex( idx );
+			_threads.EraseByIndex( idx );
 		}
 		return true;
 	}
@@ -220,14 +237,14 @@ namespace Base
 	CreateParallelThreadData
 =================================================
 */
-	struct CreateParallelThreadData
+	struct ThreadManager::CreateParallelThreadData
 	{
 	// variables
 		CreateInfo::Thread			info;
 		OS::Thread					thread;
-		OS::SyncEvent				sync;
-		ModulePtr					result;
-		Delegate<void ()>			waitFunc;
+		OS::SyncEvent				sync;			// sync primitive
+		ModulePtr					result;			// out
+		BlockingWaitThread_t		waitFunc;		// out
 		Ptr< MainSystem >			main;
 		Ptr< ModulesFactory >		factory;
 		Ptr< FileManager >			fileMngr;
@@ -247,7 +264,7 @@ namespace Base
 	_CreateParallelThread
 =================================================
 */
-	ModulePtr ThreadManager::_CreateParallelThread (const GlobalSystemsRef gs, const CreateInfo::Thread &ci)
+	ModulePtr ThreadManager::_CreateParallelThread (GlobalSystemsRef gs, const CreateInfo::Thread &ci)
 	{
 		// find manager for thread
 		ModulePtr	mngr = ci.manager;
@@ -288,7 +305,7 @@ namespace Base
 	_CreateThreadManager
 =================================================
 */
-	ModulePtr ThreadManager::_CreateThreadManager (const GlobalSystemsRef gs, const CreateInfo::ThreadManager &ci)
+	ModulePtr ThreadManager::_CreateThreadManager (GlobalSystemsRef gs, const CreateInfo::ThreadManager &ci)
 	{
 		return New< ThreadManager >( gs, ci );
 	}
@@ -298,7 +315,7 @@ namespace Base
 	Register
 =================================================
 */
-	void ThreadManager::Register (const GlobalSystemsRef gs)
+	void ThreadManager::Register (GlobalSystemsRef gs)
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
@@ -311,7 +328,7 @@ namespace Base
 	Unregister
 =================================================
 */
-	void ThreadManager::Unregister (const GlobalSystemsRef gs)
+	void ThreadManager::Unregister (GlobalSystemsRef gs)
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
@@ -359,7 +376,7 @@ namespace Base
 
 		pt->_OnExit();
 
-		pt = null;
+		pt		 = null;
 		task_mod = null;
 	}
 

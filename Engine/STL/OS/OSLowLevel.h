@@ -46,6 +46,7 @@
 #endif
 
 #include "Base/BaseFileSystem.h"
+#include "Base/Endianes.h"
 
 
 namespace GX_STL

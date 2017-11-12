@@ -16,7 +16,7 @@ static void Set_Test1 ()
 		s << Random::Int<int>();
 	}
 
-	for (usize i = 1; i < s.Count(); ++i) {
+	FORv( i, 1, s ) {
 		ASSERT( s[i-1] < s[i] );
 	}
 }
@@ -87,7 +87,7 @@ static void MultiSet_Test1 ()
 		s << Random::Int<int>();
 	}
 
-	for (usize i = 1; i < s.Count(); ++i) {
+	FORv( i, 1, s ) {
 		ASSERT( s[i-1] < s[i] );
 	}
 }

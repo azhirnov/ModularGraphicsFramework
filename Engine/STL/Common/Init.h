@@ -4,6 +4,15 @@
 
 #include "Engine/STL/Common/Platforms.h"
 #include "Engine/Config/STL.Config.h"
+
+#ifdef __GX_BUILD_LIB__
+#	define _STL_EXPORT_
+#elif defined( __GX_STL_BUILD__ )
+#	define _STL_EXPORT_		GX_DLL_EXPORT
+#else
+#	define _STL_EXPORT_		GX_DLL_IMPORT
+#endif
+
 #include "Engine/STL/Defines/AuxiliaryDefines.h"
 #include "Engine/STL/Defines/Defines.h"
 #include "Engine/STL/Defines/EnumHelpers.h"
@@ -25,7 +34,6 @@
 #include <vector>
 #include <string>
 
-
 namespace GX_STL
 {
 	namespace _defines_hidden_ {}
@@ -44,7 +52,7 @@ namespace GX_STL
 
 	namespace CompileTime
 	{
-		using namespace GXTypes;
+		//using namespace GXTypes;
 
 		namespace _ctime_hidden_ {}
 	}
@@ -56,7 +64,7 @@ namespace GX_STL
 		namespace _math_hidden_ {}
 		namespace _color_hidden_ {}
 
-		void InitializeSTLMath ();
+		_STL_EXPORT_ void InitializeSTLMath ();
 	}
 	
 	namespace  Java

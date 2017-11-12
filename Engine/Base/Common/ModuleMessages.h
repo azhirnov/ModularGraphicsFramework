@@ -5,6 +5,7 @@
 #include "Engine/Base/Common/MessageHelpers.h"
 #include "Engine/Base/Common/ThreadID.h"
 #include "Engine/Base/Common/EModuleGroup.h"
+#include "Engine/Base/Common/TypeIdList.h"
 
 namespace Engine
 {
@@ -33,8 +34,8 @@ namespace ModuleMsg
 		// TODO: deletable flag?
 
 	// methods
-		explicit AttachModule (const ModulePtr &unit);
-		AttachModule (StringCRef name, const ModulePtr &unit);
+		explicit AttachModule (const ModulePtr &unit) : AttachModule( StringCRef(), unit ) {}
+		AttachModule (StringCRef name, const ModulePtr &unit) : name( /*name.Empty() ? ModuleName_t("id: ") << ToString(GModID::type( unit->GetModuleID() )) :*/ name ), newModule( unit ) {}
 	};
 	
 	struct DetachModule
@@ -76,7 +77,7 @@ namespace ModuleMsg
 	{
 		// this is the last chance to initialize module.
 
-		//bool		makeImmutable	= false;
+		//bool		makeImmutable	= false;	// now this flag ignored by all modules
 	};
 
 	
@@ -105,9 +106,9 @@ namespace ModuleMsg
 	//
 	struct FindModuleByTypes
 	{
-		Runtime::VirtualTypeList	messages;
-		Runtime::VirtualTypeList	events;
-		Out< ModulePtr >			result;
+		Base::TypeIdList		messages;
+		Base::TypeIdList		events;
+		Out< ModulePtr >		result;
 	};
 
 	
@@ -128,8 +129,8 @@ namespace ModuleMsg
 	//
 	struct ModulesDeepSearchByTypes
 	{
-		Runtime::VirtualTypeList	messages;
-		Runtime::VirtualTypeList	events;
+		Base::TypeIdList			messages;
+		Base::TypeIdList			events;
 		uint						upDeep;
 		uint						downDeep;
 		mutable Array< ModulePtr >*	result;

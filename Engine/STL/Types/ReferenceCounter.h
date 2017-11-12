@@ -36,7 +36,7 @@ namespace GXTypes
 	// types
 	public:
 		typedef ReferenceCounter<T,B,S>		Self;
-		typedef T							value_t;
+		typedef T							Value_t;
 		typedef B							parent_t;
 
 	private:
@@ -228,7 +228,7 @@ namespace GXTypes
 		template <typename T2>
 		forceinline const T2 To () const
 		{
-			typedef typename T2::value_t	type_t;
+			typedef typename T2::Value_t	type_t;
 			STATIC_ASSERT( typename T2::_is_ref_counter(true) );
 
 			_CheckCast< type_t >( _ptr );

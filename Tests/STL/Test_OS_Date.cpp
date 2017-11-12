@@ -26,7 +26,7 @@ extern void Test_OS_Date ()
 	d0.SetMillisecondsSince1970( d.ToMillisecondsSince1970() );
 	ASSERT( d0 == d );
 
-	TimeL t0 = OS::PerfomanceTimer().Get( t0 );
+	TimeL t0 = OS::PerformanceTimer().Get( t0 );
 	d0.SetMillisecondsSinceEpoch( t0.MilliSeconds() );
 
 	TimeL t1;

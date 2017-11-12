@@ -43,17 +43,17 @@ namespace File
 	public:
 		virtual ~BaseFile () {}
 
-		virtual void Close () = 0;
+		virtual void Close () noexcept = 0;
 
-		virtual bool SeekSet (BytesU offset) = 0;
-		virtual bool SeekCur (BytesI offset) = 0;
-		virtual bool SeekEnd (BytesU offset) = 0;
+		virtual bool SeekSet (BytesU offset) noexcept = 0;
+		virtual bool SeekCur (BytesI offset) noexcept = 0;
+		virtual bool SeekEnd (BytesU offset) noexcept = 0;
 
-		virtual BytesU			RemainingSize ()	const = 0;
-		virtual BytesU			Size ()				const = 0;
-		virtual BytesU			Pos ()				const = 0;
-		virtual bool			IsEOF ()			const = 0;
-		virtual bool			IsOpened ()			const = 0;
+		virtual BytesU			RemainingSize ()	const noexcept = 0;
+		virtual BytesU			Size ()				const noexcept = 0;
+		virtual BytesU			Pos ()				const noexcept = 0;
+		virtual bool			IsEOF ()			const noexcept = 0;
+		virtual bool			IsOpened ()			const noexcept = 0;
 
 		virtual EFile::type		GetType ()			const = 0;
 		virtual StringCRef		Name ()				const = 0;
@@ -74,9 +74,9 @@ namespace File
 
 	// interface
 	public:
-		virtual BytesU ReadBuf (void * buf, BytesU size) = 0;
+		virtual BytesU ReadBuf (void * buf, BytesU size) noexcept = 0;
 		
-		virtual BytesU ReadBufFrom (void * buf, BytesU size, BytesU offset)
+		virtual BytesU ReadBufFrom (void * buf, BytesU size, BytesU offset) noexcept
 		{
 			const BytesU	pos = Pos();
 			SeekSet( offset );
@@ -135,9 +135,9 @@ namespace File
 
 	// interface
 	public:
-		virtual void Flush () = 0;
+		virtual void Flush () noexcept = 0;
 
-		virtual BytesU WriteBuf (const void * buf, BytesU size) = 0;
+		virtual BytesU WriteBuf (const void * buf, BytesU size) noexcept = 0;
 
 
 	// methods

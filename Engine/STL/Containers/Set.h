@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "MapUtils.h"
+#include "Engine/STL/Containers/MapUtils.h"
+#include "Engine/STL/Containers/IndexedArray.h"
 
 namespace GX_STL
 {
@@ -15,24 +16,25 @@ namespace _types_hidden_
 	// Base Set (Set or MultiSet)
 	//
 
-	template <	typename Value,
+	template <	template <typename T1, typename S1, typename MC1> class Container,
+				typename Value,
 				bool IsUnique,
 				typename S,
 				typename MC
 			 >
-	struct BaseSet : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, MC >	// TODO: copy qualifiers from _MapUtils_t
+	struct BaseSet : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, Container< Value, S, MC > >
 	{
 	// types
 	public:
-		typedef BaseSet< Value, IsUnique, S, MC >	Self;
+		using Self					= BaseSet< Container, Value, IsUnique, S, MC >;
 
-		typedef Value								key_t;
-		typedef Value								value_t;
+		using Key_t					= Value;
+		using Value_t				= Value;
 
-		typedef Ptr< const Value >					const_iterator;
+		using const_iterator		= Ptr< const Value >;
 
-		typedef ArrayRef< Value >					values_range_t;
-		typedef ArrayCRef< Value >					const_values_range_t;
+		using values_range_t		= ArrayRef< Value >;
+		using const_values_range_t	= ArrayCRef< Value >;
 
 
 	private:
@@ -51,7 +53,7 @@ namespace _types_hidden_
 			bool operator >  (const Value &value) const		{ return GXMath::All( _key > value ); }
 		};
 
-		typedef _types_hidden_::MapUtils< Array< Value, S, MC >, Value, _ValueSearchCmp, IsUnique >	_MapUtils_t;
+		using _MapUtils_t	= _types_hidden_::MapUtils< Container< Value, S, MC >, Value, _ValueSearchCmp, IsUnique >;
 
 
 	// variables
@@ -70,9 +72,9 @@ namespace _types_hidden_
 		BaseSet (Self &&other) : _memory( RVREF( other._memory ) )
 		{}
 
-		BaseSet (InitializerList<key_t> list)
+		BaseSet (InitializerList<Key_t> list)
 		{
-			AddArray( ArrayCRef<key_t>( list ) );
+			AddArray( ArrayCRef<Key_t>( list ) );
 		}
 
 
@@ -87,10 +89,10 @@ namespace _types_hidden_
 			return ReferenceCast< const Value >( _memory[i] );
 		}
 		
-		Value const &	operator () (const key_t &key) const
+		Value const &	operator () (const Key_t &key) const
 		{
-			usize	idx;
-			FindIndex( key, idx );
+			usize	idx = 0;
+			FindIndex( key, OUT idx );
 			return (*this)[ idx ];
 		}
 
@@ -160,13 +162,13 @@ namespace _types_hidden_
 		}
 
 
-		bool FindIndex (const key_t &key, OUT usize &idx) const
+		bool FindIndex (const Key_t &key, OUT usize &idx) const
 		{
 			return FindFirstIndex( key, OUT idx );
 		}
 
 
-		bool FindFirstIndex (const key_t &key, OUT usize &idx) const
+		bool FindFirstIndex (const Key_t &key, OUT usize &idx) const
 		{
 			return _memory.FindFirstIndex( key, OUT idx );
 		}
@@ -178,14 +180,14 @@ namespace _types_hidden_
 		}
 
 
-		bool IsExist (const key_t &key) const
+		bool IsExist (const Key_t &key) const
 		{
 			usize idx = 0;
 			return FindIndex( key, OUT idx );
 		}
 
 		
-		bool Find (const key_t &key, OUT const_iterator &result) const
+		bool Find (const Key_t &key, OUT const_iterator &result) const
 		{
 			usize	idx;
 
@@ -197,7 +199,7 @@ namespace _types_hidden_
 		}
 
 
-		bool FindAll (const key_t &key, OUT values_range_t &result)
+		bool FindAll (const Key_t &key, OUT values_range_t &result)
 		{
 			usize	first;
 			usize	last;
@@ -211,7 +213,7 @@ namespace _types_hidden_
 			return true;
 		}
 
-		bool FindAll (const key_t &key, OUT const_values_range_t &result) const
+		bool FindAll (const Key_t &key, OUT const_values_range_t &result) const
 		{
 			usize	first;
 			usize	last;
@@ -237,8 +239,8 @@ namespace _types_hidden_
 		}
 
 
-		bool Erase (const key_t &key)		{ return _memory.Erase( key ); }
-		void EraseFromIndex (usize index)	{ _memory.EraseFromIndex( index ); }
+		bool Erase (const Key_t &key)		{ return _memory.Erase( key ); }
+		void EraseByIndex (usize index)		{ _memory.EraseByIndex( index ); }
 		void Free ()						{ _memory.Free(); }
 		void Clear ()						{ _memory.Clear(); }
 		void Resize (usize uSize)			{ _memory.Resize( uSize ); }
@@ -327,24 +329,24 @@ namespace _types_hidden_
 				typename S = typename AutoDetectCopyStrategy< Value >::type,
 				typename MC = MemoryContainer< Value >
 			 >
-	using Set = _types_hidden_::BaseSet< Value, true, S, MC >;
+	using Set = _types_hidden_::BaseSet< Array, Value, true, S, MC >;
 	
 
 	template <	typename Value,
 				typename S = typename AutoDetectCopyStrategy< Value >::type,
 				typename MC = MemoryContainer< Value >
 			 >
-	using MultiSet = _types_hidden_::BaseSet< Value, false, S, MC >;
+	using MultiSet = _types_hidden_::BaseSet< Array, Value, false, S, MC >;
 	
 
 	template <typename Value, usize Size>
-	using FixedSizeSet = _types_hidden_::BaseSet< Value, true,
+	using FixedSizeSet = _types_hidden_::BaseSet< Array, Value, true,
 								typename AutoDetectCopyStrategy< Value >::type,
 								StaticMemoryContainer< Value, Size > >;
 	
 
 	template <typename Value, usize Size>
-	using FixedSizeMultiSet = _types_hidden_::BaseSet< Value, false,
+	using FixedSizeMultiSet = _types_hidden_::BaseSet< Array, Value, false,
 									typename AutoDetectCopyStrategy< Value >::type,
 									StaticMemoryContainer< Value, Size > >;
 
@@ -352,17 +354,22 @@ namespace _types_hidden_
 	//using EnumSet = FixedSizeSet< typename EnumType::type, EnumType::_Count >;
 
 	
-	template <typename Value, bool IsUnique, typename S, typename MC>
-	struct Hash< _types_hidden_::BaseSet< Value, IsUnique, S, MC > > :
+	template <	template <typename, typename, typename> class Container,
+				typename Value,
+				bool IsUnique,
+				typename S,
+				typename MC
+			 >
+	struct Hash< _types_hidden_::BaseSet< Container, Value, IsUnique, S, MC > > :
 		private Hash< ArrayCRef<Value> >
 	{
-		typedef _types_hidden_::BaseSet< Value, IsUnique, S, MC >	key_t;
-		typedef Hash< ArrayCRef<Value> >							base_t;
-		typedef typename base_t::result_t							result_t;
+		typedef _types_hidden_::BaseSet< Container, Value, IsUnique, S, MC >	Key_t;
+		typedef Hash< ArrayCRef<Value> >										Base_t;
+		typedef typename Base_t::Result_t										Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x );
+			return Base_t::operator ()( x );
 		}
 	};
 

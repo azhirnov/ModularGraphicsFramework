@@ -1,7 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Vk1Device.h"
-#include "vulkan1_utils.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
+#include "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -21,38 +21,37 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1Device::Vk1Device (const GlobalSystemsRef gs, const VkSystemsRef vkSys) :
+	Vk1Device::Vk1Device (GlobalSystemsRef gs) :
 		BaseObject( gs ),
-		_vkSystems( vkSys ),
-		_instance( VK_NULL_HANDLE ),
-		_physicalDevice( VK_NULL_HANDLE ),
 		_logicalDevice( VK_NULL_HANDLE ),
+		_physicalDevice( VK_NULL_HANDLE ),
+		_instance( VK_NULL_HANDLE ),
 		_surface( VK_NULL_HANDLE ),
 		_swapchain( VK_NULL_HANDLE ),
 		_vsync( false ),
-		_debugCallback( VK_NULL_HANDLE ),
+		_depthStencilImage( VK_NULL_HANDLE ),
+		_depthStencilMemory( VK_NULL_HANDLE ),
+		_depthStencilView( VK_NULL_HANDLE ),
 		_colorPixelFormat( EPixelFormat::Unknown ),
 		_depthStencilPixelFormat( EPixelFormat::Unknown ),
 		_colorFormat( VK_FORMAT_UNDEFINED ),
 		_colorSpace( VK_COLOR_SPACE_MAX_ENUM_KHR ),
-		_imageAvailable( VK_NULL_HANDLE ),
-		_renderFinished( VK_NULL_HANDLE ),
-		_enableDebugMarkers( false ),
-		_depthStencilImage( VK_NULL_HANDLE ),
-		_depthStencilMemory( VK_NULL_HANDLE ),
-		_depthStencilView( VK_NULL_HANDLE ),
 		_depthStencilFormat( VK_FORMAT_UNDEFINED ),
 		_queue( VK_NULL_HANDLE ),
 		_queueIndex( ~0u ),
 		_queueFamily(),
 		_currentImageIndex( ~0u ),
-		_graphicsQueueSubmited( false )
+		_graphicsQueueSubmited( false ),
+		_imageAvailable( VK_NULL_HANDLE ),
+		_renderFinished( VK_NULL_HANDLE ),
+		_debugCallback( VK_NULL_HANDLE ),
+		_enableDebugMarkers( false ),
+		_isInstanceFunctionsLoaded( false ),
+		_isDeviceFunctionsLoaded( false )
 	{
 		SetDebugName( "Vk1Device" );
 
 		_imageBuffers.Reserve( 8 );
-
-		VkSystems()->GetSetter< Vk1Device >().Set( this );
 
 		CHECK( GlobalSystems()->Get< ModulesFactory >()->Register(
 			VkSystemFramebufferModuleID,
@@ -75,8 +74,78 @@ namespace PlatformVK
 		CHECK( not IsSurfaceCreated() );
 		CHECK( not IsSwapchainCreated() );
 		CHECK( not IsDebugCallbackCreated() );
+	}
+	
+/*
+=================================================
+	_LoadFunctions
+=================================================
+*/
+	bool Vk1Device::_LoadFunctions () const
+	{
+		if ( _isInstanceFunctionsLoaded and _isDeviceFunctionsLoaded )
+			return true;
 
-		VkSystems()->GetSetter< Vk1Device >().Set( null );
+		if ( not _isInstanceFunctionsLoaded )
+		{
+			CHECK_ERR( Vk1_Init( null ) );
+			_isInstanceFunctionsLoaded = true;
+		}
+
+		if ( not _isDeviceFunctionsLoaded and IsInstanceCreated() )
+		{
+			CHECK_ERR( Vk1_Init( GetInstance() ) );
+			_isDeviceFunctionsLoaded = true;
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_LoadInstanceLayers
+=================================================
+*/
+	bool Vk1Device::_LoadInstanceLayers () const
+	{
+		if ( not _instanceLayers.Empty() )
+			return true;
+
+		_LoadFunctions();
+		
+		uint32_t	count = 0;
+		VK_CALL( vkEnumerateInstanceLayerProperties( OUT &count, null ) );
+
+		if (count == 0)
+			return true;
+
+		_instanceLayers.Resize( count );
+		VK_CALL( vkEnumerateInstanceLayerProperties( OUT &count, OUT _instanceLayers.ptr() ) );
+
+		return true;
+	}
+	
+/*
+=================================================
+	_LoadInstanceExtensions
+=================================================
+*/
+	bool Vk1Device::_LoadInstanceExtensions () const
+	{
+		if ( not _instanceExtensions.Empty() )
+			return true;
+
+		_LoadFunctions();
+		
+		uint32_t	count = 0;
+		VK_CALL( vkEnumerateInstanceExtensionProperties( null, OUT &count, null ) );
+
+		if ( count == 0 )
+			return false;
+
+		_instanceExtensions.Resize( count );
+		VK_CALL( vkEnumerateInstanceExtensionProperties( null, OUT &count, OUT _instanceExtensions.ptr() ) );
+
+		return true;
 	}
 
 /*
@@ -84,19 +153,22 @@ namespace PlatformVK
 	CreateInstance
 =================================================
 */
-	bool Vk1Device::CreateInstance (StringCRef applicationName, vk::uint32_t applicationVersion,
-									 vk::uint32_t vulkanVersion, ExtensionNames_t ext, ValidationLayers_t layers)
+	bool Vk1Device::CreateInstance (StringCRef applicationName, uint32_t applicationVersion,
+									 uint32_t vulkanVersion, ExtensionNames_t ext, ValidationLayers_t layers)
 	{
 		CHECK_ERR( not IsInstanceCreated() );
 
+		_LoadFunctions();
+
 		VkApplicationInfo		app_info				= {};
 		VkInstanceCreateInfo	instance_create_info	= {};
+		Array< const char* >	instance_layers			= layers;
 		Array< const char* >	instance_extensions		= { VK_KHR_SURFACE_EXTENSION_NAME };
 
 		instance_extensions << ext;
 
-		CHECK_ERR( _CheckLayers( layers ) );
-
+		CHECK_ERR( _CheckLayers( INOUT instance_layers ) );
+		CHECK_ERR( _CheckExtensions( INOUT instance_extensions ) );
 
 		app_info.sType				= VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		app_info.apiVersion			= vulkanVersion;
@@ -111,10 +183,10 @@ namespace PlatformVK
 		instance_create_info.sType						= VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		instance_create_info.pApplicationInfo			= &app_info;
 
-		instance_create_info.enabledExtensionCount		= (vk::uint32_t) instance_extensions.Count();
+		instance_create_info.enabledExtensionCount		= (uint32_t) instance_extensions.Count();
 		instance_create_info.ppEnabledExtensionNames	= instance_extensions.ptr();
 		
-		instance_create_info.enabledLayerCount			= (vk::uint32_t) layers.Count();
+		instance_create_info.enabledLayerCount			= (uint32_t) layers.Count();
 		instance_create_info.ppEnabledLayerNames		= layers.ptr();
 
 
@@ -142,9 +214,52 @@ namespace PlatformVK
 		_physicalDevice	= VK_NULL_HANDLE;
 		_instance		= VK_NULL_HANDLE;
 
+		_isDeviceFunctionsLoaded	= false;
+		_isInstanceFunctionsLoaded	= false;
+
+		_instanceLayers.Clear();
+		_instanceExtensions.Clear();
+		
+		Vk1_Delete();
 		return true;
 	}
 	
+/*
+=================================================
+	HasLayer
+=================================================
+*/
+	bool Vk1Device::HasLayer (StringCRef name) const
+	{
+		_LoadInstanceLayers();
+
+		// TODO: optimize search
+		FOR( i, _instanceLayers )
+		{
+			if ( name.EqualsIC( _instanceLayers[i].layerName ) )
+				return true;
+		}
+		return false;
+	}
+	
+/*
+=================================================
+	HasExtension
+=================================================
+*/
+	bool Vk1Device::HasExtension (StringCRef name) const
+	{
+		_LoadInstanceExtensions();
+
+		// TODO: optimize search
+		FOR( i, _instanceExtensions )
+		{
+			if ( name.EqualsIC( _instanceExtensions[i].extensionName ) )
+				return true;
+		}
+		return false;
+	}
+
 /*
 =================================================
 	CreateDebugCallback
@@ -154,6 +269,8 @@ namespace PlatformVK
 	{
 		CHECK_ERR( IsInstanceCreated() );
 		CHECK_ERR( not IsDebugCallbackCreated() );
+
+		_LoadFunctions();
 
 		VkDebugReportCallbackCreateInfoEXT	dbg_callback_info = {};
 
@@ -185,34 +302,139 @@ namespace PlatformVK
 
 /*
 =================================================
+	GetPhysicalDeviceInfo
+=================================================
+*/
+	bool Vk1Device::GetPhysicalDeviceInfo (OUT AppendableAdaptor<DeviceInfo> deviceInfo) const
+	{
+		CHECK_ERR( IsInstanceCreated() );
+
+		_LoadFunctions();
+		
+		uint32_t						count	= 0;
+		Array< VkPhysicalDevice >		devices;
+		Array< VkDisplayPropertiesKHR >	display_props;		display_props.Reserve( 8 );
+
+		VK_CALL( vkEnumeratePhysicalDevices( _instance, OUT &count, null ) );
+		CHECK_ERR( count > 0 );
+
+		devices.Resize( count );
+		VK_CALL( vkEnumeratePhysicalDevices( _instance, OUT &count, OUT devices.ptr() ) );
+
+		FOR( i, devices )
+		{
+			VkPhysicalDeviceProperties			prop;
+			VkPhysicalDeviceFeatures			feat;
+			VkPhysicalDeviceMemoryProperties	mem_prop;
+			DeviceInfo							info;
+
+			vkGetPhysicalDeviceProperties( devices[i], OUT &prop );
+			vkGetPhysicalDeviceFeatures( devices[i], OUT &feat );
+			vkGetPhysicalDeviceMemoryProperties( devices[i], OUT &mem_prop );
+			// vkGetPhysicalDeviceQueueFamilyProperties
+			// vkGetPhysicalDeviceSparseImageFormatProperties
+			// vkGetPhysicalDeviceDisplayPlanePropertiesKHR
+			// vkGetPhysicalDeviceFeatures2KHR
+			// vkGetPhysicalDeviceProperties2KHR
+			// vkGetPhysicalDeviceMemoryProperties2KHR
+			// vkGetPhysicalDeviceSparseImageFormatProperties2KHR
+
+			/*uint32_t	prop_count = 0;
+			VK_CALL( vkGetPhysicalDeviceDisplayPropertiesKHR( devices[i], OUT &prop_count, null ) );
+
+			if ( prop_count > 0 )
+			{
+				display_props.Resize( prop_count );
+				VK_CALL( vkGetPhysicalDeviceDisplayPropertiesKHR( devices[i], OUT &prop_count, OUT display_props.ptr() ) );
+
+				FOR( j, display_props )
+				{
+				}
+			}*/
+
+
+			info.id				= devices[i];
+			info.device			= prop.deviceName;
+			info.version		= prop.apiVersion;
+			info.integratedGPU	= prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
+			info.isGPU			= (prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU or
+								   prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU);
+			info.isCPU			= prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU;
+			info.maxInvocations	= prop.limits.maxComputeWorkGroupInvocations;
+
+			info.supportsTesselation	= feat.tessellationShader;
+			info.supportsGeometryShader	= feat.geometryShader;
+
+			for (uint32_t j = 0; j < mem_prop.memoryTypeCount; ++j)
+			{
+				if ( mem_prop.memoryTypes[j].propertyFlags == VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT )
+				{
+					uint32_t idx = mem_prop.memoryTypes[j].heapIndex;
+
+					ASSERT( !!(mem_prop.memoryHeaps[idx].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) );
+					
+					info.globalMemory += BytesUL( mem_prop.memoryHeaps[idx].size );
+					mem_prop.memoryHeaps[idx].size = 0;
+				}
+			}
+
+			deviceInfo.PushBack( RVREF(info) );
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	CreatePhysicalDevice
+=================================================
+*/
+	bool Vk1Device::CreatePhysicalDevice (vk::VkPhysicalDevice id)
+	{
+		CHECK_ERR( IsInstanceCreated() );
+		
+		_LoadFunctions();
+
+		_physicalDevice = id;
+
+		vkGetPhysicalDeviceProperties( _physicalDevice, OUT &_deviceProperties );
+		vkGetPhysicalDeviceFeatures( _physicalDevice, OUT &_deviceFeatures );
+		vkGetPhysicalDeviceMemoryProperties( _physicalDevice, OUT &_deviceMemoryProperties );
+
+		return true;
+	}
+	
+/*
+=================================================
 	ChoosePhysicalDevice
 =================================================
 */
 	bool Vk1Device::ChoosePhysicalDevice (StringCRef deviceName)
 	{
 		CHECK_ERR( IsInstanceCreated() );
-		//CHECK_ERR( not HasPhyiscalDevice() );
+		
+		_LoadFunctions();
 
-		vk::uint32_t				count				= 0;
+		uint32_t					count				= 0;
 
-		usize						name_math_idx		= -1;
+		usize						name_match_idx		= -1;
 		usize						high_version_idx	= -1;
 		usize						best_gpu_idx		= -1;
 
-		vk::uint32_t				version				= 0;
+		uint32_t					version				= 0;
 		VkPhysicalDeviceType		gpu_type			= VK_PHYSICAL_DEVICE_TYPE_OTHER;
 		Array< VkPhysicalDevice >	devices;
 
-		VK_CALL( vkEnumeratePhysicalDevices( _instance, &count, null ) );
-		devices.Resize( count );
+		VK_CALL( vkEnumeratePhysicalDevices( _instance, OUT &count, null ) );
+		CHECK_ERR( count > 0 );
 
-		VK_CALL( vkEnumeratePhysicalDevices( _instance, &count, devices.ptr() ) );
+		devices.Resize( count );
+		VK_CALL( vkEnumeratePhysicalDevices( _instance, OUT &count, OUT devices.ptr() ) );
 
 		FOR( i, devices )
 		{
 			VkPhysicalDeviceProperties	prop;
 
-			vkGetPhysicalDeviceProperties( devices[i], &prop );
+			vkGetPhysicalDeviceProperties( devices[i], OUT &prop );
 
 			// select higher version
 			if ( prop.apiVersion > version )
@@ -233,15 +455,15 @@ namespace PlatformVK
 			if ( deviceName.Empty() )
 				continue;
 
-			if ( name_math_idx == -1 and
+			if ( name_match_idx == -1 and
 				 StringCRef( prop.deviceName ).HasSubStringIC( deviceName ) )
 			{
-				name_math_idx = i;
+				name_match_idx = i;
 			}
 		}
 
-		if ( name_math_idx != -1 )
-			_physicalDevice = devices[name_math_idx];
+		if ( name_match_idx != -1 )
+			_physicalDevice = devices[name_match_idx];
 		else
 		if ( best_gpu_idx != -1 )
 			_physicalDevice = devices[best_gpu_idx];
@@ -252,11 +474,29 @@ namespace PlatformVK
 			_physicalDevice = devices[0];
 
 
-		vkGetPhysicalDeviceProperties( _physicalDevice, &_deviceProperties );
-		vkGetPhysicalDeviceFeatures( _physicalDevice, &_deviceFeatures );
-		vkGetPhysicalDeviceMemoryProperties( _physicalDevice, &_deviceMemoryProperties );
+		vkGetPhysicalDeviceProperties( _physicalDevice, OUT &_deviceProperties );
+		vkGetPhysicalDeviceFeatures( _physicalDevice, OUT &_deviceFeatures );
+		vkGetPhysicalDeviceMemoryProperties( _physicalDevice, OUT &_deviceMemoryProperties );
 
 		return true;
+	}
+	
+/*
+=================================================
+	_DeviceTypeToString
+=================================================
+*/
+	StringCRef Vk1Device::_DeviceTypeToString (VkPhysicalDeviceType value)
+	{
+		switch ( value )
+		{
+			case VK_PHYSICAL_DEVICE_TYPE_OTHER :			return "Other";
+			case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU :	return "Intergrated GPU";
+			case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU :		return "Discrete GPU";
+			case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU :		return "Virtual GPU";
+			case VK_PHYSICAL_DEVICE_TYPE_CPU :				return "CPU";
+		}
+		RETURN_ERR( "unknown physical device type!" );
 	}
 	
 /*
@@ -268,8 +508,16 @@ namespace PlatformVK
 	{
 		CHECK_ERR( HasPhyiscalDevice() );
 
-		TODO( "" );
-		return false;
+		String	str;
+
+		str << "Vulkan info\n---------------------";
+		str << "\ndevice name: " << _deviceProperties.deviceName;
+		str << "\ndevice type: " << _DeviceTypeToString( _deviceProperties.deviceType );
+
+		str << "\n---------------------";
+
+		LOG( str.cstr(), ELog::Info | ELog::SpoilerFlag );
+		return true;
 	}
 	
 /*
@@ -281,14 +529,12 @@ namespace PlatformVK
 								   EQueueFamily::bits queueFamilies,
 								   ExtensionNames_t enabledExtensions)
 	{
-		const bool useSwapchain = queueFamilies.Get( EQueueFamily::Present );
+		const bool useSwapchain = queueFamilies[ EQueueFamily::Present ];
 
 		CHECK_ERR( HasPhyiscalDevice() );
 		CHECK_ERR( useSwapchain == IsSurfaceCreated() );
 		CHECK_ERR( not IsDeviceCreated() );
 
-		Array< String >						supported_extensions;
-		Array< String >						instance_extensions;
 		Array< VkDeviceQueueCreateInfo >	queue_infos;
 		Array< const char * >				device_extensions	= enabledExtensions;
 		VkDeviceCreateInfo					device_info			= {};
@@ -296,32 +542,23 @@ namespace PlatformVK
 		_queueFamily = queueFamilies;
 		_queueIndex  = -1;
 
-		CHECK_ERR( _GetInstanceExtensions( OUT instance_extensions ) );
-		CHECK_ERR( _GetDeviceExtensions( OUT supported_extensions ) );
 		CHECK_ERR( _GetQueueCreateInfos( OUT queue_infos, INOUT _queueFamily, OUT _queueIndex ) );
 
-		if ( useSwapchain )
-		{
-			CHECK_ERR( supported_extensions.IsExist( VK_KHR_SWAPCHAIN_EXTENSION_NAME ) );
-
+		if ( _queueFamily[ EQueueFamily::Present ] )
 			device_extensions << VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-		}
+		
+		CHECK_ERR( _CheckDeviceExtensions( INOUT device_extensions ) );
 
-		// NVIDIA does not add this extension to device extensions
-		//if ( supported_extensions.IsExist( VK_EXT_DEBUG_MARKER_EXTENSION_NAME ) )
-		{
-			device_extensions.PushBack( VK_EXT_DEBUG_MARKER_EXTENSION_NAME );
-			_enableDebugMarkers = true;
-		}
+		_enableDebugMarkers = HasExtension( VK_EXT_DEBUG_MARKER_EXTENSION_NAME );
 		
 		device_info.sType					= VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		device_info.queueCreateInfoCount	= (vk::uint32_t) queue_infos.Count();
+		device_info.queueCreateInfoCount	= (uint32_t) queue_infos.Count();
 		device_info.pQueueCreateInfos		= queue_infos.ptr();
 		device_info.pEnabledFeatures		= &enabledFeatures;
 		
 		if ( not device_extensions.Empty() )
 		{
-			device_info.enabledExtensionCount	= (vk::uint32_t) device_extensions.Count();
+			device_info.enabledExtensionCount	= (uint32_t) device_extensions.Count();
 			device_info.ppEnabledExtensionNames	= device_extensions.ptr();
 		}
 
@@ -332,13 +569,20 @@ namespace PlatformVK
 
 		// write extensions to log
 		{
-			String	log = "Vulkan extensions:";
-
-			FOR( i, instance_extensions ) {
-				log << (i ? ", " : "") << ((i&3) ? "" : "\n") << instance_extensions[i];
+			String	log = "Vulkan layers:";
+			
+			FOR( i, _instanceLayers ) {
+				log << _instanceLayers[i].layerName << " (" << _instanceLayers[i].description << ")\n";
 			}
-			FOR( i, supported_extensions ) {
-				log << (i ? ", " : "") << ((i&3) ? "" : "\n") << supported_extensions[i];
+			log << "\nVulkan instance extensions:";
+
+			FOR( i, _instanceExtensions ) {
+				log << (i ? ", " : "") << ((i&3) ? "" : "\n") << _instanceExtensions[i].extensionName;
+			}
+			log << "\nVulkan device extensions:";
+
+			FOR( i, _deviceExtensions ) {
+				log << (i ? ", " : "") << ((i&3) ? "" : "\n") << _deviceExtensions[i].extensionName;
 			}
 			log << "\n------------------------";
 
@@ -364,6 +608,8 @@ namespace PlatformVK
 		vkDestroyDevice( _logicalDevice, null );
 
 		_logicalDevice = VK_NULL_HANDLE;
+
+		_deviceExtensions.Clear();
 		return true;
 	}
 	
@@ -384,7 +630,7 @@ namespace PlatformVK
 	CreateSwapchain
 =================================================
 */
-	bool Vk1Device::CreateSwapchain (const uint2 &size, bool vsync, vk::uint32_t imageArrayLayers, EPixelFormat::type depthStencilFormat)
+	bool Vk1Device::CreateSwapchain (const uint2 &size, bool vsync, uint32_t imageArrayLayers, EPixelFormat::type depthStencilFormat, MultiSamples samples)
 	{
 		CHECK_ERR( HasPhyiscalDevice() );
 		CHECK_ERR( IsDeviceCreated() );
@@ -429,7 +675,7 @@ namespace PlatformVK
 		_DeleteCommandBuffers();
 
 		// create dependent resources
-		CHECK_ERR( _CreateColorAttachment( OUT _imageBuffers ) );
+		CHECK_ERR( _CreateColorAttachment( samples, OUT _imageBuffers ) );
 		CHECK_ERR( _CreateDepthStencilAttachment( depthStencilFormat ) );
 		CHECK_ERR( _CreateRenderPass() );
 		CHECK_ERR( _CreateFramebuffers( OUT _framebuffers ) );
@@ -489,7 +735,7 @@ namespace PlatformVK
 	SetSurface
 =================================================
 */
-	bool Vk1Device::SetSurface (vk::VkSurfaceKHR surface, EPixelFormat::type colorFmt)
+	bool Vk1Device::SetSurface (VkSurfaceKHR surface, EPixelFormat::type colorFmt)
 	{
 		CHECK_ERR( surface != VK_NULL_HANDLE );
 		CHECK_ERR( HasPhyiscalDevice() );
@@ -533,7 +779,7 @@ namespace PlatformVK
 	_ChooseQueueIndex
 =================================================
 */
-	bool Vk1Device::_ChooseQueueIndex (INOUT EQueueFamily::bits &family, OUT vk::uint32_t &index) const
+	bool Vk1Device::_ChooseQueueIndex (INOUT EQueueFamily::bits &family, OUT uint32_t &index) const
 	{
 		Array< VkQueueFamilyProperties >	queue_family_props;
 		CHECK_ERR( _GetQueueFamilyProperties( OUT queue_family_props ) );
@@ -543,7 +789,7 @@ namespace PlatformVK
 			EQueueFamily::bits	flags;
 
 			VkBool32	supports_present = false;
-			VK_CALL( vkGetPhysicalDeviceSurfaceSupportKHR( _physicalDevice, uint32_t(i), _surface, &supports_present ) );
+			VK_CALL( vkGetPhysicalDeviceSurfaceSupportKHR( _physicalDevice, uint32_t(i), _surface, OUT &supports_present ) );
 
 			if ( supports_present )
 				flags |= EQueueFamily::Present;
@@ -587,7 +833,7 @@ namespace PlatformVK
 */
 	bool Vk1Device::_GetQueueCreateInfos (OUT Array<VkDeviceQueueCreateInfo> &queueCreateInfos,
 										  INOUT EQueueFamily::bits &queueFamily,
-										  OUT vk::uint32_t &queueIndex) const
+										  OUT uint32_t &queueIndex) const
 	{
 		static const float	default_queue_priority	= 1.0f;	// high priority
 
@@ -641,9 +887,9 @@ namespace PlatformVK
 		_graphicsQueueSubmited	= false;
 		_currentImageIndex		= -1;
 
-		vk::uint32_t	image_index = -1;
-		VkResult		result		= vkAcquireNextImageKHR( _logicalDevice, _swapchain, vk::uint64_t(-1), _imageAvailable,
-															 VK_NULL_HANDLE, OUT &image_index );
+		uint32_t	image_index = -1;
+		VkResult	result		= vkAcquireNextImageKHR( _logicalDevice, _swapchain, uint64_t(-1), _imageAvailable,
+														 VK_NULL_HANDLE, OUT &image_index );
 
 		if ( result == VK_SUCCESS )
 		{}
@@ -717,7 +963,7 @@ namespace PlatformVK
 	if you don't need sync, use GetQueue() and write your own submission.
 =================================================
 */
-	bool Vk1Device::SubmitQueue (ArrayCRef<vk::VkCommandBuffer> cmdBuffers, vk::VkFence fence)
+	bool Vk1Device::SubmitQueue (ArrayCRef<VkCommandBuffer> cmdBuffers, VkFence fence)
 	{
 		CHECK_ERR( _currentImageIndex < _framebuffers.Count() );
 		CHECK_ERR( IsQueueCreated() );
@@ -768,17 +1014,18 @@ namespace PlatformVK
 =================================================
 */
 	void Vk1Device::_GetPresentMode (OUT VkPresentModeKHR &presentMode, bool vsync,
-											 const VkSurfaceCapabilitiesKHR &surfaceCaps) const
+									 const VkSurfaceCapabilitiesKHR &surfaceCaps) const
 	{
-		vk::uint32_t				count		= 0;
+		uint32_t					count		= 0;
 		Array< VkPresentModeKHR >	present_modes;
 		
 		presentMode = VK_PRESENT_MODE_FIFO_KHR;
 
-		VK_CALL( vkGetPhysicalDeviceSurfacePresentModesKHR( _physicalDevice, _surface, &count, null ) );
+		VK_CALL( vkGetPhysicalDeviceSurfacePresentModesKHR( _physicalDevice, _surface, OUT &count, null ) );
+		CHECK_ERR( count > 0, void() );
 
 		present_modes.Resize( count );
-		VK_CALL( vkGetPhysicalDeviceSurfacePresentModesKHR( _physicalDevice, _surface, &count, present_modes.ptr() ) );
+		VK_CALL( vkGetPhysicalDeviceSurfacePresentModesKHR( _physicalDevice, _surface, OUT &count, OUT present_modes.ptr() ) );
 
 		if ( not vsync )
 		{
@@ -804,7 +1051,7 @@ namespace PlatformVK
 	_GetSurfaceImageCount
 =================================================
 */
-	void Vk1Device::_GetSurfaceImageCount (OUT vk::uint32_t &minImageCount, const VkSurfaceCapabilitiesKHR &surfaceCaps) const
+	void Vk1Device::_GetSurfaceImageCount (OUT uint32_t &minImageCount, const VkSurfaceCapabilitiesKHR &surfaceCaps) const
 	{
 		minImageCount = surfaceCaps.minImageCount + 1;
 
@@ -843,7 +1090,7 @@ namespace PlatformVK
 
 		VkFormatProperties	format_props;
 		
-		vkGetPhysicalDeviceFormatProperties( _physicalDevice, _colorFormat, &format_props );
+		vkGetPhysicalDeviceFormatProperties( _physicalDevice, _colorFormat, OUT &format_props );
 
 		if ( format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT )
 		{
@@ -887,15 +1134,17 @@ namespace PlatformVK
 	_CreateColorAttachment
 =================================================
 */
-	bool Vk1Device::_CreateColorAttachment (OUT SwapChainBuffers_t &buffers) const
+	bool Vk1Device::_CreateColorAttachment (MultiSamples samples, OUT SwapChainBuffers_t &buffers) const
 	{
-		vk::uint32_t		count = 0;
+		uint32_t			count = 0;
 		Array< VkImage >	images;
 
 		VK_CHECK( vkGetSwapchainImagesKHR( _logicalDevice, _swapchain, OUT &count, null ) );
+		CHECK_ERR( count > 0 );
 		images.Resize( count );
 
-		VK_CHECK( vkGetSwapchainImagesKHR( _logicalDevice, _swapchain, &count, OUT images.ptr() ) );
+		VK_CHECK( vkGetSwapchainImagesKHR( _logicalDevice, _swapchain, OUT &count, OUT images.ptr() ) );
+		CHECK_ERR( count > 0 );
 		buffers.Resize( count );
 
 		FOR( i, buffers )
@@ -1030,11 +1279,11 @@ namespace PlatformVK
 	GetMemoryTypeIndex
 =================================================
 */
-	bool Vk1Device::GetMemoryTypeIndex (vk::uint32_t memoryTypeBits, VkMemoryPropertyFlags flags, OUT vk::uint32_t &index) const
+	bool Vk1Device::GetMemoryTypeIndex (uint32_t memoryTypeBits, VkMemoryPropertyFlags flags, OUT uint32_t &index) const
 	{
 		index = -1;
 
-		for (vk::uint32_t i = 0; i < _deviceMemoryProperties.memoryTypeCount; ++i)
+		for (uint32_t i = 0; i < _deviceMemoryProperties.memoryTypeCount; ++i)
 		{
 			if ( (memoryTypeBits & 1) == 1 )
 			{
@@ -1055,10 +1304,8 @@ namespace PlatformVK
 	SetObjectName
 =================================================
 */
-	bool Vk1Device::SetObjectName (vk::uint64_t id, StringCRef name, EGpuObject::type type) const
+	bool Vk1Device::SetObjectName (uint64_t id, StringCRef name, EGpuObject::type type) const
 	{
-		using namespace vk;
-
 		if ( name.Empty() or id == VK_NULL_HANDLE or not _enableDebugMarkers )
 			return false;
 
@@ -1084,75 +1331,18 @@ namespace PlatformVK
 		if ( _renderPass )
 			return true;
 
-		using Builder = RenderPassDescrBuilder;
-		
-		const bool	has_depth = (_depthStencilView != VK_NULL_HANDLE);
-
-		Builder		builder;
-		auto		subpass	= builder.AddSubpass();
-
-		// depth attachment
-		if ( has_depth )
-		{
-			Builder::DepthStencilAttachment_t	attach;
-			Builder::AttachmentRef_t			attach_ref;
-			Builder::SubpassDependency_t		dep;
-			
-			attach.format			= _depthStencilPixelFormat;
-			attach.loadOp			= EAttachmentLoadOp::Clear;
-			attach.storeOp			= EAttachmentStoreOp::Store;
-			attach.stencilLoadOp	= EAttachmentLoadOp::None;
-			attach.stencilStoreOp	= EAttachmentStoreOp::None;
-			attach.initialLayout	= EImageLayout::Undefined;
-			attach.finalLayout		= EImageLayout::DepthStencilAttachmentOptimal;
-			builder.SetDepthStencilAttachment( attach );
-
-			attach_ref.index		= Builder::AttachmentIndex(1);
-			attach_ref.layout		= EImageLayout::DepthStencilAttachmentOptimal;
-			subpass.SetDepthStencilAttachment( attach_ref );
-
-			dep.srcPass				= Builder::SubpassIndex(0);
-			dep.srcStage			= EPipelineStage::bits() | EPipelineStage::ColorAttachmentOutput;
-			dep.srcAccess			= EPipelineAccess::bits() | EPipelineAccess::ColorAttachmentRead | EPipelineAccess::ColorAttachmentWrite;
-			dep.dstPass				= Builder::SubpassIndexExternal;
-			dep.dstStage			= EPipelineStage::bits() | EPipelineStage::BottomOfPipe;
-			dep.dstAccess			= EPipelineAccess::bits() | EPipelineAccess::MemoryRead;
-			dep.dependency			= ESubpassDependency::bits() | ESubpassDependency::ByRegion;
-			builder.AddDependency( dep );
-		}
-
-		// color attachment
-		{
-			Builder::ColorAttachment_t		attach;
-			Builder::AttachmentRef_t		attach_ref;
-			Builder::SubpassDependency_t	dep;
-
-			attach.format			= _colorPixelFormat;
-			attach.loadOp			= EAttachmentLoadOp::Clear;
-			attach.storeOp			= EAttachmentStoreOp::Store;
-			attach.initialLayout	= EImageLayout::Undefined;
-			attach.finalLayout		= EImageLayout::PresentSrc;
-			builder.AddColorAttachment( attach );
-
-			attach_ref.index		= Builder::AttachmentIndex(0);
-			attach_ref.layout		= EImageLayout::ColorAttachmentOptimal;
-			subpass.AddColorAttachment( attach_ref );
-
-			dep.srcPass				= Builder::SubpassIndexExternal;
-			dep.srcStage			= EPipelineStage::bits() | EPipelineStage::BottomOfPipe;
-			dep.srcAccess			= EPipelineAccess::bits() | EPipelineAccess::MemoryRead;
-			dep.dstPass				= Builder::SubpassIndex(0);
-			dep.dstStage			= EPipelineStage::bits() | EPipelineStage::ColorAttachmentOutput;
-			dep.dstAccess			= EPipelineAccess::bits() | EPipelineAccess::ColorAttachmentRead | EPipelineAccess::ColorAttachmentWrite;
-			dep.dependency			= ESubpassDependency::bits() | ESubpassDependency::ByRegion;
-			builder.AddDependency( dep );
-		}
+		ASSERT( _depthStencilView != VK_NULL_HANDLE ?
+					_depthStencilPixelFormat != EPixelFormat::Unknown :
+					_depthStencilPixelFormat == EPixelFormat::Unknown );
 
 		ModulePtr	module;
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
 					Platforms::VkRenderPassModuleID,
 					GlobalSystems(),
-					CreateInfo::GpuRenderPass{ null, builder.Finish() },
+					CreateInfo::GpuRenderPass{
+						null,
+						RenderPassDescrBuilder::CreateForSurface( _colorPixelFormat, _depthStencilPixelFormat )
+					},
 					OUT module ) );
 
 		_renderPass = module;
@@ -1177,7 +1367,7 @@ namespace PlatformVK
 
 		FOR( i, frameBuffers )
 		{
-			auto fb = New< Vk1SystemFramebuffer >( GlobalSystems(), VkSystems() );
+			auto fb = New< Vk1SystemFramebuffer >( GlobalSystems() );
 
 			SendTo< ModuleMsg::AttachModule >( fb, { _renderPass } );
 
@@ -1185,7 +1375,7 @@ namespace PlatformVK
 											  *(req_id->result),
 											  _imageBuffers[i].view, _colorPixelFormat,
 											  _depthStencilView, _depthStencilPixelFormat,
-											  EImage::Tex2D
+											  EImage::Tex2D	// TODO: multisampling
 			) );
 
 			frameBuffers[i] = fb;
@@ -1217,16 +1407,16 @@ namespace PlatformVK
 	bool Vk1Device::_ChooseColorFormat (OUT VkFormat &colorFormat, OUT VkColorSpaceKHR &colorSpace,
 										const VkFormat requiredFormat, const VkColorSpaceKHR requiredColorSpace) const
 	{
-		vk::uint32_t				count		= 0;
+		uint32_t					count		= 0;
 		Array< VkSurfaceFormatKHR >	surf_formats;
 		const VkFormat				def_format	= VK_FORMAT_B8G8R8A8_UNORM;
 		const VkColorSpaceKHR		def_space	= VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 
-		VK_CHECK( vkGetPhysicalDeviceSurfaceFormatsKHR( _physicalDevice, _surface, &count, null ) );
+		VK_CHECK( vkGetPhysicalDeviceSurfaceFormatsKHR( _physicalDevice, _surface, OUT &count, null ) );
 		CHECK_ERR( count > 0 );
 
 		surf_formats.Resize( count );
-		VK_CHECK( vkGetPhysicalDeviceSurfaceFormatsKHR( _physicalDevice, _surface, &count, surf_formats.ptr() ) );
+		VK_CHECK( vkGetPhysicalDeviceSurfaceFormatsKHR( _physicalDevice, _surface, OUT &count, OUT surf_formats.ptr() ) );
 		
 		if ( count == 1 and
 			 surf_formats[0].format == VK_FORMAT_UNDEFINED )
@@ -1291,68 +1481,76 @@ namespace PlatformVK
 */
 	bool Vk1Device::_GetQueueFamilyProperties (OUT Array<VkQueueFamilyProperties> &properties) const
 	{
-		vk::uint32_t	count = 0;
+		uint32_t	count = 0;
 
-		vkGetPhysicalDeviceQueueFamilyProperties( _physicalDevice, &count, null );
-
+		vkGetPhysicalDeviceQueueFamilyProperties( _physicalDevice, OUT &count, null );
 		CHECK_ERR( count > 0 );
+
 		properties.Resize( count );
-	
-		vkGetPhysicalDeviceQueueFamilyProperties( _physicalDevice, &count, properties.ptr() );
+		vkGetPhysicalDeviceQueueFamilyProperties( _physicalDevice, OUT &count, OUT properties.ptr() );
+		return true;
+	}
+
+/*
+=================================================
+	_LoadDeviceExtensions
+=================================================
+*/
+	bool Vk1Device::_LoadDeviceExtensions () const
+	{
+		CHECK_ERR( HasPhyiscalDevice() );
+
+		if ( not _deviceExtensions.Empty() )
+			return true;
+
+		uint32_t	count = 0;
+		VK_CALL( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, OUT &count, null ) );
+
+		if ( count == 0 )
+			return true;
+
+		_deviceExtensions.Resize( count );
+		VK_CHECK( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, OUT &count, OUT _deviceExtensions.ptr() ) );
+
 		return true;
 	}
 	
 /*
 =================================================
-	_GetInstanceExtensions
+	HasDeviceExtension
 =================================================
 */
-	bool Vk1Device::_GetInstanceExtensions (OUT Array<String> &supportedExtensions) const
+	bool Vk1Device::HasDeviceExtension (StringCRef name) const
 	{
-		vk::uint32_t					count = 0;
-		Array<VkExtensionProperties>	extensions;
+		_LoadDeviceExtensions();
 
-		supportedExtensions.Clear();
-		VK_CALL( vkEnumerateInstanceExtensionProperties( null, &count, null ) );
-
-		if ( count > 0 )
+		FOR( i, _deviceExtensions )
 		{
-			extensions.Resize( count );
-			supportedExtensions.Reserve( count );
-
-			VK_CHECK( vkEnumerateInstanceExtensionProperties( null, &count, extensions.ptr() ) );
-
-			FOR( i, extensions )
-			{
-				supportedExtensions << extensions[i].extensionName;
-			}
+			if ( name.EqualsIC( _deviceExtensions[i].extensionName ) )
+				return true;
 		}
-		return true;
+		return false;
 	}
 
 /*
 =================================================
-	_GetDeviceExtensions
+	_CheckDeviceExtensions
 =================================================
 */
-	bool Vk1Device::_GetDeviceExtensions (OUT Array<String> &supportedExtensions) const
+	bool Vk1Device::_CheckDeviceExtensions (INOUT Array<const char*> &extensions) const
 	{
-		vk::uint32_t					count = 0;
-		Array<VkExtensionProperties>	extensions;
+		CHECK_ERR( HasPhyiscalDevice() );
 
-		supportedExtensions.Clear();
-		VK_CALL( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, &count, null ) );
-
-		if ( count > 0 )
+		FOR( i, extensions )
 		{
-			extensions.Resize( count );
-			supportedExtensions.Reserve( count );
-
-			VK_CHECK( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, &count, extensions.ptr() ) );
-
-			FOR( i, extensions )
+			StringCRef	name = extensions[i];
+			
+			if ( not HasDeviceExtension( name ) )
 			{
-				supportedExtensions << extensions[i].extensionName;
+				LOG( ("Vulkan device extension \""_str << name << "\" not supported and will be removed").cstr(), ELog::Info );
+
+				extensions.Erase( i );
+				--i;
 			}
 		}
 		return true;
@@ -1363,37 +1561,45 @@ namespace PlatformVK
 	_CheckLayers
 =================================================
 */
-	bool Vk1Device::_CheckLayers (ValidationLayers_t layers) const
+	bool Vk1Device::_CheckLayers (INOUT Array<const char*> &layers) const
 	{
-		vk::uint32_t				count = 0;
-		Array< VkLayerProperties >	props;
-
-		VK_CALL( vkEnumerateInstanceLayerProperties( &count, null ) );
-		props.Resize( count );
-		
-		VK_CALL( vkEnumerateInstanceLayerProperties( &count, props.ptr() ) );
-
-		FOR( j, layers )
+		FOR( i, layers )
 		{
-			StringCRef	name	= layers[j];
-			bool		found	= false;
-
-			FOR( i, props )
+			StringCRef	name = layers[i];
+			
+			if ( not HasLayer( name ) )
 			{
-				if ( name.EqualsIC( props[i].layerName ) )
-				{
-					found = true;
-					break;
-				}
+				LOG( ("Vulkan layer \""_str << name << "\" not supported and will be removed").cstr(), ELog::Info );
+
+				layers.Erase( i );
+				--i;
 			}
-
-			if ( not found )
-				RETURN_ERR( "validation layer \"" << name << "\" not supported" );
 		}
-
 		return true;
 	}
 	
+/*
+=================================================
+	_CheckExtensions
+=================================================
+*/
+	bool Vk1Device::_CheckExtensions (INOUT Array<const char*> &extensions) const
+	{
+		FOR( i, extensions )
+		{
+			StringCRef	name = extensions[i];
+			
+			if ( not HasExtension( name ) )
+			{
+				LOG( ("Vulkan extension \""_str << name << "\" not supported and will be removed").cstr(), ELog::Info );
+
+				extensions.Erase( i );
+				--i;
+			}
+		}
+		return true;
+	}
+
 /*
 =================================================
 	_CreateSemaphores
@@ -1475,7 +1681,7 @@ namespace PlatformVK
 */
 	VkBool32 VKAPI_CALL Vk1Device::_DebugReportCallback (VkDebugReportFlagsEXT flags,
 														  VkDebugReportObjectTypeEXT objectType,
-														  vk::uint64_t object,
+														  uint64_t object,
 														  size_t location,
 														  int32_t messageCode,
 														  const char* pLayerPrefix,
@@ -1505,7 +1711,7 @@ namespace PlatformVK
 			return "error";
 
 		if ( EnumEq( flags, VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT ) )
-			return "perfomance";
+			return "performance";
 
 		if ( EnumEq( flags, VK_DEBUG_REPORT_WARNING_BIT_EXT ) )
 			return "warning";
@@ -1524,7 +1730,7 @@ namespace PlatformVK
 	_DebugReportFlagsToLogType
 =================================================
 */
-	ELog::type Vk1Device::_DebugReportFlagsToLogType (vk::VkDebugReportFlagBitsEXT flags)
+	ELog::type Vk1Device::_DebugReportFlagsToLogType (VkDebugReportFlagBitsEXT flags)
 	{
 		if ( EnumEq( flags, VK_DEBUG_REPORT_ERROR_BIT_EXT ) )
 			return ELog::Warning;

@@ -62,8 +62,8 @@ namespace GXTypes
 	// types
 	public:
 		typedef Limit< T, S >		Self;
-		typedef S< T >				Strategy;
-		typedef T					value_t;
+		typedef S< T >				Strategy_t;
+		typedef T					Value_t;
 
 
 	// variables
@@ -77,7 +77,7 @@ namespace GXTypes
 	private:
 		void _Validate ()
 		{
-			Strategy::Validate( _value, _min, _max );
+			Strategy_t::Validate( _value, _min, _max );
 		}
 
 		void _Check () const
@@ -172,16 +172,16 @@ namespace GXTypes
 	
 	template <typename T, template <typename> class S>
 	struct Hash< Limit< T, S > > :
-		private Hash< typename Limit<T,S>::value_t >
+		private Hash< typename Limit<T,S>::Value_t >
 	{
-		typedef Limit< T, S >						key_t;
-		typedef Hash< typename key_t::value_t >		base_t;
-		typedef typename base_t::result_t			result_t;
+		typedef Limit< T, S >						Key_t;
+		typedef Hash< typename Key_t::Value_t >		Base_t;
+		typedef typename Base_t::Result_t			Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
 			// TODO: is min and max limits needed here?
-			return base_t::operator ()( x.Value() );
+			return Base_t::operator ()( x.Value() );
 		}
 	};
 

@@ -15,7 +15,7 @@ namespace Platforms
 	// Sampler Descriptor
 	//
 
-	struct SamplerDescriptor final : CompileTime::PODStruct
+	struct _ENGINE_PLATFORMS_EXPORT_ SamplerDescriptor final : CompileTime::PODStruct
 	{
 	// types
 	public:
@@ -65,7 +65,7 @@ namespace Platforms
 	// Sampler Descriptor Builder
 	//
 
-	struct SamplerDescriptor::Builder final
+	struct _ENGINE_PLATFORMS_EXPORT_ SamplerDescriptor::Builder final
 	{
 	// variables
 	private:
@@ -94,6 +94,14 @@ namespace Platforms
 		EFilter::type				Filter ()		const	{ return _state._filter; }
 		ESamplerBorderColor::bits	BorderColor ()	const	{ return _state._borderColor; }
 		ECompareFunc::type			CompareOp ()	const	{ return _state._compareOp; }
+
+		// TODO
+		//void ValidateAnisotropy (uint maxAnisotropy);
+		//void ValidateCoords (bool unnormSupported);
+		//void ValidateBorder ();
+		//void ValidateLod ();
+		//void ValidateAddressMode ();
+		//void ValidateFilter ();
 
 		// validate, calculate hash and return
 		SamplerDescriptor const& Finish ();
@@ -127,11 +135,6 @@ namespace GpuMsg
 	{
 		Out< Platforms::SamplerDescriptor >		result;
 	};
-	
-
-	// platform-dependent
-	struct GetVkSamplerID;
-	struct GetGLSamplerID;
 
 
 }	// GpuMsg

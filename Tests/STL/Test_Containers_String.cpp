@@ -69,10 +69,23 @@ static void String_Find2 ()
 }
 
 
+static void String_Erase ()
+{
+	String	s0 = "01234aaaa56789";
+	s0.Erase( 0, 5 );
+	ASSERT( s0 == "aaaa56789" );
+
+	String	s1 = "0123456789abcdefghijklmnop";
+	s1.Erase( 0, 21 );
+	ASSERT( s1 == "lmnop" );
+}
+
+
 extern void Test_Containers_String ()
 {
 	String_StartsWith_EndsWith();
 	String_LessThan_SortLikeInFileSystem();
 	String_Find1();
 	String_Find2();
+	String_Erase();
 }

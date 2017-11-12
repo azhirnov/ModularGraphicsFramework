@@ -248,17 +248,17 @@ namespace GXTypes
 
 	// methods
 	public:
-		forceinline Delegate (GX_DEFCTOR) noexcept
+		forceinline Delegate (GX_DEFCTOR)
 		{
 			_Clear();
 		}
 
-		forceinline Delegate (const Self &other) noexcept
+		forceinline Delegate (const Self &other)
 		{
 			_Copy( other );
 		}
 
-		forceinline Delegate (Self &&other) noexcept
+		forceinline Delegate (Self &&other)
 		{
 			_Move( RVREF( other ) );
 		}
@@ -312,7 +312,7 @@ namespace GXTypes
 		forceinline BinArrayRef				_Data ()						{ return BinArrayRef( _storage.buf ); }
 		forceinline bool					_IsCreated ()			const	{ return _storage.maxAlign != 0; }
 
-		forceinline void _Delete ()
+		forceinline void _Delete () noexcept
 		{
 			if ( _IsCreated() )
 			{
@@ -321,7 +321,7 @@ namespace GXTypes
 			}
 		}
 
-		forceinline void _DeleteNoClear ()
+		forceinline void _DeleteNoClear () noexcept
 		{
 			if ( _IsCreated() )
 			{
@@ -329,7 +329,7 @@ namespace GXTypes
 			}
 		}
 
-		forceinline void _Move (Self &&other)
+		forceinline void _Move (Self &&other) noexcept
 		{
 			if ( other._IsCreated() )
 			{
@@ -341,7 +341,7 @@ namespace GXTypes
 				_Clear();
 		}
 
-		forceinline void _Copy (const Self &other)
+		forceinline void _Copy (const Self &other) noexcept
 		{
 			if ( other._IsCreated() )
 			{
@@ -545,6 +545,12 @@ namespace GXTypes
 					--i;
 				}
 			}
+		}
+		
+		template <typename T>
+		forceinline void RemoveAllFor (const T &ptr)
+		{
+			return RemoveAllFor( (const void *) &(*ptr) );
 		}
 
 		forceinline friend void SwapValues (Self &left, Self &right)

@@ -23,13 +23,13 @@ namespace Base
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// methods
 	public:
-		StreamManager (const GlobalSystemsRef gs, const CreateInfo::StreamManager &info);
+		StreamManager (GlobalSystemsRef gs, const CreateInfo::StreamManager &info);
 		~StreamManager ();
 		
 		static void Register (GlobalSystemsRef);

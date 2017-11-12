@@ -8,7 +8,7 @@
 	{
 	// types
 	public:
-		typedef T			value_t;
+		typedef T			Value_t;
 		typedef Time< T >	Self;
 
 
@@ -66,11 +66,11 @@
 		explicit operator T ()							const		{ return NanoSeconds(); }
 		
 		_GX_DIM_CMP_OPERATORS_SELF( _time );
-		_GX_DIM_CMP_OPERATORS_TYPE( _time, value_t, );
+		_GX_DIM_CMP_OPERATORS_TYPE( _time, Value_t, );
 		_GX_DIM_OPERATORS_SELF( +, _time );
 		_GX_DIM_OPERATORS_SELF( -, _time );
-		_GX_DIM_OPERATORS_TYPE( *, _time, value_t, );
-		_GX_DIM_OPERATORS_TYPE( /, _time, value_t, );
+		_GX_DIM_OPERATORS_TYPE( *, _time, Value_t, );
+		_GX_DIM_OPERATORS_TYPE( /, _time, Value_t, );
 		
 		template <typename B>
 		B		To ()							const	{ return B().FromTime( *this ); }
@@ -83,13 +83,13 @@
 	template <>
 	struct Hash< Time<T> > : private Hash<T>
 	{
-		typedef Time<T>				key_t;
-		typedef Hash<T>				base_t;
-		typedef base_t::result_t	result_t;
+		typedef Time<T>				Key_t;
+		typedef Hash<T>				Base_t;
+		typedef Base_t::Result_t	Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x.NanoSeconds() );
+			return Base_t::operator ()( x.NanoSeconds() );
 		}
 	};
 	
@@ -103,15 +103,15 @@
 	{
 	// types
 	public:
-		typedef T					value_t;
+		typedef T					Value_t;
 		typedef Time< T >			Time_t;
 		typedef TimeProfiler< T >	Self;
 
 
 	// variables
 	private:
-		OS::PerfomanceTimer	_timer;
-		Time_t				_start;
+		OS::PerformanceTimer	_timer;
+		Time_t					_start;
 
 
 	// methods

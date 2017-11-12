@@ -9,6 +9,7 @@
 #if defined( PLATFORM_WINDOWS )
 
 #include "Engine/STL/OS/Windows/WinHeader.h"
+#include "Engine/Platforms/Windows/WinDisplay.h"
 
 namespace Engine
 {
@@ -29,31 +30,34 @@ namespace Platforms
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											ModuleMsg::WindowSetDescriptor,
-											ModuleMsg::WindowGetDescriptor,
-											ModuleMsg::PlatformCreated,
-											ModuleMsg::WindowGetHandle
+											OSMsg::WindowSetDescriptor,
+											OSMsg::WindowGetDescriptor,
+											OSMsg::OnWinPlatformCreated,
+											OSMsg::GetWinWindowHandle,
+											OSMsg::GetDisplays
 										> >;
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Update,
 											ModuleMsg::Delete,
-											ModuleMsg::WindowDescriptorChanged,
-											ModuleMsg::WindowVisibilityChanged,
-											ModuleMsg::WindowBeforeCreate,
-											ModuleMsg::WindowCreated,
-											ModuleMsg::WindowBeforeDestroy,
-											ModuleMsg::WindowAfterDestroy,
-											ModuleMsg::WindowRawMessage
+											OSMsg::WindowDescriptorChanged,
+											OSMsg::WindowVisibilityChanged,
+											OSMsg::WindowBeforeCreate,
+											OSMsg::WindowCreated,
+											OSMsg::WindowBeforeDestroy,
+											OSMsg::WindowAfterDestroy,
+											OSMsg::OnWinWindowRawMessage
 										>;
 		
-		using Handle_t				= OS::HiddenOSTypeFrom<void*>;
+		using HWND_t				= OS::HiddenOSTypeFrom<void*>;
+
 		using EVisibility			= CreateInfo::Window::EVisibility;
+		using EWindowFlags			= CreateInfo::Window::EWindowFlags;
 		
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -61,8 +65,9 @@ namespace Platforms
 		CreateInfo::Window	_createInfo;
 
 		WindowDesc			_windowDesc;
-		
-		Handle_t			_wnd;	// HWND
+		WinDisplay			_display;
+
+		HWND_t				_wnd;
 
 		TimeProfilerD		_timer;
 
@@ -72,7 +77,7 @@ namespace Platforms
 
 	// methods
 	public:
-		WinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci);
+		WinWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci);
 		~WinWindow ();
 		
 
@@ -80,17 +85,18 @@ namespace Platforms
 	private:
 		bool _Update (const Message< ModuleMsg::Update > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _PlatformCreated (const Message< ModuleMsg::PlatformCreated > &);
+		bool _OnWinPlatformCreated (const Message< OSMsg::OnWinPlatformCreated > &);
 		bool _PlatformDeleted (const Message< ModuleMsg::Delete > &);
-		bool _WindowSetDescriptor (const Message< ModuleMsg::WindowSetDescriptor > &);
-		bool _WindowGetDescriptor (const Message< ModuleMsg::WindowGetDescriptor > &);
-		bool _WindowGetHandle (const Message< ModuleMsg::WindowGetHandle > &);
+		bool _WindowSetDescriptor (const Message< OSMsg::WindowSetDescriptor > &);
+		bool _WindowGetDescriptor (const Message< OSMsg::WindowGetDescriptor > &);
+		bool _GetWinWindowHandle (const Message< OSMsg::GetWinWindowHandle > &);
+		bool _GetDisplays (const Message< OSMsg::GetDisplays > &);
 
 
 	private:
 		bool _IsCreated () const;
-		bool _Create (const ModulePtr &sender, const ModuleMsg::PlatformCreated &platformInfo);
-		bool _CreateWindow (const Display &disp, const CreateInfo::Window &info, StringCRef className, Handle_t instance);
+		bool _Create (const ModulePtr &sender, const OSMsg::OnWinPlatformCreated &platformInfo);
+		bool _CreateWindow (const Display &disp, const CreateInfo::Window &info, StringCRef className, HWND_t instance);
 		
 		isize _ProcessMessage (uint uMsg, usize wParam, isize lParam);
 
@@ -99,22 +105,23 @@ namespace Platforms
 		void _WindowTick ();
 
 		bool _UpdateDescriptor ();
-		//void _Resize ();
 		void _Destroy ();
+
+		Ptr<const Display> _GetDisplayByCoord (const int2 &point) const;
 	};
 //-----------------------------------------------------------------------------
 
 
 
-	const Runtime::VirtualTypeList	WinWindow::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	WinWindow::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	WinWindow::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	WinWindow::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	WinWindow::WinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci) :
+	WinWindow::WinWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci) :
 		Module( gs, ModuleConfig{ WinWindowModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci ),
 		_wnd( UninitializedT< HWND >() ),
@@ -134,20 +141,13 @@ namespace Platforms
 		_SubscribeOnMsg( this, &WinWindow::_Update );
 		_SubscribeOnMsg( this, &WinWindow::_WindowSetDescriptor );
 		_SubscribeOnMsg( this, &WinWindow::_WindowGetDescriptor );
-		_SubscribeOnMsg( this, &WinWindow::_PlatformCreated );
-		_SubscribeOnMsg( this, &WinWindow::_WindowGetHandle );
+		_SubscribeOnMsg( this, &WinWindow::_OnWinPlatformCreated );
+		_SubscribeOnMsg( this, &WinWindow::_GetWinWindowHandle );
+		_SubscribeOnMsg( this, &WinWindow::_GetDisplays );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( null, WinPlatformModuleID, true );
-
-		if ( _GetManager() )
-		{
-			CHECK( _GetManager()->Subscribe( this, &WinWindow::_PlatformCreated ) );
-			CHECK( _GetManager()->Subscribe( this, &WinWindow::_PlatformDeleted ) );
-
-			CHECK( _SetState( EState::Linked ) );
-		}
+		_AttachSelfToManager( null, WinPlatformModuleID, false );
 	}
 	
 /*
@@ -170,7 +170,8 @@ namespace Platforms
 */
 	bool WinWindow::_Update (const Message< ModuleMsg::Update > &msg)
 	{
-		CHECK_ERR( _IsComposedState( GetState() ) );
+		if ( not _IsComposedState( GetState() ) )
+			return true;
 		
 		_WindowTick();
 
@@ -196,10 +197,10 @@ namespace Platforms
 
 /*
 =================================================
-	_PlatformCreated
+	_OnWinPlatformCreated
 =================================================
 */
-	bool WinWindow::_PlatformCreated (const Message< ModuleMsg::PlatformCreated > &msg)
+	bool WinWindow::_OnWinPlatformCreated (const Message< OSMsg::OnWinPlatformCreated > &msg)
 	{
 		CHECK_ERR( not _IsComposedState( GetState() ) );
 
@@ -219,7 +220,6 @@ namespace Platforms
 		{
 			CHECK( _SetState( EState::ComposingFailed ) );
 		}
-
 		return true;
 	}
 		
@@ -239,9 +239,71 @@ namespace Platforms
 	_WindowSetDescriptor
 =================================================
 */
-	bool WinWindow::_WindowSetDescriptor (const Message< ModuleMsg::WindowSetDescriptor > &msg)
+	bool WinWindow::_WindowSetDescriptor (const Message< OSMsg::WindowSetDescriptor > &msg)
 	{
-		TODO( "" );
+		if ( not _IsCreated() )
+		{
+			CHECK_ERR( GetState() != EState::Deleting );
+
+			_createInfo = msg->desc;
+			return true;
+		}
+		
+		Ptr<const Display>	disp = _GetDisplayByCoord( msg->desc.position );
+
+		if ( not disp )
+			disp = &_display.GetDisplays().Front();
+
+		HWND		wnd				= _wnd.Get<HWND>();
+
+		DWORD		wnd_style		= 0;
+		DWORD		wnd_ext_style	= WS_EX_APPWINDOW;
+		RECT		win_rect		= { 0, 0, msg->desc.surfaceSize.x, msg->desc.surfaceSize.y };
+		uint2 const	scr_res			= disp->Resolution();
+
+		// set window caption
+		if ( not msg->desc.caption.Empty() )
+		{
+			::SetWindowTextA( wnd, msg->desc.caption.cstr() );
+		}
+		
+		if ( msg->desc.flags[ EWindowFlags::Fullscreen ] )
+		{
+			// setup for fullscreen
+			wnd_style				|= WS_POPUP;
+			_windowDesc.position	 = disp->FullArea().LeftBottom();
+			_windowDesc.size		 = scr_res;
+			_windowDesc.surfaceSize	 = scr_res;
+		}
+		else
+		{
+			// setup windowed
+			if ( msg->desc.flags[ EWindowFlags::Resizable ] )
+				wnd_style = WS_OVERLAPPEDWINDOW;
+			else
+				wnd_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+
+			::AdjustWindowRectEx( &win_rect, wnd_style, 0, wnd_ext_style );
+
+			_windowDesc.size		= uint2( win_rect.right - win_rect.left, win_rect.bottom - win_rect.top );
+			_windowDesc.surfaceSize	= msg->desc.surfaceSize;
+			_windowDesc.position	= msg->desc.position;
+
+			if ( msg->desc.flags[ EWindowFlags::Centered ] )
+			{
+				_windowDesc.position = disp->WorkArea().Center() - int2(_windowDesc.size) / 2;		
+			}
+		}
+
+		::SetWindowPos( wnd, HWND_TOP,
+					    _windowDesc.position.x, _windowDesc.position.y,
+					    win_rect.right - win_rect.left, win_rect.bottom - win_rect.top,
+					    SWP_FRAMECHANGED );
+
+		_ShowWindow( msg->desc.initialVisibility );
+		_UpdateDescriptor();
+
+		_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
 		return true;
 	}
 
@@ -250,7 +312,7 @@ namespace Platforms
 	_WindowGetDescriptor
 =================================================
 */
-	bool WinWindow::_WindowGetDescriptor (const Message< ModuleMsg::WindowGetDescriptor > &msg)
+	bool WinWindow::_WindowGetDescriptor (const Message< OSMsg::WindowGetDescriptor > &msg)
 	{
 		CHECK_ERR( _IsCreated() );
 
@@ -263,9 +325,20 @@ namespace Platforms
 	_WindowGetDescriptor
 =================================================
 */
-	bool WinWindow::_WindowGetHandle (const Message< ModuleMsg::WindowGetHandle > &msg)
+	bool WinWindow::_GetWinWindowHandle (const Message< OSMsg::GetWinWindowHandle > &msg)
 	{
-		msg->hwnd.Set( _wnd );
+		msg->result.Set( _wnd );
+		return true;
+	}
+	
+/*
+=================================================
+	_GetDisplays
+=================================================
+*/
+	bool WinWindow::_GetDisplays (const Message< OSMsg::GetDisplays > &msg)
+	{
+		msg->result.Set( _display.GetDisplays() );
 		return true;
 	}
 
@@ -274,37 +347,43 @@ namespace Platforms
 	_Create
 =================================================
 */
-	bool WinWindow::_Create (const ModulePtr &sender, const ModuleMsg::PlatformCreated &platformInfo)
+	bool WinWindow::_Create (const ModulePtr &, const OSMsg::OnWinPlatformCreated &platformInfo)
 	{
-		Display const&	disp = platformInfo.display;
+		_display.Update();
+
+		Ptr<const Display>	disp = _GetDisplayByCoord( _createInfo.position );
+
+		if ( not disp )
+			disp = &_display.GetDisplays().Front();
 
 		// validate create info
 		{
 			if ( _createInfo.caption.Empty() )
 				_createInfo.caption = ENGINE_NAME;
 
-			_createInfo.surfaceSize = Clamp( _createInfo.surfaceSize, uint2(0), disp.Resolution() );
+			if ( not _createInfo.flags[ EWindowFlags::Fullscreen ] )
+				_createInfo.surfaceSize = Clamp( _createInfo.surfaceSize, uint2(0), uint2(disp->WorkArea().Size()) );
 
 			_createInfo.orientation = EDisplayOrientation::Default;
 		}
 
 		
 		// allow subscribers to change settings
-		auto const					msg		= Message< ModuleMsg::WindowBeforeCreate >{ _createInfo };
+		auto const					msg		= Message< OSMsg::WindowBeforeCreate >{ _createInfo };
 		CreateInfo::Window const&	info	= msg->editable;
 
 		_SendEvent( msg );
 
 
 		// crate window
-		CHECK_ERR( _CreateWindow( disp, info, platformInfo.className, platformInfo.instance ) );
+		CHECK_ERR( _CreateWindow( *disp, info, platformInfo.className, platformInfo.instance ) );
 
 		CHECK_ERR( _UpdateDescriptor() );
 
 
 		// send event
-		_SendEvent< ModuleMsg::WindowCreated >({ _windowDesc, _wnd });
-		_SendEvent< ModuleMsg::WindowDescriptorChanged >({ _windowDesc });
+		_SendEvent< OSMsg::WindowCreated >({});
+		_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
 
 
 		// start window message loop
@@ -320,48 +399,47 @@ namespace Platforms
 	_CreateWindow
 =================================================
 */
-	bool WinWindow::_CreateWindow (const Display &disp, const CreateInfo::Window &info, StringCRef className, Handle_t instance)
+	bool WinWindow::_CreateWindow (const Display &disp, const CreateInfo::Window &info, StringCRef className, HWND_t instance)
 	{
 		CHECK_ERR( not _IsCreated() );
 
-		DWORD		wndStyle	= 0;
-		DWORD		wndExtStyle	= WS_EX_APPWINDOW;
-		RECT		winRect		= { 0, 0, info.surfaceSize.x, info.surfaceSize.y };
-		uint2 const	scr_res		= disp.Resolution();
+		DWORD		wnd_style		= 0;
+		DWORD		wnd_ext_style	= WS_EX_APPWINDOW;
+		RECT		win_rect		= { 0, 0, info.surfaceSize.x, info.surfaceSize.y };
+		uint2 const	scr_res			= disp.Resolution();
 		
-		if ( info.flags[ CreateInfo::Window::EWindowFlags::Fullscreen ] )
+		if ( info.flags[ EWindowFlags::Fullscreen ] )
 		{
 			// setup for fullscreen
-			wndStyle				|= WS_POPUP;
-			_windowDesc.position	 = int2();
+			wnd_style				|= WS_POPUP;
+			_windowDesc.position	 = disp.FullArea().LeftBottom();
 			_windowDesc.size		 = scr_res;
 			_windowDesc.surfaceSize	 = scr_res;
 		}
 		else
 		{
 			// setup windowed
-			if ( info.flags[ CreateInfo::Window::EWindowFlags::Resizable ] )
-				wndStyle = WS_OVERLAPPEDWINDOW;
+			if ( info.flags[ EWindowFlags::Resizable ] )
+				wnd_style = WS_OVERLAPPEDWINDOW;
 			else
-				wndStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+				wnd_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 
-			::AdjustWindowRectEx( &winRect, wndStyle, 0, wndExtStyle );
+			::AdjustWindowRectEx( &win_rect, wnd_style, 0, wnd_ext_style );
 
-			_windowDesc.size		= uint2( winRect.right - winRect.left, winRect.bottom - winRect.top );
+			_windowDesc.size		= uint2( win_rect.right - win_rect.left, win_rect.bottom - win_rect.top );
 			_windowDesc.surfaceSize	= info.surfaceSize;
 			_windowDesc.position	= info.position;
 
-			if ( All( info.position < -int2(disp.Resolution()) ) )
+			if ( info.flags[ EWindowFlags::Centered ] )
 			{
-				_windowDesc.position.x = Max( 0, (int)scr_res.x - (int)_windowDesc.size.x ) / 2;
-				_windowDesc.position.y = Max( 0, (int)scr_res.y - (int)_windowDesc.size.y ) / 2;		
+				_windowDesc.position = disp.WorkArea().Center() - int2(_windowDesc.size) / 2;	
 			}
 		}
 		
-		_wnd = ::CreateWindowEx( wndExtStyle,
+		_wnd = ::CreateWindowExA( wnd_ext_style,
 								 className.cstr(),
 								 info.caption.cstr(),
-								 wndStyle,
+								 wnd_style,
 								 _windowDesc.position.x,
 								 _windowDesc.position.y,
 								 _windowDesc.size.x,
@@ -445,7 +523,8 @@ namespace Platforms
 			{
 				_requestQuit = true;
 
-				_SendMsg< ModuleMsg::Delete >({});
+				_Destroy();
+				//_SendMsg< ModuleMsg::Delete >({});
 			}
 			else
 				::DispatchMessageA( &msg );
@@ -459,7 +538,7 @@ namespace Platforms
 */
 	isize WinWindow::_ProcessMessage (uint uMsg, usize wParam, isize lParam)
 	{
-		Message< ModuleMsg::WindowRawMessage >	msg{ uMsg, wParam, lParam };
+		Message< OSMsg::OnWinWindowRawMessage >	msg{ uMsg, wParam, lParam };
 		
 		// WM_PAINT //
 		if ( uMsg == WM_PAINT and _windowDesc.visibility == EVisibility::VisibleFocused )
@@ -477,7 +556,7 @@ namespace Platforms
 			msg->wasProcessed = true;
 
 			_UpdateDescriptor();
-			_SendEvent< ModuleMsg::WindowDescriptorChanged >({ _windowDesc });
+			_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
 		}
 		else
 
@@ -487,7 +566,7 @@ namespace Platforms
 			msg->wasProcessed = true;
 
 			_windowDesc.visibility = EVisibility::VisibleUnfocused;
-			_SendEvent< ModuleMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
+			_SendEvent< OSMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
 		}
 		else
 
@@ -497,7 +576,7 @@ namespace Platforms
 			msg->wasProcessed = true;
 			
 			_windowDesc.visibility = EVisibility::VisibleFocused;
-			_SendEvent< ModuleMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
+			_SendEvent< OSMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
 		}
 		else
 			
@@ -509,11 +588,20 @@ namespace Platforms
 			if ( wParam == SIZE_MINIMIZED )
 			{
 				_windowDesc.visibility = EVisibility::Invisible;
-				_SendEvent< ModuleMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
+				_SendEvent< OSMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
 			}
 
 			_UpdateDescriptor();
-			_SendEvent< ModuleMsg::WindowDescriptorChanged >({ _windowDesc });
+			_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
+		}
+		else
+
+		// WM_DISPLAYCHANGE
+		if ( uMsg == WM_DISPLAYCHANGE )
+		{
+			_display.Update();
+
+			TODO( "move window to primiry display if currently used display will be detached" );
 		}
 		else
 
@@ -565,38 +653,6 @@ namespace Platforms
 	
 /*
 =================================================
-	_Resize
-=================================================
-*
-	void WinWindow::_Resize ()
-	{
-		CHECK_ERR( _IsCreated(), void() );
-
-		/*uint2 const	res = _GetScreenResolution();
-		int2		pos;
-
-		size = Clamp( size, uint2(12), res );
-
-		DWORD dwStyle	= (DWORD) ::GetWindowLongA( _wnd.Get<HWND>(), GWL_STYLE );
-		DWORD dwExStyle	= (DWORD) ::GetWindowLongA( _wnd.Get<HWND>(), GWL_EXSTYLE );
-
-		RECT	winRect = { 0, 0, size.x, size.y };
-		AdjustWindowRectEx( &winRect, dwStyle, FALSE, dwExStyle );
-		
-		TODO( "is window size setted?" );
-
-		if ( alignCenter )
-		{
-			pos.x = Max( 0, (int)res.x - int(winRect.right  - winRect.left) ) / 2;
-			pos.y = Max( 0, (int)res.y - int(winRect.bottom - winRect.top) ) / 2;
-
-			::SetWindowPos( _wnd.Get<HWND>(), HWND_TOP, pos.x, pos.y, winRect.right - winRect.left,
-							winRect.bottom - winRect.top, SWP_FRAMECHANGED );
-		}* /
-	}
-	
-/*
-=================================================
 	_IsCreated
 =================================================
 */
@@ -616,21 +672,40 @@ namespace Platforms
 		{
 			::SetWindowLongPtrA( _wnd.Get<HWND>(), GWLP_WNDPROC, (LONG_PTR) ::DefWindowProcA );
 
-			_SendEvent< ModuleMsg::WindowBeforeDestroy >({});
+			_SendEvent< OSMsg::WindowBeforeDestroy >({});
 
 			::DestroyWindow( _wnd.Get<HWND>() );
 			_wnd = null;
 
 			LOG( "window destroyed", ELog::Debug );
 
-			_SendEvent< ModuleMsg::WindowAfterDestroy >({});
+			_SendEvent< OSMsg::WindowAfterDestroy >({});
 		}
+	}
+	
+/*
+=================================================
+	_GetDisplayByCoord
+=================================================
+*/
+	Ptr<const Display> WinWindow::_GetDisplayByCoord (const int2 &point) const
+	{
+		FOR( i, _display.GetDisplays() )
+		{
+			auto&	disp = _display.GetDisplays()[i];
+
+			if ( disp.FullArea().IsInnerPoint( point ) )
+			{
+				return &disp;
+			}
+		}
+		return null;
 	}
 //-----------------------------------------------------------------------------
 	
 
 
-	ModulePtr WinPlatform::_CreateWinWindow (const GlobalSystemsRef gs, const CreateInfo::Window &ci)
+	ModulePtr WinPlatform::_CreateWinWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci)
 	{
 		return New< WinWindow >( gs, ci );
 	}

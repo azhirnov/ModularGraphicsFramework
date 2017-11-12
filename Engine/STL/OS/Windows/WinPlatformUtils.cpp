@@ -21,7 +21,7 @@ namespace GX_STL
 namespace OS
 {
 	static bool _CreateLinkWin32 (const char *linkFilename, const char *link, bool isFolder);
-	static bool _GetkWinApiError (const char *buf, int &bufSize);
+	static bool _GetWinApiError (const char *buf, int &bufSize);
 	
 /*
 =================================================
@@ -181,7 +181,7 @@ namespace OS
 		char	buf[128] = {};
 		int		size	 = (int)CountOf(buf);
 
-		if ( _GetkWinApiError( buf, size ) )
+		if ( _GetWinApiError( buf, size ) )
 			return true;
 
 		String	str("WinAPI error: ");
@@ -244,10 +244,10 @@ namespace OS
 	
 /*
 =================================================
-	_GetkWinApiError
+	_GetWinApiError
 =================================================
 */
-	static bool _GetkWinApiError (const char *buf, int &bufSize)
+	static bool _GetWinApiError (const char *buf, int &bufSize)
 	{
 		DWORD	dw = ::GetLastError();
 

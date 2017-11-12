@@ -46,18 +46,18 @@ namespace GXMath
 		return (T) ::sin( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Sin (const RadiansVec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Sin (const RadiansVec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Sin( x[i] );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Sin (const DegreesVec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Sin (const DegreesVec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Sin( x[i] );
 		return ret;
 	}
@@ -74,18 +74,18 @@ namespace GXMath
 		return (T) ::cos( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Cos (const RadiansVec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Cos (const RadiansVec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Cos( x[i] );
 		return ret;
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Cos (const DegreesVec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Cos (const DegreesVec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Cos( x[i] );
 		return ret;
 	}
@@ -120,10 +120,10 @@ namespace GXMath
 		return (Radians<T>) ::asin( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline RadiansVec<T,I>  ASin (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline RadiansVec<T,I,U>  ASin (const Vec<T,I,U> &x)
 	{
-		RadiansVec<T,I>	ret;
+		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = ASin( x[i] );
 		return ret;
 	}
@@ -144,10 +144,10 @@ namespace GXMath
 		return (Radians<T>) ::acos( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline RadiansVec<T,I>  ACos (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline RadiansVec<T,I,U>  ACos (const Vec<T,I,U> &x)
 	{
-		RadiansVec<T,I>	ret;
+		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = ACos( x[i] );
 		return ret;
 	}
@@ -178,10 +178,10 @@ namespace GXMath
 		return (T) ::sinh( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  SinH (const RadiansVec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  SinH (const RadiansVec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SinH( x[i] );
 		return ret;
 	}
@@ -198,10 +198,10 @@ namespace GXMath
 		return (T) ::cosh( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  CosH (const RadiansVec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  CosH (const RadiansVec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = CosH( x[i] );
 		return ret;
 	}
@@ -233,10 +233,10 @@ namespace GXMath
 		return Radians<T>( SignOrZero( x ) * Ln( x + Sqrt( (x*x) + T(1) ) ) );
 	}
 
-	template <typename T, usize I>
-	inline RadiansVec<T,I>  ASinH (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline RadiansVec<T,I,U>  ASinH (const Vec<T,I,U> &x)
 	{
-		RadiansVec<T,I>	ret;
+		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = ASinH( x[i] );
 		return ret;
 	}
@@ -255,10 +255,10 @@ namespace GXMath
 		return (Radians<T>) Ln( x + Sqrt( (x*x) - T(1) ) );
 	}
 
-	template <typename T, usize I>
-	inline RadiansVec<T,I>  ACosH (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline RadiansVec<T,I,U>  ACosH (const Vec<T,I,U> &x)
 	{
-		RadiansVec<T,I>	ret;
+		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = ACosH( x[i] );
 		return ret;
 	}
@@ -289,10 +289,10 @@ namespace GXMath
 		return (T) ::tan( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  Tan (const RadiansVec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  Tan (const RadiansVec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Tan( x[i] );
 		return ret;
 	}
@@ -308,10 +308,10 @@ namespace GXMath
 		return SafeDiv( T(1), Tan( x ), T(0) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  CoTan (const RadiansVec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  CoTan (const RadiansVec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = CoTan( x[i] );
 		return ret;
 	}
@@ -328,10 +328,10 @@ namespace GXMath
 		return (T) ::tanh( _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  TanH (const RadiansVec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  TanH (const RadiansVec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = TanH( x[i] );
 		return ret;
 	}
@@ -347,10 +347,10 @@ namespace GXMath
 		return SafeDiv( T(1), TanH( x ), T(0) );
 	}
 
-	template <typename T, usize I>
-	inline Vec<T,I>  CoTanH (const RadiansVec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline Vec<T,I,U>  CoTanH (const RadiansVec<T,I,U> &x)
 	{
-		Vec<T,I>		ret;
+		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = CoTanH( x[i] );
 		return ret;
 	}
@@ -369,10 +369,10 @@ namespace GXMath
 		return (Radians<T>) ::atan( _float_t( y_over_x ) );
 	}
 
-	template <typename T, usize I>
-	inline RadiansVec<T,I>  ATan (const Vec<T,I> &y_over_x)
+	template <typename T, usize I, ulong U>
+	inline RadiansVec<T,I,U>  ATan (const Vec<T,I,U> &y_over_x)
 	{
-		RadiansVec<T,I>	ret;
+		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = ATan( y_over_x[i] );
 		return ret;
 	}
@@ -391,10 +391,10 @@ namespace GXMath
 		return (Radians<T>) ::atan2( _float_t( y ), _float_t( x ) );
 	}
 
-	template <typename T, usize I>
-	inline RadiansVec<T,I>  ATan (const Vec<T,I> &y, const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline RadiansVec<T,I,U>  ATan (const Vec<T,I,U> &y, const Vec<T,I,U> &x)
 	{
-		RadiansVec<T,I>	ret;
+		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = ATan( y[i], x[i] );
 		return ret;
 	}
@@ -412,10 +412,10 @@ namespace GXMath
 		return (Radians<T>) SafeDiv( T(1), ATan( x ), T(0) );
 	}
 
-	template <typename T, usize I>
-	inline RadiansVec<T,I>  ACoTan (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline RadiansVec<T,I,U>  ACoTan (const Vec<T,I,U> &x)
 	{
-		RadiansVec<T,I>	ret;
+		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = ACoTan( x[i] );
 		return ret;
 	}
@@ -437,10 +437,10 @@ namespace GXMath
 								return Ln( (T(1) + x) / (T(1) - x) ) / T(2);
 	}
 
-	template <typename T, usize I>
-	inline RadiansVec<T,I>  ATanH (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline RadiansVec<T,I,U>  ATanH (const Vec<T,I,U> &x)
 	{
-		RadiansVec<T,I>	ret;
+		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = ATanH( x[i] );
 		return ret;
 	}
@@ -458,10 +458,10 @@ namespace GXMath
 		return (Radians<T>) SafeDiv( T(1), ATanH( x ), T(0) );
 	}
 
-	template <typename T, usize I>
-	inline RadiansVec<T,I>  ACoTanH (const Vec<T,I> &x)
+	template <typename T, usize I, ulong U>
+	inline RadiansVec<T,I,U>  ACoTanH (const Vec<T,I,U> &x)
 	{
-		RadiansVec<T,I>	ret;
+		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = ACoTanH( x[i] );
 		return ret;
 	}

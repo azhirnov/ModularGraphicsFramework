@@ -20,7 +20,7 @@ namespace GXScript
 	// Script Engine
 	//
 
-	class ScriptEngine
+	class _STL_EXPORT_ ScriptEngine
 	{
 	// variables
 	private:

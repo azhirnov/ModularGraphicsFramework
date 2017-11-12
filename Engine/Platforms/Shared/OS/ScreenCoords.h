@@ -11,175 +11,41 @@ namespace ScreenCoords
 	using namespace GX_STL::GXMath;
 
 
-	//
 	// Pixels
-	//
+	using pixelsi1	= Vec< int, 1, "pixels"_StringToID >;
+	using pixelsi2	= Vec< int, 2, "pixels"_StringToID >;
+	using pixelsi3	= Vec< int, 3, "pixels"_StringToID >;
+	using pixelsi4	= Vec< int, 4, "pixels"_StringToID >;
 
-	struct Pixels
-	{
-	// types
-	public:
-		using vec_t		= int2;
-		using value_t	= vec_t::value_t;
+	using pixelsf1	= Vec< float, 1, "pixels"_StringToID >;
+	using pixelsf2	= Vec< float, 2, "pixels"_StringToID >;
+	using pixelsf3	= Vec< float, 3, "pixels"_StringToID >;
+	using pixelsf4	= Vec< float, 4, "pixels"_StringToID >;
 
+	using pixelsri	= Rectangle< int, "pixels"_StringToID >;
+	using pixelsrf	= Rectangle< float, "pixels"_StringToID >;
 
-	// variables
-	public:
-		value_t		x, y;
-
-
-	// methods
-	public:
-		Pixels () : x(0), y(0) {}
-
-		explicit
-		Pixels (const vec_t &p) : x(p.x), y(p.y) {}
-
-		Pixels (value_t X, value_t Y) : x(X), y(Y) {}
-
-		const vec_t &	Get ()	const	{ return ReferenceCast< vec_t >( *this ); }
-	};
+	using pixelsf1	= Vec< float, 1, "pixels"_StringToID >;
+	using pixelsf2	= Vec< float, 2, "pixels"_StringToID >;
+	using pixelsf3	= Vec< float, 3, "pixels"_StringToID >;
+	using pixelsf4	= Vec< float, 4, "pixels"_StringToID >;
 
 
-
-	//
-	// Dip
-	//
-
-	struct Dip
-	{
-	// types
-	public:
-		using vec_t		= float2;
-		using value_t	= vec_t::value_t;
+	// Dips
+	using dipsf1	= Vec< float, 1, "dips"_StringToID >;
+	using dipsf2	= Vec< float, 2, "dips"_StringToID >;
+	using dipsf3	= Vec< float, 3, "dips"_StringToID >;
+	using dipsf4	= Vec< float, 4, "dips"_StringToID >;
+	
+	using dipsri	= Rectangle< int, "dips"_StringToID >;
+	using dipsrf	= Rectangle< float, "dips"_StringToID >;
 
 
-	// variables
-	public:
-		value_t		x, y;
-
-
-	// methods
-	public:
-		Dip () : x(0), y(0) {}
-
-		explicit
-		Dip (const vec_t &d) : x(d.x), y(d.y) {}
-
-		Dip (value_t X, value_t Y) : x(X), y(Y) {}
-			
-		const vec_t &	Get ()	const	{ return ReferenceCast< vec_t >( *this ); }
-	};
-
-
-
-	//
-	// Physics (mm)
-	//
-
-	struct Physics
-	{
-	// types
-	public:
-		using vec_t		= float2;
-		using value_t	= vec_t::value_t;
-
-
-	// variables
-	public:
-		value_t		x, y;
-
-
-	// methods
-	public:
-		Physics () : x(0), y(0) {}
-
-		explicit
-		Physics (const vec_t &p) : x(p.x), y(p.y) {}
-
-		Physics (value_t X, value_t Y) : x(X), y(Y) {}
-			
-		const vec_t &	Get ()		const	{ return ReferenceCast< vec_t >( *this ); }
-
-		vec_t			ToMeters () const	{ return Get() * 1000.0f; }
-	};
-
-
-
-	struct UNorm;
-	struct SNorm;
-
-
-	//
-	// Unsigned Normalized
-	//
-
-	struct UNorm
-	{
-	// types
-	public:
-		using vec_t		= float2;
-		using value_t	= vec_t::value_t;
-
-
-	// variables
-	public:
-		value_t		x, y;
-
-
-	// methods
-	public:
-		UNorm () : x(0), y(0) {}
-
-		explicit
-		UNorm (const vec_t &v) : x(v.x), y(v.y) {}
-
-		UNorm (value_t x, value_t y) : x(x), y(y) {}
-
-		explicit
-		UNorm (const SNorm &n);
-			
-		const vec_t &	Get ()	const	{ return ReferenceCast< vec_t >( *this ); }
-	};
-
-
-
-	//
-	// Signed Normalized
-	//
-
-	struct SNorm
-	{
-	// types
-	public:
-		using vec_t		= float2;
-		using value_t	= vec_t::value_t;
-
-
-	// variables
-	public:
-		value_t		x, y;
-
-
-	// methods
-	public:
-		SNorm () : x(0), y(0) {}
-
-		explicit
-		SNorm (const vec_t &v) : x(v.x), y(v.y) {}
-
-		SNorm (value_t X, value_t Y) : x(X), y(Y) {}
-
-		explicit
-		SNorm (const UNorm &n) : x( (n.x * 2.0f) - 1.0f ), y( (n.y * 2.0f) - 1.0f ) {}
-			
-		const vec_t &	Get ()	const	{ return ReferenceCast< vec_t >( *this ); }
-	};
-		
-
-	inline UNorm::UNorm (const SNorm &n) :
-		x( (n.x - 1.0f) * 0.5f ), y( (n.y - 1.0f) * 0.5f )
-	{}
+	// Physical
+	using metersf1	= Vec< float, 1, "meters"_StringToID >;
+	using metersf2	= Vec< float, 2, "meters"_StringToID >;
+	using metersf3	= Vec< float, 3, "meters"_StringToID >;
+	using metersf4	= Vec< float, 4, "meters"_StringToID >;
 
 
 }	// ScreenCoords

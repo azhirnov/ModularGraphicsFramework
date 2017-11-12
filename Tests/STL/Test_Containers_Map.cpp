@@ -16,7 +16,7 @@ static void Map_Test1 ()
 		m.Add( Random::Int<int>(), String() << i );
 	}
 
-	for (usize i = 1; i < m.Count(); ++i) {
+	FORv( i,  1, m ) {
 		ASSERT( m[i-1].first < m[i].first );
 	}
 }

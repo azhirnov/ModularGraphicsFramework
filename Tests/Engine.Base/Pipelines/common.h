@@ -4,6 +4,10 @@
 
 #include "Engine/Platforms/Engine.Platforms.h"
 
+#ifdef GRAPHICS_API_SOFT
+#include "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h"
+#endif
+
 namespace Pipelines
 {
 

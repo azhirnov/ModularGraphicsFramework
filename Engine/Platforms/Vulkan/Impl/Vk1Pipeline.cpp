@@ -2,7 +2,8 @@
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h"
+#include "Engine/Platforms/Vulkan/VulkanContext.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -11,20 +12,20 @@ namespace Engine
 namespace PlatformVK
 {
 	
-	const Runtime::VirtualTypeList	Vk1GraphicsPipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	Vk1GraphicsPipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	Vk1GraphicsPipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	Vk1GraphicsPipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	Vk1GraphicsPipeline::Vk1GraphicsPipeline (const GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkGraphicsPipelineModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+	Vk1GraphicsPipeline::Vk1GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ VkGraphicsPipelineModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		_pipelineId( VK_NULL_HANDLE ),
 		_descr( ci.descr ),
-		_renderPass( ci.renderPass ),
 		_shaders( ci.shaders ),
-		_pipelineId( VK_NULL_HANDLE )
+		_renderPass( ci.renderPass )
 	{
 		SetDebugName( "Vk1GraphicsPipeline" );
 
@@ -41,7 +42,9 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkGraphicsPipelineID );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetGraphicsPipelineDescriptor );
-		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkLogicDevice );
+		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetPipelineLayoutDescriptor );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkDescriptorLayouts );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkPipelineLayoutID );
@@ -66,7 +69,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1GraphicsPipeline::_Compose (const  Message< ModuleMsg::Compose > &msg)
+	bool Vk1GraphicsPipeline::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -176,6 +179,7 @@ namespace PlatformVK
 		CHECK_ERR( not _IsCreated() );
 		CHECK_ERR( _GetManager() );
 
+		// validate render pass
 		if ( not _renderPass )
 		{
 			_renderPass		= GetDevice()->GetDefaultRenderPass();
@@ -183,6 +187,7 @@ namespace PlatformVK
 
 			LOG( "used default render pass", ELog::Debug );
 		}
+		CHECK_ERR( _ValidateRenderPass() );
 
 		
 		// get render pass id
@@ -198,23 +203,20 @@ namespace PlatformVK
 		
 
 		// get shader modules
-		Message< GpuMsg::GetVkShaderModuleIDs >				req_shader_ids;
-		Array< GpuMsg::GetVkShaderModuleIDs::ShaderModule >	modules;
-
+		Message< GpuMsg::GetVkShaderModuleIDs >		req_shader_ids;
 		SendTo( _shaders, req_shader_ids );
-
-		req_shader_ids->result.MoveTo( OUT modules );
-		CHECK_ERR( not modules.Empty() );
-
-		auto	vkthread	= GetGpuThread();
-
+		CHECK_ERR( req_shader_ids->result and not req_shader_ids->result->Empty() );
+		
 		// create layout
-		CHECK_ERR(( _layout = vkthread->GetLayoutCache()->Create( _descr.layout ) ));
+		Message< GpuMsg::GetVkPrivateClasses >	req_cache;
+		_SendMsg( req_cache );
+
+		CHECK_ERR(( _layout = req_cache->result->layoutCache->Create( _descr.layout ) ));
 
 		// create graphics pipeline
-		CHECK_ERR( vkthread->GetPipelineCache()->
+		CHECK_ERR( req_cache->result->pipelineCache->
 						CreatePipeline( OUT _pipelineId,
-										modules,
+										*req_shader_ids->result,
 										_layout->GetLayoutID(),
 										_descr.vertexInput,
 										_descr.renderState,
@@ -237,7 +239,7 @@ namespace PlatformVK
 	{
 		using namespace vk;
 
-		auto	dev = GetLogicalDevice();
+		auto	dev = GetVkDevice();
 
 		if ( dev != VK_NULL_HANDLE and _pipelineId != VK_NULL_HANDLE )
 		{
@@ -246,24 +248,57 @@ namespace PlatformVK
 
 		_pipelineId	= VK_NULL_HANDLE;
 		_descr		= Uninitialized;
+		_shaders	= null;
+		_renderPass	= null;
+	}
+	
+/*
+=================================================
+	_ValidateRenderPass
+=================================================
+*/
+	bool Vk1GraphicsPipeline::_ValidateRenderPass () const
+	{
+		Message< GpuMsg::GetRenderPassDescriptor >	req_descr;
+		_renderPass->Send( req_descr );
+
+		const auto&	descr = *req_descr->result;
+
+		CHECK_ERR( _descr.subpass < descr.Subpasses().Count() );
+		
+		const auto&	subpass	= descr.Subpasses()[ _descr.subpass ];
+
+		CHECK_ERR( _descr.fragOutput.Count() == subpass.colors.Count() );
+
+		// can't make mistake when number of attachment is 1
+		if ( _descr.fragOutput.Count() <= 1 )
+			return true;
+
+		FOR( i, subpass.colors )
+		{
+			auto	frag = _descr.fragOutput( subpass.colors[i].name );
+			CHECK_ERR( frag and frag->index == i );
+		}
+
+		return true;
 	}
 //-----------------------------------------------------------------------------
 
 
 	
-	const Runtime::VirtualTypeList	Vk1ComputePipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	Vk1ComputePipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	Vk1ComputePipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	Vk1ComputePipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	Vk1ComputePipeline::Vk1ComputePipeline (const GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkComputePipelineModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+	Vk1ComputePipeline::Vk1ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ VkComputePipelineModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		_pipelineId( VK_NULL_HANDLE ),
 		_descr( ci.descr ),
-		_shaders( ci.shaders ),
-		_pipelineId( VK_NULL_HANDLE )
+		_shaders( ci.shaders )
 	{
 		SetDebugName( "Vk1ComputePipeline" );
 
@@ -280,7 +315,9 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkComputePipelineID );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetComputePipelineDescriptor );
-		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkLogicDevice );
+		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetPipelineLayoutDescriptor );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkDescriptorLayouts );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkPipelineLayoutID );
@@ -305,7 +342,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1ComputePipeline::_Compose (const  Message< ModuleMsg::Compose > &msg)
+	bool Vk1ComputePipeline::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -416,33 +453,30 @@ namespace PlatformVK
 		CHECK_ERR( _GetManager() );
 
 		// get shader modules
-		Message< GpuMsg::GetVkShaderModuleIDs >				req_shader_ids;
-		Array< GpuMsg::GetVkShaderModuleIDs::ShaderModule >	modules;
-
+		Message< GpuMsg::GetVkShaderModuleIDs >		req_shader_ids;
 		SendTo( _shaders, req_shader_ids );
-
-		req_shader_ids->result.MoveTo( OUT modules );
-		CHECK_ERR( not modules.Empty() );
+		CHECK_ERR( req_shader_ids->result and not req_shader_ids->result->Empty() );
 
 		usize	cs_index = -1;
 
-		FOR( i, modules ) {
-			if ( modules[i].type == EShader::Compute ) {
+		FOR( i, *req_shader_ids->result ) {
+			if ( (*req_shader_ids->result)[i].type == EShader::Compute ) {
 				cs_index = i;
 				break;
 			}
 		}
-		CHECK_ERR( cs_index < modules.Count() );	// compute shader not found
-
-		auto	vkthread	= GetGpuThread();
+		CHECK_ERR( cs_index < req_shader_ids->result->Count() );	// compute shader not found
 
 		// create layout
-		CHECK_ERR(( _layout = vkthread->GetLayoutCache()->Create( _descr.layout ) ));
+		Message< GpuMsg::GetVkPrivateClasses >	req_cache;
+		_SendMsg( req_cache );
+
+		CHECK_ERR(( _layout = req_cache->result->layoutCache->Create( _descr.layout ) ));
 
 		// create compute pipeline
-		CHECK_ERR( vkthread->GetPipelineCache()->
+		CHECK_ERR( req_cache->result->pipelineCache->
 						CreatePipeline( OUT _pipelineId,
-										modules[cs_index],
+										(*req_shader_ids->result)[cs_index],
 										_layout->GetLayoutID() )
 		);
 		
@@ -458,7 +492,7 @@ namespace PlatformVK
 	{
 		using namespace vk;
 
-		auto	dev = GetLogicalDevice();
+		auto	dev = GetVkDevice();
 
 		if ( dev != VK_NULL_HANDLE and _pipelineId != VK_NULL_HANDLE )
 		{
@@ -467,10 +501,40 @@ namespace PlatformVK
 
 		_pipelineId	= VK_NULL_HANDLE;
 		_descr		= Uninitialized;
+		_shaders	= null;
 	}
 //-----------------------------------------------------------------------------
 
 }	// PlatformVK
+
+namespace Platforms
+{
+
+	ModulePtr VulkanContext::_CreateVk1GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
+	{
+		ModulePtr	mod;
+		CHECK_ERR( mod = gs->Get< ParallelThread >()->GetModuleByMsg< MessageListFrom< GpuMsg::GetVkPrivateClasses > >() );
+
+		Message< GpuMsg::GetVkPrivateClasses >	req_cl;
+		mod->Send( req_cl );
+		CHECK_ERR( req_cl->result.IsDefined() and req_cl->result->pipelineCache );
+
+		return req_cl->result->pipelineCache->Create( gs, ci );
+	}
+		
+	ModulePtr VulkanContext::_CreateVk1ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
+	{
+		ModulePtr	mod;
+		CHECK_ERR( mod = gs->Get< ParallelThread >()->GetModuleByMsg< MessageListFrom< GpuMsg::GetVkPrivateClasses > >() );
+
+		Message< GpuMsg::GetVkPrivateClasses >	req_cl;
+		mod->Send( req_cl );
+		CHECK_ERR( req_cl->result.IsDefined() and req_cl->result->pipelineCache );
+
+		return req_cl->result->pipelineCache->Create( gs, ci );
+	}
+
+}	// Platforms
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN

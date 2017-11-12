@@ -19,18 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Engine.Base\Engine.Base.vcxproj">
-      <Project>{4d750b1b-ce81-4c92-8bfe-40f2ace23a14}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Engine.Platforms\Engine.Platforms.vcxproj">
-      <Project>{73642aa5-aed6-4b0e-a4bb-f9919aba1159}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\..\..\Tests\Engine.Base\Main.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\OpenCL\Test.CLCompute.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\OpenGL\GLApp.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\OpenGL\Test.GLWindow.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Pipelines\default.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Pipelines\default2.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\Test.VkWindow.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Window\Test.Window.cpp" />
@@ -42,6 +36,11 @@
     <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\common.h" />
     <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\shared_types.h" />
     <ClInclude Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Engine.Platforms\Engine.Platforms.vcxproj">
+      <Project>{10d5095a-2562-4333-b486-1886c2fd0cfb}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EBEF46FE-7246-4473-9875-210B14E17BCD}</ProjectGuid>
@@ -96,13 +95,19 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(ProjectName)</TargetName>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>$(ProjectName)</TargetName>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -118,12 +123,15 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\..\External\SDL2\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -140,17 +148,20 @@
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\..\External\SDL2\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -171,7 +182,8 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>
@@ -179,11 +191,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\..\..\External\SDL2\lib</AdditionalLibraryDirectories>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -204,7 +217,8 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>
@@ -212,6 +226,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\..\..\External\SDL2\lib</AdditionalLibraryDirectories>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

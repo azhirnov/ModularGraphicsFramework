@@ -12,7 +12,7 @@ namespace Base
 	constructor
 =================================================
 */
-	FileManager::FileManager (const GlobalSystemsRef gs) :
+	FileManager::FileManager (GlobalSystemsRef gs) :
 		BaseObject( gs )
 	{
 		GlobalSystems()->GetSetter< FileManager >().Set( this );

@@ -3,8 +3,9 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/GPU/Context.h"
-#include "Engine/Platforms/OpenGL/OpenGLThread.h"
+#include "Engine/Platforms/Shared/GPU/Thread.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -28,12 +29,15 @@ namespace Platforms
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 		using GLThreads_t			= Set< ModulePtr >;
+		
+		using GLThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetGLDeviceInfo >;
+		using GLThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 		
 	// variables
@@ -45,11 +49,11 @@ namespace Platforms
 
 	// methods
 	public:
-		OpenGLContext (const GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
+		OpenGLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
 		~OpenGLContext ();
 		
-		static void Register (GlobalSystemsRef);
-		static void Unregister (GlobalSystemsRef);
+		static _ENGINE_PLATFORMS_EXPORT_ void Register (GlobalSystemsRef);
+		static _ENGINE_PLATFORMS_EXPORT_ void Unregister (GlobalSystemsRef);
 
 		
 	// message handlers
@@ -60,7 +64,18 @@ namespace Platforms
 	private:
 		static ModulePtr _CreateOpenGLThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
 		static ModulePtr _CreateOpenGLContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
+		static ModulePtr _CreateGL4Image (GlobalSystemsRef, const CreateInfo::GpuImage &);
+		static ModulePtr _CreateGL4Memory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
+		static ModulePtr _CreateGL4Buffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);
+		static ModulePtr _CreateGL4Sampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr _CreateGL4RenderPass (GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
+		static ModulePtr _CreateGL4Framebuffer (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
 		static ModulePtr _CreatePipelineTemplate (GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
+		static ModulePtr _CreateGL4CommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
+		static ModulePtr _CreateGL4CommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
+		static ModulePtr _CreateGL4ComputePipeline (GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+		static ModulePtr _CreateGL4GraphicsPipeline (GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
+		static ModulePtr _CreateGL4PipelineResourceTable (GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
 	};
 
 

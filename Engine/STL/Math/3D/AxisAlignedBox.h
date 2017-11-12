@@ -19,7 +19,7 @@ namespace GXMath
 	// types
 	public:
 		typedef AABBox<T>		Self;
-		typedef T				value_t;
+		typedef T				Value_t;
 		
 		struct ECorner
 		{
@@ -591,8 +591,8 @@ namespace GXMath
 	template <typename T>
 	inline bool AABBox<T>::Intersect (const AABBox<T> &box) const
 	{
-		return ( _max.x < box._min.x or _max.y < box._min.y or _max.z < box._min.z or
-				 _min.x > box._max.x or _min.y > box._max.y or _min.z > box._max.z );
+		return not( _max.x < box._min.x or _max.y < box._min.y or _max.z < box._min.z or
+					_min.x > box._max.x or _min.y > box._max.y or _min.z > box._max.z );
 	}
 	
 /*

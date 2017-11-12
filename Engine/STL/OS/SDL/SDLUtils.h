@@ -16,7 +16,7 @@ namespace OS
 	// SDL Utils
 	//
 
-	struct SDLUtils
+	struct _STL_EXPORT_ SDLUtils
 	{
 	public:
 		

@@ -1,7 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
-#include "Engine/Platforms/Vulkan/VulkanThread.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -9,14 +8,15 @@ namespace Engine
 {
 namespace PlatformVK
 {
+	using namespace vk;
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	Vk1PipelineCache::Vk1PipelineCache (VkSystemsRef vkSys) :
-		_vkSystems( vkSys ),
+	Vk1PipelineCache::Vk1PipelineCache (Ptr<Vk1Device> dev) :
+		Vk1BaseObject( dev ),
 		_pipelinesCache( VK_NULL_HANDLE )
 	{
 		_graphicsPipelines.Reserve( 128 );
@@ -38,7 +38,7 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	Vk1PipelineCache::Vk1GraphicsPipelinePtr  Vk1PipelineCache::Create (const GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
+	Vk1PipelineCache::Vk1GraphicsPipelinePtr  Vk1PipelineCache::Create (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
 	{
 		// TODO: validate and cache
 
@@ -57,7 +57,7 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	Vk1PipelineCache::Vk1ComputePipelinePtr  Vk1PipelineCache::Create (const GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
+	Vk1PipelineCache::Vk1ComputePipelinePtr  Vk1PipelineCache::Create (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
 	{
 		// TODO: validate and cache
 
@@ -76,10 +76,8 @@ namespace PlatformVK
 	_CreatePipelineCache
 =================================================
 */
-	bool Vk1PipelineCache::_CreatePipelineCache (vk::VkDevice device)
+	bool Vk1PipelineCache::_CreatePipelineCache ()
 	{
-		using namespace vk;
-
 		if ( _pipelinesCache != VK_NULL_HANDLE )
 			return true;
 		
@@ -91,7 +89,7 @@ namespace PlatformVK
 		info.initialDataSize	= 0;
 		info.pInitialData		= null;
 
-		VK_CHECK( vkCreatePipelineCache( device, &info, null, OUT &_pipelinesCache ) );
+		VK_CHECK( vkCreatePipelineCache( GetVkDevice(), &info, null, OUT &_pipelinesCache ) );
 		return true;
 	}
 	
@@ -102,13 +100,11 @@ namespace PlatformVK
 */
 	void Vk1PipelineCache::_DestroyPipelineCache ()
 	{
-		using namespace vk;
-		
-		VkDevice	device = VkSystems()->Get< Vk1Device >()->GetLogicalDevice();
+		auto	dev = GetVkDevice();
 
-		if ( device != VK_NULL_HANDLE and _pipelinesCache != VK_NULL_HANDLE )
+		if ( dev != VK_NULL_HANDLE and _pipelinesCache != VK_NULL_HANDLE )
 		{
-			vkDestroyPipelineCache( device, _pipelinesCache, null );
+			vkDestroyPipelineCache( dev, _pipelinesCache, null );
 		}
 
 		_pipelinesCache = VK_NULL_HANDLE;
@@ -169,23 +165,19 @@ namespace PlatformVK
 	CreatePipeline
 =================================================
 */
-	bool Vk1PipelineCache::CreatePipeline (OUT vk::VkPipeline &pipelineId,
+	bool Vk1PipelineCache::CreatePipeline (OUT VkPipeline &pipelineId,
 											ArrayCRef< ShaderModule > shaders,
-											vk::VkPipelineLayout layout,
+											VkPipelineLayout layout,
 											const VertexInputState &attribs,
 											const RenderState &renderState,
 											const EDynamicStates &dynamicStates,
 											uint patchControlPoints,
 											const RenderPassDescriptor &rpDescr,
-											vk::VkRenderPass renderPass,
+											VkRenderPass renderPass,
 											uint subpass)
 	{
-		using namespace vk;
-
-		VkDevice	device	= VkSystems()->Get< Vk1Device >()->GetLogicalDevice();
-		
 		_ClearTemp();
-		CHECK_ERR( _CreatePipelineCache( device ) );
+		CHECK_ERR( _CreatePipelineCache() );
 		CHECK_ERR( subpass < rpDescr.Subpasses().Count() );
 
 		VkGraphicsPipelineCreateInfo			pipeline_info		= {};
@@ -230,7 +222,7 @@ namespace PlatformVK
 		pipeline_info.renderPass			= renderPass;
 		pipeline_info.subpass				= subpass;
 
-		VK_CHECK( vkCreateGraphicsPipelines( device, _pipelinesCache, 1, &pipeline_info, null, OUT &pipelineId ) );
+		VK_CHECK( vkCreateGraphicsPipelines( GetVkDevice(), _pipelinesCache, 1, &pipeline_info, null, OUT &pipelineId ) );
 		return true;
 	}
 	
@@ -239,16 +231,12 @@ namespace PlatformVK
 	CreatePipeline
 =================================================
 */
-	bool Vk1PipelineCache::CreatePipeline (OUT vk::VkPipeline &pipelineId,
+	bool Vk1PipelineCache::CreatePipeline (OUT VkPipeline &pipelineId,
 											const ShaderModule &shader,
-											vk::VkPipelineLayout layout)
+											VkPipelineLayout layout)
 	{
-		using namespace vk;
-		
-		VkDevice	device	= VkSystems()->Get< Vk1Device >()->GetLogicalDevice();
-		
 		_ClearTemp();
-		CHECK_ERR( _CreatePipelineCache( device ) );
+		CHECK_ERR( _CreatePipelineCache() );
 
 		VkComputePipelineCreateInfo		pipeline_info = {};
 		
@@ -261,7 +249,7 @@ namespace PlatformVK
 		pipeline_info.stage.flags	= 0;
 		pipeline_info.stage.stage	= VK_SHADER_STAGE_COMPUTE_BIT;
 
-		VK_CHECK( vkCreateComputePipelines( device, _pipelinesCache, 1, &pipeline_info, null, OUT &pipelineId ) );
+		VK_CHECK( vkCreateComputePipelines( GetVkDevice(), _pipelinesCache, 1, &pipeline_info, null, OUT &pipelineId ) );
 		return true;
 	}
 
@@ -270,13 +258,11 @@ namespace PlatformVK
 	_SetViewportState
 =================================================
 */
-	void Vk1PipelineCache::_SetViewportState (OUT vk::VkPipelineViewportStateCreateInfo &outState,
+	void Vk1PipelineCache::_SetViewportState (OUT VkPipelineViewportStateCreateInfo &outState,
 											  OUT Viewports_t &tmpViewports,
 											  OUT Scissors_t &tmpScissors,
 											  const RenderPassDescriptor::Subpass_t &subpass) const
 	{
-		using namespace vk;
-
 		tmpViewports.Resize( subpass.colors.Count() );
 		tmpScissors.Resize( subpass.colors.Count() );
 
@@ -300,13 +286,11 @@ namespace PlatformVK
 	_SetColorBlendState
 =================================================
 */
-	void Vk1PipelineCache::_SetColorBlendState (OUT vk::VkPipelineColorBlendStateCreateInfo &outState,
+	void Vk1PipelineCache::_SetColorBlendState (OUT VkPipelineColorBlendStateCreateInfo &outState,
 												OUT Attachment_t &attachment,
 												const RenderState::ColorBuffersState &inState,
 												const RenderPassDescriptor::Subpass_t &subpass) const
 	{
-		using namespace vk;
-
 		const bool	logic_op_enabled	= ( inState.logicOp != ELogicOp::None );
 		const usize	count				= Min( subpass.colors.Count(), inState.buffers.Count() );
 
@@ -317,7 +301,7 @@ namespace PlatformVK
 		outState.sType				= VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		outState.pNext				= null;
 		outState.flags				= 0;
-		outState.attachmentCount	= (vk::uint32_t) count;
+		outState.attachmentCount	= (uint32_t) count;
 		outState.pAttachments		= count ? attachment.ptr() : null;
 		outState.logicOpEnable		= logic_op_enabled;
 		outState.logicOp			= logic_op_enabled ? Vk1Enum( inState.logicOp ) : VK_LOGIC_OP_COPY;
@@ -332,13 +316,11 @@ namespace PlatformVK
 	_SetColorBlendAttachmentState
 =================================================
 */
-	void Vk1PipelineCache::_SetColorBlendAttachmentState (OUT vk::VkPipelineColorBlendAttachmentState &outState,
+	void Vk1PipelineCache::_SetColorBlendAttachmentState (OUT VkPipelineColorBlendAttachmentState &outState,
 														  const RenderState::ColorBuffer &inState,
 														  bool logicOpEnabled) const
 	{
-		using namespace vk;
-
-		outState.blendEnable			= inState.blend;
+		outState.blendEnable			= logicOpEnabled ? false : inState.blend;
 		outState.srcColorBlendFactor	= Vk1Enum( inState.blendFuncSrc.color );
 		outState.srcAlphaBlendFactor	= Vk1Enum( inState.blendFuncSrc.alpha );
 		outState.dstColorBlendFactor	= Vk1Enum( inState.blendFuncDst.color );
@@ -356,12 +338,10 @@ namespace PlatformVK
 	_SetDepthStencilState
 =================================================
 */
-	void Vk1PipelineCache::_SetDepthStencilState (OUT vk::VkPipelineDepthStencilStateCreateInfo &outState,
+	void Vk1PipelineCache::_SetDepthStencilState (OUT VkPipelineDepthStencilStateCreateInfo &outState,
 												  const RenderState::DepthBufferState &depth,
 												  const RenderState::StencilBufferState &stencil) const
 	{
-		using namespace vk;
-
 		float2	range = depth.range.Get( float2(0.0f, 1.0f) );
 
 		outState.sType					= VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -387,11 +367,9 @@ namespace PlatformVK
 	_SetStencilOpState
 =================================================
 */
-	void Vk1PipelineCache::_SetStencilOpState (OUT vk::VkStencilOpState &outState,
+	void Vk1PipelineCache::_SetStencilOpState (OUT VkStencilOpState &outState,
 											   const RenderState::StencilFaceState &inState) const
 	{
-		using namespace vk;
-
 		outState.failOp			= Vk1Enum( inState.sfail );
 		outState.passOp			= Vk1Enum( inState.dppass );
 		outState.depthFailOp	= Vk1Enum( inState.dfail );
@@ -406,11 +384,9 @@ namespace PlatformVK
 	_SetupPipelineInputAssemblyState
 =================================================
 */
-	void Vk1PipelineCache::_SetupPipelineInputAssemblyState (OUT vk::VkPipelineInputAssemblyStateCreateInfo &outState,
+	void Vk1PipelineCache::_SetupPipelineInputAssemblyState (OUT VkPipelineInputAssemblyStateCreateInfo &outState,
 															 const RenderState::InputAssemblyState &inState) const
 	{
-		using namespace vk;
-
 		outState.sType					= VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 		outState.pNext					= null;
 		outState.flags					= 0;
@@ -423,11 +399,9 @@ namespace PlatformVK
 	_SetRasterizationState
 =================================================
 */
-	void Vk1PipelineCache::_SetRasterizationState (OUT vk::VkPipelineRasterizationStateCreateInfo &outState,
+	void Vk1PipelineCache::_SetRasterizationState (OUT VkPipelineRasterizationStateCreateInfo &outState,
 													const RenderState::RasterizationState &inState) const
 	{
-		using namespace vk;
-
 		VkCullModeFlagBits	cull_mode_flags;
 		Vk1Enum( inState.cullMode, OUT cull_mode_flags );
 
@@ -451,18 +425,16 @@ namespace PlatformVK
 	_SetMultisampleState
 =================================================
 */
-	void Vk1PipelineCache::_SetMultisampleState (OUT vk::VkPipelineMultisampleStateCreateInfo &outState,
+	void Vk1PipelineCache::_SetMultisampleState (OUT VkPipelineMultisampleStateCreateInfo &outState,
 												 const RenderState::MultisampleState &inState) const
 	{
-		using namespace vk;
-
 		outState.sType					= VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		outState.pNext					= null;
 		outState.flags					= 0;
 		outState.rasterizationSamples	= Vk1Enum( inState.samples );
 		outState.sampleShadingEnable	= inState.sampleShading;
 		outState.minSampleShading		= inState.minSampleShading;
-		outState.pSampleMask			= null;
+		outState.pSampleMask			= null;						// TODO
 		outState.alphaToCoverageEnable	= inState.alphaToCoverage;
 		outState.alphaToOneEnable		= inState.alphaToOne;
 	}
@@ -472,11 +444,9 @@ namespace PlatformVK
 	_SetTessellationState
 =================================================
 */
-	void Vk1PipelineCache::_SetTessellationState (OUT vk::VkPipelineTessellationStateCreateInfo &outState,
+	void Vk1PipelineCache::_SetTessellationState (OUT VkPipelineTessellationStateCreateInfo &outState,
 												  uint patchSize) const
 	{
-		using namespace vk;
-
 		outState.sType				= VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
 		outState.pNext				= null;
 		outState.flags				= 0;
@@ -488,12 +458,10 @@ namespace PlatformVK
 	_SetDynamicState
 =================================================
 */
-	void Vk1PipelineCache::_SetDynamicState (OUT vk::VkPipelineDynamicStateCreateInfo &outState,
+	void Vk1PipelineCache::_SetDynamicState (OUT VkPipelineDynamicStateCreateInfo &outState,
 											 OUT Vk1DynamicStates &states,
 											 const EDynamicStates &inState) const
 	{
-		using namespace vk;
-
 		outState.sType	= VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 		outState.pNext	= null;
 		outState.flags	= 0;
@@ -517,12 +485,10 @@ namespace PlatformVK
 	_SetShaderStages
 =================================================
 */
-	void Vk1PipelineCache::_SetShaderStages (OUT Array< vk::VkPipelineShaderStageCreateInfo > &stages,
-											 OUT Array< vk::VkSpecializationInfo > &specialization,
+	void Vk1PipelineCache::_SetShaderStages (OUT Array< VkPipelineShaderStageCreateInfo > &stages,
+											 OUT Array< VkSpecializationInfo > &specialization,
 											 ArrayCRef< ShaderModule > shaders) const
 	{
-		using namespace vk;
-
 		FOR( i, shaders )
 		{
 			if ( shaders[i].id == VK_NULL_HANDLE )
@@ -546,13 +512,11 @@ namespace PlatformVK
 	_SetVertexInputState
 =================================================
 */
-	void Vk1PipelineCache::_SetVertexInputState (OUT vk::VkPipelineVertexInputStateCreateInfo &outState,
-												 OUT Array< vk::VkVertexInputBindingDescription > &vertexBinding,
-												 OUT Array< vk::VkVertexInputAttributeDescription > &attribDescr,
+	void Vk1PipelineCache::_SetVertexInputState (OUT VkPipelineVertexInputStateCreateInfo &outState,
+												 OUT Array< VkVertexInputBindingDescription > &vertexBinding,
+												 OUT Array< VkVertexInputAttributeDescription > &attribDescr,
 												 const VertexInputState &inState) const
 	{
-		using namespace vk;
-
 		outState.sType	= VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		outState.pNext	= null;
 		outState.flags	= 0;
@@ -565,7 +529,7 @@ namespace PlatformVK
 			descr.binding	= attr.bindingIndex;
 			descr.format	= Vk1Enum( attr.type );
 			descr.location	= attr.index;
-			descr.offset	= (vk::uint32_t) attr.offset;
+			descr.offset	= (uint32_t) attr.offset;
 
 			attribDescr.PushBack( descr );
 		}
@@ -577,10 +541,13 @@ namespace PlatformVK
 
 			descr.binding	= binding.index;
 			descr.inputRate	= Vk1Enum( binding.rate );
-			descr.stride	= (vk::uint32_t) binding.stride;
+			descr.stride	= (uint32_t) binding.stride;
 
 			vertexBinding.PushBack( descr );
 		}
+
+		// if pipeline has attributes then buffer binding must be defined
+		CHECK( attribDescr.Empty() == vertexBinding.Empty() );
 
 		outState.pVertexAttributeDescriptions		= attribDescr.RawPtr();
 		outState.vertexAttributeDescriptionCount	= (uint32_t) attribDescr.Count();

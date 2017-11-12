@@ -3,17 +3,20 @@
 #pragma once
 
 #include "Engine/Base/Common/MessageHelpers.h"
+#include "Engine/Base/Common/ModuleMessages.h"
 #include "Engine/Base/Common/Enums.h"
+#include "Engine/Base/Common/EngineSubSystems.h"
 
 namespace Engine
 {
 namespace CreateInfo
 {
-	template <typename T>	using SingleRead	= ModuleMsg::SingleRead<T>;
+	template <typename T>	using ReadOnce	= ModuleMsg::ReadOnce<T>;
 
-	using Engine::Base::ModulePtr;
-
+	using ModulePtr		= Engine::Base::ModulePtr;
+	using UntypedID_t	= Engine::ModuleMsg::UntypedID_t;
 	
+
 
 	//
 	// Thread Create Info
@@ -21,12 +24,12 @@ namespace CreateInfo
 	struct Thread
 	{
 	// types
-		using OnStartThreadFunc_t	= std::function< void (const ModulePtr &thread) >;
+		using OnStartThreadFunc_t	= std::function< void (GlobalSystemsRef) >;
 
 	// variables
 		String								name;
 		ModulePtr							manager;
-		SingleRead< OnStartThreadFunc_t >	onStarted;		// this function must be as fast as possible
+		ReadOnce< OnStartThreadFunc_t >		onStarted;		// this function must be as fast as possible
 
 	// methods
 		Thread (StringCRef name, const ModulePtr &mngr) :
@@ -37,9 +40,9 @@ namespace CreateInfo
 		
 		template <typename FN, typename ...Args>
 		Thread (StringCRef name, const ModulePtr &mngr, FN func, Args&& ...args) :
-			name( name ),
-			manager( mngr ),
-			onStarted(std::bind( func, FW<Args>(args)..., std::placeholders::_1 ))
+			name{ name },
+			manager{ mngr },
+			onStarted{std::bind( func, FW<Args>(args)..., std::placeholders::_1 )}
 		{}
 	};
 	

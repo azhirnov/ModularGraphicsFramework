@@ -344,16 +344,15 @@ namespace CompileTime
 	//
 
 	template <typename MantissaType, typename ExponentType, MantissaType Mantissa, ExponentType Exponent10 = 0>
-	struct StaticFloatPoint : public Noninstancable
+	struct StaticFloatPoint : public GXTypes::Noninstancable
 	{
 	// types
 	public:
-		typedef StaticFloatPoint< MantissaType, ExponentType, Mantissa, Exponent10 >	Self;
+		using Self			= StaticFloatPoint< MantissaType, ExponentType, Mantissa, Exponent10 >;
 
-		typedef typename NearFloat::FromType< MantissaType >	float_t;
-
-		typedef MantissaType		mantissa_t;
-		typedef ExponentType		exponent_t;
+		using Float_t		= typename NearFloat::FromType< MantissaType >;
+		using mantissa_t	= MantissaType;
+		using exponent_t	= ExponentType;
 
 		static const mantissa_t		MANTISSA	= Mantissa;
 		static const exponent_t		EXPONENT	= Exponent10;
@@ -499,17 +498,17 @@ namespace CompileTime
 			return FT(MANTISSA) * _ctime_hidden_::StaticPow<EXPONENT>( FT(10) );
 		};
 
-		static String ToString ()
+		static GXTypes::String ToString ()
 		{
-			return String().FormatI( MANTISSA ) << "*10^" << String().FormatI( EXPONENT );
+			return GXTypes::String().FormatI( MANTISSA ) << "*10^" << GXTypes::String().FormatI( EXPONENT );
 		}
 
 		
 	// methods
 	public:
-		operator float_t () const
+		operator Float_t () const
 		{
-			return ToFloat< float_t >();
+			return ToFloat< Float_t >();
 		}
 	};
 

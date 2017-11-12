@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "MapUtils.h"
+#include "Engine/STL/Containers/MapUtils.h"
+#include "Engine/STL/Containers/IndexedArray.h"
 
 namespace GX_STL
 {
@@ -15,29 +16,30 @@ namespace _types_hidden_
 	// Base Map (Map or MultiMap)
 	//
 
-	template <	typename K,
+	template <	template <typename T1, typename S1, typename MC1> class Container,
+				typename K,
 				typename T,
 				bool IsUnique,
 				typename S,
 				typename MC
 			 >
-	struct BaseMap : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, MC >	// TODO: copy qualifiers from _MapUtils_t
+	struct BaseMap : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, Container<Pair<K,T>, S, MC> >
 	{
 	// types
 	public:
-		typedef BaseMap< K, T, IsUnique, S, MC >	Self;
+		using Self					= BaseMap< Container, K, T, IsUnique, S, MC >;
 
-		typedef K									key_t;
-		typedef T									value_t;
+		using Key_t					= K;
+		using Value_t				= T;
 
-		typedef Pair< K, T >						pair_t;
-		typedef Pair< const K, T>					const_pair_t;
+		using pair_t				= Pair< Key_t, Value_t >;
+		using const_pair_t			= Pair< const Key_t, Value_t >;
 		
-		typedef Ptr< const_pair_t >					iterator;
-		typedef Ptr< const const_pair_t >			const_iterator;
+		using iterator				= Ptr< const_pair_t >;
+		using const_iterator		= Ptr< const const_pair_t >;
 		
-		typedef ArrayRef< const_pair_t >			values_range_t;
-		typedef ArrayCRef< const_pair_t >			const_values_range_t;
+		using values_range_t		= ArrayRef< const_pair_t >;
+		using const_values_range_t	= ArrayCRef< const_pair_t >;
 
 	private:
 		template <typename Key>
@@ -56,7 +58,7 @@ namespace _types_hidden_
 			bool operator >  (const pair_t &pair) const		{ return GXMath::All( _key > pair.first ); }
 		};
 
-		typedef _types_hidden_::MapUtils< Array< pair_t, S, MC >, key_t, _KeySearchCmp, IsUnique >	_MapUtils_t;
+		using _MapUtils_t	= _types_hidden_::MapUtils< Container< pair_t, S, MC >, Key_t, _KeySearchCmp, IsUnique >;
 
 
 	// variables
@@ -82,7 +84,7 @@ namespace _types_hidden_
 
 		operator	ArrayCRef< pair_t > () const
 		{
-			return ArrayCRef< _MapUtils_t::value_t >( _memory );
+			return ArrayCRef< _MapUtils_t::Value_t >( _memory );
 			//return const_values_range_t( _memory.ptr(), _memory.ptr() + _memory.Count() );
 		}
 
@@ -98,18 +100,18 @@ namespace _types_hidden_
 		}
 		
 
-		const_pair_t &	operator () (const key_t &key)
+		Value_t &	operator () (const Key_t &key)
 		{
-			usize	i;
-			FindIndex( key, i );
-			return (*this)[i];
+			usize	i = 0;
+			FindIndex( key, OUT i );
+			return (*this)[i].second;
 		}
 		
-		const_pair_t const&	operator () (const key_t &key) const
+		Value_t const&	operator () (const Key_t &key) const
 		{
-			usize	i;
-			FindIndex( key, i );
-			return (*this)[i];
+			usize	i = 0;
+			FindIndex( key, OUT i );
+			return (*this)[i].second;
 		}
 
 
@@ -160,12 +162,12 @@ namespace _types_hidden_
 		
 		// if IsUnique == true
 		// if Map contains same value, then the old value will be replaced
-		usize Add (const key_t &key, const value_t &value)
+		usize Add (const Key_t &key, const Value_t &value)
 		{
 			return _memory.AddOrReplace( RVREF( pair_t( key, value ) ) );
 		}
 		
-		usize Add (key_t &&key, value_t &&value)
+		usize Add (Key_t &&key, Value_t &&value)
 		{
 			return _memory.AddOrReplace( RVREF( pair_t( RVREF(key), RVREF(value) ) ) );
 		}
@@ -183,12 +185,12 @@ namespace _types_hidden_
 
 		// if IsUnique == true
 		// if Map contains same value, then the old value will remains
-		usize AddOrSkip (const key_t &key, const value_t &value)
+		usize AddOrSkip (const Key_t &key, const Value_t &value)
 		{
 			return _memory.AddOrSkip( RVREF( pair_t( key, value ) ) );
 		}
 		
-		usize AddOrSkip (key_t &&key, value_t &&value)
+		usize AddOrSkip (Key_t &&key, Value_t &&value)
 		{
 			return _memory.AddOrSkip( RVREF( pair_t( RVREF(key), RVREF(value) ) ) );
 		}
@@ -219,27 +221,27 @@ namespace _types_hidden_
 		}
 
 
-		/*usize ChangeKey (const key_t &key, usize idx)
+		/*usize ChangeKey (const Key_t &key, usize idx)
 		{
 			const const_pair_t	tmp = (*this)[ idx ];
 
-			EraseFromIndex( idx );
+			EraseByIndex( idx );
 
 			return Add( key, tmp.second );
 		}
 
-		usize ChangeKey (const key_t &key, const_iterator iter)
+		usize ChangeKey (const Key_t &key, const_iterator iter)
 		{
 			return ChangeKey( key, GetIndex( iter ) );
 		}*/
 
 
-		bool FindIndex (const key_t &key, OUT usize &idx) const
+		bool FindIndex (const Key_t &key, OUT usize &idx) const
 		{
 			return FindFirstIndex( key, OUT idx );
 		}
 
-		bool FindFirstIndex (const key_t &key, OUT usize &idx) const
+		bool FindFirstIndex (const Key_t &key, OUT usize &idx) const
 		{
 			return _memory.FindFirstIndex( key, OUT idx );
 		}
@@ -250,14 +252,14 @@ namespace _types_hidden_
 		}
 
 
-		bool IsExist (const key_t &key) const
+		bool IsExist (const Key_t &key) const
 		{
 			usize idx = 0;
 			return FindIndex( key, idx );
 		}
 
 		
-		bool Find (const key_t &key, OUT iterator &result)
+		bool Find (const Key_t &key, OUT iterator &result)
 		{
 			usize	idx = -1;
 
@@ -268,7 +270,7 @@ namespace _types_hidden_
 			return true;
 		}
 
-		bool Find (const key_t &key, OUT const_iterator &result) const
+		bool Find (const Key_t &key, OUT const_iterator &result) const
 		{
 			usize	idx = -1;
 
@@ -280,7 +282,7 @@ namespace _types_hidden_
 		}
 
 
-		bool FindAll (const key_t &key, OUT values_range_t &result)
+		bool FindAll (const Key_t &key, OUT values_range_t &result)
 		{
 			usize	first;
 			usize	last;
@@ -294,7 +296,7 @@ namespace _types_hidden_
 			return true;
 		}
 
-		bool FindAll (const key_t &key, OUT const_values_range_t &result) const
+		bool FindAll (const Key_t &key, OUT const_values_range_t &result) const
 		{
 			usize	first;
 			usize	last;
@@ -320,11 +322,11 @@ namespace _types_hidden_
 		}
 
 
-		void EraseFromIter (const_iterator iter)	{ return EraseFromIndex( _memory.GetIndex( (pair_t *) iter.ptr() ) ); }
-		void EraseFromIter (iterator iter)			{ return EraseFromIndex( _memory.GetIndex( (pair_t *) iter.ptr() ) ); }
+		void EraseByIter (const_iterator iter)		{ return EraseByIndex( _memory.GetIndex( (pair_t *) iter.ptr() ) ); }
+		void EraseByIter (iterator iter)			{ return EraseByIndex( _memory.GetIndex( (pair_t *) iter.ptr() ) ); }
 
-		bool Erase (const key_t &key)				{ return _memory.Erase( key ); }
-		void EraseFromIndex (usize index)			{ _memory.EraseFromIndex( index ); }
+		bool Erase (const Key_t &key)				{ return _memory.Erase( key ); }
+		void EraseByIndex (usize index)				{ _memory.EraseByIndex( index ); }
 		void Free ()								{ _memory.Free(); }
 		void Clear ()								{ _memory.Clear(); }
 		void Resize (usize size)					{ _memory.Resize( size ); }
@@ -430,7 +432,7 @@ namespace _types_hidden_
 				typename S = typename AutoDetectCopyStrategy< Pair<K, T> >::type,
 				typename MC = MemoryContainer< Pair<K, T> >
 			 >
-	using Map = _types_hidden_::BaseMap< K, T, true, S, MC >;
+	using Map = _types_hidden_::BaseMap< Array, K, T, true, S, MC >;
 	
 
 	template <	typename K,
@@ -438,32 +440,46 @@ namespace _types_hidden_
 				typename S = typename AutoDetectCopyStrategy< Pair<K, T> >::type,
 				typename MC = MemoryContainer< Pair<K, T> >
 			 >
-	using MultiMap = _types_hidden_::BaseMap< K, T, false, S, MC >;
+	using IndexedMap = _types_hidden_::BaseMap< IndexedArray, K, T, true, S, MC >;
+
+
+	template <	typename K,
+				typename T,
+				typename S = typename AutoDetectCopyStrategy< Pair<K, T> >::type,
+				typename MC = MemoryContainer< Pair<K, T> >
+			 >
+	using MultiMap = _types_hidden_::BaseMap< Array, K, T, false, S, MC >;
 	
 
 	template <typename K, typename T, usize Size>
-	using FixedSizeMap = _types_hidden_::BaseMap< K, T, true,
-								typename AutoDetectCopyStrategy< Pair<K, T> >::type,
-								StaticMemoryContainer< Pair<K, T>, Size > >;
+	using FixedSizeMap = _types_hidden_::BaseMap< Array, K, T, true,
+								typename AutoDetectCopyStrategy< Pair<K,T> >::type,
+								StaticMemoryContainer< Pair<K,T>, Size > >;
 	
 
 	template <typename K, typename T, usize Size>
-	using FixedSizeMultiMap = _types_hidden_::BaseMap< K, T, false,
+	using FixedSizeMultiMap = _types_hidden_::BaseMap< Array, K, T, false,
 									typename AutoDetectCopyStrategy< Pair<K, T> >::type,
 									StaticMemoryContainer< Pair<K, T>, Size > >;
 
 	
-	template <typename K, typename T, bool IsUnique, typename S, typename MC>
-	struct Hash< _types_hidden_::BaseMap< K, T, IsUnique, S, MC > > :
+	template <	template <typename, typename, typename> class Container,
+				typename K,
+				typename T,
+				bool IsUnique,
+				typename S,
+				typename MC
+			 >
+	struct Hash< _types_hidden_::BaseMap< Container, K, T, IsUnique, S, MC > > :
 		private Hash< ArrayCRef< Pair<const K, T> > >
 	{
-		typedef _types_hidden_::BaseMap< K, T, IsUnique, S, MC >	key_t;
-		typedef ArrayCRef< Pair<const K, T> >						base_t;
-		typedef typename base_t::result_t							result_t;
+		typedef _types_hidden_::BaseMap< Container, K, T, IsUnique, S, MC >		Key_t;
+		typedef ArrayCRef< Pair<const K, T> >									Base_t;
+		typedef typename Base_t::Result_t										Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return base_t::operator ()( x );
+			return Base_t::operator ()( x );
 		}
 	};
 

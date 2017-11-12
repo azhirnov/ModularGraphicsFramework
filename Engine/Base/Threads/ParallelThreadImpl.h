@@ -33,8 +33,8 @@ namespace Base
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -47,7 +47,7 @@ namespace Base
 
 	// methods
 	public:
-		ParallelThreadImpl (const GlobalSystemsRef gs, const CreateInfo::Thread &);
+		ParallelThreadImpl (GlobalSystemsRef gs, const CreateInfo::Thread &);
 		~ParallelThreadImpl ();
 
 
@@ -62,7 +62,9 @@ namespace Base
 		void _Loop ();
 		void _OnExit ();
 		void _Wait ();
+		
 		void _SyncUpdate ();
+		void _NoWait ();
 	};
 
 

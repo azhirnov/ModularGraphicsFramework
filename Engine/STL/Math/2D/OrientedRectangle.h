@@ -21,39 +21,39 @@ namespace GXMath
 	// types
 	public:
 		typedef OrientedRectangle<T>	Self;
-		typedef T						value_t;
-		typedef Vec<T,2>				vec2_t;
-		typedef Line2<T>				line_t;
+		typedef T						Value_t;
+		typedef Vec<T,2>				Vec2_t;
+		typedef Line2<T>				Line_t;
 
 
 	// variables
 	private:
-		vec2_t						_center;
-		vec2_t						_extent;
-		StaticArray< vec2_t, 2 >	_axis;
+		Vec2_t						_center;
+		Vec2_t						_extent;
+		StaticArray< Vec2_t, 2 >	_axis;
 
 
 	// methods
 	public:
 		OrientedRectangle (GX_DEFCTOR) {}
 
-		OrientedRectangle (const vec2_t &leftBottom, const vec2_t &leftTop,
-							const vec2_t &rightTop, const vec2_t &rightBottom);
+		OrientedRectangle (const Vec2_t &leftBottom, const Vec2_t &leftTop,
+							const Vec2_t &rightTop, const Vec2_t &rightBottom);
 
-		OrientedRectangle (ArrayCRef<vec2_t> points);
+		OrientedRectangle (ArrayCRef<Vec2_t> points);
 
 		Rectangle<T>	GetAxisAlignedRectangle () const;
 		
-		vec2_t const&	Center () const			{ return _center; }
-		vec2_t const&	Extents () const		{ return _extent; }
+		Vec2_t const&	Center () const			{ return _center; }
+		Vec2_t const&	Extents () const		{ return _extent; }
 
-		vec2_t const&	Axis1 () const			{ return _axis[0]; }
-		vec2_t const&	Axis2 () const			{ return _axis[1]; }
+		Vec2_t const&	Axis1 () const			{ return _axis[0]; }
+		Vec2_t const&	Axis2 () const			{ return _axis[1]; }
 
 		T				MaxRadius () const;		// radius of circumscribed circle
 		T				MinRadius () const;		// radius of inscribed circle
 
-		vec2_t			Corner (usize index) const;
+		Vec2_t			Corner (usize index) const;
 
 		bool Intersects (const Self &other) const;
 
@@ -66,14 +66,14 @@ namespace GXMath
 
 	private:
 		template <typename B>
-		static bool _ApprGaussian2Fit (ArrayCRef<vec2_t> points, OUT OrientedRectangle<B> &box);
+		static bool _ApprGaussian2Fit (ArrayCRef<Vec2_t> points, OUT OrientedRectangle<B> &box);
 		
 		template <typename B>
 		static void _SymmetricEigensolver2x2 (B a00, B a01, B a11, int sortType,
 											  OUT Vec<B,2> &eval, OUT StaticArray<Vec<B,2>, 2> &evec);
 		
 		template <typename B>
-		static void _FromPoints (ArrayCRef<vec2_t> points, OUT Self &box);
+		static void _FromPoints (ArrayCRef<Vec2_t> points, OUT Self &box);
 	};
 	
 	
@@ -85,13 +85,13 @@ namespace GXMath
 */
 	template <typename T>
 	inline OrientedRectangle<T>::OrientedRectangle (
-						const vec2_t &leftBottom, const vec2_t &leftTop,
-						const vec2_t &rightTop, const vec2_t &rightBottom)
+						const Vec2_t &leftBottom, const Vec2_t &leftTop,
+						const Vec2_t &rightTop, const Vec2_t &rightBottom)
 	{
 		_center = (leftBottom + leftTop + rightTop + rightBottom) * T(0.25);
 
-		const vec2_t	x_vec = MiddleValue( rightTop, rightBottom ) - MiddleValue( leftBottom, leftTop );
-		const vec2_t	y_vec = MiddleValue( leftTop, rightTop ) - MiddleValue( leftBottom, rightBottom );
+		const Vec2_t	x_vec = MiddleValue( rightTop, rightBottom ) - MiddleValue( leftBottom, leftTop );
+		const Vec2_t	y_vec = MiddleValue( leftTop, rightTop ) - MiddleValue( leftBottom, rightBottom );
 		const T			x_len = xVec.Length();
 		const T			y_len = yVec.Length();
 
@@ -99,9 +99,9 @@ namespace GXMath
 		_axis[1] = y_vec.Normalized();
 
 		if (x_len > y_len)
-			axis[1] = line_t( axis[0] ).LeftNormal();
+			axis[1] = Line_t( axis[0] ).LeftNormal();
 		else
-			axis[0] = line_t( axis[1] ).RightNormal();
+			axis[0] = Line_t( axis[1] ).RightNormal();
 		
 		_extent.x = x_len * T(0.5);
 		_extent.y = y_len * T(0.5);
@@ -113,7 +113,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline OrientedRectangle<T>::OrientedRectangle (ArrayCRef<vec2_t> points)
+	inline OrientedRectangle<T>::OrientedRectangle (ArrayCRef<Vec2_t> points)
 	{
 		// float to double
 		typedef typename CompileTime::NearFloat::FromSize<
@@ -177,13 +177,13 @@ namespace GXMath
 	template <typename T>
 	inline bool  OrientedRectangle<T>::Intersects (const Self &other) const
 	{
-		ArrayCRef<vec2_t>	aa0 = this->_axis;
-		ArrayCRef<vec2_t>	aa1 = other._axis;
+		ArrayCRef<Vec2_t>	aa0 = this->_axis;
+		ArrayCRef<Vec2_t>	aa1 = other._axis;
 
-		vec2_t const&	E0 = this->_extent;
-		vec2_t const&	E1 = other._extent;
+		Vec2_t const&	E0 = this->_extent;
+		Vec2_t const&	E1 = other._extent;
 
-		vec2_t const	D  = other._center - this->_center;
+		Vec2_t const	D  = other._center - this->_center;
 
 		T	abs_aa0_d_aa1[2][2];
 		T	r_sum;
@@ -257,7 +257,7 @@ namespace GXMath
 */
 	template <typename T>
 	template <typename B>
-	inline void OrientedRectangle<T>::_FromPoints (ArrayCRef<vec2_t> points, OUT Self &result)
+	inline void OrientedRectangle<T>::_FromPoints (ArrayCRef<Vec2_t> points, OUT Self &result)
 	{
 		OrientedRectangle<B> box;
 
@@ -304,7 +304,7 @@ namespace GXMath
 */
 	template <typename T>
 	template <typename B>
-	inline bool OrientedRectangle<T>::_ApprGaussian2Fit (ArrayCRef<vec2_t> points, OUT OrientedRectangle<B> &box)
+	inline bool OrientedRectangle<T>::_ApprGaussian2Fit (ArrayCRef<Vec2_t> points, OUT OrientedRectangle<B> &box)
 	{
 		if ( points.Count() >= 2 )
 		{
@@ -425,18 +425,18 @@ namespace GXTypes
 	
 	template <typename T>
 	struct Hash< GXMath::OrientedRectangle<T> > :
-		private Hash< typename GXMath::OrientedRectangle<T>::vec_t >
+		private Hash< typename GXMath::OrientedRectangle<T>::Vec_t >
 	{
-		typedef GXMath::OrientedRectangle<T>							key_t;
-		typedef Hash< typename GXMath::OrientedRectangle<T>::vec_t >	base_t;
-		typedef typename base_t::result_t								result_t;
+		typedef GXMath::OrientedRectangle<T>							Key_t;
+		typedef Hash< typename GXMath::OrientedRectangle<T>::Vec_t >	Base_t;
+		typedef typename Base_t::Result_t								Result_t;
 
-		result_t operator () (const key_t &x) const noexcept
+		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return	base_t::operator ()( x.Center() )  +
-					base_t::operator ()( x.Extents() ) +
-					base_t::operator ()( x.Axis1() )   +
-					base_t::operator ()( x.Axis2() );
+			return	Base_t::operator ()( x.Center() )  +
+					Base_t::operator ()( x.Extents() ) +
+					Base_t::operator ()( x.Axis1() )   +
+					Base_t::operator ()( x.Axis2() );
 		}
 	};
 

@@ -12,16 +12,16 @@ namespace Platforms
 	struct EBufferUsage
 	{
 		enum type : uint
-		{
-			TransferSrc = 0,	// in shader: read-only				// CopyReadBuffer in GL
-			TransferDst,		// in shader: write-only			// CopyWriteBuffer in GL
-			UniformTexel,		// in shader: read-only				// TextureBuffer in GL
-			StorageTexel,		// in shader: read-write
-			Uniform,			// in shader: read-only, fast		// UniformBuffer in GL
-			Storage,			// in shader: read-write			// ShaderStorageBuffer in GL
-			Index,				// in shader: read-only				// ElementArrayBuffer in GL
-			Vertex,				// in shader: read-only				// ArrayBuffer in GL
-			Indirect,			// in shader: read-only				// DrawIndirect or DispatchIndirect in GL
+		{						//	cpu read  |  cpu write  |  shader read  |  shader write  |
+			TransferSrc = 0,	//            |             |      no       |      no        |
+			TransferDst,		//            |             |      no       |      no        |  
+			UniformTexel,		//            |             |      yes      |      no        |
+			StorageTexel,		//            |             |      yes      |      no        |
+			Uniform,			//            |             |      fast     |      no        |
+			Storage,			//            |             |      yes      |      yes       |
+			Index,				//            |             |      no       |      no        |
+			Vertex,				//            |             |      no       |      no        |
+			Indirect,			//            |             |      no       |      no        |
 
 			_Count,
 			Unknown		= ~0u,

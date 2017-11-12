@@ -24,8 +24,8 @@ namespace GXMath
 
 
 #	define _VEC_OPERATOR( _op_ ) \
-		template <typename T> Self&		operator _op_##= (const T& right)		{ Set( vec3_t(*this) _op_ right );  return *this; } \
-		template <typename T> Self		operator _op_  (const T& right) const	{ return Self( vec3_t(*this) _op_ right ); }
+		template <typename T> Self&		operator _op_##= (const T& right)		{ Set( Vec3_t(*this) _op_ right );  return *this; } \
+		template <typename T> Self		operator _op_  (const T& right) const	{ return Self( Vec3_t(*this) _op_ right ); }
 
 
 
@@ -39,8 +39,8 @@ namespace GXMath
 	// types
 	public:
 		typedef TRGB9_E5<FT>		Self;
-		typedef Vec<FT,3>			vec3_t;
-		typedef FT					float_t;
+		typedef Vec<FT,3>			Vec3_t;
+		typedef FT					Float_t;
 
 		struct TBits
 		{
@@ -67,25 +67,25 @@ namespace GXMath
 		template <typename RT, typename GT, typename BT>
 		TRGB9_E5 (const RT& R, const GT& G, const BT& B)
 		{
-			Set( float_t(R), float_t(G), float_t(B) );
+			Set( Float_t(R), Float_t(G), Float_t(B) );
 		}
 
 		template <typename VT>
 		TRGB9_E5 (const VT& vec)
 		{
-			Set( vec3_t( vec ) );
+			Set( Vec3_t( vec ) );
 		}
 		
 
 		// set/get
-		void  Set (const vec3_t &v);
-		void  Set (float_t R, float_t G, float_t B);
-		void  Get (OUT float_t& R, OUT float_t& G, OUT float_t& B) const;
-		void  Get (OUT vec3_t &v) const;
+		void  Set (const Vec3_t &v);
+		void  Set (Float_t R, Float_t G, Float_t B);
+		void  Get (OUT Float_t& R, OUT Float_t& G, OUT Float_t& B) const;
+		void  Get (OUT Vec3_t &v) const;
 
 
 		// type cast
-		operator const vec3_t () const		{ vec3_t  ret;  Get(ret);  return ret; }
+		operator const Vec3_t () const		{ Vec3_t  ret;  Get(ret);  return ret; }
 
 
 		// unary operators
@@ -117,7 +117,7 @@ namespace GXMath
 	template <typename FT>
 	inline TRGB9_E5<FT>  TRGB9_E5<FT>::operator - () const
 	{
-		vec3_t	v;
+		Vec3_t	v;
 		Get( v );
 		return Self( -v );
 	}
@@ -133,7 +133,7 @@ namespace GXMath
 
 
 	template <typename FT>
-	inline void  TRGB9_E5<FT>::Set (const vec3_t &v)
+	inline void  TRGB9_E5<FT>::Set (const Vec3_t &v)
 	{
 		enum {
 			N		= 9,
@@ -143,15 +143,15 @@ namespace GXMath
 
 		static const uint	s_uSharedExpMax = ( (1<<N)-1 ) * ( 1<<(E_MAX-B-N) );
 
-		ASSERT( Any( v < vec3_t(0) ) and "only unsigned value supported" );
+		ASSERT( Any( v < Vec3_t(0) ) and "only unsigned value supported" );
 
-		vec3_t		v_color = Clamp( v, vec3_t(0), vec3_t( (FT)s_uSharedExpMax ) );
+		Vec3_t		v_color = Clamp( v, Vec3_t(0), Vec3_t( (FT)s_uSharedExpMax ) );
 
-		float_t		f_max_c	= v_color.Max();
+		Float_t		f_max_c	= v_color.Max();
 		int			i_exp_p	= Max( -B-1, (int)Log2( f_max_c ) ) + B + 1;
-		float_t		f_max_s	= f_max_c / _math_hidden_::_Pow2< float_t, int >( i_exp_p - B - N ) + FT(0.5);
-		int			i_exp_s	= i_exp_p + not ( f_max_s < float_t(1<<N) );
-		float_t		f_2e	= _math_hidden_::_Pow2< float_t, int >( i_exp_s - B - N );
+		Float_t		f_max_s	= f_max_c / _math_hidden_::_Pow2< Float_t, int >( i_exp_p - B - N ) + FT(0.5);
+		int			i_exp_s	= i_exp_p + not ( f_max_s < Float_t(1<<N) );
+		Float_t		f_2e	= _math_hidden_::_Pow2< Float_t, int >( i_exp_s - B - N );
 
 		v_color = v_color / f_2e + 0.5f;
 
@@ -163,14 +163,14 @@ namespace GXMath
 
 	
 	template <typename FT>
-	inline void  TRGB9_E5<FT>::Set (float_t R, float_t G, float_t B)
+	inline void  TRGB9_E5<FT>::Set (Float_t R, Float_t G, Float_t B)
 	{
-		Set( vec3_t( R, G, B ) );
+		Set( Vec3_t( R, G, B ) );
 	}
 
 	
 	template <typename FT>
-	inline void  TRGB9_E5<FT>::Get (float_t& Red, float_t& Green, float_t& Blue) const
+	inline void  TRGB9_E5<FT>::Get (Float_t& Red, Float_t& Green, Float_t& Blue) const
 	{
 		enum {
 			N		= 9,
@@ -178,16 +178,16 @@ namespace GXMath
 			E_MAX	= 31,
 		};
 
-		float_t	f_exp	= _math_hidden_::_Pow2< float_t, int >( _bits.e - B - N );
+		Float_t	f_exp	= _math_hidden_::_Pow2< Float_t, int >( _bits.e - B - N );
 
-		Red   = float_t( _bits.r_m ) * f_exp;
-		Green = float_t( _bits.g_m ) * f_exp;
-		Blue  = float_t( _bits.b_m ) * f_exp;
+		Red   = Float_t( _bits.r_m ) * f_exp;
+		Green = Float_t( _bits.g_m ) * f_exp;
+		Blue  = Float_t( _bits.b_m ) * f_exp;
 	}
 
 	
 	template <typename FT>
-	inline void  TRGB9_E5<FT>::Get (vec3_t &v) const
+	inline void  TRGB9_E5<FT>::Get (Vec3_t &v) const
 	{
 		Get( v.x, v.y, v.z );
 	}
@@ -202,7 +202,7 @@ namespace GXTypes
 {
 	
 	template <typename T>
-	struct Hash< GXMath::TRGB9_E5<T> > : public Hash< typename GXMath::TRGB9_E5<T>::vec3_t >
+	struct Hash< GXMath::TRGB9_E5<T> > : public Hash< typename GXMath::TRGB9_E5<T>::Vec3_t >
 	{};
 
 }	// GXTypes

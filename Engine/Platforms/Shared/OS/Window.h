@@ -22,6 +22,7 @@ namespace CreateInfo
 			{
 				Fullscreen = 0,
 				Resizable,
+				Centered,
 				_Count,
 			};
 
@@ -31,7 +32,7 @@ namespace CreateInfo
 		enum class EVisibility
 		{
 			VisibleFocused,		// visible and focused
-			VisibleUnfocused,	// may be visible
+			VisibleUnfocused,	// may be overlapped
 			Invisible,			// minimized
 		};
 
@@ -91,16 +92,20 @@ namespace Platforms
 }	// Platforms
 
 
-namespace ModuleMsg
+namespace OSMsg
 {
 
-	// platform-dependent
-	struct WindowCreated;
-	struct WindowGetHandle;
-	struct WindowRawMessage;
+	//
+	// Window events
+	//
+	struct WindowCreated
+	{};
 
-	struct WindowBeforeDestroy {};
-	struct WindowAfterDestroy {};
+	struct WindowBeforeDestroy
+	{};
+
+	struct WindowAfterDestroy
+	{};
 
 	
 	//
@@ -155,5 +160,5 @@ namespace ModuleMsg
 	};
 
 
-}	// ModuleMsg
+}	// OSMsg
 }	// Engine

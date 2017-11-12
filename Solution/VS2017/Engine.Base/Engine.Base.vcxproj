@@ -29,10 +29,12 @@
     <ClInclude Include="..\..\..\Engine\Base\Common\MessageHelpers.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\ModuleMessages.h" />
     <ClInclude Include="..\..\..\Engine\Base\Common\ThreadID.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Common\TypeIdList.h" />
     <ClInclude Include="..\..\..\Engine\Base\Engine.Base.h" />
     <ClInclude Include="..\..\..\Engine\Base\Files\FileManager.h" />
     <ClInclude Include="..\..\..\Engine\Base\Main\MainSystem.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\IDs.h" />
+    <ClInclude Include="..\..\..\Engine\Base\Modules\Module.inl.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\ModuleAsyncTasks.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\ModulesFactory.h" />
     <ClInclude Include="..\..\..\Engine\Base\Modules\Module.h" />
@@ -141,12 +143,13 @@
       <CompileAsManaged>false</CompileAsManaged>
       <TreatWarningAsError>false</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>__GX_DEBUG__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__GX_DEBUG__;__GX_ENGINE_BASE_BUILD__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -163,12 +166,13 @@
       <CompileAsManaged>false</CompileAsManaged>
       <TreatWarningAsError>false</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>__GX_DEBUG__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__GX_DEBUG__;__GX_ENGINE_BASE_BUILD__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -178,11 +182,11 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>__GX_NO_EXCEPTIONS__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__GX_NO_EXCEPTIONS__;__GX_ENGINE_BASE_BUILD__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
       <CompileAsManaged>false</CompileAsManaged>
@@ -199,7 +203,8 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>
@@ -211,11 +216,11 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>__GX_NO_EXCEPTIONS__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__GX_NO_EXCEPTIONS__;__GX_ENGINE_BASE_BUILD__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
       <CompileAsManaged>false</CompileAsManaged>
@@ -232,7 +237,8 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>

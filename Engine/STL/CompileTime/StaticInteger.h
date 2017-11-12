@@ -106,10 +106,10 @@ namespace CompileTime
 	{
 	// types
 	public:
-		typedef StaticInteger< T, Value >		Self;
-		typedef T								value_t;
-		typedef typename NearInt::FromType<T>	signed_t;
-		typedef typename NearUInt::FromType<T>	unsigned_t;
+		using Self			= StaticInteger< T, Value >;
+		using Value_t		= T;
+		using Signed_t		= typename NearInt::FromType<T>;
+		using Unsigned_t	= typename NearUInt::FromType<T>;
 		
 		static const T		value	= Value;
 

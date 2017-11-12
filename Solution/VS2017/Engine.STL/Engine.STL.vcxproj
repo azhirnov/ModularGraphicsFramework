@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\ArrayUtils.h" />
-    <ClInclude Include="..\..\..\Engine\STL\Algorithms\Comparison.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Algorithms\Comparators.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\Crypt\SimpleCrypt.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\Enum.h" />
     <ClInclude Include="..\..\..\Engine\STL\Algorithms\FileAddress.h" />
@@ -42,6 +42,9 @@
     <ClInclude Include="..\..\..\Engine\STL\Common\Uninitialized.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\CompileTimeChecks.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\CompileTimeDebug.h" />
+    <ClInclude Include="..\..\..\Engine\STL\CompileTime\CompileTimeTypes.h" />
+    <ClInclude Include="..\..\..\Engine\STL\CompileTime\FunctionInfo.h" />
+    <ClInclude Include="..\..\..\Engine\STL\CompileTime\Map.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\Sequence.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\Runtime\VirtualTypeList.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\StaticFractional.h" />
@@ -59,12 +62,16 @@
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\TypeListUtils.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\TypeQualifier.h" />
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\TypeTraits.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Containers\Adaptors.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Containers\AppendableAdaptor.h" />
     <ClInclude Include="..\..\..\Engine\STL\Containers\Array.h" />
     <ClInclude Include="..\..\..\Engine\STL\Containers\ArrayRef.h" />
     <ClInclude Include="..\..\..\Engine\STL\Containers\CircularQueue.h" />
     <ClInclude Include="..\..\..\Engine\STL\Containers\CopyStrategy.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Containers\ErasableAdaptor.h" />
     <ClInclude Include="..\..\..\Engine\STL\Containers\HashMap.h" />
     <ClInclude Include="..\..\..\Engine\STL\Containers\HashSet.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Containers\IndexedArray.h" />
     <ClInclude Include="..\..\..\Engine\STL\Containers\Map.h" />
     <ClInclude Include="..\..\..\Engine\STL\Containers\MapUtils.h" />
     <ClInclude Include="..\..\..\Engine\STL\Containers\Pair.h" />
@@ -95,16 +102,12 @@
     <ClInclude Include="..\..\..\Engine\STL\Dimensions\PhysicsValueVecI.h" />
     <ClInclude Include="..\..\..\Engine\STL\Dimensions\PowerOfTwoValue.h" />
     <ClInclude Include="..\..\..\Engine\STL\Dimensions\RadiansAndDegrees.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Experimental\BoolArg.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\FastMath.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\Fixed.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\Float.h" />
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\FunctionInfo.h" />
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\ScopeSetter.h" />
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\Signature.h" />
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\StaticVariant.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\UFloat.h" />
     <ClInclude Include="..\..\..\Engine\STL\Experimental\Unroll.h" />
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\VariantInterface.h" />
     <ClInclude Include="..\..\..\Engine\STL\Files\BaseFile.h" />
     <ClInclude Include="..\..\..\Engine\STL\Files\CryptFile.h" />
     <ClInclude Include="..\..\..\Engine\STL\Files\HDDFile.h" />
@@ -177,6 +180,7 @@
     <ClInclude Include="..\..\..\Engine\STL\OS\Base\Common.h" />
     <ClInclude Include="..\..\..\Engine\STL\OS\Base\ConditionVariableEmulation.h" />
     <ClInclude Include="..\..\..\Engine\STL\OS\Base\Date.h" />
+    <ClInclude Include="..\..\..\Engine\STL\OS\Base\Endianes.h" />
     <ClInclude Include="..\..\..\Engine\STL\OS\Base\ReadWriteSyncEmulation.h" />
     <ClInclude Include="..\..\..\Engine\STL\OS\Base\SemaphoreEmulator.h" />
     <ClInclude Include="..\..\..\Engine\STL\OS\Base\SyncEventEmulation.h" />
@@ -236,11 +240,13 @@
     <ClInclude Include="..\..\..\Engine\STL\Types\Ptr.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\RefCountedObject.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\ReferenceCounter.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Types\ScopeSetter.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\StaticLimit.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\StaticRefCountedObject.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\Union.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\UniquePtr.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantCRef.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Types\VariantInterface.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantRef.h" />
     <ClInclude Include="..\..\..\Engine\STL\Engine.STL.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantRefIndexedContainer.h" />
@@ -350,12 +356,13 @@
       <CompileAsManaged>false</CompileAsManaged>
       <TreatWarningAsError>false</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>__GX_DEBUG__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__GX_DEBUG__;__GX_STL_BUILD__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -378,12 +385,13 @@
       <CompileAsManaged>false</CompileAsManaged>
       <TreatWarningAsError>false</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>__GX_DEBUG__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__GX_DEBUG__;__GX_STL_BUILD__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <FloatingPointExceptions>true</FloatingPointExceptions>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -399,11 +407,11 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>__GX_NO_EXCEPTIONS__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__GX_NO_EXCEPTIONS__;__GX_STL_BUILD__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAsManaged>false</CompileAsManaged>
       <TreatWarningAsError>false</TreatWarningAsError>
@@ -421,7 +429,8 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <CreateHotpatchableImage>true</CreateHotpatchableImage>
       <ControlFlowGuard>false</ControlFlowGuard>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -437,11 +446,11 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>__GX_NO_EXCEPTIONS__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__GX_NO_EXCEPTIONS__;__GX_STL_BUILD__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAsManaged>false</CompileAsManaged>
       <TreatWarningAsError>false</TreatWarningAsError>
@@ -459,7 +468,8 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <CreateHotpatchableImage>true</CreateHotpatchableImage>
       <ControlFlowGuard>false</ControlFlowGuard>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

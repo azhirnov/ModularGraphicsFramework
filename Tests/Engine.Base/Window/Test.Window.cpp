@@ -7,23 +7,26 @@ class WindowApp final : public StaticRefCountedObject
 {
 // variables
 private:
-	ModulePtr	taskMngr;
-	String		name;
-	bool		looping		= true;
+	CreateInfo::Window	wndDescr;
+	ModulePtr			taskMngr;
+	String				name;
+	bool				looping		= true;
 
 
 // methods
 public:
-	WindowApp (const ModulePtr &taskMngr, StringCRef name) :
-		taskMngr( taskMngr ), name( name )
+	WindowApp (const ModulePtr &taskMngr, const CreateInfo::Window &descr) :
+		taskMngr( taskMngr ), wndDescr( descr )
 	{}
 
-	void Initialize (const ModulePtr &thread)
+	void Initialize (GlobalSystemsRef gs)
 	{
-		if ( not thread->GlobalSystems()->Get< TaskModule >() )
+		ModulePtr	thread = gs->Get< ParallelThread >();
+
+		if ( not gs->Get< TaskModule >() )
 			thread->AddModule( TaskModuleModuleID, CreateInfo::TaskModule{ taskMngr } );
 
-		thread->AddModule( WinWindowModuleID, CreateInfo::Window{ name } );
+		thread->AddModule( WinWindowModuleID, wndDescr );
 		thread->AddModule( InputThreadModuleID, CreateInfo::InputThread() );
 
 		auto	window	= thread->GetModuleByID( WinWindowModuleID );
@@ -49,7 +52,7 @@ public:
 	}
 	
 private:
-	bool _OnWindowClosed (const Message<ModuleMsg::WindowAfterDestroy> &)
+	bool _OnWindowClosed (const Message<OSMsg::WindowAfterDestroy> &)
 	{
 		looping = false;
 		return true;
@@ -71,6 +74,8 @@ SHARED_POINTER( WindowApp );
 
 extern void Test_Window ()
 {
+	using EFlags = CreateInfo::Window::EWindowFlags;
+
 	auto ms = GetMainSystemInstace();
 
 	Platforms::RegisterPlatforms();
@@ -85,10 +90,10 @@ extern void Test_Window ()
 		auto	thread		= ms->GlobalSystems()->Get< ParallelThread >();
 		auto	task_mngr	= ms->GetModuleByID( TaskManagerModuleID );
 
-		WindowAppPtr	app1 = New< WindowApp >( task_mngr, "window-0" );
-		WindowAppPtr	app2 = New< WindowApp >( task_mngr, "window-1" );
+		WindowAppPtr	app1 = New< WindowApp >( task_mngr, CreateInfo::Window{ "window-0", EFlags::bits() | EFlags::Resizable, uint2(800,600), int2(800,600) } );
+		WindowAppPtr	app2 = New< WindowApp >( task_mngr, CreateInfo::Window{ "window-1", EFlags::bits(), uint2(800,600), int2(-900,400) } );
 
-		app1->Initialize( ModulePtr( thread ) );
+		app1->Initialize( thread->GlobalSystems() );
 		
 		// create second thread with window
 		CHECK( ms->GlobalSystems()->Get< ModulesFactory >()->Create(
@@ -97,9 +102,9 @@ extern void Test_Window ()
 					CreateInfo::Thread{
 						"SecondThread",
 						null,
-						LAMBDA( &app2 ) (const ModulePtr &thread)
+						LAMBDA( app2 ) (GlobalSystemsRef gs)
 						{
-							app2->Initialize( thread );
+							app2->Initialize( gs );
 						}
 					},
 					OUT (ModulePtr &) thread ) );

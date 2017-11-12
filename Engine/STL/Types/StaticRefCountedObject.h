@@ -15,7 +15,7 @@ namespace GXTypes
 {
 
 	template <typename T, typename ...Args>
-	forceinline SHARED_POINTER_TYPE(T) New (Args ...args) noexcept;
+	forceinline SharedPointerType<T> New (Args ...args) noexcept;
 
 
 	
@@ -23,12 +23,12 @@ namespace GXTypes
 	// Static Reference Counted Object
 	//
 
-	class StaticRefCountedObject : protected RefCountedObject
+	class _STL_EXPORT_ StaticRefCountedObject : protected RefCountedObject
 	{
 	// types
 	private:
 		typedef StaticRefCountedObject			Self;
-		typedef SHARED_POINTER_TYPE( Self )		SelfPtr_t;
+		typedef SharedPointerType< Self >		SelfPtr_t;
 
 
 	// variables
@@ -69,9 +69,9 @@ namespace GXTypes
 		
 		// use New<T>( T(args) ) for private/protected constructors
 		template <typename T, typename ...Args>
-		friend forceinline SHARED_POINTER_TYPE(T)  New (Args ...args) noexcept
+		friend forceinline SharedPointerType<T>  New (Args ...args) noexcept
 		{
-			SHARED_POINTER_TYPE( T ) tmp = new T( FW<Args>(args)... );
+			SharedPointerType<T> tmp = new T( FW<Args>(args)... );
 			tmp->_SetDynamicObj( true );
 			return tmp;
 		}
@@ -79,14 +79,14 @@ namespace GXTypes
 
 	private:
 		// use 'New' function
-		forceinline void * operator new (usize size)
+		forceinline void * operator new (usize size) noexcept
 		{
 			return ::operator new( size );
 		}
 
 
 		// can't use delete for shared pointer
-		forceinline void operator delete (void* p)
+		forceinline void operator delete (void* p) noexcept
 		{
 			return ::operator delete( p );
 		}
@@ -115,6 +115,8 @@ namespace GXTypes
 		// RefCountedObject //
 		virtual void _Release () override final
 		{
+			ASSERT( _isDynamicObj );
+
 			if ( _isDynamicObj )
 			{
 				delete this;

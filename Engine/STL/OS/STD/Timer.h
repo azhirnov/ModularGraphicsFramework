@@ -13,14 +13,14 @@ namespace OS
 {
 
 	//
-	// Perfomance Timer
+	// Performance Timer
 	//
 
-	struct PerfomanceTimer
+	struct PerformanceTimer
 	{
 	// methods
 	public:
-		PerfomanceTimer ()
+		PerformanceTimer ()
 		{}
 
 		// seconds
@@ -39,7 +39,7 @@ namespace OS
 	GetTime
 =================================================
 */
-	inline TimeD PerfomanceTimer::GetTime () const
+	inline TimeD PerformanceTimer::GetTime () const
 	{
 		return TimeD::FromTime( GetTimeMicroSec() );
 	}
@@ -49,7 +49,7 @@ namespace OS
 	GetTimeMicroSec
 =================================================
 */
-	inline TimeL PerfomanceTimer::GetTimeMicroSec () const
+	inline TimeL PerformanceTimer::GetTimeMicroSec () const
 	{
 		return TimeL::FromNanoSeconds( std::chrono::high_resolution_clock::now().time_since_epoch().count() );
 	}
@@ -60,7 +60,7 @@ namespace OS
 =================================================
 */
 	template <>
-	inline TimeL  PerfomanceTimer::Get (const TimeL &) const
+	inline TimeL  PerformanceTimer::Get (const TimeL &) const
 	{
 		return GetTimeMicroSec();
 	}
@@ -71,7 +71,7 @@ namespace OS
 =================================================
 */
 	template <>
-	inline TimeD  PerfomanceTimer::Get (const TimeD &) const
+	inline TimeD  PerformanceTimer::Get (const TimeD &) const
 	{
 		return GetTime();
 	}

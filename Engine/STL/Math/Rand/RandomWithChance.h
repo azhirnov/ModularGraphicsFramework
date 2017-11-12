@@ -30,14 +30,14 @@ namespace GXMath
 		template <typename T>
 		static bool CheckChances (ArrayCRef<T> chances)
 		{
-			typedef typename TypeTraits::RemoveConst<T>		value_t;
+			typedef typename TypeTraits::RemoveConst<T>		Value_t;
 
-			value_t	summ(0);
+			Value_t	summ(0);
 			
 			FOR( i, chances ) {
 				summ += chances[i];
 			}
-			return Equals( summ, value_t(1) );
+			return Equals( summ, Value_t(1) );
 		}
 
 		
@@ -51,9 +51,9 @@ namespace GXMath
 		template <typename T>
 		static usize Index (ArrayCRef<T> chances)
 		{
-			typedef typename TypeTraits::RemoveConst<T>		value_t;
+			typedef typename TypeTraits::RemoveConst<T>		Value_t;
 
-			value_t f = RG::UNorm< value_t >();
+			Value_t f = RG::UNorm< Value_t >();
 		
 			FOR( i, chances )
 			{
@@ -76,9 +76,9 @@ namespace GXMath
 		template <typename T, typename B>
 		static usize Index (ArrayCRef<T> chances, B expected)
 		{
-			typedef typename TypeTraits::RemoveConst<T>		value_t;
+			typedef typename TypeTraits::RemoveConst<T>		Value_t;
 
-			value_t f = RG::NormalDistribution::UNorm< value_t >( expected );
+			Value_t f = RG::NormalDistribution::UNorm< Value_t >( expected );
 		
 			FOR( i, chances )
 			{

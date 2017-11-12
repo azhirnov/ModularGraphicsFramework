@@ -12,8 +12,8 @@ struct Test
 	
 	const int memberConst = 1;
 
-	int MemberFunc (int i, float f)					{ return 0; }
-	int MemberFuncConst (int i, float f) const		{ return 0; }
+	int MemberFunc (int, float)					{ return 0; }
+	int MemberFuncConst (int, float) const		{ return 0; }
 
 	virtual void VirtMemberFunc (double d) = 0;
 };

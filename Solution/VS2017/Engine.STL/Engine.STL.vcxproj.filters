@@ -190,9 +190,6 @@
     <ClInclude Include="..\..\..\Engine\STL\Experimental\Float.h">
       <Filter>Experimental</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\ScopeSetter.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\Experimental\UFloat.h">
       <Filter>Experimental</Filter>
     </ClInclude>
@@ -320,12 +317,6 @@
       <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\Math\MathFunc.h">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Math\MathTypeCast.h">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Math\MathTypes.h">
       <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\Math\Matrix.h">
@@ -647,20 +638,8 @@
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantCRef.h">
       <Filter>Types</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\StaticVariant.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\Signature.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\StringToID.h">
       <Filter>CompileTime</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\VariantInterface.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Experimental\FunctionInfo.h">
-      <Filter>Experimental</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\CompileTime\Sequence.h">
       <Filter>CompileTime</Filter>
@@ -671,8 +650,47 @@
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantRefIndexedContainer.h">
       <Filter>Types</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Algorithms\Comparison.h">
+    <ClInclude Include="..\..\..\Engine\STL\Algorithms\Comparators.h">
       <Filter>Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\CompileTime\Map.h">
+      <Filter>CompileTime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Containers\IndexedArray.h">
+      <Filter>Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\CompileTime\CompileTimeTypes.h">
+      <Filter>CompileTime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\CompileTime\FunctionInfo.h">
+      <Filter>CompileTime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Types\ScopeSetter.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Types\VariantInterface.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Experimental\BoolArg.h">
+      <Filter>Experimental</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\OS\Base\Endianes.h">
+      <Filter>OS\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Containers\AppendableAdaptor.h">
+      <Filter>Containers\Adaptors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Containers\Adaptors.h">
+      <Filter>Containers\Adaptors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Containers\ErasableAdaptor.h">
+      <Filter>Containers\Adaptors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Math\MathTypeCast.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Math\MathTypes.h">
+      <Filter>Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -777,6 +795,9 @@
     </Filter>
     <Filter Include="CompileTime\Runtime">
       <UniqueIdentifier>{8bd1eefa-3746-4832-bb18-92be2b1b7a9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Containers\Adaptors">
+      <UniqueIdentifier>{dd963391-19c3-4724-b161-c2934eb1c768}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

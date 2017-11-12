@@ -95,6 +95,11 @@
 // pragma directive inside the macro
 #define GX_PRAGMA( ... )			_Pragma( TOASTRING( __VA_ARGS__ ) )
 
+// branch prediction optimization
+#define GX_BRANCH_EXPECT( _expr_ )			__builtin_expect( !!(_expr_), 1 )
+#define GX_BRANCH_EXPECT_FALSE( _expr_ )	__builtin_expect( !!(_expr_), 0 )
+
+
 //-------------------------------------------------------------------
 
 
@@ -198,8 +203,26 @@
 
 
 // notify compiler to generate error if function result unused
-#if COMPILER_VERSION >= 400
+#if COMPILER_VERSION >= 600	// TODO
+#	define GX_CHECK_RESULT					[[nodiscard]]
+#elif COMPILER_VERSION >= 400
 #	define GX_CHECK_RESULT					__attribute__ ((warn_unused_result))
+#else
+#	define GX_CHECK_RESULT
+#endif
+
+
+// if constexpr
+#if COMPILER_VERSION >= 600 // TODO
+#	define if_constexpr			if constexpr
+#else
+#	define if_constexpr			if
+#endif
+
+
+// 'auto' keyword in template parameters
+#if COMPILER_VERSION >= 600 // TODO
+#	define GX_AUTO_IN_TEMPLATE_SUPPORTED	1
 #endif
 
 //-------------------------------------------------------------------

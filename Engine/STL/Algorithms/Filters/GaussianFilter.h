@@ -19,7 +19,7 @@ namespace GXFilters
 	{
 	// types
 	public:
-		typedef GaussianFilter< T, ValueType, ParamType, MaxSize >		Self;
+		using Self	= GaussianFilter< T, ValueType, ParamType, MaxSize >;
 
 		struct Sample
 		{
@@ -33,7 +33,7 @@ namespace GXFilters
 		};
 
 	private:
-		typedef typename FixedSizeCircularQueue< Sample, MaxSize >		Queue_t;
+		using Queue_t	= typename FixedSizeCircularQueue< Sample, MaxSize >;
 
 
 	// variables

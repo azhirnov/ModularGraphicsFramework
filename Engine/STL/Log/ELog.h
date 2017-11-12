@@ -42,8 +42,8 @@ namespace GX_STL
 	};
 
 
-	extern int  __write_to_log (const char *msg, ELog::type type, const char *file, int line);
-	extern void __debug_console_write (const char *msg, const char *file, int line);
+	extern _STL_EXPORT_ int  __write_to_log (const char *msg, ELog::type type, const char *file, int line);
+	extern _STL_EXPORT_ void __debug_console_write (const char *msg, const char *file, int line);
 
 }	// GX_STL
 

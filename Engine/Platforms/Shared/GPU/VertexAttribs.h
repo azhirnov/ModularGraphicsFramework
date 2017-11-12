@@ -13,7 +13,7 @@ namespace Platforms
 	// Vertex Attribs
 	//
 
-	class VertexAttribs final : public CompileTime::CopyQualifiers< FixedSizeHashMap<StaticString<32>, int, 1> >
+	class VertexAttribs : public CompileTime::CopyQualifiers< FixedSizeHashMap<StaticString<32>, int, 1> >
 	{
 	// types
 	public:
@@ -101,7 +101,7 @@ namespace Platforms
 	{}
 
 	inline VertexAttribs::Attrib::Attrib (EVertexAttribute::type type, AttribIndex index, StringCRef buffer) :
-		type( type ), index( index ), buffer( buffer )
+		buffer( buffer ), index( index ), type( type )
 	{}
 	
 /*

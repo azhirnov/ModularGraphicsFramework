@@ -25,9 +25,9 @@ struct Value
 template <>
 struct Hash< Value >
 {
-	typedef usize	result_t;
+	typedef usize	Result_t;
 
-	result_t operator () (const Value &) const noexcept
+	Result_t operator () (const Value &) const noexcept
 	{
 		return 0;
 	}

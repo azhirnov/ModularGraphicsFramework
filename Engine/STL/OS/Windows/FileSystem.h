@@ -17,7 +17,7 @@ namespace OS
 	// Windows File System
 	//
 
-	struct OSFileSystem
+	struct _STL_EXPORT_ OSFileSystem
 	{
 	public:
 		static bool DeleteFile (StringCRef filename);

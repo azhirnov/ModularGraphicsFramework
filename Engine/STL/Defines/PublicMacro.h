@@ -64,10 +64,6 @@
 #	error GX_BREAK_POINT
 #endif
 
-#ifndef GX_EXPORT
-#	error GX_EXPORT
-#endif
-
 #ifndef GX_IS_UNICODE
 #	error GX_IS_UNICODE
 #endif
@@ -82,6 +78,10 @@
 
 #ifndef GX_CONSTEXPR_SUPPORTED
 #	error GX_CONSTEXPR_SUPPORTED
+#endif
+
+#ifndef GX_CHECK_RESULT
+#	error GX_CHECK_RESULT
 #endif
 
 
@@ -208,10 +208,6 @@
 
 
 // shared pointer //
-#ifndef SHARED_POINTER_TYPE
-#	error SHARED_POINTER_TYPE
-#endif
-
 #ifndef SHARED_POINTER
 #	error SHARED_POINTER
 #endif

@@ -11,8 +11,8 @@ namespace GXMath
 {
 
 #	define _VEC_OPERATOR( _op_ ) \
-		template <typename T> Self&		operator _op_##= (const T& right)		{ Set( vec3_t(*this) _op_ right );  return *this; } \
-		template <typename T> Self		operator _op_  (const T& right) const	{ return Self( vec3_t(*this) _op_ right ); }
+		template <typename T> Self&		operator _op_##= (const T& right)		{ Set( Vec3_t(*this) _op_ right );  return *this; } \
+		template <typename T> Self		operator _op_  (const T& right) const	{ return Self( Vec3_t(*this) _op_ right ); }
 
 
 
@@ -26,8 +26,8 @@ namespace GXMath
 	// types
 	public:
 		typedef TR11G11B10F<FT>		Self;
-		typedef Vec<FT,3>			vec3_t;
-		typedef FT					float_t;
+		typedef Vec<FT,3>			Vec3_t;
+		typedef FT					Float_t;
 
 		struct TBits
 		{
@@ -67,29 +67,29 @@ namespace GXMath
 		template <typename RT, typename GT, typename BT>
 		TR11G11B10F (const RT& R, const GT& G, const BT& B)
 		{
-			Set( float_t(R), float_t(G), float_t(B) );
+			Set( Float_t(R), Float_t(G), Float_t(B) );
 		}
 
 		template <typename VT>
 		TR11G11B10F (const VT& vec)
 		{
-			Set( float_t(vec.x), float_t(vec.y), float_t(vec.z) );
+			Set( Float_t(vec.x), Float_t(vec.y), Float_t(vec.z) );
 		}
 
 
 		// set/get
-		void  Set (const vec3_t &v);
-		void  Set (float_t R, float_t G, float_t B);
-		void  Get (OUT float_t& R, OUT float_t& G, OUT float_t& B) const;
-		void  Get (OUT vec3_t &v) const;
+		void  Set (const Vec3_t &v);
+		void  Set (Float_t R, Float_t G, Float_t B);
+		void  Get (OUT Float_t& R, OUT Float_t& G, OUT Float_t& B) const;
+		void  Get (OUT Vec3_t &v) const;
 
-		void  SetR (float_t R);
-		void  SetG (float_t G);
-		void  SetB (float_t B);
+		void  SetR (Float_t R);
+		void  SetG (Float_t G);
+		void  SetB (Float_t B);
 
-		float_t R () const;
-		float_t G () const;
-		float_t B () const;
+		Float_t R () const;
+		Float_t G () const;
+		Float_t B () const;
 
 		uint  RBits () const				{ return _rgb.r; }
 		uint  GBits () const				{ return _rgb.g; }
@@ -97,7 +97,7 @@ namespace GXMath
 
 
 		// type cast
-		operator const vec3_t () const		{ vec3_t  ret;  Get(ret);  return ret; }
+		operator const Vec3_t () const		{ Vec3_t  ret;  Get(ret);  return ret; }
 
 
 		// unary operators
@@ -127,17 +127,17 @@ namespace GXMath
 
 	
 	template <typename FT>
-	inline void TR11G11B10F<FT>::Set (const vec3_t &v)
+	inline void TR11G11B10F<FT>::Set (const Vec3_t &v)
 	{
 		Set( v.x, v.y, v.z );
 	}
 
 	
 	template <typename FT>
-	inline void TR11G11B10F<FT>::Set (float_t R, float_t G, float_t B)
+	inline void TR11G11B10F<FT>::Set (Float_t R, Float_t G, Float_t B)
 	{
 #	if 1
-		float_t	f;
+		Float_t	f;
 
 		f = R;
 		ASSERT( f._bits.s == 0 and "only unsigned value supported" );
@@ -177,10 +177,10 @@ namespace GXMath
 
 	
 	template <typename FT>
-	inline void TR11G11B10F<FT>::Get (float_t& R, float_t& G, float_t& B) const
+	inline void TR11G11B10F<FT>::Get (Float_t& R, Float_t& G, Float_t& B) const
 	{
 #	if 1
-		float_t	f;
+		Float_t	f;
 	
 		f._bits.m = _bits.r_m << (23-6);
 		f._bits.e = _bits.r_e + (127 - 15);
@@ -213,7 +213,7 @@ namespace GXMath
 
 	
 	template <typename FT>
-	inline void TR11G11B10F<FT>::Get (vec3_t &v) const
+	inline void TR11G11B10F<FT>::Get (Vec3_t &v) const
 	{
 		Get( v.x, v.y, v.z );
 	}
@@ -222,7 +222,7 @@ namespace GXMath
 	template <typename FT>
 	inline FT TR11G11B10F<FT>::R () const
 	{
-		float_t	f;
+		Float_t	f;
 		f._bits.m = _bits.r_m << (23-6);
 		f._bits.e = _bits.r_e + (127 - 15);
 		return f;
@@ -232,7 +232,7 @@ namespace GXMath
 	template <typename FT>
 	inline FT TR11G11B10F<FT>::G () const
 	{
-		float_t	f;
+		Float_t	f;
 		f._bits.m = _bits.g_m << (23-6);
 		f._bits.e = _bits.g_e + (127 - 15);
 		return f;
@@ -242,7 +242,7 @@ namespace GXMath
 	template <typename FT>
 	inline FT TR11G11B10F<FT>::B () const
 	{
-		float_t	f;
+		Float_t	f;
 		f._bits.m = _bits.b_m << (23-5);
 		f._bits.e = _bits.b_e + (127 - 15);
 		return f;
@@ -250,9 +250,9 @@ namespace GXMath
 	
 	
 	template <typename FT>
-	inline void TR11G11B10F<FT>::SetR (float_t R)
+	inline void TR11G11B10F<FT>::SetR (Float_t R)
 	{
-		float_t	f(R);
+		Float_t	f(R);
 
 		ASSERT( f._bits.s == 0 and "only unsigned value supported" );
 		_bits.r_e = f._bits.e - (127 - 15);
@@ -261,9 +261,9 @@ namespace GXMath
 
 	
 	template <typename FT>
-	inline void TR11G11B10F<FT>::SetG (float_t G)
+	inline void TR11G11B10F<FT>::SetG (Float_t G)
 	{
-		float_t	f(G);
+		Float_t	f(G);
 
 		ASSERT( f._bits.s == 0 and "only unsigned value supported" );
 		_bits.g_e = f._bits.e - (127 - 15);
@@ -272,9 +272,9 @@ namespace GXMath
 
 	
 	template <typename FT>
-	inline void TR11G11B10F<FT>::SetB (float_t B)
+	inline void TR11G11B10F<FT>::SetB (Float_t B)
 	{
-		float_t	f(B);
+		Float_t	f(B);
 
 		ASSERT( f._bits.s == 0 and "only unsigned value supported" );
 		_bits.b_e = f._bits.e - (127 - 15);
@@ -308,7 +308,7 @@ namespace GXTypes
 {
 	
 	template <typename T>
-	struct Hash< GXMath::TR11G11B10F<T> > : public Hash< typename GXMath::TR11G11B10F<T>::vec3_t >
+	struct Hash< GXMath::TR11G11B10F<T> > : public Hash< typename GXMath::TR11G11B10F<T>::Vec3_t >
 	{};
 
 }	// GXTypes

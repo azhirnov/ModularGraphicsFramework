@@ -42,8 +42,8 @@ namespace Base
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -54,7 +54,7 @@ namespace Base
 
 	// methods
 	public:
-		TaskManager (const GlobalSystemsRef gs, const CreateInfo::TaskManager &);
+		TaskManager (GlobalSystemsRef gs, const CreateInfo::TaskManager &);
 		~TaskManager ();
 
 		static void Register (GlobalSystemsRef);
@@ -67,7 +67,7 @@ namespace Base
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
 		bool _AddTaskSchedulerToManager (const Message< ModuleMsg::AddTaskSchedulerToManager > &);
-		bool _PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg);
+		bool _PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg) noexcept;
 
 	private:
 		static ModulePtr _CreateTaskModule (GlobalSystemsRef, const CreateInfo::TaskModule &);

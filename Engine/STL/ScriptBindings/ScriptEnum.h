@@ -53,7 +53,7 @@ namespace GXScript
 			\
 			typedef ArrayCRef< type >						values_arr_t; \
 			typedef ArrayRef< char const * const >				names_arr_t; \
-			typedef CompileTime::NearUInt::FromType< type >		value_t; \
+			typedef CompileTime::NearUInt::FromType< type >		Value_t; \
 			\
 			\
 		/* constants */ \
@@ -191,7 +191,7 @@ namespace GXScript
 		private: \
 			union { \
 				type	_typeView; \
-				value_t	_value; \
+				Value_t	_value; \
 			}; \
 			\
 			\

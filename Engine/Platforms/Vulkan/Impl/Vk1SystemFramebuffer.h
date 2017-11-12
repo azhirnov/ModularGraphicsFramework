@@ -35,8 +35,8 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const Runtime::VirtualTypeList	_msgTypes;
-		static const Runtime::VirtualTypeList	_eventTypes;
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
 
 
 	// variables
@@ -48,7 +48,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1SystemFramebuffer (const GlobalSystemsRef gs, const VkSystemsRef vkSys);
+		explicit Vk1SystemFramebuffer (GlobalSystemsRef gs);
 		~Vk1SystemFramebuffer ();
 
 		bool CreateFramebuffer (const uint2 &surfaceSize, uint index,
@@ -58,10 +58,6 @@ namespace PlatformVK
 								EImage::type imageType);
 
 		static ModulePtr CreateModule (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &)	{ return null; }
-		
-		FramebufferDescriptor const&	GetDescriptor ()		const	{ return _descr; }
-		vk::VkFramebuffer				GetFramebufferID ()		const	{ return _framebufferId; }
-		uint							GetImageIndex ()		const	{ return _index; }
 
 
 	// message handlers
@@ -74,18 +70,20 @@ namespace PlatformVK
 		bool _IsCreated () const;
 		void _DestroyFramebuffer ();
 	};
+//-----------------------------------------------------------------------------
+
 
 	
-	const Runtime::VirtualTypeList	Vk1Device::Vk1SystemFramebuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	Vk1Device::Vk1SystemFramebuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	Vk1Device::Vk1SystemFramebuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	Vk1Device::Vk1SystemFramebuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	Vk1Device::Vk1SystemFramebuffer::Vk1SystemFramebuffer (const GlobalSystemsRef gs, const VkSystemsRef vkSys) :
-		Vk1BaseModule( gs, vkSys, ModuleConfig{ VkSystemFramebufferModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	Vk1Device::Vk1SystemFramebuffer::Vk1SystemFramebuffer (GlobalSystemsRef gs) :
+		Vk1BaseModule( gs, ModuleConfig{ VkSystemFramebufferModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_framebufferId( VK_NULL_HANDLE ),
 		_index( ~0u )
 	{
@@ -102,7 +100,9 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetVkFramebufferID );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetFramebufferDescriptor );
-		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetVkLogicDevice );
+		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetVkDeviceInfo );
+		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetVkPrivateClasses );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -144,11 +144,11 @@ namespace PlatformVK
 		if ( has_depth )
 		{
 			attachments.PushBack( depthStencilView );
-			_descr.depthStencilAttachment = { "depth", imageType, ERenderTarget::FromPixelFormat( depthStencilFormat ) };
+			_descr.depthStencilAttachment = { "depth", imageType/*, ERenderTarget::FromPixelFormat( depthStencilFormat )*/ };
 		}
 
 		attachments.PushBack( colorView );
-		_descr.colorAttachments.PushBack({ "color", imageType, ERenderTarget::FromPixelFormat( colorFormat, 0 ) });
+		_descr.colorAttachments.PushBack({ "color", imageType/*, ERenderTarget::FromPixelFormat( colorFormat, 0 )*/ });
 
 
 		VkFramebufferCreateInfo	fb_info = {};
@@ -160,7 +160,7 @@ namespace PlatformVK
 		fb_info.height			= surfaceSize.y;
 		fb_info.layers			= 1;
 
-		VK_CHECK( vkCreateFramebuffer( GetLogicalDevice(), &fb_info, null, OUT &_framebufferId ) );
+		VK_CHECK( vkCreateFramebuffer( GetVkDevice(), &fb_info, null, OUT &_framebufferId ) );
 		
 		GetDevice()->SetObjectName( _framebufferId, GetDebugName(), EGpuObject::Framebuffer );
 
@@ -221,7 +221,7 @@ namespace PlatformVK
 	{
 		using namespace vk;
 
-		auto	dev = GetLogicalDevice();
+		auto	dev = GetVkDevice();
 
 		if ( dev != VK_NULL_HANDLE and _framebufferId != VK_NULL_HANDLE )
 		{

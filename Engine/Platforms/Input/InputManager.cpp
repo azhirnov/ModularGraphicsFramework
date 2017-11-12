@@ -7,15 +7,15 @@ namespace Engine
 namespace Platforms
 {
 	
-	const Runtime::VirtualTypeList	InputManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const Runtime::VirtualTypeList	InputManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	InputManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	InputManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	InputManager::InputManager (const GlobalSystemsRef gs, const CreateInfo::InputManager &ci) :
+	InputManager::InputManager (GlobalSystemsRef gs, const CreateInfo::InputManager &) :
 		Module( gs, ModuleConfig{ InputManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "InputManager" );
@@ -83,7 +83,7 @@ namespace Platforms
 	_CreateInputManager
 =================================================
 */
-	ModulePtr InputManager::_CreateInputManager (const GlobalSystemsRef gs, const CreateInfo::InputManager &ci)
+	ModulePtr InputManager::_CreateInputManager (GlobalSystemsRef gs, const CreateInfo::InputManager &ci)
 	{
 		return New< InputManager >( gs, ci );
 	}
@@ -93,7 +93,7 @@ namespace Platforms
 	Register
 =================================================
 */
-	void InputManager::Register (const GlobalSystemsRef gs)
+	void InputManager::Register (GlobalSystemsRef gs)
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 
@@ -106,7 +106,7 @@ namespace Platforms
 	Unregister
 =================================================
 */
-	void InputManager::Unregister (const GlobalSystemsRef gs)
+	void InputManager::Unregister (GlobalSystemsRef gs)
 	{
 		auto	mf = gs->Get< ModulesFactory >();
 

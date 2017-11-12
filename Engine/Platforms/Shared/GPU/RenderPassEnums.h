@@ -13,7 +13,7 @@ namespace Platforms
 	{
 		enum type : uint
 		{
-			None = 0,
+			Invalidate = 0,
 			Load,
 			Clear,
 
@@ -27,7 +27,7 @@ namespace Platforms
 	{
 		enum type : uint
 		{
-			None = 0,
+			Invalidate = 0,
 			Store,
 
 			_Count,

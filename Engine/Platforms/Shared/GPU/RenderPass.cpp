@@ -50,6 +50,8 @@ namespace Platforms
 			_subpasses.Count()		 != right._subpasses.Count()		?	_subpasses.Count()		 < right._subpasses.Count()			:
 																	MemCmp( _depthStencilAttachment, right._depthStencilAttachment ) < 0;
 	}
+//-----------------------------------------------------------------------------
+
 
 
 /*
@@ -65,11 +67,11 @@ namespace Platforms
 	}
 
 	RenderPassDescrBuilder::SubpassBuilder&
-		RenderPassDescrBuilder::SubpassBuilder::AddColorAttachment (uint				index,
+		RenderPassDescrBuilder::SubpassBuilder::AddColorAttachment (StringCRef			name,
 																	EImageLayout::type	layout)
 	{
 		AttachmentRef_t		tmp;
-		tmp.index	= RenderPassDescriptor::AttachmentIndex(index);
+		tmp.name	= name;
 		tmp.layout	= layout;
 
 		return AddColorAttachment( tmp );
@@ -88,11 +90,11 @@ namespace Platforms
 	}
 
 	RenderPassDescrBuilder::SubpassBuilder& 
-		RenderPassDescrBuilder::SubpassBuilder::SetDepthStencilAttachment (uint					index,
+		RenderPassDescrBuilder::SubpassBuilder::SetDepthStencilAttachment (StringCRef			name,
 																		   EImageLayout::type	layout)
 	{
 		AttachmentRef_t		tmp;
-		tmp.index	= RenderPassDescriptor::AttachmentIndex(index);
+		tmp.name	= name;
 		tmp.layout	= layout;
 
 		return SetDepthStencilAttachment( tmp );
@@ -111,11 +113,11 @@ namespace Platforms
 	}
 
 	RenderPassDescrBuilder::SubpassBuilder& 
-		RenderPassDescrBuilder::SubpassBuilder::AddInputAttachment (uint				index,
+		RenderPassDescrBuilder::SubpassBuilder::AddInputAttachment (StringCRef			name,
 																	EImageLayout::type	layout)
 	{
 		AttachmentRef_t		tmp;
-		tmp.index	= RenderPassDescriptor::AttachmentIndex(index);
+		tmp.name	= name;
 		tmp.layout	= layout;
 
 		return AddInputAttachment( tmp );
@@ -134,11 +136,11 @@ namespace Platforms
 	}
 
 	RenderPassDescrBuilder::SubpassBuilder& 
-		RenderPassDescrBuilder::SubpassBuilder::SetResolveAttachment (uint					index,
+		RenderPassDescrBuilder::SubpassBuilder::SetResolveAttachment (StringCRef			name,
 																	  EImageLayout::type	layout)
 	{
 		AttachmentRef_t		tmp;
-		tmp.index	= RenderPassDescriptor::AttachmentIndex(index);
+		tmp.name	= name;
 		tmp.layout	= layout;
 
 		return SetResolveAttachment( tmp );
@@ -150,12 +152,14 @@ namespace Platforms
 =================================================
 */
 	RenderPassDescrBuilder::SubpassBuilder& 
-		RenderPassDescrBuilder::SubpassBuilder::AddPreserveAttachment (uint index)
+		RenderPassDescrBuilder::SubpassBuilder::AddPreserveAttachment (StringCRef name)
 	{
-		_valueRef.preserves.PushBack( RenderPassDescriptor::AttachmentIndex( index ) );
+		_valueRef.preserves.PushBack( name );
 		return *this;
 	}
+//-----------------------------------------------------------------------------
 	
+
 
 /*
 =================================================
@@ -165,6 +169,8 @@ namespace Platforms
 	RenderPassDescrBuilder&
 		RenderPassDescrBuilder::AddColorAttachment (const ColorAttachment_t &value)
 	{
+		CHECK_ERR( value.finalLayout != EImageLayout::Preinitialized and value.finalLayout != EImageLayout::Undefined, *this );
+
 		_changed = true;
 		_state._colorAttachmens.PushBack( value );
 		return *this;
@@ -241,10 +247,10 @@ namespace Platforms
 		return *this;
 	}
 
-	RenderPassDescrBuilder::SubpassBuilder  RenderPassDescrBuilder::AddSubpass ()
+	RenderPassDescrBuilder::SubpassBuilder  RenderPassDescrBuilder::AddSubpass (StringCRef name)
 	{
 		_changed = true;
-		_state._subpasses.PushBack( Uninitialized );
+		_state._subpasses.PushBack( Subpass_t{ name } );
 		return SubpassBuilder( _state._subpasses.Back() );
 	}
 	
@@ -304,7 +310,168 @@ namespace Platforms
 
 		return _state;
 	}
+	
+/*
+=================================================
+	CreateForSurface
+=================================================
+*/
+	RenderPassDescriptor  RenderPassDescrBuilder::CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt)
+	{
+		Self		builder;
+		auto		subpass	= builder.AddSubpass("pass");
 
+		// depth attachment
+		if ( depthStencilFmt != EPixelFormat::Unknown )
+		{
+			DepthStencilAttachment_t	attach;
+			AttachmentRef_t				attach_ref;
+			
+			attach.name				= "depth-stencil";
+			attach.format			= depthStencilFmt;
+			attach.loadOp			= EAttachmentLoadOp::Clear;
+			attach.storeOp			= EAttachmentStoreOp::Store;
+			attach.stencilLoadOp	= EAttachmentLoadOp::Invalidate;
+			attach.stencilStoreOp	= EAttachmentStoreOp::Invalidate;
+			attach.initialLayout	= EImageLayout::Undefined;
+			attach.finalLayout		= EImageLayout::DepthStencilAttachmentOptimal;
+			builder.SetDepthStencilAttachment( attach );
+
+			attach_ref.name			= attach.name;
+			attach_ref.layout		= EImageLayout::DepthStencilAttachmentOptimal;
+			subpass.SetDepthStencilAttachment( attach_ref );
+		}
+
+		// color attachment
+		{
+			ColorAttachment_t		attach;
+			AttachmentRef_t			attach_ref;
+			
+			attach.name				= "color-0";
+			attach.format			= colorFmt;
+			attach.loadOp			= EAttachmentLoadOp::Clear;
+			attach.storeOp			= EAttachmentStoreOp::Store;
+			attach.initialLayout	= EImageLayout::Undefined;
+			attach.finalLayout		= EImageLayout::PresentSrc;
+			builder.AddColorAttachment( attach );
+
+			attach_ref.name			= attach.name;
+			attach_ref.layout		= EImageLayout::ColorAttachmentOptimal;
+			subpass.AddColorAttachment( attach_ref );
+		}
+
+		// dependency
+		{
+			SubpassDependency_t	dep;
+
+			dep.srcPass		= "external";
+			dep.srcStage	= EPipelineStage::bits() | EPipelineStage::BottomOfPipe;
+			dep.srcAccess	= EPipelineAccess::bits() | EPipelineAccess::MemoryRead;
+			dep.dstPass		= "pass";
+			dep.dstStage	= EPipelineStage::bits() | EPipelineStage::ColorAttachmentOutput;
+			dep.dstAccess	= EPipelineAccess::bits() | EPipelineAccess::ColorAttachmentRead | EPipelineAccess::ColorAttachmentWrite;
+			dep.dependency	= ESubpassDependency::bits() | ESubpassDependency::ByRegion;
+			builder.AddDependency( dep );
+
+			dep.srcPass		= "pass";
+			dep.srcStage	= EPipelineStage::bits() | EPipelineStage::ColorAttachmentOutput;
+			dep.srcAccess	= EPipelineAccess::bits() | EPipelineAccess::ColorAttachmentRead | EPipelineAccess::ColorAttachmentWrite;
+			dep.dstPass		= "external";
+			dep.dstStage	= EPipelineStage::bits() | EPipelineStage::BottomOfPipe;
+			dep.dstAccess	= EPipelineAccess::bits() | EPipelineAccess::MemoryRead;
+			dep.dependency	= ESubpassDependency::bits() | ESubpassDependency::ByRegion;
+			builder.AddDependency( dep );
+		}
+
+		return builder.Finish();
+	}
+//-----------------------------------------------------------------------------
+
+	
+
+/*
+=================================================
+	SimpleBuilder::Add
+=================================================
+*/
+	RenderPassDescrBuilder::SimpleBuilder&
+		RenderPassDescrBuilder::SimpleBuilder::Add (StringCRef name, EPixelFormat::type format, MultiSamples samples)
+	{
+		if ( _builder._state.Subpasses().Empty() )
+			_builder.AddSubpass("pass-1");
+
+		SubpassBuilder	subpass{ _builder._state._subpasses.Back() };
+
+		if ( EPixelFormat::HasDepth( format ) or EPixelFormat::HasStencil( format ) )
+		{
+			CHECK_ERR( not _hasDepth and not _hasStencil, *this );
+
+			_hasDepth	= EPixelFormat::HasDepth( format );
+			_hasStencil = EPixelFormat::HasStencil( format );
+
+			subpass.SetDepthStencilAttachment( name, EImageLayout::DepthStencilAttachmentOptimal );
+
+			_builder.SetDepthStencilAttachment(	name,
+												format,
+												samples,
+												_hasDepth ? EAttachmentLoadOp::Clear : EAttachmentLoadOp::Invalidate,
+												_hasDepth ? EAttachmentStoreOp::Store : EAttachmentStoreOp::Invalidate,
+												_hasStencil ? EAttachmentLoadOp::Clear : EAttachmentLoadOp::Invalidate,
+												_hasStencil ? EAttachmentStoreOp::Store : EAttachmentStoreOp::Invalidate,
+												EImageLayout::Undefined,
+												EImageLayout::DepthStencilAttachmentOptimal );
+		}
+		else
+		{
+			subpass.AddColorAttachment( name, EImageLayout::ColorAttachmentOptimal );
+
+			_builder.AddColorAttachment( name,
+										 format,
+										 samples,
+										 EAttachmentLoadOp::Clear,
+										 EAttachmentStoreOp::Store,
+										 EImageLayout::Undefined,
+										 EImageLayout::ShaderReadOnlyOptimal );
+		}
+		return *this;
+	}
+	
+/*
+=================================================
+	SimpleBuilder::Finish
+=================================================
+*/
+	RenderPassDescriptor const&  RenderPassDescrBuilder::SimpleBuilder::Finish ()
+	{
+		CHECK( not _builder._state.Subpasses().Empty() );
+
+		// add dependency
+		if ( not _builder._state.Subpasses().Empty() and
+			 _builder._state.Dependencies().Empty() )
+		{
+			SubpassDependency_t	dep;
+
+			dep.srcPass		= "external";
+			dep.srcStage	= EPipelineStage::bits() | EPipelineStage::BottomOfPipe;
+			dep.srcAccess	= EPipelineAccess::bits() | EPipelineAccess::MemoryRead;
+			dep.dstPass		= _builder._state._subpasses.Front().name;
+			dep.dstStage	= EPipelineStage::bits() | EPipelineStage::ColorAttachmentOutput;
+			dep.dstAccess	= EPipelineAccess::bits() | EPipelineAccess::ColorAttachmentRead | EPipelineAccess::ColorAttachmentWrite;
+			dep.dependency	= ESubpassDependency::bits() | ESubpassDependency::ByRegion;
+			_builder.AddDependency( dep );
+		
+			dep.srcPass		= _builder._state._subpasses.Front().name;
+			dep.srcStage	= EPipelineStage::bits() | EPipelineStage::ColorAttachmentOutput;
+			dep.srcAccess	= EPipelineAccess::bits() | EPipelineAccess::ColorAttachmentRead | EPipelineAccess::ColorAttachmentWrite;
+			dep.dstPass		= "external";
+			dep.dstStage	= EPipelineStage::bits() | EPipelineStage::BottomOfPipe;
+			dep.dstAccess	= EPipelineAccess::bits() | EPipelineAccess::MemoryRead;
+			dep.dependency	= ESubpassDependency::bits() | ESubpassDependency::ByRegion;
+			_builder.AddDependency( dep );
+		}
+
+		return _builder.Finish();
+	}
 
 }	// Platforms
 }	// Engine

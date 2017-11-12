@@ -7,11 +7,10 @@
 
 #pragma once
 
-#include "vulkan1.h"
+#include "Engine/Platforms/Vulkan/Impl/vulkan1.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
 
 #if defined( GRAPHICS_API_VULKAN )
-
-#include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
 
 namespace Engine
 {
@@ -39,7 +38,24 @@ namespace PlatformVK
 			};
 
 			GX_ENUM_BITFIELD( EQueueFamily );
+
+			static constexpr bits	All = bits().SetAll();
 		};
+
+		struct DeviceInfo
+		{
+			vk::VkPhysicalDevice	id						= VK_NULL_HANDLE;
+			String					device;
+			BytesUL					globalMemory;
+			uint					version					= 0;
+			uint					maxInvocations			= 0;		// for compute shader
+			bool					isGPU					= false;	// may be discrete or integrated GPU
+			bool					integratedGPU			= false;
+			bool					isCPU					= false;
+			bool					supportsTesselation		= false;
+			bool					supportsGeometryShader	= false;
+		};
+
 
 	private:
 		class Vk1SystemFramebuffer;
@@ -65,15 +81,17 @@ namespace PlatformVK
 
 	// variables
 	private:
-		const VkSystemsRef						_vkSystems;
-
-		vk::VkPhysicalDeviceProperties			_deviceProperties;
-		vk::VkPhysicalDeviceFeatures			_deviceFeatures;
-		vk::VkPhysicalDeviceMemoryProperties	_deviceMemoryProperties;
-
-		vk::VkInstance					_instance;
-		vk::VkPhysicalDevice			_physicalDevice;
 		vk::VkDevice					_logicalDevice;
+		vk::VkPhysicalDevice			_physicalDevice;
+		vk::VkInstance					_instance;
+
+		vk::VkPhysicalDeviceProperties				_deviceProperties;
+		vk::VkPhysicalDeviceFeatures				_deviceFeatures;
+		vk::VkPhysicalDeviceMemoryProperties		_deviceMemoryProperties;
+		
+		mutable Array< vk::VkLayerProperties >		_instanceLayers;
+		mutable Array< vk::VkExtensionProperties >	_instanceExtensions;
+		mutable Array< vk::VkExtensionProperties >	_deviceExtensions;
 
 		vk::VkSurfaceKHR				_surface;
 		vk::VkSwapchainKHR				_swapchain;
@@ -87,6 +105,7 @@ namespace PlatformVK
 
 		EPixelFormat::type				_colorPixelFormat;
 		EPixelFormat::type				_depthStencilPixelFormat;
+		MultiSamples					_samples;
 
 		vk::VkFormat					_colorFormat;
 		vk::VkColorSpaceKHR				_colorSpace;
@@ -111,20 +130,30 @@ namespace PlatformVK
 
 		bool							_enableDebugMarkers;
 
+		mutable bool					_isInstanceFunctionsLoaded;
+		mutable bool					_isDeviceFunctionsLoaded;
+
 
 	// methods
 	public:
-		Vk1Device (const GlobalSystemsRef gs, const VkSystemsRef vkSys);
+		Vk1Device (GlobalSystemsRef gs);
 		~Vk1Device ();
 
 		bool CreateInstance (StringCRef applicationName, vk::uint32_t applicationVersion, vk::uint32_t vulkanVersion,
 							 ExtensionNames_t ext = ExtensionNames_t(), ValidationLayers_t layers = ValidationLayers_t());
 		bool DestroyInstance ();
 
+		bool HasLayer (StringCRef name) const;
+		bool HasExtension (StringCRef name) const;
+		bool HasDeviceExtension (StringCRef name) const;
+
 		bool CreateDebugCallback (vk::VkDebugReportFlagBitsEXT flags);
 		bool DestroyDebugCallback ();
 
+		bool GetPhysicalDeviceInfo (OUT AppendableAdaptor<DeviceInfo> deviceInfo) const;
+
 		bool ChoosePhysicalDevice (StringCRef name = StringCRef());
+		bool CreatePhysicalDevice (vk::VkPhysicalDevice id);
 		bool WritePhysicalDeviceInfo () const;
 
 		bool CreateDevice (const vk::VkPhysicalDeviceFeatures &enabledFeatures, EQueueFamily::bits queueFamilies,
@@ -133,7 +162,7 @@ namespace PlatformVK
 		void DeviceWaitIdle ();
 
 		bool CreateSwapchain (const uint2 &size, bool vsync, vk::uint32_t imageArrayLayers = 1,
-							  EPixelFormat::type depthStencilFormat = Uninitialized);
+							  EPixelFormat::type depthStencilFormat = Uninitialized, MultiSamples samples = Uninitialized);
 		bool RecreateSwapchain (const uint2 &size);
 		bool RecreateSwapchain ();
 		bool DestroySwapchain ();
@@ -161,8 +190,6 @@ namespace PlatformVK
 		bool IsSwapchainCreated ()		const						{ return _swapchain		 != VK_NULL_HANDLE; }
 		bool IsDebugCallbackCreated ()	const						{ return _debugCallback	 != VK_NULL_HANDLE; }
 		bool IsQueueCreated ()			const						{ return _queue			 != VK_NULL_HANDLE; }
-		
-		VkSystemsRef			VkSystems ()				const	{ return _vkSystems; }
 
 		vk::VkInstance			GetInstance ()				const	{ return _instance; }
 		vk::VkPhysicalDevice	GetPhyiscalDevice ()		const	{ return _physicalDevice; }
@@ -192,8 +219,11 @@ namespace PlatformVK
 
 	private:
 		// Instance
-		bool _CheckLayers (ValidationLayers_t layers) const;
-
+		bool _CheckLayers (INOUT Array<const char*> &layers) const;
+		bool _CheckExtensions (INOUT Array<const char*> &extensions) const;
+		bool _LoadFunctions () const;
+		bool _LoadInstanceLayers () const;
+		bool _LoadInstanceExtensions () const;
 
 		// Swapchain
 		void _GetImageUsage (OUT vk::VkImageUsageFlags &imageUsage) const;
@@ -207,7 +237,7 @@ namespace PlatformVK
 		bool _CreateRenderPass ();
 		void _DeleteRenderPass ();
 
-		bool _CreateColorAttachment (OUT SwapChainBuffers_t &imageBuffers) const;
+		bool _CreateColorAttachment (MultiSamples samples, OUT SwapChainBuffers_t &imageBuffers) const;
 		bool _CreateDepthStencilAttachment (EPixelFormat::type depthStencilFormat);
 		void _DeleteDepthStencilAttachment ();
 
@@ -220,15 +250,13 @@ namespace PlatformVK
 		bool _CreateCommandBuffers ();
 		void _DeleteCommandBuffers ();
 
-		// Instance
-		bool _GetInstanceExtensions (OUT Array<String> &ext) const;
-
 		// Surface
 		bool _ChooseColorFormat (OUT vk::VkFormat &colorFormat, OUT vk::VkColorSpaceKHR &colorSpace,
 								 vk::VkFormat requiredFormat, vk::VkColorSpaceKHR requiredColorSpace) const;
 
 		// Device
-		bool _GetDeviceExtensions (OUT Array<String> &ext) const;
+		bool _LoadDeviceExtensions () const;
+		bool _CheckDeviceExtensions (INOUT Array<const char*> &extensions) const;
 
 		// Queue
 		bool _ChooseQueueIndex (INOUT EQueueFamily::bits &family, OUT vk::uint32_t &index) const;
@@ -250,6 +278,8 @@ namespace PlatformVK
 		static ELog::type _DebugReportFlagsToLogType (vk::VkDebugReportFlagBitsEXT flags);
 		static StringCRef _DebugReportFlagsToString (vk::VkDebugReportFlagBitsEXT flags);
 		static StringCRef _DebugReportObjectTypeToString (vk::VkDebugReportObjectTypeEXT objType);
+
+		static StringCRef _DeviceTypeToString (vk::VkPhysicalDeviceType value);
 	};
 
 	
