@@ -5,6 +5,7 @@
 #if defined( GRAPHICS_API_OPENGL )
 
 #include "Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4FlippedSystemFramebuffer.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 
@@ -25,14 +26,9 @@ namespace PlatformGL
 		_depthStencilPixelFormat( EPixelFormat::Unknown ),
 		_currentImageIndex( -1 ),	_swapchainLength( 1 ),
 		_numExtensions( 0 ),		_initialized( false ),
-		_frameStarted( false )
+		_frameStarted( false ),		_vulkanCompatibility( true )
 	{
 		SetDebugName( "GL4Device" );
-
-		CHECK( GlobalSystems()->Get< ModulesFactory >()->Register(
-			GLSystemFramebufferModuleID,
-			&GL4SystemFramebuffer::CreateModule
-		) );
 	}
 	
 /*
@@ -195,6 +191,11 @@ namespace PlatformGL
 		DBG_CHECK_ERR( _initialized );
 		CHECK_ERR( _frameStarted );
 
+		if ( _vulkanCompatibility and _framebuffer )
+		{
+			_framebuffer.ToPtr< GL4FlippedSystemFramebuffer >()->Present();
+		}
+
 		_currentImageIndex = (_currentImageIndex+1) % _swapchainLength;
 		_frameStarted = false;
 		return true;
@@ -212,7 +213,12 @@ namespace PlatformGL
 		_surfaceSize = size;
 
 		if ( _framebuffer )
-			_framebuffer.ToPtr< GL4SystemFramebuffer >()->Resize( _surfaceSize );
+		{
+			if ( _vulkanCompatibility )
+				_framebuffer.ToPtr< GL4FlippedSystemFramebuffer >()->Resize( _surfaceSize );
+			else
+				_framebuffer.ToPtr< GL4SystemFramebuffer >()->Resize( _surfaceSize );
+		}
 
 		return true;
 	}
@@ -249,7 +255,7 @@ namespace PlatformGL
 		if ( name.Empty() or id == 0  )
 			return false;
 
-		GL_CALL( glObjectLabel( GL4Enum( type ), id, name.Length(), name.ptr() ) );
+		GL_CALL( glObjectLabel( GL4Enum( type ), id, GLsizei(name.Length()), name.ptr() ) );
 		return true;
 	}
 	
@@ -265,7 +271,7 @@ namespace PlatformGL
 		if ( name.Empty() or ptr == null  )
 			return false;
 
-		GL_CALL( glObjectPtrLabel( ptr, name.Length(), name.ptr() ) );
+		GL_CALL( glObjectPtrLabel( ptr, GLsizei(name.Length()), name.ptr() ) );
 		return true;
 	}
 
@@ -277,7 +283,7 @@ namespace PlatformGL
 	bool GL4Device::_CreateCommandBuffer ()
 	{
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-			Platforms::GLCommandBuilderModuleID,
+			GLCommandBuilderModuleID,
 			GlobalSystems(),
 			CreateInfo::GpuCommandBuilder{},
 			OUT _commandBuilder )
@@ -298,11 +304,12 @@ namespace PlatformGL
 
 		ModulePtr	module;
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-					Platforms::GLRenderPassModuleID,
+					GLRenderPassModuleID,
 					GlobalSystems(),
 					CreateInfo::GpuRenderPass{
 						null,
-						RenderPassDescrBuilder::CreateForSurface( _colorPixelFormat, _depthStencilPixelFormat )
+						RenderPassDescrBuilder::CreateForSurface( _colorPixelFormat, _depthStencilPixelFormat,
+																  _vulkanCompatibility ? EImageLayout::TransferSrcOptimal : EImageLayout::PresentSrc )
 					},
 					OUT module ) );
 
@@ -320,13 +327,20 @@ namespace PlatformGL
 		CHECK_ERR( _renderPass );
 		CHECK_ERR( not _framebuffer );
 
-		auto fb = New< GL4SystemFramebuffer >( GlobalSystems() );
-
-		fb->Send< ModuleMsg::AttachModule >({ _renderPass });
-
-		CHECK_ERR( fb->CreateFramebuffer( _surfaceSize, _colorPixelFormat, _depthStencilPixelFormat, _samples ) );
-
-		_framebuffer = fb;
+		if ( _vulkanCompatibility )
+		{
+			auto fb = New< GL4FlippedSystemFramebuffer >( GlobalSystems() );
+			fb->Send< ModuleMsg::AttachModule >({ _renderPass });
+			CHECK_ERR( fb->CreateFramebuffer( _surfaceSize, _colorPixelFormat, _depthStencilPixelFormat, _samples ) );
+			_framebuffer = fb;
+		}
+		else
+		{
+			auto fb = New< GL4SystemFramebuffer >( GlobalSystems() );
+			fb->Send< ModuleMsg::AttachModule >({ _renderPass });
+			CHECK_ERR( fb->CreateFramebuffer( _surfaceSize, _colorPixelFormat, _depthStencilPixelFormat, _samples ) );
+			_framebuffer = fb;
+		}
 		return true;
 	}
 

@@ -154,7 +154,7 @@ namespace CreateInfo
 		using Descriptor	= Platforms::GraphicsPipelineDescriptor;
 
 	// variables
-		ModulePtr		gpuThread;
+		ModulePtr		gpuThread;			// can be null
 		Descriptor		descr;
 		ModulePtr		shaders;
 		ModulePtr		renderPass;
@@ -170,7 +170,7 @@ namespace CreateInfo
 		using Descriptor	= Platforms::ComputePipelineDescriptor;
 		
 	// variables
-		ModulePtr		gpuThread;
+		ModulePtr		gpuThread;			// can be null
 		Descriptor		descr;
 		ModulePtr		shaders;
 	};
@@ -195,7 +195,7 @@ namespace CreateInfo
 	struct PipelineResourceTable
 	{
 	// variables
-		ModulePtr		gpuThread;
+		ModulePtr		gpuThread;			// can be null
 
 	// methods
 		//PipelineResourceTable () {}

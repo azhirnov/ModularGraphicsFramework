@@ -34,7 +34,8 @@ namespace Platforms
 											OSMsg::WindowGetDescriptor,
 											OSMsg::OnWinPlatformCreated,
 											OSMsg::GetWinWindowHandle,
-											OSMsg::GetDisplays
+											OSMsg::GetDisplays,
+											OSMsg::GetOSModules
 										> >;
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Update,
@@ -91,6 +92,7 @@ namespace Platforms
 		bool _WindowGetDescriptor (const Message< OSMsg::WindowGetDescriptor > &);
 		bool _GetWinWindowHandle (const Message< OSMsg::GetWinWindowHandle > &);
 		bool _GetDisplays (const Message< OSMsg::GetDisplays > &);
+		bool _GetOSModules (const Message< OSMsg::GetOSModules > &);
 
 
 	private:
@@ -144,6 +146,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &WinWindow::_OnWinPlatformCreated );
 		_SubscribeOnMsg( this, &WinWindow::_GetWinWindowHandle );
 		_SubscribeOnMsg( this, &WinWindow::_GetDisplays );
+		_SubscribeOnMsg( this, &WinWindow::_GetOSModules );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -339,6 +342,17 @@ namespace Platforms
 	bool WinWindow::_GetDisplays (const Message< OSMsg::GetDisplays > &msg)
 	{
 		msg->result.Set( _display.GetDisplays() );
+		return true;
+	}
+	
+/*
+=================================================
+	_GetOSModules
+=================================================
+*/
+	bool WinWindow::_GetOSModules (const Message< OSMsg::GetOSModules > &msg)
+	{
+		msg->result.Set( WinPlatform::GetModuleIDs() );
 		return true;
 	}
 

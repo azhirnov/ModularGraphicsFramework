@@ -21,6 +21,7 @@ namespace PlatformGL
 	// types
 	private:
 		class GL4SystemFramebuffer;
+		class GL4FlippedSystemFramebuffer;
 
 
 	// variables
@@ -45,6 +46,8 @@ namespace PlatformGL
 		uint						_numExtensions;
 		bool						_initialized;
 		bool						_frameStarted;
+
+		const bool					_vulkanCompatibility;	// if 'true' then opengl will be emulate vulkan bahavior
 
 
 	// methods
@@ -76,6 +79,8 @@ namespace PlatformGL
 		ModulePtr	GetCurrentFramebuffer ()	const	{ return _framebuffer; }
 		uint		GetImageIndex ()			const	{ return _currentImageIndex; }
 		uint		GetSwapchainLength ()		const	{ return _swapchainLength; }
+
+		bool		IsVulkanCompatibility ()	const	{ return _vulkanCompatibility; }
 
 	private:
 		bool _CreateCommandBuffer ();

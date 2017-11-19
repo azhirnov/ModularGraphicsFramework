@@ -144,7 +144,7 @@ namespace PlatformCL
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::CLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
 	}
 		
 /*
@@ -240,7 +240,7 @@ namespace PlatformCL
 		// create new command buffer
 		{
 			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-							Platforms::CLCommandBufferModuleID,
+							CLCommandBufferModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
 								_GetManager(),

@@ -41,10 +41,6 @@ namespace Base
 											ModuleMsg::Update
 										>;
 
-		struct _FinalChecks {
-			~_FinalChecks ();
-		};
-
 		SHARED_POINTER( TaskManager );
 		SHARED_POINTER( ThreadManager );
 
@@ -57,8 +53,6 @@ namespace Base
 
 	// variables
 	private:
-		_FinalChecks		_finalChecks;
-
 		ModulesFactory		_factory;
 		TaskManagerPtr		_taskMngr;
 		ThreadManagerPtr	_threadMngr;

@@ -414,7 +414,10 @@ namespace Platforms
 			shader_info.codeSize	= (usize) data.Size();
 			shader_info.pCode		= (vk::uint32_t const*) data.ptr();
 
-			VK_CHECK( vkCreateShaderModule( VkDevice(_vkData.device), &shader_info, null, OUT &_vkData.shaders[i] ) );
+			VkShaderModule	shader;
+			VK_CHECK( vkCreateShaderModule( VkDevice(_vkData.device), &shader_info, null, OUT &shader ) );
+
+			_vkData.shaders[i] = ReferenceCast<ulong>(shader);
 		}
 		return true;
 	}
@@ -434,7 +437,7 @@ namespace Platforms
 		{
 			if ( _vkData.shaders[i] )
 			{
-				vkDestroyShaderModule( VkDevice(_vkData.device), (VkShaderModule)_vkData.shaders[i], null );
+				vkDestroyShaderModule( VkDevice(_vkData.device), ReferenceCast<VkShaderModule>(_vkData.shaders[i]), null );
 				_vkData.shaders[i] = 0;
 			}
 		}
@@ -467,7 +470,7 @@ namespace Platforms
 			Shaders_t::Value_t	module;
 
 			module.type		= EShader::type(i);
-			module.id		= _vkData.shaders[i];
+			module.id		= ReferenceCast<vk::VkShaderModule>( _vkData.shaders[i] );
 			module.entry	= "main";
 
 			result.PushBack( RVREF(module) );

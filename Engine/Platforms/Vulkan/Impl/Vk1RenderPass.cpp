@@ -98,7 +98,7 @@ namespace PlatformVK
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
 	}
 	
 /*
@@ -210,11 +210,11 @@ namespace PlatformVK
 		auto	FindAttachmentIndex =	LAMBDA( this ) (StringCRef name) -> uint32_t
 										{{
 											if ( _descr.DepthStencilAttachment().name == name )
-												return _descr.ColorAttachments().Count();
+												return uint32_t(_descr.ColorAttachments().Count());
 
 											FOR( i, _descr.ColorAttachments() ) {
 												if ( _descr.ColorAttachments()[i].name == name )
-													return i;
+													return uint32_t(i);
 											}
 											RETURN_ERR( "Attachement '" << name << "' not found", ~0u );	// return any invalid value
 										}};
@@ -226,7 +226,7 @@ namespace PlatformVK
 
 											FOR( i, _descr.Subpasses() ) {
 												if ( _descr.Subpasses()[i].name == name )
-													return i;
+													return uint32_t(i);
 											}
 											RETURN_ERR( "Subpass '" << name << "' not found", VK_SUBPASS_EXTERNAL-1 ); // return any invalid value
 										}};
@@ -356,7 +356,7 @@ namespace PlatformVK
 		
 		VK_CHECK( vkCreateRenderPass( GetVkDevice(), &info, null, OUT &_renderPassId ) );
 
-		GetDevice()->SetObjectName( _renderPassId, GetDebugName(), EGpuObject::RenderPass );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_renderPassId), GetDebugName(), EGpuObject::RenderPass );
 		return true;
 	}
 	

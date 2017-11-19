@@ -99,7 +99,7 @@ namespace PlatformGL
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::GLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
 	}
 	
 /*
@@ -271,14 +271,14 @@ namespace PlatformGL
 			const auto&	col = _descr.ColorAttachments()[i];
 			ASSERT( not EImageLayout::IsPresent( col.finalLayout ) );
 
-			_id.draw.colorBuffers.PushBack( gl::GL_COLOR_ATTACHMENT0 + i );
+			_id.draw.colorBuffers.PushBack( gl::GL_COLOR_ATTACHMENT0 + uint(i) );
 
 			switch ( col.loadOp ) {
-				case EAttachmentLoadOp::Clear :			_id.clear.PushBack({ gl::GL_COLOR_ATTACHMENT0 + i, _FormatToClearValue( col.format ) });	break;
-				case EAttachmentLoadOp::Invalidate :	_id.invalidateBefore.PushBack( gl::GL_COLOR_ATTACHMENT0 + i );								break;
+				case EAttachmentLoadOp::Clear :			_id.clear.PushBack({ gl::GL_COLOR_ATTACHMENT0 + uint(i), _FormatToClearValue( col.format ) });	break;
+				case EAttachmentLoadOp::Invalidate :	_id.invalidateBefore.PushBack( gl::GL_COLOR_ATTACHMENT0 + uint(i) );							break;
 			}
 			if ( col.storeOp == EAttachmentStoreOp::Invalidate )
-				_id.invalidateAfter.PushBack( gl::GL_COLOR_ATTACHMENT0 + i );
+				_id.invalidateAfter.PushBack( gl::GL_COLOR_ATTACHMENT0 + uint(i) );
 		}
 
 		if ( _descr.DepthStencilAttachment().IsEnabled() )

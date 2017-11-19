@@ -35,8 +35,10 @@ namespace Platforms
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
+											GpuMsg::GetGraphicsModules,
 											OSMsg::WindowCreated,
 											OSMsg::WindowBeforeDestroy,
+											GpuMsg::GetGraphicsModules,
 											GpuMsg::ThreadBeginFrame,
 											GpuMsg::ThreadEndFrame,
 											GpuMsg::SubmitGraphicsQueueCommands,
@@ -51,7 +53,8 @@ namespace Platforms
 											// TODO: device lost event
 										> >;
 		
-		using VideoSettings_t		= CreateInfo::GpuContext;
+		using WindowMsgList_t		= MessageListFrom< OSMsg::GetWinWindowHandle >;
+		using WindowEventList_t		= MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::OnWinWindowRawMessage >;
 
 		using Surface				= PlatformVK::Vk1Surface;
 		using Device				= PlatformVK::Vk1Device;
@@ -102,7 +105,7 @@ namespace Platforms
 		
 	// variables
 	private:
-		VideoSettings_t			_settings;
+		GraphicsSettings		_settings;
 
 		ModulePtr				_window;
 
@@ -133,6 +136,7 @@ namespace Platforms
 		bool _Update (const Message< ModuleMsg::Update > &);
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
 
 		bool _ThreadBeginFrame (const Message< GpuMsg::ThreadBeginFrame > &);
 		bool _ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &);
@@ -187,6 +191,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &VulkanThread::_Update );
 		_SubscribeOnMsg( this, &VulkanThread::_Link );
 		_SubscribeOnMsg( this, &VulkanThread::_Delete );
+		_SubscribeOnMsg( this, &VulkanThread::_GetGraphicsModules );
 		_SubscribeOnMsg( this, &VulkanThread::_ThreadBeginFrame );
 		_SubscribeOnMsg( this, &VulkanThread::_ThreadEndFrame );
 		_SubscribeOnMsg( this, &VulkanThread::_SubmitGraphicsQueueCommands );
@@ -231,9 +236,7 @@ namespace Platforms
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 		
 		// TODO: use SearchModule message
-		// TODO: reset to initial state if window was detached
-		_window = _GetParents().Front()->GetModuleByID( WinWindowModuleID );
-		CHECK_ATTACHMENT( _window );
+		CHECK_ATTACHMENT(( _window = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
 
 		_window->Subscribe( this, &VulkanThread::_WindowCreated );
 		_window->Subscribe( this, &VulkanThread::_WindowBeforeDestroy );
@@ -296,6 +299,18 @@ namespace Platforms
 */
 	bool VulkanThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &)
 	{
+		return true;
+	}
+	
+/*
+=================================================
+	_GetGraphicsModules
+=================================================
+*/	
+	bool VulkanThread::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	{
+		msg->compute.Set( VulkanContext::GetComputeModules() );
+		msg->graphics.Set( VulkanContext::GetGraphicsModules() );
 		return true;
 	}
 

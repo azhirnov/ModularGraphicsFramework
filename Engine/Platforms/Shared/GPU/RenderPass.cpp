@@ -316,7 +316,7 @@ namespace Platforms
 	CreateForSurface
 =================================================
 */
-	RenderPassDescriptor  RenderPassDescrBuilder::CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt)
+	RenderPassDescriptor  RenderPassDescrBuilder::CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt, EImageLayout::type finalLayout)
 	{
 		Self		builder;
 		auto		subpass	= builder.AddSubpass("pass");
@@ -352,7 +352,7 @@ namespace Platforms
 			attach.loadOp			= EAttachmentLoadOp::Clear;
 			attach.storeOp			= EAttachmentStoreOp::Store;
 			attach.initialLayout	= EImageLayout::Undefined;
-			attach.finalLayout		= EImageLayout::PresentSrc;
+			attach.finalLayout		= finalLayout;
 			builder.AddColorAttachment( attach );
 
 			attach_ref.name			= attach.name;

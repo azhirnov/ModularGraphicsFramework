@@ -58,5 +58,14 @@ namespace OSMsg
 	};
 
 
+	//
+	// Get OS Modules
+	//
+	struct GetOSModules
+	{
+		Out< Platforms::OSModuleIDs >	result;
+	};
+
+
 }	// OSMsg
 }	// Engine

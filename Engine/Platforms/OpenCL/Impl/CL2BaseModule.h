@@ -49,7 +49,9 @@ namespace PlatformCL
 
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Compose,
-											ModuleMsg::Delete
+											ModuleMsg::Delete,
+											ModuleMsg::OnModuleAttached,
+											ModuleMsg::OnModuleDetached
 										>;
 
 	// variables

@@ -428,10 +428,26 @@ namespace PlatformGL
 	BufferUsage
 =================================================
 */
-	inline GL4BufferUsage GL4Enum (EBufferUsage::bits value)
+	inline GL4BufferUsage GL4Enum (EGpuMemory::bits flags, EMemoryAccess::bits access)
 	{
-		// TODO
-		return (GL4BufferUsage) gl::GL_DYNAMIC_DRAW;
+		int result = gl::GL_DYNAMIC_STORAGE_BIT;
+
+		if ( flags[EGpuMemory::CoherentWithCPU] )
+			result |= gl::GL_MAP_PERSISTENT_BIT | gl::GL_MAP_COHERENT_BIT;
+
+		if ( flags[EGpuMemory::CachedInCPU] )
+			result |= gl::GL_CLIENT_STORAGE_BIT;
+
+		if ( flags[EGpuMemory::LocalInGPU] )
+			result |= 0;
+
+		if ( access[EMemoryAccess::CpuRead] )
+			result |= gl::GL_MAP_READ_BIT;
+
+		if ( access[EMemoryAccess::CpuWrite] )
+			result |= gl::GL_MAP_WRITE_BIT;
+
+		return GL4BufferUsage(result);
 	}
 
 /*

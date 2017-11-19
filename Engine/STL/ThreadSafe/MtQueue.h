@@ -24,14 +24,14 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef QueueType						queue_t;
+		typedef QueueType						Queue_t;
 		typedef typename QueueType::Value_t		Value_t;
 		typedef MtQueue< QueueType >			Self;
 
 
 	// variables
 	protected:
-		queue_t		_currentQueue,
+		Queue_t		_currentQueue,
 					_pendingQueue;
 
 		OS::Mutex	_lockCurrentQueue,
@@ -226,8 +226,8 @@ namespace GXTypes
 	{
 	// types
 	private:
-		typedef MtQueue< QueueType >			parent_t;
-		typedef QueueType						queue_t;
+		typedef MtQueue< QueueType >			Parent_t;
+		typedef QueueType						Queue_t;
 		typedef typename QueueType::Value_t		Value_t;
 		typedef MtShortQueue< QueueType >		Self;
 
@@ -238,15 +238,15 @@ namespace GXTypes
 		{
 			// Warning: _lockPendingQueue must be locked!
 
-			if ( parent_t::_pendingQueue.Empty() )
+			if ( Parent_t::_pendingQueue.Empty() )
 				return;
 
-			if ( parent_t::_lockCurrentQueue.TryLock() )
+			if ( Parent_t::_lockCurrentQueue.TryLock() )
 			{
-				parent_t::_currentQueue.AppendBack( RVREF( parent_t::_pendingQueue ) );
-				parent_t::_lockCurrentQueue.Unlock();
+				Parent_t::_currentQueue.AppendBack( RVREF( Parent_t::_pendingQueue ) );
+				Parent_t::_lockCurrentQueue.Unlock();
 
-				parent_t::_pendingQueue.Clear();
+				Parent_t::_pendingQueue.Clear();
 			}
 		}
 
@@ -254,65 +254,65 @@ namespace GXTypes
 	public:
 		usize Push (const Value_t &x)	// override
 		{
-			SCOPELOCK( parent_t::_lockPendingQueue );
-			parent_t::_pendingQueue.PushBack( x );
+			SCOPELOCK( Parent_t::_lockPendingQueue );
+			Parent_t::_pendingQueue.PushBack( x );
 			_TryFlush();
-			return parent_t::_pendingQueue.Count();
+			return Parent_t::_pendingQueue.Count();
 		}
 		
 
 		usize Push (Value_t &&x)	// override
 		{
-			SCOPELOCK( parent_t::_lockPendingQueue );
-			parent_t::_pendingQueue.PushBack( RVREF( x ) );
+			SCOPELOCK( Parent_t::_lockPendingQueue );
+			Parent_t::_pendingQueue.PushBack( RVREF( x ) );
 			_TryFlush();
-			return parent_t::_pendingQueue.Count();
+			return Parent_t::_pendingQueue.Count();
 		}
 
 
 		void Append (const QueueType &q)	// override
 		{
-			SCOPELOCK( parent_t::_lockPendingQueue );
-			parent_t::_pendingQueue.AppendBack( q );
+			SCOPELOCK( Parent_t::_lockPendingQueue );
+			Parent_t::_pendingQueue.AppendBack( q );
 			_TryFlush();
 		}
 
 
 		void Append (QueueType &&q)	// override
 		{
-			SCOPELOCK( parent_t::_lockPendingQueue );
-			parent_t::_pendingQueue.AppendBack( RVREF( q ) );
+			SCOPELOCK( Parent_t::_lockPendingQueue );
+			Parent_t::_pendingQueue.AppendBack( RVREF( q ) );
 			_TryFlush();
 		}
 
 
 		void Append (ArrayCRef<Value_t> q)	// override
 		{
-			SCOPELOCK( parent_t::_lockPendingQueue );
-			parent_t::_pendingQueue.AppendBack( q );
+			SCOPELOCK( Parent_t::_lockPendingQueue );
+			Parent_t::_pendingQueue.AppendBack( q );
 			_TryFlush();
 		}
 
 
 		void TryFlush ()
 		{
-			SCOPELOCK( parent_t::_lockPendingQueue );
+			SCOPELOCK( Parent_t::_lockPendingQueue );
 			_TryFlush();
 		}
 
 
-		// inherit parent_t::Process
+		// inherit Parent_t::Process
 
 		template <typename Op>
 		usize ProcessAll (Op op) noexcept	// override
 		{
-			SCOPELOCK( parent_t::_lockCurrentQueue );
+			SCOPELOCK( Parent_t::_lockCurrentQueue );
 			usize	counter = 0;
 
-			while ( not parent_t::_currentQueue.Empty() )
+			while ( not Parent_t::_currentQueue.Empty() )
 			{
-				op( parent_t::_currentQueue.Front() );
-				parent_t::_currentQueue.PopFront();
+				op( Parent_t::_currentQueue.Front() );
+				Parent_t::_currentQueue.PopFront();
 				++counter;
 			}
 			return counter;

@@ -26,33 +26,25 @@ namespace PlatformGL
 	private:
 		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetFramebufferDescriptor,
-											GpuMsg::GetGLFramebufferID
+											GpuMsg::GetGLFramebufferID,
+											GpuMsg::FramebufferAttachImage
 										> >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
 		
 		using RenderPassMsgList_t	= MessageListFrom< GpuMsg::GetRenderPassDescriptor, GpuMsg::GetGLRenderPassID >;
+		using ImageMsgList_t		= MessageListFrom< GpuMsg::GetImageDescriptor, GpuMsg::CreateGLImageView >;
 		
 		struct AttachmentInfo : CompileTime::PODStruct
 		{
 		// variables
-			ModuleName_t		name;
-			GLuint				imageId		= 0;
-			EPixelFormat::type	format		= EPixelFormat::Unknown;
-			MultiSamples		samples;
-			EImage::type		imageType	= EImage::Unknown;
-			MipmapLevel			level;
-			ImgArrLayer			layer;
+			ModuleName_t			name;
+			GLuint					imageId		= 0;
+			ImageViewDescriptor		descr;
+			MultiSamples			samples;
 
 		// methods
-			AttachmentInfo ()
-			{}
-
-			AttachmentInfo (StringCRef name, MipmapLevel level, ImgArrLayer layer) :
-				name(name), level(level), layer(layer)
-			{}
-
-			bool IsEnabled ()	const	{ return imageId != 0; }
+			AttachmentInfo () {}
 		};
 	
 		using Attachments_t		= FixedSizeArray< AttachmentInfo, GlobalConst::Graphics_MaxColorBuffers >;
@@ -87,6 +79,7 @@ namespace PlatformGL
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _GetGLFramebufferID (const Message< GpuMsg::GetGLFramebufferID > &);
 		bool _GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &);
+		bool _FramebufferAttachImage (const Message< GpuMsg::FramebufferAttachImage > &);
 
 	private:
 		bool _IsCreated () const;
@@ -135,20 +128,11 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetGLPrivateClasses );
+		_SubscribeOnMsg( this, &GL4Framebuffer::_FramebufferAttachImage );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::GLThreadModuleID, true );
-		
-		FOR( i, ci.attachment )
-		{
-			const auto& att = ci.attachment[i];
-
-			CHECK( att.module and not att.name.Empty() );
-			CHECK( _Attach( att.name, att.module, false ) );
-
-			_attachments.PushBack({ att.name, att.mipmap, att.layer });
-		}
+		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
 
 		_ValidateDescriptor( INOUT _descr );
 	}
@@ -195,6 +179,9 @@ namespace PlatformGL
 	{
 		_DestroyFramebuffer();
 
+		_descr = Uninitialized;
+		_attachments.Clear();
+
 		return Module::_Delete_Impl( msg );
 	}
 	
@@ -208,12 +195,61 @@ namespace PlatformGL
 		CHECK_ERR( msg->newModule );
 
 		// render pass must be unique
-		bool	is_render_pass = msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_render_pass	= msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_image		= msg->newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_render_pass ) );
-		CHECK( _SetState( EState::Initial ) );
+		if ( _Attach( msg->name, msg->newModule, is_render_pass ) and (is_image or is_render_pass) )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_DestroyFramebuffer();
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_AttachModule
+=================================================
+*/
+	bool GL4Framebuffer::_FramebufferAttachImage (const Message< GpuMsg::FramebufferAttachImage > &msg)
+	{
+		ModulePtr	mod = GetModuleByName( msg->name );
+		if ( mod ) {
+			CHECK( _Detach( mod ) );
+		}
 
-		_DestroyFramebuffer();
+		bool			found = false;
+		AttachmentInfo	new_att;
+		
+		new_att.name			= msg->name;
+		new_att.descr			= msg->viewDescr;
+		new_att.descr.swizzle	= ImageSwizzle();
+
+		CHECK( new_att.descr.swizzle == msg->viewDescr.swizzle );
+
+		FOR( i, _attachments )
+		{
+			auto&	att = _attachments[i];
+
+			// replace
+			if ( att.name == msg->name )
+			{
+				att		= new_att;
+				found	= true;
+				break;
+			}
+		}
+
+		// add new attachment
+		if ( not found ) {
+			_attachments.PushBack( new_att );
+		}
+		
+		if ( _Attach( msg->name, msg->image, false ) )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_DestroyFramebuffer();
+		}
 		return true;
 	}
 	
@@ -224,7 +260,12 @@ namespace PlatformGL
 */
 	bool GL4Framebuffer::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
 	{
-		if ( _Detach( msg->oldModule ) )
+		CHECK_ERR( msg->oldModule );
+
+		bool	is_render_pass	= msg->oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_image		= msg->oldModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+
+		if ( _Detach( msg->oldModule ) and (is_image or is_render_pass) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyFramebuffer();
@@ -310,23 +351,23 @@ namespace PlatformGL
 
 			CHECK_ERR( req_descr->result.IsDefined() and req_view->result.IsDefined() );
 			
-			att.format		= req_descr->result->format;
-			att.imageType	= req_descr->result->imageType;
-			att.samples		= req_descr->result->samples;
-			att.imageId		= *req_view->result;
+			att.descr.format	= att.descr.format == EPixelFormat::Unknown ? req_descr->result->format : att.descr.format;
+			att.descr.viewType	= att.descr.viewType == EImage::Unknown ? req_descr->result->imageType : att.descr.viewType;
+			att.samples			= req_descr->result->samples;
+			att.imageId			= *req_view->result;
 
-			const uint4	dim	= ImageUtils::LevelDimension( att.imageType, req_descr->result->dimension, att.level.Get() );
+			const uint4	dim	= ImageUtils::LevelDimension( att.descr.viewType, req_descr->result->dimension, att.descr.baseLevel.Get() );
 
 			// validate
 			CHECK_ERR( All( dim.xy() >= _descr.size ) );
 
 			if ( _descr.layers > 1 )
 			{
-				CHECK_ERR( EImage::IsArray( att.imageType ) );
-				CHECK_ERR( dim.w == _descr.layers and att.layer.Get() == 0 );	// OpenGL doesn't support range for layers
+				CHECK_ERR( EImage::IsArray( att.descr.viewType ) );
+				CHECK_ERR( dim.w == _descr.layers and att.descr.baseLayer.Get() == 0 );	// OpenGL doesn't support range for layers
 			}
 			else
-				att.layer = Uninitialized;
+				att.descr.baseLayer = Uninitialized;
 		}
 
 		
@@ -356,15 +397,15 @@ namespace PlatformGL
 
 			_GetAttachmentTarget( att, render_pass_descr, OUT index, OUT target );
 			
-			if ( att.layer.IsDefined() )
-				GL_CALL( glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER, target, att.imageId, att.level.Get(), att.layer.Get() ) )
+			if ( att.descr.baseLayer.IsDefined() )
+				GL_CALL( glFramebufferTextureLayer( GL_DRAW_FRAMEBUFFER, target, att.imageId, att.descr.baseLevel.Get(), att.descr.baseLayer.Get() ) )
 			else
-				GL_CALL( glFramebufferTexture( GL_DRAW_FRAMEBUFFER, target, att.imageId, att.level.Get() ) );
+				GL_CALL( glFramebufferTexture( GL_DRAW_FRAMEBUFFER, target, att.imageId, att.descr.baseLevel.Get() ) );
 
 			if ( is_depth )
-				_descr.depthStencilAttachment = FramebufferDescriptor::AttachmentInfo{ att.name, att.imageType };
+				_descr.depthStencilAttachment = FramebufferDescriptor::AttachmentInfo{ att.name, att.descr.viewType };
 			else
-				_descr.colorAttachments[index] = FramebufferDescriptor::AttachmentInfo{ att.name, att.imageType };
+				_descr.colorAttachments[index] = FramebufferDescriptor::AttachmentInfo{ att.name, att.descr.viewType };
 		}
 
 		// check status
@@ -408,17 +449,17 @@ namespace PlatformGL
 		{
 			index = -1; // not needed for depth stencil
 
-			if ( EPixelFormat::HasDepth( info.format ) and EPixelFormat::HasStencil( info.format ) ) {
+			if ( EPixelFormat::HasDepth( info.descr.format ) and EPixelFormat::HasStencil( info.descr.format ) ) {
 				target = GL_DEPTH_STENCIL_ATTACHMENT;
 				return true;
 			}
 
-			if ( EPixelFormat::HasDepth( info.format ) ) {
+			if ( EPixelFormat::HasDepth( info.descr.format ) ) {
 				target = GL_DEPTH_ATTACHMENT;
 				return true;
 			}
 
-			if ( EPixelFormat::HasStencil( info.format ) ) {
+			if ( EPixelFormat::HasStencil( info.descr.format ) ) {
 				target = GL_STENCIL_ATTACHMENT;
 				return true;
 			}
@@ -430,11 +471,11 @@ namespace PlatformGL
 		{
 			if ( rpDescr.ColorAttachments()[i].name == info.name )
 			{
-				CHECK_ERR( EPixelFormat::IsColor( info.format ) );
+				CHECK_ERR( EPixelFormat::IsColor( info.descr.format ) );
 				CHECK_ERR( i < GlobalConst::Graphics_MaxColorBuffers );
 
 				index  = i;
-				target = GL_COLOR_ATTACHMENT0 + i;
+				target = GL_COLOR_ATTACHMENT0 + uint(i);
 				return true;
 			}
 		}
@@ -456,12 +497,12 @@ namespace PlatformGL
 			const auto&	att = _attachments[i];
 
 			ASSERT( att.imageId != 0 );
-			builder.Add( att.name, att.format, att.samples );
+			builder.Add( att.name, att.descr.format, att.samples );
 		}
 
 		ModulePtr	render_pass;
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-							Platforms::GLRenderPassModuleID,
+							GLRenderPassModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuRenderPass{ null, builder.Finish() },
 							OUT render_pass
@@ -494,7 +535,7 @@ namespace PlatformGL
 			// check in depth stencil attachment
 			if ( att.name == rpDescr.DepthStencilAttachment().name )
 			{
-				CHECK_ERR( att.format == rpDescr.DepthStencilAttachment().format );
+				CHECK_ERR( att.descr.format == rpDescr.DepthStencilAttachment().format );
 				CHECK_ERR( att.samples == rpDescr.DepthStencilAttachment().samples );
 				continue;
 			}
@@ -508,7 +549,7 @@ namespace PlatformGL
 
 				if ( col.name == att.name )
 				{
-					CHECK_ERR( col.format == att.format );
+					CHECK_ERR( col.format == att.descr.format );
 					CHECK_ERR( col.samples == att.samples );
 					found = false;
 					break;
@@ -535,7 +576,6 @@ namespace PlatformGL
 		}
 
 		_framebufferId	= 0;
-		_descr			= Uninitialized;
 	}
 
 /*

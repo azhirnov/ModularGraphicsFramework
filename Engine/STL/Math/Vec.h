@@ -7,16 +7,82 @@
 #include "Engine/STL/Containers/String.h"
 #include "Engine/STL/Common/Cast.h"
 #include "Mathematics.h"
+#include "Engine/STL/CompileTime/StringToID.h"
 
 namespace GX_STL
 {
 namespace GXMath
 {
 
+	DECL_STRING_TO_ID( Swizzle, 0 );
+
+
+	namespace _math_hidden_
+	{
+		inline constexpr uint _SwizzleCharToIndex (const ulong hash)
+		{
+			const uint	off		= CompileTime::IntLog2< uint, ('Z' - 'A') > + 1;
+			const uint	mask	= (1u << off) - 1;
+			const uint	mask2	= (1u << (off*2)) - 1;
+
+			const uint	c = 'A' + (hash & mask) - 1;
+			const uint	c0 = mask | (1 << off);
+			const uint	c1 = mask | (2 << off);
+
+			return	(c == 'R' or c == 'X' ? 1 :		// X
+					 c == 'G' or c == 'Y' ? 2 :		// Y
+					 c == 'B' or c == 'Z' ? 3 :		// Z
+					 c == 'A' or c == 'W' ? 4 :		// W
+					 (hash & mask2) == c0 ? 5 :		// 0
+					 (hash & mask2) == c1 ? 6 :		// 1
+					 (hash & mask) == 0 ? 0 : -1);	// error
+		}
+
+		inline constexpr uint _ParseSwizzle (const Swizzle::type sw, const uint maxI = 4)
+		{
+			const auto	val	 = sw >> CompileTime::IntLog2< uint, Swizzle::_IDMask+1 >;
+			const uint	off	 = CompileTime::IntLog2< uint, ('Z' - 'A') > + 1;
+
+			const uint	a3 = _SwizzleCharToIndex( val );
+			const uint	a2 = _SwizzleCharToIndex( val >> (off * (a3<5?1:2)) );
+			const uint	a1 = _SwizzleCharToIndex( val >> (off * ((a2<5?1:2) + (a3<5?1:2))) );
+			const uint	a0 = _SwizzleCharToIndex( val >> (off * ((a1<5?1:2) + (a2<5?1:2) + (a3<5?1:2))) );
+
+			//const uint	b0 = a0 << 0;
+			//const uint	b1 = a1 << (a0 ? 4 : 0);
+			//const uint	b2 = a2 << ((a1 ? 4 : 0) + (a0 ? 4 : 0));
+			//const uint	b3 = a3 << ((a2 ? 4 : 0) + (a1 ? 4 : 0) + (a0 ? 4 : 0));
+			const uint	b0 = a3 << 0;
+			const uint	b1 = a2 << (a3 ? 4 : 0);
+			const uint	b2 = a1 << ((a2?4:0) + (a3?4:0));
+			const uint	b3 = a0 << ((a1?4:0) + (a2?4:0) + (a3?4:0));
+
+			return	b0 | b1 | b2 | b3 |
+					((val >> (off*((a0<5?1:2) + (a1<5?1:2) + (a2<5?1:2) + (a3<5?1:2)))) ? -1 : 0) |
+					(a0 <= maxI or a0 == 5 or a0 == 6 ? 0 : -1) |
+					(a1 <= maxI or a1 == 5 or a1 == 6 ? 0 : -1) |
+					(a2 <= maxI or a2 == 5 or a2 == 6 ? 0 : -1) |
+					(a3 <= maxI or a3 == 5 or a3 == 6 ? 0 : -1);
+		}
+
+		template <usize I>
+		inline constexpr bool _Validate (const uint sw)
+		{
+			const 
+		}
+
+		template <uint I>
+		static constexpr usize SWLengthImpl = I < 0xF ? 1 : I < 0xFF ? 2 : I < 0xFFF ? 3 : 4;
+
+		template <Swizzle::type SW>
+		static constexpr usize SWLength = SWLengthImpl< _ParseSwizzle( SW ) >;
+
+	}	// _math_hidden_
+
 	
 #	define VEC_OP_UNARY( _op_ ) \
 		\
-		const Self	operator _op_ () const \
+		constexpr const Self	operator _op_ () const \
 		{ \
 			Self	ret; \
 			FOR( i, *this )	 ret[i] = _op_ (*this)[i]; \
@@ -25,7 +91,7 @@ namespace GXMath
 
 #	define VEC_OP_BINARY_( _op_ ) \
 		\
-		Self	operator _op_  (const Self& right) const \
+		constexpr Self	operator _op_  (const Self& right) const \
 		{ \
 			Self	ret; \
 			FOR( i, *this )	 ret[i] = ( (*this)[i] _op_ right[i] ); \
@@ -42,14 +108,14 @@ namespace GXMath
 		
 #	define VEC_OP_BINARY_SCALAR_( _op_, _scalar_ ) \
 		\
-		Self	operator _op_  (const _scalar_& right) const \
+		constexpr Self	operator _op_  (const _scalar_& right) const \
 		{ \
 			Self	ret; \
 			FOR( i, *this )	 ret[i] = ( (*this)[i] _op_ right ); \
 			return ret; \
 		} \
 		\
-		friend Self operator _op_ (const _scalar_& left, const Self& right) \
+		friend constexpr Self operator _op_ (const _scalar_& left, const Self& right) \
 		{ \
 			return Self(left) _op_ right; \
 		}

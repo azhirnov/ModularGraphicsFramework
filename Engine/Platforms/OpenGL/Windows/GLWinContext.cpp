@@ -36,7 +36,7 @@ namespace PlatformGL
 	Create
 =================================================
 */
-	bool GLWinContext::Create (const HWND_t &wnd, INOUT VideoSettings_t &vs)
+	bool GLWinContext::Create (const HWND_t &wnd, INOUT GraphicsSettings &vs)
 	{
 		Destroy();
 		
@@ -126,7 +126,7 @@ namespace PlatformGL
 	_GetApiVersion
 =================================================
 */
-	bool GLWinContext::_GetApiVersion (const VideoSettings_t &vs, OUT uint2 &version)
+	bool GLWinContext::_GetApiVersion (const GraphicsSettings &vs, OUT uint2 &version)
 	{
 		using namespace CreateInfo;
 
@@ -150,7 +150,7 @@ namespace PlatformGL
 	_InitOpenGL
 =================================================
 */
-	bool GLWinContext::_InitOpenGL (INOUT VideoSettings_t &vs)
+	bool GLWinContext::_InitOpenGL (INOUT GraphicsSettings &vs)
 	{
 		// extract data from video settings
 		uint2	version;

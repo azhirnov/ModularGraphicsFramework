@@ -12,6 +12,8 @@ namespace Platforms
 	// Shared
 	static constexpr OModID::type  PipelineTemplateModuleID			= "pp-templ"_OModID;
 
+	// TODO: remove platform-dependent ids
+
 	// Vulkan
 	static constexpr GModID::type  VkContextModuleID				= "vk.ctx"_GModID;
 	static constexpr TModID::type  VkThreadModuleID					= "vk.thread"_TModID;
@@ -19,10 +21,10 @@ namespace Platforms
 	static constexpr OModID::type  VkCommandBufferModuleID			= "vk.cmdbuf"_OModID;
 	static constexpr OModID::type  VkCommandBuilderModuleID			= "vk.cmdbuild"_OModID;
 	static constexpr OModID::type  VkFramebufferModuleID			= "vk.fbuffer"_OModID;
-	static constexpr OModID::type  VkSystemFramebufferModuleID		= "vk.sys-fb"_OModID;
+	//static constexpr OModID::type  VkSystemFramebufferModuleID		= "vk.sys-fb"_OModID;
 	static constexpr OModID::type  VkImageModuleID					= "vk.image"_OModID;
 	static constexpr OModID::type  VkMemoryModuleID					= "vk.memory"_OModID;
-	static constexpr OModID::type  VkManagedMemoryModuleID			= "vk.mngd-mem"_OModID;	// part of memory manager
+	//static constexpr OModID::type  VkManagedMemoryModuleID			= "vk.mngd-mem"_OModID;	// part of memory manager
 	static constexpr OModID::type  VkMemoryManagerModuleID			= "vk.mem-mngr"_OModID;
 	static constexpr OModID::type  VkGraphicsPipelineModuleID		= "vk.g-ppln"_OModID;
 	static constexpr OModID::type  VkComputePipelineModuleID		= "vk.c-ppln"_OModID;
@@ -38,7 +40,7 @@ namespace Platforms
 	static constexpr OModID::type  GLCommandBufferModuleID			= "gl.cmdbuf"_OModID;
 	static constexpr OModID::type  GLCommandBuilderModuleID			= "gl.cmdbuild"_OModID;
 	static constexpr OModID::type  GLFramebufferModuleID			= "gl.fbuffer"_OModID;
-	static constexpr OModID::type  GLSystemFramebufferModuleID		= "gl.sys-fb"_OModID;
+	//static constexpr OModID::type  GLSystemFramebufferModuleID		= "gl.sys-fb"_OModID;
 	static constexpr OModID::type  GLImageModuleID					= "gl.image"_OModID;
 	static constexpr OModID::type  GLMemoryModuleID					= "gl.memory"_OModID;
 	static constexpr OModID::type  GLGraphicsPipelineModuleID		= "gl.g-ppln"_OModID;
@@ -55,7 +57,7 @@ namespace Platforms
 	static constexpr OModID::type  DXCommandBufferModuleID			= "dx.cmdbuf"_OModID;
 	static constexpr OModID::type  DXCommandBuilderModuleID			= "dx.cmdbuild"_OModID;
 	static constexpr OModID::type  DXFramebufferModuleID			= "dx.fbuffer"_OModID;
-	static constexpr OModID::type  DXSystemFramebufferModuleID		= "dx.sys-fb"_OModID;
+	//static constexpr OModID::type  DXSystemFramebufferModuleID		= "dx.sys-fb"_OModID;
 	static constexpr OModID::type  DXImageModuleID					= "dx.image"_OModID;
 	static constexpr OModID::type  DXMemoryModuleID					= "dx.memory"_OModID;
 	static constexpr OModID::type  DXGraphicsPipelineModuleID		= "dx.g-ppln"_OModID;
@@ -88,6 +90,41 @@ namespace Platforms
 	static constexpr OModID::type  SWMemoryModuleID					= "sw.memory"_OModID;
 	static constexpr OModID::type  SWComputePipelineModuleID		= "sw.c-ppln"_OModID;
 	static constexpr OModID::type  SWPipelineResourceTableModuleID	= "sw.restable"_OModID;
+
+
+
+	struct ComputeModuleIDs
+	{
+		GModID::type	context			= GModID::type(0);
+		TModID::type	thread			= TModID::type(0);
+		OModID::type	buffer			= OModID::type(0);
+		OModID::type	image			= OModID::type(0);
+		OModID::type	memory			= OModID::type(0);
+		OModID::type	memoryManager	= OModID::type(0);
+		OModID::type	pipeline		= OModID::type(0);
+		OModID::type	resourceTable	= OModID::type(0);
+		OModID::type	uniforms		= OModID::type(0);
+		OModID::type	commandBuffer	= OModID::type(0);
+		OModID::type	commandBuilder	= OModID::type(0);
+	};
+
+	struct GraphicsModuleIDs
+	{
+		GModID::type	context			= GModID::type(0);
+		TModID::type	thread			= TModID::type(0);
+		OModID::type	buffer			= OModID::type(0);
+		OModID::type	image			= OModID::type(0);
+		OModID::type	sampler			= OModID::type(0);
+		OModID::type	memory			= OModID::type(0);
+		OModID::type	memoryManager	= OModID::type(0);
+		OModID::type	pipeline		= OModID::type(0);
+		OModID::type	resourceTable	= OModID::type(0);
+		OModID::type	uniforms		= OModID::type(0);
+		OModID::type	commandBuffer	= OModID::type(0);
+		OModID::type	commandBuilder	= OModID::type(0);
+		OModID::type	framebuffer		= OModID::type(0);
+		OModID::type	renderPass		= OModID::type(0);
+	};
 
 
 }	// Platforms

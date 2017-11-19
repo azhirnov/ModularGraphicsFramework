@@ -279,7 +279,7 @@ namespace PlatformVK
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
 	}
 		
 /*
@@ -544,7 +544,7 @@ namespace PlatformVK
 		// create new command buffer
 		{
 			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-							Platforms::VkCommandBufferModuleID,
+							VkCommandBufferModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
 								_GetManager(),
@@ -1772,7 +1772,7 @@ namespace PlatformVK
 
 		VK_CHECK( vkCreateCommandPool( GetVkDevice(), &pool_info, null, OUT &_cmdPool ) );
 
-		GetDevice()->SetObjectName( _cmdPool, GetDebugName(), EGpuObject::CommandPool );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_cmdPool), GetDebugName(), EGpuObject::CommandPool );
 		return true;
 	}
 

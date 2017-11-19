@@ -46,52 +46,55 @@ namespace GXTypes
 
 	// methods
 	public:
-		Atomic (GX_DEFCTOR): _value(0) {}
+		forceinline Atomic (GX_DEFCTOR): _value(0) {}
 
-		explicit Atomic (T val): _value(val) {}
-		explicit Atomic (const Self &sObj): _value(sObj.Get()) {}
+		forceinline explicit Atomic (const T &val) : _value(val) {}
+		forceinline explicit Atomic (const Self &other) : _value(other.Get()) {}
+		forceinline explicit Atomic (Self &&other) : _value(other.Get()) {}
 
-		operator const volatile T () const		{ return Get(); }
+		forceinline explicit operator T () const			{ return Get(); }
 
-		Self &	operator ++ ()					{ Op::Inc<T>( _value );			return *this; }
-		Self &	operator -- ()					{ Op::Dec<T>( _value );			return *this; }
-		Self &	operator += (const T& right)	{ Op::Add<T>( _value, right );  return *this; }
-		Self &	operator -= (const T& right)	{ Op::Sub<T>( _value, right );  return *this; }
-		Self &	operator =  (const T& right)	{ Op::Set<T>( _value, right );  return *this; }
-		Self &	operator |= (const T& right)	{ Op::Or<T> ( _value, right );  return *this; }
-		Self &	operator &= (const T& right)	{ Op::And<T>( _value, right );  return *this; }
-		Self &	operator ^= (const T& right)	{ Op::Xor<T>( _value, right );  return *this; }
+		forceinline const T	operator ++ ()					{ return Op::Inc<T>( _value ); }
+		forceinline const T	operator -- ()					{ return Op::Dec<T>( _value ); }
+		forceinline const T	operator += (const T& right)	{ return Op::Add<T>( _value, right ); }
+		forceinline const T	operator -= (const T& right)	{ return Op::Sub<T>( _value, right ); }
+		forceinline const T	operator =  (const T& right)	{ return Op::Set<T>( _value, right ); }
+		forceinline const T	operator |= (const T& right)	{ return Op::Or<T> ( _value, right ); }
+		forceinline const T	operator &= (const T& right)	{ return Op::And<T>( _value, right ); }
+		forceinline const T	operator ^= (const T& right)	{ return Op::Xor<T>( _value, right ); }
 		
-		T		Inc ()							{ return Op::Inc<T>( _value ); }
-		T		Dec ()							{ return Op::Dec<T>( _value ); }
-		T		Get ()	const					{ return Op::Get<T>( _value ); }
-		T		Add (const T& right)			{ return Op::Add<T>( _value, right ); }
-		T		Sub (const T& right)			{ return Op::Sub<T>( _value, right ); }
-		T		Set (const T& right)			{ return Op::Set<T>( _value, right ); }
-		T		Or  (const T& right)			{ return Op::Or<T> ( _value, right ); }
-		T		And (const T& right)			{ return Op::And<T>( _value, right ); }
-		T		Xor (const T& right)			{ return Op::Xor<T>( _value, right ); }
+		forceinline const T	Inc ()							{ return Op::Inc<T>( _value ); }
+		forceinline const T	Dec ()							{ return Op::Dec<T>( _value ); }
+		forceinline const T	Get ()	const					{ return Op::Get<T>( _value ); }
+		forceinline const T	Add (const T& right)			{ return Op::Add<T>( _value, right ); }
+		forceinline const T	Sub (const T& right)			{ return Op::Sub<T>( _value, right ); }
+		forceinline const T	Set (const T& right)			{ return Op::Set<T>( _value, right ); }
+		forceinline const T	Or  (const T& right)			{ return Op::Or<T> ( _value, right ); }
+		forceinline const T	And (const T& right)			{ return Op::And<T>( _value, right ); }
+		forceinline const T	Xor (const T& right)			{ return Op::Xor<T>( _value, right ); }
 
-		Self	operator ++ (int)
+		forceinline const T	operator ++ (int)
 		{
-			const Self  ret( _value );
+			const T  ret = Get();
 			++(*this);
 			return ret;
 		}
 
-		Self	operator -- (int)
+		forceinline const T	operator -- (int)
 		{
-			const Self  ret( _value );
+			const T  ret = Get();
 			--(*this);
 			return ret;
 		}
 
-
-		// if *this == compare then *this = val return old *this
-		T CompareEx (const T& val, const T& compare)
+		// if *this == compare then *this = val returns old *this
+		forceinline T CompareEx (const T& val, const T& compare)
 		{
-			return Op::CmpEx<T>( _value, val, compare );
+			return Op::CmpExch<T>( _value, val, compare );
 		}
+
+		_GX_DIM_CMP_OPERATORS_SELF( Get() );
+		_GX_DIM_CMP_OPERATORS_TYPE( Get(), const T&, );
 	};
 
 # else

@@ -25,8 +25,7 @@ namespace PlatformGL
 		using HDC_t				= OS::HiddenOSTypeFrom<void*>;
 		using HGLRC_t			= OS::HiddenOSTypeFrom<void*>;
 		using FuncPtr_t			= OS::HiddenOSTypeFrom<void*>;
-		using VideoSettings_t	= CreateInfo::GpuContext;
-		using EFlags			= VideoSettings_t::EFlags;
+		using EFlags			= GraphicsSettings::EFlags;
 
 
 	// variables
@@ -46,7 +45,7 @@ namespace PlatformGL
 	public:
 		GLWinContext ();
 
-		bool Create (const HWND_t &wnd, INOUT VideoSettings_t &vs);
+		bool Create (const HWND_t &wnd, INOUT GraphicsSettings &vs);
 		void Destroy ();
 
 		void MakeCurrent ();
@@ -58,10 +57,10 @@ namespace PlatformGL
 		void SwapBuffers ();
 
 	private:
-		bool _InitOpenGL (INOUT VideoSettings_t &vs);
+		bool _InitOpenGL (INOUT GraphicsSettings &vs);
 		bool _InitOpenGL2 ();
 
-		bool _GetApiVersion (const VideoSettings_t &vs, OUT uint2 &version);
+		bool _GetApiVersion (const GraphicsSettings &vs, OUT uint2 &version);
 	};
 
 

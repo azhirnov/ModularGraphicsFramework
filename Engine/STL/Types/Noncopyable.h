@@ -21,12 +21,11 @@ namespace GXTypes
 		~Noncopyable () {}
 
 	private:
-		explicit
-		Noncopyable (const Noncopyable &) = delete;
+		explicit Noncopyable (const Noncopyable &) = delete;
+		explicit Noncopyable (Noncopyable &&) = delete;
 
-		Noncopyable (Noncopyable &&) = delete;
-
-		void operator = (const Noncopyable &) = delete;
+		Noncopyable& operator = (const Noncopyable &) = delete;
+		Noncopyable& operator = (Noncopyable &&) = delete;
 	};
 
 

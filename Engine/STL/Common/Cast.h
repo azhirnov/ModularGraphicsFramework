@@ -60,7 +60,7 @@ namespace GXTypes
 	template <typename R, typename B>
 	forceinline constexpr typename _types_hidden_::_PointerCast< B, R >::Result_t  PointerSafeCast (B val)
 	{
-		STATIC_ASSERT( sizeof(R) == sizeof(TypeTraits::RemovePointer<B>) );
+		STATIC_ASSERT( sizeof(R) == sizeof(TypeTraits::RemovePointer<B>) or CompileTime::IsBaseOf< B, R > );
 		return PointerCast<R,B>( val );
 	}
 

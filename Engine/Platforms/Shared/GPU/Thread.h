@@ -16,9 +16,27 @@ namespace CreateInfo
 	//
 	struct GpuThread
 	{
-		ModulePtr		context;
-		ModulePtr		shared;
-		GpuContext		settings;
+	// types
+		using GAPI		= Platforms::GAPI;
+		using EFlags	= Platforms::GraphicsSettings::EFlags;
+
+	// variables
+		ModulePtr						context;
+		ModulePtr						shared;
+		Platforms::GraphicsSettings		settings;
+
+	// methods
+		explicit GpuThread (GAPI::type version = GAPI::type(0)) : settings{ version } {}
+
+		explicit GpuThread (const Platforms::GraphicsSettings &settings, const ModulePtr &context = null, const ModulePtr &shared = null) :
+			context{ context }, shared{ shared }, settings{ settings }
+		{}
+
+		explicit GpuThread (const Platforms::ComputeSettings &settings) :
+			settings{ settings.version, EFlags::bits() | (settings.isDebug ? EFlags::DebugContext : EFlags::type(0)),
+					  Platforms::EPixelFormat::Unknown, Platforms::EPixelFormat::Unknown,
+					  Platforms::MultiSamples(), settings.device, 0 }
+		{}
 	};
 
 }	// CreateInfo
@@ -118,6 +136,16 @@ namespace GpuMsg
 		explicit SubmitComputeQueueCommands (const ModulePtr &cmd, bool sync = false) : commands({ cmd }), sync(sync) {}
 
 		SubmitComputeQueueCommands (InitializerList< ModulePtr > list, bool sync = false) : commands( list ), sync(sync) {}
+	};
+
+
+	//
+	// Get Compute / Graphics Module IDs
+	//
+	struct GetGraphicsModules
+	{
+		Out< Platforms::ComputeModuleIDs >		compute;
+		Out< Platforms::GraphicsModuleIDs >		graphics;
 	};
 
 

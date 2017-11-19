@@ -4,6 +4,7 @@
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
+using namespace GX_STL::GXMath;
 using namespace GX_STL::CompileTime;
 
 
@@ -15,7 +16,7 @@ extern void Test_CompileTime_StringToID ()
 {
 	STATIC_ASSERT( MyID::_ID == 1 );
 	STATIC_ASSERT( MyID2::_ID == 15 );
-	/*
+	
 	STATIC_ASSERT( ("_"_MyID >> 9) == 0 );
 
 	STATIC_ASSERT( ("*"_MyID >> 14) == 0 );
@@ -34,7 +35,7 @@ extern void Test_CompileTime_StringToID ()
 	{
 		case "*"_MyID : break;
 		default :		WARNING( "----" );
-	}*/
+	}
 
 	auto	a0 = "qwertyuiopas"_str;	// max size
 	auto	a1 = MyID::FromString( a0 );
@@ -74,4 +75,28 @@ extern void Test_CompileTime_StringToID ()
 	auto	i1 = MyID::FromString( i0 );
 	auto	i2 = MyID::ToString( i1 );
 	ASSERT( i2.StartsWithIC( i0 ) );
+
+	const uint	sw0 = _math_hidden_::_ParseSwizzle( "RRRR"_Swizzle );
+	STATIC_ASSERT( sw0 == 0x1111 );
+	
+	const uint	sw1 = _math_hidden_::_ParseSwizzle( " RRRR"_Swizzle );
+	STATIC_ASSERT( sw1 == -1 );
+	
+	const uint	sw2 = _math_hidden_::_ParseSwizzle( "RGBA"_Swizzle );
+	STATIC_ASSERT( sw2 == 0x4321 );
+	
+	const uint	sw3 = _math_hidden_::_ParseSwizzle( "YX"_Swizzle );
+	STATIC_ASSERT( sw3 == 0x12 );
+
+	const uint	sw4 = _math_hidden_::_ParseSwizzle( "R0"_Swizzle );
+	STATIC_ASSERT( sw4 == 0x51 );
+	
+	const uint	sw5 = _math_hidden_::_ParseSwizzle( "R01G"_Swizzle );
+	STATIC_ASSERT( sw5 == 0x2651 );
+
+	const uint	sw6 = _math_hidden_::_ParseSwizzle( "R "_Swizzle );
+	STATIC_ASSERT( sw6 == 0x1 );
+
+	const uint	sw7 = _math_hidden_::_ParseSwizzle( "R G "_Swizzle );
+	STATIC_ASSERT( sw7 == 0x21 );
 }

@@ -35,6 +35,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenGLContext::_Delete_Impl );
 		_SubscribeOnMsg( this, &OpenGLContext::_AddToManager );
 		_SubscribeOnMsg( this, &OpenGLContext::_RemoveFromManager );
+		_SubscribeOnMsg( this, &OpenGLContext::_GetGraphicsModules );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 	}
@@ -75,14 +76,75 @@ namespace Platforms
 	bool OpenGLContext::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		//CHECK_ERR( msg->module->GetSupportedMessages().HasAllTypes< GLThreadMsgList_t >() );
-		//CHECK_ERR( msg->module->GetSupportedEvents().HasAllTypes< GLThreadEventList_t >() );
-		ASSERT( _threads.IsExist( msg->module ) );
 
-		_threads.Erase( msg->module );
+		ModulePtr	module = msg->module.Lock();
+
+		if ( not module )
+			return false;
+
+		ASSERT( _threads.IsExist( module ) );
+
+		_threads.Erase( module );
 		return true;
 	}
 		
+/*
+=================================================
+	_GetGraphicsModules
+=================================================
+*/	
+	bool OpenGLContext::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	{
+		msg->compute.Set( GetComputeModules() );
+		msg->graphics.Set( GetGraphicsModules() );
+		return true;
+	}
+	
+/*
+=================================================
+	GetGraphicsModules
+=================================================
+*/	
+	GraphicsModuleIDs OpenGLContext::GetGraphicsModules ()
+	{
+		GraphicsModuleIDs	graphics;
+		graphics.pipeline		= GLGraphicsPipelineModuleID;
+		graphics.framebuffer	= GLFramebufferModuleID;
+		graphics.renderPass		= GLRenderPassModuleID;
+		graphics.context		= GLContextModuleID;
+		graphics.thread			= GLThreadModuleID;
+		graphics.commandBuffer	= GLCommandBufferModuleID;
+		graphics.commandBuilder	= GLCommandBuilderModuleID;
+		graphics.buffer			= GLBufferModuleID;
+		graphics.image			= GLImageModuleID;
+		graphics.sampler		= GLSamplerModuleID;
+		graphics.memory			= GLMemoryModuleID;
+		graphics.resourceTable	= GLPipelineResourceTableModuleID;
+		graphics.uniforms		= GLUniformsModuleID;
+		return graphics;
+	}
+	
+/*
+=================================================
+	GetComputeModules
+=================================================
+*/	
+	ComputeModuleIDs OpenGLContext::GetComputeModules ()
+	{
+		ComputeModuleIDs	compute;
+		compute.pipeline		= GLComputePipelineModuleID;
+		compute.context			= GLContextModuleID;
+		compute.thread			= GLThreadModuleID;
+		compute.commandBuffer	= GLCommandBufferModuleID;
+		compute.commandBuilder	= GLCommandBuilderModuleID;
+		compute.buffer			= GLBufferModuleID;
+		compute.image			= GLImageModuleID;
+		compute.memory			= GLMemoryModuleID;
+		compute.resourceTable	= GLPipelineResourceTableModuleID;
+		compute.uniforms		= GLUniformsModuleID;
+		return compute;
+	}
+
 /*
 =================================================
 	Register

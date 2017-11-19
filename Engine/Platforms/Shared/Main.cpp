@@ -36,7 +36,12 @@ namespace Engine
 {
 namespace Platforms
 {
-	
+
+	static ModulePtr CreateDefaultPlatform (GlobalSystemsRef, const CreateInfo::Platform &);
+	static ModulePtr CreateDefaultWindow (GlobalSystemsRef, const CreateInfo::Window &);
+	static ModulePtr CreateDefaultGpuContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
+	static ModulePtr CreateDefaultGpuThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
+
 /*
 =================================================
 	RegisterPlatforms
@@ -64,6 +69,13 @@ namespace Platforms
 		#ifdef GRAPHICS_API_DIRECTX
 			DirectXContext::Register( ms->GlobalSystems() );
 		#endif
+
+		auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
+
+		factory->Register( 0, &CreateDefaultPlatform );
+		factory->Register( 0, &CreateDefaultWindow );
+		factory->Register( 0, &CreateDefaultGpuContext );
+		factory->Register( 0, &CreateDefaultGpuThread );
 	}
 	
 /*
@@ -94,7 +106,99 @@ namespace Platforms
 			DirectXContext::Unregister( ms->GlobalSystems() );
 		#endif
 	}
+	
+/*
+=================================================
+	CreateDefaultPlatform
+=================================================
+*/
+	static ModulePtr CreateDefaultPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci)
+	{
+		auto	factory = gs->Get< ModulesFactory >();
 
+		Array< ModuleMsg::UntypedID_t >	ids;
+		factory->Search<decltype(ci)>( "", OUT ids );
+		
+		FOR( i, ids ) {
+			if ( ids[i] != GModID::type(0) ) {
+				ModulePtr	mod;
+				CHECK_ERR( factory->Create( ids[i], gs, ci, OUT mod ) );
+				return mod;
+			}
+		}
+		return null;
+	}
+	
+/*
+=================================================
+	CreateDefaultWindow
+=================================================
+*/
+	static ModulePtr CreateDefaultWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci)
+	{
+		auto	factory = gs->Get< ModulesFactory >();
+
+		Array< ModuleMsg::UntypedID_t >	ids;
+		factory->Search<decltype(ci)>( "", OUT ids );
+
+		FOR( i, ids ) {
+			if ( ids[i] != TModID::type(0) ) {
+				ModulePtr	mod;
+				CHECK_ERR( factory->Create( ids[i], gs, ci, OUT mod ) );
+				return mod;
+			}
+		}
+		return null;
+	}
+	
+/*
+=================================================
+	CreateDefaultGpuContext
+=================================================
+*/
+	static ModulePtr CreateDefaultGpuContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+	{
+		auto	factory = gs->Get< ModulesFactory >();
+		auto	api		= GAPI::ToString( ci.settings.version );
+		usize	pos;
+
+		if ( api.Find( ' ', OUT pos ) ) {
+			api[pos] = '.';
+			api[pos+1] = '\0';
+		}
+
+		Array< ModuleMsg::UntypedID_t >	ids;
+		factory->Search<decltype(ci)>( api.cstr(), OUT ids );
+
+		FOR( i, ids ) {
+			if ( ids[i] != GModID::type(0) ) {
+				ModulePtr	mod;
+				CHECK_ERR( factory->Create( ids[i], gs, ci, OUT mod ) );
+				return mod;
+			}
+		}
+		return null;
+	}
+	
+/*
+=================================================
+	CreateDefaultGpuThread
+=================================================
+*/
+	static ModulePtr CreateDefaultGpuThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
+	{
+		auto		ctx		= gs->Get< MainSystem >()->GetModuleByMsg< CompileTime::TypeListFrom< Message<GpuMsg::GetGraphicsModules> > >();
+		auto		factory	= gs->Get< ModulesFactory >();
+		ModulePtr	mod;
+
+		if ( ctx ) {
+			Message< GpuMsg::GetGraphicsModules >	req_ids;
+			ctx->Send( req_ids );
+			CHECK_ERR( factory->Create( req_ids->graphics->thread, gs, ci, OUT mod ) );
+			return mod;
+		}
+		return null;
+	}
 
 }	// Platforms
 }	// Engine

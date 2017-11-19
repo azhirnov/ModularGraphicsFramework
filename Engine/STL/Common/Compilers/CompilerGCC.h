@@ -225,6 +225,12 @@
 #	define GX_AUTO_IN_TEMPLATE_SUPPORTED	1
 #endif
 
+
+// for many other features
+#if COMPILER_VERSION >= 500		// TODO: check version
+#	define GX_CPP11_SUPPORTED	1
+#endif
+
 //-------------------------------------------------------------------
 
 

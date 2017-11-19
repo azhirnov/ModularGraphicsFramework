@@ -300,26 +300,29 @@ namespace _types_hidden_
 
 		struct _CustomSearch
 		{
-			Self &	_ref;
+			Self const &	_ref;
 
-			_CustomSearch (Self &ref) : _ref(ref) {}
+			_CustomSearch (const Self &ref) : _ref(ref) {}
 			
 			template <typename KeyT>
-			bool FindFirstIndex (const KeyT &key, OUT usize &idx) const		{ return _ref._FindFirstIndex2( key, OUT idx ); }
+			bool FindFirstIndex (const KeyT &key, OUT usize &idx) const					{ return _ref._FindFirstIndex2( key, OUT idx ); }
 			
 			template <typename KeyT>
-			void FindLastIndex (const KeyT &key, usize first, OUT usize &idx) const	{ return _ref._FindLastIndex2( key, first, OUT idx ); }
+			void FindLastIndex (const KeyT &key, usize first, OUT usize &idx) const		{ return _ref._FindLastIndex2( key, first, OUT idx ); }
 
 			template <typename KeyT>
-			bool Find (const KeyT &key, OUT const_iterator &result) const	{ return _ref._Find2( key, OUT result ); }
+			bool Find (const KeyT &key, OUT const_iterator &result) const				{ return _ref._Find2( key, OUT result ); }
 
 			template <typename KeyT>
-			bool FindAll (const KeyT &key, OUT values_range_t &result)		{ return _ref._FindAll2( key, OUT result ); }
+			bool FindAll (const KeyT &key, OUT const_values_range_t &result) const		{ return _ref._FindAll2( key, OUT result ); }
+
+			template <typename KeyT>
+			bool IsExist (const KeyT &key) const										{ usize idx;  return FindFirstIndex( key, OUT idx ); }
 		};
 
 
 	public:
-		_CustomSearch CustomSearch ()	{ return _CustomSearch( *this ); }
+		_CustomSearch CustomSearch ()	const	{ return _CustomSearch( *this ); }
 	};
 
 }	// _types_hidden_

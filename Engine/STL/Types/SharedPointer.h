@@ -10,15 +10,15 @@ namespace GXTypes
 {
 
 	//
-	// Reference Counter Strategy
+	// Shared Pointer Strategy
 	//
 
 	template <typename T>
 	struct SharedPointerStrategy
 	{
-		forceinline static void IncRef (T *ptr)		{}
-		forceinline static void DecRef (T *ptr)		{}
-		forceinline static int  Count (T *ptr)		{ return 0; }
+		forceinline static void IncRef (T *ptr);
+		forceinline static void DecRef (T *ptr);
+		forceinline static int  Count (T *ptr);
 	};
 
 
@@ -28,24 +28,24 @@ namespace GXTypes
 	//
 
 	template <typename T, typename B, typename S = SharedPointerStrategy<B> >
-	class ReferenceCounter : public CompileTime::FastCopyable
+	class SharedPointer final : public CompileTime::FastCopyable
 	{
 		template <typename T2, typename B2, typename S2>
-		friend class ReferenceCounter;
+		friend class SharedPointer;
 
 	// types
 	public:
-		typedef ReferenceCounter<T,B,S>		Self;
-		typedef T							Value_t;
-		typedef B							parent_t;
+		using Self		= SharedPointer<T,B,S>;
+		using Parent_t	= B;
+		using Value_t	= T*;
 
 	private:
-		typedef bool						_is_ref_counter;
+		using _is_shared_pointer	= bool;
 
 
 	// variables
 	private:
-		T *		_ptr;
+		T *		_ptr	= null;
 		
 
 	// methods
@@ -53,13 +53,13 @@ namespace GXTypes
 		forceinline void _Inc ()
 		{
 			if ( _ptr != null )
-				S::IncRef( (B *)_ptr );
+				S::IncRef( PointerCast<B>(_ptr) );
 		}
 
 		forceinline void _Dec ()
 		{
 			if ( _ptr != null )
-				S::DecRef( (B *)_ptr );
+				S::DecRef( PointerCast<B>(_ptr) );
 		}
 
 		template <typename T2>
@@ -69,7 +69,7 @@ namespace GXTypes
 		}
 
 		template <typename T2, typename B2, typename S2>
-		forceinline bool _CmpPtr (const ReferenceCounter<T2,B2,S2> &sRC) const
+		forceinline bool _CmpPtr (const SharedPointer<T2,B2,S2> &sRC) const
 		{
 			return _CmpPtr( sRC.RawPtr() );
 		}
@@ -78,60 +78,59 @@ namespace GXTypes
 		static void _CheckCast (FromType *p)
 		{
 			STATIC_ASSERT(( CompileTime::IsBaseOf< ToType, FromType > or
-							CompileTime::IsBaseOf< FromType, ToType > ));
+							CompileTime::IsBaseOf< FromType, ToType > or
+						    CompileTime::IsSameTypes< ToType, FromType > ));
 
 			ASSERT( CompileTime::TypeDescriptor::CanCastTo< ToType >( p ) );
 		}
 
 
 	public:
-		ReferenceCounter (GX_DEFCTOR) : _ptr(null)
-		{}
-
-
-		ReferenceCounter (T *ptr) : _ptr(ptr)
+		forceinline SharedPointer (GX_DEFCTOR)
 		{
 			STATIC_ASSERT(( CompileTime::IsBaseOf< B, T > ));
+		}
 
+		forceinline SharedPointer (std::nullptr_t)
+		{}
+
+		forceinline SharedPointer (T *ptr) : _ptr(ptr)
+		{
 			_Inc();
 		}
 
-
-		ReferenceCounter (Ptr<T> ptr) :
-			ReferenceCounter( ptr.RawPtr() )
+		forceinline SharedPointer (Ptr<T> ptr) : SharedPointer( ptr.RawPtr() )
 		{}
 
-
-		ReferenceCounter (Self &&sRC) : _ptr(sRC._ptr)
+		forceinline SharedPointer (Self &&other) : _ptr(other._ptr)
 		{
-			sRC._ptr = null;
+			other._ptr = null;
 		}
 
-
-		ReferenceCounter (const Self &sRC) : _ptr(sRC._ptr)
+		forceinline SharedPointer (const Self &other) : _ptr(other._ptr)
 		{
 			_Inc();
 		}
 
 
 		template <typename T2>
-		ReferenceCounter (const ReferenceCounter<T2,B,S> &right) : _ptr(null)
+		forceinline SharedPointer (const SharedPointer<T2,B,S> &right)
 		{
 			_CheckCast<T>( right.RawPtr() );
 
-			_ptr = Cast<T *>( right.RawPtr() );
+			_ptr = PointerCast<T>( right.RawPtr() );
 			_Inc();
 		}
 
 
-		~ReferenceCounter ()
+		forceinline ~SharedPointer ()
 		{
 			_Dec();
 		}
 
 
 		template <typename T2>
-		forceinline Self & operator = (const ReferenceCounter<T2,B,S> &right)
+		forceinline Self & operator = (const SharedPointer<T2,B,S> &right)
 		{
 			if ( _CmpPtr( right ) )
 				return *this;
@@ -139,7 +138,7 @@ namespace GXTypes
 			_CheckCast<T>( right.RawPtr() );
 
 			_Dec();
-			_ptr = Cast<T *>( right.RawPtr() );
+			_ptr = PointerCast<T>( right.RawPtr() );
 			_Inc();
 			return *this;
 		}
@@ -147,15 +146,16 @@ namespace GXTypes
 		
 		forceinline Self & operator = (const Self &right)
 		{
-			if ( _CmpPtr( right ) )
-				return *this;
+			return Self::operator = <T>( right );
+		}
 
+		forceinline Self & operator = (Self &&right)
+		{
 			_Dec();
 			_ptr = right._ptr;
-			_Inc();
+			right._ptr = null;
 			return *this;
 		}
-		
 
 		template <typename T2>
 		forceinline Self & operator = (T2 *right)
@@ -166,14 +166,14 @@ namespace GXTypes
 			_CheckCast<T>( right );
 
 			_Dec();
-			_ptr = Cast<T *>( right );
+			_ptr = PointerCast<T>( right );
 			_Inc();
 			return *this;
 		}
 		
 
 		template <typename T2>
-		forceinline Self & operator = (Ptr<T> right)
+		forceinline Self & operator = (Ptr<T2> right)
 		{
 			return Self::operator= ( right.RawPtr() );
 		}
@@ -209,11 +209,6 @@ namespace GXTypes
 		}
 
 
-		forceinline bool Empty () const
-		{
-			return _ptr == null;
-		}
-
 		forceinline bool IsNull () const
 		{
 			return ( _ptr == null );
@@ -228,11 +223,8 @@ namespace GXTypes
 		template <typename T2>
 		forceinline const T2 To () const
 		{
-			typedef typename T2::Value_t	type_t;
-			STATIC_ASSERT( typename T2::_is_ref_counter(true) );
-
-			_CheckCast< type_t >( _ptr );
-			return T2( static_cast< type_t *>( RawPtr() ) );
+			STATIC_ASSERT( typename T2::_is_shared_pointer(true) );
+			return T2( *this );
 		}
 
 		template <typename T2>
@@ -249,39 +241,8 @@ namespace GXTypes
 		}
 
 		
-		forceinline bool operator == (const T *right) const
-		{
-			return _ptr == right;
-		}
-
-		
-		forceinline bool operator == (const Self &right) const
-		{
-			return _ptr == right._ptr;
-		}
-
-		
-		forceinline bool operator != (const T *right) const
-		{
-			return _ptr != right;
-		}
-		
-		
-		forceinline bool operator != (const Self &right) const
-		{
-			return _ptr != right._ptr;
-		}
-		
-
-		forceinline bool operator > (const Self &right) const
-		{
-			return _ptr > right._ptr;
-		}
-		
-		forceinline bool operator < (const Self &right) const
-		{
-			return _ptr < right._ptr;
-		}
+		_GX_DIM_CMP_OPERATORS_SELF( RawPtr() );
+		_GX_DIM_CMP_OPERATORS_TYPE( RawPtr(), Value_t const, );
 	};
 	
 

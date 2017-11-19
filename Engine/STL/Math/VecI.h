@@ -27,20 +27,20 @@
 		T	x;
 
 	// constructors
-		Vec (GX_DEFCTOR): x(0) {}
-		Vec (const Vec<T,1,U> &v): x(v.x) {}
-		explicit Vec (T X): x(X) {}
+		constexpr Vec (GX_DEFCTOR): x(0) {}
+		constexpr Vec (const Vec<T,1,U> &v): x(v.x) {}
+		constexpr explicit Vec (T X): x(X) {}
 
-		explicit Vec (const Vec<T,2,U> &v): x(v.x) {}
-		explicit Vec (const Vec<T,3,U> &v): x(v.x) {}
-		explicit Vec (const Vec<T,4,U> &v): x(v.x) {}
+		constexpr explicit Vec (const Vec<T,2,U> &v): x(v.x) {}
+		constexpr explicit Vec (const Vec<T,3,U> &v): x(v.x) {}
+		constexpr explicit Vec (const Vec<T,4,U> &v): x(v.x) {}
 
 		template <typename B>
-		explicit Vec (const Vec<B,1,U> &v): x(T(v.x)) {}
+		constexpr explicit Vec (const Vec<B,1,U> &v): x(T(v.x)) {}
 
 		Self& operator = (T X)				{ x = X; return *this; }
 
-		explicit operator T () const		{ return x; }
+		constexpr explicit operator T () const		{ return x; }
 #	endif
 
 #	if I == 2
@@ -49,18 +49,18 @@
 			y;
 
 	// constructors
-		Vec (GX_DEFCTOR): x(0), y(0) {}
-		Vec (const Vec<T,2,U> &v): x(v.x), y(v.y) {}
+		constexpr Vec (GX_DEFCTOR): x(0), y(0) {}
+		constexpr Vec (const Vec<T,2,U> &v): x(v.x), y(v.y) {}
 
-		explicit Vec (T V): x(V), y(V) {}
-		explicit Vec (const Vec<T,3,U> &v): x(v.x), y(v.y) {}
-		explicit Vec (const Vec<T,4,U> &v): x(v.x), y(v.y) {}
+		constexpr explicit Vec (T V): x(V), y(V) {}
+		constexpr explicit Vec (const Vec<T,3,U> &v): x(v.x), y(v.y) {}
+		constexpr explicit Vec (const Vec<T,4,U> &v): x(v.x), y(v.y) {}
 
 		template <typename A, typename B>
-		explicit Vec (A X, B Y) : x(X), y(Y) {}
+		constexpr explicit Vec (A X, B Y) : x(X), y(Y) {}
 
 		template <typename B>
-		explicit Vec (const Vec<B,2,U> &v): x(T(v.x)), y(T(v.y)) {}
+		constexpr explicit Vec (const Vec<B,2,U> &v): x(T(v.x)), y(T(v.y)) {}
 #	endif
 
 #	if I == 3
@@ -70,25 +70,25 @@
 			z;
 
 	// constructors
-		Vec (GX_DEFCTOR): x(0), y(0), z(0) {}
-		Vec (const Vec<T,3,U> &v): x(v.x), y(v.y), z(v.z) {}
+		constexpr Vec (GX_DEFCTOR): x(0), y(0), z(0) {}
+		constexpr Vec (const Vec<T,3,U> &v): x(v.x), y(v.y), z(v.z) {}
 
-		explicit Vec (T V): x(V), y(V), z(V) {}
+		constexpr explicit Vec (T V): x(V), y(V), z(V) {}
 
 		template <typename A, typename B, typename C>
-		explicit Vec (A X, B Y, C Z): x(X), y(Y), z(Z) {}
+		constexpr explicit Vec (A X, B Y, C Z): x(X), y(Y), z(Z) {}
 
 		template <typename A>
-		explicit Vec (A X, const Vec<T,2,U> &YZ): x(X), y(YZ[0]), z(YZ[1]) {}
+		constexpr explicit Vec (A X, const Vec<T,2,U> &YZ): x(X), y(YZ[0]), z(YZ[1]) {}
 
 		template <typename A>
-		explicit Vec (const Vec<T,2,U> &XY, A Z): x(XY[0]), y(XY[1]), z(Z) {}
+		constexpr explicit Vec (const Vec<T,2,U> &XY, A Z): x(XY[0]), y(XY[1]), z(Z) {}
 
-		explicit Vec (const Vec<T,2,U> &XY): x(XY[0]), y(XY[1]), z(0) {}
-		explicit Vec (const Vec<T,4,U> &v): x(v.x), y(v.y), z(v.z) {}
+		constexpr explicit Vec (const Vec<T,2,U> &XY): x(XY[0]), y(XY[1]), z(0) {}
+		constexpr explicit Vec (const Vec<T,4,U> &v): x(v.x), y(v.y), z(v.z) {}
 
 		template <typename B>
-		explicit Vec (const Vec<B,3,U> &v): x(T(v.x)), y(T(v.y)), z(T(v.z)) {}
+		constexpr explicit Vec (const Vec<B,3,U> &v): x(T(v.x)), y(T(v.y)), z(T(v.z)) {}
 #	endif
 
 #	if I == 4
@@ -99,33 +99,33 @@
 			w;
 
 	// constructors
-		Vec (GX_DEFCTOR): x(0), y(0), z(0), w(0) {}
-		Vec (const Vec<T,4,U> &v): x(v.x), y(v.y), z(v.z), w(v.w) {}
+		constexpr Vec (GX_DEFCTOR): x(0), y(0), z(0), w(0) {}
+		constexpr Vec (const Vec<T,4,U> &v): x(v.x), y(v.y), z(v.z), w(v.w) {}
 
-		explicit Vec (T V): x(V), y(V), z(V), w(V) {}
-		explicit Vec (const Vec<T,2,U> &XY): x(XY[0]), y(XY[1]), z(T(0)), w(T(0)) {}
+		constexpr explicit Vec (T V): x(V), y(V), z(V), w(V) {}
+		constexpr explicit Vec (const Vec<T,2,U> &XY): x(XY[0]), y(XY[1]), z(T(0)), w(T(0)) {}
 
 		template <typename A, typename B, typename C, typename D>
-		explicit Vec (A X, B Y, C Z, D W): x(X), y(Y), z(Z), w(W) {}
+		constexpr explicit Vec (A X, B Y, C Z, D W): x(X), y(Y), z(Z), w(W) {}
 
 		template <typename A, typename B>
-		explicit Vec (A X, const Vec<T,2,U> &YZ, B W): x(X), y(YZ[0]), z(YZ[1]), w(W) {}
+		constexpr explicit Vec (A X, const Vec<T,2,U> &YZ, B W): x(X), y(YZ[0]), z(YZ[1]), w(W) {}
 
 		template <typename A, typename B>
-		explicit Vec (A X, B Y, const Vec<T,2,U> &ZW): x(X), y(Y), z(ZW[0]), w(ZW[1]) {}
+		constexpr explicit Vec (A X, B Y, const Vec<T,2,U> &ZW): x(X), y(Y), z(ZW[0]), w(ZW[1]) {}
 
-		explicit Vec (const Vec<T,2,U> &XY, const Vec<T,2,U> &ZW): x(XY[0]), y(XY[1]), z(ZW[0]), w(ZW[1]) {}
+		constexpr explicit Vec (const Vec<T,2,U> &XY, const Vec<T,2,U> &ZW): x(XY[0]), y(XY[1]), z(ZW[0]), w(ZW[1]) {}
 
 		template <typename A>
-		explicit Vec (const Vec<T,3,U> &XYZ, A W): x(XYZ[0]), y(XYZ[1]), z(XYZ[2]), w(W) {}
+		constexpr explicit Vec (const Vec<T,3,U> &XYZ, A W): x(XYZ[0]), y(XYZ[1]), z(XYZ[2]), w(W) {}
 
-		explicit Vec (const Vec<T,3,U> &XYZ): x(XYZ[0]), y(XYZ[1]), z(XYZ[2]), w(T(0)) {}
+		constexpr explicit Vec (const Vec<T,3,U> &XYZ): x(XYZ[0]), y(XYZ[1]), z(XYZ[2]), w(T(0)) {}
 
 		template <typename A, typename B>
-		explicit Vec (const Vec<T,2,U> &XY, A Z, B W) : x(XY[0]), y(XY[1]), z(Z), w(W) {}
+		constexpr explicit Vec (const Vec<T,2,U> &XY, A Z, B W) : x(XY[0]), y(XY[1]), z(Z), w(W) {}
 
 		template <typename B>
-		explicit Vec (const Vec<B,4,U> &v): x(T(v.x)), y(T(v.y)), z(T(v.z)), w(T(v.w)) {}
+		constexpr explicit Vec (const Vec<B,4,U> &v): x(T(v.x)), y(T(v.y)), z(T(v.z)), w(T(v.w)) {}
 #	endif
 
 #	if I >= 5 or I < 0
@@ -150,21 +150,22 @@
 		// binary operators
 		T &			operator [] (usize i)								{ ASSUME(i<I);  return PointerCast< T >( this )[i]; }
 		T const &	operator [] (usize i) const							{ ASSUME(i<I);  return PointerCast< T >( this )[i]; }
+		//constexpr T	operator [] (usize i) const	noexcept				{ /*ASSUME(i<I);*/  return PointerCast< T >( this )[i]; }
 
-		BVec_t		operator == (const Self & right) const				{ return Equal( right ); }
-		BVec_t		operator != (const Self & right) const				{ return not Equal( right ); }
-		BVec_t		operator >  (const Self & right) const				{ return Greater( right ); }
-		BVec_t		operator >= (const Self & right) const				{ return not Less( right ); }
-		BVec_t		operator <  (const Self & right) const				{ return Less( right ); }
-		BVec_t		operator <= (const Self & right) const				{ return not Greater( right ); }
+		constexpr BVec_t	operator == (const Self & right) const		{ return Equal( right ); }
+		constexpr BVec_t	operator != (const Self & right) const		{ return not Equal( right ); }
+		constexpr BVec_t	operator >  (const Self & right) const		{ return Greater( right ); }
+		constexpr BVec_t	operator >= (const Self & right) const		{ return not Less( right ); }
+		constexpr BVec_t	operator <  (const Self & right) const		{ return Less( right ); }
+		constexpr BVec_t	operator <= (const Self & right) const		{ return not Greater( right ); }
 		
 #	if I == 1
-		bool		operator == (const T& right) const					{ return x == right; }
-		bool		operator != (const T& right) const					{ return x != right; }
-		bool		operator >  (const T& right) const					{ return x >  right; }
-		bool		operator >= (const T& right) const					{ return x >= right; }
-		bool		operator <  (const T& right) const					{ return x <  right; }
-		bool		operator <= (const T& right) const					{ return x <= right; }
+		constexpr bool		operator == (const T& right) const			{ return x == right; }
+		constexpr bool		operator != (const T& right) const			{ return x != right; }
+		constexpr bool		operator >  (const T& right) const			{ return x >  right; }
+		constexpr bool		operator >= (const T& right) const			{ return x >= right; }
+		constexpr bool		operator <  (const T& right) const			{ return x <  right; }
+		constexpr bool		operator <= (const T& right) const			{ return x <= right; }
 		
 		VEC_OP_BINARY_SCALAR( +,  T );
 		VEC_OP_BINARY_SCALAR( -,  T );
@@ -200,7 +201,7 @@
 			return *this;
 		}
 		
-		const Self	operator %  (const Self& right) const
+		constexpr const Self	operator %  (const Self& right) const
 		{
 			Self	ret;
 			FOR( i, *this )	 ret[i] = Mod( (*this)[i], right[i] );
@@ -213,32 +214,32 @@
 			return *this;
 		}
 
-		const Self	operator %  (const T& right) const
+		constexpr const Self	operator %  (const T& right) const
 		{
 			Self	ret;
 			FOR( i, *this )	 ret[i] = Mod( (*this)[i], right );
 			return ret;
 		}
 
-		friend const Self operator % (const T& left, const Self& right)
+		friend constexpr const Self operator % (const T& left, const Self& right)
 		{
 			return Self(left) % right;
 		}
 
 #	else
-		BVec_t		operator == (const T& right) const					{ return Equal( Self(right) ); }
-		BVec_t		operator != (const T& right) const					{ return not Equal( Self(right) ); }
-		BVec_t		operator >  (const T& right) const					{ return Greater( Self(right) ); }
-		BVec_t		operator >= (const T& right) const					{ return GEqual( Self(right) ); }
-		BVec_t		operator <  (const T& right) const					{ return Less( Self(right) ); }
-		BVec_t		operator <= (const T& right) const					{ return LEqual( Self(right) ); }
+		constexpr BVec_t		operator == (const T& right) const				{ return Equal( Self(right) ); }
+		constexpr BVec_t		operator != (const T& right) const				{ return not Equal( Self(right) ); }
+		constexpr BVec_t		operator >  (const T& right) const				{ return Greater( Self(right) ); }
+		constexpr BVec_t		operator >= (const T& right) const				{ return GEqual( Self(right) ); }
+		constexpr BVec_t		operator <  (const T& right) const				{ return Less( Self(right) ); }
+		constexpr BVec_t		operator <= (const T& right) const				{ return LEqual( Self(right) ); }
 
-		BVec_t		operator == (const Scalar_t& right) const			{ return Equal( Self(right.x) ); }
-		BVec_t		operator != (const Scalar_t& right) const			{ return not Equal( Self(right.x) ); }
-		BVec_t		operator >  (const Scalar_t& right) const			{ return Greater( Self(right.x) ); }
-		BVec_t		operator >= (const Scalar_t& right) const			{ return GEqual( Self(right.x) ); }
-		BVec_t		operator <  (const Scalar_t& right) const			{ return Less( Self(right.x) ); }
-		BVec_t		operator <= (const Scalar_t& right) const			{ return LEqual( Self(right.x) ); }
+		constexpr BVec_t		operator == (const Scalar_t& right) const		{ return Equal( Self(right.x) ); }
+		constexpr BVec_t		operator != (const Scalar_t& right) const		{ return not Equal( Self(right.x) ); }
+		constexpr BVec_t		operator >  (const Scalar_t& right) const		{ return Greater( Self(right.x) ); }
+		constexpr BVec_t		operator >= (const Scalar_t& right) const		{ return GEqual( Self(right.x) ); }
+		constexpr BVec_t		operator <  (const Scalar_t& right) const		{ return Less( Self(right.x) ); }
+		constexpr BVec_t		operator <= (const Scalar_t& right) const		{ return LEqual( Self(right.x) ); }
 
 		VEC_OP_BINARY_SCALAR( +,  T );
 		VEC_OP_BINARY_SCALAR( -,  T );
@@ -297,7 +298,7 @@
 			return *this;
 		}
 		
-		const Self	operator %  (const Self& right) const
+		constexpr const Self	operator %  (const Self& right) const
 		{
 			Self	ret;
 			FOR( i, *this )	 ret[i] = Mod( (*this)[i], right[i] );
@@ -310,14 +311,14 @@
 			return *this;
 		}
 
-		const Self	operator %  (const T& right) const
+		constexpr const Self	operator %  (const T& right) const
 		{
 			Self	ret;
 			FOR( i, *this )	 ret[i] = Mod( (*this)[i], right );
 			return ret;
 		}
 
-		friend const Self operator % (const T& left, const Self& right)
+		friend constexpr const Self operator % (const T& left, const Self& right)
 		{
 			return Self(left) % right;
 		}
@@ -330,7 +331,7 @@
 		Arr_t &		ref ()										{ return *PointerCast< Arr_t >( this ); }
 		Arr_t const& ref ()	const								{ return *PointerCast< Arr_t >( this ); }
 
-		static usize Count ()									{ return I; }
+		static constexpr usize Count ()							{ return I; }
 
 		T			Min () const;
 		T			Max () const;
@@ -374,84 +375,89 @@
 
 
 #	if I == 1
-		T			Sum ()		const	{ return x; }
-		T			SumAbs ()	const	{ return Abs(x); }
-		T			Area ()		const	{ return x*1; }
-		T			Volume ()	const	{ return x*1*1; }
+		constexpr T				Sum ()		const	{ return x; }
+		constexpr T				SumAbs ()	const	{ return Abs(x); }
+		constexpr T				Area ()		const	{ return x*1; }
+		constexpr T				Volume ()	const	{ return x*1*1; }
 #	endif
 
 #	if I >= 1
-		Vec<T,2,U>	xo ()		const	{ return Vec<T,2,U>( x, T(0) ); }
-		Vec<T,2,U>	ox ()		const	{ return Vec<T,2,U>( T(0), x ); }
-		Vec<T,2,U>	xx ()		const	{ return Vec<T,2,U>( x, x ); }
+		constexpr Vec<T,2,U>	xo ()		const	{ return Vec<T,2,U>( x, T(0) ); }
+		constexpr Vec<T,2,U>	ox ()		const	{ return Vec<T,2,U>( T(0), x ); }
+		constexpr Vec<T,2,U>	xx ()		const	{ return Vec<T,2,U>( x, x ); }
 
-		Vec<T,3,U>	xoo ()		const	{ return Vec<T,3,U>( x, T(0), T(0) ); }
+		constexpr Vec<T,3,U>	xoo ()		const	{ return Vec<T,3,U>( x, T(0), T(0) ); }
 
-		Vec<T,4,U>	xooo ()		const	{ return Vec<T,4,U>( x, T(0), T(0), T(0) ); }
+		constexpr Vec<T,4,U>	xooo ()		const	{ return Vec<T,4,U>( x, T(0), T(0), T(0) ); }
 #	endif
 
 #	if I == 2
-		T			Sum ()		const	{ return x + y; }
-		T			SumAbs ()	const	{ return Abs(x) + Abs(y); }
-		T			Volume ()	const	{ return x*y*1; }
+		constexpr T				Sum ()		const	{ return x + y; }
+		constexpr T				SumAbs ()	const	{ return Abs(x) + Abs(y); }
+		constexpr T				Volume ()	const	{ return x*y*1; }
 #	endif
 
 #	if I >= 2
-		T			Area ()		const	{ return x*y; }
-		Vec<T,2,U>	yo ()		const	{ return Vec<T,2,U>( y, T(0) ); }
-		Vec<T,2,U>	yx ()		const	{ return Vec<T,2,U>( y, x ); }
-		Vec<T,2,U>	xy ()		const	{ return Vec<T,2,U>( x, y ); }
-		Vec<T,2,U>	oy ()		const	{ return Vec<T,2,U>( T(0), y ); }
-		Vec<T,2,U>	yy ()		const	{ return Vec<T,2,U>( y, y ); }
+		constexpr T				Area ()		const	{ return x*y; }
+		constexpr Vec<T,2,U>	yo ()		const	{ return Vec<T,2,U>( y, T(0) ); }
+		constexpr Vec<T,2,U>	yx ()		const	{ return Vec<T,2,U>( y, x ); }
+		constexpr Vec<T,2,U>	xy ()		const	{ return Vec<T,2,U>( x, y ); }
+		constexpr Vec<T,2,U>	oy ()		const	{ return Vec<T,2,U>( T(0), y ); }
+		constexpr Vec<T,2,U>	yy ()		const	{ return Vec<T,2,U>( y, y ); }
 
-		Vec<T,3,U>	oyo ()		const	{ return Vec<T,3,U>( T(0), y, T(0) ); }
-		Vec<T,3,U>	xyo ()		const	{ return Vec<T,3,U>( x, y, T(0) ); }
-		Vec<T,3,U>	xoy ()		const	{ return Vec<T,3,U>( x, T(0), y ); }
-		Vec<T,3,U>	oyx ()		const	{ return Vec<T,3,U>( T(0), y, x ); }
+		constexpr Vec<T,3,U>	oyo ()		const	{ return Vec<T,3,U>( T(0), y, T(0) ); }
+		constexpr Vec<T,3,U>	xyo ()		const	{ return Vec<T,3,U>( x, y, T(0) ); }
+		constexpr Vec<T,3,U>	xoy ()		const	{ return Vec<T,3,U>( x, T(0), y ); }
+		constexpr Vec<T,3,U>	oyx ()		const	{ return Vec<T,3,U>( T(0), y, x ); }
 
-		Vec<T,4,U>	xooy ()		const	{ return Vec<T,4,U>( x, T(0), T(0), y ); }
-		Vec<T,4,U>	xyoo ()		const	{ return Vec<T,4,U>( x, y, T(0), T(0) ); }
-		Vec<T,4,U>	xyxy ()		const	{ return Vec<T,4,U>( x, y, x, y ); }
+		constexpr Vec<T,4,U>	xooy ()		const	{ return Vec<T,4,U>( x, T(0), T(0), y ); }
+		constexpr Vec<T,4,U>	xyoo ()		const	{ return Vec<T,4,U>( x, y, T(0), T(0) ); }
+		constexpr Vec<T,4,U>	xyxy ()		const	{ return Vec<T,4,U>( x, y, x, y ); }
 #	endif
 
 #	if I == 3
-		T			Sum ()		const	{ return x + y + z; }
-		T			SumAbs ()	const	{ return Abs(x) + Abs(y) + Abs(z); }
+		constexpr T				Sum ()		const	{ return x + y + z; }
+		constexpr T				SumAbs ()	const	{ return Abs(x) + Abs(y) + Abs(z); }
 #	endif
 
 #	if I >= 3
-		T			Volume ()	const	{ return x*y*z; }
-		Vec<T,2,U>	yz ()		const	{ return Vec<T,2,U>( y, z ); }
-		Vec<T,2,U>	xz ()		const	{ return Vec<T,2,U>( x, z ); }
-		Vec<T,2,U>	yw ()		const	{ return Vec<T,2,U>( y, w ); }
-		Vec<T,3,U>	xyz ()		const	{ return Vec<T,3,U>( x, y, z ); }
-		Vec<T,3,U>	zyx ()		const	{ return Vec<T,3,U>( z, y, x ); }
-		Vec<T,3,U>	xzy ()		const	{ return Vec<T,3,U>( x, z, y ); }
+		constexpr T				Volume ()	const	{ return x*y*z; }
+		constexpr Vec<T,2,U>	yz ()		const	{ return Vec<T,2,U>( y, z ); }
+		constexpr Vec<T,2,U>	xz ()		const	{ return Vec<T,2,U>( x, z ); }
+		constexpr Vec<T,2,U>	yw ()		const	{ return Vec<T,2,U>( y, w ); }
+		constexpr Vec<T,3,U>	xyz ()		const	{ return Vec<T,3,U>( x, y, z ); }
+		constexpr Vec<T,3,U>	zyx ()		const	{ return Vec<T,3,U>( z, y, x ); }
+		constexpr Vec<T,3,U>	xzy ()		const	{ return Vec<T,3,U>( x, z, y ); }
 
-		Vec<T,3,U>	ooz ()		const	{ return Vec<T,3,U>( T(0), T(0), z ); }
-		Vec<T,3,U>	xoz ()		const	{ return Vec<T,3,U>( x, T(0), z ); }
-		Vec<T,3,U>	oyz ()		const	{ return Vec<T,3,U>( T(0), y, z ); }
+		constexpr Vec<T,3,U>	ooz ()		const	{ return Vec<T,3,U>( T(0), T(0), z ); }
+		constexpr Vec<T,3,U>	xoz ()		const	{ return Vec<T,3,U>( x, T(0), z ); }
+		constexpr Vec<T,3,U>	oyz ()		const	{ return Vec<T,3,U>( T(0), y, z ); }
 		
-		Vec<T,4,U>	xyoz ()		const	{ return Vec<T,4,U>( x, y, T(0), z ); }
-		Vec<T,4,U>	xyzo ()		const	{ return Vec<T,4,U>( x, y, z, T(0) ); }
+		constexpr Vec<T,4,U>	xyoz ()		const	{ return Vec<T,4,U>( x, y, T(0), z ); }
+		constexpr Vec<T,4,U>	xyzo ()		const	{ return Vec<T,4,U>( x, y, z, T(0) ); }
 #	endif
 
 #	if I == 4
-		T			Sum ()		const	{ return x + y + z + w; }
-		T			SumAbs ()	const	{ return Abs(x) + Abs(y) + Abs(z) + Abs(w); }
+		constexpr T				Sum ()		const	{ return x + y + z + w; }
+		constexpr T				SumAbs ()	const	{ return Abs(x) + Abs(y) + Abs(z) + Abs(w); }
 #	endif
 
 #	if I >= 4
-		T			Volume4D ()	const	{ return x*y*z*w; }
-		Vec<T,2,U>	zw ()		const	{ return Vec<T,2,U>( z, w ); }
+		constexpr T				Volume4D ()	const	{ return x*y*z*w; }
+		constexpr Vec<T,2,U>	zw ()		const	{ return Vec<T,2,U>( z, w ); }
 		
-		Vec<T,3,U>	xwo ()		const	{ return Vec<T,3,U>( x, y, T(0) ); }
-		Vec<T,3,U>	xyw ()		const	{ return Vec<T,3,U>( x, y, w ); }
-		Vec<T,3,U>	yzw ()		const	{ return Vec<T,3,U>( y, z, w ); }
+		constexpr Vec<T,3,U>	xwo ()		const	{ return Vec<T,3,U>( x, y, T(0) ); }
+		constexpr Vec<T,3,U>	xyw ()		const	{ return Vec<T,3,U>( x, y, w ); }
+		constexpr Vec<T,3,U>	yzw ()		const	{ return Vec<T,3,U>( y, z, w ); }
 		
-		Vec<T,4,U>	xyzw ()		const	{ return Vec<T,4,U>( x, y, z, w ); }
-		Vec<T,4,U>	wzyx ()		const	{ return Vec<T,4,U>( w, z, y, x ); }
+		constexpr Vec<T,4,U>	xyzw ()		const	{ return Vec<T,4,U>( x, y, z, w ); }
+		constexpr Vec<T,4,U>	wzyx ()		const	{ return Vec<T,4,U>( w, z, y, x ); }
 #	endif
+
+		template <Swizzle::type SW>
+		constexpr auto Swizzle () const -> Vec< T, _math_hidden_::SWLength<SW>, U >;
+
+		Vec<T,4,U> Swizzle (Swizzle::type sw) const;
 	};
 
 
@@ -740,4 +746,42 @@
 			r = eta * (*this) - ( eta * normal.Dot( *this ) + Sqrt( k ) ) * normal;
 
 		return r;
+	}
+
+	
+	template <typename T, ulong U>
+	template <Swizzle::type SW>
+	inline constexpr auto  Vec<T,I,U>::Swizzle () const -> Vec< T, _math_hidden_::SWLength<SW>, U >
+	{
+		Vec< T, _math_hidden_::SWLength<SW>, U >	res;
+		constexpr uint								swizzle = _math_hidden_::_ParseSwizzle( SW, I );
+		STATIC_ASSERT( swizzle != -1 );
+
+		FOR( i, res )
+		{
+			const uint j = (swizzle >> (i*4)) & 0xF;
+			res[i] =	j > 0 and j <= I ? (*this)[j-1] :
+						j == 5 ? T(0) :
+						j == 6 ? T(1) :
+						GXTypes::MaxValue<T>();
+		}
+		return res;
+	}
+	
+
+	template <typename T, ulong U>
+	inline Vec<T,4,U>  Vec<T,I,U>::Swizzle (Swizzle::type sw) const
+	{
+		Vec<T,4,U>	res;
+		const uint	swizzle = _math_hidden_::_ParseSwizzle( sw, I );
+		
+		FOR( i, res )
+		{
+			const uint j = (swizzle >> (i*4)) & 0xF;
+			res[i] =	j > 0 and j <= I ? (*this)[j-1] :
+						j == 5 ? T(0) :
+						j == 6 ? T(1) :
+						GXTypes::MaxValue<T>();
+		}
+		return res;
 	}

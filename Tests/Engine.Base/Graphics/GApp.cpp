@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "GLApp.h"
+#include "GApp.h"
 #include "../Pipelines/all_pipelines.h"
 
 
@@ -10,8 +10,16 @@ struct Vertex
 	float2	texcoord;
 };
 
+inline ModulePtr GetGThread (GlobalSystemsRef gs)
+{
+	using GThreadMsgList_t		= CompileTime::TypeListFrom< Message<GpuMsg::ThreadBeginFrame>, Message<GpuMsg::ThreadEndFrame>, Message<GpuMsg::GetDeviceInfo> >;
+	using GThreadEventList_t	= CompileTime::TypeListFrom< Message<GpuMsg::DeviceCreated>, Message<GpuMsg::DeviceBeforeDestroy> >;
 
-GLApp::GLApp ()
+	return gs->Get< ParallelThread >()->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >();
+}
+
+
+GApp::GApp ()
 {
 	ms = GetMainSystemInstace();
 
@@ -19,43 +27,55 @@ GLApp::GLApp ()
 }
 
 
-void GLApp::Initialize ()
+bool GApp::Initialize (GAPI::type api)
 {
-	ms->AddModule( WinPlatformModuleID, CreateInfo::Platform{} );
+	ms->AddModule( GModID::type(0), CreateInfo::Platform{} );
 	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager{} );
 	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager{} );
-	ms->AddModule( GLContextModuleID, CreateInfo::GpuContext{} );
+
+	{
+		auto		factory	= ms->GlobalSystems()->Get< ModulesFactory >();
+		ModulePtr	context;
+
+		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ api }, OUT context ) );
+		ms->Send< ModuleMsg::AttachModule >({ context });
+
+		Message< GpuMsg::GetGraphicsModules >	req_ids;
+		context->Send( req_ids );
+		ids << req_ids->graphics;
+	}
 
 	auto	thread	= ms->GlobalSystems()->Get< ParallelThread >();
 	
 	thread->AddModule( WinWindowModuleID, CreateInfo::Window{} );
 	thread->AddModule( InputThreadModuleID, CreateInfo::InputThread{} );
-	thread->AddModule( GLThreadModuleID, CreateInfo::GpuThread{ null, null, 
-					   CreateInfo::GpuContext{
-							"GL 4.4"_GAPI,
+	thread->AddModule( ids.thread, CreateInfo::GpuThread{
+					   GraphicsSettings{
+							api,
 							CreateInfo::GpuContext::EFlags::bits() | CreateInfo::GpuContext::EFlags::DebugContext
 						} } );
 
 	auto	window		= thread->GetModuleByID( WinWindowModuleID );
 	auto	input		= thread->GetModuleByID( InputThreadModuleID );
-	auto	glthread	= thread->GetModuleByID( GLThreadModuleID );
+	auto	gthread		= thread->GetModuleByID( ids.thread );
 
 	window->AddModule( WinKeyInputModuleID, CreateInfo::RawInputHandler{} );
 	window->AddModule( WinMouseInputModuleID, CreateInfo::RawInputHandler{} );
 
-	window->Subscribe( this, &GLApp::_OnWindowClosed );
-	input->Subscribe( this, &GLApp::_OnKey );
-	//input->Subscribe( this, &GLApp::_OnMotion );
-	glthread->Subscribe( this, &GLApp::_Draw );
-	glthread->Subscribe( this, &GLApp::_GLInit );
-	glthread->Subscribe( this, &GLApp::_GLDelete );
+	window->Subscribe( this, &GApp::_OnWindowClosed );
+	input->Subscribe( this, &GApp::_OnKey );
+	//input->Subscribe( this, &GApp::_OnMotion );
+	gthread->Subscribe( this, &GApp::_Draw );
+	gthread->Subscribe( this, &GApp::_GInit );
+	gthread->Subscribe( this, &GApp::_GDelete );
 
 	// finish initialization
 	ModuleUtils::Initialize({ ms });
+	return true;
 }
 
 
-void GLApp::Quit ()
+void GApp::Quit ()
 {
 	Message< ModuleMsg::Delete >	del_msg;
 
@@ -68,7 +88,7 @@ void GLApp::Quit ()
 	auto	thread		= ms->GlobalSystems()->Get< ParallelThread >();
 	auto	window		= thread->GetModuleByID( WinWindowModuleID );
 	auto	input		= thread->GetModuleByID( InputThreadModuleID );
-	auto	glthread	= thread->GetModuleByID( GLThreadModuleID );
+	auto	gthread		= thread->GetModuleByID( ids.thread );
 
 	if ( window )
 		window->UnsubscribeAll( this );
@@ -76,14 +96,14 @@ void GLApp::Quit ()
 	if ( input )
 		input->UnsubscribeAll( this );
 	
-	if ( glthread )
-		glthread->UnsubscribeAll( this );
+	if ( gthread )
+		gthread->UnsubscribeAll( this );
 
 	looping = false;
 }
 
 
-bool GLApp::Update ()
+bool GApp::Update ()
 {
 	if ( not looping )
 		return false;
@@ -93,14 +113,14 @@ bool GLApp::Update ()
 }
 
 
-bool GLApp::_OnWindowClosed (const Message<OSMsg::WindowAfterDestroy> &)
+bool GApp::_OnWindowClosed (const Message<OSMsg::WindowAfterDestroy> &)
 {
 	looping = false;
 	return true;
 }
 
 
-bool GLApp::_OnKey (const Message< ModuleMsg::InputKey > &msg)
+bool GApp::_OnKey (const Message< ModuleMsg::InputKey > &msg)
 {
 	DEBUG_CONSOLE( ("Key '"_str << KeyID::ToString( msg->key ) <<
 					"', pressure " << msg->pressure).cstr() );
@@ -108,7 +128,7 @@ bool GLApp::_OnKey (const Message< ModuleMsg::InputKey > &msg)
 }
 
 
-bool GLApp::_OnMotion (const Message< ModuleMsg::InputMotion > &msg)
+bool GApp::_OnMotion (const Message< ModuleMsg::InputMotion > &msg)
 {
 	DEBUG_CONSOLE( ("Motion '"_str << MotionID::ToString( msg->motion ) <<
 					"', relative " << msg->relative <<
@@ -117,15 +137,15 @@ bool GLApp::_OnMotion (const Message< ModuleMsg::InputMotion > &msg)
 }
 
 
-bool GLApp::_Draw (const Message< ModuleMsg::Update > &)
+bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 {
 	if ( not looping )
 		return false;
 
-	auto	glthread	= ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( GLThreadModuleID );
+	auto	gthread	= GetGThread( ms->GlobalSystems() );
 
 	Message< GpuMsg::ThreadBeginFrame >	begin_frame;
-	glthread->Send( begin_frame );
+	gthread->Send( begin_frame );
 
 	ModulePtr	system_fb	= begin_frame->result->framebuffer;
 	ModulePtr	builder		= cmdBuilder;	//begin_frame->result->commandBuilder;
@@ -142,7 +162,7 @@ bool GLApp::_Draw (const Message< ModuleMsg::Update > &)
 		builder->Send< GpuMsg::CmdPipelineBarrier >({  EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::AllGraphics,
 					  EImageLayout::TransferDstOptimal, EImageLayout::ShaderReadOnlyOptimal, texture, EImageAspect::bits() | EImageAspect::Color });
 	}
-	
+
 	// draw triangle to framebuffer
 	{
 		ModulePtr	render_pass	= framebuffer->GetModuleByMsg< RenderPassMsgList_t >();
@@ -157,7 +177,7 @@ bool GLApp::_Draw (const Message< ModuleMsg::Update > &)
 		clear.attachments.PushBack({ EImageAspect::bits() | EImageAspect::Color, 0, float4(1.0f) });
 		clear.clearRects.PushBack({ area });
 
-		builder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, framebuffer, RectU(area.Center().x, area.bottom, area.right, area.top) });
+		builder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, framebuffer, area });
 		builder->Send< GpuMsg::CmdClearAttachments >( clear );
 		builder->Send< GpuMsg::CmdBindGraphicsPipeline >({ gpipeline1 });
 		builder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ resourceTable1 });
@@ -191,15 +211,15 @@ bool GLApp::_Draw (const Message< ModuleMsg::Update > &)
 	Message< GpuMsg::CmdEnd >	cmd_end = {};
 	builder->Send( cmd_end );
 
-	glthread->Send< GpuMsg::ThreadEndFrame >({ system_fb, InitializerList<ModulePtr>{ cmd_end->cmdBuffer.Get(null) } });
+	gthread->Send< GpuMsg::ThreadEndFrame >({ system_fb, InitializerList<ModulePtr>{ cmd_end->cmdBuffer.Get(null) } });
 	return true;
 }
 
 
-bool GLApp::_CreatePipeline1 ()
+bool GApp::_CreatePipeline1 ()
 {
-	auto	glthread = ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( GLThreadModuleID );
-	auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
+	auto	gthread	= GetGThread( ms->GlobalSystems() );
+	auto	factory	= ms->GlobalSystems()->Get< ModulesFactory >();
 	
 	CreateInfo::PipelineTemplate	pp_templ;
 	Pipelines::Create_default( OUT pp_templ.descr );
@@ -213,8 +233,8 @@ bool GLApp::_CreatePipeline1 ()
 
 	Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
 	
-	create_gpp->gpuThread	= glthread;
-	create_gpp->moduleID	= GLGraphicsPipelineModuleID;
+	create_gpp->gpuThread	= gthread;
+	create_gpp->moduleID	= ids.pipeline;
 	create_gpp->topology	= EPrimitive::TriangleList;
 	create_gpp->renderPass	= framebuffer->GetModuleByMsg< RenderPassMsgList_t >();
 
@@ -222,7 +242,7 @@ bool GLApp::_CreatePipeline1 ()
 	gpipeline1 = create_gpp->result.Get();
 
 	CHECK_ERR( factory->Create(
-					GLPipelineResourceTableModuleID,
+					ids.resourceTable,
 					ms->GlobalSystems(),
 					CreateInfo::PipelineResourceTable{},
 					OUT resourceTable1 )
@@ -235,9 +255,9 @@ bool GLApp::_CreatePipeline1 ()
 }
 
 
-bool GLApp::_CreatePipeline2 ()
+bool GApp::_CreatePipeline2 ()
 {
-	auto	glthread = ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( GLThreadModuleID );
+	auto	gthread = GetGThread( ms->GlobalSystems() );
 	auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
 	
 	CreateInfo::PipelineTemplate	pp_templ;
@@ -252,8 +272,8 @@ bool GLApp::_CreatePipeline2 ()
 
 	Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
 
-	create_gpp->gpuThread	= glthread;
-	create_gpp->moduleID	= GLGraphicsPipelineModuleID;
+	create_gpp->gpuThread	= gthread;
+	create_gpp->moduleID	= ids.pipeline;
 	create_gpp->topology	= EPrimitive::TriangleList;
 	create_gpp->vertexInput.Add( "at_Position", &Vertex::position )
 							.Add( "at_Texcoord", &Vertex::texcoord )
@@ -263,9 +283,9 @@ bool GLApp::_CreatePipeline2 ()
 	gpipeline2 = create_gpp->result.Get();
 
 	CHECK_ERR( factory->Create(
-					GLPipelineResourceTableModuleID,
+					ids.resourceTable,
 					ms->GlobalSystems(),
-					CreateInfo::PipelineResourceTable(),
+					CreateInfo::PipelineResourceTable{},
 					OUT resourceTable2 )
 	);
 
@@ -277,15 +297,15 @@ bool GLApp::_CreatePipeline2 ()
 }
 
 
-bool GLApp::_CreateCmdBuffers ()
+bool GApp::_CreateCmdBuffers ()
 {
-	auto	glthread = ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( GLThreadModuleID );
+	auto	gthread = GetGThread( ms->GlobalSystems() );
 	auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
 
 	CHECK_ERR( factory->Create(
-					GLCommandBuilderModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuCommandBuilder{ glthread },
+					ids.commandBuilder,
+					gthread->GlobalSystems(),
+					CreateInfo::GpuCommandBuilder{ gthread },
 					OUT cmdBuilder )
 	);
 	
@@ -295,9 +315,9 @@ bool GLApp::_CreateCmdBuffers ()
 	FOR( i, cmdBuffers )
 	{
 		CHECK_ERR( factory->Create(
-						GLCommandBufferModuleID,
-						glthread->GlobalSystems(),
-						CreateInfo::GpuCommandBuffer{ glthread },
+						ids.commandBuffer,
+						gthread->GlobalSystems(),
+						CreateInfo::GpuCommandBuffer{ gthread },
 						OUT cmdBuffers[i] )
 		);
 		cmdBuilder->Send< ModuleMsg::AttachModule >({ ""_str << i, cmdBuffers[i] });
@@ -306,85 +326,54 @@ bool GLApp::_CreateCmdBuffers ()
 }
 
 
-bool GLApp::_GLInit (const Message< GpuMsg::DeviceCreated > &)
+bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 {
-	auto	glthread = ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( GLThreadModuleID );
-	auto	factory	 = glthread->GlobalSystems()->Get< ModulesFactory >();
-
-	ModulePtr	texmem_module;
-	ModulePtr	imgmem_module;
-	ModulePtr	vbufmem_module;
-	ModulePtr	ibufmem_module;
-	ModulePtr	ubufmem_module;
+	auto	gthread = GetGThread( ms->GlobalSystems() );
+	auto	factory = gthread->GlobalSystems()->Get< ModulesFactory >();
 
 	CHECK_ERR( factory->Create(
-					GLImageModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuImage{	glthread,
-											ImageDescriptor{
+					ids.image,
+					gthread->GlobalSystems(),
+					CreateInfo::GpuImage{	ImageDescriptor{
 												EImage::Tex2D,
 												uint4( 1024, 1024, 0, 0 ),
 												EPixelFormat::RGBA8_UNorm,
 												EImageUsage::bits() | EImageUsage::Sampled | EImageUsage::ColorAttachment
-											} },
-					OUT fbColorImage ) );
-
-	CHECK_ERR( factory->Create(
-					GLMemoryModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuMemory{	glthread,
+											},
 											EGpuMemory::bits() | EGpuMemory::LocalInGPU,
 											EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
-					OUT imgmem_module ) );
-
+					OUT fbColorImage ) );
+	/*
 	CHECK_ERR( factory->Create(
-					GLMemoryModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuMemory{	glthread,
-											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
-											EMemoryAccess::All },
-					OUT texmem_module ) );
-
-	CHECK_ERR( factory->Create(
-					GLMemoryModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuMemory{	glthread,
-											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
-											EMemoryAccess::CpuReadWrite },
-					OUT vbufmem_module ) );
-
-	CHECK_ERR( factory->Create(
-					GLMemoryModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuMemory{	glthread,
-											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
-											EMemoryAccess::CpuReadWrite },
-					OUT ibufmem_module ) );
-
-	CHECK_ERR( factory->Create(
-					GLMemoryModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuMemory{	glthread,
-											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
-											EMemoryAccess::CpuReadWrite },
-					OUT ubufmem_module ) );
-
-	CHECK_ERR( factory->Create(
-					GLImageModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuImage{	glthread,
-											ImageDescriptor{
+					ids.image,
+					gthread->GlobalSystems(),
+					CreateInfo::GpuImage{	ImageDescriptor{
 												EImage::Tex2D,
 												uint4( 4, 4, 0, 0 ),
 												EPixelFormat::RGBA8_UNorm,
 												EImageUsage::bits() | EImageUsage::Sampled | EImageUsage::TransferDst
-											} },
+											},
+											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+											EMemoryAccess::All },
 					OUT texture ) );
-
+	/*/
 	CHECK_ERR( factory->Create(
-					GLSamplerModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuSampler{ glthread,
+					ids.image,
+					gthread->GlobalSystems(),
+					CreateInfo::GpuImage{	ImageDescriptor{
+												EImage::Tex2D,
+												uint4( 128, 128, 0, 0 ),
+												EPixelFormat::RGBA8_UNorm,
+												EImageUsage::bits() | EImageUsage::Sampled | EImageUsage::TransferDst
+											},
+											EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+											EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
+					OUT texture ) );
+	//*/
+	CHECK_ERR( factory->Create(
+					ids.sampler,
+					gthread->GlobalSystems(),
+					CreateInfo::GpuSampler{ gthread,
 											SamplerDescriptor::Builder()
 												.SetAddressMode( EAddressMode::Clamp )
 												.SetFilter( EFilter::MinMagMipLinear )
@@ -393,49 +382,52 @@ bool GLApp::_GLInit (const Message< GpuMsg::DeviceCreated > &)
 					OUT sampler ) );
 
 	CHECK_ERR( factory->Create(
-					GLBufferModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuBuffer{	glthread,
-											BufferDescriptor{
+					ids.buffer,
+					gthread->GlobalSystems(),
+					CreateInfo::GpuBuffer{	BufferDescriptor{
 												SizeOf<Vertex>() * 4,
 												EBufferUsage::bits() | EBufferUsage::Vertex
-											} },
+											},
+											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+											EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite  },
 					OUT vbuffer ) );
 
 	CHECK_ERR( factory->Create(
-					GLBufferModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuBuffer{	glthread,
-											BufferDescriptor{
+					ids.buffer,
+					gthread->GlobalSystems(),
+					CreateInfo::GpuBuffer{	BufferDescriptor{
 												SizeOf<uint>() * 6,
 												EBufferUsage::bits() | EBufferUsage::Index
-											} },
+											},
+											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+											EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite },
 					OUT ibuffer ) );
 
 	CHECK_ERR( factory->Create(
-					GLBufferModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuBuffer{	glthread,
-											BufferDescriptor{
+					ids.buffer,
+					gthread->GlobalSystems(),
+					CreateInfo::GpuBuffer{	BufferDescriptor{
 												SizeOf<Pipelines::UB>(),
 												EBufferUsage::bits() | EBufferUsage::Uniform
-											} },
+											},
+											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+											EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite },
 					OUT ubuffer ) );
 
 	CHECK_ERR( factory->Create(
-					GLFramebufferModuleID,
-					glthread->GlobalSystems(),
-					CreateInfo::GpuFramebuffer{	glthread,
-												uint2(1024, 1024), 1,
-												{{ "Color0", fbColorImage }} },
+					ids.framebuffer,
+					gthread->GlobalSystems(),
+					CreateInfo::GpuFramebuffer{
+						gthread,
+						uint2(1024, 1024), 1
+					},
 					OUT framebuffer ) );
 	
-	fbColorImage->Send< ModuleMsg::AttachModule >({ imgmem_module });
-	texture->Send< ModuleMsg::AttachModule >({ texmem_module });
-	vbuffer->Send< ModuleMsg::AttachModule >({ vbufmem_module });
-	ibuffer->Send< ModuleMsg::AttachModule >({ ibufmem_module });
-	ubuffer->Send< ModuleMsg::AttachModule >({ ubufmem_module });
-	
+	ImageViewDescriptor	view_descr;
+	//view_descr.swizzle = "RRRR"_Swizzle;
+
+	framebuffer->Send< GpuMsg::FramebufferAttachImage >({ "Color0", fbColorImage, view_descr });
+
 	CHECK_ERR( _CreateCmdBuffers() );
 	CHECK_ERR( ModuleUtils::Initialize({ texture, sampler, vbuffer, ibuffer, ubuffer, cmdBuilder, framebuffer, fbColorImage }) );
 
@@ -453,28 +445,25 @@ bool GLApp::_GLInit (const Message< GpuMsg::DeviceCreated > &)
 		0, 1, 2,
 		2, 1, 3
 	};
-
-	Pipelines::UB	ub_data;	ub_data.color = float4(1.0f);
-
-	using EMappingFlags = GpuMsg::MapMemoryToCpu::EMappingFlags;
-
-	vbuffer->Send< GpuMsg::WriteToGpuMemory >({ vertices });
-	ibuffer->Send< GpuMsg::WriteToGpuMemory >({ indices });
-	ubuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::FromValue(ub_data) });
-	/*
-	const uint imgData[] = {
+	const uint pixels[] = {
 		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF
 	};
-	texture->Send< GpuMsg::WriteToImageMemory >({ BinArrayCRef::From(imgData), uint4(4,4,0,0), 4_b });*/
+
+	Pipelines::UB	ub_data;	ub_data.color = float4(1.0f);
+
+	vbuffer->Send< GpuMsg::WriteToGpuMemory >({ vertices });
+	ibuffer->Send< GpuMsg::WriteToGpuMemory >({ indices });
+	ubuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::FromValue(ub_data) });
+	//texture->Send< GpuMsg::WriteToImageMemory >({ BinArrayCRef::From(pixels), uint4(4,4,0,0), 4_b });
 
 	return true;
 }
 
 
-bool GLApp::_GLDelete (const Message< GpuMsg::DeviceBeforeDestroy > &)
+bool GApp::_GDelete (const Message< GpuMsg::DeviceBeforeDestroy > &)
 {
 	return true;
 }

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
+#include "Engine/Platforms/Shared/GPU/Image.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -135,11 +136,12 @@ namespace GpuMsg
 
 
 	//
-	// Get GPU Image View
+	// Create GPU Image View
 	//
-	struct GetVkImageView
+	struct CreateVkImageView
 	{
-		Out< vk::VkImageView >		result;
+		Platforms::ImageViewDescriptor	viewDescr;
+		Out< vk::VkImageView >			result;
 	};
 
 

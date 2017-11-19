@@ -52,9 +52,13 @@ namespace PlatformCL
 	private:
 		ImageDescriptor			_descr;
 		ModulePtr				_memObj;
-		EGpuMemory::bits		_memFlags;
 		cl::cl_mem				_imageId;
 		EImageLayout::type		_layout;
+		
+		EGpuMemory::bits		_memFlags;		// -|-- this flags is requirements for memory obj, don't use it anywhere
+		EMemoryAccess::bits		_memAccess;		// -|
+		bool					_useMemMngr;	// -|
+
 		bool					_isBindedToMemory;
 
 
@@ -108,8 +112,10 @@ namespace PlatformCL
 */
 	CL2Image::CL2Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
 		CL2BaseModule( gs, ModuleConfig{ CLImageModuleID, ~0u }, &_msgTypes, &_eventTypes ),
-		_descr( ci.descr ),					_imageId( null ),
-		_layout( EImageLayout::Unknown ),	_isBindedToMemory( false )
+		_descr( ci.descr ),				_imageId( null ),
+		_layout( EImageLayout::Unknown ),
+		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
+		_useMemMngr( ci.allocMem ),		_isBindedToMemory( false )
 	{
 		SetDebugName( "CL2Image" );
 
@@ -145,7 +151,7 @@ namespace PlatformCL
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::CLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
 
 		Utils::ValidateDescriptor( INOUT _descr );
 	}
@@ -172,7 +178,21 @@ namespace PlatformCL
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 		
-		CHECK_ATTACHMENT( _memObj = GetModuleByEvent< MemoryEvents_t >() );
+		_memObj = GetModuleByEvent< MemoryEvents_t >();
+
+		if ( not _memObj and _useMemMngr )
+		{
+			ModulePtr	mem_module;
+			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+								CLMemoryModuleID,
+								GlobalSystems(),
+								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
+								OUT mem_module ) );
+
+			CHECK_ERR( _Attach( "mem", mem_module, true ) );
+			_memObj = mem_module;
+		}
+		CHECK_ATTACHMENT( _memObj );
 		
 		// TODO: check shared objects
 

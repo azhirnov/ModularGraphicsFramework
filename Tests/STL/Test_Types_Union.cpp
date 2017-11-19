@@ -7,7 +7,7 @@ using namespace GX_STL::GXTypes;
 using namespace GX_STL::GXMath;
 
 
-class RefClass : public RefCountedObject
+class RefClass : public RefCountedObject<>
 {
 	int i;
 };

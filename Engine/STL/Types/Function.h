@@ -94,7 +94,7 @@ namespace GXTypes
 
 		template <typename T, typename C>
 		struct FB_GetBaseClass< T, C, false > {
-			static const bool	value = FB_IsRawTypesSame< typename T::Value_t, C >::value;
+			static const bool	value = FB_IsRawTypesSame< TypeTraits::RemovePointer<typename T::Value_t>, C >::value;
 		};
 		
 		template <typename T, typename C>

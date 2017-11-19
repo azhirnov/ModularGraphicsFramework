@@ -47,7 +47,7 @@ namespace CreateInfo
 
 	struct GpuUniforms
 	{
-		ModulePtr						gpuThread;
+		ModulePtr						gpuThread;			// can be null
 		Platforms::UniformsDescriptor	descr;
 	};
 

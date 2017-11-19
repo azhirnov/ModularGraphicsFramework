@@ -119,7 +119,7 @@ namespace CreateInfo
 
 	struct GpuSampler
 	{
-		ModulePtr						gpuThread;
+		ModulePtr						gpuThread;			// can be null
 		Platforms::SamplerDescriptor	descr;
 	};
 

@@ -239,7 +239,8 @@
     <ClInclude Include="..\..\..\Engine\STL\Types\Optional.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\Ptr.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\RefCountedObject.h" />
-    <ClInclude Include="..\..\..\Engine\STL\Types\ReferenceCounter.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Types\RefCounter.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Types\SharedPointer.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\ScopeSetter.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\StaticLimit.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\StaticRefCountedObject.h" />
@@ -250,6 +251,7 @@
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantRef.h" />
     <ClInclude Include="..\..\..\Engine\STL\Engine.STL.h" />
     <ClInclude Include="..\..\..\Engine\STL\Types\VariantRefIndexedContainer.h" />
+    <ClInclude Include="..\..\..\Engine\STL\Types\WeakPointer.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Engine.Config\Engine.Config.vcxproj">

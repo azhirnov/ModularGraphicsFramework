@@ -23,33 +23,25 @@ namespace PlatformVK
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetFramebufferDescriptor,
-											GpuMsg::GetVkFramebufferID
+											GpuMsg::GetVkFramebufferID,
+											GpuMsg::FramebufferAttachImage
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
 
 		using RenderPassMsgList_t	= MessageListFrom< GpuMsg::GetRenderPassDescriptor, GpuMsg::GetVkRenderPassID >;
-		
+		using ImageMsgList_t		= MessageListFrom< GpuMsg::GetImageDescriptor, GpuMsg::CreateVkImageView >;
+
 		struct AttachmentInfo : CompileTime::PODStruct
 		{
 		// variables
-			ModuleName_t		name;
-			vk::VkImageView		view		= VK_NULL_HANDLE;
-			EPixelFormat::type	format		= EPixelFormat::Unknown;
-			MultiSamples		samples;
-			EImage::type		imageType	= EImage::Unknown;
-			MipmapLevel			level;
-			ImgArrLayer			layer;
+			ModuleName_t			name;
+			vk::VkImageView			view	= VK_NULL_HANDLE;
+			ImageViewDescriptor		descr;
+			MultiSamples			samples;
 
 		// methods
-			AttachmentInfo ()
-			{}
-
-			AttachmentInfo (StringCRef name, MipmapLevel level, ImgArrLayer layer) :
-				name(name), level(level), layer(layer)
-			{}
-
-			bool IsEnabled ()	const	{ return view != VK_NULL_HANDLE; }
+			AttachmentInfo () {}
 		};
 	
 		using Attachments_t		= FixedSizeArray< AttachmentInfo, GlobalConst::Graphics_MaxColorBuffers >;
@@ -82,8 +74,10 @@ namespace PlatformVK
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		//bool _ReplaceModule (const Message< ModuleMsg::ReplaceModule > &);
 		bool _GetVkFramebufferID (const Message< GpuMsg::GetVkFramebufferID > &);
 		bool _GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &);
+		bool _FramebufferAttachImage (const Message< GpuMsg::FramebufferAttachImage > &);
 
 	private:
 		bool _IsCreated () const;
@@ -118,6 +112,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_AttachModule );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_DetachModule );
+		//_SubscribeOnMsg( this, &Vk1Framebuffer::_ReplaceModule );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_FindModule_Impl );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_Link_Impl );
@@ -130,20 +125,11 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetVkPrivateClasses );
+		_SubscribeOnMsg( this, &Vk1Framebuffer::_FramebufferAttachImage );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
-
-		FOR( i, ci.attachment )
-		{
-			const auto& att = ci.attachment[i];
-
-			CHECK( att.module and not att.name.Empty() );
-			CHECK( _Attach( att.name, att.module, false ) );
-
-			_attachments.PushBack({ att.name, att.mipmap, att.layer });
-		}
+		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
 
 		_ValidateDescriptor( INOUT _descr );
 	}
@@ -206,15 +192,107 @@ namespace PlatformVK
 		CHECK_ERR( msg->newModule );
 
 		// render pass must be unique
-		bool	is_render_pass = msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_render_pass	= msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_image		= msg->newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_render_pass ) );
-		CHECK( _SetState( EState::Initial ) );
-
-		_DestroyFramebuffer();
+		if ( _Attach( msg->name, msg->newModule, is_render_pass ) and (is_image or is_render_pass) )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_DestroyFramebuffer();
+		}
 		return true;
 	}
 	
+/*
+=================================================
+	_ReplaceModule
+=================================================
+*
+	bool Vk1Framebuffer::_ReplaceModule (const Message< ModuleMsg::ReplaceModule > &msg)
+	{
+		CHECK_ERR( msg->newModule );
+		
+		ModulePtr	old_mod = msg->oldModule;
+
+		if ( not msg->name.Empty() )
+		{
+			old_mod = GetModuleByName( msg->name );
+			CHECK_ERR( old_mod.IsNull() or msg->oldModule.IsNull() or old_mod == msg->oldModule );
+			old_mod = old_mod ? old_mod : msg->oldModule;	// module by name has more priority
+		}
+		CHECK_ERR( old_mod );
+
+		bool	is_render_pass	= msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	was_render_pass	= old_mod->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_image		= msg->newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+		bool	was_image		= old_mod->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+
+		CHECK_ERR( is_render_pass == was_render_pass and is_image == was_image );
+
+		if ( is_image )
+		{
+			Message< GpuMsg::GetImageDescriptor >	req_descr1;
+			Message< GpuMsg::GetImageDescriptor >	req_descr2;
+
+			old_mod->Send( req_descr1 );
+			msg->newModule->Send( req_descr2 );
+		}
+
+		CHECK( _Detach( old_mod ) );
+		CHECK( _Attach( msg->name, msg->newModule, is_render_pass ) );
+		
+		CHECK( _SetState( EState::Initial ) );
+		_DestroyFramebuffer();
+		return true;
+	}
+
+/*
+=================================================
+	_AttachModule
+=================================================
+*/
+	bool Vk1Framebuffer::_FramebufferAttachImage (const Message< GpuMsg::FramebufferAttachImage > &msg)
+	{
+		ModulePtr	mod = GetModuleByName( msg->name );
+		if ( mod ) {
+			CHECK( _Detach( mod ) );
+		}
+
+		bool			found = false;
+		AttachmentInfo	new_att;
+		
+		new_att.name			= msg->name;
+		new_att.descr			= msg->viewDescr;
+		new_att.descr.swizzle	= ImageSwizzle();
+
+		CHECK( new_att.descr.swizzle == msg->viewDescr.swizzle );
+
+		FOR( i, _attachments )
+		{
+			auto&	att = _attachments[i];
+
+			// replace
+			if ( att.name == msg->name )
+			{
+				att		= new_att;
+				found	= true;
+				break;
+			}
+		}
+
+		// add new attachment
+		if ( not found ) {
+			_attachments.PushBack( new_att );
+		}
+
+		if ( _Attach( msg->name, msg->image, false ) )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_DestroyFramebuffer();
+		}
+		return true;
+	}
+
 /*
 =================================================
 	_Delete
@@ -222,7 +300,12 @@ namespace PlatformVK
 */
 	bool Vk1Framebuffer::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
 	{
-		if ( _Detach( msg->oldModule ) )
+		CHECK_ERR( msg->oldModule );
+
+		bool	is_render_pass	= msg->oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_image		= msg->oldModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+
+		if ( _Detach( msg->oldModule ) and (is_image or is_render_pass) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyFramebuffer();
@@ -274,7 +357,7 @@ namespace PlatformVK
 		CHECK_ERR( not _IsCreated() );
 		CHECK_ERR( not _attachments.Empty() );
 
-		using ImageViewMessages_t		= MessageListFrom< GpuMsg::GetImageDescriptor, GpuMsg::GetVkImageView >;
+		using ImageViewMessages_t		= MessageListFrom< GpuMsg::GetImageDescriptor, GpuMsg::CreateVkImageView >;
 		using ImageViews_t				= FixedSizeArray< VkImageView, GlobalConst::Graphics_MaxColorBuffers + 1 >;
 		using ColorAttachmentInfos_t	= FixedSizeArray< AttachmentInfo, GlobalConst::Graphics_MaxColorBuffers >;
 
@@ -310,30 +393,32 @@ namespace PlatformVK
 			CHECK_ERR( _IsComposedState( mod->GetState() ) );
 			
 			Message< GpuMsg::GetImageDescriptor >	req_descr;
-			Message< GpuMsg::GetVkImageView >		req_view;	// TODO: get view of mipmap and layer
+			Message< GpuMsg::CreateVkImageView >	req_view;
+
+			req_view->viewDescr = att.descr;
 
 			SendTo( mod, req_descr );
 			SendTo( mod, req_view );
 
 			CHECK_ERR( req_descr->result.IsDefined() and req_view->result.IsDefined() );
 			
-			att.format		= req_descr->result->format;
-			att.imageType	= req_descr->result->imageType;
-			att.samples		= req_descr->result->samples;
-			att.view		= *req_view->result;
-
-			const uint4	dim	= ImageUtils::LevelDimension( att.imageType, req_descr->result->dimension, att.level.Get() );
+			att.descr.format	= att.descr.format == EPixelFormat::Unknown ? req_descr->result->format : att.descr.format;
+			att.descr.viewType	= att.descr.viewType == EImage::Unknown ? req_descr->result->imageType : att.descr.viewType;
+			att.samples			= req_descr->result->samples;
+			att.view			= *req_view->result;
+			
+			const uint4	dim	= ImageUtils::LevelDimension( att.descr.viewType, req_descr->result->dimension, att.descr.baseLevel.Get() );
 
 			// validate
 			CHECK_ERR( All( dim.xy() >= _descr.size ) );
 
 			if ( _descr.layers > 1 )
 			{
-				CHECK_ERR( EImage::IsArray( att.imageType ) );
-				CHECK_ERR( dim.w <= att.layer.Get() + _descr.layers );
+				CHECK_ERR( EImage::IsArray( att.descr.viewType ) );
+				CHECK_ERR( dim.w <= att.descr.baseLayer.Get() + _descr.layers );
 			}
 			else
-				att.layer = Uninitialized;
+				att.descr.baseLayer = Uninitialized;
 		}
 
 		
@@ -371,9 +456,9 @@ namespace PlatformVK
 			img_views[idx] = att.view;
 
 			if ( is_depth )
-				_descr.depthStencilAttachment = FramebufferDescriptor::AttachmentInfo{ att.name, att.imageType };
+				_descr.depthStencilAttachment = FramebufferDescriptor::AttachmentInfo{ att.name, att.descr.viewType };
 			else
-				_descr.colorAttachments[idx] = FramebufferDescriptor::AttachmentInfo{ att.name, att.imageType };
+				_descr.colorAttachments[idx] = FramebufferDescriptor::AttachmentInfo{ att.name, att.descr.viewType };
 		}
 
 		// create framebuffer
@@ -389,7 +474,7 @@ namespace PlatformVK
 		
 		VK_CHECK( vkCreateFramebuffer( GetVkDevice(), &fb_info, null, OUT &_framebufferId ) );
 
-		GetDevice()->SetObjectName( _framebufferId, GetDebugName(), EGpuObject::Framebuffer );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_framebufferId), GetDebugName(), EGpuObject::Framebuffer );
 		return true;
 	}
 	
@@ -407,12 +492,12 @@ namespace PlatformVK
 			const auto&	att = _attachments[i];
 
 			ASSERT( att.view != VK_NULL_HANDLE );
-			builder.Add( att.name, att.format, att.samples );
+			builder.Add( att.name, att.descr.format, att.samples );
 		}
 
 		ModulePtr	render_pass;
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-							Platforms::VkRenderPassModuleID,
+							VkRenderPassModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuRenderPass{ null, builder.Finish() },
 							OUT render_pass
@@ -451,7 +536,7 @@ namespace PlatformVK
 			// check in depth stencil attachment
 			if ( att.name == rpDescr.DepthStencilAttachment().name )
 			{
-				CHECK_ERR( att.format == rpDescr.DepthStencilAttachment().format );
+				CHECK_ERR( att.descr.format == rpDescr.DepthStencilAttachment().format );
 				CHECK_ERR( att.samples == rpDescr.DepthStencilAttachment().samples );
 				continue;
 			}
@@ -465,7 +550,7 @@ namespace PlatformVK
 
 				if ( col.name == att.name )
 				{
-					CHECK_ERR( col.format == att.format );
+					CHECK_ERR( col.format == att.descr.format );
 					CHECK_ERR( col.samples == att.samples );
 					found = false;
 					break;
@@ -494,7 +579,7 @@ namespace PlatformVK
 		{
 			vkDestroyFramebuffer( dev, _framebufferId, null );
 		}
-
+		
 		_framebufferId	= VK_NULL_HANDLE;
 	}
 	

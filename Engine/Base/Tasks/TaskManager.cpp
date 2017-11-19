@@ -102,14 +102,19 @@ namespace Base
 	bool TaskManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		SCOPELOCK( _lock );
-
 		CHECK_ERR( msg->module );
-		ASSERT( _threads.IsExist( msg->module->GetThreadID() ) );
+
+		ModulePtr	module = msg->module.Lock();
+
+		if ( not module )
+			return false;
+
+		ASSERT( _threads.IsExist( module->GetThreadID() ) );
 
 		usize	idx;
-		if ( _threads.FindIndex( msg->module->GetThreadID(), OUT idx ) )
+		if ( _threads.FindIndex( module->GetThreadID(), OUT idx ) )
 		{
-			ASSERT( _threads[idx].second.module == msg->module );
+			ASSERT( _threads[idx].second.module == module );
 
 			_threads.EraseByIndex( idx );
 		}

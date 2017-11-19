@@ -53,7 +53,7 @@ namespace PlatformVK
 
 		VK_CHECK( vkCreatePipelineLayout( GetVkDevice(), &layout_info, null, OUT &_layoutId ) );
 
-		GetDevice()->SetObjectName( _layoutId, "Vk1PipelineLayout", EGpuObject::PipelineLayout );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_layoutId), "Vk1PipelineLayout", EGpuObject::PipelineLayout );
 		return true;
 	}
 	
@@ -220,7 +220,7 @@ namespace PlatformVK
 
 		for (usize set = 0; set <= descr.MaxDescriptorSet(); ++set)
 		{
-			_CreateDescriptor_Func	func( OUT descr_binding, OUT _pushConstRanges, set );
+			_CreateDescriptor_Func	func( OUT descr_binding, OUT _pushConstRanges, uint(set) );
 
 			FOR( i, descr.GetUniforms() ) {
 				descr.GetUniforms()[i].Apply( func );

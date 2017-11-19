@@ -416,11 +416,15 @@ namespace _types_hidden_
 
 			template <typename KeyT>
 			bool FindAll (const KeyT &key, OUT values_range_t &result)		{ return _ref._FindAll2( key, OUT result ); }
+
+			template <typename KeyT>
+			bool IsExist (const KeyT &key) const							{ usize idx;  return FindFirstIndex( key, OUT idx ); }
 		};
 
 
 	public:
-		_CustomSearch CustomSearch ()	{ return _CustomSearch( *this ); }
+		_CustomSearch		CustomSearch ()			{ return _CustomSearch( *this ); }
+		_CustomSearch const	CustomSearch ()	const	{ return _CustomSearch( *this ); }
 	};
 
 	

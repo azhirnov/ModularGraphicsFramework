@@ -278,7 +278,7 @@ namespace Platforms
 		RenderPassDescriptor const& Finish ();
 
 		// default render pass for presenting to screen
-		static RenderPassDescriptor CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt);
+		static RenderPassDescriptor CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt, EImageLayout::type finalLayout = EImageLayout::PresentSrc);
 
 		// simplified builder
 		static SimpleBuilder CreateForFramebuffer ();
@@ -350,7 +350,7 @@ namespace CreateInfo
 
 	struct GpuRenderPass
 	{
-		ModulePtr							gpuThread;
+		ModulePtr							gpuThread;			// can be null
 		Platforms::RenderPassDescriptor		descr;
 	};
 

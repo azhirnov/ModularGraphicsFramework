@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Engine\Graphics\Engine.Graphics.h" />
+    <ClInclude Include="..\..\..\Engine\Graphics\Shared\GraphicsContext.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Graphics\Shared\Common.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Graphics\Shared\IDs.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Graphics\BatchRenderer\BatchRenderer.h">
+      <Filter>BatchRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Graphics\BatchRenderer\Vertices.h">
+      <Filter>BatchRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Graphics\BatchRenderer\Primitives.h">
+      <Filter>BatchRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Graphics\Shared\GraphicsBaseModule.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Shared">
+      <UniqueIdentifier>{66f1602f-6a3b-472a-92fd-56df446d294d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BatchRenderer">
+      <UniqueIdentifier>{db04633c-5a51-4965-861a-9a9c2c60e97c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Engine\Graphics\Shared\GraphicsContext.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Graphics\Shared\GraphicsThread.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Graphics\Shared\Main.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Graphics\BatchRenderer\BatchRenderer.cpp">
+      <Filter>BatchRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Graphics\Shared\GraphicsBaseModule.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

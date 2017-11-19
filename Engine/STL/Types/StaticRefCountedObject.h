@@ -23,12 +23,15 @@ namespace GXTypes
 	// Static Reference Counted Object
 	//
 
-	class _STL_EXPORT_ StaticRefCountedObject : protected RefCountedObject
+	class _STL_EXPORT_ StaticRefCountedObject : public RefCountedObject<>
 	{
 	// types
 	private:
-		typedef StaticRefCountedObject			Self;
-		typedef SharedPointerType< Self >		SelfPtr_t;
+		using Self				= StaticRefCountedObject;
+		using SelfPtr_t			= SharedPointerType< Self >;
+		using Base_t			= RefCountedObject<>;
+		using Strategy_t		= SharedPointerStrategy< Base_t >;
+		using WeakStrategy_t	= WeakPointerStrategy< Base_t >;
 
 
 	// variables
@@ -46,7 +49,7 @@ namespace GXTypes
 
 		explicit
 		StaticRefCountedObject (const Self &other) :
-			RefCountedObject(other),
+			Base_t(other),
 			_isDynamicObj(true)
 		{
 			_SetDynamicObj( false );
@@ -54,7 +57,7 @@ namespace GXTypes
 
 
 		StaticRefCountedObject (Self &&other) :
-			RefCountedObject( other ),
+			Base_t( other ),
 			_isDynamicObj(true)
 		{
 			_SetDynamicObj( false );
@@ -63,7 +66,14 @@ namespace GXTypes
 
 		~StaticRefCountedObject ()
 		{
-			ASSERT( (_GetRefCount() != 0) == not _isDynamicObj );
+			ASSERT( (Strategy_t::Count( this ) != 0) == not _isDynamicObj );
+
+			if ( not _isDynamicObj )
+			{
+				// free weak pointer
+				WeakStrategy_t::Counter_t cnt{ WeakStrategy_t::Create( this ) };
+				WeakStrategy_t::DecRef( cnt );
+			}
 		}
 
 		
@@ -101,19 +111,20 @@ namespace GXTypes
 
 			if ( not _isDynamicObj )
 			{
-				_AddRef();
-				_DebugRemoveRef();
+				Strategy_t::IncRef( this );
+				//_DebugRemoveRef();
 			}
 			else
 			{
-				_ReleaseRef();
-				_DebugAddRef();
+				Strategy_t::DecRef( this );
+				//_DebugAddRef();
 			}
 		}
 
 
-		// RefCountedObject //
-		virtual void _Release () override final
+	// RefCountedObject //
+	protected:
+		void _Release (RefCounter_t &) override
 		{
 			ASSERT( _isDynamicObj );
 

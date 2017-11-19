@@ -52,6 +52,7 @@
     <ClCompile Include="..\..\..\Tests\STL\Test_Dimensions_PhysicsValue.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Math_Matrix.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Math_Transform.cpp" />
+    <ClCompile Include="..\..\..\Tests\STL\Test_OS_Atomic.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_OS_Date.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_OS_FileSystem.cpp" />
     <ClCompile Include="..\..\..\Tests\STL\Test_Runtime_VirtualTypelist.cpp" />

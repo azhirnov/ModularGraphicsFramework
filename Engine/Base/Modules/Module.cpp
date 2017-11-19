@@ -42,6 +42,34 @@ namespace Base
 		CHECK( _parents.Empty() );
 		CHECK( _manager.IsNull() );
 	}
+	
+/*
+=================================================
+	_Release
+=================================================
+*/
+	void Module::_Release (RefCounter_t &rc)
+	{
+		if ( GetState() != EState::Deleting )
+		{
+			// send deleting message (and event)
+			rc.Inc();
+			CHECK( _SendMsg< ModuleMsg::Delete >({}) );
+			rc.Dec();
+		}
+		
+		if ( GetState() == EState::Deleting )
+		{
+			BaseObject::_Release( rc );
+		}
+		else
+		{
+			// something goes wrong...
+			// maybe somebody save strong reference when processing 'Delete' message
+			// so we need to keep this object alive and increase week reference counter
+			rc.IncWeak();
+		}
+	}
 
 /*
 =================================================
@@ -77,7 +105,11 @@ namespace Base
 
 		_attachments.PushBack({ name, unit });
 
-		_SendForEachAttachments< ModuleMsg::OnModuleAttached >({ this, name, unit });
+		Message< ModuleMsg::OnModuleAttached >	on_attached{ this, name, unit };
+
+		_SendForEachAttachments( on_attached );
+		_SendEvent( on_attached, false );
+
 		return true;
 	}
 	
@@ -94,7 +126,10 @@ namespace Base
 		{
 			if ( _attachments[i].second == unit )
 			{
-				_SendForEachAttachments< ModuleMsg::OnModuleDetached >({ this, _attachments[i].first, unit });
+				Message< ModuleMsg::OnModuleDetached >	on_detached{ this, _attachments[i].first, unit };
+
+				_SendForEachAttachments( on_detached );
+				_SendEvent( on_detached, false );
 
 				_attachments.Erase( i );
 				return true;
@@ -187,7 +222,7 @@ namespace Base
 			auto	task_mod = GlobalSystems()->Get< TaskModule >();
 
 			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
-						AsyncMessage{	LAMBDA( mngr = _manager, self = ModulePtr(this) ) (GlobalSystemsRef)
+						AsyncMessage{	LAMBDA( mngr = _manager, self = ModuleWPtr(this) ) (GlobalSystemsRef)
 										{
 											mngr->Send< ModuleMsg::RemoveFromManager >({ self });
 										}},
@@ -361,6 +396,7 @@ namespace Base
 		CHECK_ERR( GetState() == EState::Linked );
 
 		_SendForEachAttachments< ModuleMsg::Compose >({});
+		//_SendEvent< ModuleMsg::Compose >({});
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
@@ -541,6 +577,30 @@ namespace Base
 		CHECK( _Detach( msg->oldModule ) );
 		return true;
 	}
+	
+/*
+=================================================
+	_ReplaceModule_Impl
+=================================================
+*/
+	bool Module::_ReplaceModule_Impl (const Message< ModuleMsg::ReplaceModule > &msg)
+	{
+		CHECK_ERR( msg->newModule );
+
+		ModulePtr	old_mod = msg->oldModule;
+
+		if ( not msg->name.Empty() )
+		{
+			old_mod = GetModuleByName( msg->name );
+			CHECK_ERR( old_mod.IsNull() or msg->oldModule.IsNull() or old_mod == msg->oldModule );
+			old_mod = old_mod ? old_mod : msg->oldModule;	// module by name has more priority
+		}
+		CHECK_ERR( old_mod );
+
+		SendTo< ModuleMsg::DetachModule >( this, { old_mod } );
+		SendTo< ModuleMsg::AttachModule >( this, { msg->name, msg->newModule } );
+		return true;
+	}
 
 /*
 =================================================
@@ -555,6 +615,7 @@ namespace Base
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
 		_SendForEachAttachments( msg );
+		//_SendEvent( msg );
 
 		CHECK( _SetState( EState::Linked ) );
 
@@ -680,6 +741,16 @@ namespace Base
 		return false;
 	}
 	
+/*
+=================================================
+	_DetachModule_Empty
+=================================================
+*/
+	bool _ReplaceModule_Empty (const Message< ModuleMsg::ReplaceModule > &)
+	{
+		return false;
+	}
+
 /*
 =================================================
 	_OnManagerChanged_Empty

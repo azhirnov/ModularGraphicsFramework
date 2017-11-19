@@ -1,6 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 

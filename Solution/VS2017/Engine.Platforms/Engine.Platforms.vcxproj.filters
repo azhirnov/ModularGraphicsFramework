@@ -110,9 +110,6 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ImageEnums.h">
       <Filter>Shared\GPU</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ImgArrLayer.h">
-      <Filter>Shared\GPU</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ObjectEnums.h">
       <Filter>Shared\GPU</Filter>
     </ClInclude>
@@ -134,6 +131,18 @@
     <ClInclude Include="..\..\..\Engine\Platforms\Shared\OS\VR.h">
       <Filter>Shared\OS</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ImageLayer.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\Tools\ImageViewHashMap.h">
+      <Filter>Shared\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\GPU\ImageSwizzle.h">
+      <Filter>Shared\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\Platforms\Shared\Tools\MemoryMapperHelper.h">
+      <Filter>Shared\Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="SDL">
@@ -154,8 +163,8 @@
     <Filter Include="Shared\OS">
       <UniqueIdentifier>{0f738aac-a234-4dd5-9b2a-3dcf975e9537}</UniqueIdentifier>
     </Filter>
-    <Filter Include="VR">
-      <UniqueIdentifier>{223d88e2-6a84-46f6-a8da-dd7a194a721c}</UniqueIdentifier>
+    <Filter Include="Shared\Tools">
+      <UniqueIdentifier>{cc93ede8-cb36-4088-ae24-9fc988619ca1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -191,6 +200,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Engine\Platforms\Shared\GPU\VertexInputState.cpp">
       <Filter>Shared\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Engine\Platforms\Shared\Tools\MemoryMapperHelper.cpp">
+      <Filter>Shared\Tools</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

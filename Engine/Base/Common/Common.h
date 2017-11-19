@@ -35,6 +35,7 @@ namespace Engine
 		// TODO: FileManager
 		// TODO: Serializer
 
+		WEAK_POINTER( Module );
 		SHARED_POINTER( Module );
 		SHARED_POINTER( TaskModule );
 		SHARED_POINTER( ModulesFactory );

@@ -16,8 +16,13 @@ namespace Base
 	GetMainSystemInstace
 =================================================
 */
+	struct _FinalChecks {
+		~_FinalChecks ();
+	};
+
 	Ptr<Module>  GetMainSystemInstace ()
 	{
+		static _FinalChecks			final_checks;
 		static GlobalSubSystems		global_systems;
 		static MainSystem			main_system{ GlobalSystemsRef(global_systems) };
 		return &main_system;
@@ -60,14 +65,16 @@ namespace Base
 	
 /*
 =================================================
-	destructor
+	_FinalChecks
 =================================================
 */
-	MainSystem::_FinalChecks::~_FinalChecks ()
+	_FinalChecks::~_FinalChecks ()
 	{
 		Logger::GetInstance()->Close();
 
-		DEBUG_ONLY( RefCountedObject::s_ChenckNotReleasedObjects() );
+		// compare with 1 becouse MainSystem is referenced object too
+		DEBUG_ONLY( DbgRefCountedObject::s_ChenckNotReleasedObjects() );
+		DEBUG_ONLY( RefCounter2::s_CheckAllocations() );
 	}
 	
 /*

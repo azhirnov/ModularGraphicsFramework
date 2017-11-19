@@ -2,11 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GPU/ImageEnums.h"
-#include "Engine/Platforms/Shared/GPU/ImgArrLayer.h"
-#include "Engine/Platforms/Shared/GPU/MipmapLevel.h"
-#include "Engine/Platforms/Shared/GPU/MultiSamples.h"
-#include "Engine/Platforms/Shared/GPU/IDs.h"
+#include "Engine/Platforms/Shared/GPU/Image.h"
 
 namespace Engine
 {
@@ -99,29 +95,9 @@ namespace CreateInfo
 
 	struct GpuFramebuffer
 	{
-	// types
-		using ImgArrLayer	= Platforms::ImgArrLayer;
-		using MipmapLevel	= Platforms::MipmapLevel;
-
-		struct Attachment final : CompileTime::FastCopyable
-		{
-		// variables
-			ModuleMsg::ModuleName_t	name;
-			ModulePtr				module;
-			MipmapLevel				mipmap;
-			ImgArrLayer				layer;		// one layer or first layer for layered framebuffer
-
-		// methods
-			Attachment () {}
-			Attachment (StringCRef name, const ModulePtr &mod, MipmapLevel lvl = Uninitialized, ImgArrLayer layer = Uninitialized) : name(name), module(mod), mipmap(lvl), layer(layer) {}
-		};
-		using Attachments_t = FixedSizeArray< Attachment, GlobalConst::Graphics_MaxColorBuffers >;
-
-	// vaariables
-		ModulePtr			gpuThread;
+		ModulePtr			gpuThread;			// can be null
 		GXMath::uint2		size;
 		uint				layers;
-		Attachments_t		attachment;
 	};
 
 }	// CreateInfo
@@ -136,6 +112,35 @@ namespace GpuMsg
 	struct GetFramebufferDescriptor
 	{
 		Out< Platforms::FramebufferDescriptor >		result;
+	};
+
+
+	//
+	// Attach Image toframebuffer (use it instead of AttachModule)
+	//
+	struct FramebufferAttachImage
+	{
+	// types
+		using ImageLayer		= Platforms::ImageLayer;
+		using MipmapLevel		= Platforms::MipmapLevel;
+		using EImage			= Platforms::EImage;
+		using EPixelFormat		= Platforms::EPixelFormat;
+		using ImageViewDescr	= Platforms::ImageViewDescriptor;
+
+	// variables
+		ModuleName_t		name;
+		ModulePtr			image;
+		ImageViewDescr		viewDescr;
+
+	// methods
+		FramebufferAttachImage (GX_DEFCTOR) {}
+
+		FramebufferAttachImage (StringCRef name, const ModulePtr &mod, const ImageViewDescr &descr) : name(name), image(mod), viewDescr(descr) {}
+
+		FramebufferAttachImage (StringCRef name, const ModulePtr &mod, MipmapLevel level = Uninitialized, ImageLayer layer = Uninitialized, uint layerCount = 1,
+								EImage::type viewType = Uninitialized, EPixelFormat::type format = Uninitialized) :
+			name{name}, image{mod}, viewDescr{ viewType, format, level, 0, layer, layerCount }
+		{}
 	};
 
 

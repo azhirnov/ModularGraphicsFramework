@@ -18,6 +18,7 @@ namespace ModuleMsg
 	//using ThreadID	= Base::ThreadID;
 
 	using ModulePtr		= Base::ModulePtr;
+	using ModuleWPtr	= Base::ModuleWPtr;
 
 	using UntypedID_t	= CompileTime::NearUInt::FromType< GModID::type >;
 	using ModuleName_t	= StaticString<64>;
@@ -29,10 +30,9 @@ namespace ModuleMsg
 	struct AttachModule
 	{
 	// variables
-		ModuleName_t	name;
+		ModuleName_t	name;		// can be empty
 		ModulePtr		newModule;
-		// TODO: deletable flag?
-
+		
 	// methods
 		explicit AttachModule (const ModulePtr &unit) : AttachModule( StringCRef(), unit ) {}
 		AttachModule (StringCRef name, const ModulePtr &unit) : name( /*name.Empty() ? ModuleName_t("id: ") << ToString(GModID::type( unit->GetModuleID() )) :*/ name ), newModule( unit ) {}
@@ -41,6 +41,13 @@ namespace ModuleMsg
 	struct DetachModule
 	{
 		ModulePtr	oldModule;
+	};
+
+	struct ReplaceModule
+	{
+		ModuleName_t	name;		// can be empty
+		ModulePtr		oldModule;	// can be null
+		ModulePtr		newModule;
 	};
 	
 
@@ -172,7 +179,7 @@ namespace ModuleMsg
 
 	struct RemoveFromManager
 	{
-		ModulePtr	module;
+		ModuleWPtr	module;
 	};
 
 

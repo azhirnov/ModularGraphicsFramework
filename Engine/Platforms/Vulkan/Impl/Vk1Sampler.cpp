@@ -97,7 +97,7 @@ namespace PlatformVK
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
 	}
 	
 /*
@@ -225,7 +225,7 @@ namespace PlatformVK
 
 		VK_CHECK( vkCreateSampler( GetVkDevice(), &info, null, OUT &_samplerId ) );
 
-		GetDevice()->SetObjectName( _samplerId, GetDebugName(), EGpuObject::Sampler );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_samplerId), GetDebugName(), EGpuObject::Sampler );
 		return true;
 	}
 	

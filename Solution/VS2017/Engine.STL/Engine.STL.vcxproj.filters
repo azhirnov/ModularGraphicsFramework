@@ -608,9 +608,6 @@
     <ClInclude Include="..\..\..\Engine\STL\Types\StaticRefCountedObject.h">
       <Filter>Types</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Engine\STL\Types\ReferenceCounter.h">
-      <Filter>Types</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\OS\STD\Thread.h">
       <Filter>OS\STD</Filter>
     </ClInclude>
@@ -691,6 +688,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Engine\STL\Math\MathTypes.h">
       <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Types\SharedPointer.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Types\RefCounter.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Engine\STL\Types\WeakPointer.h">
+      <Filter>Types</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

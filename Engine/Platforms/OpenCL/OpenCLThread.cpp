@@ -49,10 +49,9 @@ namespace Platforms
 		
 	// variables
 	private:
-		String		_reqDeviceName;
-		GAPI::type	_reqVersion;
+		ComputeSettings		_settings;
 
-		Device		_device;
+		Device				_device;
 
 
 	// methods
@@ -92,7 +91,7 @@ namespace Platforms
 */
 	OpenCLThread::OpenCLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
 		Module( gs, ModuleConfig{ CLThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
-		_reqDeviceName( ci.settings.device ),	_reqVersion( ci.settings.version ),
+		_settings( ci.settings.version, ci.settings.device, ci.settings.flags[ GraphicsSettings::EFlags::DebugContext ] ),
 		_device( GlobalSystems() )
 	{
 		SetDebugName( "OpenCLThread" );
@@ -217,7 +216,7 @@ namespace Platforms
 	{
 		uint	version = 0;
 
-		switch ( _reqVersion )
+		switch ( _settings.version )
 		{
 			case "CL 1.0"_GAPI :	version = 100;	break;
 			case "CL 1.1"_GAPI :	version = 110;	break;
@@ -263,8 +262,8 @@ namespace Platforms
 				match_ver_device = info.id;
 
 			if ( match_name_device == null		and
-				 not _reqDeviceName.Empty()		and
-				 info.device.HasSubStringIC( _reqDeviceName ) )
+				 not _settings.device.Empty()	and
+				 info.device.HasSubStringIC( _settings.device ) )
 			{
 				match_name_device = info.id;
 			}
@@ -277,6 +276,8 @@ namespace Platforms
 		if ( match_name_device )	dev = match_name_device;	else
 		if ( gpu_device )			dev = gpu_device;			else
 									RETURN_ERR( "no OpenCL device found" );
+
+		// TODO: write new device name and version to '_settings'
 
 		CHECK_ERR( _device.CreateDevice( dev ) );
 		

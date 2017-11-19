@@ -13,11 +13,11 @@ namespace Platforms
 	// Image Array Layer
 	//
 	
-	struct ImgArrLayer
+	struct ImageLayer
 	{
 	// types
 	private:
-		using Self	= ImgArrLayer;
+		using Self	= ImageLayer;
 
 
 	// variables
@@ -27,11 +27,11 @@ namespace Platforms
 
 	// methods
 	public:
-		ImgArrLayer (GX_DEFCTOR) : _value(-1)
+		ImageLayer (GX_DEFCTOR) : _value(-1)
 		{}
 
 		explicit
-		ImgArrLayer (uint value) : _value(value)
+		ImageLayer (uint value) : _value(value)
 		{}
 
 		bool IsDefined ()	const	{ return _value != -1; }
@@ -44,3 +44,21 @@ namespace Platforms
 
 }	// Platforms
 }	// Engine
+
+namespace GX_STL
+{
+namespace GXTypes
+{
+	template <>
+	struct Hash< Engine::Platforms::ImageLayer >
+	{
+		using Result_t	= HashResult;
+
+		Result_t operator () (const Engine::Platforms::ImageLayer &value) const
+		{
+			return HashOf( value.Get() );
+		}
+	};
+
+}	// GXTypes
+}	// GX_STL

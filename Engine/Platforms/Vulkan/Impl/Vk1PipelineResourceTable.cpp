@@ -140,7 +140,7 @@ namespace PlatformVK
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
 	}
 	
 /*
@@ -300,7 +300,7 @@ namespace PlatformVK
 		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
 		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
 		using Uniform			= PipelineLayoutDescriptor::Uniform;
-		using ImageMsgList		= MessageListFrom< GpuMsg::GetVkImageView >;
+		using ImageMsgList		= MessageListFrom< GpuMsg::GetVkImageID >;
 		using SamplerMsgList	= MessageListFrom< GpuMsg::GetVkSamplerID >;
 		using BufferMsgList		= MessageListFrom< GpuMsg::GetVkBufferID >;
 
@@ -381,7 +381,7 @@ namespace PlatformVK
 				CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT tex_mod ) );
 				CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT samp_mod ) );
 
-				Message< GpuMsg::GetVkImageView >		req_image;
+				Message< GpuMsg::GetVkImageID >			req_image;
 				Message< GpuMsg::GetVkSamplerID >		req_sampler;
 				Message< GpuMsg::GetImageDescriptor >	req_img_descr;
 
@@ -399,7 +399,7 @@ namespace PlatformVK
 
 				ImageDescr				descr;
 				descr.info.sampler		<< req_sampler->result;
-				descr.info.imageView	<< req_image->result;
+				descr.info.imageView	<< req_image->defaultView;
 				descr.info.imageLayout	= vk::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 				descr.binding			= tex.binding;
@@ -439,14 +439,14 @@ namespace PlatformVK
 			ModulePtr	img_mod;
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT img_mod ) );
 
-			Message< GpuMsg::GetVkImageView >	req_image;
+			Message< GpuMsg::GetVkImageID >	req_image;
 			self.SendTo( img_mod, req_image );	// TODO: check result
 
 			// TODO: check format
 
 			ImageDescr				descr;
 			descr.info.sampler		= VK_NULL_HANDLE;
-			descr.info.imageView	<< req_image->result;
+			descr.info.imageView	<< req_image->defaultView;
 			descr.info.imageLayout	= vk::VK_IMAGE_LAYOUT_GENERAL;				// TODO
 			descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			descr.binding			= img.binding;
@@ -583,7 +583,7 @@ namespace PlatformVK
 
 		VK_CHECK( vkCreateDescriptorPool( GetVkDevice(), &pool_info, null, OUT &_descriptorPoolId ) );
 		
-		GetDevice()->SetObjectName( _descriptorPoolId, GetDebugName(), EGpuObject::DescriptorPool );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_descriptorPoolId), GetDebugName(), EGpuObject::DescriptorPool );
 
 		ASSERT( descr_layouts.Count() == 1 );	// TODO: only 1 set are supported yet
 
@@ -596,7 +596,7 @@ namespace PlatformVK
 
 		VK_CHECK( vkAllocateDescriptorSets( GetVkDevice(), &alloc_info, OUT &_descriptorSetId ) );
 
-		GetDevice()->SetObjectName( _descriptorSetId, GetDebugName(), EGpuObject::DescriptorSet );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_descriptorSetId), GetDebugName(), EGpuObject::DescriptorSet );
 		return true;
 	}
 	

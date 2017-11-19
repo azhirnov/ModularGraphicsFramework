@@ -107,12 +107,12 @@ namespace Base
 =================================================
 */
 	template <typename T>
-	forceinline bool Module::_SendEvent (const Message<T> &msg)
+	forceinline bool Module::_SendEvent (const Message<T> &msg, bool checked)
 	{
 		// only sync message supported
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 		
-		if ( not GetSupportedEvents().HasType( TypeIdOf< Message<T> >() ) )
+		if ( checked and not GetSupportedEvents().HasType( TypeIdOf< Message<T> >() ) )
 			RETURN_ERR( "Unsupported event type '" << ToString( TypeIdOf<T>() ) << "'" );
 
 		return _msgHandler.Send( msg.From( this ) );
@@ -268,7 +268,7 @@ namespace Base
 	template <typename T>
 	forceinline bool BaseObject::SendTo (const ModulePtr &target, const Message<T> &msg) const
 	{
-		return target->Send( msg.From( BaseObjectPtr( const_cast<BaseObject *>(this) ) ) );
+		return target->Send( msg.From( WeakPointerType< BaseObject >( const_cast<BaseObject *>(this) ) ) );
 	}
 
 

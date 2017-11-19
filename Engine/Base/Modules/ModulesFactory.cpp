@@ -30,6 +30,8 @@ namespace Base
 */
 	ModulesFactory::~ModulesFactory ()
 	{
+		ASSERT( _constructors.Empty() );	// some constructors is not unregistered
+
 		Clear();
 
 		GlobalSystems()->GetSetter< ModulesFactory >().Set( null );

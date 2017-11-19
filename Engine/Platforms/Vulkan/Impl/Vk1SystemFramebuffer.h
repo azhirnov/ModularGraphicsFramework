@@ -57,8 +57,6 @@ namespace PlatformVK
 								vk::VkImageView depthStencilView, EPixelFormat::type depthStencilFormat,
 								EImage::type imageType);
 
-		static ModulePtr CreateModule (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &)	{ return null; }
-
 
 	// message handlers
 	private:
@@ -83,7 +81,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Device::Vk1SystemFramebuffer::Vk1SystemFramebuffer (GlobalSystemsRef gs) :
-		Vk1BaseModule( gs, ModuleConfig{ VkSystemFramebufferModuleID, 1 }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ VkFramebufferModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_framebufferId( VK_NULL_HANDLE ),
 		_index( ~0u )
 	{
@@ -106,7 +104,7 @@ namespace PlatformVK
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( null, Platforms::VkThreadModuleID, true );
+		_AttachSelfToManager( null, VkThreadModuleID, true );
 	}
 	
 /*
@@ -116,7 +114,7 @@ namespace PlatformVK
 */
 	Vk1Device::Vk1SystemFramebuffer::~Vk1SystemFramebuffer ()
 	{
-		ASSERT( not _IsCreated() );
+		_DestroyFramebuffer();
 	}
 	
 /*
@@ -162,7 +160,7 @@ namespace PlatformVK
 
 		VK_CHECK( vkCreateFramebuffer( GetVkDevice(), &fb_info, null, OUT &_framebufferId ) );
 		
-		GetDevice()->SetObjectName( _framebufferId, GetDebugName(), EGpuObject::Framebuffer );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_framebufferId), GetDebugName(), EGpuObject::Framebuffer );
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 		return true;

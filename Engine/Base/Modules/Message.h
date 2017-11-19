@@ -20,7 +20,7 @@ namespace Base
 
 	// types
 	public:
-		using Sender_t		= BaseObjectPtr;
+		using Sender_t		= WeakPointerType< BaseObject >;
 		using Self			= Message<T>;
 		using Data_t		= T;
 

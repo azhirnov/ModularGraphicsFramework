@@ -23,7 +23,7 @@ namespace File
 	public:
 		SHARED_POINTER( LzmaRFile );
 		
-		typedef BaseMemRFile	parent_t;
+		typedef BaseMemRFile	Parent_t;
 
 		struct LzmaFileHeader : PODType
 		{
@@ -133,7 +133,7 @@ namespace File
 	private:
 		void _Close ()
 		{
-			parent_t::_Close();
+			Parent_t::_Close();
 			_name.Clear();
 		}
 	};
@@ -165,7 +165,7 @@ namespace File
 		};
 
 	private:
-		typedef BaseMemWFile	parent_t;
+		typedef BaseMemWFile	Parent_t;
 
 		typedef LzmaRFile::LzmaFileHeader	LzmaFileHeader;
 

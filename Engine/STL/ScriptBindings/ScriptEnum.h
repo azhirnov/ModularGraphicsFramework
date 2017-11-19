@@ -227,7 +227,7 @@ namespace GXScript
 		/* operators */ \
 		public: \
 			_GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value ) \
-			_GX_DIM_ALL_INTEGER_OPERATORS_TYPE( _value, type, ) \
+			_GX_DIM_ALL_INTEGER_OPERATORS_TYPE( _value, const type&, ) \
 			\
 			\
 		/* user methods*/ \

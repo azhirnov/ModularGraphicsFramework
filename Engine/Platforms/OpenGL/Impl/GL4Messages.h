@@ -4,6 +4,7 @@
 
 #include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Shared/GPU/Image.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -89,6 +90,17 @@ namespace GpuMsg
 	struct GetGLImageID
 	{
 		Out< gl::GLuint >		result;
+		Out< gl::GLuint >		defaultView;
+	};
+
+
+	//
+	// Create GPU Image View
+	//
+	struct CreateGLImageView
+	{
+		Platforms::ImageViewDescriptor		viewDescr;
+		Out< gl::GLuint >					result;
 	};
 
 

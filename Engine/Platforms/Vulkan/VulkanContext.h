@@ -24,7 +24,8 @@ namespace Platforms
 	private:
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
-											ModuleMsg::RemoveFromManager
+											ModuleMsg::RemoveFromManager,
+											GpuMsg::GetGraphicsModules
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
@@ -55,11 +56,15 @@ namespace Platforms
 		static _ENGINE_PLATFORMS_EXPORT_ void Register (GlobalSystemsRef);
 		static _ENGINE_PLATFORMS_EXPORT_ void Unregister (GlobalSystemsRef);
 
+		static GraphicsModuleIDs GetGraphicsModules ();
+		static ComputeModuleIDs GetComputeModules ();
+
 		
 	// message handlers
 	private:
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
 		
 	private:
 		static ModulePtr _CreateVulkanThread (GlobalSystemsRef, const CreateInfo::GpuThread &);

@@ -71,11 +71,11 @@
 		explicit operator T ()							const		{ return Seconds(); }
 
 		_GX_DIM_CMP_OPERATORS_SELF( _time );
-		_GX_DIM_CMP_OPERATORS_TYPE( _time, Value_t, );
+		_GX_DIM_CMP_OPERATORS_TYPE( _time, const Value_t&, );
 		_GX_DIM_OPERATORS_SELF( +, _time );
 		_GX_DIM_OPERATORS_SELF( -, _time );
-		_GX_DIM_OPERATORS_TYPE( *, _time, Value_t, );
-		_GX_DIM_OPERATORS_TYPE( /, _time, Value_t, );
+		_GX_DIM_OPERATORS_TYPE( *, _time, const Value_t&, );
+		_GX_DIM_OPERATORS_TYPE( /, _time, const Value_t&, );
 
 		template <typename B>
 		B		To ()							const	{ return B().FromTime( *this ); }

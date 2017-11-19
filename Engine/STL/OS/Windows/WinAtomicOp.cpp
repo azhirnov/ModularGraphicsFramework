@@ -20,7 +20,7 @@ namespace OS
 	ilong AtomicOp::Add (volatile ilong * ptr, ilong val)				{ return InterlockedExchangeAdd64( ptr, val ); }
 	ilong AtomicOp::Sub (volatile ilong * ptr, ilong val)				{ return InterlockedExchangeAdd64( ptr, -val ); }
 	ilong AtomicOp::Set (volatile ilong * ptr, ilong val)				{ return InterlockedExchange64( ptr, val ); }
-	ilong AtomicOp::CmpEx (volatile ilong * ptr, ilong val, ilong cmp)	{ return InterlockedCompareExchange64( ptr, val, cmp ); }
+	ilong AtomicOp::CmpExch (volatile ilong * ptr, ilong val, ilong cmp){ return InterlockedCompareExchange64( ptr, val, cmp ); }
 	ilong AtomicOp::Or  (volatile ilong * ptr, ilong val)				{ return InterlockedOr64( ptr, val ); }
 	ilong AtomicOp::Xor (volatile ilong * ptr, ilong val)				{ return InterlockedXor64( ptr, val ); }
 	ilong AtomicOp::And (volatile ilong * ptr, ilong val)				{ return InterlockedAnd64( ptr, val ); }

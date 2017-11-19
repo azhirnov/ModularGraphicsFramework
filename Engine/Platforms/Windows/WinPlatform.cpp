@@ -39,6 +39,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &WinPlatform::_AddToManager );
 		_SubscribeOnMsg( this, &WinPlatform::_RemoveFromManager );
 		_SubscribeOnMsg( this, &WinPlatform::_GetDisplays );
+		_SubscribeOnMsg( this, &WinPlatform::_GetOSModules );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 	}
@@ -57,6 +58,21 @@ namespace Platforms
 		ASSERT( not _IsCreated() );
 	}
 	
+/*
+=================================================
+	GetModuleIDs
+=================================================
+*/
+	OSModuleIDs WinPlatform::GetModuleIDs ()
+	{
+		OSModuleIDs	ids;
+		ids.platform	= WinPlatformModuleID;
+		ids.window		= WinWindowModuleID;
+		ids.keyInput	= WinKeyInputModuleID;
+		ids.mouseInout	= WinMouseInputModuleID;
+		return ids;
+	}
+
 /*
 =================================================
 	_Delete
@@ -146,10 +162,16 @@ namespace Platforms
 	bool WinPlatform::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == WinWindowModuleID );
-		ASSERT( _windows.IsExist( msg->module ) );
 
-		_windows.Erase( msg->module );
+		ModulePtr	module = msg->module.Lock();
+
+		if ( not module )
+			return false;
+
+		CHECK_ERR( module->GetModuleID() == WinWindowModuleID );
+		ASSERT( _windows.IsExist( module ) );
+
+		_windows.Erase( module );
 		return true;
 	}
 	
@@ -257,6 +279,17 @@ namespace Platforms
 		return true;
 	}
 	
+/*
+=================================================
+	_GetOSModules
+=================================================
+*/
+	bool WinPlatform::_GetOSModules (const Message< OSMsg::GetOSModules > &msg)
+	{
+		msg->result.Set( GetModuleIDs() );
+		return true;
+	}
+
 /*
 =================================================
 	_RegisterClass

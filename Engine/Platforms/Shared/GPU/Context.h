@@ -13,16 +13,31 @@ namespace Platforms
 {
 	DECL_STRING_TO_ID( GAPI, 10 );
 
-}	// Platforms
-
-namespace CreateInfo
-{
 
 	//
-	// GPU Context Create Info
+	// Compute Settings
 	//
+	struct ComputeSettings
+	{
+	// variables
+		String			device;
+		GAPI::type		version;
+		bool			isDebug;
 
-	struct GpuContext
+	// methods
+		explicit
+		ComputeSettings (GAPI::type	version		= GAPI::type(0),
+						 StringCRef	deviceName	= StringCRef(),
+						 bool		isDebug		= false) :
+			device(deviceName), version(version), isDebug(isDebug)
+		{}
+	};
+
+
+	//
+	// Graphics Settings
+	//
+	struct GraphicsSettings
 	{
 	// types
 		struct EFlags
@@ -38,10 +53,6 @@ namespace CreateInfo
 			GX_ENUM_BITFIELD( EFlags );
 		};
 
-		using EPixelFormat	= Platforms::EPixelFormat;
-		using MultiSamples	= Platforms::MultiSamples;
-		using GAPI			= Platforms::GAPI;
-
 
 	// variables
 		String				device;
@@ -56,16 +67,46 @@ namespace CreateInfo
 
 
 	// methods
-		GpuContext (GAPI::type			version			= GAPI::type(0),
-					EFlags::bits		flags			= EFlags::bits(),
-					EPixelFormat::type	colorFmt		= EPixelFormat::RGBA8_UNorm,
-					EPixelFormat::type	depthStencilFmt	= EPixelFormat::Depth24,
-					MultiSamples		samples			= MultiSamples(),
-					StringCRef			deviceName		= StringCRef(),
-					uint				swapchainLength	= 0) :
+		explicit
+		GraphicsSettings (GAPI::type			version			= GAPI::type(0),
+						  EFlags::bits			flags			= EFlags::bits(),
+						  EPixelFormat::type	colorFmt		= EPixelFormat::RGBA8_UNorm,
+						  EPixelFormat::type	depthStencilFmt	= EPixelFormat::Depth24,
+						  MultiSamples			samples			= MultiSamples(),
+						  StringCRef			deviceName		= StringCRef(),
+						  uint					swapchainLength	= 0) :
 			device{ deviceName },	version{ version },		flags{ flags },
 			colorFmt{ colorFmt },	depthStencilFmt{ depthStencilFmt },
 			samples{ samples },		swapchainLength{ swapchainLength }
+		{}
+	};
+
+
+}	// Platforms
+
+namespace CreateInfo
+{
+
+	//
+	// GPU Context Create Info
+	//
+	struct GpuContext
+	{
+	// types
+		using GAPI		= Platforms::GAPI;
+		using EFlags	= Platforms::GraphicsSettings::EFlags;
+
+	// variables
+		Platforms::GraphicsSettings		settings;	// this is default settings for all threads
+
+	// methods
+		explicit GpuContext (GAPI::type version = GAPI::type(0)) : settings{ version } {}
+		explicit GpuContext (const Platforms::GraphicsSettings &settings) : settings{ settings } {}
+
+		explicit GpuContext (const Platforms::ComputeSettings &settings) :
+			settings{ settings.version, EFlags::bits() | (settings.isDebug ? EFlags::DebugContext : EFlags::type(0)),
+					  Platforms::EPixelFormat::Unknown, Platforms::EPixelFormat::Unknown,
+					  Platforms::MultiSamples(), settings.device, 0 }
 		{}
 	};
 

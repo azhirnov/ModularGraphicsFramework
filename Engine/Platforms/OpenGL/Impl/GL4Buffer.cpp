@@ -58,6 +58,8 @@ namespace PlatformGL
 	private:
 		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
+		
+		static const gl::GLenum		_defaultTarget = gl::GL_COPY_READ_BUFFER;
 
 
 	// variables
@@ -65,6 +67,11 @@ namespace PlatformGL
 		BufferDescriptor		_descr;
 		ModulePtr				_memObj;
 		gl::GLuint				_bufferId;
+		
+		EGpuMemory::bits		_memFlags;		// -|-- this flags is requirements for memory obj, don't use it anywhere
+		EMemoryAccess::bits		_memAccess;		// -|
+		bool					_useMemMngr;	// -|
+
 		bool					_isBindedToMemory;
 
 
@@ -107,9 +114,9 @@ namespace PlatformGL
 */
 	GL4Buffer::GL4Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
 		GL4BaseModule( gs, ModuleConfig{ GLBufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
-		_descr( ci.descr ),
-		_bufferId( 0 ),
-		_isBindedToMemory( false )
+		_descr( ci.descr ),				_bufferId( 0 ),
+		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
+		_useMemMngr( ci.allocMem ),		_isBindedToMemory( false )
 	{
 		SetDebugName( "GL4Buffer" );
 
@@ -131,7 +138,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Buffer::_GetGLPrivateClasses );
 		_SubscribeOnMsg( this, &GL4Buffer::_GpuMemoryRegionChanged );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::GLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
 	}
 	
 /*
@@ -156,7 +163,21 @@ namespace PlatformGL
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 		
-		CHECK_ATTACHMENT( _memObj = GetModuleByEvent< MemoryEvents_t >() );
+		_memObj = GetModuleByEvent< MemoryEvents_t >();
+
+		if ( not _memObj and _useMemMngr )
+		{
+			ModulePtr	mem_module;
+			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+								GLMemoryModuleID,
+								GlobalSystems(),
+								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
+								OUT mem_module ) );
+
+			CHECK_ERR( _Attach( "mem", mem_module, true ) );
+			_memObj = mem_module;
+		}
+		CHECK_ATTACHMENT( _memObj );
 
 		_memObj->Subscribe( this, &GL4Buffer::_OnMemoryBindingChanged );
 		
@@ -208,9 +229,11 @@ namespace PlatformGL
 */
 	bool GL4Buffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
 	{
-		CHECK( _Attach( msg->name, msg->newModule, true ) );
+		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		if ( msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		CHECK( _Attach( msg->name, msg->newModule, is_mem ) );
+
+		if (is_mem )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
@@ -310,9 +333,10 @@ namespace PlatformGL
 		GL_CALL( glGenBuffers( 1, &_bufferId ) );
 		CHECK_ERR( _bufferId != 0 );
 
-		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, _bufferId ) );
-		GL_CALL( glBufferData( GL_COPY_READ_BUFFER, (GLsizeiptr) _descr.size, null, GL4Enum( _descr.usage ) ) );
-		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, 0 ) );
+		GL_CALL( glBindBuffer( _defaultTarget, _bufferId ) );
+		//GL_CALL( glBufferData( _defaultTarget, (GLsizeiptr) _descr.size, null, GL4Enum( _descr.usage ) ) );
+		GL_CALL( glBufferStorage( _defaultTarget, GLsizeiptr(_descr.size), null, GL4Enum( _memFlags, _memAccess ) ) );
+		GL_CALL( glBindBuffer( _defaultTarget, 0 ) );
 
 		GetDevice()->SetObjectName( _bufferId, GetDebugName(), EGpuObject::Buffer );
 		return true;

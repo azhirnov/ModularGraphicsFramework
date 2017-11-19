@@ -84,25 +84,25 @@ namespace GXTypes
 		template <typename B>
 		friend B const*	operator + (B const *left, const Bytes<T> &right)
 		{
-			return Cast<B const*>( Cast<byte const*>(left) + _value );
+			return PointerCast<B>( PointerCast<byte>(left) + right._value );
 		}
 		
 		template <typename B>
 		friend B *		operator + (B *left, const Bytes<T> &right)
 		{
-			return Cast<B *>( Cast<byte *>(left) + _value );
+			return PointerCast<B>( PointerCast<byte>(left) + right._value );
 		}
 
 		template <typename B>
 		friend B const*	operator - (B const *left, const Bytes<T> &right)
 		{
-			return Cast<B const*>( Cast<byte const*>(left) - _value );
+			return PointerCast<B>( PointerCast<byte>(left) - right._value );
 		}
 		
 		template <typename B>
 		friend B *		operator - (B *left, const Bytes<T> &right)
 		{
-			return Cast<B *>( Cast<byte *>(left) - _value );
+			return PointerCast<B>( PointerCast<byte>(left) - right._value );
 		}
 
 
@@ -137,7 +137,7 @@ namespace GXTypes
 
 
 		_GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value );
-		_GX_DIM_ALL_INTEGER_OPERATORS_TYPE( _value, Value_t, );
+		_GX_DIM_ALL_INTEGER_OPERATORS_TYPE( _value, const Value_t&, );
 	};
 
 
@@ -203,7 +203,7 @@ namespace GXTypes
 
 
 		_GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value );
-		_GX_DIM_ALL_INTEGER_OPERATORS_TYPE( _value, Value_t, );
+		_GX_DIM_ALL_INTEGER_OPERATORS_TYPE( _value, const Value_t&, );
 	};
 
 

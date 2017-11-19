@@ -13,7 +13,7 @@ namespace Base
 	{
 		enum type
 		{
-			Global	= 0,
+			Global	= 1,
 			Thread,
 			Object,
 

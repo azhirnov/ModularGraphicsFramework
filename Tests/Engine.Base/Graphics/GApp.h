@@ -5,7 +5,7 @@
 #include "../Common.h"
 
 
-class VkApp final : public StaticRefCountedObject
+class GApp final : public StaticRefCountedObject
 {
 // types
 private:
@@ -19,6 +19,7 @@ public:
 private:
 	bool				looping		= true;
 	uint				cmdBufIndex	= 0;
+	GraphicsModuleIDs	ids;
 
 	// triangle
 	ModulePtr			gpipeline1;
@@ -46,8 +47,8 @@ private:
 
 // methods
 public:
-	VkApp ();
-	void Initialize ();
+	GApp ();
+	bool Initialize (GAPI::type api);
 	void Quit ();
 	bool Update ();
 
@@ -57,8 +58,8 @@ private:
 	bool _OnKey (const Message< ModuleMsg::InputKey > &);
 	bool _OnMotion (const Message< ModuleMsg::InputMotion > &);
 	bool _Draw (const Message< ModuleMsg::Update > &);
-	bool _VkInit (const Message< GpuMsg::DeviceCreated > &);
-	bool _VkDelete (const Message< GpuMsg::DeviceBeforeDestroy > &);
+	bool _GInit (const Message< GpuMsg::DeviceCreated > &);
+	bool _GDelete (const Message< GpuMsg::DeviceBeforeDestroy > &);
 	
 	bool _CreatePipeline1 ();
 	bool _CreatePipeline2 ();

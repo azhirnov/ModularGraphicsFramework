@@ -169,7 +169,7 @@ namespace Base
 	bool TaskModuleImpl::_Update (const Message< ModuleMsg::Update > &msg)
 	{
 		//ASSERT( _IsComposedState( GetState() ), void() );
-		ASSERT( msg.Sender() and _GetParents().IsExist( msg.Sender() ) );
+		ASSERT( msg.Sender() and _GetParents().CustomSearch().IsExist( msg.Sender() ) );
 
 		_Flush();
 		_ProcessMessages();
@@ -183,7 +183,7 @@ namespace Base
 */
 	bool TaskModuleImpl::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
-		ASSERT( msg.Sender() and _GetParents().IsExist( msg.Sender() ) );
+		ASSERT( msg.Sender() and _GetParents().CustomSearch().IsExist( msg.Sender() ) );
 		
 		_Push(AsyncMessage{ LAMBDA( this ) (GlobalSystemsRef)
 							{

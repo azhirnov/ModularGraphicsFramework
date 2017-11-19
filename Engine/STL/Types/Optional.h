@@ -14,7 +14,7 @@ namespace GXTypes
 	//
 
 	template <typename T>
-	struct Optional : CompileTime::CopyQualifiers< CompileTime::PODStruct, T >
+	struct alignas(T) Optional : CompileTime::CopyQualifiers< CompileTime::PODStruct, T >
 	{
 	// types
 	public:

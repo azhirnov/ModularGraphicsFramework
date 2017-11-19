@@ -22,7 +22,7 @@ namespace GXTypes
 		template <typename T>
 		forceinline bool IsAlignedMem (void *ptr) noexcept
 		{
-			enum { ALIGN = /*alignof(T)*/ sizeof(void *) };
+			enum { ALIGN = alignof(T) /*sizeof(void *)*/ };
 			return (sizeof(T) < ALIGN) or IsAlignedPointer< ALIGN >( ptr );
 		}
 	}

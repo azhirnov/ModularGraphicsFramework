@@ -222,7 +222,7 @@ namespace PlatformGL
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::GLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
 	}
 	
 /*
@@ -534,8 +534,8 @@ namespace PlatformGL
 			if ( _vertexBuffers[i].id == 0 )
 				continue;
 
-			GL_CALL( glBindVertexBuffer( i, _vertexBuffers[i].id, (GLintptr) _vertexBuffers[i].offset,
-										 (GLsizei) _vertexBuffers[i].stride ) );
+			GL_CALL( glBindVertexBuffer( GLuint(i), _vertexBuffers[i].id, GLintptr(_vertexBuffers[i].offset),
+										 GLsizei(_vertexBuffers[i].stride) ) );
 		}
 
 		// bind index buffer
@@ -581,9 +581,10 @@ namespace PlatformGL
 		GL_CALL( glBlendColor( state.blendColor.R(), state.blendColor.G(),
 								state.blendColor.B(), state.blendColor.A() ) );
 
-		FOR( index, state.buffers )
+		FOR( i, state.buffers )
 		{
-			const auto&	cb = state.buffers[index];
+			const uint	index	= uint(i);
+			const auto&	cb		= state.buffers[i];
 			
 			if ( not cb.blend ) {
 				GL_CALL( glDisablei( GL_BLEND, index ) );
@@ -887,9 +888,10 @@ namespace PlatformGL
 
 		FOR( i, _viewports )
 		{
-			const auto&	v = _viewports[i];
-			auto		r = v.rect;
-			auto		s = _scissors[i];
+			const auto&	v		= _viewports[i];
+			auto		r		= v.rect;
+			auto		s		= _scissors[i];
+			const uint	index	= uint(i);
 
 			r.LeftBottom()	= Max( r.LeftBottom(), _renderPassArea.LeftBottom() );
 			r.RightTop()	= Clamp( r.RightTop(), _renderPassArea.LeftBottom(), _renderPassArea.RightTop() );
@@ -899,9 +901,9 @@ namespace PlatformGL
 
 			DEBUG_ONLY( scissor_was_clipped |= (s != _scissors[i]) );
 
-			GL_CALL( glViewportIndexedf( i, float(v.rect.left), float(v.rect.bottom), float(v.rect.Width()), float(v.rect.Height()) ) );
-			GL_CALL( glScissorIndexed( i, s.left, s.bottom, s.Width(), s.Height() ) );
-			GL_CALL( glDepthRangeIndexed( i, v.depthRange.x, v.depthRange.y ) );
+			GL_CALL( glViewportIndexedf( index, float(v.rect.left), float(v.rect.bottom), float(v.rect.Width()), float(v.rect.Height()) ) );
+			GL_CALL( glScissorIndexed( index, s.left, s.bottom, s.Width(), s.Height() ) );
+			GL_CALL( glDepthRangeIndexed( index, v.depthRange.x, v.depthRange.y ) );
 		}
 		
 		GL_CALL( glDrawBuffers( GLsizei(_renderPassData.draw.colorBuffers.Count()), _renderPassData.draw.colorBuffers.ptr() ) );

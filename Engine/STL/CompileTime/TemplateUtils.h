@@ -160,6 +160,7 @@ namespace CompileTime
 	// Is Base Of
 	//
 
+#	if 1 //ndef GX_CPP11_SUPPORTED
 	namespace _ctime_hidden_
 	{
 		template <typename B, typename D>
@@ -195,7 +196,11 @@ namespace CompileTime
 	template <typename Base, typename Derived>
 	static constexpr bool IsBaseOf	= _ctime_hidden_::_IsBaseOf< Base, Derived,
 										TypeTraits::IsLValueReference<Base> or TypeTraits::IsLValueReference<Derived> >::value;
+#	else
+	template <typename Base, typename Derived>
+	static constexpr bool IsBaseOf	= std::is_base_of< Base, Derived >::value;
 
+#	endif
 
 
 	//

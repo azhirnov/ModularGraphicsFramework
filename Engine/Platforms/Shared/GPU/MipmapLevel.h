@@ -72,3 +72,21 @@ namespace Platforms
 
 }	// Platforms
 }	// Engine
+
+namespace GX_STL
+{
+namespace GXTypes
+{
+	template <>
+	struct Hash< Engine::Platforms::MipmapLevel >
+	{
+		using Result_t	= HashResult;
+
+		Result_t operator () (const Engine::Platforms::MipmapLevel &value) const
+		{
+			return HashOf( value.Get() );
+		}
+	};
+
+}	// GXTypes
+}	// GX_STL

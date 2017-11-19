@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/GPU/BufferEnums.h"
+#include "Engine/Platforms/Shared/GPU/MemoryEnums.h"
 #include "Engine/Platforms/Shared/GPU/IDs.h"
 
 namespace Engine
@@ -31,14 +32,28 @@ namespace Platforms
 
 namespace CreateInfo
 {
+
 	//
 	// GPU Buffer Create Info
 	//
-
-	struct GpuBuffer
+	struct GpuBuffer	// TODO: rename
 	{
-		ModulePtr						gpuThread;
-		Platforms::BufferDescriptor		descr;
+	// types
+		using BufferDescriptor	= Platforms::BufferDescriptor;
+		using EGpuMemory		= Platforms::EGpuMemory;
+		using EMemoryAccess		= Platforms::EMemoryAccess;
+
+	// variables
+		ModulePtr				gpuThread;			// can be null
+		BufferDescriptor		descr;
+		EGpuMemory::bits		memFlags;
+		EMemoryAccess::bits		access;
+		bool					allocMem = true;	// if true then you don't need to attach memory module to buffer
+
+	// methods
+		GpuBuffer (GX_DEFCTOR) {}
+		GpuBuffer (const BufferDescriptor &descr) : descr{descr}, allocMem{false} {}
+		GpuBuffer (const BufferDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) : descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
 	};
 
 }	// CreateInfo

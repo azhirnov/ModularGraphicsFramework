@@ -66,6 +66,21 @@ namespace gl
 		return glGetNamedBufferSubDataEXT( buffer, offset, size, data );
 	}
 
+	inline void* glMapNamedBufferRange (GLuint buffer, GLintptr offset, GLsizeiptr length, GLbitfield access)
+	{
+		return glMapNamedBufferRangeEXT( buffer, offset, length, access );
+	}
+
+	inline void glFlushMappedNamedBufferRange (GLuint buffer, GLintptr offset, GLsizeiptr length)
+	{
+		return glFlushMappedNamedBufferRangeEXT( buffer, offset, length );
+	}
+
+	inline GLboolean glUnmapNamedBuffer (GLuint buffer)
+	{
+		return glUnmapNamedBufferEXT( buffer );
+	}
+
 	// Vertex Attribs
 	inline void glDisableVertexArrayAttrib (GLuint vaobj, GLuint index)
 	{

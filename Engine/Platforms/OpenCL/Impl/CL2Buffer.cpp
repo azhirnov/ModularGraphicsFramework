@@ -30,7 +30,6 @@ namespace PlatformCL
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::FlushMemoryRange,
 											GpuMsg::UnmapMemory
-											//GpuMsg::GetGpuMemoryDescriptor
 										> >;
 
 		using SupportedEvents_t		= CL2BaseModule::SupportedEvents_t;
@@ -49,8 +48,12 @@ namespace PlatformCL
 	private:
 		BufferDescriptor		_descr;
 		ModulePtr				_memObj;
-		EGpuMemory::bits		_memFlags;
 		cl::cl_mem				_bufferId;
+		
+		EGpuMemory::bits		_memFlags;		// -|-- this flags is requirements for memory obj, don't use it anywhere
+		EMemoryAccess::bits		_memAccess;		// -|
+		bool					_useMemMngr;	// -|
+
 		bool					_isBindedToMemory;
 
 
@@ -77,7 +80,6 @@ namespace PlatformCL
 		bool _MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &);
 		bool _FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &);
 		bool _UnmapMemory (const Message< GpuMsg::UnmapMemory > &);
-		//bool _GetGpuMemoryDescriptor (const Message< GpuMsg::GetGpuMemoryDescriptor > &);
 
 	private:
 		bool _IsCreated () const;
@@ -103,8 +105,9 @@ namespace PlatformCL
 */
 	CL2Buffer::CL2Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
 		CL2BaseModule( gs, ModuleConfig{ CLBufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
-		_descr( ci.descr ),			_bufferId( null ),
-		_isBindedToMemory( false )
+		_descr( ci.descr ),				_bufferId( null ),
+		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
+		_useMemMngr( ci.allocMem ),		_isBindedToMemory( false )
 	{
 		SetDebugName( "CL2Buffer" );
 		
@@ -134,11 +137,10 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2Buffer::_MapMemoryToCpu );
 		_SubscribeOnMsg( this, &CL2Buffer::_FlushMemoryRange );
 		_SubscribeOnMsg( this, &CL2Buffer::_UnmapMemory );
-		//_SubscribeOnMsg( this, &CL2Buffer::_GetGpuMemoryDescriptor );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::CLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
 	}
 	
 /*
@@ -163,7 +165,21 @@ namespace PlatformCL
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
-		CHECK_ATTACHMENT(( _memObj = GetModuleByMsgEvent< MemoryMsg_t, MemoryEvents_t >() ));
+		_memObj = GetModuleByMsgEvent< MemoryMsg_t, MemoryEvents_t >();
+
+		if ( not _memObj and _useMemMngr )
+		{
+			ModulePtr	mem_module;
+			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+								CLMemoryModuleID,
+								GlobalSystems(),
+								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
+								OUT mem_module ) );
+
+			CHECK_ERR( _Attach( "mem", mem_module, true ) );
+			_memObj = mem_module;
+		}
+		CHECK_ATTACHMENT( _memObj );
 
 		// TODO: check shared objects
 

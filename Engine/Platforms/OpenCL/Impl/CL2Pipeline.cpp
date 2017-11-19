@@ -108,7 +108,7 @@ namespace PlatformCL
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::CLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
 	}
 	
 /*

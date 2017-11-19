@@ -36,6 +36,13 @@ namespace Base
 			{
 				for (usize i = first; i < _handlers.Count() and _handlers[i].first == msg.GetValueTypeId(); ++i)
 				{
+					if ( _handlers[i].second.ptr.Lock() == null )
+					{
+						_handlers.EraseByIndex( i );
+						--i;
+						continue;
+					}
+
 					temp.PushBack( _handlers[i] );
 				}
 			}
@@ -113,10 +120,10 @@ namespace Base
 
 /*
 =================================================
-	UnsubscribeAll
+	_UnsubscribeAll
 =================================================
 */
-	void MessageHandler::UnsubscribeAll (const ObjectPtr_t &ptr)
+	void MessageHandler::_UnsubscribeAll (const ObjectPtr_t &ptr)
 	{
 		SCOPELOCK( _lock );
 

@@ -152,7 +152,7 @@ namespace PlatformCL
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::CLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
 	}
 	
 /*
@@ -434,7 +434,7 @@ namespace PlatformCL
 		CHECK_ERR( req_id->result and req_descr->result );
 
 		_kernelId			= req_id->result->kernel;
-		_kernelLocalSize	= req_descr->result->localGroupSize;
+		_kernelLocalSize	= usize3(req_descr->result->localGroupSize);
 
 		return true;
 	}

@@ -221,7 +221,7 @@ namespace File
 	public:
 		SHARED_POINTER( ZipRFile );
 
-		typedef BaseMemRFile	parent_t;
+		typedef BaseMemRFile	Parent_t;
 
 
 	// variables
@@ -350,7 +350,7 @@ namespace File
 
 		void _Close ()
 		{
-			parent_t::_Close();
+			Parent_t::_Close();
 			_name.Clear();
 		}
 	};
@@ -367,7 +367,7 @@ namespace File
 	public:
 		SHARED_POINTER( ZipWFile );
 
-		typedef BaseMemWFile	parent_t;
+		typedef BaseMemWFile	Parent_t;
 
 
 	// methods

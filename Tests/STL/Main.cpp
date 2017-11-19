@@ -58,6 +58,7 @@ extern void Test_Types_Time ();
 
 extern void Test_Algorithms_InvokeWithVariant ();
 
+extern void Test_OS_Atomic ();
 extern void Test_OS_Date ();
 extern void Test_OS_FileSystem ();
 
@@ -119,6 +120,7 @@ void main ()
 
 	Test_Algorithms_InvokeWithVariant();
 
+	Test_OS_Atomic();
 	Test_OS_Date();
 	Test_OS_FileSystem();
 
@@ -128,5 +130,6 @@ void main ()
 
 	Logger::GetInstance()->Close();
 	
-	DEBUG_ONLY( RefCountedObject::s_ChenckNotReleasedObjects() );
+	DEBUG_ONLY( DbgRefCountedObject::s_ChenckNotReleasedObjects() );
+	DEBUG_ONLY( RefCounter2::s_CheckAllocations() );
 }

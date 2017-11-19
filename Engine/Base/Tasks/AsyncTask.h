@@ -187,7 +187,7 @@ namespace Base
 	template <typename R, typename P>
 	inline bool AsyncTask<R,P>::IsCanceled () const noexcept
 	{
-		return _isCanceled;
+		return (bool)_isCanceled;
 	}
 
 /*

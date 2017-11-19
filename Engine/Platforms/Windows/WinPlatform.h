@@ -26,7 +26,8 @@ namespace Platforms
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
-											OSMsg::GetDisplays
+											OSMsg::GetDisplays,
+											OSMsg::GetOSModules
 										> >;
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Delete,
@@ -66,6 +67,8 @@ namespace Platforms
 		static _ENGINE_PLATFORMS_EXPORT_ void Register (GlobalSystemsRef);
 		static _ENGINE_PLATFORMS_EXPORT_ void Unregister (GlobalSystemsRef);
 
+		static OSModuleIDs GetModuleIDs ();
+
 
 	// message handlers
 	private:
@@ -73,6 +76,7 @@ namespace Platforms
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		//bool _Update (const Message< ModuleMsg::Update > &);
 		bool _GetDisplays (const Message< OSMsg::GetDisplays > &);
+		bool _GetOSModules (const Message< OSMsg::GetOSModules > &);
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
 

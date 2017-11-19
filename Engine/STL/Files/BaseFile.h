@@ -37,7 +37,7 @@ namespace File
 	// Base File interface
 	//
 
-	class BaseFile : protected RefCountedObject
+	class BaseFile : protected RefCountedObject<>
 	{
 	// interface
 	public:

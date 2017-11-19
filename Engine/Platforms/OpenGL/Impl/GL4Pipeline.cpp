@@ -173,7 +173,7 @@ namespace PlatformGL
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::GLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
 	}
 	
 /*
@@ -489,7 +489,7 @@ namespace PlatformGL
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::GLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
 	}
 	
 /*
@@ -499,7 +499,7 @@ namespace PlatformGL
 */
 	GL4ComputePipeline::~GL4ComputePipeline ()
 	{
-		ASSERT( not _IsCreated() );
+		_DestroyPipeline();
 	}
 	
 /*

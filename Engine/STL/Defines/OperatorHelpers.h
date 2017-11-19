@@ -16,19 +16,19 @@
 
 #define _GX_DIM_OPERATORS_TYPE( _op_, _value_, _type_, _memberOption_ ) \
 	\
-	forceinline Self&			operator _op_##= (const _type_ &right) noexcept						{ _value_ _op_##= Cast<Value_t>( right _memberOption_ );  return *this; } \
-	forceinline constexpr Self  operator _op_    (const _type_ &right) const noexcept				{ return Self( _value_ _op_ Cast<Value_t>( right _memberOption_ ) ); } \
+	forceinline Self&			operator _op_##= (_type_ right) noexcept						{ _value_ _op_##= Cast<const Value_t>( right _memberOption_ );  return *this; } \
+	forceinline constexpr Self  operator _op_    (_type_ right) const noexcept				{ return Self( _value_ _op_ Cast<const Value_t>( right _memberOption_ ) ); } \
 	\
-	forceinline constexpr friend Self operator _op_ (const _type_ &left, const Self &right)noexcept	{ return Self( Cast<Value_t>( left _memberOption_ ) _op_ right._value_ ); }
+	forceinline constexpr friend Self operator _op_ (_type_ left, const Self &right)noexcept	{ return Self( Cast<const Value_t>( left _memberOption_ ) _op_ right._value_ ); }
 
 
 #define _GX_DIM_OPERATORS_TEMPLATE( _op_, _value_, _memberOption_ ) \
 	\
-	forceinline template <typename _A_> Self&			operator _op_##= (const _A_ &right) noexcept		{ _value_ _op_##= Cast<Value_t>( right _memberOption_ );  return *this; } \
-	forceinline template <typename _A_> constexpr Self  operator _op_    (const _A_ &right) const noexcept	{ return Self( _value_ _op_ Cast<Value_t>( right _memberOption_ ) ); } \
+	forceinline template <typename _A_> Self&			operator _op_##= (const _A_ &right) noexcept		{ _value_ _op_##= Cast<const Value_t>( right _memberOption_ );  return *this; } \
+	forceinline template <typename _A_> constexpr Self  operator _op_    (const _A_ &right) const noexcept	{ return Self( _value_ _op_ Cast<const Value_t>( right _memberOption_ ) ); } \
 	\
 	forceinline template <typename _A_> \
-	forceinline constexpr friend Self operator _op_ (const _A_ &left, const Self &right) noexcept			{ return Self( Cast<Value_t>( left _memberOption_ ) _op_ right._value_ ); }
+	forceinline constexpr friend Self operator _op_ (const _A_ &left, const Self &right) noexcept			{ return Self( Cast<const Value_t>( left _memberOption_ ) _op_ right._value_ ); }
 
 
 #define _GX_DIM_CMP_OPERATORS_SELF( _value_ ) \
@@ -43,36 +43,36 @@
 
 #define _GX_DIM_CMP_OPERATORS_TYPE( _value_, _type_, _memberOption_ ) \
 	\
-	forceinline constexpr bool operator == (const _type_ &right) const noexcept		{ return this->_value_ == Cast<Value_t>( right _memberOption_ ); } \
-	forceinline constexpr bool operator != (const _type_ &right) const noexcept		{ return this->_value_ != Cast<Value_t>( right _memberOption_ ); } \
-	forceinline constexpr bool operator >  (const _type_ &right) const noexcept		{ return this->_value_ >  Cast<Value_t>( right _memberOption_ ); } \
-	forceinline constexpr bool operator <  (const _type_ &right) const noexcept		{ return this->_value_ <  Cast<Value_t>( right _memberOption_ ); } \
-	forceinline constexpr bool operator >= (const _type_ &right) const noexcept		{ return this->_value_ >= Cast<Value_t>( right _memberOption_ ); } \
-	forceinline constexpr bool operator <= (const _type_ &right) const noexcept		{ return this->_value_ <= Cast<Value_t>( right _memberOption_ ); } \
+	forceinline constexpr bool operator == (_type_ right) const noexcept		{ return this->_value_ == Cast<const Value_t>( right _memberOption_ ); } \
+	forceinline constexpr bool operator != (_type_ right) const noexcept		{ return this->_value_ != Cast<const Value_t>( right _memberOption_ ); } \
+	forceinline constexpr bool operator >  (_type_ right) const noexcept		{ return this->_value_ >  Cast<const Value_t>( right _memberOption_ ); } \
+	forceinline constexpr bool operator <  (_type_ right) const noexcept		{ return this->_value_ <  Cast<const Value_t>( right _memberOption_ ); } \
+	forceinline constexpr bool operator >= (_type_ right) const noexcept		{ return this->_value_ >= Cast<const Value_t>( right _memberOption_ ); } \
+	forceinline constexpr bool operator <= (_type_ right) const noexcept		{ return this->_value_ <= Cast<const Value_t>( right _memberOption_ ); } \
 	\
-	forceinline constexpr friend bool operator == (const _type_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) == right._value_; } \
-	forceinline constexpr friend bool operator != (const _type_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) != right._value_; } \
-	forceinline constexpr friend bool operator >  (const _type_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) >  right._value_; } \
-	forceinline constexpr friend bool operator <  (const _type_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) <  right._value_; } \
-	forceinline constexpr friend bool operator >= (const _type_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) >= right._value_; } \
-	forceinline constexpr friend bool operator <= (const _type_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) <= right._value_; }
+	forceinline constexpr friend bool operator == (_type_ left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) == right._value_; } \
+	forceinline constexpr friend bool operator != (_type_ left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) != right._value_; } \
+	forceinline constexpr friend bool operator >  (_type_ left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) >  right._value_; } \
+	forceinline constexpr friend bool operator <  (_type_ left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) <  right._value_; } \
+	forceinline constexpr friend bool operator >= (_type_ left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) >= right._value_; } \
+	forceinline constexpr friend bool operator <= (_type_ left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) <= right._value_; }
 	
 
 #define _GX_DIM_CMP_OPERATORS_TEMPLATE( _value_, _memberOption_ ) \
 	\
-	template <typename _A_> forceinline constexpr bool operator == (const _A_ &right) const noexcept	{ return this->_value_ == Cast<Value_t>( right _memberOption_ ); } \
-	template <typename _A_> forceinline constexpr bool operator != (const _A_ &right) const noexcept	{ return this->_value_ != Cast<Value_t>( right _memberOption_ ); } \
-	template <typename _A_> forceinline constexpr bool operator >  (const _A_ &right) const noexcept	{ return this->_value_ >  Cast<Value_t>( right _memberOption_ ); } \
-	template <typename _A_> forceinline constexpr bool operator <  (const _A_ &right) const noexcept	{ return this->_value_ <  Cast<Value_t>( right _memberOption_ ); } \
-	template <typename _A_> forceinline constexpr bool operator >= (const _A_ &right) const noexcept	{ return this->_value_ >= Cast<Value_t>( right _memberOption_ ); } \
-	template <typename _A_> forceinline constexpr bool operator <= (const _A_ &right) const noexcept	{ return this->_value_ <= Cast<Value_t>( right _memberOption_ ); } \
+	template <typename _A_> forceinline constexpr bool operator == (const _A_ &right) const noexcept	{ return this->_value_ == Cast<const Value_t>( right _memberOption_ ); } \
+	template <typename _A_> forceinline constexpr bool operator != (const _A_ &right) const noexcept	{ return this->_value_ != Cast<const Value_t>( right _memberOption_ ); } \
+	template <typename _A_> forceinline constexpr bool operator >  (const _A_ &right) const noexcept	{ return this->_value_ >  Cast<const Value_t>( right _memberOption_ ); } \
+	template <typename _A_> forceinline constexpr bool operator <  (const _A_ &right) const noexcept	{ return this->_value_ <  Cast<const Value_t>( right _memberOption_ ); } \
+	template <typename _A_> forceinline constexpr bool operator >= (const _A_ &right) const noexcept	{ return this->_value_ >= Cast<const Value_t>( right _memberOption_ ); } \
+	template <typename _A_> forceinline constexpr bool operator <= (const _A_ &right) const noexcept	{ return this->_value_ <= Cast<const Value_t>( right _memberOption_ ); } \
 	\
-	template <typename _A_> forceinline constexpr friend bool operator == (const _A_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) == right._value_; } \
-	template <typename _A_> forceinline constexpr friend bool operator != (const _A_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) != right._value_; } \
-	template <typename _A_> forceinline constexpr friend bool operator >  (const _A_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) >  right._value_; } \
-	template <typename _A_> forceinline constexpr friend bool operator <  (const _A_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) <  right._value_; } \
-	template <typename _A_> forceinline constexpr friend bool operator >= (const _A_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) >= right._value_; } \
-	template <typename _A_> forceinline constexpr friend bool operator <= (const _A_ &left, const Self &right) noexcept	{ return Cast<Value_t>( left _memberOption_ ) <= right._value_; }
+	template <typename _A_> forceinline constexpr friend bool operator == (const _A_ &left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) == right._value_; } \
+	template <typename _A_> forceinline constexpr friend bool operator != (const _A_ &left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) != right._value_; } \
+	template <typename _A_> forceinline constexpr friend bool operator >  (const _A_ &left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) >  right._value_; } \
+	template <typename _A_> forceinline constexpr friend bool operator <  (const _A_ &left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) <  right._value_; } \
+	template <typename _A_> forceinline constexpr friend bool operator >= (const _A_ &left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) >= right._value_; } \
+	template <typename _A_> forceinline constexpr friend bool operator <= (const _A_ &left, const Self &right) noexcept	{ return Cast<const Value_t>( left _memberOption_ ) <= right._value_; }
 		
 
 #define _GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value_ ) \

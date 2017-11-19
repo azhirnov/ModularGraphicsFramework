@@ -38,6 +38,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &VulkanContext::_Delete_Impl );
 		_SubscribeOnMsg( this, &VulkanContext::_AddToManager );
 		_SubscribeOnMsg( this, &VulkanContext::_RemoveFromManager );
+		_SubscribeOnMsg( this, &VulkanContext::_GetGraphicsModules );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 	}
@@ -78,14 +79,77 @@ namespace Platforms
 	bool VulkanContext::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		//CHECK_ERR( msg->module->GetSupportedMessages().HasAllTypes< VkThreadMsgList_t >() );
-		//CHECK_ERR( msg->module->GetSupportedEvents().HasAllTypes< VkThreadEventList_t >() );
-		ASSERT( _threads.IsExist( msg->module ) );
 
-		_threads.Erase( msg->module );
+		ModulePtr	module = msg->module.Lock();
+
+		if ( not module )
+			return false;
+
+		ASSERT( _threads.IsExist( module ) );
+
+		_threads.Erase( module );
 		return true;
 	}
-		
+	
+/*
+=================================================
+	_GetGraphicsModules
+=================================================
+*/	
+	bool VulkanContext::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	{
+		msg->compute.Set( GetComputeModules() );
+		msg->graphics.Set( GetGraphicsModules() );
+		return true;
+	}
+	
+/*
+=================================================
+	GetGraphicsModules
+=================================================
+*/
+	GraphicsModuleIDs VulkanContext::GetGraphicsModules ()
+	{
+		GraphicsModuleIDs	graphics;
+		graphics.pipeline		= VkGraphicsPipelineModuleID;
+		graphics.framebuffer	= VkFramebufferModuleID;
+		graphics.renderPass		= VkRenderPassModuleID;
+		graphics.context		= VkContextModuleID;
+		graphics.thread			= VkThreadModuleID;
+		graphics.commandBuffer	= VkCommandBufferModuleID;
+		graphics.commandBuilder	= VkCommandBuilderModuleID;
+		graphics.buffer			= VkBufferModuleID;
+		graphics.image			= VkImageModuleID;
+		graphics.sampler		= VkSamplerModuleID;
+		graphics.memory			= VkMemoryModuleID;
+		graphics.memoryManager	= VkMemoryManagerModuleID;
+		graphics.resourceTable	= VkPipelineResourceTableModuleID;
+		graphics.uniforms		= VkUniformsModuleID;
+		return graphics;
+	}
+	
+/*
+=================================================
+	GetComputeModules
+=================================================
+*/
+	ComputeModuleIDs VulkanContext::GetComputeModules ()
+	{
+		ComputeModuleIDs	compute;
+		compute.pipeline		= VkComputePipelineModuleID;
+		compute.context			= VkContextModuleID;
+		compute.thread			= VkThreadModuleID;
+		compute.commandBuffer	= VkCommandBufferModuleID;
+		compute.commandBuilder	= VkCommandBuilderModuleID;
+		compute.buffer			= VkBufferModuleID;
+		compute.image			= VkImageModuleID;
+		compute.memory			= VkMemoryModuleID;
+		compute.memoryManager	= VkMemoryManagerModuleID;
+		compute.resourceTable	= VkPipelineResourceTableModuleID;
+		compute.uniforms		= VkUniformsModuleID;
+		return compute;
+	}
+
 /*
 =================================================
 	Register

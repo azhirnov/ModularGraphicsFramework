@@ -65,6 +65,11 @@ namespace PlatformVK
 		BufferDescriptor		_descr;
 		ModulePtr				_memObj;
 		vk::VkBuffer			_bufferId;
+		
+		EGpuMemory::bits		_memFlags;		// -|-- this flags is requirements for memory obj, don't use it anywhere
+		EMemoryAccess::bits		_memAccess;		// -|
+		bool					_useMemMngr;	// -|
+
 		bool					_isBindedToMemory;
 
 
@@ -107,9 +112,9 @@ namespace PlatformVK
 */
 	Vk1Buffer::Vk1Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
 		Vk1BaseModule( gs, ModuleConfig{ VkBufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
-		_descr( ci.descr ),
-		_bufferId( VK_NULL_HANDLE ),
-		_isBindedToMemory( false )
+		_descr( ci.descr ),				_bufferId( VK_NULL_HANDLE ),
+		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
+		_useMemMngr( ci.allocMem ),		_isBindedToMemory( false )
 	{
 		SetDebugName( "Vk1Buffer" );
 
@@ -131,7 +136,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GpuMemoryRegionChanged );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::VkThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
 	}
 	
 /*
@@ -156,7 +161,21 @@ namespace PlatformVK
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 		
-		CHECK_ATTACHMENT( _memObj = GetModuleByEvent< MemoryEvents_t >() );
+		_memObj = GetModuleByEvent< MemoryEvents_t >();
+
+		if ( not _memObj and _useMemMngr )
+		{
+			ModulePtr	mem_module;
+			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+								VkMemoryModuleID,
+								GlobalSystems(),
+								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
+								OUT mem_module ) );
+
+			CHECK_ERR( _Attach( "mem", mem_module, true ) );
+			_memObj = mem_module;
+		}
+		CHECK_ATTACHMENT( _memObj );
 
 		_memObj->Subscribe( this, &Vk1Buffer::_OnMemoryBindingChanged );
 		
@@ -208,9 +227,11 @@ namespace PlatformVK
 */
 	bool Vk1Buffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
 	{
-		CHECK( _Attach( msg->name, msg->newModule, true ) );
+		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		if ( msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		CHECK( _Attach( msg->name, msg->newModule, is_mem ) );
+
+		if ( is_mem )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
@@ -318,7 +339,7 @@ namespace PlatformVK
 
 		VK_CHECK( vkCreateBuffer( GetVkDevice(), &info, null, OUT &_bufferId ) );
 
-		GetDevice()->SetObjectName( _bufferId, GetDebugName(), EGpuObject::Buffer );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_bufferId), GetDebugName(), EGpuObject::Buffer );
 		return true;
 	}
 	

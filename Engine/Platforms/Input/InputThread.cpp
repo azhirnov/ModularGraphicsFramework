@@ -176,11 +176,17 @@ namespace Platforms
 	bool InputThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		ASSERT( _inputs.IsExist( msg->module ) );
 
-		_inputs.Erase( msg->module );
+		ModulePtr	module = msg->module.Lock();
 
-		msg->module->UnsubscribeAll( this );
+		if ( not module )
+			return false;
+
+		ASSERT( _inputs.IsExist( module ) );
+
+		_inputs.Erase( module );
+
+		module->UnsubscribeAll( this );
 		return true;
 	}
 

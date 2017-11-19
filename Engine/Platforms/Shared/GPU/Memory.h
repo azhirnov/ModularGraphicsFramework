@@ -5,6 +5,7 @@
 #include "Engine/Platforms/Shared/GPU/MemoryEnums.h"
 #include "Engine/Platforms/Shared/GPU/IDs.h"
 #include "Engine/Platforms/Shared/GPU/MipmapLevel.h"
+#include "Engine/Platforms/Shared/GPU/ImageLayer.h"
 
 namespace Engine
 {
@@ -18,12 +19,13 @@ namespace Platforms
 	struct GpuMemoryDescriptor : CompileTime::PODStruct
 	{
 	// variables
-		BytesUL				size;
-		EGpuMemory::bits	flags;
+		BytesUL					size;
+		EGpuMemory::bits		flags;
+		EMemoryAccess::bits		access;
 
 	// methods
 		GpuMemoryDescriptor (GX_DEFCTOR) {}
-		GpuMemoryDescriptor (BytesUL size, EGpuMemory::bits flags) : size(size), flags(flags) {}
+		GpuMemoryDescriptor (BytesUL size, EGpuMemory::bits flags, EMemoryAccess::bits access) : size(size), flags(flags), access(access) {}
 	};
 
 }	// Platforms
@@ -41,7 +43,7 @@ namespace CreateInfo
 		using EMemoryAccess	= Platforms::EMemoryAccess;
 
 	// variables
-		ModulePtr				gpuThread;
+		ModulePtr				gpuThread;		// can be null
 		BytesUL					maxSize;		// max size of allocated memory (for memory managment)
 		BytesUL					blockSize;		// block size to avoid fragmentation (for memory managment)
 		EGpuMemory::bits		memFlags;
@@ -96,8 +98,8 @@ namespace GpuMsg
 
 	// methods
 		MapMemoryToCpu () {}
-		MapMemoryToCpu (EMappingFlags flags, BytesU size, BytesU offset = Uninitialized) : offset(offset), size(size), flags(flags) {}
-		MapMemoryToCpu (EMappingFlags flags, BytesUL size, BytesUL offset = Uninitialized) : offset(offset), size(size), flags(flags) {}
+		MapMemoryToCpu (EMappingFlags flags, Bytes<uint> size, Bytes<uint> offset = Uninitialized) : offset(offset), size(size), flags(flags) {}
+		MapMemoryToCpu (EMappingFlags flags, Bytes<ulong> size, Bytes<ulong> offset = Uninitialized) : offset(offset), size(size), flags(flags) {}
 	};
 
 	struct MapImageToCpu
@@ -113,17 +115,22 @@ namespace GpuMsg
 		};
 		using uint4			= GXMath::uint4;
 		using EMappingFlags	= MapMemoryToCpu::EMappingFlags;
+		using MipmapLevel	= Platforms::MipmapLevel;
+		using ImageLayer	= Platforms::ImageLayer;
 
 	// variables
-		uint4				offset;
-		uint4				dimension;
+		BytesUL				memOffset;		// offset in global memory space, may be unsupported
+		MipmapLevel			level;
+		ImageLayer			layer;
 		EMappingFlags		flags		= EMappingFlags::ReadWrite;
 
 		Out<MemoryRange>	range;			// this values may be used in 'FlushMemoryRange' command
 		Out<PixelAlign>		pixelAlign;		// this values may be used to calculate pixel offset
+		Out<uint4>			dimension;		// dimension of mapped level (layer) in pixels
 
 	// methods
-		MapImageToCpu (EMappingFlags flags, const uint4 &dimension, const uint4 &offset = uint4()) : offset(offset), dimension(dimension), flags(flags) {}
+		MapImageToCpu () {}
+		MapImageToCpu (EMappingFlags flags, MipmapLevel level = Uninitialized, ImageLayer layer = Uninitialized) : level(level), layer(layer), flags(flags) {}
 	};
 
 
@@ -150,8 +157,8 @@ namespace GpuMsg
 
 	// methods
 		FlushMemoryRange () {}
-		explicit FlushMemoryRange (BytesU size, BytesU offset = Uninitialized) :  offset(offset), size(size) {}
-		explicit FlushMemoryRange (BytesUL size, BytesUL offset = Uninitialized) :  offset(offset), size(size) {}
+		explicit FlushMemoryRange (BytesU size, Bytes<uint> offset = Uninitialized) :  offset(offset), size(size) {}
+		explicit FlushMemoryRange (BytesUL size, Bytes<ulong> offset = Uninitialized) :  offset(offset), size(size) {}
 	};
 
 
@@ -201,8 +208,8 @@ namespace GpuMsg
 		uint4					offset;
 		uint4					dimension;
 		MipmapLevel				level;
-		BytesU					rowPitch;
-		BytesU					slicePitch;		// size of array layer or 3D image slice
+		BytesU					rowPitch;		// memory alignment requirements for result
+		BytesU					slicePitch;		// memory alignment requirements for result
 		Optional< BinArrayRef >	writableBuffer;	// will use exist buffer
 		Out< BinArrayCRef >		result;
 		

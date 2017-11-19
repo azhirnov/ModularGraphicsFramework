@@ -66,7 +66,7 @@ namespace GXMath
 		Self	ToInterval (Self minValue, Self maxValue) const;
 
 		_GX_DIM_ALL_FLOAT_OPERATORS_SELF( _value )
-		_GX_DIM_ALL_FLOAT_OPERATORS_TYPE( _value, Value_t, )
+		_GX_DIM_ALL_FLOAT_OPERATORS_TYPE( _value, const Value_t&, )
 
 		static constexpr Self	Pi (T scale)		{ return Self( GXMath::Pi<T> * scale ); }	// Pi * x
 		static constexpr Self	Pi ()				{ return Self( GXMath::Pi<T> ); }			// Pi

@@ -29,6 +29,7 @@ namespace Platforms
 											ModuleMsg::OnManagerChanged,
 											OSMsg::WindowCreated,
 											OSMsg::WindowBeforeDestroy,
+											GpuMsg::GetGraphicsModules,
 											GpuMsg::ThreadBeginFrame,
 											GpuMsg::ThreadEndFrame,
 											GpuMsg::SubmitGraphicsQueueCommands,
@@ -46,7 +47,6 @@ namespace Platforms
 		using WindowMsgList_t		= MessageListFrom< OSMsg::GetWinWindowHandle >;
 		using WindowEventList_t		= MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::OnWinWindowRawMessage >;
 
-		using VideoSettings_t		= CreateInfo::GpuContext;
 		using GLContext				= PlatformGL::GLRenderingContext;
 		using GLDevice				= PlatformGL::GL4Device;
 
@@ -59,7 +59,7 @@ namespace Platforms
 		
 	// variables
 	private:
-		VideoSettings_t		_settings;
+		GraphicsSettings	_settings;
 
 		ModulePtr			_window;
 		
@@ -84,6 +84,7 @@ namespace Platforms
 		bool _Update (const Message< ModuleMsg::Update > &);
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
 		
 		bool _ThreadBeginFrame (const Message< GpuMsg::ThreadBeginFrame > &);
 		bool _ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &);
@@ -137,6 +138,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenGLThread::_Update );
 		_SubscribeOnMsg( this, &OpenGLThread::_Link );
 		_SubscribeOnMsg( this, &OpenGLThread::_Delete );
+		_SubscribeOnMsg( this, &OpenGLThread::_GetGraphicsModules );
 		_SubscribeOnMsg( this, &OpenGLThread::_ThreadBeginFrame );
 		_SubscribeOnMsg( this, &OpenGLThread::_ThreadEndFrame );
 		_SubscribeOnMsg( this, &OpenGLThread::_SubmitGraphicsQueueCommands );
@@ -179,8 +181,7 @@ namespace Platforms
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
 		// TODO: use SearchModule message
-		// TODO: reset to initial state if window was detached
-		CHECK_ATTACHMENT(( _window = _GetParents().Front()->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
+		CHECK_ATTACHMENT(( _window = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
 
 		_window->Subscribe( this, &OpenGLThread::_WindowCreated );
 		_window->Subscribe( this, &OpenGLThread::_WindowBeforeDestroy );
@@ -245,6 +246,18 @@ namespace Platforms
 */
 	bool OpenGLThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &)
 	{
+		return true;
+	}
+		
+/*
+=================================================
+	_GetGraphicsModules
+=================================================
+*/	
+	bool OpenGLThread::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	{
+		msg->compute.Set( OpenGLContext::GetComputeModules() );
+		msg->graphics.Set( OpenGLContext::GetGraphicsModules() );
 		return true;
 	}
 
@@ -379,7 +392,7 @@ namespace Platforms
 		CHECK_ERR( _device.Initialize( req_descr->result->surfaceSize, _settings.colorFmt,
 									   _settings.depthStencilFmt, _settings.samples ) );
 
-		if ( _settings.flags[ VideoSettings_t::EFlags::DebugContext ] )
+		if ( _settings.flags[ GraphicsSettings::EFlags::DebugContext ] )
 			CHECK( _device.InitDebugReport() );
 
 		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
@@ -484,20 +497,6 @@ namespace Platforms
 		msg->result.Set({ &_device });
 		return true;
 	}
-
-/*
-=================================================
-	_IsWindow
-=================================================
-*
-	bool OpenGLThread::_IsWindow (const ModulePtr &mod)
-	{
-		using WindowEventList_t		= MessageListFrom< ModuleMsg::WindowCreated, ModuleMsg::WindowBeforeDestroy >;
-		using WindowMsgList_t		= MessageListFrom< ModuleMsg::GetWinWindowHandle >;
-
-		return	mod->GetSupportedEvents().HasAllTypes< WindowEventList_t >() and
-				mod->GetSupportedMessages().HasAllTypes< WindowMsgList_t >();
-	}*/
 	
 /*
 =================================================

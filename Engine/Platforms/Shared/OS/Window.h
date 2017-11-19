@@ -50,9 +50,9 @@ namespace CreateInfo
 	// methods
 		explicit
 		Window (StringCRef					caption				= StringCRef(),
-				EWindowFlags::bits			flags				= EWindowFlags::bits() | EWindowFlags::Resizable,
+				EWindowFlags::bits			flags				= EWindowFlags::bits() | EWindowFlags::Resizable | EWindowFlags::Centered,
 				GXMath::uint2				surfaceSize			= GXMath::uint2( 800, 600 ),
-				GXMath::int2				position			= MinValue<GXMath::int2>(),
+				GXMath::int2				position			= GXMath::int2(),
 				EVisibility					initialVisibility	= EVisibility::VisibleFocused,
 				EWindowOrientation::type	orientation			= EWindowOrientation::Default) :
 			caption(caption),

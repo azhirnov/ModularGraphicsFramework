@@ -53,7 +53,7 @@ void CLApp::Initialize ()
 
 	auto	thread	= ms->GlobalSystems()->Get< ParallelThread >();
 	
-	thread->AddModule( CLThreadModuleID, CreateInfo::GpuThread{ null, null, CreateInfo::GpuContext{ "CL 1.2"_GAPI } } );
+	thread->AddModule( CLThreadModuleID, CreateInfo::GpuThread{ ComputeSettings{ "CL 1.2"_GAPI } } );
 
 	auto	clthread	= thread->GetModuleByID( CLThreadModuleID );
 
@@ -138,7 +138,7 @@ bool CLApp::_CLInit (const Message< GpuMsg::DeviceCreated > &)
 	CHECK_ERR( factory->Create(
 					CLImageModuleID,
 					clthread->GlobalSystems(),
-					CreateInfo::GpuImage{ null,
+					CreateInfo::GpuImage{
 						ImageDescriptor{
 							EImage::Tex2D,
 							uint4( 128, 128, 0, 0 ),
@@ -152,7 +152,7 @@ bool CLApp::_CLInit (const Message< GpuMsg::DeviceCreated > &)
 	CHECK_ERR( factory->Create(
 					CLBufferModuleID,
 					clthread->GlobalSystems(),
-					CreateInfo::GpuBuffer{ null,
+					CreateInfo::GpuBuffer{
 						BufferDescriptor{
 							32_Kb,
 							EBufferUsage::bits() | EBufferUsage::Storage

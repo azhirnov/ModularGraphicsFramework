@@ -56,6 +56,7 @@ namespace Base
 		using SupportedMessages_t	= MessageListFrom< 
 											ModuleMsg::AttachModule,
 											ModuleMsg::DetachModule,
+											//ModuleMsg::ReplaceModule,
 											ModuleMsg::OnModuleAttached,
 											ModuleMsg::OnModuleDetached,
 											ModuleMsg::FindModule,
@@ -71,7 +72,9 @@ namespace Base
 											ModuleMsg::Link,
 											ModuleMsg::Compose,
 											ModuleMsg::Update,
-											ModuleMsg::Delete
+											ModuleMsg::Delete,
+											ModuleMsg::OnModuleAttached,
+											ModuleMsg::OnModuleDetached
 										>;
 
 		struct ModuleConfig
@@ -174,7 +177,7 @@ namespace Base
 		template <typename MsgList>		bool _CopySubscriptions (const ModulePtr &other);
 
 		template <typename T>			bool _SendMsg (const Message<T> &msg);
-		template <typename T>			bool _SendEvent (const Message<T> &msg);
+		template <typename T>			bool _SendEvent (const Message<T> &msg, bool checked = true);
 		template <typename T>			bool _SendForEachAttachments (const Message<T> &msg);
 		
 		template <typename ...Types>	bool _SubscribeOnMsg (Types&& ...args);
@@ -195,6 +198,9 @@ namespace Base
 		ModulePtr const&			_GetManager ()		const	{ return _manager; }
 		AttachedModules_t const&	_GetAttachments ()	const	{ return _attachments; }
 
+	private:
+		void _Release (RefCounter_t &) override final;
+
 
 	// message handlers with implementation
 	protected:
@@ -202,6 +208,7 @@ namespace Base
 		bool _OnModuleDetached_Impl (const Message< ModuleMsg::OnModuleDetached > &);
 		bool _AttachModule_Impl (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule_Impl (const Message< ModuleMsg::DetachModule > &);
+		bool _ReplaceModule_Impl (const Message< ModuleMsg::ReplaceModule > &);
 		bool _FindModule_Impl (const Message< ModuleMsg::FindModule > &);
 		bool _ModulesDeepSearch_Impl (const Message< ModuleMsg::ModulesDeepSearch > &);
 		bool _Update_Impl (const Message< ModuleMsg::Update > &);
@@ -213,6 +220,7 @@ namespace Base
 	protected:
 		bool _AttachModule_Empty (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule_Empty (const Message< ModuleMsg::DetachModule > &);
+		bool _ReplaceModule_Empty (const Message< ModuleMsg::ReplaceModule > &);
 		bool _OnManagerChanged_Empty (const Message< ModuleMsg::OnManagerChanged > &);
 		bool _FindModule_Empty (const Message< ModuleMsg::FindModule > &);
 		bool _ModulesDeepSearch_Empty (const Message< ModuleMsg::ModulesDeepSearch > &);

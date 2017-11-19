@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
+#include "Engine/Platforms/Shared/GPU/Pipeline.h"
+#include "Engine/Platforms/Shared/GPU/RenderPass.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -11,6 +12,11 @@ namespace Engine
 {
 namespace PlatformVK
 {
+
+	class Vk1GraphicsPipeline;
+	class Vk1ComputePipeline;
+
+
 
 	//
 	// Vulkan Pipeline Cache
@@ -20,9 +26,6 @@ namespace PlatformVK
 	{
 	// types
 	private:
-		class InScreenRenderPass;
-		SHARED_POINTER( InScreenRenderPass );
-
 		SHARED_POINTER( Vk1GraphicsPipeline );
 		SHARED_POINTER( Vk1ComputePipeline );
 		
@@ -40,8 +43,6 @@ namespace PlatformVK
 		Set< Vk1ComputePipelinePtr >					_computePipelines;
 
 		vk::VkPipelineCache								_pipelinesCache;
-
-		InScreenRenderPassPtr							_inScreenRenderPass;
 
 		// temporary arrays
 		Array< vk::VkPipelineShaderStageCreateInfo >	_tempStages;

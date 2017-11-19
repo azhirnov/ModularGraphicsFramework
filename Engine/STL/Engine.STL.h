@@ -99,7 +99,8 @@
 #include "Types/Limit.h"
 #include "Types/StaticLimit.h"
 #include "Types/RefCountedObject.h"
-#include "Types/ReferenceCounter.h"
+#include "Types/SharedPointer.h"
+#include "Types/WeakPointer.h"
 #include "Types/StaticRefCountedObject.h"
 #include "Types/ScopeSetter.h"
 

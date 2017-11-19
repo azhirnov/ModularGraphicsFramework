@@ -132,6 +132,9 @@
     <ClCompile Include="..\..\..\Tests\STL\Test_Containers_Adaptors.cpp">
       <Filter>Containers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Tests\STL\Test_OS_Atomic.cpp">
+      <Filter>OS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Tests\STL\Debug.h" />

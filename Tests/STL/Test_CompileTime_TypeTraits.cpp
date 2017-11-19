@@ -36,16 +36,16 @@ enum ETestEnum {};
 
 // EnableIf //
 template <typename T>
-static int Test1 (T a, CompileTime::EnableIf< (sizeof(T) > 2), int > = 0)			{ return 1; }
+static int Test1 (T , CompileTime::EnableIf< (sizeof(T) > 2), int > = 0)			{ return 1; }
 
 template <typename T>
-static float Test1 (T b, CompileTime::EnableIf< (sizeof(T) <= 2), int > = 0)		{ return 2.0f; }
+static float Test1 (T , CompileTime::EnableIf< (sizeof(T) <= 2), int > = 0)		{ return 2.0f; }
 
 template <typename T>
-static int Test2 (T a, CompileTime::EnableIf< (IsPointer<T>), int > = 0)			{ return 4; }
+static int Test2 (T , CompileTime::EnableIf< (IsPointer<T>), int > = 0)			{ return 4; }
 
 template <typename T>
-static float Test2 (T b, CompileTime::EnableIf< (not IsPointer<T>), int > = 0)		{ return 5.0f; }
+static float Test2 (T , CompileTime::EnableIf< (not IsPointer<T>), int > = 0)		{ return 5.0f; }
 
 
 // SwitchType //
@@ -294,6 +294,8 @@ extern void Test_CompileTime_TypeTraits ()
 
 	// SwitchType //
 	int	c = Test3< decltype(param) >( param );
+
+	GX_UNUSED( a, b, c );
 
 
 	// FunctionInfo //

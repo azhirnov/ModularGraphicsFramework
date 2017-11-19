@@ -154,7 +154,7 @@ namespace PlatformCL
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, Platforms::CLThreadModuleID, true );
+		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
 	}
 
 /*
@@ -263,7 +263,7 @@ namespace PlatformCL
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
-		CHECK_ERR( _GetParents().IsExist( msg.Sender() ) );
+		//CHECK_ERR( _GetParents().IsExist( msg.Sender() ) );
 
 		CHECK_ERR( not _IsCreated() );
 		CHECK_ERR( _GetParents().Count() >= 1 );
@@ -416,7 +416,7 @@ namespace PlatformCL
 */
 	bool CL2Memory::_MapImageToCpu (const Message< GpuMsg::MapImageToCpu > &msg)
 	{
-		using namespace cl;
+		/*using namespace cl;
 		
 		CHECK_ERR( _IsCreated() and not _IsMapped() );
 		CHECK_ERR( _binding == EBindingTarget::Image );
@@ -453,7 +453,7 @@ namespace PlatformCL
 
 		_mappedSize			= _size;
 		_mappedOffset		= BytesUL();
-		_isMappedMemChanged	= false;
+		_isMappedMemChanged	= false;*/
 		return true;
 	}
 	
@@ -682,8 +682,9 @@ namespace PlatformCL
 	{
 		GpuMemoryDescriptor		descr;
 
-		descr.flags	= _flags;
-		descr.size	= _size;
+		descr.flags		= _flags;
+		descr.size		= _size;
+		descr.access	= _access;
 
 		msg->result.Set( descr );
 		return true;

@@ -8,7 +8,7 @@
 #include "Engine/Platforms/Shared/GPU/ImageEnums.h"
 #include "Engine/Platforms/Shared/GPU/CommandEnums.h"
 #include "Engine/Platforms/Shared/GPU/MipmapLevel.h"
-#include "Engine/Platforms/Shared/GPU/ImgArrLayer.h"
+#include "Engine/Platforms/Shared/GPU/ImageLayer.h"
 
 namespace Engine
 {
@@ -47,7 +47,7 @@ namespace CreateInfo
 
 	struct GpuCommandBuffer
 	{
-		ModulePtr							gpuThread;
+		ModulePtr							gpuThread;			// can be null
 		ModulePtr							builder;
 		Platforms::CommandBufferDescriptor	descr;
 	};
@@ -59,7 +59,7 @@ namespace CreateInfo
 
 	struct GpuCommandBuilder
 	{
-		ModulePtr	gpuThread;
+		ModulePtr	gpuThread;			// can be null
 	};
 	
 }	// CreateInfo
@@ -502,8 +502,8 @@ namespace GpuMsg
 
 		// methods
 			Region () {}
-			Region (BytesU srcOffset, BytesU dstOffset, BytesU size) : srcOffset(srcOffset), dstOffset(dstOffset), size(size) {}
-			Region (BytesUL srcOffset, BytesUL dstOffset, BytesUL size) : srcOffset(srcOffset), dstOffset(dstOffset), size(size) {}
+			Region (Bytes<uint> srcOffset, Bytes<uint> dstOffset, Bytes<uint> size) : srcOffset(BytesUL(srcOffset)), dstOffset(BytesUL(dstOffset)), size(BytesUL(size)) {}
+			Region (Bytes<ulong> srcOffset, Bytes<ulong> dstOffset, Bytes<ulong> size) : srcOffset(srcOffset), dstOffset(dstOffset), size(size) {}
 		};
 
 		using Regions_t	= FixedSizeArray< Region, 8 >;
@@ -545,14 +545,14 @@ namespace GpuMsg
 		using EImageLayout	= Platforms::EImageLayout;
 		using EImageAspect	= Platforms::EImageAspect;
 		using MipmapLevel	= Platforms::MipmapLevel;
-		using ImgArrLayer	= Platforms::ImgArrLayer;
+		using ImageLayer	= Platforms::ImageLayer;
 		using uint3			= GXMath::uint3;
 
 		struct ImageLayers : CompileTime::PODStruct
 		{
 			EImageAspect::bits	aspectMask;
 			MipmapLevel			mipLevel;
-			ImgArrLayer			baseLayer;
+			ImageLayer			baseLayer;
 			uint				layerCount;
 		};
 
@@ -742,7 +742,7 @@ namespace GpuMsg
 		using EImageAspect		= Platforms::EImageAspect;
 		using DepthStencil_t	= CmdBeginRenderPass::DepthStencil;
 		using ClearValue_t		= CmdBeginRenderPass::ClearValue_t;
-		using ImgArrLayer		= Platforms::ImgArrLayer;
+		using ImageLayer		= Platforms::ImageLayer;
 		using RectU				= GXMath::RectU;
 
 		struct Attachment : CompileTime::PODStruct
@@ -761,11 +761,11 @@ namespace GpuMsg
 		struct ClearRect : CompileTime::PODStruct
 		{
 			RectU			rect;
-			ImgArrLayer		baseLayer;
+			ImageLayer		baseLayer;
 			uint			layerCount	= 1;
 
 			ClearRect () {}
-			ClearRect (const RectU &rect, ImgArrLayer layer = ImgArrLayer(0), uint count = 1) : rect(rect), baseLayer(layer), layerCount(count) {}
+			ClearRect (const RectU &rect, ImageLayer layer = ImageLayer(0), uint count = 1) : rect(rect), baseLayer(layer), layerCount(count) {}
 		};
 
 		using Attachments_t		= FixedSizeArray< Attachment, GlobalConst::Graphics_MaxColorBuffers >;
@@ -790,7 +790,7 @@ namespace GpuMsg
 		using EImageAspect	= Platforms::EImageAspect;
 		using EImageLayout	= Platforms::EImageLayout;
 		using MipmapLevel	= Platforms::MipmapLevel;
-		using ImgArrLayer	= Platforms::ImgArrLayer;
+		using ImageLayer	= Platforms::ImageLayer;
 		using ClearColor_t	= Union< GXMath::float4, GXMath::uint4, GXMath::int4 >;
 
 		struct ImageRange : CompileTime::PODStruct
@@ -798,18 +798,18 @@ namespace GpuMsg
 		// variables
 			EImageAspect::bits	aspectMask;
 			MipmapLevel			baseMipLevel;
-			ImgArrLayer			baseLayer;
+			ImageLayer			baseLayer;
 			uint				levelCount		= 1;
 			uint				layerCount		= 1;
 			
 		// methods
 			ImageRange () {}
 
-			explicit ImageRange (EImageAspect::bits aspect, MipmapLevel mip = Uninitialized, ImgArrLayer layer = Uninitialized) :
+			explicit ImageRange (EImageAspect::bits aspect, MipmapLevel mip = Uninitialized, ImageLayer layer = Uninitialized) :
 				aspectMask(aspect), baseMipLevel(mip), baseLayer(layer), levelCount(1), layerCount(1)
 			{}
 			
-			ImageRange (EImageAspect::bits aspect, MipmapLevel baseMipLevel, uint levelCount, ImgArrLayer baseLayer, uint layerCount) :
+			ImageRange (EImageAspect::bits aspect, MipmapLevel baseMipLevel, uint levelCount, ImageLayer baseLayer, uint layerCount) :
 				aspectMask(aspect), baseMipLevel(baseMipLevel), baseLayer(baseLayer), levelCount(levelCount), layerCount(layerCount)
 			{}
 		};
@@ -862,7 +862,7 @@ namespace GpuMsg
 		using EPipelineAccess	= Platforms::EPipelineAccess;
 		using EPipelineStage	= Platforms::EPipelineStage;
 		using MipmapLevel		= Platforms::MipmapLevel;
-		using ImgArrLayer		= Platforms::ImgArrLayer;
+		using ImageLayer		= Platforms::ImageLayer;
 		using ImageRange		= CmdClearColorImage::ImageRange;
 
 
@@ -901,7 +901,7 @@ namespace GpuMsg
 
 			ImageMemoryBarrier (const ModulePtr &image, EPipelineAccess::bits srcAccess, EPipelineAccess::bits dstAccess,
 								EImageLayout::type oldLayout, EImageLayout::type newLayout, EImageAspect::bits aspect,
-								MipmapLevel mip = Uninitialized, ImgArrLayer layer = Uninitialized) :
+								MipmapLevel mip = Uninitialized, ImageLayer layer = Uninitialized) :
 				image(image), srcAccessMask(srcAccess), dstAccessMask(dstAccess), oldLayout(oldLayout), newLayout(newLayout), range{ aspect, mip, layer }
 			{}
 		};
@@ -950,13 +950,13 @@ namespace GpuMsg
 							EImageLayout::type oldLayout, EImageLayout::type newLayout,
 							ModulePtr image, EImageAspect::bits aspectMask,
 							MipmapLevel baseMipLevel = Uninitialized, uint levelCount = 1,
-							ImgArrLayer baseLayer = Uninitialized, uint layerCount = 1);
+							ImageLayer baseLayer = Uninitialized, uint layerCount = 1);
 
 		CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
 							EImageLayout::type oldLayout, EImageLayout::type newLayout,
 							ModulePtr image, EImageAspect::bits aspectMask,
 							MipmapLevel baseMipLevel = Uninitialized, uint levelCount = 1,
-							ImgArrLayer baseLayer = Uninitialized, uint layerCount = 1);
+							ImageLayer baseLayer = Uninitialized, uint layerCount = 1);
 
 		CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
 							EPipelineAccess::bits srcAccess, EPipelineAccess::bits dstAccess,
@@ -983,7 +983,7 @@ namespace GpuMsg
 											EImageLayout::type oldLayout, EImageLayout::type newLayout,
 											ModulePtr image, EImageAspect::bits aspectMask,
 											MipmapLevel baseMipLevel, uint levelCount,
-											ImgArrLayer baseLayer, uint layerCount) :
+											ImageLayer baseLayer, uint layerCount) :
 		srcStageMask( srcStage ),	dstStageMask( dstStage )
 	{
 		imageBarriers.PushBack({ image, srcAccess, dstAccess, oldLayout, newLayout, ImageRange{aspectMask, baseMipLevel, levelCount, baseLayer, layerCount} });
@@ -994,7 +994,7 @@ namespace GpuMsg
 											EImageLayout::type oldLayout, EImageLayout::type newLayout,
 											ModulePtr image, EImageAspect::bits aspectMask,
 											MipmapLevel baseMipLevel, uint levelCount,
-											ImgArrLayer baseLayer, uint layerCount) :
+											ImageLayer baseLayer, uint layerCount) :
 		srcStageMask( srcStage ),	dstStageMask( dstStage )
 	{
 		EPipelineAccess::bits	src_access;

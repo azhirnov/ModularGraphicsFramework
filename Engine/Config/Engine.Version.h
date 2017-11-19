@@ -24,9 +24,9 @@ namespace Engine
 	}	// _engine_hidden_
 
 
-	static const char	ENGINE_NAME[]		= "GraphXGenEngine2";
+	static const char	ENGINE_NAME[]		= "ModularGraphicsFramework";
 	static const char	ENGINE_BUILD_DATE[]	= __DATE__ " " __TIME__;
-	static const int	ENGINE_VERSION		= _engine_hidden_::BuildVersionNumber( 0, 1, 0, 0 );
+	static const int	ENGINE_VERSION		= _engine_hidden_::BuildVersionNumber( 0, 2, 0, 0 );
 
 
 }	// Engine

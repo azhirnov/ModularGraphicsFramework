@@ -55,8 +55,6 @@ namespace PlatformGL
 
 		void Resize (const uint2 &surfaceSize);
 
-		static ModulePtr CreateModule (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &)	{ return null; }
-
 
 	// message handlers
 	private:
@@ -80,7 +78,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Device::GL4SystemFramebuffer::GL4SystemFramebuffer (GlobalSystemsRef gs) :
-		GL4BaseModule( gs, ModuleConfig{ GLSystemFramebufferModuleID, 1 }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLFramebufferModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_framebufferId( 0 )
 	{
 		SetDebugName( "GL4SystemFramebuffer" );
@@ -102,7 +100,7 @@ namespace PlatformGL
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( null, Platforms::GLThreadModuleID, true );
+		_AttachSelfToManager( null, GLThreadModuleID, true );
 	}
 	
 /*
@@ -126,29 +124,19 @@ namespace PlatformGL
 
 		_framebufferId	= 0;
 		_descr			= Uninitialized;
-		//_drawBuffers.Clear();
 
 		GL_CALL( glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, (GLint*)&_framebufferId ) );
-
-		/*for (usize i = 0; i < DrawBuffers_t::MemoryContainer_t::SIZE; ++i)
-		{
-			GLint	buf = 0;
-			GL_CALL( glGetIntegerv( GL_DRAW_BUFFER0 + i, &buf ) );
-
-			if ( buf != GL_NONE )
-				_drawBuffers.PushBack( buf );
-		}*/
 
 		const bool	is_multisampled	= samples.Get() > 1;
 		
 		if ( colorFmt != EPixelFormat::Unknown )
 		{
-			_descr.ColorImage( "color", is_multisampled ? EImage::Tex2DMS : EImage::Tex2D );
+			_descr.ColorRenderbuffer( "color", is_multisampled ? EImage::Tex2DMS : EImage::Tex2D );
 		}
 
 		if ( depthStencilFmt != EPixelFormat::Unknown )
 		{
-			_descr.DepthStencilImage( "depth", is_multisampled ? EImage::Tex2DMS : EImage::Tex2D );
+			_descr.DepthStencilRenderbuffer( "depth", is_multisampled ? EImage::Tex2DMS : EImage::Tex2D );
 		}
 
 		Resize( surfaceSize );
@@ -177,8 +165,6 @@ namespace PlatformGL
 	{
 		_descr			= Uninitialized;
 		_framebufferId	= 0;
-
-		//_drawBuffers.Clear();
 
 		return Module::_Delete_Impl( msg );
 	}

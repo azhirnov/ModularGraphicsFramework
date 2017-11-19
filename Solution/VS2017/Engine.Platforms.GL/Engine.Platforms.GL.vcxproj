@@ -29,6 +29,7 @@
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Device.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Emulator.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Enums.h" />
+    <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4FlippedSystemFramebuffer.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Messages.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4Sampler.h" />
     <ClInclude Include="..\..\..\Engine\Platforms\OpenGL\Impl\GL4SystemFramebuffer.h" />

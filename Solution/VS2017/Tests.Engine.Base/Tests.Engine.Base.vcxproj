@@ -19,23 +19,20 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Graphics\GApp.cpp" />
+    <ClCompile Include="..\..\..\Tests\Engine.Base\Graphics\Test.GWindow.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Main.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\OpenCL\Test.CLCompute.cpp" />
-    <ClCompile Include="..\..\..\Tests\Engine.Base\OpenGL\GLApp.cpp" />
-    <ClCompile Include="..\..\..\Tests\Engine.Base\OpenGL\Test.GLWindow.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Pipelines\default.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Pipelines\default2.cpp" />
-    <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\Test.VkWindow.cpp" />
-    <ClCompile Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.cpp" />
     <ClCompile Include="..\..\..\Tests\Engine.Base\Window\Test.Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Tests\Engine.Base\Common.h" />
-    <ClInclude Include="..\..\..\Tests\Engine.Base\OpenGL\GLApp.h" />
+    <ClInclude Include="..\..\..\Tests\Engine.Base\Graphics\GApp.h" />
     <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\all_pipelines.h" />
     <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\common.h" />
     <ClInclude Include="..\..\..\Tests\Engine.Base\Pipelines\shared_types.h" />
-    <ClInclude Include="..\..\..\Tests\Engine.Base\Vulkan\VkApp.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Engine.Platforms\Engine.Platforms.vcxproj">

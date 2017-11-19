@@ -52,11 +52,6 @@ namespace PlatformVK
 		SetDebugName( "Vk1Device" );
 
 		_imageBuffers.Reserve( 8 );
-
-		CHECK( GlobalSystems()->Get< ModulesFactory >()->Register(
-			VkSystemFramebufferModuleID,
-			&Vk1SystemFramebuffer::CreateModule
-		) );
 	}
 	
 /*
@@ -66,8 +61,6 @@ namespace PlatformVK
 */
 	Vk1Device::~Vk1Device ()
 	{
-		GlobalSystems()->Get< ModulesFactory >()->UnregisterAll( VkSystemFramebufferModuleID );
-
 		CHECK( not IsInstanceCreated() );
 		CHECK( not HasPhyiscalDevice() );
 		CHECK( not IsDeviceCreated() );
@@ -1337,7 +1330,7 @@ namespace PlatformVK
 
 		ModulePtr	module;
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-					Platforms::VkRenderPassModuleID,
+					VkRenderPassModuleID,
 					GlobalSystems(),
 					CreateInfo::GpuRenderPass{
 						null,
@@ -1651,7 +1644,7 @@ namespace PlatformVK
 		CHECK_ERR( not _framebuffers.Empty() );
 
 		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-			Platforms::VkCommandBuilderModuleID,
+			VkCommandBuilderModuleID,
 			GlobalSystems(),
 			CreateInfo::GpuCommandBuilder{},
 			OUT _commandBuilder )

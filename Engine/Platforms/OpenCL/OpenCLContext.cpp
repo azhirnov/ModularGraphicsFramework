@@ -75,9 +75,15 @@ namespace Platforms
 	bool OpenCLContext::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		ASSERT( _threads.IsExist( msg->module ) );
 
-		_threads.Erase( msg->module );
+		ModulePtr	module = msg->module.Lock();
+
+		if ( not module )
+			return false;
+
+		ASSERT( _threads.IsExist( module ) );
+
+		_threads.Erase( module );
 		return true;
 	}
 		

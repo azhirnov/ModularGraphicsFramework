@@ -68,7 +68,7 @@ namespace OS
 		}
 
 		template <typename T>
-		forceinline static T  CmpEx (volatile T & left, const T& right, const T& cmp) {
+		forceinline static T  CmpExch (volatile T & left, const T& right, const T& cmp) {
 			return rtype_cast( __sync_val_compare_and_swap( itype_cast( left ), ctype_cast( cmp ), ctype_cast( right ) ) );
 		}
 

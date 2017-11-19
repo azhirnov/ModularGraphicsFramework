@@ -5,13 +5,17 @@
 #include "Engine/Platforms/Shared/GPU/MultiSamples.h"
 #include "Engine/Platforms/Shared/GPU/MipmapLevel.h"
 #include "Engine/Platforms/Shared/GPU/ImageEnums.h"
+#include "Engine/Platforms/Shared/GPU/ImageSwizzle.h"
+#include "Engine/Platforms/Shared/GPU/ImageLayer.h"
 #include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
+#include "Engine/Platforms/Shared/GPU/MemoryEnums.h"
 #include "Engine/Platforms/Shared/GPU/IDs.h"
 
 namespace Engine
 {
 namespace Platforms
 {
+
 	//
 	// GPU Image Descriptor
 	//
@@ -37,11 +41,39 @@ namespace Platforms
 						  EPixelFormat::type	format,
 						  EImageUsage::bits		usage,
 						  MipmapLevel			maxLevel	= Uninitialized,
-						  MultiSamples			samples		= Uninitialized) :
-			imageType(imageType),	dimension(dimension),
-			format(format),			usage(usage),
-			maxLevel(maxLevel),		samples(samples)
-		{}
+						  MultiSamples			samples		= Uninitialized);
+	};
+
+
+	
+	//
+	// GPU Image View Descriptor
+	//
+
+	struct ImageViewDescriptor
+	{
+	// variables
+		EImage::type			viewType	= EImage::Unknown;
+		EPixelFormat::type		format		= EPixelFormat::Unknown;
+		MipmapLevel				baseLevel;
+		uint					levelCount	= 1;
+		ImageLayer				baseLayer;
+		uint					layerCount	= 1;
+		ImageSwizzle			swizzle;
+
+	// methods
+		explicit
+		ImageViewDescriptor (EImage::type		viewType	= EImage::Unknown,
+							 EPixelFormat::type	format		= EPixelFormat::Unknown,
+							 MipmapLevel		baseLevel	= Uninitialized,
+							 uint				levelCount	= 1,
+							 ImageLayer			baseLayer	= Uninitialized,
+							 uint				layerCount	= 1,
+							 Swizzle::type		swizzle		= "RGBA"_Swizzle);
+
+		bool operator == (const ImageViewDescriptor &right) const;
+		bool operator >  (const ImageViewDescriptor &right) const;
+		bool operator <  (const ImageViewDescriptor &right) const;
 	};
 
 
@@ -76,13 +108,25 @@ namespace CreateInfo
 	//
 	// Image Create Info
 	//
-
-	struct GpuImage
+	struct GpuImage // TODO: rename
 	{
-		ModulePtr						gpuThread;
-		Platforms::ImageDescriptor		descr;
-	};
+	// types
+		using ImageDescriptor	= Platforms::ImageDescriptor;
+		using EGpuMemory		= Platforms::EGpuMemory;
+		using EMemoryAccess		= Platforms::EMemoryAccess;
 
+	// variables
+		ModulePtr				gpuThread;			// can be null
+		ImageDescriptor			descr;
+		EGpuMemory::bits		memFlags;
+		EMemoryAccess::bits		access;
+		bool					allocMem = true;	// if true then you don't need to attach memory module to image
+
+	// methods
+		GpuImage (GX_DEFCTOR) {}
+		GpuImage (const ImageDescriptor &descr) : descr{descr}, allocMem{false} {}
+		GpuImage (const ImageDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) : descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
+	};
 
 }	// CreateInfo
 

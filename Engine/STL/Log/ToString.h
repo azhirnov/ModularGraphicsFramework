@@ -18,7 +18,7 @@
 #include "Engine/STL/Time/Time.h"
 #include "Engine/STL/OS/OSLowLevel.h"
 #include "Engine/STL/Types/Optional.h"
-#include "Engine/STL/Types/ReferenceCounter.h"
+#include "Engine/STL/Types/SharedPointer.h"
 
 namespace GX_STL
 {
@@ -350,11 +350,11 @@ namespace GXTypes
 	
 /*
 =================================================
-	ToString (ReferenceCounter)
+	ToString (SharedPointer)
 =================================================
 */
 	template <typename T, typename B, typename S>
-	inline String  ToString (const ReferenceCounter<T,B,S> &value)
+	inline String  ToString (const SharedPointer<T,B,S> &value)
 	{
 		return String().FormatI( ReferenceCast<usize>( value.RawPtr() ), 16 );
 	}
