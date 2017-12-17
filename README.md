@@ -24,3 +24,6 @@ Supported OS:
 
 Supported compilers:
 - VS 2017 (C++14 required)
+
+Dependencies:
+- LunarGLASS and other https://github.com/azhirnov/ModularGraphicsFramework-Externals
