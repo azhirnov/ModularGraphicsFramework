@@ -6,7 +6,7 @@ Features:
 - Low level abstraction of API.
 - Run many graphics API at one time for debugging - to see different behavior.
 - High level abstraction (work in progress).
-- Shader compiler - one shader for all platforms (work in progress).
+- Shader compiler - one shader for all platforms.
 - Procedural generation (work in progress).
 - VR (work in progress).
 
@@ -23,7 +23,8 @@ Supported OS:
 - (Android - somewhen)
 
 Supported compilers:
-- VS 2017 (C++14 required)
+- VS 2017 (C++17)
+- MinGW (with C++17 support)
 
 Dependencies:
 - LunarGLASS and other https://github.com/azhirnov/ModularGraphicsFramework-Externals
