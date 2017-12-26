@@ -1,6 +1,15 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/Shared/GPU/Context.h"
+#include "Engine/Platforms/Shared/GPU/Thread.h"
+#include "Engine/Platforms/Shared/GPU/Pipeline.h"
+#include "Engine/Platforms/Shared/GPU/Buffer.h"
+#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
+#include "Engine/Platforms/Shared/GPU/RenderPass.h"
+#include "Engine/Platforms/Shared/GPU/Sampler.h"
+#include "Engine/Platforms/Shared/GPU/Memory.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -8,6 +17,56 @@ namespace Engine
 {
 namespace Platforms
 {
+
+	//
+	// OpenGL Context
+	//
+	
+	class OpenGLContext final : public Module
+	{
+	// types
+	private:
+		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+											ModuleMsg::AddToManager,
+											ModuleMsg::RemoveFromManager,
+											GpuMsg::GetGraphicsModules
+										> >;
+		using SupportedEvents_t		= Module::SupportedEvents_t;
+
+		using GLThreads_t			= Set< ModulePtr >;
+		
+		using GLThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetGLDeviceInfo >;
+		using GLThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
+
+
+	// constants
+	private:
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
+
+		
+	// variables
+	private:
+		CreateInfo::GpuContext	_createInfo;
+
+		GLThreads_t				_threads;
+		
+
+	// methods
+	public:
+		OpenGLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
+		~OpenGLContext ();
+
+		
+	// message handlers
+	private:
+		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
+		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
+	};
+//-----------------------------------------------------------------------------
+
+
 	
 	const TypeIdList	OpenGLContext::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	OpenGLContext::_eventTypes{ UninitializedT< SupportedEvents_t >() };
@@ -95,17 +154,20 @@ namespace Platforms
 */	
 	bool OpenGLContext::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
 	{
-		msg->compute.Set( GetComputeModules() );
-		msg->graphics.Set( GetGraphicsModules() );
+		msg->compute.Set( OpenGLObjectsConstructor::GetComputeModules() );
+		msg->graphics.Set( OpenGLObjectsConstructor::GetGraphicsModules() );
 		return true;
 	}
+//-----------------------------------------------------------------------------
+
+
 	
 /*
 =================================================
 	GetGraphicsModules
 =================================================
 */	
-	GraphicsModuleIDs OpenGLContext::GetGraphicsModules ()
+	GraphicsModuleIDs OpenGLObjectsConstructor::GetGraphicsModules ()
 	{
 		GraphicsModuleIDs	graphics;
 		graphics.pipeline		= GLGraphicsPipelineModuleID;
@@ -129,7 +191,7 @@ namespace Platforms
 	GetComputeModules
 =================================================
 */	
-	ComputeModuleIDs OpenGLContext::GetComputeModules ()
+	ComputeModuleIDs OpenGLObjectsConstructor::GetComputeModules ()
 	{
 		ComputeModuleIDs	compute;
 		compute.pipeline		= GLComputePipelineModuleID;
@@ -150,26 +212,27 @@ namespace Platforms
 	Register
 =================================================
 */
-	void OpenGLContext::Register (GlobalSystemsRef gs)
+	void OpenGLObjectsConstructor::Register ()
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
 
-		CHECK( mf->Register( GLContextModuleID, &_CreateOpenGLContext ) );
-		CHECK( mf->Register( GLThreadModuleID, &_CreateOpenGLThread ) );
+		CHECK( mf->Register( GLContextModuleID, &CreateOpenGLContext ) );
+		CHECK( mf->Register( GLThreadModuleID, &CreateOpenGLThread ) );
 		
-		CHECK( mf->Register( GLImageModuleID, &_CreateGL4Image ) );
-		CHECK( mf->Register( GLMemoryModuleID, &_CreateGL4Memory ) );
-		CHECK( mf->Register( GLBufferModuleID, &_CreateGL4Buffer ) );
-		CHECK( mf->Register( GLSamplerModuleID, &_CreateGL4Sampler ) );
-		CHECK( mf->Register( GLRenderPassModuleID, &_CreateGL4RenderPass ) );
-		CHECK( mf->Register( GLFramebufferModuleID, &_CreateGL4Framebuffer ) );
-		CHECK( mf->Register( GLCommandBufferModuleID, &_CreateGL4CommandBuffer ) );
-		CHECK( mf->Register( GLCommandBuilderModuleID, &_CreateGL4CommandBuilder ) );
-		CHECK( mf->Register( GLGraphicsPipelineModuleID, &_CreateGL4GraphicsPipeline ) );
-		CHECK( mf->Register( GLPipelineResourceTableModuleID, &_CreateGL4PipelineResourceTable ) );
+		CHECK( mf->Register( GLImageModuleID, &CreateGL4Image ) );
+		CHECK( mf->Register( GLMemoryModuleID, &CreateGL4Memory ) );
+		CHECK( mf->Register( GLBufferModuleID, &CreateGL4Buffer ) );
+		CHECK( mf->Register( GLSamplerModuleID, &CreateGL4Sampler ) );
+		CHECK( mf->Register( GLRenderPassModuleID, &CreateGL4RenderPass ) );
+		CHECK( mf->Register( GLFramebufferModuleID, &CreateGL4Framebuffer ) );
+		CHECK( mf->Register( GLCommandBufferModuleID, &CreateGL4CommandBuffer ) );
+		CHECK( mf->Register( GLCommandBuilderModuleID, &CreateGL4CommandBuilder ) );
+		CHECK( mf->Register( GLComputePipelineModuleID, &CreateGL4ComputePipeline ) );
+		CHECK( mf->Register( GLGraphicsPipelineModuleID, &CreateGL4GraphicsPipeline ) );
+		CHECK( mf->Register( GLPipelineResourceTableModuleID, &CreateGL4PipelineResourceTable ) );
 
 		if ( not mf->IsRegistered< CreateInfo::PipelineTemplate >( PipelineTemplateModuleID ) )
-			CHECK( mf->Register( PipelineTemplateModuleID, &_CreatePipelineTemplate ) );
+			CHECK( mf->Register( PipelineTemplateModuleID, &CreatePipelineTemplate ) );
 	}
 	
 /*
@@ -177,9 +240,9 @@ namespace Platforms
 	Unregister
 =================================================
 */
-	void OpenGLContext::Unregister (GlobalSystemsRef gs)
+	void OpenGLObjectsConstructor::Unregister ()
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
 
 		mf->UnregisterAll( GLContextModuleID );
 		mf->UnregisterAll( GLThreadModuleID );
@@ -200,10 +263,10 @@ namespace Platforms
 
 /*
 =================================================
-	_CreateOpenGLContext
+	CreateOpenGLContext
 =================================================
 */
-	ModulePtr OpenGLContext::_CreateOpenGLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateOpenGLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
 		return New< OpenGLContext >( gs, ci );
 	}

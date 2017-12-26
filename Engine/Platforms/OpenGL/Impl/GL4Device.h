@@ -30,8 +30,6 @@ namespace PlatformGL
 
 		EPixelFormat::type			_colorPixelFormat;
 		EPixelFormat::type			_depthStencilPixelFormat;
-		
-		ModulePtr					_commandBuilder;
 
 		ModulePtr					_renderPass;
 		ModulePtr					_framebuffer;
@@ -75,7 +73,6 @@ namespace PlatformGL
 		bool		IsFrameStarted ()			const	{ return _frameStarted; }
 
 		ModulePtr	GetDefaultRenderPass ()		const	{ return _renderPass; }
-		ModulePtr	GetCommandBuilder ()		const	{ return _commandBuilder; }
 		ModulePtr	GetCurrentFramebuffer ()	const	{ return _framebuffer; }
 		uint		GetImageIndex ()			const	{ return _currentImageIndex; }
 		uint		GetSwapchainLength ()		const	{ return _swapchainLength; }
@@ -83,7 +80,6 @@ namespace PlatformGL
 		bool		IsVulkanCompatibility ()	const	{ return _vulkanCompatibility; }
 
 	private:
-		bool _CreateCommandBuffer ();
 		bool _CreateRenderPass ();
 		bool _CreateFramebuffer ();
 

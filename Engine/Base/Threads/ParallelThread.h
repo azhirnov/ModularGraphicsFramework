@@ -28,6 +28,49 @@ namespace ModuleMsg
 
 }	// ModuleMsg
 
+
+namespace CreateInfo
+{
+
+	//
+	// Thread Create Info
+	//
+	struct Thread
+	{
+	// types
+		using OnStartThreadFunc_t	= std::function< void (GlobalSystemsRef) >;
+
+	// variables
+		String								name;
+		ModulePtr							manager;
+		ReadOnce< OnStartThreadFunc_t >		onStarted;		// this function must be as fast as possible
+
+	// methods
+		Thread (StringCRef name, const ModulePtr &mngr) :
+			name( name ),
+			manager( mngr ),
+			onStarted( OnStartThreadFunc_t() )
+		{}
+		
+		template <typename FN, typename ...Args>
+		Thread (StringCRef name, const ModulePtr &mngr, FN func, Args&& ...args) :
+			name{ name },
+			manager{ mngr },
+			onStarted{std::bind( func, FW<Args>(args)..., std::placeholders::_1 )}
+		{}
+	};
+	
+
+	//
+	// Thread Manager Create Info
+	//
+	struct ThreadManager
+	{
+	};
+
+}	// CreateInfo
+
+
 namespace Base
 {
 

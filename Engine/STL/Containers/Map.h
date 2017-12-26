@@ -81,10 +81,15 @@ namespace _types_hidden_
 		{
 			AddArray( ArrayCRef<pair_t>( list ) );
 		}
+		
+		BaseMap (ArrayCRef<pair_t> list)
+		{
+			AddArray( list );
+		}
 
 		operator	ArrayCRef< pair_t > () const
 		{
-			return ArrayCRef< _MapUtils_t::Value_t >( _memory );
+			return ArrayCRef< typename _MapUtils_t::Value_t >( _memory );
 			//return const_values_range_t( _memory.ptr(), _memory.ptr() + _memory.Count() );
 		}
 
@@ -220,6 +225,18 @@ namespace _types_hidden_
 			}
 		}
 
+		void AddArray (const Self &value)
+		{
+			AddArray( const_values_range_t(value) );
+		}
+
+		void AddArray (Self &&value)
+		{
+			FOR( i, value ) {
+				Add(RVREF( value[i] ));
+			}
+		}
+
 
 		/*usize ChangeKey (const Key_t &key, usize idx)
 		{
@@ -261,7 +278,7 @@ namespace _types_hidden_
 		
 		bool Find (const Key_t &key, OUT iterator &result)
 		{
-			usize	idx = -1;
+			usize	idx = UMax;
 
 			if ( not FindIndex( key, OUT idx ) )
 				return false;
@@ -272,7 +289,7 @@ namespace _types_hidden_
 
 		bool Find (const Key_t &key, OUT const_iterator &result) const
 		{
-			usize	idx = -1;
+			usize	idx = UMax;
 
 			if ( not FindIndex( key, OUT idx ) )
 				return false;

@@ -16,14 +16,14 @@ private:
 // methods
 public:
 	WindowApp (const ModulePtr &taskMngr, const CreateInfo::Window &descr) :
-		taskMngr( taskMngr ), wndDescr( descr )
+		wndDescr( descr ), taskMngr( taskMngr )
 	{}
 
 	void Initialize (GlobalSystemsRef gs)
 	{
-		ModulePtr	thread = gs->Get< ParallelThread >();
+		auto	thread = gs->parallelThread;
 
-		if ( not gs->Get< TaskModule >() )
+		if ( not gs->taskModule )
 			thread->AddModule( TaskModuleModuleID, CreateInfo::TaskModule{ taskMngr } );
 
 		thread->AddModule( WinWindowModuleID, wndDescr );
@@ -47,7 +47,7 @@ public:
 	// only for main thread
 	bool Update ()
 	{
-		GetMainSystemInstace()->Send< ModuleMsg::Update >({});
+		GetMainSystemInstance()->Send< ModuleMsg::Update >({});
 		return looping;
 	}
 	
@@ -76,19 +76,20 @@ extern void Test_Window ()
 {
 	using EFlags = CreateInfo::Window::EWindowFlags;
 
-	auto ms = GetMainSystemInstace();
+	auto ms = GetMainSystemInstance();
 
 	Platforms::RegisterPlatforms();
 	
-	CHECK( ms->GlobalSystems()->Get< FileManager >()->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
+	CHECK( ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
 	
 	ms->AddModule( WinPlatformModuleID, CreateInfo::Platform() );
 	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager() );
 	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager() );
 	
 	{
-		auto	thread		= ms->GlobalSystems()->Get< ParallelThread >();
-		auto	task_mngr	= ms->GetModuleByID( TaskManagerModuleID );
+		auto		thread		= ms->GlobalSystems()->parallelThread;
+		auto		task_mngr	= ms->GetModuleByID( TaskManagerModuleID );
+		ModulePtr	thread2;
 
 		WindowAppPtr	app1 = New< WindowApp >( task_mngr, CreateInfo::Window{ "window-0", EFlags::bits() | EFlags::Resizable, uint2(800,600), int2(800,600) } );
 		WindowAppPtr	app2 = New< WindowApp >( task_mngr, CreateInfo::Window{ "window-1", EFlags::bits(), uint2(800,600), int2(-900,400) } );
@@ -96,7 +97,7 @@ extern void Test_Window ()
 		app1->Initialize( thread->GlobalSystems() );
 		
 		// create second thread with window
-		CHECK( ms->GlobalSystems()->Get< ModulesFactory >()->Create(
+		CHECK( ms->GlobalSystems()->modulesFactory->Create(
 					ParallelThreadModuleID,
 					ms->GlobalSystems(),
 					CreateInfo::Thread{
@@ -107,9 +108,9 @@ extern void Test_Window ()
 							app2->Initialize( gs );
 						}
 					},
-					OUT (ModulePtr &) thread ) );
-		
-		thread = null;
+					OUT (ModulePtr &) thread2 ) );
+
+		thread2 = null;
 
 		// finish initialization
 		ModuleUtils::Initialize({ ms });

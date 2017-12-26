@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -14,8 +14,10 @@ namespace CompileTime
 
 	namespace _ctime_hidden_
 	{
+# ifdef COMPILER_MSVC
 #		pragma warning (push)
 #		pragma warning (disable: 4307)	// 'operator' : integral constant overflow
+# endif
 		
 		template <bool Condition, typename T, T Left, T Right, T Default = T(0)>
 		struct MulIf {
@@ -52,9 +54,9 @@ namespace CompileTime
 
 		template <typename T, T Left, T Right>
 		struct StaticInteger_CanAddWithSign {
-			static const bool	value = typename SwitchType< (Left >= 0 and Right >= 0) or (Left < 0 and Right < 0),
+			static const bool	value = SwitchType< (Left >= 0 and Right >= 0) or (Left < 0 and Right < 0),
 											StaticInteger_CanAdd< T, (Abs< T, Left >), (Abs< T, Right >) >,	// ++/--
-											typename SwitchType< (Left > 0),
+											SwitchType< (Left > 0),
 												StaticInteger_CanSub< T, Left, T(0)-Right >,		// +-
 												StaticInteger_CanSub< T, Right, T(0)-Left > >		// -+
 										>::value;
@@ -62,11 +64,11 @@ namespace CompileTime
 
 		template <typename T, T Left, T Right>
 		struct StaticInteger_CanMulWithSign {
-			static const bool	value = typename SwitchType< (Left == 0 or Right == 0),
+			static const bool	value = SwitchType< (Left == 0 or Right == 0),
 											StaticInteger_CanMul< T, 1, 1 >,			// 00
-											typename SwitchType< ((Left >= 0 and Right >= 0) or (Left < 0 and Right < 0)),
+											SwitchType< ((Left >= 0 and Right >= 0) or (Left < 0 and Right < 0)),
 												StaticInteger_CanMul< T, (Abs< T, Left >), (Abs< T, Right >) >,	// ++/--
-												typename SwitchType< (Left > 0),
+												SwitchType< (Left > 0),
 													StaticInteger_CanMul< T, Left, Right >,			// +-
 													StaticInteger_CanMul< T, Right, Left > >		// -+
 											>
@@ -90,8 +92,10 @@ namespace CompileTime
 			static const T		_val  = Abs< T, Value >;
 			static const bool	value = StaticInteger_CanPowRecursive< T, _val, _val, (Max< int, Power-1, 0 >) >::value;
 		};
-		
+
+# ifdef COMPILER_MSVC
 #		pragma warning (pop)
+# endif
 
 	}	// _ctime_hidden_
 
@@ -102,7 +106,7 @@ namespace CompileTime
 	//
 
 	template <typename T, T Value>
-	struct StaticInteger : public Noninstancable
+	struct StaticInteger : public GXTypes::Noninstancable
 	{
 	// types
 	public:
@@ -146,13 +150,13 @@ namespace CompileTime
 		using AddInt = typename _AddInt<RightValue>::type;
 		
 		template <typename RightType>
-		using Add = typename AddInt< RightType::value >;
+		using Add = AddInt< RightType::value >;
 		
 		template <T RightValue>
-		using SubInt = typename AddInt< T(0)-RightValue >;
+		using SubInt = AddInt< T(0)-RightValue >;
 
 		template <typename RightType>
-		using Sub = typename SubInt< RightType::value >;
+		using Sub = SubInt< RightType::value >;
 		
 		template <T RightValue>
 		using MulInt = typename _MulInt< RightValue >::type;
@@ -164,13 +168,13 @@ namespace CompileTime
 		using DivInt = StaticInteger< T, value / RightValue >;
 
 		template <typename RightType>
-		using Div = typename DivInt< RightType::value >;
+		using Div = DivInt< RightType::value >;
 		
 		template <int ToPower>
 		using PowInt = typename _PowInt< ToPower >::type;
 
 		template <typename ToPower>
-		using Pow = typename PowInt< ToPower::value >;
+		using Pow = PowInt< ToPower::value >;
 
 
 	// methods

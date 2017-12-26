@@ -95,7 +95,7 @@ namespace GXTypes
 				if ( parser.IsEnd( c ) )
 				{
 					word = false;
-					tokens.PushBack( StringCRef( str.cstr() + begin, i - begin ) );
+					tokens.PushBack( StringCRef( str.ptr() + begin, i - begin ) );
 					--i;
 				}
 				continue;
@@ -117,7 +117,7 @@ namespace GXTypes
 		}	
 
 		if ( word )
-			tokens.PushBack( StringCRef( str.cstr() + begin, str.Length() - begin ) );
+			tokens.PushBack( StringCRef( str.ptr() + begin, str.Length() - begin ) );
 
 		return true;
 	}

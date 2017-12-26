@@ -267,19 +267,19 @@ namespace Platforms
 	}
 
 	RenderPassDescrBuilder&
-		RenderPassDescrBuilder::AddDependency (uint						srcPass,
+		RenderPassDescrBuilder::AddDependency (StringCRef				srcPass,
 											   EPipelineStage::bits		srcStage,
 											   EPipelineAccess::bits	srcAccess,
-											   uint						dstPass,
+											   StringCRef				dstPass,
 											   EPipelineStage::bits		dstStage,
 											   EPipelineAccess::bits	dstAccess,
 											   ESubpassDependency::bits	dependency)
 	{
 		SubpassDependency_t		tmp;
-		tmp.srcPass		= RenderPassDescriptor::SubpassIndex( srcPass );
+		tmp.srcPass		= srcPass;
 		tmp.srcStage	= srcStage;
 		tmp.srcAccess	= srcAccess;
-		tmp.dstPass		= RenderPassDescriptor::SubpassIndex( dstPass );
+		tmp.dstPass		= dstPass;
 		tmp.dstStage	= dstStage;
 		tmp.dstAccess	= dstAccess;
 		tmp.dependency	= dependency;

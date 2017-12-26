@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -82,8 +82,8 @@ namespace GXMath
 		};
 
 		template <typename T>
-		struct Equal1 {
-			static const bool	value = IsSame1<T>::value and POWER::Equal<T::POWER>::value;
+		struct Equal {
+			static const bool	value = IsSame1<T>::value and POWER::template Equal<T::POWER>::value;
 		};
 
 
@@ -203,7 +203,7 @@ namespace GXMath
 
 		template <typename Dim>
 		struct _MulDim {
-			typedef TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _MulDimFunc< Dim >::Func > >	type;
+			typedef TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _MulDimFunc< Dim >::template Func > >	type;
 		};
 
 		template <typename Dims>
@@ -223,7 +223,7 @@ namespace GXMath
 		template <typename Dims>
 		struct Mul2 {
 			//STATIC_ASSERT( typename Dims::_is_physics_dimensions_list(true) );
-			typedef TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _MulFunc< Dims >::Func > >		type;
+			typedef TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _MulFunc< Dims >::template Func > >		type;
 		};
 
 		template <typename Dims>
@@ -234,7 +234,7 @@ namespace GXMath
 	
 		template <typename ToFracPower>
 		struct Power2 {
-			typedef TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _PowerFunc< ToFracPower >::Func > >		type;
+			typedef TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _PowerFunc< ToFracPower >::template Func > >		type;
 		};
 
 		struct Inverse2 {
@@ -248,11 +248,11 @@ namespace GXMath
 
 		template <typename Dims>
 		struct Equal {
-			static const bool	value = DimensionsTypeList::Equal< Dims::DimensionsTypeList_t >;
+			static const bool	value = DimensionsTypeList::template Equal< Dims::DimensionsTypeList_t >;
 		};
 
 		struct IsNonDimensional {
-			static const bool	value = DimensionsTypeList::ForEach< _IsNonDimFunc, CompileTime::ValueToType<bool,true> >::value;
+			static const bool	value = DimensionsTypeList::template ForEach< _IsNonDimFunc, CompileTime::ValueToType<bool,true> >::value;
 		};
 
 

@@ -83,7 +83,7 @@ namespace Base
 =================================================
 */
 	InputStream::InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci) :
-		Module( gs, ModuleConfig{ InputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ InputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -99,7 +99,7 @@ namespace Base
 
 		String	uri = RVREF( ci.uri.Get() );
 
-		CHECK( gs->Get< FileManager >()->OpenForRead( uri, OUT _file ) );
+		CHECK( gs->fileManager->OpenForRead( uri, OUT _file ) );
 		
 		if ( _file )
 		{
@@ -115,7 +115,7 @@ namespace Base
 =================================================
 */
 	InputStream::InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci) :
-		Module( gs, ModuleConfig{ InputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ InputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -148,7 +148,7 @@ namespace Base
 =================================================
 */
 	InputStream::InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci) :
-		Module( gs, ModuleConfig{ InputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ InputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -245,7 +245,7 @@ namespace Base
 
 		CHECK( _file->SeekSet( offset ) );
 
-		const BytesU	size	= Min( _cache.Size(), BytesU( msg->size.Get(BytesUL(-1)) ) );
+		const BytesU	size	= Min( _cache.Size(), BytesU( msg->size.Get( UMax ) ) );
 		const usize		readn	= (usize) _file->ReadBuf( _cache.ptr(), size );
 
 		msg->result.Set( _cache.SubArray( 0, readn ) );
@@ -263,7 +263,7 @@ namespace Base
 	{
 		const BytesUL	cache_size	= BytesUL( _cache.Size() );
 		const BytesUL	offset		= Min( cache_size, msg->offset );
-		const BytesUL	size		= Min( cache_size - offset, msg->size.Get( BytesUL(-1) ) );
+		const BytesUL	size		= Min( cache_size - offset, msg->size.Get( UMax ) );
 
 		msg->result.Set( _cache.SubArray( usize(offset), usize(size) ) );
 

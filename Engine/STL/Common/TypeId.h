@@ -128,13 +128,11 @@ namespace GXTypes
 	template <>
 	struct Hash< TypeId >
 	{
-		using Key_t		= TypeId;
-		using Base_t	= Hash< TypeTraits::ResultOf< decltype(&Key_t::Get) > >;
-		using Result_t	= Base_t::Result_t;
+		using Key_t	= TypeId;
 
-		Result_t operator () (const Key_t &x) const noexcept
+		HashResult  operator () (const Key_t &x) const noexcept
 		{
-			return Base_t()( x.Get() );
+			return HashOf( x.Get() );
 		}
 	};
 	

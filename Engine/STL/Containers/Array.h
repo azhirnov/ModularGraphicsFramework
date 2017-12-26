@@ -31,7 +31,7 @@ namespace GXTypes
 	// types
 	public:
 		using Self				= Array<T,S,MC>;
-		using Strategy_t			= S;
+		using Strategy_t		= S;
 		using MemoryContainer_t	= MC;
 		using Value_t			= T;
 		using iterator			= T *;
@@ -108,18 +108,22 @@ namespace GXTypes
 		
 		bool At (usize index, OUT T & value) const;
 
+		void Append (InitializerList<T> other)						{ Append( ArrayCRef<T>(other) ); }
 		void Append (ArrayCRef<T> other)							{ _Insert<const T>( other.RawPtr(), other.Count(), Count() ); }
 		void Append (const Self &other)								{ Append( (ArrayCRef<T>) other ); }
 		void Append (Self &&other)									{ _Insert<T>( other._memory.Pointer(), other.Count(), Count() ); }
 		
+		void AppendFront (InitializerList<T> other)					{ AppendFront( ArrayCRef<T>(other) ); }
 		void AppendFront (ArrayCRef<T> other)						{ Insert( other, 0 ); }
 		void AppendFront (const Self &other)						{ AppendFront( (ArrayCRef<T>) other ); }
 		void AppendFront (Self &&other)								{ _Insert<T>( other._memory.Pointer(), other.Count(), Count() ); }
-
+		
+		void AppendBack (InitializerList<T> other)					{ Append( ArrayCRef<T>(other) ); }
 		void AppendBack (ArrayCRef<T> other)						{ Append( other ); }
 		void AppendBack (const Self &other)							{ Append( other ); }
 		void AppendBack (Self &&other)								{ Append( RVREF( other ) ); }
 
+		void Copy (InitializerList<T> other)						{ Copy( ArrayCRef<T>( other ) ); }
 		void Copy (ArrayCRef<T> other)								{ Clear();  Append( other ); }
 		void Copy (const Self &other)								{ Clear();  Append( other ); }
 
@@ -174,8 +178,8 @@ namespace GXTypes
 		
 		void Swap (usize first, usize second);
 
-		ArrayRef<T>	 SubArray (usize pos, usize count = usize(-1))			{ return ArrayRef<T>(*this).SubArray( pos, count ); }
-		ArrayCRef<T> SubArray (usize pos, usize count = usize(-1))	const	{ return ArrayCRef<T>(*this).SubArray( pos, count ); }
+		ArrayRef<T>	 SubArray (usize pos, usize count = UMax)			{ return ArrayRef<T>(*this).SubArray( pos, count ); }
+		ArrayCRef<T> SubArray (usize pos, usize count = UMax)	const	{ return ArrayCRef<T>(*this).SubArray( pos, count ); }
 
 		template <typename T2, typename S2, typename A2>
 		void Convert (OUT Array<T2,S2,A2> &other) const;
@@ -401,7 +405,7 @@ namespace GXTypes
 			}
 		}
 
-		if ( TypeTraits::IsConst<B> )
+		if_constexpr( TypeTraits::IsConst<B> )
 			Strategy_t::Copy( _memory.Pointer() + pos, pArray, count );
 		else
 			Strategy_t::Move( _memory.Pointer() + pos, (T *) pArray, count );
@@ -659,7 +663,7 @@ namespace GXTypes
 	template <typename E>
 	inline bool Array<T,S,MC>::FindAndErase (const E &value)
 	{
-		usize	idx = -1;
+		usize	idx = UMax;
 
 		if ( Find<E>( idx, value ) )
 		{
@@ -678,7 +682,7 @@ namespace GXTypes
 	template <typename E>
 	inline bool Array<T,S,MC>::FindAndFastErase (const E &value)
 	{
-		usize	idx = -1;
+		usize	idx = UMax;
 
 		if ( Find<E>( idx, value ) )
 		{

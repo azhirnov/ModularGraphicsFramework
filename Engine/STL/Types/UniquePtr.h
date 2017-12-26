@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/STL/Common/Types.h"
+#include "Engine/STL/Algorithms/Swap.h"
 
 namespace GX_STL
 {
@@ -170,12 +171,6 @@ namespace GXTypes
 		}
 
 
-		forceinline bool Empty() const
-		{
-			return ( _ptr == null );
-		}
-
-
 		forceinline bool IsNull() const
 		{
 			return ( _ptr == null );
@@ -228,6 +223,12 @@ namespace GXTypes
 		forceinline static Self CreateCopy (const T2& value)
 		{
 			return Self( new T( value ) );
+		}
+
+
+		friend void SwapValues (INOUT Self &left, INOUT Self &right)
+		{
+			return GXTypes::SwapValues( INOUT left._ptr, INOUT right._ptr );
 		}
 	};
 

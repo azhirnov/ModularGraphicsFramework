@@ -8,7 +8,6 @@
 #include "TemplateMath.h"
 #include "PlainOldDataType.h"
 #include "TypeQualifier.h"
-#include "Engine/STL/Common/AllFunc.h"
 
 namespace GX_STL
 {
@@ -18,8 +17,10 @@ namespace CompileTime
 	namespace _ctime_hidden_
 	{
 		// Limits
+# ifdef COMPILER_MSVC
 #	pragma warning (push)
 #	pragma warning (disable: 4723)	// potential divide by 0
+# endif
 		
 #	undef UINT8_MAX
 #	undef UINT16_MAX
@@ -60,23 +61,23 @@ namespace CompileTime
 		constexpr	uint	FLOAT_MAX_POW		= 38;
 		constexpr	uint	DOUBLE_MAX_POW		= 308;
 
-		constexpr	float	FLOAT_INF			= 1.0f / static_cast< float const  &>( uint(0) );
-		constexpr	double	DOUBLE_INF			= 1.0  / static_cast< double const &>( ulong(0) );
+		const		float	FLOAT_INF			= 1.0f / static_cast< float const  &>( uint(0) );
+		const		double	DOUBLE_INF			= 1.0  / static_cast< double const &>( ulong(0) );
 
-		constexpr	float	FLOAT_NAN			= static_cast< float const  &>( uint(0) ) / static_cast< float const  &>( uint(0) );
-		constexpr	double	DOUBLE_NAN			= static_cast< double const &>( ulong(0) ) / static_cast< double const &>( ulong(0) );
+		const		float	FLOAT_NAN			= static_cast< float const  &>( uint(0) ) / static_cast< float const  &>( uint(0) );
+		const		double	DOUBLE_NAN			= static_cast< double const &>( ulong(0) ) / static_cast< double const &>( ulong(0) );
 
 #	else
 
-		constexpr	ubyte	UINT8_MAX			= 0xFF;
-		constexpr	ushort	UINT16_MAX			= 0xFFFF;
-		constexpr	uint	UINT32_MAX			= 0xFFFFFFFF;
-		constexpr	ulong	UINT64_MAX			= 0xFFFFFFFFFFFFFFFFull;
+		constexpr	ubyte	UINT8_MAX			= ubyte(0xFF);
+		constexpr	ushort	UINT16_MAX			= ushort(0xFFFF);
+		constexpr	uint	UINT32_MAX			= uint(0xFFFFFFFFu);
+		constexpr	ulong	UINT64_MAX			= ulong(0xFFFFFFFFFFFFFFFFull);
 
 		constexpr	byte	INT8_MIN			= byte (0x80);
 		constexpr	short	INT16_MIN			= short(0x8000);
-		constexpr	int		INT32_MIN			= 0x80000000;
-		constexpr	ilong	INT64_MIN			= 0x8000000000000000ull;
+		constexpr	int		INT32_MIN			= int(0x80000000);
+		constexpr	ilong	INT64_MIN			= ilong(0x8000000000000000ll);
 
 		constexpr	byte	INT8_MAX			= UINT8_MAX  & ~INT8_MIN;
 		constexpr	short	INT16_MAX			= UINT16_MAX & ~INT16_MIN;
@@ -92,18 +93,20 @@ namespace CompileTime
 		constexpr	uint	FLOAT_MAX_POW		= 38;
 		constexpr	uint	DOUBLE_MAX_POW		= 308;
 		
-		constexpr	float	FLOAT_INF			= static_cast< float const  &>( 0x7F800000 );
-		constexpr	double	DOUBLE_INF			= static_cast< double const &>( 0x7FF0000000000000ull );
+		const		float	FLOAT_INF			= static_cast< float const  &>(uint( 0x7F800000 ));
+		const		double	DOUBLE_INF			= static_cast< double const &>(ulong( 0x7FF0000000000000ull ));
 
-		constexpr	float	FLOAT_NAN			= static_cast< float const  &>( 0xFFC00000 );
-		constexpr	double	DOUBLE_NAN			= static_cast< double const &>( 0xFFF8000000000000ull );
+		const		float	FLOAT_NAN			= static_cast< float const  &>(uint( 0xFFC00000 ));
+		const		double	DOUBLE_NAN			= static_cast< double const &>(ulong( 0xFFF8000000000000ull ));
 
 #	endif	// GX_MATH_REAL_LIMITS
 
 		constexpr	float	FLOAT_EPSILON		= 1.0e-6f;
 		constexpr	double	DOUBLE_EPSILON		= 1.0e-8;
-		
+
+# ifdef COMPILER_MSVC
 #	pragma warning (pop)
+# endif
 
 		enum ETypeDescriptor
 		{

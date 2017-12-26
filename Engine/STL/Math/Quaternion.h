@@ -159,7 +159,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Quaternion<T,U>::Quaternion (const mat3_t &matrix): x(0), y(0), z(0), w(1)
+	inline Quaternion<T,U>::Quaternion (const mat3_t &right): x(0), y(0), z(0), w(1)
 	{
 		T			s		= T(0);
 		const T		trace	= right(0,0) + right(1,1) + right(2,2);
@@ -208,7 +208,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Quaternion<T,U>::Quaternion (const mat4_t &matrix): x(0), y(0), z(0), w(1)
+	inline Quaternion<T,U>::Quaternion (const mat4_t &right): x(0), y(0), z(0), w(1)
 	{
 		T			s		= T(0);
 		const T		trace	= right(0,0) + right(1,1) + right(2,2);
@@ -400,7 +400,7 @@ namespace GXMath
 	template <typename T, ulong U>
 	inline Quaternion<T,U> &	Quaternion<T,U>::Set (const DegreesVec<T,3,U> &angle)
 	{
-		return Set( angle.To< RadiansVec<T,3,U> >() );
+		return Set( angle.template To< RadiansVec<T,3,U> >() );
 	}
 
 /*
@@ -700,7 +700,7 @@ namespace GXMath
 	template <typename T, ulong U>
 	inline Quaternion<T,U> & Quaternion<T,U>::Rotation (const DegreesVec<T,3,U> &angle)
 	{
-		return Rotation( angle.To< RadiansVec<T,3,U> >() );
+		return Rotation( angle.template To< RadiansVec<T,3,U> >() );
 	}
 
 /*

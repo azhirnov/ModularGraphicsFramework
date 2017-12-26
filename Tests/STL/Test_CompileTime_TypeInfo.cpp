@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -52,4 +52,8 @@ extern void Test_CompileTime_TypeInfo ()
 	// IsVector //
 	STATIC_ASSERT( IsVector<GXMath::int3 > );
 	STATIC_ASSERT( not IsVector<float> );
+
+	// Constants //
+	//TEST( IsNaN( NaN<float>() ) );
+	//TEST( IsNaN( NaN<double>() ) );
 }

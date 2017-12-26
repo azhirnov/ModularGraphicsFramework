@@ -252,7 +252,7 @@ namespace _types_hidden_
 	template <typename C, typename K, template <typename T> class S, bool U>
 	inline bool MapUtils<C,K,S,U>::Erase (const Key_t &key)
 	{
-		usize	idx = -1;
+		usize	idx = UMax;
 
 		if ( not FindFirstIndex( key, OUT idx ) )
 			return false;
@@ -365,7 +365,7 @@ namespace _types_hidden_
 		}
 
 		WARNING( "" );
-		return usize(-1);
+		return UMax;
 	}
 		
 /*
@@ -428,7 +428,7 @@ namespace _types_hidden_
 		}
 			
 		WARNING( "" );
-		return usize(-1);
+		return UMax;
 	}
 	
 /*
@@ -440,7 +440,7 @@ namespace _types_hidden_
 	template <typename SearchCmp, typename Key>
 	inline bool MapUtils<C,K,S,U>::_FindIndex (const Key &key, usize &idx) const
 	{
-		idx = usize(-1);
+		idx = UMax;
 
 		if ( _memory.Empty() )
 			return false;

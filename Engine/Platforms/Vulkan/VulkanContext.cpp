@@ -1,9 +1,17 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Shared/GPU/Context.h"
+#include "Engine/Platforms/Shared/GPU/Thread.h"
+#include "Engine/Platforms/Shared/GPU/Pipeline.h"
+#include "Engine/Platforms/Shared/GPU/Buffer.h"
+#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
+#include "Engine/Platforms/Shared/GPU/Memory.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -11,7 +19,57 @@ namespace Engine
 {
 namespace Platforms
 {
+
+	//
+	// Vulkan Context
+	//
 	
+	class VulkanContext final : public Module
+	{
+	// types
+	private:
+		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+											ModuleMsg::AddToManager,
+											ModuleMsg::RemoveFromManager,
+											GpuMsg::GetGraphicsModules
+										> >;
+		using SupportedEvents_t		= Module::SupportedEvents_t;
+
+		using VkThreads_t			= Set< ModulePtr >;
+
+		using VkThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetVkDeviceInfo >;
+		using VkThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
+
+
+	// constants
+	private:
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
+
+		
+	// variables
+	private:
+		CreateInfo::GpuContext	_createInfo;
+
+		VkThreads_t				_threads;
+		
+
+	// methods
+	public:
+		VulkanContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
+		~VulkanContext ();
+
+		
+	// message handlers
+	private:
+		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
+		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
+	};
+//-----------------------------------------------------------------------------
+
+
+
 	const TypeIdList	VulkanContext::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	VulkanContext::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
@@ -98,17 +156,20 @@ namespace Platforms
 */	
 	bool VulkanContext::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
 	{
-		msg->compute.Set( GetComputeModules() );
-		msg->graphics.Set( GetGraphicsModules() );
+		msg->compute.Set( VulkanObjectsConstructor::GetComputeModules() );
+		msg->graphics.Set( VulkanObjectsConstructor::GetGraphicsModules() );
 		return true;
 	}
+//-----------------------------------------------------------------------------
+
+
 	
 /*
 =================================================
 	GetGraphicsModules
 =================================================
 */
-	GraphicsModuleIDs VulkanContext::GetGraphicsModules ()
+	GraphicsModuleIDs VulkanObjectsConstructor::GetGraphicsModules ()
 	{
 		GraphicsModuleIDs	graphics;
 		graphics.pipeline		= VkGraphicsPipelineModuleID;
@@ -133,7 +194,7 @@ namespace Platforms
 	GetComputeModules
 =================================================
 */
-	ComputeModuleIDs VulkanContext::GetComputeModules ()
+	ComputeModuleIDs VulkanObjectsConstructor::GetComputeModules ()
 	{
 		ComputeModuleIDs	compute;
 		compute.pipeline		= VkComputePipelineModuleID;
@@ -155,26 +216,27 @@ namespace Platforms
 	Register
 =================================================
 */
-	void VulkanContext::Register (GlobalSystemsRef gs)
+	void VulkanObjectsConstructor::Register ()
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
 
-		CHECK( mf->Register( VkThreadModuleID, &_CreateVulkanThread ) );
-		CHECK( mf->Register( VkContextModuleID, &_CreateVulkanContext ) );
+		CHECK( mf->Register( VkThreadModuleID, &CreateVulkanThread ) );
+		CHECK( mf->Register( VkContextModuleID, &CreateVulkanContext ) );
 
-		CHECK( mf->Register( VkImageModuleID, &_CreateVk1Image ) );
-		CHECK( mf->Register( VkMemoryModuleID, &_CreateVk1Memory ) );
-		CHECK( mf->Register( VkBufferModuleID, &_CreateVk1Buffer ) );
-		CHECK( mf->Register( VkSamplerModuleID, &_CreateVk1Sampler ) );
-		CHECK( mf->Register( VkRenderPassModuleID, &_CreateVk1RenderPass ) );
-		CHECK( mf->Register( VkFramebufferModuleID, &_CreateVk1Framebuffer ) );
-		CHECK( mf->Register( VkCommandBufferModuleID, &_CreateVk1CommandBuffer ) );
-		CHECK( mf->Register( VkCommandBuilderModuleID, &_CreateVk1CommandBuilder ) );
-		CHECK( mf->Register( VkGraphicsPipelineModuleID, &_CreateVk1GraphicsPipeline ) );
-		CHECK( mf->Register( VkPipelineResourceTableModuleID, &_CreateVk1PipelineResourceTable ) );
+		CHECK( mf->Register( VkImageModuleID, &CreateVk1Image ) );
+		CHECK( mf->Register( VkMemoryModuleID, &CreateVk1Memory ) );
+		CHECK( mf->Register( VkBufferModuleID, &CreateVk1Buffer ) );
+		CHECK( mf->Register( VkSamplerModuleID, &CreateVk1Sampler ) );
+		CHECK( mf->Register( VkRenderPassModuleID, &CreateVk1RenderPass ) );
+		CHECK( mf->Register( VkFramebufferModuleID, &CreateVk1Framebuffer ) );
+		CHECK( mf->Register( VkCommandBufferModuleID, &CreateVk1CommandBuffer ) );
+		CHECK( mf->Register( VkCommandBuilderModuleID, &CreateVk1CommandBuilder ) );
+		CHECK( mf->Register( VkComputePipelineModuleID, &CreateCachedVk1ComputePipeline ) );
+		CHECK( mf->Register( VkGraphicsPipelineModuleID, &CreateCachedVk1GraphicsPipeline ) );
+		CHECK( mf->Register( VkPipelineResourceTableModuleID, &CreateVk1PipelineResourceTable ) );
 
 		if ( not mf->IsRegistered< CreateInfo::PipelineTemplate >( PipelineTemplateModuleID ) )
-			CHECK( mf->Register( PipelineTemplateModuleID, &_CreatePipelineTemplate ) );
+			CHECK( mf->Register( PipelineTemplateModuleID, &CreatePipelineTemplate ) );
 	}
 	
 /*
@@ -182,9 +244,9 @@ namespace Platforms
 	Unregister
 =================================================
 */
-	void VulkanContext::Unregister (GlobalSystemsRef gs)
+	void VulkanObjectsConstructor::Unregister ()
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
 
 		mf->UnregisterAll( VkThreadModuleID );
 		mf->UnregisterAll( VkContextModuleID );
@@ -197,6 +259,7 @@ namespace Platforms
 		mf->UnregisterAll( VkFramebufferModuleID );
 		mf->UnregisterAll( VkCommandBufferModuleID );
 		mf->UnregisterAll( VkCommandBuilderModuleID );
+		mf->UnregisterAll( VkComputePipelineModuleID );
 		mf->UnregisterAll( VkGraphicsPipelineModuleID );
 		mf->UnregisterAll( VkPipelineResourceTableModuleID );
 
@@ -205,10 +268,10 @@ namespace Platforms
 
 /*
 =================================================
-	_CreateVulkanContext
+	CreateVulkanContext
 =================================================
 */	
-	ModulePtr VulkanContext:: _CreateVulkanContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVulkanContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
 		return New< VulkanContext >( gs, ci );
 	}

@@ -1,0 +1,868 @@
+// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+
+#include "Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h"
+
+#if 0
+#	define _SLOG( ... )		LOG( __VA_ARGS__ )
+#else
+#	define _SLOG( ... )
+#endif
+
+namespace PipelineCompiler
+{
+	using ReplaceStructTypesFunc_t	= ShaderCompiler::ReplaceStructTypesFunc_t;
+	using FieldTypeInfo				= ShaderCompiler::FieldTypeInfo;
+	
+	static bool RecursiveProcessAggregateNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessBranchNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessSwitchNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessConstUnionNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessSelectionNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessMethodNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessSymbolNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessTypedNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessOperatorNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessUnaryNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool RecursiveProcessBinaryNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	static bool ReplaceTypesInNode (TIntermNode* root, glslang::TIntermBinary* node, const ReplaceStructTypesFunc_t &replacer);
+	static bool ReplaceTypesInNode2 (TIntermNode* root, glslang::TIntermBinary* node, const FieldTypeInfo &oldField, const FieldTypeInfo &newField);
+	static bool RecursiveProccessLoop (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+
+/*
+=================================================
+	_ReplaceTypes
+=================================================
+*/
+	bool ShaderCompiler::_ReplaceTypes (const glslang::TIntermediate* intermediate, const Config &cfg)
+	{
+		if ( not cfg.typeReplacer )
+			return true;
+
+		TIntermNode*	root	= intermediate->getTreeRoot();
+		uint			uid		= 0;
+
+		CHECK_ERR( RecursiveProcessAggregateNode( null, root, OUT uid, cfg.typeReplacer ) );
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveProcessBinaryNode
+=================================================
+*/
+	static bool RecursiveProcessBinaryNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermBinary*		binary = node->getAsBinaryNode();
+		
+		_SLOG( ("TIntermBinary ("_str << uid << ") op:" << uint(binary->getOp()) << "; " << binary->getCompleteString().c_str()).cstr(), ELog::Debug );
+
+		if ( binary->getOp() == glslang::TOperator::EOpIndexDirectStruct )
+		{
+			CHECK_ERR( ReplaceTypesInNode( root, binary, replacer ) );
+		}
+
+		CHECK_ERR( RecursiveProcessNode( binary, binary->getLeft(), INOUT ++uid, replacer ) );
+		CHECK_ERR( RecursiveProcessNode( binary, binary->getRight(), INOUT ++uid, replacer ) );
+		return true;
+	}
+	
+/*
+=================================================
+	ReplaceTypesInNode
+=================================================
+*/
+	static bool ReplaceTypesInNode (TIntermNode* root, glslang::TIntermBinary* binary, const ReplaceStructTypesFunc_t &replacer)
+	{
+		const glslang::TType&	type		= binary->getType();
+		FieldTypeInfo			field;
+		String					st_type;
+		bool					has_index	= false;
+		
+		// skip builtin
+		if ( type.isBuiltIn() )
+			return true;
+
+		// get field info
+		if ( &type.getFieldName() != null ) {
+			field.name		= type.getFieldName().data();
+		}
+		if ( &type.getTypeName() != null ) {
+			field.typeName	= type.getTypeName().data();
+			field.type		= EShaderVariable::Struct;
+		}
+		else {
+			field.type		= ConvertBasicType( type.getBasicType(), type.getVectorSize(), type.getMatrixCols(), type.getMatrixRows() );
+		}
+
+		// get struct info
+		if ( binary->getLeft() and binary->getLeft()->getAsTyped() )
+		{
+			glslang::TIntermTyped*	left	= binary->getLeft()->getAsTyped();
+			const glslang::TType&	ltype	= left->getType();
+
+			CHECK( not ltype.isBuiltIn() );
+
+			if ( (ltype.getBasicType() == glslang::TBasicType::EbtStruct or
+				 ltype.getBasicType() == glslang::TBasicType::EbtBlock) and
+				 &ltype.getTypeName() != null )
+			{
+				st_type = ltype.getTypeName().data();
+			}
+		}
+
+		// get field index
+		if ( binary->getRight() and binary->getRight()->getAsConstantUnion() )
+		{
+			const glslang::TConstUnionArray&	arr = binary->getRight()->getAsConstantUnion()->getConstArray();
+
+			if ( arr.size() == 1 and
+				(arr[0].getType() == glslang::TBasicType::EbtInt or
+				 arr[0].getType() == glslang::TBasicType::EbtUint) )
+			{
+				field.index	= arr[0].getIConst();
+				has_index	= true;
+			}
+		}
+
+		if ( field.name.Empty() or st_type.Empty() or not has_index )
+			return true;	// continue parsing
+
+		LOG( ("TIntermBinary: struct field access: "_str << st_type << "::" << field.name).cstr(), ELog::Info );
+
+		const FieldTypeInfo		src_field = field;
+
+		if ( not replacer( st_type, INOUT field ) or src_field == field )
+			return true;	// not replaced or not changed
+
+		CHECK_ERR( ReplaceTypesInNode2( root, binary, src_field, field ) );
+		return true;
+	}
+	
+/*
+=================================================
+	ConvertToBasicType
+=================================================
+*/
+	static glslang::TBasicType  ConvertToBasicType (EShaderVariable::type valueType)
+	{
+		switch ( EShaderVariable::ToScalar( valueType ) )
+		{
+			case EShaderVariable::Bool :		return glslang::TBasicType::EbtBool;
+			case EShaderVariable::Int :			return glslang::TBasicType::EbtInt;
+			case EShaderVariable::UInt :		return glslang::TBasicType::EbtUint;
+			case EShaderVariable::Long :		return glslang::TBasicType::EbtInt64;
+			case EShaderVariable::ULong :		return glslang::TBasicType::EbtUint64;
+			case EShaderVariable::Float :		return glslang::TBasicType::EbtFloat;
+			case EShaderVariable::Double :		return glslang::TBasicType::EbtDouble;
+		}
+		RETURN_ERR( "unsupported type!", glslang::TBasicType::EbtNumTypes );
+	}
+	
+/*
+=================================================
+	ConvertToConstructor
+=================================================
+*/
+	static glslang::TOperator  ConvertToConstructor (EShaderVariable::type valueType)
+	{
+		switch ( valueType )
+		{
+			case EShaderVariable::Bool :		return glslang::TOperator::EOpConstructBool;
+			case EShaderVariable::Bool2 :		return glslang::TOperator::EOpConstructBVec2;
+			case EShaderVariable::Bool3 :		return glslang::TOperator::EOpConstructBVec3;
+			case EShaderVariable::Bool4 :		return glslang::TOperator::EOpConstructBVec4;
+
+			case EShaderVariable::Int :			return glslang::TOperator::EOpConstructInt;
+			case EShaderVariable::Int2 :		return glslang::TOperator::EOpConstructIVec2;
+			case EShaderVariable::Int3 :		return glslang::TOperator::EOpConstructIVec3;
+			case EShaderVariable::Int4 :		return glslang::TOperator::EOpConstructIVec4;
+
+			case EShaderVariable::UInt :		return glslang::TOperator::EOpConstructUint;
+			case EShaderVariable::UInt2 :		return glslang::TOperator::EOpConstructUVec2;
+			case EShaderVariable::UInt3 :		return glslang::TOperator::EOpConstructUVec3;
+			case EShaderVariable::UInt4 :		return glslang::TOperator::EOpConstructUVec4;
+
+			case EShaderVariable::Long :		return glslang::TOperator::EOpConstructInt64;
+			case EShaderVariable::Long2 :		return glslang::TOperator::EOpConstructI64Vec2;
+			case EShaderVariable::Long3 :		return glslang::TOperator::EOpConstructI64Vec3;
+			case EShaderVariable::Long4 :		return glslang::TOperator::EOpConstructI64Vec4;
+
+			case EShaderVariable::ULong :		return glslang::TOperator::EOpConstructUint64;
+			case EShaderVariable::ULong2 :		return glslang::TOperator::EOpConstructU64Vec2;
+			case EShaderVariable::ULong3 :		return glslang::TOperator::EOpConstructU64Vec3;
+			case EShaderVariable::ULong4 :		return glslang::TOperator::EOpConstructU64Vec4;
+
+			case EShaderVariable::Float :		return glslang::TOperator::EOpConstructFloat;
+			case EShaderVariable::Float2 :		return glslang::TOperator::EOpConstructVec2;
+			case EShaderVariable::Float3 :		return glslang::TOperator::EOpConstructVec3;
+			case EShaderVariable::Float4 :		return glslang::TOperator::EOpConstructVec4;
+
+			case EShaderVariable::Double :		return glslang::TOperator::EOpConstructDouble;
+			case EShaderVariable::Double2 :		return glslang::TOperator::EOpConstructDVec2;
+			case EShaderVariable::Double3 :		return glslang::TOperator::EOpConstructDVec3;
+			case EShaderVariable::Double4 :		return glslang::TOperator::EOpConstructDVec4;
+				
+			case EShaderVariable::Float2x2 :	return glslang::TOperator::EOpConstructMat2x2;
+			case EShaderVariable::Float2x3 :	return glslang::TOperator::EOpConstructMat2x3;
+			case EShaderVariable::Float2x4 :	return glslang::TOperator::EOpConstructMat2x4;
+			case EShaderVariable::Float3x2 :	return glslang::TOperator::EOpConstructMat3x2;
+			case EShaderVariable::Float3x3 :	return glslang::TOperator::EOpConstructMat3x3;
+			case EShaderVariable::Float3x4 :	return glslang::TOperator::EOpConstructMat3x4;
+			case EShaderVariable::Float4x2 :	return glslang::TOperator::EOpConstructMat4x2;
+			case EShaderVariable::Float4x3 :	return glslang::TOperator::EOpConstructMat4x3;
+			case EShaderVariable::Float4x4 :	return glslang::TOperator::EOpConstructMat4x4;
+
+			case EShaderVariable::Double2x2 :	return glslang::TOperator::EOpConstructDMat2x2;
+			case EShaderVariable::Double2x3 :	return glslang::TOperator::EOpConstructDMat2x3;
+			case EShaderVariable::Double2x4 :	return glslang::TOperator::EOpConstructDMat2x4;
+			case EShaderVariable::Double3x2 :	return glslang::TOperator::EOpConstructDMat3x2;
+			case EShaderVariable::Double3x3 :	return glslang::TOperator::EOpConstructDMat3x3;
+			case EShaderVariable::Double3x4 :	return glslang::TOperator::EOpConstructDMat3x4;
+			case EShaderVariable::Double4x2 :	return glslang::TOperator::EOpConstructDMat4x2;
+			case EShaderVariable::Double4x3 :	return glslang::TOperator::EOpConstructDMat4x3;
+			case EShaderVariable::Double4x4 :	return glslang::TOperator::EOpConstructDMat4x4;
+		}
+		RETURN_ERR( "unsupported type!", glslang::TOperator::EOpNull );
+	}
+
+/*
+=================================================
+	ReplaceNodeInRoot
+=================================================
+*/
+	static bool ReplaceNodeInRoot (TIntermNode* root, TIntermNode* srcNode, TIntermNode* dstNode)
+	{
+		if ( root->getAsAggregate() )
+		{
+			glslang::TIntermAggregate*	aggr = root->getAsAggregate();
+
+			for (size_t i = 0; i < aggr->getSequence().size(); ++i) {
+				if ( aggr->getSequence()[i] == srcNode ) {
+					aggr->getSequence()[i] = dstNode;
+					return true;
+				}
+			}
+		}
+
+		if ( root->getAsBinaryNode() )
+		{
+			glslang::TIntermBinary*		binary = root->getAsBinaryNode();
+
+			if ( binary->getLeft() == srcNode )
+			{
+				CHECK_ERR( dstNode->getAsTyped() );
+				binary->setLeft( dstNode->getAsTyped() );
+				return true;
+			}
+			if ( binary->getRight() == srcNode )
+			{
+				CHECK_ERR( dstNode->getAsTyped() );
+				binary->setRight( dstNode->getAsTyped() );
+				return true;
+			}
+		}
+
+		if ( root->getAsBranchNode() )
+		{
+			glslang::TIntermBranch*		branch = root->getAsBranchNode();
+
+			if ( branch->getExpression() == srcNode ) {
+				RETURN_ERR( "go to root of 'branch' node and create new branch node with 'dstNode' as expression!" );
+			}
+		}
+		
+		if ( root->getAsSwitchNode() )
+		{
+			glslang::TIntermSwitch*		sw = root->getAsSwitchNode();
+
+			if ( sw->getCondition() == srcNode ) {
+				RETURN_ERR( "go to root of 'switch' node and create new switch node with 'dstNode' as condition!" );
+			}
+
+			// 'body' is aggregate node and cannot be a binary node 'srcNode'
+		}
+
+		if ( root->getAsSelectionNode() )
+		{
+			glslang::TIntermSelection*	selection = root->getAsSelectionNode();
+
+			if ( selection->getCondition() == srcNode ) {
+				RETURN_ERR( "go to root of 'selection' node and create new selection node with 'dstNode' as condition!" );
+			}
+			if ( selection->getTrueBlock() == srcNode ) {
+				RETURN_ERR( "go to root of 'selection' node and create new selection node with 'dstNode' as true block!" );
+			}
+			if ( selection->getFalseBlock() == srcNode ) {
+				RETURN_ERR( "go to root of 'selection' node and create new selection node with 'dstNode' as false block!" );
+			}
+		}
+
+		if ( root->getAsUnaryNode() )
+		{
+			glslang::TIntermUnary*		unary = root->getAsUnaryNode();
+
+			if ( unary->getOperand() == srcNode )
+			{
+				CHECK_ERR( dstNode->getAsTyped() );
+				unary->setOperand( dstNode->getAsTyped() );
+				return true;
+			}
+		}
+
+		RETURN_ERR( "can't replace nodes!" );
+	}
+	
+/*
+=================================================
+	CreateSwizzleNode
+=================================================
+*/
+	static bool CreateSwizzleNode (INOUT TIntermNode* &root, glslang::TIntermBinary* binary,
+									const FieldTypeInfo &oldField, const FieldTypeInfo &newField,
+									const glslang::TType &oldType, INOUT glslang::TPublicType &newType)
+	{
+		newType.basicType	= ConvertToBasicType( newField.type );
+		newType.vectorSize	= EShaderVariable::VecSize( newField.type );
+		newType.matrixCols	= 0;
+		newType.matrixRows	= 0;
+			
+		// add constructor to convert new type to old type
+		glslang::TType*				sw_type			= oldType.clone();		sw_type->makeTemporary();
+		glslang::TPublicType		mask_pub_type	= newType;
+		glslang::TPublicType		cu_pub_type;	cu_pub_type.init( binary->getLoc() );
+				
+		mask_pub_type.vectorSize = 1;
+		mask_pub_type.qualifier.storage = glslang::TStorageQualifier::EvqTemporary;
+
+		cu_pub_type.basicType = glslang::TBasicType::EbtInt;
+		cu_pub_type.vectorSize = 1;
+		cu_pub_type.qualifier.storage = glslang::TStorageQualifier::EvqConst;
+
+		glslang::TIntermBinary*		swizzle_op		= new glslang::TIntermBinary( glslang::TOperator::EOpVectorSwizzle );
+		glslang::TIntermAggregate*	swizzle_mask	= new glslang::TIntermAggregate();
+		glslang::TType*				mask_type		= new glslang::TType( mask_pub_type );
+		glslang::TType*				cu_type			= new glslang::TType( cu_pub_type );
+
+		swizzle_op->setType( *sw_type );
+		swizzle_op->setOperationPrecision( oldType.getQualifier().precision );
+		swizzle_op->setLeft( binary );
+		swizzle_op->setRight( swizzle_mask );
+		swizzle_op->setLoc( binary->getLoc() );
+
+		swizzle_mask->setType( *mask_type );
+		swizzle_mask->setOp( glslang::TOperator::EOpSequence );
+		swizzle_mask->setOperationPrecision( oldType.getQualifier().precision );
+		swizzle_mask->setUserDefined();
+		swizzle_mask->setOptimize( true );
+		swizzle_mask->setDebug( true );
+		swizzle_mask->setLoc( binary->getLoc() );
+		swizzle_mask->getSequence().resize( oldType.getVectorSize() );
+
+		for (size_t i = 0; i < swizzle_mask->getSequence().size(); ++i)
+		{
+			glslang::TConstUnionArray		arr(1);		arr[0].setIConst( i );
+			glslang::TIntermConstantUnion*	c_union		= new glslang::TIntermConstantUnion( arr, *cu_type );
+
+			swizzle_mask->getSequence()[i] = c_union;
+		}
+				
+		CHECK_ERR( ReplaceNodeInRoot( root, binary, swizzle_op ) );
+
+		root = swizzle_op;
+		return true;
+	}
+	
+/*
+=================================================
+	CreateLValueNode
+=================================================
+*/
+	static bool CreateLValueNode (TIntermNode* root, const FieldTypeInfo &newField, INOUT glslang::TPublicType &newType)
+	{
+		newType.basicType	= ConvertToBasicType( newField.type );
+		newType.vectorSize	= EShaderVariable::VecSize( newField.type );
+		newType.matrixCols	= EShaderVariable::MatSize( newField.type ).x;
+		newType.matrixRows	= EShaderVariable::MatSize( newField.type ).y;
+
+		CHECK_ERR( root->getAsBinaryNode() );
+
+		// add constructor to convert new type to old type
+		glslang::TIntermBinary*		bin_root	= root->getAsBinaryNode();
+		glslang::TIntermAggregate*	func_call	= new glslang::TIntermAggregate();
+		glslang::TIntermTyped*		right		= bin_root->getRight();
+
+		func_call->getSequence().resize(1);
+		func_call->getSequence()[0] = right;
+		func_call->setOp( ConvertToConstructor( newField.type ) );
+		func_call->setOperationPrecision( right->getQualifier().precision );
+		func_call->setOptimize( true );
+		func_call->setDebug( true );
+		func_call->setLoc( right->getLoc() );
+
+		glslang::TPublicType	res_type;
+		res_type.init( right->getLoc() );
+		res_type.basicType			= newType.basicType;
+		res_type.sampler			= newType.sampler;
+		res_type.vectorSize			= newType.vectorSize;
+		res_type.matrixCols			= newType.matrixCols;
+		res_type.matrixRows			= newType.matrixRows;
+		res_type.qualifier.storage	= glslang::TStorageQualifier::EvqTemporary;
+
+		func_call->setType( *(new glslang::TType( res_type )) );
+
+		bin_root->setRight( func_call );
+		return true;
+	}
+	
+/*
+=================================================
+	CreateConstructorNode
+=================================================
+*/
+	static bool CreateConstructorNode (INOUT TIntermNode* &root, glslang::TIntermBinary* binary,
+										const FieldTypeInfo &oldField, const FieldTypeInfo &newField,
+										const glslang::TType &oldType, INOUT glslang::TPublicType &newType)
+	{
+		newType.basicType	= ConvertToBasicType( newField.type );
+		newType.vectorSize	= EShaderVariable::VecSize( newField.type );
+		newType.matrixCols	= EShaderVariable::MatSize( newField.type ).x;
+		newType.matrixRows	= EShaderVariable::MatSize( newField.type ).y;
+
+		// add constructor to convert new type to old type
+		glslang::TIntermAggregate*	func_call	= new glslang::TIntermAggregate();
+
+		func_call->getSequence().resize(1);
+		func_call->getSequence()[0] = binary;
+		func_call->setOp( ConvertToConstructor( oldField.type ) );
+		func_call->setOperationPrecision( oldType.getQualifier().precision );
+		func_call->setOptimize( true );
+		func_call->setDebug( true );
+		func_call->setLoc( binary->getLoc() );
+
+		glslang::TPublicType	res_type;
+		res_type.init( binary->getLoc() );
+		res_type.basicType			= oldType.getBasicType();
+		res_type.sampler			= oldType.getSampler();
+		res_type.vectorSize			= oldType.getVectorSize();
+		res_type.matrixCols			= oldType.getMatrixCols();
+		res_type.matrixRows			= oldType.getMatrixRows();
+		res_type.qualifier.storage	= glslang::TStorageQualifier::EvqTemporary;
+
+		func_call->setType( *(new glslang::TType( res_type )) );
+
+		CHECK_ERR( ReplaceNodeInRoot( root, binary, func_call ) );
+
+		root = func_call;
+		return true;
+	}
+
+/*
+=================================================
+	GetValueQualifier
+=================================================
+*/
+	static void GetValueQualifier (TIntermNode* root, glslang::TIntermBinary* binary, OUT bool &isRValue, OUT bool &isOutArgument)
+	{
+		isOutArgument = isRValue = false;
+
+		if ( root->getAsAggregate() )
+		{
+			glslang::TIntermAggregate*	aggr = root->getAsAggregate();
+
+			if ( aggr->getOp() == glslang::TOperator::EOpFunctionCall )
+			{
+				const size_t	count = Min( aggr->getQualifierList().size(), aggr->getSequence().size() );
+
+				for (size_t i = 0; i < count; ++i)
+				{
+					auto	qual = aggr->getQualifierList()[i];
+					auto	seq  = aggr->getSequence()[i];
+
+					if ( seq == binary and (qual == glslang::TStorageQualifier::EvqOut or qual == glslang::TStorageQualifier::EvqInOut) )
+						isOutArgument = true;
+				}
+			}
+		}
+
+		if ( root->getAsOperator() )
+		{
+			switch ( root->getAsOperator()->getOp() )
+			{
+				case glslang::TOperator::EOpAssign :
+				case glslang::TOperator::EOpAddAssign :
+				case glslang::TOperator::EOpSubAssign :
+				case glslang::TOperator::EOpMulAssign :
+				case glslang::TOperator::EOpVectorTimesMatrixAssign :
+				case glslang::TOperator::EOpVectorTimesScalarAssign :
+				case glslang::TOperator::EOpMatrixTimesScalarAssign :
+				case glslang::TOperator::EOpMatrixTimesMatrixAssign :
+				case glslang::TOperator::EOpDivAssign :
+				case glslang::TOperator::EOpModAssign :
+				case glslang::TOperator::EOpAndAssign :
+				case glslang::TOperator::EOpInclusiveOrAssign :
+				case glslang::TOperator::EOpExclusiveOrAssign :
+				case glslang::TOperator::EOpLeftShiftAssign :
+				case glslang::TOperator::EOpRightShiftAssign :
+					isRValue = true;
+					break;
+			}
+		}
+	}
+
+/*
+=================================================
+	ReplaceTypesInNode2
+=================================================
+*/
+	static bool ReplaceTypesInNode2 (TIntermNode* root, glslang::TIntermBinary* binary, const FieldTypeInfo &oldField, const FieldTypeInfo &newField)
+	{
+		glslang::TType const&	old_type	= binary->getType();
+		glslang::TPublicType	new_type;	new_type.init( binary->getLoc() );
+
+		new_type.basicType		= old_type.getBasicType();
+		new_type.sampler		= old_type.getSampler();
+		new_type.qualifier		= old_type.getQualifier();
+		new_type.vectorSize		= old_type.getVectorSize();
+		new_type.matrixCols		= old_type.getMatrixCols();
+		new_type.matrixRows		= old_type.getMatrixRows();
+
+		// not supported
+		CHECK_ERR( old_type.getArraySizes() == null );
+		CHECK_ERR( not old_type.isStruct() );
+
+		// changed name or index
+		if ( oldField.name != newField.name or oldField.index != newField.index )
+		{
+			glslang::TIntermTyped*			right		= binary->getRight();
+			glslang::TConstUnionArray		arr(1);		arr[0].setIConst( newField.index );
+			glslang::TIntermConstantUnion*	const_union = new glslang::TIntermConstantUnion( arr, *right->getType().clone() );
+
+			CHECK_ERR( right and right->getAsConstantUnion() );
+
+			if ( right->getAsConstantUnion()->isLiteral() )
+				const_union->setLiteral();
+			else
+				const_union->setExpression();
+
+			const_union->setLoc( right->getLoc() );
+
+			binary->setRight( const_union );
+		}
+
+		// changed scalar/vector/matrix type of field
+		if ( oldField.type != newField.type and oldField.typeName.Empty() and newField.typeName.Empty() )
+		{
+			// check is 'root' a assign operator or out/inout argument in function call
+			bool	is_lvalue	= false;
+			bool	is_out_arg	= false;
+
+			GetValueQualifier( root, binary, OUT is_lvalue, OUT is_out_arg );
+
+
+			// create swizzle operator, value may be Rvalue or Lvalue
+			if ( EShaderVariable::VecSize( newField.type ) > 0 )
+			{
+				CHECK_ERR( CreateSwizzleNode( INOUT root, binary, oldField, newField, old_type, INOUT new_type ) );
+			}
+			else
+			// change other type for compatibility
+			if ( is_lvalue )
+			{
+				CHECK_ERR( CreateLValueNode( root, newField, INOUT new_type ) );
+			}
+			else
+			if ( is_out_arg )
+			{
+				RETURN_ERR( "output argument is not supported if type is not a scalar or vector!" );
+			}
+			else
+			// create constructor, value must be the Rvalue
+			{
+				CHECK_ERR( CreateConstructorNode(  INOUT root, binary, oldField, newField, old_type, INOUT new_type ) );
+			}
+		}
+
+		// changed struct type of field
+		if ( not oldField.typeName.Empty() or not newField.typeName.Empty() )
+		{
+			RETURN_ERR( "struct fields not supported yet!" );
+		}
+
+		// set new type to node
+		glslang::TType*		ttype	= new glslang::TType( new_type );
+
+		ttype->setFieldName( glslang::TString( newField.name.cstr() ) );
+
+		if ( not newField.typeName.Empty() )
+			ttype->setTypeName( glslang::TString( newField.typeName.cstr() ) );
+
+		binary->setType( *ttype );
+		return true;
+	}
+
+/*
+=================================================
+	RecursiveProcessAggregateNode
+=================================================
+*/
+	static bool RecursiveProcessAggregateNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermAggregate* aggr = node->getAsAggregate();
+	
+		_SLOG( ("TIntermAggregate ("_str << uid << ") op:" << uint(aggr->getOp()) << 
+				"; " << aggr->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
+		
+		for (size_t i = 0; i < aggr->getSequence().size(); ++i) {
+			CHECK_ERR( RecursiveProcessNode( aggr, aggr->getSequence()[i], INOUT ++uid, replacer ) );
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveProcessNode
+=================================================
+*/
+	static bool RecursiveProcessNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		if ( not node )
+			return true;
+
+		if ( node->getAsAggregate() )
+		{
+			CHECK_ERR( RecursiveProcessAggregateNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsUnaryNode() )
+		{
+			CHECK_ERR( RecursiveProcessUnaryNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsBinaryNode() )
+		{
+			CHECK_ERR( RecursiveProcessBinaryNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsOperator() )
+		{
+			CHECK_ERR( RecursiveProcessOperatorNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsBranchNode() )
+		{
+			CHECK_ERR( RecursiveProcessBranchNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsSwitchNode() )
+		{
+			CHECK_ERR( RecursiveProcessSwitchNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsConstantUnion() )
+		{
+			CHECK_ERR( RecursiveProcessConstUnionNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsSelectionNode() )
+		{
+			CHECK_ERR( RecursiveProcessSelectionNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsMethodNode() )
+		{
+			CHECK_ERR( RecursiveProcessMethodNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsSymbolNode() )
+		{
+			CHECK_ERR( RecursiveProcessSymbolNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsTyped() )
+		{
+			CHECK_ERR( RecursiveProcessTypedNode( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		if ( node->getAsLoopNode() )
+		{
+			CHECK_ERR( RecursiveProccessLoop( root, node, INOUT uid, replacer ) );
+			return true;
+		}
+
+		return false;
+	}
+	
+/*
+=================================================
+	RecursiveProcessBranchNode
+=================================================
+*/
+	static bool RecursiveProcessBranchNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermBranch*		branch = node->getAsBranchNode();
+		
+		_SLOG( ("TIntermBranch ("_str << uid << ") op: " << uint(branch->getFlowOp())).cstr(), ELog::Debug );
+
+		CHECK_ERR( RecursiveProcessNode( branch, branch->getExpression(), INOUT ++uid, replacer ) );
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveProcessSwitchNode
+=================================================
+*/
+	static bool RecursiveProcessSwitchNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermSwitch*		sw = node->getAsSwitchNode();
+		
+		_SLOG( ("TIntermSwitch ("_str << uid << ") ").cstr(), ELog::Debug );
+
+		CHECK_ERR( RecursiveProcessNode( sw, sw->getCondition(), INOUT ++uid, replacer ) );
+		CHECK_ERR( RecursiveProcessNode( sw, sw->getBody(), INOUT ++uid, replacer ) );
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveProcessConstUnionNode
+=================================================
+*/
+	static bool RecursiveProcessConstUnionNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermConstantUnion*	cu = node->getAsConstantUnion();
+		
+		_SLOG( ("TIntermConstantUnion ("_str << uid << ") " << cu->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
+
+		// do nothing
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveProcessSelectionNode
+=================================================
+*/
+	static bool RecursiveProcessSelectionNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermSelection*	selection = node->getAsSelectionNode();
+		
+		_SLOG( ("TIntermSelection ("_str << uid << ") " << selection->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
+
+		CHECK_ERR( RecursiveProcessNode( selection, selection->getCondition(), INOUT ++uid, replacer ) );
+		CHECK_ERR( RecursiveProcessNode( selection, selection->getTrueBlock(), INOUT ++uid, replacer ) );
+		CHECK_ERR( RecursiveProcessNode( selection, selection->getFalseBlock(), INOUT ++uid, replacer ) );
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveProcessMethodNode
+=================================================
+*/
+	static bool RecursiveProcessMethodNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermMethod*		method = node->getAsMethodNode();
+		
+		_SLOG( ("TIntermMethod ("_str << uid << ") " << method->getMethodName().c_str() << "; " << method->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
+
+		CHECK_ERR( RecursiveProcessNode( method, method->getObject(), INOUT ++uid, replacer ) );
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveProcessSymbolNode
+=================================================
+*/
+	static bool RecursiveProcessSymbolNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermSymbol*		symbol = node->getAsSymbolNode();
+		
+		_SLOG( ("TIntermSymbol ("_str << uid << ") " << symbol->getName().c_str() << "; " << symbol->getId() << 
+				"; " << symbol->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
+
+		// do nothing
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveProcessTypedNode
+=================================================
+*/
+	static bool RecursiveProcessTypedNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermTyped*		typed = node->getAsTyped();
+		
+		_SLOG( ("TIntermTyped ("_str << uid << ") " << typed->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
+
+		// do nothing
+		return true;
+	}
+
+/*
+=================================================
+	RecursiveProcessOperatorNode
+=================================================
+*/
+	static bool RecursiveProcessOperatorNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermOperator*	op = node->getAsOperator();
+		
+		_SLOG( ("TIntermOperator ("_str << uid << ") " << op->getCompleteString().c_str()).cstr(), ELog::Debug );
+
+		// do nothing
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveProcessUnaryNode
+=================================================
+*/
+	static bool RecursiveProcessUnaryNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermUnary*		unary = node->getAsUnaryNode();
+		
+		_SLOG( ("TIntermUnary ("_str << uid << ") op:" << uint(unary->getOp()) << "; " << unary->getCompleteString().c_str()).cstr(), ELog::Debug );
+
+		CHECK_ERR( RecursiveProcessNode( unary, unary->getOperand(), INOUT ++uid, replacer ) );
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveProccessLoop
+=================================================
+*/
+	static bool RecursiveProccessLoop (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	{
+		glslang::TIntermLoop *	loop = node->getAsLoopNode();
+		
+		CHECK_ERR( RecursiveProcessNode( loop, loop->getBody(), INOUT ++uid, replacer ) );
+
+		if ( loop->getTerminal() ) {
+			CHECK_ERR( RecursiveProcessNode( loop, loop->getTerminal(), INOUT ++uid, replacer ) );
+		}
+
+		if ( loop->getTest() ) {
+			CHECK_ERR( RecursiveProcessNode( loop, loop->getTest(), INOUT ++uid, replacer ) );
+		}
+		return true;
+	}
+
+
+}	// PipelineCompiler

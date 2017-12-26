@@ -22,9 +22,6 @@ namespace GXTypes
 
 	}	// _types_hidden_
 
-	
-	template <typename T>	struct TStringRef;
-
 	typedef TStringRef< char >			StringRef;
 	typedef TStringRef< wchar >			WStringRef;
 
@@ -34,7 +31,7 @@ namespace GXTypes
 
 
 	//
-	// Universal String
+	// String Wrapper
 	//
 
 	template <typename T>
@@ -161,8 +158,8 @@ namespace GXTypes
 		bool IsNullTerminated () const;
 
 		// get range
-		TStringRef<T>		SubString (usize pos, usize count = usize(-1));
-		TStringRef<const T>	SubString (usize pos, usize count = usize(-1)) const;
+		TStringRef<T>		SubString (usize pos, usize count = UMax);
+		TStringRef<const T>	SubString (usize pos, usize count = UMax) const;
 		
 		TStringRef<T>		GetInterval (usize begin, usize end);
 		TStringRef<const T>	GetInterval (usize begin, usize end) const;
@@ -231,7 +228,7 @@ namespace GXTypes
 */
 	template <typename T>
 	inline TStringRef<T>::TStringRef (void *pBegin, void *pEnd) :
-		_memory( (T*)pBegin ), _count( ( usize(pEnd) - usize(pBegin) ) / sizeof(T) )
+		_memory( static_cast<T*>(pBegin) ), _count( ( usize(pEnd) - usize(pBegin) ) / sizeof(T) )
 	{}
 	
 /*
@@ -241,7 +238,7 @@ namespace GXTypes
 */
 	template <typename T>
 	inline TStringRef<T>::TStringRef (const std::basic_string< C, std::char_traits<C>, std::allocator<C> > &str) :
-		_memory( (T *) str.c_str() ), _count( str.empty() ? 0 : str.length()+1 )
+		_memory( static_cast<T *>(str.data()) ), _count( str.empty() ? 0 : str.length()+1 )
 	{}
 	
 /*
@@ -916,7 +913,25 @@ namespace GXTypes
 		return Begin() > other.End() or End() < other.Begin();
 	}
 	
+/*
+=================================================
+	ArrayRef::From
+=================================================
+*/
+	template <typename T>
+	template <typename B>
+	inline ArrayRef<T>  ArrayRef<T>::From (TStringRef<B> str)
+	{
+		return From( ArrayRef<B>( str ) );
+	}
 	
+	template <typename T>
+	template <typename B>
+	inline ArrayRef<T>  ArrayRef<T>::FromStd (const std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str)
+	{
+		return From( TStringRef<const B>( str ) );
+	}
+
 /*
 =================================================
 	StrLength

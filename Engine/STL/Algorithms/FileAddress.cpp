@@ -1,6 +1,8 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "FileAddress.h"
+#include "Engine/STL/Math/Vec.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 namespace GX_STL
 {
@@ -422,6 +424,50 @@ namespace GXTypes
 		AddNameToPath( INOUT result, name );
 		AddExtensionToName( INOUT result, ext );
 		return result;
+	}
+	
+/*
+=================================================
+	AbsoluteToRelativePath
+=================================================
+*/
+	bool  FileAddress::AbsoluteToRelativePath (StringCRef source, StringCRef base, OUT String &result)
+	{
+		Array< StringCRef >	path1;
+		Array< StringCRef >	path2;
+
+		DividePath( source, OUT path1 );
+		DividePath( base, OUT path2 );
+
+		if ( path1.Empty() or path2.Empty() )
+		{
+			result = source;
+			return true;
+		}
+
+		CHECK_ERR( path1.Front() == path2.Front() );
+
+		usize	i = 0;
+
+		for (; i < path1.Count() and i < path2.Count(); ++i)
+		{
+			if ( path1[i] != path2[i] )
+				break;
+
+			//AddDirectoryToPath( INOUT result, path1[i] );
+		}
+
+		for (usize j = i; j < path2.Count(); ++j)
+		{
+			AddDirectoryToPath( INOUT result, ".." );
+		}
+
+		for (; i < path1.Count(); ++i)
+		{
+			AddDirectoryToPath( INOUT result, path1[i] );
+		}
+
+		return true;
 	}
 
 

@@ -10,7 +10,7 @@
 
 // helpers //
 #define __GX_LOG( _text_, _level_ ) \
-	LOG( (::GX_STL::GXTypes::String( "Error: " ) << _text_ << ", in function: " GX_FUNCTION_NAME ".").cstr(), (_level_) )
+	LOG( (::GX_STL::GXTypes::String( "Error: " ) << _text_ << ", in function: " << GX_FUNCTION_NAME << ".").cstr(), (_level_) )
 
 
 
@@ -18,7 +18,7 @@
 #if !defined( __GX_ERROR_CHECKS__ )
 
 #	define __GX_RETURN_ERR( _text_, _ret_, ... ) \
-		{ return (_ret_); }
+		{ return _ret_; }
 
 #	define __GX_CHECK_ERRX( _expr_, _text_, _level_, _ret_ ) \
 		{ (void)( _expr_ ); }
@@ -29,13 +29,13 @@
 #else
 		
 #	define __GX_RETURN_ERR( _text_, _ret_, ... ) \
-		{ __GX_LOG( _text_, ::GX_STL::ELog::_DefError );  return (_ret_); }
+		{ __GX_LOG( _text_, ::GX_STL::ELog::_DefError );  return _ret_; }
 
 #	define __GX_CHECK_ERRX( _expr_, _text_, _level_, _ret_ ) \
 		{ if (GX_BRANCH_EXPECT( _expr_ )) {}\
 		  else { \
 			__GX_LOG( _text_, (_level_) ); \
-			return (_ret_); \
+			return _ret_; \
 		}}
 
 #	define __GX_CHECK_WARN( _expr_, _text_, _level_ ) \
@@ -54,7 +54,7 @@
 
 // check and return error if false
 #define __GX_CHECK_ERR( _func_, _ret_, ... ) \
-	__GX_CHECK_ERRX( (_func_), GX_TO_ANSI_STRING( _func_ ), ::GX_STL::ELog::_DefError, (_ret_)  )
+	__GX_CHECK_ERRX( (_func_), GX_TO_ANSI_STRING( _func_ ), ::GX_STL::ELog::_DefError, _ret_  )
 
 #define CHECK_ERR( ... ) \
 	__GX_CHECK_ERR( AUXDEF_GETARG_0( __VA_ARGS__ ), AUXDEF_GETARG_1( __VA_ARGS__, ::GX_STL::GXTypes::Uninitialized ) )
@@ -70,7 +70,7 @@
 
 	// check and return error if false
 #	define __GX_DBG_CHECK_ERR( _func_, _ret_, ... ) \
-		__GX_CHECK_ERRX( (_func_), GX_TO_ANSI_STRING( _func_ ), ::GX_STL::ELog::_DefWarning, (_ret_)  )
+		__GX_CHECK_ERRX( (_func_), GX_TO_ANSI_STRING( _func_ ), ::GX_STL::ELog::_DefWarning, _ret_ )
 
 #	define DBG_CHECK_ERR( ... ) \
 		__GX_DBG_CHECK_ERR( AUXDEF_GETARG_0( __VA_ARGS__ ), AUXDEF_GETARG_1( __VA_ARGS__, ::GX_STL::GXTypes::Uninitialized ) )

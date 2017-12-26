@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 
 	//
@@ -29,7 +29,7 @@
 			typedef typename value_scale_t::template Add< typename Right::value_scale_t >	conv_add_op_t;
 			typedef PhysicsValue< inner_value_t,
 						typename dimensions_t::template Add< Right::dimensions_t >,
-						typename conv_add_op_t >											type;
+						conv_add_op_t >														type;
 			typedef PhysicsValueVec< type, I, U >											vec;
 
 			static inner_value_t Get (const inner_value_t &left, const inner_value_t &right) {
@@ -43,7 +43,7 @@
 			typedef typename value_scale_t::template Sub< typename Right::value_scale_t >	conv_sub_op_t;
 			typedef PhysicsValue< inner_value_t,
 						typename dimensions_t::template Sub< Right::dimensions_t >,
-						typename conv_sub_op_t >											type;
+						conv_sub_op_t >														type;
 			typedef PhysicsValueVec< type, I, U >											vec;
 
 			static inner_value_t Get (const inner_value_t &left, const inner_value_t &right) {
@@ -57,7 +57,7 @@
 			typedef typename value_scale_t::template Mul< typename Right::value_scale_t >	conv_mul_op_t;
 			typedef PhysicsValue< inner_value_t,
 						typename dimensions_t::template Mul< Right::dimensions_t >,
-						typename conv_mul_op_t >											type;
+						conv_mul_op_t >														type;
 			typedef PhysicsValueVec< type, I, U >											vec;
 
 			static inner_value_t Get (const inner_value_t &left, const inner_value_t &right) {
@@ -71,7 +71,7 @@
 			typedef typename value_scale_t::template Div< typename Right::value_scale_t >	conv_div_op_t;
 			typedef PhysicsValue< inner_value_t,
 						typename dimensions_t::template Div< Right::dimensions_t >,
-						typename conv_div_op_t >											type;
+						conv_div_op_t >														type;
 			typedef PhysicsValueVec< type, I, U >											vec;
 
 			static inner_value_t Get (const inner_value_t &left, const inner_value_t &right) {
@@ -84,7 +84,7 @@
 			typedef typename CompileTime::Fractional32< PowNum, PowDenom >			pow_t;
 			typedef PhysicsValue< inner_value_t,
 						typename dimensions_t::template Power< pow_t >,
-						typename value_scale_t::template Pow< pow_t > >				type;
+					typename value_scale_t::template Pow< pow_t > >					type;
 			typedef PhysicsValueVec< type, I, U >									vec;
 		};
 
@@ -292,13 +292,18 @@
 		typename _Pow< PowNum, PowDenom >::vec  Pow ()	const;
 		
 		template <isize Power>
-		typename _Pow< Power >::vec		Pow ()			const;
+		typename _Pow< Power >::vec				Pow ()	const
+		{
+			typename _Pow< Power >::vec		ret;
+			FOR( i, ret )	ret[i] = (*this)[i].template Pow< Power >();
+			return ret;
+		}
 		
 		typename _Pow< 2 >::vec			Square ()		const	{ return Pow< 2 >(); }
 
 		typename _Pow< 1, 2 >::vec		Sqrt ()			const	{ return Pow< 1, 2 >(); }
 		
-		SelfInversed					Inverse ()		const	{ return SelfInversed( inner_value_t(1) / _value ); }
+		SelfInversed					Inverse ()		const	{ return SelfInversed( inner_value_t(1) / (*this) ); }
 
 
 		T				Length ()						const	{ return Value_t( ref().Length() ); }
@@ -580,10 +585,10 @@
 	
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	inline typename PhysicsValueVec<T,I,U>::_Add< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Add< D, S >::vec
 		PhysicsValueVec<T,I,U>::operator +  (const PhysicsValueVec< PhysicsValue< inner_value_t, D, S >, I, U > &right) const
 	{
-		_Add< D, S >::vec	ret;
+		typename _Add< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] + right[i];
 		return ret;
 	}
@@ -591,10 +596,10 @@
 
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	inline typename PhysicsValueVec<T,I,U>::_Sub< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Sub< D, S >::vec
 		PhysicsValueVec<T,I,U>::operator -  (const PhysicsValueVec< PhysicsValue< inner_value_t, D, S >, I, U > &right) const
 	{
-		_Sub< D, S >::vec	ret;
+		typename _Sub< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] - right[i];
 		return ret;
 	}
@@ -602,10 +607,10 @@
 
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	inline typename PhysicsValueVec<T,I,U>::_Mul< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Mul< D, S >::vec
 		PhysicsValueVec<T,I,U>::operator *  (const PhysicsValueVec< PhysicsValue< inner_value_t, D, S >, I, U > &right) const
 	{
-		_Mul< D, S >::vec	ret;
+		typename _Mul< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] * right[i];
 		return ret;
 	}
@@ -613,10 +618,10 @@
 
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	inline typename PhysicsValueVec<T,I,U>::_Div< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Div< D, S >::vec
 		PhysicsValueVec<T,I,U>::operator /  (const PhysicsValueVec< PhysicsValue< inner_value_t, D, S >, I, U > &right) const
 	{
-		_Div< D, S >::vec	ret;
+		typename _Div< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] / right[i];
 		return ret;
 	}
@@ -624,10 +629,10 @@
 	
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	inline typename PhysicsValueVec<T,I,U>::_Add< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Add< D, S >::vec
 		PhysicsValueVec<T,I,U>::operator +  (const PhysicsValue< inner_value_t, D, S > &right) const
 	{
-		_Add< D, S >::vec	ret;
+		typename _Add< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] + right;
 		return ret;
 	}
@@ -635,10 +640,10 @@
 
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	inline typename PhysicsValueVec<T,I,U>::_Sub< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Sub< D, S >::vec
 		PhysicsValueVec<T,I,U>::operator -  (const PhysicsValue< inner_value_t, D, S > &right) const
 	{
-		_Sub< D, S >::vec	ret;
+		typename _Sub< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] - right;
 		return ret;
 	}
@@ -646,10 +651,10 @@
 
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	inline typename PhysicsValueVec<T,I,U>::_Mul< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Mul< D, S >::vec
 		PhysicsValueVec<T,I,U>::operator *  (const PhysicsValue< inner_value_t, D, S > &right) const
 	{
-		_Mul< D, S >::vec	ret;
+		typename _Mul< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] * right;
 		return ret;
 	}
@@ -657,50 +662,50 @@
 
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	inline typename PhysicsValueVec<T,I,U>::_Div< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Div< D, S >::vec
 		PhysicsValueVec<T,I,U>::operator /  (const PhysicsValue< inner_value_t, D, S > &right) const
 	{
-		_Div< D, S >::vec	ret;
+		typename _Div< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] / right;
 		return ret;
 	}
 	
 	/*
 	template <typename T, typename D, typename S, ulong U>
-	inline typename PhysicsValueVec<T,I,U>::_Add< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Add< D, S >::vec
 		operator +  (const PhysicsValue< typename PhysicsValueVec<T,I,U>::inner_value_t, D, S > &left, const PhysicsValueVec<T,I,U> &right)
 	{
-		_Add< D, S >::vec	ret;
+		typename _Add< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = left + right[i];
 		return ret;
 	}
 		
 
 	template <typename T, typename D, typename S, ulong U>
-	inline typename PhysicsValueVec<T,I,U>::_Sub< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Sub< D, S >::vec
 		operator -  (const PhysicsValue< typename PhysicsValueVec<T,I,U>::inner_value_t, D, S > &left, const PhysicsValueVec<T,I,U> &right)
 	{
-		_Sub< D, S >::vec	ret;
+		typename _Sub< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = left - right[i];
 		return ret;
 	}
 		
 
 	template <typename T, typename D, typename S, ulong U>
-	inline typename PhysicsValueVec<T,I,U>::_Mul< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Mul< D, S >::vec
 		operator *  (const PhysicsValue< typename PhysicsValueVec<T,I,U>::inner_value_t, D, S > &left, const PhysicsValueVec<T,I,U> &right)
 	{
-		_Mul< D, S >::vec	ret;
+		typename _Mul< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = left * right[i];
 		return ret;
 	}
 		
 
 	template <typename T, typename D, typename S, ulong U>
-	inline typename PhysicsValueVec<T,I,U>::_Div< D, S >::vec
+	inline typename PhysicsValueVec<T,I,U>::template _Div< D, S >::vec
 		operator /  (const PhysicsValue< typename PhysicsValueVec<T,I,U>::inner_value_t, D, S > &left, const PhysicsValueVec<T,I,U> &right)
 	{
-		_Div< D, S >::vec	ret;
+		typename _Div< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = left / right[i];
 		return ret;
 	}
@@ -710,7 +715,7 @@
 	inline PhysicsValueVec<T,I,U>
 		operator * (typename PhysicsValueVec<T,I,U>::inner_value_t left, const PhysicsValueVec<T,I,U> &right)
 	{
-		Self	ret;
+		PhysicsValueVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = left * right[i];
 		return ret;
 	}
@@ -720,7 +725,7 @@
 	inline typename PhysicsValueVec<T,I,U>::SelfInversed
 		operator / (typename PhysicsValueVec<T,I,U>::inner_value_t left, const PhysicsValueVec<T,I,U> &right)
 	{
-		SelfInversed	ret;
+		typename PhysicsValueVec<T,I,U>::SelfInversed	ret;
 		FOR( i, ret )		ret[i] = left / right[i];
 		return ret;
 	}
@@ -730,7 +735,7 @@
 	inline PhysicsValueVec<T,I,U>
 		operator * (const typename PhysicsValueVec<T,I,U>::Vec_t &left, const PhysicsValueVec<T,I,U> &right)
 	{
-		Self	ret;
+		PhysicsValueVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = left[i] * right[i];
 		return ret;
 	}
@@ -740,7 +745,7 @@
 	inline typename PhysicsValueVec<T,I,U>::SelfInversed
 		operator / (const typename PhysicsValueVec<T,I,U>::Vec_t &left, const PhysicsValueVec<T,I,U> &right)
 	{
-		SelfInversed	ret;
+		typename PhysicsValueVec<T,I,U>::SelfInversed	ret;
 		FOR( i, ret )		ret[i] = left[i] / right[i];
 		return ret;
 	}
@@ -749,7 +754,7 @@
 	template <typename T, ulong U>
 	inline typename PhysicsValueVec<T,I,U>::Vec_t  PhysicsValueVec<T,I,U>::Get () const
 	{
-		Vec_t	ret;
+		typename PhysicsValueVec<T,I,U>::Vec_t	ret;
 		FOR( i, ret )	ret[i] = (*this)[i].Get();
 		return ret;
 	}
@@ -818,20 +823,11 @@
 
 	template <typename T, ulong U>
 	template <isize PowNum, isize PowDenom>
-	inline typename PhysicsValueVec<T,I,U>::_Pow< PowNum, PowDenom >::vec  PhysicsValueVec<T,I,U>::Pow () const
+	inline typename PhysicsValueVec<T,I,U>::template _Pow< PowNum, PowDenom >::vec
+		PhysicsValueVec<T,I,U>::Pow () const
 	{
-		_Pow< PowNum, PowDenom >::vec	ret;
-		FOR( i, ret )	ret[i] = (*this)[i].Pow< PowNum, PowDenom >();
-		return ret;
-	}
-	
-
-	template <typename T, ulong U>
-	template <isize Power>
-	inline typename PhysicsValueVec<T,I,U>::_Pow< Power >::vec  PhysicsValueVec<T,I,U>::Pow () const
-	{
-		_Pow< Power >::vec	ret;
-		FOR( i, ret )	ret[i] = (*this)[i].Pow< Power >();
+		typename _Pow< PowNum, PowDenom >::vec	ret;
+		FOR( i, ret )	ret[i] = (*this)[i].template Pow< PowNum, PowDenom >();
 		return ret;
 	}
 	
@@ -841,7 +837,7 @@
 	inline PhysicsValueVec<T2,I,U>  PhysicsValueVec<T,I,U>::Convert () const
 	{
 		PhysicsValueVec<T2,I,U>	ret;
-		FOR( i, ret )	ret[i] = (*this)[i].Convert< T2 >();
+		FOR( i, ret )	ret[i] = (*this)[i].template Convert< T2 >();
 		return ret;
 	}
 
@@ -867,7 +863,7 @@
 		PhysicsValueVec<T,I,U>::ToScale () const
 	{
 		PhysicsValueVec< PhysicsValue< inner_value_t, dimensions_t, ToValueScale >, I, U >	ret;
-		FOR( i, ret )	ret[i] = (*this)[i].ToScale< ToValueScale >();
+		FOR( i, ret )	ret[i] = (*this)[i].template ToScale< ToValueScale >();
 		return ret;
 	}
 

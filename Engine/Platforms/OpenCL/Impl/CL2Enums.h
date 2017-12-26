@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -109,7 +109,7 @@ namespace PlatformCL
 		using _vtypeinfo	= _platforms_hidden_::EValueTypeInfo;
 
 		const bool	norm = EnumEq( value, _vtypeinfo::_NORM );
-		const bool	srgb = EnumEq( value, _vtypeinfo::_SRGB );
+		//const bool	srgb = EnumEq( value, _vtypeinfo::_SRGB );
 
 		bpp = BytesU( EPixelFormat::BitPerPixel( value ) );
 

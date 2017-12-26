@@ -1,11 +1,11 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
 #include "Engine/STL/Common/Types.h"
 #include "Engine/STL/CompileTime/TypeTraits.h"
 #include "Engine/STL/CompileTime/TypeQualifier.h"
-#include <xstddef>
+#include "Engine/STL/Defines/OperatorHelpers.h"
 
 namespace GX_STL
 {
@@ -18,7 +18,7 @@ namespace GXMath
 namespace _math_hidden_
 {
 	template <typename T>
-	forceinline T _BitRotateLeft (T value, usize shift);
+	forceinline T _BitRotateLeft (T value, GXTypes::usize shift);
 
 }	// _math_hidden_
 }	// GXMath
@@ -87,6 +87,8 @@ namespace GXTypes
 			# elif COMPILER_VERSION >= 1911
 				return (HashResult) std::_Hash_bytes( ptr, count );
 			# endif
+			#elif defined(COMPILER_GCC)
+				return (HashResult) std::_Hash_bytes( ptr, count, 0 );
 			#else
 				#error "hash function not defined!"
 			#endif

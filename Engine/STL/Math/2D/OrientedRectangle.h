@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -92,16 +92,16 @@ namespace GXMath
 
 		const Vec2_t	x_vec = MiddleValue( rightTop, rightBottom ) - MiddleValue( leftBottom, leftTop );
 		const Vec2_t	y_vec = MiddleValue( leftTop, rightTop ) - MiddleValue( leftBottom, rightBottom );
-		const T			x_len = xVec.Length();
-		const T			y_len = yVec.Length();
+		const T			x_len = x_vec.Length();
+		const T			y_len = y_vec.Length();
 
 		_axis[0] = x_vec.Normalized();
 		_axis[1] = y_vec.Normalized();
 
 		if (x_len > y_len)
-			axis[1] = Line_t( axis[0] ).LeftNormal();
+			_axis[1] = Line_t( _axis[0] ).LeftNormal();
 		else
-			axis[0] = Line_t( axis[1] ).RightNormal();
+			_axis[0] = Line_t( _axis[1] ).RightNormal();
 		
 		_extent.x = x_len * T(0.5);
 		_extent.y = y_len * T(0.5);
@@ -130,7 +130,7 @@ namespace GXMath
 	template <typename T>
 	inline Rectangle<T>  OrientedRectangle<T>::GetAxisAlignedRectangle () const
 	{
-		return Rectangle<T>( StaticArrayBuilder::Create( Corner(0), Corner(1), Corner(2), Corner(3) ) );
+		return Rectangle<T>( MakeStaticArray( Corner(0), Corner(1), Corner(2), Corner(3) ) );
 	}
 
 /*
@@ -163,7 +163,7 @@ namespace GXMath
 	template <typename T>
 	inline Vec<T,2>  OrientedRectangle<T>::Corner (usize index) const
 	{
-		assert(index < 4);
+		ASSERT( index < 4 );
 		return _center +
 			T(index & 1 ? 1 : -1) * (_extent[0] * _axis[0]) +
 			T(index & 2 ? 1 : -1) * (_extent[1] * _axis[1]);
@@ -226,7 +226,7 @@ namespace GXMath
 	template <usize C, usize R>
 	inline OrientedRectangle<T>  OrientedRectangle<T>::Transform (const Matrix<T,C,R> &mat) const
 	{
-		return Self( StaticArrayBuilder::Create(
+		return Self( MakeStaticArray(
 						(mat * Corner(0)).xy(), (mat * Corner(1)).xy(),
 						(mat * Corner(2)).xy(), (mat * Corner(3)).xy() ) );
 	}
@@ -242,10 +242,10 @@ namespace GXMath
 	{
 		OrientedRectangle<B> result;
 
-		result._center	= _center.To< Vec<B,2> >();
-		result._extent	= _extent.To< Vec<B,2> >();
-		result._axis[0]	= _axis[0].To< Vec<B,2> >();
-		result._axis[1]	= _axis[1].To< Vec<B,2> >();
+		result._center	= _center.template To< Vec<B,2> >();
+		result._extent	= _extent.template To< Vec<B,2> >();
+		result._axis[0]	= _axis[0].template To< Vec<B,2> >();
+		result._axis[1]	= _axis[1].template To< Vec<B,2> >();
 
 		return result;
 	}
@@ -263,13 +263,13 @@ namespace GXMath
 
 		if ( _ApprGaussian2Fit<T>( points, box ) )
 		{
-			Vec<B,2>	diff = points[0].To< Vec<B,2> >() - box._center;
+			Vec<B,2>	diff = points[0].template To< Vec<B,2> >() - box._center;
 			Vec<B,2>	pmin( diff.Dot( box._axis[0] ), diff.Dot( box._axis[1] ) );
 			Vec<B,2>	pmax = pmin;
 
 			FORv( i, 1, points )
 			{
-				diff = points[i].To< Vec<B,2> >() - box._center;
+				diff = points[i].template To< Vec<B,2> >() - box._center;
 
 				for (int j = 0; j < 2; ++j)
 				{
@@ -294,7 +294,7 @@ namespace GXMath
 			}
 		}
 
-		result = box.To< Self >();
+		result = box.template To< Self >();
 	}
 	
 /*
@@ -311,7 +311,7 @@ namespace GXMath
 			Vec<B,2>	mean;
 
 			FOR( i, points ) {
-				mean += points[i].To< Vec<B,2> >();
+				mean += points[i].template To< Vec<B,2> >();
 			}
 
 			const B	inv_size = B(1) / B(points.Count());
@@ -324,7 +324,7 @@ namespace GXMath
 
 			FOR( i, points )
 			{
-				const Vec<B,2>	diff = points[i].To< Vec<B,2> >() - mean;
+				const Vec<B,2>	diff = points[i].template To< Vec<B,2> >() - mean;
 
 				covar00 += diff.x * diff.x;
 				covar01 += diff.x * diff.y;
@@ -347,7 +347,7 @@ namespace GXMath
 			return true;
 		}
 		
-		assert(false);
+		ASSERT( false );
 		return false;
 	}
 	

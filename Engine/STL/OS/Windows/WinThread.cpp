@@ -1,6 +1,8 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Thread.h"
+#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Math/Interpolations.h"
 
 #if defined( PLATFORM_WINDOWS ) and \
 	not defined( PLATFORM_SDL ) and \

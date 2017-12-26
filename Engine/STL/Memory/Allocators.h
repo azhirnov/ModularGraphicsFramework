@@ -27,7 +27,7 @@ namespace GXTypes
 			return ptr != null;
 		}
 
-		static void Deallocate (T *&ptr) noexcept
+		static void Deallocate (INOUT T *&ptr) noexcept
 		{
 			::operator delete( ptr );
 			ptr = null;
@@ -43,7 +43,7 @@ namespace GXTypes
 			return TDefaultAllocator<ubyte>::Allocate( reinterpret_cast< ubyte *&>(ptr), size );
 		}
 
-		static void Deallocate (void *&ptr) noexcept
+		static void Deallocate (INOUT void *&ptr) noexcept
 		{
 			return TDefaultAllocator<ubyte>::Deallocate( reinterpret_cast< ubyte *&>( ptr ) );
 		}
@@ -83,7 +83,7 @@ namespace GXTypes
 			return ptr != null;
 		}
 
-		static void Deallocate (T *&ptr) noexcept
+		static void Deallocate (INOUT T *&ptr) noexcept
 		{
 			_mm_free( ptr );
 			ptr = null;
@@ -101,7 +101,7 @@ namespace GXTypes
 			return TAlignedAllocator<ubyte, AlignInBytes>::Allocate( reinterpret_cast< ubyte *&>(ptr), size );
 		}
 
-		static void Deallocate (void *&ptr) noexcept
+		static void Deallocate (INOUT void *&ptr) noexcept
 		{
 			return TAlignedAllocator<ubyte, AlignInBytes>::Deallocate( reinterpret_cast< ubyte *&>( ptr ) );
 		}

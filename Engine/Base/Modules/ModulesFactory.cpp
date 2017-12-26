@@ -17,7 +17,7 @@ namespace Base
 	{
 		SetDebugName( "ModulesFactory" );
 
-		GlobalSystems()->GetSetter< ModulesFactory >().Set( this );
+		GlobalSystems()->modulesFactory.Set( this );
 
 		_constructors.Reserve( 128 );
 		_groups.Reserve( EModuleGroup::_Count );
@@ -34,7 +34,7 @@ namespace Base
 
 		Clear();
 
-		GlobalSystems()->GetSetter< ModulesFactory >().Set( null );
+		GlobalSystems()->modulesFactory.Set( null );
 	}
 	
 /*

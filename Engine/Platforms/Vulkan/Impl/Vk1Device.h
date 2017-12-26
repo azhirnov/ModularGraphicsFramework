@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Crossplatform helper for Vulkan initialization.
 
@@ -71,7 +71,7 @@ namespace PlatformVK
 		using SwapChainBuffers_t	= FixedSizeArray< SwapChainBuffer, MAX_SWAPCHAIN_SIZE >;
 		using Framebuffers_t		= FixedSizeArray< ModulePtr, MAX_SWAPCHAIN_SIZE >;
 		using CommandBuffers_t		= Array< vk::VkCommandBuffer >;
-		using _ConstCharPtrBuffer_t	= ArrayRef< const char *>;
+		using _ConstCharPtrBuffer_t	= ArrayCRef< const char *>;
 
 		using ExtensionNames_t		= _ConstCharPtrBuffer_t;
 		using ValidationLayers_t	= _ConstCharPtrBuffer_t;
@@ -114,8 +114,6 @@ namespace PlatformVK
 		vk::VkQueue						_queue;
 		vk::uint32_t					_queueIndex;
 		EQueueFamily::bits				_queueFamily;
-
-		ModulePtr						_commandBuilder;
 
 		ModulePtr						_renderPass;
 		Framebuffers_t					_framebuffers;
@@ -201,7 +199,6 @@ namespace PlatformVK
 		vk::VkFormat			GetDepthStencilFormat ()	const	{ return _depthStencilFormat; }
 
 		ModulePtr				GetDefaultRenderPass ()		const	{ return _renderPass; }
-		ModulePtr				GetCommandBuilder ()		const	{ return _commandBuilder; }
 		ModulePtr				GetCurrentFramebuffer ()	const	{ return _framebuffers[ _currentImageIndex ]; }
 		uint					GetImageIndex ()			const	{ return _currentImageIndex; }
 		uint					GetSwapchainLength ()		const	{ return (uint)_framebuffers.Count(); }
@@ -246,9 +243,6 @@ namespace PlatformVK
 
 		bool _CreateSemaphores ();
 		void _DestroySemaphores ();
-
-		bool _CreateCommandBuffers ();
-		void _DeleteCommandBuffers ();
 
 		// Surface
 		bool _ChooseColorFormat (OUT vk::VkFormat &colorFormat, OUT vk::VkColorSpaceKHR &colorSpace,

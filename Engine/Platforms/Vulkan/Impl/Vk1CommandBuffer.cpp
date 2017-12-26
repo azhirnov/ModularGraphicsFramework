@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -47,6 +47,7 @@ namespace PlatformVK
 	private:
 		CommandBufferDescriptor		_descr;
 		vk::VkCommandBuffer			_cmdId;
+		vk::VkFence					_fenceId;
 		
 		UsedResources_t				_resources;
 		ERecordingState				_recordingState;
@@ -82,6 +83,8 @@ namespace PlatformVK
 		bool _OnCompleted ();
 
 		void _ChangeState (ERecordingState newState);
+
+		static void _ValidateDescriptor (INOUT CommandBufferDescriptor &descr);
 	};
 //-----------------------------------------------------------------------------
 
@@ -96,9 +99,9 @@ namespace PlatformVK
 =================================================
 */
 	Vk1CommandBuffer::Vk1CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkCommandBufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ VkCommandBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
-		_cmdId( VK_NULL_HANDLE ),
+		_cmdId( VK_NULL_HANDLE ),	_fenceId{ VK_NULL_HANDLE },
 		_recordingState( ERecordingState::Deleted )
 	{
 		SetDebugName( "Vk1CommandBuffer" );
@@ -126,6 +129,8 @@ namespace PlatformVK
 		CHECK( _ValidateMsgSubscriptions() );
 
 		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
+
+		_ValidateDescriptor( _descr );
 	}
 	
 /*
@@ -219,7 +224,7 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuffer::_GetVkCommandBufferID (const Message< GpuMsg::GetVkCommandBufferID > &msg)
 	{
-		msg->result.Set( _cmdId );
+		msg->result.Set({ _cmdId, _fenceId });
 		return true;
 	}
 
@@ -299,22 +304,38 @@ namespace PlatformVK
 
 		CHECK_ERR( not _IsCreated() );
 		
-		ModulePtr	builder;
-		CHECK_ERR( builder = GetParentByMsg< CmdPoolMsgList_t >() );
+		// create command buffer
+		{
+			ModulePtr	builder;
+			CHECK_ERR( builder = GetParentByMsg< CmdPoolMsgList_t >() );
 
-		Message< GpuMsg::GetVkCommandPoolID >	req_pool_id;
-		SendTo( builder, req_pool_id );
+			Message< GpuMsg::GetVkCommandPoolID >	req_pool_id;
+			SendTo( builder, req_pool_id );
+			CHECK_ERR( req_pool_id->result and *req_pool_id->result != VK_NULL_HANDLE );
 
-		VkCommandBufferAllocateInfo	info = {};
-		info.sType				= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		info.pNext				= null;
-		info.commandPool		<< req_pool_id->result;
-		info.level				= _descr.isSecondary ? VK_COMMAND_BUFFER_LEVEL_SECONDARY : VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		info.commandBufferCount	= 1;
+			VkCommandBufferAllocateInfo	info = {};
+			info.sType				= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			info.pNext				= null;
+			info.commandPool		= *req_pool_id->result;
+			info.level				= _descr.flags[ ECmdBufferCreate::Secondary ] ? VK_COMMAND_BUFFER_LEVEL_SECONDARY : VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			info.commandBufferCount	= 1;
 
-		VK_CHECK( vkAllocateCommandBuffers( GetVkDevice(), &info, OUT &_cmdId ) );
+			VK_CHECK( vkAllocateCommandBuffers( GetVkDevice(), &info, OUT &_cmdId ) );
 		
-		GetDevice()->SetObjectName( (uint64_t)_cmdId, GetDebugName(), EGpuObject::CommandBuffer );
+			GetDevice()->SetObjectName( uint64_t(_cmdId), GetDebugName(), EGpuObject::CommandBuffer );
+		}
+
+		// create fence
+		if ( _descr.flags[ ECmdBufferCreate::UseFence ] )
+		{
+			VkFenceCreateInfo	fence_info	= {};
+			fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+			fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+			VK_CHECK( vkCreateFence( GetVkDevice(), &fence_info, null, OUT &_fenceId ) );
+
+			GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_fenceId), GetDebugName(), EGpuObject::Fence );
+		}
 
 		_ChangeState( ERecordingState::Initial );
 		return true;
@@ -329,6 +350,14 @@ namespace PlatformVK
 	{
 		using namespace vk;
 		
+		VkDevice	dev = GetVkDevice();
+
+		if ( _fenceId != VK_NULL_HANDLE and dev != VK_NULL_HANDLE )
+		{
+			VK_CALL( vkWaitForFences( dev, 1, &_fenceId, VK_TRUE, (10_sec).NanoSeconds() ) );
+			vkDestroyFence( dev, _fenceId, null );
+		}
+
 		if ( _cmdId	!= VK_NULL_HANDLE )
 		{
 			ModulePtr	builder;
@@ -337,17 +366,17 @@ namespace PlatformVK
 			Message< GpuMsg::GetVkCommandPoolID >	req_pool_id;
 			SendTo( builder, req_pool_id );
 
-			VkDevice		dev		= GetVkDevice();
 			VkCommandPool	pool;	pool << req_pool_id->result;
 
-			if ( dev  != VK_NULL_HANDLE and pool != VK_NULL_HANDLE )
+			if ( dev != VK_NULL_HANDLE and pool != VK_NULL_HANDLE )
 			{
 				vkFreeCommandBuffers( dev, pool, 1, &_cmdId );
 			}
 		}
 
-		_cmdId	= VK_NULL_HANDLE;
-		_descr	= Uninitialized;
+		_cmdId		= VK_NULL_HANDLE;
+		_fenceId	= VK_NULL_HANDLE;
+		_descr		= Uninitialized;
 
 		_ChangeState( ERecordingState::Deleted );
 		_resources.Clear();
@@ -400,7 +429,7 @@ namespace PlatformVK
 	{
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _recordingState == ERecordingState::Initial or
-				  (_recordingState == ERecordingState::Executable and _descr.implicitResetable) );
+				  (_recordingState == ERecordingState::Executable and _descr.flags[ECmdBufferCreate::ImplicitResetable]) );
 
 		_ChangeState( ERecordingState::Recording );
 		return true;
@@ -449,13 +478,27 @@ namespace PlatformVK
 
 		_SendEvent< GpuMsg::OnCommandBufferStateChanged >({ old_state, newState });
 	}
+	
+/*
+=================================================
+	_ValidateDescriptor
+=================================================
+*/
+	void Vk1CommandBuffer::_ValidateDescriptor (INOUT CommandBufferDescriptor &descr)
+	{
+		if ( descr.flags[ ECmdBufferCreate::Secondary ] and descr.flags[ ECmdBufferCreate::UseFence ] )
+		{
+			WARNING( "not supported" );
+			descr.flags[ ECmdBufferCreate::UseFence ] = false;
+		}
+	}
 
 }	// PlatformVK
 //-----------------------------------------------------------------------------
 
 namespace Platforms
 {
-	ModulePtr VulkanContext::_CreateVk1CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
 	{
 		return New< PlatformVK::Vk1CommandBuffer >( gs, ci );
 	}

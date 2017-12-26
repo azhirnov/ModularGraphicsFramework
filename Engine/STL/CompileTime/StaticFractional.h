@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -20,7 +20,7 @@ namespace CompileTime
 	//
 
 	template <typename T, T Numerator, T Denominator = 1>
-	struct Fractional : public Noninstancable
+	struct Fractional : public GXTypes::Noninstancable
 	{
 	// checks
 		STATIC_ASSERT( Denominator > 0, "denominator must be positive no-zero value!" );
@@ -94,7 +94,7 @@ namespace CompileTime
 		using ToStaticFloat = typename _ToStaticFloat<MT, ET>::type;
 
 		template <typename StaticFloatType>
-		using ToStaticFloatType = typename ToStaticFloat< typename StaticFloatType::mantissa_t, typename StaticFloatType::exponent_t >;
+		using ToStaticFloatType = ToStaticFloat< typename StaticFloatType::mantissa_t, typename StaticFloatType::exponent_t >;
 
 		template <typename B>
 		using To = Fractional< B, N, D >;

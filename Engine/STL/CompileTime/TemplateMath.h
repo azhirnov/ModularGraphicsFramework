@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -122,18 +122,6 @@ namespace CompileTime
 		struct _GetPOT {
 			static const uint	value	= __GetPOT<T, X, SizeOf<T>::bits-1 >::value;
 		};
-
-		template <typename T, T X>
-		struct _NearPowerOfTwo
-		{
-			static const T		_x	 = Abs<T,X>;
-			static const uint	_pot = IntLog2<T,X>;
-			static const T		_a	 = T(1) << (_pot + 1);
-			static const T		_b	 = T(1) << _pot;
-			static const T		_c	 = ((_a - _b) >> 1) + _b;
-			static const T		value = ( _x >= _c ? _a : _b ) * Sign<T,X>;
-		};
-
 	}	// _ctime_hidden_
 
 	template <typename T, T X>
@@ -154,9 +142,74 @@ namespace CompileTime
 	template <typename T, T X>
 	static constexpr T FloorPowerOfTwo	= ( T(1) << IntLog2<T,X> ) * Sign<T,X>;
 
+	namespace _ctime_hidden_
+	{
+		template <typename T, T X>
+		struct _NearPowerOfTwo
+		{
+			static const T		_x	 = Abs<T,X>;
+			static const uint	_pot = IntLog2<T,X>;
+			static const T		_a	 = T(1) << (_pot + 1);
+			static const T		_b	 = T(1) << _pot;
+			static const T		_c	 = ((_a - _b) >> 1) + _b;
+			static const T		value = ( _x >= _c ? _a : _b ) * Sign<T,X>;
+		};
+	}	// _ctime_hidden_
+
 	template <typename T, T X>
 	static constexpr T NearPowerOfTwo	= _ctime_hidden_::_NearPowerOfTwo<T, X>::value;
 
+
+	//
+	// Compile Time Safe Division
+	//
+	namespace _ctime_hidden_
+	{
+		template <typename T, T X, T Y, T Default, bool UseDefault>
+		struct _SafeDiv2
+		{
+			static const T 	value = X / Y;
+		};
+
+		template <typename T, T X, T Y, T Default>
+		struct _SafeDiv2< T, X, Y, Default, true >
+		{
+			static const T 	value = Default;
+		};
+
+		template <typename T, T X, T Y, T Default>
+		using _SafeDiv = _SafeDiv2< T, X, Y, Default, (Y == T(0)) >;
+
+	}	// _ctime_hidden_
+
+	template <typename T, T X, T Y, T Default>
+	static constexpr T SafeDiv 	= _ctime_hidden_::_SafeDiv< T, X, Y, Default >::value;
+
+
+	//
+	// Compile Time Safe Module
+	//
+	namespace _ctime_hidden_
+	{
+		template <typename T, T X, T Y, T Default, bool UseDefault>
+		struct _SafeMod2
+		{
+			static const T 	value = X % Y;
+		};
+
+		template <typename T, T X, T Y, T Default>
+		struct _SafeMod2< T, X, Y, Default, true >
+		{
+			static const T 	value = Default;
+		};
+
+		template <typename T, T X, T Y, T Default>
+		using _SafeMod = _SafeMod2< T, X, Y, Default, (Y == T(0)) >;
+
+	}	// _ctime_hidden_
+
+	template <typename T, T X, T Y, T Default>
+	static constexpr T SafeMod 	= _ctime_hidden_::_SafeMod< T, X, Y, Default >::value;
 
 
 	//
@@ -169,7 +222,7 @@ namespace CompileTime
 		struct _GreatestCommonDivisor
 		{
 			static const T	value = SwitchType< Value1 != T(0),
-										_GreatestCommonDivisor< T, Value1, Value0 % Value1 >,
+										_GreatestCommonDivisor< T, Value1, SafeMod< T, Value0, Value1, T(0) > >,
 										ValueToType< T, Value0 > >::value;
 		};
 

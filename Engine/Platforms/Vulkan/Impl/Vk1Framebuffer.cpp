@@ -4,7 +4,7 @@
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/Shared/GPU/Framebuffer.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -102,7 +102,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Framebuffer::Vk1Framebuffer (GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkFramebufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ VkFramebufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_framebufferId( VK_NULL_HANDLE ),
 		_descr( ci.size, ci.layers )
 	{
@@ -440,7 +440,7 @@ namespace PlatformVK
 												if ( name == render_pass_descr.ColorAttachments()[i].name )
 													return i;
 											}
-											RETURN_ERR( "Attachment '" << name << "' not found", ~0u );
+											RETURN_ERR( "Attachment '" << name << "' not found", UMax );
 										}};
 
 		img_views.Resize( render_pass_descr.ColorAttachments().Count() + uint(render_pass_descr.DepthStencilAttachment().IsEnabled()) );
@@ -496,7 +496,7 @@ namespace PlatformVK
 		}
 
 		ModulePtr	render_pass;
-		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 							VkRenderPassModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuRenderPass{ null, builder.Finish() },
@@ -600,7 +600,7 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanContext::_CreateVk1Framebuffer (GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1Framebuffer (GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci)
 	{
 		return New< PlatformVK::Vk1Framebuffer >( gs, ci );
 	}

@@ -1,10 +1,12 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/STL/Log/Logger.h"
 #include "Engine/STL/ThreadSafe/Singleton.h"
 #include "Engine/STL/Algorithms/StringParser.h"
 #include "Engine/STL/Math/Rand/Pseudorandom.h"
 #include "Engine/STL/Math/MathTypeCast.h"
+#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Math/Interpolations.h"
 #include "Engine/STL/OS/OSLowLevel.h"
 #include "Engine/STL/Types/ScopeSetter.h"
 
@@ -467,7 +469,8 @@ namespace GXTypes
 				else
 					str << "<details>";
 
-				str << "<summary>" << summary << "</summary>";
+				str << "<summary>";
+				_ConvertToHtml( str, summary ) << "</summary>";
 				_ConvertToHtml( str, msg.SubString(pos) ) << "</details>";
 			}
 			else
@@ -504,7 +507,7 @@ namespace GXTypes
 	void Logger::_ClearCache ()
 	{
 		_cached			= false;
-		_lastType		= ELog::type(-1);
+		_lastType		= ELog::Unknown;
 		_lastLine		= 0;
 		_lastThreadId	= 0;
 		_lastSrcFile.Clear();
@@ -517,16 +520,18 @@ namespace GXTypes
 */
 	bool Logger::_CmpWithCache (ELog::type type, StringCRef file, usize threadId, int line)
 	{
-		if ( _allowCaching							and
-			 _lastType == type						and
-			 not EnumEq( type, ELog::SpoilerFlag )	and
-			 //not ELog::IsError( type )			and
-			 _lastSrcFile == file					and
-			 _lastThreadId == threadId				and
-			 _lastLine == line )
+		if_constexpr( _allowCaching )
 		{
-			_cached = true;
-			return true;
+			if ( _lastType == type						and
+				 not EnumEq( type, ELog::SpoilerFlag )	and
+				 //not ELog::IsError( type )			and
+				 _lastSrcFile == file					and
+				 _lastThreadId == threadId				and
+				 _lastLine == line )
+			{
+				_cached = true;
+				return true;
+			}
 		}
 
 		_cached			= false;

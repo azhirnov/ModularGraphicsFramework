@@ -82,6 +82,11 @@ namespace _types_hidden_
 		{
 			AddArray( ArrayCRef<Key_t>( list ) );
 		}
+		
+		BaseHashSet (ArrayCRef<Key_t> list)
+		{
+			AddArray( list );
+		}
 
 
 		Value const &	operator [] (usize i) const
@@ -172,6 +177,13 @@ namespace _types_hidden_
 			}
 		}
 
+		void AddArray (const Self &value)
+		{
+			FOR( i, value ) {
+				Add( value[i] );
+			}
+		}
+
 		void AddArray (Self &&value)
 		{
 			FOR( i, value ) {
@@ -204,7 +216,7 @@ namespace _types_hidden_
 
 		bool Find (const Value &key, OUT const_iterator & result) const
 		{
-			usize	idx = -1;
+			usize	idx = UMax;
 
 			if ( not FindIndex( key, OUT idx ) )
 				return false;

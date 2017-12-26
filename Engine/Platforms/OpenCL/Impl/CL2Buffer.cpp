@@ -3,7 +3,7 @@
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
-#include "Engine/Platforms/OpenCL/OpenCLContext.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 #if defined( COMPUTE_API_OPENCL )
 
@@ -104,7 +104,7 @@ namespace PlatformCL
 =================================================
 */
 	CL2Buffer::CL2Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLBufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		CL2BaseModule( gs, ModuleConfig{ CLBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),				_bufferId( null ),
 		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
 		_useMemMngr( ci.allocMem ),		_isBindedToMemory( false )
@@ -170,7 +170,7 @@ namespace PlatformCL
 		if ( not _memObj and _useMemMngr )
 		{
 			ModulePtr	mem_module;
-			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								CLMemoryModuleID,
 								GlobalSystems(),
 								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
@@ -456,7 +456,7 @@ namespace PlatformCL
 
 namespace Platforms
 {
-	ModulePtr OpenCLContext::_CreateCL2Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
 	{
 		return New< PlatformCL::CL2Buffer >( gs, ci );
 	}

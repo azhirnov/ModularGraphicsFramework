@@ -118,6 +118,9 @@
 
 		template <typename A>
 		constexpr explicit Vec (const Vec<T,3,U> &XYZ, A W): x(XYZ[0]), y(XYZ[1]), z(XYZ[2]), w(W) {}
+		
+		template <typename A>
+		constexpr explicit Vec (A X, const Vec<T,3,U> &YZW): x(X), y(YZW[0]), z(YZW[1]), w(YZW[2]) {}
 
 		constexpr explicit Vec (const Vec<T,3,U> &XYZ): x(XYZ[0]), y(XYZ[1]), z(XYZ[2]), w(T(0)) {}
 
@@ -424,7 +427,6 @@
 		constexpr T				Volume ()	const	{ return x*y*z; }
 		constexpr Vec<T,2,U>	yz ()		const	{ return Vec<T,2,U>( y, z ); }
 		constexpr Vec<T,2,U>	xz ()		const	{ return Vec<T,2,U>( x, z ); }
-		constexpr Vec<T,2,U>	yw ()		const	{ return Vec<T,2,U>( y, w ); }
 		constexpr Vec<T,3,U>	xyz ()		const	{ return Vec<T,3,U>( x, y, z ); }
 		constexpr Vec<T,3,U>	zyx ()		const	{ return Vec<T,3,U>( z, y, x ); }
 		constexpr Vec<T,3,U>	xzy ()		const	{ return Vec<T,3,U>( x, z, y ); }
@@ -444,6 +446,7 @@
 
 #	if I >= 4
 		constexpr T				Volume4D ()	const	{ return x*y*z*w; }
+		constexpr Vec<T,2,U>	yw ()		const	{ return Vec<T,2,U>( y, w ); }
 		constexpr Vec<T,2,U>	zw ()		const	{ return Vec<T,2,U>( z, w ); }
 		
 		constexpr Vec<T,3,U>	xwo ()		const	{ return Vec<T,3,U>( x, y, T(0) ); }
@@ -499,7 +502,7 @@
 	
 	
 	template <typename T, ulong U>
-	inline typename T  Vec<T,I,U>::Min () const
+	inline T  Vec<T,I,U>::Min () const
 	{
 		T	t_min = (*this)[0];
 		FOR( i, *this )  (*this)[i] < t_min ?  t_min = (*this)[i]  : 0;
@@ -508,7 +511,7 @@
 
 	
 	template <typename T, ulong U>
-	inline typename T  Vec<T,I,U>::Max () const
+	inline T  Vec<T,I,U>::Max () const
 	{
 		T	t_max = (*this)[0];
 		FOR( i, *this )  (*this)[i] > t_max ?  t_max = (*this)[i]  : 0;
@@ -517,14 +520,14 @@
 
 	
 	template <typename T, ulong U>
-	inline typename T  Vec<T,I,U>::Length () const
+	inline T  Vec<T,I,U>::Length () const
 	{
 		return Sqrt( LengthSqr() );
 	}
 
 	
 	template <typename T, ulong U>
-	inline typename T  Vec<T,I,U>::LengthSqr () const
+	inline T  Vec<T,I,U>::LengthSqr () const
 	{
 		Self	res;
 		FOR( i, *this )	res[i] = GXMath::Square( (*this)[i] );
@@ -599,7 +602,7 @@
 
 		
 	template <typename T, ulong U>
-	inline typename T  Vec<T,I,U>::Dot (const Self &right) const
+	inline T  Vec<T,I,U>::Dot (const Self &right) const
 	{
 		Self	res;
 		FOR( i, *this )	res[i] = (*this)[i] * right[i];
@@ -608,7 +611,7 @@
 		
 	
 	template <typename T, ulong U>
-	inline typename T  Vec<T,I,U>::DotAbs (const Self &right) const
+	inline T  Vec<T,I,U>::DotAbs (const Self &right) const
 	{
 		Self	res;
 		FOR( i, *this )	res[i] = Abs( (*this)[i] * right[i] );
@@ -617,14 +620,14 @@
 
 		
 	template <typename T, ulong U>
-	inline typename T  Vec<T,I,U>::Distance (const Self &sVec) const
+	inline T  Vec<T,I,U>::Distance (const Self &sVec) const
 	{
 		return ( (*this) - sVec ).Length();
 	}
 		
 	
 	template <typename T, ulong U>
-	inline typename T  Vec<T,I,U>::DistanceSqr (const Self &sVec) const
+	inline T  Vec<T,I,U>::DistanceSqr (const Self &sVec) const
 	{
 		return ( (*this) - sVec ).LengthSqr();
 	}

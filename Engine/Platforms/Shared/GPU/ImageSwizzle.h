@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -32,7 +32,7 @@ namespace Platforms
 		ImageSwizzle (Swizzle::type swizzle) :
 			_value{ GXMath::_math_hidden_::_ParseSwizzle( swizzle ) }
 		{
-			ASSERT( _value != -1 );
+			ASSERT( _value != UMax );
 		}
 
 		uint Get () const

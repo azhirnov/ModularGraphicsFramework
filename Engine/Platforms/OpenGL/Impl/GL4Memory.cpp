@@ -5,7 +5,7 @@
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -295,7 +295,7 @@ namespace PlatformGL
 	bool GL4Memory::_ReadFromStream (const Message< ModuleMsg::ReadFromStream > &msg)
 	{
 		BinArrayCRef	data;
-		CHECK_ERR( _memMapper.Read( msg->offset, msg->size.Get( BytesUL(-1) ), OUT data ) );
+		CHECK_ERR( _memMapper.Read( msg->offset, msg->size.Get( UMax ), OUT data ) );
 		msg->result.Set( data );
 		
 		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuRead, _memMapper.MappedOffset() + msg->offset, BytesUL(data.Size()) });
@@ -772,7 +772,7 @@ namespace PlatformGL
 
 namespace Platforms
 {
-	ModulePtr OpenGLContext::_CreateGL4Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
 	{
 		return New< PlatformGL::GL4Memory >( gs, ci );
 	}

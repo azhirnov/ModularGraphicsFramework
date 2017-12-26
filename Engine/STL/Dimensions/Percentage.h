@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -66,43 +66,51 @@ namespace GXMath
 	constexpr Percents operator "" _pct (long double value)			{ return Percents::FromPercents( real(value) ); }
 	constexpr Percents operator "" _pct (unsigned long long value)	{ return Percents::FromPercents( real(value) ); }
 
-	
-	
+}	// GXMath
+
+
+namespace CompileTime
+{
 /*
 =================================================
 	TypeInfo
 =================================================
 */
 	template <typename T>
-	struct ::GX_STL::CompileTime::TypeInfo< GXMath::Percentage<T> >
+	struct TypeInfo< GXMath::Percentage<T> >
 	{
 		typedef GXMath::Percentage<T>	type;
 		typedef T						inner_type;
-		
+
 		template <typename OtherType>
 		using CreateWith = GXMath::Percentage< OtherType >;
 
 		enum {
 			FLAGS	= (int)TypeInfo< inner_type >::FLAGS | int(_ctime_hidden_::WRAPPER),
 		};
-		
+
 		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }
 		static constexpr type	Min()		{ return type( TypeInfo< inner_type >::Min() ); }
 		static constexpr type	Inf()		{ return type( TypeInfo< inner_type >::Inf() ); }
 		static constexpr type	NaN()		{ return type( TypeInfo< inner_type >::NaN() ); }
-		
+
 		static constexpr type	Epsilon()	{ return type( TypeInfo< inner_type >::Epsilon() ); }
 		static constexpr uint	SignBit()	{ return TypeInfo< inner_type >::SignBit(); }
 		static constexpr uint	Count()		{ return TypeInfo< inner_type >::Count(); }
 	};
 
+}	// CompileTime
+
+
+namespace GXTypes
+{
 /*
 =================================================
 	Hash
 =================================================
 */
 	template <typename T>
-	struct ::GX_STL::GXTypes::Hash< GXMath::Percentage<T> > : private Hash<T>
+	struct Hash< GXMath::Percentage<T> > : private Hash<T>
 	{
 		typedef GXMath::Percentage<T>		Key_t;
 		typedef Hash<T>						Base_t;
@@ -114,5 +122,5 @@ namespace GXMath
 		}
 	};
 
-}	// GXMath
+}	// GXTypes
 }	// GX_STL

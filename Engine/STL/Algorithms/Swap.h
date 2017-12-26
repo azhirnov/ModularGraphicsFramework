@@ -21,24 +21,14 @@ namespace GXTypes
 		T c(a);
 		a = b;
 		b = c;
-	#else
+	#elif 1
 		T c	= RVREF( a );
 		a	= RVREF( b );
 		b	= RVREF( c );
-	#endif
-	}
-
-	template <typename T>
-	forceinline void SwapValuesWithTemp (INOUT T &a, INOUT T &b, INOUT T &temp)
-	{
-	#if 0
-		temp = a;
-		a    = b;
-		b    = temp;
 	#else
-		temp = RVREF( a );
-		a	 = RVREF( b );
-		b	 = RVREF( temp );
+		T c{ RVREF(a) };
+		PlacementDelete( a );	UnsafeMem::PlacementNew<T>( &a, RVREF(b) );
+		PlacementDelete( b );	UnsafeMem::PlacementNew<T>( &b, RVREF(c) );
 	#endif
 	}
 	

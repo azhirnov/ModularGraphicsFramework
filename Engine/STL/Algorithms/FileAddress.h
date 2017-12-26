@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -8,7 +8,6 @@
 #include "Engine/STL/Containers/StaticArray.h"
 #include "Engine/STL/Algorithms/ArrayUtils.h"
 #include "Engine/STL/Math/Mathematics.h"
-#include "Engine/STL/Math/Vec.h"
 
 namespace GX_STL
 {
@@ -49,6 +48,9 @@ namespace GXTypes
 
 		static String	BuildPath (StringCRef path, StringCRef nameWithExt);
 		static String	BuildPath (StringCRef path, StringCRef name, StringCRef ext);
+
+		static bool		AbsoluteToRelativePath (StringCRef source, StringCRef base, OUT String &result);
+		//static String	ReleativeToRelativePath (StringCRef path1, StringCRef path2);	// TODO: find first match in folder and build relative path
 
 	private:
 		static usize	_GetExtensionPos (StringCRef filename);

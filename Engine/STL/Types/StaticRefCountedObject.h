@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	StaticRefCountedObject class may be created as static or
 	dynamic object and cast to shared pointer always available and
@@ -64,7 +64,7 @@ namespace GXTypes
 		}
 
 
-		~StaticRefCountedObject ()
+		~StaticRefCountedObject () override
 		{
 			ASSERT( (Strategy_t::Count( this ) != 0) == not _isDynamicObj );
 
@@ -86,6 +86,12 @@ namespace GXTypes
 			return tmp;
 		}
 
+		// can't use delete for shared pointer (but GCC can't compile this as private...)
+		forceinline void operator delete (void* p) noexcept
+		{
+			return ::operator delete( p );
+		}
+
 
 	private:
 		// use 'New' function
@@ -93,14 +99,6 @@ namespace GXTypes
 		{
 			return ::operator new( size );
 		}
-
-
-		// can't use delete for shared pointer
-		forceinline void operator delete (void* p) noexcept
-		{
-			return ::operator delete( p );
-		}
-
 
 		forceinline void _SetDynamicObj (bool isDynamic)
 		{

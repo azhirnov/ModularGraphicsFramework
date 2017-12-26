@@ -2,10 +2,11 @@
 
 #pragma once
 
-#include "Engine/Base/Common/CreateInfo.h"
-#include "Engine/Base/Common/ModuleMessages.h"
+#include "Engine/Base/Modules/CreateInfo.h"
+#include "Engine/Base/Modules/ModuleMessages.h"
 #include "Engine/Base/Modules/Message.h"
 #include "Engine/Base/Modules/MessageHandler.h"
+#include "Engine/Base/Modules/ProfilingMessages.h"
 
 namespace Engine
 {
@@ -16,7 +17,7 @@ namespace Base
 	// Base Module
 	//
 
-	class _ENGINE_BASE_EXPORT_ Module : public BaseObject
+	class Module : public BaseObject
 	{
 	// types
 	public:
@@ -47,7 +48,7 @@ namespace Base
 		using UntypedID_t			= ModuleMsg::UntypedID_t;
 		using ModuleName_t			= ModuleMsg::ModuleName_t;
 		using AttachedModules_t		= Array<Pair< ModuleName_t, ModulePtr >>;
-		using ParentModules_t		= FixedSizeSet< ModulePtr, 16 >;
+		using ParentModules_t		= Set< ModulePtr >;	//FixedSizeSet< ModulePtr, 16 >;
 
 		template <typename ...Types>
 		using MessageListFrom		= CompileTime::TypeListFrom< Message<Types>... >;
@@ -68,7 +69,8 @@ namespace Base
 										>;
 
 		// this messages available to Subscribe()
-		using SupportedEvents_t		= MessageListFrom< 
+		using SupportedEvents_t		= MessageListFrom<
+											//GX_PROFILE_MSG( ProfilingMsg::OnSendMsg, )
 											ModuleMsg::Link,
 											ModuleMsg::Compose,
 											ModuleMsg::Update,
@@ -86,7 +88,7 @@ namespace Base
 
 	private:
 		class AttachModuleToManagerAsyncTask;
-		struct _FindModuleWithTypelist_Func;
+		struct _SubscribeReceiver_Func;
 
 
 	// variables
@@ -110,6 +112,14 @@ namespace Base
 
 		template <typename ...Types>
 		bool Subscribe (Types&& ...args);
+
+		template <typename MsgList>
+		bool ReceiveEvents (const ModulePtr &other);
+
+		GX_PROFILE_MSG(
+			template <typename ...Types>
+			bool _SubscribeDbg (Types&& ...args);
+		)
 
 		//template <typename ...Types>
 		//bool Unsubscribe (Types&& ...args);
@@ -177,7 +187,8 @@ namespace Base
 		template <typename MsgList>		bool _CopySubscriptions (const ModulePtr &other);
 
 		template <typename T>			bool _SendMsg (const Message<T> &msg);
-		template <typename T>			bool _SendEvent (const Message<T> &msg, bool checked = true);
+		template <typename T>			bool _SendEvent (const Message<T> &msg);
+		template <typename T>			bool _SendUncheckedEvent (const Message<T> &msg);
 		template <typename T>			bool _SendForEachAttachments (const Message<T> &msg);
 		
 		template <typename ...Types>	bool _SubscribeOnMsg (Types&& ...args);

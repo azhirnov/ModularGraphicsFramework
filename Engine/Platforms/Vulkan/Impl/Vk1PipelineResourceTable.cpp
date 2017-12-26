@@ -4,7 +4,7 @@
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -32,7 +32,7 @@ namespace PlatformVK
 
 		struct BaseDescr
 		{
-			uint						binding			= ~0u;
+			uint						binding			= UMax;
 			vk::VkDescriptorType		descriptorType	= vk::VK_DESCRIPTOR_TYPE_MAX_ENUM;
 		};
 
@@ -113,7 +113,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1PipelineResourceTable::Vk1PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkPipelineResourceTableModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ VkPipelineResourceTableModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descriptorPoolId( VK_NULL_HANDLE ),
 		_descriptorSetId( VK_NULL_HANDLE )
 	{
@@ -309,13 +309,12 @@ namespace PlatformVK
 		Vk1PipelineResourceTable&	self;
 		ResourceDescrArray_t&		resources;
 		DescriptorPoolSizes_t&		poolSizes;
-		const uint					set;
 
 
 	// methods
-		_CreateResourceDescriptor_Func (OUT ResourceDescrArray_t &resources, OUT DescriptorPoolSizes_t &poolSizes, Vk1PipelineResourceTable& self, uint set) :
+		_CreateResourceDescriptor_Func (OUT ResourceDescrArray_t &resources, OUT DescriptorPoolSizes_t &poolSizes, Vk1PipelineResourceTable& self) :
 			self( self ), resources( resources ),
-			poolSizes( poolSizes ),	set( set )
+			poolSizes( poolSizes )
 		{}
 		
 		void operator () (const PushConstant &pc) const
@@ -362,8 +361,7 @@ namespace PlatformVK
 */
 		bool operator () (const TextureUniform &tex) const
 		{
-			if ( set != tex.descriptorSet )
-				return false;
+			CHECK( tex.textureType != EImage::Buffer );
 
 			// texture buffer
 			/*if ( tex.dimension == EImage::Buffer )
@@ -402,7 +400,7 @@ namespace PlatformVK
 				descr.info.imageView	<< req_image->defaultView;
 				descr.info.imageLayout	= vk::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-				descr.binding			= tex.binding;
+				descr.binding			= tex.uniqueIndex;
 				
 				CHECK_ERR(	descr.info.sampler   != VK_NULL_HANDLE and
 							descr.info.imageView != VK_NULL_HANDLE );
@@ -420,9 +418,6 @@ namespace PlatformVK
 */
 		bool operator () (const SamplerUniform &samp) const
 		{
-			if ( set != samp.descriptorSet )
-				return false;
-
 			RETURN_ERR( "unsupported!" );
 		}
 		
@@ -433,9 +428,6 @@ namespace PlatformVK
 */
 		bool operator () (const ImageUniform &img) const
 		{
-			if ( set != img.descriptorSet )
-				return false;
-			
 			ModulePtr	img_mod;
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT img_mod ) );
 
@@ -449,7 +441,7 @@ namespace PlatformVK
 			descr.info.imageView	<< req_image->defaultView;
 			descr.info.imageLayout	= vk::VK_IMAGE_LAYOUT_GENERAL;				// TODO
 			descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			descr.binding			= img.binding;
+			descr.binding			= img.uniqueIndex;
 			
 			CHECK_ERR( descr.info.imageView != VK_NULL_HANDLE );
 
@@ -465,9 +457,6 @@ namespace PlatformVK
 */
 		bool operator () (const UniformBuffer &buf) const
 		{
-			if ( set != buf.descriptorSet )
-				return false;
-			
 			ModulePtr	buf_mod;
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT buf_mod ) );
 
@@ -485,7 +474,7 @@ namespace PlatformVK
 			descr.info.offset		= 0;
 			descr.info.range		= (uint) buf.size;
 			descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descr.binding			= buf.binding;
+			descr.binding			= buf.uniqueIndex;
 
 			CHECK_ERR( descr.info.buffer != VK_NULL_HANDLE );
 			
@@ -501,9 +490,6 @@ namespace PlatformVK
 */
 		bool operator () (const StorageBuffer &buf) const
 		{
-			if ( set != buf.descriptorSet )
-				return false;
-			
 			ModulePtr	buf_mod;
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT buf_mod ) );
 
@@ -525,7 +511,7 @@ namespace PlatformVK
 			descr.info.offset		= 0;
 			descr.info.range		= (uint) buf_descr.size;
 			descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			descr.binding			= buf.binding;
+			descr.binding			= buf.uniqueIndex;
 			
 			CHECK_ERR( descr.info.buffer != VK_NULL_HANDLE );
 
@@ -551,9 +537,9 @@ namespace PlatformVK
 		SendTo( _layout, req_layouts );
 
 		PipelineLayoutDescriptor			layout_descr;	layout_descr << req_descr->result;
-		GpuMsg::GetVkDescriptorLayouts::IDs	descr_layouts;	descr_layouts << req_layouts->result;
+		vk::VkDescriptorSetLayout			descr_layout = *req_layouts->result;
 		DescriptorPoolSizes_t				pool_sizes;
-		_CreateResourceDescriptor_Func		func( OUT _resources, OUT pool_sizes, *this, 0 );
+		_CreateResourceDescriptor_Func		func( OUT _resources, OUT pool_sizes, *this );
 
 		// init pool sizes
 		pool_sizes.Resize( vk::VK_DESCRIPTOR_TYPE_RANGE_SIZE );
@@ -585,14 +571,12 @@ namespace PlatformVK
 		
 		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_descriptorPoolId), GetDebugName(), EGpuObject::DescriptorPool );
 
-		ASSERT( descr_layouts.Count() == 1 );	// TODO: only 1 set are supported yet
-
 		// create descriptor
 		VkDescriptorSetAllocateInfo		alloc_info = {};
 		alloc_info.sType				= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		alloc_info.descriptorPool		= _descriptorPoolId;
-		alloc_info.pSetLayouts			= descr_layouts.RawPtr();
-		alloc_info.descriptorSetCount	= (uint) descr_layouts.Count();
+		alloc_info.pSetLayouts			= &descr_layout;
+		alloc_info.descriptorSetCount	= 1u;
 
 		VK_CHECK( vkAllocateDescriptorSets( GetVkDevice(), &alloc_info, OUT &_descriptorSetId ) );
 
@@ -727,7 +711,7 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanContext::_CreateVk1PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
 	{
 		return New< PlatformVK::Vk1PipelineResourceTable >( gs, ci );
 	}

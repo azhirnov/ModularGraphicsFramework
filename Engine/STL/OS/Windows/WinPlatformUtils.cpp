@@ -1,7 +1,8 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "PlatformUtils.h"
 #include "FileSystem.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -21,7 +22,7 @@ namespace GX_STL
 namespace OS
 {
 	static bool _CreateLinkWin32 (const char *linkFilename, const char *link, bool isFolder);
-	static bool _GetWinApiError (const char *buf, int &bufSize);
+	static bool _GetWinApiError (INOUT char *buf, INOUT uint &bufSize);
 	
 /*
 =================================================
@@ -80,7 +81,7 @@ namespace OS
 */
 	bool PlatformUtils::ValidateHeap ()
 	{
-		const DWORD	count		= ::GetProcessHeaps( 0, 0 );
+		const DWORD	count		= ::GetProcessHeaps( 0, null );
 		HANDLE *	ph_heaps	= new HANDLE[count]; //(HANDLE *)_alloca( sizeof(HANDLE) * count );
 		bool		result		= true;
 
@@ -88,7 +89,7 @@ namespace OS
 
 		for (uint index = 0; index < count; ++index)
 		{
-			if( not ::HeapValidate( ph_heaps[ index ], 0, 0 ) )
+			if( not ::HeapValidate( ph_heaps[ index ], 0, null ) )
 			{
 				result = false;
 				//assert(false);
@@ -121,7 +122,7 @@ namespace OS
 			<< "\n\nMessage:\n" << msg
 			<< "\n\n(Yes - debug application,\n No - skip message,\n Cancel - mute messages)";
 
-		int	result = ::MessageBoxExA( 0, str.cstr(), caption.cstr(), 
+		int	result = ::MessageBoxExA( null, str.cstr(), caption.cstr(),
 									  MB_YESNOCANCEL | MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST | MB_DEFBUTTON2,
 									  MAKELANGID( LANG_ENGLISH, SUBLANG_ENGLISH_US ) );
 
@@ -179,7 +180,7 @@ namespace OS
 		ASSERT( file.IsNullTerminated() );
 
 		char	buf[128] = {};
-		int		size	 = (int)CountOf(buf);
+		uint	size	 = (uint)CountOf(buf);
 
 		if ( _GetWinApiError( buf, size ) )
 			return true;
@@ -202,13 +203,13 @@ namespace OS
 		HRESULT hres;
 		IShellLinkA* psl;
  
-		hres = CoInitialize( 0 );
+		hres = CoInitialize( null );
 		
 		if ( FAILED(hres) )
 			return false;
 
 		hres = CoCreateInstance( isFolder ? CLSID_FolderShortcut : CLSID_ShellLink,
-								 NULL,
+								 null,
 								 CLSCTX_INPROC_SERVER,
 								 IID_IShellLink,
 								 (LPVOID*)&psl );
@@ -247,7 +248,7 @@ namespace OS
 	_GetWinApiError
 =================================================
 */
-	static bool _GetWinApiError (const char *buf, int &bufSize)
+	static bool _GetWinApiError (INOUT char *buf, INOUT uint &bufSize)
 	{
 		DWORD	dw = ::GetLastError();
 
@@ -257,12 +258,12 @@ namespace OS
 		DWORD	dw_count = ::FormatMessageA(
 									FORMAT_MESSAGE_FROM_SYSTEM |
 									FORMAT_MESSAGE_IGNORE_INSERTS,
-									0,
+									null,
 									dw,
 									MAKELANGID( LANG_ENGLISH, SUBLANG_DEFAULT ),
 									(LPTSTR) buf,
 									bufSize,
-									0 );
+									null );
 
 		bufSize = dw_count;
 		return false;

@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -75,7 +75,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4RenderPass::GL4RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci) :
-		GL4BaseModule( gs, ModuleConfig{ GLRenderPassModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLRenderPassModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr )
 	{
 		SetDebugName( "GL4RenderPass" );
@@ -359,7 +359,7 @@ namespace PlatformGL
 
 namespace Platforms
 {
-	ModulePtr OpenGLContext::_CreateGL4RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
 	{
 		return New< PlatformGL::GL4RenderPass >( gs, ci );
 	}

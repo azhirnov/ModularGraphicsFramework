@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright ï¿½  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -91,7 +91,7 @@
 
 
 // physics types (this types slow down compilation)
-#define GX_PHYSICS_DIMENSIONS_ENABLED
+//#define GX_PHYSICS_DIMENSIONS_ENABLED
 
 
 // Java

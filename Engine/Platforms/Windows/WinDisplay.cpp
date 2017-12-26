@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Windows/WinDisplay.h"
 
@@ -6,17 +6,26 @@
 
 #include "Engine/STL/OS/Windows/WinHeader.h"
 
-#include <VersionHelpers.h>
+#ifdef COMPILER_MSVC
 
-// Windows 8.1
-#pragma comment (lib, "Shcore.lib")
-#include <ShellScalingAPI.h>		
+#	pragma warning (push, 0)
+#	include <VersionHelpers.h>
+	// Windows 8.1
+#	include <ShellScalingAPI.h>		
+	// Windows Vista 
+#	include <LowLevelMonitorConfigurationAPI.h>
+#	include <PhysicalMonitorEnumerationAPI.h>
+//#	include <HighLevelMonitorConfigurationAPI.h>
+#	pragma warning (pop)
 
-// Windows Vista 
-#include <PhysicalMonitorEnumerationAPI.h>
-//#include <HighLevelMonitorConfigurationAPI.h>
-#include <LowLevelMonitorConfigurationAPI.h>
-#pragma comment (lib, "Dxva2.lib")
+#else
+
+#	include <VersionHelpers.h>
+	// Windows Vista
+#	include <PhysicalMonitorEnumerationAPI.h>
+
+#endif	// COMPILER_MSVC
+
 
 namespace Engine
 {
@@ -86,6 +95,7 @@ namespace Platforms
 			disp.SetFullArea(RectI{ info.rcMonitor.left, info.rcMonitor.top, info.rcMonitor.right, info.rcMonitor.bottom });
 			disp.SetOrientation( disp.IsHorizontal() ? EDisplayOrientation::Landscape : EDisplayOrientation::Portrait );
 
+			#ifdef COMPILER_MSVC
 			RELEASE_ONLY( if ( IsWindows8Point1OrGreater() ) )
 			{
 				uint2 dpi{ 96, 96 };
@@ -96,6 +106,8 @@ namespace Platforms
 					has_dpi = true;
 				}
 			}
+			#endif	// COMPILER_MSVC
+
 			if ( not has_dpi and is_primary )
 			{
 				disp.SetPhysicalSize( self->_ScreenPhysicalSize() );

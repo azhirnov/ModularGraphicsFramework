@@ -23,3 +23,10 @@
 		CHECK( _SetState( EState::ComposingFailed ) ); \
 		return true; \
 	}}
+
+
+#if defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING)
+#	define GX_PROFILE_MSG		ARGS
+#else
+#	define GX_PROFILE_MSG		__GX_EMPTY_ARGS
+#endif

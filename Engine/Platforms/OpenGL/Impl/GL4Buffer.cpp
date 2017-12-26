@@ -3,7 +3,7 @@
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -113,7 +113,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Buffer::GL4Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
-		GL4BaseModule( gs, ModuleConfig{ GLBufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),				_bufferId( 0 ),
 		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
 		_useMemMngr( ci.allocMem ),		_isBindedToMemory( false )
@@ -168,7 +168,7 @@ namespace PlatformGL
 		if ( not _memObj and _useMemMngr )
 		{
 			ModulePtr	mem_module;
-			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								GLMemoryModuleID,
 								GlobalSystems(),
 								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
@@ -371,6 +371,7 @@ namespace PlatformGL
 	{
 		if ( _memObj )
 		{
+			this->UnsubscribeAll( _memObj );
 			_memObj->UnsubscribeAll( this );
 			_memObj = null;
 		}
@@ -394,7 +395,7 @@ namespace PlatformGL
 
 namespace Platforms
 {
-	ModulePtr OpenGLContext::_CreateGL4Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
 	{
 		return New< PlatformGL::GL4Buffer >( gs, ci );
 	}

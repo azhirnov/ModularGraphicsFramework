@@ -20,6 +20,11 @@ namespace OS
 
 	struct Library : public Noncopyable
 	{
+	// types
+	public:
+		using Func_t	= SharedLibFunction_t;
+
+
 	// variables
 	private:
 		void *				_library;
@@ -134,13 +139,13 @@ namespace OS
 			return false;
 		}
 
-		void * GetProc (StringCRef procName, void *defProc = null) const
+		Func_t GetProc (StringCRef procName, void *defProc = null) const
 		{
 			ASSERT( IsValid() );
 			ASSERT( not procName.Empty() );
 			ASSERT( procName.IsNullTerminated() );
 
-			void * tmp = dlsym( _library, procName.cstr() );
+			Func_t tmp = dlsym( _library, procName.cstr() );
 			return tmp != null ? tmp : defProc;
 		}
 	};

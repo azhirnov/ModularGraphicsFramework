@@ -62,9 +62,13 @@ namespace Base
 	_Subscribe
 =================================================
 */
-	bool MessageHandler::_Subscribe (const TypeIdList& validTypes, TypeId id, Handler &&handler)
+	bool MessageHandler::_Subscribe (const TypeIdList& validTypes, TypeId id, Handler &&handler, bool checked)
 	{
-		if ( not validTypes.HasType( id ) )
+		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
+			checked = true;
+		#endif
+
+		if ( checked and not validTypes.HasType( id ) )
 			RETURN_ERR( "Can't subscribe for event '" << ToString( id ) << "'" );
 
 		SCOPELOCK( _lock );
@@ -106,7 +110,7 @@ namespace Base
 				{
 					if ( other._handlers[i].second.ptr == obj )
 					{
-						_Subscribe( validTypes, ids[j], Handler(other._handlers[i].second) );
+						_Subscribe( validTypes, ids[j], Handler(other._handlers[i].second), false );
 						copied++;
 					}
 				}
@@ -161,13 +165,17 @@ namespace Base
 		SCOPELOCK( _lock );
 
 		// is all handlers presented in typelist?
-		FOR( i, _handlers )
+		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
 		{
-			const TypeId	id = _handlers[i].first;
+			FOR( i, _handlers )
+			{
+				const TypeId	id = _handlers[i].first;
 
-			if ( not typelist.HasType( id ) )
-				RETURN_ERR( "Type '" << ToString( id ) << "' is not exist in typelist" );
+				if ( not typelist.HasType( id ) )
+					RETURN_ERR( "Type '" << ToString( id ) << "' is not exist in typelist" );
+			}
 		}
+		#endif
 
 		// is all types in typelist has handlers?
 		for (usize i = 0, cnt = typelist.Count(); i < cnt; ++i)
@@ -192,13 +200,17 @@ namespace Base
 		SCOPELOCK( _lock );
 
 		// is all handlers presented in typelist?
-		FOR( i, _handlers )
+		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
 		{
-			const TypeId	id = _handlers[i].first;
+			FOR( i, _handlers )
+			{
+				const TypeId	id = _handlers[i].first;
 
-			if ( not eventTypes.HasType( id ) and not msgTypes.HasType( id ) )
-				RETURN_ERR( "Type '" << ToString( id ) << "' is not exist in typelists" );
+				if ( not eventTypes.HasType( id ) and not msgTypes.HasType( id ) )
+					RETURN_ERR( "Type '" << ToString( id ) << "' is not exist in typelists" );
+			}
 		}
+		#endif
 
 		// is all types in typelist has handlers?
 		for (usize i = 0, cnt = msgTypes.Count(); i < cnt; ++i)

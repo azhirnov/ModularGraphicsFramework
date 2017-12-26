@@ -81,6 +81,11 @@ namespace gl
 		return glUnmapNamedBufferEXT( buffer );
 	}
 
+	inline void glNamedCopyBufferSubData (GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
+	{
+		return glNamedCopyBufferSubDataEXT(readBuffer, writeBuffer, readOffset, writeOffset, size);
+	}
+
 	// Vertex Attribs
 	inline void glDisableVertexArrayAttrib (GLuint vaobj, GLuint index)
 	{

@@ -1,7 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/OpenGL/Impl/GL4Sampler.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -72,7 +72,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Sampler::GL4Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
-		GL4BaseModule( gs, ModuleConfig{ GLSamplerModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLSamplerModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_samplerId( 0 )
 	{
@@ -407,7 +407,7 @@ namespace PlatformGL
 
 namespace Platforms
 {
-	ModulePtr OpenGLContext::_CreateGL4Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
 		return New< PlatformGL::GL4Sampler >( gs, ci );
 	}

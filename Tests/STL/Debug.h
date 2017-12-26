@@ -83,7 +83,7 @@ namespace GXTypes
 
 		~TDebugInstCounter ()
 		{
-			ASSERT( value != 0 );	// assert on second dtor call
+			TEST( value != 0 );	// assert on second dtor call
 			--counter;
 			++dtorCnt;
 			value = 0;

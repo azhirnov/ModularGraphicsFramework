@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -15,7 +15,7 @@ static void IndexedArray_Test1 ()
 	arr.Sort();
 
 	FORv( i, 1, arr ) {
-		ASSERT( arr[i-1] <= arr[i] );
+		TEST( arr[i-1] <= arr[i] );
 	}
 }
 
@@ -31,10 +31,10 @@ static void IndexedArray_Test2 ()
 	m.Add( 2, 6.3f );
 	m.Add( 3, 7.0f );
 
-	ASSERT( m( 0 ) == 8.0f );
-	ASSERT( m( 4 ) == 5.0f );
-	ASSERT( m( 2 ) == 6.3f );
-	ASSERT( m( 3 ) == 7.0f );
+	TEST( m( 0 ) == 8.0f );
+	TEST( m( 4 ) == 5.0f );
+	TEST( m( 2 ) == 6.3f );
+	TEST( m( 3 ) == 7.0f );
 }
 
 

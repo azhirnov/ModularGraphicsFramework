@@ -113,7 +113,7 @@ namespace GXMath
 	template <typename T>
 	inline bool Frustum<T>::IsVisible (const Vec<T,3> &point) const
 	{
-		typedef Plane<T>::ESide		PSide;
+		typedef typename Plane<T>::ESide		PSide;
 
 		return ( _planes[EPlane::Left  ].Intersect( point ) != PSide::Negative and
 				 _planes[EPlane::Right ].Intersect( point ) != PSide::Negative and
@@ -158,7 +158,7 @@ namespace GXMath
 	template <typename T>
 	inline bool Frustum<T>::IsVisible (const Vec<T,3> &center, const Vec<T,3> &halfextents) const
 	{
-		typedef Plane<T>::ESide		PSide;
+		typedef typename Plane<T>::ESide		PSide;
 
 		return ( _planes[EPlane::Left  ].Intersect( center, halfextents ) != PSide::Negative and
 				 _planes[EPlane::Right ].Intersect( center, halfextents ) != PSide::Negative and
@@ -191,12 +191,12 @@ namespace GXMath
 	{
 		Frustum<T2>	ret;
 
-		ret._planes[0] = _planes[0].Convert<T2>();
-		ret._planes[1] = _planes[1].Convert<T2>();
-		ret._planes[2] = _planes[2].Convert<T2>();
-		ret._planes[3] = _planes[3].Convert<T2>();
-		ret._planes[4] = _planes[4].Convert<T2>();
-		ret._planes[5] = _planes[5].Convert<T2>();
+		ret._planes[0] = _planes[0].template Convert<T2>();
+		ret._planes[1] = _planes[1].template Convert<T2>();
+		ret._planes[2] = _planes[2].template Convert<T2>();
+		ret._planes[3] = _planes[3].template Convert<T2>();
+		ret._planes[4] = _planes[4].template Convert<T2>();
+		ret._planes[5] = _planes[5].template Convert<T2>();
 
 		return ret;
 	}

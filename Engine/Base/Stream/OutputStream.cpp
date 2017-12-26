@@ -78,7 +78,7 @@ namespace Base
 =================================================
 */
 	OutputStream::OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci) :
-		Module( gs, ModuleConfig{ OutputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ OutputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleDetached_Impl );
@@ -94,7 +94,7 @@ namespace Base
 
 		String	uri = RVREF( ci.uri.Get() );
 
-		CHECK( gs->Get< FileManager >()->OpenForWrite( uri, OUT _file ) );
+		CHECK( gs->fileManager->OpenForWrite( uri, OUT _file ) );
 		
 		if ( _file )
 		{
@@ -110,7 +110,7 @@ namespace Base
 =================================================
 */
 	OutputStream::OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci) :
-		Module( gs, ModuleConfig{ OutputStreamModuleID, ~0u }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ OutputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleDetached_Impl );

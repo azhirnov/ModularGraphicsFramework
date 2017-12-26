@@ -5,7 +5,7 @@
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Shared/GPU/Uniforms.h"
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
-#include "Engine/Platforms/OpenCL/OpenCLContext.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 #if defined( COMPUTE_API_OPENCL )
 
@@ -32,7 +32,7 @@ namespace PlatformCL
 		using LayoutMsgList_t		= MessageListFrom< GpuMsg::GetPipelineLayoutDescriptor >;
 		
 		struct BaseArg {
-			uint		index	= ~0u;
+			uint		index	= UMax;
 			ModulePtr	module;
 		};
 
@@ -98,7 +98,7 @@ namespace PlatformCL
 =================================================
 */
 	CL2PipelineResourceTable::CL2PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLPipelineResourceTableModuleID, ~0u }, &_msgTypes, &_eventTypes )
+		CL2BaseModule( gs, ModuleConfig{ CLPipelineResourceTableModuleID, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "CL2PipelineResourceTable" );
 
@@ -506,7 +506,7 @@ namespace PlatformCL
 
 namespace Platforms
 {
-	ModulePtr OpenCLContext::_CreateCL2PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
 	{
 		return New< PlatformCL::CL2PipelineResourceTable >( gs, ci );
 	}

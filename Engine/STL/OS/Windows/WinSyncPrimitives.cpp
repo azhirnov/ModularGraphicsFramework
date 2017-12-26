@@ -1,7 +1,8 @@
 ﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Math/Mathematics.h"
 #include "SyncPrimitives.h"
+#include "Engine/STL/Algorithms/ArrayUtils.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 #if defined( PLATFORM_WINDOWS ) and \
 	not defined( PLATFORM_SDL )
@@ -26,8 +27,6 @@ namespace OS
 		_crSection( UninitializedT<CRITICAL_SECTION>() ),
 		_inited(false)
 	{
-		const uint s = sizeof(CRITICAL_SECTION);
-
 		::InitializeCriticalSection( &_crSection.Get<CRITICAL_SECTION>() );
 		_inited = true;
 	}
@@ -118,10 +117,10 @@ namespace OS
 	}
 
 	template <typename T>
-	inline bool SetPointer (T *&to, void *from)
+	inline bool SetPointer (T &to, Library::Func_t from)
 	{
 		if ( from != null ) {
-			to = PointerCast< T >( from );
+			to = ReferenceCast< T >( from );
 			return true;
 		}
 		return false;

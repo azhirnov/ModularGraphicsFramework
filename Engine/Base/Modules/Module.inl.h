@@ -15,10 +15,10 @@ namespace Base
 	template <typename T>
 	forceinline bool Module::Send (const Message<T> &msg) noexcept
 	{
-		// only sync message supported
-		if ( not msg.IsAsync() ) {
-			CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
-		}
+		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
+		
+		GX_PROFILE_MSG( _SendUncheckedEvent(Message< ProfilingMsg::OnSendMsg >{ this, msg }.Async()) );
+
 		return _msgHandler.Send( msg );
 	}
 
@@ -33,6 +33,59 @@ namespace Base
 		return _SubscribeOnEvent( FW<Types>( args )... );
 	}
 	
+/*
+=================================================
+	_SubscribeReceiver_Func
+=================================================
+*/
+	struct Module::_SubscribeReceiver_Func
+	{
+		ModulePtr	_self;
+		ModulePtr	_other;
+		bool		ok		= true;
+
+		template <typename T, usize Index>
+		void Process ()
+		{
+			bool is_ok;
+			CHECK(( is_ok = _self->Subscribe( _other, &Module::_SendEvent< typename T::Data_t > ) ));
+			ok &= is_ok;
+		}
+	};
+
+/*
+=================================================
+	ReceiveEvents
+=================================================
+*/
+	template <typename MsgList>
+	forceinline bool Module::ReceiveEvents (const ModulePtr &other)
+	{
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
+		_SubscribeReceiver_Func		func{ this, other };
+
+		MsgList::RuntimeForEach( func );
+		CHECK_ERR( func.ok );
+
+		return true;
+	}
+
+/*
+=================================================
+	_SubscribeDbg
+=================================================
+*/
+	GX_PROFILE_MSG(
+	template <typename ...Types>
+	forceinline bool Module::_SubscribeDbg (Types&& ...args)
+	{
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
+		_msgHandler.Subscribe( TypeIdList{}, FW<Types>( args )..., /*checked*/false );
+		return true;
+	})
+
 /*
 =================================================
 	Unsubscribe
@@ -89,10 +142,8 @@ namespace Base
 	template <typename T>
 	forceinline bool Module::_SendMsg (const Message<T> &msg)
 	{
-		// only sync message supported
-		if ( not msg.IsAsync() ) {
-			CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
-		}
+		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
+		
 		if ( not GetSupportedMessages().HasType( TypeIdOf< Message<T> >() ) )
 			RETURN_ERR( "Unsupported message type '" << ToString( TypeIdOf<T>() ) << "'" );
 
@@ -107,17 +158,24 @@ namespace Base
 =================================================
 */
 	template <typename T>
-	forceinline bool Module::_SendEvent (const Message<T> &msg, bool checked)
+	forceinline bool Module::_SendEvent (const Message<T> &msg)
 	{
-		// only sync message supported
-		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
 		
-		if ( checked and not GetSupportedEvents().HasType( TypeIdOf< Message<T> >() ) )
+		if ( not GetSupportedEvents().HasType( TypeIdOf< Message<T> >() ) )
 			RETURN_ERR( "Unsupported event type '" << ToString( TypeIdOf<T>() ) << "'" );
 
 		return _msgHandler.Send( msg.From( this ) );
 	}
 	
+	template <typename T>
+	forceinline bool Module::_SendUncheckedEvent (const Message<T> &msg)
+	{
+		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
+
+		return _msgHandler.Send( msg.From( this ) );
+	}
+
 /*
 =================================================
 	_SubscribeOnMsg
@@ -247,15 +305,19 @@ namespace Base
 =================================================
 	_CopySubscriptions
 ----
-	will copy message handlers from 'other' to self,
-	warning: don't forget to unsubscribe!
+	will copy message handlers from 'other' to self
 =================================================
 */
 	template <typename MsgList>
 	inline bool Module::_CopySubscriptions (const ModulePtr &other)
 	{
 		CHECK_ERR( other );
-		CHECK_ERR( other->GetSupportedMessages().HasAllTypes< MsgList >() );
+
+		const TypeIdList	tlist{ UninitializedT<MsgList>() };
+
+		FOR( i, tlist ) {
+			CHECK_ERR( other->GetSupportedMessages().HasType( tlist.Get(i) ) );
+		}
 
 		return _msgHandler.CopySubscriptions< MsgList >( GetSupportedMessages(), other, other->_msgHandler );
 	}

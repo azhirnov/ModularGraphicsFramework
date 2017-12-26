@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -10,23 +10,23 @@ static void TestGetAllFiles ()
 {
 	Array<String>	dirs;
 
-	ASSERT( OS::FileSystem::GetAllDirsInPath( "..", dirs ) );
+	TEST( OS::FileSystem::GetAllDirsInPath( "..", dirs ) );
 
-	ASSERT( not dirs.Empty() );
+	TEST( not dirs.Empty() );
 }
 
 
 static void TestFolderSearch ()
 {
-	ASSERT( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Base", 4 ) );
+	TEST( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Base", 4 ) );
 
-	ASSERT( OS::FileSystem::IsFileExist( "Main.cpp" ) );
+	TEST( OS::FileSystem::IsFileExist( "Main.cpp" ) );
 }
 
 
 static void TestRecursiveFileSearch ()
 {
-	ASSERT( OS::FileSystem::FindAndSetCurrentDir( "Tests/STL", 4 ) );
+	TEST( OS::FileSystem::FindAndSetCurrentDir( "Tests/STL", 4 ) );
 
 	Array<String>	file_names;
 	auto			filter = LAMBDA()(StringCRef fname) -> bool
@@ -40,7 +40,7 @@ static void TestRecursiveFileSearch ()
 	OS::FileSystem::RecursiveFindFiles( "", filter, 1, OUT file_names );
 
 	usize	idx;
-	ASSERT( file_names.Find( OUT idx, String("Test_OS_FileSystem.cpp"), 0 ) );
+	TEST( file_names.Find( OUT idx, String("Test_OS_FileSystem.cpp"), 0 ) );
 }
 
 

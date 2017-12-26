@@ -68,7 +68,7 @@ namespace GX_STL
 
 // text, level, file, line
 #define LOG( _text_, ... ) \
-		__GX_LOG_EXT( _text_, \
+		__GX_LOG_EXT(	_text_, \
 						AUXDEF_GETARG_0( __VA_ARGS__ ), \
 						AUXDEF_GETARG_1( __VA_ARGS__, __FILE__ ), \
 						AUXDEF_GETARG_2( __VA_ARGS__, __FILE__, __LINE__ ) )

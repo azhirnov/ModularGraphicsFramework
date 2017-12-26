@@ -196,7 +196,7 @@ namespace GXMath
 			forceinline static T Get (const BitsU lastBitIndex)
 			{
 				STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
-				STATIC_ASSERT( CompileTime::IsInteger<T> );
+				STATIC_ASSERT( CompileTime::IsInteger<T> /*and CompileTime::IsUnsigned<T>*/ );
 
 				// Test:
 				// (1 << lastBitIndex-1) & ToMask( lastBitIndex ) == (1 << lastBitIndex-1)
@@ -286,7 +286,7 @@ namespace GXMath
 			forceinline static T Get ()
 			{
 				STATIC_ASSERT( CompileTime::IsInteger<T> and CompileTime::IsUnsigned<T> );
-				return T(-1);
+				return UMax;
 			}
 		};
 		

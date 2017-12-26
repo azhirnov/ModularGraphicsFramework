@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -40,7 +40,7 @@ namespace GXTypes
 		static void _CheckArgs ()
 		{
 			using Args = CompileTime::TypeListFrom< TypeLists... >;
-			STATIC_ASSERT( Args::Equal< ArgsTypeList > );
+			STATIC_ASSERT( Args::template Equal< ArgsTypeList > );
 			
 			//CompileTime::Debug::TypeListToString< Args >::Show();
 			//CompileTime::Debug::TypeListToString< ArgsTypeList >::Show();
@@ -65,7 +65,7 @@ namespace GXTypes
 						  const VariantArray1 &varArray1,
 						  CompileTime::IndexSequence<I1...>)
 		{
-			return _CallImpl( func, varArray1.Get<I1>()... );
+			return _CallImpl( func, varArray1.template Get<I1>()... );
 		}
 
 
@@ -78,7 +78,7 @@ namespace GXTypes
 						  const VariantArray1 &varArray1, const VariantArray2 &varArray2,
 						  CompileTime::IndexSequence<I1...>, CompileTime::IndexSequence<I2...>)
 		{
-			return _CallImpl( func, varArray1.Get<I1>()..., varArray2.Get<I2>()... );
+			return _CallImpl( func, varArray1.template Get<I1>()..., varArray2.template Get<I2>()... );
 		}
 
 
@@ -91,7 +91,7 @@ namespace GXTypes
 						  const VariantArray1 &varArray1, const VariantArray2 &varArray2, const VariantArray3 &varArray3,
 						  CompileTime::IndexSequence<I1...>, CompileTime::IndexSequence<I2...>, CompileTime::IndexSequence<I3...>)
 		{
-			return _CallImpl( func, varArray1.Get<I1>()..., varArray2.Get<I2>()..., varArray3.Get<I3>()... );
+			return _CallImpl( func, varArray1.template Get<I1>()..., varArray2.template Get<I2>()..., varArray3.template Get<I3>()... );
 		}
 	};
 
@@ -103,13 +103,13 @@ namespace GXTypes
 */
 	template <typename FuncType, typename ...VariantArrays>
 	forceinline typename CompileTime::FunctionInfo< FuncType >::result
-		InvokeWithVariant (const FuncType &func, const VariantArrays& ...varArrays)
+		InvokeWithVariant (const FuncType &func, VariantArrays&& ...varArrays)
 	{
 		using Impl = InvokeWithVariantImpl< 
 						typename CompileTime::FunctionInfo< FuncType >::result,
 						typename CompileTime::FunctionInfo< FuncType >::args >;
 
-		return Impl::Call( func, varArrays... );
+		return Impl::Call( func, FW<VariantArrays>(varArrays)... );
 	}
 
 }	// GXTypes

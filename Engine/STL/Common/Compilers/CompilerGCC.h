@@ -221,7 +221,7 @@
 
 
 // 'auto' keyword in template parameters
-#if COMPILER_VERSION >= 600 // TODO
+#if COMPILER_VERSION >= 700
 #	define GX_AUTO_IN_TEMPLATE_SUPPORTED	1
 #endif
 
@@ -240,7 +240,9 @@
 #if defined( PLATFORM_ANDROID )
 #	define GX_BREAK_POINT()		{}
 #else
-#	define GX_BREAK_POINT()		__asm__("int3")		// or asm("int $3");
+#	include <csignal>
+#	define GX_BREAK_POINT()		std::raise(SIGINT)
+//#	define GX_BREAK_POINT()		__asm__("int3")		// or asm("int $3");
 #endif
 
 

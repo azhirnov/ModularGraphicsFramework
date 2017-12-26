@@ -96,7 +96,7 @@ namespace File
 			int		pos  = ftell( _file );
 
 			fseek( _file, 0, SEEK_END );
-			size = ftell( _file );
+			size = usize(ftell( _file ));
 			fseek( _file, pos, SEEK_SET );
 
 			return BytesU( size - pos );
@@ -108,7 +108,7 @@ namespace File
 			int		pos  = ftell( _file );
 
 			fseek( _file, 0, SEEK_END );
-			size = ftell( _file );
+			size = usize(ftell( _file ));
 			fseek( _file, pos, SEEK_SET );
 
 			return BytesU( size );
@@ -116,7 +116,7 @@ namespace File
 
 		virtual BytesU Pos () const noexcept override
 		{
-			return BytesU( ftell( _file ) );
+			return BytesU(usize( ftell( _file ) ));
 		}
 		
 		virtual bool IsEOF () const noexcept override
@@ -271,7 +271,7 @@ namespace File
 			int		pos  = ftell( _file );
 
 			fseek( _file, 0, SEEK_END );
-			size = ftell( _file );
+			size = usize(ftell( _file ));
 			fseek( _file, pos, SEEK_SET );
 
 			return BytesU( size - pos );
@@ -283,7 +283,7 @@ namespace File
 			int		pos  = ftell( _file );
 
 			fseek( _file, 0, SEEK_END );
-			size = ftell( _file );
+			size = usize(ftell( _file ));
 			fseek( _file, pos, SEEK_SET );
 
 			return BytesU( size );
@@ -291,7 +291,7 @@ namespace File
 
 		virtual BytesU Pos () const noexcept override
 		{
-			return BytesU( ftell( _file ) );
+			return BytesU(usize( ftell( _file ) ));
 		}
 		
 		virtual bool IsEOF () const noexcept override

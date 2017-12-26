@@ -6,7 +6,7 @@
 #pragma once
 
 #include "Engine/Base/Modules/ModulesFactory.h"
-#include "Engine/Base/Modules/IDs.h"
+#include "Engine/Base/Common/IDs.h"
 #include "Engine/Base/Tasks/TaskManager.h"
 #include "Engine/Base/Threads/ThreadManager.h"
 #include "Engine/Base/Files/FileManager.h"
@@ -21,7 +21,7 @@ namespace Base
 	// Main System
 	//
 
-	class _ENGINE_BASE_EXPORT_ MainSystem final : public Module
+	class MainSystem final : public Module
 	{
 	// types
 	private:

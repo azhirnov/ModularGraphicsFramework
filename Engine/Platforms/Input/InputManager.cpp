@@ -99,9 +99,9 @@ namespace Platforms
 	Register
 =================================================
 */
-	void InputManager::Register (GlobalSystemsRef gs)
+	void InputManager::Register ()
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
 
 		CHECK( mf->Register( InputManagerModuleID, &_CreateInputManager ) );
 		CHECK( mf->Register( InputThreadModuleID, &_CreateInputThread ) );
@@ -112,9 +112,9 @@ namespace Platforms
 	Unregister
 =================================================
 */
-	void InputManager::Unregister (GlobalSystemsRef gs)
+	void InputManager::Unregister ()
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
 
 		mf->UnregisterAll( InputManagerModuleID );
 		mf->UnregisterAll( InputThreadModuleID );

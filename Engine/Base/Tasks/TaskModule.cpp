@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Base/Modules/IDs.h"
+#include "Engine/Base/Common/IDs.h"
 #include "Engine/Base/Modules/Module.h"
 #include "Engine/Base/Tasks/AsyncMessage.h"
 #include "Engine/Base/Tasks/TaskManager.h"
@@ -22,7 +22,7 @@ namespace Base
 							const TypeIdList *eventTypes) :
 		Module( gs, config, msgTypes, eventTypes )
 	{
-		GlobalSystems()->GetSetter< TaskModule >().Set( this );
+		GlobalSystems()->taskModule.Set( this );
 	}
 	
 /*
@@ -33,7 +33,7 @@ namespace Base
 	TaskModule::~TaskModule ()
 	{
 		if ( GetThreadID() == ThreadID::GetCurrent() ) {
-			GlobalSystems()->GetSetter< TaskModule >().Set( null );
+			GlobalSystems()->taskModule.Set( null );
 		}
 	}
 //-----------------------------------------------------------------------------
@@ -108,7 +108,7 @@ namespace Base
 	TaskModuleImpl::TaskModuleImpl (GlobalSystemsRef gs, const CreateInfo::TaskModule &info) :
 		TaskModule( gs, ModuleConfig{ TaskModuleModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
-		SetDebugName( GlobalSystems()->Get< ParallelThread >()->GetDebugName() + "_Tasks"_str );
+		SetDebugName( GlobalSystems()->parallelThread->GetDebugName() + "_Tasks"_str );
 
 		_SubscribeOnMsg( this, &TaskModuleImpl::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &TaskModuleImpl::_OnModuleDetached_Impl );

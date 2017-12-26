@@ -8,7 +8,7 @@ extern void Test_GWindow ()
 	{
 		GApp	app;
 	
-		CHECK( app.ms->GlobalSystems()->Get< FileManager >()->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
+		CHECK( app.ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
 
 		app.Initialize( "GL 4.4"_GAPI );
 
@@ -17,14 +17,14 @@ extern void Test_GWindow ()
 
 		app.Quit();
 	}
-	GetMainSystemInstace()->Send< ModuleMsg::Delete >({});
+	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
 	#endif
 	
 	#ifdef GRAPHICS_API_VULKAN
 	{
 		GApp	app;
 	
-		CHECK( app.ms->GlobalSystems()->Get< FileManager >()->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
+		CHECK( app.ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
 
 		app.Initialize( "VK 1.0"_GAPI );
 
@@ -33,6 +33,8 @@ extern void Test_GWindow ()
 
 		app.Quit();
 	}
-	GetMainSystemInstace()->Send< ModuleMsg::Delete >({});
+	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
 	#endif
+
+	//WARNING( "Vulkan Window test succeeded!" );
 }

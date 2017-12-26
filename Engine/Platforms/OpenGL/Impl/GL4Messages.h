@@ -113,7 +113,7 @@ namespace GpuMsg
 		{
 			StaticString<64>			entry;
 			gl::GLuint					id		= 0;
-			Platforms::EShader::type	type	= Platforms::EShader::Unknown;;
+			Platforms::EShader::type	type	= Platforms::EShader::Unknown;
 		};
 		using Shaders_t		= FixedSizeArray< ShaderModule, Platforms::EShader::_Count >;
 
@@ -168,6 +168,24 @@ namespace GpuMsg
 		explicit GLPipelineResourceTableApply (gl::GLuint compProg): programs{} { programs[Platforms::EShader::Compute] = compProg; }
 	};
 
+
+	//
+	// Update Buffer Command
+	//
+	struct GLCmdUpdateBuffer
+	{
+	// variables
+		ModulePtr		dstBuffer;
+		BytesUL			dstOffset;
+		BytesUL			size;
+		BytesUL			srcOffset;
+
+	// methods
+		GLCmdUpdateBuffer (const CmdUpdateBuffer &cmd, BytesU offset) :
+			dstBuffer(cmd.dstBuffer), dstOffset(cmd.dstOffset), size(cmd.data.Size()), srcOffset(offset)
+		{}
+	};
+
 	
 	//
 	// OpenGL Commands
@@ -204,7 +222,7 @@ namespace GpuMsg
 								CmdCopyBufferToImage,
 								CmdCopyImageToBuffer,
 								CmdBlitImage,
-								CmdUpdateBuffer,
+								GLCmdUpdateBuffer,
 								CmdFillBuffer,
 								CmdClearAttachments,
 								CmdClearColorImage,
@@ -239,6 +257,7 @@ namespace GpuMsg
 
 	// variables
 		ReadOnce< Array<Command> >	commands;
+		BinaryArray					bufferData;
 	};
 
 

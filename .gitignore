@@ -18,3 +18,5 @@
 *.dll
 *.iobj
 *.ipdb
+/build
+/Tests/PipelineCompiler/out

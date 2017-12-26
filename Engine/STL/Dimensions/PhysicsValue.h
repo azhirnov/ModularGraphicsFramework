@@ -119,7 +119,7 @@ namespace GXMath
 		
 		template <typename S>
 		PhysicsValue (const PhysicsValue< Value_t, dimensions_t, S > &other) :
-			_value(other.ToScale< value_scale_t >().ref())
+			_value(other.template ToScale< value_scale_t >().ref())
 		{}
 
 		Value_t &		ref ()							{ return _value; }
@@ -209,7 +209,7 @@ namespace GXMath
 			typedef typename CompileTime::Fractional32< PowNum, PowDenom >		pow_t;
 			typedef typename CompileTime::NearFloat::FromType<ValueType>		Float_t;
 
-			return Result_t( GXMath::Pow( _value, pow_t::ToFloat< Float_t >() ) );
+			return Result_t( GXMath::Pow( _value, pow_t::template ToFloat< Float_t >() ) );
 		}
 		
 
@@ -276,14 +276,14 @@ namespace GXMath
 		template <typename T>
 		T	To () const
 		{
-			STATIC_ASSERT( dimensions_t::Equal< typename T::dimensions_t >::value );
+			STATIC_ASSERT( dimensions_t::template Equal< typename T::dimensions_t >::value );
 
 			typedef typename CompileTime::MainType< Value_t, typename T::Value_t >		main_value_t;
-			typedef typename value_scale_t::To< main_value_t >							scale1_t;
-			typedef typename T::value_scale_t::To< main_value_t >						scale2_t;
-			typedef typename scale1_t::_Div4< scale2_t >								div_op_t;
+			typedef typename value_scale_t::template To< main_value_t >					scale1_t;
+			typedef typename T::value_scale_t::template To< main_value_t >				scale2_t;
+			typedef typename scale1_t::template _Div4< scale2_t >						div_op_t;
 
-			return T( (T::Value_t) div_op_t::Get( _value, main_value_t(1) ) );
+			return T( (typename T::Value_t) div_op_t::template Get( _value, main_value_t(1) ) );
 		}
 
 
@@ -382,7 +382,7 @@ namespace GXMath
 			typedef typename CompileTime::Fractional32< PowNum, PowDenom >		pow_t;
 			typedef typename CompileTime::NearFloat::FromType< Value_t >		Float_t;
 
-			return GXMath::Pow( Get(), pow_t::ToFloat< Float_t >() );
+			return GXMath::Pow( Get(), pow_t::template ToFloat< Float_t >() );
 		}
 		
 
@@ -423,14 +423,17 @@ namespace GXMath
 					<< ")^" << value_scale_t::Power::ToString() << " []";
 		}
 	};
-
-
 	
+}	// GXMath
+
+
+namespace CompileTime
+{
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale
 			 >
-	struct ::GX_STL::CompileTime::TypeInfo < GXMath::PhysicsValue< ValueType, Dimensions, ValueScale > >
+	struct TypeInfo < GXMath::PhysicsValue< ValueType, Dimensions, ValueScale > >
 	{
 	private:
 		typedef CompileTime::TypeInfo<ValueType>	_value_type_info;
@@ -456,12 +459,16 @@ namespace GXMath
 		static constexpr uint	Count()		{ return _value_type_info::Count(); }
 	};
 
+}	// CompileTime
 
+
+namespace GXTypes
+{
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale
 			 >
-	struct ::GX_STL::GXTypes::Hash< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale > > : private Hash< ValueType >
+	struct Hash< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale > > : private Hash< ValueType >
 	{
 		typedef GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >	Key_t;
 		typedef Hash< ValueType >											Base_t;
@@ -473,7 +480,7 @@ namespace GXMath
 		}
 	};
 
-}	// GXMath
+}	// GXTypes
 }	// GX_STL
 
 #endif	// GX_PHYSICS_DIMENSIONS_ENABLED

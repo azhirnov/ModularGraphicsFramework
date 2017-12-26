@@ -242,7 +242,7 @@ namespace GXMath
 	template <typename T2>
 	inline Plane<T2>  Plane<T>::Convert () const
 	{
-		return TPlane<T2>( _normal.Convert<T2>(), T2(_dist) );
+		return Plane<T2>( _normal.template Convert<T2>(), T2(_dist) );
 	}
 	
 /*

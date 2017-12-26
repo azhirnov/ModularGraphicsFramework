@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -9,6 +9,8 @@
 
 namespace GX_STL
 {
+	using SharedLibFunction_t 	= void (CALLBACK *) ();
+
 namespace OS
 {
 
@@ -19,9 +21,10 @@ namespace OS
 	struct _STL_EXPORT_ Library
 	{
 	// types
-	private:
-		typedef HiddenOSTypeFrom<void *>	Handle_t;	// HMODULE
-		typedef Library						Self;
+	public:
+		using Handle_t	= HiddenOSTypeFrom<void *>;	// HMODULE
+		using Self		= Library;
+		using Func_t	= SharedLibFunction_t;
 
 
 	// variables
@@ -52,12 +55,12 @@ namespace OS
 		bool Unload ();
 
 		template <typename T>
-		bool GetProc (T *&proc, StringCRef procName) const
+		bool GetProc (T &proc, StringCRef procName) const
 		{
 			ASSERT( IsValid() );
 			ASSERT( not procName.Empty() );
 
-			T * tmp = PointerCast< T >( GetProc( procName.cstr() ) );
+			T tmp = ReferenceCast<T>( GetProc( procName.cstr() ) );
 
 			if ( tmp != null )
 			{
@@ -67,7 +70,7 @@ namespace OS
 			return false;
 		}
 
-		void * GetProc (StringCRef procName, void *defProc = null) const;
+		Func_t GetProc (StringCRef procName, Func_t defProc = null) const;
 	};
 
 	

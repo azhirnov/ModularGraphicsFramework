@@ -7,8 +7,10 @@
 namespace cl
 {
 
+# ifdef COMPILER_MSVC
 #	pragma warning (push)
 #	pragma warning (disable : 4100)	// 'identifier' : unreferenced formal parameter
+# endif
 	
 	// get function address from driver //
 #	define OPENCL2_GET_PROC( _p_, _n_, _d_ ) \
@@ -41,7 +43,9 @@ namespace cl
 	CL2_GL_FUNCTIONS( CL2_BUILD_DEFFUNC )
 	CL2_GL_FUNCTIONS( CL2_BUILDFUNC )
 		
+# ifdef COMPILER_MSVC
 #	pragma warning (pop)
+# endif
 
 /*
 =================================================
@@ -50,6 +54,10 @@ namespace cl
 */
 	struct LibOpenCL
 	{
+	// types
+	private:
+		using Func_t	= GX_STL::OS::Library::Func_t;
+
 	// variables
 	private:
 		GX_STL::OS::Library		_library;
@@ -70,9 +78,9 @@ namespace cl
 			_library.Unload();
 		}
 		
-		void * GetProc (const char * address) const
+		Func_t GetProc (const char * address) const
 		{
-			void * res = null;
+			Func_t res = null;
 
 			if ( (res = _library.GetProc( address )) != null )
 				return res;
@@ -98,10 +106,10 @@ namespace cl
 	CL2_GetProcAddress
 =================================================
 */
-	void * CL2_GetProcAddress (const char *name)
+	GX_STL::SharedLibFunction_t  CL2_GetProcAddress (const char *name)
 	{
 		using namespace Engine;
-		void *	ptr = LibOpenCL::Instance()->GetProc( name );
+		SharedLibFunction_t	ptr = LibOpenCL::Instance()->GetProc( name );
 
 		DEBUG_ONLY(
 		if ( ptr == null ) {

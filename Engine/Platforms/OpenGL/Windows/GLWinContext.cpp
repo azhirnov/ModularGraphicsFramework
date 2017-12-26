@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/OpenGL/Windows/GLWinContext.h"
 
@@ -6,8 +6,6 @@
 
 #include "Engine/STL/OS/Windows/WinHeader.h"
 #include "External/opengl/wglext.h"
-
-#pragma comment (lib, "opengl32.lib")
 
 namespace Engine
 {
@@ -92,7 +90,7 @@ namespace PlatformGL
 
 		const HDC	dc			= _deviceContext.Get<HDC>();
 		HGLRC		rc			= null;
-		const uint	pixformat	= ChoosePixelFormat( dc, &pfd );
+		const uint	pixformat	= ChoosePixelFormat( dc, OUT &pfd );
 		bool		res			= false;
 
 		if ( pixformat != 0 )
@@ -140,6 +138,7 @@ namespace PlatformGL
 			case "opengl 4.5"_GAPI :	version = uint2(4,5);	break;
 			case "GL 4.6"_GAPI :
 			case "opengl 4.6"_GAPI :	version = uint2(4,6);	break;
+			case GAPI::type(0) :		version = uint2(4,5);	break;
 			default :					RETURN_ERR( "unsupported OpenGL version" );
 		}
 		return true;
@@ -186,14 +185,14 @@ namespace PlatformGL
 			WGL_SUPPORT_OPENGL_ARB,				true,
 			WGL_ACCELERATION_ARB,				WGL_FULL_ACCELERATION_ARB,
 			WGL_COLOR_BITS_ARB,					color_bits[3] == 0 ? 24 : 32,
-			WGL_ALPHA_BITS_ARB,					color_bits[3] == 0 ? 1 : color_bits[3],
-			WGL_DEPTH_BITS_ARB,					depth_stencil_bits[0],
-			WGL_STENCIL_BITS_ARB,				depth_stencil_bits[1],
+			WGL_ALPHA_BITS_ARB,					color_bits[3] == 0 ? 1 : int(color_bits[3]),
+			WGL_DEPTH_BITS_ARB,					int(depth_stencil_bits[0]),
+			WGL_STENCIL_BITS_ARB,				int(depth_stencil_bits[1]),
 			WGL_DOUBLE_BUFFER_ARB,				true,
 			WGL_STEREO_ARB,						false,	//vs.flags[ EFlags::Stereo ],
 			WGL_PIXEL_TYPE_ARB,					WGL_TYPE_RGBA_ARB,
 			WGL_SAMPLE_BUFFERS_ARB,				vs.samples.Get() > 1 ? true : false,
-			WGL_SAMPLES_ARB,					vs.samples.Get(),
+			WGL_SAMPLES_ARB,					int(vs.samples.Get()),
             WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB,	true,
 			0,0
 		};
@@ -246,8 +245,8 @@ namespace PlatformGL
 		// Create OpenGL Context //
 		int	context_attribs[] =
 		{
-			WGL_CONTEXT_MAJOR_VERSION_ARB, version[0],
-			WGL_CONTEXT_MINOR_VERSION_ARB, version[1],
+			WGL_CONTEXT_MAJOR_VERSION_ARB, int(version[0]),
+			WGL_CONTEXT_MINOR_VERSION_ARB, int(version[1]),
 			WGL_CONTEXT_FLAGS_ARB,         WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB |
 												(vs.flags[ EFlags::DebugContext ] ? WGL_CONTEXT_DEBUG_BIT_ARB : 0) |
 												(vs.flags[ EFlags::NoErrorContext ] ? CONTEXT_FLAG_NO_ERROR_BIT_KHR : 0),

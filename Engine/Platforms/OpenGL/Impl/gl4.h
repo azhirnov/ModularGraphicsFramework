@@ -104,8 +104,8 @@ namespace gl
 	// macro
 # if !defined( __GX_GRAPHICS_API_ERROR_CHECKS__ )
 	
-#	define GL_CALL( ... )		{ __VA_ARGS__ }
-#	define GL_CHECK( ... )		{ __VA_ARGS__ }
+#	define GL_CALL( ... )		{ __VA_ARGS__; }
+#	define GL_CHECK( ... )		{ __VA_ARGS__; }
 
 # else
 

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -20,7 +20,7 @@ namespace CompileTime
 		template <typename T, typename RightTL>
 		struct _TypeListFrom_Append
 		{
-			using type	= typename TypeList< T, RightTL >;
+			using type	= TypeList< T, RightTL >;
 		};
 
 		template <typename Left, typename Right, typename RightTL>
@@ -120,7 +120,7 @@ namespace CompileTime
 					(_SwitchStrongerQualifier< _GetTypeQualifier<Type>::value, PrevFuncResult::value >::value) >	result;
 			};
 
-			static const ETypeQualifier::type	qual = Typelist::ForEach< _TypeList_GetMainQualifier,
+			static const ETypeQualifier::type	qual = Typelist::template ForEach< _TypeList_GetMainQualifier,
 														ValueToType<ETypeQualifier::type, ETypeQualifier::Unknown> >::value;
 
 			typedef TypeQualifier< qual >	type;
@@ -137,7 +137,7 @@ namespace CompileTime
 	using CopyQualifiersTL =  typename _ctime_hidden_::CopyQualifiersFromTypeList< Typelist >::type;
 
 	template <typename ...Types>
-	using CopyQualifiers =  CopyQualifiersTL< typename TypeListFrom< Types... > >;
+	using CopyQualifiers =  CopyQualifiersTL< TypeListFrom< Types... > >;
 
 
 
@@ -150,7 +150,7 @@ namespace CompileTime
 		template <uint Index, typename ...Types>
 		struct _ChooseType
 		{
-			typedef typename TypeListFrom< Types... >		TypeList_t;
+			typedef TypeListFrom< Types... >		TypeList_t;
 
 			STATIC_ASSERT( Index < TypeList_t::Count );
 
@@ -191,17 +191,17 @@ namespace CompileTime
 	template <typename T, T ...Args>
 	constexpr T MinFrom ()
 	{
-		typedef typename ValueListFrom< T, Args... >	ValueList_t;
+		typedef ValueListFrom< T, Args... >		ValueList_t;
 
-		return ValueList_t::ForEach< _ctime_hidden_::MinFrom_Func, ValueList_t::Front >::value;
+		return ValueList_t::template ForEach< _ctime_hidden_::MinFrom_Func, typename ValueList_t::Front >::value;
 	}
 
 	template <typename T, T ...Args>
 	constexpr T MaxFrom ()
 	{
-		typedef typename ValueListFrom< T, Args... >	ValueList_t;
+		typedef ValueListFrom< T, Args... >		ValueList_t;
 
-		return ValueList_t::ForEach< _ctime_hidden_::MaxFrom_Func, ValueList_t::Front >::value;
+		return ValueList_t::template ForEach< _ctime_hidden_::MaxFrom_Func, typename ValueList_t::Front >::value;
 	}
 
 
@@ -227,8 +227,8 @@ namespace CompileTime
 			typedef typename TypeInfo<T0>::inner_type				t0;
 			typedef typename TypeInfo<T1>::inner_type				t1;
 
-			typedef typename SwitchType< (c0 >= c1 or IsVoid<T0>), T0, typename _DeferredCreateWith<T1,t0>::type >		left;
-			typedef typename SwitchType< (c1 >= c0 or IsVoid<T1>), T1, typename _DeferredCreateWith<T0,t1>::type >		right;
+			typedef SwitchType< (c0 >= c1 or IsVoid<T0>), T0, typename _DeferredCreateWith<T1,t0>::type >		left;
+			typedef SwitchType< (c1 >= c0 or IsVoid<T1>), T1, typename _DeferredCreateWith<T0,t1>::type >		right;
 		};
 
 		template <uint Index, typename T0, typename T1, typename T2 = int>
@@ -237,10 +237,10 @@ namespace CompileTime
 			typedef typename TypeInfo<T0>::inner_type	t0;
 			typedef typename TypeInfo<T1>::inner_type	t1;
 
-			typedef typename SwitchType< not IsWrapper<T0> and IsWrapper<T1>, 
+			typedef SwitchType< not IsWrapper<T0> and IsWrapper<T1>,
 							typename _DeferredCreateWith<T1,t0>::type, T0 >		type0;
 			
-			typedef typename SwitchType< not IsWrapper<T1> and IsWrapper<T0>,
+			typedef SwitchType< not IsWrapper<T1> and IsWrapper<T0>,
 							typename _DeferredCreateWith<T0,t1>::type, T1 >		type1;
 			/*
 			typedef typename SwitchType< IsWrapper<T0>,
@@ -253,7 +253,7 @@ namespace CompileTime
 							typename _DeferredCreateWith<T1,T2>::type,					// only T1 is wrapper
 							T2 > >			type2;										// none of T0 and T1 is wrappers
 							*/
-			typedef typename ChooseType< Index, type0, type1, T2 >	type;
+			typedef ChooseType< Index, type0, type1, T2 >	type;
 		};
 
 		
@@ -269,7 +269,7 @@ namespace CompileTime
 					IsFloat< Type > or IsFixed< Type > ? 1 :
 					IsSigned< Type > ? 2 : 3;
 
-				typedef typename ChooseType< change_to,
+				typedef ChooseType< change_to,
 									Type,
 									typename NearFloat::FromType< Type >,
 									typename NearInt::FromType< Type >,

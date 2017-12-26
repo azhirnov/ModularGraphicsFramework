@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
 #include "Engine/Platforms/Shared/GPU/Framebuffer.h"
 

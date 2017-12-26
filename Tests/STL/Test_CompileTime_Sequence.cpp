@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -15,10 +15,10 @@ static void Sequence_RangeForTest ()
 	usize idx = 0;
 
 	for (auto i : IdxSeq()) {
-		ASSERT( idx == i );
+		TEST( idx == i );
 		++idx;
 	}
-	ASSERT( idx == IdxSeq::Count );
+	TEST( idx == IdxSeq::Count );
 
 	
 	using IdxSeq2 = IndexSequenceFromRange<2, 8>;
@@ -27,10 +27,10 @@ static void Sequence_RangeForTest ()
 	idx = 0;
 
 	for (auto i : IdxSeq2()) {
-		ASSERT( idx + 2 == i );
+		TEST( idx + 2 == i );
 		++idx;
 	}
-	ASSERT( idx == IdxSeq2::Count );
+	TEST( idx == IdxSeq2::Count );
 }
 
 
@@ -50,10 +50,10 @@ static void Sequence_BoolTest ()
 
 	for (bool b : CompileTime::Sequence<bool, true, false>())
 	{
-		ASSERT( b == (idx ? false : true) );
+		TEST( b == (idx ? false : true) );
 		++idx;
 	}
-	ASSERT( idx == 2 );
+	TEST( idx == 2 );
 }
 
 

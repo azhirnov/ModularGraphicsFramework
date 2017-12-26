@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Static variant class for types with base interface.
 */
@@ -75,7 +75,7 @@ namespace GXTypes
 
 	// variables
 	private:
-		_Storage_t		_storage;
+		mutable _Storage_t		_storage;
 
 
 	// methods

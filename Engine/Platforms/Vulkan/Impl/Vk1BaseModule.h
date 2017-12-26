@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -83,7 +83,7 @@ namespace PlatformVK
 
 	protected:
 		Ptr< Vk1Device >	GetDevice ()	const	{ return _vkDevice; }
-		vk::VkDevice		GetVkDevice ()	const	{ return _vkDevice ? _vkDevice->GetLogicalDevice() : 0; }
+		vk::VkDevice		GetVkDevice ()	const	{ return _vkDevice ? _vkDevice->GetLogicalDevice() : null; }
 
 
 	// message handlers

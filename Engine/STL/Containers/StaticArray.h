@@ -56,10 +56,10 @@ namespace GXTypes
 		StaticArray (GX_DEFCTOR);
 		StaticArray (Self &&other);
 		StaticArray (const Self &other);
-		StaticArray (InitializerList<T> list);
 
 		explicit StaticArray (const T& value);
 		explicit StaticArray (ArrayCRef<T> other);
+		explicit StaticArray (InitializerList<T> list);
 
 		~StaticArray ();
 
@@ -108,8 +108,8 @@ namespace GXTypes
 		constexpr BytesU	FullSize ()		const	{ return BytesU( Capacity() * sizeof(T) ); }
 		constexpr usize		LastIndex ()	const	{ return Count()-1; }
 	
-		ArrayRef<T>			SubArray (usize pos, usize count = usize(-1))			{ return ArrayRef<T>(*this).SubArray( pos, count ); }
-		ArrayCRef<T>		SubArray (usize pos, usize count = usize(-1))	const	{ return ArrayCRef<T>(*this).SubArray( pos, count ); }
+		ArrayRef<T>			SubArray (usize pos, usize count = UMax)			{ return ArrayRef<T>(*this).SubArray( pos, count ); }
+		ArrayCRef<T>		SubArray (usize pos, usize count = UMax)	const	{ return ArrayCRef<T>(*this).SubArray( pos, count ); }
 
 
 		iterator		Begin ()				{ return _memory; }

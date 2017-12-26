@@ -1,6 +1,6 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright ï¿½  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 #include "Debug.h"
 
 using namespace GX_STL;
@@ -21,17 +21,22 @@ struct Value
 	bool operator <  (const Value &right) const		{ return val <  right.val; }
 };
 
-
-template <>
-struct Hash< Value >
+namespace GX_STL
 {
-	typedef usize	Result_t;
-
-	Result_t operator () (const Value &) const noexcept
+namespace GXTypes
+{
+	template <>
+	struct Hash< Value >
 	{
-		return 0;
-	}
-};
+		typedef usize	Result_t;
+
+		Result_t operator () (const Value &) const noexcept
+		{
+			return 0;
+		}
+	};
+}	// GXTypes
+}	// GX_STL
 
 
 static void HashSet_Test1 ()
@@ -41,7 +46,7 @@ static void HashSet_Test1 ()
 	s << Value(1) << Value(1);
 	s << Value(2) << Value(2);
 
-	ASSERT( s.Count() == 2 );
+	TEST( s.Count() == 2 );
 }
 
 
@@ -68,9 +73,9 @@ static void HashSet_Test2 ()
 		}
 	}
 
-	ASSERT( Elem1_t::CheckStatistic() );
-	ASSERT( Elem2_t::CheckStatistic() );
-	ASSERT( Elem3_t::CheckStatistic() );
+	TEST( Elem1_t::CheckStatistic() );
+	TEST( Elem2_t::CheckStatistic() );
+	TEST( Elem3_t::CheckStatistic() );
 }
 
 
@@ -81,11 +86,11 @@ static void HashSet_Test3 ()
 
 	s << "111" << "222" << "333";
 
-	ASSERT( s.FindIndex( StringCRef("222"), idx ) );
+	TEST( s.FindIndex( StringCRef("222"), idx ) );
 	
 	HashSet< String >::const_iterator	iter;
 
-	ASSERT( s.Find( "333", OUT iter ) );
+	TEST( s.Find( "333", OUT iter ) );
 }
 
 
@@ -96,7 +101,7 @@ static void MultiHashSet_Test1 ()
 	m << Value(1) << Value(1);
 	m << Value(2) << Value(2);
 
-	ASSERT( m.Count() == 4 );
+	TEST( m.Count() == 4 );
 }
 
 
@@ -109,7 +114,7 @@ static void HashMap_Test1 ()
 	m << P(Value(1), "1") << P(Value(1), "2");
 	m << P(Value(2), "3") << P(Value(2), "4");
 
-	ASSERT( m.Count() == 4 );
+	TEST( m.Count() == 4 );
 }
 
 
@@ -126,13 +131,13 @@ static void HashMap_Test2 ()
 	m << P("111", 0) << P("222", 1) << P("333", 2);
 	m << P("444", 3) << P("555", 4) << P("666", 5);
 
-	ASSERT( m.FindIndex( "222", OUT idx ) );
+	TEST( m.FindIndex( "222", OUT idx ) );
 	
 	MultiHashMap<Str_t, int>::iterator	iter;
 
-	ASSERT( m.Find( "333", OUT iter ) );
+	TEST( m.Find( "333", OUT iter ) );
 
-	//ASSERT( idx->second == 1 );
+	//TEST( idx->second == 1 );
 }
 
 

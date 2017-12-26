@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -22,9 +22,6 @@ namespace GXTypes
 
 		// value
 		p_static_array_t	ptr;
-
-		// cast
-		static const Self Cast (const void *ptr)	{ return *PointerCast< Self >( &ptr ); }
 
 		// check
 		STATIC_ASSERT( sizeof(T*) == sizeof(p_static_array_t), "size mismatch" );

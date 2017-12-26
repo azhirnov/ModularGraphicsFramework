@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -27,14 +27,14 @@ namespace Platforms
 
 	// methods
 	public:
-		ImageLayer (GX_DEFCTOR) : _value(-1)
+		ImageLayer (GX_DEFCTOR) : _value(UMax)
 		{}
 
 		explicit
 		ImageLayer (uint value) : _value(value)
 		{}
 
-		bool IsDefined ()	const	{ return _value != -1; }
+		bool IsDefined ()	const	{ return _value != UMax; }
 
 		uint Get ()			const	{ return IsDefined() ? _value : 0; }
 

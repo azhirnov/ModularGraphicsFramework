@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -42,13 +42,6 @@ namespace GXTypes
 		}
 
 		template <typename T, typename ...Types>
-		forceinline T * PlacementNew (void *ptr, Types const&... args) noexcept
-		{
-			ASSERT( _types_hidden_::IsAlignedMem<T>( ptr ) );
-			return ( new(ptr) T( args... ) );
-		}
-
-		template <typename T, typename ...Types>
 		forceinline T * PlacementNew (void *ptr, Types&&... args) noexcept
 		{
 			ASSERT( _types_hidden_::IsAlignedMem<T>( ptr ) );
@@ -64,9 +57,6 @@ namespace GXTypes
 */
 	template <typename T, typename C>
 	forceinline T * PlacementNew (ArrayRef<C> buf) noexcept;
-			
-	template <typename T, typename C, typename ...Types>
-	forceinline T * PlacementNew (ArrayRef<C> buf, Types const&... args) noexcept;
 
 	template <typename T, typename C, typename ...Types>
 	forceinline T * PlacementNew (ArrayRef<C> buf, Types&&... args) noexcept;

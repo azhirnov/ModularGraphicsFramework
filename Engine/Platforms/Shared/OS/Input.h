@@ -111,14 +111,22 @@ namespace ModuleMsg
 		using Callback_t	= Delegate< void (const InputKey &) >;
 
 	// variables
-		ReadOnce< Callback_t >	cb;
-		KeyID::type				key		= KeyID::Unknown;
-		EKeyState				state	= EKeyState::OnKeyDown;
+		Callback_t			callback;
+		KeyID::type			key			= KeyID::Unknown;
+		EKeyState			state		= EKeyState::OnKeyDown;
 
 	// methods
-		InputKeyBind (Callback_t &&cb, KeyID::type key, EKeyState state) :
-			cb( RVREF(cb) ), key(key), state(state)
+		InputKeyBind () {}
+
+		template <typename Class>
+		InputKeyBind (Class *mod, void (Class::*cb) (const InputKey &), KeyID::type key, EKeyState state) :
+			callback(DelegateBuilder( WeakPointerType<Class>(mod), cb )), key(key), state(state)
 		{}
+	};
+
+	struct InputKeyUnbindAll
+	{
+		ModuleWPtr		object;
 	};
 
 
@@ -132,13 +140,21 @@ namespace ModuleMsg
 		using Callback_t	= Delegate< void (const InputMotion &) >;
 
 	// variables
-		ReadOnce< Callback_t >	cb;
-		MotionID::type			motion	= MotionID::Unknown;
+		Callback_t			callback;
+		MotionID::type		motion	= MotionID::Unknown;
 
 	// methods
-		InputMotionBind (Callback_t &&cb, MotionID::type motion) :
-			cb( RVREF(cb) ), motion(motion)
+		InputMotionBind () {}
+
+		template <typename Class>
+		InputMotionBind (Class *mod, void (Class::*cb) (const InputMotion &), MotionID::type motion) :
+			callback(DelegateBuilder( WeakPointerType<Class>(mod), cb )), motion(motion)
 		{}
+	};
+
+	struct InputMotionUnbindAll
+	{
+		ModuleWPtr		object;
 	};
 
 

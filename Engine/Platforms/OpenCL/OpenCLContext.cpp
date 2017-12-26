@@ -1,6 +1,12 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/OpenCL/OpenCLContext.h"
+#include "Engine/Platforms/Shared/GPU/Context.h"
+#include "Engine/Platforms/Shared/GPU/Buffer.h"
+#include "Engine/Platforms/Shared/GPU/Image.h"
+#include "Engine/Platforms/Shared/GPU/Thread.h"
+#include "Engine/Platforms/Shared/GPU/Pipeline.h"
+#include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 #if defined( COMPUTE_API_OPENCL )
 
@@ -8,7 +14,68 @@ namespace Engine
 {
 namespace Platforms
 {
+
+	//
+	// OpenCL Context
+	//
 	
+	class OpenCLContext final : public Module
+	{
+	// types
+	private:
+		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+											ModuleMsg::AddToManager,
+											ModuleMsg::RemoveFromManager
+										> >;
+		using SupportedEvents_t		= Module::SupportedEvents_t;
+
+		using CLThreads_t			= Set< ModulePtr >;
+		
+		using CLThreadMsgList_t		= MessageListFrom< GpuMsg::SubmitComputeQueueCommands, GpuMsg::GetCLDeviceInfo >;
+		using CLThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
+
+
+	// constants
+	private:
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
+
+		
+	// variables
+	private:
+		CreateInfo::GpuContext	_createInfo;
+
+		CLThreads_t				_threads;
+		
+
+	// methods
+	public:
+		OpenCLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
+		~OpenCLContext ();
+
+		
+	// message handlers
+	private:
+		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
+		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		
+	private:
+		static ModulePtr _CreateOpenCLThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
+		static ModulePtr _CreateOpenCLContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
+		static ModulePtr _CreateCL2Image (GlobalSystemsRef, const CreateInfo::GpuImage &);
+		static ModulePtr _CreateCL2Memory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
+		static ModulePtr _CreateCL2Buffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);
+		static ModulePtr _CreateCL2Sampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr _CreatePipelineTemplate (GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
+		static ModulePtr _CreateCL2CommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
+		static ModulePtr _CreateCL2CommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
+		static ModulePtr _CreateCL2ComputePipeline (GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+		static ModulePtr _CreateCL2PipelineResourceTable (GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
+	};
+//-----------------------------------------------------------------------------
+
+
+
 	const TypeIdList	OpenCLContext::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	OpenCLContext::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
@@ -86,30 +153,54 @@ namespace Platforms
 		_threads.Erase( module );
 		return true;
 	}
+//-----------------------------------------------------------------------------
+
+
 		
+/*
+=================================================
+	GetComputeModules
+=================================================
+*/	
+	ComputeModuleIDs OpenCLObjectsConstructor::GetComputeModules ()
+	{
+		ComputeModuleIDs	compute;
+		compute.pipeline		= CLComputePipelineModuleID;
+		compute.context			= CLContextModuleID;
+		compute.thread			= CLThreadModuleID;
+		compute.commandBuffer	= CLCommandBufferModuleID;
+		compute.commandBuilder	= CLCommandBuilderModuleID;
+		compute.buffer			= CLBufferModuleID;
+		compute.image			= CLImageModuleID;
+		compute.memory			= CLMemoryModuleID;
+		compute.resourceTable	= CLPipelineResourceTableModuleID;
+		compute.uniforms		= CLUniformsModuleID;
+		return compute;
+	}
+
 /*
 =================================================
 	Register
 =================================================
 */
-	void OpenCLContext::Register (GlobalSystemsRef gs)
+	void OpenCLObjectsConstructor::Register ()
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
 
-		CHECK( mf->Register( CLThreadModuleID, &_CreateOpenCLThread ) );
-		CHECK( mf->Register( CLContextModuleID, &_CreateOpenCLContext ) );
+		CHECK( mf->Register( CLThreadModuleID, &CreateOpenCLThread ) );
+		CHECK( mf->Register( CLContextModuleID, &CreateOpenCLContext ) );
 
-		CHECK( mf->Register( CLImageModuleID, &_CreateCL2Image ) );
-		CHECK( mf->Register( CLMemoryModuleID, &_CreateCL2Memory ) );
-		CHECK( mf->Register( CLBufferModuleID, &_CreateCL2Buffer ) );
-		//CHECK( mf->Register( CLSamplerModuleID, &_CreateCL2Sampler ) );
-		CHECK( mf->Register( CLCommandBufferModuleID, &_CreateCL2CommandBuffer ) );
-		CHECK( mf->Register( CLCommandBuilderModuleID, &_CreateCL2CommandBuilder ) );
-		CHECK( mf->Register( CLComputePipelineModuleID, &_CreateCL2ComputePipeline ) );
-		CHECK( mf->Register( CLPipelineResourceTableModuleID, &_CreateCL2PipelineResourceTable ) );
+		CHECK( mf->Register( CLImageModuleID, &CreateCL2Image ) );
+		CHECK( mf->Register( CLMemoryModuleID, &CreateCL2Memory ) );
+		CHECK( mf->Register( CLBufferModuleID, &CreateCL2Buffer ) );
+		//CHECK( mf->Register( CLSamplerModuleID, &CreateCL2Sampler ) );
+		CHECK( mf->Register( CLCommandBufferModuleID, &CreateCL2CommandBuffer ) );
+		CHECK( mf->Register( CLCommandBuilderModuleID, &CreateCL2CommandBuilder ) );
+		CHECK( mf->Register( CLComputePipelineModuleID, &CreateCL2ComputePipeline ) );
+		CHECK( mf->Register( CLPipelineResourceTableModuleID, &CreateCL2PipelineResourceTable ) );
 
 		if ( not mf->IsRegistered< CreateInfo::PipelineTemplate >( PipelineTemplateModuleID ) )
-			CHECK( mf->Register( PipelineTemplateModuleID, &_CreatePipelineTemplate ) );
+			CHECK( mf->Register( PipelineTemplateModuleID, &CreatePipelineTemplate ) );
 	}
 	
 /*
@@ -117,9 +208,9 @@ namespace Platforms
 	Unregister
 =================================================
 */
-	void OpenCLContext::Unregister (GlobalSystemsRef gs)
+	void OpenCLObjectsConstructor::Unregister ()
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
 
 		mf->UnregisterAll( CLThreadModuleID );
 		mf->UnregisterAll( CLContextModuleID );
@@ -138,10 +229,10 @@ namespace Platforms
 
 /*
 =================================================
-	_CreateOpenCLContext
+	CreateOpenCLContext
 =================================================
 */
-	ModulePtr OpenCLContext:: _CreateOpenCLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+	ModulePtr OpenCLObjectsConstructor:: CreateOpenCLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
 		return New< OpenCLContext >( gs, ci );
 	}

@@ -2,7 +2,7 @@
 /*
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -103,7 +103,7 @@ namespace PlatformVK
 		// TODO: ci.maxSize ignored
 		_flags( ci.memFlags ),
 		_access( ci.access & _GpuMemoryToMemoryAccess( ci.memFlags ) ),
-		_heapIndex( ~0u ),
+		_heapIndex( UMax ),
 		_binding( EBindingTarget::Unbinded ),
 		_isMapped( false ),
 		_isMappedMemChanged( false )
@@ -334,7 +334,7 @@ namespace PlatformVK
 		CHECK_ERR( msg->offset < _mappedSize );
 
 		const usize		offset	= (usize) msg->offset;
-		const usize		size	= (usize) Min( _mappedSize - msg->offset, msg->size.Get( BytesUL(-1) ) );
+		const usize		size	= (usize) Min( _mappedSize - msg->offset, msg->size.Get( UMax ) );
 
 		msg->result.Set( BinArrayCRef( _mappedPtr + offset, size ) );
 

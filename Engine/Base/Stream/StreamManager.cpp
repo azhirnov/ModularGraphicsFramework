@@ -51,7 +51,7 @@ namespace Base
 */
 	void StreamManager::Register (GlobalSystemsRef gs)
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = gs->modulesFactory;
 
 		CHECK( mf->Register( StreamManagerModuleID, &_CreateStreamManager ) );
 		CHECK( mf->Register( InputStreamModuleID, &_CreateInStreamFromFile ) );
@@ -68,7 +68,7 @@ namespace Base
 */
 	void StreamManager::Unregister (GlobalSystemsRef gs)
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = gs->modulesFactory;
 
 		mf->UnregisterAll( StreamManagerModuleID );
 		mf->UnregisterAll( OutputStreamModuleID );

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -90,7 +90,7 @@ namespace PlatformTools
 	template <typename ViewType>
 	inline ViewType ImageViewHashMap<ViewType>::Find (const Key_t &key) const
 	{
-		ImageViewMap_t::const_iterator	iter;
+		typename ImageViewMap_t::const_iterator	iter;
 
 		if ( _map.Find( key, OUT iter ) )
 			return iter->second;

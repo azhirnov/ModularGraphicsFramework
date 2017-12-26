@@ -13,7 +13,7 @@ namespace Base
 	// Modules Factory
 	//
 
-	class _ENGINE_BASE_EXPORT_ ModulesFactory final : public BaseObject
+	class ModulesFactory final : public BaseObject
 	{
 	// types
 	private:
@@ -264,7 +264,7 @@ namespace Base
 	inline bool Module::AddModule (StringCRef name, UntypedID_t id, const CreateInfo &createInfo)
 	{
 		ModulePtr	unit;
-		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create( id, GlobalSystems(), createInfo, OUT unit ) );
+		CHECK_ERR( GlobalSystems()->modulesFactory->Create( id, GlobalSystems(), createInfo, OUT unit ) );
 
 		CHECK_ERR( _SendMsg< ModuleMsg::AttachModule >({ name, unit }) );
 		return true;

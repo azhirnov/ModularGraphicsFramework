@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Engine/Base/Common/ModuleMessages.h"
+#include "Engine/Base/Modules/ModuleMessages.h"
 #include "Engine/Base/Modules/Message.h"
 
 namespace Engine

@@ -3,7 +3,7 @@
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
-#include "Engine/Platforms/OpenCL/OpenCLContext.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 #if defined( COMPUTE_API_OPENCL )
 
@@ -111,7 +111,7 @@ namespace PlatformCL
 =================================================
 */
 	CL2Image::CL2Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLImageModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		CL2BaseModule( gs, ModuleConfig{ CLImageModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),				_imageId( null ),
 		_layout( EImageLayout::Unknown ),
 		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
@@ -183,7 +183,7 @@ namespace PlatformCL
 		if ( not _memObj and _useMemMngr )
 		{
 			ModulePtr	mem_module;
-			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								CLMemoryModuleID,
 								GlobalSystems(),
 								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
@@ -528,7 +528,7 @@ namespace PlatformCL
 
 namespace Platforms
 {
-	ModulePtr OpenCLContext::_CreateCL2Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
 	{
 		return New< PlatformCL::CL2Image >( gs, ci );
 	}

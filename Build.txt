@@ -1,0 +1,18 @@
+
+1. make prjects for externals:
+external projects used for pipeline compiler only, if you don't need compiler then skip this step.
+source folder: "External/LunarGLASS"	with CMakeLists.txt
+binary folder: "build_LunarGLASS"
+
+2. make projects for engine:
+source folder: ""	with CMakeLists.txt
+binary folder: "build"
+
+3. for MS Visual Studio only
+open solution "build/ModularGraphicsFramework.sln" and compile projects.
+
+4. for other compilers
+- build external projects.
+- use Utils/CMake to update engine cmake file, static libraries from externals will be added.
+- or add static libraries to cmake manualy.
+- build engine.

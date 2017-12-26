@@ -42,7 +42,7 @@ namespace OS
 		
 		void LockWrite ()
 		{
-			_sELocked.Wait( TimeL(-1) );
+			_sELocked.Wait( TimeL(ulong(UMax)) );
 			_sCSWrite.Lock();
 		}
 

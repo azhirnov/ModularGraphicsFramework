@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -148,7 +148,7 @@ public:
 			
 			e.Add( d );
 			e.Add( d );
-			ASSERT( e.Count() == 1 );
+			TEST( e.Count() == 1 );
 		}
 
 		e.Call( 3, 4 );
@@ -183,11 +183,11 @@ public:
 
 		e.Add( d );
 		e.RemoveAllFor( t.ptr() );
-		ASSERT( e.Count() == 0 );
+		TEST( e.Count() == 0 );
 
 		e.Add( d );
 		e.RemoveAllFor( t );
-		ASSERT( e.Count() == 0 );
+		TEST( e.Count() == 0 );
 	}
 };
 

@@ -4,7 +4,7 @@
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
-#include "Engine/Platforms/OpenCL/OpenCLContext.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 #if defined( COMPUTE_API_OPENCL )
 
@@ -318,7 +318,7 @@ namespace PlatformCL
 		CHECK_ERR( msg->offset < _mappedSize );
 
 		const usize		offset	= (usize) msg->offset;
-		const usize		size	= (usize) Min( _mappedSize - msg->offset, msg->size.Get( BytesUL(-1) ) );
+		const usize		size	= (usize) Min( _mappedSize - msg->offset, msg->size.Get( UMax ) );
 
 		msg->result.Set( BinArrayCRef( _mappedPtr + offset, size ) );
 
@@ -695,7 +695,7 @@ namespace PlatformCL
 
 namespace Platforms
 {
-	ModulePtr OpenCLContext::_CreateCL2Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
 	{
 		return New< PlatformCL::CL2Memory >( gs, ci );
 	}

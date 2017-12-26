@@ -3,7 +3,7 @@
 #include "Engine/Platforms/Shared/GPU/Thread.h"
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Windows/WinMessages.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #include "Engine/Platforms/Vulkan/Windows/VkWinSurface.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
@@ -13,7 +13,6 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1Fence.h"
 
 #if defined( GRAPHICS_API_VULKAN )
-
 
 namespace Engine
 {
@@ -45,7 +44,8 @@ namespace Platforms
 											GpuMsg::SubmitComputeQueueCommands,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetVkDeviceInfo,
-											GpuMsg::GetVkPrivateClasses
+											GpuMsg::GetVkPrivateClasses,
+											GpuMsg::GetGraphicsSettings
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::DeviceCreated,
@@ -62,39 +62,6 @@ namespace Platforms
 		using PipelineCache			= PlatformVK::Vk1PipelineCache;
 		using LayoutCache			= PlatformVK::Vk1PipelineLayoutCache;
 		using RenderPassCache		= PlatformVK::Vk1RenderPassCache;
-		using CommandBuffers_t		= Array< vk::VkCommandBuffer >;
-
-		//
-		// Command Buffers Life Control
-		//
-		struct CmdBufferLifeControl
-		{
-		// types
-			struct PerFrame
-			{
-				Array< ModulePtr >			cmdBuffers;
-				PlatformVK::Vk1FencePtr		fence;
-				uint						imageIndex = 0;		// index of image in swapchain
-			};
-			using PerFrameData_t		= StaticArray< PerFrame, 8 >;
-			using FrameIndex_t			= Limit< int, LimitStrategy::Wrap >;
-
-		// variables
-			PerFrameData_t		perFrameData;
-			FrameIndex_t		frameIndex		{ 0, 0, 3 };
-
-		// methods
-			explicit CmdBufferLifeControl (Ptr<Device> dev);
-			~CmdBufferLifeControl ();
-
-			bool SubmitQueue (Ptr<Device> dev, ArrayCRef<ModulePtr> cmdBuffers, ArrayCRef<vk::VkCommandBuffer> cmdIDs);
-			void FreeBuffers (int len);
-
-			bool Resize (uint size);
-			void FreeAll ();
-
-			void Destroy ();
-		};
 
 
 	// constants
@@ -116,9 +83,6 @@ namespace Platforms
 		PipelineCache			_pipelineCache;
 		LayoutCache				_layoutCache;
 		RenderPassCache			_renderPassCache;
-		
-		CommandBuffers_t		_tempCmdBuffers;
-		CmdBufferLifeControl	_cmdControl;
 
 		bool					_isWindowVisible;
 
@@ -142,6 +106,7 @@ namespace Platforms
 		bool _ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &);
 		bool _SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &);
 		bool _SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &);
+		bool _GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &);
 
 		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
 		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
@@ -155,8 +120,6 @@ namespace Platforms
 	private:
 		bool _CreateDevice ();
 		void _DetachWindow ();
-
-		ArrayCRef<vk::VkCommandBuffer> _ExtractCmdBufferIDs (ArrayCRef<ModulePtr> modules);
 	};
 //-----------------------------------------------------------------------------
 
@@ -175,7 +138,7 @@ namespace Platforms
 		_settings( ci.settings ),		_device( GlobalSystems() ),
 		_samplerCache( &_device ),		_pipelineCache( &_device ),
 		_layoutCache( &_device ),		_renderPassCache( &_device ),
-		_cmdControl( &_device ),		_isWindowVisible( false )
+		_isWindowVisible( false )
 	{
 		SetDebugName( "VulkanThread" );
 		
@@ -201,14 +164,13 @@ namespace Platforms
 		_SubscribeOnMsg( this, &VulkanThread::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &VulkanThread::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &VulkanThread::_GetVkPrivateClasses );
+		_SubscribeOnMsg( this, &VulkanThread::_GetGraphicsSettings );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 		
 		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
 
 		_AttachSelfToManager( ci.context, VkContextModuleID, false );
-
-		_tempCmdBuffers.Reserve( 16 );
 	}
 	
 /*
@@ -236,7 +198,7 @@ namespace Platforms
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 		
 		// TODO: use SearchModule message
-		CHECK_ATTACHMENT(( _window = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
+		CHECK_ATTACHMENT(( _window = GlobalSystems()->parallelThread->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
 
 		_window->Subscribe( this, &VulkanThread::_WindowCreated );
 		_window->Subscribe( this, &VulkanThread::_WindowBeforeDestroy );
@@ -309,8 +271,8 @@ namespace Platforms
 */	
 	bool VulkanThread::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
 	{
-		msg->compute.Set( VulkanContext::GetComputeModules() );
-		msg->graphics.Set( VulkanContext::GetGraphicsModules() );
+		msg->compute.Set( VulkanObjectsConstructor::GetComputeModules() );
+		msg->graphics.Set( VulkanObjectsConstructor::GetGraphicsModules() );
 		return true;
 	}
 
@@ -326,7 +288,7 @@ namespace Platforms
 		CHECK_ERR( not _device.IsFrameStarted() );
 		CHECK_ERR( _device.BeginFrame() );
 
-		msg->result.Set({ _device.GetCurrentFramebuffer(), _device.GetCommandBuilder(), _device.GetImageIndex() });
+		msg->result.Set({ _device.GetCurrentFramebuffer(), _device.GetImageIndex() });
 		return true;
 	}
 
@@ -342,35 +304,28 @@ namespace Platforms
 		if ( msg->framebuffer )
 			CHECK_ERR( msg->framebuffer == _device.GetCurrentFramebuffer() );
 
-		if ( not msg->commands.Empty() )
-			CHECK_ERR( _cmdControl.SubmitQueue( &_device, msg->commands, _ExtractCmdBufferIDs( msg->commands ) ) );
+		if ( msg->commands )
+		{
+			Message< GpuMsg::GetVkCommandBufferID >			req_id;
+			Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
+
+			msg->commands->Send( req_id );
+			msg->commands->Send( req_descr );
+
+			CHECK_ERR( req_id->result and req_id->result->cmd != VK_NULL_HANDLE );
+			CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
+
+			CHECK_ERR( _device.SubmitQueue({ req_id->result->cmd }, req_id->result->fence ) );
+			
+			msg->commands->Send< GpuMsg::SetCommandBufferState >({ GpuMsg::SetCommandBufferState::EState::Pending });
+			
+			if ( not req_id->result->fence ) {
+				msg->commands->Send< GpuMsg::SetCommandBufferState >({ GpuMsg::SetCommandBufferState::EState::Completed });
+			}
+		}
 
 		CHECK_ERR( _device.EndFrame() );
 		return true;
-	}
-	
-/*
-=================================================
-	_ExtractCmdBufferIDs
-=================================================
-*/
-	ArrayCRef<vk::VkCommandBuffer>  VulkanThread::_ExtractCmdBufferIDs (ArrayCRef<ModulePtr> cmdBuffers)
-	{
-		_tempCmdBuffers.Clear();
-		_tempCmdBuffers.Reserve( cmdBuffers.Count() );
-
-		FOR( i, cmdBuffers )
-		{
-			Message< GpuMsg::GetVkCommandBufferID >		req_id;
-			cmdBuffers[i]->Send( req_id );
-
-			vk::VkCommandBuffer		cmd = req_id->result.Get( VK_NULL_HANDLE );
-
-			if ( cmd != VK_NULL_HANDLE )
-				_tempCmdBuffers.PushBack( cmd );
-		}
-
-		return _tempCmdBuffers;
 	}
 
 /*
@@ -385,31 +340,42 @@ namespace Platforms
 		CHECK_ERR( _device.IsDeviceCreated() );
 		CHECK_ERR( _device.GetQueueFamily()[ Device::EQueueFamily::Graphics ] );
 		
-		PlatformVK::Vk1Fence	fence		{ &_device };
-		const auto				cmd_ids		= _ExtractCmdBufferIDs( msg->commands );
-		VkSubmitInfo			submit_info = {};
-
-		if ( msg->sync )
-			fence.Create();
-
-		submit_info.sType				= VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.commandBufferCount	= (uint) cmd_ids.Count();
-		submit_info.pCommandBuffers		= cmd_ids.RawPtr();
-
-		VK_CHECK( vkQueueSubmit( _device.GetQueue(), 1, &submit_info, fence.GetFenceID() ) );
-
 		Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
 		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
 
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( pending_state );
-		}
-		
-		if ( msg->sync )
-			fence.Wait();
+		FixedSizeArray< VkCommandBuffer, 32 >	cmd_ids;
 
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( completed_state );
+		FOR( i, msg->commands )
+		{
+			CHECK_ERR( msg->commands[i] );
+			
+			Message< GpuMsg::GetVkCommandBufferID >			req_id;
+			Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
+
+			msg->commands[i]->Send( req_id );
+			msg->commands[i]->Send( req_descr );
+			
+			CHECK_ERR( req_id->result and req_id->result->cmd != VK_NULL_HANDLE );
+			CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
+
+			// TODO: optimize
+			cmd_ids.Clear();
+			cmd_ids << req_id->result->cmd;
+
+			{
+				VkSubmitInfo			submit_info = {};
+				submit_info.sType				= VK_STRUCTURE_TYPE_SUBMIT_INFO;
+				submit_info.commandBufferCount	= (uint) cmd_ids.Count();
+				submit_info.pCommandBuffers		= cmd_ids.RawPtr();
+
+				VK_CHECK( vkQueueSubmit( _device.GetQueue(), 1, &submit_info, req_id->result->fence ) );
+			}
+			
+			msg->commands[i]->Send( pending_state );
+			
+			if ( req_id->result->fence ) {
+				msg->commands[i]->Send( completed_state );
+			}
 		}
 		return true;
 	}
@@ -426,31 +392,42 @@ namespace Platforms
 		CHECK_ERR( _device.IsDeviceCreated() );
 		CHECK_ERR( _device.GetQueueFamily()[ Device::EQueueFamily::Compute ] );
 		
-		PlatformVK::Vk1Fence	fence		{ &_device };
-		const auto				cmd_ids		= _ExtractCmdBufferIDs( msg->commands );
-		VkSubmitInfo			submit_info = {};
-
-		if ( msg->sync )
-			fence.Create();
-		
-		submit_info.sType				= VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.commandBufferCount	= (uint) cmd_ids.Count();
-		submit_info.pCommandBuffers		= cmd_ids.RawPtr();
-
-		VK_CHECK( vkQueueSubmit( _device.GetQueue(), 1, &submit_info, fence.GetFenceID() ) );
-
 		Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
 		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
 
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( pending_state );
-		}
-		
-		if ( msg->sync )
-			fence.Wait();
+		FixedSizeArray< VkCommandBuffer, 32 >	cmd_ids;
 
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( completed_state );
+		FOR( i, msg->commands )
+		{
+			CHECK_ERR( msg->commands[i] );
+			
+			Message< GpuMsg::GetVkCommandBufferID >			req_id;
+			Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
+
+			msg->commands[i]->Send( req_id );
+			msg->commands[i]->Send( req_descr );
+			
+			CHECK_ERR( req_id->result and req_id->result->cmd != VK_NULL_HANDLE );
+			CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
+
+			// TODO: optimize
+			cmd_ids.Clear();
+			cmd_ids << req_id->result->cmd;
+
+			{
+				VkSubmitInfo			submit_info = {};
+				submit_info.sType				= VK_STRUCTURE_TYPE_SUBMIT_INFO;
+				submit_info.commandBufferCount	= (uint) cmd_ids.Count();
+				submit_info.pCommandBuffers		= cmd_ids.RawPtr();
+
+				VK_CHECK( vkQueueSubmit( _device.GetQueue(), 1, &submit_info, req_id->result->fence ) );
+			}
+			
+			msg->commands[i]->Send( pending_state );
+			
+			if ( req_id->result->fence ) {
+				msg->commands[i]->Send( completed_state );
+			}
 		}
 		return true;
 	}
@@ -498,6 +475,7 @@ namespace Platforms
 		{
 			case "VK 1.0"_GAPI :
 			case "vulkan 1.0"_GAPI :	vk_version = VK_API_VERSION_1_0; break;
+			case GAPI::type(0) :		vk_version = VK_API_VERSION_1_0; break;
 			default :					RETURN_ERR( "unsupported Vulkan version" );
 		}
 
@@ -596,8 +574,6 @@ namespace Platforms
 		{
 			_device.DeviceWaitIdle();
 
-			_cmdControl.Destroy();
-
 			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
 		}
 
@@ -644,7 +620,8 @@ namespace Platforms
 		{
 			_device.DeviceWaitIdle();
 
-			_cmdControl.FreeAll();
+			// TODO:
+			// destroy command buffers with old framebuffers and images
 
 			CHECK_ERR( _device.RecreateSwapchain( msg->desc.surfaceSize ) );
 		}
@@ -716,160 +693,26 @@ namespace Platforms
 		});
 		return true;
 	}
+	
+/*
+=================================================
+	_GetGraphicsSettings
+=================================================
+*/
+	bool VulkanThread::_GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &msg)
+	{
+		msg->result.Set( _settings );
+		return true;
+	}
 //-----------------------------------------------------------------------------
 
 
-	
 /*
 =================================================
-	constructor
-=================================================
-*/
-	VulkanThread::CmdBufferLifeControl::CmdBufferLifeControl (Ptr<Device> dev)
-	{
-		FOR( i, perFrameData )
-		{
-			perFrameData[i].fence = New< PlatformVK::Vk1Fence >( dev );
-			perFrameData[i].cmdBuffers.Reserve( 16 );
-		}
-	}
-	
-/*
-=================================================
-	destructor
-=================================================
-*/
-	VulkanThread::CmdBufferLifeControl::~CmdBufferLifeControl ()
-	{
-		FOR( i, perFrameData )
-		{
-			if ( perFrameData[i].fence )
-				ASSERT( not perFrameData[i].fence->IsCreated() );
-
-			ASSERT( perFrameData[i].cmdBuffers.Empty() );
-		}
-	}
-
-/*
-=================================================
-	SubmitQueue
-=================================================
-*/
-	bool VulkanThread::CmdBufferLifeControl::SubmitQueue (Ptr<Device> device, ArrayCRef<ModulePtr> cmdBuffers, ArrayCRef<vk::VkCommandBuffer> cmdIDs)
-	{
-		using namespace vk;
-
-		++frameIndex;
-		FreeBuffers( device->GetSwapchainLength() );	// TODO: call on frame begin
-
-		auto&	frame_data	= perFrameData[ frameIndex ];
-
-		CHECK_ERR( not cmdIDs.Empty() );
-		
-		// submit
-		if ( frame_data.fence->IsCreated() ) {
-			CHECK_ERR( frame_data.fence->Reset() );
-		} else {
-			CHECK_ERR( frame_data.fence->Create( false ) );
-		}
-		CHECK_ERR( device->SubmitQueue( cmdIDs, frame_data.fence->GetFenceID() ) );
-
-		// change state
-		FOR( i, cmdBuffers )
-		{
-			Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
-			cmdBuffers[i]->Send( pending_state );
-		}
-
-		frame_data.imageIndex	= device->GetImageIndex();
-		frame_data.cmdBuffers	= cmdBuffers;
-		return true;
-	}
-	
-/*
-=================================================
-	FreeBuffers
-=================================================
-*/
-	void VulkanThread::CmdBufferLifeControl::FreeBuffers (int length)
-	{
-		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
-
-		FrameIndex_t	begin_index = frameIndex;
-		FrameIndex_t	end_index	= frameIndex - length;
-
-		ASSERT( begin_index != end_index );
-
-		for (FrameIndex_t i = begin_index; i != end_index; ++i)
-		{
-			auto&	frame_data	= perFrameData[i];
-
-			// sync
-			if ( frame_data.fence->IsCreated() )
-				frame_data.fence->Wait();
-			
-			// change state
-			FOR( j, frame_data.cmdBuffers ) {
-				frame_data.cmdBuffers[j]->Send( completed_state );
-			}
-
-			frame_data.cmdBuffers.Clear();
-		}
-	}
-	
-/*
-=================================================
-	Resize
-=================================================
-*/		
-	bool VulkanThread::CmdBufferLifeControl::Resize (uint size)
-	{
-		CHECK_ERR( size < perFrameData.Count() );
-
-		frameIndex.SetLimits( 0, size );
-		return true;
-	}
-		
-/*
-=================================================
-	FreeAll
+	CreateVulkanThread
 =================================================
 */	
-	void VulkanThread::CmdBufferLifeControl::FreeAll ()
-	{
-		frameIndex = 0;
-		
-		Message< GpuMsg::SetCommandBufferState >	submit_state{ GpuMsg::SetCommandBufferState::EState::Completed };
-
-		FOR( i, perFrameData )
-		{
-			auto&	frame_data	= perFrameData[i];
-
-			frame_data.fence->Destroy();
-			
-			FOR( j, frame_data.cmdBuffers ) {
-				frame_data.cmdBuffers[j]->Send( submit_state );
-			}
-			frame_data.cmdBuffers.Clear();
-		}
-	}
-	
-/*
-=================================================
-	Destroy
-=================================================
-*/	
-	void VulkanThread::CmdBufferLifeControl::Destroy ()
-	{
-		perFrameData.Clear();
-	}
-	
-/*
-=================================================
-	_CreateVulkanThread
-=================================================
-*/	
-	ModulePtr VulkanContext::_CreateVulkanThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVulkanThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
 		return New< VulkanThread >( gs, ci );
 	}

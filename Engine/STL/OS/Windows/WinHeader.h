@@ -8,7 +8,13 @@
 //#define NOSERVICE
 //#define WIN32_LEAN_AND_MEAN
 
-#include <Windows.h>
+#ifdef COMPILER_MSVC
+#	pragma warning (push, 0)
+#	include <Windows.h>
+#	pragma warning (pop)
+#else
+#	include <Windows.h>
+#endif
 
 #undef DeleteFile
 #undef SetCurrentDirectory

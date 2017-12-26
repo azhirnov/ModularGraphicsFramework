@@ -14,7 +14,7 @@ namespace Platforms
 	// Render State
 	//
 	
-	struct _ENGINE_PLATFORMS_EXPORT_ RenderState final : public CompileTime::PODStruct		// TODO: copy from StaticArray<...>
+	struct RenderState final : public CompileTime::PODStruct		// TODO: copy from StaticArray<...>
 	{
 	// types
 	public:
@@ -126,8 +126,8 @@ namespace Platforms
 			StencilFaceState (GX_DEFCTOR) :
 				sfail( EStencilOp::Keep ),		dfail( EStencilOp::Keep ),
 				dppass( EStencilOp::Keep ),		func( ECompareFunc::Always ),
-				funcRef( 0 ),					funcMask( ~0u ),
-				mask( ~0u )
+				funcRef( 0 ),					funcMask( UMax ),
+				mask( UMax )
 			{}
 			
 			bool operator == (const Self &right) const;
@@ -265,7 +265,7 @@ namespace Platforms
 
 		// methods
 			MultisampleState (GX_DEFCTOR) :
-				sampleMask{ ~0u, ~0u, ~0u, ~0u },
+				sampleMask{ UMax, UMax, UMax, UMax },
 				samples( 1 ),				minSampleShading(),		sampleShading( false ),
 				alphaToCoverage( false ),	alphaToOne( false )
 			{}

@@ -1,6 +1,7 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "StringParser.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 namespace GX_STL
 {
@@ -533,7 +534,7 @@ namespace GXTypes
 
 			if ( c == '"' )
 			{
-				result = StringCRef( str.cstr() + begin, pos - begin );
+				result = StringCRef( str.ptr() + begin, pos - begin );
 				++pos;
 				return true;
 			}
@@ -629,7 +630,7 @@ namespace GXTypes
 	
 			if ( c == '"' )
 			{
-				ParseCStyleString( StringCRef( str.cstr() + begin, pos - begin ), OUT result );
+				ParseCStyleString( StringCRef( str.ptr() + begin, pos - begin ), OUT result );
 				++pos;
 				return true;
 			}
@@ -701,12 +702,12 @@ namespace GXTypes
 
 			if ( c == divisor )
 			{
-				tokens.PushBack( StringCRef( str.cstr() + begin, i - begin ) );
+				tokens.PushBack( StringCRef( str.ptr() + begin, i - begin ) );
 				begin = i+1;
 			}
 		}
 
-		tokens.PushBack( StringCRef( str.cstr() + begin, str.Length() - begin ) );
+		tokens.PushBack( StringCRef( str.ptr() + begin, str.Length() - begin ) );
 	}
 	
 /*

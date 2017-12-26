@@ -44,7 +44,7 @@ namespace File
 		virtual BytesU ReadBuf (void * buf, BytesU size) noexcept override
 		{
 			if ( not _opened )
-				return BytesU(-1);
+				return UMax;
 
 			if ( usize(_pos + size) > _mem.Count() )
 				size = BytesU( _mem.Count() - _pos );
@@ -312,9 +312,9 @@ namespace File
 		virtual BytesU WriteBuf (const void * buf, BytesU size) noexcept override
 		{
 			if ( not _opened )
-				return BytesU( -1 );
+				return UMax;
 
-			if ( (usize)_pos != _mem.Count() )
+			if ( usize(_pos) != _mem.Count() )
 			{
 				_mem.Resize( (usize)_pos );
 			}

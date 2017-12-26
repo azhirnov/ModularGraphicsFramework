@@ -1,13 +1,14 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Shared/GPU/Framebuffer.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
+#include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -52,7 +53,7 @@ namespace PlatformGL
 			BytesU		stride;
 
 			GLBuffer () {}
-			GLBuffer (GLuint id, BytesUL off) : id(id), offset(off), stride(stride) {}
+			GLBuffer (GLuint id, BytesUL off) : id(id), offset(off) {}
 		};
 
 		using PipelineStages_t		= StaticArray< GLuint, EShader::_Count >;
@@ -72,6 +73,10 @@ namespace PlatformGL
 
 	// variables
 	private:
+		ModulePtr					_tempBuffer;	// for UpdateBuffer command
+
+		GLsync						_fenceId;
+
 		CommandBufferDescriptor		_descr;
 		CommandArray_t				_commands;
 		UsedResources_t				_resources;
@@ -97,8 +102,6 @@ namespace PlatformGL
 		RectU						_renderPassArea;
 		Viewports_t					_viewports;
 		Scissors_t					_scissors;
-		
-		bool						_isInitialized;
 
 
 	// methods
@@ -128,6 +131,8 @@ namespace PlatformGL
 
 		bool _Initialize ();
 		void _ClearStates ();
+
+		bool _DestroyFence ();
 
 		bool _PrepareForDraw ();
 		bool _PrepareForCompute ();
@@ -178,6 +183,8 @@ namespace PlatformGL
 		bool _CmdClearColorImage (const Command_t &cmd);
 		bool _CmdClearDepthStencilImage (const Command_t &cmd);
 		bool _CmdPipelineBarrier (const Command_t &cmd);
+		
+		static void _ValidateDescriptor (INOUT CommandBufferDescriptor &descr);
 	};
 //-----------------------------------------------------------------------------
 
@@ -192,11 +199,11 @@ namespace PlatformGL
 =================================================
 */
 	GL4CommandBuffer::GL4CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
-		GL4BaseModule( gs, ModuleConfig{ GLCommandBufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLCommandBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
+		_fenceId( null ),
 		_descr( ci.descr ),				_recordingState( ERecordingState::Deleted ),
 		_pipelineObj( 0 ),				_vertexAttribs( 0 ),
-		_indexType( EIndex::Unknown ),	_primitive( EPrimitive::Unknown ),
-		_isInitialized( false )
+		_indexType( EIndex::Unknown ),	_primitive( EPrimitive::Unknown )
 	{
 		SetDebugName( "GL4CommandBuffer" );
 
@@ -223,6 +230,8 @@ namespace PlatformGL
 		CHECK( _ValidateMsgSubscriptions() );
 
 		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
+
+		_ValidateDescriptor( _descr );
 	}
 	
 /*
@@ -267,6 +276,20 @@ namespace PlatformGL
 		_ChangeState( ERecordingState::Initial );
 		return true;
 	}
+	
+/*
+=================================================
+	_ValidateDescriptor
+=================================================
+*/
+	void GL4CommandBuffer::_ValidateDescriptor (INOUT CommandBufferDescriptor &descr)
+	{
+		if ( descr.flags[ ECmdBufferCreate::Secondary ] and descr.flags[ ECmdBufferCreate::UseFence ] )
+		{
+			WARNING( "not supported" );
+			descr.flags[ ECmdBufferCreate::UseFence ] = false;
+		}
+	}
 
 /*
 =================================================
@@ -282,6 +305,20 @@ namespace PlatformGL
 		_resources.Clear();
 		_commands.Clear();
 
+		if ( _tempBuffer )
+		{
+			_tempBuffer->Send( msg );
+			_tempBuffer = null;
+		}
+
+		if ( _fenceId )
+		{
+			GLenum	state;
+			GL_CALL( state = glClientWaitSync( _fenceId, GL_SYNC_FLUSH_COMMANDS_BIT, (10_sec).NanoSeconds() ) );
+		}
+
+		_DestroyFence();
+
 		return Module::_Delete_Impl( msg );
 	}
 
@@ -292,7 +329,28 @@ namespace PlatformGL
 */
 	bool GL4CommandBuffer::_SetGLCommandBufferQueue (const Message< GpuMsg::SetGLCommandBufferQueue > &msg)
 	{
-		_commands = RVREF(msg->commands.Get());
+		_commands	= RVREF(msg->commands.Get());
+		_tempBuffer	= null;
+
+		if ( not msg->bufferData.Empty() )
+		{
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
+								GLBufferModuleID,
+								GlobalSystems(),
+								CreateInfo::GpuBuffer{
+									BufferDescriptor{
+										msg->bufferData.Size(),
+										EBufferUsage::bits() | EBufferUsage::TransferSrc
+									},
+									EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+									EMemoryAccess::bits() | EMemoryAccess::GpuRead | EMemoryAccess::CpuWrite
+								},
+								OUT _tempBuffer ) );
+
+			ModuleUtils::Initialize({ _tempBuffer });
+
+			CHECK_ERR( _tempBuffer->Send< GpuMsg::WriteToGpuMemory >({ msg->bufferData }) );
+		}
 		return true;
 	}
 
@@ -413,7 +471,7 @@ namespace PlatformGL
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyBufferToImage> :		_CmdCopyBufferToImage( data );			break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyImageToBuffer> :		_CmdCopyImageToBuffer( data );			break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdBlitImage> :				_CmdBlitImage( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdUpdateBuffer> :				_CmdUpdateBuffer( data );				break;
+				case CmdDataTypes_t::IndexOf<GpuMsg::GLCmdUpdateBuffer> :			_CmdUpdateBuffer( data );				break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdFillBuffer> :				_CmdFillBuffer( data );					break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdClearAttachments> :			_CmdClearAttachments( data );			break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdClearColorImage> :			_CmdClearColorImage( data );			break;
@@ -434,8 +492,23 @@ namespace PlatformGL
 */
 	bool GL4CommandBuffer::_BeginRecording ()
 	{
+		// sync
+		if ( _fenceId )
+		{
+			GLenum	state;
+			GL_CALL( state = glClientWaitSync( _fenceId, GL_SYNC_FLUSH_COMMANDS_BIT, (10_sec).NanoSeconds() ) );
+
+			CHECK_ERR( _OnCompleted() );
+		}
+
 		CHECK_ERR( _recordingState == ERecordingState::Initial or
-				  (_recordingState == ERecordingState::Executable and _descr.implicitResetable) );
+				  (_recordingState == ERecordingState::Executable and _descr.flags[ECmdBufferCreate::ImplicitResetable]) );
+		
+		if ( _descr.flags[ ECmdBufferCreate::UseFence ] )
+		{
+			CHECK_ERR( not _fenceId );
+			GL_CALL( _fenceId = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 ) );
+		}
 
 		_ChangeState( ERecordingState::Recording );
 		return true;
@@ -465,6 +538,8 @@ namespace PlatformGL
 
 		_resources.Clear();
 		_commands.Clear();
+
+		_DestroyFence();
 
 		_ChangeState( ERecordingState::Executable );
 		return true;
@@ -508,6 +583,21 @@ namespace PlatformGL
 		_renderPassData			= Uninitialized;
 	}
 	
+/*
+=================================================
+	_DestroyFence
+=================================================
+*/
+	bool GL4CommandBuffer::_DestroyFence ()
+	{
+		if ( _fenceId )
+		{
+			GL_CALL( glDeleteSync( _fenceId ) );
+			_fenceId = null;
+		}
+		return true;
+	}
+
 /*
 =================================================
 	_PrepareForDraw
@@ -766,18 +856,18 @@ namespace PlatformGL
 		using ClearValue_t		= ClearValues_t::Value_t;
 		using DepthStencil_t	= GpuMsg::CmdBeginRenderPass::DepthStencil;
 
-		usize	ds_index	= -1;
-		usize	col_start	= -1;
+		usize	ds_index	= UMax;
+		usize	col_start	= UMax;
 
 		FOR( i, clearValues ) {
 			if ( clearValues[i].Is<DepthStencil_t>() ) {
 				ds_index = i;
 				break;
 			}
-			if ( col_start == -1 )
+			if ( col_start == UMax )
 				col_start = i;
 		}
-		CHECK_ERR( ds_index == -1 or ds_index == 0 or ds_index == clearValues.LastIndex() );
+		CHECK_ERR( ds_index == UMax or ds_index == 0 or ds_index == clearValues.LastIndex() );
 
 		GL_CALL( glEnable( GL_SCISSOR_TEST ) );
 		GL_CALL( glViewport( _renderPassArea.left, _renderPassArea.bottom, _renderPassArea.Width(), _renderPassArea.Height() ) );
@@ -815,7 +905,7 @@ namespace PlatformGL
 			// read clear value from command
 			ClearValue_t	clear_val;
 			
-			if ( buffer != GL_COLOR and ds_index != -1 )	clear_val = clearValues[ds_index];			else
+			if ( buffer != GL_COLOR and ds_index != UMax )	clear_val = clearValues[ds_index];			else
 			if ( index < clearValues.Count() )				clear_val = clearValues[col_start + index];
 
 
@@ -1402,7 +1492,7 @@ namespace PlatformGL
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdBlitImage >();
 
-		TODO("");
+		TODO("not supported");
 		return true;
 	}
 	
@@ -1413,9 +1503,24 @@ namespace PlatformGL
 */
 	bool GL4CommandBuffer::_CmdUpdateBuffer (const Command_t &cmd)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdUpdateBuffer >();
+		const auto&	data = cmd.data.Get< GpuMsg::GLCmdUpdateBuffer >();
+		
+		Message< GpuMsg::GetGLBufferID >		req_dst_id;
+		Message< GpuMsg::GetGLBufferID >		req_src_id;
+		Message< GpuMsg::GetBufferDescriptor >	req_descr;
+		
+		data.dstBuffer->Send( req_dst_id );
+		data.dstBuffer->Send( req_descr );
+		_tempBuffer->Send( req_src_id );
+		
+		CHECK_ERR( data.dstOffset < req_descr->result->size );
+		CHECK_ERR( data.size + data.dstOffset <= req_descr->result->size );
 
-		TODO("");
+		GL_CALL( glNamedCopyBufferSubData( *req_src_id->result,
+										   *req_dst_id->result,
+										   GLintptr(data.srcOffset),
+										   GLintptr(data.dstOffset),
+										   GLsizeiptr(data.size) ) );
 		return true;
 	}
 	
@@ -1428,7 +1533,23 @@ namespace PlatformGL
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdFillBuffer >();
 
-		TODO("");
+		Message< GpuMsg::GetGLBufferID >		req_id;
+		Message< GpuMsg::GetBufferDescriptor >	req_descr;
+
+		data.dstBuffer->Send( req_id );
+		data.dstBuffer->Send( req_descr );
+
+		CHECK_ERR( data.dstOffset < req_descr->result->size );
+
+		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, *req_id->result ) );
+		GL_CALL( glClearBufferSubData( GL_COPY_READ_BUFFER,
+										GL_R32UI,
+										GLintptr(data.dstOffset),
+										GLsizeiptr(Min( data.size, req_descr->result->size - data.dstOffset )),
+										GL_RED, GL_UNSIGNED_INT,
+										&data.pattern ) );
+
+		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, 0 ) );
 		return true;
 	}
 	
@@ -1585,7 +1706,7 @@ namespace PlatformGL
 
 namespace Platforms
 {
-	ModulePtr OpenGLContext::_CreateGL4CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
 	{
 		return New< PlatformGL::GL4CommandBuffer >( gs, ci );
 	}

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -30,7 +30,7 @@ namespace CompileTime
 	private:
 		template <typename Key, typename Value>
 		struct _Add {
-			static constexpr bool	has = KeyList::HasType< Key >;
+			static constexpr bool	has = KeyList::template HasType< Key >;
 			STATIC_ASSERT( not has );
 
 			using keylist	= typename KeyList::template PushBack< Key >;
@@ -54,7 +54,7 @@ namespace CompileTime
 		
 		// IsExist
 		template <typename Key>
-		static constexpr bool	IsExist		= KeyList::HasType< Key >;
+		static constexpr bool	IsExist		= KeyList::template HasType< Key >;
 
 		// Add
 		template <typename Key, typename Value>

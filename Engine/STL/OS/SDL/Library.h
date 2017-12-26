@@ -18,6 +18,11 @@ namespace OS
 
 	struct Library
 	{
+	// types
+	public:
+		using Func_t	= SharedLibFunction_t;
+
+
 	// variables
 	private:
 		void *		_handle;
@@ -85,18 +90,18 @@ namespace OS
 			return _name;
 		}
 
-		void * GetProc (StringCRef name, void *defProc = null) const
+		Func_t GetProc (StringCRef name, void *defProc = null) const
 		{
 			ASSERT( name.IsNullTerminated() );
 
-			void *	tmp = ::SDL_LoadFunction( _handle, name.cstr() );
+			Func_t	tmp = ::SDL_LoadFunction( _handle, name.cstr() );
 			return tmp != null ? tmp : defProc;
 		}
 
 		template <typename T>
 		bool GetProc (T &func, StringCRef name)
 		{
-			func = (T) GetProc( name );
+			func = static_cast<T>( GetProc( name ) );
 			return func != null;
 		}
 	};

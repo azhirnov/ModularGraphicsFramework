@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -17,7 +17,7 @@ static void Transform_Inverse ()
 
 	const transform_t	b = a.Inversed().Inversed();
 
-	ASSERT( a == b );
+	TEST( a == b );
 }
 
 
@@ -29,7 +29,7 @@ static void Transform_AddInverse ()
 
 	const transform_t	b = a + a.Inversed();
 
-	ASSERT( b.IsZero() );
+	TEST( b.IsZero() );
 }
 
 
@@ -50,8 +50,8 @@ static void Transform_MulVec ()
 	real3	tr_point0	= tr.Transform( point0 );
 	real3	tr_point1	= tr.Transform( point1 );
 
-	ASSERT( All( mat_point0 == tr_point0 ) );
-	ASSERT( All( mat_point1 == tr_point1 ) );
+	TEST( All( mat_point0 == tr_point0 ) );
+	TEST( All( mat_point1 == tr_point1 ) );
 }
 
 

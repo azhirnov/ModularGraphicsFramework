@@ -1,7 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -73,7 +73,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1RenderPass::Vk1RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkRenderPassModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ VkRenderPassModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_renderPassId( VK_NULL_HANDLE )
 	{
@@ -216,7 +216,7 @@ namespace PlatformVK
 												if ( _descr.ColorAttachments()[i].name == name )
 													return uint32_t(i);
 											}
-											RETURN_ERR( "Attachement '" << name << "' not found", ~0u );	// return any invalid value
+											RETURN_ERR( "Attachement '" << name << "' not found", UMax );	// return any invalid value
 										}};
 
 		auto	FindSubpassIndex	=	LAMBDA( this ) (StringCRef name) -> uint32_t
@@ -466,10 +466,10 @@ namespace PlatformVK
 namespace Platforms
 {
 
-	ModulePtr VulkanContext::_CreateVk1RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
 	{
 		ModulePtr	mod;
-		CHECK_ERR( mod = gs->Get< ParallelThread >()->GetModuleByMsg< MessageListFrom< GpuMsg::GetVkPrivateClasses > >() );
+		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetVkPrivateClasses>> >() );
 
 		Message< GpuMsg::GetVkPrivateClasses >	req_cl;
 		mod->Send( req_cl );

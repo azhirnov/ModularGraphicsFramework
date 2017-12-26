@@ -23,7 +23,7 @@ namespace Platforms
 	// Graphics Pipeline Descriptor
 	//
 
-	struct _ENGINE_PLATFORMS_EXPORT_ GraphicsPipelineDescriptor final : CompileTime::FastCopyable
+	struct GraphicsPipelineDescriptor final : CompileTime::FastCopyable
 	{
 	// variables
 		VertexInputState				vertexInput;
@@ -53,7 +53,7 @@ namespace Platforms
 	// Compute Pipeline Descriptor
 	//
 
-	struct _ENGINE_PLATFORMS_EXPORT_ ComputePipelineDescriptor final : CompileTime::FastCopyable
+	struct ComputePipelineDescriptor final : CompileTime::FastCopyable
 	{
 	// variables
 		PipelineLayoutDescriptor		layout;
@@ -74,16 +74,19 @@ namespace Platforms
 	// Pipeline Template Descriptor
 	//
 
-	struct _ENGINE_PLATFORMS_EXPORT_ PipelineTemplateDescriptor final : CompileTime::FastCopyable
+	struct PipelineTemplateDescriptor final : CompileTime::FastCopyable
 	{
 	// types
-		struct _ENGINE_PLATFORMS_EXPORT_ ShaderSource
+		struct ShaderSource
 		{
 		// types
 			struct ESource { enum type {
 				GLSL,
+				GLSL_Bin,
 				SPIRV,
+				SPIRV_Src,
 				OpenCL,
+				OpenCL_Bin,
 				SoftRenderer,
 				_Count
 			}; };
@@ -98,17 +101,42 @@ namespace Platforms
 		// methods
 			ShaderSource () {}
 
+			// GLSL source
 			void StringGLSL (StringCRef data);
-			void StringSPIRV (StringCRef data);
+			bool FileGLSL (const RFilePtr &file);
+
+			StringCRef GetGLSL () const;
+
+			// GLSL binary
+			//void ArrayGLSLBin (BinArrayCRef data);
+			//bool FileGLSLBin (const RFilePtr &file);
+			//BinArrayCRef GetGLSLBin () const;
+
+			// CL source
 			void StringCL (StringCRef data);
+			bool FileCL (const RFilePtr &file);
+
+			StringCRef GetCL () const;
+
+			// CL binary
+			//void ArrayCLBin (BinArrayCRef data);
+			//bool FileCLBin (const RFilePtr &file);
+			//BinArrayCRef GetCLBin () const;
+
+			// SPIRV binary
 			void ArraySPIRV (ArrayCRef<uint> data);
 			bool FileSPIRV (const RFilePtr &file);
+
+			ArrayCRef<uint> GetSPIRV () const;
+
+			// SPIRV assembly
+			void ArrayAsmSPIRV (StringCRef data);
+			StringCRef	GetAsmSPIRV () const;
+
+			// Software
 			void FuncSW (const SWInvoke &func);
 
-			StringCRef		GetGLSL ()	const;
-			ArrayCRef<uint>	GetSPIRV ()	const;
-			StringCRef		GetCL ()	const;
-			SWInvoke		GetSW ()	const;
+			SWInvoke GetSW () const;
 		};
 
 		using Sources = StaticArray< ShaderSource, EShader::_Count >;

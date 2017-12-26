@@ -1,7 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Windows/WinMessages.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinContext.h"
 
@@ -36,7 +36,8 @@ namespace Platforms
 											GpuMsg::SubmitComputeQueueCommands,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetGLDeviceInfo,
-											GpuMsg::GetGLPrivateClasses
+											GpuMsg::GetGLPrivateClasses,
+											GpuMsg::GetGraphicsSettings
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::DeviceCreated,
@@ -90,6 +91,7 @@ namespace Platforms
 		bool _ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &);
 		bool _SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &);
 		bool _SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &);
+		bool _GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &);
 
 		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
 		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
@@ -148,6 +150,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenGLThread::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &OpenGLThread::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &OpenGLThread::_GetGLPrivateClasses );
+		_SubscribeOnMsg( this, &OpenGLThread::_GetGraphicsSettings );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -181,7 +184,7 @@ namespace Platforms
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
 		// TODO: use SearchModule message
-		CHECK_ATTACHMENT(( _window = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
+		CHECK_ATTACHMENT(( _window = GlobalSystems()->parallelThread->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
 
 		_window->Subscribe( this, &OpenGLThread::_WindowCreated );
 		_window->Subscribe( this, &OpenGLThread::_WindowBeforeDestroy );
@@ -256,8 +259,8 @@ namespace Platforms
 */	
 	bool OpenGLThread::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
 	{
-		msg->compute.Set( OpenGLContext::GetComputeModules() );
-		msg->graphics.Set( OpenGLContext::GetGraphicsModules() );
+		msg->compute.Set( OpenGLObjectsConstructor::GetComputeModules() );
+		msg->graphics.Set( OpenGLObjectsConstructor::GetGraphicsModules() );
 		return true;
 	}
 
@@ -270,8 +273,10 @@ namespace Platforms
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( _device.BeginFrame() );
+		
+		_context.MakeCurrent();
 
-		msg->result.Set({ _device.GetCurrentFramebuffer(), _device.GetCommandBuilder(), _device.GetImageIndex() });
+		msg->result.Set({ _device.GetCurrentFramebuffer(), _device.GetImageIndex() });
 		return true;
 	}
 
@@ -287,19 +292,27 @@ namespace Platforms
 		if ( msg->framebuffer )
 			CHECK_ERR( msg->framebuffer == _device.GetCurrentFramebuffer() );
 		
-		Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
-		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
+		if ( msg->commands )
+		{
+			Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
+			msg->commands->Send( req_descr );
+			CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
+			
+			msg->commands->Send< GpuMsg::SetCommandBufferState >({ GpuMsg::SetCommandBufferState::EState::Pending });
 
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( pending_state );
+			CHECK_ERR( _device.EndFrame() );
+
+			_context.SwapBuffers();
+			
+			if ( not req_descr->result->flags[ ECmdBufferCreate::UseFence ] ) {
+				msg->commands->Send< GpuMsg::SetCommandBufferState >({ GpuMsg::SetCommandBufferState::EState::Completed });
+			}
 		}
+		else
+		{
+			CHECK_ERR( _device.EndFrame() );
 
-		CHECK_ERR( _device.EndFrame() );
-
-		_context.SwapBuffers();
-		
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( completed_state );
+			_context.SwapBuffers();
 		}
 		return true;
 	}
@@ -318,14 +331,19 @@ namespace Platforms
 		Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
 		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
 
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( pending_state );
-		}
+		FOR( i, msg->commands )
+		{
+			CHECK_ERR( msg->commands[i] );
+			
+			Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
+			msg->commands[i]->Send( req_descr );
+			CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
 
-		GL_CALL( glFlush() );	// TODO: use fence
-		
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( completed_state );
+			msg->commands[i]->Send( pending_state );
+			
+			if ( not req_descr->result->flags[ ECmdBufferCreate::UseFence ] ) {
+				msg->commands[i]->Send( completed_state );
+			}
 		}
 		return true;
 	}
@@ -343,15 +361,20 @@ namespace Platforms
 
 		Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
 		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
+		
+		FOR( i, msg->commands )
+		{
+			CHECK_ERR( msg->commands[i] );
+			
+			Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
+			msg->commands[i]->Send( req_descr );
+			CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
 
-		FOR( i, msg->commands ) {
 			msg->commands[i]->Send( pending_state );
-		}
-		
-		GL_CALL( glFlush() );	// TODO: use fence
-		
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( completed_state );
+			
+			if ( not req_descr->result->flags[ ECmdBufferCreate::UseFence ] ) {
+				msg->commands[i]->Send( completed_state );
+			}
 		}
 		return true;
 	}
@@ -363,12 +386,10 @@ namespace Platforms
 */
 	bool OpenGLThread::_WindowCreated (const Message< OSMsg::WindowCreated > &)
 	{
-		if ( _CreateDevice() )
-		{
+		if ( _CreateDevice() ) {
 			CHECK( _DefCompose( false ) );
 		}
-		else
-		{
+		else {
 			CHECK( _SetState( EState::ComposingFailed ) );
 		}
 		return true;
@@ -500,10 +521,23 @@ namespace Platforms
 	
 /*
 =================================================
-	_CreateOpenGLThread
+	_GetGraphicsSettings
 =================================================
 */
-	ModulePtr OpenGLContext::_CreateOpenGLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
+	bool OpenGLThread::_GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &msg)
+	{
+		msg->result.Set( _settings );
+		return true;
+	}
+//-----------------------------------------------------------------------------
+
+	
+/*
+=================================================
+	CreateOpenGLThread
+=================================================
+*/
+	ModulePtr OpenGLObjectsConstructor::CreateOpenGLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
 		return New< OpenGLThread >( gs, ci );
 	}

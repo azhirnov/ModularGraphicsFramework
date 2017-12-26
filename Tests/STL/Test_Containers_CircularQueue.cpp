@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 #include "Debug.h"
 
 using namespace GX_STL;
@@ -51,15 +51,15 @@ static void CircularQueue_Test3 ()
 
 	q.Resize( 12 );
 	vec.resize( 12 );
-	ASSERT( (q == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
+	TEST( (q == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
 	
 	q.Resize( 36 );
 	vec.resize( 36 );
-	ASSERT( (q == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
+	TEST( (q == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
 	
 	q.Resize( 6 );
 	vec.resize( 6 );
-	ASSERT( (q == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
+	TEST( (q == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
 }
 
 
@@ -98,9 +98,9 @@ static void CircularQueue_Test4 ()
 
 	q.GetParts( part0, part1 );
 
-	ASSERT( part0.Count() + part1.Count() == q.Count() );
+	TEST( part0.Count() + part1.Count() == q.Count() );
 
-	ASSERT( (q == ArrayRef<int>( &v[0], v.size() )) );
+	TEST( (q == ArrayRef<int>( &v[0], v.size() )) );
 }
 
 
@@ -109,15 +109,15 @@ extern void Test_Containers_CircularQueue ()
 	Elem_t::ClearStatistic();
 
 	CircularQueue_Test1();
-	ASSERT( Elem_t::CheckStatistic() );
+	TEST( Elem_t::CheckStatistic() );
 	Elem_t::ClearStatistic();
 
 	CircularQueue_Test2();
-	ASSERT( Elem_t::CheckStatistic() );
+	TEST( Elem_t::CheckStatistic() );
 	Elem_t::ClearStatistic();
 
 	CircularQueue_Test3();
-	ASSERT( Elem_t::CheckStatistic() );
+	TEST( Elem_t::CheckStatistic() );
 	Elem_t::ClearStatistic();
 
 	CircularQueue_Test4();

@@ -194,7 +194,7 @@ namespace Platforms
 
 			// TODO: validate
 			
-			_state._hash = HashOf( BinArrayCRef( &_state, &_state._hash ) );
+			_state._hash = HashOf( BinArrayCRef( &_state, &_state._hash ) );	// TODO
 		}
 		return _state;
 	}

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -209,14 +209,14 @@ namespace GXMath
 	inline bool Circle<T,U>::IntersectLine (const Line_t &line) const
 	{
 		TODO( "IntersectLine" );
-		return line.IntersectRect( ToRect() );
+		return line.IntersectRect( GetAxisAlignedRectangle() );
 	}
 		
 	
 	template <typename T, ulong U>
 	inline bool Circle<T,U>::IntersectRect (const Rect_t &rect) const
 	{
-		return rect.IntersectRect( ToRect() );
+		return rect.IntersectRect( GetAxisAlignedRectangle() );
 	}
 		
 	

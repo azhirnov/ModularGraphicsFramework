@@ -3,7 +3,7 @@
 	Temporary tests.
 */
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 #include "Debug.h"
 
 using namespace GX_STL;

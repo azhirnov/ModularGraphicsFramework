@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -75,6 +75,11 @@ namespace _types_hidden_
 		BaseSet (InitializerList<Key_t> list)
 		{
 			AddArray( ArrayCRef<Key_t>( list ) );
+		}
+
+		BaseSet (ArrayCRef<Key_t> list)
+		{
+			AddArray( list );
 		}
 
 
@@ -154,6 +159,11 @@ namespace _types_hidden_
 			}
 		}
 
+		void AddArray (const Self &value)
+		{
+			AddArray( const_values_range_t(value) );
+		}
+
 		void AddArray (Self &&value)
 		{
 			FOR( i, value ) {
@@ -209,7 +219,7 @@ namespace _types_hidden_
 			
 			FindLastIndex( first, OUT last );
 
-			result = values_range_t( ptr() + first, last - first + 1 );
+			result = values_range_t( this->ptr() + first, last - first + 1 );
 			return true;
 		}
 
@@ -223,7 +233,7 @@ namespace _types_hidden_
 			
 			FindLastIndex( first, OUT last );
 
-			result = const_values_range_t( ptr() + first, last - first + 1 );
+			result = const_values_range_t( this->ptr() + first, last - first + 1 );
 			return true;
 		}
 
@@ -293,7 +303,7 @@ namespace _types_hidden_
 			
 			FindLastIndex2( key, first, OUT last );
 
-			result = values_range_t( ptr() + first, last - first + 1 );
+			result = values_range_t( this->ptr() + first, last - first + 1 );
 			return true;
 		}
 

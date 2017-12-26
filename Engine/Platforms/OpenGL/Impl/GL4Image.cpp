@@ -3,7 +3,7 @@
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #include "Engine/Platforms/Shared/Tools/ImageViewHashMap.h"
 
 #if defined( GRAPHICS_API_OPENGL )
@@ -131,7 +131,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Image::GL4Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
-		GL4BaseModule( gs, ModuleConfig{ GLImageModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLImageModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),				_imageId( 0 ),
 		_imageView( 0 ),				_memFlags( ci.memFlags ),
 		_memAccess( ci.access ),		_useMemMngr( ci.allocMem ),
@@ -192,7 +192,7 @@ namespace PlatformGL
 		if ( not _memObj and _useMemMngr )
 		{
 			ModulePtr	mem_module;
-			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								GLMemoryModuleID,
 								GlobalSystems(),
 								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
@@ -514,6 +514,7 @@ namespace PlatformGL
 
 		if ( _memObj )
 		{
+			this->UnsubscribeAll( _memObj );
 			_memObj->UnsubscribeAll( this );
 			_memObj = null;
 		}
@@ -668,7 +669,7 @@ namespace PlatformGL
 
 namespace Platforms
 {
-	ModulePtr OpenGLContext::_CreateGL4Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
 	{
 		return New< PlatformGL::GL4Image >( gs, ci );
 	}

@@ -231,6 +231,10 @@ namespace PlatformGL
 		if ( _depthBufferId != 0 ) {
 			GL_CALL( glDeleteRenderbuffers( 1, &_depthBufferId ) );
 		}
+
+		_colorBufferId			= 0;
+		_depthBufferId			= 0;
+		_flippedFramebufferId	= 0;
 	}
 
 /*

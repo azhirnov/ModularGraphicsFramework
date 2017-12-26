@@ -1,11 +1,12 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
 #include "Engine/STL/CompileTime/TypeList.h"
 #include "Engine/STL/CompileTime/NewTypeInfo.h"
 #include "Engine/STL/Algorithms/Comparators.h"
-#include "VariantRef.h"
+#include "Engine/STL/Types/VariantRef.h"
+#include "Engine/STL/Types/VariantCRef.h"
 
 namespace GX_STL
 {
@@ -24,7 +25,7 @@ namespace GXTypes
 		using TypeList_t	= typename CompileTime::TypeListFrom< Types... >;
 		using Self			= Union< Types... >;
 
-		static const uint		INVALID_INDEX = ~0u;
+		static const uint		INVALID_INDEX = UMax;
 		
 	private:
 		struct _TypeList_Destroy;
@@ -44,7 +45,7 @@ namespace GXTypes
 
 		using _AlignedUnion_t	= typename std::aligned_union< 0, Types... >;
 
-		STATIC_ASSERT( _AlignedUnion_t::_Max_len == _DataSize );
+		//STATIC_ASSERT( _AlignedUnion_t::_Max_len == _DataSize );
 		STATIC_ASSERT( _AlignedUnion_t::alignment_value == _DataAlign );
 
 
@@ -430,7 +431,7 @@ namespace GXTypes
 
 		STATIC_ASSERT( sizeof(value) <= sizeof(_data) );
 
-		_currentIndex = TypeList_t::IndexOf<T>;
+		_currentIndex = TypeList_t::template IndexOf<T>;
 		DEBUG_ONLY( _dbgType = TypeIdOf<T>() );
 			
 		UnsafeMem::PlacementNew<T>( _data, value );
@@ -449,7 +450,7 @@ namespace GXTypes
 		_HasType<T>();
 		Destroy();
 
-		_currentIndex = TypeList_t::IndexOf<T>;
+		_currentIndex = TypeList_t::template IndexOf<T>;
 		DEBUG_ONLY( _dbgType = TypeIdOf<T>() );
 			
 		UnsafeMem::PlacementNew<T>( _data, RVREF( value ) );
@@ -466,7 +467,7 @@ namespace GXTypes
 	forceinline bool Union<Types...>::Is () const
 	{
 		_HasType<T>();
-		return _currentIndex == TypeList_t::IndexOf<T>;
+		return _currentIndex == TypeList_t::template IndexOf<T>;
 	}
 	
 /*
@@ -693,7 +694,7 @@ namespace GXTypes
 	template <typename T>
 	forceinline void Union<Types...>::_HasType ()
 	{
-		STATIC_ASSERT( (TypeList_t::HasType<T>), "type not presented in union" );
+		STATIC_ASSERT( (TypeList_t::template HasType<T>), "type not presented in union" );
 	}
 	
 /*

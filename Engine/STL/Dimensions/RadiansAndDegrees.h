@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -193,7 +193,7 @@ namespace GXMath
 	template <typename T>
 	inline Radians<T>  Radians<T>::From (T deg, T arcmin, T arcsec)
 	{
-		return Degrees<T>()::From( degm arcmin, arcsec ).ToRadians();
+		return Degrees<T>::From( deg, arcmin, arcsec ).ToRadians();
 	}
 	
 
@@ -233,14 +233,17 @@ namespace GXMath
 		return Degrees<T>( deg + (arcmin / T(60.0)) + (arcsec / T(3600.0)) );
 	}
 
+}	// GXMath
 	
+
+namespace CompileTime {
 /*
 =================================================
 	TypeInfo
 =================================================
 */
 	template <typename T>
-	struct ::GX_STL::CompileTime::TypeInfo< GXMath::Radians<T> >
+	struct TypeInfo< GXMath::Radians<T> >
 	{
 		typedef GXMath::Radians<T>	type;
 		typedef T					inner_type;
@@ -263,7 +266,7 @@ namespace GXMath
 	};
 
 	template <typename T>
-	struct ::GX_STL::CompileTime::TypeInfo< GXMath::Degrees<T> >
+	struct TypeInfo< GXMath::Degrees<T> >
 	{
 		typedef GXMath::Degrees<T>	type;
 		typedef T					inner_type;
@@ -285,14 +288,17 @@ namespace GXMath
 		static constexpr uint	Count()		{ return TypeInfo< inner_type >::Count(); }
 	};
 
+}	// CompileTime
 
+namespace GXTypes
+{
 /*
 =================================================
 	Hash
 =================================================
 */
 	template <typename T>
-	struct ::GX_STL::GXTypes::Hash< GXMath::Radians<T> > : private Hash<T>
+	struct Hash< GXMath::Radians<T> > : private Hash<T>
 	{
 		typedef GXMath::Radians<T>			Key_t;
 		typedef Hash<T>						Base_t;
@@ -306,7 +312,7 @@ namespace GXMath
 	
 	
 	template <typename T>
-	struct ::GX_STL::GXTypes::Hash< GXMath::Degrees<T> > : private Hash<T>
+	struct Hash< GXMath::Degrees<T> > : private Hash<T>
 	{
 		typedef GXMath::Degrees<T>			Key_t;
 		typedef Hash<T>						Base_t;

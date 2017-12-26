@@ -1,6 +1,6 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright ï¿½  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -16,6 +16,7 @@ struct Test
 
 	float MemberFunc1 ()						{ return 0.0f; }
 	int MemberFunc2 (int, float)				{ return 0; }
+	//uint MemberFunc2 (int, float, bool)			{ return 0; }
 	int MemberFuncConst (int, float) const		{ return 0; }
 
 	virtual void VirtMemberFunc (double)		{}
@@ -29,6 +30,7 @@ typedef int (Test::*Test_MemberFuncConst) (int, float) const;
 typedef int (Test::*Test_VirtMemberFunc) (double);
 typedef decltype(&Test::MemberFunc1) Test_MemberFunc3;
 typedef decltype(&Test::MemberFunc2) Test_MemberFunc4;
+//typedef decltype(static_cast<int (Test::*)(int, float)>(&Test::MemberFunc2)) Test_MemberFunc4;
 typedef int (*Test_StaticFunc) (float, double);
 
 enum ETestEnum {};
@@ -269,10 +271,10 @@ extern void Test_CompileTime_TypeTraits ()
 
 
 	// ResultOf //
-	//STATIC_ASSERT(( IsSameTypes< ResultOf< Test_memberVar >, int > ));
-	STATIC_ASSERT(( IsSameTypes< ResultOf< Test_MemberFunc1 >, float > ));
-	STATIC_ASSERT(( IsSameTypes< ResultOf< decltype(&Test::MemberFunc2)(Test, int, float) >, int > ));
-	STATIC_ASSERT(( IsSameTypes< std::result_of_t< decltype(&Test::MemberFunc2)(Test, int, float) >, int > ));
+	//STATIC_ASSERT(( IsSameTypes< CompileTime::ResultOf< Test_memberVar >, int > ));
+	STATIC_ASSERT(( IsSameTypes< CompileTime::ResultOf< Test_MemberFunc1 >, float > ));
+	STATIC_ASSERT(( IsSameTypes< CompileTime::ResultOf< decltype(&Test::MemberFunc2) >, int > ));
+	//STATIC_ASSERT(( IsSameTypes< std::result_of_t< decltype(&Test::MemberFunc2)(Test, int, float) >, int > ));
 
 
 	// IsMovable //

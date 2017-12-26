@@ -15,7 +15,7 @@ namespace Base
 	FileManager::FileManager (GlobalSystemsRef gs) :
 		BaseObject( gs )
 	{
-		GlobalSystems()->GetSetter< FileManager >().Set( this );
+		GlobalSystems()->fileManager.Set( this );
 	}
 	
 /*
@@ -25,7 +25,7 @@ namespace Base
 */
 	FileManager::~FileManager ()
 	{
-		GlobalSystems()->GetSetter< FileManager >().Set( null );
+		GlobalSystems()->fileManager.Set( null );
 	}
 
 /*

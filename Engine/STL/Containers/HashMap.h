@@ -90,6 +90,11 @@ namespace _types_hidden_
 		{
 			AddArray( ArrayCRef<pair_t>( list ) );
 		}
+		
+		BaseHashMap (ArrayCRef<pair_t> list)
+		{
+			AddArray( list );
+		}
 
 
 		const_pair_t &			operator [] (usize i)
@@ -225,6 +230,13 @@ namespace _types_hidden_
 			}
 		}
 
+		void AddArray (const Self &value)
+		{
+			FOR( i, value ) {
+				Add( value[i] );
+			}
+		}
+
 		void AddArray (Self &&value)
 		{
 			FOR( i, value ) {
@@ -257,7 +269,7 @@ namespace _types_hidden_
 
 		bool Find (const Key_t &key, OUT iterator & result)
 		{
-			usize	idx = -1;
+			usize	idx = UMax;
 
 			if ( not FindIndex( key, OUT idx ) )
 				return false;
@@ -268,7 +280,7 @@ namespace _types_hidden_
 
 		bool Find (const Key_t &key, OUT const_iterator & result) const
 		{
-			usize	idx = -1;
+			usize	idx = UMax;
 
 			if ( not FindIndex( key, OUT idx ) )
 				return false;

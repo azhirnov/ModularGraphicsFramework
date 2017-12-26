@@ -1,6 +1,7 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "FileSystem.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -284,7 +285,7 @@ namespace OS
 	{
 		ASSERT( filename.IsNullTerminated() );
 
-		FILETIME	time = {0};
+		FILETIME	time = {};
 		HANDLE		file = ::CreateFileA( filename.cstr(), GENERIC_READ,
 							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
 							null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );
@@ -304,7 +305,7 @@ namespace OS
 	{
 		ASSERT( filename.IsNullTerminated() );
 
-		FILETIME	time = {0};
+		FILETIME	time = {};
 		HANDLE		file = ::CreateFileA( filename.cstr(), GENERIC_READ,
 							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
 							null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );

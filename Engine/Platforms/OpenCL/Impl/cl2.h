@@ -61,8 +61,8 @@ namespace cl
 	// macro
 #if !defined( __GX_COMPUTE_API_ERROR_CHECKS__ )
 	
-#	define CL_CALL( ... )		{ __VA_ARGS__ }
-#	define CL_CHECK( ... )		{ __VA_ARGS__ }
+#	define CL_CALL( ... )		{ __VA_ARGS__; }
+#	define CL_CHECK( ... )		{ __VA_ARGS__; }
 
 #else
 

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Shared/GPU/Thread.h"
+#include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
 
 namespace Engine
 {
@@ -10,26 +11,21 @@ namespace CreateInfo
 {
 
 	//
-	// GPU VR Context Create Info
+	// GPU VR Thread Create Info
 	//
-	struct VRContext : GpuContext
+	struct VRThread
 	{
 	// variables
-		GXMath::uint2	eyeTextureDimension;		// dimension of per eye textures
-		bool			layered;					// create texture array or use multiview extension, depended of implementation
+		ModulePtr						gpuThread;					// can be null
+		Platforms::GraphicsSettings		settings;
+		GXMath::uint2					eyeTextureDimension;		// dimension of per eye textures
+		bool							layered;					// create texture array or use multiview extension, depended of implementation
 
 	// methods
-		VRContext  (GXMath::uint2		texDimension,
-				    bool				layered			= false,
-					GAPI::type			version			= GAPI::type(0),
-					EFlags::bits		flags			= EFlags::bits(),
-					EPixelFormat::type	colorFmt		= EPixelFormat::RGBA8_UNorm,
-					EPixelFormat::type	depthStencilFmt	= EPixelFormat::Depth24,
-					MultiSamples		samples			= MultiSamples(),
-					StringCRef			deviceName		= StringCRef(),
-					uint				swapchainLength	= 0) :
-			GpuContext{ version, flags, colorFmt, depthStencilFmt,
-						samples, deviceName, swapchainLength },
+		VRThread  (const Platforms::GraphicsSettings &settings,
+					const GXMath::uint2 &texDimension = Uninitialized,
+					bool layered = false) :
+			settings{ settings },
 			eyeTextureDimension{ texDimension },
 			layered{ layered }
 		{}
@@ -68,7 +64,6 @@ namespace GpuMsg
 		struct Data {
 			PerEye		leftEye;
 			PerEye		rightEye;
-			ModulePtr	commandBuilder;		// this builder destroys all command buffer before resize swapchain		// TODO: remove
 			uint		index	= 0;		// index of image in swapchain
 		};
 

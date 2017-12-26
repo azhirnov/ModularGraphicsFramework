@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -42,7 +42,7 @@ namespace CompileTime
 		constexpr static usize	Count	= sizeof...(Values);
 
 		template <usize Index>
-		constexpr static T		Get		= ValueList_t::Get< Index >::value;
+		constexpr static T		Get		= ValueList_t::template Get< Index >::value;
 
 
 	// methods

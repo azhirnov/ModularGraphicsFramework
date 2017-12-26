@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/OpenGL/Impl/gl4.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinLibrary.h"
@@ -8,9 +8,11 @@
 namespace gl
 {
 	using Engine::PlatformGL::GLLibrary;
-	
+
+# ifdef COMPILER_MSVC
 #	pragma warning (push)
 #	pragma warning (disable : 4100)	// 'identifier' : unreferenced formal parameter
+# endif
 
 	// get function address from driver //
 #	define OPENGL4_GET_PROC( _p_, _n_, _d_ ) \
@@ -41,18 +43,20 @@ namespace gl
 	GL4_CORE_FUNCTIONS( GL4_BUILDFUNC )
 
 	static int	gl4Version = 0;
-	
+
+# ifdef COMPILER_MSVC
 #	pragma warning (pop)
+# endif
 
 /*
 =================================================
 	GL4_GetProcAddress
 =================================================
 */
-	void * GL4_GetProcAddress (const char *name)
+	GX_STL::SharedLibFunction_t  GL4_GetProcAddress (const char *name)
 	{
 		using namespace Engine;
-		void * ptr = SingletonSingleThread::Instance< GLLibrary >()->GetProc( name );
+		SharedLibFunction_t	ptr = SingletonSingleThread::Instance< GLLibrary >()->GetProc( name );
 		
 		DEBUG_ONLY(
 		if ( ptr == null ) {

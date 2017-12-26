@@ -18,6 +18,8 @@ namespace Platforms
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::InputKeyBind,
 											ModuleMsg::InputMotionBind,
+											ModuleMsg::InputKeyUnbindAll,
+											ModuleMsg::InputMotionUnbindAll,
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged
@@ -27,11 +29,8 @@ namespace Platforms
 											ModuleMsg::InputMotion		// not recomended to use
 										> >;
 
-		using KeyCollback_t			= ModuleMsg::InputKeyBind::Callback_t;
-		using KeyBinds_t			= MultiMap< KeyID::type, Pair< EKeyState, KeyCollback_t > >;
-
-		using MotionCallback_t		= ModuleMsg::InputMotionBind::Callback_t;
-		using MotionBinds_t			= MultiMap< MotionID::type, MotionCallback_t >;
+		using KeyBinds_t			= MultiMap< KeyID::type, ModuleMsg::InputKeyBind >;
+		using MotionBinds_t			= MultiMap< MotionID::type, ModuleMsg::InputMotionBind >;
 
 		using ModulesSet_t			= Set< ModulePtr >;
 
@@ -49,6 +48,8 @@ namespace Platforms
 		KeyBinds_t		_keyBinds;
 		MotionBinds_t	_motionBinds;
 		
+		bool			_lockBindings;
+
 
 	// methods
 	public:
@@ -65,6 +66,8 @@ namespace Platforms
 		bool _InputMotion (const Message< ModuleMsg::InputMotion > &);
 		bool _InputKeyBind (const Message< ModuleMsg::InputKeyBind > &);
 		bool _InputMotionBind (const Message< ModuleMsg::InputMotionBind > &);
+		bool _InputKeyUnbindAll (const Message< ModuleMsg::InputKeyUnbindAll > &);
+		bool _InputMotionUnbindAll (const Message< ModuleMsg::InputMotionUnbindAll > &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -79,7 +82,8 @@ namespace Platforms
 =================================================
 */
 	InputThread::InputThread (GlobalSystemsRef gs, const CreateInfo::InputThread &) :
-		Module( gs, ModuleConfig{ InputThreadModuleID, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ InputThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
+		_lockBindings( false )
 	{
 		SetDebugName( "InputThread" );
 
@@ -96,6 +100,8 @@ namespace Platforms
 		_SubscribeOnMsg( this, &InputThread::_Delete );
 		_SubscribeOnMsg( this, &InputThread::_InputKeyBind );
 		_SubscribeOnMsg( this, &InputThread::_InputMotionBind );
+		_SubscribeOnMsg( this, &InputThread::_InputKeyUnbindAll );
+		_SubscribeOnMsg( this, &InputThread::_InputMotionUnbindAll );
 		_SubscribeOnMsg( this, &InputThread::_AddToManager );
 		_SubscribeOnMsg( this, &InputThread::_RemoveFromManager );
 		
@@ -199,11 +205,27 @@ namespace Platforms
 	{
 		_SendEvent( msg );
 
-		KeyBinds_t::values_range_t	range;
-		_keyBinds.FindAll( msg->key, OUT range );
+		CHECK_ERR( not _lockBindings );
+		SCOPE_SETTER( _lockBindings = true, false );
 
-		FOR( i, range ) {
-			range[i].second.second.Call( msg.Data() );
+		usize	idx = 0;
+
+		if ( _keyBinds.FindFirstIndex( msg->key, OUT idx ) )
+		{
+			for (usize i = idx; i < _keyBinds.Count() and _keyBinds[i].first == msg->key; ++i)
+			{
+				auto&	bind = _keyBinds[i].second;
+
+				if ( bind.callback.IsValid() )
+				{
+					if ( bind.state == EKeyState::OnKeyDown )
+						bind.callback( *msg );
+				}
+				else {
+					_keyBinds.EraseByIndex( i );
+					--i;
+				}
+			}
 		}
 		return true;
 	}
@@ -217,11 +239,25 @@ namespace Platforms
 	{
 		_SendEvent( msg );
 
-		MotionBinds_t::values_range_t	range;
-		_motionBinds.FindAll( msg->motion, OUT range );
+		CHECK_ERR( not _lockBindings );
+		SCOPE_SETTER( _lockBindings = true, false );
 
-		FOR( i, range ) {
-			range[i].second.Call( msg.Data() );
+		usize	idx = 0;
+
+		if ( _motionBinds.FindFirstIndex( msg->motion, OUT idx ) )
+		{
+			for (usize i = idx; i < _motionBinds.Count() and _motionBinds[i].first == msg->motion; ++i)
+			{
+				auto&	bind = _motionBinds[i].second;
+
+				if ( bind.callback.IsValid() ) {
+					bind.callback( *msg );
+				}
+				else {
+					_motionBinds.EraseByIndex( i );
+					--i;
+				}
+			}
 		}
 		return true;
 	}
@@ -233,7 +269,9 @@ namespace Platforms
 */
 	bool InputThread::_InputKeyBind (const Message< ModuleMsg::InputKeyBind > &msg)
 	{
-		_keyBinds.Add( RVREF(msg->key), KeyBinds_t::Value_t( RVREF(msg->state), RVREF(msg->cb.Get()) ) );
+		CHECK_ERR( msg->callback );
+
+		_keyBinds.Add( msg->key, *msg );
 		return true;
 	}
 	
@@ -244,7 +282,51 @@ namespace Platforms
 */
 	bool InputThread::_InputMotionBind (const Message< ModuleMsg::InputMotionBind > &msg)
 	{
-		_motionBinds.Add( RVREF(msg->motion), RVREF(msg->cb.Get()) );
+		CHECK_ERR( msg->callback );
+
+		_motionBinds.Add( msg->motion, *msg );
+		return true;
+	}
+	
+/*
+=================================================
+	_InputMotionBind
+=================================================
+*/
+	bool InputThread::_InputKeyUnbindAll (const Message< ModuleMsg::InputKeyUnbindAll > &msg)
+	{
+		CHECK_ERR( not _lockBindings );
+		SCOPE_SETTER( _lockBindings = true, false );
+
+		FOR( i, _keyBinds )
+		{
+			if ( _keyBinds[i].second.callback.EqualPointers( msg->object.RawPtr() ) )
+			{
+				_keyBinds.EraseByIndex( i );
+				--i;
+			}
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_InputMotionBind
+=================================================
+*/
+	bool InputThread::_InputMotionUnbindAll (const Message< ModuleMsg::InputMotionUnbindAll > &msg)
+	{
+		CHECK_ERR( not _lockBindings );
+		SCOPE_SETTER( _lockBindings = true, false );
+
+		FOR( i, _motionBinds )
+		{
+			if ( _motionBinds[i].second.callback.EqualPointers( msg->object.RawPtr() ) )
+			{
+				_motionBinds.EraseByIndex( i );
+				--i;
+			}
+		}
 		return true;
 	}
 //-----------------------------------------------------------------------------

@@ -13,13 +13,9 @@
 #	define _STL_EXPORT_		GX_DLL_IMPORT
 #endif
 
-#include "Engine/STL/Defines/AuxiliaryDefines.h"
-#include "Engine/STL/Defines/Defines.h"
-#include "Engine/STL/Defines/EnumHelpers.h"
-#include "Engine/STL/Defines/Errors.h"
-#include "Engine/STL/Defines/OperatorHelpers.h"
-#include "Engine/STL/Defines/MemberDetector.h"
-#include "Engine/STL/Log/ELog.h"
+#if defined(COMPILER_MSVC)
+#	pragma warning (push, 0)
+#endif
 
 #include <stdio.h>
 #include <math.h>
@@ -33,6 +29,22 @@
 #include <typeindex>
 #include <vector>
 #include <string>
+#include <cstddef>
+#include <type_traits>
+
+#if defined(COMPILER_MSVC)
+#   include <xstddef>
+#	pragma warning (pop)
+#endif
+
+#include "Engine/STL/Defines/AuxiliaryDefines.h"
+#include "Engine/STL/Defines/Defines.h"
+#include "Engine/STL/Defines/EnumHelpers.h"
+#include "Engine/STL/Defines/Errors.h"
+#include "Engine/STL/Defines/OperatorHelpers.h"
+#include "Engine/STL/Defines/MemberDetector.h"
+#include "Engine/STL/Log/ELog.h"
+
 
 namespace GX_STL
 {

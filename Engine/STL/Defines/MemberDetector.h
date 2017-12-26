@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -19,5 +19,5 @@
 		public:																				\
 		typedef Detect_##_X_ type;															\
 		enum { value = sizeof(func<Derived>(0)) == 2 };										\
-	};
+	}
 

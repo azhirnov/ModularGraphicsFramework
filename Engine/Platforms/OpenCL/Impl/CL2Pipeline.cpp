@@ -1,12 +1,10 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#pragma once
-
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/Shared/GPU/VertexInputState.h"
-#include "Engine/Platforms/OpenCL/OpenCLContext.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 #if defined( COMPUTE_API_OPENCL )
 
@@ -81,7 +79,7 @@ namespace PlatformCL
 =================================================
 */
 	CL2ComputePipeline::CL2ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLComputePipelineModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		CL2BaseModule( gs, ModuleConfig{ CLComputePipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_programId( null ),		_kernelId( null ),
 		_descr( ci.descr ),		_shaders( ci.shaders ),
 		_preferredMultipleOfWorkGroupSize(0)
@@ -246,10 +244,11 @@ namespace PlatformCL
 	}
 
 }	// PlatformCL
+//-----------------------------------------------------------------------------
 
 namespace Platforms
 {
-	ModulePtr OpenCLContext::_CreateCL2ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
 	{
 		return New< PlatformCL::CL2ComputePipeline >( gs, ci );
 	}

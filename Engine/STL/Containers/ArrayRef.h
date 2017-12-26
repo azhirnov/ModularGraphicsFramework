@@ -3,14 +3,18 @@
 #pragma once
 
 #include "CopyStrategy.h"
-#include "Engine/STL/CompileTime/NewTypeInfo.h"
+#include "Engine/STL/Math/MathFunc.h"
+#include "Engine/STL/Algorithms/ArrayUtils.h"
 
 namespace GX_STL
 {
 namespace GXTypes
 {
 	
-	template <typename T, typename S, typename MC> struct Array;
+	template <typename T, typename S, typename MC>	struct Array;
+	template <typename T, typename S, typename MC>	struct TString;
+	template <typename T>							struct TStringRef;
+
 
 
 	//
@@ -54,7 +58,7 @@ namespace GXTypes
 		ArrayRef (void_ptr_t begin, void_ptr_t end);
 
 		template <usize I>
-		ArrayRef (const C (&arr)[I]);
+		ArrayRef (T (&arr)[I]);
 
 		ArrayRef (Self &&other) = default;
 		ArrayRef (const Self &other) = default;
@@ -116,8 +120,8 @@ namespace GXTypes
 
 		bool		Intersects (const Self &other) const;
 
-		Self				SubArray (usize first, usize count = usize(-1));
-		ArrayRef<const T>	SubArray (usize first, usize count = usize(-1)) const;
+		Self				SubArray (usize first, usize count = UMax);
+		ArrayRef<const T>	SubArray (usize first, usize count = UMax) const;
 
 
 		// iterators
@@ -154,8 +158,14 @@ namespace GXTypes
 		template <typename B>
 		static Self From (ArrayRef<B> arr);
 		
+		template <typename B>
+		static Self From (TStringRef<B> str);
+
 		template <typename B, typename S, typename MC>
 		static Self From (const Array<B,S,MC> &arr);
+
+		template <typename B, typename S, typename MC>
+		static Self From (const TString<B,S,MC> &str);
 
 		static Self FromVoid (void_ptr_t ptr, BytesU size);
 		
@@ -165,6 +175,9 @@ namespace GXTypes
 		template <typename B>
 		static Self FromStd (const std::vector<B> &vec);
 		
+		template <typename B>
+		static Self FromStd (const std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str);
+
 		template <typename B>
 		static Self FromValue (B &ref);
 
@@ -222,8 +235,8 @@ namespace GXTypes
 */
 	template <typename T>
 	template <usize I>
-	inline ArrayRef<T>::ArrayRef (const C (&arr)[I]) :
-		_memory( (T *) arr ), _count( I )
+	inline ArrayRef<T>::ArrayRef (T (&arr)[I]) :
+		_memory( static_cast<T *>(arr) ), _count( I )
 	{
 		ASSERT( _count == 0 or _memory != null );
 	}
@@ -305,10 +318,10 @@ namespace GXTypes
 */
 	template <typename T>
 	template <typename B>
-	static ArrayRef<T>  ArrayRef<T>::FromStd (const std::vector<B> &vec)
+	inline ArrayRef<T>  ArrayRef<T>::FromStd (const std::vector<B> &vec)
 	{
 		if ( not vec.empty() )
-			return FromVoid( (void_ptr_t) &vec[0], vec.size() * SizeOf<B>() );
+			return FromVoid( static_cast<void_ptr_t>(vec.data()), vec.size() * SizeOf<B>() );
 		else
 			return ArrayRef<T>();
 	}
@@ -504,7 +517,7 @@ namespace GXTypes
 	template <typename E>
 	inline bool ArrayRef<T>::Find (OUT usize &index, const E &value, usize start) const
 	{
-		index = -1;
+		index = UMax;
 
 		FORv( i, start, *this )
 		{
@@ -527,7 +540,7 @@ namespace GXTypes
 	inline bool ArrayRef<T>::IsExist (const E &value) const
 	{
 		usize	idx;
-		return Find( idx, value, 0 );
+		return Find( OUT idx, value, 0 );
 	}
 	
 /*
@@ -538,13 +551,13 @@ namespace GXTypes
 	template <typename T>
 	inline ArrayRef<T>  ArrayRef<T>::SubArray (usize first, usize count)
 	{
-		ASSERT( first <= Count() and (count == usize(-1) or first + count <= Count()) );
+		ASSERT( first <= Count() and (count == UMax or first + count <= Count()) );
 		
 		if ( first >= Count() )
 			return ArrayRef<T>();
 		
-		// 'count' can be usize(-1)
-		if ( count == usize(-1) or count + first > Count() )
+		// 'count' can be -1
+		if ( count == UMax or count + first > Count() )
 			count = Count() - first;
 
 		return ( ArrayRef<T>( ptr() + first, count ) );
@@ -558,13 +571,13 @@ namespace GXTypes
 	template <typename T>
 	inline ArrayCRef<T>  ArrayRef<T>::SubArray (usize first, usize count) const
 	{
-		ASSERT( first <= Count() and (count == usize(-1) or first + count <= Count()) );
+		ASSERT( first <= Count() and (count == UMax or first + count <= Count()) );
 		
 		if ( first >= Count() )
 			return ArrayCRef<T>();
 
-		// 'count' can be usize(-1)
-		if ( count == usize(-1) or count + first > Count() )
+		// 'count' can be -1
+		if ( count == UMax or count + first > Count() )
 			count = Count() - first;
 
 		return ( ArrayCRef<T>( ptr() + first, count ) );
@@ -723,16 +736,6 @@ namespace GXTypes
 		ASSERT( buf.Size() >= SizeOf<T>() );
 
 		return UnsafeMem::PlacementNew<T>( buf.ptr() );
-	}
-			
-	template <typename T, typename C, typename ...Types>
-	forceinline T * PlacementNew (ArrayRef<C> buf, Types const&... args) noexcept
-	{
-		STATIC_ASSERT( not TypeTraits::IsConst<C> );
-		STATIC_ASSERT( CompileTime::IsPOD<C> );
-		ASSERT( buf.Size() >= SizeOf<T>() );
-
-		return UnsafeMem::PlacementNew<T>( buf.ptr(), args... );
 	}
 
 	template <typename T, typename C, typename ...Types>

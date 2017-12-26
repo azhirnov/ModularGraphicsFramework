@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
 #include "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h"
@@ -38,9 +38,9 @@ namespace PlatformVK
 		_colorSpace( VK_COLOR_SPACE_MAX_ENUM_KHR ),
 		_depthStencilFormat( VK_FORMAT_UNDEFINED ),
 		_queue( VK_NULL_HANDLE ),
-		_queueIndex( ~0u ),
+		_queueIndex( UMax ),
 		_queueFamily(),
-		_currentImageIndex( ~0u ),
+		_currentImageIndex( UMax ),
 		_graphicsQueueSubmited( false ),
 		_imageAvailable( VK_NULL_HANDLE ),
 		_renderFinished( VK_NULL_HANDLE ),
@@ -409,9 +409,9 @@ namespace PlatformVK
 
 		uint32_t					count				= 0;
 
-		usize						name_match_idx		= -1;
-		usize						high_version_idx	= -1;
-		usize						best_gpu_idx		= -1;
+		usize						name_match_idx		= UMax;
+		usize						high_version_idx	= UMax;
+		usize						best_gpu_idx		= UMax;
 
 		uint32_t					version				= 0;
 		VkPhysicalDeviceType		gpu_type			= VK_PHYSICAL_DEVICE_TYPE_OTHER;
@@ -448,20 +448,20 @@ namespace PlatformVK
 			if ( deviceName.Empty() )
 				continue;
 
-			if ( name_match_idx == -1 and
+			if ( name_match_idx == UMax and
 				 StringCRef( prop.deviceName ).HasSubStringIC( deviceName ) )
 			{
 				name_match_idx = i;
 			}
 		}
 
-		if ( name_match_idx != -1 )
+		if ( name_match_idx != UMax )
 			_physicalDevice = devices[name_match_idx];
 		else
-		if ( best_gpu_idx != -1 )
+		if ( best_gpu_idx != UMax )
 			_physicalDevice = devices[best_gpu_idx];
 		else
-		if ( high_version_idx != -1 )
+		if ( high_version_idx != UMax )
 			_physicalDevice = devices[high_version_idx];
 		else
 			_physicalDevice = devices[0];
@@ -533,7 +533,7 @@ namespace PlatformVK
 		VkDeviceCreateInfo					device_info			= {};
 		
 		_queueFamily = queueFamilies;
-		_queueIndex  = -1;
+		_queueIndex  = UMax;
 
 		CHECK_ERR( _GetQueueCreateInfos( OUT queue_infos, INOUT _queueFamily, OUT _queueIndex ) );
 
@@ -665,7 +665,6 @@ namespace PlatformVK
 		// destroy obsolete resources
 		_DeleteSwapchain( old_swapchain, _imageBuffers );
 		_DeleteFramebuffers( _framebuffers );
-		_DeleteCommandBuffers();
 
 		// create dependent resources
 		CHECK_ERR( _CreateColorAttachment( samples, OUT _imageBuffers ) );
@@ -673,7 +672,6 @@ namespace PlatformVK
 		CHECK_ERR( _CreateRenderPass() );
 		CHECK_ERR( _CreateFramebuffers( OUT _framebuffers ) );
 		CHECK_ERR( _CreateSemaphores() );
-		CHECK_ERR( _CreateCommandBuffers() );
 
 		return true;
 	}
@@ -716,7 +714,6 @@ namespace PlatformVK
 		_renderPass = null;
 
 		_DeleteDepthStencilAttachment();
-		_DeleteCommandBuffers();
 		_DestroySemaphores();
 
 		_surfaceSize = uint2();
@@ -864,7 +861,7 @@ namespace PlatformVK
 	void Vk1Device::DestroyQueue ()
 	{
 		_queue			= VK_NULL_HANDLE;
-		_queueIndex		= -1;
+		_queueIndex		= UMax;
 		_queueFamily	= EQueueFamily::bits();
 	}
 
@@ -878,10 +875,10 @@ namespace PlatformVK
 		CHECK_ERR( IsSwapchainCreated() );
 
 		_graphicsQueueSubmited	= false;
-		_currentImageIndex		= -1;
+		_currentImageIndex		= UMax;
 
-		uint32_t	image_index = -1;
-		VkResult	result		= vkAcquireNextImageKHR( _logicalDevice, _swapchain, uint64_t(-1), _imageAvailable,
+		uint32_t	image_index = UMax;
+		VkResult	result		= vkAcquireNextImageKHR( _logicalDevice, _swapchain, UMax, _imageAvailable,
 														 VK_NULL_HANDLE, OUT &image_index );
 
 		if ( result == VK_SUCCESS )
@@ -934,7 +931,7 @@ namespace PlatformVK
 		VK_CHECK( vkQueuePresentKHR( GetQueue(), &present_info ) );
 		
 		_graphicsQueueSubmited	= false;
-		_currentImageIndex		= -1;
+		_currentImageIndex		= UMax;
 		return true;
 	}
 
@@ -989,8 +986,8 @@ namespace PlatformVK
 */
 	void Vk1Device::_GetSwapChainExtent (OUT VkExtent2D &extent, const VkSurfaceCapabilitiesKHR &surfaceCaps) const
 	{
-		if ( surfaceCaps.currentExtent.width  == ~0u and
-			 surfaceCaps.currentExtent.height == ~0u )
+		if ( surfaceCaps.currentExtent.width  == UMax and
+			 surfaceCaps.currentExtent.height == UMax )
 		{
 			// keep window size
 		}
@@ -1274,7 +1271,7 @@ namespace PlatformVK
 */
 	bool Vk1Device::GetMemoryTypeIndex (uint32_t memoryTypeBits, VkMemoryPropertyFlags flags, OUT uint32_t &index) const
 	{
-		index = -1;
+		index = UMax;
 
 		for (uint32_t i = 0; i < _deviceMemoryProperties.memoryTypeCount; ++i)
 		{
@@ -1329,7 +1326,7 @@ namespace PlatformVK
 					_depthStencilPixelFormat == EPixelFormat::Unknown );
 
 		ModulePtr	module;
-		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 					VkRenderPassModuleID,
 					GlobalSystems(),
 					CreateInfo::GpuRenderPass{
@@ -1419,9 +1416,9 @@ namespace PlatformVK
 		}
 		else
 		{
-			usize	both_match_idx		= -1;
-			usize	format_match_idx	= -1;
-			usize	space_match_idx		= -1;
+			usize	both_match_idx		= UMax;
+			usize	format_match_idx	= UMax;
+			usize	space_match_idx		= UMax;
 			usize	def_format_idx		= 0;
 			usize	def_space_idx		= 0;
 
@@ -1450,10 +1447,10 @@ namespace PlatformVK
 
 			usize	idx = 0;
 
-			if ( both_match_idx != -1 )
+			if ( both_match_idx != UMax )
 				idx = both_match_idx;
 			else
-			if ( format_match_idx != -1 )
+			if ( format_match_idx != UMax )
 				idx = format_match_idx;
 			else
 				idx = def_format_idx;
@@ -1632,39 +1629,6 @@ namespace PlatformVK
 			vkDestroySemaphore( _logicalDevice, _renderFinished, null );
 			_renderFinished = VK_NULL_HANDLE;
 		}
-	}
-	
-/*
-=================================================
-	_CreateCommandBuffers
-=================================================
-*/
-	bool Vk1Device::_CreateCommandBuffers ()
-	{
-		CHECK_ERR( not _framebuffers.Empty() );
-
-		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-			VkCommandBuilderModuleID,
-			GlobalSystems(),
-			CreateInfo::GpuCommandBuilder{},
-			OUT _commandBuilder )
-		);
-
-		ModuleUtils::Initialize( {_commandBuilder}, this );
-		return true;
-	}
-	
-/*
-=================================================
-	_DeleteCommandBuffers
-=================================================
-*/
-	void Vk1Device::_DeleteCommandBuffers ()
-	{
-		if ( _commandBuilder )
-			SendTo< ModuleMsg::Delete >( _commandBuilder, {} );
-
-		_commandBuilder	= null;
 	}
 
 /*

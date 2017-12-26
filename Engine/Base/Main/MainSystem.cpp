@@ -13,14 +13,14 @@ namespace Base
 	
 /*
 =================================================
-	GetMainSystemInstace
+	GetMainSystemInstance
 =================================================
 */
 	struct _FinalChecks {
 		~_FinalChecks ();
 	};
 
-	Ptr<Module>  GetMainSystemInstace ()
+	Ptr<Module>  GetMainSystemInstance ()
 	{
 		static _FinalChecks			final_checks;
 		static GlobalSubSystems		global_systems;
@@ -40,7 +40,7 @@ namespace Base
 	{
 		SetDebugName( "MainSystem" );
 
-		GlobalSystems()->GetSetter< MainSystem >().Set( this );
+		GlobalSystems()->mainSystem.Set( this );
 
 		_Create();
 	}
@@ -58,7 +58,7 @@ namespace Base
 
 		CHECK( _SetState( EState::Deleting ) );
 
-		GlobalSystems()->GetSetter< MainSystem >().Set( null );
+		GlobalSystems()->mainSystem.Set( null );
 		
 		LOG( "MainSystem finalized", ELog::Debug );
 	}
@@ -107,8 +107,7 @@ namespace Base
 		_SendMsg< ModuleMsg::AttachModule >({ _taskMngr });
 		_SendMsg< ModuleMsg::AttachModule >({ _threadMngr });
 		
-		GlobalSystems()->Get< ParallelThread >()->
-			AddModule( StringCRef(), TaskModuleModuleID, CreateInfo::TaskModule{ _taskMngr } );
+		GlobalSystems()->parallelThread->AddModule( StringCRef(), TaskModuleModuleID, CreateInfo::TaskModule{ _taskMngr } );
 	}
 	
 /*

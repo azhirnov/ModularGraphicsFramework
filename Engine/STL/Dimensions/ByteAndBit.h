@@ -1,8 +1,9 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright ï¿½  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
 #include "Engine/STL/CompileTime/TypeListHelpers.h"
+#include "Engine/STL/Common/Cast.h"
 
 namespace GX_STL
 {
@@ -196,10 +197,10 @@ namespace GXTypes
 		
 
 		template <typename B>
-		static constexpr Self SizeOf ()				{ return Bytes<T>::SizeOf<B>().ToBits(); }
+		static constexpr Self SizeOf ()				{ return Bytes<T>::template SizeOf<B>().ToBits(); }
 		
 		template <typename B>
-		static constexpr Self SizeOf (B value)		{ return Bytes<T>::SizeOf<B>().ToBits(); }
+		static constexpr Self SizeOf (B value)		{ return Bytes<T>::template SizeOf<B>().ToBits(); }
 
 
 		_GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value );
@@ -237,7 +238,7 @@ namespace GXTypes
 	template <typename A, typename B>
 	constexpr forceinline BytesU OffsetOf (A (B::*member))
 	{
-		static const union U {
+		const union U {
 			B		b;
 			int		tmp;
 			U () : tmp(0) {}

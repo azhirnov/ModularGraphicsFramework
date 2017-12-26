@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -151,6 +151,8 @@ namespace GXTypes
 			//STATIC_WARNING("hash not supported for variant reference type!");
 			//return Result_t();
 			//return Base_t::operator ()( x.RawPtr() );
+			TODO("");
+			return Result_t(0);
 		}
 	};
 

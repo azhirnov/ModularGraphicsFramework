@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -13,19 +13,19 @@ static void Test_AlignedImageSize ()
 	BytesU	size;
 	
 	size = ImageUtils::AlignedDataSize( uint3( 2, 2, 1 ), BitsU(8).ToBytes(), BytesU(1) );
-	ASSERT( size == 2*2 );
+	TEST( size == 2*2 );
 
 	size = ImageUtils::AlignedDataSize( uint3( 2, 2, 1 ), BitsU(8).ToBytes(), BytesU(4) );
-	ASSERT( size == 4*2 );
+	TEST( size == 4*2 );
 	
 	size = ImageUtils::AlignedDataSize( uint3( 4, 2, 1 ), BitsU(8).ToBytes(), BytesU(4) );
-	ASSERT( size == 4*2 );
+	TEST( size == 4*2 );
 	
 	size = ImageUtils::AlignedDataSize( uint3( 2, 4, 1 ), BitsU(8).ToBytes(), BytesU(4) );
-	ASSERT( size == 4*4 );
+	TEST( size == 4*4 );
 	
 	size = ImageUtils::AlignedDataSize( uint3( 3, 2, 1 ), BitsU(8*3).ToBytes(), BytesU(4) );
-	ASSERT( size == 4*2*3 );
+	TEST( size == 4*2*3 );
 
 	// assert:
 	//size = AlignedImageDataSize( uint3( 2, 2, 1 ), 8, 3 );
@@ -39,10 +39,10 @@ static void Test_ImageConverter ()
 
 	ImageUtils::Copy( uint3( 2, 2, 1 ), src, dst );
 
-	ASSERT( dst[0].r == 0xFF );
-	ASSERT( dst[1].r == 0x1F );
-	ASSERT( dst[2].r == 0x3F );
-	ASSERT( dst[3].r == 0x07 );
+	TEST( dst[0].r == 0xFF );
+	TEST( dst[1].r == 0x1F );
+	TEST( dst[2].r == 0x3F );
+	TEST( dst[3].r == 0x07 );
 
 
 	//	0		0		0		0
@@ -54,10 +54,10 @@ static void Test_ImageConverter ()
 	ImageUtils::CopyPart( uint3( 2, 2, 0 ), uint3( 0 ), src,
 						  uint3( 4, 4, 0 ), uint3( 1, 1, 0 ), img );
 	
-	ASSERT( img[5].r == 0xFF );
-	ASSERT( img[6].r == 0x1F );
-	ASSERT( img[9].r == 0x3F );
-	ASSERT( img[10].r == 0x07 );
+	TEST( img[5].r == 0xFF );
+	TEST( img[6].r == 0x1F );
+	TEST( img[9].r == 0x3F );
+	TEST( img[10].r == 0x07 );
 
 	
 	//	0		0		0		0
@@ -69,10 +69,10 @@ static void Test_ImageConverter ()
 	ImageUtils::CopyPart( uint3( 2, 2, 0 ), uint3( 0 ), src,
 						  uint3( 4, 4, 0 ), uint3( 2, 2, 0 ), pic );
 	
-	ASSERT( pic[5].bits.r == 0xFF );
-	ASSERT( pic[6].bits.r == 0x1F );
-	ASSERT( pic[9].bits.r == 0x3F );
-	ASSERT( pic[10].bits.r == 0x07 );*/
+	TEST( pic[5].bits.r == 0xFF );
+	TEST( pic[6].bits.r == 0x1F );
+	TEST( pic[9].bits.r == 0x3F );
+	TEST( pic[10].bits.r == 0x07 );*/
 
 	
 	//	0		0		0		0
@@ -83,10 +83,10 @@ static void Test_ImageConverter ()
 	ImageUtils::Fill( uint3( 2, 2, 0 ), RGBA8u( 0xFF, 0, 0, 0 ),
 					  uint3( 1, 1, 0 ), uint3( 4, 4, 0 ), img );
 	
-	ASSERT( img[5].r == 0xFF );
-	ASSERT( img[6].r == 0xFF );
-	ASSERT( img[9].r == 0xFF );
-	ASSERT( img[10].r == 0xFF );
+	TEST( img[5].r == 0xFF );
+	TEST( img[6].r == 0xFF );
+	TEST( img[9].r == 0xFF );
+	TEST( img[10].r == 0xFF );
 
 }
 

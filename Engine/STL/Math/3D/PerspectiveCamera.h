@@ -332,7 +332,7 @@ namespace GXMath
 	template <typename T>
 	inline void PerspectiveCamera<T>::LimitRotation (bool enabled, const degrees3_t &minAngle, const degrees3_t &maxAngle)
 	{
-		LimitRotation( enabled, minAngle.To< radians3_t >(), maxAngle.To< radians3_t >() );
+		LimitRotation( enabled, minAngle.template To< radians3_t >(), maxAngle.template To< radians3_t >() );
 	}
 	
 /*
@@ -413,7 +413,7 @@ namespace GXMath
 	template <typename T>
 	inline void PerspectiveCamera<T>::RotateFPS (const degrees2_t &rotation)
 	{
-		RotateFPS( rotation.To< radians2_t >() );
+		RotateFPS( rotation.template To< radians2_t >() );
 	}
 	
 /*
@@ -505,7 +505,7 @@ namespace GXMath
 	template <typename T>
 	inline void PerspectiveCamera<T>::RotateFlight (const degrees3_t &rotation)
 	{
-		RotateFlight( rotation.To< radians3_t >() );
+		RotateFlight( rotation.template To< radians3_t >() );
 	}
 	
 /*

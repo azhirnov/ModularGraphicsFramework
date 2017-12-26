@@ -1,8 +1,8 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
-
-#pragma once
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Timer.h"
+#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Math/Interpolations.h"
 
 #if defined( PLATFORM_WINDOWS )
 
@@ -63,7 +63,7 @@ namespace OS
 */
 	Date & Date::Now ()
 	{
-		SYSTEMTIME	 time = {0};
+		SYSTEMTIME	 time = {};
 		GetLocalTime( &time );
 
 		_year		= time.wYear;

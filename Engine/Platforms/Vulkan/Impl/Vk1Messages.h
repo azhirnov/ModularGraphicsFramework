@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -92,9 +92,10 @@ namespace GpuMsg
 	//
 	struct GetVkDescriptorLayouts
 	{
-		using IDs	= FixedSizeArray< vk::VkDescriptorSetLayout, 8 >;
+		//using IDs	= FixedSizeArray< vk::VkDescriptorSetLayout, 8 >;
+		//Out< IDs >					result;
 
-		Out< IDs >					result;
+		Out< vk::VkDescriptorSetLayout >	result;
 	};
 
 
@@ -154,7 +155,7 @@ namespace GpuMsg
 		{
 			StaticString<64>			entry;
 			vk::VkShaderModule			id		= 0;
-			Platforms::EShader::type	type	= Platforms::EShader::Unknown;;
+			Platforms::EShader::type	type	= Platforms::EShader::Unknown;
 		};
 		using Shaders_t		= FixedSizeArray< ShaderModule, Platforms::EShader::_Count >;
 
@@ -167,7 +168,11 @@ namespace GpuMsg
 	//
 	struct GetVkCommandBufferID
 	{
-		Out< vk::VkCommandBuffer >		result;
+		struct Data {
+			vk::VkCommandBuffer	cmd;
+			vk::VkFence			fence;
+		};
+		Out< Data >		result;
 	};
 
 

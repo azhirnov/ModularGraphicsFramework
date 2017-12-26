@@ -5,6 +5,7 @@
 #include "Engine/STL/Common/Types.h"
 #include "Engine/STL/Common/AllFunc.h"
 #include "Engine/STL/CompileTime/NewTypeInfo.h"
+#include "Engine/STL/CompileTime/TypeInfoFunc.h"
 #include "Engine/STL/Algorithms/Hash.h"
 #include "Engine/STL/Math/Vec.h"
 

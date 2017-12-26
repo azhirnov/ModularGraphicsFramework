@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 #include "Debug.h"
 
 using namespace GX_STL;
@@ -17,7 +17,7 @@ static void Set_Test1 ()
 	}
 
 	FORv( i, 1, s ) {
-		ASSERT( s[i-1] < s[i] );
+		TEST( s[i-1] < s[i] );
 	}
 }
 
@@ -29,7 +29,7 @@ static void Set_Test2 ()
 	s << 0 << 0;
 	s << 1 << 1;
 
-	ASSERT( s.Count() == 2 );
+	TEST( s.Count() == 2 );
 }
 
 
@@ -56,9 +56,9 @@ static void Set_Test3 ()
 		}
 	}
 
-	ASSERT( Elem1_t::CheckStatistic() );
-	ASSERT( Elem2_t::CheckStatistic() );
-	ASSERT( Elem3_t::CheckStatistic() );
+	TEST( Elem1_t::CheckStatistic() );
+	TEST( Elem2_t::CheckStatistic() );
+	TEST( Elem3_t::CheckStatistic() );
 }
 
 
@@ -69,13 +69,13 @@ static void Set_Test4 ()
 
 	s << "111" << "222" << "333";
 
-	ASSERT( s.FindIndex( StringCRef("222"), idx ) );
+	TEST( s.FindIndex( StringCRef("222"), idx ) );
 
 	Set< String >::const_iterator	iter;
 
-	ASSERT( s.Find( "333", OUT iter ) );
+	TEST( s.Find( "333", OUT iter ) );
 
-	ASSERT( idx == 1 );
+	TEST( idx == 1 );
 }
 
 
@@ -88,7 +88,7 @@ static void MultiSet_Test1 ()
 	}
 
 	FORv( i, 1, s ) {
-		ASSERT( s[i-1] < s[i] );
+		TEST( s[i-1] < s[i] );
 	}
 }
 
@@ -100,7 +100,7 @@ static void MultiSet_Test2 ()
 	s << 0 << 0;
 	s << 1 << 1;
 
-	ASSERT( s.Count() == 4 );
+	TEST( s.Count() == 4 );
 }
 
 

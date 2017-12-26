@@ -11,28 +11,28 @@
 
 #if defined( GRAPHICS_API_VULKAN )
 #include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #endif
 
 #if defined( GRAPHICS_API_OPENGL )
 #include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #endif
 
 #if defined( COMPUTE_API_OPENCL )
 #include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
-#include "Engine/Platforms/OpenCL/OpenCLContext.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 #endif
 
 #if defined( GRAPHICS_API_DIRECTX )
 #include "Engine/Platforms/DirectX/Impl/DX11Messages.h"
-#include "Engine/Platforms/DirectX/DirectXContext.h"
+#include "Engine/Platforms/DirectX/DirectXObjectsConstructor.h"
 #endif
 
 #if defined( GRAPHICS_API_SOFT )
 #include "Engine/Platforms/Soft/Impl/SWMessages.h"
-#include "Engine/Platforms/Soft/SoftComputeContext.h"
+#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
 #endif
 
 
@@ -346,7 +346,7 @@ namespace Platforms
 			return true;
 
 		ModulePtr	dev;
-		dev = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< VkDeviceMsgList_t, DeviceEventList_t >();
+		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< VkDeviceMsgList_t, DeviceEventList_t >();
 
 		if ( not dev )
 			return false;
@@ -374,7 +374,7 @@ namespace Platforms
 	bool PipelineTemplate::_VkDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
 	{
 		ModulePtr	dev;
-		dev = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< VkDeviceMsgList_t, DeviceEventList_t >();
+		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< VkDeviceMsgList_t, DeviceEventList_t >();
 
 		if ( dev )
 			dev->UnsubscribeAll( this );
@@ -414,7 +414,7 @@ namespace Platforms
 			shader_info.codeSize	= (usize) data.Size();
 			shader_info.pCode		= (vk::uint32_t const*) data.ptr();
 
-			VkShaderModule	shader;
+			VkShaderModule	shader = {};
 			VK_CHECK( vkCreateShaderModule( VkDevice(_vkData.device), &shader_info, null, OUT &shader ) );
 
 			_vkData.shaders[i] = ReferenceCast<ulong>(shader);
@@ -488,7 +488,7 @@ namespace Platforms
 	bool PipelineTemplate::_GetVkLogicDevice (const Message< GpuMsg::GetVkLogicDevice > &msg)
 	{
 		ModulePtr	dev;
-		dev = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgList< VkDeviceMsgList_t >();
+		dev = GlobalSystems()->parallelThread->GetModuleByMsgList< VkDeviceMsgList_t >();
 
 		if ( dev )
 			SendTo( dev, msg );
@@ -527,7 +527,7 @@ namespace Platforms
 			return true;
 		
 		ModulePtr	dev;
-		dev = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< GLDeviceMsgList_t, DeviceEventList_t >();
+		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GLDeviceMsgList_t, DeviceEventList_t >();
 
 		if ( not dev )
 			return false;
@@ -546,7 +546,7 @@ namespace Platforms
 	bool PipelineTemplate::_GLDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
 	{
 		ModulePtr	dev;
-		dev = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< GLDeviceMsgList_t, DeviceEventList_t >();
+		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GLDeviceMsgList_t, DeviceEventList_t >();
 
 		if ( dev )
 			dev->UnsubscribeAll( this );
@@ -705,7 +705,7 @@ namespace Platforms
 			return true;
 
 		ModulePtr	dev;
-		dev = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< CLDeviceMsgList_t, DeviceEventList_t >();
+		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< CLDeviceMsgList_t, DeviceEventList_t >();
 
 		if ( not dev )
 			return false;
@@ -735,7 +735,7 @@ namespace Platforms
 	bool PipelineTemplate::_CLDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
 	{
 		ModulePtr	dev;
-		dev = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< CLDeviceMsgList_t, DeviceEventList_t >();
+		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< CLDeviceMsgList_t, DeviceEventList_t >();
 
 		if ( dev )
 			dev->UnsubscribeAll( this );
@@ -900,7 +900,7 @@ namespace Platforms
 			return true;
 
 		ModulePtr	dev;
-		dev = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< SWDeviceMsgList_t, DeviceEventList_t >();
+		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< SWDeviceMsgList_t, DeviceEventList_t >();
 
 		if ( not dev )
 			return false;
@@ -930,7 +930,7 @@ namespace Platforms
 	bool PipelineTemplate::_SWDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
 	{
 		ModulePtr	dev;
-		dev = GlobalSystems()->Get< ParallelThread >()->GetModuleByMsgEvent< SWDeviceMsgList_t, DeviceEventList_t >();
+		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< SWDeviceMsgList_t, DeviceEventList_t >();
 
 		if ( dev )
 			dev->UnsubscribeAll( this );
@@ -1062,7 +1062,7 @@ namespace Platforms
 		CHECK_ERR( _GetGraphicsPipelineDescriptor( msg->vertexInput, msg->topology, OUT gpp_descr ) );
 
 		ModulePtr	pipeline;
-		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 					msg->moduleID,
 					GlobalSystems(),
 					CreateInfo::GraphicsPipeline{
@@ -1089,7 +1089,7 @@ namespace Platforms
 		CHECK_ERR( _GetComputePipelineDescriptor( OUT cpp_descr ) );
 		
 		ModulePtr	pipeline;
-		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 					msg->moduleID,
 					GlobalSystems(),
 					CreateInfo::ComputePipeline{
@@ -1109,28 +1109,28 @@ namespace Platforms
 	
 	
 #if defined( GRAPHICS_API_VULKAN )
-	ModulePtr VulkanContext::_CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
+	ModulePtr VulkanObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
 		return New< PipelineTemplate >( gs, ci );
 	}
 #endif
 	
 #if defined( GRAPHICS_API_OPENGL )
-	ModulePtr OpenGLContext::_CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
+	ModulePtr OpenGLObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
 		return New< PipelineTemplate >( gs, ci );
 	}
 #endif
 	
 #if defined( COMPUTE_API_OPENCL )
-	ModulePtr OpenCLContext::_CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
+	ModulePtr OpenCLObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
 		return New< PipelineTemplate >( gs, ci );
 	}
 #endif
 	
 #if defined( GRAPHICS_API_DIRECTX )
-	ModulePtr DirectXContext::_CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
+	ModulePtr DirectXObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
 		return New< PipelineTemplate >( gs, ci );
 	}

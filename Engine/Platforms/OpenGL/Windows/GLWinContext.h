@@ -17,10 +17,10 @@ namespace PlatformGL
 	// Windows OpenGL Surface
 	//
 
-	class GLWinContext final
+	class GLWinContext
 	{
 	// types
-	private:
+	protected:
 		using HWND_t			= OS::HiddenOSTypeFrom<void*>;
 		using HDC_t				= OS::HiddenOSTypeFrom<void*>;
 		using HGLRC_t			= OS::HiddenOSTypeFrom<void*>;
@@ -29,7 +29,7 @@ namespace PlatformGL
 
 
 	// variables
-	private:
+	protected:
 		FuncPtr_t		wglSwapInterval;			// PFNWGLSWAPINTERVALEXTPROC
 		FuncPtr_t		wglGetSwapInterval;			// PFNWGLGETSWAPINTERVALEXTPROC
 		FuncPtr_t		wglChoosePixelFormat;		// PFNWGLCHOOSEPIXELFORMATARBPROC
@@ -56,7 +56,7 @@ namespace PlatformGL
 
 		void SwapBuffers ();
 
-	private:
+	protected:
 		bool _InitOpenGL (INOUT GraphicsSettings &vs);
 		bool _InitOpenGL2 ();
 

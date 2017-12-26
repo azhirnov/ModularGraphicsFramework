@@ -31,8 +31,8 @@ namespace vk
 	// macro
 # if !defined( __GX_GRAPHICS_API_ERROR_CHECKS__ )
 	
-#	define VK_CALL( ... )		{ __VA_ARGS__ }
-#	define VK_CHECK( ... )		{ __VA_ARGS__ }
+#	define VK_CALL( ... )		{ __VA_ARGS__; }
+#	define VK_CHECK( ... )		{ __VA_ARGS__; }
 
 # else
 

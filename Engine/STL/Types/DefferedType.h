@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -136,7 +136,7 @@ namespace GXTypes
 
 			return	TypeIdOf<T>() == _typeid	and
 					IsDefined()					and
-					ReferenceCast<T>( _data ) != 0;
+					ReferenceCast<T>( _data ) != T(0);
 		}
 
 
@@ -213,15 +213,15 @@ namespace GXTypes
 
 		~DeferredType ()
 		{
-			if ( IsDefined() and _destructor != null )
-				_destructor( _data );
+			if ( this->IsDefined() and _destructor != null )
+				_destructor( this->_data );
 		}
 
 		
 		template <typename T>
 		forceinline Self& operator = (const T &value)
 		{
-			ASSERT( TypeIdOf<T>() == _typeid );
+			ASSERT( TypeIdOf<T>() == this->_typeid );
 
 			_Destroy();
 			_Create( value );
@@ -243,7 +243,7 @@ namespace GXTypes
 		template <typename T>
 		forceinline void _Create () noexcept
 		{
-			Base_t::_Create<T>();
+			Base_t::template _Create<T>();
 
 			_destructor	= &_CallDestructor<T>;
 		}
@@ -259,12 +259,18 @@ namespace GXTypes
 
 		forceinline void _Destroy () noexcept
 		{
-			if ( IsDefined() and _destructor != null )
-				_destructor( _data );
+			if ( this->IsDefined() and _destructor != null )
+				_destructor( this->_data );
 
 			Base_t::_Destroy();
 
 			_destructor = null;
+		}
+
+		template <typename T>
+		void _CallDestructor (void *ptr)
+		{
+			reinterpret_cast<T*>(ptr)->~T();
 		}
 	};
 

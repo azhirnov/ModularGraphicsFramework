@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 #include "Debug.h"
 
 using namespace GX_STL;
@@ -36,29 +36,29 @@ static void Array_Test1 ()
 
 	arr.Resize( 12, false );
 	vec.resize( 12 );
-	ASSERT( (arr == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
+	TEST( (arr == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
 	
 	arr.Resize( 36, false );
 	vec.resize( 36 );
-	ASSERT( (arr == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
+	TEST( (arr == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
 	
 	arr.Resize( 6 );
 	vec.resize( 6 );
-	ASSERT( (arr == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
+	TEST( (arr == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
 	
 	const uint	cnt2 = 10;
 	Array_t		arr2; arr2.Resize( cnt2 );
 	Vector_t	vec2( cnt2 );
 	arr.Insert( arr2, 2 );
 	vec.insert( vec.begin()+2, vec2.begin(), vec2.end() );
-	ASSERT( (arr == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
+	TEST( (arr == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
 	
 	const uint	cnt3 = 4;
 	Array_t		arr3; arr3.Resize( cnt3 );
 	Vector_t	vec3( cnt3 );
 	vec.insert( vec.begin()+5, vec3.begin(), vec3.end() );
 	arr.Insert( arr3, 5 );
-	ASSERT( (arr == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
+	TEST( (arr == ArrayRef<Elem_t>( (Elem_t *)&vec[0], vec.size() )) );
 }
 
 
@@ -130,7 +130,7 @@ static void Array_Test4 ()
 				}}
 	);
 
-	ASSERT(( arr == ArrayRef<ElemStr_t>( (ElemStr_t *)&vec[0], vec.size() ) ));
+	TEST(( arr == ArrayRef<ElemStr_t>( (ElemStr_t *)&vec[0], vec.size() ) ));
 }
 
 
@@ -142,13 +142,13 @@ static void Array_Test5 ()
 	const wchar	data3[] = L"111";
 
 
-	ASSERT( BinArrayCRef::From( data0 ).BinEquals( BinArrayCRef::From( data0 ) ) );
-	ASSERT( not BinArrayCRef::From( data0 ).BinEquals( BinArrayCRef::From( data1 ) ) );
-	ASSERT( not BinArrayCRef::From( data0 ).BinEquals( BinArrayCRef::From( data2 ) ) );
-	ASSERT( not BinArrayCRef::From( data0 ).BinEquals( BinArrayCRef::From( data3 ) ) );
+	TEST( BinArrayCRef::From( data0 ).BinEquals( BinArrayCRef::From( data0 ) ) );
+	TEST( not BinArrayCRef::From( data0 ).BinEquals( BinArrayCRef::From( data1 ) ) );
+	TEST( not BinArrayCRef::From( data0 ).BinEquals( BinArrayCRef::From( data2 ) ) );
+	TEST( not BinArrayCRef::From( data0 ).BinEquals( BinArrayCRef::From( data3 ) ) );
 	
-	ASSERT( BinArrayCRef::From( data0 ).BinLess( BinArrayCRef::From( data1 ) ) );
-	ASSERT( BinArrayCRef::From( data0 ).BinGreater( BinArrayCRef::From( data2 ) ) );
+	TEST( BinArrayCRef::From( data0 ).BinLess( BinArrayCRef::From( data1 ) ) );
+	TEST( BinArrayCRef::From( data0 ).BinGreater( BinArrayCRef::From( data2 ) ) );
 }
 
 
@@ -173,26 +173,26 @@ extern void Test_Containers_Array ()
 	Elem_t::ClearStatistic();
 
 	Array_Test1();
-	ASSERT( Elem_t::CheckStatistic() );
-	ASSERT( VElem_t::CheckStatistic() );
+	TEST( Elem_t::CheckStatistic() );
+	TEST( VElem_t::CheckStatistic() );
 	Elem_t::ClearStatistic();
 
 	Array_Test2();
-	ASSERT( Elem_t::CheckStatistic() );
+	TEST( Elem_t::CheckStatistic() );
 	Elem_t::ClearStatistic();
 	
 	Array_Test3();
-	ASSERT( Elem_t::CheckStatistic() );
+	TEST( Elem_t::CheckStatistic() );
 	Elem_t::ClearStatistic();
 	
 	Array_Test4();
-	ASSERT( ElemStr_t::CheckStatistic() );
-	ASSERT( VElemStr_t::CheckStatistic() );
+	TEST( ElemStr_t::CheckStatistic() );
+	TEST( VElemStr_t::CheckStatistic() );
 	ElemStr_t::ClearStatistic();
 
 	Array_Test5();
 	
 	Elem_t::ClearStatistic();
 	Array_Test6();
-	ASSERT( Elem_t::CheckStatistic() );
+	TEST( Elem_t::CheckStatistic() );
 }

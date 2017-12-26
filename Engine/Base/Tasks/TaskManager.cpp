@@ -170,7 +170,7 @@ namespace Base
 */
 	void TaskManager::Register (GlobalSystemsRef gs)
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = gs->modulesFactory;
 
 		CHECK( mf->Register( TaskModuleModuleID, &_CreateTaskModule ) );
 		CHECK( mf->Register( TaskManagerModuleID, &_CreateTaskManager ) );
@@ -183,7 +183,7 @@ namespace Base
 */
 	void TaskManager::Unregister (GlobalSystemsRef gs)
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = gs->modulesFactory;
 
 		mf->UnregisterAll( TaskModuleModuleID );
 		mf->UnregisterAll( TaskManagerModuleID );

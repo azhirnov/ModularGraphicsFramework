@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 #include "Debug.h"
 #include <unordered_set>
 #include <list>
@@ -26,28 +26,28 @@ static void Test_Adaptor1 ()
 	std::list<int>			list;
 
 	Test_Func1( arr );
-	ASSERT( arr[0] == 1 );
-	ASSERT( arr[1] == 2 );
+	TEST( arr[0] == 1 );
+	TEST( arr[1] == 2 );
 	
 	Test_Func1( farr );
-	ASSERT( farr[0] == 1 );
-	ASSERT( farr[1] == 2 );
+	TEST( farr[0] == 1 );
+	TEST( farr[1] == 2 );
 
 	Test_Func1( set );
-	ASSERT( set.IsExist( 1 ) );
-	ASSERT( set.IsExist( 2 ) );
+	TEST( set.IsExist( 1 ) );
+	TEST( set.IsExist( 2 ) );
 
 	Test_Func1( vec );
-	ASSERT( vec[0] == 1 );
-	ASSERT( vec[1] == 2 );
+	TEST( vec[0] == 1 );
+	TEST( vec[1] == 2 );
 
 	Test_Func1( uset );
-	ASSERT( uset.find( 1 ) != uset.end() );
-	ASSERT( uset.find( 2 ) != uset.end() );
+	TEST( uset.find( 1 ) != uset.end() );
+	TEST( uset.find( 2 ) != uset.end() );
 
 	Test_Func1( list );
-	ASSERT( *(list.begin()) == 1 );
-	ASSERT( *(++list.begin()) == 2 );
+	TEST( *(list.begin()) == 1 );
+	TEST( *(++list.begin()) == 2 );
 }
 
 
@@ -98,21 +98,21 @@ static void Test_Adaptor3 ()
 	Set<int>			set = { 0, 1, 2, 3, 4, 5 };
 	//HashSet<int>		hset = { 7, 3, 5, 2, 8, 9 };
 	
-	ASSERT( arr.IsExist( 2 ) );
+	TEST( arr.IsExist( 2 ) );
 	Test_Func3( arr );
-	ASSERT( not arr.IsExist( 2 ) );
+	TEST( not arr.IsExist( 2 ) );
 
-	ASSERT( std::find( vec.begin(), vec.end(), 2 ) != vec.end() );
+	TEST( std::find( vec.begin(), vec.end(), 2 ) != vec.end() );
 	Test_Func3( vec );
-	ASSERT( std::find( vec.begin(), vec.end(), 2 ) == vec.end() );
+	TEST( std::find( vec.begin(), vec.end(), 2 ) == vec.end() );
 
-	ASSERT( set.IsExist( 2 ) );
+	TEST( set.IsExist( 2 ) );
 	Test_Func3( set );
-	ASSERT( not set.IsExist( 2 ) );
+	TEST( not set.IsExist( 2 ) );
 
-	//ASSERT( hset.IsExist( 2 ) );
+	//TEST( hset.IsExist( 2 ) );
 	//Test_Func3( hset );
-	//ASSERT( not hset.IsExist( 2 ) );
+	//TEST( not hset.IsExist( 2 ) );
 }
 
 
@@ -122,7 +122,7 @@ extern void Test_Containers_Adaptors ()
 
 	Elem_t::ClearStatistic();
 	Test_Adaptor2();
-	ASSERT( Elem_t::CheckStatistic() );
+	TEST( Elem_t::CheckStatistic() );
 
 	Test_Adaptor3();
 }

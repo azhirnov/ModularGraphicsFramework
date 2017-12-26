@@ -7,6 +7,7 @@
 #include "ArrayRef.h"
 #include "StringRef.h"
 #include "Engine/STL/Math/Mathematics.h"
+#include "Engine/STL/Algorithms/Swap.h"
 
 namespace GX_STL
 {
@@ -158,7 +159,7 @@ namespace GXTypes
 
 		void Append (const void *begin, const void *end);
 		void Append (TStringRef<const T> str);
-		void Append (const T value)										{ return Append( TStringRef<const T>( &value, value != 0 ) ); }
+		void Append (const T value)										{ return Append( TStringRef<const T>( &value, usize(value != 0) ) ); }
 
 		//template <typename B>
 		//void Append (const B &value);
@@ -172,7 +173,7 @@ namespace GXTypes
 
 		void Insert (const void *begin, const void *end, usize pos);
 		void Insert (TStringRef<const T> str, usize pos);
-		void Insert (const T value, usize pos)							{ return Insert( TStringRef<const T>( &value, value != 0 ), pos ); }
+		void Insert (const T value, usize pos)							{ return Insert( TStringRef<const T>( &value, usize(value != 0) ), pos ); }
 
 		void Erase (usize pos, usize count = 1);
 		void Erase (const void *begin, const void *end);
@@ -206,8 +207,8 @@ namespace GXTypes
 
 		void FreeReserve ();
 
-		TStringRef<T>		SubString (usize pos, usize count = usize(-1))			{ return TStringRef<T>(*this).SubString( pos, count ); }
-		TStringRef<const T>	SubString (usize pos, usize count = usize(-1))	const	{ return TStringRef<const T>(*this).SubString( pos, count ); }
+		TStringRef<T>		SubString (usize pos, usize count = UMax)			{ return TStringRef<T>(*this).SubString( pos, count ); }
+		TStringRef<const T>	SubString (usize pos, usize count = UMax)	const	{ return TStringRef<const T>(*this).SubString( pos, count ); }
 		
 		template <typename B>
 		Self &	FormatI (const B& value, int radix = 10);
@@ -348,8 +349,8 @@ namespace GXTypes
 		{
 			left._memory.SwapMemory( right._memory );
 
-			SwapValues( left._length,	right._length );
-			SwapValues( left._size,		right._size );
+			GXTypes::SwapValues( left._length,	right._length );
+			GXTypes::SwapValues( left._size,	right._size );
 		}
 	};
 	
@@ -814,7 +815,7 @@ namespace GXTypes
 		if ( str.Empty() )
 			return;
 
-		if ( pos > _length or not Empty() and _CheckIntersection( Begin(), End(), str.Begin(), str.End() ) )
+		if ( pos > _length or (not Empty() and _CheckIntersection( Begin(), End(), str.Begin(), str.End() )) )
 			RET_VOID;
 
 		_length += str.Length();
@@ -1163,7 +1164,7 @@ namespace GXTypes
 			return *this;
 		}
 
-		char	a_buf[ CompileTime::SizeOf<B>::bits + 2 ] = {0};
+		char	a_buf[ CompileTime::SizeOf<B>::bits + 2 ] = {};
 
 		isize	i	= _types_hidden_::IntToStr( value, a_buf, CountOf(a_buf), radix ),
 				j	= 0,
@@ -1196,7 +1197,7 @@ namespace GXTypes
 		const float		value	= GXMath::Abs(fValue);
 		StringFormatF	format	= fmt;
 
-		if ( value > 1.0e7f or ( value > 0.0f and value < 1.0e-6f ) )
+		if ( GXMath::Abs(value) > 1.0e8f or (fValue != 0.0f and GXMath::Abs(value) < 1.0e-7f) )
 			format.Exp();
 
 		char	a_fmt[8] = {};
@@ -1204,23 +1205,25 @@ namespace GXTypes
 
 		Reserve( (sizeof(fValue)<<4) / 10 + 10 );
 		
-		_length = ::sprintf( _memory.Pointer(), a_fmt, fValue );
+		_length = usize(::snprintf( _memory.Pointer(), _size-1, a_fmt, double(fValue) ));
 
-		if ( (isize)_length <= 0 ) {
+		if ( isize(_length) <= 0 ) {
 			WARNING( "can't convert value to string" );
 			return *this;
 		}
 
 		if ( format.IsCutZeros() and not format.IsExponent() )
 		{
-			for (isize i = _length-1; i > 0; --i)
+			for (usize i = _length-1; i > 0 and i < _length; --i)
 			{
-				if ( _memory.Pointer()[i] == (T)'0' )	_length = i-1;
-				else {
-					_length = i+1 + (_memory.Pointer()[i] == (T)'.');
+				if ( _memory.Pointer()[i] == T('0') ) {
+					_length = i;
+				} else {
+					_length = i+1 + (_memory.Pointer()[i] == T('.'));
 					break;
 				}
 			}
+			_length = GXMath::Min( _length, _size-1 );
 			_memory.Pointer()[_length] = T(0);
 		}
 
@@ -1238,7 +1241,7 @@ namespace GXTypes
 		const double	value	= GXMath::Abs(fValue);
 		StringFormatF	format	= fmt;
 		
-		if ( value > 1.0e13 or ( value > 0.0 and value < 1.0e-7 ) )
+		if ( GXMath::Abs(value) > 1.0e13 or (fValue != 0.0 and GXMath::Abs(value) < 1.0e-9) )
 			format.Exp();
 
 		char	a_fmt[8] = {};
@@ -1246,23 +1249,25 @@ namespace GXTypes
 
 		Reserve( (sizeof(fValue)<<4) / 10 + 12 );
 		
-		_length = ::sprintf( _memory.Pointer(), a_fmt, fValue );
+		_length = usize(::snprintf( _memory.Pointer(), _size-1, a_fmt, fValue ));
 
-		if ( (isize)_length <= 0 ) {
+		if ( isize(_length) <= 0 ) {
 			WARNING( "can't convert value to string" );
 			return *this;
 		}
 		
 		if ( format.IsCutZeros() and not format.IsExponent() )
 		{
-			for (isize i = _length-1; i > 0; --i)
+			for (usize i = _length-1; i > 0 and i < _length; --i)
 			{
-				if ( _memory.Pointer()[i] == (T)'0' )	_length = i-1;
-				else {
-					_length = i+1 + (_memory.Pointer()[i] == (T)'.');
+				if ( _memory.Pointer()[i] == T('0') ) {
+					_length = i;
+				} else {
+					_length = i+1 + (_memory.Pointer()[i] == T('.'));
 					break;
 				}
 			}
+			_length = GXMath::Min( _length, _size-1 );
 			_memory.Pointer()[_length] = T(0);
 		}
 
@@ -1286,12 +1291,11 @@ namespace GXTypes
 
 		str.SetLength( _length );
 	}
-	
+
 	
 	#undef  RET_ERROR
 	#undef	RET_FALSE
 	#undef  RET_VOID
-	
 	
 /*
 =================================================
@@ -1312,7 +1316,7 @@ namespace GXTypes
 			}
 
 			const usize		buf_size			= CompileTime::SizeOf<B>::bits + 2;		// TODO: Ln( sizeof(B), radix )
-			T				tmp_buf[ buf_size ] = {0};
+			T				tmp_buf[ buf_size ] = {};
 			usize			i					= buf_size - 2;
 			bool			sign				= ( radix == 10 and val < B(0) );
 
@@ -1331,15 +1335,27 @@ namespace GXTypes
 			if ( sign )
 				tmp_buf[i--] = '-';
 
-			UnsafeMem::MemCopy( buf, tmp_buf + i + 1, BytesU( buf_size - i - 1 ) );
-			i = buf_size - i - 2;
+			usize	j = buf_size - i - 1;
+			UnsafeMem::MemCopy( buf, tmp_buf + i + 1, BytesU(GXMath::Min( j, size-1 )) );
 
-			ASSERT( size > i );
-			return i;
+			ASSERT( size >= j );
+			return j-1;
 		}
 
 	}	// _types_hidden_
-
+	
+	
+/*
+=================================================
+	ArrayRef::From
+=================================================
+*/
+	template <typename T>
+	template <typename B, typename S, typename MC>
+	inline ArrayRef<T>  ArrayRef<T>::From (const TString<B,S,MC> &str)
+	{
+		return From( TStringRef<const B>( str ) );
+	}
 
 	
 /*

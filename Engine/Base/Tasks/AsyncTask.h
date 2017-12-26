@@ -35,9 +35,9 @@ namespace Base
 		ModulePtr				_targetThreadModule;		// module in thread where task will be schedule
 
 		mutable OS::SyncEvent	_event;
-		mutable Atomic<bool>	_isCanceled;
-		mutable Atomic<bool>	_onCanceledCalled;
-		mutable Atomic<bool>	_isSync;					// if current and target threads are same
+		mutable Atomic<int>		_isCanceled;
+		mutable Atomic<int>		_onCanceledCalled;
+		mutable Atomic<int>		_isSync;					// if current and target threads are same
 
 		ResultType				_result;
 
@@ -151,13 +151,13 @@ namespace Base
 		}
 
 		// target thread is current
-		if ( _isSync )
+		if ( !!_isSync.Get() )
 		{
 			_RunSync();
 			return this;
 		}
 
-		auto	task_mod = _currentThreadModule->GlobalSystems()->Get< TaskModule >();
+		auto	task_mod = _currentThreadModule->GlobalSystems()->taskModule;
 		CHECK_ERR( task_mod, this );
 
 		CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
@@ -187,7 +187,7 @@ namespace Base
 	template <typename R, typename P>
 	inline bool AsyncTask<R,P>::IsCanceled () const noexcept
 	{
-		return (bool)_isCanceled;
+		return !!_isCanceled.Get();
 	}
 
 /*
@@ -201,16 +201,16 @@ namespace Base
 		ASSERT( _targetThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
 		// target thread is current
-		if ( _isSync )
+		if ( !!_isSync.Get() )
 		{
 			UpdateProgress( _currentThreadModule, RVREF( value ) );
 			return;
 		}
 		
-		auto	task_mod = _targetThreadModule->GlobalSystems()->Get< TaskModule >();
+		auto	task_mod = _targetThreadModule->GlobalSystems()->taskModule;
 		CHECK_ERR( task_mod, );
 
-		CHECK( task_mod->Send< ModuleMsg::PushAsyncMessage >({
+		CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
 					AsyncMessage{ &AsyncTask::_UpdateProgress, SelfPtr(this), RVREF(value) },
 					_currentThreadModule->GetThreadID()
 				}.Async())
@@ -254,7 +254,7 @@ namespace Base
 	{
 		ASSERT( _targetThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
-		auto	task_mod = _targetThreadModule->GlobalSystems()->Get< TaskModule >();
+		auto	task_mod = _targetThreadModule->GlobalSystems()->taskModule;
 		CHECK_ERR( task_mod, void() );
 
 		if ( IsCanceled() )
@@ -326,7 +326,7 @@ namespace Base
 	{
 		ASSERT( _currentThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
-		if ( _onCanceledCalled )
+		if ( !!_onCanceledCalled.Get() )
 			return;
 
 		_onCanceledCalled = true;

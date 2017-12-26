@@ -1,19 +1,14 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
 
-// Emulators //
-
-#define EMULATOR_VR		100		// just a version
-
-//-------------------------------------------------------------------
-
-
-
 // Options //
 
-//#define GX_ENABLE_PROFILING
+#ifdef __GX_DEBUG__
+//#	define GX_ENABLE_PROFILING
+//#	define GX_ENABLE_DEBUGGING
+#endif
 
 //#define GX_USE_LODEPNG
 
@@ -21,11 +16,16 @@
 // Graphics
 #define GRAPHICS_API_OPENGL			440		// 4.x		graphics & compute
 #define GRAPHICS_API_VULKAN			100		// 1.x		graphics & compute
-//#define GRAPHICS_API_OPENGLES		200		// 2.x		// not supported
+//#define GRAPHICS_API_OPENGLES		310		// 3.x		// not supported
 //#define GRAPHICS_API_DIRECTX		110		// 11.x		// not supported
-#define COMPUTE_API_OPENCL			120		// 1.x or 2.x
+//#define COMPUTE_API_OPENCL		120		// 1.x or 2.x
 //#define COMPUTE_API_CUDA			7000	// --		// not supported
 //#define GRAPHICS_API_SOFT			100
+
+
+// VR
+//#define PLATFORM_OCULUS_VR		100
+//#define GX_EMULATOR_VR			100
 
 //-------------------------------------------------------------------
 

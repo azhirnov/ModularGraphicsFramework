@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -178,38 +178,50 @@ namespace GXMath
 
 }	// GXMath
 
-namespace GXTypes
+
+namespace CompileTime
 {
-	
-	template <typename ValueType,
-			  typename Dimensions,
-			  typename ValueScale,
-			  usize I, ulong U
-			 >
-	struct ::GX_STL::CompileTime::TypeInfo < GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > >
-	{
+
+	template<typename ValueType,
+			typename Dimensions,
+			typename ValueScale,
+			usize I, ulong U
+	>
+	struct TypeInfo<GXMath::PhysicsValueVec<GXMath::PhysicsValue<ValueType, Dimensions, ValueScale>, I, U> > {
 	private:
-		typedef CompileTime::TypeInfo< ValueType >	_value_type_info;
+		typedef CompileTime::TypeInfo<ValueType> _value_type_info;
 
 	public:
-		typedef GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U >	type;
-		typedef GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >									inner_type;
-		
-		template <typename OtherType>
-		using CreateWith =  GXMath::PhysicsValueVec< GXMath::PhysicsValue< OtherType, Dimensions, ValueScale >, I >;
+		typedef GXMath::PhysicsValueVec<GXMath::PhysicsValue<ValueType, Dimensions, ValueScale>, I, U> type;
+		typedef GXMath::PhysicsValue<ValueType, Dimensions, ValueScale> inner_type;
 
-		enum { FLAGS = (int)_value_type_info::FLAGS | (int)GX_STL::CompileTime::_ctime_hidden_::VECTOR };
+		template<typename OtherType>
+		using CreateWith =  GXMath::PhysicsValueVec<GXMath::PhysicsValue<OtherType, Dimensions, ValueScale>, I>;
 
-		static constexpr type	Max()		{ return type( _value_type_info::Max() ); }
-		static constexpr type	Min()		{ return type( _value_type_info::Min() ); }
-		static			 type	Inf()		{ return type( _value_type_info::Inf() ); }
-		static			 type	NaN()		{ return type( _value_type_info::NaN() ); }
-		
-		static constexpr type	Epsilon()	{ return type( _value_type_info::Epsilon() ); }
-		static constexpr uint	SignBit()	{ return _value_type_info::SignBit(); }
-		static constexpr uint	Count()		{ return I * _value_type_info::Count(); }
+		enum {
+			FLAGS = (int) _value_type_info::FLAGS | (int) GX_STL::CompileTime::_ctime_hidden_::VECTOR
+		};
+
+		static constexpr type Max() { return type(_value_type_info::Max()); }
+
+		static constexpr type Min() { return type(_value_type_info::Min()); }
+
+		static type Inf() { return type(_value_type_info::Inf()); }
+
+		static type NaN() { return type(_value_type_info::NaN()); }
+
+		static constexpr type Epsilon() { return type(_value_type_info::Epsilon()); }
+
+		static constexpr uint SignBit() { return _value_type_info::SignBit(); }
+
+		static constexpr uint Count() { return I * _value_type_info::Count(); }
 	};
 
+}	// CompileTime
+
+
+namespace GXTypes
+{
 	
 	template <typename ValueType,
 			  typename Dimensions,

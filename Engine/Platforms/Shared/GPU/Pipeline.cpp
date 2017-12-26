@@ -70,6 +70,24 @@ namespace Platforms
 	
 /*
 =================================================
+	FileGLSL
+=================================================
+*/
+	bool PipelineTemplateDescriptor::ShaderSource::FileGLSL (const RFilePtr &file)
+	{
+		CHECK_ERR( file );
+
+		usize	len = (usize)file->RemainingSize();
+		String	str;	str.Resize( len );
+
+		CHECK_ERR( file->Read(ArrayRef<char>( str )) );
+
+		StringGLSL( str );
+		return true;
+	}
+
+/*
+=================================================
 	StringCL
 =================================================
 */
@@ -77,17 +95,25 @@ namespace Platforms
 	{
 		src[ ESource::OpenCL ].Create2( String(data) );
 	}
-
+	
 /*
 =================================================
-	StringSPIRV
+	FileCL
 =================================================
 */
-	void PipelineTemplateDescriptor::ShaderSource::StringSPIRV (StringCRef data)
+	bool PipelineTemplateDescriptor::ShaderSource::FileCL (const RFilePtr &file)
 	{
-		src[ ESource::SPIRV ].Create2( String(data) );
+		CHECK_ERR( file );
+
+		usize	len = (usize)file->RemainingSize();
+		String	str;	str.Resize( len );
+
+		CHECK_ERR( file->Read(ArrayRef<char>( str )) );
+
+		StringCL( str );
+		return true;
 	}
-	
+
 /*
 =================================================
 	ArraySPIRV
@@ -107,15 +133,25 @@ namespace Platforms
 	{
 		CHECK_ERR( file );
 
-		usize	len = (usize)file->RemainingSize();
-		String	str;	str.Resize( len );
+		usize		len = (usize)file->RemainingSize();
+		Array<uint>	arr;	arr.Resize( len / sizeof(uint) );
 
-		CHECK_ERR( file->Read(ArrayRef<char>( str )) );
+		CHECK_ERR( file->Read(ArrayRef<uint>( arr )) );
 
-		StringSPIRV( str );
+		ArraySPIRV( arr );
 		return true;
 	}
 	
+/*
+=================================================
+	ArrayAsmSPIRV
+=================================================
+*/
+	void PipelineTemplateDescriptor::ShaderSource::ArrayAsmSPIRV (StringCRef data)
+	{
+		src[ ESource::SPIRV_Src ].Create2( String(data) );
+	}
+
 /*
 =================================================
 	FuncSW
@@ -156,6 +192,21 @@ namespace Platforms
 		RETURN_ERR( "no SPIR-V binary!" );
 	}
 		
+/*
+=================================================
+	GetAsmSPIRV
+=================================================
+*/
+	StringCRef	PipelineTemplateDescriptor::ShaderSource::GetAsmSPIRV () const
+	{
+		const auto&		data = src[ ESource::SPIRV_Src ];
+
+		if ( data.Is< String >() )
+			return data.Get< String >();
+
+		RETURN_ERR( "no SPIR-V source!" );
+	}
+
 /*
 =================================================
 	GetCL

@@ -103,6 +103,8 @@ namespace vk
 */
 	inline Vk1Library::VoidFunc_t  Vk1Library::GetProc (vk::VkInstance instance, vk::VkDevice device, StringCRef address) const
 	{
+		using namespace GX_STL::GXTypes;
+
 		ASSERT( address.IsNullTerminated() );
 
 		vk::PFN_vkVoidFunction	res = null;
@@ -121,7 +123,7 @@ namespace vk
 			return res;
 		}
 		
-		if ( (res = (VoidFunc_t) _lib.GetProc( address )) != null )
+		if ( (res = ReferenceCast<VoidFunc_t>(_lib.GetProc( address ))) != null )
 			return res;
 
 		return null;
@@ -144,8 +146,10 @@ namespace vk
 */
 	inline bool Vk1Library::_OnInit ()
 	{
-		_getDeviceProc		= (PFN_vkGetDeviceProcAddr)   _lib.GetProc( "vkGetDeviceProcAddr" );
-		_getInstanceProc	= (PFN_vkGetInstanceProcAddr) _lib.GetProc( "vkGetInstanceProcAddr" );
+		using namespace GX_STL::GXTypes;
+
+		_getDeviceProc		= ReferenceCast<PFN_vkGetDeviceProcAddr>(   _lib.GetProc( "vkGetDeviceProcAddr" ) );
+		_getInstanceProc	= ReferenceCast<PFN_vkGetInstanceProcAddr>( _lib.GetProc( "vkGetInstanceProcAddr" ) );
 
 		return	_getDeviceProc   != null and
 				_getInstanceProc != null;

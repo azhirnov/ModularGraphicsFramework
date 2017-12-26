@@ -40,7 +40,7 @@ private:
 
 CLApp::CLApp ()
 {
-	ms = GetMainSystemInstace();
+	ms = GetMainSystemInstance();
 
 	Platforms::RegisterPlatforms();
 }
@@ -51,7 +51,7 @@ void CLApp::Initialize ()
 	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager() );
 	ms->AddModule( CLContextModuleID, CreateInfo::GpuContext() );
 
-	auto	thread	= ms->GlobalSystems()->Get< ParallelThread >();
+	auto	thread	= ms->GlobalSystems()->parallelThread;
 	
 	thread->AddModule( CLThreadModuleID, CreateInfo::GpuThread{ ComputeSettings{ "CL 1.2"_GAPI } } );
 
@@ -92,7 +92,7 @@ bool CLApp::_Draw (const Message< ModuleMsg::Update > &)
 	if ( not looping )
 		return false;
 	
-	auto	clthread	= ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( CLThreadModuleID );
+	auto	clthread	= ms->GlobalSystems()->parallelThread->GetModuleByID( CLThreadModuleID );
 
 	cmdBuilder->Send< GpuMsg::CmdBegin >({ cmdBuffers[cmdBufIndex % cmdBuffers.Count()] });
 	cmdBuilder->Send< GpuMsg::CmdBindComputePipeline >({ cpipeline });
@@ -132,8 +132,8 @@ kernel void main (write_only image2d_t outImage)
 
 bool CLApp::_CLInit (const Message< GpuMsg::DeviceCreated > &)
 {
-	auto	clthread = ms->GlobalSystems()->Get< ParallelThread >()->GetModuleByID( CLThreadModuleID );
-	auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
+	auto	clthread = ms->GlobalSystems()->parallelThread->GetModuleByID( CLThreadModuleID );
+	auto	factory = ms->GlobalSystems()->modulesFactory;
 
 	CHECK_ERR( factory->Create(
 					CLImageModuleID,
@@ -225,7 +225,7 @@ extern void Test_CLCompute ()
 	{
 		CLApp	app;
 	
-		CHECK( app.ms->GlobalSystems()->Get< FileManager >()->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
+		CHECK( app.ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
 
 		app.Initialize();
 
@@ -234,7 +234,7 @@ extern void Test_CLCompute ()
 
 		app.Quit();
 	}
-	GetMainSystemInstace()->Send< ModuleMsg::Delete >({});
+	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
 	
 	//WARNING( "OpenCL Window test succeeded!" );
 }

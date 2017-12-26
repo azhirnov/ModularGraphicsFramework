@@ -1,6 +1,7 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "RandDevice.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 #ifdef PLATFORM_WINDOWS
 

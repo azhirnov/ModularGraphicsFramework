@@ -3,7 +3,7 @@
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #include "Engine/Platforms/Shared/Tools/ImageViewHashMap.h"
 
 #if defined( GRAPHICS_API_VULKAN )
@@ -132,7 +132,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Image::Vk1Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkImageModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ VkImageModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),				_imageId( VK_NULL_HANDLE ),
 		_imageView( VK_NULL_HANDLE ),	_layout( EImageLayout::Unknown ),
 		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
@@ -193,7 +193,7 @@ namespace PlatformVK
 		if ( not _memObj and _useMemMngr )
 		{
 			ModulePtr	mem_module;
-			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								VkMemoryModuleID,
 								GlobalSystems(),
 								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
@@ -380,6 +380,7 @@ namespace PlatformVK
 		
 		if ( _memObj )
 		{
+			this->UnsubscribeAll( _memObj );
 			_memObj->UnsubscribeAll( this );
 			_memObj = null;
 		}
@@ -570,7 +571,7 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanContext::_CreateVk1Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
 	{
 		return New< PlatformVK::Vk1Image >( gs, ci );
 	}

@@ -3,7 +3,7 @@
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -115,8 +115,8 @@ namespace PlatformVK
 */
 	Vk1Memory::Vk1Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci) :
 		Vk1BaseModule( gs, ModuleConfig{ VkMemoryModuleID, 1 }, &_msgTypes, &_eventTypes ),
-		_mem( VK_NULL_HANDLE ),			_memMapper( ci.memFlags, ci.access ),
-		_flags( ci.memFlags ),			_binding( EBindingTarget::Unbinded )
+		_mem( VK_NULL_HANDLE ),					_memMapper( ci.memFlags, ci.access ),
+		_binding( EBindingTarget::Unbinded ),	_flags( ci.memFlags )
 	{
 		SetDebugName( "Vk1Memory" );
 
@@ -342,7 +342,7 @@ namespace PlatformVK
 	bool Vk1Memory::_ReadFromStream (const Message< ModuleMsg::ReadFromStream > &msg)
 	{
 		BinArrayCRef	data;
-		CHECK_ERR( _memMapper.Read( msg->offset, msg->size.Get( BytesUL(-1) ), OUT data ) );
+		CHECK_ERR( _memMapper.Read( msg->offset, msg->size.Get( UMax ), OUT data ) );
 		msg->result.Set( data );
 
 		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuRead, _memMapper.MappedOffset() + msg->offset, BytesUL(data.Size()) });
@@ -630,7 +630,7 @@ namespace PlatformVK
 		{
 			Message< GpuMsg::FlushMemoryRange >	flush;
 			flush->offset	= write_stream->offset;
-			flush->size		= write_stream->wasWritten.Get( BytesUL(-1) );
+			flush->size		= write_stream->wasWritten.Get( UMax );
 
 			CHECK( _FlushMemoryRange( flush ) );
 		}
@@ -750,7 +750,7 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanContext::_CreateVk1Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
 	{
 		return New< PlatformVK::Vk1Memory >( gs, ci );
 	}

@@ -1,10 +1,10 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/OS/Window.h"
 #include "Engine/Platforms/Shared/OS/Display.h"
 #include "Engine/Platforms/Shared/OS/Platform.h"
 #include "Engine/Platforms/Windows/WinMessages.h"
-#include "Engine/Platforms/Windows/WinPlatform.h"
+#include "Engine/Platforms/Windows/WinObjectsConstructor.h"
 
 #if defined( PLATFORM_WINDOWS )
 
@@ -261,7 +261,7 @@ namespace Platforms
 
 		DWORD		wnd_style		= 0;
 		DWORD		wnd_ext_style	= WS_EX_APPWINDOW;
-		RECT		win_rect		= { 0, 0, msg->desc.surfaceSize.x, msg->desc.surfaceSize.y };
+		RECT		win_rect		= { 0, 0, int(msg->desc.surfaceSize.x), int(msg->desc.surfaceSize.y) };
 		uint2 const	scr_res			= disp->Resolution();
 
 		// set window caption
@@ -352,7 +352,7 @@ namespace Platforms
 */
 	bool WinWindow::_GetOSModules (const Message< OSMsg::GetOSModules > &msg)
 	{
-		msg->result.Set( WinPlatform::GetModuleIDs() );
+		msg->result.Set( WinObjectsConstructor::GetModuleIDs() );
 		return true;
 	}
 
@@ -419,7 +419,7 @@ namespace Platforms
 
 		DWORD		wnd_style		= 0;
 		DWORD		wnd_ext_style	= WS_EX_APPWINDOW;
-		RECT		win_rect		= { 0, 0, info.surfaceSize.x, info.surfaceSize.y };
+		RECT		win_rect		= { 0, 0, int(info.surfaceSize.x), int(info.surfaceSize.y) };
 		uint2 const	scr_res			= disp.Resolution();
 		
 		if ( info.flags[ EWindowFlags::Fullscreen ] )
@@ -529,7 +529,7 @@ namespace Platforms
 		if ( not _looping or _requestQuit )
 			return;
 		
-		MSG		msg	= {0};
+		MSG		msg	= {};
 
 		while ( ::PeekMessageA( &msg, 0, 0, 0, PM_REMOVE ) )
 		{
@@ -718,8 +718,13 @@ namespace Platforms
 //-----------------------------------------------------------------------------
 	
 
-
-	ModulePtr WinPlatform::_CreateWinWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci)
+	
+/*
+=================================================
+	CreateWinWindow
+=================================================
+*/
+	ModulePtr WinObjectsConstructor::CreateWinWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci)
 	{
 		return New< WinWindow >( gs, ci );
 	}

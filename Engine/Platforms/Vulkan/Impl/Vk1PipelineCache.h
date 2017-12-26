@@ -13,11 +13,6 @@ namespace Engine
 namespace PlatformVK
 {
 
-	class Vk1GraphicsPipeline;
-	class Vk1ComputePipeline;
-
-
-
 	//
 	// Vulkan Pipeline Cache
 	//
@@ -26,9 +21,6 @@ namespace PlatformVK
 	{
 	// types
 	private:
-		SHARED_POINTER( Vk1GraphicsPipeline );
-		SHARED_POINTER( Vk1ComputePipeline );
-		
 		using EDynamicStates	= EPipelineDynamicState::bits;
 		using Vk1DynamicStates	= StaticArray< vk::VkDynamicState, EPipelineDynamicState::_Count >;
 		using Attachment_t		= StaticArray< vk::VkPipelineColorBlendAttachmentState, RenderState::ColorBuffersState::ColorBuffers_t::STATIC_COUNT >;
@@ -39,8 +31,8 @@ namespace PlatformVK
 
 	// variables
 	private:
-		Set< Vk1GraphicsPipelinePtr >					_graphicsPipelines;
-		Set< Vk1ComputePipelinePtr >					_computePipelines;
+		Set< ModulePtr >								_graphicsPipelines;
+		Set< ModulePtr >								_computePipelines;
 
 		vk::VkPipelineCache								_pipelinesCache;
 
@@ -61,8 +53,8 @@ namespace PlatformVK
 		explicit Vk1PipelineCache (Ptr<Vk1Device> dev);
 		~Vk1PipelineCache ();
 
-		Vk1GraphicsPipelinePtr	Create (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci);
-		Vk1ComputePipelinePtr	Create (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
+		ModulePtr	Create (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci);
+		ModulePtr	Create (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
 
 		bool CreatePipeline (OUT vk::VkPipeline &pipelineId,
 							 ArrayCRef< ShaderModule > shaders,

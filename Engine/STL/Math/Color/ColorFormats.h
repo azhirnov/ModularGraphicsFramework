@@ -312,7 +312,7 @@ namespace GXMath
 				IntColorFormatInfo const	sfmt(src);
 				FloatColorFormatInfo const	dfmt(dst);
 				IntFormat   const			scolor(src);
-				FloatFormat const			dcolor = scolor.To<FloatFormat>() / sfmt.MaxValueF();
+				FloatFormat const			dcolor = scolor.template To<FloatFormat>() / sfmt.MaxValueF();
 
 				dst = dfmt.Clamp( dcolor );
 			}
@@ -328,7 +328,7 @@ namespace GXMath
 				IntColorFormatInfo const	sfmt(src);
 				FloatColorFormatInfo const	dfmt(dst);
 				IntFormat   const			scolor(src);
-				FloatFormat const			dcolor = scolor.To<FloatFormat>();
+				FloatFormat const			dcolor = scolor.template To<FloatFormat>();
 
 				dst = dfmt.Clamp( dcolor );
 			}
@@ -343,7 +343,7 @@ namespace GXMath
 				IntColorFormatInfo const	sfmt(src);
 				FloatColorFormatInfo const	dfmt(dst);
 				IntFormat   const			scolor(src);
-				FloatFormat const			dcolor = scolor.To<FloatFormat>();
+				FloatFormat const			dcolor = scolor.template To<FloatFormat>();
 
 				dst = dfmt.Clamp( dcolor );
 			}
@@ -359,7 +359,7 @@ namespace GXMath
 				FloatColorFormatInfo const	sfmt(src);
 				IntColorFormatInfo const	dfmt(dst);
 				FloatFormat const			scolor(src);
-				IntFormat   const			dcolor = Round< IntFormat::Value_t >( scolor );
+				IntFormat   const			dcolor = RoundToInt( scolor );
 
 				dst = dfmt.Clamp( dcolor );
 			}
@@ -414,10 +414,10 @@ namespace GXMath
 		template <typename Src, typename Dst, bool SrcInt, bool DstInt, bool SrcNorm, bool DstNorm>
 		struct ConverterSwitch
 		{
-			static void Convert (Dst &dst, const Src &src)
+			/*static void Convert (Dst &dst, const Src &src)
 			{
 				DESCTOP_ONLY( STATIC_WARNING( "not implementation for this formats!" ) );
-			}
+			}*/
 		};
 
 #		define CONVERTER_SWITCH( _srcInt_, _dstInt_, _srcNorm_, _dstNorm_, _func_ ) \
@@ -466,10 +466,10 @@ namespace GXMath
 				::Convert( dst, src );
 		}
 
-	
+# ifdef COMPILER_MSVC
 #	pragma warning (push)
 #	pragma warning (disable: 4244)		// convert to smallest type
-
+# endif
 
 		//
 		// Base Color Type
@@ -1047,7 +1047,9 @@ namespace GXMath
 		};
 
 
+# ifdef COMPILER_MSVC
 #	pragma warning (pop)
+# endif
 
 	}	// _color_hidden_
 

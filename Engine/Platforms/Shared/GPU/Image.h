@@ -82,7 +82,7 @@ namespace Platforms
 	// Image Utils
 	//
 
-	class _ENGINE_PLATFORMS_EXPORT_ ImageUtils final
+	class ImageUtils final
 	{
 	public:
 		static uint4	ValidateDimension (EImage::type imageType, const uint4 &dim);

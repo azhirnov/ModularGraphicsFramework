@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -147,7 +147,7 @@ namespace CompileTime
 		template <	typename Typelist,
 					typename FullTypelist,
 					usize Index, 
-					template <usize Index, typename Type, typename PrevFuncResult, typename Typelist> class Func,
+					template <usize Index2, typename Type2, typename PrevFuncResult2, typename Typelist2> class Func,
 					typename PrevFuncResult
 				 >
 		struct TTypeList_CompileTimeForEach;
@@ -155,7 +155,7 @@ namespace CompileTime
 		template <	typename Left, typename Right,
 					typename FullTypelist,
 					usize Index,
-					template <usize Index, typename Type, typename PrevFuncResult, typename Typelist> class Func,
+					template <usize Index2, typename Type2, typename PrevFuncResult2, typename Typelist2> class Func,
 					typename PrevFuncResult
 				 >
 		struct TTypeList_CompileTimeForEach< CompileTime::TypeList< Left, Right >, FullTypelist, Index, Func, PrevFuncResult >
@@ -168,7 +168,7 @@ namespace CompileTime
 		template <	typename Right,
 					typename FullTypelist,
 					usize Index,
-					template <usize Index, typename Type, typename PrevFuncResult, typename Typelist> class Func,
+					template <usize Index2, typename Type2, typename PrevFuncResult2, typename Typelist2> class Func,
 					typename PrevFuncResult
 				 >
 		struct TTypeList_CompileTimeForEach< CompileTime::TypeList< TypeListEnd, Right >, FullTypelist, Index, Func, PrevFuncResult >
@@ -178,7 +178,7 @@ namespace CompileTime
 
 		template <	typename FullTypelist,
 					usize Index,
-					template <usize Index, typename Type, typename PrevFuncResult, typename Typelist> class Func,
+					template <usize Index2, typename Type2, typename PrevFuncResult2, typename Typelist2> class Func,
 					typename PrevFuncResult
 				 >
 		struct TTypeList_CompileTimeForEach< TypeListEnd, FullTypelist, Index, Func, PrevFuncResult >
@@ -195,7 +195,7 @@ namespace CompileTime
 		template <	typename Typelist,
 					typename FullTypelist,
 					usize Index, 
-					template <usize Index, typename Type, typename NextFuncResult, typename Typelist> class Func,
+					template <usize Index2, typename Type2, typename NextFuncResult2, typename Typelist2> class Func,
 					typename NextFuncResult
 				 >
 		struct TTypeList_CompileTimeReverseForEach;
@@ -203,7 +203,7 @@ namespace CompileTime
 		template <	typename Left, typename Right,
 					typename FullTypelist,
 					usize Index,
-					template <usize Index, typename Type, typename NextFuncResult, typename Typelist> class Func,
+					template <usize Index2, typename Type2, typename NextFuncResult2, typename Typelist2> class Func,
 					typename NextFuncResult
 				 >
 		struct TTypeList_CompileTimeReverseForEach< CompileTime::TypeList< Left, Right >, FullTypelist, Index, Func, NextFuncResult >
@@ -216,7 +216,7 @@ namespace CompileTime
 		template <	typename Right,
 					typename FullTypelist,
 					usize Index,
-					template <usize Index, typename Type, typename NextFuncResult, typename Typelist> class Func,
+					template <usize Index2, typename Type2, typename NextFuncResult2, typename Typelist2> class Func,
 					typename NextFuncResult
 				 >
 		struct TTypeList_CompileTimeReverseForEach< CompileTime::TypeList< TypeListEnd, Right >, FullTypelist, Index, Func, NextFuncResult >
@@ -226,7 +226,7 @@ namespace CompileTime
 
 		template <	typename FullTypelist,
 					usize Index,
-					template <usize Index, typename Type, typename NextFuncResult, typename Typelist> class Func,
+					template <usize Index2, typename Type2, typename NextFuncResult2, typename Typelist2> class Func,
 					typename NextFuncResult
 				 >
 		struct TTypeList_CompileTimeReverseForEach< TypeListEnd, FullTypelist, Index, Func, NextFuncResult >
@@ -240,7 +240,7 @@ namespace CompileTime
 		// Compile Time For Each Wrappers
 		//
 
-		template <template <typename Type, typename PrevFuncResult> class WrappedFunc>
+		template <template <typename Type2, typename PrevFuncResult2> class WrappedFunc>
 		struct TTypeList_FuncWrapper2
 		{
 			template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
@@ -250,7 +250,7 @@ namespace CompileTime
 			};
 		};
 
-		template <template <usize Index, typename Type, typename PrevFuncResult> class WrappedFunc>
+		template <template <usize Index2, typename Type2, typename PrevFuncResult2> class WrappedFunc>
 		struct TTypeList_FuncWrapper3
 		{
 			template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
@@ -318,7 +318,7 @@ namespace CompileTime
 			template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
 			struct Func
 			{
-				static const usize	val0 = IsSameTypes< Type, RefType > ? Index : usize(-1);
+				static const usize	val0 = IsSameTypes< Type, RefType > ? Index : UMax;
 				static const usize	val1 = PrevFuncResult::value;
 				static const usize	val2 = Min< usize, val0, val1 >;
 
@@ -332,9 +332,9 @@ namespace CompileTime
 			template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
 			struct Func
 			{
-				static const usize	val0 = IsSameTypes< Type, RefType > ? Index : usize(-1);
+				static const usize	val0 = IsSameTypes< Type, RefType > ? Index : UMax;
 				static const usize	val1 = PrevFuncResult::value;
-				static const usize	val2 = val0 != usize(-1) and val1 != usize(-1) ?
+				static const usize	val2 = val0 != UMax and val1 != UMax ?
 											Max< usize, val0, val1 > :
 											Min< usize, val0, val1 >;
 				
@@ -361,7 +361,7 @@ namespace CompileTime
 			template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
 			struct Func
 			{
-				static const bool	val = IsSameTypes< Type, typename RefTypeList::Get< Index > >;
+				static const bool	val = IsSameTypes< Type, typename RefTypeList::template Get< Index > >;
 
 				typedef ValueToType< bool, (val and PrevFuncResult::value) >	result;
 			};
@@ -385,10 +385,10 @@ namespace CompileTime
 			template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
 			struct Func
 			{
-				typedef typename SwitchType< (Index >= First and Index < Last), Type, TypeListEnd >		L;
-				typedef PrevFuncResult																	R;
+				typedef SwitchType< (Index >= First and Index < Last), Type, TypeListEnd >		L;
+				typedef PrevFuncResult															R;
 
-				typedef typename SwitchType< IsSameTypes< TypeListEnd, L >, R, TypeList< L, R > >	result;
+				typedef SwitchType< IsSameTypes< TypeListEnd, L >, R, TypeList< L, R > >	result;
 			};
 		};
 
@@ -404,7 +404,7 @@ namespace CompileTime
 			static const usize	rlen	= RightTypelist::Count;
 			static const usize	nextIdx = Index + 1;
 
-			typedef typename SwitchType< (Index < llen),
+			typedef SwitchType< (Index < llen),
 									typename LeftTypelist::template Get< Clamp< isize, Index, 0, llen-1 > >, 
 									typename RightTypelist::template Get< Clamp< isize, Index - llen, 0, rlen-1 > > >	ltype;
 
@@ -441,7 +441,7 @@ namespace CompileTime
 			STATIC_ASSERT(	First < length and First + Count <= length );
 
 			typedef typename TTypeList_CompileTimeReverseForEach< Typelist, Typelist, 0, 
-					TTypeList_SubListFunc< First, First + Count >::Func, TypeListEnd >::type	type;
+					TTypeList_SubListFunc< First, First + Count >::template Func, TypeListEnd >::type	type;
 		};
 
 		template <typename Typelist, usize First>
@@ -472,7 +472,7 @@ namespace CompileTime
 
 			template <typename Index, typename Type, typename PrevFuncResult, typename Typelist>
 			struct Build1 {
-				static const bool	skip	= not (ErasedTypes::HasType< Type >);
+				static const bool	skip	= not (ErasedTypes::template HasType< Type >);
 				using result				= SwitchType< skip, TypeList< Type, PrevFuncResult >, PrevFuncResult >;
 			};
 
@@ -498,7 +498,7 @@ namespace CompileTime
 			template <bool IsTL, typename Type, typename PrevFuncResult>
 			struct Skip
 			{
-				static const bool	value = PrevFuncResult::HasType< Type >;
+				static const bool	value = PrevFuncResult::template HasType< Type >;
 			};
 
 			template <typename Type, typename PrevFuncResult>

@@ -374,14 +374,14 @@ namespace GXTypes
 	template <typename ArrayType, typename IndicesArrayType>
 	inline void SortArrayIndices (const ArrayType &arr, INOUT IndicesArrayType &indices)
 	{
-		TSortCmp< ArrayType::Value_t >	cmp;
-		_SortArrayIndices( ArrayCRef<ArrayType::Value_t>( arr ), ArrayRef<IndicesArrayType::Value_t>( indices ), cmp );
+		TSortCmp< typename ArrayType::Value_t >	cmp;
+		_SortArrayIndices( ArrayCRef<typename ArrayType::Value_t>( arr ), ArrayRef<typename IndicesArrayType::Value_t>( indices ), cmp );
 	}
 
 	template <typename CmpOp, typename ArrayType, typename IndicesArrayType>
 	inline void SortArrayIndices (const ArrayType &arr, INOUT IndicesArrayType &indices, const CmpOp &cmp)
 	{
-		_SortArrayIndices( ArrayCRef<ArrayType::Value_t>( arr ), ArrayRef<IndicesArrayType::Value_t>( indices ), cmp );
+		_SortArrayIndices( ArrayCRef<typename ArrayType::Value_t>( arr ), ArrayRef<typename IndicesArrayType::Value_t>( indices ), cmp );
 	}
 
 

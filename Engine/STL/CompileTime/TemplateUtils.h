@@ -8,14 +8,6 @@ namespace GX_STL
 {
 namespace CompileTime
 {
-	
-	//
-	// Order (to fix bug in VS 15.3.0)
-	//
-	template <typename T>
-	using Order = T;
-
-
 
 	//
 	// Switch Type
@@ -153,54 +145,6 @@ namespace CompileTime
 		static const First_t	first	= First;
 		static const Second_t	second	= Second;
 	};
-
-
-
-	//
-	// Is Base Of
-	//
-
-#	if 1 //ndef GX_CPP11_SUPPORTED
-	namespace _ctime_hidden_
-	{
-		template <typename B, typename D>
-		struct _IsBaseOf_Host
-		{
-		  operator B*() const;
-		  operator D*();
-		};
-
-		template <typename Base, typename Derived, bool IsRef>
-		struct _IsBaseOf
-		{
-		private:
-			typedef ubyte	_yes;
-			typedef ushort	_no;
-
-			template <typename T> 
-			static _yes _check (Derived *, T);
-			static _no  _check (Base *, int);
-
-		public:
-			static const bool	value = sizeof( _check( _IsBaseOf_Host< Base, Derived >(), int() ) ) == sizeof(_yes);
-		};
-
-		template <typename Base, typename Derived>
-		struct _IsBaseOf< Base, Derived, true >
-		{
-			static const bool	value = false;
-		};
-
-	}	// _ctime_hidden_
-	
-	template <typename Base, typename Derived>
-	static constexpr bool IsBaseOf	= _ctime_hidden_::_IsBaseOf< Base, Derived,
-										TypeTraits::IsLValueReference<Base> or TypeTraits::IsLValueReference<Derived> >::value;
-#	else
-	template <typename Base, typename Derived>
-	static constexpr bool IsBaseOf	= std::is_base_of< Base, Derived >::value;
-
-#	endif
 
 
 	//

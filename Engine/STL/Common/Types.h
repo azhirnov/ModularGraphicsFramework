@@ -45,12 +45,7 @@ namespace GXTypes
 	
 
 	// initializer list
-#ifdef COMPILER_MSVC
 #	define InitializerList	std::initializer_list
-#else
-	template <typename T>
-	using InitializerList	= std::initializer_list<T>;
-#endif
 
 
 	// Bytes and Bits

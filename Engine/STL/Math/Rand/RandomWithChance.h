@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -78,7 +78,7 @@ namespace GXMath
 		{
 			typedef typename TypeTraits::RemoveConst<T>		Value_t;
 
-			Value_t f = RG::NormalDistribution::UNorm< Value_t >( expected );
+			Value_t f = RG::NormalDistribution::template UNorm< Value_t >( expected );
 		
 			FOR( i, chances )
 			{

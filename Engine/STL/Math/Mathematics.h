@@ -5,6 +5,8 @@
 #include "Trigonometry.h"
 #include "Engine/STL/Dimensions/ByteAndBit.h"
 #include "Engine/STL/Experimental/FastMath.h"
+#include "Engine/STL/Algorithms/ArrayUtils.h"
+#include "Engine/STL/CompileTime/TypeInfoFunc.h"
 
 namespace GX_STL
 {
@@ -651,74 +653,6 @@ namespace GXMath
 		typedef typename CompileTime::MainType<A,B,C>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ClampOut( value[i], minValue, maxValue );
-		return ret;
-	}
-	
-/*
-=================================================
-	Wrap
-=================================================
-*/
-	namespace _math_hidden_
-	{
-		template <typename T, bool isInteger>
-		struct _Wrap_Impl
-		{
-			forceinline static T Get (const T& value, const T& minValue, const T& maxValue)
-			{
-				// check for NaN
-				if ( minValue >= maxValue )
-					return minValue;
-
-				T	result = T( minValue + Mod( value - minValue, maxValue - minValue ) );
-		
-				if ( result < minValue )
-					result += (maxValue - minValue);
-
-				return result;
-			}
-		};
-
-		template <typename T>
-		struct _Wrap_Impl<T, true>
-		{
-			forceinline static T Get (const T& value, const T& minValue, const T& maxValue)
-			{
-				return _Wrap_Impl<T, false>::Get( value, minValue, maxValue + T(1) );
-			}
-		};
-	}
-	
-	template <typename A, typename B, typename C>
-	forceinline typename CompileTime::MainType<A,B,C>  Wrap (const A& value, const B& minValue, const C& maxValue)
-	{
-		// Warning: float value never equal maxValue!
-		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and
-					   CompileTime::IsScalarOrEnum<B> and
-					   CompileTime::IsScalarOrEnum<C> );
-
-		typedef typename CompileTime::MainType<A,B,C>	T;
-
-		ASSERT( minValue <= maxValue );
-
-		return _math_hidden_::_Wrap_Impl< T, CompileTime::IsInteger<T> >::Get( T(value), T(minValue), T(maxValue) );
-	}
-
-	template <typename A, typename B, typename C, usize I, ulong U>
-	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Wrap (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
-	{
-		typedef typename CompileTime::MainType<A,B,C>	T;
-		Vec<T,I,U>		ret;
-		FOR( i, ret )	ret[i] = Wrap( value[i], minValue[i], maxValue[i] );
-		return ret;
-	}
-
-	template <typename A, typename B, typename C, usize I, ulong U>
-	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Wrap (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
-	{
-		typedef typename CompileTime::MainType<A,B,C>	T;
-		Vec<T,I,U>		ret;
-		FOR( i, ret )	ret[i] = Wrap( value[i], minValue, maxValue );
 		return ret;
 	}
 	
@@ -1506,7 +1440,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline T  Floor (const T& x)
+	forceinline constexpr T  Floor (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -1529,7 +1463,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline T  Ceil (const T& x)
+	forceinline constexpr T  Ceil (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -1554,7 +1488,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline T  Fract (const T& x)
+	forceinline constexpr T  Fract (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -1587,7 +1521,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline T  Trunc (const T& x)
+	forceinline constexpr T  Trunc (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -1661,6 +1595,74 @@ namespace GXMath
 	
 /*
 =================================================
+	Wrap
+=================================================
+*/
+	namespace _math_hidden_
+	{
+		template <typename T, bool isInteger>
+		struct _Wrap_Impl
+		{
+			forceinline static T Get (const T& value, const T& minValue, const T& maxValue)
+			{
+				// check for NaN
+				if ( minValue >= maxValue )
+					return minValue;
+
+				T	result = T( minValue + GXMath::Mod( value - minValue, maxValue - minValue ) );
+		
+				if ( result < minValue )
+					result += (maxValue - minValue);
+
+				return result;
+			}
+		};
+
+		template <typename T>
+		struct _Wrap_Impl<T, true>
+		{
+			forceinline static T Get (const T& value, const T& minValue, const T& maxValue)
+			{
+				return _Wrap_Impl<T, false>::Get( value, minValue, maxValue + T(1) );
+			}
+		};
+	}
+	
+	template <typename A, typename B, typename C>
+	forceinline typename CompileTime::MainType<A,B,C>  Wrap (const A& value, const B& minValue, const C& maxValue)
+	{
+		// Warning: float value never equal maxValue!
+		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and
+					   CompileTime::IsScalarOrEnum<B> and
+					   CompileTime::IsScalarOrEnum<C> );
+
+		typedef typename CompileTime::MainType<A,B,C>	T;
+
+		ASSERT( minValue <= maxValue );
+
+		return _math_hidden_::_Wrap_Impl< T, CompileTime::IsInteger<T> >::Get( T(value), T(minValue), T(maxValue) );
+	}
+
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Wrap (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
+	{
+		typedef typename CompileTime::MainType<A,B,C>	T;
+		Vec<T,I,U>		ret;
+		FOR( i, ret )	ret[i] = Wrap( value[i], minValue[i], maxValue[i] );
+		return ret;
+	}
+
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Wrap (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
+	{
+		typedef typename CompileTime::MainType<A,B,C>	T;
+		Vec<T,I,U>		ret;
+		FOR( i, ret )	ret[i] = Wrap( value[i], minValue, maxValue );
+		return ret;
+	}
+	
+/*
+=================================================
 	Round
 =================================================
 */
@@ -1670,7 +1672,7 @@ namespace GXMath
 		struct _TRound	// int to int, int to float
 		{
 			template <typename R, typename T>
-			static forceinline R Round (const T& val)
+			static forceinline constexpr R Round (const T& val)
 			{
 				return R( val );
 			}
@@ -1680,7 +1682,7 @@ namespace GXMath
 		struct _TRound< true, false >	// float to int
 		{
 			template <typename R, typename T>
-			static forceinline R Round (const T& val)
+			static forceinline constexpr R Round (const T& val)
 			{
 				typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 
@@ -1693,7 +1695,7 @@ namespace GXMath
 		struct _TRound< false, false >	// float to float
 		{
 			template <typename R, typename T>
-			static forceinline R Round (const T& val)
+			static forceinline constexpr R Round (const T& val)
 			{
 				typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 
@@ -1703,7 +1705,7 @@ namespace GXMath
 		};
 
 		template <typename R, typename T>
-		forceinline R _Round (const T& x)
+		forceinline constexpr R _Round (const T& x)
 		{
 			return _TRound<	CompileTime::IsInteger<R>, CompileTime::IsInteger<T> >::template Round< R, T >( x );
 		}
@@ -1711,7 +1713,7 @@ namespace GXMath
 	}	// _math_hidden_
 
 	template <typename T>
-	forceinline T Round (const T& x)
+	forceinline constexpr T Round (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		//CompileTime::MustBeFloat<T>();
@@ -1733,7 +1735,7 @@ namespace GXMath
 =================================================
 */
 	template <typename R, typename T>
-	forceinline R RoundTo (const T& x)
+	forceinline constexpr R RoundTo (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		//CompileTime::MustBeFloat<T>();
@@ -1797,7 +1799,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline T  RoundTo (const T& x, const T& base)
+	forceinline constexpr T  RoundTo (const T& x, const T& base)
 	{
 		return Round( x / base ) * base;
 	}
@@ -2053,7 +2055,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline bool  IsOdd (const T& x)
+	forceinline constexpr bool  IsOdd (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -2075,7 +2077,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline bool  IsEven (const T& x)
+	forceinline constexpr bool  IsEven (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );

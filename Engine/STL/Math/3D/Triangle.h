@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright ï¿½  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -26,7 +26,7 @@ namespace GXMath
 
 	// variables
 	private:
-		Vec_t	_p0, _p1, _p2;
+		StaticArray< Vec_t, 3 >		_points;
 
 
 	// methods
@@ -35,13 +35,13 @@ namespace GXMath
 		{}
 
 		Triangle (const Vec_t &p0, const Vec_t &p1, const Vec_t &p2) :
-			_p0(p0), _p1(p1), _p2(p2)
+			_points{ p0, p1, p2 }
 		{}
 
-		Vec_t const &	operator [] (uint i) const	{ ASSERT(i<3);  return ptr()[i]; }
-		Vec_t &			operator [] (uint i)		{ ASSERT(i<3);  return ptr()[i]; }
+		Vec_t const &	operator [] (uint i) const	{ return _points[i]; }
+		Vec_t &			operator [] (uint i)		{ return _points[i]; }
 
-		Vec_t			Center ()			const	{ return (_p0 + _p1 + _p2) / Value_t(3); }
+		Vec_t			Center ()			const	{ return (_points[0] + _points[1] + _points[2]) / Value_t(3); }
 
 		bool	InnerPoint (const Vec_t &p) const;
 		Vec3_t	PointToBarycentric (const Vec_t &p) const;
@@ -64,9 +64,9 @@ namespace GXMath
 			}
 		};
 
-		const bool b1 = Util::Sign( p, _p0, _p1 ) < Value_t(0);
-		const bool b2 = Util::Sign( p, _p1, _p2 ) < Value_t(0);
-		const bool b3 = Util::Sign( p, _p2, _p0 ) < Value_t(0);
+		const bool b1 = Util::Sign( p, _points[0], _points[1] ) < Value_t(0);
+		const bool b2 = Util::Sign( p, _points[1], _points[2] ) < Value_t(0);
+		const bool b3 = Util::Sign( p, _points[2], _points[0] ) < Value_t(0);
 
 		return ( (b1 == b2) and (b2 == b3) );
 	}
@@ -79,9 +79,9 @@ namespace GXMath
 	template <typename VecType>
 	inline typename Triangle<VecType>::Vec3_t  Triangle<VecType>::PointToBarycentric (const Vec_t &p) const
 	{
-		Vec_t const		v0 = _p1 - _p0;
-		Vec_t const		v1 = _p2 - _p0;
-		Vec_t const		v2 = p - _p0;
+		Vec_t const		v0 = _points[1] - _points[0];
+		Vec_t const		v1 = _points[2] - _points[0];
+		Vec_t const		v2 = p - _points[0];
 
 		Value_t const	d00 = Dot( v0, v0 );
 		Value_t const	d01 = Dot( v0, v1 );
@@ -106,7 +106,7 @@ namespace GXMath
 	template <typename VecType>
 	inline VecType  Triangle<VecType>::PointFromBarycentric (const Vec3_t &b) const
 	{
-		return _p0 * b.x + _p1 * b.y + _p2 * b.z;
+		return _points[0] * b.x + _points[1] * b.y + _points[2] * b.z;
 	}
 
 

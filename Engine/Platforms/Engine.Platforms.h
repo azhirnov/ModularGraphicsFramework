@@ -16,6 +16,7 @@
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/Shared/GPU/Sampler.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
+#include "Engine/Platforms/Shared/GPU/VR.h"
 
 #include "Engine/Platforms/Shared/OS/Platform.h"
 #include "Engine/Platforms/Shared/OS/Window.h"

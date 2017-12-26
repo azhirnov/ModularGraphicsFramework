@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -77,28 +77,28 @@ namespace TypeTraits
 			//static const bool	is_array		= true;
 		};
 
-		template <typename T, usize I>
+		template <typename T, GXTypes::usize I>
 		struct _TypeQualifierInfo <T [I]> : _BaseTypeQualifierInfo<T>
 		{
 			typedef T			input_type[I];
 			static const bool	is_array		= true;
 		};
 
-		template <typename T, usize I>
+		template <typename T, GXTypes::usize I>
 		struct _TypeQualifierInfo <T const [I]> : _BaseTypeQualifierInfo<const T>
 		{
 			typedef T			input_type[I];
 			static const bool	is_array		= true;
 		};
 		
-		template <typename T, usize I>
+		template <typename T, GXTypes::usize I>
 		struct _TypeQualifierInfo <T volatile [I]> : _BaseTypeQualifierInfo<volatile T>
 		{
 			typedef T			input_type[I];
 			static const bool	is_array		= true;
 		};
 		
-		template <typename T, usize I>
+		template <typename T, GXTypes::usize I>
 		struct _TypeQualifierInfo <T volatile const [I]> : _BaseTypeQualifierInfo<volatile const T>
 		{
 			typedef T			input_type[I];
@@ -371,7 +371,7 @@ namespace TypeTraits
 			static const bool	_is_const	= _TypeQualifierInfo< FromType >::is_const;
 			
 			typedef typename _RemoveConst< ToType >::type										_dst;
-			typedef typename RemovePointer< _dst >												_unptr;
+			typedef RemovePointer< _dst >														_unptr;
 			typedef typename CompileTime::SwitchType< _is_const, _unptr const *, _unptr * >		type;
 			typedef typename CompileTime::SwitchType< _is_const, _unptr *, _unptr const * >		inv_type;
 		};
@@ -482,7 +482,7 @@ namespace TypeTraits
 	}	// _ttraits_hidden_
 
 	template <typename T>
-	constexpr bool IsMemberVariablePointer	= _ttraits_hidden_::_IsMemberVariablePointer< T >::value;
+	constexpr bool IsMemberVariablePointer	= _ttraits_hidden_::_IsMemberVariablePointer< T >::value;	// TODO: ???
 
 
 	namespace _ttraits_hidden_
@@ -499,7 +499,7 @@ namespace TypeTraits
 	}	// _ttraits_hidden_
 
 	template <typename T>
-	constexpr bool IsMemberFunctionPointer	= _ttraits_hidden_::_IsMemberFunctionPointer< T >::value;
+	constexpr bool IsMemberFunctionPointer	= _ttraits_hidden_::_IsMemberFunctionPointer< T >::value;	// TODO: use FunctionInfo
 
 
 	namespace _ttraits_hidden_
@@ -516,7 +516,7 @@ namespace TypeTraits
 	}	// _ttraits_hidden_
 
 	template <typename T>
-	constexpr bool IsFunctionPointer	= _ttraits_hidden_::_IsFunctionPointer< T >::value;
+	constexpr bool IsFunctionPointer	= _ttraits_hidden_::_IsFunctionPointer< T >::value;	// TODO: use FunctionInfo
 
 
 		
@@ -531,32 +531,6 @@ namespace TypeTraits
 
 	template <typename T>
 	constexpr bool IsEnum	= _ttraits_hidden_::_IsEnum< T >::value;
-
-		
-
-	//--------- ResultOf --------//
-		
-	namespace _ttraits_hidden_
-	{
-		template <typename T>
-		struct _ResultOfFunction										{ typedef typename std::result_of_t<T>	type; };
-
-		template <typename Class, typename Result, typename ...Args>
-		struct _ResultOfFunction< Result (Class::*) (Args...) >			{ typedef Result	type; };
-		
-		template <typename Class, typename Result, typename ...Args>
-		struct _ResultOfFunction< Result (Class::*) (Args...) const >	{ typedef Result	type; };
-
-		template <typename Result, typename ...Args>
-		struct _ResultOfFunction< Result (*) (Args...) >				{ typedef Result	type; };
-		
-		template <typename T>
-		struct _ResultOfFunction< T * >									{};
-
-	}	// _ttraits_hidden_
-
-	template <typename ...Types>
-	using ResultOf	= typename _ttraits_hidden_::_ResultOfFunction< Types... >::type;
 
 
 	
@@ -573,7 +547,7 @@ namespace TypeTraits
 	template <typename T>
 	struct RValueRef
 	{
-		typedef typename RemoveAnyReference<T> &&		type;
+		typedef RemoveAnyReference<T> &&		type;
 		STATIC_ASSERT( not IsLValueReference< type > );
 		STATIC_ASSERT( not IsConstOrVolatile< type > );
 		STATIC_ASSERT( IsRValueReference< type > );
@@ -593,16 +567,68 @@ namespace TypeTraits
 */
 	// std::forward
 	template <typename T>
-	forceinline constexpr T&&  Forward (typename RemoveAnyReference<T>& arg) noexcept
+	forceinline constexpr T&&  Forward (RemoveAnyReference<T>& arg) noexcept
 	{
 		return static_cast< T&& >( arg );
 	}
 	
 	template <typename T>
-	forceinline constexpr T&&  Forward (typename RemoveAnyReference<T>&& arg) noexcept
+	forceinline constexpr T&&  Forward (RemoveAnyReference<T>&& arg) noexcept
 	{
 		return static_cast< T&& >( arg );
 	}
 	
 }	// TypeTraits
+
+
+namespace CompileTime
+{
+
+	//
+	// Is Base Of
+	//
+
+#	if 1 //ndef GX_CPP11_SUPPORTED
+	namespace _ctime_hidden_
+	{
+		template <typename B, typename D>
+		struct _IsBaseOf_Host
+		{
+		  operator B*() const;
+		  operator D*();
+		};
+
+		template <typename Base, typename Derived, bool IsRef>
+		struct _IsBaseOf
+		{
+		private:
+			typedef ubyte	_yes;
+			typedef ushort	_no;
+
+			template <typename T> 
+			static _yes _check (Derived *, T);
+			static _no  _check (Base *, int);
+
+		public:
+			static const bool	value = sizeof( _check( _IsBaseOf_Host< Base, Derived >(), int() ) ) == sizeof(_yes);
+		};
+
+		template <typename Base, typename Derived>
+		struct _IsBaseOf< Base, Derived, true >
+		{
+			static const bool	value = false;
+		};
+
+	}	// _ctime_hidden_
+	
+	template <typename Base, typename Derived>
+	static constexpr bool IsBaseOf	= _ctime_hidden_::_IsBaseOf< Base, Derived,
+										TypeTraits::IsLValueReference<Base> or TypeTraits::IsLValueReference<Derived> >::value;
+#	else
+	template <typename Base, typename Derived>
+	static constexpr bool IsBaseOf	= std::is_base_of< Base, Derived >::value;
+
+#	endif
+
+}	// CompileTime
 }	// GX_STL

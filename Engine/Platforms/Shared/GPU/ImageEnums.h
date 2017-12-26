@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -100,7 +100,7 @@ namespace Platforms
 
 		static constexpr type	FromPixelFormat (EPixelFormat::type fmt, uint colorIndex = 0);
 
-		template <uint I> static constexpr type	Color	= _ToColor<I>::value;
+		template <uint I> static constexpr type	Color	= ToColor(I);
 
 	private:
 		template <uint I> struct _ToColor;

@@ -7,7 +7,7 @@
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -213,7 +213,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1CommandBuilder::Vk1CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkCommandBuilderModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ VkCommandBuilderModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_cmdPool( VK_NULL_HANDLE ),		_cmdId( VK_NULL_HANDLE ),
 		_scope( EScope::None ),			_subpassIndex( 0 ),
 		_maxSubpasses( 0 )
@@ -543,13 +543,13 @@ namespace PlatformVK
 		else
 		// create new command buffer
 		{
-			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 							VkCommandBufferModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
 								_GetManager(),
 								this,
-								CommandBufferDescriptor{ msg->isSecondary, true }
+								CommandBufferDescriptor{ msg->flags }
 							},
 							OUT _cmdBuffer )
 			);
@@ -563,15 +563,32 @@ namespace PlatformVK
 		// get command buffer id
 		Message< GpuMsg::GetVkCommandBufferID >		req_cmd_id;
 		SendTo( _cmdBuffer, req_cmd_id );
+		CHECK_ERR( req_cmd_id->result and req_cmd_id->result->cmd != VK_NULL_HANDLE );
 
-		_cmdId << req_cmd_id->result;
-		CHECK_ERR( _cmdId != VK_NULL_HANDLE );
+		_cmdId = req_cmd_id->result->cmd;
 		
+		// sync
+		vk::VkFence		fence_id = req_cmd_id->result->fence;
+		
+		if ( fence_id != VK_NULL_HANDLE )
+		{
+			Message< GpuMsg::GetCommandBufferState >	req_state;
+			SendTo( _cmdBuffer, req_state );
+
+			if ( *req_state->result != ERecordingState::Initial )
+			{
+				VK_CALL( vkWaitForFences( GetVkDevice(), 1, &fence_id, VK_TRUE, (10_sec).NanoSeconds() ) );
+				_cmdBuffer->Send< GpuMsg::SetCommandBufferState >({ ERecordingState::Completed });
+			}
+
+			VK_CALL( vkResetFences( GetVkDevice(), 1, &fence_id ) );
+		}
+
 		// begin
 		VkCommandBufferBeginInfo	cmd_info = {};
 		cmd_info.sType				= VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		cmd_info.pNext				= null;
-		cmd_info.flags				= 0;	// TODO
+		cmd_info.flags				= 0;	// TODO		VK_QUERY_CONTROL_PRECISE_BIT
 		cmd_info.pInheritanceInfo	= null;	// TODO
 
 		VK_CHECK( vkBeginCommandBuffer( _cmdId, &cmd_info ) );
@@ -1087,14 +1104,14 @@ namespace PlatformVK
 			SendTo( cmd, req_state );
 
 			CHECK( req_state->result.Get() == GpuMsg::GetCommandBufferState::EState::Executable );
+			CHECK_ERR( req_id->result and req_id->result->cmd != VK_NULL_HANDLE and req_id->result->fence == VK_NULL_HANDLE );
 
-			cmd_buffers.PushBack( req_id->result.Get( VK_NULL_HANDLE ) );
-
+			cmd_buffers.PushBack( req_id->result->cmd );
 			_resources.Add( cmd );
 		}
 			
 		CHECK_ERR( not cmd_buffers.Empty() );
-		vkCmdExecuteCommands( _cmdId, (uint32_t) cmd_buffers.Count(), cmd_buffers.RawPtr() );
+		vkCmdExecuteCommands( _cmdId, Cast<uint32_t>(cmd_buffers.Count()), cmd_buffers.RawPtr() );
 
 		return true;
 	}
@@ -1200,6 +1217,9 @@ namespace PlatformVK
 			dst.size		= (VkDeviceSize) src.size;
 
 			regions.PushBack( dst );
+
+			CHECK_ERR( src.size + src.srcOffset <= req_src_descr->result->size );
+			CHECK_ERR( src.size + src.dstOffset <= req_dst_descr->result->size );
 		}
 		
 		_resources.Add( msg->srcBuffer );
@@ -1509,7 +1529,7 @@ namespace PlatformVK
 		vkCmdFillBuffer( _cmdId,
 						 req_id->result.Get(),
 						 (VkDeviceSize) msg->dstOffset,
-						 (VkDeviceSize) Min( msg->size, req_descr->result.Get().size ),
+						 (VkDeviceSize) Min( msg->size, req_descr->result.Get().size - msg->dstOffset ),
 						 msg->pattern );
 		return true;
 	}
@@ -1889,7 +1909,7 @@ namespace PlatformVK
 	
 namespace Platforms
 {
-	ModulePtr VulkanContext::_CreateVk1CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
 	{
 		return New< PlatformVK::Vk1CommandBuilder >( gs, ci );
 	}

@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -14,24 +14,24 @@ extern void Test_OS_Date ()
 	OS::Date	d;	d.Now();
 
 	OS::Date	d0 = d;
-	ASSERT( d0 == d );
+	TEST( d0 == d );
 
 	OS::Thread::Sleep( TimeL::FromMilliSeconds(1000) );
 	d0.Now();
 
-	ASSERT( d0 != d  );
-	ASSERT( d0 >  d  );
-	ASSERT( d  <  d0 );
+	TEST( d0 != d  );
+	TEST( d0 >  d  );
+	TEST( d  <  d0 );
 
 	d0.SetMillisecondsSince1970( d.ToMillisecondsSince1970() );
-	ASSERT( d0 == d );
+	TEST( d0 == d );
 
 	TimeL t0 = OS::PerformanceTimer().Get( t0 );
 	d0.SetMillisecondsSinceEpoch( t0.MilliSeconds() );
 
 	TimeL t1;
 	t1.SetMilliSeconds( d0.ToMillisecondsSinceEpoch() );
-	ASSERT( t0.MilliSeconds() == t1.MilliSeconds() );
+	TEST( t0.MilliSeconds() == t1.MilliSeconds() );
 
 
 	const char format1[] = "yyyy/mm.dm - hh:mi:ss ms";

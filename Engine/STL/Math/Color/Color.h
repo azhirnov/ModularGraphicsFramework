@@ -92,7 +92,7 @@ namespace GXMath
 		template <typename T>
 		explicit color4u (const Vec<T,4> &v): ubyte4( ColorUtils::Convert<ubyte>( v ) ) {}
 
-		operator ubyte4 & ()					{ return ReferenceCast< ubyte4 >( *this ); }
+		operator ubyte4 & ()					{ return static_cast< ubyte4& >( *this ); }
 		operator ubyte4   () const				{ return ubyte4( x, y, z, w ); }
 
 		uint		ToIntRGBA () const			{ return ReferenceCast<uint>( ABGR() ); }
@@ -309,7 +309,7 @@ namespace GXMath
 		template <typename T>
 		color4f (const Vec<T,4> &v): float4( ColorUtils::Convert<float>( v ) ) {}
 
-		operator float4 & ()			{ return ReferenceCast< float4 >( *this ); }
+		operator float4 & ()			{ return static_cast< float4& >( *this ); }
 		operator float4   () const		{ return float4( x, y, z, w ); }
 
 		Value_t		R ()	const		{ return (*this)[0]; }
@@ -547,7 +547,7 @@ namespace GXMath
 							 2.0f - Abs( hsv.x * 6.0f - 2.0f ),
 							 2.0f - Abs( hsv.x * 6.0f - 4.0f ) );
 
-		return (( Clamp( col, float3(0.0f), float3(1.0f) ) - 1.0f ) * hsv.y + 1.0f ) * hsv.z;
+		return (( GXMath::Clamp( col, float3(0.0f), float3(1.0f) ) - 1.0f ) * hsv.y + 1.0f ) * hsv.z;
 	}
 	
 

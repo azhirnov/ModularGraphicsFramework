@@ -4,7 +4,7 @@
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/Shared/GPU/Framebuffer.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -106,7 +106,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Framebuffer::GL4Framebuffer (GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci) :
-		GL4BaseModule( gs, ModuleConfig{ GLFramebufferModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLFramebufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_framebufferId( 0 ),
 		_descr( ci.size, ci.layers )
 	{
@@ -392,7 +392,7 @@ namespace PlatformGL
 		{
 			const auto&	att			= _attachments[i];
 			bool		is_depth	= att.name == render_pass_descr.DepthStencilAttachment().name;
-			usize		index		= -1;
+			usize		index		= UMax;
 			GLenum		target		= 0;
 
 			_GetAttachmentTarget( att, render_pass_descr, OUT index, OUT target );
@@ -447,7 +447,7 @@ namespace PlatformGL
 		// depth stencil
 		if ( info.name == rpDescr.DepthStencilAttachment().name )
 		{
-			index = -1; // not needed for depth stencil
+			index = UMax; // not needed for depth stencil
 
 			if ( EPixelFormat::HasDepth( info.descr.format ) and EPixelFormat::HasStencil( info.descr.format ) ) {
 				target = GL_DEPTH_STENCIL_ATTACHMENT;
@@ -501,7 +501,7 @@ namespace PlatformGL
 		}
 
 		ModulePtr	render_pass;
-		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 							GLRenderPassModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuRenderPass{ null, builder.Finish() },
@@ -595,7 +595,7 @@ namespace PlatformGL
 
 namespace Platforms
 {
-	ModulePtr OpenGLContext::_CreateGL4Framebuffer (GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4Framebuffer (GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci)
 	{
 		return New< PlatformGL::GL4Framebuffer >( gs, ci );
 	}

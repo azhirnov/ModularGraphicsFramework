@@ -25,11 +25,12 @@
 #include "CompileTime/StringToID.h"
 #include "CompileTime/Sequence.h"
 #include "CompileTime/Map.h"
+#include "CompileTime/TypeInfoFunc.h"
 //#include "CompileTime/FunctionInfo.h"
 
 
 // Runtime //
-#include "CompileTime/Runtime/VirtualTypeList.h"
+#include "CompileTime/Runtime/TypeIdList.h"
 
 
 // Memory //
@@ -228,3 +229,5 @@
 
 // Debug //
 #include "CompileTime/CompileTimeDebug.h"
+
+#include "CompileTime/FunctionInfo.h"

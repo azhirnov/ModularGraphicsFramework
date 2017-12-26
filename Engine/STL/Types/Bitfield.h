@@ -50,7 +50,7 @@ namespace GXTypes
 		constexpr bool		Get (index_t i) const				{ ASSUME(i<B);  return !!( _bits & (T(1) << i) ); }
 		constexpr Self &	Set (index_t i)						{ ASSUME(i<B);  _bits |= (T(1) << i);  return *this; }
 		constexpr Self &	Reset (index_t i)					{ ASSUME(i<B);  _bits &= ~(T(1) << i);  return *this; }
-		constexpr Self &	SetAt (index_t i, bool bit)			{ ASSUME(i<B); (_bits &= ~(T(1) << i)) |= (T(bit) << i);  return *this; }
+		constexpr Self &	SetAt (index_t i, bool bit)			{ ASSUME(i<B);  _bits &= ~(T(1) << i);  _bits |= (T(bit) << i);  return *this; }
 
 		constexpr Self &	And (index_t i, bool bit)			{ ASSUME(i<B);  _bits &= (T(bit) << i);  return *this; }
 		constexpr Self &	Or (index_t i, bool bit)			{ ASSUME(i<B);  _bits |= (T(bit) << i);  return *this; }
@@ -138,9 +138,8 @@ namespace GXTypes
 			Self &		_bitfield;
 			index_t		_index;
 
-			void _Set ()			{ _bitfield.Set( _index ); }
 			void _Reset ()			{ _bitfield.Reset( _index ); }
-			void _SetAt (bool bit)	{ _bitfield.SetAt( _index, bit ); }
+			void _Set (bool bit)	{ _bitfield.SetAt( _index, bit ); }
 			void _And (bool bit)	{ _bitfield.And( _index, bit ); }
 			void _Or (bool bit)		{ _bitfield.Or( _index, bit ); }
 			void _Xor (bool bit)	{ _bitfield.Xor( _index, bit ); }

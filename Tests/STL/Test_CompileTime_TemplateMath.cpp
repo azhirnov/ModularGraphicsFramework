@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace CompileTime;
@@ -40,6 +40,7 @@ extern void Test_CompileTime_TemplateMath ()
 
 	STATIC_ASSERT(( GreatestCommonDivisor< uint, 8, 16 > == 8 ));
 
+	STATIC_ASSERT(( AlignToLarge< uint, 0xd8, 8 > == 0xd8 ));
 
 	/*
 	typedef CompileTime::SwitchType< true, Templ2_True< float >::type,

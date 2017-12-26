@@ -10,6 +10,28 @@
 
 namespace Engine
 {
+namespace CreateInfo
+{
+
+	//
+	// Task Module Create Info
+	//
+	struct TaskModule
+	{
+		// TODO: set priority or something else
+		ModulePtr		manager;
+	};
+	
+
+	//
+	// Task Manager Create Info
+	//
+	struct TaskManager
+	{
+	};
+
+}	// CreateInfo
+
 namespace Base
 {
 

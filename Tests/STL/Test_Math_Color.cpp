@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -16,25 +16,25 @@ extern void Test_Math_Color ()
 	ubyte A = 0x44;
 
 	c.FromIntRGB( (R<<16) | (G<<8) | B );
-	ASSERT( c.R() == R );
-	ASSERT( c.G() == G );
-	ASSERT( c.B() == B );
+	TEST( c.R() == R );
+	TEST( c.G() == G );
+	TEST( c.B() == B );
 	
 	c.FromIntRGBA( (R<<24) | (G<<16) | (B<<8) | A );
-	ASSERT( c.R() == R );
-	ASSERT( c.G() == G );
-	ASSERT( c.B() == B );
-	ASSERT( c.A() == A );
+	TEST( c.R() == R );
+	TEST( c.G() == G );
+	TEST( c.B() == B );
+	TEST( c.A() == A );
 	
 	c.FromIntABGR( (A<<24) | (B<<16) | (G<<8) | R );
-	ASSERT( c.R() == R );
-	ASSERT( c.G() == G );
-	ASSERT( c.B() == B );
-	ASSERT( c.A() == A );
+	TEST( c.R() == R );
+	TEST( c.G() == G );
+	TEST( c.B() == B );
+	TEST( c.A() == A );
 	
 	c.FromIntARGB( (A<<24) | (R<<16) | (G<<8) | B );
-	ASSERT( c.R() == R );
-	ASSERT( c.G() == G );
-	ASSERT( c.B() == B );
-	ASSERT( c.A() == A );
+	TEST( c.R() == R );
+	TEST( c.G() == G );
+	TEST( c.B() == B );
+	TEST( c.A() == A );
 }

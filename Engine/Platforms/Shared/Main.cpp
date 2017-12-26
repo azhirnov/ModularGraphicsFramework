@@ -1,33 +1,39 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Common/Common.h"
+#include "Engine/Platforms/Shared/GPU/Thread.h"
+#include "Engine/Platforms/Shared/GPU/Context.h"
+#include "Engine/Platforms/Shared/GPU/VR.h"
+#include "Engine/Platforms/Shared/OS/Window.h"
+#include "Engine/Platforms/Shared/OS/Platform.h"
 
-
-#if defined( PLATFORM_WINDOWS )
-#	include "Engine/Platforms/Windows/WinPlatform.h"
-	using OSPlatform = Engine::Platforms::WinPlatform;
+#ifdef PLATFORM_WINDOWS
+#	include "Engine/Platforms/Windows/WinObjectsConstructor.h"
 #endif
-
 
 #ifdef GRAPHICS_API_OPENGL
-#	include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#	include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #endif
-
 
 #ifdef GRAPHICS_API_VULKAN
-#	include "Engine/Platforms/Vulkan/VulkanContext.h"
+#	include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #endif
-
 
 #ifdef COMPUTE_API_OPENCL
-#	include "Engine/Platforms/OpenCL/OpenCLContext.h"
+#	include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 #endif
-
 
 #ifdef GRAPHICS_API_DIRECTX
-#	include "Engine/Platforms/DirectX/DirectXContext.h"
+#	include "Engine/Platforms/DirectX/DirectXObjectsConstructor.h"
 #endif
 
+#ifdef GRAPHICS_API_SOFT
+#	include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+#endif
+
+#if defined(PLATFORM_OCULUS_VR) || defined(GX_EMULATOR_VR)
+#	include "Engine/Platforms/VR/VRObjectsConstructor.h"
+#endif
 
 #include "Engine/Platforms/Input/InputManager.h"
 
@@ -41,6 +47,7 @@ namespace Platforms
 	static ModulePtr CreateDefaultWindow (GlobalSystemsRef, const CreateInfo::Window &);
 	static ModulePtr CreateDefaultGpuContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
 	static ModulePtr CreateDefaultGpuThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
+	static ModulePtr CreateDefaultVRThread (GlobalSystemsRef, const CreateInfo::VRThread &);
 
 /*
 =================================================
@@ -49,33 +56,43 @@ namespace Platforms
 */
 	void RegisterPlatforms ()
 	{
-		auto	ms	= GetMainSystemInstace();
+		#ifdef PLATFORM_WINDOWS
+			WinObjectsConstructor::Register();
+		#endif
 
-		OSPlatform::Register( ms->GlobalSystems() );
-		InputManager::Register( ms->GlobalSystems() );
+		InputManager::Register();
 		
 		#ifdef GRAPHICS_API_OPENGL
-			OpenGLContext::Register( ms->GlobalSystems() );
+			OpenGLObjectsConstructor::Register();
 		#endif
 
 		#ifdef GRAPHICS_API_VULKAN
-			VulkanContext::Register( ms->GlobalSystems() );
+			VulkanObjectsConstructor::Register();
 		#endif
 
 		#ifdef COMPUTE_API_OPENCL
-			OpenCLContext::Register( ms->GlobalSystems() );
+			OpenCLObjectsConstructor::Register();
 		#endif
 
 		#ifdef GRAPHICS_API_DIRECTX
-			DirectXContext::Register( ms->GlobalSystems() );
+			DirectXObjectsConstructor::Register();
 		#endif
-
-		auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
+			
+		#ifdef GRAPHICS_API_SOFT
+			SoftRendererObjectsConstructor::Register();
+		#endif
+			
+		auto	factory = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
+		
+		#if defined(PLATFORM_OCULUS_VR) || defined(GX_EMULATOR_VR)
+			VRObjectsConstructor::Register();
+		#endif
 
 		factory->Register( 0, &CreateDefaultPlatform );
 		factory->Register( 0, &CreateDefaultWindow );
 		factory->Register( 0, &CreateDefaultGpuContext );
 		factory->Register( 0, &CreateDefaultGpuThread );
+		factory->Register( 0, &CreateDefaultVRThread );
 	}
 	
 /*
@@ -85,25 +102,34 @@ namespace Platforms
 */
 	void UnregisterPlatforms ()
 	{
-		auto	ms	= GetMainSystemInstace();
+		#ifdef PLATFORM_WINDOWS
+			WinObjectsConstructor::Unregister();
+		#endif
 
-		OSPlatform::Unregister( ms->GlobalSystems() );
-		InputManager::Unregister( ms->GlobalSystems() );
+		InputManager::Unregister();
 		
 		#ifdef GRAPHICS_API_OPENGL
-			OpenGLContext::Unregister( ms->GlobalSystems() );
+			OpenGLObjectsConstructor::Unregister();
 		#endif
 
 		#ifdef GRAPHICS_API_VULKAN
-			VulkanContext::Unregister( ms->GlobalSystems() );
+			VulkanObjectsConstructor::Unregister();
 		#endif
 
 		#ifdef COMPUTE_API_OPENCL
-			OpenCLContext::Unregister( ms->GlobalSystems() );
+			OpenCLObjectsConstructor::Unregister();
 		#endif
 
 		#ifdef GRAPHICS_API_DIRECTX
-			DirectXContext::Unregister( ms->GlobalSystems() );
+			DirectXObjectsConstructor::Unregister();
+		#endif
+			
+		#ifdef GRAPHICS_API_SOFT
+			SoftRendererObjectsConstructor::Unregister();
+		#endif
+		
+		#if defined(PLATFORM_OCULUS_VR) || defined(GX_EMULATOR_VR)
+			VRObjectsConstructor::Unregister();
 		#endif
 	}
 	
@@ -114,10 +140,10 @@ namespace Platforms
 */
 	static ModulePtr CreateDefaultPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci)
 	{
-		auto	factory = gs->Get< ModulesFactory >();
+		auto	factory = gs->modulesFactory;
 
 		Array< ModuleMsg::UntypedID_t >	ids;
-		factory->Search<decltype(ci)>( "", OUT ids );
+		factory->Search< decltype(ci) >( "", OUT ids );
 		
 		FOR( i, ids ) {
 			if ( ids[i] != GModID::type(0) ) {
@@ -136,10 +162,10 @@ namespace Platforms
 */
 	static ModulePtr CreateDefaultWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci)
 	{
-		auto	factory = gs->Get< ModulesFactory >();
+		auto	factory = gs->modulesFactory;
 
 		Array< ModuleMsg::UntypedID_t >	ids;
-		factory->Search<decltype(ci)>( "", OUT ids );
+		factory->Search< decltype(ci) >( "", OUT ids );
 
 		FOR( i, ids ) {
 			if ( ids[i] != TModID::type(0) ) {
@@ -158,17 +184,20 @@ namespace Platforms
 */
 	static ModulePtr CreateDefaultGpuContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
-		auto	factory = gs->Get< ModulesFactory >();
+		auto	factory = gs->modulesFactory;
 		auto	api		= GAPI::ToString( ci.settings.version );
 		usize	pos;
 
-		if ( api.Find( ' ', OUT pos ) ) {
+		if ( api.Find( ' ', OUT pos ) and pos > 0 )
+		{
 			api[pos] = '.';
 			api[pos+1] = '\0';
 		}
+		else
+			api[0] = '\0';
 
 		Array< ModuleMsg::UntypedID_t >	ids;
-		factory->Search<decltype(ci)>( api.cstr(), OUT ids );
+		factory->Search< decltype(ci) >( api.cstr(), OUT ids );
 
 		FOR( i, ids ) {
 			if ( ids[i] != GModID::type(0) ) {
@@ -187,8 +216,8 @@ namespace Platforms
 */
 	static ModulePtr CreateDefaultGpuThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
-		auto		ctx		= gs->Get< MainSystem >()->GetModuleByMsg< CompileTime::TypeListFrom< Message<GpuMsg::GetGraphicsModules> > >();
-		auto		factory	= gs->Get< ModulesFactory >();
+		auto		ctx		= gs->mainSystem->GetModuleByMsg< CompileTime::TypeListFrom< Message<GpuMsg::GetGraphicsModules> > >();
+		auto		factory	= gs->modulesFactory;
 		ModulePtr	mod;
 
 		if ( ctx ) {
@@ -199,6 +228,29 @@ namespace Platforms
 		}
 		return null;
 	}
+	
+/*
+=================================================
+	CreateDefaultGpuThread
+=================================================
+*/
+	static ModulePtr CreateDefaultVRThread (GlobalSystemsRef gs, const CreateInfo::VRThread &ci)
+	{
+		auto	factory	= gs->modulesFactory;
+		
+		Array< ModuleMsg::UntypedID_t >	ids;
+		factory->Search< decltype(ci) >( "", OUT ids );
+
+		FOR( i, ids ) {
+			if ( ids[i] != TModID::type(0) ) {
+				ModulePtr	mod;
+				CHECK_ERR( factory->Create( ids[i], gs, ci, OUT mod ) );
+				return mod;
+			}
+		}
+		return null;
+	}
+
 
 }	// Platforms
 }	// Engine

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Wrapper for (member) function pointer.
 */
@@ -9,7 +9,9 @@
 #include "Engine/STL/Memory/MemFunc.h"
 #include "Engine/STL/Memory/PlacementNew.h"
 #include "Engine/STL/Dimensions/ByteAndBit.h"
-#include "Function.h"
+#include "Engine/STL/Types/Function.h"
+#include "Engine/STL/Types/SharedPointer.h"
+#include "Engine/STL/Types/WeakPointer.h"
 
 namespace GX_STL
 {
@@ -25,6 +27,50 @@ namespace GXTypes
 
 	namespace _types_hidden_
 	{
+
+		//
+		// Pointer Wrapper
+		//
+		template <typename T>
+		struct PointerWrapper
+		{
+		// variables
+		private:
+			mutable T	_ptr;
+
+		// methods
+		public:
+			PointerWrapper (const T &ptr) : _ptr(ptr) {}
+
+			bool IsValid () const			{ return _ptr != null; }
+
+			decltype(auto) Ref () const		{ return *_ptr; }
+			void const*    Ptr () const		{ return (void const*) &(*_ptr); }
+		};
+		
+
+		template <typename T, typename B, typename WS, typename SPS>
+		struct PointerWrapper< WeakPointer<T,B,WS,SPS> >
+		{
+		// types
+			using WP = WeakPointer<T,B,WS,SPS>;
+
+		// variables
+		private:
+			mutable WP		_ptr;
+
+		// methods
+		public:
+			PointerWrapper (const WP &ptr) : _ptr(ptr) {}
+			PointerWrapper (WP &&ptr) : _ptr(RVREF(ptr)) {}
+
+			bool IsValid () const		{ return _ptr.Lock().IsNotNull(); }
+
+			T &			Ref () const	{ return *_ptr.Lock(); }
+			void const*	Ptr () const	{ return (void const *) _ptr.RawPtr(); }
+		};
+
+
 		struct DelegateBase {};
 
 		template <typename Func>
@@ -57,7 +103,7 @@ namespace GXTypes
 				const BytesU size = Size();
 				return	( size == right->Size() ) and
 						( TypeIdOf() == right->TypeIdOf() ) and
-						UnsafeMem::MemCmp( (void *)this, (void *)right, size ) == 0;
+						UnsafeMem::MemCmp( static_cast<const void *>(this), static_cast<const void *>(right), size ) == 0;
 			}
 		
 			forceinline bool Less (const Interface_t *right) const
@@ -69,7 +115,7 @@ namespace GXTypes
 			
 				if ( type0 == type1 ) {
 					if ( size0 == size1 )
-						return UnsafeMem::MemCmp( (void *)this, (void *)right, size0 ) < 0;
+						return UnsafeMem::MemCmp( static_cast<const void *>(this), static_cast<const void *>(right), size0 ) < 0;
 					else
 						return size0 < size1;
 				}
@@ -140,7 +186,7 @@ namespace GXTypes
 		// types
 		public:
 			using Self			= MemberDelegate< C, Class, Ret, Args... >;
-			using Ptr_t			= C;
+			using Ptr_t			= PointerWrapper< C >;
 			using Function_t	= Ret (Class:: *) (Args...);
 
 		// variables
@@ -150,14 +196,14 @@ namespace GXTypes
 
 		// methods
 		public:
-			MemberDelegate (const Ptr_t &ptr, Function_t fn) noexcept : _classPtr(ptr), _func(fn) {}
-			MemberDelegate (Ptr_t &&ptr, Function_t fn) noexcept : _classPtr( RVREF(ptr) ), _func(fn) {}
+			MemberDelegate (const C &ptr, Function_t fn) noexcept : _classPtr(ptr), _func(fn) {}
+			MemberDelegate (C &&ptr, Function_t fn) noexcept : _classPtr( RVREF(ptr) ), _func(fn) {}
 
-			bool		IsValid ()				const override	{ return _func != null and _classPtr != null; }
-			Ret			Call (Args&&... args)	const override	{ return ((*_classPtr).*_func)( FW<Args>(args)... ); }
+			bool		IsValid ()				const override	{ return _func != null and _classPtr.IsValid(); }
+			Ret			Call (Args&&... args)	const override	{ return (_classPtr.Ref().*_func)( FW<Args>(args)... ); }
 			TypeId		TypeIdOf ()				const override	{ return GXTypes::TypeIdOf( *this ); }
 			BytesU		Size ()					const override	{ return SizeOf( *this ); }
-			void const*	ClassPtr ()				const override	{ return (void const*) &(*_classPtr); }
+			void const*	ClassPtr ()				const override	{ return _classPtr.Ptr(); }
 			
 			void MoveTo (BinArrayRef buf) override
 			{
@@ -180,7 +226,7 @@ namespace GXTypes
 		// types
 		public:
 			using Self			= MemberDelegateConst< C, Class, Ret, Args... >;
-			using Ptr_t			= C;
+			using Ptr_t			= PointerWrapper< C >;
 			using Function_t	= Ret (Class:: *) (Args...) const;
 			
 		// variables
@@ -190,14 +236,14 @@ namespace GXTypes
 
 		// methods
 		public:
-			MemberDelegateConst (const Ptr_t &ptr, Function_t fn) noexcept : _classPtr(ptr), _func(fn) {}
-			MemberDelegateConst (Ptr_t &&ptr, Function_t fn) noexcept : _classPtr( RVREF(ptr) ), _func(fn) {}
+			MemberDelegateConst (const C &ptr, Function_t fn) noexcept : _classPtr(ptr), _func(fn) {}
+			MemberDelegateConst (C &&ptr, Function_t fn) noexcept : _classPtr( RVREF(ptr) ), _func(fn) {}
 
-			bool		IsValid ()				const override	{ return _func != null and _classPtr != null; }
-			Ret			Call (Args&&... args)	const override	{ return ((*_classPtr).*_func)( FW<Args>(args)... ); }
+			bool		IsValid ()				const override	{ return _func != null and _classPtr.IsValid(); }
+			Ret			Call (Args&&... args)	const override	{ return (_classPtr.Ref().*_func)( FW<Args>(args)... ); }
 			TypeId		TypeIdOf ()				const override	{ return GXTypes::TypeIdOf( *this ); }
 			BytesU		Size ()					const override	{ return SizeOf( *this ); }
-			void const*	ClassPtr ()				const override	{ return (void const*) &(*_classPtr); }
+			void const*	ClassPtr ()				const override	{ return _classPtr.Ptr(); }
 			
 			void MoveTo (BinArrayRef buf) override
 			{
@@ -270,26 +316,26 @@ namespace GXTypes
 
 		forceinline Self& operator = (const Self &other)
 		{
-			_DeleteNoClear();
+			_Delete();
 			_Copy( other );
 			return *this;
 		}
 
 		forceinline Self& operator = (Self &&other)
 		{
-			_DeleteNoClear();
+			_Delete();
 			_Move( RVREF( other ) );
 			return *this;
 		}
 
 		forceinline bool EqualPointers (const void *ptr) const
 		{
-			return IsValid() and _Internal()->ClassPtr() == ptr;
+			return _IsCreated() and _Internal()->ClassPtr() == ptr;
 		}
 
 		forceinline operator	bool ()								const	{ return IsValid(); }
 
-		forceinline bool		IsValid ()							const	{ return _IsCreated() DEBUG_ONLY( and _Internal()->IsValid() ); }
+		forceinline bool		IsValid ()							const	{ return _IsCreated() and _Internal()->IsValid(); }
 
 		forceinline Result_t	operator () (Args... args)			const	{ ASSERT( IsValid() );  return _Internal()->Call( FW<Args>(args)... ); }
 		
@@ -321,35 +367,27 @@ namespace GXTypes
 			}
 		}
 
-		forceinline void _DeleteNoClear () noexcept
-		{
-			if ( _IsCreated() )
-			{
-				_Internal()->~_Interface_t();
-			}
-		}
-
 		forceinline void _Move (Self &&other) noexcept
 		{
+			_Clear();
+
 			if ( other._IsCreated() )
 			{
 				DEBUG_ONLY( _dbgType = other._dbgType );
 				other._Internal()->MoveTo( _Data() );
 				other._Clear();
 			}
-			else
-				_Clear();
 		}
 
 		forceinline void _Copy (const Self &other) noexcept
 		{
+			_Clear();
+
 			if ( other._IsCreated() )
 			{
 				DEBUG_ONLY( _dbgType = other._dbgType );
 				other._Internal()->CopyTo( _Data() );
 			}
-			else
-				_Clear();
 		}
 
 		forceinline void _Clear ()

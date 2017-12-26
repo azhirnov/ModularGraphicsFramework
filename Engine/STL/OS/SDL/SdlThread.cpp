@@ -1,8 +1,7 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
-
-#pragma once
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "OS_SDL.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 #ifdef PLATFORM_SDL
 

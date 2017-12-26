@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Engine/Base/Modules/Message.h"
-#include "Engine/Base/Common/TypeIdList.h"
 
 namespace Engine
 {
@@ -14,7 +13,7 @@ namespace Base
 	// Message Handler
 	//
 
-	class _ENGINE_BASE_EXPORT_ MessageHandler final
+	class MessageHandler final
 	{
 	// types
 	private:
@@ -42,7 +41,7 @@ namespace Base
 	private:
 		HandlersMap_t		_handlers;
 
-		mutable OS::Mutex	_lock;
+		mutable OS::Mutex	_lock;		// TODO: is it needed?
 
 
 	// methods
@@ -53,13 +52,13 @@ namespace Base
 		bool Send (const Message<T> &msg);
 		
 		template <typename Class, typename Class2, typename T>
-		bool Subscribe (const TypeIdList& validTypes, const SP<Class> &obj, bool (Class2::*) (const Message<T> &));
+		bool Subscribe (const TypeIdList& validTypes, const SP<Class> &obj, bool (Class2::*) (const Message<T> &), bool checked = true);
 		
 		template <typename Class, typename Class2, typename T>
-		bool Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, bool (Class2::*) (const Message<T> &));
+		bool Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, bool (Class2::*) (const Message<T> &), bool checked = true);
 
 		template <typename Class, typename Class2, typename T>
-		bool Subscribe (const TypeIdList& validTypes, Class *obj, bool (Class2::*) (const Message<T> &));
+		bool Subscribe (const TypeIdList& validTypes, Class *obj, bool (Class2::*) (const Message<T> &), bool checked = true);
 
 		template <typename MsgList, typename Class>
 		bool CopySubscriptions (const TypeIdList& validTypes, const SP<Class> &obj, const MessageHandler &other);
@@ -86,8 +85,8 @@ namespace Base
 
 	private:
 		bool _Send (VariantCRef);
-		bool _Subscribe (const TypeIdList& validTypes, TypeId id, Handler &&handler);
-		bool _CopySubscriptions (const TypeIdList& validTypes, const ObjectPtr_t &obj, const MessageHandler &other, ArrayCRef<TypeId> ids);
+		bool _Subscribe (const TypeIdList& validTypes, TypeId id, Handler &&handler, bool checked);
+		bool _CopySubscriptions (const TypeIdList& validTypes, const ObjectPtr_t &otherObj, const MessageHandler &other, ArrayCRef<TypeId> ids);
 		void _UnsubscribeAll (const ObjectPtr_t &obj);
 
 		template <typename Class, typename T>
@@ -113,15 +112,15 @@ namespace Base
 =================================================
 */
 	template <typename Class, typename Class2, typename T>
-	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, Class *obj, bool (Class2::* func) (const Message<T> &))
+	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, Class *obj, bool (Class2::* func) (const Message<T> &), bool checked)
 	{
-		return Subscribe( validTypes, WP<Class>(obj), func );
+		return Subscribe( validTypes, WP<Class>(obj), func, checked );
 	}
 	
 	template <typename Class, typename Class2, typename T>
-	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, const SP<Class> &obj, bool (Class2::* func) (const Message<T> &))
+	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, const SP<Class> &obj, bool (Class2::* func) (const Message<T> &), bool checked)
 	{
-		return Subscribe( validTypes, WP<Class>(obj), func );
+		return Subscribe( validTypes, WP<Class>(obj), func, checked );
 	}
 
 /*
@@ -130,7 +129,7 @@ namespace Base
 =================================================
 */
 	template <typename Class, typename Class2, typename T>
-	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, bool (Class2::* func) (const Message<T> &))
+	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, bool (Class2::* func) (const Message<T> &), bool checked)
 	{
 		STATIC_ASSERT( sizeof(Handler::data) >= sizeof(func) );
 		STATIC_ASSERT(( CompileTime::IsSameTypes< Class, Class2 > or CompileTime::IsBaseOf< Class2, Class > ));
@@ -140,7 +139,7 @@ namespace Base
 		handler.ptr		= obj;
 		handler.func	= &_Call< Class, T >;
 		
-		return _Subscribe( validTypes, TypeIdOf< Message<T> >(), RVREF(handler) );
+		return _Subscribe( validTypes, TypeIdOf< Message<T> >(), RVREF(handler), checked );
 	}
 	
 /*
@@ -163,7 +162,7 @@ namespace Base
 	template <typename MsgList, typename Class>
 	forceinline bool MessageHandler::CopySubscriptions (const TypeIdList& validTypes, Class *obj, const MessageHandler &other)
 	{
-		return CopySubscriptions( validTypes, WP<Class>(obj), other );
+		return CopySubscriptions< MsgList >( validTypes, WP<Class>(obj), other );
 	}
 	
 /*

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "GApp.h"
 #include "../Pipelines/all_pipelines.h"
@@ -15,13 +15,13 @@ inline ModulePtr GetGThread (GlobalSystemsRef gs)
 	using GThreadMsgList_t		= CompileTime::TypeListFrom< Message<GpuMsg::ThreadBeginFrame>, Message<GpuMsg::ThreadEndFrame>, Message<GpuMsg::GetDeviceInfo> >;
 	using GThreadEventList_t	= CompileTime::TypeListFrom< Message<GpuMsg::DeviceCreated>, Message<GpuMsg::DeviceBeforeDestroy> >;
 
-	return gs->Get< ParallelThread >()->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >();
+	return gs->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >();
 }
 
 
 GApp::GApp ()
 {
-	ms = GetMainSystemInstace();
+	ms = GetMainSystemInstance();
 
 	Platforms::RegisterPlatforms();
 }
@@ -34,7 +34,7 @@ bool GApp::Initialize (GAPI::type api)
 	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager{} );
 
 	{
-		auto		factory	= ms->GlobalSystems()->Get< ModulesFactory >();
+		auto		factory	= ms->GlobalSystems()->modulesFactory;
 		ModulePtr	context;
 
 		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ api }, OUT context ) );
@@ -45,7 +45,7 @@ bool GApp::Initialize (GAPI::type api)
 		ids << req_ids->graphics;
 	}
 
-	auto	thread	= ms->GlobalSystems()->Get< ParallelThread >();
+	auto	thread	= ms->GlobalSystems()->parallelThread;
 	
 	thread->AddModule( WinWindowModuleID, CreateInfo::Window{} );
 	thread->AddModule( InputThreadModuleID, CreateInfo::InputThread{} );
@@ -85,7 +85,7 @@ void GApp::Quit ()
 	if ( pipelineTemplate2 )
 		pipelineTemplate2->Send( del_msg );
 
-	auto	thread		= ms->GlobalSystems()->Get< ParallelThread >();
+	auto	thread		= ms->GlobalSystems()->parallelThread;
 	auto	window		= thread->GetModuleByID( WinWindowModuleID );
 	auto	input		= thread->GetModuleByID( InputThreadModuleID );
 	auto	gthread		= thread->GetModuleByID( ids.thread );
@@ -211,7 +211,7 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 	Message< GpuMsg::CmdEnd >	cmd_end = {};
 	builder->Send( cmd_end );
 
-	gthread->Send< GpuMsg::ThreadEndFrame >({ system_fb, InitializerList<ModulePtr>{ cmd_end->cmdBuffer.Get(null) } });
+	gthread->Send< GpuMsg::ThreadEndFrame >({ system_fb, cmd_end->cmdBuffer.Get(null) });
 	return true;
 }
 
@@ -219,7 +219,7 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 bool GApp::_CreatePipeline1 ()
 {
 	auto	gthread	= GetGThread( ms->GlobalSystems() );
-	auto	factory	= ms->GlobalSystems()->Get< ModulesFactory >();
+	auto	factory	= ms->GlobalSystems()->modulesFactory;
 	
 	CreateInfo::PipelineTemplate	pp_templ;
 	Pipelines::Create_default( OUT pp_templ.descr );
@@ -258,7 +258,7 @@ bool GApp::_CreatePipeline1 ()
 bool GApp::_CreatePipeline2 ()
 {
 	auto	gthread = GetGThread( ms->GlobalSystems() );
-	auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
+	auto	factory = ms->GlobalSystems()->modulesFactory;
 	
 	CreateInfo::PipelineTemplate	pp_templ;
 	Pipelines::Create_default2( OUT pp_templ.descr );
@@ -300,7 +300,7 @@ bool GApp::_CreatePipeline2 ()
 bool GApp::_CreateCmdBuffers ()
 {
 	auto	gthread = GetGThread( ms->GlobalSystems() );
-	auto	factory = ms->GlobalSystems()->Get< ModulesFactory >();
+	auto	factory = ms->GlobalSystems()->modulesFactory;
 
 	CHECK_ERR( factory->Create(
 					ids.commandBuilder,
@@ -317,7 +317,11 @@ bool GApp::_CreateCmdBuffers ()
 		CHECK_ERR( factory->Create(
 						ids.commandBuffer,
 						gthread->GlobalSystems(),
-						CreateInfo::GpuCommandBuffer{ gthread },
+						CreateInfo::GpuCommandBuffer{
+							gthread,
+							null,
+							CommandBufferDescriptor{ ECmdBufferCreate::ImplicitResetable | ECmdBufferCreate::UseFence }
+						},
 						OUT cmdBuffers[i] )
 		);
 		cmdBuilder->Send< ModuleMsg::AttachModule >({ ""_str << i, cmdBuffers[i] });
@@ -329,7 +333,7 @@ bool GApp::_CreateCmdBuffers ()
 bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 {
 	auto	gthread = GetGThread( ms->GlobalSystems() );
-	auto	factory = gthread->GlobalSystems()->Get< ModulesFactory >();
+	auto	factory = gthread->GlobalSystems()->modulesFactory;
 
 	CHECK_ERR( factory->Create(
 					ids.image,
@@ -424,7 +428,6 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					OUT framebuffer ) );
 	
 	ImageViewDescriptor	view_descr;
-	//view_descr.swizzle = "RRRR"_Swizzle;
 
 	framebuffer->Send< GpuMsg::FramebufferAttachImage >({ "Color0", fbColorImage, view_descr });
 

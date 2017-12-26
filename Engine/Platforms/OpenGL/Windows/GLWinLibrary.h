@@ -36,7 +36,7 @@ namespace PlatformGL
 
 		void Unload ();
 
-		void * GetProc (StringCRef address) const;
+		SharedLibFunction_t  GetProc (StringCRef address) const;
 
 		static StringCRef  GetDefaultName ();
 

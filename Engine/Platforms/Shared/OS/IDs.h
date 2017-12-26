@@ -30,7 +30,7 @@ namespace Platforms
 		GModID::type	platform	= GModID::type(0);
 		TModID::type	window		= TModID::type(0);
 		OModID::type	keyInput	= OModID::type(0);
-		OModID::type	mouseInout	= OModID::type(0);
+		OModID::type	mouseInput	= OModID::type(0);
 
 		// TODO: touch input, joystick input, gamepad input, desctop window, wallpaper window ...
 		// output devices?

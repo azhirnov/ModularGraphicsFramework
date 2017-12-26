@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -56,8 +56,8 @@ namespace GXTypes
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{
-			SwapValues( left.first,		right.first );
-			SwapValues( left.second,	right.second );
+			GXTypes::SwapValues( left.first,	right.first );
+			GXTypes::SwapValues( left.second,	right.second );
 		}
 	};
 	
@@ -87,19 +87,17 @@ namespace GXTypes
 =================================================
 */
 	template <typename FirstType, typename SecondType>
-	struct Hash< Pair< FirstType, SecondType > > :
-		private Hash< FirstType >, private Hash< SecondType >
+	struct Hash< Pair< FirstType, SecondType > >
 	{
 		STATIC_ASSERT(( CompileTime::IsSameTypes< typename Hash< FirstType >::Result_t,
 													typename Hash< SecondType >::Result_t > ));
 
-		typedef Pair< FirstType, SecondType >	Key_t;
-		typedef Hash< FirstType >::Result_t		Result_t;
+		typedef Pair< FirstType, SecondType >			Key_t;
+		typedef typename Hash< FirstType >::Result_t	Result_t;
 
 		Result_t operator () (const Key_t &x) const noexcept
 		{
-			return	Hash< FirstType >::operator ()( x.first ) +
-					Hash< SecondType >::operator ()( x.second );
+			return HashOf( x.first ) + HashOf( x.second );
 		}
 	};
 

@@ -663,7 +663,7 @@ namespace GXMath
 	template <typename T2>
 	inline AABBox<T2>  AABBox<T>::Convert () const
 	{
-		return AABBox<T2>( _min.Convert<T2>(), _max.Convert<T2>() );
+		return AABBox<T2>( _min.template Convert<T2>(), _max.template Convert<T2>() );
 	}
 	
 /*

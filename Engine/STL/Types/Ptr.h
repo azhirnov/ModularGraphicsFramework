@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/STL/CompileTime/PlainOldDataType.h"
+#include "Engine/STL/CompileTime/NewTypeInfo.h"
 #include "Engine/STL/Algorithms/Hash.h"
 
 namespace GX_STL
@@ -20,8 +20,7 @@ namespace GXTypes
 	// types
 	public:
 		typedef Ptr<T>		Self;
-		typedef T			Value_t;
-		typedef T *			value_ptr_t;
+		typedef T*			Value_t;
 		typedef bool		_is_simple_ptr;
 
 		
@@ -122,8 +121,8 @@ namespace GXTypes
 		forceinline T2  To () const
 		{
 			STATIC_ASSERT( typename T2::_is_simple_ptr(true) );
-			_CheckCast< typename T2::Value_t, Value_t >( _ptr );
-			return T2( (typename T2::Value_t *) RawPtr() );
+			_CheckCast< TypeTraits::RemovePointer<typename T2::Value_t>, T >( _ptr );
+			return T2( (typename T2::Value_t) RawPtr() );
 		}
 
 		template <typename R>
@@ -132,17 +131,16 @@ namespace GXTypes
 			_CheckCast< R, Value_t >( _ptr );
 			return ptr();
 		}
-		
 
-		forceinline bool operator > (const Self &right) const
+
+		bool operator == (NullPtr_t) const
 		{
-			return _ptr > right._ptr;
+			return IsNull();
 		}
 		
-		forceinline bool operator < (const Self &right) const
-		{
-			return _ptr < right._ptr;
-		}
+		
+		_GX_DIM_CMP_OPERATORS_SELF( RawPtr() );
+		_GX_DIM_CMP_OPERATORS_TYPE( RawPtr(), Value_t const, );
 	};
 	
 

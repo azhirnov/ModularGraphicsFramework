@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -12,7 +12,7 @@ extern void Test_Runtime_VirtualTypelist ()
 {
 	using Typelist1 = TypeListFrom< int, float, ulong, bool >;
 
-	VirtualTypeList	vtl = VirtualTypeList( UninitializedT< Typelist1 >() );
+	TypeIdList	vtl = TypeIdList( UninitializedT< Typelist1 >() );
 
-	ASSERT( vtl.HasType( TypeIdOf<float>() ) );
+	TEST( vtl.HasType( TypeIdOf<float>() ) );
 }

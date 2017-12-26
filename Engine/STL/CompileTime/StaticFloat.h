@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -93,7 +93,7 @@ namespace CompileTime
 		template <typename MT, MT M0, MT M1, typename ET, ET EDiff>
 		struct StaticFloat_CalcBaseExponent_Overflow
 		{
-			static const bool	value = typename SwitchType< EDiff >= 0,
+			static const bool	value = SwitchType< EDiff >= 0,
 													StaticFloat_CalcBaseExponent_DiffOverflow< MT, M0, ET,  EDiff >,
 													StaticFloat_CalcBaseExponent_DiffOverflow< MT, M1, ET, -EDiff > >::value;
 		};
@@ -420,7 +420,7 @@ namespace CompileTime
 		using Add = typename _Add< StaticFloatValue >::type;
 
 		template <typename StaticFloatValue>
-		using Sub = typename Add< typename StaticFloatValue::Neg >;
+		using Sub = Add< typename StaticFloatValue::Neg >;
 
 		template <typename StaticFloatValue>
 		using Mul = typename _Mul< StaticFloatValue >::type;
@@ -454,7 +454,7 @@ namespace CompileTime
 
 		template <typename StaticFloatValue>
 		struct FastEqual {
-			typedef typename Simplify						t0;
+			typedef Simplify								t0;
 			typedef typename StaticFloatValue::Simplify		t1;
 			static const bool	value = (t0::MANTISSA == t1::MANTISSA and t0::EXPONENT == t1::EXPONENT);
 		};
@@ -476,13 +476,13 @@ namespace CompileTime
 
 		template <typename StaticFloatValue>
 		struct LessThanEqual {
-			typedef typename Sub< StaticFloatValue >	sub;
+			typedef Sub< StaticFloatValue >		sub;
 			static const bool	value = sub::IsZero::value or sub::MANTISSA < 0;
 		};
 
 		template <typename StaticFloatValue>
 		struct GreaterThanEqual {
-			typedef typename Sub< StaticFloatValue >	sub;
+			typedef Sub< StaticFloatValue >		sub;
 			static const bool	value = sub::IsZero::value or sub::MANTISSA > 0;
 		};
 

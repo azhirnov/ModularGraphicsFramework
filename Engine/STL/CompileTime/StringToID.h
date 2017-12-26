@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -20,7 +20,7 @@ namespace CompileTime
 			using type = ulong;
 
 #			define _ON_ERROR( _msg_ )	(throw std::logic_error(_msg_))
-//#			define _ON_ERROR( _msg_ )	(type(-1))
+//#			define _ON_ERROR( _msg_ )	(type(GXTypes::UMax))
 
 		// constants
 		private:
@@ -45,7 +45,7 @@ namespace CompileTime
 					(c == '+')				? type(c - '+' + 'Z' - 'A' + 4) << shift	:	// map +
 					(c == '_')				? type(c - '_' + 'Z' - 'A' + 5) << shift	:	// map _
 					(c == '\0' or c == ' ')	? 0											:
-					type(-1);
+					type(GXTypes::UMax);
 					//_ON_ERROR( "unsupported char" );
 			}
 
@@ -76,7 +76,7 @@ namespace CompileTime
 					(c == '=')				? type(c - '='  + '9' - '0' + 21) << shift	:	// map =
 					(c == '%')				? type(c - '%'  + '9' - '0' + 22) << shift	:	// map %
 					(c == '\0' or c == ' ')	? 0											:
-					type(-1);
+					type(GXTypes::UMax);
 					//_ON_ERROR( "unsupported char" );
 			}
 
@@ -128,7 +128,7 @@ namespace CompileTime
 			}
 
 
-			forceinline static constexpr type _RecursiveHash (char const * const str, const size_t i, const size_t off, const size_t size)
+			inline static constexpr type _RecursiveHash (char const * const str, const size_t i, const size_t off, const size_t size)
 			{
 				return
 					(i >= size or str[i] == '\0') ?
@@ -139,11 +139,11 @@ namespace CompileTime
 						_ON_ERROR( "overflow" ) :
 
 					// try map to laters
-					(_Hash1( str[i], off ) != type(-1)) ?
+					(_Hash1( str[i], off ) != type(GXTypes::UMax)) ?
 						(_Hash1( str[i], off ) | _RecursiveHash( str, i+1, off + _SYMBOL_SIZE, size )) :
 
 					// try map to numerics
-					(off + _SYMBOL_SIZE < _MAX_OFFSET and _Hash2( str[i], off + _SYMBOL_SIZE ) != type(-1)) ?
+					(off + _SYMBOL_SIZE < _MAX_OFFSET and _Hash2( str[i], off + _SYMBOL_SIZE ) != type(GXTypes::UMax)) ?
 						((_NUMERIC << off) | _Hash2( str[i], off + _SYMBOL_SIZE ) | _RecursiveHash( str, i+1, off + _SYMBOL_SIZE*2, size )) :
 
 					// error
@@ -162,7 +162,7 @@ namespace CompileTime
 
 			forceinline static constexpr type CalcHash (char const * const str, const size_t size, const type id) noexcept
 			{
-				return size > _COUNT ? type(-1) : (_RecursiveHash( str, 0, _OFFSET, size ) | (id & MASK));
+				return size > _COUNT ? type(GXTypes::UMax) : (_RecursiveHash( str, 0, _OFFSET, size ) | (id & MASK));
 			}
 
 
@@ -202,7 +202,7 @@ namespace CompileTime
 			enum type : _type_ { \
 				_IDMask	= ::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper::MASK, \
 				_ID		= (_id_ & _IDMask), \
-				Unknown	= _type_(-1), \
+				Unknown	= _type_(GXTypes::UMax), \
 			}; \
 			\
 			forceinline static type FromString (::GX_STL::GXTypes::StringCRef str) noexcept { \

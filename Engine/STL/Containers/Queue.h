@@ -567,23 +567,23 @@ namespace GXTypes
 	{
 		Clear();
 		
-		if ( arrayPtr == null or count == 0 )
+		if ( other.Empty() )
 			return;
 
-		if ( not Empty() and _CheckIntersection( _memory.Pointer(), _memory.Pointer() + _size, arrayPtr, arrayPtr + count ) )
+		if ( not Empty() and _CheckIntersection( _memory.Pointer(), _memory.Pointer() + _size, other.Begin(), other.End() ) )
 			RET_VOID;
 
-		if ( count > _size )
+		if ( other.Count() > _size )
 		{
-			_size = count;
+			_size = other.Count();
 			_memory.Deallocate();
 			CHECK( _memory.Allocate( INOUT _size ) );
 		}
 
 		_first  = _CalcFirstOffset( _size );
-		_last	 = GXMath::Min( _first + count, _size );
+		_last	 = GXMath::Min( _first + other.Count(), _size );
 
-		Strategy_t::Copy( _memory.Pointer() + _first, arrayPtr, Count() );
+		Strategy_t::Copy( _memory.Pointer() + _first, other.ptr(), Count() );
 	}
 		
 /*

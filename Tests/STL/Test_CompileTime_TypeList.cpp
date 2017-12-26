@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -41,7 +41,7 @@ extern void Test_CompileTime_TypeList ()
 	STATIC_ASSERT( typeList4::Count == 6 );
 	STATIC_ASSERT(( IsSameTypes< typeList4::Front, short > ));
 
-	typedef Order< typeList0::PushBack< short > >::PushBack< float >		typeList5;
+	typedef typeList0::PushBack< short >::PushBack< float >		typeList5;
 	STATIC_ASSERT( typeList5::FirstIndexOf< short > == 1 );
 	STATIC_ASSERT( typeList5::LastIndexOf< short > == 7 );
 	
@@ -65,7 +65,7 @@ extern void Test_CompileTime_TypeList ()
 	STATIC_ASSERT( typeList11::IndexOf< uint > == 1 );
 	STATIC_ASSERT( typeList11::IndexOf< ulong > == 2 );
 
-	typedef Order< typeList10::Append< TypeListFrom< ulong, float > >>::Append< TypeListFrom< double, bool > >	typeList12;
+	typedef typeList10::Append< TypeListFrom< ulong, float > >::Append< TypeListFrom< double, bool > >	typeList12;
 	STATIC_ASSERT( typeList12::Count == 6 );
 	STATIC_ASSERT( typeList12::IndexOf< short > == 0 );
 	STATIC_ASSERT( typeList12::IndexOf< uint > == 1 );

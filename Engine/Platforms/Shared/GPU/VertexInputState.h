@@ -14,7 +14,7 @@ namespace Platforms
 	// Vertex Input State
 	//
 
-	class _ENGINE_PLATFORMS_EXPORT_ VertexInputState : public CompileTime::CopyQualifiers< FixedSizeHashMap<StaticString<32>, int, 1> >
+	class VertexInputState : public CompileTime::CopyQualifiers< FixedSizeHashMap<StaticString<32>, int, 1> >
 	{
 	// types
 	public:

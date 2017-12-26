@@ -1,8 +1,9 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
-
-#pragma once
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Thread.h"
+#include "Engine/STL/Math/Mathematics.h"
+#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Math/Interpolations.h"
 
 #if defined( GX_USE_STD ) and \
 	not defined( PLATFORM_SDL )

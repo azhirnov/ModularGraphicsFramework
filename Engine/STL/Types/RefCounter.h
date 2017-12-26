@@ -104,7 +104,7 @@ namespace GXTypes
 			DEBUG_ONLY( ++_AllocCounter() );
 		}
 
-		RefCounter2 (std::nullptr_t)
+		RefCounter2 (NullPtr_t)
 		{}
 
 		explicit RefCounter2 (const RefCounter2 &other) : _ptr( other._ptr )

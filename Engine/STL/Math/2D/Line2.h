@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -312,7 +312,7 @@ namespace GXMath
 	template <typename T, ulong U>
 	inline void Line2<T,U>::GetBoundingRect (OUT Rect_t &boundRect) const
 	{
-		boundRect = Rect_t( StaticArrayBuilder::Create( Begin(), End() ) );
+		boundRect = Rect_t( MakeStaticArray( Begin(), End() ) );
 		boundRect.Stretch( Vector().Max() /* T(0.01)*/ );
 	}
 	

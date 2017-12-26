@@ -1,6 +1,12 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Windows/WinPlatform.h"
+#include "Engine/Platforms/Shared/OS/Display.h"
+#include "Engine/Platforms/Shared/OS/Platform.h"
+#include "Engine/Platforms/Shared/OS/OSEnums.h"
+#include "Engine/Platforms/Shared/OS/Input.h"
+#include "Engine/Platforms/Windows/WinMessages.h"
+#include "Engine/Platforms/Windows/WinDisplay.h"
+#include "Engine/Platforms/Windows/WinObjectsConstructor.h"
 
 #if defined( PLATFORM_WINDOWS )
 
@@ -10,7 +16,83 @@ namespace Engine
 {
 namespace Platforms
 {
-	
+
+
+	//
+	// Windows Platform
+	//
+
+	class WinPlatform final : public Module
+	{
+	// types
+	private:
+		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+											ModuleMsg::AddToManager,
+											ModuleMsg::RemoveFromManager,
+											OSMsg::GetDisplays,
+											OSMsg::GetOSModules
+										> >;
+		using SupportedEvents_t		= MessageListFrom<
+											ModuleMsg::Delete,
+											OSMsg::OnWinPlatformCreated
+										>;
+
+		using ModArray_t			= Set< ModulePtr >;
+		using Directories_t			= StaticArray< String, EDirectory::_Count >;
+
+		using HMODULE_t				= OS::HiddenOSTypeFrom<void*>;
+		
+
+	// constants
+	private:
+		static const TypeIdList		_msgTypes;
+		static const TypeIdList		_eventTypes;
+
+
+	// variables
+	private:
+		ModArray_t				_windows;
+		WinDisplay				_display;
+		
+		CreateInfo::Platform	_createInfo;
+
+		String					_className;
+		HMODULE_t				_instance;
+
+		Directories_t			_directories;
+
+
+	// methods
+	public:
+		WinPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci);
+		~WinPlatform ();
+
+
+	// message handlers
+	private:
+		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Compose (const Message< ModuleMsg::Compose > &);
+		//bool _Update (const Message< ModuleMsg::Update > &);
+		bool _GetDisplays (const Message< OSMsg::GetDisplays > &);
+		bool _GetOSModules (const Message< OSMsg::GetOSModules > &);
+		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
+		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+
+	private:
+		bool _IsCreated () const;
+		bool _Create ();
+		void _Destroy ();
+
+		bool _GetDirectories ();
+		bool _RegisterClass ();
+
+		bool _SetScreenResolution (const uint2 &size, uint freq);
+		bool _ReturnToDefaultResolution ();
+	};
+//-----------------------------------------------------------------------------
+
+
+
 	const TypeIdList	WinPlatform::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	WinPlatform::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
@@ -57,21 +139,6 @@ namespace Platforms
 
 		ASSERT( not _IsCreated() );
 	}
-	
-/*
-=================================================
-	GetModuleIDs
-=================================================
-*/
-	OSModuleIDs WinPlatform::GetModuleIDs ()
-	{
-		OSModuleIDs	ids;
-		ids.platform	= WinPlatformModuleID;
-		ids.window		= WinWindowModuleID;
-		ids.keyInput	= WinKeyInputModuleID;
-		ids.mouseInout	= WinMouseInputModuleID;
-		return ids;
-	}
 
 /*
 =================================================
@@ -111,7 +178,7 @@ namespace Platforms
 		// async message
 		FOR( i, _windows )
 		{
-			CHECK( GlobalSystems()->Get< TaskModule >()->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( GlobalSystems()->taskModule->Send( Message< ModuleMsg::PushAsyncMessage >{
 						AsyncMessage{ LAMBDA(
 							target = _windows[i],
 							msg = Message< OSMsg::OnWinPlatformCreated >{ _instance, _className } ) (GlobalSystemsRef)
@@ -140,7 +207,7 @@ namespace Platforms
 
 		if ( _IsCreated() )
 		{
-			CHECK( GlobalSystems()->Get< TaskModule >()->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( GlobalSystems()->taskModule->Send( Message< ModuleMsg::PushAsyncMessage >{
 						AsyncMessage{ LAMBDA(
 							target = msg->module,
 							msg = Message< OSMsg::OnWinPlatformCreated >{ _instance, _className } ) (GlobalSystemsRef)
@@ -173,46 +240,6 @@ namespace Platforms
 
 		_windows.Erase( module );
 		return true;
-	}
-	
-/*
-=================================================
-	Register
-=================================================
-*/
-	void WinPlatform::Register (GlobalSystemsRef gs)
-	{
-		auto	mf = gs->Get< ModulesFactory >();
-
-		CHECK( mf->Register( WinPlatformModuleID, &_CreateWinPlatform ) );
-		CHECK( mf->Register( WinWindowModuleID, &_CreateWinWindow ) );
-		CHECK( mf->Register( WinKeyInputModuleID, &_CreateWinKeyInput ) );
-		CHECK( mf->Register( WinMouseInputModuleID, &_CreateWinMouseInput ) );
-	}
-	
-/*
-=================================================
-	Unregister
-=================================================
-*/
-	void WinPlatform::Unregister (GlobalSystemsRef gs)
-	{
-		auto	mf = gs->Get< ModulesFactory >();
-
-		mf->UnregisterAll( WinPlatformModuleID );
-		mf->UnregisterAll( WinWindowModuleID );
-		mf->UnregisterAll( WinKeyInputModuleID );
-		mf->UnregisterAll( WinMouseInputModuleID );
-	}
-
-/*
-=================================================
-	_CreateWinPlatform
-=================================================
-*/
-	ModulePtr WinPlatform::_CreateWinPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci)
-	{
-		return New< WinPlatform >( gs, ci );
 	}
 
 /*
@@ -286,7 +313,7 @@ namespace Platforms
 */
 	bool WinPlatform::_GetOSModules (const Message< OSMsg::GetOSModules > &msg)
 	{
-		msg->result.Set( GetModuleIDs() );
+		msg->result.Set( WinObjectsConstructor::GetModuleIDs() );
 		return true;
 	}
 
@@ -301,13 +328,13 @@ namespace Platforms
 		_className += "Class";
 
 		HMODULE		instance	= _instance.Get<HMODULE>();
-		WNDCLASSA	tmp			= {0};
+		WNDCLASSA	tmp			= {};
 		bool		ret			= GetClassInfo( instance, _className.cstr(), &tmp ) == TRUE;
 		
 		if ( ret or ( _className == tmp.lpszClassName and instance == tmp.hInstance ) )
 			return true;
 
-		WNDCLASSEXA		window_class = {0};
+		WNDCLASSEXA		window_class = {};
 		window_class.cbSize			= sizeof(window_class);
 		window_class.style			= CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 		window_class.lpfnWndProc	= &DefWindowProcA;
@@ -354,7 +381,7 @@ namespace Platforms
 */
 	bool WinPlatform::_SetScreenResolution (const uint2 &size, uint freq)
 	{
-		DEVMODEA	mode = {0};
+		DEVMODEA	mode = {};
 		mode.dmSize				= sizeof( mode );
 		mode.dmPelsWidth		= (DWORD) size.x;
 		mode.dmPelsHeight		= (DWORD) size.y;
@@ -382,6 +409,64 @@ namespace Platforms
 	{
 		CHECK_ERR( ::ChangeDisplaySettings( (DEVMODEA *)null, CDS_RESET ) != DISP_CHANGE_SUCCESSFUL );
 		return true;
+	}
+//-----------------------------------------------------------------------------
+	
+
+	
+/*
+=================================================
+	Register
+=================================================
+*/
+	void WinObjectsConstructor::Register ()
+	{
+		auto	mf = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
+
+		CHECK( mf->Register( WinPlatformModuleID, &CreateWinPlatform ) );
+		CHECK( mf->Register( WinWindowModuleID, &CreateWinWindow ) );
+		CHECK( mf->Register( WinKeyInputModuleID, &CreateWinKeyInput ) );
+		CHECK( mf->Register( WinMouseInputModuleID, &CreateWinMouseInput ) );
+	}
+	
+/*
+=================================================
+	Unregister
+=================================================
+*/
+	void WinObjectsConstructor::Unregister ()
+	{
+		auto	mf = GetMainSystemInstance()->GlobalSystems()->modulesFactory;
+
+		mf->UnregisterAll( WinPlatformModuleID );
+		mf->UnregisterAll( WinWindowModuleID );
+		mf->UnregisterAll( WinKeyInputModuleID );
+		mf->UnregisterAll( WinMouseInputModuleID );
+	}
+	
+/*
+=================================================
+	GetModuleIDs
+=================================================
+*/
+	OSModuleIDs WinObjectsConstructor::GetModuleIDs ()
+	{
+		OSModuleIDs	ids;
+		ids.platform	= WinPlatformModuleID;
+		ids.window		= WinWindowModuleID;
+		ids.keyInput	= WinKeyInputModuleID;
+		ids.mouseInput	= WinMouseInputModuleID;
+		return ids;
+	}
+
+/*
+=================================================
+	CreateWinPlatform
+=================================================
+*/
+	ModulePtr WinObjectsConstructor::CreateWinPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci)
+	{
+		return New< WinPlatform >( gs, ci );
 	}
 
 

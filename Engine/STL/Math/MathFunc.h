@@ -3,6 +3,7 @@
 #pragma once
 
 #include "MathTypes.h"
+#include "Engine/STL/CompileTime/TypeListHelpers.h"
 
 namespace GX_STL
 {
@@ -46,7 +47,6 @@ namespace GXMath
 	
 	template <typename T>			constexpr bool		All (const T& x);
 	template <typename T>			constexpr bool		Any (const T& x);
-	//template <typename T>				inline bool		Most (const T& x);
 	template <typename T>			constexpr bool		IsZero (const T& x);
 	template <typename T>			constexpr bool		IsNotZero (const T& x);
 	template <typename T>			constexpr bool		Equals (const T& a, const T& b);
@@ -104,17 +104,17 @@ namespace GXMath
 	// Other
 	//
 
-	template <typename T>				inline T		Floor (const T& x);
-	template <typename T>				inline T		Ceil (const T& x);
-	template <typename T>				inline T		Fract (const T& x);
-	template <typename T>				inline T		Trunc (const T& x);
+	template <typename T>				constexpr T		Floor (const T& x);
+	template <typename T>				constexpr T		Ceil (const T& x);
+	template <typename T>				constexpr T		Fract (const T& x);
+	template <typename T>				constexpr T		Trunc (const T& x);
 
-	template <typename T>				inline T		Round (const T& x);
-	template <typename R, typename T>	inline R		RoundTo (const T& x);
-	template <typename T>				inline T		RoundTo (const T& x, const T& base);
+	template <typename T>				constexpr T		Round (const T& x);
+	template <typename R, typename T>	constexpr R		RoundTo (const T& x);
+	template <typename T>				constexpr T		RoundTo (const T& x, const T& base);
 
-	template <typename T>				inline bool		IsOdd (const T& x);
-	template <typename T>				inline bool		IsEven (const T& x);
+	template <typename T>				constexpr bool	IsOdd (const T& x);
+	template <typename T>				constexpr bool	IsEven (const T& x);
 
 	template <typename T>				inline T		SafeDiv (const T& left, const T& right, const T& defVal);
 
@@ -164,6 +164,12 @@ namespace GXMath
 	//
 	
 	template <typename T>			constexpr T AlignToLarge (const T& value, usize align);
+
+	
+	template <typename A, typename B>				typename CompileTime::MainType<A,B>		Min (const A& a, const B& b);
+	template <typename A, typename B>				typename CompileTime::MainType<A,B>		Max (const A& a, const B& b);
+	template <typename A, typename B, typename C>	typename CompileTime::MainType<A,B,C>	Wrap (const A& value, const B& minValue, const C& maxValue);
+	template <typename A, typename B>				typename CompileTime::MainType<A,B>		Mod (const A& left, const B& right);
 
 
 }	// GXMath

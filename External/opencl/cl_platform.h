@@ -476,7 +476,7 @@ typedef unsigned int cl_GLenum;
 #if defined( __GNUC__) && ! defined( __STRICT_ANSI__ )
 #define  __CL_HAS_ANON_STRUCT__ 1
 #define  __CL_ANON_STRUCT__ __extension__
-#elif defined( _WIN32) && (_MSC_VER >= 1500)
+#elif defined( _WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1500)
    /* Microsoft Developer Studio 2008 supports anonymous structs, but
     * complains by default. */
 #define  __CL_HAS_ANON_STRUCT__ 1
@@ -1292,7 +1292,7 @@ typedef union
 
 #undef __CL_HAS_ANON_STRUCT__
 #undef __CL_ANON_STRUCT__
-#if defined( _WIN32) && (_MSC_VER >= 1500)
+#if defined( _WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1500)
 #pragma warning( pop )
 #endif
 

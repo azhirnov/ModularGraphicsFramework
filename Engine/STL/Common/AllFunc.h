@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Engine/STL/Common/TypeId.h"
-#include "Engine/STL/Math/MathFunc.h"
 #include "Engine/STL/CompileTime/PlainOldDataType.h"
 
 namespace GX_STL
@@ -67,3 +66,5 @@ namespace GXTypes
 	
 }	// GXTypes
 }	// GX_STL
+
+#include "Engine/STL/Math/MathFunc.h"

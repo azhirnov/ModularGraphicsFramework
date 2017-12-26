@@ -739,7 +739,7 @@ namespace GXScript
 	template <typename OutType, typename ...InTypes>
 	inline typename ClassBinder<T>::OperatorBinder &  ClassBinder<T>::OperatorBinder::Index ()
 	{
-		if ( TypeTraits::IsConst<OutType>() )
+		if_constexpr( TypeTraits::IsConst<OutType>() )
 			return Index( static_cast< OutType (T::*) (InTypes...) const >( &T::operator [] ) );
 		else
 			return Index( static_cast< OutType (T::*) (InTypes...) >( &T::operator [] ) );

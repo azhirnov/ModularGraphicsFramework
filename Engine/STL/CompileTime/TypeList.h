@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -61,7 +61,7 @@ namespace CompileTime
 		struct _Minimize {
 			using type = typename _ctime_hidden_::TTypeList_CompileTimeReverseForEach<
 							Self, Self, 0,
-							typename _ctime_hidden_::TTypeList_RemoveDuplicatesFunc::Build,
+							_ctime_hidden_::TTypeList_RemoveDuplicatesFunc::template Build,
 							TypeList<TypeListEnd> >::type;
 		};
 
@@ -114,10 +114,10 @@ namespace CompileTime
 		using SubList	= typename _ctime_hidden_::TTypeList_SubList< Self, First, ListCount >::type;
 
 		// PopBack
-		using PopBack	= typename SubList< 0, Count-1 >;
+		using PopBack	= SubList< 0, Count-1 >;
 
 		// PopFront
-		using PopFront	= typename SubList< 1, Count-1 >;
+		using PopFront	= SubList< 1, Count-1 >;
 
 		// Append
 		template <typename Typelist>
@@ -125,7 +125,7 @@ namespace CompileTime
 
 		// Erase
 		template <typename Type>
-		using Erase		= typename ReverseForEach< typename _ctime_hidden_::TTypeList_EraseFunc< Type >::Build >;
+		using Erase		= ReverseForEach< _ctime_hidden_::TTypeList_EraseFunc< Type >::template Build >;
 
 		// Minimize
 		using Minimize	= _Minimize;
@@ -133,7 +133,7 @@ namespace CompileTime
 
 		// FirstIndexOf
 		template <typename Type>
-		static constexpr usize	FirstIndexOf	= ForEach< _ctime_hidden_::TTypeList_GetFirstIndexOfType< Type >::Func,
+		static constexpr usize	FirstIndexOf	= ForEach< _ctime_hidden_::TTypeList_GetFirstIndexOfType< Type >::template Func,
 															ValueToType< usize, usize(-1) > >::value;
 		// IndexOf
 		template <typename Type>
@@ -141,19 +141,20 @@ namespace CompileTime
 		
 		// LastIndexOf
 		template <typename Type>
-		static constexpr usize	LastIndexOf		= ForEach< _ctime_hidden_::TTypeList_GetLastIndexOfType< Type >::Func,
+		static constexpr usize	LastIndexOf		= ForEach< _ctime_hidden_::TTypeList_GetLastIndexOfType< Type >::template Func,
 															ValueToType< usize, usize(-1) > >::value;
 		// HasType
 		template <typename Type>
-		static constexpr bool	HasType			= ( IndexOf< Type > != usize(-1) );
+		static constexpr bool	HasType			= ( IndexOf< Type > != UMax );
 
 		// Equal
 		template <typename TTypeList>
 		static constexpr bool	Equal			= (Count == TTypeList::Count) and
-													ForEach< _ctime_hidden_::TTypeList_Equal< TTypeList >::Func, ValueToType<bool, true> >::value;
+													ForEach< _ctime_hidden_::TTypeList_Equal< TTypeList >::template Func,
+															 ValueToType<bool, true> >::value;
 		// IsType
 		template <usize Index, typename Type>
-		static constexpr bool	IsType			= IsSameTypes< typename Get< Index >, Type >;
+		static constexpr bool	IsType			= IsSameTypes< Get< Index >, Type >;
 
 
 		// MaxSizeOf
@@ -164,7 +165,7 @@ namespace CompileTime
 
 		// AllAreSameAs
 		template <typename Type>
-		static constexpr bool	AllAreSameAs	= ForEach< _ctime_hidden_::TTypeList_IsAllSameAs<Type>::Func,
+		static constexpr bool	AllAreSameAs	= ForEach< _ctime_hidden_::TTypeList_IsAllSameAs<Type>::template Func,
 															ValueToType< bool, true > >::value;
 		// AllAreSame
 		static constexpr bool	AllAreSame		= AllAreSameAs< Front >;

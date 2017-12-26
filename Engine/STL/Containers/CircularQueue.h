@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -468,8 +468,8 @@ namespace GXTypes
 
 		if ( Empty() )
 		{
-			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray, count );
-			else							Strategy_t::Move( _memory.Pointer(), (T*)pArray, count );
+			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray, count );
+			else									Strategy_t::Move( _memory.Pointer(), (T*)pArray, count );
 
 			_first = 0;
 			_end   = count;
@@ -477,10 +477,10 @@ namespace GXTypes
 		else
 		if ( _first < _end )
 		{
-			usize	count = GXMath::Min( count, _first );
+			count = GXMath::Min( count, _first );
 
-			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - count, pArray + count - count, count );
-			else							Strategy_t::Move( _memory.Pointer() + _first - count, (T*)pArray + count - count, count );
+			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - count, pArray + count - count, count );
+			else									Strategy_t::Move( _memory.Pointer() + _first - count, (T*)pArray + count - count, count );
 
 			_first -= count;
 			
@@ -489,14 +489,14 @@ namespace GXTypes
 				count   = count - count;
 				_first = _size - count;
 
-				if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first, pArray, count );
-				else							Strategy_t::Move( _memory.Pointer() + _first, (T*)pArray, count );
+				if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first, pArray, count );
+				else									Strategy_t::Move( _memory.Pointer() + _first, (T*)pArray, count );
 			}
 		}
 		else
 		{
-			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - count, pArray, count );
-			else							Strategy_t::Move( _memory.Pointer() + _first - count, (T*)pArray, count );
+			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - count, pArray, count );
+			else									Strategy_t::Move( _memory.Pointer() + _first - count, (T*)pArray, count );
 
 			_first -= count;
 		}
@@ -522,8 +522,8 @@ namespace GXTypes
 
 		if ( Empty() )
 		{
-			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray, count );
-			else							Strategy_t::Move( _memory.Pointer(), (T*)pArray, count );
+			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray, count );
+			else									Strategy_t::Move( _memory.Pointer(), (T*)pArray, count );
 
 			_first = 0;
 			_end   = count;
@@ -533,8 +533,8 @@ namespace GXTypes
 		{
 			usize	cnt = GXMath::Min( count, _size - _end );
 
-			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, cnt );
-			else							Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, cnt );
+			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, cnt );
+			else									Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, cnt );
 
 			_end += cnt;
 			
@@ -542,14 +542,14 @@ namespace GXTypes
 			{
 				_end = count - cnt;
 
-				if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray + cnt, count - cnt );
-				else							Strategy_t::Move( _memory.Pointer(), (T*)pArray + cnt, count - cnt );
+				if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray + cnt, count - cnt );
+				else									Strategy_t::Move( _memory.Pointer(), (T*)pArray + cnt, count - cnt );
 			}
 		}
 		else
 		{
-			if ( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, count );
-			else							Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, count );
+			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, count );
+			else									Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, count );
 
 			_end += count;
 		}
@@ -896,11 +896,9 @@ namespace GXTypes
 
 		Result_t operator () (const Key_t &x) const noexcept
 		{
-			typedef ArrayCRef<T>	Buf_t;
-
-			Base_t::Key_t	part0;
-			Base_t::Key_t	part1;
-			Base_t			hasher;
+			typename Base_t::Key_t	part0;
+            typename Base_t::Key_t	part1;
+			Base_t			        hasher;
 
 			x.GetParts( part0, part1 );
 

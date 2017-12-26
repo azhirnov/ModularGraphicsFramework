@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -13,9 +13,12 @@ namespace Base
 	{
 		enum type
 		{
+			// 0 - reserved
 			Global	= 1,
 			Thread,
 			Object,
+
+			// free to use: Object+1 .. _Mask
 
 			_Mask	= CompileTime::_ctime_hidden_::_StringToID_Helper::MASK,
 
@@ -43,7 +46,7 @@ namespace GXTypes
 	ToString (GModID)
 =================================================
 */
-	inline TypeTraits::ResultOf< decltype(&Engine::Base::GModID::ToString) > ToString (Engine::Base::GModID::type value)
+	inline decltype(auto) ToString (Engine::Base::GModID::type value)
 	{
 		return Engine::Base::GModID::ToString( value );
 	}

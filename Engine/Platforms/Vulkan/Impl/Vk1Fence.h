@@ -15,7 +15,7 @@ namespace PlatformVK
 	//
 	// Vulan Fence
 	//
-
+/*
 	class Vk1Fence final : public Vk1BaseObject
 	{
 	// variables
@@ -106,7 +106,7 @@ namespace PlatformVK
 	};
 
 	SHARED_POINTER( Vk1Fence );
-
+	*/
 
 }	// PlatformVK
 }	// Engine

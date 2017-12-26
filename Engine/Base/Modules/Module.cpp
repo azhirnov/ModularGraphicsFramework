@@ -108,7 +108,7 @@ namespace Base
 		Message< ModuleMsg::OnModuleAttached >	on_attached{ this, name, unit };
 
 		_SendForEachAttachments( on_attached );
-		_SendEvent( on_attached, false );
+		_SendUncheckedEvent( on_attached );
 
 		return true;
 	}
@@ -129,7 +129,7 @@ namespace Base
 				Message< ModuleMsg::OnModuleDetached >	on_detached{ this, _attachments[i].first, unit };
 
 				_SendForEachAttachments( on_detached );
-				_SendEvent( on_detached, false );
+				_SendUncheckedEvent( on_detached );
 
 				_attachments.Erase( i );
 				return true;
@@ -219,9 +219,7 @@ namespace Base
 		}
 		else
 		{
-			auto	task_mod = GlobalSystems()->Get< TaskModule >();
-
-			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( GlobalSystems()->taskModule->Send( Message< ModuleMsg::PushAsyncMessage >{
 						AsyncMessage{	LAMBDA( mngr = _manager, self = ModuleWPtr(this) ) (GlobalSystemsRef)
 										{
 											mngr->Send< ModuleMsg::RemoveFromManager >({ self });
@@ -255,7 +253,7 @@ namespace Base
 			if ( mngr->GetThreadID() == this->GetThreadID() )
 			{
 				// single-thread optimization
-				SendTo< ModuleMsg::AddToManager >( mngr, { this } );
+				CHECK( SendTo< ModuleMsg::AddToManager >( mngr, { this } ) );
 
 				_SetManager( mngr );
 				return true;
@@ -266,10 +264,10 @@ namespace Base
 		else
 		// find manager by moduleID and attach
 		{
-			ASSERT( id != UntypedID_t(0) or id != UntypedID_t(-1) );
+			ASSERT( id != UntypedID_t(0) and id != UntypedID_t(-1) );
 
-			ModulePtr	where =	TModID::_ID == (GetModuleID() & TModID::_IDMask) ?  ModulePtr( GlobalSystems()->Get<MainSystem>() ) :
-								OModID::_ID == (GetModuleID() & OModID::_IDMask) ?  ModulePtr( GlobalSystems()->Get<ParallelThread>() ) :
+			ModulePtr	where =	TModID::_ID == (GetModuleID() & TModID::_IDMask) ?  ModulePtr( GlobalSystems()->mainSystem.Ptr() ) :
+								OModID::_ID == (GetModuleID() & OModID::_IDMask) ?  ModulePtr( GlobalSystems()->parallelThread.Ptr() ) :
 								null;
 			CHECK_ERR( where );
 

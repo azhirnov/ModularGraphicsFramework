@@ -17,7 +17,7 @@ namespace GXMath
 	
 	struct DefaultRandomEngine
 	{
-		uint operator () ()	const	{ return rand(); }
+		uint operator () ()	const	{ return uint(rand()); }
 		uint Max()			const	{ return RAND_MAX; }
 	};
 

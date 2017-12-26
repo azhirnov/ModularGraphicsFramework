@@ -5,7 +5,7 @@
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
-#include "Engine/Platforms/OpenCL/OpenCLContext.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 #if defined( COMPUTE_API_OPENCL )
 
@@ -106,7 +106,7 @@ namespace PlatformCL
 =================================================
 */
 	CL2CommandBuilder::CL2CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLCommandBuilderModuleID, ~0u }, &_msgTypes, &_eventTypes )
+		CL2BaseModule( gs, ModuleConfig{ CLCommandBuilderModuleID, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "CL2CommandBuilder" );
 
@@ -239,7 +239,7 @@ namespace PlatformCL
 		else
 		// create new command buffer
 		{
-			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 							CLCommandBufferModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
@@ -454,7 +454,7 @@ namespace PlatformCL
 	
 namespace Platforms
 {
-	ModulePtr OpenCLContext::_CreateCL2CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
 	{
 		return New< PlatformCL::CL2CommandBuilder >( gs, ci );
 	}

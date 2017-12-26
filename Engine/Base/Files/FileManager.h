@@ -17,7 +17,7 @@ namespace Base
 	// File System
 	//
 
-	class _ENGINE_BASE_EXPORT_ FileManager final : public BaseObject
+	class FileManager final : public BaseObject
 	{
 	// methods
 	public:

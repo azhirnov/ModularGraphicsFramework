@@ -24,7 +24,7 @@ namespace PlatformGL
 		BaseObject( gs ),
 		_colorPixelFormat( EPixelFormat::Unknown ),
 		_depthStencilPixelFormat( EPixelFormat::Unknown ),
-		_currentImageIndex( -1 ),	_swapchainLength( 1 ),
+		_currentImageIndex( UMax ),	_swapchainLength( 1 ),
 		_numExtensions( 0 ),		_initialized( false ),
 		_frameStarted( false ),		_vulkanCompatibility( true )
 	{
@@ -59,11 +59,10 @@ namespace PlatformGL
 		_depthStencilPixelFormat = depthStencilFormat;
 		_samples				 = samples;
 
-		CHECK_ERR( _CreateCommandBuffer() );
 		CHECK_ERR( _CreateRenderPass() );
 		CHECK_ERR( _CreateFramebuffer() );
 
-		ModuleUtils::Initialize({ _framebuffer, _renderPass, _commandBuilder });
+		ModuleUtils::Initialize({ _framebuffer, _renderPass });
 
 		_initialized = true;
 		return true;
@@ -80,11 +79,10 @@ namespace PlatformGL
 		_depthStencilPixelFormat = Uninitialized;
 		_samples				 = Uninitialized;
 
-		_commandBuilder		= null;
 		_framebuffer		= null;
 		_renderPass			= null;
 
-		_currentImageIndex	= -1;
+		_currentImageIndex	= UMax;
 		_swapchainLength	= 1;
 
 		_numExtensions		= 0;
@@ -116,8 +114,8 @@ namespace PlatformGL
 	_StaticDebugCallback
 =================================================
 */
-	void GL4Device::_StaticDebugCallback (GLenum source, GLenum type, GLuint id, GLenum severity,
-										   GLsizei length, const GLchar* message, const void* userParam)
+	void GL4Device::_StaticDebugCallback (GLenum source, GLenum type, GLuint /*id*/, GLenum severity,
+										   GLsizei length, const GLchar* message, const void* /*userParam*/)
 	{
 		String	str;
 
@@ -274,24 +272,6 @@ namespace PlatformGL
 		GL_CALL( glObjectPtrLabel( ptr, GLsizei(name.Length()), name.ptr() ) );
 		return true;
 	}
-
-/*
-=================================================
-	_CreateCommandBuffer
-=================================================
-*/
-	bool GL4Device::_CreateCommandBuffer ()
-	{
-		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
-			GLCommandBuilderModuleID,
-			GlobalSystems(),
-			CreateInfo::GpuCommandBuilder{},
-			OUT _commandBuilder )
-		);
-
-		ModuleUtils::Initialize( {_commandBuilder}, this );
-		return true;
-	}
 	
 /*
 =================================================
@@ -303,7 +283,7 @@ namespace PlatformGL
 		CHECK_ERR( not _renderPass );
 
 		ModulePtr	module;
-		CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 					GLRenderPassModuleID,
 					GlobalSystems(),
 					CreateInfo::GpuRenderPass{

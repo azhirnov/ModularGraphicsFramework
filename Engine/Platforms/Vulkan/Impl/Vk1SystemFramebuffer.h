@@ -83,7 +83,7 @@ namespace PlatformVK
 	Vk1Device::Vk1SystemFramebuffer::Vk1SystemFramebuffer (GlobalSystemsRef gs) :
 		Vk1BaseModule( gs, ModuleConfig{ VkFramebufferModuleID, 1 }, &_msgTypes, &_eventTypes ),
 		_framebufferId( VK_NULL_HANDLE ),
-		_index( ~0u )
+		_index( UMax )
 	{
 		SetDebugName( "Vk1SystemFramebuffer" );
 
@@ -124,7 +124,7 @@ namespace PlatformVK
 */
 	bool Vk1Device::Vk1SystemFramebuffer::CreateFramebuffer (const uint2 &surfaceSize, uint index,
 															 vk::VkRenderPass renderPass,
-															 vk::VkImageView colorView, EPixelFormat::type colorFormat,
+															 vk::VkImageView colorView, EPixelFormat::type /*colorFormat*/,
 															 vk::VkImageView depthStencilView, EPixelFormat::type depthStencilFormat,
 															 EImage::type imageType)
 	{
@@ -228,7 +228,7 @@ namespace PlatformVK
 
 		_framebufferId	= VK_NULL_HANDLE;
 		_descr			= Uninitialized;
-		_index			= -1;
+		_index			= UMax;
 	}
 
 

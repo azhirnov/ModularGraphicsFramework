@@ -5,7 +5,7 @@
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -94,6 +94,7 @@ namespace PlatformGL
 	private:
 		UsedResources_t			_resources;
 		CommandArray_t			_commands;
+		BinaryArray				_bufferData;	// used to store data for UpdateBuffer command
 		ModulePtr				_cmdBuffer;		// current command buffer
 		EScope					_scope;
 		DynamicStates_t			_dynamicStates;
@@ -165,7 +166,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4CommandBuilder::GL4CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
-		GL4BaseModule( gs, ModuleConfig{ GLCommandBuilderModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLCommandBuilderModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_scope( EScope::None )
 	{
 		SetDebugName( "GL4CommandBuilder" );
@@ -324,13 +325,13 @@ namespace PlatformGL
 		else
 		// create new command buffer
 		{
-			CHECK_ERR( GlobalSystems()->Get< ModulesFactory >()->Create(
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 							GLCommandBufferModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
 								_GetManager(),
 								this,
-								CommandBufferDescriptor{ msg->isSecondary, true }
+								CommandBufferDescriptor{ msg->flags }
 							},
 							OUT _cmdBuffer )
 			);
@@ -359,7 +360,7 @@ namespace PlatformGL
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		
-		SendTo( _cmdBuffer, Message< GpuMsg::SetGLCommandBufferQueue >{ RVREF(_commands) } );
+		SendTo( _cmdBuffer, Message< GpuMsg::SetGLCommandBufferQueue >{ RVREF(_commands), RVREF(_bufferData) } );
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferDependency >{ RVREF(_resources) } );
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Executable } );
 
@@ -370,6 +371,7 @@ namespace PlatformGL
 
 		_resources.Clear();
 		_commands.Clear();
+		_bufferData.Clear();
 
 		return true;
 	}
@@ -826,8 +828,10 @@ namespace PlatformGL
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
+
+		_commands.PushBack({ GpuMsg::GLCmdUpdateBuffer{ msg.Data(), _bufferData.Size() }, __FILE__, __LINE__ });
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_bufferData.Append( msg->data );
 		return true;
 	}
 	
@@ -909,7 +913,7 @@ namespace PlatformGL
 	
 namespace Platforms
 {
-	ModulePtr OpenGLContext::_CreateGL4CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
 	{
 		return New< PlatformGL::GL4CommandBuilder >( gs, ci );
 	}

@@ -188,7 +188,8 @@ namespace GpuMsg
 		// 'offset' - offset in global memory space
 
 		WriteToGpuMemory () {}
-		explicit WriteToGpuMemory (BinArrayCRef data, BytesU offset = 0_b) : WriteToStream(data, offset) {}
+		explicit WriteToGpuMemory (BinArrayCRef data, Bytes<uint> offset = 0_b) : WriteToStream(data, offset) {}
+		explicit WriteToGpuMemory (BinArrayCRef data, Bytes<ulong> offset) : WriteToStream(data, offset) {}
 		template <typename T>			explicit WriteToGpuMemory (ArrayCRef<T> arr, BytesU offset = 0_b) : WriteToStream(arr, offset) {}
 		template <typename B, usize I>	explicit WriteToGpuMemory (const B (&arr)[I], BytesU offset = 0_b) : WriteToStream(arr, offset) {}
 	};

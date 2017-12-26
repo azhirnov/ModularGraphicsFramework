@@ -342,10 +342,10 @@ namespace PlatformGL
 		CHECK_ERR( value[ ESamplerBorderColor::Int ] );
 		
 		if ( value[ ESamplerBorderColor::Black ] )
-			intColor = uint4(0, 0, 0, ~0u);
+			intColor = uint4(0u, 0u, 0u, UMax);
 		else
 		if ( value[ ESamplerBorderColor::White ] )
-			intColor = uint4(~0u);
+			intColor = uint4(uint(UMax));
 		else
 		//if ( value[ ESamplerBorderColor::Transparent ] )
 			intColor = uint4(0);

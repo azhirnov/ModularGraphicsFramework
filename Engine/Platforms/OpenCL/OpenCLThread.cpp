@@ -2,8 +2,8 @@
 
 #include "Engine/Platforms/Shared/GPU/Thread.h"
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/OpenCL/OpenCLContext.h"
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 #if defined( COMPUTE_API_OPENCL )
 
@@ -223,6 +223,7 @@ namespace Platforms
 			case "CL 1.2"_GAPI :	version = 120;	break;
 			case "CL 2.0"_GAPI :	version = 200;	break;
 			case "CL 2.1"_GAPI :	version = 210;	break;
+			case GAPI::type(0) :	version = 210;	break;
 			default :				RETURN_ERR( "unsupported OpenCL version" );
 		}
 
@@ -346,13 +347,15 @@ namespace Platforms
 		msg->result.Set({ &_device });
 		return true;
 	}
+//-----------------------------------------------------------------------------
+
 
 /*
 =================================================
-	_CreateOpenCLThread
+	CreateOpenCLThread
 =================================================
 */
-	ModulePtr OpenCLContext::_CreateOpenCLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateOpenCLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
 		return New< OpenCLThread >( gs, ci );
 	}

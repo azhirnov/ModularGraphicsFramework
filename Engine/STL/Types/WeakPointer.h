@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -38,7 +38,7 @@ namespace GXTypes
 		friend class WeakPointer;
 
 	// types
-	private:
+	public:
 		using Self			= WeakPointer< T, B, WS, SPS >;
 		using Value_t		= T*;
 
@@ -90,7 +90,7 @@ namespace GXTypes
 			STATIC_ASSERT(( CompileTime::IsBaseOf< B, T > ));
 		}
 
-		forceinline WeakPointer (std::nullptr_t)
+		forceinline WeakPointer (NullPtr_t)
 		{}
 
 		template <typename T2>
@@ -116,7 +116,7 @@ namespace GXTypes
 		template <typename T2>
 		forceinline WeakPointer (const WeakPointer<T2,B,WS,SPS> &other) : _counter(other._counter)
 		{
-			_CheckCast<T>( right._ptr );
+			_CheckCast<T>( other._ptr );
 
 			_ptr = PointerCast<T>(other._ptr);
 			_Inc();

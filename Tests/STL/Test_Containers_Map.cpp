@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 #include "Debug.h"
 
 using namespace GX_STL;
@@ -17,7 +17,7 @@ static void Map_Test1 ()
 	}
 
 	FORv( i,  1, m ) {
-		ASSERT( m[i-1].first < m[i].first );
+		TEST( m[i-1].first < m[i].first );
 	}
 }
 
@@ -45,9 +45,9 @@ static void Map_Test2 ()
 		}
 	}
 
-	ASSERT( Elem1_t::CheckStatistic() );
-	ASSERT( Elem2_t::CheckStatistic() );
-	ASSERT( Elem3_t::CheckStatistic() );
+	TEST( Elem1_t::CheckStatistic() );
+	TEST( Elem2_t::CheckStatistic() );
+	TEST( Elem3_t::CheckStatistic() );
 }
 
 
@@ -73,9 +73,9 @@ static void Map_Test3 ()
 	m.Add( "333", ValueWithUnion( 4.0, "ccc" ) );
 
 	Map_t::iterator	iter;
-	ASSERT( m.Find( "222", iter ) );
-	ASSERT( iter->second.u.Is<float>() );
-	ASSERT( iter->second.s == "bbb" );
+	TEST( m.Find( "222", iter ) );
+	TEST( iter->second.u.Is<float>() );
+	TEST( iter->second.s == "bbb" );
 }
 
 

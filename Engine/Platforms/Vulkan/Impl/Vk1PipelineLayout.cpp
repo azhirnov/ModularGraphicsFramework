@@ -17,7 +17,7 @@ namespace PlatformVK
 */
 	Vk1PipelineLayout::Vk1PipelineLayout (Ptr<Vk1Device> dev) :
 		Vk1BaseObject( dev ),
-		_layoutId( VK_NULL_HANDLE )
+		_descriptorId( VK_NULL_HANDLE ),	_layoutId( VK_NULL_HANDLE )
 	{
 	}
 	
@@ -46,8 +46,8 @@ namespace PlatformVK
 		
 		VkPipelineLayoutCreateInfo			layout_info = {};
 		layout_info.sType					= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		layout_info.setLayoutCount			= (uint) _descriptorIds.Count();
-		layout_info.pSetLayouts				= _descriptorIds.RawPtr();
+		layout_info.setLayoutCount			= 1u;
+		layout_info.pSetLayouts				= &_descriptorId;
 		layout_info.pushConstantRangeCount	= (uint) _pushConstRanges.Count();
 		layout_info.pPushConstantRanges		= _pushConstRanges.RawPtr();
 
@@ -78,12 +78,11 @@ namespace PlatformVK
 	// variables
 		DescriptorBindings&		bindings;
 		PushConstantRanges&		pushConstRanges;
-		const uint				set;
 
 
 	// methods
-		_CreateDescriptor_Func (OUT DescriptorBindings &bindings, OUT PushConstantRanges &pushConstRanges, uint set) :
-			bindings( bindings ), pushConstRanges( pushConstRanges ), set( set )
+		_CreateDescriptor_Func (OUT DescriptorBindings &bindings, OUT PushConstantRanges &pushConstRanges) :
+			bindings( bindings ), pushConstRanges( pushConstRanges )
 		{}
 
 
@@ -91,13 +90,10 @@ namespace PlatformVK
 		{
 			ASSERT( tex.textureType != EImage::Buffer );	// type must be VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER or VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER
 
-			if ( set != tex.descriptorSet )
-				return;
-
 			VkDescriptorSetLayoutBinding	bind = {};
 			bind.descriptorType		= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			bind.stageFlags			= Vk1Enum( tex.stageFlags );
-			bind.binding			= tex.binding;
+			bind.binding			= tex.uniqueIndex;
 			bind.descriptorCount	= 1;
 
 			bindings.PushBack( bind );
@@ -106,13 +102,10 @@ namespace PlatformVK
 
 		void operator () (const SamplerUniform &samp) const
 		{
-			if ( set != samp.descriptorSet )
-				return;
-
 			VkDescriptorSetLayoutBinding	bind = {};
 			bind.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLER;
 			bind.stageFlags			= Vk1Enum( samp.stageFlags );
-			bind.binding			= samp.binding;
+			bind.binding			= samp.uniqueIndex;
 			bind.descriptorCount	= 1;
 
 			bindings.PushBack( bind );
@@ -121,13 +114,10 @@ namespace PlatformVK
 
 		void operator () (const ImageUniform &img) const
 		{
-			if ( set != img.descriptorSet )
-				return;
-
 			VkDescriptorSetLayoutBinding	bind = {};
 			bind.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			bind.stageFlags			= Vk1Enum( img.stageFlags );
-			bind.binding			= img.binding;
+			bind.binding			= img.uniqueIndex;
 			bind.descriptorCount	= 1;
 
 			bindings.PushBack( bind );
@@ -136,13 +126,10 @@ namespace PlatformVK
 
 		void operator () (const UniformBuffer &buf) const
 		{
-			if ( set != buf.descriptorSet )
-				return;
-
 			VkDescriptorSetLayoutBinding	bind = {};
 			bind.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;	// TODO: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
 			bind.stageFlags			= Vk1Enum( buf.stageFlags );
-			bind.binding			= buf.binding;
+			bind.binding			= buf.uniqueIndex;
 			bind.descriptorCount	= 1;
 
 			bindings.PushBack( bind );
@@ -151,13 +138,10 @@ namespace PlatformVK
 
 		void operator () (const StorageBuffer &buf) const
 		{
-			if ( set != buf.descriptorSet )
-				return;
-
 			VkDescriptorSetLayoutBinding	bind = {};
 			bind.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;	// TODO: VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
 			bind.stageFlags			= Vk1Enum( buf.stageFlags );
-			bind.binding			= buf.binding;
+			bind.binding			= buf.uniqueIndex;
 			bind.descriptorCount	= 1;
 
 			bindings.PushBack( bind );
@@ -166,9 +150,6 @@ namespace PlatformVK
 
 		void operator () (const PushConstant &pc) const
 		{
-			if ( set != 0 )
-				return;
-
 			VkPushConstantRange		range = {};
 			range.stageFlags	= Vk1Enum( pc.stageFlags );
 			range.offset		= (uint) pc.offset;
@@ -180,9 +161,6 @@ namespace PlatformVK
 
 		void operator () (const SubpassInput &sp) const
 		{
-			if ( set != sp.descriptorSet )
-				return;
-			
 			WARNING( "not supported" );
 			// TODO: VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
 		}
@@ -214,30 +192,25 @@ namespace PlatformVK
 */
 	bool Vk1PipelineLayout::_CreateLayoutDescriptors (const PipelineLayoutDescriptor &descr)
 	{
-		DescriptorBindings	descr_binding;
-
 		CHECK_ERR( descr.GetUniforms().Count() <= DescriptorBindings::MemoryContainer_t::SIZE );
+		CHECK_ERR( _descriptorId == VK_NULL_HANDLE );
 
-		for (usize set = 0; set <= descr.MaxDescriptorSet(); ++set)
-		{
-			_CreateDescriptor_Func	func( OUT descr_binding, OUT _pushConstRanges, uint(set) );
+		DescriptorBindings		descr_binding;
+		_CreateDescriptor_Func	func( OUT descr_binding, OUT _pushConstRanges );
 
-			FOR( i, descr.GetUniforms() ) {
-				descr.GetUniforms()[i].Apply( func );
-			}
-
-			CHECK_ERR( not descr_binding.Empty() );	// empty descriptor set is not allowed
-
-			VkDescriptorSetLayoutCreateInfo	descriptor_info		= {};
-			VkDescriptorSetLayout			descriptor_layout	= VK_NULL_HANDLE;
-
-			descriptor_info.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			descriptor_info.pBindings		= descr_binding.RawPtr();
-			descriptor_info.bindingCount	= (uint) descr_binding.Count();
-
-			VK_CHECK( vkCreateDescriptorSetLayout( GetVkDevice(), &descriptor_info, null, OUT &descriptor_layout ) );
-			_descriptorIds.PushBack( descriptor_layout );
+		FOR( i, descr.GetUniforms() ) {
+			descr.GetUniforms()[i].Apply( func );
 		}
+
+		CHECK_ERR( not descr_binding.Empty() );	// empty descriptor set is not allowed
+
+		VkDescriptorSetLayoutCreateInfo	descriptor_info = {};
+
+		descriptor_info.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		descriptor_info.pBindings		= descr_binding.RawPtr();
+		descriptor_info.bindingCount	= (uint) descr_binding.Count();
+
+		VK_CHECK( vkCreateDescriptorSetLayout( GetVkDevice(), &descriptor_info, null, OUT &_descriptorId ) );
 		return true;
 	}
 	
@@ -250,13 +223,11 @@ namespace PlatformVK
 	{
 		auto	device = GetVkDevice();
 
-		if ( device == VK_NULL_HANDLE )
-			return;
-
-		FOR( i, _descriptorIds ) {
-			vkDestroyDescriptorSetLayout( device, _descriptorIds[i], null );
+		if ( device != VK_NULL_HANDLE and _descriptorId != VK_NULL_HANDLE ) {
+			vkDestroyDescriptorSetLayout( device, _descriptorId, null );
 		}
-		_descriptorIds.Clear();
+
+		_descriptorId = VK_NULL_HANDLE;
 	}
 
 /*

@@ -1,11 +1,9 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
-
-#pragma once
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -146,7 +144,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4GraphicsPipeline::GL4GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci) :
-		GL4BaseModule( gs, ModuleConfig{ GLGraphicsPipelineModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLGraphicsPipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_pipelineId( 0 ),				_vertexAttribs( 0 ),
 		_descr( ci.descr ),				_shaders( ci.shaders ),
 		_renderPass( ci.renderPass )
@@ -463,7 +461,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4ComputePipeline::GL4ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
-		GL4BaseModule( gs, ModuleConfig{ GLComputePipelineModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLComputePipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_pipelineId( 0 ),		_programId( 0 ),
 		_descr( ci.descr ),		_shaders( ci.shaders )
 	{
@@ -615,12 +613,12 @@ namespace PlatformGL
 
 namespace Platforms
 {
-	ModulePtr OpenGLContext::_CreateGL4GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &msg)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &msg)
 	{
 		return New< PlatformGL::GL4GraphicsPipeline >( gs, msg );
 	}
 
-	ModulePtr OpenGLContext::_CreateGL4ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &msg)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &msg)
 	{
 		return New< PlatformGL::GL4ComputePipeline >( gs, msg );
 	}

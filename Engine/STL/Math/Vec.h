@@ -29,13 +29,13 @@ namespace GXMath
 			const uint	c0 = mask | (1 << off);
 			const uint	c1 = mask | (2 << off);
 
-			return	(c == 'R' or c == 'X' ? 1 :		// X
-					 c == 'G' or c == 'Y' ? 2 :		// Y
-					 c == 'B' or c == 'Z' ? 3 :		// Z
-					 c == 'A' or c == 'W' ? 4 :		// W
-					 (hash & mask2) == c0 ? 5 :		// 0
-					 (hash & mask2) == c1 ? 6 :		// 1
-					 (hash & mask) == 0 ? 0 : -1);	// error
+			return	(c == 'R' or c == 'X' ? 1u :		// X
+					 c == 'G' or c == 'Y' ? 2u :		// Y
+					 c == 'B' or c == 'Z' ? 3u :		// Z
+					 c == 'A' or c == 'W' ? 4u :		// W
+					 (hash & mask2) == c0 ? 5u :		// 0
+					 (hash & mask2) == c1 ? 6u :		// 1
+					 (hash & mask) == 0 ? 0u : UMax);	// error
 		}
 
 		inline constexpr uint _ParseSwizzle (const Swizzle::type sw, const uint maxI = 4)
@@ -58,17 +58,11 @@ namespace GXMath
 			const uint	b3 = a0 << ((a1?4:0) + (a2?4:0) + (a3?4:0));
 
 			return	b0 | b1 | b2 | b3 |
-					((val >> (off*((a0<5?1:2) + (a1<5?1:2) + (a2<5?1:2) + (a3<5?1:2)))) ? -1 : 0) |
-					(a0 <= maxI or a0 == 5 or a0 == 6 ? 0 : -1) |
-					(a1 <= maxI or a1 == 5 or a1 == 6 ? 0 : -1) |
-					(a2 <= maxI or a2 == 5 or a2 == 6 ? 0 : -1) |
-					(a3 <= maxI or a3 == 5 or a3 == 6 ? 0 : -1);
-		}
-
-		template <usize I>
-		inline constexpr bool _Validate (const uint sw)
-		{
-			const 
+					((val >> (off*((a0<5?1:2) + (a1<5?1:2) + (a2<5?1:2) + (a3<5?1:2)))) ? UMax : 0u) |
+					(a0 <= maxI or a0 == 5 or a0 == 6 ? 0u : UMax) |
+					(a1 <= maxI or a1 == 5 or a1 == 6 ? 0u : UMax) |
+					(a2 <= maxI or a2 == 5 or a2 == 6 ? 0u : UMax) |
+					(a3 <= maxI or a3 == 5 or a3 == 6 ? 0u : UMax);
 		}
 
 		template <uint I>

@@ -7,14 +7,6 @@
 #include "Engine/Config/Engine.Version.h"
 #include "Engine/Base/Common/Defines.h"
 
-#ifdef __GX_BUILD_LIB__
-#	define _ENGINE_BASE_EXPORT_
-#elif defined( __GX_ENGINE_BASE_BUILD__ )
-#	define _ENGINE_BASE_EXPORT_		GX_DLL_EXPORT
-#else
-#	define _ENGINE_BASE_EXPORT_		GX_DLL_IMPORT
-#endif
-
 namespace Engine
 {
 	using namespace GX_STL;
@@ -22,6 +14,7 @@ namespace Engine
 
 	namespace Base
 	{
+		class BaseObject;
 		class Module;
 		class MessageHandler;
 		class TaskModule;
@@ -40,14 +33,21 @@ namespace Engine
 		SHARED_POINTER( TaskModule );
 		SHARED_POINTER( ModulesFactory );
 
-		_ENGINE_BASE_EXPORT_ Ptr<Module>  GetMainSystemInstace ();
+		Ptr<Module>  GetMainSystemInstance ();
 
 		template <typename T> struct Message;
+		
+		using TypeIdList = Runtime::TypeIdList;
 	}
 	
 	namespace ModuleMsg
 	{
 		// never use 'using namespace ModuleMsg' !!!
+	}
+
+	namespace ProfilingMsg
+	{
+		// never use 'using namespace ProfilingMsg' !!!
 	}
 
 	namespace CreateInfo
@@ -75,6 +75,10 @@ namespace Engine
 		//void UnregisterGraphics ();
 	}
 	
+	namespace Scene
+	{
+	}
+
 	namespace Audio
 	{
 	}

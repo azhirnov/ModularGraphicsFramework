@@ -60,12 +60,12 @@ namespace PlatformGL
 	GetProc
 =================================================
 */
-	void * GLWinLibrary::GetProc (StringCRef address) const
+	SharedLibFunction_t  GLWinLibrary::GetProc (StringCRef address) const
 	{
-		void * res = null;
+		SharedLibFunction_t  res = null;
 
 		if ( _getProc.IsNotNull<wglGetProcAddressProc_t>() and
-			 (res = _getProc.Get<wglGetProcAddressProc_t>()( address.cstr() )) != null )
+			 (res = ReferenceCast<SharedLibFunction_t>(_getProc.Get<wglGetProcAddressProc_t>()( address.cstr() ))) != null )
 		{
 			return res;
 		}
@@ -93,7 +93,7 @@ namespace PlatformGL
 */
 	bool GLWinLibrary::_OnInit ()
 	{
-		_getProc = (wglGetProcAddressProc_t) _lib.GetProc( "wglGetProcAddress" );
+		_getProc = ReferenceCast<wglGetProcAddressProc_t>( _lib.GetProc( "wglGetProcAddress" ) );
 		return _getProc.IsNotNull<wglGetProcAddressProc_t>();
 	}
 

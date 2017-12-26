@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -48,14 +48,14 @@ namespace GXTypes
 		template <typename T, usize I>	struct IsStaticArray< T[I] >	{ static const bool  value = true; };
 
 		template <typename T>
-		static constexpr bool	HasCountMethod = typename CompileTime::SwitchType< not IsStaticArray<T>::value,
-														CompileTime::DeferredTemplate< Detect_Count, T >,
-														CompileTime::TypeToType< CompileTime::ValueToType< bool, false >> >::type::value;
+		static constexpr bool	HasCountMethod = CompileTime::SwitchType< not IsStaticArray<T>::value,
+														typename CompileTime::DeferredTemplate< Detect_Count, T >,
+														typename CompileTime::TypeToType< CompileTime::ValueToType< bool, false >> >::type::value;
 		
 		template <typename T>
-		static constexpr bool	HasStdSizeMethod = typename CompileTime::SwitchType< not IsStaticArray<T>::value,
-														CompileTime::DeferredTemplate< Detect_size, T >,
-														CompileTime::TypeToType< CompileTime::ValueToType< bool, false >> >::type::value;
+		static constexpr bool	HasStdSizeMethod = CompileTime::SwitchType< not IsStaticArray<T>::value,
+														typename CompileTime::DeferredTemplate< Detect_size, T >,
+														typename CompileTime::TypeToType< CompileTime::ValueToType< bool, false >> >::type::value;
 	}	// _types_hidden_
 
 	template <typename Arr>

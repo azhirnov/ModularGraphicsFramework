@@ -17,7 +17,7 @@ namespace Platforms
 	// Render Pass Descriptor
 	//
 	
-	struct _ENGINE_PLATFORMS_EXPORT_ RenderPassDescriptor final : CompileTime::FastCopyable
+	struct RenderPassDescriptor final : CompileTime::FastCopyable
 	{
 		friend struct RenderPassDescrBuilder;
 
@@ -25,9 +25,6 @@ namespace Platforms
 	public:
 		using Self		= RenderPassDescriptor;
 		using Name_t	= StaticString<64>;
-
-		enum AttachmentIndex : uint {};
-		enum SubpassIndex : uint { SubpassIndexExternal = uint(1u << 31) };
 
 		static const uint	MAX_COLOR_ATTACHMENTS	= GlobalConst::Graphics_MaxColorBuffers;
 		static const uint	MAX_SUBPASSES			= GlobalConst::Graphics_MaxRenderPassSubpasses;
@@ -179,7 +176,7 @@ namespace Platforms
 	// Render Pass Descriptor Builder
 	//
 
-	struct _ENGINE_PLATFORMS_EXPORT_ RenderPassDescrBuilder final
+	struct RenderPassDescrBuilder final
 	{
 	// types
 	public:
@@ -190,10 +187,6 @@ namespace Platforms
 		using ColorAttachment_t			= RenderPassDescriptor::ColorAttachment_t;
 		using DepthStencilAttachment_t	= RenderPassDescriptor::DepthStencilAttachment_t;
 		using SubpassDependency_t		= RenderPassDescriptor::SubpassDependency_t;
-		//using SubpassIndex				= RenderPassDescriptor::SubpassIndex;
-		//using AttachmentIndex			= RenderPassDescriptor::AttachmentIndex;
-
-		//static const SubpassIndex	SubpassIndexExternal	= RenderPassDescriptor::SubpassIndexExternal;
 
 		struct SimpleBuilder;
 
@@ -266,10 +259,10 @@ namespace Platforms
 		SubpassBuilder AddSubpass (StringCRef name);
 
 		Self& AddDependency (const SubpassDependency_t &value);
-		Self& AddDependency (uint						srcPass,
+		Self& AddDependency (StringCRef					srcPass,
 							 EPipelineStage::bits		srcStage,
 							 EPipelineAccess::bits		srcAccess,
-							 uint						dstPass,
+							 StringCRef					dstPass,
 							 EPipelineStage::bits		dstStage,
 							 EPipelineAccess::bits		dstAccess,
 							 ESubpassDependency::bits	dependency);
@@ -288,7 +281,7 @@ namespace Platforms
 	//
 	// Simple Builder
 	//
-	struct _ENGINE_PLATFORMS_EXPORT_ RenderPassDescrBuilder::SimpleBuilder final
+	struct RenderPassDescrBuilder::SimpleBuilder final
 	{
 		friend struct RenderPassDescrBuilder;
 

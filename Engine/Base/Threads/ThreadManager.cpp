@@ -82,7 +82,7 @@ namespace Base
 			{
 				_threads[i].second.wait();
 				
-				_SendForEachAttachments< ModuleMsg::Update >({ TimeD::FromNanoSeconds(1.0) });
+				_SendForEachAttachments< ModuleMsg::Update >({ TimeF::FromNanoSeconds(1.0) });
 			}
 		}
 
@@ -108,7 +108,7 @@ namespace Base
 
 		SCOPELOCK( _lock );
 
-		auto	task_mngr = GlobalSystems()->Get< MainSystem >()->GetModuleByMsg< TaskMngrMsgList >();
+		auto	task_mngr = GlobalSystems()->mainSystem->GetModuleByMsg< TaskMngrMsgList >();
 		CHECK_ERR( task_mngr );
 
 		FOR( i, _threads )
@@ -258,9 +258,9 @@ namespace Base
 		CreateParallelThreadData (GlobalSystemsRef gs, CreateInfo::Thread &&info) :
 			info( RVREF( info ) ),
 			sync( OS::SyncEvent::MANUAL_RESET ),
-			main( gs->Get<MainSystem>() ),
-			factory( gs->Get<ModulesFactory>() ),
-			fileMngr( gs->Get<FileManager>() )
+			main( gs->mainSystem.Ptr() ),
+			factory( gs->modulesFactory.Ptr() ),
+			fileMngr( gs->fileManager.Ptr() )
 		{}
 	};
 	
@@ -275,17 +275,17 @@ namespace Base
 		ModulePtr	mngr = ci.manager;
 
 		// get manager from current thread
-		/*if ( not mngr and gs->Get< ParallelThread >() )
+		/*if ( not mngr and gs->parallelThread )
 		{
-			mngr = gs->Get< ParallelThread >()->_GetManager();	// TODO
+			mngr = gs->parallelThread->_GetManager();	// TODO
 		}*/
 
 		// get manager from global variable
 		if ( not mngr and
-			 gs->Get< MainSystem >() and
-			 gs->Get< MainSystem >()->GetThreadID() == ThreadID::GetCurrent() )
+			 gs->mainSystem and
+			 gs->mainSystem->GetThreadID() == ThreadID::GetCurrent() )
 		{
-			mngr = gs->Get< MainSystem >()->GetModuleByID( ThreadManagerModuleID );
+			mngr = gs->mainSystem->GetModuleByID( ThreadManagerModuleID );
 		}
 
 		CHECK_ERR( mngr );
@@ -322,7 +322,7 @@ namespace Base
 */
 	void ThreadManager::Register (GlobalSystemsRef gs)
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = gs->modulesFactory;
 
 		CHECK( mf->Register( ParallelThreadModuleID, &_CreateParallelThread ) );
 		CHECK( mf->Register( ThreadManagerModuleID, &_CreateThreadManager ) );
@@ -335,7 +335,7 @@ namespace Base
 */
 	void ThreadManager::Unregister (GlobalSystemsRef gs)
 	{
-		auto	mf = gs->Get< ModulesFactory >();
+		auto	mf = gs->modulesFactory;
 
 		mf->UnregisterAll( ParallelThreadModuleID );
 		mf->UnregisterAll( ThreadManagerModuleID );
@@ -355,9 +355,9 @@ namespace Base
 		{
 			CreateParallelThreadData&	data = *Cast<CreateParallelThreadData *>(d);
 
-			global_sys.GetSetter< MainSystem >().Set( data.main );
-			global_sys.GetSetter< ModulesFactory >().Set( data.factory );
-			global_sys.GetSetter< FileManager >().Set( data.fileMngr );
+			global_sys.mainSystem.Set( data.main );
+			global_sys.modulesFactory.Set( data.factory );
+			global_sys.fileManager.Set( data.fileMngr );
 
 			pt = New< ParallelThreadImpl >( GlobalSystemsRef(global_sys), data.info );
 

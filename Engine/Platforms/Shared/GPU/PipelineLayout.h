@@ -15,7 +15,7 @@ namespace Platforms
 	// Pipeline Layout Descriptor
 	//
 
-	struct _ENGINE_PLATFORMS_EXPORT_ PipelineLayoutDescriptor final : CompileTime::PODStruct
+	struct PipelineLayoutDescriptor final : CompileTime::PODStruct
 	{
 	// types
 	public:
@@ -24,13 +24,12 @@ namespace Platforms
 		using Self		= PipelineLayoutDescriptor;
 		using Name_t	= StaticString<64>;
 
-
 		struct BaseUniform : CompileTime::CopyQualifiers< Name_t >
 		{
-			Name_t					name;
-			EShader::bits			stageFlags;
-			uint					binding			= ~0u;		// binding index or location of uniform
-			uint					descriptorSet	= 0;		// vulkan only
+			Name_t				name;
+			EShader::bits		stageFlags;
+			uint				binding		= UMax;	// resource dependend index, may be optimized to minimize resource switches between pipelines, used in OpenGL, DirectX
+			uint				uniqueIndex	= UMax;	// resource unique index in current pipeline, used in Vulkan, OpenCL
 		};
 
 
@@ -156,14 +155,12 @@ namespace Platforms
 	private:
 		Uniforms_t		_uniforms;
 		HashResult		_hash;
-		uint			_maxDescriptorSet	= 0;
 
 
 	// methods
 	public:
 		PipelineLayoutDescriptor (GX_DEFCTOR) {}
 
-		uint					MaxDescriptorSet () const	{ return _maxDescriptorSet; }
 		HashResult				GetHash ()			const	{ return _hash; }
 		ArrayCRef<Uniform_t>	GetUniforms ()		const	{ return _uniforms; }
 
@@ -178,7 +175,7 @@ namespace Platforms
 	// Pipeline Layout Descriptor Builder
 	//
 
-	struct _ENGINE_PLATFORMS_EXPORT_ PipelineLayoutDescriptor::Builder
+	struct PipelineLayoutDescriptor::Builder
 	{
 	// variables
 	private:
@@ -193,18 +190,20 @@ namespace Platforms
 		explicit Builder (const PipelineLayoutDescriptor &descr) : _descr(descr) {}
 
 		Builder& AddTexture (StringCRef name, EImage::type dimension, EPixelFormatClass::type format,
-							 uint binding, uint set, EShader::bits stageFlags);
+							 uint binding, uint uniqueIndex, EShader::bits stageFlags);
 
 		Builder& AddImage (StringCRef name, EImage::type dimension, EPixelFormat::type format, bool writeAccess,
-						   bool readAccess, uint binding, uint set, EShader::bits stageFlags);
+						   bool readAccess, uint binding, uint uniqueIndex, EShader::bits stageFlags);
 
-		Builder& AddUniformBuffer (StringCRef name, BytesU size, uint binding, uint set, EShader::bits stageFlags);
+		Builder& AddUniformBuffer (StringCRef name, BytesU size, uint binding, uint uniqueIndex, EShader::bits stageFlags);
 		
 		Builder& AddStorageBuffer (StringCRef name, BytesU size, BytesU stride, bool writeAccess, bool readAccess,
-									uint binding, uint set, EShader::bits stageFlags);
+									uint binding, uint uniqueIndex, EShader::bits stageFlags);
 
 		Builder& AddPushConstant (StringCRef name, BytesU offset, BytesU size, EShader::bits stageFlags);
 		
+		ArrayCRef<Uniform_t>	GetUniforms ()	const	{ return _descr.GetUniforms(); }
+
 		// validate, calculate hash and return
 		PipelineLayoutDescriptor const& Finish ();
 	};

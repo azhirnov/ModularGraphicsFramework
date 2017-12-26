@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 #ifdef GX_ANGELSCRIPT_ENABLED
 
@@ -22,7 +22,7 @@ static void SimpleScript_ScriptFunction (ScriptEngine &se)
 
 	se.Run<int, int>( script, "main", 0, res );
 
-	ASSERT( res == 1 );
+	TEST( res == 1 );
 }
 
 
@@ -46,7 +46,7 @@ static void SimpleScript_GlobalFunction (ScriptEngine &se)
 
 	se.Run<int, int>( script, "main", 1, res );
 
-	ASSERT( res == 20 );
+	TEST( res == 20 );
 }
 
 
@@ -73,7 +73,7 @@ static void SimpleScript_GlobalVariable (ScriptEngine &se)
 
 	se.Run<int, int>( script, "main", 5, res );
 
-	ASSERT( res == (gVar + 5)*gConst );
+	TEST( res == (gVar + 5)*gConst );
 }
 
 
@@ -94,7 +94,7 @@ static void SimpleScript_ClassBinding (ScriptEngine &se)
 
 	se.Run< const float2 *, float >( script, "main", &v, res );
 
-	ASSERT( res == v.x + v.y + (3+5)*3 );
+	TEST( res == v.x + v.y + (3+5)*3 );
 }
 
 
@@ -114,7 +114,7 @@ static void SimpleScript_String (ScriptEngine &se)
 
 	se.Run< const std::string *, int >( script, "main", &s, res );
 
-	ASSERT( res == s.length() );
+	TEST( res == s.length() );
 }
 
 
@@ -155,7 +155,7 @@ static void SimpleScript_ClassRef (ScriptEngine &se)
 
 	se.Run< int, int >( script, "main", 1, res );
 
-	ASSERT( res == 3+1 );
+	TEST( res == 3+1 );
 }
 
 

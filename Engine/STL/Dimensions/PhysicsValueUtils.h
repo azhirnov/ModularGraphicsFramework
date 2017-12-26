@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright ï¿½  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -18,7 +18,7 @@ namespace GXMath
 		template <typename ValueType, typename Scale, typename Power>
 		struct Dimensions_ConvertValue_ScalePower {
 			static ValueType Get (const ValueType &value) {
-				return value * Pow( Scale::ToFloat<ValueType>(), Power::ToFloat<ValueType>() );
+				return value * Pow( Scale::template ToFloat<ValueType>(), Power::template ToFloat<ValueType>() );
 			}
 		};
 		
@@ -30,14 +30,14 @@ namespace GXMath
 			typedef typename Scale::template Pow< Power::N >::type	scale_t;
 
 			static ValueType Get (const ValueType &value) {
-				return value * scale_t::ToFloat<ValueType>();
+				return value * scale_t::template ToFloat<ValueType>();
 			}
 		};
 
 		template <typename ValueType, typename Scale>
 		struct Dimensions_ConvertValue_Scale {
 			static ValueType Get (const ValueType &value) {
-				return value * Scale::ToFloat<ValueType>();
+				return value * Scale::template ToFloat<ValueType>();
 			}
 		};
 		
@@ -62,7 +62,7 @@ namespace GXMath
 			static const bool	ScaleIsOne	= Scale::template FastEqual< typename CompileTime::StaticFloat< 1 > >::value;
 
 			static const bool	PowerIsZero	= Power::IsZero::value;
-			static const bool	PowerIsOne	= Power::EqualInt< 1 >::value;
+			static const bool	PowerIsOne	= Power::template EqualInt< 1 >::value;
 
 			static const int	Index		=	ScaleIsZero ? 0 :
 												PowerIsZero ? 1 :
@@ -309,8 +309,8 @@ namespace GXMath
 
 			template <typename Conv>
 			struct Equal {
-				static const bool	value = Scale::Equal< Conv::Scale >::value and
-											Power::Equal< Conv::Power >::value;
+				static const bool	value = Scale::template Equal< Conv::Scale >::value and
+											Power::template Equal< Conv::Power >::value;
 			};
 
 			struct _Simplify4 {
@@ -461,7 +461,7 @@ namespace GXMath
 			}
 
 			static inline ValueType ToFloat () {
-				return GXMath::Pow( Scale::ToFloat< ValueType >(), Power::ToFloat< ValueType >() );
+				return GXMath::Pow( Scale::template ToFloat< ValueType >(), Power::template ToFloat< ValueType >() );
 			}
 
 			static inline String ToString () {

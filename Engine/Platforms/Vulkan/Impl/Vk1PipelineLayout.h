@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
+#include "Engine/Platforms/Shared/GPU/PipelineLayout.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -11,6 +11,10 @@ namespace Engine
 {
 namespace PlatformVK
 {
+	class Vk1PipelineLayout;
+	SHARED_POINTER( Vk1PipelineLayout );
+
+
 	
 	//
 	// Vulkan Pipeline Layout
@@ -22,7 +26,6 @@ namespace PlatformVK
 
 	// types
 	private:
-		using DescriptorSetLayouts	= GpuMsg::GetVkDescriptorLayouts::IDs;
 		using DescriptorBindings	= FixedSizeArray< vk::VkDescriptorSetLayoutBinding, 64 >;
 		using PushConstantRanges	= FixedSizeArray< vk::VkPushConstantRange, 16 >;
 		struct _CreateDescriptor_Func;
@@ -31,7 +34,7 @@ namespace PlatformVK
 	// variables
 	private:
 		PipelineLayoutDescriptor	_layoutDescr;
-		DescriptorSetLayouts		_descriptorIds;
+		vk::VkDescriptorSetLayout	_descriptorId;
 		PushConstantRanges			_pushConstRanges;
 		vk::VkPipelineLayout		_layoutId;
 
@@ -44,9 +47,9 @@ namespace PlatformVK
 		bool Create (const PipelineLayoutDescriptor &layout);
 		void Destroy ();
 
-		PipelineLayoutDescriptor const&			GetDescriptor ()			const	{ return _layoutDescr; }
-		vk::VkPipelineLayout					GetLayoutID ()				const	{ return _layoutId; }
-		ArrayCRef<vk::VkDescriptorSetLayout>	GetDescriptorLayouts ()		const	{ return _descriptorIds; }
+		PipelineLayoutDescriptor const&	GetDescriptor ()			const	{ return _layoutDescr; }
+		vk::VkPipelineLayout			GetLayoutID ()				const	{ return _layoutId; }
+		vk::VkDescriptorSetLayout		GetDescriptorLayouts ()		const	{ return _descriptorId; }
 
 	private:
 		void _Init (const PipelineLayoutDescriptor &layout);

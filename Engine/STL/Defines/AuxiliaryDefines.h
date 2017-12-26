@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -20,7 +20,7 @@
 
 
 // unite
-#define AUXDEF_UNITE_RAW( _arg0_, _arg1_ )		AUXDEF_GETRAW( _arg0_ ) ## AUXDEF_GETRAW( _arg1_ )
+#define AUXDEF_UNITE_RAW( _arg0_, _arg1_ )		AUXDEF_UNITE( _arg0_, _arg1_ )
 #define AUXDEF_UNITE( _arg0_, _arg1_ )			_arg0_ ## _arg1_
 
 

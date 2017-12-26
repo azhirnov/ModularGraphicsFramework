@@ -1,8 +1,9 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
 #include "Allocators.h"
+#include "Engine/STL/Algorithms/Swap.h"
 
 namespace GX_STL
 {
@@ -14,20 +15,20 @@ namespace GXTypes
 	// Memory Container
 	//
 
-	template <typename T, typename A = TDefaultAllocator<T> >
+	template <typename T>
 	struct MemoryContainer : public CompileTime::FastCopyable
 	{
 	// types
 	public:
-		typedef MemoryContainer< T, A >		Self;
-		typedef A							Allocator_t;
-		typedef T							Value_t;
+		using Self			= MemoryContainer< T >;
+		using Allocator_t	= TDefaultAllocator<void>;
+		using Value_t		= T;
 
 
 	// variables
 	private:
 		union {
-			T *					_memory;
+			void *				_memory;
 			TMemoryViewer<T>	_memView;
 		};
 
@@ -60,16 +61,26 @@ namespace GXTypes
 		}
 
 
-		T *				Pointer ()			{ return _memory; }
-
-		T const *		Pointer ()	const	{ return _memory; }
+		T *				Pointer ()			{ return ReferenceCast<T *>(_Aligned()); }
+		T const *		Pointer ()	const	{ return ReferenceCast<T const*>(_Aligned()); }
 
 		constexpr bool	IsStatic ()	const	{ return false; }
 
 
+		usize _Aligned () const
+		{
+			STATIC_ASSERT(( CompileTime::IsPowerOfTwo< uint, alignof(T) > ));
+
+			if_constexpr( alignof(T) < sizeof(void*) )
+				return ReferenceCast<usize>(_memory);
+			else
+				return (ReferenceCast<usize>(_memory) + alignof(T)-1) & ~(alignof(T)-1);
+		}
+
+
 		bool Allocate (INOUT usize &size, bool allowReserve = true) noexcept
 		{
-			const usize	required_size	= size;
+			const usize	required_size	= size * sizeof(T);
 			const usize	min_size		= GlobalConst::STL_MemContainerResizingMinSize;
 
 			if ( allowReserve )
@@ -80,10 +91,15 @@ namespace GXTypes
 				size += (size * nom + den - 1) / den + min_size;
 			}
 
-			if ( not (Allocator_t::Allocate( _memory, size ) and size >= required_size) )
+			usize size2 = size * sizeof(T) + alignof(T);
+
+			if ( not (Allocator_t::Allocate( INOUT _memory, INOUT size2 ) and size2 >= required_size) )
 				return false;
 
-			DEBUG_ONLY( UnsafeMem::ZeroMem( _memory, BytesU(size) ) );
+			DEBUG_ONLY( UnsafeMem::ZeroMem( _memory, BytesU(size2) ) );
+
+			size2 -= (_Aligned() - ReferenceCast<usize>(_memory));
+			size = size2 / sizeof(T);
 			return true;
 		}
 
@@ -96,7 +112,7 @@ namespace GXTypes
 
 		usize MaxSize () const
 		{
-			return usize(-1);
+			return UMax;
 		}
 		
 
@@ -122,7 +138,7 @@ namespace GXTypes
 	//
 
 	template <typename T, usize ArraySize>
-	struct StaticMemoryContainer : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, T >
+	struct alignas(T) StaticMemoryContainer : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, T >
 	{
 		STATIC_ASSERT( ArraySize > 0 );
 		STATIC_ASSERT( CompileTime::IsMemCopyAvailable<T> );
@@ -130,8 +146,8 @@ namespace GXTypes
 
 	// types
 	public:
-		typedef StaticMemoryContainer< T, ArraySize >	Self;
-		typedef T										Value_t;
+		using Self		= StaticMemoryContainer< T, ArraySize >;
+		using Value_t	= T;
 
 		static const usize	SIZE = ArraySize;
 
@@ -174,7 +190,6 @@ namespace GXTypes
 
 
 		T *				Pointer ()			{ return _values; }
-
 		T const *		Pointer ()	const	{ return _values; }
 
 		constexpr bool	IsStatic ()	const	{ return true; }
@@ -182,7 +197,7 @@ namespace GXTypes
 
 		bool Allocate (INOUT usize &size, bool = false) noexcept
 		{
-			CHECK( size <= ArraySize );
+			ASSERT( size <= ArraySize );
 
 			size = ArraySize;
 			return true;
@@ -214,12 +229,10 @@ namespace GXTypes
 		{
 			TODO( "SwapMemory" );
 
-			ubyte tmp;
-
 			// TODO: optimize
 			for (usize i = 0; i < sizeof(_buf); ++i)
 			{
-				SwapValuesWithTemp( this->_buf[i], other._buf[i], tmp );
+				SwapValues( this->_buf[i], other._buf[i] );
 			}
 		}
 	};
@@ -230,8 +243,8 @@ namespace GXTypes
 	// Mixed Memory Container
 	//
 
-	template <typename T, usize FixedArraySize, typename A = TDefaultAllocator<T>>
-	struct MixedMemoryContainer : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, T >
+	template <typename T, usize FixedArraySize>
+	struct alignas(T) MixedMemoryContainer : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, T >
 	{
 		STATIC_ASSERT( FixedArraySize > 0 );
 		STATIC_ASSERT( CompileTime::IsMemCopyAvailable<T> );
@@ -239,10 +252,10 @@ namespace GXTypes
 
 	// types
 	public:
-		typedef MixedMemoryContainer<T,FixedArraySize,A>	Self;
-		typedef A											Allocator_t;
-		typedef T											Value_t;
-
+		using Self			= MixedMemoryContainer<T,FixedArraySize>;
+		using Allocator_t	= TDefaultAllocator<void>;
+		using Value_t		= T;
+		
 		static const usize	FIXED_SIZE = FixedArraySize;
 
 
@@ -254,7 +267,7 @@ namespace GXTypes
 		};
 
 		union {
-			T *					_memory;
+			void *				_memory;
 			TMemoryViewer<T>	_memView;
 		};
 
@@ -293,17 +306,27 @@ namespace GXTypes
 			return *this;
 		}
 
-
-		T *				Pointer ()			{ return _memory; }
-
-		T const *		Pointer ()	const	{ return _memory; }
+		
+		T *				Pointer ()			{ return ReferenceCast<T *>(_Aligned()); }
+		T const *		Pointer ()	const	{ return ReferenceCast<T const*>(_Aligned()); }
 
 		constexpr bool	IsStatic ()	const	{ return false; }
+		
+
+		usize _Aligned () const
+		{
+			STATIC_ASSERT(( CompileTime::IsPowerOfTwo< uint, alignof(T) > ));
+
+			if_constexpr( alignof(T) < sizeof(void*) )
+				return ReferenceCast<usize>(_memory);
+			else
+				return (ReferenceCast<usize>(_memory) + alignof(T)-1) & ~(alignof(T)-1);
+		}
 
 
 		bool Allocate (INOUT usize &size, bool allowReserve = true) noexcept
 		{
-			const usize	required_size	= size;
+			const usize	required_size	= size * sizeof(T);
 			const usize	min_size		= GlobalConst::STL_MemContainerResizingMinSize;
 
 			if ( size <= FIXED_SIZE )
@@ -311,10 +334,10 @@ namespace GXTypes
 				_memory = _buf;
 				size	= FIXED_SIZE;
 
-				return size >= required_size;
+				return true;
 			}
 
-			if ( size > FIXED_SIZE and allowReserve )
+			if ( allowReserve )
 			{
 				const usize	nom	= GlobalConst::STL_MemContainerResizingNominator;
 				const usize	den	= GlobalConst::STL_MemContainerResizingDenominator;
@@ -322,10 +345,15 @@ namespace GXTypes
 				size += (size * nom + den - 1) / den + min_size;
 			}
 
-			if ( not (Allocator_t::Allocate( _memory, size ) and size >= required_size) )
+			usize size2 = size * sizeof(T) + alignof(T);
+
+			if ( not (Allocator_t::Allocate( INOUT _memory, INOUT size2 ) and size2 >= required_size) )
 				return false;
-			
-			DEBUG_ONLY( UnsafeMem::ZeroMem( _memory, BytesU(size) ) );
+
+			DEBUG_ONLY( UnsafeMem::ZeroMem( _memory, BytesU(size2) ) );
+
+			size2 -= (_Aligned() - ReferenceCast<usize>(_memory));
+			size = size2 / sizeof(T);
 			return true;
 		}
 
@@ -345,7 +373,7 @@ namespace GXTypes
 
 		usize MaxSize () const
 		{
-			return usize(-1);
+			return UMax;
 		}
 		
 
@@ -382,12 +410,10 @@ namespace GXTypes
 				return;
 			}
 
-			ubyte tmp;
-
 			// TODO: optimize
 			for (usize i = 0; i < sizeof(_buf); ++i)
 			{
-				SwapValuesWithTemp( this->_buf[i], other._buf[i], tmp );
+				SwapValues( this->_buf[i], other._buf[i] );
 			}
 			
 			if ( this_in_static_mem )

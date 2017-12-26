@@ -15,7 +15,7 @@ namespace Platforms
 	// Sampler Descriptor
 	//
 
-	struct _ENGINE_PLATFORMS_EXPORT_ SamplerDescriptor final : CompileTime::PODStruct
+	struct SamplerDescriptor final : CompileTime::PODStruct
 	{
 	// types
 	public:
@@ -65,7 +65,7 @@ namespace Platforms
 	// Sampler Descriptor Builder
 	//
 
-	struct _ENGINE_PLATFORMS_EXPORT_ SamplerDescriptor::Builder final
+	struct SamplerDescriptor::Builder final
 	{
 	// variables
 	private:

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -33,7 +33,7 @@ namespace GXFilters
 		};
 
 	private:
-		using Queue_t	= typename FixedSizeCircularQueue< Sample, MaxSize >;
+		using Queue_t	= FixedSizeCircularQueue< Sample, MaxSize >;
 
 
 	// variables
@@ -96,8 +96,8 @@ namespace GXFilters
 
 			ValueType	value_sum	= ValueType();
 			T			weight_sum	= T(0);
-			T const		sigma2		= Square( sigma ) * T(-2);
-			T const		sigma3		= T(1) / (sigma * Sqrt( T(2) * Pi<T> ));
+			T const		sigma2		= Square( _sigma ) * T(-2);
+			T const		sigma3		= T(1) / (_sigma * Sqrt( T(2) * Pi<T> ));
 
 
 			FOR( i, _values )
@@ -127,8 +127,8 @@ namespace GXFilters
 
 			ValueType	value_sum	= ValueType();
 			T			weight_sum	= T(0);
-			T const		sigma2		= Square( sigma ) * T(-2);
-			T const		sigma3		= T(1) / (sigma * Sqrt( T(2) * Pi<T> ));
+			T const		sigma2		= Square( _sigma ) * T(-2);
+			T const		sigma3		= T(1) / (_sigma * Sqrt( T(2) * Pi<T> ));
 
 
 			for (usize i = 0; i < _values.LastIndex(); ++i)

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -17,7 +17,10 @@ namespace CompileTime
 		
 		template <typename T>
 		struct _FunctionInfo< T * >		{};
-
+		
+		template <typename T, typename Class>
+		struct _FunctionInfo< T (Class::*) >	{};
+		
 		
 		template <typename Result, typename ...Args>
 		struct _FunctionInfo< Result (Args...) >
@@ -27,7 +30,16 @@ namespace CompileTime
 			using type		= Result (*) (Args...);
 			using clazz		= void;
 		};
-
+		
+		template <typename Result, typename ...Args>
+		struct _FunctionInfo< Result (*) (Args...) >
+		{
+			using args		= TypeListFrom< Args..., TypeListEnd >;
+			using result	= Result;
+			using type		= Result (*) (Args...);
+			using clazz		= void;
+		};
+		
 		template <typename Class, typename Result, typename ...Args>
 		struct _FunctionInfo< Result (Class::*) (Args...) >
 		{
@@ -45,14 +57,77 @@ namespace CompileTime
 			using type		= Result (Class::*) (Args...) const;
 			using clazz		= Class;
 		};
-
-		template <typename Result, typename ...Args>
-		struct _FunctionInfo< Result (*) (Args...) >
+		
+		template <typename Class, typename Result, typename ...Args>
+		struct _FunctionInfo< Result (Class::*) (Args...) volatile >
 		{
 			using args		= TypeListFrom< Args..., TypeListEnd >;
 			using result	= Result;
-			using type		= Result (*) (Args...);
+			using type		= Result (Class::*) (Args...) volatile;
+			using clazz		= Class;
+		};
+
+		template <typename Class, typename Result, typename ...Args>
+		struct _FunctionInfo< Result (Class::*) (Args...) volatile const >
+		{
+			using args		= TypeListFrom< Args..., TypeListEnd >;
+			using result	= Result;
+			using type		= Result (Class::*) (Args...) volatile const;
+			using clazz		= Class;
+		};
+		
+		template <typename Result, typename ...Args>
+		struct _FunctionInfo< Result (Args...) noexcept >
+		{
+			using args		= TypeListFrom< Args..., TypeListEnd >;
+			using result	= Result;
+			using type		= Result (*) (Args...) noexcept;
 			using clazz		= void;
+		};
+
+		template <typename Result, typename ...Args>
+		struct _FunctionInfo< Result (*) (Args...) noexcept >
+		{
+			using args		= TypeListFrom< Args..., TypeListEnd >;
+			using result	= Result;
+			using type		= Result (*) (Args...) noexcept;
+			using clazz		= void;
+		};
+
+		template <typename Class, typename Result, typename ...Args>
+		struct _FunctionInfo< Result (Class::*) (Args...) noexcept >
+		{
+			using args		= TypeListFrom< Args..., TypeListEnd >;
+			using result	= Result;
+			using type		= Result (Class::*) (Args...) noexcept;
+			using clazz		= Class;
+		};
+		
+		template <typename Class, typename Result, typename ...Args>
+		struct _FunctionInfo< Result (Class::*) (Args...) const noexcept >
+		{
+			using args		= TypeListFrom< Args..., TypeListEnd >;
+			using result	= Result;
+			using type		= Result (Class::*) (Args...) const noexcept;
+			using clazz		= Class;
+		};
+
+		template <typename Class, typename Result, typename ...Args>
+		struct _FunctionInfo< Result (Class::*) (Args...) volatile noexcept >
+		{
+			using args		= TypeListFrom< Args..., TypeListEnd >;
+			using result	= Result;
+			using type		= Result (Class::*) (Args...) volatile noexcept;
+			using clazz		= Class;
+		};
+
+		template <typename Class, typename Result, typename ...Args>
+		struct _FunctionInfo< Result (Class::*) (Args...) volatile const noexcept >
+		{
+			using args		= TypeListFrom< Args..., TypeListEnd >;
+			using result	= Result;
+			using type		= Result (Class::*) (Args...) volatile const noexcept;
+			using clazz		= Class;
 		};
 
 		template <typename Result, typename ...Args>
@@ -91,7 +166,9 @@ namespace CompileTime
 	
 	template <typename T>
 	using FunctionInfo		= _ctime_hidden_::_FunctionInfo< T >;
-
+	
+	template <typename T>
+	using ResultOf			= typename FunctionInfo< T >::result;
 
 }	// CompileTime
 }	// GX_STL

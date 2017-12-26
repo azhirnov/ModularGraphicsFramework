@@ -1,7 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -39,11 +39,11 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	Vk1PipelineCache::Vk1GraphicsPipelinePtr  Vk1PipelineCache::Create (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
+	ModulePtr  Vk1PipelineCache::Create (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
 	{
 		// TODO: validate and cache
 
-		auto	result = New< Vk1GraphicsPipeline >( gs, ci );
+		auto	result = VulkanObjectsConstructor::CreateVk1GraphicsPipeline( gs, ci );
 
 		ModuleUtils::Initialize({ result });
 
@@ -58,11 +58,11 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	Vk1PipelineCache::Vk1ComputePipelinePtr  Vk1PipelineCache::Create (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
+	ModulePtr  Vk1PipelineCache::Create (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
 	{
 		// TODO: validate and cache
 
-		auto	result = New< Vk1ComputePipeline >( gs, ci );
+		auto	result = VulkanObjectsConstructor::CreateVk1ComputePipeline( gs, ci );
 
 		ModuleUtils::Initialize({ result });
 

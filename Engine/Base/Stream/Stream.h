@@ -2,10 +2,10 @@
 
 #pragma once
 
+#include "Engine/Base/Common/IDs.h"
 #include "Engine/Base/Common/Enums.h"
-#include "Engine/Base/Common/CreateInfo.h"
-#include "Engine/Base/Common/ModuleMessages.h"
-#include "Engine/Base/Modules/IDs.h"
+#include "Engine/Base/Modules/ModuleMessages.h"
+#include "Engine/Base/Modules/CreateInfo.h"
 
 namespace Engine
 {
@@ -110,7 +110,8 @@ namespace ModuleMsg
 
 	// methods
 		WriteToStream () {}
-		explicit WriteToStream (BinArrayCRef data, BytesU offset = 0_b) : offset(offset), data(data) {}
+		explicit WriteToStream (BinArrayCRef data, Bytes<uint> offset = 0_b) : offset(offset), data(data) {}
+		explicit WriteToStream (BinArrayCRef data, Bytes<ulong> offset) : offset(offset), data(data) {}
 		template <typename T>			explicit WriteToStream (ArrayCRef<T> arr, BytesU offset = 0_b) : offset(offset), data(BinArrayCRef::From(arr)) {}
 		template <typename B, usize I>	explicit WriteToStream (const B (&arr)[I], BytesU offset = 0_b) : offset(offset), data(BinArrayCRef::From(arr)) {}
 	};

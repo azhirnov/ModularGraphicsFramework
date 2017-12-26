@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -72,16 +72,18 @@ namespace OS
 		
 		template <typename T>
 		forceinline static T  Get (volatile T const & left) {
-			::_ReadWriteBarrier();
+			_Barrier();
 			return left;
 		}
+
+		static void _Barrier ();
 
 #		undef  type_cast
 #		undef  itype_cast
 #		undef  ctype_cast
 #		undef  rtype_cast
 
-
+#	ifdef COMPILER_MSVC
 		// byte //
 		static byte  Inc (volatile byte * ptr);
 		static byte  Dec (volatile byte * ptr);
@@ -103,6 +105,7 @@ namespace OS
 		static short Or  (volatile short * ptr, short val);
 		static short Xor (volatile short * ptr, short val);
 		static short And (volatile short * ptr, short val);
+#	endif	// COMPILER_MSVC
 
 		// int //
 		static int Inc (volatile int * ptr);
@@ -155,69 +158,6 @@ namespace OS
 #	endif	// 64
 
 	};
-	
-	// Warning: all functions except 'CmpExch' returns the operation result!
-	// 'CmpExch' returns origin value.
-
-	// byte //
-	forceinline byte  AtomicOp::Inc (volatile byte * ptr)						{ return Add( ptr, 1 ); }
-	forceinline byte  AtomicOp::Dec (volatile byte * ptr)						{ return Add( ptr, -1 ); }
-	forceinline byte  AtomicOp::Add (volatile byte * ptr, byte val)				{ return ::_InterlockedExchangeAdd8( (volatile char *)ptr, val ) + val; }
-	forceinline byte  AtomicOp::Sub (volatile byte * ptr, byte val)				{ return ::_InterlockedExchangeAdd8( (volatile char *)ptr, -val ) - val; }
-	forceinline byte  AtomicOp::Set (volatile byte * ptr, byte val)				{ ::_InterlockedExchange8( (volatile char *)ptr, val );  return val; }
-	forceinline byte  AtomicOp::CmpExch (volatile byte * ptr, byte val, byte cmp){ return ::_InterlockedCompareExchange8( (volatile char *)ptr, val, cmp ); }
-	forceinline byte  AtomicOp::Or  (volatile byte * ptr, byte val)				{ return ::_InterlockedOr8( (volatile char *)ptr, val ) | val; }
-	forceinline byte  AtomicOp::Xor (volatile byte * ptr, byte val)				{ return ::_InterlockedXor8( (volatile char *)ptr, val ) ^ val; }
-	forceinline byte  AtomicOp::And (volatile byte * ptr, byte val)				{ return ::_InterlockedAnd8( (volatile char *)ptr, val ) & val; }
-		
-	// short //
-	forceinline short AtomicOp::Inc (volatile short * ptr)							{ return ::_InterlockedIncrement16( (volatile short *)ptr ); }
-	forceinline short AtomicOp::Dec (volatile short * ptr)							{ return ::_InterlockedDecrement16( (volatile short *)ptr ); }
-	forceinline short AtomicOp::Add (volatile short * ptr, short val)				{ return ::_InterlockedExchangeAdd16( (volatile short *)ptr, val ) + val; }
-	forceinline short AtomicOp::Sub (volatile short * ptr, short val)				{ return ::_InterlockedExchangeAdd16( (volatile short *)ptr, -val ) - val; }
-	forceinline short AtomicOp::Set (volatile short * ptr, short val)				{ ::_InterlockedExchange16( (volatile short *)ptr, val );  return val; }
-	forceinline short AtomicOp::CmpExch (volatile short * ptr, short val, short cmp){ return ::_InterlockedCompareExchange16( (volatile short *)ptr, val, cmp ); }
-	forceinline short AtomicOp::Or  (volatile short * ptr, short val)				{ return ::_InterlockedOr16( (volatile short *)ptr, val ) | val; }
-	forceinline short AtomicOp::Xor (volatile short * ptr, short val)				{ return ::_InterlockedXor16( (volatile short *)ptr, val ) ^ val; }
-	forceinline short AtomicOp::And (volatile short * ptr, short val)				{ return ::_InterlockedAnd16( (volatile short *)ptr, val ) & val; }
-
-	// int //
-	forceinline int AtomicOp::Inc (volatile int * ptr)							{ return ::_InterlockedIncrement( (volatile long *)ptr ); }
-	forceinline int AtomicOp::Dec (volatile int * ptr)							{ return ::_InterlockedDecrement( (volatile long *)ptr ); }
-	forceinline int AtomicOp::Add (volatile int * ptr, int val)					{ return ::_InterlockedExchangeAdd( (volatile long *)ptr, val ) + val; }
-	forceinline int AtomicOp::Sub (volatile int * ptr, int val)					{ return ::_InterlockedExchangeAdd( (volatile long *)ptr, -val ) - val; }
-	forceinline int AtomicOp::Set (volatile int * ptr, int val)					{ ::_InterlockedExchange( (volatile long *)ptr, val );  return val; }
-	forceinline int AtomicOp::CmpExch (volatile int * ptr, int val, int cmp)	{ return ::_InterlockedCompareExchange( (volatile long *)ptr, val, cmp ); }
-	forceinline int AtomicOp::Or  (volatile int * ptr, int val)					{ return ::_InterlockedOr( (volatile long *)ptr, val ) | val; }
-	forceinline int AtomicOp::Xor (volatile int * ptr, int val)					{ return ::_InterlockedXor( (volatile long *)ptr, val ) ^ val; }
-	forceinline int AtomicOp::And (volatile int * ptr, int val)					{ return ::_InterlockedAnd( (volatile long *)ptr, val ) & val; }
-		
-#	if PLATFORM_BITS == 32
-		
-	// pointers //
-	forceinline void * AtomicOp::SetPtr (volatile void ** ptr, void * val)				{ ::_InterlockedExchange( (volatile long *)ptr, (long)val );  return val; }
-	forceinline void * AtomicOp::CmpExchP (volatile void **ptr, void *val, void *cmp)	{ return (void *)::_InterlockedCompareExchange( (volatile long *)ptr, (long)val, (long)cmp ); }
-
-#	endif	// 32
-	
-#	if PLATFORM_BITS == 64
-
-	// pointers //
-	forceinline void * AtomicOp::SetPtr (void* volatile* ptr, void * val)			{ ::_InterlockedExchangePointer( ptr, val );  return val; }
-	forceinline void * AtomicOp::CmpExP (void* volatile* ptr, void *val, void *cmp)	{ return ::_InterlockedCompareExchangePointer( ptr, val, cmp ); }
-		
-	// ilong //
-	forceinline ilong AtomicOp::Inc (volatile ilong * ptr)							{ return ::_InterlockedIncrement64( ptr ); }
-	forceinline ilong AtomicOp::Dec (volatile ilong * ptr)							{ return ::_InterlockedDecrement64( ptr ); }
-	forceinline ilong AtomicOp::Add (volatile ilong * ptr, ilong val)				{ return ::_InterlockedExchangeAdd64( ptr, val ) + val; }
-	forceinline ilong AtomicOp::Sub (volatile ilong * ptr, ilong val)				{ return ::_InterlockedExchangeAdd64( ptr, -val ) - val; }
-	forceinline ilong AtomicOp::Set (volatile ilong * ptr, ilong val)				{ ::_InterlockedExchange64( ptr, val );  return val; }
-	forceinline ilong AtomicOp::CmpExch (volatile ilong * ptr, ilong val, ilong cmp){ return ::_InterlockedCompareExchange64( ptr, val, cmp ); }
-	forceinline ilong AtomicOp::Or  (volatile ilong * ptr, ilong val)				{ return ::_InterlockedOr64( ptr, val ) | val; }
-	forceinline ilong AtomicOp::Xor (volatile ilong * ptr, ilong val)				{ return ::_InterlockedXor64( ptr, val ) ^ val; }
-	forceinline ilong AtomicOp::And (volatile ilong * ptr, ilong val)				{ return ::_InterlockedAnd64( ptr, val ) & val; }
-
-#	endif	// 64
 
 
 }	// OS

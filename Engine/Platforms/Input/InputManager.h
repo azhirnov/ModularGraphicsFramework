@@ -42,8 +42,8 @@ namespace Platforms
 		InputManager (GlobalSystemsRef gs, const CreateInfo::InputManager &ci);
 		~InputManager ();
 		
-		static _ENGINE_PLATFORMS_EXPORT_ void Register (GlobalSystemsRef);
-		static _ENGINE_PLATFORMS_EXPORT_ void Unregister (GlobalSystemsRef);
+		static void Register ();
+		static void Unregister ();
 
 		
 	// message handlers

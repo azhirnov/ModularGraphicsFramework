@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -21,17 +21,11 @@ namespace Platforms
 
 	struct CommandBufferDescriptor : CompileTime::PODStruct
 	{
-		// set 'true' to create secondary command buffer
-		bool	isSecondary			= false;
-
-		// if 'false' then you need return command buffer to initial state before begin recording
-		// this value depends of command builder module
-		bool	implicitResetable	= true;
+		ECmdBufferCreate::bits	flags;
 
 		CommandBufferDescriptor () {}
 
-		explicit CommandBufferDescriptor (bool isSecondary, bool implicitResetable = true) :
-			isSecondary( isSecondary ), implicitResetable( implicitResetable )
+		explicit CommandBufferDescriptor (ECmdBufferCreate::bits flags) : flags{flags}
 		{}
 	};
 
@@ -156,7 +150,7 @@ namespace GpuMsg
 			this->firstViewport = firstViewport;
 		}
 
-		CmdSetViewport (InitializerList<Viewport> list, uint firstViewport = 0) :
+		CmdSetViewport (ArrayCRef<Viewport> list, uint firstViewport = 0) :
 			viewports(list), firstViewport(firstViewport)
 		{}
 	};
@@ -181,7 +175,7 @@ namespace GpuMsg
 			this->firstScissor = firstScissor;
 		}
 
-		CmdSetScissor (InitializerList<GXMath::RectU> list, uint firstScissor = 0) :
+		CmdSetScissor (ArrayCRef<GXMath::RectU> list, uint firstScissor = 0) :
 			scissors(list), firstScissor(firstScissor)
 		{}
 	};
@@ -262,12 +256,12 @@ namespace GpuMsg
 	struct CmdBegin
 	{
 	// variables
-		bool							isSecondary		= false;
-		ModulePtr						targetCmdBuffer	= null;
+		Platforms::ECmdBufferCreate::bits	flags;
+		ModulePtr							targetCmdBuffer;
 
 	// methods
 		CmdBegin () {}
-		explicit CmdBegin (bool secondary) : isSecondary(secondary) {}
+		explicit CmdBegin (Platforms::ECmdBufferCreate::bits flags) : flags{flags} {}
 		explicit CmdBegin (const ModulePtr &target) : targetCmdBuffer(target) {}
 	};
 
@@ -306,6 +300,13 @@ namespace GpuMsg
 		ModulePtr		framebuffer;
 		GXMath::RectU	area;
 		ClearValues_t	clearValues;	// TODO: map names to indices ?
+
+	// methods
+		CmdBeginRenderPass () {}
+
+		CmdBeginRenderPass (const ModulePtr &renderPass, const ModulePtr &framebuffer, const GXMath::RectU &area, ArrayCRef<ClearValue_t> clearValues = Uninitialized) :
+			renderPass{renderPass}, framebuffer{framebuffer}, area{area}, clearValues(clearValues)
+		{}
 	};
 
 
@@ -527,9 +528,9 @@ namespace GpuMsg
 			regions.PushBack( Region{ srcOffset, dstOffset, size } );
 		}
 
-		CmdCopyBuffer (const ModulePtr &srcBuffer,
-						const ModulePtr &dstBuffer,
-						InitializerList<Region> regions) :
+		CmdCopyBuffer (const ModulePtr		&srcBuffer,
+						const ModulePtr		&dstBuffer,
+						ArrayCRef<Region>	regions) :
 			srcBuffer(srcBuffer),	dstBuffer(dstBuffer),
 			regions(regions)
 		{}
@@ -580,7 +581,7 @@ namespace GpuMsg
 					  EImageLayout::type	srcLayout,
 					  ModulePtr				dstImage,
 					  EImageLayout::type	dstLayout,
-					  InitializerList<Region> regions) :
+					  ArrayCRef<Region>		regions) :
 			srcImage(srcImage), srcLayout(srcLayout),
 			dstImage(dstImage), dstLayout(dstLayout),
 			regions(regions)
@@ -624,7 +625,7 @@ namespace GpuMsg
 		CmdCopyBufferToImage (const ModulePtr		&srcBuffer,
 							  const ModulePtr		&dstImage,
 							  EImageLayout::type	dstLayout,
-							  InitializerList<Region> regions) :
+							  ArrayCRef<Region>		regions) :
 			srcBuffer(srcBuffer),
 			dstImage(dstImage), dstLayout(dstLayout),
 			regions(regions)
@@ -654,10 +655,10 @@ namespace GpuMsg
 
 
 	// methods
-		CmdCopyImageToBuffer (const ModulePtr			&srcImage,
-							  EImageLayout::type		srcLayout,
-							  const ModulePtr			&dstBuffer,
-							  InitializerList<Region>	regions) :
+		CmdCopyImageToBuffer (const ModulePtr		&srcImage,
+							  EImageLayout::type	srcLayout,
+							  const ModulePtr		&dstBuffer,
+							  ArrayCRef<Region>		regions) :
 			srcImage(srcImage),		srcLayout(srcLayout),
 			dstBuffer(dstBuffer),	regions(regions)
 		{}
@@ -697,12 +698,12 @@ namespace GpuMsg
 
 
 	// methods
-		CmdBlitImage (const ModulePtr			&srcImage,
-					  EImageLayout::type		srcLayout,
-					  const ModulePtr			&dstImage,
-					  EImageLayout::type		dstLayout,
-					  bool						linearFilter,
-					  InitializerList<Region>	regions) :
+		CmdBlitImage (const ModulePtr		&srcImage,
+					  EImageLayout::type	srcLayout,
+					  const ModulePtr		&dstImage,
+					  EImageLayout::type	dstLayout,
+					  bool					linearFilter,
+					  ArrayCRef<Region>		regions) :
 			srcImage(srcImage),			srcLayout(srcLayout),
 			dstImage(dstImage),			dstLayout(dstLayout),
 			linearFilter(linearFilter),	regions(regions)
@@ -715,9 +716,24 @@ namespace GpuMsg
 	//
 	struct CmdUpdateBuffer
 	{
+	// types
+		template <typename T>
+		using NonArray_t = CompileTime::EnableIf< CompileTime::IsMemCopyAvailable<T> and not CompileTime::IsSameTypes< T, BinArrayCRef > >;
+
+	// variables
 		ModulePtr		dstBuffer;
 		BytesUL			dstOffset;
 		BinaryArray		data;
+
+	// methods
+		CmdUpdateBuffer (const ModulePtr &buf, BinArrayCRef data, Bytes<uint> offset = Uninitialized) : dstBuffer{buf}, dstOffset{BytesUL(offset)}, data{data} {}
+		CmdUpdateBuffer (const ModulePtr &buf, BinArrayCRef data, Bytes<ulong> offset) : dstBuffer{buf}, dstOffset{offset}, data{data} {}
+
+		template <typename T, typename = NonArray_t<T>>
+		CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<uint> offset = Uninitialized) : CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
+		
+		template <typename T, typename = NonArray_t<T>>
+		CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<ulong> offset) : CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
 	};
 
 

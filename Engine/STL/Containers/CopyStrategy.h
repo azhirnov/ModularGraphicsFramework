@@ -207,11 +207,11 @@ namespace GXTypes
 		STATIC_ASSERT( not CompileTime::IsNoncopyable<T> );
 
 		static const bool _is_fastcopy	= CompileTime::IsMemCopyAvailable<T>;
-		static const bool _is_pod		= _is_fastcopy and not CompileTime::IsCtorAvailable<T> and not CompileTime::IsDtorAvailable<T>;
+		static const bool _is_pod		= _is_fastcopy and (not CompileTime::IsCtorAvailable<T>) and (not CompileTime::IsDtorAvailable<T>);
 
-		typedef typename CompileTime::SwitchType< _is_pod, CopyStrategy::MemCopyWithoutCtor<T>,
-							typename CompileTime::SwitchType< _is_fastcopy, CopyStrategy::MemCopyWithCtor<T>,
-																			CopyStrategy::CopyAndMoveCtor<T> > >		type;
+		typedef CompileTime::SwitchType< _is_pod, CopyStrategy::template MemCopyWithoutCtor<T>,
+							CompileTime::SwitchType< _is_fastcopy, CopyStrategy::template MemCopyWithCtor<T>,
+																	CopyStrategy::template CopyAndMoveCtor<T> > >		type;
 	};
 
 

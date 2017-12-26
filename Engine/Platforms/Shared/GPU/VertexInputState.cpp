@@ -14,7 +14,7 @@ namespace Platforms
 */
 	VertexInputState::Attrib::Attrib (UninitializedType) :
 		type( EVertexAttribute::Unknown ),
-		index( AttribIndex(~0u) ),
+		index( AttribIndex(UMax) ),
 		bindingIndex( BindingIndex_Default )
 	{}
 
@@ -30,7 +30,7 @@ namespace Platforms
 	ToDstType
 =================================================
 */
-	inline EVertexAttribute::type  VertexInputState::Attrib::ToDstType () const
+	EVertexAttribute::type  VertexInputState::Attrib::ToDstType () const
 	{
 		return EVertexAttribute::ToDstType( type );
 	}
@@ -83,7 +83,7 @@ namespace Platforms
 =================================================
 */
 	VertexInputState::Binding::Binding (UninitializedType) :
-		index( BindingIndex(~0u) ), rate( EVertexInputRate::Unknown )
+		index( BindingIndex(UMax) ), rate( EVertexInputRate::Unknown )
 	{}
 
 	VertexInputState::Binding::Binding (BindingIndex index, BytesU stride, EVertexInputRate::type rate) :

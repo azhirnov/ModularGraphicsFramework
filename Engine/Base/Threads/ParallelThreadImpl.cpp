@@ -18,7 +18,7 @@ namespace Base
 									const TypeIdList *eventTypes) :
 		Module( gs, config, msgTypes, eventTypes )
 	{
-		GlobalSystems()->GetSetter< ParallelThread >().Set( this );
+		GlobalSystems()->parallelThread.Set( this );
 	}
 	
 /*
@@ -29,7 +29,7 @@ namespace Base
 	ParallelThread::~ParallelThread ()
 	{
 		if ( GetThreadID() == ThreadID::GetCurrent() ) {
-			GlobalSystems()->GetSetter< ParallelThread >().Set( null );
+			GlobalSystems()->parallelThread.Set( null );
 		}
 	}
 //-----------------------------------------------------------------------------
@@ -157,7 +157,7 @@ namespace Base
 			const TimeD		dt = _timer.GetTimeDelta();		_timer.Start();
 
 			// update attached modules
-			_SendForEachAttachments< ModuleMsg::Update >({ dt });
+			_SendForEachAttachments< ModuleMsg::Update >({ TimeF(dt) });
 
 			// calc time to sleep
 			const TimeD		upd_dt = _timer.GetTimeDelta();
@@ -182,7 +182,7 @@ namespace Base
 		const TimeD		dt = _timer.GetTimeDelta();		_timer.Start();
 
 		// last update to proccess messages
-		_SendForEachAttachments< ModuleMsg::Update >({ dt });
+		_SendForEachAttachments< ModuleMsg::Update >({ TimeF(dt) });
 
 		CHECK( Module::_Delete_Impl( Message< ModuleMsg::Delete >{} ) );
 	}
@@ -210,7 +210,7 @@ namespace Base
 		const TimeD		dt = _timer.GetTimeDelta();		_timer.Start();
 
 		// update attached modules
-		_SendForEachAttachments< ModuleMsg::Update >({ dt });
+		_SendForEachAttachments< ModuleMsg::Update >({ TimeF(dt) });
 	}
 
 /*

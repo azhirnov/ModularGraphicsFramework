@@ -1,10 +1,10 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLContext.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 
@@ -30,7 +30,7 @@ namespace PlatformGL
 
 		struct BaseDescr
 		{
-			uint			binding		= ~0u;	// uniform location, texture unit, image unit, buffer binding
+			uint			binding		= UMax;	// uniform location, texture unit, image unit, buffer binding
 			EShader::bits	stageFlags;
 		};
 
@@ -45,7 +45,7 @@ namespace PlatformGL
 		{
 			gl::GLuint		imgID		= 0;
 			uint			level		= 0;
-			uint			layer		= -1;
+			uint			layer		= UMax;
 			gl::GLenum		access		= 0;
 			gl::GLenum		format		= 0;
 		};
@@ -110,7 +110,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4PipelineResourceTable::GL4PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		GL4BaseModule( gs, ModuleConfig{ GLPipelineResourceTableModuleID, ~0u }, &_msgTypes, &_eventTypes )
+		GL4BaseModule( gs, ModuleConfig{ GLPipelineResourceTableModuleID, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "GL4PipelineResourceTable" );
 
@@ -237,7 +237,7 @@ namespace PlatformGL
 		void operator () (const ImageDescr &img) const
 		{
 			using namespace gl;
-			GL_CALL( glBindImageTexture( img.binding, img.imgID, img.level, img.layer != -1, img.layer, img.access, img.format ) );
+			GL_CALL( glBindImageTexture( img.binding, img.imgID, img.level, img.layer != UMax, img.layer, img.access, img.format ) );
 		}
 
 		void operator () (const BufferDescr &buf) const
@@ -426,7 +426,7 @@ namespace PlatformGL
 			ImageDescr		descr;
 			descr.format		= GL4Enum( img.format );
 			descr.level			= 0;	// TODO
-			descr.layer			= -1;
+			descr.layer			= UMax;
 			descr.imgID			= req_image->result.Get(0);
 			descr.binding		= img.binding;
 			descr.stageFlags	= img.stageFlags;
@@ -539,7 +539,7 @@ namespace PlatformGL
 
 namespace Platforms
 {
-	ModulePtr OpenGLContext::_CreateGL4PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateGL4PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
 	{
 		return New< PlatformGL::GL4PipelineResourceTable >( gs, ci );
 	}

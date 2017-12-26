@@ -1,6 +1,8 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Library.h"
+#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Math/Interpolations.h"
 
 #if defined( PLATFORM_WINDOWS ) and \
 	not defined( PLATFORM_SDL )
@@ -150,13 +152,13 @@ namespace OS
 	GetProc
 =================================================
 */
-	void * Library::GetProc (StringCRef procName, void *defProc) const
+	Library::Func_t Library::GetProc (StringCRef procName, Func_t defProc) const
 	{
 		ASSERT( IsValid() );
 		ASSERT( not procName.Empty() );
 		ASSERT( procName.IsNullTerminated() );
 
-		void * tmp = GetProcAddress( _library.Get<HMODULE>(), procName.cstr() );
+		Func_t tmp = ReferenceCast<Func_t>( GetProcAddress( _library.Get<HMODULE>(), procName.cstr() ) );
 		return tmp != null ? tmp : defProc;
 	}
 

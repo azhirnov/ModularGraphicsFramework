@@ -1,14 +1,10 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
 using namespace GX_STL::GXMath;
-
-#ifndef __GX_DEBUG__
-#	error In release configuration tests don't show errors!
-#endif
 
 
 extern void Test_CompileTime_TypeInfo ();
@@ -66,7 +62,7 @@ extern void Test_SimpleScript ();
 extern void Test_Temp ();
 
 
-void main ()
+int main ()
 {
 	InitializeSTLMath();
 
@@ -126,10 +122,12 @@ void main ()
 
 	Test_SimpleScript();
 
-	WARNING( "Tests Finished!" );
+	TEST( !"Tests Finished!" );
 
 	Logger::GetInstance()->Close();
 	
 	DEBUG_ONLY( DbgRefCountedObject::s_ChenckNotReleasedObjects() );
 	DEBUG_ONLY( RefCounter2::s_CheckAllocations() );
+
+	return 0;
 }

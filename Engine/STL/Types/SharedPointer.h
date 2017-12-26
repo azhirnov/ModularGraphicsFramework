@@ -1,8 +1,9 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
 #include "Ptr.h"
+#include "Engine/STL/Common/Cast.h"
 
 namespace GX_STL
 {
@@ -91,7 +92,7 @@ namespace GXTypes
 			STATIC_ASSERT(( CompileTime::IsBaseOf< B, T > ));
 		}
 
-		forceinline SharedPointer (std::nullptr_t)
+		forceinline SharedPointer (NullPtr_t)
 		{}
 
 		forceinline SharedPointer (T *ptr) : _ptr(ptr)

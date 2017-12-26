@@ -4,7 +4,6 @@
 
 #include "Engine/Platforms/Common/Common.h"
 #include "Engine/Platforms/Shared/GPU/Context.h"
-#include "Engine/Platforms/Shared/GPU/IDs.h"
 
 namespace Engine
 {
@@ -21,8 +20,8 @@ namespace CreateInfo
 		using EFlags	= Platforms::GraphicsSettings::EFlags;
 
 	// variables
-		ModulePtr						context;
-		ModulePtr						shared;
+		ModulePtr						context;		// can be null
+		ModulePtr						shared;			// can be null
 		Platforms::GraphicsSettings		settings;
 
 	// methods
@@ -77,7 +76,6 @@ namespace GpuMsg
 	{
 		struct Data {
 			ModulePtr	framebuffer;		// returns current framebuffer
-			ModulePtr	commandBuilder;		// this builder destroys all command buffer before resize swapchain		// TODO: remove, create cmd manager
 			uint		index;				// index of image in swapchain
 		};
 		Out< Data >		result;
@@ -89,18 +87,15 @@ namespace GpuMsg
 		using Commands_t	= FixedSizeArray< ModulePtr, 32 >;
 		
 	// variables
-		Commands_t			commands;		// (optional) commands to submit before present frame
-		ModulePtr			framebuffer;	// (optional) must be null or framebuffer returned by ThreadBeginFrame
+		ModulePtr		framebuffer;	// (optional) must be null or framebuffer returned by ThreadBeginFrame
+		ModulePtr		commands;		// (optional) commands to submit before present frame
 
 	// methods
 		ThreadEndFrame ()
 		{}
 
-		explicit ThreadEndFrame (const ModulePtr &framebuffer) : framebuffer(framebuffer)
-		{}
-
-		ThreadEndFrame (const ModulePtr &framebuffer, InitializerList< ModulePtr > list) :
-			commands( list ), framebuffer( framebuffer )
+		ThreadEndFrame (const ModulePtr &framebuffer, const ModulePtr &commands) :
+			framebuffer( framebuffer ), commands( commands )
 		{}
 	};
 
@@ -115,12 +110,10 @@ namespace GpuMsg
 
 	// variables
 		Commands_t		commands;
-		bool			sync	= false;
 
 	// methods
-		explicit SubmitGraphicsQueueCommands (const ModulePtr &cmd, bool sync = false) : commands({ cmd }), sync(sync) {}
-
-		SubmitGraphicsQueueCommands (InitializerList< ModulePtr > list, bool sync = false) : commands( list ), sync(sync) {}
+		explicit SubmitGraphicsQueueCommands (const ModulePtr &cmd) : commands({ cmd }) {}
+		explicit SubmitGraphicsQueueCommands (ArrayCRef< ModulePtr > list) : commands( list ) {}
 	};
 
 	struct SubmitComputeQueueCommands
@@ -130,12 +123,10 @@ namespace GpuMsg
 
 	// variables
 		Commands_t		commands;
-		bool			sync	= false;
 
 	// methods
-		explicit SubmitComputeQueueCommands (const ModulePtr &cmd, bool sync = false) : commands({ cmd }), sync(sync) {}
-
-		SubmitComputeQueueCommands (InitializerList< ModulePtr > list, bool sync = false) : commands( list ), sync(sync) {}
+		explicit SubmitComputeQueueCommands (const ModulePtr &cmd) : commands({ cmd }) {}
+		explicit SubmitComputeQueueCommands (ArrayCRef< ModulePtr > list) : commands( list ) {}
 	};
 
 
@@ -146,6 +137,15 @@ namespace GpuMsg
 	{
 		Out< Platforms::ComputeModuleIDs >		compute;
 		Out< Platforms::GraphicsModuleIDs >		graphics;
+	};
+
+
+	//
+	// Get Graphics Settings
+	//
+	struct GetGraphicsSettings
+	{
+		Out< Platforms::GraphicsSettings >		result;
 	};
 
 

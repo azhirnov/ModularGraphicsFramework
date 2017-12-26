@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -45,7 +45,7 @@ void Matrix_Test1 ()
 	float4x4	mat3 = mat1 * mat2;
 	float4x4	mat4 = Mul( mat1, mat2 );
 
-	ASSERT( mat3 == mat4 );
+	TEST( mat3 == mat4 );
 }
 
 

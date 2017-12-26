@@ -1,7 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
-#include "Engine/Platforms/Vulkan/VulkanContext.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -72,7 +72,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Sampler::Vk1Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkSamplerModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ VkSamplerModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_samplerId( VK_NULL_HANDLE )
 	{
@@ -390,10 +390,10 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanContext::_CreateVk1Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
 		ModulePtr	mod;
-		CHECK_ERR( mod = gs->Get< ParallelThread >()->GetModuleByMsg< MessageListFrom< GpuMsg::GetVkPrivateClasses > >() );
+		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetVkPrivateClasses>> >() );
 
 		Message< GpuMsg::GetVkPrivateClasses >	req_cl;
 		mod->Send( req_cl );

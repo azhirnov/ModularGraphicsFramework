@@ -374,7 +374,7 @@ namespace GXMath
 	template <typename T2>
 	inline Transformation<T2> Transformation<T>::Convert () const
 	{
-		return Transformation<T2>( _position.Convert<T2>(), _orientation.Convert<T2>(), T2(_scale) );
+		return Transformation<T2>( _position.template Convert<T2>(), _orientation.template Convert<T2>(), T2(_scale) );
 	}
 
 

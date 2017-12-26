@@ -1,6 +1,6 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Engine.STL.h"
+#include "Tests/STL/Common.h"
 
 using namespace GX_STL;
 using namespace GX_STL::GXTypes;
@@ -23,7 +23,7 @@ static void Union_Test1 ()
 	Union_t		u;	u.Create( f1 );
 	float		f2 = u.Get<float>();
 
-	ASSERT( f1 == f2 );
+	TEST( f1 == f2 );
 }
 
 
@@ -55,7 +55,7 @@ static void Union_Test3 ()
 	}
 
 	String s = un2.Get<String>();
-	ASSERT( s == "1234567890" );
+	TEST( s == "1234567890" );
 }
 
 
@@ -73,10 +73,10 @@ static void Union_Test4 ()
 		au2 = au1;
 	}
 
-	String	s0 = au2[0].Get< String >();	ASSERT( s0 == "000000000000000000000" );
-	String	s1 = au2[1].Get< String >();	ASSERT( s1 == "111111111111111111111" );
-	String	s2 = au2[2].Get< String >();	ASSERT( s2 == "222222222222222222222" );
-	String	s3 = au2[3].Get< String >();	ASSERT( s3 == "333333333333333333333" );
+	String	s0 = au2[0].Get< String >();	TEST( s0 == "000000000000000000000" );
+	String	s1 = au2[1].Get< String >();	TEST( s1 == "111111111111111111111" );
+	String	s2 = au2[2].Get< String >();	TEST( s2 == "222222222222222222222" );
+	String	s3 = au2[3].Get< String >();	TEST( s3 == "333333333333333333333" );
 }
 
 

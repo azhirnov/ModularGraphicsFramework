@@ -1,8 +1,8 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright Â©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/OS/Input.h"
 #include "Engine/Platforms/Windows/WinMessages.h"
-#include "Engine/Platforms/Windows/WinPlatform.h"
+#include "Engine/Platforms/Windows/WinObjectsConstructor.h"
 
 #if defined( PLATFORM_WINDOWS )
 
@@ -182,7 +182,7 @@ namespace Platforms
 			ubyte	input_data[60];
 			uint	data_size = sizeof(input_data);
 
-			if ( ::GetRawInputData( (HRAWINPUT) msg->lParam, RID_INPUT, input_data, &data_size, sizeof(RAWINPUTHEADER) ) != -1 )
+			if ( ::GetRawInputData( (HRAWINPUT) msg->lParam, RID_INPUT, input_data, &data_size, sizeof(RAWINPUTHEADER) ) != UMax )
 			{
 				RAWINPUT  *	p_data = (RAWINPUT *)input_data;
 
@@ -252,6 +252,9 @@ namespace Platforms
 */
 	bool WinKeyInput::_Link (const Message< ModuleMsg::Link > &msg)
 	{
+		if ( _IsComposedOrLinkedState( GetState() ) )
+			return true;	// already linked
+
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 
 		// subscribe on window events
@@ -516,7 +519,12 @@ namespace Platforms
 
 
 	
-	ModulePtr WinPlatform::_CreateWinKeyInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
+/*
+=================================================
+	CreateWinKeyInput
+=================================================
+*/
+	ModulePtr WinObjectsConstructor::CreateWinKeyInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
 	{
 		return New< WinKeyInput >( gs, ci );
 	}
