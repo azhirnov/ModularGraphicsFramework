@@ -128,30 +128,6 @@ namespace PipelineCompiler
 			str << '\n';
 		}
 	}
-	
-/*
-=================================================
-	_ConstantsToString
-=================================================
-*/
-	String BasePipeline::_ConstantsToString (const Array<Constant> &constants) const
-	{
-		String	str;
-
-		FOR( i, constants )
-		{
-			const auto&		cnst	= constants[i];
-
-			if ( EShaderVariable::IsStruct( cnst.type ) )
-			{
-			}
-			else
-			{
-				str << cnst.ToStringGLSL() << "\n";
-			}
-		}
-		return str;
-	}
 
 /*
 =================================================
@@ -582,8 +558,7 @@ namespace PipelineCompiler
 			source.Clear();
 			str.Clear();
 
-			str << _VaryingsToString( shader._io ) << '\n'
-				<< _ConstantsToString( shader._constants ) << '\n';
+			str << _VaryingsToString( shader._io ) << '\n';
 			_BindingsToString( shader.type, EShaderType::GLSL, OUT str );
 
 			source	<< version
@@ -626,8 +601,7 @@ namespace PipelineCompiler
 			source.Clear();
 			str.Clear();
 
-			str << _VaryingsToString( shader._io ) << '\n'
-				<< _ConstantsToString( shader._constants ) << '\n';
+			str << _VaryingsToString( shader._io ) << '\n';
 			_BindingsToString( shader.type, EShaderType::SPIRV, OUT str );
 
 			source	<< version
@@ -664,8 +638,7 @@ namespace PipelineCompiler
 			source.Clear();
 			str.Clear();
 
-			str << _VaryingsToString( shader._io ) << '\n'
-				<< _ConstantsToString( shader._constants ) << '\n';
+			str << _VaryingsToString( shader._io ) << '\n';
 			_BindingsToString( shader.type, EShaderType::Software, OUT str );
 			
 			source	<< version
@@ -691,8 +664,7 @@ namespace PipelineCompiler
 			source.Clear();
 			str.Clear();
 
-			str << _VaryingsToString( shader._io ) << '\n'
-				<< _ConstantsToString( shader._constants ) << '\n';
+			str << _VaryingsToString( shader._io ) << '\n';
 			_BindingsToString( shader.type, EShaderType::CL, OUT str );
 			
 			source	<< version

@@ -138,8 +138,10 @@ namespace PipelineCompiler
 			using Value_t		= Union< bool, bool2, bool3, bool4,
 										 int, int2, int3, int4,				uint, uint2, uint3, uint4,
 										 ilong, ilong2, ilong3, ilong4,		ulong, ulong2, ulong3, ulong4,
-										 float, float2, float3, float4,		float2x2, float3x3, float4x4,
-										 double, double2, double3, double4,	double2x2, double3x3, double4x4 >;
+										 float, float2, float3, float4,		float2x2, float2x3, float2x4,
+										 float3x2, float3x3, float3x4,		float4x2, float4x3, float4x4,
+										 double, double2, double3, double4,	double2x2, double2x3, double2x4,
+										 double3x2, double3x3, double3x4,	double4x2, double4x3, double4x4 >;
 			using ValueArray_t	= Array< Value_t >;
 
 			ValueArray_t	values;

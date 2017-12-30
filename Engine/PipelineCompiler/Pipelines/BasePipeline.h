@@ -8,29 +8,12 @@
 		- find same buffers type names and make align filds for GLSL/HLSL/SPIRV/CL/C++ compatibility
 		- find same samplers and optimize bindings for OpenGL and DirectX 11
 	- for targets:
-		- GLSL:
-			- use OpenGL bindings
-			- parse GXSL/GLSL with glslang
-			- replace buffer fields by aligned types
-			- optimize with LunarGLASS (LLVW)
-			- compile to binary (optional)
-		- SPIRV
-			- use Vulkan bindings
-			- parse GXSL/GLSL with glslang
-			- replace buffer fields by aligned types
-			- translate to SPIRV with LunarGLASS
-			- optimize with SPIRV-tools
-		- C++
-			- use Vulkan bindings
-			- parse GXSL/GLSL with glslang
-			- replace buffer fields by aligned types
-			- translate to C++ 
-		- CL
-			- use OpenCL bindings
-			- parse GXSL/GLSL with glslang
-			- replace buffer fields by aligned types
-			- translate to CL
-			- compile to binary (optional)
+		- use target bindings
+		- parse GXSL/GLSL/HLSL with glslang
+		- replace buffer fields by aligned types
+		- GLSL: optimize with LunarGLASS
+		- HLSL/CL/C++: translate to target
+		- SPIRV: translate with LunarGLASS and optimize with SPIRV-tools
 */
 
 #pragma once
@@ -226,25 +209,9 @@ namespace PipelineCompiler
 		};
 
 
-		struct Constant final : Varying
-		{
-		// types
-			using VarlueArray_t		= DeserializedShader::Constant::ValueArray_t;
-			
-		// variables
-			VarlueArray_t				values;
-			
-		// methods
-			bool operator == (const Constant &) const;
-
-			String ToStringGLSL () const;
-		};
-
-
 		struct ShaderModule
 		{
 		// variables
-			Array<Constant>			_constants;
 			Array<String>			_source;		// origin source
 			BinaryArray				_sourceOnly;	// shader source without external objects, entry point: 'main'
 			Array<Varying>			_io;			// for compute shader must be empty
@@ -274,7 +241,6 @@ namespace PipelineCompiler
 			Array<ImageUniform>			images;
 			Array<UniformBuffer>		uniformBuffers;
 			Array<StorageBuffer>		storageBuffers;
-			Array<Constant>				constants;
 
 		// methods
 			ShaderDisasembly () {}
@@ -413,7 +379,6 @@ namespace PipelineCompiler
 		static bool _ExtractStorageBuffers (const DeserializedShader &shader, OUT Array<StorageBuffer> &result);
 		static bool _ExtractTypes (const DeserializedShader &shader, OUT Array<_StructField> &result);
 		static bool _ExtractVaryings (const DeserializedShader &shader, OUT Array<Varying> &input, OUT Array<Varying> &output);
-		static bool _ExtractConstants (const DeserializedShader &shader, OUT Array<Constant> &result);
 		static bool _ExtractAttribs (const Array<Varying> &input, OUT VertexAttribs &attribs);
 		static bool _ExtractFragOutput (const Array<Varying> &output, OUT FragmentOutputState &fragOutput);
 
@@ -435,8 +400,6 @@ namespace PipelineCompiler
 		bool _CompileShader (const ShaderModule &shader, const ConverterConfig &cfg, OUT CompiledShader &compiled) const;
 		void _BindingsToString (EShader::type shaderType, EShaderType shaderApi, OUT String &str) const;
 		bool _TypeReplacer (StringCRef typeName, INOUT ShaderCompiler::FieldTypeInfo &field) const;
-
-		String _ConstantsToString (const Array<Constant> &constants) const;
 		String _StructToString (StringCRef typeName, bool skipLayouts) const;
 
 		static bool _CalculateOffsets (INOUT StructTypes &structTypes);

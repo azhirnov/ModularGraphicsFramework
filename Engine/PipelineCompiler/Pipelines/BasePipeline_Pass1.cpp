@@ -441,35 +441,6 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	_ExtractConstants
-=================================================
-*/
-	bool BasePipeline::_ExtractConstants (const DeserializedShader &shader, OUT Array<Constant> &result)
-	{
-		result.Clear();
-		result.Reserve( shader.Constants().Count() );
-
-		FOR( i, shader.Constants() )
-		{
-			const auto&		src	= shader.Constants()[i];
-			Constant		dst;
-
-			dst.name		= src.name;
-			dst.typeName	= src.typeName;
-			dst.type		= src.type;
-			dst.arraySize	= src.arraySize;
-			dst.location	= UMax;	// unused
-			dst.precision	= src.precision;
-			dst.qualifier	= src.qualifier;
-			dst.values		= src.values;
-
-			result.PushBack( RVREF(dst) );
-		}
-		return true;
-	}
-	
-/*
-=================================================
 	_ExtractAttribs
 =================================================
 */
@@ -861,8 +832,6 @@ namespace PipelineCompiler
 
 		// build source
 		{
-			CHECK_ERR( shader._constants.Empty() );
-
 			str << _VaryingsToString( shader._io ) << '\n';
 			_BindingsToString( shader.type, EShaderType::None, OUT str );
 
@@ -943,7 +912,6 @@ namespace PipelineCompiler
 			CHECK_ERR( _ExtractStorageBuffers( deserialized, OUT disasm.storageBuffers ) );
 			CHECK_ERR( _ExtractTypes( deserialized, OUT disasm.structTypes ) );
 			CHECK_ERR( _ExtractVaryings( deserialized, OUT disasm.input, OUT disasm.output ) );
-			CHECK_ERR( _ExtractConstants( deserialized, OUT disasm.constants ) );
 			
 			if ( shader.type == EShader::Vertex )
 				CHECK_ERR( _ExtractAttribs( disasm.input, OUT attribs ) );
@@ -986,8 +954,6 @@ namespace PipelineCompiler
 				shader._io << disasm.output[i];
 			}
 		}
-
-		shader._constants = disasm.constants;
 		return true;
 	}
 

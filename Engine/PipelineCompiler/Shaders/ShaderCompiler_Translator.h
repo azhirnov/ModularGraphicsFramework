@@ -7,6 +7,16 @@
 namespace PipelineCompiler
 {
 
+	struct ConstUnionHash
+	{
+		using Result_t = HashResult;
+
+		HashResult operator () (const glslang::TConstUnionArray &key) const;
+		HashResult operator () (const glslang::TConstUnionArray *key) const;
+		HashResult operator () (const glslang::TConstUnion &key) const;
+	};
+
+
 	//
 	// Translator
 	//
@@ -33,12 +43,22 @@ namespace PipelineCompiler
 			TypeInfo() {}
 		};
 
+
 		struct Node
 		{
 			TypeInfo		typeInfo;
 			uint			uid		= 0;
 			String			src;
 		};
+
+
+		struct Const
+		{
+			String					name;
+			glslang::TIntermSymbol*	node	= null;
+		};
+
+		using ConstMap_t		= HashMap< const glslang::TConstUnionArray*, Const, ConstUnionHash >;
 
 		using NodeMap_t			= Map< uint, Node >;
 		using LocalVarSet_t		= Set< uint >;
@@ -48,7 +68,7 @@ namespace PipelineCompiler
 		using LocalNames_t		= Set< String >;
 		using StringStack_t		= Stack< String >;
 		using LocalReplacer_t	= HashMap< String, String >;
-		using Constants_t		= Set< glslang::TIntermSymbol* >;
+		//using Constants_t		= Set< glslang::TIntermSymbol* >;
 		using CustomTypes_t		= Map< String, glslang::TIntermTyped* >;
 
 		class IDstLanguage;
@@ -59,8 +79,15 @@ namespace PipelineCompiler
 		String				src;
 		String				log;
 		NodeMap_t			nodes;
-		Constants_t			constNodes;
-		
+
+		// constants
+		struct {
+			LocalNames_t		uniqueNames;
+			ConstMap_t			symbNodes;
+			String				source;
+
+		}					constants;
+
 		// for inllining
 		struct {
 			InlFunctionsMap_t	functions;
@@ -151,6 +178,12 @@ namespace PipelineCompiler
 				str << "(" << _ToString( value ) << ")";
 		}
 
+		template <typename T, usize C, usize R>
+		void operator () (const Matrix<T,C,R> &value) const
+		{
+			str << "(" << _ToString( value ) << ")";
+		}
+
 
 	private:
 		static String _ToString (float value)
@@ -171,6 +204,17 @@ namespace PipelineCompiler
 
 		template <typename T, usize I>
 		static String _ToString (const Vec<T,I> &value)
+		{
+			String	str;
+
+			FOR( i, value ) {
+				str << (i ? ", " : "") << _ToString( value[i] );
+			}
+			return str;
+		}
+
+		template <typename T, usize C, usize R>
+		static String _ToString (const Matrix<T,C,R> &value)
 		{
 			String	str;
 

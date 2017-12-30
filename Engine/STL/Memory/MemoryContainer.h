@@ -29,6 +29,7 @@ namespace GXTypes
 	private:
 		union {
 			void *				_memory;
+			T *					_memPtr;
 			TMemoryViewer<T>	_memView;
 		};
 
@@ -268,6 +269,7 @@ namespace GXTypes
 
 		union {
 			void *				_memory;
+			T *					_memPtr;
 			TMemoryViewer<T>	_memView;
 		};
 

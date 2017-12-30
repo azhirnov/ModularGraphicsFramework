@@ -34,7 +34,7 @@ namespace ModuleMsg
 		
 	// methods
 		explicit AttachModule (const ModulePtr &unit) : AttachModule( StringCRef(), unit ) {}
-		AttachModule (StringCRef name, const ModulePtr &unit) : name( /*name.Empty() ? ModuleName_t("id: ") << ToString(GModID::type( unit->GetModuleID() )) :*/ name ), newModule( unit ) {}
+		AttachModule (StringCRef name, const ModulePtr &unit) : name( name ), newModule( unit ) {}
 	};
 	
 	struct DetachModule

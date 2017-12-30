@@ -1,6 +1,7 @@
 // Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.h"
+#include "Engine/PipelineCompiler/Common/ToGLSL.h"
 
 namespace PipelineCompiler
 {
@@ -27,6 +28,7 @@ namespace PipelineCompiler
 
 	static bool TranslateFunction (glslang::TIntermAggregate* aggr, const uint uid, Translator &translator);
 	static bool TranslateExternalObjects (glslang::TIntermAggregate* aggr, const uint uid, Translator &translator);
+	static bool TranslateGlobals (glslang::TIntermAggregate* aggr, const uint uid, Translator &translator);
 	static bool ConvertType (TIntermNode* node, glslang::TType const &type, glslang::TSourceLoc const &loc, const Translator::TypeInfo *parent, OUT Translator::TypeInfo &typeInfo);
 	static bool TranslateVectorSwizzle (glslang::TIntermOperator* node, const uint uid, Translator &translator);
 	static bool TranslateIndexDirectStruct (glslang::TIntermOperator* node, const uint uid, Translator &translator);
@@ -39,6 +41,7 @@ namespace PipelineCompiler
 	static bool TranslateFunctionForwardDecl (glslang::TIntermAggregate* node, const Translator &translator, INOUT String &src);
 
 	static bool GXCheckAccessToExternal (const Translator &translator, const Translator::Node &node);
+	static bool GXCheckExternalQualifiers (const Translator &translator, const glslang::TQualifier &qual);
 	
 		
 /*
@@ -68,6 +71,80 @@ namespace PipelineCompiler
 		}
 		return true;
 	}
+	
+/*
+=================================================
+	GXCheckExternalQualifiers
+=================================================
+*/
+	static bool GXCheckExternalQualifiers (const Translator &translator, const glslang::TQualifier &qual)
+	{
+		if ( translator.useGXrules )
+		{
+			switch ( qual.storage )
+			{
+				case glslang::TStorageQualifier::EvqBuffer :
+				case glslang::TStorageQualifier::EvqConst :
+				case glslang::TStorageQualifier::EvqUniform :
+					return true;
+
+				default :
+					return false;
+			}
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	hash of TConstUnionArray
+=================================================
+*/
+	HashResult  ConstUnionHash::operator () (const glslang::TConstUnionArray *key) const
+	{
+		return (*this)( *key );
+	}
+
+	HashResult  ConstUnionHash::operator () (const glslang::TConstUnionArray &key) const
+	{
+		HashResult	result;
+		for (int i = 0; i < key.size(); ++i) {
+			result += (*this)( key[i] );
+		}
+		return result;
+	}
+	
+/*
+=================================================
+	hash of TConstUnion
+=================================================
+*/
+	HashResult  ConstUnionHash::operator () (const glslang::TConstUnion &key) const
+	{
+		switch (key.getType())
+		{
+			case glslang::TBasicType::EbtFloat :
+			case glslang::TBasicType::EbtDouble :	return HashOf( key.getDConst() );
+			#ifdef AMD_EXTENSIONS
+			//case glslang::TBasicType::EbtFloat16
+			#endif
+			case glslang::TBasicType::EbtInt :		return HashOf( key.getIConst() );
+			case glslang::TBasicType::EbtUint :		return HashOf( key.getUConst() );
+			case glslang::TBasicType::EbtInt64 :	return HashOf( key.getI64Const() );
+			case glslang::TBasicType::EbtUint64 :	return HashOf( key.getU64Const() );
+			#ifdef AMD_EXTENSIONS
+			//case glslang::TBasicType::EbtInt16
+			//case glslang::TBasicType::EbtUint16
+			#endif
+			case glslang::TBasicType::EbtBool :		return HashOf( key.getBConst() );
+			//case glslang::TBasicType::EbtAtomicUint
+			//case glslang::TBasicType::EbtSampler
+			//case glslang::TBasicType::EbtStruct
+			//case glslang::TBasicType::EbtBlock
+			case glslang::TBasicType::EbtString :	return HashOf( key.getSConst()->c_str() );
+			default :								RETURN_ERR( "unsupported type!" );
+		}
+	}
 
 /*
 =================================================
@@ -82,7 +159,8 @@ namespace PipelineCompiler
 		CHECK_ERR( aggr and aggr->getOp() == glslang::TOperator::EOpSequence );
 		
 		// get external objects
-		const uint		ext_uid	= ++translator.uid;
+		const uint		ext_uid		= ++translator.uid;
+		const uint		global_uid	= ++translator.uid;
 		DeclFunction_t	funcs;
 
 		for (size_t i = 0; i < aggr->getSequence().size(); ++i)
@@ -93,6 +171,7 @@ namespace PipelineCompiler
 			if ( aggr2 and aggr2->getOp() == glslang::TOperator::EOpLinkerObjects )
 			{
 				CHECK_ERR( TranslateExternalObjects( aggr2, ext_uid, translator ) );
+				CHECK_ERR( TranslateGlobals( aggr2, global_uid, translator ) );
 			}
 			else
 			if ( aggr2 and aggr2->getOp() == glslang::TOperator::EOpFunction )
@@ -123,16 +202,37 @@ namespace PipelineCompiler
 			src << arg.src << "\n";
 		}
 
-		if ( not skipExternals )
+		// custom types declaration
+		if ( not translator.types.globalTypes.Empty() )
 		{
-			translator.src	<< translator.nodes( ext_uid ).src
-							<< "\n//---------------------------------\n\n";
+			FOR( i, translator.types.globalTypes ) {
+				CHECK_ERR( TranslateCustomType( translator.types.globalTypes[i].second, translator, INOUT translator.src ) );
+			}
+			translator.src << "\n//---------------------------------\n\n";
 		}
 
-		// custom types declaration
-		FOR( i, translator.types.globalTypes )
+		// add externals
+		if ( not skipExternals )
 		{
-			CHECK_ERR( TranslateCustomType( translator.types.globalTypes[i].second, translator, INOUT translator.src ) );
+			StringCRef	ext_src = translator.nodes( ext_uid ).src;
+
+			if ( not ext_src.Empty() ) {
+				translator.src	<< ext_src
+								<< "\n//---------------------------------\n\n";
+			}
+		}
+
+		// add constants and globals
+		{
+			StringCRef	global_src	= translator.nodes( global_uid ).src;
+			StringCRef	const_src	= translator.constants.source;
+
+			if ( not global_src.Empty() or not const_src.Empty() )
+			{
+				translator.src	<< global_src
+								<< const_src
+								<< "\n//---------------------------------\n\n";
+			}
 		}
 
 		// function forward declaration
@@ -684,8 +784,6 @@ namespace PipelineCompiler
 	TranslateExternalObjects
 =================================================
 */
-	static bool TranslateConst (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str);
-
 	static bool TranslateExternalObjects (glslang::TIntermAggregate* aggr, const uint uid, Translator &translator)
 	{
 		CHECK_ERR( aggr and aggr->getOp() == glslang::TOperator::EOpLinkerObjects );
@@ -709,10 +807,61 @@ namespace PipelineCompiler
 			if ( type.isBuiltIn() or info.typeName.StartsWithIC("gl_") ) {
 				continue;
 			}
+
+			CHECK_ERR( GXCheckExternalQualifiers( translator, type.getQualifier() ) );
 			
-			if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqConst ) {
-				translator.constNodes.Add( node->getAsSymbolNode() );
+			if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqConst or
+				 type.getQualifier().storage == glslang::TStorageQualifier::EvqGlobal )
+				continue;
+
+			CHECK_ERR( translator.language->TranslateExternal( typed, info, OUT str ) );
+		}
+
+		translator.nodes.Add( uid, RVREF(dst_node) );
+		return true;
+	}
+	
+/*
+=================================================
+	TranslateGlobals
+=================================================
+*/
+	static bool TranslateGlobals (glslang::TIntermAggregate* aggr, const uint uid, Translator &translator)
+	{
+		CHECK_ERR( aggr and aggr->getOp() == glslang::TOperator::EOpLinkerObjects );
+
+		Translator::Node	dst_node;
+		String &			str = dst_node.src;
+
+		dst_node.uid = uid;
+
+		for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+		{
+			TIntermNode*	node = aggr->getSequence()[i];
+			CHECK_ERR( node->getAsTyped() );
+
+			glslang::TIntermTyped*		typed	= node->getAsTyped();
+			glslang::TType const&		type	= typed->getType();
+			Translator::TypeInfo		info;
+
+			CHECK_ERR( ConvertType( node, type, typed->getLoc(), null, OUT info ) );
+			
+			if ( type.isBuiltIn() or info.typeName.StartsWithIC("gl_") ) {
+				continue;
 			}
+			
+			if ( type.getQualifier().storage != glslang::TStorageQualifier::EvqConst and
+				 type.getQualifier().storage != glslang::TStorageQualifier::EvqGlobal )
+				continue;
+			
+			auto*	symb_node	= node->getAsSymbolNode();
+			auto*	cu_arr		= &symb_node->getConstArray();
+			String	name		= symb_node->getName().c_str();
+
+			CHECK_ERR( not translator.constants.uniqueNames.IsExist( name ) );
+
+			translator.constants.uniqueNames.Add( name );
+			translator.constants.symbNodes.Add( cu_arr, Translator::Const{ name, symb_node } );
 
 			CHECK_ERR( translator.language->TranslateExternal( typed, info, OUT str ) );
 		}
@@ -882,6 +1031,56 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	RecursiveInitConstStruct
+=================================================
+*/
+	static bool RecursiveInitConstStruct (const Array<Translator::TypeInfo> &fields, const glslang::TConstUnionArray& cu_arr, INOUT int &index, OUT String &src, Translator &translator)
+	{
+		DeserializedShader::Constant::ValueArray_t	values;
+		CU_ToString_Func							func( src );
+
+		src << "( ";
+
+		FOR( i, fields )
+		{
+			const auto&	field	= fields[i];
+			const uint	count	= field.arraySize == 0 ? 1 : field.arraySize;
+
+			CHECK_ERR( field.arraySize != UMax );
+			
+			src << (i ? ", " : "");
+
+			if ( field.arraySize != 0 )
+				src << "{ ";
+
+			if ( field.type == EShaderVariable::Struct )
+			{
+				for (uint j = 0; j < count; ++j) {
+					CHECK_ERR( RecursiveInitConstStruct( field.fields, cu_arr, INOUT index, INOUT src, translator ) );
+				}
+			}
+			else
+			{
+				for (uint j = 0; j < count; ++j)
+				{
+					values.Clear();
+					CHECK_ERR( DeserializeConstant::Process( field.type, cu_arr, index, true, OUT values, OUT index ) );
+					
+					src << (j ? ", " : "");
+					CHECK_ERR( translator.language->TranslateType( field, INOUT src ) );
+					values.Front().Apply( func );
+				}
+			}
+			
+			if ( field.arraySize != 0 )
+				src << " }";
+		}
+		src << " )";
+		return true;
+	}
+
+/*
+=================================================
 	RecursiveProcessConstUnionNode
 =================================================
 */
@@ -894,17 +1093,72 @@ namespace PipelineCompiler
 		dst_node.uid = uid;
 		CHECK_ERR( ConvertType( node, cu->getType(), cu->getLoc(), null, OUT dst_node.typeInfo ) );
 		CHECK_COMP2( GXCheckAccessToExternal( translator, dst_node ) );
-
-		DeserializedShader::Constant::ValueArray_t	values;
-		CHECK_ERR( DeserializeConstant::Process( dst_node.typeInfo.type, cu_arr, OUT values ) );
 		
-		CU_ToString_Func	func( dst_node.src );
+		// find in constants
+		bool found = false;
 
-		FOR( i, values )
+		FOR( i, translator.constants.symbNodes )
 		{
-			dst_node.src << (i ? ", " : "");
-			CHECK_ERR( translator.language->TranslateType( dst_node.typeInfo, INOUT dst_node.src ) );
-			values[i].Apply( func );
+			glslang::TConstUnionArray const&	arr = *translator.constants.symbNodes[i].first;
+
+			if ( cu_arr == arr )
+			{
+				dst_node.src << translator.constants.symbNodes[i].second.name;
+				found = true;
+				break;
+			}
+		}
+
+		// create constant
+		if ( not found )
+		{
+			String			name;
+			String&			src			= translator.constants.source;
+			String const	type_name	= (dst_node.typeInfo.typeName.Empty() ? ToStringGLSL( dst_node.typeInfo.type ) : dst_node.typeInfo.typeName);
+
+			// choose unique name
+			for (uint i = 0; i < 100; ++i)
+			{
+				name << "C_" << type_name << "_" << i;
+
+				if ( not translator.constants.uniqueNames.IsExist( name ) )
+					break;
+				
+				name.Clear();
+			}
+			
+			CHECK_ERR( not name.Empty() );
+			translator.constants.uniqueNames.Add(name);
+			translator.constants.symbNodes.Add( &cu_arr, { name, null } );
+
+			src << "const " << type_name << " " << name << " = ";
+
+			// create constant
+			if ( dst_node.typeInfo.type != EShaderVariable::Struct )
+			{
+				DeserializedShader::Constant::ValueArray_t	values;
+				CHECK_ERR( DeserializeConstant::Process( dst_node.typeInfo.type, cu_arr, OUT values ) );
+			
+				CU_ToString_Func	func( src );
+
+				FOR( i, values )
+				{
+					src << (i ? ", " : "");
+					CHECK_ERR( translator.language->TranslateType( dst_node.typeInfo, INOUT src ) );
+					values[i].Apply( func );
+				}
+			}
+			else
+			{
+				src << dst_node.typeInfo.typeName;
+
+				int index = 0;
+				CHECK_ERR( RecursiveInitConstStruct( dst_node.typeInfo.fields, cu_arr, INOUT index, INOUT src, translator ) );
+			}
+			src << ";\n";
+
+			// copy
+			dst_node.src << name;
 		}
 
 		translator.nodes.Add( uid, RVREF(dst_node) );
@@ -1371,13 +1625,13 @@ namespace PipelineCompiler
 		dst_node.uid = uid;
 		CHECK_ERR( ConvertType( cu, cu->getType(), cu->getLoc(), null, OUT dst_node.typeInfo ) );
 
-		FOR( i, translator.constNodes )
+		FOR( i, translator.constants.symbNodes )
 		{
-			glslang::TConstUnionArray const&	arr = translator.constNodes[i]->getConstArray();
+			glslang::TConstUnionArray const&	arr = *translator.constants.symbNodes[i].first;
 
 			if ( cu_arr == arr )
 			{
-				dst_node.src << translator.constNodes[i]->getName().c_str();
+				dst_node.src << translator.constants.symbNodes[i].second.name;
 				break;
 			}
 		}

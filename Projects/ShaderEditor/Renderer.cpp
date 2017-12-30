@@ -512,7 +512,7 @@ namespace ShaderEditor
 
 			FOR( j, shader->_descr._channels )
 			{
-				auto&	ch = shader->_descr._channels[i];
+				auto&	ch = shader->_descr._channels[j];
 				
 				ShadersMap_t::iterator	iter;
 				CHECK_ERR( _shaders.Find( ch.first, OUT iter ) );
@@ -520,12 +520,12 @@ namespace ShaderEditor
 				if ( iter->second == shader )
 				{
 					// use image from previous pass
-					pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j, shader->_perPass[(i+1) & 1] });
+					pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j, shader->_perPass[(i+1) & 1].image });
 					pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j << ".sampler", _linearClampSampler });	// TODO
 					continue;
 				}
 				
-				pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j, iter->second->_perPass[i] });
+				pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j, iter->second->_perPass[i].image });
 				pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j << ".sampler", _linearClampSampler });	// TODO
 			}
 			

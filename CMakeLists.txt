@@ -1422,7 +1422,10 @@ add_executable( "Projects.ShaderEditor"
 		"Projects/ShaderEditor/Pipelines/common.h"
 		"Projects/ShaderEditor/Pipelines/drawtexturedquad.cpp"
 		"Projects/ShaderEditor/Pipelines/experimental.cpp"
+		"Projects/ShaderEditor/Pipelines/glowballs.cpp"
 		"Projects/ShaderEditor/Pipelines/shared_types.h"
+		"Projects/ShaderEditor/Pipelines/sireniandawn1.cpp"
+		"Projects/ShaderEditor/Pipelines/sireniandawn2.cpp"
 		"Projects/ShaderEditor/Pipelines/voronnoirecursion.cpp"
 		"Projects/ShaderEditor/Common.h"
 		"Projects/ShaderEditor/Renderer.cpp"
@@ -1430,7 +1433,7 @@ add_executable( "Projects.ShaderEditor"
 		"Projects/ShaderEditor/ShaderEditorApp.cpp"
 		"Projects/ShaderEditor/ShaderEditorApp.h" )
 
-source_group( "Pipelines" FILES "Projects/ShaderEditor/Pipelines/all_pipelines.h" "Projects/ShaderEditor/Pipelines/common.h" "Projects/ShaderEditor/Pipelines/drawtexturedquad.cpp" "Projects/ShaderEditor/Pipelines/experimental.cpp" "Projects/ShaderEditor/Pipelines/shared_types.h" "Projects/ShaderEditor/Pipelines/voronnoirecursion.cpp" )
+source_group( "Pipelines" FILES "Projects/ShaderEditor/Pipelines/all_pipelines.h" "Projects/ShaderEditor/Pipelines/common.h" "Projects/ShaderEditor/Pipelines/drawtexturedquad.cpp" "Projects/ShaderEditor/Pipelines/experimental.cpp" "Projects/ShaderEditor/Pipelines/glowballs.cpp" "Projects/ShaderEditor/Pipelines/shared_types.h" "Projects/ShaderEditor/Pipelines/sireniandawn1.cpp" "Projects/ShaderEditor/Pipelines/sireniandawn2.cpp" "Projects/ShaderEditor/Pipelines/voronnoirecursion.cpp" )
 source_group( "" FILES "Projects/ShaderEditor/Common.h" "Projects/ShaderEditor/Renderer.cpp" "Projects/ShaderEditor/Renderer.h" "Projects/ShaderEditor/ShaderEditorApp.cpp" "Projects/ShaderEditor/ShaderEditorApp.h" )
 set_property( TARGET "Projects.ShaderEditor" PROPERTY FOLDER "Projects" )
 target_include_directories( "Projects.ShaderEditor" PRIVATE "Projects/ShaderEditor" )
@@ -1490,11 +1493,14 @@ endif()
 add_executable( "Projects.ShaderEditor.Tools" 
 		"Projects/ShaderEditorTools/DrawTexturedQuad.cpp"
 		"Projects/ShaderEditorTools/Experimental.cpp"
+		"Projects/ShaderEditorTools/Glowballs.cpp"
 		"Projects/ShaderEditorTools/Main.cpp"
 		"Projects/ShaderEditorTools/ShadertoyTemplate.h"
+		"Projects/ShaderEditorTools/SirenianDawn1.cpp"
+		"Projects/ShaderEditorTools/SirenianDawn2.cpp"
 		"Projects/ShaderEditorTools/VoronnoiRecursion.cpp" )
 
-source_group( "" FILES "Projects/ShaderEditorTools/DrawTexturedQuad.cpp" "Projects/ShaderEditorTools/Experimental.cpp" "Projects/ShaderEditorTools/Main.cpp" "Projects/ShaderEditorTools/ShadertoyTemplate.h" "Projects/ShaderEditorTools/VoronnoiRecursion.cpp" )
+source_group( "" FILES "Projects/ShaderEditorTools/DrawTexturedQuad.cpp" "Projects/ShaderEditorTools/Experimental.cpp" "Projects/ShaderEditorTools/Glowballs.cpp" "Projects/ShaderEditorTools/Main.cpp" "Projects/ShaderEditorTools/ShadertoyTemplate.h" "Projects/ShaderEditorTools/SirenianDawn1.cpp" "Projects/ShaderEditorTools/SirenianDawn2.cpp" "Projects/ShaderEditorTools/VoronnoiRecursion.cpp" )
 set_property( TARGET "Projects.ShaderEditor.Tools" PROPERTY FOLDER "Projects" )
 target_include_directories( "Projects.ShaderEditor.Tools" PRIVATE "Projects/ShaderEditorTools" )
 target_include_directories( "Projects.ShaderEditor.Tools" PUBLIC "Engine/.." )

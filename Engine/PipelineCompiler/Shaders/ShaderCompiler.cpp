@@ -166,7 +166,7 @@ namespace PipelineCompiler
 
 					CHECK( local_line < num_lines[j] );
 
-					CHECK( StringParser::MoveToLine( source[j], INOUT pos, local_line ) );
+					CHECK( StringParser::MoveToLine( source[j], INOUT pos, local_line-1 ) );
 
 					StringParser::ReadLineToEnd( source[j], INOUT pos, OUT line_str );
 

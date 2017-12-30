@@ -107,19 +107,22 @@ namespace PipelineCompiler
 	struct DeserializeConstant
 	{
 		template <typename T>
-		static bool _Run (const glslang::TConstUnionArray& src, OUT DeserializedShader::Constant::ValueArray_t &result) {
-			return _Run2( src, result, T() );
+		static bool _Run (const glslang::TConstUnionArray& src, bool single, INOUT int &index, OUT DeserializedShader::Constant::ValueArray_t &result) {
+			return _Run2( src, single, INOUT index, result, T() );
 		}
 
 
 		template <typename T>
-		static bool _Run2 (const glslang::TConstUnionArray& src, OUT DeserializedShader::Constant::ValueArray_t &result, const T&)
+		static bool _Run2 (const glslang::TConstUnionArray& src, bool single, INOUT int &index, OUT DeserializedShader::Constant::ValueArray_t &result, const T&)
 		{
-			result.Reserve( src.size() );
+			const int first = index;
 
-			for (int i = 0; i < src.size(); ++i)
+			for (index; index < src.size(); ++index)
 			{
-				T	value = _Get<T>( src[i] );
+				if ( single and first != index )
+					break;
+
+				T	value = _Get<T>( src[index] );
 
 				result.PushBack( DeserializedShader::Constant::Value_t( value ) );
 			}
@@ -128,18 +131,22 @@ namespace PipelineCompiler
 		
 
 		template <typename T, usize I, ulong U>
-		static bool _Run2 (const glslang::TConstUnionArray& src, OUT DeserializedShader::Constant::ValueArray_t &result, const Vec<T,I,U>&)
+		static bool _Run2 (const glslang::TConstUnionArray& src, bool single, INOUT int &index, OUT DeserializedShader::Constant::ValueArray_t &result, const Vec<T,I,U>&)
 		{
-			ASSERT( src.size() % I == 0 );
-			result.Reserve( src.size() / I );
+			const int first = index;
 
-			for (int i = 0; i < src.size(); i += I)
+			for (index; index < src.size(); index += I)
 			{
-				Vec<T,I>	value;
+				if ( single and first != index )
+					break;
+
+				CHECK_ERR( src.size() - index >= I );
+
+				Vec<T,I,U>	value;
 
 				for (usize j = 0; j < I; ++j)
 				{
-					value[j] = _Get<T>( src[i+j] );
+					value[j] = _Get<T>( src[index+j] );
 				}
 
 				result.PushBack( DeserializedShader::Constant::Value_t( value ) );
@@ -149,10 +156,28 @@ namespace PipelineCompiler
 		
 
 		template <typename T, usize C, usize R, ulong U>
-		static bool _Run2 (const glslang::TConstUnionArray& src, OUT DeserializedShader::Constant::ValueArray_t &result, const Matrix<T,C,R,U>&)
+		static bool _Run2 (const glslang::TConstUnionArray& src, bool single, INOUT int &index, OUT DeserializedShader::Constant::ValueArray_t &result, const Matrix<T,C,R,U>&)
 		{
-			// TODO
-			return false;
+			const int first = index;
+
+			for (index; index < src.size(); index += C*R)
+			{
+				if ( single and first != index )
+					break;
+
+				CHECK_ERR( src.size() - index >= C*R );
+
+				Matrix<T,C,R,U>	value;
+
+				for (usize c = 0; c < C; ++c)
+				for (usize r = 0; r < R; ++r)
+				{
+					value(c,r) = _Get<T>( src[index + c*R + r] );
+				}
+
+				result.PushBack( DeserializedShader::Constant::Value_t( value ) );
+			}
+			return true;
 		}
 
 
@@ -163,36 +188,63 @@ namespace PipelineCompiler
 		static bool Process (EShaderVariable::type valueType, const glslang::TConstUnionArray& src,
 							 OUT DeserializedShader::Constant::ValueArray_t &result)
 		{
+			int index;
+			return Process( valueType, src, 0, false, OUT result, OUT index );
+		}
+
+		static bool Process (EShaderVariable::type valueType, const glslang::TConstUnionArray& src, int first, bool single, 
+							 OUT DeserializedShader::Constant::ValueArray_t &result, OUT int &index)
+		{
+			index = first;
+
 			switch ( valueType )
 			{
-				case EShaderVariable::Bool :	return _Run<bool>( src, OUT result );
-				case EShaderVariable::Bool2 :	return _Run<bool2>( src, OUT result );
-				case EShaderVariable::Bool3 :	return _Run<bool3>( src, OUT result );
-				case EShaderVariable::Bool4 :	return _Run<bool4>( src, OUT result );
-				case EShaderVariable::Int :		return _Run<int>( src, OUT result );
-				case EShaderVariable::Int2 :	return _Run<int2>( src, OUT result );
-				case EShaderVariable::Int3 :	return _Run<int3>( src, OUT result );
-				case EShaderVariable::Int4 :	return _Run<int4>( src, OUT result );
-				case EShaderVariable::UInt :	return _Run<uint>( src, OUT result );
-				case EShaderVariable::UInt2 :	return _Run<uint2>( src, OUT result );
-				case EShaderVariable::UInt3 :	return _Run<uint3>( src, OUT result );
-				case EShaderVariable::UInt4 :	return _Run<uint4>( src, OUT result );
-				case EShaderVariable::Long :	return _Run<ilong>( src, OUT result );
-				case EShaderVariable::Long2 :	return _Run<ilong2>( src, OUT result );
-				case EShaderVariable::Long3 :	return _Run<ilong3>( src, OUT result );
-				case EShaderVariable::Long4 :	return _Run<ilong4>( src, OUT result );
-				case EShaderVariable::ULong :	return _Run<ulong>( src, OUT result );
-				case EShaderVariable::ULong2 :	return _Run<ulong2>( src, OUT result );
-				case EShaderVariable::ULong3 :	return _Run<ulong3>( src, OUT result );
-				case EShaderVariable::ULong4 :	return _Run<ulong4>( src, OUT result );
-				case EShaderVariable::Float :	return _Run<float>( src, OUT result );
-				case EShaderVariable::Float2 :	return _Run<float2>( src, OUT result );
-				case EShaderVariable::Float3 :	return _Run<float3>( src, OUT result );
-				case EShaderVariable::Float4 :	return _Run<float4>( src, OUT result );
-				case EShaderVariable::Double :	return _Run<double>( src, OUT result );
-				case EShaderVariable::Double2 :	return _Run<double2>( src, OUT result );
-				case EShaderVariable::Double3 :	return _Run<double3>( src, OUT result );
-				case EShaderVariable::Double4 :	return _Run<double4>( src, OUT result );
+				case EShaderVariable::Bool :		return _Run<bool>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Bool2 :		return _Run<bool2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Bool3 :		return _Run<bool3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Bool4 :		return _Run<bool4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Int :			return _Run<int>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Int2 :		return _Run<int2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Int3 :		return _Run<int3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Int4 :		return _Run<int4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::UInt :		return _Run<uint>( src, single, INOUT index, OUT result );
+				case EShaderVariable::UInt2 :		return _Run<uint2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::UInt3 :		return _Run<uint3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::UInt4 :		return _Run<uint4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Long :		return _Run<ilong>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Long2 :		return _Run<ilong2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Long3 :		return _Run<ilong3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Long4 :		return _Run<ilong4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::ULong :		return _Run<ulong>( src, single, INOUT index, OUT result );
+				case EShaderVariable::ULong2 :		return _Run<ulong2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::ULong3 :		return _Run<ulong3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::ULong4 :		return _Run<ulong4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float :		return _Run<float>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float2 :		return _Run<float2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float3 :		return _Run<float3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float4 :		return _Run<float4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double :		return _Run<double>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double2 :		return _Run<double2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double3 :		return _Run<double3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double4 :		return _Run<double4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float2x2 :	return _Run<float2x2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float2x3 :	return _Run<float2x3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float2x4 :	return _Run<float2x4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float3x2 :	return _Run<float3x2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float3x3 :	return _Run<float3x3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float3x4 :	return _Run<float3x4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float4x2 :	return _Run<float4x2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float4x3 :	return _Run<float4x3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Float4x4 :	return _Run<float4x4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double2x2 :	return _Run<double2x2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double2x3 :	return _Run<double2x3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double2x4 :	return _Run<double2x4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double3x2 :	return _Run<double3x2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double3x3 :	return _Run<double3x3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double3x4 :	return _Run<double3x4>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double4x2 :	return _Run<double4x2>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double4x3 :	return _Run<double4x3>( src, single, INOUT index, OUT result );
+				case EShaderVariable::Double4x4 :	return _Run<double4x4>( src, single, INOUT index, OUT result );
 				default :	RETURN_ERR( "unsupported type!" );
 			}
 		}

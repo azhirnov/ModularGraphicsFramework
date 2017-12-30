@@ -50,6 +50,7 @@ namespace PipelineCompiler
 		bool _TranslateShared (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateVarying (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateConst (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str);
+		bool _TranslateGlobal (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str);
 	};
 
 	
@@ -277,6 +278,10 @@ namespace PipelineCompiler
 		else
 		if ( qual.storage == glslang::TStorageQualifier::EvqConst ) {
 			CHECK_ERR( _TranslateConst( typed, info, INOUT str ) );
+		}
+		else
+		if ( qual.storage == glslang::TStorageQualifier::EvqGlobal ) {
+			CHECK_ERR( _TranslateGlobal( typed, info, INOUT str ) );
 		}
 		else {
 			RETURN_ERR( "unknown type" );
@@ -922,6 +927,74 @@ namespace PipelineCompiler
 				values[i].Apply( func );
 			}
 			str << ";\n";
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_TranslateGlobal
+=================================================
+*/
+	bool GLSL_DstLanguage::_TranslateGlobal (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str)
+	{
+		CHECK_ERR( typed->getAsSymbolNode() );
+
+		glslang::TType const&				type	= typed->getType();
+		glslang::TQualifier const&			qual	= type.getQualifier();
+		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
+
+		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
+
+		if ( type.isArray() )
+		{
+			Translator::TypeInfo	scalar_info = info;		scalar_info.arraySize = 0;
+
+			DeserializedShader::Constant::ValueArray_t	values;
+			CHECK_ERR( DeserializeConstant::Process( scalar_info.type, cu_arr, OUT values ) );
+		
+			if ( not values.Empty() )
+			{
+				str << " = { ";
+
+				CU_ToString_Func	func( str );
+
+				FOR( i, values )
+				{
+					str << (i ? ", " : "");
+					CHECK_ERR( TranslateType( scalar_info, INOUT str ) );
+					values[i].Apply( func );
+				}
+				str << " };\n";
+			}
+			else
+				str << ";\n";
+		}
+		else
+		if ( type.isStruct() )
+		{
+			TODO( "" );
+		}
+		else
+		{
+			DeserializedShader::Constant::ValueArray_t	values;
+			CHECK_ERR( DeserializeConstant::Process( info.type, cu_arr, OUT values ) );
+		
+			if ( not values.Empty() )
+			{
+				CU_ToString_Func	func( str );
+
+				str << " = ";
+				FOR( i, values )
+				{
+					str << (i ? ", " : "");
+					CHECK_ERR( TranslateType( info, INOUT str ) );
+					values[i].Apply( func );
+				}
+				str << ";\n";
+			}
+			else
+				str << ";\n";
 		}
 		return true;
 	}

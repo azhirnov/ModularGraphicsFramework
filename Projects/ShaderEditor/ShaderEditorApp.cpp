@@ -98,9 +98,31 @@ namespace ShaderEditor
 		{
 			CHECK_ERR( _renderer.Inititalize() );
 
-			Renderer::ShaderDescr	sh_main;
-			sh_main.Pipeline( Pipelines::Create_voronnoirecursion );
-			CHECK_ERR( _renderer.Add( "main", sh_main ) );
+			#if 0
+				Renderer::ShaderDescr	sh_main;
+				sh_main.Pipeline( Pipelines::Create_voronnoirecursion );
+				CHECK_ERR( _renderer.Add( "main", sh_main ) );
+			#endif
+
+			#if 0
+				Renderer::ShaderDescr	sh_bufA;
+				sh_bufA.Pipeline( Pipelines::Create_sireniandawn1 );
+				sh_bufA.InChannel( "noise", 0 );
+				sh_bufA.InChannel( "bufA", 1 );
+				CHECK_ERR( _renderer.Add( "bufA", sh_bufA ) );
+
+				Renderer::ShaderDescr	sh_main;
+				sh_main.Pipeline( Pipelines::Create_sireniandawn2 );
+				sh_bufA.InChannel( "bufA", 0 );
+				CHECK_ERR( _renderer.Add( "main", sh_main ) );
+			#endif
+
+			#if 1
+				Renderer::ShaderDescr	sh_main;
+				sh_main.Pipeline( Pipelines::Create_glowballs );
+				sh_main.InChannel( "main", 0 );
+				CHECK_ERR( _renderer.Add( "main", sh_main ) );
+			#endif
 		}
 		return true;
 	}
@@ -158,6 +180,7 @@ int main ()
 	{
 		ShaderEditorApp	app;
 	
+		//app.Initialize( "GL 4.4"_GAPI );
 		app.Initialize( "VK 1.0"_GAPI );
 
 		// main loop
