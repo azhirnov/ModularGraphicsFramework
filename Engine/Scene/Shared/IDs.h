@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -23,6 +23,7 @@ namespace Scene
 
 	// Surface
 	static constexpr OModID::type  WindowSurfaceModuleID		= "s.wndsurf"_OModID;
+	static constexpr OModID::type  VRSurfaceModuleID			= "s.vrsurf"_OModID;
 
 	// Technique
 	static constexpr OModID::type  ForwardRendererTechModuleID	= "s.fr-tech"_OModID;

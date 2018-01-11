@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Pipelines/BasePipeline.h"
 #include "Engine/PipelineCompiler/Pipelines/PipelineManager.h"
@@ -120,8 +120,6 @@ namespace PipelineCompiler
 		// compare fields
 		if ( structType.fields.Count() == iter->second.fields.Count() )
 		{
-			bool	equal = true;
-
 			FOR( j, structType.fields )
 			{
 				auto const&		left	= structType.fields[j];
@@ -148,9 +146,7 @@ namespace PipelineCompiler
 					right.memoryModel	= EGpuMemoryModel::None;
 				}
 			}
-
-			if ( equal )
-				return true;
+			return true;
 		}
 
 		RETURN_ERR( "incompatible fields in structures with same typename" );
@@ -195,10 +191,6 @@ namespace PipelineCompiler
 #extension GL_ARB_separate_shader_objects : enable
 #define ARB_separate_shader_objects_enabled  1
 #endif
-
-#define and			&&
-#define or			||
-#define not			!
 
 #define bool2		bvec2
 #define bool3		bvec3

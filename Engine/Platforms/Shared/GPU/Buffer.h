@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -36,7 +36,7 @@ namespace CreateInfo
 	//
 	// GPU Buffer Create Info
 	//
-	struct GpuBuffer	// TODO: rename
+	struct GpuBuffer
 	{
 	// types
 		using BufferDescriptor	= Platforms::BufferDescriptor;
@@ -45,6 +45,7 @@ namespace CreateInfo
 
 	// variables
 		ModulePtr				gpuThread;			// can be null
+		ModulePtr				memManager;			// can be null
 		BufferDescriptor		descr;
 		EGpuMemory::bits		memFlags;
 		EMemoryAccess::bits		access;
@@ -52,8 +53,14 @@ namespace CreateInfo
 
 	// methods
 		GpuBuffer (GX_DEFCTOR) {}
+
 		GpuBuffer (const BufferDescriptor &descr) : descr{descr}, allocMem{false} {}
-		GpuBuffer (const BufferDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) : descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
+
+		GpuBuffer (const BufferDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+			descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
+
+		GpuBuffer (const BufferDescriptor &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+			memManager{memMngr}, descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
 	};
 
 }	// CreateInfo

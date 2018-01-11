@@ -1,8 +1,8 @@
-﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
-#include "AxisAlignedBox.h"
+#include "Engine/STL/Math/3D/AxisAlignedBox.h"
 
 namespace GX_STL
 {
@@ -18,9 +18,10 @@ namespace GXMath
 	{
 	// types
 	public:
-		typedef Plane<T>	Self;
-		typedef T			Value_t;
-		typedef Vec<T,3>	Vec3_t;
+		using Self		= Plane<T>;
+		using Value_t	= T;
+		using Vec3_t	= Vec<T,3>;
+		using Rad_t		= Radians<T>;
 		
 		struct ESide
 		{
@@ -32,12 +33,12 @@ namespace GXMath
 				Both,
 			};
 		};
-		typedef typename ESide::type		_ESide_t;
+		using _ESide_t	= typename ESide::type;
 
 
 	// variables
 	private:
-		Vec<T,3>	_normal;
+		Vec3_t		_normal;
 		T			_dist;
 
 
@@ -56,14 +57,19 @@ namespace GXMath
 		_ESide_t		Intersect (const AABBox<T> &box) const;
 		_ESide_t		Intersect (const Vec3_t &center, const Vec3_t &halfextent) const;
 		
-		Vec<T,3> &		Normal ()				{ return _normal; }
-		Vec<T,3> const&	Normal ()	const		{ return _normal; }
+		Vec3_t &		Normal ()				{ return _normal; }
+		Vec3_t const&	Normal ()	const		{ return _normal; }
 		T &				Distance ()				{ return _dist; }
 		T const &		Distance ()	const		{ return _dist; }
 
 		Self &			Normalize ();
 		T				Distance (const Vec3_t &point) const;
 		Vec3_t			Project (const Vec3_t &point) const;
+
+		Rad_t			AngleBetweenPlanes (const Self &other) const;
+
+		bool			GetIntersection (const Self &other, OUT Vec3_t &result) const;
+		bool			GetIntersection (const Vec3_t &rayDir, const Vec3_t &rayOrigin, OUT Vec3_t &result) const;
 
 		bool			operator == (const Self &right) const;
 		bool			operator != (const Self &right) const;
@@ -84,11 +90,11 @@ namespace GXMath
 	{}
 
 	template <typename T>
-	inline Plane<T>::Plane (const Vec<T,3> &normal, const T& dist) : _normal(normal), _dist(dist)
+	inline Plane<T>::Plane (const Vec3_t &normal, const T& dist) : _normal(normal), _dist(dist)
 	{}
 
 	template <typename T>
-	inline Plane<T>::Plane (const Vec<T,3> &p0, const Vec<T,3> &p1, const Vec<T,3> &p2) : _normal(), _dist(0)
+	inline Plane<T>::Plane (const Vec3_t &p0, const Vec3_t &p1, const Vec3_t &p2) : _normal(), _dist(0)
 	{
 		Set( p0, p1, p2 );
 	}
@@ -99,10 +105,10 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void Plane<T>::Set (const Vec<T,3> &normal, const T& dist)
+	inline void Plane<T>::Set (const Vec3_t &normal, const T& dist)
 	{
-		_normal	= normal;
-		_dist	= dist;
+		_normal	= normal.Normalized();
+		_dist	= Abs( dist );
 	}
 	
 /*
@@ -111,10 +117,10 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void Plane<T>::Set (const Vec<T,3> &p0, const Vec<T,3> &p1, const Vec<T,3> &p2)
+	inline void Plane<T>::Set (const Vec3_t &p0, const Vec3_t &p1, const Vec3_t &p2)
 	{
-		Vec<T,3>	edge1 = p1 - p0,
-					edge2 = p2 - p0;
+		Vec3_t	edge1 = p1 - p0,
+				edge2 = p2 - p0;
 
 		_normal = Cross( edge1, edge2 ).Normalize();
 		_dist   = -_normal.Dot( p0 );
@@ -126,7 +132,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline typename Plane<T>::ESide::type  Plane<T>::Intersect (const Vec<T,3> &point) const
+	inline typename Plane<T>::ESide::type  Plane<T>::Intersect (const Vec3_t &point) const
 	{
 		const T	d = Distance( point );
 
@@ -147,7 +153,7 @@ namespace GXMath
 	}
 	
 	template <typename T>
-	inline typename Plane<T>::ESide::type  Plane<T>::Intersect (const Vec<T,3> &center, const Vec<T,3> &halfextent) const
+	inline typename Plane<T>::ESide::type  Plane<T>::Intersect (const Vec3_t &center, const Vec3_t &halfextent) const
 	{
 		const T	d			= Distance( center );
 		const T	max_abs_d	= _normal.DotAbs( halfextent );
@@ -183,7 +189,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline T Plane<T>::Distance (const Vec<T,3> &point) const
+	inline T Plane<T>::Distance (const Vec3_t &point) const
 	{
 		return _normal.Dot( point ) + _dist;
 	}
@@ -194,7 +200,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Vec<T,3> Plane<T>::Project (const Vec<T,3> &point) const
+	inline Vec<T,3> Plane<T>::Project (const Vec3_t &point) const
 	{
 		Matrix<T,3,3>	mat;
 
@@ -210,6 +216,55 @@ namespace GXMath
 
 		return mat * point;
 	}
+	
+/*
+=================================================
+	AngleBetweenPlanes
+=================================================
+*/
+	template <typename T>
+	inline Radians<T>  Plane<T>::AngleBetweenPlanes (const Self &other) const
+	{
+		return ACos( Dot( _normal, other._normal ) );
+	}
+	
+/*
+=================================================
+	GetIntersection
+=================================================
+*/
+	template <typename T>
+	inline bool Plane<T>::GetIntersection (const Self &other, OUT Vec3_t &result) const
+	{
+		const Vec3_t	n = Cross( _normal, other._normal ).Normalize();
+		const T			d = n.LengthSqr();
+
+		if ( IsZero( d ) )
+			return false;
+
+		result = n;
+		return true;
+	}
+	
+/*
+=================================================
+	GetIntersection
+=================================================
+*/
+	template <typename T>
+	inline bool Plane<T>::GetIntersection (const Vec3_t &rayDir, const Vec3_t &rayOrigin, OUT Vec3_t &result) const
+	{
+		const Vec3_t dir = rayDir.Normalized();
+		const T ndr = Dot( _normal, dir );
+
+		if ( IsZero( ndr ) )
+			return false;	// no intersection, line is parallel to the plane
+
+		const T x = (_dist - Dot(_normal, rayOrigin)) / ndr;
+
+		result = rayOrigin + dir * x;
+		return true;
+	}
 
 /*
 =================================================
@@ -219,7 +274,7 @@ namespace GXMath
 	template <typename T>
 	inline bool Plane<T>::operator == (const Plane<T> &right) const
 	{
-		return Equals( _dist, right._dist ) and _normal == right._normal;
+		return Equals( _dist, right._dist ) and All( _normal == right._normal );
 	}
 
 /*
@@ -253,9 +308,9 @@ namespace GXMath
 	template <typename T>
 	inline void Plane<T>::GetPerpendiculars (OUT Vec3_t &n0, OUT Vec3_t &n1, OUT Vec3_t &n2) const
 	{
-		n0 = Cross( -Vec3_t(T(0), T(0), T(1)), _normal ).Normalized();
-		n1 = Cross( -Vec3_t(T(0), T(1), T(0)), _normal ).Normalized();
-		n2 = Cross( -Vec3_t(T(1), T(0), T(0)), _normal ).Normalized();
+		n0 = Cross( -Vec3_t(T(0), T(0), T(1)), _normal ).Normalize();
+		n1 = Cross( -Vec3_t(T(0), T(1), T(0)), _normal ).Normalize();
+		n2 = Cross( -Vec3_t(T(1), T(0), T(0)), _normal ).Normalize();
 	}
 
 

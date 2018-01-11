@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Main/MainSystem.h"
 #include "Engine/Base/Stream/StreamManager.h"

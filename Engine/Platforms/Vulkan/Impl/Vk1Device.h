@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Crossplatform helper for Vulkan initialization.
 
@@ -171,7 +171,9 @@ namespace PlatformVK
 		bool CreateQueue ();
 		void DestroyQueue ();
 
-		bool SubmitQueue (ArrayCRef<vk::VkCommandBuffer> cmdBuffers, vk::VkFence fence = VK_NULL_HANDLE);
+		bool SubmitQueue (ArrayCRef<vk::VkCommandBuffer> cmdBuffers, vk::VkFence fence = VK_NULL_HANDLE,
+						  ArrayCRef<vk::VkSemaphore> waitSemaphore = Uninitialized, ArrayCRef<vk::VkPipelineStageFlags> waitStages = Uninitialized,
+						  ArrayCRef<vk::VkSemaphore> signalSemaphores = Uninitialized);
 
 		bool BeginFrame ();
 		bool EndFrame ();

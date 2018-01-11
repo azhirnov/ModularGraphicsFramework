@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -26,7 +26,7 @@ namespace Engine
 
 	static const char	ENGINE_NAME[]		= "ModularGraphicsFramework";
 	static const char	ENGINE_BUILD_DATE[]	= __DATE__ " " __TIME__;
-	static const int	ENGINE_VERSION		= _engine_hidden_::BuildVersionNumber( 0, 2, 0, 0 );
+	static const int	ENGINE_VERSION		= _engine_hidden_::BuildVersionNumber( 0, 2, 1, 0 );
 
 
 }	// Engine

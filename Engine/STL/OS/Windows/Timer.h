@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -42,7 +42,7 @@ namespace OS
 		TimeL GetTimeMicroSec () const;
 
 		template <typename T>
-		T Get (const T&) const;
+		T Get (const T& = T()) const;
 	};
 	
 

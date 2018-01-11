@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
@@ -90,7 +90,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4RenderPass::_Compose );
 		_SubscribeOnMsg( this, &GL4RenderPass::_Delete );
 		_SubscribeOnMsg( this, &GL4RenderPass::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4RenderPass::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4RenderPass::_GetGLRenderPassID );
 		_SubscribeOnMsg( this, &GL4RenderPass::_GetRenderPassDescriptor );
 		_SubscribeOnMsg( this, &GL4RenderPass::_GetDeviceInfo );

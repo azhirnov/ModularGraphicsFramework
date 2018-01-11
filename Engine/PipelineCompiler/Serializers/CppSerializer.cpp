@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Serializers/CppSerializer.h"
 
@@ -192,6 +192,7 @@ namespace PipelineCompiler
 			case EPrimitive::LineStrip :		return "EPrimitive::LineStrip";
 			case EPrimitive::TriangleList :		return "EPrimitive::TriangleList";
 			case EPrimitive::TriangleStrip :	return "EPrimitive::TriangleStrip";
+			case EPrimitive::Patch :			return "EPrimitive::Patch";
 		}
 		RETURN_ERR( "unknown primitive type!" );
 	}
@@ -773,9 +774,117 @@ namespace PipelineCompiler
 */
 	String  CppSerializer::ToString (StringCRef value) const
 	{
-		return "R\"#("_str << StringCRef( (const char*)value.ptr() ) << ")#\"_ref";
+		const usize	max_len = 16000;	// 16380 is max for MSVS
+
+		if ( value.Length() > max_len )
+		{
+			String		result;
+			StringCRef	temp = value;
+			usize		pos  = max_len;
+
+			while ( temp.Length() > max_len )
+			{
+				// find best place to separate string
+				bool found = false;
+
+				for (uint i = 0; i < 100; ++i)	// 100 lines
+				{
+					StringParser::ToPrevLine( temp, INOUT pos );
+					usize		p = pos;
+					StringCRef	res;
+					StringParser::ReadCurrLine( temp, INOUT p, OUT res );
+
+					if ( res.Empty() )
+					{
+						result << (result.Empty() ? "" : "\n+\n") << "R\"#("_str << temp.SubString( 0, pos ) << ")#\"_str";
+						temp	= temp.SubString( pos );
+						pos		= Min( temp.Length(), max_len );
+						found	= true;
+						break;
+					}
+				}
+
+				// separate in max length
+				if ( not found )
+				{
+					pos		= Min( temp.Length(), max_len );
+					result << (result.Empty() ? "" : "\n+\n") << "R\"#("_str << temp.SubString( 0, pos ) << ")#\"_str";
+					temp	= temp.SubString( pos );
+					pos		= Min( temp.Length(), max_len );
+				}
+			}
+
+			if ( not temp.Empty() )
+			{
+				result << (result.Empty() ? "" : "\n+\n") << "R\"#("_str << temp << ")#\"_str";
+			}
+
+			return result;
+		}
+		else
+			return "R\"#("_str << value << ")#\"_str";
 	}
 	
+/*
+=================================================
+	ToString (EShaderVariable)
+=================================================
+*/
+	String  CppSerializer::ToString (EShaderVariable::type value) const
+	{
+		switch ( value )
+		{
+			case EShaderVariable::Bool :		return "bool";
+			case EShaderVariable::Bool2 :		return "bool2";
+			case EShaderVariable::Bool3 :		return "bool3";
+			case EShaderVariable::Bool4 :		return "bool4";
+			case EShaderVariable::Int :			return "int";
+			case EShaderVariable::Int2 :		return "int2";
+			case EShaderVariable::Int3 :		return "int3";
+			case EShaderVariable::Int4 :		return "int4";
+			case EShaderVariable::UInt :		return "uint";
+			case EShaderVariable::UInt2 :		return "uint2";
+			case EShaderVariable::UInt3 :		return "uint3";
+			case EShaderVariable::UInt4 :		return "uint4";
+			case EShaderVariable::Long :		return "ilong";
+			case EShaderVariable::Long2 :		return "ilong2";
+			case EShaderVariable::Long3 :		return "ilong3";
+			case EShaderVariable::Long4 :		return "ilong4";
+			case EShaderVariable::ULong :		return "ulong";
+			case EShaderVariable::ULong2 :		return "ulong2";
+			case EShaderVariable::ULong3 :		return "ulong3";
+			case EShaderVariable::ULong4 :		return "ulong4";
+			case EShaderVariable::Float :		return "float";
+			case EShaderVariable::Float2 :		return "float2";
+			case EShaderVariable::Float3 :		return "float3";
+			case EShaderVariable::Float4 :		return "float4";
+			case EShaderVariable::Float2x2 :	return "float2x2";
+			case EShaderVariable::Float2x3 :	return "float2x3";
+			case EShaderVariable::Float2x4 :	return "float2x4";
+			case EShaderVariable::Float3x2 :	return "float3x2";
+			case EShaderVariable::Float3x3 :	return "float3x3";
+			case EShaderVariable::Float3x4 :	return "float3x4";
+			case EShaderVariable::Float4x2 :	return "float4x2";
+			case EShaderVariable::Float4x3 :	return "float4x3";
+			case EShaderVariable::Float4x4 :	return "float4x4";
+			case EShaderVariable::Double :		return "double";
+			case EShaderVariable::Double2 :		return "double2";
+			case EShaderVariable::Double3 :		return "double3";
+			case EShaderVariable::Double4 :		return "double4";
+			case EShaderVariable::Double2x2 :	return "double2x2";
+			case EShaderVariable::Double2x3 :	return "double2x3";
+			case EShaderVariable::Double2x4 :	return "double2x4";
+			case EShaderVariable::Double3x2 :	return "double3x2";
+			case EShaderVariable::Double3x3 :	return "double3x3";
+			case EShaderVariable::Double3x4 :	return "double3x4";
+			case EShaderVariable::Double4x2 :	return "double4x2";
+			case EShaderVariable::Double4x3 :	return "double4x3";
+			case EShaderVariable::Double4x4 :	return "double4x4";
+		}
+
+		RETURN_ERR( "invalid variable type", "unknown" );
+	}
+
 /*
 =================================================
 	ToString (BinArrayCRef)

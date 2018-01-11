@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
@@ -96,7 +96,6 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_Compose );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_Delete );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_OnManagerChanged );
-		_SubscribeOnMsg( this, &CL2ComputePipeline::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_GetCLComputePipelineID );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_GetComputePipelineDescriptor );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_GetDeviceInfo );

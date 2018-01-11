@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/OS/Window.h"
 #include "Engine/Platforms/Shared/OS/Display.h"
@@ -706,7 +706,7 @@ namespace Platforms
 	{
 		FOR( i, _display.GetDisplays() )
 		{
-			auto&	disp = _display.GetDisplays()[i];
+			const auto&	disp = _display.GetDisplays()[i];
 
 			if ( disp.FullArea().IsInnerPoint( point ) )
 			{

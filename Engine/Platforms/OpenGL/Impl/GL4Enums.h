@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -106,6 +106,7 @@ namespace PlatformGL
 		switch ( value )
 		{
 			case EImage::Tex1D			:	return (GL4TextureTarget) gl::GL_TEXTURE_1D;
+			case EImage::Tex1DArray		:	return (GL4TextureTarget) gl::GL_TEXTURE_1D_ARRAY;
 			case EImage::Tex2D			:	return (GL4TextureTarget) gl::GL_TEXTURE_2D;
 			case EImage::Tex2DArray		:	return (GL4TextureTarget) gl::GL_TEXTURE_2D_ARRAY;
 			case EImage::Tex2DMS		:	return (GL4TextureTarget) gl::GL_TEXTURE_2D_MULTISAMPLE;

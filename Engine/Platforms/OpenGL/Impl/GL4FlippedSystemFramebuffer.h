@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	System framebuffer for compatibility with Vulkan and DirectX window coordinate system.
 */
@@ -109,7 +109,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_Delete );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetGLFramebufferID );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetFramebufferDescriptor );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetDeviceInfo );

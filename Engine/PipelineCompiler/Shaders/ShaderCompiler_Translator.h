@@ -1,4 +1,9 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
+/*
+	Bugs:
+		- incorrect scope of local variable, initialize local variable to fix this issue.
+		- incorrect global variable initialization.
+*/
 
 #pragma once
 
@@ -68,8 +73,7 @@ namespace PipelineCompiler
 		using LocalNames_t		= Set< String >;
 		using StringStack_t		= Stack< String >;
 		using LocalReplacer_t	= HashMap< String, String >;
-		//using Constants_t		= Set< glslang::TIntermSymbol* >;
-		using CustomTypes_t		= Map< String, glslang::TIntermTyped* >;
+		using CustomTypes_t		= Map< String, TypeInfo >;
 
 		class IDstLanguage;
 		using IDstLanguagePtr	= UniquePtr< IDstLanguage >;
@@ -85,6 +89,7 @@ namespace PipelineCompiler
 			LocalNames_t		uniqueNames;
 			ConstMap_t			symbNodes;
 			String				source;
+			bool				optimize	= false;	// use global constants instead of local
 
 		}					constants;
 
@@ -100,6 +105,7 @@ namespace PipelineCompiler
 		// function and variable forward declaration
 		struct {
 			LocalVarSet_t		definedLocalVars;		// list of defined (local) variables
+			LocalVarSet_t		funcArguments;			// list of function arguments
 			PendingVars_t		pendingVars;			// this variables will be added before current line
 			PendingStrings_t	addBeforeLine;			// this source lines will be added before current line
 

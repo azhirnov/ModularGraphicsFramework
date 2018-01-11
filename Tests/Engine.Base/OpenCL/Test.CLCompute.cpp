@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "../Common.h"
 
@@ -101,7 +101,7 @@ bool CLApp::_Draw (const Message< ModuleMsg::Update > &)
 
 	Message< GpuMsg::CmdEnd >	cmd_end;
 	cmdBuilder->Send( cmd_end );
-	clthread->Send< GpuMsg::SubmitComputeQueueCommands >({ cmd_end->cmdBuffer.Get() });
+	clthread->Send< GpuMsg::SubmitComputeQueueCommands >({ cmd_end->result.Get() });
 	return true;
 }
 

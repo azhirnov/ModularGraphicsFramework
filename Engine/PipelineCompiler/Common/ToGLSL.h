@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -98,43 +98,51 @@ namespace PipelineCompiler
 		{
 			case EShaderVariable::Void :		return "void";
 			case EShaderVariable::Bool :		return "bool";
-			case EShaderVariable::Bool2 :		return "bool2";
-			case EShaderVariable::Bool3 :		return "bool3";
-			case EShaderVariable::Bool4 :		return "bool4";
+			case EShaderVariable::Bool2 :		return "bvec2";
+			case EShaderVariable::Bool3 :		return "bvec3";
+			case EShaderVariable::Bool4 :		return "bvec4";
 			case EShaderVariable::Int :			return "int";
-			case EShaderVariable::Int2 :		return "int2";
-			case EShaderVariable::Int3 :		return "int3";
-			case EShaderVariable::Int4 :		return "int4";
+			case EShaderVariable::Int2 :		return "ivec2";
+			case EShaderVariable::Int3 :		return "ivec3";
+			case EShaderVariable::Int4 :		return "ivec4";
 			case EShaderVariable::UInt :		return "uint";
-			case EShaderVariable::UInt2 :		return "uint2";
-			case EShaderVariable::UInt3 :		return "uint3";
-			case EShaderVariable::UInt4 :		return "uint4";
+			case EShaderVariable::UInt2 :		return "uvec2";
+			case EShaderVariable::UInt3 :		return "uvec3";
+			case EShaderVariable::UInt4 :		return "uvec4";
+			case EShaderVariable::Long :		return "int64_t";
+			case EShaderVariable::Long2 :		return "i64vec2";
+			case EShaderVariable::Long3 :		return "i64vec3";
+			case EShaderVariable::Long4 :		return "i64vec4";
+			case EShaderVariable::ULong :		return "uint64_t";
+			case EShaderVariable::ULong2 :		return "u64vec2";
+			case EShaderVariable::ULong3 :		return "u64vec3";
+			case EShaderVariable::ULong4 :		return "u64vec4";
 			case EShaderVariable::Float :		return "float";
-			case EShaderVariable::Float2 :		return "float2";
-			case EShaderVariable::Float3 :		return "float3";
-			case EShaderVariable::Float4 :		return "float4";
-			case EShaderVariable::Float2x2 :	return "float2x2";
-			case EShaderVariable::Float2x3 :	return "float2x3";
-			case EShaderVariable::Float2x4 :	return "float2x4";
-			case EShaderVariable::Float3x2 :	return "float3x2";
-			case EShaderVariable::Float3x3 :	return "float3x3";
-			case EShaderVariable::Float3x4 :	return "float3x4";
-			case EShaderVariable::Float4x2 :	return "float4x2";
-			case EShaderVariable::Float4x3 :	return "float4x3";
-			case EShaderVariable::Float4x4 :	return "float4x4";
+			case EShaderVariable::Float2 :		return "vec2";
+			case EShaderVariable::Float3 :		return "vec3";
+			case EShaderVariable::Float4 :		return "vec4";
+			case EShaderVariable::Float2x2 :	return "mat2x2";
+			case EShaderVariable::Float2x3 :	return "mat2x3";
+			case EShaderVariable::Float2x4 :	return "mat2x4";
+			case EShaderVariable::Float3x2 :	return "mat3x2";
+			case EShaderVariable::Float3x3 :	return "mat3x3";
+			case EShaderVariable::Float3x4 :	return "mat3x4";
+			case EShaderVariable::Float4x2 :	return "mat4x2";
+			case EShaderVariable::Float4x3 :	return "mat4x3";
+			case EShaderVariable::Float4x4 :	return "mat4x4";
 			case EShaderVariable::Double :		return "double";
-			case EShaderVariable::Double2 :		return "double2";
-			case EShaderVariable::Double3 :		return "double3";
-			case EShaderVariable::Double4 :		return "double4";
-			case EShaderVariable::Double2x2 :	return "double2x2";
-			case EShaderVariable::Double2x3 :	return "double2x3";
-			case EShaderVariable::Double2x4 :	return "double2x4";
-			case EShaderVariable::Double3x2 :	return "double3x2";
-			case EShaderVariable::Double3x3 :	return "double3x3";
-			case EShaderVariable::Double3x4 :	return "double3x4";
-			case EShaderVariable::Double4x2 :	return "double4x2";
-			case EShaderVariable::Double4x3 :	return "double4x3";
-			case EShaderVariable::Double4x4 :	return "double4x4";
+			case EShaderVariable::Double2 :		return "dvec2";
+			case EShaderVariable::Double3 :		return "dvec3";
+			case EShaderVariable::Double4 :		return "dvec4";
+			case EShaderVariable::Double2x2 :	return "dmat2x2";
+			case EShaderVariable::Double2x3 :	return "dmat2x3";
+			case EShaderVariable::Double2x4 :	return "dmat2x4";
+			case EShaderVariable::Double3x2 :	return "dmat3x2";
+			case EShaderVariable::Double3x3 :	return "dmat3x3";
+			case EShaderVariable::Double3x4 :	return "dmat3x4";
+			case EShaderVariable::Double4x2 :	return "dmat4x2";
+			case EShaderVariable::Double4x3 :	return "dmat4x3";
+			case EShaderVariable::Double4x4 :	return "dmat4x4";
 
 			case EShaderVariable::FloatSampler1D :				return "sampler1D";
 			case EShaderVariable::FloatSampler1DShadow :		return "sampler1DShadow";

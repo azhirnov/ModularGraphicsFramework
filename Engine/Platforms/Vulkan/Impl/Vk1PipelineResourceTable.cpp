@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
@@ -129,7 +129,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_Compose );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_Delete );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkPrivateClasses );

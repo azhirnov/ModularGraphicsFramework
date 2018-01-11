@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
@@ -161,7 +161,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4GraphicsPipeline::_Compose );
 		_SubscribeOnMsg( this, &GL4GraphicsPipeline::_Delete );
 		_SubscribeOnMsg( this, &GL4GraphicsPipeline::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4GraphicsPipeline::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4GraphicsPipeline::_GetGLGraphicsPipelineID );
 		_SubscribeOnMsg( this, &GL4GraphicsPipeline::_GetGraphicsPipelineDescriptor );
 		_SubscribeOnMsg( this, &GL4GraphicsPipeline::_GetDeviceInfo );
@@ -477,7 +476,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4ComputePipeline::_Compose );
 		_SubscribeOnMsg( this, &GL4ComputePipeline::_Delete );
 		_SubscribeOnMsg( this, &GL4ComputePipeline::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4ComputePipeline::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4ComputePipeline::_GetGLComputePipelineID );
 		_SubscribeOnMsg( this, &GL4ComputePipeline::_GetComputePipelineDescriptor );
 		_SubscribeOnMsg( this, &GL4ComputePipeline::_GetDeviceInfo );

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Scene/Shared/Camera.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
@@ -68,7 +68,6 @@ namespace Scene
 	// message handlers
 	private:
 		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _Update (const Message< ModuleMsg::Update > &);
 		bool _CameraBindKeys (const Message< SceneMsg::CameraBindKeys > &);
 		bool _CameraGetState (const Message< SceneMsg::CameraGetState > &);
@@ -81,6 +80,7 @@ namespace Scene
 
 		void _OnMouseX (const ModuleMsg::InputMotion &);
 		void _OnMouseY (const ModuleMsg::InputMotion &);
+		void _OnMouseWheel (const ModuleMsg::InputMotion &);
 
 		void _OnKeyStepForward (const ModuleMsg::InputKey &);
 		void _OnKeyStepBackward (const ModuleMsg::InputKey &);
@@ -88,9 +88,6 @@ namespace Scene
 		void _OnKeyStepRight (const ModuleMsg::InputKey &);
 		void _OnKeyStepDown (const ModuleMsg::InputKey &);
 		void _OnKeyStepUp (const ModuleMsg::InputKey &);
-
-		void _OnKeyIncreaseZoom (const ModuleMsg::InputKey &);
-		void _OnKeyDecreaseZoom (const ModuleMsg::InputKey &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -117,7 +114,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &FreeCamera::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &FreeCamera::_Link );
 		_SubscribeOnMsg( this, &FreeCamera::_Compose_Impl );
-		_SubscribeOnMsg( this, &FreeCamera::_Delete );
+		_SubscribeOnMsg( this, &FreeCamera::_Delete_Impl );
 		_SubscribeOnMsg( this, &FreeCamera::_Update );
 		_SubscribeOnMsg( this, &FreeCamera::_CameraBindKeys );
 		_SubscribeOnMsg( this, &FreeCamera::_CameraGetState );
@@ -157,15 +154,16 @@ namespace Scene
 			ModulePtr	input;
 			CHECK_LINKING( input = GlobalSystems()->parallelThread->GetModuleByMsg< InputThreadMsgList_t >() );
 
-			input->Send< ModuleMsg::InputMotionBind >({ this, &FreeCamera::_OnMouseX, "mouse.x"_MotionID });
-			input->Send< ModuleMsg::InputMotionBind >({ this, &FreeCamera::_OnMouseY, "mouse.y"_MotionID });
+			input->Send< ModuleMsg::InputMotionBind >({ this, &FreeCamera::_OnMouseX,		"mouse.x"_MotionID });
+			input->Send< ModuleMsg::InputMotionBind >({ this, &FreeCamera::_OnMouseY,		"mouse.y"_MotionID });
+			input->Send< ModuleMsg::InputMotionBind >({ this, &FreeCamera::_OnMouseWheel,	"mouse.wheel"_MotionID });
 
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepForward,	"W"_KeyID,		EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepBackward,	"S"_KeyID,		EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepLeft,		"A"_KeyID,		EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepRight,	"D"_KeyID,		EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepDown,		"Ctrl"_KeyID,	EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepUp,		"Space"_KeyID,	EKeyState::OnKeyPressed });
+			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepForward,	"W"_KeyID,			EKeyState::OnKeyPressed });
+			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepBackward,	"S"_KeyID,			EKeyState::OnKeyPressed });
+			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepLeft,		"A"_KeyID,			EKeyState::OnKeyPressed });
+			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepRight,	"D"_KeyID,			EKeyState::OnKeyPressed });
+			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepDown,		"Ctrl"_KeyID,		EKeyState::OnKeyPressed });
+			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepUp,		"Space"_KeyID,		EKeyState::OnKeyPressed });
 		}
 
 		// subscribe to surface events
@@ -185,24 +183,6 @@ namespace Scene
 
 		CHECK( _SetState( EState::Linked ) );
 		return true;
-	}
-	
-/*
-=================================================
-	_Delete
-=================================================
-*/
-	bool FreeCamera::_Delete (const Message< ModuleMsg::Delete > &msg)
-	{
-		ModulePtr	input = GlobalSystems()->parallelThread->GetModuleByMsg< InputThreadMsgList_t >();
-
-		if ( input )
-		{
-			input->Send< ModuleMsg::InputKeyUnbindAll >({ this });
-			input->Send< ModuleMsg::InputMotionUnbindAll >({ this });
-		}
-
-		return Module::_Delete_Impl( msg );
 	}
 
 /*
@@ -259,6 +239,7 @@ namespace Scene
 	bool FreeCamera::_SurfaceRequestUpdate (const Message< SceneMsg::SurfaceRequestUpdate > &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
+		CHECK_ERR( msg->framebuffers.Count() == 1 );
 
 		CameraState_t	state{ _camera.Frustum(), _camera.Transform(), _camera.ViewMatrix(), _camera.ProjMatrix() };
 
@@ -285,7 +266,7 @@ namespace Scene
 */
 	bool FreeCamera::_CameraGetState (const Message< SceneMsg::CameraGetState > &msg)
 	{
-		msg->result.Set({ _camera.Frustum(), _camera.Transform(), _camera.ViewMatrix(), _camera.ProjMatrix() });
+		msg->result.Set({{ _camera.Frustum(), _camera.Transform(), _camera.ViewMatrix(), _camera.ProjMatrix() }});
 		return true;
 	}
 	
@@ -326,6 +307,11 @@ namespace Scene
 		_mouseDelta.y += m.relative;
 	}
 	
+	void FreeCamera::_OnMouseWheel (const ModuleMsg::InputMotion &m)
+	{
+		_zoom += m.relative;
+	}
+
 /*
 =================================================
 	_OnKey***
@@ -359,16 +345,6 @@ namespace Scene
 	void FreeCamera::_OnKeyStepUp (const ModuleMsg::InputKey &)
 	{
 		_positionDelta.z += 1.0f;
-	}
-
-	void FreeCamera::_OnKeyIncreaseZoom (const ModuleMsg::InputKey &)
-	{
-		_zoom += 1.0f;
-	}
-
-	void FreeCamera::_OnKeyDecreaseZoom (const ModuleMsg::InputKey &)
-	{
-		_zoom -= 1.0f;
 	}
 //-----------------------------------------------------------------------------
 

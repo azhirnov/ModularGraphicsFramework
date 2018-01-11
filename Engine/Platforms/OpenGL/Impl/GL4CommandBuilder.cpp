@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
@@ -55,6 +55,7 @@ namespace PlatformGL
 											GpuMsg::CmdCopyBufferToImage,
 											GpuMsg::CmdCopyImageToBuffer,
 											GpuMsg::CmdBlitImage,
+											GpuMsg::CmdBlitGLFramebuffers,
 											GpuMsg::CmdUpdateBuffer,
 											GpuMsg::CmdFillBuffer,
 											GpuMsg::CmdClearAttachments,
@@ -146,6 +147,7 @@ namespace PlatformGL
 		bool _CmdCopyBufferToImage (const Message< GpuMsg::CmdCopyBufferToImage > &);
 		bool _CmdCopyImageToBuffer (const Message< GpuMsg::CmdCopyImageToBuffer > &);
 		bool _CmdBlitImage (const Message< GpuMsg::CmdBlitImage > &);
+		bool _CmdBlitGLFramebuffers (const Message< GpuMsg::CmdBlitGLFramebuffers > &);
 		bool _CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &);
 		bool _CmdFillBuffer (const Message< GpuMsg::CmdFillBuffer > &);
 		bool _CmdClearAttachments (const Message< GpuMsg::CmdClearAttachments > &);
@@ -184,7 +186,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_GetGLPrivateClasses );
-		_SubscribeOnMsg( this, &GL4CommandBuilder::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_GetCommandBufferState );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_SetCommandBufferDependency );
 
@@ -220,6 +221,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdCopyBufferToImage );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdCopyImageToBuffer );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdBlitImage );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdBlitGLFramebuffers );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdUpdateBuffer );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdFillBuffer );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdClearAttachments );
@@ -364,7 +366,7 @@ namespace PlatformGL
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferDependency >{ RVREF(_resources) } );
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Executable } );
 
-		msg->cmdBuffer.Set( _cmdBuffer );
+		msg->result.Set( _cmdBuffer );
 
 		_cmdBuffer	= null;
 		_scope		= EScope::None;
@@ -819,6 +821,21 @@ namespace PlatformGL
 		return true;
 	}
 	
+/*
+=================================================
+	_CmdBlitGLFramebuffers
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdBlitGLFramebuffers (const Message< GpuMsg::CmdBlitGLFramebuffers > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( msg->srcFramebuffer and msg->dstFramebuffer );
+		
+		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		return true;
+	}
+
 /*
 =================================================
 	_CmdUpdateBuffer

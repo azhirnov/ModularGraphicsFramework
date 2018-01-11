@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Projects/ShaderEditor/ShaderEditorApp.h"
 
@@ -26,8 +26,11 @@ namespace ShaderEditor
 	bool ShaderEditorApp::Initialize (GAPI::type api)
 	{
 		CreateInfo::SceneManager scene_mngr_ci{};
-		scene_mngr_ci.settings.version = api;
-		scene_mngr_ci.settings.flags |= GraphicsSettings::EFlags::DebugContext;
+		scene_mngr_ci.settings.version	 = api;
+		scene_mngr_ci.settings.flags	|= GraphicsSettings::EFlags::DebugContext;
+
+		scene_mngr_ci.vrSettings.enabled				= true;
+		scene_mngr_ci.vrSettings.eyeTextureDimension	= uint2(1024);
 
 		GetMainSystemInstance()->AddModule( SceneManagerModuleID, scene_mngr_ci );
 	
@@ -66,14 +69,22 @@ namespace ShaderEditor
 		{
 			auto	gs = GetMainSystemInstance()->GlobalSystems();
 
+			#if 1
+				const auto	camera_id	= Scene::FreeVRCameraModuleID;
+				const auto	surface_id	= Scene::VRSurfaceModuleID;
+			#else
+				const auto	camera_id	= Scene::FreeCameraModuleID;
+				const auto	surface_id	= Scene::WindowSurfaceModuleID;
+			#endif
+
 			CHECK_ERR( gs->modulesFactory->Create(
-								Scene::FreeCameraModuleID,
+								camera_id,
 								gs,
 								CreateInfo::Camera{},
 								OUT _camera ) );
 
 			CHECK_ERR( gs->modulesFactory->Create(
-								Scene::WindowSurfaceModuleID,
+								surface_id,
 								gs,
 								CreateInfo::RenderSurface{},
 								OUT _surface ) );
@@ -117,10 +128,16 @@ namespace ShaderEditor
 				CHECK_ERR( _renderer.Add( "main", sh_main ) );
 			#endif
 
-			#if 1
+			#if 0
 				Renderer::ShaderDescr	sh_main;
 				sh_main.Pipeline( Pipelines::Create_glowballs );
 				sh_main.InChannel( "main", 0 );
+				CHECK_ERR( _renderer.Add( "main", sh_main ) );
+			#endif
+
+			#if 1
+				Renderer::ShaderDescr	sh_main;
+				sh_main.Pipeline( Pipelines::Create_skyline );
 				CHECK_ERR( _renderer.Add( "main", sh_main ) );
 			#endif
 		}
@@ -180,8 +197,8 @@ int main ()
 	{
 		ShaderEditorApp	app;
 	
-		//app.Initialize( "GL 4.4"_GAPI );
-		app.Initialize( "VK 1.0"_GAPI );
+		app.Initialize( "GL 4.4"_GAPI );
+		//app.Initialize( "VK 1.0"_GAPI );
 
 		// main loop
 		for (; app.Update();) {}

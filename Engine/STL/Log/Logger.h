@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Logger -	log class for write html logs with color highlighting.
 				message template: "date - time - [thread ID] - message"

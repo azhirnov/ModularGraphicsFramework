@@ -1,4 +1,4 @@
-﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Description:	3x2, 3x3, 3x4 matrices
 */

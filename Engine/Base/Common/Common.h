@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -57,8 +57,6 @@ namespace Engine
 	
 	namespace Platforms
 	{
-		//void RegisterPlatforms ();
-		//void UnregisterPlatforms ();
 	}
 	
 	namespace Profilers
@@ -71,8 +69,6 @@ namespace Engine
 	
 	namespace Graphics
 	{
-		//void RegisterGraphics ();
-		//void UnregisterGraphics ();
 	}
 	
 	namespace Scene

@@ -1,4 +1,4 @@
-﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	STL is my vision of C++ code and programming style for
 	more readable, more safely code on C++.

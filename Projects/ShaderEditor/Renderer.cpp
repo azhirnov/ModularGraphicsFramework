@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Projects/ShaderEditor/Renderer.h"
 
@@ -37,6 +37,7 @@ namespace ShaderEditor
 	Renderer::Shader::Shader (const ShaderDescr &descr) :
 		_descr(descr)
 	{
+		STATIC_ASSERT( _perPass.Count() == MAX_PASSES );
 	}
 	
 /*
@@ -46,6 +47,7 @@ namespace ShaderEditor
 */
 	bool Renderer::Shader::Update (const ModulePtr &builder, const ShaderData &data, const uint passIdx)
 	{
+		CHECK_ERR( passIdx < _perPass.Count() );
 		CHECK_ERR( UpdateUBuffer( builder, data, passIdx ) );
 
 		auto&		pass		= _perPass[ passIdx ];
@@ -97,13 +99,18 @@ namespace ShaderEditor
 			}
 		}
 
-		ub_data.iDate		= data.iDate;
-		ub_data.iFrame		= data.iFrame;
-		ub_data.iMouse		= data.iMouse;
-		ub_data.iResolution	= float4( data.iResolution );
-		ub_data.iSampleRate	= data.iSampleRate;
-		ub_data.iTime		= data.iTime;
-		ub_data.iTimeDelta	= data.iTimeDelta;
+		ub_data.iDate				= data.iDate;
+		ub_data.iFrame				= data.iFrame;
+		ub_data.iMouse				= data.iMouse;
+		ub_data.iResolution			= float4( data.iResolution );
+		ub_data.iSampleRate			= data.iSampleRate;
+		ub_data.iTime				= data.iTime;
+		ub_data.iTimeDelta			= data.iTimeDelta;
+		ub_data.iCameraFrustum[0]	= float4(data.iCameraFrustumRay0);
+		ub_data.iCameraFrustum[1]	= float4(data.iCameraFrustumRay1);
+		ub_data.iCameraFrustum[2]	= float4(data.iCameraFrustumRay2);
+		ub_data.iCameraFrustum[3]	= float4(data.iCameraFrustumRay3);
+		ub_data.iCameraPos			= float4(data.iCameraPos);
 
 		builder->Send< GpuMsg::CmdUpdateBuffer >({ pass.ubuffer, ub_data });
 		return true;
@@ -139,8 +146,8 @@ namespace ShaderEditor
 =================================================
 */
 	Renderer::Renderer (GlobalSystemsRef gs) :
-		_gs{ gs },
-		_frameCounter{ 0 }, _passIdx{ 0 }
+		_gs{ gs },		_frameCounter{ 0 },
+		_ubData{},		_passIdx{ 0 }
 	{
 	}
 	
@@ -151,15 +158,36 @@ namespace ShaderEditor
 */
 	bool Renderer::Inititalize ()
 	{
-		ModulePtr	gthread = _GetGpuThread();
+		// get graphics module ids
+		{
+			ModulePtr	gthread = _GetGpuThread();
 
-		Message< GpuMsg::GetGraphicsModules >	req_ids;
-		CHECK( gthread->Send( req_ids ) );
+			Message< GpuMsg::GetGraphicsModules >	req_ids;
+			CHECK( gthread->Send( req_ids ) );
 
-		_ids = *req_ids->graphics;
+			_ids = *req_ids->graphics;
+		}
 
 		CHECK_ERR( _CreateCmdBuffers() );
 		CHECK_ERR( _CreateSamplers() );
+		
+		// subscribe on input events
+		{
+			using InputThreadMsgList_t	= CompileTime::TypeListFrom< 
+												Message< ModuleMsg::InputKeyBind >,
+												Message< ModuleMsg::InputMotionBind >,
+												Message< ModuleMsg::InputKeyUnbindAll >,
+												Message< ModuleMsg::InputMotionUnbindAll > >;
+
+			ModulePtr	input;
+			CHECK_ERR( input = _gs->parallelThread->GetModuleByMsg< InputThreadMsgList_t >() );
+
+			input->Send< ModuleMsg::InputMotionBind >({ this, &Renderer::_OnMouseX,	"mouse.x"_MotionID });
+			input->Send< ModuleMsg::InputMotionBind >({ this, &Renderer::_OnMouseY,	"mouse.y"_MotionID });
+
+			input->Send< ModuleMsg::InputKeyBind >({ this, &Renderer::_OnMouseLeftButtonDown,	"mouse 0"_KeyID,	EKeyState::OnKeyDown });
+			input->Send< ModuleMsg::InputKeyBind >({ this, &Renderer::_OnMouseLeftButtonUp,		"mouse 0"_KeyID,	EKeyState::OnKeyUp });
+		}
 		return true;
 	}
 
@@ -222,7 +250,6 @@ namespace ShaderEditor
 		}
 
 		ModuleUtils::Initialize({ _cmdBuilder });
-		//ModuleUtils::Initialize( _cmdBuffers );
 		return true;
 	}
 	
@@ -520,7 +547,7 @@ namespace ShaderEditor
 				if ( iter->second == shader )
 				{
 					// use image from previous pass
-					pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j, shader->_perPass[(i+1) & 1].image });
+					pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j, shader->_perPass[(i-1) & 1].image });
 					pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j << ".sampler", _linearClampSampler });	// TODO
 					continue;
 				}
@@ -541,11 +568,11 @@ namespace ShaderEditor
 */
 	bool Renderer::Update (const SceneMsg::CameraRequestUpdate &msg)
 	{
-		CHECK_ERR( msg.framebuffers.Count() == 1 );
-		CHECK_ERR( msg.framebuffers.Count() == msg.frustums.Count() );
-
+		CHECK_ERR( msg.framebuffers.Count() == 1 or msg.framebuffers.Count() == 2 );
+		CHECK_ERR( msg.framebuffers.Count() == msg.cameras.Count() );
+		
 		Message< GpuMsg::GetFramebufferDescriptor >	req_descr;
-		msg.framebuffers.Front()->Send( req_descr );
+		msg.framebuffers.Front().framebuffer->Send( req_descr );
 
 		if ( Any( _surfaceSize != req_descr->result->size ) )
 		{
@@ -553,24 +580,30 @@ namespace ShaderEditor
 		}
 		
 		++_passIdx;
-		_UpdateShaderData();
 
 		ModulePtr	cmd_buf = _cmdBuffers[ _passIdx ];
 		_cmdBuilder->Send< GpuMsg::CmdBegin >({ cmd_buf });
 
-		// run shaders
-		FOR( i, _ordered )
-		{
-			_ordered[i]->Update( _cmdBuilder, _ubData, _passIdx );
-		}
-		
 		// draw quad to screen
+		FOR( i, msg.framebuffers )
 		{
-			ModulePtr	system_fb	= msg.framebuffers.Front();
-			ModulePtr	render_pass	= system_fb->GetModuleByMsg< RenderPassMsgList_t >();
+			const uint pass_idx = _passIdx * msg.framebuffers.Count() + i;
+			
+			_UpdateShaderData( msg.cameras[i] );
+
+			// run shaders
+			FOR( j, _ordered )
+			{
+				_ordered[j]->Update( _cmdBuilder, _ubData, pass_idx );
+			}
+		
+			CHECK_ERR( msg.framebuffers[i].layer == 0 );	// not supported
+
+			ModulePtr	eye_fb		= msg.framebuffers[i].framebuffer;
+			ModulePtr	render_pass	= eye_fb->GetModuleByMsg< RenderPassMsgList_t >();
 
 			Message< GpuMsg::GetFramebufferDescriptor >	fb_descr_request;
-			system_fb->Send( fb_descr_request );
+			eye_fb->Send( fb_descr_request );
 
 			auto const&	fb_descr	= fb_descr_request->result.Get();
 			RectU		area		= RectU( 0, 0, fb_descr.size.x, fb_descr.size.y );
@@ -579,10 +612,10 @@ namespace ShaderEditor
 			clear.attachments.PushBack({ EImageAspect::bits() | EImageAspect::Color, 0, float4(1.0f) });
 			clear.clearRects.PushBack({ area });
 
-			_cmdBuilder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, system_fb, area });
+			_cmdBuilder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, eye_fb, area });
 			_cmdBuilder->Send< GpuMsg::CmdClearAttachments >( clear );
 			_cmdBuilder->Send< GpuMsg::CmdBindGraphicsPipeline >({ _drawTexQuadPipeline });
-			_cmdBuilder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ _resourceTables[_passIdx] });
+			_cmdBuilder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ _resourceTables[pass_idx] });
 			_cmdBuilder->Send< GpuMsg::CmdSetViewport >({ area, float2(0.0f, 1.0f) });
 			_cmdBuilder->Send< GpuMsg::CmdSetScissor >({ area });
 			_cmdBuilder->Send< GpuMsg::CmdDraw >({ 4u });
@@ -594,27 +627,58 @@ namespace ShaderEditor
 		msg.cmdBuffers.PushBack( cmd_buf );
 		return true;
 	}
-	
+
 /*
 =================================================
 	_UpdateShaderData
 =================================================
 */
-	void Renderer::_UpdateShaderData ()
+	void Renderer::_UpdateShaderData (const SceneMsg::CameraGetState::State &state)
 	{
 		if ( _frameCounter == 0 )
 			_timer.Start();
 
-		_ubData.iResolution = _surfaceSize.To<float3>();
-		_ubData.iTime		= float(_timer.GetTimeDelta().Seconds());
-		_ubData.iTimeDelta	= float((_timer.GetCurrentTime() - _lastUpdateTime).Seconds());
-		_ubData.iFrame		= _frameCounter;
-		_ubData.iMouse		= float4();	// TODO
-		_ubData.iDate		= float4();	// TODO
-		_ubData.iSampleRate	= 0.0f;	// not supported yet
+		OS::Date	date;	date.Now();
+
+		_ubData.iResolution			= _surfaceSize.To<float3>();
+		_ubData.iTime				= float(_timer.GetTimeDelta().Seconds());
+		_ubData.iTimeDelta			= float((_timer.GetCurrentTime() - _lastUpdateTime).Seconds());
+		_ubData.iFrame				= _frameCounter;
+		_ubData.iMouse				= float4( _mousePressed ? _mousePos : float2(), float2() );	// TODO: click
+		_ubData.iDate				= float4(uint3( date.Year(), date.Month(), date.DayOfMonth()).To<float3>(), float(date.Second()) + float(date.Milliseconds()) * 0.001f);
+		_ubData.iSampleRate			= 0.0f;	// not supported yet
+		_ubData.iCameraPos			= state.transform.Position();
+
+		state.frustum.GetRays( OUT _ubData.iCameraFrustumRay2, OUT _ubData.iCameraFrustumRay0,
+							   OUT _ubData.iCameraFrustumRay3, OUT _ubData.iCameraFrustumRay1 );
 
 		++_frameCounter;
 		_lastUpdateTime = _timer.GetCurrentTime();
+	}
+	
+/*
+=================================================
+	_OnMouse*
+=================================================
+*/
+	void Renderer::_OnMouseX (const ModuleMsg::InputMotion &m)
+	{
+		_mousePos.x = m.absolute;
+	}
+
+	void Renderer::_OnMouseY (const ModuleMsg::InputMotion &m)
+	{
+		_mousePos.y = m.absolute;
+	}
+	
+	void Renderer::_OnMouseLeftButtonDown (const ModuleMsg::InputKey &)
+	{
+		//_mousePressed = true;
+	}
+
+	void Renderer::_OnMouseLeftButtonUp (const ModuleMsg::InputKey &)
+	{
+		//_mousePressed = false;
 	}
 
 }	// ShaderEditor

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
@@ -75,6 +75,7 @@ namespace PlatformVK
 	private:
 		ImageDescriptor			_descr;
 		ModulePtr				_memObj;
+		ModulePtr				_memManager;	// optional
 		ImageViewMap_t			_viewMap;
 		VkImage					_imageId;
 		VkImageView				_imageView;		// default image view, has all mipmaps and all layers
@@ -133,10 +134,11 @@ namespace PlatformVK
 */
 	Vk1Image::Vk1Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
 		Vk1BaseModule( gs, ModuleConfig{ VkImageModuleID, UMax }, &_msgTypes, &_eventTypes ),
-		_descr( ci.descr ),				_imageId( VK_NULL_HANDLE ),
-		_imageView( VK_NULL_HANDLE ),	_layout( EImageLayout::Unknown ),
-		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
-		_useMemMngr( ci.allocMem ),		_isBindedToMemory( false )
+		_descr( ci.descr ),					_memManager( ci.memManager ),
+		_imageId( VK_NULL_HANDLE ),			_imageView( VK_NULL_HANDLE ),
+		_layout( EImageLayout::Unknown ),	_memFlags( ci.memFlags ),
+		_memAccess( ci.access ),			_useMemMngr( ci.allocMem or ci.memManager.IsNotNull() ),
+		_isBindedToMemory( false )
 	{
 		SetDebugName( "Vk1Image" );
 
@@ -150,7 +152,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Image::_Compose );
 		_SubscribeOnMsg( this, &Vk1Image::_Delete );
 		_SubscribeOnMsg( this, &Vk1Image::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1Image::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1Image::_GetVkImageID );
 		_SubscribeOnMsg( this, &Vk1Image::_CreateVkImageView );
 		_SubscribeOnMsg( this, &Vk1Image::_GetImageDescriptor );
@@ -194,9 +195,9 @@ namespace PlatformVK
 		{
 			ModulePtr	mem_module;
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-								VkMemoryModuleID,
+								VkManagedMemoryModuleID,
 								GlobalSystems(),
-								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
+								CreateInfo::GpuMemory{ _GetManager(), _memManager, _memFlags, _memAccess },
 								OUT mem_module ) );
 
 			CHECK_ERR( _Attach( "mem", mem_module, true ) );
@@ -377,15 +378,16 @@ namespace PlatformVK
 				vkDestroyImageView( dev, _viewMap[i].second, null );
 			}
 		}
+		_viewMap.Clear();
 		
 		if ( _memObj )
 		{
 			this->UnsubscribeAll( _memObj );
 			_memObj->UnsubscribeAll( this );
-			_memObj = null;
 		}
 
-		_viewMap.Clear();
+		_memObj				= null;
+		_memManager			= null;
 		_imageView			= VK_NULL_HANDLE;
 		_isBindedToMemory	= false;
 	}
@@ -551,7 +553,7 @@ namespace PlatformVK
 			case EImage::Tex3D :
 				return VK_IMAGE_TYPE_3D;
 		}
-		return VK_IMAGE_TYPE_MAX_ENUM;
+		RETURN_ERR( "not supported", VK_IMAGE_TYPE_MAX_ENUM );
 	}
 
 /*

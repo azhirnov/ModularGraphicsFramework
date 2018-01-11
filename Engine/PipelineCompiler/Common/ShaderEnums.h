@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -85,7 +85,7 @@ namespace PipelineCompiler
 			HLSL_Source,		// crossplatform
 			HLSL_Binary,		// crossplatform
 
-			SPIRV_Source,		// crossplatform
+			SPIRV_Source,		// dissasebled binary for debugging
 			SPIRV_Binary,		// crossplatform
 
 			Metal_Source,
@@ -499,6 +499,7 @@ namespace PipelineCompiler
 		static bool		IsStruct (type value);
 		static bool		IsTexture (type value);
 		static bool		IsImage (type value);
+		static bool		IsFloat (type value);
 
 		static BytesU	SizeOf (type value, BytesU rowAlign = 4_b);
 		static uint		VecSize (type value);
@@ -1007,6 +1008,13 @@ namespace PipelineCompiler
 	inline bool  EShaderVariable::IsImage (type value)
 	{
 		return !!(value & _vtypeinfo::_IMAGE);
+	}
+	
+
+	inline bool  EShaderVariable::IsFloat (type value)
+	{
+		const uint t = value & _vtypeinfo::_TYPE_MASK;
+		return t == _vtypeinfo::_FLOAT or t == _vtypeinfo::_DOUBLE;
 	}
 
 

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
@@ -132,7 +132,6 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2Image::_Compose );
 		_SubscribeOnMsg( this, &CL2Image::_Delete );
 		_SubscribeOnMsg( this, &CL2Image::_OnManagerChanged );
-		_SubscribeOnMsg( this, &CL2Image::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &CL2Image::_GetCLImageID );
 		_SubscribeOnMsg( this, &CL2Image::_GetImageDescriptor );
 		_SubscribeOnMsg( this, &CL2Image::_SetImageLayout );

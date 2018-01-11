@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Context.h"
 #include "Engine/Platforms/Shared/GPU/Thread.h"
@@ -225,6 +225,7 @@ namespace Platforms
 		CHECK( mf->Register( GLSamplerModuleID, &CreateGL4Sampler ) );
 		CHECK( mf->Register( GLRenderPassModuleID, &CreateGL4RenderPass ) );
 		CHECK( mf->Register( GLFramebufferModuleID, &CreateGL4Framebuffer ) );
+		CHECK( mf->Register( GLSyncManagerModuleID, &CreateGL4SyncManager ) );
 		CHECK( mf->Register( GLCommandBufferModuleID, &CreateGL4CommandBuffer ) );
 		CHECK( mf->Register( GLCommandBuilderModuleID, &CreateGL4CommandBuilder ) );
 		CHECK( mf->Register( GLComputePipelineModuleID, &CreateGL4ComputePipeline ) );
@@ -253,6 +254,7 @@ namespace Platforms
 		mf->UnregisterAll( GLSamplerModuleID );
 		mf->UnregisterAll( GLRenderPassModuleID );
 		mf->UnregisterAll( GLFramebufferModuleID );
+		mf->UnregisterAll( GLSyncManagerModuleID );
 		mf->UnregisterAll( GLCommandBufferModuleID );
 		mf->UnregisterAll( GLCommandBuilderModuleID );
 		mf->UnregisterAll( GLGraphicsPipelineModuleID );

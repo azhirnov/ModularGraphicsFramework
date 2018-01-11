@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -67,7 +67,7 @@ namespace GXMath
 	inline Vec<T,I,U>  SafeRightBitShift (const Vec<T,I,U> &x, BitsU shift)
 	{
 		Vec<T,I,U>		ret;
-		FOR( i, ret )	ret[i] = SafeLeftBitShift( x[i], shift );
+		FOR( i, ret )	ret[i] = SafeRightBitShift( x[i], shift );
 		return ret;
 	}
 	
@@ -153,7 +153,7 @@ namespace GXMath
 	inline T  BitRotateRight (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
 	{
 		Vec<T,I,U>		ret;
-		FOR( i, ret )	ret[i] = BitRotateLeft( x[i], shift[i] );
+		FOR( i, ret )	ret[i] = BitRotateRight( x[i], shift[i] );
 		return ret;
 	}
 
@@ -161,7 +161,7 @@ namespace GXMath
 	inline T  BitRotateRight (const Vec<T,I,U> &x, BitsU shift)
 	{
 		Vec<T,I,U>		ret;
-		FOR( i, ret )	ret[i] = BitRotateLeft( x[i], shift );
+		FOR( i, ret )	ret[i] = BitRotateRight( x[i], shift );
 		return ret;
 	}
 

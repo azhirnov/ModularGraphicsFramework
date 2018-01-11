@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -95,7 +95,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetVkFramebufferID );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetFramebufferDescriptor );
 		_SubscribeOnMsg( this, &Vk1SystemFramebuffer::_GetDeviceInfo );

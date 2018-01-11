@@ -1,4 +1,4 @@
-﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -100,13 +100,13 @@ namespace GXTypes
 		
 		usize GetIndex (const T &value) const		{ return ArrayCRef<T>(*this).GetIndex( value ); }
 
-		constexpr bool		Empty ()		const	{ return false; }
-		constexpr usize		Count ()		const	{ return C; }
-		constexpr usize		Capacity ()		const	{ return C; }
-		constexpr usize		MaxCapacity ()	const	{ return Capacity(); }	// max available for allocation count of elements
-		constexpr BytesU	Size ()			const	{ return BytesU( Count() * sizeof(T) ); }
-		constexpr BytesU	FullSize ()		const	{ return BytesU( Capacity() * sizeof(T) ); }
-		constexpr usize		LastIndex ()	const	{ return Count()-1; }
+		static constexpr bool		Empty ()		{ return false; }
+		static constexpr usize		Count ()		{ return C; }
+		static constexpr usize		Capacity ()		{ return C; }
+		static constexpr usize		MaxCapacity ()	{ return Capacity(); }	// max available for allocation count of elements
+		static constexpr BytesU		Size ()			{ return BytesU( Count() * sizeof(T) ); }
+		static constexpr BytesU		FullSize ()		{ return BytesU( Capacity() * sizeof(T) ); }
+		static constexpr usize		LastIndex ()	{ return Count()-1; }
 	
 		ArrayRef<T>			SubArray (usize pos, usize count = UMax)			{ return ArrayRef<T>(*this).SubArray( pos, count ); }
 		ArrayCRef<T>		SubArray (usize pos, usize count = UMax)	const	{ return ArrayCRef<T>(*this).SubArray( pos, count ); }

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -19,10 +19,11 @@ namespace GXMath
 	{
 	// types
 	public:
-		typedef Line2< T, U >	Self;
-		typedef Vec<T,2,U>		Vec_t;
-		typedef T				Value_t;
-		typedef Rectangle<T,U>	Rect_t;
+		using Self		= Line2< T, U >;
+		using Vec_t		= Vec<T,2,U>;
+		using Value_t	= T;
+		using Rect_t	= Rectangle<T,U>;
+		using Rad_t		= Radians<T>;
 
 
 	// variables
@@ -82,9 +83,9 @@ namespace GXMath
 
 		bool IsPointInBoundingRects (const Self &other, const Vec_t &point) const;
 
-		Radians<T>	AngleBetweenLines (const Self &other) const;	// angle of other line rotation by this line in a clockwise 
-		T			CosBetweenLines (const Self &other) const;
-		Self		Reflection (const Vec_t &normal) const;
+		Rad_t	AngleBetweenLines (const Self &other) const;	// angle of other line rotation by this line in a clockwise 
+		T		CosBetweenLines (const Self &other) const;
+		Self	Reflection (const Vec_t &normal) const;
 
 		bool	PerpendicularBase (const Vec_t &point, OUT Vec_t &base)	const;
 		bool	Perpendicular (const Vec_t &point, OUT Self &result) const;
@@ -540,16 +541,16 @@ namespace GXMath
 		const Vec_t	v1 = other.Vector();
 
 		if ( All( v0 == v1 ) )
-			return T(0);
+			return Rad_t(T(0));
 
 		if ( All( v0 == -v1 ) )
-			return Pi<T>;
+			return Rad_t::Pi();
 
-		const T	a0 = ATan( v0.x, v0.y );
-		const T	a1 = ATan( v1.x, v1.y );
-		const T	a  = (a1 - a0);
+		const Rad_t	a0 = ATan( v0.x, v0.y );
+		const Rad_t	a1 = ATan( v1.x, v1.y );
+		const Rad_t	a  = (a1 - a0);
 
-		return Radians<T>(a).ToInterval( -Radians<T>::Pi(), Radians<T>::Pi() );
+		return a.ToInterval( -Rad_t::Pi(), Rad_t::Pi() );
 	}
 	
 /*
@@ -709,9 +710,9 @@ namespace GXTypes
 	struct Hash< GXMath::Line2<T,U> > :
 		private Hash< typename GXMath::Line2<T,U>::Vec_t >
 	{
-		typedef GXMath::Line2<T,U>				Key_t;
-		typedef Hash< typename Key_t::Vec_t >	Base_t;
-		typedef typename Base_t::Result_t		Result_t;
+		using Key_t		= GXMath::Line2<T,U>;
+		using Base_t	= Hash< typename Key_t::Vec_t >;
+		using Result_t	= typename Base_t::Result_t;
 
 		Result_t operator () (const Key_t &x) const noexcept
 		{

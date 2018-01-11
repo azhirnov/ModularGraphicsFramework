@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -24,7 +24,9 @@ namespace PipelineCompiler
 		virtual String  ToString (StringCRef name, const PipelineLayoutDescriptor &value) const = 0;
 		virtual String  ToString (StringCRef name, EPrimitive::bits value) const = 0;
 		virtual String  ToString (StringCRef name, EShader::bits value) const = 0;
+
 		virtual String  ToString (StringCRef value) const = 0;
+		virtual String	ToString (EShaderVariable::type value) const = 0;
 
 		virtual String	BeginFile (bool isIncludable) const = 0;
 		virtual String	EndFile (bool isIncludable) const = 0;

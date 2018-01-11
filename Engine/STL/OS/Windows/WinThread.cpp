@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Thread.h"
 #include "Engine/STL/Math/BinaryMath.h"
@@ -228,8 +228,8 @@ namespace OS
 	void Thread::Exit (uint exitCode)
 	{
 		ASSERT( IsCurrent() );
-		_endthreadex( exitCode == UNKNOWN_EXIT_CODE ? _GetExitCode() : exitCode );
 		_id = 0;
+		_endthreadex( exitCode == UNKNOWN_EXIT_CODE ? _GetExitCode() : exitCode );
 	}
 	
 /*

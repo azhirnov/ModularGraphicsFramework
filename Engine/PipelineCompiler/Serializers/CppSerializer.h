@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -39,7 +39,9 @@ namespace PipelineCompiler
 		String  ToString (StringCRef name, const PipelineLayoutDescriptor &value) const override;
 		String  ToString (StringCRef name, EPrimitive::bits value) const override;
 		String  ToString (StringCRef name, EShader::bits value) const override;
+
 		String  ToString (StringCRef value) const override;
+		String	ToString (EShaderVariable::type value) const override;
 		
 		String	BeginFile (bool isIncludable) const override;
 		String	EndFile (bool isIncludable) const override;

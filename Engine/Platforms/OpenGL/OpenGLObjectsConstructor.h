@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -18,6 +18,7 @@ namespace CreateInfo
 	struct GpuSampler;
 	struct GpuRenderPass;
 	struct GpuFramebuffer;
+	struct GpuSyncManager;
 	struct PipelineTemplate;
 	struct GpuCommandBuffer;
 	struct GpuCommandBuilder;
@@ -53,6 +54,7 @@ namespace Platforms
 		static ModulePtr CreateGL4Sampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
 		static ModulePtr CreateGL4RenderPass (GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
 		static ModulePtr CreateGL4Framebuffer (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
+		static ModulePtr CreateGL4SyncManager (GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
 		static ModulePtr CreatePipelineTemplate (GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
 		static ModulePtr CreateGL4CommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
 		static ModulePtr CreateGL4CommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -90,7 +90,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_Delete );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetGLFramebufferID );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetFramebufferDescriptor );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetDeviceInfo );

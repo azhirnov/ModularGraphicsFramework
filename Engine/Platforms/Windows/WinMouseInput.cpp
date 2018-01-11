@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/OS/Input.h"
 #include "Engine/Platforms/Windows/WinMessages.h"
@@ -50,6 +50,7 @@ namespace Platforms
 		ModulePtr			_window;
 		uint2				_surfaceSize;
 		Optional<float2>	_mouseDifference;
+		Optional<float>		_wheelDelta;
 		float2				_mousePos;
 		
 
@@ -187,12 +188,21 @@ namespace Platforms
 				// MOUSE //
 				if ( p_data->header.dwType == RIM_TYPEMOUSE )
 				{
-					const float2	diff = float2( int2( p_data->data.mouse.lLastX, p_data->data.mouse.lLastY ) );
+					const float2	diff = float2(int2( p_data->data.mouse.lLastX, p_data->data.mouse.lLastY ));
 
 					if ( not _mouseDifference )
 						_mouseDifference = diff;
 					else
 						(*_mouseDifference) += diff;
+				}
+
+				// Mouse Wheel //
+				if ( p_data->data.mouse.usButtonFlags & RI_MOUSE_WHEEL )
+				{
+					if ( not _wheelDelta )
+						_wheelDelta = 0;
+
+					*_wheelDelta += float(p_data->data.mouse.usButtonData) / WHEEL_DELTA;
 				}
 			}
 		}
@@ -246,7 +256,7 @@ namespace Platforms
 
 		if ( _mouseDifference )
 		{
-			float2	diff = _mouseDifference.Get( float2() );
+			const float2	diff = _mouseDifference.Get();
 
 			if ( IsNotZero( diff.x ) )
 				_SendEvent< ModuleMsg::InputMotion >({ "mouse.x"_MotionID, diff.x, _mousePos.x });
@@ -254,8 +264,17 @@ namespace Platforms
 			if ( IsNotZero( diff.y ) )
 				_SendEvent< ModuleMsg::InputMotion >({ "mouse.y"_MotionID, diff.y, _mousePos.y });
 		}
+
+		if ( _wheelDelta )
+		{
+			const float	delta = _wheelDelta.Get();
+
+			if ( IsNotZero( delta ) )
+				_SendEvent< ModuleMsg::InputMotion >({ "mouse.wheel"_MotionID, delta, 0.0f });
+		}
 		
 		_mouseDifference.Undefine();
+		_wheelDelta.Undefine();
 		return true;
 	}
 	

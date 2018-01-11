@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -9,6 +9,7 @@
 #include "Engine/Platforms/Shared/GPU/CommandEnums.h"
 #include "Engine/Platforms/Shared/GPU/MipmapLevel.h"
 #include "Engine/Platforms/Shared/GPU/ImageLayer.h"
+#include "Engine/Platforms/Shared/GPU/Sync.h"
 
 namespace Engine
 {
@@ -79,9 +80,9 @@ namespace GpuMsg
 		enum class EState : uint
 		{
 			Initial,		// initial or reseted state
-			Recording,
-			Executable,
-			Pending,
+			Recording,		// recording state
+			Executable,		// ready to execute
+			Pending,		// added to queue
 			Completed,		// it is temporary state, cb will pass to 'Initial', 'Executable' or 'Deleted' state depends of cb settings
 			Deleted,
 			Unknown		= ~0u
@@ -271,7 +272,7 @@ namespace GpuMsg
 	//
 	struct CmdEnd
 	{
-		Out< ModulePtr >	cmdBuffer;
+		Out< ModulePtr >	result;
 	};
 
 
@@ -517,6 +518,8 @@ namespace GpuMsg
 
 
 	// methods
+		CmdCopyBuffer (GX_DEFCTOR) {}
+
 		CmdCopyBuffer (const ModulePtr &srcBuffer,
 					   const ModulePtr &dstBuffer,
 					   BytesUL srcOffset,
@@ -551,19 +554,42 @@ namespace GpuMsg
 
 		struct ImageLayers : CompileTime::PODStruct
 		{
+		// variables
 			EImageAspect::bits	aspectMask;
 			MipmapLevel			mipLevel;
 			ImageLayer			baseLayer;
-			uint				layerCount;
+			uint				layerCount = 1;
+
+		// methods
+			ImageLayers (GX_DEFCTOR) {}
+
+			ImageLayers (EImageAspect::bits	aspectMask,
+						 MipmapLevel		mipLevel,
+						 ImageLayer			baseLayer,
+						 uint				layerCount) :
+				aspectMask(aspectMask), mipLevel(mipLevel), baseLayer(baseLayer), layerCount(layerCount)
+			{}
 		};
 
 		struct Region : CompileTime::PODStruct
 		{
+		// variables
 			ImageLayers		srcLayers;
 			uint3			srcOffset;
 			ImageLayers		dstLayers;
 			uint3			dstOffset;
 			uint3			size;
+
+		// methods
+			Region (GX_DEFCTOR) {}
+			
+			Region (const ImageLayers	&srcLayers,
+					const uint3			&srcOffset,
+					const ImageLayers	&dstLayers,
+					const uint3			&dstOffset,
+					const uint3			&size) :
+				srcLayers{srcLayers}, srcOffset{srcOffset}, dstLayers{dstLayers}, dstOffset{dstOffset}, size{size}
+			{}
 		};
 		using Regions_t		= FixedSizeArray< Region, 8 >;
 
@@ -577,6 +603,8 @@ namespace GpuMsg
 
 
 	// methods
+		CmdCopyImage (GX_DEFCTOR) {}
+
 		CmdCopyImage (ModulePtr				srcImage,
 					  EImageLayout::type	srcLayout,
 					  ModulePtr				dstImage,
@@ -622,6 +650,8 @@ namespace GpuMsg
 
 
 	// methods
+		CmdCopyBufferToImage (GX_DEFCTOR) {}
+
 		CmdCopyBufferToImage (const ModulePtr		&srcBuffer,
 							  const ModulePtr		&dstImage,
 							  EImageLayout::type	dstLayout,
@@ -655,6 +685,8 @@ namespace GpuMsg
 
 
 	// methods
+		CmdCopyImageToBuffer (GX_DEFCTOR) {}
+
 		CmdCopyImageToBuffer (const ModulePtr		&srcImage,
 							  EImageLayout::type	srcLayout,
 							  const ModulePtr		&dstBuffer,
@@ -672,18 +704,31 @@ namespace GpuMsg
 	{
 	// types
 		using EImageLayout	= Platforms::EImageLayout;
-		using EImageAspect	= Platforms::EImageAspect;
 		using ImageLayers	= CmdCopyImage::ImageLayers;
 		using uint3			= GXMath::uint3;
 
 		struct Region : CompileTime::PODStruct
 		{
+		// variables
 			ImageLayers		srcLayers;
-			uint3			srcOffset0;
-			uint3			srcOffset1;
+			uint3			srcOffset0;		// start offset
+			uint3			srcOffset1;		// end offset
 			ImageLayers		dstLayers;
-			uint3			dstOffset0;
-			uint3			dstOffset1;
+			uint3			dstOffset0;		// start offset
+			uint3			dstOffset1;		// end offset
+
+		// methods
+			Region (GX_DEFCTOR) {}
+
+			Region (const ImageLayers	&srcLayers,
+					const uint3			&srcOffset0,
+					const uint3			&srcOffset1,
+					const ImageLayers	&dstLayers,
+					const uint3			&dstOffset0,
+					const uint3			&dstOffset1) :
+				srcLayers{srcLayers}, srcOffset0{srcOffset0}, srcOffset1{srcOffset1},
+				dstLayers{dstLayers}, dstOffset0{dstOffset0}, dstOffset1{dstOffset1}
+			{}
 		};
 		using Regions_t		= FixedSizeArray< Region, 8 >;
 
@@ -693,11 +738,13 @@ namespace GpuMsg
 		EImageLayout::type	srcLayout;
 		ModulePtr			dstImage;
 		EImageLayout::type	dstLayout;
-		bool				linearFilter;
+		bool				linearFilter	= false;
 		Regions_t			regions;
 
 
 	// methods
+		CmdBlitImage (GX_DEFCTOR) {}
+
 		CmdBlitImage (const ModulePtr		&srcImage,
 					  EImageLayout::type	srcLayout,
 					  const ModulePtr		&dstImage,
@@ -864,6 +911,47 @@ namespace GpuMsg
 		EImageLayout::type	layout;
 		Ranges_t			ranges;
 		DepthStencil		clearValue;
+	};
+	
+
+	//
+	// Set Event State (signaled / non-signaled)
+	//
+	struct CmdSetEvent
+	{
+	// types
+		using Event_t			= Platforms::GpuEventId;
+		using EPipelineStage	= Platforms::EPipelineStage;
+
+	// variables
+		Event_t					eventId;
+		EPipelineStage::bits	stageMask;
+
+	// methods
+		CmdSetEvent (Event_t id, EPipelineStage::bits stageMask) : eventId(id), stageMask(stageMask) {}
+		explicit CmdSetEvent (Event_t id) : eventId{id}, stageMask{ EPipelineStage::bits() | EPipelineStage::BottomOfPipe } {}
+	};
+
+	struct CmdResetEvent : CmdSetEvent
+	{};
+
+
+	//
+	// Wait Events
+	//
+	struct CmdWaitEvents
+	{
+	// types
+		using Event_t		= Platforms::GpuEventId;
+		using Events_t		= FixedSizeArray< Event_t, 16 >;
+
+	// variables
+		Events_t		events;
+		// TODO
+
+	// methods
+		CmdWaitEvents (Event_t event) { events.PushBack( event ); }
+		CmdWaitEvents (ArrayCRef<Event_t> events) : events(events) {}
 	};
 
 

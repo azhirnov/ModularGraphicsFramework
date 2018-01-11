@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
@@ -104,7 +104,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_Compose );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_Delete );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkGraphicsPipelineID );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetGraphicsPipelineDescriptor );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetDeviceInfo );
@@ -437,7 +436,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_Compose );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_Delete );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1ComputePipeline::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkComputePipelineID );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetComputePipelineDescriptor );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetDeviceInfo );

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
@@ -124,7 +124,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_Compose );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_Delete );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GetGLPrivateClasses );

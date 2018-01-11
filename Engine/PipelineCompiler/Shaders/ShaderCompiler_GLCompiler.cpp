@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"

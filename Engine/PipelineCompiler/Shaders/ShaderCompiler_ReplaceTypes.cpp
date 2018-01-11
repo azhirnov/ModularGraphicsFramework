@@ -1,4 +1,8 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
+/*
+	TODO:
+		- detect swizzle to avoid replacing 'float2().y' -> 'float4().xy.y'
+*/
 
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h"
 
@@ -13,36 +17,49 @@ namespace PipelineCompiler
 	using ReplaceStructTypesFunc_t	= ShaderCompiler::ReplaceStructTypesFunc_t;
 	using FieldTypeInfo				= ShaderCompiler::FieldTypeInfo;
 	
-	static bool RecursiveProcessAggregateNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessBranchNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessSwitchNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessConstUnionNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessSelectionNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessMethodNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessSymbolNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessTypedNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessOperatorNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessUnaryNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool RecursiveProcessBinaryNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
-	static bool ReplaceTypesInNode (TIntermNode* root, glslang::TIntermBinary* node, const ReplaceStructTypesFunc_t &replacer);
-	static bool ReplaceTypesInNode2 (TIntermNode* root, glslang::TIntermBinary* node, const FieldTypeInfo &oldField, const FieldTypeInfo &newField);
-	static bool RecursiveProccessLoop (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer);
+	struct Replacer
+	{
+		ReplaceStructTypesFunc_t	func;
+		Array<TIntermNode*>			nodes;
+		uint						uid		= 0;
+	};
+
+	static bool RecursiveProcessAggregateNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessBranchNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessSwitchNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessConstUnionNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessSelectionNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessMethodNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessSymbolNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessTypedNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessOperatorNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessUnaryNode (TIntermNode* node, Replacer &replacer);
+	static bool RecursiveProcessBinaryNode (TIntermNode* node, Replacer &replacer);
+	static bool ReplaceTypesInNode (glslang::TIntermBinary* node, Replacer &replacer);
+	static bool ReplaceTypesInNode2 (glslang::TIntermBinary* node, const FieldTypeInfo &oldField, const FieldTypeInfo &newField, const Replacer &replacer);
+	static bool ReplaceTypesInNode2Arr (glslang::TIntermBinary* node, const FieldTypeInfo &oldField, const FieldTypeInfo &newField, const Replacer &replacer);
+	static bool RecursiveProccessLoop (TIntermNode* node, Replacer &replacer);
 
 /*
 =================================================
 	_ReplaceTypes
 =================================================
 */
-	bool ShaderCompiler::_ReplaceTypes (const glslang::TIntermediate* intermediate, const Config &cfg)
+	bool ShaderCompiler::_ReplaceTypes (const _GLSLangResult &glslangData, const Config &cfg) const
 	{
 		if ( not cfg.typeReplacer )
 			return true;
+		
+		const glslang::TIntermediate* intermediate = glslangData.prog.getIntermediate( glslangData.shader->getStage() );
+		CHECK_ERR( intermediate );
 
 		TIntermNode*	root	= intermediate->getTreeRoot();
-		uint			uid		= 0;
+		Replacer		replacer;
 
-		CHECK_ERR( RecursiveProcessAggregateNode( null, root, OUT uid, cfg.typeReplacer ) );
+		replacer.func = cfg.typeReplacer;
+
+		CHECK_ERR( RecursiveProcessAggregateNode( root, replacer ) );
 		return true;
 	}
 	
@@ -51,19 +68,25 @@ namespace PipelineCompiler
 	RecursiveProcessBinaryNode
 =================================================
 */
-	static bool RecursiveProcessBinaryNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessBinaryNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermBinary*		binary = node->getAsBinaryNode();
 		
 		_SLOG( ("TIntermBinary ("_str << uid << ") op:" << uint(binary->getOp()) << "; " << binary->getCompleteString().c_str()).cstr(), ELog::Debug );
 
-		if ( binary->getOp() == glslang::TOperator::EOpIndexDirectStruct )
+		if ( binary->getOp() == glslang::TOperator::EOpIndexDirectStruct	or
+			 binary->getOp() == glslang::TOperator::EOpIndexDirect			or
+			 binary->getOp() == glslang::TOperator::EOpIndexIndirect )
 		{
-			CHECK_ERR( ReplaceTypesInNode( root, binary, replacer ) );
+			CHECK_ERR( ReplaceTypesInNode( binary, replacer ) );
 		}
 
-		CHECK_ERR( RecursiveProcessNode( binary, binary->getLeft(), INOUT ++uid, replacer ) );
-		CHECK_ERR( RecursiveProcessNode( binary, binary->getRight(), INOUT ++uid, replacer ) );
+		replacer.nodes << binary;
+		CHECK_ERR( RecursiveProcessNode( binary->getLeft(), replacer ) );
+		CHECK_ERR( RecursiveProcessNode( binary->getRight(), replacer ) );
+
+		CHECK( replacer.nodes.Back() == binary );
+		replacer.nodes.PopBack();
 		return true;
 	}
 	
@@ -72,7 +95,7 @@ namespace PipelineCompiler
 	ReplaceTypesInNode
 =================================================
 */
-	static bool ReplaceTypesInNode (TIntermNode* root, glslang::TIntermBinary* binary, const ReplaceStructTypesFunc_t &replacer)
+	static bool ReplaceTypesInNode (glslang::TIntermBinary* binary, Replacer &replacer)
 	{
 		const glslang::TType&	type		= binary->getType();
 		FieldTypeInfo			field;
@@ -101,11 +124,10 @@ namespace PipelineCompiler
 			glslang::TIntermTyped*	left	= binary->getLeft()->getAsTyped();
 			const glslang::TType&	ltype	= left->getType();
 
-			CHECK( not ltype.isBuiltIn() );
-
 			if ( (ltype.getBasicType() == glslang::TBasicType::EbtStruct or
 				 ltype.getBasicType() == glslang::TBasicType::EbtBlock) and
-				 &ltype.getTypeName() != null )
+				 &ltype.getTypeName() != null and
+				 not ltype.isBuiltIn() )
 			{
 				st_type = ltype.getTypeName().data();
 			}
@@ -132,10 +154,14 @@ namespace PipelineCompiler
 
 		const FieldTypeInfo		src_field = field;
 
-		if ( not replacer( st_type, INOUT field ) or src_field == field )
+		if ( not replacer.func( st_type, INOUT field ) or src_field == field )
 			return true;	// not replaced or not changed
 
-		CHECK_ERR( ReplaceTypesInNode2( root, binary, src_field, field ) );
+		if ( type.getArraySizes() == null ) {
+			CHECK_ERR( ReplaceTypesInNode2( binary, src_field, field, replacer ) );
+		} else {
+			CHECK_ERR( ReplaceTypesInNode2Arr( binary, src_field, field, replacer ) );
+		}
 		return true;
 	}
 	
@@ -231,7 +257,7 @@ namespace PipelineCompiler
 	ReplaceNodeInRoot
 =================================================
 */
-	static bool ReplaceNodeInRoot (TIntermNode* root, TIntermNode* srcNode, TIntermNode* dstNode)
+	static bool ReplaceNodeInRoot (TIntermNode *root, TIntermNode* srcNode, TIntermNode* dstNode)
 	{
 		if ( root->getAsAggregate() )
 		{
@@ -339,6 +365,7 @@ namespace PipelineCompiler
 		cu_pub_type.vectorSize = 1;
 		cu_pub_type.qualifier.storage = glslang::TStorageQualifier::EvqConst;
 
+		// all glslang objects use GC
 		glslang::TIntermBinary*		swizzle_op		= new glslang::TIntermBinary( glslang::TOperator::EOpVectorSwizzle );
 		glslang::TIntermAggregate*	swizzle_mask	= new glslang::TIntermAggregate();
 		glslang::TType*				mask_type		= new glslang::TType( mask_pub_type );
@@ -515,8 +542,10 @@ namespace PipelineCompiler
 	ReplaceTypesInNode2
 =================================================
 */
-	static bool ReplaceTypesInNode2 (TIntermNode* root, glslang::TIntermBinary* binary, const FieldTypeInfo &oldField, const FieldTypeInfo &newField)
+	static bool ReplaceTypesInNode2 (glslang::TIntermBinary* binary, const FieldTypeInfo &oldField, const FieldTypeInfo &newField, const Replacer &replacer)
 	{
+		TIntermNode *			root	= replacer.nodes.Back();
+
 		glslang::TType const&	old_type	= binary->getType();
 		glslang::TPublicType	new_type;	new_type.init( binary->getLoc() );
 
@@ -537,10 +566,14 @@ namespace PipelineCompiler
 			glslang::TIntermTyped*			right		= binary->getRight();
 			glslang::TConstUnionArray		arr(1);		arr[0].setIConst( newField.index );
 			glslang::TIntermConstantUnion*	const_union = new glslang::TIntermConstantUnion( arr, *right->getType().clone() );
+			glslang::TIntermConstantUnion*	r_cunion	= right->getAsConstantUnion();
 
-			CHECK_ERR( right and right->getAsConstantUnion() );
+			CHECK_ERR( r_cunion and
+					   r_cunion->getConstArray().size() == 1 and
+					   r_cunion->getConstArray()[0].getType() == glslang::TBasicType::EbtInt and
+					   r_cunion->getConstArray()[0].getUConst() == oldField.index );
 
-			if ( right->getAsConstantUnion()->isLiteral() )
+			if ( r_cunion->isLiteral() )
 				const_union->setLiteral();
 			else
 				const_union->setExpression();
@@ -590,7 +623,107 @@ namespace PipelineCompiler
 		}
 
 		// set new type to node
-		glslang::TType*		ttype	= new glslang::TType( new_type );
+		glslang::TType*		ttype	= new glslang::TType( new_type );	// all glslang objects use GC
+
+		ttype->setFieldName( glslang::TString( newField.name.cstr() ) );
+
+		if ( not newField.typeName.Empty() )
+			ttype->setTypeName( glslang::TString( newField.typeName.cstr() ) );
+
+		binary->setType( *ttype );
+		return true;
+	}
+	
+/*
+=================================================
+	ReplaceTypesInNode2Arr
+=================================================
+*/
+	static bool ReplaceTypesInNode2Arr (glslang::TIntermBinary* node, const FieldTypeInfo &oldField, const FieldTypeInfo &newField, const Replacer &replacer)
+	{
+		CHECK_ERR( replacer.nodes.Count() >= 2 );
+
+		TIntermNode *	root1  = *(replacer.nodes.End() - 1);
+		TIntermNode *	root2 = *(replacer.nodes.End() - 2);
+
+		if ( root1 == null or
+			 root2 == null or
+			 root1->getAsBinaryNode() == null or
+			(root1->getAsBinaryNode()->getOp() != glslang::TOperator::EOpIndexDirect and
+			 root1->getAsBinaryNode()->getOp() != glslang::TOperator::EOpIndexIndirect) )
+		{
+			RETURN_ERR( "not supported" );
+		}
+
+		glslang::TIntermBinary *	binary	= root1->getAsBinaryNode();
+		TIntermNode *				root	= root2;
+		
+		glslang::TType const&	old_type	= binary->getType();
+		glslang::TPublicType	new_type;	new_type.init( binary->getLoc() );
+
+		new_type.basicType		= old_type.getBasicType();
+		new_type.sampler		= old_type.getSampler();
+		new_type.qualifier		= old_type.getQualifier();
+		new_type.vectorSize		= old_type.getVectorSize();
+		new_type.matrixCols		= old_type.getMatrixCols();
+		new_type.matrixRows		= old_type.getMatrixRows();
+		
+		if ( old_type.getArraySizes() )
+		{
+			new_type.arraySizes		= new glslang::TArraySizes();
+			*new_type.arraySizes	= *old_type.getArraySizes();
+		}
+
+		// not supported
+		CHECK_ERR( not old_type.isStruct() );
+
+		// changed name or index
+		if ( oldField.name != newField.name or oldField.index != newField.index )
+		{
+			RETURN_ERR( "not supported" );
+		}
+
+		// changed scalar/vector/matrix type of field
+		if ( oldField.type != newField.type and oldField.typeName.Empty() and newField.typeName.Empty() )
+		{
+			// check is 'root' a assign operator or out/inout argument in function call
+			bool	is_lvalue	= false;
+			bool	is_out_arg	= false;
+
+			GetValueQualifier( root, binary, OUT is_lvalue, OUT is_out_arg );
+
+
+			// create swizzle operator, value may be Rvalue or Lvalue
+			if ( EShaderVariable::VecSize( newField.type ) > 0 )
+			{
+				CHECK_ERR( CreateSwizzleNode( INOUT root, binary, oldField, newField, old_type, INOUT new_type ) );
+			}
+			else
+			// change other type for compatibility
+			if ( is_lvalue )
+			{
+				CHECK_ERR( CreateLValueNode( root, newField, INOUT new_type ) );
+			}
+			else
+			if ( is_out_arg )
+			{
+				RETURN_ERR( "output argument is not supported if type is not a scalar or vector!" );
+			}
+			else
+			// create constructor, value must be the Rvalue
+			{
+				CHECK_ERR( CreateConstructorNode(  INOUT root, binary, oldField, newField, old_type, INOUT new_type ) );
+			}
+		}
+
+		// changed struct type of field
+		if ( not oldField.typeName.Empty() or not newField.typeName.Empty() )
+		{
+			RETURN_ERR( "struct fields not supported yet!" );
+		}
+
+		// set new type to node
+		glslang::TType*		ttype	= new glslang::TType( new_type );	// all glslang objects use GC
 
 		ttype->setFieldName( glslang::TString( newField.name.cstr() ) );
 
@@ -606,16 +739,21 @@ namespace PipelineCompiler
 	RecursiveProcessAggregateNode
 =================================================
 */
-	static bool RecursiveProcessAggregateNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessAggregateNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermAggregate* aggr = node->getAsAggregate();
 	
 		_SLOG( ("TIntermAggregate ("_str << uid << ") op:" << uint(aggr->getOp()) << 
 				"; " << aggr->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
 		
+		replacer.nodes << aggr;
+
 		for (size_t i = 0; i < aggr->getSequence().size(); ++i) {
-			CHECK_ERR( RecursiveProcessNode( aggr, aggr->getSequence()[i], INOUT ++uid, replacer ) );
+			CHECK_ERR( RecursiveProcessNode( aggr->getSequence()[i], replacer ) );
 		}
+		
+		CHECK( replacer.nodes.Back() == aggr );
+		replacer.nodes.PopBack();
 		return true;
 	}
 	
@@ -624,83 +762,84 @@ namespace PipelineCompiler
 	RecursiveProcessNode
 =================================================
 */
-	static bool RecursiveProcessNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessNode (TIntermNode* node, Replacer &replacer)
 	{
 		if ( not node )
 			return true;
 
 		if ( node->getAsAggregate() )
 		{
-			CHECK_ERR( RecursiveProcessAggregateNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessAggregateNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsUnaryNode() )
 		{
-			CHECK_ERR( RecursiveProcessUnaryNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessUnaryNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsBinaryNode() )
 		{
-			CHECK_ERR( RecursiveProcessBinaryNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessBinaryNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsOperator() )
 		{
-			CHECK_ERR( RecursiveProcessOperatorNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessOperatorNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsBranchNode() )
 		{
-			CHECK_ERR( RecursiveProcessBranchNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessBranchNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsSwitchNode() )
 		{
-			CHECK_ERR( RecursiveProcessSwitchNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessSwitchNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsConstantUnion() )
 		{
-			CHECK_ERR( RecursiveProcessConstUnionNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessConstUnionNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsSelectionNode() )
 		{
-			CHECK_ERR( RecursiveProcessSelectionNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessSelectionNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsMethodNode() )
 		{
-			CHECK_ERR( RecursiveProcessMethodNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessMethodNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsSymbolNode() )
 		{
-			CHECK_ERR( RecursiveProcessSymbolNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessSymbolNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsTyped() )
 		{
-			CHECK_ERR( RecursiveProcessTypedNode( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProcessTypedNode( node, replacer ) );
 			return true;
 		}
 
 		if ( node->getAsLoopNode() )
 		{
-			CHECK_ERR( RecursiveProccessLoop( root, node, INOUT uid, replacer ) );
+			CHECK_ERR( RecursiveProccessLoop( node, replacer ) );
 			return true;
 		}
 
+		TODO("");
 		return false;
 	}
 	
@@ -709,13 +848,17 @@ namespace PipelineCompiler
 	RecursiveProcessBranchNode
 =================================================
 */
-	static bool RecursiveProcessBranchNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessBranchNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermBranch*		branch = node->getAsBranchNode();
 		
 		_SLOG( ("TIntermBranch ("_str << uid << ") op: " << uint(branch->getFlowOp())).cstr(), ELog::Debug );
-
-		CHECK_ERR( RecursiveProcessNode( branch, branch->getExpression(), INOUT ++uid, replacer ) );
+		
+		replacer.nodes << branch;
+		CHECK_ERR( RecursiveProcessNode( branch->getExpression(), replacer ) );
+		
+		CHECK( replacer.nodes.Back() == branch );
+		replacer.nodes.PopBack();
 		return true;
 	}
 	
@@ -724,14 +867,18 @@ namespace PipelineCompiler
 	RecursiveProcessSwitchNode
 =================================================
 */
-	static bool RecursiveProcessSwitchNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessSwitchNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermSwitch*		sw = node->getAsSwitchNode();
 		
 		_SLOG( ("TIntermSwitch ("_str << uid << ") ").cstr(), ELog::Debug );
-
-		CHECK_ERR( RecursiveProcessNode( sw, sw->getCondition(), INOUT ++uid, replacer ) );
-		CHECK_ERR( RecursiveProcessNode( sw, sw->getBody(), INOUT ++uid, replacer ) );
+		
+		replacer.nodes << sw;
+		CHECK_ERR( RecursiveProcessNode( sw->getCondition(), replacer ) );
+		CHECK_ERR( RecursiveProcessNode( sw->getBody(), replacer ) );
+		
+		CHECK( replacer.nodes.Back() == sw );
+		replacer.nodes.PopBack();
 		return true;
 	}
 	
@@ -740,7 +887,7 @@ namespace PipelineCompiler
 	RecursiveProcessConstUnionNode
 =================================================
 */
-	static bool RecursiveProcessConstUnionNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessConstUnionNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermConstantUnion*	cu = node->getAsConstantUnion();
 		
@@ -755,15 +902,19 @@ namespace PipelineCompiler
 	RecursiveProcessSelectionNode
 =================================================
 */
-	static bool RecursiveProcessSelectionNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessSelectionNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermSelection*	selection = node->getAsSelectionNode();
 		
 		_SLOG( ("TIntermSelection ("_str << uid << ") " << selection->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
 
-		CHECK_ERR( RecursiveProcessNode( selection, selection->getCondition(), INOUT ++uid, replacer ) );
-		CHECK_ERR( RecursiveProcessNode( selection, selection->getTrueBlock(), INOUT ++uid, replacer ) );
-		CHECK_ERR( RecursiveProcessNode( selection, selection->getFalseBlock(), INOUT ++uid, replacer ) );
+		replacer.nodes << selection;
+		CHECK_ERR( RecursiveProcessNode( selection->getCondition(), replacer ) );
+		CHECK_ERR( RecursiveProcessNode( selection->getTrueBlock(), replacer ) );
+		CHECK_ERR( RecursiveProcessNode( selection->getFalseBlock(), replacer ) );
+		
+		CHECK( replacer.nodes.Back() == selection );
+		replacer.nodes.PopBack();
 		return true;
 	}
 	
@@ -772,13 +923,17 @@ namespace PipelineCompiler
 	RecursiveProcessMethodNode
 =================================================
 */
-	static bool RecursiveProcessMethodNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessMethodNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermMethod*		method = node->getAsMethodNode();
 		
 		_SLOG( ("TIntermMethod ("_str << uid << ") " << method->getMethodName().c_str() << "; " << method->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
-
-		CHECK_ERR( RecursiveProcessNode( method, method->getObject(), INOUT ++uid, replacer ) );
+		
+		replacer.nodes << method;
+		CHECK_ERR( RecursiveProcessNode( method->getObject(), replacer ) );
+		
+		CHECK( replacer.nodes.Back() == method );
+		replacer.nodes.PopBack();
 		return true;
 	}
 	
@@ -787,7 +942,7 @@ namespace PipelineCompiler
 	RecursiveProcessSymbolNode
 =================================================
 */
-	static bool RecursiveProcessSymbolNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessSymbolNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermSymbol*		symbol = node->getAsSymbolNode();
 		
@@ -803,7 +958,7 @@ namespace PipelineCompiler
 	RecursiveProcessTypedNode
 =================================================
 */
-	static bool RecursiveProcessTypedNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessTypedNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermTyped*		typed = node->getAsTyped();
 		
@@ -818,7 +973,7 @@ namespace PipelineCompiler
 	RecursiveProcessOperatorNode
 =================================================
 */
-	static bool RecursiveProcessOperatorNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessOperatorNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermOperator*	op = node->getAsOperator();
 		
@@ -833,13 +988,17 @@ namespace PipelineCompiler
 	RecursiveProcessUnaryNode
 =================================================
 */
-	static bool RecursiveProcessUnaryNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProcessUnaryNode (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermUnary*		unary = node->getAsUnaryNode();
 		
 		_SLOG( ("TIntermUnary ("_str << uid << ") op:" << uint(unary->getOp()) << "; " << unary->getCompleteString().c_str()).cstr(), ELog::Debug );
 
-		CHECK_ERR( RecursiveProcessNode( unary, unary->getOperand(), INOUT ++uid, replacer ) );
+		replacer.nodes << unary;
+		CHECK_ERR( RecursiveProcessNode( unary->getOperand(), replacer ) );
+
+		CHECK( replacer.nodes.Back() == unary );
+		replacer.nodes.PopBack();
 		return true;
 	}
 	
@@ -848,19 +1007,23 @@ namespace PipelineCompiler
 	RecursiveProccessLoop
 =================================================
 */
-	static bool RecursiveProccessLoop (TIntermNode* root, TIntermNode* node, INOUT uint &uid, const ReplaceStructTypesFunc_t &replacer)
+	static bool RecursiveProccessLoop (TIntermNode* node, Replacer &replacer)
 	{
 		glslang::TIntermLoop *	loop = node->getAsLoopNode();
 		
-		CHECK_ERR( RecursiveProcessNode( loop, loop->getBody(), INOUT ++uid, replacer ) );
+		replacer.nodes << loop;
+		CHECK_ERR( RecursiveProcessNode( loop->getBody(), replacer ) );
 
 		if ( loop->getTerminal() ) {
-			CHECK_ERR( RecursiveProcessNode( loop, loop->getTerminal(), INOUT ++uid, replacer ) );
+			CHECK_ERR( RecursiveProcessNode( loop->getTerminal(), replacer ) );
 		}
 
 		if ( loop->getTest() ) {
-			CHECK_ERR( RecursiveProcessNode( loop, loop->getTest(), INOUT ++uid, replacer ) );
+			CHECK_ERR( RecursiveProcessNode( loop->getTest(), replacer ) );
 		}
+		
+		CHECK( replacer.nodes.Back() == loop );
+		replacer.nodes.PopBack();
 		return true;
 	}
 

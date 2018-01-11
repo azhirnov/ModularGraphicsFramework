@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -38,7 +38,7 @@ namespace Platforms
 			ImplicitResetable,
 
 			// will wait fence before restart or delete
-			UseFence,
+			//UseFence,
 
 			_Count,
 			Unknown	= ~0u,

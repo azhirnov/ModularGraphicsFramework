@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -21,6 +21,8 @@ private:
 	uint				cmdBufIndex	= 0;
 	GraphicsModuleIDs	ids;
 
+	ModulePtr			syncManager;
+
 	// triangle
 	ModulePtr			gpipeline1;
 	ModulePtr			pipelineTemplate1;
@@ -42,6 +44,7 @@ private:
 	ModulePtr			ubuffer;
 
 	Array<ModulePtr>	cmdBuffers;
+	Array<GpuFenceId>	cmdFence;
 	ModulePtr			cmdBuilder;
 
 

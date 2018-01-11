@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Temporary tests.
 */
@@ -13,4 +13,5 @@ using namespace GX_STL::GXMath;
 
 extern void Test_Temp ()
 {
+	//WARNING( "!!!" );
 }

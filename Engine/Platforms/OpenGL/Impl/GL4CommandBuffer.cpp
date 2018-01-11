@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Shared/GPU/Framebuffer.h"
@@ -32,7 +32,8 @@ namespace PlatformGL
 											GpuMsg::SetCommandBufferState,
 											GpuMsg::GetCommandBufferState,
 											GpuMsg::SetCommandBufferDependency,
-											GpuMsg::SetGLCommandBufferQueue
+											GpuMsg::SetGLCommandBufferQueue,
+											GpuMsg::ExecuteGLCommandBuffer
 										> >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t::Append< MessageListFrom<
@@ -75,7 +76,9 @@ namespace PlatformGL
 	private:
 		ModulePtr					_tempBuffer;	// for UpdateBuffer command
 
-		GLsync						_fenceId;
+		// temporary framebuffer for blit image command
+		GLuint						_srcBlitFramebuffer;
+		GLuint						_dstBlitFramebuffer;
 
 		CommandBufferDescriptor		_descr;
 		CommandArray_t				_commands;
@@ -119,6 +122,7 @@ namespace PlatformGL
 		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
 		bool _SetCommandBufferState (const Message< GpuMsg::SetCommandBufferState > &);
 		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
+		bool _ExecuteGLCommandBuffer (const Message< GpuMsg::ExecuteGLCommandBuffer > &);
 		
 	private:
 		bool _Submit ();
@@ -132,7 +136,7 @@ namespace PlatformGL
 		bool _Initialize ();
 		void _ClearStates ();
 
-		bool _DestroyFence ();
+		bool _DestroyResources ();
 
 		bool _PrepareForDraw ();
 		bool _PrepareForCompute ();
@@ -177,6 +181,7 @@ namespace PlatformGL
 		bool _CmdCopyBufferToImage (const Command_t &cmd);
 		bool _CmdCopyImageToBuffer (const Command_t &cmd);
 		bool _CmdBlitImage (const Command_t &cmd);
+		bool _CmdBlitGLFramebuffers (const Command_t &cmd);
 		bool _CmdUpdateBuffer (const Command_t &cmd);
 		bool _CmdFillBuffer (const Command_t &cmd);
 		bool _CmdClearAttachments (const Command_t &cmd);
@@ -200,7 +205,7 @@ namespace PlatformGL
 */
 	GL4CommandBuffer::GL4CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
 		GL4BaseModule( gs, ModuleConfig{ GLCommandBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
-		_fenceId( null ),
+		_srcBlitFramebuffer( 0 ),		_dstBlitFramebuffer( 0 ),
 		_descr( ci.descr ),				_recordingState( ERecordingState::Deleted ),
 		_pipelineObj( 0 ),				_vertexAttribs( 0 ),
 		_indexType( EIndex::Unknown ),	_primitive( EPrimitive::Unknown )
@@ -217,7 +222,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_Compose );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_Delete );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4CommandBuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_GetCommandBufferDescriptor );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_GetGLDeviceInfo );
@@ -226,6 +230,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_SetCommandBufferDependency );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_SetCommandBufferState );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_GetCommandBufferState );
+		_SubscribeOnMsg( this, &GL4CommandBuffer::_ExecuteGLCommandBuffer );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -284,11 +289,6 @@ namespace PlatformGL
 */
 	void GL4CommandBuffer::_ValidateDescriptor (INOUT CommandBufferDescriptor &descr)
 	{
-		if ( descr.flags[ ECmdBufferCreate::Secondary ] and descr.flags[ ECmdBufferCreate::UseFence ] )
-		{
-			WARNING( "not supported" );
-			descr.flags[ ECmdBufferCreate::UseFence ] = false;
-		}
 	}
 
 /*
@@ -305,19 +305,7 @@ namespace PlatformGL
 		_resources.Clear();
 		_commands.Clear();
 
-		if ( _tempBuffer )
-		{
-			_tempBuffer->Send( msg );
-			_tempBuffer = null;
-		}
-
-		if ( _fenceId )
-		{
-			GLenum	state;
-			GL_CALL( state = glClientWaitSync( _fenceId, GL_SYNC_FLUSH_COMMANDS_BIT, (10_sec).NanoSeconds() ) );
-		}
-
-		_DestroyFence();
+		_DestroyResources();
 
 		return Module::_Delete_Impl( msg );
 	}
@@ -342,6 +330,7 @@ namespace PlatformGL
 										msg->bufferData.Size(),
 										EBufferUsage::bits() | EBufferUsage::TransferSrc
 									},
+									null,
 									EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
 									EMemoryAccess::bits() | EMemoryAccess::GpuRead | EMemoryAccess::CpuWrite
 								},
@@ -408,33 +397,12 @@ namespace PlatformGL
 	
 /*
 =================================================
-	_ResetCmdBuffer
+	_ExecuteGLCommandBuffer
 =================================================
 */
-	bool GL4CommandBuffer::_ResetCmdBuffer ()
+	bool GL4CommandBuffer::_ExecuteGLCommandBuffer (const Message< GpuMsg::ExecuteGLCommandBuffer > &)
 	{
-		if ( _recordingState == ERecordingState::Initial )
-			return true;
-
 		CHECK_ERR( _recordingState == ERecordingState::Pending );
-
-		_ChangeState( ERecordingState::Initial );
-		_resources.Clear();
-		_commands.Clear();
-
-		return true;
-	}
-
-/*
-=================================================
-	_Submit
-=================================================
-*/
-	bool GL4CommandBuffer::_Submit ()
-	{
-		CHECK_ERR( _recordingState == ERecordingState::Executable );
-
-		_ChangeState( ERecordingState::Pending );
 
 		FOR( i, _commands )
 		{
@@ -471,6 +439,7 @@ namespace PlatformGL
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyBufferToImage> :		_CmdCopyBufferToImage( data );			break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyImageToBuffer> :		_CmdCopyImageToBuffer( data );			break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdBlitImage> :				_CmdBlitImage( data );					break;
+				case CmdDataTypes_t::IndexOf<GpuMsg::CmdBlitGLFramebuffers> :		_CmdBlitGLFramebuffers ( data );		break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::GLCmdUpdateBuffer> :			_CmdUpdateBuffer( data );				break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdFillBuffer> :				_CmdFillBuffer( data );					break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdClearAttachments> :			_CmdClearAttachments( data );			break;
@@ -484,6 +453,38 @@ namespace PlatformGL
 		_ClearStates();
 		return true;
 	}
+
+/*
+=================================================
+	_ResetCmdBuffer
+=================================================
+*/
+	bool GL4CommandBuffer::_ResetCmdBuffer ()
+	{
+		if ( _recordingState == ERecordingState::Initial )
+			return true;
+
+		CHECK_ERR( _recordingState == ERecordingState::Pending );
+
+		_ChangeState( ERecordingState::Initial );
+		_resources.Clear();
+		_commands.Clear();
+
+		return true;
+	}
+
+/*
+=================================================
+	_Submit
+=================================================
+*/
+	bool GL4CommandBuffer::_Submit ()
+	{
+		CHECK_ERR( _recordingState == ERecordingState::Executable );
+
+		_ChangeState( ERecordingState::Pending );
+		return true;
+	}
 	
 /*
 =================================================
@@ -492,22 +493,15 @@ namespace PlatformGL
 */
 	bool GL4CommandBuffer::_BeginRecording ()
 	{
-		// sync
-		if ( _fenceId )
-		{
-			GLenum	state;
-			GL_CALL( state = glClientWaitSync( _fenceId, GL_SYNC_FLUSH_COMMANDS_BIT, (10_sec).NanoSeconds() ) );
-
-			CHECK_ERR( _OnCompleted() );
-		}
-
 		CHECK_ERR( _recordingState == ERecordingState::Initial or
-				  (_recordingState == ERecordingState::Executable and _descr.flags[ECmdBufferCreate::ImplicitResetable]) );
-		
-		if ( _descr.flags[ ECmdBufferCreate::UseFence ] )
+				  ((_recordingState == ERecordingState::Executable or
+					_recordingState == ERecordingState::Pending) and
+				    _descr.flags[ECmdBufferCreate::ImplicitResetable]) );
+
+		if ( _recordingState == ERecordingState::Pending )
 		{
-			CHECK_ERR( not _fenceId );
-			GL_CALL( _fenceId = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 ) );
+			_resources.Clear();
+			_commands.Clear();
 		}
 
 		_ChangeState( ERecordingState::Recording );
@@ -538,8 +532,6 @@ namespace PlatformGL
 
 		_resources.Clear();
 		_commands.Clear();
-
-		_DestroyFence();
 
 		_ChangeState( ERecordingState::Executable );
 		return true;
@@ -585,15 +577,27 @@ namespace PlatformGL
 	
 /*
 =================================================
-	_DestroyFence
+	_DestroyResources
 =================================================
 */
-	bool GL4CommandBuffer::_DestroyFence ()
+	bool GL4CommandBuffer::_DestroyResources ()
 	{
-		if ( _fenceId )
+		if ( _tempBuffer )
 		{
-			GL_CALL( glDeleteSync( _fenceId ) );
-			_fenceId = null;
+			_tempBuffer->Send< ModuleMsg::Delete >({});
+			_tempBuffer = null;
+		}
+
+		if ( _srcBlitFramebuffer != 0 )
+		{
+			GL_CALL( glDeleteFramebuffers( 1, &_srcBlitFramebuffer ) );
+			_srcBlitFramebuffer = 0;
+		}
+
+		if ( _dstBlitFramebuffer != 0 )
+		{
+			GL_CALL( glDeleteFramebuffers( 1, &_dstBlitFramebuffer ) );
+			_dstBlitFramebuffer = 0;
 		}
 		return true;
 	}
@@ -1388,18 +1392,10 @@ namespace PlatformGL
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdExecute >();
 		
-		Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
-		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
+		ModuleUtils::Send( data.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
+		ModuleUtils::Send( data.cmdBuffers, Message<GpuMsg::ExecuteGLCommandBuffer>{} );
+		//ModuleUtils::Send( data.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Completed });
 
-		FOR( i, data.cmdBuffers ) {
-			data.cmdBuffers[i]->Send( pending_state );
-		}
-
-		// TODO: sync
-		
-		FOR( i, data.cmdBuffers ) {
-			data.cmdBuffers[i]->Send( completed_state );
-		}
 		return true;
 	}
 	
@@ -1492,10 +1488,120 @@ namespace PlatformGL
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdBlitImage >();
 
-		TODO("not supported");
+		const auto	CheckFBStatus = LAMBDA() (GLuint fb, GLenum target) 
+									{
+										GLenum status = 0;
+										GL_CALL( status = glCheckFramebufferStatus( target ) );
+										return status == GL_FRAMEBUFFER_COMPLETE;
+									};
+
+		if ( _srcBlitFramebuffer == 0 ) {
+			GL_CALL( glGenFramebuffers( 1, &_srcBlitFramebuffer ) );
+		}
+		if ( _dstBlitFramebuffer == 0 ) {
+			GL_CALL( glGenFramebuffers( 1, &_dstBlitFramebuffer ) );
+		}
+
+		Message< GpuMsg::GetGLImageID >			req_src_id;
+		Message< GpuMsg::GetGLImageID >			req_dst_id;
+		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
+		Message< GpuMsg::GetImageDescriptor >	req_dst_descr;
+
+		data.srcImage->Send( req_src_id );
+		data.srcImage->Send( req_src_descr );
+		data.dstImage->Send( req_dst_id );
+		data.dstImage->Send( req_dst_descr );
+		
+		GL_CALL( glDisable( GL_SCISSOR_TEST ) );
+
+		GL_CALL( glBindFramebuffer( GL_READ_FRAMEBUFFER, _srcBlitFramebuffer ) );
+		GL_CALL( glFramebufferTexture( GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, req_src_id->result.Get(0), 0 ) );
+		GL_CALL( glReadBuffer( GL_COLOR_ATTACHMENT0 ) );
+		CHECK_ERR( CheckFBStatus( _srcBlitFramebuffer, GL_READ_FRAMEBUFFER ) );
+
+		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, _dstBlitFramebuffer ) );
+		GL_CALL( glFramebufferTexture( GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, req_src_id->result.Get(0), 0 ) );
+		GL_CALL( glDrawBuffer( GL_COLOR_ATTACHMENT0 ) );
+		CHECK_ERR( CheckFBStatus( _dstBlitFramebuffer, GL_DRAW_FRAMEBUFFER ) );
+
+		const GLenum	filter = data.linearFilter ? GL_LINEAR : GL_NEAREST;
+
+		FOR( i, data.regions )
+		{
+			const auto& r = data.regions[i];
+
+			// depth image not supported, yet
+			ASSERT( r.dstOffset0.z == 0 and r.dstOffset1.z == 0 );
+			ASSERT( r.srcOffset0.z == 0 and r.srcOffset1.z == 0 );
+
+			ASSERT( r.srcLayers.aspectMask == r.dstLayers.aspectMask );
+			ASSERT( r.srcLayers.baseLayer == ImageLayer(0) and r.dstLayers.baseLayer == ImageLayer(0) );
+			ASSERT( r.srcLayers.layerCount == 1 and r.dstLayers.layerCount == 1 );
+			ASSERT( r.srcLayers.mipLevel == MipmapLevel(0) and r.dstLayers.mipLevel == MipmapLevel(0) );
+			
+			const GLenum	buffers	= (r.srcLayers.aspectMask[ EImageAspect::Color ] ? GL_COLOR_BUFFER_BIT : 0) |
+									  (r.srcLayers.aspectMask[ EImageAspect::Depth ] ? GL_DEPTH_BUFFER_BIT : 0) |
+									  (r.srcLayers.aspectMask[ EImageAspect::Stencil ] ? GL_STENCIL_BUFFER_BIT : 0);
+			CHECK_ERR( buffers != 0 );
+
+			GL_CALL( glBlitFramebuffer( r.srcOffset0.x, r.srcOffset0.y, r.srcOffset1.x, r.srcOffset1.y,
+										r.dstOffset0.x, r.dstOffset0.y, r.dstOffset1.x, r.dstOffset1.y,
+										buffers, filter ) );
+		}
+
+		
+		GL_CALL( glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 ) );
+		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 ) );
 		return true;
 	}
 	
+/*
+=================================================
+	_CmdBlitGLFramebuffers
+=================================================
+*/
+	bool GL4CommandBuffer::_CmdBlitGLFramebuffers (const Command_t &cmd)
+	{
+		const auto&	data = cmd.data.Get< GpuMsg::CmdBlitGLFramebuffers >();
+
+		Message< GpuMsg::GetGLFramebufferID >	req_src_id;
+		Message< GpuMsg::GetGLFramebufferID >	req_dst_id;
+		
+		data.srcFramebuffer->Send( req_src_id );
+		data.dstFramebuffer->Send( req_dst_id );
+
+		CHECK_ERR( req_src_id->result and req_dst_id->result );
+
+		GL_CALL( glDisable( GL_SCISSOR_TEST ) );
+		GL_CALL( glBindFramebuffer( GL_READ_FRAMEBUFFER, *req_src_id->result ) );
+		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, *req_dst_id->result ) );
+
+		GL_CALL( glReadBuffer( GL_COLOR_ATTACHMENT0 ) );
+		GL_CALL( glDrawBuffer( GL_COLOR_ATTACHMENT0 ) );
+		
+		const GLenum	filter	= data.linearFilter ? GL_LINEAR : GL_NEAREST;
+
+		const GLenum	buffers	= (data.imageAspect[ EImageAspect::Color ] ? GL_COLOR_BUFFER_BIT : 0) |
+								  (data.imageAspect[ EImageAspect::Depth ] ? GL_DEPTH_BUFFER_BIT : 0) |
+								  (data.imageAspect[ EImageAspect::Stencil ] ? GL_STENCIL_BUFFER_BIT : 0);
+		CHECK_ERR( buffers != 0 );
+
+
+		FOR( i, data.regions )
+		{
+			const auto&	r = data.regions[i];
+
+			GL_CALL( glBlitFramebuffer( r.srcOffset0.x, r.srcOffset0.y, r.srcOffset1.x, r.srcOffset1.y,
+									    r.dstOffset0.x, r.dstOffset0.y, r.dstOffset1.x, r.dstOffset1.y,
+										buffers, filter ) );
+		}
+
+		GL_CALL( glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 ) );
+		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 ) );
+
+		return true;
+	}
+
 /*
 =================================================
 	_CmdUpdateBuffer

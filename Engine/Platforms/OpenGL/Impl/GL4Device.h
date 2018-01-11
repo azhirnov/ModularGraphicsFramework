@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -30,13 +30,10 @@ namespace PlatformGL
 
 		EPixelFormat::type			_colorPixelFormat;
 		EPixelFormat::type			_depthStencilPixelFormat;
+		MultiSamples				_samples;
 
 		ModulePtr					_renderPass;
 		ModulePtr					_framebuffer;
-		
-		EPixelFormat::type			_colorFormat;
-		EPixelFormat::type			_depthStencilFormat;
-		MultiSamples				_samples;
 
 		uint						_currentImageIndex;
 		uint						_swapchainLength;
@@ -76,6 +73,8 @@ namespace PlatformGL
 		ModulePtr	GetCurrentFramebuffer ()	const	{ return _framebuffer; }
 		uint		GetImageIndex ()			const	{ return _currentImageIndex; }
 		uint		GetSwapchainLength ()		const	{ return _swapchainLength; }
+		
+		uint2 const& GetSurfaceSize ()			const	{ return _surfaceSize; }
 
 		bool		IsVulkanCompatibility ()	const	{ return _vulkanCompatibility; }
 

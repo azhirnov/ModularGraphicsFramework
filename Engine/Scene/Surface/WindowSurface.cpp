@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Scene/Shared/Surface.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
@@ -156,7 +156,7 @@ namespace Scene
 		ModulePtr	system_fb	= begin_frame->result->framebuffer;
 
 		Message< SceneMsg::SurfaceRequestUpdate >	req_upd;
-		req_upd->framebuffers.PushBack( system_fb );
+		req_upd->framebuffers.PushBack({ system_fb, float4x4(), float4x4(), 0 });
 
 		CHECK( _SendEvent( req_upd ) );
 
@@ -176,6 +176,10 @@ namespace Scene
 	{
 		if ( _window ) {
 			_window->UnsubscribeAll( this );
+		}
+
+		if ( _thread ) {
+			_thread->UnsubscribeAll( this );
 		}
 
 		_thread	= null;

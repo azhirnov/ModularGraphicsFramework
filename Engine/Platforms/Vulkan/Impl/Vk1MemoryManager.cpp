@@ -1,5 +1,5 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
-/*
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
+
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
@@ -10,6 +10,8 @@ namespace Engine
 {
 namespace PlatformVK
 {
+	using namespace vk;
+
 
 	//
 	// Vulkan Memory Manager
@@ -20,25 +22,36 @@ namespace PlatformVK
 	// types
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::ReadFromStream,
-											ModuleMsg::WriteToStream,
-											GpuMsg::MapMemoryToCpu,
-											GpuMsg::FlushMemoryRange,
-											GpuMsg::UnmapMemory,
-											GpuMsg::CopyMemory,
-											GpuMsg::GpuMemoryRegionChanged
+											GpuMsg::VkAllocMemForImage,
+											GpuMsg::VkAllocMemForBuffer,
+											GpuMsg::VkFreeMemory
 										> >;
 
-		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t::Append< MessageListFrom<
-											ModuleMsg::DataRegionChanged,
-											GpuMsg::OnMemoryBindingChanged
-										> >;
+		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
 		
-		using ImageMessages_t		= MessageListFrom< GpuMsg::GetVkImageID >;
-		using BufferMessages_t		= MessageListFrom< GpuMsg::GetVkBufferID >;
-
 		using EBindingTarget		= GpuMsg::OnMemoryBindingChanged::EBindingTarget;
+
+		struct Memory
+		{
+			VkDeviceMemory			mem		= VK_NULL_HANDLE;
+			BytesUL					size;
+			BytesUL					align;
+			EGpuMemory::bits		flags;
+			EBindingTarget			binding	= EBindingTarget::Unbinded;
+		};
+
+		/*struct Block
+		{
+			usize		memIndex;
+			BytesUL		offset;
+			BytesUL		size;
+		};
+
+		using MemArray_t			= Array< Memory >;
+		using BlockMap_t			= Map< usize, Block >;			// key - mem index
+		using ModuleMemBlockMap_t	= Map< ModuleWPtr, usize >;		// value - block index*/
+
+		using MemoryMap_t		= Map< ModuleWPtr, Memory >;
 
 
 	// constants
@@ -49,40 +62,22 @@ namespace PlatformVK
 
 	// variables
 	private:
-		vk::VkDeviceMemory		_mem;
-		BytesUL					_maxSize;
-		
-		EGpuMemory::bits		_flags;
-		EMemoryAccess::bits		_access;
-		EBindingTarget			_binding;
+		MemoryMap_t		_memBlocks;
 
 
 	// methods
 	public:
-		Vk1MemoryManager (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci);
+		Vk1MemoryManager (GlobalSystemsRef gs, const CreateInfo::GpuMemoryManager &ci);
 		~Vk1MemoryManager ();
 
 
 	// message handlers
 	private:
-		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _GetStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &);
-		bool _ReadFromStream (const Message< ModuleMsg::ReadFromStream > &);
-		bool _WriteToStream (const Message< ModuleMsg::WriteToStream > &);
-		bool _MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &);
-		bool _FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &);
-		bool _UnmapMemory (const Message< GpuMsg::UnmapMemory > &);
-		bool _CopyMemory (const Message< GpuMsg::CopyMemory > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-
-	private:
-		bool _IsCreated () const;
-		bool _AllocForImage ();
-		bool _AllocForBuffer ();
-		void _FreeMemory ();
-
-		static EMemoryAccess::bits _GpuMemoryToMemoryAccess (EGpuMemory::bits flags);
+		
+		bool _VkAllocMemForImage (const Message< GpuMsg::VkAllocMemForImage > &);
+		bool _VkAllocMemForBuffer (const Message< GpuMsg::VkAllocMemForBuffer > &);
+		bool _VkFreeMemory (const Message< GpuMsg::VkFreeMemory > &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -95,18 +90,9 @@ namespace PlatformVK
 =================================================
 	constructor
 =================================================
-*
-	Vk1MemoryManager::Vk1MemoryManager (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci) :
-		Vk1BaseModule( gs, ci.gpuThread, ModuleConfig{ VkMemoryManagerModuleID, 1 }, &_msgTypes, &_eventTypes ),
-		_mem( VK_NULL_HANDLE ),
-		_mappedPtr( null ),
-		// TODO: ci.maxSize ignored
-		_flags( ci.memFlags ),
-		_access( ci.access & _GpuMemoryToMemoryAccess( ci.memFlags ) ),
-		_heapIndex( UMax ),
-		_binding( EBindingTarget::Unbinded ),
-		_isMapped( false ),
-		_isMappedMemChanged( false )
+*/
+	Vk1MemoryManager::Vk1MemoryManager (GlobalSystemsRef gs, const CreateInfo::GpuMemoryManager &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ VkMemoryManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "Vk1MemoryManager" );
 
@@ -117,21 +103,15 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_FindModule_Empty );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_ModulesDeepSearch_Empty );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_Link_Impl );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_Compose );
+		_SubscribeOnMsg( this, &Vk1MemoryManager::_Compose_Impl );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_Delete );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_DeviceBeforeDestroy );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_GetStreamDescriptor );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_ReadFromStream );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_WriteToStream );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_MapMemoryToCpu );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_FlushMemoryRange );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_UnmapMemory );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_CopyMemory );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_GetVkPrivateClasses );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_GpuMemoryRegionChanged );
+		_SubscribeOnMsg( this, &Vk1MemoryManager::_VkAllocMemForImage );
+		_SubscribeOnMsg( this, &Vk1MemoryManager::_VkAllocMemForBuffer );
+		_SubscribeOnMsg( this, &Vk1MemoryManager::_VkFreeMemory );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -142,44 +122,24 @@ namespace PlatformVK
 =================================================
 	destructor
 =================================================
-*
+*/
 	Vk1MemoryManager::~Vk1MemoryManager ()
 	{
-		ASSERT( not _IsCreated() );
 	}
 	
 /*
 =================================================
-	_IsCreated
+	_VkAllocMemForImage
 =================================================
-*
-	bool Vk1MemoryManager::_IsCreated () const
+*/
+	bool Vk1MemoryManager::_VkAllocMemForImage (const Message< GpuMsg::VkAllocMemForImage > &msg)
 	{
-		return _mem != VK_NULL_HANDLE;
-	}
-	
-/*
-=================================================
-	_AllocForImage
-=================================================
-*
-	bool Vk1MemoryManager::_AllocForImage ()
-	{
-		using namespace vk;
-		
-		CHECK_ERR( not _IsCreated() );
-
-		// request image ID
-		Message< GpuMsg::GetVkImageID >	msg;
-		SendTo( _GetParents().Front(), msg );
-
-		VkImage	img_id	= msg->result.Get( VkImage(VK_NULL_HANDLE) );
-		CHECK_ERR( img_id != VK_NULL_HANDLE );
-
+		CHECK_ERR( not _memBlocks.IsExist( msg->module ) );
+		CHECK_ERR( msg->image != VK_NULL_HANDLE );
 
 		// allocate memory
 		VkMemoryRequirements	mem_reqs = {};
-		vkGetImageMemoryRequirements( GetLogicalDevice(), img_id, &mem_reqs );
+		vkGetImageMemoryRequirements( GetVkDevice(), msg->image, &mem_reqs );
 		
 		VkMemoryAllocateInfo	info = {};
 		info.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -187,42 +147,40 @@ namespace PlatformVK
 		info.allocationSize		= mem_reqs.size;
 		info.memoryTypeIndex	= 0;
 
-		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( mem_reqs.memoryTypeBits, Vk1Enum( _flags ), OUT info.memoryTypeIndex ) );
+		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( mem_reqs.memoryTypeBits, Vk1Enum( msg->flags ), OUT info.memoryTypeIndex ) );
 		
-		VK_CHECK( vkAllocateMemory( GetLogicalDevice(), &info, null, OUT &_mem ) );
+		VkDeviceMemory		mem_id;
+		VK_CHECK( vkAllocateMemory( GetVkDevice(), &info, null, OUT &mem_id ) );
 		
-		GetDevice()->SetObjectName( _mem, GetDebugName(), EGpuObject::DeviceMemory );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(mem_id), GetDebugName(), EGpuObject::DeviceMemory );
+		
 
-		// bind memory to image
-		VK_CHECK( vkBindImageMemory( GetLogicalDevice(), img_id, _mem, 0 ) );
+		Memory	block;
+		block.binding	= EBindingTarget::Buffer;
+		block.align		= BytesUL( mem_reqs.alignment );
+		block.flags		= msg->flags;
+		block.mem		= mem_id;
+		block.size		= BytesUL( mem_reqs.size );
 		
-		_size	 = BytesUL( mem_reqs.size );
-		_binding = EBindingTarget::Image;
+		msg->result.Set({ block.mem, BytesUL(0), block.size });
+
+		_memBlocks.Add( msg->module, block );
 		return true;
 	}
 	
 /*
 =================================================
-	_AllocForBuffer
+	_VkAllocMemForBuffer
 =================================================
-*
-	bool Vk1MemoryManager::_AllocForBuffer ()
+*/
+	bool Vk1MemoryManager::_VkAllocMemForBuffer (const Message< GpuMsg::VkAllocMemForBuffer > &msg)
 	{
-		using namespace vk;
-		
-		CHECK_ERR( not _IsCreated() );
-
-		// request image ID
-		Message< GpuMsg::GetVkBufferID >	msg;
-		SendTo( _GetParents().Front(), msg );
-
-		VkBuffer	buf_id	= msg->result.Get( VkBuffer(VK_NULL_HANDLE) );
-		CHECK_ERR( buf_id != VK_NULL_HANDLE );
-
+		CHECK_ERR( not _memBlocks.IsExist( msg->module ) );
+		CHECK_ERR( msg->buffer != VK_NULL_HANDLE );
 
 		// allocate memory
 		VkMemoryRequirements	mem_reqs = {};
-		vkGetBufferMemoryRequirements( GetLogicalDevice(), buf_id, &mem_reqs );
+		vkGetBufferMemoryRequirements( GetVkDevice(), msg->buffer, &mem_reqs );
 		
 		VkMemoryAllocateInfo	info = {};
 		info.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -230,220 +188,44 @@ namespace PlatformVK
 		info.allocationSize		= mem_reqs.size;
 		info.memoryTypeIndex	= 0;
 
-		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( mem_reqs.memoryTypeBits, Vk1Enum( _flags ), OUT info.memoryTypeIndex ) );
+		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( mem_reqs.memoryTypeBits, Vk1Enum( msg->flags ), OUT info.memoryTypeIndex ) );
 		
-		VK_CHECK( vkAllocateMemory( GetLogicalDevice(), &info, null, OUT &_mem ) );
+		VkDeviceMemory		mem_id;
+		VK_CHECK( vkAllocateMemory( GetVkDevice(), &info, null, OUT &mem_id ) );
 		
-		GetDevice()->SetObjectName( _mem, GetDebugName(), EGpuObject::DeviceMemory );
+		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(mem_id), GetDebugName(), EGpuObject::DeviceMemory );
 
-		// bind memory to image
-		VK_CHECK( vkBindBufferMemory( GetLogicalDevice(), buf_id, _mem, 0 ) );
+
+		Memory	block;
+		block.binding	= EBindingTarget::Buffer;
+		block.align		= BytesUL( mem_reqs.alignment );
+		block.flags		= msg->flags;
+		block.mem		= mem_id;
+		block.size		= BytesUL( mem_reqs.size );
 		
-		_size	 = BytesUL( mem_reqs.size );
-		_binding = EBindingTarget::Buffer;
+		msg->result.Set({ block.mem, BytesUL(0), block.size });
+
+		_memBlocks.Add( msg->module, block );
 		return true;
 	}
-
+	
 /*
 =================================================
-	_FreeMemory
+	_VkFreeMemory
 =================================================
-*
-	void Vk1MemoryManager::_FreeMemory ()
+*/
+	bool Vk1MemoryManager::_VkFreeMemory (const Message< GpuMsg::VkFreeMemory > &msg)
 	{
-		using namespace vk;
+		auto	dev = GetVkDevice();
 
-		auto	dev = GetLogicalDevice();
-
-		if ( dev != VK_NULL_HANDLE and _mem != VK_NULL_HANDLE )
+		MemoryMap_t::iterator	iter;
+		
+		if ( _memBlocks.Find( msg->module, OUT iter ) )
 		{
-			vkFreeMemory( dev, _mem, null );
+			vkFreeMemory( dev, iter->second.mem, null );
+
+			_memBlocks.EraseByIter( iter );
 		}
-
-		_mem			= VK_NULL_HANDLE;
-		_mappedPtr		= null;
-		_size			= Uninitialized;
-		_mappedOffset	= Uninitialized;
-		_mappedSize		= Uninitialized;
-		_flags			= Uninitialized;
-		_access			= Uninitialized;
-		_heapIndex		= -1;
-		_binding		= EBindingTarget::Unbinded;
-		_isMapped		= false;
-	}
-	
-/*
-=================================================
-	_Compose
-=================================================
-*
-	bool Vk1MemoryManager::_Compose (const Message< ModuleMsg::Compose > &msg)
-	{
-		if ( _IsComposedState( GetState() ) )
-			return true;	// already composed
-
-		CHECK_ERR( GetState() == EState::Linked );
-
-		CHECK_ERR( not _IsCreated() );
-		CHECK_ERR( _GetParents().Count() == 1 );
-
-		ModulePtr const&	parent = _GetParents().Front();
-
-		if ( parent->GetSupportedMessages().HasAllTypes< ImageMessages_t >() )
-		{
-			CHECK_COMPOSING( _AllocForImage() );
-		}
-		else
-		if ( parent->GetSupportedMessages().HasAllTypes< BufferMessages_t >() )
-		{
-			CHECK_COMPOSING( _AllocForBuffer() );
-		}
-
-		CHECK( _DefCompose( false ) );
-		CHECK( _SendEvent( Message< GpuMsg::OnMemoryBindingChanged >{ parent, _binding } ) );
-
-		return true;
-	}
-
-/*
-=================================================
-	_GetStreamDescriptor
-=================================================
-*
-	bool Vk1MemoryManager::_GetStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &msg)
-	{
-		StreamDescriptor	descr;
-
-		descr.memoryFlags	= _access;
-		descr.available		= _mappedSize;
-		descr.totalSize		= _IsCreated() ? _size : BytesUL();
-
-		msg->result.Set( descr );
-		return true;
-	}
-	
-/*
-=================================================
-	_ReadFromStream
-=================================================
-*
-	bool Vk1MemoryManager::_ReadFromStream (const Message< ModuleMsg::ReadFromStream > &msg)
-	{
-		CHECK_ERR( _isMapped );
-		CHECK_ERR( _access[EMemoryAccess::CpuRead] );
-		CHECK_ERR( msg->offset < _mappedSize );
-
-		const usize		offset	= (usize) msg->offset;
-		const usize		size	= (usize) Min( _mappedSize - msg->offset, msg->size.Get( UMax ) );
-
-		msg->result.Set( BinArrayCRef( _mappedPtr + offset, size ) );
-
-		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuRead, BytesU(offset), BytesU(size) });
-		return true;
-	}
-	
-/*
-=================================================
-	_WriteToStream
-=================================================
-*
-	bool Vk1MemoryManager::_WriteToStream (const Message< ModuleMsg::WriteToStream > &msg)
-	{
-		CHECK_ERR( _isMapped );
-		CHECK_ERR( _access[EMemoryAccess::CpuWrite] );
-		CHECK_ERR( msg->offset < _mappedSize );
-		
-		const usize		offset		= (usize) msg->offset;
-		const usize		size		= Min( usize(_mappedSize), usize(msg->data.Size()) );
-
-		MemCopy( BinArrayRef( _mappedPtr + offset, size ), msg->data );
-
-		msg->wasWritten.Set( BytesUL(size) );
-
-		_isMappedMemChanged = true;
-
-		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, BytesU(offset), BytesU(size) });
-		return true;
-	}
-	
-/*
-=================================================
-	_MapMemoryToCpu
-=================================================
-*
-	bool Vk1MemoryManager::_MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &msg)
-	{
-		using namespace vk;
-		
-		CHECK_ERR( _IsCreated() and not _isMapped );
-		CHECK_ERR( _access[EMemoryAccess::CpuRead] or _access[EMemoryAccess::CpuWrite] );
-		CHECK_ERR( msg->offset < _size );
-		
-		const BytesUL	size = Min( _size, msg->size );
-
-		VK_CHECK( vkMapMemory( GetLogicalDevice(), _mem, (VkDeviceSize) msg->offset, (VkDeviceSize) size, 0, (void **)&_mappedPtr ) );
-
-		_isMapped			= true;
-		_mappedSize			= size;
-		_mappedOffset		= msg->offset;
-		_isMappedMemChanged	= false;
-		return true;
-	}
-	
-/*
-=================================================
-	_FlushMemoryRange
-=================================================
-*
-	bool Vk1MemoryManager::_FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &msg)
-	{
-		using namespace vk;
-
-		CHECK_ERR( _isMapped );
-		CHECK( not _flags[EGpuMemory::CoherentWithCPU] );	// it is not needed becouse of coherency flag
-
-		TODO( "" );
-
-		_isMappedMemChanged = false;	// it is simple check, without regard to regions
-		return true;
-	}
-	
-/*
-=================================================
-	_UnmapMemory
-=================================================
-*
-	bool Vk1MemoryManager::_UnmapMemory (const Message< GpuMsg::UnmapMemory > &msg)
-	{
-		using namespace vk;
-
-		CHECK_ERR( _isMapped );
-		CHECK( _flags[EGpuMemory::CoherentWithCPU] or not _isMappedMemChanged );	// changes must be flushed
-		
-		vkUnmapMemory( GetLogicalDevice(), _mem );
-
-		_isMapped			= false;
-		_mappedSize			= BytesUL(0);
-		_mappedPtr			= null;
-		_isMappedMemChanged	= false;
-
-		return true;
-	}
-	
-/*
-=================================================
-	_CopyMemory
-----
-	copy from other buffer to this buffer
-=================================================
-*
-	bool Vk1MemoryManager::_CopyMemory (const Message< GpuMsg::CopyMemory > &msg)
-	{
-		CHECK_ERR( _IsCreated() );
-		CHECK_ERR( _access[EMemoryAccess::GpuWrite] );
-
-		// TODO: create buffer for transfer and copy memory in gpu
-		TODO( "" );
 		return true;
 	}
 	
@@ -451,47 +233,29 @@ namespace PlatformVK
 =================================================
 	_Delete
 =================================================
-*
+*/
 	bool Vk1MemoryManager::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
-		_FreeMemory();
+		auto	dev = GetVkDevice();
 
-		return Module::_Delete_Impl( msg );
-	}
-
-/*
-=================================================
-	_GpuMemoryToMemoryAccess
-=================================================
-*
-	EMemoryAccess::bits Vk1MemoryManager::_GpuMemoryToMemoryAccess (EGpuMemory::bits flags)
-	{
-		EMemoryAccess::bits		result;
-
-		result |= EMemoryAccess::GpuRead;
-		result |= EMemoryAccess::GpuWrite;
-
-		if ( flags[EGpuMemory::CoherentWithCPU] or flags[EGpuMemory::CachedInCPU] )
+		if ( dev != VK_NULL_HANDLE )
 		{
-			result |= EMemoryAccess::CpuRead;
-			result |= EMemoryAccess::CpuWrite;
+			while ( not _memBlocks.Empty() )
+			{
+				ModulePtr	mod = _memBlocks.Front().first.Lock();
+
+				vkFreeMemory( dev, _memBlocks.Front().second.mem, null );
+				_memBlocks.EraseByIndex( 0 );
+
+				if ( mod ) {
+					mod->Send( msg );
+				}
+			}
 		}
 
-		return result;
-	}
+		_memBlocks.Clear();
 
-/*
-=================================================
-	_GpuMemoryRegionChanged
-=================================================
-*
-	bool Vk1MemoryManager::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &msg)
-	{
-		CHECK_ERR( _access[EMemoryAccess::GpuWrite] );	// this message allowed only for gpu-writable memory
-
-		// request memory barrier
-		TODO( "" );
-		return false;
+		return Module::_Delete_Impl( msg );
 	}
 
 }	// PlatformVK
@@ -499,12 +263,12 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanContext::_CreateVk1MemoryManager (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1MemoryManager (GlobalSystemsRef gs, const CreateInfo::GpuMemoryManager &ci)
 	{
 		return New< PlatformVK::Vk1MemoryManager >( gs, ci );
 	}
+
 }	// Platforms
 }	// Engine
 
 #endif	// GRAPHICS_API_VULKAN
-*/

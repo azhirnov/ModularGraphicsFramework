@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
@@ -140,7 +140,6 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2CommandBuffer::_Compose );
 		_SubscribeOnMsg( this, &CL2CommandBuffer::_Delete );
 		_SubscribeOnMsg( this, &CL2CommandBuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &CL2CommandBuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &CL2CommandBuffer::_GetCommandBufferDescriptor );
 		_SubscribeOnMsg( this, &CL2CommandBuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &CL2CommandBuffer::_GetCLDeviceInfo );

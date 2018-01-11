@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
@@ -377,7 +377,7 @@ namespace PipelineCompiler
 			
 		// add version
 		if ( not src.HasSubString( "#version" ) )
-			("#version "_str << version << " core\n") >> src;
+			("#version "_str << GLSL_VERSION << " core\n") >> src;
 
 		// parse shader
 		const char *	src_ptr		= src.ptr();
@@ -438,7 +438,7 @@ namespace PipelineCompiler
 						if ( cfg.optimize )
 							return _OptimizeGLSL( cfg, data, OUT log, OUT result );
 						else
-						if ( cfg.skipExternals )
+						if ( cfg.skipExternals or cfg.typeReplacer )
 							;	// go to 'case GXSL'
 						else
 							return _CopySource( data, OUT result );
@@ -451,6 +451,7 @@ namespace PipelineCompiler
 						cfg2.skipExternals = cfg.optimize ? false : cfg.skipExternals;
 
 						CHECK_COMP( _GLSLangParse( cfg2, data, OUT log, OUT glslang_data ) );
+						CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 						CHECK_COMP( _TranslateGXSLtoGLSL( cfg2, glslang_data, OUT log, OUT result ) );
 						
 						if ( cfg.optimize )
@@ -460,8 +461,9 @@ namespace PipelineCompiler
 							data2.src << (const char*) result.ptr();
 							data2.entry = "main";
 
-							cfg2		= cfg;
-							cfg2.source	= EShaderSrcFormat::GLSL;
+							cfg2				= cfg;
+							cfg2.source			= EShaderSrcFormat::GLSL;
+							cfg2.typeReplacer	= Uninitialized;
 
 							BinaryArray	temp;
 							CHECK_COMP( _OptimizeGLSL( cfg2, data2, OUT log, OUT temp ) );
@@ -504,6 +506,7 @@ namespace PipelineCompiler
 				cfg2.optimize		= false;
 				cfg2.skipExternals	= false;
 				cfg2.target			= EShaderDstFormat::GLSL_Source;
+				cfg2.typeReplacer	= Uninitialized;
 
 				BinaryArray	temp;
 				CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
@@ -518,6 +521,9 @@ namespace PipelineCompiler
 
 				_GLSLangResult	glslang_data;
 				CHECK_COMP( _GLSLangParse( cfg2, data2, OUT log, OUT glslang_data ) );
+				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
+
+				cfg2.typeReplacer = Uninitialized;
 				CHECK_COMP( _CompileWithLunarGOO( cfg2, glslang_data, OUT log, OUT result ) );
 
 				return true;
@@ -532,6 +538,7 @@ namespace PipelineCompiler
 				switch ( cfg.source )
 				{
 					case EShaderSrcFormat::CL :
+						CHECK_COMP( not cfg.typeReplacer );
 						return _CopySource( data, OUT result );
 
 					case EShaderSrcFormat::GXSL :
@@ -543,6 +550,7 @@ namespace PipelineCompiler
 						cfg2.optimize		= true;
 						cfg2.skipExternals	= false;
 						cfg2.target			= EShaderDstFormat::GLSL_Source;
+						cfg2.typeReplacer	= Uninitialized;
 
 						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
 
@@ -550,13 +558,15 @@ namespace PipelineCompiler
 						data2.src << (const char*) temp.ptr();
 						data2.entry = "main";
 
-						cfg2		= cfg;
-						cfg2.source	= EShaderSrcFormat::GLSL;
+						cfg2				= cfg;
+						cfg2.source			= EShaderSrcFormat::GLSL;
+						cfg2.typeReplacer	= cfg.typeReplacer;
 					}
 				}
-				
+
 				_GLSLangResult	glslang_data;
 				CHECK_COMP( _GLSLangParse( cfg2, data2, OUT log, OUT glslang_data ) );
+				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 				CHECK_COMP( _TranslateGXSLtoCL( cfg2, glslang_data, OUT log, OUT result ) );
 				return true;
 			}
@@ -576,8 +586,9 @@ namespace PipelineCompiler
 				data2.src << (const char*) temp.ptr();
 				data2.entry = "main";
 
-				cfg2		= cfg;
-				cfg2.source	= EShaderSrcFormat::CL;
+				cfg2				= cfg;
+				cfg2.source			= EShaderSrcFormat::CL;
+				cfg2.typeReplacer	= Uninitialized;
 
 				CHECK_COMP( _CompileCL( cfg2, data2, OUT log, OUT result ) );
 				return true;
@@ -600,6 +611,7 @@ namespace PipelineCompiler
 						cfg2.optimize		= true;
 						cfg2.skipExternals	= false;
 						cfg2.target			= EShaderDstFormat::GLSL_Source;
+						cfg2.typeReplacer	= Uninitialized;
 
 						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
 
@@ -607,13 +619,15 @@ namespace PipelineCompiler
 						data2.src << (const char*) temp.ptr();
 						data2.entry = "main";
 
-						cfg2		= cfg;
-						cfg2.source	= EShaderSrcFormat::GLSL;
+						cfg2				= cfg;
+						cfg2.source			= EShaderSrcFormat::GLSL;
+						cfg2.typeReplacer	= cfg.typeReplacer;
 					}
 				}
 				
 				_GLSLangResult	glslang_data;
 				CHECK_COMP( _GLSLangParse( cfg2, data2, OUT log, OUT glslang_data ) );
+				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 				CHECK_COMP( _TranslateGXSLtoCPP( cfg2, glslang_data, OUT log, OUT result ) );
 				return true;
 			}
@@ -637,6 +651,7 @@ namespace PipelineCompiler
 						cfg2.optimize		= true;
 						cfg2.skipExternals	= false;
 						cfg2.target			= EShaderDstFormat::GLSL_Source;
+						cfg2.typeReplacer	= Uninitialized;
 
 						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
 
@@ -644,13 +659,15 @@ namespace PipelineCompiler
 						data2.src << (const char*) temp.ptr();
 						data2.entry = "main";
 
-						cfg2		= cfg;
-						cfg2.source	= EShaderSrcFormat::GLSL;
+						cfg2				= cfg;
+						cfg2.source			= EShaderSrcFormat::GLSL;
+						cfg2.typeReplacer	= cfg.typeReplacer;
 					}
 				}
 				
 				_GLSLangResult	glslang_data;
 				CHECK_COMP( _GLSLangParse( cfg2, data2, OUT log, OUT glslang_data ) );
+				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 				CHECK_COMP( _TranslateGXSLtoHLSL( cfg2, glslang_data, OUT log, OUT result ) );
 				return true;
 			}
@@ -670,8 +687,9 @@ namespace PipelineCompiler
 				data2.src << (const char*) temp.ptr();
 				data2.entry = "main";
 
-				cfg2		= cfg;
-				cfg2.source	= EShaderSrcFormat::HLSL;
+				cfg2				= cfg;
+				cfg2.source			= EShaderSrcFormat::HLSL;
+				cfg2.typeReplacer	= Uninitialized;
 
 				CHECK_COMP( _CompileHLSL( cfg2, data2, OUT log, OUT result ) );
 				return true;
@@ -692,6 +710,8 @@ namespace PipelineCompiler
 */
 	bool ShaderCompiler::_CompileWithLunarGOO (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const
 	{
+		ASSERT( not cfg.typeReplacer );
+
 		// choose target
 		EProfile	shader_profile	= ENoProfile;
 		uint		shader_version	= 0;
@@ -776,8 +796,7 @@ namespace PipelineCompiler
 				spv::Parameterize();
 				spv::Disassemble( OUT spv_source, spirv );
 
-				std::string str = spv_source.str().c_str();
-				result = BinArrayCRef::FromStd( str );
+				result = BinArrayCRef::FromStd( spv_source.str() );
 				return true;
 			}
 			else
@@ -812,9 +831,14 @@ namespace PipelineCompiler
 */
 	bool ShaderCompiler::_OptimizeGLSL (const Config &cfg, const _ShaderData &data, OUT String &log, OUT BinaryArray &result) const
 	{
+		Config			cfg2 = cfg;
 		_GLSLangResult	glslang_data;
-		CHECK_COMP( _GLSLangParse( cfg, data, OUT log, OUT glslang_data ) );
-		CHECK_COMP( _CompileWithLunarGOO( cfg, glslang_data, OUT log, OUT result ) );
+
+		CHECK_COMP( _GLSLangParse( cfg2, data, OUT log, OUT glslang_data ) );
+		CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
+
+		cfg2.typeReplacer = Uninitialized;
+		CHECK_COMP( _CompileWithLunarGOO( cfg2, glslang_data, OUT log, OUT result ) );
 		return true;
 	}
 	

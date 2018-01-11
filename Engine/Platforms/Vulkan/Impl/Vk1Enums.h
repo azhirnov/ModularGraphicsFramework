@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -255,6 +255,7 @@ namespace PlatformVK
 			case EPrimitive::LineStrip		:	return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
 			case EPrimitive::TriangleList	:	return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 			case EPrimitive::TriangleStrip	:	return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+			case EPrimitive::Patch			:	return VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
 			// TODO
 			//	VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN
 			//	VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY
@@ -389,7 +390,7 @@ namespace PlatformVK
 	BufferSparse
 =================================================
 */
-	inline bool  Vk1Enum (OUT vk::VkBufferCreateFlagBits flags, ESparseMemory::bits values)
+	inline bool  Vk1Enum (OUT vk::VkBufferCreateFlagBits &flags, ESparseMemory::bits values)
 	{
 		using namespace vk;
 
@@ -422,7 +423,7 @@ namespace PlatformVK
 	ImageSparse
 =================================================
 */
-	inline bool  Vk1Enum (OUT vk::VkImageCreateFlagBits flags, ESparseMemory::bits values)
+	inline bool  Vk1Enum (OUT vk::VkImageCreateFlagBits &flags, ESparseMemory::bits values)
 	{
 		using namespace vk;
 		
@@ -863,6 +864,8 @@ namespace PlatformVK
 			case EGpuObject::Surface :				return VK_DEBUG_REPORT_OBJECT_TYPE_SURFACE_KHR_EXT;
 			case EGpuObject::Swapchain :			return VK_DEBUG_REPORT_OBJECT_TYPE_SWAPCHAIN_KHR_EXT;
 			case EGpuObject::Display :				return VK_DEBUG_REPORT_OBJECT_TYPE_DISPLAY_KHR_EXT;
+			case EGpuObject::Query :				break;	// not supported
+			case EGpuObject::VertexArray :			break;	// not supported
 		}
 		RETURN_ERR( "invalid object type", VK_DEBUG_REPORT_OBJECT_TYPE_MAX_ENUM_EXT );
 	}

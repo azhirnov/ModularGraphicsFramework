@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -33,19 +33,19 @@ namespace Platforms
 
 namespace CreateInfo
 {
+
 	//
 	// GPU Memory Create Info
 	//
-
 	struct GpuMemory
 	{
+	// types
 		using EGpuMemory	= Platforms::EGpuMemory;
 		using EMemoryAccess	= Platforms::EMemoryAccess;
 
 	// variables
 		ModulePtr				gpuThread;		// can be null
-		BytesUL					maxSize;		// max size of allocated memory (for memory managment)
-		BytesUL					blockSize;		// block size to avoid fragmentation (for memory managment)
+		ModulePtr				memManager;
 		EGpuMemory::bits		memFlags;
 		EMemoryAccess::bits		access;
 		
@@ -54,11 +54,35 @@ namespace CreateInfo
 			gpuThread(gpuThread), memFlags(memFlags), access(access)
 		{}
 
-		GpuMemory (const ModulePtr &gpuThread, Bytes<ulong> maxSize, Bytes<ulong> blockSize, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+		GpuMemory (const ModulePtr &gpuThread, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+			gpuThread(gpuThread), memManager(memMngr), memFlags(memFlags), access(access)
+		{}
+	};
+
+
+
+	//
+	// GPU Memory Manager Create Info
+	//
+	struct GpuMemoryManager
+	{
+	// types
+		using EGpuMemory	= Platforms::EGpuMemory;
+		using EMemoryAccess	= Platforms::EMemoryAccess;
+
+	// variables
+		ModulePtr				gpuThread;		// can be null
+		BytesUL					maxSize;		// max size of allocated memory
+		BytesUL					blockSize;		// block size to avoid fragmentation
+		EGpuMemory::bits		memFlags;
+		EMemoryAccess::bits		access;
+		
+	// methods
+		GpuMemoryManager (const ModulePtr &gpuThread, Bytes<ulong> maxSize, Bytes<ulong> blockSize, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
 			gpuThread(gpuThread), maxSize(maxSize), blockSize(blockSize), memFlags(memFlags), access(access)
 		{}
 
-		GpuMemory (const ModulePtr &gpuThread, Bytes<uint> maxSize, Bytes<uint> blockSize, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+		GpuMemoryManager (const ModulePtr &gpuThread, Bytes<uint> maxSize, Bytes<uint> blockSize, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
 			gpuThread(gpuThread), maxSize(maxSize), blockSize(blockSize), memFlags(memFlags), access(access)
 		{}
 	};
@@ -175,8 +199,10 @@ namespace GpuMsg
 
 	// methods
 		ReadFromGpuMemory () {}
-		explicit ReadFromGpuMemory (BinArrayRef buf, BytesU off = 0_b) : offset(BytesUL(off)), writableBuffer(buf) {}
-		explicit ReadFromGpuMemory (BytesU size, BytesU off = 0_b) : offset(BytesUL(off)), size(BytesUL(size)) {}
+		explicit ReadFromGpuMemory (BinArrayRef buf, Bytes<uint> off = Uninitialized) : offset(BytesUL(off)), writableBuffer(buf) {}
+		explicit ReadFromGpuMemory (BinArrayRef buf, Bytes<ulong> off) : offset(off), writableBuffer(buf) {}
+		explicit ReadFromGpuMemory (Bytes<uint> size, Bytes<uint> off = Uninitialized) : offset(BytesUL(off)), size(BytesUL(size)) {}
+		explicit ReadFromGpuMemory (Bytes<ulong> size, Bytes<ulong> off) : offset(off), size(size) {}
 	};
 
 
@@ -188,10 +214,10 @@ namespace GpuMsg
 		// 'offset' - offset in global memory space
 
 		WriteToGpuMemory () {}
-		explicit WriteToGpuMemory (BinArrayCRef data, Bytes<uint> offset = 0_b) : WriteToStream(data, offset) {}
+		explicit WriteToGpuMemory (BinArrayCRef data, Bytes<uint> offset = Uninitialized) : WriteToStream(data, offset) {}
 		explicit WriteToGpuMemory (BinArrayCRef data, Bytes<ulong> offset) : WriteToStream(data, offset) {}
-		template <typename T>			explicit WriteToGpuMemory (ArrayCRef<T> arr, BytesU offset = 0_b) : WriteToStream(arr, offset) {}
-		template <typename B, usize I>	explicit WriteToGpuMemory (const B (&arr)[I], BytesU offset = 0_b) : WriteToStream(arr, offset) {}
+		template <typename T>			explicit WriteToGpuMemory (ArrayCRef<T> arr, BytesU offset = Uninitialized) : WriteToStream(arr, offset) {}
+		template <typename B, usize I>	explicit WriteToGpuMemory (const B (&arr)[I], BytesU offset = Uninitialized) : WriteToStream(arr, offset) {}
 	};
 
 

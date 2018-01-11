@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h"
 
@@ -279,6 +279,7 @@ namespace PipelineCompiler
 		else
 		// for scalar, vector and matrix types only
 		if ( type.getBasicType() == glslang::TBasicType::EbtVoid or
+			 type.getBasicType() == glslang::TBasicType::EbtBool or
 			 type.getBasicType() == glslang::TBasicType::EbtFloat or
 			 type.getBasicType() == glslang::TBasicType::EbtDouble or
 			 type.getBasicType() == glslang::TBasicType::EbtInt or
@@ -288,10 +289,9 @@ namespace PipelineCompiler
 			#ifdef AMD_EXTENSIONS
 			 type.getBasicType() == glslang::TBasicType::EbtFloat16 or
 			 type.getBasicType() == glslang::TBasicType::EbtInt16 or
-			 type.getBasicType() == glslang::TBasicType::EbtUint16 or
+			 type.getBasicType() == glslang::TBasicType::EbtUint16
 			#endif
-			 type.getBasicType() == glslang::TBasicType::EbtBool or
-			 type.getBasicType() == glslang::TBasicType::EbtUint64 )
+			)
 		{
 			arg.type = ConvertBasicType( type.getBasicType(), type.getVectorSize(), type.getMatrixCols(), type.getMatrixRows() );
 		}

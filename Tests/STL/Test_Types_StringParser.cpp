@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Tests/STL/Common.h"
 
@@ -189,14 +189,15 @@ static void StringParser_DecreaceIndent ()
 static void StringParser_MoveToLine ()
 {
 	usize pos = 0;
-
-	StringParser::MoveToLine( "1\n2\n3\r\n4\r\n5\n6\n7\r8\n9\n10", pos = 0, 0 );
+	StringParser::MoveToLine( "1\n2\n3\r\n4\r\n5\n6\n7\r8\n9\n10", OUT pos, 0 );
 	TEST( pos == 0 );
 	
-	StringParser::MoveToLine( "1\n2\n3\r\n4\r\n5\n6\n7\r8\n9\n10", pos = 0, 1 );
+	pos = 0;
+	StringParser::MoveToLine( "1\n2\n3\r\n4\r\n5\n6\n7\r8\n9\n10", OUT pos, 1 );
 	TEST( pos == 2 );
-
-	StringParser::MoveToLine( "1\n2\n3\r\n4\r\n5\n6\n7\r8\n9\n10", pos = 0, 9 );
+	
+	pos = 0;
+	StringParser::MoveToLine( "1\n2\n3\r\n4\r\n5\n6\n7\r8\n9\n10", OUT pos, 9 );
 	TEST( pos == 20 );
 }
 

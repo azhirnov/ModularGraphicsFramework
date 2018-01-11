@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Tests/STL/Common.h"
 
@@ -26,7 +26,7 @@ extern void Test_OS_Date ()
 	d0.SetMillisecondsSince1970( d.ToMillisecondsSince1970() );
 	TEST( d0 == d );
 
-	TimeL t0 = OS::PerformanceTimer().Get( t0 );
+	TimeL t0 = OS::PerformanceTimer().Get<TimeL>();
 	d0.SetMillisecondsSinceEpoch( t0.MilliSeconds() );
 
 	TimeL t1;

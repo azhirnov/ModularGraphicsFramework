@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -110,10 +110,10 @@ namespace ModuleMsg
 
 	// methods
 		WriteToStream () {}
-		explicit WriteToStream (BinArrayCRef data, Bytes<uint> offset = 0_b) : offset(offset), data(data) {}
+		explicit WriteToStream (BinArrayCRef data, Bytes<uint> offset = Uninitialized) : offset(offset), data(data) {}
 		explicit WriteToStream (BinArrayCRef data, Bytes<ulong> offset) : offset(offset), data(data) {}
-		template <typename T>			explicit WriteToStream (ArrayCRef<T> arr, BytesU offset = 0_b) : offset(offset), data(BinArrayCRef::From(arr)) {}
-		template <typename B, usize I>	explicit WriteToStream (const B (&arr)[I], BytesU offset = 0_b) : offset(offset), data(BinArrayCRef::From(arr)) {}
+		template <typename T>			explicit WriteToStream (ArrayCRef<T> arr, BytesU offset = Uninitialized) : offset(offset), data(BinArrayCRef::From(arr)) {}
+		template <typename B, usize I>	explicit WriteToStream (const B (&arr)[I], BytesU offset = Uninitialized) : offset(offset), data(BinArrayCRef::From(arr)) {}
 	};
 
 

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Context.h"
 #include "Engine/Platforms/Shared/GPU/Thread.h"
@@ -182,7 +182,7 @@ namespace Platforms
 		graphics.buffer			= VkBufferModuleID;
 		graphics.image			= VkImageModuleID;
 		graphics.sampler		= VkSamplerModuleID;
-		graphics.memory			= VkMemoryModuleID;
+		graphics.memory			= VkManagedMemoryModuleID;
 		graphics.memoryManager	= VkMemoryManagerModuleID;
 		graphics.resourceTable	= VkPipelineResourceTableModuleID;
 		graphics.uniforms		= VkUniformsModuleID;
@@ -204,7 +204,7 @@ namespace Platforms
 		compute.commandBuilder	= VkCommandBuilderModuleID;
 		compute.buffer			= VkBufferModuleID;
 		compute.image			= VkImageModuleID;
-		compute.memory			= VkMemoryModuleID;
+		compute.memory			= VkManagedMemoryModuleID;
 		compute.memoryManager	= VkMemoryManagerModuleID;
 		compute.resourceTable	= VkPipelineResourceTableModuleID;
 		compute.uniforms		= VkUniformsModuleID;
@@ -224,11 +224,13 @@ namespace Platforms
 		CHECK( mf->Register( VkContextModuleID, &CreateVulkanContext ) );
 
 		CHECK( mf->Register( VkImageModuleID, &CreateVk1Image ) );
-		CHECK( mf->Register( VkMemoryModuleID, &CreateVk1Memory ) );
 		CHECK( mf->Register( VkBufferModuleID, &CreateVk1Buffer ) );
 		CHECK( mf->Register( VkSamplerModuleID, &CreateVk1Sampler ) );
 		CHECK( mf->Register( VkRenderPassModuleID, &CreateVk1RenderPass ) );
+		CHECK( mf->Register( VkSyncManagerModuleID, CreateVk1SyncManager ) );
 		CHECK( mf->Register( VkFramebufferModuleID, &CreateVk1Framebuffer ) );
+		CHECK( mf->Register( VkManagedMemoryModuleID, &CreateVk1ManagedMemory ) );
+		CHECK( mf->Register( VkMemoryManagerModuleID, &CreateVk1MemoryManager ) );
 		CHECK( mf->Register( VkCommandBufferModuleID, &CreateVk1CommandBuffer ) );
 		CHECK( mf->Register( VkCommandBuilderModuleID, &CreateVk1CommandBuilder ) );
 		CHECK( mf->Register( VkComputePipelineModuleID, &CreateCachedVk1ComputePipeline ) );
@@ -250,14 +252,16 @@ namespace Platforms
 
 		mf->UnregisterAll( VkThreadModuleID );
 		mf->UnregisterAll( VkContextModuleID );
-
+		
 		mf->UnregisterAll( VkImageModuleID );
-		mf->UnregisterAll( VkMemoryModuleID );
 		mf->UnregisterAll( VkBufferModuleID );
 		mf->UnregisterAll( VkSamplerModuleID );
 		mf->UnregisterAll( VkRenderPassModuleID );
 		mf->UnregisterAll( VkFramebufferModuleID );
+		mf->UnregisterAll( VkManagedMemoryModuleID );
+		mf->UnregisterAll( VkMemoryManagerModuleID );
 		mf->UnregisterAll( VkCommandBufferModuleID );
+		mf->UnregisterAll( VkSyncManagerModuleID );
 		mf->UnregisterAll( VkCommandBuilderModuleID );
 		mf->UnregisterAll( VkComputePipelineModuleID );
 		mf->UnregisterAll( VkGraphicsPipelineModuleID );

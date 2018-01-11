@@ -1,8 +1,8 @@
-﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
-#include "Plane.h"
+#include "Engine/STL/Math/3D/Plane.h"
 
 namespace GX_STL
 {
@@ -18,9 +18,10 @@ namespace GXMath
 	{
 	// types
 	public:
-		typedef Frustum<T>		Self;
-		typedef T				Value_t;
-		typedef Vec<T,3>		Vec3_t;
+		using Self		= Frustum<T>;
+		using Value_t	= T;
+		using Vec3_t	= Vec<T,3>;
+		using Plane_t	= Plane<T>;
 
 		struct EPlane
 		{
@@ -36,12 +37,14 @@ namespace GXMath
 			};
 		};
 
-		typedef StaticArray< Plane<T>, EPlane::_Count >		Planes_t;
+	private:
+		using _EPlane_t		= typename EPlane::type;
+		using _PlaneArr_t	= StaticArray< Plane_t, EPlane::_Count >;
 
 
 	// variables
 	private:
-		Planes_t	_planes;
+		_PlaneArr_t		_planes;
 
 
 	// methods
@@ -53,6 +56,10 @@ namespace GXMath
 		//bool IsVisible (const Frustum<T> &frustum) const;
 		bool IsVisible (const Vec3_t &center, T radius) const;
 		bool IsVisible (const Vec3_t &center, const Vec3_t &halfextents) const;
+
+		Plane_t const&	GetPlane (_EPlane_t loc) const	{ return _planes[loc]; }
+
+		void GetRays (OUT Vec3_t &leftTop, OUT Vec3_t &leftBottom, OUT Vec3_t &rightTop, OUT Vec3_t &rightBottom) const;
 
 		template <typename T2>
 		Frustum<T2> Convert () const;
@@ -66,43 +73,14 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void Frustum<T>::Setup (const Matrix<T,4,4> &vp)
+	inline void Frustum<T>::Setup (const Matrix<T,4,4> &mat)
 	{
-		_planes[EPlane::Left].Normal().x = vp(3,0) + vp(0,0);
-		_planes[EPlane::Left].Normal().y = vp(3,1) + vp(0,1);
-		_planes[EPlane::Left].Normal().z = vp(3,2) + vp(0,2);
-		_planes[EPlane::Left].Distance() = vp(3,3) + vp(0,3);
-		_planes[EPlane::Left].Normalize();
-		
-		_planes[EPlane::Right].Normal().x = vp(3,0) - vp(0,0);
-		_planes[EPlane::Right].Normal().y = vp(3,1) - vp(0,1);
-		_planes[EPlane::Right].Normal().z = vp(3,2) - vp(0,2);
-		_planes[EPlane::Right].Distance() = vp(3,3) - vp(0,3);
-		_planes[EPlane::Right].Normalize();
-
-		_planes[EPlane::Top].Normal().x = vp(3,0) - vp(1,0);
-		_planes[EPlane::Top].Normal().x = vp(3,1) - vp(1,1);
-		_planes[EPlane::Top].Normal().x = vp(3,2) - vp(1,2);
-		_planes[EPlane::Top].Distance() = vp(3,3) - vp(1,3);
-		_planes[EPlane::Top].Normalize();
-		
-		_planes[EPlane::Bottom].Normal().x = vp(3,0) + vp(1,0);
-		_planes[EPlane::Bottom].Normal().x = vp(3,1) + vp(1,1);
-		_planes[EPlane::Bottom].Normal().x = vp(3,2) + vp(1,2);
-		_planes[EPlane::Bottom].Distance() = vp(3,3) + vp(1,3);
-		_planes[EPlane::Bottom].Normalize();
-		
-		_planes[EPlane::Near].Normal().x = vp(3,0) + vp(2,0);
-		_planes[EPlane::Near].Normal().x = vp(3,1) + vp(2,1);
-		_planes[EPlane::Near].Normal().x = vp(3,2) + vp(2,2);
-		_planes[EPlane::Near].Distance() = vp(3,3) + vp(2,3);
-		_planes[EPlane::Near].Normalize();
-		
-		_planes[EPlane::Far].Normal().x = vp(3,0) - vp(2,0);
-		_planes[EPlane::Far].Normal().x = vp(3,1) - vp(2,1);
-		_planes[EPlane::Far].Normal().x = vp(3,2) - vp(2,2);
-		_planes[EPlane::Far].Distance() = vp(3,3) - vp(2,3);
-		_planes[EPlane::Far].Normalize();
+		_planes[EPlane::Top].Set(    Vec3_t( mat(0,3) - mat(0,1), mat(1,3) - mat(1,1), mat(2,3) - mat(2,1) ), -mat(3,3) + mat(3,1) );
+		_planes[EPlane::Bottom].Set( Vec3_t( mat(0,3) + mat(0,1), mat(1,3) + mat(1,1), mat(2,3) + mat(2,1) ), -mat(3,3) - mat(3,1) );
+		_planes[EPlane::Left].Set(   Vec3_t( mat(0,3) + mat(0,0), mat(1,3) + mat(1,0), mat(2,3) + mat(2,0) ), -mat(3,3) - mat(3,0) );
+		_planes[EPlane::Right].Set(  Vec3_t( mat(0,3) - mat(0,0), mat(1,3) - mat(1,0), mat(2,3) - mat(2,0) ), -mat(3,3) + mat(3,0) );
+		_planes[EPlane::Near].Set(   Vec3_t( mat(0,3) + mat(0,2), mat(1,3) + mat(1,2), mat(2,3) + mat(2,2) ), -mat(3,3) - mat(3,2) );
+		_planes[EPlane::Far].Set(    Vec3_t( mat(0,3) - mat(0,2), mat(1,3) - mat(1,2), mat(2,3) - mat(2,2) ), -mat(3,3) + mat(3,2) );
 	}
 	
 /*
@@ -180,6 +158,25 @@ namespace GXMath
 		return false;
 	}*/
 	
+/*
+=================================================
+	GetRays
+=================================================
+*/
+	template <typename T>
+	void Frustum<T>::GetRays (OUT Vec3_t &leftTop, OUT Vec3_t &leftBottom, OUT Vec3_t &rightTop, OUT Vec3_t &rightBottom) const
+	{
+		auto const&	p0 = GetPlane( EPlane::Left );
+		auto const&	p1 = GetPlane( EPlane::Right );
+		auto const&	p2 = GetPlane( EPlane::Top );
+		auto const&	p3 = GetPlane( EPlane::Bottom );
+
+		p3.GetIntersection( p0, OUT leftBottom );
+		p0.GetIntersection( p2, OUT leftTop );
+		p1.GetIntersection( p3, OUT rightBottom );
+		p2.GetIntersection( p1, OUT rightTop );
+	}
+
 /*
 =================================================
 	Convert

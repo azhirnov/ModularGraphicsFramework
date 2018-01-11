@@ -1,4 +1,4 @@
-﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -376,7 +376,7 @@ namespace _types_hidden_
 		template <typename KeyT>
 		bool _Find2 (const KeyT &key, OUT iterator &result)
 		{
-			usize	idx = -1;
+			usize	idx = UMax;
 
 			if ( not _FindFirstIndex2( key, OUT idx ) )
 				return false;
@@ -388,7 +388,7 @@ namespace _types_hidden_
 		template <typename KeyT>
 		bool _Find2 (const KeyT &key, OUT const_iterator &result) const
 		{
-			usize	idx = -1;
+			usize	idx = UMax;
 
 			if ( not _FindFirstIndex2( key, OUT idx ) )
 				return false;

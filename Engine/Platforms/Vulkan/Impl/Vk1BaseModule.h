@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -32,6 +32,7 @@ namespace GpuMsg
 			PlatformVK::Vk1PipelineCache *			pipelineCache	= null;
 			PlatformVK::Vk1PipelineLayoutCache *	layoutCache		= null;
 			PlatformVK::Vk1RenderPassCache *		renderPassCache	= null;
+			Base::Module *							memManager		= null;
 		};
 
 		Out< Classes >		result;
@@ -54,7 +55,6 @@ namespace PlatformVK
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											GpuMsg::DeviceBeforeDestroy,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetVkDeviceInfo,
 											GpuMsg::GetVkPrivateClasses
@@ -64,7 +64,8 @@ namespace PlatformVK
 											ModuleMsg::Compose,
 											ModuleMsg::Delete,
 											ModuleMsg::OnModuleAttached,
-											ModuleMsg::OnModuleDetached
+											ModuleMsg::OnModuleDetached,
+											GpuMsg::DeviceBeforeDestroy
 										>;
 
 

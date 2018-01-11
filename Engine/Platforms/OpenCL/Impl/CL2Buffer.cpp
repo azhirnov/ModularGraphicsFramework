@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
@@ -124,7 +124,6 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2Buffer::_Compose );
 		_SubscribeOnMsg( this, &CL2Buffer::_Delete );
 		_SubscribeOnMsg( this, &CL2Buffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &CL2Buffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetCLBufferID );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetBufferDescriptor );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetDeviceInfo );

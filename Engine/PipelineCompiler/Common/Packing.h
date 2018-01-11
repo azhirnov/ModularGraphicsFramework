@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -472,7 +472,8 @@ namespace PipelineCompiler
 			const BytesU	free_space	= maxAlign - (offset % maxAlign);
 			usize			i			= fields.LastIndex();
 			
-			if ( free_space != 0_b ) {
+			if ( free_space > 0_b and free_space < maxAlign )
+			{
 				_AddPadding( INOUT fields, INOUT i, free_space, maxAlign );
 			}
 			return true;

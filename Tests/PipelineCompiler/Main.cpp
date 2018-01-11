@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Common.h"
 
@@ -23,10 +23,10 @@ void main ()
 	CHECK( OS::FileSystem::FindAndSetCurrentDir( "../../../Tests/PipelineCompiler", 5 ) );
 
 
-	//Test_DeserializeGLSL();
+	Test_DeserializeGLSL();
 	//Test_DeserializeGLSL_2();
 	//Test_DeserializeGLSL_3();
-	Test_PipelineCompilation();
+	//Test_PipelineCompilation();
 	//Test_CompileGxsl();
 	//Test_TranslateCL();
 

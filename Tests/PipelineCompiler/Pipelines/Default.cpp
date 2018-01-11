@@ -51,8 +51,14 @@ in  float3	v_Color;
 
 out float4	out_Color;
 
+float4 Temp (const float3 inColor)
+{
+    const float4 col = texture(un_ColorTexture, v_Texcoord) * float4(inColor, 1.0);
+	return col;
+}
+
 void main() {
-    out_Color = texture(un_ColorTexture, v_Texcoord) * float4(v_Color, 1.0);
+	out_Color = Temp( v_Color );
 }
 #endif
 #endif	// SHADER

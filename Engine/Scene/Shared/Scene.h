@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -21,8 +21,17 @@ namespace CreateInfo
 	//
 	struct SceneManager
 	{
+	// types
+		struct VRSettings
+		{
+			GXMath::uint2		eyeTextureDimension;		// dimension of per eye textures
+			bool				layered		= false;		// create texture array or use multiview extension, depended of implementation
+			bool				enabled		= false;
+		};
+
 	// variables
-		Platforms::GraphicsSettings		settings;	// this is default settings for all threads
+		Platforms::GraphicsSettings		settings;		// this is default settings for all threads
+		VRSettings						vrSettings;
 
 	// methods
 		SceneManager () {}

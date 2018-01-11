@@ -1,9 +1,10 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Scene/Shared/Scene.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
 #include "Engine/Scene/Impl/BaseSceneModule.h"
 #include "Engine/Platforms/Windows/WinMessages.h"
+//#include "Engine/Platforms/VR/VRObjectsConstructor.h"
 
 namespace Engine
 {
@@ -35,6 +36,7 @@ namespace Scene
 										> >;
 	
 		using SceneThreads_t		= Set< ModulePtr >;
+		using VRSettings_t			= CreateInfo::SceneManager::VRSettings;
 		
 		using PlatformMsgList_t		= MessageListFrom< OSMsg::GetOSModules >;
 		using PlatformEventList_t	= MessageListFrom< OSMsg::OnWinPlatformCreated >;
@@ -44,6 +46,7 @@ namespace Scene
 		using WindowMsgList_t		= MessageListFrom< OSMsg::GetWinWindowHandle >;
 		using WindowEventList_t		= MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::OnWinWindowRawMessage >;
 
+		using VRThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginVRFrame, GpuMsg::ThreadEndVRFrame, GpuMsg::GetGraphicsModules >;
 		using GpuThreadMsgList_t	= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetGraphicsModules >;
 		using GpuThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 
@@ -62,6 +65,8 @@ namespace Scene
 		SceneThreads_t			_threads;
 
 		const GraphicsSettings	_settings;
+		const VRSettings_t		_vrSettings;
+
 
 	// methods
 	public:
@@ -91,7 +96,7 @@ namespace Scene
 */
 	SceneManager::SceneManager (GlobalSystemsRef gs, const CreateInfo::SceneManager &ci) :
 		Module( gs, ModuleConfig{ SceneManagerModuleID, 1 }, &_msgTypes, &_eventTypes ),
-		_settings( ci.settings )
+		_settings{ ci.settings },	_vrSettings{ ci.vrSettings }
 	{
 		SetDebugName( "SceneManager" );
 		
@@ -168,6 +173,7 @@ namespace Scene
 		}
 		
 		ModulePtr	window		= GlobalSystems()->parallelThread->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >();
+		ModulePtr	vr_thread	= GlobalSystems()->parallelThread->GetModuleByMsgEvent< VRThreadMsgList_t, GpuThreadEventList_t >();
 		ModulePtr	gpu_thread	= GlobalSystems()->parallelThread->GetModuleByMsgEvent< GpuThreadMsgList_t, GpuThreadEventList_t >();
 		ModulePtr	input_thread= GlobalSystems()->parallelThread->GetModuleByID( InputThreadModuleID );
 
@@ -196,6 +202,16 @@ namespace Scene
 			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( InputThreadModuleID, GlobalSystems(), CreateInfo::InputThread{}, OUT input_thread ) );
 			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ input_thread });
 			input_thread->Send( msg );
+		}
+
+		if ( _vrSettings.enabled and not vr_thread )
+		{
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create( EmulatorVRThreadModuleID,
+																GlobalSystems(),
+																CreateInfo::VRThread{ gpu_thread, _vrSettings.eyeTextureDimension, _vrSettings.layered },
+																OUT vr_thread ) );
+			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ vr_thread });
+			vr_thread->Send( msg );
 		}
 
 		ModulePtr	key_input	= window->GetModuleByEvent< KeyInputEventList_t >();

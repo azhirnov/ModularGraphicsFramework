@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
@@ -122,7 +122,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Framebuffer::_Compose );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_Delete );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4Framebuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetGLFramebufferID );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetFramebufferDescriptor );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetDeviceInfo );
@@ -545,13 +544,13 @@ namespace PlatformGL
 
 			FOR( j, rpDescr.ColorAttachments() )
 			{
-				const auto&	col = rpDescr.ColorAttachments()[i];
+				const auto&	col = rpDescr.ColorAttachments()[j];
 
 				if ( col.name == att.name )
 				{
 					CHECK_ERR( col.format == att.descr.format );
 					CHECK_ERR( col.samples == att.samples );
-					found = false;
+					found = true;
 					break;
 				}
 			}

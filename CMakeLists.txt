@@ -581,8 +581,10 @@ add_executable( "Tests.STL"
 		"Tests/STL/Test_Math_ColorFormat.cpp"
 		"Tests/STL/Test_Math_Factorial.cpp"
 		"Tests/STL/Test_Math_FloorCeilTruncRoundFract.cpp"
+		"Tests/STL/Test_Math_Frustum.cpp"
 		"Tests/STL/Test_Math_ImageUtils.cpp"
 		"Tests/STL/Test_Math_Matrix.cpp"
+		"Tests/STL/Test_Math_Plane.cpp"
 		"Tests/STL/Test_Math_Transform.cpp"
 		"Tests/STL/Test_OS_Atomic.cpp"
 		"Tests/STL/Test_OS_Date.cpp"
@@ -598,7 +600,7 @@ add_executable( "Tests.STL"
 		"Tests/STL/Test_Types_Time.cpp"
 		"Tests/STL/Test_Types_Union.cpp" )
 
-source_group( "" FILES "Tests/STL/Common.h" "Tests/STL/Debug.h" "Tests/STL/Main.cpp" "Tests/STL/Test_Algorithms_InvokeWithVariant.cpp" "Tests/STL/Test_CompileTime_MainType.cpp" "Tests/STL/Test_CompileTime_Map.cpp" "Tests/STL/Test_CompileTime_Sequence.cpp" "Tests/STL/Test_CompileTime_StaticFloat.cpp" "Tests/STL/Test_CompileTime_StringToID.cpp" "Tests/STL/Test_CompileTime_TemplateMath.cpp" "Tests/STL/Test_CompileTime_TypeInfo.cpp" "Tests/STL/Test_CompileTime_TypeList.cpp" "Tests/STL/Test_CompileTime_TypeQualifier.cpp" "Tests/STL/Test_CompileTime_TypeTraits.cpp" "Tests/STL/Test_Containers_Adaptors.cpp" "Tests/STL/Test_Containers_Array.cpp" "Tests/STL/Test_Containers_CircularQueue.cpp" "Tests/STL/Test_Containers_HashSet.cpp" "Tests/STL/Test_Containers_IndexedArray.cpp" "Tests/STL/Test_Containers_List.cpp" "Tests/STL/Test_Containers_Map.cpp" "Tests/STL/Test_Containers_Queue.cpp" "Tests/STL/Test_Containers_Set.cpp" "Tests/STL/Test_Containers_String.cpp" "Tests/STL/Test_Dimensions_PhysicsValue.cpp" "Tests/STL/Test_Math_Abs.cpp" "Tests/STL/Test_Math_Bit.cpp" "Tests/STL/Test_Math_Clamp_Wrap.cpp" "Tests/STL/Test_Math_Color.cpp" "Tests/STL/Test_Math_ColorFormat.cpp" "Tests/STL/Test_Math_Factorial.cpp" "Tests/STL/Test_Math_FloorCeilTruncRoundFract.cpp" "Tests/STL/Test_Math_ImageUtils.cpp" "Tests/STL/Test_Math_Matrix.cpp" "Tests/STL/Test_Math_Transform.cpp" "Tests/STL/Test_OS_Atomic.cpp" "Tests/STL/Test_OS_Date.cpp" "Tests/STL/Test_OS_FileSystem.cpp" "Tests/STL/Test_Runtime_VirtualTypelist.cpp" "Tests/STL/Test_SimpleScript.cpp" "Tests/STL/Test_Temp.cpp" "Tests/STL/Test_Types_Cast.cpp" "Tests/STL/Test_Types_ExtString.cpp" "Tests/STL/Test_Types_FileAddress.cpp" "Tests/STL/Test_Types_Function.cpp" "Tests/STL/Test_Types_StringParser.cpp" "Tests/STL/Test_Types_Time.cpp" "Tests/STL/Test_Types_Union.cpp" )
+source_group( "" FILES "Tests/STL/Common.h" "Tests/STL/Debug.h" "Tests/STL/Main.cpp" "Tests/STL/Test_Algorithms_InvokeWithVariant.cpp" "Tests/STL/Test_CompileTime_MainType.cpp" "Tests/STL/Test_CompileTime_Map.cpp" "Tests/STL/Test_CompileTime_Sequence.cpp" "Tests/STL/Test_CompileTime_StaticFloat.cpp" "Tests/STL/Test_CompileTime_StringToID.cpp" "Tests/STL/Test_CompileTime_TemplateMath.cpp" "Tests/STL/Test_CompileTime_TypeInfo.cpp" "Tests/STL/Test_CompileTime_TypeList.cpp" "Tests/STL/Test_CompileTime_TypeQualifier.cpp" "Tests/STL/Test_CompileTime_TypeTraits.cpp" "Tests/STL/Test_Containers_Adaptors.cpp" "Tests/STL/Test_Containers_Array.cpp" "Tests/STL/Test_Containers_CircularQueue.cpp" "Tests/STL/Test_Containers_HashSet.cpp" "Tests/STL/Test_Containers_IndexedArray.cpp" "Tests/STL/Test_Containers_List.cpp" "Tests/STL/Test_Containers_Map.cpp" "Tests/STL/Test_Containers_Queue.cpp" "Tests/STL/Test_Containers_Set.cpp" "Tests/STL/Test_Containers_String.cpp" "Tests/STL/Test_Dimensions_PhysicsValue.cpp" "Tests/STL/Test_Math_Abs.cpp" "Tests/STL/Test_Math_Bit.cpp" "Tests/STL/Test_Math_Clamp_Wrap.cpp" "Tests/STL/Test_Math_Color.cpp" "Tests/STL/Test_Math_ColorFormat.cpp" "Tests/STL/Test_Math_Factorial.cpp" "Tests/STL/Test_Math_FloorCeilTruncRoundFract.cpp" "Tests/STL/Test_Math_Frustum.cpp" "Tests/STL/Test_Math_ImageUtils.cpp" "Tests/STL/Test_Math_Matrix.cpp" "Tests/STL/Test_Math_Plane.cpp" "Tests/STL/Test_Math_Transform.cpp" "Tests/STL/Test_OS_Atomic.cpp" "Tests/STL/Test_OS_Date.cpp" "Tests/STL/Test_OS_FileSystem.cpp" "Tests/STL/Test_Runtime_VirtualTypelist.cpp" "Tests/STL/Test_SimpleScript.cpp" "Tests/STL/Test_Temp.cpp" "Tests/STL/Test_Types_Cast.cpp" "Tests/STL/Test_Types_ExtString.cpp" "Tests/STL/Test_Types_FileAddress.cpp" "Tests/STL/Test_Types_Function.cpp" "Tests/STL/Test_Types_StringParser.cpp" "Tests/STL/Test_Types_Time.cpp" "Tests/STL/Test_Types_Union.cpp" )
 set_property( TARGET "Tests.STL" PROPERTY FOLDER "Tests" )
 target_include_directories( "Tests.STL" PRIVATE "Tests/STL" )
 target_include_directories( "Tests.STL" PUBLIC "Engine/.." )
@@ -784,6 +786,7 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/OpenGL/Impl/GL4RenderPass.cpp"
 		"Engine/Platforms/OpenGL/Impl/GL4Sampler.cpp"
 		"Engine/Platforms/OpenGL/Impl/GL4Sampler.h"
+		"Engine/Platforms/OpenGL/Impl/GL4SyncManager.cpp"
 		"Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h"
 		"Engine/Platforms/OpenGL/OpenGLContext.cpp"
 		"Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
@@ -797,7 +800,6 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Shared/OS/OSEnums.h"
 		"Engine/Platforms/Shared/OS/Platform.h"
 		"Engine/Platforms/Shared/OS/ScreenCoords.h"
-		"Engine/Platforms/Shared/OS/VR.h"
 		"Engine/Platforms/Shared/OS/Window.h"
 		"Engine/Platforms/Common/Common.h"
 		"Engine/Platforms/Input/InputManager.cpp"
@@ -829,7 +831,7 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Vulkan/Impl/Vk1Framebuffer.cpp"
 		"Engine/Platforms/Vulkan/Impl/Vk1Image.cpp"
 		"Engine/Platforms/Vulkan/Impl/Vk1Library.h"
-		"Engine/Platforms/Vulkan/Impl/Vk1Memory.cpp"
+		"Engine/Platforms/Vulkan/Impl/Vk1ManagedMemory.cpp"
 		"Engine/Platforms/Vulkan/Impl/Vk1MemoryManager.cpp"
 		"Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
 		"Engine/Platforms/Vulkan/Impl/Vk1Pipeline.cpp"
@@ -842,6 +844,7 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 		"Engine/Platforms/Vulkan/Impl/Vk1Sampler.cpp"
 		"Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
+		"Engine/Platforms/Vulkan/Impl/Vk1SyncManager.cpp"
 		"Engine/Platforms/Vulkan/Impl/Vk1SystemFramebuffer.h"
 		"Engine/Platforms/Vulkan/Impl/vulkan1.cpp"
 		"Engine/Platforms/Vulkan/Impl/vulkan1.h"
@@ -890,6 +893,7 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Shared/GPU/Sampler.h"
 		"Engine/Platforms/Shared/GPU/SamplerEnums.h"
 		"Engine/Platforms/Shared/GPU/ShaderEnums.h"
+		"Engine/Platforms/Shared/GPU/Sync.h"
 		"Engine/Platforms/Shared/GPU/Thread.h"
 		"Engine/Platforms/Shared/GPU/Uniforms.h"
 		"Engine/Platforms/Shared/GPU/VertexAttribs.h"
@@ -918,20 +922,20 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Vulkan/Windows/VkWinSurface.cpp"
 		"Engine/Platforms/Vulkan/Windows/VkWinSurface.h" )
 
-source_group( "OpenGL\\Impl" FILES "Engine/Platforms/OpenGL/Impl/gl4.cpp" "Engine/Platforms/OpenGL/Impl/gl4.h" "Engine/Platforms/OpenGL/Impl/GL4BaseModule.cpp" "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h" "Engine/Platforms/OpenGL/Impl/GL4Buffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4CommandBuffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4CommandBuilder.cpp" "Engine/Platforms/OpenGL/Impl/GL4Device.cpp" "Engine/Platforms/OpenGL/Impl/GL4Device.h" "Engine/Platforms/OpenGL/Impl/GL4Emulator.h" "Engine/Platforms/OpenGL/Impl/GL4Enums.h" "Engine/Platforms/OpenGL/Impl/GL4FlippedSystemFramebuffer.h" "Engine/Platforms/OpenGL/Impl/GL4Framebuffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4Image.cpp" "Engine/Platforms/OpenGL/Impl/GL4Memory.cpp" "Engine/Platforms/OpenGL/Impl/GL4Messages.h" "Engine/Platforms/OpenGL/Impl/GL4Pipeline.cpp" "Engine/Platforms/OpenGL/Impl/GL4PipelineResourceTable.cpp" "Engine/Platforms/OpenGL/Impl/GL4RenderPass.cpp" "Engine/Platforms/OpenGL/Impl/GL4Sampler.cpp" "Engine/Platforms/OpenGL/Impl/GL4Sampler.h" "Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h" )
+source_group( "OpenGL\\Impl" FILES "Engine/Platforms/OpenGL/Impl/gl4.cpp" "Engine/Platforms/OpenGL/Impl/gl4.h" "Engine/Platforms/OpenGL/Impl/GL4BaseModule.cpp" "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h" "Engine/Platforms/OpenGL/Impl/GL4Buffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4CommandBuffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4CommandBuilder.cpp" "Engine/Platforms/OpenGL/Impl/GL4Device.cpp" "Engine/Platforms/OpenGL/Impl/GL4Device.h" "Engine/Platforms/OpenGL/Impl/GL4Emulator.h" "Engine/Platforms/OpenGL/Impl/GL4Enums.h" "Engine/Platforms/OpenGL/Impl/GL4FlippedSystemFramebuffer.h" "Engine/Platforms/OpenGL/Impl/GL4Framebuffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4Image.cpp" "Engine/Platforms/OpenGL/Impl/GL4Memory.cpp" "Engine/Platforms/OpenGL/Impl/GL4Messages.h" "Engine/Platforms/OpenGL/Impl/GL4Pipeline.cpp" "Engine/Platforms/OpenGL/Impl/GL4PipelineResourceTable.cpp" "Engine/Platforms/OpenGL/Impl/GL4RenderPass.cpp" "Engine/Platforms/OpenGL/Impl/GL4Sampler.cpp" "Engine/Platforms/OpenGL/Impl/GL4Sampler.h" "Engine/Platforms/OpenGL/Impl/GL4SyncManager.cpp" "Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h" )
 source_group( "OpenGL" FILES "Engine/Platforms/OpenGL/OpenGLContext.cpp" "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h" "Engine/Platforms/OpenGL/OpenGLThread.cpp" )
 source_group( "OpenCL" FILES "Engine/Platforms/OpenCL/OpenCLContext.cpp" "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h" "Engine/Platforms/OpenCL/OpenCLThread.cpp" )
-source_group( "Shared\\OS" FILES "Engine/Platforms/Shared/OS/Display.h" "Engine/Platforms/Shared/OS/IDs.h" "Engine/Platforms/Shared/OS/Input.h" "Engine/Platforms/Shared/OS/OSEnums.h" "Engine/Platforms/Shared/OS/Platform.h" "Engine/Platforms/Shared/OS/ScreenCoords.h" "Engine/Platforms/Shared/OS/VR.h" "Engine/Platforms/Shared/OS/Window.h" )
+source_group( "Shared\\OS" FILES "Engine/Platforms/Shared/OS/Display.h" "Engine/Platforms/Shared/OS/IDs.h" "Engine/Platforms/Shared/OS/Input.h" "Engine/Platforms/Shared/OS/OSEnums.h" "Engine/Platforms/Shared/OS/Platform.h" "Engine/Platforms/Shared/OS/ScreenCoords.h" "Engine/Platforms/Shared/OS/Window.h" )
 source_group( "Common" FILES "Engine/Platforms/Common/Common.h" )
 source_group( "Input" FILES "Engine/Platforms/Input/InputManager.cpp" "Engine/Platforms/Input/InputManager.h" "Engine/Platforms/Input/InputThread.cpp" )
 source_group( "Shared" FILES "Engine/Platforms/Shared/Main.cpp" "Engine/Platforms/Shared/PipelineTemplate.cpp" )
 source_group( "Vulkan" FILES "Engine/Platforms/Vulkan/VulkanContext.cpp" "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h" "Engine/Platforms/Vulkan/VulkanThread.cpp" )
 source_group( "Windows" FILES "Engine/Platforms/Windows/WinDisplay.cpp" "Engine/Platforms/Windows/WinDisplay.h" "Engine/Platforms/Windows/WinKeyInput.cpp" "Engine/Platforms/Windows/WinMessages.h" "Engine/Platforms/Windows/WinMouseInput.cpp" "Engine/Platforms/Windows/WinObjectsConstructor.h" "Engine/Platforms/Windows/WinPlatform.cpp" "Engine/Platforms/Windows/WinWindow.cpp" )
-source_group( "Vulkan\\Impl" FILES "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.cpp" "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h" "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h" "Engine/Platforms/Vulkan/Impl/Vk1Buffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1CommandBuilder.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Device.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Device.h" "Engine/Platforms/Vulkan/Impl/Vk1Enums.h" "Engine/Platforms/Vulkan/Impl/Vk1Fence.h" "Engine/Platforms/Vulkan/Impl/Vk1Framebuffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Image.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Library.h" "Engine/Platforms/Vulkan/Impl/Vk1Memory.cpp" "Engine/Platforms/Vulkan/Impl/Vk1MemoryManager.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Messages.h" "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h" "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h" "Engine/Platforms/Vulkan/Impl/Vk1PipelineResourceTable.cpp" "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.cpp" "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h" "Engine/Platforms/Vulkan/Impl/Vk1Sampler.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h" "Engine/Platforms/Vulkan/Impl/Vk1SystemFramebuffer.h" "Engine/Platforms/Vulkan/Impl/vulkan1.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1.h" "Engine/Platforms/Vulkan/Impl/vulkan1_platform.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1_platform.h" "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h" )
+source_group( "Vulkan\\Impl" FILES "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.cpp" "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h" "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h" "Engine/Platforms/Vulkan/Impl/Vk1Buffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1CommandBuilder.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Device.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Device.h" "Engine/Platforms/Vulkan/Impl/Vk1Enums.h" "Engine/Platforms/Vulkan/Impl/Vk1Fence.h" "Engine/Platforms/Vulkan/Impl/Vk1Framebuffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Image.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Library.h" "Engine/Platforms/Vulkan/Impl/Vk1ManagedMemory.cpp" "Engine/Platforms/Vulkan/Impl/Vk1MemoryManager.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Messages.h" "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h" "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h" "Engine/Platforms/Vulkan/Impl/Vk1PipelineResourceTable.cpp" "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.cpp" "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h" "Engine/Platforms/Vulkan/Impl/Vk1Sampler.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h" "Engine/Platforms/Vulkan/Impl/Vk1SyncManager.cpp" "Engine/Platforms/Vulkan/Impl/Vk1SystemFramebuffer.h" "Engine/Platforms/Vulkan/Impl/vulkan1.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1.h" "Engine/Platforms/Vulkan/Impl/vulkan1_platform.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1_platform.h" "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h" )
 source_group( "" FILES "Engine/Platforms/Engine.Platforms.h" )
 source_group( "Shared\\Tools" FILES "Engine/Platforms/Shared/Tools/ImageViewHashMap.h" "Engine/Platforms/Shared/Tools/MemoryMapperHelper.cpp" "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h" )
 source_group( "OpenGL\\Windows" FILES "Engine/Platforms/OpenGL/Windows/GLWinContext.cpp" "Engine/Platforms/OpenGL/Windows/GLWinContext.h" "Engine/Platforms/OpenGL/Windows/GLWinLibrary.cpp" "Engine/Platforms/OpenGL/Windows/GLWinLibrary.h" )
-source_group( "Shared\\GPU" FILES "Engine/Platforms/Shared/GPU/Buffer.h" "Engine/Platforms/Shared/GPU/BufferEnums.h" "Engine/Platforms/Shared/GPU/CommandBuffer.h" "Engine/Platforms/Shared/GPU/CommandEnums.h" "Engine/Platforms/Shared/GPU/Context.h" "Engine/Platforms/Shared/GPU/Enums.ToString.h" "Engine/Platforms/Shared/GPU/FragmentOutputState.h" "Engine/Platforms/Shared/GPU/Framebuffer.h" "Engine/Platforms/Shared/GPU/IDs.h" "Engine/Platforms/Shared/GPU/Image.cpp" "Engine/Platforms/Shared/GPU/Image.h" "Engine/Platforms/Shared/GPU/ImageEnums.h" "Engine/Platforms/Shared/GPU/ImageLayer.h" "Engine/Platforms/Shared/GPU/ImageSwizzle.h" "Engine/Platforms/Shared/GPU/Memory.h" "Engine/Platforms/Shared/GPU/MemoryEnums.h" "Engine/Platforms/Shared/GPU/MipmapLevel.h" "Engine/Platforms/Shared/GPU/MultiSamples.h" "Engine/Platforms/Shared/GPU/ObjectEnums.h" "Engine/Platforms/Shared/GPU/Pipeline.cpp" "Engine/Platforms/Shared/GPU/Pipeline.h" "Engine/Platforms/Shared/GPU/PipelineLayout.cpp" "Engine/Platforms/Shared/GPU/PipelineLayout.h" "Engine/Platforms/Shared/GPU/PixelFormatEnums.h" "Engine/Platforms/Shared/GPU/RenderPass.cpp" "Engine/Platforms/Shared/GPU/RenderPass.h" "Engine/Platforms/Shared/GPU/RenderPassEnums.h" "Engine/Platforms/Shared/GPU/RenderState.cpp" "Engine/Platforms/Shared/GPU/RenderState.h" "Engine/Platforms/Shared/GPU/RenderStateEnums.h" "Engine/Platforms/Shared/GPU/Sampler.cpp" "Engine/Platforms/Shared/GPU/Sampler.h" "Engine/Platforms/Shared/GPU/SamplerEnums.h" "Engine/Platforms/Shared/GPU/ShaderEnums.h" "Engine/Platforms/Shared/GPU/Thread.h" "Engine/Platforms/Shared/GPU/Uniforms.h" "Engine/Platforms/Shared/GPU/VertexAttribs.h" "Engine/Platforms/Shared/GPU/VertexDescr.h" "Engine/Platforms/Shared/GPU/VertexEnums.h" "Engine/Platforms/Shared/GPU/VertexInputState.cpp" "Engine/Platforms/Shared/GPU/VertexInputState.h" "Engine/Platforms/Shared/GPU/VR.h" )
+source_group( "Shared\\GPU" FILES "Engine/Platforms/Shared/GPU/Buffer.h" "Engine/Platforms/Shared/GPU/BufferEnums.h" "Engine/Platforms/Shared/GPU/CommandBuffer.h" "Engine/Platforms/Shared/GPU/CommandEnums.h" "Engine/Platforms/Shared/GPU/Context.h" "Engine/Platforms/Shared/GPU/Enums.ToString.h" "Engine/Platforms/Shared/GPU/FragmentOutputState.h" "Engine/Platforms/Shared/GPU/Framebuffer.h" "Engine/Platforms/Shared/GPU/IDs.h" "Engine/Platforms/Shared/GPU/Image.cpp" "Engine/Platforms/Shared/GPU/Image.h" "Engine/Platforms/Shared/GPU/ImageEnums.h" "Engine/Platforms/Shared/GPU/ImageLayer.h" "Engine/Platforms/Shared/GPU/ImageSwizzle.h" "Engine/Platforms/Shared/GPU/Memory.h" "Engine/Platforms/Shared/GPU/MemoryEnums.h" "Engine/Platforms/Shared/GPU/MipmapLevel.h" "Engine/Platforms/Shared/GPU/MultiSamples.h" "Engine/Platforms/Shared/GPU/ObjectEnums.h" "Engine/Platforms/Shared/GPU/Pipeline.cpp" "Engine/Platforms/Shared/GPU/Pipeline.h" "Engine/Platforms/Shared/GPU/PipelineLayout.cpp" "Engine/Platforms/Shared/GPU/PipelineLayout.h" "Engine/Platforms/Shared/GPU/PixelFormatEnums.h" "Engine/Platforms/Shared/GPU/RenderPass.cpp" "Engine/Platforms/Shared/GPU/RenderPass.h" "Engine/Platforms/Shared/GPU/RenderPassEnums.h" "Engine/Platforms/Shared/GPU/RenderState.cpp" "Engine/Platforms/Shared/GPU/RenderState.h" "Engine/Platforms/Shared/GPU/RenderStateEnums.h" "Engine/Platforms/Shared/GPU/Sampler.cpp" "Engine/Platforms/Shared/GPU/Sampler.h" "Engine/Platforms/Shared/GPU/SamplerEnums.h" "Engine/Platforms/Shared/GPU/ShaderEnums.h" "Engine/Platforms/Shared/GPU/Sync.h" "Engine/Platforms/Shared/GPU/Thread.h" "Engine/Platforms/Shared/GPU/Uniforms.h" "Engine/Platforms/Shared/GPU/VertexAttribs.h" "Engine/Platforms/Shared/GPU/VertexDescr.h" "Engine/Platforms/Shared/GPU/VertexEnums.h" "Engine/Platforms/Shared/GPU/VertexInputState.cpp" "Engine/Platforms/Shared/GPU/VertexInputState.h" "Engine/Platforms/Shared/GPU/VR.h" )
 source_group( "OpenCL\\Impl" FILES "Engine/Platforms/OpenCL/Impl/cl2.cpp" "Engine/Platforms/OpenCL/Impl/cl2.h" "Engine/Platforms/OpenCL/Impl/CL2BaseModule.cpp" "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h" "Engine/Platforms/OpenCL/Impl/CL2Buffer.cpp" "Engine/Platforms/OpenCL/Impl/CL2CommandBuffer.cpp" "Engine/Platforms/OpenCL/Impl/CL2CommandBuilder.cpp" "Engine/Platforms/OpenCL/Impl/CL2Device.cpp" "Engine/Platforms/OpenCL/Impl/CL2Device.h" "Engine/Platforms/OpenCL/Impl/CL2Emulator.cpp" "Engine/Platforms/OpenCL/Impl/CL2Emulator.h" "Engine/Platforms/OpenCL/Impl/CL2Enums.h" "Engine/Platforms/OpenCL/Impl/CL2Image.cpp" "Engine/Platforms/OpenCL/Impl/CL2Memory.cpp" "Engine/Platforms/OpenCL/Impl/CL2Messages.h" "Engine/Platforms/OpenCL/Impl/CL2Pipeline.cpp" "Engine/Platforms/OpenCL/Impl/CL2PipelineResourceTable.cpp" )
 source_group( "Vulkan\\Windows" FILES "Engine/Platforms/Vulkan/Windows/VkWinSurface.cpp" "Engine/Platforms/Vulkan/Windows/VkWinSurface.h" )
 set_property( TARGET "Engine.Platforms" PROPERTY FOLDER "Engine" )
@@ -1002,11 +1006,91 @@ endif()
 
 
 #==================================================================================================
+# project: Engine.Graphics
+#==================================================================================================
+add_library( "Engine.Graphics" STATIC 
+		"Engine/Graphics/Shared/BatchRenderer.h"
+		"Engine/Graphics/Shared/Commands.h"
+		"Engine/Graphics/Shared/Common.h"
+		"Engine/Graphics/Shared/Font.h"
+		"Engine/Graphics/Shared/IDs.h"
+		"Engine/Graphics/Shared/ImageStream.h"
+		"Engine/Graphics/Shared/Primitives.h"
+		"Engine/Graphics/Shared/Vertices.h"
+		"Engine/Graphics/Impl/AsyncCommandBuffer.cpp"
+		"Engine/Graphics/Impl/BatchRenderer.cpp"
+		"Engine/Graphics/Impl/Font.cpp"
+		"Engine/Graphics/Impl/FontManager.cpp"
+		"Engine/Graphics/Impl/GraphicsBaseModule.cpp"
+		"Engine/Graphics/Impl/GraphicsBaseModule.h"
+		"Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
+		"Engine/Graphics/Impl/Main.cpp"
+		"Engine/Graphics/Impl/PerFrameCommandBuffers.cpp"
+		"Engine/Graphics/Impl/TextureLineAtlas.h"
+		"Engine/Graphics/Engine.Graphics.h" )
+
+source_group( "Shared" FILES "Engine/Graphics/Shared/BatchRenderer.h" "Engine/Graphics/Shared/Commands.h" "Engine/Graphics/Shared/Common.h" "Engine/Graphics/Shared/Font.h" "Engine/Graphics/Shared/IDs.h" "Engine/Graphics/Shared/ImageStream.h" "Engine/Graphics/Shared/Primitives.h" "Engine/Graphics/Shared/Vertices.h" )
+source_group( "Impl" FILES "Engine/Graphics/Impl/AsyncCommandBuffer.cpp" "Engine/Graphics/Impl/BatchRenderer.cpp" "Engine/Graphics/Impl/Font.cpp" "Engine/Graphics/Impl/FontManager.cpp" "Engine/Graphics/Impl/GraphicsBaseModule.cpp" "Engine/Graphics/Impl/GraphicsBaseModule.h" "Engine/Graphics/Impl/GraphicsObjectsConstructor.h" "Engine/Graphics/Impl/Main.cpp" "Engine/Graphics/Impl/PerFrameCommandBuffers.cpp" "Engine/Graphics/Impl/TextureLineAtlas.h" )
+source_group( "" FILES "Engine/Graphics/Engine.Graphics.h" )
+set_property( TARGET "Engine.Graphics" PROPERTY FOLDER "Engine" )
+target_include_directories( "Engine.Graphics" PRIVATE "Engine/Graphics" )
+target_include_directories( "Engine.Graphics" PUBLIC "Engine/.." )
+target_link_libraries( "Engine.Graphics" "Engine.Platforms" )
+# compiler
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	# DebugAnalyze
+	target_compile_options ( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
+	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" )
+	# Debug
+	target_compile_options ( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
+	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" )
+	# Profile
+	target_compile_options ( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Od /analyze- /EHsc /GR >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
+	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /DEBUG /PROFILE" )
+	# Release
+	target_compile_options ( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Ox /analyze- /EHs-c- /GR- >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
+	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_RELEASE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /RELEASE /DYNAMICBASE" )
+endif()
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	# DebugAnalyze
+	target_compile_options ( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
+	# Debug
+	target_compile_options ( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fchkp-check-incomplete-type -Og >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
+	# Profile
+	target_compile_options ( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O2 -finline-functions >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
+	# Release
+	target_compile_options ( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O3 -Ofast -fomit-frame-pointer -finline-functions >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
+endif()
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
+endif()
+
+
+
+
+
+#==================================================================================================
 # project: Engine.Scene
 #==================================================================================================
 add_library( "Engine.Scene" STATIC 
 		"Engine/Scene/Surface/OffscreenSurface.cpp"
 		"Engine/Scene/Surface/VideoRecorderSurface.cpp"
+		"Engine/Scene/Surface/VRSurface.cpp"
 		"Engine/Scene/Surface/WindowSurface.cpp"
 		"Engine/Scene/Renderer/SceneRendererMainThread.cpp"
 		"Engine/Scene/Shared/Camera.h"
@@ -1026,7 +1110,7 @@ add_library( "Engine.Scene" STATIC
 		"Engine/Scene/Physics/ScenePhysicsMainThread.cpp"
 		"Engine/Scene/Logic/SceneLogicMainThread.cpp" )
 
-source_group( "Surface" FILES "Engine/Scene/Surface/OffscreenSurface.cpp" "Engine/Scene/Surface/VideoRecorderSurface.cpp" "Engine/Scene/Surface/WindowSurface.cpp" )
+source_group( "Surface" FILES "Engine/Scene/Surface/OffscreenSurface.cpp" "Engine/Scene/Surface/VideoRecorderSurface.cpp" "Engine/Scene/Surface/VRSurface.cpp" "Engine/Scene/Surface/WindowSurface.cpp" )
 source_group( "Renderer" FILES "Engine/Scene/Renderer/SceneRendererMainThread.cpp" )
 source_group( "Shared" FILES "Engine/Scene/Shared/Camera.h" "Engine/Scene/Shared/Common.h" "Engine/Scene/Shared/IDs.h" "Engine/Scene/Shared/Scene.h" "Engine/Scene/Shared/Surface.h" )
 source_group( "Camera" FILES "Engine/Scene/Camera/FreeCamera.cpp" "Engine/Scene/Camera/FreeVRCamera.cpp" )
@@ -1163,255 +1247,68 @@ endif()
 
 
 #==================================================================================================
-# project: Engine.PipelineCompiler
+# project: Tests.Engine.Graphics
 #==================================================================================================
-if (WIN32)
-	add_library( "Engine.PipelineCompiler" STATIC 
-			"Engine/PipelineCompiler/Serializers/CppSerializer.cpp"
-			"Engine/PipelineCompiler/Serializers/CppSerializer.h"
-			"Engine/PipelineCompiler/Serializers/ISerializer.h"
-			"Engine/PipelineCompiler/Common/Common.h"
-			"Engine/PipelineCompiler/Common/Packing.h"
-			"Engine/PipelineCompiler/Common/ShaderEnums.h"
-			"Engine/PipelineCompiler/Common/ToGLSL.h"
-			"Engine/PipelineCompiler/Pipelines/BasePipeline.cpp"
-			"Engine/PipelineCompiler/Pipelines/BasePipeline.h"
-			"Engine/PipelineCompiler/Pipelines/BasePipeline_Pass1.cpp"
-			"Engine/PipelineCompiler/Pipelines/BasePipeline_Pass2.cpp"
-			"Engine/PipelineCompiler/Pipelines/ComputePipeline.cpp"
-			"Engine/PipelineCompiler/Pipelines/ComputePipeline.h"
-			"Engine/PipelineCompiler/Pipelines/GraphicsPipeline.cpp"
-			"Engine/PipelineCompiler/Pipelines/GraphicsPipeline.h"
-			"Engine/PipelineCompiler/Pipelines/PipelineManager.cpp"
-			"Engine/PipelineCompiler/Pipelines/PipelineManager.h"
-			"Engine/PipelineCompiler/Shaders/DeserializedShader.cpp"
-			"Engine/PipelineCompiler/Shaders/DeserializedShader.h"
-			"Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler.cpp"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_CLCompiler.cpp"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_CLTranslator.cpp"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_CPPTranslator.cpp"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_DXTranslator.cpp"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_GLCompiler.cpp"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_GLParser.cpp"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_GXTranslator.cpp"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_ReplaceTypes.cpp"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.cpp"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.h"
-			"Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h" )
-	
-	source_group( "Serializers" FILES "Engine/PipelineCompiler/Serializers/CppSerializer.cpp" "Engine/PipelineCompiler/Serializers/CppSerializer.h" "Engine/PipelineCompiler/Serializers/ISerializer.h" )
-	source_group( "Common" FILES "Engine/PipelineCompiler/Common/Common.h" "Engine/PipelineCompiler/Common/Packing.h" "Engine/PipelineCompiler/Common/ShaderEnums.h" "Engine/PipelineCompiler/Common/ToGLSL.h" )
-	source_group( "Pipelines" FILES "Engine/PipelineCompiler/Pipelines/BasePipeline.cpp" "Engine/PipelineCompiler/Pipelines/BasePipeline.h" "Engine/PipelineCompiler/Pipelines/BasePipeline_Pass1.cpp" "Engine/PipelineCompiler/Pipelines/BasePipeline_Pass2.cpp" "Engine/PipelineCompiler/Pipelines/ComputePipeline.cpp" "Engine/PipelineCompiler/Pipelines/ComputePipeline.h" "Engine/PipelineCompiler/Pipelines/GraphicsPipeline.cpp" "Engine/PipelineCompiler/Pipelines/GraphicsPipeline.h" "Engine/PipelineCompiler/Pipelines/PipelineManager.cpp" "Engine/PipelineCompiler/Pipelines/PipelineManager.h" )
-	source_group( "Shaders" FILES "Engine/PipelineCompiler/Shaders/DeserializedShader.cpp" "Engine/PipelineCompiler/Shaders/DeserializedShader.h" "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler_CLCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_CLTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_CPPTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_DXTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_GLCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_GLParser.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_GXTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_ReplaceTypes.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h" )
-	set_property( TARGET "Engine.PipelineCompiler" PROPERTY FOLDER "EngineTools" )
-	target_include_directories( "Engine.PipelineCompiler" PRIVATE "Engine/PipelineCompiler" )
-	target_include_directories( "Engine.PipelineCompiler" PUBLIC "Engine/.." )
-	target_include_directories( "Engine.PipelineCompiler" PRIVATE "build_LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." )
-	target_include_directories( "Engine.PipelineCompiler" PRIVATE "External/LunarGLASS/glslang/.." )
-	target_include_directories( "Engine.PipelineCompiler" PRIVATE "External/LunarGLASS/.." )
-	target_include_directories( "Engine.PipelineCompiler" PRIVATE "External/LunarGLASS/glslang" )
-	target_include_directories( "Engine.PipelineCompiler" PRIVATE "External/LunarGLASS" )
-	target_include_directories( "Engine.PipelineCompiler" PRIVATE "External/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." )
-	target_link_libraries( "Engine.PipelineCompiler" "Engine.Platforms" )
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMTransformUtils" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMAsmParser" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "OSDependent" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMAnalysis" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "SPVRemapper" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMCore" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMipa" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "core" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "glslangFrontend" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "SPIRV" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "SPIRV-Tools-opt" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMTarget" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "OGLCompiler" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "HLSL" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMSupport" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "glslang" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMipo" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMInstCombine" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "GLSLBackend" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMScalarOpts" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "LLVMLinker" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "SPIRV-Tools" )
-	endif()
-	if (MSVC)
-		add_dependencies( "Engine.PipelineCompiler" "SpvFrontend" )
-	endif()
-	# compiler
-	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-		# DebugAnalyze
-		target_compile_options ( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
-		set_target_properties( "Engine.PipelineCompiler" PROPERTIES LINK_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" )
-		# Debug
-		target_compile_options ( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
-		set_target_properties( "Engine.PipelineCompiler" PROPERTIES LINK_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" )
-		# Profile
-		target_compile_options ( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Od /analyze- /EHsc /GR >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
-		set_target_properties( "Engine.PipelineCompiler" PROPERTIES LINK_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /DEBUG /PROFILE" )
-		# Release
-		target_compile_options ( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Ox /analyze- /EHs-c- /GR- >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
-		set_target_properties( "Engine.PipelineCompiler" PROPERTIES LINK_FLAGS_RELEASE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /RELEASE /DYNAMICBASE" )
-	endif()
-	
-	
-	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-		# DebugAnalyze
-		target_compile_options ( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
-		# Debug
-		target_compile_options ( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fchkp-check-incomplete-type -Og >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
-		# Profile
-		target_compile_options ( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O2 -finline-functions >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
-		# Release
-		target_compile_options ( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O3 -Ofast -fomit-frame-pointer -finline-functions >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
-	endif()
-	
-	
-	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
-		target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
-	endif()
-	
-	
-	
-	#-----------------------------------
-	
-	if (MSVC)
-	    set_target_properties( "Engine.PipelineCompiler" PROPERTIES STATIC_LIBRARY_FLAGS "\" LinkLibraryDependencies=\"true" )
-	endif()
-	
-	#-----------------------------------
+add_executable( "Tests.Engine.Graphics" 
+		"Tests/Engine.Graphics/Pipelines/all_pipelines.h"
+		"Tests/Engine.Graphics/Pipelines/common.h"
+		"Tests/Engine.Graphics/Pipelines/default3.cpp"
+		"Tests/Engine.Graphics/GApp.cpp"
+		"Tests/Engine.Graphics/GApp.h"
+		"Tests/Engine.Graphics/Main.cpp" )
+
+source_group( "Pipelines" FILES "Tests/Engine.Graphics/Pipelines/all_pipelines.h" "Tests/Engine.Graphics/Pipelines/common.h" "Tests/Engine.Graphics/Pipelines/default3.cpp" )
+source_group( "" FILES "Tests/Engine.Graphics/GApp.cpp" "Tests/Engine.Graphics/GApp.h" "Tests/Engine.Graphics/Main.cpp" )
+set_property( TARGET "Tests.Engine.Graphics" PROPERTY FOLDER "Tests" )
+target_include_directories( "Tests.Engine.Graphics" PRIVATE "Tests/Engine.Graphics" )
+target_include_directories( "Tests.Engine.Graphics" PUBLIC "Engine/.." )
+target_link_libraries( "Tests.Engine.Graphics" "Engine.Graphics" )
+# compiler
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	# DebugAnalyze
+	target_compile_options ( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
+	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" )
+	# Debug
+	target_compile_options ( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
+	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" )
+	# Profile
+	target_compile_options ( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Od /analyze- /EHsc /GR >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
+	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /DEBUG /PROFILE" )
+	# Release
+	target_compile_options ( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Ox /analyze- /EHs-c- /GR- >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
+	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_RELEASE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /RELEASE /DYNAMICBASE" )
 endif()
 
 
-#==================================================================================================
-# project: Tests.PipelineCompiler
-#==================================================================================================
-if (WIN32)
-	add_executable( "Tests.PipelineCompiler" 
-			"Tests/PipelineCompiler/Pipelines/Default.cpp"
-			"Tests/PipelineCompiler/Pipelines/Default2.cpp"
-			"Tests/PipelineCompiler/Pipelines/Default3.cpp"
-			"Tests/PipelineCompiler/Pipelines/Multitextured.cpp"
-			"Tests/PipelineCompiler/Pipelines/Test1.cpp"
-			"Tests/PipelineCompiler/Common.h"
-			"Tests/PipelineCompiler/Main.cpp"
-			"Tests/PipelineCompiler/Test_CompileGxsl.cpp"
-			"Tests/PipelineCompiler/Test_DeserializeGLSL.cpp"
-			"Tests/PipelineCompiler/Test_DeserializeGLSL_2.cpp"
-			"Tests/PipelineCompiler/Test_DeserializeGLSL_3.cpp"
-			"Tests/PipelineCompiler/Test_PipelineCompilation.cpp"
-			"Tests/PipelineCompiler/Test_TranslateCL.cpp" )
-	
-	source_group( "Pipelines" FILES "Tests/PipelineCompiler/Pipelines/Default.cpp" "Tests/PipelineCompiler/Pipelines/Default2.cpp" "Tests/PipelineCompiler/Pipelines/Default3.cpp" "Tests/PipelineCompiler/Pipelines/Multitextured.cpp" "Tests/PipelineCompiler/Pipelines/Test1.cpp" )
-	source_group( "" FILES "Tests/PipelineCompiler/Common.h" "Tests/PipelineCompiler/Main.cpp" "Tests/PipelineCompiler/Test_CompileGxsl.cpp" "Tests/PipelineCompiler/Test_DeserializeGLSL.cpp" "Tests/PipelineCompiler/Test_DeserializeGLSL_2.cpp" "Tests/PipelineCompiler/Test_DeserializeGLSL_3.cpp" "Tests/PipelineCompiler/Test_PipelineCompilation.cpp" "Tests/PipelineCompiler/Test_TranslateCL.cpp" )
-	set_property( TARGET "Tests.PipelineCompiler" PROPERTY FOLDER "Tests" )
-	target_include_directories( "Tests.PipelineCompiler" PRIVATE "Tests/PipelineCompiler" )
-	target_include_directories( "Tests.PipelineCompiler" PUBLIC "Engine/.." )
-	target_link_libraries( "Tests.PipelineCompiler" "Engine.PipelineCompiler" )
-	# compiler
-	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-		# DebugAnalyze
-		target_compile_options ( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
-		set_target_properties( "Tests.PipelineCompiler" PROPERTIES LINK_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" )
-		# Debug
-		target_compile_options ( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
-		set_target_properties( "Tests.PipelineCompiler" PROPERTIES LINK_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" )
-		# Profile
-		target_compile_options ( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Od /analyze- /EHsc /GR >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
-		set_target_properties( "Tests.PipelineCompiler" PROPERTIES LINK_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /DEBUG /PROFILE" )
-		# Release
-		target_compile_options ( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Ox /analyze- /EHs-c- /GR- >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
-		set_target_properties( "Tests.PipelineCompiler" PROPERTIES LINK_FLAGS_RELEASE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /RELEASE /DYNAMICBASE" )
-	endif()
-	
-	
-	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-		# DebugAnalyze
-		target_compile_options ( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
-		# Debug
-		target_compile_options ( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fchkp-check-incomplete-type -Og >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
-		# Profile
-		target_compile_options ( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O2 -finline-functions >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
-		# Release
-		target_compile_options ( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O3 -Ofast -fomit-frame-pointer -finline-functions >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
-	endif()
-	
-	
-	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
-		target_compile_definitions( "Tests.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
-	endif()
-	
-	
-	
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	# DebugAnalyze
+	target_compile_options ( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
+	# Debug
+	target_compile_options ( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fchkp-check-incomplete-type -Og >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
+	# Profile
+	target_compile_options ( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O2 -finline-functions >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
+	# Release
+	target_compile_options ( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O3 -Ofast -fomit-frame-pointer -finline-functions >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
 endif()
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
+endif()
+
+
+
 
 
 #==================================================================================================
@@ -1426,6 +1323,7 @@ add_executable( "Projects.ShaderEditor"
 		"Projects/ShaderEditor/Pipelines/shared_types.h"
 		"Projects/ShaderEditor/Pipelines/sireniandawn1.cpp"
 		"Projects/ShaderEditor/Pipelines/sireniandawn2.cpp"
+		"Projects/ShaderEditor/Pipelines/skyline.cpp"
 		"Projects/ShaderEditor/Pipelines/voronnoirecursion.cpp"
 		"Projects/ShaderEditor/Common.h"
 		"Projects/ShaderEditor/Renderer.cpp"
@@ -1433,7 +1331,7 @@ add_executable( "Projects.ShaderEditor"
 		"Projects/ShaderEditor/ShaderEditorApp.cpp"
 		"Projects/ShaderEditor/ShaderEditorApp.h" )
 
-source_group( "Pipelines" FILES "Projects/ShaderEditor/Pipelines/all_pipelines.h" "Projects/ShaderEditor/Pipelines/common.h" "Projects/ShaderEditor/Pipelines/drawtexturedquad.cpp" "Projects/ShaderEditor/Pipelines/experimental.cpp" "Projects/ShaderEditor/Pipelines/glowballs.cpp" "Projects/ShaderEditor/Pipelines/shared_types.h" "Projects/ShaderEditor/Pipelines/sireniandawn1.cpp" "Projects/ShaderEditor/Pipelines/sireniandawn2.cpp" "Projects/ShaderEditor/Pipelines/voronnoirecursion.cpp" )
+source_group( "Pipelines" FILES "Projects/ShaderEditor/Pipelines/all_pipelines.h" "Projects/ShaderEditor/Pipelines/common.h" "Projects/ShaderEditor/Pipelines/drawtexturedquad.cpp" "Projects/ShaderEditor/Pipelines/experimental.cpp" "Projects/ShaderEditor/Pipelines/glowballs.cpp" "Projects/ShaderEditor/Pipelines/shared_types.h" "Projects/ShaderEditor/Pipelines/sireniandawn1.cpp" "Projects/ShaderEditor/Pipelines/sireniandawn2.cpp" "Projects/ShaderEditor/Pipelines/skyline.cpp" "Projects/ShaderEditor/Pipelines/voronnoirecursion.cpp" )
 source_group( "" FILES "Projects/ShaderEditor/Common.h" "Projects/ShaderEditor/Renderer.cpp" "Projects/ShaderEditor/Renderer.h" "Projects/ShaderEditor/ShaderEditorApp.cpp" "Projects/ShaderEditor/ShaderEditorApp.h" )
 set_property( TARGET "Projects.ShaderEditor" PROPERTY FOLDER "Projects" )
 target_include_directories( "Projects.ShaderEditor" PRIVATE "Projects/ShaderEditor" )
@@ -1481,74 +1379,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
 	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
 	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
-endif()
-
-
-
-
-
-#==================================================================================================
-# project: Projects.ShaderEditor.Tools
-#==================================================================================================
-add_executable( "Projects.ShaderEditor.Tools" 
-		"Projects/ShaderEditorTools/DrawTexturedQuad.cpp"
-		"Projects/ShaderEditorTools/Experimental.cpp"
-		"Projects/ShaderEditorTools/Glowballs.cpp"
-		"Projects/ShaderEditorTools/Main.cpp"
-		"Projects/ShaderEditorTools/ShadertoyTemplate.h"
-		"Projects/ShaderEditorTools/SirenianDawn1.cpp"
-		"Projects/ShaderEditorTools/SirenianDawn2.cpp"
-		"Projects/ShaderEditorTools/VoronnoiRecursion.cpp" )
-
-source_group( "" FILES "Projects/ShaderEditorTools/DrawTexturedQuad.cpp" "Projects/ShaderEditorTools/Experimental.cpp" "Projects/ShaderEditorTools/Glowballs.cpp" "Projects/ShaderEditorTools/Main.cpp" "Projects/ShaderEditorTools/ShadertoyTemplate.h" "Projects/ShaderEditorTools/SirenianDawn1.cpp" "Projects/ShaderEditorTools/SirenianDawn2.cpp" "Projects/ShaderEditorTools/VoronnoiRecursion.cpp" )
-set_property( TARGET "Projects.ShaderEditor.Tools" PROPERTY FOLDER "Projects" )
-target_include_directories( "Projects.ShaderEditor.Tools" PRIVATE "Projects/ShaderEditorTools" )
-target_include_directories( "Projects.ShaderEditor.Tools" PUBLIC "Engine/.." )
-if (WIN32)
-	target_link_libraries( "Projects.ShaderEditor.Tools" "Engine.PipelineCompiler" )
-endif()
-# compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	# DebugAnalyze
-	target_compile_options ( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:DebugAnalyze>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
-	set_target_properties( "Projects.ShaderEditor.Tools" PROPERTIES LINK_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" )
-	# Debug
-	target_compile_options ( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Debug>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
-	set_target_properties( "Projects.ShaderEditor.Tools" PROPERTIES LINK_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" )
-	# Profile
-	target_compile_options ( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Profile>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Od /analyze- /EHsc /GR >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
-	set_target_properties( "Projects.ShaderEditor.Tools" PROPERTIES LINK_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /DEBUG /PROFILE" )
-	# Release
-	target_compile_options ( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Release>: /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Ox /analyze- /EHs-c- /GR- >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
-	set_target_properties( "Projects.ShaderEditor.Tools" PROPERTIES LINK_FLAGS_RELEASE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /RELEASE /DYNAMICBASE" )
-endif()
-
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	# DebugAnalyze
-	target_compile_options ( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:DebugAnalyze>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
-	# Debug
-	target_compile_options ( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Debug>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fchkp-check-incomplete-type -Og >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
-	# Profile
-	target_compile_options ( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Profile>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O2 -finline-functions >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
-	# Release
-	target_compile_options ( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Release>: -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O3 -Ofast -fomit-frame-pointer -finline-functions >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
-endif()
-
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:DebugAnalyze>: __GX_DEBUG__ __GX_ANALYZE__ >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Debug>: __GX_DEBUG__ >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Profile>: GX_ENABLE_PROFILING >)
-	target_compile_definitions( "Projects.ShaderEditor.Tools" PRIVATE $<$<CONFIG:Release>: __GX_FAST__ __GX_NO_EXCEPTIONS__ >)
 endif()
 
 

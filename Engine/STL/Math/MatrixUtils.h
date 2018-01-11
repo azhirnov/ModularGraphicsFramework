@@ -1,4 +1,4 @@
-﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -750,7 +750,7 @@ namespace GXMath
 		};
 		
 
-		template <typename T, usize C, usize R, ulong U>
+		template <typename T, usize C, usize R>
 		static void  Get(T (&t)[R][C], const T (&m)[C][R])
 		{
 			typedef T mat_t[C][R];

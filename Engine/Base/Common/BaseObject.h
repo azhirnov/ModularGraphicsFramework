@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	BaseObject - base class for all modules, systems and other engine classes.
 	BaseObject can be static or dynamic, for dynamic creation use static function,

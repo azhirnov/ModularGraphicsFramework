@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "GApp.h"
 #include "../Pipelines/all_pipelines.h"
@@ -142,24 +142,27 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 	if ( not looping )
 		return false;
 
-	auto	gthread	= GetGThread( ms->GlobalSystems() );
+	auto		gthread	= GetGThread( ms->GlobalSystems() );
+	uint		prev_idx= cmdBufIndex % cmdBuffers.Count();
+	uint		index	= (++cmdBufIndex) % cmdBuffers.Count();
+
+	syncManager->Send< GpuMsg::ClientWaitFence >({ cmdFence[prev_idx] });
 
 	Message< GpuMsg::ThreadBeginFrame >	begin_frame;
 	gthread->Send( begin_frame );
 
 	ModulePtr	system_fb	= begin_frame->result->framebuffer;
-	ModulePtr	builder		= cmdBuilder;	//begin_frame->result->commandBuilder;
 
-	builder->Send< GpuMsg::CmdBegin >({ cmdBuffers[cmdBufIndex++ % cmdBuffers.Count()] });
+	cmdBuilder->Send< GpuMsg::CmdBegin >({ cmdBuffers[index] });
 
 	// clear image
 	{
-		builder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::bits() | EPipelineStage::Transfer,
+		cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::bits() | EPipelineStage::Transfer,
 					  EImageLayout::Undefined, EImageLayout::TransferDstOptimal, texture, EImageAspect::bits() | EImageAspect::Color });
 
-		builder->Send< GpuMsg::CmdClearColorImage >({ texture, EImageLayout::TransferDstOptimal, float4(0.5f) });
+		cmdBuilder->Send< GpuMsg::CmdClearColorImage >({ texture, EImageLayout::TransferDstOptimal, float4(0.5f) });
 
-		builder->Send< GpuMsg::CmdPipelineBarrier >({  EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::AllGraphics,
+		cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({  EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::AllGraphics,
 					  EImageLayout::TransferDstOptimal, EImageLayout::ShaderReadOnlyOptimal, texture, EImageAspect::bits() | EImageAspect::Color });
 	}
 
@@ -177,14 +180,14 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 		clear.attachments.PushBack({ EImageAspect::bits() | EImageAspect::Color, 0, float4(1.0f) });
 		clear.clearRects.PushBack({ area });
 
-		builder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, framebuffer, area });
-		builder->Send< GpuMsg::CmdClearAttachments >( clear );
-		builder->Send< GpuMsg::CmdBindGraphicsPipeline >({ gpipeline1 });
-		builder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ resourceTable1 });
-		builder->Send< GpuMsg::CmdSetViewport >({ area, float2(0.0f, 1.0f) });
-		builder->Send< GpuMsg::CmdSetScissor >({ area });
-		builder->Send< GpuMsg::CmdDraw >({ 3u });
-		builder->Send< GpuMsg::CmdEndRenderPass >({});
+		cmdBuilder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, framebuffer, area });
+		cmdBuilder->Send< GpuMsg::CmdClearAttachments >( clear );
+		cmdBuilder->Send< GpuMsg::CmdBindGraphicsPipeline >({ gpipeline1 });
+		cmdBuilder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ resourceTable1 });
+		cmdBuilder->Send< GpuMsg::CmdSetViewport >({ area, float2(0.0f, 1.0f) });
+		cmdBuilder->Send< GpuMsg::CmdSetScissor >({ area });
+		cmdBuilder->Send< GpuMsg::CmdDraw >({ 3u });
+		cmdBuilder->Send< GpuMsg::CmdEndRenderPass >({});
 	}
 
 	// draw quad to screen
@@ -197,21 +200,21 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 		auto const&	fb_descr	= fb_descr_request->result.Get();
 		RectU		area		= RectU( 0, 0, fb_descr.size.x, fb_descr.size.y );
 
-		builder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, system_fb, area });
-		builder->Send< GpuMsg::CmdBindGraphicsPipeline >({ gpipeline2 });
-		builder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ resourceTable2 });
-		builder->Send< GpuMsg::CmdSetViewport >({ area, float2(0.0f, 1.0f) });
-		builder->Send< GpuMsg::CmdSetScissor >({ area });
-		builder->Send< GpuMsg::CmdBindVertexBuffers >({ vbuffer });
-		builder->Send< GpuMsg::CmdBindIndexBuffer >({ ibuffer, EIndex::UInt });
-		builder->Send< GpuMsg::CmdDrawIndexed >({ 6u });
-		builder->Send< GpuMsg::CmdEndRenderPass >({});
+		cmdBuilder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, system_fb, area });
+		cmdBuilder->Send< GpuMsg::CmdBindGraphicsPipeline >({ gpipeline2 });
+		cmdBuilder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ resourceTable2 });
+		cmdBuilder->Send< GpuMsg::CmdSetViewport >({ area, float2(0.0f, 1.0f) });
+		cmdBuilder->Send< GpuMsg::CmdSetScissor >({ area });
+		cmdBuilder->Send< GpuMsg::CmdBindVertexBuffers >({ vbuffer });
+		cmdBuilder->Send< GpuMsg::CmdBindIndexBuffer >({ ibuffer, EIndex::UInt });
+		cmdBuilder->Send< GpuMsg::CmdDrawIndexed >({ 6u });
+		cmdBuilder->Send< GpuMsg::CmdEndRenderPass >({});
 	}
 
 	Message< GpuMsg::CmdEnd >	cmd_end = {};
-	builder->Send( cmd_end );
+	cmdBuilder->Send( cmd_end );
 
-	gthread->Send< GpuMsg::ThreadEndFrame >({ system_fb, cmd_end->cmdBuffer.Get(null) });
+	gthread->Send< GpuMsg::ThreadEndFrame >({ system_fb, cmd_end->result.Get(null), cmdFence[index] });
 	return true;
 }
 
@@ -311,6 +314,7 @@ bool GApp::_CreateCmdBuffers ()
 	
 	cmdBufIndex = 0;
 	cmdBuffers.Resize( 6 );
+	cmdFence.Resize( 6 );
 
 	FOR( i, cmdBuffers )
 	{
@@ -320,11 +324,18 @@ bool GApp::_CreateCmdBuffers ()
 						CreateInfo::GpuCommandBuffer{
 							gthread,
 							null,
-							CommandBufferDescriptor{ ECmdBufferCreate::ImplicitResetable | ECmdBufferCreate::UseFence }
+							CommandBufferDescriptor{ ECmdBufferCreate::bits() | ECmdBufferCreate::ImplicitResetable }
 						},
 						OUT cmdBuffers[i] )
 		);
 		cmdBuilder->Send< ModuleMsg::AttachModule >({ ""_str << i, cmdBuffers[i] });
+	}
+
+	FOR( i, cmdFence )
+	{
+		Message< GpuMsg::CreateFence >	ctor;
+		syncManager->Send( ctor );
+		cmdFence[i] = *ctor->result;
 	}
 	return true;
 }
@@ -334,6 +345,9 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 {
 	auto	gthread = GetGThread( ms->GlobalSystems() );
 	auto	factory = gthread->GlobalSystems()->modulesFactory;
+
+	syncManager = gthread->GetModuleByMsg<CompileTime::TypeListFrom< Message<GpuMsg::CreateFence> >>();
+	CHECK_ERR( syncManager );
 
 	CHECK_ERR( factory->Create(
 					ids.image,

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -36,6 +36,48 @@ namespace GpuMsg
 	struct GetGLFramebufferID
 	{
 		Out< gl::GLuint >		result;
+	};
+
+
+	//
+	// Blit Framebuffers
+	//
+	struct CmdBlitGLFramebuffers
+	{
+	// types
+		using EImageAspect	= Platforms::EImageAspect;
+		using uint2			= GXMath::uint2;
+
+		struct Region : CompileTime::FastCopyable
+		{
+			uint2		srcOffset0;		// start offset
+			uint2		srcOffset1;		// end offset
+
+			uint2		dstOffset0;		// start offset
+			uint2		dstOffset1;		// end offset
+		};
+		using Regions_t	= FixedSizeArray< Region, 16 >;
+
+
+	// variables
+		ModulePtr			srcFramebuffer;
+		ModulePtr			dstFramebuffer;
+		EImageAspect::bits	imageAspect;
+		bool				linearFilter	= false;
+		Regions_t			regions;
+
+
+	// methods
+		CmdBlitGLFramebuffers (GX_DEFCTOR) {}
+
+		CmdBlitGLFramebuffers (const ModulePtr		&srcFramebuffer,
+							   const ModulePtr		&dstFramebuffer,
+							   EImageAspect::bits	imageAspect,
+							   bool					linearFilter,
+							   ArrayCRef<Region>	regions) :
+			srcFramebuffer{srcFramebuffer}, dstFramebuffer{dstFramebuffer},
+			imageAspect{imageAspect}, linearFilter{linearFilter}, regions{regions}
+		{}
 	};
 
 
@@ -170,6 +212,43 @@ namespace GpuMsg
 
 
 	//
+	// GL Fence Sync
+	//
+	struct GLFenceSync
+	{
+		Platforms::GpuFenceId	fenceId;
+		Out< gl::GLsync >		result;
+	};
+
+	struct GetGLFence
+	{
+		Platforms::GpuFenceId	fenceId;
+		Out< gl::GLsync >		result;
+	};
+
+
+	//
+	// GL Semaphore
+	//
+	struct GLSemaphoreEnqueue
+	{
+		Platforms::GpuSemaphoreId	semId;
+		Out< gl::GLsync >			result;
+	};
+
+	struct GetGLSemaphore
+	{
+		Platforms::GpuSemaphoreId	semId;
+		Out< gl::GLsync >			result;
+	};
+
+	struct WaitGLSemaphore
+	{
+		Platforms::GpuSemaphoreId	semId;
+	};
+
+
+	//
 	// Update Buffer Command
 	//
 	struct GLCmdUpdateBuffer
@@ -222,6 +301,7 @@ namespace GpuMsg
 								CmdCopyBufferToImage,
 								CmdCopyImageToBuffer,
 								CmdBlitImage,
+								CmdBlitGLFramebuffers,
 								GLCmdUpdateBuffer,
 								CmdFillBuffer,
 								CmdClearAttachments,
@@ -236,7 +316,7 @@ namespace GpuMsg
 
 			DEBUG_ONLY(
 				String	file;
-				uint	line;
+				uint	line	= 0;
 			)
 
 		// methods
@@ -259,6 +339,13 @@ namespace GpuMsg
 		ReadOnce< Array<Command> >	commands;
 		BinaryArray					bufferData;
 	};
+
+
+	//
+	// Execute GL Command Buffer
+	//
+	struct ExecuteGLCommandBuffer
+	{};
 
 
 }	// GpuMsg

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
@@ -47,7 +47,6 @@ namespace PlatformVK
 	private:
 		CommandBufferDescriptor		_descr;
 		vk::VkCommandBuffer			_cmdId;
-		vk::VkFence					_fenceId;
 		
 		UsedResources_t				_resources;
 		ERecordingState				_recordingState;
@@ -100,8 +99,7 @@ namespace PlatformVK
 */
 	Vk1CommandBuffer::Vk1CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
 		Vk1BaseModule( gs, ModuleConfig{ VkCommandBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
-		_descr( ci.descr ),
-		_cmdId( VK_NULL_HANDLE ),	_fenceId{ VK_NULL_HANDLE },
+		_descr( ci.descr ),		_cmdId( VK_NULL_HANDLE ),	
 		_recordingState( ERecordingState::Deleted )
 	{
 		SetDebugName( "Vk1CommandBuffer" );
@@ -116,7 +114,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_Compose );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1CommandBuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetVkCommandBufferID );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetCommandBufferDescriptor );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetDeviceInfo );
@@ -224,7 +221,7 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuffer::_GetVkCommandBufferID (const Message< GpuMsg::GetVkCommandBufferID > &msg)
 	{
-		msg->result.Set({ _cmdId, _fenceId });
+		msg->result.Set({ _cmdId });
 		return true;
 	}
 
@@ -325,18 +322,6 @@ namespace PlatformVK
 			GetDevice()->SetObjectName( uint64_t(_cmdId), GetDebugName(), EGpuObject::CommandBuffer );
 		}
 
-		// create fence
-		if ( _descr.flags[ ECmdBufferCreate::UseFence ] )
-		{
-			VkFenceCreateInfo	fence_info	= {};
-			fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-			fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-			VK_CHECK( vkCreateFence( GetVkDevice(), &fence_info, null, OUT &_fenceId ) );
-
-			GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_fenceId), GetDebugName(), EGpuObject::Fence );
-		}
-
 		_ChangeState( ERecordingState::Initial );
 		return true;
 	}
@@ -351,12 +336,6 @@ namespace PlatformVK
 		using namespace vk;
 		
 		VkDevice	dev = GetVkDevice();
-
-		if ( _fenceId != VK_NULL_HANDLE and dev != VK_NULL_HANDLE )
-		{
-			VK_CALL( vkWaitForFences( dev, 1, &_fenceId, VK_TRUE, (10_sec).NanoSeconds() ) );
-			vkDestroyFence( dev, _fenceId, null );
-		}
 
 		if ( _cmdId	!= VK_NULL_HANDLE )
 		{
@@ -374,9 +353,8 @@ namespace PlatformVK
 			}
 		}
 
-		_cmdId		= VK_NULL_HANDLE;
-		_fenceId	= VK_NULL_HANDLE;
-		_descr		= Uninitialized;
+		_cmdId	= VK_NULL_HANDLE;
+		_descr	= Uninitialized;
 
 		_ChangeState( ERecordingState::Deleted );
 		_resources.Clear();
@@ -429,7 +407,14 @@ namespace PlatformVK
 	{
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _recordingState == ERecordingState::Initial or
-				  (_recordingState == ERecordingState::Executable and _descr.flags[ECmdBufferCreate::ImplicitResetable]) );
+				  ((_recordingState == ERecordingState::Executable or
+					_recordingState == ERecordingState::Pending) and
+				    _descr.flags[ECmdBufferCreate::ImplicitResetable]) );
+		
+		if ( _recordingState == ERecordingState::Pending )
+		{
+			_resources.Clear();
+		}
 
 		_ChangeState( ERecordingState::Recording );
 		return true;
@@ -486,11 +471,6 @@ namespace PlatformVK
 */
 	void Vk1CommandBuffer::_ValidateDescriptor (INOUT CommandBufferDescriptor &descr)
 	{
-		if ( descr.flags[ ECmdBufferCreate::Secondary ] and descr.flags[ ECmdBufferCreate::UseFence ] )
-		{
-			WARNING( "not supported" );
-			descr.flags[ ECmdBufferCreate::UseFence ] = false;
-		}
 	}
 
 }	// PlatformVK

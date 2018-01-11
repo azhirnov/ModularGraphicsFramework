@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
@@ -89,7 +89,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1RenderPass::_Compose );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_Delete );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1RenderPass::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkRenderPassID );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetRenderPassDescriptor );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetDeviceInfo );
@@ -207,7 +206,7 @@ namespace PlatformVK
 
 		static const char		external_pass[] = "external";
 
-		auto	FindAttachmentIndex =	LAMBDA( this ) (StringCRef name) -> uint32_t
+		const auto	FindAttachmentIndex =LAMBDA( this ) (StringCRef name) -> uint32_t
 										{{
 											if ( _descr.DepthStencilAttachment().name == name )
 												return uint32_t(_descr.ColorAttachments().Count());
@@ -219,7 +218,7 @@ namespace PlatformVK
 											RETURN_ERR( "Attachement '" << name << "' not found", UMax );	// return any invalid value
 										}};
 
-		auto	FindSubpassIndex	=	LAMBDA( this ) (StringCRef name) -> uint32_t
+		const auto	FindSubpassIndex =	LAMBDA( this ) (StringCRef name) -> uint32_t
 										{{
 											if ( name.EqualsIC( external_pass ) )
 												return VK_SUBPASS_EXTERNAL;
@@ -233,7 +232,7 @@ namespace PlatformVK
 
 		if ( _descr.DepthStencilAttachment().IsEnabled() )
 		{
-			auto const&	attach = _descr.DepthStencilAttachment();
+			const auto&		attach = _descr.DepthStencilAttachment();
 
 			VkAttachmentDescription	descr = {};
 			descr.format			= Vk1Enum( attach.format );
@@ -250,7 +249,7 @@ namespace PlatformVK
 
 		FOR( i, _descr.ColorAttachments() )
 		{
-			auto const&	attach = _descr.ColorAttachments()[i];
+			const auto&		attach = _descr.ColorAttachments()[i];
 
 			VkAttachmentDescription	descr = {};
 			descr.format			= Vk1Enum( attach.format );
@@ -267,7 +266,7 @@ namespace PlatformVK
 
 		FOR( i, _descr.Subpasses() )
 		{
-			auto const&		subpass = _descr.Subpasses()[i];
+			const auto&		subpass = _descr.Subpasses()[i];
 
 			VkSubpassDescription	descr = {};
 			descr.flags						= 0;	// no flags, only vendor specific flags exists
@@ -331,7 +330,7 @@ namespace PlatformVK
 
 		FOR( i, _descr.Dependencies() )
 		{
-			auto const&		dep = _descr.Dependencies()[i];
+			const auto&		dep = _descr.Dependencies()[i];
 
 			VkSubpassDependency	descr = {};
 			descr.dependencyFlags	= Vk1Enum( dep.dependency );

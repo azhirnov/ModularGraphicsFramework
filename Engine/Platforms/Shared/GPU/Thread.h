@@ -1,9 +1,11 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
 #include "Engine/Platforms/Common/Common.h"
 #include "Engine/Platforms/Shared/GPU/Context.h"
+#include "Engine/Platforms/Shared/GPU/Sync.h"
+#include "Engine/Platforms/Shared/GPU/RenderPassEnums.h"
 
 namespace Engine
 {
@@ -70,63 +72,61 @@ namespace GpuMsg
 
 
 	//
+	// Submit Commands
+	//
+	struct SubmitGraphicsQueueCommands
+	{
+	// types
+		using Commands_t		= FixedSizeArray< ModulePtr, 16 >;
+		using Fence_t			= Platforms::GpuFenceId;
+		using Semaphore_t		= Platforms::GpuSemaphoreId;
+		using EPipelineStage	= Platforms::EPipelineStage;
+		using Semaphores_t		= FixedSizeArray< Semaphore_t, 8 >;
+		using WaitSemaphores_t	= FixedSizeArray<Pair< Semaphore_t, EPipelineStage::bits >, 8 >;
+
+	// variables
+		Commands_t			commands;			// command to submit.
+		Fence_t				fence;				// fence that will be signaled when command buffer will complete executing.
+		WaitSemaphores_t	waitSemaphores;		// wait before executing command buffers.
+		Semaphores_t		signalSemaphores;	// will be signaleed when command buffers have completed execution.
+
+	// methods
+		SubmitGraphicsQueueCommands ()  {}
+		explicit SubmitGraphicsQueueCommands (const ModulePtr &cmd, Fence_t fence = Uninitialized) : commands({ cmd }), fence( fence ) {}
+		explicit SubmitGraphicsQueueCommands (ArrayCRef< ModulePtr > list, Fence_t fence = Uninitialized) : commands( list ), fence( fence ) {}
+	};
+
+	struct SubmitComputeQueueCommands : SubmitGraphicsQueueCommands
+	{};
+
+
+	//
 	// Begin / End Frame
 	//
 	struct ThreadBeginFrame
 	{
 		struct Data {
 			ModulePtr	framebuffer;		// returns current framebuffer
-			uint		index;				// index of image in swapchain
+			uint		frameIndex;			// index of image in swapchain, max value if 'GraphicsSettings::swapchainLength'-1
 		};
 		Out< Data >		result;
 	};
 
-	struct ThreadEndFrame
+	struct ThreadEndFrame : SubmitGraphicsQueueCommands
 	{
-	// types
-		using Commands_t	= FixedSizeArray< ModulePtr, 32 >;
-		
 	// variables
-		ModulePtr		framebuffer;	// (optional) must be null or framebuffer returned by ThreadBeginFrame
-		ModulePtr		commands;		// (optional) commands to submit before present frame
+		ModulePtr		framebuffer;	// (optional) must be null or framebuffer returned by 'ThreadBeginFrame'
 
 	// methods
-		ThreadEndFrame ()
+		ThreadEndFrame () {}
+
+		ThreadEndFrame (const ModulePtr &framebuffer, const ModulePtr &command, Fence_t fence = Uninitialized) :
+			SubmitGraphicsQueueCommands( command, fence ), framebuffer( framebuffer )
 		{}
 
-		ThreadEndFrame (const ModulePtr &framebuffer, const ModulePtr &commands) :
-			framebuffer( framebuffer ), commands( commands )
+		ThreadEndFrame (const ModulePtr &framebuffer, ArrayCRef<ModulePtr> commands, Fence_t fence = Uninitialized) :
+			SubmitGraphicsQueueCommands( commands, fence ), framebuffer( framebuffer )
 		{}
-	};
-
-
-	//
-	// Submit Commands
-	//
-	struct SubmitGraphicsQueueCommands
-	{
-	// types
-		using Commands_t	= FixedSizeArray< ModulePtr, 32 >;
-
-	// variables
-		Commands_t		commands;
-
-	// methods
-		explicit SubmitGraphicsQueueCommands (const ModulePtr &cmd) : commands({ cmd }) {}
-		explicit SubmitGraphicsQueueCommands (ArrayCRef< ModulePtr > list) : commands( list ) {}
-	};
-
-	struct SubmitComputeQueueCommands
-	{
-	// types
-		using Commands_t	= FixedSizeArray< ModulePtr, 32 >;
-
-	// variables
-		Commands_t		commands;
-
-	// methods
-		explicit SubmitComputeQueueCommands (const ModulePtr &cmd) : commands({ cmd }) {}
-		explicit SubmitComputeQueueCommands (ArrayCRef< ModulePtr > list) : commands( list ) {}
 	};
 
 

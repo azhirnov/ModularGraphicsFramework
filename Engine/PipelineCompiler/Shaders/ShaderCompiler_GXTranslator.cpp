@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Translate from GXSL to GLSL.
 	This is temporary solution for dynamic arrays problem,
@@ -71,7 +71,7 @@ namespace PipelineCompiler
 		CHECK_ERR(	cfg.target == EShaderDstFormat::GLSL_Source );
 	
 		// not supported here
-		ASSERT( not cfg.filterInactive );
+		//ASSERT( not cfg.filterInactive );
 		ASSERT( not cfg.optimize );
 
 		const glslang::TIntermediate* intermediate = glslangData.prog.getIntermediate( glslangData.shader->getStage() );
@@ -84,7 +84,9 @@ namespace PipelineCompiler
 		translator.entryPoint	= intermediate->getEntryPointName().c_str();
 		translator.language		= new GLSL_DstLanguage( translator );
 
-		CHECK_ERR( TranslateShaderInfo( intermediate, translator ) );
+		if ( not cfg.skipExternals ) {
+			CHECK_ERR( TranslateShaderInfo( intermediate, translator ) );
+		}
 		CHECK_ERR( translator.Main( root, translator.uid, cfg.skipExternals ) );
 
 		log		<< translator.log;
@@ -102,6 +104,18 @@ namespace PipelineCompiler
 */
 	static bool TranslateShaderInfo (const glslang::TIntermediate* intermediate, Translator &translator)
 	{
+		// add version and profile
+		{
+			translator.src << "#version " << intermediate->getVersion();
+
+			switch ( intermediate->getProfile() ) {
+				case EProfile::ECompatibilityProfile :	translator.src << " compatibility\n";	break;
+				case EProfile::ECoreProfile :			translator.src << " core\n";			break;
+				case EProfile::EEsProfile :				translator.src << " es\n";				break;
+				default :								translator.src << "\n";
+			}
+		}
+
 		switch ( intermediate->getStage() )
 		{
 			case EShLanguage::EShLangVertex :
@@ -176,6 +190,10 @@ namespace PipelineCompiler
 		//if ( memoryModel != EGpuMemoryModel::None )
 		//	res << ToStringGLSL( memoryModel ) << ' ';
 
+		// read-only
+		if ( t.qualifier[ EVariableQualifier::Constant ] )
+			res << "const ";
+
 		// layout
 		if ( t.format != EPixelFormat::Unknown )
 			res << "layout(" << ToStringGLSL( t.format ) << ") ";
@@ -204,7 +222,7 @@ namespace PipelineCompiler
 	{
 		// qualifies
 		if ( t.qualifier[ EVariableQualifier::Constant ] )
-			res << "const ";
+		{}	//res << "const ";
 		else
 		if ( t.qualifier[ EVariableQualifier::InArg ] and t.qualifier[ EVariableQualifier::OutArg ] )
 			res << "inout ";
@@ -480,6 +498,8 @@ namespace PipelineCompiler
 									(argTypes[0]->arraySize == 0 and EShaderVariable::VecSize( argTypes[0]->type ) > 1)	and
 									(argTypes[1]->arraySize == 0 and EShaderVariable::VecSize( argTypes[1]->type ) > 1);
 			
+			const bool	is_float = (EShaderVariable::IsFloat( argTypes[0]->type ) or EShaderVariable::IsFloat( argTypes[1]->type ));
+
 			if ( is_vec )
 			{
 				const auto &	lhs_type = *argTypes[0];
@@ -502,6 +522,14 @@ namespace PipelineCompiler
 					case glslang::TOperator::EOpGreaterThan :		src<<"greaterThan("<<temp<<')';			return true;
 					case glslang::TOperator::EOpLessThanEqual :		src<<"lessThanEqual("<<temp<<')';		return true;
 					case glslang::TOperator::EOpGreaterThanEqual :	src<<"greaterThanEqual("<<temp<<')';	return true;
+				}
+			}
+
+			if ( is_float )
+			{
+				switch ( op )
+				{
+					case glslang::TOperator::EOpMod :					src << "mod("<<args[0]<<", "<<args[1]<<')';		return true;
 				}
 			}
 
@@ -530,11 +558,11 @@ namespace PipelineCompiler
 				case glslang::TOperator::EOpLogicalOr :					src << '('<<args[0] <<"||"<< args[1]<<')';		break;
 				case glslang::TOperator::EOpLogicalXor :				src << '('<<args[0] <<"^^"<< args[1]<<')';		break;
 				case glslang::TOperator::EOpLogicalAnd :				src << '('<<args[0] <<"&&"<< args[1]<<')';		break;
-				case glslang::TOperator::EOpIndexDirect :				src << '('<<args[0] <<'['<<args[1]<<"])";		break;
-				case glslang::TOperator::EOpIndexIndirect :				src << '('<<args[0] <<'['<<args[1]<<"])";		break;
+				case glslang::TOperator::EOpIndexDirect :				src << '('<<args[0] <<'[' << args[1]<<"])";		break;
+				case glslang::TOperator::EOpIndexIndirect :				src << '('<<args[0] <<'[' << args[1]<<"])";		break;
 				//case glslang::TOperator::EOpMethod :					break;
 				//case glslang::TOperator::EOpScoping :					break;
-				case glslang::TOperator::EOpAssign :					src << args[0] <<'=' << args[1];				break;
+				case glslang::TOperator::EOpAssign :					src <<      args[0] <<'=' << args[1];			break;
 				case glslang::TOperator::EOpAddAssign :					src << '('<<args[0] <<"+="<< args[1]<<')';		break;
 				case glslang::TOperator::EOpSubAssign :					src << '('<<args[0] <<"-="<< args[1]<<')';		break;
 				case glslang::TOperator::EOpMulAssign :					src << '('<<args[0] <<"*="<< args[1]<<')';		break;
@@ -825,15 +853,25 @@ namespace PipelineCompiler
 			if ( qual.restrict )	str << "restrict ";
 			if ( qual.volatil )		str << "volatile ";
 			
-			str << "layout(" << ToStringGLSL( info.format ) << ") uniform";
+			str << "layout(" << ToStringGLSL( info.format ) << ") uniform ";
 		}
 		else
 		{
 			str << "uniform ";
 		}
-		
-		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
-		str << ";\n";
+
+		// precision
+		if ( info.precision != EPrecision::Default )
+			str << ToStringGLSL( info.precision ) << ' ';
+
+		// type
+		if ( not info.typeName.Empty() ) {
+			str << info.typeName;
+		} else {
+			str << ToStringGLSL( info.type );
+		}
+
+		str << " " << info.name << (info.arraySize == 0 ? "" : (info.arraySize == UMax ? "[]" : "["_str << info.arraySize << "]")) << ";\n";
 		return true;
 	}
 
@@ -884,7 +922,6 @@ namespace PipelineCompiler
 		glslang::TQualifier const&			qual	= type.getQualifier();
 		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
 
-		str << "const ";
 		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
 		str << " = ";
 

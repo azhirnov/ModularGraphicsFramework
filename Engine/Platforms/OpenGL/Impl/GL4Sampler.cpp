@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/OpenGL/Impl/GL4Sampler.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
@@ -88,7 +88,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Sampler::_Compose );
 		_SubscribeOnMsg( this, &GL4Sampler::_Delete );
 		_SubscribeOnMsg( this, &GL4Sampler::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4Sampler::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4Sampler::_GetGLSamplerID );
 		_SubscribeOnMsg( this, &GL4Sampler::_GetSamplerDescriptor );
 		_SubscribeOnMsg( this, &GL4Sampler::_GetDeviceInfo );
@@ -351,7 +350,7 @@ namespace PlatformGL
 				builder.SetFilter( EFilter::_MIP_NEAREST |
 									(EFilter::IsMinLinear( builder.Filter() ) or EFilter::IsMagLinear( builder.Filter() ) ?
 										EFilter::_MIN_LINEAR | EFilter::_MAG_LINEAR :
-										EFilter::_MIN_NEAREST | EFilter::_MIN_NEAREST) );
+										EFilter::_MIN_NEAREST | EFilter::_MAG_NEAREST) );
 			}
 		}
 

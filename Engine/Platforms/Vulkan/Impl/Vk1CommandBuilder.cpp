@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
@@ -65,6 +65,9 @@ namespace PlatformVK
 											GpuMsg::CmdClearAttachments,
 											GpuMsg::CmdClearColorImage,
 											GpuMsg::CmdClearDepthStencilImage,
+											GpuMsg::CmdSetEvent,
+											GpuMsg::CmdResetEvent,
+											GpuMsg::CmdWaitEvents,
 											GpuMsg::CmdPipelineBarrier,
 											GpuMsg::SetCommandBufferDependency,
 											GpuMsg::GetCommandBufferState,
@@ -75,6 +78,8 @@ namespace PlatformVK
 		
 		using CmdBufferMsg_t		= MessageListFrom< GpuMsg::SetCommandBufferDependency, GpuMsg::SetCommandBufferState,
 														GpuMsg::GetCommandBufferState >;
+
+		using SyncMngrMsgList_t		= MessageListFrom< GpuMsg::GetVkEvent >;
 
 		using DynamicStates_t		= EPipelineDynamicState::bits;
 		//using Layout_t			= Optional< Vk1PipelineLayoutPtr >;
@@ -98,6 +103,7 @@ namespace PlatformVK
 	// variables
 	private:
 		VkCommandPool			_cmdPool;
+		ModulePtr				_syncManager;
 
 		UsedResources_t			_resources;
 		ModulePtr				_cmdBuffer;		// current command buffer
@@ -163,6 +169,9 @@ namespace PlatformVK
 		bool _CmdClearAttachments (const Message< GpuMsg::CmdClearAttachments > &);
 		bool _CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &);
 		bool _CmdClearDepthStencilImage (const Message< GpuMsg::CmdClearDepthStencilImage > &);
+		bool _CmdSetEvent (const Message< GpuMsg::CmdSetEvent > &);
+		bool _CmdResetEvent (const Message< GpuMsg::CmdResetEvent > &);
+		bool _CmdWaitEvents (const Message< GpuMsg::CmdWaitEvents > &);
 		bool _CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &);
 		bool _GetVkCommandPoolID (const Message< GpuMsg::GetVkCommandPoolID > &);
 		
@@ -234,7 +243,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_GetVkCommandPoolID );
-		_SubscribeOnMsg( this, &Vk1CommandBuilder::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_GetCommandBufferState );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_SetCommandBufferDependency );
 
@@ -275,8 +283,11 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdClearAttachments );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdClearColorImage );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdClearDepthStencilImage );
+		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdSetEvent );
+		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdResetEvent );
+		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdWaitEvents );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdPipelineBarrier );
-		
+
 		CHECK( _ValidateMsgSubscriptions() );
 
 		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
@@ -306,6 +317,9 @@ namespace PlatformVK
 
 		CHECK_COMPOSING( _CreateCmdBufferPool() );
 
+		_syncManager = _GetManager()->GetModuleByMsg< SyncMngrMsgList_t >();
+		CHECK_COMPOSING( _syncManager );
+
 		_SendForEachAttachments( msg );
 		
 		// very paranoic check
@@ -325,6 +339,8 @@ namespace PlatformVK
 		_SendForEachAttachments( msg );
 
 		_DestroyCmdBufferPool();
+
+		_syncManager = null;
 
 		return Module::_Delete_Impl( msg );
 	}
@@ -371,8 +387,8 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetViewport (const Message< GpuMsg::CmdSetViewport > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::Viewport ) );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 
 		Viewports_t		viewports;		viewports.Resize( msg->viewports.Count() );
 
@@ -396,8 +412,8 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetScissor (const Message< GpuMsg::CmdSetScissor > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::Scissor ) );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 
 		Scissors_t		scissors;		scissors.Resize( msg->scissors.Count() );
 
@@ -420,8 +436,8 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetDepthBounds (const Message< GpuMsg::CmdSetDepthBounds > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::DepthBounds ) );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 
 		vkCmdSetDepthBounds( _cmdId, msg->min, msg->max );
 		return true;
@@ -434,8 +450,8 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetBlendColor (const Message< GpuMsg::CmdSetBlendColor > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::BlendConstants ) );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 		
 		vkCmdSetBlendConstants( _cmdId, msg->color.ptr() );
 		return true;
@@ -448,8 +464,8 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetDepthBias (const Message< GpuMsg::CmdSetDepthBias > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::DepthBias ) );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 		
 		vkCmdSetDepthBias( _cmdId, msg->biasConstFactor, msg->biasClamp, msg->biasSlopeFactor );
 		return true;
@@ -462,8 +478,8 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetLineWidth (const Message< GpuMsg::CmdSetLineWidth > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::LineWidth ) );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 		
 		vkCmdSetLineWidth( _cmdId, msg->width );
 		return true;
@@ -476,8 +492,8 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetStencilCompareMask (const Message< GpuMsg::CmdSetStencilCompareMask > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::StencilCompareMask ) );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 		
 		VkStencilFaceFlagBits	flags;
 		Vk1Enum( msg->face, OUT flags );
@@ -493,8 +509,8 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetStencilWriteMask (const Message< GpuMsg::CmdSetStencilWriteMask > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::StencilWriteMask ) );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 		
 		VkStencilFaceFlagBits	flags;
 		Vk1Enum( msg->face, OUT flags );
@@ -510,8 +526,8 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdSetStencilReference (const Message< GpuMsg::CmdSetStencilReference > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _CheckDynamicState( EPipelineDynamicState::StencilReference ) );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 		
 		VkStencilFaceFlagBits	flags;
 		Vk1Enum( msg->face, OUT flags );
@@ -563,26 +579,9 @@ namespace PlatformVK
 		// get command buffer id
 		Message< GpuMsg::GetVkCommandBufferID >		req_cmd_id;
 		SendTo( _cmdBuffer, req_cmd_id );
-		CHECK_ERR( req_cmd_id->result and req_cmd_id->result->cmd != VK_NULL_HANDLE );
+		CHECK_ERR( req_cmd_id->result and *req_cmd_id->result != VK_NULL_HANDLE );
 
-		_cmdId = req_cmd_id->result->cmd;
-		
-		// sync
-		vk::VkFence		fence_id = req_cmd_id->result->fence;
-		
-		if ( fence_id != VK_NULL_HANDLE )
-		{
-			Message< GpuMsg::GetCommandBufferState >	req_state;
-			SendTo( _cmdBuffer, req_state );
-
-			if ( *req_state->result != ERecordingState::Initial )
-			{
-				VK_CALL( vkWaitForFences( GetVkDevice(), 1, &fence_id, VK_TRUE, (10_sec).NanoSeconds() ) );
-				_cmdBuffer->Send< GpuMsg::SetCommandBufferState >({ ERecordingState::Completed });
-			}
-
-			VK_CALL( vkResetFences( GetVkDevice(), 1, &fence_id ) );
-		}
+		_cmdId = *req_cmd_id->result;
 
 		// begin
 		VkCommandBufferBeginInfo	cmd_info = {};
@@ -610,7 +609,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdEnd (const Message< GpuMsg::CmdEnd > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		
 		VK_CHECK( vkEndCommandBuffer( _cmdId ) );
@@ -618,7 +616,7 @@ namespace PlatformVK
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferDependency >{ RVREF(_resources) } );
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Executable } );
 
-		msg->cmdBuffer.Set( _cmdBuffer );
+		msg->result.Set( _cmdBuffer );
 
 		_cmdBuffer	= null;
 		_scope		= EScope::None;
@@ -633,7 +631,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBeginRenderPass (const Message< GpuMsg::CmdBeginRenderPass > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->framebuffer );
 		CHECK_ERR( msg->renderPass );
@@ -696,18 +693,7 @@ namespace PlatformVK
 		_maxSubpasses	= (uint32_t) rp_descr.Subpasses().Count();
 		return true;
 	}
-	
-/*
-=================================================
-	_CmdBeginRenderPassID
-=================================================
-*
-	bool Vk1CommandBuilder::_CmdBeginRenderPassID (const Message< GpuMsg::CmdBeginRenderPassID > &msg)
-	{
-		TODO( "" );
-		return false;
-	}
-	
+
 /*
 =================================================
 	_CmdEndRenderPass
@@ -715,7 +701,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdEndRenderPass (const Message< GpuMsg::CmdEndRenderPass > &)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 
 		vkCmdEndRenderPass( _cmdId );
@@ -734,7 +719,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdNextSubpass (const Message< GpuMsg::CmdNextSubpass > &)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( ++_subpassIndex < _maxSubpasses );
 
@@ -749,7 +733,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBindGraphicsPipeline (const Message< GpuMsg::CmdBindGraphicsPipeline > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( msg->pipeline );
 
@@ -788,34 +771,11 @@ namespace PlatformVK
 
 /*
 =================================================
-	_CmdBindGraphicsPipelineID
-=================================================
-*
-	bool Vk1CommandBuilder::_CmdBindGraphicsPipelineID (const Message< GpuMsg::CmdBindGraphicsPipelineID > &msg)
-	{
-		TODO( "" );
-		return false;
-	}
-	
-/*
-=================================================
-	_CmdBindComputePipelineID
-=================================================
-*
-	bool Vk1CommandBuilder::_CmdBindComputePipelineID (const Message< GpuMsg::CmdBindComputePipelineID > &msg)
-	{
-		TODO( "" );
-		return false;
-	}
-	
-/*
-=================================================
 	_CmdBindVertexBuffers
 =================================================
 */
 	bool Vk1CommandBuilder::_CmdBindVertexBuffers (const Message< GpuMsg::CmdBindVertexBuffers > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 
 		CompileTime::MustBeSameSize< VkDeviceSize, decltype(msg->offsets)::Value_t >();
@@ -850,23 +810,11 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_CmdBindVertexBufferIDs
-=================================================
-*
-	bool Vk1CommandBuilder::_CmdBindVertexBufferIDs (const Message< GpuMsg::CmdBindVertexBufferIDs > &msg)
-	{
-		TODO( "" );
-		return false;
-	}
-	
-/*
-=================================================
 	_CmdBindIndexBuffer
 =================================================
 */
 	bool Vk1CommandBuilder::_CmdBindIndexBuffer (const Message< GpuMsg::CmdBindIndexBuffer > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( msg->indexBuffer );
 
@@ -890,23 +838,11 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_CmdBindIndexBufferID
-=================================================
-*
-	bool Vk1CommandBuilder::_CmdBindIndexBufferID (const Message< GpuMsg::CmdBindIndexBufferID > &msg)
-	{
-		TODO( "" );
-		return false;
-	}
-	
-/*
-=================================================
 	_CmdDraw
 =================================================
 */
 	bool Vk1CommandBuilder::_CmdDraw (const Message< GpuMsg::CmdDraw > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( _CheckGraphicsPipeline() );
 
@@ -927,7 +863,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdDrawIndexed (const Message< GpuMsg::CmdDrawIndexed > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( _CheckGraphicsPipeline() );
 		
@@ -949,7 +884,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdDrawIndirect (const Message< GpuMsg::CmdDrawIndirect > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( msg->indirectBuffer );
 		CHECK_ERR( _CheckGraphicsPipeline() );
@@ -982,7 +916,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdDrawIndexedIndirect (const Message< GpuMsg::CmdDrawIndexedIndirect > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( msg->indirectBuffer );
 		CHECK_ERR( _CheckGraphicsPipeline() );
@@ -1010,34 +943,11 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_CmdDrawIndirectID
-=================================================
-*
-	bool Vk1CommandBuilder::_CmdDrawIndirectID (const Message< GpuMsg::CmdDrawIndirectID > &msg)
-	{
-		TODO( "" );
-		return false;
-	}
-	
-/*
-=================================================
-	_CmdDrawIndexedIndirectID
-=================================================
-*
-	bool Vk1CommandBuilder::_CmdDrawIndexedIndirectID (const Message< GpuMsg::CmdDrawIndexedIndirectID > &msg)
-	{
-		TODO( "" );
-		return false;
-	}
-	
-/*
-=================================================
 	_CmdDispatch
 =================================================
 */
 	bool Vk1CommandBuilder::_CmdDispatch (const Message< GpuMsg::CmdDispatch > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( _CheckComputePipeline() );
 
@@ -1057,28 +967,6 @@ namespace PlatformVK
 		TODO( "" );
 		return false;
 	}
-	
-/*
-=================================================
-	_CmdDispatchID
-=================================================
-*
-	bool Vk1CommandBuilder::_CmdDispatchID (const Message< GpuMsg::CmdDispatchID > &msg)
-	{
-		TODO( "" );
-		return false;
-	}
-	
-/*
-=================================================
-	_CmdDispatchIndirectID
-=================================================
-*
-	bool Vk1CommandBuilder::_CmdDispatchIndirectID (const Message< GpuMsg::CmdDispatchIndirectID > &msg)
-	{
-		TODO( "" );
-		return false;
-	}
 
 /*
 =================================================
@@ -1087,7 +975,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdExecute (const Message< GpuMsg::CmdExecute > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 
 		CmdBuffers_t	cmd_buffers;
@@ -1095,18 +982,18 @@ namespace PlatformVK
 		FOR( i, msg->cmdBuffers )
 		{
 			auto const&	cmd = msg->cmdBuffers[i];
-			
-			// TODO: check result
+
+			DEBUG_ONLY(
+				Message< GpuMsg::GetCommandBufferState >	req_state;
+				SendTo( cmd, req_state );
+				CHECK( req_state->result.Get() == GpuMsg::GetCommandBufferState::EState::Executable );
+			);
+
 			Message< GpuMsg::GetVkCommandBufferID >		req_id;
-			Message< GpuMsg::GetCommandBufferState >	req_state;
-
 			SendTo( cmd, req_id );
-			SendTo( cmd, req_state );
+			CHECK_ERR( req_id->result and *req_id->result != VK_NULL_HANDLE );
 
-			CHECK( req_state->result.Get() == GpuMsg::GetCommandBufferState::EState::Executable );
-			CHECK_ERR( req_id->result and req_id->result->cmd != VK_NULL_HANDLE and req_id->result->fence == VK_NULL_HANDLE );
-
-			cmd_buffers.PushBack( req_id->result->cmd );
+			cmd_buffers.PushBack( *req_id->result );
 			_resources.Add( cmd );
 		}
 			
@@ -1114,17 +1001,6 @@ namespace PlatformVK
 		vkCmdExecuteCommands( _cmdId, Cast<uint32_t>(cmd_buffers.Count()), cmd_buffers.RawPtr() );
 
 		return true;
-	}
-	
-/*
-=================================================
-	_CmdExecuteID
-=================================================
-*
-	bool Vk1CommandBuilder::_CmdExecuteID (const Message< GpuMsg::CmdExecuteID > &msg)
-	{
-		TODO( "" );
-		return false;
 	}
 	
 /*
@@ -1154,7 +1030,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_BindDescriptorSet (const ModulePtr &resourceTable, uint firstIndex, VkPipelineBindPoint bindPoint)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( resourceTable );
 		
@@ -1187,7 +1062,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdCopyBuffer (const Message< GpuMsg::CmdCopyBuffer > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->srcBuffer and msg->dstBuffer );
 		
@@ -1240,7 +1114,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdCopyImage (const Message< GpuMsg::CmdCopyImage > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->srcImage and msg->dstImage );
 
@@ -1302,7 +1175,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdCopyBufferToImage (const Message< GpuMsg::CmdCopyBufferToImage > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->srcBuffer and msg->dstImage );
 		
@@ -1360,7 +1232,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdCopyImageToBuffer (const Message< GpuMsg::CmdCopyImageToBuffer > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->srcImage and msg->dstBuffer );
 
@@ -1418,7 +1289,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBlitImage (const Message< GpuMsg::CmdBlitImage > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->srcImage and msg->dstImage );
 		
@@ -1481,7 +1351,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < 65536_b );
 		
@@ -1511,7 +1380,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdFillBuffer (const Message< GpuMsg::CmdFillBuffer > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->dstBuffer );
 		
@@ -1541,7 +1409,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdClearAttachments (const Message< GpuMsg::CmdClearAttachments > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 
 		ClearAttachments_t	attachments;
@@ -1587,7 +1454,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->image );
 		
@@ -1636,7 +1502,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdClearDepthStencilImage (const Message< GpuMsg::CmdClearDepthStencilImage > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->image );
 		
@@ -1679,7 +1544,50 @@ namespace PlatformVK
 									 ranges.ptr() );
 		return true;
 	}
+
+/*
+=================================================
+	_CmdSetEvent
+=================================================
+*/
+	bool Vk1CommandBuilder::_CmdSetEvent (const Message< GpuMsg::CmdSetEvent > &msg)
+	{
+		CHECK_ERR( _scope == EScope::Command );
+
+		Message< GpuMsg::GetVkEvent >	req_event{ msg->eventId };
+		_syncManager->Send( req_event );
+
+		vkCmdSetEvent( _cmdId, *req_event->result, Vk1Enum( msg->stageMask ) );
+		return true;
+	}
+
+/*
+=================================================
+	_CmdResetEvent
+=================================================
+*/
+	bool Vk1CommandBuilder::_CmdResetEvent (const Message< GpuMsg::CmdResetEvent > &msg)
+	{
+		CHECK_ERR( _scope == EScope::Command );
+
+		Message< GpuMsg::GetVkEvent >	req_event{ msg->eventId };
+		_syncManager->Send( req_event );
+
+		vkCmdResetEvent( _cmdId, *req_event->result, Vk1Enum( msg->stageMask ) );
+		return true;
+	}
 	
+/*
+=================================================
+	_CmdWaitEvents
+=================================================
+*/
+	bool Vk1CommandBuilder::_CmdWaitEvents (const Message< GpuMsg::CmdWaitEvents > &msg)
+	{
+		TODO("");
+		return false;
+	}
+
 /*
 =================================================
 	_CmdPipelineBarrier
@@ -1687,7 +1595,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &msg)
 	{
-		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 
 		MemoryBarriers_t		mem_barriers;

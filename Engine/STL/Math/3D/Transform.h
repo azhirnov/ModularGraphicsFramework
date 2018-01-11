@@ -1,4 +1,4 @@
-﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -201,7 +201,7 @@ namespace GXMath
 				_orientation.y	!= right._orientation.y	?	_orientation.y	> right._orientation.y	:
 				_orientation.z	!= right._orientation.z	?	_orientation.z	> right._orientation.z	:
 				_orientation.w	!= right._orientation.w	?	_orientation.w	> right._orientation.w	:
-															_scale			> _scale;
+															_scale			> right._scale;
 
 				//_scale.x		!= right._scale.x		?	_scale.x		> right._scale.x		:
 				//_scale.y		!= right._scale.y		?	_scale.y		> right._scale.y		:
@@ -223,7 +223,7 @@ namespace GXMath
 				_orientation.y	!= right._orientation.y	?	_orientation.y	< right._orientation.y	:
 				_orientation.z	!= right._orientation.z	?	_orientation.z	< right._orientation.z	:
 				_orientation.w	!= right._orientation.w	?	_orientation.w	< right._orientation.w	:
-															_scale			< _scale;
+															_scale			< right._scale;
 
 				//_scale.x		!= right._scale.x		?	_scale.x		< right._scale.x		:
 				//_scale.y		!= right._scale.y		?	_scale.y		< right._scale.y		:

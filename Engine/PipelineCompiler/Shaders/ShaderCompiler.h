@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -100,7 +100,7 @@ namespace PipelineCompiler
 
 	// Replace types
 	private:
-		bool _ReplaceTypes (const glslang::TIntermediate* intermediate, const Config &cfg);
+		bool _ReplaceTypes (const _GLSLangResult &data, const Config &cfg) const;
 
 
 	// GLSL deserializer

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Common.h"
 
@@ -104,6 +104,8 @@ struct Vertex
 	vec2	texc;
 	int		index2;
 	vec4	color;
+	vec2	arr[4];
+	vec4	buf[4];
 };
 
 layout(std140) restrict buffer SSBO
@@ -124,9 +126,10 @@ void ToGlobalIndex (ivec2 p, ivec2 s, out int i)
 
 void main ()
 {
+	int		j = int(gl_FragCoord.x) & 2;
 	ivec2	p = ivec2(gl_FragCoord.xy); //ivec2(gl_GlobalInvocationID.xy);
 	ivec2	s = ivec2(1024, 1024);		//ivec2(gl_NumWorkGroups.xy) * ivec2(gl_WorkGroupSize.xy);
-	vec2	n = NormCoord( p, s );
+	vec2	n = NormCoord( p + int(ssbo.vertices[0].arr[j].y), s );
 	int		i = 0;	ToGlobalIndex( p, s, i );
 	vec4	c = texture( unTexture, n );
 
@@ -158,6 +161,13 @@ void main ()
 				field.index	= 1;
 				return true;
 			}
+			if ( typeName == "Vertex" and field.name == "arr" )
+			{
+				field.type	= EShaderVariable::Float4;
+				field.name	= "buf";
+				field.index	= 6;
+				return true;
+			}
 
 			return false;
 		}
@@ -181,6 +191,7 @@ void main ()
 
 	cfg.typeReplacer	= DelegateBuilder( &Util::Replace );
 	cfg.target			= EShaderDstFormat::GLSL_Source;
+	cfg.optimize		= false;
 	
 	CHECK_ERR( ShaderCompiler::Instance()->Translate( EShader::Fragment, source, "main", cfg, OUT log, OUT binary ) );
 

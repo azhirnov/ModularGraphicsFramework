@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "../Builder/CMakeBuilder.h"
 
@@ -8,7 +8,7 @@ using namespace CMake;
 #define ENABLE_ENGINE
 #define ENABLE_UTILS
 #define ENABLE_PROJECTS
-#define ENABLE_LUNARGLASS
+//#define ENABLE_LUNARGLASS
 
 extern void GenMGFProject ()
 {
@@ -243,6 +243,12 @@ extern void GenMGFProject ()
 			engine_platforms->LinkLibrary( "Shcore.lib", "(MSVC AND WIN32)" )->LinkLibrary( "Dxva2.lib", "WIN32" );
 		}
 		
+		auto	engine_graphics = builder.AddLibrary( "Engine.Graphics", "Engine/Graphics" );
+		{
+			engine_graphics->AddFoldersRecursive( "" );
+			engine_graphics->LinkLibrary( engine_platforms );
+		}
+		
 		auto	engine_scene = builder.AddLibrary( "Engine.Scene", "Engine/Scene" );
 		{
 			engine_scene->AddFoldersRecursive( "" );
@@ -255,7 +261,13 @@ extern void GenMGFProject ()
 			test_engine_base->AddFoldersRecursive( "" );
 			test_engine_base->LinkLibrary( engine_platforms );
 		}
-
+		
+		auto	test_engine_graphics = builder.AddExecutable( "Tests.Engine.Graphics", "Tests/Engine.Graphics" );
+		{
+			test_engine_graphics->AddFoldersRecursive( "" );
+			test_engine_graphics->LinkLibrary( engine_graphics );
+		}
+		
 		auto	test_engine_scene = builder.AddExecutable( "Tests.Engine.Scene", "Tests/Engine.Scene" );
 		{
 			test_engine_scene->AddFoldersRecursive( "" );

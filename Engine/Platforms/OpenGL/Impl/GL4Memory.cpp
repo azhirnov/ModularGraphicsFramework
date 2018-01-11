@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
@@ -129,7 +129,6 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Memory::_Compose );
 		_SubscribeOnMsg( this, &GL4Memory::_Delete );
 		_SubscribeOnMsg( this, &GL4Memory::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4Memory::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &GL4Memory::_GetStreamDescriptor );
 		_SubscribeOnMsg( this, &GL4Memory::_ReadFromImageMemory );
 		_SubscribeOnMsg( this, &GL4Memory::_WriteToImageMemory );

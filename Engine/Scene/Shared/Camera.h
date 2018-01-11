@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -68,7 +68,7 @@ namespace SceneMsg
 	//
 	struct CameraUpdateSettings
 	{
-		Scene::CameraSettings		settings;
+		Scene::CameraSettings			settings;
 	};
 
 	struct CameraGetSettings
@@ -82,38 +82,32 @@ namespace SceneMsg
 	//
 	struct CameraGetState
 	{
+	// types
+		using Frustum_t		= GXMath::Frustum<float>;
+		using Transform_t	= GXMath::Transformation<float>;
+		using Mat4x4_t		= GXMath::float4x4;
+
 		struct State : CompileTime::FastCopyable
 		{
 		// variables
-			GXMath::Frustum<float>			frustum;
-			GXMath::Transformation<float>	transform;
-			GXMath::float4x4				view;
-			GXMath::float4x4				projection;
+			Frustum_t		frustum;
+			Transform_t		transform;
+			Mat4x4_t		viewMat;
+			Mat4x4_t		projMat;
 
 		// methods
 			State () {}
 
-			State (const GXMath::Frustum<float> &frustum, const GXMath::Transformation<float> &transform, const GXMath::float4x4 &view, const GXMath::float4x4 &projection) :
-				frustum{frustum}, transform{transform}, view{view}, projection{projection}
+			State (const Frustum_t &frustum, const Transform_t &transform, const Mat4x4_t &view, const Mat4x4_t &proj) :
+				frustum{frustum}, transform{transform}, viewMat{view}, projMat{proj}
 			{}
 		};
 
-		Out< State >	result;
-	};
+		using States_t = FixedSizeArray< State, 2 >;
 
-	struct StereoCameraGetState
-	{
-		struct State : CompileTime::FastCopyable
-		{
-			GXMath::Frustum<float>			leftFrustum;
-			GXMath::Frustum<float>			rightFrustum;
-			GXMath::Transformation<float>	transform;
-			GXMath::float4x4				leftView;
-			GXMath::float4x4				rightView;
-			GXMath::float4x4				projection;
-		};
 
-		Out< State >	result;
+	// variables
+		Out< States_t >	result;
 	};
 
 
@@ -123,12 +117,15 @@ namespace SceneMsg
 	struct CameraRequestUpdate
 	{
 	// types
-		using Frustum_t			= FixedSizeArray< CameraGetState::State, SurfaceRequestUpdate::Framebuffers_t::MemoryContainer_t::SIZE >;
+		using Cameras_t			= CameraGetState::States_t;
 		using Framebuffers_t	= SurfaceRequestUpdate::Framebuffers_t const &;
 		using CmdBuffers_t		= SurfaceRequestUpdate::CmdBuffers_t &;
 
+		STATIC_ASSERT( Cameras_t::MemoryContainer_t::SIZE == SurfaceRequestUpdate::Framebuffers_t::MemoryContainer_t::SIZE );
+
+
 	// variables
-		Frustum_t		frustums;		// in
+		Cameras_t		cameras;		// in
 		Framebuffers_t	framebuffers;	// in
 
 		CmdBuffers_t	cmdBuffers;		// out

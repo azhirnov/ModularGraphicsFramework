@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
 
@@ -24,7 +24,7 @@ namespace PlatformGL
 		BaseObject( gs ),
 		_colorPixelFormat( EPixelFormat::Unknown ),
 		_depthStencilPixelFormat( EPixelFormat::Unknown ),
-		_currentImageIndex( UMax ),	_swapchainLength( 1 ),
+		_currentImageIndex( 0 ),	_swapchainLength( 1 ),
 		_numExtensions( 0 ),		_initialized( false ),
 		_frameStarted( false ),		_vulkanCompatibility( true )
 	{
@@ -82,7 +82,7 @@ namespace PlatformGL
 		_framebuffer		= null;
 		_renderPass			= null;
 
-		_currentImageIndex	= UMax;
+		_currentImageIndex	= 0;
 		_swapchainLength	= 1;
 
 		_numExtensions		= 0;

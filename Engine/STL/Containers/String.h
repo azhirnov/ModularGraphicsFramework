@@ -1,4 +1,4 @@
-﻿// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -1168,7 +1168,7 @@ namespace GXTypes
 
 		isize	i	= _types_hidden_::IntToStr( value, a_buf, CountOf(a_buf), radix ),
 				j	= 0,
-				k	= k	= i + i / stepSize - (i % stepSize == 0 ? 1 : 0);
+				k	= i + i / stepSize - (i % stepSize == 0 ? 1 : 0);
 
 		Reserve( k+2 );
 		SetLength( k );

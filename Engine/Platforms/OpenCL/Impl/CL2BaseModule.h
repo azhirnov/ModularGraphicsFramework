@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -41,7 +41,6 @@ namespace PlatformCL
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											GpuMsg::DeviceBeforeDestroy,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetCLDeviceInfo,
 											GpuMsg::GetCLPrivateClasses
@@ -51,7 +50,8 @@ namespace PlatformCL
 											ModuleMsg::Compose,
 											ModuleMsg::Delete,
 											ModuleMsg::OnModuleAttached,
-											ModuleMsg::OnModuleDetached
+											ModuleMsg::OnModuleDetached,
+											GpuMsg::DeviceBeforeDestroy
 										>;
 
 	// variables

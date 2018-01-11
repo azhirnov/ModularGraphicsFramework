@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
 #include "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h"
@@ -953,25 +953,35 @@ namespace PlatformVK
 	if you don't need sync, use GetQueue() and write your own submission.
 =================================================
 */
-	bool Vk1Device::SubmitQueue (ArrayCRef<VkCommandBuffer> cmdBuffers, VkFence fence)
+	bool Vk1Device::SubmitQueue (ArrayCRef<VkCommandBuffer> cmdBuffers, VkFence fence,
+								 ArrayCRef<VkSemaphore> waitSemaphore, ArrayCRef<VkPipelineStageFlags> waitStages,
+								 ArrayCRef<VkSemaphore> signalSemaphores)
 	{
 		CHECK_ERR( _currentImageIndex < _framebuffers.Count() );
 		CHECK_ERR( IsQueueCreated() );
+		CHECK_ERR( waitSemaphore.Count() == waitStages.Count() );
+		
+		using Semaphores_t		= FixedSizeArray< VkSemaphore, 16 >;
+		using PipelineStages_t	= FixedSizeArray< VkPipelineStageFlags, 16 >;
 
 		// submit command buffers to grpahics/compute queue
-		VkSubmitInfo			submit_info			= {};
-		VkSemaphore				wait_semaphores[]	= { _imageAvailable };
-		VkPipelineStageFlags	wait_stages[]		= { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		VkSemaphore				signal_semaphores[] = { _renderFinished };
+		VkSubmitInfo		submit_info			= {};
+		Semaphores_t		wait_semaphores;
+		PipelineStages_t	wait_stages;
+		Semaphores_t		signal_semaphores;
+
+		wait_semaphores.PushBack( _imageAvailable );							wait_semaphores.Append( waitSemaphore );
+		wait_stages.PushBack( VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT );	wait_stages.Append( waitStages );
+		signal_semaphores.PushBack( _renderFinished );							signal_semaphores.Append( signalSemaphores );
 
 		submit_info.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.waitSemaphoreCount		= (uint32_t) CountOf( wait_semaphores );
-		submit_info.pWaitSemaphores			= wait_semaphores;
-		submit_info.pWaitDstStageMask		= wait_stages;
+		submit_info.waitSemaphoreCount		= (uint32_t) wait_semaphores.Count();
+		submit_info.pWaitSemaphores			= wait_semaphores.RawPtr();
+		submit_info.pWaitDstStageMask		= wait_stages.RawPtr();
 		submit_info.commandBufferCount		= (uint32_t) cmdBuffers.Count();
 		submit_info.pCommandBuffers			= cmdBuffers.RawPtr();
-		submit_info.signalSemaphoreCount	= (uint32_t) CountOf( signal_semaphores );
-		submit_info.pSignalSemaphores		= signal_semaphores;
+		submit_info.signalSemaphoreCount	= (uint32_t) signal_semaphores.Count();
+		submit_info.pSignalSemaphores		= signal_semaphores.RawPtr();
 
 		VK_CHECK( vkQueueSubmit( GetQueue(), 1, &submit_info, fence ) );
 
@@ -1204,7 +1214,6 @@ namespace PlatformVK
 		VkMemoryAllocateInfo		mem_alloc = {};
 		mem_alloc.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		mem_alloc.pNext				= null;
-		mem_alloc.allocationSize	= 0;
 		mem_alloc.memoryTypeIndex	= 0;
 		mem_alloc.allocationSize	= mem_reqs.size;
 

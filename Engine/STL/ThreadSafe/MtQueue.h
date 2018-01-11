@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	MtQueue is optimized for the large number of elements.
 
@@ -45,7 +45,7 @@ namespace GXTypes
 		
 
 		MtQueue (const Self &other) :
-			_currentQueue(_currentQueue), _pendingQueue(_pendingQueue)
+			_currentQueue(other.currentQueue), _pendingQueue(other.pendingQueue)
 		{}
 
 

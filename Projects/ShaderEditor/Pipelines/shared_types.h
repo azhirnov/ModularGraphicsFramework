@@ -1,5 +1,5 @@
 // This is generated file
-// Created at: 2017/12/30 - 21:34:50
+// Created at: 2018/01/06 - 01:19:11
 
 #pragma once
 
@@ -21,10 +21,12 @@ struct ShadertoyUB final
 	float  _padding1;    // offset: 196, align: 4
 	float  _padding2;    // offset: 200, align: 4
 	float  _padding3;    // offset: 204, align: 4
+	float4  iCameraFrustum[4];    // offset: 208, align: 16
+	float4  iCameraPos;    // offset: 272, align: 16
 
 	ShadertoyUB ()
 	{
-		STATIC_ASSERT( sizeof(ShadertoyUB) == 208 );
+		STATIC_ASSERT( sizeof(ShadertoyUB) == 288 );
 		STATIC_ASSERT( (offsetof( ShadertoyUB, iResolution ) == 0) and (sizeof( iResolution ) == 16) );
 		STATIC_ASSERT( (offsetof( ShadertoyUB, iTime ) == 16) and (sizeof( iTime ) == 4) );
 		STATIC_ASSERT( (offsetof( ShadertoyUB, iTimeDelta ) == 20) and (sizeof( iTimeDelta ) == 4) );
@@ -38,6 +40,8 @@ struct ShadertoyUB final
 		STATIC_ASSERT( (offsetof( ShadertoyUB, _padding1 ) == 196) and (sizeof( _padding1 ) == 4) );
 		STATIC_ASSERT( (offsetof( ShadertoyUB, _padding2 ) == 200) and (sizeof( _padding2 ) == 4) );
 		STATIC_ASSERT( (offsetof( ShadertoyUB, _padding3 ) == 204) and (sizeof( _padding3 ) == 4) );
+		STATIC_ASSERT( (offsetof( ShadertoyUB, iCameraFrustum ) == 208) and (sizeof( iCameraFrustum ) == 64) );
+		STATIC_ASSERT( (offsetof( ShadertoyUB, iCameraPos ) == 272) and (sizeof( iCameraPos ) == 16) );
 	}
 };
 

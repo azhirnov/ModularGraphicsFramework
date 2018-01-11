@@ -1,8 +1,9 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
 #include "Engine/Scene/Shared/IDs.h"
+#include "Engine/Platforms/Shared/GPU/VR.h"
 
 namespace Engine
 {
@@ -65,7 +66,8 @@ namespace SceneMsg
 	struct SurfaceRequestUpdate
 	{
 	// types
-		using Framebuffers_t	= FixedSizeArray< ModulePtr, 2 >;		// 1 for screen/texture, 2 for VR (left, right)
+		using PerEye			= GpuMsg::ThreadBeginVRFrame::PerEye;
+		using Framebuffers_t	= FixedSizeArray< PerEye, 2 >;		// 1 for screen/texture, 2 for VR (left, right)
 		using CmdBuffers_t		= GpuMsg::CmdExecute::CmdBuffers_t;
 
 

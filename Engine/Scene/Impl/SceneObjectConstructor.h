@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -30,8 +30,10 @@ namespace Scene
 	// methods
 	public:
 		static ModulePtr  CreateFreeCamera (GlobalSystemsRef, const CreateInfo::Camera &);
+		static ModulePtr  CreateFreeVRCamera (GlobalSystemsRef, const CreateInfo::Camera &);
 
 		static ModulePtr  CreateWindowSurface (GlobalSystemsRef, const CreateInfo::RenderSurface &);
+		static ModulePtr  CreateVRSurface (GlobalSystemsRef, const CreateInfo::RenderSurface &);
 
 		static ModulePtr  CreateSceneManager (GlobalSystemsRef, const CreateInfo::SceneManager &);
 		static ModulePtr  CreateSceneMainThread (GlobalSystemsRef, const CreateInfo::SceneMain &);

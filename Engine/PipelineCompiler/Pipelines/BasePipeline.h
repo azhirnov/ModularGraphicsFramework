@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 /*
 	Pipeline compiling steps:
 	- deserialize GXSL or GLSL source
@@ -213,7 +213,6 @@ namespace PipelineCompiler
 		{
 		// variables
 			Array<String>			_source;		// origin source
-			BinaryArray				_sourceOnly;	// shader source without external objects, entry point: 'main'
 			Array<Varying>			_io;			// for compute shader must be empty
 
 			String					entry;
@@ -398,9 +397,10 @@ namespace PipelineCompiler
 		
 		bool _ConvertLayout (StringCRef name, INOUT String &src, Ptr<ISerializer> ser) const;
 		bool _CompileShader (const ShaderModule &shader, const ConverterConfig &cfg, OUT CompiledShader &compiled) const;
-		void _BindingsToString (EShader::type shaderType, EShaderType shaderApi, OUT String &str) const;
+		void _BindingsToString (EShader::type shaderType, EShaderType shaderApi, bool useOriginTypes, OUT String &str) const;
 		bool _TypeReplacer (StringCRef typeName, INOUT ShaderCompiler::FieldTypeInfo &field) const;
-		String _StructToString (StringCRef typeName, bool skipLayouts) const;
+
+		static String _StructToString (const StructTypes &types, StringCRef typeName, bool skipLayouts);
 
 		static bool _CalculateOffsets (INOUT StructTypes &structTypes);
 		static bool _AddPaddingToStructs (INOUT StructTypes &structTypes);

@@ -1,9 +1,10 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
+#include "Engine/Platforms/Shared/GPU/Sync.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -168,11 +169,7 @@ namespace GpuMsg
 	//
 	struct GetVkCommandBufferID
 	{
-		struct Data {
-			vk::VkCommandBuffer	cmd;
-			vk::VkFence			fence;
-		};
-		Out< Data >		result;
+		Out< vk::VkCommandBuffer >		result;
 	};
 
 
@@ -182,6 +179,117 @@ namespace GpuMsg
 	struct GetVkCommandPoolID
 	{
 		Out< vk::VkCommandPool >		result;
+	};
+
+
+	//
+	// Memory Manger Allocate Block for Image / Buffer
+	//
+	struct VkAllocMemForImage
+	{
+	// types
+		struct Data {
+			vk::VkDeviceMemory	mem	= VK_NULL_HANDLE;
+			BytesUL				offset;
+			BytesUL				size;
+		};
+		using EGpuMemory	= Platforms::EGpuMemory;
+
+	// variables
+		ModuleWPtr			module;
+		vk::VkImage			image	= VK_NULL_HANDLE;
+		EGpuMemory::bits	flags;
+		Out< Data >			result;
+
+	// methods
+		VkAllocMemForImage (GX_DEFCTOR) {}
+		VkAllocMemForImage (const ModuleWPtr &mod, vk::VkImage img, EGpuMemory::bits flags) : module{mod}, image{img}, flags{flags} {}
+	};
+
+
+	struct VkAllocMemForBuffer
+	{
+	// types
+		using Data			= VkAllocMemForImage::Data;
+		using EGpuMemory	= Platforms::EGpuMemory;
+
+	// variables
+		ModuleWPtr			module;
+		vk::VkBuffer		buffer	= VK_NULL_HANDLE;
+		EGpuMemory::bits	flags;
+		Out< Data >			result;
+
+	// methods
+		VkAllocMemForBuffer (GX_DEFCTOR) {}
+		VkAllocMemForBuffer (const ModuleWPtr &mod, vk::VkBuffer buf, EGpuMemory::bits flags) : module{mod}, buffer{buf}, flags{flags} {}
+	};
+
+
+	//
+	// Memory Manager Free Block
+	//
+	struct VkFreeMemory
+	{
+	// variables
+		ModuleWPtr			module;
+		vk::VkDeviceMemory	mem	= VK_NULL_HANDLE;
+		BytesUL				offset;
+		BytesUL				size;
+
+	// methods
+		VkFreeMemory (GX_DEFCTOR) {}
+		VkFreeMemory (const ModuleWPtr &mod, vk::VkDeviceMemory mem, BytesUL off, BytesUL size) : module{mod}, mem{mem}, offset{off}, size{size} {}
+	};
+
+
+	//
+	// Get Fence
+	//
+	struct GetVkFence
+	{
+	// types
+		using Fence_t	= Platforms::GpuFenceId;
+
+	// variables
+		Fence_t				fenceId;
+		Out< vk::VkFence >	result;
+
+	// methods
+		explicit GetVkFence (Fence_t id) : fenceId(id) {}
+	};
+
+
+	//
+	// Get Event
+	//
+	struct GetVkEvent
+	{
+	// types
+		using Event_t	= Platforms::GpuEventId;
+
+	// variables
+		Event_t				eventId;
+		Out< vk::VkEvent >	result;
+
+	// methods
+		explicit GetVkEvent (Event_t id) : eventId(id) {}
+	};
+
+
+	//
+	// Get Semaphore
+	//
+	struct GetVkSemaphore
+	{
+	// types
+		using Semaphore_t	= Platforms::GpuSemaphoreId;
+
+	// variables
+		Semaphore_t				semId;
+		Out< vk::VkSemaphore >	result;
+
+	// methods
+		explicit GetVkSemaphore (Semaphore_t id) : semId(id) {}
 	};
 
 

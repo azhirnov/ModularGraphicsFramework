@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
@@ -119,7 +119,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_Compose );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1Framebuffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetVkFramebufferID );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetFramebufferDescriptor );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetDeviceInfo );
@@ -248,7 +247,7 @@ namespace PlatformVK
 
 /*
 =================================================
-	_AttachModule
+	_FramebufferAttachImage
 =================================================
 */
 	bool Vk1Framebuffer::_FramebufferAttachImage (const Message< GpuMsg::FramebufferAttachImage > &msg)
@@ -546,13 +545,13 @@ namespace PlatformVK
 
 			FOR( j, rpDescr.ColorAttachments() )
 			{
-				const auto&	col = rpDescr.ColorAttachments()[i];
+				const auto&	col = rpDescr.ColorAttachments()[j];
 
 				if ( col.name == att.name )
 				{
 					CHECK_ERR( col.format == att.descr.format );
 					CHECK_ERR( col.samples == att.samples );
-					found = false;
+					found = true;
 					break;
 				}
 			}

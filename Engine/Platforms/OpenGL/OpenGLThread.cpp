@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
@@ -63,6 +63,7 @@ namespace Platforms
 		GraphicsSettings	_settings;
 
 		ModulePtr			_window;
+		ModulePtr			_syncManager;
 		
 		GLContext			_context;
 		GLDevice			_device;
@@ -105,8 +106,8 @@ namespace Platforms
 	private:
 		bool _CreateDevice ();
 		void _DetachWindow ();
-
-		static bool _IsWindow (const ModulePtr &mod);
+		
+		bool _SubmitQueue (const GpuMsg::SubmitGraphicsQueueCommands *);
 	};
 //-----------------------------------------------------------------------------
 
@@ -193,6 +194,19 @@ namespace Platforms
 		
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 
+		// create sync manager
+		{
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
+											GLSyncManagerModuleID,
+											GlobalSystems(),
+											CreateInfo::GpuSyncManager{},
+											OUT _syncManager ) );
+
+			CHECK_ERR( _Attach( "sync", _syncManager, true ) );
+			ModuleUtils::Initialize({ _syncManager });
+		}
+
+		// if window already created
 		if ( _IsComposedState( _window->GetState() ) )
 		{
 			_SendMsg< OSMsg::WindowCreated >({});
@@ -292,31 +306,61 @@ namespace Platforms
 		if ( msg->framebuffer )
 			CHECK_ERR( msg->framebuffer == _device.GetCurrentFramebuffer() );
 		
-		if ( msg->commands )
+		if ( not msg->commands.Empty() )
 		{
-			Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
-			msg->commands->Send( req_descr );
-			CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
-			
-			msg->commands->Send< GpuMsg::SetCommandBufferState >({ GpuMsg::SetCommandBufferState::EState::Pending });
-
-			CHECK_ERR( _device.EndFrame() );
-
-			_context.SwapBuffers();
-			
-			if ( not req_descr->result->flags[ ECmdBufferCreate::UseFence ] ) {
-				msg->commands->Send< GpuMsg::SetCommandBufferState >({ GpuMsg::SetCommandBufferState::EState::Completed });
-			}
+			CHECK_ERR( _SubmitQueue( msg.operator->() ) );
 		}
-		else
-		{
-			CHECK_ERR( _device.EndFrame() );
 
-			_context.SwapBuffers();
-		}
+		CHECK_ERR( _device.EndFrame() );
+		_context.SwapBuffers();
+
 		return true;
 	}
 
+/*
+=================================================
+	_SubmitQueue
+=================================================
+*/
+	bool OpenGLThread::_SubmitQueue (const GpuMsg::SubmitGraphicsQueueCommands *msg)
+	{
+		DEBUG_ONLY(
+			FOR( i, msg->commands )
+			{
+				Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
+				msg->commands[i]->Send( req_descr );
+				CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
+			}
+		);
+
+		ModuleUtils::Send( msg->commands, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
+
+		// wait for signal
+		FOR( i, msg->waitSemaphores )
+		{
+			Message< GpuMsg::WaitGLSemaphore >	wait{ msg->waitSemaphores[i].first };
+			CHECK( _syncManager->Send( wait ) );
+		}
+
+		// execute command buffers
+		ModuleUtils::Send( msg->commands, Message<GpuMsg::ExecuteGLCommandBuffer>{} );
+		
+		// enqueue fence
+		if ( msg->fence != GpuFenceId::Unknown )
+		{
+			Message< GpuMsg::GLFenceSync >	fence_sync{ msg->fence };
+			CHECK( _syncManager->Send( fence_sync ) );
+		}
+
+		// enqueue semaphores
+		FOR( i, msg->signalSemaphores )
+		{
+			Message< GpuMsg::GLSemaphoreEnqueue >	sem_sync{ msg->signalSemaphores[i] };
+			CHECK( _syncManager->Send( sem_sync ) );
+		}
+		return true;
+	}
+	
 /*
 =================================================
 	_SubmitGraphicsQueueCommands
@@ -324,28 +368,9 @@ namespace Platforms
 */
 	bool OpenGLThread::_SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &msg)
 	{
-		using namespace gl;
-
 		CHECK_ERR( _device.IsDeviceCreated() );
 
-		Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
-		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
-
-		FOR( i, msg->commands )
-		{
-			CHECK_ERR( msg->commands[i] );
-			
-			Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
-			msg->commands[i]->Send( req_descr );
-			CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
-
-			msg->commands[i]->Send( pending_state );
-			
-			if ( not req_descr->result->flags[ ECmdBufferCreate::UseFence ] ) {
-				msg->commands[i]->Send( completed_state );
-			}
-		}
-		return true;
+		return _SubmitQueue( msg.operator->() );
 	}
 	
 /*
@@ -355,28 +380,9 @@ namespace Platforms
 */
 	bool OpenGLThread::_SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &msg)
 	{
-		using namespace gl;
-		
 		CHECK_ERR( _device.IsDeviceCreated() );
-
-		Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
-		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
 		
-		FOR( i, msg->commands )
-		{
-			CHECK_ERR( msg->commands[i] );
-			
-			Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
-			msg->commands[i]->Send( req_descr );
-			CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
-
-			msg->commands[i]->Send( pending_state );
-			
-			if ( not req_descr->result->flags[ ECmdBufferCreate::UseFence ] ) {
-				msg->commands[i]->Send( completed_state );
-			}
-		}
-		return true;
+		return _SubmitQueue( msg.operator->() );
 	}
 
 /*
@@ -430,6 +436,12 @@ namespace Platforms
 		if ( _device.IsDeviceCreated() )
 		{
 			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
+		}
+
+		if ( _syncManager )
+		{
+			_syncManager->Send< ModuleMsg::Delete >({});
+			_syncManager = null;
 		}
 
 		_device.Deinitialize();

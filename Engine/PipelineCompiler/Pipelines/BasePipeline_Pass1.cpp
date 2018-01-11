@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Pipelines/BasePipeline.h"
 #include "Engine/PipelineCompiler/Common/ToGLSL.h"
@@ -818,8 +818,6 @@ namespace PipelineCompiler
 					shaderFormat == EShaderSrcFormat::GLSL			or
 					shaderFormat == EShaderSrcFormat::GLSL_Vulkan );
 
-		shader._sourceOnly.Clear();
-
 		if ( shader.type == EShader::Vertex )
 		{
 			str << ToStringGLSL( attribs );
@@ -832,9 +830,6 @@ namespace PipelineCompiler
 
 		// build source
 		{
-			str << _VaryingsToString( shader._io ) << '\n';
-			_BindingsToString( shader.type, EShaderType::None, OUT str );
-
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
@@ -845,6 +840,7 @@ namespace PipelineCompiler
 			}
 		}
 
+		#if 0
 		// optimize before deserializing
 		if ( convCfg.optimizeSource )
 		{
@@ -866,12 +862,12 @@ namespace PipelineCompiler
 			source.Clear();
 			source		 << temp;
 			shader_entry = "main";
-
+			/*
 			usize	pos;
 			CHECK_ERR( temp.FindIC( "main(", OUT pos ) );
 			StringParser::ToBeginOfLine( temp, INOUT pos );
 
-			shader._sourceOnly = BinArrayCRef::From( temp.SubString( pos ) );
+			shader._sourceOnly = BinArrayCRef::From( temp.SubString( pos ) );*/
 		}
 		else
 		// GXSL to GLSL
@@ -880,7 +876,7 @@ namespace PipelineCompiler
 			 shaderFormat == EShaderSrcFormat::GXSL_Vulkan or
 			 shaderFormat == EShaderSrcFormat::GLSL_Vulkan )
 		{
-			ShaderCompiler::Config	cfg;
+			/*ShaderCompiler::Config	cfg;
 			cfg.filterInactive	= false;
 			cfg.obfuscate		= false;
 			cfg.skipExternals	= true;
@@ -891,13 +887,14 @@ namespace PipelineCompiler
 			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, shader.entry, cfg, OUT log, OUT shader._sourceOnly ) )
 			{
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
-			}
+			}*/
 		}
 		else
 		{
 			// remove externals
 			TODO( "not supported yet" );
 		}
+		#endif
 
 		// deserialize
 		{

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
@@ -88,7 +88,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Sampler::_Compose );
 		_SubscribeOnMsg( this, &Vk1Sampler::_Delete );
 		_SubscribeOnMsg( this, &Vk1Sampler::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1Sampler::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetVkSamplerID );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetSamplerDescriptor );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetDeviceInfo );
@@ -318,7 +317,7 @@ namespace PlatformVK
 				builder.SetFilter( EFilter::_MIP_NEAREST |
 									(EFilter::IsMinLinear( builder.Filter() ) or EFilter::IsMagLinear( builder.Filter() ) ?
 										EFilter::_MIN_LINEAR | EFilter::_MAG_LINEAR :
-										EFilter::_MIN_NEAREST | EFilter::_MIN_NEAREST) );
+										EFilter::_MIN_NEAREST | EFilter::_MAG_NEAREST) );
 			}
 		}
 

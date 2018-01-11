@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -32,7 +32,7 @@ namespace CreateInfo
 
 	// variables
 		GXMath::uint2			resolution;
-		uint					frequency;
+		uint					frequency	= 0;
 		EPlatformFlags::bits	flags;
 
 

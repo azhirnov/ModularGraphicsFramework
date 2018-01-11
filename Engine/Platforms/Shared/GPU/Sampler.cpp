@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Sampler.h"
 #include "Engine/Platforms/Shared/GPU/Enums.ToString.h"
@@ -45,11 +45,11 @@ namespace Platforms
 */
 	bool SamplerDescriptor::operator == (const Self &right) const
 	{
-		return	( this->_hash		== right._hash )		&
-				All( _addressMode	== right._addressMode )	&
-				All( _filter		== right._filter )		&
-				( _borderColor		== right._borderColor )	&
-				( _compareOp		== right._compareOp );
+		return	this->_hash			== right._hash			and
+				All( _addressMode	== right._addressMode )	and
+				All( _filter		== right._filter )		and
+				_borderColor		== right._borderColor	and
+				_compareOp			== right._compareOp;
 	}
 	
 /*

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
@@ -64,6 +64,7 @@ namespace PlatformVK
 	private:
 		BufferDescriptor		_descr;
 		ModulePtr				_memObj;
+		ModulePtr				_memManager;	// optional
 		vk::VkBuffer			_bufferId;
 		
 		EGpuMemory::bits		_memFlags;		// -|-- this flags is requirements for memory obj, don't use it anywhere
@@ -112,9 +113,10 @@ namespace PlatformVK
 */
 	Vk1Buffer::Vk1Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
 		Vk1BaseModule( gs, ModuleConfig{ VkBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
-		_descr( ci.descr ),				_bufferId( VK_NULL_HANDLE ),
-		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
-		_useMemMngr( ci.allocMem ),		_isBindedToMemory( false )
+		_descr( ci.descr ),				_memManager( ci.memManager ),
+		_bufferId( VK_NULL_HANDLE ),	_memFlags( ci.memFlags ),
+		_memAccess( ci.access ),		_useMemMngr( ci.allocMem or ci.memManager.IsNotNull() ),
+		_isBindedToMemory( false )
 	{
 		SetDebugName( "Vk1Buffer" );
 
@@ -128,7 +130,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Buffer::_Compose );
 		_SubscribeOnMsg( this, &Vk1Buffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1Buffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &Vk1Buffer::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkBufferID );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetBufferDescriptor );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetDeviceInfo );
@@ -167,9 +168,9 @@ namespace PlatformVK
 		{
 			ModulePtr	mem_module;
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-								VkMemoryModuleID,
+								VkManagedMemoryModuleID,
 								GlobalSystems(),
-								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
+								CreateInfo::GpuMemory{ _GetManager(), _memManager, _memFlags, _memAccess },
 								OUT mem_module ) );
 
 			CHECK_ERR( _Attach( "mem", mem_module, true ) );
@@ -376,9 +377,11 @@ namespace PlatformVK
 		{
 			this->UnsubscribeAll( _memObj );
 			_memObj->UnsubscribeAll( this );
-			_memObj = null;
 		}
-		_isBindedToMemory = false;
+		
+		_memObj				= null;
+		_memManager			= null;
+		_isBindedToMemory	= false;
 	}
 
 /*

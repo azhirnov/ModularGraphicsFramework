@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -29,8 +29,6 @@ namespace Platforms
 		EImageUsage::bits	usage;
 		MipmapLevel			maxLevel;
 		MultiSamples		samples;
-		//BytesU			xAlign;		// ignored if used staging buffer
-		//BytesU			xyAlign;
 
 	// methods
 		ImageDescriptor (GX_DEFCTOR) : imageType( EImage::Unknown ), format( EPixelFormat::Unknown )
@@ -117,6 +115,7 @@ namespace CreateInfo
 
 	// variables
 		ModulePtr				gpuThread;			// can be null
+		ModulePtr				memManager;			// can be null
 		ImageDescriptor			descr;
 		EGpuMemory::bits		memFlags;
 		EMemoryAccess::bits		access;
@@ -124,8 +123,14 @@ namespace CreateInfo
 
 	// methods
 		GpuImage (GX_DEFCTOR) {}
+		
 		GpuImage (const ImageDescriptor &descr) : descr{descr}, allocMem{false} {}
-		GpuImage (const ImageDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) : descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
+
+		GpuImage (const ImageDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+			descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
+
+		GpuImage (const ImageDescriptor &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+			memManager{memMngr}, descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
 	};
 
 }	// CreateInfo

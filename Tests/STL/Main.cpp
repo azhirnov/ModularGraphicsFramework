@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Tests/STL/Common.h"
 
@@ -43,6 +43,8 @@ extern void Test_Math_Clamp_Wrap ();
 extern void Test_Math_Matrix ();
 extern void Test_Math_FloorCeilTruncRoundFract ();
 extern void Test_Math_Bit ();
+extern void Test_Math_Frustum ();
+extern void Test_Math_Plane ();
 
 extern void Test_Types_ExtString ();
 extern void Test_Types_FileAddress ();
@@ -105,6 +107,8 @@ int main ()
 	Test_Math_Matrix();
 	Test_Math_FloorCeilTruncRoundFract();
 	Test_Math_Bit();
+	Test_Math_Frustum();
+	Test_Math_Plane();
 
 	//Test_Types_ExtString();
 	Test_Types_FileAddress();

@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -25,7 +25,7 @@
 
 // VR
 //#define PLATFORM_OCULUS_VR		100
-//#define GX_EMULATOR_VR			100
+//#define GX_EMULATOR_VR				100
 
 //-------------------------------------------------------------------
 

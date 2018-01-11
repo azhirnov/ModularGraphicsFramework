@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -12,7 +12,7 @@ namespace ShaderEditor
 	// Renderer
 	//
 	
-	class Renderer final
+	class Renderer final : public StaticRefCountedObject
 	{
 	// types
 	public:
@@ -27,7 +27,7 @@ namespace ShaderEditor
 			using PplnCtor_t	= void (*) (OUT PipelineTemplateDescriptor &);
 
 		// variables
-			PplnCtor_t		_pplnCtor;
+			PplnCtor_t		_pplnCtor	= null;
 			Channels_t		_channels;
 
 		// methods
@@ -48,7 +48,14 @@ namespace ShaderEditor
 			float4	iMouse;					// mouse pixel coords. xy: current (if MLB down), zw: click
 			float4	iDate;					// (year, month, day, time in seconds)
 			float	iSampleRate;			// sound sample rate (i.e., 44100)
+			float3	iCameraFrustumRay0;		// left bottom - frustum rays
+			float3	iCameraFrustumRay1;		// right bottom
+			float3	iCameraFrustumRay2;		// left top
+			float3	iCameraFrustumRay3;		// right top
+			float3	iCameraPos;				// camera position in world space
 		};
+
+		static constexpr uint	MAX_PASSES	= 4;	// 2 passes for 2 framebuffers (VR)
 
 
 		//
@@ -71,7 +78,7 @@ namespace ShaderEditor
 			const ShaderDescr			_descr;
 			ModulePtr					_pipelineTemplate;
 			ModulePtr					_pipeline;
-			StaticArray< PerPass, 2 >	_perPass;
+			StaticArray< PerPass, 4 >	_perPass;
 
 		// methods
 		public:
@@ -92,7 +99,7 @@ namespace ShaderEditor
 		GraphicsModuleIDs				_ids;
 		
 		ModulePtr						_cmdBuilder;
-		StaticArray< ModulePtr, 2 >		_cmdBuffers;
+		StaticArray< ModulePtr, 2 >		_cmdBuffers;	// it's correct - 2 passes, 1 buffer for 2 framebuffers
 
 		ShadersMap_t					_shaders;
 		Array< ShaderPtr >				_ordered;
@@ -103,7 +110,7 @@ namespace ShaderEditor
 		ModulePtr						_linearRepeatSampler;
 
 		ModulePtr						_drawTexQuadPipeline;
-		StaticArray< ModulePtr, 2 >		_resourceTables;
+		StaticArray< ModulePtr, 4 >		_resourceTables;
 
 		const GlobalSystemsRef			_gs;
 
@@ -114,7 +121,11 @@ namespace ShaderEditor
 
 		ShaderData						_ubData;
 
+		float2							_mousePos;
+		bool							_mousePressed	= false;
+
 		uint							_passIdx : 1;
+		bool							_vrMode		= false;
 
 
 	// methods
@@ -133,9 +144,15 @@ namespace ShaderEditor
 		bool _CreateCmdBuffers ();
 		bool _CreateSamplers ();
 		bool _CreateDrawTexQuadPipeline ();
-		void _UpdateShaderData ();
+		void _UpdateShaderData (const SceneMsg::CameraGetState::State &);
 
 		ModulePtr _GetGpuThread () const;
+		
+		void _OnMouseX (const ModuleMsg::InputMotion &);
+		void _OnMouseY (const ModuleMsg::InputMotion &);
+
+		void _OnMouseLeftButtonDown (const ModuleMsg::InputKey &);
+		void _OnMouseLeftButtonUp (const ModuleMsg::InputKey &);
 	};
 
 }	// ShaderEditor

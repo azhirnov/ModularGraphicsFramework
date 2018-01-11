@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Pipelines/BasePipeline.h"
 #include "Engine/PipelineCompiler/Common/ToGLSL.h"
@@ -12,12 +12,12 @@ namespace PipelineCompiler
 	_StructToString
 =================================================
 */
-	String  BasePipeline::_StructToString (StringCRef typeName, bool skipLayouts) const
+	String  BasePipeline::_StructToString (const StructTypes &types, StringCRef typeName, bool skipLayouts)
 	{
 		String						str;
 		StructTypes::const_iterator	iter;
 
-		if ( _structTypes.Find( typeName, OUT iter ) )
+		if ( types.Find( typeName, OUT iter ) )
 		{
 			const bool	is_block	= iter->second.type == EShaderVariable::UniformBlock or
 									  iter->second.type == EShaderVariable::StorageBlock;
@@ -65,12 +65,15 @@ namespace PipelineCompiler
 		String	&				_str;
 		EShader::type			_shaderType;
 		EShaderType				_shaderApi;
+		bool					_useOriginTypes;
 		bool					_skipBufferLayouts;
 
 
 	// methods
-		_BindingsToString_Func (BasePipeline const *pp, EShader::type shaderType, EShaderType shaderApi, OUT String &str) :
-			_pp(pp), _shaderType(shaderType), _shaderApi(shaderApi), _str(str), _skipBufferLayouts(shaderApi == EShaderType::SPIRV)
+		_BindingsToString_Func (BasePipeline const *pp, EShader::type shaderType, EShaderType shaderApi, bool useOriginTypes, OUT String &str) :
+			_pp(pp),							_shaderType(shaderType),
+			_shaderApi(shaderApi),				_str(str),
+			_useOriginTypes(useOriginTypes),	_skipBufferLayouts(shaderApi == EShaderType::SPIRV)
 		{}
 
 
@@ -97,7 +100,7 @@ namespace PipelineCompiler
 			if ( not ub.shaderUsage[ _shaderType ] )
 				return;
 
-			_str << ub.ToStringGLSL( _pp->_StructToString( ub.typeName, _skipBufferLayouts ), _shaderApi );
+			_str << ub.ToStringGLSL( _StructToString( ub.typeName ), _shaderApi );
 		}
 
 
@@ -106,7 +109,12 @@ namespace PipelineCompiler
 			if ( not ssb.shaderUsage[ _shaderType ] )
 				return;
 
-			_str << ssb.ToStringGLSL( _pp->_StructToString( ssb.typeName, _skipBufferLayouts ), _shaderApi );
+			_str << ssb.ToStringGLSL( _StructToString( ssb.typeName ), _shaderApi );
+		}
+
+		String _StructToString (StringCRef typeName) const
+		{
+			return BasePipeline::_StructToString( (_useOriginTypes ? _pp->_originTypes : _pp->_structTypes), typeName, _skipBufferLayouts );
 		}
 	};
 	
@@ -115,9 +123,9 @@ namespace PipelineCompiler
 	_BindingsToString
 =================================================
 */
-	void BasePipeline::_BindingsToString (EShader::type shaderType, EShaderType shaderApi, OUT String &str) const
+	void BasePipeline::_BindingsToString (EShader::type shaderType, EShaderType shaderApi, bool useOriginTypes, OUT String &str) const
 	{
-		_BindingsToString_Func	func( this, shaderType, shaderApi, OUT str );
+		_BindingsToString_Func	func( this, shaderType, shaderApi, useOriginTypes, OUT str );
 
 		//TODO("");
 		FOR( i, bindings.uniforms )
@@ -263,7 +271,7 @@ namespace PipelineCompiler
 			FOR( j, st.second.fields )
 			{
 				const auto&		fl			= st.second.fields[j];
-				const String	type_name	= EShaderVariable::IsStruct( fl.type ) ? fl.typeName : ToStringGLSL( fl.type );
+				const String	type_name	= EShaderVariable::IsStruct( fl.type ) ? fl.typeName : ser->ToString( fl.type );
 				const uint		array_size	= fl.arraySize;
 				const uint		align		= (usize) fl.align;
 				const uint		offset		= (usize) fl.offset;
@@ -286,7 +294,7 @@ namespace PipelineCompiler
 			if ( st.second.fields.Back().arraySize == 0 )
 			{
 				const auto&		arr			= st.second.fields.Back();
-				const String	type_name	= EShaderVariable::IsStruct( arr.type ) ? arr.typeName : ToStringGLSL( arr.type );
+				const String	type_name	= EShaderVariable::IsStruct( arr.type ) ? arr.typeName : ser->ToString( arr.type );
 				ASSERT( arr.arraySize == 0 and arr.stride > 0_b );
 
 				str << "\n\t";
@@ -391,7 +399,7 @@ namespace PipelineCompiler
 
 				if ( fl.name == field.name )
 				{
-					//field.index	= i;	// get index from '_originTypes'
+					//field.index	= i;	// not needed, index will be replaced later
 					field.type	= fl.type;
 					return true;
 				}
@@ -541,16 +549,39 @@ namespace PipelineCompiler
 		EShaderSrcFormat::type	src_fmt	=	shaderFormat == EShaderSrcFormat::GXSL_Vulkan ?	EShaderSrcFormat::GLSL_Vulkan : 
 											shaderFormat == EShaderSrcFormat::GXSL ?		EShaderSrcFormat::GLSL :
 											shaderFormat;
-		
-		CHECK_ERR( not shader._sourceOnly.Empty() );
-	
+
+		// replace types
+		BinaryArray		glsl_source;
+		{
+			ShaderCompiler::Config	cfg;
+			cfg.filterInactive	= false;
+			cfg.obfuscate		= false;
+			cfg.skipExternals	= true;
+			cfg.optimize		= false;
+			cfg.source			= shaderFormat;
+			cfg.target			= EShaderDstFormat::GLSL_Source;
+			cfg.typeReplacer	= DelegateBuilder( this, &BasePipeline::_TypeReplacer );
+
+			source	<< version
+					<< _GetDefaultHeaderGLSL()
+					<< _GetPerShaderHeaderGLSL( shader.type );
+
+			FOR( i, shader._source ) {
+				source << StringCRef(shader._source[i]);
+			}
+
+			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, shader.entry, cfg, OUT log, OUT glsl_source ) )
+			{
+				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
+			}
+		}
+
+
 		ShaderCompiler::Config	cfg;
 		cfg.filterInactive	= true;
 		cfg.obfuscate		= convCfg.obfuscate;
 		cfg.optimize		= convCfg.optimizeSource;
 		cfg.skipExternals	= false;
-		cfg.typeReplacer	= DelegateBuilder( this, &BasePipeline::_TypeReplacer );
-
 
 		// compile (optimize) for OpenGL
 		if ( convCfg.target[ EShaderDstFormat::GLSL_Source ] )
@@ -559,14 +590,14 @@ namespace PipelineCompiler
 			str.Clear();
 
 			str << _VaryingsToString( shader._io ) << '\n';
-			_BindingsToString( shader.type, EShaderType::GLSL, OUT str );
+			_BindingsToString( shader.type, EShaderType::GLSL, false, OUT str );
 
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< convCfg._glslTypes
 					<< str
-					<< (const char*) shader._sourceOnly.ptr();
+					<< (const char*) glsl_source.ptr();
 				
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::GLSL_Source;
@@ -602,14 +633,14 @@ namespace PipelineCompiler
 			str.Clear();
 
 			str << _VaryingsToString( shader._io ) << '\n';
-			_BindingsToString( shader.type, EShaderType::SPIRV, OUT str );
+			_BindingsToString( shader.type, EShaderType::SPIRV, false, OUT str );
 
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< convCfg._glslTypes
 					<< str
-					<< (const char*) shader._sourceOnly.ptr();
+					<< (const char*) glsl_source.ptr();
 				
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::SPIRV_Binary;
@@ -639,14 +670,14 @@ namespace PipelineCompiler
 			str.Clear();
 
 			str << _VaryingsToString( shader._io ) << '\n';
-			_BindingsToString( shader.type, EShaderType::Software, OUT str );
+			_BindingsToString( shader.type, EShaderType::Software, false, OUT str );
 			
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< convCfg._glslTypes
 					<< str
-					<< (const char*) shader._sourceOnly.ptr();
+					<< (const char*) glsl_source.ptr();
 			
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::CPP_Module;
@@ -665,14 +696,14 @@ namespace PipelineCompiler
 			str.Clear();
 
 			str << _VaryingsToString( shader._io ) << '\n';
-			_BindingsToString( shader.type, EShaderType::CL, OUT str );
+			_BindingsToString( shader.type, EShaderType::CL, false, OUT str );
 			
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< convCfg._glslTypes						// TODO: convert to CL ?
 					<< str
-					<< (const char*) shader._sourceOnly.ptr();
+					<< (const char*) glsl_source.ptr();
 			
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::CL_Source;

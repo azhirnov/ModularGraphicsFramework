@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
@@ -112,7 +112,6 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_Compose );
 		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_Delete );
 		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_OnManagerChanged );
-		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_DeviceBeforeDestroy );
 		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_GetCLPrivateClasses );

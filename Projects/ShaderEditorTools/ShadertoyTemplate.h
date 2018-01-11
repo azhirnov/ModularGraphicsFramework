@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -42,6 +42,8 @@ layout(std140) uniform ShadertoyUB
 	float4	iMouse;					// mouse pixel coords. xy: current (if MLB down), zw: click
 	float4	iDate;					// (year, month, day, time in seconds)
 	float	iSampleRate;			// sound sample rate (i.e., 44100)
+	float3	iCameraFrustum[4];		// frustum rays (left bottom, right bottom, left top, right top)
+	float3	iCameraPos;				// camera position in world space
 };
 
 // input channel, TODO: 2D and Cube support

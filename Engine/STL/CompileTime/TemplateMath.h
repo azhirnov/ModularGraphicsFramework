@@ -1,4 +1,4 @@
-// Copyright ©  Zhirnov Andrey. For more information see 'LICENSE.txt'
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #pragma once
 
@@ -290,10 +290,9 @@ namespace CompileTime
 		template <typename T, uint BitIndex>
 		struct _ToMask
 		{
-			static const uint	value =	BitIndex < 0 ? T(0) :
-											BitIndex < CompileTime::SizeOf<T>::bits ?
-												(T(1) << (BitIndex & (CompileTime::SizeOf<T>::bits-1))) - 1 :
-												T(-1);
+			static const uint	value =	BitIndex < CompileTime::SizeOf<T>::bits ?
+											(T(1) << (BitIndex & (CompileTime::SizeOf<T>::bits-1))) - 1 :
+											T(-1);
 		};
 
 	}	// _ctime_hidden_
