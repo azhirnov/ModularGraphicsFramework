@@ -8,13 +8,17 @@
 namespace vk
 {
 
+# ifdef COMPILER_MSVC
 #	pragma warning (push)
 #	pragma warning (disable : 4100)	// 'identifier' : unreferenced formal parameter
+# endif
 
 	VK1_CORE_FUNCTIONS( VULKAN1_DEFFUNC )
 	VK1_CORE_FUNCTIONS( VULKAN1_INITFUNC )
 	
+# ifdef COMPILER_MSVC
 #	pragma warning (pop)
+# endif
 
 /*
 =================================================

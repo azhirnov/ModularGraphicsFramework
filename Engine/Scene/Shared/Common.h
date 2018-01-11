@@ -3,12 +3,17 @@
 #pragma once
 
 #include "Engine/Platforms/Engine.Platforms.h"
+#include "Engine/Graphics/Engine.Graphics.h"
 
 namespace Engine
 {
 namespace Scene
 {
-	using namespace Platforms;
+	using namespace Engine::Base;
+	using namespace GX_STL::GXMath;
+
+	//using namespace Engine::Platforms;
+	//using namespace Engine::Graphics;
 	
 	
 	void RegisterScene ();

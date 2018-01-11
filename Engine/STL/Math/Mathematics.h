@@ -984,16 +984,17 @@ namespace GXMath
 	}
 
 
-	// deprecated
 	namespace _math_hidden_
 	{
 		template <uint Base, typename T>
+		GX_DEPRECATED("")
 		inline T Log (const T& x)
 		{
 			return Log( x, T( Base ) );
 		}
 
 		template <uint Base, typename T, usize I, ulong U>
+		GX_DEPRECATED("")
 		inline Vec<T,I,U>  Log (const Vec<T,I,U>& x)
 		{
 			Vec<T,I,U>		ret;

@@ -9,6 +9,8 @@ namespace Engine
 {
 namespace Scene
 {
+	using namespace Engine::Platforms;
+
 
 	//
 	// Window Surface
@@ -37,6 +39,12 @@ namespace Scene
 		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetDeviceInfo >;
 		using GThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 
+		using PerFrameCmdMsgList_t	= MessageListFrom<
+											GraphicsMsg::CmdBeginFrame,
+											GraphicsMsg::CmdEndFrame,
+											GraphicsMsg::CmdBegin,
+											GraphicsMsg::CmdEnd >;
+
 
 	// constants
 	private:
@@ -47,7 +55,7 @@ namespace Scene
 	// variables
 	private:
 		ModulePtr		_thread;
-		ModulePtr		_window;
+		ModulePtr		_builder;
 
 		uint2			_size;
 
@@ -124,14 +132,19 @@ namespace Scene
 			return true;	// already linked
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _GetManager() );
 
 		_SendForEachAttachments( msg );
 		
+		ModulePtr	window;
+		CHECK_ATTACHMENT(( window = GlobalSystems()->parallelThread->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
 		CHECK_ATTACHMENT(( _thread = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >() ));
-		CHECK_ATTACHMENT(( _window = GlobalSystems()->parallelThread->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
 		
-		_window->Subscribe( this, &WindowSurface::_WindowDescriptorChanged );
+		window->Subscribe( this, &WindowSurface::_WindowDescriptorChanged );
 		_thread->Subscribe( this, &WindowSurface::_DeviceBeforeDestroy );
+
+		_builder = _GetManager()->GetModuleByMsg< PerFrameCmdMsgList_t >();
+		CHECK_ERR( _builder );
 
 		CHECK( _SetState( EState::Linked ) );
 		return true;
@@ -150,20 +163,18 @@ namespace Scene
 		// update dependencies
 		Module::_Update_Impl( msg );
 
-		Message< GpuMsg::ThreadBeginFrame >	begin_frame;
-		_thread->Send( begin_frame );
+		Message< GraphicsMsg::CmdBeginFrame >	begin_frame;
+		_builder->Send( begin_frame );
 		
 		ModulePtr	system_fb	= begin_frame->result->framebuffer;
 
 		Message< SceneMsg::SurfaceRequestUpdate >	req_upd;
 		req_upd->framebuffers.PushBack({ system_fb, float4x4(), float4x4(), 0 });
+		req_upd->cmdBuilder = _builder;
 
 		CHECK( _SendEvent( req_upd ) );
 
-		CHECK_ERR( req_upd->cmdBuffers.Count() == 1 );	// supported only 1 buffer yet
-
-		_thread->Send< GpuMsg::ThreadEndFrame >({ system_fb, req_upd->cmdBuffers.Front() });
-
+		_builder->Send< GraphicsMsg::CmdEndFrame >({});
 		return true;
 	}
 
@@ -174,16 +185,12 @@ namespace Scene
 */
 	bool WindowSurface::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
-		if ( _window ) {
-			_window->UnsubscribeAll( this );
-		}
-
 		if ( _thread ) {
 			_thread->UnsubscribeAll( this );
 		}
 
-		_thread	= null;
-		_window	= null;
+		_thread		= null;
+		_builder	= null;
 
 		return Module::_Delete_Impl( msg );
 	}
@@ -212,7 +219,8 @@ namespace Scene
 */
 	bool WindowSurface::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
 	{
-		if ( msg->desc.visibility != WindowDesc::EVisibility::Invisible	and
+		if ( _IsComposedState( GetState() )									and
+			 msg->desc.visibility != WindowDesc::EVisibility::Invisible		and
 			 Any( msg->desc.surfaceSize != _size ) )
 		{
 			_size = msg->desc.surfaceSize;

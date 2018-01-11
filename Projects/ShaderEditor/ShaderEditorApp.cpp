@@ -15,6 +15,7 @@ namespace ShaderEditor
 		_looping(true)
 	{
 		Platforms::RegisterPlatforms();
+		Graphics::RegisterGraphics();
 		Scene::RegisterScene();
 	}
 	
@@ -29,7 +30,7 @@ namespace ShaderEditor
 		scene_mngr_ci.settings.version	 = api;
 		scene_mngr_ci.settings.flags	|= GraphicsSettings::EFlags::DebugContext;
 
-		scene_mngr_ci.vrSettings.enabled				= true;
+		scene_mngr_ci.vrSettings.enabled				= false;
 		scene_mngr_ci.vrSettings.eyeTextureDimension	= uint2(1024);
 
 		GetMainSystemInstance()->AddModule( SceneManagerModuleID, scene_mngr_ci );
@@ -69,7 +70,7 @@ namespace ShaderEditor
 		{
 			auto	gs = GetMainSystemInstance()->GlobalSystems();
 
-			#if 1
+			#if 0
 				const auto	camera_id	= Scene::FreeVRCameraModuleID;
 				const auto	surface_id	= Scene::VRSurfaceModuleID;
 			#else
@@ -197,8 +198,8 @@ int main ()
 	{
 		ShaderEditorApp	app;
 	
-		app.Initialize( "GL 4.4"_GAPI );
-		//app.Initialize( "VK 1.0"_GAPI );
+		//app.Initialize( "GL 4.4"_GAPI );
+		app.Initialize( "VK 1.0"_GAPI );
 
 		// main loop
 		for (; app.Update();) {}

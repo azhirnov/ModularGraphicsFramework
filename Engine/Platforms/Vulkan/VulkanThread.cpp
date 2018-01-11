@@ -227,7 +227,7 @@ namespace Platforms
 											OUT _syncManager ) );
 
 			CHECK_ERR( _Attach( "sync", _syncManager, true ) );
-			ModuleUtils::Initialize({ _syncManager });
+			_syncManager->Send( msg );
 		}
 		
 		// if window already created
@@ -509,12 +509,11 @@ namespace Platforms
 */
 	bool VulkanThread::_WindowCreated (const Message< OSMsg::WindowCreated > &)
 	{
-		if ( _CreateDevice() )
-		{
+		CHECK_ERR( GetState() == EState::Linked );
+
+		if ( _CreateDevice() ) {
 			CHECK( _DefCompose( false ) );
-		}
-		else
-		{
+		} else {
 			CHECK( _SetState( EState::ComposingFailed ) );
 		}
 		return true;

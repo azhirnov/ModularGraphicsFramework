@@ -40,7 +40,12 @@ namespace Scene
 											GpuMsg::ThreadEndVRFrame >;
 
 		using VRThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
-
+		
+		using PerFrameCmdMsgList_t	= MessageListFrom<
+											GraphicsMsg::CmdBeginFrame,
+											GraphicsMsg::CmdEndFrame,
+											GraphicsMsg::CmdBegin,
+											GraphicsMsg::CmdEnd >;
 
 	// constants
 	private:
@@ -51,6 +56,7 @@ namespace Scene
 	// variables
 	private:
 		ModulePtr		_vrthread;
+		ModulePtr		_builder;
 
 		uint2			_size;
 
@@ -130,8 +136,10 @@ namespace Scene
 		_SendForEachAttachments( msg );
 		
 		CHECK_ATTACHMENT(( _vrthread = GlobalSystems()->parallelThread->GetModuleByMsgEvent< VRThreadMsgList_t, VRThreadEventList_t >() ));
-		
 		_vrthread->Subscribe( this, &VRSurface::_DeviceBeforeDestroy );
+		
+		_builder = _GetManager()->GetModuleByMsg< PerFrameCmdMsgList_t >();
+		CHECK_ERR( _builder );
 
 		CHECK( _SetState( EState::Linked ) );
 		return true;
@@ -150,7 +158,8 @@ namespace Scene
 		// update dependencies
 		Module::_Update_Impl( msg );
 
-		Message< GpuMsg::ThreadBeginVRFrame >	begin_frame;
+		TODO( "" );
+		/*Message< GpuMsg::ThreadBeginVRFrame >	begin_frame;
 		_vrthread->Send( begin_frame );
 		
 		Message< SceneMsg::SurfaceRequestUpdate >	req_upd;
@@ -159,10 +168,7 @@ namespace Scene
 
 		CHECK( _SendEvent( req_upd ) );
 
-		CHECK_ERR( req_upd->cmdBuffers.Count() == 1 );	// supported only 1 buffer yet
-
-		_vrthread->Send< GpuMsg::ThreadEndVRFrame >({ req_upd->cmdBuffers.Front() });
-
+		_vrthread->Send< GpuMsg::ThreadEndVRFrame >({ req_upd->cmdBuffers });*/
 		return true;
 	}
 
@@ -178,6 +184,7 @@ namespace Scene
 		}
 
 		_vrthread	= null;
+		_builder	= null;
 
 		return Module::_Delete_Impl( msg );
 	}

@@ -119,16 +119,14 @@ namespace SceneMsg
 	// types
 		using Cameras_t			= CameraGetState::States_t;
 		using Framebuffers_t	= SurfaceRequestUpdate::Framebuffers_t const &;
-		using CmdBuffers_t		= SurfaceRequestUpdate::CmdBuffers_t &;
 
 		STATIC_ASSERT( Cameras_t::MemoryContainer_t::SIZE == SurfaceRequestUpdate::Framebuffers_t::MemoryContainer_t::SIZE );
 
 
 	// variables
-		Cameras_t		cameras;		// in
-		Framebuffers_t	framebuffers;	// in
-
-		CmdBuffers_t	cmdBuffers;		// out
+		Cameras_t		cameras;
+		Framebuffers_t	framebuffers;
+		ModulePtr		cmdBuilder;
 	};
 
 

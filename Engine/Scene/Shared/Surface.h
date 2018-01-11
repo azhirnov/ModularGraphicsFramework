@@ -68,13 +68,12 @@ namespace SceneMsg
 	// types
 		using PerEye			= GpuMsg::ThreadBeginVRFrame::PerEye;
 		using Framebuffers_t	= FixedSizeArray< PerEye, 2 >;		// 1 for screen/texture, 2 for VR (left, right)
-		using CmdBuffers_t		= GpuMsg::CmdExecute::CmdBuffers_t;
 
 
 	// variables
-		Framebuffers_t			framebuffers;
+		Framebuffers_t		framebuffers;
 
-		mutable CmdBuffers_t	cmdBuffers;
+		ModulePtr			cmdBuilder;
 	};
 
 

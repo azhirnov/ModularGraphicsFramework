@@ -106,6 +106,26 @@ namespace GraphicsMsg
 
 
 	//
+	// Subscribe On Frame Completed
+	//
+	struct SubscribeOnFrameCompleted
+	{
+	// types
+		using Callback_t	= Function< void (uint) >;
+
+	// variables
+		Callback_t		callback;		// callback that will be triggered when executing of all command buffers in current frame completed
+		Out< uint >		index;			// (optional) returns implementation defined frame index
+
+	// methods
+		SubscribeOnFrameCompleted () {}
+
+		template <typename F>
+		explicit SubscribeOnFrameCompleted (F &&func) : callback(RVREF(func)) {}
+	};
+
+
+	//
 	// Begin / End Commands Recording
 	//
 	struct CmdBegin
@@ -116,11 +136,27 @@ namespace GraphicsMsg
 
 
 	//
-	// Get Current Framebuffer
+	// Get Current State
 	//
-	struct CmdGetCurrentFramebuffer
+	struct CmdGetCurrentState
 	{
-		Out< ModulePtr >	result;
+		enum class EScope {
+			None,
+			Frame,
+			Command,
+			// TODO: RenderPass
+		};
+
+		struct Data {
+			ModulePtr		framebuffer	= null;			// returns current framebuffer, same as in 'ThreadBeginFrame'
+			uint			frameIndex	= UMax;			// index of image in swapchain, same as in 'ThreadBeginFrame'
+			uint			cmdIndex	= UMax;			// index of buffer sequence, max value is 'PerFrameCommandBuffers::bufferChainLength'-1
+			EScope			scope		= EScope::None;	// current scope state
+
+			// TODO: max frame index, max command index
+		};
+
+		Out< Data >		result;
 	};
 	
 }	// GraphicsMsg

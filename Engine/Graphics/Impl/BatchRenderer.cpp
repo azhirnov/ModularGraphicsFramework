@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Graphics/Shared/BatchRenderer.h"
+#include "Engine/Graphics/Shared/Commands.h"
 #include "Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
 #include "Engine/Graphics/Impl/GraphicsBaseModule.h"
 
@@ -77,8 +78,6 @@ namespace Graphics
 
 		using DefMaterial_t			= Optional< GraphicsMsg::BatchRendererSetMaterial >;
 
-		using CommandBuffers_t		= Map< ModulePtr, CmdBuffer >;
-
 
 	// constants
 	private:
@@ -123,7 +122,7 @@ namespace Graphics
 		bool _FlushBatchRenderer (const Message< GraphicsMsg::FlushBatchRenderer > &);
 
 	// events
-		bool _OnCommandBufferStateChanged (const Message< GpuMsg::OnCommandBufferStateChanged > &);
+		void _OnFrameCompleted (uint index);
 
 
 	private:
@@ -747,6 +746,7 @@ namespace Graphics
 		}
 
 		// TODO: check render pass compatibility
+		// TODO: staging buffers ?
 
 		// create vertex buffer
 		CHECK_ERR( factory->Create(
@@ -825,26 +825,19 @@ namespace Graphics
 			}
 
 			builder->Send< GpuMsg::CmdEndRenderPass >({});
+
 		}
+		
+		auto	on_completed =	LAMBDA( vbuffer, ibuffer ) (uint)
+								{
+									Message< ModuleMsg::Delete >	del_msg;
+									vbuffer->Send( del_msg );
+									ibuffer->Send( del_msg );
+								};
+
+		CHECK( msg->cmdBuilder->Send< GraphicsMsg::SubscribeOnFrameCompleted >( RVREF(on_completed) ) );
 
 		_ClearCurrent();
-		return true;
-	}
-	
-/*
-=================================================
-	_OnCommandBufferStateChanged
-=================================================
-*/
-	bool BatchRenderer::_OnCommandBufferStateChanged (const Message< GpuMsg::OnCommandBufferStateChanged > &msg)
-	{
-		CommandBuffers_t::iterator	iter;
-
-		//CHECK_ERR( _cmdBuffers.CustomSearch().Find( msg.Sender(), OUT iter ) );
-
-		// TODO: free or reset resources
-
-		//_cmdBuffers.Add( msg.Sender() );
 		return true;
 	}
 	

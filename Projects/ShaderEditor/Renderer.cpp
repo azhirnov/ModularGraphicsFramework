@@ -168,7 +168,6 @@ namespace ShaderEditor
 			_ids = *req_ids->graphics;
 		}
 
-		CHECK_ERR( _CreateCmdBuffers() );
 		CHECK_ERR( _CreateSamplers() );
 		
 		// subscribe on input events
@@ -217,42 +216,6 @@ namespace ShaderEditor
 		return _gs->parallelThread->GetModuleByMsgEvent< ThrdMsgList_t, ThrdEventList_t >();
 	}
 
-/*
-=================================================
-	_CreateCmdBuffers
-=================================================
-*/
-	bool Renderer::_CreateCmdBuffers ()
-	{
-		ModulePtr	gthread = _GetGpuThread();
-		auto		factory = _gs->modulesFactory;
-
-		CHECK_ERR( factory->Create(
-						_ids.commandBuilder,
-						gthread->GlobalSystems(),
-						CreateInfo::GpuCommandBuilder{ gthread },
-						OUT _cmdBuilder )
-		);
-
-		FOR( i, _cmdBuffers )
-		{
-			CHECK_ERR( factory->Create(
-							_ids.commandBuffer,
-							gthread->GlobalSystems(),
-							CreateInfo::GpuCommandBuffer{
-								gthread,
-								null,
-								CommandBufferDescriptor{ ECmdBufferCreate::ImplicitResetable | ECmdBufferCreate::UseFence }
-							},
-							OUT _cmdBuffers[i] )
-			);
-			_cmdBuilder->Send< ModuleMsg::AttachModule >({ ""_str << i, _cmdBuffers[i] });
-		}
-
-		ModuleUtils::Initialize({ _cmdBuilder });
-		return true;
-	}
-	
 /*
 =================================================
 	_CreateDrawTexQuadPipeline
@@ -377,7 +340,7 @@ namespace ShaderEditor
 */
 	bool Renderer::_RecreateAll (const uint2 &newSize)
 	{
-		CHECK_ERR( _CreateCmdBuffers() );
+		// TODO: delete command buffers?
 
 		_surfaceSize = newSize;
 
@@ -581,8 +544,8 @@ namespace ShaderEditor
 		
 		++_passIdx;
 
-		ModulePtr	cmd_buf = _cmdBuffers[ _passIdx ];
-		_cmdBuilder->Send< GpuMsg::CmdBegin >({ cmd_buf });
+		ModulePtr	builder = msg.cmdBuilder;
+		CHECK( builder->Send< GraphicsMsg::CmdBegin >({}) );
 
 		// draw quad to screen
 		FOR( i, msg.framebuffers )
@@ -594,7 +557,7 @@ namespace ShaderEditor
 			// run shaders
 			FOR( j, _ordered )
 			{
-				_ordered[j]->Update( _cmdBuilder, _ubData, pass_idx );
+				_ordered[j]->Update( builder, _ubData, pass_idx );
 			}
 		
 			CHECK_ERR( msg.framebuffers[i].layer == 0 );	// not supported
@@ -612,19 +575,17 @@ namespace ShaderEditor
 			clear.attachments.PushBack({ EImageAspect::bits() | EImageAspect::Color, 0, float4(1.0f) });
 			clear.clearRects.PushBack({ area });
 
-			_cmdBuilder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, eye_fb, area });
-			_cmdBuilder->Send< GpuMsg::CmdClearAttachments >( clear );
-			_cmdBuilder->Send< GpuMsg::CmdBindGraphicsPipeline >({ _drawTexQuadPipeline });
-			_cmdBuilder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ _resourceTables[pass_idx] });
-			_cmdBuilder->Send< GpuMsg::CmdSetViewport >({ area, float2(0.0f, 1.0f) });
-			_cmdBuilder->Send< GpuMsg::CmdSetScissor >({ area });
-			_cmdBuilder->Send< GpuMsg::CmdDraw >({ 4u });
-			_cmdBuilder->Send< GpuMsg::CmdEndRenderPass >({});
+			builder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, eye_fb, area });
+			builder->Send< GpuMsg::CmdClearAttachments >( clear );
+			builder->Send< GpuMsg::CmdBindGraphicsPipeline >({ _drawTexQuadPipeline });
+			builder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ _resourceTables[pass_idx] });
+			builder->Send< GpuMsg::CmdSetViewport >({ area, float2(0.0f, 1.0f) });
+			builder->Send< GpuMsg::CmdSetScissor >({ area });
+			builder->Send< GpuMsg::CmdDraw >({ 4u });
+			builder->Send< GpuMsg::CmdEndRenderPass >({});
 		}
 
-		_cmdBuilder->Send< GpuMsg::CmdEnd >({});
-
-		msg.cmdBuffers.PushBack( cmd_buf );
+		CHECK( builder->Send< GraphicsMsg::CmdEnd >({}) );
 		return true;
 	}
 

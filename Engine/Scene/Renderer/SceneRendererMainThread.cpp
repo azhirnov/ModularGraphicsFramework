@@ -17,14 +17,29 @@ namespace Scene
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
+											ModuleMsg::Compose
+										> >
+										::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
 											SceneMsg::GetScenePrivateClasses
 										> >;
 		
-		using SupportedEvents_t		= Module::SupportedEvents_t;
+		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
+											GpuMsg::DeviceCreated,
+											GpuMsg::DeviceBeforeDestroy
+										> >;
+		
+		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetDeviceInfo >;
+		using GThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
+
+		using PerFrameCmdMsgList_t	= MessageListFrom<
+											GraphicsMsg::CmdBeginFrame,
+											GraphicsMsg::CmdEndFrame,
+											GraphicsMsg::CmdBegin,
+											GraphicsMsg::CmdEnd >;
 
 
 	// constants
@@ -46,11 +61,16 @@ namespace Scene
 	// message handlers
 	protected:
 		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
+		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _GetScenePrivateClasses (const Message< SceneMsg::GetScenePrivateClasses > &);
+
+		// event handlers
+		bool _DeviceCreated (const Message< GpuMsg::DeviceCreated > &);
+		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -71,13 +91,12 @@ namespace Scene
 		
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_OnModuleDetached_Impl );
-		_SubscribeOnMsg( this, &SceneRendererMainThread::_AttachModule_Impl );
-		_SubscribeOnMsg( this, &SceneRendererMainThread::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &SceneRendererMainThread::_AttachModule );
+		_SubscribeOnMsg( this, &SceneRendererMainThread::_DetachModule );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_FindModule_Empty );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_ModulesDeepSearch_Empty );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_Update_Empty );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_Link );
-		_SubscribeOnMsg( this, &SceneRendererMainThread::_Compose );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_Delete );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_AddToManager );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_RemoveFromManager );
@@ -110,27 +129,35 @@ namespace Scene
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
-		// TODO
 
+		// find or create per frame command buffer builder
+		ModulePtr	builder = GetModuleByMsg< PerFrameCmdMsgList_t >();
+		if ( not builder )
+		{
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
+										Graphics::PerFrameCommandBuffersModuleID,
+										GlobalSystems(),
+										CreateInfo::PerFrameCommandBuffers{},
+										OUT builder ) );
+
+			CHECK_ERR( _Attach( "builder", builder, true ) );
+			builder->Send( msg );
+		}
+		
 		CHECK_ERR( Module::_Link_Impl( msg ) );
+
+		ModulePtr	thread;
+		CHECK_ATTACHMENT(( thread = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >() ));
+
+		thread->Subscribe( this, &SceneRendererMainThread::_DeviceCreated );
+		thread->Subscribe( this, &SceneRendererMainThread::_DeviceBeforeDestroy );
+		
+		// if gpu device already created
+		if ( _IsComposedState( thread->GetState() ) )
+		{
+			_SendMsg< GpuMsg::DeviceCreated >({});
+		}
 		return true;
-	}
-	
-/*
-=================================================
-	_Compose
-=================================================
-*/
-	bool SceneRendererMainThread::_Compose (const Message< ModuleMsg::Compose > &msg)
-	{
-		if ( _IsComposedState( GetState() ) )
-			return true;	// already composed
-
-		CHECK_ERR( GetState() == EState::Linked );
-
-		// TODO
-
-		return _DefCompose( true );
 	}
 	
 /*
@@ -142,6 +169,65 @@ namespace Scene
 	{
 		//TODO( "" );
 		return Module::_Delete_Impl( msg );
+	}
+	
+/*
+=================================================
+	_DeviceCreated
+=================================================
+*/
+	bool SceneRendererMainThread::_DeviceCreated (const Message< GpuMsg::DeviceCreated > &)
+	{
+		CHECK_ERR( GetState() == EState::Linked );
+		
+		return _DefCompose( true );
+	}
+	
+/*
+=================================================
+	_DeviceBeforeDestroy
+=================================================
+*/
+	bool SceneRendererMainThread::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	{
+		// TODO: destroy resources and wait for new device creation
+
+		_SendMsg< ModuleMsg::Delete >({});
+		return true;
+	}
+
+/*
+=================================================
+	_AttachModule
+=================================================
+*/
+	bool SceneRendererMainThread::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	{
+		const bool	is_builder	= msg->newModule->GetSupportedEvents().HasAllTypes< PerFrameCmdMsgList_t >();
+
+		CHECK( _Attach( msg->name, msg->newModule, is_builder ) );
+
+		if ( is_builder )
+		{
+			CHECK( _SetState( EState::Initial ) );
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_DetachModule
+=================================================
+*/
+	bool SceneRendererMainThread::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	{
+		CHECK( _Detach( msg->oldModule ) );
+
+		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< PerFrameCmdMsgList_t >() )
+		{
+			CHECK( _SetState( EState::Initial ) );
+		}
+		return true;
 	}
 
 /*

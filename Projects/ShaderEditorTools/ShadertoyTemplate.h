@@ -52,13 +52,18 @@ layout(std140) uniform ShadertoyUB
 //uniform sampler2D	iChannel2;
 //uniform sampler2D	iChannel3;
 
+//layout(origin_upper_left) in float4 gl_FragCoord;
+
 layout(location=0) out float4	out_Color0;
 
 void mainImage (out float4 fragColor, in float2 fragCoord);
 
 void main ()
 {
-	mainImage( out_Color0, gl_FragCoord.xy );
+	vec2 coord = gl_FragCoord.xy;
+	coord.y = iResolution.y - coord.y;
+
+	mainImage( out_Color0, coord );
 }
 		)#");
 

@@ -8,6 +8,8 @@ namespace Engine
 {
 namespace Scene
 {
+	using namespace Engine::Platforms;
+
 
 	//
 	// Free VR Camera
@@ -234,7 +236,7 @@ namespace Scene
 		_states[1].viewMat = msg->framebuffers[1].viewMat;
 		_states[1].projMat = msg->framebuffers[1].projMat;
 
-		CHECK_ERR( _SendEvent< SceneMsg::CameraRequestUpdate >({ _states, msg->framebuffers, msg->cmdBuffers }) );
+		CHECK_ERR( _SendEvent< SceneMsg::CameraRequestUpdate >({ _states, msg->framebuffers, msg->cmdBuilder }) );
 
 		return true;
 	}

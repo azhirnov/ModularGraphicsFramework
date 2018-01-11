@@ -10,6 +10,8 @@ namespace Engine
 {
 namespace Scene
 {
+	using namespace Engine::Platforms;
+
 
 	//
 	// Scene Manager Module
@@ -204,7 +206,7 @@ namespace Scene
 			input_thread->Send( msg );
 		}
 
-		if ( _vrSettings.enabled and not vr_thread )
+		/*if ( _vrSettings.enabled and not vr_thread )
 		{
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create( EmulatorVRThreadModuleID,
 																GlobalSystems(),
@@ -212,7 +214,7 @@ namespace Scene
 																OUT vr_thread ) );
 			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ vr_thread });
 			vr_thread->Send( msg );
-		}
+		}*/
 
 		ModulePtr	key_input	= window->GetModuleByEvent< KeyInputEventList_t >();
 		ModulePtr	mouse_input	= window->GetModuleByEvent< MouseInputEventList_t >();

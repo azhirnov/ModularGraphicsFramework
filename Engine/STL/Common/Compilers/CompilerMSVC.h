@@ -216,7 +216,7 @@
 
 
 // deprecated attribute
-#if COMPILER_VERSION >= 2000	// TODO
+#if COMPILER_VERSION >= 1912
 #	define GX_DEPRECATED( _reason_ )		[[ deprecated(_reason_) ]]
 #else
 #	define GX_DEPRECATED( _reason_ )
@@ -230,7 +230,7 @@
 
 
 // notify compiler to generate error if function result unused
-#if COMPILER_VERSION >= 2000	// TODO
+#if COMPILER_VERSION >= 1912
 #	define GX_CHECK_RESULT					[[nodiscard]]
 #elif COMPILER_VERSION >= 1700
 #	define GX_CHECK_RESULT					_Check_return_	// Compile with '/analize' key

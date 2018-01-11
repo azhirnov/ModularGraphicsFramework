@@ -1121,7 +1121,7 @@ source_group( "Logic" FILES "Engine/Scene/Logic/SceneLogicMainThread.cpp" )
 set_property( TARGET "Engine.Scene" PROPERTY FOLDER "Engine" )
 target_include_directories( "Engine.Scene" PRIVATE "Engine/Scene" )
 target_include_directories( "Engine.Scene" PUBLIC "Engine/.." )
-target_link_libraries( "Engine.Scene" "Engine.Platforms" )
+target_link_libraries( "Engine.Scene" "Engine.Graphics" )
 # compiler
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	# DebugAnalyze

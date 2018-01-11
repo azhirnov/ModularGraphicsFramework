@@ -60,7 +60,7 @@ namespace PipelineCompiler
 	_TranslateGXSLtoGLSL
 =================================================
 */
-	static bool TranslateShaderInfo (const glslang::TIntermediate* intermediate, Translator &translator);
+	static bool TranslateShaderInfo (const glslang::TIntermediate* intermediate, bool skipExternals, Translator &translator);
 
 	bool ShaderCompiler::_TranslateGXSLtoGLSL (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const
 	{
@@ -84,9 +84,8 @@ namespace PipelineCompiler
 		translator.entryPoint	= intermediate->getEntryPointName().c_str();
 		translator.language		= new GLSL_DstLanguage( translator );
 
-		if ( not cfg.skipExternals ) {
-			CHECK_ERR( TranslateShaderInfo( intermediate, translator ) );
-		}
+		CHECK_ERR( TranslateShaderInfo( intermediate, cfg.skipExternals, translator ) );
+		
 		CHECK_ERR( translator.Main( root, translator.uid, cfg.skipExternals ) );
 
 		log		<< translator.log;
@@ -102,17 +101,20 @@ namespace PipelineCompiler
 	TranslateShaderInfo
 =================================================
 */
-	static bool TranslateShaderInfo (const glslang::TIntermediate* intermediate, Translator &translator)
+	static bool TranslateShaderInfo (const glslang::TIntermediate* intermediate, bool skipExternals, Translator &translator)
 	{
+		String &	src = translator.src;
+
 		// add version and profile
+		if ( not skipExternals )
 		{
-			translator.src << "#version " << intermediate->getVersion();
+			src << "#version " << intermediate->getVersion();
 
 			switch ( intermediate->getProfile() ) {
-				case EProfile::ECompatibilityProfile :	translator.src << " compatibility\n";	break;
-				case EProfile::ECoreProfile :			translator.src << " core\n";			break;
-				case EProfile::EEsProfile :				translator.src << " es\n";				break;
-				default :								translator.src << "\n";
+				case EProfile::ECompatibilityProfile :	src << " compatibility\n";	break;
+				case EProfile::ECoreProfile :			src << " core\n";			break;
+				case EProfile::EEsProfile :				src << " es\n";				break;
+				default :								src << "\n";
 			}
 		}
 
@@ -120,6 +122,46 @@ namespace PipelineCompiler
 		{
 			case EShLanguage::EShLangVertex :
 			{
+				break;
+			}
+			
+			case EShLanguage::EShLangFragment :
+			{
+				// early fragment test
+				if ( intermediate->getEarlyFragmentTests() )
+					src << "layout(early_fragment_tests) in;\n";
+
+				// frag coord
+				{
+					if ( intermediate->getOriginUpperLeft() and intermediate->getPixelCenterInteger() )
+						src << "layout(origin_upper_left, pixel_center_integer) in vec4 gl_FragCoord;\n";
+					else
+					if ( intermediate->getOriginUpperLeft() )
+						src << "layout(origin_upper_left) in vec4 gl_FragCoord;\n";
+					else
+					if ( intermediate->getPixelCenterInteger() )
+						src << "layout(pixel_center_integer) in vec4 gl_FragCoord;\n";
+				}
+
+				// depth coverage
+				if ( intermediate->getPostDepthCoverage() )
+				{
+					switch ( intermediate->getDepth() )
+					{
+						case glslang::TLayoutDepth::EldAny :		src << "layout (depth_any) out float gl_FragDepth;";		break;
+						case glslang::TLayoutDepth::EldGreater :	src << "layout (depth_greater) out float gl_FragDepth;";	break;
+						case glslang::TLayoutDepth::EldLess :		src << "layout (depth_less) out float gl_FragDepth;";		break;
+						case glslang::TLayoutDepth::EldUnchanged :	src << "layout (depth_unchanged) out float gl_FragDepth;";	break;
+						default :									WARNING( "unknown depth layout" );
+					}
+				}
+
+				// depth export
+				if ( intermediate->isDepthReplacing() )
+				{
+					TODO( "" );
+				}
+
 				break;
 			}
 			/*
@@ -145,27 +187,6 @@ namespace PipelineCompiler
 				result._geometry.outputPrimitive	= ConvertGeometryOutputPrimitive( intermediate->getOutputPrimitive() );
 				break;
 			}
-
-			case EShLanguage::EShLangFragment :
-			{
-				result._fragment.flags |= (intermediate->getOriginUpperLeft() ? EFragmentShaderParams::OriginUpperLeft : EFragmentShaderParams::None);
-				result._fragment.flags |= (intermediate->getPixelCenterInteger() ? EFragmentShaderParams::PixelCenterInteger : EFragmentShaderParams::None);
-				result._fragment.flags |= (intermediate->getEarlyFragmentTests() ? EFragmentShaderParams::EarlyFragmentTests : EFragmentShaderParams::None);
-				result._fragment.flags |= (intermediate->getPostDepthCoverage() ? EFragmentShaderParams::PostDepthCoverage : EFragmentShaderParams::None);
-				result._fragment.flags |= (intermediate->isDepthReplacing() ? EFragmentShaderParams::DepthExport : EFragmentShaderParams::None);
-				// getBlendEquations
-				
-				switch ( intermediate->getDepth() )
-				{
-					case glslang::TLayoutDepth::EldNone :		break;
-					case glslang::TLayoutDepth::EldAny :		result._fragment.flags |= EFragmentShaderParams::ConservativeDepth_Any;			break;
-					case glslang::TLayoutDepth::EldGreater :	result._fragment.flags |= EFragmentShaderParams::ConservativeDepth_Greater;		break;
-					case glslang::TLayoutDepth::EldLess :		result._fragment.flags |= EFragmentShaderParams::ConservativeDepth_Less;		break;
-					case glslang::TLayoutDepth::EldUnchanged :	result._fragment.flags |= EFragmentShaderParams::ConservativeDepth_Unchanged;	break;
-				}
-
-				break;
-			}
 			*/
 			case EShLanguage::EShLangCompute :
 			{
@@ -176,6 +197,8 @@ namespace PipelineCompiler
 				break;
 			}
 		}
+
+		src << '\n';
 		return true;
 	}
 

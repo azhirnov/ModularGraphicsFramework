@@ -65,8 +65,9 @@ namespace Graphics
 											GraphicsMsg::CmdEnd,
 											GraphicsMsg::CmdBeginFrame,
 											GraphicsMsg::CmdEndFrame,
-											GraphicsMsg::CmdGetCurrentFramebuffer,
-											GraphicsMsg::CmdAddFrameDependency
+											GraphicsMsg::CmdGetCurrentState,
+											GraphicsMsg::CmdAddFrameDependency,
+											GraphicsMsg::SubscribeOnFrameCompleted
 										> >
 										::Append< CmdBufferMsgList_t >;
 
@@ -76,15 +77,19 @@ namespace Graphics
 										> >;
 
 		using SyncMngrMsgList_t		= MessageListFrom< 
-										GpuMsg::CreateFence,
-										GpuMsg::DestroyFence
-									>;
+											GpuMsg::CreateFence,
+											GpuMsg::DestroyFence,
+											GpuMsg::ClientWaitFence
+										>;
 
 		using CmdBuffers_t			= FixedSizeArray< ModulePtr, 16 >;
 
 		using Semaphores_t			= FixedSizeArray< GpuSemaphoreId, 16 >;
 		using WaitSemaphores_t		= FixedSizeArray<Pair< GpuSemaphoreId, EPipelineStage::bits >, 16 >;
 		using Fences_t				= FixedSizeArray< GpuFenceId, 8 >;
+
+		using Callback_t			= GraphicsMsg::SubscribeOnFrameCompleted::Callback_t;
+		using Callbacks_t			= Array< Callback_t >;
 
 		struct PerFrame : CompileTime::FastCopyable
 		{
@@ -94,16 +99,12 @@ namespace Graphics
 			Fences_t			waitFences;						// wait before begin frame (in client side)
 			WaitSemaphores_t	waitSemaphores;					// wait before begin executing (in gpu side)
 			Semaphores_t		signalSemaphores;				// signal after executing (in gpu side)
+			Callbacks_t			callbacks;
 		};
 
 		using PerFrameArray_t		= FixedSizeArray< PerFrame, 4 >;
 
-		enum class EScope
-		{
-			None,
-			Frame,
-			Command,
-		};
+		using EScope				= GraphicsMsg::CmdGetCurrentState::EScope;
 
 
 	// constants
@@ -124,6 +125,7 @@ namespace Graphics
 
 		EScope				_scope;
 		ModulePtr			_framebuffer;
+		uint				_frameIndex;
 
 
 	// methods
@@ -144,8 +146,11 @@ namespace Graphics
 		bool _CmdEnd (const Message< GraphicsMsg::CmdEnd > &);
 		bool _CmdBeginFrame (const Message< GraphicsMsg::CmdBeginFrame > &);
 		bool _CmdEndFrame (const Message< GraphicsMsg::CmdEndFrame > &);
-		bool _CmdGetCurrentFramebuffer (const Message< GraphicsMsg::CmdGetCurrentFramebuffer > &);
+		bool _CmdGetCurrentState (const Message< GraphicsMsg::CmdGetCurrentState > &);
 		bool _CmdAddFrameDependency (const Message< GraphicsMsg::CmdAddFrameDependency > &);
+		bool _SubscribeOnFrameCompleted (const Message< GraphicsMsg::SubscribeOnFrameCompleted > &);
+
+		// TODO: delete command buffers when swapchain recreated
 	};
 //-----------------------------------------------------------------------------
 
@@ -161,7 +166,7 @@ namespace Graphics
 	PerFrameCommandBuffers::PerFrameCommandBuffers (GlobalSystemsRef gs, const CreateInfo::PerFrameCommandBuffers &ci) :
 		GraphicsBaseModule( gs, ModuleConfig{ PerFrameCommandBuffersModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_bufferChainLength{ Max( 2u, ci.bufferChainLength ) },		_bufferIndex{ 0 },
-		_scope{ EScope::None }
+		_scope{ EScope::None },										_frameIndex{ 0 }
 	{
 		SetDebugName( "PerFrameCommandBuffers" );
 
@@ -179,8 +184,9 @@ namespace Graphics
 		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdEnd );
 		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdBeginFrame );
 		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdEndFrame );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdGetCurrentFramebuffer );
+		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdGetCurrentState );
 		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdAddFrameDependency );
+		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_SubscribeOnFrameCompleted );
 
 		_AttachSelfToManager( _GetGpuThread( ci.gpuThread ), UntypedID_t(0), true );
 
@@ -226,9 +232,9 @@ namespace Graphics
 										GlobalSystems(),
 										CreateInfo::GpuCommandBuilder{ _GetManager() },
 										OUT _builder ) );
-			ModuleUtils::Initialize({ _builder });
 
 			CHECK_ERR( _Attach( "builder", _builder, true ) );
+			_builder->Send( msg );
 		}
 
 		CHECK_ERR( _CopySubscriptions< CmdBufferMsgList_t >( _builder ) );
@@ -353,12 +359,18 @@ namespace Graphics
 			per_frame.waitFences.PushFront( per_frame.fence );
 
 			CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ per_frame.waitFences }) );
-		
+
 			ModuleUtils::Send( per_frame.commands, Message< GpuMsg::SetCommandBufferState >{ GpuMsg::SetCommandBufferState::EState::Completed });
+		
+			FOR( i, per_frame.callbacks ) {
+				per_frame.callbacks[i]( _bufferIndex );
+			}
 
 			per_frame.freeBuffers.Append( per_frame.commands );
+
 			per_frame.waitFences.Clear();
 			per_frame.commands.Clear();
+			per_frame.callbacks.Clear();
 		}
 
 		// begin frame
@@ -369,6 +381,7 @@ namespace Graphics
 			msg->result.Set({ begin->result->framebuffer, begin->result->frameIndex, _bufferIndex });
 
 			_framebuffer = begin->result->framebuffer;
+			_frameIndex	 = begin->result->frameIndex;
 			_scope		 = EScope::Frame;
 
 			_SendEvent< GraphicsMsg::OnCmdBeginFrame >({ _bufferIndex });
@@ -400,6 +413,7 @@ namespace Graphics
 		per_frame.waitSemaphores.Clear();
 
 		_framebuffer = null;
+		_frameIndex	 = UMax;
 		_scope		 = EScope::None;
 		
 		_SendEvent< GraphicsMsg::OnCmdEndFrame >({ _bufferIndex });
@@ -408,12 +422,12 @@ namespace Graphics
 	
 /*
 =================================================
-	_CmdGetCurrentFramebuffer
+	_CmdGetCurrentState
 =================================================
 */
-	bool PerFrameCommandBuffers::_CmdGetCurrentFramebuffer (const Message< GraphicsMsg::CmdGetCurrentFramebuffer > &msg)
+	bool PerFrameCommandBuffers::_CmdGetCurrentState (const Message< GraphicsMsg::CmdGetCurrentState > &msg)
 	{
-		msg->result.Set( _framebuffer );
+		msg->result.Set({ _framebuffer, _frameIndex, _bufferIndex, _scope });
 		return true;
 	}
 	
@@ -432,6 +446,21 @@ namespace Graphics
 		per_frame.waitFences.Append( msg->waitFences );
 		per_frame.waitSemaphores.Append( msg->waitSemaphores );
 		per_frame.signalSemaphores.Append( msg->signalSemaphores );
+		return true;
+	}
+	
+/*
+=================================================
+	_SubscribeOnFrameCompleted
+=================================================
+*/
+	bool PerFrameCommandBuffers::_SubscribeOnFrameCompleted (const Message< GraphicsMsg::SubscribeOnFrameCompleted > &msg)
+	{
+		auto &	per_frame	= _perFrame[ _bufferIndex ];
+
+		per_frame.callbacks.PushBack( msg->callback );
+
+		msg->index.Set( _bufferIndex );
 		return true;
 	}
 

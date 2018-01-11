@@ -252,7 +252,7 @@ extern void GenMGFProject ()
 		auto	engine_scene = builder.AddLibrary( "Engine.Scene", "Engine/Scene" );
 		{
 			engine_scene->AddFoldersRecursive( "" );
-			engine_scene->LinkLibrary( engine_platforms );
+			engine_scene->LinkLibrary( engine_graphics );
 		}
 
 		// Tests //

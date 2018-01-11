@@ -97,9 +97,6 @@ namespace ShaderEditor
 	// variables
 	private:
 		GraphicsModuleIDs				_ids;
-		
-		ModulePtr						_cmdBuilder;
-		StaticArray< ModulePtr, 2 >		_cmdBuffers;	// it's correct - 2 passes, 1 buffer for 2 framebuffers
 
 		ShadersMap_t					_shaders;
 		Array< ShaderPtr >				_ordered;
@@ -141,7 +138,6 @@ namespace ShaderEditor
 	private:
 		bool _RecreateAll (const uint2 &newSize);
 		bool _CreateShader (const ShaderPtr &shader, const uint2 &newSize);
-		bool _CreateCmdBuffers ();
 		bool _CreateSamplers ();
 		bool _CreateDrawTexQuadPipeline ();
 		void _UpdateShaderData (const SceneMsg::CameraGetState::State &);
