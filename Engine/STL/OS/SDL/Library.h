@@ -60,8 +60,6 @@ namespace OS
 
 		bool Load (StringCRef name, bool canFree = true)
 		{
-			ASSERT( name.IsNullTerminated() );
-
 			Unload();
 
 			_handle = ::SDL_LoadObject( name.cstr() );
@@ -92,8 +90,6 @@ namespace OS
 
 		Func_t GetProc (StringCRef name, void *defProc = null) const
 		{
-			ASSERT( name.IsNullTerminated() );
-
 			Func_t	tmp = ::SDL_LoadFunction( _handle, name.cstr() );
 			return tmp != null ? tmp : defProc;
 		}

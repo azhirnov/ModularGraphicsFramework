@@ -13,11 +13,12 @@ extern bool Test_PipelineCompilation ()
 	cfg.addPaddingToStructs		= true;
 	cfg.optimizeSource			= false;
 	//cfg.optimizeBindings		= false;
-	//cfg.skipBufferLayouts		= true;	// for vulkan
 	cfg.includings				<< "common.h";
 	cfg.nameSpace				= "Pipelines";
 	cfg.target					|= EShaderDstFormat::GLSL_Source;
 	cfg.target					|= EShaderDstFormat::SPIRV_Binary;
+	//cfg.target				|= EShaderDstFormat::SPIRV_Source;	// disassembled spirv
+	cfg.target					|= EShaderDstFormat::CL_Source;
 
 	PipelineManager::Instance()->Convert( "out/all_pipelines", new CppSerializer(), cfg );
 

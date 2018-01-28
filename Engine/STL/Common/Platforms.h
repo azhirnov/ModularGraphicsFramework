@@ -167,14 +167,24 @@
 
 
 // GNU Compiler Collection
-#ifdef __GNUC__
+#if (defined(__GNUC__) || defined(__MINGW32__)) && !defined(__clang__)
 #	define COMPILER_GCC			1
+# ifdef __MINGW32__
+#	define COMPILER_NAME		"MinGW"
+# else
 #	define COMPILER_NAME		"GCC"
+# endif
 #	include "Compilers/CompilerGCC.h"
 #endif
 
 
-// TODO: support compilers
+// Clang
+#ifdef __clang__
+#	define COMPILER_CLANG		1
+#	define COMPILER_NAME		"Clang"
+#	include "Compilers/CompilerClang.h"
+#endif
+
 
 // Intel C Compiler
 #ifdef __INTEL_COMPILER
@@ -187,13 +197,6 @@
 #ifdef __BORLANDC__
 #	define COMPILER_BORLAND		1
 #	define COMPILER_NAME		"Borland"
-#endif
-
-
-// Clang
-#ifdef __clang__
-#	define COMPILER_CLANG		1
-#	define COMPILER_NAME		"Clang"
 #endif
 
 

@@ -119,7 +119,7 @@ namespace GXTypes
 		void AppendBack (ArrayCRef<T> other);
 		void AppendBack (Self &&other);
 
-		void Erase (usize pos, usize count);
+		void Erase (usize pos, usize count = 1);
 		void EraseFromFront (usize count);
 		void EraseFromBack (usize count);
 

@@ -10,7 +10,7 @@ namespace GX_STL
 namespace GXMath
 {
 
-struct ImageUtils : public Noninstancable
+struct GXImageUtils : public Noninstancable
 {
 	
 /*
@@ -21,7 +21,7 @@ struct ImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static Vec<T,2> ResCorrectionAspect (const Vec<T,2> &dim)
+	static CHECKRES(Vec<T,2>)  ResCorrectionAspect (const Vec<T,2> &dim)
 	{
 		// proportional_coords = normalized_coords * aspect
 		return	dim.x < dim.y ?
@@ -35,7 +35,7 @@ struct ImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename B, usize I, ulong U>
-	static Vec<T,I,U> AlignDimension (const Vec<T,I,U> &size, const B& align)
+	static CHECKRES(Vec<T,I,U>)  AlignDimension (const Vec<T,I,U> &size, const B& align)
 	{
 		CompileTime::MustBeInteger<T>();
 		ASSERT( IsPowerOfTwo( align ) and "align must be a power of 2" );
@@ -58,7 +58,7 @@ struct ImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static uint GetNumberOfMipmaps (const T len)
+	static CHECKRES(uint)  GetNumberOfMipmaps (const T len)
 	{
 		return IntLog2( len );
 	}
@@ -91,8 +91,8 @@ struct ImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static BytesU AlignedDataSize (const Vec<T,3> &dimension, BytesU bytePerPixel,
-									BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
+	static CHECKRES(BytesU)  AlignedDataSize (const Vec<T,3> &dimension, BytesU bytePerPixel,
+											  BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
 	{
 		CompileTime::MustBeInteger<T>();
 		const usize3	dim			= Max( dimension, Vec<T,3>(1) ).template To<usize3>();
@@ -114,7 +114,7 @@ struct ImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static BytesU AlignedRowSize (const T rowPixels, BytesU bytePerPixel, BytesU rowAlign)
+	static CHECKRES(BytesU)  AlignedRowSize (const T rowPixels, BytesU bytePerPixel, BytesU rowAlign)
 	{
 		typedef CompileTime::MainType<T, BytesU::Value_t>	main_t;
 
@@ -128,7 +128,7 @@ struct ImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static BytesU AlignedSliceSize (const Vec<T,2> dim, BytesU bytePerPixel, BytesU rowAlign, BytesU sliceAlign)
+	static CHECKRES(BytesU)  AlignedSliceSize (const Vec<T,2> dim, BytesU bytePerPixel, BytesU rowAlign, BytesU sliceAlign)
 	{
 		const usize	row_size	= (usize) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
 		const usize slice_size	= (usize) AlignedRowSize( dim.y * row_size, 1_b, sliceAlign );
@@ -141,8 +141,8 @@ struct ImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static usize GetPixelOffset (const Vec<T,3> &coord, const Vec<T,3> &dimension, BytesU bytePerPixel,
-								 BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
+	static CHECKRES(usize)  GetPixelOffset (const Vec<T,3> &coord, const Vec<T,3> &dimension, BytesU bytePerPixel,
+											BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
 	{
 		CompileTime::MustBeInteger<T>();
 		const usize3	dim			= Max( dimension, Vec<T,3>(1) ).template To<usize3>();
@@ -307,8 +307,7 @@ struct ImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename ColorType>
-	static ColorType & GetPixel (const Vec<T,3> &imageDim, ColorType *image, const Vec<T,3> &pixelCoord,
-									uint rowAlignInBytes = 1)
+	static CHECKRES(ColorType &)  GetPixel (const Vec<T,3> &imageDim, ColorType *image, const Vec<T,3> &pixelCoord, uint rowAlignInBytes = 1)
 	{
 		ASSUME( image != null );
 			
@@ -323,6 +322,6 @@ struct ImageUtils : public Noninstancable
 	}
 	
 
-};	// ImageUtils
+};	// GXImageUtils
 }	// GXMath
 }	// GX_STL

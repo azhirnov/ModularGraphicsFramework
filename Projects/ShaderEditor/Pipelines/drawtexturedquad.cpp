@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'C:\Projects\graphxgenengine\Projects\ShaderEditorTools\DrawTexturedQuad.cpp'
-// Created at: 2018/01/12 - 00:05:47
+// Created at: 2018/01/17 - 20:21:46
 
 #include "all_pipelines.h"
 
@@ -113,6 +113,9 @@ R"#(#version 450 core
 #endif
 
 
+out gl_PerVertex {
+	vec4	gl_Position;
+};
 
 
 

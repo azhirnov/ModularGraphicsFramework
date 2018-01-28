@@ -81,6 +81,7 @@ namespace Platforms
 		using EVisibility			= CreateInfo::Window::EVisibility;
 
 	// variables
+		String						caption;
 		EWindowFlags::bits			flags;
 		uint2						size;
 		uint2						surfaceSize;
@@ -113,7 +114,7 @@ namespace OSMsg
 	//
 	struct WindowSetDescriptor
 	{
-		CreateInfo::Window				desc;
+		Platforms::WindowDesc			desc;
 	};
 
 	struct WindowGetDescriptor

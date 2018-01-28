@@ -5,16 +5,17 @@
 
 #if defined( GRAPHICS_API_VULKAN )
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1SystemFramebuffer.h"
+#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1SwapchainImage.h"
 
-using namespace vk;
 
 namespace Engine
 {
 namespace PlatformVK
 {
+	using namespace vk;
 
 /*
 =================================================
@@ -29,8 +30,6 @@ namespace PlatformVK
 		_surface( VK_NULL_HANDLE ),
 		_swapchain( VK_NULL_HANDLE ),
 		_vsync( false ),
-		_depthStencilImage( VK_NULL_HANDLE ),
-		_depthStencilMemory( VK_NULL_HANDLE ),
 		_depthStencilView( VK_NULL_HANDLE ),
 		_colorPixelFormat( EPixelFormat::Unknown ),
 		_depthStencilPixelFormat( EPixelFormat::Unknown ),
@@ -663,14 +662,14 @@ namespace PlatformVK
 		_vsync			= vsync;
 
 		// destroy obsolete resources
-		_DeleteSwapchain( old_swapchain, _imageBuffers );
-		_DeleteFramebuffers( _framebuffers );
+		_DeleteSwapchain( old_swapchain );
+		_DeleteFramebuffers();
 
 		// create dependent resources
-		CHECK_ERR( _CreateColorAttachment( samples, OUT _imageBuffers ) );
+		CHECK_ERR( _CreateColorAttachment( samples ) );
 		CHECK_ERR( _CreateDepthStencilAttachment( depthStencilFormat ) );
 		CHECK_ERR( _CreateRenderPass() );
-		CHECK_ERR( _CreateFramebuffers( OUT _framebuffers ) );
+		CHECK_ERR( _CreateFramebuffers() );
 		CHECK_ERR( _CreateSemaphores() );
 
 		return true;
@@ -708,7 +707,7 @@ namespace PlatformVK
 
 		CHECK_ERR( IsDeviceCreated() );
 
-		_DeleteSwapchain( _swapchain, _imageBuffers );
+		_DeleteSwapchain( _swapchain );
 		_framebuffers.Clear();
 		
 		_renderPass = null;
@@ -1113,20 +1112,22 @@ namespace PlatformVK
 	_DeleteSwapchain
 =================================================
 */
-	void Vk1Device::_DeleteSwapchain (VkSwapchainKHR &swapchain, SwapChainBuffers_t &buffers) const
+	void Vk1Device::_DeleteSwapchain (VkSwapchainKHR &swapchain)
 	{
-		if ( swapchain != VK_NULL_HANDLE ) 
-		{ 
-			FOR( i, buffers )
-			{
-				vkDestroyImageView( _logicalDevice, buffers[i].view, null );
+		FOR( i, _imageBuffers )
+		{
+			if ( _imageBuffers[i].module ) {
+				_imageBuffers[i].module->Send< ModuleMsg::Delete >({});
 			}
+		}
 
+		if ( swapchain != VK_NULL_HANDLE ) 
+		{
 			vkDestroySwapchainKHR( _logicalDevice, swapchain, null );
 		}
 
 		swapchain = VK_NULL_HANDLE;
-		buffers.Clear();
+		_imageBuffers.Clear();
 	}
 	
 /*
@@ -1134,10 +1135,12 @@ namespace PlatformVK
 	_CreateColorAttachment
 =================================================
 */
-	bool Vk1Device::_CreateColorAttachment (MultiSamples samples, OUT SwapChainBuffers_t &buffers) const
+	bool Vk1Device::_CreateColorAttachment (MultiSamples samples)
 	{
-		uint32_t			count = 0;
-		Array< VkImage >	images;
+		using VkImages_t = FixedSizeArray< VkImage, MAX_SWAPCHAIN_SIZE >;
+
+		uint32_t		count = 0;
+		VkImages_t		images;
 
 		VK_CHECK( vkGetSwapchainImagesKHR( _logicalDevice, _swapchain, OUT &count, null ) );
 		CHECK_ERR( count > 0 );
@@ -1145,31 +1148,27 @@ namespace PlatformVK
 
 		VK_CHECK( vkGetSwapchainImagesKHR( _logicalDevice, _swapchain, OUT &count, OUT images.ptr() ) );
 		CHECK_ERR( count > 0 );
-		buffers.Resize( count );
+		_imageBuffers.Resize( count );
 
-		FOR( i, buffers )
+		ImageDescriptor		descr;
+		descr.dimension	= uint4( _surfaceSize, 0, 0 );
+		descr.format	= _colorPixelFormat;
+		descr.imageType	= EImage::Tex2D;
+		descr.usage		|= EImageUsage::All;		// TODO: get from swapchain_info
+
+		FOR( i, _imageBuffers )
 		{
-			VkImageViewCreateInfo	color_attachment_view = {};
+			auto&		buf = _imageBuffers[i];
 
-			color_attachment_view.sType			= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			color_attachment_view.viewType		= VK_IMAGE_VIEW_TYPE_2D;
-			color_attachment_view.flags			= 0;
-			color_attachment_view.format		= _colorFormat;
-			color_attachment_view.components	= { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G,
-													VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
+			ModulePtr	img = New< Vk1SwapchainImage >( GlobalSystems(), CreateInfo::GpuImage{ descr } );
+			ModuleUtils::Initialize({ img });
 
-			color_attachment_view.subresourceRange.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT;
-			color_attachment_view.subresourceRange.baseMipLevel		= 0;
-			color_attachment_view.subresourceRange.levelCount		= 1;
-			color_attachment_view.subresourceRange.baseArrayLayer	= 0;
-			color_attachment_view.subresourceRange.layerCount		= 1;	// TODO
-			
-			buffers[i].image			= images[i];
-			color_attachment_view.image	= buffers[i].image;
-			
-			VK_CHECK( vkCreateImageView( _logicalDevice, &color_attachment_view, null, OUT &buffers[i].view ) );
+			Message< GpuMsg::SetVkSwapchainImage >	msg{ images[i] };
+			img->Send( msg );
+
+			buf.module	= img;
+			buf.view	= *msg->result;
 		}
-
 		return true;
 	}
 	
@@ -1186,61 +1185,27 @@ namespace PlatformVK
 			return true;
 		}
 
-		CHECK_ERR( _depthStencilView != VK_NULL_HANDLE );
-		CHECK_ERR( _depthStencilImage != VK_NULL_HANDLE );
-		CHECK_ERR( _depthStencilMemory != VK_NULL_HANDLE );
+		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
+									VkImageModuleID,
+									GlobalSystems(),
+									CreateInfo::GpuImage{
+										ImageDescriptor{
+											EImage::Tex2D,
+											uint4( _surfaceSize, 0, 0 ),
+											depthStencilFormat,
+											EImageUsage::DepthStencilAttachment | EImageUsage::TransferSrc | EImageUsage::TransferDst
+										},
+										EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+										EMemoryAccess::GpuReadWrite
+									},
+									OUT _depthStencilImage ) );
 
-		VkFormat				depth_stencil_fmt	= Vk1Enum( depthStencilFormat );
+		ModuleUtils::Initialize({ _depthStencilImage });
 
-		VkMemoryRequirements	mem_reqs = {};
+		Message< GpuMsg::GetVkImageID >		req_id;
+		_depthStencilImage->Send( req_id );
 
-		VkImageCreateInfo		image_info = {};
-		image_info.sType		= VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		image_info.pNext		= null;
-		image_info.imageType	= VK_IMAGE_TYPE_2D;
-		image_info.format		= depth_stencil_fmt;
-		image_info.extent		= { _surfaceSize.x, _surfaceSize.y, 1 };
-		image_info.mipLevels	= 1;
-		image_info.arrayLayers	= 1;
-		image_info.samples		= VK_SAMPLE_COUNT_1_BIT;
-		image_info.tiling		= VK_IMAGE_TILING_OPTIMAL;
-		image_info.usage		= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-		image_info.flags		= 0;
-
-		VK_CHECK( vkCreateImage( _logicalDevice, &image_info, null, OUT &_depthStencilImage ) );
-		vkGetImageMemoryRequirements( _logicalDevice, _depthStencilImage, OUT &mem_reqs );
-
-
-		VkMemoryAllocateInfo		mem_alloc = {};
-		mem_alloc.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		mem_alloc.pNext				= null;
-		mem_alloc.memoryTypeIndex	= 0;
-		mem_alloc.allocationSize	= mem_reqs.size;
-
-		CHECK_ERR( GetMemoryTypeIndex( mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, OUT mem_alloc.memoryTypeIndex ) );
-		VK_CHECK( vkAllocateMemory( _logicalDevice, &mem_alloc, null, OUT &_depthStencilMemory ) );
-		VK_CHECK( vkBindImageMemory( _logicalDevice, _depthStencilImage, _depthStencilMemory, 0 ) );
-
-
-		VkImageViewCreateInfo		depth_stencil_view = {};
-		depth_stencil_view.sType	= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		depth_stencil_view.pNext	= null;
-		depth_stencil_view.viewType	= VK_IMAGE_VIEW_TYPE_2D;
-		depth_stencil_view.format	= depth_stencil_fmt;
-		depth_stencil_view.flags	= 0;
-		depth_stencil_view.image	= _depthStencilImage;
-
-		depth_stencil_view.subresourceRange					= {};
-		depth_stencil_view.subresourceRange.aspectMask		= VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-		depth_stencil_view.subresourceRange.baseMipLevel	= 0;
-		depth_stencil_view.subresourceRange.levelCount		= 1;
-		depth_stencil_view.subresourceRange.baseArrayLayer	= 0;
-		depth_stencil_view.subresourceRange.layerCount		= 1;
-
-		VK_CHECK( vkCreateImageView( _logicalDevice, &depth_stencil_view, null, OUT &_depthStencilView ) );
-
-		_depthStencilFormat			= depth_stencil_fmt;
-		_depthStencilPixelFormat	= depthStencilFormat;
+		_depthStencilView = *req_id->defaultView;
 		return true;
 	}
 	
@@ -1251,26 +1216,14 @@ namespace PlatformVK
 */
 	void Vk1Device::_DeleteDepthStencilAttachment ()
 	{
+		if ( _depthStencilImage ) {
+			_depthStencilImage->Send< ModuleMsg::Delete >({});
+		}
+
+		_depthStencilImage			= null;
 		_depthStencilFormat			= VK_FORMAT_UNDEFINED;
 		_depthStencilPixelFormat	= EPixelFormat::Unknown;
-
-		if ( _depthStencilView != VK_NULL_HANDLE )
-		{
-			vkDestroyImageView( _logicalDevice, _depthStencilView, null );
-			_depthStencilView = VK_NULL_HANDLE;
-		}
-		
-		if ( _depthStencilImage != VK_NULL_HANDLE )
-		{
-			vkDestroyImage( _logicalDevice, _depthStencilImage, null );
-			_depthStencilImage = VK_NULL_HANDLE;
-		}
-
-		if ( _depthStencilMemory != VK_NULL_HANDLE )
-		{
-			vkFreeMemory( _logicalDevice, _depthStencilMemory, null );
-			_depthStencilMemory = VK_NULL_HANDLE;
-		}
+		_depthStencilView			= VK_NULL_HANDLE;
 	}
 	
 /*
@@ -1325,8 +1278,6 @@ namespace PlatformVK
 */
 	bool Vk1Device::_CreateRenderPass ()
 	{
-		//CHECK_ERR( not _renderPass );
-
 		if ( _renderPass )
 			return true;
 
@@ -1353,32 +1304,37 @@ namespace PlatformVK
 	_CreateFramebuffers
 =================================================
 */
-	bool Vk1Device::_CreateFramebuffers (OUT Framebuffers_t &frameBuffers) const
+	bool Vk1Device::_CreateFramebuffers ()
 	{
 		CHECK_ERR( not _imageBuffers.Empty() );
-		CHECK_ERR( frameBuffers.Empty() );
+		CHECK_ERR( _framebuffers.Empty() );
 		CHECK_ERR( _renderPass );
 
-		frameBuffers.Resize( _imageBuffers.Count() );
+		_framebuffers.Resize( _imageBuffers.Count() );
 		
 		Message< GpuMsg::GetVkRenderPassID >	req_id;
 		SendTo( _renderPass, req_id );
 
-		FOR( i, frameBuffers )
+		FOR( i, _framebuffers )
 		{
-			auto fb = New< Vk1SystemFramebuffer >( GlobalSystems() );
+			ModulePtr	fb;
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
+										VkFramebufferModuleID,
+										GlobalSystems(),
+										CreateInfo::GpuFramebuffer{ null, _surfaceSize, 1u },
+										OUT fb ) );
 
-			SendTo< ModuleMsg::AttachModule >( fb, { _renderPass } );
+			fb->Send< ModuleMsg::AttachModule >({ _renderPass });
+			fb->Send< ModuleMsg::AttachModule >({ "Color0", _imageBuffers[i].module });
 
-			CHECK_ERR( fb->CreateFramebuffer( _surfaceSize, uint(i),
-											  *(req_id->result),
-											  _imageBuffers[i].view, _colorPixelFormat,
-											  _depthStencilView, _depthStencilPixelFormat,
-											  EImage::Tex2D	// TODO: multisampling
-			) );
+			if ( _depthStencilImage ) {
+				fb->Send< ModuleMsg::AttachModule >({ "Depth", _depthStencilImage });
+			}
 
-			frameBuffers[i] = fb;
+			_framebuffers[i] = fb;
 		}
+
+		ModuleUtils::Initialize( _framebuffers );
 		return true;
 	}
 	
@@ -1387,15 +1343,15 @@ namespace PlatformVK
 	_DeleteFramebuffers
 =================================================
 */
-	void Vk1Device::_DeleteFramebuffers (INOUT Framebuffers_t &frameBuffers) const
+	void Vk1Device::_DeleteFramebuffers ()
 	{
 		Message< ModuleMsg::Delete >	msg;
 
-		FOR( i, frameBuffers ) {
-			SendTo( frameBuffers[i], msg );
+		FOR( i, _framebuffers ) {
+			SendTo( _framebuffers[i], msg );
 		}
 
-		frameBuffers.Clear();
+		_framebuffers.Clear();
 	}
 
 /*
@@ -1462,6 +1418,7 @@ namespace PlatformVK
 			if ( format_match_idx != UMax )
 				idx = format_match_idx;
 			else
+			if ( def_format_idx != UMax )
 				idx = def_format_idx;
 
 			// TODO: space_match_idx and def_space_idx are unused yet

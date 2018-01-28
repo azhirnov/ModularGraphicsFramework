@@ -19,10 +19,10 @@ protected:
 
 		shaders.vertex.Source( R"#(
 const float2	g_Positions[] = {
-{ -1.0,  1.0 },
-{ -1.0, -1.0 },
-{  1.0,  1.0 },
-{  1.0, -1.0 }
+	{ -1.0,  1.0 },
+	{ -1.0, -1.0 },
+	{  1.0,  1.0 },
+	{  1.0, -1.0 }
 };
 
 void main() {

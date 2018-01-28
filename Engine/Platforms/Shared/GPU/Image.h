@@ -146,6 +146,11 @@ namespace GpuMsg
 		Out< Platforms::ImageDescriptor >		result;
 	};
 
+	struct SetImageDescriptor
+	{
+		Platforms::ImageDescriptor				descr;
+	};
+
 
 	//
 	// Set/Get Image Layout

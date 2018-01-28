@@ -128,7 +128,7 @@ namespace PlatformVK
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
 		_ValidateDescriptor( INOUT _descr );
 	}
@@ -189,12 +189,16 @@ namespace PlatformVK
 	bool Vk1Framebuffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
 	{
 		CHECK_ERR( msg->newModule );
+		
+		if ( msg->newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >() )
+		{
+			return _FramebufferAttachImage({ msg->name, msg->newModule });
+		}
 
 		// render pass must be unique
 		bool	is_render_pass	= msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
-		bool	is_image		= msg->newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
 
-		if ( _Attach( msg->name, msg->newModule, is_render_pass ) and (is_image or is_render_pass) )
+		if ( _Attach( msg->name, msg->newModule, is_render_pass ) and is_render_pass )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyFramebuffer();

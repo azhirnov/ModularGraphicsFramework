@@ -105,8 +105,6 @@ namespace vk
 	{
 		using namespace GX_STL::GXTypes;
 
-		ASSERT( address.IsNullTerminated() );
-
 		vk::PFN_vkVoidFunction	res = null;
 
 		if ( device != VK_NULL_HANDLE		and

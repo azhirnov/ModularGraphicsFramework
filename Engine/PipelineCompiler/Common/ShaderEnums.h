@@ -38,7 +38,8 @@ namespace PipelineCompiler
 	{
 		None,
 		GLSL,
-		GLSL_ES,
+		GLSL_ES_2,
+		GLSL_ES_3,
 		HLSL,
 		CL,
 		SPIRV,
@@ -57,7 +58,8 @@ namespace PipelineCompiler
 			GLSL,
 			GLSL_Vulkan,	// GLSL for Vulkan
 
-			GLSL_ES,
+			GLSL_ES_2,
+			GLSL_ES_3,
 
 			CL,				// only for compiling to binary
 			HLSL,			// only for compiling to binary
@@ -74,10 +76,10 @@ namespace PipelineCompiler
 		{
 			GLSL_Source,		// crossplatform
 			GLSL_VulkanSource,	// crossplatform
-			GLSL_Binary,		// system and hardware dependednt
+			GLSL_Binary,		// system and hardware dependent
 			
 			GLSL_ES_Source,		// crossplatform
-			GLSL_ES_Binary,		// system and hardware dependednt
+			GLSL_ES_Binary,		// system and hardware dependent
 
 			CL_Source,			// crossplatform
 			CL_Binary,			// crossplatform
@@ -499,7 +501,14 @@ namespace PipelineCompiler
 		static bool		IsStruct (type value);
 		static bool		IsTexture (type value);
 		static bool		IsImage (type value);
+
 		static bool		IsFloat (type value);
+		static bool		IsFloat32 (type value);
+		static bool		IsFloat64 (type value);
+
+		static bool		IsInt (type value);
+		static bool		IsInt32 (type value);
+		static bool		IsInt64 (type value);
 
 		static BytesU	SizeOf (type value, BytesU rowAlign = 4_b);
 		static uint		VecSize (type value);
@@ -868,7 +877,7 @@ namespace PipelineCompiler
 
 	inline EShaderVariable::type  EShaderVariable::ToImage (EImage::type imageType, EPixelFormat::type format)
 	{
-		uint	result = 0;
+		uint	result = _vtypeinfo::_IMAGE;
 
 		switch ( imageType )
 		{
@@ -885,7 +894,10 @@ namespace PipelineCompiler
 			default :						RETURN_ERR( "unsupported texture type!" );
 		}
 
-		result |= (format & (_vtypeinfo::_TYPE_FLAG_MASK | _vtypeinfo::_COL_MASK));
+		if ( EPixelFormat::IsFloat( format ) or EPixelFormat::IsIntNorm( format ) )		result |= _vtypeinfo::_FLOAT;	else
+		if ( EPixelFormat::IsInt( format ) )											result |= _vtypeinfo::_INT;		else
+		if ( EPixelFormat::IsUInt( format ) )											result |= _vtypeinfo::_UINT;	else
+																						RETURN_ERR( "unsupported format" );
 
 		return EShaderVariable::type( result );
 	}
@@ -1013,8 +1025,33 @@ namespace PipelineCompiler
 
 	inline bool  EShaderVariable::IsFloat (type value)
 	{
-		const uint t = value & _vtypeinfo::_TYPE_MASK;
-		return t == _vtypeinfo::_FLOAT or t == _vtypeinfo::_DOUBLE;
+		return IsFloat32( value ) or IsFloat64( value );
+	}
+
+	inline bool  EShaderVariable::IsFloat32 (type value)
+	{
+		return (value & _vtypeinfo::_TYPE_MASK) == _vtypeinfo::_FLOAT;
+	}
+
+	inline bool  EShaderVariable::IsFloat64 (type value)
+	{
+		return (value & _vtypeinfo::_TYPE_MASK) == _vtypeinfo::_DOUBLE;
+	}
+	
+	
+	inline bool  EShaderVariable::IsInt (type value)
+	{
+		return IsInt32( value ) or IsInt64( value );
+	}
+
+	inline bool  EShaderVariable::IsInt32 (type value)
+	{
+		return (value & _vtypeinfo::_TYPE_MASK) == _vtypeinfo::_INT;
+	}
+
+	inline bool  EShaderVariable::IsInt64 (type value)
+	{
+		return (value & _vtypeinfo::_TYPE_MASK) == _vtypeinfo::_LONG;
 	}
 
 

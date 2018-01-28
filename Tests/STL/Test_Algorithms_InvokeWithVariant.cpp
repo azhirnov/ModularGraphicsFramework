@@ -16,7 +16,7 @@ static bool TestFunc (int i, float f, double d, OUT uint &outU, OUT float &outF)
 
 void InvokeWithVariant_Test1 ()
 {
-	/*int		inI		= 2;
+	int		inI		= 2;
 	float	inF		= 6.87632f;
 	double	inD		= 9.2342343;
 	uint	outU	= 0;
@@ -31,13 +31,13 @@ void InvokeWithVariant_Test1 ()
 	);
 
 	TEST( outU == uint(inI + uint(inF)) );
-	TEST( outF == float(inF + float(inD)) );*/
+	TEST( outF == float(inF + float(inD)) );
 }
 
 
 void InvokeWithVariant_Test2 ()
 {
-	/*auto TestFuncDel = DelegateBuilder( &TestFunc );
+	auto TestFuncDel = DelegateBuilder( &TestFunc );
 
 	int		inI		= 2;
 	float	inF		= 6.87632f;
@@ -58,13 +58,13 @@ void InvokeWithVariant_Test2 ()
 	);
 
 	TEST( outU == uint(inI + uint(inF)) );
-	TEST( outF == float(inF + float(inD)) );*/
+	TEST( outF == float(inF + float(inD)) );
 }
 
 
 void InvokeWithVariant_Test3 ()
 {
-	/*auto TestFuncDel = std::function< bool (int, float, double, uint &, float &) >( &TestFunc );
+	auto TestFuncDel = std::function< bool (int, float, double, uint &, float &) >( &TestFunc );
 
 	int		inI		= 2;
 	float	inF		= 6.87632f;
@@ -81,7 +81,7 @@ void InvokeWithVariant_Test3 ()
 	);
 
 	TEST( outU == uint(inI + uint(inF)) );
-	TEST( outF == float(inF + float(inD)) );*/
+	TEST( outF == float(inF + float(inD)) );
 }
 
 

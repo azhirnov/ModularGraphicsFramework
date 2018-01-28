@@ -39,10 +39,13 @@ namespace PipelineCompiler
 		bool TranslateLocalVar (const TypeInfo &, INOUT String &src) override;
 		bool TranslateArg (const TypeInfo &, INOUT String &src) override;
 		bool TranslateType (const TypeInfo &, INOUT String &src) override;
+		bool TranslateName (const TypeInfo &, INOUT String &src) override;
 
 		bool TranslateExternal (glslang::TIntermTyped*, const TypeInfo &, INOUT String &src) override;
 		bool TranslateOperator (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) override;
 		bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) override;
+		
+		bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) override;
 
 	private:
 		bool _TranslateBuffer (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str);
@@ -291,6 +294,17 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	TranslateName
+=================================================
+*/
+	bool GLSL_DstLanguage::TranslateName (const TypeInfo &t, INOUT String &src)
+	{
+		src << t.name;
+		return true;
+	}
+
+/*
+=================================================
 	TranslateExternal
 =================================================
 */
@@ -499,13 +513,6 @@ namespace PipelineCompiler
 				case glslang::TOperator::EOpAtomicCounter :			src << "atomicCounter" << all_args;				break;
 				case glslang::TOperator::EOpAtomicCounterIncrement:	src << "atomicCounterIncrement" << all_args;	break;
 				case glslang::TOperator::EOpAtomicCounterDecrement:	src << "atomicCounterDecrement" << all_args;	break;
-
-				case glslang::TOperator::EOpVectorEqual :			src << "equal" << all_args;						break;
-				case glslang::TOperator::EOpVectorNotEqual :		src << "notEqual" << all_args;					break;
-				case glslang::TOperator::EOpLessThan :				src << "lessThan" << all_args;					break;
-				case glslang::TOperator::EOpGreaterThan :			src << "greaterThan" << all_args;				break;
-				case glslang::TOperator::EOpLessThanEqual :			src << "lessThanEqual" << all_args;				break;
-				case glslang::TOperator::EOpGreaterThanEqual :		src << "greaterThanEqual" << all_args;			break;
 
 				case glslang::TOperator::EOpTextureQuerySize :		src << "textureSize" << all_args;				break;
 				case glslang::TOperator::EOpTextureQueryLevels :	src << "textureQueryLevels" << all_args;		break;
@@ -807,6 +814,16 @@ namespace PipelineCompiler
 		src << val << '.' << swizzle;
 		return true;
 	}
+	
+/*
+=================================================
+	TranslateEntry
+=================================================
+*/
+	bool GLSL_DstLanguage::TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src)
+	{
+		return true;
+	}
 //-----------------------------------------------------------------------------
 
 
@@ -818,32 +835,26 @@ namespace PipelineCompiler
 */
 	bool GLSL_DstLanguage::_TranslateBuffer (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str)
 	{
-		glslang::TQualifier const&	qual = type.getQualifier();
+		if ( info.binding != UMax )
+			str << "layout(binding=" << info.binding << ") ";
 
-		if ( qual.hasBinding() )
-			str << "layout(binding=" << qual.layoutBinding << ") ";
-
-		if ( qual.hasPacking() )
+		if ( type.getQualifier().hasPacking() )
 		{
-			switch ( qual.layoutPacking ) {
+			switch ( type.getQualifier().layoutPacking ) {
 				case glslang::TLayoutPacking::ElpStd140 :	str << "layout(std140) ";	break;
 				case glslang::TLayoutPacking::ElpStd430 :	str << "layout(std430) ";	break;
 				default :									RETURN_ERR( "unsupported packing" );
 			}
 		}
 
-		if ( qual.readonly )	str << "readonly ";
-		if ( qual.writeonly )	str << "writeonly ";
-		if ( qual.coherent )	str << "coherent ";
-		if ( qual.restrict )	str << "restrict ";
-		if ( qual.volatil )		str << "volatile ";
-		
-		if ( qual.storage == glslang::TStorageQualifier::EvqBuffer )
+		str << ToStringGLSL( info.memoryModel ) << ' ';
+
+		if ( info.type == EShaderVariable::Struct )
 			str << "buffer " << info.typeName;
 		else
 			str << "uniform " << info.typeName;
 
-		CHECK_ERR( type.isStruct() and not info.fields.Empty() );
+		CHECK_ERR( (info.type == EShaderVariable::Struct) and not info.fields.Empty() );
 		
 		str << "{\n";
 		FOR( j, info.fields )
@@ -863,20 +874,14 @@ namespace PipelineCompiler
 */
 	bool GLSL_DstLanguage::_TranslateImage (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str)
 	{
-		glslang::TQualifier const&	qual = type.getQualifier();
+		if ( info.binding != UMax )
+			str << "layout(binding=" << info.binding << ") ";
 
-		if ( qual.hasBinding() )
-			str << "layout(binding=" << qual.layoutBinding << ") ";
-		
 		if ( type.isImage() )
 		{
-			if ( qual.readonly )	str << "readonly ";
-			if ( qual.writeonly )	str << "writeonly ";
-			if ( qual.coherent )	str << "coherent ";
-			if ( qual.restrict )	str << "restrict ";
-			if ( qual.volatil )		str << "volatile ";
-			
-			str << "layout(" << ToStringGLSL( info.format ) << ") uniform ";
+			str << "layout(" << ToStringGLSL( info.format ) << ") "
+				<< ToStringGLSL( info.memoryModel )
+				<< " uniform ";
 		}
 		else
 		{
@@ -903,7 +908,7 @@ namespace PipelineCompiler
 	_TranslateShared
 =================================================
 */
-	bool GLSL_DstLanguage::_TranslateShared (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str)
+	bool GLSL_DstLanguage::_TranslateShared (glslang::TType const&, Translator::TypeInfo const& info, OUT String &str)
 	{
 		str << "shared ";
 		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
@@ -918,9 +923,7 @@ namespace PipelineCompiler
 */
 	bool GLSL_DstLanguage::_TranslateVarying (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str)
 	{
-		glslang::TQualifier const&	qual = type.getQualifier();
-
-		if ( qual.storage == glslang::TStorageQualifier::EvqVaryingIn )
+		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqVaryingIn )
 			str << "in ";
 		else
 			str << "out ";
@@ -942,7 +945,6 @@ namespace PipelineCompiler
 		CHECK_ERR( typed->getAsSymbolNode() );
 
 		glslang::TType const&				type	= typed->getType();
-		glslang::TQualifier const&			qual	= type.getQualifier();
 		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
 
 		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );

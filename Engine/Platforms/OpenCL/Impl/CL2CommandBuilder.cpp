@@ -143,7 +143,7 @@ namespace PlatformCL
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 		
 /*
@@ -243,8 +243,7 @@ namespace PlatformCL
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
 								_GetManager(),
-								this,
-								CommandBufferDescriptor{ msg->isSecondary, true }
+								CommandBufferDescriptor{ msg->flags }
 							},
 							OUT _cmdBuffer )
 			);
@@ -275,7 +274,7 @@ namespace PlatformCL
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferDependency >{ RVREF(_resources) } );
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Executable } );
 
-		msg->cmdBuffer.Set( _cmdBuffer );
+		msg->result.Set( _cmdBuffer );
 
 		_cmdBuffer = null;
 		_resources.Clear();

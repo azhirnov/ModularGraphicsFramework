@@ -12,7 +12,9 @@ namespace CreateInfo
 	struct FontManager;
 	struct BatchRenderer;
 	struct AsyncCommandBuffer;
-	struct PerFrameCommandBuffers;
+	struct CommandBufferManager;
+	struct GpuMemoryInStream;
+	struct GpuMemoryOutStream;
 
 }	// CreateInfo
 
@@ -35,7 +37,9 @@ namespace Graphics
 		static ModulePtr CreateFontManager (GlobalSystemsRef, const CreateInfo::FontManager &);
 		static ModulePtr CreateBatchRenderer (GlobalSystemsRef, const CreateInfo::BatchRenderer &);
 		static ModulePtr CreateAsyncCommandBuffer (GlobalSystemsRef, const CreateInfo::AsyncCommandBuffer &);
-		static ModulePtr CreatePerFrameCommandBuffers (GlobalSystemsRef, const CreateInfo::PerFrameCommandBuffers &);
+		static ModulePtr CreateCommandBufferManager (GlobalSystemsRef, const CreateInfo::CommandBufferManager &);
+		static ModulePtr CreateMemoryInputStream (GlobalSystemsRef, const CreateInfo::GpuMemoryInStream &);
+		static ModulePtr CreateMemoryOutputStream (GlobalSystemsRef, const CreateInfo::GpuMemoryOutStream &);
 	};
 
 

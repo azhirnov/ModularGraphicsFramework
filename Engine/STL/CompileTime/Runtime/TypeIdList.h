@@ -61,6 +61,9 @@ namespace Runtime
 		bool	HasAllTypes (const TypesArray_t &other) const;
 		bool	HasAnyType (const TypesArray_t &other) const;
 
+		void	Erase (TypeId id)				{ _types.Erase( id ); }
+		void	EraseByIndex (usize index)		{ _types.EraseByIndex( index ); }
+
 		//String	ToString () const;
 
 		template <typename T>

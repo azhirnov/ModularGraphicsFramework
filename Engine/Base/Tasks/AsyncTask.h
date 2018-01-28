@@ -23,9 +23,9 @@ namespace Base
 	{
 	// types
 	public:
-		using ResultType	= ResultT;
-		using ProgressType	= ProgressT;
-		using Self			= AsyncTask< ResultType, ProgressType >;
+		using Result_t		= ResultT;
+		using Progress_t	= ProgressT;
+		using Self			= AsyncTask< Result_t, Progress_t >;
 		using SelfPtr		= SharedPointerType<Self>;
 
 
@@ -39,7 +39,7 @@ namespace Base
 		mutable Atomic<int>		_onCanceledCalled;
 		mutable Atomic<int>		_isSync;					// if current and target threads are same
 
-		ResultType				_result;
+		Result_t				_result;
 
 
 	// methods
@@ -56,7 +56,7 @@ namespace Base
 		AsyncTask (const ModulePtr &currentThreadModule, const ModulePtr &targetThreadModule);
 		~AsyncTask ();
 
-		void PublishProgress (ProgressType &&) noexcept;
+		void PublishProgress (Progress_t &&) noexcept;
 
 		ModulePtr const&	CurrentThreadModule ()		{ return _currentThreadModule; }
 		ModulePtr const&	TargetThreadModule ()		{ return _targetThreadModule; }
@@ -66,20 +66,20 @@ namespace Base
 		void _RunSync () noexcept;
 		void _RunAsync (GlobalSystemsRef) noexcept;
 		void _OnCanceled (GlobalSystemsRef = GlobalSystemsRef(null)) noexcept;
-		void _UpdateProgress (GlobalSystemsRef, ProgressType &&) noexcept;
+		void _UpdateProgress (GlobalSystemsRef, Progress_t &&) noexcept;
 		void _PostExecute (GlobalSystemsRef) noexcept;
 
 
 	// interface
 	protected:
 		// in current thread //
-		virtual void PreExecute (const ModulePtr &)							{}
-		virtual void UpdateProgress (const ModulePtr &, ProgressType &&)	{}
-		virtual void PostExecute (const ModulePtr &, ResultType &&)			{}
-		virtual void OnCanceled (const ModulePtr &)							{}
+		virtual void PreExecute (const ModulePtr &)						{}
+		virtual void UpdateProgress (const ModulePtr &, Progress_t &&)	{}
+		virtual void PostExecute (const ModulePtr &, Result_t &&)		{}
+		virtual void OnCanceled (const ModulePtr &)						{}
 		
 		// in target thread //
-		virtual void ExecuteInBackground (const ModulePtr &, OUT ResultType &) = 0;
+		virtual void ExecuteInBackground (const ModulePtr &, OUT Result_t &) = 0;
 	};
 
 	
@@ -196,7 +196,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline void AsyncTask<R,P>::PublishProgress (ProgressType &&value) noexcept
+	inline void AsyncTask<R,P>::PublishProgress (Progress_t &&value) noexcept
 	{
 		ASSERT( _targetThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
@@ -296,7 +296,7 @@ namespace Base
 =================================================
 */
 	template <typename R, typename P>
-	inline void AsyncTask<R,P>::_UpdateProgress (GlobalSystemsRef, ProgressType &&value) noexcept
+	inline void AsyncTask<R,P>::_UpdateProgress (GlobalSystemsRef, Progress_t &&value) noexcept
 	{
 		ASSERT( _currentThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 

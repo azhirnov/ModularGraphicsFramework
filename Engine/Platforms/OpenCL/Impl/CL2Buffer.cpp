@@ -20,17 +20,25 @@ namespace PlatformCL
 	{
 	// types
 	private:
-		using SupportedMessages_t	= CL2BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetBufferDescriptor,
-											GpuMsg::GetCLBufferID,
-											GpuMsg::GpuMemoryRegionChanged,
+		using ForwardToMem_t		= MessageListFrom< 
 											ModuleMsg::GetStreamDescriptor,
 											ModuleMsg::ReadFromStream,
 											ModuleMsg::WriteToStream,
 											GpuMsg::MapMemoryToCpu,
+											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
-											GpuMsg::UnmapMemory
-										> >;
+											GpuMsg::UnmapMemory,
+											GpuMsg::ReadFromGpuMemory,
+											GpuMsg::WriteToGpuMemory,
+											GpuMsg::ReadFromImageMemory,
+											GpuMsg::WriteToImageMemory
+										>;
+
+		using SupportedMessages_t	= CL2BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetBufferDescriptor,
+											GpuMsg::GetCLBufferID,
+											GpuMsg::GpuMemoryRegionChanged
+										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= CL2BaseModule::SupportedEvents_t;
 		
@@ -72,14 +80,11 @@ namespace PlatformCL
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _GetCLBufferID (const Message< GpuMsg::GetCLBufferID > &);
 		bool _GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &);
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _GetStreamDescriptor (const Message< GpuMsg::GetStreamDescriptor > &);
-		bool _ReadFromStream (const Message< GpuMsg::ReadFromStream > &);
-		bool _WriteToStream (const Message< GpuMsg::WriteToStream > &);
-		bool _MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &);
-		bool _FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &);
-		bool _UnmapMemory (const Message< GpuMsg::UnmapMemory > &);
+		
+	// event handlers
+		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+
 
 	private:
 		bool _IsCreated () const;
@@ -130,16 +135,8 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2Buffer::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetCLPrivateClasses );
 		_SubscribeOnMsg( this, &CL2Buffer::_GpuMemoryRegionChanged );
-		_SubscribeOnMsg( this, &CL2Buffer::_GetStreamDescriptor );
-		_SubscribeOnMsg( this, &CL2Buffer::_ReadFromStream );
-		_SubscribeOnMsg( this, &CL2Buffer::_WriteToStream );
-		_SubscribeOnMsg( this, &CL2Buffer::_MapMemoryToCpu );
-		_SubscribeOnMsg( this, &CL2Buffer::_FlushMemoryRange );
-		_SubscribeOnMsg( this, &CL2Buffer::_UnmapMemory );
 
-		CHECK( _ValidateMsgSubscriptions() );
-
-		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*
@@ -187,6 +184,8 @@ namespace PlatformCL
 		_memFlags = req_descr->result->flags;
 
 		_memObj->Subscribe( this, &CL2Buffer::_OnMemoryBindingChanged );
+		
+		CHECK_LINKING( _CopySubscriptions< ForwardToMem_t >( _memObj ) );
 
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 		return true;
@@ -234,9 +233,11 @@ namespace PlatformCL
 */
 	bool CL2Buffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
 	{
-		CHECK( _Attach( msg->name, msg->newModule, true ) );
+		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		if ( msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		CHECK( _Attach( msg->name, msg->newModule, is_mem ) );
+
+		if ( is_mem )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
@@ -333,12 +334,12 @@ namespace PlatformCL
 		CHECK_ERR( not _isBindedToMemory );
 		
 		cl_int	cl_err = 0;
-		CL_CHECK( ((_bufferId = clCreateBuffer(
+		CL_CHECK(( (_bufferId = clCreateBuffer(
 							GetContext(),
 							CL2Enum( _memFlags ),
 							(size_t) _descr.size,
 							null,
-							&cl_err )), cl_err) );
+							OUT &cl_err )), cl_err ));
 		return true;
 	}
 	
@@ -388,66 +389,6 @@ namespace PlatformCL
 		// request buffer memory barrier
 		TODO( "" );
 		return false;
-	}
-	
-/*
-=================================================
-	_GetStreamDescriptor
-=================================================
-*/
-	bool CL2Buffer::_GetStreamDescriptor (const Message< GpuMsg::GetStreamDescriptor > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_ReadFromStream
-=================================================
-*/
-	bool CL2Buffer::_ReadFromStream (const Message< GpuMsg::ReadFromStream > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_WriteToStream
-=================================================
-*/
-	bool CL2Buffer::_WriteToStream (const Message< GpuMsg::WriteToStream > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_MapMemoryToCpu
-=================================================
-*/
-	bool CL2Buffer::_MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_FlushMemoryRange
-=================================================
-*/
-	bool CL2Buffer::_FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_UnmapMemory
-=================================================
-*/
-	bool CL2Buffer::_UnmapMemory (const Message< GpuMsg::UnmapMemory > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
 	}
 	
 }	// PlatformCL

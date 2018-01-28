@@ -121,7 +121,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Transformation<T> & Transformation<T>::operator += (const Self &right)
+	inline CHECKRES(Transformation<T> &)  Transformation<T>::operator += (const Self &right)
 	{
 		_position		+= _orientation * (right._position * _scale);
 		_orientation	*= right._orientation;
@@ -135,7 +135,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Transformation<T> Transformation<T>::operator + (const Self &right) const
+	inline CHECKRES(Transformation<T>)  Transformation<T>::operator + (const Self &right) const
 	{
 		return Transformation<T>( *this ) += right;
 	}
@@ -146,7 +146,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Transformation<T> & Transformation<T>::operator -= (const Self &right)
+	inline CHECKRES(Transformation<T> &)  Transformation<T>::operator -= (const Self &right)
 	{
 		return (*this) += right.Inversed();
 	}
@@ -157,7 +157,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Transformation<T> Transformation<T>::operator -  (const Self &right)	const
+	inline CHECKRES(Transformation<T>)  Transformation<T>::operator - (const Self &right) const
 	{
 		return Self(*this) -= right;
 	}
@@ -168,7 +168,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline bool Transformation<T>::operator == (const Self &right) const
+	inline CHECKRES(bool)  Transformation<T>::operator == (const Self &right) const
 	{
 		return	_orientation	== right._orientation	and
 				All( _position	== right._position )	and
@@ -181,7 +181,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline bool Transformation<T>::operator != (const Self &right) const
+	inline CHECKRES(bool)  Transformation<T>::operator != (const Self &right) const
 	{
 		return not ( *this == right );
 	}
@@ -192,7 +192,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline bool Transformation<T>::operator >  (const Self &right) const
+	inline CHECKRES(bool)  Transformation<T>::operator >  (const Self &right) const
 	{
 		return	_position.x		!= right._position.x	?	_position.x		> right._position.x		:
 				_position.y		!= right._position.y	?	_position.y		> right._position.y		:
@@ -214,7 +214,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline bool Transformation<T>::operator <  (const Self &right) const
+	inline CHECKRES(bool)  Transformation<T>::operator <  (const Self &right) const
 	{
 		return	_position.x		!= right._position.x	?	_position.x		< right._position.x		:
 				_position.y		!= right._position.y	?	_position.y		< right._position.y		:
@@ -260,7 +260,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Transformation<T> & Transformation<T>::Inverse ()
+	inline CHECKRES(Transformation<T> &)  Transformation<T>::Inverse ()
 	{
 		_orientation.Inverse();
 		_scale		= T(1) / _scale;
@@ -269,7 +269,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	inline Transformation<T> Transformation<T>::Inversed () const
+	inline CHECKRES(Transformation<T>)  Transformation<T>::Inversed () const
 	{
 		return Transformation( *this ).Inverse();
 	}
@@ -280,7 +280,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Transformation<T> & Transformation<T>::Move (const Vec<T,3> &delta)
+	inline CHECKRES(Transformation<T> &)  Transformation<T>::Move (const Vec<T,3> &delta)
 	{
 		_position += _orientation * (delta * _scale);
 		return *this;
@@ -292,7 +292,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Transformation<T> & Transformation<T>::Rotate (const Quaternion<T> &delta)
+	inline CHECKRES(Transformation<T> &)  Transformation<T>::Rotate (const Quaternion<T> &delta)
 	{
 		_orientation *= delta;
 		return *this;
@@ -304,7 +304,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Transformation<T> & Transformation<T>::Scale (const Vec_t &scale)
+	inline CHECKRES(Transformation<T> &)  Transformation<T>::Scale (const Vec_t &scale)
 	{
 		_scale *= scale;
 		return *this;
@@ -316,7 +316,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline bool Transformation<T>::IsZero () const
+	inline CHECKRES(bool)  Transformation<T>::IsZero () const
 	{
 		return GXMath::IsZero( _position ) and GXMath::IsZero( _orientation ) and Equals( _scale, T(1) );
 	}
@@ -327,7 +327,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Vec<T,3> Transformation<T>::GetGlobalVector (const Vec<T,3> &local) const
+	inline CHECKRES(Vec<T,3>)  Transformation<T>::GetGlobalVector (const Vec<T,3> &local) const
 	{
 		return _orientation * (local * _scale);
 	}
@@ -338,7 +338,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Vec<T,3> Transformation<T>::GetGlobalPosition (const Vec<T,3> &local) const
+	inline CHECKRES(Vec<T,3>)  Transformation<T>::GetGlobalPosition (const Vec<T,3> &local) const
 	{
 		return GetGlobalVector( local ) + _position;
 	}
@@ -349,7 +349,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Vec<T,3> Transformation<T>::GetLocalVector (const Vec<T,3> &global) const
+	inline CHECKRES(Vec<T,3>)  Transformation<T>::GetLocalVector (const Vec<T,3> &global) const
 	{
 		return (_orientation.Inversed() * global) / _scale;
 	}
@@ -360,7 +360,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Vec<T,3> Transformation<T>::GetLocalPosition (const Vec<T,3> &global) const
+	inline CHECKRES(Vec<T,3>)  Transformation<T>::GetLocalPosition (const Vec<T,3> &global) const
 	{
 		return GetLocalVector( global - _position );
 	}
@@ -372,7 +372,7 @@ namespace GXMath
 */
 	template <typename T>
 	template <typename T2>
-	inline Transformation<T2> Transformation<T>::Convert () const
+	inline CHECKRES(Transformation<T2>)  Transformation<T>::Convert () const
 	{
 		return Transformation<T2>( _position.template Convert<T2>(), _orientation.template Convert<T2>(), T2(_scale) );
 	}

@@ -244,9 +244,8 @@ DEBUG_ONLY(
 */
 	bool RenderState::RasterizationState::operator == (const Self &right) const
 	{
-		return	polygonMode		== right.polygonMode			and
-				(polygonMode	!= EPolygonMode::Line ?	true :
-					lineWidth	== right.lineWidth)				and
+		return	polygonMode				== right.polygonMode			and
+				(polygonMode			!= EPolygonMode::Line ?	true : Equals( lineWidth, right.lineWidth )) and
 				depthBiasConstFactor	== right.depthBiasConstFactor	and		// TODO
 				depthBiasClamp			== right.depthBiasClamp			and
 				depthBiasSlopeFactor	== right.depthBiasSlopeFactor	and

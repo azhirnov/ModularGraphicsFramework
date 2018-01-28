@@ -50,6 +50,7 @@ namespace Platforms
 	// variables
 	private:
 		ComputeSettings		_settings;
+		ModulePtr			_syncManager;
 
 		Device				_device;
 
@@ -58,13 +59,12 @@ namespace Platforms
 	public:
 		OpenCLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
 		~OpenCLThread ();
-
-		Ptr< Device >	GetDevice ()		{ return &_device; }
 		
 
 	// message handlers
 	private:
 		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
@@ -105,7 +105,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenCLThread::_OnManagerChanged_Empty );
 		_SubscribeOnMsg( this, &OpenCLThread::_FindModule_Impl );
 		_SubscribeOnMsg( this, &OpenCLThread::_ModulesDeepSearch_Impl );
-		_SubscribeOnMsg( this, &OpenCLThread::_Link_Impl );
+		_SubscribeOnMsg( this, &OpenCLThread::_Link );
 		_SubscribeOnMsg( this, &OpenCLThread::_Compose );
 		_SubscribeOnMsg( this, &OpenCLThread::_Delete );
 		_SubscribeOnMsg( this, &OpenCLThread::_SubmitComputeQueueCommands );
@@ -132,10 +132,37 @@ namespace Platforms
 	
 /*
 =================================================
+	_Link
+=================================================
+*/
+	bool OpenCLThread::_Link (const Message< ModuleMsg::Link > &msg)
+	{
+		if ( _IsComposedOrLinkedState( GetState() ) )
+			return true;	// already linked
+
+		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+
+		// create sync manager
+		{
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
+											CLSyncManagerModuleID,
+											GlobalSystems(),
+											CreateInfo::GpuSyncManager{ this },
+											OUT _syncManager ) );
+
+			CHECK_ERR( _Attach( "sync", _syncManager, true ) );
+			_syncManager->Send( msg );
+		}
+
+		return Module::_Link_Impl( msg );
+	}
+	
+/*
+=================================================
 	_Compose
 =================================================
 */
-	bool OpenCLThread::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool OpenCLThread::_Compose (const Message< ModuleMsg::Compose > &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -144,8 +171,7 @@ namespace Platforms
 
 		CHECK_COMPOSING( _CreateDevice() );
 
-		CHECK( _DefCompose( false ) );
-		return true;
+		return _DefCompose( false );
 	}
 
 /*
@@ -191,18 +217,46 @@ namespace Platforms
 		using namespace cl;
 
 		CHECK_ERR( _device.HasCommandQueue() );
+		
+		DEBUG_ONLY(
+			FOR( i, msg->commands )
+			{
+				Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
+				msg->commands[i]->Send( req_descr );
+				CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
+			}
+		);
+		
+		ModuleUtils::Send( msg->commands, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
 
-		Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
-		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
+		// wait for signal
+		{
+			Message< GpuMsg::WaitCLSemaphore >	wait;
 
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( pending_state );
+			FOR( i, msg->waitSemaphores ) {
+				wait->semaphores.PushBack( msg->waitSemaphores[i].first );
+			}
+
+			if ( not wait->semaphores.Empty() ) {
+				CHECK( _syncManager->Send( wait ) );
+			}
 		}
 
-		CL_CALL( clEnqueueBarrierWithWaitList( _device.GetCommandQueue(), 0, null, null ) );	// TODO: use fence
+		// execute command buffers
+		ModuleUtils::Send( msg->commands, Message<GpuMsg::ExecuteCLCommandBuffer>{} );
 		
-		FOR( i, msg->commands ) {
-			msg->commands[i]->Send( completed_state );
+		// enqueue fence
+		if ( msg->fence != GpuFenceId::Unknown )
+		{
+			Message< GpuMsg::CLFenceSync >	fence_sync{ msg->fence };
+			CHECK( _syncManager->Send( fence_sync ) );
+		}
+
+		// enqueue semaphores
+		FOR( i, msg->signalSemaphores )
+		{
+			Message< GpuMsg::CLSemaphoreEnqueue >	sem_sync{ msg->signalSemaphores[i] };
+			CHECK( _syncManager->Send( sem_sync ) );
 		}
 		return true;
 	}
@@ -283,7 +337,7 @@ namespace Platforms
 		CHECK_ERR( _device.CreateDevice( dev ) );
 		
 		CHECK_ERR( _device.CreateContext() );
-		CHECK_ERR( _device.CreateQueue() );
+		CHECK_ERR( _device.CreateQueue( _settings.isDebug ) );
 
 		_device.WriteInfo();
 
@@ -304,6 +358,12 @@ namespace Platforms
 
 			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
 		}
+		
+		if ( _syncManager )
+		{
+			_syncManager->Send< ModuleMsg::Delete >({});
+			_syncManager = null;
+		}
 
 		_device.Deinitialize();
 	}
@@ -316,6 +376,9 @@ namespace Platforms
 	bool OpenCLThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
 	{
 		msg->result.Set({
+			this,
+			null,
+			_syncManager,
 			null,
 			0
 		});

@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'C:\Projects\graphxgenengine\Projects\ShaderEditorTools\SirenianDawn1.cpp'
-// Created at: 2018/01/12 - 00:05:48
+// Created at: 2018/01/17 - 20:21:47
 
 #include "all_pipelines.h"
 
@@ -281,22 +281,22 @@ const mat2x2 m2 = mat2x2(0.80000001, 0.60000002, -0.60000002, 0.80000001);
 
 //---------------------------------
 
-float march (in vec3 ro, in vec3 rd, out float itrc);
-void mainImage (out vec4 fragColor, in vec2 fragCoord);
-vec3 scatter (in vec3 ro, in vec3 rd);
-vec3 hash33 (in vec3 p);
-vec3 stars (in vec3 p);
-float curv (in vec3 p, in float w);
-vec3 fog (in vec3 ro, in vec3 rd, in vec3 col, in float ds);
-float linstep (in float mn, in float mx, in float x);
 vec3 noised (in vec2 x);
 float terrain (in vec2 p);
 float map (in vec3 p);
+vec3 stars (in vec3 p);
 vec3 normal (in vec3 p, in float ds);
 float noise (in vec2 x);
 float fbm (in vec2 p);
 float bnoise (in vec2 p);
 vec3 bump (in vec3 p, in vec3 n, in float ds);
+vec3 scatter (in vec3 ro, in vec3 rd);
+vec3 hash33 (in vec3 p);
+float curv (in vec3 p, in float w);
+vec3 fog (in vec3 ro, in vec3 rd, in vec3 col, in float ds);
+float linstep (in float mn, in float mx, in float x);
+float march (in vec3 ro, in vec3 rd, out float itrc);
+void mainImage (out vec4 fragColor, in vec2 fragCoord);
 
 //---------------------------------
 void main ()

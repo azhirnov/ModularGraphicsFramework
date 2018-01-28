@@ -43,7 +43,7 @@ namespace CreateInfo
 	struct GpuCommandBuffer
 	{
 		ModulePtr							gpuThread;			// can be null
-		ModulePtr							builder;
+		//ModulePtr							builder;
 		Platforms::CommandBufferDescriptor	descr;
 	};
 
@@ -128,11 +128,11 @@ namespace GpuMsg
 	// types
 		struct Viewport : CompileTime::PODStruct
 		{
-			GXMath::RectU	rect;
-			GXMath::float2	depthRange;
+			RectU		rect;
+			float2		depthRange;
 
 			Viewport () {}
-			Viewport (const GXMath::RectU &rect, const GXMath::float2 &depth) : rect(rect), depthRange(depth) {}
+			Viewport (const RectU &rect, const float2 &depth) : rect(rect), depthRange(depth) {}
 		};
 
 		using Viewports_t	= FixedSizeArray< Viewport, GlobalConst::Graphics_MaxViewports >;
@@ -143,8 +143,8 @@ namespace GpuMsg
 		uint			firstViewport	= 0;
 
 	// methods
-		CmdSetViewport (const GXMath::RectU &rect,
-						const GXMath::float2 &depthRange,
+		CmdSetViewport (const RectU &rect,
+						const float2 &depthRange,
 						uint firstViewport = 0)
 		{
 			viewports.PushBack( Viewport( rect, depthRange ) );
@@ -163,20 +163,20 @@ namespace GpuMsg
 	struct CmdSetScissor
 	{
 	// types
-		using Scissors_t	= FixedSizeArray< GXMath::RectU, GlobalConst::Graphics_MaxViewports >;
+		using Scissors_t	= FixedSizeArray< RectU, GlobalConst::Graphics_MaxViewports >;
 
 	// variables
 		Scissors_t		scissors;
 		uint			firstScissor	= 0;
 
 	// methods
-		CmdSetScissor (const GXMath::RectU &scissorRect, uint firstScissor = 0)
+		CmdSetScissor (const RectU &scissorRect, uint firstScissor = 0)
 		{
 			scissors.PushBack( scissorRect );
 			this->firstScissor = firstScissor;
 		}
 
-		CmdSetScissor (ArrayCRef<GXMath::RectU> list, uint firstScissor = 0) :
+		CmdSetScissor (ArrayCRef<RectU> list, uint firstScissor = 0) :
 			scissors(list), firstScissor(firstScissor)
 		{}
 	};
@@ -197,7 +197,7 @@ namespace GpuMsg
 	//
 	struct CmdSetBlendColor
 	{
-		GXMath::color4f		color;
+		color4f		color;
 	};
 
 
@@ -293,19 +293,19 @@ namespace GpuMsg
 			explicit DepthStencil (float depth, uint stencil = 0) : depth(depth), stencil(stencil) {}
 		};
 
-		using ClearValue_t	= Union< GXMath::float4, GXMath::uint4, GXMath::int4, DepthStencil >;
+		using ClearValue_t	= Union< float4, uint4, int4, DepthStencil >;
 		using ClearValues_t	= FixedSizeArray< ClearValue_t, GlobalConst::Graphics_MaxColorBuffers+1 >;
 
 	// variables
 		ModulePtr		renderPass;
 		ModulePtr		framebuffer;
-		GXMath::RectU	area;
+		RectU			area;
 		ClearValues_t	clearValues;	// TODO: map names to indices ?
 
 	// methods
 		CmdBeginRenderPass () {}
 
-		CmdBeginRenderPass (const ModulePtr &renderPass, const ModulePtr &framebuffer, const GXMath::RectU &area, ArrayCRef<ClearValue_t> clearValues = Uninitialized) :
+		CmdBeginRenderPass (const ModulePtr &renderPass, const ModulePtr &framebuffer, const RectU &area, ArrayCRef<ClearValue_t> clearValues = Uninitialized) :
 			renderPass{renderPass}, framebuffer{framebuffer}, area{area}, clearValues(clearValues)
 		{}
 	};
@@ -450,7 +450,7 @@ namespace GpuMsg
 	//
 	struct CmdDispatch
 	{
-		GXMath::uint3	groupCount;
+		uint3			groupCount;
 	};
 
 	struct CmdDispatchIndirect
@@ -550,7 +550,6 @@ namespace GpuMsg
 		using EImageAspect	= Platforms::EImageAspect;
 		using MipmapLevel	= Platforms::MipmapLevel;
 		using ImageLayer	= Platforms::ImageLayer;
-		using uint3			= GXMath::uint3;
 
 		struct ImageLayers : CompileTime::PODStruct
 		{
@@ -596,9 +595,9 @@ namespace GpuMsg
 
 	// variables
 		ModulePtr			srcImage;
-		EImageLayout::type	srcLayout;
+		EImageLayout::type	srcLayout	= EImageLayout::Unknown;
 		ModulePtr			dstImage;
-		EImageLayout::type	dstLayout;
+		EImageLayout::type	dstLayout	= EImageLayout::Unknown;
 		Regions_t			regions;
 
 
@@ -626,14 +625,13 @@ namespace GpuMsg
 		using EImageLayout	= Platforms::EImageLayout;
 		using EImageAspect	= Platforms::EImageAspect;
 		using ImageLayers	= CmdCopyImage::ImageLayers;
-		using uint3			= GXMath::uint3;
 
 		struct Region : CompileTime::PODStruct
 		{
 			// src
 			BytesUL		bufferOffset;
-			uint		bufferRowLength;		// TODO: bytes?
-			uint		bufferImageHeight;
+			uint		bufferRowLength		= 0;	// pixels ?
+			uint		bufferImageHeight	= 0;	// pixels ?
 			// dst
 			ImageLayers	imageLayers;
 			uint3		imageOffset;
@@ -645,7 +643,7 @@ namespace GpuMsg
 	// variables
 		ModulePtr			srcBuffer;
 		ModulePtr			dstImage;
-		EImageLayout::type	dstLayout;
+		EImageLayout::type	dstLayout	= EImageLayout::Unknown;
 		Regions_t			regions;
 
 
@@ -672,14 +670,13 @@ namespace GpuMsg
 		using EImageLayout	= Platforms::EImageLayout;
 		using EImageAspect	= Platforms::EImageAspect;
 		using ImageLayers	= CmdCopyImage::ImageLayers;
-		using uint3			= GXMath::uint3;
 		using Region		= CmdCopyBufferToImage::Region;
 		using Regions_t		= CmdCopyBufferToImage::Regions_t;
 
 
 	// variables
 		ModulePtr			srcImage;
-		EImageLayout::type	srcLayout;
+		EImageLayout::type	srcLayout	= EImageLayout::Unknown;
 		ModulePtr			dstBuffer;
 		Regions_t			regions;
 
@@ -705,7 +702,6 @@ namespace GpuMsg
 	// types
 		using EImageLayout	= Platforms::EImageLayout;
 		using ImageLayers	= CmdCopyImage::ImageLayers;
-		using uint3			= GXMath::uint3;
 
 		struct Region : CompileTime::PODStruct
 		{
@@ -735,9 +731,9 @@ namespace GpuMsg
 
 	// variables
 		ModulePtr			srcImage;
-		EImageLayout::type	srcLayout;
+		EImageLayout::type	srcLayout		= EImageLayout::Unknown;
 		ModulePtr			dstImage;
-		EImageLayout::type	dstLayout;
+		EImageLayout::type	dstLayout		= EImageLayout::Unknown;
 		bool				linearFilter	= false;
 		Regions_t			regions;
 
@@ -806,7 +802,6 @@ namespace GpuMsg
 		using DepthStencil_t	= CmdBeginRenderPass::DepthStencil;
 		using ClearValue_t		= CmdBeginRenderPass::ClearValue_t;
 		using ImageLayer		= Platforms::ImageLayer;
-		using RectU				= GXMath::RectU;
 
 		struct Attachment : CompileTime::PODStruct
 		{
@@ -815,9 +810,9 @@ namespace GpuMsg
 			ClearValue_t		clearValue;
 
 			Attachment () {}
-			Attachment (EImageAspect::bits aspect, uint idx, const GXMath::float4 &color) : aspectMask(aspect), attachmentIdx(idx), clearValue(color) {}
-			Attachment (EImageAspect::bits aspect, uint idx, const GXMath::int4 &color) : aspectMask(aspect), attachmentIdx(idx), clearValue(color) {}
-			Attachment (EImageAspect::bits aspect, uint idx, const GXMath::uint4 &color) : aspectMask(aspect), attachmentIdx(idx), clearValue(color) {}
+			Attachment (EImageAspect::bits aspect, uint idx, const float4 &color) : aspectMask(aspect), attachmentIdx(idx), clearValue(color) {}
+			Attachment (EImageAspect::bits aspect, uint idx, const int4 &color) : aspectMask(aspect), attachmentIdx(idx), clearValue(color) {}
+			Attachment (EImageAspect::bits aspect, uint idx, const uint4 &color) : aspectMask(aspect), attachmentIdx(idx), clearValue(color) {}
 			Attachment (EImageAspect::bits aspect, uint idx, float depth, uint stencil) : aspectMask(aspect), attachmentIdx(idx), clearValue(DepthStencil_t{depth, stencil}) {}
 		};
 
@@ -854,7 +849,7 @@ namespace GpuMsg
 		using EImageLayout	= Platforms::EImageLayout;
 		using MipmapLevel	= Platforms::MipmapLevel;
 		using ImageLayer	= Platforms::ImageLayer;
-		using ClearColor_t	= Union< GXMath::float4, GXMath::uint4, GXMath::int4 >;
+		using ClearColor_t	= Union< float4, uint4, int4 >;
 
 		struct ImageRange : CompileTime::PODStruct
 		{
@@ -887,7 +882,7 @@ namespace GpuMsg
 
 
 	// methods
-		CmdClearColorImage (const ModulePtr &image, EImageLayout::type layout, const GXMath::float4 &color) :
+		CmdClearColorImage (const ModulePtr &image, EImageLayout::type layout, const float4 &color) :
 			image( image ), layout( layout ), clearValue( color )
 		{
 			ranges.PushBack(ImageRange{ EImageAspect::bits() | EImageAspect::Color });

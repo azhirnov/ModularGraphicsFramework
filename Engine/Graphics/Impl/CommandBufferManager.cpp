@@ -8,12 +8,14 @@ namespace Engine
 {
 namespace Graphics
 {
+	using namespace Engine::Platforms;
+
 
 	//
-	// Per Frame Command Buffers
+	// Command Buffers Manager
 	//
 
-	class PerFrameCommandBuffers final : public GraphicsBaseModule
+	class CommandBufferManager final : public GraphicsBaseModule
 	{
 	// types
 	private:
@@ -65,6 +67,9 @@ namespace Graphics
 											GraphicsMsg::CmdEnd,
 											GraphicsMsg::CmdBeginFrame,
 											GraphicsMsg::CmdEndFrame,
+											GraphicsMsg::CmdBeginVRFrame,
+											GraphicsMsg::CmdEndVRFrame,
+											GraphicsMsg::CmdAppend,
 											GraphicsMsg::CmdGetCurrentState,
 											GraphicsMsg::CmdAddFrameDependency,
 											GraphicsMsg::SubscribeOnFrameCompleted
@@ -76,13 +81,12 @@ namespace Graphics
 											GraphicsMsg::OnCmdEndFrame
 										> >;
 
-		using SyncMngrMsgList_t		= MessageListFrom< 
-											GpuMsg::CreateFence,
-											GpuMsg::DestroyFence,
-											GpuMsg::ClientWaitFence
+		using VRThreadMsgList_t		= MessageListFrom<
+											GpuMsg::ThreadBeginVRFrame,
+											GpuMsg::ThreadEndVRFrame
 										>;
 
-		using CmdBuffers_t			= FixedSizeArray< ModulePtr, 16 >;
+		using CmdBuffers_t			= FixedSizeArray< ModulePtr, 32 >;
 
 		using Semaphores_t			= FixedSizeArray< GpuSemaphoreId, 16 >;
 		using WaitSemaphores_t		= FixedSizeArray<Pair< GpuSemaphoreId, EPipelineStage::bits >, 16 >;
@@ -96,13 +100,14 @@ namespace Graphics
 			GpuFenceId			fence		= Uninitialized;	// wait before reuse command buffers
 			CmdBuffers_t		commands;						// used command buffers
 			CmdBuffers_t		freeBuffers;					// available command buffers
+			CmdBuffers_t		externalBuffers;				// command buffers that added by 'CmdAppend' command
 			Fences_t			waitFences;						// wait before begin frame (in client side)
 			WaitSemaphores_t	waitSemaphores;					// wait before begin executing (in gpu side)
 			Semaphores_t		signalSemaphores;				// signal after executing (in gpu side)
 			Callbacks_t			callbacks;
 		};
 
-		using PerFrameArray_t		= FixedSizeArray< PerFrame, 4 >;
+		using PerFrameArray_t		= Array< PerFrame >;
 
 		using EScope				= GraphicsMsg::CmdGetCurrentState::EScope;
 
@@ -119,6 +124,7 @@ namespace Graphics
 		ModulePtr			_builder;
 		UntypedID_t			_cmdBufferId;
 
+		Array<ModulePtr>	_tempBuffers;
 		PerFrameArray_t		_perFrame;
 		const uint			_bufferChainLength;
 		uint				_bufferIndex;
@@ -126,12 +132,15 @@ namespace Graphics
 		EScope				_scope;
 		ModulePtr			_framebuffer;
 		uint				_frameIndex;
+		
+		bool				_isVRCompatible;
+		bool				_isVRFrame;
 
 
 	// methods
 	public:
-		PerFrameCommandBuffers (GlobalSystemsRef gs, const CreateInfo::PerFrameCommandBuffers &ci);
-		~PerFrameCommandBuffers ();
+		CommandBufferManager (GlobalSystemsRef gs, const CreateInfo::CommandBufferManager &ci);
+		~CommandBufferManager ();
 
 
 	// message handlers
@@ -146,47 +155,67 @@ namespace Graphics
 		bool _CmdEnd (const Message< GraphicsMsg::CmdEnd > &);
 		bool _CmdBeginFrame (const Message< GraphicsMsg::CmdBeginFrame > &);
 		bool _CmdEndFrame (const Message< GraphicsMsg::CmdEndFrame > &);
+		bool _CmdBeginVRFrame (const Message< GraphicsMsg::CmdBeginVRFrame > &);
+		bool _CmdEndVRFrame (const Message< GraphicsMsg::CmdEndVRFrame > &);
+		bool _CmdAppend (const Message< GraphicsMsg::CmdAppend > &);
 		bool _CmdGetCurrentState (const Message< GraphicsMsg::CmdGetCurrentState > &);
 		bool _CmdAddFrameDependency (const Message< GraphicsMsg::CmdAddFrameDependency > &);
 		bool _SubscribeOnFrameCompleted (const Message< GraphicsMsg::SubscribeOnFrameCompleted > &);
 
+		// only to change scope
+		bool _Scope_CmdBegin (const Message< GpuMsg::CmdBegin > &);
+		bool _Scope_CmdEnd (const Message< GpuMsg::CmdEnd > &);
+		bool _Scope_CmdBeginRenderPass (const Message< GpuMsg::CmdBeginRenderPass > &);
+		bool _Scope_CmdEndRenderPass (const Message< GpuMsg::CmdEndRenderPass > &);
+
 		// TODO: delete command buffers when swapchain recreated
+
+	private:
+		bool _BeginFrame ();
 	};
 //-----------------------------------------------------------------------------
 
 
-	const TypeIdList	PerFrameCommandBuffers::_msgTypes{ UninitializedT< SupportedMessages_t >() };
-	const TypeIdList	PerFrameCommandBuffers::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	const TypeIdList	CommandBufferManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
+	const TypeIdList	CommandBufferManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
 =================================================
 	constructor
 =================================================
 */
-	PerFrameCommandBuffers::PerFrameCommandBuffers (GlobalSystemsRef gs, const CreateInfo::PerFrameCommandBuffers &ci) :
-		GraphicsBaseModule( gs, ModuleConfig{ PerFrameCommandBuffersModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	CommandBufferManager::CommandBufferManager (GlobalSystemsRef gs, const CreateInfo::CommandBufferManager &ci) :
+		GraphicsBaseModule( gs, ModuleConfig{ CommandBufferManagerModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_bufferChainLength{ Max( 2u, ci.bufferChainLength ) },		_bufferIndex{ 0 },
-		_scope{ EScope::None },										_frameIndex{ 0 }
+		_scope{ EScope::None },										_frameIndex{ 0 },
+		_isVRCompatible{ false },									_isVRFrame{ false }
 	{
-		SetDebugName( "PerFrameCommandBuffers" );
+		SetDebugName( "CommandBufferManager" );
 
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_OnModuleAttached_Impl );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_OnModuleDetached_Impl );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_AttachModule );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_DetachModule );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_FindModule_Impl );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_ModulesDeepSearch_Impl );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_Link );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_Compose );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_Delete );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_OnManagerChanged );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdBegin );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdEnd );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdBeginFrame );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdEndFrame );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdGetCurrentState );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_CmdAddFrameDependency );
-		_SubscribeOnMsg( this, &PerFrameCommandBuffers::_SubscribeOnFrameCompleted );
+		_SubscribeOnMsg( this, &CommandBufferManager::_OnModuleAttached_Impl );
+		_SubscribeOnMsg( this, &CommandBufferManager::_OnModuleDetached_Impl );
+		_SubscribeOnMsg( this, &CommandBufferManager::_AttachModule );
+		_SubscribeOnMsg( this, &CommandBufferManager::_DetachModule );
+		_SubscribeOnMsg( this, &CommandBufferManager::_FindModule_Impl );
+		_SubscribeOnMsg( this, &CommandBufferManager::_ModulesDeepSearch_Impl );
+		_SubscribeOnMsg( this, &CommandBufferManager::_Link );
+		_SubscribeOnMsg( this, &CommandBufferManager::_Compose );
+		_SubscribeOnMsg( this, &CommandBufferManager::_Delete );
+		_SubscribeOnMsg( this, &CommandBufferManager::_OnManagerChanged );
+		_SubscribeOnMsg( this, &CommandBufferManager::_CmdBegin );
+		_SubscribeOnMsg( this, &CommandBufferManager::_CmdEnd );
+		_SubscribeOnMsg( this, &CommandBufferManager::_CmdBeginFrame );
+		_SubscribeOnMsg( this, &CommandBufferManager::_CmdEndFrame );
+		_SubscribeOnMsg( this, &CommandBufferManager::_CmdBeginVRFrame );
+		_SubscribeOnMsg( this, &CommandBufferManager::_CmdEndVRFrame );
+		_SubscribeOnMsg( this, &CommandBufferManager::_CmdAppend );
+		_SubscribeOnMsg( this, &CommandBufferManager::_CmdGetCurrentState );
+		_SubscribeOnMsg( this, &CommandBufferManager::_CmdAddFrameDependency );
+		_SubscribeOnMsg( this, &CommandBufferManager::_SubscribeOnFrameCompleted );
+		_SubscribeOnMsg( this, &CommandBufferManager::_Scope_CmdBegin );
+		_SubscribeOnMsg( this, &CommandBufferManager::_Scope_CmdEnd );
+		_SubscribeOnMsg( this, &CommandBufferManager::_Scope_CmdBeginRenderPass );
+		_SubscribeOnMsg( this, &CommandBufferManager::_Scope_CmdEndRenderPass );
 
 		_AttachSelfToManager( _GetGpuThread( ci.gpuThread ), UntypedID_t(0), true );
 
@@ -198,7 +227,7 @@ namespace Graphics
 	desctructor
 =================================================
 */
-	PerFrameCommandBuffers::~PerFrameCommandBuffers ()
+	CommandBufferManager::~CommandBufferManager ()
 	{
 	}
 	
@@ -207,19 +236,20 @@ namespace Graphics
 	_Link
 =================================================
 */
-	bool PerFrameCommandBuffers::_Link (const Message< ModuleMsg::Link > &msg)
+	bool CommandBufferManager::_Link (const Message< ModuleMsg::Link > &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
-		CHECK_ERR( _GetManager() );
+		CHECK_ERR( _GetManager() /*and _IsComposedState( _GetManager()->GetState() )*/ );
 
 
 		Message< GpuMsg::GetGraphicsModules >	req_ids;
 		CHECK( _GetManager()->Send( req_ids ) );
 
-		_cmdBufferId = req_ids->graphics->commandBuffer;
+		_cmdBufferId	= req_ids->graphics->commandBuffer;
+		_isVRCompatible	= _GetManager()->GetSupportedMessages().HasAllTypes< VRThreadMsgList_t >();
 
 
 		// create builder
@@ -247,15 +277,16 @@ namespace Graphics
 	_Compose
 =================================================
 */
-	bool PerFrameCommandBuffers::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool CommandBufferManager::_Compose (const Message< ModuleMsg::Compose > &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
-
-		_syncManager = _GetManager()->GetModuleByMsg< SyncMngrMsgList_t >();
-		CHECK_COMPOSING( _syncManager );
+		
+		Message< GpuMsg::GetDeviceInfo >	req_dev;
+		_GetManager()->Send( req_dev );
+		CHECK_COMPOSING( _syncManager = req_dev->result->syncManager );
 
 		FOR( i, _perFrame )
 		{
@@ -279,7 +310,7 @@ namespace Graphics
 	_Delete
 =================================================
 */
-	bool PerFrameCommandBuffers::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool CommandBufferManager::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
 		_SendForEachAttachments( msg );
 
@@ -311,7 +342,7 @@ namespace Graphics
 	_AttachModule
 =================================================
 */
-	bool PerFrameCommandBuffers::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool CommandBufferManager::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
 	{
 		const bool	is_builder	= msg->newModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >();
 
@@ -330,7 +361,7 @@ namespace Graphics
 	_DetachModule
 =================================================
 */
-	bool PerFrameCommandBuffers::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool CommandBufferManager::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
 	{
 		CHECK( _Detach( msg->oldModule ) );
 
@@ -344,13 +375,11 @@ namespace Graphics
 
 /*
 =================================================
-	_CmdBeginFrame
+	_BeginFrame
 =================================================
 */
-	bool PerFrameCommandBuffers::_CmdBeginFrame (const Message< GraphicsMsg::CmdBeginFrame > &msg)
+	bool CommandBufferManager::_BeginFrame ()
 	{
-		CHECK_ERR( _IsComposedState( GetState() ) );
-		
 		_bufferIndex = (_bufferIndex + 1) % _bufferChainLength;
 
 		// wait until executing will be completed
@@ -360,7 +389,11 @@ namespace Graphics
 
 			CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ per_frame.waitFences }) );
 
-			ModuleUtils::Send( per_frame.commands, Message< GpuMsg::SetCommandBufferState >{ GpuMsg::SetCommandBufferState::EState::Completed });
+			Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
+
+			ModuleUtils::Send( per_frame.commands, completed_state );
+			ModuleUtils::Send( per_frame.externalBuffers, completed_state );
+			ModuleUtils::Send( per_frame.externalBuffers, Message<ModuleMsg::Delete>{} );
 		
 			FOR( i, per_frame.callbacks ) {
 				per_frame.callbacks[i]( _bufferIndex );
@@ -371,7 +404,22 @@ namespace Graphics
 			per_frame.waitFences.Clear();
 			per_frame.commands.Clear();
 			per_frame.callbacks.Clear();
+			per_frame.externalBuffers.Clear();
 		}
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdBeginFrame
+=================================================
+*/
+	bool CommandBufferManager::_CmdBeginFrame (const Message< GraphicsMsg::CmdBeginFrame > &msg)
+	{
+		CHECK_ERR( _IsComposedState( GetState() ) );
+		CHECK_ERR( _scope == EScope::None );
+		
+		CHECK_ERR( _BeginFrame() );
 
 		// begin frame
 		{
@@ -394,16 +442,19 @@ namespace Graphics
 	_CmdEndFrame
 =================================================
 */
-	bool PerFrameCommandBuffers::_CmdEndFrame (const Message< GraphicsMsg::CmdEndFrame > &msg)
+	bool CommandBufferManager::_CmdEndFrame (const Message< GraphicsMsg::CmdEndFrame > &msg)
 	{
-		CHECK_ERR( _scope == EScope::Frame );
+		CHECK_ERR( _scope == EScope::Frame and not _isVRFrame );
 		CHECK_ERR( msg->framebuffer == null or msg->framebuffer == _framebuffer );
 		
 		auto&	per_frame = _perFrame[ _bufferIndex ];
 
+		_tempBuffers.Append( per_frame.commands );
+		_tempBuffers.Append( per_frame.externalBuffers );
+
 		Message< GpuMsg::ThreadEndFrame >	end;
 		end->fence			= per_frame.fence;
-		end->commands		= per_frame.commands;
+		end->commands		= _tempBuffers;
 		end->framebuffer	= _framebuffer;
 		end->waitSemaphores.Append( per_frame.waitSemaphores );
 		end->signalSemaphores.Append( per_frame.signalSemaphores );
@@ -411,6 +462,7 @@ namespace Graphics
 		CHECK( _GetManager()->Send( end ) );
 
 		per_frame.waitSemaphores.Clear();
+		_tempBuffers.Clear();
 
 		_framebuffer = null;
 		_frameIndex	 = UMax;
@@ -422,10 +474,87 @@ namespace Graphics
 	
 /*
 =================================================
+	_CmdBeginVRFrame
+=================================================
+*/
+	bool CommandBufferManager::_CmdBeginVRFrame (const Message< GraphicsMsg::CmdBeginVRFrame > &msg)
+	{
+		CHECK_ERR( _IsComposedState( GetState() ) );
+		CHECK_ERR( _isVRCompatible );
+		CHECK_ERR( _scope == EScope::None );
+		
+		CHECK_ERR( _BeginFrame() );
+
+		// begin frame
+		{
+			Message< GpuMsg::ThreadBeginVRFrame >		begin;
+			CHECK( _GetManager()->Send( begin ) );
+
+			msg->result.Set({ *begin->result, _bufferIndex });
+
+			//_framebuffer = begin->result->framebuffer;
+			_frameIndex	 = begin->result->frameIindex;
+			_scope		 = EScope::Frame;
+			_isVRFrame	 = true;
+
+			_SendEvent< GraphicsMsg::OnCmdBeginFrame >({ _bufferIndex });
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdEndVRFrame
+=================================================
+*/
+	bool CommandBufferManager::_CmdEndVRFrame (const Message< GraphicsMsg::CmdEndVRFrame > &msg)
+	{
+		CHECK_ERR( _scope == EScope::Frame and _isVRFrame );
+		
+		auto&	per_frame = _perFrame[ _bufferIndex ];
+
+		_tempBuffers.Append( per_frame.commands );
+		_tempBuffers.Append( per_frame.externalBuffers );
+
+		Message< GpuMsg::ThreadEndVRFrame >		end;
+		end->fence		= per_frame.fence;
+		end->commands	= _tempBuffers;
+		end->waitSemaphores.Append( per_frame.waitSemaphores );
+		end->signalSemaphores.Append( per_frame.signalSemaphores );
+		
+		CHECK( _GetManager()->Send( end ) );
+
+		per_frame.waitSemaphores.Clear();
+		_tempBuffers.Clear();
+
+		_framebuffer = null;
+		_frameIndex	 = UMax;
+		_scope		 = EScope::None;
+		_isVRFrame	 = false;
+
+		_SendEvent< GraphicsMsg::OnCmdEndFrame >({ _bufferIndex });
+		return true;
+	}
+
+/*
+=================================================
+	_CmdAppend
+=================================================
+*/
+	bool CommandBufferManager::_CmdAppend (const Message< GraphicsMsg::CmdAppend > &msg)
+	{
+		CHECK_ERR( _scope == EScope::Frame );
+
+		_perFrame[ _bufferIndex ].externalBuffers.Append( msg->commands );
+		return true;
+	}
+
+/*
+=================================================
 	_CmdGetCurrentState
 =================================================
 */
-	bool PerFrameCommandBuffers::_CmdGetCurrentState (const Message< GraphicsMsg::CmdGetCurrentState > &msg)
+	bool CommandBufferManager::_CmdGetCurrentState (const Message< GraphicsMsg::CmdGetCurrentState > &msg)
 	{
 		msg->result.Set({ _framebuffer, _frameIndex, _bufferIndex, _scope });
 		return true;
@@ -436,7 +565,7 @@ namespace Graphics
 	_CmdAddFrameDependency
 =================================================
 */
-	bool PerFrameCommandBuffers::_CmdAddFrameDependency (const Message< GraphicsMsg::CmdAddFrameDependency > &msg)
+	bool CommandBufferManager::_CmdAddFrameDependency (const Message< GraphicsMsg::CmdAddFrameDependency > &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
@@ -454,7 +583,7 @@ namespace Graphics
 	_SubscribeOnFrameCompleted
 =================================================
 */
-	bool PerFrameCommandBuffers::_SubscribeOnFrameCompleted (const Message< GraphicsMsg::SubscribeOnFrameCompleted > &msg)
+	bool CommandBufferManager::_SubscribeOnFrameCompleted (const Message< GraphicsMsg::SubscribeOnFrameCompleted > &msg)
 	{
 		auto &	per_frame	= _perFrame[ _bufferIndex ];
 
@@ -463,13 +592,57 @@ namespace Graphics
 		msg->index.Set( _bufferIndex );
 		return true;
 	}
+	
+/*
+=================================================
+	_Scope_CmdBegin
+=================================================
+*/
+	bool CommandBufferManager::_Scope_CmdBegin (const Message< GpuMsg::CmdBegin > &)
+	{
+		_scope = EScope::Command;
+		return false;
+	}
+	
+/*
+=================================================
+	_Scope_CmdEnd
+=================================================
+*/
+	bool CommandBufferManager::_Scope_CmdEnd (const Message< GpuMsg::CmdEnd > &)
+	{
+		_scope = EScope::Frame;
+		return false;
+	}
+	
+/*
+=================================================
+	_Scope_CmdBeginRenderPass
+=================================================
+*/
+	bool CommandBufferManager::_Scope_CmdBeginRenderPass (const Message< GpuMsg::CmdBeginRenderPass > &)
+	{
+		_scope = EScope::RenderPass;
+		return false;
+	}
+	
+/*
+=================================================
+	_Scope_CmdEndRenderPass
+=================================================
+*/
+	bool CommandBufferManager::_Scope_CmdEndRenderPass (const Message< GpuMsg::CmdEndRenderPass > &)
+	{
+		_scope = EScope::Command;
+		return false;
+	}
 
 /*
 =================================================
 	_CmdBegin
 =================================================
 */
-	bool PerFrameCommandBuffers::_CmdBegin (const Message< GraphicsMsg::CmdBegin > &)
+	bool CommandBufferManager::_CmdBegin (const Message< GraphicsMsg::CmdBegin > &)
 	{
 		CHECK_ERR( _scope == EScope::Frame );
 
@@ -484,7 +657,6 @@ namespace Graphics
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
 								_GetManager(),
-								_builder,
 								CommandBufferDescriptor{ ECmdBufferCreate::bits() | ECmdBufferCreate::ImplicitResetable }
 							},
 							OUT cmd_buf ) );
@@ -514,7 +686,7 @@ namespace Graphics
 	_CmdEnd
 =================================================
 */
-	bool PerFrameCommandBuffers::_CmdEnd (const Message< GraphicsMsg::CmdEnd > &)
+	bool CommandBufferManager::_CmdEnd (const Message< GraphicsMsg::CmdEnd > &)
 	{
 		CHECK_ERR( _scope == EScope::Command );
 
@@ -528,12 +700,12 @@ namespace Graphics
 
 /*
 =================================================
-	CreatePerFrameCommandBuffers
+	CreateCommandBufferManager
 =================================================
 */
-	ModulePtr  GraphicsObjectsConstructor::CreatePerFrameCommandBuffers (GlobalSystemsRef gs, const CreateInfo::PerFrameCommandBuffers &ci)
+	ModulePtr  GraphicsObjectsConstructor::CreateCommandBufferManager (GlobalSystemsRef gs, const CreateInfo::CommandBufferManager &ci)
 	{
-		return New< PerFrameCommandBuffers >( gs, ci );
+		return New< CommandBufferManager >( gs, ci );
 	}
 
 }	// Graphics

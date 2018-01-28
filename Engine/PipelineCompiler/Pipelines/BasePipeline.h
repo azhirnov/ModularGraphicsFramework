@@ -288,7 +288,7 @@ namespace PipelineCompiler
 
 			// you can recompile shaders without changing C++ code,
 			// error will be generated if new C++ code is different than current code.
-			bool						updateShaders			= false;
+			//bool						updateShaders			= false;
 
 			// set 'false' for run-time shader editing.
 			bool						optimizeSource			= true;
@@ -304,6 +304,9 @@ namespace PipelineCompiler
 
 			// 
 			bool						obfuscate				= false;
+
+			// validate comiled shader to check errors
+			bool						validation				= false;
 		};
 
 
@@ -406,6 +409,8 @@ namespace PipelineCompiler
 		static bool _AddPaddingToStructs (INOUT StructTypes &structTypes);
 		static bool _AllStructsToString (const StructTypes &structTypes, Ptr<ISerializer> ser, OUT String &serialized, OUT String &glsl);
 		static bool _MergeStructTypes (const StructTypes &newTypes, INOUT StructTypes &currTypes);
+
+		static bool _ValidateShader (EShader::type, const CompiledShader &);
 
 
 	// Utils for Preparing and Converting Passes //

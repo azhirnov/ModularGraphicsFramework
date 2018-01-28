@@ -36,9 +36,6 @@ namespace GXDataBase
 	from http://code.google.com/p/convert-utf8-to-cp1251/
 =================================================
 */
-#pragma warning (push)
-#pragma warning (disable: 4309)		// 'conversion' : truncation of constant value
-
 	typedef struct ConvLetter {
 		unsigned char	win1251;
 		int				unicode;
@@ -107,9 +104,6 @@ namespace GXDataBase
 		{0xBE, 0x0455}, // CYRILLIC SMALL LETTER DZE
 		{0xBF, 0x0457} // CYRILLIC SMALL LETTER YI
 	};
-
-#pragma warning (pop)
-
 
 	int convert_utf8_to_windows1251 (const char* utf8, String &windows1251, size_t n)
 	{

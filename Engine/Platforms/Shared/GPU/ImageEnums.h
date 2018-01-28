@@ -54,6 +54,8 @@ namespace Platforms
 		};
 
 		GX_ENUM_BITFIELD( EImageUsage );
+
+		static constexpr EImageUsage::bits	All = EImageUsage::bits().SetAll();
 	};
 	
 

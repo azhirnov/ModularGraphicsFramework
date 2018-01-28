@@ -29,7 +29,7 @@ namespace GXMath
 		// d = sqrt(x*x + y*y)  for x |_\
 		//                             y
 		template <typename T>
-		static T Hypotenuse (const T& x, const T& y)
+		static CHECKRES(T)  Hypotenuse (const T& x, const T& y)
 		{
 			return Sqrt( Square( x ) + Square( y ) );
 		}
@@ -38,7 +38,7 @@ namespace GXMath
 		// b = sqrt(d*d - a*a)  for b |_\
 		//                             a
 		template <typename T>
-		static T Cathetus (const T& a, const T& d)
+		static CHECKRES(T)  Cathetus (const T& a, const T& d)
 		{
 			ASSERT( Abs(a) < Abs(d) );
 			return Sqrt( Square( d ) - Square( a ) );
@@ -55,21 +55,21 @@ namespace GXMath
 	{
 		// ax + b = 0
 		template <typename T>
-		static T  GetX (const T& a, const T& b = T(0))
+		static CHECKRES(T)  GetX (const T& a, const T& b = T(0))
 		{
 			return ( -b / a );
 		}
 
 		// ax + by + c = 0
 		template <typename T>
-		static T  GetY (const T& x, const T& a, const T& b, const T& c)
+		static CHECKRES(T)  GetY (const T& x, const T& a, const T& b, const T& c)
 		{
 			return ( a * x + c ) / -b;
 		}
 
 		// y = kx + m
 		template <typename T>
-		static T  GetY (const T& x, const T& k, const T& m)
+		static CHECKRES(T)  GetY (const T& x, const T& k, const T& m)
 		{
 			return ( k*x + m );
 		}

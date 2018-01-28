@@ -11,7 +11,6 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Fence.h"
 
 #if defined( GRAPHICS_API_VULKAN )
 
@@ -48,6 +47,8 @@ namespace Platforms
 											GpuMsg::GetGraphicsSettings
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
+											GpuMsg::ThreadBeginFrame,
+											GpuMsg::ThreadEndFrame,
 											GpuMsg::DeviceCreated,
 											GpuMsg::DeviceBeforeDestroy
 											// TODO: device lost event
@@ -126,6 +127,7 @@ namespace Platforms
 
 	private:
 		bool _CreateDevice ();
+		void _DestroyDevice ();
 		void _DetachWindow ();
 		
 		bool _SubmitQueue (const GpuMsg::SubmitGraphicsQueueCommands *);
@@ -223,7 +225,7 @@ namespace Platforms
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											VkSyncManagerModuleID,
 											GlobalSystems(),
-											CreateInfo::GpuSyncManager{},
+											CreateInfo::GpuSyncManager{ this },
 											OUT _syncManager ) );
 
 			CHECK_ERR( _Attach( "sync", _syncManager, true ) );
@@ -262,6 +264,7 @@ namespace Platforms
 */
 	bool VulkanThread::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
+		_DestroyDevice();
 		_DetachWindow();
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
@@ -645,6 +648,22 @@ namespace Platforms
 */
 	bool VulkanThread::_WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &)
 	{
+		_DestroyDevice();
+		_DetachWindow();
+		
+		if ( GetState() != EState::Deleting ) {
+			CHECK( _SetState( EState::Initial ) );
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_DestroyDevice
+=================================================
+*/
+	void VulkanThread::_DestroyDevice ()
+	{
 		if ( _device.IsDeviceCreated() )
 		{
 			_device.DeviceWaitIdle();
@@ -676,11 +695,6 @@ namespace Platforms
 		_device.DestroyDevice();
 		_device.DestroyDebugCallback();
 		_device.DestroyInstance();
-
-		_DetachWindow();
-		
-		CHECK( _SetState( EState::Initial ) );
-		return true;
 	}
 	
 /*
@@ -740,6 +754,9 @@ namespace Platforms
 	bool VulkanThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
 	{
 		msg->result.Set({
+			this,
+			_memManager,
+			_syncManager,
 			_device.GetDefaultRenderPass(),
 			_device.GetSwapchainLength()
 		});
@@ -789,7 +806,7 @@ namespace Platforms
 */
 	bool VulkanThread::_GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &msg)
 	{
-		msg->result.Set( _settings );
+		msg->result.Set({ _settings, _device.GetSurfaceSize() });
 		return true;
 	}
 //-----------------------------------------------------------------------------

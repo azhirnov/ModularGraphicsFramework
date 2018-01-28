@@ -52,6 +52,7 @@ namespace Platforms
 		Optional<float2>	_mouseDifference;
 		Optional<float>		_wheelDelta;
 		float2				_mousePos;
+		bool				_lbPressed;
 		
 
 	// methods
@@ -86,7 +87,8 @@ namespace Platforms
 =================================================
 */
 	WinMouseInput::WinMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
-		Module( gs, ModuleConfig{ WinMouseInputModuleID, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ WinMouseInputModuleID, 1 }, &_msgTypes, &_eventTypes ),
+		_lbPressed{ false }
 	{
 		SetDebugName( "WinMouseInput" );
 		
@@ -149,7 +151,7 @@ namespace Platforms
 		Rid[0].dwFlags		= 0;
 		Rid[0].hwndTarget	= req_hwnd->result->Get<HWND>();
 
-		CHECK( RegisterRawInputDevices( &Rid[0], (UINT) CountOf(Rid), sizeof(Rid[0]) ) == TRUE );
+		CHECK( RegisterRawInputDevices( &Rid[0], (UINT) CountOf(Rid), sizeof(Rid[0]) ) != FALSE );
 
 		CHECK( _DefCompose( false ) );
 		return true;
@@ -188,21 +190,31 @@ namespace Platforms
 				// MOUSE //
 				if ( p_data->header.dwType == RIM_TYPEMOUSE )
 				{
+					ASSERT( p_data->data.mouse.usFlags == MOUSE_MOVE_RELATIVE );
+
+					// relative position
 					const float2	diff = float2(int2( p_data->data.mouse.lLastX, p_data->data.mouse.lLastY ));
 
 					if ( not _mouseDifference )
 						_mouseDifference = diff;
 					else
 						(*_mouseDifference) += diff;
-				}
 
-				// Mouse Wheel //
-				if ( p_data->data.mouse.usButtonFlags & RI_MOUSE_WHEEL )
-				{
-					if ( not _wheelDelta )
-						_wheelDelta = 0;
+					// Mouse Wheel
+					if ( p_data->data.mouse.usButtonFlags & RI_MOUSE_WHEEL )
+					{
+						if ( not _wheelDelta )
+							_wheelDelta = 0;
 
-					*_wheelDelta += float(p_data->data.mouse.usButtonData) / WHEEL_DELTA;
+						*_wheelDelta += float(p_data->data.mouse.usButtonData) / WHEEL_DELTA;
+					}
+
+					// Mouse Button
+					if ( p_data->data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN )
+						_lbPressed = true;
+					
+					if ( p_data->data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP )
+						_lbPressed = false;
 				}
 			}
 		}
@@ -263,6 +275,12 @@ namespace Platforms
 			
 			if ( IsNotZero( diff.y ) )
 				_SendEvent< ModuleMsg::InputMotion >({ "mouse.y"_MotionID, diff.y, _mousePos.y });
+			
+			if ( _lbPressed and IsNotZero( diff.x ) )
+				_SendEvent< ModuleMsg::InputMotion >({ "touch.x"_MotionID, diff.x, _mousePos.x });
+			
+			if ( _lbPressed and IsNotZero( diff.y ) )
+				_SendEvent< ModuleMsg::InputMotion >({ "touch.y"_MotionID, diff.y, _mousePos.y });
 		}
 
 		if ( _wheelDelta )

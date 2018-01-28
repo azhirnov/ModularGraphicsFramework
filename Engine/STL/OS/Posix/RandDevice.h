@@ -56,8 +56,6 @@ namespace OS
 	private:
 		bool _Create (StringCRef provider)
 		{
-			ASSERT( provider.IsNullTerminated() );
-
 			_fd = open( provider.cstr(), O_RDONLY );
 			return ( _fd >= 0 );
 		}

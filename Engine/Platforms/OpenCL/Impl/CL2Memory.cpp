@@ -153,7 +153,7 @@ namespace PlatformCL
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 
 /*
@@ -544,7 +544,7 @@ namespace PlatformCL
 									  CL_TRUE,	// blocking
 									  (usize) msg->offset,
 									  (usize) size,
-									  (void *) msg->writableBuffer->ptr(),
+									  OUT (void *) msg->writableBuffer->ptr(),
 									  0, null,
 									  null ) );
 

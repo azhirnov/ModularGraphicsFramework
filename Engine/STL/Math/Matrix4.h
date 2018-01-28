@@ -201,7 +201,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Inverse () const
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::Inverse () const
 	{
 		const T s00 = _v[2][2] * _v[3][3] - _v[3][2] * _v[2][3];
 		const T s01 = _v[2][1] * _v[3][3] - _v[3][1] * _v[2][3];
@@ -255,7 +255,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::ToBillboard () const
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::ToBillboard () const
 	{
 		return Self(
 			1,				0,				0,				(*this)(3,0),
@@ -270,7 +270,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::SphericalBillboard (const Vec3_t &cameraPos, const Vec3_t &pos)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::SphericalBillboard (const Vec3_t &cameraPos, const Vec3_t &pos)
 	{
 		Vec3_t	v_look_at( 0, 0, 1 ),
 				v_obj_to_cam_proj( cameraPos.x - pos.x, 0, cameraPos.z - pos.z ),
@@ -308,7 +308,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildPerspective (const Radians<T>& fovY, const T& screenAspect, const Vec2_t &clipPlanes)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::BuildPerspective (const Radians<T>& fovY, const T& screenAspect, const Vec2_t &clipPlanes)
 	{
 		const T	f = T(1) / Tan( fovY * T(0.5) ),
 				A = ( clipPlanes.y + clipPlanes.x ) / ( clipPlanes.x - clipPlanes.y ),
@@ -329,7 +329,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildRealPerspective (const Vec2_t &screenSize, const Vec2_t &clipPlanes, const T& dist)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::BuildRealPerspective (const Vec2_t &screenSize, const Vec2_t &clipPlanes, const T& dist)
 	{
 
 		const T	asp	= screenSize.x / screenSize.y,
@@ -349,7 +349,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildOrtho (const Rectangle<T> &rect, const Vec2_t &clipPlanes)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::BuildOrtho (const Rectangle<T> &rect, const Vec2_t &clipPlanes)
 	{
 		const T	tx = - ( rect.right + rect.left ) / ( rect.right - rect.left ),
 				ty = - ( rect.top + rect.bottom ) / ( rect.top - rect.bottom ),
@@ -370,7 +370,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildOrtho2D (const Rectangle<T> &rect)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::BuildOrtho2D (const Rectangle<T> &rect)
 	{
 		return BuildOrtho( rect, Vec2_t( -1, 1 ) );
 	}
@@ -381,7 +381,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildFrustum (const Rectangle<T> &rect, const Vec2_t &clipPlanes)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::BuildFrustum (const Rectangle<T> &rect, const Vec2_t &clipPlanes)
 	{
 		const T	sx = ( T(2) * clipPlanes.x ) / ( rect.left - rect.right ),
 				sy = ( T(2) * clipPlanes.x ) / ( rect.top - rect.bottom ),
@@ -402,7 +402,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildLookAt (const Vec3_t &pos, const Vec3_t &center, const Vec3_t &upVec)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::BuildLookAt (const Vec3_t &pos, const Vec3_t &center, const Vec3_t &upVec)
 	{
 		const Vec3_t	f = ( pos - center ).Normalized(),
 						s = Cross( upVec, f ).Normalized(),
@@ -420,7 +420,7 @@ namespace GXMath
 =================================================
 *
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::GetTextureMatrix () const
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::GetTextureMatrix () const
 	{
 		return Self(	(*this)(0,0),	(*this)(1,0),	0,	(*this)(3,0),
 						(*this)(0,1),	(*this)(1,1),	0,	(*this)(3,1),
@@ -434,7 +434,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Vec<T,3,U> Matrix<T,C,R,U>::Project (const Vec3_t &pos, const Self &mvp, const Rectangle<T> &viewport)
+	inline CHECKRES(Vec<T,3,U>)  Matrix<T,C,R,U>::Project (const Vec3_t &pos, const Self &mvp, const Rectangle<T> &viewport)
 	{
 		Vec4_t			temp	= mvp * Vec4_t( pos, T(1) );
 		Vec2_t const	size	= viewport.Size();
@@ -453,7 +453,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Vec<T,3,U> Matrix<T,C,R,U>::UnProject (const Vec3_t &pos, const Self &mvpInverse, const Rectangle<T> &viewport)
+	inline CHECKRES(Vec<T,3,U>)  Matrix<T,C,R,U>::UnProject (const Vec3_t &pos, const Self &mvpInverse, const Rectangle<T> &viewport)
 	{
 		Vec4_t			temp	= Vec4_t( pos, T(1) );
 		Vec2_t const	size	= viewport.Size();

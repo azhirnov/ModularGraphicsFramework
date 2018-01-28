@@ -180,6 +180,10 @@ namespace Platforms
 				ASSERT( dim.z == 6 and dim.w <= 1 );
 				return uint4( dim.xy(), 6, 0 );
 			}
+			case EImage::Tex1DArray :
+			{
+				ASSERT( IsNotZero( dim.xw() ) );
+			}
 			case EImage::Tex2DArray :
 			{
 				ASSERT( IsNotZero( dim.xyw() ) );
@@ -247,13 +251,15 @@ namespace Platforms
 			case EImage::Tex2DMS :
 			case EImage::Tex2DMSArray :		return 1;
 
-			case EImage::Tex1D :
 			case EImage::Tex2D :
-			case EImage::Tex3D :			return GXMath::ImageUtils::GetNumberOfMipmaps( dim.Max() ) + 1;
+			case EImage::Tex3D :			return GXImageUtils::GetNumberOfMipmaps( dim.Max() ) + 1;
+				
+			case EImage::Tex1D :
+			case EImage::Tex1DArray :		return GXImageUtils::GetNumberOfMipmaps( dim.x ) + 1;
 
 			case EImage::TexCube :
 			case EImage::TexCubeArray :
-			case EImage::Tex2DArray :		return GXMath::ImageUtils::GetNumberOfMipmaps( dim.xy().Max() ) + 1;
+			case EImage::Tex2DArray :		return GXImageUtils::GetNumberOfMipmaps( dim.xy().Max() ) + 1;
 		}
 
 		RETURN_ERR( "invalid texture type", uint(1) );
@@ -271,7 +277,7 @@ namespace Platforms
 		BytesU			bpp = BytesU( EPixelFormat::BitPerPixel( format ) );
 		uint3 const		dim	= Max( size, uint3(1) );
 
-		return GXMath::ImageUtils::AlignedDataSize( dim, bpp, xAlign, xyAlign );
+		return GXImageUtils::AlignedDataSize( dim, bpp, xAlign, xyAlign );
 	}
 
 	BytesU ImageUtils::GetImageSize (EPixelFormat::type format, EImage::type type, const uint4 &dim, BytesU xAlign, BytesU xyAlign)
@@ -286,6 +292,9 @@ namespace Platforms
 */
 	void ImageUtils::ValidateDescriptor (INOUT ImageDescriptor &descr)
 	{
+		ASSERT( descr.format != EPixelFormat::Unknown );
+		ASSERT( descr.imageType != EImage::Unknown );
+
 		descr.dimension = ValidateDimension( descr.imageType, descr.dimension );
 		descr.dimension = Max( descr.dimension, uint4(1) );
 

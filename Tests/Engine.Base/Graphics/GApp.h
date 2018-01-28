@@ -10,6 +10,8 @@ class GApp final : public StaticRefCountedObject
 // types
 private:
 	using RenderPassMsgList_t = CompileTime::TypeListFrom< Message<GpuMsg::GetRenderPassDescriptor> >;
+	
+	struct Vertex;
 
 
 // variables
@@ -67,4 +69,6 @@ private:
 	bool _CreatePipeline1 ();
 	bool _CreatePipeline2 ();
 	bool _CreateCmdBuffers ();
+
+	static ModulePtr GetGThread (GlobalSystemsRef gs);
 };

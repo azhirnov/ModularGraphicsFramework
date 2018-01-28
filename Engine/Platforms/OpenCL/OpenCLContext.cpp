@@ -194,6 +194,7 @@ namespace Platforms
 		CHECK( mf->Register( CLMemoryModuleID, &CreateCL2Memory ) );
 		CHECK( mf->Register( CLBufferModuleID, &CreateCL2Buffer ) );
 		//CHECK( mf->Register( CLSamplerModuleID, &CreateCL2Sampler ) );
+		CHECK( mf->Register( CLSyncManagerModuleID, &CreateCL2SyncManager ) );
 		CHECK( mf->Register( CLCommandBufferModuleID, &CreateCL2CommandBuffer ) );
 		CHECK( mf->Register( CLCommandBuilderModuleID, &CreateCL2CommandBuilder ) );
 		CHECK( mf->Register( CLComputePipelineModuleID, &CreateCL2ComputePipeline ) );
@@ -219,6 +220,7 @@ namespace Platforms
 		mf->UnregisterAll( CLMemoryModuleID );
 		mf->UnregisterAll( CLBufferModuleID );
 		mf->UnregisterAll( CLSamplerModuleID );
+		mf->UnregisterAll( CLSyncManagerModuleID );
 		mf->UnregisterAll( CLCommandBufferModuleID );
 		mf->UnregisterAll( CLCommandBuilderModuleID );
 		mf->UnregisterAll( CLComputePipelineModuleID );

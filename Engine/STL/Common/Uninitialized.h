@@ -73,7 +73,7 @@ namespace GXTypes
 	}	// _types_hidden_
 
 
-	struct UninitializedType
+	struct UninitializedType final
 	{
 		constexpr UninitializedType ()
 		{}
@@ -96,7 +96,7 @@ namespace GXTypes
 	//
 
 	template <typename T>
-	struct UninitializedT
+	struct UninitializedT final
 	{
 		constexpr UninitializedT ()
 		{}

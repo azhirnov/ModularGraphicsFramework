@@ -8,6 +8,9 @@
 //#define NOSERVICE
 //#define WIN32_LEAN_AND_MEAN
 
+#define Rectangle	WinRectangle
+#define byte		WinByte
+
 #ifdef COMPILER_MSVC
 #	pragma warning (push, 0)
 #	include <Windows.h>
@@ -20,5 +23,15 @@
 #undef SetCurrentDirectory
 #undef GetCurrentDirectory
 #undef CreateDirectory
+#undef CreateFile
 #undef CopyFile
 #undef MoveFile
+#undef Yield
+#undef GetFreeSpace
+#undef CreateSemaphore
+#undef GetCurrentTime
+#undef min
+#undef max
+
+#undef Rectangle
+#undef byte

@@ -35,7 +35,7 @@ namespace OS
 
 
 		template <typename T>
-		bool Generate (T &value) const
+		bool Generate (OUT T &value) const
 		{
 			return _Generate( (ubyte *) &value, sizeof(value) );
 		}

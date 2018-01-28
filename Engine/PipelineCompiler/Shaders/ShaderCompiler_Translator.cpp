@@ -515,19 +515,25 @@ namespace PipelineCompiler
 		}
 
 		String	body = translator.nodes( body_uid ).src;
+		String	str;
 
 		CHECK_ERR( not body.Empty() );
-		CHECK_ERR( translator.language->TranslateType( dst_node.typeInfo, INOUT dst_node.src ) );
-		dst_node.src << " " << func_name << " (";
+		CHECK_ERR( translator.language->TranslateType( dst_node.typeInfo, INOUT str ) );
+		str << " " << func_name << " (";
 
 		FOR( i, func_args )
 		{
-			dst_node.src << (i ? ", " : "");
-			CHECK_ERR( translator.language->TranslateArg( func_args[i], INOUT dst_node.src ) );
+			str << (i ? ", " : "");
+			CHECK_ERR( translator.language->TranslateArg( func_args[i], INOUT str ) );
+		}
+		str << ")";
+
+		if ( is_entry ) {
+			CHECK_ERR( translator.language->TranslateEntry( dst_node.typeInfo, func_name, func_args, INOUT str ) );
 		}
 
 		StringParser::IncreaceIndent( INOUT body );
-		dst_node.src << ")\n{\n" << body << "}\n\n";
+		dst_node.src << str << "\n{\n" << body << "}\n\n";
 
 		translator.nodes.Add( uid, RVREF(dst_node) );
 		return true;
@@ -1347,8 +1353,7 @@ namespace PipelineCompiler
 			return true;
 		}
 		
-
-		dst_node.src = dst_node.typeInfo.name;
+		CHECK_ERR( translator.language->TranslateName( dst_node.typeInfo, OUT dst_node.src ) );
 
 		if ( dst_node.typeInfo.qualifier[ EVariableQualifier::Local ] and
 			 not translator.fwd.definedLocalVars.IsExist( symbol->getId() ) )

@@ -588,7 +588,7 @@ namespace CompileTime
 	// Is Base Of
 	//
 
-#	if 1 //ndef GX_CPP11_SUPPORTED
+#	if 1
 	namespace _ctime_hidden_
 	{
 		template <typename B, typename D>

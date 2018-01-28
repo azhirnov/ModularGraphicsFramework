@@ -347,7 +347,7 @@ namespace Platforms
 			ColorAttachment_t		attach;
 			AttachmentRef_t			attach_ref;
 			
-			attach.name				= "color-0";
+			attach.name				= "Color0";
 			attach.format			= colorFmt;
 			attach.loadOp			= EAttachmentLoadOp::Clear;
 			attach.storeOp			= EAttachmentStoreOp::Store;

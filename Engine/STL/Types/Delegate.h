@@ -562,15 +562,15 @@ namespace GXTypes
 		forceinline void Clear ()													{ _delegates.Clear(); }
 
 
-		forceinline void Call (Args&&... args)					const		{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
+		forceinline void Call (Args... args)					const				{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
 
-		forceinline void operator () (Args&&... args)			const		{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
+		forceinline void operator () (Args... args)				const				{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
 
-		forceinline bool Empty ()								const		{ return _delegates.Empty(); }
+		forceinline bool Empty ()								const				{ return _delegates.Empty(); }
 
-		forceinline usize Count ()								const		{ return _delegates.Count(); }
+		forceinline usize Count ()								const				{ return _delegates.Count(); }
 
-		forceinline Delegate_t const&	Get (usize index)		const		{ return _delegates[index]; }
+		forceinline Delegate_t const&	Get (usize index)		const				{ return _delegates[index]; }
 
 
 		forceinline void RemoveAllFor (const void *ptr)

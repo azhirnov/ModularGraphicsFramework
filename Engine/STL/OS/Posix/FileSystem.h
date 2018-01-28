@@ -61,8 +61,6 @@ namespace OS
 */
 	inline bool PosixFileSystem::DeleteFile (StringCRef filename)
 	{
-		ASSERT( filename.IsNullTerminated() );
-
 		return posix::remove( filename.cstr() ) == 0;
 	}
 	
@@ -73,8 +71,6 @@ namespace OS
 */
 	inline bool PosixFileSystem::SetCurrentDirectory (StringCRef dir)
 	{
-		ASSERT( dir.IsNullTerminated() );
-
 		return posix::chdir( dir.cstr() ) == 0;
 	}
 	
@@ -105,8 +101,6 @@ namespace OS
 	{
 		if ( filename.Empty() )
 			return false;
-		
-		ASSERT( dir.IsNullTerminated() );
 
 		return access( filename.cstr(), F_OK ) != -1;
 	}
@@ -120,8 +114,6 @@ namespace OS
 	{
 		if ( dirname.Empty() )
 			return true;
-		
-		ASSERT( dirname.IsNullTerminated() );
 
 		struct stat	st;
 		return ( stat( dirname.cstr(), &st ) == 0 and S_ISDIR(st.st_mode) );
@@ -136,8 +128,6 @@ namespace OS
 	{
 		if ( dir.Empty() )
 			return true;
-		
-		ASSERT( dir.IsNullTerminated() );
 
 		mode_t process_mask = umask(0);
 
@@ -155,7 +145,6 @@ namespace OS
 */
 	inline bool PosixFileSystem::DeleteEmptyDirectory (StringCRef dir)
 	{
-		ASSERT( dir.IsNullTerminated() );
 		ASSERT( IsDirectoryExist( dir ) );
 
 		return ( rmdir( dir.cstr() ) == 0 );
@@ -168,7 +157,6 @@ namespace OS
 */
 	inline bool PosixFileSystem::DeleteDirectory (StringCRef dir)
 	{
-		ASSERT( dir.IsNullTerminated() );
 		ASSERT( IsDirectoryExist( dir ) );
 
 		DIR *			dp = null;

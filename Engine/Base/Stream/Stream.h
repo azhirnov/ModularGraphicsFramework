@@ -141,5 +141,32 @@ namespace ModuleMsg
 	};
 
 
+	//
+	// Add / Remove On File Modified Listener
+	//
+	struct AddOnFileModifiedListener
+	{
+	// types
+		using Callback_t	= Delegate< void (StringCRef fname) >;
+		
+	// variables
+		Callback_t		callback;
+		String			filename;
+		
+	// methods
+		template <typename Class>
+		AddOnFileModifiedListener (Class *mod, void (Class::*cb) (StringCRef), StringCRef fname) :
+			callback(DelegateBuilder{ WeakPointerType<Class>(mod), cb )}, filename{fname}
+		{}
+	};
+
+	struct RemoveOnFileModifiedListener
+	{
+		ModuleWPtr		module;
+
+		explicit RemoveOnFileModifiedListener (const ModuleWPtr &mod) : module{mod} {}
+	};
+
+
 }	// ModuleMsg
 }	// Engine

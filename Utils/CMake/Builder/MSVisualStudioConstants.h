@@ -108,7 +108,14 @@ namespace VS
 
 	static constexpr uint	UninitializedVarUsed				= 4700;		// uninitialized local variable 'name' used
 
+	static constexpr uint	IllegalConversion					= 4927;		// illegal conversion; more than one user-defined conversion has been implicitly applied
 
+
+	// Static Analyzer Warnings //
+	static constexpr uint	ReturnValueIgnored					= 6031;		// Return value ignored: 'name'
+
+
+	// Helpers //
 	inline String WarningToError (uint code)
 	{
 		return "/we"_str << code;

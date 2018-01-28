@@ -61,9 +61,11 @@ namespace Base
 		bool DeleteEmptyDirectory (StringCRef dir) const;
 		bool DeleteDirectory (StringCRef dir) const;
 
-		ulong GetFileSize (StringCRef filename) const;
-		ulong GetFreeSpace (StringCRef path) const;
-		ulong GetTotalSpace (StringCRef path) const;
+		BytesUL GetFileSize (StringCRef filename) const;
+		BytesUL GetFreeSpace (StringCRef path) const;
+		BytesUL GetTotalSpace (StringCRef path) const;
+
+		OS::Date GetLastModificationTime (StringCRef filename) const;
 		
 		bool SearchFile (StringCRef file, uint depth, OUT String &result) const;
 		bool SearchFileForward (StringCRef file, uint depth, OUT String &result) const;

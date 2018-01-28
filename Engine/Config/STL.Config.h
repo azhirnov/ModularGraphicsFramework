@@ -91,7 +91,7 @@
 
 
 // physics types (this types slow down compilation)
-//#define GX_PHYSICS_DIMENSIONS_ENABLED
+#define GX_PHYSICS_DIMENSIONS_ENABLED
 
 
 // Java

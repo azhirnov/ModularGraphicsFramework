@@ -131,7 +131,7 @@ namespace PlatformGL
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
 		_ValidateDescriptor( INOUT _descr );
 	}

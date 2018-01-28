@@ -61,11 +61,13 @@ namespace PlatformVK
 										> >;
 
 		using SupportedEvents_t		= MessageListFrom<
+											ModuleMsg::Link,
+											ModuleMsg::AfterLink,
 											ModuleMsg::Compose,
+											ModuleMsg::AfterCompose,
 											ModuleMsg::Delete,
 											ModuleMsg::OnModuleAttached,
-											ModuleMsg::OnModuleDetached,
-											GpuMsg::DeviceBeforeDestroy
+											ModuleMsg::OnModuleDetached
 										>;
 
 
@@ -75,25 +77,30 @@ namespace PlatformVK
 		
 
 	// methods
-	public:
+	protected:
 		Vk1BaseModule (const GlobalSystemsRef gs,
 					   const ModuleConfig &config,
 					   const TypeIdList *msgTypes,
 					   const TypeIdList *eventTypes);
 
-
-	protected:
 		Ptr< Vk1Device >	GetDevice ()	const	{ return _vkDevice; }
 		vk::VkDevice		GetVkDevice ()	const	{ return _vkDevice ? _vkDevice->GetLogicalDevice() : null; }
+
+		ModulePtr _GetGPUThread (const ModulePtr &);
 
 
 	// message handlers
 	protected:
 		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
 		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
 		bool _GetVkDeviceInfo (const Message< GpuMsg::GetVkDeviceInfo > &);
 		bool _GetVkPrivateClasses (const Message< GpuMsg::GetVkPrivateClasses > &);
+		
+
+	// event handlers
+	private:
+		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _DeviceDeleted (const Message< ModuleMsg::Delete > &);
 	};
 
 

@@ -43,7 +43,7 @@ namespace CreateInfo
 	//
 	// GPU VR Framebuffer Create Info
 	//
-	struct VRFramebuffer
+	/*struct VRFramebuffer
 	{
 	// types
 		enum class Eye {
@@ -57,10 +57,10 @@ namespace CreateInfo
 		Eye				eye;
 
 	// methods
-		VRFramebuffer () {}
+		VRFramebuffer () : eye{Eye{-1}} {}
 		VRFramebuffer (const GXMath::uint2 &dim, Eye eye) : dimension(dim), eye(eye) {}
 		VRFramebuffer (const ModulePtr &gpuThread, const GXMath::uint2 &dim, Eye eye) : gpuThread(gpuThread), dimension(dim), eye(eye) {}
-	};
+	};*/
 
 
 }	// CreateInfo
@@ -88,8 +88,6 @@ namespace GpuMsg
 	//
 	struct ThreadBeginVRFrame
 	{
-		using float4x4 = GXMath::float4x4;
-
 		struct PerEye : CompileTime::FastCopyable
 		{
 		// variables
@@ -110,30 +108,15 @@ namespace GpuMsg
 		{
 			PerEye		leftEye;
 			PerEye		rightEye;
-			uint		index	= 0;		// index of image in swapchain
+			uint		frameIindex	= 0;	// index of image in swapchain
 		};
 
 		Out< Data >		result;
 	};
 
-	struct ThreadEndVRFrame
-	{
-	// types
-		using Commands_t	= ThreadEndFrame::Commands_t;
+	struct ThreadEndVRFrame : SubmitGraphicsQueueCommands
+	{};
 
-	// variables
-		Commands_t		commands;		// (optional) commands to submit before present frame
-	};
-
-
-	//
-	// VR Framebuffer Present
-	//
-	struct PresentVRFramebuffer
-	{
-		ModulePtr		cmdBuilder;
-		ModulePtr		systemFb;
-	};
-
+	
 }	// GpuMsg
 }	// Engine

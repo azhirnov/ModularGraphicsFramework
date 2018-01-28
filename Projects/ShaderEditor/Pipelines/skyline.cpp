@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'C:\Projects\graphxgenengine\Projects\ShaderEditorTools\Skyline.cpp'
-// Created at: 2018/01/12 - 00:05:48
+// Created at: 2018/01/17 - 20:21:48
 
 #include "all_pipelines.h"
 
@@ -112,6 +112,10 @@ R"#(#version 450 core
 # define gl_InstanceIndex  gl_InstanceID
 #endif
 
+
+out gl_PerVertex {
+	vec4	gl_Position;
+};
 
 
 
@@ -309,10 +313,10 @@ vec3 GetSunColorSmall (in vec3 rayDir, in vec3 sunDir);
 vec3 GetEnvMap (in vec3 rayDir, in vec3 sunDir);
 vec3 GetEnvMapSkyline (in vec3 rayDir, in vec3 sunDir, in float height);
 vec2 matmin (in vec2 a, in vec2 b);
+float cylCap (in vec3 p, in float r, in float lenRad);
 float sdBox (in vec3 p, in vec3 radius);
 float smin (in float a, in float b, in float k);
 float Repeat (in float a, in float len);
-float cylCap (in vec3 p, in float r, in float lenRad);
 vec2 Car (in vec3 baseCenter, in float unique);
 vec2 CityBlock (in vec3 p, in vec2 pint);
 vec2 DistanceToObject (in vec3 p);

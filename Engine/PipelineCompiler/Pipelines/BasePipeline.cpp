@@ -182,7 +182,7 @@ namespace PipelineCompiler
 #define SH_COMPUTE          (1<<5)
 
 #ifdef GL_ARB_gpu_shader_int64
-#extension GL_ARB_gpu_shader_int64 : enable
+#extension GL_ARB_gpu_shader_int64 : require
 #define ARB_gpu_shader_int64_enabled  1
 #endif
 
@@ -271,7 +271,13 @@ namespace PipelineCompiler
 						"#else\n"
 						"# define gl_VertexIndex    gl_VertexID\n"
 						"# define gl_InstanceIndex  gl_InstanceID\n"
-						"#endif\n";
+						"#endif\n"
+						"out gl_PerVertex {\n"
+						"	vec4 gl_Position;\n"
+						"	float gl_PointSize;\n"
+						"	float gl_ClipDistance[];\n"
+						"	float gl_CullDistance[];\n"
+						"};\n";
 
 			case EShader::TessControl :
 				return	"#define SHADER	SH_TESS_CONTROL\n";
@@ -431,6 +437,14 @@ namespace PipelineCompiler
 					str << "layout(binding=" << index << ") ";
 				}
 				break;
+				
+			case EShaderType::CL :
+			case EShaderType::HLSL :
+			case EShaderType::Software :
+				if ( uniqueIndex != UMax ) {
+					str << "layout(binding=" << uniqueIndex << ") ";
+				}
+				break;
 
 			case EShaderType::SPIRV :
 				if ( uniqueIndex != UMax ) {
@@ -438,7 +452,8 @@ namespace PipelineCompiler
 				}
 				break;
 
-			case EShaderType::GLSL_ES :
+			case EShaderType::GLSL_ES_2 :
+			case EShaderType::GLSL_ES_3 :
 			default :
 				WARNING( "not supported" );
 		}
@@ -460,6 +475,7 @@ namespace PipelineCompiler
 				break;
 
 			case EShaderType::GLSL :
+			case EShaderType::GLSL_ES_3 :
 				if ( index != UMax ) {
 					str << "layout(location=" << index << ") ";
 				}
@@ -499,7 +515,7 @@ namespace PipelineCompiler
 	String  BasePipeline::ImageUniform::ToStringGLSL (EShaderType shaderApi) const
 	{
 		return	location.BindingToStringGLSL( shaderApi ) << "layout(" << PipelineCompiler::ToStringGLSL( format ) << ") " <<
-				PipelineCompiler::ToStringGLSL( memoryModel ) << "uniform " <<
+				PipelineCompiler::ToStringGLSL( memoryModel ) << " uniform " <<
 				PipelineCompiler::ToStringGLSL( EShaderVariable::ToImage( imageType, format ) ) << " " << name << ";\n";
 	}
 //=========================================================

@@ -526,6 +526,16 @@ namespace Base
 		RETURN_ERR( "unknown error!" );
 	}
 	
+/*
+=================================================
+	GetLastModificationTime
+=================================================
+*/
+	OS::Date FileManager::GetLastModificationTime (StringCRef filename) const
+	{
+		return OS::FileSystem::GetFileLastModificationTime( filename );
+	}
+
 
 }	// Base
 }	// Engine

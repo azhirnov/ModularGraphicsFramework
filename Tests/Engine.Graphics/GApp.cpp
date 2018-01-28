@@ -2,6 +2,8 @@
 
 #include "GApp.h"
 #include "Pipelines/all_pipelines.h"
+#include "Engine/Profilers/Engine.Profilers.h"
+//#include "Engine/ImportExport/Engine.ImportExport.h"
 
 using Vertex1		= Graphics::DefVertices::Vertex2D;
 using Rectangle1	= Graphics::DefPrimitives::Rectangle< Vertex1 >;
@@ -21,6 +23,8 @@ GApp::GApp ()
 	ms = GetMainSystemInstance();
 
 	Platforms::RegisterPlatforms();
+	Profilers::RegisterProfilers();
+	//ImportExport::RegisterImportExport();
 	Graphics::RegisterGraphics();
 }
 
@@ -56,6 +60,8 @@ bool GApp::Initialize (GAPI::type api)
 	auto	window		= thread->GetModuleByID( WinWindowModuleID );
 	auto	input		= thread->GetModuleByID( InputThreadModuleID );
 	auto	gthread		= thread->GetModuleByID( ids.thread );
+	
+	window->AddModule( Profilers::FPSCounterModuleID, CreateInfo::FPSCounter{} );
 
 	gthread->Subscribe( this, &GApp::_GraphicsInit );
 	gthread->Subscribe( this, &GApp::_GraphicsDelete );
@@ -227,9 +233,9 @@ bool GApp::_CreatePipeline ()
 					OUT sampler ) );
 
 	CHECK_ERR( factory->Create(
-					PerFrameCommandBuffersModuleID,
+					CommandBufferManagerModuleID,
 					gthread->GlobalSystems(),
-					CreateInfo::PerFrameCommandBuffers{ gthread },
+					CreateInfo::CommandBufferManager{ gthread },
 					OUT cmdBuilder ) );
 	
 	CHECK_ERR( factory->Create(
@@ -246,7 +252,7 @@ bool GApp::_CreatePipeline ()
 	
 	// initialize texture data
 	{
-		asyncCmdBuilder->Send< GraphicsMsg::CmdBeginAsync >({});
+		asyncCmdBuilder->Send< GraphicsMsg::CmdBeginAsync >({ GraphicsMsg::CmdBeginAsync::EMode::Sync });
 
 		asyncCmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::bits() | EPipelineStage::Transfer,
 						EImageLayout::Undefined, EImageLayout::TransferDstOptimal, texture, EImageAspect::bits() | EImageAspect::Color });
@@ -256,7 +262,7 @@ bool GApp::_CreatePipeline ()
 		asyncCmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({  EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::AllGraphics,
 						EImageLayout::TransferDstOptimal, EImageLayout::ShaderReadOnlyOptimal, texture, EImageAspect::bits() | EImageAspect::Color });
 
-		asyncCmdBuilder->Send< GraphicsMsg::CmdEndAndSync >({});
+		asyncCmdBuilder->Send< GraphicsMsg::CmdEndAsync >({});
 	}
 	return true;
 }

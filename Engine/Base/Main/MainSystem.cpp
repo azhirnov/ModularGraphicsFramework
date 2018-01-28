@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Main/MainSystem.h"
-#include "Engine/Base/Stream/StreamManager.h"
+#include "Engine/Base/Stream/StreamObjectsConstructor.h"
 
 namespace Engine
 {
@@ -102,7 +102,7 @@ namespace Base
 
 		TaskManager::Register( GlobalSystems() );
 		ThreadManager::Register( GlobalSystems() );
-		StreamManager::Register( GlobalSystems() );
+		StreamObjectsConstructor::Register( GlobalSystems() );
 
 		_SendMsg< ModuleMsg::AttachModule >({ _taskMngr });
 		_SendMsg< ModuleMsg::AttachModule >({ _threadMngr });

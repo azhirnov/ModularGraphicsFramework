@@ -210,9 +210,6 @@ namespace PipelineCompiler
 			case EShaderVariable::UIntImageCubeArray :	return "uimageCubeArray";
 			case EShaderVariable::UIntImage3D :			return "uimage3D";
 			case EShaderVariable::UIntImageBuffer :		return "uimageBuffer";
-
-			//case Struct :						return "struct";
-			//case Array :						return "array";
 		}
 
 		RETURN_ERR( "invalid variable type", "unknown" );
@@ -262,7 +259,49 @@ namespace PipelineCompiler
 */
 	inline StringCRef  ToStringGLSL (const EPixelFormat::type &value)
 	{
-		return EPixelFormat::ToString( value );
+		switch ( value )
+		{
+			case EPixelFormat::RGBA32F			: return "rgba32f";
+			case EPixelFormat::RGBA16F			: return "rgba16f";
+			case EPixelFormat::RG32F			: return "rg32f";
+			case EPixelFormat::RG16F			: return "rg16f";
+			case EPixelFormat::RGB_11_11_10F	: return "r11f_g11f_b10f";
+			case EPixelFormat::R32F				: return "r32f";
+			case EPixelFormat::R16F				: return "r16f";
+			case EPixelFormat::RGBA32U			: return "rgba32ui";
+			case EPixelFormat::RGBA16U			: return "rgba16ui";
+			case EPixelFormat::RGB10_A2U		: return "rgb10_a2ui";
+			case EPixelFormat::RGBA8U			: return "rgba8ui";
+			case EPixelFormat::RG32U			: return "rg32ui";
+			case EPixelFormat::RG16U			: return "rg16ui";
+			case EPixelFormat::RG8U				: return "rg8ui";
+			case EPixelFormat::R32U				: return "r32ui";
+			case EPixelFormat::R16U				: return "r16ui";
+			case EPixelFormat::R8U				: return "r8ui";
+			case EPixelFormat::RGBA32I			: return "rgba32i";
+			case EPixelFormat::RGBA16I			: return "rgba16i";
+			case EPixelFormat::RGBA8I			: return "rgba8i";
+			case EPixelFormat::RG32I			: return "rg32i";
+			case EPixelFormat::RG16I			: return "rg16i";
+			case EPixelFormat::RG8I				: return "rg8i";
+			case EPixelFormat::R32I				: return "r32i";
+			case EPixelFormat::R16I				: return "r16i";
+			case EPixelFormat::R8I				: return "r8i";
+			case EPixelFormat::RGBA16_UNorm		: return "rgba16";
+			case EPixelFormat::RGB10_A2_UNorm	: return "rgb10_a2";
+			case EPixelFormat::RGBA8_UNorm		: return "rgba8";
+			case EPixelFormat::RG16_UNorm		: return "rg16";
+			case EPixelFormat::RG8_UNorm		: return "rg8";
+			case EPixelFormat::R16_UNorm		: return "r16";
+			case EPixelFormat::R8_UNorm			: return "r8";
+			case EPixelFormat::RGBA16_SNorm		: return "rgba16_snorm";
+			case EPixelFormat::RGBA8_SNorm		: return "rgba8_snorm";
+			case EPixelFormat::RG16_SNorm		: return "rg16_snorm";
+			case EPixelFormat::RG8_SNorm		: return "rg8_snorm";
+			case EPixelFormat::R16_SNorm		: return "r16_snorm";
+			case EPixelFormat::R8_SNorm			: return "r8_snorm";
+		}
+		RETURN_ERR( "unsupported format" );
 	}
 	
 /*

@@ -110,7 +110,11 @@ namespace OS
 
 		Date &  SetYear (uint value)		{ _year = value; return *this; }
 		Date &	SetMonth (uint value)		{ _month = value; return *this; }
-
+		Date &	SetDay (uint value);
+		Date &	SetHour (uint value)		{ _hour = value; return *this; }
+		Date &	SetMinute (uint value)		{ _minute = value; return *this; }
+		Date &	SetSecond (uint value)		{ _second = value; return *this; }
+		Date &	SetMillis (uint value)		{ _millis = value; return *this; }
 
 		String ToString (StringCRef fmt) const;
 		

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Common/Common.h"
+#include "Engine/Platforms/Shared/Common.h"
 
 namespace Engine
 {
@@ -656,6 +656,10 @@ namespace Platforms
 
 	inline BitsVec<usize, 4>  EPixelFormat::BitsPerChannel (type value)
 	{
+		if ( value == Unknown ) {
+			return BitsVec<usize, 4>();
+		}
+
 		if ( IsCompressed( value ) ) {
 			TODO( "" );
 			return BitsVec<usize, 4>( 1_bit );

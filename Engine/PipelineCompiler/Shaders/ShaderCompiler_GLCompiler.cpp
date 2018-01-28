@@ -2,8 +2,7 @@
 
 #include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
-#include "Engine/Platforms/OpenGL/Impl/gl4.h"
-
+#include "External/SDL2/include/SDL.h"
 
 namespace PipelineCompiler
 {
@@ -776,6 +775,28 @@ namespace PipelineCompiler
 	bool ShaderCompiler::_CompileGLSL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result) const
 	{
 		TODO( "_CompileGLSL" );
+		return false;
+	}
+	
+/*
+=================================================
+	_ValidateGLSLSource
+=================================================
+*/
+	bool ShaderCompiler::_ValidateGLSLSource (EShader::type shaderType, StringCRef src) const
+	{
+		TODO( "_ValidateGLSLBinary" );
+		return false;
+	}
+	
+/*
+=================================================
+	_ValidateGLSLBinary
+=================================================
+*/
+	bool ShaderCompiler::_ValidateGLSLBinary (EShader::type shaderType, BinArrayCRef bin) const
+	{
+		TODO( "_ValidateGLSLBinary" );
 		return false;
 	}
 

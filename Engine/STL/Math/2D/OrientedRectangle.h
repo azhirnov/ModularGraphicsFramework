@@ -128,7 +128,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Rectangle<T>  OrientedRectangle<T>::GetAxisAlignedRectangle () const
+	inline CHECKRES(Rectangle<T>)  OrientedRectangle<T>::GetAxisAlignedRectangle () const
 	{
 		return Rectangle<T>( MakeStaticArray( Corner(0), Corner(1), Corner(2), Corner(3) ) );
 	}
@@ -139,7 +139,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline T  OrientedRectangle<T>::MaxRadius () const
+	inline CHECKRES(T)  OrientedRectangle<T>::MaxRadius () const
 	{
 		return Max( _extent.x, _extent.y );
 	}
@@ -150,7 +150,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline T  OrientedRectangle<T>::MinRadius () const
+	inline CHECKRES(T)  OrientedRectangle<T>::MinRadius () const
 	{
 		return Min( _extent.x, _extent.y );
 	}
@@ -161,7 +161,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline Vec<T,2>  OrientedRectangle<T>::Corner (usize index) const
+	inline CHECKRES(Vec<T,2>)  OrientedRectangle<T>::Corner (usize index) const
 	{
 		ASSERT( index < 4 );
 		return _center +
@@ -175,7 +175,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline bool  OrientedRectangle<T>::Intersects (const Self &other) const
+	inline CHECKRES(bool)  OrientedRectangle<T>::Intersects (const Self &other) const
 	{
 		ArrayCRef<Vec2_t>	aa0 = this->_axis;
 		ArrayCRef<Vec2_t>	aa1 = other._axis;
@@ -224,7 +224,7 @@ namespace GXMath
 */
 	template <typename T>
 	template <usize C, usize R>
-	inline OrientedRectangle<T>  OrientedRectangle<T>::Transform (const Matrix<T,C,R> &mat) const
+	inline CHECKRES(OrientedRectangle<T>)  OrientedRectangle<T>::Transform (const Matrix<T,C,R> &mat) const
 	{
 		return Self( MakeStaticArray(
 						(mat * Corner(0)).xy(), (mat * Corner(1)).xy(),
@@ -238,7 +238,7 @@ namespace GXMath
 */
 	template <typename T>
 	template <typename B>
-	inline OrientedRectangle<B>  OrientedRectangle<T>::To () const
+	inline CHECKRES(OrientedRectangle<B>)  OrientedRectangle<T>::To () const
 	{
 		OrientedRectangle<B> result;
 
@@ -431,7 +431,7 @@ namespace GXTypes
 		typedef Hash< typename GXMath::OrientedRectangle<T>::Vec_t >	Base_t;
 		typedef typename Base_t::Result_t								Result_t;
 
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES(Result_t)  operator () (const Key_t &x) const noexcept
 		{
 			return	Base_t::operator ()( x.Center() )  +
 					Base_t::operator ()( x.Extents() ) +

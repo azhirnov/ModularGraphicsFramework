@@ -1,5 +1,5 @@
 
-#ifdef __cplusplus
+#if 0 //def __cplusplus
 #include "Engine/PipelineCompiler/Pipelines/GraphicsPipeline.h"
 
 using namespace PipelineCompiler;

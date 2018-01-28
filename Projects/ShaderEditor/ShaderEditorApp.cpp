@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Projects/ShaderEditor/ShaderEditorApp.h"
+#include "Engine/Profilers/Engine.Profilers.h"
 
 namespace ShaderEditor
 {
@@ -12,9 +13,11 @@ namespace ShaderEditor
 */
 	ShaderEditorApp::ShaderEditorApp () :
 		_renderer( GetMainSystemInstance()->GlobalSystems() ),
-		_looping(true)
+		_looping( true ),
+		_vrMode( false )
 	{
 		Platforms::RegisterPlatforms();
+		Profilers::RegisterProfilers();
 		Graphics::RegisterGraphics();
 		Scene::RegisterScene();
 	}
@@ -30,7 +33,7 @@ namespace ShaderEditor
 		scene_mngr_ci.settings.version	 = api;
 		scene_mngr_ci.settings.flags	|= GraphicsSettings::EFlags::DebugContext;
 
-		scene_mngr_ci.vrSettings.enabled				= false;
+		scene_mngr_ci.vrSettings.enabled				= _vrMode;
 		scene_mngr_ci.vrSettings.eyeTextureDimension	= uint2(1024);
 
 		GetMainSystemInstance()->AddModule( SceneManagerModuleID, scene_mngr_ci );
@@ -68,15 +71,9 @@ namespace ShaderEditor
 	{
 		// create camera and surface
 		{
-			auto	gs = GetMainSystemInstance()->GlobalSystems();
-
-			#if 0
-				const auto	camera_id	= Scene::FreeVRCameraModuleID;
-				const auto	surface_id	= Scene::VRSurfaceModuleID;
-			#else
-				const auto	camera_id	= Scene::FreeCameraModuleID;
-				const auto	surface_id	= Scene::WindowSurfaceModuleID;
-			#endif
+			auto		gs			= GetMainSystemInstance()->GlobalSystems();
+			const auto	camera_id	= _vrMode ? Scene::FreeVRCameraModuleID : Scene::FreeCameraModuleID;
+			const auto	surface_id	= _vrMode ? Scene::VRSurfaceModuleID : Scene::WindowSurfaceModuleID;
 
 			CHECK_ERR( gs->modulesFactory->Create(
 								camera_id,

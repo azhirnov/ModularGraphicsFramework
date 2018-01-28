@@ -1,4 +1,17 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
+/*
+	Vulkan style synchronization primitives.
+	For more information see vulkan docs.
+
+	Fence - used to sync device with client.
+
+	Semaphore (mutex) - used to sync between command buffers in queue.
+	https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#synchronization-semaphores-waiting
+
+	Event - used to sync between command buffer in different queues.
+			Client may check and change state of event, but can't wait the event.
+			Limited support in OpenGL and DirectX11.
+*/
 
 #pragma once
 

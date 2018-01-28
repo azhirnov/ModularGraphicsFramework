@@ -6,6 +6,7 @@ namespace CMake
 {
 
 static char g_targetPlaceholder[] = "#target#";
+static char g_tempFolderForFastCpp[] = "__gxtemp__";
 
 /*
 =================================================
@@ -34,7 +35,7 @@ static char g_targetPlaceholder[] = "#target#";
 		FOR( i, _groups ) {
 			file_count += _groups[i].second.Count();
 		}
-		CHECK_ERR( file_count > 0 );
+		CHECK_ERR( file_count > 0 or _mergeCppForThreads > 0 );
 
 		outSrc	<< "#==================================================================================================\n"
 				<< "# project: " << _name << "\n"
@@ -63,6 +64,46 @@ static char g_targetPlaceholder[] = "#target#";
 				break;
 		}
 		
+		if ( _mergeCppForThreads > 0 and (_projType == EProjectType::Executable or _projType == EProjectType::SharedLibrary) )
+		{
+			CHECK_ERR( _ToStringOptimized( OUT src ) );
+		}
+		else
+		{
+			CHECK_ERR( _ToStringNormal( OUT src ) );
+		}
+
+		if ( not _compilerOpt.Empty() )
+		{
+			src << "# compiler\n"
+				<< _compilerOpt << "\n";
+		}
+
+		if ( not _source.Empty() )
+		{
+			src << "#-----------------------------------\n"
+				<< _source
+				<< "#-----------------------------------\n";
+		}
+		
+		if ( not _enableIf.Empty() )
+		{
+			StringParser::IncreaceIndent( INOUT src );
+
+			src << "endif()\n";
+		}
+
+		outSrc << src << "\n\n";
+		return true;
+	}
+	
+/*
+=================================================
+	_ToStringNormal
+=================================================
+*/
+	bool CMakeBuilder::CMakeProject::_ToStringNormal (OUT String &src)
+	{
 		FOR( i, _groups )
 		{
 			FOR( j, _groups[i].second ) {
@@ -160,31 +201,340 @@ static char g_targetPlaceholder[] = "#target#";
 				<< "add_dependencies( \"" << _name << "\" \"" << _dependencies[i].first << "\" )\n"
 				<< (has_option ? "endif()\n" : "");
 		}
-
-		if ( not _compilerOpt.Empty() )
-		{
-			src << "# compiler\n"
-				<< _compilerOpt << "\n";
-		}
-
-		if ( not _source.Empty() )
-		{
-			src << "#-----------------------------------\n"
-				<< _source
-				<< "#-----------------------------------\n";
-		}
-		
-		if ( not _enableIf.Empty() )
-		{
-			StringParser::IncreaceIndent( INOUT src );
-
-			src << "endif()\n";
-		}
-
-		outSrc << src << "\n\n";
 		return true;
 	}
 	
+/*
+=================================================
+	_ToStringOptimized
+=================================================
+*/
+	bool CMakeBuilder::CMakeProject::_ToStringOptimized (OUT String &src) const
+	{
+		String	path		= FileAddress::BuildPath( _builder->_baseFolder, g_tempFolderForFastCpp );
+		String	temp_folder = _name;
+
+		temp_folder.ReplaceStrings( ".", "_" );
+		temp_folder.ReplaceStrings( "/", "_" );
+		temp_folder.ReplaceStrings( "\\", "_" );
+
+		path = FileAddress::BuildPath( path, temp_folder );
+		
+		if ( not OS::FileSystem::IsDirectoryExist( path ) )
+		{
+			CHECK_ERR( OS::FileSystem::CreateDirectories( path ) );
+		}
+
+		// find dependencies
+		Set<String>		cpp_files;
+		StringMap_t		include_dirs;
+		StringMap_t		link_dirs;
+		StringMap_t		link_libs;
+		StringMap_t		defines;
+		StringMap_t		deps;
+
+		CHECK_ERR( _MergeDependencies( OUT cpp_files, OUT include_dirs, OUT link_dirs, OUT link_libs, OUT defines, OUT deps ) );
+
+		Array<String>	files;
+		CHECK_ERR( _BuildNewCppFiles( path, cpp_files, OUT files ) );
+
+		CHECK_ERR( _ToStringOptimizedImpl( files, include_dirs, link_dirs, link_libs, defines, deps, OUT src ) );
+		return true;
+	}
+	
+/*
+=================================================
+	_ToStringOptimizedImpl
+=================================================
+*/
+	bool CMakeBuilder::CMakeProject::_ToStringOptimizedImpl (ArrayCRef<String> filePaths, const StringMap_t &includeDirs, const StringMap_t &linkDirs,
+															 const StringMap_t &linkLibs, const StringMap_t &defines, const StringMap_t &dependencies,
+															 OUT String &src) const
+	{
+		FOR( i, filePaths )
+		{
+			src << "\n\t\t\"" << filePaths[i] << "\"";
+		}
+		src << " )\n\n";
+
+		if ( not _folder.Empty() ) {
+			src << "set_property( TARGET \"" << _name << "\" PROPERTY FOLDER \"" << _folder << "\" )\n";
+		}
+
+		if ( not _outputDir.Empty() ) {
+			src << "set_property( TARGET \"" << _name << "\" PROPERTY RUNTIME_OUTPUT_DIRECTORY \"" << _outputDir << "\" )\n";
+		}
+
+		FOR( i, includeDirs )
+		{
+			const bool	has_option = not includeDirs[i].second.Empty() and includeDirs[i].second != _enableIf; 
+
+			CHECK( _ValidateInclude( includeDirs[i].first, has_option ) );
+
+			src << (has_option ? "if ("_str << includeDirs[i].second << ")\n\t" : "")
+				<< "target_include_directories( \"" << _name << "\" PRIVATE \"" << includeDirs[i].first << "\" )\n"
+				<< (has_option ? "endif()\n" : "");
+		}
+		
+		FOR( i, linkDirs )
+		{
+			const bool	has_option = not linkDirs[i].second.Empty() and linkDirs[i].second != _enableIf; 
+			
+			CHECK( _ValidateLinkDir( linkDirs[i].first, has_option ) );
+
+			src << (has_option ? "if ("_str << linkDirs[i].second << ")\n\t" : "")
+				<< "target_link_directory( \"" << _name << "\" \"" << linkDirs[i].first << "\" )\n"
+				<< (has_option ? "endif()\n" : "");
+		}
+		
+		FOR( i, linkLibs )
+		{
+			const bool	has_option = not linkLibs[i].second.Empty() and linkLibs[i].second != _enableIf; 
+
+			src << (has_option ? "if ("_str << linkLibs[i].second << ")\n\t" : "")
+				<< "target_link_libraries( \"" << _name << "\" \"" << linkLibs[i].first << "\" )\n"
+				<< (has_option ? "endif()\n" : "");
+		}
+		
+		FOR( i, defines )
+		{
+			const bool	has_option = not defines[i].second.Empty() and defines[i].second != _enableIf; 
+
+			src << (has_option ? "if ("_str << defines[i].second << ")\n\t" : "")
+				<< "target_add_definitions( \"" << _name << "\" \"" << defines[i].first << "\" )\n"
+				<< (has_option ? "endif()\n" : "");
+		}
+
+		FOR( i, dependencies )
+		{
+			const bool	has_option = not dependencies[i].second.Empty() and dependencies[i].second != _enableIf;
+
+			src << (has_option ? "if ("_str << dependencies[i].second << ")\n\t" : "")
+				<< "add_dependencies( \"" << _name << "\" \"" << dependencies[i].first << "\" )\n"
+				<< (has_option ? "endif()\n" : "");
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_MergeDependencies
+=================================================
+*/
+	bool CMakeBuilder::CMakeProject::_MergeDependencies (OUT Set<String> &cppFiles, OUT StringMap_t &includeDirs, OUT StringMap_t &linkDirs,
+														 OUT StringMap_t &linkLibs, OUT StringMap_t &defines, OUT StringMap_t &deps) const
+	{
+		Set<String>		dependencies;
+		Set<String>		processed;
+
+		auto AddProjectDeps =	LAMBDA( &includeDirs, &linkDirs, &linkLibs, &defines, &deps, &dependencies ) (const CMakeProject *proj)
+								{{
+									String	include;
+									FileAddress::AbsoluteToRelativePath( proj->_baseFolder, proj->_builder->_baseFolder, OUT include );
+									includeDirs.Add({ include, "" });
+
+									FOR( i, proj->_linkLibs ) {
+										dependencies.Add( proj->_linkLibs[i].first );
+										linkLibs.Add( proj->_linkLibs[i] );
+									}
+									FOR( i, proj->_dependencies ) {
+										deps.Add( proj->_dependencies[i] );
+										dependencies.Add( proj->_dependencies[i].first );
+									}
+									FOR( i, proj->_includeDirs ) {
+										includeDirs.Add( proj->_includeDirs[i] );
+									}
+									FOR( i, proj->_includeDirsPrivate ) {
+										includeDirs.Add( proj->_includeDirsPrivate[i] );
+									}
+									FOR( i, proj->_defines ) {
+										defines.Add( proj->_defines[i] );
+									}
+								}};
+
+		auto AddProjectFiles =	LAMBDA ( &cppFiles ) (const CMakeProject *proj) -> bool
+								{{
+									FOR( j, proj->_groups )
+									{
+										FOR( k, proj->_groups[j].second )
+										{
+											StringCRef	fname	= proj->_groups[j].second[k];
+											StringCRef	ext		= FileAddress::GetExtension( fname );
+
+											if ( ext.EqualsIC( "cpp" ) or ext.EqualsIC( "c" ) or ext.EqualsIC( "cxx" ) )
+											{
+												String fpath = FileAddress::BuildPath( proj->_builder->_baseFolder, fname );
+												CHECK_ERR( OS::FileSystem::IsFileExist( fpath ) );
+
+												cppFiles.Add( fname );
+											}
+										}
+									}
+									return true;
+								}};
+
+		AddProjectDeps( this );
+		AddProjectFiles( this );
+
+		for (bool completed = false; not completed; )
+		{
+			completed = true;
+
+			FOR( i, _builder->_projects )
+			{
+				CMakeProject const* proj = dynamic_cast<CMakeProject*>( _builder->_projects[i].RawPtr() );
+
+				if ( proj and
+					 dependencies.IsExist( proj->_name ) and
+					 not processed.IsExist( proj->_name ) )
+				{
+					processed.Add( proj->_name );
+					AddProjectDeps( proj );
+					AddProjectFiles( proj );
+
+					// restart searching
+					completed = false;
+					break;
+				}
+			}
+		}
+
+		// remove processed projects from libs
+		FOR( i, linkLibs )
+		{
+			if ( processed.IsExist( linkLibs[i].first ) )
+			{
+				linkLibs.EraseByIndex( i );
+				--i;
+			}
+		}
+		
+		// remove processed projects from dependencies
+		FOR( i, deps )
+		{
+			if ( processed.IsExist( deps[i].first ) )
+			{
+				deps.EraseByIndex( i );
+				--i;
+			}
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_BuildNewCppFiles
+=================================================
+*/
+	bool CMakeBuilder::CMakeProject::_BuildNewCppFiles (StringCRef path, const Set<String> &cppFiles, OUT Array<String> &filePaths) const
+	{
+		struct FileInfo
+		{
+			BytesUL				size;
+			Array<StringCRef>	files;
+
+			FileInfo () {}
+		};
+		HashMap< String, FileInfo >		info;
+
+		FOR( i, cppFiles )
+		{
+			StringCRef	ext = FileAddress::GetExtension( cppFiles[i] );
+			usize		idx;
+
+			if ( not info.FindIndex( ext, OUT idx ) )
+			{
+				idx = info.Add( ext, {} );
+			}
+
+			info[idx].second.size += OS::FileSystem::GetFileSize( cppFiles[i] );
+			info[idx].second.files << cppFiles[i];
+		}
+
+		BytesUL		total;
+
+		FOR( i, info ) {
+			total += info[i].second.size;
+		}
+
+		BytesUL		size_per_thread = BytesUL( (ulong)GXMath::Ceil( double(ulong(total)) / double(_mergeCppForThreads) ) );
+		uint		file_counter	= 0;
+		
+		FOR( i, info )
+		{
+			for (; not info[i].second.files.Empty(); )
+			{
+				BytesUL	fsize;
+				String	fname = FileAddress::BuildPath( path, "File"_str << (file_counter++), info[i].first );
+				FileAddress::FormatPath( INOUT fname );
+
+				CHECK_ERR( _GenNewFile( fname, size_per_thread, INOUT info[i].second.files, OUT fsize ) );
+
+				filePaths << fname;
+				info[i].second.size -= fsize;
+			}
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_GenNewFile
+=================================================
+*/
+	bool CMakeBuilder::CMakeProject::_GenNewFile (StringCRef filename, BytesUL maxSize, INOUT Array<StringCRef> &files, OUT BytesUL &totalSize) const
+	{
+		File::WFilePtr	file = File::HddWFile::New( filename );
+		CHECK_ERR( file );
+
+		String	data;
+		String	fname;
+
+		data << "// This is generated file to make compilation faster\n\n";
+
+		totalSize = BytesUL();
+
+		usize	smallest_file_idx	= UMax;
+		BytesUL	min_size			= BytesUL(ulong(UMax));
+
+		FOR( i, files )
+		{
+			BytesUL	size = OS::FileSystem::GetFileSize( files[i] );
+
+			if ( totalSize + size < maxSize )
+			{
+				fname = files[i];
+				FileAddress::FormatPath( INOUT fname );
+
+				data << "#include \"" << fname << "\"\n";
+
+				totalSize += size;
+				files.Erase( i );
+				--i;
+			}
+			else
+			if ( size < min_size )
+			{
+				smallest_file_idx	= i;
+				min_size			= size;
+			}
+		}
+
+		if ( smallest_file_idx < files.Count() )
+		{
+			fname = files[smallest_file_idx];
+			FileAddress::FormatPath( INOUT fname );
+
+			data << "#include \"" << fname << "\"\n";
+
+			totalSize += min_size;
+			files.Erase( smallest_file_idx );
+		}
+
+		CHECK_ERR( file->Write( StringCRef(data) ) );
+		return true;
+	}
+
 /*
 =================================================
 	_ValidateInclude
@@ -261,10 +611,35 @@ static char g_targetPlaceholder[] = "#target#";
 	
 /*
 =================================================
+	CheckExtension
+=================================================
+*/
+	static bool CheckExtension (StringCRef filename, const HashSet<String> &filter)
+	{
+		if ( filter.Empty() )
+			return true;
+
+		String	ext = FileAddress::GetExtension( filename );
+
+		if ( ext.Empty() )
+			return false;
+
+		FOR( i, ext ) {
+			ext[i] = StringUtils::ToUpper( ext[i] );
+		}
+
+		if ( not filter.IsExist( ext ) )
+			return false;
+
+		return true;
+	}
+	
+/*
+=================================================
 	AddFolder
 =================================================
 */
-	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::AddFolder (StringCRef path)
+	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::AddFolder (StringCRef path, const StringSet_t &filter)
 	{
 		String	dir = FileAddress::BuildPath( _baseFolder, path );
 		CHECK_ERR( OS::FileSystem::IsDirectoryExist( dir ) );
@@ -280,8 +655,12 @@ static char g_targetPlaceholder[] = "#target#";
 			idx = _groups.Add( gr_name, {} );
 		}
 
+		// add files to group
 		FOR( i, names )
 		{
+			if ( not CheckExtension( names[i], filter ) )
+				continue;
+
 			String	fname = FileAddress::BuildPath( dir, names[i] );
 			CHECK_ERR( OS::FileSystem::IsFileExist( fname ) );
 			
@@ -290,6 +669,11 @@ static char g_targetPlaceholder[] = "#target#";
 
 			_groups[idx].second << fname2;
 		}
+
+		// remove if empty
+		if ( _groups[idx].second.Empty() )
+			_groups.EraseByIndex( idx );
+
 		return this;
 	}
 	
@@ -298,7 +682,7 @@ static char g_targetPlaceholder[] = "#target#";
 	AddFoldersRecursive
 =================================================
 */
-	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::AddFoldersRecursive (StringCRef path)
+	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::AddFoldersRecursive (StringCRef path, const StringSet_t &filter)
 	{
 		String	dir = FileAddress::BuildPath( _baseFolder, path );
 		CHECK_ERR( OS::FileSystem::IsDirectoryExist( dir ) );
@@ -328,14 +712,19 @@ static char g_targetPlaceholder[] = "#target#";
 				CHECK_ERR( FileAddress::AbsoluteToRelativePath( folders.Front(), _baseFolder, OUT dir2 ) );
 				dir2.ReplaceStrings( "/", "\\\\" );
 
+				// create or reuse group
 				usize	idx;
 				if ( not _groups.FindIndex( dir2, OUT idx ) )
 				{
 					idx = _groups.Add( dir2, {} );
 				}
 
+				// add files to group
 				FOR( i, names )
 				{
+					if ( not CheckExtension( names[i], filter ) )
+						continue;
+
 					String	fname = FileAddress::BuildPath( folders.Front(), names[i] );
 					CHECK_ERR( OS::FileSystem::IsFileExist( fname ) );
 					
@@ -344,6 +733,10 @@ static char g_targetPlaceholder[] = "#target#";
 
 					_groups[idx].second << fname2;
 				}
+
+				// remove if empty
+				if ( _groups[idx].second.Empty() )
+					_groups.EraseByIndex( idx );
 			}
 			folders.PopFront();
 		}
@@ -451,12 +844,13 @@ static char g_targetPlaceholder[] = "#target#";
 */
 	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::LinkLibrary (StringCRef lib, StringCRef enableIf)
 	{
-		//StringCRef	path = FileAddress::GetPath( lib );
-		//lib = FileAddress::GetNameAndExt( lib );
+		#if 0
+		StringCRef	path = FileAddress::GetPath( lib );
+		lib = FileAddress::GetNameAndExt( lib );
 
-		//if ( not path.Empty() )
-		//	LinkDirectory( path, enableIf );
-		/*
+		if ( not path.Empty() )
+			LinkDirectory( path, enableIf );
+		
 		if ( lib.EndsWithIC( ".lib" ) )
 			lib = lib.SubString( 0, lib.Length() - 4 );
 		else
@@ -467,7 +861,8 @@ static char g_targetPlaceholder[] = "#target#";
 			lib = lib.SubString( 0, lib.Length() - 2 );
 		else
 		if ( lib.EndsWithIC( ".so" ) )
-			lib = lib.SubString( 0, lib.Length() - 3 );*/
+			lib = lib.SubString( 0, lib.Length() - 3 );
+		#endif
 
 		_linkLibs.Add({ lib, enableIf });
 		return this;
@@ -488,6 +883,8 @@ static char g_targetPlaceholder[] = "#target#";
 */
 	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::LinkLibrary (CMakeProject *lib)
 	{
+		//CHECK( lib->_projType == EProjectType::Library or lib->_projType == EProjectType::SharedLibrary );
+
 		return LinkLibrary( lib->_name, lib->_enableIf );
 	}
 	
@@ -608,6 +1005,19 @@ static char g_targetPlaceholder[] = "#target#";
 	
 /*
 =================================================
+	MergeCPP
+=================================================
+*/
+	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::MergeCPP (uint numThreads)
+	{
+		CHECK( _projType == EProjectType::Executable or _projType == EProjectType::SharedLibrary );
+
+		_mergeCppForThreads = numThreads;
+		return this;
+	}
+
+/*
+=================================================
 	SetCompilerOptions
 =================================================
 */
@@ -722,6 +1132,7 @@ static char g_targetPlaceholder[] = "#target#";
 			_configurations[i].second->ToString( _configurations[i].first, OUT src );
 		}
 
+		// set default configuration
 		if ( _defaultCfg.Empty() )
 		{
 			if ( _configurations.IsExist( "Debug" ) )
@@ -733,6 +1144,14 @@ static char g_targetPlaceholder[] = "#target#";
 		CHECK_ERR( _configurations.IsExist( _defaultCfg ) );
 		src << "	set( CMAKE_BUILD_TYPE \"" << _defaultCfg << "\")\n";
 
+		// add user-defined source
+		if ( not _source.Empty() )
+		{
+			src << "#--------------------------------------------\n";
+			src << _source << "\n";
+			src << "#--------------------------------------------\n";
+		}
+
 		src << "\nendif()\n\n\n";
 		return true;
 	}
@@ -740,6 +1159,8 @@ static char g_targetPlaceholder[] = "#target#";
 /*
 =================================================
 	ToString2
+----
+	TODO: create variables to minimize options for target...
 =================================================
 */
 	bool CMakeBuilder::CMakeCompiler::ToString2 (OUT String &src)
@@ -854,6 +1275,17 @@ static char g_targetPlaceholder[] = "#target#";
 		FOR( i, libs ) {
 			_linkLibs.Add({ libs[i], enableIf });
 		}
+		return this;
+	}
+	
+/*
+=================================================
+	AddSource
+=================================================
+*/
+	CMakeBuilder::CMakeCompiler* CMakeBuilder::CMakeCompiler::AddSource (StringCRef cmakeSrc)
+	{
+		_source = cmakeSrc;
 		return this;
 	}
 //-----------------------------------------------------------------------------
@@ -1086,6 +1518,9 @@ static char g_targetPlaceholder[] = "#target#";
 		if ( not _enableIf.Empty() )
 			outSrc << "if (" << _enableIf << ")\n";
 
+		src	<< "message( STATUS \"external project '" << _path << "' generation started\" )\n"
+			<< "message( STATUS \"-----------------------------------------------------\" )\n\n";
+
 		FOR( i, _options ) {
 			src << "set( " << _options[i].first << " " << _options[i].second << " )\n";
 		}
@@ -1108,6 +1543,10 @@ static char g_targetPlaceholder[] = "#target#";
 				<< _source
 				<< "#-----------------------------------\n";
 		}
+		
+		src	<< "\n"
+			<< "message( STATUS \"external project '" << _path << "' generation ended\" )\n"
+			<< "message( STATUS \"-----------------------------------------------------\" )\n";
 
 		if ( not _enableIf.Empty() )
 		{
@@ -1285,6 +1724,11 @@ static char g_targetPlaceholder[] = "#target#";
 						return true;
 					}
 				}
+
+				// TODO: check builtin includes
+				if ( line.EqualsIC( "CMakePackageConfigHelpers" ) )
+					return true;
+
 				RETURN_ERR( "file '" << line << "' not found!" );
 			}
 			case EKeyType::Prop : {
@@ -1540,30 +1984,44 @@ static char g_targetPlaceholder[] = "#target#";
 */
 	bool CMakeBuilder::Save (StringCRef filename)
 	{
+		CHECK_ERR( not _solutionName.Empty() );
+
+		// create directory
 		if ( not OS::FileSystem::IsDirectoryExist( _baseFolder ) )
 		{
-			Array< StringCRef >	paths;
-			String				new_path;
-
-			FileAddress::DividePath( _baseFolder, OUT paths );
-
-			FOR( i, paths )
-			{
-				FileAddress::AddDirectoryToPath( new_path, paths[i] );
-
-				if ( not OS::FileSystem::IsDirectoryExist( new_path ) ) {
-					CHECK_ERR( OS::FileSystem::NewDirectory( new_path ) );
-				}
-			}
-
-			ASSERT( new_path == _baseFolder );
+			CHECK_ERR( OS::FileSystem::CreateDirectories( _baseFolder ) );
 		}
+
+		// clear fast build files
+		{
+			String	path = FileAddress::BuildPath( _baseFolder, g_tempFolderForFastCpp );
+
+			if ( OS::FileSystem::IsDirectoryExist( path ) )
+			{
+				CHECK( OS::FileSystem::DeleteDirectory( path ) );
+			}
+		}
+
 
 		String	src;
 		String	compiler_opt;
 
 		src << "# auto generated file\n"
 			<< "cmake_minimum_required (VERSION 3.6.3)\n\n"
+			<< "message( STATUS \"==========================================================================\\n\" )\n"
+			<< "message( STATUS \"project '" << _solutionName << "' generation started\" )\n";
+
+		// system version and other options
+		FOR( i, _sourceBeforeProject )
+		{
+			auto&	opt = _sourceBeforeProject[i];
+
+			src << (opt.second.Empty() ? "" : "if ( "_str << opt.second << " )\n\t")
+				<< opt.first << "\n"
+				<< (opt.second.Empty() ? "" : "endif()\n");
+		}
+		
+		src	<< "\n"
 			<< "project( \"" << _solutionName << "\" LANGUAGES CXX )\n"
 			<< "set_property( GLOBAL PROPERTY USE_FOLDERS ON )\n"
 			<< "set( " << _solutionName << "_VERSION_MAJOR " << _version.x << " )\n"
@@ -1634,10 +2092,18 @@ static char g_targetPlaceholder[] = "#target#";
 
 			CHECK( proj->ToString( OUT src ) );
 		}
+		
+		src << "message( STATUS \"project '" << _solutionName << "' generation ended\" )\n"
+			<< "message( STATUS \"\n==========================================================================\" )\n\n";
 
 		// serialize external projects
-		FOR( i, _externalProjects ) {
-			CHECK( _externalProjects[i]->ToString( OUT src ) );
+		if ( not _externalProjects.Empty() )
+		{
+			src << "message( STATUS \"adding external projects\" )\n\n\n";
+
+			FOR( i, _externalProjects ) {
+				CHECK( _externalProjects[i]->ToString( OUT src ) );
+			}
 		}
 
 		// save project
@@ -1878,6 +2344,32 @@ static char g_targetPlaceholder[] = "#target#";
 			if ( not projFolder.Empty() )
 				proj->ProjFolder( projFolder );
 		}
+		return this;
+	}
+	
+/*
+=================================================
+	GetCPPFilters
+=================================================
+*/
+	HashSet<String> const&  CMakeBuilder::GetCPPFilters ()
+	{
+		static const HashSet<String>	set = {
+			"C", "CPP", "CXX", "H", "HPP", "HXX"
+		};
+		return set;
+	}
+	
+/*
+=================================================
+	SetSystemVersion
+=================================================
+*/	
+	CMakeBuilder* CMakeBuilder::SetSystemVersion (StringCRef value, StringCRef enableIf)
+	{
+		String	sys_ver = "set (CMAKE_SYSTEM_VERSION \""_str << value << "\" CACHE TYPE INTERNAL FORCE)";
+
+		_sourceBeforeProject.Add({ sys_ver, enableIf });
 		return this;
 	}
 //-----------------------------------------------------------------------------

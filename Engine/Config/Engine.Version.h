@@ -4,7 +4,7 @@
 
 namespace Engine
 {
-	namespace _engine_hidden_
+	/*namespace _engine_hidden_
 	{
 		constexpr int BuildVersionNumber (int v0, int v1, int v2, int revision)
 		{
@@ -21,12 +21,15 @@ namespace Engine
 			return	(engineVer & ~0xFFFF) | (resourceVer & 0xFFFF);
 		}
 
-	}	// _engine_hidden_
+	}	// _engine_hidden_*/
+	//static const int	ENGINE_VERSION		= _engine_hidden_::BuildVersionNumber( 0, 2, 1, 0 );
 
 
 	static const char	ENGINE_NAME[]		= "ModularGraphicsFramework";
 	static const char	ENGINE_BUILD_DATE[]	= __DATE__ " " __TIME__;
-	static const int	ENGINE_VERSION		= _engine_hidden_::BuildVersionNumber( 0, 2, 1, 0 );
+	static const int	_ENGINE_VERSION_MAJ	= 0;
+	static const int	_ENGINE_VERSION_MIN	= 210;
+	static const int	ENGINE_VERSION		= _ENGINE_VERSION_MAJ * 1000 + _ENGINE_VERSION_MIN;
 
 
 }	// Engine

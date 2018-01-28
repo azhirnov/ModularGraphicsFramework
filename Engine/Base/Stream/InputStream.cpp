@@ -3,7 +3,7 @@
 #include "Engine/Base/Stream/Stream.h"
 #include "Engine/Base/Modules/Module.h"
 #include "Engine/Base/Files/FileManager.h"
-#include "Engine/Base/Stream/StreamManager.h"
+#include "Engine/Base/Stream/StreamObjectsConstructor.h"
 
 namespace Engine
 {
@@ -275,20 +275,20 @@ namespace Base
 	
 /*
 =================================================
-	_CreateInputStream*
+	CreateInputStream*
 =================================================
 */
-	ModulePtr StreamManager::_CreateInStreamFromFile (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci)
+	ModulePtr StreamObjectsConstructor::CreateInStreamFromFile (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci)
 	{
 		return New< InputStream >( gs, ci );
 	}
 	
-	ModulePtr StreamManager::_CreateInStreamFromUri (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci)
+	ModulePtr StreamObjectsConstructor::CreateInStreamFromUri (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci)
 	{
 		return New< InputStream >( gs, ci );
 	}
 
-	ModulePtr StreamManager::_CreateInStreamFromMemory (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci)
+	ModulePtr StreamObjectsConstructor::CreateInStreamFromMemory (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci)
 	{
 		return New< InputStream >( gs, ci );
 	}

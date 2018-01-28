@@ -25,29 +25,6 @@ namespace PlatformGL
 	{
 	// types
 	private:
-		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetImageDescriptor,
-											GpuMsg::GetGLImageID,
-											GpuMsg::CreateGLImageView,
-											GpuMsg::GpuMemoryRegionChanged,
-											GpuMsg::SetImageLayout,
-											GpuMsg::GetImageLayout,
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::ReadFromStream,
-											ModuleMsg::WriteToStream,
-											GpuMsg::MapMemoryToCpu,
-											GpuMsg::MapImageToCpu,
-											GpuMsg::FlushMemoryRange,
-											GpuMsg::UnmapMemory,
-											GpuMsg::ReadFromGpuMemory,
-											GpuMsg::WriteToGpuMemory,
-											GpuMsg::ReadFromImageMemory,
-											GpuMsg::WriteToImageMemory
-										> >;
-
-		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
-		
-		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 		using ForwardToMem_t		= MessageListFrom< 
 											ModuleMsg::GetStreamDescriptor,
 											ModuleMsg::ReadFromStream,
@@ -59,7 +36,22 @@ namespace PlatformGL
 											GpuMsg::ReadFromGpuMemory,
 											GpuMsg::WriteToGpuMemory,
 											GpuMsg::ReadFromImageMemory,
-											GpuMsg::WriteToImageMemory >;
+											GpuMsg::WriteToImageMemory
+										>;
+
+		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetImageDescriptor,
+											GpuMsg::SetImageDescriptor,
+											GpuMsg::GetGLImageID,
+											GpuMsg::CreateGLImageView,
+											GpuMsg::GpuMemoryRegionChanged,
+											GpuMsg::SetImageLayout,
+											GpuMsg::GetImageLayout
+										> >::Append< ForwardToMem_t >;
+
+		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
+		
+		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 
 		using Utils					= Platforms::ImageUtils;
 		
@@ -104,10 +96,13 @@ namespace PlatformGL
 		bool _GetGLImageID (const Message< GpuMsg::GetGLImageID > &);
 		bool _CreateGLImageView (const Message< GpuMsg::CreateGLImageView > &);
 		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
 		bool _SetImageLayout (const Message< GpuMsg::SetImageLayout > &);
 		bool _GetImageLayout (const Message< GpuMsg::GetImageLayout > &);
+		
+	// event handlers
+		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
 
 	private:
 		bool _IsImageCreated () const;
@@ -152,6 +147,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Image::_GetGLImageID );
 		_SubscribeOnMsg( this, &GL4Image::_CreateGLImageView );
 		_SubscribeOnMsg( this, &GL4Image::_GetImageDescriptor );
+		_SubscribeOnMsg( this, &GL4Image::_SetImageDescriptor );
 		_SubscribeOnMsg( this, &GL4Image::_SetImageLayout );
 		_SubscribeOnMsg( this, &GL4Image::_GetImageLayout );
 		_SubscribeOnMsg( this, &GL4Image::_GetDeviceInfo );
@@ -159,7 +155,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Image::_GetGLPrivateClasses );
 		_SubscribeOnMsg( this, &GL4Image::_GpuMemoryRegionChanged );
 
-		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
 		Utils::ValidateDescriptor( INOUT _descr );
 	}
@@ -600,6 +596,21 @@ namespace PlatformGL
 		return true;
 	}
 	
+/*
+=================================================
+	_SetImageDescriptor
+=================================================
+*/
+	bool GL4Image::_SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &msg)
+	{
+		CHECK_ERR( GetState() == EState::Initial );
+
+		_descr = msg->descr;
+
+		Utils::ValidateDescriptor( INOUT _descr );
+		return true;
+	}
+
 /*
 =================================================
 	_OnMemoryBindingChanged

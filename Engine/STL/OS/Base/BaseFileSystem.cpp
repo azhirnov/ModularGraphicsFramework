@@ -2,6 +2,7 @@
 
 #include "BaseFileSystem.h"
 #include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Algorithms/FileAddress.h"
 
 namespace GX_STL
 {

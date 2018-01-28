@@ -115,7 +115,7 @@ namespace PlatformVK
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*
@@ -246,11 +246,16 @@ namespace PlatformVK
 		// validate render pass
 		if ( not _renderPass )
 		{
-			_renderPass		= GetDevice()->GetDefaultRenderPass();
+			Message< GpuMsg::GetDeviceInfo >	req_dev;
+			CHECK( _GetManager()->Send( req_dev ) );
+
+			_renderPass		= req_dev->result->renderPass;
 			_descr.subpass	= 0;
 
 			LOG( "used default render pass", ELog::Debug );
 		}
+
+		CHECK_ERR( _renderPass );
 		CHECK_ERR( _ValidateRenderPass() );
 
 		
@@ -447,7 +452,7 @@ namespace PlatformVK
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*

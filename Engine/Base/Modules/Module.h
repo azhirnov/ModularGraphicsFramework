@@ -72,7 +72,9 @@ namespace Base
 		using SupportedEvents_t		= MessageListFrom<
 											//GX_PROFILE_MSG( ProfilingMsg::OnSendMsg, )
 											ModuleMsg::Link,
+											ModuleMsg::AfterLink,
 											ModuleMsg::Compose,
+											ModuleMsg::AfterCompose,
 											ModuleMsg::Update,
 											ModuleMsg::Delete,
 											ModuleMsg::OnModuleAttached,
@@ -184,7 +186,7 @@ namespace Base
 
 		void _ClearMessageHandlers ();
 		
-		template <typename MsgList>		bool _CopySubscriptions (const ModulePtr &other);
+		template <typename MsgList>		bool _CopySubscriptions (const ModulePtr &other, bool removeUnsupported = false);
 
 		template <typename T>			bool _SendMsg (const Message<T> &msg);
 		template <typename T>			bool _SendEvent (const Message<T> &msg);

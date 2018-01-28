@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'C:\Projects\graphxgenengine\Projects\ShaderEditorTools\VoronnoiRecursion.cpp'
-// Created at: 2018/01/12 - 00:05:50
+// Created at: 2018/01/17 - 20:21:49
 
 #include "all_pipelines.h"
 
@@ -113,8 +113,9 @@ R"#(#version 450 core
 #endif
 
 
-
-
+out gl_PerVertex {
+	vec4	gl_Position;
+};
 
 const vec2 g_Positions[4] = { vec2(-1.0, 1.0), vec2(-1.0), vec2(1.0), vec2(1.0, -1.0) };
 
@@ -268,15 +269,15 @@ layout(binding=0) layout(std140) uniform ShadertoyUB {
 
 
 
-vec3 HSVtoRGB (in vec3 hsv);
-vec3 Rainbow (in float color, in float dist);
-vec2 Hash22 (in vec2 p);
-float Hash21 (in vec2 p);
-vec2 Hash12 (in float f);
-float Hash11 (in float a);
-void mainImage (out vec4 fragColor, in vec2 fragCoord);
 vec3 VoronoiFactal (in vec2 coord, in float time);
+void mainImage (out vec4 fragColor, in vec2 fragCoord);
+vec3 Rainbow (in float color, in float dist);
+vec3 HSVtoRGB (in vec3 hsv);
 vec4 voronoi (in vec2 x);
+vec2 Hash12 (in float f);
+float Hash21 (in vec2 p);
+vec2 Hash22 (in vec2 p);
+float Hash11 (in float a);
 
 //---------------------------------
 void main ()

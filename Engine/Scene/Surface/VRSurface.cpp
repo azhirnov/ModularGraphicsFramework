@@ -18,7 +18,9 @@ namespace Scene
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= BaseSceneModule::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= BaseSceneModule::SupportedMessages_t::Erase< MessageListFrom<
+											ModuleMsg::Compose
+										> >::Append< MessageListFrom<
 											SceneMsg::SurfaceGetDescriptor,
 											ModuleMsg::Update
 										> >;
@@ -41,7 +43,7 @@ namespace Scene
 
 		using VRThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 		
-		using PerFrameCmdMsgList_t	= MessageListFrom<
+		using CmdBufferMngrMsgList_t = MessageListFrom<
 											GraphicsMsg::CmdBeginFrame,
 											GraphicsMsg::CmdEndFrame,
 											GraphicsMsg::CmdBegin,
@@ -74,6 +76,8 @@ namespace Scene
 		bool _Update (const Message< ModuleMsg::Update > &);
 		bool _SurfaceGetDescriptor (const Message< SceneMsg::SurfaceGetDescriptor > &);
 		
+		// event handlers
+		bool _AfterCompose (const Message< ModuleMsg::AfterCompose > &);
 		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
 	};
 //-----------------------------------------------------------------------------
@@ -100,7 +104,6 @@ namespace Scene
 		_SubscribeOnMsg( this, &VRSurface::_FindModule_Impl );
 		_SubscribeOnMsg( this, &VRSurface::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &VRSurface::_Link );
-		_SubscribeOnMsg( this, &VRSurface::_Compose_Impl );
 		_SubscribeOnMsg( this, &VRSurface::_Delete );
 		_SubscribeOnMsg( this, &VRSurface::_Update );
 		_SubscribeOnMsg( this, &VRSurface::_SurfaceGetDescriptor );
@@ -137,14 +140,26 @@ namespace Scene
 		
 		CHECK_ATTACHMENT(( _vrthread = GlobalSystems()->parallelThread->GetModuleByMsgEvent< VRThreadMsgList_t, VRThreadEventList_t >() ));
 		_vrthread->Subscribe( this, &VRSurface::_DeviceBeforeDestroy );
+
+		_GetManager()->Subscribe( this, &VRSurface::_AfterCompose );
 		
-		_builder = _GetManager()->GetModuleByMsg< PerFrameCmdMsgList_t >();
+		_builder = _GetManager()->GetModuleByMsg< CmdBufferMngrMsgList_t >();
 		CHECK_ERR( _builder );
 
 		CHECK( _SetState( EState::Linked ) );
 		return true;
 	}
 	
+/*
+=================================================
+	_AfterCompose
+=================================================
+*/
+	bool VRSurface::_AfterCompose (const Message< ModuleMsg::AfterCompose > &)
+	{
+		return _DefCompose( false );
+	}
+
 /*
 =================================================
 	_Update
@@ -157,18 +172,18 @@ namespace Scene
 		
 		// update dependencies
 		Module::_Update_Impl( msg );
-
-		TODO( "" );
-		/*Message< GpuMsg::ThreadBeginVRFrame >	begin_frame;
-		_vrthread->Send( begin_frame );
+		
+		Message< GraphicsMsg::CmdBeginVRFrame >		begin_frame;
+		_builder->Send( begin_frame );
 		
 		Message< SceneMsg::SurfaceRequestUpdate >	req_upd;
 		req_upd->framebuffers.PushBack( begin_frame->result->leftEye );
 		req_upd->framebuffers.PushBack( begin_frame->result->rightEye );
+		req_upd->cmdBuilder = _builder;
 
 		CHECK( _SendEvent( req_upd ) );
 
-		_vrthread->Send< GpuMsg::ThreadEndVRFrame >({ req_upd->cmdBuffers });*/
+		_builder->Send< GraphicsMsg::CmdEndVRFrame >({});
 		return true;
 	}
 

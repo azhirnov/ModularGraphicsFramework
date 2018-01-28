@@ -4,7 +4,7 @@
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
 #include "Engine/Scene/Impl/BaseSceneModule.h"
 #include "Engine/Platforms/Windows/WinMessages.h"
-//#include "Engine/Platforms/VR/VRObjectsConstructor.h"
+#include "Engine/Platforms/VR/VRObjectsConstructor.h"
 
 namespace Engine
 {
@@ -188,6 +188,29 @@ namespace Scene
 			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ window });
 			window->Send( msg );
 		}
+		
+		DEBUG_ONLY( window->AddModule( Profilers::FPSCounterModuleID, CreateInfo::FPSCounter{} ) );
+
+		if ( not input_thread )
+		{
+			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( InputThreadModuleID, GlobalSystems(), CreateInfo::InputThread{}, OUT input_thread ) );
+			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ input_thread });
+			input_thread->Send( msg );
+		}
+		
+		if ( _vrSettings.enabled and not vr_thread )
+		{
+			// TODO: create default VR thread
+			#ifdef GX_EMULATOR_VR
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create( EmulatorVRThreadModuleID,
+																GlobalSystems(),
+																CreateInfo::VRThread{ gpu_thread, _vrSettings.eyeTextureDimension, _vrSettings.layered },
+																OUT vr_thread ) );
+			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ vr_thread });
+			vr_thread->Send( msg );
+			gpu_thread = vr_thread;
+			#endif
+		}
 
 		if ( not gpu_thread )
 		{
@@ -198,23 +221,6 @@ namespace Scene
 			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ gpu_thread });
 			gpu_thread->Send( msg );
 		}
-
-		if ( not input_thread )
-		{
-			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( InputThreadModuleID, GlobalSystems(), CreateInfo::InputThread{}, OUT input_thread ) );
-			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ input_thread });
-			input_thread->Send( msg );
-		}
-
-		/*if ( _vrSettings.enabled and not vr_thread )
-		{
-			CHECK_ERR( GlobalSystems()->modulesFactory->Create( EmulatorVRThreadModuleID,
-																GlobalSystems(),
-																CreateInfo::VRThread{ gpu_thread, _vrSettings.eyeTextureDimension, _vrSettings.layered },
-																OUT vr_thread ) );
-			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ vr_thread });
-			vr_thread->Send( msg );
-		}*/
 
 		ModulePtr	key_input	= window->GetModuleByEvent< KeyInputEventList_t >();
 		ModulePtr	mouse_input	= window->GetModuleByEvent< MouseInputEventList_t >();

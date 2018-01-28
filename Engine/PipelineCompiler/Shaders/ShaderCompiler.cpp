@@ -53,11 +53,6 @@ namespace PipelineCompiler
 */
 	ShaderCompiler::ShaderCompiler ()
 	{
-		#ifdef GX_DEPENDS_OF_PLATFORMS
-			_app.Initialize();
-			_app.Update();
-		#endif
-
 		glslang::InitializeProcess();
 		gla::RegisterUnsupportedFunctionalityHandler( &UnsupportedFunctionalityHandler );
 	}
@@ -69,12 +64,6 @@ namespace PipelineCompiler
 */
 	ShaderCompiler::~ShaderCompiler ()
 	{
-		#ifdef GX_DEPENDS_OF_PLATFORMS
-			_app.Quit();
-		#endif
-
-		//GetMainSystemInstance()->Send( Message< ModuleMsg::Delete >() );
-
 		glslang::FinalizeProcess();
 	}
 	
@@ -332,7 +321,12 @@ namespace PipelineCompiler
 				is_vulkan = true;
 				break;
 
-			case EShaderSrcFormat::GLSL_ES :
+			case EShaderSrcFormat::GLSL_ES_2 :
+				sh_source = glslang::EShSourceGlsl;
+				version   = 200;
+				break;
+
+			case EShaderSrcFormat::GLSL_ES_3 :
 				sh_source = glslang::EShSourceGlsl;
 				version   = GLSL_ES_VERSION;
 				break;
@@ -433,7 +427,8 @@ namespace PipelineCompiler
 				switch ( cfg.source )
 				{
 					case EShaderSrcFormat::GLSL :
-					//case EShaderSrcFormat::GLSL_ES :
+					//case EShaderSrcFormat::GLSL_ES_2 :
+					//case EShaderSrcFormat::GLSL_ES_3 :
 					{
 						if ( cfg.optimize )
 							return _OptimizeGLSL( cfg, data, OUT log, OUT result );
@@ -493,7 +488,7 @@ namespace PipelineCompiler
 				data2.entry = "main";
 
 				cfg2		= cfg;
-				cfg2.source	= cfg.target == EShaderDstFormat::GLSL_Binary ? EShaderSrcFormat::GLSL : EShaderSrcFormat::GLSL_ES;
+				cfg2.source	= (cfg.target == EShaderDstFormat::GLSL_Binary ? EShaderSrcFormat::GLSL : EShaderSrcFormat::GLSL_ES_3);
 
 				CHECK_COMP( _CompileGLSL( cfg2, data2, OUT log, OUT result ) );
 				return true;
@@ -716,18 +711,17 @@ namespace PipelineCompiler
 		EProfile	shader_profile	= ENoProfile;
 		uint		shader_version	= 0;
 		bool		use_spirv		= false;
-		//bool		is_vulkan		= false;
 
 		switch ( cfg.source )
 		{
 			case EShaderSrcFormat::GLSL :
 			case EShaderSrcFormat::GXSL :
-			case EShaderSrcFormat::GLSL_ES :
+			case EShaderSrcFormat::GLSL_ES_2 :
+			case EShaderSrcFormat::GLSL_ES_3 :
 				break;
 
 			case EShaderSrcFormat::GLSL_Vulkan :
 			case EShaderSrcFormat::GXSL_Vulkan :
-				//is_vulkan = true;
 				break;
 
 			default :
@@ -757,9 +751,6 @@ namespace PipelineCompiler
 			default :
 				RETURN_ERR( "unsupported shader compilation target!" );
 		}
-
-		//CHECK_COMP( is_vulkan == use_spirv );	// TODO
-
 
 		// optimize shader
 		const int		substitution_level	= 1;
@@ -858,6 +849,26 @@ namespace PipelineCompiler
 
 			result << BinArrayCRef::From( data.src[i] );
 			result << newline;
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	Validate
+=================================================
+*/
+	bool ShaderCompiler::Validate (EShaderDstFormat::type shaderFmt, EShader::type shaderType, BinArrayCRef data)
+	{
+		switch ( shaderFmt )
+		{
+			case EShaderDstFormat::GLSL_Source :	return _ValidateGLSLSource( shaderType, StringCRef( (const char*)data.ptr() ) );
+			case EShaderDstFormat::GLSL_Binary :	return _ValidateGLSLBinary( shaderType, data );
+			case EShaderDstFormat::CL_Source :		return _ValidateCLSource( shaderType, StringCRef( (const char*)data.ptr() ) );
+			case EShaderDstFormat::CL_Binary :		return _ValidateCLBinary( shaderType, data );
+			case EShaderDstFormat::HLSL_Source :	return _ValidateHLSLSource( shaderType, StringCRef( (const char*)data.ptr() ) );
+			case EShaderDstFormat::HLSL_Binary :	return _ValidateHLSLBinary( shaderType, data );
+			case EShaderDstFormat::SPIRV_Binary :	return _ValidateSPIRV( shaderType, data );
 		}
 		return true;
 	}

@@ -149,10 +149,13 @@ namespace PipelineCompiler
 		virtual bool TranslateLocalVar (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateArg (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateType (const TypeInfo &, INOUT String &src) = 0;
+		virtual bool TranslateName (const TypeInfo &, INOUT String &src) = 0;
 
 		virtual bool TranslateExternal (glslang::TIntermTyped *, const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateOperator (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) = 0;
 		virtual bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) = 0;
+
+		virtual bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) = 0;
 	};
 	
 	

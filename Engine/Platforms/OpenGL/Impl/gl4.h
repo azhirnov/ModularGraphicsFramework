@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Common/Common.h"
+#include "Engine/Platforms/Shared/Common.h"
 
 #if defined( GRAPHICS_API_OPENGL )
 

@@ -8,8 +8,12 @@ namespace Engine
 {
 namespace Graphics
 {
-	using namespace Platforms;
+	using namespace Engine::Base;
+	using namespace GX_STL::GXMath;
+	using EPrimitive		= Engine::Platforms::EPrimitive;
+	using VertexInputState	= Engine::Platforms::VertexInputState;
 	
+
 	void RegisterGraphics ();
 	void UnregisterGraphics ();
 
@@ -17,7 +21,7 @@ namespace Graphics
 
 namespace GraphicsMsg
 {
-	using namespace ModuleMsg;
+	using namespace Engine::ModuleMsg;
 
 }	// GraphicsMsg
 }	// Engine

@@ -97,7 +97,7 @@ namespace PlatformVK
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*
@@ -230,28 +230,13 @@ namespace PlatformVK
 											RETURN_ERR( "Subpass '" << name << "' not found", VK_SUBPASS_EXTERNAL-1 ); // return any invalid value
 										}};
 
-		if ( _descr.DepthStencilAttachment().IsEnabled() )
-		{
-			const auto&		attach = _descr.DepthStencilAttachment();
-
-			VkAttachmentDescription	descr = {};
-			descr.format			= Vk1Enum( attach.format );
-			descr.samples			= Vk1Enum( attach.samples );
-			descr.loadOp			= Vk1Enum( attach.loadOp );
-			descr.storeOp			= Vk1Enum( attach.storeOp );
-			descr.stencilLoadOp		= Vk1Enum( attach.stencilLoadOp );
-			descr.stencilStoreOp	= Vk1Enum( attach.stencilStoreOp );
-			descr.initialLayout		= Vk1Enum( attach.initialLayout );
-			descr.finalLayout		= Vk1Enum( attach.finalLayout );
-
-			attachments.PushBack( descr );
-		}
+		attachments.Resize( _descr.ColorAttachments().Count() + usize(_descr.DepthStencilAttachment().IsEnabled()) );
 
 		FOR( i, _descr.ColorAttachments() )
 		{
 			const auto&		attach = _descr.ColorAttachments()[i];
 
-			VkAttachmentDescription	descr = {};
+			VkAttachmentDescription&	descr = attachments[i];
 			descr.format			= Vk1Enum( attach.format );
 			descr.samples			= Vk1Enum( attach.samples );
 			descr.loadOp			= Vk1Enum( attach.loadOp );
@@ -260,8 +245,21 @@ namespace PlatformVK
 			descr.stencilStoreOp	= VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			descr.initialLayout		= Vk1Enum( attach.initialLayout );
 			descr.finalLayout		= Vk1Enum( attach.finalLayout );
+		}
+		
+		if ( _descr.DepthStencilAttachment().IsEnabled() )
+		{
+			const auto&		attach = _descr.DepthStencilAttachment();
 
-			attachments.PushBack( descr );
+			VkAttachmentDescription&	descr = attachments.Back();
+			descr.format			= Vk1Enum( attach.format );
+			descr.samples			= Vk1Enum( attach.samples );
+			descr.loadOp			= Vk1Enum( attach.loadOp );
+			descr.storeOp			= Vk1Enum( attach.storeOp );
+			descr.stencilLoadOp		= Vk1Enum( attach.stencilLoadOp );
+			descr.stencilStoreOp	= Vk1Enum( attach.stencilStoreOp );
+			descr.initialLayout		= Vk1Enum( attach.initialLayout );
+			descr.finalLayout		= Vk1Enum( attach.finalLayout );
 		}
 
 		FOR( i, _descr.Subpasses() )

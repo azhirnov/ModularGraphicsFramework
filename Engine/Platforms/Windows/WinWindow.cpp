@@ -248,7 +248,13 @@ namespace Platforms
 		{
 			CHECK_ERR( GetState() != EState::Deleting );
 
-			_createInfo = msg->desc;
+			_createInfo.caption				= msg->desc.caption;
+			_createInfo.flags				= msg->desc.flags;
+			_createInfo.initialVisibility	= msg->desc.visibility;
+			_createInfo.orientation			= msg->desc.orientation;
+			_createInfo.position			= msg->desc.position;
+			_createInfo.surfaceSize			= msg->desc.surfaceSize;
+			// ignored msg->desc.size
 			return true;
 		}
 		
@@ -265,8 +271,9 @@ namespace Platforms
 		uint2 const	scr_res			= disp->Resolution();
 
 		// set window caption
-		if ( not msg->desc.caption.Empty() )
+		if ( msg->desc.caption != _windowDesc.caption )
 		{
+			_windowDesc.caption = msg->desc.caption;
 			::SetWindowTextA( wnd, msg->desc.caption.cstr() );
 		}
 		
@@ -303,7 +310,7 @@ namespace Platforms
 					    win_rect.right - win_rect.left, win_rect.bottom - win_rect.top,
 					    SWP_FRAMECHANGED );
 
-		_ShowWindow( msg->desc.initialVisibility );
+		_ShowWindow( msg->desc.visibility );
 		_UpdateDescriptor();
 
 		_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
@@ -464,6 +471,7 @@ namespace Platforms
 								 null );
 		CHECK_ERR( _IsCreated() );
 
+		_windowDesc.caption		= info.caption;
 		_windowDesc.flags		= info.flags;
 		_windowDesc.orientation	= EDisplayOrientation::Default;
 		return true;

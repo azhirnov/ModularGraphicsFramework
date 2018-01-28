@@ -47,13 +47,13 @@ namespace OS
 	
 
 	template <>
-	inline TimeL  PerformanceTimer::Get (const TimeL &) const
+	inline CHECKRES(TimeL)  PerformanceTimer::Get (const TimeL &) const
 	{
 		return GetTimeMicroSec();
 	}
 	
 	template <>
-	inline TimeD  PerformanceTimer::Get (const TimeD &) const
+	inline CHECKRES(TimeD)  PerformanceTimer::Get (const TimeD &) const
 	{
 		return GetTime();
 	}

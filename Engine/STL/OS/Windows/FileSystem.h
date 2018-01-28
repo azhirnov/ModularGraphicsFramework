@@ -4,7 +4,7 @@
 
 #include "OSWindows.h"
 #include "PlatformUtils.h"
-#include "Engine/STL/Algorithms/FileAddress.h"
+#include "Engine/STL/OS/Base/Date.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -45,9 +45,9 @@ namespace OS
 
 		static bool MoveFile (StringCRef oldName, StringCRef newName, bool async = false);
 
-		static ulong GetFileLastModificationTime (StringCRef filename);
-		static ulong GetFileCreationTime (StringCRef filename);
-		static ulong GetFileSize (StringCRef filename);
+		static Date GetFileLastModificationTime (StringCRef filename);
+		static Date GetFileCreationTime (StringCRef filename);
+		static BytesUL GetFileSize (StringCRef filename);
 	};
 
 	

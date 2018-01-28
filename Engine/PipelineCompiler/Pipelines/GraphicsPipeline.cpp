@@ -262,6 +262,10 @@ namespace PipelineCompiler
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
 			<< '\n';
+
+		if ( cfg.validation ) {
+			CHECK_ERR( _ValidateShader( EShader::Vertex, compiled ) );
+		}
 		return true;
 	}
 	
@@ -290,6 +294,10 @@ namespace PipelineCompiler
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
 			<< '\n';
+		
+		if ( cfg.validation ) {
+			CHECK_ERR( _ValidateShader( EShader::TessControl, compiled ) );
+		}
 		return true;
 	}
 	
@@ -315,6 +323,10 @@ namespace PipelineCompiler
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
 			<< '\n';
+		
+		if ( cfg.validation ) {
+			CHECK_ERR( _ValidateShader( EShader::TessEvaluation, compiled ) );
+		}
 		return true;
 	}
 	
@@ -340,6 +352,10 @@ namespace PipelineCompiler
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
 			<< '\n';
+		
+		if ( cfg.validation ) {
+			CHECK_ERR( _ValidateShader( EShader::Geometry, compiled ) );
+		}
 		return true;
 	}
 	
@@ -367,6 +383,10 @@ namespace PipelineCompiler
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
 			<< '\n';
+		
+		if ( cfg.validation ) {
+			CHECK_ERR( _ValidateShader( EShader::Fragment, compiled ) );
+		}
 		return true;
 	}
 	

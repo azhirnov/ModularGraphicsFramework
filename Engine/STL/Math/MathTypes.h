@@ -29,8 +29,8 @@ namespace GXMath
 # endif
 
 
-	constexpr real operator "" _r (long double value)	{ return real(value); }
-	constexpr real operator "" _R (long double value)	{ return real(value); }
+	constexpr CHECKRES(real) operator "" _r (long double value)	{ return real(value); }
+	constexpr CHECKRES(real) operator "" _R (long double value)	{ return real(value); }
 
 
 

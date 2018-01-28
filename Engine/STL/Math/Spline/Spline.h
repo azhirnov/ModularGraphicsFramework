@@ -109,7 +109,7 @@ namespace Spline
 			_c3 = T(2) * p1 - T(2) * p2 + t1 + t2;
 		}
 
-		Vec_t Interpolate (Value_t a) const
+		CHECKRES(Vec_t)  Interpolate (Value_t a) const
 		{
 			return (_c0) + (_c1 * a) + (_c2 * a * a) + (_c3 * a * a * a);
 		}
@@ -153,7 +153,7 @@ namespace Spline
 			_c3 = ( -p0 + T(3.0) * p1 - T(3.0) * p2 + p3 );
 		}
 
-		Vec_t Interpolate (Value_t a) const
+		CHECKRES(Vec_t)  Interpolate (Value_t a) const
 		{
 			return Value_t(0.5) * ( (_c0) + (_c1 * a) + (_c2 * a * a) + (_c3 * a * a * a) );
 		}
@@ -276,7 +276,7 @@ namespace Spline
 			_c0 = (p0 + T(4) * p1 + p2) / T(6);
 		}
 
-		Vec_t Interpolate (Value_t a) const
+		CHECKRES(Vec_t)  Interpolate (Value_t a) const
 		{
 			return (_c3 * a * a * a) + (_c2 * a * a) + (_c1 * a) + _c0;
 		}

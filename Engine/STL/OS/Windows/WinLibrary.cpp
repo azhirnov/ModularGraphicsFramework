@@ -53,7 +53,7 @@ namespace OS
 	IsValid
 =================================================
 */
-	bool Library::IsValid () const
+	CHECKRES(bool)  Library::IsValid () const
 	{
 		return _library.IsNotNull<HMODULE>();
 	}
@@ -82,8 +82,6 @@ namespace OS
 	{
 		if ( name == null )
 			return false;
-		
-		ASSERT( name.IsNullTerminated() );
 
 		Unload();
 
@@ -141,7 +139,7 @@ namespace OS
 
 		if ( IsValid() )
 		{
-			ret		 = ( ::FreeLibrary( _library.Get<HMODULE>() ) == TRUE );
+			ret		 = ( ::FreeLibrary( _library.Get<HMODULE>() ) != FALSE );
 			_library = null;
 		}
 		return ret;
@@ -152,11 +150,10 @@ namespace OS
 	GetProc
 =================================================
 */
-	Library::Func_t Library::GetProc (StringCRef procName, Func_t defProc) const
+	CHECKRES(Library::Func_t)  Library::GetProc (StringCRef procName, Func_t defProc) const
 	{
 		ASSERT( IsValid() );
 		ASSERT( not procName.Empty() );
-		ASSERT( procName.IsNullTerminated() );
 
 		Func_t tmp = ReferenceCast<Func_t>( GetProcAddress( _library.Get<HMODULE>(), procName.cstr() ) );
 		return tmp != null ? tmp : defProc;

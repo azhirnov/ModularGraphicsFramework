@@ -23,29 +23,6 @@ namespace PlatformVK
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetImageDescriptor,
-											GpuMsg::GetVkImageID,
-											GpuMsg::CreateVkImageView,
-											GpuMsg::GpuMemoryRegionChanged,
-											GpuMsg::SetImageLayout,
-											GpuMsg::GetImageLayout,
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::ReadFromStream,
-											ModuleMsg::WriteToStream,
-											GpuMsg::MapMemoryToCpu,
-											GpuMsg::MapImageToCpu,
-											GpuMsg::FlushMemoryRange,
-											GpuMsg::UnmapMemory,
-											GpuMsg::ReadFromGpuMemory,
-											GpuMsg::WriteToGpuMemory,
-											GpuMsg::ReadFromImageMemory,
-											GpuMsg::WriteToImageMemory
-										> >;
-
-		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
-		
-		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 		using ForwardToMem_t		= MessageListFrom< 
 											ModuleMsg::GetStreamDescriptor,
 											ModuleMsg::ReadFromStream,
@@ -57,7 +34,22 @@ namespace PlatformVK
 											GpuMsg::ReadFromGpuMemory,
 											GpuMsg::WriteToGpuMemory,
 											GpuMsg::ReadFromImageMemory,
-											GpuMsg::WriteToImageMemory >;
+											GpuMsg::WriteToImageMemory
+										>;
+
+		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetImageDescriptor,
+											GpuMsg::SetImageDescriptor,
+											GpuMsg::GetVkImageID,
+											GpuMsg::CreateVkImageView,
+											GpuMsg::GpuMemoryRegionChanged,
+											GpuMsg::SetImageLayout,
+											GpuMsg::GetImageLayout
+										> >::Append< ForwardToMem_t >;
+
+		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
+		
+		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 
 		using Utils					= Platforms::ImageUtils;
 
@@ -104,10 +96,14 @@ namespace PlatformVK
 		bool _GetVkImageID (const Message< GpuMsg::GetVkImageID > &);
 		bool _CreateVkImageView (const Message< GpuMsg::CreateVkImageView > &);
 		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
 		bool _SetImageLayout (const Message< GpuMsg::SetImageLayout > &);
 		bool _GetImageLayout (const Message< GpuMsg::GetImageLayout > &);
+		
+	// event handlers
+		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+
 
 	private:
 		bool _IsImageCreated () const	{ return _imageId != VK_NULL_HANDLE; }
@@ -155,6 +151,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Image::_GetVkImageID );
 		_SubscribeOnMsg( this, &Vk1Image::_CreateVkImageView );
 		_SubscribeOnMsg( this, &Vk1Image::_GetImageDescriptor );
+		_SubscribeOnMsg( this, &Vk1Image::_SetImageDescriptor );
 		_SubscribeOnMsg( this, &Vk1Image::_SetImageLayout );
 		_SubscribeOnMsg( this, &Vk1Image::_GetImageLayout );
 		_SubscribeOnMsg( this, &Vk1Image::_GetDeviceInfo );
@@ -162,7 +159,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Image::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1Image::_GpuMemoryRegionChanged );
 
-		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
 		Utils::ValidateDescriptor( INOUT _descr );
 	}
@@ -477,6 +474,21 @@ namespace PlatformVK
 		return true;
 	}
 	
+/*
+=================================================
+	_SetImageDescriptor
+=================================================
+*/
+	bool Vk1Image::_SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &msg)
+	{
+		CHECK_ERR( GetState() == EState::Initial );
+
+		_descr = msg->descr;
+
+		Utils::ValidateDescriptor( INOUT _descr );
+		return true;
+	}
+
 /*
 =================================================
 	_OnMemoryBindingChanged

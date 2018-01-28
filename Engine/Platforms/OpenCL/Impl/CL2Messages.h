@@ -4,6 +4,7 @@
 
 #include "Engine/Platforms/OpenCL/Impl/CL2Enums.h"
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Shared/GPU/Thread.h"
 
 #if defined( COMPUTE_API_OPENCL )
 
@@ -96,6 +97,50 @@ namespace GpuMsg
 
 
 	//
+	// Fence Sync
+	//
+	struct CLFenceSync
+	{
+		Platforms::GpuFenceId	fenceId;
+		Out< cl::cl_event >		result;
+	};
+
+
+	//
+	// Get Event
+	//
+	struct GetCLEvent
+	{
+	// types
+		using Event_t	= Platforms::GpuEventId;
+
+	// variables
+		Event_t				eventId;
+		Out< cl::cl_event >	result;
+
+	// methods
+		explicit GetCLEvent (Event_t id) : eventId(id) {}
+	};
+
+
+	//
+	// Semaphore
+	//
+	struct CLSemaphoreEnqueue
+	{
+		Platforms::GpuSemaphoreId	semId;
+		Out< cl::cl_event >			result;
+	};
+
+	struct WaitCLSemaphore
+	{
+		using Semaphores_t	= FixedSizeArray< Platforms::GpuSemaphoreId, GpuMsg::SubmitComputeQueueCommands::WaitSemaphores_t::MemoryContainer_t::SIZE + 4 >;
+
+		Semaphores_t		semaphores;
+	};
+
+
+	//
 	// OpenCL Commands
 	//
 	struct SetCLCommandBufferQueue
@@ -143,6 +188,13 @@ namespace GpuMsg
 
 		ReadOnce< Array<Command> >	commands;
 	};
+	
+
+	//
+	// Execute CL Command Buffer
+	//
+	struct ExecuteCLCommandBuffer
+	{};
 
 
 }	// GpuMsg

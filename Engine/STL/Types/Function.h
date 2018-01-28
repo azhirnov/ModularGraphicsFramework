@@ -41,7 +41,7 @@ namespace GXTypes
 		Function (NullPtr_t value) noexcept : _func(value)				{}
 	
 		template <typename FN>
-		Function (FN value) noexcept : _func(value)						{}
+		Function (FN value) noexcept : _func(FW<FN>(value))						{}
 
 		Function (const Func_t &fn) noexcept : _func(fn)				{}
 		Function (Func_t &&fn) noexcept : _func(RVREF(fn))				{}
@@ -54,6 +54,9 @@ namespace GXTypes
 
 		forceinline Self& operator = (const Func_t &other) noexcept		{ _func = other;		return *this; }
 		forceinline Self& operator = (Func_t &&other) noexcept			{ _func = RVREF(other);	return *this; }
+
+		template <typename FN>
+		forceinline Self& operator = (FN value) noexcept				{ _func = FW<FN>(value);  return *this; }
 
 		forceinline void Swap (INOUT Self &other)						{ _func.swap( other._func ); }
 		forceinline void Swap (INOUT Func_t &other)						{ _func.swap( other._func ); }

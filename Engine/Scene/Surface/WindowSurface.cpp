@@ -20,7 +20,9 @@ namespace Scene
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= BaseSceneModule::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= BaseSceneModule::SupportedMessages_t::Erase< MessageListFrom<
+											ModuleMsg::Compose
+										> >::Append< MessageListFrom<
 											SceneMsg::SurfaceGetDescriptor,
 											ModuleMsg::Update
 										> >;
@@ -39,7 +41,7 @@ namespace Scene
 		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetDeviceInfo >;
 		using GThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 
-		using PerFrameCmdMsgList_t	= MessageListFrom<
+		using CmdBufferMngrMsgList_t = MessageListFrom<
 											GraphicsMsg::CmdBeginFrame,
 											GraphicsMsg::CmdEndFrame,
 											GraphicsMsg::CmdBegin,
@@ -73,8 +75,10 @@ namespace Scene
 		bool _Update (const Message< ModuleMsg::Update > &);
 		bool _SurfaceGetDescriptor (const Message< SceneMsg::SurfaceGetDescriptor > &);
 		
+		// event handlers
 		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
 		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _AfterCompose (const Message< GpuMsg::AfterCompose > &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -100,7 +104,6 @@ namespace Scene
 		_SubscribeOnMsg( this, &WindowSurface::_FindModule_Impl );
 		_SubscribeOnMsg( this, &WindowSurface::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &WindowSurface::_Link );
-		_SubscribeOnMsg( this, &WindowSurface::_Compose_Impl );
 		_SubscribeOnMsg( this, &WindowSurface::_Delete );
 		_SubscribeOnMsg( this, &WindowSurface::_Update );
 		_SubscribeOnMsg( this, &WindowSurface::_SurfaceGetDescriptor );
@@ -142,12 +145,23 @@ namespace Scene
 		
 		window->Subscribe( this, &WindowSurface::_WindowDescriptorChanged );
 		_thread->Subscribe( this, &WindowSurface::_DeviceBeforeDestroy );
+		_GetManager()->Subscribe( this, &WindowSurface::_AfterCompose );
 
-		_builder = _GetManager()->GetModuleByMsg< PerFrameCmdMsgList_t >();
+		_builder = _GetManager()->GetModuleByMsg< CmdBufferMngrMsgList_t >();
 		CHECK_ERR( _builder );
 
 		CHECK( _SetState( EState::Linked ) );
 		return true;
+	}
+	
+/*
+=================================================
+	_AfterCompose
+=================================================
+*/
+	bool WindowSurface::_AfterCompose (const Message< ModuleMsg::AfterCompose > &)
+	{
+		return _DefCompose( false );
 	}
 	
 /*

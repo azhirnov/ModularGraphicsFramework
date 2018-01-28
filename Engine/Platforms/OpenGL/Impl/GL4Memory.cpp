@@ -148,7 +148,7 @@ namespace PlatformGL
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 
 /*
@@ -666,8 +666,8 @@ namespace PlatformGL
 		if ( msg->rowPitch % 2_b == 0 )		row_align = 2_b;	else
 											row_align = 1_b;
 		
-		ASSERT( msg->rowPitch == GXMath::ImageUtils::AlignedRowSize( msg->dimension.x, bpp, row_align ) );
-		ASSERT( msg->slicePitch == GXMath::ImageUtils::AlignedSliceSize( msg->dimension.xy(), bpp, row_align, row_align ) );
+		ASSERT( msg->rowPitch == GXImageUtils::AlignedRowSize( msg->dimension.x, bpp, row_align ) );
+		ASSERT( msg->slicePitch == GXImageUtils::AlignedSliceSize( msg->dimension.xy(), bpp, row_align, row_align ) );
 		CHECK_ERR( msg->data.Size() == msg->dimension.z * msg->slicePitch );
 		
 		GL_CALL( glBindTexture( target, _objectId ) );

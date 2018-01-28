@@ -61,7 +61,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Inverse () const
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::Inverse () const
 	{
 		const T	det = _v[0][0] * _v[1][1] - _v[1][0] * _v[0][1];
 

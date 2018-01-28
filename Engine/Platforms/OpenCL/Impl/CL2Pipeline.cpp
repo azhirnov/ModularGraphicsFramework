@@ -105,7 +105,7 @@ namespace PlatformCL
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*
@@ -218,7 +218,7 @@ namespace PlatformCL
 		_programId = comp_sh.id;
 
 		cl_int	cl_err = 0;
-		CL_CHECK( ((_kernelId = clCreateKernel( _programId, comp_sh.entry.cstr(), &cl_err )), cl_err) );
+		CL_CHECK(( (_kernelId = clCreateKernel( _programId, comp_sh.entry.cstr(), OUT &cl_err )), cl_err ));
 
 		CHECK_ERR( _IsCreated() );
 		return true;

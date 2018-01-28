@@ -20,26 +20,6 @@ namespace PlatformGL
 	{
 	// types
 	private:
-		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetBufferDescriptor,
-											GpuMsg::GetGLBufferID,
-											GpuMsg::GpuMemoryRegionChanged,
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::ReadFromStream,
-											ModuleMsg::WriteToStream,
-											GpuMsg::MapMemoryToCpu,
-											GpuMsg::MapImageToCpu,
-											GpuMsg::FlushMemoryRange,
-											GpuMsg::UnmapMemory,
-											GpuMsg::ReadFromGpuMemory,
-											GpuMsg::WriteToGpuMemory,
-											GpuMsg::ReadFromImageMemory,
-											GpuMsg::WriteToImageMemory
-										> >;
-
-		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
-		
-		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 		using ForwardToMem_t		= MessageListFrom< 
 											ModuleMsg::GetStreamDescriptor,
 											ModuleMsg::ReadFromStream,
@@ -51,7 +31,19 @@ namespace PlatformGL
 											GpuMsg::ReadFromGpuMemory,
 											GpuMsg::WriteToGpuMemory,
 											GpuMsg::ReadFromImageMemory,
-											GpuMsg::WriteToImageMemory >;
+											GpuMsg::WriteToImageMemory
+										>;
+
+		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetBufferDescriptor,
+											GpuMsg::SetBufferDescriptor,
+											GpuMsg::GetGLBufferID,
+											GpuMsg::GpuMemoryRegionChanged
+										> >::Append< ForwardToMem_t >;
+
+		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
+		
+		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 
 
 	// constants
@@ -90,8 +82,12 @@ namespace PlatformGL
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _GetGLBufferID (const Message< GpuMsg::GetGLBufferID > &);
 		bool _GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &);
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+		bool _SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
+		
+	// event handlers
+		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+
 
 	private:
 		bool _IsCreated () const;
@@ -132,12 +128,13 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Buffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetGLBufferID );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetBufferDescriptor );
+		_SubscribeOnMsg( this, &GL4Buffer::_SetBufferDescriptor );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetGLPrivateClasses );
 		_SubscribeOnMsg( this, &GL4Buffer::_GpuMemoryRegionChanged );
 
-		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*
@@ -268,6 +265,19 @@ namespace PlatformGL
 		return true;
 	}
 	
+/*
+=================================================
+	_SetBufferDescriptor
+=================================================
+*/
+	bool GL4Buffer::_SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &msg)
+	{
+		CHECK_ERR( GetState() == EState::Initial );
+
+		_descr = msg->descr;
+		return true;
+	}
+
 /*
 =================================================
 	_GetGLBufferID

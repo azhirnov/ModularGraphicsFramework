@@ -58,14 +58,14 @@ namespace PlatformGL
 		if ( _deviceContext.IsNotNull<HDC>() and
 			 _window.IsNotNull<HWND>() )
 		{
-			CHECK( wglMakeCurrent( _deviceContext.Get<HDC>(), null ) == TRUE );
+			CHECK( wglMakeCurrent( _deviceContext.Get<HDC>(), null ) != FALSE );
 
 			::ReleaseDC( _window.Get<HWND>(), _deviceContext.Get<HDC>() );
 		}
 
 		if ( _renderContext.IsNotNull<HGLRC>() )
 		{
-			CHECK( wglDeleteContext( _renderContext.Get<HGLRC>() ) == TRUE );
+			CHECK( wglDeleteContext( _renderContext.Get<HGLRC>() ) != FALSE );
 		}
 
 		wglSwapInterval			= null;
@@ -95,10 +95,10 @@ namespace PlatformGL
 
 		if ( pixformat != 0 )
 		{
-			CHECK( SetPixelFormat( dc, pixformat, &pfd ) == TRUE );
+			CHECK( SetPixelFormat( dc, pixformat, &pfd ) != FALSE );
 			rc = wglCreateContext( dc );
 
-			if ( rc != null and wglMakeCurrent( dc, rc ) == TRUE )
+			if ( rc != null and wglMakeCurrent( dc, rc ) != FALSE )
 			{
 				wglChoosePixelFormat	= (PFNWGLCHOOSEPIXELFORMATARBPROC) wglGetProcAddress("wglChoosePixelFormatARB");
 				wglCreateContextAttribs	= (PFNWGLCREATECONTEXTATTRIBSARBPROC) wglGetProcAddress("wglCreateContextAttribsARB");
@@ -111,9 +111,9 @@ namespace PlatformGL
 
 				res = true;
 			}
-			CHECK( wglMakeCurrent( dc, null ) == TRUE );
+			CHECK( wglMakeCurrent( dc, null ) != FALSE );
 
-			CHECK( wglDeleteContext( rc ) == TRUE );
+			CHECK( wglDeleteContext( rc ) != FALSE );
 		}
 		
 		return res;
@@ -300,12 +300,12 @@ namespace PlatformGL
 		CHECK_ERR( rc != null );
 		_renderContext = rc;
 
-		CHECK_ERR( wglMakeCurrent( dc, rc ) == TRUE );
+		CHECK_ERR( wglMakeCurrent( dc, rc ) != FALSE );
 
 		// set vertical synchronization
 		if ( swapControlSupported )
 		{
-			CHECK( wglSwapInterval.Get<PFNWGLSWAPINTERVALEXTPROC>()( int(vs.flags[ EFlags::VSync ]) ) == TRUE );
+			CHECK( wglSwapInterval.Get<PFNWGLSWAPINTERVALEXTPROC>()( int(vs.flags[ EFlags::VSync ]) ) != FALSE );
 
 			vs.flags.SetAt( EFlags::VSync, wglGetSwapInterval.Get<PFNWGLGETSWAPINTERVALEXTPROC>()() != 0 );
 		}
@@ -322,7 +322,7 @@ namespace PlatformGL
 	void GLWinContext::MakeCurrent ()
 	{
 		ASSERT( IsCreated() );
-		CHECK( wglMakeCurrent( _deviceContext.Get<HDC>(), _renderContext.Get<HGLRC>() ) == TRUE );
+		CHECK( wglMakeCurrent( _deviceContext.Get<HDC>(), _renderContext.Get<HGLRC>() ) != FALSE );
 	}
 	
 /*
@@ -333,7 +333,7 @@ namespace PlatformGL
 	void GLWinContext::ResetCurrent ()
 	{
 		ASSERT( IsCreated() );
-		CHECK( wglMakeCurrent( _deviceContext.Get<HDC>(), null ) == TRUE );
+		CHECK( wglMakeCurrent( _deviceContext.Get<HDC>(), null ) != FALSE );
 	}
 	
 /*

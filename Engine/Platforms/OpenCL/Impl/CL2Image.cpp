@@ -20,20 +20,27 @@ namespace PlatformCL
 	{
 	// types
 	private:
-		using SupportedMessages_t	= CL2BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetImageDescriptor,
-											GpuMsg::GetCLImageID,
-											GpuMsg::GpuMemoryRegionChanged,
-											GpuMsg::SetImageLayout,
-											GpuMsg::GetImageLayout,
+		using ForwardToMem_t		= MessageListFrom< 
 											ModuleMsg::GetStreamDescriptor,
 											ModuleMsg::ReadFromStream,
 											ModuleMsg::WriteToStream,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
-											GpuMsg::UnmapMemory
-										> >;
+											GpuMsg::UnmapMemory,
+											GpuMsg::ReadFromGpuMemory,
+											GpuMsg::WriteToGpuMemory,
+											GpuMsg::ReadFromImageMemory,
+											GpuMsg::WriteToImageMemory
+										>;
+
+		using SupportedMessages_t	= CL2BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetImageDescriptor,
+											GpuMsg::GetCLImageID,
+											GpuMsg::GpuMemoryRegionChanged,
+											GpuMsg::SetImageLayout,
+											GpuMsg::GetImageLayout
+										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= CL2BaseModule::SupportedEvents_t;
 		
@@ -77,17 +84,12 @@ namespace PlatformCL
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _GetCLImageID (const Message< GpuMsg::GetCLImageID > &);
 		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
 		bool _SetImageLayout (const Message< GpuMsg::SetImageLayout > &);
 		bool _GetImageLayout (const Message< GpuMsg::GetImageLayout > &);
-		bool _GetStreamDescriptor (const Message< GpuMsg::GetStreamDescriptor > &);
-		bool _ReadFromStream (const Message< GpuMsg::ReadFromStream > &);
-		bool _WriteToStream (const Message< GpuMsg::WriteToStream > &);
-		bool _MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &);
-		bool _MapImageToCpu (const Message< GpuMsg::MapImageToCpu > &);
-		bool _FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &);
-		bool _UnmapMemory (const Message< GpuMsg::UnmapMemory > &);
+
+	// event handlers
+		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
 
 	private:
 		bool _IsCreated () const;
@@ -140,17 +142,8 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2Image::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &CL2Image::_GetCLPrivateClasses );
 		_SubscribeOnMsg( this, &CL2Image::_GpuMemoryRegionChanged );
-		_SubscribeOnMsg( this, &CL2Image::_GetStreamDescriptor );
-		_SubscribeOnMsg( this, &CL2Image::_ReadFromStream );
-		_SubscribeOnMsg( this, &CL2Image::_WriteToStream );
-		_SubscribeOnMsg( this, &CL2Image::_MapMemoryToCpu );
-		_SubscribeOnMsg( this, &CL2Image::_MapImageToCpu );
-		_SubscribeOnMsg( this, &CL2Image::_FlushMemoryRange );
-		_SubscribeOnMsg( this, &CL2Image::_UnmapMemory );
-		
-		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
 		Utils::ValidateDescriptor( INOUT _descr );
 	}
@@ -200,6 +193,8 @@ namespace PlatformCL
 		_memFlags = req_descr->result->flags;
 
 		_memObj->Subscribe( this, &CL2Image::_OnMemoryBindingChanged );
+		
+		CHECK_LINKING( _CopySubscriptions< ForwardToMem_t >( _memObj ) );
 
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 		return true;
@@ -247,9 +242,11 @@ namespace PlatformCL
 */
 	bool CL2Image::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
 	{
-		CHECK( _Attach( msg->name, msg->newModule, true ) );
+		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		if ( msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		CHECK( _Attach( msg->name, msg->newModule, is_mem ) );
+
+		if ( is_mem )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
@@ -317,13 +314,13 @@ namespace PlatformCL
 		img_desc.image_array_size	= size.w;
 
 		cl_int	cl_err = 0;
-		CL_CHECK( ((_imageId = clCreateImage(
+		CL_CHECK(( (_imageId = clCreateImage(
 							GetContext(),
 							CL2Enum( _memFlags ),
 							&img_format,
 							&img_desc,
 							null,
-							&cl_err )), cl_err) );
+							OUT &cl_err )), cl_err ));
 
 		//GetDevice()->SetObjectName( _imageId, GetDebugName(), EGpuObject::Image );
 
@@ -450,76 +447,6 @@ namespace PlatformCL
 		// request image memory barrier
 		TODO( "" );
 		return false;
-	}
-	
-/*
-=================================================
-	_GetStreamDescriptor
-=================================================
-*/
-	bool CL2Image::_GetStreamDescriptor (const Message< GpuMsg::GetStreamDescriptor > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_ReadFromStream
-=================================================
-*/
-	bool CL2Image::_ReadFromStream (const Message< GpuMsg::ReadFromStream > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_WriteToStream
-=================================================
-*/
-	bool CL2Image::_WriteToStream (const Message< GpuMsg::WriteToStream > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_MapMemoryToCpu
-=================================================
-*/
-	bool CL2Image::_MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_MapImageToCpu
-=================================================
-*/
-	bool CL2Image::_MapImageToCpu (const Message< GpuMsg::MapImageToCpu > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_FlushMemoryRange
-=================================================
-*/
-	bool CL2Image::_FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
-	}
-	
-/*
-=================================================
-	_UnmapMemory
-=================================================
-*/
-	bool CL2Image::_UnmapMemory (const Message< GpuMsg::UnmapMemory > &msg)
-	{
-		return _memObj ? _memObj->Send( msg ) : false;
 	}
 
 }	// PlatformCL

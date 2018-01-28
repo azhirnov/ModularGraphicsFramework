@@ -20,26 +20,6 @@ namespace PlatformVK
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetBufferDescriptor,
-											GpuMsg::GetVkBufferID,
-											GpuMsg::GpuMemoryRegionChanged,
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::ReadFromStream,
-											ModuleMsg::WriteToStream,
-											GpuMsg::MapMemoryToCpu,
-											GpuMsg::MapImageToCpu,
-											GpuMsg::FlushMemoryRange,
-											GpuMsg::UnmapMemory,
-											GpuMsg::ReadFromGpuMemory,
-											GpuMsg::WriteToGpuMemory,
-											GpuMsg::ReadFromImageMemory,
-											GpuMsg::WriteToImageMemory
-										> >;
-
-		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
-		
-		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 		using ForwardToMem_t		= MessageListFrom< 
 											ModuleMsg::GetStreamDescriptor,
 											ModuleMsg::ReadFromStream,
@@ -51,7 +31,19 @@ namespace PlatformVK
 											GpuMsg::ReadFromGpuMemory,
 											GpuMsg::WriteToGpuMemory,
 											GpuMsg::ReadFromImageMemory,
-											GpuMsg::WriteToImageMemory >;
+											GpuMsg::WriteToImageMemory
+										>;
+
+		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
+											GpuMsg::GetBufferDescriptor,
+											GpuMsg::SetBufferDescriptor,
+											GpuMsg::GetVkBufferID,
+											GpuMsg::GpuMemoryRegionChanged
+										> >::Append< ForwardToMem_t >;
+
+		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
+		
+		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 
 
 	// constants
@@ -89,8 +81,12 @@ namespace PlatformVK
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _GetVkBufferID (const Message< GpuMsg::GetVkBufferID > &);
 		bool _GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &);
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+		bool _SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
+		
+	// event handlers
+		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+
 
 	private:
 		bool _IsCreated () const;
@@ -132,12 +128,13 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Buffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkBufferID );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetBufferDescriptor );
+		_SubscribeOnMsg( this, &Vk1Buffer::_SetBufferDescriptor );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GpuMemoryRegionChanged );
 
-		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*
@@ -268,6 +265,19 @@ namespace PlatformVK
 		return true;
 	}
 	
+/*
+=================================================
+	_SetBufferDescriptor
+=================================================
+*/
+	bool Vk1Buffer::_SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &msg)
+	{
+		CHECK_ERR( GetState() == EState::Initial );
+
+		_descr = msg->descr;
+		return true;
+	}
+
 /*
 =================================================
 	_GetVkBufferID

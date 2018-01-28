@@ -8,9 +8,11 @@ namespace Engine
 {
 namespace Graphics
 {
+	using namespace Engine::Platforms;
+
 
 	//
-	// Asyn cCommand Buffer
+	// Async Command Buffer
 	//
 
 	class AsyncCommandBuffer final : public GraphicsBaseModule
@@ -62,32 +64,33 @@ namespace Graphics
 		
 		using SupportedMessages_t	= GraphicsBaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GraphicsMsg::CmdBeginAsync,
-											GraphicsMsg::CmdEndAsync,
-											GraphicsMsg::CmdEndAndSync
+											GraphicsMsg::CmdEndAsync
 										> >
 										::Append< CmdBufferMsgList_t >;
 
 		using SupportedEvents_t		= GraphicsBaseModule::SupportedEvents_t;
-		
-		using SyncMngrMsgList_t		= MessageListFrom< 
-										GpuMsg::CreateFence,
-										GpuMsg::DestroyFence,
-										GpuMsg::ClientWaitFence
-									>;
 
 
 		using WaitSemaphores_t		= GraphicsMsg::CmdBeginAsync::WaitSemaphores_t;
+		using Callback_t			= GraphicsMsg::CmdBeginAsync::Callback_t;
+		using ESyncMode				= GraphicsMsg::CmdBeginAsync::EMode;
 
 		struct PendingCommand : CompileTime::FastCopyable
 		{
 			WaitSemaphores_t	waitSemaphores;
+			ESyncMode			syncMode;
+			GpuSemaphoreId		externalSemaphore	 = Uninitialized;
+			GpuSemaphoreId		beforeFrameExecuting = Uninitialized;
+			Callback_t			onCompleted;
+			ModulePtr			command;
 		};
 
 		struct WaitingCommand : CompileTime::FastCopyable
 		{
-			ModulePtr		cmdBuffer;
-			GpuFenceId		fence			= GpuFenceId::Unknown;	// wait before destroy command buffer
-			uint			frameLatency	= 2;					// number of frames to skip before wait fence
+			ModulePtr			cmdBuffer;
+			Callback_t			onCompleted;
+			GpuFenceId			fence			= GpuFenceId::Unknown;	// wait before destroy command buffer
+			uint				frameLatency	= 2;					// number of frames to skip before wait fence
 		};
 
 		using PendingCommands_t		= FixedSizeArray< PendingCommand, 8 >;
@@ -103,7 +106,7 @@ namespace Graphics
 	// variables
 	private:
 		ModulePtr			_builder;
-		ModulePtr			_perFrameCmdBuffers;
+		ModulePtr			_cmdBufferMngr;
 		ModulePtr			_syncManager;
 
 		PendingCommands_t	_pendingCommands;		// commands that ready to execute
@@ -129,10 +132,16 @@ namespace Graphics
 
 		bool _CmdBeginAsync (const Message< GraphicsMsg::CmdBeginAsync > &);
 		bool _CmdEndAsync (const Message< GraphicsMsg::CmdEndAsync > &);
-		bool _CmdEndAndSync (const Message< GraphicsMsg::CmdEndAndSync > &);
 
 		// event handlers
 		bool _OnCmdBeginFrame (const Message< GraphicsMsg::OnCmdBeginFrame > &);
+
+	private:
+		bool _SubmitInFrame (const ModulePtr &cmdBuf);
+		bool _SubmitBetweenFrames (const ModulePtr &cmdBuf);
+		bool _SubmitBeforeFrame (const ModulePtr &cmdBuf);
+		bool _SubmitSync (const ModulePtr &cmdBuf);
+		bool _SubmitAsync (const ModulePtr &cmdBuf);
 	};
 //-----------------------------------------------------------------------------
 
@@ -147,7 +156,7 @@ namespace Graphics
 */
 	AsyncCommandBuffer::AsyncCommandBuffer (GlobalSystemsRef gs, const CreateInfo::AsyncCommandBuffer &ci) :
 		GraphicsBaseModule( gs, ModuleConfig{ AsyncCommandBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
-		_perFrameCmdBuffers{ ci.perFrameCmd },	_cmdBufferId{ 0 },
+		_cmdBufferMngr{ ci.cmdBufMngr },	_cmdBufferId{ 0 },
 		_currCmdIndex{ UMax }
 	{
 		SetDebugName( "AsyncCommandBuffer" );
@@ -164,7 +173,6 @@ namespace Graphics
 		_SubscribeOnMsg( this, &AsyncCommandBuffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &AsyncCommandBuffer::_CmdBeginAsync );
 		_SubscribeOnMsg( this, &AsyncCommandBuffer::_CmdEndAsync );
-		_SubscribeOnMsg( this, &AsyncCommandBuffer::_CmdEndAndSync );
 
 		_AttachSelfToManager( _GetGpuThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -216,8 +224,8 @@ namespace Graphics
 		CHECK_ERR( _CopySubscriptions< CmdBufferMsgList_t >( _builder ) );
 
 
-		CHECK_ERR( _perFrameCmdBuffers );
-		_perFrameCmdBuffers->Subscribe( this, &AsyncCommandBuffer::_OnCmdBeginFrame );
+		CHECK_ERR( _cmdBufferMngr );
+		_cmdBufferMngr->Subscribe( this, &AsyncCommandBuffer::_OnCmdBeginFrame );
 
 		return Module::_Link_Impl( msg );
 	}
@@ -233,9 +241,10 @@ namespace Graphics
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
-
-		_syncManager = _GetManager()->GetModuleByMsg< SyncMngrMsgList_t >();
-		CHECK_COMPOSING( _syncManager );
+		
+		Message< GpuMsg::GetDeviceInfo >	req_dev;
+		_GetManager()->Send( req_dev );
+		CHECK_COMPOSING( _syncManager = req_dev->result->syncManager );
 		
 		_SendForEachAttachments( msg );
 		
@@ -256,7 +265,7 @@ namespace Graphics
 		_SendForEachAttachments( msg );
 
 		_builder			= null;
-		_perFrameCmdBuffers	= null;
+		_cmdBufferMngr	= null;
 		_syncManager		= null;
 
 		return Module::_Delete_Impl( msg );
@@ -320,9 +329,36 @@ namespace Graphics
 		Message< GpuMsg::CmdBegin >		begin;
 		CHECK( _builder->Send( begin ) );
 
+		// validate
+		switch ( msg->syncMode )
+		{
+			case ESyncMode::Async :
+				// nothing to check
+				break;
+
+			case ESyncMode::Sync :
+				CHECK_ERR( msg->beforeFrameExecuting == GpuSemaphoreId::Unknown and
+						   msg->externalSemaphore == GpuSemaphoreId::Unknown );
+				break;
+
+			case ESyncMode::InFrame :
+			case ESyncMode::BeforeFrame :
+				CHECK_ERR( msg->waitSemaphores.Empty() );	// may be sync or perfomance issues, so don't use it
+				CHECK_ERR( msg->beforeFrameExecuting == GpuSemaphoreId::Unknown );
+				break;
+
+			case ESyncMode::BetweenFrames :
+				CHECK_ERR( msg->beforeFrameExecuting == GpuSemaphoreId::Unknown );
+				break;
+
+			default :
+				RETURN_ERR( "unsupported sync mode" );
+		}
+
 		// setup
 		_pendingCommands.PushBack({});
 		_pendingCommands.Back().waitSemaphores.Append( msg->waitSemaphores );
+		_pendingCommands.Back().syncMode = msg->syncMode;
 
 		return true;
 	}
@@ -340,88 +376,168 @@ namespace Graphics
 		Message< GpuMsg::CmdEnd >	end;
 		CHECK( _builder->Send( end ) );
 
-
-		// submit commands
-		bool	sync_with_fence = false;
-		
-		Message< GraphicsMsg::CmdAddFrameDependency >	deps;
-		Message< GpuMsg::SubmitGraphicsQueueCommands >	submit;
-		
-		_waitingCommands.PushBack({});
-		_waitingCommands.Back().cmdBuffer	 = *end->result;
-		_waitingCommands.Back().frameLatency = 2;	// TODO: must be bufferChainLength+1
-
-		submit->commands << *end->result;
-		
-		// add fence
-		if ( msg->fence == GpuFenceId::Unknown )
+		switch ( _pendingCommands.Back().syncMode )
 		{
-			Message< GpuMsg::CreateFence >	fence_ctor;
-			CHECK( _syncManager->Send( fence_ctor ) );
-			
-			submit->fence	= *fence_ctor->result;
-			sync_with_fence	= true;
+			case ESyncMode::Async :			return _SubmitAsync( *end->result );
+			case ESyncMode::InFrame :		return _SubmitInFrame( *end->result );
+			case ESyncMode::BetweenFrames :	return _SubmitBetweenFrames( *end->result );
+			case ESyncMode::BeforeFrame :	return _SubmitBeforeFrame( *end->result );
+			case ESyncMode::Sync :
+			default :						return _SubmitSync( *end->result );
 		}
-		else {
-			submit->fence = msg->fence;
-			deps->waitFences.PushBack( msg->fence );
+	}
+	
+/*
+=================================================
+	_SubmitInFrame
+=================================================
+*/
+	bool AsyncCommandBuffer::_SubmitInFrame (const ModulePtr &cmdBuf)
+	{
+		CHECK( _cmdBufferMngr->Send< GraphicsMsg::CmdAppend >({ cmdBuf }) );
+
+		auto&	cmd = _pendingCommands.Back();
+
+		if ( cmd.externalSemaphore != GpuSemaphoreId::Unknown )
+		{
+			Message< GraphicsMsg::CmdAddFrameDependency >	deps;
+			deps->signalSemaphores.PushBack( cmd.externalSemaphore );
+
+			CHECK( _cmdBufferMngr->Send( deps ) );
 		}
 
-		// add semaphores
-		submit->waitSemaphores.Append( _pendingCommands.Back().waitSemaphores );
+		cmd.onCompleted.SafeCall(0);
+
 		_pendingCommands.PopBack();
-
-		if ( msg->semaphore != GpuSemaphoreId::Unknown )
-		{
-			submit->signalSemaphores.PushBack( msg->semaphore );
-			deps->waitSemaphores.PushBack({ msg->semaphore, EPipelineStage::bits() | EPipelineStage::BottomOfPipe });
-		}
-
-		CHECK( _GetManager()->Send( submit ) );
-
-
-		// add as dependency to per frame commands
-		CHECK( _perFrameCmdBuffers->Send( deps ) );
-
-		if ( sync_with_fence )
-		{
-			_waitingCommands.Back().fence = submit->fence;
-		}
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdEndAndSync
+	_SubmitSync
 =================================================
 */
-	bool AsyncCommandBuffer::_CmdEndAndSync (const Message< GraphicsMsg::CmdEndAndSync > &)
+	bool AsyncCommandBuffer::_SubmitSync (const ModulePtr &cmdBuf)
 	{
-		CHECK_ERR( _IsComposedState( GetState() ) );
-		
-		// end recording
-		Message< GpuMsg::CmdEnd >	end;
-		CHECK( _builder->Send( end ) );
-		
+		auto&	cmd = _pendingCommands.Back();
+
 		// create fence
 		Message< GpuMsg::CreateFence >	fence_ctor;
 		CHECK( _syncManager->Send( fence_ctor ) );
 
 		// submit commands
 		Message< GpuMsg::SubmitGraphicsQueueCommands >	submit;
-		submit->commands << *end->result;
+		submit->commands << cmdBuf;
 		submit->fence	 = *fence_ctor->result;
-		submit->waitSemaphores.Append( _pendingCommands.Back().waitSemaphores );
+		submit->waitSemaphores.Append( cmd.waitSemaphores );
 		CHECK( _GetManager()->Send( submit ) );
+		
+		cmd.onCompleted.SafeCall(0);
+		_pendingCommands.PopBack();
 
 		// wait until executing completed and delete fence
 		CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ submit->fence }) );
 		CHECK( _syncManager->Send< GpuMsg::DestroyFence >({ submit->fence }) );
+	
+		return true;
+	}
+	
+/*
+=================================================
+	_SubmitAsync
+=================================================
+*/
+	bool AsyncCommandBuffer::_SubmitAsync (const ModulePtr &cmdBuf)
+	{
+		auto&	cmd = _pendingCommands.Back();
+
+		// submit commands
+		Message< GpuMsg::SubmitGraphicsQueueCommands >	submit;
 		
+		_waitingCommands.PushBack({});
+		_waitingCommands.Back().cmdBuffer	 = cmdBuf;
+		_waitingCommands.Back().frameLatency = 2;	// TODO: must be bufferChainLength+1
+		_waitingCommands.Back().onCompleted	 = RVREF(cmd.onCompleted); 
+
+		submit->commands << cmdBuf;
+		
+		// add fence
+		{
+			Message< GpuMsg::CreateFence >	fence_ctor;
+			CHECK( _syncManager->Send( fence_ctor ) );
+			
+			submit->fence					= *fence_ctor->result;
+			_waitingCommands.Back().fence	= *fence_ctor->result;
+		}
+
+		// add semaphores
+		{
+			submit->waitSemaphores.Append( cmd.waitSemaphores );
+
+			if ( cmd.externalSemaphore != GpuSemaphoreId::Unknown ) {
+				submit->signalSemaphores.PushBack( cmd.externalSemaphore );
+			}
+
+			if ( cmd.beforeFrameExecuting != GpuSemaphoreId::Unknown )
+			{
+				Message< GraphicsMsg::CmdAddFrameDependency >	deps;
+
+				submit->signalSemaphores.PushBack( cmd.beforeFrameExecuting );
+				deps->waitSemaphores.PushBack({ cmd.beforeFrameExecuting, EPipelineStage::bits() | EPipelineStage::BottomOfPipe });	// TODO
+				
+				CHECK( _cmdBufferMngr->Send( deps ) );
+			}
+		}
+
+		CHECK( _GetManager()->Send( submit ) );
+
 		_pendingCommands.PopBack();
 		return true;
 	}
 	
+/*
+=================================================
+	_SubmitBetweenFrames
+=================================================
+*/
+	bool AsyncCommandBuffer::_SubmitBetweenFrames (const ModulePtr &cmdBuf)
+	{
+		_pendingCommands.Back().command = cmdBuf;
+
+		Message< GpuMsg::CreateSemaphore >	sem_ctor1;
+		Message< GpuMsg::CreateSemaphore >	sem_ctor2;
+
+		CHECK( _syncManager->Send( sem_ctor1 ) );
+		CHECK( _syncManager->Send( sem_ctor2 ) );
+
+		Message< GraphicsMsg::CmdAddFrameDependency >	deps;
+		deps->signalSemaphores.PushBack( *sem_ctor1->result );
+
+		_cmdBufferMngr->Send( deps );
+
+		_pendingCommands.Back().waitSemaphores.PushBack({ *sem_ctor1->result, EPipelineStage::bits() | EPipelineStage::BottomOfPipe });
+		_pendingCommands.Back().beforeFrameExecuting = *sem_ctor2->result;
+		return true;
+	}
+	
+/*
+=================================================
+	_SubmitBetweenFrames
+=================================================
+*/
+	bool AsyncCommandBuffer::_SubmitBeforeFrame (const ModulePtr &cmdBuf)
+	{
+		Message< GpuMsg::CreateSemaphore >	sem_ctor;
+		CHECK( _syncManager->Send( sem_ctor ) );
+
+		ASSERT( _pendingCommands.Back().beforeFrameExecuting == GpuSemaphoreId::Unknown );
+
+		_pendingCommands.Back().beforeFrameExecuting = *sem_ctor->result;
+
+		_SubmitAsync( cmdBuf );
+		return true;
+	}
+
 /*
 =================================================
 	_OnCmdBeginFrame
@@ -445,10 +561,19 @@ namespace Graphics
 				CHECK( _syncManager->Send< GpuMsg::DestroyFence >({ cmd.fence }) );
 			}
 
-			cmd.cmdBuffer->Send< ModuleMsg::Delete >({});
+			if ( cmd.cmdBuffer ) {
+				cmd.cmdBuffer->Send< ModuleMsg::Delete >({});
+			}
+
+			cmd.onCompleted.SafeCall( msg->cmdIndex );
 
 			_waitingCommands.Erase( i );
 			--i;
+		}
+
+		while ( not _pendingCommands.Empty() )
+		{
+			CHECK( _SubmitAsync( _pendingCommands.Back().command ) );
 		}
 
 		_currCmdIndex = msg->cmdIndex;

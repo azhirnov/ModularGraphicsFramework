@@ -2,15 +2,16 @@
 
 #include "GApp.h"
 #include "../Pipelines/all_pipelines.h"
+#include "Engine/Profilers/Engine.Profilers.h"
 
 
-struct Vertex
+struct GApp::Vertex
 {
 	float2	position;
 	float2	texcoord;
 };
 
-inline ModulePtr GetGThread (GlobalSystemsRef gs)
+inline ModulePtr GApp::GetGThread (GlobalSystemsRef gs)
 {
 	using GThreadMsgList_t		= CompileTime::TypeListFrom< Message<GpuMsg::ThreadBeginFrame>, Message<GpuMsg::ThreadEndFrame>, Message<GpuMsg::GetDeviceInfo> >;
 	using GThreadEventList_t	= CompileTime::TypeListFrom< Message<GpuMsg::DeviceCreated>, Message<GpuMsg::DeviceBeforeDestroy> >;
@@ -24,6 +25,7 @@ GApp::GApp ()
 	ms = GetMainSystemInstance();
 
 	Platforms::RegisterPlatforms();
+	Profilers::RegisterProfilers();
 }
 
 
@@ -61,6 +63,7 @@ bool GApp::Initialize (GAPI::type api)
 
 	window->AddModule( WinKeyInputModuleID, CreateInfo::RawInputHandler{} );
 	window->AddModule( WinMouseInputModuleID, CreateInfo::RawInputHandler{} );
+	window->AddModule( Profilers::FPSCounterModuleID, CreateInfo::FPSCounter{} );
 
 	window->Subscribe( this, &GApp::_OnWindowClosed );
 	input->Subscribe( this, &GApp::_OnKey );
@@ -323,7 +326,6 @@ bool GApp::_CreateCmdBuffers ()
 						gthread->GlobalSystems(),
 						CreateInfo::GpuCommandBuffer{
 							gthread,
-							null,
 							CommandBufferDescriptor{ ECmdBufferCreate::bits() | ECmdBufferCreate::ImplicitResetable }
 						},
 						OUT cmdBuffers[i] )

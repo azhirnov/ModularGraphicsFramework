@@ -26,8 +26,6 @@ namespace OS
 		
 		str << err << "\n in " << sdlCall << ", function " << func;
 
-		ASSERT( file.IsNullTerminated() );
-
 		LOG( str.cstr(), ELog::Warning, file.cstr(), line );
 
 		SDL_ClearError();

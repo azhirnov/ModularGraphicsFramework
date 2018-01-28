@@ -48,16 +48,17 @@ namespace OS
 		CriticalSection ();
 		~CriticalSection ();
 
-		bool IsValid () const
+		CHECKRES(bool) IsValid () const
 		{
 			return _inited;
 		}
 
+		CHECKRES(bool) TryLock ();
+
 		void Lock ();
-		bool TryLock ();
 		void Unlock ();
 
-		ScopeLock GetScopeLock ()
+		CHECKRES(ScopeLock)  GetScopeLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->Lock(); }
@@ -104,15 +105,16 @@ namespace OS
 		ReadWriteSync ();
 		~ReadWriteSync ();
 
+		CHECKRES(bool) TryLockWrite ();
+		CHECKRES(bool) TryLockRead ();
+
 		void LockWrite ();
-		bool TryLockWrite ();
 		void UnlockWrite ();
 
 		void LockRead ();
-		bool TryLockRead ();
 		void UnlockRead ();
 
-		ScopeLock GetScopeWriteLock ()
+		CHECKRES(ScopeLock)  GetScopeWriteLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->LockWrite(); }
@@ -121,7 +123,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		ScopeLock GetScopeReadLock ()
+		CHECKRES(ScopeLock)  GetScopeReadLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->LockRead(); }
@@ -165,7 +167,7 @@ namespace OS
 		ConditionVariable ();
 		~ConditionVariable ();
 
-		bool IsValid () const
+		CHECKRES(bool) IsValid () const
 		{
 			return _inited;
 		}
@@ -209,7 +211,7 @@ namespace OS
 		SyncEvent (EFlags flags = AUTO_RESET);
 		~SyncEvent ();
 
-		bool IsValid () const
+		CHECKRES(bool) IsValid () const
 		{
 			return _event.IsDefined();
 		}
@@ -275,14 +277,14 @@ namespace OS
 
 		~Semaphore ();
 
-		bool IsValid () const
+		CHECKRES(bool) IsValid () const
 		{
 			return _sem.IsDefined();
 		}
 
 		void Lock ();
 
-		bool TryLock ();
+		CHECKRES(bool) TryLock ();
 
 		void Unlock ();
 

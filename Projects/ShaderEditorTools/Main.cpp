@@ -17,14 +17,13 @@ int main ()
 	
 	cfg.searchForSharedTypes	= true;
 	cfg.addPaddingToStructs		= true;
-	cfg.optimizeSource			= false;	// set 'false' for debugging
+	cfg.optimizeSource			= true;	// set 'false' for debugging
 	//cfg.optimizeBindings		= false;
-	//cfg.skipBufferLayouts		= true;	// for vulkan
 	cfg.includings				<< "Pipelines/common.h";
 	cfg.nameSpace				= "Pipelines";
 	cfg.target					|= EShaderDstFormat::GLSL_Source;
 	cfg.target					|= EShaderDstFormat::SPIRV_Binary;
-	//cfg.target					|= EShaderDstFormat::SPIRV_Source;
+	cfg.target					|= EShaderDstFormat::SPIRV_Source;
 
 	PipelineManager::Instance()->Convert( "all_pipelines", new CppSerializer(), cfg );
 	

@@ -84,6 +84,22 @@ namespace StringUtils
 		}
 		return str;
 	}
+	
+/*
+=================================================
+	Repeat String
+=================================================
+*/
+	inline String  RepeatString (StringCRef part, uint count)
+	{
+		String	str = part;
+
+		for (uint i = 0; i < count; ++i) {
+			str << part;
+		}
+		return str;
+	}
+
 
 	
 	inline int		ToInt32 (StringCRef sStr)			{ return atoi( sStr.cstr() ); }

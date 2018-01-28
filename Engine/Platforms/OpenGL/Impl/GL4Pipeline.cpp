@@ -170,7 +170,7 @@ namespace PlatformGL
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*
@@ -273,12 +273,18 @@ namespace PlatformGL
 		// validate render pass
 		if ( not _renderPass )
 		{
-			_renderPass		= GetDevice()->GetDefaultRenderPass();
+			Message< GpuMsg::GetDeviceInfo >	req_dev;
+			CHECK( _GetManager()->Send( req_dev ) );
+
+			_renderPass		= req_dev->result->renderPass;
 			_descr.subpass	= 0;
 
 			LOG( "used default render pass", ELog::Debug );
 		}
+
+		CHECK_ERR( _renderPass );
 		CHECK_ERR( _ValidateRenderPass() );
+
 
 		// get shader modules
 		Message< GpuMsg::GetGLShaderModuleIDs >		req_shader_ids;
@@ -294,6 +300,7 @@ namespace PlatformGL
 
 			GL_CALL( glUseProgramStages( _pipelineId, GL4Enum(EShader::bits().Set( sh.type )), sh.id ) );
 		}
+
 
 		// validate pipeline
 		GL_CALL( glValidateProgramPipeline( _pipelineId ) );
@@ -316,7 +323,6 @@ namespace PlatformGL
 		}
 
 		CHECK_ERR( valid );
-
 		CHECK_ERR( _CreateVertexArray() );
 
 		GetDevice()->SetObjectName( _pipelineId, GetDebugName(), EGpuObject::Pipeline );
@@ -485,7 +491,7 @@ namespace PlatformGL
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*

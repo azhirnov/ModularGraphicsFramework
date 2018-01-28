@@ -56,12 +56,12 @@ namespace OS
 	public:
 		CurrentThread ();
 
-		usize Id () const
+		CHECKRES(usize) Id () const
 		{
 			return _id;
 		}
 
-		bool IsCurrent () const
+		CHECKRES(bool) IsCurrent () const
 		{
 			return GetCurrentThreadId() == _id;
 		}

@@ -35,14 +35,14 @@ namespace GXTypes
 	namespace UnsafeMem
 	{
 		template <typename T>
-		forceinline T * PlacementNew (void *ptr) noexcept
+		forceinline CHECKRES(T *)  PlacementNew (void *ptr) noexcept
 		{
 			ASSERT( _types_hidden_::IsAlignedMem<T>( ptr ) );
 			return ( new(ptr) T() );
 		}
 
 		template <typename T, typename ...Types>
-		forceinline T * PlacementNew (void *ptr, Types&&... args) noexcept
+		forceinline CHECKRES(T *)  PlacementNew (void *ptr, Types&&... args) noexcept
 		{
 			ASSERT( _types_hidden_::IsAlignedMem<T>( ptr ) );
 			return ( new(ptr) T( FW<Types>(args)... ) );

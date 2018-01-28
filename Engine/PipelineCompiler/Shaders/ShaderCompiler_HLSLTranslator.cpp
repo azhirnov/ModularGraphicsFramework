@@ -16,16 +16,5 @@ namespace PipelineCompiler
 		TODO( "_TranslateGLSLtoHLSL" );
 		return false;
 	}
-	
-/*
-=================================================
-	_CompileHLSL
-=================================================
-*/
-	bool ShaderCompiler::_CompileHLSL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result) const
-	{
-		TODO( "_CompileHLSL" );
-		return false;
-	}
 
 }	// PipelineCompiler

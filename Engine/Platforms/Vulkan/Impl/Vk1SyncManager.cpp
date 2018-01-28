@@ -145,7 +145,7 @@ namespace PlatformVK
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*
@@ -155,6 +155,7 @@ namespace PlatformVK
 */
 	Vk1SyncManager::~Vk1SyncManager ()
 	{
+		ASSERT( _syncs.Empty() );
 	}
 	
 /*

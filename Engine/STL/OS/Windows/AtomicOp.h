@@ -71,7 +71,7 @@ namespace OS
 		}
 		
 		template <typename T>
-		forceinline static T  Get (volatile T const & left) {
+		forceinline static CHECKRES(T)  Get (volatile T const & left) {
 			_Barrier();
 			return left;
 		}

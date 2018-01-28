@@ -10,7 +10,7 @@ using namespace GX_STL::GXMath;
 struct Test1
 {
 	typedef Delegate< void () >		delegate_t;
-	typedef Function< void >		function_t;
+	typedef Function< void () >		function_t;
 	typedef Event< delegate_t >		event_t;
 
 	static void Func ()
@@ -36,7 +36,7 @@ struct Test1
 struct Test2
 {
 	typedef Delegate< void (int) >		delegate_t;
-	typedef Function< void >			function_t;
+	typedef Function< void () >			function_t;
 	typedef Event< delegate_t >			event_t;
 
 	static void Func (int i)
@@ -64,7 +64,7 @@ struct Test2
 struct Test3
 {
 	typedef Delegate< void () >		delegate_t;
-	typedef Function< void >		function_t;
+	typedef Function< void () >		function_t;
 	typedef Event< delegate_t >		event_t;
 
 	void Func ()
@@ -91,7 +91,7 @@ struct Test3
 struct Test4
 {
 	typedef Delegate< void (const float &) >	delegate_t;
-	typedef Function< void >					function_t;
+	typedef Function< void () >					function_t;
 	typedef Event< delegate_t >					event_t;
 
 	void Func (const float &f) const
@@ -122,7 +122,7 @@ class Test5 : public RefCountedObject<>
 {
 public:
 	typedef Delegate< void (int, int) >		delegate_t;
-	typedef Function< void >				function_t;
+	typedef Function< void () >				function_t;
 	typedef Event< delegate_t >				event_t;
 
 	SHARED_POINTER( Test5 );

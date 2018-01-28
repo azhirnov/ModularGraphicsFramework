@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "../Builder/CMakeBuilder.h"
+#include "Engine/Config/Engine.Version.h"
 
 using namespace CMake;
 
@@ -10,6 +11,9 @@ using namespace CMake;
 #define ENABLE_PROJECTS
 //#define ENABLE_LUNARGLASS
 
+#define NUM_THREADS	8
+
+
 extern void GenMGFProject ()
 {
 	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Utils/CMake/Builder", 5 ) );
@@ -17,6 +21,7 @@ extern void GenMGFProject ()
 
 	CMakeBuilder	builder{ "", "ModularGraphicsFramework" };
 
+	builder.SetVersion( Engine::_ENGINE_VERSION_MAJ, Engine::_ENGINE_VERSION_MIN );
 	builder.Projects_IncludeDirectory( "Engine/.." );
 
 	// compilers
@@ -33,7 +38,7 @@ extern void GenMGFProject ()
 											   VS::OptFiberSafe, VS::OptWholeProgram, VS::StringPooling, VS::NoSecurityCheck };
 
 			Set<uint>	errors				= { VS::ReturningAddressOfLocalVariable, VS::TypeNameMismatch, VS::UninitializedVarUsed,
-												VS::TooManyParamsForMacro, VS::RecursiveOnAllControlPaths,
+												VS::TooManyParamsForMacro, VS::RecursiveOnAllControlPaths, VS::IllegalConversion,
 												VS::UnrecognizedEscapeSequence, VS::UnreachableCode, VS::MultipleAssignmentOperators,
 												VS::InconsistentDllLinkage, VS::ClassNeedsDllInterface };
 			Set<uint>	enabled_warnings	= { VS::InitOrder, VS::UnknownMacro, VS::UnsafeFunctionorVariable, VS::ConditionalExprIsConstant, VS::ReintCastBetwenRelatedClasses };
@@ -91,7 +96,6 @@ extern void GenMGFProject ()
 												  VS::MultiThreadedDebugDll, VS::StaticAnalyze, VS::DbgProgramDatabase, VS::StackFrameAndUninitVarCheck });
 				analyze_cfg->AddTargetLinkerFlags( shared_linker_cfg )->AddTargetLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
 				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG"/*, "DEBUG"*/ });
-
 			}
 
 			auto	profile_cfg = msvc->AddConfiguration( "Profile" );
@@ -121,6 +125,9 @@ extern void GenMGFProject ()
 							->AddTargetLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Release, VS_Linker::RandomBaseAddress });
 				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
 			}
+
+			builder.SetSystemVersion( "8.1", "WIN32" );
+			msvc->AddSource( "message( STATUS \"CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION: ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}\" )\n" );
 		}
 
 		// GCC
@@ -201,7 +208,7 @@ extern void GenMGFProject ()
 
 	// projects
 	{
-		// Engine //
+		// STL //
 	#ifdef ENABLE_STL
 		auto	engine_config = builder.AddLibrary( "Engine.Config", "Engine/Config" );
 		{
@@ -212,6 +219,7 @@ extern void GenMGFProject ()
 		{
 			engine_stl->AddFoldersRecursive( "" );
 			engine_stl->LinkLibrary( engine_config );
+			//engine_stl->LinkLibrary( "SDL2-static" );
 		}
 		
 		auto	test_stl = builder.AddExecutable( "Tests.STL", "Tests/STL" );
@@ -222,6 +230,7 @@ extern void GenMGFProject ()
 	#endif	// ENABLE_STL
 
 
+		// Engine //
 	#ifdef ENABLE_ENGINE
 		auto	engine_base = builder.AddLibrary( "Engine.Base", "Engine/Base" );
 		{
@@ -248,6 +257,12 @@ extern void GenMGFProject ()
 			engine_graphics->AddFoldersRecursive( "" );
 			engine_graphics->LinkLibrary( engine_platforms );
 		}
+
+		auto	engine_profilers = builder.AddLibrary( "Engine.Profilers", "Engine/Profilers" );
+		{
+			engine_profilers->AddFoldersRecursive( "" );
+			engine_profilers->LinkLibrary( engine_platforms );
+		}
 		
 		auto	engine_scene = builder.AddLibrary( "Engine.Scene", "Engine/Scene" );
 		{
@@ -259,22 +274,24 @@ extern void GenMGFProject ()
 		auto	test_engine_base = builder.AddExecutable( "Tests.Engine.Base", "Tests/Engine.Base" );
 		{
 			test_engine_base->AddFoldersRecursive( "" );
-			test_engine_base->LinkLibrary( engine_platforms );
+			test_engine_base->LinkLibrary( engine_platforms )->LinkLibrary( engine_profilers );
 		}
 		
 		auto	test_engine_graphics = builder.AddExecutable( "Tests.Engine.Graphics", "Tests/Engine.Graphics" );
 		{
 			test_engine_graphics->AddFoldersRecursive( "" );
-			test_engine_graphics->LinkLibrary( engine_graphics );
+			test_engine_graphics->LinkLibrary( engine_graphics )->LinkLibrary( engine_profilers );
 		}
 		
-		auto	test_engine_scene = builder.AddExecutable( "Tests.Engine.Scene", "Tests/Engine.Scene" );
-		{
-			test_engine_scene->AddFoldersRecursive( "" );
-			test_engine_scene->LinkLibrary( engine_scene );
-		}
+		builder.AddExecutable( "Tests.Engine.Base.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_base )->MergeCPP( NUM_THREADS );
+		builder.AddExecutable( "Tests.Engine.Graphics.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_graphics )->MergeCPP( NUM_THREADS );
 	#endif	// ENABLE_ENGINE
 
+
+		// External //
+		//builder.SearchVSProjects( "External/FreeImage", "External/FreeImage" );
+
+		//builder.AddExternal( "External/SDL2" );
 
 	#ifdef ENABLE_LUNARGLASS
 		builder.SearchVSProjects( "build_LunarGLASS", "External/LunarGLASS" );
@@ -298,7 +315,7 @@ extern void GenMGFProject ()
 								   { "GLSLBackend", "glslangFrontend", "SpvFrontend", "core",
 								     "LLVMAsmParser", "LLVMLinker", "LLVMipo", "LLVMScalarOpts", "LLVMInstCombine", "LLVMTransformUtils",
 									 "LLVMipa", "LLVMAnalysis", "LLVMTarget", "LLVMCore", "LLVMSupport",
-									 "glslang", "HLSL", "OSDependent", "OGLCompiler", "SPIRV", "SPVRemapper", "SPIRV-Tools", "SPIRV-Tools-opt" }, "NOT MSVC");
+									 "glslang", "HLSL", "OSDependent", "OGLCompiler", "SPIRV", "SPVRemapper", "SPIRV-Tools", "SPIRV-Tools-opt" }, "NOT MSVC" );
 
 			engine_pipeline_compiler->AddDependency( {	"GLSLBackend", "glslangFrontend", "SpvFrontend", "core",
 														"LLVMAsmParser", "LLVMLinker", "LLVMipo", "LLVMScalarOpts", "LLVMInstCombine", "LLVMTransformUtils",
@@ -322,11 +339,13 @@ endif()
 		}
 	#endif	// ENABLE_LUNARGLASS
 
+
+		// Projects //
 	#ifdef ENABLE_PROJECTS
 		auto	proj_shader_editor = builder.AddExecutable( "Projects.ShaderEditor", "Projects/ShaderEditor" );
 		{
 			proj_shader_editor->AddFoldersRecursive( "" );
-			proj_shader_editor->LinkLibrary( engine_scene );
+			proj_shader_editor->LinkLibrary( engine_scene )->LinkLibrary( engine_profilers );
 		}
 
 	# ifdef ENABLE_LUNARGLASS
@@ -337,6 +356,7 @@ endif()
 		}
 	# endif	// ENABLE_LUNARGLASS
 	#endif	// ENABLE_PROJECTS
+
 
 		// Utils //
 	#ifdef ENABLE_UTILS

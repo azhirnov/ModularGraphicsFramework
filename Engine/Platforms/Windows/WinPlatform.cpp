@@ -329,7 +329,7 @@ namespace Platforms
 
 		HMODULE		instance	= _instance.Get<HMODULE>();
 		WNDCLASSA	tmp			= {};
-		bool		ret			= GetClassInfo( instance, _className.cstr(), &tmp ) == TRUE;
+		bool		ret			= GetClassInfo( instance, _className.cstr(), &tmp ) != FALSE;
 		
 		if ( ret or ( _className == tmp.lpszClassName and instance == tmp.hInstance ) )
 			return true;

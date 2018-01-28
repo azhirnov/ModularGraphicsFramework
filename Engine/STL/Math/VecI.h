@@ -345,7 +345,7 @@
 		void		GetNormLength (OUT Self &norm, OUT T &length) const;
 		Self &		Normalize ();
 		Self &		SetLength (T len);
-		Self		NewLength (T len) const;
+		Self		WithLength (T len) const;
 
 		// 
 		Self &		MakeCeil (const Self &sVec);
@@ -446,6 +446,7 @@
 
 #	if I >= 4
 		constexpr T				Volume4D ()	const	{ return x*y*z*w; }
+		constexpr Vec<T,2,U>	xw ()		const	{ return Vec<T,2,U>( x, w ); }
 		constexpr Vec<T,2,U>	yw ()		const	{ return Vec<T,2,U>( y, w ); }
 		constexpr Vec<T,2,U>	zw ()		const	{ return Vec<T,2,U>( z, w ); }
 		
@@ -484,7 +485,7 @@
 
 		
 	template <typename T, ulong U>
-	inline const Vec<T,I,U>  Vec<T,I,U>::operator ++ (int)
+	inline CHECKRES(const Vec<T,I,U>)  Vec<T,I,U>::operator ++ (int)
 	{
 		Self	ret(*this);
 		++(*this);
@@ -493,7 +494,7 @@
 
 		
 	template <typename T, ulong U>
-	inline const Vec<T,I,U>  Vec<T,I,U>::operator -- (int)
+	inline CHECKRES(const Vec<T,I,U>)  Vec<T,I,U>::operator -- (int)
 	{
 		Self	ret(*this);
 		--(*this);
@@ -502,7 +503,7 @@
 	
 	
 	template <typename T, ulong U>
-	inline T  Vec<T,I,U>::Min () const
+	inline CHECKRES(T)  Vec<T,I,U>::Min () const
 	{
 		T	t_min = (*this)[0];
 		FOR( i, *this )  (*this)[i] < t_min ?  t_min = (*this)[i]  : 0;
@@ -511,7 +512,7 @@
 
 	
 	template <typename T, ulong U>
-	inline T  Vec<T,I,U>::Max () const
+	inline CHECKRES(T)  Vec<T,I,U>::Max () const
 	{
 		T	t_max = (*this)[0];
 		FOR( i, *this )  (*this)[i] > t_max ?  t_max = (*this)[i]  : 0;
@@ -520,14 +521,14 @@
 
 	
 	template <typename T, ulong U>
-	inline T  Vec<T,I,U>::Length () const
+	inline CHECKRES(T)  Vec<T,I,U>::Length () const
 	{
 		return Sqrt( LengthSqr() );
 	}
 
 	
 	template <typename T, ulong U>
-	inline T  Vec<T,I,U>::LengthSqr () const
+	inline CHECKRES(T)  Vec<T,I,U>::LengthSqr () const
 	{
 		Self	res;
 		FOR( i, *this )	res[i] = GXMath::Square( (*this)[i] );
@@ -536,7 +537,7 @@
 
 	
 	template <typename T, ulong U>
-	inline Vec<T,I,U>  Vec<T,I,U>::Normalized () const
+	inline CHECKRES(Vec<T,I,U>)  Vec<T,I,U>::Normalized () const
 	{
 		const T		len_sqr = LengthSqr();
 		return len_sqr != T(0) ?  Self(*this) * InvSqrt( len_sqr )  :  Self();
@@ -579,7 +580,7 @@
 	
 	
 	template <typename T, ulong U>
-	inline Vec<T,I,U>  Vec<T,I,U>::NewLength (T len) const
+	inline CHECKRES(Vec<T,I,U>)  Vec<T,I,U>::WithLength (T len) const
 	{
 		return Self( *this ).SetLength( len );
 	}
@@ -588,7 +589,7 @@
 	template <typename T, ulong U>
 	inline Vec<T,I,U> &  Vec<T,I,U>::MakeCeil (const Self &sVec)
 	{
-		FOR( i, *this )  sVec[i] > (*this)[i]  ?  (*this)[i] = sVec[i]  : T(0);
+		FOR( i, *this )  sVec[i] > (*this)[i]  ?  ((*this)[i] = sVec[i])  : T(0);
 		return *this;
 	}
 		
@@ -596,13 +597,13 @@
 	template <typename T, ulong U>
 	inline Vec<T,I,U> &  Vec<T,I,U>::MakeFloor (const Self &sVec)
 	{
-		FOR( i, *this )  sVec[i] < (*this)[i]  ?  (*this)[i] = sVec[i]  : T(0);
+		FOR( i, *this )  sVec[i] < (*this)[i]  ?  ((*this)[i] = sVec[i])  : T(0);
 		return *this;
 	}
 
 		
 	template <typename T, ulong U>
-	inline T  Vec<T,I,U>::Dot (const Self &right) const
+	inline CHECKRES(T)  Vec<T,I,U>::Dot (const Self &right) const
 	{
 		Self	res;
 		FOR( i, *this )	res[i] = (*this)[i] * right[i];
@@ -611,7 +612,7 @@
 		
 	
 	template <typename T, ulong U>
-	inline T  Vec<T,I,U>::DotAbs (const Self &right) const
+	inline CHECKRES(T)  Vec<T,I,U>::DotAbs (const Self &right) const
 	{
 		Self	res;
 		FOR( i, *this )	res[i] = Abs( (*this)[i] * right[i] );
@@ -620,14 +621,14 @@
 
 		
 	template <typename T, ulong U>
-	inline T  Vec<T,I,U>::Distance (const Self &sVec) const
+	inline CHECKRES(T)  Vec<T,I,U>::Distance (const Self &sVec) const
 	{
 		return ( (*this) - sVec ).Length();
 	}
 		
 	
 	template <typename T, ulong U>
-	inline T  Vec<T,I,U>::DistanceSqr (const Self &sVec) const
+	inline CHECKRES(T)  Vec<T,I,U>::DistanceSqr (const Self &sVec) const
 	{
 		return ( (*this) - sVec ).LengthSqr();
 	}
@@ -635,7 +636,7 @@
 		
 	template <typename T, ulong U>
 	template <typename T2>
-	inline const Vec<T2,I,U>  Vec<T,I,U>::Convert () const
+	inline CHECKRES(const Vec<T2,I,U>)  Vec<T,I,U>::Convert () const
 	{
 		Vec<T2,I,U>	ret;
 		FOR( i, *this )	ret[i] = T2( (*this)[i] );
@@ -645,7 +646,7 @@
 		
 	template <typename T, ulong U>
 	template <typename B>
-	inline const B  Vec<T,I,U>::To () const
+	inline CHECKRES(const B)  Vec<T,I,U>::To () const
 	{
 		STATIC_ASSERT( typename B::_is_vector(true), "type is not vector" );
 		
@@ -670,7 +671,7 @@
 	*/
 	
 	template <typename T, ulong U>
-	inline Vec<bool,I,U>  Vec<T,I,U>::Equal (const Self &right) const
+	inline CHECKRES(Vec<bool,I,U>)  Vec<T,I,U>::Equal (const Self &right) const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = GXMath::Equals( (*this)[i], right[i] );
@@ -679,7 +680,7 @@
 		
 	
 	template <typename T, ulong U>
-	inline Vec<bool,I,U>  Vec<T,I,U>::Less (const Self &right) const
+	inline CHECKRES(Vec<bool,I,U>)  Vec<T,I,U>::Less (const Self &right) const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] < right[i] ) & not GXMath::Equals( (*this)[i], right[i] );
@@ -688,7 +689,7 @@
 		
 	
 	template <typename T, ulong U>
-	inline Vec<bool,I,U>  Vec<T,I,U>::LEqual (const Self &right) const
+	inline CHECKRES(Vec<bool,I,U>)  Vec<T,I,U>::LEqual (const Self &right) const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] < right[i] ) | GXMath::Equals( (*this)[i], right[i] );
@@ -697,7 +698,7 @@
 		
 	
 	template <typename T, ulong U>
-	inline Vec<bool,I,U>  Vec<T,I,U>::Greater (const Self &right) const
+	inline CHECKRES(Vec<bool,I,U>)  Vec<T,I,U>::Greater (const Self &right) const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] > right[i] ) & not GXMath::Equals( (*this)[i], right[i] );
@@ -706,7 +707,7 @@
 		
 	
 	template <typename T, ulong U>
-	inline Vec<bool,I,U>  Vec<T,I,U>::GEqual (const Self &right) const
+	inline CHECKRES(Vec<bool,I,U>)  Vec<T,I,U>::GEqual (const Self &right) const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] > right[i] ) | GXMath::Equals( (*this)[i], right[i] );
@@ -715,7 +716,7 @@
 		
 	
 	template <typename T, ulong U>
-	inline Vec<bool,I,U>  Vec<T,I,U>::IsZero () const
+	inline CHECKRES(Vec<bool,I,U>)  Vec<T,I,U>::IsZero () const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = GXMath::IsZero( (*this)[i] );
@@ -724,7 +725,7 @@
 		
 	
 	template <typename T, ulong U>
-	inline Vec<bool,I,U>  Vec<T,I,U>::IsNotZero () const
+	inline CHECKRES(Vec<bool,I,U>)  Vec<T,I,U>::IsNotZero () const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = GXMath::IsNotZero( (*this)[i] );
@@ -733,14 +734,14 @@
 	
 		
 	template <typename T, ulong U>
-	inline Vec<T,I,U>  Vec<T,I,U>::Reflect (const Self &normal) const
+	inline CHECKRES(Vec<T,I,U>)  Vec<T,I,U>::Reflect (const Self &normal) const
 	{
 		return (*this) - T(2) * normal.Dot( *this ) * normal;
 	}
 
 		
 	template <typename T, ulong U>
-	inline Vec<T,I,U>  Vec<T,I,U>::Refract (const Self &normal, T eta) const
+	inline CHECKRES(Vec<T,I,U>)  Vec<T,I,U>::Refract (const Self &normal, T eta) const
 	{
 		T const		k = T(1) - eta * eta * ( T(1) - GXMath::Square( normal.Dot( *this ) ) );
 		Self		r;
@@ -754,7 +755,7 @@
 	
 	template <typename T, ulong U>
 	template <Swizzle::type SW>
-	inline constexpr auto  Vec<T,I,U>::Swizzle () const -> Vec< T, _math_hidden_::SWLength<SW>, U >
+	inline constexpr CHECKRES(auto)  Vec<T,I,U>::Swizzle () const -> Vec< T, _math_hidden_::SWLength<SW>, U >
 	{
 		Vec< T, _math_hidden_::SWLength<SW>, U >	res;
 		constexpr uint								swizzle = _math_hidden_::_ParseSwizzle( SW, I );
@@ -773,7 +774,7 @@
 	
 
 	template <typename T, ulong U>
-	inline Vec<T,4,U>  Vec<T,I,U>::Swizzle (Swizzle::type sw) const
+	inline CHECKRES(Vec<T,4,U>)  Vec<T,I,U>::Swizzle (Swizzle::type sw) const
 	{
 		Vec<T,4,U>	res;
 		const uint	swizzle = _math_hidden_::_ParseSwizzle( sw, I );

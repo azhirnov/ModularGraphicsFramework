@@ -45,7 +45,6 @@ CLApp::CLApp ()
 	Platforms::RegisterPlatforms();
 }
 
-
 void CLApp::Initialize ()
 {
 	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager() );
@@ -201,7 +200,10 @@ bool CLApp::_CLInit (const Message< GpuMsg::DeviceCreated > &)
 		CHECK_ERR( factory->Create(
 						CLCommandBufferModuleID,
 						clthread->GlobalSystems(),
-						CreateInfo::GpuCommandBuffer{},
+						CreateInfo::GpuCommandBuffer{
+							null,
+							CommandBufferDescriptor{ ECmdBufferCreate::bits() | ECmdBufferCreate::ImplicitResetable }
+						},
 						OUT cmdBuffers[i] )
 		);
 		cmdBuilder->Send< ModuleMsg::AttachModule >({ ""_str << i, cmdBuffers[i] });
@@ -230,7 +232,7 @@ extern void Test_CLCompute ()
 		app.Initialize();
 
 		// main loop
-		for (uint i = 0; i < 10 and app.Update(); ++i) {}
+		for (uint i = 0; i < 100 and app.Update(); ++i) {}
 
 		app.Quit();
 	}

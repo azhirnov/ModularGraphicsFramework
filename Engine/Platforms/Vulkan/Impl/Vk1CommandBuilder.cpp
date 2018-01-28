@@ -79,10 +79,7 @@ namespace PlatformVK
 		using CmdBufferMsg_t		= MessageListFrom< GpuMsg::SetCommandBufferDependency, GpuMsg::SetCommandBufferState,
 														GpuMsg::GetCommandBufferState >;
 
-		using SyncMngrMsgList_t		= MessageListFrom< GpuMsg::GetVkEvent >;
-
 		using DynamicStates_t		= EPipelineDynamicState::bits;
-		//using Layout_t			= Optional< Vk1PipelineLayoutPtr >;
 		using UsedResources_t		= Set< ModulePtr >;
 		using ERecordingState		= GpuMsg::SetCommandBufferState::EState;
 
@@ -290,7 +287,7 @@ namespace PlatformVK
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, VkThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 		
 /*
@@ -317,8 +314,9 @@ namespace PlatformVK
 
 		CHECK_COMPOSING( _CreateCmdBufferPool() );
 
-		_syncManager = _GetManager()->GetModuleByMsg< SyncMngrMsgList_t >();
-		CHECK_COMPOSING( _syncManager );
+		Message< GpuMsg::GetDeviceInfo >	req_dev;
+		_GetManager()->Send( req_dev );
+		CHECK_COMPOSING( _syncManager = req_dev->result->syncManager );
 
 		_SendForEachAttachments( msg );
 		
@@ -543,6 +541,7 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBegin (const Message< GpuMsg::CmdBegin > &msg)
 	{
+		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( not _cmdBuffer );
 		CHECK_ERR( _scope == EScope::None );
 		
@@ -550,7 +549,7 @@ namespace PlatformVK
 		if ( msg->targetCmdBuffer )
 		{
 			// it is bad practice, becouse command buffer depends of other commands pool
-			//ASSERT( msg->targetCmdBuffer->_GetParents().IsExist( this ) );
+			//ASSERT( msg->targetCmdBuffer->_GetParents().IsExist( this ) );		// TODO
 			
 			CHECK_ERR( msg->targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
 
@@ -564,7 +563,6 @@ namespace PlatformVK
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
 								_GetManager(),
-								this,
 								CommandBufferDescriptor{ msg->flags }
 							},
 							OUT _cmdBuffer )

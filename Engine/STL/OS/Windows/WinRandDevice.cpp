@@ -36,7 +36,7 @@ namespace OS
 	PlatformRandomDevice::~PlatformRandomDevice ()
 	{
 		if ( _prov.IsNotNull<HCRYPTPROV>() ) {
-			CHECK( ::CryptReleaseContext( _prov.Get<HCRYPTPROV>(), 0 ) == TRUE );
+			CHECK( ::CryptReleaseContext( _prov.Get<HCRYPTPROV>(), 0 ) != FALSE );
 		}
 	}
 	
@@ -63,9 +63,7 @@ namespace OS
 				break;
 		}
 		
-		ASSERT( provider.IsNullTerminated() );
-
-		return ::CryptAcquireContext( &_prov.Get<HCRYPTPROV>(), null, provider.cstr(), type, CRYPT_VERIFYCONTEXT | CRYPT_SILENT ) == TRUE;
+		return ::CryptAcquireContext( &_prov.Get<HCRYPTPROV>(), null, provider.cstr(), type, CRYPT_VERIFYCONTEXT | CRYPT_SILENT ) != FALSE;
 	}
 	
 /*
@@ -75,7 +73,7 @@ namespace OS
 */
 	bool PlatformRandomDevice::_CreateFromType (uint type)
 	{
-		return ::CryptAcquireContext( &_prov.Get<HCRYPTPROV>(), null, (LPCSTR)null, type, CRYPT_VERIFYCONTEXT | CRYPT_SILENT ) == TRUE;
+		return ::CryptAcquireContext( &_prov.Get<HCRYPTPROV>(), null, (LPCSTR)null, type, CRYPT_VERIFYCONTEXT | CRYPT_SILENT ) != FALSE;
 	}
 	
 /*
@@ -115,7 +113,7 @@ namespace OS
 */
 	bool PlatformRandomDevice::_Generate (ubyte *ptr, usize size) const
 	{
-		return CryptGenRandom( _prov.Get<HCRYPTPROV>(), (DWORD) size, ptr ) == TRUE;
+		return CryptGenRandom( _prov.Get<HCRYPTPROV>(), (DWORD) size, ptr ) != FALSE;
 	}
 
 

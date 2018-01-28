@@ -2,6 +2,7 @@
 
 #include "FileSystem.h"
 #include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Algorithms/FileAddress.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -20,9 +21,7 @@ namespace OS
 */
 	bool OSFileSystem::DeleteFile (StringCRef filename)
 	{
-		ASSERT( filename.IsNullTerminated() );
-
-		return ::DeleteFileA( filename.cstr() ) == TRUE;
+		return ::DeleteFileA( filename.cstr() ) != FALSE;
 	}
 	
 /*
@@ -35,9 +34,7 @@ namespace OS
 		if ( dir.Empty() )
 			return false;
 		
-		ASSERT( dir.IsNullTerminated() );
-
-		return ::SetCurrentDirectoryA( dir.cstr() ) == TRUE;
+		return ::SetCurrentDirectoryA( dir.cstr() ) != FALSE;
 	}
 	
 /*
@@ -63,12 +60,10 @@ namespace OS
 	IsFileExist
 =================================================
 */
-	bool OSFileSystem::IsFileExist (StringCRef filename)
+	CHECKRES(bool)  OSFileSystem::IsFileExist (StringCRef filename)
 	{
 		if ( filename.Empty() )
 			return false;
-		
-		ASSERT( filename.IsNullTerminated() );
 
 		int i_code = ::GetFileAttributes( filename.cstr() );
 		return (i_code != -1) and not (FILE_ATTRIBUTE_DIRECTORY & i_code);
@@ -79,12 +74,10 @@ namespace OS
 	IsDirectoryExist
 =================================================
 */
-	bool OSFileSystem::IsDirectoryExist (StringCRef dirname)
+	CHECKRES(bool)  OSFileSystem::IsDirectoryExist (StringCRef dirname)
 	{
 		if ( dirname.Empty() )
 			return true;
-		
-		ASSERT( dirname.IsNullTerminated() );
 
 		int i_code = ::GetFileAttributes( dirname.cstr() );
 		return (i_code != -1) and (FILE_ATTRIBUTE_DIRECTORY & i_code);
@@ -95,15 +88,14 @@ namespace OS
 	NewDirectory
 =================================================
 */
-	bool OSFileSystem::NewDirectory (StringCRef dir)
+	CHECKRES(bool)  OSFileSystem::NewDirectory (StringCRef dir)
 	{
 		if ( dir.Empty() )
 			return true;
-		
-		ASSERT( dir.IsNullTerminated() );
+
 		ASSERT( not IsDirectoryExist( dir ) );
 
-		return ::CreateDirectoryA( dir.cstr(), null ) == TRUE;
+		return ::CreateDirectoryA( dir.cstr(), null ) != FALSE;
 	}
 	
 /*
@@ -113,10 +105,9 @@ namespace OS
 */
 	bool OSFileSystem::DeleteEmptyDirectory (StringCRef dir)
 	{
-		ASSERT( dir.IsNullTerminated() );
 		ASSERT( IsDirectoryExist( dir ) );
 
-		return ::RemoveDirectoryA( dir.cstr() ) == TRUE;
+		return ::RemoveDirectoryA( dir.cstr() ) != FALSE;
 	}
 	
 /*
@@ -126,7 +117,6 @@ namespace OS
 */
 	bool OSFileSystem::DeleteDirectory (StringCRef dir)
 	{
-		ASSERT( dir.IsNullTerminated() );
 		ASSERT( IsDirectoryExist( dir ) );
 
 		SHFILEOPSTRUCTA file_op = {
@@ -225,12 +215,9 @@ namespace OS
 	CopyFile
 =================================================
 */
-	bool OSFileSystem::CopyFile (StringCRef fromFile, StringCRef toFile)
+	CHECKRES(bool)  OSFileSystem::CopyFile (StringCRef fromFile, StringCRef toFile)
 	{
-		ASSERT( fromFile.IsNullTerminated() );
-		ASSERT( toFile.IsNullTerminated() );
-
-		return ::CopyFileA( fromFile.cstr(), toFile.cstr(), FALSE ) == TRUE;
+		return ::CopyFileA( fromFile.cstr(), toFile.cstr(), FALSE ) != FALSE;
 	}
 	
 /*
@@ -238,7 +225,7 @@ namespace OS
 	CopyDirectory
 =================================================
 */
-	bool OSFileSystem::CopyDirectory (StringCRef fromDir, StringCRef toDir)
+	CHECKRES(bool)  OSFileSystem::CopyDirectory (StringCRef fromDir, StringCRef toDir)
 	{
 		SHFILEOPSTRUCTA s;
 		UnsafeMem::ZeroMem( &s, SizeOf(s) );
@@ -263,37 +250,59 @@ namespace OS
 	
 /*
 =================================================
-	GetFileLastModificationTime
+	MoveFile
 =================================================
 */
-	bool OSFileSystem::MoveFile (StringCRef oldName, StringCRef newName, bool async)
+	CHECKRES(bool)  OSFileSystem::MoveFile (StringCRef oldName, StringCRef newName, bool async)
 	{
-		ASSERT( oldName.IsNullTerminated() );
-		ASSERT( newName.IsNullTerminated() );
-
 		const uint	flags = MOVEFILE_COPY_ALLOWED | (async ? 0 : MOVEFILE_WRITE_THROUGH);
 
-		return ::MoveFileEx( oldName.cstr(), newName.cstr(), flags ) == TRUE;
+		return ::MoveFileEx( oldName.cstr(), newName.cstr(), flags ) != FALSE;
 	}
 
+/*
+=================================================
+	SystemTimeToDate
+=================================================
+*/
+	static Date SystemTimeToDate (const SYSTEMTIME &sysTime)
+	{
+		Date	result;
+		result.SetYear( sysTime.wYear );
+		result.SetMonth( sysTime.wMonth );
+		result.SetDay( sysTime.wDay );
+		result.SetHour( sysTime.wHour );
+		result.SetMinute( sysTime.wMinute );
+		result.SetSecond( sysTime.wSecond );
+		result.SetMillis( sysTime.wMilliseconds );
+		return result;
+	}
+	
 /*
 =================================================
 	GetFileLastModificationTime
 =================================================
 */
-	ulong OSFileSystem::GetFileLastModificationTime (StringCRef filename)
+	CHECKRES(Date)  OSFileSystem::GetFileLastModificationTime (StringCRef filename)
 	{
-		ASSERT( filename.IsNullTerminated() );
-
-		FILETIME	time = {};
+		FILETIME	atime = {};
+		FILETIME	wtime = {};
 		HANDLE		file = ::CreateFileA( filename.cstr(), GENERIC_READ,
 							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
 							null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );
 
-		if ( file == null or ::GetFileTime( file, null, &time, null ) != TRUE )
-			return 0;
+		if ( file == null or ::GetFileTime( file, null, OUT &atime, OUT &wtime ) != TRUE )
+			return Uninitialized;
 
-		return (ulong(time.dwHighDateTime) << 32) | ulong(time.dwLowDateTime);
+		ulong	a = (ulong(atime.dwHighDateTime) << 32) | ulong(atime.dwLowDateTime);
+		ulong	w = (ulong(wtime.dwHighDateTime) << 32) | ulong(wtime.dwLowDateTime);
+
+		SYSTEMTIME	sys_time = {};
+
+		if ( ::FileTimeToSystemTime( a > w ? &atime : &wtime, OUT &sys_time ) == FALSE )
+			return Uninitialized;
+
+		return SystemTimeToDate( sys_time );
 	}
 	
 /*
@@ -301,19 +310,22 @@ namespace OS
 	GetFileCreationTime
 =================================================
 */
-	ulong OSFileSystem::GetFileCreationTime (StringCRef filename)
+	CHECKRES(Date)  OSFileSystem::GetFileCreationTime (StringCRef filename)
 	{
-		ASSERT( filename.IsNullTerminated() );
-
 		FILETIME	time = {};
 		HANDLE		file = ::CreateFileA( filename.cstr(), GENERIC_READ,
 							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
 							null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );
 
-		if ( file == null or ::GetFileTime( file, &time, null, null ) != TRUE )
-			return 0;
+		if ( file == null or ::GetFileTime( file, OUT &time, null, null ) != TRUE )
+			return Uninitialized;
+		
+		SYSTEMTIME	sys_time = {};
 
-		return (ulong(time.dwHighDateTime) << 32) | ulong(time.dwLowDateTime);
+		if ( ::FileTimeToSystemTime( &time, OUT &sys_time ) == FALSE )
+			return Uninitialized;
+
+		return SystemTimeToDate( sys_time );
 	}
 	
 /*
@@ -321,21 +333,19 @@ namespace OS
 	GetFileSize
 =================================================
 */
-	ulong OSFileSystem::GetFileSize (StringCRef filename)
+	CHECKRES(BytesUL)  OSFileSystem::GetFileSize (StringCRef filename)
 	{
-		ASSERT( filename.IsNullTerminated() );
-
-		HANDLE		file = ::CreateFileA( filename.cstr(), GENERIC_READ,
+		HANDLE	file = ::CreateFileA( filename.cstr(), GENERIC_READ,
 							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
 							null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );
 
 		if ( file == null )
-			return 0;
+			return Uninitialized;
 
 		LARGE_INTEGER	size;
-		::GetFileSizeEx( file, &size );
+		::GetFileSizeEx( file, OUT &size );
 
-		return ulong(size.QuadPart);
+		return BytesUL(size.QuadPart);
 	}
 
 

@@ -98,7 +98,7 @@ namespace PlatformGL
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( null, GLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( null ), UntypedID_t(0), true );
 	}
 	
 /*

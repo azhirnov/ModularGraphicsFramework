@@ -234,7 +234,7 @@ namespace PlatformGL
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
 		_ValidateDescriptor( _descr );
 	}
@@ -317,8 +317,14 @@ namespace PlatformGL
 */
 	bool GL4CommandBuffer::_SetGLCommandBufferQueue (const Message< GpuMsg::SetGLCommandBufferQueue > &msg)
 	{
-		_commands	= RVREF(msg->commands.Get());
-		_tempBuffer	= null;
+		_commands = RVREF(msg->commands.Get());
+		
+		// TODO: optimize
+		if ( _tempBuffer )
+		{
+			_tempBuffer->Send< ModuleMsg::Delete >({});
+			_tempBuffer = null;
+		}
 
 		if ( not msg->bufferData.Empty() )
 		{
@@ -1572,12 +1578,15 @@ namespace PlatformGL
 
 		CHECK_ERR( req_src_id->result and req_dst_id->result );
 
-		GL_CALL( glDisable( GL_SCISSOR_TEST ) );
-		GL_CALL( glBindFramebuffer( GL_READ_FRAMEBUFFER, *req_src_id->result ) );
-		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, *req_dst_id->result ) );
+		GLuint	src_fb	= *req_src_id->result;
+		GLuint	dst_fb	= *req_dst_id->result;
 
-		GL_CALL( glReadBuffer( GL_COLOR_ATTACHMENT0 ) );
-		GL_CALL( glDrawBuffer( GL_COLOR_ATTACHMENT0 ) );
+		GL_CALL( glDisable( GL_SCISSOR_TEST ) );
+		GL_CALL( glBindFramebuffer( GL_READ_FRAMEBUFFER, src_fb ) );
+		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, dst_fb ) );
+
+		GL_CALL( glReadBuffer( src_fb ? GL_COLOR_ATTACHMENT0 : GL_BACK ) );
+		GL_CALL( glDrawBuffer( dst_fb ? GL_COLOR_ATTACHMENT0 : GL_BACK ) );
 		
 		const GLenum	filter	= data.linearFilter ? GL_LINEAR : GL_NEAREST;
 

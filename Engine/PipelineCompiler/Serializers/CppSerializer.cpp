@@ -957,7 +957,7 @@ namespace PipelineCompiler
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
-			str << name << ".ArrayGLSLBin({ " << ToString(StringCRef( (const char*)shaderSrc.ptr() )) << " });\n";
+			str << name << ".ArrayGLSLBin({ " << ToString(ArrayCRef<ubyte>::From( shaderSrc )) << " });\n";
 		return str;
 	}
 	
@@ -1029,6 +1029,72 @@ namespace PipelineCompiler
 	{
 		TODO("");
 		return "";
+	}
+	
+/*
+=================================================
+	ShaderBinCL
+=================================================
+*/
+	String  CppSerializer::ShaderBinCL (StringCRef name, BinArrayCRef shaderSrc) const
+	{
+		String	str;
+		if ( not shaderSrc.Empty() )
+			str << name << ".ArrayCLBin({ " << ToString(ArrayCRef<ubyte>::From( shaderSrc )) << " });\n";
+		return str;
+	}
+	
+/*
+=================================================
+	ShaderSrcCL
+=================================================
+*/
+	String  CppSerializer::ShaderSrcCL (StringCRef name, BinArrayCRef shaderSrc) const
+	{
+		String	str;
+		if ( not shaderSrc.Empty() )
+			str << name << ".StringCL( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr() )) << " );\n";
+		return str;
+	}
+	
+/*
+=================================================
+	ShaderFileSrcCL
+=================================================
+*/
+	String  CppSerializer::ShaderFileSrcCL (StringCRef name, BinArrayCRef shaderSrc) const
+	{
+		TODO("");
+		return "";
+	}
+	
+/*
+=================================================
+	ShaderFileBinCL
+=================================================
+*/
+	String  CppSerializer::ShaderFileBinCL (StringCRef name, BinArrayCRef shaderSrc) const
+	{
+		TODO("");
+		return "";
+	}
+	
+/*
+=================================================
+	ShaderSrcCPP
+=================================================
+*/
+	String  CppSerializer::ShaderSrcCPP (StringCRef name, BinArrayCRef shaderSrc) const
+	{
+		String	str;
+		if ( not shaderSrc.Empty() )
+		{
+			str << name << ".FuncSW( LAMBDA() (const SWShaderLang::SWShaderHelper &helper)\n"
+				<< "{\n"
+				<< StringCRef( (const char*)shaderSrc.ptr() )
+				<< "\n} );\n";
+		}
+		return str;
 	}
 
 /*

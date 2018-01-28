@@ -867,7 +867,7 @@ namespace GXTypes
 		if ( pos >= Length() or count == 0 )
 			RET_VOID;
 		
-		if ( pos + count > _length )	// TODO: check overflow
+		if ( count > _length or pos + count > _length )
 			count = _length - pos;
 
 		_length -= count;

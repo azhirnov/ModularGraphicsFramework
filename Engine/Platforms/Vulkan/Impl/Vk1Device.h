@@ -60,10 +60,10 @@ namespace PlatformVK
 	private:
 		class Vk1SystemFramebuffer;
 
-		struct SwapChainBuffer : CompileTime::PODStruct
+		struct SwapChainBuffer : CompileTime::FastCopyable
 		{
-			vk::VkImage		image	= VK_NULL_HANDLE;
-			vk::VkImageView	view	= VK_NULL_HANDLE;
+			ModulePtr			module;
+			vk::VkImageView		view	= VK_NULL_HANDLE;
 		};
 
 		static const uint	MAX_SWAPCHAIN_SIZE = 8;
@@ -75,8 +75,6 @@ namespace PlatformVK
 
 		using ExtensionNames_t		= _ConstCharPtrBuffer_t;
 		using ValidationLayers_t	= _ConstCharPtrBuffer_t;
-
-		using uint2					= GX_STL::GXMath::uint2;
 
 
 	// variables
@@ -99,8 +97,7 @@ namespace PlatformVK
 		uint2							_surfaceSize;
 		bool							_vsync;
 		
-		vk::VkImage						_depthStencilImage;
-		vk::VkDeviceMemory				_depthStencilMemory;
+		ModulePtr						_depthStencilImage;
 		vk::VkImageView					_depthStencilView;
 
 		EPixelFormat::type				_colorPixelFormat;
@@ -231,17 +228,17 @@ namespace PlatformVK
 		void _GetSwapChainExtent (OUT vk::VkExtent2D &extent, const vk::VkSurfaceCapabilitiesKHR &surfaceCaps) const;
 		void _GetSurfaceTransform (OUT vk::VkSurfaceTransformFlagBitsKHR &transform, const vk::VkSurfaceCapabilitiesKHR &surfaceCaps) const;
 		void _GetSurfaceImageCount (OUT vk::uint32_t &minImageCount, const vk::VkSurfaceCapabilitiesKHR &surfaceCaps) const;
-		void _DeleteSwapchain (INOUT vk::VkSwapchainKHR &swapchain, SwapChainBuffers_t &buffers) const;
+		void _DeleteSwapchain (INOUT vk::VkSwapchainKHR &swapchain);
 
 		bool _CreateRenderPass ();
 		void _DeleteRenderPass ();
 
-		bool _CreateColorAttachment (MultiSamples samples, OUT SwapChainBuffers_t &imageBuffers) const;
+		bool _CreateColorAttachment (MultiSamples samples);
 		bool _CreateDepthStencilAttachment (EPixelFormat::type depthStencilFormat);
 		void _DeleteDepthStencilAttachment ();
 
-		bool _CreateFramebuffers (OUT Framebuffers_t &frameBuffers) const;
-		void _DeleteFramebuffers (INOUT Framebuffers_t &frameBuffers) const;
+		bool _CreateFramebuffers ();
+		void _DeleteFramebuffers ();
 
 		bool _CreateSemaphores ();
 		void _DestroySemaphores ();

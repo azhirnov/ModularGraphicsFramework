@@ -12,19 +12,19 @@ static void Test_AlignedImageSize ()
 {
 	BytesU	size;
 	
-	size = ImageUtils::AlignedDataSize( uint3( 2, 2, 1 ), BitsU(8).ToBytes(), BytesU(1) );
+	size = GXImageUtils::AlignedDataSize( uint3( 2, 2, 1 ), BitsU(8).ToBytes(), BytesU(1) );
 	TEST( size == 2*2 );
 
-	size = ImageUtils::AlignedDataSize( uint3( 2, 2, 1 ), BitsU(8).ToBytes(), BytesU(4) );
+	size = GXImageUtils::AlignedDataSize( uint3( 2, 2, 1 ), BitsU(8).ToBytes(), BytesU(4) );
 	TEST( size == 4*2 );
 	
-	size = ImageUtils::AlignedDataSize( uint3( 4, 2, 1 ), BitsU(8).ToBytes(), BytesU(4) );
+	size = GXImageUtils::AlignedDataSize( uint3( 4, 2, 1 ), BitsU(8).ToBytes(), BytesU(4) );
 	TEST( size == 4*2 );
 	
-	size = ImageUtils::AlignedDataSize( uint3( 2, 4, 1 ), BitsU(8).ToBytes(), BytesU(4) );
+	size = GXImageUtils::AlignedDataSize( uint3( 2, 4, 1 ), BitsU(8).ToBytes(), BytesU(4) );
 	TEST( size == 4*4 );
 	
-	size = ImageUtils::AlignedDataSize( uint3( 3, 2, 1 ), BitsU(8*3).ToBytes(), BytesU(4) );
+	size = GXImageUtils::AlignedDataSize( uint3( 3, 2, 1 ), BitsU(8*3).ToBytes(), BytesU(4) );
 	TEST( size == 4*2*3 );
 
 	// assert:
@@ -37,7 +37,7 @@ static void Test_ImageConverter ()
 	R8u		src[4] = { R8u( 0xFF ), R8u( 0x1F ), R8u( 0x3F ), R8u( 0x07 ) };
 	R32u	dst[4] = { R32u( 1 ), R32u( 2 ), R32u( 3 ), R32u( 4 ) };
 
-	ImageUtils::Copy( uint3( 2, 2, 1 ), src, dst );
+	GXImageUtils::Copy( uint3( 2, 2, 1 ), src, dst );
 
 	TEST( dst[0].r == 0xFF );
 	TEST( dst[1].r == 0x1F );
@@ -51,8 +51,8 @@ static void Test_ImageConverter ()
 	//	0		0		0		0
 	R32i	img[4*4] = {};
 
-	ImageUtils::CopyPart( uint3( 2, 2, 0 ), uint3( 0 ), src,
-						  uint3( 4, 4, 0 ), uint3( 1, 1, 0 ), img );
+	GXImageUtils::CopyPart( uint3( 2, 2, 0 ), uint3( 0 ), src,
+						    uint3( 4, 4, 0 ), uint3( 1, 1, 0 ), img );
 	
 	TEST( img[5].r == 0xFF );
 	TEST( img[6].r == 0x1F );
@@ -66,8 +66,8 @@ static void Test_ImageConverter ()
 	//	0		0		0		0
 	/*RGBA4_UNorm	pic[4*4] = {};
 
-	ImageUtils::CopyPart( uint3( 2, 2, 0 ), uint3( 0 ), src,
-						  uint3( 4, 4, 0 ), uint3( 2, 2, 0 ), pic );
+	GXImageUtils::CopyPart( uint3( 2, 2, 0 ), uint3( 0 ), src,
+						    uint3( 4, 4, 0 ), uint3( 2, 2, 0 ), pic );
 	
 	TEST( pic[5].bits.r == 0xFF );
 	TEST( pic[6].bits.r == 0x1F );
@@ -80,8 +80,8 @@ static void Test_ImageConverter ()
 	//	0	  0xFF	  0xFF		0
 	//	0		0		0		0
 	ZeroMem( img );
-	ImageUtils::Fill( uint3( 2, 2, 0 ), RGBA8u( 0xFF, 0, 0, 0 ),
-					  uint3( 1, 1, 0 ), uint3( 4, 4, 0 ), img );
+	GXImageUtils::Fill( uint3( 2, 2, 0 ), RGBA8u( 0xFF, 0, 0, 0 ),
+					    uint3( 1, 1, 0 ), uint3( 4, 4, 0 ), img );
 	
 	TEST( img[5].r == 0xFF );
 	TEST( img[6].r == 0xFF );

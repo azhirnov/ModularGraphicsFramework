@@ -59,8 +59,8 @@
 
 		Self &			operator ++ ();
 		Self &			operator -- ();
-		Self			operator ++ (int) const;
-		Self			operator -- (int) const;
+		Self			operator ++ (int);
+		Self			operator -- (int);
 
 
 		// binary operators
@@ -126,22 +126,22 @@
 		Col_t const &	Column (uint i) const;
 
 		template <usize nA>
-		static Self	FromEuler (const Vec<T,nA,U> &a);
+		static Self	FromEuler (const Vec<Radians<T>,nA,U> &a);
 
 		template <usize nC, usize nR, usize nA>
-		static Self	FromEuler (const Vec<T,nA,U> &a);
+		static Self	FromEuler (const Vec<Radians<T>,nA,U> &a);
 
 		template <usize nC, usize nR>
-		static Self	RotationX (const T& a);
-		static Self	RotationX (const T& a);
+		static Self	RotationX (const Radians<T>& a);
+		static Self	RotationX (const Radians<T>& a);
 		
 		template <usize nC, usize nR>
-		static Self	RotationY (const T& a);
-		static Self	RotationY (const T& a);
+		static Self	RotationY (const Radians<T>& a);
+		static Self	RotationY (const Radians<T>& a);
 		
 		template <usize nC, usize nR>
-		static Self	RotationZ (const T& a);
-		static Self	RotationZ (const T& a);
+		static Self	RotationZ (const Radians<T>& a);
+		static Self	RotationZ (const Radians<T>& a);
 
 		template <usize nC, usize nR>
 		static Self	FromQuat (const Quaternion<T,U> &q);
@@ -219,7 +219,7 @@
 
 
 	template <typename T, ulong U>
-	inline T &  Matrix<T,C,R,U>::operator [] (usize i)
+	inline CHECKRES(T &)  Matrix<T,C,R,U>::operator [] (usize i)
 	{
 		ASSUME( i < Count() );
 		return ptr()[i];
@@ -227,7 +227,7 @@
 
 		
 	template <typename T, ulong U>
-	inline T const &  Matrix<T,C,R,U>::operator [] (usize i)	const
+	inline CHECKRES(T const &)  Matrix<T,C,R,U>::operator [] (usize i) const
 	{
 		ASSUME( i < Count() );
 		return ptr()[i];
@@ -235,7 +235,7 @@
 
 		
 	template <typename T, ulong U>
-	inline typename Matrix<T,C,R,U>::Col_t &  Matrix<T,C,R,U>::operator () (usize c)
+	inline CHECKRES(typename Matrix<T,C,R,U>::Col_t &)  Matrix<T,C,R,U>::operator () (usize c)
 	{
 		ASSUME( c < NumColumns() );
 		return *PointerCast< Col_t >( _v[c] );
@@ -243,7 +243,7 @@
 
 		
 	template <typename T, ulong U>
-	inline typename Matrix<T,C,R,U>::Col_t const &  Matrix<T,C,R,U>::operator () (usize c) const
+	inline CHECKRES(typename Matrix<T,C,R,U>::Col_t const &)  Matrix<T,C,R,U>::operator () (usize c) const
 	{
 		ASSUME( c < NumColumns() );
 		return *PointerCast< Col_t >( _v[c] );
@@ -251,7 +251,7 @@
 		
 
 	template <typename T, ulong U>
-	inline T &  Matrix<T,C,R,U>::operator () (usize c, usize r)
+	inline CHECKRES(T &)  Matrix<T,C,R,U>::operator () (usize c, usize r)
 	{
 		ASSUME( r < NumRows() and c < NumColumns() );
 		return _v[c][r];
@@ -259,7 +259,7 @@
 
 		
 	template <typename T, ulong U>
-	inline T const &  Matrix<T,C,R,U>::operator () (usize c, usize r) const
+	inline CHECKRES(T const &)  Matrix<T,C,R,U>::operator () (usize c, usize r) const
 	{
 		ASSUME( r < NumRows() and c < NumColumns() );
 		return _v[c][r];
@@ -267,7 +267,7 @@
 	
 		
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::operator -  () const
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::operator - () const
 	{
 		Self	ret;
 		FOR( i, *this )		ret[i] = -(*this)[i];
@@ -276,7 +276,7 @@
 
 		
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::operator ~  () const
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::operator ~ () const
 	{
 		Self	ret;
 		FOR( i, *this )		ret[i] = ~(*this)[i];
@@ -285,7 +285,7 @@
 
 		
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::operator !  () const
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::operator ! () const
 	{
 		Self	ret;
 		FOR( i, *this )		ret[i] = not (*this)[i];
@@ -310,7 +310,7 @@
 
 		
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::operator ++ (int) const
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::operator ++ (int)
 	{
 		Self	ret;
 		++(*this);
@@ -319,7 +319,7 @@
 
 		
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::operator -- (int) const
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::operator -- (int)
 	{
 		Self	ret;
 		--(*this);
@@ -328,7 +328,7 @@
 
 		
 	template <typename T, ulong U>
-	inline bool  Matrix<T,C,R,U>::operator == (const Self &right) const
+	inline CHECKRES(bool)  Matrix<T,C,R,U>::operator == (const Self &right) const
 	{
 		bool			ret = true;
 		FOR( i, *this )	ret &= (*this)[i] == right[i];
@@ -337,7 +337,7 @@
 
 		
 	template <typename T, ulong U>
-	inline bool  Matrix<T,C,R,U>::operator != (const Self &right) const
+	inline CHECKRES(bool)  Matrix<T,C,R,U>::operator != (const Self &right) const
 	{
 		return not ( *this == right );
 	}
@@ -353,7 +353,7 @@
 		
 	template <typename T, ulong U>
 	template <usize Q>
-	inline Matrix<T,Q,R,U>  Matrix<T,C,R,U>::operator *  (const Matrix<T,Q,C,U> &right) const
+	inline CHECKRES(Matrix<T,Q,R,U>)  Matrix<T,C,R,U>::operator *  (const Matrix<T,Q,C,U> &right) const
 	{
 		Matrix<T,Q,R>	ret;
 		TMatMul<T,C,R,Q>( ret.ref(), ref(), right.ref() );
@@ -362,7 +362,7 @@
 
 		
 	template <typename T, ulong U>
-	inline typename Matrix<T,C,R,U>::Col_t  Matrix<T,C,R,U>::operator *  (const Row_t &v) const
+	inline CHECKRES(typename Matrix<T,C,R,U>::Col_t)  Matrix<T,C,R,U>::operator *  (const Row_t &v) const
 	{
 		Col_t	ret;
 		
@@ -375,7 +375,7 @@
 	
 		
 	template <typename T, ulong U>
-	inline typename Matrix<T,C,R,U>::Row_t  Matrix<T,C,R,U>::Row (uint r) const
+	inline CHECKRES(typename Matrix<T,C,R,U>::Row_t)  Matrix<T,C,R,U>::Row (uint r) const
 	{
 		ASSERT( r < R );
 
@@ -389,7 +389,7 @@
 	
 
 	template <typename T, ulong U>
-	inline typename Matrix<T,C,R,U>::Col_t const &  Matrix<T,C,R,U>::Column (uint c) const
+	inline CHECKRES(typename Matrix<T,C,R,U>::Col_t const &)  Matrix<T,C,R,U>::Column (uint c) const
 	{
 		ASSERT( c < C );
 		return *PointerCast< Cols_t >( this )[c];
@@ -398,76 +398,76 @@
 	
 	template <typename T, ulong U>
 	template <usize nA>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::FromEuler (const Vec<T,nA,U> &a)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::FromEuler (const Vec<Radians<T>,nA,U> &a)
 	{
-		return FromEuler<C,R>( a );
+		return FromEuler<C,R>( a.To<Vec<T,nA,U>>() );
 	}
 	
 	
 	template <typename T, ulong U>
 	template <usize nC, usize nR, usize nA>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::FromEuler (const Vec<T,nA,U> &a)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::FromEuler (const Vec<Radians<T>,nA,U> &a)
 	{
 		Self	ret;
-		MatFromEuler::Get< nC, nR >( ret._v, a );
+		MatFromEuler::Get< nC, nR >( ret._v, a.To<Vec<T,nA,U>>() );
 		return ret;
 	}
 	
 
 	template <typename T, ulong U>
 	template <usize nC, usize nR>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationX (const T& a)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::RotationX (const Radians<T>& a)
 	{
 		Self	ret;
-		MatRotationX::Get< nC, nR >( ret._v, a );
+		MatRotationX::Get< nC, nR >( ret._v, T(a) );
 		return ret;
 	}
 
 	
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationX (const T& a)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::RotationX (const Radians<T>& a)
 	{
-		return RotationX< C, R >( a );
+		return RotationX< C, R >( T(a) );
 	}
 		
 	
 	template <typename T, ulong U>
 	template <usize nC, usize nR>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationY (const T& a)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::RotationY (const Radians<T>& a)
 	{
 		Self	ret;
-		MatRotationY::Get< nC, nR >( ret._v, a );
+		MatRotationY::Get< nC, nR >( ret._v, T(a) );
 		return ret;
 	}
 
 	
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationY (const T& a)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::RotationY (const Radians<T>& a)
 	{
-		return RotationY< C, R >( a );
+		return RotationY< C, R >( T(a) );
 	}
 		
 	
 	template <typename T, ulong U>
 	template <usize nC, usize nR>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationZ (const T& a)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::RotationZ (const Radians<T>& a)
 	{
 		Self	ret;
-		MatRotationZ::Get< nC, nR >( ret._v, a );
+		MatRotationZ::Get< nC, nR >( ret._v, T(a) );
 		return ret;
 	}
 
 	
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::RotationZ (const T& a)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::RotationZ (const Radians<T>& a)
 	{
-		return RotationZ< C, R >( a );
+		return RotationZ< C, R >( T(a) );
 	}
 	
 
 	template <typename T, ulong U>
 	template <usize nC, usize nR>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::FromQuat (const Quaternion<T,U> &q)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::FromQuat (const Quaternion<T,U> &q)
 	{
 		Self	ret;
 		MatFromQuat::Get< nC, nR >( ret._v, q );
@@ -476,14 +476,14 @@
 	
 
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::FromQuat (const Quaternion<T,U> &q)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::FromQuat (const Quaternion<T,U> &q)
 	{
 		return FromQuat< C, R >( q );
 	}
 	
 
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Identity ()
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::Identity ()
 	{
 		Self	ret;
 		MatIdentity::Get( ret._v );
@@ -492,7 +492,7 @@
 
 	
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Zero ()
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::Zero ()
 	{
 		Self	ret;
 		UnsafeMem::ZeroMem( &ret, sizeof(ret) );
@@ -501,7 +501,7 @@
 	
 
 	template <typename T, ulong U>
-	inline Matrix<T,R,C,U>  Matrix<T,C,R,U>::Transpose () const
+	inline CHECKRES(Matrix<T,R,C,U>)  Matrix<T,C,R,U>::Transpose () const
 	{
 		Transposed_t	ret;
 		MatTranspose::Get( ret._v, _v );
@@ -510,7 +510,7 @@
 
 	
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Scale (const Scale_t &s)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::Scale (const Scale_t &s)
 	{
 		Self	ret;
 		MatScale::Get( ret._v, s );
@@ -519,7 +519,7 @@
 	
 
 	template <typename T, ulong U>
-	inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Translate (const Col3_t &t)
+	inline CHECKRES(Matrix<T,C,R,U>)  Matrix<T,C,R,U>::Translate (const Col3_t &t)
 	{
 		Self	ret;
 		MatTranslate::Get( ret._v, t );
@@ -529,7 +529,7 @@
 	
 	template <typename T, ulong U>
 	template <typename B>
-	inline Matrix<B,C,R,U>  Matrix<T,C,R,U>::Convert () const
+	inline CHECKRES(Matrix<B,C,R,U>)  Matrix<T,C,R,U>::Convert () const
 	{
 		Matrix<B,C,R,U>	ret;
 		FOR( i, *this )	ret[i] = B( (*this)[i] );
@@ -539,7 +539,7 @@
 
 	template <typename T, ulong U>
 	template <typename B>
-	inline B  Matrix<T,C,R,U>::To () const
+	inline CHECKRES(B)  Matrix<T,C,R,U>::To () const
 	{
 		STATIC_ASSERT( typename B::_is_matrix(true), "type is not matrix type" );
 

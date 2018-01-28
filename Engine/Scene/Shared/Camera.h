@@ -107,7 +107,7 @@ namespace SceneMsg
 
 
 	// variables
-		Out< States_t >	result;
+		Out< States_t >		result;
 	};
 
 

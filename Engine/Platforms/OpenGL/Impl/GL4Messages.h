@@ -46,7 +46,6 @@ namespace GpuMsg
 	{
 	// types
 		using EImageAspect	= Platforms::EImageAspect;
-		using uint2			= GXMath::uint2;
 
 		struct Region : CompileTime::FastCopyable
 		{
@@ -212,7 +211,7 @@ namespace GpuMsg
 
 
 	//
-	// GL Fence Sync
+	// Fence Sync
 	//
 	struct GLFenceSync
 	{
@@ -220,15 +219,25 @@ namespace GpuMsg
 		Out< gl::GLsync >		result;
 	};
 
-	struct GetGLFence
+	/*struct GetGLFence
 	{
 		Platforms::GpuFenceId	fenceId;
+		Out< gl::GLsync >		result;
+	};*/
+
+
+	//
+	// Event
+	//
+	struct GetGLEvent
+	{
+		Platforms::GpuEventId	eventId;
 		Out< gl::GLsync >		result;
 	};
 
 
 	//
-	// GL Semaphore
+	// Semaphore
 	//
 	struct GLSemaphoreEnqueue
 	{

@@ -17,7 +17,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline T InvLerp (const T& x, const T& y, const T& interpolated)
+	inline CHECKRES(T)  InvLerp (const T& x, const T& y, const T& interpolated)
 	{
 		return (interpolated - x) / (y - x);
 	}
@@ -30,7 +30,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, typename B>
-	inline T Lerp (const T& x, const T& y, const B& factor)
+	inline CHECKRES(T)  Lerp (const T& x, const T& y, const B& factor)
 	{
 		//return T(factor) * (y - x) + x;
 		return x * (T(1) - T(factor)) + y * T(factor);
@@ -44,7 +44,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, typename B>
-	inline T IncLerp (const T& x1, const T& endX, const B& factor1, const B& factor)
+	inline CHECKRES(T)  IncLerp (const T& x1, const T& endX, const B& factor1, const B& factor)
 	{
 		/*
 		x1 = Lerp( startX, endX, factor1 ) = startX * (1 - factor1) + endX * factor1;
@@ -65,13 +65,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T, typename B>
-	inline T BiLerp (const T& v0, const T& v1, const T& v2, const T& v3, const B& factorX, const B& factorY)
+	inline CHECKRES(T)  BiLerp (const T& v0, const T& v1, const T& v2, const T& v3, const B& factorX, const B& factorY)
 	{
 		return Lerp( Lerp( v0, v3, factorX ), Lerp( v1, v2, factorX ), factorY );
 	}
 
 	template <typename T, typename B>
-	inline T BiLerp (const T& v0, const T& v1, const T& v2, const T& v3, const Vec<B,2> &factor)
+	inline CHECKRES(T)  BiLerp (const T& v0, const T& v1, const T& v2, const T& v3, const Vec<B,2> &factor)
 	{
 		return BiLerp( v0, v1, v2, v3, factor.x, factor.y );
 	}

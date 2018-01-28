@@ -29,7 +29,8 @@ namespace PlatformCL
 											GpuMsg::SetCommandBufferState,
 											GpuMsg::GetCommandBufferState,
 											GpuMsg::SetCommandBufferDependency,
-											GpuMsg::SetCLCommandBufferQueue
+											GpuMsg::SetCLCommandBufferQueue,
+											GpuMsg::ExecuteCLCommandBuffer
 										> >;
 
 		using SupportedEvents_t		= CL2BaseModule::SupportedEvents_t::Append< MessageListFrom<
@@ -84,6 +85,7 @@ namespace PlatformCL
 		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
 		bool _SetCommandBufferState (const Message< GpuMsg::SetCommandBufferState > &);
 		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
+		bool _ExecuteCLCommandBuffer (const Message< GpuMsg::ExecuteCLCommandBuffer > &);
 		
 	private:
 		bool _Submit ();
@@ -148,10 +150,11 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2CommandBuffer::_SetCommandBufferDependency );
 		_SubscribeOnMsg( this, &CL2CommandBuffer::_SetCommandBufferState );
 		_SubscribeOnMsg( this, &CL2CommandBuffer::_GetCommandBufferState );
+		_SubscribeOnMsg( this, &CL2CommandBuffer::_ExecuteCLCommandBuffer );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, CLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 	
 /*
@@ -197,9 +200,9 @@ namespace PlatformCL
 		size_t		size	 = 0;
 		usize3		size3;
 
-		CL_CALL( clGetDeviceInfo( GetCLDevice(), CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size), &size, null ) );
-		CL_CALL( clGetDeviceInfo( GetCLDevice(), CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size3), size3.ptr(), null ) );
-		CL_CALL( clGetDeviceInfo( GetCLDevice(), CL_DEVICE_ADDRESS_BITS, sizeof(value32), &value32, null ) );
+		CL_CALL( clGetDeviceInfo( GetCLDevice(), CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size), OUT &size, null ) );
+		CL_CALL( clGetDeviceInfo( GetCLDevice(), CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size3), OUT size3.ptr(), null ) );
+		CL_CALL( clGetDeviceInfo( GetCLDevice(), CL_DEVICE_ADDRESS_BITS, sizeof(value32), OUT &value32, null ) );
 		
 		_maxInvocations		= ulong( size );
 		_maxLocalGroupSize	= ulong3( size3 );
@@ -319,6 +322,17 @@ namespace PlatformCL
 		CHECK_ERR( _recordingState == ERecordingState::Executable );
 
 		_ChangeState( ERecordingState::Pending );
+		return true;
+	}
+	
+/*
+=================================================
+	_ExecuteCLCommandBuffer
+=================================================
+*/
+	bool CL2CommandBuffer::_ExecuteCLCommandBuffer (const Message< GpuMsg::ExecuteCLCommandBuffer > &)
+	{
+		CHECK_ERR( _recordingState == ERecordingState::Pending );
 
 		FOR( i, _commands )
 		{
@@ -354,7 +368,15 @@ namespace PlatformCL
 	bool CL2CommandBuffer::_BeginRecording ()
 	{
 		CHECK_ERR( _recordingState == ERecordingState::Initial or
-				  (_recordingState == ERecordingState::Executable and _descr.implicitResetable) );
+				  ((_recordingState == ERecordingState::Executable or
+					_recordingState == ERecordingState::Pending) and
+				    _descr.flags[ECmdBufferCreate::ImplicitResetable]) );
+
+		if ( _recordingState == ERecordingState::Pending )
+		{
+			_resources.Clear();
+			_commands.Clear();
+		}
 
 		_ChangeState( ERecordingState::Recording );
 		return true;
@@ -457,16 +479,14 @@ namespace PlatformCL
 			CHECK( _resourceTable->Send< GpuMsg::CLPipelineResourceTableApply >({ _kernelId }) );
 		
 		CL_CALL( clEnqueueNDRangeKernel(
-					GetCommandQueue(),
-					_kernelId,
-					3,
-					null,
-					global_size.ptr(),
-					_kernelLocalSize.ptr(),
-					0, null,
-					null ) );
-
-		CL_CALL( clEnqueueBarrierWithWaitList( GetCommandQueue(), 0, null, null ) );
+						GetCommandQueue(),
+						_kernelId,
+						3,
+						null,
+						global_size.ptr(),
+						_kernelLocalSize.ptr(),
+						0, null,
+						null ) );
 		return true;
 	}
 	
@@ -479,18 +499,10 @@ namespace PlatformCL
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdExecute >();
 		
-		Message< GpuMsg::SetCommandBufferState >	pending_state{ GpuMsg::SetCommandBufferState::EState::Pending };
-		Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
+		ModuleUtils::Send( data.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
+		ModuleUtils::Send( data.cmdBuffers, Message<GpuMsg::ExecuteCLCommandBuffer>{} );
+		//ModuleUtils::Send( data.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Completed });
 
-		FOR( i, data.cmdBuffers ) {
-			data.cmdBuffers[i]->Send( pending_state );
-		}
-
-		CL_CALL( clEnqueueBarrierWithWaitList( GetCommandQueue(), 0, null, null ) );	// TODO: use fence
-		
-		FOR( i, data.cmdBuffers ) {
-			data.cmdBuffers[i]->Send( completed_state );
-		}
 		return true;
 	}
 	
@@ -758,7 +770,7 @@ namespace PlatformCL
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdPipelineBarrier >();
 		
-		CL_CALL( clEnqueueBarrierWithWaitList( GetCommandQueue(), 0, null, null ) );
+		CL_CALL( clEnqueueMarkerWithWaitList( GetCommandQueue(), 0, null, null ) );
 		return true;
 	}
 

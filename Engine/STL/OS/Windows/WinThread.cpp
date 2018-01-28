@@ -58,7 +58,7 @@ namespace OS
 	IsValid
 =================================================
 */
-	bool CurrentThread::IsValid () const
+	CHECKRES(bool) CurrentThread::IsValid () const
 	{
 		return _thread.IsNotNull<HANDLE>();
 	}
@@ -70,7 +70,7 @@ namespace OS
 */
 	bool CurrentThread::SetPriority (EThreadPriority::type priority) const
 	{
-		return SetThreadPriority( _thread.Get<HANDLE>(), priority ) == TRUE;
+		return SetThreadPriority( _thread.Get<HANDLE>(), priority ) != FALSE;
 	}
 	
 /*
@@ -78,7 +78,7 @@ namespace OS
 	GetCurrentThreadId
 =================================================
 */
-	usize CurrentThread::GetCurrentThreadId ()
+	CHECKRES(usize) CurrentThread::GetCurrentThreadId ()
 	{
 		return ::GetCurrentThreadId();
 	}
@@ -209,7 +209,7 @@ namespace OS
 
 		if ( IsValid() )
 		{
-			ret		= ::CloseHandle( _thread.Get<HANDLE>() ) == TRUE;
+			ret		= ::CloseHandle( _thread.Get<HANDLE>() ) != FALSE;
 			_thread = null;
 			_id		= 0;
 		}
@@ -241,7 +241,7 @@ namespace OS
 	{
 		_id = 0;
 		ASSERT( IsValid() );
-		return IsValid() and ::TerminateThread( _thread.Get<HANDLE>(), _GetExitCode() ) == TRUE;
+		return IsValid() and ::TerminateThread( _thread.Get<HANDLE>(), _GetExitCode() ) != FALSE;
 	}
 	
 /*

@@ -9,6 +9,7 @@
 #include "Engine/STL/Math/Interpolations.h"
 #include "Engine/STL/OS/OSLowLevel.h"
 #include "Engine/STL/Types/ScopeSetter.h"
+#include "Engine/STL/Algorithms/FileAddress.h"
 
 namespace GX_STL
 {

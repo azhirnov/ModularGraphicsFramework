@@ -9,6 +9,9 @@ namespace Engine
 {
 namespace Graphics
 {
+	using namespace Engine::Platforms;
+
+
 
 	//
 	// Batch Renderer

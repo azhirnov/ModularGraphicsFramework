@@ -57,6 +57,13 @@ namespace PipelineCompiler
 		virtual String	ShaderSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc) const = 0;
 		virtual String	ShaderFileSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc) const = 0;
 		virtual String	ShaderFileBinSPIRV (StringCRef name, BinArrayCRef shaderSrc) const = 0;
+		
+		virtual String	ShaderBinCL (StringCRef name, BinArrayCRef shaderSrc) const = 0;
+		virtual String	ShaderSrcCL (StringCRef name, BinArrayCRef shaderSrc) const = 0;
+		virtual String	ShaderFileSrcCL (StringCRef name, BinArrayCRef shaderSrc) const = 0;
+		virtual String	ShaderFileBinCL (StringCRef name, BinArrayCRef shaderSrc) const = 0;
+		
+		virtual String	ShaderSrcCPP (StringCRef name, BinArrayCRef shaderSrc) const = 0;
 
 		virtual String	GetSourceFileExt () const = 0;
 		virtual String	GetHeaderFileExt () const = 0;

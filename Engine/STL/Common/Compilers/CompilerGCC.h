@@ -104,7 +104,7 @@
 
 
 
-// C++ 11 features //
+// C++ 11/14/17 features //
 
 // constexpr
 #if COMPILER_VERSION >= 460
@@ -197,13 +197,13 @@
 
 
 // literal operator
-#if COMPILER_VERSION >= 500		// TODO: check version
+#if COMPILER_VERSION >= 470
 #	define	GX_LITERAL_OPERATOR_SUPPORTED	1
 #endif
 
 
 // notify compiler to generate error if function result unused
-#if COMPILER_VERSION >= 600	// TODO
+#if COMPILER_VERSION >= 700
 #	define GX_CHECK_RESULT					[[nodiscard]]
 #elif COMPILER_VERSION >= 400
 #	define GX_CHECK_RESULT					__attribute__ ((warn_unused_result))
@@ -213,7 +213,7 @@
 
 
 // if constexpr
-#if COMPILER_VERSION >= 600 // TODO
+#if COMPILER_VERSION >= 700
 #	define if_constexpr			if constexpr
 #else
 #	define if_constexpr			if
@@ -223,12 +223,6 @@
 // 'auto' keyword in template parameters
 #if COMPILER_VERSION >= 700
 #	define GX_AUTO_IN_TEMPLATE_SUPPORTED	1
-#endif
-
-
-// for many other features
-#if COMPILER_VERSION >= 500		// TODO: check version
-#	define GX_CPP11_SUPPORTED	1
 #endif
 
 //-------------------------------------------------------------------

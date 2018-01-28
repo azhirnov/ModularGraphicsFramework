@@ -72,7 +72,7 @@ namespace OS
 	TryLock
 =================================================
 */
-	bool CriticalSection::TryLock ()
+	CHECKRES(bool) CriticalSection::TryLock ()
 	{
 		ASSERT( IsValid() );
 		return ::TryEnterCriticalSection( &_crSection.Get<CRITICAL_SECTION>() ) != 0;
@@ -273,7 +273,7 @@ namespace OS
 	TryLockWrite
 =================================================
 */
-	bool ReadWriteSync::TryLockWrite ()
+	CHECKRES(bool) ReadWriteSync::TryLockWrite ()
 	{
 		return _TryAcquireSRWLockExclusive( &_srw.Get<SRWLOCK>() ) != 0;
 	}
@@ -303,7 +303,7 @@ namespace OS
 	TryLockRead
 =================================================
 */
-	bool ReadWriteSync::TryLockRead ()
+	CHECKRES(bool) ReadWriteSync::TryLockRead ()
 	{
 		return _TryAcquireSRWLockShared( &_srw.Get<SRWLOCK>() ) != 0;
 	}
@@ -514,7 +514,7 @@ namespace OS
 		ASSERT( IsValid() );
 		return _SleepConditionVariableCS( &_cv.Get<CONDITION_VARIABLE>(),
 										  &cs._crSection.Get<CRITICAL_SECTION>(),
-										  (uint) time.MilliSeconds() ) == TRUE;
+										  (uint) time.MilliSeconds() ) != FALSE;
 	}
 
 //-----------------------------------------------------------------------------
@@ -549,7 +549,7 @@ namespace OS
 */
 	bool SyncEvent::Signal ()
 	{
-		return ::SetEvent( _event.Get<HANDLE>() ) == TRUE;
+		return ::SetEvent( _event.Get<HANDLE>() ) != FALSE;
 	}
 	
 /*
@@ -559,7 +559,7 @@ namespace OS
 */
 	bool SyncEvent::Reset ()
 	{
-		return ::ResetEvent( _event.Get<HANDLE>() ) == TRUE;
+		return ::ResetEvent( _event.Get<HANDLE>() ) != FALSE;
 	}
 	
 /*
@@ -569,7 +569,7 @@ namespace OS
 */
 	bool SyncEvent::Pulse ()
 	{
-		return ::PulseEvent( _event.Get<HANDLE>() ) == TRUE;
+		return ::PulseEvent( _event.Get<HANDLE>() ) != FALSE;
 	}
 	
 /*
@@ -627,7 +627,7 @@ namespace OS
 
 		if ( IsValid() )
 		{
-			ret		= ::CloseHandle( _event.Get<HANDLE>() ) == TRUE;
+			ret		= ::CloseHandle( _event.Get<HANDLE>() ) != FALSE;
 			_event	= null;
 		}
 		return ret;
@@ -673,7 +673,7 @@ namespace OS
 	TryLock
 =================================================
 */
-	bool Semaphore::TryLock ()
+	CHECKRES(bool) Semaphore::TryLock ()
 	{
 		uint result = ::WaitForSingleObject( _sem.Get<HANDLE>(), 1 );
 		return result == WAIT_OBJECT_0;
@@ -708,7 +708,7 @@ namespace OS
 */
 	bool Semaphore::_Create (uint initialValue)
 	{
-		_sem = ::CreateSemaphore( null, initialValue, MaxValue<int>(), (const char *)null );
+		_sem = ::CreateSemaphoreA( null, initialValue, MaxValue<int>(), (const char *)null );
 		return IsValid();
 	}
 	

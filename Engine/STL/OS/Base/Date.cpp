@@ -309,7 +309,19 @@ namespace OS
 
 		dayOfMonth = dayOfYear;
 	}
-
+	
+/*
+=================================================
+	SetDay
+=================================================
+*/
+	Date&  Date::SetDay (uint value)
+	{
+		_dayOfMonth	= value;
+		_dayOfWeek	= _CalcDayOfWeek( _year, _month, _dayOfMonth );
+		_dayOfYear	= _CalcDayOfYear( _year, _month, _dayOfMonth );
+		return *this;
+	}
 
 }	// OS
 }	// GX_STL

@@ -15,7 +15,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline T  SafeLeftBitShift (const T& x, BitsU shift)
+	forceinline CHECKRES(T)  SafeLeftBitShift (const T& x, BitsU shift)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -25,7 +25,7 @@ namespace GXMath
 	}
 	
 	template <typename T, usize I, ulong U>
-	inline Vec<T,I,U>  SafeLeftBitShift (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
+	inline CHECKRES(Vec<T,I,U>)  SafeLeftBitShift (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeLeftBitShift( x[i], shift[i] );
@@ -33,7 +33,7 @@ namespace GXMath
 	}
 	
 	template <typename T, usize I, ulong U>
-	inline Vec<T,I,U>  SafeLeftBitShift (const Vec<T,I,U> &x, BitsU shift)
+	inline CHECKRES(Vec<T,I,U>)  SafeLeftBitShift (const Vec<T,I,U> &x, BitsU shift)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeLeftBitShift( x[i], shift );
@@ -46,7 +46,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline T  SafeRightBitShift (const T& x, BitsU shift)
+	forceinline CHECKRES(T)  SafeRightBitShift (const T& x, BitsU shift)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -56,7 +56,7 @@ namespace GXMath
 	}
 	
 	template <typename T, usize I, ulong U>
-	inline Vec<T,I,U>  SafeRightBitShift (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
+	inline CHECKRES(Vec<T,I,U>)  SafeRightBitShift (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeRightBitShift( x[i], shift[i] );
@@ -64,7 +64,7 @@ namespace GXMath
 	}
 	
 	template <typename T, usize I, ulong U>
-	inline Vec<T,I,U>  SafeRightBitShift (const Vec<T,I,U> &x, BitsU shift)
+	inline CHECKRES(Vec<T,I,U>)  SafeRightBitShift (const Vec<T,I,U> &x, BitsU shift)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeRightBitShift( x[i], shift );
@@ -91,7 +91,7 @@ namespace GXMath
 	}
 	
 	template <typename T>
-	forceinline T  BitRotateLeft (const T& x, BitsU shift)
+	forceinline CHECKRES(T)  BitRotateLeft (const T& x, BitsU shift)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -103,7 +103,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline T  BitRotateLeft (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
+	inline CHECKRES(T)  BitRotateLeft (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BitRotateLeft( x[i], shift[i] );
@@ -111,7 +111,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline T  BitRotateLeft (const Vec<T,I,U> &x, BitsU shift)
+	inline CHECKRES(T)  BitRotateLeft (const Vec<T,I,U> &x, BitsU shift)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BitRotateLeft( x[i], shift );
@@ -138,7 +138,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	forceinline T  BitRotateRight (const T& x, BitsU shift)
+	forceinline CHECKRES(T)  BitRotateRight (const T& x, BitsU shift)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -146,11 +146,11 @@ namespace GXMath
 
 		typedef CompileTime::NearUInt::FromType<T>	Unsigned_t;
 
-		return (T) _math_hidden_::_BitRotateRight( Unsigned_t(x), int(shift) );
+		return (T) _math_hidden_::_BitRotateRight( Unsigned_t(x), usize(shift) );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline T  BitRotateRight (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
+	inline CHECKRES(T)  BitRotateRight (const Vec<T,I,U> &x, const Vec<BitsU,I,U>& shift)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BitRotateRight( x[i], shift[i] );
@@ -158,7 +158,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline T  BitRotateRight (const Vec<T,I,U> &x, BitsU shift)
+	inline CHECKRES(T)  BitRotateRight (const Vec<T,I,U> &x, BitsU shift)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BitRotateRight( x[i], shift );
@@ -171,13 +171,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline T  ToBit (BitsU bitIndex)
+	forceinline CHECKRES(T)  ToBit (BitsU bitIndex)
 	{
 		return SafeLeftBitShift( T(1), (usize)bitIndex );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline Vec<T,I,U>  ToBit (const Vec<BitsU,I,U> &bitIndex)
+	inline CHECKRES(Vec<T,I,U>)  ToBit (const Vec<BitsU,I,U> &bitIndex)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ToBit<T>( bitIndex[i] );
@@ -220,13 +220,13 @@ namespace GXMath
 	}	// _math_hidden_
 
 	template <typename T>
-	forceinline T  ToMask (const BitsU lastBitIndex)
+	forceinline CHECKRES(T)  ToMask (const BitsU lastBitIndex)
 	{
 		return _math_hidden_::_ToMask<T>::Get( lastBitIndex );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline Vec<T,I,U>  ToMask (const Vec<BitsU,I,U> &lastBitIndex)
+	inline CHECKRES(Vec<T,I,U>)  ToMask (const Vec<BitsU,I,U> &lastBitIndex)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ToMask<T>( lastBitIndex[i] );
@@ -261,13 +261,13 @@ namespace GXMath
 	}	// _math_hidden_
 
 	template <typename T>
-	forceinline T  ToMask (const BitsU first, const BitsU last)
+	forceinline CHECKRES(T)  ToMask (const BitsU first, const BitsU last)
 	{
 		return _math_hidden_::_ToMask2<T>::Get( first, last );
 	}
 	
 	template <typename T, usize I, ulong U>
-	inline Vec<T,I,U>  ToMask (const Vec<BitsU,I,U> first, const Vec<BitsU,I,U> last)
+	inline CHECKRES(Vec<T,I,U>)  ToMask (const Vec<BitsU,I,U> first, const Vec<BitsU,I,U> last)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ToMask<T>( first[i], last[i] );
@@ -302,7 +302,7 @@ namespace GXMath
 	}	// _math_hidden_
 
 	template <typename T>
-	forceinline T  GetMaskForType (const T &)
+	forceinline CHECKRES(T)  GetMaskForType (const T &)
 	{
 		return _math_hidden_::_GetMaskForType< T >::Get();
 	}
@@ -338,7 +338,7 @@ namespace GXMath
 
 
 	template <typename T>
-	forceinline uint IntLog2 (const T& x)
+	forceinline CHECKRES(uint) IntLog2 (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -351,9 +351,9 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline Vec<uint,I,U>  IntLog2 (const Vec<T,I,U> &x)
+	inline CHECKRES(Vec<uint,I,U>)  IntLog2 (const Vec<T,I,U> &x)
 	{
-		Vec<uint,I,U>		ret;
+		Vec<uint,I,U>	ret;
 		FOR( i, ret )	ret[i] = IntLog2( x[i] );
 		return ret;
 	}
@@ -364,13 +364,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline BitsU BitScanReverse (const T& x)
+	forceinline CHECKRES(BitsU)  BitScanReverse (const T& x)
 	{
 		return BitsU( IntLog2( x ) );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline Vec<BitsU,I,U> BitScanReverse (const Vec<T,I,U> &x)
+	inline CHECKRES(Vec<BitsU,I,U>)  BitScanReverse (const Vec<T,I,U> &x)
 	{
 		Vec<BitsU,I,U>	ret;
 		FOR( i, x )		ret[i] = BitScanReverse( x[i] );
@@ -406,7 +406,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	forceinline BitsU BitScanForward (const T& x)
+	forceinline CHECKRES(BitsU)  BitScanForward (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -419,7 +419,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline Vec<BitsU,I,U> BitScanForward (const Vec<T,I,U> &x)
+	inline CHECKRES(Vec<BitsU,I,U>)  BitScanForward (const Vec<T,I,U> &x)
 	{
 		Vec<BitsU,I,U>	ret;
 		FOR( i, x )		ret[i] = BitScanForward( x[i] );
@@ -461,7 +461,7 @@ namespace GXMath
 	}
 	
 	template <typename T>
-	forceinline T ReverseBitOrder (const T& x)
+	forceinline CHECKRES(T)  ReverseBitOrder (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -474,7 +474,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline Vec<T,I,U> ReverseBitOrder (const Vec<T,I,U> &x)
+	inline CHECKRES(Vec<T,I,U>)  ReverseBitOrder (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>	ret;
 		FOR( i, x )	ret[i] = ReverseBitOrder( x[i] );

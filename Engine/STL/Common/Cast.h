@@ -145,6 +145,18 @@ namespace GXTypes
 		return _types_hidden_::_Cast< R, T, CompileTime::IsArithmetic<T> and CompileTime::IsArithmetic<R> >::Get( value );
 	}
 
+	template <typename R, typename T>
+	forceinline constexpr R Cast (const T* value)
+	{
+		return PointerCast< TypeTraits::RemovePointer<R> >( value );
+	}
+	
+	template <typename R, typename T>
+	forceinline constexpr R Cast (T* value)
+	{
+		return PointerCast< TypeTraits::RemovePointer<R> >( value );
+	}
+
 
 }	// GXTypes
 }	// GX_STL

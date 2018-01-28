@@ -664,7 +664,7 @@ namespace PipelineCompiler
 
 
 		// compile for C++
-		if ( convCfg.target[ EShaderDstFormat::CPP_Module ] )
+		if ( shader.type == EShader::Compute and convCfg.target[ EShaderDstFormat::CPP_Module ] )
 		{
 			source.Clear();
 			str.Clear();
@@ -690,7 +690,7 @@ namespace PipelineCompiler
 
 
 		// compile for CL
-		if ( convCfg.target[ EShaderDstFormat::CL_Source ] )
+		if ( shader.type == EShader::Compute and convCfg.target[ EShaderDstFormat::CL_Source ] )
 		{
 			source.Clear();
 			str.Clear();
@@ -735,6 +735,37 @@ namespace PipelineCompiler
 		ASSERT( not convCfg.target[ EShaderDstFormat::HLSL_Source ] );
 		ASSERT( not convCfg.target[ EShaderDstFormat::HLSL_Binary ] );
 		
+		return true;
+	}
+	
+/*
+=================================================
+	_ValidateShader
+----
+	pass 2
+=================================================
+*/
+	bool BasePipeline::_ValidateShader (EShader::type shaderType, const CompiledShader &compiled)
+	{
+		if ( not compiled.glsl.Empty() ) {
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::GLSL_Source, shaderType, compiled.glsl ) );
+		}
+		
+		if ( not compiled.glslBinary.Empty() ) {
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::GLSL_Binary, shaderType, compiled.glslBinary ) );
+		}
+		
+		if ( not compiled.spirv.Empty() ) {
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::SPIRV_Binary, shaderType, compiled.spirv ) );
+		}
+		
+		if ( not compiled.cl.Empty() ) {
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::CL_Source, shaderType, compiled.cl ) );
+		}
+
+		if ( not compiled.clBinary.Empty() ) {
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::CL_Binary, shaderType, compiled.clBinary ) );
+		}
 		return true;
 	}
 

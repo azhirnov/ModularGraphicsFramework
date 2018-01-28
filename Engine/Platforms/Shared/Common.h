@@ -26,10 +26,12 @@ namespace Platforms
 
 namespace GpuMsg {
 	using namespace ModuleMsg;
+	using namespace GX_STL::GXMath;
 }
 
 namespace OSMsg {
 	using namespace ModuleMsg;
+	using namespace GX_STL::GXMath;
 }
 
 namespace CreateInfo

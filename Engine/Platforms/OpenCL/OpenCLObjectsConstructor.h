@@ -12,6 +12,7 @@ namespace CreateInfo
 {
 	struct GpuThread;
 	struct GpuContext;
+	struct GpuSyncManager;
 	struct GpuImage;
 	struct GpuMemory;
 	struct GpuBuffer;
@@ -46,6 +47,7 @@ namespace Platforms
 		
 		static ModulePtr CreateOpenCLThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
 		static ModulePtr CreateOpenCLContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
+		static ModulePtr CreateCL2SyncManager (GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
 		static ModulePtr CreateCL2Image (GlobalSystemsRef, const CreateInfo::GpuImage &);
 		static ModulePtr CreateCL2Memory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
 		static ModulePtr CreateCL2Buffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);

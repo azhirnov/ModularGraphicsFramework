@@ -60,15 +60,9 @@ namespace Base
 		template <typename Class, typename Class2, typename T>
 		bool Subscribe (const TypeIdList& validTypes, Class *obj, bool (Class2::*) (const Message<T> &), bool checked = true);
 
-		template <typename MsgList, typename Class>
-		bool CopySubscriptions (const TypeIdList& validTypes, const SP<Class> &obj, const MessageHandler &other);
-		
-		template <typename MsgList, typename Class>
-		bool CopySubscriptions (const TypeIdList& validTypes, const WP<Class> &obj, const MessageHandler &other);
+		template <typename Class>
+		bool CopySubscriptions (const TypeIdList& validTypes, const SP<Class> &obj, const MessageHandler &other, ArrayCRef<TypeId> msgIds);
 
-		template <typename MsgList, typename Class>
-		bool CopySubscriptions (const TypeIdList& validTypes, Class *obj, const MessageHandler &other);
-		
 		template <typename Class>
 		void UnsubscribeAll (const SP<Class> &obj);
 
@@ -147,27 +141,15 @@ namespace Base
 	CopySubscriptions
 =================================================
 */
-	template <typename MsgList, typename Class>
-	forceinline bool MessageHandler::CopySubscriptions (const TypeIdList& validTypes, const SP<Class> &obj, const MessageHandler &other)
+	template <typename Class>
+	forceinline bool MessageHandler::CopySubscriptions (const TypeIdList& validTypes, const SP<Class> &obj, const MessageHandler &other, ArrayCRef<TypeId> msgIds)
 	{
-		return _CopySubscriptions( validTypes, ObjectPtr_t(obj), other, TypeIdList(UninitializedT<MsgList>{}) );
-	}
-
-	template <typename MsgList, typename Class>
-	forceinline bool MessageHandler::CopySubscriptions (const TypeIdList& validTypes, const WP<Class> &obj, const MessageHandler &other)
-	{
-		return _CopySubscriptions( validTypes, ObjectPtr_t(obj), other, TypeIdList(UninitializedT<MsgList>{}) );
-	}
-	
-	template <typename MsgList, typename Class>
-	forceinline bool MessageHandler::CopySubscriptions (const TypeIdList& validTypes, Class *obj, const MessageHandler &other)
-	{
-		return CopySubscriptions< MsgList >( validTypes, WP<Class>(obj), other );
+		return _CopySubscriptions( validTypes, ObjectPtr_t(obj), other, msgIds );
 	}
 	
 /*
 =================================================
-	CopySubscriptions
+	UnsubscribeAll
 =================================================
 */
 	template <typename Class>

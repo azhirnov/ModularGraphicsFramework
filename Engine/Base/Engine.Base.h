@@ -9,6 +9,7 @@
 #include "Engine/Base/Modules/ModuleUtils.h"
 
 #include "Engine/Base/Tasks/TaskModule.h"
+#include "Engine/Base/Tasks/AsyncTask.h"
 
 #include "Engine/Base/Threads/ParallelThread.h"
 

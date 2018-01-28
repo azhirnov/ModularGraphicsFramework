@@ -8,6 +8,8 @@
 #include "Engine/STL/Types/VariantRef.h"
 #include "Engine/STL/Types/VariantCRef.h"
 
+#ifdef GX_UNRESTRICTED_UNIONS_SUPPORTED
+
 namespace GX_STL
 {
 namespace GXTypes
@@ -768,3 +770,5 @@ namespace GXTypes
 
 }	// GXTypes
 }	// GX_STL
+
+#endif	// GX_UNRESTRICTED_UNIONS_SUPPORTED

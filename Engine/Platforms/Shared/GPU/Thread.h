@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Common/Common.h"
+#include "Engine/Platforms/Shared/Common.h"
 #include "Engine/Platforms/Shared/GPU/Context.h"
 #include "Engine/Platforms/Shared/GPU/Sync.h"
 #include "Engine/Platforms/Shared/GPU/RenderPassEnums.h"
@@ -63,6 +63,9 @@ namespace GpuMsg
 	struct GetDeviceInfo
 	{
 		struct Info {
+			ModulePtr	gpuThread;			// current gpu thread		// TODO: remove?
+			ModulePtr	memManager;			// may be null				// TODO: remove?
+			ModulePtr	syncManager;		// may be null				// TODO: remove?
 			ModulePtr	renderPass;			// this is default render pass used for on screen rendering
 			uint		imageCount;			// count of images in swapchain
 		};
@@ -91,13 +94,17 @@ namespace GpuMsg
 		Semaphores_t		signalSemaphores;	// will be signaleed when command buffers have completed execution.
 
 	// methods
-		SubmitGraphicsQueueCommands ()  {}
+		SubmitGraphicsQueueCommands () : fence{Uninitialized} {}
 		explicit SubmitGraphicsQueueCommands (const ModulePtr &cmd, Fence_t fence = Uninitialized) : commands({ cmd }), fence( fence ) {}
 		explicit SubmitGraphicsQueueCommands (ArrayCRef< ModulePtr > list, Fence_t fence = Uninitialized) : commands( list ), fence( fence ) {}
 	};
 
 	struct SubmitComputeQueueCommands : SubmitGraphicsQueueCommands
-	{};
+	{
+		SubmitComputeQueueCommands () {}
+		explicit SubmitComputeQueueCommands (const ModulePtr &cmd, Fence_t fence = Uninitialized) : SubmitGraphicsQueueCommands( cmd, fence ) {}
+		explicit SubmitComputeQueueCommands (ArrayCRef< ModulePtr > list, Fence_t fence = Uninitialized) : SubmitGraphicsQueueCommands( list, fence ) {}
+	};
 
 
 	//
@@ -145,7 +152,18 @@ namespace GpuMsg
 	//
 	struct GetGraphicsSettings
 	{
-		Out< Platforms::GraphicsSettings >		result;
+		struct Settings : Platforms::GraphicsSettings
+		{
+		// variables
+			uint2		surfaceSize;
+
+		// methods
+			Settings (const Platforms::GraphicsSettings &gs, const uint2 &size) :
+				Platforms::GraphicsSettings(gs), surfaceSize(size)
+			{}
+		};
+
+		Out< Settings >		result;
 	};
 
 

@@ -6,6 +6,7 @@
 #include "Engine/PipelineCompiler/Shaders/DeserializedShader.h"
 
 class TIntermNode;
+struct TBuiltInResource;
 
 namespace glslang
 {
@@ -27,7 +28,7 @@ namespace PipelineCompiler
 	// types
 	public:
 		static const uint	GLSL_VERSION	= 450;
-		static const uint	GLSL_ES_VERSION	= 310;
+		static const uint	GLSL_ES_VERSION	= 320;
 		static const uint	HLSL_VERSION	= 1100;
 		static const uint	VULKAN_VERSION	= 100;
 		static const uint	SPIRV_VERSION	= 0x00001000;
@@ -79,6 +80,8 @@ namespace PipelineCompiler
 		bool Deserialize (EShaderSrcFormat::type shaderFmt, EShader::type shaderType, ArrayCRef<StringCRef> source, StringCRef entryPoint,
 						  OUT String &log, OUT DeserializedShader &result);
 
+		bool Validate (EShaderDstFormat::type shaderFmt, EShader::type shaderType, BinArrayCRef data);
+
 		static Ptr<ShaderCompiler>	Instance ();
 
 
@@ -95,7 +98,7 @@ namespace PipelineCompiler
 		
 		bool _OnCompilationFailed (EShader::type shaderType, EShaderSrcFormat::type fmt, ArrayCRef<StringCRef> source, INOUT String &log) const;
 
-		static void _GenerateResources (OUT struct TBuiltInResource& resources);
+		static void _GenerateResources (OUT TBuiltInResource& resources);
 		
 
 	// Replace types
@@ -138,6 +141,8 @@ namespace PipelineCompiler
 		bool _TranslateGXSLtoGLSL (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const;
 		bool _OptimizeGLSL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result) const;
 		bool _CompileGLSL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result) const;
+		bool _ValidateGLSLSource (EShader::type shaderType, StringCRef src) const;
+		bool _ValidateGLSLBinary (EShader::type shaderType, BinArrayCRef bin) const;
 
 
 	// GXSL/GLSL to CPP translator
@@ -149,12 +154,20 @@ namespace PipelineCompiler
 	private:
 		bool _TranslateGXSLtoHLSL (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const;
 		bool _CompileHLSL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result) const;
+		bool _ValidateHLSLSource (EShader::type shaderType, StringCRef src) const;
+		bool _ValidateHLSLBinary (EShader::type shaderType, BinArrayCRef bin) const;
 
 
 	// GXSL/GLSL to OpenCL translator
 	private:
 		bool _TranslateGXSLtoCL (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const;
 		bool _CompileCL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result) const;
+		bool _ValidateCLSource (EShader::type shaderType, StringCRef src) const;
+		bool _ValidateCLBinary (EShader::type shaderType, BinArrayCRef bin) const;
+
+	// SPIRV
+	private:
+		bool _ValidateSPIRV (EShader::type shaderType, BinArrayCRef bin) const;
 	};
 
 }	// PipelineCompiler

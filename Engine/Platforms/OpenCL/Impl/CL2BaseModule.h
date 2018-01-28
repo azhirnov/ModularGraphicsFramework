@@ -50,8 +50,7 @@ namespace PlatformCL
 											ModuleMsg::Compose,
 											ModuleMsg::Delete,
 											ModuleMsg::OnModuleAttached,
-											ModuleMsg::OnModuleDetached,
-											GpuMsg::DeviceBeforeDestroy
+											ModuleMsg::OnModuleDetached
 										>;
 
 	// variables
@@ -60,26 +59,32 @@ namespace PlatformCL
 
 
 	// methods
-	public:
+	protected:
 		CL2BaseModule (const GlobalSystemsRef gs,
 					   const ModuleConfig &config,
 					   const TypeIdList *msgTypes,
 					   const TypeIdList *eventTypes);
 
-	protected:
 		Ptr< CL2Device >		GetDevice ()		const	{ return _clDevice; }
 		cl::cl_device_id		GetCLDevice ()		const	{ return _clDevice ? _clDevice->GetDevice() : null; }
 		cl::cl_context			GetContext ()		const	{ return _clDevice ? _clDevice->GetContext() : null; }
 		cl::cl_command_queue	GetCommandQueue ()	const	{ return _clDevice ? _clDevice->GetCommandQueue() : null; }
+		
+		ModulePtr _GetGPUThread (const ModulePtr &);
 
 
 	// message handlers
 	protected:
 		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
 		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
 		bool _GetCLDeviceInfo (const Message< GpuMsg::GetCLDeviceInfo > &);
 		bool _GetCLPrivateClasses (const Message< GpuMsg::GetCLPrivateClasses > &);
+		
+
+	// event handlers
+	private:
+		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _DeviceDeleted (const Message< ModuleMsg::Delete > &);
 	};
 
 

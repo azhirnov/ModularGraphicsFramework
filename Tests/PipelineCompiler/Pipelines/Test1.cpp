@@ -1,9 +1,9 @@
 
-#ifdef __cplusplus
+#if 0 //def __cplusplus
 #include "Engine/PipelineCompiler/Pipelines/GraphicsPipeline.h"
 
 using namespace PipelineCompiler;
-/*
+
 static const struct _ final : GraphicsPipeline
 {
 	_ () : GraphicsPipeline( __FILE__ )
@@ -35,7 +35,7 @@ static const struct _ final : GraphicsPipeline
 	}
 
 } test1Pipeline;
-*/
+
 #endif
 
 #ifdef SHADER

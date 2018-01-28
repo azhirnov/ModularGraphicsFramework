@@ -137,7 +137,6 @@ namespace GpuMsg
 			BytesUL		rowPitch;
 			BytesUL		slicePitch;	// size of array layer or 3D image slice
 		};
-		using uint4			= GXMath::uint4;
 		using EMappingFlags	= MapMemoryToCpu::EMappingFlags;
 		using MipmapLevel	= Platforms::MipmapLevel;
 		using ImageLayer	= Platforms::ImageLayer;
@@ -227,7 +226,6 @@ namespace GpuMsg
 	struct ReadFromImageMemory
 	{
 	// types
-		using uint4			= GXMath::uint4;
 		using MipmapLevel	= Platforms::MipmapLevel;
 
 	// variables
@@ -244,14 +242,14 @@ namespace GpuMsg
 		ReadFromImageMemory () {}
 
 		ReadFromImageMemory (const uint4 &off, const uint4 &dim, BytesU rowPitch, BytesU slicePitch) :
-			offset(off), dimension(GXMath::Max(dim, uint4(1))), rowPitch(rowPitch), slicePitch(slicePitch)
+			offset(off), dimension(Max(dim, uint4(1))), rowPitch(rowPitch), slicePitch(slicePitch)
 		{}
 
 		ReadFromImageMemory (const uint4 &dim, BytesU bpp, const uint4 &off = uint4(), BytesU rowAlign = 4_b, BytesU sliceAlign = 4_b) :
-			offset(off), dimension(GXMath::Max(dim, uint4(1)))
+			offset(off), dimension(Max(dim, uint4(1)))
 		{
-			rowPitch   = GXMath::ImageUtils::AlignedRowSize( dimension.x, bpp, rowAlign );
-			slicePitch = GXMath::ImageUtils::AlignedSliceSize( dimension.xy(), bpp, rowAlign, sliceAlign );
+			rowPitch   = GXImageUtils::AlignedRowSize( dimension.x, bpp, rowAlign );
+			slicePitch = GXImageUtils::AlignedSliceSize( dimension.xy(), bpp, rowAlign, sliceAlign );
 		}
 
 		ReadFromImageMemory (BinArrayRef buf, const uint4 &off, const uint4 &dim, BytesU rowPitch, BytesU slicePitch) :
@@ -276,7 +274,6 @@ namespace GpuMsg
 	struct WriteToImageMemory
 	{
 	// types
-		using uint4			= GXMath::uint4;
 		using MipmapLevel	= Platforms::MipmapLevel;
 
 	// variables
@@ -293,14 +290,14 @@ namespace GpuMsg
 		WriteToImageMemory () {}
 
 		WriteToImageMemory (BinArrayCRef data, const uint4 &off, const uint4 &dim, BytesU rowPitch, BytesU slicePitch) :
-			offset(off), dimension(GXMath::Max(dim, uint4(1))), rowPitch(rowPitch), slicePitch(slicePitch), data(data)
+			offset(off), dimension(Max(dim, uint4(1))), rowPitch(rowPitch), slicePitch(slicePitch), data(data)
 		{}
 
 		WriteToImageMemory (BinArrayCRef data, const uint4 &dim, BytesU bpp, const uint4 &off = uint4(), BytesU rowAlign = 4_b, BytesU sliceAlign = 4_b) :
-			offset(off), dimension(GXMath::Max(dim, uint4(1))), data(data)
+			offset(off), dimension(Max(dim, uint4(1))), data(data)
 		{
-			rowPitch   = GXMath::ImageUtils::AlignedRowSize( dimension.x, bpp, rowAlign );
-			slicePitch = GXMath::ImageUtils::AlignedSliceSize( dimension.xy(), bpp, rowAlign, sliceAlign );
+			rowPitch   = GXImageUtils::AlignedRowSize( dimension.x, bpp, rowAlign );
+			slicePitch = GXImageUtils::AlignedSliceSize( dimension.xy(), bpp, rowAlign, sliceAlign );
 			ASSERT( data.Size() == dimension.z * slicePitch );
 		}
 	};

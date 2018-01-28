@@ -31,8 +31,6 @@ namespace OS
 */
 	void PlatformUtils::OpenURL (StringCRef url)
 	{
-		ASSERT( url.IsNullTerminated() );
-
 		::ShellExecute( null, "open", url.cstr(), null, null, SW_SHOWNORMAL );
 	}
 	
@@ -43,8 +41,6 @@ namespace OS
 */
 	void PlatformUtils::OpenFile (StringCRef filename)
 	{
-		ASSERT( filename.IsNullTerminated() );
-
 		::ShellExecute( null, null, filename.cstr(), null, null, SW_SHOWNORMAL );
 	}
 
@@ -55,9 +51,6 @@ namespace OS
 */
 	bool PlatformUtils::CreateLink (StringCRef linkFilename, StringCRef link)
 	{
-		ASSERT( linkFilename.IsNullTerminated() );
-		ASSERT( link.IsNullTerminated() );
-
 		return _CreateLinkWin32( linkFilename.cstr(), link.cstr(), not FileSystem::IsFileExist( link ) );
 	}
 	
@@ -109,8 +102,6 @@ namespace OS
 */
 	PlatformUtils::Dialog::EResult  PlatformUtils::Dialog::ShowAssertion (StringCRef caption, StringCRef msg, StringCRef file, int line)
 	{
-		ASSERT( caption.IsNullTerminated() );
-
 		if ( msg.Length() > 1024 )
 			msg = msg.SubString( 0, 1024 );
 
@@ -175,10 +166,8 @@ namespace OS
 	_CheckError
 =================================================
 */
-	bool PlatformUtils::_CheckError (StringCRef file, int line)
+	CHECKRES(bool)  PlatformUtils::_CheckError (StringCRef file, int line)
 	{
-		ASSERT( file.IsNullTerminated() );
-
 		char	buf[128] = {};
 		uint	size	 = (uint)CountOf(buf);
 

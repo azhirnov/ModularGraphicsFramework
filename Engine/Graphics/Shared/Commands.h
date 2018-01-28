@@ -6,19 +6,13 @@
 
 namespace Engine
 {
-namespace Graphics
-{
-
-}	// Graphics
-
-
 namespace CreateInfo
 {
 
 	//
-	// Per Frame Command Buffers Create Info
+	// Command Buffers Manager Create Info
 	//
-	struct PerFrameCommandBuffers
+	struct CommandBufferManager
 	{
 		ModulePtr	gpuThread;					// can be null
 		uint		bufferChainLength	= 2;	// indicates frame latency
@@ -31,14 +25,14 @@ namespace CreateInfo
 	struct AsyncCommandBuffer
 	{
 		ModulePtr	gpuThread;			// can be null
-		ModulePtr	perFrameCmd;		// module that supports 'CmdAddFrameDependency' message
+		ModulePtr	cmdBufMngr;			// module that supports 'CmdAddFrameDependency' message
 	};
 
 
 }	// CreateInfo
 
 
-// for PerFrameCommandBuffers
+// for CommandBufferManager
 namespace GraphicsMsg
 {
 
@@ -50,7 +44,7 @@ namespace GraphicsMsg
 		struct Data {
 			ModulePtr	framebuffer;		// returns current framebuffer, same as in 'ThreadBeginFrame'
 			uint		frameIndex;			// index of image in swapchain, same as in 'ThreadBeginFrame'
-			uint		cmdIndex;			// index of buffer sequence, max value is 'PerFrameCommandBuffers::bufferChainLength'-1
+			uint		cmdIndex;			// index of buffer sequence, max value is 'CommandBufferManager::bufferChainLength'-1
 		};
 
 		Out< Data >		result;
@@ -61,6 +55,30 @@ namespace GraphicsMsg
 		ModulePtr		framebuffer;		// (optional) must be null or framebuffer returned by 'CmdBeginFrame'
 	};
 	
+
+	//
+	// Begin / End VR Frame
+	//
+	struct CmdBeginVRFrame
+	{
+	// types
+		using PerEye_t	= GpuMsg::ThreadBeginVRFrame::PerEye;
+		using _Data_t	= GpuMsg::ThreadBeginVRFrame::Data;
+
+		struct Data : _Data_t
+		{
+			uint	cmdIndex;	// index of buffer sequence, max value is 'CommandBufferManager::bufferChainLength'-1
+
+			Data (const _Data_t &d, uint idx) : _Data_t(d), cmdIndex(idx) {}
+		};
+
+	// variables
+		Out< Data >		result;
+	};
+
+	struct CmdEndVRFrame
+	{};
+
 
 	//
 	// Frame Begin / End Event
@@ -106,6 +124,25 @@ namespace GraphicsMsg
 
 
 	//
+	// Append Command Buffers
+	//
+	struct CmdAppend
+	{
+	// types
+		using Commands_t	= FixedSizeArray< ModulePtr, 16 >;
+
+	// variables
+		Commands_t		commands;		// this commands will be submited with other commands that created in current frame,
+										// no synchronization needed, commands will be deleted when complete executing.
+
+	// methods
+		CmdAppend () {}
+		explicit CmdAppend (const ModulePtr &cmd) : commands{ cmd } {}
+		explicit CmdAppend (ArrayCRef<ModulePtr> cmds) : commands{ cmds } {}
+	};
+
+
+	//
 	// Subscribe On Frame Completed
 	//
 	struct SubscribeOnFrameCompleted
@@ -144,13 +181,13 @@ namespace GraphicsMsg
 			None,
 			Frame,
 			Command,
-			// TODO: RenderPass
+			RenderPass
 		};
 
 		struct Data {
 			ModulePtr		framebuffer	= null;			// returns current framebuffer, same as in 'ThreadBeginFrame'
 			uint			frameIndex	= UMax;			// index of image in swapchain, same as in 'ThreadBeginFrame'
-			uint			cmdIndex	= UMax;			// index of buffer sequence, max value is 'PerFrameCommandBuffers::bufferChainLength'-1
+			uint			cmdIndex	= UMax;			// index of buffer sequence, max value is 'CommandBufferManager::bufferChainLength'-1
 			EScope			scope		= EScope::None;	// current scope state
 
 			// TODO: max frame index, max command index
@@ -172,15 +209,31 @@ namespace GraphicsMsg
 	struct CmdBeginAsync
 	{
 	// types
+		enum class EMode {
+			Async,			// command will be submited immediatly in 'CmdEndAsync' and synchronized with sync objects only.
+			InFrame,		// command will be added as dependency to commands manager and will be submited on end of current frame rendering.
+			Sync,			// command will be submited immediatly in 'CmdEndAsync', cliend will be waiting when commands complete executing.
+			BetweenFrames,	// command executed after current frame and before next frame.
+			BeforeFrame,	// command executed before current frame, but without synchronization with previous frames.
+			//SyncInFrame,	// added to current frame and block client, this is wery bad and not supported yet.
+		};
+
+		using Semaphore_t		= Platforms::GpuSemaphoreId;
 		using Fences_t			= FixedSizeArray< Platforms::GpuFenceId, 8 >;
-		using WaitSemaphores_t	= FixedSizeArray<Pair< Platforms::GpuSemaphoreId, Platforms::EPipelineStage::bits >, 8 >;
+		using WaitSemaphores_t	= FixedSizeArray<Pair< Semaphore_t, Platforms::EPipelineStage::bits >, 8 >;
+		using Callback_t		= SubscribeOnFrameCompleted::Callback_t;
 
 	// variables
-		Fences_t			waitFences;			// will wait before start recording
-		WaitSemaphores_t	waitSemaphores;		// will wait beffore executing
+		EMode				syncMode;
+		Fences_t			waitFences;				// (optional) will wait before start recording
+		WaitSemaphores_t	waitSemaphores;			// (optional) will wait beffore executing
+		Semaphore_t			externalSemaphore	 = Uninitialized;	// (optional) signaled after executing in gpu side, for user purposes.
+		Semaphore_t			beforeFrameExecuting = Uninitialized;	// (optional) signaled after executing, current frame will be waiting this semaphore until execute commands.
+		Callback_t			onCompleted;			// (optional) will triggered when command buffer executed, before begining the new frame.
 
 	// methods
-		CmdBeginAsync () {}
+		CmdBeginAsync () : syncMode{EMode::InFrame} {}
+		explicit CmdBeginAsync (EMode syncMode) : syncMode{syncMode} {}
 	};
 
 	
@@ -188,27 +241,6 @@ namespace GraphicsMsg
 	// End Async Commands Recording
 	//
 	struct CmdEndAsync
-	{
-	// types
-		using Fence_t		= Platforms::GpuFenceId;
-		using Semaphore_t	= Platforms::GpuSemaphoreId;
-
-	// variables
-		Fence_t			fence;			// signaled after executing in client side
-		Semaphore_t		semaphore;		// signaled after executing in gpu side
-
-	// methods
-		CmdEndAsync () : fence(Fence_t::Unknown), semaphore(Semaphore_t::Unknown) {}
-		CmdEndAsync (Fence_t fence, Semaphore_t sem) : fence(fence), semaphore(sem) {}
-		explicit CmdEndAsync (Fence_t fence) : fence(fence), semaphore(Semaphore_t::Unknown) {}
-		explicit CmdEndAsync (Semaphore_t sem) : fence(Fence_t::Unknown), semaphore(sem) {}
-	};
-
-	
-	//
-	// End Sync Commands Recording
-	//
-	struct CmdEndAndSync
 	{};
 
 

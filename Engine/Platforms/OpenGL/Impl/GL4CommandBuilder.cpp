@@ -231,7 +231,7 @@ namespace PlatformGL
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
-		_AttachSelfToManager( ci.gpuThread, GLThreadModuleID, true );
+		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
 		
 /*
@@ -311,6 +311,7 @@ namespace PlatformGL
 */
 	bool GL4CommandBuilder::_CmdBegin (const Message< GpuMsg::CmdBegin > &msg)
 	{
+		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( not _cmdBuffer );
 		CHECK_ERR( _scope == EScope::None );
 		
@@ -332,7 +333,6 @@ namespace PlatformGL
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
 								_GetManager(),
-								this,
 								CommandBufferDescriptor{ msg->flags }
 							},
 							OUT _cmdBuffer )

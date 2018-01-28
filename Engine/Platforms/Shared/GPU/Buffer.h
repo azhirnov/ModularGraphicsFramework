@@ -77,6 +77,11 @@ namespace GpuMsg
 		Out< Platforms::BufferDescriptor >	result;
 	};
 
+	struct SetBufferDescriptor
+	{
+		Platforms::BufferDescriptor			descr;
+	};
+
 
 }	// GpuMsg
 }	// Engine

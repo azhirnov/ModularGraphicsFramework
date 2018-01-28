@@ -150,7 +150,7 @@ namespace Platforms
 		Rid[0].dwFlags		= 0;	// RIDEV_INPUTSINK | RIDEV_NOHOTKEYS | RIDEV_NOLEGACY | RIDEV_REMOVE;
 		Rid[0].hwndTarget	= req_hwnd->result->Get<HWND>();
 
-		CHECK( RegisterRawInputDevices( &Rid[0], (UINT) CountOf(Rid), sizeof(Rid[0]) ) == TRUE );
+		CHECK( RegisterRawInputDevices( &Rid[0], (UINT) CountOf(Rid), sizeof(Rid[0]) ) != FALSE );
 
 		CHECK( _DefCompose( false ) );
 		return true;

@@ -23,6 +23,7 @@ namespace ShaderEditor
 		Renderer		_renderer;
 
 		bool			_looping;
+		const bool		_vrMode;
 
 	
 	// methods

@@ -309,17 +309,29 @@ namespace Base
 =================================================
 */
 	template <typename MsgList>
-	inline bool Module::_CopySubscriptions (const ModulePtr &other)
+	inline bool Module::_CopySubscriptions (const ModulePtr &other, bool removeUnsupported)
 	{
 		CHECK_ERR( other );
 
-		const TypeIdList	tlist{ UninitializedT<MsgList>() };
+		TypeIdList	tlist{ UninitializedT<MsgList>() };
 
-		FOR( i, tlist ) {
-			CHECK_ERR( other->GetSupportedMessages().HasType( tlist.Get(i) ) );
+		FOR( i, tlist )
+		{
+			if ( other->GetSupportedMessages().HasType( tlist.Get(i) ) )
+				continue;
+
+			if ( removeUnsupported )
+			{
+				tlist.EraseByIndex( i );
+				--i;
+			}
+			else
+			{
+				RETURN_ERR( "Message with type '" << ToString( tlist.Get(i) ) << "' is not supported" );
+			}
 		}
 
-		return _msgHandler.CopySubscriptions< MsgList >( GetSupportedMessages(), other, other->_msgHandler );
+		return _msgHandler.CopySubscriptions( GetSupportedMessages(), other, other->_msgHandler, tlist );
 	}
 
 /*

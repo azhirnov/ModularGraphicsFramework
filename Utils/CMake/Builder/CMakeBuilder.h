@@ -50,6 +50,8 @@ namespace CMake
 		StringSet_t		_userOptions;
 		GXMath::uint2	_version;
 
+		StringMap_t		_sourceBeforeProject;
+
 		// for all projects
 		String			_projectOutputDir;
 		StringMap_t		_projectIncludeDirs;
@@ -89,6 +91,10 @@ namespace CMake
 		CMakeExternalProjects* AddExternal (StringCRef path, StringCRef enableIf = Uninitialized);
 		CMakeExternalVSProject* AddVSProject (StringCRef filename, StringCRef enableIf = Uninitialized);
 		Self* SearchVSProjects (StringCRef path, StringCRef projFolder = Uninitialized, StringCRef enableIf = Uninitialized);
+
+		Self*	SetSystemVersion (StringCRef value, StringCRef enableIf = Uninitialized);
+
+		static HashSet<String> const& GetCPPFilters ();
 	};
 
 
@@ -134,6 +140,7 @@ namespace CMake
 		StringMap_t				_dependencies;
 		String					_source;
 		String					_compilerOpt;
+		uint					_mergeCppForThreads = 0;	// create N *.cpp files to optimize compilation, the N must equal to the number of threads
 
 
 	// methods
@@ -148,11 +155,22 @@ namespace CMake
 		bool _ValidateInclude (StringCRef path, bool withOption) const;
 		bool _ValidateLinkDir (StringCRef path, bool withOption) const;
 
+		bool _ToStringNormal (OUT String &src);
+
+		bool _ToStringOptimized (OUT String &src) const;
+		bool _BuildNewCppFiles (StringCRef path, const Set<String> &cppFiles, OUT Array<String> &filePaths) const;
+		bool _GenNewFile (StringCRef filename, BytesUL maxSize, INOUT Array<StringCRef> &files, OUT BytesUL &fsize) const;
+		bool _MergeDependencies (OUT Set<String> &cppFiles, OUT StringMap_t &includeDirs, OUT StringMap_t &linkDirs,
+								 OUT StringMap_t &linkLibs, OUT StringMap_t &defines, OUT StringMap_t &deps) const;
+		bool _ToStringOptimizedImpl (ArrayCRef<String> filePaths, const StringMap_t &includeDirs, const StringMap_t &linkDirs,
+									 const StringMap_t &linkLibs, const StringMap_t &defines, const StringMap_t &deps, OUT String &src) const;
+
 	public:
 		Self*	AddFile (StringCRef filename);
 		Self*	AddGroup (StringCRef groupName, ArrayCRef<StringCRef> files);
-		Self*	AddFolder (StringCRef path);
-		Self*	AddFoldersRecursive (StringCRef path);
+
+		Self*	AddFolder (StringCRef path, const StringSet_t &filter = Uninitialized);
+		Self*	AddFoldersRecursive (StringCRef path, const StringSet_t &filter = Uninitialized);
 
 		Self*	EnableIf (StringCRef condition);
 		Self*	ProjFolder (StringCRef folder);
@@ -181,7 +199,9 @@ namespace CMake
 		Self*	AddDependency (StringCRef dep, StringCRef enableIf = Uninitialized);
 		Self*	AddDependency (Array<String> deps, StringCRef enableIf = Uninitialized);
 
-		Self*	AddSource (StringCRef src);
+		Self*	AddSource (StringCRef cmakeSrc);
+
+		Self*	MergeCPP (uint numThreads);
 	};
 
 
@@ -220,6 +240,7 @@ namespace CMake
 		StringMap_t				_includeDirs;
 		StringMap_t				_linkDirs;
 		StringMap_t				_linkLibs;
+		String					_source;
 
 
 	// methods
@@ -242,6 +263,8 @@ namespace CMake
 
 		Self*	LinkLibrary (StringCRef lib, StringCRef enableIf = Uninitialized);
 		Self*	LinkLibrary (ArrayCRef<String> libs, StringCRef enableIf = Uninitialized);
+
+		Self*	AddSource (StringCRef cmakeSrc);
 	};
 	
 
@@ -357,7 +380,7 @@ namespace CMake
 		Self*	AddBoolOption (StringCRef name, bool value = true, StringCRef info = StringCRef());
 		Self*	AddStringOption (StringCRef name, StringCRef value, StringCRef info = StringCRef());
 		Self*	AddPathOption (StringCRef name, StringCRef path, StringCRef info = StringCRef());
-		Self*	AddSource (StringCRef src);
+		Self*	AddSource (StringCRef cmakeSrc);
 	};
 
 

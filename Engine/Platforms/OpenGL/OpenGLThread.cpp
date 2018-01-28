@@ -40,6 +40,8 @@ namespace Platforms
 											GpuMsg::GetGraphicsSettings
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
+											GpuMsg::ThreadBeginFrame,
+											GpuMsg::ThreadEndFrame,
 											GpuMsg::DeviceCreated,
 											GpuMsg::DeviceBeforeDestroy
 											// TODO: device lost event
@@ -47,6 +49,9 @@ namespace Platforms
 
 		using WindowMsgList_t		= MessageListFrom< OSMsg::GetWinWindowHandle >;
 		using WindowEventList_t		= MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::OnWinWindowRawMessage >;
+
+		using PendingCommands_t		= Queue< GpuMsg::SubmitGraphicsQueueCommands >;
+		using SemaphoreSet_t		= Set< GpuSemaphoreId >;
 
 		using GLContext				= PlatformGL::GLRenderingContext;
 		using GLDevice				= PlatformGL::GL4Device;
@@ -68,6 +73,8 @@ namespace Platforms
 		GLContext			_context;
 		GLDevice			_device;
 	
+		PendingCommands_t	_pendingCommands;
+
 		bool				_isWindowVisible;
 
 
@@ -105,8 +112,10 @@ namespace Platforms
 
 	private:
 		bool _CreateDevice ();
+		void _DestroyDevice ();
 		void _DetachWindow ();
 		
+		bool _RunCommands ();
 		bool _SubmitQueue (const GpuMsg::SubmitGraphicsQueueCommands *);
 	};
 //-----------------------------------------------------------------------------
@@ -199,7 +208,7 @@ namespace Platforms
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											GLSyncManagerModuleID,
 											GlobalSystems(),
-											CreateInfo::GpuSyncManager{},
+											CreateInfo::GpuSyncManager{ this },
 											OUT _syncManager ) );
 
 			CHECK_ERR( _Attach( "sync", _syncManager, true ) );
@@ -240,6 +249,7 @@ namespace Platforms
 */
 	bool OpenGLThread::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
+		_DestroyDevice();
 		_DetachWindow();
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
@@ -306,10 +316,11 @@ namespace Platforms
 		if ( msg->framebuffer )
 			CHECK_ERR( msg->framebuffer == _device.GetCurrentFramebuffer() );
 		
-		if ( not msg->commands.Empty() )
-		{
-			CHECK_ERR( _SubmitQueue( msg.operator->() ) );
-		}
+		ModuleUtils::Send( msg->commands, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
+
+		_pendingCommands.PushBack( *msg );
+
+		CHECK_ERR( _RunCommands() );
 
 		CHECK_ERR( _device.EndFrame() );
 		_context.SwapBuffers();
@@ -317,6 +328,96 @@ namespace Platforms
 		return true;
 	}
 
+/*
+=================================================
+	_SubmitGraphicsQueueCommands
+=================================================
+*/
+	bool OpenGLThread::_SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &msg)
+	{
+		CHECK_ERR( _device.IsDeviceCreated() );
+
+		ModuleUtils::Send( msg->commands, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
+
+		_pendingCommands.PushBack( *msg );
+		return true;
+	}
+	
+/*
+=================================================
+	_SubmitComputeQueueCommands
+=================================================
+*/
+	bool OpenGLThread::_SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &msg)
+	{
+		CHECK_ERR( _device.IsDeviceCreated() );
+		
+		ModuleUtils::Send( msg->commands, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
+
+		_pendingCommands.PushBack( *msg );
+		return true;
+	}
+	
+/*
+=================================================
+	_RunCommands
+=================================================
+*/
+	bool OpenGLThread::_RunCommands ()
+	{
+		// TODO: optimize
+		SemaphoreSet_t	signaled_semaphores;
+		SemaphoreSet_t	all_signal_semaphores;	
+		SemaphoreSet_t	all_wait_semaphores;
+		
+		// get all signal & wait semaphores
+		FOR( i, _pendingCommands ) {
+			FOR( j, _pendingCommands[i].waitSemaphores ) {
+				all_wait_semaphores.Add( _pendingCommands[i].waitSemaphores[j].first );
+			}
+			all_signal_semaphores.AddArray( _pendingCommands[i].signalSemaphores );
+		}
+
+		// sort & run
+		for (usize iter = 0; iter < 10 and not _pendingCommands.Empty(); ++iter)
+		{
+			FOR( i, _pendingCommands )
+			{
+				auto&	cmd			= _pendingCommands[i];
+				bool	ready		= true;
+				bool	maybe_ready	= true;
+
+				// check wait semaphores
+				FOR( j, cmd.waitSemaphores )
+				{
+					if ( not signaled_semaphores.IsExist( cmd.waitSemaphores[j].first ) )
+					{
+						ready = false;
+
+						// waiting semaphore from other command
+						if ( all_signal_semaphores.IsExist( cmd.waitSemaphores[j].first ) )
+							maybe_ready = false;
+					}
+				}
+
+				if ( ready						or
+					 (maybe_ready and iter > 0)	or
+					 iter > 2 )
+				{
+					signaled_semaphores.AddArray( cmd.signalSemaphores );
+					_SubmitQueue( &cmd );
+					_pendingCommands.Erase( i );
+					--i;
+				}
+			}
+		}
+
+		CHECK_ERR( _pendingCommands.Empty() );
+		_pendingCommands.Clear();
+
+		return true;
+	}
+	
 /*
 =================================================
 	_SubmitQueue
@@ -332,8 +433,6 @@ namespace Platforms
 				CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
 			}
 		);
-
-		ModuleUtils::Send( msg->commands, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
 
 		// wait for signal
 		FOR( i, msg->waitSemaphores )
@@ -361,30 +460,6 @@ namespace Platforms
 		return true;
 	}
 	
-/*
-=================================================
-	_SubmitGraphicsQueueCommands
-=================================================
-*/
-	bool OpenGLThread::_SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &msg)
-	{
-		CHECK_ERR( _device.IsDeviceCreated() );
-
-		return _SubmitQueue( msg.operator->() );
-	}
-	
-/*
-=================================================
-	_SubmitComputeQueueCommands
-=================================================
-*/
-	bool OpenGLThread::_SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &msg)
-	{
-		CHECK_ERR( _device.IsDeviceCreated() );
-		
-		return _SubmitQueue( msg.operator->() );
-	}
-
 /*
 =================================================
 	_WindowCreated
@@ -434,6 +509,22 @@ namespace Platforms
 */
 	bool OpenGLThread::_WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &)
 	{
+		_DestroyDevice();
+		_DetachWindow();
+		
+		if ( GetState() != EState::Deleting ) {
+			CHECK( _SetState( EState::Initial ) );
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_WindowBeforeDestroy
+=================================================
+*/
+	void OpenGLThread::_DestroyDevice ()
+	{
 		if ( _device.IsDeviceCreated() )
 		{
 			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
@@ -447,10 +538,6 @@ namespace Platforms
 
 		_device.Deinitialize();
 		_context.Destroy();
-		_DetachWindow();
-		
-		CHECK( _SetState( EState::Initial ) );
-		return true;
 	}
 	
 /*
@@ -504,6 +591,9 @@ namespace Platforms
 	bool OpenGLThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
 	{
 		msg->result.Set({
+			this,
+			null,
+			_syncManager,
 			GetDevice()->GetDefaultRenderPass(),
 			GetDevice()->GetSwapchainLength()
 		});
@@ -539,7 +629,7 @@ namespace Platforms
 */
 	bool OpenGLThread::_GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &msg)
 	{
-		msg->result.Set( _settings );
+		msg->result.Set({ _settings, _device.GetSurfaceSize() });
 		return true;
 	}
 //-----------------------------------------------------------------------------

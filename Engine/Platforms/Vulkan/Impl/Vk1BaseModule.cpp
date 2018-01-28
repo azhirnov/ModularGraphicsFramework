@@ -34,9 +34,10 @@ namespace PlatformVK
 		if ( msg->newManager )
 		{
 			msg->newManager->Subscribe( this, &Vk1BaseModule::_DeviceBeforeDestroy );
+			msg->newManager->Subscribe( this, &Vk1BaseModule::_DeviceDeleted );
 
 			Message< GpuMsg::GetVkPrivateClasses >	req_dev;
-			msg->newManager->Send( req_dev );
+			CHECK( msg->newManager->Send( req_dev ) );
 
 			_vkDevice = req_dev->result->device;
 		}
@@ -60,6 +61,19 @@ namespace PlatformVK
 		return true;
 	}
 	
+/*
+=================================================
+	_DeviceDeleted
+=================================================
+*/
+	bool Vk1BaseModule::_DeviceDeleted (const Message< ModuleMsg::Delete > &msg)
+	{
+		Send( msg );
+
+		_vkDevice = null;
+		return true;
+	}
+
 /*
 =================================================
 	_GetDeviceInfo
@@ -88,6 +102,27 @@ namespace PlatformVK
 	bool Vk1BaseModule::_GetVkPrivateClasses (const Message< GpuMsg::GetVkPrivateClasses > &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
+	}
+	
+/*
+=================================================
+	_GetGPUThread
+=================================================
+*/
+	ModulePtr Vk1BaseModule::_GetGPUThread (const ModulePtr &thread)
+	{
+		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetVkPrivateClasses >;
+		using GThreadEventMsgList_t	= MessageListFrom< GpuMsg::DeviceBeforeDestroy, ModuleMsg::Delete >;
+
+		ModulePtr	result = thread;
+		
+		if ( not result )
+			result = GlobalSystems()->parallelThread->GetModuleByID( VkThreadModuleID );
+
+		if ( not result )
+			result = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventMsgList_t >();
+
+		return result;
 	}
 
 }	// PlatformVK

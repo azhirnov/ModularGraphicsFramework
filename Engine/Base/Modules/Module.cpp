@@ -248,7 +248,7 @@ namespace Base
 		// attach to known manager
 		if ( mngr )
 		{
-			ASSERT( id == UntypedID_t(0) or id == mngr->GetModuleID() );
+			//ASSERT( id == UntypedID_t(0) or id == mngr->GetModuleID() );
 
 			if ( mngr->GetThreadID() == this->GetThreadID() )
 			{
@@ -400,6 +400,8 @@ namespace Base
 		CHECK( _ValidateAllSubscriptions() );
 
 		CHECK( _SetState( immutable ? EState::ComposedImmutable : EState::ComposedMutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 	
@@ -613,10 +615,10 @@ namespace Base
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
 		_SendForEachAttachments( msg );
-		//_SendEvent( msg );
 
 		CHECK( _SetState( EState::Linked ) );
-
+		
+		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
 		return true;
 	}
 	
@@ -694,7 +696,7 @@ namespace Base
 		else
 		{
 			// TODO: msg->detachedModule->UnsubscribeAll( this ); ?
-			_msgHandler.UnsubscribeAll( msg->detachedModule );
+			UnsubscribeAll( msg->detachedModule );
 		}
 		return true;
 	}
@@ -783,6 +785,8 @@ namespace Base
 		CHECK_ERR( GetState() == EState::Linked );
 
 		CHECK( _SetState( EState::ComposedMutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 
@@ -797,6 +801,8 @@ namespace Base
 			return true;	// already linked
 
 		CHECK( _SetState( EState::Linked ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
 		return true;
 	}
 	

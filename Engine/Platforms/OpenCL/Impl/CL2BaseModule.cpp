@@ -62,6 +62,19 @@ namespace PlatformCL
 	
 /*
 =================================================
+	_DeviceDeleted
+=================================================
+*/
+	bool CL2BaseModule::_DeviceDeleted (const Message< ModuleMsg::Delete > &msg)
+	{
+		Send( msg );
+
+		_clDevice = null;
+		return true;
+	}
+
+/*
+=================================================
 	_GetDeviceInfo
 =================================================
 */
@@ -88,6 +101,27 @@ namespace PlatformCL
 	bool CL2BaseModule::_GetCLPrivateClasses (const Message< GpuMsg::GetCLPrivateClasses > &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
+	}
+	
+/*
+=================================================
+	_GetGPUThread
+=================================================
+*/
+	ModulePtr CL2BaseModule::_GetGPUThread (const ModulePtr &thread)
+	{
+		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetCLPrivateClasses >;
+		using GThreadEventMsgList_t	= MessageListFrom< GpuMsg::DeviceBeforeDestroy, ModuleMsg::Delete >;
+
+		ModulePtr	result = thread;
+		
+		if ( not result )
+			result = GlobalSystems()->parallelThread->GetModuleByID( CLThreadModuleID );
+
+		if ( not result )
+			result = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventMsgList_t >();
+
+		return result;
 	}
 
 }	// PlatformCL

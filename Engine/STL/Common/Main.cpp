@@ -68,6 +68,7 @@ namespace GXTypes
 }	// GXTypes
 }	// GX_STL
 
+/*
 using namespace GX_STL;
 using namespace GXTypes;
 using namespace GXMath;
@@ -78,3 +79,4 @@ using namespace CompileTime;
 using namespace _types_hidden_;
 using namespace _ctime_hidden_;
 using namespace _math_hidden_;
+*/

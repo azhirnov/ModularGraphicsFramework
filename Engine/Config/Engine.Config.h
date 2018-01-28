@@ -18,14 +18,14 @@
 #define GRAPHICS_API_VULKAN			100		// 1.x		graphics & compute
 //#define GRAPHICS_API_OPENGLES		310		// 3.x		// not supported
 //#define GRAPHICS_API_DIRECTX		110		// 11.x		// not supported
-//#define COMPUTE_API_OPENCL		120		// 1.x or 2.x
+#define COMPUTE_API_OPENCL			120		// 1.x or 2.x
 //#define COMPUTE_API_CUDA			7000	// --		// not supported
 //#define GRAPHICS_API_SOFT			100
 
 
 // VR
 //#define PLATFORM_OCULUS_VR		100
-//#define GX_EMULATOR_VR				100
+#define GX_EMULATOR_VR				100
 
 //-------------------------------------------------------------------
 

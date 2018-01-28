@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Common/Common.h"
+#include "Engine/Platforms/Shared/Common.h"
 #include "Engine/Platforms/Shared/GPU/Thread.h"
 #include "Engine/Platforms/Shared/GPU/Context.h"
 #include "Engine/Platforms/Shared/GPU/VR.h"

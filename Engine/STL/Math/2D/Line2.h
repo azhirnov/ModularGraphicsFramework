@@ -113,13 +113,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool	Line2<T,U>::operator == (const Self &right) const
+	inline CHECKRES(bool)  Line2<T,U>::operator == (const Self &right) const
 	{
 		return All( Begin() == right.Begin() ) and All( End() == right.End() );
 	}
 	
 	template <typename T, ulong U>
-	inline bool	Line2<T,U>::operator != (const Self &right) const
+	inline CHECKRES(bool)  Line2<T,U>::operator != (const Self &right) const
 	{
 		return not ( (*this) == right );
 	}
@@ -171,7 +171,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline T Line2<T,U>::GetXfromY (T y) const
+	inline CHECKRES(T)  Line2<T,U>::GetXfromY (T y) const
 	{
 		// ax + by + c = 0 -> x = -(by + c) / a
 
@@ -186,7 +186,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline T  Line2<T,U>::GetYfromX (T x) const
+	inline CHECKRES(T)  Line2<T,U>::GetYfromX (T x) const
 	{
 		// y = kx + b
 		T	k, b;
@@ -200,7 +200,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline typename Line2<T,U>::Vec_t  Line2<T,U>::GetFromY (T y) const
+	inline CHECKRES(typename Line2<T,U>::Vec_t)  Line2<T,U>::GetFromY (T y) const
 	{
 		return Vec_t( GetXfromY( y ), y );
 	}
@@ -211,7 +211,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline typename Line2<T,U>::Vec_t  Line2<T,U>::GetFromX (T x) const
+	inline CHECKRES(typename Line2<T,U>::Vec_t)  Line2<T,U>::GetFromX (T x) const
 	{
 		return Vec_t( x, GetYfromX( x ) );
 	}
@@ -222,7 +222,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool Line2<T,U>::PerpendicularBase (const Vec_t &p, OUT Vec_t &base) const
+	inline CHECKRES(bool)  Line2<T,U>::PerpendicularBase (const Vec_t &p, OUT Vec_t &base) const
 	{
 		Vec_t	vec		= End() - Begin();
 		Vec_t	vecSqr	= vec * vec;
@@ -239,7 +239,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool Line2<T,U>::Perpendicular (const Vec_t &point, OUT Self &result) const
+	inline CHECKRES(bool)  Line2<T,U>::Perpendicular (const Vec_t &point, OUT Self &result) const
 	{
 		Vec_t	base;
 
@@ -259,7 +259,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline T  Line2<T,U>::MinDistance (const Vec_t &point) const
+	inline CHECKRES(T)  Line2<T,U>::MinDistance (const Vec_t &point) const
 	{
 		T	a, b, c;
 		GetEquation( a, b, c );
@@ -275,7 +275,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Vec<T,2,U>  Line2<T,U>::Normal () const
+	inline CHECKRES(Vec<T,2,U>)  Line2<T,U>::Normal () const
 	{
 		const Vec_t	v = Vector();
 		return ( v.x >= T(0) ? Vec_t( -v.y, v.x ) : Vec_t( v.y, -v.x ) ).Normalized();
@@ -287,7 +287,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Vec<T,2,U>  Line2<T,U>::LeftNormal () const
+	inline CHECKRES(Vec<T,2,U>)  Line2<T,U>::LeftNormal () const
 	{
 		const Vec_t	v = Vector();
 		return Vec_t( -v.y, v.x ).Normalized();
@@ -299,7 +299,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Vec<T,2,U>  Line2<T,U>::RightNormal () const
+	inline CHECKRES(Vec<T,2,U>)  Line2<T,U>::RightNormal () const
 	{
 		const Vec_t	v = Vector();
 		return Vec_t( v.y, -v.x ).Normalized();
@@ -323,7 +323,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool Line2<T,U>::IsInnerPoint (const Vec_t &point) const
+	inline CHECKRES(bool)  Line2<T,U>::IsInnerPoint (const Vec_t &point) const
 	{
 		Rect_t	r;
 		GetBoundingRect( r );
@@ -342,7 +342,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool Line2<T,U>::IsInnerLine (const Self &line) const
+	inline CHECKRES(bool)  Line2<T,U>::IsInnerLine (const Self &line) const
 	{
 		Rect_t	r;
 		GetBoundingRect( r );
@@ -366,7 +366,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool Line2<T,U>::IntersectLine (const Self &other) const
+	inline CHECKRES(bool)  Line2<T,U>::IntersectLine (const Self &other) const
 	{
 		Vec_t	res;
 		return GetLineIntersection( other, res );
@@ -378,7 +378,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool Line2<T,U>::IntersectRect (const Rect_t &other) const
+	inline CHECKRES(bool)  Line2<T,U>::IntersectRect (const Rect_t &other) const
 	{
 		Vec_t	res0, res1;
 		return _IntersectRect( other, res0, res1 );
@@ -390,7 +390,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool Line2<T,U>::IsPointInBoundingRects (const Self &other, const Vec_t &point) const
+	inline CHECKRES(bool)  Line2<T,U>::IsPointInBoundingRects (const Self &other, const Vec_t &point) const
 	{
 		Rect_t	r0;
 		Rect_t	r1;
@@ -535,7 +535,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Radians<T>  Line2<T,U>::AngleBetweenLines (const Self &other) const
+	inline CHECKRES(Radians<T>)  Line2<T,U>::AngleBetweenLines (const Self &other) const
 	{
 		const Vec_t	v0 = Vector();
 		const Vec_t	v1 = other.Vector();
@@ -559,7 +559,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline T Line2<T,U>::CosBetweenLines (const Self &other) const
+	inline CHECKRES(T)  Line2<T,U>::CosBetweenLines (const Self &other) const
 	{
 		const Vec_t	v0 = Vector();
 		const Vec_t	v1 = other.Vector();
@@ -579,7 +579,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Line2<T,U>  Line2<T,U>::Reflection (const Vec_t &normal) const
+	inline CHECKRES(Line2<T,U>)  Line2<T,U>::Reflection (const Vec_t &normal) const
 	{
 		/*      this
 			|  /
@@ -602,7 +602,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool Rectangle<T,U>::IsInnerLine (const Line2<T,U> &other) const
+	inline CHECKRES(bool)  Rectangle<T,U>::IsInnerLine (const Line2<T,U> &other) const
 	{
 		return IsInnerPoint( other.Begin() ) & IsInnerPoint( other.End() );
 	}
@@ -613,7 +613,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool Rectangle<T,U>::IntersectLine (const Line2<T,U> &other) const
+	inline CHECKRES(bool)  Rectangle<T,U>::IntersectLine (const Line2<T,U> &other) const
 	{
 		return other.IntersectRect( *this );
 	}
@@ -635,7 +635,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline bool Rectangle<T,U>::CropLine (OUT Line2<T,U> &other) const
+	inline bool Rectangle<T,U>::CropLine (INOUT Line2<T,U> &other) const
 	{
 		if ( IntersectLine( other ) )
 		{
@@ -651,7 +651,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Line2<T,U>  Rectangle<T,U>::Left () const
+	inline CHECKRES(Line2<T,U>)  Rectangle<T,U>::Left () const
 	{
 		return Line_t( LeftBottom(), LeftTop() );
 	}
@@ -662,7 +662,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Line2<T,U>  Rectangle<T,U>::Right () const
+	inline CHECKRES(Line2<T,U>)  Rectangle<T,U>::Right () const
 	{
 		return Line_t( RightTop(), RightBottom() );
 	}
@@ -673,7 +673,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Line2<T,U>  Rectangle<T,U>::Bottom () const
+	inline CHECKRES(Line2<T,U>)  Rectangle<T,U>::Bottom () const
 	{
 		return Line_t( RightBottom(), LeftBottom() );
 	}
@@ -684,7 +684,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Line2<T,U>  Rectangle<T,U>::Top () const
+	inline CHECKRES(Line2<T,U>)  Rectangle<T,U>::Top () const
 	{
 		return Line_t( LeftTop(), RightTop() );
 	}
@@ -714,7 +714,7 @@ namespace GXTypes
 		using Base_t	= Hash< typename Key_t::Vec_t >;
 		using Result_t	= typename Base_t::Result_t;
 
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES(Result_t)  operator () (const Key_t &x) const noexcept
 		{
 			return	Base_t::operator ()( x.Begin() ) + Base_t::operator ()( x.End() );
 		}

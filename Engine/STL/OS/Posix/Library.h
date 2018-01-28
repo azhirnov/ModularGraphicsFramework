@@ -81,8 +81,6 @@ namespace OS
 				return false;
 
 			Unload();
-			
-			ASSERT( name.IsNullTerminated() );
 
 			_library		= dlopen( name.cstr(), RTLD_GLOBAL );
 			_name			= name;
@@ -127,7 +125,6 @@ namespace OS
 		{
 			ASSERT( IsValid() );
 			ASSERT( not procName.Empty() );
-			ASSERT( procName.IsNullTerminated() );
 
 			T * tmp = reinterpret_cast< T *>( dlsym( _library, procName.cstr() ) );
 
@@ -143,7 +140,6 @@ namespace OS
 		{
 			ASSERT( IsValid() );
 			ASSERT( not procName.Empty() );
-			ASSERT( procName.IsNullTerminated() );
 
 			Func_t tmp = dlsym( _library, procName.cstr() );
 			return tmp != null ? tmp : defProc;

@@ -89,6 +89,8 @@ namespace PipelineCompiler
 
 		CHECK_ERR( _ConvertLayout( "\tdescr.layout", INOUT src, ser ) );
 		
+		CHECK_ERR( _ConvertComputeShader( INOUT src, ser, cfg ) );
+
 		src << ser->EndScope();	// function
 		src << ser->EndScope();	// namespace
 		src << ser->EndFile( false );
@@ -115,7 +117,14 @@ namespace PipelineCompiler
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
+			<< ser->ShaderSrcCL( name, compiled.cl )
+			<< ser->ShaderBinCL( name, compiled.clBinary )
+			<< ser->ShaderSrcCPP( name, compiled.cpp )
 			<< '\n';
+		
+		if ( cfg.validation ) {
+			CHECK_ERR( _ValidateShader( EShader::Compute, compiled ) );
+		}
 		return true;
 	}
 

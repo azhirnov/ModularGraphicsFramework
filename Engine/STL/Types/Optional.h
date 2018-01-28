@@ -117,7 +117,7 @@ namespace GXTypes
 		T const &	Get ()			const				{ ASSERT( IsDefined() );  return _value; }
 		T &			Get ()								{ ASSERT( IsDefined() );  return _value; }
 
-		T const		Get (const T defaultValue)	const	{ return IsDefined() ? Get() : defaultValue; }
+		T const		Get (const T defaultValue)	const	{ return IsDefined() ? _value : defaultValue; }
 		T const&	Get (T& defaultValue) const			{ return IsDefined() ? _value : defaultValue; }
 
 		T *			GetPtrOrNull ()						{ return IsDefined() ? GetPtr() : null; }

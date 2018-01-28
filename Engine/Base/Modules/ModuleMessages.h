@@ -75,6 +75,8 @@ namespace ModuleMsg
 	{
 	};
 
+	struct AfterLink {};	// event
+
 
 	//
 	// Compose 
@@ -85,6 +87,8 @@ namespace ModuleMsg
 
 		//bool		makeImmutable	= false;	// at now this flag ignored by all modules
 	};
+
+	struct AfterCompose {};	// event
 
 	
 	//

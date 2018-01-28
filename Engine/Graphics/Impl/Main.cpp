@@ -3,7 +3,7 @@
 #include "Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
 #include "Engine/Graphics/Shared/BatchRenderer.h"
 #include "Engine/Graphics/Shared/Font.h"
-#include "Engine/Graphics/Shared/ImageStream.h"
+#include "Engine/Graphics/Shared/MemStream.h"
 #include "Engine/Graphics/Shared/Commands.h"
 
 namespace Engine
@@ -44,7 +44,7 @@ namespace Graphics
 		CHECK( mf->Register( FontManagerModuleID, &CreateFontManager ) );
 		CHECK( mf->Register( BatchRendererModuleID, &CreateBatchRenderer ) );
 		CHECK( mf->Register( AsyncCommandBufferModuleID, &CreateAsyncCommandBuffer ) );
-		CHECK( mf->Register( PerFrameCommandBuffersModuleID, &CreatePerFrameCommandBuffers ) );
+		CHECK( mf->Register( CommandBufferManagerModuleID, &CreateCommandBufferManager ) );
 	}
 	
 /*
@@ -60,7 +60,7 @@ namespace Graphics
 		mf->UnregisterAll( FontManagerModuleID );
 		mf->UnregisterAll( BatchRendererModuleID );
 		mf->UnregisterAll( AsyncCommandBufferModuleID );
-		mf->UnregisterAll( PerFrameCommandBuffersModuleID );
+		mf->UnregisterAll( CommandBufferManagerModuleID );
 	}
 
 }	// Graphics

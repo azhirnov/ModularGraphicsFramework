@@ -47,11 +47,13 @@ namespace PlatformGL
 										> >;
 
 		using SupportedEvents_t		= MessageListFrom<
+											ModuleMsg::Link,
+											ModuleMsg::AfterLink,
 											ModuleMsg::Compose,
+											ModuleMsg::AfterCompose,
 											ModuleMsg::Delete,
 											ModuleMsg::OnModuleAttached,
-											ModuleMsg::OnModuleDetached,
-											GpuMsg::DeviceBeforeDestroy
+											ModuleMsg::OnModuleDetached
 										>;
 
 	// variables
@@ -60,23 +62,29 @@ namespace PlatformGL
 
 
 	// methods
-	public:
+	protected:
 		GL4BaseModule (const GlobalSystemsRef gs,
 					   const ModuleConfig &config,
 					   const TypeIdList *msgTypes,
 					   const TypeIdList *eventTypes);
 
-	protected:
 		Ptr< GL4Device >	GetDevice ()	const	{ return _glDevice; }
+		
+		ModulePtr _GetGPUThread (const ModulePtr &);
 
 
 	// message handlers
 	protected:
 		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
 		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
 		bool _GetGLDeviceInfo (const Message< GpuMsg::GetGLDeviceInfo > &);
 		bool _GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &);
+		
+
+	// event handlers
+	private:
+		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _DeviceDeleted (const Message< ModuleMsg::Delete > &);
 	};
 
 

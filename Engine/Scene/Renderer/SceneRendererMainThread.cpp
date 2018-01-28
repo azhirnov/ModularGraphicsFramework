@@ -18,7 +18,8 @@ namespace Scene
 	// types
 	protected:
 		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Compose
+											ModuleMsg::Compose,
+											ModuleMsg::Update
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
@@ -32,10 +33,11 @@ namespace Scene
 											GpuMsg::DeviceBeforeDestroy
 										> >;
 		
+		using VRThreadMsgList_t		= MessageListFrom< GpuMsg::GetVRDeviceInfo, GpuMsg::ThreadBeginVRFrame, GpuMsg::ThreadEndVRFrame >;
 		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetDeviceInfo >;
 		using GThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 
-		using PerFrameCmdMsgList_t	= MessageListFrom<
+		using CmdBufferMngrMsg_t	= MessageListFrom<
 											GraphicsMsg::CmdBeginFrame,
 											GraphicsMsg::CmdEndFrame,
 											GraphicsMsg::CmdBegin,
@@ -95,7 +97,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_DetachModule );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_FindModule_Empty );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_ModulesDeepSearch_Empty );
-		_SubscribeOnMsg( this, &SceneRendererMainThread::_Update_Empty );
+		//_SubscribeOnMsg( this, &SceneRendererMainThread::_Update_Empty );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_Link );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_Delete );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_AddToManager );
@@ -128,32 +130,37 @@ namespace Scene
 			return true;	// already linked
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		
+		CHECK_ERR( Module::_Link_Impl( msg ) );
 
 
-		// find or create per frame command buffer builder
-		ModulePtr	builder = GetModuleByMsg< PerFrameCmdMsgList_t >();
+		// find gpu thread
+		ModulePtr	gthread;
+		if ( not (gthread = GlobalSystems()->parallelThread->GetModuleByMsgEvent< VRThreadMsgList_t, GThreadEventList_t >()) ) {
+			CHECK_ATTACHMENT(( gthread = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >() ));
+		}
+
+		gthread->Subscribe( this, &SceneRendererMainThread::_DeviceCreated );
+		gthread->Subscribe( this, &SceneRendererMainThread::_DeviceBeforeDestroy );
+
+
+		// find or create command buffer manager
+		ModulePtr	builder = GetModuleByMsg< CmdBufferMngrMsg_t >();
 		if ( not builder )
 		{
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-										Graphics::PerFrameCommandBuffersModuleID,
+										Graphics::CommandBufferManagerModuleID,
 										GlobalSystems(),
-										CreateInfo::PerFrameCommandBuffers{},
+										CreateInfo::CommandBufferManager{ gthread, 2 },
 										OUT builder ) );
 
 			CHECK_ERR( _Attach( "builder", builder, true ) );
 			builder->Send( msg );
 		}
-		
-		CHECK_ERR( Module::_Link_Impl( msg ) );
 
-		ModulePtr	thread;
-		CHECK_ATTACHMENT(( thread = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >() ));
 
-		thread->Subscribe( this, &SceneRendererMainThread::_DeviceCreated );
-		thread->Subscribe( this, &SceneRendererMainThread::_DeviceBeforeDestroy );
-		
 		// if gpu device already created
-		if ( _IsComposedState( thread->GetState() ) )
+		if ( _IsComposedState( gthread->GetState() ) )
 		{
 			_SendMsg< GpuMsg::DeviceCreated >({});
 		}
@@ -203,7 +210,7 @@ namespace Scene
 */
 	bool SceneRendererMainThread::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
 	{
-		const bool	is_builder	= msg->newModule->GetSupportedEvents().HasAllTypes< PerFrameCmdMsgList_t >();
+		const bool	is_builder	= msg->newModule->GetSupportedEvents().HasAllTypes< CmdBufferMngrMsg_t >();
 
 		CHECK( _Attach( msg->name, msg->newModule, is_builder ) );
 
@@ -223,7 +230,7 @@ namespace Scene
 	{
 		CHECK( _Detach( msg->oldModule ) );
 
-		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< PerFrameCmdMsgList_t >() )
+		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< CmdBufferMngrMsg_t >() )
 		{
 			CHECK( _SetState( EState::Initial ) );
 		}

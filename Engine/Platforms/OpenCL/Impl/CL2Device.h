@@ -69,7 +69,7 @@ namespace PlatformCL
 		bool CreateDevice (cl::cl_device_id id);
 		bool CreateContext ();
 		bool CreateGLSharedContext ();
-		bool CreateQueue ();
+		bool CreateQueue (bool enableProfiling = false);
 		bool WriteInfo ();
 		void Deinitialize ();
 		
@@ -78,13 +78,6 @@ namespace PlatformCL
 
 		bool					IsShared ()						const	{ return _isShared; }
 		uint					GetVersion ()					const	{ return _version; }
-		
-		//ulong3 const&			GetMaxThreads ()				const	{ return _maxThreads; }
-		//ulong3				GetMaxWorkGroupCount ()			const	{ return GetMaxThreads() / GetMaxLocalGroupSize(); }
-		//ulong3 const&			GetMaxLocalGroupSize ()			const	{ return _maxLocalGroupSize; }
-		//ulong					GetMaxLocalGroupInvocations ()	const	{ return _maxInvocations; }
-
-		//usize					GetComputeUnitsCount ()			const	{ return _maxComputeUnits; }
 
 		Bytes<ulong>			GetTotalMemory ()				const	{ return _totalMemory; }
 		Bytes<ulong>			GetAvailableMemory ()			const;
@@ -99,9 +92,8 @@ namespace PlatformCL
 		bool					HasContext ()					const	{ return _context != null; }
 		bool					HasCommandQueue ()				const	{ return _queue != null; }
 
+
 	private:
-		//bool _ChoosePlatform (uint version, StringCRef deviceName);
-		//bool _ChooseDevice (uint version, StringCRef deviceName);
 		bool _CheckVersion ();
 		void _DeleteQueue ();
 

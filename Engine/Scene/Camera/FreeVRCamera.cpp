@@ -259,7 +259,7 @@ namespace Scene
 */
 	bool FreeVRCamera::_CameraGetState (const Message< SceneMsg::CameraGetState > &msg)
 	{
-		msg->result.Set({ _states });
+		msg->result.Set({ ArrayCRef<CameraState_t>( _states ) });
 		return true;
 	}
 	

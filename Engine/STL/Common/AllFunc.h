@@ -34,6 +34,10 @@ namespace GXTypes
 	template <typename R, typename T>	constexpr R & ReferenceCast (T & t);
 	
 	template <typename R, typename T>	constexpr R Cast (const T& value);
+	template <typename R, typename T>	constexpr R Cast (T& value);
+
+	template <typename R, typename T>	constexpr R Cast (const T* value);
+	template <typename R, typename T>	constexpr R Cast (T* value);
 
 	
 	template <typename T, usize I>		constexpr usize	CountOf (const T (&arr)[I]);

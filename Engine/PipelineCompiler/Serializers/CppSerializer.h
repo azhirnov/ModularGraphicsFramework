@@ -72,6 +72,13 @@ namespace PipelineCompiler
 		String	ShaderSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc) const override;
 		String	ShaderFileSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc) const override;
 		String	ShaderFileBinSPIRV (StringCRef name, BinArrayCRef shaderSrc) const override;
+		
+		String	ShaderBinCL (StringCRef name, BinArrayCRef shaderSrc) const override;
+		String	ShaderSrcCL (StringCRef name, BinArrayCRef shaderSrc) const override;
+		String	ShaderFileSrcCL (StringCRef name, BinArrayCRef shaderSrc) const override;
+		String	ShaderFileBinCL (StringCRef name, BinArrayCRef shaderSrc) const override;
+		
+		String	ShaderSrcCPP (StringCRef name, BinArrayCRef shaderSrc) const override;
 
 		String	GetSourceFileExt () const override	{ return "cpp"; }
 		String	GetHeaderFileExt () const override	{ return "h"; }

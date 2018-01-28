@@ -34,9 +34,10 @@ namespace PlatformGL
 		if ( msg->newManager )
 		{
 			msg->newManager->Subscribe( this, &GL4BaseModule::_DeviceBeforeDestroy );
+			msg->newManager->Subscribe( this, &GL4BaseModule::_DeviceDeleted );
 
 			Message< GpuMsg::GetGLPrivateClasses >	req_dev;
-			msg->newManager->Send( req_dev );
+			CHECK( msg->newManager->Send( req_dev ) );
 
 			_glDevice = req_dev->result->device;
 		}
@@ -60,6 +61,19 @@ namespace PlatformGL
 		return true;
 	}
 	
+/*
+=================================================
+	_DeviceDeleted
+=================================================
+*/
+	bool GL4BaseModule::_DeviceDeleted (const Message< ModuleMsg::Delete > &msg)
+	{
+		Send( msg );
+
+		_glDevice = null;
+		return true;
+	}
+
 /*
 =================================================
 	_GetDeviceInfo
@@ -88,6 +102,27 @@ namespace PlatformGL
 	bool GL4BaseModule::_GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
+	}
+	
+/*
+=================================================
+	_GetGPUThread
+=================================================
+*/
+	ModulePtr GL4BaseModule::_GetGPUThread (const ModulePtr &thread)
+	{
+		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetGLPrivateClasses >;
+		using GThreadEventMsgList_t	= MessageListFrom< GpuMsg::DeviceBeforeDestroy, ModuleMsg::Delete >;
+
+		ModulePtr	result = thread;
+		
+		if ( not result )
+			result = GlobalSystems()->parallelThread->GetModuleByID( GLThreadModuleID );
+
+		if ( not result )
+			result = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventMsgList_t >();
+
+		return result;
 	}
 
 }	// PlatformGL

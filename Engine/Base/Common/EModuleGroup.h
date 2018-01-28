@@ -17,6 +17,7 @@ namespace Base
 			Global	= 1,
 			Thread,
 			Object,
+			Component,
 
 			// free to use: Object+1 .. _Mask
 
@@ -30,6 +31,7 @@ namespace Base
 	DECL_STRING_TO_ID( GModID, EModuleGroup::Global );
 	DECL_STRING_TO_ID( TModID, EModuleGroup::Thread );
 	DECL_STRING_TO_ID( OModID, EModuleGroup::Object );
+	DECL_STRING_TO_ID( CModID, EModuleGroup::Component );
 
 
 }	// Base
