@@ -53,7 +53,7 @@ namespace GXMath
 
 		// Float SNorm to UNorm //
 		template <typename T>
-		inline static CHECKRES(T)  ToUNorm (const T &value)
+		CHECKRES inline static T  ToUNorm (const T &value)
 		{
 			STATIC_ASSERT( CompileTime::IsFloat<T> );
 
@@ -61,7 +61,7 @@ namespace GXMath
 		}
 
 		template <typename T, usize I, ulong U>
-		inline static CHECKRES(Vec<T,I,U>)  ToUNorm (const Vec<T,I,U> &value)
+		CHECKRES inline static Vec<T,I,U>  ToUNorm (const Vec<T,I,U> &value)
 		{
 			Vec<T,I,U>		res;
 			FOR( i, res )	res[i] = ToUNorm( value[i] );
@@ -69,7 +69,7 @@ namespace GXMath
 		}
 
 		template <typename T, usize I>
-		inline static CHECKRES(Vec<T,I,_UID_UNORM>)  ToUNorm (const Vec<T,I,_UID_SNORM> &value)
+		CHECKRES inline static Vec<T,I,_UID_UNORM>  ToUNorm (const Vec<T,I,_UID_SNORM> &value)
 		{
 			Vec<T,I,_UID_UNORM>		res;
 			FOR( i, res )	res[i] = ToUNorm( value[i] );
@@ -79,7 +79,7 @@ namespace GXMath
 
 		// Float UNorm to SNorm //
 		template <typename T>
-		inline static CHECKRES(T)  ToSNorm (const T &value)
+		CHECKRES inline static T  ToSNorm (const T &value)
 		{
 			STATIC_ASSERT( CompileTime::IsFloat<T> );
 
@@ -87,7 +87,7 @@ namespace GXMath
 		}
 
 		template <typename T, usize I, ulong U>
-		inline static CHECKRES(Vec<T,I,U>)  ToSNorm (const Vec<T,I,U> &value)
+		CHECKRES inline static Vec<T,I,U>  ToSNorm (const Vec<T,I,U> &value)
 		{
 			Vec<T,I,U>		res;
 			FOR( i, res )	res[i] = ToSNorm( value[i] );
@@ -95,7 +95,7 @@ namespace GXMath
 		}
 
 		template <typename T, usize I>
-		inline static CHECKRES(Vec<T,I,_UID_SNORM>)  ToSNorm (const Vec<T,I,_UID_UNORM> &value)
+		CHECKRES inline static Vec<T,I,_UID_SNORM>  ToSNorm (const Vec<T,I,_UID_UNORM> &value)
 		{
 			Vec<T,I,_UID_SNORM>		res;
 			FOR( i, res )	res[i] = ToSNorm( value[i] );
@@ -105,7 +105,7 @@ namespace GXMath
 
 		// UNormToInt //
 		template <typename R, typename T>
-		inline static CHECKRES(R)  UNormToInt (const T &value)
+		CHECKRES inline static R  UNormToInt (const T &value)
 		{
 			STATIC_ASSERT( CompileTime::IsFloat<T> );
 			STATIC_ASSERT( CompileTime::IsUnsigned<R> );
@@ -114,7 +114,7 @@ namespace GXMath
 		}
 		
 		template <typename R, typename T, usize I, ulong U>
-		inline static CHECKRES(Vec<R,I,U>)  UNormToInt (const Vec<T,I,U> &value)
+		CHECKRES inline static Vec<R,I,U>  UNormToInt (const Vec<T,I,U> &value)
 		{
 			Vec<R,I,U>		res;
 			FOR( i, res )	res[i] = UNormToInt<R>( value[i] );
@@ -122,7 +122,7 @@ namespace GXMath
 		}
 
 		template <typename R, typename T, usize I>
-		inline static CHECKRES(Vec<R,I>)  UNormToInt (const Vec<T,I,_UID_UNORM> &value)
+		CHECKRES inline static Vec<R,I>  UNormToInt (const Vec<T,I,_UID_UNORM> &value)
 		{
 			Vec<R,I>		res;
 			FOR( i, res )	res[i] = UNormToInt<R>( value[i] );
@@ -132,7 +132,7 @@ namespace GXMath
 
 		// SNormToInt //
 		template <typename R, typename T>
-		inline static CHECKRES(R)  SNormToInt (const T &value)
+		CHECKRES inline static R  SNormToInt (const T &value)
 		{
 			STATIC_ASSERT( CompileTime::IsFloat<T> );
 			STATIC_ASSERT( CompileTime::IsSigned<R> );
@@ -143,7 +143,7 @@ namespace GXMath
 		}
 		
 		template <typename R, typename T, usize I, ulong U>
-		inline static CHECKRES(Vec<R,I,U>)  SNormToInt (const Vec<T,I,U> &value)
+		CHECKRES inline static Vec<R,I,U>  SNormToInt (const Vec<T,I,U> &value)
 		{
 			Vec<R,I,U>		res;
 			FOR( i, res )	res[i] = SNormToInt<R>( value[i] );
@@ -151,7 +151,7 @@ namespace GXMath
 		}
 		
 		template <typename R, typename T, usize I>
-		inline static CHECKRES(Vec<R,I>)  SNormToInt (const Vec<T,I,_UID_SNORM> &value)
+		CHECKRES inline static Vec<R,I>  SNormToInt (const Vec<T,I,_UID_SNORM> &value)
 		{
 			Vec<R,I>		res;
 			FOR( i, res )	res[i] = SNormToInt<R>( value[i] );
@@ -161,7 +161,7 @@ namespace GXMath
 
 		// IntToUNorm //
 		template <typename R, typename T>
-		inline static CHECKRES(R)  IntToUNorm (const T &value)
+		CHECKRES inline static R  IntToUNorm (const T &value)
 		{
 			STATIC_ASSERT( CompileTime::IsInteger<T> and CompileTime::IsUnsigned<T> );
 			STATIC_ASSERT( CompileTime::IsFloat<R> );
@@ -170,7 +170,7 @@ namespace GXMath
 		}
 		
 		/*template <typename R, typename T, usize I, ulong U>
-		inline static CHECKRES(Vec<R,I,U>)  IntToUNorm (const Vec<T,I,U> &value)
+		CHECKRES inline static Vec<R,I,U>  IntToUNorm (const Vec<T,I,U> &value)
 		{
 			Vec<R,I,U>		res;
 			FOR( i, res )	res[i] = IntToUNorm<R>( value[i] );
@@ -178,7 +178,7 @@ namespace GXMath
 		}*/
 		
 		template <typename R, typename T, usize I, ulong U>
-		inline static CHECKRES(Vec<R,I,_UID_UNORM>)  IntToUNorm (const Vec<T,I,U> &value)
+		CHECKRES inline static Vec<R,I,_UID_UNORM>  IntToUNorm (const Vec<T,I,U> &value)
 		{
 			Vec<R,I,_UID_UNORM>	res;
 			FOR( i, res )	res[i] = IntToUNorm<R>( value[i] );
@@ -188,7 +188,7 @@ namespace GXMath
 
 		// IntToSNorm //
 		template <typename R, typename T>
-		inline static CHECKRES(R)  IntToSNorm (const T &value)
+		CHECKRES inline static R  IntToSNorm (const T &value)
 		{
 			STATIC_ASSERT( CompileTime::IsInteger<T> and CompileTime::IsSigned<T> );
 			STATIC_ASSERT( CompileTime::IsFloat<R> );
@@ -199,7 +199,7 @@ namespace GXMath
 		}
 		
 		/*template <typename R, typename T, usize I, ulong U>
-		inline static CHECKRES(Vec<R,I,U>)  IntToSNorm (const Vec<T,I,U> &value)
+		CHECKRES inline static Vec<R,I,U>  IntToSNorm (const Vec<T,I,U> &value)
 		{
 			Vec<R,I,U>		res;
 			FOR( i, res )	res[i] = IntToSNorm<R>( value[i] );
@@ -207,7 +207,7 @@ namespace GXMath
 		}*/
 		
 		template <typename R, typename T, usize I, ulong U>
-		inline static CHECKRES(Vec<R,I,_UID_SNORM>)  IntToSNorm (const Vec<T,I,U> &value)
+		CHECKRES inline static Vec<R,I,_UID_SNORM>  IntToSNorm (const Vec<T,I,U> &value)
 		{
 			Vec<R,I,_UID_SNORM>	res;
 			FOR( i, res )	res[i] = IntToSNorm<R>( value[i] );

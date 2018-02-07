@@ -1,5 +1,5 @@
 
-#if 0 //def __cplusplus
+#ifdef __cplusplus
 #include "Engine/PipelineCompiler/Pipelines/ComputePipeline.h"
 
 using namespace PipelineCompiler;
@@ -94,7 +94,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
 }
 
 
-layout(binding=0, rgba8) writeonly uniform image2D  unImage;
+layout(binding=0, rgba8) writeonly uniform image2D  un_OutImage;
 
 void main ()
 {
@@ -106,7 +106,7 @@ void main ()
 
 	mainImage( fragColor, fragCoord );
 
-	imageStore( unImage, ivec2(gl_GlobalInvocationID.xy), fragColor );
+	imageStore( un_OutImage, ivec2(gl_GlobalInvocationID.xy), fragColor );
 }
 
 #endif

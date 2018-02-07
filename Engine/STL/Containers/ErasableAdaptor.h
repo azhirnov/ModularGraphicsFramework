@@ -50,7 +50,7 @@ namespace ContainerAdaptors
 
 	// variables
 	private:
-		ArrayRef<T>			_arr;			// TODO: use UnitBuffer
+		ArrayRef<T>			_arr;			// TODO: use UniBuffer
 		void *				_ref			= null;
 		EraseByIndexFunc_t	_eraseByIdx		= null;
 		

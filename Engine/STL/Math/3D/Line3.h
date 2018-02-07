@@ -71,7 +71,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  Line3<T>::operator == (const Self &right) const
+	CHECKRES inline bool  Line3<T>::operator == (const Self &right) const
 	{
 		return All( Begin() == right.Begin() ) and All( End() == right.End() );
 	}
@@ -82,7 +82,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  Line3<T>::operator != (const Self &right) const
+	CHECKRES inline bool  Line3<T>::operator != (const Self &right) const
 	{
 		return not ( (*this) == right );
 	}
@@ -93,7 +93,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Line3<T>)  Line3<T>::Reflection (const Vec_t &normal) const
+	CHECKRES inline Line3<T>  Line3<T>::Reflection (const Vec_t &normal) const
 	{
 		/*      this
 			|  /
@@ -113,7 +113,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(T)  Line3<T>::MinDistance (const Vec_t &point) const
+	CHECKRES inline T  Line3<T>::MinDistance (const Vec_t &point) const
 	{
 		// a, b, c
 		const Vec_t	d = End() - Begin();
@@ -136,17 +136,11 @@ namespace GXTypes
 {
 	
 	template <typename T>
-	struct Hash< GXMath::Line3<T> > :
-		private Hash< typename GXMath::Line3<T>::Vec_t >
+	struct Hash< GXMath::Line3<T> >
 	{
-		typedef GXMath::Line3<T>							Key_t;
-		typedef Hash< typename GXMath::Line3<T>::Vec_t >	Base_t;
-		typedef typename Base_t::Result_t					Result_t;
-
-		CHECKRES(Result_t)  operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const GXMath::Line3<T> &x) const noexcept
 		{
-			return	Base_t::operator ()( x.Begin() ) +
-					Base_t::operator ()( x.End() );
+			return HashOf( x.Begin() ) + HashOf( x.End() );
 		}
 	};
 

@@ -345,12 +345,12 @@ namespace CompileTime
 			FLAGS	= _ctime_hidden_::VOID,
 		};
 
-		static constexpr void	Max()		{ return void(); }
-		static constexpr void	Min()		{ return void(); }
-		static constexpr void	Inf()		{ return void(); }
-		static constexpr void	NaN()		{ return void(); }
+		static void				Max()		{ return void(); }
+		static void				Min()		{ return void(); }
+		static void				Inf()		{ return void(); }
+		static void				NaN()		{ return void(); }
 		
-		static constexpr void	Epsilon()	{ return void(); }
+		static void				Epsilon()	{ return void(); }
 		static constexpr uint	SignBit()	{ return 0; }
 		static constexpr uint	Count()		{ return 0; }
 	};
@@ -616,8 +616,8 @@ namespace CompileTime
 
 		static constexpr type	Max()		{ return _ctime_hidden_::FLOAT_MAX; }
 		static constexpr type	Min()		{ return _ctime_hidden_::FLOAT_MIN; }
-		static constexpr type	Inf()		{ return _ctime_hidden_::FLOAT_INF; }
-		static constexpr type	NaN()		{ return _ctime_hidden_::FLOAT_NAN; }
+		static const     type	Inf()		{ return _ctime_hidden_::FLOAT_INF; }
+		static const     type	NaN()		{ return _ctime_hidden_::FLOAT_NAN; }
 		
 		static constexpr type	Epsilon()	{ return _ctime_hidden_::FLOAT_EPSILON; }
 		static constexpr uint	SignBit()	{ return CompileTime::SizeOf<type>::bits-1; }
@@ -642,8 +642,8 @@ namespace CompileTime
 
 		static constexpr type	Max()		{ return _ctime_hidden_::DOUBLE_MAX; }
 		static constexpr type	Min()		{ return _ctime_hidden_::DOUBLE_MIN; }
-		static constexpr type	Inf()		{ return _ctime_hidden_::DOUBLE_INF; }
-		static constexpr type	NaN()		{ return _ctime_hidden_::DOUBLE_NAN; }
+		static const     type	Inf()		{ return _ctime_hidden_::DOUBLE_INF; }
+		static const     type	NaN()		{ return _ctime_hidden_::DOUBLE_NAN; }
 		
 		static constexpr type	Epsilon()	{ return _ctime_hidden_::DOUBLE_EPSILON; }
 		static constexpr uint	SignBit()	{ return CompileTime::SizeOf<type>::bits-1; }
@@ -668,8 +668,8 @@ namespace CompileTime
 
 		static constexpr type	Max()		{ return _ctime_hidden_::DOUBLE_MAX; }
 		static constexpr type	Min()		{ return _ctime_hidden_::DOUBLE_MIN; }
-		static constexpr type	Inf()		{ return _ctime_hidden_::DOUBLE_INF; }
-		static constexpr type	NaN()		{ return _ctime_hidden_::DOUBLE_NAN; }
+		static const     type	Inf()		{ return _ctime_hidden_::DOUBLE_INF; }
+		static const     type	NaN()		{ return _ctime_hidden_::DOUBLE_NAN; }
 		
 		static constexpr type	Epsilon()	{ return _ctime_hidden_::DOUBLE_EPSILON; }
 		static constexpr uint	SignBit()	{ return CompileTime::SizeOf<type>::bits-1; }

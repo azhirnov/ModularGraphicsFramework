@@ -9,10 +9,10 @@ using namespace GX_STL::GXMath;
 
 extern void Test_Math_Clamp_Wrap ()
 {
-	float a0 = Clamp( 1.0f, 2.0f, 5.0f );		TEST( Equals( a0, 2.0f ) );
-	float a1 = Clamp( 6.0f, 2.0f, 5.0f );		TEST( Equals( a1, 5.0f ) );
-	float a2 = Clamp( 4.0f, 2.0f, 5.0f );		TEST( Equals( a2, 4.0f ) );
-	float a3 = Clamp( 1.0f, 0.0f, 0.0f );		TEST( Equals( a3, 0.0f ) );
+	float a0 = GXMath::Clamp( 1.0f, 2.0f, 5.0f );		TEST( Equals( a0, 2.0f ) );
+	float a1 = GXMath::Clamp( 6.0f, 2.0f, 5.0f );		TEST( Equals( a1, 5.0f ) );
+	float a2 = GXMath::Clamp( 4.0f, 2.0f, 5.0f );		TEST( Equals( a2, 4.0f ) );
+	float a3 = GXMath::Clamp( 1.0f, 0.0f, 0.0f );		TEST( Equals( a3, 0.0f ) );
 
 	float b0 = Wrap( 1.0f, 2.0f, 5.0f );		TEST( Equals( b0, 4.0f ) );
 	float b1 = Wrap( 6.0f, 2.0f, 5.0f );		TEST( Equals( b1, 3.0f ) );

@@ -53,6 +53,9 @@ namespace GXMath
 
 		// methods
 		private:
+			IntColorFormatInfo () : sizeInBits{0}, isSigned{false}
+			{}
+
 			template <typename ColorType>
 			IntColorFormatInfo (uint sizeR, uint sizeG, uint sizeB, uint sizeA, const ColorType &) :
 				sizeInBits( sizeR, sizeG, sizeB, sizeA ),
@@ -66,7 +69,7 @@ namespace GXMath
 
 		public:
 			template <uint sizeR, uint sizeG, uint sizeB, uint sizeA, typename ColorType>
-			static IntColorFormatInfo PackedType (const ColorType &color)
+			CHECKRES static IntColorFormatInfo PackedType (const ColorType &color)
 			{
 				STATIC_ASSERT( (sizeR + sizeG + sizeB + sizeA) == CompileTime::SizeOf<ColorType>::bits );
 				return IntColorFormatInfo( sizeR, sizeG, sizeB, sizeA, color );
@@ -74,7 +77,7 @@ namespace GXMath
 
 
 			template <typename ValueType, uint ChannelsCount, typename ColorType>
-			static IntColorFormatInfo SimpleType (const ColorType &color)
+			CHECKRES static IntColorFormatInfo SimpleType (const ColorType &color)
 			{
 				const uint channel_size = CompileTime::SizeOf<ValueType>::bits;
 
@@ -158,7 +161,7 @@ namespace GXMath
 
 		public:
 			template <typename ValueType>
-			static FloatColorFormatInfo SimpleType ()
+			CHECKRES static FloatColorFormatInfo SimpleType ()
 			{
 				const ValueType	min_value = GXTypes::MinValue<ValueType>();
 				const ValueType	max_value = GXTypes::MaxValue<ValueType>();
@@ -167,7 +170,7 @@ namespace GXMath
 			}
 
 
-			static FloatColorFormatInfo PackedType (const FloatFormat &maxValue)
+			CHECKRES static FloatColorFormatInfo PackedType (const FloatFormat &maxValue)
 			{
 				return FloatColorFormatInfo( maxValue, FloatFormat(0), false );
 			}

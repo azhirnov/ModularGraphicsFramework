@@ -230,7 +230,7 @@
 
 
 // notify compiler to generate error if function result unused
-#if COMPILER_VERSION >= 1913
+#if COMPILER_VERSION >= 1912
 #	define GX_CHECK_RESULT					[[nodiscard]]
 #elif COMPILER_VERSION >= 1700
 #	define GX_CHECK_RESULT					_Check_return_	// Compile with '/analize' key
@@ -251,6 +251,9 @@
 #if COMPILER_VERSION >= 2000	// TODO
 #	define GX_AUTO_IN_TEMPLATE_SUPPORTED	1
 #endif
+
+// TODO
+#define GX_RTTI_SUPPORTED
 
 //-------------------------------------------------------------------
 

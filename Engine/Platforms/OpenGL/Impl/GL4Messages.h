@@ -22,6 +22,15 @@ namespace GpuMsg
 
 
 	//
+	// Sync Client With Device
+	//
+	struct SyncGLClientWithDevice
+	{
+		Platforms::GpuFenceId	fenceId	= Uninitialized;	// if null then wait untill all commands complete
+	};
+
+
+	//
 	// Get GPU Buffer ID
 	//
 	struct GetGLBufferID

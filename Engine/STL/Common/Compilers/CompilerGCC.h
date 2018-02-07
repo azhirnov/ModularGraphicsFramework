@@ -225,6 +225,12 @@
 #	define GX_AUTO_IN_TEMPLATE_SUPPORTED	1
 #endif
 
+
+// TODO
+#if !defined( PLATFORM_ANDROID )
+#	define GX_RTTI_SUPPORTED
+#endif
+
 //-------------------------------------------------------------------
 
 

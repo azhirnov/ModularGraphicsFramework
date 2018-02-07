@@ -52,6 +52,8 @@ namespace GXTypes
 		template <typename T>	struct _StaticTypeId< const volatile T > : _StaticTypeId<T> {};
 
 
+#	ifdef GX_RTTI_SUPPORTED
+
 		//
 		// STD Type ID
 		//
@@ -87,7 +89,12 @@ namespace GXTypes
 				return _StdTypeID( typeid(T) );
 			}
 		};
+
+#	elif defined(GX_USE_STD_TYPEID)
+#		undef GX_USE_STD_TYPEID
+#	endif	// GX_RTTI_SUPPORTED
 		
+
 #	ifdef GX_USE_STD_TYPEID
 		template <typename T>
 		using _TypeIdOf	= _types_hidden_::_StdTypeId<T>;
@@ -109,13 +116,13 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	forceinline static TypeId  TypeIdOf () noexcept
+	CHECKRES forceinline static TypeId  TypeIdOf () noexcept
 	{
 		return _types_hidden_::_TypeIdOf<T>::Get();
 	}
 
 	template <typename T>
-	forceinline static TypeId  TypeIdOf (const T&) noexcept
+	CHECKRES forceinline static TypeId  TypeIdOf (const T&) noexcept
 	{
 		return TypeIdOf<T>();
 	}
@@ -128,9 +135,7 @@ namespace GXTypes
 	template <>
 	struct Hash< TypeId >
 	{
-		using Key_t	= TypeId;
-
-		HashResult  operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const TypeId &x) const noexcept
 		{
 			return HashOf( x.Get() );
 		}

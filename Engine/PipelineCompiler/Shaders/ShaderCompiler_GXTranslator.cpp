@@ -46,14 +46,15 @@ namespace PipelineCompiler
 		bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) override;
 		
 		bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) override;
+		bool TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) override;
 
 	private:
 		bool _TranslateBuffer (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateImage (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str);
-		bool _TranslateShared (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateVarying (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateConst (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateGlobal (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str);
+		bool _TranslateShared (Translator::TypeInfo const& info, OUT String &str);
 	};
 
 	
@@ -324,7 +325,7 @@ namespace PipelineCompiler
 		}
 		else
 		if ( qual.storage == glslang::TStorageQualifier::EvqShared ) {
-			CHECK_ERR( _TranslateShared( type, info, INOUT str ) );
+			CHECK_ERR( _TranslateShared( info, INOUT str ) );
 		}
 		else
 		if ( qual.storage == glslang::TStorageQualifier::EvqVaryingIn or qual.storage == glslang::TStorageQualifier::EvqVaryingOut ) {
@@ -824,6 +825,20 @@ namespace PipelineCompiler
 	{
 		return true;
 	}
+		
+/*
+=================================================
+	TranslateStructAccess
+=================================================
+*/
+	bool GLSL_DstLanguage::TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src)
+	{
+		if ( not objName.Empty() )
+			src << objName << ".";
+
+		src << fieldType.name;
+		return true;
+	}
 //-----------------------------------------------------------------------------
 
 
@@ -846,11 +861,12 @@ namespace PipelineCompiler
 				default :									RETURN_ERR( "unsupported packing" );
 			}
 		}
-
-		str << ToStringGLSL( info.memoryModel ) << ' ';
-
-		if ( info.type == EShaderVariable::Struct )
-			str << "buffer " << info.typeName;
+		
+		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqBuffer )
+		{
+			str << ToStringGLSL( info.memoryModel ) << ' '
+				<< "buffer " << info.typeName;
+		}
 		else
 			str << "uniform " << info.typeName;
 
@@ -908,7 +924,7 @@ namespace PipelineCompiler
 	_TranslateShared
 =================================================
 */
-	bool GLSL_DstLanguage::_TranslateShared (glslang::TType const&, Translator::TypeInfo const& info, OUT String &str)
+	bool GLSL_DstLanguage::_TranslateShared (Translator::TypeInfo const& info, OUT String &str)
 	{
 		str << "shared ";
 		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );

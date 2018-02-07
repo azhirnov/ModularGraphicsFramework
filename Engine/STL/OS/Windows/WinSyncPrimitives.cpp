@@ -1,17 +1,16 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "SyncPrimitives.h"
+#include "Engine/STL/OS/Windows/SyncPrimitives.h"
 #include "Engine/STL/Algorithms/ArrayUtils.h"
 #include "Engine/STL/Math/BinaryMath.h"
 
-#if defined( PLATFORM_WINDOWS ) and \
-	not defined( PLATFORM_SDL )
+#if defined( PLATFORM_WINDOWS ) and not defined( PLATFORM_SDL )
 
-#include "Library.h"
+#include "Engine/STL/OS/Windows/Library.h"
 #include "Engine/STL/OS/Base/ReadWriteSyncEmulation.h"
 #include "Engine/STL/OS/Base/ConditionVariableEmulation.h"
 
-#include "WinHeader.h"
+#include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace GX_STL
 {
@@ -72,7 +71,7 @@ namespace OS
 	TryLock
 =================================================
 */
-	CHECKRES(bool) CriticalSection::TryLock ()
+	bool CriticalSection::TryLock ()
 	{
 		ASSERT( IsValid() );
 		return ::TryEnterCriticalSection( &_crSection.Get<CRITICAL_SECTION>() ) != 0;
@@ -273,7 +272,7 @@ namespace OS
 	TryLockWrite
 =================================================
 */
-	CHECKRES(bool) ReadWriteSync::TryLockWrite ()
+	bool ReadWriteSync::TryLockWrite ()
 	{
 		return _TryAcquireSRWLockExclusive( &_srw.Get<SRWLOCK>() ) != 0;
 	}
@@ -303,7 +302,7 @@ namespace OS
 	TryLockRead
 =================================================
 */
-	CHECKRES(bool) ReadWriteSync::TryLockRead ()
+	bool ReadWriteSync::TryLockRead ()
 	{
 		return _TryAcquireSRWLockShared( &_srw.Get<SRWLOCK>() ) != 0;
 	}
@@ -673,7 +672,7 @@ namespace OS
 	TryLock
 =================================================
 */
-	CHECKRES(bool) Semaphore::TryLock ()
+	bool Semaphore::TryLock ()
 	{
 		uint result = ::WaitForSingleObject( _sem.Get<HANDLE>(), 1 );
 		return result == WAIT_OBJECT_0;

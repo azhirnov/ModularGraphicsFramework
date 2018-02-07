@@ -226,7 +226,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void  CircularQueue<T,S,MC>::_Reallocate (usize newSize, bool allowReserve)
+	inline void  CircularQueue<T,S,MC>::_Reallocate (const usize newSize, const bool allowReserve)
 	{
 		if ( newSize <= _size )
 			return;
@@ -281,7 +281,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline usize CircularQueue<T,S,MC>::_WrapIndex (isize i) const
+	inline usize CircularQueue<T,S,MC>::_WrapIndex (const isize i) const
 	{
 		return ( i < 0 ? _size + i : ( i >= (isize)_size ? i - _size : i ) );
 	}
@@ -343,14 +343,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline T & CircularQueue<T,S,MC>::operator [] (usize i)
+	inline T & CircularQueue<T,S,MC>::operator [] (const usize i)
 	{
 		ASSERT( i < Count() );
 		return _memory.Pointer()[ _WrapIndex( i + _first ) ];
 	}
 	
 	template <typename T, typename S, typename MC>
-	inline T const & CircularQueue<T,S,MC>::operator [] (usize i) const
+	inline T const & CircularQueue<T,S,MC>::operator [] (const usize i) const
 	{
 		ASSERT( i < Count() );
 		return _memory.Pointer()[ _WrapIndex( i + _first ) ];
@@ -455,7 +455,7 @@ namespace GXTypes
 */
 	template <typename T, typename S, typename MC>
 	template <typename B>
-	inline void CircularQueue<T,S,MC>::_AppendFront (B *pArray, usize count)
+	inline void CircularQueue<T,S,MC>::_AppendFront (B *pArray, const usize count)
 	{
 		if ( pArray == null or count == 0 )
 			return;
@@ -475,22 +475,58 @@ namespace GXTypes
 			_end   = count;
 		}
 		else
+			/*
 		if ( _first < _end )
 		{
-			count = GXMath::Min( count, _first );
+			usize	cnt = GXMath::Min( count, _size - _end );
 
-			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - count, pArray + count - count, count );
-			else									Strategy_t::Move( _memory.Pointer() + _first - count, (T*)pArray + count - count, count );
+			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, cnt );
+			else									Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, cnt );
 
-			_first -= count;
+			_end += cnt;
 			
-			if ( count != count )
+			if ( cnt != count )
+			{
+				_end = count - cnt;
+
+				if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray + cnt, count - cnt );
+				else									Strategy_t::Move( _memory.Pointer(), (T*)pArray + cnt, count - cnt );
+			}
+		}*//*
+		if ( _first < _end )
+		{
+			usize	cnt = GXMath::Min( count, _first );
+
+			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - count, pArray + count - count, cnt );
+			else									Strategy_t::Move( _memory.Pointer() + _first - count, (T*)pArray + count - count, cnt );
+
+			_first -= cnt;
+			
+			if ( cnt != count )
 			{
 				count   = count - count;
-				_first = _size - count;
+				_first = _size - cnt;
 
 				if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first, pArray, count );
 				else									Strategy_t::Move( _memory.Pointer() + _first, (T*)pArray, count );
+			}
+		}
+		else*/
+		if ( _first < _end )
+		{
+			const usize	cnt = GXMath::Min( count, _first );
+
+			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - cnt, pArray + count - cnt, cnt );
+			else									Strategy_t::Move( _memory.Pointer() + _first - cnt, (T*)pArray + count - cnt, cnt );
+
+			_first -= cnt;
+			
+			if ( cnt != count )
+			{
+				_first = _size - (count - cnt);
+
+				if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first, pArray, count - cnt );
+				else									Strategy_t::Move( _memory.Pointer() + _first, (T*)pArray, count - cnt );
 			}
 		}
 		else
@@ -509,7 +545,7 @@ namespace GXTypes
 */
 	template <typename T, typename S, typename MC>
 	template <typename B>
-	inline void CircularQueue<T,S,MC>::_AppendBack (B *pArray, usize count)
+	inline void CircularQueue<T,S,MC>::_AppendBack (B *pArray, const usize count)
 	{
 		if ( pArray == null or count == 0 )
 			return;
@@ -531,7 +567,7 @@ namespace GXTypes
 		else
 		if ( _first < _end )
 		{
-			usize	cnt = GXMath::Min( count, _size - _end );
+			const usize	cnt = GXMath::Min( count, _size - _end );
 
 			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, cnt );
 			else									Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, cnt );
@@ -647,7 +683,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void CircularQueue<T,S,MC>::Reserve (usize size)
+	inline void CircularQueue<T,S,MC>::Reserve (const usize size)
 	{
 		if ( size <= _size )
 			return;
@@ -661,7 +697,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void CircularQueue<T,S,MC>::Resize (usize newSize, bool allowReserve)
+	inline void CircularQueue<T,S,MC>::Resize (const usize newSize, const bool allowReserve)
 	{
 		const usize	old_count = Count();
 		
@@ -676,7 +712,7 @@ namespace GXTypes
 		
 		if ( newSize < old_count )
 		{
-			usize	first_del = _WrapIndex( _first + newSize );
+			const usize	first_del = _WrapIndex( _first + newSize );
 
 			if ( first_del > _end )
 			{
@@ -695,7 +731,7 @@ namespace GXTypes
 		_Reallocate( newSize, allowReserve );
 		_end = _WrapIndex( _first + newSize );
 
-		usize	first_uninit = _WrapIndex( _first + old_count );
+		const usize	first_uninit = _WrapIndex( _first + old_count );
 		
 		if ( first_uninit > _end )
 		{
@@ -830,7 +866,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void CircularQueue<T,S,MC>::GetParts (ArrayRef<T> &part0, ArrayRef<T> &part1)
+	inline void CircularQueue<T,S,MC>::GetParts (OUT ArrayRef<T> &part0, OUT ArrayRef<T> &part1)
 	{
 		if ( Empty() )
 		{
@@ -856,7 +892,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void CircularQueue<T,S,MC>::GetParts (ArrayCRef<T> &part0, ArrayCRef<T> &part1) const
+	inline void CircularQueue<T,S,MC>::GetParts (OUT ArrayCRef<T> &part0, OUT ArrayCRef<T> &part1) const
 	{
 		if ( Empty() )
 		{
@@ -887,18 +923,13 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	struct Hash< CircularQueue<T,S,MC> > :
-		private Hash< ArrayCRef<T> >
+	struct Hash< CircularQueue<T,S,MC> >
 	{
-		typedef CircularQueue<T,S,MC>		Key_t;
-		typedef Hash< ArrayCRef<T> >		Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const CircularQueue<T,S,MC> &x) const noexcept
 		{
-			typename Base_t::Key_t	part0;
-            typename Base_t::Key_t	part1;
-			Base_t			        hasher;
+			ArrayCRef<T>			part0;
+			ArrayCRef<T>			part1;
+			Hash< ArrayCRef<T> >    hasher;
 
 			x.GetParts( part0, part1 );
 

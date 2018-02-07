@@ -169,13 +169,13 @@ namespace File
 		MemRFile () {}
 
 		
-		static MemRFilePtr New ()
+		CHECKRES static MemRFilePtr New ()
 		{
 			return new MemRFile();
 		}
 
 
-		static MemRFilePtr New (const RFilePtr &file)
+		CHECKRES static MemRFilePtr New (const RFilePtr &file)
 		{
 			MemRFilePtr	mfile = new MemRFile();
 
@@ -186,7 +186,7 @@ namespace File
 		}
 
 		template <typename T>
-		static MemRFilePtr New (ArrayCRef<T> arr, EFlag flag)
+		CHECKRES static MemRFilePtr New (ArrayCRef<T> arr, EFlag flag)
 		{
 			MemRFilePtr file = new MemRFile();
 
@@ -238,7 +238,7 @@ namespace File
 					RETURN_ERR( "invalid flag" );
 			}
 
-			_pos	= 0;
+			_pos	= BytesU();
 			_opened	= true;
 
 			return true;
@@ -442,7 +442,7 @@ namespace File
 		MemWFile () {}
 
 
-		static MemWFilePtr New (BytesU reserve = BytesU())
+		CHECKRES static MemWFilePtr New (BytesU reserve = BytesU())
 		{
 			MemWFilePtr	file = new MemWFile();
 

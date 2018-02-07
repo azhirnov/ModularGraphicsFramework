@@ -1,5 +1,5 @@
 // This is generated file
-// Created at: 2017/12/25 - 22:26:58
+// Created at: 2018/02/02 - 00:40:12
 
 #pragma once
 
@@ -17,7 +17,10 @@ void Create_default2 (PipelineTemplateDescriptor& descr);
 // From file 'default3.cpp'
 void Create_default3 (PipelineTemplateDescriptor& descr);
 
-// From file 'multitextured.cpp'
-void Create_multitextured (PipelineTemplateDescriptor& descr);
+// From file 'defaultcompute1.cpp'
+void Create_defaultcompute1 (PipelineTemplateDescriptor& descr);
+
+// From file 'defaultcompute2.cpp'
+void Create_defaultcompute2 (PipelineTemplateDescriptor& descr);
 
 };

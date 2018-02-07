@@ -3,10 +3,9 @@
 #pragma once
 
 #include "Engine/STL/OS/Base/ScopeLock.h"
-#include "OSWindows.h"
+#include "Engine/STL/OS/Windows/OSWindows.h"
 
-#if defined( PLATFORM_WINDOWS ) and \
-	not defined( PLATFORM_SDL )
+#if defined( PLATFORM_WINDOWS ) and not defined( PLATFORM_SDL )
 
 namespace GX_STL
 {
@@ -22,7 +21,7 @@ namespace OS
 	// Critical Section
 	//
 
-	struct _STL_EXPORT_ CriticalSection
+	struct _STL_EXPORT_ CriticalSection final : public Noncopyable
 	{
 		friend struct ConditionVariable;
 
@@ -48,17 +47,13 @@ namespace OS
 		CriticalSection ();
 		~CriticalSection ();
 
-		CHECKRES(bool) IsValid () const
-		{
-			return _inited;
-		}
+		bool IsValid () const	{ return _inited; }
 
-		CHECKRES(bool) TryLock ();
-
+		bool TryLock ();
 		void Lock ();
 		void Unlock ();
 
-		CHECKRES(ScopeLock)  GetScopeLock ()
+		CHECKRES ScopeLock  GetScopeLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->Lock(); }
@@ -68,7 +63,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		operator ScopeLock ()
+		CHECKRES operator ScopeLock ()
 		{
 			return GetScopeLock();
 		}
@@ -80,7 +75,7 @@ namespace OS
 	// Single Read, Multiple Write (with WinXP support)
 	//
 
-	struct _STL_EXPORT_ ReadWriteSync
+	struct _STL_EXPORT_ ReadWriteSync final : public Noncopyable
 	{
 		friend struct ConditionVariable;
 
@@ -105,8 +100,8 @@ namespace OS
 		ReadWriteSync ();
 		~ReadWriteSync ();
 
-		CHECKRES(bool) TryLockWrite ();
-		CHECKRES(bool) TryLockRead ();
+		bool TryLockWrite ();
+		bool TryLockRead ();
 
 		void LockWrite ();
 		void UnlockWrite ();
@@ -114,7 +109,7 @@ namespace OS
 		void LockRead ();
 		void UnlockRead ();
 
-		CHECKRES(ScopeLock)  GetScopeWriteLock ()
+		CHECKRES ScopeLock  GetScopeWriteLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->LockWrite(); }
@@ -123,7 +118,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		CHECKRES(ScopeLock)  GetScopeReadLock ()
+		CHECKRES ScopeLock  GetScopeReadLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->LockRead(); }
@@ -139,7 +134,7 @@ namespace OS
 	// Condition Variable
 	//
 
-	struct _STL_EXPORT_ ConditionVariable
+	struct _STL_EXPORT_ ConditionVariable final : public Noncopyable
 	{
 	// types
 	public:
@@ -167,10 +162,7 @@ namespace OS
 		ConditionVariable ();
 		~ConditionVariable ();
 
-		CHECKRES(bool) IsValid () const
-		{
-			return _inited;
-		}
+		bool IsValid () const	{ return _inited; }
 
 		void Signal ();
 		void Broadcast ();
@@ -184,7 +176,7 @@ namespace OS
 	// Synchronization Event
 	//
 	
-	struct _STL_EXPORT_ SyncEvent
+	struct _STL_EXPORT_ SyncEvent final : public Noncopyable
 	{
 	// types
 	public:
@@ -211,20 +203,15 @@ namespace OS
 		SyncEvent (EFlags flags = AUTO_RESET);
 		~SyncEvent ();
 
-		CHECKRES(bool) IsValid () const
-		{
-			return _event.IsDefined();
-		}
+		bool IsValid () const	{ return _event.IsDefined(); }
 
 		bool Signal ();
 		bool Reset ();
 		bool Pulse ();
 
-
 		bool Wait (TimeL time);
 
 		static int WaitEvents (ArrayRef<Self *> events, bool waitAll, TimeL time);
-
 
 		/*ScopeLock GetScopeLock()
 		{
@@ -251,7 +238,7 @@ namespace OS
 	// Semaphore
 	//
 
-	struct _STL_EXPORT_ Semaphore
+	struct _STL_EXPORT_ Semaphore final : public Noncopyable
 	{
 	// types
 	public:
@@ -272,20 +259,13 @@ namespace OS
 		void _Destroy ();
 
 	public:
-		explicit
-		Semaphore (uint initialValue);
-
+		explicit Semaphore (uint initialValue);
 		~Semaphore ();
 
-		CHECKRES(bool) IsValid () const
-		{
-			return _sem.IsDefined();
-		}
+		bool IsValid () const	{ return _sem.IsDefined(); }
 
 		void Lock ();
-
-		CHECKRES(bool) TryLock ();
-
+		bool TryLock ();
 		void Unlock ();
 
 		uint GetValue ();

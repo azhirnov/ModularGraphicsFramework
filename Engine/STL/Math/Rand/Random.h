@@ -33,54 +33,54 @@ namespace GXMath
 
 
 	// Sign (1 or -1)
-		static int Sign (const int = 0)
+		CHECKRES static int Sign (const int = 0)
 		{
 			return SetSign( 1, Bool() );
 		}
 		
 		template <usize I, ulong U>
-		static Vec<int,I,U> Sign (const Vec<int,I,U> = Uninitialized)
+		CHECKRES static Vec<int,I,U> Sign (const Vec<int,I,U> = Uninitialized)
 		{
 			return SetSign( Vec<int,I,U>(1), Bool<I>() );
 		}
 
 		template <typename T>
-		static T SignVec ()
+		CHECKRES static T SignVec ()
 		{
 			return Sign( T() );
 		}
 
 
 	// Sign Or Zero (-1, 0, 1)
-		static int SignOrZero (const int = 0)
+		CHECKRES static int SignOrZero (const int = 0)
 		{
 			const uint	val = RndEngine()();
 			return SetSign( (val >> 3) & 1, (val & 1) );
 		}
 		
 		template <usize I, ulong U>
-		static Vec<int,I,U> SignOrZero (const Vec<int,I,U> = Uninitialized)
+		CHECKRES static Vec<int,I,U> SignOrZero (const Vec<int,I,U> = Uninitialized)
 		{
-			Vec<int,I,U>		res;
+			Vec<int,I,U>	res;
 			FOR( i, res )	res[i] = SignOrZero( int() );
 			return res;
 		}
 
 		template <typename T>
-		static T SignOrZeroVec ()
+		CHECKRES static T SignOrZeroVec ()
 		{
 			return SignOrZero( T() );
 		}
 
 
 	// Boolean
-		static bool Bool (const bool = false)
+		CHECKRES static bool Bool (const bool = false)
 		{
 			return RndEngine()() & 1;
 		}
 		
 		template <usize I, ulong U>
-		static Vec<bool,I,U> Bool (const Vec<bool,I,U> & = Uninitialized)
+		CHECKRES static Vec<bool,I,U> Bool (const Vec<bool,I,U> & = Uninitialized)
 		{
 			Vec<bool,I,U>	res;
 			FOR( i, res )	res[i] = Bool();
@@ -88,7 +88,7 @@ namespace GXMath
 		}
 
 		template <typename T>
-		static T BVec ()
+		CHECKRES static T BVec ()
 		{
 			return Bool( T() );
 		}
@@ -96,13 +96,13 @@ namespace GXMath
 
 	// Integer
 		template <typename T>
-		static T Int (const T & = T())
+		CHECKRES static T Int (const T & = T())
 		{
 			return (T) RndEngine()();
 		}
 		
 		template <typename T, usize I, ulong U>
-		static Vec<T,I,U> Int (const Vec<T,I,U> & = Uninitialized)
+		CHECKRES static Vec<T,I,U> Int (const Vec<T,I,U> & = Uninitialized)
 		{
 			Vec<T,I,U>		res;
 			FOR( i, res )	res[i] = Int<T>();
@@ -110,7 +110,7 @@ namespace GXMath
 		}
 
 		template <typename T>
-		static T IVec ()
+		CHECKRES static T IVec ()
 		{
 			return Int( T() );
 		}
@@ -118,13 +118,13 @@ namespace GXMath
 
 	// Float
 		template <typename T>
-		static T Float (const T & = T())
+		CHECKRES static T Float (const T & = T())
 		{
 			return (T) RndEngine()() * T(0.1);
 		}
 		
 		template <typename T, usize I, ulong U>
-		static Vec<T,I,U> Float (const Vec<T,I,U> & = Uninitialized)
+		CHECKRES static Vec<T,I,U> Float (const Vec<T,I,U> & = Uninitialized)
 		{
 			Vec<T,I,U>		res;
 			FOR( i, res )	res[i] = Float<T>();
@@ -132,7 +132,7 @@ namespace GXMath
 		}
 
 		template <typename T>
-		static T FVec ()
+		CHECKRES static T FVec ()
 		{
 			return Float( T() );
 		}
@@ -140,7 +140,7 @@ namespace GXMath
 
 	// Float Unsigned Normalized	0.0 ... 1.0
 		template <typename T>
-		static T UNorm (const T & = T())
+		CHECKRES static T UNorm (const T & = T())
 		{
 			STATIC_ASSERT( CompileTime::IsFloat<T>, "return value must be float!" );
 			
@@ -152,7 +152,7 @@ namespace GXMath
 		}
 		
 		template <typename T, usize I, ulong U>
-		static Vec<T,I,U> UNorm (const Vec<T,I,U> & = Uninitialized)
+		CHECKRES static Vec<T,I,U> UNorm (const Vec<T,I,U> & = Uninitialized)
 		{
 			Vec<T,I,U>		res;
 			FOR( i, res )	res[i] = UNorm<T>();
@@ -160,7 +160,7 @@ namespace GXMath
 		}
 
 		template <typename T>
-		static T UNormVec ()
+		CHECKRES static T UNormVec ()
 		{
 			return UNorm( T() );
 		}
@@ -168,7 +168,7 @@ namespace GXMath
 
 	// Float Signed Normalized	-1.0 ... 1.0
 		template <typename T>
-		static T SNorm (const T & = T())
+		CHECKRES static T SNorm (const T & = T())
 		{
 			STATIC_ASSERT( CompileTime::IsFloat<T>, "return value must be float!" );
 
@@ -176,7 +176,7 @@ namespace GXMath
 		}
 		
 		template <typename T, usize I, ulong U>
-		static Vec<T,I,U> SNorm (const Vec<T,I,U> & = Uninitialized)
+		CHECKRES static Vec<T,I,U> SNorm (const Vec<T,I,U> & = Uninitialized)
 		{
 			Vec<T,I,U>		res;
 			FOR( i, res )	res[i] = SNorm<T>();
@@ -184,7 +184,7 @@ namespace GXMath
 		}
 
 		template <typename T>
-		static T SNormVec ()
+		CHECKRES static T SNormVec ()
 		{
 			return SNorm( T() );
 		}
@@ -192,14 +192,14 @@ namespace GXMath
 
 	// Float In Range
 		template <typename T>
-		static T FloatRange (const T& minValue, const T& maxValue)
+		CHECKRES static T FloatRange (const T& minValue, const T& maxValue)
 		{
 			ASSERT( minValue < maxValue );
 			return UNorm<T>() * (maxValue - minValue) + minValue;
 		}
 		
 		template <typename T, usize I, ulong U>
-		static Vec<T,I,U> FloatRange (const Vec<T,I,U> &minValue, const Vec<T,I,U> &maxValue)
+		CHECKRES static Vec<T,I,U> FloatRange (const Vec<T,I,U> &minValue, const Vec<T,I,U> &maxValue)
 		{
 			Vec<T,I,U>		res;
 			FOR( i, res )	res[i] = FloatRange<T>( minValue[i], maxValue[i] );
@@ -209,14 +209,14 @@ namespace GXMath
 
 	// Integer In Range
 		template <typename T>
-		static T IntRange (const T& minValue, const T& maxValue)
+		CHECKRES static T IntRange (const T& minValue, const T& maxValue)
 		{
 			typedef typename CompileTime::NearFloat::FromType<T>  Float_t;
 			return (T) RoundToInt( FloatRange( Float_t(minValue), Float_t(maxValue) ) );
 		}
 		
 		template <typename T, usize I, ulong U>
-		static Vec<T,I,U> IntRange (const Vec<T,I,U> &minValue, const Vec<T,I,U> &maxValue)
+		CHECKRES static Vec<T,I,U> IntRange (const Vec<T,I,U> &minValue, const Vec<T,I,U> &maxValue)
 		{
 			Vec<T,I,U>		res;
 			FOR( i, res )	res[i] = IntRange<T>( minValue[i], maxValue[i] );
@@ -226,13 +226,13 @@ namespace GXMath
 
 	// Range
 		template <typename T>
-		static T Range (const T& minValue, const T& maxValue)
+		CHECKRES static T Range (const T& minValue, const T& maxValue)
 		{
 			return IntRange( minValue, maxValue );
 		}
 		
 		template <typename T, usize I, ulong U>
-		static Vec<T,I,U> Range (const Vec<T,I,U> &minValue, const Vec<T,I,U> &maxValue)
+		CHECKRES static Vec<T,I,U> Range (const Vec<T,I,U> &minValue, const Vec<T,I,U> &maxValue)
 		{
 			return IntRange( minValue, maxValue );
 		}

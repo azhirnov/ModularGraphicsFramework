@@ -22,13 +22,13 @@ namespace GXMath
 	// Float -1.0..1.0
 	public:
 		template <typename T>
-		static Float_t Float (const T &val)
+		CHECKRES static Float_t Float (const T &val)
 		{
 			return _Float( val * T(16.0) );
 		}
 		
 		template <typename T, usize I, ulong U>
-		static Float_t Float (const Vec<T,I,U> &v)
+		CHECKRES static Float_t Float (const Vec<T,I,U> &v)
 		{
 			const float4	control( 40.0f, 64.0f, 256.0f, 96.0f );
 
@@ -38,13 +38,13 @@ namespace GXMath
 		}
 
 		template <typename T>
-		static Float_t Float (ArrayCRef<T> arr)
+		CHECKRES static Float_t Float (ArrayCRef<T> arr)
 		{
 			return _FloatI( Int( arr ) );
 		}
 		
 		template <typename T, usize I, ulong U>
-		static Vec<Float_t,I,U> FVec (const Vec<T,I,U> &v)
+		CHECKRES static Vec<Float_t,I,U> FVec (const Vec<T,I,U> &v)
 		{
 			const float4	control( 40.0f, 64.0f, 256.0f, 96.0f );
 
@@ -72,8 +72,8 @@ namespace GXMath
 	// Integer
 	public:
 		// TODO: change for Int_t type
-		static Int_t Int (const int &x)			{ return _Int( x ); }
-		static Int_t Int (const ilong &x)		{ return _Int( (x & 0xFFFFFFFF) ^ (x >> 32) ); }
+		CHECKRES static Int_t Int (const int &x)		{ return _Int( x ); }
+		CHECKRES static Int_t Int (const ilong &x)		{ return _Int( (x & 0xFFFFFFFF) ^ (x >> 32) ); }
 		/*
 		template <typename T, usize I, ulong U>
 		static Int_t Int (const Vec<T,I,U> &x)
@@ -82,7 +82,7 @@ namespace GXMath
 		}
 		*/
 		template <typename T>
-		static Int_t Int (ArrayCRef<T> arr)
+		CHECKRES static Int_t Int (ArrayCRef<T> arr)
 		{
 			Int_t	x = 0;
 			FOR( i, arr )	x ^= Int( arr[i] );
@@ -90,7 +90,7 @@ namespace GXMath
 		}
 
 		template <typename T, usize I, ulong U>
-		static Vec<Int_t,I,U> IVec (const Vec<T,I,U> &v)
+		CHECKRES static Vec<Int_t,I,U> IVec (const Vec<T,I,U> &v)
 		{
 			Vec<Int_t,I,U>	res;
 			FOR( i, res )	res[i] = Int( v[i] );

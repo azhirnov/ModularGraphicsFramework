@@ -222,14 +222,14 @@ namespace GXTypes
 
 
 		template <typename T2>
-		forceinline const T2 To () const
+		CHECKRES forceinline const T2 To () const
 		{
 			STATIC_ASSERT( typename T2::_is_shared_pointer(true) );
 			return T2( *this );
 		}
 
 		template <typename T2>
-		forceinline Ptr<T2> ToPtr () const
+		CHECKRES forceinline Ptr<T2> ToPtr () const
 		{
 			_CheckCast<T2>( _ptr );
 			return static_cast< T2 *>( RawPtr() );

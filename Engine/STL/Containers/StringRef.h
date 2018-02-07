@@ -217,7 +217,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline TStringRef<T>::TStringRef (T *pString, usize length) :
+	inline TStringRef<T>::TStringRef (T *pString, const usize length) :
 		_memory(pString), _count( pString == null ? 0 : length+1 )
 	{}
 	
@@ -259,14 +259,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline T & TStringRef<T>::operator [] (usize i)
+	inline T & TStringRef<T>::operator [] (const usize i)
 	{
 		ASSUME( i < _count );
 		return ptr()[i];
 	}
 	
 	template <typename T>
-	inline T const & TStringRef<T>::operator [] (usize i) const
+	inline T const & TStringRef<T>::operator [] (const usize i) const
 	{
 		ASSUME( i < _count );
 		return ptr()[i];
@@ -375,57 +375,6 @@ namespace GXTypes
 	{
 		return not ( *this < right );
 	}
-	
-/*
-=================================================
-	NumericLess
-=================================================
-*
-	template <typename T>
-	inline bool TStringRef<T>::NumericLess (TStringRef<const T> right) const
-	{
-		typedef typename CompileTime::NearUInt::FromType<T>		UType;
-
-		for (usize l = 0, r = 0; l < Length() or r < right.Length(); ++l, ++r)
-		{
-			if ( (*this)[l] != right[r] )
-				return UType( (*this)[l] ) < UType( right[r] );
-		
-			if ( (*this)[l] >= T('0') and (*this)[l] <= T('9') )
-			{
-				while ( (*this)[l] == T('0') ) { ++l; }
-				while ( right[r] == T('0') ) { ++r; }
-
-				const usize	l_begin = l,
-							r_begin = r;
-
-				while ( ((*this)[l] >= T('0') and (*this)[l] <= T('9')) and
-						(right[r] >= T('0') and right[r] <= T('9') ) )
-				{
-					++l; ++r;
-				}
-
-				if ( (l - l_begin) == (r - r_begin) )
-				{
-					const usize	l_end = l,
-								r_end = r;
-					l = l_begin;
-					r = r_begin;
-
-					while ( l < l_end and r < r_end )
-					{
-						if ( (*this)[l] != right[r] )
-							return UType( (*this)[l] ) < UType( right[r] );
-
-						++l; ++r;
-					}
-				}
-				else
-					return ( (l - l_begin) < (r - r_begin) );
-			}
-		}
-		return Length() < right.Length();
-	}
 
 /*
 =================================================
@@ -522,10 +471,10 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool TStringRef<T>::HasChar (T right) const
+	inline bool TStringRef<T>::HasChar (const T right) const
 	{
 		usize	pos;
-		return Find( right, pos );
+		return Find( right, OUT pos );
 	}
 	
 /*
@@ -534,10 +483,10 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool TStringRef<T>::HasCharIC (T right) const
+	inline bool TStringRef<T>::HasCharIC (const T right) const
 	{
 		usize	pos;
-		return FindIC( right, pos );
+		return FindIC( right, OUT pos );
 	}
 	
 /*
@@ -549,7 +498,7 @@ namespace GXTypes
 	inline bool TStringRef<T>::HasSubString (TStringRef<const T> right) const
 	{
 		usize	pos;
-		return Find( right, pos );
+		return Find( right, OUT pos );
 	}
 	
 /*
@@ -561,7 +510,7 @@ namespace GXTypes
 	inline bool TStringRef<T>::HasSubStringIC (TStringRef<const T> right) const
 	{
 		usize	pos;
-		return FindIC( right, pos );
+		return FindIC( right, OUT pos );
 	}
 	
 /*
@@ -570,7 +519,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool TStringRef<T>::_Equals (const T *left, const T *right, usize length)
+	inline bool TStringRef<T>::_Equals (const T *left, const T *right, const usize length)
 	{
 		for (usize i = 0; i < length; ++i) {
 			if ( left[i] != right[i] )
@@ -585,7 +534,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool TStringRef<T>::_EqualsIC (const T *left, const T *right, usize length)
+	inline bool TStringRef<T>::_EqualsIC (const T *left, const T *right, const usize length)
 	{
 		for (usize i = 0; i < length; ++i) {
 			if ( StringUtils::ToLower( left[i] ) != StringUtils::ToLower( right[i] ) )
@@ -600,7 +549,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool  TStringRef<T>::Find (TStringRef<const T> value, OUT usize &pos, usize start) const
+	inline bool  TStringRef<T>::Find (TStringRef<const T> value, OUT usize &pos, const usize start) const
 	{
 		if ( Empty() or value.Empty() )
 			return false;
@@ -628,7 +577,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool  TStringRef<T>::Find (const T tValue, OUT usize &pos, usize start) const
+	inline bool  TStringRef<T>::Find (const T tValue, OUT usize &pos, const usize start) const
 	{
 		if ( Empty() )
 			return false;
@@ -649,7 +598,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool  TStringRef<T>::FindIC (TStringRef<const T> value, OUT usize &pos, usize start) const
+	inline bool  TStringRef<T>::FindIC (TStringRef<const T> value, OUT usize &pos, const usize start) const
 	{
 		if ( Empty() or value.Empty() )
 			return false;
@@ -678,7 +627,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool  TStringRef<T>::FindIC (const T tValue, OUT usize &pos, usize start) const
+	inline bool  TStringRef<T>::FindIC (const T tValue, OUT usize &pos, const usize start) const
 	{
 		if ( Empty() )
 			return false;
@@ -712,7 +661,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline TStringRef<T>  TStringRef<T>::SubString (usize pos, usize count)
+	inline TStringRef<T>  TStringRef<T>::SubString (const usize pos, usize count)
 	{
 		if ( pos >= _count )
 			return TStringRef<T>();
@@ -729,7 +678,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline TStringRef<const T>  TStringRef<T>::SubString (usize pos, usize count) const
+	inline TStringRef<const T>  TStringRef<T>::SubString (const usize pos, usize count) const
 	{
 		if ( pos >= _count )
 			return TStringRef<const T>();
@@ -746,14 +695,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline TStringRef<T>  TStringRef<T>::GetInterval (usize begin, usize end)
+	inline TStringRef<T>  TStringRef<T>::GetInterval (const usize begin, const usize end)
 	{
 		ASSERT( begin < end );
 		return SubString( begin, end - begin );
 	}
 
 	template <typename T>
-	inline TStringRef<const T>  TStringRef<T>::GetInterval (usize begin, usize end) const
+	inline TStringRef<const T>  TStringRef<T>::GetInterval (const usize begin, const usize end) const
 	{
 		ASSERT( begin < end );
 		return SubString( begin, end - begin );
@@ -874,7 +823,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool  TStringRef<T>::EqualsInRange (TStringRef<const T> right, usize begin, usize end) const
+	inline bool  TStringRef<T>::EqualsInRange (TStringRef<const T> right, const usize begin, const usize end) const
 	{
 		if ( begin < end or Length() <= end or right.Length() <= end ) {
 			WARNING( "invalid args" );
@@ -890,7 +839,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline bool  TStringRef<T>::EqualsInRangeIC (TStringRef<const T> right, usize begin, usize end) const
+	inline bool  TStringRef<T>::EqualsInRangeIC (TStringRef<const T> right, const usize begin, const usize end) const
 	{
 		if ( begin < end or Length() <= end or right.Length() <= end ) {
 			WARNING( "invalid args" );
@@ -967,16 +916,11 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	struct Hash< TStringRef<T> > :
-		private Hash< ArrayCRef<T> >
+	struct Hash< TStringRef<T> >
 	{
-		typedef TStringRef<T>				Key_t;
-		typedef Hash< ArrayCRef<T> >		Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const TStringRef<T> &x) const noexcept
+		CHECKRES HashResult  operator () (const TStringRef<T> &x) const noexcept
 		{
-			return Base_t::operator ()( x );
+			return HashOf( ArrayCRef<T>( x ) );
 		}
 	};
 

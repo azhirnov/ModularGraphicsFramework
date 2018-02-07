@@ -10,7 +10,9 @@ using namespace CMake;
 #define ENABLE_UTILS
 #define ENABLE_PROJECTS
 //#define ENABLE_LUNARGLASS
+//#define ENABLE_EXTERNALS
 
+//#define ENABLE_SCU			// single compilation unit per thread
 #define NUM_THREADS	8
 
 
@@ -184,23 +186,49 @@ extern void GenMGFProject ()
 		// Clang
 		auto	clang = builder.AddClangCompiler();
 		{
+			Array<String>	shared_cxx_flags{ Clang::Cpp1z };
+
+			//shared_cxx_flags.Append({ Clang::Shadow, });
+
+			shared_cxx_flags.Append({ /*Clang::Pedantic,*/ Clang::CharSubscripts, Clang::DoublePromotion, Clang::Format, Clang::Main, Clang::MissingBraces, Clang::MissingIncludeDirs,
+									  Clang::Unused, Clang::Uninititalized, Clang::MayBeUninitialized, Clang::UnknownPragmas, Clang::Pragmas, Clang::StrictAliasing, Clang::StrictOverflow,
+									  Clang::Undef, Clang::EndifLabels, Clang::FreeNonheapObject, Clang::PointerArith, Clang::CastQual, Clang::CastAlign, Clang::WriteStrings,
+									  /*Clang::Conversion,*/ Clang::ConversionNull, Clang::ZeroAsNullConst, Clang::EnumCompare, Clang::SignCompare, /*Clang::SignConvertsion,*/ Clang::SizeofPointerMemaccess,
+									  Clang::LogicalOp, Clang::RTTI, Clang::Exceptions });
+			
+			shared_cxx_flags.PushBack( Clang::WarningsToErrors({ Clang::InitSelf, Clang::Parentheses, Clang::ReturnLocalAddr, Clang::ReturnType, Clang::NonTemplateFriend,
+															   Clang::ArrayBounds, Clang::DivByZero, Clang::Address, Clang::MissingFieldInit, /*Clang::AlignedNew,*/
+															   Clang::PlacementNew }) );
+
+			shared_cxx_flags.PushBack( Clang::DisableWarnings({ Clang::NonTemplateFriend, Clang::Comment, Clang::UndefinedInline, Clang::Switch, Clang::Narrowing,
+															    Clang::Cxx14Extensions, Clang::Cxx1ZExtensions }) );
+
+
 			auto	debug_cfg = clang->AddConfiguration( "Debug" );
 			{
+				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
+						 ->AddTargetCxxFlags({ Clang::DebugGddb, /*Clang::Sanitize_Undefined,*/ Clang::CheckIncompleteType, Clang::OptDebug });
 				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG"/*, "DEBUG"*/ });
 			}
 
 			auto	analyze_cfg = clang->AddConfiguration( "DebugAnalyze" );
 			{
+				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
+						  ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::Sanitize_Undefined, Clang::CheckIncompleteType, Clang::OptDebug });
 				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG"/*, "DEBUG"*/ });
 			}
 
 			auto	profile_cfg = clang->AddConfiguration( "Profile" );
 			{
+				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )
+							->AddTargetCxxFlags({ Clang::Opt2, Clang::InlineAll });
 				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
 			}
 
 			auto	release_cfg = clang->AddConfiguration( "Release" );
 			{
+				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
+							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
 				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
 			}
 		}
@@ -283,12 +311,16 @@ extern void GenMGFProject ()
 			test_engine_graphics->LinkLibrary( engine_graphics )->LinkLibrary( engine_profilers );
 		}
 		
-		builder.AddExecutable( "Tests.Engine.Base.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_base )->MergeCPP( NUM_THREADS );
-		builder.AddExecutable( "Tests.Engine.Graphics.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_graphics )->MergeCPP( NUM_THREADS );
+		#ifdef ENABLE_SCU
+			builder.AddExecutable( "Tests.Engine.STL.Fast" )->ProjFolder("Fast")->LinkLibrary( test_stl )->MergeCPP( NUM_THREADS );
+			builder.AddExecutable( "Tests.Engine.Base.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_base )->MergeCPP( NUM_THREADS );
+			builder.AddExecutable( "Tests.Engine.Graphics.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_graphics )->MergeCPP( NUM_THREADS );
+		#endif
 	#endif	// ENABLE_ENGINE
 
 
 		// External //
+#ifdef ENABLE_EXTERNALS
 		//builder.SearchVSProjects( "External/FreeImage", "External/FreeImage" );
 
 		//builder.AddExternal( "External/SDL2" );
@@ -338,6 +370,7 @@ endif()
 			test_pipeline_compiler->LinkLibrary( engine_pipeline_compiler );
 		}
 	#endif	// ENABLE_LUNARGLASS
+#endif	// ENABLE_EXTERNALS
 
 
 		// Projects //

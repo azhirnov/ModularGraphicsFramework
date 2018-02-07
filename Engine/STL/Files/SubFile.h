@@ -40,7 +40,7 @@ namespace File
 		}
 
 
-		static SubRFilePtr New (const File::RFilePtr &file, BytesU offset, BytesU size)
+		CHECKRES static SubRFilePtr New (const File::RFilePtr &file, BytesU offset, BytesU size)
 		{
 			return new Self( file, offset, size );
 		}
@@ -170,7 +170,7 @@ namespace File
 		}
 
 
-		static SubWFilePtr New (const File::WFilePtr &file, BytesU offset, BytesU size)
+		CHECKRES static SubWFilePtr New (const File::WFilePtr &file, BytesU offset, BytesU size)
 		{
 			return new Self( file, offset, size );
 		}

@@ -81,24 +81,24 @@ namespace GXTypes
 		StaticLimit (const StaticLimit< T, OtherMinValue, OtherMaxValue > &other) : _value(other._value)	{ _Validate(); }
 
 		// get
-		constexpr static T	Max ()					{ return (T) MaxLimit; }
-		constexpr static T	Min ()					{ return (T) MinLimit; }
-		const			 T	Value ()	const		{ return _value; }
+		CHECKRES constexpr static T	Max ()			{ return (T) MaxLimit; }
+		CHECKRES constexpr static T	Min ()			{ return (T) MinLimit; }
+		CHECKRES const			 T	Value () const	{ return _value; }
 		
 
 		// type cast
-		operator const T ()	const					{ return _value; }
+		CHECKRES operator const T ()	const		{ return _value; }
 
 
 		// unary operators
-		Self&	operator ++ ()						{ ++_value;  _Validate();  return *this; }
-		Self&	operator -- ()						{ --_value;  _Validate();  return *this; }
-		Self	operator ++ (int) 					{ Self ret(*this);  ++(*this);  return ret; }
-		Self	operator -- (int)					{ Self ret(*this);  --(*this);  return ret; }
-		Self	operator +  () const				{ return Self( +_value ); }
-		Self	operator -  () const				{ return Self( -_value ); }
-		bool	operator ! () const					{ return not _value; }
-		Self	operator ~ () const					{ return Self( ~_value ); }
+				 Self&	operator ++ ()				{ ++_value;  _Validate();  return *this; }
+				 Self&	operator -- ()				{ --_value;  _Validate();  return *this; }
+				 Self	operator ++ (int) 			{ Self ret(*this);  ++(*this);  return ret; }
+				 Self	operator -- (int)			{ Self ret(*this);  --(*this);  return ret; }
+		CHECKRES Self	operator +  ()	const		{ return Self( +_value ); }
+		CHECKRES Self	operator -  ()	const		{ return Self( -_value ); }
+		CHECKRES bool	operator ! ()	const		{ return not _value; }
+		CHECKRES Self	operator ~ ()	const		{ return Self( ~_value ); }
 
 
 		// binary operators
@@ -141,16 +141,12 @@ namespace GXTypes
 
 	
 	template <typename T, T MinLimit, T MaxLimit, template <typename> class S>
-	struct Hash< StaticLimit< T, MinLimit, MaxLimit, S > > : private Hash<T>
+	struct Hash< StaticLimit< T, MinLimit, MaxLimit, S > >
 	{
-		typedef StaticLimit< T, MinLimit, MaxLimit, S >		Key_t;
-		typedef Hash<T>										Base_t;
-		typedef typename Base_t::Result_t					Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const StaticLimit< T, MinLimit, MaxLimit, S > &x) const noexcept
 		{
 			// TODO: is min and max limits needed here?
-			return Base_t::operator ()( x.Value() );
+			return HashOf( x.Value() );
 		}
 	};
 

@@ -1,13 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "PlatformUtils.h"
-#include "FileSystem.h"
+#include "Engine/STL/OS/Windows/PlatformUtils.h"
+#include "Engine/STL/OS/Windows/FileSystem.h"
 #include "Engine/STL/Math/BinaryMath.h"
 
 #ifdef PLATFORM_WINDOWS
 
 #include "Engine/STL/OS/Base/BaseFileSystem.h"
-#include "WinHeader.h"
+#include "Engine/STL/OS/Windows/WinHeader.h"
 
 #include "winnls.h"
 #include "shobjidl.h"
@@ -166,7 +166,7 @@ namespace OS
 	_CheckError
 =================================================
 */
-	CHECKRES(bool)  PlatformUtils::_CheckError (StringCRef file, int line)
+	bool PlatformUtils::_CheckError (StringCRef file, int line)
 	{
 		char	buf[128] = {};
 		uint	size	 = (uint)CountOf(buf);

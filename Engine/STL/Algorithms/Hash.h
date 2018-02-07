@@ -50,17 +50,17 @@ namespace GXTypes
 		constexpr explicit HashResult (usize val) : _value(val) {}
 
 
-		Value_t  Get () const noexcept
+		CHECKRES Value_t  Get () const noexcept
 		{
 			return _value;
 		}
 
-		Self operator ~ () const noexcept
+		CHECKRES Self operator ~ () const noexcept
 		{
 			return Self( ~_value );
 		}
 
-		Self operator + (const Self &right) const noexcept
+		CHECKRES Self operator + (const Self &right) const noexcept
 		{
 			return Self(*this) += right;
 		}
@@ -89,6 +89,8 @@ namespace GXTypes
 			# endif
 			#elif defined(COMPILER_GCC)
 				return (HashResult) std::_Hash_bytes( ptr, count, 0 );
+			#elif defined(COMPILER_CLANG)
+				return (HashResult) std::__murmur2_or_cityhash<size_t>()( ptr, count );
 			#else
 				#error "hash function not defined!"
 			#endif
@@ -105,12 +107,11 @@ namespace GXTypes
 	template <typename T>
 	struct Hash : public CompileTime::FastCopyable
 	{
-		using Result_t	= HashResult;
-		using Key_t		= typename TypeTraits::RemoveConstVolatile< T >;
+		using Key_t = typename TypeTraits::RemoveConstVolatile< T >;
 
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const Key_t &x) const noexcept
 		{
-			return (Result_t) std::hash< Key_t >()( x );
+			return (HashResult) std::hash< Key_t >()( x );
 		}
 	};
 

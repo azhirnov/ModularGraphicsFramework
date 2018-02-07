@@ -100,6 +100,15 @@ static void Queue_Test4 ()
 }
 
 
+static void Queue_Test5 ()
+{
+	Queue_t		q;
+
+	q.Resize( 12 );
+	q.Erase( 3, 4 );
+}
+
+
 extern void Test_Containers_Queue ()
 {
 	Elem_t::ClearStatistic();
@@ -117,4 +126,8 @@ extern void Test_Containers_Queue ()
 	Elem_t::ClearStatistic();
 
 	Queue_Test4();
+	
+	Queue_Test5();
+	TEST( Elem_t::CheckStatistic() );
+	Elem_t::ClearStatistic();
 }

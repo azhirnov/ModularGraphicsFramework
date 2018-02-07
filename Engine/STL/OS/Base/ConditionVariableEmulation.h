@@ -11,7 +11,7 @@ namespace OS
 	// Condition Variable version 1
 	//
 
-	struct ConditionVariableEmulation_v1
+	struct ConditionVariableEmulation_v1 final : public Noncopyable
 	{
 	// variables
 	private:
@@ -65,7 +65,7 @@ namespace OS
 	// Condition Variable version 2
 	//
 
-	struct ConditionVariableEmulation_v2
+	struct ConditionVariableEmulation_v2 final : public Noncopyable
 	{
 	// variables
 	private:
@@ -140,7 +140,7 @@ namespace OS
 	};
 
 
-	typedef ConditionVariableEmulation_v2	ConditionVariableEmulation;
+	using ConditionVariableEmulation = ConditionVariableEmulation_v2;
 
 
 }	// OS

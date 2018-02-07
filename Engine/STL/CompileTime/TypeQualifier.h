@@ -52,7 +52,7 @@ namespace CompileTime
 		template <ETypeQualifier::type Q>
 		struct _TypeQualifier : SwitchType< Q == ETypeQualifier::Def_SimplePOD, PODType, _TypeQualifierBase >	// IsPOD<> can be used too
 		{
-			static const ETypeQualifier::type	__typeQualifierValue__ = Q;
+			static constexpr ETypeQualifier::type	__typeQualifierValue__ = Q;
 		};
 
 		
@@ -61,17 +61,17 @@ namespace CompileTime
 		//
 		template <typename T, bool HasQualifier>
 		struct _GetTypeQualifier2 {
-			static const ETypeQualifier::type	value = IsPOD<T> ? ETypeQualifier::Def_SimplePOD : ETypeQualifier::Def_Complex;
+			static constexpr ETypeQualifier::type	value = IsPOD<T> ? ETypeQualifier::Def_SimplePOD : ETypeQualifier::Def_Complex;
 		};
 		
 		template <typename T>
 		struct _GetTypeQualifier2< T, true > {
-			static const ETypeQualifier::type	value = T::__typeQualifierValue__;
+			static constexpr ETypeQualifier::type	value = T::__typeQualifierValue__;
 		};
 
 		template <typename T>
 		struct _GetTypeQualifier {
-			static const ETypeQualifier::type	value = _GetTypeQualifier2< T, IsBaseOf< _TypeQualifierBase, T > >::value;
+			static constexpr ETypeQualifier::type	value = _GetTypeQualifier2< T, IsBaseOf< _TypeQualifierBase, T > >::value;
 		};
 
 		
@@ -92,7 +92,7 @@ namespace CompileTime
 			static const uint	d		= all & Q::WithCompareOp ? c | Q::WithCompareOp : c;
 
 		public:
-			static const ETypeQualifier::type	value = ETypeQualifier::type( d );
+			static constexpr ETypeQualifier::type	value = ETypeQualifier::type( d );
 		};
 
 	}	// _ctime_hidden_
@@ -131,7 +131,7 @@ namespace CompileTime
 	template <ETypeQualifier::type Q, typename ...BaseTypes>
 	struct InheritWithTypeQualifier : public BaseTypes...
 	{
-		static const ETypeQualifier::type	__typeQualifierValue__ = Q;	// TODO: use qual of first parent?
+		static constexpr ETypeQualifier::type	__typeQualifierValue__ = Q;	// TODO: use qual of first parent?
 	};
 
 

@@ -79,7 +79,7 @@ namespace GXTypes
 		
 		// use New<T>( T(args) ) for private/protected constructors
 		template <typename T, typename ...Args>
-		friend forceinline SharedPointerType<T>  New (Args ...args) noexcept
+		CHECKRES friend forceinline SharedPointerType<T>  New (Args ...args) noexcept
 		{
 			SharedPointerType<T> tmp = new T( FW<Args>(args)... );
 			tmp->_SetDynamicObj( true );

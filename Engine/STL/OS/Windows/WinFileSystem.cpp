@@ -1,13 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "FileSystem.h"
+#include "Engine/STL/OS/Windows/FileSystem.h"
 #include "Engine/STL/Math/BinaryMath.h"
 #include "Engine/STL/Algorithms/FileAddress.h"
 
 #ifdef PLATFORM_WINDOWS
 
 #include "Engine/STL/OS/Base/BaseFileSystem.h"
-#include "WinHeader.h"
+#include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace GX_STL
 {
@@ -19,7 +19,7 @@ namespace OS
 	DeleteFile
 =================================================
 */
-	bool OSFileSystem::DeleteFile (StringCRef filename)
+	bool WindowsFileSystem::DeleteFile (StringCRef filename)
 	{
 		return ::DeleteFileA( filename.cstr() ) != FALSE;
 	}
@@ -29,7 +29,7 @@ namespace OS
 	SetCurrentDirectory
 =================================================
 */
-	bool OSFileSystem::SetCurrentDirectory (StringCRef dir)
+	bool WindowsFileSystem::SetCurrentDirectory (StringCRef dir)
 	{
 		if ( dir.Empty() )
 			return false;
@@ -42,7 +42,7 @@ namespace OS
 	GetCurrentDirectory
 =================================================
 */
-	bool OSFileSystem::GetCurrentDirectory (OUT String &dir)
+	bool WindowsFileSystem::GetCurrentDirectory (OUT String &dir)
 	{
 		dir.Reserve( MAX_PATH+1 );
 
@@ -60,7 +60,7 @@ namespace OS
 	IsFileExist
 =================================================
 */
-	CHECKRES(bool)  OSFileSystem::IsFileExist (StringCRef filename)
+	bool WindowsFileSystem::IsFileExist (StringCRef filename)
 	{
 		if ( filename.Empty() )
 			return false;
@@ -74,7 +74,7 @@ namespace OS
 	IsDirectoryExist
 =================================================
 */
-	CHECKRES(bool)  OSFileSystem::IsDirectoryExist (StringCRef dirname)
+	bool WindowsFileSystem::IsDirectoryExist (StringCRef dirname)
 	{
 		if ( dirname.Empty() )
 			return true;
@@ -88,7 +88,7 @@ namespace OS
 	NewDirectory
 =================================================
 */
-	CHECKRES(bool)  OSFileSystem::NewDirectory (StringCRef dir)
+	bool WindowsFileSystem::NewDirectory (StringCRef dir)
 	{
 		if ( dir.Empty() )
 			return true;
@@ -103,7 +103,7 @@ namespace OS
 	DeleteEmptyDirectory
 =================================================
 */
-	bool OSFileSystem::DeleteEmptyDirectory (StringCRef dir)
+	bool WindowsFileSystem::DeleteEmptyDirectory (StringCRef dir)
 	{
 		ASSERT( IsDirectoryExist( dir ) );
 
@@ -115,7 +115,7 @@ namespace OS
 	DeleteDirectory
 =================================================
 */
-	bool OSFileSystem::DeleteDirectory (StringCRef dir)
+	bool WindowsFileSystem::DeleteDirectory (StringCRef dir)
 	{
 		ASSERT( IsDirectoryExist( dir ) );
 
@@ -139,7 +139,7 @@ namespace OS
 	GetAllFilesInPath
 =================================================
 */
-	bool OSFileSystem::GetAllFilesInPath (StringCRef path, Array<String> &fileNames)
+	bool WindowsFileSystem::GetAllFilesInPath (StringCRef path, Array<String> &fileNames)
 	{
 		ASSERT( IsDirectoryExist( path ) );
 
@@ -174,7 +174,7 @@ namespace OS
 	GetAllDirsInPath
 =================================================
 */
-	bool OSFileSystem::GetAllDirsInPath (StringCRef path, Array<String> &directories)
+	bool WindowsFileSystem::GetAllDirsInPath (StringCRef path, Array<String> &directories)
 	{
 		ASSERT( IsDirectoryExist( path ) );
 
@@ -215,7 +215,7 @@ namespace OS
 	CopyFile
 =================================================
 */
-	CHECKRES(bool)  OSFileSystem::CopyFile (StringCRef fromFile, StringCRef toFile)
+	bool WindowsFileSystem::CopyFile (StringCRef fromFile, StringCRef toFile)
 	{
 		return ::CopyFileA( fromFile.cstr(), toFile.cstr(), FALSE ) != FALSE;
 	}
@@ -225,7 +225,7 @@ namespace OS
 	CopyDirectory
 =================================================
 */
-	CHECKRES(bool)  OSFileSystem::CopyDirectory (StringCRef fromDir, StringCRef toDir)
+	bool WindowsFileSystem::CopyDirectory (StringCRef fromDir, StringCRef toDir)
 	{
 		SHFILEOPSTRUCTA s;
 		UnsafeMem::ZeroMem( &s, SizeOf(s) );
@@ -253,7 +253,7 @@ namespace OS
 	MoveFile
 =================================================
 */
-	CHECKRES(bool)  OSFileSystem::MoveFile (StringCRef oldName, StringCRef newName, bool async)
+	bool WindowsFileSystem::MoveFile (StringCRef oldName, StringCRef newName, bool async)
 	{
 		const uint	flags = MOVEFILE_COPY_ALLOWED | (async ? 0 : MOVEFILE_WRITE_THROUGH);
 
@@ -283,7 +283,7 @@ namespace OS
 	GetFileLastModificationTime
 =================================================
 */
-	CHECKRES(Date)  OSFileSystem::GetFileLastModificationTime (StringCRef filename)
+	Date WindowsFileSystem::GetFileLastModificationTime (StringCRef filename)
 	{
 		FILETIME	atime = {};
 		FILETIME	wtime = {};
@@ -310,7 +310,7 @@ namespace OS
 	GetFileCreationTime
 =================================================
 */
-	CHECKRES(Date)  OSFileSystem::GetFileCreationTime (StringCRef filename)
+	Date WindowsFileSystem::GetFileCreationTime (StringCRef filename)
 	{
 		FILETIME	time = {};
 		HANDLE		file = ::CreateFileA( filename.cstr(), GENERIC_READ,
@@ -333,7 +333,7 @@ namespace OS
 	GetFileSize
 =================================================
 */
-	CHECKRES(BytesUL)  OSFileSystem::GetFileSize (StringCRef filename)
+	BytesUL WindowsFileSystem::GetFileSize (StringCRef filename)
 	{
 		HANDLE	file = ::CreateFileA( filename.cstr(), GENERIC_READ,
 							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,

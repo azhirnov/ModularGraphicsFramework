@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "OSPosix.h"
+#include "Engine/STL/OS/Posix/OSPosix.h"
 
 #ifdef PLATFORM_BASE_POSIX
 
@@ -10,16 +10,30 @@ namespace GX_STL
 {
 namespace OS
 {
-	using namespace posix;
-
 
 	//
 	// OS Utils
 	//
 
-	struct PlatformUtils : public Noninstancable
+	struct PlatformUtils final : public Noninstancable
 	{
 		static void OpenURL (StringCRef url);
+		
+		static void IDEConsoleMessage (StringCRef message, StringCRef file, int line) {}
+
+		struct Dialog
+		{
+			enum class EResult
+			{
+				Unknown = -1,
+				Skip	= 0,	// skip only this message
+				Ignore,			// skip some messages in first 10 seconds
+				Retry,			// run debugger
+				Abort,			// exit from application
+			};
+
+			static EResult ShowAssertion (StringCRef caption, StringCRef msg, StringCRef file, int line) { return Uninitialized; }
+		};
 	};
 
 	

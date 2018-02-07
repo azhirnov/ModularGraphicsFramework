@@ -124,7 +124,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline UniBuffer<T>::UniBuffer (void_ptr_t memory, usize count, ushort offset, ushort stride) :
+	inline UniBuffer<T>::UniBuffer (void_ptr_t memory, const usize count, const ushort offset, const ushort stride) :
 		_memory(memory), _count(count), _offset(offset), _stride(stride)
 	{
 		ASSUME( _count == 0 or _memory != null );
@@ -158,7 +158,7 @@ namespace GXTypes
 */
 	template <typename T>
 	template <typename B>
-	inline UniBuffer<T>::UniBuffer (B *memory, usize count, T (B::*member)) :
+	inline UniBuffer<T>::UniBuffer (B *memory, const usize count, T (B::*member)) :
 		_memory( static_cast<void_ptr_t>( memory ) ),
 		_count( count ),
 		_offset( (ushort) OffsetOf( member ) ),
@@ -211,7 +211,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline T &  UniBuffer<T>::operator [] (usize i)
+	inline T &  UniBuffer<T>::operator [] (const usize i)
 	{
 		ASSERT( i < _count );
 		return *Cast<T *>( Cast<char *>(_memory) + (_offset + usize(_stride) * i) );
@@ -223,7 +223,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline T const &  UniBuffer<T>::operator [] (usize i) const
+	inline T const &  UniBuffer<T>::operator [] (const usize i) const
 	{
 		ASSERT( i < _count );
 		return *Cast<const T * const>( _Begin() + (_offset + usize(_stride) * i) );
@@ -286,7 +286,7 @@ namespace GXTypes
 */
 	template <typename T>
 	template <typename E>
-	inline bool UniBuffer<T>::Find (OUT usize &index, const E &value, usize start) const
+	inline bool UniBuffer<T>::Find (OUT usize &index, const E &value, const usize start) const
 	{
 		index = -1;
 

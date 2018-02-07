@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "OSWindows.h"
+#include "Engine/STL/OS/Windows/OSWindows.h"
 
 #if defined( PLATFORM_WINDOWS ) and not defined( GX_USE_STD )
 
@@ -15,7 +15,7 @@ namespace OS
 	// Atomic Operations
 	//
 
-	struct _STL_EXPORT_ AtomicOp : public Noninstancable
+	struct _STL_EXPORT_ AtomicOp final : public Noninstancable
 	{
 		// type cast //
 #		define type_cast( _val_ )	& ReferenceCast< volatile CompileTime::NearInt::FromType<T>, volatile T >( _val_ )
@@ -71,7 +71,7 @@ namespace OS
 		}
 		
 		template <typename T>
-		forceinline static CHECKRES(T)  Get (volatile T const & left) {
+		CHECKRES forceinline static T  Get (volatile T const & left) {
 			_Barrier();
 			return left;
 		}

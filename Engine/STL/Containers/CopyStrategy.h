@@ -34,14 +34,14 @@ namespace GXTypes
 							not CompileTime::IsNoncopyable<T> );
 
 			// create default elements
-			static void Create (T *ptr, usize count) noexcept
+			static void Create (T *ptr, const usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( ptr + i );
 				}
 			}
 
-			static void Destroy (T *ptr, usize count) noexcept
+			static void Destroy (T *ptr, const usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					PlacementDelete( ptr[i] );
@@ -80,6 +80,12 @@ namespace GXTypes
 					}
 				})
 			}
+
+			static void ReplaceRev (T *to, T *from, const usize count, bool inSingleMemBlock = false) noexcept
+			{
+				// if used memmove then memory blocks can intersects
+				return Replace( to, from, count, inSingleMemBlock );
+			}
 		};
 
 
@@ -96,14 +102,14 @@ namespace GXTypes
 							not CompileTime::IsNoncopyable<T> );
 			
 			// create default elements
-			static void Create (T *ptr, usize count) noexcept
+			static void Create (T *ptr, const usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					UnsafeMem::PlacementNew<T>( ptr + i );
 				}
 			}
 
-			static void Destroy (T *ptr, usize count) noexcept
+			static void Destroy (T *ptr, const usize count) noexcept
 			{
 				for (usize i = 0; i < count; ++i) {
 					PlacementDelete( ptr[i] );
@@ -136,6 +142,16 @@ namespace GXTypes
 					PlacementDelete( from[i] );	// TODO: is it needed?
 				}
 			}
+			
+			static void ReplaceRev (T *to, T *from, const usize count, bool inSingleMemBlock = false) noexcept
+			{
+				GX_UNUSED( inSingleMemBlock );
+
+				for (usize i = count-1; i < count; --i) {
+					UnsafeMem::PlacementNew<T>( to+i, RVREF( from[i] ) );
+					PlacementDelete( from[i] );	// TODO: is it needed?
+				}
+			}
 		};
 
 
@@ -154,12 +170,12 @@ namespace GXTypes
 							not CompileTime::IsNoncopyable<T> );
 			
 			// create default elements
-			static void Create (T *ptr, usize count) noexcept
+			static void Create (T *ptr, const usize count) noexcept
 			{
 				UnsafeMem::ZeroMem( ptr, SizeOf<T>() * count );
 			}
 
-			static void Destroy (T *ptr, usize count) noexcept
+			static void Destroy (T *ptr, const usize count) noexcept
 			{
 				DEBUG_ONLY( UnsafeMem::ZeroMem( ptr, SizeOf<T>() * count ) );
 			}
@@ -191,6 +207,12 @@ namespace GXTypes
 						}
 					}
 				})
+			}
+
+			static void ReplaceRev (T *to, T *from, const usize count, bool inSingleMemBlock = false) noexcept
+			{
+				// if used memmove then memory blocks can intersects
+				return Replace( to, from, count, inSingleMemBlock );
 			}
 		};
 

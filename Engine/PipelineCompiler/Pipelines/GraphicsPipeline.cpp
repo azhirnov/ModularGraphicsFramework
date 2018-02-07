@@ -260,7 +260,7 @@ namespace PipelineCompiler
 		src << ser->ShaderSrcGLSL( name, compiled.glsl )
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
+			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
 			<< '\n';
 
 		if ( cfg.validation ) {
@@ -292,7 +292,7 @@ namespace PipelineCompiler
 		src << ser->ShaderSrcGLSL( name, compiled.glsl )
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
+			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
 			<< '\n';
 		
 		if ( cfg.validation ) {
@@ -321,7 +321,7 @@ namespace PipelineCompiler
 		src << ser->ShaderSrcGLSL( name, compiled.glsl )
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
+			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
 			<< '\n';
 		
 		if ( cfg.validation ) {
@@ -350,7 +350,7 @@ namespace PipelineCompiler
 		src << ser->ShaderSrcGLSL( name, compiled.glsl )
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
+			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
 			<< '\n';
 		
 		if ( cfg.validation ) {
@@ -381,7 +381,7 @@ namespace PipelineCompiler
 		src << ser->ShaderSrcGLSL( name, compiled.glsl )
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
+			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
 			<< '\n';
 		
 		if ( cfg.validation ) {

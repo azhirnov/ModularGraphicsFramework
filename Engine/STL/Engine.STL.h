@@ -82,6 +82,7 @@
 #include "Algorithms/StringUtils.h"
 #include "Algorithms/Swap.h"
 #include "Algorithms/InvokeWithVariant.h"
+#include "Algorithms/Range.h"
 
 
 // Types //

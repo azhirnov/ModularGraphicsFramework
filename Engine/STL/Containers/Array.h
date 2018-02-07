@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Engine/STL/Memory/MemoryContainer.h"
-#include "CopyStrategy.h"
-#include "String.h"
+#include "Engine/STL/Containers/CopyStrategy.h"
+#include "Engine/STL/Containers/String.h"
 #include "Engine/STL/Math/Mathematics.h"
 
 namespace GX_STL
@@ -315,7 +315,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Array<T,S,MC>::_Reallocate (usize newSize, bool allowReserve)
+	inline void Array<T,S,MC>::_Reallocate (usize newSize, const bool allowReserve)
 	{
 		ASSERT( newSize > 0 );
 
@@ -417,7 +417,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline bool Array<T,S,MC>::At (usize index, T & value) const
+	inline bool Array<T,S,MC>::At (const usize index, OUT T& value) const
 	{
 		if ( index >= Count() )  return false;
 		Strategy_t::Copy( &value, _memory.Pointer() + index, 1 );
@@ -430,7 +430,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline bool Array<T,S,MC>::Set (usize index, const T &value)
+	inline bool Array<T,S,MC>::Set (const usize index, const T &value)
 	{
 		if ( index >= Count() ) return false;
 		Strategy_t::Copy( _memory.Pointer() + index, &value, 1 );
@@ -443,7 +443,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline bool Array<T,S,MC>::Set (usize index, T&& value)
+	inline bool Array<T,S,MC>::Set (const usize index, T&& value)
 	{
 		if ( index >= Count() ) return false;
 		Strategy_t::Move( _memory.Pointer() + index, &value, 1 );
@@ -480,7 +480,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline T & Array<T,S,MC>::operator [] (usize index)
+	inline T & Array<T,S,MC>::operator [] (const usize index)
 	{
 		ASSUME( index < _count );
 		return _memory.Pointer()[index];
@@ -492,7 +492,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline const T & Array<T,S,MC>::operator [] (usize index) const
+	inline const T & Array<T,S,MC>::operator [] (const usize index) const
 	{
 		ASSUME( index < _count );
 		return _memory.Pointer()[index];
@@ -584,7 +584,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Array<T,S,MC>::Erase (usize pos, usize count)
+	inline void Array<T,S,MC>::Erase (const usize pos, usize count)
 	{
 		if ( pos >= _count or count == 0 or _count == 0 )
 			RET_VOID;
@@ -604,7 +604,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Array<T,S,MC>::EraseFromBack (usize count)
+	inline void Array<T,S,MC>::EraseFromBack (const usize count)
 	{
 		ASSERT( count < _count );
 
@@ -623,7 +623,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Array<T,S,MC>::FastErase (usize pos, usize count)
+	inline void Array<T,S,MC>::FastErase (const usize pos, usize count)
 	{
 		if ( pos >= _count or count == 0 or _count == 0 )
 			RET_VOID;
@@ -698,7 +698,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Array<T,S,MC>::FastErase (usize pos)
+	inline void Array<T,S,MC>::FastErase (const usize pos)
 	{
 		ASSERT( pos < _count );
 
@@ -789,7 +789,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Array<T,S,MC>::Resize (usize newSize, bool allowReserve)
+	inline void Array<T,S,MC>::Resize (const usize newSize, const bool allowReserve)
 	{
 		if ( newSize == _count )
 			return;
@@ -835,7 +835,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Array<T,S,MC>::Swap (usize first, usize second)
+	inline void Array<T,S,MC>::Swap (const usize first, const usize second)
 	{
 		if ( first >= _count or second >= _count )
 			RET_VOID;
@@ -917,7 +917,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline T * Array<T,S,MC>::GetIter (usize index)
+	inline T * Array<T,S,MC>::GetIter (const usize index)
 	{
 		ASSERT( index < _count );
 		return &_memory.Pointer()[index];
@@ -929,7 +929,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline const T * Array<T,S,MC>::GetIter (usize index) const
+	inline const T * Array<T,S,MC>::GetIter (const usize index) const
 	{
 		ASSERT( index < _count );
 		return &_memory.Pointer()[index];
@@ -969,16 +969,11 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	struct Hash< Array<T,S,MC> > :
-		private Hash< ArrayCRef<T> >
+	struct Hash< Array<T,S,MC> >
 	{
-		using Key_t		= Array<T,S,MC>;
-		using Base_t	= Hash< ArrayCRef<T> >;
-		using Result_t	= typename Base_t::Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const Array<T,S,MC> &x) const noexcept
 		{
-			return Base_t::operator ()( x );
+			return HashOf( ArrayCRef<T>(x) );
 		}
 	};
 

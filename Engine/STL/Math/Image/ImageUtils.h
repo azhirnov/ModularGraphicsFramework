@@ -21,7 +21,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static CHECKRES(Vec<T,2>)  ResCorrectionAspect (const Vec<T,2> &dim)
+	CHECKRES static inline Vec<T,2>  ResCorrectionAspect (const Vec<T,2> &dim)
 	{
 		// proportional_coords = normalized_coords * aspect
 		return	dim.x < dim.y ?
@@ -35,7 +35,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename B, usize I, ulong U>
-	static CHECKRES(Vec<T,I,U>)  AlignDimension (const Vec<T,I,U> &size, const B& align)
+	CHECKRES static inline Vec<T,I,U>  AlignDimension (const Vec<T,I,U> &size, const B& align)
 	{
 		CompileTime::MustBeInteger<T>();
 		ASSERT( IsPowerOfTwo( align ) and "align must be a power of 2" );
@@ -58,7 +58,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static CHECKRES(uint)  GetNumberOfMipmaps (const T len)
+	CHECKRES static inline uint  GetNumberOfMipmaps (const T len)
 	{
 		return IntLog2( len );
 	}
@@ -69,8 +69,8 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename B>
-	static void GetFrameCoord (OUT Rectangle<T> &sTexcoord, uint uFrameIdx, const Vec<B,2> &vDim,
-								const Vec<B,2> &vNumFrames, const Vec<B,2> &border = Vec<B,2>())
+	static inline void GetFrameCoord (OUT Rectangle<T> &sTexcoord, uint uFrameIdx, const Vec<B,2> &vDim,
+									  const Vec<B,2> &vNumFrames, const Vec<B,2> &border = Vec<B,2>())
 	{
 		CompileTime::MustBeInteger<B>();
 		ASSERT( uFrameIdx < vNumFrames.Area() );
@@ -91,8 +91,8 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static CHECKRES(BytesU)  AlignedDataSize (const Vec<T,3> &dimension, BytesU bytePerPixel,
-											  BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
+	CHECKRES static inline BytesU  AlignedDataSize (const Vec<T,3> &dimension, BytesU bytePerPixel,
+													  BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
 	{
 		CompileTime::MustBeInteger<T>();
 		const usize3	dim			= Max( dimension, Vec<T,3>(1) ).template To<usize3>();
@@ -103,7 +103,7 @@ struct GXImageUtils : public Noninstancable
 	}
 
 	template <typename ColorType, typename T>
-	static BytesU AlignedDataSize (const Vec<T,3> &dimension, BytesU rowAlign, BytesU sliceAlign)
+	CHECKRES static inline BytesU AlignedDataSize (const Vec<T,3> &dimension, BytesU rowAlign, BytesU sliceAlign)
 	{
 		return AlignedDataSize( dimension, BytesU::SizeOf<ColorType>(), rowAlign, sliceAlign );
 	}
@@ -114,7 +114,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static CHECKRES(BytesU)  AlignedRowSize (const T rowPixels, BytesU bytePerPixel, BytesU rowAlign)
+	CHECKRES static inline BytesU  AlignedRowSize (const T rowPixels, BytesU bytePerPixel, BytesU rowAlign)
 	{
 		typedef CompileTime::MainType<T, BytesU::Value_t>	main_t;
 
@@ -128,7 +128,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static CHECKRES(BytesU)  AlignedSliceSize (const Vec<T,2> dim, BytesU bytePerPixel, BytesU rowAlign, BytesU sliceAlign)
+	CHECKRES static inline BytesU  AlignedSliceSize (const Vec<T,2> dim, BytesU bytePerPixel, BytesU rowAlign, BytesU sliceAlign)
 	{
 		const usize	row_size	= (usize) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
 		const usize slice_size	= (usize) AlignedRowSize( dim.y * row_size, 1_b, sliceAlign );
@@ -141,7 +141,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	static CHECKRES(usize)  GetPixelOffset (const Vec<T,3> &coord, const Vec<T,3> &dimension, BytesU bytePerPixel,
+	CHECKRES static inline usize  GetPixelOffset (const Vec<T,3> &coord, const Vec<T,3> &dimension, BytesU bytePerPixel,
 											BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
 	{
 		CompileTime::MustBeInteger<T>();
@@ -160,9 +160,8 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename SrcType, typename DstType>
-	static bool Copy (const Vec<T,3> &dimension, const SrcType *srcImage, DstType *dstImage,
-						BytesU srcRowAlignInBytes = 1_b,
-						BytesU dstRowAlignInBytes = 1_b)
+	static inline bool Copy (const Vec<T,3> &dimension, const SrcType *srcImage, DstType *dstImage,
+							 BytesU srcRowAlignInBytes = 1_b, BytesU dstRowAlignInBytes = 1_b)
 	{
 		return CopyPart( dimension, Vec<T,3>(0), srcImage, dimension, Vec<T,3>(0), dstImage, srcRowAlignInBytes, dstRowAlignInBytes );
 	}
@@ -307,7 +306,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename ColorType>
-	static CHECKRES(ColorType &)  GetPixel (const Vec<T,3> &imageDim, ColorType *image, const Vec<T,3> &pixelCoord, uint rowAlignInBytes = 1)
+	CHECKRES inline static ColorType &  GetPixel (const Vec<T,3> &imageDim, ColorType *image, const Vec<T,3> &pixelCoord, uint rowAlignInBytes = 1)
 	{
 		ASSUME( image != null );
 			

@@ -108,20 +108,20 @@ namespace File
 		{}
 
 			
-		static RCryptFilePtr New (const File::RFilePtr &file, const CryptAlgorithm &alg)
+		CHECKRES static RCryptFilePtr New (const File::RFilePtr &file, const CryptAlgorithm &alg)
 		{
 			return new Self( file, alg );
 		}
 
 			
-		static RCryptFilePtr New (const File::RFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg)
+		CHECKRES static RCryptFilePtr New (const File::RFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg)
 		{
 			return new Self( file, offset, size, alg );
 		}
 
 		
 		// RFile //
-		virtual BytesU ReadBuf (void * buf, BytesU size) override
+		virtual BytesU ReadBuf (void * buf, BytesU size) noexcept override
 		{
 			ubyte *	data = (ubyte *) buf;
 			BytesU	pos  = Pos();
@@ -180,20 +180,20 @@ namespace File
 		{}
 		
 
-		static WCryptFilePtr New (const File::WFilePtr &file, const CryptAlgorithm &alg, bool restoreData = true)
+		CHECKRES static WCryptFilePtr New (const File::WFilePtr &file, const CryptAlgorithm &alg, bool restoreData = true)
 		{
 			return new Self( file, alg, restoreData );
 		}
 		
 
-		static WCryptFilePtr New (const File::WFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg, bool restoreData = true)
+		CHECKRES static WCryptFilePtr New (const File::WFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg, bool restoreData = true)
 		{
 			return new Self( file, offset, size, alg, restoreData );
 		}
 
 			
 		// WFile //
-		virtual BytesU WriteBuf (const void * buf, BytesU size) override
+		virtual BytesU WriteBuf (const void * buf, BytesU size) noexcept override
 		{
 			ubyte *	data = (ubyte *) buf;
 			BytesU	pos  = Pos();

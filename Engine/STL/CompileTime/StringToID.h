@@ -64,7 +64,7 @@ namespace CompileTime
 					(c == ']')				? type(c - ']'  + '9' - '0' +  9) << shift	:	// map ]
 					(c == '(')				? type(c - '('  + '9' - '0' + 10) << shift	:	// map (
 					(c == ')')				? type(c - ')'  + '9' - '0' + 11) << shift	:	// map )
-					(c == '\\')				? type(c - '\\' + '9' - '0' + 12) << shift	:	// map \ 
+					(c == '\\')				? type(c - '\\' + '9' - '0' + 12) << shift	:	// map \ - backslash
 					(c == '$')				? type(c - '$'  + '9' - '0' + 13) << shift	:	// map $
 					(c == '&')				? type(c - '&'  + '9' - '0' + 14) << shift	:	// map &
 					(c == '|')				? type(c - '|'  + '9' - '0' + 15) << shift	:	// map |
@@ -205,18 +205,18 @@ namespace CompileTime
 				Unknown	= _type_(GXTypes::UMax), \
 			}; \
 			\
-			forceinline static type FromString (::GX_STL::GXTypes::StringCRef str) noexcept { \
+			CHECKRES forceinline static type  FromString (::GX_STL::GXTypes::StringCRef str) noexcept { \
 				return (type) ::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper:: \
 								CalcHash( str.cstr(), str.Count(), _type_(_name_::_ID) ); \
 			} \
 			\
-			forceinline static ::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper::StString_t \
+			CHECKRES forceinline static ::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper::StString_t \
 						ToString (type value) noexcept { \
 				return ::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper::ReverseHash( _type_(value) ); \
 			} \
 		}; \
 		\
-		forceinline constexpr _name_::type operator "" _##_name_ (char const * const str, const size_t size) noexcept \
+		CHECKRES forceinline constexpr _name_::type  operator "" _##_name_ (char const * const str, const size_t size) noexcept \
 		{ \
 			return (_name_::type) ::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper:: \
 											CalcHash( str, size, _name_::_type_(_name_::_ID) ); \

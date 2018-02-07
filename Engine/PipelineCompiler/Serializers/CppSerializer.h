@@ -39,6 +39,7 @@ namespace PipelineCompiler
 		String  ToString (StringCRef name, const PipelineLayoutDescriptor &value) const override;
 		String  ToString (StringCRef name, EPrimitive::bits value) const override;
 		String  ToString (StringCRef name, EShader::bits value) const override;
+		String	ToString (StringCRef name, const uint3 &value) const override;
 
 		String  ToString (StringCRef value) const override;
 		String	ToString (EShaderVariable::type value) const override;
@@ -63,22 +64,17 @@ namespace PipelineCompiler
 		String	Include (StringCRef filename) const override;
 		String	Comment (StringCRef comment) const override;
 		
-		String	ShaderSrcGLSL (StringCRef name, BinArrayCRef shaderSrc) const override;
-		String	ShaderBinGLSL (StringCRef name, BinArrayCRef shaderSrc) const override;
-		String	ShaderFileSrcGLSL (StringCRef name, BinArrayCRef shaderSrc) const override;
-		String	ShaderFileBinGLSL (StringCRef name, BinArrayCRef shaderSrc) const override;
+		String	ShaderSrcGLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
+		String	ShaderBinGLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
 
-		String	ShaderBinSPIRV (StringCRef name, BinArrayCRef shaderSrc) const override;
-		String	ShaderSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc) const override;
-		String	ShaderFileSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc) const override;
-		String	ShaderFileBinSPIRV (StringCRef name, BinArrayCRef shaderSrc) const override;
+		String	ShaderBinSPIRV (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
+		String	ShaderSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
 		
-		String	ShaderBinCL (StringCRef name, BinArrayCRef shaderSrc) const override;
-		String	ShaderSrcCL (StringCRef name, BinArrayCRef shaderSrc) const override;
-		String	ShaderFileSrcCL (StringCRef name, BinArrayCRef shaderSrc) const override;
-		String	ShaderFileBinCL (StringCRef name, BinArrayCRef shaderSrc) const override;
+		String	ShaderBinCL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
+		String	ShaderSrcCL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
 		
-		String	ShaderSrcCPP (StringCRef name, BinArrayCRef shaderSrc) const override;
+		String	ShaderSrcCPP_Impl (StringCRef name, BinArrayCRef shaderSrc, StringCRef funcName) const override;
+		String	ShaderSrcCPP (StringCRef name, StringCRef funcName) const override;
 
 		String	GetSourceFileExt () const override	{ return "cpp"; }
 		String	GetHeaderFileExt () const override	{ return "h"; }

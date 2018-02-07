@@ -182,8 +182,8 @@ namespace  Java
 
 	// methods
 	public:
-		static void				SetJavaVM (JavaVM *jvm)		{ _JavaVirtualMachine::Get()->javaVM = jvm; }
-		static Ptr< JavaVM >	GetJavaVM ()				{ return _JavaVirtualMachine::Get()->javaVM; }
+		CHECKRES static void			SetJavaVM (JavaVM *jvm)		{ _JavaVirtualMachine::Get()->javaVM = jvm; }
+		CHECKRES static Ptr< JavaVM >	GetJavaVM ()				{ return _JavaVirtualMachine::Get()->javaVM; }
 	};
 
 

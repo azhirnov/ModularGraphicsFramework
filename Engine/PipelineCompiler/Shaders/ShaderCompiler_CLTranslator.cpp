@@ -44,6 +44,9 @@ namespace PipelineCompiler
 		bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) override;
 
 		bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) override;
+		bool TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) override;
+
+		bool DeclExternalTypes () const	override	{ return true; }
 
 	private:
 		bool _TranslateBuffer (Translator::TypeInfo const& info, OUT String &str);
@@ -64,6 +67,8 @@ namespace PipelineCompiler
 	_TranslateGXSLtoGLSL
 =================================================
 */
+	static StringCRef GLSLCompatibilityFuncs ();
+
 	static bool TranslateShaderInfo (const glslang::TIntermediate* intermediate, Translator &translator);
 
 	bool ShaderCompiler::_TranslateGXSLtoCL (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const
@@ -92,6 +97,7 @@ namespace PipelineCompiler
 
 		CHECK_ERR( TranslateShaderInfo( intermediate, translator ) );
 		
+
 		CHECK_ERR( translator.Main( root, translator.uid, false ) );
 
 		log		<< translator.log;
@@ -112,7 +118,7 @@ namespace PipelineCompiler
 		String&	str = translator.src;
 		
 		str << "#define FORMAT( _fmt_ )\n";
-
+		str << GLSLCompatibilityFuncs();
 		str << "\n";
 
 		// TODO
@@ -141,10 +147,6 @@ namespace PipelineCompiler
 */
 	bool CL_DstLanguage::TranslateLocalVar (const TypeInfo &t, INOUT String &res)
 	{
-		// access
-		//if ( memoryModel != EGpuMemoryModel::None )
-		//	res << ToStringCL( memoryModel ) << ' ';
-
 		// read-only
 		if ( t.qualifier[ EVariableQualifier::Constant ] )
 			res << "const ";
@@ -153,13 +155,9 @@ namespace PipelineCompiler
 		if ( t.format != EPixelFormat::Unknown )
 			res << "FORMAT(" << ToStringCL( t.format ) << ") ";
 
-		// precision
-		//if ( t.precision != EPrecision::Default )
-		//	res << ToStringCL( t.precision ) << ' ';
-
 		// type
 		if ( not t.typeName.Empty() ) {
-			res << t.typeName;
+			res << "struct " << t.typeName;
 		} else {
 			res << ToStringCL( t.type );
 		}
@@ -201,21 +199,13 @@ namespace PipelineCompiler
 */
 	bool CL_DstLanguage::TranslateType (const TypeInfo &t, INOUT String &res)
 	{
-		// access
-		//if ( t.memoryModel != EGpuMemoryModel::None )
-		//	res << ToStringCL( t.memoryModel ) << ' ';
-		
 		// image format
 		if ( t.format != EPixelFormat::Unknown )
 			res << "FORMAT(" << ToStringCL( t.format ) << ") ";
 
-		// precision
-		//if ( t.precision != EPrecision::Default )
-		//	res << ToStringCL( t.precision ) << ' ';
-
 		// type
 		if ( not t.typeName.Empty() ) {
-			res << t.typeName;
+			res << "struct " << t.typeName;
 		} else {
 			res << ToStringCL( t.type );
 		}
@@ -254,15 +244,27 @@ namespace PipelineCompiler
 */
 	bool CL_DstLanguage::TranslateExternal (glslang::TIntermTyped* typed, const TypeInfo &info, INOUT String &str)
 	{
-		if ( typed->getQualifier().storage == glslang::TStorageQualifier::EvqShared ) {
+		const auto	storage = typed->getQualifier().storage;
+
+		if ( typed->getType().getBasicType() == glslang::TBasicType::EbtBlock and
+			(storage == glslang::TStorageQualifier::EvqBuffer or storage == glslang::TStorageQualifier::EvqUniform) )
+		{
+			_externals.PushBack( info );
+		}
+		else
+		if ( typed->getType().isImage() or typed->getType().getSampler().isCombined() ) {
+			_externals.PushBack( info );
+		}
+		else
+		if ( storage == glslang::TStorageQualifier::EvqShared ) {
 			CHECK_ERR( _TranslateShared( info, INOUT str ) );
 		}
 		else
-		if ( typed->getQualifier().storage == glslang::TStorageQualifier::EvqConst ) {
+		if ( storage == glslang::TStorageQualifier::EvqConst ) {
 			CHECK_ERR( _TranslateConst( typed, info, INOUT str ) );
 		}
 		else {
-			_externals.PushBack( info );
+			RETURN_ERR( "not supported!" );
 		}
 		return true;
 	}
@@ -298,21 +300,9 @@ namespace PipelineCompiler
 		{
 			String	tname;
 			CHECK_ERR( TranslateType( resultType, OUT tname ) );
-			src <<'{'<<tname<<')'<< all_args;
+			src <<'('<<tname<<')'<< all_args;
 			return true;
 		}
-		/*
-		bool	is_vec			= true;
-		uint	min_vec_size	= UMax;
-		uint	max_vec_size	= 0;
-		
-		FOR( i, argTypes )
-		{
-			uint  vec_size	= EShaderVariable::VecSize( argTypes[i]->type );
-			is_vec			&= (argTypes[i]->arraySize == 0 and vec_size > 1);
-			min_vec_size	= Min( min_vec_size, vec_size );
-			max_vec_size	= Max( max_vec_size, vec_size );
-		}*/
 
 		if ( args.Count() == 0 )
 		{
@@ -377,9 +367,10 @@ namespace PipelineCompiler
 				case glslang::TOperator::EOpRound :					src << "round" << all_args;			break;
 				//case glslang::TOperator::EOpRoundEven :			src << "roundEven" << all_args;		break;
 				case glslang::TOperator::EOpCeil :					src << "ceil" << all_args;			break;
-				case glslang::TOperator::EOpFract :					src << "fract" << all_args;			break;
 				case glslang::TOperator::EOpIsNan :					src << "isnan" << all_args;			break;
 				case glslang::TOperator::EOpIsInf :					src << "isinf" << all_args;			break;
+
+				case glslang::TOperator::EOpFract :					src << "fractTempl_" << ToStringCL( argTypes[0]->type ) << all_args;	break;
 
 				case glslang::TOperator::EOpFloatBitsToInt :		src << "as_int" << vsize << all_args;		break;
 				case glslang::TOperator::EOpFloatBitsToUint :		src << "as_uint" << vsize << all_args;		break;
@@ -832,7 +823,8 @@ namespace PipelineCompiler
 		{
 			auto const&	obj = _externals[i];
 
-			src << (i ? ", " : "");
+			src << (i ? "," : "")
+				<< "\n\t/*" << obj.binding << "*/";
 
 			if ( obj.type == EShaderVariable::Struct ) {
 				CHECK_ERR( _TranslateBuffer( obj, INOUT src ) );
@@ -843,6 +835,20 @@ namespace PipelineCompiler
 		}
 
 		src << ")";
+		return true;
+	}
+	
+/*
+=================================================
+	TranslateStructAccess
+=================================================
+*/
+	bool CL_DstLanguage::TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src)
+	{
+		if ( not objName.Empty() )
+			src << objName << "->";
+
+		src << fieldType.name;
 		return true;
 	}
 //-----------------------------------------------------------------------------
@@ -856,41 +862,13 @@ namespace PipelineCompiler
 */
 	bool CL_DstLanguage::_TranslateBuffer (Translator::TypeInfo const& info, OUT String &str)
 	{
-		/*glslang::TQualifier const&	qual = type.getQualifier();
+		CHECK_ERR( info.type == EShaderVariable::Struct );
+		CHECK_ERR( info.arraySize == 0 );
 
-		//if ( qual.hasBinding() )
-		//	str << "layout(binding=" << qual.layoutBinding << ") ";		// TODO
+		str << "__global " << ToStringCL( info.memoryModel )
+			<< " struct " << (info.typeName.Empty() ? ToStringCL( info.type ) : info.typeName)
+			<< "* " << info.name;
 
-		//if ( qual.hasPacking() )		// TODO
-		//{
-		//	switch ( qual.layoutPacking ) {
-		//		case glslang::TLayoutPacking::ElpStd140 :	str << "layout(std140) ";	break;
-		//		case glslang::TLayoutPacking::ElpStd430 :	str << "layout(std430) ";	break;
-		//		default :									RETURN_ERR( "unsupported packing" );
-		//	}
-		//}
-
-		if ( qual.readonly )	str << "readonly ";
-		if ( qual.writeonly )	str << "writeonly ";
-		if ( qual.coherent )	str << "coherent ";
-		if ( qual.restrict )	str << "restrict ";
-		if ( qual.volatil )		str << "volatile ";
-		
-		if ( qual.storage == glslang::TStorageQualifier::EvqBuffer )
-			str << "buffer " << info.typeName;
-		else
-			str << "uniform " << info.typeName;
-
-		CHECK_ERR( type.isStruct() and not info.fields.Empty() );
-		
-		str << "{\n";
-		FOR( j, info.fields )
-		{
-			str << "\t";
-			CHECK_ERR( TranslateLocalVar( info.fields[j], INOUT str ) );
-			str << ";\n";
-		}
-		str << "} " << info.name << ";\n";*/
 		return true;
 	}
 
@@ -901,43 +879,11 @@ namespace PipelineCompiler
 */
 	bool CL_DstLanguage::_TranslateImage (Translator::TypeInfo const& info, OUT String &str)
 	{
-		/*glslang::TQualifier const&	qual = type.getQualifier();
+		CHECK_ERR( info.arraySize == 0 );
 
-		//if ( qual.hasBinding() )
-		//	str << "layout(binding=" << qual.layoutBinding << ") ";		// TODO
-		
-		if ( type.isImage() )
-		{
-			if ( qual.readonly )	str << "readonly ";
-			if ( qual.writeonly )	str << "writeonly ";
-			if ( qual.coherent )	str << "coherent ";
-			if ( qual.restrict )	str << "restrict ";
-			if ( qual.volatil )		str << "volatile ";
-			
-			//str << "FORMAT(" << ToStringCL( info.format ) << ") uniform ";
-		}
-		else
-		{
-			str << "uniform ";
-		}
+		str << ToStringCL( info.memoryModel ) << " FORMAT(" << ToStringCL( info.format ) << ") "
+			<< ToStringCL( info.type ) << " " << info.name;
 
-		// precision
-		//if ( info.precision != EPrecision::Default )
-		//	str << ToStringCL( info.precision ) << ' ';
-
-		// type
-		if ( not info.typeName.Empty() ) {
-			str << info.typeName;
-		} else {
-			str << ToStringCL( info.type );
-		}
-		str << " ";
-
-		if ( info.arraySize == 0 )		str << info.name;			else
-		if ( info.arraySize == UMax )	str << "* " << info.name;	else
-										str << info.name << " [" << info.arraySize << "]";
-
-		str << ";\n";*/
 		return true;
 	}
 
@@ -966,8 +912,28 @@ namespace PipelineCompiler
 		glslang::TType const&				type	= typed->getType();
 		glslang::TQualifier const&			qual	= type.getQualifier();
 		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
+		
+		{
+			// read-only
+			if ( info.qualifier[ EVariableQualifier::Constant ] )
+				str << "__constant ";
 
-		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
+			// image format
+			if ( info.format != EPixelFormat::Unknown )
+				str << "FORMAT(" << ToStringCL( info.format ) << ") ";
+
+			// type
+			if ( not info.typeName.Empty() ) {
+				str << "struct " << info.typeName;
+			} else {
+				str << ToStringCL( info.type );
+			}
+			str << " ";
+		
+			if ( info.arraySize == 0 )		str << info.name;				else
+			if ( info.arraySize == UMax )	str << "* " << info.name;		else
+											str << info.name << " [" << info.arraySize << "]";
+		}
 		str << " = ";
 
 		if ( type.isArray() )
@@ -983,8 +949,9 @@ namespace PipelineCompiler
 
 			FOR( i, values )
 			{
-				str << (i ? ", " : "");
+				str << (i ? ", " : "") << '(';
 				CHECK_ERR( TranslateType( scalar_info, INOUT str ) );
+				str << ')';
 				values[i].Apply( func );
 			}
 
@@ -1004,8 +971,9 @@ namespace PipelineCompiler
 
 			FOR( i, values )
 			{
-				str << (i ? ", " : "");
+				str << (i ? ", " : "") << '(';
 				CHECK_ERR( TranslateType( info, INOUT str ) );
+				str << ')';
 				values[i].Apply( func );
 			}
 			str << ";\n";
@@ -1228,4 +1196,43 @@ namespace PipelineCompiler
 		RETURN_ERR( "invalid variable type", "unknown" );
 	}
 	
+/*
+=================================================
+	GLSLCompatibilityFuncs
+=================================================
+*/
+	static StringCRef GLSLCompatibilityFuncs ()
+	{
+		return R"#(
+// Functions for GLSL compatibility
+
+#define Gen_FloatTemplates( _gen_ ) \
+	_gen_( float ) \
+	_gen_( float2 ) \
+	_gen_( float3 ) \
+	_gen_( float4 )
+
+#define Gen_DoubleTemplates( _gen_ ) \
+	_gen_( double ) \
+	_gen_( double2 ) \
+	_gen_( double3 ) \
+	_gen_( double4 )
+	
+
+// Fract
+#define GenTemplate_Fract( _type_ ) \
+	_type_ fractTempl_##_type_ (_type_ x) { \
+		_type_	ipart; \
+		return fract( x, &ipart ); \
+	}
+	Gen_FloatTemplates( GenTemplate_Fract )
+	Gen_DoubleTemplates( GenTemplate_Fract )
+#undef GenTemplate_Fract
+
+
+#undef Gen_FloatTemplates
+#undef Gen_DoubleTemplates
+			)#";
+	}
+
 }	// PipelineCompiler

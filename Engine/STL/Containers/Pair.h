@@ -69,13 +69,13 @@ namespace GXTypes
 =================================================
 */
 	template <typename FirstType, typename SecondType>
-	Pair<FirstType, SecondType>  MakePair (const FirstType &first, const SecondType &second)
+	CHECKRES Pair<FirstType, SecondType>  MakePair (const FirstType &first, const SecondType &second)
 	{
 		return Pair<FirstType, SecondType>( first, second );
 	}
 
 	template <typename FirstType, typename SecondType>
-	Pair<FirstType, SecondType>  MakePair (FirstType &&first, SecondType &&second)
+	CHECKRES Pair<FirstType, SecondType>  MakePair (FirstType &&first, SecondType &&second)
 	{
 		return Pair<FirstType, SecondType>( FW<FirstType>( first ), FW<SecondType>( second ) );
 	}
@@ -89,13 +89,7 @@ namespace GXTypes
 	template <typename FirstType, typename SecondType>
 	struct Hash< Pair< FirstType, SecondType > >
 	{
-		STATIC_ASSERT(( CompileTime::IsSameTypes< typename Hash< FirstType >::Result_t,
-													typename Hash< SecondType >::Result_t > ));
-
-		typedef Pair< FirstType, SecondType >			Key_t;
-		typedef typename Hash< FirstType >::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const Pair< FirstType, SecondType > &x) const noexcept
 		{
 			return HashOf( x.first ) + HashOf( x.second );
 		}

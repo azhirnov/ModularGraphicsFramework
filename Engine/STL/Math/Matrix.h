@@ -17,16 +17,11 @@ namespace GXTypes
 {
 	
 	template <typename T, usize C, usize R, ulong U>
-	struct Hash< GXMath::Matrix<T,C,R,U> > :
-		private Hash< ArrayCRef<T> >
+	struct Hash< GXMath::Matrix<T,C,R,U> >
 	{
-		typedef GXMath::Matrix<T,C,R,U>		Key_t;
-		typedef Hash< ArrayCRef<T> >		Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		HashResult  operator () (const GXMath::Matrix<T,C,R,U> &x) const noexcept
 		{
-			return Base_t::operator ()( Base_t::Key_t( x.ptr(), x.Count() ) );
+			return HashOf( ArrayCRef<T>( x.ptr(), x.Count() ) );
 		}
 	};
 

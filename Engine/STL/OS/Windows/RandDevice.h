@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "OSWindows.h"
+#include "Engine/STL/OS/Windows/OSWindows.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -15,7 +15,7 @@ namespace OS
 	// Random Device
 	//
 
-	struct _STL_EXPORT_ PlatformRandomDevice
+	struct _STL_EXPORT_ PlatformRandomDevice final : public Noncopyable
 	{
 	// types
 	private:

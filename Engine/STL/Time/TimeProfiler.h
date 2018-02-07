@@ -31,10 +31,10 @@ namespace GXTypes
 #	undef _TIME_PROFILER_IMPL_
 
 
-	typedef TimeProfiler<float>		TimeProfilerF;
-	typedef TimeProfiler<double>	TimeProfilerD;
-	typedef TimeProfiler<uint>		TimeProfilerU;
-	typedef TimeProfiler<ulong>		TimeProfilerL;
+	using TimeProfilerF	= TimeProfiler<float>;
+	using TimeProfilerD	= TimeProfiler<double>;
+	using TimeProfilerU	= TimeProfiler<uint>;
+	using TimeProfilerL	= TimeProfiler<ulong>;
 
 }	// GXTypes
 }	// GX_STL

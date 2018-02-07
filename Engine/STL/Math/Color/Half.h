@@ -312,16 +312,11 @@ namespace GXTypes
 
 	
 	template <>
-	struct Hash< THalf > :
-		private Hash< THalf::Int_t >
+	struct Hash< THalf >
 	{
-		typedef THalf						Key_t;
-		typedef Hash< Key_t::Int_t >		Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		HashResult  operator () (const THalf &x) const noexcept
 		{
-			return Base_t::operator ()( x.GetU() );
+			return HashOf( x.GetU() );
 		}
 	};
 	

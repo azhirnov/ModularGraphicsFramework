@@ -36,6 +36,7 @@ namespace PlatformCL
 
 		using SupportedMessages_t	= CL2BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetImageDescriptor,
+											GpuMsg::SetImageDescriptor,
 											GpuMsg::GetCLImageID,
 											GpuMsg::GpuMemoryRegionChanged,
 											GpuMsg::SetImageLayout,
@@ -84,6 +85,7 @@ namespace PlatformCL
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _GetCLImageID (const Message< GpuMsg::GetCLImageID > &);
 		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
+		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
 		bool _SetImageLayout (const Message< GpuMsg::SetImageLayout > &);
 		bool _GetImageLayout (const Message< GpuMsg::GetImageLayout > &);
@@ -135,6 +137,7 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2Image::_Delete );
 		_SubscribeOnMsg( this, &CL2Image::_OnManagerChanged );
 		_SubscribeOnMsg( this, &CL2Image::_GetCLImageID );
+		_SubscribeOnMsg( this, &CL2Image::_SetImageDescriptor );
 		_SubscribeOnMsg( this, &CL2Image::_GetImageDescriptor );
 		_SubscribeOnMsg( this, &CL2Image::_SetImageLayout );
 		_SubscribeOnMsg( this, &CL2Image::_GetImageLayout );
@@ -372,6 +375,21 @@ namespace PlatformCL
 	bool CL2Image::_GetCLImageID (const Message< GpuMsg::GetCLImageID > &msg)
 	{
 		msg->result.Set( _imageId );
+		return true;
+	}
+	
+/*
+=================================================
+	_SetImageDescriptor
+=================================================
+*/
+	bool CL2Image::_SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &msg)
+	{
+		CHECK_ERR( GetState() == EState::Initial );
+
+		_descr = msg->descr;
+
+		Utils::ValidateDescriptor( INOUT _descr );
 		return true;
 	}
 

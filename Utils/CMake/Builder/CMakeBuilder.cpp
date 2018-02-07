@@ -435,20 +435,22 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 
 			FileInfo () {}
 		};
-		HashMap< String, FileInfo >		info;
+		using FileInfoMap_t	= HashMap< String, FileInfo >;
+
+		FileInfoMap_t	info;
 
 		FOR( i, cppFiles )
 		{
-			StringCRef	ext = FileAddress::GetExtension( cppFiles[i] );
-			usize		idx;
+			StringCRef					ext = FileAddress::GetExtension( cppFiles[i] );
+			FileInfoMap_t::iterator		iter;
 
-			if ( not info.FindIndex( ext, OUT idx ) )
+			if ( not info.Find( ext, OUT iter ) )
 			{
-				idx = info.Add( ext, {} );
+				iter = info.Add( ext, {} );
 			}
 
-			info[idx].second.size += OS::FileSystem::GetFileSize( cppFiles[i] );
-			info[idx].second.files << cppFiles[i];
+			iter->second.size += OS::FileSystem::GetFileSize( cppFiles[i] );
+			iter->second.files << cppFiles[i];
 		}
 
 		BytesUL		total;
@@ -588,12 +590,12 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 */
 	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::AddGroup (StringCRef groupName, ArrayCRef<StringCRef> files)
 	{
-		String	gr_name = groupName;	gr_name.ReplaceStrings( "/", "\\\\" );
+		String				gr_name = groupName;	gr_name.ReplaceStrings( "/", "\\\\" );
+		Groups_t::iterator	iter;
 
-		usize	idx;
-		if ( not _groups.FindIndex( gr_name, OUT idx ) )
+		if ( not _groups.Find( gr_name, OUT iter ) )
 		{
-			idx = _groups.Add( gr_name, {} );
+			iter = _groups.Add( gr_name, {} );
 		}
 
 		FOR( i, files )
@@ -604,7 +606,7 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 			String	fname2;
 			CHECK_ERR( FileAddress::AbsoluteToRelativePath( fname, _builder->_baseFolder, OUT fname2 ) );
 
-			_groups[idx].second << fname2;
+			iter->second << fname2;
 		}
 		return this;
 	}
@@ -644,15 +646,15 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 		String	dir = FileAddress::BuildPath( _baseFolder, path );
 		CHECK_ERR( OS::FileSystem::IsDirectoryExist( dir ) );
 
-		Array< String >	names;
+		Array< String >		names;
 		CHECK_ERR( OS::FileSystem::GetAllFilesInPath( dir, OUT names ) );
 		
-		String	gr_name = path;		gr_name.ReplaceStrings( "/", "\\\\" );
+		String				gr_name = path;		gr_name.ReplaceStrings( "/", "\\\\" );
+		Groups_t::iterator	iter;
 
-		usize	idx;
-		if ( not _groups.FindIndex( gr_name, OUT idx ) )
+		if ( not _groups.Find( gr_name, OUT iter ) )
 		{
-			idx = _groups.Add( gr_name, {} );
+			iter = _groups.Add( gr_name, {} );
 		}
 
 		// add files to group
@@ -667,12 +669,12 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 			String	fname2;
 			CHECK_ERR( FileAddress::AbsoluteToRelativePath( fname, _builder->_baseFolder, OUT fname2 ) );
 
-			_groups[idx].second << fname2;
+			iter->second << fname2;
 		}
 
 		// remove if empty
-		if ( _groups[idx].second.Empty() )
-			_groups.EraseByIndex( idx );
+		if ( iter->second.Empty() )
+			_groups.EraseByIter( iter );
 
 		return this;
 	}
@@ -713,10 +715,11 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 				dir2.ReplaceStrings( "/", "\\\\" );
 
 				// create or reuse group
-				usize	idx;
-				if ( not _groups.FindIndex( dir2, OUT idx ) )
+				Groups_t::iterator	iter;
+
+				if ( not _groups.Find( dir2, OUT iter ) )
 				{
-					idx = _groups.Add( dir2, {} );
+					iter = _groups.Add( dir2, {} );
 				}
 
 				// add files to group
@@ -731,12 +734,12 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 					String	fname2;
 					CHECK_ERR( FileAddress::AbsoluteToRelativePath( fname, _builder->_baseFolder, OUT fname2 ) );
 
-					_groups[idx].second << fname2;
+					iter->second << fname2;
 				}
 
 				// remove if empty
-				if ( _groups[idx].second.Empty() )
-					_groups.EraseByIndex( idx );
+				if ( iter->second.Empty() )
+					_groups.EraseByIter( iter );
 			}
 			folders.PopFront();
 		}
@@ -1046,32 +1049,37 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 	ToString
 =================================================
 */
-	bool CMakeBuilder::CMakeCompiler::ToString (OUT String &src)
+	bool CMakeBuilder::CMakeCompiler::ToString (OUT String &outSrc)
 	{
 		CHECK_ERR( not _configurations.Empty() );
-
+		
+		String	src;
 		switch ( _compName )
 		{
 			case ECompilerName::MSVisualStudio :
-				src << "#==================================================================================================\n"
+				outSrc
+					<< "#==================================================================================================\n"
 					<< "# Visual Studio Compilation settings\n"
 					<< "#==================================================================================================\n"
-					<< "if (\"${CMAKE_CXX_COMPILER_ID}\" STREQUAL \"MSVC\")\n"
-					<< "	string( REPLACE \"/EHa\" \" \" CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" )\n"
-					<< "	string( REPLACE \"/EHsc\" \" \" CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" )\n"
-					<< "	string( REPLACE \"/EHs\" \" \" CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" )\n"
-					<< "	string( REPLACE \"//EHs-c-\" \" \" CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" )\n";
+					<< "if (\"${CMAKE_CXX_COMPILER_ID}\" STREQUAL \"MSVC\")\n";
+
+				src << "string( REPLACE \"/EHa\" \" \" CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" )\n"
+					<< "string( REPLACE \"/EHsc\" \" \" CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" )\n"
+					<< "string( REPLACE \"/EHs\" \" \" CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" )\n"
+					<< "string( REPLACE \"//EHs-c-\" \" \" CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" )\n";
 				break;
 
 			case ECompilerName::Clang :
-				src << "#==================================================================================================\n"
+				outSrc
+					<< "#==================================================================================================\n"
 					<< "# Clang Compilation settings\n"
 					<< "#==================================================================================================\n"
 					<< "if (\"${CMAKE_CXX_COMPILER_ID}\" STREQUAL \"Clang\")\n";
 				break;
 
 			case ECompilerName::GCC :
-				src << "#==================================================================================================\n"
+				outSrc
+					<< "#==================================================================================================\n"
 					<< "# GCC Compilation settings\n"
 					<< "#==================================================================================================\n"
 					<< "if (\"${CMAKE_CXX_COMPILER_ID}\" STREQUAL \"GNU\")\n";
@@ -1081,30 +1089,30 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 				RETURN_ERR( "unknown compiler!" );
 		}
 		
-		src << "	message( STATUS \"CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}\" )\n"
-			<< "	message( STATUS \"CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}\" )\n"
-			<< "	message( STATUS \"CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}\" )\n"
-			<< "	message( STATUS \"CMAKE_SHARED_LINKER_FLAGS: ${CMAKE_SHARED_LINKER_FLAGS}\" )\n";
+		src << "message( STATUS \"CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}\" )\n"
+			<< "message( STATUS \"CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}\" )\n"
+			<< "message( STATUS \"CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}\" )\n"
+			<< "message( STATUS \"CMAKE_SHARED_LINKER_FLAGS: ${CMAKE_SHARED_LINKER_FLAGS}\" )\n";
 
 		// declare configurations
-		src << "	if (CMAKE_CONFIGURATION_TYPES)\n"
-			<< "		set( CMAKE_CONFIGURATION_TYPES ";
+		src << "if (CMAKE_CONFIGURATION_TYPES)\n"
+			<< "	set( CMAKE_CONFIGURATION_TYPES ";
 
 		FOR( i, _configurations ) {
 			src << _configurations[i].first << " ";
 		}
 		src << ")\n"
-			<< "		set( CMAKE_CONFIGURATION_TYPES \"${CMAKE_CONFIGURATION_TYPES}\" CACHE STRING \"Configurations\" FORCE )\n"
-			<< "	endif()\n\n";
+			<< "	set( CMAKE_CONFIGURATION_TYPES \"${CMAKE_CONFIGURATION_TYPES}\" CACHE STRING \"Configurations\" FORCE )\n"
+			<< "endif()\n\n";
 
 		// include directories
 		FOR( i, _includeDirs )
 		{
 			const bool	has_option = not _includeDirs[i].second.Empty(); 
 
-			src << (has_option ? "	if ("_str << _includeDirs[i].second << ")\n\t" : "")
-				<< "	include_directories( \"" << _includeDirs[i].first << "\" )\n"
-				<< (has_option ? "	endif()\n" : "");
+			src << (has_option ? "if ("_str << _includeDirs[i].second << ")\n\t" : "")
+				<< "include_directories( \"" << _includeDirs[i].first << "\" )\n"
+				<< (has_option ? "endif()\n" : "");
 		}
 		
 		// link directories
@@ -1142,7 +1150,7 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 		}
 			
 		CHECK_ERR( _configurations.IsExist( _defaultCfg ) );
-		src << "	set( CMAKE_BUILD_TYPE \"" << _defaultCfg << "\")\n";
+		src << "set( CMAKE_BUILD_TYPE \"" << _defaultCfg << "\")\n";
 
 		// add user-defined source
 		if ( not _source.Empty() )
@@ -1151,16 +1159,16 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 			src << _source << "\n";
 			src << "#--------------------------------------------\n";
 		}
+		
+		StringParser::IncreaceIndent( INOUT src );
 
-		src << "\nendif()\n\n\n";
+		outSrc << src << "endif()\n\n\n";
 		return true;
 	}
 	
 /*
 =================================================
 	ToString2
-----
-	TODO: create variables to minimize options for target...
 =================================================
 */
 	bool CMakeBuilder::CMakeCompiler::ToString2 (OUT String &src)
@@ -1335,6 +1343,27 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 		FOR( i, _linkerFlags ) { src << ' ' << _linkerFlags[i]; }
 		src << " \")\n";
 		
+
+		if ( not _targetCxxFlags.Empty() )
+		{
+			src << "	set (PROJECTS_SHARED_CXX_FLAGS_" << uc_name << " ";
+			FOR( i, _targetCxxFlags ) { src << ' ' << _targetCxxFlags[i]; }
+			src << " CACHE INTERNAL \"\" FORCE)\n";
+		}
+		
+		if ( not _targetDefines.Empty() )
+		{
+			src << "	set (PROJECTS_SHARED_DEFINES_" << uc_name << " ";
+			FOR( i, _targetDefines ) { src << ' ' << _targetDefines[i]; }
+			src << " CACHE INTERNAL \"\" FORCE)\n";
+		}
+		
+		if ( not _targetLinkerFlags.Empty() )
+		{
+			src << "	set (PROJECTS_SHARED_LINKED_FLAGS_" << uc_name << " \"";
+			FOR( i, _targetLinkerFlags ) { src << ' ' << _targetLinkerFlags[i]; }
+			src << "\" CACHE INTERNAL \"\" FORCE)\n";
+		}
 		return true;
 	}
 
@@ -1351,26 +1380,26 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 			uc_name << StringUtils::ToUpper( name[i] );
 		}
 		
+		if ( not _targetCxxFlags.Empty()	or
+			 not _targetDefines.Empty()		or
+			 not _targetLinkerFlags.Empty() )
+		{
+			src << "	# " << name << "\n";
+		}
+
 		if ( not _targetCxxFlags.Empty() )
 		{
-			src << "	# " << name << "\n"
-				<< "	target_compile_options ( " << g_targetPlaceholder << " PRIVATE $<$<CONFIG:" << name << ">:";
-			FOR( i, _targetCxxFlags ) { src << ' ' << _targetCxxFlags[i]; }
-			src << " >)\n";
+			src << "	target_compile_options( " << g_targetPlaceholder << " PRIVATE $<$<CONFIG:" << name << ">: ${PROJECTS_SHARED_CXX_FLAGS_" << uc_name << "} >)\n";
 		}
 
 		if ( not _targetDefines.Empty() )
 		{
-			src << "	target_compile_definitions( " << g_targetPlaceholder << " PRIVATE $<$<CONFIG:" << name << ">:";
-			FOR( i, _targetDefines ) { src << ' ' << _targetDefines[i]; }
-			src << " >)\n";
+			src << "	target_compile_definitions( " << g_targetPlaceholder << " PRIVATE $<$<CONFIG:" << name << ">: ${PROJECTS_SHARED_DEFINES_" << uc_name << "} >)\n";
 		}
 
 		if ( not _targetLinkerFlags.Empty() )
 		{
-			src << "	set_target_properties( " << g_targetPlaceholder << " PROPERTIES LINK_FLAGS_" << uc_name << " \"";
-			FOR( i, _targetLinkerFlags ) { src << ' ' << _targetLinkerFlags[i]; }
-			src << "\" )\n";
+			src << "	set_target_properties( " << g_targetPlaceholder << " PROPERTIES LINK_FLAGS_" << uc_name << " ${PROJECTS_SHARED_LINKED_FLAGS_" << uc_name << "} )\n";
 		}
 		return true;
 	}
@@ -2052,10 +2081,14 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 				existing_proj.Add( _externalVSProjects[i].ToPtr< CMakeExternalVSProject >()->GetName() );
 			}
 
-			StringParser::IncreaceIndent( tmp );
-			src << "if (MSVC)\n"
-				<< tmp
-				<< "endif()\n\n";
+			if ( not tmp.Empty() )
+			{
+				StringParser::IncreaceIndent( tmp );
+				src << "# External VS projects\n"
+					<< "if (MSVC)\n"
+					<< tmp
+					<< "endif()\n\n";
+			}
 		}
 
 		// validate projects

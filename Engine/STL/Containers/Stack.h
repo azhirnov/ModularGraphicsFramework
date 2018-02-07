@@ -124,16 +124,11 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	struct Hash< Stack<T,S,MC> > :
-		private Hash< ArrayCRef<T> >
+	struct Hash< Stack<T,S,MC> >
 	{
-		typedef Stack<T,S,MC>				Key_t;
-		typedef Hash< ArrayCRef<T> >		Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const Stack<T,S,MC> &x) const noexcept
 		{
-			return Base_t::operator ()( x );
+			return HashOf( ArrayCRef<T>( x ) );
 		}
 	};
 

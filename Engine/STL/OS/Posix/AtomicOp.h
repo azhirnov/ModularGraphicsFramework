@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "OSPosix.h"
+#include "Engine/STL/OS/Posix/OSPosix.h"
 
 #if defined( PLATFORM_BASE_POSIX ) and not defined( GX_USE_STD )
 
@@ -15,7 +15,7 @@ namespace OS
 	// Atomic Operations
 	//
 
-	struct AtomicOp : public Noninstancable
+	struct AtomicOp final : public Noninstancable
 	{
 		// type cast //
 #		define type_cast( _val_ )	& ReferenceCast< volatile CompileTime::NearInt::FromType<T>, volatile T >( _val_ )
@@ -56,12 +56,13 @@ namespace OS
 		}
 
 		template <typename T>
-		forceinline static void  Set (volatile T & left, const T& right) {
-			return _Set( itype_cast( left ), ctype_cast( right ) );
+		forceinline static T  Set (volatile T & left, const T& right) {
+			_Set( itype_cast( left ), ctype_cast( right ) );
+			return right;
 		}
 
 		template <typename T>
-		forceinline static T Get (volatile T const & left) {
+		CHECKRES forceinline static T Get (volatile T const & left) {
 			T	value = left;
 			__sync_synchronize();
 			return value;

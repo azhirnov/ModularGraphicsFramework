@@ -4,8 +4,10 @@
 
 #include "Common.h"
 #include "Engine/STL/Algorithms/StringUtils.h"
+#include "Engine/STL/Algorithms/FileAddress.h"
 
 #include "Engine/STL/OS/Windows/FileSystem.h"
+#include "Engine/STL/OS/Posix/FileSystem.h"
 
 namespace GX_STL
 {

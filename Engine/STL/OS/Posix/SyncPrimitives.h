@@ -2,29 +2,30 @@
 
 #pragma once
 
-#include "Engine/STL/OS/Base/SyncPrimitives.h"
-#include "OSPosix.h"
+#include "Engine/STL/OS/Base/ScopeLock.h"
+#include "Engine/STL/OS/Posix/OSPosix.h"
 
-#ifdef PLATFORM_BASE_POSIX_SHELL
+#if defined( PLATFORM_BASE_POSIX ) and not defined( PLATFORM_SDL )
+
+#include <pthread.h>
+#include <semaphore.h>
 
 namespace GX_STL
 {
 namespace OS
 {
-	using namespace posix;
-
 
 	//
 	// Critical Section
 	//
 
-	struct CriticalSection
+	struct CriticalSection final : public Noncopyable
 	{
 		friend struct ConditionVariable;
 
 	// types
 	public:
-		typedef CriticalSection		Self;
+		using Self	= CriticalSection;
 
 
 	// variables
@@ -35,69 +36,20 @@ namespace OS
 
 	// methods
 	private:
-		bool _Create ()
-		{
-			_Delete();
-			_inited = pthread_mutex_init( &_mutex, null ) == 0;
-			return IsValid();
-		}
-
-		bool _Delete ()
-		{
-			bool	ret = true;
-
-			if ( IsValid() )
-			{
-				static const pthread_mutex_t	tmp = PTHREAD_MUTEX_INITIALIZER;
-
-				ret = pthread_mutex_destroy( &_mutex ) == 0;
-				_mutex  = tmp;
-				_inited = false;
-			}
-			return ret;
-		}
+		bool _Create ();
+		bool _Delete ();
 
 	public:
-		CriticalSection ()
-		{
-			static const pthread_mutex_t	tmp = PTHREAD_MUTEX_INITIALIZER;
+		CriticalSection ();
+		~CriticalSection ();
 
-			_mutex = tmp;
+		bool IsValid () const	{ return _inited; }
 
-			_Create();
-		}
+		void Lock ();
+		bool TryLock ();
+		void Unlock ();
 
-		~CriticalSection ()
-		{
-			_Delete();
-		}
-
-		bool IsValid () const
-		{
-			return _inited;
-		}
-
-		void Lock ()
-		{
-			ASSERT( IsValid() );
-			bool	res = pthread_mutex_lock( &_mutex ) == 0;
-			ASSERT( res );
-		}
-
-		bool TryLock ()
-		{
-			ASSERT( IsValid() );
-			return pthread_mutex_trylock( &_mutex ) == 0;
-		}
-
-		void Unlock ()
-		{
-			ASSERT( IsValid() );
-			bool	res = pthread_mutex_unlock( &_mutex ) == 0;
-			ASSERT( res );
-		}
-
-		ScopeLock GetScopeLock ()
+		CHECKRES ScopeLock GetScopeLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->Lock(); }
@@ -107,7 +59,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		operator ScopeLock ()
+		CHECKRES operator ScopeLock ()
 		{
 			return GetScopeLock();
 		}
@@ -119,13 +71,13 @@ namespace OS
 	// Single Read, Multiple Write
 	//
 
-	struct ReadWriteSync
+	struct ReadWriteSync final : public Noncopyable
 	{
 		friend struct ConditionVariable;
 
 	// types
 	public:
-		typedef ReadWriteSync	Self;
+		using Self	= ReadWriteSync;
 
 
 	// variables
@@ -136,79 +88,24 @@ namespace OS
 
 	// methods
 	private:
-		bool _Create ()
-		{
-			_Delete();
-			_inited = pthread_rwlock_init( &_rwlock, null ) == 0;
-			return IsValid();
-		}
-
-		void _Delete ()
-		{
-			if ( IsValid() )
-			{
-				pthread_rwlock_destroy( &_rwlock );
-				_inited = false;
-			}
-		}
+		bool _Create ();
+		void _Delete ();
 
 	public:
-		ReadWriteSync (): _inited(false)
-		{
-			_Create();
-		}
+		ReadWriteSync ();
+		~ReadWriteSync ();
 
-		~ReadWriteSync ()
-		{
-			_Delete();
-		}
+		bool IsValid () const	{ return _inited; }
 
-		bool IsValid () const
-		{
-			return _inited;
-		}
+		void LockWrite ();
+		bool TryLockWrite ();
+		void UnlockWrite ();
 
-		void LockWrite ()
-		{
-			ASSERT( IsValid() );
-			bool	res = pthread_rwlock_wrlock( &_rwlock ) == 0;
-			ASSERT( res );
-		}
+		void LockRead ();
+		bool TryLockRead ();
+		void UnlockRead ();
 
-		bool TryLockWrite ()
-		{
-			ASSERT( IsValid() );
-			return pthread_rwlock_trywrlock( &_rwlock ) == 0;
-		}
-
-		void UnlockWrite ()
-		{
-			ASSERT( IsValid() );
-			bool	res = pthread_rwlock_unlock( &_rwlock ) == 0;
-			ASSERT( res );
-		}
-
-		void LockRead ()
-		{
-			ASSERT( IsValid() );
-			bool	res = pthread_rwlock_rdlock( &_rwlock ) == 0;
-			ASSERT( res );
-		}
-
-		bool TryLockRead ()
-		{
-			ASSERT( IsValid() );
-			return pthread_rwlock_tryrdlock( &_rwlock ) == 0;
-		}
-
-		void UnlockRead ()
-		{
-			ASSERT( IsValid() );
-			bool	res = pthread_rwlock_unlock( &_rwlock ) == 0;
-			ASSERT( res );
-		}
-
-		ScopeLock GetScopeWriteLock ()
+		CHECKRES ScopeLock GetScopeWriteLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->LockWrite(); }
@@ -217,7 +114,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		ScopeLock GetScopeReadLock ()
+		CHECKRES ScopeLock GetScopeReadLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->LockRead(); }
@@ -233,11 +130,11 @@ namespace OS
 	// Condition Variable
 	//
 
-	struct ConditionVariable
+	struct ConditionVariable final : public Noncopyable
 	{
 	// types
 	public:
-		typedef	ConditionVariable	Self;
+		using Self	= ConditionVariable;
 
 
 	// variables
@@ -248,71 +145,20 @@ namespace OS
 
 	// methods
 	private:
-		bool _Create ()
-		{
-			_Delete();
-			_inited = pthread_cond_init( &_cv, null ) == 0;
-			return IsValid();
-		}
-
-		void _Delete ()
-		{
-			if ( IsValid() )
-			{
-				pthread_cond_destroy( &_cv );
-				_inited = false;
-			}
-		}
+		bool _Create ();
+		void _Delete ();
 
 	public:
-		ConditionVariable (): _inited(false)
-		{
-			_Create();
-		}
+		ConditionVariable ();
+		~ConditionVariable ();
 
-		~ConditionVariable ()
-		{
-			_Delete();
-		}
+		bool IsValid () const	{ return _inited; }
 
-		bool IsValid () const
-		{
-			return _inited;
-		}
+		void Signal ();
+		void Broadcast ();
 
-		void Signal ()
-		{
-			ASSERT( IsValid() );
-			bool	res = pthread_cond_signal( &_cv ) == 0;
-			ASSERT( res );
-		}
-
-		void Broadcast ()
-		{
-			ASSERT( IsValid() );
-			bool	res = pthread_cond_broadcast( &_cv ) == 0;
-			ASSERT( res );
-		}
-
-		bool Wait (CriticalSection &cs)
-		{
-			ASSERT( IsValid() );
-			return pthread_cond_wait( &_cv, &cs._mutex ) == 0;
-		}
-
-		bool Wait (CriticalSection &cs, TimeL time)
-		{
-			ASSERT( IsValid() );
-
-			timespec currTime;
-			clock_gettime( CLOCK_REALTIME, &currTime );
-
-			// TODO: check
-			currTime.tv_nsec += time.MilliSeconds() * 1000;
-			currTime.tv_sec  += currTime.tv_nsec / 1000000000;
-
-			return pthread_cond_timedwait( &_cv, &cs._mutex, &currTime );
-		}
+		bool Wait (CriticalSection &cs);
+		bool Wait (CriticalSection &cs, TimeL time);
 	};
 
 
@@ -321,11 +167,11 @@ namespace OS
 	// Semaphore
 	//
 
-	struct Semaphore
+	struct Semaphore final : public Noncopyable
 	{
 	// types
 	public:
-		typedef Semaphore	Self;
+		using Self	= Semaphore;
 
 
 	// variables
@@ -336,65 +182,22 @@ namespace OS
 
 	// methods
 	private:
-		bool _Create (GXTypes::uint initialValue)
-		{
-			_inited = sem_init( &_sem, 0, initialValue );
-			return IsValid();
-		}
-
-		void _Destroy ()
-		{
-			if ( _inited )
-			{
-				sem_destroy( &_sem );
-				_inited = false;
-			}
-		}
+		bool _Create (GXTypes::uint initialValue);
+		void _Destroy ();
 
 	public:
-		explicit
-		Semaphore (GXTypes::uint initialValue) : _inited(false)
-		{
-			_Create( initialValue );
-		}
+		explicit Semaphore (GXTypes::uint initialValue);
+		~Semaphore ();
 
-		~Semaphore ()
-		{
-			_Destroy();
-		}
+		bool IsValid () const	{ return _inited; }
 
-		bool IsValid () const
-		{
-			return _inited;
-		}
+		void Lock ();
+		bool TryLock ();
+		void Unlock ();
 
-		void Lock ()
-		{
-			int result = sem_wait( &_sem );
-			ASSERT( result == 0 );
-		}
-
-		bool TryLock ()
-		{
-			int result = sem_trywait( &_sem );
-			return result == 0;
-		}
-
-		void Unlock ()
-		{
-			int result = sem_post( &_sem );
-			ASSERT( result == 0 );
-		}
-
-		GXTypes::uint GetValue ()
-		{
-			int value = 0;
-			int result = sem_getvalue( &_sem, &value );
-			ASSERT( result == 0 );
-			return value;
-		}
+		GXTypes::uint GetValue ();
 		
-		ScopeLock GetScopeLock()
+		CHECKRES ScopeLock GetScopeLock()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->Lock(); }
@@ -404,7 +207,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		operator ScopeLock ()
+		CHECKRES operator ScopeLock ()
 		{
 			return GetScopeLock();
 		}
@@ -419,4 +222,4 @@ namespace OS
 
 #include "Engine/STL/OS/Base/SyncEventEmulation.h"
 
-#endif	// PLATFORM_BASE_POSIX_SHELL
+#endif	// PLATFORM_BASE_POSIX

@@ -98,7 +98,7 @@ namespace GXMath
 	}
 	
 	template <typename T>
-	forceinline CHECKRES(T)  Abs (const T& x)
+	CHECKRES forceinline T  Abs (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -106,7 +106,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Abs (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Abs (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Abs( x[i] );
@@ -121,7 +121,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Sign (const T& x)
+	CHECKRES forceinline T  Sign (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -129,7 +129,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Sign (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Sign (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Sign<T>( x[i] );
@@ -144,7 +144,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  SignOrZero (const T& x)
+	CHECKRES forceinline T  SignOrZero (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -152,7 +152,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SignOrZero (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  SignOrZero (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SignOrZero( x[i] );
@@ -238,7 +238,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	inline CHECKRES(T)  SetSign (const T &x, bool sign)
+	CHECKRES inline T  SetSign (const T &x, bool sign)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -246,7 +246,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SetSign (const Vec<T,I,U> &x, bool sign)
+	CHECKRES inline Vec<T,I,U>  SetSign (const Vec<T,I,U> &x, bool sign)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SetSign( x[i], sign );
@@ -254,7 +254,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SetSign (const Vec<T,I,U> &x, const Vec<bool,I,U> &sign)
+	CHECKRES inline Vec<T,I,U>  SetSign (const Vec<T,I,U> &x, const Vec<bool,I,U> &sign)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SetSign( x[i], sign[i] );
@@ -339,7 +339,7 @@ namespace GXMath
 	}
 	
 	template <typename T>
-	inline CHECKRES(T)  CopySign (const T& from, const T& to)
+	CHECKRES inline T  CopySign (const T& from, const T& to)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -347,7 +347,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  CopySign (const Vec<T,I,U> &from, const Vec<T,I,U> &to)
+	CHECKRES inline Vec<T,I,U>  CopySign (const Vec<T,I,U> &from, const Vec<T,I,U> &to)
 	{
 		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = CopySign( from[i], to[i] );
@@ -390,7 +390,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	forceinline constexpr CHECKRES(bool)  IsZero (const T& x)
+	CHECKRES forceinline constexpr bool  IsZero (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -398,13 +398,13 @@ namespace GXMath
 	}
 
 	template <>
-	forceinline constexpr CHECKRES(bool)  IsZero (const bool& x)
+	CHECKRES forceinline constexpr bool  IsZero (const bool& x)
 	{
 		return not x;
 	}
 
 	template <typename T, usize I, ulong U>
-	forceinline constexpr CHECKRES(bool)  IsZero (const Vec<T,I,U>& x)
+	CHECKRES forceinline constexpr bool  IsZero (const Vec<T,I,U>& x)
 	{
 		return All( x.IsZero() );
 	}
@@ -415,13 +415,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(bool)  IsNotZero (const T& x)
+	CHECKRES forceinline constexpr bool  IsNotZero (const T& x)
 	{
 		return not IsZero( x );
 	}
 
 	template <>
-	forceinline constexpr CHECKRES(bool)  IsNotZero (const bool& x)
+	CHECKRES forceinline constexpr bool  IsNotZero (const bool& x)
 	{
 		return x;
 	}
@@ -499,7 +499,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	forceinline constexpr CHECKRES(bool)  Equals (const T& a, const T& b)
+	CHECKRES forceinline constexpr bool  Equals (const T& a, const T& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -507,7 +507,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline constexpr CHECKRES(Vec<bool,I,U>)  Equals (const Vec<T,I,U> &a, const Vec<T,I,U> &b)
+	CHECKRES inline constexpr Vec<bool,I,U>  Equals (const Vec<T,I,U> &a, const Vec<T,I,U> &b)
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i] );
@@ -520,7 +520,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(bool)  EqualsWithError (const T& a, const T& b, /*Bits*/uint accuracy)
+	CHECKRES forceinline bool  EqualsWithError (const T& a, const T& b, /*Bits*/uint accuracy)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -528,7 +528,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<bool,I,U>)  EqualsWithError (const Vec<T,I,U> &a, const Vec<T,I,U> &b, /*Bits*/uint accuracy)
+	CHECKRES inline Vec<bool,I,U>  EqualsWithError (const Vec<T,I,U> &a, const Vec<T,I,U> &b, /*Bits*/uint accuracy)
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = EqualsWithError( a[i], b[i], accuracy );
@@ -563,7 +563,7 @@ namespace GXMath
 	}	// _math_hidden_
 
 	template <typename A, typename B>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B>)  MiddleValue (const A& a, const B& b)
+	CHECKRES forceinline typename CompileTime::MainType<A,B>  MiddleValue (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
@@ -573,7 +573,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B>, I, U >)  MiddleValue (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  MiddleValue (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
 		Vec<T,I,U>		ret;
@@ -589,14 +589,14 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B, typename C>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B,C>)  Clamp (const A& value, const B& minValue, const C& maxValue)
+	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  Clamp (const A& value, const B& minValue, const C& maxValue)
 	{
 		ASSERT( minValue <= maxValue );
 		return Min( maxValue, Max( value, minValue ) );
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B,C>, I, U >)  Clamp (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Clamp (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
 		Vec<T,I,U>		ret;
@@ -605,7 +605,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B,C>, I, U >)  Clamp (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Clamp (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
 		Vec<T,I,U>		ret;
@@ -621,7 +621,7 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B, typename C>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B,C>)  ClampOut (const A& value, const B& minValue, const C& maxValue)
+	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  ClampOut (const A& value, const B& minValue, const C& maxValue)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and
 					   CompileTime::IsScalarOrEnum<B> and
@@ -639,7 +639,7 @@ namespace GXMath
 	}
 	
 	template <typename A, typename B, typename C, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B,C>, I, U >)  ClampOut (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  ClampOut (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
 		Vec<T,I,U>		ret;
@@ -648,7 +648,7 @@ namespace GXMath
 	}
 	
 	template <typename A, typename B, typename C, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B,C>, I, U >)  ClampOut (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  ClampOut (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
 		Vec<T,I,U>		ret;
@@ -691,13 +691,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(bool)  All (const T& x)
+	CHECKRES forceinline constexpr bool  All (const T& x)
 	{
 		return IsNotZero( x );
 	}
 
 	template <typename T, usize I, ulong U>
-	forceinline constexpr CHECKRES(bool)  All (const Vec<T,I,U> &x)
+	CHECKRES forceinline constexpr bool  All (const Vec<T,I,U> &x)
 	{
 		return _math_hidden_::_AnyAllMost<T,I,U>::All( x );
 	}
@@ -708,13 +708,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(bool)  Any (const T& x)
+	CHECKRES forceinline constexpr bool  Any (const T& x)
 	{
 		return IsNotZero( x );
 	}
 
 	template <typename T, usize I, ulong U>
-	forceinline constexpr CHECKRES(bool)  Any (const Vec<T,I,U> &x)
+	CHECKRES forceinline constexpr bool  Any (const Vec<T,I,U> &x)
 	{
 		return _math_hidden_::_AnyAllMost<T,I,U>::Any( x );
 	}
@@ -725,7 +725,7 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B>)  Max (const A& a, const B& b)
+	CHECKRES forceinline typename CompileTime::MainType<A,B>  Max (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
@@ -734,7 +734,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B>, I, U >)  Max (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  Max (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
 		Vec<T,I,U>		ret;
@@ -743,13 +743,13 @@ namespace GXMath
 	}
 	
 	template <typename A, typename B, typename C>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B,C>)  Max (const A& a, const B& b, const C& c)
+	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  Max (const A& a, const B& b, const C& c)
 	{
 		return Max( Max( a, b ), c );
 	}
 	
 	template <typename A, typename B, typename C, typename D>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B,C,D>)  Max (const A& a, const B& b, const C& c, const D& d)
+	CHECKRES forceinline typename CompileTime::MainType<A,B,C,D>  Max (const A& a, const B& b, const C& c, const D& d)
 	{
 		return Max( Max( a, b ), Max( c, d ) );
 	}
@@ -760,7 +760,7 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B>)  Min (const A& a, const B& b)
+	CHECKRES forceinline typename CompileTime::MainType<A,B>  Min (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
@@ -769,7 +769,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B>, I, U >)  Min (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  Min (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
 		Vec<T,I,U>		ret;
@@ -778,13 +778,13 @@ namespace GXMath
 	}
 	
 	template <typename A, typename B, typename C>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B,C>)  Min (const A& a, const B& b, const C& c)
+	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  Min (const A& a, const B& b, const C& c)
 	{
 		return Min( Min( a, b ), c );
 	}
 	
 	template <typename A, typename B, typename C, typename D>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B,C,D>)  Min (const A& a, const B& b, const C& c, const D& d)
+	CHECKRES forceinline typename CompileTime::MainType<A,B,C,D>  Min (const A& a, const B& b, const C& c, const D& d)
 	{
 		return Min( Min( a, b ), Min( c, d ) );
 	}
@@ -795,7 +795,7 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B>)  MinAbs (const A& a, const B& b)
+	CHECKRES forceinline typename CompileTime::MainType<A,B>  MinAbs (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
@@ -804,7 +804,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B>, I, U >)  MinAbs (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  MinAbs (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
 		Vec<T,I,U>		ret;
@@ -818,7 +818,7 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B>)  MaxAbs (const A& a, const B& b)
+	CHECKRES forceinline typename CompileTime::MainType<A,B>  MaxAbs (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
@@ -827,7 +827,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B>, I, U >)  MaxAbs (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  MaxAbs (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
 		Vec<T,I,U>		ret;
@@ -870,7 +870,7 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B>)  MinMag (const A& a, const B& b)
+	CHECKRES forceinline typename CompileTime::MainType<A,B>  MinMag (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
@@ -882,7 +882,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B>, I, U >)  MinMag (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  MinMag (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
 		Vec<T,I,U>		ret;
@@ -896,7 +896,7 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B>)  MaxMag (const A& a, const B& b)
+	CHECKRES forceinline typename CompileTime::MainType<A,B>  MaxMag (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
@@ -908,7 +908,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B>, I, U >)  MaxMag (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  MaxMag (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
 	{
 		typedef typename CompileTime::MainType<A,B>	T;
 		Vec<T,I,U>		ret;
@@ -922,13 +922,13 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B, typename C>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B,C>)  Mid (const A& a, const B& b, const C& c)
+	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  Mid (const A& a, const B& b, const C& c)
 	{
 		return Min( Max( a, b ), Max( b, c ) );
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B,C>, I, U >)  Mid (const Vec<A,I,U>& a, const Vec<B,I,U>& b, const Vec<C,I,U>& c)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Mid (const Vec<A,I,U>& a, const Vec<B,I,U>& b, const Vec<C,I,U>& c)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
 		Vec<T,I,U>		ret;
@@ -942,7 +942,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, typename B>
-	forceinline CHECKRES(T)  Pow (const T&x, const B& y)
+	CHECKRES forceinline T  Pow (const T&x, const B& y)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> and CompileTime::IsScalarOrEnum<B> );
 		ASSERT( x >= T(0) or y == Floor(y) );	// if x < 0 and y not integer then result is NaN
@@ -953,7 +953,7 @@ namespace GXMath
 	}
 
 	template <typename T, typename B, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Pow (const Vec<T,I,U>& x, const Vec<B,I,U>& y)
+	CHECKRES inline Vec<T,I,U>  Pow (const Vec<T,I,U>& x, const Vec<B,I,U>& y)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Pow( x[i], y[i] );
@@ -966,7 +966,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Ln (const T& x)
+	CHECKRES forceinline T  Ln (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		ASSERT( x >= T(0) );
@@ -976,7 +976,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Ln (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  Ln (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Ln( x[i] );
@@ -1011,13 +1011,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Log (const T& x, const T& base)
+	CHECKRES forceinline T  Log (const T& x, const T& base)
 	{
 		return Ln( x ) / Ln( base );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Log (const Vec<T,I,U>& x, const T& base)
+	CHECKRES inline Vec<T,I,U>  Log (const Vec<T,I,U>& x, const T& base)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Log( x[i], base );
@@ -1025,7 +1025,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Log (const Vec<T,I,U>& x, const Vec<T,I,U>& base)
+	CHECKRES inline Vec<T,I,U>  Log (const Vec<T,I,U>& x, const Vec<T,I,U>& base)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Log( x[i], base[i] );
@@ -1038,7 +1038,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T) Log2 (const T& x)
+	CHECKRES forceinline T Log2 (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -1047,7 +1047,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Log2 (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Log2 (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Log2( x[i] );
@@ -1060,7 +1060,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Log10 (const T& x)
+	CHECKRES forceinline T  Log10 (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		ASSERT( x >= T(0) );
@@ -1070,7 +1070,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Log10 (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Log10 (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Log10( x[i] );
@@ -1083,7 +1083,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Exp (const T& x)
+	CHECKRES forceinline T  Exp (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -1092,7 +1092,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Exp (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Exp (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Exp( x[i] );
@@ -1105,7 +1105,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Exp2 (const T& x)
+	CHECKRES forceinline T  Exp2 (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -1114,7 +1114,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Exp2 (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Exp2 (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Exp2( x[i] );
@@ -1127,7 +1127,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Exp10 (const T& x)
+	CHECKRES forceinline T  Exp10 (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -1136,7 +1136,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Exp10 (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Exp10 (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Exp10( x[i] );
@@ -1149,7 +1149,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  CeilPowerOfTwo (const T& x)
+	CHECKRES forceinline T  CeilPowerOfTwo (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -1158,7 +1158,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  CeilPowerOfTwo (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  CeilPowerOfTwo (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = CeilPowerOfTwo( x[i] );
@@ -1171,7 +1171,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  FloorPowerOfTwo (const T& x)
+	CHECKRES forceinline T  FloorPowerOfTwo (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -1180,7 +1180,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  FloorPowerOfTwo (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  FloorPowerOfTwo (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = FloorPowerOfTwo( x[i] );
@@ -1193,7 +1193,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  NearPowerOfTwo (const T& x)
+	CHECKRES forceinline T  NearPowerOfTwo (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -1207,7 +1207,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  NearPowerOfTwo (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  NearPowerOfTwo (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = NearPowerOfTwo( x[i] );
@@ -1220,7 +1220,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(bool)  IsPowerOfTwo (const T& x)
+	CHECKRES forceinline bool  IsPowerOfTwo (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -1230,7 +1230,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<bool,I,U>)  IsPowerOfTwo (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<bool,I,U>  IsPowerOfTwo (const Vec<T,I,U> &x)
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = IsPowerOfTwo( x[i] );
@@ -1243,13 +1243,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Square (const T& x)
+	CHECKRES forceinline T  Square (const T& x)
 	{
 		return x * x;
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Square (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Square (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Square( x[i] );
@@ -1262,7 +1262,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Sqrt (const T& x)
+	CHECKRES forceinline T  Sqrt (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -1274,14 +1274,14 @@ namespace GXMath
 
 #ifdef GX_FAST_MATH
 	template <>
-	forceinline CHECKRES(T)  Sqrt (const float& x)
+	CHECKRES forceinline T  Sqrt (const float& x)
 	{
 		return FSqrt( x );
 	}
 #endif
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Sqrt (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Sqrt (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Sqrt( x[i] );
@@ -1294,21 +1294,21 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  InvSqrt (const T& x)
+	CHECKRES forceinline T  InvSqrt (const T& x)
 	{
 		return T(1) / Sqrt( x );
 	}
 
 #ifdef GX_FAST_MATH
 	template <>
-	forceinline CHECKRES(float)  InvSqrt (const float &x)
+	CHECKRES forceinline float  InvSqrt (const float &x)
 	{
 		return FInvSqrt( x );
 	}
 #endif
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  InvSqrt (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  InvSqrt (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = InvSqrt( x[i] );
@@ -1321,7 +1321,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  SquareSign (const T& x)
+	CHECKRES forceinline T  SquareSign (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -1329,7 +1329,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SquareSign (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  SquareSign (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SquareSign( x[i] );
@@ -1393,7 +1393,7 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B>)  Mod (const A& left, const B& right)
+	CHECKRES forceinline typename CompileTime::MainType<A,B>  Mod (const A& left, const B& right)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
@@ -1403,7 +1403,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B>, I, U >)  Mod (const Vec<A,I,U> &left, const Vec<B,I,U> &right)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  Mod (const Vec<A,I,U> &left, const Vec<B,I,U> &right)
 	{
 		typedef typename CompileTime::MainType<A,B>		T;
 		Vec<T,I,U>		ret;
@@ -1417,7 +1417,7 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B, typename C>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B>)  SafeMod (const A& left, const B& right, const C& defValue)
+	CHECKRES forceinline typename CompileTime::MainType<A,B>  SafeMod (const A& left, const B& right, const C& defValue)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
@@ -1427,7 +1427,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B>, I, U >)  SafeMod (const Vec<A,I,U> &left, const Vec<B,I,U> &right, const C& defValue)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  SafeMod (const Vec<A,I,U> &left, const Vec<B,I,U> &right, const C& defValue)
 	{
 		typedef typename CompileTime::MainType<A,B>		T;
 		Vec<T,I,U>		ret;
@@ -1441,7 +1441,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(T)  Floor (const T& x)
+	CHECKRES forceinline constexpr T  Floor (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -1451,7 +1451,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Floor (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Floor (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Floor( x[i] );
@@ -1464,7 +1464,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(T)  Ceil (const T& x)
+	CHECKRES forceinline constexpr T  Ceil (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -1474,7 +1474,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Ceil (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  Ceil (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Ceil( x[i] );
@@ -1489,7 +1489,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(T)  Fract (const T& x)
+	CHECKRES forceinline constexpr T  Fract (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -1509,7 +1509,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Fract (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Fract (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Fract( x[i] );
@@ -1522,7 +1522,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(T)  Trunc (const T& x)
+	CHECKRES forceinline constexpr T  Trunc (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -1537,7 +1537,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Trunc (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Trunc (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Trunc( x[i] );
@@ -1566,7 +1566,7 @@ namespace GXMath
 	};
 
 	template <typename T>
-	forceinline CHECKRES(ModF_Result<T>)  ModF (const T& x)
+	CHECKRES forceinline ModF_Result<T>  ModF (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -1580,7 +1580,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(ModF_Result< Vec<T,I,U> >)  ModF (const Vec<T,I,U> &x)
+	CHECKRES inline ModF_Result< Vec<T,I,U> >  ModF (const Vec<T,I,U> &x)
 	{
 		ModF_Result< Vec<T,I,U> >		ret;
 
@@ -1630,7 +1630,7 @@ namespace GXMath
 	}
 	
 	template <typename A, typename B, typename C>
-	forceinline CHECKRES(typename CompileTime::MainType<A,B,C>)  Wrap (const A& value, const B& minValue, const C& maxValue)
+	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  Wrap (const A& value, const B& minValue, const C& maxValue)
 	{
 		// Warning: float value never equal maxValue!
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and
@@ -1645,7 +1645,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B,C>, I, U >)  Wrap (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Wrap (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
 		Vec<T,I,U>		ret;
@@ -1654,7 +1654,7 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::MainType<A,B,C>, I, U >)  Wrap (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
+	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Wrap (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
 	{
 		typedef typename CompileTime::MainType<A,B,C>	T;
 		Vec<T,I,U>		ret;
@@ -1714,7 +1714,7 @@ namespace GXMath
 	}	// _math_hidden_
 
 	template <typename T>
-	forceinline constexpr CHECKRES(T)  Round (const T& x)
+	CHECKRES forceinline constexpr T  Round (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		//CompileTime::MustBeFloat<T>();
@@ -1723,7 +1723,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Round (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  Round (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Round( x[i] );
@@ -1736,7 +1736,7 @@ namespace GXMath
 =================================================
 */
 	template <typename R, typename T>
-	forceinline constexpr CHECKRES(R)  RoundTo (const T& x)
+	CHECKRES forceinline constexpr R  RoundTo (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		//CompileTime::MustBeFloat<T>();
@@ -1745,7 +1745,7 @@ namespace GXMath
 	}
 
 	template <typename R, typename T, usize I, ulong U>
-	inline CHECKRES(Vec<R,I,U>)  RoundTo (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<R,I,U>  RoundTo (const Vec<T,I,U> &x)
 	{
 		Vec<R,I,U>		ret;
 		FOR( i, ret )	ret[i] = RoundTo<R>( x[i] );
@@ -1758,14 +1758,14 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(typename CompileTime::NearInt::FromType<T>)  RoundToInt (const T& val)
+	CHECKRES forceinline typename CompileTime::NearInt::FromType<T>  RoundToInt (const T& val)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		return _math_hidden_::_Round< typename CompileTime::NearInt::FromType<T>, T >( val );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::NearInt::FromType<T>, I >)  RoundToInt (const Vec<T,I,U> &x)
+	CHECKRES inline Vec< typename CompileTime::NearInt::FromType<T>, I >  RoundToInt (const Vec<T,I,U> &x)
 	{
 		Vec< typename CompileTime::NearInt::FromType<T>, I >	ret;
 		FOR( i, ret )	ret[i] = RoundToInt( x[i] );
@@ -1778,14 +1778,14 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(typename CompileTime::NearUInt::FromType<T>)  RoundToUInt (const T& val)
+	CHECKRES forceinline typename CompileTime::NearUInt::FromType<T>  RoundToUInt (const T& val)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		return _math_hidden_::_Round< typename CompileTime::NearUInt::FromType<T>, T >( val );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec< typename CompileTime::NearUInt::FromType<T>, I >)  RoundToUInt (const Vec<T,I,U> &x)
+	CHECKRES inline Vec< typename CompileTime::NearUInt::FromType<T>, I >  RoundToUInt (const Vec<T,I,U> &x)
 	{
 		Vec< typename CompileTime::NearUInt::FromType<T>, I >	ret;
 		FOR( i, ret )	ret[i] = RoundToUInt( x[i] );
@@ -1800,13 +1800,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(T)  RoundTo (const T& x, const T& base)
+	CHECKRES forceinline constexpr T  RoundTo (const T& x, const T& base)
 	{
 		return Round( x / base ) * base;
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  RoundTo (const Vec<T,I,U> &x, const T& base)
+	CHECKRES inline Vec<T,I,U>  RoundTo (const Vec<T,I,U> &x, const T& base)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = RoundTo( x[i] );
@@ -1819,7 +1819,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  SafeDiv (const T& left, const T& right, const T& defVal)
+	CHECKRES forceinline T  SafeDiv (const T& left, const T& right, const T& defVal)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -1827,7 +1827,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SafeDiv (const Vec<T,I,U> &left, const Vec<T,I,U> &right, const T& defVal = T(0))
+	CHECKRES inline Vec<T,I,U>  SafeDiv (const Vec<T,I,U> &left, const Vec<T,I,U> &right, const T& defVal = T(0))
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeDiv( left[i], right[i], defVal );
@@ -1835,13 +1835,13 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SafeDiv (const Vec<T,I,U> &left, const T &right, const T& defVal = T(0))
+	CHECKRES inline Vec<T,I,U>  SafeDiv (const Vec<T,I,U> &left, const T &right, const T& defVal = T(0))
 	{
 		return SafeDiv( left, Vec<T,I,U>(right), defVal );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SafeDiv (const T &left, const Vec<T,I,U> &right, const T& defVal = T(0))
+	CHECKRES inline Vec<T,I,U>  SafeDiv (const T &left, const Vec<T,I,U> &right, const T& defVal = T(0))
 	{
 		return SafeDiv( Vec<T,I,U>(left), right, defVal );
 	}
@@ -1852,7 +1852,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  IntFactorial (const T& x)
+	CHECKRES forceinline T  IntFactorial (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		ASSERT( x >= T(0) );
@@ -1869,7 +1869,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  IntFactorial (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  IntFactorial (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntFactorial( x[i] );
@@ -1882,7 +1882,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  IntSuperFactorial (const T& x)
+	CHECKRES forceinline T  IntSuperFactorial (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		ASSERT( x >= T(0) );
@@ -1899,7 +1899,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  IntSuperFactorial (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  IntSuperFactorial (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntSuperFactorial( x[i] );
@@ -1912,7 +1912,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  IntHyperFactorial (const T& x)
+	CHECKRES forceinline T  IntHyperFactorial (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		ASSERT( x >= T(0) );
@@ -1929,7 +1929,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  IntHyperFactorial (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  IntHyperFactorial (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntHyperFactorial( x[i] );
@@ -1942,7 +1942,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  IntDoubleFactorial (const T& x)
+	CHECKRES forceinline T  IntDoubleFactorial (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		ASSERT( x >= T(0) );
@@ -1960,7 +1960,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  IntDoubleFactorial (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  IntDoubleFactorial (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntDoubleFactorial( x[i] );
@@ -1973,13 +1973,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  IntGammaFunction (const T& x)
+	CHECKRES forceinline T  IntGammaFunction (const T& x)
 	{
 		return IntFactorial( x - T(1) );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  IntGammaFunction (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  IntGammaFunction (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntGammaFunction( x[i] );
@@ -1992,13 +1992,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  IntLnGammaFunction (const T& x)
+	CHECKRES forceinline T  IntLnGammaFunction (const T& x)
 	{
 		return Ln( Abs( IntGammaFunction( x ) ) );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  IntLnGammaFunction (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  IntLnGammaFunction (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = IntLnGammaFunction( x[i] );
@@ -2011,13 +2011,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Factorial (const T& x)
+	CHECKRES forceinline T  Factorial (const T& x)
 	{
 		return (T) FastFactorial( double(x) );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Factorial (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  Factorial (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Factorial( x[i] );
@@ -2030,13 +2030,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Gamma (const T& x)
+	CHECKRES forceinline T  Gamma (const T& x)
 	{
 		return (T) FastGammaFunction( double(x) );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Gamma (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  Gamma (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Gamma( x[i] );
@@ -2049,13 +2049,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  LnGamma (const T& x)
+	CHECKRES forceinline T  LnGamma (const T& x)
 	{
 		return (T) FastLnGammaFunction( double(x) );
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  LnGamma (const Vec<T,I,U>& x)
+	CHECKRES inline Vec<T,I,U>  LnGamma (const Vec<T,I,U>& x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = LnGammaFunction( x[i] );
@@ -2068,7 +2068,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(bool)  IsOdd (const T& x)
+	CHECKRES forceinline constexpr bool  IsOdd (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -2077,7 +2077,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<bool,I,U>)  IsOdd (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<bool,I,U>  IsOdd (const Vec<T,I,U> &x)
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = IsOdd( x[i] );
@@ -2090,7 +2090,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(bool)  IsEven (const T& x)
+	CHECKRES forceinline constexpr bool  IsEven (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -2099,7 +2099,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<bool,I,U>)  IsEven (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<bool,I,U>  IsEven (const Vec<T,I,U> &x)
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = IsEven( x[i] );
@@ -2112,7 +2112,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  ToOdd (const T &x)
+	CHECKRES forceinline T  ToOdd (const T &x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -2121,7 +2121,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  ToOdd (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  ToOdd (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ToOdd( x[i] );
@@ -2134,7 +2134,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  ToEven (const T &x)
+	CHECKRES forceinline T  ToEven (const T &x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -2143,7 +2143,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  ToEven (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  ToEven (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ToEven( x[i] );
@@ -2156,7 +2156,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  Step (const T& x, const T& edge)
+	CHECKRES forceinline T  Step (const T& x, const T& edge)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -2165,7 +2165,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Step (const Vec<T,I,U> &x, const Vec<T,I,U> &edge)
+	CHECKRES inline Vec<T,I,U>  Step (const Vec<T,I,U> &x, const Vec<T,I,U> &edge)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Step( x[i], edge[i] );
@@ -2173,7 +2173,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  Step (const Vec<T,I,U> &x, const T &edge)
+	CHECKRES inline Vec<T,I,U>  Step (const Vec<T,I,U> &x, const T &edge)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Step( x[i], edge );
@@ -2186,7 +2186,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  LinearStep (const T& x, const T& edge0, const T& edge1)
+	CHECKRES forceinline T  LinearStep (const T& x, const T& edge0, const T& edge1)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -2196,7 +2196,7 @@ namespace GXMath
 	}
 	
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  LinearStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
+	CHECKRES inline Vec<T,I,U>  LinearStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = LinearStep( x[i], edge0[i], edge1[i] );
@@ -2204,7 +2204,7 @@ namespace GXMath
 	}
 	
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  LinearStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
+	CHECKRES inline Vec<T,I,U>  LinearStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = LinearStep( x[i], edge0, edge1 );
@@ -2217,7 +2217,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  SmoothStep (const T& x, const T& edge0, const T& edge1)
+	CHECKRES forceinline T  SmoothStep (const T& x, const T& edge0, const T& edge1)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -2228,7 +2228,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SmoothStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
+	CHECKRES inline Vec<T,I,U>  SmoothStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SmoothStep( x[i], edge0[i], edge1[i] );
@@ -2236,7 +2236,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SmoothStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
+	CHECKRES inline Vec<T,I,U>  SmoothStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SmoothStep( x[i], edge0, edge1 );
@@ -2249,7 +2249,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  BumpStep (const T& x, const T& edge0, const T& edge1)
+	CHECKRES forceinline T  BumpStep (const T& x, const T& edge0, const T& edge1)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -2259,7 +2259,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  BumpStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
+	CHECKRES inline Vec<T,I,U>  BumpStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BumpStep( x[i], edge0[i], edge1[i] );
@@ -2267,7 +2267,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  BumpStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
+	CHECKRES inline Vec<T,I,U>  BumpStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = BumpStep( x[i], edge0, edge1 );
@@ -2280,7 +2280,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline CHECKRES(T)  SmoothBumpStep (const T& x, const T& edge0, const T& edge1)
+	CHECKRES forceinline T  SmoothBumpStep (const T& x, const T& edge0, const T& edge1)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
@@ -2291,7 +2291,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SmoothBumpStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
+	CHECKRES inline Vec<T,I,U>  SmoothBumpStep (const Vec<T,I,U> &x, const Vec<T,I,U> &edge0, const Vec<T,I,U> &edge1)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SmoothBumpStep( x[i], edge0[i], edge1[i] );
@@ -2299,7 +2299,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  SmoothBumpStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
+	CHECKRES inline Vec<T,I,U>  SmoothBumpStep (const Vec<T,I,U> &x, const T &edge0, const T &edge1)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SmoothBumpStep( x[i], edge0, edge1 );
@@ -2314,7 +2314,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	forceinline constexpr CHECKRES(T)  AlignToLarge (const T& value, const usize align)
+	CHECKRES forceinline constexpr T  AlignToLarge (const T& value, const usize align)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -2325,7 +2325,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  AlignToLarge (const Vec<T,I,U>& value, const usize align)
+	CHECKRES inline Vec<T,I,U>  AlignToLarge (const Vec<T,I,U>& value, const usize align)
 	{
 		Vec<T,I,U> res;
 		FOR( i, res )	res[i] = AlignToLarge( value[i], align );
@@ -2333,7 +2333,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	forceinline constexpr CHECKRES(T)  AlignToLarge (const T& value, const BytesU align)
+	CHECKRES forceinline constexpr T  AlignToLarge (const T& value, const BytesU align)
 	{
 		return AlignToLarge( value, (usize)align );
 	}

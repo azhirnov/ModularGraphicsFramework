@@ -138,7 +138,7 @@ namespace GXTypes
 		}
 
 
-		forceinline RC Lock () const
+		CHECKRES forceinline RC Lock () const
 		{
 			if ( _ptr and Strategy_t::IncShared( _counter ) )
 			{
@@ -155,7 +155,7 @@ namespace GXTypes
 		forceinline bool IsNotNull ()	const			{ return _ptr != null; }
 		forceinline bool IsNull ()		const			{ return _ptr; }
 
-		forceinline T * RawPtr ()		const			{ return const_cast<T*>( _ptr ); }
+		forceinline T const* RawPtr ()	const			{ return _ptr; }
 
 		
 		template <typename T2>
@@ -216,7 +216,7 @@ namespace GXTypes
 		}
 
 		template <typename T2>
-		forceinline T2 To ()
+		CHECKRES forceinline T2 To ()
 		{
 			STATIC_ASSERT( typename T2::_is_weak_ptr(true) );
 			return T2( *this );

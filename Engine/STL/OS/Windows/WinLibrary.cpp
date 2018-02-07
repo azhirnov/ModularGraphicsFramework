@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Library.h"
+#include "Engine/STL/OS/Windows/Library.h"
 #include "Engine/STL/Math/BinaryMath.h"
 #include "Engine/STL/Math/Interpolations.h"
 
@@ -8,7 +8,7 @@
 	not defined( PLATFORM_SDL )
 
 #include "Engine/STL/OS/Base/BaseFileSystem.h"
-#include "WinHeader.h"
+#include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace GX_STL
 {
@@ -53,7 +53,7 @@ namespace OS
 	IsValid
 =================================================
 */
-	CHECKRES(bool)  Library::IsValid () const
+	bool Library::IsValid () const
 	{
 		return _library.IsNotNull<HMODULE>();
 	}
@@ -150,7 +150,7 @@ namespace OS
 	GetProc
 =================================================
 */
-	CHECKRES(Library::Func_t)  Library::GetProc (StringCRef procName, Func_t defProc) const
+	Library::Func_t Library::GetProc (StringCRef procName, Func_t defProc) const
 	{
 		ASSERT( IsValid() );
 		ASSERT( not procName.Empty() );

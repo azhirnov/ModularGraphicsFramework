@@ -96,14 +96,13 @@ namespace _types_hidden_
 		bool Erase (const Key_t &key);
 		void EraseByIndex (usize index);
 		
-		usize GetIndex (Ptr<const Value_t> iter) const;
-		//usize GetIndex (Ptr<Value_t> iter) const;
+		usize GetIndex (const Value_t* iter) const;
 
 		void Free ()									{ _memory.Free(); }
 		void Clear ()									{ _memory.Clear(); }
 
-		void Resize (usize uSize)						{ _memory.Resize( uSize, false ); }
-		void Reserve (usize uSize)						{ _memory.Reserve( uSize ); }
+		void Resize (usize size)						{ _memory.Resize( size, false ); }
+		void Reserve (usize size)						{ _memory.Reserve( size ); }
 
 		
 		static constexpr bool	IsLinearMemory ()			{ return Container::IsLinearMemory(); }
@@ -216,7 +215,7 @@ namespace _types_hidden_
 */
 	template <typename C, typename K, template <typename T> class Search, bool U>
 	template <typename TKey2>
-	inline void MapUtils<C,K,Search,U>::FindLastIndex2 (const TKey2 &key, usize firstIdx, OUT usize &idx) const
+	inline void MapUtils<C,K,Search,U>::FindLastIndex2 (const TKey2 &key, const usize firstIdx, OUT usize &idx) const
 	{
 		ASSERT( key == _memory[firstIdx].first );
 
@@ -233,7 +232,7 @@ namespace _types_hidden_
 =================================================
 */
 	template <typename C, typename K, template <typename T> class S, bool U>
-	inline void MapUtils<C,K,S,U>::FindLastIndex (usize first, OUT usize &idx) const
+	inline void MapUtils<C,K,S,U>::FindLastIndex (const usize first, OUT usize &idx) const
 	{
 		Key_t const &	key = _memory[first].first;
 
@@ -267,7 +266,7 @@ namespace _types_hidden_
 =================================================
 */
 	template <typename C, typename K, template <typename T> class S, bool U>
-	inline void MapUtils<C,K,S,U>::EraseByIndex (usize index)
+	inline void MapUtils<C,K,S,U>::EraseByIndex (const usize index)
 	{
 		_memory.Erase( index );
 	}
@@ -278,17 +277,10 @@ namespace _types_hidden_
 =================================================
 */
 	template <typename C, typename K, template <typename T> class S, bool U>
-	inline usize MapUtils<C,K,S,U>::GetIndex (Ptr<const Value_t> iter) const
+	inline usize MapUtils<C,K,S,U>::GetIndex (const Value_t* iter) const
 	{
-		return _memory.GetIndex( *(const Value_t *) iter.ptr() );
+		return _memory.GetIndex( *iter );
 	}
-	/*
-	template <typename C, typename K, template <typename T> class S, bool U>
-	inline usize MapUtils<C,K,S,U>::GetIndex (Ptr<Value_t> iter) const
-	{
-		return _memory.GetIndex( *(const Value_t *) iter.ptr() );
-	}
-	*/
 /*
 =================================================
 	_GetIndexBounds
@@ -438,7 +430,7 @@ namespace _types_hidden_
 */
 	template <typename C, typename K, template <typename T> class S, bool U>
 	template <typename SearchCmp, typename Key>
-	inline bool MapUtils<C,K,S,U>::_FindIndex (const Key &key, usize &idx) const
+	inline bool MapUtils<C,K,S,U>::_FindIndex (const Key &key, OUT usize &idx) const
 	{
 		idx = UMax;
 

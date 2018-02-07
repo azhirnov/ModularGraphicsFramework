@@ -152,15 +152,11 @@ namespace GXTypes
 
 	
 	template <usize UID, typename T>
-	struct Hash< TDebugInstCounter<UID, T> > : private Hash<T>
+	struct Hash< TDebugInstCounter<UID, T> >
 	{
-		typedef TDebugInstCounter<UID, T>	Key_t;
-		typedef Hash<T>						Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		HashResult  operator () (const TDebugInstCounter<UID, T> &x) const noexcept
 		{
-			return Base_t::operator ()( x.secondVal );
+			return HashOf( x.secondVal );
 		}
 	};
 

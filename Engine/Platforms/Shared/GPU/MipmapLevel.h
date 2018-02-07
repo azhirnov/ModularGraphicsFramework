@@ -80,9 +80,7 @@ namespace GXTypes
 	template <>
 	struct Hash< Engine::Platforms::MipmapLevel >
 	{
-		using Result_t	= HashResult;
-
-		Result_t operator () (const Engine::Platforms::MipmapLevel &value) const
+		HashResult  operator () (const Engine::Platforms::MipmapLevel &value) const
 		{
 			return HashOf( value.Get() );
 		}

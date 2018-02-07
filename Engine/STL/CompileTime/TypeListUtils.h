@@ -2,10 +2,11 @@
 
 #pragma once
 
-#include "TemplateUtils.h"
-#include "TemplateMath.h"
-#include "NewTypeInfo.h"
+#include "Engine/STL/CompileTime/TemplateUtils.h"
+#include "Engine/STL/CompileTime/TemplateMath.h"
+#include "Engine/STL/CompileTime/NewTypeInfo.h"
 #include "Engine/STL/Types/Noninstancable.h"
+#include "Engine/STL/CompileTime/DeferredTemplates.h"
 
 namespace GX_STL
 {

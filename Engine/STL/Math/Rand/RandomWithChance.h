@@ -21,14 +21,14 @@ namespace GXMath
 		
 		
 		template <typename T, usize I>
-		static bool CheckChances (const T (&chances)[I])
+		CHECKRES static bool CheckChances (const T (&chances)[I])
 		{
 			return CheckChances( ArrayCRef<T>( chances ) );
 		}
 		
 
 		template <typename T>
-		static bool CheckChances (ArrayCRef<T> chances)
+		CHECKRES static bool CheckChances (ArrayCRef<T> chances)
 		{
 			typedef typename TypeTraits::RemoveConst<T>		Value_t;
 
@@ -42,14 +42,14 @@ namespace GXMath
 
 		
 		template <typename T, usize I>
-		static usize Index (const T (&chances)[I])
+		CHECKRES static usize Index (const T (&chances)[I])
 		{
 			return Index( ArrayCRef<T>( chances ) );
 		}
 		
 
 		template <typename T>
-		static usize Index (ArrayCRef<T> chances)
+		CHECKRES static usize Index (ArrayCRef<T> chances)
 		{
 			typedef typename TypeTraits::RemoveConst<T>		Value_t;
 
@@ -67,14 +67,14 @@ namespace GXMath
 
 		
 		template <typename T, usize I, typename B>
-		static usize Index (const T (&chances)[I], B expected)
+		CHECKRES static usize Index (const T (&chances)[I], B expected)
 		{
 			return Index( ArrayCRef<T>( chances ), expected );
 		}
 		
 
 		template <typename T, typename B>
-		static usize Index (ArrayCRef<T> chances, B expected)
+		CHECKRES static usize Index (ArrayCRef<T> chances, B expected)
 		{
 			typedef typename TypeTraits::RemoveConst<T>		Value_t;
 
@@ -102,7 +102,7 @@ namespace GXMath
 		*/
 
 		template <typename T>
-		static bool Bool (T chanceOfTrue)
+		CHECKRES static bool Bool (T chanceOfTrue)
 		{
 			return UNorm<T>() < chanceOfTrue;
 		}

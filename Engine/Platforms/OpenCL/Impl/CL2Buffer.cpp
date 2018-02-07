@@ -36,6 +36,7 @@ namespace PlatformCL
 
 		using SupportedMessages_t	= CL2BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetBufferDescriptor,
+											GpuMsg::SetBufferDescriptor,
 											GpuMsg::GetCLBufferID,
 											GpuMsg::GpuMemoryRegionChanged
 										> >::Append< ForwardToMem_t >;
@@ -79,6 +80,7 @@ namespace PlatformCL
 		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _GetCLBufferID (const Message< GpuMsg::GetCLBufferID > &);
+		bool _SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &);
 		bool _GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
 		
@@ -130,6 +132,7 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2Buffer::_Delete );
 		_SubscribeOnMsg( this, &CL2Buffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetCLBufferID );
+		_SubscribeOnMsg( this, &CL2Buffer::_SetBufferDescriptor );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetBufferDescriptor );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetCLDeviceInfo );
@@ -259,6 +262,19 @@ namespace PlatformCL
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
 		}
+		return true;
+	}
+	
+/*
+=================================================
+	_SetBufferDescriptor
+=================================================
+*/
+	bool CL2Buffer::_SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &msg)
+	{
+		CHECK_ERR( GetState() == EState::Initial );
+
+		_descr = msg->descr;
 		return true;
 	}
 

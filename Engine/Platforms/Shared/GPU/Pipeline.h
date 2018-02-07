@@ -84,9 +84,9 @@ namespace Platforms
 				GLSL,
 				GLSL_Bin,
 				SPIRV,
-				SPIRV_Src,
+				SPIRV_Asm,
 				OpenCL,
-				OpenCL_Bin,
+				OpenCL_Asm,
 				SoftRenderer,
 				_Count
 			}; };
@@ -119,9 +119,9 @@ namespace Platforms
 			StringCRef GetCL () const;
 
 			// CL binary
-			//void ArrayCLBin (BinArrayCRef data);
-			//bool FileCLBin (const RFilePtr &file);
-			//BinArrayCRef GetCLBin () const;
+			void StringCLAsm (StringCRef data);
+			bool FileCLAsm (const RFilePtr &file);
+			StringCRef GetCLAsm () const;
 
 			// SPIRV binary
 			void ArraySPIRV (ArrayCRef<uint> data);
@@ -130,8 +130,8 @@ namespace Platforms
 			ArrayCRef<uint> GetSPIRV () const;
 
 			// SPIRV assembly
-			void ArrayAsmSPIRV (StringCRef data);
-			StringCRef	GetAsmSPIRV () const;
+			void StringSpirvAsm (StringCRef data);
+			StringCRef	GetSpirvAsm () const;
 
 			// Software
 			void FuncSW (const SWInvoke &func);

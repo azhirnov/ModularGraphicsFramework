@@ -52,9 +52,7 @@ namespace GXTypes
 	template <>
 	struct Hash< Engine::Platforms::ImageLayer >
 	{
-		using Result_t	= HashResult;
-
-		Result_t operator () (const Engine::Platforms::ImageLayer &value) const
+		HashResult  operator () (const Engine::Platforms::ImageLayer &value) const
 		{
 			return HashOf( value.Get() );
 		}

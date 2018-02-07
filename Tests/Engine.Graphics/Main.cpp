@@ -7,6 +7,7 @@ void main ()
 {
 	Logger::GetInstance()->Open( "log", false );
 	
+	#ifdef GRAPHICS_API_VULKAN
 	{
 		GApp	app;
 	
@@ -20,7 +21,9 @@ void main ()
 		app.Quit();
 	}
 	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
-
+	#endif
+	
+	#ifdef GRAPHICS_API_OPENGL
 	{
 		GApp	app;
 	
@@ -34,4 +37,5 @@ void main ()
 		app.Quit();
 	}
 	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
+	#endif
 }

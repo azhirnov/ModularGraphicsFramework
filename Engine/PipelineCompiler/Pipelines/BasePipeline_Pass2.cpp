@@ -618,9 +618,9 @@ namespace PipelineCompiler
 				cfg2.source	= EShaderSrcFormat::GLSL;
 				cfg2.target = EShaderDstFormat::GLSL_Binary;
 
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.glslBinary ) )
+				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg2, OUT log, OUT compiled.glslBinary ) )
 				{
-					CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
+					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
 				}
 			}
 		}
@@ -655,7 +655,7 @@ namespace PipelineCompiler
 			{
 				cfg.target = EShaderDstFormat::SPIRV_Source;
 
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.spirvSource ) )
+				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.spirvAsm ) )
 				{
 					CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 				}
@@ -724,9 +724,9 @@ namespace PipelineCompiler
 				cfg2.source	= EShaderSrcFormat::CL;
 				cfg2.target = EShaderDstFormat::CL_Binary;
 
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.clBinary ) )
+				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg2, OUT log, OUT compiled.clAsm ) )
 				{
-					CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
+					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
 				}
 			}
 		}
@@ -763,8 +763,8 @@ namespace PipelineCompiler
 			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::CL_Source, shaderType, compiled.cl ) );
 		}
 
-		if ( not compiled.clBinary.Empty() ) {
-			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::CL_Binary, shaderType, compiled.clBinary ) );
+		if ( not compiled.clAsm.Empty() ) {
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::CL_Binary, shaderType, compiled.clAsm ) );
 		}
 		return true;
 	}

@@ -216,7 +216,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Queue<T,S,MC>::_Reallocate (usize newSize)
+	inline void Queue<T,S,MC>::_Reallocate (const usize newSize)
 	{
 		ASSERT( newSize > 0 );
 
@@ -249,7 +249,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline usize Queue<T,S,MC>::_CalcFirstOffset (usize size)
+	inline usize Queue<T,S,MC>::_CalcFirstOffset (const usize size)
 	{
 		const usize	nom	= GlobalConst::STL_MemContainerResizingNominator;
 		const usize	den	= GlobalConst::STL_MemContainerResizingDenominator;
@@ -274,7 +274,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Queue<T,S,MC>::_ReplaceToLeft (usize offset)
+	inline void Queue<T,S,MC>::_ReplaceToLeft (const usize offset)
 	{
 		if ( _last + (isize)offset < (isize)_size ) {
 			_last += offset;
@@ -307,7 +307,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Queue<T,S,MC>::_ReplaceToRight (usize offset)
+	inline void Queue<T,S,MC>::_ReplaceToRight (const usize offset)
 	{
 		if ( _first > isize(offset + 1) ) {
 			_first -= offset;
@@ -340,14 +340,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline T & Queue<T,S,MC>::operator [] (usize i)
+	inline T & Queue<T,S,MC>::operator [] (const usize i)
 	{
 		ASSERT( i < Count() );
 		return _memory.Pointer()[ i + _first ];
 	}
 	
 	template <typename T, typename S, typename MC>
-	inline const T & Queue<T,S,MC>::operator [] (usize i) const
+	inline const T & Queue<T,S,MC>::operator [] (const usize i) const
 	{
 		ASSERT( i < Count() );
 		return _memory.Pointer()[ i + _first ];
@@ -482,7 +482,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Queue<T,S,MC>::Resize (usize newSize)
+	inline void Queue<T,S,MC>::Resize (const usize newSize)
 	{
 		const usize	old_count = Count();
 
@@ -513,7 +513,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Queue<T,S,MC>::Reserve (usize size)
+	inline void Queue<T,S,MC>::Reserve (const usize size)
 	{
 		if ( size > _memory.MaxSize() )
 			size = _memory.MaxSize();
@@ -652,7 +652,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Queue<T,S,MC>::Erase (usize pos, usize count)
+	inline void Queue<T,S,MC>::Erase (const usize pos, usize count)
 	{
 		const usize		u_count = Count();
 
@@ -661,19 +661,19 @@ namespace GXTypes
 
 		if ( pos + count >= u_count )
 			count = u_count - pos;
+		
+		Strategy_t::Destroy( _memory.Pointer() + _first + pos, count );
 
-		if ( pos <= (u_count - pos - count) )
+		if ( pos < (u_count - pos - count) )
 		{
 			// erase from left
-			Strategy_t::Destroy( _memory.Pointer() + _first + pos, count );
-			Strategy_t::Replace( _memory.Pointer() + _first + pos, _memory.Pointer() + _first, pos, true );
+			Strategy_t::ReplaceRev( _memory.Pointer() + _first + GXMath::Max(pos, count), _memory.Pointer() + _first, pos, true );
 			_first += count;
 		}
 		else
 		{
 			// erase from right
-			Strategy_t::Destroy( _memory.Pointer() + _first + pos, count );
-			Strategy_t::Replace( _memory.Pointer() + _first + pos, _memory.Pointer() + _last - pos - count, u_count - pos - count, true );
+			Strategy_t::Replace( _memory.Pointer() + _first + pos, _memory.Pointer() + _last - count, count, true );
 			_last -= count;
 		}
 	}
@@ -684,7 +684,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Queue<T,S,MC>::EraseFromFront (usize count)
+	inline void Queue<T,S,MC>::EraseFromFront (const usize count)
 	{
 		return Erase( 0, count );
 	}
@@ -695,7 +695,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Queue<T,S,MC>::EraseFromBack (usize count)
+	inline void Queue<T,S,MC>::EraseFromBack (const usize count)
 	{
 		ASSERT( count < Count() );
 		return Erase( Count() - count, count );
@@ -712,16 +712,11 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	struct Hash< Queue<T,S,MC> > :
-		private Hash< ArrayCRef<T> >
+	struct Hash< Queue<T,S,MC> >
 	{
-		typedef Queue<T,S,MC>				Key_t;
-		typedef Hash< ArrayCRef<T> >		Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const Queue<T,S,MC> &x) const noexcept
 		{
-			return Base_t::operator ()( x );
+			return HashOf( ArrayCRef<T>( x ) );
 		}
 	};
 

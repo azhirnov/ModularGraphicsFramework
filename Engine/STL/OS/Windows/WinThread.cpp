@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Thread.h"
+#include "Engine/STL/OS/Windows/Thread.h"
 #include "Engine/STL/Math/BinaryMath.h"
 #include "Engine/STL/Math/Interpolations.h"
 
@@ -8,7 +8,7 @@
 	not defined( PLATFORM_SDL ) and \
 	not defined( GX_USE_STD )
 
-#include "WinHeader.h"
+#include "Engine/STL/OS/Windows/WinHeader.h"
 #include <process.h>
 
 namespace GX_STL
@@ -58,7 +58,7 @@ namespace OS
 	IsValid
 =================================================
 */
-	CHECKRES(bool) CurrentThread::IsValid () const
+	bool CurrentThread::IsValid () const
 	{
 		return _thread.IsNotNull<HANDLE>();
 	}
@@ -78,7 +78,7 @@ namespace OS
 	GetCurrentThreadId
 =================================================
 */
-	CHECKRES(usize) CurrentThread::GetCurrentThreadId ()
+	usize CurrentThread::GetCurrentThreadId ()
 	{
 		return ::GetCurrentThreadId();
 	}

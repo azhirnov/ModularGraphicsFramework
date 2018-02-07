@@ -89,7 +89,7 @@ namespace GXMath
 =================================================
 */	
 	template <typename T>
-	inline CHECKRES(bool)  Frustum<T>::IsVisible (const Vec<T,3> &point) const
+	CHECKRES inline bool  Frustum<T>::IsVisible (const Vec<T,3> &point) const
 	{
 		typedef typename Plane<T>::ESide		PSide;
 
@@ -107,7 +107,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  Frustum<T>::IsVisible (const AABBox<T> &box) const
+	CHECKRES inline bool  Frustum<T>::IsVisible (const AABBox<T> &box) const
 	{
 		return IsVisible( box.Center(), box.HalfExtent() );
 	}
@@ -118,7 +118,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  Frustum<T>::IsVisible (const Vec<T,3> &center, const T radius) const
+	CHECKRES inline bool  Frustum<T>::IsVisible (const Vec<T,3> &center, const T radius) const
 	{
 		return ( _planes[EPlane::Left  ].Distance( center ) >= -radius and
 				 _planes[EPlane::Right ].Distance( center ) >= -radius and
@@ -134,7 +134,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  Frustum<T>::IsVisible (const Vec<T,3> &center, const Vec<T,3> &halfextents) const
+	CHECKRES inline bool  Frustum<T>::IsVisible (const Vec<T,3> &center, const Vec<T,3> &halfextents) const
 	{
 		typedef typename Plane<T>::ESide		PSide;
 
@@ -152,7 +152,7 @@ namespace GXMath
 =================================================
 */
 	/*template <typename T>
-	inline CHECKRES(bool)  Frustum<T>::IsVisible (const Frustum<T> &frustum) const
+	CHECKRES inline bool  Frustum<T>::IsVisible (const Frustum<T> &frustum) const
 	{
 		TODO( "intersect plane" );
 		return false;
@@ -184,7 +184,7 @@ namespace GXMath
 */
 	template <typename T>
 	template <typename T2>
-	inline CHECKRES(Frustum<T2>)  Frustum<T>::Convert () const
+	CHECKRES inline Frustum<T2>  Frustum<T>::Convert () const
 	{
 		Frustum<T2>	ret;
 

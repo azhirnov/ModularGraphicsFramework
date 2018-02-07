@@ -77,6 +77,13 @@ namespace PipelineCompiler
 		FOR( i, cfg.includings ) {
 			src << ser->Include( cfg.includings[i] );
 		}
+
+		// mark place for c++ source
+		if ( constCfg.target[ EShaderDstFormat::CPP_Module ] )
+		{
+			src << ser->Comment( "C++ shader" );
+		}
+
 		src << '\n' << ser->DeclNamespace( cfg.nameSpace );
 		src << ser->BeginScope() << '\n';
 		
@@ -86,6 +93,7 @@ namespace PipelineCompiler
 		src << ser->BeginScope();
 		src << ser->AssignVariable( "\tdescr", "PipelineTemplateDescriptor()" );
 		src << ser->ToString( "\tdescr.supportedShaders", EShader::bits() | EShader::Compute ) << '\n';
+		src << ser->ToString( "\tdescr.localGroupSize", localGroupSize );
 
 		CHECK_ERR( _ConvertLayout( "\tdescr.layout", INOUT src, ser ) );
 		
@@ -116,12 +124,27 @@ namespace PipelineCompiler
 		src << ser->ShaderSrcGLSL( name, compiled.glsl )
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvSource )
+			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
 			<< ser->ShaderSrcCL( name, compiled.cl )
-			<< ser->ShaderBinCL( name, compiled.clBinary )
-			<< ser->ShaderSrcCPP( name, compiled.cpp )
-			<< '\n';
+			<< ser->ShaderBinCL( name, compiled.clAsm );
 		
+		if ( not compiled.cpp.Empty() )
+		{
+			usize	pos;
+			if ( src.Find( "C++ shader", OUT pos ) )
+			{
+				StringParser::ToNextLine( src, INOUT pos );
+
+				const String	func_name = "sw_"_str << Name() << "_comp";
+
+				src.Insert( ser->ShaderSrcCPP_Impl( name, compiled.cpp, func_name ), pos );
+
+				src << ser->ShaderSrcCPP( name, func_name );
+			}
+		}
+
+		src << '\n';
+
 		if ( cfg.validation ) {
 			CHECK_ERR( _ValidateShader( EShader::Compute, compiled ) );
 		}

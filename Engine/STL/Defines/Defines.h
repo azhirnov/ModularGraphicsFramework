@@ -48,7 +48,7 @@
 
 
 // Check function result //
-#define CHECKRES(...)					GX_CHECK_RESULT __VA_ARGS__
+#define CHECKRES						GX_CHECK_RESULT
 
 
 // Assume //

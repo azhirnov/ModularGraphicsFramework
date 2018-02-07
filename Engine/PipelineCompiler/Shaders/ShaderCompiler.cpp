@@ -45,6 +45,122 @@ namespace PipelineCompiler
 	}
 //-----------------------------------------------------------------------------
 
+	
+/*
+=================================================
+	Initialize
+=================================================
+*/
+	bool ShaderCompiler::_BaseApp::Initialize ()
+	{
+		auto		ms		= GetMainSystemInstance();
+		auto		mf		= ms->GlobalSystems()->modulesFactory;
+		auto		thread	= ms->GlobalSystems()->parallelThread;
+		
+		ms->AddModule( GModID::type(0), CreateInfo::Platform{} );
+		thread->AddModule( WinWindowModuleID, CreateInfo::Window{ "", Uninitialized, uint2(1), int2(0), CreateInfo::Window::EVisibility::Invisible } );
+
+		ModulePtr	glcontext;
+		ModulePtr	clcontext;
+
+		CHECK_ERR( mf->Create(
+						CLContextModuleID,
+						ms->GlobalSystems(),
+						CreateInfo::GpuContext{},
+						OUT clcontext ) );
+
+		CHECK_ERR( mf->Create(
+						GLContextModuleID,
+						ms->GlobalSystems(),
+						CreateInfo::GpuContext{},
+						OUT glcontext ) );
+
+		ms->Send< ModuleMsg::AttachModule >({ glcontext });
+		ms->Send< ModuleMsg::AttachModule >({ clcontext });
+
+		CHECK_ERR( mf->Create(
+						CLThreadModuleID,
+						ms->GlobalSystems(),
+						CreateInfo::GpuThread{ ComputeSettings{ "CL 1.2"_GAPI } },
+						OUT _clthread ) );
+
+		CHECK_ERR( mf->Create(
+						GLThreadModuleID,
+						ms->GlobalSystems(),
+						CreateInfo::GpuThread{ GraphicsSettings{ "GL 4.4"_GAPI } },
+						OUT _glthread ) );
+	
+		thread->Send< ModuleMsg::AttachModule >({ _glthread });
+		thread->Send< ModuleMsg::AttachModule >({ _clthread });
+
+		_glthread->Subscribe( this, &_BaseApp::_GLInit );
+		_clthread->Subscribe( this, &_BaseApp::_CLInit );
+
+		// finish initialization
+		ModuleUtils::Initialize({ ms });
+
+		return true;
+	}
+	
+/*
+=================================================
+	_CLInit
+=================================================
+*/
+	bool ShaderCompiler::_BaseApp::_CLInit (const Message< GpuMsg::DeviceCreated > &)
+	{
+		_clInit = true;
+		return true;
+	}
+	
+/*
+=================================================
+	_GLInit
+=================================================
+*/
+	bool ShaderCompiler::_BaseApp::_GLInit (const Message< GpuMsg::DeviceCreated > &)
+	{
+		_glInit = true;
+		return true;
+	}
+	
+/*
+=================================================
+	IsContextInit
+=================================================
+*/
+	bool ShaderCompiler::_BaseApp::IsContextInit () const
+	{
+		return _glInit and _clInit;
+	}
+
+/*
+=================================================
+	Quit
+=================================================
+*/
+	void ShaderCompiler::_BaseApp::Quit ()
+	{
+		_looping = false;
+		_clthread = null;
+		_glthread = null;
+	}
+	
+/*
+=================================================
+	Update
+=================================================
+*/
+	bool ShaderCompiler::_BaseApp::Update ()
+	{
+		if ( not _looping )
+			return false;
+
+		GetMainSystemInstance()->Send< ModuleMsg::Update >({});
+		return true;
+	}
+//-----------------------------------------------------------------------------
+
 
 /*
 =================================================
@@ -55,6 +171,7 @@ namespace PipelineCompiler
 	{
 		glslang::InitializeProcess();
 		gla::RegisterUnsupportedFunctionalityHandler( &UnsupportedFunctionalityHandler );
+
 	}
 
 /*
@@ -64,9 +181,49 @@ namespace PipelineCompiler
 */
 	ShaderCompiler::~ShaderCompiler ()
 	{
+		DestroyContext();
+
 		glslang::FinalizeProcess();
 	}
 	
+/*
+=================================================
+	InitializeContext
+=================================================
+*/
+	bool ShaderCompiler::InitializeContext ()
+	{
+		if ( not _app )
+		{
+			Platforms::RegisterPlatforms();
+
+			_app = New<_BaseApp>();
+			CHECK_ERR( _app->Initialize() );
+
+			for (; not _app->IsContextInit() and _app->Update(); )
+			{
+				OS::CurrentThread::Yield();
+			}
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	DestroyContext
+=================================================
+*/
+	void ShaderCompiler::DestroyContext ()
+	{
+		if ( not _app )
+			return;
+
+		_app->Quit();
+		_app = null;
+
+		GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
+	}
+
 /*
 =================================================
 	Instance

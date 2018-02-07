@@ -17,7 +17,7 @@ int main ()
 	
 	cfg.searchForSharedTypes	= true;
 	cfg.addPaddingToStructs		= true;
-	cfg.optimizeSource			= true;	// set 'false' for debugging
+	cfg.optimizeSource			= false;	// set 'false' for debugging
 	//cfg.optimizeBindings		= false;
 	cfg.includings				<< "Pipelines/common.h";
 	cfg.nameSpace				= "Pipelines";

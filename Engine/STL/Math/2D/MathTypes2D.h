@@ -4,7 +4,7 @@
 
 #include "Engine/STL/Math/MathTypes.h"
 #include "Engine/STL/Math/Vec.h"
-#include "Engine/STL/math/Mathematics.h"
+#include "Engine/STL/Math/Mathematics.h"
 #include "Engine/STL/Dimensions/RadiansAndDegrees.h"
 
 namespace GX_STL

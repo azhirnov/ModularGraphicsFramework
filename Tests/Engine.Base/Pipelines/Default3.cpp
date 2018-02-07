@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'C:\Projects\graphxgenengine\Tests\PipelineCompiler\Pipelines\Default3.cpp'
-// Created at: 2017/12/25 - 22:26:59
+// Created at: 2018/02/02 - 00:40:13
 
 #include "all_pipelines.h"
 
@@ -17,7 +17,7 @@ void Create_default3 (PipelineTemplateDescriptor& descr)
 	descr.supportedPrimitives = EPrimitive::bits() | EPrimitive::TriangleList | EPrimitive::TriangleStrip;
 
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::RGBA | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 1, 0, EShader::bits() | EShader::Fragment )
+			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::RGBA | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 0, 0, EShader::bits() | EShader::Fragment )
 			.Finish();
 
 	descr.attribs = VertexAttribs()
@@ -37,7 +37,7 @@ R"#(#version 450 core
 #define SH_COMPUTE          (1<<5)
 
 #ifdef GL_ARB_gpu_shader_int64
-#extension GL_ARB_gpu_shader_int64 : enable
+#extension GL_ARB_gpu_shader_int64 : require
 #define ARB_gpu_shader_int64_enabled  1
 #endif
 
@@ -46,10 +46,6 @@ R"#(#version 450 core
 #extension GL_ARB_separate_shader_objects : enable
 #define ARB_separate_shader_objects_enabled  1
 #endif
-
-#define and			&&
-#define or			||
-#define not			!
 
 #define bool2		bvec2
 #define bool3		bvec3
@@ -116,12 +112,18 @@ R"#(#version 450 core
 # define gl_VertexIndex    gl_VertexID
 # define gl_InstanceIndex  gl_InstanceID
 #endif
+out gl_PerVertex {
+	vec4 gl_Position;
+	float gl_PointSize;
+	float gl_ClipDistance[];
+	float gl_CullDistance[];
+};
 
-layout(location=0) in   float2 at_Position;
-layout(location=1) in   float2 at_Texcoord;
-layout(location=2) in   float4 at_Color;
-layout(location=0) smooth out   float2 v_Texcoord;
-layout(location=1) smooth out   float4 v_Color;
+layout(location=0) in   vec2 at_Position;
+layout(location=1) in   vec2 at_Texcoord;
+layout(location=2) in   vec4 at_Color;
+layout(location=0) smooth out   vec2 v_Texcoord;
+layout(location=1) smooth out   vec4 v_Color;
 
 
 
@@ -130,14 +132,14 @@ layout(location=1) smooth out   float4 v_Color;
 //---------------------------------
 void main ()
 {
-	gl_Position=float4( at_Position, float(0.0), float(1.0) );
+	gl_Position=vec4( at_Position, float(0.0), float(1.0) );
 	v_Texcoord=at_Texcoord;
 	v_Color=at_Color;
 }
 
 
 
-)#"_ref );
+)#"_str );
 	descr.Vertex().ArraySPIRV({ 
 0x07230203, 0x00010000, 0x00080002, 0x00000024, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
 0x00000000, 0x0003000E, 0x00000000, 0x00000001, 0x000B000F, 0x00000000, 0x00000005, 0x6E69616D, 0x00000000, 0x0000000E, 0x00000013, 0x0000001D, 
@@ -164,10 +166,10 @@ void main ()
 0x3F800000, 0x00040020, 0x0000001A, 0x00000003, 0x00000008, 0x00040020, 0x0000001C, 0x00000003, 0x00000011, 0x0004003B, 0x0000001C, 0x0000001D, 
 0x00000003, 0x0004003B, 0x00000012, 0x0000001E, 0x00000001, 0x0004003B, 0x0000001A, 0x00000020, 0x00000003, 0x00040020, 0x00000021, 0x00000001, 
 0x00000008, 0x0004003B, 0x00000021, 0x00000022, 0x00000001, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 0x00000004, 0x000200F8, 0x00000006, 
-0x00040008, 0x00000001, 0x00000069, 0x00000000, 0x0004003D, 0x00000011, 0x00000014, 0x00000013, 0x00050051, 0x00000007, 0x00000017, 0x00000014, 
+0x00040008, 0x00000001, 0x0000006B, 0x00000000, 0x0004003D, 0x00000011, 0x00000014, 0x00000013, 0x00050051, 0x00000007, 0x00000017, 0x00000014, 
 0x00000000, 0x00050051, 0x00000007, 0x00000018, 0x00000014, 0x00000001, 0x00070050, 0x00000008, 0x00000019, 0x00000017, 0x00000018, 0x00000015, 
-0x00000016, 0x00050041, 0x0000001A, 0x0000001B, 0x0000000E, 0x00000010, 0x0003003E, 0x0000001B, 0x00000019, 0x00040008, 0x00000001, 0x0000006A, 
-0x00000000, 0x0004003D, 0x00000011, 0x0000001F, 0x0000001E, 0x0003003E, 0x0000001D, 0x0000001F, 0x00040008, 0x00000001, 0x0000006B, 0x00000000, 
+0x00000016, 0x00050041, 0x0000001A, 0x0000001B, 0x0000000E, 0x00000010, 0x0003003E, 0x0000001B, 0x00000019, 0x00040008, 0x00000001, 0x0000006C, 
+0x00000000, 0x0004003D, 0x00000011, 0x0000001F, 0x0000001E, 0x0003003E, 0x0000001D, 0x0000001F, 0x00040008, 0x00000001, 0x0000006D, 0x00000000, 
 0x0004003D, 0x00000008, 0x00000023, 0x00000022, 0x0003003E, 0x00000020, 0x00000023, 0x000100FD, 0x00010038 });
 
 	descr.fragOutput = FragmentOutputState()
@@ -185,7 +187,7 @@ R"#(#version 450 core
 #define SH_COMPUTE          (1<<5)
 
 #ifdef GL_ARB_gpu_shader_int64
-#extension GL_ARB_gpu_shader_int64 : enable
+#extension GL_ARB_gpu_shader_int64 : require
 #define ARB_gpu_shader_int64_enabled  1
 #endif
 
@@ -194,10 +196,6 @@ R"#(#version 450 core
 #extension GL_ARB_separate_shader_objects : enable
 #define ARB_separate_shader_objects_enabled  1
 #endif
-
-#define and			&&
-#define or			||
-#define not			!
 
 #define bool2		bvec2
 #define bool3		bvec3
@@ -258,12 +256,12 @@ R"#(#version 450 core
 		
 #define SHADER	SH_FRAGMENT
 
-layout(location=0) smooth in   float2 v_Texcoord;
-layout(location=1) smooth in   float4 v_Color;
-layout(location=0) out   float4 out_Color;
+layout(location=0) smooth in   vec2 v_Texcoord;
+layout(location=1) smooth in   vec4 v_Color;
+layout(location=0) out   vec4 out_Color;
 
+layout(binding=0) uniform sampler2D un_ColorTexture;
 
-layout(binding=1) uniform sampler2D un_ColorTexture;
 
 
 
@@ -275,7 +273,7 @@ void main ()
 
 
 
-)#"_ref );
+)#"_str );
 	descr.Fragment().ArraySPIRV({ 
 0x07230203, 0x00010000, 0x00080002, 0x00000019, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
 0x00000000, 0x0003000E, 0x00000000, 0x00000001, 0x0008000F, 0x00000004, 0x00000005, 0x6E69616D, 0x00000000, 0x0000000A, 0x00000012, 0x00000016, 
@@ -294,7 +292,7 @@ void main ()
 0x00040020, 0x0000000D, 0x00000000, 0x0000000C, 0x0004003B, 0x0000000D, 0x0000000E, 0x00000000, 0x00040017, 0x00000010, 0x00000007, 0x00000002, 
 0x00040020, 0x00000011, 0x00000001, 0x00000010, 0x0004003B, 0x00000011, 0x00000012, 0x00000001, 0x00040020, 0x00000015, 0x00000001, 0x00000008, 
 0x0004003B, 0x00000015, 0x00000016, 0x00000001, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 0x00000004, 0x000200F8, 0x00000006, 0x00040008, 
-0x00000001, 0x00000061, 0x00000000, 0x0004003D, 0x0000000C, 0x0000000F, 0x0000000E, 0x0004003D, 0x00000010, 0x00000013, 0x00000012, 0x00050057, 
+0x00000001, 0x0000005D, 0x00000000, 0x0004003D, 0x0000000C, 0x0000000F, 0x0000000E, 0x0004003D, 0x00000010, 0x00000013, 0x00000012, 0x00050057, 
 0x00000008, 0x00000014, 0x0000000F, 0x00000013, 0x0004003D, 0x00000008, 0x00000017, 0x00000016, 0x00050085, 0x00000008, 0x00000018, 0x00000014, 
 0x00000017, 0x0003003E, 0x0000000A, 0x00000018, 0x000100FD, 0x00010038 });
 

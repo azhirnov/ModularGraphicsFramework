@@ -132,7 +132,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(typename Plane<T>::ESide::type)  Plane<T>::Intersect (const Vec3_t &point) const
+	CHECKRES inline typename Plane<T>::ESide::type  Plane<T>::Intersect (const Vec3_t &point) const
 	{
 		const T	d = Distance( point );
 
@@ -147,13 +147,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(typename Plane<T>::ESide::type)  Plane<T>::Intersect (const AABBox<T> &box) const
+	CHECKRES inline typename Plane<T>::ESide::type  Plane<T>::Intersect (const AABBox<T> &box) const
 	{
 		return Intersect( box.Center(), box.HalfExtent() );
 	}
 	
 	template <typename T>
-	inline CHECKRES(typename Plane<T>::ESide::type)  Plane<T>::Intersect (const Vec3_t &center, const Vec3_t &halfextent) const
+	CHECKRES inline typename Plane<T>::ESide::type  Plane<T>::Intersect (const Vec3_t &center, const Vec3_t &halfextent) const
 	{
 		const T	d			= Distance( center );
 		const T	max_abs_d	= _normal.DotAbs( halfextent );
@@ -169,7 +169,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Plane<T> &)  Plane<T>::Normalize ()
+	CHECKRES inline Plane<T> &  Plane<T>::Normalize ()
 	{
 		const T	len = _normal.Length();
 
@@ -189,7 +189,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(T)  Plane<T>::Distance (const Vec3_t &point) const
+	CHECKRES inline T  Plane<T>::Distance (const Vec3_t &point) const
 	{
 		return _normal.Dot( point ) + _dist;
 	}
@@ -200,7 +200,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Vec<T,3>)  Plane<T>::Project (const Vec3_t &point) const
+	CHECKRES inline Vec<T,3>  Plane<T>::Project (const Vec3_t &point) const
 	{
 		Matrix<T,3,3>	mat;
 
@@ -223,7 +223,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Radians<T>)  Plane<T>::AngleBetweenPlanes (const Self &other) const
+	CHECKRES inline Radians<T>  Plane<T>::AngleBetweenPlanes (const Self &other) const
 	{
 		return ACos( Dot( _normal, other._normal ) );
 	}
@@ -234,7 +234,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  Plane<T>::GetIntersection (const Self &other, OUT Vec3_t &result) const
+	CHECKRES inline bool  Plane<T>::GetIntersection (const Self &other, OUT Vec3_t &result) const
 	{
 		const Vec3_t	n = Cross( _normal, other._normal ).Normalize();
 		const T			d = n.LengthSqr();
@@ -252,7 +252,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  Plane<T>::GetIntersection (const Vec3_t &rayDir, const Vec3_t &rayOrigin, OUT Vec3_t &result) const
+	CHECKRES inline bool  Plane<T>::GetIntersection (const Vec3_t &rayDir, const Vec3_t &rayOrigin, OUT Vec3_t &result) const
 	{
 		const Vec3_t dir = rayDir.Normalized();
 		const T ndr = Dot( _normal, dir );
@@ -272,7 +272,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  Plane<T>::operator == (const Plane<T> &right) const
+	CHECKRES inline bool  Plane<T>::operator == (const Plane<T> &right) const
 	{
 		return Equals( _dist, right._dist ) and All( _normal == right._normal );
 	}
@@ -283,7 +283,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  Plane<T>::operator != (const Plane<T> &right) const
+	CHECKRES inline bool  Plane<T>::operator != (const Plane<T> &right) const
 	{
 		return not ( *this == right );
 	}
@@ -295,7 +295,7 @@ namespace GXMath
 */
 	template <typename T>
 	template <typename T2>
-	inline CHECKRES(Plane<T2>)  Plane<T>::Convert () const
+	CHECKRES inline Plane<T2>  Plane<T>::Convert () const
 	{
 		return Plane<T2>( _normal.template Convert<T2>(), T2(_dist) );
 	}

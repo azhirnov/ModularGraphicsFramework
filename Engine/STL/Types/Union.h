@@ -754,17 +754,12 @@ namespace GXTypes
 =================================================
 */
 	template <typename ...Types>
-	struct Hash< Union<Types...> > :
-		private Hash< BinArrayCRef >
+	struct Hash< Union<Types...> >
 	{
-		typedef Union<Types...>				Key_t;
-		typedef Hash< BinArrayCRef >		Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		HashResult  operator () (const Union<Types...> &x) const noexcept
 		{
 			// TODO: it is not same as Hash( union.Get<T>() )
-			return Base_t::operator ()( x.GetData() );
+			return HashOf( x.GetData() );
 		}
 	};
 

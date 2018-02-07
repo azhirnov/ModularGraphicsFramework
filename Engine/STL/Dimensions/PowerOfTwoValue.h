@@ -52,7 +52,7 @@ namespace GXMath
 			return T(1) << _value;
 		}
 
-		constexpr static Self  From (T value)
+		CHECKRES constexpr static Self  From (T value)
 		{
 			ASSERT( value > 0 and _IsPowOf2( value ) );
 			return PowOf2Value( _IntLog2( value ) );

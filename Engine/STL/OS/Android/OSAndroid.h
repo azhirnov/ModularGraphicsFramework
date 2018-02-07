@@ -2,10 +2,11 @@
 
 #pragma once
 
-#include "Engine/STL/Posix/OSPosix.h"
+#include "Engine/STL/OS/Posix/OSPosix.h"
 
 #ifdef PLATFORM_ANDROID
 
+/*
 #if defined( PLATFORM_SDL )
 	// disable Android Shells
 #else
@@ -19,7 +20,6 @@ namespace GX_STL
 namespace android
 {
 	using namespace GXTypes;
-	using namespace posix;
 	
 #	include <jni.h>
 	
@@ -52,5 +52,6 @@ namespace android
 
 }	// android
 }	// GX_STL
+*/
 
 #endif	// PLATFORM_ANDROID

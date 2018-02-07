@@ -104,14 +104,14 @@ namespace GXTypes
 
 
 		template <typename T>
-		forceinline T&  Get ()
+		CHECKRES forceinline T&  Get ()
 		{
 			ASSERT( IsDefined() and TypeIdOf<T>() == _typeid );
 			return ReferenceCast<T>( _data );
 		}
 
 		template <typename T>
-		forceinline T const&  Get () const
+		CHECKRES forceinline T const&  Get () const
 		{
 			ASSERT( IsDefined() and TypeIdOf<T>() == _typeid );
 			return ReferenceCast<T>( _data );

@@ -26,7 +26,6 @@ namespace PlatformGL
 											GpuMsg::CreateFence,
 											GpuMsg::DestroyFence,
 											GpuMsg::GLFenceSync,
-											//GpuMsg::GetGLFence,
 											GpuMsg::ClientWaitFence,
 											GpuMsg::CreateEvent,
 											GpuMsg::DestroyEvent,
@@ -84,7 +83,6 @@ namespace PlatformGL
 		bool _CreateSemaphore (const Message< GpuMsg::CreateSemaphore > &);
 		bool _DestroySemaphore (const Message< GpuMsg::DestroySemaphore > &);
 		bool _GLFenceSync (const Message< GpuMsg::GLFenceSync > &);
-		//bool _GetGLFence (const Message< GpuMsg::GetGLFence > &);
 		bool _GLSemaphoreEnqueue (const Message< GpuMsg::GLSemaphoreEnqueue > &);
 		bool _GetGLSemaphore (const Message< GpuMsg::GetGLSemaphore > &);
 		bool _WaitGLSemaphore (const Message< GpuMsg::WaitGLSemaphore > &);
@@ -209,6 +207,8 @@ namespace PlatformGL
 */
 	bool GL4SyncManager::_ClientWaitDeviceIdle (const Message< GpuMsg::ClientWaitDeviceIdle > &)
 	{
+		CHECK( _GetManager()->Send< GpuMsg::SyncGLClientWithDevice >({}) );
+
 		GL_CALL( glFinish() );
 		return true;
 	}
@@ -275,6 +275,9 @@ namespace PlatformGL
 
 			if ( fence ) {
 				GL_CALL( glClientWaitSync( fence, GL_SYNC_FLUSH_COMMANDS_BIT, timeout ) );
+			}
+			else {
+				CHECK( _GetManager()->Send< GpuMsg::SyncGLClientWithDevice >( msg->fences[i] ) );
 			}
 		}
 		return true;

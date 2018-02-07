@@ -68,9 +68,9 @@ namespace GXTypes
 
 	// variables
 	private:
-		T		_value,
-				_min,
-				_max;
+		T		_value;
+		T		_min;
+		T		_max;
 
 
 	// methods
@@ -123,24 +123,24 @@ namespace GXTypes
 
 
 		// type cast
-		operator const T ()	const					{ return _value; }
+		CHECKRES operator const T ()	const		{ return _value; }
 
 
 		// get
-		const T	Value ()	const					{ return _value; }
-		const T	Min ()		const					{ return _min; }
-		const T	Max ()		const					{ return _max; }
+		CHECKRES const T	Value ()	const		{ return _value; }
+		CHECKRES const T	Min ()		const		{ return _min; }
+		CHECKRES const T	Max ()		const		{ return _max; }
 		
 
 		// unary operators
-		Self&	operator ++ ()						{ ++_value;  _Validate();  return *this; }
-		Self&	operator -- ()						{ --_value;  _Validate();  return *this; }
-		Self	operator ++ (int) 					{ Self ret(*this);  ++(*this);  return ret; }
-		Self	operator -- (int)					{ Self ret(*this);  --(*this);  return ret; }
-		Self	operator +  () const				{ return Self( +_value ); }
-		Self	operator -  () const				{ return Self( -_value ); }
-		bool	operator ! () const					{ return not _value; }
-		Self	operator ~ () const					{ return Self( ~_value ); }
+				 Self&	operator ++ ()				{ ++_value;  _Validate();  return *this; }
+				 Self&	operator -- ()				{ --_value;  _Validate();  return *this; }
+				 Self	operator ++ (int) 			{ Self ret(*this);  ++(*this);  return ret; }
+				 Self	operator -- (int)			{ Self ret(*this);  --(*this);  return ret; }
+		CHECKRES Self	operator +  ()	const		{ return Self( +_value ); }
+		CHECKRES Self	operator -  ()	const		{ return Self( -_value ); }
+		CHECKRES bool	operator ! ()	const		{ return not _value; }
+		CHECKRES Self	operator ~ ()	const		{ return Self( ~_value ); }
 
 		
 		// binary operators
@@ -171,17 +171,12 @@ namespace GXTypes
 
 	
 	template <typename T, template <typename> class S>
-	struct Hash< Limit< T, S > > :
-		private Hash< typename Limit<T,S>::Value_t >
+	struct Hash< Limit< T, S > >
 	{
-		typedef Limit< T, S >						Key_t;
-		typedef Hash< typename Key_t::Value_t >		Base_t;
-		typedef typename Base_t::Result_t			Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const Limit< T, S > &x) const noexcept
 		{
 			// TODO: is min and max limits needed here?
-			return Base_t::operator ()( x.Value() );
+			return HashOf( x.Value() );
 		}
 	};
 

@@ -4,6 +4,7 @@
 
 #include "NewTypeInfo.h"
 #include "Engine/STL/Common/AllFunc.h"
+#include <cmath>	// TODO
 
 namespace GX_STL
 {

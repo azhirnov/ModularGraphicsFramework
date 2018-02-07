@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "OSWindows.h"
+#include "Engine/STL/OS/Windows/OSWindows.h"
 #include "Engine/STL/OS/Base/Date.h"
 
 #if defined( PLATFORM_WINDOWS ) and \
@@ -19,7 +19,7 @@ namespace OS
 	// Performance Timer
 	//
 
-	struct _STL_EXPORT_ PerformanceTimer
+	struct _STL_EXPORT_ PerformanceTimer final : public Noncopyable
 	{
 	// types
 	private:
@@ -47,13 +47,13 @@ namespace OS
 	
 
 	template <>
-	inline CHECKRES(TimeL)  PerformanceTimer::Get (const TimeL &) const
+	inline TimeL  PerformanceTimer::Get (const TimeL &) const
 	{
 		return GetTimeMicroSec();
 	}
 	
 	template <>
-	inline CHECKRES(TimeD)  PerformanceTimer::Get (const TimeD &) const
+	inline TimeD  PerformanceTimer::Get (const TimeD &) const
 	{
 		return GetTime();
 	}

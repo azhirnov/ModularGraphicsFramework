@@ -142,14 +142,32 @@ namespace _types_hidden_
 		
 		// if IsUnique == true
 		// if Map contains same value, then the old value will be replaced
-		usize Add (const Value &value)			{ return _memory.AddOrReplace( value ); }
-		usize Add (Value &&value)				{ return _memory.AddOrReplace( RVREF( value ) ); }
+		const_iterator Add (const Value &value)
+		{
+			const usize	idx = _memory.AddOrReplace( value );
+			return &(*this)[ idx ];
+		}
+
+		const_iterator Add (Value &&value)
+		{
+			const usize	idx = _memory.AddOrReplace( RVREF( value ) );
+			return &(*this)[ idx ];
+		}
 		
 
 		// if IsUnique == true
 		// if Map contains same value, then the old value will remains
-		usize AddOrSkip (const Value &value)	{ return _memory.AddOrSkip( value ); }
-		usize AddOrSkip (Value &&value)			{ return _memory.AddOrSkip( RVREF( value ) ); }
+		const_iterator AddOrSkip (const Value &value)
+		{
+			const usize	idx = _memory.AddOrSkip( value );
+			return &(*this)[ idx ];
+		}
+
+		const_iterator AddOrSkip (Value &&value)
+		{
+			const usize	idx = _memory.AddOrSkip( RVREF( value ) );
+			return &(*this)[ idx ];
+		}
 
 
 		void AddArray (const_values_range_t value)
@@ -184,7 +202,7 @@ namespace _types_hidden_
 		}
 
 
-		void FindLastIndex (usize first, OUT usize &idx) const
+		void FindLastIndex (const usize first, OUT usize &idx) const
 		{
 			return _memory.FindLastIndex( first, OUT idx );
 		}
@@ -238,23 +256,25 @@ namespace _types_hidden_
 		}
 
 
-		values_range_t  GetRange (usize first, usize last)
+		values_range_t  GetRange (const usize first, const usize last)
 		{
 			return _memory.SubArray( first, last - first + 1 );
 		}
 
-		const_values_range_t  GetRange (usize first, usize last) const
+		const_values_range_t  GetRange (const usize first, const usize last) const
 		{
 			return _memory.SubArray( first, last - first + 1 );
 		}
 
 
-		bool Erase (const Key_t &key)		{ return _memory.Erase( key ); }
-		void EraseByIndex (usize index)		{ _memory.EraseByIndex( index ); }
-		void Free ()						{ _memory.Free(); }
-		void Clear ()						{ _memory.Clear(); }
-		void Resize (usize uSize)			{ _memory.Resize( uSize ); }
-		void Reserve (usize uSize)			{ _memory.Reserve( uSize ); }
+		bool Erase (const Key_t &key)			{ return _memory.Erase( key ); }
+		void EraseByIndex (usize index)			{ _memory.EraseByIndex( index ); }
+		void EraseByIter (const_iterator it)	{ _memory.EraseByIndex( _memory.GetIndex( it.RawPtr() ) ); }
+
+		void Free ()							{ _memory.Free(); }
+		void Clear ()							{ _memory.Clear(); }
+		void Resize (usize size)				{ _memory.Resize( size ); }
+		void Reserve (usize size)				{ _memory.Reserve( size ); }
 		
 		
 		static constexpr bool	IsLinearMemory ()			{ return _MapUtils_t::IsLinearMemory(); }
@@ -275,7 +295,7 @@ namespace _types_hidden_
 		}
 		
 		template <typename KeyT>
-		void _FindLastIndex2 (const KeyT &key, usize first, OUT usize &idx) const
+		void _FindLastIndex2 (const KeyT &key, const usize first, OUT usize &idx) const
 		{
 			return _memory.FindLastIndex2( key, first, OUT idx );
 		}
@@ -315,19 +335,19 @@ namespace _types_hidden_
 			_CustomSearch (const Self &ref) : _ref(ref) {}
 			
 			template <typename KeyT>
-			bool FindFirstIndex (const KeyT &key, OUT usize &idx) const					{ return _ref._FindFirstIndex2( key, OUT idx ); }
+			bool FindFirstIndex (const KeyT &key, OUT usize &idx) const						{ return _ref._FindFirstIndex2( key, OUT idx ); }
 			
 			template <typename KeyT>
-			void FindLastIndex (const KeyT &key, usize first, OUT usize &idx) const		{ return _ref._FindLastIndex2( key, first, OUT idx ); }
+			void FindLastIndex (const KeyT &key, const usize first, OUT usize &idx) const	{ return _ref._FindLastIndex2( key, first, OUT idx ); }
 
 			template <typename KeyT>
-			bool Find (const KeyT &key, OUT const_iterator &result) const				{ return _ref._Find2( key, OUT result ); }
+			bool Find (const KeyT &key, OUT const_iterator &result) const					{ return _ref._Find2( key, OUT result ); }
 
 			template <typename KeyT>
-			bool FindAll (const KeyT &key, OUT const_values_range_t &result) const		{ return _ref._FindAll2( key, OUT result ); }
+			bool FindAll (const KeyT &key, OUT const_values_range_t &result) const			{ return _ref._FindAll2( key, OUT result ); }
 
 			template <typename KeyT>
-			bool IsExist (const KeyT &key) const										{ usize idx;  return FindFirstIndex( key, OUT idx ); }
+			bool IsExist (const KeyT &key) const											{ usize idx;  return FindFirstIndex( key, OUT idx ); }
 		};
 
 
@@ -373,16 +393,11 @@ namespace _types_hidden_
 				typename S,
 				typename MC
 			 >
-	struct Hash< _types_hidden_::BaseSet< Container, Value, IsUnique, S, MC > > :
-		private Hash< ArrayCRef<Value> >
+	struct Hash< _types_hidden_::BaseSet< Container, Value, IsUnique, S, MC > >
 	{
-		typedef _types_hidden_::BaseSet< Container, Value, IsUnique, S, MC >	Key_t;
-		typedef Hash< ArrayCRef<Value> >										Base_t;
-		typedef typename Base_t::Result_t										Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		HashResult  operator () (const _types_hidden_::BaseSet< Container, Value, IsUnique, S, MC > &x) const noexcept
 		{
-			return Base_t::operator ()( x );
+			return HashOf( ArrayCRef<Value>( x ) );
 		}
 	};
 

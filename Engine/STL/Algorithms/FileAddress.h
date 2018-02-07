@@ -22,35 +22,35 @@ namespace GXTypes
 	{
 	// methods
 	public:
-		static StringCRef	GetPath (StringCRef filename);
-		static StringCRef	GetName (StringCRef filename);
-		static StringCRef	GetExtension (StringCRef filename);
-		static StringCRef	GetNameAndExt (StringCRef filename);
+		CHECKRES static StringCRef	GetPath (StringCRef filename);
+		CHECKRES static StringCRef	GetName (StringCRef filename);
+		CHECKRES static StringCRef	GetExtension (StringCRef filename);
+		CHECKRES static StringCRef	GetNameAndExt (StringCRef filename);
 
-		static StringCRef	ToShortPath (StringCRef filename, uint maxFolders = 1);
+		CHECKRES static StringCRef	ToShortPath (StringCRef filename, uint maxFolders = 1);
 
-		static void		DividePath (StringCRef filename, OUT Array<StringCRef> &path);
+				 static void		DividePath (StringCRef filename, OUT Array<StringCRef> &path);
 
-		static void		FormatPath (INOUT String &filename);
-		//static bool		IsNeedToFormatPath (StringCRef filename);	// TODO
+				 static void		FormatPath (INOUT String &filename);
+				//static bool		IsNeedToFormatPath (StringCRef filename);	// TODO
 
-		static void		RemoveName (INOUT String &filename);
-		static void		RemoveExtension (INOUT String &filename);
-		static bool		PathMoveBack (INOUT String &path);
+				 static void		RemoveName (INOUT String &filename);
+				 static void		RemoveExtension (INOUT String &filename);
+				 static bool		PathMoveBack (INOUT String &path);
 
-		static bool		RemoveDirectoriesFromLeft (INOUT String &path, uint numDirectories);
-		static bool		RemoveDirectoriesFromRight (INOUT String &path, uint numDirectories);
+				 static bool		RemoveDirectoriesFromLeft (INOUT String &path, uint numDirectories);
+				 static bool		RemoveDirectoriesFromRight (INOUT String &path, uint numDirectories);
 
-		static void		AddDirectoryToPath (INOUT String &path, StringCRef dir);
-		static void		AddBaseDirectoryToPath (INOUT String &path, StringCRef dir);
-		static void		AddNameToPath (INOUT String &path, StringCRef name);
-		static void		AddExtensionToName (INOUT String &filename, StringCRef ext);
+				 static void		AddDirectoryToPath (INOUT String &path, StringCRef dir);
+				 static void		AddBaseDirectoryToPath (INOUT String &path, StringCRef dir);
+				 static void		AddNameToPath (INOUT String &path, StringCRef name);
+				 static void		AddExtensionToName (INOUT String &filename, StringCRef ext);
 
-		static String	BuildPath (StringCRef path, StringCRef nameWithExt);
-		static String	BuildPath (StringCRef path, StringCRef name, StringCRef ext);
+		CHECKRES static String		BuildPath (StringCRef path, StringCRef nameWithExt);
+		CHECKRES static String		BuildPath (StringCRef path, StringCRef name, StringCRef ext);
 
-		static bool		AbsoluteToRelativePath (StringCRef source, StringCRef base, OUT String &result);
-		//static String	ReleativeToRelativePath (StringCRef path1, StringCRef path2);	// TODO: find first match in folder and build relative path
+				 static bool		AbsoluteToRelativePath (StringCRef source, StringCRef base, OUT String &result);
+				//static String		ReleativeToRelativePath (StringCRef path1, StringCRef path2);	// TODO: find first match in folder and build relative path
 
 	private:
 		static usize	_GetExtensionPos (StringCRef filename);

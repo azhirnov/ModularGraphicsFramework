@@ -2,16 +2,16 @@
 
 #pragma once
 
-#include "OSPosix.h"
+#include "Engine/STL/OS/Posix/OSPosix.h"
 
-#ifdef PLATFORM_BASE_POSIX_SHELL
+#if defined( PLATFORM_BASE_POSIX ) and not defined( PLATFORM_SDL )
+
+#include <pthread.h>
 
 namespace GX_STL
 {
 namespace OS
 {
-	using namespace posix;
-	
 
 	struct EThreadPriority
 	{
@@ -52,7 +52,7 @@ namespace OS
 	public:
 		CurrentThread(): _thread(INVALID_ID)
 		{
-			_thread = pthread_self();
+			_thread = ::pthread_self();
 		}
 
 		GXTypes::usize Id() const
@@ -67,7 +67,7 @@ namespace OS
 
 		bool IsCurrent() const
 		{
-			return pthread_equal( pthread_self(), _thread );
+			return ::pthread_equal( pthread_self(), _thread );
 		}
 
 		bool SetPriority (EThreadPriority::type priority) const
@@ -77,24 +77,22 @@ namespace OS
 
 		static GXTypes::usize GetCurrentThreadId()
 		{
-			return GXTypes::ReferenceCast< GXTypes::usize >( pthread_self() );
+			return GXTypes::ReferenceCast< GXTypes::usize >( ::pthread_self() );
 		}
 
-		static void Sleep (GXTypes::uint timeMS)
+		static void Sleep (TimeL time)
 		{
-			using namespace posix;
-
 			struct timespec ts;
 
-			ts.tv_sec = timeMS / 1000;
-			ts.tv_nsec = (timeMS % 1000) * 1000000;
+			ts.tv_sec = time.Seconds();
+			ts.tv_nsec = (time.NanoSeconds() % 1000) * 1000000;
 
-			nanosleep( &ts, 0);
+			::nanosleep( &ts, 0);
 		}
 
 		static void Yield ()
 		{
-			Sleep( 1 );
+			Sleep( TimeL::FromMilliSeconds(1) );
 		}
 
 		// TODO: priority
@@ -155,12 +153,12 @@ namespace OS
 			Delete();
 			_parameter	= param;
 			_proc		= proc;
-			return pthread_create( &_thread, null, &_ThreadProcWrapper, this ) == 0;
+			return ::pthread_create( &_thread, null, &_ThreadProcWrapper, this ) == 0;
 		}
 
 		bool Delete ()
 		{
-			if ( IsValid() and pthread_kill( _thread, 0 ) != 0 )	// ESRCH
+			if ( IsValid() and ::pthread_kill( _thread, 0 ) != 0 )	// ESRCH
 			{
 				Terminate();
 				Wait();
@@ -175,20 +173,20 @@ namespace OS
 		void Exit (GXTypes::uint exitCode = UNKNOWN_EXIT_CODE)
 		{
 			ASSERT( IsCurrent() );
-			pthread_exit( (void *)exitCode );
+			::pthread_exit( (void *)exitCode );
 			_thread = INVALID_ID;
 		}
 
 		bool Terminate ()
 		{
 			ASSERT( IsValid() );
-			return IsValid() and pthread_kill( _thread, SIGTERM ) == 0;
+			return IsValid() and ::pthread_kill( _thread, SIGTERM ) == 0;
 		}
 
 		bool Wait () const
 		{
 			ASSERT( IsValid() );
-			return IsValid() and pthread_join( _thread, null ) == 0;
+			return IsValid() and ::pthread_join( _thread, null ) == 0;
 		}
 	};
 
@@ -196,4 +194,4 @@ namespace OS
 }	// OS
 }	// GX_STL
 
-#endif	// PLATFORM_BASE_POSIX_SHELL
+#endif	// PLATFORM_BASE_POSIX

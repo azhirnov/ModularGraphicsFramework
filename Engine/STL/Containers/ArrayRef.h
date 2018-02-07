@@ -156,30 +156,30 @@ namespace GXTypes
 	// static methods
 	public:
 		template <typename B>
-		static Self From (ArrayRef<B> arr);
+		CHECKRES static Self From (ArrayRef<B> arr);
 		
 		template <typename B>
-		static Self From (TStringRef<B> str);
+		CHECKRES static Self From (TStringRef<B> str);
 
 		template <typename B, typename S, typename MC>
-		static Self From (const Array<B,S,MC> &arr);
+		CHECKRES static Self From (const Array<B,S,MC> &arr);
 
 		template <typename B, typename S, typename MC>
-		static Self From (const TString<B,S,MC> &str);
+		CHECKRES static Self From (const TString<B,S,MC> &str);
 
-		static Self FromVoid (void_ptr_t ptr, BytesU size);
+		CHECKRES static Self FromVoid (void_ptr_t ptr, BytesU size);
 		
 		template <typename B, usize I>
-		static Self From (const B (&arr)[I]);
+		CHECKRES static Self From (const B (&arr)[I]);
 		
 		template <typename B>
-		static Self FromStd (const std::vector<B> &vec);
+		CHECKRES static Self FromStd (const std::vector<B> &vec);
 		
 		template <typename B>
-		static Self FromStd (const std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str);
+		CHECKRES static Self FromStd (const std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str);
 
 		template <typename B>
-		static Self FromValue (B &ref);
+		CHECKRES static Self FromValue (B &ref);
 
 		static constexpr bool	IsLinearMemory ()	{ return true; }
 		static constexpr bool	IsStaticMemory ()	{ return false; }
@@ -223,7 +223,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline ArrayRef<T>::ArrayRef (T *arrayPtr, usize count) : _memory(arrayPtr), _count(count)
+	inline ArrayRef<T>::ArrayRef (T *arrayPtr, const usize count) : _memory(arrayPtr), _count(count)
 	{
 		ASSERT( _count == 0 or _memory != null );
 	}
@@ -332,7 +332,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline ArrayRef<T>  ArrayRef<T>::FromVoid (void_ptr_t ptr, BytesU size)
+	inline ArrayRef<T>  ArrayRef<T>::FromVoid (void_ptr_t ptr, const BytesU size)
 	{
 		if ( ptr != null and size > 0 )
 			return ArrayRef<T>( static_cast< T *>( const_cast< void *>( ptr ) ), usize( size / SizeOf<T>() ) );
@@ -378,14 +378,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline T & ArrayRef<T>::operator [] (usize i)
+	inline T & ArrayRef<T>::operator [] (const usize i)
 	{
 		ASSUME( i < _count );
 		return _memory[i];
 	}
 
 	template <typename T>
-	inline T const & ArrayRef<T>::operator [] (usize i) const
+	inline T const & ArrayRef<T>::operator [] (const usize i) const
 	{
 		ASSUME( i < _count );
 		return _memory[i];
@@ -515,7 +515,7 @@ namespace GXTypes
 */
 	template <typename T>
 	template <typename E>
-	inline bool ArrayRef<T>::Find (OUT usize &index, const E &value, usize start) const
+	inline bool ArrayRef<T>::Find (OUT usize &index, const E &value, const usize start) const
 	{
 		index = UMax;
 
@@ -549,7 +549,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline ArrayRef<T>  ArrayRef<T>::SubArray (usize first, usize count)
+	inline ArrayRef<T>  ArrayRef<T>::SubArray (const usize first, usize count)
 	{
 		ASSERT( first <= Count() and (count == UMax or first + count <= Count()) );
 		
@@ -569,7 +569,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline ArrayCRef<T>  ArrayRef<T>::SubArray (usize first, usize count) const
+	inline ArrayCRef<T>  ArrayRef<T>::SubArray (const usize first, usize count) const
 	{
 		ASSERT( first <= Count() and (count == UMax or first + count <= Count()) );
 		
@@ -602,7 +602,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline T * ArrayRef<T>::GetIter (usize i)
+	inline T * ArrayRef<T>::GetIter (const usize i)
 	{
 		ASSUME( i < _count );
 		return & _memory[i];
@@ -614,7 +614,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline const T * ArrayRef<T>::GetIter (usize i) const
+	inline const T * ArrayRef<T>::GetIter (const usize i) const
 	{
 		ASSUME( i < _count );
 		return & _memory[i];
@@ -696,15 +696,11 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	struct Hash< ArrayRef<T> > : private Hash<T>
+	struct Hash< ArrayRef<T> >
 	{
-		typedef ArrayRef<T>					Key_t;
-		typedef Hash<T>						Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const ArrayRef<T> &x) const noexcept
 		{
-			Result_t	value = ~HashOf( x.Count() );
+			HashResult	value = ~HashOf( x.Count() );
 
 			if ( CompileTime::IsPOD<T> )
 			{
@@ -712,7 +708,7 @@ namespace GXTypes
 			}
 			else
 			{
-				Base_t	hasher;
+				Hash<T>	hasher;
 
 				FOR( i, x ) {
 					value += hasher( x[i] );

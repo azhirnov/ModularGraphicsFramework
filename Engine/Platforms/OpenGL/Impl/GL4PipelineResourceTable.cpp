@@ -236,7 +236,8 @@ namespace PlatformGL
 		void operator () (const ImageDescr &img) const
 		{
 			using namespace gl;
-			GL_CALL( glBindImageTexture( img.binding, img.imgID, img.level, img.layer != UMax, img.layer, img.access, img.format ) );
+			bool layered = (img.layer != UMax);
+			GL_CALL( glBindImageTexture( img.binding, img.imgID, img.level, layered, layered ? img.layer : 0, img.access, img.format ) );
 		}
 
 		void operator () (const BufferDescr &buf) const

@@ -72,6 +72,9 @@ namespace DefPrimitives
 		Rectangle () : BatchMemory(EPrimitive::TriangleStrip)
 		{}
 
+		Rectangle (const RectF &pos, color4u color) : Rectangle{ pos, RectF{}, color }
+		{}
+
 		Rectangle (const RectF &pos, const RectF &texc, color4u color = color4u::Default::White()) :
 			BatchMemory( EPrimitive::TriangleStrip ),
 			position(pos), texcoord(texc), color(color)

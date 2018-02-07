@@ -11,7 +11,7 @@ namespace OS
 	// Read Write Sync
 	//
 	
-	struct ReadWriteSyncEmulation
+	struct ReadWriteSyncEmulation final : public Noncopyable
 	{
 	// types
 	public:

@@ -1,11 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "RandDevice.h"
+#include "Engine/STL/OS/Windows/RandDevice.h"
 #include "Engine/STL/Math/BinaryMath.h"
 
 #ifdef PLATFORM_WINDOWS
 
-#include "WinHeader.h"
+#include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace GX_STL
 {

@@ -26,8 +26,8 @@
 		constexpr Time (Self &&other) = default;
 		constexpr Time (const Self &other) = default;
 
-		constexpr Self& operator = (Self &&right) = default;
-		constexpr Self& operator = (const Self &right) = default;
+		Self& operator = (Self &&right) = default;
+		Self& operator = (const Self &right) = default;
 
 		template <typename B>
 		constexpr explicit
@@ -47,28 +47,28 @@
 		}
 
 		template <typename B>
-		static constexpr Self	FromTime (const B &time)			{ return Self().SetTime( time ); }
+		CHECKRES static constexpr Self	FromTime (const B &time)			{ return Self().SetTime( time ); }
 
-		static constexpr Self	FromSeconds (const T &value)		{ return Self().SetSeconds( value ); }
-		static constexpr Self	FromMilliSeconds (const T &value)	{ return Self().SetMilliSeconds( value ); }
-		static constexpr Self	FromMicroSeconds (const T &value)	{ return Self().SetMicroSeconds( value ); }
-		static constexpr Self	FromNanoSeconds (const T &value)	{ return Self().SetNanoSeconds( value ); }
+		CHECKRES static constexpr Self	FromSeconds (const T &value)		{ return Self().SetSeconds( value ); }
+		CHECKRES static constexpr Self	FromMilliSeconds (const T &value)	{ return Self().SetMilliSeconds( value ); }
+		CHECKRES static constexpr Self	FromMicroSeconds (const T &value)	{ return Self().SetMicroSeconds( value ); }
+		CHECKRES static constexpr Self	FromNanoSeconds (const T &value)	{ return Self().SetNanoSeconds( value ); }
 		
-		constexpr Self&	SetSeconds (const T &value)					{ _time = value;				return *this; }
-		constexpr Self&	SetMilliSeconds (const T &value)			{ _time = value * T(1.0e-3);	return *this; }
-		constexpr Self&	SetMicroSeconds (const T &value)			{ _time = value * T(1.0e-6);	return *this; }
-		constexpr Self&	SetNanoSeconds (const T &value)				{ _time = value * T(1.0e-9);	return *this; }
+		constexpr Self&	SetSeconds (const T &value)							{ _time = value;				return *this; }
+		constexpr Self&	SetMilliSeconds (const T &value)					{ _time = value * T(1.0e-3);	return *this; }
+		constexpr Self&	SetMicroSeconds (const T &value)					{ _time = value * T(1.0e-6);	return *this; }
+		constexpr Self&	SetNanoSeconds (const T &value)						{ _time = value * T(1.0e-9);	return *this; }
 
-		constexpr T		Hours ()						const		{ return _time / T(3600); }
-		constexpr T		Minutes ()						const		{ return _time / T(60); }
-		constexpr T		Seconds ()						const		{ return _time; }
-		constexpr T		MilliSeconds ()					const		{ return _time * T(1.0e+3); }
-		constexpr T		MicroSeconds ()					const		{ return _time * T(1.0e+6); }
-		constexpr T		NanoSeconds ()					const		{ return _time * T(1.0e+9); }
+		CHECKRES constexpr T		Hours ()					const		{ return _time / T(3600); }
+		CHECKRES constexpr T		Minutes ()					const		{ return _time / T(60); }
+		CHECKRES constexpr T		Seconds ()					const		{ return _time; }
+		CHECKRES constexpr T		MilliSeconds ()				const		{ return _time * T(1.0e+3); }
+		CHECKRES constexpr T		MicroSeconds ()				const		{ return _time * T(1.0e+6); }
+		CHECKRES constexpr T		NanoSeconds ()				const		{ return _time * T(1.0e+9); }
 		
-		constexpr bool	IsZero ()						const		{ return GXMath::IsZero( _time ); }
+		CHECKRES constexpr bool	IsZero ()						const		{ return GXMath::IsZero( _time ); }
 		
-		explicit operator T ()							const		{ return Seconds(); }
+		CHECKRES explicit operator T ()							const		{ return Seconds(); }
 
 		_GX_DIM_CMP_OPERATORS_SELF( _time );
 		_GX_DIM_CMP_OPERATORS_TYPE( _time, const Value_t&, );
@@ -78,7 +78,7 @@
 		_GX_DIM_OPERATORS_TYPE( /, _time, const Value_t&, );
 
 		template <typename B>
-		B		To ()							const	{ return B().FromTime( *this ); }
+		CHECKRES B		To ()					const	{ return B().FromTime( *this ); }
 
 		// seconds = value * 10 ^ power
 		static constexpr int GetSecondsPowerOf10 ()		{ return 0; }
@@ -86,15 +86,11 @@
 
 
 	template <>
-	struct Hash< Time<T> > : private Hash<T>
+	struct Hash< Time<T> >
 	{
-		typedef Time<T>				Key_t;
-		typedef Hash<T>				Base_t;
-		typedef Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const Time<T> &x) const noexcept
 		{
-			return Base_t::operator ()( x.Seconds() );
+			return HashOf( x.Seconds() );
 		}
 	};
 	
@@ -134,17 +130,17 @@
 			_start = GetCurrentTime();
 		}
 
-		Time_t GetTimeDelta () const
+		CHECKRES Time_t  GetTimeDelta () const
 		{
 			return GetCurrentTime() - _start;
 		}
 
-		Time_t GetStartTime () const
+		CHECKRES Time_t  GetStartTime () const
 		{
 			return _start;
 		}
 
-		Time_t GetCurrentTime () const
+		CHECKRES Time_t  GetCurrentTime () const
 		{
 			return Time_t().FromTime( _timer.GetTime() );
 		}

@@ -414,13 +414,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  AABBox<T>::operator == (const AABBox<T> &right) const
+	CHECKRES inline bool  AABBox<T>::operator == (const AABBox<T> &right) const
 	{
 		return ( _min == right._min and _max == right._max );
 	}
 	
 	template <typename T>
-	inline CHECKRES(bool)  AABBox<T>::operator != (const AABBox<T> &right) const
+	CHECKRES inline bool  AABBox<T>::operator != (const AABBox<T> &right) const
 	{
 		return not ( *this == right );
 	}
@@ -450,13 +450,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(AABBox<T>)  AABBox<T>::operator + (const Vec<T,3> &right) const
+	CHECKRES inline AABBox<T>  AABBox<T>::operator + (const Vec<T,3> &right) const
 	{
 		return AABBox<T>(*this) += right;
 	}
 
 	template <typename T>
-	inline CHECKRES(AABBox<T>)  AABBox<T>::operator + (const AABBox<T> &right) const
+	CHECKRES inline AABBox<T>  AABBox<T>::operator + (const AABBox<T> &right) const
 	{
 		return AABBox<T>(*this) += right;
 	}
@@ -486,7 +486,7 @@ namespace GXMath
 =================================================
 *
 	template <typename T>
-	inline CHECKRES(AABBox<T>)  AABBox<T>::operator * (const Matrix<T,4,4> &right) const
+	CHECKRES inline AABBox<T>  AABBox<T>::operator * (const Matrix<T,4,4> &right) const
 	{
 		AABBox<T>	ret(*this);
 		ret.TransformExt( right );
@@ -494,7 +494,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	inline CHECKRES(AABBox<T>)  AABBox<T>::operator * (const Matrix<T,3,3> &right) const
+	CHECKRES inline AABBox<T>  AABBox<T>::operator * (const Matrix<T,3,3> &right) const
 	{
 		AABBox<T>	ret(*this);
 		ret.Transform( right );
@@ -507,7 +507,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(T)  AABBox<T>::Volume () const
+	CHECKRES inline T  AABBox<T>::Volume () const
 	{
 		Vec<T,3> const	ext = Extent();
 		return ext.x * ext.y * ext.z;
@@ -519,7 +519,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(T)  AABBox<T>::MinRadius () const
+	CHECKRES inline T  AABBox<T>::MinRadius () const
 	{
 		const Vec<T,3>	side = Extent();
 		return T(0.5) * GXMath::Min( side.x, side.y, side.z );
@@ -531,7 +531,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(T)  AABBox<T>::MaxRadius () const
+	CHECKRES inline T  AABBox<T>::MaxRadius () const
 	{
 		const Vec<T,3>	side		= Extent();
 		const T			sq3_div2	= T(0.86602540378443864676372317075294);
@@ -545,7 +545,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  AABBox<T>::IsInside (const Vec<T,3> &point) const
+	CHECKRES inline bool  AABBox<T>::IsInside (const Vec<T,3> &point) const
 	{
 		return All( point >= _min ) and All( point <= _max );
 	}
@@ -556,7 +556,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  AABBox<T>::IsFullInside (const Vec<T,3> &point) const
+	CHECKRES inline bool  AABBox<T>::IsFullInside (const Vec<T,3> &point) const
 	{
 		return All( point > _min ) and All( point < _max );
 	}
@@ -567,7 +567,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  AABBox<T>::IsInside (const AABBox<T> &box) const
+	CHECKRES inline bool  AABBox<T>::IsInside (const AABBox<T> &box) const
 	{
 		return All( box._min >= _min ) and All( box._max <= _max );
 	}
@@ -578,7 +578,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  AABBox<T>::IsFullInside (const AABBox<T> &box) const
+	CHECKRES inline bool  AABBox<T>::IsFullInside (const AABBox<T> &box) const
 	{
 		return All( box._min > _min ) and All( box._max < _max );
 	}
@@ -589,7 +589,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(bool)  AABBox<T>::Intersect (const AABBox<T> &box) const
+	CHECKRES inline bool  AABBox<T>::Intersect (const AABBox<T> &box) const
 	{
 		return not( _max.x < box._min.x or _max.y < box._min.y or _max.z < box._min.z or
 					_min.x > box._max.x or _min.y > box._max.y or _min.z > box._max.z );
@@ -601,7 +601,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(AABBox<T>)  AABBox<T>::Intersection (const AABBox<T> &box) const
+	CHECKRES inline AABBox<T>  AABBox<T>::Intersection (const AABBox<T> &box) const
 	{
 		AABBox<T>	ret( *this );
 
@@ -618,7 +618,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Vec<T,3>)  AABBox<T>::GetCorner (_Corner_t corner) const
+	CHECKRES inline Vec<T,3>  AABBox<T>::GetCorner (_Corner_t corner) const
 	{
 		switch ( corner )
 		{
@@ -661,7 +661,7 @@ namespace GXMath
 */
 	template <typename T>
 	template <typename T2>
-	inline CHECKRES(AABBox<T2>)  AABBox<T>::Convert () const
+	CHECKRES inline AABBox<T2>  AABBox<T>::Convert () const
 	{
 		return AABBox<T2>( _min.template Convert<T2>(), _max.template Convert<T2>() );
 	}

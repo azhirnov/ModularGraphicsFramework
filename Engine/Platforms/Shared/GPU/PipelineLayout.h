@@ -222,7 +222,7 @@ namespace GXTypes
 	template <>
 	struct Hash< Engine::Platforms::PipelineLayoutDescriptor > final
 	{
-		HashResult operator () (const Engine::Platforms::PipelineLayoutDescriptor &key) const noexcept
+		HashResult  operator () (const Engine::Platforms::PipelineLayoutDescriptor &key) const noexcept
 		{
 			HashResult	res;
 

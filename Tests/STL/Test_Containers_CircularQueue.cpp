@@ -104,6 +104,68 @@ static void CircularQueue_Test4 ()
 }
 
 
+static void CircularQueue_Test5 ()
+{
+	VElem_t::ClearStatistic();
+
+	const usize loops = 100;
+	const usize count = 1000;
+
+	Queue_t		q;
+	Vector_t	v;
+
+	Array<Elem_t>	aq;
+	Vector_t		av;
+
+	for (usize i = 0; i < loops; ++i)
+	{
+		aq.Clear();
+		av.clear();
+
+		for (usize j = 0; j < count; ++j) {
+			aq.PushBack( Elem_t( i * count + j ) );
+			av.push_back( VElem_t( i * count + j ) );
+		}
+
+		q.AppendBack( aq );
+		v.insert( v.end(), av.begin(), av.end() );
+	}
+	
+	TEST( (q == ArrayRef<Elem_t>( (Elem_t *)&v[0], v.size() )) );
+}
+
+
+static void CircularQueue_Test6 ()
+{
+	VElem_t::ClearStatistic();
+
+	const usize loops = 100;
+	const usize count = 1000;
+
+	Queue_t		q;
+	Vector_t	v;
+
+	Array<Elem_t>	aq;
+	Vector_t		av;
+
+	for (usize i = 0; i < loops; ++i)
+	{
+		aq.Clear();
+		av.clear();
+
+		for (usize j = 0; j < count; ++j) {
+			aq.PushBack( Elem_t( i * count + j ) );
+			av.push_back( VElem_t( i * count + j ) );
+		}
+
+		q.AppendFront( aq );
+		v.insert( v.begin(), av.begin(), av.end() );
+	}
+
+	TEST( (q == ArrayRef<Elem_t>( (Elem_t *)&v[0], v.size() )) );
+}
+
+
 extern void Test_Containers_CircularQueue ()
 {
 	Elem_t::ClearStatistic();
@@ -121,4 +183,12 @@ extern void Test_Containers_CircularQueue ()
 	Elem_t::ClearStatistic();
 
 	CircularQueue_Test4();
+	
+	CircularQueue_Test5();
+	TEST( Elem_t::CheckStatistic() );
+	Elem_t::ClearStatistic();
+	
+	CircularQueue_Test6();
+	TEST( Elem_t::CheckStatistic() );
+	Elem_t::ClearStatistic();
 }

@@ -4,6 +4,8 @@
 
 #include "Engine/STL/Containers/MapUtils.h"
 #include "Engine/STL/Containers/IndexedArray.h"
+#include "Engine/STL/CompileTime/FunctionInfo.h"
+#include "Engine/STL/CompileTime/FunctionInfo.h"
 
 namespace GX_STL
 {
@@ -26,7 +28,7 @@ namespace _types_hidden_
 				typename MC
 			 >
 	struct BaseHashMap : public CompileTime::CopyQualifiers< CompileTime::FastCopyable, 
-									Container< Pair< typename H::Result_t, Pair< K, T > >, S, MC > >
+									Container< Pair< CompileTime::ResultOf<decltype(&H::operator())>, Pair< K, T > >, S, MC > >
 	{
 	// types
 	public:
@@ -44,7 +46,7 @@ namespace _types_hidden_
 
 
 	private:
-		using KeyHash_t			= typename H::Result_t;
+		using KeyHash_t			= CompileTime::ResultOf<decltype(&H::operator())>;
 		using KeyPair_t			= Pair< KeyHash_t, Key_t const& >;
 		using triple_t			= Pair< KeyHash_t, pair_t >;
 
@@ -171,55 +173,63 @@ namespace _types_hidden_
 		
 		// if IsUnique == true
 		// if Map contains same value, then the old value will be replaced
-		usize Add (const Key_t &key, const Value_t &value)
+		iterator Add (const Key_t &key, const Value_t &value)
 		{
 			const KeyHash_t	hash = _hasher( key );
-			return _memory.AddOrReplace( RVREF(triple_t( hash, pair_t( key, value ))) );
+			const usize		idx  = _memory.AddOrReplace( RVREF(triple_t( hash, pair_t( key, value ))) );
+			return &(*this)[ idx ];
 		}
 
-		usize Add (Key_t &&key, Value_t &&value)
+		iterator Add (Key_t &&key, Value_t &&value)
 		{
 			const KeyHash_t	hash = _hasher( key );
-			return _memory.AddOrReplace( RVREF(triple_t( hash, RVREF(pair_t( RVREF(key), RVREF(value) )) )) );
+			const usize		idx  = _memory.AddOrReplace( RVREF(triple_t( hash, RVREF(pair_t( RVREF(key), RVREF(value) )) )) );
+			return &(*this)[ idx ];
 		}
 
-		usize Add (const pair_t &value)
+		iterator Add (const pair_t &value)
 		{
 			const KeyHash_t	hash = _hasher( value.first );
-			return _memory.AddOrReplace( RVREF(triple_t( hash, RVREF(pair_t( value.first, value.second )) )) );
+			const usize		idx  = _memory.AddOrReplace( RVREF(triple_t( hash, RVREF(pair_t( value.first, value.second )) )) );
+			return &(*this)[ idx ];
 		}
 
-		usize Add (pair_t &&value)
+		iterator Add (pair_t &&value)
 		{
 			const KeyHash_t	hash = _hasher( value.first );
-			return _memory.AddOrReplace( RVREF(triple_t( hash, RVREF(value) )) );
+			const usize		idx  = _memory.AddOrReplace( RVREF(triple_t( hash, RVREF(value) )) );
+			return &(*this)[ idx ];
 		}
 		
 
 		// if IsUnique == true
 		// if Map contains same value, then the old value will remains
-		usize AddOrSkip (const Key_t &key, const Value_t &value)
+		iterator AddOrSkip (const Key_t &key, const Value_t &value)
 		{
 			const KeyHash_t	hash = _hasher( key );
-			return _memory.AddOrSkip( RVREF(triple_t( hash, key, value )) );
+			const usize		idx  = _memory.AddOrSkip( RVREF(triple_t( hash, key, value )) );
+			return &(*this)[ idx ];
 		}
 
-		usize AddOrSkip (Key_t &&key, Value_t &&value)
+		iterator AddOrSkip (Key_t &&key, Value_t &&value)
 		{
 			const KeyHash_t	hash = _hasher( key );
-			return _memory.AddOrSkip( RVREF(triple_t( hash, RVREF(pair_t( RVREF(key), RVREF(value) )) )) );
+			const usize		idx  = _memory.AddOrSkip( RVREF(triple_t( hash, RVREF(pair_t( RVREF(key), RVREF(value) )) )) );
+			return &(*this)[ idx ];
 		}
 
-		usize AddOrSkip (const pair_t &value)
+		iterator AddOrSkip (const pair_t &value)
 		{
 			const KeyHash_t	hash = _hasher( value.first );
-			return _memory.AddOrSkip( RVREF(triple_t( hash, RVREF(pair_t( value.first, value.second )) )) );
+			const usize		idx  = _memory.AddOrSkip( RVREF(triple_t( hash, RVREF(pair_t( value.first, value.second )) )) );
+			return &(*this)[ idx ];
 		}
 
-		usize AddOrSkip (pair_t &&value)
+		iterator AddOrSkip (pair_t &&value)
 		{
 			const KeyHash_t	hash = _hasher( value.first );
-			return _memory.AddOrSkip( RVREF(triple_t( hash, RVREF(value) )) );
+			const usize		idx  = _memory.AddOrSkip( RVREF(triple_t( hash, RVREF(value) )) );
+			return &(*this)[ idx ];
 		}
 
 
@@ -291,10 +301,13 @@ namespace _types_hidden_
 
 
 		bool Erase (const Key_t &key)					{ return _memory.Erase( KeyPair_t( _hasher( key ), key ) ); }
-		void EraseByIndex (usize index)					{ return _memory.EraseByIndex( index ); }
+		void EraseByIndex (usize index)					{ _memory.EraseByIndex( index ); }
+		void EraseByIter (iterator it)					{ _memory.EraseByIndex( _memory.GetIndex( (triple_t const*) it.RawPtr() ) ); }
+		void EraseByIter (const_iterator it)			{ _memory.EraseByIndex( _memory.GetIndex( (triple_t const*) it.RawPtr() ) ); }
+
 		void Free ()									{ _memory.Free(); }
 		void Clear ()									{ _memory.Clear(); }
-		void Resize (usize uSize)						{ _memory.Resize( uSize, false ); }
+		void Resize (usize size)						{ _memory.Resize( size, false ); }
 		void Reserve (usize size)						{ _memory.Reserve( size ); }
 		
 
@@ -314,8 +327,8 @@ namespace _types_hidden_
 	template <	typename K,
 				typename T,
 				typename H = Hash< K >,
-				typename S = typename AutoDetectCopyStrategy< Pair< typename H::Result_t, Pair<K, T> > >::type,
-				typename MC = MemoryContainer< Pair< typename H::Result_t, Pair<K, T> > >
+				typename S = typename AutoDetectCopyStrategy< Pair< CompileTime::ResultOf<decltype(&H::operator())>, Pair<K, T> > >::type,
+				typename MC = MemoryContainer< Pair< CompileTime::ResultOf<decltype(&H::operator())>, Pair<K, T> > >
 			 >
 	using HashMap = _types_hidden_::BaseHashMap< Array, K, T, true, H, S, MC >;
 	
@@ -323,8 +336,8 @@ namespace _types_hidden_
 	template <	typename K,
 				typename T,
 				typename H = Hash< K >,
-				typename S = typename AutoDetectCopyStrategy< Pair< typename H::Result_t, Pair<K, T> > >::type,
-				typename MC = MemoryContainer< Pair< typename H::Result_t, Pair<K, T> > >
+				typename S = typename AutoDetectCopyStrategy< Pair< CompileTime::ResultOf<decltype(&H::operator())>, Pair<K, T> > >::type,
+				typename MC = MemoryContainer< Pair< CompileTime::ResultOf<decltype(&H::operator())>, Pair<K, T> > >
 			 >
 	using MultiHashMap = _types_hidden_::BaseHashMap< Array, K, T, false, H, S, MC >;
 	
@@ -335,8 +348,8 @@ namespace _types_hidden_
 				typename H = Hash< K >
 			 >
 	using FixedSizeHashMap = _types_hidden_::BaseHashMap< Array, K, T, true, H,
-								typename AutoDetectCopyStrategy< Pair< typename H::Result_t, Pair<K, T> > >::type,
-								StaticMemoryContainer< Pair< typename H::Result_t, Pair<K, T> >, Size > >;
+								typename AutoDetectCopyStrategy< Pair< typename CompileTime::ResultOf<decltype(&H::operator())>, Pair<K, T> > >::type,
+								StaticMemoryContainer< Pair< typename CompileTime::ResultOf<decltype(&H::operator())>, Pair<K, T> >, Size > >;
 	
 	
 	template <	typename K,
@@ -345,8 +358,8 @@ namespace _types_hidden_
 				typename H = Hash< K >
 			 >
 	using FixedSizeMultiHashMap = _types_hidden_::BaseHashMap< Array, K, T, false, H,
-									typename AutoDetectCopyStrategy< Pair< typename H::Result_t, Pair<K, T> > >::type,
-									StaticMemoryContainer< Pair< typename H::Result_t, Pair<K, T> >, Size > >;
+									typename AutoDetectCopyStrategy< Pair< CompileTime::ResultOf<decltype(&H::operator())>, Pair<K, T> > >::type,
+									StaticMemoryContainer< Pair< CompileTime::ResultOf<decltype(&H::operator())>, Pair<K, T> >, Size > >;
 
 	
 	template <	template <typename T1, typename S1, typename MC1> class Container,
@@ -357,16 +370,11 @@ namespace _types_hidden_
 				typename S,
 				typename MC
 			 >
-	struct Hash< _types_hidden_::BaseHashMap< Container, K, T, IsUnique, H, S, MC > > :
-		private Hash< ArrayCRef<Pair< typename H::Result_t, Pair<K, T> > > >
+	struct Hash< _types_hidden_::BaseHashMap< Container, K, T, IsUnique, H, S, MC > >
 	{
-		typedef _types_hidden_::BaseHashMap< Container, K, T, IsUnique, H, S, MC >	Key_t;
-		typedef Hash< ArrayCRef<Pair< typename H::Result_t, Pair<K, T> > > >		Base_t;
-		typedef typename Base_t::Result_t											Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		HashResult  operator () (const _types_hidden_::BaseHashMap< Container, K, T, IsUnique, H, S, MC > &x) const noexcept
 		{
-			return Base_t::operator ()( x );
+			return HashOf( ArrayCRef<Pair< CompileTime::ResultOf<decltype(&H::operator())>, Pair<K, T> > >( x ) );
 		}
 	};
 

@@ -91,13 +91,13 @@ namespace GXTypes
 		}
 
 
-		bool	operator == (const Self &other) const
+		CHECKRES bool	operator == (const Self &other) const
 		{
 			return IsDefined() and other.IsDefined() and GXMath::All( Get() == other.Get() );
 		}
 
 
-		bool	operator != (const Self &other) const
+		CHECKRES bool	operator != (const Self &other) const
 		{
 			return not (*this == other);
 		}
@@ -214,15 +214,11 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	struct Hash< Optional<T> > : private Hash<T>
+	struct Hash< Optional<T> >
 	{
-		typedef Optional<T>					Key_t;
-		typedef Hash<T>						Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		HashResult  operator () (const Optional<T> &x) const noexcept
 		{
-			return x ? Base_t::operator ()( x.Get() ) : Result_t();
+			return x ? HashOf( x.Get() ) : HashResult();
 		}
 	};
 

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "OSWindows.h"
+#include "Engine/STL/OS/Windows/OSWindows.h"
 #include "Engine/STL/OS/SDL/Thread.h"
 
 #if defined( PLATFORM_WINDOWS ) and \
@@ -56,12 +56,12 @@ namespace OS
 	public:
 		CurrentThread ();
 
-		CHECKRES(usize) Id () const
+		usize Id () const
 		{
 			return _id;
 		}
 
-		CHECKRES(bool) IsCurrent () const
+		bool IsCurrent () const
 		{
 			return GetCurrentThreadId() == _id;
 		}
@@ -87,7 +87,7 @@ namespace OS
 	// Thread
 	//
 
-	struct _STL_EXPORT_ Thread : CurrentThread
+	struct _STL_EXPORT_ Thread final : public CurrentThread
 	{
 	// types
 	public:

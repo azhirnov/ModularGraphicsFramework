@@ -113,6 +113,34 @@ namespace Platforms
 		StringCL( str );
 		return true;
 	}
+	
+/*
+=================================================
+	StringCLAsm
+=================================================
+*/
+	void PipelineTemplateDescriptor::ShaderSource::StringCLAsm (StringCRef data)
+	{
+		src[ ESource::OpenCL_Asm ].Create2( String(data) );
+	}
+	
+/*
+=================================================
+	FileCLAsm
+=================================================
+*/
+	bool PipelineTemplateDescriptor::ShaderSource::FileCLAsm (const RFilePtr &file)
+	{
+		CHECK_ERR( file );
+
+		usize	len = (usize)file->RemainingSize();
+		String	str;	str.Resize( len );
+
+		CHECK_ERR( file->Read(ArrayRef<char>( str )) );
+
+		StringCLAsm( str );
+		return true;
+	}
 
 /*
 =================================================
@@ -144,12 +172,12 @@ namespace Platforms
 	
 /*
 =================================================
-	ArrayAsmSPIRV
+	StringSpirvAsm
 =================================================
 */
-	void PipelineTemplateDescriptor::ShaderSource::ArrayAsmSPIRV (StringCRef data)
+	void PipelineTemplateDescriptor::ShaderSource::StringSpirvAsm (StringCRef data)
 	{
-		src[ ESource::SPIRV_Src ].Create2( String(data) );
+		src[ ESource::SPIRV_Asm ].Create2( String(data) );
 	}
 
 /*
@@ -174,7 +202,7 @@ namespace Platforms
 		if ( data.Is< String >() )
 			return data.Get< String >();
 
-		RETURN_ERR( "no GLSL source!" );
+		RETURN_ERR( "GLSL source doesn't exists!" );
 	}
 	
 /*
@@ -189,22 +217,22 @@ namespace Platforms
 		if ( data.Is< Array<uint> >() )
 			return data.Get< Array<uint> >();
 
-		RETURN_ERR( "no SPIR-V binary!" );
+		RETURN_ERR( "SPIR-V binary doesn't exists!" );
 	}
 		
 /*
 =================================================
-	GetAsmSPIRV
+	GetSpirvAsm
 =================================================
 */
-	StringCRef	PipelineTemplateDescriptor::ShaderSource::GetAsmSPIRV () const
+	StringCRef	PipelineTemplateDescriptor::ShaderSource::GetSpirvAsm () const
 	{
-		const auto&		data = src[ ESource::SPIRV_Src ];
+		const auto&		data = src[ ESource::SPIRV_Asm ];
 
 		if ( data.Is< String >() )
 			return data.Get< String >();
 
-		RETURN_ERR( "no SPIR-V source!" );
+		RETURN_ERR( "SPIR-V assembly doesn't exists!" );
 	}
 
 /*
@@ -219,7 +247,22 @@ namespace Platforms
 		if ( data.Is< String >() )
 			return data.Get< String >();
 
-		RETURN_ERR( "no CL source" );
+		RETURN_ERR( "CL source doesn't exists!" );
+	}
+	
+/*
+=================================================
+	GetCLAsm
+=================================================
+*/
+	StringCRef PipelineTemplateDescriptor::ShaderSource::GetCLAsm () const
+	{
+		const auto&		data = src[ ESource::OpenCL_Asm ];
+
+		if ( data.Is< String >() )
+			return data.Get< String >();
+
+		RETURN_ERR( "CL assembly doesn't exists!" );
 	}
 	
 /*
@@ -235,7 +278,7 @@ namespace Platforms
 		if ( data.Is< SWInvoke >() )
 			return data.Get< SWInvoke >();
 
-		RETURN_ERR( "no SW function" );
+		RETURN_ERR( "SW function doesn't exists!" );
 	}
 
 }	// Platforms

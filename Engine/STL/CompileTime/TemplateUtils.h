@@ -117,7 +117,7 @@ namespace CompileTime
 
 		template <typename T>
 		struct _EnableIf <false, T> {
-			using type	= void;
+			//using type	= void;
 		};
 	}
 
@@ -165,30 +165,6 @@ namespace CompileTime
 	{};
 
 
-
-	//
-	// Deferred Template Type
-	//
-
-	/*
-		example:
-
-			template <typename T> struct Templ {};
-
-			// switch type without template instantiation
-			using D = SwitchType< condition, DeferredTemplate< Templ, T1 >, DeferredTemplate< Templ, T2 > >;
-
-			// instantiate only 1 template
-			using T = D::type;
-	*/
-
-	template <template <typename ...> class Templ, typename ...Types>
-	struct DeferredTemplate
-	{
-		using type	= Templ< Types... >;
-	};
-
-
 	//
 	// Type to Type
 	//
@@ -202,12 +178,12 @@ namespace CompileTime
 	//
 	// Offset Of
 	//
-	/*template <typename A, typename B>
+	template <typename A, typename B>
 	inline usize constexpr Offsetof (A B::*member)
 	{
 		constexpr B object {};
 		return usize(&(object.*member)) - usize(&object);
-	}*/
+	}
 
 
 }	// CompileTime

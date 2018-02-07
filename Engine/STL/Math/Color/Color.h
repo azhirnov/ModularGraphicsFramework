@@ -92,8 +92,8 @@ namespace GXMath
 		template <typename T>
 		explicit color4u (const Vec<T,4> &v): ubyte4( ColorUtils::Convert<ubyte>( v ) ) {}
 
-		operator ubyte4 & ()					{ return static_cast< ubyte4& >( *this ); }
-		operator ubyte4   () const				{ return ubyte4( x, y, z, w ); }
+		//operator ubyte4 & ()					{ return static_cast< ubyte4& >( *this ); }
+		//operator ubyte4   () const				{ return ubyte4( x, y, z, w ); }
 
 		uint		ToIntRGBA () const			{ return ReferenceCast<uint>( ABGR() ); }
 		uint		ToIntARGB () const			{ return ReferenceCast<uint>( ARGB() ); }
@@ -309,8 +309,8 @@ namespace GXMath
 		template <typename T>
 		color4f (const Vec<T,4> &v): float4( ColorUtils::Convert<float>( v ) ) {}
 
-		operator float4 & ()			{ return static_cast< float4& >( *this ); }
-		operator float4   () const		{ return float4( x, y, z, w ); }
+		//operator float4 & ()			{ return static_cast< float4& >( *this ); }
+		//operator float4   () const		{ return float4( x, y, z, w ); }
 
 		Value_t		R ()	const		{ return (*this)[0]; }
 		Value_t &	R ()				{ return (*this)[0]; }
@@ -330,14 +330,14 @@ namespace GXMath
 
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  ColorUtils::Saturate (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  ColorUtils::Saturate (const Vec<T,I,U> &x)
 	{
 		return Clamp( x, Limits<T>::Min(), Limits<T>::Max() );
 	}
 
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  ColorUtils::Normalize (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  ColorUtils::Normalize (const Vec<T,I,U> &x)
 	{
 		typedef typename CompileTime::MainType< T, float >	main_t;
 		
@@ -354,7 +354,7 @@ namespace GXMath
 
 	
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  ColorUtils::Random ()
+	CHECKRES inline Vec<T,I,U>  ColorUtils::Random ()
 	{
 		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = GXMath::Random::Range( Limits<T>::Min(), Limits<T>::Max() );
@@ -363,7 +363,7 @@ namespace GXMath
 	
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  ColorUtils::Random (const Vec<T,I,U> &minValue, const Vec<T,I,U> &maxValue)
+	CHECKRES inline Vec<T,I,U>  ColorUtils::Random (const Vec<T,I,U> &minValue, const Vec<T,I,U> &maxValue)
 	{
 		ASSERT( All( minValue >= Vec<T,I,U>( Limits<T>::Min() ) ) );
 		ASSERT( All( maxValue <= Vec<T,I,U>( Limits<T>::Max() ) ) );
@@ -375,21 +375,21 @@ namespace GXMath
 
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(T)  ColorUtils::Luminance (const Vec<T,I,U> &x)
+	CHECKRES inline T  ColorUtils::Luminance (const Vec<T,I,U> &x)
 	{
 		return Dot( Vec<T,3>( x ), LuminanceK<T>::Get() );
 	}
 
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(T)  ColorUtils::LuminanceNorm (const Vec<T,I,U> &x)
+	CHECKRES inline T  ColorUtils::LuminanceNorm (const Vec<T,I,U> &x)
 	{
 		return Clamp( Luminance( x ), Limits<T>::Min(), Limits<T>::Max() );
 	}
 
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(T)  ColorUtils::Negative (const Vec<T,I,U> &x)
+	CHECKRES inline T  ColorUtils::Negative (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = i < 3 ? Limits<T>::Max() - x[i] : x[i];
@@ -398,14 +398,14 @@ namespace GXMath
 
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(T)  ColorUtils::NegativeAlpha (const Vec<T,I,U> &x)
+	CHECKRES inline T  ColorUtils::NegativeAlpha (const Vec<T,I,U> &x)
 	{
 		return Vec<T,I,U>( Limits<T>::Max() ) - x;
 	}
 
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(T)  ColorUtils::AdjustContrast (const Vec<T,I,U> &x, T k)
+	CHECKRES inline T  ColorUtils::AdjustContrast (const Vec<T,I,U> &x, T k)
 	{
 		static const T		s_tMiddle	= Limits<T>::Max() / 2;
 		Vec<T,I,U>	ret;
@@ -415,7 +415,7 @@ namespace GXMath
 
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(T)  ColorUtils::AdjustSaturation (const Vec<T,I,U> &x, T k)
+	CHECKRES inline T  ColorUtils::AdjustSaturation (const Vec<T,I,U> &x, T k)
 	{
 		const T		lum		= Luminance( x );
 		Vec<T,I,U>	ret;
@@ -425,7 +425,7 @@ namespace GXMath
 
 		
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  ColorUtils::ToSRGB (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  ColorUtils::ToSRGB (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = i < 3 ? ( x[i] <= T(0.0031308) ?  T(12.92) * x[i] :
@@ -435,7 +435,7 @@ namespace GXMath
 
 
 	template <typename T, usize I, ulong U>
-	inline CHECKRES(Vec<T,I,U>)  ColorUtils::FromSRGB (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<T,I,U>  ColorUtils::FromSRGB (const Vec<T,I,U> &x)
 	{
 		Vec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = i < 3 ? ( x[i] <= T(0.04045) ?  x[i] / T(12.92) :
@@ -445,14 +445,14 @@ namespace GXMath
 	
 
 	template <typename T>
-	inline CHECKRES(Vec<T,4>)  ColorUtils::FromRGBA8 (uint x)
+	CHECKRES inline Vec<T,4>  ColorUtils::FromRGBA8 (uint x)
 	{
 		return Convert<T>( FromRGBA8<ubyte>( x ) );
 	}
 	
 
 	template <>
-	inline CHECKRES(Vec<ubyte,4>)  ColorUtils::FromRGBA8<ubyte> (uint x)
+	CHECKRES inline Vec<ubyte,4>  ColorUtils::FromRGBA8<ubyte> (uint x)
 	{
 		const ubyte *	p_rgba = (const ubyte *) &x;
 		return Vec<ubyte,4>( p_rgba[3], p_rgba[2], p_rgba[1], p_rgba[0] );
@@ -460,14 +460,14 @@ namespace GXMath
 
 
 	template <typename T>
-	inline CHECKRES(uint)  ColorUtils::ToRGBA8 (const Vec<T,4> &x)
+	CHECKRES inline uint  ColorUtils::ToRGBA8 (const Vec<T,4> &x)
 	{
 		return ToRGBA8<ubyte>( Convert<ubyte>( x ) );
 	}
 
 
 	template <>
-	inline CHECKRES(uint)  ColorUtils::ToRGBA8<ubyte> (const Vec<ubyte,4> &x)
+	CHECKRES inline uint  ColorUtils::ToRGBA8<ubyte> (const Vec<ubyte,4> &x)
 	{
 		uint	u_rgba = 0;
 		ubyte *	p_rgba = (ubyte *)&u_rgba;
@@ -482,7 +482,7 @@ namespace GXMath
 
 
 	template <typename T>
-	inline CHECKRES(Matrix<T,4,4>)  ColorUtils::SaturationMat (const T& s)
+	CHECKRES inline Matrix<T,4,4>  ColorUtils::SaturationMat (const T& s)
 	{
 		const Vec<T,3>		c = (T(1) - s) * LuminanceK<T>::Get();
 
@@ -497,7 +497,7 @@ namespace GXMath
 
 
 	template <typename B, typename T, usize I, ulong U>
-	inline CHECKRES(Vec<B,I,U>)  ColorUtils::Convert (const Vec<T,I,U> &x)
+	CHECKRES inline Vec<B,I,U>  ColorUtils::Convert (const Vec<T,I,U> &x)
 	{
 		typedef typename CompileTime::MainType< B, T, float >		main_t;
 
@@ -510,7 +510,7 @@ namespace GXMath
 	}
 	
 
-	inline CHECKRES(float3)  ColorUtils::RGBtoHSV (const float3 &rgb)
+	CHECKRES inline float3  ColorUtils::RGBtoHSV (const float3 &rgb)
 	{
 		// from http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv
 
@@ -539,7 +539,7 @@ namespace GXMath
 	}
 
 
-	inline CHECKRES(float3)  ColorUtils::HSVtoRGB (const float3 &hsv)
+	CHECKRES inline float3  ColorUtils::HSVtoRGB (const float3 &hsv)
 	{
 		// from http://chilliant.blogspot.ru/2014/04/rgbhsv-in-hlsl-5.html
 
@@ -551,7 +551,7 @@ namespace GXMath
 	}
 	
 
-	inline CHECKRES(float3)  ColorUtils::RainbowRGB (const float value)
+	CHECKRES inline float3  ColorUtils::RainbowRGB (const float value)
 	{
 		return HSVtoRGB( float3( value, 1.0f, 1.0f ) );
 	}

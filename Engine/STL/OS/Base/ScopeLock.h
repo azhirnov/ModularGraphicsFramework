@@ -13,7 +13,7 @@ namespace OS
 	// Scope Lock
 	//
 
-	struct ScopeLock
+	struct ScopeLock final : public Noncopyable
 	{
 	// types
 	public:

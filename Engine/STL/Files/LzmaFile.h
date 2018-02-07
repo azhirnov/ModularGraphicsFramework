@@ -55,13 +55,13 @@ namespace File
 		~LzmaRFile ()		{ _Close(); }
 
 		
-		static LzmaRFilePtr New ()
+		CHECKRES static LzmaRFilePtr New ()
 		{
 			return new LzmaRFile();
 		}
 
 
-		static LzmaRFilePtr New (const RFilePtr &file)
+		CHECKRES static LzmaRFilePtr New (const RFilePtr &file)
 		{
 			LzmaRFilePtr	lfile = new LzmaRFile();
 
@@ -275,7 +275,7 @@ namespace File
 		~LzmaWFile ()		{ _Close(); }
 		
 
-		static LzmaWFilePtr New (BytesU reserve = 0)
+		CHECKRES static LzmaWFilePtr New (BytesU reserve = 0)
 		{
 			LzmaWFilePtr	file = new LzmaWFile();
 

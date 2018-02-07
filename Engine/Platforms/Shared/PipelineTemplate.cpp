@@ -479,33 +479,12 @@ namespace Platforms
 		msg->result.Set( RVREF(result) );
 		return true;
 	}
-	
-/*
-=================================================
-	_GetVkLogicDevice
-=================================================
-*
-	bool PipelineTemplate::_GetVkLogicDevice (const Message< GpuMsg::GetVkLogicDevice > &msg)
-	{
-		ModulePtr	dev;
-		dev = GlobalSystems()->parallelThread->GetModuleByMsgList< VkDeviceMsgList_t >();
-
-		if ( dev )
-			SendTo( dev, msg );
-
-		return true;
-	}*/
 
 #else
 
 	bool PipelineTemplate::_GetVkShaderModuleIDs (const Message< GpuMsg::GetVkShaderModuleIDs > &) {
 		return false;
 	}
-
-	/*bool PipelineTemplate::_GetVkLogicDevice (const Message< GpuMsg::GetVkLogicDevice > &)
-	{
-		return false;
-	}*/
 
 	bool PipelineTemplate::_DeleteVulkanShaders () {
 		return false;
@@ -570,19 +549,19 @@ namespace Platforms
 		GL_CALL( prog = glCreateShaderProgramv( PlatformGL::GL4Enum( shaderType ), 1, &src ) );
 
 		GLint	link_status = 0;
-		GL_CALL( glGetProgramiv( prog, GL_LINK_STATUS, &link_status ) );
+		GL_CALL( glGetProgramiv( prog, GL_LINK_STATUS, OUT &link_status ) );
 		
 		const bool	linked = ( link_status == GL_TRUE );
 
 		GLint	log_size = 0;
-		GL_CALL( glGetProgramiv( prog, GL_INFO_LOG_LENGTH, &log_size ) );
+		GL_CALL( glGetProgramiv( prog, GL_INFO_LOG_LENGTH, OUT &log_size ) );
 
 		if ( log_size > 5 )
 		{
 			String	info;
 			info.Reserve( log_size + 1 );
 
-			GL_CALL( glGetProgramInfoLog( prog, log_size, null, info.ptr() ) );
+			GL_CALL( glGetProgramInfoLog( prog, log_size, null, OUT info.ptr() ) );
 			info.CalculateLength();
 			
 			LOG( ("OpenGL Program compilation message: "_str << info).cstr(), linked ? ELog::Debug : ELog::Error );
@@ -789,24 +768,23 @@ namespace Platforms
 								1,
 								&src,
 								null,
-								&cl_err )), cl_err );
+								OUT &cl_err )), cl_err );
 		CHECK_ERR( prog_id != null );
 
 		cl_err = clBuildProgram( prog_id, (cl_uint)CountOf(devices), devices, options, null, null );
 		const bool compiled = (cl_err == CL_SUCCESS);
 		
-		CL_CALL( clGetProgramBuildInfo( prog_id, devices[0], CL_PROGRAM_BUILD_LOG, 0, null, &log_size ) );
+		CL_CALL( clGetProgramBuildInfo( prog_id, devices[0], CL_PROGRAM_BUILD_LOG, 0, null, OUT &log_size ) );
 		
 		if ( log_size > 5 )
 		{
 			String	info;
-			info.Reserve( log_size + 128 );
-			info << "OpenCL compute program build " << (compiled ? "message" : "error") << ":\n";
+			info.Reserve( log_size + 1 );
 
-			CL_CALL( clGetProgramBuildInfo( prog_id, devices[0], CL_PROGRAM_BUILD_LOG, log_size, info.End(), null ) );
+			CL_CALL( clGetProgramBuildInfo( prog_id, devices[0], CL_PROGRAM_BUILD_LOG, log_size, OUT info.ptr(), null ) );
 			info.CalculateLength();
 		
-			LOG( info.cstr(), compiled ? ELog::Debug : ELog::Warning );
+			LOG( ("OpenCL compute program build message:\n"_str << info).cstr(), compiled ? ELog::Debug : ELog::Warning );
 		}
 		
 		if ( not compiled ) {

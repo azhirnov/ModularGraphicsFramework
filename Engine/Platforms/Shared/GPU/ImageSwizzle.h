@@ -64,9 +64,7 @@ namespace GXTypes
 	template <>
 	struct Hash< Engine::Platforms::ImageSwizzle >
 	{
-		using Result_t	= HashResult;
-
-		Result_t operator () (const Engine::Platforms::ImageSwizzle &value) const
+		HashResult  operator () (const Engine::Platforms::ImageSwizzle &value) const
 		{
 			return HashOf( value.Get() == 0 ? Engine::Platforms::ImageSwizzle().Get() : value.Get() );
 		}

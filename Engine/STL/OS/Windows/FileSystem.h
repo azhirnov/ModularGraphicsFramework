@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "OSWindows.h"
-#include "PlatformUtils.h"
+#include "Engine/STL/OS/Windows/OSWindows.h"
+#include "Engine/STL/OS/Windows/PlatformUtils.h"
 #include "Engine/STL/OS/Base/Date.h"
 
 #ifdef PLATFORM_WINDOWS
@@ -17,7 +17,7 @@ namespace OS
 	// Windows File System
 	//
 
-	struct _STL_EXPORT_ OSFileSystem
+	struct _STL_EXPORT_ WindowsFileSystem : public Noninstancable
 	{
 	public:
 		static bool DeleteFile (StringCRef filename);
@@ -49,7 +49,8 @@ namespace OS
 		static Date GetFileCreationTime (StringCRef filename);
 		static BytesUL GetFileSize (StringCRef filename);
 	};
-
+	
+	using OSFileSystem = WindowsFileSystem;
 	
 }	// OS
 }	// GX_STL

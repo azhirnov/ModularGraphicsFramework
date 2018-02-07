@@ -52,26 +52,26 @@ namespace GXTypes
 		forceinline explicit Atomic (const Self &other) : _value(other.Get()) {}
 		forceinline explicit Atomic (Self &&other) : _value(other.Get()) {}
 
-		forceinline explicit operator T () const			{ return Get(); }
+		CHECKRES forceinline explicit	operator T ()	const	{ return Get(); }
+		CHECKRES forceinline const T	Get ()			const	{ return Op::Get<T>( _value ); }
 
-		forceinline const T	operator ++ ()					{ return Op::Inc<T>( _value ); }
-		forceinline const T	operator -- ()					{ return Op::Dec<T>( _value ); }
-		forceinline const T	operator += (const T& right)	{ return Op::Add<T>( _value, right ); }
-		forceinline const T	operator -= (const T& right)	{ return Op::Sub<T>( _value, right ); }
-		forceinline const T	operator =  (const T& right)	{ return Op::Set<T>( _value, right ); }
-		forceinline const T	operator |= (const T& right)	{ return Op::Or<T> ( _value, right ); }
-		forceinline const T	operator &= (const T& right)	{ return Op::And<T>( _value, right ); }
-		forceinline const T	operator ^= (const T& right)	{ return Op::Xor<T>( _value, right ); }
+		forceinline const T	operator ++ ()						{ return Op::Inc<T>( _value ); }
+		forceinline const T	operator -- ()						{ return Op::Dec<T>( _value ); }
+		forceinline const T	operator += (const T& right)		{ return Op::Add<T>( _value, right ); }
+		forceinline const T	operator -= (const T& right)		{ return Op::Sub<T>( _value, right ); }
+		forceinline const T	operator =  (const T& right)		{ return Op::Set<T>( _value, right ); }
+		forceinline const T	operator |= (const T& right)		{ return Op::Or<T> ( _value, right ); }
+		forceinline const T	operator &= (const T& right)		{ return Op::And<T>( _value, right ); }
+		forceinline const T	operator ^= (const T& right)		{ return Op::Xor<T>( _value, right ); }
 		
-		forceinline const T	Inc ()							{ return Op::Inc<T>( _value ); }
-		forceinline const T	Dec ()							{ return Op::Dec<T>( _value ); }
-		forceinline const T	Get ()	const					{ return Op::Get<T>( _value ); }
-		forceinline const T	Add (const T& right)			{ return Op::Add<T>( _value, right ); }
-		forceinline const T	Sub (const T& right)			{ return Op::Sub<T>( _value, right ); }
-		forceinline const T	Set (const T& right)			{ return Op::Set<T>( _value, right ); }
-		forceinline const T	Or  (const T& right)			{ return Op::Or<T> ( _value, right ); }
-		forceinline const T	And (const T& right)			{ return Op::And<T>( _value, right ); }
-		forceinline const T	Xor (const T& right)			{ return Op::Xor<T>( _value, right ); }
+		forceinline const T	Inc ()								{ return Op::Inc<T>( _value ); }
+		forceinline const T	Dec ()								{ return Op::Dec<T>( _value ); }
+		forceinline const T	Add (const T& right)				{ return Op::Add<T>( _value, right ); }
+		forceinline const T	Sub (const T& right)				{ return Op::Sub<T>( _value, right ); }
+		forceinline const T	Set (const T& right)				{ return Op::Set<T>( _value, right ); }
+		forceinline const T	Or  (const T& right)				{ return Op::Or<T> ( _value, right ); }
+		forceinline const T	And (const T& right)				{ return Op::And<T>( _value, right ); }
+		forceinline const T	Xor (const T& right)				{ return Op::Xor<T>( _value, right ); }
 
 		forceinline const T	operator ++ (int)
 		{
@@ -134,7 +134,8 @@ namespace GXTypes
 		explicit Atomic (T val) : _atomic(val) {}
 		explicit Atomic (const Self &sObj) : _atomic(sObj.Get()) {}
 
-		operator const volatile T () const		{ return Get(); }
+		CHECKRES operator const volatile T () const		{ return Get(); }
+		CHECKRES T		Get ()	const					{ return _atomic.load(); }
 
 		Self &	operator ++ ()					{ ++_atomic;				return *this; }
 		Self &	operator -- ()					{ --_atomic;				return *this; }
@@ -147,7 +148,6 @@ namespace GXTypes
 		
 		T		Inc ()							{ return Add( 1 ); }
 		T		Dec ()							{ return Sub( 1 ); }
-		T		Get ()	const					{ return _atomic.load(); }
 		T		Add (const T& right)			{ return _atomic.fetch_add( right ); }
 		T		Sub (const T& right)			{ return _atomic.fetch_sub( right ); }
 		T		Set (const T& right)			{ return _atomic.exchange( right ); }

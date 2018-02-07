@@ -32,12 +32,12 @@ namespace File
 		~HddRFile ()	{ _Close(); }
 
 
-		static HddRFilePtr New ()
+		CHECKRES static HddRFilePtr New ()
 		{
 			return new HddRFile();
 		}
 
-		static HddRFilePtr New (StringCRef address)
+		CHECKRES static HddRFilePtr New (StringCRef address)
 		{
 			HddRFilePtr	file = new HddRFile();
 
@@ -186,12 +186,12 @@ namespace File
 		~HddWFile ()	{ _Close(); }
 		
 
-		static HddWFilePtr New ()
+		CHECKRES static HddWFilePtr New ()
 		{
 			return new HddWFile();
 		}
 
-		static HddWFilePtr New (StringCRef address, EOpenFlags::type flags = EOpenFlags::None)
+		CHECKRES static HddWFilePtr New (StringCRef address, EOpenFlags::type flags = EOpenFlags::None)
 		{
 			HddWFilePtr	file = new HddWFile();
 

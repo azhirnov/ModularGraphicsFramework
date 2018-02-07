@@ -364,19 +364,19 @@ namespace CompileTime
 		struct _Add {
 			typedef typename _ctime_hidden_::StaticFloat_CalcBaseExponentForAdd<
 								mantissa_t, MANTISSA, StaticFloatValue::MANTISSA,
-								exponent_t, EXPONENT, StaticFloatValue::EXPONENT >::type	_B;
-			STATIC_ASSERT( _B::e0 == _B::e1 );
+								exponent_t, EXPONENT, StaticFloatValue::EXPONENT >::type	B;
+			STATIC_ASSERT( B::e0 == B::e1 );
 			
-			typedef StaticFloatPoint< mantissa_t, exponent_t, _B::m0 + _B::m1, _B::e0 >			type;
+			typedef StaticFloatPoint< mantissa_t, exponent_t, B::m0 + B::m1, B::e0 >			type;
 		};
 
 		template <typename StaticFloatValue>
 		struct _Mul {
 			typedef typename _ctime_hidden_::StaticFloat_CalcBaseForMul<
 								mantissa_t, MANTISSA, StaticFloatValue::MANTISSA,
-								exponent_t, EXPONENT, StaticFloatValue::EXPONENT >::type	_B;
+								exponent_t, EXPONENT, StaticFloatValue::EXPONENT >::type	B;
 
-			typedef StaticFloatPoint< mantissa_t, exponent_t, _B::m0 * _B::m1, _B::e0 + _B::e1 >	type;
+			typedef StaticFloatPoint< mantissa_t, exponent_t, B::m0 * B::m1, B::e0 + B::e1 >	type;
 		};
 
 		template <typename StaticFloatValue>
@@ -386,10 +386,10 @@ namespace CompileTime
 
 			typedef typename _ctime_hidden_::StaticFloat_CalcBaseForDiv<
 								mantissa_t, MANTISSA, SF::MANTISSA,
-								exponent_t, EXPONENT, SF::EXPONENT >::type	_B;
-			STATIC_ASSERT( (_B::m0 != 0) == (MANTISSA != 0) );
+								exponent_t, EXPONENT, SF::EXPONENT >::type	B;
+			STATIC_ASSERT( (B::m0 != 0) == (MANTISSA != 0) );
 
-			typedef typename StaticFloatPoint< mantissa_t, exponent_t, _B::m0, _B::e0 >::_Simplify::type	type;
+			typedef typename StaticFloatPoint< mantissa_t, exponent_t, B::m0, B::e0 >::_Simplify::type	type;
 		};
 
 		template <exponent_t ToPower>
@@ -402,8 +402,8 @@ namespace CompileTime
 		};
 
 		struct _Simplify {
-			typedef typename _ctime_hidden_::StaticFloat_Simplify< mantissa_t, exponent_t, MANTISSA, EXPONENT >::type	_B;
-			typedef StaticFloatPoint< mantissa_t, exponent_t, _B::m0, _B::e0 >		type;
+			typedef typename _ctime_hidden_::StaticFloat_Simplify< mantissa_t, exponent_t, MANTISSA, EXPONENT >::type	B;
+			typedef StaticFloatPoint< mantissa_t, exponent_t, B::m0, B::e0 >		type;
 		};
 
 

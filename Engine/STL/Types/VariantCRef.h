@@ -55,18 +55,18 @@ namespace GXTypes
 
 
 		template <typename T>
-		forceinline static VariantCRef  From (T &ref)
+		CHECKRES forceinline static VariantCRef  From (T &ref)
 		{
 			return VariantCRef( ref );
 		}
 		
 		template <typename T>
-		forceinline static VariantCRef  From (const T *ptr)
+		CHECKRES forceinline static VariantCRef  From (const T *ptr)
 		{
 			return VariantCRef( *const_cast<T *>( ptr ) );
 		}
 
-		forceinline static VariantCRef  FromVoid (const void *ptr, TypeId typeId)
+		CHECKRES forceinline static VariantCRef  FromVoid (const void *ptr, TypeId typeId)
 		{
 			VariantCRef	ref;
 			ref._reference	= ptr;
@@ -78,7 +78,7 @@ namespace GXTypes
 		// Warning: this is not safe!
 		// const reference may be a reference to a temporary object.
 		template <typename T>
-		forceinline static VariantCRef  FromConst (const T& ref)
+		CHECKRES forceinline static VariantCRef  FromConst (const T& ref)
 		{
 			return VariantCRef( const_cast<T &>( ref ) );
 		}
@@ -138,13 +138,9 @@ namespace GXTypes
 	//
 
 	template <>
-	struct Hash< VariantCRef > : private Hash< void* >
+	struct Hash< VariantCRef >
 	{
-		typedef VariantCRef			Key_t;
-		typedef Hash< void* >		Base_t;
-		typedef Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &) const noexcept
+		HashResult operator () (const VariantCRef &) const noexcept
 		{
 			// must be compilation error!
 
@@ -152,7 +148,7 @@ namespace GXTypes
 			//return Result_t();
 			//return Base_t::operator ()( x.RawPtr() );
 			TODO("");
-			return Result_t(0);
+			return HashResult(0);
 		}
 	};
 

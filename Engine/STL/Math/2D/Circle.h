@@ -127,7 +127,7 @@ namespace GXMath
 
 
 	template <typename T, ulong U>
-	inline CHECKRES(Rectangle<T,U>)  Circle<T,U>::GetAxisAlignedRectangle () const
+	CHECKRES inline Rectangle<T,U>  Circle<T,U>::GetAxisAlignedRectangle () const
 	{
 		Rect_t	r( _center, _center );
 		r.LeftBottom() -= _radius;
@@ -136,14 +136,14 @@ namespace GXMath
 	
 
 	template <typename T, ulong U>
-	inline CHECKRES(Vec<T,2,U>)  Circle<T,U>::GetPoint (Radians<T> angle) const
+	CHECKRES inline Vec<T,2,U>  Circle<T,U>::GetPoint (Radians<T> angle) const
 	{
 		return _center + _radius * SinCos( (T)angle ).yx();
 	}
 	
 
 	template <typename T, ulong U>
-	inline CHECKRES(Radians<T>)  Circle<T,U>::GetAngle (const Vec_t &point) const
+	CHECKRES inline Radians<T>  Circle<T,U>::GetAngle (const Vec_t &point) const
 	{
 		//const Vec_t	v = point - _center;
 		//const T		d = v.Length();
@@ -153,7 +153,7 @@ namespace GXMath
 	
 
 	template <typename T, ulong U>
-	inline CHECKRES(Vec<T,2,U>)  Circle<T,U>::GetXfromY (const T y) const
+	CHECKRES inline Vec<T,2,U>  Circle<T,U>::GetXfromY (const T y) const
 	{
 		// (x-cx)^2 + (y-cy)^2 = R^2
 		const T	x = Sqrt( Square( _radius ) - Square( y - _center.y ) );
@@ -162,7 +162,7 @@ namespace GXMath
 
 	
 	template <typename T, ulong U>
-	inline CHECKRES(Vec<T,2,U>)  Circle<T,U>::GetYfromX (const T x) const
+	CHECKRES inline Vec<T,2,U>  Circle<T,U>::GetYfromX (const T x) const
 	{
 		const T	y = Sqrt( Square( _radius ) - Square( x - _center.x ) );
 		return _center.y + Vec_t( y, -y );
@@ -170,35 +170,35 @@ namespace GXMath
 
 
 	template <typename T, ulong U>
-	inline CHECKRES(Line2<T,U>)  Circle<T,U>::GetChord (Radians<T> startAngle, Radians<T> endAngle) const
+	CHECKRES inline Line2<T,U>  Circle<T,U>::GetChord (Radians<T> startAngle, Radians<T> endAngle) const
 	{
 		return Line_t( GetPoint( startAngle ), GetPoint( endAngle ) );
 	}
 
 
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Circle<T,U>::IsInnerPoint (const Vec_t &point) const
+	CHECKRES inline bool  Circle<T,U>::IsInnerPoint (const Vec_t &point) const
 	{
 		return _center.Distance( point ) <= Radius();
 	}
 	
 
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Circle<T,U>::IsInnerLine (const Line_t &line) const
+	CHECKRES inline bool  Circle<T,U>::IsInnerLine (const Line_t &line) const
 	{
 		return IsInnerPoint( line.Begin() ) and IsInnerPoint( line.End() );
 	}
 	
 
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Circle<T,U>::IsInnerRect (const Rect_t &rect) const
+	CHECKRES inline bool  Circle<T,U>::IsInnerRect (const Rect_t &rect) const
 	{
 		return IsInnerPoint( rect.LeftBottom() ) and IsInnerPoint( rect.RightTop() );
 	}
 	
 
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Circle<T,U>::IsInnerCircle (const Self &circle) const
+	CHECKRES inline bool  Circle<T,U>::IsInnerCircle (const Self &circle) const
 	{
 		return	_radius >= circle.Radius() and
 				_center.Distance( circle.Center() ) + circle.Radius() <= Radius();
@@ -206,7 +206,7 @@ namespace GXMath
 	
 
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Circle<T,U>::IntersectLine (const Line_t &line) const
+	CHECKRES inline bool  Circle<T,U>::IntersectLine (const Line_t &line) const
 	{
 		TODO( "IntersectLine" );
 		return line.IntersectRect( GetAxisAlignedRectangle() );
@@ -214,14 +214,14 @@ namespace GXMath
 		
 	
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Circle<T,U>::IntersectRect (const Rect_t &rect) const
+	CHECKRES inline bool  Circle<T,U>::IntersectRect (const Rect_t &rect) const
 	{
 		return rect.IntersectRect( GetAxisAlignedRectangle() );
 	}
 		
 	
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Circle<T,U>::IntersectCircle (const Self &circle) const
+	CHECKRES inline bool  Circle<T,U>::IntersectCircle (const Self &circle) const
 	{
 		return this->Center().Distance( circle.Center() ) - circle.Radius() <= this->Radius();
 	}
@@ -233,13 +233,9 @@ namespace GXTypes
 {
 	
 	template <typename T, ulong U>
-	struct Hash< GXMath::Circle<T,U> > :
-		private Hash< typename GXMath::Circle<T,U>::Vec_t >, private Hash< T >
+	struct Hash< GXMath::Circle<T,U> >
 	{
-		typedef GXMath::Circle<T,U>			Key_t;
-		typedef typename Hash<T>::Result_t	Result_t;
-
-		CHECKRES(Result_t)  operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const GXMath::Circle<T,U> &x) const noexcept
 		{
 			return	HashOf( x.Center() ) + HashOf( x.Radius() );
 		}

@@ -769,12 +769,24 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	ToString (uint3)
+=================================================
+*/
+	String	CppSerializer::ToString (StringCRef name, const uint3 &value) const
+	{
+		return String(name) << " = uint3(" << value.x << ", " << value.y << ", " << value.z << ");\n";
+	}
+
+/*
+=================================================
 	ToString (StringCRef)
 =================================================
 */
 	String  CppSerializer::ToString (StringCRef value) const
 	{
 		const usize	max_len = 16000;	// 16380 is max for MSVS
+
+		ASSERT( not value.HasSubString( ")#" ) );
 
 		if ( value.Length() > max_len )
 		{
@@ -785,17 +797,19 @@ namespace PipelineCompiler
 			while ( temp.Length() > max_len )
 			{
 				// find best place to separate string
-				bool found = false;
+				bool	found	= false;
+				usize	p1		= pos;
 
-				for (uint i = 0; i < 100; ++i)	// 100 lines
+				for (uint i = 0; i < 10; ++i)	// 10 lines
 				{
-					StringParser::ToPrevLine( temp, INOUT pos );
-					usize		p = pos;
+					StringParser::ToPrevLine( temp, INOUT p1 );
+					usize		p2 = pos+1;
 					StringCRef	res;
-					StringParser::ReadCurrLine( temp, INOUT p, OUT res );
+					StringParser::ReadCurrLine( temp, INOUT p2, OUT res );
 
 					if ( res.Empty() )
 					{
+						pos		= p1;
 						result << (result.Empty() ? "" : "\n+\n") << "R\"#("_str << temp.SubString( 0, pos ) << ")#\"_str";
 						temp	= temp.SubString( pos );
 						pos		= Min( temp.Length(), max_len );
@@ -807,7 +821,7 @@ namespace PipelineCompiler
 				// separate in max length
 				if ( not found )
 				{
-					pos		= Min( temp.Length(), max_len );
+					StringParser::ToPrevLine( temp, INOUT pos );
 					result << (result.Empty() ? "" : "\n+\n") << "R\"#("_str << temp.SubString( 0, pos ) << ")#\"_str";
 					temp	= temp.SubString( pos );
 					pos		= Min( temp.Length(), max_len );
@@ -940,11 +954,16 @@ namespace PipelineCompiler
 	ShaderSrcGLSL
 =================================================
 */
-	String	CppSerializer::ShaderSrcGLSL (StringCRef name, BinArrayCRef shaderSrc) const
+	String	CppSerializer::ShaderSrcGLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
-			str << name << ".StringGLSL( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr() )) << " );\n";
+		{
+			if ( inFile )
+				RETURN_ERR( "not supported" )
+			else
+				str << name << ".StringGLSL( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() )) << " );\n";
+		}
 		return str;
 	}
 	
@@ -953,34 +972,18 @@ namespace PipelineCompiler
 	ShaderBinGLSL
 =================================================
 */
-	String	CppSerializer::ShaderBinGLSL (StringCRef name, BinArrayCRef shaderSrc) const
+	String	CppSerializer::ShaderBinGLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
-			str << name << ".ArrayGLSLBin({ " << ToString(ArrayCRef<ubyte>::From( shaderSrc )) << " });\n";
+		{
+			if ( inFile )
+				RETURN_ERR( "not supported" )
+			else
+				str << name << ".ArrayGLSLBin({ " << ToString(StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() )) << " });\n";
+				//str << name << ".ArrayGLSLBin({ " << ToString(ArrayCRef<ubyte>::From( shaderSrc )) << " });\n";
+		}
 		return str;
-	}
-	
-/*
-=================================================
-	ShaderFileSrcGLSL
-=================================================
-*/
-	String	CppSerializer::ShaderFileSrcGLSL (StringCRef name, BinArrayCRef shaderSrc) const
-	{
-		TODO("");
-		return "";
-	}
-	
-/*
-=================================================
-	ShaderFileBinGLSL
-=================================================
-*/
-	String	CppSerializer::ShaderFileBinGLSL (StringCRef name, BinArrayCRef shaderSrc) const
-	{
-		TODO("");
-		return "";
 	}
 	
 /*
@@ -988,11 +991,16 @@ namespace PipelineCompiler
 	ShaderBinSPIRV
 =================================================
 */
-	String	CppSerializer::ShaderBinSPIRV (StringCRef name, BinArrayCRef shaderSrc) const
+	String	CppSerializer::ShaderBinSPIRV (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
-			str << name << ".ArraySPIRV({ " << ToString(ArrayCRef<uint>::From( shaderSrc )) << " });\n";
+		{
+			if ( inFile )
+				RETURN_ERR( "not supported" )
+			else
+				str << name << ".ArraySPIRV({ " << ToString(ArrayCRef<uint>::From( shaderSrc )) << " });\n";
+		}
 		return str;
 	}
 	
@@ -1001,46 +1009,34 @@ namespace PipelineCompiler
 	ShaderSrcSPIRV
 =================================================
 */
-	String	CppSerializer::ShaderSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc) const
+	String	CppSerializer::ShaderSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
-			str << name << ".ArrayAsmSPIRV( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr() )) << " );\n";
+		{
+			if ( inFile )
+				RETURN_ERR( "not supported" )
+			else
+				str << name << ".StringSpirvAsm( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() )) << " );\n";
+		}
 		return str;
 	}
-	
-/*
-=================================================
-	ShaderFileSrcSPIRV
-=================================================
-*/
-	String	CppSerializer::ShaderFileSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc) const
-	{
-		TODO("");
-		return "";
-	}
-	
-/*
-=================================================
-	ShaderFileBinSPIRV
-=================================================
-*/
-	String	CppSerializer::ShaderFileBinSPIRV (StringCRef name, BinArrayCRef shaderSrc) const
-	{
-		TODO("");
-		return "";
-	}
-	
+
 /*
 =================================================
 	ShaderBinCL
 =================================================
 */
-	String  CppSerializer::ShaderBinCL (StringCRef name, BinArrayCRef shaderSrc) const
+	String  CppSerializer::ShaderBinCL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
-			str << name << ".ArrayCLBin({ " << ToString(ArrayCRef<ubyte>::From( shaderSrc )) << " });\n";
+		{
+			if ( inFile )
+				RETURN_ERR( "not supported" )
+			else
+				str << name << ".StringCLAsm( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() )) << " );\n";
+		}
 		return str;
 	}
 	
@@ -1049,34 +1045,17 @@ namespace PipelineCompiler
 	ShaderSrcCL
 =================================================
 */
-	String  CppSerializer::ShaderSrcCL (StringCRef name, BinArrayCRef shaderSrc) const
+	String  CppSerializer::ShaderSrcCL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
-			str << name << ".StringCL( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr() )) << " );\n";
+		{
+			if ( inFile )
+				RETURN_ERR( "not supported" )
+			else
+				str << name << ".StringCL( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() )) << " );\n";
+		}
 		return str;
-	}
-	
-/*
-=================================================
-	ShaderFileSrcCL
-=================================================
-*/
-	String  CppSerializer::ShaderFileSrcCL (StringCRef name, BinArrayCRef shaderSrc) const
-	{
-		TODO("");
-		return "";
-	}
-	
-/*
-=================================================
-	ShaderFileBinCL
-=================================================
-*/
-	String  CppSerializer::ShaderFileBinCL (StringCRef name, BinArrayCRef shaderSrc) const
-	{
-		TODO("");
-		return "";
 	}
 	
 /*
@@ -1084,15 +1063,31 @@ namespace PipelineCompiler
 	ShaderSrcCPP
 =================================================
 */
-	String  CppSerializer::ShaderSrcCPP (StringCRef name, BinArrayCRef shaderSrc) const
+	String  CppSerializer::ShaderSrcCPP (StringCRef name, StringCRef funcName) const
+	{
+		ASSERT( not funcName.Empty() );
+
+		String	str;
+		str << name << ".FuncSW( &SWShaderLang::" << funcName << " );\n";
+		return str;
+	}
+	
+/*
+=================================================
+	ShaderSrcCPP_Impl
+=================================================
+*/
+	String	CppSerializer::ShaderSrcCPP_Impl (StringCRef name, BinArrayCRef shaderSrc, StringCRef funcName) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
 		{
-			str << name << ".FuncSW( LAMBDA() (const SWShaderLang::SWShaderHelper &helper)\n"
-				<< "{\n"
-				<< StringCRef( (const char*)shaderSrc.ptr() )
-				<< "\n} );\n";
+			const usize	start	= str.Length();
+			usize		pos		= 0;
+
+			str << StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() );
+
+			str.FindAndChange( "##main##", funcName, OUT pos, start );
 		}
 		return str;
 	}

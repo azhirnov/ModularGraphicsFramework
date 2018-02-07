@@ -46,7 +46,7 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
+	CHECKRES inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
 		operator * (const Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
@@ -64,7 +64,7 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
+	CHECKRES inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
 		operator * (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const Vec<ValueType,I,U> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
@@ -82,7 +82,7 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
+	CHECKRES inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
 		operator / (const Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
@@ -100,7 +100,7 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
+	CHECKRES inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
 		operator / (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const Vec<ValueType,I,U> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
@@ -117,8 +117,8 @@ namespace GXMath
 			  typename Dimensions,
 			  typename ValueScale
 			 >
-	inline bool Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
-						const PhysicsValue<ValueType, Dimensions, ValueScale>& b)
+	CHECKRES inline bool Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
+								 const PhysicsValue<ValueType, Dimensions, ValueScale>& b)
 	{
 		return Equals( a.ref(), b.ref() );
 	}
@@ -133,8 +133,8 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	inline Vec<bool,I,U>  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
-								 const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b)
+	CHECKRES inline Vec<bool,I,U>  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
+											const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b)
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i] );
@@ -150,9 +150,9 @@ namespace GXMath
 			  typename Dimensions,
 			  typename ValueScale
 			 >
-	inline bool Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
-						const PhysicsValue<ValueType, Dimensions, ValueScale>& b,
-						/*Bits*/uint accuracy)
+	CHECKRES inline bool Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
+								 const PhysicsValue<ValueType, Dimensions, ValueScale>& b,
+								 /*Bits*/uint accuracy)
 	{
 		return Equals( a.ref(), b.ref(), accuracy );
 	}
@@ -167,9 +167,9 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	inline Vec<bool,I,U>  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
-								 const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b,
-								 /*Bits*/uint accuracy)
+	CHECKRES inline Vec<bool,I,U>  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
+											const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b,
+											/*Bits*/uint accuracy)
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i], accuracy );
@@ -228,16 +228,11 @@ namespace GXTypes
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	struct Hash< GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > > :
-		private Hash< GXMath::Vec< ValueType, I, U > >
+	struct Hash< GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > >
 	{
-		typedef GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U >	Key_t;
-		typedef Hash< GXMath::Vec< ValueType, I, U > >														Base_t;
-		typedef typename Base_t::Result_t																	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > &x) const noexcept
 		{
-			return Base_t::operator ()( x.ref() );
+			return HashOf( x.ref() );
 		}
 	};
 	

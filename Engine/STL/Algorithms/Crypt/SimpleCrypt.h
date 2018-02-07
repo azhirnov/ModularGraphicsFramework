@@ -17,7 +17,7 @@ namespace GXTypes
 	{
 		// source to encrypted
 		template <typename T, typename B>
-		static bool Encrypt (ArrayRef<T> data, ArrayCRef<B> password)
+		static bool Encrypt (INOUT ArrayRef<T> data, ArrayCRef<B> password)
 		{
 			FOR( i, data )
 			{
@@ -31,7 +31,7 @@ namespace GXTypes
 
 		// encrypted to source
 		template <typename T, typename B>
-		static bool Decrypt (ArrayRef<T> data, ArrayCRef<B> password)
+		static bool Decrypt (INOUT ArrayRef<T> data, ArrayCRef<B> password)
 		{
 			return Encrypt( data, password );
 		}

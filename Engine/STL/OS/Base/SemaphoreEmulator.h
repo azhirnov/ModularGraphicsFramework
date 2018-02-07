@@ -12,7 +12,7 @@ namespace OS
 	// Semaphore
 	//
 
-	struct SemaphoreEmulation
+	struct SemaphoreEmulation final : public Noncopyable
 	{
 	// types
 	public:

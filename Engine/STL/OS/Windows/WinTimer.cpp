@@ -1,12 +1,12 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Timer.h"
+#include "Engine/STL/OS/Windows/Timer.h"
 #include "Engine/STL/Math/BinaryMath.h"
 #include "Engine/STL/Math/Interpolations.h"
 
 #if defined( PLATFORM_WINDOWS )
 
-#include "WinHeader.h"
+#include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace GX_STL
 {
@@ -51,7 +51,6 @@ namespace OS
 	}
 
 # endif	// not PLATFORM_SDL and not GX_USE_STD
-
 //-----------------------------------------------------------------------------
 	
 
@@ -64,7 +63,7 @@ namespace OS
 	Date & Date::Now ()
 	{
 		SYSTEMTIME	 time = {};
-		GetLocalTime( &time );
+		GetLocalTime( OUT &time );
 
 		_year		= time.wYear;
 		_month		= time.wMonth-1;								// 1..12 convert to 0..11
@@ -79,7 +78,6 @@ namespace OS
 
 		return *this;
 	}
-
 //-----------------------------------------------------------------------------
 
 

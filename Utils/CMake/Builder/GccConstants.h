@@ -16,7 +16,13 @@ namespace CMake
 namespace GCC
 {
 
+	static constexpr char	Cpp11[]					= "-std=c++11";
+	static constexpr char	Cpp14[]					= "-std=c++14";
+	static constexpr char	Cpp1y[]					= "-std=c++1y";
 	static constexpr char	Cpp1z[]					= "-std=c++1z";
+	
+	static constexpr char	RTTI[]					= "-frtti";
+	static constexpr char	Exceptions[]			= "-fexceptions";
 
 	// Debugging
 	static constexpr char	Debug[]					= "-g";

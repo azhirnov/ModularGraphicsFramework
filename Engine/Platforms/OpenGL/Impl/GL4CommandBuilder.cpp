@@ -739,7 +739,7 @@ namespace PlatformGL
 	bool GL4CommandBuilder::_CmdBindComputeResourceTable (const Message< GpuMsg::CmdBindComputeResourceTable > &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( _scope == EScope::RenderPass );
+		CHECK_ERR( _scope == EScope::Command );
 		CHECK_ERR( msg->resourceTable );
 		
 		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });

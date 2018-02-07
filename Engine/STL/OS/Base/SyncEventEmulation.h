@@ -12,7 +12,7 @@ namespace OS
 	// Synchronization Event
 	//
 
-	struct SyncEventEmulation
+	struct SyncEventEmulation final : public Noncopyable
 	{
 	//types
 	public:
@@ -117,7 +117,7 @@ namespace OS
 
 			if ( not _triggered )
 			{
-				res = _cv.Wait( _cs, time.MilliSeconds() );
+				res = _cv.Wait( _cs, time );
 
 				if ( not _triggered )
 					res = false;

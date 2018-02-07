@@ -104,24 +104,24 @@ namespace PipelineCompiler
 */
 	HashResult  ConstUnionHash::operator () (const glslang::TConstUnionArray *key) const
 	{
-		return (*this)( *key );
+		return _ArrHash( *key );
 	}
 
-	HashResult  ConstUnionHash::operator () (const glslang::TConstUnionArray &key) const
+	HashResult  ConstUnionHash::_ArrHash (const glslang::TConstUnionArray &key) const
 	{
 		HashResult	result;
 		for (int i = 0; i < key.size(); ++i) {
-			result += (*this)( key[i] );
+			result += _ValHash( key[i] );
 		}
 		return result;
 	}
 	
 /*
 =================================================
-	hash of TConstUnion
+	_ValHash
 =================================================
 */
-	HashResult  ConstUnionHash::operator () (const glslang::TConstUnion &key) const
+	HashResult  ConstUnionHash::_ValHash (const glslang::TConstUnion &key) const
 	{
 		switch (key.getType())
 		{
@@ -238,12 +238,20 @@ namespace PipelineCompiler
 		}
 
 		// function forward declaration
-		FOR( i, funcs )
+		if ( not funcs.Empty() )
 		{
-			CHECK_ERR( TranslateFunctionForwardDecl( funcs[i], translator, INOUT translator.src ) );
-		}
+			const usize	len = translator.src.Length();
 
-		translator.src << "\n//---------------------------------\n" << src;
+			FOR( i, funcs ) {
+				CHECK_ERR( TranslateFunctionForwardDecl( funcs[i], translator, INOUT translator.src ) );
+			}
+
+			if ( len != translator.src.Length() ) {
+				translator.src << "\n//---------------------------------\n\n";
+			}
+		}
+		
+		translator.src << src;
 		return true;
 	}
 	
@@ -841,6 +849,12 @@ namespace PipelineCompiler
 				if ( field.type == EShaderVariable::Struct and not translator.types.globalTypes.IsExist( field.typeName ) ) {
 					translator.types.globalTypes.Add( field.typeName, field );
 				}
+			}
+
+			if ( info.type == EShaderVariable::Struct	and
+				 translator.language->DeclExternalTypes() )
+			{
+				translator.types.globalTypes.Add( info.typeName, info );
 			}
 
 			if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqConst or
@@ -1682,7 +1696,12 @@ namespace PipelineCompiler
 				   cu_arr[0].getIConst() >= 0 and cu_arr[0].getIConst() < int(st_type.size()) );
 		
 		dst_node.uid = uid;
-		dst_node.src << (lhs.src.Empty() ? "" : lhs.src + ".") << st_type[ cu_arr[0].getIConst() ].type->getFieldName().c_str();
+		//dst_node.src << (lhs.src.Empty() ? "" : lhs.src + ".") << st_type[ cu_arr[0].getIConst() ].type->getFieldName().c_str();
+		
+		Translator::TypeInfo	field_info;
+		CHECK_ERR( ConvertType( null, *st_type[ cu_arr[0].getIConst() ].type, binary->getLoc(), null, translator, OUT field_info ) );
+
+		CHECK_ERR( translator.language->TranslateStructAccess( lhs.typeInfo, lhs.src, field_info, OUT dst_node.src ) );
 
 		translator.nodes.Add( uid, RVREF(dst_node) );
 		return true;

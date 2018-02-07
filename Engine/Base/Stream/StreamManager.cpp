@@ -126,6 +126,13 @@ namespace Base
 			StringCRef	fname	= _fileWatch[i].first;
 			auto&		edit	= _fileWatch[i].second;
 			ulong		time	= GlobalSystems()->fileManager->GetLastModificationTime( fname ).ToMillisecondsSince1970();
+			
+			if ( edit.callbacks.Empty() )
+			{
+				_fileWatch.EraseByIndex( i );
+				--i;
+				continue;
+			}
 
 			if ( edit.time < time )
 			{
@@ -144,14 +151,14 @@ namespace Base
 */
 	bool StreamManager::_AddOnFileModifiedListener (const Message< ModuleMsg::AddOnFileModifiedListener > &msg)
 	{
-		usize	idx;
+		FileWatchList_t::iterator	iter;
 
-		if ( not _fileWatch.FindIndex( msg->filename, OUT idx ) )
+		if ( not _fileWatch.Find( msg->filename, OUT iter ) )
 		{
-			idx = _fileWatch.Add( msg->filename, {} );
+			iter = _fileWatch.Add( msg->filename, {} );
 		}
 
-		_fileWatch[idx].second.callbacks.Add( msg->callback );
+		iter->second.callbacks.Add( msg->callback );
 		return true;
 	}
 	
@@ -162,7 +169,10 @@ namespace Base
 */
 	bool StreamManager::_RemoveOnFileModifiedListener (const Message< ModuleMsg::RemoveOnFileModifiedListener > &msg)
 	{
-
+		FOR( i, _fileWatch )
+		{
+			_fileWatch[i].second.callbacks.RemoveAllFor( msg->module.RawPtr() );
+		}
 		return true;
 	}
 //-----------------------------------------------------------------------------

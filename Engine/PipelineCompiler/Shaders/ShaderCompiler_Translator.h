@@ -16,9 +16,10 @@ namespace PipelineCompiler
 	{
 		using Result_t = HashResult;
 
-		HashResult operator () (const glslang::TConstUnionArray &key) const;
 		HashResult operator () (const glslang::TConstUnionArray *key) const;
-		HashResult operator () (const glslang::TConstUnion &key) const;
+
+		HashResult _ArrHash (const glslang::TConstUnionArray &key) const;
+		HashResult _ValHash (const glslang::TConstUnion &key) const;
 	};
 
 
@@ -156,6 +157,10 @@ namespace PipelineCompiler
 		virtual bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) = 0;
 
 		virtual bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) = 0;
+
+		virtual bool TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) = 0;
+
+		virtual bool DeclExternalTypes () const	{ return false; }
 	};
 	
 	

@@ -2,162 +2,14 @@
 
 #include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
-#include "External/SDL2/include/SDL.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
+
+#if defined( GRAPHICS_API_OPENGL )
 
 namespace PipelineCompiler
 {
+	using namespace gl;
 
-#if 0
-
-	class GLApp final : public StaticRefCountedObject
-	{
-	// variables
-	public:
-		Ptr< Module >	ms;
-		bool			looping	= true;
-		bool			initialized = false;
-
-	// methods
-	public:
-		GLApp ();
-
-		void Initialize ();
-		void Quit ();
-		bool Update ();
-
-		bool Compile (const _GLSLangCompiler &comp, const Config &cfg, OUT BinaryArray &result) const;
-
-	private:
-		bool _OnWindowClosed (const Message<ModuleMsg::WindowAfterDestroy> &);
-		bool _Draw (const Message< ModuleMsg::Update > &msg);
-
-		bool _GLInit (const Message< ModuleMsg::GpuDeviceCreated > &msg);
-		bool _GLDelete (const Message< ModuleMsg::GpuDeviceBeforeDestory > &msg);
-			
-		bool _CompileShader (uint shader, EShader::type type, ArrayCRef<StringCRef> source) const;
-		bool _LinkProgram (uint prog, ArrayCRef<uint> shaders, const Config &cfg) const;
-		bool _GetProgramBinary (uint prog, OUT BinaryArray &result) const;
-		void _DumpProgramResources (uint prog) const;
-		void _DumpUniformBlocksInfo (uint prog, INOUT String &str) const;
-		void _DumpBufferBlockInfo (uint prog, INOUT String &str) const;
-		void _DumpUniformsInfo (uint prog, INOUT String &str) const;
-
-	}	_app;
-
-/*
-=================================================
-	constructor
-=================================================
-*/
-	ShaderCompiler::GLApp::GLApp ()
-	{
-		ms = GetMainSystemInstance();
-
-		Platforms::RegisterPlatforms();
-	}
-	
-/*
-=================================================
-	Initialize
-=================================================
-*/
-	void ShaderCompiler::GLApp::Initialize ()
-	{
-		ms->AddModule( WinPlatformModuleID, CreateInfo::Platform() );
-		ms->AddModule( GLContextModuleID, CreateInfo::GpuContext() );
-
-		auto	thread	= ms->GlobalSystems()->parallelThread;
-	
-		thread->AddModule( WinWindowModuleID, CreateInfo::Window() );
-		thread->AddModule( GLThreadModuleID, CreateInfo::GpuThread() );
-
-		auto	window		= thread->GetModule( WinWindowModuleID );
-		auto	glthread	= thread->GetModule( GLThreadModuleID );
-
-		window->Subscribe( this, &GLApp::_OnWindowClosed );
-		glthread->Subscribe( this, &GLApp::_Draw );
-		glthread->Subscribe( this, &GLApp::_GLInit );
-		glthread->Subscribe( this, &GLApp::_GLDelete );
-
-		window = null;
-		thread = null;
-		glthread = null;
-
-		// finish initialization
-		ms->Send( Message< ModuleMsg::Link >() );
-		ms->Send( Message< ModuleMsg::Compose >() );
-	}
-	
-/*
-=================================================
-	Quit
-=================================================
-*/
-	void ShaderCompiler::GLApp::Quit ()
-	{
-		looping = false;
-	}
-
-/*
-=================================================
-	Update
-=================================================
-*/
-	bool ShaderCompiler::GLApp::Update ()
-	{
-		ms->Send( Message< ModuleMsg::Update >() );
-		return looping;
-	}
-	
-/*
-=================================================
-	_OnWindowClosed
-=================================================
-*/
-	bool ShaderCompiler::GLApp::_OnWindowClosed (const Message<ModuleMsg::WindowAfterDestroy> &)
-	{
-		looping = false;
-		return true;
-	}
-	
-/*
-=================================================
-	_Draw
-=================================================
-*/
-	bool ShaderCompiler::GLApp::_Draw (const Message< ModuleMsg::Update > &msg)
-	{
-		using namespace gl;
-
-		return true;
-	}
-	
-/*
-=================================================
-	_GLInit
-=================================================
-*/
-	bool ShaderCompiler::GLApp::_GLInit (const Message< ModuleMsg::GpuDeviceCreated > &msg)
-	{
-		using namespace gl;
-
-		initialized = true;
-		return true;
-	}
-	
-/*
-=================================================
-	_GLDelete
-=================================================
-*/
-	bool ShaderCompiler::GLApp::_GLDelete (const Message< ModuleMsg::GpuDeviceBeforeDestory > &msg)
-	{
-		using namespace gl;
-
-
-		return true;
-	}
-	
 /*
 =================================================
 	GL4Enum (EShader)
@@ -178,71 +30,14 @@ namespace PipelineCompiler
 
 		RETURN_ERR( "invalid shader type", GL4Shader() );
 	}
-
-/*
-=================================================
-	Compile
-=================================================
-*/
-	bool ShaderCompiler::GLApp::Compile (const _GLSLangCompiler &comp, const Config &cfg, OUT BinaryArray &programBinary) const
-	{
-		using namespace gl;
-
-		bool			result	= true;
-
-		uint			prog	= 0;
-		Array<uint>		shader_ids;
-		shader_ids.Resize( comp.shaders.Count() );
-
-
-		// compile shaders
-		FOR( i, comp.shaders )
-		{
-			const auto&	sh = comp.shaders[i];
-
-			GL_CALL( shader_ids[i] = glCreateShader( GL4Enum(sh.type) ) );
-
-			result &= _CompileShader( shader_ids[i], sh.type, sh.src );
-		}
-
-		// link program
-		if ( result ) {
-			GL_CALL( prog = glCreateProgram() );
-
-			result &= _LinkProgram( prog, shader_ids, cfg );
-		}
-
-		// dump resource info
-		if ( result ) {
-			_DumpProgramResources( prog );
-		}
-
-		// get compiled program
-		if ( result ) {
-			result &= _GetProgramBinary( prog, OUT programBinary );
-		}
-
-
-		// delete resources
-		FOR( i, shader_ids ) {
-			GL_CALL( glDeleteShader( shader_ids[i] ) );
-		}
-
-		GL_CALL( glDeleteProgram( prog ) );
-
-		CHECK_ERR( result );
-		return true;
-	}
 	
 /*
 =================================================
 	_CompileShader
 =================================================
 */
-	bool ShaderCompiler::GLApp::_CompileShader (uint shader, EShader::type shaderType, ArrayCRef<StringCRef> sources) const
+	static bool _CompileShader (GLuint shader, EShader::type shaderType, ArrayCRef<StringCRef> sources, OUT String &log)
 	{
-		using namespace gl;
-
 		CHECK_ERR( shader != 0 and not sources.Empty() );
 
 		Array<const char *>	src;
@@ -255,22 +50,19 @@ namespace PipelineCompiler
 		GL_CALL( glCompileShader( shader ) );
 		
 		GLint	compile_status = 0;
-		GL_CALL( glGetShaderiv( shader, GL_COMPILE_STATUS,  &compile_status ) );
+		GL_CALL( glGetShaderiv( shader, GL_COMPILE_STATUS, OUT &compile_status ) );
 
 		const bool	compiled = ( compile_status == GL_TRUE );
 
 		GLint	log_size = 0;
-		GL_CALL( glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &log_size ) );
+		GL_CALL( glGetShaderiv( shader, GL_INFO_LOG_LENGTH, OUT &log_size ) );
 
 		if ( log_size > 5 )
 		{
-			String	info;
-			info.Reserve( log_size+1 );
+			log.Reserve( log.Length() + log_size+1 );
 			
-			GL_CALL( glGetShaderInfoLog( shader, log_size, null, info.ptr() ) );
-			info.CalculateLength();
-			
-			LOG( ("Shader compilation error: "_str << info).cstr(), compiled ? ELog::Debug : ELog::Error );
+			GL_CALL( glGetShaderInfoLog( shader, log_size, null, OUT log.ptr() ) );
+			log.CalculateLength();
 		}
 
 		return compiled;
@@ -281,10 +73,8 @@ namespace PipelineCompiler
 	_LinkProgram
 =================================================
 */
-	bool ShaderCompiler::GLApp::_LinkProgram (uint prog, ArrayCRef<uint> shaders, const Config &cfg) const
+	static bool _LinkProgram (GLuint prog, ArrayCRef<GLuint> shaders, OUT String &log)
 	{
-		using namespace gl;
-
 		CHECK_ERR( prog != 0 and not shaders.Empty() );
 		
 		GL_CALL( glProgramParameteri( prog, GL_PROGRAM_SEPARABLE, GL_TRUE ) );
@@ -297,22 +87,19 @@ namespace PipelineCompiler
 		GL_CALL( glLinkProgram( prog ) );
 		
 		GLint	link_status = 0;
-		GL_CALL( glGetProgramiv( prog, GL_LINK_STATUS, &link_status ) );
+		GL_CALL( glGetProgramiv( prog, GL_LINK_STATUS, OUT &link_status ) );
 		
 		const bool	linked = ( link_status == GL_TRUE );
 
 		GLint	log_size = 0;
-		GL_CALL( glGetProgramiv( prog, GL_INFO_LOG_LENGTH, &log_size ) );
+		GL_CALL( glGetProgramiv( prog, GL_INFO_LOG_LENGTH, OUT &log_size ) );
 
 		if ( log_size > 5 )
 		{
-			String	info;
-			info.Reserve( log_size + 1 );
+			log.Reserve( log.Length() + log_size + 1 );
 
-			GL_CALL( glGetProgramInfoLog( prog, log_size, null, info.ptr() ) );
-			info.CalculateLength();
-			
-			LOG( ("Program compilation error: "_str << info).cstr(), linked ? ELog::Debug : ELog::Error );
+			GL_CALL( glGetProgramInfoLog( prog, log_size, null, OUT log.End() ) );
+			log.CalculateLength();
 		}
 		
 		FOR( i, shaders ) {
@@ -326,10 +113,8 @@ namespace PipelineCompiler
 	_GetProgramBinary
 =================================================
 */
-	bool ShaderCompiler::GLApp::_GetProgramBinary (uint prog, OUT BinaryArray &result) const
+	static bool _GetProgramBinary (GLuint prog, OUT BinaryArray &result)
 	{
-		using namespace gl;
-
 		GLint		i_size = 0;
 		GLsizei		s_size = 0;
 
@@ -349,7 +134,7 @@ namespace PipelineCompiler
 		// get binary
 		{
 			GL_CALL( glGetProgramiv( prog, GL_PROGRAM_BINARY_LENGTH, OUT &i_size ) );
-			result.Resize( i_size );
+			result.Resize( i_size, false );
 
 			GL_CALL( glGetProgramBinary( prog, result.Count(), OUT &s_size, OUT &format, OUT result.ptr() ) );
 			result.Resize( s_size );
@@ -367,8 +152,6 @@ namespace PipelineCompiler
 */
 	static const char * GLVariableTypeToStr (gl::GLenum type)
 	{
-		using namespace gl;
-
 		switch ( type )
 		{
 			case GL_BOOL :										return "bool";
@@ -487,36 +270,14 @@ namespace PipelineCompiler
 		WARNING( "Unknown OpenGL type!" );
 		return "<unknown>";
 	}
-	
-/*
-=================================================
-	_DumpProgramResources
-=================================================
-*/
-	void ShaderCompiler::GLApp::_DumpProgramResources (uint prog) const
-	{
-		CHECK( prog != 0 );
-
-		String	str;	str.Reserve( 256 );
-
-		str << "Program resources\n---------------\n";
-
-		_DumpUniformBlocksInfo( prog, INOUT str );
-		_DumpBufferBlockInfo( prog, INOUT str );
-		_DumpUniformsInfo( prog, INOUT str );
-
-		LOG( str.cstr(), ELog::Info | ELog::SpoilerFlag );
-	}
 
 /*
 =================================================
 	_DumpUniformBlocksInfo
 =================================================
 */
-	void ShaderCompiler::GLApp::_DumpUniformBlocksInfo (uint prog, INOUT String &str) const
+	static void _DumpUniformBlocksInfo (GLuint prog, INOUT String &str)
 	{
-		using namespace gl;
-		
 		static const GLenum ubProperties[] = {
 			GL_NUM_ACTIVE_VARIABLES,
 			GL_BUFFER_BINDING,
@@ -545,9 +306,9 @@ namespace PipelineCompiler
 		GLint			ub_params[ CountOf(ubProperties) ] = {};
 		GLint			var_params[ CountOf(varProps) ]	   = {};
 
-		GL_CALL( glGetProgramInterfaceiv( prog, GL_UNIFORM_BLOCK,  GL_ACTIVE_RESOURCES, &ub_count ) );
-		GL_CALL( glGetProgramInterfaceiv( prog, GL_UNIFORM_BLOCK,  GL_MAX_NAME_LENGTH,  &max_ub_length ) );
-		GL_CALL( glGetProgramInterfaceiv( prog, GL_UNIFORM,		GL_MAX_NAME_LENGTH,  &max_var_length ) );
+		GL_CALL( glGetProgramInterfaceiv( prog, GL_UNIFORM_BLOCK,	GL_ACTIVE_RESOURCES, OUT &ub_count ) );
+		GL_CALL( glGetProgramInterfaceiv( prog, GL_UNIFORM_BLOCK,	GL_MAX_NAME_LENGTH,  OUT &max_ub_length ) );
+		GL_CALL( glGetProgramInterfaceiv( prog, GL_UNIFORM,			GL_MAX_NAME_LENGTH,  OUT &max_var_length ) );
 
 		if ( ub_count <= 0 )
 			return;
@@ -558,20 +319,20 @@ namespace PipelineCompiler
 		{
 			GLuint	idx = (GLuint) i;
 
-			GL_CALL( glGetProgramResourceName( prog, GL_UNIFORM_BLOCK, idx, max_ub_length, &length, buf.ptr() ) );
+			GL_CALL( glGetProgramResourceName( prog, GL_UNIFORM_BLOCK, idx, max_ub_length, OUT &length, OUT buf.ptr() ) );
 			buf.SetLength( length );
 
 			GL_CALL( index = glGetProgramResourceIndex( prog, GL_UNIFORM_BLOCK, buf.cstr() ) );
 
 			GL_CALL( glGetProgramResourceiv( prog, GL_UNIFORM_BLOCK, index, GLsizei(CountOf( ubProperties )),
-											 ubProperties, GLsizei(CountOf( ub_params )), null, ub_params ) );
+											 ubProperties, GLsizei(CountOf( ub_params )), null, OUT ub_params ) );
 
 			GLint	ub_binding	= ub_params[1];
 			GLint	ub_size		= ub_params[2];
 
 			var_indices.Resize( ub_params[0] );
 			GL_CALL( glGetProgramResourceiv( prog, GL_UNIFORM_BLOCK, index, GLsizei(CountOf( varArrayProps )), varArrayProps,
-											 GLsizei(var_indices.Count()), null, var_indices.ptr() ) );
+											 GLsizei(var_indices.Count()), null, OUT var_indices.ptr() ) );
 			
 			str << "UBO     " << buf << ", index: " << index << ", binding: " << ub_binding
 				<< ", size: " << ToString( BytesU( ub_size ) ) << '\n';
@@ -579,9 +340,9 @@ namespace PipelineCompiler
 			FOR( j, var_indices )
 			{
 				GL_CALL( glGetProgramResourceiv( prog, GL_UNIFORM, var_indices[j], GLsizei(CountOf( varProps )), varProps,
-												 GLsizei(CountOf( var_params )), null, var_params ) );
+												 GLsizei(CountOf( var_params )), null, OUT var_params ) );
 
-				GL_CALL( glGetProgramResourceName( prog, GL_UNIFORM, var_indices[j], max_var_length, &length, buf.ptr() ) );
+				GL_CALL( glGetProgramResourceName( prog, GL_UNIFORM, var_indices[j], max_var_length, OUT &length, OUT buf.ptr() ) );
 				buf.SetLength( length );
 
 				GLenum	var_type		= var_params[0];
@@ -605,10 +366,8 @@ namespace PipelineCompiler
 	_DumpBufferBlockInfo
 =================================================
 */
-	void ShaderCompiler::GLApp::_DumpBufferBlockInfo (uint prog, INOUT String &str) const
+	static void _DumpBufferBlockInfo (GLuint prog, INOUT String &str)
 	{
-		using namespace gl;
-
 		static const GLenum ssbProperties[] = {
 			GL_NUM_ACTIVE_VARIABLES,
 			GL_BUFFER_BINDING,
@@ -638,9 +397,9 @@ namespace PipelineCompiler
 		GLint			ssb_params[ CountOf(ssbProperties) ] = {};
 		GLint			var_params[ CountOf(varProps) ]		 = {};
 
-		GL_CALL( glGetProgramInterfaceiv( prog, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, &ssb_count ) );
-		GL_CALL( glGetProgramInterfaceiv( prog, GL_SHADER_STORAGE_BLOCK, GL_MAX_NAME_LENGTH,  &max_ssb_length ) );
-		GL_CALL( glGetProgramInterfaceiv( prog, GL_BUFFER_VARIABLE,      GL_MAX_NAME_LENGTH,  &max_var_length ) );
+		GL_CALL( glGetProgramInterfaceiv( prog, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, OUT &ssb_count ) );
+		GL_CALL( glGetProgramInterfaceiv( prog, GL_SHADER_STORAGE_BLOCK, GL_MAX_NAME_LENGTH,  OUT &max_ssb_length ) );
+		GL_CALL( glGetProgramInterfaceiv( prog, GL_BUFFER_VARIABLE,      GL_MAX_NAME_LENGTH,  OUT &max_var_length ) );
 
 		if ( ssb_count <= 0 )
 			return;
@@ -651,20 +410,20 @@ namespace PipelineCompiler
 		{
 			GLuint	idx = (GLuint) i;
 
-			GL_CALL( glGetProgramResourceName( prog, GL_SHADER_STORAGE_BLOCK, idx, max_ssb_length, &length, buf.ptr() ) );
+			GL_CALL( glGetProgramResourceName( prog, GL_SHADER_STORAGE_BLOCK, idx, max_ssb_length, OUT &length, OUT buf.ptr() ) );
 			buf.SetLength( length );
 
 			GL_CALL( index = glGetProgramResourceIndex( prog, GL_SHADER_STORAGE_BLOCK, buf.cstr() ) );
 
 			GL_CALL( glGetProgramResourceiv( prog, GL_SHADER_STORAGE_BLOCK, index, GLsizei(CountOf( ssbProperties )),
-											 ssbProperties, GLsizei(CountOf( ssb_params )), null, ssb_params ) );
+											 ssbProperties, GLsizei(CountOf( ssb_params )), null, OUT ssb_params ) );
 			
 			GLint	ssb_binding	= ssb_params[1];
 			GLint	ssb_size	= ssb_params[2];
 
 			var_indices.Resize( ssb_params[0] );
 			GL_CALL( glGetProgramResourceiv( prog, GL_SHADER_STORAGE_BLOCK, index, GLsizei(CountOf( varArrayProps )), varArrayProps,
-											 GLsizei(var_indices.Count()), null, var_indices.ptr() ) );
+											 GLsizei(var_indices.Count()), null, OUT var_indices.ptr() ) );
 
 			str << "SSBO    " << buf << ", index: " << index << ", binding: " << ssb_binding
 				<< ", size: " << ToString( BytesU( ssb_size ) ) << '\n';
@@ -672,9 +431,9 @@ namespace PipelineCompiler
 			FOR( j, var_indices )
 			{
 				GL_CALL( glGetProgramResourceiv( prog, GL_BUFFER_VARIABLE, var_indices[j], GLsizei(CountOf( varProps )), varProps,
-												 GLsizei(CountOf( var_params )), null, var_params ) );
+												 GLsizei(CountOf( var_params )), null, OUT var_params ) );
 
-				GL_CALL( glGetProgramResourceName( prog, GL_BUFFER_VARIABLE, var_indices[j], max_var_length, &length, buf.ptr() ) );
+				GL_CALL( glGetProgramResourceName( prog, GL_BUFFER_VARIABLE, var_indices[j], max_var_length, OUT &length, OUT buf.ptr() ) );
 				buf.SetLength( length );
 
 				GLenum	var_type		= var_params[0];
@@ -699,10 +458,8 @@ namespace PipelineCompiler
 	_DumpUniformsInfo
 =================================================
 */
-	void ShaderCompiler::GLApp::_DumpUniformsInfo (uint prog, INOUT String &str) const
+	static void _DumpUniformsInfo (GLuint prog, INOUT String &str)
 	{
-		using namespace gl;
-
 		static const GLenum varProps[] = {
 			GL_TYPE,
 			GL_LOCATION,
@@ -720,8 +477,8 @@ namespace PipelineCompiler
 		String	name;
 		GLint	var_params[ CountOf(varProps) ] = {0};
 
-		GL_CALL( glGetProgramInterfaceiv( id, GL_UNIFORM, GL_ACTIVE_RESOURCES, &count ) );
-		GL_CALL( glGetProgramInterfaceiv( id, GL_UNIFORM, GL_MAX_NAME_LENGTH, &max_name_length ) );
+		GL_CALL( glGetProgramInterfaceiv( id, GL_UNIFORM, GL_ACTIVE_RESOURCES, OUT &count ) );
+		GL_CALL( glGetProgramInterfaceiv( id, GL_UNIFORM, GL_MAX_NAME_LENGTH,  OUT &max_name_length ) );
 		
 		if ( count <= 0 )
 			return;
@@ -731,15 +488,15 @@ namespace PipelineCompiler
 		for (int i = 0; i < count; ++i)
 		{
 			GL_CALL( glGetProgramResourceiv( id, GL_UNIFORM, GLuint(i), GLsizei(CountOf( varProps )), varProps,
-											 GLsizei(CountOf( var_params )), &length, var_params ) );
+											 GLsizei(CountOf( var_params )), OUT &length, OUT var_params ) );
 
-			GL_CALL( glGetProgramResourceName( id, GL_UNIFORM, i, max_name_length, &length, name.ptr() ) );
+			GL_CALL( glGetProgramResourceName( id, GL_UNIFORM, i, max_name_length, OUT &length, OUT name.ptr() ) );
 			name.SetLength( length );
 
 			const GLenum	type		= var_params[0];
 			const GLint		location	= var_params[1];
 			const GLuint	array_size	= var_params[2];
-			//const GLint		offset		= var_params[3];
+			//const GLint	offset		= var_params[3];
 			const GLint		blockidx	= var_params[4];
 			
 			if ( blockidx != -1 )
@@ -753,29 +510,75 @@ namespace PipelineCompiler
 			str << ", location: " << location << '\n';
 		}
 	}
-
+	
 /*
 =================================================
-	_CompileGLBinary
+	_DumpProgramResources
 =================================================
 */
-	bool ShaderCompiler::_CompileGLBinary (const _GLSLangCompiler &comp, const Config &cfg, OUT BinaryArray &result) const
+	static void _DumpProgramResources (GLuint prog)
 	{
-		CHECK_ERR( _app.Compile( comp, cfg, OUT result ) );
-		return true;
+		CHECK( prog != 0 );
+
+		String	str;	str.Reserve( 256 );
+
+		str << "Program resources\n---------------\n";
+
+		_DumpUniformBlocksInfo( prog, INOUT str );
+		_DumpBufferBlockInfo( prog, INOUT str );
+		_DumpUniformsInfo( prog, INOUT str );
+
+		LOG( str.cstr(), ELog::Info | ELog::SpoilerFlag );
 	}
 
-#else
-		
 /*
 =================================================
 	_CompileGLSL
 =================================================
 */
-	bool ShaderCompiler::_CompileGLSL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result) const
+	bool ShaderCompiler::_CompileGLSL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result)
 	{
-		TODO( "_CompileGLSL" );
-		return false;
+		CHECK_ERR( InitializeContext() );
+
+		bool	res			= true;
+		GLuint	prog_id		= 0;
+		GLuint	shader_id	= 0;
+
+		// compile shader
+		{
+			CHECK_ERR( shader.entry == "main" );
+
+			GL_CALL( shader_id = glCreateShader( GL4Enum(shader.type) ) );
+
+			res &= _CompileShader( shader_id, shader.type, shader.src, OUT log );
+		}
+
+		// link program
+		if ( res )
+		{
+			GL_CALL( prog_id = glCreateProgram() );
+
+			res &= _LinkProgram( prog_id, {shader_id}, OUT log );
+		}
+
+		// dump resource info
+		if ( res ) {
+			_DumpProgramResources( prog_id );
+		}
+
+		// get compiled program
+		if ( res ) {
+			res &= _GetProgramBinary( prog_id, OUT result );
+		}
+
+		// delete resources
+		if ( shader_id != 0 ) {
+			GL_CALL( glDeleteShader( shader_id ) );
+		}
+		if ( prog_id != 0 ) {
+			GL_CALL( glDeleteProgram( prog_id ) );
+		}
+		return res;
 	}
 	
 /*
@@ -800,6 +603,6 @@ namespace PipelineCompiler
 		return false;
 	}
 
-#endif
-
 }	// PipelineCompiler
+
+#endif	// GRAPHICS_API_OPENGL

@@ -171,6 +171,13 @@
 #	define GX_CHECK_RESULT
 #endif
 
+// deprecated attribute
+#if __has_feature(cxx_attributes)
+#	define GX_DEPRECATED( _reason_ )		[[ deprecated(_reason_) ]]
+#else
+#	define GX_DEPRECATED( _reason_ )
+#endif
+
 
 // if constexpr
 #if COMPILER_VERSION >= 390
@@ -181,8 +188,14 @@
 
 
 // 'auto' keyword in template parameters
-#if COMPILER_VERSION >= 400
+#if 0 //COMPILER_VERSION >= 400
 #	define GX_AUTO_IN_TEMPLATE_SUPPORTED	1
+#endif
+
+
+// TODO
+#if !defined( PLATFORM_ANDROID )
+#	define GX_RTTI_SUPPORTED
 #endif
 
 //-------------------------------------------------------------------

@@ -58,13 +58,14 @@ namespace GXMath
 	{
 	// types
 	public:
-		typedef bool			_is_rect;
-		typedef Rectangle<T,U>	Self;
-		typedef T				Value_t;
-		typedef Vec<T,2,U>		Vec2_t;
-		typedef Vec2_t const	CVec2_t;
-		typedef Vec<T,4,U>		Vec4_t;
-		typedef Line2<T,U>		Line_t;
+		using _is_rect		= bool;
+		using Self			= Rectangle<T,U>;
+		using Value_t		= T;
+		using Vec2_t		= Vec<T,2,U>;
+		using CVec2_t		= Vec2_t const;
+		using Vec4_t		= Vec<T,4,U>;
+		using Line_t		= Line2<T,U>;
+		using Arr_t			= T[4];
 
 		//enum EEdge : ubyte
 		//{
@@ -124,14 +125,14 @@ namespace GXMath
 		
 
 		// methods
-		T		*	ptr ()							{ return PointerCast< T >( this ); }
-		const T *	ptr () const					{ return PointerCast< T >( this ); }
+		T		*	ptr ()							{ _CheckAlign();  return &left; }
+		const T *	ptr () const					{ _CheckAlign();  return &left; }
 
 		CVec2_t		LeftBottom () const				{ return Vec2_t( left, bottom ); }
-		Vec2_t &	LeftBottom ()					{ return *PointerCast< Vec2_t >( &left ); }
+		Vec2_t &	LeftBottom ();
 
 		CVec2_t		RightTop () const				{ return Vec2_t( right, top ); }
-		Vec2_t &	RightTop ()						{ return *PointerCast< Vec2_t >( &right ); }
+		Vec2_t &	RightTop ();
 
 		CVec2_t		LeftTop () const				{ return Vec2_t( left, top ); }
 		CVec2_t		RightBottom () const			{ return Vec2_t( right, bottom ); }
@@ -186,6 +187,10 @@ namespace GXMath
 
 		template <typename B>
 		const B		To () const;
+
+
+	private:
+		static void _CheckAlign ();
 	};
 
 	
@@ -198,7 +203,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Rectangle<T,U>)  Abs (const Rectangle<T,U> &val)
+	CHECKRES inline Rectangle<T,U>  Abs (const Rectangle<T,U> &val)
 	{
 		return Rectangle<T,U>( Abs(val.left), Abs(val.bottom), Abs(val.right), Abs(val.top) );
 	}
@@ -209,7 +214,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  IsZero (const Rectangle<T,U>& val)
+	CHECKRES inline bool  IsZero (const Rectangle<T,U>& val)
 	{
 		return IsZero(val.Size());
 	}
@@ -220,7 +225,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Rectangle<T,U>)  SetSign (const Rectangle<T,U> &val, bool bSign)
+	CHECKRES inline Rectangle<T,U>  SetSign (const Rectangle<T,U> &val, bool bSign)
 	{
 		return Rectangle<T,U>(	SetSign( val.left,  bSign ),	SetSign( val.bottom, bSign ),
 								SetSign( val.right, bSign ),	SetSign( val.top,	 bSign ) );
@@ -232,7 +237,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Rectangle<T,U>)  Mod (const Rectangle<T,U>& left, const Rectangle<T,U>& right)
+	CHECKRES inline Rectangle<T,U>  Mod (const Rectangle<T,U>& left, const Rectangle<T,U>& right)
 	{
 		return Rectangle<T,U>(	Mod( left.left,  right.left ),	Mod( left.bottom, right.bottom ),
 								Mod( left.right, right.right ), Mod( left.top,	  right.top ) );
@@ -244,7 +249,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Rectangle<T,U>)  Round (const Rectangle<T,U>& val)
+	CHECKRES inline Rectangle<T,U>  Round (const Rectangle<T,U>& val)
 	{
 		return Rectangle<T,U>(	Round( val.left ),	Round( val.bottom ),
 								Round( val.right ),	Round( val.top ) );
@@ -256,7 +261,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Rectangle< typename CompileTime::NearInt::FromType<T> >)  RoundToInt (const Rectangle<T,U>& val)
+	CHECKRES inline Rectangle< typename CompileTime::NearInt::FromType<T> >  RoundToInt (const Rectangle<T,U>& val)
 	{
 		return Rectangle< typename CompileTime::NearInt::FromType<T> >(
 					RoundToInt( val.left ),		RoundToInt( val.bottom ),
@@ -269,7 +274,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Rectangle< typename CompileTime::NearUInt::FromType<T> >)  RoundToUInt (const Rectangle<T,U>& val)
+	CHECKRES inline Rectangle< typename CompileTime::NearUInt::FromType<T> >  RoundToUInt (const Rectangle<T,U>& val)
 	{
 		return Rectangle< typename CompileTime::NearUInt::FromType<T> >(
 					RoundToUInt( val.left ),	RoundToUInt( val.bottom ),
@@ -282,7 +287,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Rectangle<T,U>)  SafeDiv (const Rectangle<T,U>& left, const Rectangle<T,U>& right, const Rectangle<T,U>& defVal)
+	CHECKRES inline Rectangle<T,U>  SafeDiv (const Rectangle<T,U>& left, const Rectangle<T,U>& right, const Rectangle<T,U>& defVal)
 	{
 		return Rectangle<T,U>(	SafeDiv( left.left,		right.left,		defVal.left ),
 								SafeDiv( left.bottom,	right.bottom,	defVal.bottom ),
@@ -325,7 +330,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Rectangle<T,U>::operator == (const Self &other) const
+	CHECKRES inline bool  Rectangle<T,U>::operator == (const Self &other) const
 	{
 		return ( (left  == other.left)  & (bottom == other.bottom) &
 				 (right == other.right) & (top    == other.top) );
@@ -337,7 +342,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Rectangle<T,U>::operator != (const Self &other) const
+	CHECKRES inline bool  Rectangle<T,U>::operator != (const Self &other) const
 	{
 		return not (*this == other);
 	}
@@ -348,7 +353,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Vec<T,2,U>)  Rectangle<T,U>::operator () (usize i) const
+	CHECKRES inline Vec<T,2,U>  Rectangle<T,U>::operator () (usize i) const
 	{
 		ASSUME( i < 4 );
 		return Vec2_t( (*this)[ i & 2 ], (*this)[ ((( (i & 1) + (i >> 1) ) & 1) << 1) + 1 ] );
@@ -356,12 +361,36 @@ namespace GXMath
 	
 /*
 =================================================
+	LeftBottom
+=================================================
+*/
+	template <typename T, ulong U>
+	CHECKRES inline Vec<T,2,U> &  Rectangle<T,U>::LeftBottom ()
+	{
+		STATIC_ASSERT( sizeof(left) == (offsetof(Self, bottom) - offsetof(Self, left)) );
+		return *PointerCast< Vec2_t >( &left );
+	}
+	
+/*
+=================================================
+	RightTop
+=================================================
+*/	
+	template <typename T, ulong U>
+	CHECKRES inline Vec<T,2,U> &  Rectangle<T,U>::RightTop ()
+	{
+		STATIC_ASSERT( sizeof(right) == (offsetof(Self, top) - offsetof(Self, right)) );
+		return *PointerCast< Vec2_t >( &right );
+	}
+
+/*
+=================================================
 	Convert
 =================================================
 */
 	template <typename T, ulong U>
 	template <typename T2>
-	inline CHECKRES(Rectangle<T2,U>)  Rectangle<T,U>::Convert () const
+	CHECKRES inline Rectangle<T2,U>  Rectangle<T,U>::Convert () const
 	{
 		return Rectangle<T2,U>( T2(left), T2(bottom), T2(right), T2(top) );
 	}
@@ -372,7 +401,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Rectangle<T,U>::IsInnerPoint (const Vec2_t &point) const
+	CHECKRES inline bool  Rectangle<T,U>::IsInnerPoint (const Vec2_t &point) const
 	{
 		return ( (point.x >= left)	 & (point.x <= right) &
 				 (point.y >= bottom) & (point.y <= top) );
@@ -384,7 +413,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Rectangle<T,U>::IsInnerRect (const Self &other) const
+	CHECKRES inline bool  Rectangle<T,U>::IsInnerRect (const Self &other) const
 	{
 		// this rect in other rect
 		return ( (left >= other.left) & (right <= other.right) & (bottom >= other.bottom) & (top <= other.top) );
@@ -396,7 +425,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Rectangle<T,U>::IntersectRect (const Self &other) const
+	CHECKRES inline bool  Rectangle<T,U>::IntersectRect (const Self &other) const
 	{
 		return !!( ( (left < other.right) & (right > other.left) & (bottom < other.top) & (top > other.bottom) ) |
 				   ( (other.right < left) & (other.left > right) & (other.top < bottom) & (other.bottom > top) ) );
@@ -485,7 +514,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Vec<T,2,U>)  Rectangle<T,U>::Center () const
+	CHECKRES inline Vec<T,2,U>  Rectangle<T,U>::Center () const
 	{
 		return Vec2_t( (right + left) / T(2), (top + bottom) / T(2) );
 	}
@@ -514,6 +543,7 @@ namespace GXMath
 			if ( other.top    > top    )	other.top    = top;
 			return true;
 		}
+		other = Self();
 		return false;
 	}
 	
@@ -583,7 +613,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Vec<T,2,U>)  Rectangle<T,U>::Size () const
+	CHECKRES inline Vec<T,2,U>  Rectangle<T,U>::Size () const
 	{
 		return Vec2_t( right - left, top - bottom );
 	}
@@ -611,13 +641,26 @@ namespace GXMath
 */
 	template <typename T, ulong U>
 	template <typename B>
-	inline CHECKRES(const B)  Rectangle<T,U>::To () const
+	CHECKRES inline const B  Rectangle<T,U>::To () const
 	{
 		STATIC_ASSERT( typename B::_is_rect(true), "type is not Rectangle" );
 		using T2 = typename B::Value_t;
 		return B( T2(left), T2(bottom), T2(right), T2(top) );
 	}
-
+	
+/*
+=================================================
+	_CheckAlign
+=================================================
+*/
+	template <typename T, ulong U>
+	inline void Rectangle<T,U>::_CheckAlign ()
+	{
+		STATIC_ASSERT( offsetof(Self, left)  + sizeof(T) == offsetof(Self, top) );
+		STATIC_ASSERT( offsetof(Self, top)   + sizeof(T) == offsetof(Self, right) );
+		STATIC_ASSERT( offsetof(Self, right) + sizeof(T) == offsetof(Self, bottom) );
+		STATIC_ASSERT( sizeof(T[3]) == (offsetof(Self, bottom) - offsetof(Self, left)) );
+	}
 
 #	undef	RECT_OPERATOR
 
@@ -628,16 +671,11 @@ namespace GXTypes
 {
 	
 	template <typename T, ulong U>
-	struct Hash< GXMath::Rectangle<T,U> > :
-		private Hash< typename GXMath::Rectangle<T,U>::Vec4_t >
+	struct Hash< GXMath::Rectangle<T,U> >
 	{
-		typedef GXMath::Rectangle<T,U>							Key_t;
-		typedef Hash< typename GXMath::Rectangle<T,U>::Vec4_t >	Base_t;
-		typedef typename Base_t::Result_t						Result_t;
-
-		CHECKRES(Result_t)  operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const GXMath::Rectangle<T,U> &x) const noexcept
 		{
-			return Base_t::operator ()( x.ToVec4() );
+			return HashOf( x.ToVec4() );
 		}
 	};
 

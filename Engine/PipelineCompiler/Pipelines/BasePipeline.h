@@ -256,10 +256,10 @@ namespace PipelineCompiler
 			BinaryArray		glslBinary;
 			
 			BinaryArray		spirv;
-			BinaryArray		spirvSource;
+			BinaryArray		spirvAsm;
 			
 			BinaryArray		cl;
-			BinaryArray		clBinary;
+			BinaryArray		clAsm;
 
 			BinaryArray		cpp;
 

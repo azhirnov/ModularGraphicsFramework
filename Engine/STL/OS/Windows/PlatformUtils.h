@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "OSWindows.h"
+#include "Engine/STL/OS/Windows/OSWindows.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -15,7 +15,7 @@ namespace OS
 	// OS Utils
 	//
 
-	struct PlatformUtils
+	struct PlatformUtils final : public Noninstancable
 	{
 		static void OpenURL (StringCRef url);
 

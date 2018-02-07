@@ -3,7 +3,6 @@
 #include "GApp.h"
 #include "Pipelines/all_pipelines.h"
 #include "Engine/Profilers/Engine.Profilers.h"
-//#include "Engine/ImportExport/Engine.ImportExport.h"
 
 using Vertex1		= Graphics::DefVertices::Vertex2D;
 using Rectangle1	= Graphics::DefPrimitives::Rectangle< Vertex1 >;
@@ -24,7 +23,6 @@ GApp::GApp ()
 
 	Platforms::RegisterPlatforms();
 	Profilers::RegisterProfilers();
-	//ImportExport::RegisterImportExport();
 	Graphics::RegisterGraphics();
 }
 

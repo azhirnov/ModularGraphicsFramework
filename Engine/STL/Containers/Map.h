@@ -153,10 +153,6 @@ namespace _types_hidden_
 
 		const_pair_t &		Back ()				{ return (*this)[ LastIndex() ]; }
 		const_pair_t const&	Back ()		const	{ return (*this)[ LastIndex() ]; }
-
-
-		//const_pair_t *		ptr ()				{ return (const_pair_t *) _memory.ptr(); }
-		//const_pair_t const*	ptr ()		const	{ return (const_pair_t const *) _memory.ptr(); }
 		
 
 		bool			Empty ()		const	{ return _memory.Empty(); }
@@ -167,47 +163,55 @@ namespace _types_hidden_
 		
 		// if IsUnique == true
 		// if Map contains same value, then the old value will be replaced
-		usize Add (const Key_t &key, const Value_t &value)
+		iterator Add (const Key_t &key, const Value_t &value)
 		{
-			return _memory.AddOrReplace( RVREF( pair_t( key, value ) ) );
+			const usize	idx = _memory.AddOrReplace( RVREF( pair_t( key, value ) ) );
+			return &(*this)[ idx ];
 		}
 		
-		usize Add (Key_t &&key, Value_t &&value)
+		iterator Add (Key_t &&key, Value_t &&value)
 		{
-			return _memory.AddOrReplace( RVREF( pair_t( RVREF(key), RVREF(value) ) ) );
+			const usize	idx = _memory.AddOrReplace( RVREF( pair_t( RVREF(key), RVREF(value) ) ) );
+			return &(*this)[ idx ];
 		}
 
-		usize Add (const pair_t &value)
+		iterator Add (const pair_t &value)
 		{
-			return _memory.AddOrReplace( value );
+			const usize	idx = _memory.AddOrReplace( value );
+			return &(*this)[ idx ];
 		}
 
-		usize Add (pair_t &&value)
+		iterator Add (pair_t &&value)
 		{
-			return _memory.AddOrReplace( RVREF( value ) );
+			const usize	idx = _memory.AddOrReplace( RVREF( value ) );
+			return &(*this)[ idx ];
 		}
 		
 
 		// if IsUnique == true
 		// if Map contains same value, then the old value will remains
-		usize AddOrSkip (const Key_t &key, const Value_t &value)
+		iterator AddOrSkip (const Key_t &key, const Value_t &value)
 		{
-			return _memory.AddOrSkip( RVREF( pair_t( key, value ) ) );
+			const usize	idx = _memory.AddOrSkip( RVREF( pair_t( key, value ) ) );
+			return &(*this)[ idx ];
 		}
 		
-		usize AddOrSkip (Key_t &&key, Value_t &&value)
+		iterator AddOrSkip (Key_t &&key, Value_t &&value)
 		{
-			return _memory.AddOrSkip( RVREF( pair_t( RVREF(key), RVREF(value) ) ) );
+			const usize	idx = _memory.AddOrSkip( RVREF( pair_t( RVREF(key), RVREF(value) ) ) );
+			return &(*this)[ idx ];
 		}
 
-		usize AddOrSkip (const pair_t &value)
+		iterator AddOrSkip (const pair_t &value)
 		{
-			return _memory.AddOrSkip( value );
+			const usize	idx = _memory.AddOrSkip( value );
+			return &(*this)[ idx ];
 		}
 
-		usize AddOrSkip (pair_t &&value)
+		iterator AddOrSkip (pair_t &&value)
 		{
-			return _memory.AddOrSkip( RVREF( value ) );
+			const usize	idx = _memory.AddOrSkip( RVREF( value ) );
+			return &(*this)[ idx ];
 		}
 
 
@@ -238,21 +242,6 @@ namespace _types_hidden_
 		}
 
 
-		/*usize ChangeKey (const Key_t &key, usize idx)
-		{
-			const const_pair_t	tmp = (*this)[ idx ];
-
-			EraseByIndex( idx );
-
-			return Add( key, tmp.second );
-		}
-
-		usize ChangeKey (const Key_t &key, const_iterator iter)
-		{
-			return ChangeKey( key, GetIndex( iter ) );
-		}*/
-
-
 		bool FindIndex (const Key_t &key, OUT usize &idx) const
 		{
 			return FindFirstIndex( key, OUT idx );
@@ -272,7 +261,7 @@ namespace _types_hidden_
 		bool IsExist (const Key_t &key) const
 		{
 			usize idx = 0;
-			return FindIndex( key, idx );
+			return FindIndex( key, OUT idx );
 		}
 
 		
@@ -304,10 +293,10 @@ namespace _types_hidden_
 			usize	first;
 			usize	last;
 
-			if ( not FindFirstIndex( key, first ) )
+			if ( not FindFirstIndex( key, OUT first ) )
 				return false;
 			
-			FindLastIndex( first, last );
+			FindLastIndex( first, OUT last );
 
 			result = values_range_t( &(*this)[first], last - first + 1 );
 			return true;
@@ -318,32 +307,32 @@ namespace _types_hidden_
 			usize	first;
 			usize	last;
 
-			if ( not FindFirstIndex( key, first ) )
+			if ( not FindFirstIndex( key, OUT first ) )
 				return false;
 			
-			FindLastIndex( first, last );
+			FindLastIndex( first, OUT last );
 
 			result = const_values_range_t( &(*this)[first], last - first + 1 );
 			return true;
 		}
 
 
-		values_range_t  GetRange (usize first, usize last)
+		values_range_t  GetRange (const usize first, const usize last)
 		{
 			return const_values_range_t(*this).SubArray( first, last - first + 1 );
 		}
 
-		const_values_range_t  GetRange (usize first, usize last) const
+		const_values_range_t  GetRange (const usize first, const usize last) const
 		{
 			return const_values_range_t(*this).SubArray( first, last - first + 1 );
 		}
 
 
-		void EraseByIter (const_iterator iter)		{ return EraseByIndex( _memory.GetIndex( (pair_t *) iter.ptr() ) ); }
-		void EraseByIter (iterator iter)			{ return EraseByIndex( _memory.GetIndex( (pair_t *) iter.ptr() ) ); }
-
-		bool Erase (const Key_t &key)				{ return _memory.Erase( key ); }
+		void EraseByIter (const_iterator iter)		{ EraseByIndex( _memory.GetIndex( (pair_t const*) iter.RawPtr() ) ); }
+		void EraseByIter (iterator iter)			{ EraseByIndex( _memory.GetIndex( (pair_t const*) iter.RawPtr() ) ); }
 		void EraseByIndex (usize index)				{ _memory.EraseByIndex( index ); }
+		bool Erase (const Key_t &key)				{ return _memory.Erase( key ); }
+
 		void Free ()								{ _memory.Free(); }
 		void Clear ()								{ _memory.Clear(); }
 		void Resize (usize size)					{ _memory.Resize( size ); }
@@ -491,16 +480,11 @@ namespace _types_hidden_
 				typename S,
 				typename MC
 			 >
-	struct Hash< _types_hidden_::BaseMap< Container, K, T, IsUnique, S, MC > > :
-		private Hash< ArrayCRef< Pair<const K, T> > >
+	struct Hash< _types_hidden_::BaseMap< Container, K, T, IsUnique, S, MC > >
 	{
-		typedef _types_hidden_::BaseMap< Container, K, T, IsUnique, S, MC >		Key_t;
-		typedef ArrayCRef< Pair<const K, T> >									Base_t;
-		typedef typename Base_t::Result_t										Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		HashResult  operator () (const _types_hidden_::BaseMap< Container, K, T, IsUnique, S, MC > &x) const noexcept
 		{
-			return Base_t::operator ()( x );
+			return HashOf( ArrayCRef< Pair<const K, T> >( x ) );
 		}
 	};
 

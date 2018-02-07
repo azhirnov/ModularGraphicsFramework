@@ -2,10 +2,9 @@
 
 #pragma once
 
-#include "OSWindows.h"
+#include "Engine/STL/OS/Windows/OSWindows.h"
 
-#if defined( PLATFORM_WINDOWS ) and \
-	not defined( PLATFORM_SDL )
+#if defined( PLATFORM_WINDOWS ) and not defined( PLATFORM_SDL )
 
 namespace GX_STL
 {
@@ -18,7 +17,7 @@ namespace OS
 	// Library
 	//
 
-	struct _STL_EXPORT_ Library
+	struct _STL_EXPORT_ Library final : public Noncopyable
 	{
 	// types
 	public:
@@ -55,7 +54,7 @@ namespace OS
 		bool Unload ();
 
 		template <typename T>
-		bool GetProc (T &proc, StringCRef procName) const
+		bool GetProc (OUT T &proc, StringCRef procName) const
 		{
 			ASSERT( IsValid() );
 			ASSERT( not procName.Empty() );

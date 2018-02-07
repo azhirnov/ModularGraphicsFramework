@@ -16,19 +16,19 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, usize I>
-	constexpr forceinline usize  CountOf (const T (&)[I])
+	CHECKRES constexpr forceinline usize  CountOf (const T (&)[I])
 	{
 		return I;
 	}
 	
 	template <typename T, T First, T ...Values>
-	constexpr forceinline usize  CountOf ()
+	CHECKRES constexpr forceinline usize  CountOf ()
 	{
 		return sizeof...(Values) + 1;
 	}
 	
 	template <typename ...Types>
-	constexpr forceinline usize  CountOf ()
+	CHECKRES constexpr forceinline usize  CountOf ()
 	{
 		return sizeof...(Types);
 	}
@@ -56,16 +56,24 @@ namespace GXTypes
 		static constexpr bool	HasStdSizeMethod = CompileTime::SwitchType< not IsStaticArray<T>::value,
 														typename CompileTime::DeferredTemplate< Detect_size, T >,
 														typename CompileTime::TypeToType< CompileTime::ValueToType< bool, false >> >::type::value;
+
+		template <typename T>
+		using HasCountMethod_t		= CompileTime::SwitchType< HasCountMethod<T>, int, void >;
+		
+		template <typename T>
+		using HasStdSizeMethod_t	= CompileTime::SwitchType< HasStdSizeMethod<T>, int, void >;
+
 	}	// _types_hidden_
 
+
 	template <typename Arr>
-	constexpr forceinline usize CountOf (const Arr &arr, CompileTime::EnableIf< _types_hidden_::HasCountMethod<Arr>, int > = 0)
+	CHECKRES constexpr forceinline usize CountOf (const Arr &arr, _types_hidden_::HasCountMethod_t<Arr> = 0)
 	{
 		return arr.Count();
 	}
 
 	template <typename Arr>
-	constexpr forceinline usize CountOf (const Arr &arr, CompileTime::EnableIf< _types_hidden_::HasStdSizeMethod<Arr>, int > = 0)
+	CHECKRES constexpr forceinline usize CountOf (const Arr &arr, _types_hidden_::HasStdSizeMethod_t<Arr> = 0)
 	{
 		return arr.size();
 	}

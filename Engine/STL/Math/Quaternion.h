@@ -38,12 +38,13 @@ namespace GXMath
 	struct Quaternion : public CompileTime::CopyQualifiers< T >
 	{
 		// types
-		typedef Quaternion<T,U>		Self;
-		typedef T					Value_t;
-		typedef Vec<T,3,U>			Vec3_t;
-		typedef Matrix<T,3,3,U>		mat3_t;
-		typedef Matrix<T,4,4,U>		mat4_t;
-		typedef bool				_is_quaternion;
+		using Self				= Quaternion<T,U>;
+		using Value_t			= T;
+		using Vec3_t			= Vec<T,3,U>;
+		using mat3_t			= Matrix<T,3,3,U>;
+		using mat4_t			= Matrix<T,4,4,U>;
+		using Arr_t				= T[4];
+		using _is_quaternion	= bool;
 
 
 		// variables
@@ -85,8 +86,8 @@ namespace GXMath
 
 		
 		// methods
-		T		*	 ptr ()							{ return PointerCast< T >( this ); }
-		const T	*	 ptr () const					{ return PointerCast< T >( this ); }
+		T		*	 ptr ()							{ _CheckAlign();  return &x; }
+		const T	*	 ptr () const					{ _CheckAlign();  return &x; }
 
 		static usize Count ()						{ return 4; }
 
@@ -134,9 +135,13 @@ namespace GXMath
 		template <typename B>
 		const B	To () const;
 
-		Vec<T,4,U>	xyzw () const		{ return Vec<T,4,U>( x, y, z, w ); }
-		Vec<T,2,U>	xy ()	const		{ return Vec<T,2,U>( x, y ); }
-		Vec<T,3,U>	xyz ()	const		{ return Vec<T,3,U>( x, y, z ); }
+		CHECKRES Vec<T,4,U>	xyzw () const		{ return Vec<T,4,U>( x, y, z, w ); }
+		CHECKRES Vec<T,2,U>	xy ()	const		{ return Vec<T,2,U>( x, y ); }
+		CHECKRES Vec<T,3,U>	xyz ()	const		{ return Vec<T,3,U>( x, y, z ); }
+
+
+	private:
+		static void _CheckAlign ();
 	};
 
 	
@@ -144,7 +149,7 @@ namespace GXMath
 //--------------------------- Math Func ---------------------------//
 	
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  IsZero (const Quaternion<T,U>& val)
+	CHECKRES inline bool  IsZero (const Quaternion<T,U>& val)
 	{
 		return val.IsZero();
 	}
@@ -257,19 +262,14 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(T &)  Quaternion<T,U>::operator [] (usize index)
+	CHECKRES inline T &  Quaternion<T,U>::operator [] (usize index)
 	{
 		ASSUME( index < 4 );
 		return ptr()[index];
 	}
 	
-/*
-=================================================
-	operator []
-=================================================
-*/
 	template <typename T, ulong U>
-	inline CHECKRES(const T &)  Quaternion<T,U>::operator [] (usize index) const
+	CHECKRES inline const T &  Quaternion<T,U>::operator [] (usize index) const
 	{
 		ASSUME( index < 4 );
 		return ptr()[index];
@@ -281,7 +281,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Quaternion<T,U>::operator == (const Self &right) const
+	CHECKRES inline bool  Quaternion<T,U>::operator == (const Self &right) const
 	{
 		return ( Equals( x, right.x ) and Equals( y, right.y ) and
 				 Equals( z, right.z ) and Equals( w, right.w ) );
@@ -293,7 +293,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Quaternion<T,U>::operator != (const Self &right) const
+	CHECKRES inline bool  Quaternion<T,U>::operator != (const Self &right) const
 	{
 		return not ( *this == right );
 	}
@@ -304,7 +304,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Quaternion<T,U>::operator ! () const
+	CHECKRES inline bool  Quaternion<T,U>::operator ! () const
 	{
 		// TODO: WTF?
 		return not x and not y and not z and not w;
@@ -316,7 +316,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Quaternion<T,U>)  Quaternion<T,U>::operator * (const Self &right) const
+	CHECKRES inline Quaternion<T,U>  Quaternion<T,U>::operator * (const Self &right) const
 	{
 		return Self(*this) *= right;
 	}
@@ -327,7 +327,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Vec<T,3,U>)  Quaternion<T,U>::operator * (const Vec3_t &right) const
+	CHECKRES inline Vec<T,3,U>  Quaternion<T,U>::operator * (const Vec3_t &right) const
 	{
 		Vec3_t const	qvec(x, y, z);
 		Vec3_t const	uv  = Cross( qvec, right );
@@ -360,7 +360,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(T)  Quaternion<T,U>::Dot (const Self &right) const
+	CHECKRES inline T  Quaternion<T,U>::Dot (const Self &right) const
 	{
 		return (x * right.x) + (y * right.y) + (z * right.z) + (w * right.w);
 	}
@@ -409,7 +409,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(bool)  Quaternion<T,U>::IsZero () const
+	CHECKRES inline bool  Quaternion<T,U>::IsZero () const
 	{
 		return ( GXMath::IsZero(x) and GXMath::IsZero(y) and GXMath::IsZero(z) and GXMath::Equals( w, T(1) ) );
 	}
@@ -431,7 +431,7 @@ namespace GXMath
 	}
 
 	template <typename T, ulong U>
-	inline CHECKRES(Quaternion<T,U>)  Quaternion<T,U>::Normalized () const
+	CHECKRES inline Quaternion<T,U>  Quaternion<T,U>::Normalized () const
 	{
 		return Self(*this).Normalize();
 	}
@@ -442,7 +442,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Vec<T,3,U>)  Quaternion<T,U>::GetDirection () const
+	CHECKRES inline Vec<T,3,U>  Quaternion<T,U>::GetDirection () const
 	{
 		return Vec3_t(	T(2) * x * z + T(2) * y * w,
 						T(2) * z * y - T(2) * x * w,
@@ -464,13 +464,13 @@ namespace GXMath
 	}
 	
 	template <typename T, ulong U>
-	inline CHECKRES(Quaternion<T,U>)  Quaternion<T,U>::Inversed () const
+	CHECKRES inline Quaternion<T,U>  Quaternion<T,U>::Inversed () const
 	{
 		return Self( *this ).Inverse();
 	}
 
 	template <typename T, ulong U>
-	inline CHECKRES(Quaternion<T,U>)  Quaternion<T,U>::operator - () const
+	CHECKRES inline Quaternion<T,U>  Quaternion<T,U>::operator - () const
 	{
 		return Inversed();
 	}
@@ -481,7 +481,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline CHECKRES(Quaternion<T,U>)  Slerp (const Quaternion<T,U> &qx, const Quaternion<T,U> &qy, T factor)
+	CHECKRES inline Quaternion<T,U>  Slerp (const Quaternion<T,U> &qx, const Quaternion<T,U> &qy, T factor)
 	{
 		Quaternion<T,U>	qz			= qy;
 		T				cos_theta	= Dot( qx, qy );
@@ -710,7 +710,7 @@ namespace GXMath
 */
 	template <typename T, ulong U>
 	template <typename T2>
-	inline CHECKRES(const Quaternion<T2>)  Quaternion<T,U>::Convert () const
+	CHECKRES inline const Quaternion<T2>  Quaternion<T,U>::Convert () const
 	{
 		return Quaternion<T2>( (T2)x, (T2)y, (T2)z, (T2)w );
 	}
@@ -722,11 +722,25 @@ namespace GXMath
 */
 	template <typename T, ulong U>
 	template <typename B>
-	inline CHECKRES(const B)  Quaternion<T,U>::To () const
+	CHECKRES inline const B  Quaternion<T,U>::To () const
 	{
 		STATIC_ASSERT( B::_is_quaternion(true), "type is not quaternion" );
 
 		return Convert< B::Value_t >();
+	}
+	
+/*
+=================================================
+	_CheckAlign
+=================================================
+*/
+	template <typename T, ulong U>
+	inline void Quaternion<T,U>::_CheckAlign ()
+	{
+		STATIC_ASSERT( offsetof(Self, x) + sizeof(T) == offsetof(Self, y) );
+		STATIC_ASSERT( offsetof(Self, y) + sizeof(T) == offsetof(Self, z) );
+		STATIC_ASSERT( offsetof(Self, z) + sizeof(T) == offsetof(Self, w) );
+		STATIC_ASSERT( sizeof(T[3]) == (offsetof(Self, w) - offsetof(Self, x)) );
 	}
 
 
@@ -742,16 +756,11 @@ namespace GXTypes
 {
 	
 	template <typename T, ulong U>
-	struct Hash< GXMath::Quaternion<T,U> > :
-		private Hash< GXMath::Vec<T,4,U> >
+	struct Hash< GXMath::Quaternion<T,U> >
 	{
-		typedef GXMath::Quaternion<T,U>		Key_t;
-		typedef Hash< GXMath::Vec<T,4,U> >	Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		CHECKRES(Result_t)  operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const GXMath::Quaternion<T,U> &x) const noexcept
 		{
-			return Base_t::operator ()( x.xyzw() );
+			return HashOf( x.xyzw() );
 		}
 	};
 

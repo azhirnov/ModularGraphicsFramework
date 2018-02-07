@@ -177,7 +177,7 @@ namespace Runtime
 		_HasTypes_Func	func{ _types };
 
 		T::RuntimeForEach( func );
-		return func.and_result;
+		return func.and_result and func.counter > 0;
 	}
 	
 /*
@@ -191,7 +191,7 @@ namespace Runtime
 		_HasTypes_Func	func{ _types };
 
 		T::RuntimeForEach( func );
-		return func.or_result;
+		return func.counter > 0;
 	}
 
 /*

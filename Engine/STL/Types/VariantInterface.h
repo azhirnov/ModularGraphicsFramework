@@ -160,7 +160,7 @@ namespace GXTypes
 		}
 
 
-		TypeId		GetTypeId ()						const	{ return IsCreated() ? _Internal()->TypeIdOf() : TypeId(); }
+		TypeId			GetTypeId ()					const	{ return IsCreated() ? _Internal()->TypeIdOf() : TypeId(); }
 
 
 	private:

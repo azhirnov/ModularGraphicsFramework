@@ -235,14 +235,14 @@ namespace File
 		~ZipRFile ()	{ _Close(); }
 
 		
-		static ZipRFilePtr New ()
+		CHECKRES static ZipRFilePtr New ()
 		{
 			return new ZipRFile();
 		}
 
 
-		static ZipRFilePtr New (StringCRef archiveName, StringCRef fileInArchive,
-								StringCRef password = StringCRef())
+		CHECKRES static ZipRFilePtr New (StringCRef archiveName, StringCRef fileInArchive,
+										 StringCRef password = StringCRef())
 		{
 			ZipRFilePtr	zfile = new ZipRFile();
 
@@ -253,8 +253,8 @@ namespace File
 		}
 
 
-		static ZipRFilePtr New (const RFilePtr &file, StringCRef fileInArchive,
-								StringCRef password = StringCRef())
+		CHECKRES static ZipRFilePtr New (const RFilePtr &file, StringCRef fileInArchive,
+										 StringCRef password = StringCRef())
 		{
 			ZipRFilePtr	zfile = new ZipRFile();
 

@@ -84,7 +84,7 @@ namespace PlatformGL
 		CommandArray_t				_commands;
 		UsedResources_t				_resources;
 		ERecordingState				_recordingState;
-		ulong3						_maxWorkGroupCount;
+		//ulong3						_maxWorkGroupCount;
 
 		// states
 		PipelineStages_t			_pipelineStages;
@@ -1369,7 +1369,7 @@ namespace PlatformGL
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdDispatch >();
 		
-		CHECK_ERR( All( ulong3(data.groupCount) <= _maxWorkGroupCount ) );
+		//CHECK_ERR( All( ulong3(data.groupCount) <= _maxWorkGroupCount ) );
 
 		CHECK_ERR( _PrepareForCompute() );
 		GL_CALL( glDispatchCompute( data.groupCount.x, data.groupCount.y, data.groupCount.z ) );

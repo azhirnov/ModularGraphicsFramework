@@ -46,8 +46,6 @@ namespace GXTypes
 		
 		constexpr Bitfield (Self &&other) = default;
 		constexpr Bitfield (const Self &other) = default;
-
-		constexpr bool		Get (index_t i) const				{ ASSUME(i<B);  return !!( _bits & (T(1) << i) ); }
 		constexpr Self &	Set (index_t i)						{ ASSUME(i<B);  _bits |= (T(1) << i);  return *this; }
 		constexpr Self &	Reset (index_t i)					{ ASSUME(i<B);  _bits &= ~(T(1) << i);  return *this; }
 		constexpr Self &	SetAt (index_t i, bool bit)			{ ASSUME(i<B);  _bits &= ~(T(1) << i);  _bits |= (T(bit) << i);  return *this; }
@@ -58,33 +56,35 @@ namespace GXTypes
 
 		constexpr Self &	SetAll (bool bit = true)			{ _bits = bit ? _MAX_VALUE : T(0);  return *this; }
 
-		constexpr bool		IsZero ()	const					{ return _bits == 0; }
-		constexpr bool		IsNotZero () const					{ return _bits != 0; }
-		constexpr bool		Empty ()	const					{ return IsZero(); }
+		CHECKRES constexpr bool		Get (index_t i) const		{ ASSUME(i<B);  return !!( _bits & (T(1) << i) ); }
 
-		constexpr index_t	MinIndex () const					{ return (index_t) GXMath::BitScanForward( _bits ); }
-		constexpr index_t	MaxIndex () const					{ return (index_t) GXMath::BitScanReverse( _bits ); }
+		CHECKRES constexpr bool		IsZero ()	const			{ return _bits == 0; }
+		CHECKRES constexpr bool		IsNotZero () const			{ return _bits != 0; }
+		CHECKRES constexpr bool		Empty ()	const			{ return IsZero(); }
 
-		explicit constexpr operator uint () const				{ return Cast<uint>(_bits); }
-		explicit constexpr operator ulong () const				{ return Cast<usize>(_bits); }
+		CHECKRES constexpr index_t	MinIndex () const			{ return (index_t) GXMath::BitScanForward( _bits ); }
+		CHECKRES constexpr index_t	MaxIndex () const			{ return (index_t) GXMath::BitScanReverse( _bits ); }
 
-		static constexpr usize Count ()							{ return B; }
+		CHECKRES explicit constexpr operator uint () const		{ return Cast<uint>(_bits); }
+		CHECKRES explicit constexpr operator ulong () const		{ return Cast<usize>(_bits); }
 
-		constexpr Self	operator ~  ()	const					{ return Self( ~_bits ); }
+		CHECKRES static constexpr usize Count ()				{ return B; }
 
-		constexpr Self &	operator =  (Self &&right) = default;
-		constexpr Self &	operator =  (const Self &right) = default;
+		CHECKRES constexpr Self	operator ~  ()	const			{ return Self( ~_bits ); }
+
+		Self &	operator =  (Self &&right) = default;
+		Self &	operator =  (const Self &right) = default;
 		
 		// add bit
-				  Self &	operator |= (index_t i)				{ return Set( i ); }
-		constexpr Self		operator |  (index_t i) const		{ return Self(*this).Set( i ); }
+							Self &	operator |= (index_t i)			{ return Set( i ); }
+		CHECKRES constexpr	Self	operator |  (index_t i) const	{ return Self(*this).Set( i ); }
 		
 		// remove bit
-				  Self &	operator ^= (index_t i)				{ return Reset( i ); }
-		constexpr Self		operator ^  (index_t i) const		{ return Self(*this).Reset( i ); }
+							Self &	operator ^= (index_t i)			{ return Reset( i ); }
+		CHECKRES constexpr	Self	operator ^  (index_t i) const	{ return Self(*this).Reset( i ); }
 
-		constexpr bool 		operator [] (index_t i) const		{ return Get( i ); }
-				  BitRef	operator [] (index_t i)				{ ASSUME(i < B);  return BitRef( *this, i ); }
+		CHECKRES constexpr	bool 	operator [] (index_t i) const	{ return Get( i ); }
+		CHECKRES			BitRef	operator [] (index_t i)			{ ASSUME(i < B);  return BitRef( *this, i ); }
 		
 
 		_GX_DIM_CMP_OPERATORS_SELF( _bits );
@@ -105,19 +105,19 @@ namespace GXTypes
 			_bits &= ~GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
 		}
 
-		forceinline constexpr bool HasInterval (index_t first, index_t last) const
+		CHECKRES forceinline constexpr bool HasInterval (index_t first, index_t last) const
 		{
 			ASSUME( first <= last and last < B );
 			const T	mask = GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
 			return (_bits & mask) == mask;
 		}
 
-		forceinline constexpr bool HasAll () const
+		CHECKRES forceinline constexpr bool HasAll () const
 		{
 			return HasInterval( 0, B-1 );
 		}
 
-		forceinline constexpr bool BitsEq (const Self &right) const
+		CHECKRES forceinline constexpr bool BitsEq (const Self &right) const
 		{
 			// Compare only setted bits!
 			// Warning: not same result as right.BitsEq( *this )
@@ -125,7 +125,7 @@ namespace GXTypes
 			return (_bits & right._bits) == right._bits;
 		}
 
-		forceinline constexpr bool AnyBitEq (const Self &right) const
+		CHECKRES forceinline constexpr bool AnyBitEq (const Self &right) const
 		{
 			return (_bits & right._bits) != 0;
 		}
@@ -206,16 +206,11 @@ namespace GXTypes
 
 	
 	template <usize B, typename IT>
-	struct Hash < Bitfield< B, IT > > :
-		private Hash< typename Bitfield< B, IT >::Value_t >
+	struct Hash < Bitfield<B,IT> >
 	{
-		typedef Bitfield<B>						Key_t;
-		typedef Hash< typename Key_t::Value_t >	Base_t;
-		typedef typename Base_t::Result_t		Result_t;
-
-		Result_t operator () (const Key_t &x) const
+		CHECKRES HashResult  operator () (const Bitfield<B,IT> &x) const
 		{
-			return Base_t::operator ()( x );
+			return HashOf( T(x) );
 		}
 	};
 

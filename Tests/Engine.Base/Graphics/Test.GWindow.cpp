@@ -4,6 +4,8 @@
 	
 extern void Test_GWindow ()
 {
+	Logger::GetInstance()->Open( "log", false );
+
 	#ifdef GRAPHICS_API_OPENGL
 	{
 		GApp	app;
@@ -35,6 +37,4 @@ extern void Test_GWindow ()
 	}
 	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
 	#endif
-
-	//WARNING( "Vulkan Window test succeeded!" );
 }

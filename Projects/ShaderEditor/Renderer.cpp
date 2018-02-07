@@ -112,7 +112,7 @@ namespace ShaderEditor
 		ub_data.iCameraFrustum[3]	= float4(data.iCameraFrustumRay3);
 		ub_data.iCameraPos			= float4(data.iCameraPos);
 
-		builder->Send< GpuMsg::CmdUpdateBuffer >({ pass.ubuffer, ub_data });
+		builder->Send< GpuMsg::CmdUpdateBuffer >({ pass.ubuffer, BinArrayCRef::FromValue(ub_data) });
 		return true;
 	}
 

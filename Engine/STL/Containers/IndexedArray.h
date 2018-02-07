@@ -107,7 +107,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void IndexedArray<T,S,MC>::Resize (usize newSize, bool allowReserve)
+	inline void IndexedArray<T,S,MC>::Resize (const usize newSize, const bool allowReserve)
 	{
 		const usize	old_size = _array.Count();
 
@@ -125,7 +125,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void IndexedArray<T,S,MC>::Reserve (usize size)
+	inline void IndexedArray<T,S,MC>::Reserve (const usize size)
 	{
 		_array.Reserve( size );
 		_indices.Reserve( size );
@@ -156,7 +156,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void IndexedArray<T,S,MC>::Insert (const T& value, usize pos)
+	inline void IndexedArray<T,S,MC>::Insert (const T& value, const usize pos)
 	{
 		if ( pos < _indices.Count() )
 		{
@@ -170,7 +170,7 @@ namespace GXTypes
 	}
 	
 	template <typename T, typename S, typename MC>
-	inline void IndexedArray<T,S,MC>::Insert (T&& value, usize pos)
+	inline void IndexedArray<T,S,MC>::Insert (T&& value, const usize pos)
 	{
 		if ( pos < _indices.Count() )
 		{
@@ -216,16 +216,11 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	struct Hash< IndexedArray<T,S,MC> > :
-		private Hash< ArrayCRef<T> >
+	struct Hash< IndexedArray<T,S,MC> >
 	{
-		typedef IndexedArray<T,S,MC>		Key_t;
-		typedef Hash< ArrayCRef<T> >		Base_t;
-		typedef typename Base_t::Result_t	Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const IndexedArray<T,S,MC> &x) const noexcept
 		{
-			return Base_t::operator ()( x );
+			return HashOf( ArrayCRef<T>(x) );
 		}
 	};
 

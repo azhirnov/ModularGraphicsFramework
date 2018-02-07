@@ -17,7 +17,7 @@ namespace GXMath
 	
 	struct DefaultRandomEngine
 	{
-		CHECKRES(uint)	operator () ()	const	{ return uint(rand()); }
+		CHECKRES uint	operator () ()	const	{ return uint(rand()); }
 		uint			Max()			const	{ return RAND_MAX; }
 	};
 
@@ -38,7 +38,7 @@ namespace GXMath
 		PlatformRandomEngine () : _device( StringCRef() )
 		{}
 		
-		CHECKRES(uint)	operator () ()	const	{ uint result;  _device.Generate( result );  return result; }
+		CHECKRES uint	operator () ()	const	{ uint result;  _device.Generate( result );  return result; }
 		uint			Max()			const	{ return MaxValue< uint >(); }
 	};
 

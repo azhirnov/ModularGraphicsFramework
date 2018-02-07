@@ -138,13 +138,13 @@ namespace Base
 		ModulePtr GetModuleByID (UntypedID_t id);	// TODO: remove
 		ModulePtr GetModuleByName (StringCRef name);
 		
-		template <typename Typelist>				CHECKRES(ModulePtr) GetModuleByMsg ();
-		template <typename Typelist>				CHECKRES(ModulePtr) GetModuleByEvent ();
-		template <typename Msg, typename Events>	CHECKRES(ModulePtr) GetModuleByMsgEvent ();
+		template <typename Typelist>				CHECKRES ModulePtr  GetModuleByMsg ();
+		template <typename Typelist>				CHECKRES ModulePtr  GetModuleByEvent ();
+		template <typename Msg, typename Events>	CHECKRES ModulePtr  GetModuleByMsgEvent ();
 		
-		template <typename Typelist>				CHECKRES(ModulePtr) GetParentByMsg ();
-		template <typename Typelist>				CHECKRES(ModulePtr) GetParentByEvent ();
-		template <typename Msg, typename Events>	CHECKRES(ModulePtr) GetParentByMsgEvent ();
+		template <typename Typelist>				CHECKRES ModulePtr  GetParentByMsg ();
+		template <typename Typelist>				CHECKRES ModulePtr  GetParentByEvent ();
+		template <typename Msg, typename Events>	CHECKRES ModulePtr  GetParentByMsgEvent ();
 
 		TypeIdList const&	GetSupportedMessages ()		const	{ return _supportedMessages; }
 		TypeIdList const&	GetSupportedEvents ()		const	{ return _supportedEvents; }

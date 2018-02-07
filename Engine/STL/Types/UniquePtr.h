@@ -17,7 +17,7 @@ namespace GXTypes
 	template <typename T>
 	struct TUniquePtrStrategy
 	{
-		forceinline static void Delete(T *ptr)	{ delete ptr; }
+		forceinline static void Delete (T *ptr)		{ STATIC_ASSERT( sizeof(T) > 0 );  delete ptr; }
 	};
 
 
@@ -183,44 +183,45 @@ namespace GXTypes
 		}
 
 
-		forceinline void Reset()
+		//forceinline void Reset()
+		//{
+		//	_ptr = null;
+		//}
+
+		CHECKRES inline T* Release ()
 		{
+			T*	res = _ptr;
 			_ptr = null;
-		}
-		
-
-		forceinline bool operator == (const T *right) const
-		{
-			return _ptr == right;
+			return res;
 		}
 
 		
-		forceinline bool operator == (const Self &right) const
+		CHECKRES forceinline bool operator == (const Self &right) const
 		{
 			return _ptr == right._ptr;
 		}
 
 		
-		forceinline bool operator != (const T *right) const
+		CHECKRES forceinline bool operator != (const T *right) const
 		{
 			return _ptr != right;
 		}
 		
 
-		forceinline bool operator != (const Self &right) const
+		CHECKRES forceinline bool operator != (const Self &right) const
 		{
 			return _ptr != right._ptr;
 		}
 
 		
-		forceinline bool operator ! () const
+		CHECKRES forceinline bool operator ! () const
 		{
 			return _ptr != null;
 		}
 
 
 		template <typename T2>
-		forceinline static Self CreateCopy (const T2& value)
+		CHECKRES forceinline static Self CreateCopy (const T2& value)
 		{
 			return Self( new T( value ) );
 		}
@@ -234,22 +235,17 @@ namespace GXTypes
 
 	
 	template <typename T, typename B, typename S>
-	struct Hash< UniquePtr< T, B, S > > :
-		private Hash< typename UniquePtr<T,B,S>::Value_t const * >
+	struct Hash< UniquePtr< T, B, S > >
 	{
-		typedef UniquePtr< T, B, S >						Key_t;
-		typedef Hash< typename Key_t::Value_t const * >		Base_t;
-		typedef typename Base_t::Result_t					Result_t;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		CHECKRES HashResult  operator () (const UniquePtr< T, B, S > &x) const noexcept
 		{
-			return Base_t::operator ()( x.ptr() );
+			return HashOf( Cast<T const *>( x.ptr() ) );
 		}
 	};
 	
 
 	template <typename T, typename ...Args>
-	inline UniquePtr<T>  MakeUnique (Args&& ...args)
+	CHECKRES forceinline UniquePtr<T>  MakeUnique (Args&& ...args)
 	{
 		return UniquePtr<T>(new T( FW<Args>(args)... ));
 	}

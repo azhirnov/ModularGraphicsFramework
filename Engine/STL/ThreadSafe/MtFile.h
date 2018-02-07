@@ -28,7 +28,7 @@ namespace File
 		{}
 
 
-		static SharedPointerType< MtRFile >  New (const RFilePtr &file)
+		CHECKRES static SharedPointerType< MtRFile >  New (const RFilePtr &file)
 		{
 			ASSERT( file->GetType() != EFile::Multithreaded );
 			return new MtRFile( file );
@@ -143,7 +143,7 @@ namespace File
 		{}
 
 
-		static SharedPointerType< MtWFile >  New (const WFilePtr &file)
+		CHECKRES static SharedPointerType< MtWFile >  New (const WFilePtr &file)
 		{
 			ASSERT( file->GetType() != EFile::Multithreaded );
 			return new MtWFile( file );

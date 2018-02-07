@@ -21,7 +21,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Vec<T,3>)  CartesianToSpherical (const Vec<T,3> &cartesian)
+	CHECKRES inline Vec<T,3>  CartesianToSpherical (const Vec<T,3> &cartesian)
 	{
 		CompileTime::MustBeFloat<T>();
 
@@ -48,7 +48,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Vec<T,3>)  SphericalToCartesian (const Vec<T,3> &spherical)
+	CHECKRES inline Vec<T,3>  SphericalToCartesian (const Vec<T,3> &spherical)
 	{
 		CompileTime::MustBeFloat<T>();
 
@@ -76,7 +76,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Vec<T,3>)  SphericalToCilindrical (const Vec<T,3> &spherical)
+	CHECKRES inline Vec<T,3>  SphericalToCilindrical (const Vec<T,3> &spherical)
 	{
 		CompileTime::MustBeFloat<T>();
 
@@ -103,7 +103,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Vec<T,3>)  CilindricalToSpherical (const Vec<T,3> &cilindrical)
+	CHECKRES inline Vec<T,3>  CilindricalToSpherical (const Vec<T,3> &cilindrical)
 	{
 		CompileTime::MustBeFloat<T>();
 
@@ -128,7 +128,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Vec<T,3>)  CartesianToCilindrical (const Vec<T,3> &cartesian)
+	CHECKRES inline Vec<T,3>  CartesianToCilindrical (const Vec<T,3> &cartesian)
 	{
 		CompileTime::MustBeFloat<T>();
 
@@ -153,7 +153,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline CHECKRES(Vec<T,3>)  CilindricalToCartesian (const Vec<T,3> &cilindrical)
+	CHECKRES inline Vec<T,3>  CilindricalToCartesian (const Vec<T,3> &cilindrical)
 	{
 		CompileTime::MustBeFloat<T>();
 

@@ -96,7 +96,7 @@
 
 // Java
 #if defined( PLATFORM_ANDROID )
-#	define GX_JNI_ENABLED
+//#	define GX_JNI_ENABLED
 #endif
 
 //-------------------------------------------------------------------

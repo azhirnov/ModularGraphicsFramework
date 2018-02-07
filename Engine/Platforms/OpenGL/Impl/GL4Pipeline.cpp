@@ -263,6 +263,34 @@ namespace PlatformGL
 	
 /*
 =================================================
+	ValidateGLPipeline
+=================================================
+*/
+	static bool ValidateGLPipeline (GLuint pipelineId)
+	{
+		GL_CALL( glValidateProgramPipeline( pipelineId ) );
+
+		GLint	status = 0;
+		GL_CALL( glGetProgramPipelineiv( pipelineId, GL_VALIDATE_STATUS, &status ) );
+
+		const bool	valid = !!status;
+
+		if ( not valid )
+		{
+			GLint	log_len = 0;
+			GL_CALL( glGetProgramPipelineiv( pipelineId, GL_INFO_LOG_LENGTH, &log_len ) );
+
+			String	log;	log.Reserve( log_len + 64 );
+
+			GL_CALL( glGetProgramPipelineInfoLog( pipelineId, log_len, &log_len, log.ptr() ) );
+
+			LOG( ("OpenGL pipeline compilation failed: "_str << log).cstr(), ELog::Warning );
+		}
+		return valid;
+	}
+
+/*
+=================================================
 	_CreatePipeline
 =================================================
 */
@@ -303,26 +331,7 @@ namespace PlatformGL
 
 
 		// validate pipeline
-		GL_CALL( glValidateProgramPipeline( _pipelineId ) );
-
-		GLint	status = 0;
-		GL_CALL( glGetProgramPipelineiv( _pipelineId, GL_VALIDATE_STATUS, &status ) );
-
-		const bool	valid = !!status;
-
-		if ( not valid )
-		{
-			GLint	log_len = 0;
-			GL_CALL( glGetProgramPipelineiv( _pipelineId, GL_INFO_LOG_LENGTH, &log_len ) );
-
-			String	log;	log.Reserve( log_len + 64 );
-
-			GL_CALL( glGetProgramPipelineInfoLog( _pipelineId, log_len, &log_len, log.ptr() ) );
-
-			LOG( ("OpenGL pipeline compilation failed: "_str << log).cstr(), ELog::Warning );
-		}
-
-		CHECK_ERR( valid );
+		CHECK_ERR( ValidateGLPipeline( _pipelineId ) );
 		CHECK_ERR( _CreateVertexArray() );
 
 		GetDevice()->SetObjectName( _pipelineId, GetDebugName(), EGpuObject::Pipeline );
@@ -589,7 +598,25 @@ namespace PlatformGL
 */
 	bool GL4ComputePipeline::_CreatePipeline ()
 	{
-		TODO( "" );
+		CHECK_ERR( not _IsCreated() );
+
+		// get shader modules
+		Message< GpuMsg::GetGLShaderModuleIDs >		req_shader_ids;
+		SendTo( _shaders, req_shader_ids );
+		CHECK_ERR( req_shader_ids->result and not req_shader_ids->result->Empty() );
+
+		GL_CALL( glGenProgramPipelines( 1, &_pipelineId ) );
+		CHECK_ERR( _pipelineId != 0 );
+
+		FOR( i, *req_shader_ids->result )
+		{
+			const auto&	sh = (*req_shader_ids->result)[i];
+
+			GL_CALL( glUseProgramStages( _pipelineId, GL4Enum(EShader::bits().Set( sh.type )), sh.id ) );
+		}
+
+		// validate pipeline
+		CHECK_ERR( ValidateGLPipeline( _pipelineId ) );
 
 		GetDevice()->SetObjectName( _pipelineId, GetDebugName(), EGpuObject::Pipeline );
 		return true;

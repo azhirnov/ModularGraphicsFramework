@@ -207,6 +207,11 @@ namespace GXMath
 		};
 
 		template <typename Dims>
+		struct Equal {
+			static const bool	value = DimensionsTypeList::template Equal< Dims::DimensionsTypeList_t >;
+		};
+
+		template <typename Dims>
 		struct Add2 {
 			//STATIC_ASSERT( typename Dims::_is_physics_dimensions_list(true) );
 			STATIC_ASSERT( Self::template Equal< Dims >::value );
@@ -246,11 +251,6 @@ namespace GXMath
 			typedef typename DimensionsTypeList::template Get< Index >	type;
 		};
 
-		template <typename Dims>
-		struct Equal {
-			static const bool	value = DimensionsTypeList::template Equal< Dims::DimensionsTypeList_t >;
-		};
-
 		struct IsNonDimensional {
 			static const bool	value = DimensionsTypeList::template ForEach< _IsNonDimFunc, CompileTime::ValueToType<bool,true> >::value;
 		};
@@ -258,7 +258,7 @@ namespace GXMath
 
 	// methods
 	public:
-		static String ToString (StringCRef divider = "\n")
+		CHECKRES static String ToString (StringCRef divider = "\n")
 		{
 			_ToStringFunc	func( divider );
 

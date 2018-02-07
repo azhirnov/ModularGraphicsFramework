@@ -1,12 +1,12 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "AtomicOp.h"
+#include "Engine/STL/OS/Windows/AtomicOp.h"
 #include "Engine/STL/Math/BinaryMath.h"
 #include "Engine/STL/Math/Interpolations.h"
 
 #if defined( PLATFORM_WINDOWS ) and not defined( GX_USE_STD )
 
-#include "WinHeader.h"
+#include "Engine/STL/OS/Windows/WinHeader.h"
 
 #ifdef COMPILER_GCC
 # include <winbase.h>
