@@ -28,6 +28,4 @@ Supported compilers:
 - MinGW (tested with 7.2.0)
 
 Dependencies:
-- LunarGLASS and other https://github.com/azhirnov/ModularGraphicsFramework-Externals
-- SDL2 (optional) https://www.libsdl.org/download-2.0.php
-- glm (optional, required for Software renderer only) https://glm.g-truc.net/0.9.8/index.html
+- LunarGLASS, SDL2, GLM and other https://github.com/azhirnov/ModularGraphicsFramework-Externals
