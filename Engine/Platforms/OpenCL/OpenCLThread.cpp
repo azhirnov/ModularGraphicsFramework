@@ -5,7 +5,7 @@
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
@@ -27,6 +27,8 @@ namespace Platforms
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
+											GpuMsg::GetGraphicsModules,
+											GpuMsg::GetComputeSettings,
 											GpuMsg::SubmitComputeQueueCommands,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetCLDeviceInfo,
@@ -68,6 +70,9 @@ namespace Platforms
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+
+		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
+		bool _GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &);
 		bool _SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &);
 		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
 		bool _GetCLDeviceInfo (const Message< GpuMsg::GetCLDeviceInfo > &);
@@ -108,6 +113,8 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenCLThread::_Link );
 		_SubscribeOnMsg( this, &OpenCLThread::_Compose );
 		_SubscribeOnMsg( this, &OpenCLThread::_Delete );
+		_SubscribeOnMsg( this, &OpenCLThread::_GetGraphicsModules );
+		_SubscribeOnMsg( this, &OpenCLThread::_GetComputeSettings );
 		_SubscribeOnMsg( this, &OpenCLThread::_SubmitComputeQueueCommands );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetCLDeviceInfo );
@@ -207,6 +214,28 @@ namespace Platforms
 		return true;
 	}
 	
+/*
+=================================================
+	_GetGraphicsModules
+=================================================
+*/
+	bool OpenCLThread::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	{
+		msg->compute.Set( OpenCLObjectsConstructor::GetComputeModules() );
+		return true;
+	}
+	
+/*
+=================================================
+	_GetComputeSettings
+=================================================
+*/
+	bool OpenCLThread::_GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &msg)
+	{
+		msg->result.Set( _settings );
+		return true;
+	}
+
 /*
 =================================================
 	_SubmitComputeQueueCommands

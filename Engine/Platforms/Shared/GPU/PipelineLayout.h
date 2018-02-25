@@ -85,12 +85,12 @@ namespace Platforms
 		};
 
 
-		struct UniformBuffer final : BaseUniform
+		struct UniformBuffer : BaseUniform
 		{
 		// variables
 			// TODO: buffer typename
 
-			BytesUL					size;
+			BytesU					size;
 
 		// methods
 			bool operator == (const UniformBuffer &right) const;
@@ -116,14 +116,14 @@ namespace Platforms
 		};
 
 
-		// vulkan only
-		struct PushConstant final
+		struct PushConstant final : CompileTime::CopyQualifiers< Name_t >
 		{
 		// variables
 			Name_t					name;
 			EShader::bits			stageFlags;
 			BytesU					offset;
 			BytesU					size;
+			// TODO: type info
 
 		// methods
 			bool operator == (const PushConstant &right) const;
@@ -132,21 +132,12 @@ namespace Platforms
 		};
 
 
-		// opengl and opencl only
-		struct Uniform final : BaseUniform
-		{
-		// variables
-			EVertexAttribute::type	valueType	= EVertexAttribute::Unknown;	// TODO: matrix support
-			uint					arraySize	= 1;
-
-		// methods
-			bool operator == (const Uniform &right) const;
-			bool operator >  (const Uniform &right) const;
-			bool operator <  (const Uniform &right) const;
-		};
+		// push constants emulation for OpenGL, OpenCL, DirectX 11
+		struct PushConstantsBuffer final : UniformBuffer
+		{};
 
 
-		using Uniform_t		= Union< TextureUniform, SamplerUniform, ImageUniform, Uniform,
+		using Uniform_t		= Union< TextureUniform, SamplerUniform, ImageUniform, PushConstantsBuffer,
 									 UniformBuffer, StorageBuffer, PushConstant, SubpassInput >;
 		using Uniforms_t	= Array< Uniform_t >;
 
@@ -201,6 +192,7 @@ namespace Platforms
 									uint binding, uint uniqueIndex, EShader::bits stageFlags);
 
 		Builder& AddPushConstant (StringCRef name, BytesU offset, BytesU size, EShader::bits stageFlags);
+		Builder& AddPushConstantsBuffer (StringCRef name, BytesU size, uint binding, uint uniqueIndex, EShader::bits stageFlags);
 		
 		ArrayCRef<Uniform_t>	GetUniforms ()	const	{ return _descr.GetUniforms(); }
 

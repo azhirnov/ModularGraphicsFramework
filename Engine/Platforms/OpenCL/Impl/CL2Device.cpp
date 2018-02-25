@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/OpenCL/Impl/CL2Device.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 # if defined( PLATFORM_WINDOWS )
 #	include "Engine/STL/OS/Windows/WinHeader.h"

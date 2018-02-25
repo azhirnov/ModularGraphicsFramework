@@ -117,7 +117,7 @@ namespace CompileTime
 
 		template <typename T>
 		struct _EnableIf <false, T> {
-			//using type	= void;
+			using type	= void;
 		};
 	}
 
@@ -125,7 +125,7 @@ namespace CompileTime
 	using EnableIf = typename _ctime_hidden_::_EnableIf< Condition, T >::type;
 
 	template <bool Condition, typename T = void>
-	using DisableIf = typename _ctime_hidden_::_EnableIf< not Condition, T >::type;
+	using DisableIf = EnableIf< not Condition, T >;
 
 	
 

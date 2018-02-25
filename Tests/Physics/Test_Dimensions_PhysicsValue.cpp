@@ -1,13 +1,10 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Tests/STL/Common.h"
+#include "Tests/Physics/Common.h"
 
-using namespace GX_STL;
-using namespace GX_STL::GXTypes;
-using namespace GX_STL::GXMath;
+using namespace GXPhysics;
 
 
-#ifdef GX_PHYSICS_DIMENSIONS_ENABLED
 static void TestPhysicsValue ()
 {
 	typedef DefaultPhysicsValues< float >::Seconds					Sec;
@@ -48,7 +45,7 @@ static void TestPhysicsValue ()
 
 	float	f = length / length;
 
-	length.To< MM >();
+	MM		len_mm = length.To< MM >();
 
 	Vel3	v3 = MM3( M3( M(1.0f), M(2.0f), M(3.0f) ) ) / Sec( 0.5f );
 
@@ -56,7 +53,7 @@ static void TestPhysicsValue ()
 
 	auto m = M1( M(1.0f) ).Volume();
 
-	GX_UNUSED( f, m );
+	GX_UNUSED( f, m, len_mm );
 	
 	/*WARNING( m.ToDebugString().cstr() );
 
@@ -71,18 +68,11 @@ static void TestPhysicsValue ()
 	WARNING( n.ToDebugString().cstr() );*/
 }
 
-#else
-
-static void TestPhysicsValue ()
-{
-}
-#endif	// GX_PHYSICS_DIMENSIONS_ENABLED
-
 
 extern void Test_Dimensions_PhysicsValue ()
 {
-	STATIC_ASSERT( sizeof(Bytes<uint>) == sizeof(uint) );
-	STATIC_ASSERT( sizeof(Bits<uint>) == sizeof(uint) );
+	//STATIC_ASSERT( sizeof(Bytes<uint>) == sizeof(uint) );
+	//STATIC_ASSERT( sizeof(Bits<uint>) == sizeof(uint) );
 
 	TestPhysicsValue();
 }

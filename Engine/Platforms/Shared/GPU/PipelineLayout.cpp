@@ -338,7 +338,7 @@ namespace Platforms
 =================================================
 	Uniform::operator <
 =================================================
-*/
+*
 	bool PipelineLayoutDescriptor::Uniform::operator == (const Uniform &right) const
 	{
 		return	stageFlags		== right.stageFlags		and
@@ -353,7 +353,7 @@ namespace Platforms
 =================================================
 	Uniform::operator <
 =================================================
-*/
+*
 	bool PipelineLayoutDescriptor::Uniform::operator >  (const Uniform &right) const
 	{
 		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
@@ -368,7 +368,7 @@ namespace Platforms
 =================================================
 	Uniform::operator <
 =================================================
-*/
+*
 	bool PipelineLayoutDescriptor::Uniform::operator <  (const Uniform &right) const
 	{
 		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
@@ -438,7 +438,7 @@ namespace Platforms
 	{
 		UniformBuffer	buf;
 		buf.name			= name;
-		buf.size			= BytesUL(size);
+		buf.size			= size;
 		buf.binding			= binding;
 		buf.uniqueIndex		= uniqueIndex;
 		buf.stageFlags		= stageFlags;
@@ -490,7 +490,27 @@ namespace Platforms
 		_changed = true;
 		return *this;
 	}
-		
+	
+/*
+=================================================
+	AddPushConstantsBuffer
+=================================================
+*/
+	PipelineLayoutDescriptor::Builder&
+		PipelineLayoutDescriptor::Builder::AddPushConstantsBuffer (StringCRef name, BytesU size, uint binding, uint uniqueIndex, EShader::bits stageFlags)
+	{
+		PushConstantsBuffer	pcb;
+		pcb.name		= name;
+		pcb.binding		= binding;
+		pcb.uniqueIndex	= uniqueIndex;
+		pcb.size		= size;
+		pcb.stageFlags	= stageFlags;
+
+		_descr._uniforms.PushBack(Uniform_t( RVREF(pcb) ));
+		_changed = true;
+		return *this;
+	}
+
 /*
 =================================================
 	Finish

@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Graphics/Impl/GraphicsBaseModule.h"
+#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
 
 namespace Engine
 {
@@ -53,10 +54,7 @@ namespace Graphics
 */
 	ModulePtr GraphicsBaseModule::_GetGpuThread (const ModulePtr &gpuThread) const
 	{
-		using GThreadMsgList_t		= CompileTime::TypeListFrom< Message<GpuMsg::ThreadBeginFrame>, Message<GpuMsg::ThreadEndFrame>, Message<GpuMsg::GetDeviceInfo> >;
-		using GThreadEventList_t	= CompileTime::TypeListFrom< Message<GpuMsg::DeviceCreated>, Message<GpuMsg::DeviceBeforeDestroy> >;
-
-		return gpuThread ? gpuThread : GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >();
+		return gpuThread ? gpuThread : PlatformTools::GPUThreadHelper::FindGraphicsThread( GlobalSystems() );
 	}
 
 }	// Graphics

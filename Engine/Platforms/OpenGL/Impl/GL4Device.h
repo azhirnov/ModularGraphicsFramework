@@ -5,7 +5,7 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4Emulator.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {
@@ -43,6 +43,8 @@ namespace PlatformGL
 		bool						_frameStarted;
 
 		const bool					_vulkanCompatibility;	// if 'true' then opengl will be emulate vulkan bahavior
+
+		mutable uint				_debugReportCounter;
 
 
 	// methods

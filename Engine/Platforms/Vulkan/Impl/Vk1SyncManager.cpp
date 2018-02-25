@@ -4,7 +4,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -80,7 +80,6 @@ namespace PlatformVK
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &);
 

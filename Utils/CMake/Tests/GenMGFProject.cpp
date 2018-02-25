@@ -11,6 +11,7 @@ using namespace CMake;
 #define ENABLE_PROJECTS
 //#define ENABLE_LUNARGLASS
 //#define ENABLE_EXTERNALS
+//#define ENABLE_SDL			// use SDL2 instead of WinAPI and other OS functions
 
 //#define ENABLE_SCU			// single compilation unit per thread
 #define NUM_THREADS	8
@@ -45,7 +46,7 @@ extern void GenMGFProject ()
 												VS::InconsistentDllLinkage, VS::ClassNeedsDllInterface };
 			Set<uint>	enabled_warnings	= { VS::InitOrder, VS::UnknownMacro, VS::UnsafeFunctionorVariable, VS::ConditionalExprIsConstant, VS::ReintCastBetwenRelatedClasses };
 			Set<uint>	disabled_warnings	= { VS::DecoratedNameWasTruncated, VS::CastTruncatesConstantValue, VS::UnusedInlineFunction,
-												VS::ConversionSignedUnsignedMismatch };
+												VS::ConversionSignedUnsignedMismatch, VS::ReservedLiteralSuffix };
 
 			errors.AddArray( VS::ReturnType );
 			errors.AddArray( VS::MemberNoOverride );
@@ -113,8 +114,8 @@ extern void GenMGFProject ()
 			{
 				// remove some compiler warnings
 				FOR( i, shared_cxx_flags ) {
-					usize pos;
-					if ( shared_cxx_flags[i].Find( "4100 ", pos ) ) {
+					usize pos = UMax;
+					if ( shared_cxx_flags[i].Find( "4100 ", OUT pos ) ) {
 						usize j = pos;
 						for (; j < shared_cxx_flags[i].Length() and shared_cxx_flags[i][j] != '/'; --j) {} // move to linker option start
 						shared_cxx_flags[i].Erase( j, pos + 4 - j );
@@ -140,16 +141,16 @@ extern void GenMGFProject ()
 			//shared_cxx_flags.Append({ GCC::Shadow, });
 
 			shared_cxx_flags.Append({ /*GCC::Pedantic,*/ GCC::CharSubscripts, GCC::DoublePromotion, GCC::Format, GCC::Main, GCC::MissingBraces, GCC::MissingIncludeDirs,
-									  GCC::Unused, GCC::Uninititalized, GCC::MayBeUninitialized, GCC::UnknownPragmas, GCC::Pragmas, GCC::StrictAliasing, GCC::StrictOverflow,
-									  GCC::Undef, GCC::EndifLabels, GCC::FreeNonheapObject, GCC::PointerArith, GCC::CastQual, GCC::CastAlign, GCC::WriteStrings,
-									  /*GCC::Conversion,*/ GCC::ConversionNull, GCC::ZeroAsNullConst, GCC::EnumCompare, GCC::SignCompare, /*GCC::SignConvertsion,*/ GCC::SizeofPointerMemaccess,
-									  GCC::LogicalOp });
+									  GCC::Uninititalized, GCC::MayBeUninitialized, GCC::UnknownPragmas, GCC::Pragmas, GCC::StrictAliasing, GCC::StrictOverflow,
+									  GCC::Undef, GCC::EndifLabels, GCC::FreeNonheapObject, GCC::PointerArith, GCC::CastAlign, GCC::WriteStrings,
+									  /*GCC::Conversion,*/ GCC::ConversionNull, /*GCC::ZeroAsNullConst,*/ GCC::EnumCompare, GCC::SignCompare, /*GCC::SignConvertsion,*/
+									  GCC::SizeofPointerMemaccess, /*GCC::SizeofPointerDiv,*/ GCC::LogicalOp });
 			
 			shared_cxx_flags.PushBack( GCC::WarningsToErrors({ GCC::InitSelf, GCC::Parentheses, GCC::ReturnLocalAddr, GCC::ReturnType, GCC::NonTemplateFriend,
 															   GCC::ArrayBounds, GCC::DivByZero, GCC::Address, GCC::MissingFieldInit, /*GCC::AlignedNew,*/
-															   GCC::PlacementNew }) );
+															   GCC::PlacementNew, GCC::SignCompare, GCC::CastQual }) );
 
-			shared_cxx_flags.PushBack( GCC::DisableWarnings({ GCC::NonTemplateFriend }) );
+			shared_cxx_flags.PushBack( GCC::DisableWarnings({ GCC::Unused, GCC::NonTemplateFriend, GCC::LiteralSuffix, GCC::ZeroAsNullConst }) );
 
 
 			auto	debug_cfg = gcc->AddConfiguration( "Debug" );
@@ -247,7 +248,10 @@ extern void GenMGFProject ()
 		{
 			engine_stl->AddFoldersRecursive( "" );
 			engine_stl->LinkLibrary( engine_config );
-			//engine_stl->LinkLibrary( "SDL2-static" );
+			
+			#ifdef ENABLE_SDL
+			engine_stl->AddDefinition( "PLATFORM_SDL" )->LinkLibrary( "SDL2-static" );
+			#endif
 		}
 		
 		auto	test_stl = builder.AddExecutable( "Tests.STL", "Tests/STL" );
@@ -311,6 +315,13 @@ extern void GenMGFProject ()
 			test_engine_graphics->LinkLibrary( engine_graphics )->LinkLibrary( engine_profilers );
 		}
 		
+
+		auto	test_engine_gapi = builder.AddExecutable( "Tests.Engine.Platforms.GAPI", "Tests/Engine.Platforms.GAPI" );
+		{
+			test_engine_gapi->AddFoldersRecursive( "" );
+			test_engine_gapi->LinkLibrary( engine_platforms );
+		}
+
 		#ifdef ENABLE_SCU
 			builder.AddExecutable( "Tests.Engine.STL.Fast" )->ProjFolder("Fast")->LinkLibrary( test_stl )->MergeCPP( NUM_THREADS );
 			builder.AddExecutable( "Tests.Engine.Base.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_base )->MergeCPP( NUM_THREADS );
@@ -320,10 +331,12 @@ extern void GenMGFProject ()
 
 
 		// External //
+	#ifdef ENABLE_SDL
+		builder.AddExternal( "External/SDL2" );
+	#endif
+
 #ifdef ENABLE_EXTERNALS
 		//builder.SearchVSProjects( "External/FreeImage", "External/FreeImage" );
-
-		//builder.AddExternal( "External/SDL2" );
 
 	#ifdef ENABLE_LUNARGLASS
 		builder.SearchVSProjects( "build_LunarGLASS", "External/LunarGLASS" );

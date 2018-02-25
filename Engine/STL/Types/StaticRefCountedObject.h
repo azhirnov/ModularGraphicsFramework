@@ -47,8 +47,7 @@ namespace GXTypes
 		}
 		
 
-		explicit
-		StaticRefCountedObject (const Self &other) :
+		explicit StaticRefCountedObject (const Self &other) :
 			Base_t(other),
 			_isDynamicObj(true)
 		{
@@ -56,7 +55,7 @@ namespace GXTypes
 		}
 
 
-		StaticRefCountedObject (Self &&other) :
+		explicit StaticRefCountedObject (Self &&other) :
 			Base_t( other ),
 			_isDynamicObj(true)
 		{
@@ -66,13 +65,19 @@ namespace GXTypes
 
 		~StaticRefCountedObject () override
 		{
-			ASSERT( (Strategy_t::Count( this ) != 0) == not _isDynamicObj );
-
 			if ( not _isDynamicObj )
 			{
+				ASSERT( Strategy_t::Count( this ) == 1 );
+
 				// free weak pointer
 				WeakStrategy_t::Counter_t cnt{ WeakStrategy_t::Create( this ) };
+
+				_GetCounter().Dec();
 				WeakStrategy_t::DecRef( cnt );
+			}
+			else
+			{
+				ASSERT( Strategy_t::Count( this ) == 0 );
 			}
 		}
 
@@ -110,12 +115,10 @@ namespace GXTypes
 			if ( not _isDynamicObj )
 			{
 				Strategy_t::IncRef( this );
-				//_DebugRemoveRef();
 			}
 			else
 			{
 				Strategy_t::DecRef( this );
-				//_DebugAddRef();
 			}
 		}
 

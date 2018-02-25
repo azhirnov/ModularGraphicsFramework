@@ -30,7 +30,6 @@ namespace Platforms
 	static constexpr OModID::type  VkPipelineResourceTableModuleID	= "vk.restable"_OModID;
 	static constexpr OModID::type  VkRenderPassModuleID				= "vk.renpass"_OModID;
 	static constexpr OModID::type  VkSamplerModuleID				= "vk.sampler"_OModID;
-	static constexpr OModID::type  VkUniformsModuleID				= "vk.uniforms"_OModID;	// push constants
 	static constexpr OModID::type  VkSyncManagerModuleID			= "vk.sync"_OModID;
 	
 	// OpenGL
@@ -47,7 +46,6 @@ namespace Platforms
 	static constexpr OModID::type  GLPipelineResourceTableModuleID	= "gl.restable"_OModID;
 	static constexpr OModID::type  GLRenderPassModuleID				= "gl.renpass"_OModID;
 	static constexpr OModID::type  GLSamplerModuleID				= "gl.sampler"_OModID;
-	static constexpr OModID::type  GLUniformsModuleID				= "gl.uniforms"_OModID;
 	static constexpr OModID::type  GLSyncManagerModuleID			= "gl.sync"_OModID;
 	
 	// DirectX
@@ -64,7 +62,6 @@ namespace Platforms
 	static constexpr OModID::type  DXPipelineResourceTableModuleID	= "dx.restable"_OModID;
 	static constexpr OModID::type  DXRenderPassModuleID				= "dx.renpass"_OModID;
 	static constexpr OModID::type  DXSamplerModuleID				= "dx.sampler"_OModID;
-	static constexpr OModID::type  DXUniformsModuleID				= "dx.uniforms"_OModID;
 	static constexpr OModID::type  DXSyncManagerModuleID			= "dx.sync"_OModID;
 
 	// OpenCL
@@ -78,7 +75,6 @@ namespace Platforms
 	static constexpr OModID::type  CLComputePipelineModuleID		= "cl.c-ppln"_OModID;
 	static constexpr OModID::type  CLPipelineResourceTableModuleID	= "cl.restable"_OModID;
 	static constexpr OModID::type  CLSamplerModuleID				= "cl.sampler"_OModID;
-	static constexpr OModID::type  CLUniformsModuleID				= "cl.uniforms"_OModID;
 	static constexpr OModID::type  CLSyncManagerModuleID			= "cl.sync"_OModID;
 
 	// Software
@@ -91,7 +87,8 @@ namespace Platforms
 	static constexpr OModID::type  SWMemoryModuleID					= "sw.memory"_OModID;
 	static constexpr OModID::type  SWComputePipelineModuleID		= "sw.c-ppln"_OModID;
 	static constexpr OModID::type  SWPipelineResourceTableModuleID	= "sw.restable"_OModID;
-	static constexpr OModID::type  SwSyncManagerModuleID			= "sw.sync"_OModID;
+	static constexpr OModID::type  SWSyncManagerModuleID			= "sw.sync"_OModID;
+	static constexpr OModID::type  SWCommandQueueModuleID			= "sw.queue"_OModID;
 
 
 
@@ -105,7 +102,6 @@ namespace Platforms
 		OModID::type	memoryManager	= OModID::type(0);
 		OModID::type	pipeline		= OModID::type(0);
 		OModID::type	resourceTable	= OModID::type(0);
-		OModID::type	uniforms		= OModID::type(0);
 		OModID::type	commandBuffer	= OModID::type(0);
 		OModID::type	commandBuilder	= OModID::type(0);
 	};
@@ -121,7 +117,6 @@ namespace Platforms
 		OModID::type	memoryManager	= OModID::type(0);
 		OModID::type	pipeline		= OModID::type(0);
 		OModID::type	resourceTable	= OModID::type(0);
-		OModID::type	uniforms		= OModID::type(0);
 		OModID::type	commandBuffer	= OModID::type(0);
 		OModID::type	commandBuilder	= OModID::type(0);
 		OModID::type	framebuffer		= OModID::type(0);

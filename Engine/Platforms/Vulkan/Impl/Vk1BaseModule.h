@@ -6,7 +6,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
 #include "Engine/Platforms/Shared/GPU/Thread.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {

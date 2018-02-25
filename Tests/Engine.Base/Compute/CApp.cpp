@@ -2,15 +2,7 @@
 
 #include "CApp.h"
 #include "../Pipelines/all_pipelines.h"
-
-
-inline ModulePtr CApp::GetGThread (GlobalSystemsRef gs)
-{
-	using CThreadMsgList_t		= CompileTime::TypeListFrom< Message<GpuMsg::ThreadBeginFrame>, Message<GpuMsg::ThreadEndFrame>, Message<GpuMsg::GetDeviceInfo> >;
-	using CThreadEventList_t	= CompileTime::TypeListFrom< Message<GpuMsg::DeviceCreated>, Message<GpuMsg::DeviceBeforeDestroy> >;
-
-	return gs->parallelThread->GetModuleByMsgEvent< CThreadMsgList_t, CThreadEventList_t >();
-}
+#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
 
 
 CApp::CApp ()
@@ -34,7 +26,7 @@ bool CApp::Initialize (GAPI::type api)
 
 		Message< GpuMsg::GetGraphicsModules >	req_ids;
 		context->Send( req_ids );
-		ids << req_ids->compute;
+		ids = *req_ids->compute;
 	}
 
 	auto		thread	= ms->GlobalSystems()->parallelThread;
@@ -95,7 +87,7 @@ bool CApp::_Draw (const Message< ModuleMsg::Update > &)
 	if ( not looping )
 		return false;
 
-	auto		gthread	= GetGThread( ms->GlobalSystems() );
+	auto		gthread	= PlatformTools::GPUThreadHelper::FindComputeThread( ms->GlobalSystems() );
 	uint		prev_idx= cmdBufIndex % cmdBuffers.Count();
 	uint		index	= (++cmdBufIndex) % cmdBuffers.Count();
 
@@ -119,7 +111,7 @@ bool CApp::_Draw (const Message< ModuleMsg::Update > &)
 
 bool CApp::_CreatePipeline ()
 {
-	auto	gthread	= GetGThread( ms->GlobalSystems() );
+	auto	gthread	= PlatformTools::GPUThreadHelper::FindComputeThread( ms->GlobalSystems() );
 	auto	factory	= ms->GlobalSystems()->modulesFactory;
 	
 	CreateInfo::PipelineTemplate	pp_templ;
@@ -155,7 +147,7 @@ bool CApp::_CreatePipeline ()
 
 bool CApp::_CreateCmdBuffers ()
 {
-	auto	gthread = GetGThread( ms->GlobalSystems() );
+	auto	gthread = PlatformTools::GPUThreadHelper::FindComputeThread( ms->GlobalSystems() );
 	auto	factory = ms->GlobalSystems()->modulesFactory;
 
 	CHECK_ERR( factory->Create(
@@ -195,7 +187,7 @@ bool CApp::_CreateCmdBuffers ()
 
 bool CApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 {
-	auto	gthread = GetGThread( ms->GlobalSystems() );
+	auto	gthread = PlatformTools::GPUThreadHelper::FindComputeThread( ms->GlobalSystems() );
 	auto	factory = gthread->GlobalSystems()->modulesFactory;
 
 	syncManager = gthread->GetModuleByMsg<CompileTime::TypeListFrom< Message<GpuMsg::CreateFence> >>();

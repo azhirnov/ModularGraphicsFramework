@@ -5,7 +5,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
 #include "Engine/Platforms/Shared/GPU/PipelineLayout.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -26,8 +26,9 @@ namespace PlatformVK
 
 	// types
 	private:
-		using DescriptorBindings	= FixedSizeArray< vk::VkDescriptorSetLayoutBinding, 64 >;
-		using PushConstantRanges	= FixedSizeArray< vk::VkPushConstantRange, 16 >;
+		using PushConstants_t		= GpuMsg::GetVkPipelineLayoutPushConstants::PushConstants_t;
+		using DescriptorBindings_t	= FixedSizeArray< vk::VkDescriptorSetLayoutBinding, 64 >;
+		using PushConstantRanges_t	= FixedSizeArray< vk::VkPushConstantRange, 16 >;
 		struct _CreateDescriptor_Func;
 
 
@@ -35,8 +36,8 @@ namespace PlatformVK
 	private:
 		PipelineLayoutDescriptor	_layoutDescr;
 		vk::VkDescriptorSetLayout	_descriptorId;
-		PushConstantRanges			_pushConstRanges;
 		vk::VkPipelineLayout		_layoutId;
+		PushConstants_t				_pushConstants;
 
 
 	// methods
@@ -50,6 +51,7 @@ namespace PlatformVK
 		PipelineLayoutDescriptor const&	GetDescriptor ()			const	{ return _layoutDescr; }
 		vk::VkPipelineLayout			GetLayoutID ()				const	{ return _layoutId; }
 		vk::VkDescriptorSetLayout		GetDescriptorLayouts ()		const	{ return _descriptorId; }
+		PushConstants_t const&			GetPushConstants ()			const	{ return _pushConstants; }
 
 	private:
 		void _Init (const PipelineLayoutDescriptor &layout);
@@ -57,7 +59,7 @@ namespace PlatformVK
 		void _DestroyLayout ();
 		void _DestroyLayoutDescriptors ();
 			
-		bool _CreateLayoutDescriptors (const PipelineLayoutDescriptor &layout);
+		bool _CreateLayoutDescriptors (const PipelineLayoutDescriptor &layout, OUT PushConstantRanges_t &pc);
 	};
 	
 	

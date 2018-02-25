@@ -26,6 +26,9 @@ namespace Platforms
 
 		GX_ENUM_BITFIELD( EShader );
 
+		static constexpr bits	All			= bits().SetInterval( Vertex, Fragment );
+		static constexpr bits	ComputeBit	= bits().Set( Compute );
+
 		static StringCRef ToString (type value);
 	};
 

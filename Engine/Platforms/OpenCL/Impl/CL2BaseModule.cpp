@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {

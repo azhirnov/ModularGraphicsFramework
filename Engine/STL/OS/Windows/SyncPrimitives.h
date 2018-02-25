@@ -138,8 +138,6 @@ namespace OS
 	{
 	// types
 	public:
-		static const uint	MAX_WAIT_TIME	= 0xFFFFFFFF;
-
 		typedef ConditionVariable			Self;
 		typedef HiddenOSTypeFrom< void* >	Handle_t;	// CONDITION_VARIABLE
 
@@ -189,8 +187,6 @@ namespace OS
 			INIT_STATE_SIGNALED = 0x2,
 		};
 
-		static const uint	MAX_WAIT_TIME	= 0xFFFFFFFF;
-
 
 	// variables
 	private:
@@ -207,25 +203,11 @@ namespace OS
 
 		bool Signal ();
 		bool Reset ();
-		bool Pulse ();
 
+		bool Wait ();
 		bool Wait (TimeL time);
 
 		static int WaitEvents (ArrayRef<Self *> events, bool waitAll, TimeL time);
-
-		/*ScopeLock GetScopeLock()
-		{
-			struct Util {
-				static void Lock (void *p)		{ ((Self *)p)->Wait(); }
-				static void Unlock (void *p)	{ ((Self *)p)->Signal(); }
-			};
-			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
-		}
-
-		operator ScopeLock ()
-		{
-			return GetScopeLock();
-		}*/
 	
 	private:
 		bool _Create (EFlags flags);
@@ -244,8 +226,6 @@ namespace OS
 	public:
 		typedef Semaphore					Self;
 		typedef HiddenOSTypeFrom< void* >	Handle_t;	// HANDLE
-		
-		static const uint 	MAX_WAIT_TIME	= 0xFFFFFFFF;
 
 
 	// variables

@@ -6,7 +6,7 @@
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {

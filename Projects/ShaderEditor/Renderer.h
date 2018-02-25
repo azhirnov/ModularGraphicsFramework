@@ -73,12 +73,14 @@ namespace ShaderEditor
 				ModulePtr	ubuffer;
 			};
 
+			using PerPass_t	= StaticArray< PerPass, MAX_PASSES >;
+
 		// variables
 		public:
-			const ShaderDescr			_descr;
-			ModulePtr					_pipelineTemplate;
-			ModulePtr					_pipeline;
-			StaticArray< PerPass, 4 >	_perPass;
+			const ShaderDescr	_descr;
+			ModulePtr			_pipelineTemplate;
+			ModulePtr			_pipeline;
+			PerPass_t			_perPass;
 
 		// methods
 		public:
@@ -92,6 +94,7 @@ namespace ShaderEditor
 		SHARED_POINTER( Shader );
 
 		using ShadersMap_t	= HashMap< String, ShaderPtr >;
+		using ResTables_t	= StaticArray< ModulePtr, MAX_PASSES >;
 
 
 	// variables
@@ -107,7 +110,7 @@ namespace ShaderEditor
 		ModulePtr						_linearRepeatSampler;
 
 		ModulePtr						_drawTexQuadPipeline;
-		StaticArray< ModulePtr, 4 >		_resourceTables;
+		ResTables_t						_resourceTables;
 
 		const GlobalSystemsRef			_gs;
 
@@ -141,8 +144,6 @@ namespace ShaderEditor
 		bool _CreateSamplers ();
 		bool _CreateDrawTexQuadPipeline ();
 		void _UpdateShaderData (const SceneMsg::CameraGetState::State &);
-
-		ModulePtr _GetGpuThread () const;
 		
 		void _OnMouseX (const ModuleMsg::InputMotion &);
 		void _OnMouseY (const ModuleMsg::InputMotion &);

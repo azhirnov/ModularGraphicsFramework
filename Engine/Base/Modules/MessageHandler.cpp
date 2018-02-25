@@ -59,10 +59,10 @@ namespace Base
 	
 /*
 =================================================
-	_Subscribe
+	_Subscribe2
 =================================================
 */
-	bool MessageHandler::_Subscribe (const TypeIdList& validTypes, TypeId id, Handler &&handler, bool checked)
+	bool MessageHandler::_Subscribe2 (const TypeIdList& validTypes, TypeId id, Handler &&handler, bool checked)
 	{
 		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
 			checked = true;
@@ -110,7 +110,7 @@ namespace Base
 				{
 					if ( other._handlers[i].second.ptr == obj )
 					{
-						_Subscribe( validTypes, ids[j], Handler(other._handlers[i].second), false );
+						_Subscribe2( validTypes, ids[j], Handler(other._handlers[i].second), false );
 						copied++;
 					}
 				}

@@ -6,7 +6,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -21,12 +21,17 @@ namespace PlatformVK
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetPipelineLayoutDescriptor,
-											GpuMsg::GetVkDescriptorLayouts,
+		using LayoutMsgList_t		= MessageListFrom<
 											GpuMsg::GetVkPipelineLayoutID,
+											GpuMsg::GetVkDescriptorLayouts,
+											GpuMsg::GetPipelineLayoutDescriptor,
+											GpuMsg::GetVkPipelineLayoutPushConstants
+										>;
+
+		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetVkPipelineResourceTableID
-										> >;
+										> >
+										::Append< LayoutMsgList_t >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
 
@@ -52,8 +57,6 @@ namespace PlatformVK
 		};
 
 		using DescriptorPoolSizes_t	= FixedSizeArray< vk::VkDescriptorPoolSize, vk::VK_DESCRIPTOR_TYPE_RANGE_SIZE >;
-		using LayoutMsgList_t		= MessageListFrom< GpuMsg::GetVkPipelineLayoutID, GpuMsg::GetPipelineLayoutDescriptor,
-														GpuMsg::GetVkDescriptorLayouts >;
 
 		using ResourceDescr_t		= Union< ImageDescr, BufferDescr, TextureBufferDescr >;
 		using ResourceDescrArray_t	= Array< ResourceDescr_t >;
@@ -87,9 +90,6 @@ namespace PlatformVK
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetVkPipelineLayoutID (const Message< GpuMsg::GetVkPipelineLayoutID > &);
-		bool _GetVkDescriptorLayouts (const Message< GpuMsg::GetVkDescriptorLayouts > &);
-		bool _GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &);
 		bool _GetVkPipelineResourceTableID (const Message< GpuMsg::GetVkPipelineResourceTableID > &);
 		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
@@ -132,12 +132,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkPrivateClasses );
-		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkPipelineLayoutID );
-		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkDescriptorLayouts );
-		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetPipelineLayoutDescriptor );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkPipelineResourceTableID );
-
-		CHECK( _ValidateMsgSubscriptions() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -165,7 +160,8 @@ namespace PlatformVK
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
 		CHECK_ATTACHMENT( _layout = GetModuleByMsg< LayoutMsgList_t >() );
-		
+		CHECK_ERR( _CopySubscriptions< LayoutMsgList_t >( _layout ) );
+
 		CHECK( _SetState( EState::Linked ) );
 		return true;
 	}
@@ -187,7 +183,6 @@ namespace PlatformVK
 
 		_SendForEachAttachments( msg );
 		
-		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
 
 		CHECK( _SetState( EState::ComposedMutable ) );
@@ -208,36 +203,6 @@ namespace PlatformVK
 		return Module::_Delete_Impl( msg );
 	}
 
-/*
-=================================================
-	_GetVkDescriptorLayouts
-=================================================
-*/
-	bool Vk1PipelineResourceTable::_GetVkDescriptorLayouts (const Message< GpuMsg::GetVkDescriptorLayouts > &msg)
-	{
-		return _layout ? SendTo( _layout, msg ) : false;
-	}
-	
-/*
-=================================================
-	_GetPipelineLayoutDescriptor
-=================================================
-*/
-	bool Vk1PipelineResourceTable::_GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &msg)
-	{
-		return _layout ? SendTo( _layout, msg ) : false;
-	}
-	
-/*
-=================================================
-	_GetVkPipelineLayoutID
-=================================================
-*/
-	bool Vk1PipelineResourceTable::_GetVkPipelineLayoutID (const Message< GpuMsg::GetVkPipelineLayoutID > &msg)
-	{
-		return _layout ? SendTo( _layout, msg ) : false;
-	}
-	
 /*
 =================================================
 	_GetVkPipelineResourceTableID
@@ -298,7 +263,6 @@ namespace PlatformVK
 		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
 		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
 		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
-		using Uniform			= PipelineLayoutDescriptor::Uniform;
 		using ImageMsgList		= MessageListFrom< GpuMsg::GetVkImageID >;
 		using SamplerMsgList	= MessageListFrom< GpuMsg::GetVkSamplerID >;
 		using BufferMsgList		= MessageListFrom< GpuMsg::GetVkBufferID >;
@@ -322,11 +286,6 @@ namespace PlatformVK
 		}
 		
 		void operator () (const SubpassInput &sp) const
-		{
-			WARNING( "not supported" );
-		}
-		
-		void operator () (const Uniform &un) const
 		{
 			WARNING( "not supported" );
 		}
@@ -387,7 +346,7 @@ namespace PlatformVK
 				self.SendTo( tex_mod, req_img_descr );
 				self.SendTo( samp_mod, req_sampler );
 
-				ImageDescriptor	tex_descr;	tex_descr << req_img_descr->result;
+				ImageDescriptor const&	tex_descr = *req_img_descr->result;
 				CHECK( tex_descr.imageType == tex.textureType );
 				CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( tex_descr.format ) ) );
 
@@ -395,8 +354,8 @@ namespace PlatformVK
 				// TODO: check format
 
 				ImageDescr				descr;
-				descr.info.sampler		<< req_sampler->result;
-				descr.info.imageView	<< req_image->defaultView;
+				descr.info.sampler		= *req_sampler->result;
+				descr.info.imageView	= *req_image->defaultView;
 				descr.info.imageLayout	= vk::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 				descr.binding			= tex.uniqueIndex;
@@ -437,8 +396,8 @@ namespace PlatformVK
 
 			ImageDescr				descr;
 			descr.info.sampler		= VK_NULL_HANDLE;
-			descr.info.imageView	<< req_image->defaultView;
-			descr.info.imageLayout	= vk::VK_IMAGE_LAYOUT_GENERAL;				// TODO
+			descr.info.imageView	= *req_image->defaultView;
+			descr.info.imageLayout	= vk::VK_IMAGE_LAYOUT_GENERAL;
 			descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			descr.binding			= img.uniqueIndex;
 			
@@ -466,10 +425,10 @@ namespace PlatformVK
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			CHECK( req_descr->result.Get().size == buf.size );
+			CHECK( req_descr->result.Get().size == BytesUL(buf.size) );
 
 			BufferDescr				descr;
-			descr.info.buffer		<< req_buffer->result;
+			descr.info.buffer		= *req_buffer->result;
 			descr.info.offset		= 0;
 			descr.info.range		= (uint) buf.size;
 			descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -499,14 +458,14 @@ namespace PlatformVK
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			BufferDescriptor	buf_descr;	buf_descr << req_descr->result;
+			BufferDescriptor const&	buf_descr = *req_descr->result;
 
 			CHECK( (buf_descr.size >= buf.staticSize) and
 					(buf.arrayStride == 0 or
 					(buf_descr.size - buf.staticSize) % buf.arrayStride == 0) );
 
 			BufferDescr				descr;
-			descr.info.buffer		<< req_buffer->result;
+			descr.info.buffer		= *req_buffer->result;
 			descr.info.offset		= 0;
 			descr.info.range		= (uint) buf_descr.size;
 			descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -535,7 +494,7 @@ namespace PlatformVK
 		SendTo( _layout, req_descr );
 		SendTo( _layout, req_layouts );
 
-		PipelineLayoutDescriptor			layout_descr;	layout_descr << req_descr->result;
+		PipelineLayoutDescriptor const&		layout_descr = *req_descr->result;
 		vk::VkDescriptorSetLayout			descr_layout = *req_layouts->result;
 		DescriptorPoolSizes_t				pool_sizes;
 		_CreateResourceDescriptor_Func		func( OUT _resources, OUT pool_sizes, *this );

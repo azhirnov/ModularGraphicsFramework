@@ -202,6 +202,14 @@
 #endif
 
 
+// deprecated attribute
+#if COMPILER_VERSION >= 700
+#	define GX_DEPRECATED( _reason_ )		[[ deprecated(_reason_) ]]
+#else
+#	define GX_DEPRECATED( _reason_ )
+#endif
+
+
 // notify compiler to generate error if function result unused
 #if COMPILER_VERSION >= 700
 #	define GX_CHECK_RESULT					[[nodiscard]]

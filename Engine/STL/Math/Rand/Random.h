@@ -28,7 +28,7 @@ namespace GXMath
 	public:
 		static bool Initialize ()
 		{
-			return _engine(), true;
+			return bool(_engine());
 		}
 
 
@@ -147,7 +147,7 @@ namespace GXMath
 			RndEngine	eng;
 			T			res = T( eng() ) / T( eng.Max() );
 
-			ASSERT( res >= 0.0f and res <= 1.0f );
+			ASSERT( res >= T(0) and res <= T(1) );
 			return res;
 		}
 		

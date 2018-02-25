@@ -433,7 +433,7 @@ namespace GXTypes
 
 		STATIC_ASSERT( sizeof(value) <= sizeof(_data) );
 
-		_currentIndex = TypeList_t::template IndexOf<T>;
+		_currentIndex = uint(TypeList_t::template IndexOf<T>);
 		DEBUG_ONLY( _dbgType = TypeIdOf<T>() );
 			
 		UnsafeMem::PlacementNew<T>( _data, value );

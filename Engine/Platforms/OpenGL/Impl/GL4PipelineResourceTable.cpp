@@ -6,7 +6,7 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {
@@ -21,10 +21,15 @@ namespace PlatformGL
 	{
 	// types
 	private:
-		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
+		using LayoutMsgList_t		= MessageListFrom<
 											GpuMsg::GetPipelineLayoutDescriptor,
+											GpuMsg::GetGLPipelineLayoutPushConstants
+										>;
+
+		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GLPipelineResourceTableApply
-										> >;
+										> >
+										::Append< LayoutMsgList_t >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
 
@@ -56,8 +61,6 @@ namespace PlatformGL
 			gl::GLuint		bufferID	= 0;
 		};
 
-		using LayoutMsgList_t		= MessageListFrom< GpuMsg::GetPipelineLayoutDescriptor >;
-
 		using ResourceDescr_t		= Union< TextureDescr, ImageDescr, BufferDescr >;
 		using ResourceDescrArray_t	= Array< ResourceDescr_t >;
 		
@@ -88,10 +91,10 @@ namespace PlatformGL
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &);
-		bool _GLPipelineResourceTableApply (const Message< GpuMsg::GLPipelineResourceTableApply > &);
 		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+
+		bool _GLPipelineResourceTableApply (const Message< GpuMsg::GLPipelineResourceTableApply > &);
 
 	private:
 		bool _CreateResourceTable ();
@@ -127,10 +130,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GetGLPrivateClasses );
-		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GetPipelineLayoutDescriptor );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GLPipelineResourceTableApply );
-
-		CHECK( _ValidateMsgSubscriptions() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -157,6 +157,7 @@ namespace PlatformGL
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
 		CHECK_ATTACHMENT( _layout = GetModuleByMsg< LayoutMsgList_t >() );
+		CHECK_ERR( _CopySubscriptions< LayoutMsgList_t >( _layout ) );
 		
 		CHECK( _SetState( EState::Linked ) );
 		return true;
@@ -202,28 +203,22 @@ namespace PlatformGL
 	
 /*
 =================================================
-	_GetPipelineLayoutDescriptor
-=================================================
-*/
-	bool GL4PipelineResourceTable::_GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &msg)
-	{
-		return _layout ? SendTo( _layout, msg ) : false;
-	}
-	
-/*
-=================================================
 	_ApplyDescriptors_Func
 =================================================
 */
 	struct GL4PipelineResourceTable::_ApplyDescriptors_Func
 	{
-		using Programs_t	= GpuMsg::GLPipelineResourceTableApply::Programs_t;
+	// types
+		using Programs_t		= GpuMsg::GLPipelineResourceTableApply::Programs_t;
+		using PushConstants_t	= GpuMsg::GLPipelineResourceTableApply::GLPushConstants;
 
-		Programs_t const&	programs;
+	// variables
+		Programs_t const&		programs;
+		PushConstants_t const&	pushConstants;
 
-
-		_ApplyDescriptors_Func (const Programs_t &progs) :
-			programs(progs)
+	// methods
+		_ApplyDescriptors_Func (const Programs_t &progs, const PushConstants_t &pc) :
+			programs{progs}, pushConstants{pc}
 		{}
 
 		void operator () (const TextureDescr &tex) const
@@ -243,7 +238,13 @@ namespace PlatformGL
 		void operator () (const BufferDescr &buf) const
 		{
 			using namespace gl;
-			GL_CALL( glBindBufferBase( buf.target, buf.binding, buf.bufferID ) );
+
+			if ( buf.bufferID != UMax ) {
+				GL_CALL( glBindBufferBase( buf.target, buf.binding, buf.bufferID ) );
+			} else {
+				CHECK( pushConstants.bufferID != 0 );
+				GL_CALL( glBindBufferRange( buf.target, buf.binding, pushConstants.bufferID, pushConstants.offset, pushConstants.size ) );
+			}
 		}
 	};
 	
@@ -256,7 +257,7 @@ namespace PlatformGL
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
-		_ApplyDescriptors_Func	func( msg->programs );
+		_ApplyDescriptors_Func	func( msg->programs, msg->pushConstants );
 
 		FOR( i, _resources ) {
 			_resources[i].Apply( func );
@@ -317,7 +318,8 @@ namespace PlatformGL
 		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
 		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
 		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
-		using Uniform			= PipelineLayoutDescriptor::Uniform;
+		using PushConstBuffer	= PipelineLayoutDescriptor::PushConstantsBuffer;
+
 		using ImageMsgList		= MessageListFrom< GpuMsg::GetGLImageID >;
 		using SamplerMsgList	= MessageListFrom< GpuMsg::GetGLSamplerID >;
 		using BufferMsgList		= MessageListFrom< GpuMsg::GetGLBufferID >;
@@ -332,18 +334,12 @@ namespace PlatformGL
 		_CreateResourceDescriptor_Func (OUT ResourceDescrArray_t &resources, GL4PipelineResourceTable& self) :
 			self( self ), resources( resources )
 		{}
-		
-		void operator () (const PushConstant &pc) const
+
+		~_CreateResourceDescriptor_Func ()
 		{
-			WARNING( "not supported" );
 		}
 		
 		void operator () (const SubpassInput &sp) const
-		{
-			WARNING( "not supported" );
-		}
-		
-		void operator () (const Uniform &un) const
 		{
 			WARNING( "not supported" );
 		}
@@ -395,7 +391,7 @@ namespace PlatformGL
 			self.SendTo( tex_mod, req_img_descr );
 			self.SendTo( samp_mod, req_sampler );
 
-			ImageDescriptor	tex_descr;	tex_descr << req_img_descr->result;
+			ImageDescriptor	const&	tex_descr = *req_img_descr->result;
 			CHECK( tex_descr.imageType == tex.textureType );
 			CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( tex_descr.format ) ) );
 
@@ -455,7 +451,7 @@ namespace PlatformGL
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			CHECK( req_descr->result.Get().size == buf.size );
+			CHECK( req_descr->result.Get().size == BytesUL(buf.size) );
 			
 			BufferDescr		descr;
 			descr.bufferID		= req_buffer->result.Get(0);
@@ -484,7 +480,7 @@ namespace PlatformGL
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			BufferDescriptor	buf_descr;	buf_descr << req_descr->result;
+			BufferDescriptor const&	buf_descr = *req_descr->result;
 
 			CHECK( (buf_descr.size >= buf.staticSize) and
 					(buf.arrayStride == 0 or
@@ -495,6 +491,27 @@ namespace PlatformGL
 			descr.target		= gl::GL_SHADER_STORAGE_BUFFER;
 			descr.binding		= buf.binding;
 			descr.stageFlags	= buf.stageFlags;
+
+			resources.PushBack(ResourceDescr_t( descr ));
+			return true;
+		}
+		
+/*
+=================================================
+	operator (PushConstant)
+=================================================
+*/
+		void operator () (const PushConstant &pc) const
+		{
+		}
+		
+		bool operator () (const PushConstBuffer &pcb) const
+		{
+			BufferDescr		descr;
+			descr.bufferID		= UMax;		// special flag to indicate push constants buffer
+			descr.target		= gl::GL_UNIFORM_BUFFER;
+			descr.binding		= pcb.binding;
+			descr.stageFlags	= pcb.stageFlags;
 
 			resources.PushBack(ResourceDescr_t( descr ));
 			return true;
@@ -512,12 +529,11 @@ namespace PlatformGL
 
 		SendTo( _layout, req_descr );
 
-		PipelineLayoutDescriptor			layout_descr;	layout_descr << req_descr->result;
 		_CreateResourceDescriptor_Func		func( OUT _resources, *this );
 
 		// initialize table
-		FOR( i, layout_descr.GetUniforms() ) {
-			layout_descr.GetUniforms()[i].Apply( func );
+		FOR( i, req_descr->result->GetUniforms() ) {
+			req_descr->result->GetUniforms()[i].Apply( func );
 		}
 
 		return true;

@@ -61,7 +61,7 @@ void mainImage (out float4 fragColor, in float2 fragCoord);
 void main ()
 {
 	vec2 coord = gl_FragCoord.xy;
-	coord.y = iResolution.y - coord.y;
+	//coord.y = iResolution.y - coord.y;
 
 	mainImage( out_Color0, coord );
 }

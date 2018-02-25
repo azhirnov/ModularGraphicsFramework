@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "TemplateUtils.h"
-#include "TypeTraits.h"
+#include "Engine/STL/CompileTime/TemplateUtils.h"
+#include "Engine/STL/CompileTime/TypeTraits.h"
 
 namespace GX_STL
 {

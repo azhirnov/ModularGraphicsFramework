@@ -23,8 +23,8 @@ namespace Scene
 		float2		zoomLimits		= float2{ 1.0f, 2.0f };
 		float		zoomStep		= 1.0f;
 
-		Rad			fovY;
-		float		aspect			= 1.0f;					// width / height
+		Rad			fovY			= Rad::Pi() * 0.67r;	// ~60 degrees
+		float2		clipPlanes		= float2{ 0.1f, 100.0f };
 	};
 
 

@@ -11,6 +11,10 @@
 #	include "Engine/Platforms/Windows/WinObjectsConstructor.h"
 #endif
 
+#ifdef PLATFORM_SDL
+#	include "Engine/Platforms/SDL/SDLObjectsConstructor.h"
+#endif
+
 #ifdef GRAPHICS_API_OPENGL
 #	include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #endif
@@ -60,6 +64,10 @@ namespace Platforms
 			WinObjectsConstructor::Register();
 		#endif
 
+		#ifdef PLATFORM_SDL
+			SDLObjectsConstructor::Register();
+		#endif
+
 		InputManager::Register();
 		
 		#ifdef GRAPHICS_API_OPENGL
@@ -104,6 +112,10 @@ namespace Platforms
 	{
 		#ifdef PLATFORM_WINDOWS
 			WinObjectsConstructor::Unregister();
+		#endif
+			
+		#ifdef PLATFORM_SDL
+			SDLObjectsConstructor::Unregister();
 		#endif
 
 		InputManager::Unregister();
@@ -162,19 +174,18 @@ namespace Platforms
 */
 	static ModulePtr CreateDefaultWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci)
 	{
-		auto	factory = gs->modulesFactory;
+		ModulePtr	platform = gs->mainSystem->GetModuleByMsg< CompileTime::TypeListFrom< Message<OSMsg::GetOSModules> > >();
 
-		Array< ModuleMsg::UntypedID_t >	ids;
-		factory->Search< decltype(ci) >( "", OUT ids );
+		if ( not platform )
+			return null;
 
-		FOR( i, ids ) {
-			if ( ids[i] != TModID::type(0) ) {
-				ModulePtr	mod;
-				CHECK_ERR( factory->Create( ids[i], gs, ci, OUT mod ) );
-				return mod;
-			}
-		}
-		return null;
+		Message<OSMsg::GetOSModules>	req_ids;
+		CHECK( platform->Send( req_ids ) );
+
+		ModulePtr	window;
+		CHECK_ERR( gs->modulesFactory->Create( req_ids->result->window, gs, ci, OUT window ) );
+
+		return window;
 	}
 	
 /*
@@ -220,13 +231,13 @@ namespace Platforms
 		auto		factory	= gs->modulesFactory;
 		ModulePtr	mod;
 
-		if ( ctx ) {
-			Message< GpuMsg::GetGraphicsModules >	req_ids;
-			ctx->Send( req_ids );
-			CHECK_ERR( factory->Create( req_ids->graphics->thread, gs, ci, OUT mod ) );
-			return mod;
-		}
-		return null;
+		if ( not ctx )
+			return null;
+
+		Message< GpuMsg::GetGraphicsModules >	req_ids;
+		CHECK( ctx->Send( req_ids ) );
+		CHECK_ERR( factory->Create( req_ids->graphics->thread, gs, ci, OUT mod ) );
+		return mod;
 	}
 	
 /*

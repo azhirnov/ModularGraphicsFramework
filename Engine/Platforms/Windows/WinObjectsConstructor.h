@@ -4,7 +4,7 @@
 
 #include "Engine/Platforms/Shared/OS/IDs.h"
 
-#if defined( PLATFORM_WINDOWS )
+#ifdef PLATFORM_WINDOWS
 
 namespace Engine
 {

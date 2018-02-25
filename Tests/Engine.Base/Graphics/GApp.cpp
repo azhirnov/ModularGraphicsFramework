@@ -3,6 +3,7 @@
 #include "GApp.h"
 #include "../Pipelines/all_pipelines.h"
 #include "Engine/Profilers/Engine.Profilers.h"
+#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
 
 
 struct GApp::Vertex
@@ -10,14 +11,6 @@ struct GApp::Vertex
 	float2	position;
 	float2	texcoord;
 };
-
-inline ModulePtr GApp::GetGThread (GlobalSystemsRef gs)
-{
-	using GThreadMsgList_t		= CompileTime::TypeListFrom< Message<GpuMsg::ThreadBeginFrame>, Message<GpuMsg::ThreadEndFrame>, Message<GpuMsg::GetDeviceInfo> >;
-	using GThreadEventList_t	= CompileTime::TypeListFrom< Message<GpuMsg::DeviceCreated>, Message<GpuMsg::DeviceBeforeDestroy> >;
-
-	return gs->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >();
-}
 
 
 GApp::GApp ()
@@ -31,43 +24,54 @@ GApp::GApp ()
 
 bool GApp::Initialize (GAPI::type api)
 {
-	ms->AddModule( GModID::type(0), CreateInfo::Platform{} );
+	auto	factory	= ms->GlobalSystems()->modulesFactory;
+
+	{
+		ModulePtr	platform;
+		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::Platform{}, OUT platform ) );
+		ms->Send< ModuleMsg::AttachModule >({ platform });
+
+		Message< OSMsg::GetOSModules >	req_ids;
+		platform->Send( req_ids );
+		osIDs = *req_ids->result;
+	}
+
 	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager{} );
 	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager{} );
 
 	{
-		auto		factory	= ms->GlobalSystems()->modulesFactory;
 		ModulePtr	context;
-
 		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ api }, OUT context ) );
 		ms->Send< ModuleMsg::AttachModule >({ context });
 
 		Message< GpuMsg::GetGraphicsModules >	req_ids;
 		context->Send( req_ids );
-		ids << req_ids->graphics;
+		gpuIDs = *req_ids->graphics;
 	}
 
-	auto	thread	= ms->GlobalSystems()->parallelThread;
+	auto		thread	= ms->GlobalSystems()->parallelThread;
 	
-	thread->AddModule( WinWindowModuleID, CreateInfo::Window{} );
+	ModulePtr	window;
+	factory->Create( 0, ms->GlobalSystems(), CreateInfo::Window{}, OUT window );
+	thread->Send< ModuleMsg::AttachModule >({ window });
+
 	thread->AddModule( InputThreadModuleID, CreateInfo::InputThread{} );
-	thread->AddModule( ids.thread, CreateInfo::GpuThread{
+	thread->AddModule( gpuIDs.thread, CreateInfo::GpuThread{
 					   GraphicsSettings{
 							api,
 							CreateInfo::GpuContext::EFlags::bits() | CreateInfo::GpuContext::EFlags::DebugContext
 						} } );
 
-	auto	window		= thread->GetModuleByID( WinWindowModuleID );
 	auto	input		= thread->GetModuleByID( InputThreadModuleID );
-	auto	gthread		= thread->GetModuleByID( ids.thread );
+	auto	gthread		= thread->GetModuleByID( gpuIDs.thread );
 
-	window->AddModule( WinKeyInputModuleID, CreateInfo::RawInputHandler{} );
-	window->AddModule( WinMouseInputModuleID, CreateInfo::RawInputHandler{} );
+	window->AddModule( osIDs.keyInput, CreateInfo::RawInputHandler{} );
+	window->AddModule( osIDs.mouseInput, CreateInfo::RawInputHandler{} );
 	window->AddModule( Profilers::FPSCounterModuleID, CreateInfo::FPSCounter{} );
 
 	window->Subscribe( this, &GApp::_OnWindowClosed );
 	input->Subscribe( this, &GApp::_OnKey );
-	//input->Subscribe( this, &GApp::_OnMotion );
+	input->Subscribe( this, &GApp::_OnMotion );
 	gthread->Subscribe( this, &GApp::_Draw );
 	gthread->Subscribe( this, &GApp::_GInit );
 	gthread->Subscribe( this, &GApp::_GDelete );
@@ -87,21 +91,7 @@ void GApp::Quit ()
 	
 	if ( pipelineTemplate2 )
 		pipelineTemplate2->Send( del_msg );
-
-	auto	thread		= ms->GlobalSystems()->parallelThread;
-	auto	window		= thread->GetModuleByID( WinWindowModuleID );
-	auto	input		= thread->GetModuleByID( InputThreadModuleID );
-	auto	gthread		= thread->GetModuleByID( ids.thread );
-
-	if ( window )
-		window->UnsubscribeAll( this );
 	
-	if ( input )
-		input->UnsubscribeAll( this );
-	
-	if ( gthread )
-		gthread->UnsubscribeAll( this );
-
 	looping = false;
 }
 
@@ -145,7 +135,7 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 	if ( not looping )
 		return false;
 
-	auto		gthread	= GetGThread( ms->GlobalSystems() );
+	auto		gthread	= PlatformTools::GPUThreadHelper::FindGraphicsThread( ms->GlobalSystems() );
 	uint		prev_idx= cmdBufIndex % cmdBuffers.Count();
 	uint		index	= (++cmdBufIndex) % cmdBuffers.Count();
 
@@ -184,7 +174,7 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 		clear.clearRects.PushBack({ area });
 
 		cmdBuilder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, framebuffer, area });
-		cmdBuilder->Send< GpuMsg::CmdClearAttachments >( clear );
+		//cmdBuilder->Send< GpuMsg::CmdClearAttachments >( clear );
 		cmdBuilder->Send< GpuMsg::CmdBindGraphicsPipeline >({ gpipeline1 });
 		cmdBuilder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ resourceTable1 });
 		cmdBuilder->Send< GpuMsg::CmdSetViewport >({ area, float2(0.0f, 1.0f) });
@@ -224,7 +214,7 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 
 bool GApp::_CreatePipeline1 ()
 {
-	auto	gthread	= GetGThread( ms->GlobalSystems() );
+	auto	gthread	= PlatformTools::GPUThreadHelper::FindGraphicsThread( ms->GlobalSystems() );
 	auto	factory	= ms->GlobalSystems()->modulesFactory;
 	
 	CreateInfo::PipelineTemplate	pp_templ;
@@ -240,7 +230,7 @@ bool GApp::_CreatePipeline1 ()
 	Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
 	
 	create_gpp->gpuThread	= gthread;
-	create_gpp->moduleID	= ids.pipeline;
+	create_gpp->moduleID	= gpuIDs.pipeline;
 	create_gpp->topology	= EPrimitive::TriangleList;
 	create_gpp->renderPass	= framebuffer->GetModuleByMsg< RenderPassMsgList_t >();
 
@@ -248,7 +238,7 @@ bool GApp::_CreatePipeline1 ()
 	gpipeline1 = create_gpp->result.Get();
 
 	CHECK_ERR( factory->Create(
-					ids.resourceTable,
+					gpuIDs.resourceTable,
 					ms->GlobalSystems(),
 					CreateInfo::PipelineResourceTable{},
 					OUT resourceTable1 )
@@ -263,7 +253,7 @@ bool GApp::_CreatePipeline1 ()
 
 bool GApp::_CreatePipeline2 ()
 {
-	auto	gthread = GetGThread( ms->GlobalSystems() );
+	auto	gthread = PlatformTools::GPUThreadHelper::FindGraphicsThread( ms->GlobalSystems() );
 	auto	factory = ms->GlobalSystems()->modulesFactory;
 	
 	CreateInfo::PipelineTemplate	pp_templ;
@@ -279,7 +269,7 @@ bool GApp::_CreatePipeline2 ()
 	Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
 
 	create_gpp->gpuThread	= gthread;
-	create_gpp->moduleID	= ids.pipeline;
+	create_gpp->moduleID	= gpuIDs.pipeline;
 	create_gpp->topology	= EPrimitive::TriangleList;
 	create_gpp->vertexInput.Add( "at_Position", &Vertex::position )
 							.Add( "at_Texcoord", &Vertex::texcoord )
@@ -289,7 +279,7 @@ bool GApp::_CreatePipeline2 ()
 	gpipeline2 = create_gpp->result.Get();
 
 	CHECK_ERR( factory->Create(
-					ids.resourceTable,
+					gpuIDs.resourceTable,
 					ms->GlobalSystems(),
 					CreateInfo::PipelineResourceTable{},
 					OUT resourceTable2 )
@@ -305,11 +295,11 @@ bool GApp::_CreatePipeline2 ()
 
 bool GApp::_CreateCmdBuffers ()
 {
-	auto	gthread = GetGThread( ms->GlobalSystems() );
+	auto	gthread = PlatformTools::GPUThreadHelper::FindGraphicsThread( ms->GlobalSystems() );
 	auto	factory = ms->GlobalSystems()->modulesFactory;
 
 	CHECK_ERR( factory->Create(
-					ids.commandBuilder,
+					gpuIDs.commandBuilder,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuCommandBuilder{ gthread },
 					OUT cmdBuilder )
@@ -322,7 +312,7 @@ bool GApp::_CreateCmdBuffers ()
 	FOR( i, cmdBuffers )
 	{
 		CHECK_ERR( factory->Create(
-						ids.commandBuffer,
+						gpuIDs.commandBuffer,
 						gthread->GlobalSystems(),
 						CreateInfo::GpuCommandBuffer{
 							gthread,
@@ -345,14 +335,14 @@ bool GApp::_CreateCmdBuffers ()
 
 bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 {
-	auto	gthread = GetGThread( ms->GlobalSystems() );
+	auto	gthread = PlatformTools::GPUThreadHelper::FindGraphicsThread( ms->GlobalSystems() );
 	auto	factory = gthread->GlobalSystems()->modulesFactory;
 
 	syncManager = gthread->GetModuleByMsg<CompileTime::TypeListFrom< Message<GpuMsg::CreateFence> >>();
 	CHECK_ERR( syncManager );
 
 	CHECK_ERR( factory->Create(
-					ids.image,
+					gpuIDs.image,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuImage{	ImageDescriptor{
 												EImage::Tex2D,
@@ -365,7 +355,7 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					OUT fbColorImage ) );
 	/*
 	CHECK_ERR( factory->Create(
-					ids.image,
+					gpuIDs.image,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuImage{	ImageDescriptor{
 												EImage::Tex2D,
@@ -378,7 +368,7 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					OUT texture ) );
 	/*/
 	CHECK_ERR( factory->Create(
-					ids.image,
+					gpuIDs.image,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuImage{	ImageDescriptor{
 												EImage::Tex2D,
@@ -391,7 +381,7 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					OUT texture ) );
 	//*/
 	CHECK_ERR( factory->Create(
-					ids.sampler,
+					gpuIDs.sampler,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuSampler{ gthread,
 											SamplerDescriptor::Builder()
@@ -402,7 +392,7 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					OUT sampler ) );
 
 	CHECK_ERR( factory->Create(
-					ids.buffer,
+					gpuIDs.buffer,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuBuffer{	BufferDescriptor{
 												SizeOf<Vertex>() * 4,
@@ -413,7 +403,7 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					OUT vbuffer ) );
 
 	CHECK_ERR( factory->Create(
-					ids.buffer,
+					gpuIDs.buffer,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuBuffer{	BufferDescriptor{
 												SizeOf<uint>() * 6,
@@ -424,7 +414,7 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					OUT ibuffer ) );
 
 	CHECK_ERR( factory->Create(
-					ids.buffer,
+					gpuIDs.buffer,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuBuffer{	BufferDescriptor{
 												SizeOf<Pipelines::UB>(),
@@ -435,7 +425,7 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					OUT ubuffer ) );
 
 	CHECK_ERR( factory->Create(
-					ids.framebuffer,
+					gpuIDs.framebuffer,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuFramebuffer{
 						gthread,

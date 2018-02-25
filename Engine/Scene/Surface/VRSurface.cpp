@@ -3,7 +3,7 @@
 #include "Engine/Scene/Shared/Surface.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
 #include "Engine/Scene/Impl/BaseSceneModule.h"
-#include "Engine/Platforms/Windows/WinMessages.h"
+#include "Engine/Platforms/Shared/Tools/WindowHelper.h"
 
 namespace Engine
 {
@@ -32,9 +32,6 @@ namespace Scene
 										> >;
 		
 		using CameraEventList_t		= MessageListFrom< SceneMsg::SurfaceRequestUpdate >;
-
-		using WindowMsgList_t		= MessageListFrom< OSMsg::GetWinWindowHandle >;
-		using WindowEventList_t		= MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::OnWinWindowRawMessage >;
 
 		using VRThreadMsgList_t		= MessageListFrom< 
 											GpuMsg::GetVRDeviceInfo,

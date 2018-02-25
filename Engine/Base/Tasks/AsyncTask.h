@@ -123,7 +123,7 @@ namespace Base
 	inline bool AsyncTask<R,P>::Wait () const noexcept
 	{
 		// TODO: add profiling
-		return _event.Wait( TimeL::FromSeconds( 60 ) );
+		return _event.Wait( /*TimeL::FromSeconds( 60 )*/ );
 	}
 		
 /*

@@ -77,7 +77,7 @@ namespace GXMath
 	template <typename T>				inline T		Exp (const T& x);
 	template <typename T>				inline T		Exp2 (const T& x);
 	template <typename T>				inline T		Exp10 (const T& x);
-	template <typename T>				inline uint		IntLog2 (const T &x);
+	template <typename T>				constexpr uint	IntLog2 (const T &x);
 	template <typename T>				inline T		CeilPowerOfTwo (const T& x);
 	template <typename T>				inline T		FloorPowerOfTwo (const T& x);
 	template <typename T>				inline T		NearPowerOfTwo (const T& x);
@@ -141,21 +141,21 @@ namespace GXMath
 	// Bit Operators
 	//
 
-	template <typename T>				inline T		ToBit (Bits<usize> index);
-	template <typename T>				inline T		ToMask (Bits<usize> index);
-	template <typename T>				inline T		ToMask (Bits<usize> first, Bits<usize> last);
-	template <typename T>				inline T		GetMaskForType (const T &type = T());
+	template <typename T>				constexpr T		ToBit (Bits<usize> index);
+	template <typename T>				constexpr T		ToMask (Bits<usize> index);
+	template <typename T>				constexpr T		ToMask (Bits<usize> first, Bits<usize> last);
+	template <typename T>				constexpr T		GetMaskForType (const T &type = T());
 
-	template <typename T>				inline T		SafeLeftBitShift (const T& x, Bits<usize> shift);	// <<
-	template <typename T>				inline T		SafeRightBitShift (const T& x, Bits<usize> shift);	// >>
+	template <typename T>				constexpr T		SafeLeftBitShift (const T& x, Bits<usize> shift);	// <<
+	template <typename T>				constexpr T		SafeRightBitShift (const T& x, Bits<usize> shift);	// >>
 	
-	template <typename T>				inline T		BitRotateLeft (const T& x, Bits<usize> shift);
-	template <typename T>				inline T		BitRotateRight (const T& x, Bits<usize> shift);
+	template <typename T>				constexpr T		BitRotateLeft (const T& x, Bits<usize> shift);
+	template <typename T>				constexpr T		BitRotateRight (const T& x, Bits<usize> shift);
 	
-	template <typename T>				inline T		ReverseBitOrder (const T& x);
+	template <typename T>				constexpr T		ReverseBitOrder (const T& x);
 
-	template <typename T>				inline Bits<usize>	BitScanReverse (const T& x);	// clz, findMSB
-	template <typename T>				inline Bits<usize>	BitScanForward (const T& x);	// ctz, findLSB
+	template <typename T>		constexpr Bits<usize>	BitScanReverse (const T& x);	// clz, findMSB
+	template <typename T>		constexpr Bits<usize>	BitScanForward (const T& x);	// ctz, findLSB
 
 
 
@@ -163,13 +163,13 @@ namespace GXMath
 	// AlignToLarge
 	//
 	
-	template <typename T>			constexpr T AlignToLarge (const T& value, usize align);
+	template <typename T>				constexpr T		AlignToLarge (const T& value, usize align);
 
 	
-	template <typename A, typename B>				typename CompileTime::MainType<A,B>		Min (const A& a, const B& b);
-	template <typename A, typename B>				typename CompileTime::MainType<A,B>		Max (const A& a, const B& b);
-	template <typename A, typename B, typename C>	typename CompileTime::MainType<A,B,C>	Wrap (const A& value, const B& minValue, const C& maxValue);
-	template <typename A, typename B>				typename CompileTime::MainType<A,B>		Mod (const A& left, const B& right);
+	template <typename A, typename B>				auto	Min (const A& a, const B& b);
+	template <typename A, typename B>				auto	Max (const A& a, const B& b);
+	template <typename A, typename B, typename C>	auto	Wrap (const A& value, const B& minValue, const C& maxValue);
+	template <typename A, typename B>				auto	Mod (const A& left, const B& right);
 
 
 }	// GXMath

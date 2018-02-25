@@ -7,7 +7,7 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {
@@ -62,6 +62,8 @@ namespace PlatformGL
 											GpuMsg::CmdClearColorImage,
 											GpuMsg::CmdClearDepthStencilImage,
 											GpuMsg::CmdPipelineBarrier,
+											GpuMsg::CmdPushConstants,
+											GpuMsg::CmdPushNamedConstants,
 											GpuMsg::SetCommandBufferDependency,
 											GpuMsg::GetCommandBufferState
 										> >;
@@ -96,6 +98,7 @@ namespace PlatformGL
 		UsedResources_t			_resources;
 		CommandArray_t			_commands;
 		BinaryArray				_bufferData;	// used to store data for UpdateBuffer command
+		BinaryArray				_pushConstData;	// used to store data for PushConstants command
 		ModulePtr				_cmdBuffer;		// current command buffer
 		EScope					_scope;
 		DynamicStates_t			_dynamicStates;
@@ -154,6 +157,8 @@ namespace PlatformGL
 		bool _CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &);
 		bool _CmdClearDepthStencilImage (const Message< GpuMsg::CmdClearDepthStencilImage > &);
 		bool _CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &);
+		bool _CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &);
+		bool _CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -228,6 +233,8 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdClearColorImage );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdClearDepthStencilImage );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdPipelineBarrier );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdPushConstants );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdPushNamedConstants );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -362,7 +369,7 @@ namespace PlatformGL
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		
-		SendTo( _cmdBuffer, Message< GpuMsg::SetGLCommandBufferQueue >{ RVREF(_commands), RVREF(_bufferData) } );
+		SendTo( _cmdBuffer, Message< GpuMsg::SetGLCommandBufferQueue >{ RVREF(_commands), RVREF(_bufferData), RVREF(_pushConstData) } );
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferDependency >{ RVREF(_resources) } );
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Executable } );
 
@@ -374,6 +381,7 @@ namespace PlatformGL
 		_resources.Clear();
 		_commands.Clear();
 		_bufferData.Clear();
+		_pushConstData.Clear();
 
 		return true;
 	}
@@ -922,6 +930,34 @@ namespace PlatformGL
 		CHECK_ERR( _scope == EScope::Command );
 		
 		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushConstants
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command );
+		
+		TODO("");
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushNamedConstants
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command );
+		
+		TODO("");
 		return true;
 	}
 

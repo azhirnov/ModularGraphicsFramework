@@ -4,7 +4,7 @@
 
 #include "Engine/Platforms/OpenGL/Impl/gl4.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 #include "Engine/Platforms/Shared/GPU/BufferEnums.h"
 #include "Engine/Platforms/Shared/GPU/CommandEnums.h"

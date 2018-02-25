@@ -108,7 +108,8 @@ namespace Scene
 =================================================
 */
 	FreeVRCamera::FreeVRCamera (GlobalSystemsRef gs, const CreateInfo::Camera &ci) :
-		BaseSceneModule( gs, ModuleConfig{ FreeVRCameraModuleID, UMax }, &_msgTypes, &_eventTypes )
+		BaseSceneModule( gs, ModuleConfig{ FreeVRCameraModuleID, UMax }, &_msgTypes, &_eventTypes ),
+		_settings{ ci.settings }
 	{
 		SetDebugName( "Scene.FreeVRCamera" );
 

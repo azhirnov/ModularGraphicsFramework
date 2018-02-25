@@ -34,8 +34,6 @@ namespace Graphics
 		using DeviceMsgList_t		= MessageListFrom< GpuMsg::GetDeviceInfo >;
 		using DeviceEventList_t		= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 
-		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetGraphicsModules >;
-
 		using LayerName_t			= GraphicsMsg::BatchRendererSetMaterial::LayerName_t;
 
 
@@ -225,14 +223,10 @@ namespace Graphics
 
 		CHECK_ERR( GetState() == EState::Initial );
 
-		// find graphics thread
-		ModulePtr	gthread;
-		CHECK_LINKING( gthread = GlobalSystems()->parallelThread->GetModuleByMsg< GThreadMsgList_t >() );
-
 		Message< GpuMsg::GetGraphicsModules >	req_ids;
-		gthread->Send( req_ids );
+		CHECK( _GetManager()->Send( req_ids ) );
 
-		_moduleIDs << req_ids->graphics;
+		_moduleIDs = *req_ids->graphics;
 
 		return Module::_Link_Impl( msg );
 	}
@@ -570,7 +564,7 @@ namespace Graphics
 		{
 			CHECK_ERR( _descr.multitexturedShader );
 			CHECK_ERR( _descr.multitexturedShader->Send( create_gpp ) );
-			pipeline << create_gpp->result;
+			pipeline = *create_gpp->result;
 			return true;
 		}
 
@@ -579,7 +573,7 @@ namespace Graphics
 		{
 			CHECK_ERR( _descr.texturedShader );
 			CHECK_ERR( _descr.texturedShader->Send( create_gpp ) );
-			pipeline << create_gpp->result;
+			pipeline = *create_gpp->result;
 			return true;
 		}
 
@@ -587,7 +581,7 @@ namespace Graphics
 		{
 			CHECK_ERR( _descr.coloredShader );
 			CHECK_ERR( _descr.coloredShader->Send( create_gpp ) );
-			pipeline << create_gpp->result;
+			pipeline = *create_gpp->result;
 			return true;
 		}
 	}
@@ -692,7 +686,7 @@ namespace Graphics
 	{
 		CHECK_ERR( msg->pipeline and msg->resourceTable );
 
-		_defMaterial = Uninitialized;
+		_defMaterial.Undefine();
 
 		_currMaterial.layer			= msg->layer;
 		_currMaterial.pipeline		= msg->pipeline;

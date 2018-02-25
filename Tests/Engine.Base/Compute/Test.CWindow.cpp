@@ -4,8 +4,6 @@
 	
 extern void Test_CWindow ()
 {
-	Logger::GetInstance()->Open( "log", false );
-
 	#ifdef GRAPHICS_API_OPENGL
 	{
 		CApp	app;

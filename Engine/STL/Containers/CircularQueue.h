@@ -77,8 +77,6 @@ namespace GXTypes
 
 		T		&	Back ();
 		T const	&	Back () const;
-
-		bool		operator ! () const									{ return not Empty(); }
 		
 		T		&	operator [] (usize i);
 		T const	&	operator [] (usize i) const;

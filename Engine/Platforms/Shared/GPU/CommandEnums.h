@@ -37,9 +37,6 @@ namespace Platforms
 			// this value depends of command builder module
 			ImplicitResetable,
 
-			// will wait fence before restart or delete
-			//UseFence,
-
 			_Count,
 			Unknown	= ~0u,
 		};

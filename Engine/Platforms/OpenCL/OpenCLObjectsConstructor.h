@@ -4,7 +4,7 @@
 
 #include "Engine/Platforms/Shared/GPU/IDs.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {

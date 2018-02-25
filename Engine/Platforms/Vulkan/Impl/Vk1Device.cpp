@@ -3,7 +3,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
 #include "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 #include "Engine/Platforms/Shared/GPU/Framebuffer.h"
 #include "Engine/Platforms/Shared/GPU/RenderPass.h"
@@ -46,7 +46,8 @@ namespace PlatformVK
 		_debugCallback( VK_NULL_HANDLE ),
 		_enableDebugMarkers( false ),
 		_isInstanceFunctionsLoaded( false ),
-		_isDeviceFunctionsLoaded( false )
+		_isDeviceFunctionsLoaded( false ),
+		_debugReportCounter( 0 )
 	{
 		SetDebugName( "Vk1Device" );
 
@@ -66,6 +67,11 @@ namespace PlatformVK
 		CHECK( not IsSurfaceCreated() );
 		CHECK( not IsSwapchainCreated() );
 		CHECK( not IsDebugCallbackCreated() );
+
+		if ( _debugReportCounter > 0 )
+		{
+			WARNING( "Threre are a few warnings, check debug output!" );
+		}
 	}
 	
 /*
@@ -269,6 +275,7 @@ namespace PlatformVK
 		dbg_callback_info.sType			= VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
 		dbg_callback_info.flags			= flags;
 		dbg_callback_info.pfnCallback	= &_DebugReportCallback;
+		dbg_callback_info.pUserData		= this;
 
 		VK_CHECK( vkCreateDebugReportCallbackEXT( _instance, &dbg_callback_info, null, OUT &_debugCallback ) );
 		return true;
@@ -505,6 +512,10 @@ namespace PlatformVK
 		str << "Vulkan info\n---------------------";
 		str << "\ndevice name: " << _deviceProperties.deviceName;
 		str << "\ndevice type: " << _DeviceTypeToString( _deviceProperties.deviceType );
+
+		str << "\npush constants:      " << ToString( BytesU(_deviceProperties.limits.maxPushConstantsSize) );
+		str << "\nmax allocations:     " << _deviceProperties.limits.maxMemoryAllocationCount;
+		str << "\nper stage resources: " << _deviceProperties.limits.maxPerStageResources;
 
 		str << "\n---------------------";
 
@@ -1620,6 +1631,9 @@ namespace PlatformVK
 			<< ", message:\n" << pMessage;
 
 		LOG( log.cstr(), _DebugReportFlagsToLogType( (VkDebugReportFlagBitsEXT)flags ) );
+
+		Cast< Vk1Device *>(pUserData)->_debugReportCounter++;
+
 		return VK_FALSE;
 	}
 	

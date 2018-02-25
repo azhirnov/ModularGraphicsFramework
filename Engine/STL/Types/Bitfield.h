@@ -93,16 +93,18 @@ namespace GXTypes
 		_GX_DIM_OPERATORS_SELF( ^,	_bits );
 
 
-		forceinline constexpr void SetInterval (index_t first, index_t last)
+		forceinline constexpr Self& SetInterval (index_t first, index_t last)
 		{
 			ASSUME( first <= last and last < B );
 			_bits |= GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
+			return *this;
 		}
 
-		forceinline constexpr void ResetInterval (index_t first, index_t last)
+		forceinline constexpr Self& ResetInterval (index_t first, index_t last)
 		{
 			ASSUME( first <= last and last < B );
 			_bits &= ~GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
+			return *this;
 		}
 
 		CHECKRES forceinline constexpr bool HasInterval (index_t first, index_t last) const

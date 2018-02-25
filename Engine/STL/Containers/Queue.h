@@ -76,8 +76,6 @@ namespace GXTypes
 		T		&	Back ();
 		T const	&	Back () const;
 
-		bool		operator ! () const									{ return not Empty(); }
-
 		T		&	operator [] (usize i);
 		T const	&	operator [] (usize i) const;
 
@@ -513,7 +511,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void Queue<T,S,MC>::Reserve (const usize size)
+	inline void Queue<T,S,MC>::Reserve (usize size)
 	{
 		if ( size > _memory.MaxSize() )
 			size = _memory.MaxSize();
@@ -595,7 +593,7 @@ namespace GXTypes
 	inline void Queue<T,S,MC>::AppendFront (ArrayCRef<T> other)
 	{
 		if ( other.Empty() )
-			RET_VOID;
+			return;
 
 		_ReplaceToRight( other.Count() );
 		Strategy_t::Copy( _memory.Pointer() + _first, other.ptr(), other.Count() );
@@ -610,7 +608,7 @@ namespace GXTypes
 	inline void Queue<T,S,MC>::AppendFront (Self &&other)
 	{
 		if ( other.Empty() )
-			RET_VOID;
+			return;
 
 		_ReplaceToRight( other.Count() );
 		Strategy_t::Move( _memory.Pointer() + _first, other.ptr(), other.Count() );

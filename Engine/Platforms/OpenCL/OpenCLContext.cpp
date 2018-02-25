@@ -8,7 +8,7 @@
 #include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
@@ -25,7 +25,8 @@ namespace Platforms
 	private:
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
-											ModuleMsg::RemoveFromManager
+											ModuleMsg::RemoveFromManager,
+											GpuMsg::GetGraphicsModules
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
@@ -58,6 +59,7 @@ namespace Platforms
 	private:
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
 		
 	private:
 		static ModulePtr _CreateOpenCLThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
@@ -102,6 +104,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenCLContext::_Delete_Impl );
 		_SubscribeOnMsg( this, &OpenCLContext::_AddToManager );
 		_SubscribeOnMsg( this, &OpenCLContext::_RemoveFromManager );
+		_SubscribeOnMsg( this, &OpenCLContext::_GetGraphicsModules );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 	}
@@ -153,6 +156,17 @@ namespace Platforms
 		_threads.Erase( module );
 		return true;
 	}
+	
+/*
+=================================================
+	_GetGraphicsModules
+=================================================
+*/
+	bool OpenCLContext::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	{
+		msg->compute.Set( OpenCLObjectsConstructor::GetComputeModules() );
+		return true;
+	}
 //-----------------------------------------------------------------------------
 
 
@@ -174,7 +188,6 @@ namespace Platforms
 		compute.image			= CLImageModuleID;
 		compute.memory			= CLMemoryModuleID;
 		compute.resourceTable	= CLPipelineResourceTableModuleID;
-		compute.uniforms		= CLUniformsModuleID;
 		return compute;
 	}
 

@@ -3,7 +3,7 @@
 #include "Engine/Platforms/OpenGL/Impl/gl4.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinLibrary.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace gl
 {

@@ -3,8 +3,9 @@
 #include "Engine/Scene/Shared/Scene.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
 #include "Engine/Scene/Impl/BaseSceneModule.h"
-#include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/VR/VRObjectsConstructor.h"
+#include "Engine/Platforms/Shared/Tools/WindowHelper.h"
+#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
 
 namespace Engine
 {
@@ -40,17 +41,7 @@ namespace Scene
 		using SceneThreads_t		= Set< ModulePtr >;
 		using VRSettings_t			= CreateInfo::SceneManager::VRSettings;
 		
-		using PlatformMsgList_t		= MessageListFrom< OSMsg::GetOSModules >;
-		using PlatformEventList_t	= MessageListFrom< OSMsg::OnWinPlatformCreated >;
-		
 		using GpuContextMsgList_t	= MessageListFrom< ModuleMsg::AddToManager, ModuleMsg::RemoveFromManager, GpuMsg::GetGraphicsModules >;
-		
-		using WindowMsgList_t		= MessageListFrom< OSMsg::GetWinWindowHandle >;
-		using WindowEventList_t		= MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::OnWinWindowRawMessage >;
-
-		using VRThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginVRFrame, GpuMsg::ThreadEndVRFrame, GpuMsg::GetGraphicsModules >;
-		using GpuThreadMsgList_t	= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetGraphicsModules >;
-		using GpuThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 
 		using KeyInputEventList_t	= MessageListFrom< ModuleMsg::InputKey >;
 		using MouseInputEventList_t	= MessageListFrom< ModuleMsg::InputMotion >;
@@ -141,7 +132,7 @@ namespace Scene
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
-		ModulePtr	platform	= GlobalSystems()->mainSystem->GetModuleByMsgEvent< PlatformMsgList_t, PlatformEventList_t >();
+		ModulePtr	platform	= PlatformTools::WindowHelper::FindPlatform( GlobalSystems() );
 		ModulePtr	input_mngr	= GlobalSystems()->mainSystem->GetModuleByID( InputManagerModuleID );	// TODO
 		ModulePtr	stream_mngr	= GlobalSystems()->mainSystem->GetModuleByID( StreamManagerModuleID );	// TODO
 		ModulePtr	gpu_context	= GlobalSystems()->mainSystem->GetModuleByMsg< GpuContextMsgList_t >();
@@ -174,9 +165,9 @@ namespace Scene
 			gpu_context->Send( msg );
 		}
 		
-		ModulePtr	window		= GlobalSystems()->parallelThread->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >();
-		ModulePtr	vr_thread	= GlobalSystems()->parallelThread->GetModuleByMsgEvent< VRThreadMsgList_t, GpuThreadEventList_t >();
-		ModulePtr	gpu_thread	= GlobalSystems()->parallelThread->GetModuleByMsgEvent< GpuThreadMsgList_t, GpuThreadEventList_t >();
+		ModulePtr	window		= PlatformTools::WindowHelper::FindWindow( GlobalSystems() );
+		ModulePtr	vr_thread	= PlatformTools::GPUThreadHelper::FindVRThread( GlobalSystems() );
+		ModulePtr	gpu_thread	= PlatformTools::GPUThreadHelper::FindGraphicsThread( GlobalSystems() );
 		ModulePtr	input_thread= GlobalSystems()->parallelThread->GetModuleByID( InputThreadModuleID );
 
 		if ( not window )
@@ -280,9 +271,8 @@ namespace Scene
 
 		CHECK(( window->ReceiveEvents< MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::WindowAfterDestroy > >( this ) ));
 		CHECK(( gpu_thread->ReceiveEvents< MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy > >( this ) ));
-
-		CHECK_ERR( Module::_Link_Impl( msg ) );
-		return true;
+		
+		return Module::_Link_Impl( msg );
 	}
 	
 /*

@@ -70,7 +70,6 @@ namespace OS
 	public:
 		typedef void (*PThreadProc_t) (void *param);
 
-		static const uint	MAX_WAIT_TIME		= 0xFFFFFFFF;
 		static const uint	UNKNOWN_EXIT_CODE	= -1;
 
 

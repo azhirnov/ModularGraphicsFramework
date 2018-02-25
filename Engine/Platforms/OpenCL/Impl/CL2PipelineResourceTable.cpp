@@ -3,11 +3,10 @@
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/Uniforms.h"
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
@@ -40,12 +39,11 @@ namespace PlatformCL
 			cl::cl_mem	id		= null;
 		};
 
-		struct UniformArg : BaseArg {
-			UniformsDescriptor::Value_t	value;
-			BytesU						sizeOf;
+		struct PushConstantArg : BaseArg {
+			// TODO
 		};
 
-		using ResourceDescr_t		= Union< MemObjectArg, UniformArg >;
+		using ResourceDescr_t		= Union< MemObjectArg, PushConstantArg >;
 		using ResourceDescrArray_t	= Array< ResourceDescr_t >;
 
 		struct _CreateResourceDescriptor_Func;
@@ -247,10 +245,8 @@ namespace PlatformCL
 		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
 		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
 		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
-		using Uniform			= PipelineLayoutDescriptor::Uniform;
 		using ImageMsgList		= MessageListFrom< GpuMsg::GetCLImageID >;
 		using BufferMsgList		= MessageListFrom< GpuMsg::GetCLBufferID >;
-		using UniformsMsgList	= MessageListFrom< GpuMsg::GetUniformsDescriptor >;
 
 
 	// variables
@@ -322,7 +318,7 @@ namespace PlatformCL
 
 			MemObjectArg	descr;
 			descr.index		= img.binding;
-			descr.id		<< req_image->result;
+			descr.id		= *req_image->result;
 			descr.module	= img_mod;
 
 			resources.PushBack(ResourceDescr_t( descr ));
@@ -346,11 +342,11 @@ namespace PlatformCL
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			CHECK( req_descr->result.Get().size == buf.size );
+			CHECK( req_descr->result.Get().size == BytesUL(buf.size) );
 			
 			MemObjectArg	descr;
 			descr.index		= buf.binding;
-			descr.id		<< req_buffer->result;
+			descr.id		= *req_buffer->result;
 			descr.module	= buf_mod;
 			
 			resources.PushBack(ResourceDescr_t( descr ));
@@ -374,7 +370,7 @@ namespace PlatformCL
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			BufferDescriptor	buf_descr;	buf_descr << req_descr->result;
+			BufferDescriptor const&	buf_descr = *req_descr->result;
 
 			CHECK( (buf_descr.size >= buf.staticSize) and
 					(buf.arrayStride == 0 or
@@ -382,46 +378,11 @@ namespace PlatformCL
 			
 			MemObjectArg	descr;
 			descr.index		= buf.binding;
-			descr.id		<< req_buffer->result;
+			descr.id		= *req_buffer->result;
 			descr.module	= buf_mod;
 
 			resources.PushBack(ResourceDescr_t( descr ));
 			return true;
-		}
-		
-/*
-=================================================
-	operator (Uniform)
-=================================================
-*/
-		bool operator () (const Uniform &un) const
-		{
-			FOR( i, self._GetAttachments() )
-			{
-				const auto&	pair = self._GetAttachments()[i];
-
-				if ( pair.second->GetSupportedMessages().HasAllTypes< UniformsMsgList >() )
-				{
-					Message< GpuMsg::GetUniformsDescriptor >	req_descr;
-					pair.second->Send( req_descr );
-
-					UniformsDescriptor::ValueMap_t::const_iterator	iter;
-
-					if ( not req_descr->result->values.Find( StringCRef(un.name), OUT iter ) )
-						continue;
-
-					UniformArg		descr;
-					descr.index		= un.binding;
-					descr.module	= pair.second;
-					descr.value		= iter->second;
-					descr.sizeOf	= iter->second.GetSizeOf();
-
-					resources.PushBack(ResourceDescr_t( descr ));
-					return true;
-				}
-			}
-
-			RETURN_ERR( "uniform not found!" );
 		}
 	};
 
@@ -435,12 +396,11 @@ namespace PlatformCL
 		Message< GpuMsg::GetPipelineLayoutDescriptor >	req_descr;
 		SendTo( _layout, req_descr );
 		
-		PipelineLayoutDescriptor			layout_descr;	layout_descr << req_descr->result;
 		_CreateResourceDescriptor_Func		func( OUT _resources, *this );
 		
 		// initialize table
-		FOR( i, layout_descr.GetUniforms() ) {
-			layout_descr.GetUniforms()[i].Apply( func );
+		FOR( i, req_descr->result->GetUniforms() ) {
+			req_descr->result->GetUniforms()[i].Apply( func );
 		}
 		return true;
 	}
@@ -476,10 +436,11 @@ namespace PlatformCL
 			CL_CALL( clSetKernelArg( _kernel, arg.index, sizeof(arg.id), &arg.id ) );
 		}
 
-		void operator () (const UniformArg &arg) const
+		void operator () (const PushConstantArg &arg) const
 		{
 			using namespace cl;
-			CL_CALL( clSetKernelArg( _kernel, arg.index, (size_t) arg.sizeOf, arg.value.GetData().ptr() ) );
+			TODO("");
+			//CL_CALL( clSetKernelArg( _kernel, arg.index, (size_t) arg.sizeOf, arg.value.GetData().ptr() ) );
 		}
 	};
 

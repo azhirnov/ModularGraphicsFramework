@@ -6,7 +6,7 @@
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #include "Engine/Platforms/Shared/Tools/ImageViewHashMap.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 #define GX_OGL_TEXSTORAGE
 
@@ -201,9 +201,8 @@ namespace PlatformGL
 		_memObj->Subscribe( this, &GL4Image::_OnMemoryBindingChanged );
 		
 		CHECK_LINKING( _CopySubscriptions< ForwardToMem_t >( _memObj ) );
-
-		CHECK_ERR( Module::_Link_Impl( msg ) );
-		return true;
+		
+		return Module::_Link_Impl( msg );
 	}
 	
 /*
@@ -475,7 +474,7 @@ namespace PlatformGL
 
 		CHECK_ERR( _CreateGLImageView( create ) );
 
-		_imageView << create->result;
+		_imageView = *create->result;
 		return true;
 	}
 

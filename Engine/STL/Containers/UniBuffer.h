@@ -66,8 +66,6 @@ namespace GXTypes
 
 		bool		operator == (const Self &other) const;
 		bool		operator != (const Self &other) const;
-		
-		bool		operator ! ()	const			{ return not Empty(); }
 
 		operator	UniBuffer<const T> () const		{ return UniBuffer<const T>( _memory, _count, _offset, _stride ); }
 

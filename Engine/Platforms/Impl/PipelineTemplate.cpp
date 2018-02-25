@@ -9,28 +9,28 @@
 #include "Engine/Platforms/Shared/GPU/Context.h"
 #include "Engine/Platforms/Shared/GPU/Thread.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 #include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #endif
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 #include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #endif
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 #include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 #endif
 
-#if defined( GRAPHICS_API_DIRECTX )
+#ifdef GRAPHICS_API_DIRECTX
 #include "Engine/Platforms/DirectX/Impl/DX11Messages.h"
 #include "Engine/Platforms/DirectX/DirectXObjectsConstructor.h"
 #endif
 
-#if defined( GRAPHICS_API_SOFT )
+#ifdef GRAPHICS_API_SOFT
 #include "Engine/Platforms/Soft/Impl/SWMessages.h"
 #include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
 #endif
@@ -334,7 +334,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------
 
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 /*
 =================================================
 	_AttachToVulkanDevice
@@ -494,7 +494,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------
 	
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 /*
 =================================================
 	_AttachToOpenGLDevice
@@ -672,7 +672,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------
 
 	
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 /*
 =================================================
 	_AttachToOpenCLDevice
@@ -865,7 +865,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------
 	
 
-#if defined( GRAPHICS_API_SOFT )
+#ifdef GRAPHICS_API_SOFT
 	
 /*
 =================================================
@@ -1045,12 +1045,16 @@ namespace Platforms
 					GlobalSystems(),
 					CreateInfo::GraphicsPipeline{
 						msg->gpuThread,
-						gpp_descr,
-						this,
-						msg->renderPass
+						gpp_descr
 					},
 					OUT pipeline
 		));
+
+		pipeline->Send< ModuleMsg::AttachModule >({ this });
+
+		if ( msg->renderPass ) {
+			pipeline->Send< ModuleMsg::AttachModule >({ msg->renderPass });
+		}
 
 		msg->result.Set( pipeline );
 		return true;
@@ -1072,11 +1076,12 @@ namespace Platforms
 					GlobalSystems(),
 					CreateInfo::ComputePipeline{
 						msg->gpuThread,
-						cpp_descr,
-						this
+						cpp_descr
 					},
 					OUT pipeline
 		));
+		
+		pipeline->Send< ModuleMsg::AttachModule >({ this });
 
 		msg->result.Set( pipeline );
 		return true;
@@ -1086,29 +1091,36 @@ namespace Platforms
 
 	
 	
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 	ModulePtr VulkanObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
 		return New< PipelineTemplate >( gs, ci );
 	}
 #endif
 	
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 	ModulePtr OpenGLObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
 		return New< PipelineTemplate >( gs, ci );
 	}
 #endif
 	
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 	ModulePtr OpenCLObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
 		return New< PipelineTemplate >( gs, ci );
 	}
 #endif
 	
-#if defined( GRAPHICS_API_DIRECTX )
+#ifdef GRAPHICS_API_DIRECTX
 	ModulePtr DirectXObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
+	{
+		return New< PipelineTemplate >( gs, ci );
+	}
+#endif
+	
+#ifdef GRAPHICS_API_SOFT
+	ModulePtr SoftRendererObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
 		return New< PipelineTemplate >( gs, ci );
 	}

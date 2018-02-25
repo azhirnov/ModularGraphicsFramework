@@ -5,7 +5,7 @@
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
@@ -198,9 +198,8 @@ namespace PlatformCL
 		_memObj->Subscribe( this, &CL2Image::_OnMemoryBindingChanged );
 		
 		CHECK_LINKING( _CopySubscriptions< ForwardToMem_t >( _memObj ) );
-
-		CHECK_ERR( Module::_Link_Impl( msg ) );
-		return true;
+		
+		return Module::_Link_Impl( msg );
 	}
 	
 /*
@@ -296,13 +295,13 @@ namespace PlatformCL
 		CHECK_ERR( _imageId == null );
 		CHECK_ERR( not _isBindedToMemory );
 		
-		CL2ChannelOrder		order;
-		CL2ChannelDataType	data_type;
+		CL2ChannelOrder		order = {};
+		CL2ChannelDataType	data_type = {};
 		BytesU				bpp;
 
 		uint4 const			size = Utils::ValidateDimension( _descr.imageType, _descr.dimension );
 
-		CHECK_ERR( CL2Enum( _descr.format, order, data_type, bpp ) );
+		CHECK_ERR( CL2Enum( _descr.format, OUT order, OUT data_type, OUT bpp ) );
 
 		cl_image_format		img_format	= {};
 		cl_image_desc		img_desc	= {};

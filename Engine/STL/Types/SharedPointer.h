@@ -237,7 +237,9 @@ namespace GXTypes
 
 		forceinline int GetRefCount () const
 		{
-			if ( _ptr != null )	return S::Count( (B *)_ptr );
+			STATIC_ASSERT( sizeof(T) > 0 and sizeof(B) > 0 );
+
+			if ( _ptr != null )	return S::Count( static_cast<B *>(_ptr) );
 			else				{ WARNING(""); return -1; }
 		}
 

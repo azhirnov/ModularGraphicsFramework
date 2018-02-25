@@ -563,19 +563,19 @@ namespace GXMath
 	}	// _math_hidden_
 
 	template <typename A, typename B>
-	CHECKRES forceinline typename CompileTime::MainType<A,B>  MiddleValue (const A& a, const B& b)
+	CHECKRES forceinline auto  MiddleValue (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 
 		return _math_hidden_::_MiddleValue< T, CompileTime::IsFloat<T>, CompileTime::IsSigned<T> >::Get( T(a), T(b) );
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  MiddleValue (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
+	CHECKRES inline auto  MiddleValue (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
 	{
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = MiddleValue( a[i], b[i] );
 		return ret;
@@ -589,25 +589,25 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B, typename C>
-	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  Clamp (const A& value, const B& minValue, const C& maxValue)
+	CHECKRES forceinline auto  Clamp (const A& value, const B& minValue, const C& maxValue)
 	{
 		ASSERT( minValue <= maxValue );
 		return Min( maxValue, Max( value, minValue ) );
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Clamp (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
+	CHECKRES inline auto  Clamp (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
 	{
-		typedef typename CompileTime::MainType<A,B,C>	T;
+		typedef typename CompileTime::GenType<A,B,C>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Clamp( value[i], minValue[i], maxValue[i] );
 		return ret;
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Clamp (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
+	CHECKRES inline auto  Clamp (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
 	{
-		typedef typename CompileTime::MainType<A,B,C>	T;
+		typedef typename CompileTime::GenType<A,B,C>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Clamp( value[i], minValue, maxValue );
 		return ret;
@@ -615,13 +615,13 @@ namespace GXMath
 	
 /*
 =================================================
-	Clamp
+	ClampOut
 ----
 	clamp to outer range
 =================================================
 */
 	template <typename A, typename B, typename C>
-	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  ClampOut (const A& value, const B& minValue, const C& maxValue)
+	CHECKRES forceinline auto  ClampOut (const A& value, const B& minValue, const C& maxValue)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and
 					   CompileTime::IsScalarOrEnum<B> and
@@ -629,7 +629,7 @@ namespace GXMath
 
 		ASSERT( minValue <= maxValue );
 
-		typedef typename CompileTime::MainType<A,B,C>	T;
+		typedef typename CompileTime::GenType<A,B,C>	T;
 
 		const T	middle = MiddleValue( minValue, maxValue );
 		
@@ -639,18 +639,18 @@ namespace GXMath
 	}
 	
 	template <typename A, typename B, typename C, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  ClampOut (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
+	CHECKRES inline auto  ClampOut (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
 	{
-		typedef typename CompileTime::MainType<A,B,C>	T;
+		typedef typename CompileTime::GenType<A,B,C>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ClampOut( value[i], minValue[i], maxValue[i] );
 		return ret;
 	}
 	
 	template <typename A, typename B, typename C, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  ClampOut (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
+	CHECKRES inline auto  ClampOut (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
 	{
-		typedef typename CompileTime::MainType<A,B,C>	T;
+		typedef typename CompileTime::GenType<A,B,C>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = ClampOut( value[i], minValue, maxValue );
 		return ret;
@@ -725,31 +725,31 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	CHECKRES forceinline typename CompileTime::MainType<A,B>  Max (const A& a, const B& b)
+	CHECKRES forceinline auto  Max (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		return a > b ? T(a) : T(b);
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  Max (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
+	CHECKRES inline auto  Max (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Max( a[i], b[i] );
 		return ret;
 	}
 	
 	template <typename A, typename B, typename C>
-	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  Max (const A& a, const B& b, const C& c)
+	CHECKRES forceinline auto  Max (const A& a, const B& b, const C& c)
 	{
 		return Max( Max( a, b ), c );
 	}
 	
 	template <typename A, typename B, typename C, typename D>
-	CHECKRES forceinline typename CompileTime::MainType<A,B,C,D>  Max (const A& a, const B& b, const C& c, const D& d)
+	CHECKRES forceinline auto  Max (const A& a, const B& b, const C& c, const D& d)
 	{
 		return Max( Max( a, b ), Max( c, d ) );
 	}
@@ -760,31 +760,31 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	CHECKRES forceinline typename CompileTime::MainType<A,B>  Min (const A& a, const B& b)
+	CHECKRES forceinline auto  Min (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		return a > b ? T(b) : T(a);
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  Min (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
+	CHECKRES inline auto  Min (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Min( a[i], b[i] );
 		return ret;
 	}
 	
 	template <typename A, typename B, typename C>
-	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  Min (const A& a, const B& b, const C& c)
+	CHECKRES forceinline auto  Min (const A& a, const B& b, const C& c)
 	{
 		return Min( Min( a, b ), c );
 	}
 	
 	template <typename A, typename B, typename C, typename D>
-	CHECKRES forceinline typename CompileTime::MainType<A,B,C,D>  Min (const A& a, const B& b, const C& c, const D& d)
+	CHECKRES forceinline auto  Min (const A& a, const B& b, const C& c, const D& d)
 	{
 		return Min( Min( a, b ), Min( c, d ) );
 	}
@@ -795,18 +795,18 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	CHECKRES forceinline typename CompileTime::MainType<A,B>  MinAbs (const A& a, const B& b)
+	CHECKRES forceinline auto  MinAbs (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		return Abs(a) > Abs(b) ? T(b) : T(a);
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  MinAbs (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
+	CHECKRES inline auto  MinAbs (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = MinAbs( a[i], b[i] );
 		return ret;
@@ -818,18 +818,18 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	CHECKRES forceinline typename CompileTime::MainType<A,B>  MaxAbs (const A& a, const B& b)
+	CHECKRES forceinline auto  MaxAbs (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		return Abs(a) > Abs(b) ? T(a) : T(b);
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  MaxAbs (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
+	CHECKRES inline auto  MaxAbs (const Vec<A,I,U> &a, const Vec<B,I,U> &b)
 	{
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = MaxAbs( a[i], b[i] );
 		return ret;
@@ -837,31 +837,60 @@ namespace GXMath
 	
 /*
 =================================================
+	MinMax_Result
+=================================================
+*/
+	namespace _math_hidden_
+	{
+		template <typename T>
+		struct _MinMaxResult
+		{
+			T	min;
+			T	max;
+		};
+
+	}	// _math_hidden_
+	
+/*
+=================================================
 	MinMax
 =================================================
 */
 	template <typename A, typename B>
-	inline void	MinMax (OUT typename CompileTime::MainType<A,B>& tMin,
-						OUT typename CompileTime::MainType<A,B>& tMax,
-						const A& a, const B& b)
+	inline auto  MinMax (const A& a, const B& b)
 	{
-		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
-
-		typedef typename CompileTime::MainType<A,B>	T;
-
-		const bool	res = ( a > b );
-		tMin = res ? T(b) : T(a);
-		tMax = res ? T(a) : T(b);
+		return _math_hidden_::_MinMaxResult< typename CompileTime::GenType<A,B> >{ Min(a,b), Max(a,b) };
 	}
 
-	template <typename A, typename B, usize I, ulong U>
-	inline void	MinMax (OUT Vec< typename CompileTime::MainType<A,B>, I >& tMin,
-						OUT Vec< typename CompileTime::MainType<A,B>, I >& tMax,
-						const Vec<A,I,U>& a, const Vec<B,I,U>& b)
+	template <typename A, typename B, typename C>
+	inline auto  MinMax (const A& a, const B& b, const C &c)
 	{
-		FOR( i, a ) {
-			MinMax( tMin[i], tMax[i], a[i], b[i] );
-		}
+		return _math_hidden_::_MinMaxResult< typename CompileTime::GenType<A,B,C> >{ Min(a,b,c), Max(a,b,c) };
+	}
+
+	template <typename A, typename B, typename C, typename D>
+	inline auto  MinMax (const A& a, const B& b, const C &c, const D &d)
+	{
+		return _math_hidden_::_MinMaxResult< typename CompileTime::GenType<A,B,C,D> >{ Min(a,b,c,d), Max(a,b,c,d) };
+	}
+
+
+	template <typename A, typename B, usize I, ulong U>
+	inline auto  MinMax (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
+	{
+		return _math_hidden_::_MinMaxResult< Vec< typename CompileTime::GenType<A,B> ,I,U> >{ Min(a,b), Max(a,b) };
+	}
+
+	template <typename A, typename B, typename C, usize I, ulong U>
+	inline auto  MinMax (const Vec<A,I,U>& a, const Vec<B,I,U>& b, const Vec<C,I,U>& c)
+	{
+		return _math_hidden_::_MinMaxResult< Vec< typename CompileTime::GenType<A,B,C> ,I,U> >{ Min(a,b,c), Max(a,b,c) };
+	}
+
+	template <typename A, typename B, typename C, typename D, usize I, ulong U>
+	inline auto  MinMax (const Vec<A,I,U>& a, const Vec<B,I,U>& b, const Vec<C,I,U>& c, const Vec<D,I,U>& d)
+	{
+		return _math_hidden_::_MinMaxResult< Vec< typename CompileTime::GenType<A,B,C,D> ,I,U> >{ Min(a,b,c,d), Max(a,b,c,d) };
 	}
 	
 /*
@@ -870,11 +899,11 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	CHECKRES forceinline typename CompileTime::MainType<A,B>  MinMag (const A& a, const B& b)
+	CHECKRES forceinline auto  MinMag (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 
 		if ( Abs(a) > Abs(b) )	return T(b);
 		if ( Abs(a) < Abs(b) )	return T(a);
@@ -882,9 +911,9 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  MinMag (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
+	CHECKRES inline auto  MinMag (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
 	{
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = MinMag( a[i], b[i] );
 		return ret;
@@ -896,11 +925,11 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	CHECKRES forceinline typename CompileTime::MainType<A,B>  MaxMag (const A& a, const B& b)
+	CHECKRES forceinline auto  MaxMag (const A& a, const B& b)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 
 		if ( Abs(a) > Abs(b) )	return T(a);
 		if ( Abs(a) < Abs(b) )	return T(b);
@@ -908,9 +937,9 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  MaxMag (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
+	CHECKRES inline auto  MaxMag (const Vec<A,I,U>& a, const Vec<B,I,U>& b)
 	{
-		typedef typename CompileTime::MainType<A,B>	T;
+		typedef typename CompileTime::GenType<A,B>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = MaxMag( a[i], b[i] );
 		return ret;
@@ -922,15 +951,15 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B, typename C>
-	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  Mid (const A& a, const B& b, const C& c)
+	CHECKRES forceinline auto  Mid (const A& a, const B& b, const C& c)
 	{
 		return Min( Max( a, b ), Max( b, c ) );
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Mid (const Vec<A,I,U>& a, const Vec<B,I,U>& b, const Vec<C,I,U>& c)
+	CHECKRES inline auto  Mid (const Vec<A,I,U>& a, const Vec<B,I,U>& b, const Vec<C,I,U>& c)
 	{
-		typedef typename CompileTime::MainType<A,B,C>	T;
+		typedef typename CompileTime::GenType<A,B,C>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Mid( a[i], b[i], c[i] );
 		return ret;
@@ -947,7 +976,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> and CompileTime::IsScalarOrEnum<B> );
 		ASSERT( x >= T(0) or y == Floor(y) );	// if x < 0 and y not integer then result is NaN
 
-		typedef typename CompileTime::MainType<T,B>				main_t;
+		typedef typename CompileTime::GenType<T,B>				main_t;
 		typedef typename _math_hidden_::ToNearFloat< main_t >	_float_t;
 		return (T) ::pow( _float_t( x ), _float_t( y ) );
 	}
@@ -1352,7 +1381,7 @@ namespace GXMath
 		template <typename A, typename B, bool IsInt>
 		struct ModNearType
 		{
-			typedef typename CompileTime::MainType<A,B>		main_t;
+			typedef typename CompileTime::GenType<A,B>		main_t;
 
 			forceinline static main_t  Mod (const A& l, const B& r)
 			{
@@ -1371,7 +1400,7 @@ namespace GXMath
 		template <typename A, typename B>
 		struct ModNearType<A,B,true>
 		{
-			typedef typename CompileTime::MainType<A,B>		main_t;
+			typedef typename CompileTime::GenType<A,B>		main_t;
 
 			forceinline static main_t  Mod (const A& l, const B& r)
 			{
@@ -1393,19 +1422,19 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B>
-	CHECKRES forceinline typename CompileTime::MainType<A,B>  Mod (const A& left, const B& right)
+	CHECKRES forceinline auto  Mod (const A& left, const B& right)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
-		typedef typename CompileTime::MainType<A,B>		T;
+		typedef typename CompileTime::GenType<A,B>		T;
 
 		return _math_hidden_::ModNearType< A, B, CompileTime::IsInteger<T> >::Mod( left, right );
 	}
 
 	template <typename A, typename B, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  Mod (const Vec<A,I,U> &left, const Vec<B,I,U> &right)
+	CHECKRES inline auto  Mod (const Vec<A,I,U> &left, const Vec<B,I,U> &right)
 	{
-		typedef typename CompileTime::MainType<A,B>		T;
+		typedef typename CompileTime::GenType<A,B>		T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Mod( left[i], right[i] );
 		return ret;
@@ -1417,19 +1446,19 @@ namespace GXMath
 =================================================
 */
 	template <typename A, typename B, typename C>
-	CHECKRES forceinline typename CompileTime::MainType<A,B>  SafeMod (const A& left, const B& right, const C& defValue)
+	CHECKRES forceinline auto  SafeMod (const A& left, const B& right, const C& defValue)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and CompileTime::IsScalarOrEnum<B> );
 
-		typedef typename CompileTime::MainType<A,B>		T;
+		typedef typename CompileTime::GenType<A,B>		T;
 
 		return _math_hidden_::ModNearType< A, B, CompileTime::IsInteger<T> >::SafeMod( left, right, defValue );
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B>, I, U >  SafeMod (const Vec<A,I,U> &left, const Vec<B,I,U> &right, const C& defValue)
+	CHECKRES inline auto  SafeMod (const Vec<A,I,U> &left, const Vec<B,I,U> &right, const C& defValue)
 	{
-		typedef typename CompileTime::MainType<A,B>		T;
+		typedef typename CompileTime::GenType<A,B>		T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeMod( left[i], right[i], defValue );
 		return ret;
@@ -1630,14 +1659,14 @@ namespace GXMath
 	}
 	
 	template <typename A, typename B, typename C>
-	CHECKRES forceinline typename CompileTime::MainType<A,B,C>  Wrap (const A& value, const B& minValue, const C& maxValue)
+	CHECKRES forceinline auto  Wrap (const A& value, const B& minValue, const C& maxValue)
 	{
 		// Warning: float value never equal maxValue!
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> and
 					   CompileTime::IsScalarOrEnum<B> and
 					   CompileTime::IsScalarOrEnum<C> );
 
-		typedef typename CompileTime::MainType<A,B,C>	T;
+		typedef typename CompileTime::GenType<A,B,C>	T;
 
 		ASSERT( minValue <= maxValue );
 
@@ -1645,18 +1674,18 @@ namespace GXMath
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Wrap (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
+	CHECKRES inline auto  Wrap (const Vec<A,I,U>& value, const Vec<B,I,U>& minValue, const Vec<C,I,U>& maxValue)
 	{
-		typedef typename CompileTime::MainType<A,B,C>	T;
+		typedef typename CompileTime::GenType<A,B,C>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Wrap( value[i], minValue[i], maxValue[i] );
 		return ret;
 	}
 
 	template <typename A, typename B, typename C, usize I, ulong U>
-	CHECKRES inline Vec< typename CompileTime::MainType<A,B,C>, I, U >  Wrap (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
+	CHECKRES inline auto  Wrap (const Vec<A,I,U>& value, const B& minValue, const C& maxValue)
 	{
-		typedef typename CompileTime::MainType<A,B,C>	T;
+		typedef typename CompileTime::GenType<A,B,C>	T;
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Wrap( value[i], minValue, maxValue );
 		return ret;

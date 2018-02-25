@@ -3,7 +3,8 @@
 #include "Engine/Scene/Shared/Surface.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
 #include "Engine/Scene/Impl/BaseSceneModule.h"
-#include "Engine/Platforms/Windows/WinMessages.h"
+#include "Engine/Platforms/Shared/Tools/WindowHelper.h"
+#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
 
 namespace Engine
 {
@@ -34,12 +35,6 @@ namespace Scene
 										> >;
 		
 		using CameraEventList_t		= MessageListFrom< SceneMsg::SurfaceRequestUpdate >;
-
-		using WindowMsgList_t		= MessageListFrom< OSMsg::GetWinWindowHandle >;
-		using WindowEventList_t		= MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::OnWinWindowRawMessage >;
-
-		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetDeviceInfo >;
-		using GThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 
 		using CmdBufferMngrMsgList_t = MessageListFrom<
 											GraphicsMsg::CmdBeginFrame,
@@ -140,8 +135,8 @@ namespace Scene
 		_SendForEachAttachments( msg );
 		
 		ModulePtr	window;
-		CHECK_ATTACHMENT(( window = GlobalSystems()->parallelThread->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
-		CHECK_ATTACHMENT(( _thread = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >() ));
+		CHECK_ATTACHMENT( window = PlatformTools::WindowHelper::FindWindow( GlobalSystems() ) );
+		CHECK_ATTACHMENT( _thread = PlatformTools::GPUThreadHelper::FindGraphicsThread( GlobalSystems() ) );
 		
 		window->Subscribe( this, &WindowSurface::_WindowDescriptorChanged );
 		_thread->Subscribe( this, &WindowSurface::_DeviceBeforeDestroy );

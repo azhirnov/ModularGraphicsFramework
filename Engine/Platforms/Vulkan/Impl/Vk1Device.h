@@ -10,7 +10,7 @@
 #include "Engine/Platforms/Vulkan/Impl/vulkan1.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -127,6 +127,8 @@ namespace PlatformVK
 
 		mutable bool					_isInstanceFunctionsLoaded;
 		mutable bool					_isDeviceFunctionsLoaded;
+
+		uint							_debugReportCounter;
 
 
 	// methods

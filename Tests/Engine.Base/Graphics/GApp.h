@@ -21,7 +21,8 @@ public:
 private:
 	bool				looping		= true;
 	uint				cmdBufIndex	= 0;
-	GraphicsModuleIDs	ids;
+	GraphicsModuleIDs	gpuIDs;
+	OSModuleIDs			osIDs;
 
 	ModulePtr			syncManager;
 
@@ -69,6 +70,4 @@ private:
 	bool _CreatePipeline1 ();
 	bool _CreatePipeline2 ();
 	bool _CreateCmdBuffers ();
-
-	static ModulePtr GetGThread (GlobalSystemsRef gs);
 };

@@ -93,7 +93,6 @@ namespace OS
 	public:
 		typedef void (*PThreadProc_t) (void *param);
 
-		static const uint	MAX_WAIT_TIME		= 0xFFFFFFFF;
 		static const uint	UNKNOWN_EXIT_CODE	= UMax;
 
 
@@ -131,7 +130,7 @@ namespace OS
 	private:
 		uint _GetExitCode () const;
 
-		bool _Wait (uint time = MAX_WAIT_TIME) const;
+		bool _Wait (uint time) const;
 	};
 	
 

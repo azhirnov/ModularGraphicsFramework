@@ -4,7 +4,7 @@
 
 #include "Engine/Base/Common/Common.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace cl
 {

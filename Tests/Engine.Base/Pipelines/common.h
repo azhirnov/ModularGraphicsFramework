@@ -5,7 +5,7 @@
 #include "Engine/Platforms/Engine.Platforms.h"
 
 #ifdef GRAPHICS_API_SOFT
-#include "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h"
+#include "Engine/Platforms/Soft/ShaderLang/SWLang.h"
 #endif
 
 namespace Pipelines

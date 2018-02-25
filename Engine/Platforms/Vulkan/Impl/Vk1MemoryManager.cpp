@@ -4,7 +4,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -39,17 +39,6 @@ namespace PlatformVK
 			EGpuMemory::bits		flags;
 			EBindingTarget			binding	= EBindingTarget::Unbinded;
 		};
-
-		/*struct Block
-		{
-			usize		memIndex;
-			BytesUL		offset;
-			BytesUL		size;
-		};
-
-		using MemArray_t			= Array< Memory >;
-		using BlockMap_t			= Map< usize, Block >;			// key - mem index
-		using ModuleMemBlockMap_t	= Map< ModuleWPtr, usize >;		// value - block index*/
 
 		using MemoryMap_t		= Map< ModuleWPtr, Memory >;
 

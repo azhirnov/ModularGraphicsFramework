@@ -563,19 +563,14 @@ namespace OS
 	
 /*
 =================================================
-	Pulse
-=================================================
-*/
-	bool SyncEvent::Pulse ()
-	{
-		return ::PulseEvent( _event.Get<HANDLE>() ) != FALSE;
-	}
-	
-/*
-=================================================
 	Wait
 =================================================
 */
+	bool SyncEvent::Wait ()
+	{
+		return ::WaitForSingleObject( _event.Get<HANDLE>(), INFINITE ) == WAIT_OBJECT_0;
+	}
+
 	bool SyncEvent::Wait (TimeL time)
 	{
 		return ::WaitForSingleObject( _event.Get<HANDLE>(), (uint) time.MilliSeconds() ) == WAIT_OBJECT_0;
@@ -608,10 +603,10 @@ namespace OS
 	bool SyncEvent::_Create (EFlags flags)
 	{
 		_Delete();
-		_event = ::CreateEvent( null,
-								not EnumEq( flags, AUTO_RESET ),
-								EnumEq( flags, INIT_STATE_SIGNALED ),
-								(const char *)null );
+		_event = ::CreateEventA( null,
+								 not EnumEq( flags, AUTO_RESET ),
+								 EnumEq( flags, INIT_STATE_SIGNALED ),
+								 (const char *)null );
 		return IsValid();
 	}
 	
@@ -663,7 +658,7 @@ namespace OS
 */
 	void Semaphore::Lock ()
 	{
-		uint result = ::WaitForSingleObject( _sem.Get<HANDLE>(), MAX_WAIT_TIME );
+		uint result = ::WaitForSingleObject( _sem.Get<HANDLE>(), INFINITE );
 		ASSERT( result == WAIT_OBJECT_0 );
 	}
 	

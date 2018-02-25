@@ -31,8 +31,6 @@ extern void Test_Containers_HashSet ();
 extern void Test_Containers_IndexedArray ();
 extern void Test_Containers_Adaptors ();
 
-extern void Test_Dimensions_PhysicsValue ();
-
 extern void Test_Math_Abs ();
 extern void Test_Math_Color ();
 extern void Test_Math_ColorFormat ();
@@ -55,6 +53,7 @@ extern void Test_Types_Cast ();
 extern void Test_Types_Time ();
 
 extern void Test_Algorithms_InvokeWithVariant ();
+extern void Test_Algorithms_Range ();
 
 extern void Test_OS_Atomic ();
 extern void Test_OS_Date ();
@@ -95,8 +94,6 @@ int main ()
 	Test_Containers_IndexedArray();
 	Test_Containers_Adaptors();
 
-	Test_Dimensions_PhysicsValue();
-
 	Test_Math_Abs();
 	Test_Math_Color();
 	Test_Math_ColorFormat();
@@ -119,6 +116,7 @@ int main ()
 	Test_Types_Time();
 
 	Test_Algorithms_InvokeWithVariant();
+	Test_Algorithms_Range();
 
 	Test_OS_Atomic();
 	Test_OS_Date();

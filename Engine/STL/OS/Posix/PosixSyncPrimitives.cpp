@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/STL/OS/Posix/SyncPrimitives.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 #if defined( PLATFORM_BASE_POSIX ) and not defined( PLATFORM_SDL )
 

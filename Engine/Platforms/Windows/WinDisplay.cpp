@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/Windows/WinDisplay.h"
 
-#if defined( PLATFORM_WINDOWS )
+#ifdef PLATFORM_WINDOWS
 
 #include "Engine/STL/OS/Windows/WinHeader.h"
 
@@ -29,7 +29,7 @@
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformWin
 {
 
 /*
@@ -124,6 +124,8 @@ namespace Platforms
 		_monitors.Clear();
 
 		CHECK( EnumDisplayMonitors( null, null, func, ReferenceCast<LPARAM>(this) ) );
+
+		CHECK_ERR( not _displays.Empty() );
 		return true;
 	}
 	
@@ -160,7 +162,7 @@ namespace Platforms
 	}
 
 
-}	// Platforms
+}	// PlatformWin
 }	// Engine
 
 #endif	// PLATFORM_WINDOWS

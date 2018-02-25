@@ -56,6 +56,10 @@ namespace GpuMsg
 	{
 	};
 
+	struct DeviceLost
+	{
+	};
+
 
 	//
 	// Get Device Info
@@ -152,6 +156,7 @@ namespace GpuMsg
 	//
 	struct GetGraphicsSettings
 	{
+	// types
 		struct Settings : Platforms::GraphicsSettings
 		{
 		// variables
@@ -163,7 +168,17 @@ namespace GpuMsg
 			{}
 		};
 
+	// variables
 		Out< Settings >		result;
+	};
+
+
+	//
+	// Get Compute Settings
+	//
+	struct GetComputeSettings
+	{
+		Out< Platforms::ComputeSettings >	result;
 	};
 
 

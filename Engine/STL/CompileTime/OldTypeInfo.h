@@ -3,11 +3,11 @@
 #pragma once
 
 #include "Engine/STL/Common/TypeId.h"
-#include "TypeTraits.h"
-#include "TemplateUtils.h"
-#include "TemplateMath.h"
-#include "PlainOldDataType.h"
-#include "TypeQualifier.h"
+#include "Engine/STL/CompileTime/TypeTraits.h"
+#include "Engine/STL/CompileTime/TemplateUtils.h"
+#include "Engine/STL/CompileTime/TemplateMath.h"
+#include "Engine/STL/CompileTime/PlainOldDataType.h"
+#include "Engine/STL/CompileTime/TypeQualifier.h"
 
 namespace GX_STL
 {

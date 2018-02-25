@@ -2,7 +2,9 @@
 
 #pragma once
 
-#pragma warning (push, 1)
+#ifdef COMPILER_MSVC
+# pragma warning (push, 1)
+#endif
 
 #define AMD_EXTENSIONS
 #define NV_EXTENSIONS
@@ -29,7 +31,9 @@
 #include "LunarGLASS/Backends/GLSL/GlslManager.h"
 #include "LunarGLASS/Core/Exceptions.h"
 
-#pragma warning (pop)
+#ifdef COMPILER_MSVC
+# pragma warning (pop)
+#endif
 
 
 #include "Engine/PipelineCompiler/Common/Common.h"
@@ -57,6 +61,25 @@ namespace PipelineCompiler
 		RETURN_ERR( "unsupported shader type", EShLangCount );
 	}
 	
+/*
+=================================================
+	ConvertShaderType
+=================================================
+*/
+	inline EShader::type  ConvertShaderType (EShLanguage type)
+	{
+		switch ( type )
+		{
+			case EShLanguage::EShLangVertex :			return EShader::Vertex;
+			case EShLanguage::EShLangTessControl :		return EShader::TessControl;
+			case EShLanguage::EShLangTessEvaluation :	return EShader::TessEvaluation;
+			case EShLanguage::EShLangGeometry :			return EShader::Geometry;
+			case EShLanguage::EShLangFragment :			return EShader::Fragment;
+			case EShLanguage::EShLangCompute :			return EShader::Compute;
+		}
+		RETURN_ERR( "unsupported shader type" );
+	}
+
 
 	
 	//

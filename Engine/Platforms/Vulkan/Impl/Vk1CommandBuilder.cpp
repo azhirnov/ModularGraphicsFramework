@@ -9,7 +9,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -69,6 +69,8 @@ namespace PlatformVK
 											GpuMsg::CmdResetEvent,
 											GpuMsg::CmdWaitEvents,
 											GpuMsg::CmdPipelineBarrier,
+											GpuMsg::CmdPushConstants,
+											GpuMsg::CmdPushNamedConstants,
 											GpuMsg::SetCommandBufferDependency,
 											GpuMsg::GetCommandBufferState,
 											GpuMsg::GetVkCommandPoolID
@@ -113,7 +115,6 @@ namespace PlatformVK
 		DynamicStates_t			_dynamicStates;
 		uint					_subpassIndex;
 		uint					_maxSubpasses;
-		//bool					_hasIndexBuffer;
 
 
 	// methods
@@ -128,6 +129,7 @@ namespace PlatformVK
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
 		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
+		bool _GetVkCommandPoolID (const Message< GpuMsg::GetVkCommandPoolID > &);
 		
 		bool _CmdSetViewport (const Message< GpuMsg::CmdSetViewport > &);
 		bool _CmdSetScissor (const Message< GpuMsg::CmdSetScissor > &);
@@ -170,7 +172,8 @@ namespace PlatformVK
 		bool _CmdResetEvent (const Message< GpuMsg::CmdResetEvent > &);
 		bool _CmdWaitEvents (const Message< GpuMsg::CmdWaitEvents > &);
 		bool _CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &);
-		bool _GetVkCommandPoolID (const Message< GpuMsg::GetVkCommandPoolID > &);
+		bool _CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &);
+		bool _CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &);
 		
 	private:
 		bool _IsCreated () const;
@@ -284,6 +287,8 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdResetEvent );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdWaitEvents );
 		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdPipelineBarrier );
+		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdPushConstants );
+		_SubscribeOnMsg( this, &Vk1CommandBuilder::_CmdPushNamedConstants );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -669,14 +674,14 @@ namespace PlatformVK
 		// create render pass
 		VkRenderPassBeginInfo	pass_info = {};
 		pass_info.sType						= VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		pass_info.renderPass				<< req_pass->result;
+		pass_info.renderPass				= *req_pass->result;
 		pass_info.renderArea.offset.x		= msg->area.left;
 		pass_info.renderArea.offset.y		= msg->area.bottom;
 		pass_info.renderArea.extent.width	= msg->area.Width();
 		pass_info.renderArea.extent.height	= msg->area.Height();
 		pass_info.clearValueCount			= (uint32_t) clear_values.Count();
 		pass_info.pClearValues				= clear_values.ptr();
-		pass_info.framebuffer				<< req_fb->result;
+		pass_info.framebuffer				= *req_fb->result;
 		
 		vkCmdBeginRenderPass( _cmdId, &pass_info, VK_SUBPASS_CONTENTS_INLINE );
 
@@ -743,8 +748,8 @@ namespace PlatformVK
 
 		CHECK_ERR( req_id->result.IsDefined() and req_descr->result.IsDefined() );
 
-		VkPipeline					pipeline	= req_id->result.Get( VK_NULL_HANDLE );
-		GraphicsPipelineDescriptor	descr;		descr << req_descr->result;
+		VkPipeline							pipeline	= req_id->result.Get( VK_NULL_HANDLE );
+		GraphicsPipelineDescriptor const&	descr		= *req_descr->result;
 
 		CHECK_ERR( descr.subpass == _subpassIndex );
 
@@ -793,7 +798,7 @@ namespace PlatformVK
 
 			CHECK_ERR( req_descr->result->usage[ EBufferUsage::Vertex ] );
 
-			buffers[i] << req_id->result;
+			buffers[i] = *req_id->result;
 			
 			_resources.Add( vb );
 		}
@@ -1042,7 +1047,7 @@ namespace PlatformVK
 
 		_resources.Add( resourceTable );
 
-		VkDescriptorSet		descr_set;	descr_set << req_id->result;
+		VkDescriptorSet		descr_set = *req_id->result;
 
 		vkCmdBindDescriptorSets( _cmdId,
 								 bindPoint,
@@ -1627,7 +1632,7 @@ namespace PlatformVK
 			dst.dstAccessMask		= Vk1Enum( src.dstAccessMask );
 			dst.srcQueueFamilyIndex	= queue_index;
 			dst.dstQueueFamilyIndex	= queue_index;
-			dst.buffer				<< req_id->result;
+			dst.buffer				= *req_id->result;
 			dst.offset				= (VkDeviceSize) src.offset;
 			dst.size				= (VkDeviceSize) src.size;
 
@@ -1651,7 +1656,7 @@ namespace PlatformVK
 			dst.newLayout						= Vk1Enum( src.newLayout );
 			dst.srcQueueFamilyIndex				= queue_index;
 			dst.dstQueueFamilyIndex				= queue_index;
-			dst.image							<< req_id->result;
+			dst.image							= *req_id->result;
 			dst.subresourceRange.aspectMask		= Vk1Enum( src.range.aspectMask );
 			dst.subresourceRange.baseMipLevel	= src.range.baseMipLevel.Get();
 			dst.subresourceRange.levelCount		= src.range.levelCount;
@@ -1668,6 +1673,62 @@ namespace PlatformVK
 							  (uint32_t) mem_barriers.Count(),  mem_barriers.RawPtr(),
 							  (uint32_t) buf_barriers.Count(),  buf_barriers.RawPtr(),
 							  (uint32_t) img_barriers.Count(),  img_barriers.RawPtr() );
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushConstants
+=================================================
+*/
+	bool Vk1CommandBuilder::_CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &msg)
+	{
+		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( msg->pipelineLayout and not msg->data.Empty() );
+
+		Message< GpuMsg::GetVkPipelineLayoutID >	req_layout;
+		SendTo( msg->pipelineLayout, req_layout );
+
+		vkCmdPushConstants( _cmdId, *req_layout->result, Vk1Enum( msg->stages ), uint32_t(msg->offset), uint32_t(msg->data.Size()), msg->data.RawPtr() );
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushNamedConstants
+=================================================
+*/
+	bool Vk1CommandBuilder::_CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &msg)
+	{
+		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( msg->pipelineLayout and not msg->values.Empty() );
+
+		using Iter_t = GpuMsg::GetVkPipelineLayoutPushConstants::PushConstants_t::iterator;
+
+		Message< GpuMsg::GetVkPipelineLayoutPushConstants >	req_pc;
+		Message< GpuMsg::GetVkPipelineLayoutID >			req_layout;
+
+		SendTo( msg->pipelineLayout, req_pc );
+		SendTo( msg->pipelineLayout, req_layout );
+
+		FixedSizeArray<ubyte, 32*4>	data;
+		EShader::bits				stages;
+
+		FOR( i, msg->values )
+		{
+			Iter_t			iter;
+			BinArrayCRef	val = msg->values[i].second.GetData();
+
+			CHECK_ERR( req_pc->result->Find( msg->values[i].first, OUT iter ) );
+			CHECK_ERR( iter->second.size == val.Size() );
+			CHECK_ERR( usize(iter->second.offset) + iter->second.size < data.Count() );
+
+			UnsafeMem::MemCopy( &data[iter->second.offset], val.ptr(), val.Size() );
+
+			stages |= iter->second.stages;
+		}
+		
+		vkCmdPushConstants( _cmdId, *req_layout->result, Vk1Enum( stages ), 0, uint32_t(data.Size()), data.RawPtr() );
 		return true;
 	}
 

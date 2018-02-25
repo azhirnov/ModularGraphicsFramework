@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Projects/ShaderEditor/Renderer.h"
+#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
 
 namespace ShaderEditor
 {
@@ -112,7 +113,7 @@ namespace ShaderEditor
 		ub_data.iCameraFrustum[3]	= float4(data.iCameraFrustumRay3);
 		ub_data.iCameraPos			= float4(data.iCameraPos);
 
-		builder->Send< GpuMsg::CmdUpdateBuffer >({ pass.ubuffer, BinArrayCRef::FromValue(ub_data) });
+		builder->Send< GpuMsg::CmdUpdateBuffer >({ pass.ubuffer, ub_data });
 		return true;
 	}
 
@@ -160,7 +161,7 @@ namespace ShaderEditor
 	{
 		// get graphics module ids
 		{
-			ModulePtr	gthread = _GetGpuThread();
+			ModulePtr	gthread = PlatformTools::GPUThreadHelper::FindGraphicsThread( _gs );
 
 			Message< GpuMsg::GetGraphicsModules >	req_ids;
 			CHECK( gthread->Send( req_ids ) );
@@ -202,19 +203,6 @@ namespace ShaderEditor
 		_shaders.Add( name, New<Shader>( descr ) );
 		return true;
 	}
-	
-/*
-=================================================
-	_GetGpuThread
-=================================================
-*/
-	ModulePtr Renderer::_GetGpuThread () const
-	{
-		using ThrdMsgList_t		= CompileTime::TypeListFrom< Message<GpuMsg::ThreadBeginFrame>, Message<GpuMsg::ThreadEndFrame> >;
-		using ThrdEventList_t	= CompileTime::TypeListFrom< Message<GpuMsg::DeviceBeforeDestroy> >;
-
-		return _gs->parallelThread->GetModuleByMsgEvent< ThrdMsgList_t, ThrdEventList_t >();
-	}
 
 /*
 =================================================
@@ -238,7 +226,7 @@ namespace ShaderEditor
 
 			Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
 
-			create_gpp->gpuThread	= _GetGpuThread();
+			create_gpp->gpuThread	= PlatformTools::GPUThreadHelper::FindGraphicsThread( _gs );
 			create_gpp->moduleID	= _ids.pipeline;
 			create_gpp->topology	= EPrimitive::TriangleStrip;
 	
@@ -264,7 +252,6 @@ namespace ShaderEditor
 			_resourceTables[i]->Send< ModuleMsg::AttachModule >({ "pipeline", _drawTexQuadPipeline });
 			_resourceTables[i]->Send< ModuleMsg::AttachModule >({ "un_ColorTexture", iter->second->_perPass[i].image });
 			_resourceTables[i]->Send< ModuleMsg::AttachModule >({ "un_ColorTexture.sampler", _nearestClampSampler });
-
 		}
 		CHECK_ERR( ModuleUtils::Initialize( _resourceTables ) );
 
@@ -278,7 +265,7 @@ namespace ShaderEditor
 */
 	bool Renderer::_CreateSamplers ()
 	{
-		ModulePtr	gthread = _GetGpuThread();
+		ModulePtr	gthread = PlatformTools::GPUThreadHelper::FindGraphicsThread( _gs );
 		auto		factory = _gs->modulesFactory;
 
 		CHECK_ERR( factory->Create(
@@ -381,7 +368,7 @@ namespace ShaderEditor
 */
 	bool Renderer::_CreateShader (const ShaderPtr &shader, const uint2 &newSize)
 	{
-		ModulePtr	gthread = _GetGpuThread();
+		ModulePtr	gthread = PlatformTools::GPUThreadHelper::FindGraphicsThread( _gs );
 		auto		factory = _gs->modulesFactory;
 	
 		// check dependencies
@@ -550,7 +537,7 @@ namespace ShaderEditor
 		// draw quad to screen
 		FOR( i, msg.framebuffers )
 		{
-			const uint pass_idx = _passIdx * msg.framebuffers.Count() + i;
+			const uint pass_idx = uint(_passIdx) * msg.framebuffers.Count() + i;
 			
 			_UpdateShaderData( msg.cameras[i] );
 

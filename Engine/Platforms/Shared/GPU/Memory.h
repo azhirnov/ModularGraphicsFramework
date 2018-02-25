@@ -191,17 +191,14 @@ namespace GpuMsg
 	struct ReadFromGpuMemory
 	{
 	// variables
-		BytesUL						offset;			// offset in global memory space
-		Optional< BytesUL >			size;			// must be undefined or equal to result.Size()
-		Optional< BinArrayRef >		writableBuffer;	// will use exist buffer
-		Out< BinArrayCRef >			result;
+		BytesUL					offset;			// offset in global memory space
+		mutable BinArrayRef		writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
+		Out< BinArrayCRef >		result;
 
 	// methods
 		ReadFromGpuMemory () {}
 		explicit ReadFromGpuMemory (BinArrayRef buf, Bytes<uint> off = Uninitialized) : offset(BytesUL(off)), writableBuffer(buf) {}
 		explicit ReadFromGpuMemory (BinArrayRef buf, Bytes<ulong> off) : offset(off), writableBuffer(buf) {}
-		explicit ReadFromGpuMemory (Bytes<uint> size, Bytes<uint> off = Uninitialized) : offset(BytesUL(off)), size(BytesUL(size)) {}
-		explicit ReadFromGpuMemory (Bytes<ulong> size, Bytes<ulong> off) : offset(off), size(size) {}
 	};
 
 
@@ -235,35 +232,26 @@ namespace GpuMsg
 		MipmapLevel				level;
 		BytesU					rowPitch;		// memory alignment requirements for result
 		BytesU					slicePitch;		// memory alignment requirements for result
-		Optional< BinArrayRef >	writableBuffer;	// will use exist buffer
+		mutable BinArrayRef		writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
 		Out< BinArrayCRef >		result;
 		
 	// methods
 		ReadFromImageMemory () {}
 
-		ReadFromImageMemory (const uint4 &off, const uint4 &dim, BytesU rowPitch, BytesU slicePitch) :
-			offset(off), dimension(Max(dim, uint4(1))), rowPitch(rowPitch), slicePitch(slicePitch)
-		{}
-
-		ReadFromImageMemory (const uint4 &dim, BytesU bpp, const uint4 &off = uint4(), BytesU rowAlign = 4_b, BytesU sliceAlign = 4_b) :
-			offset(off), dimension(Max(dim, uint4(1)))
-		{
-			rowPitch   = GXImageUtils::AlignedRowSize( dimension.x, bpp, rowAlign );
-			slicePitch = GXImageUtils::AlignedSliceSize( dimension.xy(), bpp, rowAlign, sliceAlign );
-		}
-
 		ReadFromImageMemory (BinArrayRef buf, const uint4 &off, const uint4 &dim, BytesU rowPitch, BytesU slicePitch) :
-			ReadFromImageMemory( off, dim, rowPitch, slicePitch )
+			offset(off), dimension(Max(dim, uint4(1))), rowPitch(rowPitch), slicePitch(slicePitch)
 		{
 			writableBuffer = buf;
-			ASSERT( writableBuffer->Size() == dimension.z * slicePitch );
+			ASSERT( writableBuffer.Size() == dimension.z * slicePitch );
 		}
 
 		ReadFromImageMemory (BinArrayRef buf, const uint4 &dim, BytesU bpp, const uint4 &off = uint4(), BytesU rowAlign = 4_b, BytesU sliceAlign = 4_b) :
-			ReadFromImageMemory( dim, bpp, off, rowAlign, sliceAlign )
+			offset(off), dimension(Max(dim, uint4(1)))
 		{
-			writableBuffer = buf;
-			ASSERT( writableBuffer->Size() == dimension.z * slicePitch );
+			writableBuffer	= buf;
+			rowPitch		= GXImageUtils::AlignedRowSize( dimension.x, bpp, rowAlign );
+			slicePitch		= GXImageUtils::AlignedSliceSize( dimension.xy(), bpp, rowAlign, sliceAlign );
+			ASSERT( writableBuffer.Size() == dimension.z * slicePitch );
 		}
 	};
 

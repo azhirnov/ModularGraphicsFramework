@@ -6,14 +6,14 @@
 #include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/Windows/WinObjectsConstructor.h"
 
-#if defined( PLATFORM_WINDOWS )
+#ifdef PLATFORM_WINDOWS
 
 #include "Engine/STL/OS/Windows/WinHeader.h"
 #include "Engine/Platforms/Windows/WinDisplay.h"
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformWin
 {
 
 	//
@@ -284,6 +284,8 @@ namespace Platforms
 			_windowDesc.position	 = disp->FullArea().LeftBottom();
 			_windowDesc.size		 = scr_res;
 			_windowDesc.surfaceSize	 = scr_res;
+			
+			_windowDesc.flags[ EWindowFlags::Fullscreen ] = true;
 		}
 		else
 		{
@@ -303,6 +305,8 @@ namespace Platforms
 			{
 				_windowDesc.position = disp->WorkArea().Center() - int2(_windowDesc.size) / 2;		
 			}
+			
+			_windowDesc.flags[ EWindowFlags::Fullscreen ] = false;
 		}
 
 		::SetWindowPos( wnd, HWND_TOP,
@@ -370,7 +374,7 @@ namespace Platforms
 */
 	bool WinWindow::_Create (const ModulePtr &, const OSMsg::OnWinPlatformCreated &platformInfo)
 	{
-		_display.Update();
+		CHECK_ERR( _display.Update() );
 
 		Ptr<const Display>	disp = _GetDisplayByCoord( _createInfo.position );
 
@@ -457,9 +461,11 @@ namespace Platforms
 			}
 		}
 		
+		_windowDesc.caption = info.caption;
+		
 		_wnd = ::CreateWindowExA( wnd_ext_style,
 								 className.cstr(),
-								 info.caption.cstr(),
+								 _windowDesc.caption.cstr(),
 								 wnd_style,
 								 _windowDesc.position.x,
 								 _windowDesc.position.y,
@@ -539,14 +545,13 @@ namespace Platforms
 		
 		MSG		msg	= {};
 
-		while ( ::PeekMessageA( &msg, 0, 0, 0, PM_REMOVE ) )
+		while ( ::PeekMessageA( &msg, null, 0, 0, PM_REMOVE ) )
 		{
 			if ( WM_QUIT == msg.message )
 			{
 				_requestQuit = true;
 
 				_Destroy();
-				//_SendMsg< ModuleMsg::Delete >({});
 			}
 			else
 				::DispatchMessageA( &msg );
@@ -658,11 +663,11 @@ namespace Platforms
 		auto	hwnd	= _wnd.Get<HWND>();
 		RECT	win_rect = {0,0,0,0};
 
-		::GetWindowRect( hwnd, &win_rect );
+		::GetWindowRect( hwnd, OUT &win_rect );
 		_windowDesc.position	= int2( win_rect.left, win_rect.top );
 		_windowDesc.size		= uint2( win_rect.right - win_rect.left, win_rect.bottom - win_rect.top );
 		
-		::GetClientRect( hwnd, &win_rect );
+		::GetClientRect( hwnd, OUT &win_rect );
 		_windowDesc.surfaceSize	= uint2( win_rect.right - win_rect.left, win_rect.bottom - win_rect.top );
 
 		_windowDesc.visibility	= 
@@ -723,10 +728,13 @@ namespace Platforms
 		}
 		return null;
 	}
+
+}	// PlatformWin
 //-----------------------------------------------------------------------------
 	
 
-	
+namespace Platforms
+{
 /*
 =================================================
 	CreateWinWindow
@@ -734,7 +742,7 @@ namespace Platforms
 */
 	ModulePtr WinObjectsConstructor::CreateWinWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci)
 	{
-		return New< WinWindow >( gs, ci );
+		return New< PlatformWin::WinWindow >( gs, ci );
 	}
 
 }	// Platforms

@@ -111,9 +111,8 @@ namespace Scene
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
 		// TODO
-
-		CHECK_ERR( Module::_Link_Impl( msg ) );
-		return true;
+		
+		return Module::_Link_Impl( msg );
 	}
 	
 /*

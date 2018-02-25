@@ -74,7 +74,7 @@ namespace OS
 			return tmp != null;
 		}
 
-		CHECKRES Func_t  GetProc (StringCRef procName, void *defProc = null) const;
+		CHECKRES Func_t  GetProc (StringCRef procName, Func_t defProc = null) const;
 	};
 	
 

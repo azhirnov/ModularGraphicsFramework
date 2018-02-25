@@ -27,8 +27,8 @@ namespace Platforms
 		uint4				dimension;	// width, height, depth, layers
 		EPixelFormat::type	format;
 		EImageUsage::bits	usage;
-		MipmapLevel			maxLevel;
-		MultiSamples		samples;
+		MipmapLevel			maxLevel;	// 0 - one level
+		MultiSamples		samples;	// if > 1 then enabled multisampling
 
 	// methods
 		ImageDescriptor (GX_DEFCTOR) : imageType( EImage::Unknown ), format( EPixelFormat::Unknown )

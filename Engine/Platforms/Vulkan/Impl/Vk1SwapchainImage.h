@@ -6,7 +6,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Shared/Tools/ImageViewHashMap.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -15,9 +15,12 @@ namespace GpuMsg
 	
 	struct SetVkSwapchainImage
 	{
+	// variables
 		vk::VkImage				image	= VK_NULL_HANDLE;
-
 		Out< vk::VkImageView >	result;
+
+	// methods
+		explicit SetVkSwapchainImage (vk::VkImage image) : image{image} {}
 	};
 
 }	// GpuMsg

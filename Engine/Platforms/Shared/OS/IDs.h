@@ -19,7 +19,12 @@ namespace Platforms
 	static constexpr TModID::type	WinWindowModuleID		= "win.window"_TModID;
 	static constexpr OModID::type	WinKeyInputModuleID		= "win.keys"_OModID;
 	static constexpr OModID::type	WinMouseInputModuleID	= "win.mouse"_OModID;
-
+	
+	// SDL
+	static constexpr GModID::type	SDLPlatformModuleID		= "sdl.platform"_GModID;
+	static constexpr TModID::type	SDLWindowModuleID		= "sdl.window"_TModID;
+	static constexpr OModID::type	SDLKeyInputModuleID		= "sdl.keys"_OModID;
+	static constexpr OModID::type	SDLMouseInputModuleID	= "sdl.mouse"_OModID;
 	
 
 	//

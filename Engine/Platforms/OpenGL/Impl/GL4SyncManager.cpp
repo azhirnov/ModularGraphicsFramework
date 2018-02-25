@@ -4,7 +4,7 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {
@@ -67,7 +67,6 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &msg);
 

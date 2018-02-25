@@ -4,14 +4,16 @@
 #include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/Windows/WinObjectsConstructor.h"
 
-#if defined( PLATFORM_WINDOWS )
+#ifdef PLATFORM_WINDOWS
 
 #include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformWin
 {
+	using namespace Platforms;
+
 
 	//
 	// Windows Key Input
@@ -515,10 +517,13 @@ namespace Platforms
 
 		return KeyID::Unknown;
 	}
+
+}	// PlatformWin
 //-----------------------------------------------------------------------------
 
 
-	
+namespace Platforms
+{
 /*
 =================================================
 	CreateWinKeyInput
@@ -526,7 +531,7 @@ namespace Platforms
 */
 	ModulePtr WinObjectsConstructor::CreateWinKeyInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
 	{
-		return New< WinKeyInput >( gs, ci );
+		return New< PlatformWin::WinKeyInput >( gs, ci );
 	}
 
 }	// Platforms

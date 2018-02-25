@@ -7,7 +7,6 @@
 #include "Engine/STL/Dimensions/ByteAndBit.h"
 #include "Engine/STL/Dimensions/RadiansAndDegrees.h"
 #include "Engine/STL/Dimensions/Percentage.h"
-#include "Engine/STL/Dimensions/PhysicsValue.h"
 #include "Engine/STL/Math/Vec.h"
 #include "Engine/STL/Math/Matrix.h"
 #include "Engine/STL/Math/Color/Color.h"
@@ -260,19 +259,6 @@ namespace GXTypes
 		str.FormatF( value.GetPercents(), StringFormatF().Fmt(0,2) ) << "%";
 		return str;
 	}
-
-#ifdef GX_PHYSICS_DIMENSIONS_ENABLED
-/*
-=================================================
-	ToStringImpl (PhysicsValue)
-=================================================
-*/
-	template <typename T, typename D, typename S>
-	CHECKRES inline String  ToStringImpl (const GXMath::PhysicsValue<T,D,S> &value)
-	{
-		return value.ToString();
-	}
-#endif
 	
 /*
 =================================================

@@ -133,6 +133,7 @@ namespace GCC
 	static constexpr char	SignCompare[]			= "-Wsign-compare";
 	static constexpr char	SignConvertsion[]		= "-Wsign-conversion";
 	static constexpr char	SizeofPointerMemaccess[]= "-Wsizeof-pointer-memaccess";
+	//static constexpr char	SizeofPointerDiv[]		= "-Wsizeof-pointer-div";
 	static constexpr char	Address[]				= "-Waddress";
 	static constexpr char	LogicalOp[]				= "-Wlogical-op";
 	static constexpr char	AggregateReturn[]		= "-Waggregate-return";
@@ -147,6 +148,8 @@ namespace GCC
 
 	static constexpr char	AlignedNew[]			= "-Waligned-new";
 	static constexpr char	PlacementNew[]			= "-Wplacement-new";
+
+	static constexpr char	LiteralSuffix[]			= "-Wliteral-suffix";
 
 
 	inline String WarningToError (StringCRef code)

@@ -8,13 +8,13 @@
 #include "Engine/Platforms/Windows/WinDisplay.h"
 #include "Engine/Platforms/Windows/WinObjectsConstructor.h"
 
-#if defined( PLATFORM_WINDOWS )
+#ifdef PLATFORM_WINDOWS
 
 #include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformWin
 {
 
 
@@ -35,6 +35,11 @@ namespace Platforms
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Delete,
 											OSMsg::OnWinPlatformCreated
+										>;
+
+		using WinWindowMsgList_t	= MessageListFrom<
+											OSMsg::OnWinPlatformCreated,
+											OSMsg::GetWinWindowHandle
 										>;
 
 		using ModArray_t			= Set< ModulePtr >;
@@ -200,7 +205,7 @@ namespace Platforms
 	bool WinPlatform::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
 	{
 		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == WinWindowModuleID );
+		CHECK_ERR( msg->module->GetSupportedMessages().HasAllTypes< WinWindowMsgList_t >() );
 		ASSERT( not _windows.IsExist( msg->module ) );
 
 		_windows.Add( msg->module );
@@ -235,7 +240,6 @@ namespace Platforms
 		if ( not module )
 			return false;
 
-		CHECK_ERR( module->GetModuleID() == WinWindowModuleID );
 		ASSERT( _windows.IsExist( module ) );
 
 		_windows.Erase( module );
@@ -410,10 +414,13 @@ namespace Platforms
 		CHECK_ERR( ::ChangeDisplaySettings( (DEVMODEA *)null, CDS_RESET ) != DISP_CHANGE_SUCCESSFUL );
 		return true;
 	}
+
+}	// PlatformWin
 //-----------------------------------------------------------------------------
 	
 
-	
+namespace Platforms
+{
 /*
 =================================================
 	Register
@@ -466,9 +473,8 @@ namespace Platforms
 */
 	ModulePtr WinObjectsConstructor::CreateWinPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci)
 	{
-		return New< WinPlatform >( gs, ci );
+		return New< PlatformWin::WinPlatform >( gs, ci );
 	}
-
 
 }	// Platforms
 }	// Engine

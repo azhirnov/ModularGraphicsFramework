@@ -4,7 +4,7 @@
 
 #include "vulkan1.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 # if defined( PLATFORM_WINDOWS )
 #	include "Engine/STL/OS/Windows/WinHeader.h"

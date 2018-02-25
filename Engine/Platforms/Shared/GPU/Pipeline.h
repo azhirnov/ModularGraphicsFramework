@@ -9,10 +9,10 @@
 #include "Engine/Platforms/Shared/GPU/PipelineLayout.h"
 #include "Engine/Platforms/Shared/GPU/IDs.h"
 
-namespace SWShaderLang
-{
+namespace SWShaderLang {
+namespace Impl {
 	class SWShaderHelper;
-}
+}}
 
 namespace Engine
 {
@@ -91,7 +91,7 @@ namespace Platforms
 				_Count
 			}; };
 
-			using SWInvoke	= void (*) (const SWShaderLang::SWShaderHelper &);
+			using SWInvoke	= void (*) (const SWShaderLang::Impl::SWShaderHelper &);
 			using Data		= Union< uint, String, BinaryArray, Array<uint>, SWInvoke >;
 			using Sources	= StaticArray< Data, ESource::_Count >;
 			
@@ -184,8 +184,6 @@ namespace CreateInfo
 	// variables
 		ModulePtr		gpuThread;			// can be null
 		Descriptor		descr;
-		ModulePtr		shaders;
-		ModulePtr		renderPass;
 	};
 
 
@@ -200,7 +198,6 @@ namespace CreateInfo
 	// variables
 		ModulePtr		gpuThread;			// can be null
 		Descriptor		descr;
-		ModulePtr		shaders;
 	};
 
 

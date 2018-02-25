@@ -2,13 +2,9 @@
 
 #pragma once
 
-#include "PhysicsValue.h"
+#include "Engine/Physics/Dimensions/PhysicsValue.h"
 
-#ifdef GX_PHYSICS_DIMENSIONS_ENABLED
-
-namespace GX_STL
-{
-namespace GXMath
+namespace GXPhysics
 {
 	
 	template <typename T, usize I, ulong U = 0>
@@ -46,10 +42,9 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
-		operator * (const Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
+	CHECKRES inline auto  operator * (const GXMath::Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
 	{
-		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
+		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U >	ret;
 		FOR( i, ret )	ret[i] = left[i] * right;
 		return ret;
 	}
@@ -64,10 +59,9 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
-		operator * (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const Vec<ValueType,I,U> &right)
+	CHECKRES inline auto  operator * (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const GXMath::Vec<ValueType,I,U> &right)
 	{
-		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
+		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U >	ret;
 		FOR( i, ret )	ret[i] = left * right[i];
 		return ret;
 	}
@@ -82,10 +76,9 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
-		operator / (const Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
+	CHECKRES inline auto  operator / (const GXMath::Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
 	{
-		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
+		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U >	ret;
 		FOR( i, ret )	ret[i] = left[i] / right;
 		return ret;
 	}
@@ -100,10 +93,9 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >
-		operator / (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const Vec<ValueType,I,U> &right)
+	CHECKRES inline auto  operator / (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const GXMath::Vec<ValueType,I,U> &right)
 	{
-		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I >	ret;
+		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U >	ret;
 		FOR( i, ret )	ret[i] = left / right[i];
 		return ret;
 	}
@@ -120,7 +112,7 @@ namespace GXMath
 	CHECKRES inline bool Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
 								 const PhysicsValue<ValueType, Dimensions, ValueScale>& b)
 	{
-		return Equals( a.ref(), b.ref() );
+		return GXMath::Equals( a.ref(), b.ref() );
 	}
 	
 /*
@@ -133,10 +125,10 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline Vec<bool,I,U>  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
-											const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b)
+	CHECKRES inline auto  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U > &a,
+								  const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U > &b)
 	{
-		Vec<bool,I,U>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i] );
 		return ret;
 	}
@@ -150,11 +142,11 @@ namespace GXMath
 			  typename Dimensions,
 			  typename ValueScale
 			 >
-	CHECKRES inline bool Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
-								 const PhysicsValue<ValueType, Dimensions, ValueScale>& b,
-								 /*Bits*/uint accuracy)
+	CHECKRES inline auto  Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
+								  const PhysicsValue<ValueType, Dimensions, ValueScale>& b,
+								  /*Bits*/uint accuracy)
 	{
-		return Equals( a.ref(), b.ref(), accuracy );
+		return GXMath::Equals( a.ref(), b.ref(), accuracy );
 	}
 	
 /*
@@ -167,18 +159,20 @@ namespace GXMath
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline Vec<bool,I,U>  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
-											const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b,
-											/*Bits*/uint accuracy)
+	CHECKRES inline auto  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
+								  const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b,
+								  /*Bits*/uint accuracy)
 	{
-		Vec<bool,I,U>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i], accuracy );
 		return ret;
 	}
 
-}	// GXMath
+}	// GXPhysics
 
 
+namespace GX_STL
+{
 namespace CompileTime
 {
 
@@ -187,16 +181,16 @@ namespace CompileTime
 			typename ValueScale,
 			usize I, ulong U
 	>
-	struct TypeInfo<GXMath::PhysicsValueVec<GXMath::PhysicsValue<ValueType, Dimensions, ValueScale>, I, U> > {
+	struct TypeInfo< GXPhysics::PhysicsValueVec<GXPhysics::PhysicsValue<ValueType, Dimensions, ValueScale>, I, U> > {
 	private:
 		typedef CompileTime::TypeInfo<ValueType> _value_type_info;
 
 	public:
-		typedef GXMath::PhysicsValueVec<GXMath::PhysicsValue<ValueType, Dimensions, ValueScale>, I, U> type;
-		typedef GXMath::PhysicsValue<ValueType, Dimensions, ValueScale> inner_type;
+		using type			= GXPhysics::PhysicsValueVec<GXPhysics::PhysicsValue<ValueType, Dimensions, ValueScale>, I, U>;
+		using inner_type	= GXPhysics::PhysicsValue<ValueType, Dimensions, ValueScale>;
 
 		template<typename OtherType>
-		using CreateWith =  GXMath::PhysicsValueVec<GXMath::PhysicsValue<OtherType, Dimensions, ValueScale>, I>;
+		using CreateWith =  GXPhysics::PhysicsValueVec<GXPhysics::PhysicsValue<OtherType, Dimensions, ValueScale>, I>;
 
 		enum {
 			FLAGS = (int) _value_type_info::FLAGS | (int) GX_STL::CompileTime::_ctime_hidden_::VECTOR
@@ -228,9 +222,9 @@ namespace GXTypes
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	struct Hash< GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > >
+	struct Hash< GXPhysics::PhysicsValueVec< GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > >
 	{
-		CHECKRES HashResult  operator () (const GXMath::PhysicsValueVec< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > &x) const noexcept
+		CHECKRES HashResult  operator () (const GXPhysics::PhysicsValueVec< GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > &x) const noexcept
 		{
 			return HashOf( x.ref() );
 		}
@@ -238,5 +232,3 @@ namespace GXTypes
 	
 }	// GXTypes
 }	// GX_STL
-
-#endif	// GX_PHYSICS_DIMENSIONS_ENABLED

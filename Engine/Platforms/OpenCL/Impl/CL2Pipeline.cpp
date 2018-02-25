@@ -6,7 +6,7 @@
 #include "Engine/Platforms/Shared/GPU/VertexInputState.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
@@ -29,6 +29,8 @@ namespace PlatformCL
 
 		using SupportedEvents_t		= CL2BaseModule::SupportedEvents_t;
 		
+		using ShadersMsgList_t		= MessageListFrom< GpuMsg::GetCLShaderModuleIDs >;
+
 		using Descriptor			= ComputePipelineDescriptor;
 
 
@@ -43,7 +45,6 @@ namespace PlatformCL
 		cl::cl_program		_programId;
 		cl::cl_kernel		_kernelId;
 		Descriptor			_descr;
-		ModulePtr			_shaders;		// use as attachment
 		usize				_preferredMultipleOfWorkGroupSize;
 
 
@@ -55,8 +56,12 @@ namespace PlatformCL
 
 	// message handlers
 	private:
+		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
+		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+
 		bool _GetCLComputePipelineID (const Message< GpuMsg::GetCLComputePipelineID > &);
 		bool _GetComputePipelineDescriptor (const Message< GpuMsg::GetComputePipelineDescriptor > &);
 		bool _GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &);
@@ -81,18 +86,18 @@ namespace PlatformCL
 	CL2ComputePipeline::CL2ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
 		CL2BaseModule( gs, ModuleConfig{ CLComputePipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_programId( null ),		_kernelId( null ),
-		_descr( ci.descr ),		_shaders( ci.shaders ),
+		_descr( ci.descr ),
 		_preferredMultipleOfWorkGroupSize(0)
 	{
 		SetDebugName( "CL2ComputePipeline" );
 
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_OnModuleDetached_Impl );
-		_SubscribeOnMsg( this, &CL2ComputePipeline::_AttachModule_Impl );
-		_SubscribeOnMsg( this, &CL2ComputePipeline::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &CL2ComputePipeline::_AttachModule );
+		_SubscribeOnMsg( this, &CL2ComputePipeline::_DetachModule );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_FindModule_Impl );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_ModulesDeepSearch_Impl );
-		_SubscribeOnMsg( this, &CL2ComputePipeline::_Link_Impl );
+		_SubscribeOnMsg( this, &CL2ComputePipeline::_Link );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_Compose );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_Delete );
 		_SubscribeOnMsg( this, &CL2ComputePipeline::_OnManagerChanged );
@@ -120,6 +125,21 @@ namespace PlatformCL
 	
 /*
 =================================================
+	_Link
+=================================================
+*/
+	bool CL2ComputePipeline::_Link (const Message< ModuleMsg::Link > &msg)
+	{
+		if ( _IsComposedOrLinkedState( GetState() ) )
+			return true;	// already linked
+
+		CHECK_LINKING( GetModuleByMsg< ShadersMsgList_t >() );
+
+		return Module::_Link_Impl( msg );
+	}
+	
+/*
+=================================================
 	_Compose
 =================================================
 */
@@ -136,8 +156,47 @@ namespace PlatformCL
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
+		
+		CHECK( _SetState( EState::ComposedMutable ) );
+		return true;
+	}
+	
+/*
+=================================================
+	_AttachModule
+=================================================
+*/
+	bool CL2ComputePipeline::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	{
+		CHECK_ERR( msg->newModule );
 
-		CHECK( _SetState( EState::ComposedImmutable ) );
+		// render pass and shader must be unique
+		bool	is_dependent = msg->newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+
+		if ( _Attach( msg->name, msg->newModule, is_dependent ) and is_dependent )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_DestroyPipeline();
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_DetachModule
+=================================================
+*/
+	bool CL2ComputePipeline::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	{
+		CHECK_ERR( msg->oldModule );
+		
+		bool	is_dependent = msg->oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+
+		if ( _Detach( msg->oldModule ) and is_dependent )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_DestroyPipeline();
+		}
 		return true;
 	}
 	
@@ -149,6 +208,8 @@ namespace PlatformCL
 	bool CL2ComputePipeline::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
 		_DestroyPipeline();
+		
+		_descr = Uninitialized;
 
 		return Module::_Delete_Impl( msg );
 	}
@@ -207,9 +268,13 @@ namespace PlatformCL
 		
 		CHECK_ERR( not _IsCreated() );
 		
+		// get shader
+		ModulePtr	shaders;
+		CHECK_ERR( shaders = GetModuleByMsg< ShadersMsgList_t >() );
+
 		// get shader modules
 		Message< GpuMsg::GetCLShaderModuleIDs >		req_shader_ids;
-		SendTo( _shaders, req_shader_ids );
+		SendTo( shaders, req_shader_ids );
 		CHECK_ERR( req_shader_ids->result and req_shader_ids->result->Count() == 1 );
 
 		const auto&		comp_sh	= req_shader_ids->result.Get().Front();
@@ -239,7 +304,6 @@ namespace PlatformCL
 
 		_programId	= null;
 		_kernelId	= null;
-		_descr		= Uninitialized;
 	}
 
 }	// PlatformCL

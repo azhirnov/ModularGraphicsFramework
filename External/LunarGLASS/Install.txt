@@ -1,0 +1,2 @@
+LunarGLASS required for PipelineCompiler.
+Clone from: https://github.com/azhirnov/ModularGraphicsFramework-Externals

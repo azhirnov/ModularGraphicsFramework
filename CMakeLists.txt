@@ -10,7 +10,7 @@ endif()
 project( "ModularGraphicsFramework" LANGUAGES CXX )
 set_property( GLOBAL PROPERTY USE_FOLDERS ON )
 set( ModularGraphicsFramework_VERSION_MAJOR 0 )
-set( ModularGraphicsFramework_VERSION_MINOR 210 )
+set( ModularGraphicsFramework_VERSION_MINOR 220 )
 
 #==================================================================================================
 # Visual Studio Compilation settings
@@ -35,7 +35,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		set (CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} ")
 		set (CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} ")
 		set (CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu CACHE INTERNAL "" FORCE)
+		set (PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" CACHE INTERNAL "" FORCE)
 		# Debug
@@ -44,7 +44,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ")
 		set (CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} ")
 		set (CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_DEBUG  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu CACHE INTERNAL "" FORCE)
+		set (PROJECTS_SHARED_CXX_FLAGS_DEBUG  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_LINKED_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" CACHE INTERNAL "" FORCE)
 		# Profile
@@ -53,7 +53,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		set (CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} ")
 		set (CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} ")
 		set (CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_PROFILE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Od /analyze- /EHsc /GR CACHE INTERNAL "" FORCE)
+		set (PROJECTS_SHARED_CXX_FLAGS_PROFILE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Od /analyze- /EHsc /GR CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_LINKED_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /DEBUG /PROFILE" CACHE INTERNAL "" FORCE)
 		# Release
@@ -62,7 +62,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ")
 		set (CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} ")
 		set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_RELEASE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Ox /analyze- /EHs-c- /GR- CACHE INTERNAL "" FORCE)
+		set (PROJECTS_SHARED_CXX_FLAGS_RELEASE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Ox /analyze- /EHs-c- /GR- CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_LINKED_FLAGS_RELEASE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /RELEASE /DYNAMICBASE" CACHE INTERNAL "" FORCE)
 	set( CMAKE_BUILD_TYPE "Debug")
@@ -92,7 +92,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		set (CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} ")
 		set (CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} ")
 		set (CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og CACHE INTERNAL "" FORCE)
+		set (PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual  -Wno-unused -Wno-non-template-friend -Wno-literal-suffix -Wno-zero-as-null-pointer-constant  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE)
 		# Debug
 		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: _DEBUG >)
@@ -100,7 +100,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ")
 		set (CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} ")
 		set (CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_DEBUG  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -ggdb -fchkp-check-incomplete-type -Og CACHE INTERNAL "" FORCE)
+		set (PROJECTS_SHARED_CXX_FLAGS_DEBUG  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual  -Wno-unused -Wno-non-template-friend -Wno-literal-suffix -Wno-zero-as-null-pointer-constant  -ggdb -fchkp-check-incomplete-type -Og CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE)
 		# Profile
 		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Profile>: _NDEBUG NDEBUG >)
@@ -108,7 +108,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		set (CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} ")
 		set (CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} ")
 		set (CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_PROFILE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O2 -finline-functions CACHE INTERNAL "" FORCE)
+		set (PROJECTS_SHARED_CXX_FLAGS_PROFILE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual  -Wno-unused -Wno-non-template-friend -Wno-literal-suffix -Wno-zero-as-null-pointer-constant  -O2 -finline-functions CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE)
 		# Release
 		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>: _NDEBUG NDEBUG >)
@@ -116,7 +116,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ")
 		set (CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} ")
 		set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE)
+		set (PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual  -Wno-unused -Wno-non-template-friend -Wno-literal-suffix -Wno-zero-as-null-pointer-constant  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE)
 		set (PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE)
 	set( CMAKE_BUILD_TYPE "Debug")
 endif()
@@ -281,12 +281,6 @@ add_library( "Engine.STL" STATIC
 		"Engine/STL/Types/WeakPointer.h"
 		"Engine/STL/Dimensions/ByteAndBit.h"
 		"Engine/STL/Dimensions/Percentage.h"
-		"Engine/STL/Dimensions/PhysicsDimension.h"
-		"Engine/STL/Dimensions/PhysicsValue.h"
-		"Engine/STL/Dimensions/PhysicsValueMath.h"
-		"Engine/STL/Dimensions/PhysicsValueUtils.h"
-		"Engine/STL/Dimensions/PhysicsValueVec.h"
-		"Engine/STL/Dimensions/PhysicsValueVecI.h"
 		"Engine/STL/Dimensions/PowerOfTwoValue.h"
 		"Engine/STL/Dimensions/RadiansAndDegrees.h"
 		"Engine/STL/Log/ELog.h"
@@ -509,7 +503,7 @@ add_library( "Engine.STL" STATIC
 
 source_group( "Algorithms" FILES "Engine/STL/Algorithms/ArrayUtils.h" "Engine/STL/Algorithms/Comparators.h" "Engine/STL/Algorithms/Enum.h" "Engine/STL/Algorithms/FileAddress.cpp" "Engine/STL/Algorithms/FileAddress.h" "Engine/STL/Algorithms/Hash.h" "Engine/STL/Algorithms/InvokeWithVariant.h" "Engine/STL/Algorithms/Range.h" "Engine/STL/Algorithms/Sorts.h" "Engine/STL/Algorithms/StringParser.cpp" "Engine/STL/Algorithms/StringParser.h" "Engine/STL/Algorithms/StringUtils.h" "Engine/STL/Algorithms/Swap.h" )
 source_group( "Types" FILES "Engine/STL/Types/Bitfield.h" "Engine/STL/Types/DefferedType.h" "Engine/STL/Types/Delegate.h" "Engine/STL/Types/Function.h" "Engine/STL/Types/Limit.h" "Engine/STL/Types/Noncopyable.h" "Engine/STL/Types/Noninstancable.h" "Engine/STL/Types/Optional.h" "Engine/STL/Types/Ptr.h" "Engine/STL/Types/RefCountedObject.h" "Engine/STL/Types/RefCounter.h" "Engine/STL/Types/ScopeSetter.h" "Engine/STL/Types/SharedPointer.h" "Engine/STL/Types/StaticLimit.h" "Engine/STL/Types/StaticRefCountedObject.h" "Engine/STL/Types/Union.h" "Engine/STL/Types/UniquePtr.h" "Engine/STL/Types/VariantCRef.h" "Engine/STL/Types/VariantInterface.h" "Engine/STL/Types/VariantRef.h" "Engine/STL/Types/VariantRefIndexedContainer.h" "Engine/STL/Types/WeakPointer.h" )
-source_group( "Dimensions" FILES "Engine/STL/Dimensions/ByteAndBit.h" "Engine/STL/Dimensions/Percentage.h" "Engine/STL/Dimensions/PhysicsDimension.h" "Engine/STL/Dimensions/PhysicsValue.h" "Engine/STL/Dimensions/PhysicsValueMath.h" "Engine/STL/Dimensions/PhysicsValueUtils.h" "Engine/STL/Dimensions/PhysicsValueVec.h" "Engine/STL/Dimensions/PhysicsValueVecI.h" "Engine/STL/Dimensions/PowerOfTwoValue.h" "Engine/STL/Dimensions/RadiansAndDegrees.h" )
+source_group( "Dimensions" FILES "Engine/STL/Dimensions/ByteAndBit.h" "Engine/STL/Dimensions/Percentage.h" "Engine/STL/Dimensions/PowerOfTwoValue.h" "Engine/STL/Dimensions/RadiansAndDegrees.h" )
 source_group( "Log" FILES "Engine/STL/Log/ELog.h" "Engine/STL/Log/Logger.cpp" "Engine/STL/Log/Logger.h" "Engine/STL/Log/ToString.h" )
 source_group( "Java" FILES "Engine/STL/Java/Java.cpp" "Engine/STL/Java/JavaArray.h" "Engine/STL/Java/JavaClass.h" "Engine/STL/Java/JavaEnvironment.h" "Engine/STL/Java/JavaMethod.h" "Engine/STL/Java/JavaMethodType.h" "Engine/STL/Java/JavaString.h" "Engine/STL/Java/JavaTypeInfo.h" )
 source_group( "Math\\2D" FILES "Engine/STL/Math/2D/Circle.h" "Engine/STL/Math/2D/Line2.h" "Engine/STL/Math/2D/MathTypes2D.h" "Engine/STL/Math/2D/OrientedRectangle.h" "Engine/STL/Math/2D/Rectangle.h" )
@@ -610,6 +604,7 @@ add_executable( "Tests.STL"
 		"Tests/STL/Debug.h"
 		"Tests/STL/Main.cpp"
 		"Tests/STL/Test_Algorithms_InvokeWithVariant.cpp"
+		"Tests/STL/Test_Algorithms_Range.cpp"
 		"Tests/STL/Test_CompileTime_MainType.cpp"
 		"Tests/STL/Test_CompileTime_Map.cpp"
 		"Tests/STL/Test_CompileTime_Sequence.cpp"
@@ -630,7 +625,6 @@ add_executable( "Tests.STL"
 		"Tests/STL/Test_Containers_Queue.cpp"
 		"Tests/STL/Test_Containers_Set.cpp"
 		"Tests/STL/Test_Containers_String.cpp"
-		"Tests/STL/Test_Dimensions_PhysicsValue.cpp"
 		"Tests/STL/Test_Math_Abs.cpp"
 		"Tests/STL/Test_Math_Bit.cpp"
 		"Tests/STL/Test_Math_Clamp_Wrap.cpp"
@@ -657,7 +651,7 @@ add_executable( "Tests.STL"
 		"Tests/STL/Test_Types_Time.cpp"
 		"Tests/STL/Test_Types_Union.cpp" )
 
-source_group( "" FILES "Tests/STL/Common.h" "Tests/STL/Debug.h" "Tests/STL/Main.cpp" "Tests/STL/Test_Algorithms_InvokeWithVariant.cpp" "Tests/STL/Test_CompileTime_MainType.cpp" "Tests/STL/Test_CompileTime_Map.cpp" "Tests/STL/Test_CompileTime_Sequence.cpp" "Tests/STL/Test_CompileTime_StaticFloat.cpp" "Tests/STL/Test_CompileTime_StringToID.cpp" "Tests/STL/Test_CompileTime_TemplateMath.cpp" "Tests/STL/Test_CompileTime_TypeInfo.cpp" "Tests/STL/Test_CompileTime_TypeList.cpp" "Tests/STL/Test_CompileTime_TypeQualifier.cpp" "Tests/STL/Test_CompileTime_TypeTraits.cpp" "Tests/STL/Test_Containers_Adaptors.cpp" "Tests/STL/Test_Containers_Array.cpp" "Tests/STL/Test_Containers_CircularQueue.cpp" "Tests/STL/Test_Containers_HashSet.cpp" "Tests/STL/Test_Containers_IndexedArray.cpp" "Tests/STL/Test_Containers_List.cpp" "Tests/STL/Test_Containers_Map.cpp" "Tests/STL/Test_Containers_Queue.cpp" "Tests/STL/Test_Containers_Set.cpp" "Tests/STL/Test_Containers_String.cpp" "Tests/STL/Test_Dimensions_PhysicsValue.cpp" "Tests/STL/Test_Math_Abs.cpp" "Tests/STL/Test_Math_Bit.cpp" "Tests/STL/Test_Math_Clamp_Wrap.cpp" "Tests/STL/Test_Math_Color.cpp" "Tests/STL/Test_Math_ColorFormat.cpp" "Tests/STL/Test_Math_Factorial.cpp" "Tests/STL/Test_Math_FloorCeilTruncRoundFract.cpp" "Tests/STL/Test_Math_Frustum.cpp" "Tests/STL/Test_Math_ImageUtils.cpp" "Tests/STL/Test_Math_Matrix.cpp" "Tests/STL/Test_Math_Plane.cpp" "Tests/STL/Test_Math_Transform.cpp" "Tests/STL/Test_OS_Atomic.cpp" "Tests/STL/Test_OS_Date.cpp" "Tests/STL/Test_OS_FileSystem.cpp" "Tests/STL/Test_Runtime_VirtualTypelist.cpp" "Tests/STL/Test_SimpleScript.cpp" "Tests/STL/Test_Temp.cpp" "Tests/STL/Test_Types_Cast.cpp" "Tests/STL/Test_Types_ExtString.cpp" "Tests/STL/Test_Types_FileAddress.cpp" "Tests/STL/Test_Types_Function.cpp" "Tests/STL/Test_Types_StringParser.cpp" "Tests/STL/Test_Types_Time.cpp" "Tests/STL/Test_Types_Union.cpp" )
+source_group( "" FILES "Tests/STL/Common.h" "Tests/STL/Debug.h" "Tests/STL/Main.cpp" "Tests/STL/Test_Algorithms_InvokeWithVariant.cpp" "Tests/STL/Test_Algorithms_Range.cpp" "Tests/STL/Test_CompileTime_MainType.cpp" "Tests/STL/Test_CompileTime_Map.cpp" "Tests/STL/Test_CompileTime_Sequence.cpp" "Tests/STL/Test_CompileTime_StaticFloat.cpp" "Tests/STL/Test_CompileTime_StringToID.cpp" "Tests/STL/Test_CompileTime_TemplateMath.cpp" "Tests/STL/Test_CompileTime_TypeInfo.cpp" "Tests/STL/Test_CompileTime_TypeList.cpp" "Tests/STL/Test_CompileTime_TypeQualifier.cpp" "Tests/STL/Test_CompileTime_TypeTraits.cpp" "Tests/STL/Test_Containers_Adaptors.cpp" "Tests/STL/Test_Containers_Array.cpp" "Tests/STL/Test_Containers_CircularQueue.cpp" "Tests/STL/Test_Containers_HashSet.cpp" "Tests/STL/Test_Containers_IndexedArray.cpp" "Tests/STL/Test_Containers_List.cpp" "Tests/STL/Test_Containers_Map.cpp" "Tests/STL/Test_Containers_Queue.cpp" "Tests/STL/Test_Containers_Set.cpp" "Tests/STL/Test_Containers_String.cpp" "Tests/STL/Test_Math_Abs.cpp" "Tests/STL/Test_Math_Bit.cpp" "Tests/STL/Test_Math_Clamp_Wrap.cpp" "Tests/STL/Test_Math_Color.cpp" "Tests/STL/Test_Math_ColorFormat.cpp" "Tests/STL/Test_Math_Factorial.cpp" "Tests/STL/Test_Math_FloorCeilTruncRoundFract.cpp" "Tests/STL/Test_Math_Frustum.cpp" "Tests/STL/Test_Math_ImageUtils.cpp" "Tests/STL/Test_Math_Matrix.cpp" "Tests/STL/Test_Math_Plane.cpp" "Tests/STL/Test_Math_Transform.cpp" "Tests/STL/Test_OS_Atomic.cpp" "Tests/STL/Test_OS_Date.cpp" "Tests/STL/Test_OS_FileSystem.cpp" "Tests/STL/Test_Runtime_VirtualTypelist.cpp" "Tests/STL/Test_SimpleScript.cpp" "Tests/STL/Test_Temp.cpp" "Tests/STL/Test_Types_Cast.cpp" "Tests/STL/Test_Types_ExtString.cpp" "Tests/STL/Test_Types_FileAddress.cpp" "Tests/STL/Test_Types_Function.cpp" "Tests/STL/Test_Types_StringParser.cpp" "Tests/STL/Test_Types_Time.cpp" "Tests/STL/Test_Types_Union.cpp" )
 set_property( TARGET "Tests.STL" PROPERTY FOLDER "Tests" )
 target_include_directories( "Tests.STL" PRIVATE "Tests/STL" )
 target_include_directories( "Tests.STL" PUBLIC "Engine/.." )
@@ -861,6 +855,17 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/OpenGL/Impl/GL4Sampler.h"
 		"Engine/Platforms/OpenGL/Impl/GL4SyncManager.cpp"
 		"Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h"
+		"Engine/Platforms/Soft/SoftRendererContext.cpp"
+		"Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+		"Engine/Platforms/Soft/SoftRendererThread.cpp"
+		"Engine/Platforms/SDL/SDLDisplay.cpp"
+		"Engine/Platforms/SDL/SDLDisplay.h"
+		"Engine/Platforms/SDL/SDLKeyInput.cpp"
+		"Engine/Platforms/SDL/SDLMessages.h"
+		"Engine/Platforms/SDL/SDLMouseInput.cpp"
+		"Engine/Platforms/SDL/SDLObjectsConstructor.h"
+		"Engine/Platforms/SDL/SDLPlatform.cpp"
+		"Engine/Platforms/SDL/SDLWindow.cpp"
 		"Engine/Platforms/OpenGL/OpenGLContext.cpp"
 		"Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 		"Engine/Platforms/OpenGL/OpenGLThread.cpp"
@@ -878,11 +883,33 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Input/InputManager.h"
 		"Engine/Platforms/Input/InputThread.cpp"
 		"Engine/Platforms/Shared/Common.h"
-		"Engine/Platforms/Shared/Main.cpp"
-		"Engine/Platforms/Shared/PipelineTemplate.cpp"
+		"Engine/Platforms/Soft/ShaderLang/gen_Image.h"
+		"Engine/Platforms/Soft/ShaderLang/gen_Texture.h"
+		"Engine/Platforms/Soft/ShaderLang/SWLang.h"
+		"Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h"
+		"Engine/Platforms/Soft/ShaderLang/SWLangCommon.h"
+		"Engine/Platforms/Soft/ShaderLang/SWLangImage.cpp"
+		"Engine/Platforms/Soft/ShaderLang/SWLangImage.h"
+		"Engine/Platforms/Soft/ShaderLang/SWLangTexture.h"
+		"Engine/Platforms/Soft/ShaderLang/SWShaderHelper.cpp"
+		"Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h"
 		"Engine/Platforms/Vulkan/VulkanContext.cpp"
 		"Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 		"Engine/Platforms/Vulkan/VulkanThread.cpp"
+		"Engine/Platforms/Soft/Impl/SWBaseModule.cpp"
+		"Engine/Platforms/Soft/Impl/SWBaseModule.h"
+		"Engine/Platforms/Soft/Impl/SWBuffer.cpp"
+		"Engine/Platforms/Soft/Impl/SWCommandBuffer.cpp"
+		"Engine/Platforms/Soft/Impl/SWCommandBuilder.cpp"
+		"Engine/Platforms/Soft/Impl/SWCommandQueue.cpp"
+		"Engine/Platforms/Soft/Impl/SWEnums.h"
+		"Engine/Platforms/Soft/Impl/SWImage.cpp"
+		"Engine/Platforms/Soft/Impl/SWMemory.cpp"
+		"Engine/Platforms/Soft/Impl/SWMessages.h"
+		"Engine/Platforms/Soft/Impl/SWPipeline.cpp"
+		"Engine/Platforms/Soft/Impl/SWPipelineResourceTable.cpp"
+		"Engine/Platforms/Soft/Impl/SWSyncManager.cpp"
+		"Engine/Platforms/Soft/Impl/SWSyncObjects.h"
 		"Engine/Platforms/Windows/WinDisplay.cpp"
 		"Engine/Platforms/Windows/WinDisplay.h"
 		"Engine/Platforms/Windows/WinKeyInput.cpp"
@@ -891,6 +918,8 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Windows/WinObjectsConstructor.h"
 		"Engine/Platforms/Windows/WinPlatform.cpp"
 		"Engine/Platforms/Windows/WinWindow.cpp"
+		"Engine/Platforms/Impl/Main.cpp"
+		"Engine/Platforms/Impl/PipelineTemplate.cpp"
 		"Engine/Platforms/Vulkan/Impl/Vk1BaseModule.cpp"
 		"Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 		"Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
@@ -924,10 +953,16 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Vulkan/Impl/vulkan1_platform.h"
 		"Engine/Platforms/Vulkan/Impl/vulkan1_utils.h"
 		"Engine/Platforms/Engine.Platforms.h"
+		"Engine/Platforms/Soft/Windows/SwWinSurface.cpp"
+		"Engine/Platforms/Soft/Windows/SwWinSurface.h"
 		"Engine/Platforms/Shared/Tools/AsyncCommandsEmulator.h"
+		"Engine/Platforms/Shared/Tools/GPUThreadHelper.cpp"
+		"Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
 		"Engine/Platforms/Shared/Tools/ImageViewHashMap.h"
 		"Engine/Platforms/Shared/Tools/MemoryMapperHelper.cpp"
 		"Engine/Platforms/Shared/Tools/MemoryMapperHelper.h"
+		"Engine/Platforms/Shared/Tools/WindowHelper.cpp"
+		"Engine/Platforms/Shared/Tools/WindowHelper.h"
 		"Engine/Platforms/OpenGL/Windows/GLWinContext.cpp"
 		"Engine/Platforms/OpenGL/Windows/GLWinContext.h"
 		"Engine/Platforms/OpenGL/Windows/GLWinLibrary.cpp"
@@ -968,7 +1003,6 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Shared/GPU/ShaderEnums.h"
 		"Engine/Platforms/Shared/GPU/Sync.h"
 		"Engine/Platforms/Shared/GPU/Thread.h"
-		"Engine/Platforms/Shared/GPU/Uniforms.h"
 		"Engine/Platforms/Shared/GPU/VertexAttribs.h"
 		"Engine/Platforms/Shared/GPU/VertexDescr.h"
 		"Engine/Platforms/Shared/GPU/VertexEnums.h"
@@ -1000,18 +1034,24 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/VR/VRObjectsConstructor.h" )
 
 source_group( "OpenGL\\Impl" FILES "Engine/Platforms/OpenGL/Impl/gl4.cpp" "Engine/Platforms/OpenGL/Impl/gl4.h" "Engine/Platforms/OpenGL/Impl/GL4BaseModule.cpp" "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h" "Engine/Platforms/OpenGL/Impl/GL4Buffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4CommandBuffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4CommandBuilder.cpp" "Engine/Platforms/OpenGL/Impl/GL4Device.cpp" "Engine/Platforms/OpenGL/Impl/GL4Device.h" "Engine/Platforms/OpenGL/Impl/GL4Emulator.h" "Engine/Platforms/OpenGL/Impl/GL4Enums.h" "Engine/Platforms/OpenGL/Impl/GL4FlippedSystemFramebuffer.h" "Engine/Platforms/OpenGL/Impl/GL4Framebuffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4Image.cpp" "Engine/Platforms/OpenGL/Impl/GL4Memory.cpp" "Engine/Platforms/OpenGL/Impl/GL4Messages.h" "Engine/Platforms/OpenGL/Impl/GL4Pipeline.cpp" "Engine/Platforms/OpenGL/Impl/GL4PipelineResourceTable.cpp" "Engine/Platforms/OpenGL/Impl/GL4RenderPass.cpp" "Engine/Platforms/OpenGL/Impl/GL4Sampler.cpp" "Engine/Platforms/OpenGL/Impl/GL4Sampler.h" "Engine/Platforms/OpenGL/Impl/GL4SyncManager.cpp" "Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h" )
+source_group( "Soft" FILES "Engine/Platforms/Soft/SoftRendererContext.cpp" "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h" "Engine/Platforms/Soft/SoftRendererThread.cpp" )
+source_group( "SDL" FILES "Engine/Platforms/SDL/SDLDisplay.cpp" "Engine/Platforms/SDL/SDLDisplay.h" "Engine/Platforms/SDL/SDLKeyInput.cpp" "Engine/Platforms/SDL/SDLMessages.h" "Engine/Platforms/SDL/SDLMouseInput.cpp" "Engine/Platforms/SDL/SDLObjectsConstructor.h" "Engine/Platforms/SDL/SDLPlatform.cpp" "Engine/Platforms/SDL/SDLWindow.cpp" )
 source_group( "OpenGL" FILES "Engine/Platforms/OpenGL/OpenGLContext.cpp" "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h" "Engine/Platforms/OpenGL/OpenGLThread.cpp" )
 source_group( "OpenCL" FILES "Engine/Platforms/OpenCL/OpenCLContext.cpp" "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h" "Engine/Platforms/OpenCL/OpenCLThread.cpp" )
 source_group( "Shared\\OS" FILES "Engine/Platforms/Shared/OS/Display.h" "Engine/Platforms/Shared/OS/IDs.h" "Engine/Platforms/Shared/OS/Input.h" "Engine/Platforms/Shared/OS/OSEnums.h" "Engine/Platforms/Shared/OS/Platform.h" "Engine/Platforms/Shared/OS/ScreenCoords.h" "Engine/Platforms/Shared/OS/Window.h" )
 source_group( "Input" FILES "Engine/Platforms/Input/InputManager.cpp" "Engine/Platforms/Input/InputManager.h" "Engine/Platforms/Input/InputThread.cpp" )
-source_group( "Shared" FILES "Engine/Platforms/Shared/Common.h" "Engine/Platforms/Shared/Main.cpp" "Engine/Platforms/Shared/PipelineTemplate.cpp" )
+source_group( "Shared" FILES "Engine/Platforms/Shared/Common.h" )
+source_group( "Soft\\ShaderLang" FILES "Engine/Platforms/Soft/ShaderLang/gen_Image.h" "Engine/Platforms/Soft/ShaderLang/gen_Texture.h" "Engine/Platforms/Soft/ShaderLang/SWLang.h" "Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h" "Engine/Platforms/Soft/ShaderLang/SWLangCommon.h" "Engine/Platforms/Soft/ShaderLang/SWLangImage.cpp" "Engine/Platforms/Soft/ShaderLang/SWLangImage.h" "Engine/Platforms/Soft/ShaderLang/SWLangTexture.h" "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.cpp" "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h" )
 source_group( "Vulkan" FILES "Engine/Platforms/Vulkan/VulkanContext.cpp" "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h" "Engine/Platforms/Vulkan/VulkanThread.cpp" )
+source_group( "Soft\\Impl" FILES "Engine/Platforms/Soft/Impl/SWBaseModule.cpp" "Engine/Platforms/Soft/Impl/SWBaseModule.h" "Engine/Platforms/Soft/Impl/SWBuffer.cpp" "Engine/Platforms/Soft/Impl/SWCommandBuffer.cpp" "Engine/Platforms/Soft/Impl/SWCommandBuilder.cpp" "Engine/Platforms/Soft/Impl/SWCommandQueue.cpp" "Engine/Platforms/Soft/Impl/SWEnums.h" "Engine/Platforms/Soft/Impl/SWImage.cpp" "Engine/Platforms/Soft/Impl/SWMemory.cpp" "Engine/Platforms/Soft/Impl/SWMessages.h" "Engine/Platforms/Soft/Impl/SWPipeline.cpp" "Engine/Platforms/Soft/Impl/SWPipelineResourceTable.cpp" "Engine/Platforms/Soft/Impl/SWSyncManager.cpp" "Engine/Platforms/Soft/Impl/SWSyncObjects.h" )
 source_group( "Windows" FILES "Engine/Platforms/Windows/WinDisplay.cpp" "Engine/Platforms/Windows/WinDisplay.h" "Engine/Platforms/Windows/WinKeyInput.cpp" "Engine/Platforms/Windows/WinMessages.h" "Engine/Platforms/Windows/WinMouseInput.cpp" "Engine/Platforms/Windows/WinObjectsConstructor.h" "Engine/Platforms/Windows/WinPlatform.cpp" "Engine/Platforms/Windows/WinWindow.cpp" )
+source_group( "Impl" FILES "Engine/Platforms/Impl/Main.cpp" "Engine/Platforms/Impl/PipelineTemplate.cpp" )
 source_group( "Vulkan\\Impl" FILES "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.cpp" "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h" "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h" "Engine/Platforms/Vulkan/Impl/Vk1Buffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1CommandBuilder.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Device.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Device.h" "Engine/Platforms/Vulkan/Impl/Vk1Enums.h" "Engine/Platforms/Vulkan/Impl/Vk1Framebuffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Image.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Library.h" "Engine/Platforms/Vulkan/Impl/Vk1ManagedMemory.cpp" "Engine/Platforms/Vulkan/Impl/Vk1MemoryManager.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Messages.h" "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h" "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h" "Engine/Platforms/Vulkan/Impl/Vk1PipelineResourceTable.cpp" "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.cpp" "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h" "Engine/Platforms/Vulkan/Impl/Vk1Sampler.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h" "Engine/Platforms/Vulkan/Impl/Vk1SwapchainImage.h" "Engine/Platforms/Vulkan/Impl/Vk1SyncManager.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1.h" "Engine/Platforms/Vulkan/Impl/vulkan1_platform.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1_platform.h" "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h" )
 source_group( "" FILES "Engine/Platforms/Engine.Platforms.h" )
-source_group( "Shared\\Tools" FILES "Engine/Platforms/Shared/Tools/AsyncCommandsEmulator.h" "Engine/Platforms/Shared/Tools/ImageViewHashMap.h" "Engine/Platforms/Shared/Tools/MemoryMapperHelper.cpp" "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h" )
+source_group( "Soft\\Windows" FILES "Engine/Platforms/Soft/Windows/SwWinSurface.cpp" "Engine/Platforms/Soft/Windows/SwWinSurface.h" )
+source_group( "Shared\\Tools" FILES "Engine/Platforms/Shared/Tools/AsyncCommandsEmulator.h" "Engine/Platforms/Shared/Tools/GPUThreadHelper.cpp" "Engine/Platforms/Shared/Tools/GPUThreadHelper.h" "Engine/Platforms/Shared/Tools/ImageViewHashMap.h" "Engine/Platforms/Shared/Tools/MemoryMapperHelper.cpp" "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h" "Engine/Platforms/Shared/Tools/WindowHelper.cpp" "Engine/Platforms/Shared/Tools/WindowHelper.h" )
 source_group( "OpenGL\\Windows" FILES "Engine/Platforms/OpenGL/Windows/GLWinContext.cpp" "Engine/Platforms/OpenGL/Windows/GLWinContext.h" "Engine/Platforms/OpenGL/Windows/GLWinLibrary.cpp" "Engine/Platforms/OpenGL/Windows/GLWinLibrary.h" )
-source_group( "Shared\\GPU" FILES "Engine/Platforms/Shared/GPU/Buffer.h" "Engine/Platforms/Shared/GPU/BufferEnums.h" "Engine/Platforms/Shared/GPU/CommandBuffer.h" "Engine/Platforms/Shared/GPU/CommandEnums.h" "Engine/Platforms/Shared/GPU/Context.h" "Engine/Platforms/Shared/GPU/Enums.ToString.h" "Engine/Platforms/Shared/GPU/FragmentOutputState.h" "Engine/Platforms/Shared/GPU/Framebuffer.h" "Engine/Platforms/Shared/GPU/IDs.h" "Engine/Platforms/Shared/GPU/Image.cpp" "Engine/Platforms/Shared/GPU/Image.h" "Engine/Platforms/Shared/GPU/ImageEnums.h" "Engine/Platforms/Shared/GPU/ImageLayer.h" "Engine/Platforms/Shared/GPU/ImageSwizzle.h" "Engine/Platforms/Shared/GPU/Memory.h" "Engine/Platforms/Shared/GPU/MemoryEnums.h" "Engine/Platforms/Shared/GPU/MipmapLevel.h" "Engine/Platforms/Shared/GPU/MultiSamples.h" "Engine/Platforms/Shared/GPU/ObjectEnums.h" "Engine/Platforms/Shared/GPU/Pipeline.cpp" "Engine/Platforms/Shared/GPU/Pipeline.h" "Engine/Platforms/Shared/GPU/PipelineLayout.cpp" "Engine/Platforms/Shared/GPU/PipelineLayout.h" "Engine/Platforms/Shared/GPU/PixelFormatEnums.h" "Engine/Platforms/Shared/GPU/RenderPass.cpp" "Engine/Platforms/Shared/GPU/RenderPass.h" "Engine/Platforms/Shared/GPU/RenderPassEnums.h" "Engine/Platforms/Shared/GPU/RenderState.cpp" "Engine/Platforms/Shared/GPU/RenderState.h" "Engine/Platforms/Shared/GPU/RenderStateEnums.h" "Engine/Platforms/Shared/GPU/Sampler.cpp" "Engine/Platforms/Shared/GPU/Sampler.h" "Engine/Platforms/Shared/GPU/SamplerEnums.h" "Engine/Platforms/Shared/GPU/ShaderEnums.h" "Engine/Platforms/Shared/GPU/Sync.h" "Engine/Platforms/Shared/GPU/Thread.h" "Engine/Platforms/Shared/GPU/Uniforms.h" "Engine/Platforms/Shared/GPU/VertexAttribs.h" "Engine/Platforms/Shared/GPU/VertexDescr.h" "Engine/Platforms/Shared/GPU/VertexEnums.h" "Engine/Platforms/Shared/GPU/VertexInputState.cpp" "Engine/Platforms/Shared/GPU/VertexInputState.h" "Engine/Platforms/Shared/GPU/VR.h" )
+source_group( "Shared\\GPU" FILES "Engine/Platforms/Shared/GPU/Buffer.h" "Engine/Platforms/Shared/GPU/BufferEnums.h" "Engine/Platforms/Shared/GPU/CommandBuffer.h" "Engine/Platforms/Shared/GPU/CommandEnums.h" "Engine/Platforms/Shared/GPU/Context.h" "Engine/Platforms/Shared/GPU/Enums.ToString.h" "Engine/Platforms/Shared/GPU/FragmentOutputState.h" "Engine/Platforms/Shared/GPU/Framebuffer.h" "Engine/Platforms/Shared/GPU/IDs.h" "Engine/Platforms/Shared/GPU/Image.cpp" "Engine/Platforms/Shared/GPU/Image.h" "Engine/Platforms/Shared/GPU/ImageEnums.h" "Engine/Platforms/Shared/GPU/ImageLayer.h" "Engine/Platforms/Shared/GPU/ImageSwizzle.h" "Engine/Platforms/Shared/GPU/Memory.h" "Engine/Platforms/Shared/GPU/MemoryEnums.h" "Engine/Platforms/Shared/GPU/MipmapLevel.h" "Engine/Platforms/Shared/GPU/MultiSamples.h" "Engine/Platforms/Shared/GPU/ObjectEnums.h" "Engine/Platforms/Shared/GPU/Pipeline.cpp" "Engine/Platforms/Shared/GPU/Pipeline.h" "Engine/Platforms/Shared/GPU/PipelineLayout.cpp" "Engine/Platforms/Shared/GPU/PipelineLayout.h" "Engine/Platforms/Shared/GPU/PixelFormatEnums.h" "Engine/Platforms/Shared/GPU/RenderPass.cpp" "Engine/Platforms/Shared/GPU/RenderPass.h" "Engine/Platforms/Shared/GPU/RenderPassEnums.h" "Engine/Platforms/Shared/GPU/RenderState.cpp" "Engine/Platforms/Shared/GPU/RenderState.h" "Engine/Platforms/Shared/GPU/RenderStateEnums.h" "Engine/Platforms/Shared/GPU/Sampler.cpp" "Engine/Platforms/Shared/GPU/Sampler.h" "Engine/Platforms/Shared/GPU/SamplerEnums.h" "Engine/Platforms/Shared/GPU/ShaderEnums.h" "Engine/Platforms/Shared/GPU/Sync.h" "Engine/Platforms/Shared/GPU/Thread.h" "Engine/Platforms/Shared/GPU/VertexAttribs.h" "Engine/Platforms/Shared/GPU/VertexDescr.h" "Engine/Platforms/Shared/GPU/VertexEnums.h" "Engine/Platforms/Shared/GPU/VertexInputState.cpp" "Engine/Platforms/Shared/GPU/VertexInputState.h" "Engine/Platforms/Shared/GPU/VR.h" )
 source_group( "OpenCL\\Impl" FILES "Engine/Platforms/OpenCL/Impl/cl2.cpp" "Engine/Platforms/OpenCL/Impl/cl2.h" "Engine/Platforms/OpenCL/Impl/CL2BaseModule.cpp" "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h" "Engine/Platforms/OpenCL/Impl/CL2Buffer.cpp" "Engine/Platforms/OpenCL/Impl/CL2CommandBuffer.cpp" "Engine/Platforms/OpenCL/Impl/CL2CommandBuilder.cpp" "Engine/Platforms/OpenCL/Impl/CL2Device.cpp" "Engine/Platforms/OpenCL/Impl/CL2Device.h" "Engine/Platforms/OpenCL/Impl/CL2Emulator.cpp" "Engine/Platforms/OpenCL/Impl/CL2Emulator.h" "Engine/Platforms/OpenCL/Impl/CL2Enums.h" "Engine/Platforms/OpenCL/Impl/CL2Image.cpp" "Engine/Platforms/OpenCL/Impl/CL2Memory.cpp" "Engine/Platforms/OpenCL/Impl/CL2Messages.h" "Engine/Platforms/OpenCL/Impl/CL2Pipeline.cpp" "Engine/Platforms/OpenCL/Impl/CL2PipelineResourceTable.cpp" "Engine/Platforms/OpenCL/Impl/CL2SyncManager.cpp" )
 source_group( "Vulkan\\Windows" FILES "Engine/Platforms/Vulkan/Windows/VkWinSurface.cpp" "Engine/Platforms/Vulkan/Windows/VkWinSurface.h" )
 source_group( "VR\\Emulator" FILES "Engine/Platforms/VR/Emulator/EmulatorVRThread.cpp" )
@@ -1506,6 +1546,83 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	# Release
 	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
 	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+endif()
+
+
+
+
+
+#==================================================================================================
+# project: Tests.Engine.Platforms.GAPI
+#==================================================================================================
+add_executable( "Tests.Engine.Platforms.GAPI" 
+		"Tests/Engine.Platforms.GAPI/Compute/CApp.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp.h"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp"
+		"Tests/Engine.Platforms.GAPI/Graphics/GApp.cpp"
+		"Tests/Engine.Platforms.GAPI/Graphics/GApp.h"
+		"Tests/Engine.Platforms.GAPI/Graphics/Test.GraphicsApi.cpp"
+		"Tests/Engine.Platforms.GAPI/Common.h"
+		"Tests/Engine.Platforms.GAPI/Main.cpp" )
+
+source_group( "Compute" FILES "Tests/Engine.Platforms.GAPI/Compute/CApp.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp.h" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp" )
+source_group( "Graphics" FILES "Tests/Engine.Platforms.GAPI/Graphics/GApp.cpp" "Tests/Engine.Platforms.GAPI/Graphics/GApp.h" "Tests/Engine.Platforms.GAPI/Graphics/Test.GraphicsApi.cpp" )
+source_group( "" FILES "Tests/Engine.Platforms.GAPI/Common.h" "Tests/Engine.Platforms.GAPI/Main.cpp" )
+set_property( TARGET "Tests.Engine.Platforms.GAPI" PROPERTY FOLDER "Tests" )
+target_include_directories( "Tests.Engine.Platforms.GAPI" PRIVATE "Tests/Engine.Platforms.GAPI" )
+target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "Engine/.." )
+target_link_libraries( "Tests.Engine.Platforms.GAPI" "Engine.Platforms" )
+# compiler
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	# DebugAnalyze
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
+	# Debug
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
+	# Profile
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
+	# Release
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
+endif()
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	# DebugAnalyze
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	# Debug
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	# Profile
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	# Release
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+endif()
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	# DebugAnalyze
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	# Debug
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	# Profile
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	# Release
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
 endif()
 
 

@@ -6,7 +6,7 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {
@@ -330,7 +330,7 @@ namespace PlatformGL
 				SendTo( mod, req_descr );
 
 				render_pass			= mod;
-				render_pass_descr	<< req_descr->result;
+				render_pass_descr	= *req_descr->result;
 			}
 		}
 
@@ -514,7 +514,7 @@ namespace PlatformGL
 		Message< GpuMsg::GetRenderPassDescriptor >	req_descr;
 		SendTo( render_pass, req_descr );
 		
-		rpDescr << req_descr->result;
+		rpDescr = RVREF(*req_descr->result);
 		return true;
 	}
 

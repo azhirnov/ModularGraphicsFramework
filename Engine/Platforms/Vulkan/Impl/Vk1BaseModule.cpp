@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {

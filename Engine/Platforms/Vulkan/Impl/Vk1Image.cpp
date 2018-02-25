@@ -6,7 +6,7 @@
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #include "Engine/Platforms/Shared/Tools/ImageViewHashMap.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -205,9 +205,8 @@ namespace PlatformVK
 		_memObj->Subscribe( this, &Vk1Image::_OnMemoryBindingChanged );
 
 		CHECK_LINKING( _CopySubscriptions< ForwardToMem_t >( _memObj ) );
-
-		CHECK_ERR( Module::_Link_Impl( msg ) );
-		return true;
+		
+		return Module::_Link_Impl( msg );
 	}
 	
 /*
@@ -336,7 +335,7 @@ namespace PlatformVK
 
 		CHECK_ERR( _CreateVkImageView( create ) );
 
-		_imageView << create->result;
+		_imageView = *create->result;
 		return true;
 	}
 

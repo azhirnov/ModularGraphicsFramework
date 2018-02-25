@@ -251,7 +251,7 @@ namespace OS
 */
 	bool Thread::Wait () const
 	{
-		return _Wait();
+		return _Wait( INFINITE );
 	}
 	
 /*

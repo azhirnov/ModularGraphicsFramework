@@ -13,7 +13,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -185,7 +185,6 @@ namespace Platforms
 		graphics.memory			= VkManagedMemoryModuleID;
 		graphics.memoryManager	= VkMemoryManagerModuleID;
 		graphics.resourceTable	= VkPipelineResourceTableModuleID;
-		graphics.uniforms		= VkUniformsModuleID;
 		return graphics;
 	}
 	
@@ -207,7 +206,6 @@ namespace Platforms
 		compute.memory			= VkManagedMemoryModuleID;
 		compute.memoryManager	= VkMemoryManagerModuleID;
 		compute.resourceTable	= VkPipelineResourceTableModuleID;
-		compute.uniforms		= VkUniformsModuleID;
 		return compute;
 	}
 

@@ -10,7 +10,7 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {
@@ -74,7 +74,8 @@ namespace PlatformGL
 
 	// variables
 	private:
-		ModulePtr					_tempBuffer;	// for UpdateBuffer command
+		ModulePtr					_tempBuffer;		// for UpdateBuffer command
+		ModulePtr					_pushConstBuffer;	// for PushConstant command
 
 		// temporary framebuffer for blit image command
 		GLuint						_srcBlitFramebuffer;
@@ -84,7 +85,7 @@ namespace PlatformGL
 		CommandArray_t				_commands;
 		UsedResources_t				_resources;
 		ERecordingState				_recordingState;
-		//ulong3						_maxWorkGroupCount;
+		//ulong3					_maxWorkGroupCount;
 
 		// states
 		PipelineStages_t			_pipelineStages;
@@ -188,6 +189,7 @@ namespace PlatformGL
 		bool _CmdClearColorImage (const Command_t &cmd);
 		bool _CmdClearDepthStencilImage (const Command_t &cmd);
 		bool _CmdPipelineBarrier (const Command_t &cmd);
+		bool _GLCmdPushConstants (const Command_t &cmd);
 		
 		static void _ValidateDescriptor (INOUT CommandBufferDescriptor &descr);
 	};
@@ -452,6 +454,7 @@ namespace PlatformGL
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdClearColorImage> :			_CmdClearColorImage( data );			break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdClearDepthStencilImage> :	_CmdClearDepthStencilImage( data );		break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPipelineBarrier> :			_CmdPipelineBarrier( data );			break;
+				case CmdDataTypes_t::IndexOf<GpuMsg::GLCmdPushConstants> :			_GLCmdPushConstants( data );			break;
 				default :															WARNING( "unknown command!" );
 			}
 		}
@@ -880,7 +883,7 @@ namespace PlatformGL
 		CHECK_ERR( ds_index == UMax or ds_index == 0 or ds_index == clearValues.LastIndex() );
 
 		GL_CALL( glEnable( GL_SCISSOR_TEST ) );
-		GL_CALL( glViewport( _renderPassArea.left, _renderPassArea.bottom, _renderPassArea.Width(), _renderPassArea.Height() ) );
+		//GL_CALL( glViewport( _renderPassArea.left, _renderPassArea.bottom, _renderPassArea.Width(), _renderPassArea.Height() ) );
 		GL_CALL( glScissor( _renderPassArea.left, _renderPassArea.bottom, _renderPassArea.Width(), _renderPassArea.Height() ) );
 
 		FOR( i, _renderPassData.clear )
@@ -1229,7 +1232,7 @@ namespace PlatformGL
 		_pipelineStages			= req_id->result->programs;
 		_pipelineObj			= req_id->result->pipeline;
 		_vertexAttribs			= req_id->result->vertexAttribs;
-		_graphicsPipelineDescr	<< req_descr->result;
+		_graphicsPipelineDescr	= RVREF(*req_descr->result);
 		_computePipelineDescr	= Uninitialized;
 		_resourceTable			= null;
 
@@ -1257,7 +1260,7 @@ namespace PlatformGL
 		_vertexAttribs			= 0;
 		_resourceTable			= null;
 		_graphicsPipelineDescr	= Uninitialized;
-		_computePipelineDescr	<< req_descr->result;
+		_computePipelineDescr	= RVREF(*req_descr->result);
 
 		return true;
 	}
@@ -1442,7 +1445,24 @@ namespace PlatformGL
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyBuffer >();
 
-		TODO("");
+		Message< GpuMsg::GetGLBufferID >		req_src_id;
+		Message< GpuMsg::GetGLBufferID >		req_dst_id;
+		Message< GpuMsg::GetBufferDescriptor >	req_src_descr;
+		Message< GpuMsg::GetBufferDescriptor >	req_dst_descr;
+
+		SendTo( data.srcBuffer, req_src_id );
+		SendTo( data.dstBuffer, req_dst_id );
+		SendTo( data.srcBuffer, req_src_descr );
+		SendTo( data.dstBuffer, req_dst_descr );
+
+		for (auto& reg : Range(data.regions))
+		{
+			GL_CALL( glCopyNamedBufferSubData(	*req_src_id->result,
+												*req_dst_id->result,
+												GLintptr(reg.srcOffset),
+												GLintptr(reg.dstOffset),
+												GLsizei(reg.size) ) );
+		}
 		return true;
 	}
 	
@@ -1631,7 +1651,7 @@ namespace PlatformGL
 		CHECK_ERR( data.dstOffset < req_descr->result->size );
 		CHECK_ERR( data.size + data.dstOffset <= req_descr->result->size );
 
-		GL_CALL( glNamedCopyBufferSubData( *req_src_id->result,
+		GL_CALL( glCopyNamedBufferSubData( *req_src_id->result,
 										   *req_dst_id->result,
 										   GLintptr(data.srcOffset),
 										   GLintptr(data.dstOffset),
@@ -1681,7 +1701,7 @@ namespace PlatformGL
 		const auto&	data = cmd.data.Get< GpuMsg::CmdClearAttachments >();
 
 		GL_CALL( glEnable( GL_SCISSOR_TEST ) );
-		GL_CALL( glViewport( _renderPassArea.left, _renderPassArea.bottom, _renderPassArea.Width(), _renderPassArea.Height() ) );
+		//GL_CALL( glViewport( _renderPassArea.left, _renderPassArea.bottom, _renderPassArea.Width(), _renderPassArea.Height() ) );
 
 		FOR( i, data.clearRects )
 		{
@@ -1813,6 +1833,19 @@ namespace PlatformGL
 		const auto&	data = cmd.data.Get< GpuMsg::CmdPipelineBarrier >();
 
 		//TODO("");
+		return true;
+	}
+	
+/*
+=================================================
+	_GLCmdPushConstants
+=================================================
+*/
+	bool GL4CommandBuffer::_GLCmdPushConstants (const Command_t &cmd)
+	{
+		const auto&	data = cmd.data.Get< GpuMsg::GLCmdPushConstants >();
+		
+		TODO("");
 		return true;
 	}
 

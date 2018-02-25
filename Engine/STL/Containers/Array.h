@@ -71,14 +71,13 @@ namespace GXTypes
 		T		*		ptr ();
 		T const	*		ptr () const;
 
+		T *				RawPtr ()										{ return _memory.Pointer(); }
 		T const *		RawPtr () const									{ return _memory.Pointer(); }
 
 		T		&		Back ();
 		T const	&		Back () const;
 		T		&		Front ();
 		T const	&		Front () const;
-		
-		bool			operator ! () const								{ return not Empty(); }
 
 		T		&		operator [] (usize i);
 		T const	&		operator [] (usize i) const;
@@ -871,8 +870,9 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline T * Array<T,S,MC>::Begin ()
 	{
-		ASSERT( _memory.Pointer() != null );
-		return &_memory.Pointer()[0];
+		//ASSERT( _memory.Pointer() != null );
+		//return &_memory.Pointer()[0];
+		return RawPtr();
 	}
 	
 /*
@@ -883,8 +883,9 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline const T * Array<T,S,MC>::Begin () const
 	{
-		ASSERT( _memory.Pointer() != null );
-		return &_memory.Pointer()[0];
+		//ASSERT( _memory.Pointer() != null );
+		//return &_memory.Pointer()[0];
+		return RawPtr();
 	}
 	
 /*
@@ -895,8 +896,9 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline T * Array<T,S,MC>::End ()
 	{
-		ASSERT( _count != 0 );
-		return &_memory.Pointer()[_count];
+		//ASSERT( _count != 0 );
+		//return &_memory.Pointer()[_count];
+		return RawPtr() + _count;
 	}
 	
 /*
@@ -907,8 +909,9 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline const T * Array<T,S,MC>::End () const
 	{
-		ASSERT( _count != 0 );
-		return &_memory.Pointer()[_count];
+		//ASSERT( _count != 0 );
+		//return &_memory.Pointer()[_count];
+		return RawPtr() + _count;
 	}
 	
 /*

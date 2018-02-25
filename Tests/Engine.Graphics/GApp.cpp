@@ -3,6 +3,7 @@
 #include "GApp.h"
 #include "Pipelines/all_pipelines.h"
 #include "Engine/Profilers/Engine.Profilers.h"
+#include "Engine/ImportExport/Engine.ImportExport.h"
 
 using Vertex1		= Graphics::DefVertices::Vertex2D;
 using Rectangle1	= Graphics::DefPrimitives::Rectangle< Vertex1 >;
@@ -23,31 +24,35 @@ GApp::GApp ()
 
 	Platforms::RegisterPlatforms();
 	Profilers::RegisterProfilers();
+	//ImportExport::RegisterImportExport();
 	Graphics::RegisterGraphics();
 }
 
 
 bool GApp::Initialize (GAPI::type api)
 {
-	ms->AddModule( WinPlatformModuleID, CreateInfo::Platform{} );
+	auto	factory	= ms->GlobalSystems()->modulesFactory;
+
+	ms->AddModule( 0, CreateInfo::Platform{} );
 	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager{} );
 	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager{} );
 	
 	{
-		auto		factory	= ms->GlobalSystems()->modulesFactory;
 		ModulePtr	context;
-
 		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ api }, OUT context ) );
 		ms->Send< ModuleMsg::AttachModule >({ context });
 
 		Message< GpuMsg::GetGraphicsModules >	req_ids;
 		context->Send( req_ids );
-		ids << req_ids->graphics;
+		ids = *req_ids->graphics;
 	}
 
-	auto	thread	= ms->GlobalSystems()->parallelThread;
+	auto		thread	= ms->GlobalSystems()->parallelThread;
 	
-	thread->AddModule( WinWindowModuleID, CreateInfo::Window{} );
+	ModulePtr	window;
+	factory->Create( 0, ms->GlobalSystems(), CreateInfo::Window{}, OUT window );
+	thread->Send< ModuleMsg::AttachModule >({ window });
+
 	thread->AddModule( InputThreadModuleID, CreateInfo::InputThread{} );
 	thread->AddModule( ids.thread, CreateInfo::GpuThread{
 					   GraphicsSettings{
@@ -55,7 +60,6 @@ bool GApp::Initialize (GAPI::type api)
 							CreateInfo::GpuContext::EFlags::bits() | CreateInfo::GpuContext::EFlags::DebugContext
 						} } );
 
-	auto	window		= thread->GetModuleByID( WinWindowModuleID );
 	auto	input		= thread->GetModuleByID( InputThreadModuleID );
 	auto	gthread		= thread->GetModuleByID( ids.thread );
 	

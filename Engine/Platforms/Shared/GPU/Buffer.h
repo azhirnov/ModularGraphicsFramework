@@ -54,7 +54,7 @@ namespace CreateInfo
 	// methods
 		GpuBuffer (GX_DEFCTOR) {}
 
-		GpuBuffer (const BufferDescriptor &descr) : descr{descr}, allocMem{false} {}
+		explicit GpuBuffer (const BufferDescriptor &descr) : descr{descr}, allocMem{false} {}
 
 		GpuBuffer (const BufferDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
 			descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}

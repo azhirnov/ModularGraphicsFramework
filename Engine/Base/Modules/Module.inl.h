@@ -47,8 +47,8 @@ namespace Base
 		template <typename T, usize Index>
 		void Process ()
 		{
-			bool is_ok;
-			CHECK(( is_ok = _self->Subscribe( _other, &Module::_SendEvent< typename T::Data_t > ) ));
+			bool is_ok = false;
+			CHECK( is_ok = (_self->Subscribe( _other, &Module::_SendEvent< typename T::Data_t > )) );
 			ok &= is_ok;
 		}
 	};

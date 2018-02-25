@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "OldTypeInfo.h"
+#include "Engine/STL/CompileTime/OldTypeInfo.h"
 
 namespace GX_STL
 {

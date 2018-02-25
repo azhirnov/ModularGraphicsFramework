@@ -82,8 +82,6 @@ namespace GXTypes
 		friend bool	operator == (const T * left, const Self &right)	{ return right == left; }
 		friend bool	operator != (const T * left, const Self &right)	{ return right != left; }
 		
-		bool		operator ! () const			{ return not Empty(); }
-		
 		bool		operator <  (TStringRef<const T> right) const;
 		bool		operator >  (TStringRef<const T> right) const;
 		bool		operator <= (TStringRef<const T> right) const;

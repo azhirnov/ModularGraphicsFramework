@@ -3,7 +3,7 @@
 #include "vulkan1.h"
 #include "vulkan1_utils.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 	
 namespace vk
 {

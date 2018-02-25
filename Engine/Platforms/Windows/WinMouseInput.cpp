@@ -4,14 +4,16 @@
 #include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/Windows/WinObjectsConstructor.h"
 
-#if defined( PLATFORM_WINDOWS )
+#ifdef PLATFORM_WINDOWS
 
 #include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformWin
 {
+	using namespace Platforms;
+
 
 	//
 	// Windows Mouse Input
@@ -323,10 +325,13 @@ namespace Platforms
 
 		_window = null;
 	}
+
+}	// PlatformWin
 //-----------------------------------------------------------------------------
 	
 
-	
+namespace Platforms
+{
 /*
 =================================================
 	CreateWinMouseInput
@@ -334,7 +339,7 @@ namespace Platforms
 */
 	ModulePtr WinObjectsConstructor::CreateWinMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
 	{
-		return New< WinMouseInput >( gs, ci );
+		return New< PlatformWin::WinMouseInput >( gs, ci );
 	}
 
 }	// Platforms

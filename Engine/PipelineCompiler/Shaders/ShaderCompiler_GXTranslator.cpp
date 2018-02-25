@@ -222,8 +222,8 @@ namespace PipelineCompiler
 			res << "const ";
 
 		// layout
-		if ( t.format != EPixelFormat::Unknown )
-			res << "layout(" << ToStringGLSL( t.format ) << ") ";
+		//if ( t.format != EPixelFormat::Unknown )
+		//	res << "layout(" << ToStringGLSL( t.format ) << ") ";
 
 		// precision
 		if ( t.precision != EPrecision::Default )
@@ -275,8 +275,8 @@ namespace PipelineCompiler
 		//	res << ToStringGLSL( t.memoryModel ) << ' ';
 
 		// layout
-		if ( t.format != EPixelFormat::Unknown )
-			res << "layout(" << ToStringGLSL( t.format ) << ") ";
+		//if ( t.format != EPixelFormat::Unknown )
+		//	res << "layout(" << ToStringGLSL( t.format ) << ") ";
 
 		// precision
 		if ( t.precision != EPrecision::Default )
@@ -895,7 +895,7 @@ namespace PipelineCompiler
 
 		if ( type.isImage() )
 		{
-			str << "layout(" << ToStringGLSL( info.format ) << ") "
+			str //<< "layout(" << ToStringGLSL( info.format ) << ") "
 				<< ToStringGLSL( info.memoryModel )
 				<< " uniform ";
 		}

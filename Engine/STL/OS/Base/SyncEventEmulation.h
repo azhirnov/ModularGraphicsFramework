@@ -24,10 +24,6 @@ namespace OS
 			INIT_STATE_SIGNALED = 0x2,
 		};
 
-		enum {
-			MAX_WAIT_TIME	= 0xFFFFFFFF
-		};
-
 
 	// variables
 	private:
@@ -80,15 +76,10 @@ namespace OS
 			_cs.Unlock();
 		}
 
-		void Pulse ()
-		{
-			TODO("");
-		}
-
 		bool Wait ()
 		{
 			ASSERT( IsValid() );
-			bool res = false;
+			bool res = true;
 			
 			_cs.Lock();
 
@@ -107,13 +98,9 @@ namespace OS
 		bool Wait (TimeL time)
 		{
 			ASSERT( IsValid() );
-			bool	res = false;
+			bool	res = true;
 			
 			_cs.Lock();
-
-			//while ( not _triggered ) {
-			//	res = _cv.Wait( _cs, timeMilisec );
-			//}
 
 			if ( not _triggered )
 			{
@@ -133,23 +120,10 @@ namespace OS
 
 		static int WaitEvents (ArrayCRef<Self *> events, bool waitAll, TimeL time)
 		{
+			GX_UNUSED( events, waitAll, time );
 			TODO( "WaitEvents" );
 			return -1;
 		}
-		
-		/*ScopeLock GetScopeLock ()
-		{
-			struct Util {
-				static void Lock(void *p)		{ ((Self *)p)->Wait(); }
-				static void Unlock(void *p)		{ ((Self *)p)->Signal(); }
-			};
-			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
-		}
-
-		operator ScopeLock ()
-		{
-			return GetScopeLock();
-		}*/
 	};
 
 }	// OS

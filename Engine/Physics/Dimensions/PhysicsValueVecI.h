@@ -19,8 +19,8 @@
 		using InnerValue_t	= typename T::Value_t;
 		using Dimensions_t	= typename T::Dimensions_t;
 		using ValueScale_t	= typename T::ValueScale_t;
-		using Vec_t			= Vec< InnerValue_t, I, U >;
-		using BVec_t		= Vec< bool, I, U >;
+		using Vec_t			= GXMath::Vec< InnerValue_t, I, U >;
+		using BVec_t		= GXMath::Vec< bool, I, U >;
 
 		static const usize	STATIC_COUNT = I;
 		
@@ -73,7 +73,7 @@
 			typedef PhysicsValue< InnerValue_t, D, S >										Right;
 			typedef typename ValueScale_t::template Div< typename Right::ValueScale_t >	conv_div_op_t;
 			typedef PhysicsValue< InnerValue_t,
-						typename Dimensions_t::template Div< Right::Dimensions_t >,
+						typename Dimensions_t::template Div< typename Right::Dimensions_t >,
 						conv_div_op_t >														type;
 			typedef PhysicsValueVec< type, I, U >											vec;
 
@@ -234,42 +234,42 @@
 
 		
 		template <typename D, typename S>
-		typename _Add< D, S >::vec  operator +  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const;
+		auto  operator +  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const;
 		
 		template <typename D, typename S>
-		typename _Sub< D, S >::vec  operator -  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const;
+		auto  operator -  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const;
 		
 		template <typename D, typename S>
-		typename _Mul< D, S >::vec  operator *  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const;
+		auto  operator *  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const;
 		
 		template <typename D, typename S>
-		typename _Div< D, S >::vec  operator /  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const;
+		auto  operator /  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const;
 
 		
 		template <typename D, typename S>
-		typename _Add< D, S >::vec  operator +  (const PhysicsValue< InnerValue_t, D, S > &right) const;
+		auto  operator +  (const PhysicsValue< InnerValue_t, D, S > &right) const;
 		
 		template <typename D, typename S>
-		typename _Sub< D, S >::vec  operator -  (const PhysicsValue< InnerValue_t, D, S > &right) const;
+		auto  operator -  (const PhysicsValue< InnerValue_t, D, S > &right) const;
 		
 		template <typename D, typename S>
-		typename _Mul< D, S >::vec  operator *  (const PhysicsValue< InnerValue_t, D, S > &right) const;
+		auto  operator *  (const PhysicsValue< InnerValue_t, D, S > &right) const;
 		
 		template <typename D, typename S>
-		typename _Div< D, S >::vec  operator /  (const PhysicsValue< InnerValue_t, D, S > &right) const;
+		auto  operator /  (const PhysicsValue< InnerValue_t, D, S > &right) const;
 
 		
 		template <typename T0, typename D, typename S, ulong U0>
-		friend typename _Add< D, S >::vec  operator +  (const PhysicsValue< InnerValue_t, D, S > &left, const Self &right);
+		friend auto  operator +  (const PhysicsValue< InnerValue_t, D, S > &left, const Self &right);
 		
 		template <typename T0, typename D, typename S, ulong U0>
-		friend typename _Sub< D, S >::vec  operator -  (const PhysicsValue< InnerValue_t, D, S > &left, const Self &right);
+		friend auto  operator -  (const PhysicsValue< InnerValue_t, D, S > &left, const Self &right);
 		
 		template <typename T0, typename D, typename S, ulong U0>
-		friend typename _Mul< D, S >::vec  operator *  (const PhysicsValue< InnerValue_t, D, S > &left, const Self &right);
+		friend auto  operator *  (const PhysicsValue< InnerValue_t, D, S > &left, const Self &right);
 		
 		template <typename T0, typename D, typename S, ulong U0>
-		friend typename _Div< D, S >::vec  operator /  (const PhysicsValue< InnerValue_t, D, S > &left, const Self &right);
+		friend auto  operator /  (const PhysicsValue< InnerValue_t, D, S > &left, const Self &right);
 
 
 		friend Self			operator * (InnerValue_t left, const Self &right);
@@ -283,8 +283,8 @@
 		T *				ptr ()									{ _CheckAlign();  return &x; }
 		T const *		ptr ()	const							{ _CheckAlign();  return &x; }
 
-		Vec_t &			ref ()									{ return ReferenceCast< Vec_t >( *this ); }
-		Vec_t const &	ref ()	const							{ return ReferenceCast< Vec_t >( *this ); }
+		//Vec_t &		ref ()									{ return ReferenceCast< Vec_t >( *this ); }
+		Vec_t const &	ref ()	const							{ _CheckAlign();  return *Cast< Vec_t const *>( &x ); }
 
 		Vec_t			Get ()	const;
 
@@ -292,21 +292,21 @@
 
 		
 		template <isize PowNum, isize PowDenom>
-		typename _Pow< PowNum, PowDenom >::vec  Pow ()	const;
+		auto  Pow ()	const;
 		
 		template <isize Power>
-		CHECKRES typename _Pow< Power >::vec  Pow ()	const
+		CHECKRES auto  Pow ()	const
 		{
 			typename _Pow< Power >::vec		ret;
 			FOR( i, ret )	ret[i] = (*this)[i].template Pow< Power >();
 			return ret;
 		}
 		
-		CHECKRES typename _Pow< 2 >::vec		Square ()		const	{ return Pow< 2 >(); }
+		CHECKRES auto			Square ()						const	{ return Pow< 2 >(); }
 
-		CHECKRES typename _Pow< 1, 2 >::vec		Sqrt ()			const	{ return Pow< 1, 2 >(); }
+		CHECKRES auto			Sqrt ()							const	{ return Pow< 1, 2 >(); }
 		
-		CHECKRES SelfInversed					Inverse ()		const	{ return SelfInversed( InnerValue_t(1) / (*this) ); }
+		CHECKRES SelfInversed	Inverse ()						const	{ return SelfInversed( InnerValue_t(1) / (*this) ); }
 
 
 		CHECKRES Value_t		Length ()						const	{ return Value_t( ref().Length() ); }
@@ -323,7 +323,7 @@
 		const B		To () const;
 		
 		template <typename ToValueScale>
-		PhysicsValueVec< PhysicsValue< InnerValue_t, Dimensions_t, ToValueScale >, I, U >	ToScale () const;
+		auto		ToScale () const;
 
 
 		String		ToString ()			const;
@@ -408,7 +408,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator == (const Self & right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator == (const Self & right) const
 	{
 		return Equal( right );
 	}
@@ -419,7 +419,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator != (const Self & right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator != (const Self & right) const
 	{
 		return not Equal( right );
 	}
@@ -430,7 +430,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator >  (const Self & right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator >  (const Self & right) const
 	{
 		return Greater( right );
 	}
@@ -441,7 +441,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator >= (const Self & right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator >= (const Self & right) const
 	{
 		return GEqual( right );
 	}
@@ -452,7 +452,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator <  (const Self & right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator <  (const Self & right) const
 	{
 		return Less( right );
 	}
@@ -463,7 +463,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator <= (const Self & right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::operator <= (const Self & right) const
 	{
 		return LEqual( right );
 	}
@@ -688,8 +688,7 @@
 */
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::template _Add< D, S >::vec
-		PhysicsValueVec<T,I,U>::operator +  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const
+	CHECKRES inline auto  PhysicsValueVec<T,I,U>::operator +  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const
 	{
 		typename _Add< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] + right[i];
@@ -703,8 +702,7 @@
 */
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::template _Sub< D, S >::vec
-		PhysicsValueVec<T,I,U>::operator -  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const
+	CHECKRES inline auto  PhysicsValueVec<T,I,U>::operator -  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const
 	{
 		typename _Sub< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] - right[i];
@@ -718,8 +716,7 @@
 */
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::template _Mul< D, S >::vec
-		PhysicsValueVec<T,I,U>::operator *  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const
+	CHECKRES inline auto  PhysicsValueVec<T,I,U>::operator *  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const
 	{
 		typename _Mul< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] * right[i];
@@ -733,8 +730,7 @@
 */
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::template _Div< D, S >::vec
-		PhysicsValueVec<T,I,U>::operator /  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const
+	CHECKRES inline auto  PhysicsValueVec<T,I,U>::operator /  (const PhysicsValueVec< PhysicsValue< InnerValue_t, D, S >, I, U > &right) const
 	{
 		typename _Div< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] / right[i];
@@ -748,8 +744,7 @@
 */
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::template _Add< D, S >::vec
-		PhysicsValueVec<T,I,U>::operator +  (const PhysicsValue< InnerValue_t, D, S > &right) const
+	CHECKRES inline auto  PhysicsValueVec<T,I,U>::operator +  (const PhysicsValue< InnerValue_t, D, S > &right) const
 	{
 		typename _Add< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] + right;
@@ -763,8 +758,7 @@
 */
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::template _Sub< D, S >::vec
-		PhysicsValueVec<T,I,U>::operator -  (const PhysicsValue< InnerValue_t, D, S > &right) const
+	CHECKRES inline auto  PhysicsValueVec<T,I,U>::operator -  (const PhysicsValue< InnerValue_t, D, S > &right) const
 	{
 		typename _Sub< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] - right;
@@ -778,8 +772,7 @@
 */
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::template _Mul< D, S >::vec
-		PhysicsValueVec<T,I,U>::operator *  (const PhysicsValue< InnerValue_t, D, S > &right) const
+	CHECKRES inline auto  PhysicsValueVec<T,I,U>::operator *  (const PhysicsValue< InnerValue_t, D, S > &right) const
 	{
 		typename _Mul< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] * right;
@@ -793,62 +786,20 @@
 */
 	template <typename T, ulong U>
 	template <typename D, typename S>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::template _Div< D, S >::vec
-		PhysicsValueVec<T,I,U>::operator /  (const PhysicsValue< InnerValue_t, D, S > &right) const
+	CHECKRES inline auto  PhysicsValueVec<T,I,U>::operator /  (const PhysicsValue< InnerValue_t, D, S > &right) const
 	{
 		typename _Div< D, S >::vec	ret;
 		FOR( i, ret )		ret[i] = (*this)[i] / right;
 		return ret;
 	}
-	
-	/*
-	template <typename T, typename D, typename S, ulong U>
-	inline typename PhysicsValueVec<T,I,U>::template _Add< D, S >::vec
-		operator +  (const PhysicsValue< typename PhysicsValueVec<T,I,U>::InnerValue_t, D, S > &left, const PhysicsValueVec<T,I,U> &right)
-	{
-		typename _Add< D, S >::vec	ret;
-		FOR( i, ret )		ret[i] = left + right[i];
-		return ret;
-	}
-		
 
-	template <typename T, typename D, typename S, ulong U>
-	inline typename PhysicsValueVec<T,I,U>::template _Sub< D, S >::vec
-		operator -  (const PhysicsValue< typename PhysicsValueVec<T,I,U>::InnerValue_t, D, S > &left, const PhysicsValueVec<T,I,U> &right)
-	{
-		typename _Sub< D, S >::vec	ret;
-		FOR( i, ret )		ret[i] = left - right[i];
-		return ret;
-	}
-		
-
-	template <typename T, typename D, typename S, ulong U>
-	inline typename PhysicsValueVec<T,I,U>::template _Mul< D, S >::vec
-		operator *  (const PhysicsValue< typename PhysicsValueVec<T,I,U>::InnerValue_t, D, S > &left, const PhysicsValueVec<T,I,U> &right)
-	{
-		typename _Mul< D, S >::vec	ret;
-		FOR( i, ret )		ret[i] = left * right[i];
-		return ret;
-	}
-		
-
-	template <typename T, typename D, typename S, ulong U>
-	inline typename PhysicsValueVec<T,I,U>::template _Div< D, S >::vec
-		operator /  (const PhysicsValue< typename PhysicsValueVec<T,I,U>::InnerValue_t, D, S > &left, const PhysicsValueVec<T,I,U> &right)
-	{
-		typename _Div< D, S >::vec	ret;
-		FOR( i, ret )		ret[i] = left / right[i];
-		return ret;
-	}
-	*/
 /*
 =================================================
 	operator *
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline PhysicsValueVec<T,I,U>
-		operator * (typename PhysicsValueVec<T,I,U>::InnerValue_t left, const PhysicsValueVec<T,I,U> &right)
+	CHECKRES inline auto  operator * (typename PhysicsValueVec<T,I,U>::InnerValue_t left, const PhysicsValueVec<T,I,U> &right)
 	{
 		PhysicsValueVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = left * right[i];
@@ -861,8 +812,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::SelfInversed
-		operator / (typename PhysicsValueVec<T,I,U>::InnerValue_t left, const PhysicsValueVec<T,I,U> &right)
+	CHECKRES inline auto  operator / (typename PhysicsValueVec<T,I,U>::InnerValue_t left, const PhysicsValueVec<T,I,U> &right)
 	{
 		typename PhysicsValueVec<T,I,U>::SelfInversed	ret;
 		FOR( i, ret )		ret[i] = left / right[i];
@@ -875,8 +825,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline PhysicsValueVec<T,I,U>
-		operator * (const typename PhysicsValueVec<T,I,U>::Vec_t &left, const PhysicsValueVec<T,I,U> &right)
+	CHECKRES inline auto  operator * (const typename PhysicsValueVec<T,I,U>::Vec_t &left, const PhysicsValueVec<T,I,U> &right)
 	{
 		PhysicsValueVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = left[i] * right[i];
@@ -889,8 +838,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::SelfInversed
-		operator / (const typename PhysicsValueVec<T,I,U>::Vec_t &left, const PhysicsValueVec<T,I,U> &right)
+	CHECKRES inline auto  operator / (const typename PhysicsValueVec<T,I,U>::Vec_t &left, const PhysicsValueVec<T,I,U> &right)
 	{
 		typename PhysicsValueVec<T,I,U>::SelfInversed	ret;
 		FOR( i, ret )		ret[i] = left[i] / right[i];
@@ -916,9 +864,9 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::Equal (const Self &right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::Equal (const Self &right) const
 	{
-		Vec<bool,I,U>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = GXMath::Equals( (*this)[i], right[i] );
 		return ret;
 	}
@@ -929,9 +877,9 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::Less (const Self &right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::Less (const Self &right) const
 	{
-		Vec<bool,I,U>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] < right[i] ) & not GXMath::Equals( (*this)[i], right[i] );
 		return ret;
 	}
@@ -942,9 +890,9 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::LEqual (const Self &right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::LEqual (const Self &right) const
 	{
-		Vec<bool,I,U>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] < right[i] ) | GXMath::Equals( (*this)[i], right[i] );
 		return ret;
 	}
@@ -955,9 +903,9 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::Greater (const Self &right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::Greater (const Self &right) const
 	{
-		Vec<bool,I,U>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] > right[i] ) & not GXMath::Equals( (*this)[i], right[i] );
 		return ret;
 	}
@@ -968,9 +916,9 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::GEqual (const Self &right) const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::GEqual (const Self &right) const
 	{
-		Vec<bool,I,U>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] > right[i] ) | GXMath::Equals( (*this)[i], right[i] );
 		return ret;
 	}
@@ -981,9 +929,9 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::IsZero () const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::IsZero () const
 	{
-		Vec<bool,I,U>	ret;
+		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = (*this)[i].IsZero();
 		return ret;
 	}
@@ -994,7 +942,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  PhysicsValueVec<T,I,U>::IsNotZero () const
+	CHECKRES inline GXMath::Vec<bool,I,U>  PhysicsValueVec<T,I,U>::IsNotZero () const
 	{
 		return not IsZero();
 	}
@@ -1006,8 +954,7 @@
 */
 	template <typename T, ulong U>
 	template <isize PowNum, isize PowDenom>
-	CHECKRES inline typename PhysicsValueVec<T,I,U>::template _Pow< PowNum, PowDenom >::vec
-		PhysicsValueVec<T,I,U>::Pow () const
+	CHECKRES inline auto  PhysicsValueVec<T,I,U>::Pow () const
 	{
 		typename _Pow< PowNum, PowDenom >::vec	ret;
 		FOR( i, ret )	ret[i] = (*this)[i].template Pow< PowNum, PowDenom >();
@@ -1053,9 +1000,7 @@
 */
 	template <typename T, ulong U>
 	template <typename ToValueScale>
-	CHECKRES inline PhysicsValueVec< PhysicsValue< typename PhysicsValueVec<T,I,U>::InnerValue_t,
-													typename PhysicsValueVec<T,I,U>::Dimensions_t, ToValueScale >, I, U >
-		PhysicsValueVec<T,I,U>::ToScale () const
+	CHECKRES inline auto  PhysicsValueVec<T,I,U>::ToScale () const
 	{
 		PhysicsValueVec< PhysicsValue< InnerValue_t, Dimensions_t, ToValueScale >, I, U >	ret;
 		FOR( i, ret )	ret[i] = (*this)[i].template ToScale< ToValueScale >();
@@ -1104,6 +1049,8 @@
 	template <typename T, ulong U>
 	inline void PhysicsValueVec<T,I,U>::_CheckAlign ()
 	{
+		STATIC_ASSERT( sizeof(T) == sizeof(InnerValue_t) );
+
 		#if I == 1
 			// do nothing
 

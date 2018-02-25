@@ -3,6 +3,7 @@
 #include "Engine/Scene/Shared/Scene.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
 #include "Engine/Scene/Impl/BaseSceneModule.h"
+#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
 
 namespace Engine
 {
@@ -32,10 +33,6 @@ namespace Scene
 											GpuMsg::DeviceCreated,
 											GpuMsg::DeviceBeforeDestroy
 										> >;
-		
-		using VRThreadMsgList_t		= MessageListFrom< GpuMsg::GetVRDeviceInfo, GpuMsg::ThreadBeginVRFrame, GpuMsg::ThreadEndVRFrame >;
-		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetDeviceInfo >;
-		using GThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 
 		using CmdBufferMngrMsg_t	= MessageListFrom<
 											GraphicsMsg::CmdBeginFrame,
@@ -136,8 +133,8 @@ namespace Scene
 
 		// find gpu thread
 		ModulePtr	gthread;
-		if ( not (gthread = GlobalSystems()->parallelThread->GetModuleByMsgEvent< VRThreadMsgList_t, GThreadEventList_t >()) ) {
-			CHECK_ATTACHMENT(( gthread = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventList_t >() ));
+		if ( not (gthread = PlatformTools::GPUThreadHelper::FindVRThread( GlobalSystems() )) ) {
+			CHECK_ATTACHMENT( gthread = PlatformTools::GPUThreadHelper::FindGraphicsThread( GlobalSystems() ));
 		}
 
 		gthread->Subscribe( this, &SceneRendererMainThread::_DeviceCreated );

@@ -3,7 +3,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {

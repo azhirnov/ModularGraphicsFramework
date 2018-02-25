@@ -634,7 +634,6 @@ namespace PipelineCompiler
 		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
 		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
 		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
-		using Uniform			= PipelineLayoutDescriptor::Uniform;
 
 
 	// variables
@@ -677,7 +676,7 @@ namespace PipelineCompiler
 		void operator () (const UniformBuffer &ub) const
 		{
 			ASSERT( ub.binding != UMax and ub.uniqueIndex != UMax );
-			ASSERT( ub.size > BytesUL(0) );
+			ASSERT( ub.size > BytesU(0) );
 
 			str << '\n' << indent << "\t\t.AddUniformBuffer( \"" << ub.name << "\", " << usize(ub.size) << "_b, "
 				<< ub.binding << ", " << ub.uniqueIndex << ", " << ToString( ub.stageFlags ) << " )";
@@ -707,12 +706,6 @@ namespace PipelineCompiler
 		void operator () (const SubpassInput &sp) const
 		{
 			TODO( "SubpassInput" );
-		}
-
-
-		void operator () (const Uniform &sp) const
-		{
-			TODO( "Uniform" );
 		}
 	};
 	

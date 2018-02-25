@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "OS_SDL.h"
+#include "Engine/STL/OS/SDL/OS_SDL.h"
 
 #ifdef PLATFORM_SDL
 
@@ -33,7 +33,7 @@ namespace OS
 	{
 	// types
 	protected:
-		static const usize	INVALID_ID = -1;
+		static const usize	INVALID_ID = UMax;
 
 
 	// variables
@@ -43,8 +43,10 @@ namespace OS
 
 	// methods
 	protected:
-		explicit
-		CurrentThread (usize id) : _id(id)
+		CurrentThread (CurrentThread &&other);
+		CurrentThread& operator = (CurrentThread &&right);
+
+		explicit CurrentThread (usize id) : _id(id)
 		{}
 
 	public:
@@ -74,7 +76,7 @@ namespace OS
 	// Thread
 	//
 
-	struct _STL_EXPORT_ Thread : CurrentThread
+	struct _STL_EXPORT_ Thread final : CurrentThread
 	{
 	// types
 	public:
@@ -94,6 +96,11 @@ namespace OS
 
 	public:
 		Thread ();
+		Thread (const Thread &) = delete;
+		Thread (Thread &&other);
+		
+		Thread& operator = (const Thread &) = delete;
+		Thread& operator = (Thread &&right);
 
 		bool Create (PThreadProc_t proc, void *param);
 

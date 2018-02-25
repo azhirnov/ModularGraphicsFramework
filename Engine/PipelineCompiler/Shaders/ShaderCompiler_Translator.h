@@ -40,7 +40,7 @@ namespace PipelineCompiler
 			EGpuMemoryModel::type		memoryModel	= EGpuMemoryModel::None;
 			EShaderVariable::type		type		= EShaderVariable::Unknown;
 			EPrecision::type			precision	= EPrecision::Unknown;
-			EPixelFormat::type			format		= EPixelFormat::Unknown;
+			//EPixelFormat::type		format		= EPixelFormat::Unknown;
 			uint						arraySize	= 0;		// 0 - not array, > 0 - static array, ~0 - dynamic
 			uint						binding		= UMax;
 			bool						isGlobal	= false;	// in some languages globals are forbbiden

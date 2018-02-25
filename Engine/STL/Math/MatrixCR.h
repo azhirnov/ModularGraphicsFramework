@@ -767,7 +767,7 @@
 
 
 		// copy transform
-		const usize n = Min<usize>( row, 3 );
+		const usize n = Min<usize>( row, 3u );
 
 		for (usize r = 0; r < row; ++r)
 			(*this)(C-1,r) = T( m(X-1,r) );

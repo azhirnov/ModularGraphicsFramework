@@ -13,4 +13,5 @@ using namespace GX_STL::GXMath;
 
 extern void Test_Temp ()
 {
+	//WARNING( "!!!" );
 }

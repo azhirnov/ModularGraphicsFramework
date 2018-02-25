@@ -86,8 +86,7 @@ namespace Base
 	{
 		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
 
-		CHECK_ERR( Module::_Link_Impl( msg ) );
-		return true;
+		return Module::_Link_Impl( msg );
 	}
 	
 /*

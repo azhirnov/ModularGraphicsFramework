@@ -5,8 +5,9 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
+#include "Engine/Platforms/Shared/GPU/PipelineLayout.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {
@@ -199,6 +200,31 @@ namespace GpuMsg
 
 		Out< PipelineIDs >		result;
 	};
+
+
+	//
+	// Get Pipeline Layout Push Constants Mapping
+	//
+	struct GetGLPipelineLayoutPushConstants
+	{
+	// types
+		using EShader	= Platforms::EShader;
+
+		struct PushConstant : CompileTime::FastCopyable
+		{
+			EShader::bits	stages;
+			ushort			offset	= 0;
+			ushort			size	= 0;
+
+			PushConstant (EShader::bits stages, BytesU off, BytesU sz) : stages{stages}, offset{ushort(off)}, size{ushort(sz)} {}
+		};
+
+		using Name_t			= Platforms::PipelineLayoutDescriptor::Name_t;
+		using PushConstants_t	= FixedSizeMultiHashMap< Name_t, PushConstant, 8 >;
+
+	// variables
+		Out< PushConstants_t >		result;
+	};
 	
 
 	//
@@ -209,13 +235,28 @@ namespace GpuMsg
 	// types
 		using Programs_t	= StaticArray< gl::GLuint, Platforms::EShader::_Count >;
 
+		struct GLPushConstants
+		{
+			gl::GLuint	bufferID	= 0;
+			usize		offset		= 0;
+			usize		size		= 0;
+
+			GLPushConstants (GX_DEFCTOR) {}
+		};
+
 	// variables
-		Programs_t	programs;
+		Programs_t			programs;
+		GLPushConstants		pushConstants;
 
 	// methods
 		GLPipelineResourceTableApply () {}
-		explicit GLPipelineResourceTableApply (const Programs_t &progs) : programs(progs) {}
-		explicit GLPipelineResourceTableApply (gl::GLuint compProg): programs{} { programs[Platforms::EShader::Compute] = compProg; }
+
+		explicit GLPipelineResourceTableApply (const Programs_t &progs, GLPushConstants pc = Uninitialized) : programs{progs}, pushConstants{pc}
+		{}
+
+		explicit GLPipelineResourceTableApply (gl::GLuint compProg, GLPushConstants pc = Uninitialized) : programs{}, pushConstants{pc} {
+			programs[Platforms::EShader::Compute] = compProg;
+		}
 	};
 
 
@@ -224,8 +265,12 @@ namespace GpuMsg
 	//
 	struct GLFenceSync
 	{
+	// variables
 		Platforms::GpuFenceId	fenceId;
 		Out< gl::GLsync >		result;
+		
+	// methods
+		explicit GLFenceSync (Platforms::GpuFenceId id) : fenceId{id} {}
 	};
 
 	/*struct GetGLFence
@@ -240,8 +285,12 @@ namespace GpuMsg
 	//
 	struct GetGLEvent
 	{
+	// variables
 		Platforms::GpuEventId	eventId;
 		Out< gl::GLsync >		result;
+		
+	// methods
+		explicit GetGLEvent (Platforms::GpuEventId id) : eventId{id} {}
 	};
 
 
@@ -250,14 +299,21 @@ namespace GpuMsg
 	//
 	struct GLSemaphoreEnqueue
 	{
+	// variables
 		Platforms::GpuSemaphoreId	semId;
 		Out< gl::GLsync >			result;
+
+		explicit GLSemaphoreEnqueue (Platforms::GpuSemaphoreId id) : semId{id} {}
 	};
 
 	struct GetGLSemaphore
 	{
+	// variables
 		Platforms::GpuSemaphoreId	semId;
 		Out< gl::GLsync >			result;
+		
+	// methods
+		explicit GetGLSemaphore (Platforms::GpuSemaphoreId id) : semId{id} {}
 	};
 
 	struct WaitGLSemaphore
@@ -280,6 +336,29 @@ namespace GpuMsg
 	// methods
 		GLCmdUpdateBuffer (const CmdUpdateBuffer &cmd, BytesU offset) :
 			dstBuffer(cmd.dstBuffer), dstOffset(cmd.dstOffset), size(cmd.data.Size()), srcOffset(offset)
+		{}
+	};
+
+
+	//
+	// Push Constants Command
+	//
+	struct GLCmdPushConstants
+	{
+	// types
+		using EShader = Platforms::EShader;
+
+	// variables
+		ModulePtr		pipelineLayout;
+		EShader::bits	stages;
+		BytesUL			dstOffset;
+		BytesUL			size;
+		BytesUL			srcOffset;
+
+	// methods
+		GLCmdPushConstants (const CmdPushConstants &cmd, BytesU offset) :
+			pipelineLayout(cmd.pipelineLayout), stages(cmd.stages),
+			dstOffset(cmd.offset), size(cmd.data.Size()), srcOffset(offset)
 		{}
 	};
 
@@ -325,7 +404,8 @@ namespace GpuMsg
 								CmdClearAttachments,
 								CmdClearColorImage,
 								CmdClearDepthStencilImage,
-								CmdPipelineBarrier >;
+								CmdPipelineBarrier,
+								GLCmdPushConstants >;
 
 		struct Command
 		{
@@ -356,6 +436,7 @@ namespace GpuMsg
 	// variables
 		ReadOnce< Array<Command> >	commands;
 		BinaryArray					bufferData;
+		BinaryArray					pushConstData;
 	};
 
 

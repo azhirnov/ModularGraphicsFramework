@@ -2,17 +2,12 @@
 
 #pragma once
 
-#include "PhysicsDimension.h"
-#include "Engine/STL/CompileTime/StaticFloat.h"
+#include "Engine/Physics/Dimensions/PhysicsDimension.h"
 
-#ifdef GX_PHYSICS_DIMENSIONS_ENABLED
-
-namespace GX_STL
-{
-namespace GXMath
+namespace GXPhysics
 {
 
-	namespace _math_hidden_
+	namespace _phys_hidden_
 	{
 
 		template <typename ValueType, typename Scale, typename Power>
@@ -268,7 +263,7 @@ namespace GXMath
 					>			type;
 		};
 
-	}	// _math_hidden_
+	}	// _phys_hidden_
 
 
 
@@ -277,7 +272,7 @@ namespace GXMath
 	//
 	
 	template <typename ValueType>
-	struct PhysicsDimensionScale : public Noninstancable
+	struct PhysicsDimensionScale : public GXTypes::Noninstancable
 	{
 		static const int EXPONENT_TYPE_SIZEOF = CompileTime::Max< int, (sizeof(ValueType)>>2), 1 >;
 
@@ -304,17 +299,17 @@ namespace GXMath
 		{
 			typedef typename Float< ScaleMantissa, ScaleExponent >::Simplify									Scale;
 			typedef typename TFractional< PowNumerator, PowDenominator >::Simplified							Power;
-			typedef typename _math_hidden_::Dimensions_ConvertValue< ValueType, Scale, Power >::Conversion		Func;
+			typedef typename _phys_hidden_::Dimensions_ConvertValue< ValueType, Scale, Power >::Conversion		Func;
 			typedef BaseConversion< ScaleMantissa, ScaleExponent, PowNumerator, PowDenominator >				Self;
 
 			template <typename Conv>
 			struct Equal {
-				static const bool	value = Scale::template Equal< Conv::Scale >::value and
-											Power::template Equal< Conv::Power >::value;
+				static const bool	value = Scale::template Equal< typename Conv::Scale >::value and
+											Power::template Equal< typename Conv::Power >::value;
 			};
 
 			struct _Simplify4 {
-				typedef typename _math_hidden_::DimensionConversion_Simplify< Scale, Power >::type	_simp_t;
+				typedef typename _phys_hidden_::DimensionConversion_Simplify< Scale, Power >::type	_simp_t;
 				typedef BaseConversion< _simp_t::scale_t::MANTISSA, _simp_t::scale_t::EXPONENT,
 										_simp_t::power_t::N, _simp_t::power_t::D >					type;
 			};
@@ -327,8 +322,8 @@ namespace GXMath
 				typedef typename Conv::Power			rpower_t;
 
 				typedef typename CompileTime::SwitchType< (Equal< Conv >::value),
-							_math_hidden_::DimensionConversion_AddEq< ValueType, Scale, Power >,
-							_math_hidden_::DimensionConversion_Add< ValueType, Scale, Power, rscale_t, rpower_t >
+							_phys_hidden_::DimensionConversion_AddEq< ValueType, Scale, Power >,
+							_phys_hidden_::DimensionConversion_Add< ValueType, Scale, Power, rscale_t, rpower_t >
 						>		add_op;
 					
 				typedef typename BaseConversion< add_op::scale_t::MANTISSA, add_op::scale_t::EXPONENT,
@@ -348,8 +343,8 @@ namespace GXMath
 				typedef typename Conv::Power			rpower_t;
 
 				typedef typename CompileTime::SwitchType< (Equal< Conv >::value),
-							_math_hidden_::DimensionConversion_SubEq< ValueType, Scale, Power >,
-							_math_hidden_::DimensionConversion_Sub< ValueType, Scale, Power, rscale_t, rpower_t >
+							_phys_hidden_::DimensionConversion_SubEq< ValueType, Scale, Power >,
+							_phys_hidden_::DimensionConversion_Sub< ValueType, Scale, Power, rscale_t, rpower_t >
 						>		sub_op;
 					
 				typedef typename BaseConversion< sub_op::scale_t::MANTISSA, sub_op::scale_t::EXPONENT,
@@ -369,10 +364,10 @@ namespace GXMath
 				typedef typename Conv::Power			rpower_t;
 
 				typedef typename CompileTime::SwitchType< (Scale::template FastEqual< rscale_t >::value),
-							_math_hidden_::DimensionConversion_MulEqScale< ValueType, Scale, Power, rscale_t, rpower_t >,
+							_phys_hidden_::DimensionConversion_MulEqScale< ValueType, Scale, Power, rscale_t, rpower_t >,
 							typename CompileTime::SwitchType< (Power::IsInteger::value and Conv::Power::IsInteger::value),
-								_math_hidden_::DimensionConversion_MulIntPow< ValueType, Scale, Power, rscale_t, rpower_t >,
-								_math_hidden_::DimensionConversion_Mul< ValueType, Scale, Power, rscale_t, rpower_t >
+								_phys_hidden_::DimensionConversion_MulIntPow< ValueType, Scale, Power, rscale_t, rpower_t >,
+								_phys_hidden_::DimensionConversion_Mul< ValueType, Scale, Power, rscale_t, rpower_t >
 							>
 						>		mul_op;
 
@@ -393,10 +388,10 @@ namespace GXMath
 				typedef typename Conv::Power			rpower_t;
 
 				typedef typename CompileTime::SwitchType< (Scale::template FastEqual< rscale_t >::value),
-							_math_hidden_::DimensionConversion_DivEqScale< ValueType, Scale, Power, rscale_t, rpower_t >,
+							_phys_hidden_::DimensionConversion_DivEqScale< ValueType, Scale, Power, rscale_t, rpower_t >,
 							typename CompileTime::SwitchType< (Power::IsInteger::value and Conv::Power::IsInteger::value),
-								_math_hidden_::DimensionConversion_DivIntPow< ValueType, Scale, Power, rscale_t, rpower_t >,
-								_math_hidden_::DimensionConversion_Div< ValueType, Scale, Power, rscale_t, rpower_t >
+								_phys_hidden_::DimensionConversion_DivIntPow< ValueType, Scale, Power, rscale_t, rpower_t >,
+								_phys_hidden_::DimensionConversion_Div< ValueType, Scale, Power, rscale_t, rpower_t >
 							>
 						>		div_op;
 					
@@ -569,7 +564,7 @@ namespace GXMath
 	//
 
 	template <typename T>
-	struct DefaultPhysicsValues : public Noninstancable
+	struct DefaultPhysicsValues : public GXTypes::Noninstancable
 	{
 		typedef DefaultPhysicsDimensions	_def;
 
@@ -735,7 +730,4 @@ namespace GXMath
 	};
 
 
-}	// GXMath
-}	// GX_STL
-
-#endif	// GX_PHYSICS_DIMENSIONS_ENABLED
+}	// GXPhysics

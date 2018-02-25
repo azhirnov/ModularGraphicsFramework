@@ -2,13 +2,9 @@
 
 #pragma once
 
-#include "PhysicsValueUtils.h"
+#include "Engine/Physics/Dimensions/PhysicsValueUtils.h"
 
-#ifdef GX_PHYSICS_DIMENSIONS_ENABLED
-
-namespace GX_STL
-{
-namespace GXMath
+namespace GXPhysics
 {
 
 	//
@@ -38,7 +34,7 @@ namespace GXMath
 			typedef PhysicsValue< Value_t, D, S >											Right;
 			typedef typename ValueScale_t::template _Add4< typename Right::ValueScale_t >	conv_add_op_t;
 			typedef PhysicsValue< Value_t,
-						typename Dimensions_t::template Add< Right::Dimensions_t >,
+						typename Dimensions_t::template Add< typename Right::Dimensions_t >,
 						typename conv_add_op_t::type >										type;
 
 			static Value_t Get (const Value_t &left, const Value_t &right) {
@@ -51,7 +47,7 @@ namespace GXMath
 			typedef PhysicsValue< Value_t, D, S >											Right;
 			typedef typename ValueScale_t::template _Sub4< typename Right::ValueScale_t >	conv_sub_op_t;
 			typedef PhysicsValue< Value_t,
-						typename Dimensions_t::template Sub< Right::Dimensions_t >,
+						typename Dimensions_t::template Sub< typename Right::Dimensions_t >,
 						typename conv_sub_op_t::type >										type;
 
 			static Value_t Get (const Value_t &left, const Value_t &right) {
@@ -64,7 +60,7 @@ namespace GXMath
 			typedef PhysicsValue< Value_t, D, S >											Right;
 			typedef typename ValueScale_t::template _Mul4< typename Right::ValueScale_t >	conv_mul_op_t;
 			typedef PhysicsValue< Value_t,
-						typename Dimensions_t::template Mul< Right::Dimensions_t >,
+						typename Dimensions_t::template Mul< typename Right::Dimensions_t >,
 						typename conv_mul_op_t::type >										type;
 
 			static Value_t Get (const Value_t &left, const Value_t &right) {
@@ -77,7 +73,7 @@ namespace GXMath
 			typedef PhysicsValue< Value_t, D, S >											Right;
 			typedef typename ValueScale_t::template _Div4< typename Right::ValueScale_t >	conv_div_op_t;
 			typedef PhysicsValue< Value_t,
-						typename Dimensions_t::template Div< Right::Dimensions_t >,
+						typename Dimensions_t::template Div< typename Right::Dimensions_t >,
 						typename conv_div_op_t::type >										type;
 
 			static Value_t Get (const Value_t &left, const Value_t &right) {
@@ -123,7 +119,7 @@ namespace GXMath
 			_value(other.template ToScale< ValueScale_t >().ref())
 		{}
 
-		Value_t &		ref ()									{ return _value; }
+		//Value_t &		ref ()									{ return _value; }
 		Value_t const &	ref ()							const	{ return _value; }
 
 		CHECKRES Value_t Get ()							const	{ return ValueScale_t::Func::Get( _value ); }
@@ -155,7 +151,7 @@ namespace GXMath
 
 		
 		template <typename D, typename S>
-		CHECKRES typename _Add< D, S >::type  operator +  (const PhysicsValue<Value_t,D,S> &right) const
+		CHECKRES auto  operator +  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			typedef _Add< D, S >			add_op;
 			typedef typename add_op::type	Result_t;
@@ -164,7 +160,7 @@ namespace GXMath
 		}
 		
 		template <typename D, typename S>
-		CHECKRES typename _Sub< D, S >::type  operator -  (const PhysicsValue<Value_t,D,S> &right) const
+		CHECKRES auto  operator -  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			typedef _Sub< D, S >			sub_op;
 			typedef typename sub_op::type	Result_t;
@@ -173,7 +169,7 @@ namespace GXMath
 		}
 		
 		template <typename D, typename S>
-		CHECKRES typename _Mul< D, S >::type  operator *  (const PhysicsValue<Value_t,D,S> &right) const
+		CHECKRES auto  operator *  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			typedef _Mul< D, S >			mul_op;
 			typedef typename mul_op::type	Result_t;
@@ -182,7 +178,7 @@ namespace GXMath
 		}
 		
 		template <typename D, typename S>
-		CHECKRES typename _Div< D, S >::type  operator /  (const PhysicsValue<Value_t,D,S> &right) const
+		CHECKRES auto  operator /  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			typedef _Div< D, S >			div_op;
 			typedef typename div_op::type	Result_t;
@@ -204,7 +200,7 @@ namespace GXMath
 
 		
 		template <isize PowNum, isize PowDenom>
-		CHECKRES typename _Pow< PowNum, PowDenom >::type  Pow () const
+		CHECKRES auto  Pow () const
 		{
 			typedef typename _Pow< PowNum, PowDenom >::type						Result_t;
 			typedef typename CompileTime::Fractional32< PowNum, PowDenom >		pow_t;
@@ -215,7 +211,7 @@ namespace GXMath
 		
 
 		template <isize Power>
-		CHECKRES typename _Pow< Power >::type  Pow () const
+		CHECKRES auto  Pow () const
 		{
 			typedef typename CompileTime::NearFloat::FromType<ValueType>		Float_t;
 
@@ -223,13 +219,13 @@ namespace GXMath
 		}
 
 
-		CHECKRES typename _Pow< 2 >::type  Square () const
+		CHECKRES auto  Square () const
 		{
 			return Pow< 2 >();
 		}
 
 
-		CHECKRES typename _Pow< 1, 2 >::type  Sqrt () const
+		CHECKRES auto  Sqrt () const
 		{
 			return Pow< 1, 2 >();
 		}
@@ -268,7 +264,7 @@ namespace GXMath
 
 
 		template <typename T>
-		CHECKRES PhysicsValue< T, Dimensions_t, typename _NewConv<T>::type >  Convert () const
+		CHECKRES auto  Convert () const
 		{
 			return PhysicsValue< T, Dimensions_t, typename _NewConv<T>::type >( T( _value ) );
 		}
@@ -279,12 +275,12 @@ namespace GXMath
 		{
 			STATIC_ASSERT( Dimensions_t::template Equal< typename T::Dimensions_t >::value );
 
-			typedef typename CompileTime::MainType< Value_t, typename T::Value_t >		main_value_t;
+			typedef typename CompileTime::GenType< Value_t, typename T::Value_t >		main_value_t;
 			typedef typename ValueScale_t::template To< main_value_t >					scale1_t;
 			typedef typename T::ValueScale_t::template To< main_value_t >				scale2_t;
 			typedef typename scale1_t::template _Div4< scale2_t >						div_op_t;
 
-			return T( (typename T::Value_t) div_op_t::template Get( _value, main_value_t(1) ) );
+			return T( (typename T::Value_t) div_op_t::Get( _value, main_value_t(1) ) );
 		}
 
 
@@ -337,7 +333,7 @@ namespace GXMath
 		constexpr PhysicsValue (const Self &other) : _value(other.ref()) {}
 		
 
-		Value_t &		ref ()									{ return _value; }
+		//Value_t &		ref ()									{ return _value; }
 		Value_t const &	ref ()							const	{ return _value; }
 
 		CHECKRES Value_t Get ()							const	{ return ValueScale_t::Func::Get( _value ); }
@@ -425,26 +421,33 @@ namespace GXMath
 		}
 	};
 	
-}	// GXMath
+}	// GXPhysics
 
 
+namespace GX_STL
+{
 namespace CompileTime
 {
+/*
+=================================================
+	TypeInfo
+=================================================
+*/
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale
 			 >
-	struct TypeInfo < GXMath::PhysicsValue< ValueType, Dimensions, ValueScale > >
+	struct TypeInfo < GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale > >
 	{
 	private:
 		typedef CompileTime::TypeInfo<ValueType>	_value_type_info;
 
 	public:
-		typedef GXMath::PhysicsValue< ValueType, Dimensions, ValueScale >	type;
-		typedef ValueType													inner_type;
+		using type			= GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale >;
+		using inner_type	= ValueType;
 		
 		template <typename OtherType>
-		using CreateWith =  GXMath::PhysicsValue< OtherType, Dimensions, ValueScale >;
+		using CreateWith =  GXPhysics::PhysicsValue< OtherType, Dimensions, ValueScale >;
 
 		enum {
 			FLAGS	= (int)_value_type_info::FLAGS | (int)GX_STL::CompileTime::_ctime_hidden_::WRAPPER,
@@ -465,19 +468,33 @@ namespace CompileTime
 
 namespace GXTypes
 {
+/*
+=================================================
+	Hash
+=================================================
+*/
 	template <typename ValueType,
 			  typename Dimensions,
 			  typename ValueScale
 			 >
-	struct Hash< GXMath::PhysicsValue< ValueType, Dimensions, ValueScale > >
+	struct Hash< GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale > >
 	{
-		CHECKRES HashResult  operator () (const GXMath::PhysicsValue< ValueType, Dimensions, ValueScale > &x) const
+		CHECKRES HashResult  operator () (const GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale > &x) const
 		{
 			return HashOf( x.ref() );
 		}
 	};
+	
+/*
+=================================================
+	ToStringImpl (PhysicsValue)
+=================================================
+*/
+	template <typename T, typename D, typename S>
+	CHECKRES inline String  ToStringImpl (const GXPhysics::PhysicsValue<T,D,S> &value)
+	{
+		return value.ToString();
+	}
 
 }	// GXTypes
 }	// GX_STL
-
-#endif	// GX_PHYSICS_DIMENSIONS_ENABLED

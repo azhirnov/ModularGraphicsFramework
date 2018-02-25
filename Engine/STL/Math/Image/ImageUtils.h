@@ -91,8 +91,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	CHECKRES static inline BytesU  AlignedDataSize (const Vec<T,3> &dimension, BytesU bytePerPixel,
-													  BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
+	CHECKRES static inline BytesU  AlignedDataSize (const Vec<T,3> &dimension, BytesU bytePerPixel, BytesU rowAlign, BytesU sliceAlign)
 	{
 		CompileTime::MustBeInteger<T>();
 		const usize3	dim			= Max( dimension, Vec<T,3>(1) ).template To<usize3>();
@@ -116,7 +115,7 @@ struct GXImageUtils : public Noninstancable
 	template <typename T>
 	CHECKRES static inline BytesU  AlignedRowSize (const T rowPixels, BytesU bytePerPixel, BytesU rowAlign)
 	{
-		typedef CompileTime::MainType<T, BytesU::Value_t>	main_t;
+		typedef CompileTime::GenType<T, BytesU::Value_t>	main_t;
 
 		CompileTime::MustBeInteger<T>();
 		return (BytesU) GXMath::AlignToLarge( Max( rowPixels, T(1) ) * (main_t)bytePerPixel, rowAlign );
@@ -141,16 +140,17 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	CHECKRES static inline usize  GetPixelOffset (const Vec<T,3> &coord, const Vec<T,3> &dimension, BytesU bytePerPixel,
-											BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
+	CHECKRES static inline BytesU  GetPixelOffset (const Vec<T,3> &coord, const Vec<T,3> &dimension, BytesU bytePerPixel,
+													BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
 	{
 		CompileTime::MustBeInteger<T>();
 		const usize3	dim			= Max( dimension, Vec<T,3>(1) ).template To<usize3>();
 		const usize		row_size	= (usize) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
 		const usize		slice_size	= (usize) AlignedRowSize( dim.y * row_size, 1_b, sliceAlign );
-		const usize		z_off		= slice_size * coord.z;
-		const usize		y_off		= z_off + row_size * coord.y;
-		const usize		i			= y_off + bytePerPixel * coord.x;
+		const usize3	point		= usize3(Clamp( isize3(coord), isize3(0), isize3(dim)-1 ));
+		const usize		z_off		= slice_size * point.z;
+		const usize		y_off		= z_off + row_size * point.y;
+		const BytesU	i			= y_off + bytePerPixel * point.x;
 		return i;
 	}
 

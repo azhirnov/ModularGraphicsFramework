@@ -1,0 +1,128 @@
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
+
+#pragma once
+
+#include "Engine/Platforms/Soft/ShaderLang/SWLangCommon.h"
+
+#ifdef GRAPHICS_API_SOFT
+
+namespace SWShaderLang
+{
+namespace Impl
+{
+
+	//
+	// Uniform Buffer
+	//
+	template <typename T>
+	struct UniformBuffer final
+	{
+		friend class SWShaderHelper;
+		
+	// types
+	private:
+		using BufferData_t	= GpuMsg::GetSWBufferMemoryLayout::Data;
+
+
+	// variables
+	private:
+		BufferData_t	_data;
+
+
+	// methods
+	private:
+		explicit UniformBuffer (const BufferData_t &data) : _data(data) {}
+		
+		UniformBuffer& operator = (const UniformBuffer &) = default;
+		UniformBuffer& operator = (UniformBuffer &&) = default;
+
+	public:
+		UniformBuffer () {}
+		UniformBuffer (UniformBuffer &&) = default;
+		UniformBuffer (const UniformBuffer &) = default;
+
+		T const* operator -> () const;
+	};
+
+
+	template <typename T>
+	inline T const*  UniformBuffer<T>::operator -> () const
+	{
+		ASSERT( _data.access[ EMemoryAccess::GpuRead ] );
+		return (T const *) _data.memory.ptr();
+	}
+//-----------------------------------------------------------------------------
+
+
+
+	//
+	// Storage Buffer
+	//
+	template <	typename T,
+				EStorageAccess::type Access
+			 >
+	struct StorageBuffer
+	{
+		friend class SWShaderHelper;
+		
+	// types
+	private:
+		using BufferData_t	= GpuMsg::GetSWBufferMemoryLayout::Data;
+
+
+	// variables
+	private:
+		BufferData_t	_data;
+
+
+	// methods
+	private:
+		explicit StorageBuffer (const BufferData_t &data) : _data(data) {}
+
+		StorageBuffer& operator = (const StorageBuffer &) = default;
+		StorageBuffer& operator = (StorageBuffer &&) = default;
+
+		T const *	_Read ();
+		T *			_Write ();
+
+	public:
+		StorageBuffer () {}
+		StorageBuffer (StorageBuffer &&) = default;
+		StorageBuffer (const StorageBuffer &) = default;
+
+		decltype(auto)	operator -> ();
+	};
+
+	
+	
+	template <typename T, EStorageAccess::type A>
+	inline decltype(auto)  StorageBuffer<T,A>::operator -> ()
+	{
+		if_constexpr( EStorageAccess::CanWrite(A) )
+			return _Write();
+		else
+			return _Read();
+	}
+	
+	template <typename T, EStorageAccess::type A>
+	inline T const *  StorageBuffer<T,A>::_Read ()
+	{
+		STATIC_ASSERT( EStorageAccess::CanRead(A) );
+		ASSERT( _data.access[ EMemoryAccess::GpuRead ] );
+		return (T const *) _data.memory.ptr();
+	}
+	
+	template <typename T, EStorageAccess::type A>
+	inline T *  StorageBuffer<T,A>::_Write ()
+	{
+		STATIC_ASSERT( EStorageAccess::CanWrite(A) );
+		ASSERT( _data.access[ EMemoryAccess::GpuWrite ] );
+		return (T *) _data.memory.ptr();
+	}
+//-----------------------------------------------------------------------------
+
+
+}	// Impl
+}	// SWShaderLang
+
+#endif	// GRAPHICS_API_SOFT

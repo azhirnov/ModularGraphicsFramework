@@ -6,7 +6,7 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {

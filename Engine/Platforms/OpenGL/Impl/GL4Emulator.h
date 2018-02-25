@@ -4,7 +4,7 @@
 
 #include "Engine/Platforms/OpenGL/Impl/gl4.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace gl
 {
@@ -81,7 +81,7 @@ namespace gl
 		return glUnmapNamedBufferEXT( buffer );
 	}
 
-	inline void glNamedCopyBufferSubData (GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
+	inline void glCopyNamedBufferSubData (GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
 	{
 		return glNamedCopyBufferSubDataEXT(readBuffer, writeBuffer, readOffset, writeOffset, size);
 	}

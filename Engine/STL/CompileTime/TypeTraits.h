@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine/STL/Common/Types.h"
-#include "TemplateUtils.h"
+#include "Engine/STL/CompileTime/TemplateUtils.h"
 
 namespace GX_STL
 {

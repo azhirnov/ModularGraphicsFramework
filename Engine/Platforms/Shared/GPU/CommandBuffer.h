@@ -7,6 +7,7 @@
 #include "Engine/Platforms/Shared/GPU/VertexEnums.h"
 #include "Engine/Platforms/Shared/GPU/ImageEnums.h"
 #include "Engine/Platforms/Shared/GPU/CommandEnums.h"
+#include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
 #include "Engine/Platforms/Shared/GPU/MipmapLevel.h"
 #include "Engine/Platforms/Shared/GPU/ImageLayer.h"
 #include "Engine/Platforms/Shared/GPU/Sync.h"
@@ -945,8 +946,61 @@ namespace GpuMsg
 		// TODO
 
 	// methods
-		CmdWaitEvents (Event_t event) { events.PushBack( event ); }
-		CmdWaitEvents (ArrayCRef<Event_t> events) : events(events) {}
+		explicit CmdWaitEvents (Event_t event) { events.PushBack( event ); }
+		explicit CmdWaitEvents (ArrayCRef<Event_t> events) : events(events) {}
+	};
+
+
+	//
+	// Push Constants
+	//
+	struct CmdPushConstants
+	{
+	// types
+		using Data_t	= FixedSizeArray< uint, 32 >;
+		using EShader	= Platforms::EShader;
+
+	// variables
+		ModulePtr		pipelineLayout;
+		EShader::bits	stages;
+		BytesU			offset;
+		Data_t			data;
+
+	// methods
+		CmdPushConstants ()
+		{}
+
+		CmdPushConstants (const ModulePtr &layout, BinArrayCRef data, EShader::bits stages = EShader::All, BytesU off = Uninitialized) :
+			pipelineLayout{layout}, stages{stages}, offset{off}, data{ArrayCRef<uint>::From(data)}
+		{}
+	};
+
+	struct CmdPushNamedConstants
+	{
+	// types
+		using Value_t		= Union< int, int2, int3, int4,
+									 uint, uint2, uint3, uint4,
+									 ilong, ilong2, ilong3, ilong4,
+									 ulong, ulong2, ulong3, ulong4,
+									 float, float2, float3, float4,
+									 float2x2, float3x3, float4x4,
+									 double, double2, double3, double4 >;
+		using Name_t		= StaticString<64>;
+		using ValueMap_t	= FixedSizeArray< Pair< Name_t, Value_t >, 8 >;
+
+	// variables
+		ModulePtr		pipelineLayout;
+		ValueMap_t		values;
+
+	// methods
+		explicit CmdPushNamedConstants (const ModulePtr &layout) : pipelineLayout{layout} {}
+
+		template <typename T>
+		CmdPushNamedConstants& Add (StringCRef name, const T &value)
+		{
+			values.PushBack({ name, value });
+			return *this;
+		}
 	};
 
 

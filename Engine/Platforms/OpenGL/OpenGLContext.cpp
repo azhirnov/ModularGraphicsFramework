@@ -11,7 +11,7 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {
@@ -182,7 +182,6 @@ namespace Platforms
 		graphics.sampler		= GLSamplerModuleID;
 		graphics.memory			= GLMemoryModuleID;
 		graphics.resourceTable	= GLPipelineResourceTableModuleID;
-		graphics.uniforms		= GLUniformsModuleID;
 		return graphics;
 	}
 	
@@ -203,7 +202,6 @@ namespace Platforms
 		compute.image			= GLImageModuleID;
 		compute.memory			= GLMemoryModuleID;
 		compute.resourceTable	= GLPipelineResourceTableModuleID;
-		compute.uniforms		= GLUniformsModuleID;
 		return compute;
 	}
 

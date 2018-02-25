@@ -75,7 +75,7 @@ namespace GXTypes
 		}
 
 
-		~UniquePtr()
+		~UniquePtr ()
 		{
 			_Delete();
 		}
@@ -144,55 +144,56 @@ namespace GXTypes
 		
 
 		Self& operator = (const Self &right) = delete;
-		
-
-		forceinline explicit operator bool () const
-		{
-			return IsNotNull();
-		}
 
 
-		forceinline T * operator -> () const
+		CHECKRES forceinline T * operator -> () const
 		{
 			return ptr();
 		}
 
 
-		forceinline T & operator * () const
+		CHECKRES forceinline T & operator * () const
 		{
 			return *ptr();
 		}
 
 
-		forceinline T * ptr() const
+		CHECKRES forceinline T * ptr () const
 		{
-			ASSUME( _ptr != null );
+			ASSUME( IsNotNull() );
+			return RawPtr();
+		}
+
+
+		CHECKRES forceinline T * RawPtr () const
+		{
 			return const_cast< T* >( _ptr );
 		}
 
 
-		forceinline bool IsNull() const
+		forceinline bool IsNull () const
 		{
 			return ( _ptr == null );
 		}
 
 
-		forceinline bool IsNotNull() const
+		forceinline bool IsNotNull () const
 		{
-			return not IsNull();
+			return ( _ptr != null );
 		}
 
-
-		//forceinline void Reset()
-		//{
-		//	_ptr = null;
-		//}
 
 		CHECKRES inline T* Release ()
 		{
 			T*	res = _ptr;
 			_ptr = null;
 			return res;
+		}
+		
+
+		CHECKRES forceinline explicit operator bool () const
+		{
+			return IsNotNull();
 		}
 
 		
@@ -211,12 +212,6 @@ namespace GXTypes
 		CHECKRES forceinline bool operator != (const Self &right) const
 		{
 			return _ptr != right._ptr;
-		}
-
-		
-		CHECKRES forceinline bool operator ! () const
-		{
-			return _ptr != null;
 		}
 
 

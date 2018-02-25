@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -42,14 +42,16 @@ namespace PlatformVK
 
 		_layoutDescr = descr;
 
-		CHECK_ERR( _CreateLayoutDescriptors( descr ) );
+		PushConstantRanges_t	pc_ranges;
+
+		CHECK_ERR( _CreateLayoutDescriptors( descr, OUT pc_ranges ) );
 		
 		VkPipelineLayoutCreateInfo			layout_info = {};
 		layout_info.sType					= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		layout_info.setLayoutCount			= 1u;
 		layout_info.pSetLayouts				= &_descriptorId;
-		layout_info.pushConstantRangeCount	= (uint) _pushConstRanges.Count();
-		layout_info.pPushConstantRanges		= _pushConstRanges.RawPtr();
+		layout_info.pushConstantRangeCount	= (uint) pc_ranges.Count();
+		layout_info.pPushConstantRanges		= pc_ranges.RawPtr();
 
 		VK_CHECK( vkCreatePipelineLayout( GetVkDevice(), &layout_info, null, OUT &_layoutId ) );
 
@@ -72,17 +74,17 @@ namespace PlatformVK
 		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
 		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
 		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
-		using Uniform			= PipelineLayoutDescriptor::Uniform;
 
 
 	// variables
-		DescriptorBindings&		bindings;
-		PushConstantRanges&		pushConstRanges;
+		DescriptorBindings_t&	bindings;
+		PushConstantRanges_t&	pushConstRanges;
+		PushConstants_t&		pushConstMap;
 
 
 	// methods
-		_CreateDescriptor_Func (OUT DescriptorBindings &bindings, OUT PushConstantRanges &pushConstRanges) :
-			bindings( bindings ), pushConstRanges( pushConstRanges )
+		_CreateDescriptor_Func (OUT DescriptorBindings_t &bindings, OUT PushConstantRanges_t &pushConstRanges, OUT PushConstants_t &pcMap) :
+			bindings( bindings ), pushConstRanges( pushConstRanges ), pushConstMap( pcMap )
 		{}
 
 
@@ -156,6 +158,7 @@ namespace PlatformVK
 			range.size			= (uint) pc.size;
 
 			pushConstRanges.PushBack( range );
+			pushConstMap.Add( pc.name, { pc.stageFlags, pc.offset, pc.size } );
 		}
 		
 
@@ -163,12 +166,6 @@ namespace PlatformVK
 		{
 			WARNING( "not supported" );
 			// TODO: VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
-		}
-		
-
-		void operator () (const Uniform &un) const
-		{
-			WARNING( "not supported" );
 		}
 	};
 	
@@ -182,7 +179,7 @@ namespace PlatformVK
 		_DestroyLayout();
 		_DestroyLayoutDescriptors();
 
-		_pushConstRanges.Clear();
+		_pushConstants.Clear();
 	}
 	
 /*
@@ -190,13 +187,13 @@ namespace PlatformVK
 	_CreateLayoutDescriptors
 =================================================
 */
-	bool Vk1PipelineLayout::_CreateLayoutDescriptors (const PipelineLayoutDescriptor &descr)
+	bool Vk1PipelineLayout::_CreateLayoutDescriptors (const PipelineLayoutDescriptor &descr, OUT PushConstantRanges_t &pushConstRanges)
 	{
-		CHECK_ERR( descr.GetUniforms().Count() <= DescriptorBindings::MemoryContainer_t::SIZE );
+		CHECK_ERR( descr.GetUniforms().Count() <= DescriptorBindings_t::MemoryContainer_t::SIZE );
 		CHECK_ERR( _descriptorId == VK_NULL_HANDLE );
 
-		DescriptorBindings		descr_binding;
-		_CreateDescriptor_Func	func( OUT descr_binding, OUT _pushConstRanges );
+		DescriptorBindings_t	descr_binding;
+		_CreateDescriptor_Func	func( OUT descr_binding, OUT pushConstRanges, OUT _pushConstants );
 
 		FOR( i, descr.GetUniforms() ) {
 			descr.GetUniforms()[i].Apply( func );

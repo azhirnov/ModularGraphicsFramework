@@ -90,12 +90,18 @@ namespace PlatformGL
 
 		const HDC	dc			= _deviceContext.Get<HDC>();
 		HGLRC		rc			= null;
-		const uint	pixformat	= ChoosePixelFormat( dc, OUT &pfd );
+		uint		curr_fmt	= GetPixelFormat( dc );
+		const uint	pixformat	= curr_fmt == 0 ? ChoosePixelFormat( dc, OUT &pfd ) : curr_fmt;
 		bool		res			= false;
 
 		if ( pixformat != 0 )
 		{
-			CHECK( SetPixelFormat( dc, pixformat, &pfd ) != FALSE );
+			// An application can only set the pixel format of a window one time. (MDSN)
+			if ( pixformat != curr_fmt )
+			{
+				CHECK( SetPixelFormat( dc, pixformat, &pfd ) != FALSE );
+			}
+
 			rc = wglCreateContext( dc );
 
 			if ( rc != null and wglMakeCurrent( dc, rc ) != FALSE )

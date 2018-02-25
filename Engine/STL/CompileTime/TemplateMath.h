@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "TemplateUtils.h"
+#include "Engine/STL/CompileTime/TemplateUtils.h"
 
 namespace GX_STL
 {

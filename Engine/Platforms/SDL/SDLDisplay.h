@@ -1,0 +1,48 @@
+// Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
+
+#pragma once
+
+#include "Engine/Platforms/Shared/OS/Display.h"
+#include "Engine/Platforms/Shared/OS/Platform.h"
+
+#ifdef PLATFORM_SDL
+
+namespace Engine
+{
+namespace PlatformSDL
+{
+	using namespace Platforms;
+
+
+	//
+	// SDL Display Helper
+	//
+
+	struct SDLDisplay final
+	{
+	// types
+	private:
+		using Displays_t	= OSMsg::GetDisplays::Displays_t;
+
+
+	// variables
+	private:
+		Displays_t		_displays;
+
+
+	// methods
+	public:
+		SDLDisplay ();
+
+		bool Update ();
+
+		ArrayCRef<Display> GetDisplays () const		{ return _displays; }
+
+	private:
+	};
+
+
+}	// PlatformSDL
+}	// Engine
+
+#endif	// PLATFORM_SDL

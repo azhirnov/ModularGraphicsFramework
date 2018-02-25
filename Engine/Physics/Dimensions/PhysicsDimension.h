@@ -2,14 +2,9 @@
 
 #pragma once
 
-#include "Engine/STL/CompileTime/TypeList.h"
-#include "Engine/STL/CompileTime/StaticFractional.h"
+#include "Engine/Physics/Common/Common.h"
 
-#ifdef GX_PHYSICS_DIMENSIONS_ENABLED
-
-namespace GX_STL
-{
-namespace GXMath
+namespace GXPhysics
 {
 
 	//
@@ -47,7 +42,7 @@ namespace GXMath
 	//
 
 	template <EPhysicsDimension::type Dim, typename FracPower = CompileTime::Fractional32<0> >
-	struct TPhysicsDimension : public Noninstancable
+	struct TPhysicsDimension : public GXTypes::Noninstancable
 	{
 	// types
 	public:
@@ -111,7 +106,7 @@ namespace GXMath
 	//
 	
 	template <typename DimensionsTypeList>
-	struct TPhysicsDimensionsList : public Noninstancable
+	struct TPhysicsDimensionsList : public GXTypes::Noninstancable
 	{
 	// checks
 		STATIC_ASSERT( DimensionsTypeList::Count == EPhysicsDimension::_Count );
@@ -208,7 +203,7 @@ namespace GXMath
 
 		template <typename Dims>
 		struct Equal {
-			static const bool	value = DimensionsTypeList::template Equal< Dims::DimensionsTypeList_t >;
+			static const bool	value = DimensionsTypeList::template Equal< typename Dims::DimensionsTypeList_t >;
 		};
 
 		template <typename Dims>
@@ -274,7 +269,7 @@ namespace GXMath
 	// Simplified Physics Dimensions List
 	//
 	
-	namespace _math_hidden_
+	namespace _phys_hidden_
 	{
 		template <	int SecondsNom = 0,		uint SecondsDenom = 1,
 					int KilogramsNom = 0,	uint KilogramsDenom = 1,
@@ -286,7 +281,7 @@ namespace GXMath
 					int CurrencyNom = 0,	uint CurrencyDenom = 1,
 					int BitsNom = 0,		uint BitsDenom = 1
 				 >
-		struct PhysDimList : public Noninstancable
+		struct PhysDimList : public GXTypes::Noninstancable
 		{
 		// types
 		private:
@@ -374,7 +369,7 @@ namespace GXMath
 			}
 		};
 
-	}	// _math_hidden_
+	}	// _phys_hidden_
 	
 
 
@@ -382,7 +377,7 @@ namespace GXMath
 	// Default Physics Dimensions List
 	//
 	
-	struct DefaultPhysicsDimensionsList : _math_hidden_::PhysDimList<>
+	struct DefaultPhysicsDimensionsList : _phys_hidden_::PhysDimList<>
 	{
 		template <EPhysicsDimension::type DimType, isize PowNum = 1, isize PowDenom = 1>
 		using Create = typename Self::_MulDim< TPhysicsDimension< DimType,
@@ -396,7 +391,7 @@ namespace GXMath
 	// Default Physics Dimensions
 	//
 	
-	struct DefaultPhysicsDimensions : public Noninstancable
+	struct DefaultPhysicsDimensions : public GXTypes::Noninstancable
 	{
 		// base //
 		typedef DefaultPhysicsDimensionsList::CreateNonDimensional						NonDimensional;	// 
@@ -438,7 +433,4 @@ namespace GXMath
 	};
 	
 
-}	// GXMath
-}	// GX_STL
-
-#endif	// GX_PHYSICS_DIMENSIONS_ENABLED
+}	// GXPhysics

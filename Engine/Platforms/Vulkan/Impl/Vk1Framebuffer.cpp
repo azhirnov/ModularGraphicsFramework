@@ -6,7 +6,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -382,8 +382,8 @@ namespace PlatformVK
 
 				CHECK_ERR( req_descr->result.IsDefined() and req_id->result.Get( VK_NULL_HANDLE ) != VK_NULL_HANDLE );
 
-				render_pass			<< req_id->result;
-				render_pass_descr	<< req_descr->result;
+				render_pass			= *req_id->result;
+				render_pass_descr	= RVREF(*req_descr->result);
 			}
 		}
 
@@ -516,8 +516,8 @@ namespace PlatformVK
 		SendTo( render_pass, req_id );
 		SendTo( render_pass, req_descr );
 
-		renderPass	<< req_id->result;
-		rpDescr		<< req_descr->result;
+		renderPass	= *req_id->result;
+		rpDescr		= RVREF(*req_descr->result);
 
 		CHECK_ERR( renderPass != VK_NULL_HANDLE );
 		return true;

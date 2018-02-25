@@ -2,7 +2,7 @@
 
 #include "cl2.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace cl
 {

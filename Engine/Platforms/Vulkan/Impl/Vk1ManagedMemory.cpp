@@ -5,7 +5,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -203,7 +203,7 @@ namespace PlatformVK
 		CHECK_ERR( img_id != VK_NULL_HANDLE );
 		
 		// allocate memory
-		Message< GpuMsg::VkAllocMemForImage >		alloc{ this, img_id, _flags };
+		Message< GpuMsg::VkAllocMemForImage >	alloc{ this, img_id, _flags };
 		SendTo( _memManager, alloc );
 		CHECK_ERR( alloc->result );
 		
@@ -534,10 +534,10 @@ namespace PlatformVK
 	{
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
-		CHECK_ERR( not msg->size or not msg->writableBuffer or (*msg->size == BytesUL(msg->writableBuffer->Size())) );
+		CHECK_ERR( msg->writableBuffer.Size() > 0 );
 
 		const bool		was_mapped	= _memMapper.IsMapped();
-		const BytesUL	req_size	= msg->writableBuffer ? BytesUL(msg->writableBuffer->Size()) : (msg->size ? *msg->size : BytesUL());
+		const BytesUL	req_size	= BytesUL(msg->writableBuffer.Size());
 
 		// map memory
 		if ( not was_mapped )
@@ -560,19 +560,11 @@ namespace PlatformVK
 
 		CHECK( _ReadFromStream( read_stream ) );
 
-		// copy to writable buffer, it is a little slow in Vulkan,
-		// but in other realizations, which doesn't support memory mapping,
-		// using preallocated buffers is required.
-		if ( msg->writableBuffer )
-		{
-			CHECK( msg->writableBuffer->Size() >= read_stream->result->Size() );	// never gonna happen, but...
+		// copy to writable buffer
+		CHECK( msg->writableBuffer.Size() >= read_stream->result->Size() );
 
-			MemCopy( *msg->writableBuffer, *read_stream->result );
-
-			msg->result.Set( *msg->writableBuffer );
-		}
-		else
-			msg->result.Set( read_stream->result.Get() );
+		MemCopy( msg->writableBuffer, *read_stream->result );
+		msg->result.Set( msg->writableBuffer.SubArray( 0, usize(read_stream->result->Size()) ) );
 
 		// unmap
 		if ( not was_mapped )

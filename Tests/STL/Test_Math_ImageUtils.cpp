@@ -12,19 +12,19 @@ static void Test_AlignedImageSize ()
 {
 	BytesU	size;
 	
-	size = GXImageUtils::AlignedDataSize( uint3( 2, 2, 1 ), BitsU(8).ToBytes(), BytesU(1) );
+	size = GXImageUtils::AlignedDataSize( uint3( 2, 2, 1 ), BitsU(8).ToBytes(), 1_b, 1_b );
 	TEST( size == 2*2 );
 
-	size = GXImageUtils::AlignedDataSize( uint3( 2, 2, 1 ), BitsU(8).ToBytes(), BytesU(4) );
+	size = GXImageUtils::AlignedDataSize( uint3( 2, 2, 1 ), BitsU(8).ToBytes(), 4_b, 1_b );
 	TEST( size == 4*2 );
 	
-	size = GXImageUtils::AlignedDataSize( uint3( 4, 2, 1 ), BitsU(8).ToBytes(), BytesU(4) );
+	size = GXImageUtils::AlignedDataSize( uint3( 4, 2, 1 ), BitsU(8).ToBytes(), 4_b, 1_b );
 	TEST( size == 4*2 );
 	
-	size = GXImageUtils::AlignedDataSize( uint3( 2, 4, 1 ), BitsU(8).ToBytes(), BytesU(4) );
+	size = GXImageUtils::AlignedDataSize( uint3( 2, 4, 1 ), BitsU(8).ToBytes(), 4_b, 1_b );
 	TEST( size == 4*4 );
 	
-	size = GXImageUtils::AlignedDataSize( uint3( 3, 2, 1 ), BitsU(8*3).ToBytes(), BytesU(4) );
+	size = GXImageUtils::AlignedDataSize( uint3( 3, 2, 1 ), BitsU(8*3).ToBytes(), 4_b, 1_b );
 	TEST( size == 4*2*3 );
 
 	// assert:

@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/STL/OS/Posix/RandDevice.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 #ifdef PLATFORM_BASE_POSIX
 

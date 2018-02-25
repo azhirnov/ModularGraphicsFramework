@@ -1,9 +1,9 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
+#include "Engine/Platforms/Shared/Tools/WindowHelper.h"
 #include "Engine/Platforms/Shared/GPU/Thread.h"
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #include "Engine/Platforms/Vulkan/Windows/VkWinSurface.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
@@ -12,7 +12,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -44,7 +44,8 @@ namespace Platforms
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetVkDeviceInfo,
 											GpuMsg::GetVkPrivateClasses,
-											GpuMsg::GetGraphicsSettings
+											GpuMsg::GetGraphicsSettings,
+											GpuMsg::GetComputeSettings
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::ThreadBeginFrame,
@@ -53,9 +54,6 @@ namespace Platforms
 											GpuMsg::DeviceBeforeDestroy
 											// TODO: device lost event
 										> >;
-		
-		using WindowMsgList_t		= MessageListFrom< OSMsg::GetWinWindowHandle >;
-		using WindowEventList_t		= MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::OnWinWindowRawMessage >;
 
 		using CmdBUffers_t			= GpuMsg::ThreadEndFrame::Commands_t;
 		using VkCmdBuffers_t		= FixedSizeArray< vk::VkCommandBuffer, CmdBUffers_t::MemoryContainer_t::SIZE >;
@@ -115,6 +113,7 @@ namespace Platforms
 		bool _SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &);
 		bool _SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &);
 		bool _GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &);
+		bool _GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &);
 
 		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
 		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
@@ -178,6 +177,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &VulkanThread::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &VulkanThread::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &VulkanThread::_GetGraphicsSettings );
+		_SubscribeOnMsg( this, &VulkanThread::_GetComputeSettings );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 		
@@ -210,8 +210,7 @@ namespace Platforms
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 		
-		// TODO: use SearchModule message
-		CHECK_ATTACHMENT(( _window = GlobalSystems()->parallelThread->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
+		CHECK_LINKING(( _window = PlatformTools::WindowHelper::FindWindow( GlobalSystems() ) ));
 
 		_window->Subscribe( this, &VulkanThread::_WindowCreated );
 		_window->Subscribe( this, &VulkanThread::_WindowBeforeDestroy );
@@ -536,8 +535,6 @@ namespace Platforms
 		using EContextFlags = CreateInfo::GpuContext::EFlags;
 
 		Message< OSMsg::WindowGetDescriptor >	req_descr;
-		Message< OSMsg::GetWinWindowHandle >	req_hwnd;
-		SendTo( _window, req_hwnd );
 		SendTo( _window, req_descr );
 
 		uint	vk_version = 0;
@@ -605,9 +602,16 @@ namespace Platforms
 
 		// create surface
 		{
+			using namespace Engine::PlatformTools;
+
 			VkSurfaceKHR	surface	= VK_NULL_HANDLE;
 
-			_surface.Create( _device.GetInstance(), *req_hwnd->result, OUT surface );
+			CHECK_ERR( WindowHelper::GetWindowHandle( _window,
+							LAMBDA( this, &surface ) (const WindowHelper::WinAPIWindow &data)
+							{
+								return _surface.Create( _device.GetInstance(), data.window, OUT surface );
+							}) );
+
 			CHECK_ERR( _device.SetSurface( surface, _settings.colorFmt ) );
 		}
 
@@ -807,6 +811,22 @@ namespace Platforms
 	bool VulkanThread::_GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &msg)
 	{
 		msg->result.Set({ _settings, _device.GetSurfaceSize() });
+		return true;
+	}
+
+/*
+=================================================
+	_GetComputeSettings
+=================================================
+*/
+	bool VulkanThread::_GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &msg)
+	{
+		ComputeSettings	cs;
+		cs.device	= _settings.device;
+		cs.isDebug	= _settings.flags[ GraphicsSettings::EFlags::DebugContext ];
+		cs.version	= _settings.version;
+
+		msg->result.Set( RVREF(cs) );
 		return true;
 	}
 //-----------------------------------------------------------------------------

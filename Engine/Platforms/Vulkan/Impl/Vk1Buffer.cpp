@@ -5,7 +5,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -178,9 +178,8 @@ namespace PlatformVK
 		_memObj->Subscribe( this, &Vk1Buffer::_OnMemoryBindingChanged );
 		
 		CHECK_LINKING( _CopySubscriptions< ForwardToMem_t >( _memObj ) );
-
-		CHECK_ERR( Module::_Link_Impl( msg ) );
-		return true;
+		
+		return Module::_Link_Impl( msg );
 	}
 	
 /*

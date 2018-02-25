@@ -5,7 +5,7 @@
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
@@ -67,7 +67,6 @@ namespace PlatformCL
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &msg);
 

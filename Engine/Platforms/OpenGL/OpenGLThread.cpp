@@ -1,12 +1,12 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Windows/WinMessages.h"
+#include "Engine/Platforms/Shared/Tools/WindowHelper.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinContext.h"
 #include "Engine/Platforms/Shared/Tools/AsyncCommandsEmulator.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {
@@ -39,6 +39,7 @@ namespace Platforms
 											GpuMsg::GetGLDeviceInfo,
 											GpuMsg::GetGLPrivateClasses,
 											GpuMsg::GetGraphicsSettings,
+											GpuMsg::GetComputeSettings,
 											GpuMsg::SyncGLClientWithDevice
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
@@ -48,9 +49,6 @@ namespace Platforms
 											GpuMsg::DeviceBeforeDestroy
 											// TODO: device lost event
 										> >;
-
-		using WindowMsgList_t		= MessageListFrom< OSMsg::GetWinWindowHandle >;
-		using WindowEventList_t		= MessageListFrom< OSMsg::WindowCreated, OSMsg::WindowBeforeDestroy, OSMsg::OnWinWindowRawMessage >;
 
 		using AsyncCommands_t		= PlatformTools::AsyncCommandsEmulator;
 
@@ -102,6 +100,7 @@ namespace Platforms
 		bool _SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &);
 		bool _SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &);
 		bool _GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &);
+		bool _GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &);
 
 		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
 		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
@@ -162,6 +161,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenGLThread::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &OpenGLThread::_GetGLPrivateClasses );
 		_SubscribeOnMsg( this, &OpenGLThread::_GetGraphicsSettings );
+		_SubscribeOnMsg( this, &OpenGLThread::_GetComputeSettings );
 		_SubscribeOnMsg( this, &OpenGLThread::_SyncGLClientWithDevice );
 		
 		CHECK( _ValidateMsgSubscriptions() );
@@ -195,8 +195,7 @@ namespace Platforms
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
-		// TODO: use SearchModule message
-		CHECK_ATTACHMENT(( _window = GlobalSystems()->parallelThread->GetModuleByMsgEvent< WindowMsgList_t, WindowEventList_t >() ));
+		CHECK_LINKING(( _window = PlatformTools::WindowHelper::FindWindow( GlobalSystems() ) ));
 
 		_window->Subscribe( this, &OpenGLThread::_WindowCreated );
 		_window->Subscribe( this, &OpenGLThread::_WindowBeforeDestroy );
@@ -401,13 +400,16 @@ namespace Platforms
 */
 	bool OpenGLThread::_CreateDevice ()
 	{
-		Message< OSMsg::WindowGetDescriptor >	req_descr;
-		Message< OSMsg::GetWinWindowHandle >	req_hwnd;
+		using namespace Engine::PlatformTools;
 
-		SendTo( _window, req_hwnd );
+		Message< OSMsg::WindowGetDescriptor >	req_descr;
 		SendTo( _window, req_descr );
 
-		CHECK_ERR( _context.Create( *req_hwnd->result, INOUT _settings ) );
+		CHECK_ERR( WindowHelper::GetWindowHandle( _window,
+						LAMBDA( this ) (const WindowHelper::WinAPIWindow &data)
+						{
+							return _context.Create( data.window, INOUT _settings );
+						}) );
 
 		CHECK_ERR( _device.Initialize( req_descr->result->surfaceSize, _settings.colorFmt,
 									   _settings.depthStencilFmt, _settings.samples ) );
@@ -552,6 +554,22 @@ namespace Platforms
 		return true;
 	}
 	
+/*
+=================================================
+	_GetComputeSettings
+=================================================
+*/
+	bool OpenGLThread::_GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &msg)
+	{
+		ComputeSettings	cs;
+		cs.device	= _settings.device;
+		cs.isDebug	= _settings.flags[ GraphicsSettings::EFlags::DebugContext ];
+		cs.version	= _settings.version;
+
+		msg->result.Set( RVREF(cs) );
+		return true;
+	}
+
 /*
 =================================================
 	_SubmitQueue

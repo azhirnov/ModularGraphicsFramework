@@ -5,12 +5,14 @@
 #include "Engine/Platforms/Shared/OS/Display.h"
 #include "Engine/Platforms/Shared/OS/Platform.h"
 
-#if defined( PLATFORM_WINDOWS )
+#ifdef PLATFORM_WINDOWS
 
 namespace Engine
 {
-namespace Platforms
+namespace PlatformWin
 {
+	using namespace Platforms;
+
 
 	//
 	// Windows Display Helper
@@ -46,7 +48,7 @@ namespace Platforms
 	};
 
 
-}	// Platforms
+}	// PlatformWin
 }	// Engine
 
 #endif	// PLATFORM_WINDOWS

@@ -6,7 +6,7 @@
 #include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Shared/GPU/Thread.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
@@ -18,12 +18,14 @@ namespace GpuMsg
 	//
 	struct GetCLDeviceInfo
 	{
+	// types
 		struct Info {
 			cl::cl_device_id		device		= null;
 			cl::cl_context			context		= null;
 			cl::cl_command_queue	queue		= null;
 		};
 
+	// variables
 		Out< Info >					result;
 	};
 
@@ -42,10 +44,13 @@ namespace GpuMsg
 	//
 	struct GetCLComputePipelineID
 	{
+	// types
 		struct Pipeline {
 			cl::cl_program		progId;
 			cl::cl_kernel		kernel;
 		};
+
+	// variables
 		Out< Pipeline >		result;
 	};
 
@@ -84,6 +89,7 @@ namespace GpuMsg
 	//
 	struct GetCLShaderModuleIDs
 	{
+	// types
 		struct ShaderModule : CompileTime::PODStruct
 		{
 			StaticString<64>			entry;
@@ -91,7 +97,8 @@ namespace GpuMsg
 			Platforms::EShader::type	type	= Platforms::EShader::Unknown;
 		};
 		using Shaders_t		= FixedSizeArray< ShaderModule, Platforms::EShader::_Count >;
-
+		
+	// variables
 		Out< Shaders_t >	result;
 	};
 
@@ -101,8 +108,12 @@ namespace GpuMsg
 	//
 	struct CLFenceSync
 	{
+	// variables
 		Platforms::GpuFenceId	fenceId;
 		Out< cl::cl_event >		result;
+		
+	// methods
+		explicit CLFenceSync (Platforms::GpuFenceId id) : fenceId{id} {}
 	};
 
 
@@ -128,8 +139,12 @@ namespace GpuMsg
 	//
 	struct CLSemaphoreEnqueue
 	{
+	// variables
 		Platforms::GpuSemaphoreId	semId;
 		Out< cl::cl_event >			result;
+		
+	// methods
+		explicit CLSemaphoreEnqueue (Platforms::GpuSemaphoreId id) : semId{id} {}
 	};
 
 	struct WaitCLSemaphore
@@ -156,7 +171,9 @@ namespace GpuMsg
 								 CmdUpdateBuffer,
 								 CmdFillBuffer,
 								 CmdClearColorImage,
-								 CmdPipelineBarrier >;
+								 CmdPipelineBarrier,
+								 CmdPushConstants,
+								 CmdPushNamedConstants >;
 
 		using Func_t	= Delegate< void (VariantCRef data, StringCRef file, uint line) >;
 

@@ -32,6 +32,8 @@
 #undef GetCurrentTime
 #undef min
 #undef max
+#undef CreateEvent
+#undef FindWindow
 
 #undef Rectangle
 #undef byte

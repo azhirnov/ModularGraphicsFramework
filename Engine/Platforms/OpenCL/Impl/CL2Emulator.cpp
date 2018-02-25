@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/OpenCL/Impl/CL2Emulator.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 # if defined( GRAPHICS_API_OPENGL )
 #	include "Engine/Platforms/OpenGL/Impl/gl4.h"

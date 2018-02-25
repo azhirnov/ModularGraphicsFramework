@@ -7,7 +7,7 @@
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
@@ -111,6 +111,8 @@ namespace PlatformCL
 		bool _CmdFillBuffer (const Command_t &cmd);
 		bool _CmdClearColorImage (const Command_t &cmd);
 		bool _CmdPipelineBarrier (const Command_t &cmd);
+		bool _CmdPushConstants (const Command_t &cmd);
+		bool _CmdPushNamedConstants (const Command_t &cmd);
 	};
 //-----------------------------------------------------------------------------
 
@@ -352,6 +354,8 @@ namespace PlatformCL
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdFillBuffer> :				_CmdFillBuffer( data );					break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdClearColorImage> :			_CmdClearColorImage( data );			break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPipelineBarrier> :			_CmdPipelineBarrier( data );			break;
+				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPushConstants> :			_CmdPushConstants( data );				break;
+				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPushNamedConstants> :		_CmdPushNamedConstants( data );			break;
 				default :															WARNING( "unknown command!" );
 			}
 		}
@@ -771,6 +775,32 @@ namespace PlatformCL
 		const auto&	data = cmd.data.Get< GpuMsg::CmdPipelineBarrier >();
 		
 		CL_CALL( clEnqueueMarkerWithWaitList( GetCommandQueue(), 0, null, null ) );
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushConstants
+=================================================
+*/
+	bool CL2CommandBuffer::_CmdPushConstants (const Command_t &cmd)
+	{
+		const auto&	data = cmd.data.Get< GpuMsg::CmdPipelineBarrier >();
+		
+		TODO( "" );
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushNamedConstants
+=================================================
+*/
+	bool CL2CommandBuffer::_CmdPushNamedConstants (const Command_t &cmd)
+	{
+		const auto&	data = cmd.data.Get< GpuMsg::CmdPushNamedConstants >();
+		
+		TODO( "" );
 		return true;
 	}
 

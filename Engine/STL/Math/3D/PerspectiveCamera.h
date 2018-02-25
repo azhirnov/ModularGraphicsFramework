@@ -159,8 +159,8 @@ namespace GXMath
 	template <typename T>
 	inline PerspectiveCamera<T>::PerspectiveCamera (UninitializedType):
 		_transform(),					_projMatrix(),
-		_fovY( T(0.5) ),				_viewAspect( T(1) ),
-		_clipPlanes( T(1), T(100) ),	_zoom( T(1) ),
+		_clipPlanes( T(1), T(100) ),	_fovY( T(0.5) ),
+		_viewAspect( T(1) ),			_zoom( T(1) ),
 		_limitRotationEnabled( false )
 	{
 		_changed.SetAll();

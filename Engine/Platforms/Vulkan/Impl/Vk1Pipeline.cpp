@@ -8,7 +8,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -28,10 +28,14 @@ namespace PlatformVK
 											GpuMsg::GetVkGraphicsPipelineID,
 											GpuMsg::GetPipelineLayoutDescriptor,
 											GpuMsg::GetVkDescriptorLayouts,
-											GpuMsg::GetVkPipelineLayoutID
+											GpuMsg::GetVkPipelineLayoutID,
+											GpuMsg::GetVkPipelineLayoutPushConstants
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
+
+		using ShadersMsgList_t		= MessageListFrom< GpuMsg::GetVkShaderModuleIDs >;
+		using RenderPassMsgList_t	= MessageListFrom< GpuMsg::GetVkRenderPassID, GpuMsg::GetRenderPassDescriptor >;
 
 		using Descriptor			= GraphicsPipelineDescriptor;
 
@@ -47,8 +51,6 @@ namespace PlatformVK
 		vk::VkPipeline			_pipelineId;
 		Descriptor				_descr;
 		Vk1PipelineLayoutPtr	_layout;
-		ModulePtr				_shaders;		// use as attachment
-		ModulePtr				_renderPass;	// use as attachment
 
 
 	// methods
@@ -59,19 +61,24 @@ namespace PlatformVK
 
 	// message handlers
 	private:
+		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
+		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+
 		bool _GetVkGraphicsPipelineID (const Message< GpuMsg::GetVkGraphicsPipelineID > &);
 		bool _GetGraphicsPipelineDescriptor (const Message< GpuMsg::GetGraphicsPipelineDescriptor > &);
 		bool _GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &);
 		bool _GetVkDescriptorLayouts (const Message< GpuMsg::GetVkDescriptorLayouts > &);
 		bool _GetVkPipelineLayoutID (const Message< GpuMsg::GetVkPipelineLayoutID > &);
+		bool _GetVkPipelineLayoutPushConstants (const Message< GpuMsg::GetVkPipelineLayoutPushConstants > &);
 
 	private:
 		bool _IsCreated () const;
 		bool _CreatePipeline ();
 		void _DestroyPipeline ();
-		bool _ValidateRenderPass () const;
+		bool _ValidateRenderPass (const ModulePtr &renderPass) const;
 	};
 //-----------------------------------------------------------------------------
 
@@ -88,19 +95,17 @@ namespace PlatformVK
 	Vk1GraphicsPipeline::Vk1GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci) :
 		Vk1BaseModule( gs, ModuleConfig{ VkGraphicsPipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_pipelineId( VK_NULL_HANDLE ),
-		_descr( ci.descr ),
-		_shaders( ci.shaders ),
-		_renderPass( ci.renderPass )
+		_descr( ci.descr )
 	{
 		SetDebugName( "Vk1GraphicsPipeline" );
 
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_OnModuleDetached_Impl );
-		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_AttachModule_Impl );
-		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_AttachModule );
+		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_DetachModule );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_FindModule_Impl );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_ModulesDeepSearch_Impl );
-		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_Link_Impl );
+		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_Link );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_Compose );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_Delete );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_OnManagerChanged );
@@ -112,6 +117,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetPipelineLayoutDescriptor );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkDescriptorLayouts );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkPipelineLayoutID );
+		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkPipelineLayoutPushConstants );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -130,6 +136,36 @@ namespace PlatformVK
 	
 /*
 =================================================
+	_Link
+=================================================
+*/
+	bool Vk1GraphicsPipeline::_Link (const Message< ModuleMsg::Link > &msg)
+	{
+		if ( _IsComposedOrLinkedState( GetState() ) )
+			return true;	// already linked
+		
+		CHECK_ERR( _GetManager() );
+
+		if ( not GetModuleByMsg< RenderPassMsgList_t >() )
+		{
+			// validate render pass
+			Message< GpuMsg::GetDeviceInfo >	req_dev;
+			CHECK( _GetManager()->Send( req_dev ) );
+
+			_descr.subpass	= 0;
+
+			CHECK_ERR( _Attach( "", req_dev->result->renderPass, true ) );
+
+			LOG( "used default render pass", ELog::Debug );
+		}
+
+		CHECK_LINKING( GetModuleByMsg< ShadersMsgList_t >() );
+
+		return Module::_Link_Impl( msg );
+	}
+
+/*
+=================================================
 	_Compose
 =================================================
 */
@@ -146,11 +182,52 @@ namespace PlatformVK
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
-
-		CHECK( _SetState( EState::ComposedImmutable ) );
+		
+		CHECK( _SetState( EState::ComposedMutable ) );
 		return true;
 	}
 	
+/*
+=================================================
+	_AttachModule
+=================================================
+*/
+	bool Vk1GraphicsPipeline::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	{
+		CHECK_ERR( msg->newModule );
+
+		// render pass and shader must be unique
+		bool	is_dependent =  msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >() or
+								msg->newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+
+		if ( _Attach( msg->name, msg->newModule, is_dependent ) and is_dependent )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_DestroyPipeline();
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_DetachModule
+=================================================
+*/
+	bool Vk1GraphicsPipeline::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	{
+		CHECK_ERR( msg->oldModule );
+		
+		bool	is_dependent =  msg->oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >() or
+								msg->oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+
+		if ( _Detach( msg->oldModule ) and is_dependent )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_DestroyPipeline();
+		}
+		return true;
+	}
+
 /*
 =================================================
 	_Delete
@@ -159,6 +236,8 @@ namespace PlatformVK
 	bool Vk1GraphicsPipeline::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
 		_DestroyPipeline();
+		
+		_descr = Uninitialized;
 
 		return Module::_Delete_Impl( msg );
 	}
@@ -220,6 +299,18 @@ namespace PlatformVK
 			msg->result.Set( _layout->GetLayoutID() );
 		return true;
 	}
+	
+/*
+=================================================
+	_GetVkPipelineLayoutPushConstants
+=================================================
+*/
+	bool Vk1GraphicsPipeline::_GetVkPipelineLayoutPushConstants (const Message< GpuMsg::GetVkPipelineLayoutPushConstants > &msg)
+	{
+		if ( _layout )
+			msg->result.Set( _layout->GetPushConstants() );
+		return true;
+	}
 
 /*
 =================================================
@@ -241,39 +332,33 @@ namespace PlatformVK
 		using namespace vk;
 
 		CHECK_ERR( not _IsCreated() );
-		CHECK_ERR( _GetManager() );
+		
+		// get render pass
+		ModulePtr	render_pass;
+		CHECK_ERR( render_pass = GetModuleByMsg< RenderPassMsgList_t >() );
 
-		// validate render pass
-		if ( not _renderPass )
-		{
-			Message< GpuMsg::GetDeviceInfo >	req_dev;
-			CHECK( _GetManager()->Send( req_dev ) );
-
-			_renderPass		= req_dev->result->renderPass;
-			_descr.subpass	= 0;
-
-			LOG( "used default render pass", ELog::Debug );
-		}
-
-		CHECK_ERR( _renderPass );
-		CHECK_ERR( _ValidateRenderPass() );
+		CHECK_ERR( _ValidateRenderPass( render_pass ) );
 
 		
 		// get render pass id
 		Message< GpuMsg::GetVkRenderPassID >		req_pass_id;
 		Message< GpuMsg::GetRenderPassDescriptor >	req_pass_descr;
 
-		SendTo( _renderPass, req_pass_id );
-		SendTo( _renderPass, req_pass_descr );
+		SendTo( render_pass, req_pass_id );
+		SendTo( render_pass, req_pass_descr );
 
-		RenderPassDescriptor	rp_descr;	rp_descr << req_pass_descr->result;
-		VkRenderPass			rp			= req_pass_id->result.Get( VK_NULL_HANDLE );
+		RenderPassDescriptor const&	rp_descr	= *req_pass_descr->result;
+		VkRenderPass				rp			= req_pass_id->result.Get( VK_NULL_HANDLE );
 		CHECK_ERR( rp != VK_NULL_HANDLE );
 		
+		
+		// get shader
+		ModulePtr	shaders;
+		CHECK_ERR( shaders = GetModuleByMsg< ShadersMsgList_t >() );
 
 		// get shader modules
 		Message< GpuMsg::GetVkShaderModuleIDs >		req_shader_ids;
-		SendTo( _shaders, req_shader_ids );
+		SendTo( shaders, req_shader_ids );
 		CHECK_ERR( req_shader_ids->result and not req_shader_ids->result->Empty() );
 		
 		// create layout
@@ -316,9 +401,6 @@ namespace PlatformVK
 		}
 
 		_pipelineId	= VK_NULL_HANDLE;
-		_descr		= Uninitialized;
-		_shaders	= null;
-		_renderPass	= null;
 	}
 	
 /*
@@ -326,10 +408,10 @@ namespace PlatformVK
 	_ValidateRenderPass
 =================================================
 */
-	bool Vk1GraphicsPipeline::_ValidateRenderPass () const
+	bool Vk1GraphicsPipeline::_ValidateRenderPass (const ModulePtr &renderPass) const
 	{
 		Message< GpuMsg::GetRenderPassDescriptor >	req_descr;
-		_renderPass->Send( req_descr );
+		renderPass->Send( req_descr );
 
 		const auto&	descr = *req_descr->result;
 
@@ -373,6 +455,8 @@ namespace PlatformVK
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
 		
+		using ShadersMsgList_t		= MessageListFrom< GpuMsg::GetVkShaderModuleIDs >;
+
 		using Descriptor			= ComputePipelineDescriptor;
 
 
@@ -387,7 +471,6 @@ namespace PlatformVK
 		vk::VkPipeline			_pipelineId;
 		Descriptor				_descr;
 		Vk1PipelineLayoutPtr	_layout;
-		ModulePtr				_shaders;		// use as attachment
 
 
 	// methods
@@ -398,8 +481,12 @@ namespace PlatformVK
 
 	// message handlers
 	private:
+		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
+		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+
 		bool _GetVkComputePipelineID (const Message< GpuMsg::GetVkComputePipelineID > &);
 		bool _GetComputePipelineDescriptor (const Message< GpuMsg::GetComputePipelineDescriptor > &);
 		bool _GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &);
@@ -426,18 +513,17 @@ namespace PlatformVK
 	Vk1ComputePipeline::Vk1ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
 		Vk1BaseModule( gs, ModuleConfig{ VkComputePipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
 		_pipelineId( VK_NULL_HANDLE ),
-		_descr( ci.descr ),
-		_shaders( ci.shaders )
+		_descr( ci.descr )
 	{
 		SetDebugName( "Vk1ComputePipeline" );
 
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_OnModuleDetached_Impl );
-		_SubscribeOnMsg( this, &Vk1ComputePipeline::_AttachModule_Impl );
-		_SubscribeOnMsg( this, &Vk1ComputePipeline::_DetachModule_Impl );
+		_SubscribeOnMsg( this, &Vk1ComputePipeline::_AttachModule );
+		_SubscribeOnMsg( this, &Vk1ComputePipeline::_DetachModule );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_FindModule_Impl );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_ModulesDeepSearch_Impl );
-		_SubscribeOnMsg( this, &Vk1ComputePipeline::_Link_Impl );
+		_SubscribeOnMsg( this, &Vk1ComputePipeline::_Link );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_Compose );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_Delete );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_OnManagerChanged );
@@ -467,6 +553,21 @@ namespace PlatformVK
 	
 /*
 =================================================
+	_Link
+=================================================
+*/
+	bool Vk1ComputePipeline::_Link (const Message< ModuleMsg::Link > &msg)
+	{
+		if ( _IsComposedOrLinkedState( GetState() ) )
+			return true;	// already linked
+
+		CHECK_LINKING( GetModuleByMsg< ShadersMsgList_t >() );
+
+		return Module::_Link_Impl( msg );
+	}
+	
+/*
+=================================================
 	_Compose
 =================================================
 */
@@ -483,11 +584,50 @@ namespace PlatformVK
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
-
-		CHECK( _SetState( EState::ComposedImmutable ) );
+		
+		CHECK( _SetState( EState::ComposedMutable ) );
 		return true;
 	}
 	
+/*
+=================================================
+	_AttachModule
+=================================================
+*/
+	bool Vk1ComputePipeline::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	{
+		CHECK_ERR( msg->newModule );
+
+		// render pass and shader must be unique
+		bool	is_dependent = msg->newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+
+		if ( _Attach( msg->name, msg->newModule, is_dependent ) and is_dependent )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_DestroyPipeline();
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_DetachModule
+=================================================
+*/
+	bool Vk1ComputePipeline::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	{
+		CHECK_ERR( msg->oldModule );
+		
+		bool	is_dependent = msg->oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+
+		if ( _Detach( msg->oldModule ) and is_dependent )
+		{
+			CHECK( _SetState( EState::Initial ) );
+			_DestroyPipeline();
+		}
+		return true;
+	}
+
 /*
 =================================================
 	_Delete
@@ -496,6 +636,8 @@ namespace PlatformVK
 	bool Vk1ComputePipeline::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
 		_DestroyPipeline();
+		
+		_descr = Uninitialized;
 
 		return Module::_Delete_Impl( msg );
 	}
@@ -578,11 +720,14 @@ namespace PlatformVK
 		using namespace vk;
 
 		CHECK_ERR( not _IsCreated() );
-		CHECK_ERR( _GetManager() );
+
+		// get shader
+		ModulePtr	shaders;
+		CHECK_ERR( shaders = GetModuleByMsg< ShadersMsgList_t >() );
 
 		// get shader modules
 		Message< GpuMsg::GetVkShaderModuleIDs >		req_shader_ids;
-		SendTo( _shaders, req_shader_ids );
+		SendTo( shaders, req_shader_ids );
 		CHECK_ERR( req_shader_ids->result and not req_shader_ids->result->Empty() );
 
 		usize	cs_index = UMax;
@@ -628,8 +773,6 @@ namespace PlatformVK
 		}
 
 		_pipelineId	= VK_NULL_HANDLE;
-		_descr		= Uninitialized;
-		_shaders	= null;
 	}
 //-----------------------------------------------------------------------------
 

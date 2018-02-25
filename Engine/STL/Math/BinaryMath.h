@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Trigonometry.h"
+#include "Engine/STL/Math/Trigonometry.h"
 
 namespace GX_STL
 {
@@ -15,7 +15,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES forceinline T  SafeLeftBitShift (const T& x, BitsU shift)
+	CHECKRES forceinline constexpr T  SafeLeftBitShift (const T& x, BitsU shift)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -46,7 +46,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES forceinline T  SafeRightBitShift (const T& x, BitsU shift)
+	CHECKRES forceinline constexpr T  SafeRightBitShift (const T& x, BitsU shift)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -81,7 +81,7 @@ namespace GXMath
 	namespace _math_hidden_
 	{
 		template <typename T>
-		forceinline T _BitRotateLeft (T value, usize shift)
+		forceinline constexpr T _BitRotateLeft (T value, usize shift)
 		{
 			const usize	mask = (CompileTime::SizeOf<T>::bits - 1);
 
@@ -91,7 +91,7 @@ namespace GXMath
 	}
 	
 	template <typename T>
-	CHECKRES forceinline T  BitRotateLeft (const T& x, BitsU shift)
+	CHECKRES forceinline constexpr T  BitRotateLeft (const T& x, BitsU shift)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -128,7 +128,7 @@ namespace GXMath
 	namespace _math_hidden_
 	{
 		template <typename T>
-		forceinline T _BitRotateRight (T value, usize shift)
+		forceinline constexpr T _BitRotateRight (T value, usize shift)
 		{
 			const usize	mask = (CompileTime::SizeOf<T>::bits - 1);
 
@@ -138,7 +138,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	CHECKRES forceinline T  BitRotateRight (const T& x, BitsU shift)
+	CHECKRES forceinline constexpr T  BitRotateRight (const T& x, BitsU shift)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -171,7 +171,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES forceinline T  ToBit (BitsU bitIndex)
+	CHECKRES forceinline constexpr T  ToBit (BitsU bitIndex)
 	{
 		return SafeLeftBitShift( T(1), (usize)bitIndex );
 	}
@@ -193,7 +193,7 @@ namespace GXMath
 	{
 		template <typename T>
 		struct _ToMask {
-			forceinline static T Get (const BitsU lastBitIndex)
+			forceinline static constexpr T Get (const BitsU lastBitIndex)
 			{
 				STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 				STATIC_ASSERT( CompileTime::IsInteger<T> /*and CompileTime::IsUnsigned<T>*/ );
@@ -220,7 +220,7 @@ namespace GXMath
 	}	// _math_hidden_
 
 	template <typename T>
-	CHECKRES forceinline T  ToMask (const BitsU lastBitIndex)
+	CHECKRES forceinline constexpr T  ToMask (const BitsU lastBitIndex)
 	{
 		return _math_hidden_::_ToMask<T>::Get( lastBitIndex );
 	}
@@ -242,7 +242,7 @@ namespace GXMath
 	{
 		template <typename T>
 		struct _ToMask2 {
-			forceinline static T Get (const BitsU first, const BitsU last)
+			forceinline static constexpr T Get (const BitsU first, const BitsU last)
 			{
 				ASSERT( first <= last );
 				return _ToMask<T>::Get( first ) ^ _ToMask<T>::Get( last );
@@ -261,7 +261,7 @@ namespace GXMath
 	}	// _math_hidden_
 
 	template <typename T>
-	CHECKRES forceinline T  ToMask (const BitsU first, const BitsU last)
+	CHECKRES forceinline constexpr T  ToMask (const BitsU first, const BitsU last)
 	{
 		return _math_hidden_::_ToMask2<T>::Get( first, last );
 	}
@@ -283,7 +283,7 @@ namespace GXMath
 	{
 		template <typename T>
 		struct _GetMaskForType {
-			forceinline static T Get ()
+			forceinline static constexpr T Get ()
 			{
 				STATIC_ASSERT( CompileTime::IsInteger<T> and CompileTime::IsUnsigned<T> );
 				return UMax;
@@ -292,7 +292,7 @@ namespace GXMath
 		
 		template <typename T, usize I, ulong U>
 		struct _GetMaskForType< Vec<T,I,U> > {
-			forceinline static Vec<T,I,U> Get ()
+			forceinline static constexpr Vec<T,I,U> Get ()
 			{
 				Vec<T,I,U>		ret;
 				FOR( i, ret )	ret[i] = _GetMaskForType<T>::Get();
@@ -302,7 +302,7 @@ namespace GXMath
 	}	// _math_hidden_
 
 	template <typename T>
-	CHECKRES forceinline T  GetMaskForType (const T &)
+	CHECKRES forceinline constexpr T  GetMaskForType (const T &)
 	{
 		return _math_hidden_::_GetMaskForType< T >::Get();
 	}
@@ -338,7 +338,7 @@ namespace GXMath
 
 
 	template <typename T>
-	CHECKRES forceinline uint  IntLog2 (const T& x)
+	CHECKRES forceinline constexpr uint  IntLog2 (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -364,7 +364,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES forceinline BitsU  BitScanReverse (const T& x)
+	CHECKRES forceinline constexpr BitsU  BitScanReverse (const T& x)
 	{
 		return BitsU( IntLog2( x ) );
 	}
@@ -406,7 +406,7 @@ namespace GXMath
 	}
 
 	template <typename T>
-	CHECKRES forceinline BitsU  BitScanForward (const T& x)
+	CHECKRES forceinline constexpr BitsU  BitScanForward (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -439,7 +439,7 @@ namespace GXMath
 		struct _RecursiveReverseBitOrder
 		{
 			template <typename T>
-			forceinline static T Get (const T &x, const T &mask)
+			forceinline static constexpr T Get (const T &x, const T &mask)
 			{
 				const uint	s = Bit >> 1;
 				const T		m = mask ^ (mask << s);
@@ -461,7 +461,7 @@ namespace GXMath
 	}
 	
 	template <typename T>
-	CHECKRES forceinline T  ReverseBitOrder (const T& x)
+	CHECKRES forceinline constexpr T  ReverseBitOrder (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );

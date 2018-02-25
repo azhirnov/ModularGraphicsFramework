@@ -4,7 +4,7 @@
 
 #include "Engine/Platforms/Vulkan/Impl/vulkan1.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 #include "Engine/Platforms/Shared/GPU/BufferEnums.h"
 #include "Engine/Platforms/Shared/GPU/CommandEnums.h"

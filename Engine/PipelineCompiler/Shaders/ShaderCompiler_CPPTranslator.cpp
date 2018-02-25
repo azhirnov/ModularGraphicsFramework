@@ -19,17 +19,22 @@ namespace PipelineCompiler
 	private:
 		using TypeInfo		= Translator::TypeInfo;
 		using Externals_t	= Array<Pair< glslang::TIntermTyped*, TypeInfo >>;
+		using StringSet_t	= HashSet< String >;
+		using BuiltinMap_t	= HashMap< String, Pair< String, EShader::bits > >;
 
 
 	// variables
 	private:
-		Translator&		_translator;
-		Externals_t		_externals;
+		Translator&			_translator;
+		Externals_t			_externals;
+		StringSet_t			_builtinList;
+		const EShader::type	_shaderType;
 
 
 	// methods
 	public:
-		explicit CPP_DstLanguage (Translator &translator) : _translator{translator}
+		explicit CPP_DstLanguage (Translator &translator, EShader::type shaderType) :
+			_translator{translator}, _shaderType{shaderType}
 		{}
 
 		~CPP_DstLanguage ()
@@ -54,6 +59,14 @@ namespace PipelineCompiler
 		bool _TranslateImage (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateConst (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateShared (Translator::TypeInfo const& info, OUT String &str);
+		bool _TranslateBuiltin (StringCRef name, OUT String &str) const;
+
+		static String _ToString (EGpuMemoryModel::type value);
+		static String _ToString (EShaderVariable::type value);
+		static String _ToImageType (EShaderVariable::type value);
+		static String _ToTextureType (EShaderVariable::type value);
+
+		static BuiltinMap_t const& _GetBuiltinMapping ();
 	};
 
 	
@@ -85,7 +98,7 @@ namespace PipelineCompiler
 
 		translator.useGXrules	= intermediate->getSource() == glslang::EShSourceGxsl;
 		translator.entryPoint	= intermediate->getEntryPointName().c_str();
-		translator.language		= new CPP_DstLanguage( translator );
+		translator.language		= new CPP_DstLanguage( translator, ConvertShaderType( glslangData.shader->getStage() ) );
 
 		CHECK_ERR( TranslateShaderInfo( intermediate, cfg.skipExternals, translator ) );
 		
@@ -96,7 +109,7 @@ namespace PipelineCompiler
 		"#ifdef GRAPHICS_API_SOFT\n"
 		"namespace SWShaderLang\n{\n" >> translator.src;
 
-		translator.src	<< "}\n}	// SWShaderLang\n"
+		translator.src	<< "\t}\n}	// SWShaderLang\n"
 						<< "#endif	// GRAPHICS_API_SOFT\n\n";
 
 		log		<< translator.log;
@@ -134,12 +147,12 @@ namespace PipelineCompiler
 			res << "const ";
 
 		// layout
-		if ( t.format != EPixelFormat::Unknown )
-			res << "layout(" << ToStringGLSL( t.format ) << ") ";
+		//if ( t.format != EPixelFormat::Unknown )
+		//	res << "layout(" << ToStringGLSL( t.format ) << ") ";
 
 		// precision
-		if ( t.precision != EPrecision::Default )
-			res << ToStringGLSL( t.precision ) << ' ';
+		//if ( t.precision != EPrecision::Default )
+		//	res << ToStringGLSL( t.precision ) << ' ';
 
 		// type
 		if ( not t.typeName.Empty() ) {
@@ -187,8 +200,8 @@ namespace PipelineCompiler
 		//	res << ToStringGLSL( t.memoryModel ) << ' ';
 
 		// layout
-		if ( t.format != EPixelFormat::Unknown )
-			res << "layout(" << ToStringGLSL( t.format ) << ") ";
+		//if ( t.format != EPixelFormat::Unknown )
+		//	res << "layout(" << ToStringGLSL( t.format ) << ") ";
 
 		// precision
 		if ( t.precision != EPrecision::Default )
@@ -212,6 +225,11 @@ namespace PipelineCompiler
 */
 	bool CPP_DstLanguage::TranslateName (const TypeInfo &t, INOUT String &src)
 	{
+		if ( t.name.StartsWithIC( "gl_" ) )
+		{
+			_builtinList.Add( t.name );
+		}
+
 		src << t.name;
 		return true;
 	}
@@ -694,7 +712,7 @@ namespace PipelineCompiler
 */
 	bool CPP_DstLanguage::TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src)
 	{
-		src << val << '.' << swizzle;
+		src << val << '.' << swizzle << (swizzle.Length() > 1 ? "()" : "");
 		return true;
 	}
 	
@@ -708,7 +726,8 @@ namespace PipelineCompiler
 		CHECK_ERR( args.Empty() );
 		CHECK_ERR( ret.type == EShaderVariable::Void );
 
-		src << "static void ##main## (const SWShaderHelper &helper)\n"
+		src.Clear();
+		src << "static void ##main## (const Impl::SWShaderHelper &_helper_)\n"
 			<< "{\n"
 			<< "	// prepare externals\n";
 
@@ -738,7 +757,12 @@ namespace PipelineCompiler
 			}
 		}
 
-		src << "	// shader\n";
+		FOR( i, _builtinList )
+		{
+			CHECK_ERR( _TranslateBuiltin( _builtinList[i], INOUT src ) );
+		}
+
+		src << "\n	// shader";
 		return true;
 	}
 		
@@ -750,7 +774,7 @@ namespace PipelineCompiler
 	bool CPP_DstLanguage::TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src)
 	{
 		if ( not objName.Empty() )
-			src << objName << ".";
+			src << objName << "->";
 
 		src << fieldType.name;
 		return true;
@@ -761,41 +785,200 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	_ToString
+=================================================
+*/
+	String CPP_DstLanguage::_ToString (EGpuMemoryModel::type value)
+	{
+		for (uint i = 0; i < CompileTime::SizeOf< EGpuMemoryModel::type >::bits; ++i)
+		{
+			const auto	t = EGpuMemoryModel::type(1 << i);
+
+			if ( not EnumEq( value, t ) )
+				continue;
+
+			switch (t)
+			{
+				case EGpuMemoryModel::Coherent :	return "Impl::EStorageAccess::Coherent";
+				case EGpuMemoryModel::Volatile :	return "Impl::EStorageAccess::Volatile";
+				case EGpuMemoryModel::Restrict :	return "Impl::EStorageAccess::Restrict";
+				case EGpuMemoryModel::ReadOnly :	return "Impl::EStorageAccess::ReadOnly";
+				case EGpuMemoryModel::WriteOnly :	return "Impl::EStorageAccess::WriteOnly";
+			}
+			break;
+		}
+		RETURN_ERR( "unknown memory model type!" );
+	}
+	
+/*
+=================================================
+	_ToString
+=================================================
+*/
+	String CPP_DstLanguage::_ToString (EShaderVariable::type value)
+	{
+		switch ( value )
+		{
+			// glm types
+			case EShaderVariable::Void :		return "void";
+			case EShaderVariable::Bool :		return "bool";
+			case EShaderVariable::Bool2 :		return "bvec2";
+			case EShaderVariable::Bool3 :		return "bvec3";
+			case EShaderVariable::Bool4 :		return "bvec4";
+			case EShaderVariable::Int :			return "int";
+			case EShaderVariable::Int2 :		return "ivec2";
+			case EShaderVariable::Int3 :		return "ivec3";
+			case EShaderVariable::Int4 :		return "ivec4";
+			case EShaderVariable::UInt :		return "uint";
+			case EShaderVariable::UInt2 :		return "uvec2";
+			case EShaderVariable::UInt3 :		return "uvec3";
+			case EShaderVariable::UInt4 :		return "uvec4";
+			case EShaderVariable::Long :		return "int64_t";
+			case EShaderVariable::Long2 :		return "i64vec2";
+			case EShaderVariable::Long3 :		return "i64vec3";
+			case EShaderVariable::Long4 :		return "i64vec4";
+			case EShaderVariable::ULong :		return "uint64_t";
+			case EShaderVariable::ULong2 :		return "u64vec2";
+			case EShaderVariable::ULong3 :		return "u64vec3";
+			case EShaderVariable::ULong4 :		return "u64vec4";
+			case EShaderVariable::Float :		return "float";
+			case EShaderVariable::Float2 :		return "vec2";
+			case EShaderVariable::Float3 :		return "vec3";
+			case EShaderVariable::Float4 :		return "vec4";
+			case EShaderVariable::Float2x2 :	return "mat2x2";
+			case EShaderVariable::Float2x3 :	return "mat2x3";
+			case EShaderVariable::Float2x4 :	return "mat2x4";
+			case EShaderVariable::Float3x2 :	return "mat3x2";
+			case EShaderVariable::Float3x3 :	return "mat3x3";
+			case EShaderVariable::Float3x4 :	return "mat3x4";
+			case EShaderVariable::Float4x2 :	return "mat4x2";
+			case EShaderVariable::Float4x3 :	return "mat4x3";
+			case EShaderVariable::Float4x4 :	return "mat4x4";
+			case EShaderVariable::Double :		return "double";
+			case EShaderVariable::Double2 :		return "dvec2";
+			case EShaderVariable::Double3 :		return "dvec3";
+			case EShaderVariable::Double4 :		return "dvec4";
+			case EShaderVariable::Double2x2 :	return "dmat2x2";
+			case EShaderVariable::Double2x3 :	return "dmat2x3";
+			case EShaderVariable::Double2x4 :	return "dmat2x4";
+			case EShaderVariable::Double3x2 :	return "dmat3x2";
+			case EShaderVariable::Double3x3 :	return "dmat3x3";
+			case EShaderVariable::Double3x4 :	return "dmat3x4";
+			case EShaderVariable::Double4x2 :	return "dmat4x2";
+			case EShaderVariable::Double4x3 :	return "dmat4x3";
+			case EShaderVariable::Double4x4 :	return "dmat4x4";
+		}
+		RETURN_ERR( "unsupported type!" );
+	}
+
+/*
+=================================================
+	_ToImageType
+=================================================
+*/
+	String CPP_DstLanguage::_ToImageType (EShaderVariable::type value)
+	{
+		using _vtypeinfo	= _platforms_hidden_::EValueTypeInfo;
+
+		String	str;
+
+		switch ( value & _vtypeinfo::_SAMP_MASK )
+		{
+			case _vtypeinfo::_SAMP_1D :		str << "Impl::Image1D";				break;
+			case _vtypeinfo::_SAMP_1DS :	str << "Impl::Image1DShadow";		break;
+			case _vtypeinfo::_SAMP_1DA :	str << "Impl::Image1DArray";		break;
+			case _vtypeinfo::_SAMP_1DAS :	str << "Impl::Image1DArrayShadow";	break;
+			case _vtypeinfo::_SAMP_2D :		str << "Impl::Image2D";				break;
+			case _vtypeinfo::_SAMP_2DS :	str << "Impl::Image2DShadow";		break;
+			case _vtypeinfo::_SAMP_2DMS :	str << "Impl::Image2DMS";			break;
+			case _vtypeinfo::_SAMP_2DA :	str << "Impl::Image2DArray";		break;
+			case _vtypeinfo::_SAMP_2DAS :	str << "Impl::Image2DArrayShadow";	break;
+			case _vtypeinfo::_SAMP_2DAMS :	str << "Impl::Image2DMSArray";		break;
+			case _vtypeinfo::_SAMP_3D :		str << "Impl::Image3D";				break;
+			case _vtypeinfo::_SAMP_CUBE :	str << "Impl::ImageCube";			break;
+			case _vtypeinfo::_SAMP_CUBES :	str << "Impl::ImageCubeShadow";		break;
+			case _vtypeinfo::_SAMP_CUBEA :	str << "Impl::ImageCubeArray";		break;
+			case _vtypeinfo::_SAMP_BUF :	str << "Impl::ImageBuffer";			break;
+			default :						RETURN_ERR( "unsupported sampler type!" );
+		}
+
+		str << "< ";
+
+		switch ( value & _vtypeinfo::_TYPE_FLAG_MASK )
+		{
+			case _vtypeinfo::_INT :		str << "ivec4";		break;
+			case _vtypeinfo::_UINT :	str << "uvec4";		break;
+			case _vtypeinfo::_FLOAT :	str << "vec4";		break;
+		}
+
+		return str;
+	}
+	
+/*
+=================================================
+	_ToTextureType
+=================================================
+*/
+	String CPP_DstLanguage::_ToTextureType (EShaderVariable::type value)
+	{
+		using _vtypeinfo	= _platforms_hidden_::EValueTypeInfo;
+
+		String	str;
+
+		switch ( value & _vtypeinfo::_SAMP_MASK )
+		{
+			case _vtypeinfo::_SAMP_1D :		str << "Impl::Texture1D";				break;
+			case _vtypeinfo::_SAMP_1DS :	str << "Impl::Texture1DShadow";			break;
+			case _vtypeinfo::_SAMP_1DA :	str << "Impl::Texture1DArray";			break;
+			case _vtypeinfo::_SAMP_1DAS :	str << "Impl::Texture1DArrayShadow";	break;
+			case _vtypeinfo::_SAMP_2D :		str << "Impl::Texture2D";				break;
+			case _vtypeinfo::_SAMP_2DS :	str << "Impl::Texture2DShadow";			break;
+			case _vtypeinfo::_SAMP_2DMS :	str << "Impl::Texture2DMS";				break;
+			case _vtypeinfo::_SAMP_2DA :	str << "Impl::Texture2DArray";			break;
+			case _vtypeinfo::_SAMP_2DAS :	str << "Impl::Texture2DArrayShadow";	break;
+			case _vtypeinfo::_SAMP_2DAMS :	str << "Impl::Texture2DMSArray";		break;
+			case _vtypeinfo::_SAMP_3D :		str << "Impl::Texture3D";				break;
+			case _vtypeinfo::_SAMP_CUBE :	str << "Impl::TextureCube";				break;
+			case _vtypeinfo::_SAMP_CUBES :	str << "Impl::TextureCubeShadow";		break;
+			case _vtypeinfo::_SAMP_CUBEA :	str << "Impl::TextureCubeArray";		break;
+			case _vtypeinfo::_SAMP_BUF :	str << "Impl::TextureBuffer";			break;
+			default :						RETURN_ERR( "unsupported sampler type!" );
+		}
+
+		str << "< ";
+
+		switch ( value & _vtypeinfo::_TYPE_FLAG_MASK )
+		{
+			case _vtypeinfo::_INT :		str << "ivec4";		break;
+			case _vtypeinfo::_UINT :	str << "uvec4";		break;
+			case _vtypeinfo::_FLOAT :	str << "vec4";		break;
+		}
+
+		return str;
+	}
+
+/*
+=================================================
 	_TranslateBuffer
 =================================================
 */
 	bool CPP_DstLanguage::_TranslateBuffer (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str)
 	{
-		if ( info.binding != UMax )
-			str << "layout(binding=" << info.binding << ") ";
+		CHECK_ERR( info.arraySize == 0 );
 
-		if ( type.getQualifier().hasPacking() )
-		{
-			switch ( type.getQualifier().layoutPacking ) {
-				case glslang::TLayoutPacking::ElpStd140 :	str << "layout(std140) ";	break;
-				case glslang::TLayoutPacking::ElpStd430 :	str << "layout(std430) ";	break;
-				default :									RETURN_ERR( "unsupported packing" );
-			}
-		}
-		
 		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqBuffer )
 		{
-			str << ToStringGLSL( info.memoryModel ) << ' '
-				<< "buffer " << info.typeName;
+			str << "\tImpl::StorageBuffer< " << info.typeName << ", "
+				<< _ToString( info.memoryModel ) << " > " << info.name
+				<< ";	_helper_.GetStorageBuffer( " << info.binding
+				<< ", " << info.name << " );\n";
 		}
 		else
-			str << "uniform " << info.typeName;
-
-		CHECK_ERR( (info.type == EShaderVariable::Struct) and not info.fields.Empty() );
-		
-		str << "{\n";
-		FOR( j, info.fields )
 		{
-			str << "\t";
-			CHECK_ERR( TranslateLocalVar( info.fields[j], INOUT str ) );
-			str << ";\n";
+			str << "\tImpl::UniformBuffer< " << info.typeName << " > " << info.name
+				<< ";	_helper_.GetUniformBuffer( " << info.binding
+				<< ", " << info.name << " );\n";
 		}
-		str << "} " << info.name << ";\n";
 		return true;
 	}
 
@@ -806,32 +989,20 @@ namespace PipelineCompiler
 */
 	bool CPP_DstLanguage::_TranslateImage (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str)
 	{
-		if ( info.binding != UMax )
-			str << "layout(binding=" << info.binding << ") ";
-
+		CHECK_ERR( info.arraySize == 0 );
+		
 		if ( type.isImage() )
 		{
-			str << "layout(" << ToStringGLSL( info.format ) << ") "
-				<< ToStringGLSL( info.memoryModel )
-				<< " uniform ";
+			str << "\t" << _ToImageType( info.type ) << ", " << _ToString( info.memoryModel )
+				<< " > " << info.name << ";		_helper_.GetImage( " << info.binding
+				<< ", " << info.name << " );\n";
 		}
 		else
 		{
-			str << "uniform ";
+			str << "\t" << _ToTextureType( info.type ) << ", " << _ToString( info.memoryModel )
+				<< " > " << info.name << ";		_helper_.GetTexture( " << info.binding
+				<< ", " << info.name << " );\n";
 		}
-
-		// precision
-		if ( info.precision != EPrecision::Default )
-			str << ToStringGLSL( info.precision ) << ' ';
-
-		// type
-		if ( not info.typeName.Empty() ) {
-			str << info.typeName;
-		} else {
-			str << ToStringGLSL( info.type );
-		}
-
-		str << " " << info.name << (info.arraySize == 0 ? "" : (info.arraySize == UMax ? "[]" : "["_str << info.arraySize << "]")) << ";\n";
 		return true;
 	}
 
@@ -842,28 +1013,20 @@ namespace PipelineCompiler
 */
 	bool CPP_DstLanguage::_TranslateShared (Translator::TypeInfo const& info, OUT String &str)
 	{
-		//str << "shared ";
-		//CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
-		//str << ";\n";
-		return true;
-	}
-
-/*
-=================================================
-	_TranslateVarying
-=================================================
-*
-	bool CPP_DstLanguage::_TranslateVarying (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str)
-	{
-		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqVaryingIn )
-			str << "in ";
-		else
-			str << "out ";
+		str << "\tShared< ";
 		
-		ASSERT( info.fields.Empty() );	// TODO
+		// type
+		if ( not info.typeName.Empty() ) {
+			str << info.typeName;
+		} else {
+			str << _ToString( info.type );
+		}
 
-		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
-		str << ";\n";
+		if ( info.arraySize != 0 ) {
+			str << ", " << info.arraySize;
+		}
+
+		str << " >	" << info.name << ";\n";
 		return true;
 	}
 	
@@ -879,6 +1042,7 @@ namespace PipelineCompiler
 		glslang::TType const&				type	= typed->getType();
 		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
 
+		str << "\t";
 		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
 		str << " = ";
 
@@ -927,71 +1091,36 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	_TranslateGlobal
+	_TranslateBuiltin
 =================================================
-*
-	bool CPP_DstLanguage::_TranslateGlobal (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str)
+*/
+	bool CPP_DstLanguage::_TranslateBuiltin (StringCRef name, OUT String &str) const
 	{
-		CHECK_ERR( typed->getAsSymbolNode() );
+		BuiltinMap_t::const_iterator	iter;
 
-		glslang::TType const&				type	= typed->getType();
-		glslang::TQualifier const&			qual	= type.getQualifier();
-		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
+		CHECK_ERR( _GetBuiltinMapping().Find( name, OUT iter ) );
+		CHECK_ERR( iter->second.second[ _shaderType ] );
 
-		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
-
-		if ( type.isArray() )
-		{
-			Translator::TypeInfo	scalar_info = info;		scalar_info.arraySize = 0;
-
-			DeserializedShader::Constant::ValueArray_t	values;
-			CHECK_ERR( DeserializeConstant::Process( scalar_info.type, cu_arr, OUT values ) );
-		
-			if ( not values.Empty() )
-			{
-				str << " = { ";
-
-				CU_ToString_Func	func( str );
-
-				FOR( i, values )
-				{
-					str << (i ? ", " : "");
-					CHECK_ERR( TranslateType( scalar_info, INOUT str ) );
-					values[i].Apply( func );
-				}
-				str << " };\n";
-			}
-			else
-				str << ";\n";
-		}
-		else
-		if ( type.isStruct() )
-		{
-			TODO( "" );
-		}
-		else
-		{
-			DeserializedShader::Constant::ValueArray_t	values;
-			CHECK_ERR( DeserializeConstant::Process( info.type, cu_arr, OUT values ) );
-		
-			if ( not values.Empty() )
-			{
-				CU_ToString_Func	func( str );
-
-				str << " = ";
-				FOR( i, values )
-				{
-					str << (i ? ", " : "");
-					CHECK_ERR( TranslateType( info, INOUT str ) );
-					values[i].Apply( func );
-				}
-				str << ";\n";
-			}
-			else
-				str << ";\n";
-		}
+		str << iter->second.first;
 		return true;
 	}
+	
+/*
+=================================================
+	_GetBuiltinMapping
+=================================================
+*/
+	CPP_DstLanguage::BuiltinMap_t const&  CPP_DstLanguage::_GetBuiltinMapping ()
+	{
+		static const BuiltinMap_t	mapping = {
+			{ "gl_GlobalInvocationID",		{"\tauto& gl_GlobalInvocationID = _helper_.GetComputeShaderState().inGlobalInvocationID;\n", EShader::bits() | EShader::Compute} },
+			{ "gl_LocalInvocationID",		{"\tauto& gl_LocalInvocationID = _helper_.GetComputeShaderState().inLocalInvocationID;\n", EShader::bits() | EShader::Compute} },
+			{ "gl_LocalInvocationIndex",	{"\tauto& gl_LocalInvocationIndex = _helper_.GetComputeShaderState().inLocalInvocationIndex;\n", EShader::bits() | EShader::Compute} },
+			{ "gl_NumWorkGroups",			{"\tauto& gl_NumWorkGroups = _helper_.GetComputeShaderState().inNumWorkGroups;\n", EShader::bits() | EShader::Compute} },
+			{ "gl_WorkGroupID",				{"\tauto& gl_WorkGroupID = _helper_.GetComputeShaderState().inWorkGroupID;\n", EShader::bits() | EShader::Compute} },
+			{ "gl_WorkGroupSize",			{"\tauto& gl_WorkGroupSize = _helper_.GetComputeShaderState().constWorkGroupSize;\n", EShader::bits() | EShader::Compute} }
+		};
+		return mapping;
+	}
 
-	*/
 }	// PipelineCompiler

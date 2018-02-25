@@ -261,7 +261,7 @@ namespace OS
 
 		bool Wait (const CriticalSection &mutex, TimeL time)
 		{
-			int result = ::SDL_CondWaitTimeout( _cv, mutex._mutex, time.MilliSeconds() );
+			int result = ::SDL_CondWaitTimeout( _cv, mutex._mutex, (uint)time.MilliSeconds() );
 			ASSERT( result != -1 );
 			return result != -1;
 		}

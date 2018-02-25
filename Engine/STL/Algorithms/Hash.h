@@ -18,7 +18,7 @@ namespace GXMath
 namespace _math_hidden_
 {
 	template <typename T>
-	forceinline T _BitRotateLeft (T value, GXTypes::usize shift);
+	forceinline constexpr T _BitRotateLeft (T value, GXTypes::usize shift);
 
 }	// _math_hidden_
 }	// GXMath

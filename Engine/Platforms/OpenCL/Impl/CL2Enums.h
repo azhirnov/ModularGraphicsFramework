@@ -4,7 +4,7 @@
 
 #include "Engine/Platforms/OpenCL/Impl/cl2.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 #include "Engine/Platforms/Shared/GPU/BufferEnums.h"
 #include "Engine/Platforms/Shared/GPU/CommandEnums.h"

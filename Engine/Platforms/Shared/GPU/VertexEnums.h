@@ -166,7 +166,7 @@ namespace Platforms
 
 	 inline EVertexAttribute::type  EVertexAttribute::ToDstType (type value)
 	 {
-		const type	count	= type( value & _vtypeinfo::_COL_MASK );
+		const uint	count	= uint( value & _vtypeinfo::_COL_MASK );
 		const bool	norm	= EnumEq( value, _vtypeinfo::_NORM );
 		const type	ftype	= type( _vtypeinfo::_FLOAT | count );
 

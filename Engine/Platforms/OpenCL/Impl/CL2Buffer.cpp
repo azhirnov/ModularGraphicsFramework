@@ -5,7 +5,7 @@
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
@@ -189,9 +189,8 @@ namespace PlatformCL
 		_memObj->Subscribe( this, &CL2Buffer::_OnMemoryBindingChanged );
 		
 		CHECK_LINKING( _CopySubscriptions< ForwardToMem_t >( _memObj ) );
-
-		CHECK_ERR( Module::_Link_Impl( msg ) );
-		return true;
+		
+		return Module::_Link_Impl( msg );
 	}
 	
 /*

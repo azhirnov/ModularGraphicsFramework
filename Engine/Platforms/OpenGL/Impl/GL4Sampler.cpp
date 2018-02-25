@@ -3,7 +3,7 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4Sampler.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {

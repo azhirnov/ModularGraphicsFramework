@@ -4,7 +4,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -345,7 +345,7 @@ namespace PlatformVK
 			Message< GpuMsg::GetVkCommandPoolID >	req_pool_id;
 			SendTo( builder, req_pool_id );
 
-			VkCommandPool	pool;	pool << req_pool_id->result;
+			VkCommandPool	pool = req_pool_id->result.Get( VK_NULL_HANDLE );
 
 			if ( dev != VK_NULL_HANDLE and pool != VK_NULL_HANDLE )
 			{

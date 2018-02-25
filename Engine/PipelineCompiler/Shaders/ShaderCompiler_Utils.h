@@ -140,7 +140,7 @@ namespace PipelineCompiler
 				if ( single and first != index )
 					break;
 
-				CHECK_ERR( src.size() - index >= I );
+				CHECK_ERR( src.size() - index >= int(I) );
 
 				Vec<T,I,U>	value;
 
@@ -165,7 +165,7 @@ namespace PipelineCompiler
 				if ( single and first != index )
 					break;
 
-				CHECK_ERR( src.size() - index >= C*R );
+				CHECK_ERR( src.size() - index >= int(C*R) );
 
 				Matrix<T,C,R,U>	value;
 

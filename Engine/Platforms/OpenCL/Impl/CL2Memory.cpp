@@ -3,15 +3,18 @@
 #include "Engine/Platforms/Shared/GPU/Memory.h"
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
+#include "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h"
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
 namespace PlatformCL
 {
+	using namespace cl;
+
 
 	//
 	// OpenCL Memory
@@ -46,6 +49,7 @@ namespace PlatformCL
 		using BufferMsg_t			= MessageListFrom< GpuMsg::GetCLBufferID, GpuMsg::GetBufferDescriptor >;
 
 		using EBindingTarget		= GpuMsg::OnMemoryBindingChanged::EBindingTarget;
+		using MemMapper_t			= PlatformTools::MemoryMapperHelper;
 
 
 	// constants
@@ -56,18 +60,11 @@ namespace PlatformCL
 
 	// variables
 	private:
-		cl::cl_mem				_mem;
-		ubyte *					_mappedPtr;
+		cl_mem					_mem;
+		MemMapper_t				_memMapper;
 		BytesUL					_size;
-		
-		BytesUL					_mappedOffset;
-		BytesUL					_mappedSize;
-
 		EGpuMemory::bits		_flags;
-		EMemoryAccess::bits		_access;
 		EBindingTarget			_binding;
-		
-		bool					_isMappedMemChanged;
 
 
 	// methods
@@ -96,13 +93,10 @@ namespace PlatformCL
 
 	private:
 		bool _IsCreated () const;
-		bool _IsMapped () const;
 
 		bool _AllocForImage ();
 		bool _AllocForBuffer ();
 		void _FreeMemory ();
-
-		static EMemoryAccess::bits _GpuMemoryToMemoryAccess (EGpuMemory::bits flags);
 	};
 //-----------------------------------------------------------------------------
 
@@ -118,9 +112,8 @@ namespace PlatformCL
 */
 	CL2Memory::CL2Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci) :
 		CL2BaseModule( gs, ModuleConfig{ CLMemoryModuleID, 1 }, &_msgTypes, &_eventTypes ),
-		_mem( null ),							_mappedPtr( null ),
-		_flags( ci.memFlags ),					_access( ci.access & _GpuMemoryToMemoryAccess( ci.memFlags ) ),
-		_binding( EBindingTarget::Unbinded ),	_isMappedMemChanged( false )
+		_mem( null ),				_memMapper( ci.memFlags, ci.access ),
+		_flags( ci.memFlags ),		_binding( EBindingTarget::Unbinded )
 	{
 		SetDebugName( "CL2Memory" );
 
@@ -164,7 +157,7 @@ namespace PlatformCL
 	CL2Memory::~CL2Memory ()
 	{
 		ASSERT( not _IsCreated() );
-		ASSERT( not _IsMapped() );
+		ASSERT( not _memMapper.IsMapped() );
 	}
 	
 /*
@@ -175,16 +168,6 @@ namespace PlatformCL
 	bool CL2Memory::_IsCreated () const
 	{
 		return _mem != null;
-	}
-	
-/*
-=================================================
-	_IsMapped
-=================================================
-*/
-	bool CL2Memory::_IsMapped () const
-	{
-		return _mappedPtr != null;
 	}
 	
 /*
@@ -240,15 +223,11 @@ namespace PlatformCL
 */
 	void CL2Memory::_FreeMemory ()
 	{
-		_mem				= null;
-		_mappedPtr			= null;
-		_size				= Uninitialized;
-		_mappedOffset		= Uninitialized;
-		_mappedSize			= Uninitialized;
-		_flags				= Uninitialized;
-		_access				= Uninitialized;
-		_binding			= EBindingTarget::Unbinded;
-		_isMappedMemChanged	= false;
+		_mem		= null;
+		_size		= Uninitialized;
+		_flags		= Uninitialized;
+		_binding	= EBindingTarget::Unbinded;
+		_memMapper.Clear();
 	}
 	
 /*
@@ -296,9 +275,9 @@ namespace PlatformCL
 	bool CL2Memory::_GetStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &msg)
 	{
 		StreamDescriptor	descr;
-
-		descr.memoryFlags	= _access;
-		descr.available		= _mappedSize;
+		
+		descr.memoryFlags	= _memMapper.MappingAccess();
+		descr.available		= _memMapper.MappedSize();
 		descr.totalSize		= _size;
 
 		msg->result.Set( descr );
@@ -312,16 +291,11 @@ namespace PlatformCL
 */
 	bool CL2Memory::_ReadFromStream (const Message< ModuleMsg::ReadFromStream > &msg)
 	{
-		CHECK_ERR( _IsMapped() );
-		CHECK_ERR( _access[EMemoryAccess::CpuRead] );
-		CHECK_ERR( msg->offset < _mappedSize );
-
-		const usize		offset	= (usize) msg->offset;
-		const usize		size	= (usize) Min( _mappedSize - msg->offset, msg->size.Get( UMax ) );
-
-		msg->result.Set( BinArrayCRef( _mappedPtr + offset, size ) );
-
-		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuRead, BytesU(offset), BytesU(size) });
+		BinArrayCRef	data;
+		CHECK_ERR( _memMapper.Read( msg->offset, msg->size.Get( UMax ), OUT data ) );
+		msg->result.Set( data );
+		
+		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuRead, _memMapper.MappedOffset() + msg->offset, BytesUL(data.Size()) });
 		return true;
 	}
 	
@@ -332,20 +306,11 @@ namespace PlatformCL
 */
 	bool CL2Memory::_WriteToStream (const Message< ModuleMsg::WriteToStream > &msg)
 	{
-		CHECK_ERR( _IsMapped() );
-		CHECK_ERR( _access[EMemoryAccess::CpuWrite] );
-		CHECK_ERR( msg->offset < _mappedSize );
-		
-		const usize		offset		= (usize) msg->offset;
-		const usize		size		= Min( usize(_mappedSize), usize(msg->data.Size()) );
+		BytesUL	written;
+		CHECK_ERR( _memMapper.Write( msg->data, msg->offset, OUT written ) );
+		msg->wasWritten.Set( written );
 
-		MemCopy( BinArrayRef( _mappedPtr + offset, size ), msg->data );
-
-		msg->wasWritten.Set( BytesUL(size) );
-
-		_isMappedMemChanged = true;
-
-		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, BytesU(offset), BytesU(size) });
+		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, _memMapper.MappedOffset() + msg->offset, written });
 		return true;
 	}
 	
@@ -356,22 +321,23 @@ namespace PlatformCL
 */
 	bool CL2Memory::_MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &msg)
 	{
-		using namespace cl;
-		
-		CHECK_ERR( _IsCreated() and not _IsMapped() );
-		CHECK_ERR( _access[EMemoryAccess::CpuRead] or _access[EMemoryAccess::CpuWrite] );
+		using EMappingFlags = GpuMsg::MapMemoryToCpu::EMappingFlags;
+
+		CHECK_ERR( _IsCreated() and _memMapper.IsMappingAllowed( msg->flags ) );
+		CHECK_ERR( _binding == EBindingTarget::Buffer );
 		CHECK_ERR( msg->offset < _size );
 		
-		const BytesUL	size = Min( _size, msg->size );
+		const BytesUL	size	= Min( _size, msg->size );
+		void *			ptr		= null;
 
 		if ( _binding == EBindingTarget::Buffer )
 		{
 			cl_int	cl_err = 0;
-			CL_CHECK((( _mappedPtr = (ubyte*) clEnqueueMapBuffer(
+			CL_CHECK((( ptr = clEnqueueMapBuffer(
 										GetCommandQueue(),
 										_mem,
 										CL_TRUE, // blocking
-										CL2Enum( _access, msg->flags ),
+										CL2Enum( _memMapper.MemoryAccess(), msg->flags ),
 										(usize) msg->offset,
 										(usize) size,
 										0, null,
@@ -401,10 +367,8 @@ namespace PlatformCL
 										null,
 										&cl_err ), cl_err );*/
 		}
-
-		_mappedSize			= size;
-		_mappedOffset		= msg->offset;
-		_isMappedMemChanged	= false;
+		
+		_memMapper.OnMapped( ptr, msg->offset, size, msg->flags );
 		return true;
 	}
 	
@@ -415,8 +379,7 @@ namespace PlatformCL
 */
 	bool CL2Memory::_MapImageToCpu (const Message< GpuMsg::MapImageToCpu > &msg)
 	{
-		/*using namespace cl;
-		
+		/*
 		CHECK_ERR( _IsCreated() and not _IsMapped() );
 		CHECK_ERR( _binding == EBindingTarget::Image );
 		CHECK_ERR( _access[EMemoryAccess::CpuRead] or _access[EMemoryAccess::CpuWrite] );
@@ -463,6 +426,9 @@ namespace PlatformCL
 */
 	bool CL2Memory::_FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &msg)
 	{
+		CHECK_ERR( _binding == EBindingTarget::Buffer );
+		CHECK_ERR( _memMapper.FlushMemoryRange( msg->offset, msg->size ) );
+
 		TODO("");
 		return true;
 	}
@@ -474,21 +440,15 @@ namespace PlatformCL
 */
 	bool CL2Memory::_UnmapMemory (const Message< GpuMsg::UnmapMemory > &)
 	{
-		using namespace cl;
-
-		CHECK_ERR( _IsMapped() );
-		CHECK( _flags[EGpuMemory::CoherentWithCPU] or not _isMappedMemChanged );	// changes must be flushed
+		CHECK_ERR( _binding == EBindingTarget::Buffer );
 		
 		CL_CHECK( clEnqueueUnmapMemObject( GetCommandQueue(),
 										   _mem,
-										   _mappedPtr,
+										   _memMapper.Pointer(),
 										   0, null,
 										   null ) );
 
-		_mappedSize			= BytesUL(0);
-		_mappedPtr			= null;
-		_isMappedMemChanged	= false;
-
+		CHECK_ERR( _memMapper.Unmap() );
 		return true;
 	}
 	
@@ -499,56 +459,48 @@ namespace PlatformCL
 */
 	bool CL2Memory::_ReadFromGpuMemory (const Message< GpuMsg::ReadFromGpuMemory > &msg)
 	{
-		using namespace cl;
-
 		CHECK_ERR( _IsCreated() );
-		CHECK_ERR( _access[EMemoryAccess::CpuRead] );
+		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
-		CHECK_ERR( not msg->size or not msg->writableBuffer or (*msg->size == BytesUL(msg->writableBuffer->Size())) );
+		CHECK_ERR( msg->writableBuffer.Size() > 0 );
+		CHECK_ERR( msg->offset < _size );
+		
+		const BytesUL	req_size = BytesUL(msg->writableBuffer.Size());
 
-		// just read from mapped memory
-		if ( _IsMapped() )
+		// read from mapped memory
+		if ( _memMapper.IsMapped() )
 		{
-			CHECK_ERR( msg->offset >= _mappedOffset );
+			CHECK_ERR( msg->offset >= _memMapper.MappedOffset() and
+					   msg->offset + req_size <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
 
+			// read
 			Message< ModuleMsg::ReadFromStream >	read_stream;
-			read_stream->offset	= msg->offset - _mappedOffset;
-			read_stream->size	= msg->size;
-			CHECK( _SendMsg( read_stream ) );
+			read_stream->offset	= msg->offset - _memMapper.MappedOffset();
+			read_stream->size	= req_size;
 
-			// copy to buffer
-			if ( msg->writableBuffer )
-			{
-				CHECK( msg->writableBuffer->Size() >= read_stream->result->Size() );	// never gonna happen, but...
+			CHECK( _ReadFromStream( read_stream ) );
+			
+			// copy to writable buffer
+			CHECK( msg->writableBuffer.Size() >= read_stream->result->Size() );
 
-				const usize	size = (usize) Min( msg->writableBuffer->Size(), read_stream->result->Size() );
-
-				MemCopy( *msg->writableBuffer, *read_stream->result );
-
-				msg->result.Set( msg->writableBuffer->SubArray( 0, size ) );
-			}
-			else
-				msg->result.Set( read_stream->result.Get() );
-
+			MemCopy( msg->writableBuffer, *read_stream->result );
+			msg->result.Set( msg->writableBuffer.SubArray( 0, usize(read_stream->result->Size()) ) );
 			return true;
 		}
-			
-		// read without mapping
-		CHECK_ERR( msg->offset < _size );
-		CHECK_ERR( msg->writableBuffer and not msg->writableBuffer->Empty() );
 
-		const usize	size = Min( usize(_size), usize(msg->writableBuffer->Size()) );
+		// read without mapping
+		const usize		size = Min( usize(_size - msg->offset), usize(req_size) );
 
 		CL_CALL( clEnqueueReadBuffer( GetCommandQueue(),
 									  _mem,
 									  CL_TRUE,	// blocking
 									  (usize) msg->offset,
 									  (usize) size,
-									  OUT (void *) msg->writableBuffer->ptr(),
+									  OUT msg->writableBuffer.ptr(),
 									  0, null,
 									  null ) );
 
-		msg->result.Set( msg->writableBuffer->SubArray( 0, size ) );
+		msg->result.Set( msg->writableBuffer.SubArray( 0, size ) );
 		return true;
 	}
 		
@@ -559,31 +511,40 @@ namespace PlatformCL
 */
 	bool CL2Memory::_WriteToGpuMemory (const Message< GpuMsg::WriteToGpuMemory > &msg)
 	{
-		using namespace cl;
-
 		CHECK_ERR( _IsCreated() );
-		CHECK_ERR( _access[EMemoryAccess::CpuWrite] );
+		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
-
-		// just write to mapped memory
-		if ( _IsMapped() )
+		CHECK_ERR( msg->offset < _size );
+		
+		// write to mapped memory
+		if ( _memMapper.IsMapped() )
 		{
-			CHECK_ERR( msg->offset >= _mappedOffset );
+			CHECK_ERR( msg->offset >= _memMapper.MappedOffset() and
+					   msg->offset + BytesUL(msg->data.Size()) <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
 
+			// write
 			Message< ModuleMsg::WriteToStream >		write_stream;
-			write_stream->offset	= msg->offset - _mappedOffset;
+			write_stream->offset	= msg->offset - _memMapper.MappedOffset();
 			write_stream->data		= msg->data;
 
-			CHECK( _SendMsg( write_stream ) );
+			CHECK( _WriteToStream( write_stream ) );
 
-			TODO("");
-			return false;
+			// flush
+			if ( not _flags[ EGpuMemory::CoherentWithCPU ] )
+			{
+				Message< GpuMsg::FlushMemoryRange >	flush;
+				flush->offset	= write_stream->offset;
+				flush->size		= write_stream->wasWritten.Get( UMax );
+
+				CHECK( _FlushMemoryRange( flush ) );
+			}
+
+			msg->wasWritten.Set( write_stream->wasWritten.Get() );
+			return true;
 		}
-		
-		// write without mapping
-		CHECK_ERR( msg->offset < _size );
 
-		const usize	size = Min( usize(_size), usize(msg->data.Size()) );
+		// write without mapping
+		const usize		size = Min( usize(_size - msg->offset), usize(msg->data.Size()) );
 
 		CL_CALL( clEnqueueWriteBuffer( GetCommandQueue(),
 									   _mem,
@@ -595,7 +556,8 @@ namespace PlatformCL
 									   null ) );
 
 		msg->wasWritten.Set( BytesUL(size) );
-		// TODO: event - region changed
+		
+		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, msg->offset, BytesUL(size) });
 		return true;
 	}
 	
@@ -639,33 +601,12 @@ namespace PlatformCL
 
 /*
 =================================================
-	_GpuMemoryToMemoryAccess
-=================================================
-*/
-	EMemoryAccess::bits CL2Memory::_GpuMemoryToMemoryAccess (EGpuMemory::bits flags)
-	{
-		EMemoryAccess::bits		result;
-
-		result |= EMemoryAccess::GpuRead;
-		result |= EMemoryAccess::GpuWrite;
-
-		if ( flags[EGpuMemory::CoherentWithCPU] or flags[EGpuMemory::CachedInCPU] )
-		{
-			result |= EMemoryAccess::CpuRead;
-			result |= EMemoryAccess::CpuWrite;
-		}
-
-		return result;
-	}
-
-/*
-=================================================
 	_GpuMemoryRegionChanged
 =================================================
 */
 	bool CL2Memory::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &msg)
 	{
-		CHECK_ERR( _access[EMemoryAccess::GpuWrite] );	// this message allowed only for gpu-writable memory
+		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::GpuWrite] );	// this message allowed only for gpu-writable memory
 
 		// request memory barrier
 		TODO( "" );
@@ -683,7 +624,7 @@ namespace PlatformCL
 
 		descr.flags		= _flags;
 		descr.size		= _size;
-		descr.access	= _access;
+		descr.access	= _memMapper.MemoryAccess();
 
 		msg->result.Set( descr );
 		return true;

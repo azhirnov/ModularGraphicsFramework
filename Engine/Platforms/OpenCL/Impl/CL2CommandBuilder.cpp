@@ -7,7 +7,7 @@
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {
@@ -37,6 +37,8 @@ namespace PlatformCL
 											GpuMsg::CmdFillBuffer,
 											GpuMsg::CmdClearColorImage,
 											GpuMsg::CmdPipelineBarrier,
+											GpuMsg::CmdPushConstants,
+											GpuMsg::CmdPushNamedConstants,
 											GpuMsg::SetCommandBufferDependency,
 											GpuMsg::GetCommandBufferState
 										> >;
@@ -92,6 +94,8 @@ namespace PlatformCL
 		bool _CmdFillBuffer (const Message< GpuMsg::CmdFillBuffer > &);
 		bool _CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &);
 		bool _CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &);
+		bool _CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &);
+		bool _CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -140,6 +144,8 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2CommandBuilder::_CmdFillBuffer );
 		_SubscribeOnMsg( this, &CL2CommandBuilder::_CmdClearColorImage );
 		_SubscribeOnMsg( this, &CL2CommandBuilder::_CmdPipelineBarrier );
+		_SubscribeOnMsg( this, &CL2CommandBuilder::_CmdPushConstants );
+		_SubscribeOnMsg( this, &CL2CommandBuilder::_CmdPushNamedConstants );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -440,6 +446,32 @@ namespace PlatformCL
 =================================================
 */
 	bool CL2CommandBuilder::_CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		
+		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushConstants
+=================================================
+*/
+	bool CL2CommandBuilder::_CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		
+		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushNamedConstants
+=================================================
+*/
+	bool CL2CommandBuilder::_CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		

@@ -427,7 +427,7 @@ namespace PipelineCompiler
 	};
 
 
-
+/*
 	template <typename T>
 	inline BasePipeline::Bindings&  BasePipeline::Bindings::Texture2D (StringCRef name, EShader::bits shaderUsage) {
 		return Texture( EImage::Tex2D, name, shaderUsage, EPixelFormatClass::From<T>() );
@@ -466,7 +466,7 @@ namespace PipelineCompiler
 	template <typename T>
 	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image3D (StringCRef name, EShader::bits shaderUsage, EGpuMemoryModel::type access) {
 		return Image( EImage::Tex3D, name, EPixelFormat::From<T>(), shaderUsage, access );
-	}
+	}*/
 
 
 }	// PipelineCompiler

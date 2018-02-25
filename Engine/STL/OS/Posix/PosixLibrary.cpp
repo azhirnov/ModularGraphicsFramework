@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/STL/OS/Posix/Library.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 #if defined( PLATFORM_BASE_POSIX ) and not defined( PLATFORM_SDL )
 
@@ -121,7 +122,7 @@ namespace OS
 	GetProc
 =================================================
 */
-	Library::Func_t  Library::GetProc (StringCRef procName, void *defProc) const
+	Library::Func_t  Library::GetProc (StringCRef procName, Func_t defProc) const
 	{
 		ASSERT( IsValid() );
 		ASSERT( not procName.Empty() );

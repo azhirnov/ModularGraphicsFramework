@@ -5,7 +5,7 @@
 #include "vulkan1.h"
 #include "Vk1Library.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace vk
 {

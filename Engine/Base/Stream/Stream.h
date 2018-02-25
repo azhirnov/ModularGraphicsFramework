@@ -156,7 +156,7 @@ namespace ModuleMsg
 	// methods
 		template <typename Class>
 		AddOnFileModifiedListener (Class *mod, void (Class::*cb) (StringCRef), StringCRef fname) :
-			callback(DelegateBuilder{ WeakPointerType<Class>(mod), cb )}, filename{fname}
+			callback{DelegateBuilder( WeakPointerType<Class>(mod), cb )}, filename{fname}
 		{}
 	};
 

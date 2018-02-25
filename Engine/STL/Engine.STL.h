@@ -110,9 +110,6 @@
 // Dimensions //
 #include "Dimensions/ByteAndBit.h"
 #include "Dimensions/RadiansAndDegrees.h"
-#include "Dimensions/PhysicsValue.h"
-#include "Dimensions/PhysicsValueVec.h"
-#include "Dimensions/PhysicsValueMath.h"
 #include "Dimensions/Percentage.h"
 #include "Dimensions/PowerOfTwoValue.h"
 

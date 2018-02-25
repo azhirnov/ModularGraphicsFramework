@@ -189,7 +189,7 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 			const bool	has_option = not _defines[i].second.Empty() and _defines[i].second != _enableIf; 
 
 			src << (has_option ? "if ("_str << _defines[i].second << ")\n\t" : "")
-				<< "target_add_definitions( \"" << _name << "\" \"" << _defines[i].first << "\" )\n"
+				<< "target_compile_definitions( \"" << _name << "\" PUBLIC \"" << _defines[i].first << "\" )\n"
 				<< (has_option ? "endif()\n" : "");
 		}
 
@@ -301,7 +301,7 @@ static char g_tempFolderForFastCpp[] = "__gxtemp__";
 			const bool	has_option = not defines[i].second.Empty() and defines[i].second != _enableIf; 
 
 			src << (has_option ? "if ("_str << defines[i].second << ")\n\t" : "")
-				<< "target_add_definitions( \"" << _name << "\" \"" << defines[i].first << "\" )\n"
+				<< "target_compile_definitions( \"" << _name << "\" PUBLIC \"" << defines[i].first << "\" )\n"
 				<< (has_option ? "endif()\n" : "");
 		}
 

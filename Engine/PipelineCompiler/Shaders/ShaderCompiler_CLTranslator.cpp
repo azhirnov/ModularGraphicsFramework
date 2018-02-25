@@ -117,7 +117,7 @@ namespace PipelineCompiler
 	{
 		String&	str = translator.src;
 		
-		str << "#define FORMAT( _fmt_ )\n";
+		//str << "#define FORMAT( _fmt_ )\n";
 		str << GLSLCompatibilityFuncs();
 		str << "\n";
 
@@ -152,8 +152,8 @@ namespace PipelineCompiler
 			res << "const ";
 
 		// image format
-		if ( t.format != EPixelFormat::Unknown )
-			res << "FORMAT(" << ToStringCL( t.format ) << ") ";
+		//if ( t.format != EPixelFormat::Unknown )
+		//	res << "FORMAT(" << ToStringCL( t.format ) << ") ";
 
 		// type
 		if ( not t.typeName.Empty() ) {
@@ -200,8 +200,8 @@ namespace PipelineCompiler
 	bool CL_DstLanguage::TranslateType (const TypeInfo &t, INOUT String &res)
 	{
 		// image format
-		if ( t.format != EPixelFormat::Unknown )
-			res << "FORMAT(" << ToStringCL( t.format ) << ") ";
+		//if ( t.format != EPixelFormat::Unknown )
+		//	res << "FORMAT(" << ToStringCL( t.format ) << ") ";
 
 		// type
 		if ( not t.typeName.Empty() ) {
@@ -881,7 +881,7 @@ namespace PipelineCompiler
 	{
 		CHECK_ERR( info.arraySize == 0 );
 
-		str << ToStringCL( info.memoryModel ) << " FORMAT(" << ToStringCL( info.format ) << ") "
+		str << ToStringCL( info.memoryModel ) //<< " FORMAT(" << ToStringCL( info.format ) << ") "
 			<< ToStringCL( info.type ) << " " << info.name;
 
 		return true;
@@ -919,8 +919,8 @@ namespace PipelineCompiler
 				str << "__constant ";
 
 			// image format
-			if ( info.format != EPixelFormat::Unknown )
-				str << "FORMAT(" << ToStringCL( info.format ) << ") ";
+			//if ( info.format != EPixelFormat::Unknown )
+			//	str << "FORMAT(" << ToStringCL( info.format ) << ") ";
 
 			// type
 			if ( not info.typeName.Empty() ) {

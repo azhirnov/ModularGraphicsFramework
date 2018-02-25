@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "PlainOldDataType.h"
-#include "TypeList.h"
-#include "NearType.h"
+#include "Engine/STL/CompileTime/PlainOldDataType.h"
+#include "Engine/STL/CompileTime/TypeList.h"
+#include "Engine/STL/CompileTime/NearType.h"
 
 namespace GX_STL
 {
@@ -169,7 +169,7 @@ namespace CompileTime
 	
 	namespace _ctime_hidden_
 	{
-		template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
+		template <usize, typename Type, typename PrevFuncResult, typename>
 		struct MinFrom_Func
 		{
 			typedef typename Type::type		type;
@@ -177,7 +177,7 @@ namespace CompileTime
 			typedef ValueToType< type, Min< type, Type::value, PrevFuncResult::value > >		result;
 		};
 		
-		template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
+		template <usize, typename Type, typename PrevFuncResult, typename>
 		struct MaxFrom_Func
 		{
 			typedef typename Type::type		type;
@@ -207,7 +207,7 @@ namespace CompileTime
 
 
 	//
-	// Main Type
+	// General Type
 	//
 	
 	namespace _ctime_hidden_
@@ -258,7 +258,7 @@ namespace CompileTime
 
 		
 		template <bool UseCppStandard>
-		struct MainType_Choose
+		struct GenType_Choose
 		{
 			template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
 			struct Func
@@ -312,12 +312,12 @@ namespace CompileTime
 	
 	
 	template <typename ...Types>
-	using MainType = typename TypeListFrom< Types... >::template
-						ForEach< _ctime_hidden_::MainType_Choose<false>::Func, void >;
+	using GenType = typename TypeListFrom< Types... >::template
+						ForEach< _ctime_hidden_::GenType_Choose<false>::Func, void >;
 
 	template <typename ...Types>
-	using MainTypeStd = typename TypeListFrom< Types... >::template
-							ForEach< _ctime_hidden_::MainType_Choose<true>::Func, void >;
+	using GenTypeStd = typename TypeListFrom< Types... >::template
+							ForEach< _ctime_hidden_::GenType_Choose<true>::Func, void >;
 	
 
 

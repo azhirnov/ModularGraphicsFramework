@@ -110,6 +110,8 @@ namespace VS
 
 	static constexpr uint	IllegalConversion					= 4927;		// illegal conversion; more than one user-defined conversion has been implicitly applied
 
+	static constexpr uint	ReservedLiteralSuffix				= 4455;		// 'operator "" ...': literal suffix identifiers that do not start with an underscore are reserved
+
 
 	// Static Analyzer Warnings //
 	static constexpr uint	ReturnValueIgnored					= 6031;		// Return value ignored: 'name'

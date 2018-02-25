@@ -6,7 +6,7 @@
 #include "Engine/Platforms/Shared/OS/Window.h"
 #include "Engine/Platforms/Shared/OS/Platform.h"
 
-#if defined( PLATFORM_WINDOWS )
+#ifdef PLATFORM_WINDOWS
 
 namespace Engine
 {
@@ -29,11 +29,13 @@ namespace OSMsg
 	//
 	struct OnWinWindowRawMessage
 	{
+	// variables
 		const uint		uMsg			= 0;
 		const usize		wParam			= 0;
 		const isize		lParam			= 0;
 		mutable bool	wasProcessed	= false;
-
+		
+	// methods
 		OnWinWindowRawMessage (uint uMsg, usize wParam, isize lParam) :
 			uMsg(uMsg), wParam(wParam), lParam(lParam)
 		{}

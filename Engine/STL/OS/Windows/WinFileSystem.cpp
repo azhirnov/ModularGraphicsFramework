@@ -128,7 +128,7 @@ namespace OS
 			FOF_NOERRORUI |
 			FOF_SILENT,
 			false,
-			0,
+			null,
 			"" };
 
 		return SHFileOperation( &file_op ) == 0;

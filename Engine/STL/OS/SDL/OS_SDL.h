@@ -6,19 +6,18 @@
 
 #ifdef PLATFORM_SDL
 
+# ifdef COMPILER_MSVC
 #	pragma warning (push)
 #	pragma warning (disable: 4005)	// macros redefinition
+#	pragma warning (disable: 4668)	// '...' is not defined as a preprocessor macro
+# endif
 
 #	define SDL_MAIN_HANDLED
-#	include <External/SDL2/include/SDL.h>
+#	include "External/SDL2/include/SDL.h"
 
-#	if defined( __GX_DEBUG__ )
-#		pragma comment(lib, "SDL2_d.lib")
-#	else
-#		pragma comment(lib, "SDL2.lib")
-#	endif
-
+# ifdef COMPILER_MSVC
 #	pragma warning (pop)
+# endif
 
 
 namespace GX_STL

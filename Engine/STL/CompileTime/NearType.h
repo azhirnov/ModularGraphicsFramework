@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "NewTypeInfo.h"
+#include "Engine/STL/CompileTime/NewTypeInfo.h"
 #include "Engine/STL/Types/Noninstancable.h"
 
 namespace GX_STL

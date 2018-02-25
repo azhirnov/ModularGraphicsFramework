@@ -6,7 +6,7 @@
 #include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
 #include "Engine/Platforms/Shared/GPU/Thread.h"
 
-#if defined( COMPUTE_API_OPENCL )
+#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {

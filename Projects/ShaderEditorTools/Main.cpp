@@ -23,7 +23,7 @@ int main ()
 	cfg.nameSpace				= "Pipelines";
 	cfg.target					|= EShaderDstFormat::GLSL_Source;
 	cfg.target					|= EShaderDstFormat::SPIRV_Binary;
-	cfg.target					|= EShaderDstFormat::SPIRV_Source;
+	//cfg.target					|= EShaderDstFormat::SPIRV_Source;
 
 	PipelineManager::Instance()->Convert( "all_pipelines", new CppSerializer(), cfg );
 	

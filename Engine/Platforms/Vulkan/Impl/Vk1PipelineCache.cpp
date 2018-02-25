@@ -3,7 +3,7 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -45,11 +45,11 @@ namespace PlatformVK
 
 		auto	result = VulkanObjectsConstructor::CreateVk1GraphicsPipeline( gs, ci );
 
-		ModuleUtils::Initialize({ result });
+		/*ModuleUtils::Initialize({ result });
 
 		CHECK_ERR( result->GetState() == Module::EState::ComposedImmutable );
 
-		_graphicsPipelines.Add( result );
+		_graphicsPipelines.Add( result );*/
 		return result;
 	}
 	
@@ -64,11 +64,11 @@ namespace PlatformVK
 
 		auto	result = VulkanObjectsConstructor::CreateVk1ComputePipeline( gs, ci );
 
-		ModuleUtils::Initialize({ result });
+		/*ModuleUtils::Initialize({ result });
 
 		CHECK_ERR( result->GetState() == Module::EState::ComposedImmutable );
 
-		_computePipelines.Add( result );
+		_computePipelines.Add( result );*/
 		return result;
 	}
 

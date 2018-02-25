@@ -7,7 +7,7 @@
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace Engine
 {
@@ -94,7 +94,6 @@ namespace PlatformGL
 
 	private:
 		bool _IsCreated () const;
-		bool _IsMapped () const;
 
 		bool _AllocForImage ();
 		bool _AllocForBuffer ();
@@ -346,7 +345,7 @@ namespace PlatformGL
 
 		//map_flags |= GL_MAP_UNSYNCHRONIZED_BIT;	// TODO: is that needed for vulkan compatibility?
 
-		GL_CALL( ptr = glMapNamedBufferRange( _objectId, GLintptr(msg->offset), GLsizeiptr(Min(_size, msg->size)), map_flags ) );
+		GL_CALL( ptr = glMapNamedBufferRange( _objectId, GLintptr(msg->offset), GLsizeiptr(size), map_flags ) );
 
 		_memMapper.OnMapped( ptr, msg->offset, size, msg->flags );
 		return true;
@@ -443,28 +442,41 @@ namespace PlatformGL
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
-		CHECK_ERR( not msg->size or not msg->writableBuffer or (*msg->size == BytesUL(msg->writableBuffer->Size())) );
+		CHECK_ERR( msg->writableBuffer.Size() > 0 );
+		CHECK_ERR( msg->offset < _size );
 		
-		const bool		was_mapped	= _memMapper.IsMapped();
-		const usize		size		= Min( usize(_size), usize(msg->writableBuffer->Size()) );
+		const BytesUL	req_size = BytesUL(msg->writableBuffer.Size());
 
-		// just read from mapped memory
-		if ( was_mapped )
+		// read from mapped memory
+		if ( _memMapper.IsMapped() )
 		{
-			TODO( "" );
-			return false;
+			CHECK_ERR( msg->offset >= _memMapper.MappedOffset() and
+					   msg->offset + req_size <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
+
+			// read
+			Message< ModuleMsg::ReadFromStream >	read_stream;
+			read_stream->offset	= msg->offset - _memMapper.MappedOffset();
+			read_stream->size	= req_size;
+
+			CHECK( _ReadFromStream( read_stream ) );
+			
+			// copy to writable buffer
+			CHECK( msg->writableBuffer.Size() >= read_stream->result->Size() );
+
+			MemCopy( msg->writableBuffer, *read_stream->result );
+			msg->result.Set( msg->writableBuffer.SubArray( 0, usize(read_stream->result->Size()) ) );
+			return true;
 		}
 		
 		// read without mapping
-		CHECK_ERR( msg->offset < _size );
-		CHECK_ERR( msg->writableBuffer and not msg->writableBuffer->Empty() );
+		const usize		size = Min( usize(_size - msg->offset), usize(req_size) );
 		
 		GL_CALL( glGetNamedBufferSubData( _objectId,
 										  (GLintptr) msg->offset,
 										  (GLsizei) size,
-										  (void*) msg->writableBuffer->ptr() ) );
+										  OUT msg->writableBuffer.ptr() ) );
 
-		msg->result.Set( msg->writableBuffer->SubArray( 0, size ) );
+		msg->result.Set( msg->writableBuffer.SubArray( 0, size ) );
 		return true;
 	}
 	
@@ -478,19 +490,37 @@ namespace PlatformGL
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
+		CHECK_ERR( msg->offset < _size );
 		
-		const bool		was_mapped	= _memMapper.IsMapped();
-		const usize		size		= Min( usize(_size), usize(msg->data.Size()) );
-		
-		// just write to mapped memory
-		if ( was_mapped )
+		// write to mapped memory
+		if ( _memMapper.IsMapped() )
 		{
-			TODO( "" );
-			return false;
+			CHECK_ERR( msg->offset >= _memMapper.MappedOffset() and
+					   msg->offset + BytesUL(msg->data.Size()) <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
+
+			// write
+			Message< ModuleMsg::WriteToStream >		write_stream;
+			write_stream->offset	= msg->offset - _memMapper.MappedOffset();
+			write_stream->data		= msg->data;
+
+			CHECK( _WriteToStream( write_stream ) );
+
+			// flush
+			if ( not _flags[ EGpuMemory::CoherentWithCPU ] )
+			{
+				Message< GpuMsg::FlushMemoryRange >	flush;
+				flush->offset	= write_stream->offset;
+				flush->size		= write_stream->wasWritten.Get( UMax );
+
+				CHECK( _FlushMemoryRange( flush ) );
+			}
+
+			msg->wasWritten.Set( write_stream->wasWritten.Get() );
+			return true;
 		}
 		
 		// write without mapping
-		CHECK_ERR( msg->offset < _size );
+		const usize		size = Min( usize(_size - msg->offset), usize(msg->data.Size()) );
 
 		GL_CALL( glNamedBufferSubData( _objectId,
 									   (GLintptr) msg->offset,

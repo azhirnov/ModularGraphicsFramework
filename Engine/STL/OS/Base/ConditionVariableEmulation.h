@@ -38,12 +38,12 @@ namespace OS
 
 		void Signal ()
 		{
-			_signal.Pulse();
+			_signal.Signal();
 		}
 
 		void Broadcast ()
 		{
-			_broadcast.Pulse();
+			_broadcast.Signal();
 		}
 		
 		bool Wait (CriticalSection &cs, TimeL time)

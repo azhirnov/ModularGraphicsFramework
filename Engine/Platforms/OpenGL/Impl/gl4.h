@@ -4,7 +4,7 @@
 
 #include "Engine/Platforms/Shared/Common.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 namespace gl
 {

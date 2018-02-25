@@ -5,6 +5,7 @@
 #include "Engine/Platforms/Shared/GPU/Thread.h"
 #include "Engine/Platforms/Shared/GPU/VR.h"
 #include "Engine/Profilers/Impl/ProfilerObjectsConstructor.h"
+#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
 
 namespace Engine
 {
@@ -35,14 +36,6 @@ namespace Profilers
 		using WindowMsgList_t		= MessageListFrom<
 											OSMsg::WindowGetDescriptor,
 											OSMsg::WindowSetDescriptor >;
-
-		using GThreadMsgList_t		= MessageListFrom<
-											GpuMsg::ThreadBeginFrame,
-											GpuMsg::ThreadEndFrame >;
-		
-		using VRThreadMsgList_t		= MessageListFrom<
-											GpuMsg::ThreadBeginVRFrame,
-											GpuMsg::ThreadEndVRFrame >;
 
 		
 	// constants
@@ -128,9 +121,10 @@ namespace Profilers
 
 		// find gpu thread
 		ModulePtr	gthread;
-		if ( not (gthread = GlobalSystems()->parallelThread->GetModuleByMsg< VRThreadMsgList_t >()) )
+		//if ( not (gthread = GlobalSystems()->parallelThread->GetModuleByMsg< VRThreadMsgList_t >()) )
+		if ( not (gthread = PlatformTools::GPUThreadHelper::FindVRThread( GlobalSystems() )) )
 		{
-			CHECK_ERR(( gthread = GlobalSystems()->parallelThread->GetModuleByMsg< GThreadMsgList_t >() ));
+			CHECK_ERR(( gthread = PlatformTools::GPUThreadHelper::FindGraphicsThread( GlobalSystems() ) ));
 			gthread->Subscribe( this, &FPSCounter::_OnThreadEndFrame );
 		}
 		else

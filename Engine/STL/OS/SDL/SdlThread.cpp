@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "OS_SDL.h"
+#include "Engine/STL/OS/SDL/Thread.h"
 #include "Engine/STL/Math/BinaryMath.h"
 
 #ifdef PLATFORM_SDL
@@ -20,6 +20,18 @@ namespace OS
 		_id = ::SDL_ThreadID();
 	}
 	
+	CurrentThread::CurrentThread (CurrentThread &&other) : _id(other._id)
+	{
+		other._id = INVALID_ID;
+	}
+
+	CurrentThread& CurrentThread::operator = (CurrentThread &&right)
+	{
+		_id = right._id;
+		right._id = INVALID_ID;
+		return *this;
+	}
+
 /*
 =================================================
 	Id
@@ -85,7 +97,7 @@ namespace OS
 */
 	void CurrentThread::Sleep (TimeL time)
 	{
-		::SDL_Delay( time.MilliSeconds() );
+		::SDL_Delay( (uint)time.MilliSeconds() );
 	}
 	
 /*
@@ -117,9 +129,39 @@ namespace OS
 	constructor
 =================================================
 */
-	Thread::Thread () : _thread(), CurrentThread(INVALID_ID)
+	Thread::Thread () :
+		CurrentThread(INVALID_ID), _proc(null), _parameter(null)
 	{}
 	
+	Thread::Thread (Thread &&other) :
+		CurrentThread(RVREF(other)), _thread(other._thread),
+		_proc(other._proc), _parameter(other._parameter)
+	{
+		other._thread = null;
+		other._proc = null;
+		other._parameter = null;
+	}
+	
+/*
+=================================================
+	operator =
+=================================================
+*/
+	Thread& Thread::operator = (Thread &&right)
+	{
+		CurrentThread::operator= ( RVREF(right) );
+		
+		_proc				= right._proc;
+		_parameter			= right._parameter;
+		_thread				= right._thread;
+
+		right._proc			= null;
+		right._parameter	= null;
+		right._thread		= null;
+
+		return *this;
+	}
+
 /*
 =================================================
 	_ThreadProcWrapper

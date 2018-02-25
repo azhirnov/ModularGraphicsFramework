@@ -143,7 +143,7 @@ namespace GXMath
 		Line_t		Right () const;
 		Line_t		Bottom () const;
 		Line_t		Top () const;
-		//Line_t		ToLine (EEdge e) const;
+		//Line_t	ToLine (EEdge e) const;
 
 		T			Width () const					{ return right - left; }
 		T			Height () const					{ return top - bottom; }
@@ -163,7 +163,10 @@ namespace GXMath
 		Vec2_t		Size ()		const;
 		Vec2_t		Center ()	const;
 
-		// IsInner*
+		bool		IsNormalized () const;
+		Self &		Repair ();
+
+		// IsInner*		// TODO: rename
 		bool  IsInnerLine (const Line_t &line) const;
 		bool  IsInnerPoint (const Vec2_t &point) const;
 		bool  IsInnerRect (const Self &other) const;
@@ -175,6 +178,7 @@ namespace GXMath
 		// GetIntersection*
 		bool  GetLineIntersection (const Line_t &line, OUT Vec2_t &result0, OUT Vec2_t &result1) const;
 
+		// Crop*
 		bool  CropRect (INOUT Self &other) const;
 		bool  CropLine (INOUT Line_t &line) const;
 
@@ -216,7 +220,7 @@ namespace GXMath
 	template <typename T, ulong U>
 	CHECKRES inline bool  IsZero (const Rectangle<T,U>& val)
 	{
-		return IsZero(val.Size());
+		return IsZero( val.Size() );
 	}
 	
 /*
@@ -293,6 +297,22 @@ namespace GXMath
 								SafeDiv( left.bottom,	right.bottom,	defVal.bottom ),
 								SafeDiv( left.right,	right.right,	defVal.right ),
 								SafeDiv( left.top,		right.top,		defVal.top ) );
+	}
+
+/*
+=================================================
+	Equals
+=================================================
+*/
+	template <typename T, ulong U>
+	CHECKRES inline constexpr Vec<bool,4,U>  Equals (const Rectangle<T,U> &a, const Rectangle<T,U> &b)
+	{
+		Vec<bool,4,U>	res;
+		res[0] = Equals( a.left,   b.left   );
+		res[1] = Equals( a.bottom, b.bottom );
+		res[2] = Equals( a.right,  b.right  );
+		res[3] = Equals( a.top,    b.top    );
+		return res;
 	}
 
 
@@ -528,12 +548,15 @@ namespace GXMath
 	inline bool Rectangle<T,U>::CropRect (INOUT Self &other) const
 	{
 		// crop input rectangle
-		//	 ----=====--
+		//   --------- <---other
+		//	|    -----|-
 		//	|	|#####| | <-this
 		//	|	|#####| |
-		//	|	|#####| |
-		//	 ----=====\-
-		//   ^-other   ` result
+		//	|	|#####|<|--result
+		//	 ---|-----  |
+		//      |_______|
+		
+		ASSERT( this->IsNormalized() and other.IsNormalized() );
 
 		if ( IntersectRect( other ) )
 		{
@@ -543,10 +566,38 @@ namespace GXMath
 			if ( other.top    > top    )	other.top    = top;
 			return true;
 		}
-		other = Self();
 		return false;
 	}
 	
+/*
+=================================================
+	IsNormalized
+=================================================
+*/
+	template <typename T, ulong U>
+	inline bool  Rectangle<T,U>::IsNormalized () const
+	{
+		return (left <= right) & (bottom <= top);
+	}
+	
+/*
+=================================================
+	Repair
+=================================================
+*/
+	template <typename T, ulong U>
+	inline Rectangle<T,U>&  Rectangle<T,U>::Repair ()
+	{
+		const auto	x = MinMax( left, right );
+		const auto	y = MinMax( bottom, top );
+		
+		left	= x.min;
+		right	= x.max;
+		bottom	= y.min;
+		top		= y.max;
+		return *this;
+	}
+
 /*
 =================================================
 	Sub

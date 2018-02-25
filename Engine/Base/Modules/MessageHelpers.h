@@ -67,8 +67,8 @@ namespace ModuleMsg
 			return false;
 		}
 
-		friend void		operator << (OUT T& dst, Out<T> &src)				{ src.MoveTo( OUT dst ); }
-		friend void		operator << (OUT Optional<T> &dst, Out<T> &src)		{ src.MoveTo( OUT dst ); }
+		//friend void		operator << (OUT T& dst, Out<T> &src)				{ src.MoveTo( OUT dst ); }
+		//friend void		operator << (OUT Optional<T> &dst, Out<T> &src)		{ src.MoveTo( OUT dst ); }
 	};
 
 

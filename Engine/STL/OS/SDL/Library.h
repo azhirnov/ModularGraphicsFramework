@@ -2,13 +2,15 @@
 
 #pragma once
 
-#include "OS_SDL.h"
-#include "FileSystem.h"
+#include "Engine/STL/OS/SDL/OS_SDL.h"
+#include "Engine/STL/OS/Base/BaseFileSystem.h"
 
 #ifdef PLATFORM_SDL
 
 namespace GX_STL
 {
+	using SharedLibFunction_t 	= void (*) ();
+
 namespace OS
 {
 
@@ -62,8 +64,9 @@ namespace OS
 		{
 			Unload();
 
-			_handle = ::SDL_LoadObject( name.cstr() );
-			_name	= name;
+			_handle			= ::SDL_LoadObject( name.cstr() );
+			_name			= name;
+			_freeWhenDelete	= canFree;
 
 			return IsValid();
 		}
@@ -88,16 +91,16 @@ namespace OS
 			return _name;
 		}
 
-		Func_t GetProc (StringCRef name, void *defProc = null) const
+		CHECKRES Func_t GetProc (StringCRef name, Func_t defProc = null) const
 		{
-			Func_t	tmp = ::SDL_LoadFunction( _handle, name.cstr() );
+			Func_t	tmp = reinterpret_cast<Func_t>(::SDL_LoadFunction( _handle, name.cstr() ));
 			return tmp != null ? tmp : defProc;
 		}
 
 		template <typename T>
-		bool GetProc (T &func, StringCRef name)
+		bool GetProc (OUT T &func, StringCRef name)
 		{
-			func = static_cast<T>( GetProc( name ) );
+			func = ReferenceCast<T>( GetProc( name ) );
 			return func != null;
 		}
 	};

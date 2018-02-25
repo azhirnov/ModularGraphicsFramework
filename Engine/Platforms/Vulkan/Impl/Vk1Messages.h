@@ -5,8 +5,9 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
 #include "Engine/Platforms/Shared/GPU/Image.h"
 #include "Engine/Platforms/Shared/GPU/Sync.h"
+#include "Engine/Platforms/Shared/GPU/PipelineLayout.h"
 
-#if defined( GRAPHICS_API_VULKAN )
+#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {
@@ -44,7 +45,7 @@ namespace GpuMsg
 	
 
 	//
-	// Get GPU Framebuffer ID
+	// Get Framebuffer ID
 	//
 	struct GetVkFramebufferID
 	{
@@ -62,7 +63,7 @@ namespace GpuMsg
 
 
 	//
-	// Get GPU Graphics Pipeline ID
+	// Get Graphics Pipeline ID
 	//
 	struct GetVkGraphicsPipelineID
 	{
@@ -71,7 +72,7 @@ namespace GpuMsg
 
 
 	//
-	// Get GPU Compute Pipeline ID
+	// Get Compute Pipeline ID
 	//
 	struct GetVkComputePipelineID
 	{
@@ -80,7 +81,7 @@ namespace GpuMsg
 	
 
 	//
-	// Get GPU Pipeline Layout
+	// Get Pipeline Layout
 	//
 	struct GetVkPipelineLayoutID
 	{
@@ -89,19 +90,41 @@ namespace GpuMsg
 
 
 	//
+	// Get Pipeline Layout Push Constants Mapping
+	//
+	struct GetVkPipelineLayoutPushConstants
+	{
+	// types
+		using EShader	= Platforms::EShader;
+
+		struct PushConstant : CompileTime::FastCopyable
+		{
+			EShader::bits	stages;
+			ushort			offset	= 0;
+			ushort			size	= 0;
+
+			PushConstant (EShader::bits stages, BytesU off, BytesU sz) : stages{stages}, offset{ushort(off)}, size{ushort(sz)} {}
+		};
+
+		using Name_t			= Platforms::PipelineLayoutDescriptor::Name_t;
+		using PushConstants_t	= FixedSizeMultiHashMap< Name_t, PushConstant, 8 >;
+
+	// variables
+		Out< PushConstants_t >		result;
+	};
+
+
+	//
 	// Get Descriptor Layout IDs
 	//
 	struct GetVkDescriptorLayouts
 	{
-		//using IDs	= FixedSizeArray< vk::VkDescriptorSetLayout, 8 >;
-		//Out< IDs >					result;
-
 		Out< vk::VkDescriptorSetLayout >	result;
 	};
 
 
 	//
-	// Get GPU Pipeline Resource Table ID (DescriptorSet)
+	// Get Pipeline Resource Table ID (DescriptorSet)
 	//
 	struct GetVkPipelineResourceTableID
 	{
@@ -110,7 +133,7 @@ namespace GpuMsg
 
 
 	//
-	// Get GPU Render Pass ID
+	// Get Render Pass ID
 	//
 	struct GetVkRenderPassID
 	{
@@ -119,7 +142,7 @@ namespace GpuMsg
 	
 
 	//
-	// Get GPU Sampler ID
+	// Get Sampler ID
 	//
 	struct GetVkSamplerID
 	{
@@ -128,7 +151,7 @@ namespace GpuMsg
 
 
 	//
-	// Get GPU Image ID
+	// Get Image ID
 	//
 	struct GetVkImageID
 	{
@@ -138,20 +161,26 @@ namespace GpuMsg
 
 
 	//
-	// Create GPU Image View
+	// Create Image View
 	//
 	struct CreateVkImageView
 	{
+	// variables
 		Platforms::ImageViewDescriptor	viewDescr;
 		Out< vk::VkImageView >			result;
+
+	// methods
+		CreateVkImageView () {}
+		explicit CreateVkImageView (const Platforms::ImageViewDescriptor &descr) : viewDescr{descr} {}
 	};
 
 
 	//
-	// Get GPU Shader Module IDs
+	// Get Shader Module IDs
 	//
 	struct GetVkShaderModuleIDs
 	{
+	// types
 		struct ShaderModule : CompileTime::PODStruct
 		{
 			StaticString<64>			entry;
@@ -159,13 +188,14 @@ namespace GpuMsg
 			Platforms::EShader::type	type	= Platforms::EShader::Unknown;
 		};
 		using Shaders_t		= FixedSizeArray< ShaderModule, Platforms::EShader::_Count >;
-
+		
+	// variables
 		Out< Shaders_t >	result;
 	};
 
 	
 	//
-	// Get GPU Command Buffer ID
+	// Get Command Buffer ID
 	//
 	struct GetVkCommandBufferID
 	{
@@ -174,7 +204,7 @@ namespace GpuMsg
 
 
 	//
-	// Get GPU Command Pool ID
+	// Get Command Pool ID
 	//
 	struct GetVkCommandPoolID
 	{

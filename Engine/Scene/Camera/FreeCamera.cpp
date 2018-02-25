@@ -70,6 +70,7 @@ namespace Scene
 	// message handlers
 	private:
 		bool _Link (const Message< ModuleMsg::Link > &);
+		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Update (const Message< ModuleMsg::Update > &);
 		bool _CameraBindKeys (const Message< SceneMsg::CameraBindKeys > &);
 		bool _CameraGetState (const Message< SceneMsg::CameraGetState > &);
@@ -104,7 +105,8 @@ namespace Scene
 =================================================
 */
 	FreeCamera::FreeCamera (GlobalSystemsRef gs, const CreateInfo::Camera &ci) :
-		BaseSceneModule( gs, ModuleConfig{ FreeCameraModuleID, UMax }, &_msgTypes, &_eventTypes )
+		BaseSceneModule( gs, ModuleConfig{ FreeCameraModuleID, UMax }, &_msgTypes, &_eventTypes ),
+		_settings{ ci.settings }
 	{
 		SetDebugName( "Scene.FreeCamera" );
 
@@ -115,7 +117,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &FreeCamera::_FindModule_Impl );
 		_SubscribeOnMsg( this, &FreeCamera::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &FreeCamera::_Link );
-		_SubscribeOnMsg( this, &FreeCamera::_Compose_Impl );
+		_SubscribeOnMsg( this, &FreeCamera::_Compose );
 		_SubscribeOnMsg( this, &FreeCamera::_Delete_Impl );
 		_SubscribeOnMsg( this, &FreeCamera::_Update );
 		_SubscribeOnMsg( this, &FreeCamera::_CameraBindKeys );
@@ -186,6 +188,38 @@ namespace Scene
 		CHECK( _SetState( EState::Linked ) );
 		return true;
 	}
+	
+/*
+=================================================
+	_Compose
+=================================================
+*/
+	bool FreeCamera::_Compose (const Message< ModuleMsg::Compose > &)
+	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
+		CHECK_ERR( GetState() == EState::Linked );
+		
+		// create camera
+		{
+			ModulePtr	surface;
+			
+			if ( not (surface = GetModuleByEvent< SurfaceEventList_t >()) )
+			{
+				CHECK_COMPOSING( surface = GetParentByEvent< SurfaceEventList_t >() );
+			}
+			
+			Message< SceneMsg::SurfaceGetDescriptor >	req_size;
+			surface->Send( req_size );
+			
+			float	aspect = SafeDiv( float(req_size->result->size.x), float(req_size->result->size.y), 1.0f );
+
+			_camera.Create( Uninitialized, _settings.fovY, aspect, _settings.clipPlanes );
+		}
+
+		return _DefCompose( false );
+	}
 
 /*
 =================================================
@@ -229,7 +263,7 @@ namespace Scene
 */
 	bool FreeCamera::_SurfaceOnResize (const Message< SceneMsg::SurfaceOnResize > &msg)
 	{
-		_camera.Resize( _camera.GetFovY(), float(msg->newSize.x) / float(msg->newSize.y) );
+		_camera.Resize( _camera.GetFovY(), SafeDiv( float(msg->newSize.x), float(msg->newSize.y), 1.0f ) );
 		return true;
 	}
 	

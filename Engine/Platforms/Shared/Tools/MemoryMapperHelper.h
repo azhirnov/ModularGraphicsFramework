@@ -45,6 +45,7 @@ namespace PlatformTools
 		void Clear ();
 
 		bool				IsMapped ()					const	{ return _ptr != null; }
+		void *				Pointer ()							{ return _ptr; }
 		bool				IsMappedMemoryChanged ()	const	{ return _changed; }
 		BytesUL				MappedOffset ()				const	{ return _offset; }
 		BytesUL				MappedSize ()				const	{ return _size; }

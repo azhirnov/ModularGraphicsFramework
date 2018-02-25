@@ -97,8 +97,6 @@ namespace GXTypes
 		bool		operator <  (const Self &right) const;
 		bool		operator <= (const Self &right) const;
 
-		bool		operator ! ()	const		{ return not Empty(); }
-
 		operator	ArrayRef<const T> () const	{ return ArrayRef<const T>( _memory, _count ); }
 
 		bool		Empty ()		const		{ return _count == 0; }
@@ -131,11 +129,11 @@ namespace GXTypes
 		bool			IsBegin (const_iterator iter) const;
 		bool			IsEnd (const_iterator iter) const;
 
-		iterator		Begin ()					{ return ptr(); }
-		const_iterator	Begin () const				{ return ptr(); }
+		iterator		Begin ()					{ return RawPtr(); }
+		const_iterator	Begin () const				{ return RawPtr(); }
 
-		iterator		End ()						{ return ptr() + _count; }
-		const_iterator	End () const				{ return ptr() + _count; }
+		iterator		End ()						{ return RawPtr() + _count; }
+		const_iterator	End () const				{ return RawPtr() + _count; }
 
 		iterator		GetIter (usize i);
 		const_iterator	GetIter (usize i) const;

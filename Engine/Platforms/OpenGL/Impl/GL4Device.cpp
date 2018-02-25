@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
 
-#if defined( GRAPHICS_API_OPENGL )
+#ifdef GRAPHICS_API_OPENGL
 
 #include "Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4FlippedSystemFramebuffer.h"
@@ -26,7 +26,8 @@ namespace PlatformGL
 		_depthStencilPixelFormat( EPixelFormat::Unknown ),
 		_currentImageIndex( 0 ),	_swapchainLength( 1 ),
 		_numExtensions( 0 ),		_initialized( false ),
-		_frameStarted( false ),		_vulkanCompatibility( true )
+		_frameStarted( false ),		_vulkanCompatibility( true ),
+		_debugReportCounter( 0 )
 	{
 		SetDebugName( "GL4Device" );
 	}
@@ -39,6 +40,11 @@ namespace PlatformGL
 	GL4Device::~GL4Device ()
 	{
 		ASSERT( not _initialized );
+		
+		if ( _debugReportCounter > 0 )
+		{
+			WARNING( "There are a few warnings, check debug output!" );
+		}
 	}
 
 /*
@@ -115,7 +121,7 @@ namespace PlatformGL
 =================================================
 */
 	void GL4Device::_StaticDebugCallback (GLenum source, GLenum type, GLuint /*id*/, GLenum severity,
-										   GLsizei length, const GLchar* message, const void* /*userParam*/)
+										   GLsizei length, const GLchar* message, const void* userParam)
 	{
 		String	str;
 
@@ -135,7 +141,7 @@ namespace PlatformGL
 			case GL_DEBUG_SOURCE_API				: str << "OpenGL";			break;
 			case GL_DEBUG_SOURCE_WINDOW_SYSTEM		: str << "OS";				break;
 			case GL_DEBUG_SOURCE_SHADER_COMPILER	: str << "GL_Compiler";		break;
-			case GL_DEBUG_SOURCE_THIRD_PARTY		: str << "Thirf_Party";		break;
+			case GL_DEBUG_SOURCE_THIRD_PARTY		: str << "Third_Party";		break;
 			case GL_DEBUG_SOURCE_APPLICATION 		: str << "Application";		break;
 			case GL_DEBUG_SOURCE_OTHER 				: str << "Other";			break;
 			default									: str << "Unknown";			WARNING( "unknown source" );
@@ -163,6 +169,8 @@ namespace PlatformGL
 			str += message;
 
 		LOG( str.cstr(), ELog::Debug );
+
+		Cast< GL4Device const *>(userParam)->_debugReportCounter++;
 	}
 	
 /*

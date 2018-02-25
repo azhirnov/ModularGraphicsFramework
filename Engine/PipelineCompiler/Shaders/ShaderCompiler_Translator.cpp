@@ -648,7 +648,7 @@ namespace PipelineCompiler
 			if ( samp.isImage() )
 			{
 				result.type   = EShaderVariable::ToImage( samp_type, ConvertBasicType( samp.type, samp.vectorSize ) );
-				result.format = ConvertImageLayoutFormat( qual.layoutFormat );
+				//result.format = ConvertImageLayoutFormat( qual.layoutFormat );
 			}
 			else
 				RETURN_ERR( "unsupported sampler type!" );

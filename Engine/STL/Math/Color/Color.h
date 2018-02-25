@@ -339,7 +339,7 @@ namespace GXMath
 	template <typename T, usize I, ulong U>
 	CHECKRES inline Vec<T,I,U>  ColorUtils::Normalize (const Vec<T,I,U> &x)
 	{
-		typedef typename CompileTime::MainType< T, float >	main_t;
+		typedef typename CompileTime::GenType< T, float >	main_t;
 		
 		static const main_t		s_tAdd = main_t( CompileTime::IsInteger<T>() ? 0.5 : 0 );
 		const main_t			t_max  = x.Max();
@@ -499,7 +499,7 @@ namespace GXMath
 	template <typename B, typename T, usize I, ulong U>
 	CHECKRES inline Vec<B,I,U>  ColorUtils::Convert (const Vec<T,I,U> &x)
 	{
-		typedef typename CompileTime::MainType< B, T, float >		main_t;
+		typedef typename CompileTime::GenType< B, T, float >		main_t;
 
 		static const main_t		s_tK   = (main_t)Limits<B>::Max() / (main_t)Limits<T>::Max();
 		static const main_t		s_tAdd = main_t( CompileTime::IsInteger<B> ? 0.5 : 0 );
