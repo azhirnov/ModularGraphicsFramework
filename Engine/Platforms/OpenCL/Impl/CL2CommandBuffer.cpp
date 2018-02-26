@@ -40,7 +40,6 @@ namespace PlatformCL
 		using UsedResources_t		= Set< ModulePtr >;
 		using Command_t				= GpuMsg::SetCLCommandBufferQueue::Command;
 		using CommandArray_t		= Array< Command_t >;
-		//using CmdFunc_t				= void (*) (const Command_t &cmd);
 		using CmdDataTypes_t		= GpuMsg::SetCLCommandBufferQueue::Data_t::TypeList_t;
 
 		using ERecordingState		= GpuMsg::SetCommandBufferState::EState;
@@ -54,6 +53,9 @@ namespace PlatformCL
 
 	// variables
 	private:
+		ModulePtr					_tempBuffer;		// for UpdateBuffer command
+		ModulePtr					_pushConstBuffer;	// for PushConstant command
+
 		CommandBufferDescriptor		_descr;
 		CommandArray_t				_commands;
 		UsedResources_t				_resources;
@@ -98,6 +100,7 @@ namespace PlatformCL
 
 		bool _Initialize ();
 		void _ClearStates ();
+		bool _DestroyResources ();
 		
 		bool _CmdBindComputePipeline (const Command_t &cmd);
 		bool _CmdDispatch (const Command_t &cmd);
@@ -228,6 +231,8 @@ namespace PlatformCL
 
 		_resources.Clear();
 		_commands.Clear();
+		
+		_DestroyResources ();
 
 		return Module::_Delete_Impl( msg );
 	}
@@ -240,6 +245,34 @@ namespace PlatformCL
 	bool CL2CommandBuffer::_SetCLCommandBufferQueue (const Message< GpuMsg::SetCLCommandBufferQueue > &msg)
 	{
 		_commands = RVREF(msg->commands.Get());
+		
+		// TODO: optimize
+		if ( _tempBuffer )
+		{
+			_tempBuffer->Send< ModuleMsg::Delete >({});
+			_tempBuffer = null;
+		}
+
+		if ( not msg->bufferData.Empty() )
+		{
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
+								CLBufferModuleID,
+								GlobalSystems(),
+								CreateInfo::GpuBuffer{
+									BufferDescriptor{
+										msg->bufferData.Size(),
+										EBufferUsage::bits() | EBufferUsage::TransferSrc
+									},
+									null,
+									EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+									EMemoryAccess::bits() | EMemoryAccess::GpuRead | EMemoryAccess::CpuWrite
+								},
+								OUT _tempBuffer ) );
+
+			ModuleUtils::Initialize({ _tempBuffer });
+
+			CHECK_ERR( _tempBuffer->Send< GpuMsg::WriteToGpuMemory >({ msg->bufferData }) );
+		}
 		return true;
 	}
 
@@ -350,7 +383,7 @@ namespace PlatformCL
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyImage> :				_CmdCopyImage( data );					break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyBufferToImage> :		_CmdCopyBufferToImage( data );			break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyImageToBuffer> :		_CmdCopyImageToBuffer( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdUpdateBuffer> :				_CmdUpdateBuffer( data );				break;
+				case CmdDataTypes_t::IndexOf<GpuMsg::CLCmdUpdateBuffer> :			_CmdUpdateBuffer( data );				break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdFillBuffer> :				_CmdFillBuffer( data );					break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdClearColorImage> :			_CmdClearColorImage( data );			break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPipelineBarrier> :			_CmdPipelineBarrier( data );			break;
@@ -439,6 +472,21 @@ namespace PlatformCL
 		_kernelId			= null;
 		_kernelLocalSize	= usize3();
 		_resourceTable		= null;
+	}
+	
+/*
+=================================================
+	_DestroyResources
+=================================================
+*/
+	bool CL2CommandBuffer::_DestroyResources ()
+	{
+		if ( _tempBuffer )
+		{
+			_tempBuffer->Send< ModuleMsg::Delete >({});
+			_tempBuffer = null;
+		}
+		return true;
 	}
 
 /*
@@ -733,9 +781,28 @@ namespace PlatformCL
 */
 	bool CL2CommandBuffer::_CmdUpdateBuffer (const Command_t &cmd)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdUpdateBuffer >();
+		const auto&	data = cmd.data.Get< GpuMsg::CLCmdUpdateBuffer >();
+		
+		Message< GpuMsg::GetCLBufferID >		req_dst_id;
+		Message< GpuMsg::GetCLBufferID >		req_src_id;
+		Message< GpuMsg::GetBufferDescriptor >	req_descr;
+		
+		data.dstBuffer->Send( req_dst_id );
+		data.dstBuffer->Send( req_descr );
+		_tempBuffer->Send( req_src_id );
+		
+		CHECK_ERR( data.dstOffset < req_descr->result->size );
+		CHECK_ERR( data.size + data.dstOffset <= req_descr->result->size );
 
-		TODO( "" );
+		CL_CHECK( clEnqueueCopyBuffer(
+					GetCommandQueue(),
+					*req_src_id->result,
+					*req_dst_id->result,
+					(size_t) data.srcOffset,
+					(size_t) data.dstOffset,
+					(size_t) data.size,
+					0, null,
+					null ) );
 		return true;
 	}
 	
@@ -747,8 +814,26 @@ namespace PlatformCL
 	bool CL2CommandBuffer::_CmdFillBuffer (const Command_t &cmd)
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdFillBuffer >();
+
+		Message< GpuMsg::GetCLBufferID >		req_id;
+		Message< GpuMsg::GetBufferDescriptor >	req_descr;
+
+		data.dstBuffer->Send( req_id );
+		data.dstBuffer->Send( req_descr );
 		
-		TODO( "" );
+		CHECK_ERR( data.dstOffset < req_descr->result->size );
+		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
+		
+		CL_CHECK( clEnqueueFillBuffer(
+					GetCommandQueue(),
+					*req_id->result,
+					&data.pattern,
+					sizeof(data.pattern),
+					size_t(data.dstOffset),
+					size_t(data.size),
+					0, null,
+					null ) );
+
 		return true;
 	}
 	

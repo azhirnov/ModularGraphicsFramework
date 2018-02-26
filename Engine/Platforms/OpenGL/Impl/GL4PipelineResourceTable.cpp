@@ -12,6 +12,8 @@ namespace Engine
 {
 namespace PlatformGL
 {
+	using namespace gl;
+
 
 	//
 	// OpenGL Pipeline Resource Table (uniforms)
@@ -39,26 +41,26 @@ namespace PlatformGL
 			EShader::bits	stageFlags;
 		};
 
-		struct TextureDescr : BaseDescr
+		struct TextureDescr final : BaseDescr
 		{
-			gl::GLenum		target		= 0;
-			gl::GLuint		texID		= 0;
-			gl::GLuint		sampID		= 0;
+			GLenum		target		= 0;
+			GLuint		texID		= 0;
+			GLuint		sampID		= 0;
 		};
 
-		struct ImageDescr : BaseDescr
+		struct ImageDescr final : BaseDescr
 		{
-			gl::GLuint		imgID		= 0;
-			uint			level		= 0;
-			uint			layer		= UMax;
-			gl::GLenum		access		= 0;
-			gl::GLenum		format		= 0;
+			GLuint		imgID		= 0;
+			uint		level		= 0;
+			uint		layer		= UMax;
+			GLenum		access		= 0;
+			GLenum		format		= 0;
 		};
 
-		struct BufferDescr : BaseDescr
+		struct BufferDescr final : BaseDescr
 		{
-			gl::GLenum		target		= 0;
-			gl::GLuint		bufferID	= 0;
+			GLenum		target		= 0;
+			GLuint		bufferID	= 0;
 		};
 
 		using ResourceDescr_t		= Union< TextureDescr, ImageDescr, BufferDescr >;
@@ -223,22 +225,18 @@ namespace PlatformGL
 
 		void operator () (const TextureDescr &tex) const
 		{
-			using namespace gl;
 			GL_CALL( glBindMultiTexture( tex.binding, tex.target, tex.texID ) );
 			GL_CALL( glBindSampler( tex.binding, tex.sampID ) );
 		}
 
 		void operator () (const ImageDescr &img) const
 		{
-			using namespace gl;
 			bool layered = (img.layer != UMax);
 			GL_CALL( glBindImageTexture( img.binding, img.imgID, img.level, layered, layered ? img.layer : 0, img.access, img.format ) );
 		}
 
 		void operator () (const BufferDescr &buf) const
 		{
-			using namespace gl;
-
 			if ( buf.bufferID != UMax ) {
 				GL_CALL( glBindBufferBase( buf.target, buf.binding, buf.bufferID ) );
 			} else {
@@ -391,9 +389,9 @@ namespace PlatformGL
 			self.SendTo( tex_mod, req_img_descr );
 			self.SendTo( samp_mod, req_sampler );
 
-			ImageDescriptor	const&	tex_descr = *req_img_descr->result;
-			CHECK( tex_descr.imageType == tex.textureType );
-			CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( tex_descr.format ) ) );
+			CHECK( req_img_descr->result->imageType == tex.textureType );
+			CHECK( req_img_descr->result->usage[ EImageUsage::Sampled ] );
+			CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( req_img_descr->result->format ) ) );
 
 			TextureDescr	descr;
 			descr.target		= GL4Enum( tex.textureType );
@@ -416,19 +414,24 @@ namespace PlatformGL
 			ModulePtr	img_mod;
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT img_mod ) );
 
-			Message< GpuMsg::GetGLImageID >		req_image;
-			self.SendTo( img_mod, req_image );	// TODO: check result
+			Message< GpuMsg::GetGLImageID >			req_image;
+			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
 
-			ImageDescr		descr;
+			self.SendTo( img_mod, req_image );	// TODO: check result
+			self.SendTo( img_mod, req_img_descr );
+
+			CHECK( req_img_descr->result->usage[ EImageUsage::Storage ] );
+
+			ImageDescr			descr;
 			descr.format		= GL4Enum( img.format );
 			descr.level			= 0;	// TODO
 			descr.layer			= UMax;
 			descr.imgID			= req_image->result.Get(0);
 			descr.binding		= img.binding;
 			descr.stageFlags	= img.stageFlags;
-			descr.access		= img.readAccess and img.writeAccess ? gl::GL_READ_WRITE :
-								  img.writeAccess ? gl::GL_WRITE_ONLY :
-								  gl::GL_READ_ONLY;
+			descr.access		= img.readAccess and img.writeAccess ? GL_READ_WRITE :
+								  img.writeAccess ? GL_WRITE_ONLY :
+								  GL_READ_ONLY;
 
 			resources.PushBack(ResourceDescr_t( descr ));
 			return true;
@@ -451,11 +454,12 @@ namespace PlatformGL
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			CHECK( req_descr->result.Get().size == BytesUL(buf.size) );
+			CHECK( req_descr->result->size == BytesUL(buf.size) );
+			CHECK( req_descr->result->usage[ EBufferUsage::Uniform ] );
 			
 			BufferDescr		descr;
 			descr.bufferID		= req_buffer->result.Get(0);
-			descr.target		= gl::GL_UNIFORM_BUFFER;
+			descr.target		= GL_UNIFORM_BUFFER;
 			descr.binding		= buf.binding;
 			descr.stageFlags	= buf.stageFlags;
 
@@ -480,15 +484,14 @@ namespace PlatformGL
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			BufferDescriptor const&	buf_descr = *req_descr->result;
-
-			CHECK( (buf_descr.size >= buf.staticSize) and
+			CHECK( (req_descr->result->size >= buf.staticSize) and
 					(buf.arrayStride == 0 or
-					(buf_descr.size - buf.staticSize) % buf.arrayStride == 0) );
+					(req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
+			CHECK( req_descr->result->usage[ EBufferUsage::Storage ] );
 
 			BufferDescr		descr;
 			descr.bufferID		= req_buffer->result.Get(0);
-			descr.target		= gl::GL_SHADER_STORAGE_BUFFER;
+			descr.target		= GL_SHADER_STORAGE_BUFFER;
 			descr.binding		= buf.binding;
 			descr.stageFlags	= buf.stageFlags;
 
@@ -509,7 +512,7 @@ namespace PlatformGL
 		{
 			BufferDescr		descr;
 			descr.bufferID		= UMax;		// special flag to indicate push constants buffer
-			descr.target		= gl::GL_UNIFORM_BUFFER;
+			descr.target		= GL_UNIFORM_BUFFER;
 			descr.binding		= pcb.binding;
 			descr.stageFlags	= pcb.stageFlags;
 

@@ -5,8 +5,8 @@
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/Impl/SWShader.h"
 #include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
-#include "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -43,9 +43,6 @@ namespace PlatformSW
 
 		using ERecordingState		= GpuMsg::SetCommandBufferState::EState;
 
-		using Helper_t				= SWShaderLang::Impl::SWShaderHelper;
-		using ShaderFunc_t			= PipelineTemplateDescriptor::ShaderSource::SWInvoke;
-
 
 	// constants
 	private:
@@ -62,7 +59,7 @@ namespace PlatformSW
 		BinaryArray					_pushConstData;
 		ERecordingState				_recordingState;
 
-		Helper_t					_helper;
+		SWShader					_helper;
 
 		// states
 		ModulePtr					_computeShader;
@@ -219,8 +216,6 @@ namespace PlatformSW
 		_commands.Clear();
 		_bufferData.Clear();
 		_pushConstData.Clear();
-
-		_helper.Reset();
 
 		return Module::_Delete_Impl( msg );
 	}
@@ -481,6 +476,8 @@ namespace PlatformSW
 		const auto&	data = cmd.data.Get< GpuMsg::CmdDispatch >();
 		
 		_PrepareForCompute();
+
+		CHECK_ERR( _helper.DispatchCompute( data.groupCount, _computeShader, _computeResTable ) );
 		return true;
 	}
 	
@@ -609,8 +606,19 @@ namespace PlatformSW
 	bool SWCommandBuffer::_CmdUpdateBuffer (const Command_t &cmd)
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdUpdateBuffer >();
+		
+		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem;
+		Message< GpuMsg::GetBufferDescriptor >		req_descr;
+		
+		data.dstBuffer->Send( req_mem );
+		data.dstBuffer->Send( req_descr );
+		
+		CHECK_ERR( data.dstOffset < req_descr->result->size );
+		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
+		CHECK_ERR( req_mem->result->access[ EMemoryAccess::GpuWrite ] );
+		CHECK_ERR( (BytesU(data.dstOffset) % req_mem->result->align) == 0 );
 
-		TODO( "" );
+		MemCopy( OUT req_mem->result->memory.SubArray( usize(data.dstOffset), data.data.Count() ), BinArrayCRef(data.data) );
 		return true;
 	}
 	
@@ -623,7 +631,26 @@ namespace PlatformSW
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdFillBuffer >();
 		
-		TODO( "" );
+		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem;
+		Message< GpuMsg::GetBufferDescriptor >		req_descr;
+
+		data.dstBuffer->Send( req_mem );
+		data.dstBuffer->Send( req_descr );
+		
+		CHECK_ERR( data.dstOffset < req_descr->result->size );
+		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
+		CHECK_ERR( req_mem->result->access[ EMemoryAccess::GpuWrite ] );
+		CHECK_ERR( (BytesU(data.dstOffset) % req_mem->result->align) == 0 );
+		
+		const ubyte	pattern[4]	= { data.pattern & 0xFF,
+									(data.pattern >> 8) & 0xFF,
+									(data.pattern >> 16) & 0xFF,
+									(data.pattern >> 24) & 0xFF };
+
+		for (usize i = 0; i < usize(data.size); ++i)
+		{
+			req_mem->result->memory[i + usize(data.dstOffset)] = pattern[i&3];
+		}
 		return true;
 	}
 	

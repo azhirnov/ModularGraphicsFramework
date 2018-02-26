@@ -108,14 +108,14 @@ namespace PipelineCompiler
 		Array<StringCRef>	tokens_right;
 
 		// compare struct info
-		CHECK_ERR(	iter->second.precision		== structType.precision		and
-					iter->second.qualifier		== structType.qualifier		and
-					iter->second.memoryModel	== structType.memoryModel );
+		CHECK_ERR(	iter->second.precision	== structType.precision	and
+					iter->second.qualifier	== structType.qualifier );
 
 		iter->second.stride		= Max( structType.stride, iter->second.stride );
 		iter->second.align		= Max( structType.align, iter->second.align );
 		iter->second.packing	|= structType.packing;
 		iter->second.arraySize	= 1;
+		iter->second.memoryModel = EGpuMemoryModel::Default;
 
 		// compare fields
 		if ( structType.fields.Count() == iter->second.fields.Count() )
@@ -143,7 +143,6 @@ namespace PipelineCompiler
 					right.offset		= Max( left.offset, right.offset );
 					right.align			= Max( left.align,  right.align  );
 					right.stride		= Max( left.stride, right.stride );
-					right.memoryModel	= EGpuMemoryModel::None;
 				}
 			}
 			return true;
@@ -569,7 +568,7 @@ namespace PipelineCompiler
 		String	str;
 		str << location.BindingToStringGLSL( shaderApi ) << "layout(" << PipelineCompiler::ToStringGLSL( packing ) << ") ";
 
-		if ( memoryModel != EGpuMemoryModel::None )
+		if ( memoryModel != EGpuMemoryModel::Default )
 			str << PipelineCompiler::ToStringGLSL( memoryModel );
 
 		str << " buffer " << typeName << " {\n" << fields << "\n} " << name << ";\n";

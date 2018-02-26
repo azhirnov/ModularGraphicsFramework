@@ -431,18 +431,38 @@ namespace GpuMsg
 
 	struct CmdDrawIndirect
 	{
+	// variables
 		ModulePtr	indirectBuffer;
 		BytesU		offset;
 		uint		drawCount;
 		BytesU		stride;
+
+	// methods
+		CmdDrawIndirect (const ModulePtr &indirectBuffer,
+						 BytesU			 offset,
+						 uint			 drawCount,
+						 BytesU			 stride) :
+			indirectBuffer{indirectBuffer},		offset{offset},
+			drawCount{drawCount},				stride{stride}
+		{}
 	};
 
 	struct CmdDrawIndexedIndirect
 	{
+	// variables
 		ModulePtr	indirectBuffer;
 		BytesU		offset;
 		uint		drawCount;
 		BytesU		stride;
+		
+	// methods
+		CmdDrawIndexedIndirect (const ModulePtr &indirectBuffer,
+								BytesU			 offset,
+								uint			 drawCount,
+								BytesU			 stride) :
+			indirectBuffer{indirectBuffer},		offset{offset},
+			drawCount{drawCount},				stride{stride}
+		{}
 	};
 
 
@@ -451,13 +471,22 @@ namespace GpuMsg
 	//
 	struct CmdDispatch
 	{
+	// variables
 		uint3			groupCount;
+		
+	// methods
+		explicit CmdDispatch (const uint3 &groupCount) : groupCount{groupCount} {}
 	};
 
 	struct CmdDispatchIndirect
 	{
+	// variables
 		ModulePtr		indirectBuffer;
-		BytesU			offset;
+		BytesUL			offset;
+
+	// methods
+		explicit CmdDispatchIndirect (const ModulePtr &indirectBuffer, Bytes<uint> offset = Uninitialized) : indirectBuffer{indirectBuffer}, offset{BytesUL(offset)} {}
+		explicit CmdDispatchIndirect (const ModulePtr &indirectBuffer, Bytes<ulong> offset) : indirectBuffer{indirectBuffer}, offset{offset} {}
 	};
 
 
@@ -479,14 +508,22 @@ namespace GpuMsg
 	//
 	struct CmdBindGraphicsResourceTable
 	{
+	// variables
 		ModulePtr		resourceTable;
 		uint			index		= 0;	// descriptor set index
+
+	// methods
+		explicit CmdBindGraphicsResourceTable (const ModulePtr &resourceTable, uint index = 0) : resourceTable{resourceTable}, index{index} {}
 	};
 
 	struct CmdBindComputeResourceTable
 	{
+	// variables
 		ModulePtr		resourceTable;
 		uint			index		= 0;	// descriptor set index
+		
+	// methods
+		explicit CmdBindComputeResourceTable (const ModulePtr &resourceTable, uint index = 0) : resourceTable{resourceTable}, index{index} {}
 	};
 
 
@@ -762,7 +799,7 @@ namespace GpuMsg
 	{
 	// types
 		template <typename T>
-		using NonArray_t = CompileTime::EnableIf< CompileTime::IsMemCopyAvailable<T> and not CompileTime::IsSameTypes< T, BinArrayCRef > >;
+		using IsPOD_t = CompileTime::EnableIf< not CompileTime::IsCtorAvailable<T>, int >;
 
 	// variables
 		ModulePtr		dstBuffer;
@@ -770,14 +807,19 @@ namespace GpuMsg
 		BinaryArray		data;
 
 	// methods
-		CmdUpdateBuffer (const ModulePtr &buf, BinArrayCRef data, Bytes<uint> offset = Uninitialized) : dstBuffer{buf}, dstOffset{BytesUL(offset)}, data{data} {}
-		CmdUpdateBuffer (const ModulePtr &buf, BinArrayCRef data, Bytes<ulong> offset) : dstBuffer{buf}, dstOffset{offset}, data{data} {}
+		CmdUpdateBuffer (const ModulePtr &buf, BinArrayCRef data, Bytes<uint> offset = Uninitialized) :
+			dstBuffer{buf}, dstOffset{BytesUL(offset)}, data{data} {}
 
-		template <typename T, typename = NonArray_t<T>>
-		CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<uint> offset = Uninitialized) : CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
+		CmdUpdateBuffer (const ModulePtr &buf, BinArrayCRef data, Bytes<ulong> offset) :
+			dstBuffer{buf}, dstOffset{offset}, data{data} {}
+
+		template <typename T>
+		CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<uint> offset = Uninitialized, IsPOD_t<T> = 0) :
+			CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
 		
-		template <typename T, typename = NonArray_t<T>>
-		CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<ulong> offset) : CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
+		template <typename T>
+		CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<ulong> offset, IsPOD_t<T> = 0) :
+			CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
 	};
 
 
@@ -786,10 +828,20 @@ namespace GpuMsg
 	//
 	struct CmdFillBuffer
 	{
+	// variables
 		ModulePtr		dstBuffer;
 		BytesUL			dstOffset;
 		BytesUL			size;
 		uint			pattern;
+
+	// methods
+		CmdFillBuffer () {}
+
+		CmdFillBuffer (const ModulePtr &buffer, uint pattern, Bytes<uint> size, Bytes<uint> off = Uninitialized) :
+			dstBuffer{buffer}, dstOffset{BytesUL(off)}, size{BytesUL(size)}, pattern{pattern} {}
+
+		CmdFillBuffer (const ModulePtr &buffer, uint pattern, Bytes<ulong> size, Bytes<ulong> off = Uninitialized) :
+			dstBuffer{buffer}, dstOffset{off}, size{size}, pattern{pattern} {}
 	};
 
 

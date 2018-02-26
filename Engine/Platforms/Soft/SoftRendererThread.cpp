@@ -3,6 +3,7 @@
 #include "Engine/Platforms/Shared/Tools/WindowHelper.h"
 #include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
 #include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/Impl/SWDeviceLimits.h"
 #include "Engine/Platforms/Soft/Windows/SwWinSurface.h"
 
 #ifdef GRAPHICS_API_SOFT
@@ -60,6 +61,10 @@ namespace Platforms
 		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
+		static const uint			_ver_major		= 0;
+		static const uint			_ver_minor		= 1;
+		static const char			_renderer_name[];
+
 		
 	// variables
 	private:
@@ -111,6 +116,8 @@ namespace Platforms
 	private:
 		bool _CreateDevice ();
 		void _DestroyDevice ();
+		void _WriteDeviceInfo ();
+
 		void _DetachWindow ();
 	};
 //-----------------------------------------------------------------------------
@@ -119,6 +126,8 @@ namespace Platforms
 	
 	const TypeIdList	SoftRendererThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SoftRendererThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
+	
+	const char			SoftRendererThread::_renderer_name[]	= "gx-soft";
 
 /*
 =================================================
@@ -378,9 +387,28 @@ namespace Platforms
 							}) );
 		}
 
+		_WriteDeviceInfo();
+
 		_isCreated = true;
 		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
 		return true;
+	}
+	
+/*
+=================================================
+	_WriteDeviceInfo
+=================================================
+*/
+	void SoftRendererThread::_WriteDeviceInfo ()
+	{
+		String	log;
+
+		log << "Software renderer info\n---------------"
+			<< "\nRenderer:     " << _renderer_name
+			<< "\nVersion:      " << _ver_major << '.' << _ver_minor
+			<< "\n---------------";
+
+		LOG( log.cstr(), ELog::Debug | ELog::SpoilerFlag );
 	}
 
 /*

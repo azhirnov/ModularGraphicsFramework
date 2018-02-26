@@ -14,22 +14,22 @@ namespace Impl
 	constructor
 =================================================
 */
-	SWShaderHelper::SWShaderHelper ()
+	SWShaderHelper::SWShaderHelper () :
+		_stage{ EShader::Unknown }
 	{}
 
 /*
 =================================================
-	Reset
+	_Reset
 =================================================
 */
-	void SWShaderHelper::Reset ()
+	void SWShaderHelper::_Reset ()
 	{
-		_resourceTable			= null;
-
 		_vertexShaderState		= VertexShader();
 		_geometryShaderState	= GeometryShader();
 		_fragmentShaderState	= FragmentShader();
 		_computeShaderState		= ComputeShader();
+		_stage					= EShader::Unknown;
 	}
 
 

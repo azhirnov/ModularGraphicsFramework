@@ -20,7 +20,7 @@
 //#define GRAPHICS_API_DIRECTX		110		// 11.x		// not supported
 #define COMPUTE_API_OPENCL			120		// 1.x or 2.x
 //#define COMPUTE_API_CUDA			7000	// --		// not supported
-//#define GRAPHICS_API_SOFT			100
+#define GRAPHICS_API_SOFT			100
 
 
 // VR

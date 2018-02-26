@@ -450,7 +450,8 @@ namespace PlatformVK
 											GpuMsg::GetVkComputePipelineID,
 											GpuMsg::GetPipelineLayoutDescriptor,
 											GpuMsg::GetVkDescriptorLayouts,
-											GpuMsg::GetVkPipelineLayoutID
+											GpuMsg::GetVkPipelineLayoutID,
+											GpuMsg::GetVkPipelineLayoutPushConstants
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
@@ -492,6 +493,7 @@ namespace PlatformVK
 		bool _GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &);
 		bool _GetVkDescriptorLayouts (const Message< GpuMsg::GetVkDescriptorLayouts > &);
 		bool _GetVkPipelineLayoutID (const Message< GpuMsg::GetVkPipelineLayoutID > &);
+		bool _GetVkPipelineLayoutPushConstants (const Message< GpuMsg::GetVkPipelineLayoutPushConstants > &);
 
 	private:
 		bool _IsCreated () const;
@@ -535,6 +537,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetPipelineLayoutDescriptor );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkDescriptorLayouts );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkPipelineLayoutID );
+		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkPipelineLayoutPushConstants );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -697,6 +700,18 @@ namespace PlatformVK
 	{
 		if ( _layout )
 			msg->result.Set( _layout->GetLayoutID() );
+		return true;
+	}
+	
+/*
+=================================================
+	_GetVkPipelineLayoutPushConstants
+=================================================
+*/
+	bool Vk1ComputePipeline::_GetVkPipelineLayoutPushConstants (const Message< GpuMsg::GetVkPipelineLayoutPushConstants > &msg)
+	{
+		if ( _layout )
+			msg->result.Set( _layout->GetPushConstants() );
 		return true;
 	}
 

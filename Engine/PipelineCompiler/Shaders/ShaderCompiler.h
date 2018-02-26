@@ -56,7 +56,7 @@ namespace PipelineCompiler
 			uint						loopUnrollThreshold	= 350;
 			bool						obfuscate			= false;
 			bool						filterInactive		= false;
-			bool						skipExternals		= false;		// GLSL source only		// uniforms, buffers, in/out
+			bool						skipExternals		= false;		// uniforms, buffers, in/out
 			bool						optimize			= false;
 		};
 

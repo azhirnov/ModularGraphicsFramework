@@ -31,7 +31,7 @@ namespace Impl
 
 	// methods
 	private:
-		explicit UniformBuffer (const BufferData_t &data) : _data(data) {}
+		explicit UniformBuffer (const BufferData_t &data);
 		
 		UniformBuffer& operator = (const UniformBuffer &) = default;
 		UniformBuffer& operator = (UniformBuffer &&) = default;
@@ -44,6 +44,12 @@ namespace Impl
 		T const* operator -> () const;
 	};
 
+	
+	template <typename T>
+	UniformBuffer<T>::UniformBuffer (const BufferData_t &data) : _data(data)
+	{
+		ASSERT( _data.memory.Size() == SizeOf<T>() );
+	}
 
 	template <typename T>
 	inline T const*  UniformBuffer<T>::operator -> () const
@@ -77,7 +83,7 @@ namespace Impl
 
 	// methods
 	private:
-		explicit StorageBuffer (const BufferData_t &data) : _data(data) {}
+		explicit StorageBuffer (const BufferData_t &data);
 
 		StorageBuffer& operator = (const StorageBuffer &) = default;
 		StorageBuffer& operator = (StorageBuffer &&) = default;
@@ -95,6 +101,12 @@ namespace Impl
 
 	
 	
+	template <typename T, EStorageAccess::type A>
+	StorageBuffer<T,A>::StorageBuffer (const BufferData_t &data) : _data(data)
+	{
+		ASSERT( _data.memory.Size() == SizeOf<T>() );
+	}
+
 	template <typename T, EStorageAccess::type A>
 	inline decltype(auto)  StorageBuffer<T,A>::operator -> ()
 	{

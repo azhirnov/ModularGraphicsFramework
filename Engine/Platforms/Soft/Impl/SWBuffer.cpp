@@ -52,6 +52,8 @@ namespace PlatformSW
 		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
+		static constexpr BytesU		_align	= 4_b;
+
 
 	// variables
 	private:
@@ -403,7 +405,7 @@ namespace PlatformSW
 	{
 		CHECK_ERR( _isBindedToMemory );
 
-		msg->result.Set({ _memory, _memAccess });
+		msg->result.Set({ _memory, _memAccess, _align });
 		return true;
 	}
 
@@ -414,7 +416,7 @@ namespace PlatformSW
 */
 	bool SWBuffer::_GetSWBufferMemoryRequirements (const Message< GpuMsg::GetSWBufferMemoryRequirements > &msg)
 	{
-		msg->result.Set({ BytesU(_descr.size), 16_b });
+		msg->result.Set({ BytesU(_descr.size), _align });
 		return true;
 	}
 

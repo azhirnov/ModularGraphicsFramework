@@ -14,7 +14,7 @@ namespace PipelineCompiler
 
 		enum type : uint
 		{
-			None		= 0,
+			Default		= 0,
 
 			Coherent	= 1 << 0,
 			Volatile	= 1 << 1,
@@ -499,6 +499,7 @@ namespace PipelineCompiler
 		static EFragOutput::type		ToFragOutput (type value);
 
 		static bool		IsStruct (type value);
+		static bool		IsBuffer (type value);
 		static bool		IsTexture (type value);
 		static bool		IsImage (type value);
 
@@ -1010,6 +1011,17 @@ namespace PipelineCompiler
 		return false;
 	}
 	
+
+	inline bool  EShaderVariable::IsBuffer (type value)
+	{
+		switch ( value )
+		{
+			case UniformBlock :
+			case StorageBlock :		return true;
+		}
+		return false;
+	}
+
 
 	inline bool  EShaderVariable::IsTexture (type value)
 	{

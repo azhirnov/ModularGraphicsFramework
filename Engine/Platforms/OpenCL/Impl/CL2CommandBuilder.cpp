@@ -64,6 +64,8 @@ namespace PlatformCL
 	private:
 		UsedResources_t			_resources;
 		CommandArray_t			_commands;
+		BinaryArray				_bufferData;	// used to store data for UpdateBuffer command
+		BinaryArray				_pushConstData;	// used to store data for PushConstants command
 		ModulePtr				_cmdBuffer;		// current command buffer
 
 
@@ -276,7 +278,7 @@ namespace PlatformCL
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCLCommandBufferQueue >{ RVREF(_commands) } );
+		SendTo( _cmdBuffer, Message< GpuMsg::SetCLCommandBufferQueue >{ RVREF(_commands), RVREF(_bufferData), RVREF(_pushConstData) } );
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferDependency >{ RVREF(_resources) } );
 		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Executable } );
 
@@ -407,8 +409,10 @@ namespace PlatformCL
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < 65536_b );
+
+		_commands.PushBack({ GpuMsg::CLCmdUpdateBuffer{ msg.Data(), _bufferData.Size() }, __FILE__, __LINE__ });
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_bufferData.Append( msg->data );
 		return true;
 	}
 	

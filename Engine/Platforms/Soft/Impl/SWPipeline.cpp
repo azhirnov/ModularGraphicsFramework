@@ -22,7 +22,8 @@ namespace PlatformSW
 	private:
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetGraphicsPipelineDescriptor,
-											GpuMsg::GetPipelineLayoutDescriptor
+											GpuMsg::GetPipelineLayoutDescriptor,
+											GpuMsg::GetSWPipelineStage
 										> >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;

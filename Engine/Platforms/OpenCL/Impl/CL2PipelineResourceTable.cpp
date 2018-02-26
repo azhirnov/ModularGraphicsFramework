@@ -12,6 +12,8 @@ namespace Engine
 {
 namespace PlatformCL
 {
+	using namespace cl;
+
 
 	//
 	// OpenCL Pipeline Resource Table (program kernel arguments)
@@ -35,11 +37,11 @@ namespace PlatformCL
 			ModulePtr	module;
 		};
 
-		struct MemObjectArg : BaseArg {
-			cl::cl_mem	id		= null;
+		struct MemObjectArg final : BaseArg {
+			cl_mem		id		= null;
 		};
 
-		struct PushConstantArg : BaseArg {
+		struct PushConstantArg final : BaseArg {
 			// TODO
 		};
 
@@ -311,14 +313,18 @@ namespace PlatformCL
 			ModulePtr	img_mod;
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT img_mod ) );
 
-			Message< GpuMsg::GetCLImageID >	req_image;
+			Message< GpuMsg::GetCLImageID >			req_image;
+			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
+
 			self.SendTo( img_mod, req_image );	// TODO: check result
+			self.SendTo( img_mod, req_img_descr );
 
 			// TODO: check format
+			CHECK( req_img_descr->result->usage[ EImageUsage::Storage ] );
 
 			MemObjectArg	descr;
 			descr.index		= img.binding;
-			descr.id		= *req_image->result;
+			descr.id		= req_image->result.Get( null );
 			descr.module	= img_mod;
 
 			resources.PushBack(ResourceDescr_t( descr ));
@@ -343,10 +349,11 @@ namespace PlatformCL
 			self.SendTo( buf_mod, req_descr );
 
 			CHECK( req_descr->result.Get().size == BytesUL(buf.size) );
+			CHECK( req_descr->result->usage[ EBufferUsage::Uniform ] );
 			
 			MemObjectArg	descr;
 			descr.index		= buf.binding;
-			descr.id		= *req_buffer->result;
+			descr.id		= req_buffer->result.Get( null );
 			descr.module	= buf_mod;
 			
 			resources.PushBack(ResourceDescr_t( descr ));
@@ -369,16 +376,15 @@ namespace PlatformCL
 			// TODO: check result
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
-
-			BufferDescriptor const&	buf_descr = *req_descr->result;
-
-			CHECK( (buf_descr.size >= buf.staticSize) and
+			
+			CHECK( (req_descr->result->size >= buf.staticSize) and
 					(buf.arrayStride == 0 or
-					(buf_descr.size - buf.staticSize) % buf.arrayStride == 0) );
+					(req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
+			CHECK( req_descr->result->usage[ EBufferUsage::Storage ] );
 			
 			MemObjectArg	descr;
 			descr.index		= buf.binding;
-			descr.id		= *req_buffer->result;
+			descr.id		= req_buffer->result.Get( null );
 			descr.module	= buf_mod;
 
 			resources.PushBack(ResourceDescr_t( descr ));
@@ -424,21 +430,19 @@ namespace PlatformCL
 	struct CL2PipelineResourceTable::_WriteDescriptor_Func
 	{
 	// variables
-		const cl::cl_kernel		_kernel;
+		const cl_kernel		_kernel;
 
 	// methods
-		explicit _WriteDescriptor_Func (cl::cl_kernel id) : _kernel(id)
+		explicit _WriteDescriptor_Func (cl_kernel id) : _kernel(id)
 		{}
 
 		void operator () (const MemObjectArg &arg) const
 		{
-			using namespace cl;
 			CL_CALL( clSetKernelArg( _kernel, arg.index, sizeof(arg.id), &arg.id ) );
 		}
 
 		void operator () (const PushConstantArg &arg) const
 		{
-			using namespace cl;
 			TODO("");
 			//CL_CALL( clSetKernelArg( _kernel, arg.index, (size_t) arg.sizeOf, arg.value.GetData().ptr() ) );
 		}

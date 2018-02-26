@@ -59,7 +59,7 @@ namespace PipelineCompiler
 			// continue deserializing
 			case glslang::TOperator::EOpSequence :
 			{
-				for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+				FOR( i, aggr->getSequence() )
 				{
 					CHECK_ERR( _RecursiveProcessNode( aggr, aggr->getSequence()[i], INOUT ++uid, INOUT result ) );
 				}
@@ -76,7 +76,7 @@ namespace PipelineCompiler
 			// uniforms, buffers, ...
 			case glslang::TOperator::EOpLinkerObjects :
 			{
-				for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+				FOR( i, aggr->getSequence() )
 				{
 					CHECK_ERR( _DeserializeExternalObjects( aggr->getSequence()[i], INOUT ++uid, INOUT result ) );
 				}
@@ -134,7 +134,7 @@ namespace PipelineCompiler
 		}
 
 		// find arguments
-		for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+		FOR( i, aggr->getSequence() )
 		{
 			TIntermNode* n = aggr->getSequence()[i];
 
@@ -146,7 +146,7 @@ namespace PipelineCompiler
 				
 				func.args.Reserve( func.args.Count() + args_node->getSequence().size() );
 
-				for (size_t j = 0; j < args_node->getSequence().size(); ++j)
+				FOR( j, args_node->getSequence() )
 				{
 					DeserializedShader::FunctionArgument	arg;
 					glslang::TIntermTyped *					nn = args_node->getSequence()[j]->getAsTyped();
@@ -391,8 +391,8 @@ namespace PipelineCompiler
 			arg.qualifier.Or( EVariableQualifier::BuiltIn, parent->qualifier[EVariableQualifier::BuiltIn] );
 			arg.qualifier.Or( EVariableQualifier::Specialization, parent->qualifier[EVariableQualifier::Specialization] );
 
-			if ( arg.memoryModel == EGpuMemoryModel::None )
-				arg.memoryModel = parent->memoryModel;
+			//if ( arg.memoryModel == EGpuMemoryModel::Default )
+			//	arg.memoryModel = parent->memoryModel;
 
 			if ( arg.precision == EPrecision::Default )
 				arg.precision = parent->precision;
@@ -429,7 +429,7 @@ namespace PipelineCompiler
 					result.typeName = type.getTypeName().c_str();
 					result.fields.Reserve( result.fields.Count() + type_list.size() );
 
-					for (size_t i = 0; i < type_list.size(); ++i)
+					FOR( i, type_list )
 					{
 						DeserializedShader::FunctionArgument	arg;
 						CHECK_ERR( _DeserializeFunctionArg( null, *type_list[i].type, type_list[i].loc, &result, OUT arg ) );
@@ -466,7 +466,7 @@ namespace PipelineCompiler
 			var.typeName	= type.getTypeName().c_str();
 			var.fields.Reserve( var.fields.Count() + type_list.size() );
 
-			for (size_t i = 0; i < type_list.size(); ++i)
+			FOR( i, type_list )
 			{
 				DeserializedShader::BufferVariable	bufvar;
 				CHECK_ERR( _DeserializeBufferVariable( null, *type_list[i].type, type_list[i].loc, &var, OUT bufvar ) );
@@ -498,7 +498,7 @@ namespace PipelineCompiler
 			var.typeName	= type.getTypeName().c_str();
 			var.fields.Reserve( var.fields.Count() + type_list.size() );
 
-			for (size_t i = 0; i < type_list.size(); ++i)
+			FOR( i, type_list )
 			{
 				DeserializedShader::IOVariable	iovar;
 				CHECK_ERR( _DeserializeIOVariable( null, *type_list[i].type, type_list[i].loc, &var, OUT iovar ) );
@@ -624,7 +624,7 @@ namespace PipelineCompiler
 			Array<DeserializedShader::BufferVariable>	struct_values;
 			struct_values.Reserve( type_list.size() );
 
-			for (size_t i = 0; i < type_list.size(); ++i)
+			FOR( i, type_list )
 			{
 				DeserializedShader::BufferVariable	bufvar;
 				CHECK_ERR( _DeserializeBufferVariable( tnode, *type_list[i].type, type_list[i].loc, null, OUT bufvar ) );

@@ -240,6 +240,16 @@ namespace gl
 
 		GL_CALL( glGetFloatv( GL_POINT_SIZE_GRANULARITY, fdata ) );
 		log << "\nPoint size granularity:  " << fdata[0];
+		
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &idata[0] ) );
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &idata[1] ) );
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &idata[2] ) );
+		log << "\nMax compute groups:      " << idata[0] << ", " << idata[1] << ", " << idata[2];
+
+		//GL_CALL( glGetIntegerv( GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB, &idata[0] ) );
+		//log << "\nMax compute invocations: " << idata[0];
+
+		log << "\n---------------";
 
 		// TODO: GL_MAX_FRAMEBUFFER_WIDTH, GL_MAX_FRAMEBUFFER_HEIGHT,
 		//		GL_MAX_FRAMEBUFFER_LAYERS, GL_MAX_FRAMEBUFFER_SAMPLES,
@@ -263,6 +273,8 @@ namespace gl
 
 				log << (i == 0 ? "" : ((i & 3) == 0 ? ",\n" : ", ")) << ext_str;
 			}
+			
+			log << "\n---------------";
 
 			LOG( log.cstr(), ELog::Debug | ELog::SpoilerFlag );
 		#endif

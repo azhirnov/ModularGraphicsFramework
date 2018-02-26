@@ -5,6 +5,7 @@
 #include "Engine/Platforms/Shared/GPU/Buffer.h"
 #include "Engine/Platforms/Shared/GPU/Pipeline.h"
 #include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/Impl/SWDeviceLimits.h"
 #include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
 
 #ifdef GRAPHICS_API_SOFT
@@ -408,7 +409,7 @@ namespace PlatformSW
 	bool SWCommandBuilder::_CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < 65536_b );
+		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < BytesU(SWDeviceLimits::maxUpdateBufferSize) );
 		
 		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
 		return true;

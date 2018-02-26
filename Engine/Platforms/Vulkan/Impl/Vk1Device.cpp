@@ -514,8 +514,16 @@ namespace PlatformVK
 		str << "\ndevice type: " << _DeviceTypeToString( _deviceProperties.deviceType );
 
 		str << "\npush constants:      " << ToString( BytesU(_deviceProperties.limits.maxPushConstantsSize) );
+		str << "\nuniform buf size:    " << ToString( BytesU(_deviceProperties.limits.maxUniformBufferRange) );
+		str << "\nstorage buf size:    " << ToString( BytesU(_deviceProperties.limits.maxStorageBufferRange) );
 		str << "\nmax allocations:     " << _deviceProperties.limits.maxMemoryAllocationCount;
 		str << "\nper stage resources: " << _deviceProperties.limits.maxPerStageResources;
+
+		// compute
+		str << "\ncompute shared mem:  " << ToString( BytesU(_deviceProperties.limits.maxComputeSharedMemorySize) );
+		str << "\ncompute invocations: " << _deviceProperties.limits.maxComputeWorkGroupInvocations;
+		str << "\ncompute local size:  " << ToString( ReferenceCast<uint3>(_deviceProperties.limits.maxComputeWorkGroupSize) );
+		str << "\ncompute work groups: " << ToString( ReferenceCast<uint3>(_deviceProperties.limits.maxComputeWorkGroupCount) );
 
 		str << "\n---------------------";
 

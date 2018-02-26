@@ -156,10 +156,29 @@ namespace GpuMsg
 
 
 	//
+	// Update Buffer Command
+	//
+	struct CLCmdUpdateBuffer
+	{
+	// variables
+		ModulePtr		dstBuffer;
+		BytesUL			dstOffset;
+		BytesUL			size;
+		BytesUL			srcOffset;
+
+	// methods
+		CLCmdUpdateBuffer (const CmdUpdateBuffer &cmd, BytesU offset) :
+			dstBuffer(cmd.dstBuffer), dstOffset(cmd.dstOffset), size(cmd.data.Size()), srcOffset(offset)
+		{}
+	};
+
+
+	//
 	// OpenCL Commands
 	//
 	struct SetCLCommandBufferQueue
 	{
+	// types
 		using Data_t	= Union< CmdBindComputePipeline,
 								 CmdDispatch,
 								 CmdExecute,
@@ -168,7 +187,7 @@ namespace GpuMsg
 								 CmdCopyImage,
 								 CmdCopyBufferToImage,
 								 CmdCopyImageToBuffer,
-								 CmdUpdateBuffer,
+								 CLCmdUpdateBuffer,
 								 CmdFillBuffer,
 								 CmdClearColorImage,
 								 CmdPipelineBarrier,
@@ -203,7 +222,10 @@ namespace GpuMsg
 			{}
 		};
 
+	// variables
 		ReadOnce< Array<Command> >	commands;
+		BinaryArray					bufferData;
+		BinaryArray					pushConstData;
 	};
 	
 

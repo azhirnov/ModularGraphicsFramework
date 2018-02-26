@@ -112,7 +112,11 @@ namespace PipelineCompiler
 		}
 		if ( &type.getTypeName() != null ) {
 			field.typeName	= type.getTypeName().data();
-			field.type		= EShaderVariable::Struct;
+			field.type		= type.getBasicType() == glslang::TBasicType::EbtBlock ?
+									(type.getQualifier().storage == glslang::TStorageQualifier::EvqBuffer ?
+										EShaderVariable::StorageBlock :
+										EShaderVariable::UniformBlock) :
+									EShaderVariable::Struct;
 		}
 		else {
 			field.type		= ConvertBasicType( type.getBasicType(), type.getVectorSize(), type.getMatrixCols(), type.getMatrixRows() );
@@ -263,7 +267,7 @@ namespace PipelineCompiler
 		{
 			glslang::TIntermAggregate*	aggr = root->getAsAggregate();
 
-			for (size_t i = 0; i < aggr->getSequence().size(); ++i) {
+			FOR( i, aggr->getSequence() ) {
 				if ( aggr->getSequence()[i] == srcNode ) {
 					aggr->getSequence()[i] = dstNode;
 					return true;
@@ -386,7 +390,7 @@ namespace PipelineCompiler
 		swizzle_mask->setLoc( binary->getLoc() );
 		swizzle_mask->getSequence().resize( oldType.getVectorSize() );
 
-		for (size_t i = 0; i < swizzle_mask->getSequence().size(); ++i)
+		FOR( i, swizzle_mask->getSequence() )
 		{
 			glslang::TConstUnionArray		arr(1);		arr[0].setIConst( i );
 			glslang::TIntermConstantUnion*	c_union		= new glslang::TIntermConstantUnion( arr, *cu_type );
@@ -748,7 +752,7 @@ namespace PipelineCompiler
 		
 		replacer.nodes << aggr;
 
-		for (size_t i = 0; i < aggr->getSequence().size(); ++i) {
+		FOR( i, aggr->getSequence() ) {
 			CHECK_ERR( RecursiveProcessNode( aggr->getSequence()[i], replacer ) );
 		}
 		

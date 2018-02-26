@@ -207,13 +207,20 @@ namespace GpuMsg
 	//
 	struct WriteToGpuMemory : WriteToStream
 	{
-		// 'offset' - offset in global memory space
+	// types
+		template <typename T>
+		using IsPOD_t = CompileTime::EnableIf< not CompileTime::IsCtorAvailable<T>, int >;
 
+		// 'offset' - offset in global memory space
+		
+	// methods
 		WriteToGpuMemory () {}
 		explicit WriteToGpuMemory (BinArrayCRef data, Bytes<uint> offset = Uninitialized) : WriteToStream(data, offset) {}
 		explicit WriteToGpuMemory (BinArrayCRef data, Bytes<ulong> offset) : WriteToStream(data, offset) {}
-		template <typename T>			explicit WriteToGpuMemory (ArrayCRef<T> arr, BytesU offset = Uninitialized) : WriteToStream(arr, offset) {}
-		template <typename B, usize I>	explicit WriteToGpuMemory (const B (&arr)[I], BytesU offset = Uninitialized) : WriteToStream(arr, offset) {}
+
+		//template <typename T>			explicit WriteToGpuMemory (ArrayCRef<T> arr, BytesU offset = Uninitialized, IsPOD_t<T> = 0) : WriteToStream(arr, offset) {}
+		//template <typename T, usize I>	explicit WriteToGpuMemory (const T (&arr)[I], BytesU offset = Uninitialized, IsPOD_t<T> = 0) : WriteToStream(arr, offset) {}
+		//template <typename T>			explicit WriteToGpuMemory (const T &value, BytesU offset = Uninitialized, IsPOD_t<T> = 0) : WriteToStream(BinArrayCRef::FromValue(value), offset) {}
 	};
 
 

@@ -5,20 +5,9 @@
 #include "Engine/Platforms/Soft/Impl/SWEnums.h"
 #include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
 #include "Engine/Platforms/Soft/Impl/SWMessages.h"
+#include "Engine/Platforms/Soft/ShaderLang/SWLangGLM.h"
 
 #ifdef GRAPHICS_API_SOFT
-
-#ifdef COMPILER_MSVC
-# pragma warning (push, 1)
-# pragma warning (disable: 4201)
-#endif
-
-#define GLM_FORCE_SWIZZLE
-#include "External/glm/glm/glm.hpp"
-
-#ifdef COMPILER_MSVC
-# pragma warning (pop)
-#endif
 
 namespace SWShaderLang
 {

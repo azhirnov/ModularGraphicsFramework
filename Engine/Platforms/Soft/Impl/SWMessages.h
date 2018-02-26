@@ -178,6 +178,7 @@ namespace GpuMsg
 		struct Data {
 			BinArrayRef			memory;
 			EMemoryAccess::bits	access;
+			BytesU				align;
 		};
 
 	// variables

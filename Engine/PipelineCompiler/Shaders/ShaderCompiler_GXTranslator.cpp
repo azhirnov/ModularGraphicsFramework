@@ -214,7 +214,7 @@ namespace PipelineCompiler
 	bool GLSL_DstLanguage::TranslateLocalVar (const TypeInfo &t, INOUT String &res)
 	{
 		// access
-		//if ( memoryModel != EGpuMemoryModel::None )
+		//if ( memoryModel != EGpuMemoryModel::Default )
 		//	res << ToStringGLSL( memoryModel ) << ' ';
 
 		// read-only
@@ -271,7 +271,7 @@ namespace PipelineCompiler
 	bool GLSL_DstLanguage::TranslateType (const TypeInfo &t, INOUT String &res)
 	{
 		// access
-		//if ( t.memoryModel != EGpuMemoryModel::None )
+		//if ( t.memoryModel != EGpuMemoryModel::Default )
 		//	res << ToStringGLSL( t.memoryModel ) << ' ';
 
 		// layout
@@ -369,7 +369,7 @@ namespace PipelineCompiler
 			return true;
 		}
 
-		if ( op > glslang::TOperator::EOpConstructGuardStart and op < glslang::TOperator::EOpConstructGuardEnd )
+		if ( op >= glslang::TOperator::EOpConstructGuardStart and op < glslang::TOperator::EOpConstructGuardEnd )
 		{
 			CHECK_ERR( TranslateType( resultType, INOUT src ) );
 			src << all_args;
@@ -864,18 +864,24 @@ namespace PipelineCompiler
 		
 		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqBuffer )
 		{
-			str << ToStringGLSL( info.memoryModel ) << ' '
-				<< "buffer " << info.typeName;
+			if ( info.memoryModel != EGpuMemoryModel::Default )
+				str << ToStringGLSL( info.memoryModel ) << ' ';
+
+			str << "buffer " << info.typeName;
 		}
 		else
 			str << "uniform " << info.typeName;
 
-		CHECK_ERR( (info.type == EShaderVariable::Struct) and not info.fields.Empty() );
+		CHECK_ERR( EShaderVariable::IsBuffer( info.type ) and not info.fields.Empty() );
 		
 		str << "{\n";
 		FOR( j, info.fields )
 		{
 			str << "\t";
+
+			if ( info.fields[j].memoryModel != info.memoryModel and info.fields[j].memoryModel != EGpuMemoryModel::Default )
+				str << ToStringGLSL( info.fields[j].memoryModel ) << ' ';
+
 			CHECK_ERR( TranslateLocalVar( info.fields[j], INOUT str ) );
 			str << ";\n";
 		}
@@ -975,13 +981,15 @@ namespace PipelineCompiler
 			DeserializedShader::Constant::ValueArray_t	values;
 			CHECK_ERR( DeserializeConstant::Process( scalar_info.type, cu_arr, OUT values ) );
 		
-			CU_ToString_Func	func( str );
-
 			FOR( i, values )
 			{
+				CU_ToArray_Func	func;
+
 				str << (i ? ", " : "");
-				CHECK_ERR( TranslateType( scalar_info, INOUT str ) );
 				values[i].Apply( func );
+
+				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+											  scalar_info, func.GetStrings(), func.GetTypes(), INOUT str ) );
 			}
 
 			str << " };\n";
@@ -995,14 +1003,16 @@ namespace PipelineCompiler
 		{
 			DeserializedShader::Constant::ValueArray_t	values;
 			CHECK_ERR( DeserializeConstant::Process( info.type, cu_arr, OUT values ) );
-		
-			CU_ToString_Func	func( str );
 
 			FOR( i, values )
 			{
+				CU_ToArray_Func	func;
+
 				str << (i ? ", " : "");
-				CHECK_ERR( TranslateType( info, INOUT str ) );
 				values[i].Apply( func );
+
+				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+											  info, func.GetStrings(), func.GetTypes(), INOUT str ) );
 			}
 			str << ";\n";
 		}
@@ -1035,13 +1045,15 @@ namespace PipelineCompiler
 			{
 				str << " = { ";
 
-				CU_ToString_Func	func( str );
-
 				FOR( i, values )
 				{
+					CU_ToArray_Func	func;
+
 					str << (i ? ", " : "");
-					CHECK_ERR( TranslateType( scalar_info, INOUT str ) );
 					values[i].Apply( func );
+
+					CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+												  scalar_info, func.GetStrings(), func.GetTypes(), INOUT str ) );
 				}
 				str << " };\n";
 			}
@@ -1060,14 +1072,17 @@ namespace PipelineCompiler
 		
 			if ( not values.Empty() )
 			{
-				CU_ToString_Func	func( str );
-
 				str << " = ";
+
 				FOR( i, values )
 				{
+					CU_ToArray_Func	func;
+
 					str << (i ? ", " : "");
-					CHECK_ERR( TranslateType( info, INOUT str ) );
 					values[i].Apply( func );
+
+					CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+												  info, func.GetStrings(), func.GetTypes(), INOUT str ) );
 				}
 				str << ";\n";
 			}

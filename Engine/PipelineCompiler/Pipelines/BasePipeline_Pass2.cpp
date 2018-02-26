@@ -28,9 +28,13 @@ namespace PipelineCompiler
 			
 				str << "\t";
 
-				if ( not skipLayouts and is_block ) {
+				if ( not skipLayouts and is_block )
+				{
 					str << "layout(offset=" << usize(fl.offset)
 						<< ", align=" << usize(fl.align) << ") ";
+
+					if ( fl.memoryModel != EGpuMemoryModel::Default )
+						str << ToStringGLSL( fl.memoryModel ) << ' ';
 				}
 
 				if ( EShaderVariable::IsStruct( fl.type ) )
@@ -46,7 +50,12 @@ namespace PipelineCompiler
 				if ( fl.arraySize == 0 )
 					str << "[]";
 					
-				str << ";    // offset: " << usize(fl.offset) << ", align: " << usize(fl.align);
+				str << ';';
+				
+				if ( skipLayouts or not is_block )
+				{
+					str << "	// offset: " << usize(fl.offset) << ", align: " << usize(fl.align);
+				}
 				str << "\n";
 			}
 		}

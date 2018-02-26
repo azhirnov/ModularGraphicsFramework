@@ -296,7 +296,7 @@ namespace PipelineCompiler
 			return true;
 		}
 
-		if ( op > glslang::TOperator::EOpConstructGuardStart and op < glslang::TOperator::EOpConstructGuardEnd )
+		if ( op >= glslang::TOperator::EOpConstructGuardStart and op < glslang::TOperator::EOpConstructGuardEnd )
 		{
 			String	tname;
 			CHECK_ERR( TranslateType( resultType, OUT tname ) );
@@ -826,7 +826,7 @@ namespace PipelineCompiler
 			src << (i ? "," : "")
 				<< "\n\t/*" << obj.binding << "*/";
 
-			if ( obj.type == EShaderVariable::Struct ) {
+			if ( EShaderVariable::IsStruct( obj.type ) ) {
 				CHECK_ERR( _TranslateBuffer( obj, INOUT src ) );
 			}
 			else {
@@ -846,7 +846,12 @@ namespace PipelineCompiler
 	bool CL_DstLanguage::TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src)
 	{
 		if ( not objName.Empty() )
-			src << objName << "->";
+		{
+			if ( EShaderVariable::IsBuffer( stType.type ) )
+				src << objName << "->";
+			else
+				src << objName << '.';
+		}
 
 		src << fieldType.name;
 		return true;
@@ -862,7 +867,7 @@ namespace PipelineCompiler
 */
 	bool CL_DstLanguage::_TranslateBuffer (Translator::TypeInfo const& info, OUT String &str)
 	{
-		CHECK_ERR( info.type == EShaderVariable::Struct );
+		CHECK_ERR( EShaderVariable::IsBuffer( info.type ) );
 		CHECK_ERR( info.arraySize == 0 );
 
 		str << "__global " << ToStringCL( info.memoryModel )
@@ -944,15 +949,16 @@ namespace PipelineCompiler
 			
 			DeserializedShader::Constant::ValueArray_t	values;
 			CHECK_ERR( DeserializeConstant::Process( scalar_info.type, cu_arr, OUT values ) );
-		
-			CU_ToString_Func	func( str );
 
 			FOR( i, values )
 			{
-				str << (i ? ", " : "") << '(';
-				CHECK_ERR( TranslateType( scalar_info, INOUT str ) );
-				str << ')';
+				CU_ToArray_Func	func;
+
+				str << (i ? ", " : "");
 				values[i].Apply( func );
+
+				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+												scalar_info, func.GetStrings(), func.GetTypes(), INOUT str ) );
 			}
 
 			str << " };\n";
@@ -966,15 +972,16 @@ namespace PipelineCompiler
 		{
 			DeserializedShader::Constant::ValueArray_t	values;
 			CHECK_ERR( DeserializeConstant::Process( info.type, cu_arr, OUT values ) );
-		
-			CU_ToString_Func	func( str );
 
 			FOR( i, values )
 			{
-				str << (i ? ", " : "") << '(';
-				CHECK_ERR( TranslateType( info, INOUT str ) );
-				str << ')';
+				CU_ToArray_Func	func;
+
+				str << (i ? ", " : "");
 				values[i].Apply( func );
+				
+				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+												info, func.GetStrings(), func.GetTypes(), INOUT str ) );
 			}
 			str << ";\n";
 		}
@@ -990,6 +997,9 @@ namespace PipelineCompiler
 	{
 		bool	read_access		= false;
 		bool	write_access	= false;
+
+		if ( value == EGpuMemoryModel::Default )
+			value = EGpuMemoryModel::Coherent;
 
 		for (uint i = 0; i < CompileTime::SizeOf< EGpuMemoryModel::type >::bits; ++i)
 		{

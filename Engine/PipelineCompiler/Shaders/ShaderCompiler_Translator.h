@@ -37,7 +37,7 @@ namespace PipelineCompiler
 			String						typeName;	// for struct only
 			String						name;		// if part of struct, empty otherwise
 			EVariableQualifier::bits	qualifier;
-			EGpuMemoryModel::type		memoryModel	= EGpuMemoryModel::None;
+			EGpuMemoryModel::type		memoryModel	= EGpuMemoryModel::Default;
 			EShaderVariable::type		type		= EShaderVariable::Unknown;
 			EPrecision::type			precision	= EPrecision::Unknown;
 			//EPixelFormat::type		format		= EPixelFormat::Unknown;
@@ -70,11 +70,11 @@ namespace PipelineCompiler
 		using LocalVarSet_t		= Set< uint >;
 		using PendingVars_t		= Map< uint, TypeInfo >;
 		using PendingStrings_t	= Array< String >;
-		using InlFunctionsMap_t	= Map< String, TIntermNode* >;		// function signature and node
-		using LocalNames_t		= Set< String >;
+		using InlFunctionsMap_t	= HashMap< String, TIntermNode* >;		// function signature and node
+		using LocalNames_t		= HashSet< String >;
 		using StringStack_t		= Stack< String >;
 		using LocalReplacer_t	= HashMap< String, String >;
-		using CustomTypes_t		= Map< String, TypeInfo >;
+		using CustomTypes_t		= HashMap< String, TypeInfo >;
 
 		class IDstLanguage;
 		using IDstLanguagePtr	= UniquePtr< IDstLanguage >;
@@ -115,6 +115,7 @@ namespace PipelineCompiler
 		// types
 		struct {
 			CustomTypes_t		globalTypes;
+			HashSet<String>		definedInExteranal;		// this type must be skiped if 'skipExternals' is true
 
 		}					types;
 
@@ -169,6 +170,97 @@ namespace PipelineCompiler
 	// Constant Union to String
 	//
 
+	struct CU_ToArray_Func
+	{
+	// types
+	private:
+		using TypeInfo = Translator::TypeInfo;
+		
+
+	// variables
+	private:
+		Array<String>			_strArr;
+		Array<TypeInfo const*>	_typeArr;
+		TypeInfo				_type;
+
+
+	// methods
+	public:
+		CU_ToArray_Func () {}
+
+		ArrayCRef<String>			GetStrings ()	const	{ return _strArr; }
+		ArrayCRef<TypeInfo const*>	GetTypes ()		const	{ return _typeArr; }
+		
+		template <typename T>
+		void operator () (const T &value)
+		{
+			_CreateType<T>( _type );
+			_strArr.PushBack( _ToString( value ) );
+			_typeArr.PushBack( &_type );
+		}
+		
+		template <typename T, usize I>
+		void operator () (const Vec<T,I> &value)
+		{
+			_CreateType<T>( _type );
+			
+			if ( All( value == value.x ) )
+			{
+				_strArr.PushBack( _ToString( value.x ) );
+				_typeArr.PushBack( &_type );
+			}
+			else
+			{
+				FOR( i, value )
+				{
+					_strArr.PushBack( _ToString( value[i] ) );
+					_typeArr.PushBack( &_type );
+				}
+			}
+		}
+
+		template <typename T, usize C, usize R>
+		void operator () (const Matrix<T,C,R> &value)
+		{
+			_CreateType<T>( _type );
+
+			TODO( "" );
+		}
+
+
+	private:
+		template <typename T>
+		static void _CreateType (OUT TypeInfo &type)
+		{
+			type.arraySize		= 0;
+			type.binding		= UMax;
+			type.isGlobal		= false;
+			type.memoryModel	= Uninitialized;
+			type.precision		= Uninitialized;
+			type.qualifier		= Uninitialized;
+			type.type			= EShaderVariable::ToScalar<T>();
+		}
+
+		static String _ToString (float value)
+		{
+			return String().FormatF( value, StringFormatF().Fmt(0,8).CutZeros() );
+		}
+
+		static String _ToString (double value)
+		{
+			return String().FormatF( value, StringFormatF().Fmt(0,16).CutZeros() );
+		}
+
+		template <typename T>
+		static String _ToString (const T &value)
+		{
+			STATIC_ASSERT( CompileTime::IsScalar<T> );
+			return ToString( value );
+		}
+	};
+
+
+	/*
 	struct CU_ToString_Func
 	{
 	public:
@@ -237,6 +329,6 @@ namespace PipelineCompiler
 			}
 			return str;
 		}
-	};
+	};*/
 
 }	// PipelineCompiler

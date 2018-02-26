@@ -256,6 +256,16 @@ namespace PlatformSW
 			TODO( "SubpassInput" );
 		}
 		
+		void operator () (const SamplerUniform &samp) const
+		{
+			TODO( "SamplerUniform" );
+		}
+		
+/*
+=================================================
+	FindModule
+=================================================
+*/
 		template <typename MsgList>
 		bool FindModule (StringCRef name, OUT ModulePtr &result) const
 		{
@@ -272,46 +282,89 @@ namespace PlatformSW
 			}
 			return false;
 		}
-
+		
+/*
+=================================================
+	operator (TextureUniform)
+=================================================
+*/
 		bool operator () (const TextureUniform &tex) const
 		{
 			CHECK_ERR( tex.binding != UMax );
 			self._cached.Resize( tex.binding+1 );
 
-			CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT self._cached[ tex.binding ].first ) );
-			CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT self._cached[ tex.binding ].second ) );
+			auto&	cached = self._cached[ tex.binding ];
+
+			CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT cached.first ) );
+			CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT cached.second ) );
+			
+			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
+			self.SendTo( cached.first, req_img_descr );
+			
+			CHECK( req_img_descr->result->imageType == tex.textureType );
+			CHECK( req_img_descr->result->usage[ EImageUsage::Sampled ] );
+			CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( req_img_descr->result->format ) ) );
 			return true;
 		}
 		
-		void operator () (const SamplerUniform &samp) const
-		{
-			TODO( "SamplerUniform" );
-		}
-		
+/*
+=================================================
+	operator (ImageUniform)
+=================================================
+*/
 		bool operator () (const ImageUniform &img) const
 		{
 			CHECK_ERR( img.binding != UMax );
 			self._cached.Resize( img.binding+1 );
 			
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT self._cached[ img.binding ].first ) );
+			
+			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
+			self.SendTo( self._cached[ img.binding ].first , req_img_descr );
+			
+			CHECK( req_img_descr->result->usage[ EImageUsage::Storage ] );
 			return true;
 		}
 		
+/*
+=================================================
+	operator (UniformBuffer)
+=================================================
+*/
 		bool operator () (const UniformBuffer &buf) const
 		{
 			CHECK_ERR( buf.binding != UMax );
 			self._cached.Resize( buf.binding+1 );
 			
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT self._cached[ buf.binding ].first ) );
+			
+			Message< GpuMsg::GetBufferDescriptor >	req_descr;
+			self.SendTo( self._cached[ buf.binding ].first, req_descr );
+			
+			CHECK( req_descr->result->size == BytesUL(buf.size) );
+			CHECK( req_descr->result->usage[ EBufferUsage::Uniform ] );
 			return true;
 		}
 		
+/*
+=================================================
+	operator (StorageBuffer)
+=================================================
+*/
 		bool operator () (const StorageBuffer &buf) const
 		{
 			CHECK_ERR( buf.binding != UMax );
 			self._cached.Resize( buf.binding+1 );
 			
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT self._cached[ buf.binding ].first ) );
+			
+			Message< GpuMsg::GetBufferDescriptor >	req_descr;
+			self.SendTo( self._cached[ buf.binding ].first, req_descr );
+			
+			CHECK( (req_descr->result->size >= buf.staticSize) and
+					(buf.arrayStride == 0 or
+					(req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
+			CHECK( req_descr->result->usage[ EBufferUsage::Storage ] );
 			return true;
 		}
 	};

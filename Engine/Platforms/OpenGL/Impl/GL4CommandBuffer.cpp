@@ -1673,15 +1673,16 @@ namespace PlatformGL
 
 		data.dstBuffer->Send( req_id );
 		data.dstBuffer->Send( req_descr );
-
+		
 		CHECK_ERR( data.dstOffset < req_descr->result->size );
+		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
 
 		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, *req_id->result ) );
 		GL_CALL( glClearBufferSubData( GL_COPY_READ_BUFFER,
-										GL_R32UI,
+										GL_RGBA8UI,
 										GLintptr(data.dstOffset),
 										GLsizeiptr(Min( data.size, req_descr->result->size - data.dstOffset )),
-										GL_RED, GL_UNSIGNED_INT,
+										GL_RGBA, GL_UNSIGNED_BYTE,
 										&data.pattern ) );
 
 		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, 0 ) );

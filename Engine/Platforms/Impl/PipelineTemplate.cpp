@@ -116,7 +116,9 @@ namespace Platforms
 		using Vk1Shaders			= StaticArray< /*VkShaderModule*/ ulong, EShader::_Count >;
 		using GL4Shaders			= StaticArray< /*GLuint program*/ uint, EShader::_Count >;
 		using CL2Shaders			= StaticArray< /*cl_program*/ void*, EShader::_Count >;		// compute only
-		using SWShaders				= StaticArray< PipelineTemplateDescriptor::ShaderSource::SWInvoke, EShader::_Count >;
+
+		using SWInvoke				= PipelineTemplateDescriptor::ShaderSource::SWInvoke;
+		using SWShaders				= StaticArray< SWInvoke, EShader::_Count >;
 		
 		using VkDeviceMsgList_t		= MessageListFrom< GpuMsg::GetDeviceInfo, GpuMsg::GetVkDeviceInfo >;
 		using GLDeviceMsgList_t		= MessageListFrom< GpuMsg::GetDeviceInfo, GpuMsg::GetGLDeviceInfo >;
@@ -208,7 +210,9 @@ namespace Platforms
 		bool _HasOpenCLShaders () const;
 
 		bool _AttachToSWRendererDevice ();
+		bool _CreateSWRendererShaders ();
 		bool _DeleteSWRendererShaders ();
+		bool _HasSWRendererShaders () const;
 
 		bool _GetGraphicsPipelineDescriptor (const VertexInputState &vertexInput, EPrimitive::type topology,
 											 OUT GraphicsPipelineDescriptor &result) const;
@@ -256,6 +260,7 @@ namespace Platforms
 		ASSERT( not _HasVulkanShaders() );
 		ASSERT( not _HasOpenGLShaders() );
 		ASSERT( not _HasOpenCLShaders() );
+		ASSERT( not _HasSWRendererShaders() );
 	}
 
 /*
@@ -327,6 +332,19 @@ namespace Platforms
 	bool PipelineTemplate::_HasOpenCLShaders () const
 	{
 		if ( _clData.shaders[ EShader::Compute ] )
+			return true;
+
+		return false;
+	}
+	
+/*
+=================================================
+	_HasSWRendererShaders
+=================================================
+*/
+	bool PipelineTemplate::_HasSWRendererShaders () const
+	{
+		if ( _swData.shaders[ EShader::Compute ] )
 			return true;
 
 		return false;
@@ -744,7 +762,7 @@ namespace Platforms
 
 		CHECK_ERR( _descr.supportedShaders[EShader::Compute] );
 
-		StringCRef		data = _descr.shaders[EShader::Compute].GetCL();
+		StringCRef	data = _descr.shaders[EShader::Compute].GetCL();
 		CHECK_ERR( not data.Empty() );
 		
 		const cl_device_id	devices[]	= { (cl_device_id)_clData.device };
@@ -891,6 +909,24 @@ namespace Platforms
 	
 /*
 =================================================
+	_CreateSWRendererShaders
+=================================================
+*/
+	bool PipelineTemplate::_CreateSWRendererShaders ()
+	{
+		_DeleteSWRendererShaders();
+		
+		CHECK_ERR( _descr.supportedShaders[EShader::Compute] );
+		
+		SWInvoke	func = _descr.shaders[EShader::Compute].GetSW();
+		CHECK_ERR( func );
+		
+		_swData.shaders[EShader::Compute] = func;
+		return true;
+	}
+
+/*
+=================================================
 	_DeleteSWRendererShaders
 =================================================
 */
@@ -927,8 +963,13 @@ namespace Platforms
 */
 	bool PipelineTemplate::_GetSWShaderModuleIDs (const Message< GpuMsg::GetSWShaderModuleIDs > &msg)
 	{
-		CHECK_ERR( _AttachToSWRendererDevice() );
-		
+		if ( not _HasSWRendererShaders() )
+		{
+			CHECK_ERR( _AttachToSWRendererDevice() );
+			CHECK_ERR( _CreateSWRendererShaders() );
+			CHECK_ERR( _HasSWRendererShaders() );
+		}
+
 		using Shaders_t = GpuMsg::GetSWShaderModuleIDs::Shaders_t;
 
 		Shaders_t	result;

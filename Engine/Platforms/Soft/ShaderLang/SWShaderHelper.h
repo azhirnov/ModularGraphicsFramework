@@ -21,10 +21,10 @@ namespace Impl
 	// Soft Renderer Shader Language Helper
 	//
 
-	class SWShaderHelper final
+	class SWShaderHelper
 	{
 	// types
-	private:
+	protected:
 		using StringCRef		= GX_STL::GXTypes::StringCRef;
 		using EShader			= Engine::Platforms::EShader;
 
@@ -95,29 +95,32 @@ namespace Impl
 
 
 	// variables
-	private:
+	protected:
 		VertexShader		_vertexShaderState;
 		GeometryShader		_geometryShaderState;
 		FragmentShader		_fragmentShaderState;
 		ComputeShader		_computeShaderState;
-
-		ModulePtr			_resourceTable;
+		EShader::type		_stage;
 
 
 	// methods
-	private:
+	protected:
+		SWShaderHelper ();
 		SWShaderHelper (SWShaderHelper &&) = default;
 		SWShaderHelper (const SWShaderHelper &) = default;
 
-		EShader::type	_CurrentStage () const;
+		
+	// interface
+	protected:
+		virtual void _GetBufferMemoryLayout (const Fwd_GetSWBufferMemoryLayout &) const = 0;
+		virtual void _GetImageViewMemoryLayout (const Fwd_GetSWImageViewMemoryLayout &) const = 0;
+		virtual void _GetTextureMemoryLayout (const Fwd_GetSWTextureMemoryLayout &) const = 0;
+
+		virtual void _Reset ();
 
 
+	// shader interface
 	public:
-		SWShaderHelper ();
-
-		// control
-		void Reset ();
-
 		// vertex shader only
 		bool VS_GetVertexBufferPtr (StringCRef bufferName, OUT void *&ptr) const;
 		bool VS_GetVertexBufferPtr (uint bindingIndex, OUT void *&ptr) const;
@@ -137,10 +140,10 @@ namespace Impl
 		bool FS_DepthOutput (float value) const;
 
 		
-		VertexShader const&		GetVertexShaderState () const		{ return _vertexShaderState; }
-		GeometryShader const&	GetGeometryShaderState () const		{ return _geometryShaderState; }
-		FragmentShader const&	GetFragmentShaderState () const		{ return _fragmentShaderState; }
-		ComputeShader const&	GetComputeShaderState () const		{ return _computeShaderState; }
+		VertexShader const&		GetVertexShaderState () const		{ ASSERT( _stage == EShader::Vertex );   return _vertexShaderState; }
+		GeometryShader const&	GetGeometryShaderState () const		{ ASSERT( _stage == EShader::Geometry );  return _geometryShaderState; }
+		FragmentShader const&	GetFragmentShaderState () const		{ ASSERT( _stage == EShader::Fragment );  return _fragmentShaderState; }
+		ComputeShader const&	GetComputeShaderState () const		{ ASSERT( _stage == EShader::Compute );   return _computeShaderState; }
 
 
 		// for all shaders
@@ -181,7 +184,8 @@ namespace Impl
 	template <typename T>
 	inline bool SWShaderHelper::GetUniformBuffer (uint uniqueIndex, OUT UniformBuffer<T> &value) const
 	{
-		Fwd_GetSWBufferMemoryLayout		req_buf{ {}, uniqueIndex };
+		Fwd_GetSWBufferMemoryLayout		req_buf{ Message< GpuMsg::GetSWBufferMemoryLayout >{}, uniqueIndex };
+		_GetBufferMemoryLayout( req_buf );
 
 		value = UniformBuffer<T>{ *req_buf->message->result };
 		return true;
@@ -196,6 +200,7 @@ namespace Impl
 	inline bool SWShaderHelper::GetStorageBuffer (uint uniqueIndex, OUT StorageBuffer<T,A> &value) const
 	{
 		Fwd_GetSWBufferMemoryLayout		req_buf{ Message< GpuMsg::GetSWBufferMemoryLayout >{}, uniqueIndex };
+		_GetBufferMemoryLayout( req_buf );
 
 		value = RVREF(StorageBuffer<T,A>{ *req_buf->message->result });
 		return true;
@@ -210,6 +215,7 @@ namespace Impl
 	inline bool SWShaderHelper::GetImage (uint uniqueIndex, OUT Image2D<T,A> &value) const
 	{
 		Fwd_GetSWImageViewMemoryLayout	req_img{ Message< GpuMsg::GetSWImageViewMemoryLayout >{}, uniqueIndex };
+		_GetImageViewMemoryLayout( req_img );
 
 		value = RVREF(Image2D<T,A>{ RVREF(*req_img->message->result) });
 		return true;
@@ -219,6 +225,7 @@ namespace Impl
 	inline bool SWShaderHelper::GetImage (uint uniqueIndex, OUT Image2DArray<T,A> &value) const
 	{
 		Fwd_GetSWImageViewMemoryLayout	req_img{ Message< GpuMsg::GetSWImageViewMemoryLayout >{}, uniqueIndex };
+		_GetImageViewMemoryLayout( req_img );
 
 		value = RVREF(Image2DArray<T,A>{ RVREF(*req_img->message->result) });
 		return true;
@@ -228,6 +235,7 @@ namespace Impl
 	inline bool SWShaderHelper::GetImage (uint uniqueIndex, OUT Image3D<T,A> &value) const
 	{
 		Fwd_GetSWImageViewMemoryLayout	req_img{ Message< GpuMsg::GetSWImageViewMemoryLayout >{}, uniqueIndex };
+		_GetImageViewMemoryLayout( req_img );
 
 		value = RVREF(Image3D<T,A>{ RVREF(*req_img->message->result) });
 		return true;

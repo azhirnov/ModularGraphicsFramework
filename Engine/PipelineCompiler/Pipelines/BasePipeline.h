@@ -105,7 +105,7 @@ namespace PipelineCompiler
 			EShaderVariable::type			type				= EShaderVariable::Unknown;
 			EPrecision::type				precision			= EPrecision::Default;
 			EVariableQualifier::bits		qualifier;											// only for varyings
-			EGpuMemoryModel::type			memoryModel			= EGpuMemoryModel::None;		// for image only
+			EGpuMemoryModel::type			memoryModel			= EGpuMemoryModel::Default;		// for image and buffer
 			EVariablePacking::bits			packing;
 			//EPixelFormat::type			format				= EPixelFormat::Unknown;		// for image only
 			uint							arraySize			= 1;							// 0 - dynamic array	// TODO: array of array

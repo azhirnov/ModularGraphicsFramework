@@ -98,6 +98,8 @@ namespace PlatformVK
 		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
+		static constexpr BytesU		_maxUpdateBuffer = 65536_b;		// as specification said
+
 
 	// variables
 	private:
@@ -742,22 +744,15 @@ namespace PlatformVK
 		Message< GpuMsg::GetVkGraphicsPipelineID >			req_id;
 		Message< GpuMsg::GetGraphicsPipelineDescriptor >	req_descr;
 		
-		// TODO: check result
 		SendTo( msg->pipeline, req_id );
 		SendTo( msg->pipeline, req_descr );
 
-		CHECK_ERR( req_id->result.IsDefined() and req_descr->result.IsDefined() );
-
-		VkPipeline							pipeline	= req_id->result.Get( VK_NULL_HANDLE );
-		GraphicsPipelineDescriptor const&	descr		= *req_descr->result;
-
-		CHECK_ERR( descr.subpass == _subpassIndex );
-
 		_resources.Add( msg->pipeline );
 
-		vkCmdBindPipeline( _cmdId, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+		CHECK_ERR( req_descr->result->subpass == _subpassIndex );
+		vkCmdBindPipeline( _cmdId, VK_PIPELINE_BIND_POINT_GRAPHICS, req_id->result.Get( VK_NULL_HANDLE ) );
 
-		_dynamicStates = descr.dynamicStates;
+		_dynamicStates = req_descr->result->dynamicStates;
 		return true;
 	}
 	
@@ -766,10 +761,16 @@ namespace PlatformVK
 	_CmdBindComputePipeline
 =================================================
 */
-	bool Vk1CommandBuilder::_CmdBindComputePipeline (const Message< GpuMsg::CmdBindComputePipeline > &)
+	bool Vk1CommandBuilder::_CmdBindComputePipeline (const Message< GpuMsg::CmdBindComputePipeline > &msg)
 	{
-		TODO( "" );
-		return false;
+		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( msg->pipeline );
+		
+		Message< GpuMsg::GetVkComputePipelineID >	req_id;
+		SendTo( msg->pipeline, req_id );
+		
+		vkCmdBindPipeline( _cmdId, VK_PIPELINE_BIND_POINT_COMPUTE, req_id->result.Get( VK_NULL_HANDLE ) );
+		return true;
 	}
 
 /*
@@ -965,10 +966,25 @@ namespace PlatformVK
 	_CmdDispatchIndirect
 =================================================
 */
-	bool Vk1CommandBuilder::_CmdDispatchIndirect (const Message< GpuMsg::CmdDispatchIndirect > &)
+	bool Vk1CommandBuilder::_CmdDispatchIndirect (const Message< GpuMsg::CmdDispatchIndirect > &msg)
 	{
-		TODO( "" );
-		return false;
+		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( msg->indirectBuffer );
+		CHECK_ERR( _CheckComputePipeline() );
+		
+		Message< GpuMsg::GetVkBufferID >		req_id;
+		Message< GpuMsg::GetBufferDescriptor >	req_descr;
+
+		SendTo( msg->indirectBuffer, req_id );
+		SendTo( msg->indirectBuffer, req_descr );
+
+		CHECK_ERR( req_descr->result->usage[ EBufferUsage::Indirect ] );
+		CHECK_ERR( msg->offset < req_descr->result->size );
+
+		vkCmdDispatchIndirect( _cmdId, *req_id->result, VkDeviceSize(msg->offset) );
+
+		_CheckComputeWritableResources();
+		return true;
 	}
 
 /*
@@ -1013,6 +1029,7 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBindGraphicsResourceTable (const Message< GpuMsg::CmdBindGraphicsResourceTable > &msg)
 	{
+		CHECK_ERR( _scope == EScope::RenderPass );
 		return _BindDescriptorSet( msg->resourceTable, msg->index, VK_PIPELINE_BIND_POINT_GRAPHICS );
 	}
 	
@@ -1023,6 +1040,7 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_CmdBindComputeResourceTable (const Message< GpuMsg::CmdBindComputeResourceTable > &msg)
 	{
+		CHECK_ERR( _scope == EScope::Command );
 		return _BindDescriptorSet( msg->resourceTable, msg->index, VK_PIPELINE_BIND_POINT_COMPUTE );
 	}
 	
@@ -1033,7 +1051,6 @@ namespace PlatformVK
 */
 	bool Vk1CommandBuilder::_BindDescriptorSet (const ModulePtr &resourceTable, uint firstIndex, VkPipelineBindPoint bindPoint)
 	{
-		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( resourceTable );
 		
 		Message< GpuMsg::GetVkPipelineLayoutID >		req_layout;
@@ -1355,7 +1372,7 @@ namespace PlatformVK
 	bool Vk1CommandBuilder::_CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &msg)
 	{
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < 65536_b );
+		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < _maxUpdateBuffer );
 		
 		Message< GpuMsg::GetVkBufferID >		req_id;
 		Message< GpuMsg::GetBufferDescriptor >	req_descr;

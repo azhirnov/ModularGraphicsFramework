@@ -1193,12 +1193,15 @@ namespace GXTypes
 
 		Reserve( (sizeof(fValue)<<4) / 10 + 10 );
 		
-		_length = usize(::snprintf( _memory.Pointer(), _size-1, a_fmt, double(fValue) ));
+		_length = usize(::snprintf( _memory.Pointer(), _size, a_fmt, double(fValue) ));
 
 		if ( isize(_length) <= 0 ) {
 			WARNING( "can't convert value to string" );
+			_length = 0;
 			return *this;
 		}
+		
+		_length = GXMath::Min( _length, _size-1 );
 
 		if ( format.IsCutZeros() and not format.IsExponent() )
 		{
@@ -1237,12 +1240,15 @@ namespace GXTypes
 
 		Reserve( (sizeof(fValue)<<4) / 10 + 12 );
 		
-		_length = usize(::snprintf( _memory.Pointer(), _size-1, a_fmt, fValue ));
+		_length = usize(::snprintf( _memory.Pointer(), _size, a_fmt, fValue ));
 
 		if ( isize(_length) <= 0 ) {
 			WARNING( "can't convert value to string" );
+			_length = 0;
 			return *this;
 		}
+
+		_length = GXMath::Min( _length, _size-1 );
 		
 		if ( format.IsCutZeros() and not format.IsExponent() )
 		{

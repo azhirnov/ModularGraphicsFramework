@@ -12,6 +12,9 @@ namespace Engine
 {
 namespace PlatformVK
 {
+	using namespace vk;
+
+
 
 	//
 	// Vulkan Pipeline Resource Table (DescriptorSet)
@@ -37,26 +40,26 @@ namespace PlatformVK
 
 		struct BaseDescr
 		{
-			uint						binding			= UMax;
-			vk::VkDescriptorType		descriptorType	= vk::VK_DESCRIPTOR_TYPE_MAX_ENUM;
+			uint					binding			= UMax;
+			VkDescriptorType		descriptorType	= VK_DESCRIPTOR_TYPE_MAX_ENUM;
 		};
 
-		struct ImageDescr : BaseDescr
+		struct ImageDescr final : BaseDescr
 		{
-			vk::VkDescriptorImageInfo	info;
+			VkDescriptorImageInfo	info;
 		};
 
-		struct BufferDescr : BaseDescr
+		struct BufferDescr final : BaseDescr
 		{
-			vk::VkDescriptorBufferInfo	info;
+			VkDescriptorBufferInfo	info;
 		};
 
-		struct TextureBufferDescr : BaseDescr
+		struct TextureBufferDescr final : BaseDescr
 		{
-			vk::VkBufferView			view;
+			VkBufferView			view;
 		};
 
-		using DescriptorPoolSizes_t	= FixedSizeArray< vk::VkDescriptorPoolSize, vk::VK_DESCRIPTOR_TYPE_RANGE_SIZE >;
+		using DescriptorPoolSizes_t	= FixedSizeArray< VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE >;
 
 		using ResourceDescr_t		= Union< ImageDescr, BufferDescr, TextureBufferDescr >;
 		using ResourceDescrArray_t	= Array< ResourceDescr_t >;
@@ -73,8 +76,8 @@ namespace PlatformVK
 
 	// variables
 	private:
-		vk::VkDescriptorPool	_descriptorPoolId;
-		vk::VkDescriptorSet		_descriptorSetId;
+		VkDescriptorPool		_descriptorPoolId;
+		VkDescriptorSet			_descriptorSetId;
 		ResourceDescrArray_t	_resources;
 		ModulePtr				_layout;
 
@@ -346,18 +349,18 @@ namespace PlatformVK
 				self.SendTo( tex_mod, req_img_descr );
 				self.SendTo( samp_mod, req_sampler );
 
-				ImageDescriptor const&	tex_descr = *req_img_descr->result;
-				CHECK( tex_descr.imageType == tex.textureType );
-				CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( tex_descr.format ) ) );
+				CHECK( req_img_descr->result->imageType == tex.textureType );
+				CHECK( req_img_descr->result->usage[ EImageUsage::Sampled ] );
+				CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( req_img_descr->result->format ) ) );
 
 				// TODO: use default sampler
 				// TODO: check format
 
 				ImageDescr				descr;
-				descr.info.sampler		= *req_sampler->result;
-				descr.info.imageView	= *req_image->defaultView;
-				descr.info.imageLayout	= vk::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				descr.info.sampler		= req_sampler->result.Get( VK_NULL_HANDLE );
+				descr.info.imageView	= req_image->defaultView.Get( VK_NULL_HANDLE );
+				descr.info.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				descr.descriptorType	= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 				descr.binding			= tex.uniqueIndex;
 				
 				CHECK_ERR(	descr.info.sampler   != VK_NULL_HANDLE and
@@ -389,16 +392,21 @@ namespace PlatformVK
 			ModulePtr	img_mod;
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT img_mod ) );
 
-			Message< GpuMsg::GetVkImageID >	req_image;
+			Message< GpuMsg::GetVkImageID >			req_image;
+			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
+
 			self.SendTo( img_mod, req_image );	// TODO: check result
+			self.SendTo( img_mod, req_img_descr );
 
 			// TODO: check format
+			
+			CHECK( req_img_descr->result->usage[ EImageUsage::Storage ] );
 
 			ImageDescr				descr;
 			descr.info.sampler		= VK_NULL_HANDLE;
-			descr.info.imageView	= *req_image->defaultView;
-			descr.info.imageLayout	= vk::VK_IMAGE_LAYOUT_GENERAL;
-			descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+			descr.info.imageView	= req_image->defaultView.Get( VK_NULL_HANDLE );
+			descr.info.imageLayout	= VK_IMAGE_LAYOUT_GENERAL;
+			descr.descriptorType	= VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			descr.binding			= img.uniqueIndex;
 			
 			CHECK_ERR( descr.info.imageView != VK_NULL_HANDLE );
@@ -425,13 +433,14 @@ namespace PlatformVK
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			CHECK( req_descr->result.Get().size == BytesUL(buf.size) );
+			CHECK( req_descr->result->size == BytesUL(buf.size) );
+			CHECK( req_descr->result->usage[ EBufferUsage::Uniform ] );
 
 			BufferDescr				descr;
-			descr.info.buffer		= *req_buffer->result;
+			descr.info.buffer		= req_buffer->result.Get( VK_NULL_HANDLE );
 			descr.info.offset		= 0;
-			descr.info.range		= (uint) buf.size;
-			descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			descr.info.range		= (VkDeviceSize) buf.size;
+			descr.descriptorType	= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			descr.binding			= buf.uniqueIndex;
 
 			CHECK_ERR( descr.info.buffer != VK_NULL_HANDLE );
@@ -458,17 +467,16 @@ namespace PlatformVK
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			BufferDescriptor const&	buf_descr = *req_descr->result;
-
-			CHECK( (buf_descr.size >= buf.staticSize) and
+			CHECK( (req_descr->result->size >= buf.staticSize) and
 					(buf.arrayStride == 0 or
-					(buf_descr.size - buf.staticSize) % buf.arrayStride == 0) );
+					(req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
+			CHECK( req_descr->result->usage[ EBufferUsage::Storage ] );
 
 			BufferDescr				descr;
-			descr.info.buffer		= *req_buffer->result;
+			descr.info.buffer		= req_buffer->result.Get( VK_NULL_HANDLE );
 			descr.info.offset		= 0;
-			descr.info.range		= (uint) buf_descr.size;
-			descr.descriptorType	= vk::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			descr.info.range		= (VkDeviceSize) req_descr->result->size;
+			descr.descriptorType	= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			descr.binding			= buf.uniqueIndex;
 			
 			CHECK_ERR( descr.info.buffer != VK_NULL_HANDLE );
@@ -486,8 +494,6 @@ namespace PlatformVK
 */
 	bool Vk1PipelineResourceTable::_CreateResourceTable ()
 	{
-		using namespace vk;
-
 		Message< GpuMsg::GetPipelineLayoutDescriptor >	req_descr;
 		Message< GpuMsg::GetVkDescriptorLayouts >		req_layouts;
 
@@ -495,14 +501,14 @@ namespace PlatformVK
 		SendTo( _layout, req_layouts );
 
 		PipelineLayoutDescriptor const&		layout_descr = *req_descr->result;
-		vk::VkDescriptorSetLayout			descr_layout = *req_layouts->result;
+		VkDescriptorSetLayout				descr_layout = *req_layouts->result;
 		DescriptorPoolSizes_t				pool_sizes;
 		_CreateResourceDescriptor_Func		func( OUT _resources, OUT pool_sizes, *this );
 
 		// init pool sizes
-		pool_sizes.Resize( vk::VK_DESCRIPTOR_TYPE_RANGE_SIZE );
+		pool_sizes.Resize( VK_DESCRIPTOR_TYPE_RANGE_SIZE );
 		FOR( i, pool_sizes ) {
-			pool_sizes[i] = { vk::VkDescriptorType( vk::VK_DESCRIPTOR_TYPE_BEGIN_RANGE+i ), 0 };
+			pool_sizes[i] = { VkDescriptorType( VK_DESCRIPTOR_TYPE_BEGIN_RANGE+i ), 0 };
 		}
 
 		// initialize table
@@ -550,19 +556,19 @@ namespace PlatformVK
 	struct Vk1PipelineResourceTable::_WriteDescriptor_Func
 	{
 	// variables
-		Array< vk::VkWriteDescriptorSet >&	writeDescr;
-		vk::VkDescriptorSet					descriptorSet;
+		Array< VkWriteDescriptorSet >&	writeDescr;
+		VkDescriptorSet					descriptorSet;
 
 	// methods
-		_WriteDescriptor_Func (Array<vk::VkWriteDescriptorSet> &writeDescr, vk::VkDescriptorSet descriptorSet) :
+		_WriteDescriptor_Func (Array<VkWriteDescriptorSet> &writeDescr, VkDescriptorSet descriptorSet) :
 			writeDescr( writeDescr ), descriptorSet( descriptorSet )
 		{}
 
 
 		void operator () (const ImageDescr &descr) const
 		{
-			vk::VkWriteDescriptorSet	wds = {};
-			wds.sType			= vk::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			VkWriteDescriptorSet	wds = {};
+			wds.sType			= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			wds.descriptorType	= descr.descriptorType;
 			wds.descriptorCount	= 1;
 			wds.dstArrayElement	= 0;
@@ -576,8 +582,8 @@ namespace PlatformVK
 
 		void operator () (const BufferDescr &descr) const
 		{
-			vk::VkWriteDescriptorSet	wds = {};
-			wds.sType			= vk::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			VkWriteDescriptorSet	wds = {};
+			wds.sType			= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			wds.descriptorType	= descr.descriptorType;
 			wds.descriptorCount	= 1;
 			wds.dstArrayElement	= 0;
@@ -591,8 +597,8 @@ namespace PlatformVK
 
 		void operator () (const TextureBufferDescr &descr) const
 		{
-			vk::VkWriteDescriptorSet	wds = {};
-			wds.sType			= vk::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			VkWriteDescriptorSet	wds = {};
+			wds.sType			= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			wds.descriptorType	= descr.descriptorType;
 			wds.descriptorCount	= 1;
 			wds.dstArrayElement	= 0;
@@ -611,8 +617,6 @@ namespace PlatformVK
 */
 	bool Vk1PipelineResourceTable::_UpdateResourceTable ()
 	{
-		using namespace vk;
-
 		CHECK_ERR( _descriptorSetId != VK_NULL_HANDLE and not _resources.Empty() );
 
 		Array<VkWriteDescriptorSet>	write_descr;
@@ -633,8 +637,6 @@ namespace PlatformVK
 */
 	void Vk1PipelineResourceTable::_DestroyResourceTable ()
 	{
-		using namespace vk;
-
 		auto	dev = GetVkDevice();
 
 		/*if ( dev != VK_NULL_HANDLE and _descriptorSetId != VK_NULL_HANDLE )

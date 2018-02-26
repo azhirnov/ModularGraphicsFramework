@@ -37,7 +37,6 @@ namespace PipelineCompiler
 	static bool TranslateInlineFunctionCall (TIntermNode* node, const uint uid, TIntermNode* func, Translator &translator);
 	static bool TranslateMain (TIntermNode* root, const uint uid, bool skipExternals, Translator &translator);
 	static bool TranslateConstUnionAccess (TIntermNode* node, const uint uid, Translator &translator);
-	static bool TranslateCustomType (const Translator::TypeInfo &info, const Translator &translator, INOUT String &src);
 	static bool TranslateFunctionForwardDecl (glslang::TIntermAggregate* node, const Translator &translator, INOUT String &src);
 
 	static bool GXCheckAccessToExternal (const Translator &translator, const Translator::Node &node);
@@ -147,6 +146,82 @@ namespace PipelineCompiler
 			default :								RETURN_ERR( "unsupported type!" );
 		}
 	}
+	
+/*
+=================================================
+	TranslateCustomTypes
+=================================================
+*/
+	static bool TranslateCustomTypes (Translator &translator, bool skipExternals)
+	{
+		auto&	src = translator.src;
+
+		if ( skipExternals )
+		{
+			FOR( i, translator.types.definedInExteranal )
+			{
+				translator.types.globalTypes.Erase( translator.types.definedInExteranal[i] );
+			}
+		}
+
+		translator.types.definedInExteranal.Clear();
+
+		// sort by dependencies
+		for (uint k = 0; k < 10 and not translator.types.globalTypes.Empty(); ++k)
+		{
+			bool	changed = false;
+
+			FOR( i, translator.types.globalTypes )
+			{
+				const auto&	info	= translator.types.globalTypes[i].second;
+				bool		blocked	= false;
+
+				// check is all dependent types was declared
+				FOR( j, info.fields )
+				{
+					auto&	fl = info.fields[j];
+
+					if ( not fl.typeName.Empty() )
+					{
+						if ( translator.types.globalTypes.IsExist( fl.typeName ) )
+						{
+							blocked = true;
+							break;
+						}
+					}
+				}
+
+				// waiting for dependent types
+				if ( blocked )
+					continue;
+			
+				// process and remove from map
+				src << "struct " << info.typeName << "\n{\n";
+
+				FOR( j, info.fields )
+				{
+					src << "\t";
+					CHECK_ERR( translator.language->TranslateLocalVar( info.fields[j], INOUT src ) );
+					src << ";\n";
+				}
+
+				src << "};\n\n";
+
+				translator.types.globalTypes.EraseByIndex( i );
+				--i;
+
+				changed = true;
+			}
+
+			if ( changed )
+				k = 0;
+		}
+
+		CHECK_ERR( translator.types.globalTypes.Empty() );
+
+		src << "\n//---------------------------------\n\n";
+		return true;
+	}
 
 /*
 =================================================
@@ -165,7 +240,7 @@ namespace PipelineCompiler
 		const uint		global_uid	= ++translator.uid;
 		DeclFunction_t	funcs;
 
-		for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+		FOR( i, aggr->getSequence() )
 		{
 			TIntermNode *				node = aggr->getSequence()[i];
 			glslang::TIntermAggregate*	aggr2 = node->getAsAggregate();
@@ -184,7 +259,7 @@ namespace PipelineCompiler
 
 		// source
 		String	src;
-		for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+		FOR( i, aggr->getSequence() )
 		{
 			TIntermNode*	node = aggr->getSequence()[i];
 
@@ -207,10 +282,16 @@ namespace PipelineCompiler
 		// custom types declaration
 		if ( not translator.types.globalTypes.Empty() )
 		{
-			FOR( i, translator.types.globalTypes ) {
+			/*FOR( i, translator.types.globalTypes )
+			{
+				if ( skipExternals and translator.types.definedInExteranal.IsExist( translator.types.globalTypes[i].first ) )
+					continue;
+
 				CHECK_ERR( TranslateCustomType( translator.types.globalTypes[i].second, translator, INOUT translator.src ) );
 			}
-			translator.src << "\n//---------------------------------\n\n";
+			translator.src << "\n//---------------------------------\n\n";*/
+
+			CHECK_ERR( TranslateCustomTypes( translator, skipExternals ) );
 		}
 
 		// add externals
@@ -254,29 +335,7 @@ namespace PipelineCompiler
 		translator.src << src;
 		return true;
 	}
-	
-/*
-=================================================
-	TranslateCustomType
-=================================================
-*/
-	static bool TranslateCustomType (const Translator::TypeInfo &info, const Translator &translator, INOUT String &src)
-	{
-		CHECK_ERR( not info.fields.Empty() );
 
-		src << "struct " << info.typeName << "{\n";
-
-		FOR( i, info.fields )
-		{
-			src << "\t";
-			CHECK_ERR( translator.language->TranslateLocalVar( info.fields[i], INOUT src ) );
-			src << ";\n";
-		}
-
-		src << "};\n\n";
-		return true;
-	}
-	
 /*
 =================================================
 	TranslateFunctionForwardDecl
@@ -309,7 +368,7 @@ namespace PipelineCompiler
 			return true;
 		
 		// find arguments
-		for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+		FOR( i, aggr->getSequence() )
 		{
 			TIntermNode* n = aggr->getSequence()[i];
 
@@ -321,7 +380,7 @@ namespace PipelineCompiler
 				
 				func_args.Reserve( func_args.Count() + args_node->getSequence().size() );
 
-				for (size_t j = 0; j < args_node->getSequence().size(); ++j)
+				FOR( j, args_node->getSequence() )
 				{
 					Translator::TypeInfo		arg;
 					glslang::TIntermTyped *		nn = args_node->getSequence()[j]->getAsTyped();
@@ -363,7 +422,7 @@ namespace PipelineCompiler
 		if ( aggr->getOp() == glslang::TOperator::EOpSequence )
 		{
 			// search loop node
-			for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+			FOR( i, aggr->getSequence() )
 			{
 				if ( aggr->getSequence()[i]->getAsLoopNode() )
 				{
@@ -375,7 +434,7 @@ namespace PipelineCompiler
 			Translator::Node	dst_node;
 			dst_node.uid = uid;
 
-			for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+			FOR( i, aggr->getSequence() )
 			{
 				const uint	arg_uid = ++translator.uid;
 				CHECK_ERR( RecursiveProcessNode( node, aggr->getSequence()[i], arg_uid, translator ) );
@@ -473,7 +532,7 @@ namespace PipelineCompiler
 
 		
 		// find arguments
-		for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+		FOR( i, aggr->getSequence() )
 		{
 			TIntermNode* n = aggr->getSequence()[i];
 
@@ -485,7 +544,7 @@ namespace PipelineCompiler
 				
 				func_args.Reserve( func_args.Count() + args_node->getSequence().size() );
 
-				for (size_t j = 0; j < args_node->getSequence().size(); ++j)
+				FOR( j, args_node->getSequence() )
 				{
 					Translator::TypeInfo		arg;
 					glslang::TIntermTyped *		nn		= args_node->getSequence()[j]->getAsTyped();
@@ -785,8 +844,8 @@ namespace PipelineCompiler
 			result.qualifier.Or( EVariableQualifier::Local, parent->qualifier[EVariableQualifier::Local] );
 			result.qualifier.Or( EVariableQualifier::Specialization, parent->qualifier[EVariableQualifier::Specialization] );
 
-			if ( result.memoryModel == EGpuMemoryModel::None )
-				result.memoryModel = parent->memoryModel;
+			//if ( result.memoryModel == EGpuMemoryModel::Default )
+			//	result.memoryModel = parent->memoryModel;
 
 			if ( result.precision == EPrecision::Default )
 				result.precision = parent->precision;
@@ -796,11 +855,16 @@ namespace PipelineCompiler
 		{
 			auto const&	type_list = *type.getStruct();
 			
-			result.type		= EShaderVariable::Struct;
 			result.typeName = type.getTypeName().c_str();
+			result.type		= type.getBasicType() == glslang::TBasicType::EbtBlock ?
+									(type.getQualifier().storage == glslang::TStorageQualifier::EvqBuffer ?
+										EShaderVariable::StorageBlock :
+										EShaderVariable::UniformBlock) :
+									EShaderVariable::Struct;
+
 			result.fields.Reserve( result.fields.Count() + type_list.size() );
 
-			for (size_t i = 0; i < type_list.size(); ++i)
+			FOR( i, type_list )
 			{
 				Translator::TypeInfo	arg;
 				CHECK_ERR( ConvertType( null, *type_list[i].type, type_list[i].loc, &result, translator, OUT arg ) );
@@ -808,6 +872,27 @@ namespace PipelineCompiler
 			}
 		}
 		return true;
+	}
+
+/*
+=================================================
+	RecursiveExtractTypesFromExternal
+=================================================
+*/
+	static void RecursiveExtractTypesFromExternal (Translator &translator, const Translator::TypeInfo &info)
+	{
+		// search for struct types
+		for (auto& field : Range(info.fields))
+		{
+			if ( EShaderVariable::IsStruct( field.type ) and
+				 not translator.types.globalTypes.IsExist( field.typeName ) )
+			{
+				translator.types.globalTypes.Add( field.typeName, field );
+				translator.types.definedInExteranal.Add( field.typeName );
+
+				RecursiveExtractTypesFromExternal( translator, field );
+			}
+		}
 	}
 
 /*
@@ -824,13 +909,13 @@ namespace PipelineCompiler
 
 		dst_node.uid = uid;
 
-		for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+		FOR( i, aggr->getSequence() )
 		{
 			TIntermNode*	node = aggr->getSequence()[i];
 			CHECK_ERR( node->getAsTyped() );
 
-			glslang::TIntermTyped*		typed	= node->getAsTyped();
-			glslang::TType const&		type	= typed->getType();
+			glslang::TIntermTyped *		typed	= node->getAsTyped();
+			glslang::TType const &		type	= typed->getType();
 			Translator::TypeInfo		info;
 
 			CHECK_ERR( ConvertType( node, type, typed->getLoc(), null, translator, OUT info ) );
@@ -841,20 +926,13 @@ namespace PipelineCompiler
 
 			CHECK_ERR( GXCheckExternalQualifiers( translator, type.getQualifier() ) );
 			
-			// search for struct types
-			FOR( i, info.fields )
-			{
-				const auto&	field = info.fields[i];
+			RecursiveExtractTypesFromExternal( translator, info );
 
-				if ( field.type == EShaderVariable::Struct and not translator.types.globalTypes.IsExist( field.typeName ) ) {
-					translator.types.globalTypes.Add( field.typeName, field );
-				}
-			}
-
-			if ( info.type == EShaderVariable::Struct	and
+			if ( EShaderVariable::IsStruct( info.type )	and
 				 translator.language->DeclExternalTypes() )
 			{
 				translator.types.globalTypes.Add( info.typeName, info );
+				translator.types.definedInExteranal.Add( info.typeName );
 			}
 
 			if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqConst or
@@ -882,7 +960,7 @@ namespace PipelineCompiler
 
 		dst_node.uid = uid;
 
-		for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+		FOR( i, aggr->getSequence() )
 		{
 			TIntermNode*	node = aggr->getSequence()[i];
 			CHECK_ERR( node->getAsTyped() );
@@ -1084,7 +1162,6 @@ namespace PipelineCompiler
 	static bool RecursiveInitConstStruct (const Array<Translator::TypeInfo> &fields, const glslang::TConstUnionArray& cu_arr, INOUT int &index, OUT String &src, Translator &translator)
 	{
 		DeserializedShader::Constant::ValueArray_t	values;
-		CU_ToString_Func							func( src );
 
 		src << "( ";
 
@@ -1100,7 +1177,7 @@ namespace PipelineCompiler
 			if ( field.arraySize != 0 )
 				src << "{ ";
 
-			if ( field.type == EShaderVariable::Struct )
+			if ( EShaderVariable::IsStruct( field.type ) )
 			{
 				for (uint j = 0; j < count; ++j) {
 					CHECK_ERR( RecursiveInitConstStruct( field.fields, cu_arr, INOUT index, INOUT src, translator ) );
@@ -1112,10 +1189,14 @@ namespace PipelineCompiler
 				{
 					values.Clear();
 					CHECK_ERR( DeserializeConstant::Process( field.type, cu_arr, index, true, OUT values, OUT index ) );
+
+					CU_ToArray_Func	func;
 					
 					src << (j ? ", " : "");
-					CHECK_ERR( translator.language->TranslateType( field, INOUT src ) );
 					values.Front().Apply( func );
+
+					CHECK_ERR( translator.language->TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+																	   field, func.GetStrings(), func.GetTypes(), INOUT src ) );
 				}
 			}
 			
@@ -1183,18 +1264,20 @@ namespace PipelineCompiler
 				src << "const " << type_name << " " << name << " = ";
 
 				// create constant
-				if ( dst_node.typeInfo.type != EShaderVariable::Struct )
+				if ( not EShaderVariable::IsStruct( dst_node.typeInfo.type ) )
 				{
 					DeserializedShader::Constant::ValueArray_t	values;
 					CHECK_ERR( DeserializeConstant::Process( dst_node.typeInfo.type, cu_arr, OUT values ) );
-			
-					CU_ToString_Func	func( src );
 
 					FOR( i, values )
 					{
+						CU_ToArray_Func	func;
+
 						src << (i ? ", " : "");
-						CHECK_ERR( translator.language->TranslateType( dst_node.typeInfo, INOUT src ) );
 						values[i].Apply( func );
+
+						CHECK_ERR( translator.language->TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+																			dst_node.typeInfo, func.GetStrings(), func.GetTypes(), INOUT src ) );
 					}
 				}
 				else
@@ -1214,18 +1297,20 @@ namespace PipelineCompiler
 				String&	src = dst_node.src;
 
 				// create constant
-				if ( dst_node.typeInfo.type != EShaderVariable::Struct )
+				if ( not EShaderVariable::IsStruct( dst_node.typeInfo.type ) )
 				{
 					DeserializedShader::Constant::ValueArray_t	values;
 					CHECK_ERR( DeserializeConstant::Process( dst_node.typeInfo.type, cu_arr, OUT values ) );
-			
-					CU_ToString_Func	func( src );
 
 					FOR( i, values )
 					{
+						CU_ToArray_Func	func;
+
 						src << (i ? ", " : "");
-						CHECK_ERR( translator.language->TranslateType( dst_node.typeInfo, INOUT src ) );
 						values[i].Apply( func );
+
+						CHECK_ERR( translator.language->TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+																			dst_node.typeInfo, func.GetStrings(), func.GetTypes(), INOUT src ) );
 					}
 				}
 				else
@@ -1376,7 +1461,7 @@ namespace PipelineCompiler
 			translator.fwd.pendingVars.Add( symbol->getId(), dst_node.typeInfo );
 		}
 
-		if ( dst_node.typeInfo.type == EShaderVariable::Struct and
+		if ( EShaderVariable::IsStruct( dst_node.typeInfo.type ) and
 			 not dst_node.typeInfo.isGlobal and
 			 not translator.types.globalTypes.IsExist( dst_node.typeInfo.typeName ) )
 		{
@@ -1506,7 +1591,7 @@ namespace PipelineCompiler
 		{
 			glslang::TIntermAggregate*	aggr = node->getAsAggregate();
 
-			for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+			FOR( i, aggr->getSequence() )
 			{
 				glslang::TIntermLoop*	nloop = aggr->getSequence()[i]->getAsLoopNode();
 
@@ -1647,7 +1732,7 @@ namespace PipelineCompiler
 			glslang::TIntermAggregate*	aggr = binary->getRight()->getAsAggregate();
 			CHECK_ERR( aggr->getOp() == glslang::TOperator::EOpSequence );
 
-			for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+			FOR( i, aggr->getSequence() )
 			{
 				CHECK_ERR( ProcessUnion( aggr->getSequence()[i] ) );
 			}
@@ -1777,7 +1862,7 @@ namespace PipelineCompiler
 
 		dst_node.src << name << "(";
 		
-		for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+		FOR( i, aggr->getSequence() )
 		{
 			const uint	arg_uid = ++translator.uid;
 
@@ -1864,7 +1949,7 @@ namespace PipelineCompiler
 			CHECK_ERR( params and params->getOp() == glslang::TOperator::EOpParameters );
 			CHECK_ERR( params->getSequence().size() == aggr->getSequence().size() );
 
-			for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+			FOR( i, aggr->getSequence() )
 			{
 				// get argument type
 				Translator::TypeInfo		param_type;
@@ -1958,7 +2043,7 @@ namespace PipelineCompiler
 		{
 			glslang::TIntermAggregate* aggr = node->getAsAggregate();
 			
-			for (size_t i = 0; i < aggr->getSequence().size(); ++i)
+			FOR( i, aggr->getSequence() )
 			{
 				const uint	arg_uid = ++translator.uid;
 
