@@ -9,9 +9,8 @@ using namespace CMake;
 #define ENABLE_ENGINE
 #define ENABLE_UTILS
 #define ENABLE_PROJECTS
-#define ENABLE_LUNARGLASS
-#define ENABLE_EXTERNALS
-//#define ENABLE_SDL			// use SDL2 instead of WinAPI and other OS functions
+//#define ENABLE_LUNARGLASS
+//#define ENABLE_EXTERNALS//#define ENABLE_SDL			// use SDL2 instead of WinAPI and other OS functions
 
 //#define ENABLE_SCU			// single compilation unit per thread
 #define NUM_THREADS	8
@@ -239,12 +238,6 @@ extern void GenMGFProject ()
 	{
 		// STL //
 	#ifdef ENABLE_STL
-		auto	engine_docs = builder.AddLibrary( "Docs", "docs" );
-		{
-			engine_docs->AddFoldersRecursive( "" );
-			engine_docs->ProjFolder( "" );
-		}
-
 		auto	engine_config = builder.AddLibrary( "Engine.Config", "Engine/Config" );
 		{
 			engine_config->AddFoldersRecursive( "" );
@@ -313,33 +306,11 @@ extern void GenMGFProject ()
 			engine_profilers->AddFoldersRecursive( "" );
 			engine_profilers->LinkLibrary( engine_platforms );
 		}
-
-		auto	engine_debugger = builder.AddLibrary( "Engine.Debugger", "Engine/Debugger" );
-		{
-			engine_debugger->AddFoldersRecursive( "" );
-			engine_debugger->LinkLibrary( engine_platforms );
-		}
-
-		auto	engine_importexport = builder.AddLibrary( "Engine.ImportExport", "Engine/ImportExport" );
-		{
-			engine_importexport->AddFoldersRecursive( "" );
-			engine_importexport->LinkLibrary( engine_graphics );
-
-			#ifdef ENABLE_EXTERNALS
-				engine_importexport->AddDependency( "FreeImageLib.2013", "MSVC" );
-			#endif
-		}
 		
 		auto	engine_scene = builder.AddLibrary( "Engine.Scene", "Engine/Scene" );
 		{
 			engine_scene->AddFoldersRecursive( "" );
 			engine_scene->LinkLibrary( engine_graphics );
-		}
-		
-		auto	engine_ui = builder.AddLibrary( "Engine.UI", "Engine/UI" );
-		{
-			engine_ui->AddFoldersRecursive( "" );
-			engine_ui->LinkLibrary( engine_graphics );
 		}
 
 		// Tests //
@@ -349,30 +320,12 @@ extern void GenMGFProject ()
 			test_engine_base->LinkLibrary( engine_platforms )->LinkLibrary( engine_profilers );
 		}
 		
-		auto	test_engine_debugger = builder.AddExecutable( "Tests.Engine.Debugger", "Tests/Engine.Debugger" );
-		{
-			test_engine_debugger->AddFoldersRecursive( "" );
-			test_engine_debugger->AddFolder( "../Engine.Base/Pipelines" );
-			test_engine_debugger->LinkLibrary( engine_debugger );
-		}
-		
 		auto	test_engine_graphics = builder.AddExecutable( "Tests.Engine.Graphics", "Tests/Engine.Graphics" );
 		{
 			test_engine_graphics->AddFoldersRecursive( "" );
-			test_engine_graphics->LinkLibrary( engine_importexport )->LinkLibrary( engine_profilers );
+			test_engine_graphics->LinkLibrary( engine_graphics )->LinkLibrary( engine_profilers );
 		}
 		
-		auto	test_engine_scene = builder.AddExecutable( "Tests.Engine.Scene", "Tests/Engine.Scene" );
-		{
-			test_engine_scene->AddFoldersRecursive( "" );
-			test_engine_scene->LinkLibrary( engine_scene )->LinkLibrary( engine_profilers );
-		}
-		
-		auto	test_engine_ui = builder.AddExecutable( "Tests.Engine.UI", "Tests/Engine.UI" );
-		{
-			test_engine_ui->AddFoldersRecursive( "" );
-			test_engine_ui->LinkLibrary( engine_ui )->LinkLibrary( engine_profilers );
-		}
 
 		auto	test_engine_gapi = builder.AddExecutable( "Tests.Engine.Platforms.GAPI", "Tests/Engine.Platforms.GAPI" );
 		{
@@ -383,10 +336,7 @@ extern void GenMGFProject ()
 		#ifdef ENABLE_SCU
 			builder.AddExecutable( "Tests.Engine.STL.Fast" )->ProjFolder("Fast")->LinkLibrary( test_stl )->MergeCPP( NUM_THREADS );
 			builder.AddExecutable( "Tests.Engine.Base.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_base )->MergeCPP( NUM_THREADS );
-			builder.AddExecutable( "Tests.Engine.Debugger.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_debugger )->MergeCPP( NUM_THREADS );
 			builder.AddExecutable( "Tests.Engine.Graphics.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_graphics )->MergeCPP( NUM_THREADS );
-			builder.AddExecutable( "Tests.Engine.Scene.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_scene )->MergeCPP( NUM_THREADS );
-			builder.AddExecutable( "Tests.Engine.UI.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_ui )->MergeCPP( NUM_THREADS );
 		#endif
 	#endif	// ENABLE_ENGINE
 
@@ -397,7 +347,7 @@ extern void GenMGFProject ()
 	#endif
 
 #ifdef ENABLE_EXTERNALS
-		builder.SearchVSProjects( "External/FreeImage", "External/FreeImage" );
+		//builder.SearchVSProjects( "External/FreeImage", "External/FreeImage" );
 
 	#ifdef ENABLE_LUNARGLASS
 		builder.SearchVSProjects( "build_LunarGLASS", "External/LunarGLASS" );
@@ -469,12 +419,6 @@ endif()
 			proj_shader_editor_tools->LinkLibrary( engine_pipeline_compiler );
 		}
 	# endif	// ENABLE_LUNARGLASS
-
-		auto	proj_machine_learning = builder.AddExecutable( "Projects.MachineLearning", "Projects/MachineLearning" );
-		{
-			proj_machine_learning->AddFoldersRecursive( "" );
-			proj_machine_learning->LinkLibrary( engine_scene );
-		}
 	#endif	// ENABLE_PROJECTS
 
 
@@ -484,24 +428,6 @@ endif()
 		{
 			util_cmake->AddFoldersRecursive( "" );
 			util_cmake->LinkLibrary( engine_stl );
-		}
-
-		auto	util_cpppreprocessor = builder.AddExecutable( "Utils.CppPreprocessor", "Utils/CppPreprocessor" );
-		{
-			util_cpppreprocessor->AddFoldersRecursive( "" );
-			util_cpppreprocessor->LinkLibrary( engine_stl );
-		}
-
-		auto	util_filesearch = builder.AddExecutable( "Utils.FileSearch", "Utils/FileSearch" );
-		{
-			util_filesearch->AddFoldersRecursive( "" );
-			util_filesearch->LinkLibrary( engine_stl );
-		}
-
-		auto	util_pvs = builder.AddExecutable( "Utils.PVS", "Utils/PVS" );
-		{
-			util_pvs->AddFoldersRecursive( "" );
-			util_pvs->LinkLibrary( engine_stl );
 		}
 	#endif	// ENABLE_UTILS
 	}

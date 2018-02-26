@@ -14,6 +14,7 @@ CApp::CApp ()
 			<< &CApp::_Test_ClearBuffer
 			<< &CApp::_Test_UpdateBuffer
 			<< &CApp::_Test_BufferAlign
+			<< &CApp::_Test_DynamicBuffer
 			//<< &CApp::_Test_CopyImage2D
 			//<< &CApp::_Test_CopyImage3D
 			//<< &CApp::_Test_PushConstants

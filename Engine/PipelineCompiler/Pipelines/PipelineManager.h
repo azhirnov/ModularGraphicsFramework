@@ -20,7 +20,7 @@ namespace PipelineCompiler
 	private:
 		using StructTypes		= BasePipeline::StructTypes;
 		using BindableTypes		= BasePipeline::Bindings::_Uniform::TypeList_t;
-		using NamedTypes		= HashMap< String, BasePipeline::Bindings::_Uniform >;
+		using NamedTypes		= MultiHashMap< String, BasePipeline::Bindings::_Uniform >;
 		using SharedTypes		= StaticArray< NamedTypes, BindableTypes::Count >;
 		using TextureUniform	= BasePipeline::TextureUniform;
 		using ImageUniform		= BasePipeline::ImageUniform;

@@ -713,6 +713,163 @@ endif()
 
 
 #==================================================================================================
+# project: Engine.Physics
+#==================================================================================================
+add_library( "Engine.Physics" STATIC 
+		"Engine/Physics/Algorithms/AcceleratedMotion.h"
+		"Engine/Physics/Algorithms/Astrophysics.h"
+		"Engine/Physics/Algorithms/Astrophysics_Orbit.h"
+		"Engine/Physics/Dimensions/AstrophysicsConstants.h"
+		"Engine/Physics/Dimensions/DefaultTypes.h"
+		"Engine/Physics/Dimensions/PhysicsConstants.h"
+		"Engine/Physics/Dimensions/PhysicsDimension.h"
+		"Engine/Physics/Dimensions/PhysicsValue.h"
+		"Engine/Physics/Dimensions/PhysicsValueMath.h"
+		"Engine/Physics/Dimensions/PhysicsValueUtils.h"
+		"Engine/Physics/Dimensions/PhysicsValueVec.h"
+		"Engine/Physics/Dimensions/PhysicsValueVecI.h"
+		"Engine/Physics/Common/Common.h"
+		"Engine/Physics/Common/Main.cpp"
+		"Engine/Physics/Engine.Physics.h"
+		"Engine/Physics/CompileTime/GenType.h"
+		"Engine/Physics/CompileTime/PhysTypeInfo.h" )
+
+source_group( "Algorithms" FILES "Engine/Physics/Algorithms/AcceleratedMotion.h" "Engine/Physics/Algorithms/Astrophysics.h" "Engine/Physics/Algorithms/Astrophysics_Orbit.h" )
+source_group( "Dimensions" FILES "Engine/Physics/Dimensions/AstrophysicsConstants.h" "Engine/Physics/Dimensions/DefaultTypes.h" "Engine/Physics/Dimensions/PhysicsConstants.h" "Engine/Physics/Dimensions/PhysicsDimension.h" "Engine/Physics/Dimensions/PhysicsValue.h" "Engine/Physics/Dimensions/PhysicsValueMath.h" "Engine/Physics/Dimensions/PhysicsValueUtils.h" "Engine/Physics/Dimensions/PhysicsValueVec.h" "Engine/Physics/Dimensions/PhysicsValueVecI.h" )
+source_group( "Common" FILES "Engine/Physics/Common/Common.h" "Engine/Physics/Common/Main.cpp" )
+source_group( "" FILES "Engine/Physics/Engine.Physics.h" )
+source_group( "CompileTime" FILES "Engine/Physics/CompileTime/GenType.h" "Engine/Physics/CompileTime/PhysTypeInfo.h" )
+set_property( TARGET "Engine.Physics" PROPERTY FOLDER "Engine" )
+target_include_directories( "Engine.Physics" PRIVATE "Engine/Physics" )
+target_include_directories( "Engine.Physics" PUBLIC "Engine/.." )
+target_link_libraries( "Engine.Physics" "Engine.STL" )
+# compiler
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	# DebugAnalyze
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
+	# Debug
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
+	# Profile
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
+	# Release
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
+endif()
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	# DebugAnalyze
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	# Debug
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	# Profile
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	# Release
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+endif()
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	# DebugAnalyze
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	# Debug
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	# Profile
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	# Release
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+endif()
+
+
+
+
+
+#==================================================================================================
+# project: Tests.Physics
+#==================================================================================================
+add_executable( "Tests.Physics" 
+		"Tests/Physics/Common.h"
+		"Tests/Physics/Main.cpp"
+		"Tests/Physics/Test_Algorithms_Orbit.cpp"
+		"Tests/Physics/Test_Dimensions_PhysicsValue.cpp" )
+
+source_group( "" FILES "Tests/Physics/Common.h" "Tests/Physics/Main.cpp" "Tests/Physics/Test_Algorithms_Orbit.cpp" "Tests/Physics/Test_Dimensions_PhysicsValue.cpp" )
+set_property( TARGET "Tests.Physics" PROPERTY FOLDER "Tests" )
+target_include_directories( "Tests.Physics" PRIVATE "Tests/Physics" )
+target_include_directories( "Tests.Physics" PUBLIC "Engine/.." )
+target_link_libraries( "Tests.Physics" "Engine.Physics" )
+# compiler
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	# DebugAnalyze
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
+	# Debug
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
+	# Profile
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
+	# Release
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
+endif()
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	# DebugAnalyze
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	# Debug
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	# Profile
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	# Release
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+endif()
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	# DebugAnalyze
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	# Debug
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	# Profile
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	# Release
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+endif()
+
+
+
+
+
+#==================================================================================================
 # project: Engine.Base
 #==================================================================================================
 add_library( "Engine.Base" STATIC 
@@ -888,6 +1045,7 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Soft/ShaderLang/SWLang.h"
 		"Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h"
 		"Engine/Platforms/Soft/ShaderLang/SWLangCommon.h"
+		"Engine/Platforms/Soft/ShaderLang/SWLangGLM.h"
 		"Engine/Platforms/Soft/ShaderLang/SWLangImage.cpp"
 		"Engine/Platforms/Soft/ShaderLang/SWLangImage.h"
 		"Engine/Platforms/Soft/ShaderLang/SWLangTexture.h"
@@ -902,12 +1060,15 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Soft/Impl/SWCommandBuffer.cpp"
 		"Engine/Platforms/Soft/Impl/SWCommandBuilder.cpp"
 		"Engine/Platforms/Soft/Impl/SWCommandQueue.cpp"
+		"Engine/Platforms/Soft/Impl/SWDeviceLimits.h"
 		"Engine/Platforms/Soft/Impl/SWEnums.h"
 		"Engine/Platforms/Soft/Impl/SWImage.cpp"
 		"Engine/Platforms/Soft/Impl/SWMemory.cpp"
 		"Engine/Platforms/Soft/Impl/SWMessages.h"
 		"Engine/Platforms/Soft/Impl/SWPipeline.cpp"
 		"Engine/Platforms/Soft/Impl/SWPipelineResourceTable.cpp"
+		"Engine/Platforms/Soft/Impl/SWShader.cpp"
+		"Engine/Platforms/Soft/Impl/SWShader.h"
 		"Engine/Platforms/Soft/Impl/SWSyncManager.cpp"
 		"Engine/Platforms/Soft/Impl/SWSyncObjects.h"
 		"Engine/Platforms/Windows/WinDisplay.cpp"
@@ -1041,9 +1202,9 @@ source_group( "OpenCL" FILES "Engine/Platforms/OpenCL/OpenCLContext.cpp" "Engine
 source_group( "Shared\\OS" FILES "Engine/Platforms/Shared/OS/Display.h" "Engine/Platforms/Shared/OS/IDs.h" "Engine/Platforms/Shared/OS/Input.h" "Engine/Platforms/Shared/OS/OSEnums.h" "Engine/Platforms/Shared/OS/Platform.h" "Engine/Platforms/Shared/OS/ScreenCoords.h" "Engine/Platforms/Shared/OS/Window.h" )
 source_group( "Input" FILES "Engine/Platforms/Input/InputManager.cpp" "Engine/Platforms/Input/InputManager.h" "Engine/Platforms/Input/InputThread.cpp" )
 source_group( "Shared" FILES "Engine/Platforms/Shared/Common.h" )
-source_group( "Soft\\ShaderLang" FILES "Engine/Platforms/Soft/ShaderLang/gen_Image.h" "Engine/Platforms/Soft/ShaderLang/gen_Texture.h" "Engine/Platforms/Soft/ShaderLang/SWLang.h" "Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h" "Engine/Platforms/Soft/ShaderLang/SWLangCommon.h" "Engine/Platforms/Soft/ShaderLang/SWLangImage.cpp" "Engine/Platforms/Soft/ShaderLang/SWLangImage.h" "Engine/Platforms/Soft/ShaderLang/SWLangTexture.h" "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.cpp" "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h" )
+source_group( "Soft\\ShaderLang" FILES "Engine/Platforms/Soft/ShaderLang/gen_Image.h" "Engine/Platforms/Soft/ShaderLang/gen_Texture.h" "Engine/Platforms/Soft/ShaderLang/SWLang.h" "Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h" "Engine/Platforms/Soft/ShaderLang/SWLangCommon.h" "Engine/Platforms/Soft/ShaderLang/SWLangGLM.h" "Engine/Platforms/Soft/ShaderLang/SWLangImage.cpp" "Engine/Platforms/Soft/ShaderLang/SWLangImage.h" "Engine/Platforms/Soft/ShaderLang/SWLangTexture.h" "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.cpp" "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h" )
 source_group( "Vulkan" FILES "Engine/Platforms/Vulkan/VulkanContext.cpp" "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h" "Engine/Platforms/Vulkan/VulkanThread.cpp" )
-source_group( "Soft\\Impl" FILES "Engine/Platforms/Soft/Impl/SWBaseModule.cpp" "Engine/Platforms/Soft/Impl/SWBaseModule.h" "Engine/Platforms/Soft/Impl/SWBuffer.cpp" "Engine/Platforms/Soft/Impl/SWCommandBuffer.cpp" "Engine/Platforms/Soft/Impl/SWCommandBuilder.cpp" "Engine/Platforms/Soft/Impl/SWCommandQueue.cpp" "Engine/Platforms/Soft/Impl/SWEnums.h" "Engine/Platforms/Soft/Impl/SWImage.cpp" "Engine/Platforms/Soft/Impl/SWMemory.cpp" "Engine/Platforms/Soft/Impl/SWMessages.h" "Engine/Platforms/Soft/Impl/SWPipeline.cpp" "Engine/Platforms/Soft/Impl/SWPipelineResourceTable.cpp" "Engine/Platforms/Soft/Impl/SWSyncManager.cpp" "Engine/Platforms/Soft/Impl/SWSyncObjects.h" )
+source_group( "Soft\\Impl" FILES "Engine/Platforms/Soft/Impl/SWBaseModule.cpp" "Engine/Platforms/Soft/Impl/SWBaseModule.h" "Engine/Platforms/Soft/Impl/SWBuffer.cpp" "Engine/Platforms/Soft/Impl/SWCommandBuffer.cpp" "Engine/Platforms/Soft/Impl/SWCommandBuilder.cpp" "Engine/Platforms/Soft/Impl/SWCommandQueue.cpp" "Engine/Platforms/Soft/Impl/SWDeviceLimits.h" "Engine/Platforms/Soft/Impl/SWEnums.h" "Engine/Platforms/Soft/Impl/SWImage.cpp" "Engine/Platforms/Soft/Impl/SWMemory.cpp" "Engine/Platforms/Soft/Impl/SWMessages.h" "Engine/Platforms/Soft/Impl/SWPipeline.cpp" "Engine/Platforms/Soft/Impl/SWPipelineResourceTable.cpp" "Engine/Platforms/Soft/Impl/SWShader.cpp" "Engine/Platforms/Soft/Impl/SWShader.h" "Engine/Platforms/Soft/Impl/SWSyncManager.cpp" "Engine/Platforms/Soft/Impl/SWSyncObjects.h" )
 source_group( "Windows" FILES "Engine/Platforms/Windows/WinDisplay.cpp" "Engine/Platforms/Windows/WinDisplay.h" "Engine/Platforms/Windows/WinKeyInput.cpp" "Engine/Platforms/Windows/WinMessages.h" "Engine/Platforms/Windows/WinMouseInput.cpp" "Engine/Platforms/Windows/WinObjectsConstructor.h" "Engine/Platforms/Windows/WinPlatform.cpp" "Engine/Platforms/Windows/WinWindow.cpp" )
 source_group( "Impl" FILES "Engine/Platforms/Impl/Main.cpp" "Engine/Platforms/Impl/PipelineTemplate.cpp" )
 source_group( "Vulkan\\Impl" FILES "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.cpp" "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h" "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h" "Engine/Platforms/Vulkan/Impl/Vk1Buffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1CommandBuilder.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Device.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Device.h" "Engine/Platforms/Vulkan/Impl/Vk1Enums.h" "Engine/Platforms/Vulkan/Impl/Vk1Framebuffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Image.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Library.h" "Engine/Platforms/Vulkan/Impl/Vk1ManagedMemory.cpp" "Engine/Platforms/Vulkan/Impl/Vk1MemoryManager.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Messages.h" "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h" "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h" "Engine/Platforms/Vulkan/Impl/Vk1PipelineResourceTable.cpp" "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.cpp" "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h" "Engine/Platforms/Vulkan/Impl/Vk1Sampler.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h" "Engine/Platforms/Vulkan/Impl/Vk1SwapchainImage.h" "Engine/Platforms/Vulkan/Impl/Vk1SyncManager.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1.h" "Engine/Platforms/Vulkan/Impl/vulkan1_platform.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1_platform.h" "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h" )
@@ -1558,16 +1719,26 @@ endif()
 add_executable( "Tests.Engine.Platforms.GAPI" 
 		"Tests/Engine.Platforms.GAPI/Compute/CApp.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp.h"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_BufferAlign.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_ClearBuffer.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp"
 		"Tests/Engine.Platforms.GAPI/Graphics/GApp.cpp"
 		"Tests/Engine.Platforms.GAPI/Graphics/GApp.h"
 		"Tests/Engine.Platforms.GAPI/Graphics/Test.GraphicsApi.cpp"
+		"Tests/Engine.Platforms.GAPI/Pipelines/all_pipelines.h"
+		"Tests/Engine.Platforms.GAPI/Pipelines/bufferaligntest.cpp"
+		"Tests/Engine.Platforms.GAPI/Pipelines/common.h"
+		"Tests/Engine.Platforms.GAPI/Pipelines/dynamicbuffertest.cpp"
+		"Tests/Engine.Platforms.GAPI/Pipelines/shared_types.h"
 		"Tests/Engine.Platforms.GAPI/Common.h"
 		"Tests/Engine.Platforms.GAPI/Main.cpp" )
 
-source_group( "Compute" FILES "Tests/Engine.Platforms.GAPI/Compute/CApp.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp.h" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp" )
+source_group( "Compute" FILES "Tests/Engine.Platforms.GAPI/Compute/CApp.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp.h" "Tests/Engine.Platforms.GAPI/Compute/CApp_BufferAlign.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ClearBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp" )
 source_group( "Graphics" FILES "Tests/Engine.Platforms.GAPI/Graphics/GApp.cpp" "Tests/Engine.Platforms.GAPI/Graphics/GApp.h" "Tests/Engine.Platforms.GAPI/Graphics/Test.GraphicsApi.cpp" )
+source_group( "Pipelines" FILES "Tests/Engine.Platforms.GAPI/Pipelines/all_pipelines.h" "Tests/Engine.Platforms.GAPI/Pipelines/bufferaligntest.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/common.h" "Tests/Engine.Platforms.GAPI/Pipelines/dynamicbuffertest.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/shared_types.h" )
 source_group( "" FILES "Tests/Engine.Platforms.GAPI/Common.h" "Tests/Engine.Platforms.GAPI/Main.cpp" )
 set_property( TARGET "Tests.Engine.Platforms.GAPI" PROPERTY FOLDER "Tests" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PRIVATE "Tests/Engine.Platforms.GAPI" )

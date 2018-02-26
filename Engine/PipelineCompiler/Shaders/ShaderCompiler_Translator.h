@@ -149,6 +149,7 @@ namespace PipelineCompiler
 		virtual ~IDstLanguage () {}
 
 		virtual bool TranslateLocalVar (const TypeInfo &, INOUT String &src) = 0;
+		virtual bool TranslateStruct (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateArg (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateType (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateName (const TypeInfo &, INOUT String &src) = 0;

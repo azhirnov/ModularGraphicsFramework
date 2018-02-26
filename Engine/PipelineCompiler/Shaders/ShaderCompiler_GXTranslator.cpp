@@ -37,6 +37,7 @@ namespace PipelineCompiler
 		{}
 
 		bool TranslateLocalVar (const TypeInfo &, INOUT String &src) override;
+		bool TranslateStruct (const TypeInfo &, INOUT String &src) override;
 		bool TranslateArg (const TypeInfo &, INOUT String &src) override;
 		bool TranslateType (const TypeInfo &, INOUT String &src) override;
 		bool TranslateName (const TypeInfo &, INOUT String &src) override;
@@ -237,6 +238,26 @@ namespace PipelineCompiler
 		}
 
 		res << " " << t.name << (t.arraySize == 0 ? "" : (t.arraySize == UMax ? "[]" : "["_str << t.arraySize << "]"));
+		return true;
+	}
+	
+/*
+=================================================
+	TranslateStruct
+=================================================
+*/
+	bool GLSL_DstLanguage::TranslateStruct (const TypeInfo &info, INOUT String &src)
+	{
+		src << "struct " << info.typeName << "\n{\n";
+
+		FOR( j, info.fields )
+		{
+			src << "\t";
+			CHECK_ERR( TranslateLocalVar( info.fields[j], INOUT src ) );
+			src << ";\n";
+		}
+
+		src << "};\n\n";
 		return true;
 	}
 	

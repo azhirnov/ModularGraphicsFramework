@@ -196,16 +196,7 @@ namespace PipelineCompiler
 					continue;
 			
 				// process and remove from map
-				src << "struct " << info.typeName << "\n{\n";
-
-				FOR( j, info.fields )
-				{
-					src << "\t";
-					CHECK_ERR( translator.language->TranslateLocalVar( info.fields[j], INOUT src ) );
-					src << ";\n";
-				}
-
-				src << "};\n\n";
+				CHECK_ERR( translator.language->TranslateStruct( info, INOUT src ) );
 
 				translator.types.globalTypes.EraseByIndex( i );
 				--i;

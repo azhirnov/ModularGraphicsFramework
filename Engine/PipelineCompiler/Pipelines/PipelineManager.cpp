@@ -75,92 +75,138 @@ namespace PipelineCompiler
 		{
 			return BindableTypes::IndexOf<T>;
 		}
-
-
+		
+/*
+=================================================
+	operator (TextureUniform)
+=================================================
+*/
 		bool operator () (const TextureUniform &tex)
 		{
-			NamedTypes&				map = bindings[ Id(tex) ];
-			NamedTypes::iterator	iter;
-
-			if ( map.Find( tex.name, OUT iter ) )
+			NamedTypes&		map = bindings[ Id(tex) ];
+			usize			idx;
+			bool			found = false;
+			
+			if ( map.FindFirstIndex( tex.name, OUT idx ) )
 			{
-				auto&	dst = iter->second.Get<TextureUniform>();
+				for (; idx < map.Count() and map[idx].first == tex.name; ++idx)
+				{
+					auto&	dst = map[idx].second.Get<TextureUniform>();
 
-				CHECK_ERR(	dst.name		== tex.name			and
-							dst.imageType	== tex.imageType	and
-							EPixelFormatClass::StrongComparison( dst.format, tex.format ) );
+					CHECK_ERR(	dst.name		== tex.name			and
+								dst.imageType	== tex.imageType	and
+								EPixelFormatClass::StrongComparison( dst.format, tex.format ) );
 
-				dst.shaderUsage |= tex.shaderUsage;
+					dst.shaderUsage |= tex.shaderUsage;
+					found = true;
+				}
 			}
-			else
-				map.Add( tex.name, Uniform(tex) );
 
+			if ( not found ) {
+				map.Add( tex.name, Uniform(tex) );
+			}
 			return true;
 		}
-
-
+		
+/*
+=================================================
+	operator (ImageUniform)
+=================================================
+*/
 		bool operator () (const ImageUniform &img)
 		{
-			NamedTypes&				map = bindings[ Id(img) ];
-			NamedTypes::iterator	iter;
-
-			if ( map.Find( img.name, OUT iter ) )
-			{
-				auto&	dst = iter->second.Get<ImageUniform>();
-
-				CHECK_ERR(	dst.name		== img.name			and
-							dst.imageType	== img.imageType	and
-							dst.format		== img.format );
-
-				dst.shaderUsage |= img.shaderUsage;
-			}
-			else
-				map.Add( img.name, Uniform(img) );
+			NamedTypes&		map = bindings[ Id(img) ];
+			usize			idx;
+			bool			found = false;
 			
+			if ( map.FindFirstIndex( img.name, OUT idx ) )
+			{
+				for (; idx < map.Count() and map[idx].first == img.name; ++idx)
+				{
+					auto&	dst = map[idx].second.Get<ImageUniform>();
+					
+					CHECK_ERR(	dst.name		== img.name			and
+								dst.imageType	== img.imageType	and
+								dst.format		== img.format );
+
+					dst.shaderUsage |= img.shaderUsage;
+					found = true;
+				}
+			}
+
+			if ( not found ) {
+				map.Add( img.name, Uniform(img) );
+			}
 			return true;
 		}
-
-
+		
+/*
+=================================================
+	operator (UniformBuffer)
+=================================================
+*/
 		bool operator () (const UniformBuffer &buf)
 		{
-			NamedTypes&				map = bindings[ Id(buf) ];
-			NamedTypes::iterator	iter;
-
-			if ( map.Find( buf.name, OUT iter ) )
+			NamedTypes&		map = bindings[ Id(buf) ];
+			usize			idx;
+			bool			found = false;
+			
+			if ( map.FindFirstIndex( buf.name, OUT idx ) )
 			{
-				auto&	dst = iter->second.Get<UniformBuffer>();
+				for (; idx < map.Count() and map[idx].first == buf.name; ++idx)
+				{
+					auto&	dst = map[idx].second.Get<UniformBuffer>();
+					
+					if ( dst.typeName == buf.typeName )
+					{
+						CHECK_ERR(	dst.name		== buf.name		and
+									dst.typeName	== buf.typeName	and
+									dst.packing		== buf.packing );
 
-				CHECK_ERR(	dst.name		== buf.name		and
-							dst.typeName	== buf.typeName	and
-							dst.packing		== buf.packing );
-
-				dst.shaderUsage |= buf.shaderUsage;
+						dst.shaderUsage |= buf.shaderUsage;
+						found = true;
+					}
+				}
 			}
-			else
+			
+			if ( not found ) {
 				map.Add( buf.name, Uniform(buf) );
-
+			}
 			return true;
 		}
-
-
+		
+/*
+=================================================
+	operator (StorageBuffer)
+=================================================
+*/
 		bool operator () (const StorageBuffer &buf)
 		{
-			NamedTypes&				map = bindings[ Id(buf) ];
-			NamedTypes::iterator	iter;
+			NamedTypes&		map = bindings[ Id(buf) ];
+			usize			idx;
+			bool			found = false;
 
-			if ( map.Find( buf.name, OUT iter ) )
+			if ( map.FindFirstIndex( buf.name, OUT idx ) )
 			{
-				auto&	dst = iter->second.Get<StorageBuffer>();
+				for (; idx < map.Count() and map[idx].first == buf.name; ++idx)
+				{
+					auto&	dst = map[idx].second.Get<StorageBuffer>();
 				
-				CHECK_ERR(	dst.name		== buf.name		and
-							dst.typeName	== buf.typeName	and
-							dst.packing		== buf.packing );
+					if ( dst.typeName == buf.typeName )
+					{
+						CHECK_ERR(	dst.name		== buf.name		and
+									dst.typeName	== buf.typeName	and
+									dst.packing		== buf.packing );
 
-				dst.shaderUsage |= buf.shaderUsage;
+						dst.shaderUsage |= buf.shaderUsage;
+						found = true;
+					}
+				}
 			}
-			else
-				map.Add( buf.name, Uniform(buf) );
 
+			if ( not found ) {
+				map.Add( buf.name, Uniform(buf) );
+			}
 			return true;
 		}
 	};

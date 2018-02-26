@@ -898,7 +898,11 @@ namespace PipelineCompiler
 
 		// deserialize
 		{
-			CHECK_ERR( ShaderCompiler::Instance()->Deserialize( shaderFormat, shader.type, source, shader_entry, OUT log, OUT deserialized ) );
+			if ( not ShaderCompiler::Instance()->Deserialize( shaderFormat, shader.type, source, shader_entry, OUT log, OUT deserialized ) )
+			{
+				RETURN_ERR( log );
+			}
+
 			CHECK_ERR( deserialized.CalculateOffsets() );
 			CHECK_ERR( deserialized.CalculateLocations() );
 			//LOG( deserialized.ToString().cstr(), ELog::Debug );

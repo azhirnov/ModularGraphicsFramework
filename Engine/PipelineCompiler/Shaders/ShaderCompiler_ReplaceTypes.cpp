@@ -1,8 +1,4 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
-/*
-	TODO:
-		- detect swizzle to avoid replacing 'float2().y' -> 'float4().xy.y'
-*/
 
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h"
 
@@ -153,6 +149,21 @@ namespace PipelineCompiler
 
 		if ( field.name.Empty() or st_type.Empty() or not has_index )
 			return true;	// continue parsing
+
+		// skip scalar/vector with swizzle operator
+		{
+			TIntermNode *			root		= replacer.nodes.Back();
+			glslang::TIntermBinary*	bin_root	= root->getAsBinaryNode();
+
+			if ( bin_root and (
+				 bin_root->getOp() == glslang::TOperator::EOpVectorSwizzle or
+				(bin_root->getOp() == glslang::TOperator::EOpIndexDirect and not bin_root->getLeft()->isArray() and
+				 (bin_root->getLeft()->isScalar() or bin_root->getLeft()->isVector()))
+				) )
+			{
+				return true;
+			}
+		}
 
 		LOG( ("TIntermBinary: struct field access: "_str << st_type << "::" << field.name).cstr(), ELog::Info );
 
@@ -616,7 +627,7 @@ namespace PipelineCompiler
 			else
 			// create constructor, value must be the Rvalue
 			{
-				CHECK_ERR( CreateConstructorNode(  INOUT root, binary, oldField, newField, old_type, INOUT new_type ) );
+				CHECK_ERR( CreateConstructorNode( INOUT root, binary, oldField, newField, old_type, INOUT new_type ) );
 			}
 		}
 

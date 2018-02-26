@@ -330,6 +330,8 @@ namespace PipelineCompiler
 		}
 		
 		log = RVREF(str);
+
+		WARNING( log.cstr() );
 		return false;
 	}
 	

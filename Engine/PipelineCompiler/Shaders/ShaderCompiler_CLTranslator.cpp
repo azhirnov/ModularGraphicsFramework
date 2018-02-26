@@ -35,6 +35,7 @@ namespace PipelineCompiler
 		~CL_DstLanguage () {}
 
 		bool TranslateLocalVar (const TypeInfo &, INOUT String &src) override;
+		bool TranslateStruct (const TypeInfo &, INOUT String &src) override;
 		bool TranslateArg (const TypeInfo &, INOUT String &src) override;
 		bool TranslateType (const TypeInfo &, INOUT String &src) override;
 		bool TranslateName (const TypeInfo &, INOUT String &src) override;
@@ -132,12 +133,12 @@ namespace PipelineCompiler
 */
 	CL_DstLanguage::CL_DstLanguage (Translator &translator) : _translator{translator}
 	{
-		_builtinMap.Add( "gl_LocalInvocationIndex",	"(uint)(get_local_linear_id())" );
-		_builtinMap.Add( "gl_GlobalInvocationID",	"(uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))" );
-		_builtinMap.Add( "gl_LocalInvocationID",	"(uint3)(get_local_id(0),   get_local_id(1),   get_local_id(2))" );
-		_builtinMap.Add( "gl_NumWorkGroups",		"(uint3)(get_num_groups(0), get_num_groups(1), get_num_groups(2))" );
-		_builtinMap.Add( "gl_WorkGroupID",			"(uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))" );
-		_builtinMap.Add( "gl_WorkGroupSize",		"(uint3)(get_local_size(0), get_local_size(1), get_local_size(2))" );
+		_builtinMap.Add( "gl_LocalInvocationIndex",	"((uint)(get_local_linear_id()))" );
+		_builtinMap.Add( "gl_GlobalInvocationID",	"((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2)))" );
+		_builtinMap.Add( "gl_LocalInvocationID",	"((uint3)(get_local_id(0),   get_local_id(1),   get_local_id(2)))" );
+		_builtinMap.Add( "gl_NumWorkGroups",		"((uint3)(get_num_groups(0), get_num_groups(1), get_num_groups(2)))" );
+		_builtinMap.Add( "gl_WorkGroupID",			"((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2)))" );
+		_builtinMap.Add( "gl_WorkGroupSize",		"((uint3)(get_local_size(0), get_local_size(1), get_local_size(2)))" );
 	}
 
 /*
@@ -169,6 +170,49 @@ namespace PipelineCompiler
 		return true;
 	}
 	
+/*
+=================================================
+	TranslateStruct
+=================================================
+*/
+	bool CL_DstLanguage::TranslateStruct (const TypeInfo &info, INOUT String &src)
+	{
+		src << "struct " << info.typeName << "\n{\n";
+
+		FOR( j, info.fields )
+		{
+			src << "\t";
+
+			auto const& t = info.fields[j];
+			{
+				// read-only
+				if ( t.qualifier[ EVariableQualifier::Constant ] )
+					src << "const ";
+
+				// image format
+				//if ( t.format != EPixelFormat::Unknown )
+				//	src << "FORMAT(" << ToStringCL( t.format ) << ") ";
+
+				// type
+				if ( not t.typeName.Empty() ) {
+					src << "struct " << t.typeName;
+				} else {
+					src << ToStringCL( t.type );
+				}
+				src << " ";
+		
+				if ( t.arraySize == 0 )		src << t.name;				else
+				if ( t.arraySize == UMax )	src << t.name << " []";		else			// array memory placed in struct
+											src << t.name << " [" << t.arraySize << "]";
+			}
+
+			src << ";\n";
+		}
+
+		src << "};\n\n";
+		return true;
+	}
+
 /*
 =================================================
 	TranslateArg
@@ -300,7 +344,7 @@ namespace PipelineCompiler
 		{
 			String	tname;
 			CHECK_ERR( TranslateType( resultType, OUT tname ) );
-			src <<'('<<tname<<')'<< all_args;
+			src <<"(("<<tname<<')'<< all_args << ')';
 			return true;
 		}
 
@@ -328,7 +372,7 @@ namespace PipelineCompiler
 			{
 				case glslang::TOperator::EOpNegative :				src << "-" << all_args;				break;
 				case glslang::TOperator::EOpLogicalNot :			src << "!" << all_args;				break;
-				case glslang::TOperator::EOpVectorLogicalNot :		src << "not" << all_args;			break;
+				case glslang::TOperator::EOpVectorLogicalNot :		src << "!" << all_args;				break;
 				case glslang::TOperator::EOpBitwiseNot :			src << "~" << all_args;				break;
 				case glslang::TOperator::EOpPostIncrement :			src << all_args << "++";			break;
 				case glslang::TOperator::EOpPostDecrement :			src << all_args << "--";			break;

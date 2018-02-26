@@ -104,7 +104,7 @@ namespace Impl
 	template <typename T, EStorageAccess::type A>
 	StorageBuffer<T,A>::StorageBuffer (const BufferData_t &data) : _data(data)
 	{
-		ASSERT( _data.memory.Size() == SizeOf<T>() );
+		//ASSERT( _data.memory.Size() == SizeOf<T>() );
 	}
 
 	template <typename T, EStorageAccess::type A>

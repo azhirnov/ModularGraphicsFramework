@@ -77,7 +77,9 @@ namespace glm
 		explicit Bool (Int v) : _value(v) {}
 		explicit Bool (UInt v) : _value(v) {}
 
-		operator bool () const	{ return !!_value; }
+		operator bool () const		{ return !!_value; }
+
+		Bool operator ! () const	{ return !_value; }
 	};
 
 
@@ -118,6 +120,8 @@ namespace glm
 		explicit Bool2_t (const UInt2 &v) : x(!!v.x), y(!!v.y) {}
 
 		operator const bvec2 () const					{ return bvec2(x, y); }
+
+		Bool2_t operator ! () const						{ return Bool2_t(!x, !y); }
 		
 		typedef length_t length_type;
 		static constexpr length_type length ()			{ return 2; }
@@ -160,6 +164,8 @@ namespace glm
 		explicit Bool3_t (const UInt3 &v) : x(!!v.x), y(!!v.y), z(!!v.z) {}
 
 		operator const bvec3 () const					{ return bvec3(x, y, z); }
+
+		Bool3_t operator ! () const						{ return Bool3_t(!x, !y, !z); }
 		
 		typedef length_t length_type;
 		static constexpr length_type length ()			{ return 3; }
@@ -202,6 +208,8 @@ namespace glm
 		explicit Bool4_t (const UInt4 &v) : x(!!v.x), y(!!v.y), z(!!v.z), w(!!v.w) {}
 
 		operator const bvec4 () const					{ return bvec4(x, y, z, w); }
+
+		Bool4_t operator ! () const						{ return Bool4_t(!x, !y, !z, !w); }
 		
 		typedef length_t length_type;
 		static constexpr length_type length ()			{ return 4; }

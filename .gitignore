@@ -20,3 +20,8 @@
 *.ipdb
 /build
 /Tests/PipelineCompiler/out
+/External/FreeImage
+/External/glm
+/External/LunarGLASS
+/External/OculusSDK
+/External/SDL2

@@ -555,8 +555,8 @@ namespace PipelineCompiler
 		String					log;
 		String					str;
 		const String			version	=	_GetVersionGLSL();
-		EShaderSrcFormat::type	src_fmt	=	shaderFormat == EShaderSrcFormat::GXSL_Vulkan ?	EShaderSrcFormat::GLSL_Vulkan : 
-											shaderFormat == EShaderSrcFormat::GXSL ?		EShaderSrcFormat::GLSL :
+		EShaderSrcFormat::type	src_fmt	=	//shaderFormat == EShaderSrcFormat::GXSL_Vulkan ?	EShaderSrcFormat::GLSL_Vulkan : 
+											//shaderFormat == EShaderSrcFormat::GXSL ?		EShaderSrcFormat::GLSL :
 											shaderFormat;
 
 		// replace types
