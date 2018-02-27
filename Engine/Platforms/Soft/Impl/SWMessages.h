@@ -343,8 +343,12 @@ namespace GpuMsg
 	//
 	struct ExecuteSWCommandBuffer : CompileTime::FastCopyable
 	{
-		mutable bool	completed		= true;
-		mutable usize	lastCmdIndex	= 0;	// to continue executing from this command
+	// variables
+		Editable< bool  >	completed;
+		Editable< usize >	lastCmdIndex;	// to continue executing from this command
+
+	// methods
+		ExecuteSWCommandBuffer () : completed{true}, lastCmdIndex{0} {}
 	};
 
 

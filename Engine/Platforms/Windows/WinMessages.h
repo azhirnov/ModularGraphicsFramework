@@ -33,11 +33,11 @@ namespace OSMsg
 		const uint		uMsg			= 0;
 		const usize		wParam			= 0;
 		const isize		lParam			= 0;
-		mutable bool	wasProcessed	= false;
+		Editable<bool>	wasProcessed;
 		
 	// methods
 		OnWinWindowRawMessage (uint uMsg, usize wParam, isize lParam) :
-			uMsg(uMsg), wParam(wParam), lParam(lParam)
+			uMsg(uMsg), wParam(wParam), lParam(lParam), wasProcessed{false}
 		{}
 	};
 	

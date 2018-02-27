@@ -463,8 +463,8 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 
 	Pipelines::UB	ub_data;	ub_data.color = float4(1.0f);
 
-	vbuffer->Send< GpuMsg::WriteToGpuMemory >({ vertices });
-	ibuffer->Send< GpuMsg::WriteToGpuMemory >({ indices });
+	vbuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::From(vertices) });
+	ibuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::From(indices) });
 	ubuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::FromValue(ub_data) });
 	//texture->Send< GpuMsg::WriteToImageMemory >({ BinArrayCRef::From(pixels), uint4(4,4,0,0), 4_b });
 

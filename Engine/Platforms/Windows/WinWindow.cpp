@@ -395,7 +395,7 @@ namespace PlatformWin
 		
 		// allow subscribers to change settings
 		auto const					msg		= Message< OSMsg::WindowBeforeCreate >{ _createInfo };
-		CreateInfo::Window const&	info	= msg->editable;
+		CreateInfo::Window const&	info	= *msg->editable;
 
 		_SendEvent( msg );
 

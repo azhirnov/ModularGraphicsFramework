@@ -534,10 +534,10 @@ namespace PlatformVK
 	{
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
-		CHECK_ERR( msg->writableBuffer.Size() > 0 );
+		CHECK_ERR( msg->writableBuffer->Size() > 0 );
 
 		const bool		was_mapped	= _memMapper.IsMapped();
-		const BytesUL	req_size	= BytesUL(msg->writableBuffer.Size());
+		const BytesUL	req_size	= BytesUL(msg->writableBuffer->Size());
 
 		// map memory
 		if ( not was_mapped )
@@ -561,10 +561,10 @@ namespace PlatformVK
 		CHECK( _ReadFromStream( read_stream ) );
 
 		// copy to writable buffer
-		CHECK( msg->writableBuffer.Size() >= read_stream->result->Size() );
+		CHECK( msg->writableBuffer->Size() >= read_stream->result->Size() );
 
-		MemCopy( msg->writableBuffer, *read_stream->result );
-		msg->result.Set( msg->writableBuffer.SubArray( 0, usize(read_stream->result->Size()) ) );
+		MemCopy( *msg->writableBuffer, *read_stream->result );
+		msg->result.Set( msg->writableBuffer->SubArray( 0, usize(read_stream->result->Size()) ) );
 
 		// unmap
 		if ( not was_mapped )

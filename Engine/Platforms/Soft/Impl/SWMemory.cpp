@@ -449,14 +449,14 @@ namespace PlatformSW
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
-		CHECK_ERR( msg->writableBuffer.Size() > 0 );
+		CHECK_ERR( msg->writableBuffer->Size() > 0 );
 		CHECK_ERR( msg->offset < BytesUL(_usedMemory.Size()) );
 		
-		const usize		size = Min( usize(_usedMemory.Size()) - usize(msg->offset), usize(msg->writableBuffer.Size()) );
+		const usize		size = Min( usize(_usedMemory.Size()) - usize(msg->offset), usize(msg->writableBuffer->Size()) );
 		
-		MemCopy( msg->writableBuffer, _usedMemory.SubArray( usize(msg->offset), size ) );
+		MemCopy( *msg->writableBuffer, _usedMemory.SubArray( usize(msg->offset), size ) );
 
-		msg->result.Set( msg->writableBuffer.SubArray( 0, size ) );
+		msg->result.Set( msg->writableBuffer->SubArray( 0, size ) );
 		return true;
 	}
 	

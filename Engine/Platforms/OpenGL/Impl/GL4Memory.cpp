@@ -442,10 +442,10 @@ namespace PlatformGL
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
-		CHECK_ERR( msg->writableBuffer.Size() > 0 );
+		CHECK_ERR( msg->writableBuffer->Size() > 0 );
 		CHECK_ERR( msg->offset < _size );
 		
-		const BytesUL	req_size = BytesUL(msg->writableBuffer.Size());
+		const BytesUL	req_size = BytesUL(msg->writableBuffer->Size());
 
 		// read from mapped memory
 		if ( _memMapper.IsMapped() )
@@ -461,10 +461,10 @@ namespace PlatformGL
 			CHECK( _ReadFromStream( read_stream ) );
 			
 			// copy to writable buffer
-			CHECK( msg->writableBuffer.Size() >= read_stream->result->Size() );
+			CHECK( msg->writableBuffer->Size() >= read_stream->result->Size() );
 
-			MemCopy( msg->writableBuffer, *read_stream->result );
-			msg->result.Set( msg->writableBuffer.SubArray( 0, usize(read_stream->result->Size()) ) );
+			MemCopy( *msg->writableBuffer, *read_stream->result );
+			msg->result.Set( msg->writableBuffer->SubArray( 0, usize(read_stream->result->Size()) ) );
 			return true;
 		}
 		
@@ -474,9 +474,9 @@ namespace PlatformGL
 		GL_CALL( glGetNamedBufferSubData( _objectId,
 										  (GLintptr) msg->offset,
 										  (GLsizei) size,
-										  OUT msg->writableBuffer.ptr() ) );
+										  OUT msg->writableBuffer->ptr() ) );
 
-		msg->result.Set( msg->writableBuffer.SubArray( 0, size ) );
+		msg->result.Set( msg->writableBuffer->SubArray( 0, size ) );
 		return true;
 	}
 	

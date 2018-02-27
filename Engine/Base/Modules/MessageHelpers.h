@@ -184,22 +184,35 @@ namespace ModuleMsg
 
 
 	//
-	// Flags (TODO)
+	// Editable message input/output
 	//
-	/*struct EMessageFlags
+	template <typename T>
+	struct Editable
 	{
-		enum type : uint
-		{
-			NoAsync = 0,	// 
-			NoResend,
-			NoDiscard,
+	// types
+	public:
+		using Value_t	= T;
+		using Self		= Editable<T>;
 
-			_Count,
-			Unknown	= ~0u
-		};
+	// variables
+	private:
+		mutable T	_value;
 
-		using bits = EnumBitfield< EMessageFlags >;
-	};*/
+	// methods
+	public:
+		Editable (GX_DEFCTOR) : _value{} {}
+
+		explicit Editable (const T &value) : _value{value} {}
+		explicit Editable (T &&value) : _value(RVREF(value)) {}
+
+		void operator = (const T &value) const	{ _value = value; }
+		void operator = (T &&value) const		{ _value = RVREF(value); }
+		
+		_GX_DIM_CMP_OPERATORS_TYPE( _value, T, );
+
+		T*	operator -> () const				{ return &_value; }
+		T&	operator * () const					{ return _value; }
+	};
 
 
 }	// ModuleMsg

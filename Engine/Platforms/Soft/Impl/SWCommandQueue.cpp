@@ -331,7 +331,7 @@ namespace PlatformSW
 					// TODO: compare lastIndex and set 'changed' to true
 
 					// remove command buffer if completed
-					if ( cmd.second.completed )
+					if ( *cmd.second.completed )
 					{
 						SendTo( cmd.first, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Completed });
 
@@ -418,8 +418,12 @@ namespace PlatformSW
 			Message< GpuMsg::GetSWFence >	req_fence{ msg->fences[i] };
 			SendTo( _syncManager, req_fence );
 
-			fences.Add( *req_fence->result );
+			if ( req_fence->result and not (*req_fence->result)->Wait() )
+				fences.Add( *req_fence->result );
 		}
+
+		if ( fences.Empty() )
+			return true;
 
 		CHECK( _Execute( fences ) );
 		return true;

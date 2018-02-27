@@ -29,10 +29,10 @@ namespace OSMsg
 	{
 	// variables
 		SDL_Event		event;
-		mutable bool	wasProcessed	= false;
+		Editable<bool>	wasProcessed;
 		
 	// methods
-		OnSDLWindowRawMessage () : event{}
+		OnSDLWindowRawMessage () : event{}, wasProcessed{false}
 		{}
 	};
 

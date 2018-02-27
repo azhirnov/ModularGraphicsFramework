@@ -143,8 +143,8 @@ namespace OSMsg
 	struct WindowBeforeCreate
 	{
 	// variables
-		const	CreateInfo::Window		info;
-		mutable	CreateInfo::Window		editable;
+		const     CreateInfo::Window		info;
+		Editable< CreateInfo::Window >		editable;
 
 	// methods
 		WindowBeforeCreate ()

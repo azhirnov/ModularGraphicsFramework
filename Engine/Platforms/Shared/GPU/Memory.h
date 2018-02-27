@@ -192,7 +192,7 @@ namespace GpuMsg
 	{
 	// variables
 		BytesUL					offset;			// offset in global memory space
-		mutable BinArrayRef		writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
+		Editable< BinArrayRef >	writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
 		Out< BinArrayCRef >		result;
 
 	// methods
@@ -239,7 +239,7 @@ namespace GpuMsg
 		MipmapLevel				level;
 		BytesU					rowPitch;		// memory alignment requirements for result
 		BytesU					slicePitch;		// memory alignment requirements for result
-		mutable BinArrayRef		writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
+		Editable< BinArrayRef >	writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
 		Out< BinArrayCRef >		result;
 		
 	// methods
@@ -249,7 +249,7 @@ namespace GpuMsg
 			offset(off), dimension(Max(dim, uint4(1))), rowPitch(rowPitch), slicePitch(slicePitch)
 		{
 			writableBuffer = buf;
-			ASSERT( writableBuffer.Size() == dimension.z * slicePitch );
+			ASSERT( writableBuffer->Size() == dimension.z * slicePitch );
 		}
 
 		ReadFromImageMemory (BinArrayRef buf, const uint4 &dim, BytesU bpp, const uint4 &off = uint4(), BytesU rowAlign = 4_b, BytesU sliceAlign = 4_b) :
@@ -258,7 +258,7 @@ namespace GpuMsg
 			writableBuffer	= buf;
 			rowPitch		= GXImageUtils::AlignedRowSize( dimension.x, bpp, rowAlign );
 			slicePitch		= GXImageUtils::AlignedSliceSize( dimension.xy(), bpp, rowAlign, sliceAlign );
-			ASSERT( writableBuffer.Size() == dimension.z * slicePitch );
+			ASSERT( writableBuffer->Size() == dimension.z * slicePitch );
 		}
 	};
 

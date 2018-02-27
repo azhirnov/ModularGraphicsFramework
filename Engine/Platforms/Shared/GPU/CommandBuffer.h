@@ -813,13 +813,13 @@ namespace GpuMsg
 		CmdUpdateBuffer (const ModulePtr &buf, BinArrayCRef data, Bytes<ulong> offset) :
 			dstBuffer{buf}, dstOffset{offset}, data{data} {}
 
-		template <typename T>
-		CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<uint> offset = Uninitialized, IsPOD_t<T> = 0) :
-			CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
+		//template <typename T>
+		//CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<uint> offset = Uninitialized, IsPOD_t<T> = 0) :
+		//	CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
 		
-		template <typename T>
-		CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<ulong> offset, IsPOD_t<T> = 0) :
-			CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
+		//template <typename T>
+		//CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<ulong> offset, IsPOD_t<T> = 0) :
+		//	CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
 	};
 
 
