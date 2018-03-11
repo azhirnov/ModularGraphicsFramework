@@ -25,6 +25,18 @@ struct DynamicBuffer_Struct
 	bool2	b2;
 };
 
+void SomeFunc (DynamicBuffer_Struct arr[], const float2 f2, const int4 i4)
+{
+	int idx = int(gl_GlobalInvocationID.x);
+
+	arr[idx].i2 += int2(i4.x, idx);
+	arr[idx].b1 = ((idx & 1) == 0);
+	arr[idx].f2 -= float2(f2);
+	arr[idx].i3.xy *= 2;
+	arr[idx].i3.z = ~arr[idx].i3.z;
+	arr[idx].b2 = not(arr[idx].b2);
+}
+
 layout(binding=0, std140) coherent buffer DynamicBuffer_SSBO
 {
 	// static part
@@ -38,15 +50,7 @@ layout(binding=0, std140) coherent buffer DynamicBuffer_SSBO
 
 void main ()
 {
-	int idx = int(gl_GlobalInvocationID.x);
-
-	ssb.arr[idx].i2 += int2(ssb.i4.x, idx);
-	ssb.arr[idx].b1 = ((idx & 1) == 0);
-	ssb.arr[idx].f2 -= float2(ssb.f2);
-	//ssb.arr[idx].i3.x = idx+1;
-	ssb.arr[idx].i3.xy *= 2;
-	ssb.arr[idx].i3.z = ~ssb.arr[idx].i3.z;
-	ssb.arr[idx].b2 = not(ssb.arr[idx].b2);
+	SomeFunc(ssb.arr, ssb.f2, ssb.i4);
 }
 
 #endif

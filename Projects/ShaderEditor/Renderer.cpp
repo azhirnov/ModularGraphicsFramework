@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Projects/ShaderEditor/Renderer.h"
-#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
+#include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 namespace ShaderEditor
 {
@@ -61,7 +61,7 @@ namespace ShaderEditor
 		RectU		area		= RectU( 0, 0, fb_descr.size.x, fb_descr.size.y );
 
 		GpuMsg::CmdClearAttachments	clear;
-		clear.attachments.PushBack({ EImageAspect::bits() | EImageAspect::Color, 0, float4(0.0f) });
+		clear.attachments.PushBack({ EImageAspect::Color, 0, float4(0.0f) });
 		clear.clearRects.PushBack({ area });
 
 		builder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, pass.framebuffer, area });
@@ -414,9 +414,9 @@ namespace ShaderEditor
 									EImage::Tex2D,
 									uint4( newSize, 0, 0 ),
 									EPixelFormat::RGBA8_UNorm,
-									EImageUsage::bits() | EImageUsage::Sampled | EImageUsage::ColorAttachment
+									EImageUsage::Sampled | EImageUsage::ColorAttachment
 								},
-								EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+								EGpuMemory::LocalInGPU,
 								EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite
 							},
 							OUT pass.image ) );
@@ -462,10 +462,10 @@ namespace ShaderEditor
 							_gs,
 							CreateInfo::GpuBuffer{
 								BufferDescriptor{
-									SizeOf<Pipelines::ShadertoyUB>(),
-									EBufferUsage::bits() | EBufferUsage::Uniform | EBufferUsage::TransferDst
+									SizeOf<Pipelines::ShadertoyUB>,
+									EBufferUsage::Uniform | EBufferUsage::TransferDst
 								},
-								EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+								EGpuMemory::LocalInGPU,
 								EMemoryAccess::GpuReadWrite
 							},
 							OUT pass.ubuffer ) );
@@ -559,7 +559,7 @@ namespace ShaderEditor
 			RectU		area		= RectU( 0, 0, fb_descr.size.x, fb_descr.size.y );
 			
 			GpuMsg::CmdClearAttachments	clear;
-			clear.attachments.PushBack({ EImageAspect::bits() | EImageAspect::Color, 0, float4(1.0f) });
+			clear.attachments.PushBack({ EImageAspect::Color, 0, float4(1.0f) });
 			clear.clearRects.PushBack({ area });
 
 			builder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, eye_fb, area });

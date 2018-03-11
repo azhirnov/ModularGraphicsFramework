@@ -2,10 +2,12 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GPU/Sync.h"
-#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/GPU/Sync.h"
+#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
 
 namespace Engine
 {

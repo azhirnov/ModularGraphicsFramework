@@ -1,9 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
-#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 namespace Engine
 {

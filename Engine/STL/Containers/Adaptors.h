@@ -2,21 +2,21 @@
 
 #pragma once
 
-#include "AppendableAdaptor.h"
-#include "ErasableAdaptor.h"
+#include "Engine/STL/Containers/AppendableAdaptor.h"
+#include "Engine/STL/Containers/ErasableAdaptor.h"
 // TODO: indexable, searchable, ...
 
-#include "Array.h"
-#include "Queue.h"
-#include "CircularQueue.h"
-#include "StaticArray.h"
-#include "Stack.h"
-#include "IndexedArray.h"
-#include "Map.h"
-#include "Set.h"
-#include "HashMap.h"
-#include "HashSet.h"
-#include "UniBuffer.h"
+#include "Engine/STL/Containers/Array.h"
+#include "Engine/STL/Containers/Queue.h"
+#include "Engine/STL/Containers/CircularQueue.h"
+#include "Engine/STL/Containers/StaticArray.h"
+#include "Engine/STL/Containers/Stack.h"
+#include "Engine/STL/Containers/IndexedArray.h"
+#include "Engine/STL/Containers/Map.h"
+#include "Engine/STL/Containers/Set.h"
+#include "Engine/STL/Containers/HashMap.h"
+#include "Engine/STL/Containers/HashSet.h"
+#include "Engine/STL/Containers/UniBuffer.h"
 
 namespace GX_STL
 {

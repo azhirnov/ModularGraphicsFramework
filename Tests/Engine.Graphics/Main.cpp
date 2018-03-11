@@ -3,7 +3,7 @@
 #include "GApp.h"
 
 
-void main ()
+int main ()
 {
 	Logger::GetInstance()->Open( "log", false );
 	
@@ -38,4 +38,6 @@ void main ()
 	}
 	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
 	#endif
+
+	return 0;
 }

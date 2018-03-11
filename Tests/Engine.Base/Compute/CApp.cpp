@@ -2,7 +2,7 @@
 
 #include "CApp.h"
 #include "../Pipelines/all_pipelines.h"
-#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
+#include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 
 CApp::CApp ()
@@ -39,7 +39,7 @@ bool CApp::Initialize (GAPI::type api)
 	CHECK_ERR( factory->Create( ids.thread, ms->GlobalSystems(), CreateInfo::GpuThread{
 					   GraphicsSettings{
 							api,
-							CreateInfo::GpuContext::EFlags::bits() | CreateInfo::GpuContext::EFlags::DebugContext
+							CreateInfo::GpuContext::EFlags::DebugContext
 						} }, OUT gthread ) );
 	thread->Send< ModuleMsg::AttachModule >({ gthread });
 
@@ -168,7 +168,7 @@ bool CApp::_CreateCmdBuffers ()
 						gthread->GlobalSystems(),
 						CreateInfo::GpuCommandBuffer{
 							gthread,
-							CommandBufferDescriptor{ ECmdBufferCreate::bits() | ECmdBufferCreate::ImplicitResetable }
+							CommandBufferDescriptor{ ECmdBufferCreate::ImplicitResetable }
 						},
 						OUT cmdBuffers[i] )
 		);
@@ -197,10 +197,10 @@ bool CApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					ids.buffer,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuBuffer{	BufferDescriptor{
-												SizeOf<Pipelines::UB>(),
-												EBufferUsage::bits() | EBufferUsage::TransferDst
+												SizeOf<Pipelines::UB>,
+												EBufferUsage::TransferDst
 											},
-											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+											EGpuMemory::CoherentWithCPU,
 											EMemoryAccess::All },
 					OUT buffer ) );
 
@@ -211,9 +211,9 @@ bool CApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 												EImage::Tex2D,
 												uint4( 1024, 1024, 0, 0 ),
 												EPixelFormat::RGBA8_UNorm,
-												EImageUsage::bits() | EImageUsage::Storage | EImageUsage::TransferSrc
+												EImageUsage::Storage | EImageUsage::TransferSrc
 											},
-											EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+											EGpuMemory::LocalInGPU,
 											EMemoryAccess::GpuReadWrite },
 					OUT image ) );
 

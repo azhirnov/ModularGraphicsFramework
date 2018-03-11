@@ -37,7 +37,7 @@ struct GXImageUtils : public Noninstancable
 	template <typename T, typename B, usize I, ulong U>
 	CHECKRES static inline Vec<T,I,U>  AlignDimension (const Vec<T,I,U> &size, const B& align)
 	{
-		CompileTime::MustBeInteger<T>();
+		STATIC_ASSERT( CompileTime::IsInteger<T> );
 		ASSERT( IsPowerOfTwo( align ) and "align must be a power of 2" );
 
 		Vec<T,I,U>	res;
@@ -72,7 +72,8 @@ struct GXImageUtils : public Noninstancable
 	static inline void GetFrameCoord (OUT Rectangle<T> &sTexcoord, uint uFrameIdx, const Vec<B,2> &vDim,
 									  const Vec<B,2> &vNumFrames, const Vec<B,2> &border = Vec<B,2>())
 	{
-		CompileTime::MustBeInteger<B>();
+		STATIC_ASSERT( CompileTime::IsInteger<B> );
+
 		ASSERT( uFrameIdx < vNumFrames.Area() );
 
 		const Vec<B,2>	v_frame_size	= vDim / vNumFrames;
@@ -90,21 +91,25 @@ struct GXImageUtils : public Noninstancable
 	AlignedDataSize
 =================================================
 */
-	template <typename T>
-	CHECKRES static inline BytesU  AlignedDataSize (const Vec<T,3> &dimension, BytesU bytePerPixel, BytesU rowAlign, BytesU sliceAlign)
+	template <typename T, typename B>
+	CHECKRES static inline Bytes<B>  AlignedDataSize (const Vec<T,3> &dimension, Bytes<B> bytePerPixel, Bytes<B> rowAlign, Bytes<B> sliceAlign)
 	{
-		CompileTime::MustBeInteger<T>();
-		const usize3	dim			= Max( dimension, Vec<T,3>(1) ).template To<usize3>();
-		const usize		row_size	= (usize) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
-		const usize		slice_size	= (usize) AlignedRowSize( dim.y * row_size, 1_b, sliceAlign );
-		const usize		size		= slice_size * dim.z;
-		return BytesU( size );
+		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
+		using S3 = Vec<S,3>;
+		
+		STATIC_ASSERT( CompileTime::IsInteger<S> );
+
+		const S3	dim			= S3(Max( dimension, Vec<T,3>(1) ));
+		const S		row_size	= (S) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
+		const S		slice_size	= (S) AlignedRowSize( dim.y * row_size, Bytes<B>(1), sliceAlign );
+		const S		size		= slice_size * dim.z;
+		return Bytes<B>( size );
 	}
 
-	template <typename ColorType, typename T>
-	CHECKRES static inline BytesU AlignedDataSize (const Vec<T,3> &dimension, BytesU rowAlign, BytesU sliceAlign)
+	template <typename ColorType, typename T, typename B>
+	CHECKRES static inline Bytes<B> AlignedDataSize (const Vec<T,3> &dimension, Bytes<B> rowAlign, Bytes<B> sliceAlign)
 	{
-		return AlignedDataSize( dimension, BytesU::SizeOf<ColorType>(), rowAlign, sliceAlign );
+		return AlignedDataSize( dimension, Bytes<B>::template SizeOf<ColorType>(), rowAlign, sliceAlign );
 	}
 	
 /*
@@ -112,13 +117,14 @@ struct GXImageUtils : public Noninstancable
 	AlignedRowSize
 =================================================
 */
-	template <typename T>
-	CHECKRES static inline BytesU  AlignedRowSize (const T rowPixels, BytesU bytePerPixel, BytesU rowAlign)
+	template <typename T, typename B>
+	CHECKRES static inline Bytes<B>  AlignedRowSize (const T rowPixels, Bytes<B> bytePerPixel, Bytes<B> rowAlign)
 	{
-		typedef CompileTime::GenType<T, BytesU::Value_t>	main_t;
+		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
 
-		CompileTime::MustBeInteger<T>();
-		return (BytesU) GXMath::AlignToLarge( Max( rowPixels, T(1) ) * (main_t)bytePerPixel, rowAlign );
+		STATIC_ASSERT( CompileTime::IsInteger<S> and CompileTime::IsScalar<T> );
+
+		return (Bytes<B>) GXMath::AlignToLarge( Max( S(rowPixels), S(1) ) * S(bytePerPixel), rowAlign );
 	}
 	
 /*
@@ -126,12 +132,14 @@ struct GXImageUtils : public Noninstancable
 	AlignedSliceSize
 =================================================
 */
-	template <typename T>
-	CHECKRES static inline BytesU  AlignedSliceSize (const Vec<T,2> dim, BytesU bytePerPixel, BytesU rowAlign, BytesU sliceAlign)
+	template <typename T, typename B>
+	CHECKRES static inline Bytes<B>  AlignedSliceSize (const Vec<T,2> dim, Bytes<B> bytePerPixel, Bytes<B> rowAlign, Bytes<B> sliceAlign)
 	{
-		const usize	row_size	= (usize) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
-		const usize slice_size	= (usize) AlignedRowSize( dim.y * row_size, 1_b, sliceAlign );
-		return BytesU( slice_size );
+		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
+
+		const S	row_size	= (S) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
+		const S slice_size	= (S) AlignedRowSize( dim.y * row_size, Bytes<B>(1), sliceAlign );
+		return Bytes<B>( slice_size );
 	}
 
 /*
@@ -139,18 +147,22 @@ struct GXImageUtils : public Noninstancable
 	GetPixelOffset
 =================================================
 */
-	template <typename T>
-	CHECKRES static inline BytesU  GetPixelOffset (const Vec<T,3> &coord, const Vec<T,3> &dimension, BytesU bytePerPixel,
-													BytesU rowAlign = 1_b, BytesU sliceAlign = 1_b)
+	template <typename T, typename B>
+	CHECKRES static inline Bytes<B>  GetPixelOffset (const Vec<T,3> &coord, const Vec<T,3> &dimension, Bytes<B> bytePerPixel,
+													 Bytes<B> rowAlign = Bytes<B>(1), Bytes<B> sliceAlign = Bytes<B>(1))
 	{
-		CompileTime::MustBeInteger<T>();
-		const usize3	dim			= Max( dimension, Vec<T,3>(1) ).template To<usize3>();
-		const usize		row_size	= (usize) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
-		const usize		slice_size	= (usize) AlignedRowSize( dim.y * row_size, 1_b, sliceAlign );
-		const usize3	point		= usize3(Clamp( isize3(coord), isize3(0), isize3(dim)-1 ));
-		const usize		z_off		= slice_size * point.z;
-		const usize		y_off		= z_off + row_size * point.y;
-		const BytesU	i			= y_off + bytePerPixel * point.x;
+		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
+		using S3 = Vec<S,3>;
+		
+		STATIC_ASSERT( CompileTime::IsInteger<S> );
+
+		const S3		dim			= S3(Max( dimension, Vec<T,3>(1) ));
+		const S			row_size	= (S) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
+		const S			slice_size	= (S) AlignedRowSize( dim.y * row_size, Bytes<B>(1), sliceAlign );
+		const S3		point		= S3(Clamp( S3(coord), S3(0), dim-1 ));
+		const S			z_off		= slice_size * point.z;
+		const S			y_off		= z_off + row_size * point.y;
+		const Bytes<B>	i			= y_off + bytePerPixel * point.x;
 		return i;
 	}
 
@@ -159,9 +171,9 @@ struct GXImageUtils : public Noninstancable
 	Copy
 =================================================
 */
-	template <typename T, typename SrcType, typename DstType>
+	template <typename T, typename SrcType, typename DstType, typename B>
 	static inline bool Copy (const Vec<T,3> &dimension, const SrcType *srcImage, DstType *dstImage,
-							 BytesU srcRowAlignInBytes = 1_b, BytesU dstRowAlignInBytes = 1_b)
+							 Bytes<B> srcRowAlignInBytes, Bytes<B> dstRowAlignInBytes)
 	{
 		return CopyPart( dimension, Vec<T,3>(0), srcImage, dimension, Vec<T,3>(0), dstImage, srcRowAlignInBytes, dstRowAlignInBytes );
 	}
@@ -171,44 +183,48 @@ struct GXImageUtils : public Noninstancable
 	CopyPart
 =================================================
 */
-	template <typename T, typename SrcType, typename DstType>
+	template <typename T, typename SrcType, typename DstType, typename B>
 	static bool CopyPart (const Vec<T,3> &srcDim, const Vec<T,3> &srcOff, const SrcType *srcImage,
 							const Vec<T,3> &dstDim, const Vec<T,3> &dstOff, DstType *dstImage,
-							BytesU srcRowAlignInBytes = 1_b,
-							BytesU dstRowAlignInBytes = 1_b)
+							Bytes<B> srcRowAlignInBytes, Bytes<B> dstRowAlignInBytes)
 	{
 		CHECK_ERR( srcImage != null and dstImage != null );
+		
+		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
+		using S3 = Vec<S,3>;
+		
+		STATIC_ASSERT( CompileTime::IsInteger<S> );
 
-		const uint3		src_dim	= Max( srcDim, Vec<T,3>(1) ).template To<uint3>();
-		const uint3		src_off = srcOff.template To<uint3>();
-		const uint3		dst_dim	= Max( dstDim, Vec<T,3>(1) ).template To<uint3>();
-		const uint3		dst_off	= dstOff.template To<uint3>();
-		const usize		src_row	= (usize) AlignedRowSize( src_dim.x, BytesU::SizeOf<SrcType>(), srcRowAlignInBytes );
-		const usize		dst_row	= (usize) AlignedRowSize( dst_dim.x, BytesU::SizeOf<DstType>(), dstRowAlignInBytes );
+		const S3		src_dim	= S3(Max( srcDim, Vec<T,3>(1) ));
+		const S3		src_off = S3(srcOff);
+		const S3		dst_dim	= S3(Max( dstDim, Vec<T,3>(1) ));
+		const S3		dst_off	= S3(dstOff);
+		const S			src_row	= (S) AlignedRowSize( src_dim.x, Bytes<B>::template SizeOf<SrcType>(), srcRowAlignInBytes );
+		const S			dst_row	= (S) AlignedRowSize( dst_dim.x, Bytes<B>::template SizeOf<DstType>(), dstRowAlignInBytes );
 		const void *	src		= (const void *) srcImage;
 		void *			dst		= (void *) dstImage;
 
-		const uint3		src_size = src_dim - src_off;
-		const uint3		dst_size = dst_dim - dst_off;
+		const S3		src_size = src_dim - src_off;
+		const S3		dst_size = dst_dim - dst_off;
 			
 		//CHECK_ERR( All( src_size == dst_size ) );
 		CHECK_ERR( All( src_off <= src_dim ) );
 		CHECK_ERR( All( dst_off <= dst_dim ) );
 
-		for (uint z = 0; z < dst_size.z and z < src_size.z; ++z)
+		for (S z = 0; z < dst_size.z and z < src_size.z; ++z)
 		{
-			const usize	src_z_off = src_row * src_dim.y * (z + src_off.z);
-			const usize	dst_z_off = dst_row * dst_dim.y * (z + dst_off.z);
+			const S		src_z_off = src_row * src_dim.y * (z + src_off.z);
+			const S		dst_z_off = dst_row * dst_dim.y * (z + dst_off.z);
 
-			for (uint y = 0; y < dst_size.y and y < src_size.y; ++y)
+			for (S y = 0; y < dst_size.y and y < src_size.y; ++y)
 			{
-				const usize	src_y_off = src_z_off + src_row * (y + src_off.y);
-				const usize	dst_y_off = dst_z_off + dst_row * (y + dst_off.y);
+				const S		src_y_off = src_z_off + src_row * (y + src_off.y);
+				const S		dst_y_off = dst_z_off + dst_row * (y + dst_off.y);
 
-				for (uint x = 0; x < dst_size.x and x < src_size.x; ++x)
+				for (S x = 0; x < dst_size.x and x < src_size.x; ++x)
 				{
-					const BytesU	i = BytesU( src_y_off + sizeof(SrcType) * (x + src_off.x) );
-					const BytesU	j = BytesU( dst_y_off + sizeof(DstType) * (x + dst_off.x) );
+					const Bytes<S>	i = Bytes<S>( src_y_off + sizeof(SrcType) * (x + src_off.x) );
+					const Bytes<S>	j = Bytes<S>( dst_y_off + sizeof(DstType) * (x + dst_off.x) );
 
 					const SrcType *	s = UnsafeMem::MovePointer< SrcType >( src, i );
 					DstType *		d = UnsafeMem::MovePointer< DstType >( dst, j );
@@ -250,7 +266,7 @@ struct GXImageUtils : public Noninstancable
 
 				for (uint x = 0; x < src_dim.x; ++x)
 				{
-					const BytesU	j = dst_y_off + SizeOf<DstType>() * (x + dst_off.x);
+					const BytesU	j = dst_y_off + SizeOf<DstType> * (x + dst_off.x);
 					DstType *		d = UnsafeMem::MovePointer< DstType >( dst, j );
 						
 					ColorFormatUtils::ColorFormatConverter::Convert( *d, color );
@@ -290,7 +306,7 @@ struct GXImageUtils : public Noninstancable
 
 				for (uint x = 0; x < src_dim.x; ++x)
 				{
-					const BytesU	j = dst_y_off + SizeOf<ColorType>() * (x + dst_off.x);
+					const BytesU	j = dst_y_off + SizeOf<ColorType> * (x + dst_off.x);
 					ColorType *		d = UnsafeMem::MovePointer< ColorType >( dst, j );
 						
 					iter( *d, uint3(x,y,z) );

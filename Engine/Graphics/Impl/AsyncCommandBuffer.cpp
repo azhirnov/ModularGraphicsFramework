@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Graphics/Impl/GraphicsBaseModule.h"
-#include "Engine/Graphics/Shared/Commands.h"
+#include "Engine/Graphics/Public/Commands.h"
 #include "Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
 
 namespace Engine
@@ -483,7 +483,7 @@ namespace Graphics
 				Message< GraphicsMsg::CmdAddFrameDependency >	deps;
 
 				submit->signalSemaphores.PushBack( cmd.beforeFrameExecuting );
-				deps->waitSemaphores.PushBack({ cmd.beforeFrameExecuting, EPipelineStage::bits() | EPipelineStage::BottomOfPipe });	// TODO
+				deps->waitSemaphores.PushBack({ cmd.beforeFrameExecuting, EPipelineStage::BottomOfPipe });	// TODO
 				
 				CHECK( _cmdBufferMngr->Send( deps ) );
 			}
@@ -515,7 +515,7 @@ namespace Graphics
 
 		_cmdBufferMngr->Send( deps );
 
-		_pendingCommands.Back().waitSemaphores.PushBack({ *sem_ctor1->result, EPipelineStage::bits() | EPipelineStage::BottomOfPipe });
+		_pendingCommands.Back().waitSemaphores.PushBack({ *sem_ctor1->result, EPipelineStage::BottomOfPipe });
 		_pendingCommands.Back().beforeFrameExecuting = *sem_ctor2->result;
 		return true;
 	}

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Scene/Shared/Common.h"
+#include "Engine/Scene/Public/Common.h"
 #include "Engine/Profilers/Engine.Profilers.h"
 
 namespace Engine

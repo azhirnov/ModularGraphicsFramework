@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Graphics/Shared/IDs.h"
+#include "Engine/Graphics/Public/IDs.h"
 
 namespace Engine
 {

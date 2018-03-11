@@ -4,6 +4,7 @@
 
 #include "Engine/STL/Math/Mathematics.h"
 #include "Engine/STL/Math/Vec.h"
+#include "Engine/STL/Math/Color/Half.h"
 
 namespace GX_STL
 {
@@ -118,12 +119,11 @@ namespace GXMath
 
 
 		// check
-		STATIC_ASSERT( sizeof(uint) == 4 and sizeof(FT) == sizeof(uint), "incorrect types" );
+		STATIC_ASSERT( sizeof(uint) == 4 and sizeof(TRGB) == sizeof(uint), "incorrect types" );
 	};
 
 
-	typedef TR11G11B10F<float>		r11g11b10f_t;
-	//typedef TR11G11B10<half>		r11g11b10f_t;
+	typedef TR11G11B10F< half >		r11g11b10f_t;
 
 	
 	template <typename FT>
@@ -136,8 +136,9 @@ namespace GXMath
 	template <typename FT>
 	inline void TR11G11B10F<FT>::Set (Float_t R, Float_t G, Float_t B)
 	{
-#	if 1
+#	if 0
 		Float_t	f;
+		STATIC_ASSERT( sizeof(f) >= sizeof(float) );
 
 		f = R;
 		ASSERT( f._bits.s == 0 and "only unsigned value supported" );
@@ -179,8 +180,9 @@ namespace GXMath
 	template <typename FT>
 	inline void TR11G11B10F<FT>::Get (Float_t& R, Float_t& G, Float_t& B) const
 	{
-#	if 1
+#	if 0
 		Float_t	f;
+		STATIC_ASSERT( sizeof(f) >= sizeof(float) );
 	
 		f._bits.m = _bits.r_m << (23-6);
 		f._bits.e = _bits.r_e + (127 - 15);

@@ -1,11 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
-#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
+
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 namespace Engine
 {
@@ -38,9 +40,8 @@ namespace PlatformCL
 											GpuMsg::GetImageDescriptor,
 											GpuMsg::SetImageDescriptor,
 											GpuMsg::GetCLImageID,
-											GpuMsg::GpuMemoryRegionChanged,
-											GpuMsg::SetImageLayout,
-											GpuMsg::GetImageLayout
+											GpuMsg::GetImageMemoryLayout,
+											GpuMsg::GpuMemoryRegionChanged
 										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= CL2BaseModule::SupportedEvents_t;
@@ -84,11 +85,10 @@ namespace PlatformCL
 		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _GetCLImageID (const Message< GpuMsg::GetCLImageID > &);
+		bool _GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &);
 		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
 		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _SetImageLayout (const Message< GpuMsg::SetImageLayout > &);
-		bool _GetImageLayout (const Message< GpuMsg::GetImageLayout > &);
 
 	// event handlers
 		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
@@ -137,10 +137,9 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2Image::_Delete );
 		_SubscribeOnMsg( this, &CL2Image::_OnManagerChanged );
 		_SubscribeOnMsg( this, &CL2Image::_GetCLImageID );
+		_SubscribeOnMsg( this, &CL2Image::_GetImageMemoryLayout );
 		_SubscribeOnMsg( this, &CL2Image::_SetImageDescriptor );
 		_SubscribeOnMsg( this, &CL2Image::_GetImageDescriptor );
-		_SubscribeOnMsg( this, &CL2Image::_SetImageLayout );
-		_SubscribeOnMsg( this, &CL2Image::_GetImageLayout );
 		_SubscribeOnMsg( this, &CL2Image::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &CL2Image::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &CL2Image::_GetCLPrivateClasses );
@@ -299,7 +298,7 @@ namespace PlatformCL
 		CL2ChannelDataType	data_type = {};
 		BytesU				bpp;
 
-		uint4 const			size = Utils::ValidateDimension( _descr.imageType, _descr.dimension );
+		uint4 const			size = Max( uint4(1), Utils::ValidateDimension( _descr.imageType, _descr.dimension ) );
 
 		CHECK_ERR( CL2Enum( _descr.format, OUT order, OUT data_type, OUT bpp ) );
 
@@ -324,9 +323,7 @@ namespace PlatformCL
 							null,
 							OUT &cl_err )), cl_err ));
 
-		//GetDevice()->SetObjectName( _imageId, GetDebugName(), EGpuObject::Image );
-
-		_layout = EImageLayout::Undefined;
+		_layout	= EImageLayout::General;
 		return true;
 	}
 
@@ -346,6 +343,7 @@ namespace PlatformCL
 		_OnMemoryUnbinded();
 
 		_imageId	= null;
+		_layout		= Uninitialized;
 		_descr		= Uninitialized;
 	}
 	
@@ -377,6 +375,43 @@ namespace PlatformCL
 		return true;
 	}
 	
+/*
+=================================================
+	_GetImageMemoryLayout
+=================================================
+*/
+	bool CL2Image::_GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &msg)
+	{
+		using namespace cl;
+		
+		size_t	row_pitch = 0;
+		CL_CALL( clGetImageInfo( _imageId, CL_IMAGE_ROW_PITCH, sizeof(row_pitch), OUT &row_pitch, null ) );
+
+		size_t	slice_pitch = 0;
+		CL_CALL( clGetImageInfo( _imageId, CL_IMAGE_SLICE_PITCH, sizeof(slice_pitch), OUT &slice_pitch, null ) );
+
+		size_t	img_size = 0;
+		CL_CALL( clGetMemObjectInfo( _imageId, CL_MEM_SIZE, sizeof(img_size), OUT &img_size, null ) );
+
+		GpuMsg::GetImageMemoryLayout::MemLayout	result;
+		result.offset		= BytesUL(0);
+		result.size			= BytesUL(img_size);
+		result.rowPitch		= BytesUL(row_pitch);
+		result.slicePitch	= BytesUL(slice_pitch);
+		result.dimension	= _descr.dimension.xyz();
+
+		if ( result.slicePitch == 0 )
+			result.slicePitch = SafeDiv( result.size, result.dimension.z );
+
+		if ( result.rowPitch == 0 )
+			result.rowPitch = SafeDiv( result.slicePitch, result.dimension.y );
+		
+		ASSERT( result.slicePitch * result.dimension.z == result.size );
+
+		msg->result.Set( result );
+		return true;
+	}
+
 /*
 =================================================
 	_SetImageDescriptor
@@ -427,30 +462,6 @@ namespace PlatformCL
 				CHECK( _SetState( EState::Linked ) );
 			}
 		}
-		return true;
-	}
-	
-/*
-=================================================
-	_SetImageLayout
-=================================================
-*/
-	bool CL2Image::_SetImageLayout (const Message< GpuMsg::SetImageLayout > &msg)
-	{
-		CHECK_ERR( _IsCreated() );
-
-		_layout = msg->newLayout;
-		return true;
-	}
-
-/*
-=================================================
-	_GetImageLayout
-=================================================
-*/
-	bool CL2Image::_GetImageLayout (const Message< GpuMsg::GetImageLayout > &msg)
-	{
-		msg->result.Set( _layout );
 		return true;
 	}
 

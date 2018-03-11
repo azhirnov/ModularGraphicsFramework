@@ -9,8 +9,7 @@ using namespace CMake;
 #define ENABLE_ENGINE
 #define ENABLE_UTILS
 #define ENABLE_PROJECTS
-//#define ENABLE_LUNARGLASS
-//#define ENABLE_EXTERNALS//#define ENABLE_SDL			// use SDL2 instead of WinAPI and other OS functions
+//#define ENABLE_SDL			// use SDL2 instead of WinAPI and other OS functions
 
 //#define ENABLE_SCU			// single compilation unit per thread
 #define NUM_THREADS	8
@@ -36,14 +35,16 @@ extern void GenMGFProject ()
 			Array<String>	shared_cxx_flags{ VS::CppLastest, VS::MultiThreadCompilation, VS::NoMinimalRebuild, VS::RemUnrefCode,
 											  VS::NoFunctionLevelLinking, VS::FloatPointStrict, VS::FloatPointNoExceptions };
 
-			Array<String>	release_cxx_flags{ VS::InlineAll, VS::InlineAll, VS::Intrinsic, VS::OptFavorFastCode, VS::OptOmitFramePointers, VS::MultiThreadedDll,
-											   VS::OptFiberSafe, VS::OptWholeProgram, VS::StringPooling, VS::NoSecurityCheck };
+			Array<String>	release_cxx_flags{ VS::InlineAll, VS::InlineAll, VS::Intrinsic, VS::OptFavorFastCode, VS::OptOmitFramePointers,
+											   VS::OptFiberSafe, VS::OptWholeProgram, VS::StringPooling, VS::NoSecurityCheck, VS::MultiThreadedDll };
 
 			Set<uint>	errors				= { VS::ReturningAddressOfLocalVariable, VS::TypeNameMismatch, VS::UninitializedVarUsed,
 												VS::TooManyParamsForMacro, VS::RecursiveOnAllControlPaths, VS::IllegalConversion,
 												VS::UnrecognizedEscapeSequence, VS::UnreachableCode, VS::MultipleAssignmentOperators,
-												VS::InconsistentDllLinkage, VS::ClassNeedsDllInterface };
-			Set<uint>	enabled_warnings	= { VS::InitOrder, VS::UnknownMacro, VS::UnsafeFunctionorVariable, VS::ConditionalExprIsConstant, VS::ReintCastBetwenRelatedClasses };
+												VS::InconsistentDllLinkage, VS::ClassNeedsDllInterface, VS::EmptyControlledStatement,
+												VS::AssignInConditionalExpr };
+			Set<uint>	enabled_warnings	= { VS::InitOrder, VS::UnknownMacro, VS::UnsafeFunctionorVariable, VS::ConditionalExprIsConstant,
+												VS::ReintCastBetwenRelatedClasses };
 			Set<uint>	disabled_warnings	= { VS::DecoratedNameWasTruncated, VS::CastTruncatesConstantValue, VS::UnusedInlineFunction,
 												VS::ConversionSignedUnsignedMismatch, VS::ReservedLiteralSuffix };
 
@@ -52,9 +53,9 @@ extern void GenMGFProject ()
 			errors.AddArray( VS::OperatorHasNoEffect );
 			errors.AddArray( VS::Extensions );
 			errors.AddArray( VS::Format );
+			errors.AddArray( VS::Shadow );
 
 			enabled_warnings.AddArray( VS::Unused );
-			enabled_warnings.AddArray( VS::Shadow );
 			enabled_warnings.AddArray( VS::Conversion );
 			enabled_warnings.AddArray( VS::ConversionSign );
 
@@ -87,7 +88,7 @@ extern void GenMGFProject ()
 												VS::OptNoOmitFramePointers, VS::NoStringPooling, VS::SecurityCheck, /*VS::ControlFlowGuard,*/ VS::RTTI,
 												VS::MultiThreadedDebugDll, VS::NoStaticAnalyze, VS::DbgProgramDatabase, VS::StackFrameAndUninitVarCheck });
 				debug_cfg->AddTargetLinkerFlags( shared_linker_cfg )->AddTargetLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
-				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG"/*, "DEBUG"*/ });
+				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG" });
 			}
 
 			auto	analyze_cfg = msvc->AddConfiguration( "DebugAnalyze" );
@@ -97,7 +98,7 @@ extern void GenMGFProject ()
 												  VS::OptNoOmitFramePointers, VS::NoStringPooling, VS::SecurityCheck, VS::ControlFlowGuard, VS::RTTI,
 												  VS::MultiThreadedDebugDll, VS::StaticAnalyze, VS::DbgProgramDatabase, VS::StackFrameAndUninitVarCheck });
 				analyze_cfg->AddTargetLinkerFlags( shared_linker_cfg )->AddTargetLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
-				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG"/*, "DEBUG"*/ });
+				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG" });
 			}
 
 			auto	profile_cfg = msvc->AddConfiguration( "Profile" );
@@ -129,49 +130,54 @@ extern void GenMGFProject ()
 			}
 
 			builder.SetSystemVersion( "8.1", "WIN32" );
-			msvc->AddSource( "message( STATUS \"CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION: ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}\" )\n" );
 		}
 
 		// GCC
 		auto	gcc = builder.AddGCCompiler();
 		{
 			Array<String>	shared_cxx_flags{ GCC::Cpp1z };
+			Array<String>	shared_linked_flags{ GccLinker::Static, GccLinker::StaticLibGCC, GccLinker::StaticLibStdCPP };
 
-			//shared_cxx_flags.Append({ GCC::Shadow, });
+			//shared_cxx_flags.Append({, });
 
 			shared_cxx_flags.Append({ /*GCC::Pedantic,*/ GCC::CharSubscripts, GCC::DoublePromotion, GCC::Format, GCC::Main, GCC::MissingBraces, GCC::MissingIncludeDirs,
 									  GCC::Uninititalized, GCC::MayBeUninitialized, GCC::UnknownPragmas, GCC::Pragmas, GCC::StrictAliasing, GCC::StrictOverflow,
 									  GCC::Undef, GCC::EndifLabels, GCC::FreeNonheapObject, GCC::PointerArith, GCC::CastAlign, GCC::WriteStrings,
 									  /*GCC::Conversion,*/ GCC::ConversionNull, /*GCC::ZeroAsNullConst,*/ GCC::EnumCompare, GCC::SignCompare, /*GCC::SignConvertsion,*/
 									  GCC::SizeofPointerMemaccess, /*GCC::SizeofPointerDiv,*/ GCC::LogicalOp });
-			
-			shared_cxx_flags.PushBack( GCC::WarningsToErrors({ GCC::InitSelf, GCC::Parentheses, GCC::ReturnLocalAddr, GCC::ReturnType, GCC::NonTemplateFriend,
-															   GCC::ArrayBounds, GCC::DivByZero, GCC::Address, GCC::MissingFieldInit, /*GCC::AlignedNew,*/
-															   GCC::PlacementNew, GCC::SignCompare, GCC::CastQual }) );
 
-			shared_cxx_flags.PushBack( GCC::DisableWarnings({ GCC::Unused, GCC::NonTemplateFriend, GCC::LiteralSuffix, GCC::ZeroAsNullConst }) );
+			shared_cxx_flags.PushBack( GCC::DisableWarnings({ GCC::Unused, GCC::NonTemplateFriend, GCC::ZeroAsNullConst, GCC::Shadow, GCC::EnumCompare,
+															  GCC::Narrowing }) );
+			
+			shared_cxx_flags.PushBack( GCC::WarningsToErrors({ GCC::InitSelf, GCC::Parentheses, GCC::ReturnLocalAddr, GCC::ReturnType,
+															   GCC::ArrayBounds, GCC::DivByZero, GCC::Address, GCC::MissingFieldInit, /*GCC::AlignedNew,*/
+															   GCC::PlacementNew, GCC::SignCompare, GCC::CastQual, GCC::CastAlign, GCC::LiteralSuffix,
+															   GCC::ShadowLocal }) );
 
 
 			auto	debug_cfg = gcc->AddConfiguration( "Debug" );
 			{
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						 ->AddTargetCxxFlags({ GCC::DebugGddb, /*GCC::Sanitize_Undefined,*/ GCC::CheckIncompleteType, GCC::OptDebug });
+				debug_cfg->AddTargetLinkerFlags( shared_linked_flags );
 				//debug_cfg->AddTargetLinkerFlags({ "-lubsan" });
-				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG"/*, "DEBUG"*/ });
+				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG" });
 			}
 
 			auto	analyze_cfg = gcc->AddConfiguration( "DebugAnalyze" );
 			{
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						  ->AddTargetCxxFlags({ GCC::DebugGddb, GCC::Sanitize_Undefined, GCC::CheckIncompleteType, GCC::OptDebug });
+				analyze_cfg->AddTargetLinkerFlags( shared_linked_flags );
 				//debug_cfg->AddTargetLinkerFlags({ "-lubsan" });
-				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG"/*, "DEBUG"*/ });
+				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG" });
 			}
 
 			auto	profile_cfg = gcc->AddConfiguration( "Profile" );
 			{
 				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ GCC::Opt2, GCC::InlineAll });
+				profile_cfg->AddTargetLinkerFlags( shared_linked_flags );
 				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
 			}
 
@@ -179,12 +185,14 @@ extern void GenMGFProject ()
 			{
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ GCC::Opt3, GCC::OptFast, GCC::OptOmitFramePointers, GCC::InlineAll });
+				release_cfg->AddTargetLinkerFlags( shared_linked_flags );
 				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
 			}
 		}
 
-		// Clang
-		auto	clang = builder.AddClangCompiler();
+		// Clang (Windows, Linux)
+		#if 0
+		auto	clang = builder.AddClangCompiler()->EnableIf("WIN32 OR UNIX");
 		{
 			Array<String>	shared_cxx_flags{ Clang::Cpp1z };
 
@@ -192,13 +200,13 @@ extern void GenMGFProject ()
 
 			shared_cxx_flags.Append({ /*Clang::Pedantic,*/ Clang::CharSubscripts, Clang::DoublePromotion, Clang::Format, Clang::Main, Clang::MissingBraces, Clang::MissingIncludeDirs,
 									  Clang::Unused, Clang::Uninititalized, Clang::MayBeUninitialized, Clang::UnknownPragmas, Clang::Pragmas, Clang::StrictAliasing, Clang::StrictOverflow,
-									  Clang::Undef, Clang::EndifLabels, Clang::FreeNonheapObject, Clang::PointerArith, Clang::CastQual, Clang::CastAlign, Clang::WriteStrings,
+									  Clang::Undef, Clang::EndifLabels, Clang::FreeNonheapObject, Clang::PointerArith, Clang::WriteStrings,
 									  /*Clang::Conversion,*/ Clang::ConversionNull, Clang::ZeroAsNullConst, Clang::EnumCompare, Clang::SignCompare, /*Clang::SignConvertsion,*/ Clang::SizeofPointerMemaccess,
 									  Clang::LogicalOp, Clang::RTTI, Clang::Exceptions });
 			
 			shared_cxx_flags.PushBack( Clang::WarningsToErrors({ Clang::InitSelf, Clang::Parentheses, Clang::ReturnLocalAddr, Clang::ReturnType, Clang::NonTemplateFriend,
 															   Clang::ArrayBounds, Clang::DivByZero, Clang::Address, Clang::MissingFieldInit, /*Clang::AlignedNew,*/
-															   Clang::PlacementNew }) );
+															   Clang::PlacementNew, Clang::CastQual, Clang::CastAlign, Clang::UnknownWarning, Clang::UserDefinedLiterals }) );
 
 			shared_cxx_flags.PushBack( Clang::DisableWarnings({ Clang::NonTemplateFriend, Clang::Comment, Clang::UndefinedInline, Clang::Switch, Clang::Narrowing,
 															    Clang::Cxx14Extensions, Clang::Cxx1ZExtensions }) );
@@ -208,14 +216,14 @@ extern void GenMGFProject ()
 			{
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						 ->AddTargetCxxFlags({ Clang::DebugGddb, /*Clang::Sanitize_Undefined,*/ Clang::CheckIncompleteType, Clang::OptDebug });
-				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG"/*, "DEBUG"*/ });
+				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG" });
 			}
 
 			auto	analyze_cfg = clang->AddConfiguration( "DebugAnalyze" );
 			{
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						  ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::Sanitize_Undefined, Clang::CheckIncompleteType, Clang::OptDebug });
-				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG"/*, "DEBUG"*/ });
+				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG" });
 			}
 
 			auto	profile_cfg = clang->AddConfiguration( "Profile" );
@@ -226,6 +234,103 @@ extern void GenMGFProject ()
 			}
 
 			auto	release_cfg = clang->AddConfiguration( "Release" );
+			{
+				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
+							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
+				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+			}
+		}
+		#endif
+
+		// Clang MacOS
+		auto	clang_apple = builder.AddClangCompiler( "CLANG_APPLE" )->EnableIf("APPLE");
+		{
+			Array<String>	shared_cxx_flags{ Clang::Cpp1z };
+
+			shared_cxx_flags.Append({ Clang::CharSubscripts, Clang::DoublePromotion, Clang::Format, Clang::Main, Clang::MissingBraces, Clang::MissingIncludeDirs,
+									  Clang::Uninititalized, Clang::UnknownPragmas, Clang::Pragmas, Clang::StrictAliasing, Clang::StrictOverflow,
+									  Clang::Undef, Clang::EndifLabels, Clang::PointerArith, Clang::WriteStrings,
+									  Clang::ConversionNull, Clang::EnumCompare, Clang::SignCompare, Clang::SizeofPointerMemaccess,
+									  Clang::RTTI, Clang::Exceptions });
+			
+			shared_cxx_flags.PushBack( Clang::WarningsToErrors({ Clang::InitSelf, Clang::Parentheses, Clang::ReturnLocalAddr, Clang::ReturnType, Clang::UserDefinedLiterals,
+															   Clang::ArrayBounds, Clang::DivByZero, Clang::Address, Clang::MissingFieldInit,
+															   Clang::CastQual, Clang::UnknownWarning }) );
+
+			shared_cxx_flags.PushBack( Clang::DisableWarnings({ Clang::Comment, Clang::UndefinedInline, Clang::Switch, Clang::Narrowing, Clang::Unused,
+															    Clang::Cxx14Extensions, Clang::Cxx1ZExtensions }) );
+
+
+			auto	debug_cfg = clang_apple->AddConfiguration( "Debug" );
+			{
+				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
+						 ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::OptDebug });
+				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG" });
+			}
+
+			auto	analyze_cfg = clang_apple->AddConfiguration( "DebugAnalyze" );
+			{
+				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
+						  ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::Sanitize_Undefined, Clang::OptDebug });
+				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG" });
+			}
+
+			auto	profile_cfg = clang_apple->AddConfiguration( "Profile" );
+			{
+				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )
+							->AddTargetCxxFlags({ Clang::Opt2, Clang::InlineAll });
+				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+			}
+
+			auto	release_cfg = clang_apple->AddConfiguration( "Release" );
+			{
+				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
+							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
+				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+			}
+		}
+
+		// Clang Android
+		auto	clang_and = builder.AddClangCompiler( "CLANG_ANDROID" )->EnableIf("DEFINED ANDROID");
+		{
+			Array<String>	shared_cxx_flags{ Clang::Cpp1z };
+
+			shared_cxx_flags.Append({ Clang::CharSubscripts, Clang::DoublePromotion, Clang::Format, Clang::Main, Clang::MissingBraces, Clang::MissingIncludeDirs,
+									  Clang::Uninititalized, Clang::UnknownPragmas, Clang::Pragmas, Clang::StrictAliasing, Clang::StrictOverflow,
+									  Clang::Undef, Clang::EndifLabels, Clang::PointerArith, Clang::WriteStrings,
+									  Clang::ConversionNull, Clang::EnumCompare, Clang::SignCompare, Clang::SizeofPointerMemaccess,
+									  Clang::RTTI, Clang::Exceptions });
+			
+			shared_cxx_flags.PushBack( Clang::WarningsToErrors({ Clang::InitSelf, Clang::Parentheses, Clang::ReturnLocalAddr, Clang::ReturnType, Clang::UserDefinedLiterals,
+															   Clang::ArrayBounds, Clang::DivByZero, Clang::Address, Clang::MissingFieldInit,
+															   Clang::CastQual, Clang::UnknownWarning }) );
+
+			shared_cxx_flags.PushBack( Clang::DisableWarnings({ Clang::Comment, Clang::UndefinedInline, Clang::Switch, Clang::Narrowing, Clang::Unused,
+															    Clang::Cxx14Extensions, Clang::Cxx1ZExtensions }) );
+
+
+			auto	debug_cfg = clang_and->AddConfiguration( "Debug" );
+			{
+				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
+						 ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::OptDebug });
+				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG" });
+			}
+
+			auto	analyze_cfg = clang_and->AddConfiguration( "DebugAnalyze" );
+			{
+				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
+						  ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::Sanitize_Undefined, Clang::OptDebug });
+				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG" });
+			}
+
+			auto	profile_cfg = clang_and->AddConfiguration( "Profile" );
+			{
+				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )
+							->AddTargetCxxFlags({ Clang::Opt2, Clang::InlineAll });
+				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+			}
+
+			auto	release_cfg = clang_and->AddConfiguration( "Release" );
 			{
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
@@ -423,12 +528,14 @@ endif()
 
 
 		// Utils //
-	#ifdef ENABLE_UTILS
 		auto	util_cmake = builder.AddExecutable( "Utils.CMake", "Utils/CMake" );
 		{
+			util_cmake->EnableIf( "NOT DEFINED ANDROID" );
 			util_cmake->AddFoldersRecursive( "" );
 			util_cmake->LinkLibrary( engine_stl );
 		}
+
+	#ifdef ENABLE_UTILS
 	#endif	// ENABLE_UTILS
 	}
 

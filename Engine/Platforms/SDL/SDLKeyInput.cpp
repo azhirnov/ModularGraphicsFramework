@@ -1,10 +1,12 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/OS/Input.h"
-#include "Engine/Platforms/SDL/SDLMessages.h"
-#include "Engine/Platforms/SDL/SDLObjectsConstructor.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_SDL
+
+#include "Engine/Platforms/Public/OS/Input.h"
+#include "Engine/Platforms/SDL/SDLMessages.h"
+#include "Engine/Platforms/SDL/SDLObjectsConstructor.h"
 
 namespace Engine
 {

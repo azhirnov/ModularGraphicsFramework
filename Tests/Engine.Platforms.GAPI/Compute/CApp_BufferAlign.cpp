@@ -24,7 +24,7 @@ bool CApp::_Test_BufferAlign ()
 	st2.b3 = uint4( false, true, false, 0 );
 	st2.f1 = 1.4335f;
 
-	BytesU	buf_size = SizeOf<Pipelines::BufferAlign_Struct>() * 3;
+	BytesU	buf_size = SizeOf<Pipelines::BufferAlign_Struct> * 3;
 
 
 	// create resources
@@ -46,8 +46,8 @@ bool CApp::_Test_BufferAlign ()
 					gpuIDs.buffer,
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
-						BufferDescriptor{ buf_size, EBufferUsage::bits() | EBufferUsage::Storage },
-						EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+						BufferDescriptor{ buf_size, EBufferUsage::Storage },
+						EGpuMemory::CoherentWithCPU,
 						EMemoryAccess::All
 					},
 					OUT buffer
@@ -84,7 +84,7 @@ bool CApp::_Test_BufferAlign ()
 	// write data to buffer
 	Message< GpuMsg::WriteToGpuMemory >	write_cmd{ BinArrayCRef::FromValue(st1) };
 	buffer->Send( write_cmd );
-	CHECK_ERR( *write_cmd->wasWritten == BytesUL(SizeOf(st1)) );
+	CHECK_ERR( *write_cmd->wasWritten == BytesUL::SizeOf(st1) );
 
 
 	// build command buffer

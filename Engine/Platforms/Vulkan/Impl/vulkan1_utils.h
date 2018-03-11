@@ -2,10 +2,13 @@
 
 #pragma once
 
-#include "vulkan1.h"
-#include "Vk1Library.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "vulkan1.h"
+#include "Vk1Library.h"
+#include "Engine/STL/ThreadSafe/Singleton.h"
 
 namespace vk
 {

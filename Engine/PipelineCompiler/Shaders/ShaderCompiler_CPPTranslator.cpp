@@ -30,6 +30,9 @@ namespace PipelineCompiler
 		StringSet_t			_builtinList;
 		const EShader::type	_shaderType;
 
+		uint				_sharedCounter = 0;
+		uint				_barrierCounter = 0;
+
 
 	// methods
 	public:
@@ -61,8 +64,9 @@ namespace PipelineCompiler
 		bool _TranslateConst (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateShared (Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateBuiltin (StringCRef name, OUT String &str) const;
+		bool _TranslateBarrier (uint index, OUT String &str) const;
 
-		static String _ToString (EGpuMemoryModel::type value);
+		static String _ToString (EShaderMemoryModel::type value);
 		static String _ToString (EShaderVariable::type value);
 		static String _ToImageType (EShaderVariable::type value);
 		static String _ToTextureType (EShaderVariable::type value);
@@ -103,7 +107,7 @@ namespace PipelineCompiler
 
 		CHECK_ERR( TranslateShaderInfo( intermediate, cfg.skipExternals, translator ) );
 		
-		CHECK_ERR( translator.Main( root, translator.uid, cfg.skipExternals ) );
+		CHECK_ERR( translator.Main( root, cfg.skipExternals ) );
 		
 		StringParser::IncreaceIndent( translator.src );
 		
@@ -140,7 +144,7 @@ namespace PipelineCompiler
 	bool CPP_DstLanguage::TranslateLocalVar (const TypeInfo &t, INOUT String &res)
 	{
 		// access
-		//if ( memoryModel != EGpuMemoryModel::Default )
+		//if ( memoryModel != EShaderMemoryModel::Default )
 		//	res << _ToString( memoryModel ) << ' ';
 
 		// read-only
@@ -217,7 +221,7 @@ namespace PipelineCompiler
 	bool CPP_DstLanguage::TranslateType (const TypeInfo &t, INOUT String &res)
 	{
 		// access
-		//if ( t.memoryModel != EGpuMemoryModel::Default )
+		//if ( t.memoryModel != EShaderMemoryModel::Default )
 		//	res << _ToString( t.memoryModel ) << ' ';
 
 		// layout
@@ -303,7 +307,12 @@ namespace PipelineCompiler
 			{
 				case glslang::TOperator::EOpEmitVertex :				src << "EmitVertex()";			break;
 				case glslang::TOperator::EOpEndPrimitive :				src << "EndPrimitive()";		break;
-				case glslang::TOperator::EOpBarrier :					src << "barrier()";				break;
+
+				case glslang::TOperator::EOpBarrier :
+					src << "__barrier_obj" << _barrierCounter << ".Wait()";
+					++_barrierCounter;
+					break;
+
 				case glslang::TOperator::EOpMemoryBarrier :				src << "memoryBarrier()";		break;
 				case glslang::TOperator::EOpMemoryBarrierAtomicCounter:	src << "memoryBarrierAtomicCounter()";break;
 				case glslang::TOperator::EOpMemoryBarrierBuffer :		src << "memoryBarrierBuffer()";	break;
@@ -487,48 +496,48 @@ namespace PipelineCompiler
 
 			switch ( op )
 			{
-				case glslang::TOperator::EOpAdd :						src << '('<<args[0] <<'+' << args[1]<<')';		break;
-				case glslang::TOperator::EOpSub :						src << '('<<args[0] <<'-' << args[1]<<')';		break;
-				case glslang::TOperator::EOpMul :						src << '('<<args[0] <<'*' << args[1]<<')';		break;
-				case glslang::TOperator::EOpDiv :						src << '('<<args[0] <<'/' << args[1]<<')';		break;
-				case glslang::TOperator::EOpMod :						src << '('<<args[0] <<'%' << args[1]<<')';		break;
-				case glslang::TOperator::EOpRightShift :				src << '('<<args[0] <<">>"<< args[1]<<')';		break;
-				case glslang::TOperator::EOpLeftShift :					src << '('<<args[0] <<"<<"<< args[1]<<')';		break;
-				case glslang::TOperator::EOpAnd :						src << '('<<args[0] <<'&' << args[1]<<')';		break;
-				case glslang::TOperator::EOpInclusiveOr :				src << '('<<args[0] <<'|' << args[1]<<')';		break;
-				case glslang::TOperator::EOpExclusiveOr :				src << '('<<args[0] <<'^' << args[1]<<')';		break;
-				case glslang::TOperator::EOpEqual :						src << '('<<args[0] <<"=="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpNotEqual :					src << '('<<args[0] <<"!="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpLessThan :					src << '('<<args[0] <<'<' << args[1]<<')';		break;
-				case glslang::TOperator::EOpGreaterThan :				src << '('<<args[0] <<'>' << args[1]<<')';		break;
-				case glslang::TOperator::EOpLessThanEqual :				src << '('<<args[0] <<"<="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpGreaterThanEqual :			src << '('<<args[0] <<">="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpVectorTimesScalar :			src << '('<<args[0] <<'*' << args[1]<<')';		break;
-				case glslang::TOperator::EOpVectorTimesMatrix :			src << '('<<args[0] <<'*' << args[1]<<')';		break;
-				case glslang::TOperator::EOpMatrixTimesVector :			src << '('<<args[0] <<'*' << args[1]<<')';		break;
-				case glslang::TOperator::EOpMatrixTimesScalar :			src << '('<<args[0] <<'*' << args[1]<<')';		break;
-				case glslang::TOperator::EOpLogicalOr :					src << '('<<args[0] <<"||"<< args[1]<<')';		break;
-				case glslang::TOperator::EOpLogicalXor :				src << '('<<args[0] <<"^^"<< args[1]<<')';		break;
-				case glslang::TOperator::EOpLogicalAnd :				src << '('<<args[0] <<"&&"<< args[1]<<')';		break;
+				case glslang::TOperator::EOpAdd :						src << '('<<args[0] <<" + " << args[1]<<')';	break;
+				case glslang::TOperator::EOpSub :						src << '('<<args[0] <<" - " << args[1]<<')';	break;
+				case glslang::TOperator::EOpMul :						src << '('<<args[0] <<" * " << args[1]<<')';	break;
+				case glslang::TOperator::EOpDiv :						src << '('<<args[0] <<" / " << args[1]<<')';	break;
+				case glslang::TOperator::EOpMod :						src << '('<<args[0] <<" % " << args[1]<<')';	break;
+				case glslang::TOperator::EOpRightShift :				src << '('<<args[0] <<" >> "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLeftShift :					src << '('<<args[0] <<" << "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpAnd :						src << '('<<args[0] <<" & " << args[1]<<')';	break;
+				case glslang::TOperator::EOpInclusiveOr :				src << '('<<args[0] <<" | " << args[1]<<')';	break;
+				case glslang::TOperator::EOpExclusiveOr :				src << '('<<args[0] <<" ^ " << args[1]<<')';	break;
+				case glslang::TOperator::EOpEqual :						src << '('<<args[0] <<" == "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpNotEqual :					src << '('<<args[0] <<" != "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLessThan :					src << '('<<args[0] <<" < " << args[1]<<')';	break;
+				case glslang::TOperator::EOpGreaterThan :				src << '('<<args[0] <<" > " << args[1]<<')';	break;
+				case glslang::TOperator::EOpLessThanEqual :				src << '('<<args[0] <<" <= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpGreaterThanEqual :			src << '('<<args[0] <<" >= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpVectorTimesScalar :			src << '('<<args[0] <<" * " << args[1]<<')';	break;
+				case glslang::TOperator::EOpVectorTimesMatrix :			src << '('<<args[0] <<" * " << args[1]<<')';	break;
+				case glslang::TOperator::EOpMatrixTimesVector :			src << '('<<args[0] <<" * " << args[1]<<')';	break;
+				case glslang::TOperator::EOpMatrixTimesScalar :			src << '('<<args[0] <<" * " << args[1]<<')';	break;
+				case glslang::TOperator::EOpLogicalOr :					src << '('<<args[0] <<" || "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLogicalXor :				src << '('<<args[0] <<" ^^ "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLogicalAnd :				src << '('<<args[0] <<" && "<< args[1]<<')';	break;
 				case glslang::TOperator::EOpIndexDirect :				src << '('<<args[0] <<'[' << args[1]<<"])";		break;
 				case glslang::TOperator::EOpIndexIndirect :				src << '('<<args[0] <<'[' << args[1]<<"])";		break;
 				//case glslang::TOperator::EOpMethod :					break;
 				//case glslang::TOperator::EOpScoping :					break;
-				case glslang::TOperator::EOpAssign :					src <<      args[0] <<'=' << args[1];			break;
-				case glslang::TOperator::EOpAddAssign :					src << '('<<args[0] <<"+="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpSubAssign :					src << '('<<args[0] <<"-="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpMulAssign :					src << '('<<args[0] <<"*="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpVectorTimesMatrixAssign :	src << '('<<args[0] <<"*="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpVectorTimesScalarAssign :	src << '('<<args[0] <<"*="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpMatrixTimesScalarAssign :	src << '('<<args[0] <<"*="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpMatrixTimesMatrixAssign :	src << '('<<args[0] <<"*="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpDivAssign :					src << '('<<args[0] <<"/="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpModAssign :					src << '('<<args[0] <<"%="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpAndAssign :					src << '('<<args[0] <<"&="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpInclusiveOrAssign :			src << '('<<args[0] <<"|="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpExclusiveOrAssign :			src << '('<<args[0] <<"^="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpLeftShiftAssign :			src << '('<<args[0] <<"<<="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpRightShiftAssign :			src << '('<<args[0] <<">>="<< args[1]<<')';		break;
+				case glslang::TOperator::EOpAssign :					src <<      args[0] <<" = " << args[1];			break;
+				case glslang::TOperator::EOpAddAssign :					src << '('<<args[0] <<" += "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpSubAssign :					src << '('<<args[0] <<" -= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpMulAssign :					src << '('<<args[0] <<" *= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpVectorTimesMatrixAssign :	src << '('<<args[0] <<" *= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpVectorTimesScalarAssign :	src << '('<<args[0] <<" *= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpMatrixTimesScalarAssign :	src << '('<<args[0] <<" *= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpMatrixTimesMatrixAssign :	src << '('<<args[0] <<" *= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpDivAssign :					src << '('<<args[0] <<" /= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpModAssign :					src << '('<<args[0] <<" %= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpAndAssign :					src << '('<<args[0] <<" &= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpInclusiveOrAssign :			src << '('<<args[0] <<" |= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpExclusiveOrAssign :			src << '('<<args[0] <<" ^= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLeftShiftAssign :			src << '('<<args[0] <<" <<= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpRightShiftAssign :			src << '('<<args[0] <<" >>= "<< args[1]<<')';	break;
 
 				case glslang::TOperator::EOpAtan :						src << "atan" << all_args;						break;
 				case glslang::TOperator::EOpImageLoad :					src << "imageLoad" << all_args;					break;
@@ -752,6 +761,7 @@ namespace PipelineCompiler
 			<< "{\n"
 			<< "	// prepare externals\n";
 
+		// externals
 		FOR( i, _externals )
 		{
 			glslang::TIntermTyped*	typed	= _externals[i].first;
@@ -778,6 +788,13 @@ namespace PipelineCompiler
 			}
 		}
 
+		// barriers
+		for (uint i = 0; i < _barrierCounter; ++i)
+		{
+			CHECK_ERR( _TranslateBarrier( i, INOUT src ) );
+		}
+
+		// builtins
 		FOR( i, _builtinList )
 		{
 			CHECK_ERR( _TranslateBuiltin( _builtinList[i], INOUT src ) );
@@ -814,27 +831,16 @@ namespace PipelineCompiler
 	_ToString
 =================================================
 */
-	String CPP_DstLanguage::_ToString (EGpuMemoryModel::type value)
+	String CPP_DstLanguage::_ToString (EShaderMemoryModel::type value)
 	{
-		if ( value == EGpuMemoryModel::Default )
-			return "Impl::EStorageAccess::Coherent";
-
-		for (uint i = 0; i < CompileTime::SizeOf< EGpuMemoryModel::type >::bits; ++i)
+		switch ( value )
 		{
-			const auto	t = EGpuMemoryModel::type(1 << i);
-
-			if ( not EnumEq( value, t ) )
-				continue;
-
-			switch (t)
-			{
-				case EGpuMemoryModel::Coherent :	return "Impl::EStorageAccess::Coherent";
-				case EGpuMemoryModel::Volatile :	return "Impl::EStorageAccess::Volatile";
-				case EGpuMemoryModel::Restrict :	return "Impl::EStorageAccess::Restrict";
-				case EGpuMemoryModel::ReadOnly :	return "Impl::EStorageAccess::ReadOnly";
-				case EGpuMemoryModel::WriteOnly :	return "Impl::EStorageAccess::WriteOnly";
-			}
-			break;
+			case EShaderMemoryModel::Default :
+			case EShaderMemoryModel::Coherent :		return "Impl::EStorageAccess::Coherent";
+			case EShaderMemoryModel::Volatile :		return "Impl::EStorageAccess::Volatile";
+			case EShaderMemoryModel::Restrict :		return "Impl::EStorageAccess::Restrict";
+			case EShaderMemoryModel::ReadOnly :		return "Impl::EStorageAccess::ReadOnly";
+			case EShaderMemoryModel::WriteOnly :	return "Impl::EStorageAccess::WriteOnly";
 		}
 		RETURN_ERR( "unknown memory model type!" );
 	}
@@ -1042,7 +1048,9 @@ namespace PipelineCompiler
 */
 	bool CPP_DstLanguage::_TranslateShared (Translator::TypeInfo const& info, OUT String &str)
 	{
-		str << "\tShared< ";
+		++_sharedCounter;
+
+		str << "\tImpl::SharedMemory< ";
 		
 		// type
 		if ( not info.typeName.Empty() ) {
@@ -1050,15 +1058,31 @@ namespace PipelineCompiler
 		} else {
 			str << _ToString( info.type );
 		}
+		
+		str << " >	" << info.name << ";	_helper_.GetShared( "
+			<< _sharedCounter << ", ";
 
-		if ( info.arraySize != 0 ) {
-			str << ", " << info.arraySize;
-		}
+		if ( info.arraySize != 0 and info.arraySize != UMax )
+			str << info.arraySize;
+		else
+			str << "1";
 
-		str << " >	" << info.name << ";\n";
+		str << ", " << info.name << " );\n";
 		return true;
 	}
 	
+/*
+=================================================
+	_TranslateBarrier
+=================================================
+*/
+	bool CPP_DstLanguage::_TranslateBarrier (uint index, OUT String &str) const
+	{
+		str << "\tImpl::Barrier __barrier_obj" << index << ";"
+			<< "\t_helper_.InitBarrier( " << index << ", " << "__barrier_obj" << index << " );\n";
+		return true;
+	}
+
 /*
 =================================================
 	_TranslateConst
@@ -1146,12 +1170,12 @@ namespace PipelineCompiler
 	CPP_DstLanguage::BuiltinMap_t const&  CPP_DstLanguage::_GetBuiltinMapping ()
 	{
 		static const BuiltinMap_t	mapping = {
-			{ "gl_GlobalInvocationID",		{"\tauto& gl_GlobalInvocationID = _helper_.GetComputeShaderState().inGlobalInvocationID;\n", EShader::bits() | EShader::Compute} },
-			{ "gl_LocalInvocationID",		{"\tauto& gl_LocalInvocationID = _helper_.GetComputeShaderState().inLocalInvocationID;\n", EShader::bits() | EShader::Compute} },
-			{ "gl_LocalInvocationIndex",	{"\tauto& gl_LocalInvocationIndex = _helper_.GetComputeShaderState().inLocalInvocationIndex;\n", EShader::bits() | EShader::Compute} },
-			{ "gl_NumWorkGroups",			{"\tauto& gl_NumWorkGroups = _helper_.GetComputeShaderState().inNumWorkGroups;\n", EShader::bits() | EShader::Compute} },
-			{ "gl_WorkGroupID",				{"\tauto& gl_WorkGroupID = _helper_.GetComputeShaderState().inWorkGroupID;\n", EShader::bits() | EShader::Compute} },
-			{ "gl_WorkGroupSize",			{"\tauto& gl_WorkGroupSize = _helper_.GetComputeShaderState().constWorkGroupSize;\n", EShader::bits() | EShader::Compute} }
+			{ "gl_GlobalInvocationID",		{"\tauto& gl_GlobalInvocationID = _helper_.GetComputeShaderState().inGlobalInvocationID;\n", EShader::Compute} },
+			{ "gl_LocalInvocationID",		{"\tauto& gl_LocalInvocationID = _helper_.GetComputeShaderState().inLocalInvocationID;\n", EShader::Compute} },
+			{ "gl_LocalInvocationIndex",	{"\tauto& gl_LocalInvocationIndex = _helper_.GetComputeShaderState().inLocalInvocationIndex;\n", EShader::Compute} },
+			{ "gl_NumWorkGroups",			{"\tauto& gl_NumWorkGroups = _helper_.GetComputeShaderState().inNumWorkGroups;\n", EShader::Compute} },
+			{ "gl_WorkGroupID",				{"\tauto& gl_WorkGroupID = _helper_.GetComputeShaderState().inWorkGroupID;\n", EShader::Compute} },
+			{ "gl_WorkGroupSize",			{"\tauto& gl_WorkGroupSize = _helper_.GetComputeShaderState().constWorkGroupSize;\n", EShader::Compute} }
 		};
 		return mapping;
 	}

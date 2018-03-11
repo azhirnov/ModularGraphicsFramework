@@ -242,17 +242,7 @@ namespace CompileTime
 			
 			typedef SwitchType< not IsWrapper<T1> and IsWrapper<T0>,
 							typename _DeferredCreateWith<T0,t1>::type, T1 >		type1;
-			/*
-			typedef typename SwitchType< IsWrapper<T0>,
-						typename SwitchType< IsWrapper<T1>,
-							typename SwitchType< (SizeOf<T0>::bytes >= SizeOf<T1>::bytes),	// T0 and T1 are wrappers
-								typename _DeferredCreateWith<T0,T2>::type,					// from T0
-								typename _DeferredCreateWith<T1,T2>::type >,				// from T1
-							typename _DeferredCreateWith<T0,T2>::type >,				// only T0 is wrapper
-						typename SwitchType< IsWrapper<T1>,
-							typename _DeferredCreateWith<T1,T2>::type,					// only T1 is wrapper
-							T2 > >			type2;										// none of T0 and T1 is wrappers
-							*/
+			
 			typedef ChooseType< Index, type0, type1, T2 >	type;
 		};
 
@@ -282,8 +272,8 @@ namespace CompileTime
 				typedef typename _same_capacity::right	right;
 
 				// calc type index
-				static const usize	left_size	= SizeOf<left>::bytes;
-				static const usize	right_size	= SizeOf<right>::bytes;
+				static const usize	left_size	= CompileTime::SizeOf<left>::bytes;
+				static const usize	right_size	= CompileTime::SizeOf<right>::bytes;
 				
 				static const uint	left_count = TypeDescriptor::GetCapacity< left >;
 				static const uint	right_count = TypeDescriptor::GetCapacity< right >;

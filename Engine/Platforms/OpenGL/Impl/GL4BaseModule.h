@@ -2,11 +2,13 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GPU/Thread.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/Public/GPU/Thread.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
 
 namespace Engine
 {
@@ -67,10 +69,10 @@ namespace PlatformGL
 					   const ModuleConfig &config,
 					   const TypeIdList *msgTypes,
 					   const TypeIdList *eventTypes);
-
-		Ptr< GL4Device >	GetDevice ()	const	{ return _glDevice; }
 		
 		ModulePtr _GetGPUThread (const ModulePtr &);
+
+		Ptr< GL4Device >	GetDevice ()	const	{ return _glDevice; }
 
 
 	// message handlers

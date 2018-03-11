@@ -29,28 +29,47 @@ namespace gl
 		return glTextureParameteri( texture, pname, param );
 	}
 
-	inline void glGetImageFromTexture (GLuint texture, GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, void *pixels)
+	/*inline void glGetImageFromTexture (GLuint texture, GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, void *pixels)
 	{
 		GX_UNUSED( target );
 		return glGetTextureImage( texture, level, format, type, bufSize, pixels );
 	}
 
-	/*inline void glGetSubImageFromTexture (GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+	inline void glGetSubImageFromTexture (GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
 										  GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
   										  GLsizei bufSize, void *pixels)
 	{
 		GX_UNUSED( target );
 		return glGetTextureSubImage( texture, level, xoffset, yoffset, zoffset,
 									 width, height, depth, format, type, bufSize, pixels );
+	}
+	
+	inline void glCopySubImage1D (GLuint texture, GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)
+	{
+		GX_UNUSED( target );
+		return glCopyTextureSubImage1D( texture, level, xoffset, x, y, width );
+	}
+	
+	inline void glCopySubImage2D (GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+	{
+		GX_UNUSED( target );
+		return glCopyTextureSubImage2D( texture, level, xoffset, yoffset, x, y, width, height );
+	}
+	
+	inline void glCopySubImage3D (GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+	{
+		GX_UNUSED( target );
+		return glCopyTextureSubImage3D( texture, level, xoffset, yoffset, zoffset, x, y, width, height );
 	}*/
 
-# endif
+# endif	// GRAPHICS_API_OPENGL >= 450
+
 
 # if GRAPHICS_API_OPENGL < 450
 
 	// using extension https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_direct_state_access.txt
 	
-	// Buffer
+// Buffer
 	inline void glNamedBufferData (GLuint buffer, GLsizei size, const void *data, GLenum usage)
 	{
 		return glNamedBufferDataEXT( buffer, size, data, usage );
@@ -86,7 +105,8 @@ namespace gl
 		return glNamedCopyBufferSubDataEXT(readBuffer, writeBuffer, readOffset, writeOffset, size);
 	}
 
-	// Vertex Attribs
+
+// Vertex Attribs
 	inline void glDisableVertexArrayAttrib (GLuint vaobj, GLuint index)
 	{
 		return glDisableVertexArrayAttribEXT( vaobj, index );
@@ -134,7 +154,8 @@ namespace gl
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, buffer );	// TODO
 	}
 	
-	// Framebuffer
+
+// Framebuffer
 	inline void glNamedFramebufferTexture (GLuint framebuffer, GLenum attachment, GLuint texture, GLint level)
 	{
 		return glNamedFramebufferTextureEXT( framebuffer, attachment, texture, level );
@@ -167,7 +188,8 @@ namespace gl
 		return glReadPixels( x, y, width, height, format, type, data );
 	}
 	
-	// Texture
+
+// Texture
 	inline void glBindMultiTexture (GLuint unit, GLenum target, GLuint texture)
 	{
 		return glBindMultiTextureEXT( unit + GL_TEXTURE0, target, texture );
@@ -183,13 +205,28 @@ namespace gl
 		return glTextureParameteriEXT( texture, target, pname, param );
 	}
 
-	inline void glGetImageFromTexture (GLuint texture, GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, void *pixels)
+	/*inline void glGetImageFromTexture (GLuint texture, GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, void *pixels)
 	{
 		GX_UNUSED( bufSize );
 		return glGetTextureImageEXT( texture, target, level, format, type, pixels );
 	}
 
-# endif
+	inline void glCopySubImage1D (GLuint texture, GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)
+	{
+		return glCopyTextureSubImage1DEXT( texture, target, level, xoffset, x, y, width );
+	}
+
+	inline void glCopySubImage2D (GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+	{
+		return glCopyTextureSubImage2DEXT( texture, target, level, xoffset, yoffset, x, y, width, height );
+	}
+
+	inline void glCopySubImage3D (GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+	{
+		return glCopyTextureSubImage3DEXT( texture, target, level, xoffset, yoffset, zoffset, x, y, width, height );
+	}*/
+
+# endif	// GRAPHICS_API_OPENGL < 450
 
 }	// gl
 

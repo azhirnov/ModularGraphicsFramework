@@ -14,7 +14,6 @@
 #	define PLATFORM_NAME			"Android"
 #	define PLATFORM_TYPE_MOBILE		1
 #	define PLATFORM_BASE_POSIX		1
-#	define PLATFORM_LITTLE_ENDIAN	1
 #endif
 
 
@@ -36,7 +35,6 @@
 #	define PLATFORM_NAME			"Windows"
 #	define PLATFORM_TYPE_DESCTOP	1
 #	define PLATFORM_BASE_WINDOWS	1
-#	define PLATFORM_LITTLE_ENDIAN	1
 #endif
 
 
@@ -45,7 +43,7 @@
 	( defined( __APPLE__ ) || defined( MACOSX ) )
 # include "AvailabilityMacros.h"
 # include "TargetConditionals.h"
-# if defined( TARGET_OS_IPHONE )
+# if 0 //defined( TARGET_OS_IPHONE )
 #	define PLATFORM_IPHONE			1
 #	define PLATFORM_NAME			"iPhone OS"
 #	define PLATFORM_TYPE_MOBILE		1
@@ -54,8 +52,6 @@
 #	define PLATFORM_NAME			"Mac OS X"
 #	define PLATFORM_TYPE_DESCTOP	1
 # endif
-#	define PLATFORM_BASE_POSIX		1
-#	define PLATFORM_LITTLE_ENDIAN	1
 #endif
 
 
@@ -66,7 +62,6 @@
 #	define PLATFORM_NAME			"Linux"
 #	define PLATFORM_TYPE_DESCTOP	1
 #	define PLATFORM_BASE_POSIX		1
-#	define PLATFORM_LITTLE_ENDIAN	1
 #endif
 
 
@@ -148,10 +143,6 @@
 
 #ifndef PLATFORM_CPU_NAME
 #	error Unknown cpu architecture
-#endif
-
-#ifndef PLATFORM_LITTLE_ENDIAN
-#	error Endianes not defined
 #endif
 
 

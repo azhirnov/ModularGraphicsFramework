@@ -2,9 +2,12 @@
 
 #pragma once
 
-#include "Engine/STL/OS/Posix/OSPosix.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_BASE_POSIX
+
+#include "Engine/STL/OS/Posix/OSPosix.h"
+#include "Engine/STL/OS/Base/Date.h"
 
 namespace GX_STL
 {
@@ -34,9 +37,18 @@ namespace OS
 		
 		static bool GetAllFilesInPath (StringCRef path, OUT Array<String> &fileNames);
 		static bool GetAllDirsInPath (StringCRef path, OUT Array<String> &directories);
-		/*
+		
 		static bool CopyFile (StringCRef fromFile, StringCRef toFile);
-		static bool CopyDirectory (StringCRef fromDir, StringCRef toDir);*/
+		static bool CopyDirectory (StringCRef fromDir, StringCRef toDir);
+
+		// TODO: MoveFile
+		// TODO: MoveDirectory
+
+		static bool MoveFile (StringCRef oldName, StringCRef newName, bool async = false);
+
+		static Date GetFileLastModificationTime (StringCRef filename);
+		static Date GetFileCreationTime (StringCRef filename);
+		static BytesUL GetFileSize (StringCRef filename);
 	};
 
 	using OSFileSystem = PosixFileSystem;

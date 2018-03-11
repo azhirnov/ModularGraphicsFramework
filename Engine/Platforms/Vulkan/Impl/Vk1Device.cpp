@@ -1,13 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
-#include "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
-#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
+#include "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h"
+#include "Engine/Platforms/Public/GPU/Framebuffer.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1SwapchainImage.h"
 
 
@@ -507,11 +508,20 @@ namespace PlatformVK
 	{
 		CHECK_ERR( HasPhyiscalDevice() );
 
+		struct ApiVersionBits {
+			uint	patch : 12;
+			uint	minor : 10;
+			uint	major : 10;
+		};
+
+		const ApiVersionBits	api_ver = ReferenceCast<ApiVersionBits>(_deviceProperties.apiVersion);
+
 		String	str;
 
 		str << "Vulkan info\n---------------------";
-		str << "\ndevice name: " << _deviceProperties.deviceName;
-		str << "\ndevice type: " << _DeviceTypeToString( _deviceProperties.deviceType );
+		str << "\nversion:             " << api_ver.major <<'.'<< api_ver.minor <<'.'<< api_ver.patch;
+		str << "\ndevice name:         " << _deviceProperties.deviceName;
+		str << "\ndevice type:         " << _DeviceTypeToString( _deviceProperties.deviceType );
 
 		str << "\npush constants:      " << ToString( BytesU(_deviceProperties.limits.maxPushConstantsSize) );
 		str << "\nuniform buf size:    " << ToString( BytesU(_deviceProperties.limits.maxUniformBufferRange) );
@@ -1214,7 +1224,7 @@ namespace PlatformVK
 											depthStencilFormat,
 											EImageUsage::DepthStencilAttachment | EImageUsage::TransferSrc | EImageUsage::TransferDst
 										},
-										EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+										EGpuMemory::LocalInGPU,
 										EMemoryAccess::GpuReadWrite
 									},
 									OUT _depthStencilImage ) );

@@ -1,12 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/OS/Windows/Library.h"
-#include "Engine/STL/Math/BinaryMath.h"
-#include "Engine/STL/Math/Interpolations.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/Engine.Config.h"
 
 #if defined( PLATFORM_WINDOWS ) and \
 	not defined( PLATFORM_SDL )
 
+#include "Engine/STL/OS/Windows/Library.h"
+#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Math/Interpolations.h"
 #include "Engine/STL/OS/Base/BaseFileSystem.h"
 #include "Engine/STL/OS/Windows/WinHeader.h"
 

@@ -3,34 +3,26 @@
 #pragma once
 
 #include "Engine/PipelineCompiler/Common/ShaderEnums.h"
-#include "Engine/Platforms/Shared/GPU/Enums.ToString.h"
+#include "Engine/Platforms/Public/GPU/Enums.ToString.h"
 
 namespace PipelineCompiler
 {
 	
 /*
 =================================================
-	ToStringGLSL (EGpuMemoryModel)
+	ToStringGLSL (EShaderMemoryModel)
 =================================================
 */
-	inline StringCRef  ToStringGLSL (EGpuMemoryModel::type value)
+	inline StringCRef  ToStringGLSL (EShaderMemoryModel::type value)
 	{
-		for (uint i = 0; i < CompileTime::SizeOf< EGpuMemoryModel::type >::bits; ++i)
+		switch ( value )
 		{
-			const auto	t = EGpuMemoryModel::type(1 << i);
-
-			if ( not EnumEq( value, t ) )
-				continue;
-
-			switch (t)
-			{
-				case EGpuMemoryModel::Coherent :	return "coherent";
-				case EGpuMemoryModel::Volatile :	return "volatile";
-				case EGpuMemoryModel::Restrict :	return "restrict";
-				case EGpuMemoryModel::ReadOnly :	return "readonly";
-				case EGpuMemoryModel::WriteOnly :	return "writeonly";
-			}
-			break;
+			case EShaderMemoryModel::Default :
+			case EShaderMemoryModel::Coherent :		return "coherent";
+			case EShaderMemoryModel::Volatile :		return "volatile";
+			case EShaderMemoryModel::Restrict :		return "restrict";
+			case EShaderMemoryModel::ReadOnly :		return "readonly";
+			case EShaderMemoryModel::WriteOnly :	return "writeonly";
 		}
 		RETURN_ERR( "unknown memory model type!" );
 	}

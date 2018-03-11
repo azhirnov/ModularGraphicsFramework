@@ -221,7 +221,7 @@ namespace GXTypes
 		{
 			Deallocate();
 
-			UnsafeMem::MemCopy( Pointer(), other.Pointer(), SizeOf(_buf) );
+			UnsafeMem::MemCopy( Pointer(), other.Pointer(), BytesU::SizeOf(_buf) );
 			DEBUG_ONLY( ZeroMem( other._buf ) );
 		}
 

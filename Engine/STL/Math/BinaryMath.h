@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/STL/Math/Trigonometry.h"
+#include "Engine/STL/Dimensions/ByteAndBit.h"
 
 namespace GX_STL
 {

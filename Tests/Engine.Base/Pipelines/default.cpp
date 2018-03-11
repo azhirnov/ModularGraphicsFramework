@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'C:\Projects\graphxgenengine\Tests\PipelineCompiler\Pipelines\Default.cpp'
-// Created at: 2018/02/02 - 00:40:12
+// Origin file: 'c:\projects\graphxgenengine\tests\pipelinecompiler\pipelines\default.cpp'
+// Created at: 2018/03/11 - 09:59:53
 
 #include "all_pipelines.h"
 
@@ -16,12 +16,12 @@ void Create_default (PipelineTemplateDescriptor& descr)
 	descr.renderState.inputAssembly.topology         = EPrimitive::TriangleList;
 	descr.renderState.inputAssembly.primitiveRestart = false;
 
-	descr.dynamicStates = EPipelineDynamicState::bits() | EPipelineDynamicState::Viewport | EPipelineDynamicState::Scissor;
-	descr.supportedShaders = EShader::bits() | EShader::Vertex | EShader::Fragment;
-	descr.supportedPrimitives = EPrimitive::bits() | EPrimitive::TriangleList;
+	descr.dynamicStates = EPipelineDynamicState::Viewport | EPipelineDynamicState::Scissor;
+	descr.supportedShaders = EShader::Vertex | EShader::Fragment;
+	descr.supportedPrimitives = EPrimitive::TriangleList;
 
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::RGBA | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 0, 0, EShader::bits() | EShader::Fragment )
+			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::RGBA | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 0, 0, EShader::Fragment )
 			.Finish();
 
 	descr.Vertex().StringGLSL( 
@@ -124,18 +124,16 @@ layout(location=1) smooth out   vec3 v_Color;
 
 
 
-const vec2 g_Positions[3] = { vec2(0.0, -0.5), vec2(0.5), vec2(-0.5, 0.5) };
-const vec3 g_Colors[3] = { vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0) };
+const vec2 g_Positions[3] = { vec2( 0.0, -0.5 ), vec2( 0.5 ), vec2( -0.5, 0.5 ) };
+const vec3 g_Colors[3] = { vec3( 1.0, 0.0, 0.0 ), vec3( 0.0, 1.0, 0.0 ), vec3( 0.0, 0.0, 1.0 ) };
 
 //---------------------------------
 
-
-//---------------------------------
 void main ()
 {
-	gl_Position=vec4( g_Positions[gl_VertexID], float(0.0), float(1.0) );
-	v_Color=g_Colors[gl_VertexID];
-	v_Texcoord=(g_Positions[gl_VertexID]+float(0.5));
+	gl_Position = vec4( g_Positions[gl_VertexID], float( 0.0 ), float( 1.0 ) );
+	v_Color = g_Colors[gl_VertexID];
+	v_Texcoord = (g_Positions[gl_VertexID] + float( 0.5 ));
 }
 
 
@@ -174,12 +172,12 @@ void main ()
 0x0000002E, 0x0000002F, 0x00040020, 0x00000032, 0x00000007, 0x0000002C, 0x00040020, 0x00000034, 0x00000007, 0x00000029, 0x00040020, 0x00000037, 
 0x00000003, 0x00000011, 0x0004003B, 0x00000037, 0x00000038, 0x00000003, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 0x00000004, 0x000200F8, 
 0x00000006, 0x0004003B, 0x0000001E, 0x0000001F, 0x00000007, 0x0004003B, 0x00000032, 0x00000033, 0x00000007, 0x0004003B, 0x0000001E, 0x0000003A, 
-0x00000007, 0x00040008, 0x00000001, 0x0000006D, 0x00000000, 0x0004003D, 0x0000000F, 0x0000001D, 0x0000001C, 0x0003003E, 0x0000001F, 0x0000001A, 
+0x00000007, 0x00040008, 0x00000001, 0x0000006B, 0x00000000, 0x0004003D, 0x0000000F, 0x0000001D, 0x0000001C, 0x0003003E, 0x0000001F, 0x0000001A, 
 0x00050041, 0x00000020, 0x00000021, 0x0000001F, 0x0000001D, 0x0004003D, 0x00000011, 0x00000022, 0x00000021, 0x00050051, 0x00000007, 0x00000024, 
 0x00000022, 0x00000000, 0x00050051, 0x00000007, 0x00000025, 0x00000022, 0x00000001, 0x00070050, 0x00000008, 0x00000026, 0x00000024, 0x00000025, 
 0x00000014, 0x00000023, 0x00050041, 0x00000027, 0x00000028, 0x0000000E, 0x00000010, 0x0003003E, 0x00000028, 0x00000026, 0x00040008, 0x00000001, 
-0x0000006E, 0x00000000, 0x0004003D, 0x0000000F, 0x00000031, 0x0000001C, 0x0003003E, 0x00000033, 0x00000030, 0x00050041, 0x00000034, 0x00000035, 
-0x00000033, 0x00000031, 0x0004003D, 0x00000029, 0x00000036, 0x00000035, 0x0003003E, 0x0000002B, 0x00000036, 0x00040008, 0x00000001, 0x0000006F, 
+0x0000006C, 0x00000000, 0x0004003D, 0x0000000F, 0x00000031, 0x0000001C, 0x0003003E, 0x00000033, 0x00000030, 0x00050041, 0x00000034, 0x00000035, 
+0x00000033, 0x00000031, 0x0004003D, 0x00000029, 0x00000036, 0x00000035, 0x0003003E, 0x0000002B, 0x00000036, 0x00040008, 0x00000001, 0x0000006D, 
 0x00000000, 0x0004003D, 0x0000000F, 0x00000039, 0x0000001C, 0x0003003E, 0x0000003A, 0x0000001A, 0x00050041, 0x00000020, 0x0000003B, 0x0000003A, 
 0x00000039, 0x0004003D, 0x00000011, 0x0000003C, 0x0000003B, 0x00050050, 0x00000011, 0x0000003D, 0x00000017, 0x00000017, 0x00050081, 0x00000011, 
 0x0000003E, 0x0000003C, 0x0000003D, 0x0003003E, 0x00000038, 0x0000003E, 0x000100FD, 0x00010038 });
@@ -279,16 +277,17 @@ layout(binding=0) uniform sampler2D un_ColorTexture;
 vec4 Temp (const vec3 inColor);
 
 //---------------------------------
+
 vec4 Temp (const vec3 inColor)
 {
-	const vec4 col=(texture( un_ColorTexture, v_Texcoord )*vec4( inColor, float(1.0) ));
+	const vec4 col = (texture( un_ColorTexture, v_Texcoord ) * vec4( inColor, float( 1.0 ) ));
 	return col;
 }
 
 
 void main ()
 {
-	out_Color=Temp( v_Color );
+	out_Color = Temp( v_Color );
 }
 
 
@@ -314,14 +313,14 @@ void main ()
 0x00040017, 0x00000015, 0x00000007, 0x00000002, 0x00040020, 0x00000016, 0x00000001, 0x00000015, 0x0004003B, 0x00000016, 0x00000017, 0x00000001, 
 0x0004002B, 0x00000007, 0x0000001A, 0x3F800000, 0x00040020, 0x00000023, 0x00000003, 0x00000009, 0x0004003B, 0x00000023, 0x00000024, 0x00000003, 
 0x00040020, 0x00000025, 0x00000001, 0x00000008, 0x0004003B, 0x00000025, 0x00000026, 0x00000001, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 
-0x00000004, 0x000200F8, 0x00000006, 0x00040008, 0x00000001, 0x00000065, 0x00000000, 0x0004003D, 0x00000008, 0x00000027, 0x00000026, 0x00050039, 
+0x00000004, 0x000200F8, 0x00000006, 0x00040008, 0x00000001, 0x00000066, 0x00000000, 0x0004003D, 0x00000008, 0x00000027, 0x00000026, 0x00050039, 
 0x00000009, 0x00000028, 0x0000000C, 0x00000027, 0x0003003E, 0x00000024, 0x00000028, 0x000100FD, 0x00010038, 0x00050036, 0x00000009, 0x0000000C, 
 0x00000000, 0x0000000A, 0x00030037, 0x00000008, 0x0000000B, 0x000200F8, 0x0000000D, 0x0004003B, 0x0000000E, 0x0000000F, 0x00000007, 0x00040008, 
-0x00000001, 0x0000005E, 0x00000000, 0x0004003D, 0x00000011, 0x00000014, 0x00000013, 0x0004003D, 0x00000015, 0x00000018, 0x00000017, 0x00050057, 
+0x00000001, 0x0000005F, 0x00000000, 0x0004003D, 0x00000011, 0x00000014, 0x00000013, 0x0004003D, 0x00000015, 0x00000018, 0x00000017, 0x00050057, 
 0x00000009, 0x00000019, 0x00000014, 0x00000018, 0x00050051, 0x00000007, 0x0000001B, 0x0000000B, 0x00000000, 0x00050051, 0x00000007, 0x0000001C, 
 0x0000000B, 0x00000001, 0x00050051, 0x00000007, 0x0000001D, 0x0000000B, 0x00000002, 0x00070050, 0x00000009, 0x0000001E, 0x0000001B, 0x0000001C, 
 0x0000001D, 0x0000001A, 0x00050085, 0x00000009, 0x0000001F, 0x00000019, 0x0000001E, 0x0003003E, 0x0000000F, 0x0000001F, 0x00040008, 0x00000001, 
-0x0000005F, 0x00000000, 0x0004003D, 0x00000009, 0x00000020, 0x0000000F, 0x000200FE, 0x00000020, 0x00010038 });
+0x00000060, 0x00000000, 0x0004003D, 0x00000009, 0x00000020, 0x0000000F, 0x000200FE, 0x00000020, 0x00010038 });
 
 };
 };

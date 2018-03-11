@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'C:\Projects\graphxgenengine\Tests\Engine.Platforms.GAPI.Tools\Compute\BufferAlignTest.cpp'
-// Created at: 2018/02/27 - 00:31:02
+// Origin file: 'c:\projects\graphxgenengine\tests\engine.platforms.gapi.tools\compute\bufferaligntest.cpp'
+// Created at: 2018/03/11 - 09:53:08
 
 #include "all_pipelines.h"
 // C++ shader
@@ -42,14 +42,14 @@ namespace SWShaderLang
 	
 		// shader
 	{
-		ssb->dst1=ssb->src;
-		ssb->dst2.i4=Int4( 1, -2, 3, -4 );
-		ssb->dst2.f2=Float2( 3.0999999, 5.5 );
-		ssb->dst2.b1=Bool( true );
-		ssb->dst2.u3.xyz=UInt3( 9, 8, 7 );
-		ssb->dst2.i1=Int( 1193046 );
-		ssb->dst2.b3.xyz=Bool3( false, true, false );
-		ssb->dst2.f1=Float( 1.43350005 );
+		ssb->dst1 = ssb->src;
+		ssb->dst2.i4 = Int4( 1, -2, 3, -4 );
+		ssb->dst2.f2 = Float2( 3.0999999, 5.5 );
+		ssb->dst2.b1 = Bool( true );
+		ssb->dst2.u3.xyz = UInt3( 9, 8, 7 );
+		ssb->dst2.i1 = Int( 1193046 );
+		ssb->dst2.b3.xyz = Bool3( false, true, false );
+		ssb->dst2.f1 = Float( 1.43350005 );
 	}
 	
 	
@@ -64,11 +64,11 @@ namespace Pipelines
 void Create_bufferaligntest (PipelineTemplateDescriptor& descr)
 {
 	descr = PipelineTemplateDescriptor();
-	descr.supportedShaders = EShader::bits() | EShader::Compute;
+	descr.supportedShaders = EShader::Compute;
 
 	descr.localGroupSize = uint3(1, 1, 1);
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddStorageBuffer( "ssb", 288_b, 0_b, true, false, 0, 0, EShader::bits() | EShader::Compute )
+			.AddStorageBuffer( "ssb", 288_b, 0_b, EShaderMemoryModel::Default, 0, 0, EShader::Compute )
 			.Finish();
 
 	descr.Compute().StringGLSL( 
@@ -106,14 +106,14 @@ layout(binding=0) layout(std430) buffer BufferAlign_SSBO{
 
 void main ()
 {
-	ssb.dst1=ssb.src;
-	ssb.dst2.i4=ivec4( 1, -2, 3, -4 );
-	ssb.dst2.f2=vec2( 3.0999999, 5.5 );
-	ssb.dst2.b1=bool( true );
-	ssb.dst2.u3.xyz=uvec3( 9, 8, 7 );
-	ssb.dst2.i1=int( 1193046 );
-	ssb.dst2.b3.xyz=bvec3( false, true, false );
-	ssb.dst2.f1=float( 1.43350005 );
+	ssb.dst1 = ssb.src;
+	ssb.dst2.i4 = ivec4( 1, -2, 3, -4 );
+	ssb.dst2.f2 = vec2( 3.0999999, 5.5 );
+	ssb.dst2.b1 = bool( true );
+	ssb.dst2.u3.xyz = uvec3( 9, 8, 7 );
+	ssb.dst2.i1 = int( 1193046 );
+	ssb.dst2.b3.xyz = bvec3( false, true, false );
+	ssb.dst2.f1 = float( 1.43350005 );
 }
 
 
@@ -175,7 +175,8 @@ void main ()
 0x00000040, 0x00000042, 0x00040008, 0x00000001, 0x0000002A, 0x00000000, 0x00060041, 0x00000045, 0x00000046, 0x00000010, 0x00000017, 0x00000043, 
 0x0003003E, 0x00000046, 0x00000044, 0x000100FD, 0x00010038 });
 	descr.Compute().StringCL( 
-R"#(
+R"#(#define FORMAT( _fmt_ )
+
 // Functions for GLSL compatibility
 
 #define Gen_FloatTemplates( _gen_ ) \
@@ -234,21 +235,23 @@ struct BufferAlign_SSBO
 //---------------------------------
 
 kernel void main (
-	/*0*/__global write_only struct BufferAlign_SSBO* ssb)
+	/*0*/__global read_only struct BufferAlign_SSBO* ssb)
 {
-	ssb->dst1=ssb->src;
-	ssb->dst2.i4=((int4)( 1, -2, 3, -4 ));
-	ssb->dst2.f2=((float2)( 3.0999999, 5.5 ));
-	ssb->dst2.b1=((int)( true ));
-	ssb->dst2.u3.xyz=((uint3)( 9, 8, 7 ));
-	ssb->dst2.i1=((int)( 1193046 ));
-	ssb->dst2.b3.xyz=((int3)( false, true, false ));
-	ssb->dst2.f1=((float)( 1.43350005 ));
+	ssb->dst1 = ssb->src;
+	ssb->dst2.i4 = ((int4)( 1, -2, 3, -4 ));
+	ssb->dst2.f2 = ((float2)( 3.0999999, 5.5 ));
+	ssb->dst2.b1 = ((int)( true ));
+	ssb->dst2.u3.xyz = ((uint3)( 9, 8, 7 ));
+	ssb->dst2.i1 = ((int)( 1193046 ));
+	ssb->dst2.b3.xyz = ((int3)( false, true, false ));
+	ssb->dst2.f1 = ((float)( 1.43350005 ));
 }
 
 
 )#"_str );
+#ifdef GRAPHICS_API_SOFT
 	descr.Compute().FuncSW( &SWShaderLang::sw_bufferaligntest_comp );
+#endif
 
 };
 };

@@ -1,10 +1,10 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
-#include "Engine/Scene/Shared/IDs.h"
-#include "Engine/Scene/Shared/Scene.h"
-#include "Engine/Scene/Shared/Surface.h"
-#include "Engine/Scene/Shared/Camera.h"
+#include "Engine/Scene/Public/IDs.h"
+#include "Engine/Scene/Public/Scene.h"
+#include "Engine/Scene/Public/Surface.h"
+#include "Engine/Scene/Public/Camera.h"
 
 namespace Engine
 {

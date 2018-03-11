@@ -1,15 +1,17 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Framebuffer.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 namespace Engine
 {
@@ -749,7 +751,7 @@ namespace PlatformVK
 
 		_resources.Add( msg->pipeline );
 
-		CHECK_ERR( req_descr->result->subpass == _subpassIndex );
+		ASSERT( req_descr->result->subpass == _subpassIndex );
 		vkCmdBindPipeline( _cmdId, VK_PIPELINE_BIND_POINT_GRAPHICS, req_id->result.Get( VK_NULL_HANDLE ) );
 
 		_dynamicStates = req_descr->result->dynamicStates;
@@ -797,7 +799,7 @@ namespace PlatformVK
 			SendTo( vb, req_id );
 			SendTo( vb, req_descr );
 
-			CHECK_ERR( req_descr->result->usage[ EBufferUsage::Vertex ] );
+			ASSERT( req_descr->result->usage[ EBufferUsage::Vertex ] );
 
 			buffers[i] = *req_id->result;
 			
@@ -829,7 +831,7 @@ namespace PlatformVK
 		SendTo( msg->indexBuffer, req_id );
 		SendTo( msg->indexBuffer, req_descr );
 		
-		CHECK_ERR( req_descr->result->usage[ EBufferUsage::Index ] );
+		ASSERT( req_descr->result->usage[ EBufferUsage::Index ] );
 		
 		_resources.Add( msg->indexBuffer );
 
@@ -899,7 +901,7 @@ namespace PlatformVK
 		SendTo( msg->indirectBuffer, req_id );
 		SendTo( msg->indirectBuffer, req_descr );
 		
-		CHECK_ERR( req_descr->result->usage[ EBufferUsage::Indirect ] );
+		ASSERT( req_descr->result->usage[ EBufferUsage::Indirect ] );
 		
 		_resources.Add( msg->indirectBuffer );
 
@@ -931,7 +933,7 @@ namespace PlatformVK
 		SendTo( msg->indirectBuffer, req_id );
 		SendTo( msg->indirectBuffer, req_descr );
 		
-		CHECK_ERR( req_descr->result->usage[ EBufferUsage::Indirect ] );
+		ASSERT( req_descr->result->usage[ EBufferUsage::Indirect ] );
 		
 		_resources.Add( msg->indirectBuffer );
 
@@ -978,8 +980,8 @@ namespace PlatformVK
 		SendTo( msg->indirectBuffer, req_id );
 		SendTo( msg->indirectBuffer, req_descr );
 
-		CHECK_ERR( req_descr->result->usage[ EBufferUsage::Indirect ] );
-		CHECK_ERR( msg->offset < req_descr->result->size );
+		ASSERT( req_descr->result->usage[ EBufferUsage::Indirect ] );
+		ASSERT( msg->offset < req_descr->result->size );
 
 		vkCmdDispatchIndirect( _cmdId, *req_id->result, VkDeviceSize(msg->offset) );
 
@@ -1010,13 +1012,13 @@ namespace PlatformVK
 
 			Message< GpuMsg::GetVkCommandBufferID >		req_id;
 			SendTo( cmd, req_id );
-			CHECK_ERR( req_id->result and *req_id->result != VK_NULL_HANDLE );
+			ASSERT( req_id->result and *req_id->result != VK_NULL_HANDLE );
 
 			cmd_buffers.PushBack( *req_id->result );
 			_resources.Add( cmd );
 		}
 			
-		CHECK_ERR( not cmd_buffers.Empty() );
+		ASSERT( not cmd_buffers.Empty() );
 		vkCmdExecuteCommands( _cmdId, Cast<uint32_t>(cmd_buffers.Count()), cmd_buffers.RawPtr() );
 
 		return true;
@@ -1056,7 +1058,6 @@ namespace PlatformVK
 		Message< GpuMsg::GetVkPipelineLayoutID >		req_layout;
 		Message< GpuMsg::GetVkPipelineResourceTableID >	req_id;
 
-		// TODO: check result
 		SendTo( resourceTable, req_id );
 		SendTo( resourceTable, req_layout );
 		
@@ -1090,14 +1091,13 @@ namespace PlatformVK
 		Message< GpuMsg::GetBufferDescriptor >	req_src_descr;
 		Message< GpuMsg::GetBufferDescriptor >	req_dst_descr;
 
-		// TODO: check result
 		SendTo( msg->srcBuffer, req_src_id );
 		SendTo( msg->dstBuffer, req_dst_id );
 		SendTo( msg->srcBuffer, req_src_descr );
 		SendTo( msg->dstBuffer, req_dst_descr );
 		
-		CHECK_ERR( req_src_descr->result->usage[ EBufferUsage::TransferSrc ] );
-		CHECK_ERR( req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
+		ASSERT( req_src_descr->result->usage[ EBufferUsage::TransferSrc ] );
+		ASSERT( req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
 
 		BufferCopyRegions_t	regions;
 
@@ -1112,8 +1112,8 @@ namespace PlatformVK
 
 			regions.PushBack( dst );
 
-			CHECK_ERR( src.size + src.srcOffset <= req_src_descr->result->size );
-			CHECK_ERR( src.size + src.dstOffset <= req_dst_descr->result->size );
+			ASSERT( src.size + src.srcOffset <= req_src_descr->result->size );
+			ASSERT( src.size + src.dstOffset <= req_dst_descr->result->size );
 		}
 		
 		_resources.Add( msg->srcBuffer );
@@ -1142,14 +1142,17 @@ namespace PlatformVK
 		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
 		Message< GpuMsg::GetImageDescriptor >	req_dst_descr;
 		
-		// TODO: check result
 		SendTo( msg->srcImage, req_src_id );
 		SendTo( msg->dstImage, req_dst_id );
 		SendTo( msg->srcImage, req_src_descr );
 		SendTo( msg->dstImage, req_dst_descr );
 		
-		CHECK_ERR( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
-		CHECK_ERR( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
+		ASSERT( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( msg->srcLayout == EImageLayout::TransferSrcOptimal or msg->srcLayout == EImageLayout::General );
+		ASSERT( msg->dstLayout == EImageLayout::TransferDstOptimal or msg->dstLayout == EImageLayout::General );
+		ASSERT( EPixelFormat::BitPerPixel( req_src_descr->result->format ) == EPixelFormat::BitPerPixel( req_dst_descr->result->format ) );
+		ASSERT( req_src_descr->result->samples == req_dst_descr->result->samples );
 
 		ImageCopyRegions_t	regions;
 
@@ -1171,6 +1174,13 @@ namespace PlatformVK
 			dst.dstOffset						= VkOffset3D{ int(src.dstOffset.x), int(src.dstOffset.y), int(src.dstOffset.z) };
 
 			dst.extent							= VkExtent3D{ src.size.x, src.size.y, src.size.z };
+
+			ASSERT( src.srcLayers.mipLevel < req_src_descr->result->maxLevel );
+			ASSERT( src.dstLayers.mipLevel < req_dst_descr->result->maxLevel );
+			ASSERT( src.srcLayers.baseLayer.Get() + src.srcLayers.layerCount <= req_src_descr->result->dimension.w );
+			ASSERT( src.dstLayers.baseLayer.Get() + src.dstLayers.layerCount <= req_dst_descr->result->dimension.w );
+			ASSERT(All( src.srcOffset + src.size <= Max(1u, req_src_descr->result->dimension.xyz() >> src.srcLayers.mipLevel.Get()) ));
+			ASSERT(All( src.dstOffset + src.size <= Max(1u, req_dst_descr->result->dimension.xyz() >> src.dstLayers.mipLevel.Get()) ));
 
 			regions.PushBack( dst );
 		}
@@ -1203,14 +1213,14 @@ namespace PlatformVK
 		Message< GpuMsg::GetBufferDescriptor >	req_src_descr;
 		Message< GpuMsg::GetImageDescriptor >	req_dst_descr;
 		
-		// TODO: check result
 		SendTo( msg->srcBuffer, req_src_id );
 		SendTo( msg->srcBuffer, req_src_descr );
 		SendTo( msg->dstImage, req_dst_id );
 		SendTo( msg->dstImage, req_dst_descr );
 		
-		CHECK_ERR( req_src_descr->result->usage[ EBufferUsage::TransferSrc ] );
-		CHECK_ERR( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( req_src_descr->result->usage[ EBufferUsage::TransferSrc ] );
+		ASSERT( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( msg->dstLayout == EImageLayout::TransferDstOptimal or msg->dstLayout == EImageLayout::General );
 
 		BufImgCopyRegions_t	regions;
 
@@ -1260,14 +1270,14 @@ namespace PlatformVK
 		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
 		Message< GpuMsg::GetBufferDescriptor >	req_dst_descr;
 		
-		// TODO: check result
 		SendTo( msg->dstBuffer, req_dst_id );
 		SendTo( msg->dstBuffer, req_dst_descr );
 		SendTo( msg->srcImage, req_src_id );
 		SendTo( msg->srcImage, req_src_descr );
 		
-		CHECK_ERR( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
-		CHECK_ERR( req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
+		ASSERT( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
+		ASSERT( req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
+		ASSERT( msg->srcLayout == EImageLayout::TransferSrcOptimal or msg->srcLayout == EImageLayout::General );
 
 		BufImgCopyRegions_t	regions;
 
@@ -1317,14 +1327,15 @@ namespace PlatformVK
 		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
 		Message< GpuMsg::GetImageDescriptor >	req_dst_descr;
 		
-		// TODO: check result
 		SendTo( msg->srcImage, req_src_id );
 		SendTo( msg->dstImage, req_dst_id );
 		SendTo( msg->srcImage, req_src_descr );
 		SendTo( msg->dstImage, req_dst_descr );
 		
-		CHECK_ERR( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
-		CHECK_ERR( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
+		ASSERT( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( msg->srcLayout == EImageLayout::TransferSrcOptimal or msg->srcLayout == EImageLayout::General );
+		ASSERT( msg->dstLayout == EImageLayout::TransferDstOptimal or msg->dstLayout == EImageLayout::General );
 
 		ImgBlitRegions_t	regions;
 
@@ -1381,7 +1392,7 @@ namespace PlatformVK
 		SendTo( msg->dstBuffer, req_id );
 		SendTo( msg->dstBuffer, req_descr );
 		
-		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
+		ASSERT( req_descr->result->usage[ EBufferUsage::TransferDst ] );
 		
 		_resources.Add( msg->dstBuffer );
 
@@ -1410,7 +1421,7 @@ namespace PlatformVK
 		SendTo( msg->dstBuffer, req_id );
 		SendTo( msg->dstBuffer, req_descr );
 		
-		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
+		ASSERT( req_descr->result->usage[ EBufferUsage::TransferDst ] );
 		
 		_resources.Add( msg->dstBuffer );
 
@@ -1484,7 +1495,8 @@ namespace PlatformVK
 		SendTo( msg->image, req_id );
 		SendTo( msg->image, req_descr );
 		
-		CHECK_ERR( req_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( req_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( msg->layout == EImageLayout::TransferDstOptimal or msg->layout == EImageLayout::General );
 
 		ImageRanges_t		ranges;
 		VkClearColorValue	clear_value;
@@ -1532,7 +1544,8 @@ namespace PlatformVK
 		SendTo( msg->image, req_id );
 		SendTo( msg->image, req_descr );
 		
-		CHECK_ERR( req_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( req_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( msg->layout == EImageLayout::TransferDstOptimal or msg->layout == EImageLayout::General );
 
 		ImageRanges_t				ranges;
 		VkClearDepthStencilValue	clear_value;
@@ -1664,7 +1677,6 @@ namespace PlatformVK
 			// TODO: check result
 			Message< GpuMsg::GetVkImageID >	req_id;
 			SendTo( src.image, req_id );
-			SendTo( src.image, Message< GpuMsg::SetImageLayout >{ src.newLayout } );
 
 			dst.sType							= VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 			dst.srcAccessMask					= Vk1Enum( src.srcAccessMask );
@@ -1736,9 +1748,9 @@ namespace PlatformVK
 			Iter_t			iter;
 			BinArrayCRef	val = msg->values[i].second.GetData();
 
-			CHECK_ERR( req_pc->result->Find( msg->values[i].first, OUT iter ) );
-			CHECK_ERR( iter->second.size == val.Size() );
-			CHECK_ERR( usize(iter->second.offset) + iter->second.size < data.Count() );
+			ASSERT( req_pc->result->Find( msg->values[i].first, OUT iter ) );
+			ASSERT( iter->second.size == val.Size() );
+			ASSERT( usize(iter->second.offset) + iter->second.size < data.Count() );
 
 			UnsafeMem::MemCopy( &data[iter->second.offset], val.ptr(), val.Size() );
 

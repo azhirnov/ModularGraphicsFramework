@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/OS/Input.h"
+#include "Engine/Platforms/Public/OS/Input.h"
 
 namespace Engine
 {

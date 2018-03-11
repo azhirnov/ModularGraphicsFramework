@@ -29,7 +29,7 @@ namespace PlatformSW
 */
 	bool SWBaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
 	{
-		//_swDevice = null;
+		_swDevice = null;
 
 		if ( msg->newManager )
 		{
@@ -39,7 +39,7 @@ namespace PlatformSW
 			Message< GpuMsg::GetSWPrivateClasses >	req_dev;
 			CHECK( msg->newManager->Send( req_dev ) );
 
-			//_swDevice = req_dev->result->device;
+			_swDevice = req_dev->result->device;
 		}
 
 		if ( msg->oldManager )
@@ -57,7 +57,7 @@ namespace PlatformSW
 	{
 		_SendMsg< ModuleMsg::Delete >({});
 
-		//_swDevice = null;
+		_swDevice = null;
 		return true;
 	}
 	
@@ -70,7 +70,7 @@ namespace PlatformSW
 	{
 		Send( msg );
 
-		//_swDevice = null;
+		_swDevice = null;
 		return true;
 	}
 
@@ -123,6 +123,16 @@ namespace PlatformSW
 			result = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventMsgList_t >();
 
 		return result;
+	}
+	
+/*
+=================================================
+	_DbgReport
+=================================================
+*/
+	void SWBaseModule::_DbgReport (StringCRef log, EDbgReport::bits flags, StringCRef file, int line) const
+	{
+		GetDevice()->DebugReport( log, flags, file, line );
 	}
 
 }	// PlatformSW

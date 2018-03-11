@@ -2,13 +2,15 @@
 
 #pragma once
 
-#include "Engine/Platforms/Soft/Impl/SWEnums.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Sampler.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Soft/Impl/SWEnums.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Sampler.h"
 
 namespace Engine
 {
@@ -75,36 +77,57 @@ namespace GpuMsg
 	struct GetSWImageMemoryLayout
 	{
 	// types
-		using EPixelFormat	= Platforms::EPixelFormat;
-		using EMemoryAccess = Platforms::EMemoryAccess;
+		using EPixelFormat		= Platforms::EPixelFormat;
+		using EImageLayout		= Platforms::EImageLayout;
+		using EPipelineAccess	= Platforms::EPipelineAccess;
+		using EPipelineStage	= Platforms::EPipelineStage;
+		using EMemoryAccess		= Platforms::EMemoryAccess;
 
 		struct ImgLayer : CompileTime::FastCopyable
 		{
-			uint2				dimension;
-			void *				memory	= null;	// initialized when binded to memory
-			BytesU				size;
-			EPixelFormat::type	format	= Uninitialized;
+		// variables
+			uint2					dimension;
+			void *					memory	= null;	// initialized when binded to memory
+			BytesU					size;
+			EPixelFormat::type		format	= Uninitialized;
+			EImageLayout::type		layout	= EImageLayout::Undefined;
+			EPipelineAccess::bits	access;								// last access type
+			EPipelineStage::type	stage	= EPipelineStage::Unknown;	// stage of last access
+
+		// methods
+			ImgLayer (GX_DEFCTOR) {}
+
+			BinArrayRef		Data ()			{ return BinArrayRef::FromVoid( memory, size ); }
+			BinArrayCRef	Data () const	{ return BinArrayCRef::FromVoid( memory, size ); }
 		};
 
 		struct ImgLayers2D : CompileTime::FastCopyable
 		{
+		// types
 			using ImgLayers_t = FixedSizeArray< ImgLayer, 14 >;
-
+			
+		// variables
 			ImgLayers_t			mipmaps;
 			uint2				dimension;		// must be equal to mipmaps[0].dimension
 			BytesU				size;			// summary size of all mipmaps
+			
+		// methods
+			ImgLayers2D (GX_DEFCTOR) {}
 		};
 
 		struct ImgLayers3D
 		{
+		// types
 			using ImgLayers2D_t	= Array< ImgLayers2D >;
-
+			
+		// variables
 			ImgLayers2D_t		layers;
 			uint3				dimension;		// must be equal to uint3( layers[0].dimension, ... )
 			BytesU				size;			// summary size of all layers
 			BytesU				align	= 4_b;	// base align
-			EMemoryAccess::bits	access;			// access flags
-
+			EMemoryAccess::bits	memAccess;		// TODO: remove, use 'access'
+			
+		// methods
 			ImgLayers3D (GX_DEFCTOR) {}
 		};
 
@@ -114,9 +137,15 @@ namespace GpuMsg
 		// image3D:  { layers[d], dim(w,h,d) }, { mipmaps[], dim(w,h) }
 
 	// variables
-		Out< ImgLayers3D >	result;
+		EPipelineAccess::bits	accessMask;
+		EPipelineStage::type	stage	= EPipelineStage::Unknown;
+		Out< ImgLayers3D >		result;
+
+	// methods
+		GetSWImageMemoryLayout (EPipelineAccess::bits access, EPipelineStage::type stage) :
+			accessMask{access}, stage{stage} {}
 	};
-	
+
 
 	//
 	// Get Image View Memory Layout
@@ -124,15 +153,22 @@ namespace GpuMsg
 	struct GetSWImageViewMemoryLayout
 	{
 	// types
-		using ImgLayers3D = GetSWImageMemoryLayout::ImgLayers3D;
+		using ImgLayers3D		= GetSWImageMemoryLayout::ImgLayers3D;
+		using EPipelineAccess	= Platforms::EPipelineAccess;
+		using EPipelineStage	= Platforms::EPipelineStage;
 
 	// variables
 		Platforms::ImageViewDescriptor	viewDescr;
+		EPipelineAccess::bits			accessMask;
+		EPipelineStage::type			stage	= EPipelineStage::Unknown;
 		Out< ImgLayers3D >				result;
 
 	// methods
-		GetSWImageViewMemoryLayout () {}
-		explicit GetSWImageViewMemoryLayout (const Platforms::ImageViewDescriptor &descr) : viewDescr{descr} {}
+		GetSWImageViewMemoryLayout (EPipelineAccess::bits access, EPipelineStage::type stage) :
+			viewDescr{}, accessMask{access}, stage{stage} {}
+
+		GetSWImageViewMemoryLayout (const Platforms::ImageViewDescriptor &descr, EPipelineAccess::bits access, EPipelineStage::type stage) :
+			viewDescr{descr}, accessMask{access}, stage{stage} {}
 	};
 
 
@@ -142,8 +178,7 @@ namespace GpuMsg
 	struct GetSWImageMemoryRequirements
 	{
 	// types
-		struct MemReq
-		{
+		struct MemReq {
 			BytesU		size;
 			BytesU		align;
 		};
@@ -162,8 +197,31 @@ namespace GpuMsg
 		Out< Platforms::SamplerDescriptor >		sampler;
 
 	// methods
-		GetSWTextureMemoryLayout () {}
-		explicit GetSWTextureMemoryLayout (const Platforms::ImageViewDescriptor &descr) : GetSWImageViewMemoryLayout{descr} {}
+		//GetSWTextureMemoryLayout () {}
+		//explicit GetSWTextureMemoryLayout (const Platforms::ImageViewDescriptor &descr) : GetSWImageViewMemoryLayout{descr} {}
+	};
+
+
+	//
+	// Image Barrier
+	//
+	struct SWImageBarrier
+	{
+	// types
+		using Barrier_t			= CmdPipelineBarrier::ImageMemoryBarrier;
+		using Barriers_t		= CmdPipelineBarrier::ImageMemoryBarriers;
+		using EPipelineStage	= Platforms::EPipelineStage;
+
+	// variables
+		Barriers_t				barriers;
+		EPipelineStage::bits	srcStageMask;
+		EPipelineStage::bits	dstStageMask;
+
+	// methods
+		SWImageBarrier () {}
+
+		explicit SWImageBarrier (const Barrier_t &imgBarrier, EPipelineStage::bits srcStage, EPipelineStage::bits dstStage) :
+			srcStageMask{srcStage}, dstStageMask{dstStage} { barriers.PushBack(imgBarrier); }
 	};
 
 
@@ -173,16 +231,29 @@ namespace GpuMsg
 	struct GetSWBufferMemoryLayout
 	{
 	// types
-		using EMemoryAccess = Platforms::EMemoryAccess;
+		using EMemoryAccess		= Platforms::EMemoryAccess;
+		using EPipelineAccess	= Platforms::EPipelineAccess;
+		using EPipelineStage	= Platforms::EPipelineStage;
 
 		struct Data {
 			BinArrayRef			memory;
-			EMemoryAccess::bits	access;
 			BytesU				align;
+			EMemoryAccess::bits	memAccess;	// TODO: remove, use 'access'
 		};
 
 	// variables
-		Out< Data >		result;
+		BytesU					offset;
+		BytesU					size;
+		EPipelineAccess::bits	access;
+		EPipelineStage::type	stage	= EPipelineStage::Unknown;
+		Out< Data >				result;
+
+	// methods
+		GetSWBufferMemoryLayout (EPipelineAccess::bits access, EPipelineStage::type stage) : 
+			offset{0}, size{usize(UMax)}, access{access}, stage{stage} {}
+		
+		GetSWBufferMemoryLayout (BytesU offset, BytesU size, EPipelineAccess::bits access, EPipelineStage::type stage) : 
+			offset{offset}, size{size}, access{access}, stage{stage} {}
 	};
 
 
@@ -192,8 +263,7 @@ namespace GpuMsg
 	struct GetSWBufferMemoryRequirements
 	{
 	// types
-		struct MemReq
-		{
+		struct MemReq {
 			BytesU		size;
 			BytesU		align;
 		};
@@ -204,11 +274,57 @@ namespace GpuMsg
 
 
 	//
+	// Buffer Barrier
+	//
+	struct SWBufferBarrier
+	{
+	// types
+		using Barrier_t			= CmdPipelineBarrier::BufferMemoryBarrier;
+		using Barriers_t		= CmdPipelineBarrier::BufferMemoryBarriers;
+		using EPipelineStage	= Platforms::EPipelineStage;
+
+	// variables
+		Barriers_t				barriers;
+		EPipelineStage::bits	srcStageMask;
+		EPipelineStage::bits	dstStageMask;
+
+	// methods
+		SWBufferBarrier () {}
+
+		explicit SWBufferBarrier (const Barrier_t &bufBarrier, EPipelineStage::bits srcStage, EPipelineStage::bits dstStage) :
+			srcStageMask{srcStage}, dstStageMask{dstStage} { barriers.PushBack(bufBarrier); }
+	};
+
+
+	//
 	// Get Memory Data
 	//
 	struct GetSWMemoryData
 	{
 		Out< BinArrayRef >	result;
+	};
+
+
+	//
+	// Memory Barrier
+	//
+	struct SWMemoryBarrier
+	{
+	// types
+		using Barrier_t			= CmdPipelineBarrier::MemoryBarrier;
+		using Barriers_t		= CmdPipelineBarrier::MemoryBarriers;
+		using EPipelineStage	= Platforms::EPipelineStage;
+
+	// variables
+		Barriers_t				barriers;
+		EPipelineStage::bits	srcStageMask;
+		EPipelineStage::bits	dstStageMask;
+
+	// methods
+		SWMemoryBarrier () {}
+
+		explicit SWMemoryBarrier (const Barrier_t &memBarrier, EPipelineStage::bits srcStage, EPipelineStage::bits dstStage) :
+			srcStageMask{srcStage}, dstStageMask{dstStage} { barriers.PushBack(memBarrier); }
 	};
 	
 
@@ -261,11 +377,16 @@ namespace GpuMsg
 	struct ResourceTableForwardMsg
 	{
 	// variables
-		Msg		message;
-		uint	index	= UMax;
+		mutable Msg		message;
+		uint			index	= UMax;
 
 	// methods
-		ResourceTableForwardMsg (const Msg &msg, uint idx) : message{msg}, index{idx} {}
+		explicit ResourceTableForwardMsg (uint idx) : index{idx} {}
+		
+		explicit ResourceTableForwardMsg (uint idx, const Msg &msg) : message{msg}, index{idx} {}
+
+		template <typename ...ArgTypes>
+		explicit ResourceTableForwardMsg (uint idx, ArgTypes&& ...args) : message{ FW<ArgTypes>(args)... }, index{idx} {}
 	};
 
 

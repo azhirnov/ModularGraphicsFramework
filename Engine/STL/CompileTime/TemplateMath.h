@@ -120,7 +120,7 @@ namespace CompileTime
 
 		template <typename T, T X>
 		struct _GetPOT {
-			static const uint	value	= __GetPOT<T, X, SizeOf<T>::bits-1 >::value;
+			static const uint	value	= __GetPOT<T, X, CompileTime::SizeOf<T>::bits-1 >::value;
 		};
 	}	// _ctime_hidden_
 

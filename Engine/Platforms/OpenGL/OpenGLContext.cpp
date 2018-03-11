@@ -1,17 +1,19 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Context.h"
-#include "Engine/Platforms/Shared/GPU/Thread.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/Shared/GPU/Sampler.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
-#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/Public/GPU/Context.h"
+#include "Engine/Platforms/Public/GPU/Thread.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Framebuffer.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/Sampler.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 namespace Engine
 {

@@ -1,10 +1,10 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
-#include "Engine/Graphics/Shared/BatchRenderer.h"
-#include "Engine/Graphics/Shared/Font.h"
-#include "Engine/Graphics/Shared/MemStream.h"
-#include "Engine/Graphics/Shared/Commands.h"
+#include "Engine/Graphics/Public/BatchRenderer.h"
+#include "Engine/Graphics/Public/Font.h"
+#include "Engine/Graphics/Public/MemStream.h"
+#include "Engine/Graphics/Public/Commands.h"
 
 namespace Engine
 {

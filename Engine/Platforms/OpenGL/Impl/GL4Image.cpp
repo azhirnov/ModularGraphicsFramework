@@ -1,12 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
-#include "Engine/Platforms/Shared/Tools/ImageViewHashMap.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/Public/Tools/ImageViewHashMap.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #define GX_OGL_TEXSTORAGE
 
@@ -45,8 +47,7 @@ namespace PlatformGL
 											GpuMsg::GetGLImageID,
 											GpuMsg::CreateGLImageView,
 											GpuMsg::GpuMemoryRegionChanged,
-											GpuMsg::SetImageLayout,
-											GpuMsg::GetImageLayout
+											GpuMsg::GetImageMemoryLayout
 										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
@@ -98,8 +99,7 @@ namespace PlatformGL
 		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
 		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _SetImageLayout (const Message< GpuMsg::SetImageLayout > &);
-		bool _GetImageLayout (const Message< GpuMsg::GetImageLayout > &);
+		bool _GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &);
 		
 	// event handlers
 		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
@@ -112,6 +112,8 @@ namespace PlatformGL
 		
 		void _DestroyAll ();
 		void _DestroyViews ();
+
+		bool _CanHaveImageView () const;
 	};
 //-----------------------------------------------------------------------------
 
@@ -148,12 +150,11 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Image::_CreateGLImageView );
 		_SubscribeOnMsg( this, &GL4Image::_GetImageDescriptor );
 		_SubscribeOnMsg( this, &GL4Image::_SetImageDescriptor );
-		_SubscribeOnMsg( this, &GL4Image::_SetImageLayout );
-		_SubscribeOnMsg( this, &GL4Image::_GetImageLayout );
 		_SubscribeOnMsg( this, &GL4Image::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Image::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Image::_GetGLPrivateClasses );
 		_SubscribeOnMsg( this, &GL4Image::_GpuMemoryRegionChanged );
+		_SubscribeOnMsg( this, &GL4Image::_GetImageMemoryLayout );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
@@ -302,6 +303,7 @@ namespace PlatformGL
 		
 		GL_CALL( glActiveTexture( GL_TEXTURE0 ) );
 		GL_CALL( glBindTexture( target, _imageId ) );
+		GL_CALL( glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 ) );
 
 		switch ( _descr.imageType )
 		{
@@ -317,7 +319,7 @@ namespace PlatformGL
 				#else
 				for (uint level = 0; level < _descr.maxLevel.Get(); ++level)
 				{
-					const uint2	size = Max( _descr.dimension.xy() >> level, uint2(1) );
+					const uint2	size = Max( _descr.dimension.xy() >> level, 1u );
 					GL_CALL( glTexImage1D( target, level, ifmt, size.x, 0, fmt, type, null ) );
 				}
 				#endif
@@ -335,7 +337,7 @@ namespace PlatformGL
 				#else
 				for (uint level = 0; level < _descr.maxLevel.Get(); ++level)
 				{
-					const uint2	size = Max( _descr.dimension.xy() >> level, uint2(1) );
+					const uint2	size = Max( _descr.dimension.xy() >> level, 1u );
 					GL_CALL( glTexImage2D( target, level, ifmt, size.x, size.y, 0, fmt, type, null ) );
 				}
 				#endif
@@ -365,7 +367,7 @@ namespace PlatformGL
 				#else
 				for (uint level = 0; level < _descr.maxLevel.Get(); ++level)
 				{
-					const uint2	size = Max( _descr.dimension.xy() >> level, uint2(1) );
+					const uint2	size = Max( _descr.dimension.xy() >> level, 1u );
 					GL_CALL( glTexImage3D( target, level, ifmt, size.x, size.y, _descr.dimension.w, 0, fmt, type, null ) );
 				}
 				#endif
@@ -396,7 +398,7 @@ namespace PlatformGL
 				#else
 				for (uint level = 0; level < _descr.maxLevel.Get(); ++level)
 				{
-					const uint3	size = Max( _descr.dimension.xyz() >> level, uint3(1) );
+					const uint3	size = Max( _descr.dimension.xyz() >> level, 1u );
 					GL_CALL( glTexImage3D( target, level, ifmt, size.x, size.y, size.z, 0, fmt, type, null ) );
 				}
 				#endif
@@ -414,7 +416,7 @@ namespace PlatformGL
 				#else
 				for (uint level = 0; level < _descr.maxLevel.Get(); ++level)
 				{
-					const uint2	size = Max( _descr.dimension.xy() >> level, uint2(1) );
+					const uint2	size = Max( _descr.dimension.xy() >> level, 1u );
 
 					for (uint i = 0; i < _descr.dimension.z; ++i) {
 						GL_CALL( glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, level, ifmt,
@@ -436,7 +438,7 @@ namespace PlatformGL
 				#else
 				for (uint level = 0; level < _descr.maxLevel.Get(); ++level)
 				{
-					const uint2	size = Max( _descr.dimension.xy() >> level, uint2(1) );
+					const uint2	size = Max( _descr.dimension.xy() >> level, 1u );
 					GL_CALL( glTexImage3D( target, level, ifmt, size.x, size.y, _descr.dimension.z * _descr.dimension.w,
 											0, fmt, type, null ) );
 				}
@@ -468,13 +470,16 @@ namespace PlatformGL
 		CHECK_ERR( _IsImageCreated() );
 		CHECK_ERR( _imageView == 0 );
 		
-		Message< GpuMsg::CreateGLImageView >	create;
-		create->viewDescr.layerCount = _descr.dimension.w;
-		create->viewDescr.levelCount = _descr.maxLevel.Get();
+		if ( _CanHaveImageView() )
+		{
+			Message< GpuMsg::CreateGLImageView >	create;
+			create->viewDescr.layerCount = _descr.dimension.w;
+			create->viewDescr.levelCount = _descr.maxLevel.Get();
 
-		CHECK_ERR( _CreateGLImageView( create ) );
+			CHECK_ERR( _CreateGLImageView( create ) );
 
-		_imageView = *create->result;
+			_imageView = *create->result;
+		}
 		return true;
 	}
 
@@ -538,6 +543,7 @@ namespace PlatformGL
 	{
 		CHECK_ERR( _IsImageCreated() );
 		CHECK_ERR( _isBindedToMemory );
+		CHECK_ERR( _CanHaveImageView() );
 
 		ImageView_t		descr = msg->viewDescr;
 		
@@ -637,29 +643,6 @@ namespace PlatformGL
 		}
 		return true;
 	}
-	
-/*
-=================================================
-	_SetImageLayout
-=================================================
-*/
-	bool GL4Image::_SetImageLayout (const Message< GpuMsg::SetImageLayout > &msg)
-	{
-		CHECK_ERR( _IsImageCreated() );
-
-		return true;
-	}
-
-/*
-=================================================
-	_GetImageLayout
-=================================================
-*/
-	bool GL4Image::_GetImageLayout (const Message< GpuMsg::GetImageLayout > &msg)
-	{
-		msg->result.Set( EImageLayout::Undefined );
-		return true;
-	}
 
 /*
 =================================================
@@ -671,6 +654,43 @@ namespace PlatformGL
 		// request image memory barrier
 		TODO( "" );
 		return false;
+	}
+	
+/*
+=================================================
+	_GetImageMemoryLayout
+=================================================
+*/
+	bool GL4Image::_GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &msg)
+	{
+		CHECK_ERR( _IsImageCreated() );
+		CHECK_ERR( msg->mipLevel < _descr.maxLevel );
+
+		const uint4		lvl_size	= Max( ImageUtils::LevelDimension( _descr.imageType, _descr.dimension, msg->mipLevel.Get() ), 1u );
+		const BytesUL	bpp			= BytesUL(EPixelFormat::BitPerPixel( _descr.format ));
+		const BytesUL	row_align	= BytesUL(uint(bpp) % 4 == 0 ? 4 : 1);
+
+		GpuMsg::GetImageMemoryLayout::MemLayout	result;
+		result.offset		= BytesUL(0);	// not supported
+		result.rowPitch		= GXImageUtils::AlignedRowSize( lvl_size.x, bpp, row_align );
+		result.slicePitch	= GXImageUtils::AlignedRowSize( lvl_size.y * result.rowPitch, BytesUL(1), row_align );
+		result.size			= result.slicePitch * lvl_size.z * lvl_size.w;
+		result.dimension	= lvl_size.xyz();
+		
+		ASSERT( result.slicePitch * result.dimension.z == result.size );
+
+		msg->result.Set( result );
+		return true;
+	}
+	
+/*
+=================================================
+	_CanHaveImageView
+=================================================
+*/
+	bool GL4Image::_CanHaveImageView () const
+	{
+		return _descr.usage != (_descr.usage & (EImageUsage::TransferSrc | EImageUsage::TransferDst));
 	}
 
 }	// PlatformGL

@@ -1,13 +1,15 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
-#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
+
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 namespace Engine
 {
@@ -259,13 +261,10 @@ namespace PlatformCL
 								CLBufferModuleID,
 								GlobalSystems(),
 								CreateInfo::GpuBuffer{
-									BufferDescriptor{
-										msg->bufferData.Size(),
-										EBufferUsage::bits() | EBufferUsage::TransferSrc
-									},
+									BufferDescriptor{ msg->bufferData.Size(), EBufferUsage::TransferSrc },
 									null,
-									EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
-									EMemoryAccess::bits() | EMemoryAccess::GpuRead | EMemoryAccess::CpuWrite
+									EGpuMemory::CoherentWithCPU,
+									EMemoryAccess::GpuRead | EMemoryAccess::CpuWrite
 								},
 								OUT _tempBuffer ) );
 
@@ -521,8 +520,8 @@ namespace PlatformCL
 	{
 		const auto&		data		= cmd.data.Get< GpuMsg::CmdDispatch >();
 
-		const usize3	global_size	= Max( usize3(data.groupCount), usize3(1) ) *
-									  Max( _kernelLocalSize, usize3(1) );
+		const usize3	global_size	= Max( usize3(data.groupCount), 1u ) *
+									  Max( _kernelLocalSize, 1u );
 
 		CHECK_ERR( All( ulong3(data.groupCount) <= _maxWorkGroupCount ) );
 		CHECK_ERR( All( ulong3(global_size) <= _maxThreads ) );
@@ -596,19 +595,18 @@ namespace PlatformCL
 		BytesUL		src_size	= req_src_descr->result->size;
 		BytesUL		dst_size	= req_dst_descr->result->size;
 
-		FOR( i, data.regions )
+		for (auto& reg : Range(data.regions))
 		{
-			const auto&	r = data.regions[i];
-			CHECK_ERR( r.srcOffset + r.size <= src_size );
-			CHECK_ERR( r.dstOffset + r.size <= dst_size );
+			CHECK_ERR( reg.srcOffset + reg.size <= src_size );
+			CHECK_ERR( reg.dstOffset + reg.size <= dst_size );
 			
 			CL_CHECK( clEnqueueCopyBuffer(
 						GetCommandQueue(),
 						src_id,
 						dst_id,
-						(size_t) r.srcOffset,
-						(size_t) r.dstOffset,
-						(size_t) r.size,
+						(size_t) reg.srcOffset,
+						(size_t) reg.dstOffset,
+						(size_t) reg.size,
 						0, null,
 						null ) );
 		}
@@ -639,22 +637,20 @@ namespace PlatformCL
 		ImageDescriptor	src_descr	= req_src_descr->result.Get();
 		ImageDescriptor	dst_descr	= req_dst_descr->result.Get();
 		
-		FOR( i, data.regions )
+		for (auto& reg : Range(data.regions))
 		{
-			const auto&	r = data.regions[i];
+			CHECK_ERR( reg.srcLayers.mipLevel.Get() == 0 and reg.srcLayers.aspectMask[EImageAspect::Color] );
+			CHECK_ERR( reg.dstLayers.mipLevel.Get() == 0 and reg.dstLayers.aspectMask[EImageAspect::Color] );
 
-			CHECK_ERR( r.srcLayers.mipLevel.Get() == 0 and r.srcLayers.aspectMask[EImageAspect::Color] );
-			CHECK_ERR( r.dstLayers.mipLevel.Get() == 0 and r.dstLayers.aspectMask[EImageAspect::Color] );
+			uint4	img_src_offset	= uint4( reg.srcOffset, reg.srcLayers.baseLayer.Get() );
+			uint4	img_src_size	= uint4( reg.size, reg.srcLayers.layerCount );
+			uint4	img_dst_offset	= uint4( reg.dstOffset, reg.dstLayers.baseLayer.Get() );
+			uint4	img_dst_size	= uint4( reg.size, reg.dstLayers.layerCount );
 
-			uint4	img_src_offset	= uint4( r.srcOffset, r.srcLayers.baseLayer.Get() );
-			uint4	img_src_size	= uint4( r.size, r.srcLayers.layerCount );
-			uint4	img_dst_offset	= uint4( r.dstOffset, r.dstLayers.baseLayer.Get() );
-			uint4	img_dst_size	= uint4( r.size, r.dstLayers.layerCount );
-
-			uint3	src_offset		= ImageUtils::ConvertOffset( src_descr.imageType, img_src_offset );
-			uint3	src_size		= ImageUtils::ConvertSize( src_descr.imageType, img_src_size );
-			uint3	dst_offset		= ImageUtils::ConvertOffset( dst_descr.imageType, img_dst_offset );
-			uint3	dst_size		= ImageUtils::ConvertSize( dst_descr.imageType, img_dst_size );
+			usize3	src_offset		= ImageUtils::ConvertOffset( src_descr.imageType, usize4(img_src_offset) );
+			usize3	src_size		= Max( ImageUtils::ConvertSize( src_descr.imageType, usize4(img_src_size) ), 1u );
+			usize3	dst_offset		= ImageUtils::ConvertOffset( dst_descr.imageType, usize4(img_dst_offset) );
+			usize3	dst_size		= Max( ImageUtils::ConvertSize( dst_descr.imageType, usize4(img_dst_size) ), 1u );
 			
 			CHECK_ERR( All( src_size == dst_size ) );
 
@@ -662,9 +658,9 @@ namespace PlatformCL
 						GetCommandQueue(),
 						src_id,
 						dst_id,
-						usize3(src_offset).ptr(),
-						usize3(dst_offset).ptr(),
-						usize3(dst_size).ptr(),
+						src_offset.ptr(),
+						dst_offset.ptr(),
+						dst_size.ptr(),
 						0, null,
 						null ) );
 		}
@@ -690,35 +686,47 @@ namespace PlatformCL
 		data.srcBuffer->Send( req_src_descr );
 		data.dstImage->Send( req_dst_descr );
 		
-		cl_mem			src_id		= req_src_id->result.Get(null);
-		cl_mem			dst_id		= req_dst_id->result.Get(null);
-		BytesUL			src_size	= req_src_descr->result->size;
-		ImageDescriptor	img_descr	= req_dst_descr->result.Get();
+		cl_mem		src_id		= req_src_id->result.Get(null);
+		cl_mem		dst_id		= req_dst_id->result.Get(null);
+		BytesUL		src_size	= req_src_descr->result->size;
+		BytesUL		bpp			= BytesUL( EPixelFormat::BitPerPixel( req_dst_descr->result->format ) );
+		uint		depth		= req_dst_descr->result->dimension.z;
 
-		FOR( i, data.regions )
+		for (auto& reg : Range(data.regions))
 		{
-			const auto&	r = data.regions[i];
-			CHECK_ERR( r.imageLayers.mipLevel.Get() == 0 and r.imageLayers.aspectMask[EImageAspect::Color] );
+			CHECK_ERR( reg.imageLayers.mipLevel.Get() == 0 and reg.imageLayers.aspectMask[EImageAspect::Color] );
 
-			uint4	img_offset	= uint4( r.imageOffset, r.imageLayers.baseLayer.Get() );
-			uint4	img_size	= uint4( r.imageSize, r.imageLayers.layerCount );
-			uint3	dst_offset	= ImageUtils::ConvertOffset( img_descr.imageType, img_offset );
-			uint3	dst_size	= ImageUtils::ConvertSize( img_descr.imageType, img_size );
-			BytesUL	bpp			= BytesUL( EPixelFormat::BitPerPixel( img_descr.format ) );
-			BytesUL	data_size	= dst_size.Volume() * bpp;
-
-			CHECK_ERR( All( img_offset + img_size <= img_descr.dimension ) );
-			CHECK_ERR( data_size <= src_size );
+			BytesUL	row_size		= reg.imageSize.x * bpp;
+			BytesUL	src_row_pitch	= reg.bufferRowLength * bpp;
+			BytesUL	src_depth_pitch	= reg.bufferImageHeight * src_row_pitch;
+			BytesUL	src_array_pitch	= src_depth_pitch;	// TODO
 			
-			CL_CHECK( clEnqueueCopyBufferToImage(
-						GetCommandQueue(),
-						src_id,
-						dst_id,
-						(size_t) r.bufferOffset,
-						usize3(dst_offset).ptr(),
-						usize3(dst_size).ptr(),
-						0, null,
-						null ) );
+			for (uint layer = 0; layer < reg.imageLayers.layerCount; ++layer)
+			{
+				for (uint z = 0; z < reg.imageSize.z; ++z)
+				{
+					for (uint y = 0; y < reg.imageSize.y; ++y)
+					{
+						usize4	img_offset	= usize4( reg.imageOffset.x, y + reg.imageOffset.y, z + reg.imageOffset.z, layer + reg.imageLayers.baseLayer.Get() );
+						usize3	dst_offset	= usize3( img_offset.xy(), img_offset.z + img_offset.w * depth );
+						usize3	dst_size	= usize3( reg.imageSize.x, 1, 1 );
+						BytesUL	src_off		= reg.bufferOffset + layer * src_array_pitch + z * src_depth_pitch + y * src_row_pitch;
+						
+						CHECK_ERR( src_off + row_size <= src_size );
+						CHECK_ERR(All( img_offset + usize4(dst_size.x, 1, 1, 1) <= usize4(req_dst_descr->result->dimension) ));
+
+						CL_CHECK( clEnqueueCopyBufferToImage(
+									GetCommandQueue(),
+									src_id,
+									dst_id,
+									size_t(src_off),
+									dst_offset.ptr(),
+									dst_size.ptr(),
+									0, null,
+									null ) );
+					}
+				}
+			}
 		}
 		return true;
 	}
@@ -742,34 +750,47 @@ namespace PlatformCL
 		data.srcImage->Send( req_src_descr );
 		data.dstBuffer->Send( req_dst_descr );
 		
-		cl_mem			src_id		= req_src_id->result.Get(null);
-		cl_mem			dst_id		= req_dst_id->result.Get(null);
-		ImageDescriptor	img_descr	= req_src_descr->result.Get();
-		BytesUL			dst_size	= req_dst_descr->result->size;
-		
-		FOR( i, data.regions )
+		cl_mem		src_id		= req_src_id->result.Get(null);
+		cl_mem		dst_id		= req_dst_id->result.Get(null);
+		BytesUL		dst_size	= req_dst_descr->result->size;
+		BytesUL		bpp			= BytesUL( EPixelFormat::BitPerPixel( req_src_descr->result->format ) );
+		uint		depth		= req_src_descr->result->dimension.z;
+
+		for (auto& reg : Range(data.regions))
 		{
-			const auto&	r = data.regions[i];
-			CHECK_ERR( r.imageLayers.mipLevel.Get() == 0 and r.imageLayers.aspectMask[EImageAspect::Color] );
+			CHECK_ERR( reg.imageLayers.mipLevel.Get() == 0 and reg.imageLayers.aspectMask[EImageAspect::Color] );
+
+			BytesUL	row_size		= reg.imageSize.x * bpp;
+			BytesUL	dst_row_pitch	= reg.bufferRowLength * bpp;
+			BytesUL	dst_depth_pitch	= reg.bufferImageHeight * dst_row_pitch;
+			BytesUL	dst_array_pitch	= dst_depth_pitch;	// TODO
 			
-			uint4	img_offset	= uint4( r.imageOffset, r.imageLayers.baseLayer.Get() );
-			uint4	img_size	= uint4( r.imageSize, r.imageLayers.layerCount );
-			uint3	src_offset	= ImageUtils::ConvertOffset( img_descr.imageType, img_offset );
-			uint3	src_size	= ImageUtils::ConvertSize( img_descr.imageType, img_size );
-			BytesUL	bpp			= BytesUL( EPixelFormat::BitPerPixel( img_descr.format ) );
-			BytesUL	data_size	= src_size.Volume() * bpp;
+			for (uint layer = 0; layer < reg.imageLayers.layerCount; ++layer)
+			{
+				for (uint z = 0; z < reg.imageSize.z; ++z)
+				{
+					for (uint y = 0; y < reg.imageSize.y; ++y)
+					{
+						usize4	img_offset	= usize4( reg.imageOffset.x, y + reg.imageOffset.y, z + reg.imageOffset.z, layer + reg.imageLayers.baseLayer.Get() );
+						usize3	src_offset	= usize3( img_offset.xy(), img_offset.z + img_offset.w * depth );
+						usize3	src_size	= usize3( reg.imageSize.x, 1, 1 );
+						BytesUL	dst_off		= reg.bufferOffset + layer * dst_array_pitch + z * dst_depth_pitch + y * dst_row_pitch;
+						
+						CHECK_ERR( dst_off + row_size <= dst_size );
+						CHECK_ERR(All( img_offset + usize4(src_size.x, 1, 1, 1) <= usize4(req_src_descr->result->dimension) ));
 
-			CHECK_ERR( data_size <= dst_size );
-
-			CL_CHECK( clEnqueueCopyImageToBuffer(
-						GetCommandQueue(),
-						src_id,
-						dst_id,
-						usize3(src_offset).ptr(),
-						usize3(src_size).ptr(),
-						(size_t) r.bufferOffset,
-						0, null,
-						null ) );
+						CL_CHECK( clEnqueueCopyImageToBuffer(
+									GetCommandQueue(),
+									src_id,
+									dst_id,
+									src_offset.ptr(),
+									src_size.ptr(),
+									size_t(dst_off),
+									0, null,
+									null ) );
+					}
+				}
+			}
 		}
 		return true;
 	}

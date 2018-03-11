@@ -172,7 +172,7 @@ namespace GXMath
 
 			CHECKRES static FloatColorFormatInfo PackedType (const FloatFormat &maxValue)
 			{
-				return FloatColorFormatInfo( maxValue, FloatFormat(0), false );
+				return FloatColorFormatInfo( maxValue, FloatFormat(0.0f), false );
 			}
 
 
@@ -195,13 +195,13 @@ namespace GXMath
 
 			FloatFormat MinValue() const
 			{
-				return isSigned ? -maxValue : FloatFormat(0);
+				return isSigned ? -maxValue : FloatFormat(0.0f);
 			}
 
 			FloatFormat Clamp (const FloatFormat &value) const
 			{
 				FloatFormat	ret;
-				FOR( i, ret )	ret[i] = Max( value[i], FloatFormat::Value_t(0) );
+				FOR( i, ret )	ret[i] = Max( value[i], FloatFormat::Value_t(0.0f) );
 				return ret;
 			}
 		};
@@ -446,7 +446,7 @@ namespace GXMath
 		
 		CONVERTER_SWITCH( true,   false,  false,   false,     IntToFloat );
 		CONVERTER_SWITCH( true,   false,  false,   true,      IntToNormFloat );
-		CONVERTER_SWITCH( true,   false,  true,    false,     IntToFloat );
+		CONVERTER_SWITCH( true,   false,  true,    false,     NormIntToNormFloat );
 		CONVERTER_SWITCH( true,   false,  true,    true,      NormIntToNormFloat );
 			
 		CONVERTER_SWITCH( true,   true,   false,   false,     IntToInt );
@@ -905,8 +905,8 @@ namespace GXMath
 			r11g11b10f_t	data;
 
 			R11_G11_B10f () {}
-			R11_G11_B10f (float R, float G, float B)	{ data.SetR(R);  data.SetG(G);  data.SetB(B); }
-			R11_G11_B10f (const FloatFormat &c)			{ data.SetR(c[0]);  data.SetG(c[1]);  data.SetB(c[2]); }
+			R11_G11_B10f (float R, float G, float B) : data{ R, G, B } {}
+			R11_G11_B10f (const FloatFormat &c) : data{ c }		{}
 
 			operator FloatFormat () const						{ return Vec3_t(data).To<FloatFormat>(); }
 			explicit operator FloatColorFormatInfo () const		{ return FloatColorFormatInfo::PackedType( FloatFormat(*this) ); }
@@ -964,7 +964,7 @@ namespace GXMath
 			RedF (T R) : r(R) {}
 			RedF (const FloatFormat &c)				{ r = c[0]; }
 
-			operator FloatFormat () const					{ return FloatFormat( r, 0, 0, 0 ); }
+			operator FloatFormat () const					{ return FloatFormat( r, 0.0f, 0.0f, 0.0f ); }
 			explicit operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
 
 			template <typename ColorType>
@@ -989,7 +989,7 @@ namespace GXMath
 			RGf (T R, T G) : r(R), g(G)				{}
 			RGf (const FloatFormat &c)				{ r = c[0];  g = c[1]; }
 
-			operator FloatFormat () const					{ return FloatFormat( r, g, 0, 0 ); }
+			operator FloatFormat () const					{ return FloatFormat( r, g, 0.0f, 0.0f ); }
 			explicit operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
 
 			template <typename ColorType>
@@ -1014,7 +1014,7 @@ namespace GXMath
 			RGBf (T R, T G, T B) : r(R), g(G), b(B) {}
 			RGBf (const FloatFormat &c)				{ r = c[0];  g = c[1];  b = c[2]; }
 
-			operator FloatFormat () const					{ return FloatFormat( r, g, b, 0 ); }
+			operator FloatFormat () const					{ return FloatFormat( r, g, b, 0.0f ); }
 			explicit operator FloatColorFormatInfo () const	{ return FloatColorFormatInfo::SimpleType<T>(); }
 
 			template <typename ColorType>

@@ -2,11 +2,13 @@
 
 #pragma once
 
+#include "Engine/STL/Common/Platforms.h"
+
+#ifdef PLATFORM_WINDOWS
+
 #include "Engine/STL/OS/Windows/OSWindows.h"
 #include "Engine/STL/OS/Windows/PlatformUtils.h"
 #include "Engine/STL/OS/Base/Date.h"
-
-#ifdef PLATFORM_WINDOWS
 
 namespace GX_STL
 {

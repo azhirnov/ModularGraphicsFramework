@@ -91,7 +91,7 @@ namespace PipelineCompiler
 
 		CHECK_ERR( TranslateShaderInfo( intermediate, cfg.skipExternals, translator ) );
 		
-		CHECK_ERR( translator.Main( root, translator.uid, cfg.skipExternals ) );
+		CHECK_ERR( translator.Main( root, cfg.skipExternals ) );
 
 		log		<< translator.log;
 		result	= BinArrayCRef::From( translator.src );
@@ -215,7 +215,7 @@ namespace PipelineCompiler
 	bool GLSL_DstLanguage::TranslateLocalVar (const TypeInfo &t, INOUT String &res)
 	{
 		// access
-		//if ( memoryModel != EGpuMemoryModel::Default )
+		//if ( memoryModel != EShaderMemoryModel::Default )
 		//	res << ToStringGLSL( memoryModel ) << ' ';
 
 		// read-only
@@ -223,8 +223,8 @@ namespace PipelineCompiler
 			res << "const ";
 
 		// layout
-		//if ( t.format != EPixelFormat::Unknown )
-		//	res << "layout(" << ToStringGLSL( t.format ) << ") ";
+		if ( t.format != EPixelFormat::Unknown )
+			res << "layout(" << ToStringGLSL( t.format ) << ") ";	// TODO: for writeonly access format you may skip explicit format
 
 		// precision
 		if ( t.precision != EPrecision::Default )
@@ -292,12 +292,12 @@ namespace PipelineCompiler
 	bool GLSL_DstLanguage::TranslateType (const TypeInfo &t, INOUT String &res)
 	{
 		// access
-		//if ( t.memoryModel != EGpuMemoryModel::Default )
+		//if ( t.memoryModel != EShaderMemoryModel::Default )
 		//	res << ToStringGLSL( t.memoryModel ) << ' ';
 
 		// layout
-		//if ( t.format != EPixelFormat::Unknown )
-		//	res << "layout(" << ToStringGLSL( t.format ) << ") ";
+		if ( t.format != EPixelFormat::Unknown )
+			res << "layout(" << ToStringGLSL( t.format ) << ") ";	// TODO: for writeonly access format you may skip explicit format
 
 		// precision
 		if ( t.precision != EPrecision::Default )
@@ -587,48 +587,48 @@ namespace PipelineCompiler
 
 			switch ( op )
 			{
-				case glslang::TOperator::EOpAdd :						src << '('<<args[0] <<'+' << args[1]<<')';		break;
-				case glslang::TOperator::EOpSub :						src << '('<<args[0] <<'-' << args[1]<<')';		break;
-				case glslang::TOperator::EOpMul :						src << '('<<args[0] <<'*' << args[1]<<')';		break;
-				case glslang::TOperator::EOpDiv :						src << '('<<args[0] <<'/' << args[1]<<')';		break;
-				case glslang::TOperator::EOpMod :						src << '('<<args[0] <<'%' << args[1]<<')';		break;
-				case glslang::TOperator::EOpRightShift :				src << '('<<args[0] <<">>"<< args[1]<<')';		break;
-				case glslang::TOperator::EOpLeftShift :					src << '('<<args[0] <<"<<"<< args[1]<<')';		break;
-				case glslang::TOperator::EOpAnd :						src << '('<<args[0] <<'&' << args[1]<<')';		break;
-				case glslang::TOperator::EOpInclusiveOr :				src << '('<<args[0] <<'|' << args[1]<<')';		break;
-				case glslang::TOperator::EOpExclusiveOr :				src << '('<<args[0] <<'^' << args[1]<<')';		break;
-				case glslang::TOperator::EOpEqual :						src << '('<<args[0] <<"=="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpNotEqual :					src << '('<<args[0] <<"!="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpLessThan :					src << '('<<args[0] <<'<' << args[1]<<')';		break;
-				case glslang::TOperator::EOpGreaterThan :				src << '('<<args[0] <<'>' << args[1]<<')';		break;
-				case glslang::TOperator::EOpLessThanEqual :				src << '('<<args[0] <<"<="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpGreaterThanEqual :			src << '('<<args[0] <<">="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpVectorTimesScalar :			src << '('<<args[0] <<'*' << args[1]<<')';		break;
-				case glslang::TOperator::EOpVectorTimesMatrix :			src << '('<<args[0] <<'*' << args[1]<<')';		break;
-				case glslang::TOperator::EOpMatrixTimesVector :			src << '('<<args[0] <<'*' << args[1]<<')';		break;
-				case glslang::TOperator::EOpMatrixTimesScalar :			src << '('<<args[0] <<'*' << args[1]<<')';		break;
-				case glslang::TOperator::EOpLogicalOr :					src << '('<<args[0] <<"||"<< args[1]<<')';		break;
-				case glslang::TOperator::EOpLogicalXor :				src << '('<<args[0] <<"^^"<< args[1]<<')';		break;
-				case glslang::TOperator::EOpLogicalAnd :				src << '('<<args[0] <<"&&"<< args[1]<<')';		break;
+				case glslang::TOperator::EOpAdd :						src << '('<<args[0] <<" + " << args[1]<<')';	break;
+				case glslang::TOperator::EOpSub :						src << '('<<args[0] <<" - " << args[1]<<')';	break;
+				case glslang::TOperator::EOpMul :						src << '('<<args[0] <<" * " << args[1]<<')';	break;
+				case glslang::TOperator::EOpDiv :						src << '('<<args[0] <<" / " << args[1]<<')';	break;
+				case glslang::TOperator::EOpMod :						src << '('<<args[0] <<" % " << args[1]<<')';	break;
+				case glslang::TOperator::EOpRightShift :				src << '('<<args[0] <<" >> "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLeftShift :					src << '('<<args[0] <<" << "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpAnd :						src << '('<<args[0] <<" & " << args[1]<<')';	break;
+				case glslang::TOperator::EOpInclusiveOr :				src << '('<<args[0] <<" | " << args[1]<<')';	break;
+				case glslang::TOperator::EOpExclusiveOr :				src << '('<<args[0] <<" ^ " << args[1]<<')';	break;
+				case glslang::TOperator::EOpEqual :						src << '('<<args[0] <<" == "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpNotEqual :					src << '('<<args[0] <<" != "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLessThan :					src << '('<<args[0] <<" < " << args[1]<<')';	break;
+				case glslang::TOperator::EOpGreaterThan :				src << '('<<args[0] <<" > " << args[1]<<')';	break;
+				case glslang::TOperator::EOpLessThanEqual :				src << '('<<args[0] <<" <= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpGreaterThanEqual :			src << '('<<args[0] <<" >= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpVectorTimesScalar :			src << '('<<args[0] <<" * " << args[1]<<')';	break;
+				case glslang::TOperator::EOpVectorTimesMatrix :			src << '('<<args[0] <<" * " << args[1]<<')';	break;
+				case glslang::TOperator::EOpMatrixTimesVector :			src << '('<<args[0] <<" * " << args[1]<<')';	break;
+				case glslang::TOperator::EOpMatrixTimesScalar :			src << '('<<args[0] <<" * " << args[1]<<')';	break;
+				case glslang::TOperator::EOpLogicalOr :					src << '('<<args[0] <<" || "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLogicalXor :				src << '('<<args[0] <<" ^^ "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLogicalAnd :				src << '('<<args[0] <<" && "<< args[1]<<')';	break;
 				case glslang::TOperator::EOpIndexDirect :				src << '('<<args[0] <<'[' << args[1]<<"])";		break;
 				case glslang::TOperator::EOpIndexIndirect :				src << '('<<args[0] <<'[' << args[1]<<"])";		break;
 				//case glslang::TOperator::EOpMethod :					break;
 				//case glslang::TOperator::EOpScoping :					break;
-				case glslang::TOperator::EOpAssign :					src <<      args[0] <<'=' << args[1];			break;
-				case glslang::TOperator::EOpAddAssign :					src << '('<<args[0] <<"+="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpSubAssign :					src << '('<<args[0] <<"-="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpMulAssign :					src << '('<<args[0] <<"*="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpVectorTimesMatrixAssign :	src << '('<<args[0] <<"*="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpVectorTimesScalarAssign :	src << '('<<args[0] <<"*="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpMatrixTimesScalarAssign :	src << '('<<args[0] <<"*="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpMatrixTimesMatrixAssign :	src << '('<<args[0] <<"*="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpDivAssign :					src << '('<<args[0] <<"/="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpModAssign :					src << '('<<args[0] <<"%="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpAndAssign :					src << '('<<args[0] <<"&="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpInclusiveOrAssign :			src << '('<<args[0] <<"|="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpExclusiveOrAssign :			src << '('<<args[0] <<"^="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpLeftShiftAssign :			src << '('<<args[0] <<"<<="<< args[1]<<')';		break;
-				case glslang::TOperator::EOpRightShiftAssign :			src << '('<<args[0] <<">>="<< args[1]<<')';		break;
+				case glslang::TOperator::EOpAssign :					src <<      args[0] <<" = " << args[1];			break;
+				case glslang::TOperator::EOpAddAssign :					src << '('<<args[0] <<" += "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpSubAssign :					src << '('<<args[0] <<" -= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpMulAssign :					src << '('<<args[0] <<" *= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpVectorTimesMatrixAssign :	src << '('<<args[0] <<" *= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpVectorTimesScalarAssign :	src << '('<<args[0] <<" *= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpMatrixTimesScalarAssign :	src << '('<<args[0] <<" *= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpMatrixTimesMatrixAssign :	src << '('<<args[0] <<" *= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpDivAssign :					src << '('<<args[0] <<" /= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpModAssign :					src << '('<<args[0] <<" %= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpAndAssign :					src << '('<<args[0] <<" &= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpInclusiveOrAssign :			src << '('<<args[0] <<" |= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpExclusiveOrAssign :			src << '('<<args[0] <<" ^= "<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLeftShiftAssign :			src << '('<<args[0] <<" << ="<< args[1]<<')';	break;
+				case glslang::TOperator::EOpRightShiftAssign :			src << '('<<args[0] <<" >>= "<< args[1]<<')';	break;
 
 				case glslang::TOperator::EOpAtan :						src << "atan" << all_args;						break;
 				case glslang::TOperator::EOpImageLoad :					src << "imageLoad" << all_args;					break;
@@ -885,7 +885,7 @@ namespace PipelineCompiler
 		
 		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqBuffer )
 		{
-			if ( info.memoryModel != EGpuMemoryModel::Default )
+			if ( info.memoryModel != EShaderMemoryModel::Default )
 				str << ToStringGLSL( info.memoryModel ) << ' ';
 
 			str << "buffer " << info.typeName;
@@ -900,7 +900,7 @@ namespace PipelineCompiler
 		{
 			str << "\t";
 
-			if ( info.fields[j].memoryModel != info.memoryModel and info.fields[j].memoryModel != EGpuMemoryModel::Default )
+			if ( info.fields[j].memoryModel != info.memoryModel and info.fields[j].memoryModel != EShaderMemoryModel::Default )
 				str << ToStringGLSL( info.fields[j].memoryModel ) << ' ';
 
 			CHECK_ERR( TranslateLocalVar( info.fields[j], INOUT str ) );
@@ -922,7 +922,7 @@ namespace PipelineCompiler
 
 		if ( type.isImage() )
 		{
-			str //<< "layout(" << ToStringGLSL( info.format ) << ") "
+			str << "layout(" << ToStringGLSL( info.format ) << ") "	// TODO: for writeonly access format you may skip explicit format
 				<< ToStringGLSL( info.memoryModel )
 				<< " uniform ";
 		}

@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include "TemplateMath.h"
+#include "Engine/STL/CompileTime/TemplateMath.h"
 #include "Engine/STL/Types/Noninstancable.h"
+#include "Engine/STL/Containers/String.h"
 
 namespace GX_STL
 {
@@ -26,8 +27,8 @@ namespace CompileTime
 		private:
 			static const uint	_MAX_OFFSET		= sizeof(type) * 8;
 			static const uint	_SYMBOL_SIZE	= CompileTime::IntLog2< uint, ('Z' - 'A') > + 1;
-			static const uint	_COUNT			= SizeOf<type>::bits / _SYMBOL_SIZE;
-			static const uint	_OFFSET			= SizeOf<type>::bits % _SYMBOL_SIZE;
+			static const uint	_COUNT			= CompileTime::SizeOf<type>::bits / _SYMBOL_SIZE;
+			static const uint	_OFFSET			= CompileTime::SizeOf<type>::bits % _SYMBOL_SIZE;
 			static const type	_NUMERIC		= (1u << _SYMBOL_SIZE) - 1;
 			static const uint	_STR_SIZE		= _COUNT + 1;
 			static const type	_SYMBOL_MASK	= _NUMERIC;

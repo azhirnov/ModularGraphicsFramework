@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Trigonometry.h"
+#include "Engine/STL/Math/Trigonometry.h"
 #include "Engine/STL/Dimensions/ByteAndBit.h"
 #include "Engine/STL/Experimental/FastMath.h"
 #include "Engine/STL/Algorithms/ArrayUtils.h"
@@ -37,7 +37,7 @@ namespace GXMath
 				const UInt_t mask = ((UInt_t(1) << (CompileTime::SizeOf<T>::bits-1))-1);
 
 				// if val == MinValue result is undefined, remove sign bit anyway
-				return ::abs( val ) & mask;
+				return std::abs( val ) & mask;
 
 			#elif 0
 				// from http://graphics.stanford.edu/~seander/bithacks.html#IntegerAbs
@@ -73,7 +73,7 @@ namespace GXMath
 			#if 1
 				typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 
-				return (T) ::abs( _float_t(val) );
+				return (T) std::abs( _float_t(val) );
 
 			#else
 				typedef typename CompileTime::NearUInt::FromType<T>	Int_t;
@@ -742,6 +742,20 @@ namespace GXMath
 		return ret;
 	}
 	
+	template <typename A, typename B, usize I, ulong U>
+	CHECKRES inline auto  Max (const Vec<A,I,U> &a, const B &b)
+	{
+		STATIC_ASSERT( CompileTime::IsScalarOrEnum<B> );
+		return Max( a, Vec<B,I,U>(b) );
+	}
+	
+	template <typename A, typename B, usize I, ulong U>
+	CHECKRES inline auto  Max (const A &a, const Vec<B,I,U> &b)
+	{
+		STATIC_ASSERT( CompileTime::IsScalarOrEnum<A> );
+		return Max( Vec<A,I,U>(a), b );
+	}
+
 	template <typename A, typename B, typename C>
 	CHECKRES forceinline auto  Max (const A& a, const B& b, const C& c)
 	{
@@ -1847,32 +1861,60 @@ namespace GXMath
 	SafeDiv
 =================================================
 */
-	template <typename T>
-	CHECKRES forceinline T  SafeDiv (const T& left, const T& right, const T& defVal)
+	template <typename T1, typename T2, typename T3>
+	CHECKRES forceinline auto  SafeDiv (const T1& left, const T2& right, const T3& defVal)
 	{
-		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
+		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T1> and CompileTime::IsScalarOrEnum<T2> and CompileTime::IsScalarOrEnum<T3> );
 
-		return IsNotZero(right) ? (left / right) : defVal;
+		using T = CompileTime::GenType<T1, T2, T3>;
+
+		return IsNotZero(right) ? (T(left) / T(right)) : T(defVal);
+	}
+	
+	template <typename T1, typename T2>
+	CHECKRES forceinline auto  SafeDiv (const T1& left, const T2& right)
+	{
+		return SafeDiv( left, right, T1(0) );
 	}
 
-	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  SafeDiv (const Vec<T,I,U> &left, const Vec<T,I,U> &right, const T& defVal = T(0))
+	template <typename T1, typename T2, typename T3, usize I, ulong U>
+	CHECKRES inline auto  SafeDiv (const Vec<T1,I,U> &left, const Vec<T2,I,U> &right, const T3& defVal)
 	{
+		using T = CompileTime::GenType<T1, T2, T3>;
+
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SafeDiv( left[i], right[i], defVal );
 		return ret;
 	}
-
-	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  SafeDiv (const Vec<T,I,U> &left, const T &right, const T& defVal = T(0))
+	
+	template <typename T1, typename T2, usize I, ulong U>
+	CHECKRES inline auto  SafeDiv (const Vec<T1,I,U> &left, const Vec<T2,I,U> &right)
 	{
-		return SafeDiv( left, Vec<T,I,U>(right), defVal );
+		return SafeDiv( left, right, T1(0) );
 	}
 
-	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  SafeDiv (const T &left, const Vec<T,I,U> &right, const T& defVal = T(0))
+	template <typename T1, typename T2, typename T3, usize I, ulong U>
+	CHECKRES inline auto  SafeDiv (const Vec<T1,I,U> &left, const T2 &right, const T3& defVal)
 	{
-		return SafeDiv( Vec<T,I,U>(left), right, defVal );
+		return SafeDiv( left, Vec<T2,I,U>(right), defVal );
+	}
+	
+	template <typename T1, typename T2, usize I, ulong U>
+	CHECKRES inline auto  SafeDiv (const Vec<T1,I,U> &left, const T2 &right)
+	{
+		return SafeDiv( left, right, T1(0) );
+	}
+
+	template <typename T1, typename T2, typename T3, usize I, ulong U>
+	CHECKRES inline auto  SafeDiv (const T1 &left, const Vec<T2,I,U> &right, const T3& defVal)
+	{
+		return SafeDiv( Vec<T1,I,U>(left), right, defVal );
+	}
+	
+	template <typename T1, typename T2, usize I, ulong U>
+	CHECKRES inline auto  SafeDiv (const T1 &left, const Vec<T2,I,U> &right)
+	{
+		return SafeDiv( left, right, T1(0) );
 	}
 
 /*
@@ -2342,29 +2384,30 @@ namespace GXMath
 	align to largest value
 =================================================
 */
-	template <typename T>
-	CHECKRES forceinline constexpr T  AlignToLarge (const T& value, const usize align)
+	template <typename T, typename S>
+	CHECKRES forceinline constexpr T  AlignToLarge (const T& value, const S& align)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
+		STATIC_ASSERT( CompileTime::IsInteger<S> and CompileTime::IsUnsigned<S> );
 
-		const T	a = (T) Max( align, 1u );
+		const T	a = (T) Max( align, S(1) );
 
 		return T( ((value + (a-1)) / a) * a );
 	}
 
-	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  AlignToLarge (const Vec<T,I,U>& value, const usize align)
+	template <typename T, usize I, ulong U, typename S>
+	CHECKRES inline Vec<T,I,U>  AlignToLarge (const Vec<T,I,U>& value, const S& align)
 	{
 		Vec<T,I,U> res;
 		FOR( i, res )	res[i] = AlignToLarge( value[i], align );
 		return res;
 	}
 
-	template <typename T>
-	CHECKRES forceinline constexpr T  AlignToLarge (const T& value, const BytesU align)
+	template <typename T, typename B>
+	CHECKRES forceinline constexpr T  AlignToLarge (const T& value, const Bytes<B> align)
 	{
-		return AlignToLarge( value, (usize)align );
+		return AlignToLarge( value, B(align) );
 	}
 
 

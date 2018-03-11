@@ -2,11 +2,13 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Shared/Tools/ImageViewHashMap.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Public/Tools/ImageViewHashMap.h"
 
 namespace Engine
 {
@@ -44,8 +46,6 @@ namespace PlatformVK
 											GpuMsg::SetImageDescriptor,
 											GpuMsg::GetVkImageID,
 											GpuMsg::CreateVkImageView,
-											GpuMsg::SetImageLayout,
-											GpuMsg::GetImageLayout,
 											GpuMsg::SetVkSwapchainImage
 										> >;
 
@@ -87,8 +87,6 @@ namespace PlatformVK
 		bool _CreateVkImageView (const Message< GpuMsg::CreateVkImageView > &);
 		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
 		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
-		bool _SetImageLayout (const Message< GpuMsg::SetImageLayout > &);
-		bool _GetImageLayout (const Message< GpuMsg::GetImageLayout > &);
 		bool _SetVkSwapchainImage (const Message< GpuMsg::SetVkSwapchainImage > &);
 
 	private:
@@ -130,8 +128,6 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_CreateVkImageView );
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetImageDescriptor );
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_SetImageDescriptor );
-		_SubscribeOnMsg( this, &Vk1SwapchainImage::_SetImageLayout );
-		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetImageLayout );
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetVkPrivateClasses );
@@ -320,30 +316,6 @@ namespace PlatformVK
 		_descr = msg->descr;
 
 		Utils::ValidateDescriptor( INOUT _descr );
-		return true;
-	}
-	
-/*
-=================================================
-	_SetImageLayout
-=================================================
-*/
-	bool Vk1SwapchainImage::_SetImageLayout (const Message< GpuMsg::SetImageLayout > &msg)
-	{
-		CHECK_ERR( _IsImageCreated() );
-
-		_layout = msg->newLayout;
-		return true;
-	}
-
-/*
-=================================================
-	_GetImageLayout
-=================================================
-*/
-	bool Vk1SwapchainImage::_GetImageLayout (const Message< GpuMsg::GetImageLayout > &msg)
-	{
-		msg->result.Set( _layout );
 		return true;
 	}
 

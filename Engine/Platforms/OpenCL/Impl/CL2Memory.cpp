@@ -1,13 +1,15 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h"
-#include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
-#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
+
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/Tools/MemoryMapperHelper.h"
+#include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 namespace Engine
 {
@@ -188,7 +190,10 @@ namespace PlatformCL
 		_mem = req_id->result.Get(null);
 		CHECK_ERR( _mem != null );
 
-		// TODO: calc size
+		size_t	mem_size = 0;
+		CL_CALL( clGetMemObjectInfo( _mem, CL_MEM_SIZE, sizeof(mem_size), OUT &mem_size, null ) );
+
+		_size	 = BytesUL(mem_size);
 		_binding = EBindingTarget::Image;
 		return true;
 	}
@@ -211,7 +216,10 @@ namespace PlatformCL
 		_mem = req_id->result.Get(null);
 		CHECK_ERR( _mem != null );
 		
-		_size	 = req_descr->result->size;
+		size_t	mem_size = 0;
+		CL_CALL( clGetMemObjectInfo( _mem, CL_MEM_SIZE, sizeof(mem_size), OUT &mem_size, null ) );
+		
+		_size	 = BytesUL(mem_size);
 		_binding = EBindingTarget::Buffer;
 		return true;
 	}
@@ -241,7 +249,6 @@ namespace PlatformCL
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
-		//CHECK_ERR( _GetParents().IsExist( msg.Sender() ) );
 
 		CHECK_ERR( not _IsCreated() );
 		CHECK_ERR( _GetParents().Count() >= 1 );
@@ -352,8 +359,8 @@ namespace PlatformCL
 			/*Message< GpuMsg::GetImageDescriptor >	req_descr;
 			SendTo( _GetParents().Front(), req_descr );
 
-			const usize3	origin	= usize3(0);
-			const usize3	region	= usize3(Platforms::ImageUtils::ConvertSize( req_descr->result->imageType, req_descr->result->dimension ));
+			usize3	origin	= usize3(0);
+			usize3	region	= Max( ImageUtils::ConvertSize( req_descr->result->imageType, req_descr->result->dimension ), 1u );
 
 			size_t	row_pitch	= 0;
 			size_t	slice_pitch	= 0;
@@ -392,7 +399,7 @@ namespace PlatformCL
 		CHECK_ERR( All( msg->offset + msg->dimension <= req_descr->result->dimension ) );
 		
 		const usize3	origin	= usize3(0);
-		const usize3	region	= usize3(Platforms::ImageUtils::ConvertSize( req_descr->result->imageType, req_descr->result->dimension ));
+		const usize3	region	= Max( ImageUtils::ConvertSize( req_descr->result->imageType, req_descr->result->dimension ), 1u );
 
 		size_t	row_pitch	= 0;
 		size_t	slice_pitch	= 0;
@@ -568,9 +575,66 @@ namespace PlatformCL
 */
 	bool CL2Memory::_ReadFromImageMemory (const Message< GpuMsg::ReadFromImageMemory > &msg)
 	{
-		// use clEnqueueReadBufferRect 
+		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
+		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
+		CHECK_ERR( msg->memOffset == BytesUL(0) );	// not supported
+		CHECK_ERR( msg->mipLevel == MipmapLevel(0) );
+		
+		// read without mapping
+		Message< GpuMsg::GetImageDescriptor >	req_descr;
+		Message< GpuMsg::GetImageMemoryLayout >	req_layout;
+		
+		// TODO: buffer hasn't image memory layout and image descriptor...
+		SendTo( _GetParents().Front(), req_descr );
+		SendTo( _GetParents().Front(), req_layout );
+		
+		const uint3		img_size = Max( ImageUtils::ConvertSize( req_descr->result->imageType, req_descr->result->dimension ), 1u );
+		
+		CHECK_ERR( All( msg->offset + msg->dimension <= img_size ) );
+		CHECK_ERR( msg->writableBuffer->Size() >= msg->dimension.z * msg->slicePitch );
+		
+		/*if ( _binding == EBindingTarget::Image )
+		{
+			CHECK_ERR( BytesUL(msg->rowPitch) == req_layout->result->rowPitch );
+			CHECK_ERR( BytesUL(msg->slicePitch) == req_layout->result->slicePitch );
+			
+			const size_t	slice_pitch = (req_descr->result->imageType == EImage::Tex3D ? size_t(msg->slicePitch) : 0);
 
-		TODO( "" );
+			CL_CALL( clEnqueueReadImage(
+								GetCommandQueue(),
+								_mem,
+								CL_TRUE,	// blocking
+								usize3(msg->offset).ptr(),
+								usize3(msg->dimension).ptr(),
+								size_t(msg->rowPitch),
+								slice_pitch,
+								OUT msg->writableBuffer->ptr(),
+								0, null,
+								null ) );
+		}
+		else*/
+		{
+			const usize		bpp		= (usize) BytesU(EPixelFormat::BitPerPixel( req_descr->result->format ));
+			const usize3	offset	= usize3(msg->offset.x * bpp, msg->offset.y, msg->offset.z);
+			const usize3	region	= Max( usize3(msg->dimension.x * bpp, msg->dimension.y, msg->dimension.z), 1u );
+
+			CL_CALL( clEnqueueReadBufferRect(
+								GetCommandQueue(),
+								_mem,
+								CL_TRUE,	// blocking
+								offset.ptr(),
+								usize3(0).ptr(),
+								region.ptr(),
+								size_t(req_layout->result->rowPitch),
+								size_t(req_layout->result->slicePitch),
+								size_t(msg->rowPitch),
+								size_t(msg->slicePitch),
+								OUT msg->writableBuffer->ptr(),
+								0, null,
+								null ) );
+		}
+
+		msg->result.Set( msg->writableBuffer->SubArray( 0, usize(msg->dimension.z * msg->slicePitch) ) );
 		return true;
 	}
 	
@@ -581,9 +645,68 @@ namespace PlatformCL
 */
 	bool CL2Memory::_WriteToImageMemory (const Message< GpuMsg::WriteToImageMemory > &msg)
 	{
-		// use clEnqueueWriteBufferRect 
+		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
+		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
+		CHECK_ERR( msg->memOffset == BytesUL(0) );	// not supported
+		CHECK_ERR( msg->mipLevel == MipmapLevel(0) );
+		CHECK_ERR( msg->data.Size() >= msg->dimension.z * msg->slicePitch );
+		CHECK_ERR( IsNotZero( msg->dimension ) );
 
-		TODO( "" );
+		// write without mapping
+		Message< GpuMsg::GetImageDescriptor >	req_descr;
+		Message< GpuMsg::GetImageMemoryLayout >	req_layout;
+		
+		// TODO: buffer hasn't image memory layout and image descriptor...
+		SendTo( _GetParents().Front(), req_descr );
+		SendTo( _GetParents().Front(), req_layout );
+		
+		const uint3		img_size = Max( ImageUtils::ConvertSize( req_descr->result->imageType, req_descr->result->dimension ), 1u );
+		
+		CHECK_ERR( All( msg->offset + msg->dimension <= img_size ) );
+		CHECK_ERR( msg->data.Size() == msg->dimension.z * msg->slicePitch );
+
+		/*if ( _binding == EBindingTarget::Image )
+		{
+			CHECK_ERR( BytesUL(msg->rowPitch) == req_layout->result->rowPitch );
+			CHECK_ERR( BytesUL(msg->slicePitch) == req_layout->result->slicePitch );
+
+			const size_t	slice_pitch = (req_descr->result->imageType == EImage::Tex3D ? size_t(msg->slicePitch) : 0);
+
+			CL_CALL( clEnqueueWriteImage(
+								GetCommandQueue(),
+								_mem,
+								CL_TRUE,	// blocking
+								usize3(msg->offset).ptr(),
+								usize3(msg->dimension).ptr(),
+								size_t(msg->rowPitch),
+								slice_pitch,
+								msg->data.ptr(),
+								0, null,
+								null ) );
+		}
+		else*/
+		{
+			const usize		bpp		= (usize) BytesU(EPixelFormat::BitPerPixel( req_descr->result->format ));
+			const usize3	offset	= usize3(msg->offset.x * bpp, msg->offset.y, msg->offset.z);
+			const usize3	region	= Max( usize3(msg->dimension.x * bpp, msg->dimension.y, msg->dimension.z), 1u );
+
+			CL_CALL( clEnqueueWriteBufferRect(
+								GetCommandQueue(),
+								_mem,
+								CL_TRUE,	// blocking
+								offset.ptr(),
+								usize3(0).ptr(),
+								region.ptr(),
+								size_t(req_layout->result->rowPitch),
+								size_t(req_layout->result->slicePitch),
+								size_t(msg->rowPitch),
+								size_t(msg->slicePitch),
+								msg->data.ptr(),
+								0, null,
+								null ) );
+		}
+
+		msg->wasWritten.Set( BytesUL(msg->dimension.z * msg->slicePitch) );
 		return true;
 	}
 		

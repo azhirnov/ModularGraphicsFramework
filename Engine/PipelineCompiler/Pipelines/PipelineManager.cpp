@@ -93,12 +93,14 @@ namespace PipelineCompiler
 				{
 					auto&	dst = map[idx].second.Get<TextureUniform>();
 
-					CHECK_ERR(	dst.name		== tex.name			and
-								dst.imageType	== tex.imageType	and
-								EPixelFormatClass::StrongComparison( dst.format, tex.format ) );
-
-					dst.shaderUsage |= tex.shaderUsage;
-					found = true;
+					if ( dst.name		== tex.name			and
+						 dst.imageType	== tex.imageType	and
+						 EPixelFormatClass::StrongComparison( dst.format, tex.format ) )
+					{
+						dst.shaderUsage |= tex.shaderUsage;
+						found = true;
+						break;
+					}
 				}
 			}
 
@@ -125,12 +127,14 @@ namespace PipelineCompiler
 				{
 					auto&	dst = map[idx].second.Get<ImageUniform>();
 					
-					CHECK_ERR(	dst.name		== img.name			and
-								dst.imageType	== img.imageType	and
-								dst.format		== img.format );
-
-					dst.shaderUsage |= img.shaderUsage;
-					found = true;
+					if ( dst.name		== img.name			and
+						 dst.imageType	== img.imageType	and
+						 dst.format		== img.format )
+					{
+						dst.shaderUsage |= img.shaderUsage;
+						found = true;
+						break;
+					}
 				}
 			}
 
@@ -165,6 +169,7 @@ namespace PipelineCompiler
 
 						dst.shaderUsage |= buf.shaderUsage;
 						found = true;
+						break;
 					}
 				}
 			}

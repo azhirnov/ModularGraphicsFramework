@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #if 0
-#include "Engine/Graphics/Shared/Common.h"
+#include "Engine/Graphics/Public/Common.h"
 
 namespace Engine
 {

@@ -5,22 +5,22 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GPU/Context.h"
-#include "Engine/Platforms/Shared/GPU/Thread.h"
+#include "Engine/Platforms/Public/GPU/Context.h"
+#include "Engine/Platforms/Public/GPU/Thread.h"
 
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/Shared/GPU/Sampler.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/VR.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Framebuffer.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/Sampler.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/VR.h"
 
-#include "Engine/Platforms/Shared/OS/Platform.h"
-#include "Engine/Platforms/Shared/OS/Window.h"
-#include "Engine/Platforms/Shared/OS/Input.h"
+#include "Engine/Platforms/Public/OS/Platform.h"
+#include "Engine/Platforms/Public/OS/Window.h"
+#include "Engine/Platforms/Public/OS/Input.h"
 
 //#include "Engien/Platforms/DirectX/Impl/DX11Messages.h"
 //#include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"

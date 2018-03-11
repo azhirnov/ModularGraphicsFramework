@@ -1,11 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/Tools/MemoryMapperHelper.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 namespace Engine
 {
@@ -99,9 +101,6 @@ namespace PlatformVK
 		bool _AllocForImage ();
 		bool _AllocForBuffer ();
 		void _FreeMemory ();
-
-		bool _GetSubResource (uint mipmapLevel, uint arrayLayer, OUT VkSubresourceLayout &result,
-							  OUT EImage::type &imgType, OUT uint4 &imgDimension) const;
 	};
 //-----------------------------------------------------------------------------
 
@@ -375,73 +374,32 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetSubResource
-=================================================
-*/
-	bool Vk1ManagedMemory::_GetSubResource (uint mipmapLevel, uint arrayLayer, OUT VkSubresourceLayout &result, OUT EImage::type &imgType, OUT uint4 &imgDimension) const
-	{
-		// request image info
-		Message< GpuMsg::GetVkImageID >			req_id;
-		Message< GpuMsg::GetImageDescriptor >	req_descr;
-
-		SendTo( _GetParents().Front(), req_id );
-		SendTo( _GetParents().Front(), req_descr );
-
-		// get subresource layout
-		VkImageSubresource	sub_resource	= {};
-
-		const bool			is_color		= EPixelFormat::IsColor( req_descr->result->format );
-		const bool			is_depth		= EPixelFormat::IsDepth( req_descr->result->format );
-		const uint4			lvl_dim			= ImageUtils::LevelDimension( req_descr->result->imageType, req_descr->result->dimension, mipmapLevel );
-
-		CHECK_ERR( is_color or is_depth );
-		sub_resource.aspectMask	= is_color ? VK_IMAGE_ASPECT_COLOR_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
-		sub_resource.mipLevel	= Clamp( mipmapLevel, 0u, req_descr->result->maxLevel.Get()-1 );
-		sub_resource.arrayLayer	= Clamp( arrayLayer, 0u, lvl_dim.w-1 );
-
-		vkGetImageSubresourceLayout( GetVkDevice(), req_id->result.Get(0), &sub_resource, OUT &result );
-
-		imgType			= req_descr->result->imageType;
-		imgDimension	= lvl_dim;
-		return true;
-	}
-	
-/*
-=================================================
 	_MapImageToCpu
 =================================================
 */
 	bool Vk1ManagedMemory::_MapImageToCpu (const Message< GpuMsg::MapImageToCpu > &msg)
 	{
-		CHECK_ERR( _IsCreated() and not _memMapper.IsMappingAllowed( msg->flags ) );
+		CHECK_ERR( _IsCreated() and _memMapper.IsMappingAllowed( msg->flags ) );
 		CHECK_ERR( _binding == EBindingTarget::Image );
 		CHECK_ERR( msg->memOffset == BytesUL(0) );	// not supported yet
 	
-		VkSubresourceLayout sub_res_layout	= {};
-		EImage::type		img_type;
-		uint4				img_dim;	// unused
-
-		_GetSubResource( msg->level.Get(), 0, OUT sub_res_layout, OUT img_type, OUT img_dim );
+		Message< GpuMsg::GetImageMemoryLayout >		req_layout{ msg->mipLevel, msg->layer };
+		SendTo( _GetParents().Front(), req_layout );
 
 		// validate and map memory
-		CHECK_ERR( sub_res_layout.offset + sub_res_layout.size <= (ulong)_size );
+		CHECK_ERR( req_layout->result->offset + req_layout->result->size <= _size );
 
-		VkDeviceSize	offset	= sub_res_layout.offset + (ulong)_offset;
-		void *			ptr		= null;
-		VK_CHECK( vkMapMemory( GetVkDevice(), _mem, offset, sub_res_layout.size, 0, &ptr ) );
+		VkDeviceSize	level_offset	= VkDeviceSize(req_layout->result->offset + _offset);
+		VkDeviceSize	level_size		= VkDeviceSize(req_layout->result->size);
+		void *			ptr				= null;
+
+		VK_CHECK( vkMapMemory( GetVkDevice(), _mem, level_offset, level_size, 0, OUT &ptr ) );
 
 		// write output
-		msg->range.Set({ BytesUL(sub_res_layout.offset), BytesUL(sub_res_layout.size) });
+		msg->range.Set({ req_layout->result->offset, req_layout->result->size });
+		msg->dimension.Set( req_layout->result->dimension );
 
-		if ( img_type == EImage::Tex3D ) {
-			ASSERT( sub_res_layout.arrayPitch <= 1 );
-			msg->pixelAlign.Set({ BytesUL(sub_res_layout.rowPitch), BytesUL(sub_res_layout.depthPitch) });
-		} else {
-			ASSERT( sub_res_layout.depthPitch <= 1 );
-			msg->pixelAlign.Set({ BytesUL(sub_res_layout.rowPitch), BytesUL(sub_res_layout.arrayPitch) });
-		}
-
-		_memMapper.OnMapped( ptr, BytesUL(sub_res_layout.offset), BytesUL(sub_res_layout.size), msg->flags );
+		_memMapper.OnMapped( ptr, req_layout->result->offset, req_layout->result->size, msg->flags );
 		return true;
 	}
 
@@ -590,7 +548,7 @@ namespace PlatformVK
 		if ( not was_mapped )
 		{
 			Message< GpuMsg::MapMemoryToCpu >	map_msg;
-			map_msg->flags	= GpuMsg::MapMemoryToCpu::EMappingFlags::WriteDiscard;
+			map_msg->flags	= GpuMsg::MapMemoryToCpu::EMappingFlags::Write;
 			map_msg->offset	= msg->offset;
 			map_msg->size	= BytesUL( msg->data.Size() );
 
@@ -637,11 +595,40 @@ namespace PlatformVK
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
 		CHECK_ERR( msg->memOffset == BytesUL(0) );	// not supported yet
+		CHECK_ERR( msg->writableBuffer->Size() >= msg->dimension.z * msg->slicePitch );
 		
 		const bool	was_mapped	= _memMapper.IsMapped();
+		
+		Message< GpuMsg::GetImageMemoryLayout >		req_layout{ msg->mipLevel, msg->layer };
+		SendTo( _GetParents().Front(), req_layout );
 
-		TODO( "" );
+		// map memory
+		if ( not was_mapped )
+		{
+			Message< GpuMsg::MapImageToCpu >	map_msg;
+			map_msg->flags		= GpuMsg::MapImageToCpu::EMappingFlags::Read;
+			map_msg->mipLevel	= msg->mipLevel;
+			map_msg->layer		= msg->layer;
+			map_msg->memOffset	= msg->memOffset;
 
+			CHECK( _MapImageToCpu( map_msg ) );
+			
+			req_layout->result->offset = BytesUL(0);	// offset added when mapped memory
+		}
+		else
+		{
+			// mapped memory must be in smae range as image level (layer)
+			CHECK_ERR( req_layout->result->offset >= _memMapper.MappedOffset() and
+					   req_layout->result->offset + req_layout->result->size <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
+		}
+
+		// read
+		BytesUL		readn;
+		CHECK_ERR( _memMapper.ReadImage( OUT readn, OUT *msg->writableBuffer, msg->dimension, BytesUL(msg->rowPitch), BytesUL(msg->slicePitch),
+										 msg->offset, req_layout->result->dimension, req_layout->result->offset, req_layout->result->size,
+										 req_layout->result->rowPitch, req_layout->result->slicePitch ) );
+
+		msg->result.Set( msg->writableBuffer->SubArray( 0, usize(readn) ) );
 		
 		// unmap
 		if ( not was_mapped )
@@ -661,63 +648,49 @@ namespace PlatformVK
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
 		CHECK_ERR( msg->memOffset == BytesUL(0) );	// not supported yet
+		CHECK_ERR( msg->data.Size() >= msg->dimension.z * msg->slicePitch );
+		CHECK_ERR( IsNotZero( msg->dimension ) );
 		
 		const bool	was_mapped	= _memMapper.IsMapped();
-
-		BytesUL		dst_offset;
-		BytesUL		dst_size;
-		BytesUL		dst_row_pitch;
-		BytesUL		dst_slice_pitch;
-		uint4		dst_dim;
+		
+		Message< GpuMsg::GetImageMemoryLayout >		req_layout{ msg->mipLevel, msg->layer };
+		SendTo( _GetParents().Front(), req_layout );
 
 		// map memory
 		if ( not was_mapped )
 		{
 			Message< GpuMsg::MapImageToCpu >	map_msg;
-			map_msg->flags		= GpuMsg::MapImageToCpu::EMappingFlags::WriteDiscard;
-			map_msg->level		= msg->level;
-			map_msg->layer		= ImageLayer( msg->offset.w );
+			map_msg->flags		= GpuMsg::MapImageToCpu::EMappingFlags::Write;
+			map_msg->mipLevel	= msg->mipLevel;
+			map_msg->layer		= msg->layer;
 			map_msg->memOffset	= msg->memOffset;
 
 			CHECK( _MapImageToCpu( map_msg ) );
 
-			dst_offset		= BytesUL(0);
-			dst_size		= map_msg->range->size;
-			dst_row_pitch	= map_msg->pixelAlign->rowPitch;
-			dst_slice_pitch	= map_msg->pixelAlign->slicePitch;
-			dst_dim			= *map_msg->dimension;
+			req_layout->result->offset = BytesUL(0);	// offset added when mapped memory
 		}
 		else
 		{
 			// mapped memory must be in smae range as image level (layer)
-			VkSubresourceLayout sub_res_layout	= {};
-			EImage::type		img_type;
-
-			_GetSubResource( msg->level.Get(), 0, OUT sub_res_layout, OUT img_type, OUT dst_dim );
-
-			dst_offset		= BytesUL(sub_res_layout.offset);
-			dst_size		= BytesUL(sub_res_layout.size);
-			dst_row_pitch	= BytesUL(sub_res_layout.rowPitch);
-			dst_slice_pitch	= BytesUL(img_type == EImage::Tex3D ? sub_res_layout.depthPitch : sub_res_layout.arrayPitch);
-
-			CHECK_ERR( sub_res_layout.offset >= _memMapper.MappedOffset() and
-					   sub_res_layout.offset + sub_res_layout.size <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
+			CHECK_ERR( req_layout->result->offset >= _memMapper.MappedOffset() and
+					   req_layout->result->offset + req_layout->result->size <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
 		}
 
 		// write
 		BytesUL	written;
-		CHECK_ERR( _memMapper.WriteImage( OUT written, OUT msg->data, msg->dimension, BytesUL(msg->rowPitch), BytesUL(msg->slicePitch),
-										  msg->offset, dst_dim, dst_offset, dst_size, dst_row_pitch, dst_slice_pitch ) );
+		CHECK_ERR( _memMapper.WriteImage( OUT written, OUT msg->data, msg->dimension.xyz(), BytesUL(msg->rowPitch), BytesUL(msg->slicePitch),
+										  msg->offset, req_layout->result->dimension, req_layout->result->offset, req_layout->result->size,
+										  req_layout->result->rowPitch, req_layout->result->slicePitch ) );
 		
 		// flush
 		if ( not _flags[ EGpuMemory::CoherentWithCPU ] )
 		{
-			Message< GpuMsg::FlushMemoryRange >	flush;
-			flush->offset	= dst_offset;
-			flush->size		= dst_size;
+			Message< GpuMsg::FlushMemoryRange >	flush{ req_layout->result->offset, req_layout->result->size };
 
 			CHECK( _FlushMemoryRange( flush ) );
 		}
+
+		msg->wasWritten.Set( written );
 
 		// unmap
 		if ( not was_mapped )

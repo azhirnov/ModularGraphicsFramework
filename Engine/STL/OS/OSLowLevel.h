@@ -2,51 +2,51 @@
 
 #pragma once
 
-#include "Base/Common.h"
+#include "Engine/STL/OS/Base/Common.h"
 
 #ifdef PLATFORM_SDL
-#	include "SDL/SyncPrimitives.h"
-#	include "SDL/Thread.h"
-#	include "SDL/Library.h"
-#	include "SDL/Timer.h"
-#	include "SDL/FileSystem.h"
-#	include "SDL/SDLUtils.h"
-#	include "SDL/RandDevice.h"
+#	include "Engine/STL/OS/SDL/SyncPrimitives.h"
+#	include "Engine/STL/OS/SDL/Thread.h"
+#	include "Engine/STL/OS/SDL/Library.h"
+#	include "Engine/STL/OS/SDL/Timer.h"
+#	include "Engine/STL/OS/SDL/FileSystem.h"
+#	include "Engine/STL/OS/SDL/SDLUtils.h"
+#	include "Engine/STL/OS/SDL/RandDevice.h"
 #else
 
 # ifdef GX_USE_STD
-#	include "STD/Thread.h"
-#	include "STD/Timer.h"
+#	include "Engine/STL/OS/STD/Thread.h"
+#	include "Engine/STL/OS/STD/Timer.h"
 # endif
 
 # ifdef PLATFORM_WINDOWS
-#	include "Windows/SyncPrimitives.h"
-#	include "Windows/Thread.h"
-#	include "Windows/Library.h"
-#	include "Windows/Timer.h"
-#	include "Windows/FileSystem.h"
-#	include "Windows/PlatformUtils.h"
-#	include "Windows/RandDevice.h"
+#	include "Engine/STL/OS/Windows/SyncPrimitives.h"
+#	include "Engine/STL/OS/Windows/Thread.h"
+#	include "Engine/STL/OS/Windows/Library.h"
+#	include "Engine/STL/OS/Windows/Timer.h"
+#	include "Engine/STL/OS/Windows/FileSystem.h"
+#	include "Engine/STL/OS/Windows/PlatformUtils.h"
+#	include "Engine/STL/OS/Windows/RandDevice.h"
 # endif
 
 # ifdef PLATFORM_BASE_POSIX
-#	include "Posix/SyncPrimitives.h"
-#	include "Posix/Thread.h"
-#	include "Posix/Library.h"
-#	include "Posix/Timer.h"
-#	include "Posix/FileSystem.h"
-#	include "Posix/PlatformUtils.h"
-#	include "Posix/RandDevice.h"
+#	include "Engine/STL/OS/Posix/SyncPrimitives.h"
+#	include "Engine/STL/OS/Posix/Thread.h"
+#	include "Engine/STL/OS/Posix/Library.h"
+#	include "Engine/STL/OS/Posix/Timer.h"
+#	include "Engine/STL/OS/Posix/FileSystem.h"
+#	include "Engine/STL/OS/Posix/PlatformUtils.h"
+#	include "Engine/STL/OS/Posix/RandDevice.h"
 # endif
 
 # ifdef PLATFORM_ANDROID
-#	include "Android/OSAndroid.h"
+#	include "Engine/STL/OS/Android/OSAndroid.h"
 # endif
 
 #endif
 
-#include "Base/BaseFileSystem.h"
-#include "Base/Endianes.h"
+#include "Engine/STL/OS/Base/BaseFileSystem.h"
+#include "Engine/STL/OS/Base/Endianes.h"
 
 
 namespace GX_STL

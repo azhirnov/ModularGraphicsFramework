@@ -108,7 +108,7 @@ namespace PipelineCompiler
 	{
 		template <typename T>
 		static bool _Run (const glslang::TConstUnionArray& src, bool single, INOUT int &index, OUT DeserializedShader::Constant::ValueArray_t &result) {
-			return _Run2( src, single, INOUT index, result, T() );
+			return _Run2( src, single, INOUT index, OUT result, T() );
 		}
 
 

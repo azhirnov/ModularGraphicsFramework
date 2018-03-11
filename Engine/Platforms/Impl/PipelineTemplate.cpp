@@ -5,9 +5,9 @@
 	This is a single thread module!
 */
 
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/Context.h"
-#include "Engine/Platforms/Shared/GPU/Thread.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/Context.h"
+#include "Engine/Platforms/Public/GPU/Thread.h"
 
 #ifdef GRAPHICS_API_VULKAN
 #include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"

@@ -5,11 +5,13 @@
 
 #pragma once
 
-#include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
+#include "Engine/Platforms/Public/GPU/Framebuffer.h"
 
 namespace Engine
 {

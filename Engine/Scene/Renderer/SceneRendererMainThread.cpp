@@ -1,9 +1,9 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Scene/Shared/Scene.h"
+#include "Engine/Scene/Public/Scene.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
 #include "Engine/Scene/Impl/BaseSceneModule.h"
-#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
+#include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 namespace Engine
 {

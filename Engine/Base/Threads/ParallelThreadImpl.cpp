@@ -165,7 +165,7 @@ namespace Base
 			if ( factor > 0.5 )
 				OS::Thread::Yield();
 			else
-				OS::Thread::Sleep( TimeL::FromMilliSeconds( 10 ) );
+				OS::Thread::Sleep( 10_milliSec );
 		}
 	}
 	

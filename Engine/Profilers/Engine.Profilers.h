@@ -5,5 +5,5 @@
 #pragma once
 
 
-#include "Engine/Profilers/Shared/GpuStatistic.h"
+#include "Engine/Profilers/Public/GpuStatistic.h"
 

@@ -1,9 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/OpenGL/Impl/GL4Sampler.h"
-#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/OpenGL/Impl/GL4Sampler.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 namespace Engine
 {

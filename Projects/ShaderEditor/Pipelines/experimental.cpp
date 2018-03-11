@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'C:\Projects\graphxgenengine\Projects\ShaderEditorTools\Experimental.cpp'
-// Created at: 2018/02/17 - 11:15:30
+// Origin file: 'c:\projects\graphxgenengine\projects\shadereditortools\experimental.cpp'
+// Created at: 2018/03/11 - 09:54:21
 
 #include "all_pipelines.h"
 
@@ -16,12 +16,12 @@ void Create_experimental (PipelineTemplateDescriptor& descr)
 	descr.renderState.inputAssembly.topology         = EPrimitive::TriangleStrip;
 	descr.renderState.inputAssembly.primitiveRestart = false;
 
-	descr.dynamicStates = EPipelineDynamicState::bits() | EPipelineDynamicState::Viewport | EPipelineDynamicState::Scissor;
-	descr.supportedShaders = EShader::bits() | EShader::Vertex | EShader::Fragment;
-	descr.supportedPrimitives = EPrimitive::bits() | EPrimitive::TriangleStrip;
+	descr.dynamicStates = EPipelineDynamicState::Viewport | EPipelineDynamicState::Scissor;
+	descr.supportedShaders = EShader::Vertex | EShader::Fragment;
+	descr.supportedPrimitives = EPrimitive::TriangleStrip;
 
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddUniformBuffer( "", 288_b, 0, 0, EShader::bits() | EShader::Fragment )
+			.AddUniformBuffer( "", 288_b, 0, 0, EShader::Fragment )
 			.Finish();
 
 	descr.Vertex().StringGLSL( 
@@ -122,13 +122,13 @@ out gl_PerVertex {
 
 
 
-const vec2 g_Positions[4] = { vec2(-1.0, 1.0), vec2(-1.0), vec2(1.0), vec2(1.0, -1.0) };
+const vec2 g_Positions[4] = { vec2( -1.0, 1.0 ), vec2( -1.0 ), vec2( 1.0 ), vec2( 1.0, -1.0 ) };
 
 //---------------------------------
 
 void main ()
 {
-	gl_Position=vec4( g_Positions[gl_VertexID], float(0.0), float(1.0) );
+	gl_Position = vec4( g_Positions[gl_VertexID], float( 0.0 ), float( 1.0 ) );
 }
 
 
@@ -252,21 +252,21 @@ R"#(#version 450 core
 layout(location=0) out   vec4 out_Color0;
 
 layout(binding=0) layout(std140) uniform ShadertoyUB {
-	layout(offset=0, align=16) vec4  iResolution;    // offset: 0, align: 16
-	layout(offset=16, align=4) float  iTime;    // offset: 16, align: 4
-	layout(offset=20, align=4) float  iTimeDelta;    // offset: 20, align: 4
-	layout(offset=24, align=4) int  iFrame;    // offset: 24, align: 4
-	layout(offset=28, align=4) float  _padding0;    // offset: 28, align: 4
-	layout(offset=32, align=16) vec4  iChannelTime[4];    // offset: 32, align: 16
-	layout(offset=96, align=16) vec4  iChannelResolution[4];    // offset: 96, align: 16
-	layout(offset=160, align=16) vec4  iMouse;    // offset: 160, align: 16
-	layout(offset=176, align=16) vec4  iDate;    // offset: 176, align: 16
-	layout(offset=192, align=4) float  iSampleRate;    // offset: 192, align: 4
-	layout(offset=196, align=4) float  _padding1;    // offset: 196, align: 4
-	layout(offset=200, align=4) float  _padding2;    // offset: 200, align: 4
-	layout(offset=204, align=4) float  _padding3;    // offset: 204, align: 4
-	layout(offset=208, align=16) vec4  iCameraFrustum[4];    // offset: 208, align: 16
-	layout(offset=272, align=16) vec4  iCameraPos;    // offset: 272, align: 16
+	layout(offset=0, align=16) vec4  iResolution;
+	layout(offset=16, align=4) float  iTime;
+	layout(offset=20, align=4) float  iTimeDelta;
+	layout(offset=24, align=4) int  iFrame;
+	layout(offset=28, align=4) float  _padding0;
+	layout(offset=32, align=16) vec4  iChannelTime[4];
+	layout(offset=96, align=16) vec4  iChannelResolution[4];
+	layout(offset=160, align=16) vec4  iMouse;
+	layout(offset=176, align=16) vec4  iDate;
+	layout(offset=192, align=4) float  iSampleRate;
+	layout(offset=196, align=4) float  _padding1;
+	layout(offset=200, align=4) float  _padding2;
+	layout(offset=204, align=4) float  _padding3;
+	layout(offset=208, align=16) vec4  iCameraFrustum[4];
+	layout(offset=272, align=16) vec4  iCameraPos;
 
 } ;
 
@@ -278,24 +278,22 @@ void mainImage (out vec4 fragColor, in vec2 fragCoord);
 
 void main ()
 {
-	vec2 coord;
-	coord=gl_FragCoord.xy;
+	vec2 coord = gl_FragCoord.xy;
 	mainImage( out_Color0, coord );
 }
 
 
 void mainImage (out vec4 fragColor, in vec2 fragCoord)
 {
-	vec2 uv;
-	uv=(fragCoord.xy/iResolution.xyz.xy);
-	fragColor=vec4( uv, (float(0.5)+(float(0.5)*sin( iTime ))), float(1.0) );
+	vec2 uv = (fragCoord.xy / iResolution.xy);
+	fragColor = vec4( uv, (float( 0.5 ) + (float( 0.5 ) * sin( iTime ))), float( 1.0 ) );
 }
 
 
 
 )#"_str );
 	descr.Fragment().ArraySPIRV({ 
-0x07230203, 0x00010000, 0x00080002, 0x0000003C, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
+0x07230203, 0x00010000, 0x00080002, 0x0000003B, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
 0x00000000, 0x0003000E, 0x00000000, 0x00000001, 0x0007000F, 0x00000004, 0x00000005, 0x6E69616D, 0x00000000, 0x00000013, 0x00000017, 0x00030010, 
 0x00000005, 0x00000007, 0x00030007, 0x00000001, 0x00000000, 0x002E0003, 0x00000002, 0x000001C2, 0x00000001, 0x4F202F2F, 0x646F4D70, 0x50656C75, 
 0x65636F72, 0x64657373, 0x746E6520, 0x702D7972, 0x746E696F, 0x69616D20, 0x2F2F0A6E, 0x4D704F20, 0x6C75646F, 0x6F725065, 0x73736563, 0x63206465, 
@@ -331,23 +329,23 @@ void mainImage (out vec4 fragColor, in vec2 fragCoord)
 0x00000020, 0x00000021, 0x00000004, 0x0004001C, 0x00000022, 0x00000008, 0x00000021, 0x0004001C, 0x00000023, 0x00000008, 0x00000021, 0x0004001C, 
 0x00000024, 0x00000008, 0x00000021, 0x0011001E, 0x00000025, 0x00000008, 0x00000007, 0x00000007, 0x0000001F, 0x00000007, 0x00000022, 0x00000023, 
 0x00000008, 0x00000008, 0x00000007, 0x00000007, 0x00000007, 0x00000007, 0x00000024, 0x00000008, 0x00040020, 0x00000026, 0x00000002, 0x00000025, 
-0x0004003B, 0x00000026, 0x00000027, 0x00000002, 0x0004002B, 0x0000001F, 0x00000028, 0x00000000, 0x00040017, 0x00000029, 0x00000007, 0x00000003, 
-0x00040020, 0x0000002A, 0x00000002, 0x00000008, 0x0004002B, 0x00000007, 0x00000030, 0x3F000000, 0x0004002B, 0x0000001F, 0x00000031, 0x00000001, 
-0x00040020, 0x00000032, 0x00000002, 0x00000007, 0x0004002B, 0x00000007, 0x00000038, 0x3F800000, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 
-0x00000004, 0x000200F8, 0x00000006, 0x0004003B, 0x0000000B, 0x00000011, 0x00000007, 0x0004003B, 0x00000009, 0x00000018, 0x00000007, 0x0004003B, 
-0x0000000B, 0x00000019, 0x00000007, 0x00040008, 0x00000001, 0x0000006F, 0x00000000, 0x0004003D, 0x00000008, 0x00000014, 0x00000013, 0x0007004F, 
-0x0000000A, 0x00000015, 0x00000014, 0x00000014, 0x00000000, 0x00000001, 0x0003003E, 0x00000011, 0x00000015, 0x00040008, 0x00000001, 0x00000070, 
-0x00000000, 0x0004003D, 0x0000000A, 0x0000001A, 0x00000011, 0x0003003E, 0x00000019, 0x0000001A, 0x00060039, 0x00000003, 0x0000001B, 0x0000000F, 
-0x00000018, 0x00000019, 0x0004003D, 0x00000008, 0x0000001C, 0x00000018, 0x0003003E, 0x00000017, 0x0000001C, 0x000100FD, 0x00010038, 0x00050036, 
-0x00000003, 0x0000000F, 0x00000000, 0x0000000C, 0x00030037, 0x00000009, 0x0000000D, 0x00030037, 0x0000000B, 0x0000000E, 0x000200F8, 0x00000010, 
-0x0004003B, 0x0000000B, 0x0000001D, 0x00000007, 0x00040008, 0x00000001, 0x00000077, 0x00000000, 0x0004003D, 0x0000000A, 0x0000001E, 0x0000000E, 
-0x00050041, 0x0000002A, 0x0000002B, 0x00000027, 0x00000028, 0x0004003D, 0x00000008, 0x0000002C, 0x0000002B, 0x0007004F, 0x0000000A, 0x0000002D, 
-0x0000002C, 0x0000002C, 0x00000000, 0x00000001, 0x00050088, 0x0000000A, 0x0000002E, 0x0000001E, 0x0000002D, 0x0003003E, 0x0000001D, 0x0000002E, 
-0x00040008, 0x00000001, 0x00000078, 0x00000000, 0x0004003D, 0x0000000A, 0x0000002F, 0x0000001D, 0x00050041, 0x00000032, 0x00000033, 0x00000027, 
-0x00000031, 0x0004003D, 0x00000007, 0x00000034, 0x00000033, 0x0006000C, 0x00000007, 0x00000035, 0x00000002, 0x0000000D, 0x00000034, 0x00050085, 
-0x00000007, 0x00000036, 0x00000030, 0x00000035, 0x00050081, 0x00000007, 0x00000037, 0x00000030, 0x00000036, 0x00050051, 0x00000007, 0x00000039, 
-0x0000002F, 0x00000000, 0x00050051, 0x00000007, 0x0000003A, 0x0000002F, 0x00000001, 0x00070050, 0x00000008, 0x0000003B, 0x00000039, 0x0000003A, 
-0x00000037, 0x00000038, 0x0003003E, 0x0000000D, 0x0000003B, 0x000100FD, 0x00010038 });
+0x0004003B, 0x00000026, 0x00000027, 0x00000002, 0x0004002B, 0x0000001F, 0x00000028, 0x00000000, 0x00040020, 0x00000029, 0x00000002, 0x00000008, 
+0x0004002B, 0x00000007, 0x0000002F, 0x3F000000, 0x0004002B, 0x0000001F, 0x00000030, 0x00000001, 0x00040020, 0x00000031, 0x00000002, 0x00000007, 
+0x0004002B, 0x00000007, 0x00000037, 0x3F800000, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 0x00000004, 0x000200F8, 0x00000006, 0x0004003B, 
+0x0000000B, 0x00000011, 0x00000007, 0x0004003B, 0x00000009, 0x00000018, 0x00000007, 0x0004003B, 0x0000000B, 0x00000019, 0x00000007, 0x00040008, 
+0x00000001, 0x0000006E, 0x00000000, 0x0004003D, 0x00000008, 0x00000014, 0x00000013, 0x0007004F, 0x0000000A, 0x00000015, 0x00000014, 0x00000014, 
+0x00000000, 0x00000001, 0x0003003E, 0x00000011, 0x00000015, 0x00040008, 0x00000001, 0x0000006F, 0x00000000, 0x0004003D, 0x0000000A, 0x0000001A, 
+0x00000011, 0x0003003E, 0x00000019, 0x0000001A, 0x00060039, 0x00000003, 0x0000001B, 0x0000000F, 0x00000018, 0x00000019, 0x0004003D, 0x00000008, 
+0x0000001C, 0x00000018, 0x0003003E, 0x00000017, 0x0000001C, 0x000100FD, 0x00010038, 0x00050036, 0x00000003, 0x0000000F, 0x00000000, 0x0000000C, 
+0x00030037, 0x00000009, 0x0000000D, 0x00030037, 0x0000000B, 0x0000000E, 0x000200F8, 0x00000010, 0x0004003B, 0x0000000B, 0x0000001D, 0x00000007, 
+0x00040008, 0x00000001, 0x00000075, 0x00000000, 0x0004003D, 0x0000000A, 0x0000001E, 0x0000000E, 0x00050041, 0x00000029, 0x0000002A, 0x00000027, 
+0x00000028, 0x0004003D, 0x00000008, 0x0000002B, 0x0000002A, 0x0007004F, 0x0000000A, 0x0000002C, 0x0000002B, 0x0000002B, 0x00000000, 0x00000001, 
+0x00050088, 0x0000000A, 0x0000002D, 0x0000001E, 0x0000002C, 0x0003003E, 0x0000001D, 0x0000002D, 0x00040008, 0x00000001, 0x00000076, 0x00000000, 
+0x0004003D, 0x0000000A, 0x0000002E, 0x0000001D, 0x00050041, 0x00000031, 0x00000032, 0x00000027, 0x00000030, 0x0004003D, 0x00000007, 0x00000033, 
+0x00000032, 0x0006000C, 0x00000007, 0x00000034, 0x00000002, 0x0000000D, 0x00000033, 0x00050085, 0x00000007, 0x00000035, 0x0000002F, 0x00000034, 
+0x00050081, 0x00000007, 0x00000036, 0x0000002F, 0x00000035, 0x00050051, 0x00000007, 0x00000038, 0x0000002E, 0x00000000, 0x00050051, 0x00000007, 
+0x00000039, 0x0000002E, 0x00000001, 0x00070050, 0x00000008, 0x0000003A, 0x00000038, 0x00000039, 0x00000036, 0x00000037, 0x0003003E, 0x0000000D, 
+0x0000003A, 0x000100FD, 0x00010038 });
 
 };
 };

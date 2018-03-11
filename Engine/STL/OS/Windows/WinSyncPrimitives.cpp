@@ -1,15 +1,16 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/OS/Windows/SyncPrimitives.h"
-#include "Engine/STL/Algorithms/ArrayUtils.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/Engine.Config.h"
 
 #if defined( PLATFORM_WINDOWS ) and not defined( PLATFORM_SDL )
 
+#include "Engine/STL/OS/Windows/SyncPrimitives.h"
+#include "Engine/STL/Algorithms/ArrayUtils.h"
+#include "Engine/STL/Math/BinaryMath.h"
 #include "Engine/STL/OS/Windows/Library.h"
 #include "Engine/STL/OS/Base/ReadWriteSyncEmulation.h"
 #include "Engine/STL/OS/Base/ConditionVariableEmulation.h"
-
 #include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace GX_STL
@@ -92,14 +93,14 @@ namespace OS
 	
 
 
-	typedef VOID	(CALLBACK *PInitializeSRWLockProc_t)		 (OUT   PSRWLOCK SRWLock);
-	typedef VOID	(CALLBACK *PAcquireSRWLockExclusiveProc_t)	 (INOUT PSRWLOCK SRWLock);
+	typedef void	(CALLBACK *PInitializeSRWLockProc_t)		 (OUT   PSRWLOCK SRWLock);
+	typedef void	(CALLBACK *PAcquireSRWLockExclusiveProc_t)	 (INOUT PSRWLOCK SRWLock);
 	typedef BOOLEAN	(CALLBACK *PTryAcquireSRWLockExclusiveProc_t)(INOUT PSRWLOCK SRWLock);
-	typedef VOID	(CALLBACK *PReleaseSRWLockExclusiveProc_t)	 (INOUT PSRWLOCK SRWLock);
-	typedef VOID	(CALLBACK *PAcquireSRWLockSharedProc_t)		 (INOUT PSRWLOCK SRWLock);
+	typedef void	(CALLBACK *PReleaseSRWLockExclusiveProc_t)	 (INOUT PSRWLOCK SRWLock);
+	typedef void	(CALLBACK *PAcquireSRWLockSharedProc_t)		 (INOUT PSRWLOCK SRWLock);
 	typedef BOOLEAN	(CALLBACK *PTryAcquireSRWLockSharedProc_t)	 (INOUT PSRWLOCK SRWLock);
-	typedef VOID	(CALLBACK *PReleaseSRWLockSharedProc_t)		 (INOUT PSRWLOCK SRWLock);
-	typedef	VOID	(CALLBACK *PDeleteSRWLockProc_t)			 (INOUT PSRWLOCK SRWLock);
+	typedef void	(CALLBACK *PReleaseSRWLockSharedProc_t)		 (INOUT PSRWLOCK SRWLock);
+	typedef	void	(CALLBACK *PDeleteSRWLockProc_t)			 (INOUT PSRWLOCK SRWLock);
 
 
 
@@ -129,13 +130,13 @@ namespace OS
 	typedef ConditionVariableEmulation	TDefConditionVariable;
 
 
-	VOID CALLBACK DefInitializeSRWLock (/*out*/ PSRWLOCK SRWLock)
+	void CALLBACK DefInitializeSRWLock (/*out*/ PSRWLOCK SRWLock)
 	{
 		HandleToPointerRef< TDefReadWriteSync >( SRWLock ) = new TDefReadWriteSync;
 	}
 
 
-	VOID CALLBACK DefAcquireSRWLockExclusive (/*inout*/ PSRWLOCK SRWLock)
+	void CALLBACK DefAcquireSRWLockExclusive (/*inout*/ PSRWLOCK SRWLock)
 	{
 		HandleToPointer< TDefReadWriteSync >( SRWLock )->LockWrite();
 	}
@@ -147,13 +148,13 @@ namespace OS
 	}
 
 
-	VOID CALLBACK DefReleaseSRWLockExclusive (/*inout*/ PSRWLOCK SRWLock)
+	void CALLBACK DefReleaseSRWLockExclusive (/*inout*/ PSRWLOCK SRWLock)
 	{
 		HandleToPointer< TDefReadWriteSync >( SRWLock )->UnlockWrite();
 	}
 
 
-	VOID CALLBACK DefAcquireSRWLockShared (/*inout*/ PSRWLOCK SRWLock)
+	void CALLBACK DefAcquireSRWLockShared (/*inout*/ PSRWLOCK SRWLock)
 	{
 		HandleToPointer< TDefReadWriteSync >( SRWLock )->LockRead();
 	}
@@ -165,20 +166,20 @@ namespace OS
 	}
 
 
-	VOID CALLBACK DefReleaseSRWLockShared (/*inout*/ PSRWLOCK SRWLock)
+	void CALLBACK DefReleaseSRWLockShared (/*inout*/ PSRWLOCK SRWLock)
 	{
 		HandleToPointer< TDefReadWriteSync >( SRWLock )->UnlockRead();
 	}
 	
 
-	VOID CALLBACK DefDeleteSRWLock (/*inout*/ PSRWLOCK SRWLock)
+	void CALLBACK DefDeleteSRWLock (/*inout*/ PSRWLOCK SRWLock)
 	{
 		delete HandleToPointer< TDefReadWriteSync >( SRWLock );
 		HandleToPointerRef< TDefReadWriteSync >( SRWLock ) = null;
 	}
 	
 
-	VOID CALLBACK WinDeleteSRWLock (/*inout*/ PSRWLOCK SRWLock)
+	void CALLBACK WinDeleteSRWLock (/*inout*/ PSRWLOCK SRWLock)
 	{
 		GX_UNUSED( SRWLock );
 		return;
@@ -321,9 +322,9 @@ namespace OS
 	
 
 
-	typedef VOID	(CALLBACK *PInitializeConditionVariableProc_t)(OUT   PCONDITION_VARIABLE ConditionVariable);
-	typedef VOID	(CALLBACK *PWakeConditionVariableProc_t)	  (INOUT PCONDITION_VARIABLE ConditionVariable);
-	typedef VOID	(CALLBACK *PWakeAllConditionVariableProc_t)	  (INOUT PCONDITION_VARIABLE ConditionVariable);
+	typedef void	(CALLBACK *PInitializeConditionVariableProc_t)(OUT   PCONDITION_VARIABLE ConditionVariable);
+	typedef void	(CALLBACK *PWakeConditionVariableProc_t)	  (INOUT PCONDITION_VARIABLE ConditionVariable);
+	typedef void	(CALLBACK *PWakeAllConditionVariableProc_t)	  (INOUT PCONDITION_VARIABLE ConditionVariable);
 	typedef BOOL	(CALLBACK *PSleepConditionVariableCSProc_t)	  (INOUT PCONDITION_VARIABLE ConditionVariable,
 																	INOUT PCRITICAL_SECTION CriticalSection,
 																	        DWORD dwMilliseconds);
@@ -331,23 +332,23 @@ namespace OS
 																	INOUT PSRWLOCK SRWLock,
 																	        DWORD dwMilliseconds,
 																	        ULONG Flags);
-	typedef VOID	(CALLBACK *PDeleteConditionVariableProc_t)	  (INOUT PCONDITION_VARIABLE ConditionVariable);
+	typedef void	(CALLBACK *PDeleteConditionVariableProc_t)	  (INOUT PCONDITION_VARIABLE ConditionVariable);
 		
 
 
-	static VOID CALLBACK DefInitializeConditionVariable (OUT PCONDITION_VARIABLE cv)
+	static void CALLBACK DefInitializeConditionVariable (OUT PCONDITION_VARIABLE cv)
 	{
 		HandleToPointerRef< TDefConditionVariable >( cv ) = new TDefConditionVariable;
 	}
 
 
-	static VOID CALLBACK DefWakeConditionVariable (INOUT PCONDITION_VARIABLE cv)
+	static void CALLBACK DefWakeConditionVariable (INOUT PCONDITION_VARIABLE cv)
 	{
 		HandleToPointer< TDefConditionVariable >( cv )->Signal();
 	}
 
 
-	static VOID CALLBACK DefWakeAllConditionVariable (INOUT PCONDITION_VARIABLE cv)
+	static void CALLBACK DefWakeAllConditionVariable (INOUT PCONDITION_VARIABLE cv)
 	{
 		HandleToPointer< TDefConditionVariable >( cv )->Broadcast();
 	}
@@ -375,14 +376,14 @@ namespace OS
 	}
 	
 
-	static VOID CALLBACK DefDeleteConditionVariable (INOUT PCONDITION_VARIABLE cv)
+	static void CALLBACK DefDeleteConditionVariable (INOUT PCONDITION_VARIABLE cv)
 	{
 		delete HandleToPointer< TDefConditionVariable >( cv );
 		HandleToPointerRef< TDefConditionVariable >( cv ) = null;
 	}
 	
 
-	static VOID CALLBACK WinDeleteConditionVariable(/*inout*/ PCONDITION_VARIABLE cv)
+	static void CALLBACK WinDeleteConditionVariable(/*inout*/ PCONDITION_VARIABLE cv)
 	{
 		GX_UNUSED( cv );
 	}

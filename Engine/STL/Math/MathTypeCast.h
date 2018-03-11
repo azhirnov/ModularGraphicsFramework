@@ -169,14 +169,6 @@ namespace GXMath
 			return R(value) / R(MaxValue<T>());
 		}
 		
-		/*template <typename R, typename T, usize I, ulong U>
-		CHECKRES inline static Vec<R,I,U>  IntToUNorm (const Vec<T,I,U> &value)
-		{
-			Vec<R,I,U>		res;
-			FOR( i, res )	res[i] = IntToUNorm<R>( value[i] );
-			return res;
-		}*/
-		
 		template <typename R, typename T, usize I, ulong U>
 		CHECKRES inline static Vec<R,I,_UID_UNORM>  IntToUNorm (const Vec<T,I,U> &value)
 		{
@@ -197,14 +189,6 @@ namespace GXMath
 					-R(value) / R(MinValue<T>()) :
 					 R(value) / R(MaxValue<T>());
 		}
-		
-		/*template <typename R, typename T, usize I, ulong U>
-		CHECKRES inline static Vec<R,I,U>  IntToSNorm (const Vec<T,I,U> &value)
-		{
-			Vec<R,I,U>		res;
-			FOR( i, res )	res[i] = IntToSNorm<R>( value[i] );
-			return res;
-		}*/
 		
 		template <typename R, typename T, usize I, ulong U>
 		CHECKRES inline static Vec<R,I,_UID_SNORM>  IntToSNorm (const Vec<T,I,U> &value)

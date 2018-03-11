@@ -2,6 +2,7 @@
 At first it was experimental port of my engine to another architecture, and now I make it as may primary engine.
 
 Features:
+- Event driven architecture.
 - Many graphics APIs without recompilation.
 - Low level abstraction of API: Image, Buffer, CommandBuffer, Pipeline and other.
 - Run many graphics API at one time for debugging - to see different behavior (WIP).
@@ -15,7 +16,7 @@ Supported APIs:
 - OpenGL 4.4
 - DirectX 11 (WIP)
 - OpenCL 1.1
-- Software renderer (WIP)
+- Software renderer
 - (OpenGL ES 3.0 - somewhen)
 
 Supported OS:

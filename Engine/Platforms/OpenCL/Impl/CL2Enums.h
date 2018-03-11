@@ -2,18 +2,19 @@
 
 #pragma once
 
-#include "Engine/Platforms/OpenCL/Impl/cl2.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
-#include "Engine/Platforms/Shared/GPU/BufferEnums.h"
-#include "Engine/Platforms/Shared/GPU/CommandEnums.h"
-#include "Engine/Platforms/Shared/GPU/MemoryEnums.h"
-#include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
-#include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
-#include "Engine/Platforms/Shared/GPU/ImageEnums.h"
-#include "Engine/Platforms/Shared/GPU/ObjectEnums.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
+#include "Engine/Platforms/OpenCL/Impl/cl2.h"
+#include "Engine/Platforms/Public/GPU/BufferEnums.h"
+#include "Engine/Platforms/Public/GPU/CommandEnums.h"
+#include "Engine/Platforms/Public/GPU/MemoryEnums.h"
+#include "Engine/Platforms/Public/GPU/PixelFormatEnums.h"
+#include "Engine/Platforms/Public/GPU/ShaderEnums.h"
+#include "Engine/Platforms/Public/GPU/ImageEnums.h"
+#include "Engine/Platforms/Public/GPU/ObjectEnums.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
 
 namespace Engine
 {

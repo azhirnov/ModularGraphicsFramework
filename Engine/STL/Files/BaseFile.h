@@ -100,7 +100,7 @@ namespace File
 		{
 			STATIC_ASSERT( not TypeTraits::IsConstOrVolatile<T> );
 			STATIC_ASSERT( CompileTime::IsMemCopyFromFileAvailable<T> );
-			return ReadBuf( &value, SizeOf( value ) ) == sizeof(value);
+			return ReadBuf( &value, BytesU::SizeOf( value ) ) == BytesU::SizeOf(value);
 		}
 
 		template <typename T>
@@ -151,7 +151,7 @@ namespace File
 		bool Write (const T &value)
 		{
 			STATIC_ASSERT( CompileTime::IsMemCopyFromFileAvailable<T> );
-			return WriteBuf( &value, SizeOf( value ) ) == sizeof(value);
+			return WriteBuf( &value, BytesU::SizeOf( value ) ) == BytesU::SizeOf(value);
 		}
 
 		template <typename T>

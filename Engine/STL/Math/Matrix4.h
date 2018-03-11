@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "MatrixUtils.h"
-#include "2D/Rectangle.h"
+#include "Engine/STL/Math/MatrixUtils.h"
+#include "Engine/STL/Math/2D/Rectangle.h"
 
 namespace GX_STL
 {

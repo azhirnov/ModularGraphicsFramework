@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "GApp.h"
-#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
+#include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 
 GApp::GApp ()
@@ -47,7 +47,7 @@ bool GApp::Initialize (GAPI::type api)
 						CreateInfo::GpuThread{
 							GraphicsSettings{
 								api,
-								CreateInfo::GpuContext::EFlags::bits() | CreateInfo::GpuContext::EFlags::DebugContext
+								CreateInfo::GpuContext::EFlags::DebugContext
 							} }
 					 );
 

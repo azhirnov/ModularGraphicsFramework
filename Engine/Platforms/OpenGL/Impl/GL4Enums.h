@@ -2,22 +2,23 @@
 
 #pragma once
 
-#include "Engine/Platforms/OpenGL/Impl/gl4.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
-#include "Engine/Platforms/Shared/GPU/BufferEnums.h"
-#include "Engine/Platforms/Shared/GPU/CommandEnums.h"
-#include "Engine/Platforms/Shared/GPU/MemoryEnums.h"
-#include "Engine/Platforms/Shared/GPU/MultiSamples.h"
-#include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
-#include "Engine/Platforms/Shared/GPU/RenderPassEnums.h"
-#include "Engine/Platforms/Shared/GPU/RenderStateEnums.h"
-#include "Engine/Platforms/Shared/GPU/SamplerEnums.h"
-#include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
-#include "Engine/Platforms/Shared/GPU/ImageEnums.h"
-#include "Engine/Platforms/Shared/GPU/VertexEnums.h"
-#include "Engine/Platforms/Shared/GPU/ObjectEnums.h"
+#include "Engine/Platforms/OpenGL/Impl/gl4.h"
+#include "Engine/Platforms/Public/GPU/BufferEnums.h"
+#include "Engine/Platforms/Public/GPU/CommandEnums.h"
+#include "Engine/Platforms/Public/GPU/MemoryEnums.h"
+#include "Engine/Platforms/Public/GPU/MultiSamples.h"
+#include "Engine/Platforms/Public/GPU/PixelFormatEnums.h"
+#include "Engine/Platforms/Public/GPU/RenderPassEnums.h"
+#include "Engine/Platforms/Public/GPU/RenderStateEnums.h"
+#include "Engine/Platforms/Public/GPU/SamplerEnums.h"
+#include "Engine/Platforms/Public/GPU/ShaderEnums.h"
+#include "Engine/Platforms/Public/GPU/ImageEnums.h"
+#include "Engine/Platforms/Public/GPU/VertexEnums.h"
+#include "Engine/Platforms/Public/GPU/ObjectEnums.h"
 
 namespace Engine
 {

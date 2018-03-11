@@ -2,12 +2,14 @@
 
 #pragma once
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Sync.h"
-#include "Engine/Platforms/Shared/GPU/PipelineLayout.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Sync.h"
+#include "Engine/Platforms/Public/GPU/PipelineLayout.h"
 
 namespace Engine
 {

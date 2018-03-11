@@ -27,7 +27,7 @@ namespace CompileTime
 	}	// _ctime_hidden_
 
 	template <typename T>
-	static constexpr T IntegerMinLimit = _ctime_hidden_::Int_IsSigned<T>::value ? T( T(1) << (SizeOf<T>::bits-1) ) : T(0);
+	static constexpr T IntegerMinLimit = _ctime_hidden_::Int_IsSigned<T>::value ? T( T(1) << (CompileTime::SizeOf<T>::bits-1) ) : T(0);
 	
 	template <typename T>
 	static constexpr T IntegerMaxLimit = _ctime_hidden_::Int_IsSigned<T>::value ? T( T(-1) & T(~IntegerMinLimit<T>) ) : T(-1);
@@ -61,7 +61,7 @@ namespace CompileTime
 		template <typename T>
 		struct _FromScalar {
 			STATIC_ASSERT( IsScalarOrEnum<T> );
-			typedef typename _FromSize< SizeOf<T>::bytes >::type	type;
+			typedef typename _FromSize< CompileTime::SizeOf<T>::bytes >::type	type;
 		};
 
 		template <typename T>
@@ -111,7 +111,7 @@ namespace CompileTime
 		template <typename T>
 		struct _FromScalar {
 			STATIC_ASSERT( IsScalarOrEnum<T> );
-			typedef typename _FromSize< SizeOf<T>::bytes >::type	type;
+			typedef typename _FromSize< CompileTime::SizeOf<T>::bytes >::type	type;
 		};
 
 		template <typename T>
@@ -155,7 +155,7 @@ namespace CompileTime
 		template <typename T>
 		struct _FromScalar {
 			STATIC_ASSERT( IsScalarOrEnum<T> );
-			typedef typename _FromSize< SizeOf<T>::bytes >::type	type;
+			typedef typename _FromSize< CompileTime::SizeOf<T>::bytes >::type	type;
 		};
 
 		template <typename T>
@@ -191,7 +191,7 @@ namespace CompileTime
 		template <typename T>
 		struct _FromScalar {
 			STATIC_ASSERT( IsScalarOrEnum<T> );
-			typedef typename _FromSize< SizeOf<T>::bytes >::type	type;
+			typedef typename _FromSize< CompileTime::SizeOf<T>::bytes >::type	type;
 		};
 
 		template <typename T>
@@ -232,7 +232,7 @@ namespace CompileTime
 		template <typename T>
 		struct _FromScalar {
 			STATIC_ASSERT( IsScalarOrEnum<T> );
-			typedef typename _FromSize< SizeOf<T>::bytes >::type	type;
+			typedef typename _FromSize< CompileTime::SizeOf<T>::bytes >::type	type;
 		};
 
 		template <typename T>
@@ -268,7 +268,7 @@ namespace CompileTime
 		template <typename T>
 		struct _FromScalar {
 			STATIC_ASSERT( IsScalarOrEnum<T> );
-			typedef typename _FromSize< SizeOf<T>::bytes >::type	type;
+			typedef typename _FromSize< CompileTime::SizeOf<T>::bytes >::type	type;
 		};
 
 		template <typename T>
@@ -311,7 +311,7 @@ namespace CompileTime
 		template <typename T>
 		struct _FromScalar {
 			STATIC_ASSERT( IsScalarOrEnum<T> );
-			typedef typename _FromSize< SizeOf<T>::bytes >::type	type;
+			typedef typename _FromSize< CompileTime::SizeOf<T>::bytes >::type	type;
 		};
 
 		template <typename T>

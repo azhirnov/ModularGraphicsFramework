@@ -2,11 +2,13 @@
 
 #pragma once
 
-#include "Engine/Platforms/OpenCL/Impl/CL2Device.h"
-#include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
-#include "Engine/Platforms/Shared/GPU/Thread.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
+
+#include "Engine/Platforms/OpenCL/Impl/CL2Device.h"
+#include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
+#include "Engine/Platforms/Public/GPU/Thread.h"
 
 namespace Engine
 {

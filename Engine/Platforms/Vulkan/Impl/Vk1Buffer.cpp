@@ -1,11 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 namespace Engine
 {

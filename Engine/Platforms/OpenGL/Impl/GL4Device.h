@@ -2,10 +2,12 @@
 
 #pragma once
 
-#include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4Emulator.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4Emulator.h"
 
 namespace Engine
 {
@@ -49,7 +51,7 @@ namespace PlatformGL
 
 	// methods
 	public:
-		GL4Device (GlobalSystemsRef gs);
+		explicit GL4Device (GlobalSystemsRef gs);
 		~GL4Device ();
 
 		bool Initialize (const uint2 &surfaceSize, EPixelFormat::type colorFormat, EPixelFormat::type depthStencilFormat = Uninitialized,

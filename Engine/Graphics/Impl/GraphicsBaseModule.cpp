@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Graphics/Impl/GraphicsBaseModule.h"
-#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
+#include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 namespace Engine
 {

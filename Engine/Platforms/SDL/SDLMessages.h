@@ -2,11 +2,13 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/OS/Display.h"
-#include "Engine/Platforms/Shared/OS/Window.h"
-#include "Engine/Platforms/Shared/OS/Platform.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_SDL
+
+#include "Engine/Platforms/Public/OS/Display.h"
+#include "Engine/Platforms/Public/OS/Window.h"
+#include "Engine/Platforms/Public/OS/Platform.h"
 
 namespace Engine
 {

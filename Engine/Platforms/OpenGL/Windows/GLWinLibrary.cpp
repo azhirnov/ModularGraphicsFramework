@@ -1,9 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/OpenGL/Windows/GLWinLibrary.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/Engine.Config.h"
 
 #if defined( GRAPHICS_API_OPENGL ) and defined( PLATFORM_WINDOWS )
 
+#include "Engine/Platforms/OpenGL/Windows/GLWinLibrary.h"
 #include "Engine/STL/OS/Windows/WinHeader.h"
 #include "External/opengl/wglext.h"
 

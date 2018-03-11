@@ -1,12 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 namespace Engine
 {
@@ -429,8 +431,8 @@ namespace PlatformGL
 			descr.imgID			= req_image->result.Get(0);
 			descr.binding		= img.binding;
 			descr.stageFlags	= img.stageFlags;
-			descr.access		= img.readAccess and img.writeAccess ? GL_READ_WRITE :
-								  img.writeAccess ? GL_WRITE_ONLY :
+			descr.access		= EShaderMemoryModel::HasReadWriteAccess( img.access ) ? GL_READ_WRITE :
+								  EShaderMemoryModel::HasWriteAccess( img.access ) ? GL_WRITE_ONLY :
 								  GL_READ_ONLY;
 
 			resources.PushBack(ResourceDescr_t( descr ));

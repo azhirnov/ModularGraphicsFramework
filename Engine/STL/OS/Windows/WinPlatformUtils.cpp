@@ -1,11 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/OS/Windows/PlatformUtils.h"
-#include "Engine/STL/OS/Windows/FileSystem.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef PLATFORM_WINDOWS
 
+#include "Engine/STL/OS/Windows/PlatformUtils.h"
+#include "Engine/STL/OS/Windows/FileSystem.h"
+#include "Engine/STL/Math/BinaryMath.h"
 #include "Engine/STL/OS/Base/BaseFileSystem.h"
 #include "Engine/STL/OS/Windows/WinHeader.h"
 

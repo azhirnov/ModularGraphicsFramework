@@ -331,24 +331,26 @@ namespace PipelineCompiler
 
 			if ( q.sample )
 				arg.qualifier |= EVariableQualifier::Sample;
-
-			if ( q.coherent )
-				arg.memoryModel |= EGpuMemoryModel::Coherent;
-
-			if ( q.volatil )
-				arg.memoryModel |= EGpuMemoryModel::Volatile;
-
-			if ( q.restrict )
-				arg.memoryModel |= EGpuMemoryModel::Restrict;
-
-			if ( q.readonly )
-				arg.memoryModel |= EGpuMemoryModel::ReadOnly;
-
-			if ( q.writeonly )
-				arg.memoryModel |= EGpuMemoryModel::WriteOnly;
-
+			
 			if ( q.specConstant )
 				arg.qualifier |= EVariableQualifier::Specialization;
+
+			CHECK_ERR( (q.coherent + q.volatil + q.restrict + q.readonly + q.writeonly) <= 1 );
+
+			if ( q.coherent )
+				arg.memoryModel = EShaderMemoryModel::Coherent;
+
+			if ( q.volatil )
+				arg.memoryModel = EShaderMemoryModel::Volatile;
+
+			if ( q.restrict )
+				arg.memoryModel = EShaderMemoryModel::Restrict;
+
+			if ( q.readonly )
+				arg.memoryModel = EShaderMemoryModel::ReadOnly;
+
+			if ( q.writeonly )
+				arg.memoryModel = EShaderMemoryModel::WriteOnly;
 
 			switch ( q.storage )
 			{
@@ -391,7 +393,7 @@ namespace PipelineCompiler
 			arg.qualifier.Or( EVariableQualifier::BuiltIn, parent->qualifier[EVariableQualifier::BuiltIn] );
 			arg.qualifier.Or( EVariableQualifier::Specialization, parent->qualifier[EVariableQualifier::Specialization] );
 
-			//if ( arg.memoryModel == EGpuMemoryModel::Default )
+			//if ( arg.memoryModel == EShaderMemoryModel::Default )
 			//	arg.memoryModel = parent->memoryModel;
 
 			if ( arg.precision == EPrecision::Default )

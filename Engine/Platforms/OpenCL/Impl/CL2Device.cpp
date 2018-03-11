@@ -1,12 +1,16 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/OpenCL/Impl/CL2Device.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
 # if defined( PLATFORM_WINDOWS )
 #	include "Engine/STL/OS/Windows/WinHeader.h"
 # endif
+
+#include "Engine/Platforms/OpenCL/Impl/CL2Device.h"
+#include "Engine/STL/Log/ToString.h"
 
 namespace Engine
 {

@@ -2,12 +2,14 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GPU/BufferEnums.h"
-#include "Engine/Platforms/Shared/GPU/ImageEnums.h"
-#include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
-#include "Engine/Platforms/Shared/GPU/VertexEnums.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/GPU/BufferEnums.h"
+#include "Engine/Platforms/Public/GPU/ImageEnums.h"
+#include "Engine/Platforms/Public/GPU/ShaderEnums.h"
+#include "Engine/Platforms/Public/GPU/VertexEnums.h"
 
 namespace Engine
 {

@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "MathFunc.h"
-#include "MathTypes.h"
+#include "Engine/STL/Math/MathFunc.h"
+#include "Engine/STL/Math/MathTypes.h"
 #include "Engine/STL/Containers/String.h"
 #include "Engine/STL/Common/Cast.h"
-#include "Mathematics.h"
+#include "Engine/STL/Math/Mathematics.h"
 #include "Engine/STL/CompileTime/StringToID.h"
 
 namespace GX_STL

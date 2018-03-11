@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Graphics/Shared/Font.h"
+#include "Engine/Graphics/Public/Font.h"
 #include "Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
 
 namespace Engine

@@ -34,6 +34,9 @@
 #undef max
 #undef CreateEvent
 #undef FindWindow
-
 #undef Rectangle
 #undef byte
+#undef VOID
+//#undef COMPOUND
+
+using VOID = void;

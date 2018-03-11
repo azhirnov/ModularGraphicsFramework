@@ -1,2 +1,0 @@
-SDL2 is required for all platforms except Windows.
-Download from: https://www.libsdl.org/download-2.0.php

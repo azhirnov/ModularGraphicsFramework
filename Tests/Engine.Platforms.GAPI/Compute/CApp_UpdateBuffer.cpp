@@ -37,7 +37,7 @@ bool CApp::_Test_UpdateBuffer ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ data.Size(), EBufferUsage::TransferSrc | EBufferUsage::TransferDst },
-						EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+						EGpuMemory::CoherentWithCPU,
 						EMemoryAccess::All
 					},
 					OUT buffer

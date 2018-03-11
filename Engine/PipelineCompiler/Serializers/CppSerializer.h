@@ -106,6 +106,7 @@ namespace PipelineCompiler
 		static String  ToString (EShader::bits value);
 		static String  ToString (EPixelFormatClass::type value);
 		static String  ToString (EPixelFormat::type value);
+		static String  ToString (EShaderMemoryModel::type value);
 		
 		static String  ExtractIndent (StringCRef str);
 	};

@@ -115,7 +115,7 @@ namespace PipelineCompiler
 		iter->second.align		= Max( structType.align, iter->second.align );
 		iter->second.packing	|= structType.packing;
 		iter->second.arraySize	= 1;
-		iter->second.memoryModel = EGpuMemoryModel::Default;
+		iter->second.memoryModel = EShaderMemoryModel::Default;
 
 		// compare fields
 		if ( structType.fields.Count() == iter->second.fields.Count() )
@@ -367,7 +367,7 @@ namespace PipelineCompiler
 =================================================
 */
 	BasePipeline::Bindings&  BasePipeline::Bindings::Image (EImage::type imageType, StringCRef name, EPixelFormat::type format,
-															EShader::bits shaderUsage, EGpuMemoryModel::type access)
+															EShader::bits shaderUsage, EShaderMemoryModel::type access)
 	{
 		ImageUniform	img;
 		img.name		= name;
@@ -402,7 +402,7 @@ namespace PipelineCompiler
 =================================================
 */
 	BasePipeline::Bindings&  BasePipeline::Bindings::StorageBuffer (StringCRef name, StringCRef typeName, EShader::bits shaderUsage,
-																	EGpuMemoryModel::type access)
+																	EShaderMemoryModel::type access)
 	{
 		BasePipeline::StorageBuffer	buf;
 		buf.name		= name;
@@ -568,7 +568,7 @@ namespace PipelineCompiler
 		String	str;
 		str << location.BindingToStringGLSL( shaderApi ) << "layout(" << PipelineCompiler::ToStringGLSL( packing ) << ") ";
 
-		if ( memoryModel != EGpuMemoryModel::Default )
+		if ( memoryModel != EShaderMemoryModel::Default )
 			str << PipelineCompiler::ToStringGLSL( memoryModel );
 
 		str << " buffer " << typeName << " {\n" << fields << "\n} " << name << ";\n";

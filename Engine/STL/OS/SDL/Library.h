@@ -2,10 +2,12 @@
 
 #pragma once
 
-#include "Engine/STL/OS/SDL/OS_SDL.h"
-#include "Engine/STL/OS/Base/BaseFileSystem.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_SDL
+
+#include "Engine/STL/OS/SDL/OS_SDL.h"
+#include "Engine/STL/OS/Base/BaseFileSystem.h"
 
 namespace GX_STL
 {

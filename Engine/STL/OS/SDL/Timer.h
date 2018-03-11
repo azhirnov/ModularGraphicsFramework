@@ -2,10 +2,11 @@
 
 #pragma once
 
-#include "OS_SDL.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_SDL
 
+#include "Engine/STL/OS/SDL/OS_SDL.h"
 #include "Engine/STL/OS/Base/Date.h"
 #include "Engine/STL/OS/Windows/Timer.h"
 #include "Engine/STL/OS/Posix/Timer.h"

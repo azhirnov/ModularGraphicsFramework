@@ -1,11 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Profilers/Shared/GpuStatistic.h"
-#include "Engine/Platforms/Shared/OS/Window.h"
-#include "Engine/Platforms/Shared/GPU/Thread.h"
-#include "Engine/Platforms/Shared/GPU/VR.h"
+#include "Engine/Profilers/Public/GpuStatistic.h"
+#include "Engine/Platforms/Public/OS/Window.h"
+#include "Engine/Platforms/Public/GPU/Thread.h"
+#include "Engine/Platforms/Public/GPU/VR.h"
 #include "Engine/Profilers/Impl/ProfilerObjectsConstructor.h"
-#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
+#include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 namespace Engine
 {

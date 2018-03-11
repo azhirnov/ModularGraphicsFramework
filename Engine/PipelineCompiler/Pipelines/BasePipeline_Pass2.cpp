@@ -33,7 +33,7 @@ namespace PipelineCompiler
 					str << "layout(offset=" << usize(fl.offset)
 						<< ", align=" << usize(fl.align) << ") ";
 
-					if ( fl.memoryModel != EGpuMemoryModel::Default )
+					if ( fl.memoryModel != EShaderMemoryModel::Default )
 						str << ToStringGLSL( fl.memoryModel ) << ' ';
 				}
 
@@ -351,8 +351,7 @@ namespace PipelineCompiler
 
 		void operator () (const ImageUniform &src) const
 		{
-			layout.AddImage( src.name, src.imageType, src.format, EGpuMemoryModel::HasWriteAccess( src.memoryModel ),
-							 EGpuMemoryModel::HasReadAccess( src.memoryModel ), src.location.index, src.location.uniqueIndex, src.shaderUsage );
+			layout.AddImage( src.name, src.imageType, src.format, src.memoryModel, src.location.index, src.location.uniqueIndex, src.shaderUsage );
 		}
 
 		void operator () (const UniformBuffer &src) const
@@ -362,8 +361,7 @@ namespace PipelineCompiler
 
 		void operator () (const StorageBuffer &src) const
 		{
-			layout.AddStorageBuffer( src.name, src.staticSize, src.arrayStride, EGpuMemoryModel::HasWriteAccess( src.memoryModel ),
-									 EGpuMemoryModel::HasReadAccess( src.memoryModel ), src.location.index, src.location.uniqueIndex, src.shaderUsage );
+			layout.AddStorageBuffer( src.name, src.staticSize, src.arrayStride, src.memoryModel, src.location.index, src.location.uniqueIndex, src.shaderUsage );
 		}
 
 		// TODO:

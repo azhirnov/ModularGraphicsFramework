@@ -1,12 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 namespace Engine
 {
@@ -32,9 +34,10 @@ namespace PlatformVK
 										>;
 
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetVkPipelineResourceTableID
-										> >
-										::Append< LayoutMsgList_t >;
+											GpuMsg::GetVkPipelineResourceTableID,
+											GpuMsg::PipelineAttachBuffer,
+											GpuMsg::PipelineAttachImage
+										> >::Append< LayoutMsgList_t >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
 
@@ -58,8 +61,17 @@ namespace PlatformVK
 		{
 			VkBufferView			view;
 		};
+		
+		struct BufferRange
+		{
+			BytesUL		offset;
+			BytesUL		size;
+		};
 
 		using DescriptorPoolSizes_t	= FixedSizeArray< VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE >;
+		
+		using ResourceCache_t		= Union< ImageViewDescriptor, BufferRange >;
+		using CachedResources_t		= Array< ResourceCache_t >;
 
 		using ResourceDescr_t		= Union< ImageDescr, BufferDescr, TextureBufferDescr >;
 		using ResourceDescrArray_t	= Array< ResourceDescr_t >;
@@ -93,9 +105,11 @@ namespace PlatformVK
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetVkPipelineResourceTableID (const Message< GpuMsg::GetVkPipelineResourceTableID > &);
 		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &);
+		bool _PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &);
+		bool _GetVkPipelineResourceTableID (const Message< GpuMsg::GetVkPipelineResourceTableID > &);
 
 	private:
 		bool _IsCreated ();
@@ -135,6 +149,8 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkPrivateClasses );
+		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_PipelineAttachImage );
+		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_PipelineAttachBuffer );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkPipelineResourceTableID );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
@@ -236,6 +252,26 @@ namespace PlatformVK
 		return true;
 	}
 	
+/*
+=================================================
+	_AttachModule
+=================================================
+*/
+	bool Vk1PipelineResourceTable::_PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &msg)
+	{
+		return true;
+	}
+	
+/*
+=================================================
+	_AttachModule
+=================================================
+*/
+	bool Vk1PipelineResourceTable::_PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &msg)
+	{
+		return true;
+	}
+
 /*
 =================================================
 	_DetachModule

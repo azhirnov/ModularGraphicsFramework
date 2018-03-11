@@ -2,10 +2,14 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GPU/Thread.h"
-#include "Engine/Platforms/Soft/Impl/SWMessages.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/GPU/Thread.h"
+#include "Engine/Platforms/Soft/Impl/SWMessages.h"
+#include "Engine/Platforms/Soft/Impl/SWDeviceProperties.h"
+#include "Engine/Platforms/Soft/Impl/SWDevice.h"
 
 namespace Engine
 {
@@ -17,6 +21,7 @@ namespace GpuMsg
 	struct GetSWPrivateClasses
 	{
 		struct Classes {
+			PlatformSW::SWDevice *	device	= null;
 		};
 
 		Out< Classes >		result;
@@ -54,9 +59,12 @@ namespace PlatformSW
 											ModuleMsg::OnModuleDetached
 										>;
 
+		using EDbgReport	= SWDevice::EDbgReport;
+
+
 	// variables
 	private:
-		//Ptr< SWDevice >		_swDevice;
+		Ptr< SWDevice >		_swDevice;
 
 
 	// methods
@@ -65,10 +73,10 @@ namespace PlatformSW
 					   const ModuleConfig &config,
 					   const TypeIdList *msgTypes,
 					   const TypeIdList *eventTypes);
-
-		//Ptr< SWDevice >	GetDevice ()	const	{ return _swDevice; }
 		
 		ModulePtr _GetGPUThread (const ModulePtr &);
+		
+		Ptr< SWDevice >	GetDevice ()	const	{ return _swDevice; }
 
 
 	// message handlers
@@ -83,8 +91,22 @@ namespace PlatformSW
 	private:
 		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
 		bool _DeviceDeleted (const Message< ModuleMsg::Delete > &);
+
+
+	protected:
+		void _DbgReport (StringCRef log, EDbgReport::bits flags, StringCRef file, int line) const;
 	};
 
+
+#	define SW_DEBUG_REPORT( _condition_, _message_, _flags_ ) \
+		if ( SWDeviceProperties.vulkanCompatibility ) { \
+			if ( not (_condition_) ) { \
+				_DbgReport( _message_, _flags_, __FILE__, __LINE__ ); \
+			} \
+		}
+
+#	define SW_DEBUG_REPORT2( _condition_, _flags_ ) \
+		SW_DEBUG_REPORT( (_condition_), GX_TO_ANSI_STRING(_condition_), _flags_ )
 
 }	// PlatformSW
 }	// Engine

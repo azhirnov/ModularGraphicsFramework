@@ -6,33 +6,6 @@
 
 namespace PipelineCompiler
 {
-	
-	struct EGpuMemoryModel
-	{
-		// see https://www.khronos.org/opengl/wiki/Image_Load_Store#Memory_qualifiers
-		// https://www.khronos.org/opengl/wiki/Memory_Model
-
-		enum type : uint
-		{
-			Default		= 0,
-
-			Coherent	= 1 << 0,
-			Volatile	= 1 << 1,
-			Restrict	= 1 << 2,
-			ReadOnly	= 1 << 3,
-			WriteOnly	= 1 << 4,
-
-			Unknown		= ~0u,
-		};
-
-		GX_ENUM_BIT_OPERATIONS( type );
-
-		static String ToString (type value);
-
-		static bool HasWriteAccess (type value);
-		static bool HasReadAccess (type value);
-	};
-
 
 	enum class EShaderType : uint
 	{
@@ -517,50 +490,7 @@ namespace PipelineCompiler
 
 		static type		FromString (StringCRef typeName);
 	};
-	
-	
 
-//-----------------------------------------------------------------------------//
-// EGpuMemoryModel
-	
-	inline String  EGpuMemoryModel::ToString (type value)
-	{
-		String str;
-		
-		for (uint i = 0; i < CompileTime::SizeOf< EGpuMemoryModel::type >::bits; ++i)
-		{
-			const type	t = type(1 << i);
-
-			if ( not EnumEq( value, t ) )
-				continue;
-
-			if ( not str.Empty() )
-				str << " | ";
-
-			switch (t)
-			{
-				case Coherent :		str << "Coherent";	break;
-				case Volatile :		str << "Volatile";	break;
-				case Restrict :		str << "Restrict";	break;
-				case ReadOnly :		str << "ReadOnly";	break;
-				case WriteOnly :	str << "WriteOnly";	break;
-				default :			RETURN_ERR( "unknown memory model type!" );
-			}
-		}
-		return str;
-	}
-	
-
-	inline bool EGpuMemoryModel::HasWriteAccess (type value)
-	{
-		return value != EGpuMemoryModel::ReadOnly;
-	}
-
-
-	inline bool EGpuMemoryModel::HasReadAccess (type value)
-	{
-		return value == EGpuMemoryModel::ReadOnly;
-	}
 
 
 

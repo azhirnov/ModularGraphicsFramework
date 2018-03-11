@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GPU/IDs.h"
+#include "Engine/Platforms/Public/GPU/IDs.h"
 
 #ifdef COMPUTE_API_OPENCL
 

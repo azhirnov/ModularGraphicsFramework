@@ -1,11 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
-#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
+
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 namespace Engine
 {

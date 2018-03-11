@@ -1,12 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/Tools/WindowHelper.h"
+#include "Engine/Config/Engine.Config.h"
+
+#ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/Public/Tools/WindowHelper.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinContext.h"
-#include "Engine/Platforms/Shared/Tools/AsyncCommandsEmulator.h"
-
-#ifdef GRAPHICS_API_OPENGL
+#include "Engine/Platforms/Public/Tools/AsyncCommandsEmulator.h"
 
 namespace Engine
 {

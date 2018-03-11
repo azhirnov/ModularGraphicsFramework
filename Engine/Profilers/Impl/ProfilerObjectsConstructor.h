@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Profilers/Shared/IDs.h"
+#include "Engine/Profilers/Public/IDs.h"
 
 namespace Engine
 {

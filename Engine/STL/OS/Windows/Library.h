@@ -2,9 +2,11 @@
 
 #pragma once
 
-#include "Engine/STL/OS/Windows/OSWindows.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #if defined( PLATFORM_WINDOWS ) and not defined( PLATFORM_SDL )
+
+#include "Engine/STL/OS/Windows/OSWindows.h"
 
 namespace GX_STL
 {

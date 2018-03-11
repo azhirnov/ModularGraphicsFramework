@@ -5,7 +5,7 @@
 
 bool CApp::_Test_DynamicBuffer ()
 {
-	const BytesU	buf_size = SizeOf<Pipelines::DynamicBuffer_SSBO>() + SizeOf<Pipelines::DynamicBuffer_Struct>() * 100;
+	const BytesU	buf_size = SizeOf<Pipelines::DynamicBuffer_SSBO> + SizeOf<Pipelines::DynamicBuffer_Struct> * 100;
 
 	// create resources
 	auto	factory	= ms->GlobalSystems()->modulesFactory;
@@ -27,7 +27,7 @@ bool CApp::_Test_DynamicBuffer ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ buf_size, EBufferUsage::TransferDst | EBufferUsage::Storage },
-						EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+						EGpuMemory::CoherentWithCPU,
 						EMemoryAccess::All
 					},
 					OUT buffer
@@ -68,13 +68,13 @@ bool CApp::_Test_DynamicBuffer ()
 
 	Message< GpuMsg::WriteToGpuMemory >	write_cmd{ BinArrayCRef::FromValue(st_buf) };
 	buffer->Send( write_cmd );
-	CHECK_ERR( *write_cmd->wasWritten == BytesUL(SizeOf(st_buf)) );
+	CHECK_ERR( *write_cmd->wasWritten == BytesUL::SizeOf(st_buf) );
 
 
 	// build command buffer
 	cmdBuilder->Send< GpuMsg::CmdBegin >({ cmd_buffer });
 
-	cmdBuilder->Send< GpuMsg::CmdFillBuffer >({ buffer, 0, buf_size - SizeOf(st_buf), SizeOf(st_buf) });	// clear dynamic part
+	cmdBuilder->Send< GpuMsg::CmdFillBuffer >({ buffer, 0, buf_size - BytesU::SizeOf(st_buf), BytesU::SizeOf(st_buf) });	// clear dynamic part
 
 	cmdBuilder->Send< GpuMsg::CmdBindComputePipeline >({ pipeline });
 	cmdBuilder->Send< GpuMsg::CmdBindComputeResourceTable >({ resource_table });
@@ -97,7 +97,7 @@ bool CApp::_Test_DynamicBuffer ()
 	buffer->Send( read_cmd );
 
 	Pipelines::DynamicBuffer_SSBO const&	res_stbuf  = *reinterpret_cast< Pipelines::DynamicBuffer_SSBO const *>( dst_data.ptr() );
-	Pipelines::DynamicBuffer_Struct const*	res_dynbuf = reinterpret_cast< Pipelines::DynamicBuffer_Struct const *>( dst_data.ptr() + SizeOf(st_buf) );
+	Pipelines::DynamicBuffer_Struct const*	res_dynbuf = reinterpret_cast< Pipelines::DynamicBuffer_Struct const *>( dst_data.ptr() + BytesU::SizeOf(st_buf) );
 
 	CHECK_ERR(	All( res_stbuf.f2 == st_buf.f2 )	and
 				All( res_stbuf.i4 == st_buf.i4 ) );

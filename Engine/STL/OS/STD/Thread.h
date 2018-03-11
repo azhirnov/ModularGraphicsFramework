@@ -2,11 +2,12 @@
 
 #pragma once
 
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/STL.Config.h"
+
+#if defined( GX_USE_STD ) and not defined( PLATFORM_SDL )
+
 #include "Engine/STL/OS/Base/Common.h"
-
-#if defined( GX_USE_STD ) and \
-	not defined( PLATFORM_SDL )
-
 #include <thread>
 
 namespace GX_STL
@@ -120,4 +121,4 @@ namespace OS
 }	// OS
 }	// GX_STL
 
-#endif	// GX_USE_STD
+#endif	// GX_USE_STD and not PLATFORM_SDL

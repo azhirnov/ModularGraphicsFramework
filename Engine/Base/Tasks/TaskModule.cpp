@@ -6,6 +6,9 @@
 #include "Engine/Base/Tasks/TaskManager.h"
 #include "Engine/Base/Threads/ParallelThread.h"
 
+#include "Engine/STL/Containers/CircularQueue.h"
+#include "Engine/STL/ThreadSafe/MtQueue.h"
+
 namespace Engine
 {
 namespace Base

@@ -17,6 +17,6 @@
 #pragma once
 
 
-#include "Engine/Scene/Shared/Camera.h"
-#include "Engine/Scene/Shared/Surface.h"
-#include "Engine/Scene/Shared/Scene.h"
+#include "Engine/Scene/Public/Camera.h"
+#include "Engine/Scene/Public/Surface.h"
+#include "Engine/Scene/Public/Scene.h"

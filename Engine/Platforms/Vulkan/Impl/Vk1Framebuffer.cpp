@@ -1,12 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/Framebuffer.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 namespace Engine
 {
@@ -410,7 +412,7 @@ namespace PlatformVK
 			att.samples			= req_descr->result->samples;
 			att.view			= *req_view->result;
 			
-			const uint4	dim	= ImageUtils::LevelDimension( att.descr.viewType, req_descr->result->dimension, att.descr.baseLevel.Get() );
+			const uint4	dim	= Max( ImageUtils::LevelDimension( att.descr.viewType, req_descr->result->dimension, att.descr.baseLevel.Get() ), 1u );
 
 			// validate
 			CHECK_ERR( All( dim.xy() >= _descr.size ) );

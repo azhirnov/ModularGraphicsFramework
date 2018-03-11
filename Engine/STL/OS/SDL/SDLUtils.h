@@ -2,10 +2,12 @@
 
 #pragma once
 
-#include "Engine/STL/OS/Windows/PlatformUtils.h"
-#include "Engine/STL/OS/Posix/PlatformUtils.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #if defined( PLATFORM_SDL )
+
+#include "Engine/STL/OS/Windows/PlatformUtils.h"
+#include "Engine/STL/OS/Posix/PlatformUtils.h"
 
 namespace GX_STL
 {

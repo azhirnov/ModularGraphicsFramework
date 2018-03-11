@@ -1,9 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/OS/Posix/SyncPrimitives.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #if defined( PLATFORM_BASE_POSIX ) and not defined( PLATFORM_SDL )
+
+#include "Engine/STL/OS/Posix/SyncPrimitives.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 namespace GX_STL
 {

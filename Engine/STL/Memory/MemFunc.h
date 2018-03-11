@@ -99,7 +99,7 @@ namespace GXTypes
 		STATIC_ASSERT( CompileTime::IsPOD<T1> );
 		STATIC_ASSERT( sizeof(dst) == sizeof(src) );
 
-		UnsafeMem::MemCopy( &dst, &src, SizeOf(dst) );
+		UnsafeMem::MemCopy( &dst, &src, SizeOf<T0> );
 	}
 	
 	template <typename T0, typename T1>
@@ -119,7 +119,7 @@ namespace GXTypes
 		STATIC_ASSERT( CompileTime::IsPOD<T1> );
 		STATIC_ASSERT( sizeof(dst) == sizeof(src) );
 
-		UnsafeMem::MemMove( &dst, &src, SizeOf(dst) );
+		UnsafeMem::MemMove( &dst, &src, SizeOf<T0> );
 	}
 
 	template <typename T0, typename T1>
@@ -135,7 +135,7 @@ namespace GXTypes
 	{
 		STATIC_ASSERT( sizeof(left) == sizeof(right) );
 
-		return UnsafeMem::MemCmp( &left, &right, SizeOf(left) );
+		return UnsafeMem::MemCmp( &left, &right, SizeOf<T0> );
 	}
 
 	template <typename T0, typename T1>
@@ -150,14 +150,14 @@ namespace GXTypes
 	inline void ZeroMem (T (&arr)[I]) noexcept
 	{
 		STATIC_ASSERT( CompileTime::IsZeroMemAvailable<T> );
-		UnsafeMem::ZeroMem( arr, I * SizeOf<T>() );
+		UnsafeMem::ZeroMem( arr, I * SizeOf<T> );
 	}
 
 	template <typename T>
 	inline void ZeroMem (T &val) noexcept
 	{
 		STATIC_ASSERT( CompileTime::IsZeroMemAvailable<T> );
-		UnsafeMem::ZeroMem( &val, SizeOf(val) );
+		UnsafeMem::ZeroMem( &val, SizeOf<T> );
 	}
 
 	template <typename T>

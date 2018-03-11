@@ -1,12 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
-#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
-#include "Engine/Platforms/Shared/Tools/ImageViewHashMap.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
+#include "Engine/Platforms/Public/Tools/ImageViewHashMap.h"
 
 namespace Engine
 {
@@ -43,8 +45,7 @@ namespace PlatformVK
 											GpuMsg::GetVkImageID,
 											GpuMsg::CreateVkImageView,
 											GpuMsg::GpuMemoryRegionChanged,
-											GpuMsg::SetImageLayout,
-											GpuMsg::GetImageLayout
+											GpuMsg::GetImageMemoryLayout
 										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
@@ -53,8 +54,8 @@ namespace PlatformVK
 
 		using Utils					= Platforms::ImageUtils;
 
-		using ImageViewMap_t	= PlatformTools::ImageViewHashMap< VkImageView >;
-		using ImageView_t		= ImageViewMap_t::Key_t;
+		using ImageViewMap_t		= PlatformTools::ImageViewHashMap< VkImageView >;
+		using ImageView_t			= ImageViewMap_t::Key_t;
 
 
 	// constants
@@ -98,8 +99,7 @@ namespace PlatformVK
 		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
 		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _SetImageLayout (const Message< GpuMsg::SetImageLayout > &);
-		bool _GetImageLayout (const Message< GpuMsg::GetImageLayout > &);
+		bool _GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &);
 		
 	// event handlers
 		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
@@ -113,6 +113,8 @@ namespace PlatformVK
 
 		void _DestroyAll ();
 		void _DestroyViews ();
+
+		bool _CanHaveImageView () const;
 
 		static VkImageType  _GetImageType (EImage::type type);
 	};
@@ -152,12 +154,11 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Image::_CreateVkImageView );
 		_SubscribeOnMsg( this, &Vk1Image::_GetImageDescriptor );
 		_SubscribeOnMsg( this, &Vk1Image::_SetImageDescriptor );
-		_SubscribeOnMsg( this, &Vk1Image::_SetImageLayout );
-		_SubscribeOnMsg( this, &Vk1Image::_GetImageLayout );
 		_SubscribeOnMsg( this, &Vk1Image::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Image::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Image::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1Image::_GpuMemoryRegionChanged );
+		_SubscribeOnMsg( this, &Vk1Image::_GetImageMemoryLayout );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
@@ -290,11 +291,19 @@ namespace PlatformVK
 		CHECK_ERR( not _IsImageCreated() );
 		CHECK_ERR( _viewMap.Empty() );
 
+		Message< GpuMsg::GetGpuMemoryDescriptor >	req_mem_descr;
+		SendTo( _memObj, req_mem_descr );
+
+		EMemoryAccess::bits	mem_access	= req_mem_descr->result->access;
+		const bool			opt_tiling	= !(mem_access & EMemoryAccess::CpuReadWrite);
+
+		_layout = opt_tiling ? EImageLayout::Undefined : EImageLayout::Preinitialized;
+
 		// create image
 		VkImageCreateInfo	info = {};
 		info.sType			= VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		info.pNext			= null;
-		info.flags			= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
+		info.flags			= 0; //VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
 		info.imageType		= _GetImageType( _descr.imageType );
 		info.format			= Vk1Enum( _descr.format );
 		info.extent.width	= _descr.dimension.x;
@@ -303,9 +312,10 @@ namespace PlatformVK
 		info.mipLevels		= _descr.maxLevel.Get();
 		info.arrayLayers	= _descr.dimension.w;
 		info.samples		= Vk1Enum( _descr.samples );
-		info.tiling			= VK_IMAGE_TILING_OPTIMAL;	// use copy from buffer to write data to texture
+		info.tiling			=  opt_tiling ? VK_IMAGE_TILING_OPTIMAL :	// use copy from buffer to write data to texture
+											VK_IMAGE_TILING_LINEAR;
 		info.usage			= Vk1Enum( _descr.usage );
-		info.initialLayout	= Vk1Enum( EImageLayout::Undefined );	// Undefined or Preinitialized
+		info.initialLayout	= Vk1Enum( _layout );	// Undefined or Preinitialized
 		info.sharingMode	= VK_SHARING_MODE_EXCLUSIVE;
 
 		if ( _descr.imageType == EImage::TexCube or _descr.imageType == EImage::TexCubeArray )
@@ -314,8 +324,6 @@ namespace PlatformVK
 		VK_CHECK( vkCreateImage( GetVkDevice(), &info, null, OUT &_imageId ) );
 		
 		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(_imageId), GetDebugName(), EGpuObject::Image );
-
-		_layout = EImageLayout::Undefined;
 		return true;
 	}
 	
@@ -329,13 +337,16 @@ namespace PlatformVK
 		CHECK_ERR( _IsImageCreated() );
 		CHECK_ERR( _imageView == VK_NULL_HANDLE );
 		
-		Message< GpuMsg::CreateVkImageView >	create;
-		create->viewDescr.layerCount	= _descr.dimension.w;
-		create->viewDescr.levelCount	= _descr.maxLevel.Get();
+		if ( _CanHaveImageView() )
+		{
+			Message< GpuMsg::CreateVkImageView >	create;
+			create->viewDescr.layerCount	= _descr.dimension.w;
+			create->viewDescr.levelCount	= _descr.maxLevel.Get();
 
-		CHECK_ERR( _CreateVkImageView( create ) );
+			CHECK_ERR( _CreateVkImageView( create ) );
 
-		_imageView = *create->result;
+			_imageView = *create->result;
+		}
 		return true;
 	}
 
@@ -356,6 +367,7 @@ namespace PlatformVK
 		_DestroyViews();
 
 		_imageId	= VK_NULL_HANDLE;
+		_layout		= Uninitialized;
 		_descr		= Uninitialized;
 	}
 	
@@ -409,6 +421,7 @@ namespace PlatformVK
 	{
 		CHECK_ERR( _IsImageCreated() );
 		CHECK_ERR( _isBindedToMemory );
+		CHECK_ERR( _CanHaveImageView() );
 
 		ImageView_t		descr = msg->viewDescr;
 
@@ -518,25 +531,47 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_SetImageLayout
+	_GetImageMemoryLayout
 =================================================
 */
-	bool Vk1Image::_SetImageLayout (const Message< GpuMsg::SetImageLayout > &msg)
+	bool Vk1Image::_GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &msg)
 	{
 		CHECK_ERR( _IsImageCreated() );
+		CHECK_ERR( msg->mipLevel < _descr.maxLevel );
+		CHECK_ERR( msg->layer.Get() < _descr.dimension.w );
 
-		_layout = msg->newLayout;
-		return true;
-	}
+		// get subresource layout
+		VkImageSubresource	sub_resource	= {};
+		VkSubresourceLayout sub_res_layout	= {};
 
-/*
-=================================================
-	_GetImageLayout
-=================================================
-*/
-	bool Vk1Image::_GetImageLayout (const Message< GpuMsg::GetImageLayout > &msg)
-	{
-		msg->result.Set( _layout );
+		const bool			is_color		= EPixelFormat::IsColor( _descr.format );
+		const bool			is_depth		= EPixelFormat::IsDepth( _descr.format );
+		const uint4			lvl_dim			= Max( ImageUtils::LevelDimension( _descr.imageType, _descr.dimension, msg->mipLevel.Get() ), 1u );
+
+		CHECK_ERR( is_color or is_depth );
+		sub_resource.aspectMask	= is_color ? VK_IMAGE_ASPECT_COLOR_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
+		sub_resource.mipLevel	= Clamp( msg->mipLevel.Get(), 0u, _descr.maxLevel.Get()-1 );
+		sub_resource.arrayLayer	= Clamp( msg->layer.Get(), 0u, lvl_dim.w-1 );
+
+		vkGetImageSubresourceLayout( GetVkDevice(), _imageId, &sub_resource, OUT &sub_res_layout );
+
+		GpuMsg::GetImageMemoryLayout::MemLayout	result;
+		result.offset		= BytesUL(sub_res_layout.offset);
+		result.size			= BytesUL(sub_res_layout.size);
+		result.rowPitch		= BytesUL(sub_res_layout.rowPitch);
+		result.dimension	= lvl_dim.xyz();
+		
+		if ( _descr.imageType == EImage::Tex3D ) {
+			ASSERT( sub_res_layout.arrayPitch == sub_res_layout.depthPitch );
+			result.slicePitch = BytesUL(sub_res_layout.depthPitch);
+		} else {
+			ASSERT( sub_res_layout.depthPitch == sub_res_layout.arrayPitch );
+			result.slicePitch = BytesUL(sub_res_layout.arrayPitch);
+		}
+		
+		ASSERT( result.slicePitch * result.dimension.z == result.size );
+
+		msg->result.Set( result );
 		return true;
 	}
 
@@ -577,6 +612,16 @@ namespace PlatformVK
 		// request image memory barrier
 		TODO( "" );
 		return false;
+	}
+	
+/*
+=================================================
+	_CanHaveImageView
+=================================================
+*/
+	bool Vk1Image::_CanHaveImageView () const
+	{
+		return _descr.usage != (_descr.usage & (EImageUsage::TransferSrc | EImageUsage::TransferDst));
 	}
 
 }	// PlatformVK

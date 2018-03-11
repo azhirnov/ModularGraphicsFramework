@@ -37,10 +37,10 @@ namespace PipelineCompiler
 			String						typeName;	// for struct only
 			String						name;		// if part of struct, empty otherwise
 			EVariableQualifier::bits	qualifier;
-			EGpuMemoryModel::type		memoryModel	= EGpuMemoryModel::Default;
+			EShaderMemoryModel::type	memoryModel	= EShaderMemoryModel::Default;
 			EShaderVariable::type		type		= EShaderVariable::Unknown;
 			EPrecision::type			precision	= EPrecision::Unknown;
-			//EPixelFormat::type		format		= EPixelFormat::Unknown;
+			EPixelFormat::type			format		= EPixelFormat::Unknown;
 			uint						arraySize	= 0;		// 0 - not array, > 0 - static array, ~0 - dynamic
 			uint						binding		= UMax;
 			bool						isGlobal	= false;	// in some languages globals are forbbiden
@@ -67,7 +67,7 @@ namespace PipelineCompiler
 		using ConstMap_t		= HashMap< const glslang::TConstUnionArray*, Const, ConstUnionHash >;
 
 		using NodeMap_t			= Map< uint, Node >;
-		using LocalVarSet_t		= Set< uint >;
+		using LocalVarSet_t		= Map< uint, String >;					// variable ID, name with prefix from inline function
 		using PendingVars_t		= Map< uint, TypeInfo >;
 		using PendingStrings_t	= Array< String >;
 		using InlFunctionsMap_t	= HashMap< String, TIntermNode* >;		// function signature and node
@@ -134,7 +134,7 @@ namespace PipelineCompiler
 
 		bool IsInline () const		{ return inl.prefixStack.Count() > 1; }
 
-		bool Main (TIntermNode* root, const uint uid, bool skipExternals);
+		bool Main (TIntermNode* root, bool skipExternals);
 	};
 	
 
@@ -224,8 +224,12 @@ namespace PipelineCompiler
 		void operator () (const Matrix<T,C,R> &value)
 		{
 			_CreateType<T>( _type );
-
-			TODO( "" );
+			
+			FOR( i, value )
+			{
+				_strArr.PushBack( _ToString( value[i] ) );
+				_typeArr.PushBack( &_type );
+			}
 		}
 
 

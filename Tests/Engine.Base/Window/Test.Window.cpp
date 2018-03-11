@@ -99,7 +99,7 @@ extern void Test_Window ()
 		auto		task_mngr	= ms->GetModuleByID( TaskManagerModuleID );
 		ModulePtr	thread2;
 
-		WindowAppPtr	app1 = New< WindowApp >( task_mngr, req_ids->result->window, CreateInfo::Window{ "window-0", EFlags::bits() | EFlags::Resizable, uint2(800,600), int2(800,600) } );
+		WindowAppPtr	app1 = New< WindowApp >( task_mngr, req_ids->result->window, CreateInfo::Window{ "window-0", EFlags::Resizable, uint2(800,600), int2(800,600) } );
 		WindowAppPtr	app2 = New< WindowApp >( task_mngr, req_ids->result->window, CreateInfo::Window{ "window-1", EFlags::bits(), uint2(800,600), int2(-900,400) } );
 
 		app1->Initialize( thread->GlobalSystems() );

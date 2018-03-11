@@ -549,7 +549,7 @@ namespace PipelineCompiler
 */
 	String  CppSerializer::ToString (StringCRef name, EPipelineDynamicState::bits value) const
 	{
-		String	str;	str << name << " = EPipelineDynamicState::bits()";
+		String	str;
 
 		FOR( i, value )
 		{
@@ -558,20 +558,25 @@ namespace PipelineCompiler
 			if ( not value[t] )
 				continue;
 
+			if ( not str.Empty() )
+				str << " | ";
+
 			switch ( t )
 			{
-				case EPipelineDynamicState::Viewport :				str << " | EPipelineDynamicState::Viewport";			break;
-				case EPipelineDynamicState::Scissor :				str << " | EPipelineDynamicState::Scissor";				break;
-				case EPipelineDynamicState::LineWidth :				str << " | EPipelineDynamicState::LineWidth";			break;
-				case EPipelineDynamicState::DepthBias :				str << " | EPipelineDynamicState::DepthBias";			break;
-				case EPipelineDynamicState::BlendConstants :		str << " | EPipelineDynamicState::BlendConstants";		break;
-				case EPipelineDynamicState::DepthBounds :			str << " | EPipelineDynamicState::DepthBounds";			break;
-				case EPipelineDynamicState::StencilCompareMask :	str << " | EPipelineDynamicState::StencilCompareMask";	break;
-				case EPipelineDynamicState::StencilWriteMask :		str << " | EPipelineDynamicState::StencilWriteMask";	break;
-				case EPipelineDynamicState::StencilReference :		str << " | EPipelineDynamicState::StencilReference";	break;
+				case EPipelineDynamicState::Viewport :				str << "EPipelineDynamicState::Viewport";			break;
+				case EPipelineDynamicState::Scissor :				str << "EPipelineDynamicState::Scissor";			break;
+				case EPipelineDynamicState::LineWidth :				str << "EPipelineDynamicState::LineWidth";			break;
+				case EPipelineDynamicState::DepthBias :				str << "EPipelineDynamicState::DepthBias";			break;
+				case EPipelineDynamicState::BlendConstants :		str << "EPipelineDynamicState::BlendConstants";		break;
+				case EPipelineDynamicState::DepthBounds :			str << "EPipelineDynamicState::DepthBounds";		break;
+				case EPipelineDynamicState::StencilCompareMask :	str << "EPipelineDynamicState::StencilCompareMask";	break;
+				case EPipelineDynamicState::StencilWriteMask :		str << "EPipelineDynamicState::StencilWriteMask";	break;
+				case EPipelineDynamicState::StencilReference :		str << "EPipelineDynamicState::StencilReference";	break;
 				default :											RETURN_ERR( "unknown dynamic state!" );
 			}
 		}
+
+		name >> (" = " >> str);
 		str << ";\n";
 		return str;
 	}
@@ -668,7 +673,7 @@ namespace PipelineCompiler
 			ASSERT( img.binding != UMax and img.uniqueIndex != UMax );
 
 			str << '\n' << indent << "\t\t.AddImage( \"" << img.name << "\", " << ToString( img.imageType )
-				<< ", " << ToString( img.format ) << ", " << img.writeAccess << ", " << img.readAccess << ", "
+				<< ", " << ToString( img.format ) << ", " << ToString( img.access ) << ", "
 				<< img.binding << ", " << img.uniqueIndex << ", " << ToString( img.stageFlags ) << " )";
 		}
 
@@ -689,7 +694,7 @@ namespace PipelineCompiler
 			ASSERT( sb.staticSize > BytesUL(0) or sb.arrayStride > BytesUL(0) );
 
 			str << '\n' << indent << "\t\t.AddStorageBuffer( \"" << sb.name << "\", " << usize(sb.staticSize) << "_b, "
-				<< usize(sb.arrayStride) << "_b, " << sb.writeAccess << ", " << sb.readAccess << ", " << sb.binding << ", "
+				<< usize(sb.arrayStride) << "_b, " << ToString( sb.access ) << ", " << sb.binding << ", "
 				<< sb.uniqueIndex << ", " << ToString( sb.stageFlags ) << " )";
 		}
 
@@ -735,7 +740,7 @@ namespace PipelineCompiler
 */
 	String  CppSerializer::ToString (StringCRef name, EPrimitive::bits value) const
 	{
-		String	str;	str << name << " = EPrimitive::bits()";
+		String	str;
 
 		FOR( i, value )
 		{
@@ -744,8 +749,13 @@ namespace PipelineCompiler
 			if ( not value[t] )
 				continue;
 
-			str << " | " << ToString( t );
+			if ( not str.Empty() )
+				str << " | ";
+
+			str << ToString( t );
 		}
+
+		name >> (" = " >> str);
 		str << ";\n";
 		return str;
 	}
@@ -921,6 +931,25 @@ namespace PipelineCompiler
 		}
 		return str;
 	}
+	
+/*
+=================================================
+	ToString (EShaderMemoryModel)
+=================================================
+*/
+	String  CppSerializer::ToString (EShaderMemoryModel::type value)
+	{
+		switch ( value )
+		{
+			case EShaderMemoryModel::Default :		return "EShaderMemoryModel::Default";
+			case EShaderMemoryModel::Coherent :		return "EShaderMemoryModel::Coherent";
+			case EShaderMemoryModel::Volatile :		return "EShaderMemoryModel::Volatile";
+			case EShaderMemoryModel::Restrict :		return "EShaderMemoryModel::Restrict";
+			case EShaderMemoryModel::ReadOnly :		return "EShaderMemoryModel::ReadOnly";
+			case EShaderMemoryModel::WriteOnly :	return "EShaderMemoryModel::WriteOnly";
+		}
+		RETURN_ERR( "not supported" );
+	}
 
 /*
 =================================================
@@ -1061,7 +1090,9 @@ namespace PipelineCompiler
 		ASSERT( not funcName.Empty() );
 
 		String	str;
-		str << name << ".FuncSW( &SWShaderLang::" << funcName << " );\n";
+		str << "#ifdef GRAPHICS_API_SOFT\n"
+			<< name << ".FuncSW( &SWShaderLang::" << funcName << " );\n"
+			<< "#endif\n";
 		return str;
 	}
 	
@@ -1302,7 +1333,7 @@ namespace PipelineCompiler
 */
 	String  CppSerializer::ToString (EShader::bits value)
 	{
-		String str = "EShader::bits()";
+		String str;
 
 		FOR( i, value )
 		{
@@ -1311,14 +1342,17 @@ namespace PipelineCompiler
 			if ( not value[t] )
 				continue;
 
+			if ( not str.Empty() )
+				str << " | ";
+
 			switch ( t )
 			{
-				case EShader::Vertex :			str << " | EShader::Vertex";			break;
-				case EShader::TessControl :		str << " | EShader::TessControl";		break;
-				case EShader::TessEvaluation :	str << " | EShader::TessEvaluation";	break;
-				case EShader::Geometry :		str << " | EShader::Geometry";			break;
-				case EShader::Fragment :		str << " | EShader::Fragment";			break;
-				case EShader::Compute :			str << " | EShader::Compute";			break;
+				case EShader::Vertex :			str << "EShader::Vertex";			break;
+				case EShader::TessControl :		str << "EShader::TessControl";		break;
+				case EShader::TessEvaluation :	str << "EShader::TessEvaluation";	break;
+				case EShader::Geometry :		str << "EShader::Geometry";			break;
+				case EShader::Fragment :		str << "EShader::Fragment";			break;
+				case EShader::Compute :			str << "EShader::Compute";			break;
 				default :						RETURN_ERR( "unwnown shader type!" );
 			}
 		}

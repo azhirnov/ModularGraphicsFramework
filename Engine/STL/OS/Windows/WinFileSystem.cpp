@@ -1,11 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/OS/Windows/FileSystem.h"
-#include "Engine/STL/Math/BinaryMath.h"
-#include "Engine/STL/Algorithms/FileAddress.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef PLATFORM_WINDOWS
 
+#include "Engine/STL/OS/Windows/FileSystem.h"
+#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Algorithms/FileAddress.h"
 #include "Engine/STL/OS/Base/BaseFileSystem.h"
 #include "Engine/STL/OS/Windows/WinHeader.h"
 
@@ -228,7 +230,7 @@ namespace OS
 	bool WindowsFileSystem::CopyDirectory (StringCRef fromDir, StringCRef toDir)
 	{
 		SHFILEOPSTRUCTA s;
-		UnsafeMem::ZeroMem( &s, SizeOf(s) );
+		UnsafeMem::ZeroMem( &s, BytesU::SizeOf(s) );
 
 		String	from_dir	= fromDir;
 		String	to_dir		= toDir;

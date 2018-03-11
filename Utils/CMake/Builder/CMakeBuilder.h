@@ -1,4 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
+/*
+	This is simple program to generate cmake file from c++ code.
+*/
 
 #pragma once
 
@@ -71,12 +74,9 @@ namespace CMake
 		CMakeProject* AddLibrary (StringCRef name, StringCRef folder = Uninitialized);
 		CMakeProject* AddExecutable (StringCRef name, StringCRef folder = Uninitialized);
 
-		CMakeCompiler*	AddMSVisualStudioCompiler ();
-		CMakeCompiler*	AddGCCompiler ();
-		CMakeCompiler*	AddClangCompiler ();
-
-		//Self*	AddLibraryProjects (StringCRef folder);
-		//Self*	AddExecutableProjects (StringCRef folder);
+		CMakeCompiler*	AddMSVisualStudioCompiler (StringCRef name = "", CMakeCompiler *copyFrom = null);
+		CMakeCompiler*	AddGCCompiler (StringCRef name = "", CMakeCompiler *copyFrom = null);
+		CMakeCompiler*	AddClangCompiler (StringCRef name = "", CMakeCompiler *copyFrom = null);
 
 		Self*	Projects_OutputDirectory (StringCRef folder);
 		Self*	Projects_AddDefinition (StringCRef def, StringCRef enableIf = Uninitialized);
@@ -95,6 +95,9 @@ namespace CMake
 		Self*	SetSystemVersion (StringCRef value, StringCRef enableIf = Uninitialized);
 
 		static HashSet<String> const& GetCPPFilters ();
+		
+		static StringCRef GetTargetPlaceholder ();
+		static StringCRef GetTempFolderForFastCpp ();
 	};
 
 
@@ -155,7 +158,9 @@ namespace CMake
 		bool _ValidateInclude (StringCRef path, bool withOption) const;
 		bool _ValidateLinkDir (StringCRef path, bool withOption) const;
 
-		bool _ToStringNormal (OUT String &src);
+		bool _ProjectToString (OUT String &src) const;
+
+		bool _ToStringNormal (OUT String &src) const;
 
 		bool _ToStringOptimized (OUT String &src) const;
 		bool _BuildNewCppFiles (StringCRef path, const Set<String> &cppFiles, OUT Array<String> &filePaths) const;
@@ -216,7 +221,7 @@ namespace CMake
 
 	// types
 	private:
-		enum class ECompilerName
+		enum class ECompilerClass
 		{
 			MSVisualStudio,
 			Clang,
@@ -234,8 +239,10 @@ namespace CMake
 	// variables
 	private:
 		CMakeBuilder *			_builder;
+		String					_name;
+		String					_enableIf;
 		Configs_t				_configurations;
-		const ECompilerName		_compName;
+		const ECompilerClass	_compName;
 		String					_defaultCfg;
 		StringMap_t				_includeDirs;
 		StringMap_t				_linkDirs;
@@ -245,12 +252,16 @@ namespace CMake
 
 	// methods
 	private:
-		CMakeCompiler (CMakeBuilder *builder, ECompilerName name);
+		CMakeCompiler (CMakeBuilder *builder, ECompilerClass compiler, StringCRef name);
 
 		bool ToString (OUT String &src) override;
 		bool ToString2 (OUT String &src) override;
+
+		void _CopyFrom (CMakeCompiler *other);
 		
 	public:
+		Self*	EnableIf (StringCRef condition);
+
 		Configuration*	AddConfiguration (StringCRef name, Configuration* copyFrom = null);
 
 		Self*	DefaultConfiguration (StringCRef name);

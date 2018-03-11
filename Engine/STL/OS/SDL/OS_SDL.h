@@ -2,9 +2,11 @@
 
 #pragma once
 
-#include "Engine/STL/OS/Base/Common.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_SDL
+
+#include "Engine/STL/OS/Base/Common.h"
 
 # ifdef COMPILER_MSVC
 #	pragma warning (push)

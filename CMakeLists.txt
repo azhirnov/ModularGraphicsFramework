@@ -1,10 +1,10 @@
 # auto generated file
-cmake_minimum_required (VERSION 3.6.3)
+cmake_minimum_required (VERSION 3.6.0)
 
 message( STATUS "==========================================================================\n" )
 message( STATUS "project 'ModularGraphicsFramework' generation started" )
 if ( WIN32 )
-	set (CMAKE_SYSTEM_VERSION "8.1" CACHE TYPE INTERNAL FORCE)
+	set( CMAKE_SYSTEM_VERSION "8.1" CACHE TYPE INTERNAL FORCE )
 endif()
 
 project( "ModularGraphicsFramework" LANGUAGES CXX )
@@ -15,7 +15,13 @@ set( ModularGraphicsFramework_VERSION_MINOR 220 )
 #==================================================================================================
 # Visual Studio Compilation settings
 #==================================================================================================
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+set( COMPILER_MSVC OFF )
+string( FIND "${CMAKE_CXX_COMPILER_ID}" "MSVC" outPos )
+if ( (outPos GREATER -1) )
+	set( COMPILER_MSVC ON )
+endif()
+if ( COMPILER_MSVC )
+	set( DETECTED_COMPILER "COMPILER_MSVC" )
 	string( REPLACE "/EHa" " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" )
 	string( REPLACE "/EHsc" " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" )
 	string( REPLACE "/EHs" " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" )
@@ -24,100 +30,102 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	message( STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}" )
 	message( STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}" )
 	message( STATUS "CMAKE_SHARED_LINKER_FLAGS: ${CMAKE_SHARED_LINKER_FLAGS}" )
-	if (CMAKE_CONFIGURATION_TYPES)
-		set( CMAKE_CONFIGURATION_TYPES DebugAnalyze Debug Profile Release )
-		set( CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING "Configurations" FORCE )
-	endif()
+	set( CMAKE_CONFIGURATION_TYPES DebugAnalyze Debug Profile Release )
+	set( CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING "Configurations" FORCE )
 	
-		# DebugAnalyze
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:DebugAnalyze>: _DEBUG >)
-		set (CMAKE_C_FLAGS_DEBUGANALYZE "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" CACHE INTERNAL "" FORCE)
-		# Debug
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: _DEBUG >)
-		set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_DEBUG  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_LINKED_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" CACHE INTERNAL "" FORCE)
-		# Profile
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Profile>: _NDEBUG NDEBUG >)
-		set (CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_PROFILE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Od /analyze- /EHsc /GR CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_LINKED_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /DEBUG /PROFILE" CACHE INTERNAL "" FORCE)
-		# Release
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>: _NDEBUG NDEBUG >)
-		set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_RELEASE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4715 /we4716 /we4717 /we4927  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14456 /w14457 /w14458 /w14459 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /MD /GT /GL /GF /GS- /W3 /Ox /analyze- /EHs-c- /GR- CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_LINKED_FLAGS_RELEASE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /RELEASE /DYNAMICBASE" CACHE INTERNAL "" FORCE)
+	# DebugAnalyze
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:DebugAnalyze>: _DEBUG > )
+	set( CMAKE_C_FLAGS_DEBUGANALYZE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" CACHE INTERNAL "" FORCE )
+	# Debug
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: _DEBUG > )
+	set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUG  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKED_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" CACHE INTERNAL "" FORCE )
+	# Profile
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Profile>: _NDEBUG NDEBUG > )
+	set( CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /GT /GL /GF /GS- /MD /W3 /Od /analyze- /EHsc /GR CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKED_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /DEBUG /PROFILE" CACHE INTERNAL "" FORCE )
+	# Release
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>: _NDEBUG NDEBUG > )
+	set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /GT /GL /GF /GS- /MD /W3 /Ox /analyze- /EHs-c- /GR- CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKED_FLAGS_RELEASE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /RELEASE /DYNAMICBASE" CACHE INTERNAL "" FORCE )
 	set( CMAKE_BUILD_TYPE "Debug")
-	#--------------------------------------------
-	message( STATUS "CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION: ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}" )
-	
-	#--------------------------------------------
 endif()
 
 
 #==================================================================================================
 # GCC Compilation settings
 #==================================================================================================
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+set( COMPILER_GCC OFF )
+string( FIND "${CMAKE_CXX_COMPILER_ID}" "GNU" outPos )
+if ( (outPos GREATER -1) )
+	set( COMPILER_GCC ON )
+endif()
+if ( COMPILER_GCC )
+	set( DETECTED_COMPILER "COMPILER_GCC" )
 	message( STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}" )
 	message( STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}" )
 	message( STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}" )
 	message( STATUS "CMAKE_SHARED_LINKER_FLAGS: ${CMAKE_SHARED_LINKER_FLAGS}" )
-	if (CMAKE_CONFIGURATION_TYPES)
-		set( CMAKE_CONFIGURATION_TYPES DebugAnalyze Debug Profile Release )
-		set( CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING "Configurations" FORCE )
-	endif()
+	set( CMAKE_CONFIGURATION_TYPES DebugAnalyze Debug Profile Release )
+	set( CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING "Configurations" FORCE )
 	
-		# DebugAnalyze
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:DebugAnalyze>: _DEBUG >)
-		set (CMAKE_C_FLAGS_DEBUGANALYZE "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual  -Wno-unused -Wno-non-template-friend -Wno-literal-suffix -Wno-zero-as-null-pointer-constant  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE)
-		# Debug
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: _DEBUG >)
-		set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_DEBUG  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual  -Wno-unused -Wno-non-template-friend -Wno-literal-suffix -Wno-zero-as-null-pointer-constant  -ggdb -fchkp-check-incomplete-type -Og CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE)
-		# Profile
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Profile>: _NDEBUG NDEBUG >)
-		set (CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_PROFILE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual  -Wno-unused -Wno-non-template-friend -Wno-literal-suffix -Wno-zero-as-null-pointer-constant  -O2 -finline-functions CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE)
-		# Release
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>: _NDEBUG NDEBUG >)
-		set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual  -Wno-unused -Wno-non-template-friend -Wno-literal-suffix -Wno-zero-as-null-pointer-constant  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE)
+	# DebugAnalyze
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:DebugAnalyze>: _DEBUG > )
+	set( CMAKE_C_FLAGS_DEBUGANALYZE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
+	# Debug
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: _DEBUG > )
+	set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUG  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local  -ggdb -fchkp-check-incomplete-type -Og CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKED_FLAGS_DEBUG " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
+	# Profile
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Profile>: _NDEBUG NDEBUG > )
+	set( CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local  -O2 -finline-functions CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKED_FLAGS_PROFILE " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
+	# Release
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>: _NDEBUG NDEBUG > )
+	set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKED_FLAGS_RELEASE " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
 	set( CMAKE_BUILD_TYPE "Debug")
 endif()
 
@@ -125,115 +133,201 @@ endif()
 #==================================================================================================
 # Clang Compilation settings
 #==================================================================================================
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+set( COMPILER_CLANG_APPLE OFF )
+string( FIND "${CMAKE_CXX_COMPILER_ID}" "Clang" outPos )
+if ( (outPos GREATER -1) AND (APPLE) )
+	set( COMPILER_CLANG_APPLE ON )
+endif()
+if ( COMPILER_CLANG_APPLE )
+	set( DETECTED_COMPILER "COMPILER_CLANG_APPLE" )
 	message( STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}" )
 	message( STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}" )
 	message( STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}" )
 	message( STATUS "CMAKE_SHARED_LINKER_FLAGS: ${CMAKE_SHARED_LINKER_FLAGS}" )
-	if (CMAKE_CONFIGURATION_TYPES)
-		set( CMAKE_CONFIGURATION_TYPES DebugAnalyze Debug Profile Release )
-		set( CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING "Configurations" FORCE )
-	endif()
+	set( CMAKE_CONFIGURATION_TYPES DebugAnalyze Debug Profile Release )
+	set( CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING "Configurations" FORCE )
 	
-		# DebugAnalyze
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:DebugAnalyze>: _DEBUG >)
-		set (CMAKE_C_FLAGS_DEBUGANALYZE "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-c++14-extensions -Wno-c++1z-extensions  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE)
-		# Debug
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: _DEBUG >)
-		set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_DEBUG  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-c++14-extensions -Wno-c++1z-extensions  -ggdb -fchkp-check-incomplete-type -Og CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE)
-		# Profile
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Profile>: _NDEBUG NDEBUG >)
-		set (CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_PROFILE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-c++14-extensions -Wno-c++1z-extensions  -O2 -finline-functions CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE)
-		# Release
-		set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>: _NDEBUG NDEBUG >)
-		set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} ")
-		set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ")
-		set (CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} ")
-		set (PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wunused -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion-null -Wzero-as-null-pointer-constant -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=non-template-friend -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new  -Wno-non-template-friend -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-c++14-extensions -Wno-c++1z-extensions  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE)
-		set (PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE)
+	# DebugAnalyze
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:DebugAnalyze>: _DEBUG > )
+	set( CMAKE_C_FLAGS_DEBUGANALYZE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wpointer-arith -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-stack-address -Werror=return-type -Werror=user-defined-literals -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=cast-qual -Werror=unknown-warning-option  -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-unused -Wno-c++14-extensions -Wno-c++1z-extensions  -ggdb -fsanitize=undefined -Og CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE )
+	# Debug
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: _DEBUG > )
+	set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUG  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wpointer-arith -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-stack-address -Werror=return-type -Werror=user-defined-literals -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=cast-qual -Werror=unknown-warning-option  -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-unused -Wno-c++14-extensions -Wno-c++1z-extensions  -ggdb -Og CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE )
+	# Profile
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Profile>: _NDEBUG NDEBUG > )
+	set( CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wpointer-arith -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-stack-address -Werror=return-type -Werror=user-defined-literals -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=cast-qual -Werror=unknown-warning-option  -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-unused -Wno-c++14-extensions -Wno-c++1z-extensions  -O2 -finline-functions CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE )
+	# Release
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>: _NDEBUG NDEBUG > )
+	set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wpointer-arith -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-stack-address -Werror=return-type -Werror=user-defined-literals -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=cast-qual -Werror=unknown-warning-option  -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-unused -Wno-c++14-extensions -Wno-c++1z-extensions  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
 	set( CMAKE_BUILD_TYPE "Debug")
 endif()
 
 
 #==================================================================================================
+# Clang Compilation settings
+#==================================================================================================
+set( COMPILER_CLANG_ANDROID OFF )
+string( FIND "${CMAKE_CXX_COMPILER_ID}" "Clang" outPos )
+if ( (outPos GREATER -1) AND (DEFINED ANDROID) )
+	set( COMPILER_CLANG_ANDROID ON )
+endif()
+if ( COMPILER_CLANG_ANDROID )
+	set( DETECTED_COMPILER "COMPILER_CLANG_ANDROID" )
+	message( STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}" )
+	message( STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}" )
+	message( STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}" )
+	message( STATUS "CMAKE_SHARED_LINKER_FLAGS: ${CMAKE_SHARED_LINKER_FLAGS}" )
+	set( CMAKE_CONFIGURATION_TYPES DebugAnalyze Debug Profile Release )
+	set( CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING "Configurations" FORCE )
+	
+	# DebugAnalyze
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:DebugAnalyze>: _DEBUG > )
+	set( CMAKE_C_FLAGS_DEBUGANALYZE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wpointer-arith -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-stack-address -Werror=return-type -Werror=user-defined-literals -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=cast-qual -Werror=unknown-warning-option  -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-unused -Wno-c++14-extensions -Wno-c++1z-extensions  -ggdb -fsanitize=undefined -Og CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE )
+	# Debug
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: _DEBUG > )
+	set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUG  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wpointer-arith -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-stack-address -Werror=return-type -Werror=user-defined-literals -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=cast-qual -Werror=unknown-warning-option  -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-unused -Wno-c++14-extensions -Wno-c++1z-extensions  -ggdb -Og CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE )
+	# Profile
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Profile>: _NDEBUG NDEBUG > )
+	set( CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wpointer-arith -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-stack-address -Werror=return-type -Werror=user-defined-literals -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=cast-qual -Werror=unknown-warning-option  -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-unused -Wno-c++14-extensions -Wno-c++1z-extensions  -O2 -finline-functions CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE )
+	# Release
+	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>: _NDEBUG NDEBUG > )
+	set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wpointer-arith -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -frtti -fexceptions -Werror=init-self -Werror=parentheses -Werror=return-stack-address -Werror=return-type -Werror=user-defined-literals -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=cast-qual -Werror=unknown-warning-option  -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-unused -Wno-c++14-extensions -Wno-c++1z-extensions  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
+	set( CMAKE_BUILD_TYPE "Debug")
+endif()
+
+
+if ( NOT DEFINED DETECTED_COMPILER )
+	message( FATAL_ERROR "current compiler: '${CMAKE_CXX_COMPILER_ID}' is not configured for this project!" )
+endif()
+
+message( STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} (${CMAKE_CXX_COMPILER_VERSION})" )
+message( STATUS "Compiler name: ${DETECTED_COMPILER}" )
+message( STATUS "target system: ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_VERSION})" )
+message( STATUS "host system: ${CMAKE_HOST_SYSTEM_NAME} (${CMAKE_HOST_SYSTEM_VERSION})" )
+
+#==================================================================================================
 # project: Engine.Config
 #==================================================================================================
-add_library( "Engine.Config" STATIC 
+set( SOURCES 
 		"Engine/Config/Engine.Config.h"
 		"Engine/Config/Engine.Version.h"
 		"Engine/Config/Main.cpp"
 		"Engine/Config/STL.Config.h" )
-
+add_library( "Engine.Config" STATIC ${SOURCES} )
 source_group( "" FILES "Engine/Config/Engine.Config.h" "Engine/Config/Engine.Version.h" "Engine/Config/Main.cpp" "Engine/Config/STL.Config.h" )
 set_property( TARGET "Engine.Config" PROPERTY FOLDER "Engine" )
 target_include_directories( "Engine.Config" PRIVATE "Engine/Config" )
 target_include_directories( "Engine.Config" PUBLIC "Engine/.." )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Engine.Config" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Engine.Config" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Engine.Config" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Engine.Config" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Engine.Config" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Engine.Config" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Engine.Config" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Engine.Config" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Config" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -243,7 +337,7 @@ endif()
 #==================================================================================================
 # project: Engine.STL
 #==================================================================================================
-add_library( "Engine.STL" STATIC 
+set( SOURCES 
 		"Engine/STL/Algorithms/ArrayUtils.h"
 		"Engine/STL/Algorithms/Comparators.h"
 		"Engine/STL/Algorithms/Enum.h"
@@ -500,7 +594,7 @@ add_library( "Engine.STL" STATIC
 		"Engine/STL/Math/3D/Plane.h"
 		"Engine/STL/Math/3D/Transform.h"
 		"Engine/STL/Math/3D/Triangle.h" )
-
+add_library( "Engine.STL" STATIC ${SOURCES} )
 source_group( "Algorithms" FILES "Engine/STL/Algorithms/ArrayUtils.h" "Engine/STL/Algorithms/Comparators.h" "Engine/STL/Algorithms/Enum.h" "Engine/STL/Algorithms/FileAddress.cpp" "Engine/STL/Algorithms/FileAddress.h" "Engine/STL/Algorithms/Hash.h" "Engine/STL/Algorithms/InvokeWithVariant.h" "Engine/STL/Algorithms/Range.h" "Engine/STL/Algorithms/Sorts.h" "Engine/STL/Algorithms/StringParser.cpp" "Engine/STL/Algorithms/StringParser.h" "Engine/STL/Algorithms/StringUtils.h" "Engine/STL/Algorithms/Swap.h" )
 source_group( "Types" FILES "Engine/STL/Types/Bitfield.h" "Engine/STL/Types/DefferedType.h" "Engine/STL/Types/Delegate.h" "Engine/STL/Types/Function.h" "Engine/STL/Types/Limit.h" "Engine/STL/Types/Noncopyable.h" "Engine/STL/Types/Noninstancable.h" "Engine/STL/Types/Optional.h" "Engine/STL/Types/Ptr.h" "Engine/STL/Types/RefCountedObject.h" "Engine/STL/Types/RefCounter.h" "Engine/STL/Types/ScopeSetter.h" "Engine/STL/Types/SharedPointer.h" "Engine/STL/Types/StaticLimit.h" "Engine/STL/Types/StaticRefCountedObject.h" "Engine/STL/Types/Union.h" "Engine/STL/Types/UniquePtr.h" "Engine/STL/Types/VariantCRef.h" "Engine/STL/Types/VariantInterface.h" "Engine/STL/Types/VariantRef.h" "Engine/STL/Types/VariantRefIndexedContainer.h" "Engine/STL/Types/WeakPointer.h" )
 source_group( "Dimensions" FILES "Engine/STL/Dimensions/ByteAndBit.h" "Engine/STL/Dimensions/Percentage.h" "Engine/STL/Dimensions/PowerOfTwoValue.h" "Engine/STL/Dimensions/RadiansAndDegrees.h" )
@@ -541,55 +635,75 @@ target_include_directories( "Engine.STL" PRIVATE "Engine/STL" )
 target_include_directories( "Engine.STL" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.STL" "Engine.Config" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Engine.STL" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Engine.STL" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Engine.STL" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Engine.STL" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Engine.STL" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Engine.STL" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Engine.STL" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Engine.STL" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -599,7 +713,7 @@ endif()
 #==================================================================================================
 # project: Tests.STL
 #==================================================================================================
-add_executable( "Tests.STL" 
+set( SOURCES 
 		"Tests/STL/Common.h"
 		"Tests/STL/Debug.h"
 		"Tests/STL/Main.cpp"
@@ -650,62 +764,86 @@ add_executable( "Tests.STL"
 		"Tests/STL/Test_Types_StringParser.cpp"
 		"Tests/STL/Test_Types_Time.cpp"
 		"Tests/STL/Test_Types_Union.cpp" )
-
+if (DEFINED ANDROID)
+	add_library( "Tests.STL" SHARED ${SOURCES} )
+else()
+	add_executable( "Tests.STL" ${SOURCES} )
+endif()
 source_group( "" FILES "Tests/STL/Common.h" "Tests/STL/Debug.h" "Tests/STL/Main.cpp" "Tests/STL/Test_Algorithms_InvokeWithVariant.cpp" "Tests/STL/Test_Algorithms_Range.cpp" "Tests/STL/Test_CompileTime_MainType.cpp" "Tests/STL/Test_CompileTime_Map.cpp" "Tests/STL/Test_CompileTime_Sequence.cpp" "Tests/STL/Test_CompileTime_StaticFloat.cpp" "Tests/STL/Test_CompileTime_StringToID.cpp" "Tests/STL/Test_CompileTime_TemplateMath.cpp" "Tests/STL/Test_CompileTime_TypeInfo.cpp" "Tests/STL/Test_CompileTime_TypeList.cpp" "Tests/STL/Test_CompileTime_TypeQualifier.cpp" "Tests/STL/Test_CompileTime_TypeTraits.cpp" "Tests/STL/Test_Containers_Adaptors.cpp" "Tests/STL/Test_Containers_Array.cpp" "Tests/STL/Test_Containers_CircularQueue.cpp" "Tests/STL/Test_Containers_HashSet.cpp" "Tests/STL/Test_Containers_IndexedArray.cpp" "Tests/STL/Test_Containers_List.cpp" "Tests/STL/Test_Containers_Map.cpp" "Tests/STL/Test_Containers_Queue.cpp" "Tests/STL/Test_Containers_Set.cpp" "Tests/STL/Test_Containers_String.cpp" "Tests/STL/Test_Math_Abs.cpp" "Tests/STL/Test_Math_Bit.cpp" "Tests/STL/Test_Math_Clamp_Wrap.cpp" "Tests/STL/Test_Math_Color.cpp" "Tests/STL/Test_Math_ColorFormat.cpp" "Tests/STL/Test_Math_Factorial.cpp" "Tests/STL/Test_Math_FloorCeilTruncRoundFract.cpp" "Tests/STL/Test_Math_Frustum.cpp" "Tests/STL/Test_Math_ImageUtils.cpp" "Tests/STL/Test_Math_Matrix.cpp" "Tests/STL/Test_Math_Plane.cpp" "Tests/STL/Test_Math_Transform.cpp" "Tests/STL/Test_OS_Atomic.cpp" "Tests/STL/Test_OS_Date.cpp" "Tests/STL/Test_OS_FileSystem.cpp" "Tests/STL/Test_Runtime_VirtualTypelist.cpp" "Tests/STL/Test_SimpleScript.cpp" "Tests/STL/Test_Temp.cpp" "Tests/STL/Test_Types_Cast.cpp" "Tests/STL/Test_Types_ExtString.cpp" "Tests/STL/Test_Types_FileAddress.cpp" "Tests/STL/Test_Types_Function.cpp" "Tests/STL/Test_Types_StringParser.cpp" "Tests/STL/Test_Types_Time.cpp" "Tests/STL/Test_Types_Union.cpp" )
 set_property( TARGET "Tests.STL" PROPERTY FOLDER "Tests" )
 target_include_directories( "Tests.STL" PRIVATE "Tests/STL" )
 target_include_directories( "Tests.STL" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.STL" "Engine.STL" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Tests.STL" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Tests.STL" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Tests.STL" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Tests.STL" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Tests.STL" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Tests.STL" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Tests.STL" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Tests.STL" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.STL" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -715,7 +853,7 @@ endif()
 #==================================================================================================
 # project: Engine.Physics
 #==================================================================================================
-add_library( "Engine.Physics" STATIC 
+set( SOURCES 
 		"Engine/Physics/Algorithms/AcceleratedMotion.h"
 		"Engine/Physics/Algorithms/Astrophysics.h"
 		"Engine/Physics/Algorithms/Astrophysics_Orbit.h"
@@ -733,7 +871,7 @@ add_library( "Engine.Physics" STATIC
 		"Engine/Physics/Engine.Physics.h"
 		"Engine/Physics/CompileTime/GenType.h"
 		"Engine/Physics/CompileTime/PhysTypeInfo.h" )
-
+add_library( "Engine.Physics" STATIC ${SOURCES} )
 source_group( "Algorithms" FILES "Engine/Physics/Algorithms/AcceleratedMotion.h" "Engine/Physics/Algorithms/Astrophysics.h" "Engine/Physics/Algorithms/Astrophysics_Orbit.h" )
 source_group( "Dimensions" FILES "Engine/Physics/Dimensions/AstrophysicsConstants.h" "Engine/Physics/Dimensions/DefaultTypes.h" "Engine/Physics/Dimensions/PhysicsConstants.h" "Engine/Physics/Dimensions/PhysicsDimension.h" "Engine/Physics/Dimensions/PhysicsValue.h" "Engine/Physics/Dimensions/PhysicsValueMath.h" "Engine/Physics/Dimensions/PhysicsValueUtils.h" "Engine/Physics/Dimensions/PhysicsValueVec.h" "Engine/Physics/Dimensions/PhysicsValueVecI.h" )
 source_group( "Common" FILES "Engine/Physics/Common/Common.h" "Engine/Physics/Common/Main.cpp" )
@@ -744,55 +882,75 @@ target_include_directories( "Engine.Physics" PRIVATE "Engine/Physics" )
 target_include_directories( "Engine.Physics" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.Physics" "Engine.STL" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -802,67 +960,91 @@ endif()
 #==================================================================================================
 # project: Tests.Physics
 #==================================================================================================
-add_executable( "Tests.Physics" 
+set( SOURCES 
 		"Tests/Physics/Common.h"
 		"Tests/Physics/Main.cpp"
 		"Tests/Physics/Test_Algorithms_Orbit.cpp"
 		"Tests/Physics/Test_Dimensions_PhysicsValue.cpp" )
-
+if (DEFINED ANDROID)
+	add_library( "Tests.Physics" SHARED ${SOURCES} )
+else()
+	add_executable( "Tests.Physics" ${SOURCES} )
+endif()
 source_group( "" FILES "Tests/Physics/Common.h" "Tests/Physics/Main.cpp" "Tests/Physics/Test_Algorithms_Orbit.cpp" "Tests/Physics/Test_Dimensions_PhysicsValue.cpp" )
 set_property( TARGET "Tests.Physics" PROPERTY FOLDER "Tests" )
 target_include_directories( "Tests.Physics" PRIVATE "Tests/Physics" )
 target_include_directories( "Tests.Physics" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Physics" "Engine.Physics" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Physics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -872,7 +1054,7 @@ endif()
 #==================================================================================================
 # project: Engine.Base
 #==================================================================================================
-add_library( "Engine.Base" STATIC 
+set( SOURCES 
 		"Engine/Base/Stream/InputStream.cpp"
 		"Engine/Base/Stream/OutputStream.cpp"
 		"Engine/Base/Stream/Stream.h"
@@ -916,7 +1098,7 @@ add_library( "Engine.Base" STATIC
 		"Engine/Base/Threads/ParallelThreadImpl.h"
 		"Engine/Base/Threads/ThreadManager.cpp"
 		"Engine/Base/Threads/ThreadManager.h" )
-
+add_library( "Engine.Base" STATIC ${SOURCES} )
 source_group( "Stream" FILES "Engine/Base/Stream/InputStream.cpp" "Engine/Base/Stream/OutputStream.cpp" "Engine/Base/Stream/Stream.h" "Engine/Base/Stream/StreamManager.cpp" "Engine/Base/Stream/StreamObjectsConstructor.h" )
 source_group( "Tasks" FILES "Engine/Base/Tasks/AsyncMessage.h" "Engine/Base/Tasks/AsyncTask.h" "Engine/Base/Tasks/TaskManager.cpp" "Engine/Base/Tasks/TaskManager.h" "Engine/Base/Tasks/TaskModule.cpp" "Engine/Base/Tasks/TaskModule.h" )
 source_group( "Main" FILES "Engine/Base/Main/MainSystem.cpp" "Engine/Base/Main/MainSystem.h" )
@@ -930,55 +1112,75 @@ target_include_directories( "Engine.Base" PRIVATE "Engine/Base" )
 target_include_directories( "Engine.Base" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.Base" "Engine.STL" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Engine.Base" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Engine.Base" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Engine.Base" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Engine.Base" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Engine.Base" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Engine.Base" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Engine.Base" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Engine.Base" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -988,7 +1190,7 @@ endif()
 #==================================================================================================
 # project: Engine.Platforms
 #==================================================================================================
-add_library( "Engine.Platforms" STATIC 
+set( SOURCES 
 		"Engine/Platforms/OpenGL/Impl/gl4.cpp"
 		"Engine/Platforms/OpenGL/Impl/gl4.h"
 		"Engine/Platforms/OpenGL/Impl/GL4BaseModule.cpp"
@@ -1029,27 +1231,20 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/OpenCL/OpenCLContext.cpp"
 		"Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 		"Engine/Platforms/OpenCL/OpenCLThread.cpp"
-		"Engine/Platforms/Shared/OS/Display.h"
-		"Engine/Platforms/Shared/OS/IDs.h"
-		"Engine/Platforms/Shared/OS/Input.h"
-		"Engine/Platforms/Shared/OS/OSEnums.h"
-		"Engine/Platforms/Shared/OS/Platform.h"
-		"Engine/Platforms/Shared/OS/ScreenCoords.h"
-		"Engine/Platforms/Shared/OS/Window.h"
 		"Engine/Platforms/Input/InputManager.cpp"
 		"Engine/Platforms/Input/InputManager.h"
 		"Engine/Platforms/Input/InputThread.cpp"
-		"Engine/Platforms/Shared/Common.h"
 		"Engine/Platforms/Soft/ShaderLang/gen_Image.h"
 		"Engine/Platforms/Soft/ShaderLang/gen_Texture.h"
 		"Engine/Platforms/Soft/ShaderLang/SWLang.h"
+		"Engine/Platforms/Soft/ShaderLang/SWLangBarrier.h"
 		"Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h"
 		"Engine/Platforms/Soft/ShaderLang/SWLangCommon.h"
 		"Engine/Platforms/Soft/ShaderLang/SWLangGLM.h"
 		"Engine/Platforms/Soft/ShaderLang/SWLangImage.cpp"
 		"Engine/Platforms/Soft/ShaderLang/SWLangImage.h"
+		"Engine/Platforms/Soft/ShaderLang/SWLangShared.h"
 		"Engine/Platforms/Soft/ShaderLang/SWLangTexture.h"
-		"Engine/Platforms/Soft/ShaderLang/SWShaderHelper.cpp"
 		"Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h"
 		"Engine/Platforms/Vulkan/VulkanContext.cpp"
 		"Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
@@ -1060,15 +1255,17 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Soft/Impl/SWCommandBuffer.cpp"
 		"Engine/Platforms/Soft/Impl/SWCommandBuilder.cpp"
 		"Engine/Platforms/Soft/Impl/SWCommandQueue.cpp"
-		"Engine/Platforms/Soft/Impl/SWDeviceLimits.h"
+		"Engine/Platforms/Soft/Impl/SWDevice.cpp"
+		"Engine/Platforms/Soft/Impl/SWDevice.h"
+		"Engine/Platforms/Soft/Impl/SWDeviceProperties.h"
 		"Engine/Platforms/Soft/Impl/SWEnums.h"
 		"Engine/Platforms/Soft/Impl/SWImage.cpp"
 		"Engine/Platforms/Soft/Impl/SWMemory.cpp"
 		"Engine/Platforms/Soft/Impl/SWMessages.h"
 		"Engine/Platforms/Soft/Impl/SWPipeline.cpp"
 		"Engine/Platforms/Soft/Impl/SWPipelineResourceTable.cpp"
-		"Engine/Platforms/Soft/Impl/SWShader.cpp"
-		"Engine/Platforms/Soft/Impl/SWShader.h"
+		"Engine/Platforms/Soft/Impl/SWShaderModel.cpp"
+		"Engine/Platforms/Soft/Impl/SWShaderModel.h"
 		"Engine/Platforms/Soft/Impl/SWSyncManager.cpp"
 		"Engine/Platforms/Soft/Impl/SWSyncObjects.h"
 		"Engine/Platforms/Windows/WinDisplay.cpp"
@@ -1079,6 +1276,48 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Windows/WinObjectsConstructor.h"
 		"Engine/Platforms/Windows/WinPlatform.cpp"
 		"Engine/Platforms/Windows/WinWindow.cpp"
+		"Engine/Platforms/Public/GPU/Buffer.h"
+		"Engine/Platforms/Public/GPU/BufferEnums.h"
+		"Engine/Platforms/Public/GPU/CommandBuffer.h"
+		"Engine/Platforms/Public/GPU/CommandEnums.h"
+		"Engine/Platforms/Public/GPU/Context.h"
+		"Engine/Platforms/Public/GPU/Enums.ToString.h"
+		"Engine/Platforms/Public/GPU/FragmentOutputState.h"
+		"Engine/Platforms/Public/GPU/Framebuffer.h"
+		"Engine/Platforms/Public/GPU/IDs.h"
+		"Engine/Platforms/Public/GPU/Image.cpp"
+		"Engine/Platforms/Public/GPU/Image.h"
+		"Engine/Platforms/Public/GPU/ImageEnums.h"
+		"Engine/Platforms/Public/GPU/ImageLayer.h"
+		"Engine/Platforms/Public/GPU/ImageSwizzle.h"
+		"Engine/Platforms/Public/GPU/Memory.h"
+		"Engine/Platforms/Public/GPU/MemoryEnums.h"
+		"Engine/Platforms/Public/GPU/MipmapLevel.h"
+		"Engine/Platforms/Public/GPU/MultiSamples.h"
+		"Engine/Platforms/Public/GPU/ObjectEnums.h"
+		"Engine/Platforms/Public/GPU/Pipeline.cpp"
+		"Engine/Platforms/Public/GPU/Pipeline.h"
+		"Engine/Platforms/Public/GPU/PipelineLayout.cpp"
+		"Engine/Platforms/Public/GPU/PipelineLayout.h"
+		"Engine/Platforms/Public/GPU/PixelFormatEnums.h"
+		"Engine/Platforms/Public/GPU/RenderPass.cpp"
+		"Engine/Platforms/Public/GPU/RenderPass.h"
+		"Engine/Platforms/Public/GPU/RenderPassEnums.h"
+		"Engine/Platforms/Public/GPU/RenderState.cpp"
+		"Engine/Platforms/Public/GPU/RenderState.h"
+		"Engine/Platforms/Public/GPU/RenderStateEnums.h"
+		"Engine/Platforms/Public/GPU/Sampler.cpp"
+		"Engine/Platforms/Public/GPU/Sampler.h"
+		"Engine/Platforms/Public/GPU/SamplerEnums.h"
+		"Engine/Platforms/Public/GPU/ShaderEnums.h"
+		"Engine/Platforms/Public/GPU/Sync.h"
+		"Engine/Platforms/Public/GPU/Thread.h"
+		"Engine/Platforms/Public/GPU/VertexAttribs.h"
+		"Engine/Platforms/Public/GPU/VertexDescr.h"
+		"Engine/Platforms/Public/GPU/VertexEnums.h"
+		"Engine/Platforms/Public/GPU/VertexInputState.cpp"
+		"Engine/Platforms/Public/GPU/VertexInputState.h"
+		"Engine/Platforms/Public/GPU/VR.h"
 		"Engine/Platforms/Impl/Main.cpp"
 		"Engine/Platforms/Impl/PipelineTemplate.cpp"
 		"Engine/Platforms/Vulkan/Impl/Vk1BaseModule.cpp"
@@ -1116,60 +1355,26 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/Engine.Platforms.h"
 		"Engine/Platforms/Soft/Windows/SwWinSurface.cpp"
 		"Engine/Platforms/Soft/Windows/SwWinSurface.h"
-		"Engine/Platforms/Shared/Tools/AsyncCommandsEmulator.h"
-		"Engine/Platforms/Shared/Tools/GPUThreadHelper.cpp"
-		"Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
-		"Engine/Platforms/Shared/Tools/ImageViewHashMap.h"
-		"Engine/Platforms/Shared/Tools/MemoryMapperHelper.cpp"
-		"Engine/Platforms/Shared/Tools/MemoryMapperHelper.h"
-		"Engine/Platforms/Shared/Tools/WindowHelper.cpp"
-		"Engine/Platforms/Shared/Tools/WindowHelper.h"
 		"Engine/Platforms/OpenGL/Windows/GLWinContext.cpp"
 		"Engine/Platforms/OpenGL/Windows/GLWinContext.h"
 		"Engine/Platforms/OpenGL/Windows/GLWinLibrary.cpp"
 		"Engine/Platforms/OpenGL/Windows/GLWinLibrary.h"
-		"Engine/Platforms/Shared/GPU/Buffer.h"
-		"Engine/Platforms/Shared/GPU/BufferEnums.h"
-		"Engine/Platforms/Shared/GPU/CommandBuffer.h"
-		"Engine/Platforms/Shared/GPU/CommandEnums.h"
-		"Engine/Platforms/Shared/GPU/Context.h"
-		"Engine/Platforms/Shared/GPU/Enums.ToString.h"
-		"Engine/Platforms/Shared/GPU/FragmentOutputState.h"
-		"Engine/Platforms/Shared/GPU/Framebuffer.h"
-		"Engine/Platforms/Shared/GPU/IDs.h"
-		"Engine/Platforms/Shared/GPU/Image.cpp"
-		"Engine/Platforms/Shared/GPU/Image.h"
-		"Engine/Platforms/Shared/GPU/ImageEnums.h"
-		"Engine/Platforms/Shared/GPU/ImageLayer.h"
-		"Engine/Platforms/Shared/GPU/ImageSwizzle.h"
-		"Engine/Platforms/Shared/GPU/Memory.h"
-		"Engine/Platforms/Shared/GPU/MemoryEnums.h"
-		"Engine/Platforms/Shared/GPU/MipmapLevel.h"
-		"Engine/Platforms/Shared/GPU/MultiSamples.h"
-		"Engine/Platforms/Shared/GPU/ObjectEnums.h"
-		"Engine/Platforms/Shared/GPU/Pipeline.cpp"
-		"Engine/Platforms/Shared/GPU/Pipeline.h"
-		"Engine/Platforms/Shared/GPU/PipelineLayout.cpp"
-		"Engine/Platforms/Shared/GPU/PipelineLayout.h"
-		"Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
-		"Engine/Platforms/Shared/GPU/RenderPass.cpp"
-		"Engine/Platforms/Shared/GPU/RenderPass.h"
-		"Engine/Platforms/Shared/GPU/RenderPassEnums.h"
-		"Engine/Platforms/Shared/GPU/RenderState.cpp"
-		"Engine/Platforms/Shared/GPU/RenderState.h"
-		"Engine/Platforms/Shared/GPU/RenderStateEnums.h"
-		"Engine/Platforms/Shared/GPU/Sampler.cpp"
-		"Engine/Platforms/Shared/GPU/Sampler.h"
-		"Engine/Platforms/Shared/GPU/SamplerEnums.h"
-		"Engine/Platforms/Shared/GPU/ShaderEnums.h"
-		"Engine/Platforms/Shared/GPU/Sync.h"
-		"Engine/Platforms/Shared/GPU/Thread.h"
-		"Engine/Platforms/Shared/GPU/VertexAttribs.h"
-		"Engine/Platforms/Shared/GPU/VertexDescr.h"
-		"Engine/Platforms/Shared/GPU/VertexEnums.h"
-		"Engine/Platforms/Shared/GPU/VertexInputState.cpp"
-		"Engine/Platforms/Shared/GPU/VertexInputState.h"
-		"Engine/Platforms/Shared/GPU/VR.h"
+		"Engine/Platforms/Public/Common.h"
+		"Engine/Platforms/Public/Tools/AsyncCommandsEmulator.h"
+		"Engine/Platforms/Public/Tools/GPUThreadHelper.cpp"
+		"Engine/Platforms/Public/Tools/GPUThreadHelper.h"
+		"Engine/Platforms/Public/Tools/ImageViewHashMap.h"
+		"Engine/Platforms/Public/Tools/MemoryMapperHelper.cpp"
+		"Engine/Platforms/Public/Tools/MemoryMapperHelper.h"
+		"Engine/Platforms/Public/Tools/WindowHelper.cpp"
+		"Engine/Platforms/Public/Tools/WindowHelper.h"
+		"Engine/Platforms/Public/OS/Display.h"
+		"Engine/Platforms/Public/OS/IDs.h"
+		"Engine/Platforms/Public/OS/Input.h"
+		"Engine/Platforms/Public/OS/OSEnums.h"
+		"Engine/Platforms/Public/OS/Platform.h"
+		"Engine/Platforms/Public/OS/ScreenCoords.h"
+		"Engine/Platforms/Public/OS/Window.h"
 		"Engine/Platforms/OpenCL/Impl/cl2.cpp"
 		"Engine/Platforms/OpenCL/Impl/cl2.h"
 		"Engine/Platforms/OpenCL/Impl/CL2BaseModule.cpp"
@@ -1193,26 +1398,26 @@ add_library( "Engine.Platforms" STATIC
 		"Engine/Platforms/VR/Emulator/EmulatorVRThread.cpp"
 		"Engine/Platforms/VR/VRObjectsConstructor.cpp"
 		"Engine/Platforms/VR/VRObjectsConstructor.h" )
-
+add_library( "Engine.Platforms" STATIC ${SOURCES} )
 source_group( "OpenGL\\Impl" FILES "Engine/Platforms/OpenGL/Impl/gl4.cpp" "Engine/Platforms/OpenGL/Impl/gl4.h" "Engine/Platforms/OpenGL/Impl/GL4BaseModule.cpp" "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h" "Engine/Platforms/OpenGL/Impl/GL4Buffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4CommandBuffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4CommandBuilder.cpp" "Engine/Platforms/OpenGL/Impl/GL4Device.cpp" "Engine/Platforms/OpenGL/Impl/GL4Device.h" "Engine/Platforms/OpenGL/Impl/GL4Emulator.h" "Engine/Platforms/OpenGL/Impl/GL4Enums.h" "Engine/Platforms/OpenGL/Impl/GL4FlippedSystemFramebuffer.h" "Engine/Platforms/OpenGL/Impl/GL4Framebuffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4Image.cpp" "Engine/Platforms/OpenGL/Impl/GL4Memory.cpp" "Engine/Platforms/OpenGL/Impl/GL4Messages.h" "Engine/Platforms/OpenGL/Impl/GL4Pipeline.cpp" "Engine/Platforms/OpenGL/Impl/GL4PipelineResourceTable.cpp" "Engine/Platforms/OpenGL/Impl/GL4RenderPass.cpp" "Engine/Platforms/OpenGL/Impl/GL4Sampler.cpp" "Engine/Platforms/OpenGL/Impl/GL4Sampler.h" "Engine/Platforms/OpenGL/Impl/GL4SyncManager.cpp" "Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h" )
 source_group( "Soft" FILES "Engine/Platforms/Soft/SoftRendererContext.cpp" "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h" "Engine/Platforms/Soft/SoftRendererThread.cpp" )
 source_group( "SDL" FILES "Engine/Platforms/SDL/SDLDisplay.cpp" "Engine/Platforms/SDL/SDLDisplay.h" "Engine/Platforms/SDL/SDLKeyInput.cpp" "Engine/Platforms/SDL/SDLMessages.h" "Engine/Platforms/SDL/SDLMouseInput.cpp" "Engine/Platforms/SDL/SDLObjectsConstructor.h" "Engine/Platforms/SDL/SDLPlatform.cpp" "Engine/Platforms/SDL/SDLWindow.cpp" )
 source_group( "OpenGL" FILES "Engine/Platforms/OpenGL/OpenGLContext.cpp" "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h" "Engine/Platforms/OpenGL/OpenGLThread.cpp" )
 source_group( "OpenCL" FILES "Engine/Platforms/OpenCL/OpenCLContext.cpp" "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h" "Engine/Platforms/OpenCL/OpenCLThread.cpp" )
-source_group( "Shared\\OS" FILES "Engine/Platforms/Shared/OS/Display.h" "Engine/Platforms/Shared/OS/IDs.h" "Engine/Platforms/Shared/OS/Input.h" "Engine/Platforms/Shared/OS/OSEnums.h" "Engine/Platforms/Shared/OS/Platform.h" "Engine/Platforms/Shared/OS/ScreenCoords.h" "Engine/Platforms/Shared/OS/Window.h" )
 source_group( "Input" FILES "Engine/Platforms/Input/InputManager.cpp" "Engine/Platforms/Input/InputManager.h" "Engine/Platforms/Input/InputThread.cpp" )
-source_group( "Shared" FILES "Engine/Platforms/Shared/Common.h" )
-source_group( "Soft\\ShaderLang" FILES "Engine/Platforms/Soft/ShaderLang/gen_Image.h" "Engine/Platforms/Soft/ShaderLang/gen_Texture.h" "Engine/Platforms/Soft/ShaderLang/SWLang.h" "Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h" "Engine/Platforms/Soft/ShaderLang/SWLangCommon.h" "Engine/Platforms/Soft/ShaderLang/SWLangGLM.h" "Engine/Platforms/Soft/ShaderLang/SWLangImage.cpp" "Engine/Platforms/Soft/ShaderLang/SWLangImage.h" "Engine/Platforms/Soft/ShaderLang/SWLangTexture.h" "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.cpp" "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h" )
+source_group( "Soft\\ShaderLang" FILES "Engine/Platforms/Soft/ShaderLang/gen_Image.h" "Engine/Platforms/Soft/ShaderLang/gen_Texture.h" "Engine/Platforms/Soft/ShaderLang/SWLang.h" "Engine/Platforms/Soft/ShaderLang/SWLangBarrier.h" "Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h" "Engine/Platforms/Soft/ShaderLang/SWLangCommon.h" "Engine/Platforms/Soft/ShaderLang/SWLangGLM.h" "Engine/Platforms/Soft/ShaderLang/SWLangImage.cpp" "Engine/Platforms/Soft/ShaderLang/SWLangImage.h" "Engine/Platforms/Soft/ShaderLang/SWLangShared.h" "Engine/Platforms/Soft/ShaderLang/SWLangTexture.h" "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h" )
 source_group( "Vulkan" FILES "Engine/Platforms/Vulkan/VulkanContext.cpp" "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h" "Engine/Platforms/Vulkan/VulkanThread.cpp" )
-source_group( "Soft\\Impl" FILES "Engine/Platforms/Soft/Impl/SWBaseModule.cpp" "Engine/Platforms/Soft/Impl/SWBaseModule.h" "Engine/Platforms/Soft/Impl/SWBuffer.cpp" "Engine/Platforms/Soft/Impl/SWCommandBuffer.cpp" "Engine/Platforms/Soft/Impl/SWCommandBuilder.cpp" "Engine/Platforms/Soft/Impl/SWCommandQueue.cpp" "Engine/Platforms/Soft/Impl/SWDeviceLimits.h" "Engine/Platforms/Soft/Impl/SWEnums.h" "Engine/Platforms/Soft/Impl/SWImage.cpp" "Engine/Platforms/Soft/Impl/SWMemory.cpp" "Engine/Platforms/Soft/Impl/SWMessages.h" "Engine/Platforms/Soft/Impl/SWPipeline.cpp" "Engine/Platforms/Soft/Impl/SWPipelineResourceTable.cpp" "Engine/Platforms/Soft/Impl/SWShader.cpp" "Engine/Platforms/Soft/Impl/SWShader.h" "Engine/Platforms/Soft/Impl/SWSyncManager.cpp" "Engine/Platforms/Soft/Impl/SWSyncObjects.h" )
+source_group( "Soft\\Impl" FILES "Engine/Platforms/Soft/Impl/SWBaseModule.cpp" "Engine/Platforms/Soft/Impl/SWBaseModule.h" "Engine/Platforms/Soft/Impl/SWBuffer.cpp" "Engine/Platforms/Soft/Impl/SWCommandBuffer.cpp" "Engine/Platforms/Soft/Impl/SWCommandBuilder.cpp" "Engine/Platforms/Soft/Impl/SWCommandQueue.cpp" "Engine/Platforms/Soft/Impl/SWDevice.cpp" "Engine/Platforms/Soft/Impl/SWDevice.h" "Engine/Platforms/Soft/Impl/SWDeviceProperties.h" "Engine/Platforms/Soft/Impl/SWEnums.h" "Engine/Platforms/Soft/Impl/SWImage.cpp" "Engine/Platforms/Soft/Impl/SWMemory.cpp" "Engine/Platforms/Soft/Impl/SWMessages.h" "Engine/Platforms/Soft/Impl/SWPipeline.cpp" "Engine/Platforms/Soft/Impl/SWPipelineResourceTable.cpp" "Engine/Platforms/Soft/Impl/SWShaderModel.cpp" "Engine/Platforms/Soft/Impl/SWShaderModel.h" "Engine/Platforms/Soft/Impl/SWSyncManager.cpp" "Engine/Platforms/Soft/Impl/SWSyncObjects.h" )
 source_group( "Windows" FILES "Engine/Platforms/Windows/WinDisplay.cpp" "Engine/Platforms/Windows/WinDisplay.h" "Engine/Platforms/Windows/WinKeyInput.cpp" "Engine/Platforms/Windows/WinMessages.h" "Engine/Platforms/Windows/WinMouseInput.cpp" "Engine/Platforms/Windows/WinObjectsConstructor.h" "Engine/Platforms/Windows/WinPlatform.cpp" "Engine/Platforms/Windows/WinWindow.cpp" )
+source_group( "Public\\GPU" FILES "Engine/Platforms/Public/GPU/Buffer.h" "Engine/Platforms/Public/GPU/BufferEnums.h" "Engine/Platforms/Public/GPU/CommandBuffer.h" "Engine/Platforms/Public/GPU/CommandEnums.h" "Engine/Platforms/Public/GPU/Context.h" "Engine/Platforms/Public/GPU/Enums.ToString.h" "Engine/Platforms/Public/GPU/FragmentOutputState.h" "Engine/Platforms/Public/GPU/Framebuffer.h" "Engine/Platforms/Public/GPU/IDs.h" "Engine/Platforms/Public/GPU/Image.cpp" "Engine/Platforms/Public/GPU/Image.h" "Engine/Platforms/Public/GPU/ImageEnums.h" "Engine/Platforms/Public/GPU/ImageLayer.h" "Engine/Platforms/Public/GPU/ImageSwizzle.h" "Engine/Platforms/Public/GPU/Memory.h" "Engine/Platforms/Public/GPU/MemoryEnums.h" "Engine/Platforms/Public/GPU/MipmapLevel.h" "Engine/Platforms/Public/GPU/MultiSamples.h" "Engine/Platforms/Public/GPU/ObjectEnums.h" "Engine/Platforms/Public/GPU/Pipeline.cpp" "Engine/Platforms/Public/GPU/Pipeline.h" "Engine/Platforms/Public/GPU/PipelineLayout.cpp" "Engine/Platforms/Public/GPU/PipelineLayout.h" "Engine/Platforms/Public/GPU/PixelFormatEnums.h" "Engine/Platforms/Public/GPU/RenderPass.cpp" "Engine/Platforms/Public/GPU/RenderPass.h" "Engine/Platforms/Public/GPU/RenderPassEnums.h" "Engine/Platforms/Public/GPU/RenderState.cpp" "Engine/Platforms/Public/GPU/RenderState.h" "Engine/Platforms/Public/GPU/RenderStateEnums.h" "Engine/Platforms/Public/GPU/Sampler.cpp" "Engine/Platforms/Public/GPU/Sampler.h" "Engine/Platforms/Public/GPU/SamplerEnums.h" "Engine/Platforms/Public/GPU/ShaderEnums.h" "Engine/Platforms/Public/GPU/Sync.h" "Engine/Platforms/Public/GPU/Thread.h" "Engine/Platforms/Public/GPU/VertexAttribs.h" "Engine/Platforms/Public/GPU/VertexDescr.h" "Engine/Platforms/Public/GPU/VertexEnums.h" "Engine/Platforms/Public/GPU/VertexInputState.cpp" "Engine/Platforms/Public/GPU/VertexInputState.h" "Engine/Platforms/Public/GPU/VR.h" )
 source_group( "Impl" FILES "Engine/Platforms/Impl/Main.cpp" "Engine/Platforms/Impl/PipelineTemplate.cpp" )
 source_group( "Vulkan\\Impl" FILES "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.cpp" "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h" "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h" "Engine/Platforms/Vulkan/Impl/Vk1Buffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1CommandBuffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1CommandBuilder.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Device.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Device.h" "Engine/Platforms/Vulkan/Impl/Vk1Enums.h" "Engine/Platforms/Vulkan/Impl/Vk1Framebuffer.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Image.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Library.h" "Engine/Platforms/Vulkan/Impl/Vk1ManagedMemory.cpp" "Engine/Platforms/Vulkan/Impl/Vk1MemoryManager.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Messages.h" "Engine/Platforms/Vulkan/Impl/Vk1Pipeline.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h" "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.cpp" "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h" "Engine/Platforms/Vulkan/Impl/Vk1PipelineResourceTable.cpp" "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.cpp" "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h" "Engine/Platforms/Vulkan/Impl/Vk1Sampler.cpp" "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h" "Engine/Platforms/Vulkan/Impl/Vk1SwapchainImage.h" "Engine/Platforms/Vulkan/Impl/Vk1SyncManager.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1.h" "Engine/Platforms/Vulkan/Impl/vulkan1_platform.cpp" "Engine/Platforms/Vulkan/Impl/vulkan1_platform.h" "Engine/Platforms/Vulkan/Impl/vulkan1_utils.h" )
 source_group( "" FILES "Engine/Platforms/Engine.Platforms.h" )
 source_group( "Soft\\Windows" FILES "Engine/Platforms/Soft/Windows/SwWinSurface.cpp" "Engine/Platforms/Soft/Windows/SwWinSurface.h" )
-source_group( "Shared\\Tools" FILES "Engine/Platforms/Shared/Tools/AsyncCommandsEmulator.h" "Engine/Platforms/Shared/Tools/GPUThreadHelper.cpp" "Engine/Platforms/Shared/Tools/GPUThreadHelper.h" "Engine/Platforms/Shared/Tools/ImageViewHashMap.h" "Engine/Platforms/Shared/Tools/MemoryMapperHelper.cpp" "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h" "Engine/Platforms/Shared/Tools/WindowHelper.cpp" "Engine/Platforms/Shared/Tools/WindowHelper.h" )
 source_group( "OpenGL\\Windows" FILES "Engine/Platforms/OpenGL/Windows/GLWinContext.cpp" "Engine/Platforms/OpenGL/Windows/GLWinContext.h" "Engine/Platforms/OpenGL/Windows/GLWinLibrary.cpp" "Engine/Platforms/OpenGL/Windows/GLWinLibrary.h" )
-source_group( "Shared\\GPU" FILES "Engine/Platforms/Shared/GPU/Buffer.h" "Engine/Platforms/Shared/GPU/BufferEnums.h" "Engine/Platforms/Shared/GPU/CommandBuffer.h" "Engine/Platforms/Shared/GPU/CommandEnums.h" "Engine/Platforms/Shared/GPU/Context.h" "Engine/Platforms/Shared/GPU/Enums.ToString.h" "Engine/Platforms/Shared/GPU/FragmentOutputState.h" "Engine/Platforms/Shared/GPU/Framebuffer.h" "Engine/Platforms/Shared/GPU/IDs.h" "Engine/Platforms/Shared/GPU/Image.cpp" "Engine/Platforms/Shared/GPU/Image.h" "Engine/Platforms/Shared/GPU/ImageEnums.h" "Engine/Platforms/Shared/GPU/ImageLayer.h" "Engine/Platforms/Shared/GPU/ImageSwizzle.h" "Engine/Platforms/Shared/GPU/Memory.h" "Engine/Platforms/Shared/GPU/MemoryEnums.h" "Engine/Platforms/Shared/GPU/MipmapLevel.h" "Engine/Platforms/Shared/GPU/MultiSamples.h" "Engine/Platforms/Shared/GPU/ObjectEnums.h" "Engine/Platforms/Shared/GPU/Pipeline.cpp" "Engine/Platforms/Shared/GPU/Pipeline.h" "Engine/Platforms/Shared/GPU/PipelineLayout.cpp" "Engine/Platforms/Shared/GPU/PipelineLayout.h" "Engine/Platforms/Shared/GPU/PixelFormatEnums.h" "Engine/Platforms/Shared/GPU/RenderPass.cpp" "Engine/Platforms/Shared/GPU/RenderPass.h" "Engine/Platforms/Shared/GPU/RenderPassEnums.h" "Engine/Platforms/Shared/GPU/RenderState.cpp" "Engine/Platforms/Shared/GPU/RenderState.h" "Engine/Platforms/Shared/GPU/RenderStateEnums.h" "Engine/Platforms/Shared/GPU/Sampler.cpp" "Engine/Platforms/Shared/GPU/Sampler.h" "Engine/Platforms/Shared/GPU/SamplerEnums.h" "Engine/Platforms/Shared/GPU/ShaderEnums.h" "Engine/Platforms/Shared/GPU/Sync.h" "Engine/Platforms/Shared/GPU/Thread.h" "Engine/Platforms/Shared/GPU/VertexAttribs.h" "Engine/Platforms/Shared/GPU/VertexDescr.h" "Engine/Platforms/Shared/GPU/VertexEnums.h" "Engine/Platforms/Shared/GPU/VertexInputState.cpp" "Engine/Platforms/Shared/GPU/VertexInputState.h" "Engine/Platforms/Shared/GPU/VR.h" )
+source_group( "Public" FILES "Engine/Platforms/Public/Common.h" )
+source_group( "Public\\Tools" FILES "Engine/Platforms/Public/Tools/AsyncCommandsEmulator.h" "Engine/Platforms/Public/Tools/GPUThreadHelper.cpp" "Engine/Platforms/Public/Tools/GPUThreadHelper.h" "Engine/Platforms/Public/Tools/ImageViewHashMap.h" "Engine/Platforms/Public/Tools/MemoryMapperHelper.cpp" "Engine/Platforms/Public/Tools/MemoryMapperHelper.h" "Engine/Platforms/Public/Tools/WindowHelper.cpp" "Engine/Platforms/Public/Tools/WindowHelper.h" )
+source_group( "Public\\OS" FILES "Engine/Platforms/Public/OS/Display.h" "Engine/Platforms/Public/OS/IDs.h" "Engine/Platforms/Public/OS/Input.h" "Engine/Platforms/Public/OS/OSEnums.h" "Engine/Platforms/Public/OS/Platform.h" "Engine/Platforms/Public/OS/ScreenCoords.h" "Engine/Platforms/Public/OS/Window.h" )
 source_group( "OpenCL\\Impl" FILES "Engine/Platforms/OpenCL/Impl/cl2.cpp" "Engine/Platforms/OpenCL/Impl/cl2.h" "Engine/Platforms/OpenCL/Impl/CL2BaseModule.cpp" "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h" "Engine/Platforms/OpenCL/Impl/CL2Buffer.cpp" "Engine/Platforms/OpenCL/Impl/CL2CommandBuffer.cpp" "Engine/Platforms/OpenCL/Impl/CL2CommandBuilder.cpp" "Engine/Platforms/OpenCL/Impl/CL2Device.cpp" "Engine/Platforms/OpenCL/Impl/CL2Device.h" "Engine/Platforms/OpenCL/Impl/CL2Emulator.cpp" "Engine/Platforms/OpenCL/Impl/CL2Emulator.h" "Engine/Platforms/OpenCL/Impl/CL2Enums.h" "Engine/Platforms/OpenCL/Impl/CL2Image.cpp" "Engine/Platforms/OpenCL/Impl/CL2Memory.cpp" "Engine/Platforms/OpenCL/Impl/CL2Messages.h" "Engine/Platforms/OpenCL/Impl/CL2Pipeline.cpp" "Engine/Platforms/OpenCL/Impl/CL2PipelineResourceTable.cpp" "Engine/Platforms/OpenCL/Impl/CL2SyncManager.cpp" )
 source_group( "Vulkan\\Windows" FILES "Engine/Platforms/Vulkan/Windows/VkWinSurface.cpp" "Engine/Platforms/Vulkan/Windows/VkWinSurface.h" )
 source_group( "VR\\Emulator" FILES "Engine/Platforms/VR/Emulator/EmulatorVRThread.cpp" )
@@ -1237,55 +1442,75 @@ if (WIN32)
 	target_link_libraries( "Engine.Platforms" "dxgi.lib" )
 endif()
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Engine.Platforms" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Engine.Platforms" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Engine.Platforms" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Engine.Platforms" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Engine.Platforms" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Engine.Platforms" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Engine.Platforms" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Engine.Platforms" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Platforms" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -1295,15 +1520,7 @@ endif()
 #==================================================================================================
 # project: Engine.Graphics
 #==================================================================================================
-add_library( "Engine.Graphics" STATIC 
-		"Engine/Graphics/Shared/BatchRenderer.h"
-		"Engine/Graphics/Shared/Commands.h"
-		"Engine/Graphics/Shared/Common.h"
-		"Engine/Graphics/Shared/Font.h"
-		"Engine/Graphics/Shared/IDs.h"
-		"Engine/Graphics/Shared/MemStream.h"
-		"Engine/Graphics/Shared/Primitives.h"
-		"Engine/Graphics/Shared/Vertices.h"
+set( SOURCES 
 		"Engine/Graphics/Impl/AsyncCommandBuffer.cpp"
 		"Engine/Graphics/Impl/BatchRenderer.cpp"
 		"Engine/Graphics/Impl/CommandBufferManager.cpp"
@@ -1316,65 +1533,93 @@ add_library( "Engine.Graphics" STATIC
 		"Engine/Graphics/Impl/MemoryInputStream.cpp"
 		"Engine/Graphics/Impl/MemoryOutputStream.cpp"
 		"Engine/Graphics/Impl/TextureLineAtlas.h"
-		"Engine/Graphics/Engine.Graphics.h" )
-
-source_group( "Shared" FILES "Engine/Graphics/Shared/BatchRenderer.h" "Engine/Graphics/Shared/Commands.h" "Engine/Graphics/Shared/Common.h" "Engine/Graphics/Shared/Font.h" "Engine/Graphics/Shared/IDs.h" "Engine/Graphics/Shared/MemStream.h" "Engine/Graphics/Shared/Primitives.h" "Engine/Graphics/Shared/Vertices.h" )
+		"Engine/Graphics/Engine.Graphics.h"
+		"Engine/Graphics/Public/BatchRenderer.h"
+		"Engine/Graphics/Public/Commands.h"
+		"Engine/Graphics/Public/Common.h"
+		"Engine/Graphics/Public/Font.h"
+		"Engine/Graphics/Public/IDs.h"
+		"Engine/Graphics/Public/MemStream.h"
+		"Engine/Graphics/Public/Primitives.h"
+		"Engine/Graphics/Public/Vertices.h" )
+add_library( "Engine.Graphics" STATIC ${SOURCES} )
 source_group( "Impl" FILES "Engine/Graphics/Impl/AsyncCommandBuffer.cpp" "Engine/Graphics/Impl/BatchRenderer.cpp" "Engine/Graphics/Impl/CommandBufferManager.cpp" "Engine/Graphics/Impl/Font.cpp" "Engine/Graphics/Impl/FontManager.cpp" "Engine/Graphics/Impl/GraphicsBaseModule.cpp" "Engine/Graphics/Impl/GraphicsBaseModule.h" "Engine/Graphics/Impl/GraphicsObjectsConstructor.h" "Engine/Graphics/Impl/Main.cpp" "Engine/Graphics/Impl/MemoryInputStream.cpp" "Engine/Graphics/Impl/MemoryOutputStream.cpp" "Engine/Graphics/Impl/TextureLineAtlas.h" )
 source_group( "" FILES "Engine/Graphics/Engine.Graphics.h" )
+source_group( "Public" FILES "Engine/Graphics/Public/BatchRenderer.h" "Engine/Graphics/Public/Commands.h" "Engine/Graphics/Public/Common.h" "Engine/Graphics/Public/Font.h" "Engine/Graphics/Public/IDs.h" "Engine/Graphics/Public/MemStream.h" "Engine/Graphics/Public/Primitives.h" "Engine/Graphics/Public/Vertices.h" )
 set_property( TARGET "Engine.Graphics" PROPERTY FOLDER "Engine" )
 target_include_directories( "Engine.Graphics" PRIVATE "Engine/Graphics" )
 target_include_directories( "Engine.Graphics" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.Graphics" "Engine.Platforms" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -1384,72 +1629,92 @@ endif()
 #==================================================================================================
 # project: Engine.Profilers
 #==================================================================================================
-add_library( "Engine.Profilers" STATIC 
-		"Engine/Profilers/Shared/Common.h"
-		"Engine/Profilers/Shared/GpuStatistic.h"
-		"Engine/Profilers/Shared/IDs.h"
+set( SOURCES 
 		"Engine/Profilers/Impl/FPSCounter.cpp"
 		"Engine/Profilers/Impl/Main.cpp"
 		"Engine/Profilers/Impl/ProfilerObjectsConstructor.h"
-		"Engine/Profilers/Engine.Profilers.h" )
-
-source_group( "Shared" FILES "Engine/Profilers/Shared/Common.h" "Engine/Profilers/Shared/GpuStatistic.h" "Engine/Profilers/Shared/IDs.h" )
+		"Engine/Profilers/Engine.Profilers.h"
+		"Engine/Profilers/Public/Common.h"
+		"Engine/Profilers/Public/GpuStatistic.h"
+		"Engine/Profilers/Public/IDs.h" )
+add_library( "Engine.Profilers" STATIC ${SOURCES} )
 source_group( "Impl" FILES "Engine/Profilers/Impl/FPSCounter.cpp" "Engine/Profilers/Impl/Main.cpp" "Engine/Profilers/Impl/ProfilerObjectsConstructor.h" )
 source_group( "" FILES "Engine/Profilers/Engine.Profilers.h" )
+source_group( "Public" FILES "Engine/Profilers/Public/Common.h" "Engine/Profilers/Public/GpuStatistic.h" "Engine/Profilers/Public/IDs.h" )
 set_property( TARGET "Engine.Profilers" PROPERTY FOLDER "Engine" )
 target_include_directories( "Engine.Profilers" PRIVATE "Engine/Profilers" )
 target_include_directories( "Engine.Profilers" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.Profilers" "Engine.Platforms" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Engine.Profilers" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Engine.Profilers" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Engine.Profilers" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Engine.Profilers" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Engine.Profilers" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Engine.Profilers" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Engine.Profilers" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Engine.Profilers" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Profilers" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -1459,17 +1724,12 @@ endif()
 #==================================================================================================
 # project: Engine.Scene
 #==================================================================================================
-add_library( "Engine.Scene" STATIC 
+set( SOURCES 
 		"Engine/Scene/Surface/OffscreenSurface.cpp"
 		"Engine/Scene/Surface/VideoRecorderSurface.cpp"
 		"Engine/Scene/Surface/VRSurface.cpp"
 		"Engine/Scene/Surface/WindowSurface.cpp"
 		"Engine/Scene/Renderer/SceneRendererMainThread.cpp"
-		"Engine/Scene/Shared/Camera.h"
-		"Engine/Scene/Shared/Common.h"
-		"Engine/Scene/Shared/IDs.h"
-		"Engine/Scene/Shared/Scene.h"
-		"Engine/Scene/Shared/Surface.h"
 		"Engine/Scene/Camera/FreeCamera.cpp"
 		"Engine/Scene/Camera/FreeVRCamera.cpp"
 		"Engine/Scene/Impl/BaseSceneModule.cpp"
@@ -1480,70 +1740,96 @@ add_library( "Engine.Scene" STATIC
 		"Engine/Scene/Impl/SceneObjectConstructor.h"
 		"Engine/Scene/Engine.Scene.h"
 		"Engine/Scene/Physics/ScenePhysicsMainThread.cpp"
+		"Engine/Scene/Public/Camera.h"
+		"Engine/Scene/Public/Common.h"
+		"Engine/Scene/Public/FrameGraph.h"
+		"Engine/Scene/Public/IDs.h"
+		"Engine/Scene/Public/Scene.h"
+		"Engine/Scene/Public/Surface.h"
 		"Engine/Scene/Logic/SceneLogicMainThread.cpp" )
-
+add_library( "Engine.Scene" STATIC ${SOURCES} )
 source_group( "Surface" FILES "Engine/Scene/Surface/OffscreenSurface.cpp" "Engine/Scene/Surface/VideoRecorderSurface.cpp" "Engine/Scene/Surface/VRSurface.cpp" "Engine/Scene/Surface/WindowSurface.cpp" )
 source_group( "Renderer" FILES "Engine/Scene/Renderer/SceneRendererMainThread.cpp" )
-source_group( "Shared" FILES "Engine/Scene/Shared/Camera.h" "Engine/Scene/Shared/Common.h" "Engine/Scene/Shared/IDs.h" "Engine/Scene/Shared/Scene.h" "Engine/Scene/Shared/Surface.h" )
 source_group( "Camera" FILES "Engine/Scene/Camera/FreeCamera.cpp" "Engine/Scene/Camera/FreeVRCamera.cpp" )
 source_group( "Impl" FILES "Engine/Scene/Impl/BaseSceneModule.cpp" "Engine/Scene/Impl/BaseSceneModule.h" "Engine/Scene/Impl/Main.cpp" "Engine/Scene/Impl/SceneMainThread.cpp" "Engine/Scene/Impl/SceneManager.cpp" "Engine/Scene/Impl/SceneObjectConstructor.h" )
 source_group( "" FILES "Engine/Scene/Engine.Scene.h" )
 source_group( "Physics" FILES "Engine/Scene/Physics/ScenePhysicsMainThread.cpp" )
+source_group( "Public" FILES "Engine/Scene/Public/Camera.h" "Engine/Scene/Public/Common.h" "Engine/Scene/Public/FrameGraph.h" "Engine/Scene/Public/IDs.h" "Engine/Scene/Public/Scene.h" "Engine/Scene/Public/Surface.h" )
 source_group( "Logic" FILES "Engine/Scene/Logic/SceneLogicMainThread.cpp" )
 set_property( TARGET "Engine.Scene" PROPERTY FOLDER "Engine" )
 target_include_directories( "Engine.Scene" PRIVATE "Engine/Scene" )
 target_include_directories( "Engine.Scene" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.Scene" "Engine.Graphics" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Engine.Scene" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -1553,7 +1839,7 @@ endif()
 #==================================================================================================
 # project: Tests.Engine.Base
 #==================================================================================================
-add_executable( "Tests.Engine.Base" 
+set( SOURCES 
 		"Tests/Engine.Base/Compute/CApp.cpp"
 		"Tests/Engine.Base/Compute/CApp.h"
 		"Tests/Engine.Base/Compute/Test.CWindow.cpp"
@@ -1567,15 +1853,18 @@ add_executable( "Tests.Engine.Base"
 		"Tests/Engine.Base/Pipelines/Default3.cpp"
 		"Tests/Engine.Base/Pipelines/defaultcompute1.cpp"
 		"Tests/Engine.Base/Pipelines/defaultcompute2.cpp"
-		"Tests/Engine.Base/Pipelines/multitextured.cpp"
 		"Tests/Engine.Base/Pipelines/shared_types.h"
 		"Tests/Engine.Base/Window/Test.Window.cpp"
 		"Tests/Engine.Base/Common.h"
 		"Tests/Engine.Base/Main.cpp" )
-
+if (DEFINED ANDROID)
+	add_library( "Tests.Engine.Base" SHARED ${SOURCES} )
+else()
+	add_executable( "Tests.Engine.Base" ${SOURCES} )
+endif()
 source_group( "Compute" FILES "Tests/Engine.Base/Compute/CApp.cpp" "Tests/Engine.Base/Compute/CApp.h" "Tests/Engine.Base/Compute/Test.CWindow.cpp" )
 source_group( "Graphics" FILES "Tests/Engine.Base/Graphics/GApp.cpp" "Tests/Engine.Base/Graphics/GApp.h" "Tests/Engine.Base/Graphics/Test.GWindow.cpp" )
-source_group( "Pipelines" FILES "Tests/Engine.Base/Pipelines/all_pipelines.h" "Tests/Engine.Base/Pipelines/common.h" "Tests/Engine.Base/Pipelines/default.cpp" "Tests/Engine.Base/Pipelines/default2.cpp" "Tests/Engine.Base/Pipelines/Default3.cpp" "Tests/Engine.Base/Pipelines/defaultcompute1.cpp" "Tests/Engine.Base/Pipelines/defaultcompute2.cpp" "Tests/Engine.Base/Pipelines/multitextured.cpp" "Tests/Engine.Base/Pipelines/shared_types.h" )
+source_group( "Pipelines" FILES "Tests/Engine.Base/Pipelines/all_pipelines.h" "Tests/Engine.Base/Pipelines/common.h" "Tests/Engine.Base/Pipelines/default.cpp" "Tests/Engine.Base/Pipelines/default2.cpp" "Tests/Engine.Base/Pipelines/Default3.cpp" "Tests/Engine.Base/Pipelines/defaultcompute1.cpp" "Tests/Engine.Base/Pipelines/defaultcompute2.cpp" "Tests/Engine.Base/Pipelines/shared_types.h" )
 source_group( "Window" FILES "Tests/Engine.Base/Window/Test.Window.cpp" )
 source_group( "" FILES "Tests/Engine.Base/Common.h" "Tests/Engine.Base/Main.cpp" )
 set_property( TARGET "Tests.Engine.Base" PROPERTY FOLDER "Tests" )
@@ -1584,55 +1873,75 @@ target_include_directories( "Tests.Engine.Base" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Engine.Base" "Engine.Profilers" )
 target_link_libraries( "Tests.Engine.Base" "Engine.Platforms" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -1642,14 +1951,18 @@ endif()
 #==================================================================================================
 # project: Tests.Engine.Graphics
 #==================================================================================================
-add_executable( "Tests.Engine.Graphics" 
+set( SOURCES 
 		"Tests/Engine.Graphics/Pipelines/all_pipelines.h"
 		"Tests/Engine.Graphics/Pipelines/common.h"
 		"Tests/Engine.Graphics/Pipelines/default3.cpp"
 		"Tests/Engine.Graphics/GApp.cpp"
 		"Tests/Engine.Graphics/GApp.h"
 		"Tests/Engine.Graphics/Main.cpp" )
-
+if (DEFINED ANDROID)
+	add_library( "Tests.Engine.Graphics" SHARED ${SOURCES} )
+else()
+	add_executable( "Tests.Engine.Graphics" ${SOURCES} )
+endif()
 source_group( "Pipelines" FILES "Tests/Engine.Graphics/Pipelines/all_pipelines.h" "Tests/Engine.Graphics/Pipelines/common.h" "Tests/Engine.Graphics/Pipelines/default3.cpp" )
 source_group( "" FILES "Tests/Engine.Graphics/GApp.cpp" "Tests/Engine.Graphics/GApp.h" "Tests/Engine.Graphics/Main.cpp" )
 set_property( TARGET "Tests.Engine.Graphics" PROPERTY FOLDER "Tests" )
@@ -1658,55 +1971,75 @@ target_include_directories( "Tests.Engine.Graphics" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Engine.Graphics" "Engine.Profilers" )
 target_link_libraries( "Tests.Engine.Graphics" "Engine.Graphics" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -1716,13 +2049,18 @@ endif()
 #==================================================================================================
 # project: Tests.Engine.Platforms.GAPI
 #==================================================================================================
-add_executable( "Tests.Engine.Platforms.GAPI" 
+set( SOURCES 
 		"Tests/Engine.Platforms.GAPI/Compute/CApp.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp.h"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_BufferAlign.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_ClearBuffer.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_ConvertFloatImage2D.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBufferToImage2D.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2D.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2DToBuffer.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_ShaderBarrier.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp"
 		"Tests/Engine.Platforms.GAPI/Graphics/GApp.cpp"
@@ -1731,69 +2069,95 @@ add_executable( "Tests.Engine.Platforms.GAPI"
 		"Tests/Engine.Platforms.GAPI/Pipelines/all_pipelines.h"
 		"Tests/Engine.Platforms.GAPI/Pipelines/bufferaligntest.cpp"
 		"Tests/Engine.Platforms.GAPI/Pipelines/common.h"
+		"Tests/Engine.Platforms.GAPI/Pipelines/copyfloatimage2d.cpp"
 		"Tests/Engine.Platforms.GAPI/Pipelines/dynamicbuffertest.cpp"
+		"Tests/Engine.Platforms.GAPI/Pipelines/sharedmemorytest.cpp"
 		"Tests/Engine.Platforms.GAPI/Pipelines/shared_types.h"
 		"Tests/Engine.Platforms.GAPI/Common.h"
 		"Tests/Engine.Platforms.GAPI/Main.cpp" )
-
-source_group( "Compute" FILES "Tests/Engine.Platforms.GAPI/Compute/CApp.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp.h" "Tests/Engine.Platforms.GAPI/Compute/CApp_BufferAlign.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ClearBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp" )
+if (DEFINED ANDROID)
+	add_library( "Tests.Engine.Platforms.GAPI" SHARED ${SOURCES} )
+else()
+	add_executable( "Tests.Engine.Platforms.GAPI" ${SOURCES} )
+endif()
+source_group( "Compute" FILES "Tests/Engine.Platforms.GAPI/Compute/CApp.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp.h" "Tests/Engine.Platforms.GAPI/Compute/CApp_BufferAlign.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ClearBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ConvertFloatImage2D.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBufferToImage2D.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2D.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2DToBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ShaderBarrier.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp" )
 source_group( "Graphics" FILES "Tests/Engine.Platforms.GAPI/Graphics/GApp.cpp" "Tests/Engine.Platforms.GAPI/Graphics/GApp.h" "Tests/Engine.Platforms.GAPI/Graphics/Test.GraphicsApi.cpp" )
-source_group( "Pipelines" FILES "Tests/Engine.Platforms.GAPI/Pipelines/all_pipelines.h" "Tests/Engine.Platforms.GAPI/Pipelines/bufferaligntest.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/common.h" "Tests/Engine.Platforms.GAPI/Pipelines/dynamicbuffertest.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/shared_types.h" )
+source_group( "Pipelines" FILES "Tests/Engine.Platforms.GAPI/Pipelines/all_pipelines.h" "Tests/Engine.Platforms.GAPI/Pipelines/bufferaligntest.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/common.h" "Tests/Engine.Platforms.GAPI/Pipelines/copyfloatimage2d.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/dynamicbuffertest.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/sharedmemorytest.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/shared_types.h" )
 source_group( "" FILES "Tests/Engine.Platforms.GAPI/Common.h" "Tests/Engine.Platforms.GAPI/Main.cpp" )
 set_property( TARGET "Tests.Engine.Platforms.GAPI" PROPERTY FOLDER "Tests" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PRIVATE "Tests/Engine.Platforms.GAPI" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Engine.Platforms.GAPI" "Engine.Platforms" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -1803,7 +2167,7 @@ endif()
 #==================================================================================================
 # project: Projects.ShaderEditor
 #==================================================================================================
-add_executable( "Projects.ShaderEditor" 
+set( SOURCES 
 		"Projects/ShaderEditor/Pipelines/all_pipelines.h"
 		"Projects/ShaderEditor/Pipelines/common.h"
 		"Projects/ShaderEditor/Pipelines/drawtexturedquad.cpp"
@@ -1819,7 +2183,11 @@ add_executable( "Projects.ShaderEditor"
 		"Projects/ShaderEditor/Renderer.h"
 		"Projects/ShaderEditor/ShaderEditorApp.cpp"
 		"Projects/ShaderEditor/ShaderEditorApp.h" )
-
+if (DEFINED ANDROID)
+	add_library( "Projects.ShaderEditor" SHARED ${SOURCES} )
+else()
+	add_executable( "Projects.ShaderEditor" ${SOURCES} )
+endif()
 source_group( "Pipelines" FILES "Projects/ShaderEditor/Pipelines/all_pipelines.h" "Projects/ShaderEditor/Pipelines/common.h" "Projects/ShaderEditor/Pipelines/drawtexturedquad.cpp" "Projects/ShaderEditor/Pipelines/experimental.cpp" "Projects/ShaderEditor/Pipelines/glowballs.cpp" "Projects/ShaderEditor/Pipelines/shared_types.h" "Projects/ShaderEditor/Pipelines/sireniandawn1.cpp" "Projects/ShaderEditor/Pipelines/sireniandawn2.cpp" "Projects/ShaderEditor/Pipelines/skyline.cpp" "Projects/ShaderEditor/Pipelines/voronnoirecursion.cpp" )
 source_group( "" FILES "Projects/ShaderEditor/Common.h" "Projects/ShaderEditor/Renderer.cpp" "Projects/ShaderEditor/Renderer.h" "Projects/ShaderEditor/ShaderEditorApp.cpp" "Projects/ShaderEditor/ShaderEditorApp.h" )
 set_property( TARGET "Projects.ShaderEditor" PROPERTY FOLDER "Projects" )
@@ -1828,55 +2196,75 @@ target_include_directories( "Projects.ShaderEditor" PUBLIC "Engine/.." )
 target_link_libraries( "Projects.ShaderEditor" "Engine.Profilers" )
 target_link_libraries( "Projects.ShaderEditor" "Engine.Scene" )
 # compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if ( COMPILER_MSVC )
 	# DebugAnalyze
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 	set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ( COMPILER_GCC )
 	# DebugAnalyze
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
 	# Debug
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
 	# Profile
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
 	# Release
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
 endif()
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if ( COMPILER_CLANG_APPLE )
 	# DebugAnalyze
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
 	# Debug
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
 	# Profile
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
 	# Release
-	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+endif()
+
+
+if ( COMPILER_CLANG_ANDROID )
+	# DebugAnalyze
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+	# Debug
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+	# Profile
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+	# Release
+	target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+	target_compile_definitions( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
 endif()
 
 
@@ -1886,75 +2274,104 @@ endif()
 #==================================================================================================
 # project: Utils.CMake
 #==================================================================================================
-add_executable( "Utils.CMake" 
-		"Utils/CMake/Tests/GenMGFProject.cpp"
-		"Utils/CMake/Tests/Main.cpp"
-		"Utils/CMake/Builder/ClangConstants.h"
-		"Utils/CMake/Builder/CMakeBuilder.cpp"
-		"Utils/CMake/Builder/CMakeBuilder.h"
-		"Utils/CMake/Builder/GccConstants.h"
-		"Utils/CMake/Builder/MSVisualStudioConstants.h" )
-
-source_group( "Tests" FILES "Utils/CMake/Tests/GenMGFProject.cpp" "Utils/CMake/Tests/Main.cpp" )
-source_group( "Builder" FILES "Utils/CMake/Builder/ClangConstants.h" "Utils/CMake/Builder/CMakeBuilder.cpp" "Utils/CMake/Builder/CMakeBuilder.h" "Utils/CMake/Builder/GccConstants.h" "Utils/CMake/Builder/MSVisualStudioConstants.h" )
-set_property( TARGET "Utils.CMake" PROPERTY FOLDER "Utils" )
-target_include_directories( "Utils.CMake" PRIVATE "Utils/CMake" )
-target_include_directories( "Utils.CMake" PUBLIC "Engine/.." )
-target_link_libraries( "Utils.CMake" "Engine.STL" )
-# compiler
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	# DebugAnalyze
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
-	set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
-	# Debug
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
-	set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
-	# Profile
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
-	set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
-	# Release
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
-	set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
+if (NOT DEFINED ANDROID)
+	set( SOURCES 
+			"Utils/CMake/Tests/GenMGFProject.cpp"
+			"Utils/CMake/Tests/Main.cpp"
+			"Utils/CMake/Builder/ClangConstants.h"
+			"Utils/CMake/Builder/CMakeBuilder.cpp"
+			"Utils/CMake/Builder/CMakeBuilder.h"
+			"Utils/CMake/Builder/CMakeBuilder_Compiler.cpp"
+			"Utils/CMake/Builder/CMakeBuilder_ExternalProjects.cpp"
+			"Utils/CMake/Builder/CMakeBuilder_Project.cpp"
+			"Utils/CMake/Builder/GccConstants.h"
+			"Utils/CMake/Builder/MSVisualStudioConstants.h" )
+	if (DEFINED ANDROID)
+		add_library( "Utils.CMake" SHARED ${SOURCES} )
+	else()
+		add_executable( "Utils.CMake" ${SOURCES} )
+	endif()
+	source_group( "Tests" FILES "Utils/CMake/Tests/GenMGFProject.cpp" "Utils/CMake/Tests/Main.cpp" )
+	source_group( "Builder" FILES "Utils/CMake/Builder/ClangConstants.h" "Utils/CMake/Builder/CMakeBuilder.cpp" "Utils/CMake/Builder/CMakeBuilder.h" "Utils/CMake/Builder/CMakeBuilder_Compiler.cpp" "Utils/CMake/Builder/CMakeBuilder_ExternalProjects.cpp" "Utils/CMake/Builder/CMakeBuilder_Project.cpp" "Utils/CMake/Builder/GccConstants.h" "Utils/CMake/Builder/MSVisualStudioConstants.h" )
+	set_property( TARGET "Utils.CMake" PROPERTY FOLDER "Utils" )
+	target_include_directories( "Utils.CMake" PRIVATE "Utils/CMake" )
+	target_include_directories( "Utils.CMake" PUBLIC "Engine/.." )
+	target_link_libraries( "Utils.CMake" "Engine.STL" )
+	# compiler
+	if ( COMPILER_MSVC )
+		# DebugAnalyze
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+		set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
+		# Debug
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+		set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
+		# Profile
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+		set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
+		# Release
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+		set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
+	endif()
+	
+	
+	if ( COMPILER_GCC )
+		# DebugAnalyze
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+		set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKED_FLAGS_DEBUGANALYZE} )
+		# Debug
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+		set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKED_FLAGS_DEBUG} )
+		# Profile
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+		set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKED_FLAGS_PROFILE} )
+		# Release
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+		set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKED_FLAGS_RELEASE} )
+	endif()
+	
+	
+	if ( COMPILER_CLANG_APPLE )
+		# DebugAnalyze
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+		# Debug
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+		# Profile
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+		# Release
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	endif()
+	
+	
+	if ( COMPILER_CLANG_ANDROID )
+		# DebugAnalyze
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
+		# Debug
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
+		# Profile
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
+		# Release
+		target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
+		target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
+	endif()
+	
+	
+	
 endif()
-
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	# DebugAnalyze
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
-	# Debug
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
-	# Profile
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
-	# Release
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
-endif()
-
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-	# DebugAnalyze
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE} >)
-	# Debug
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG} >)
-	# Profile
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE} >)
-	# Release
-	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE} >)
-	target_compile_definitions( "Utils.CMake" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE} >)
-endif()
-
-
-
 
 
 message( STATUS "project 'ModularGraphicsFramework' generation ended" )

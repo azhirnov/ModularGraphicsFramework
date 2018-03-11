@@ -1,11 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
-#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
 
 namespace Engine
 {
@@ -471,7 +473,9 @@ namespace PlatformSW
 		}
 		CHECK_ERR( cs_index < req_shader_ids->result->Count() );	// compute shader not found
 
-		CHECK_ERR( _func = (*req_shader_ids->result)[cs_index].func );
+		_func = (*req_shader_ids->result)[cs_index].func;
+		CHECK_ERR( _func );
+
 		return true;
 	}
 	

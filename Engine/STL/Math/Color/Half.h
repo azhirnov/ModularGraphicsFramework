@@ -46,7 +46,7 @@ namespace GXTypes
 
 
 	// variables
-	private:
+	public:
 		union {
 			THalfBits	_bits;
 			ushort		_value;
@@ -148,11 +148,11 @@ namespace GXTypes
 	};
 
 
-	typedef THalf							half;
-	typedef GXMath::Vec< half,		1 >		half1;
-	typedef GXMath::Vec< half,		2 >		half2;
-	typedef GXMath::Vec< half,		3 >		half3;
-	typedef GXMath::Vec< half,		4 >		half4;
+	typedef THalf						half;
+	typedef GXMath::Vec< half,	1 >		half1;
+	typedef GXMath::Vec< half,	2 >		half2;
+	typedef GXMath::Vec< half,	3 >		half3;
+	typedef GXMath::Vec< half,	4 >		half4;
 
 
 
@@ -344,7 +344,7 @@ namespace CompileTime
 		static			 type	NaN()		{ return type(0); }	// TODO
 		
 		static			 type	Epsilon()	{ return (type) GXTypes::Epsilon<float>(); }
-		static constexpr uint	SignBit()	{ return SizeOf<type>::bits-1; }
+		static constexpr uint	SignBit()	{ return CompileTime::SizeOf<type>::bits-1; }
 		static constexpr uint	Count()		{ return 1; }
 	};
 

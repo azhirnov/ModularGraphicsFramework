@@ -162,7 +162,7 @@ namespace GXTypes
 			bool		IsValid ()				const override	{ return _func != null; }
 			Ret			Call (Args&&... args)	const override	{ return _func( FW<Args>(args)... ); }
 			TypeId		TypeIdOf ()				const override	{ return GXTypes::TypeIdOf( *this ); }
-			BytesU		Size ()					const override	{ return SizeOf( *this ); }
+			BytesU		Size ()					const override	{ return BytesU::SizeOf( *this ); }
 			void const*	ClassPtr ()				const override	{ return null; }
 			
 			void MoveTo (BinArrayRef buf) override
@@ -202,7 +202,7 @@ namespace GXTypes
 			bool		IsValid ()				const override	{ return _func != null and _classPtr.IsValid(); }
 			Ret			Call (Args&&... args)	const override	{ return (_classPtr.Ref().*_func)( FW<Args>(args)... ); }
 			TypeId		TypeIdOf ()				const override	{ return GXTypes::TypeIdOf( *this ); }
-			BytesU		Size ()					const override	{ return SizeOf( *this ); }
+			BytesU		Size ()					const override	{ return BytesU::SizeOf( *this ); }
 			void const*	ClassPtr ()				const override	{ return _classPtr.Ptr(); }
 			
 			void MoveTo (BinArrayRef buf) override
@@ -242,7 +242,7 @@ namespace GXTypes
 			bool		IsValid ()				const override	{ return _func != null and _classPtr.IsValid(); }
 			Ret			Call (Args&&... args)	const override	{ return (_classPtr.Ref().*_func)( FW<Args>(args)... ); }
 			TypeId		TypeIdOf ()				const override	{ return GXTypes::TypeIdOf( *this ); }
-			BytesU		Size ()					const override	{ return SizeOf( *this ); }
+			BytesU		Size ()					const override	{ return BytesU::SizeOf( *this ); }
 			void const*	ClassPtr ()				const override	{ return _classPtr.Ptr(); }
 			
 			void MoveTo (BinArrayRef buf) override

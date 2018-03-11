@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "MathTypes.h"
+#include "Engine/STL/Math/MathTypes.h"
 #include "Engine/STL/CompileTime/TypeListHelpers.h"
 
 namespace GX_STL
@@ -116,8 +116,6 @@ namespace GXMath
 	template <typename T>				constexpr bool	IsOdd (const T& x);
 	template <typename T>				constexpr bool	IsEven (const T& x);
 
-	template <typename T>				inline T		SafeDiv (const T& left, const T& right, const T& defVal);
-
 	template <typename T>				inline T		IntFactorial (const T& x);
 	template <typename T>				inline T		IntSuperFactorial (const T& x);
 	template <typename T>				inline T		IntHyperFactorial (const T& x);
@@ -163,7 +161,7 @@ namespace GXMath
 	// AlignToLarge
 	//
 	
-	template <typename T>				constexpr T		AlignToLarge (const T& value, usize align);
+	template <typename T, typename S>	constexpr T		AlignToLarge (const T& value, const S& align);
 
 	
 	template <typename A, typename B>				auto	Min (const A& a, const B& b);

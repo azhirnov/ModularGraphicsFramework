@@ -1,13 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
+#include "Engine/Platforms/OpenGL/Impl/GL4Device.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h"
 #include "Engine/Platforms/OpenGL/Impl/GL4FlippedSystemFramebuffer.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
 
 namespace Engine
 {

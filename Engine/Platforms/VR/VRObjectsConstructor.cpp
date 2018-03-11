@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/VR/VRObjectsConstructor.h"
-#include "Engine/Platforms/Shared/GPU/VR.h"
+#include "Engine/Platforms/Public/GPU/VR.h"
 
 namespace Engine
 {

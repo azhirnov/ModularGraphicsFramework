@@ -1,13 +1,16 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h"
-#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
-#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/Tools/MemoryMapperHelper.h"
+#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+#include "Engine/Platforms/Public/GPU/Enums.ToString.h"
 
 namespace Engine
 {
@@ -36,7 +39,8 @@ namespace PlatformSW
 											GpuMsg::UnmapMemory,
 											GpuMsg::GetGpuMemoryDescriptor,
 											GpuMsg::GpuMemoryRegionChanged,
-											GpuMsg::GetSWMemoryData
+											GpuMsg::GetSWMemoryData,
+											GpuMsg::SWMemoryBarrier
 										> >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t::Append< MessageListFrom<
@@ -96,6 +100,7 @@ namespace PlatformSW
 		bool _FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &);
 		bool _UnmapMemory (const Message< GpuMsg::UnmapMemory > &);
 		bool _GetSWMemoryData (const Message< GpuMsg::GetSWMemoryData > &);
+		bool _SWMemoryBarrier (const Message< GpuMsg::SWMemoryBarrier > &);
 
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
@@ -156,6 +161,7 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWMemory::_GpuMemoryRegionChanged );
 		_SubscribeOnMsg( this, &SWMemory::_GetGpuMemoryDescriptor );
 		_SubscribeOnMsg( this, &SWMemory::_GetSWMemoryData );
+		_SubscribeOnMsg( this, &SWMemory::_SWMemoryBarrier );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -206,7 +212,19 @@ namespace PlatformSW
 		CHECK_ERR( not _IsCreated() );
 
 		Message< GpuMsg::GetSWImageMemoryRequirements >		req_mem;
+		Message< GpuMsg::GetImageDescriptor >				req_descr;
+
 		SendTo( _GetParents().Front(), req_mem );
+		SendTo( _GetParents().Front(), req_descr );
+		
+		if ( SWDeviceProperties.vulkanCompatibility )
+		{
+			if ( not _flags[ EGpuMemory::LocalInGPU ] and
+				 req_descr->result->usage != (req_descr->result->usage & (EImageUsage::TransferDst | EImageUsage::TransferSrc)) )
+			{
+				SW_DEBUG_REPORT( false, "image memory must be located in GPU or image must be used only for transfer!", EDbgReport::Error );
+			}
+		}
 
 		_align = req_mem->result->align;
 		CHECK_ERR( IsPowerOfTwo( _align ) );
@@ -266,7 +284,6 @@ namespace PlatformSW
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
-		//CHECK_ERR( _GetParents().IsExist( msg.Sender() ) );
 
 		CHECK_ERR( not _IsCreated() );
 		CHECK_ERR( _GetParents().Count() >= 1 );
@@ -393,7 +410,7 @@ namespace PlatformSW
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
 		CHECK_ERR( _memMapper.Unmap() );
 
-		TODO("");
+		TODO("");	// call _GpuMemoryRegionChanged ?
 		return true;
 	}
 	
@@ -452,11 +469,15 @@ namespace PlatformSW
 		CHECK_ERR( msg->writableBuffer->Size() > 0 );
 		CHECK_ERR( msg->offset < BytesUL(_usedMemory.Size()) );
 		
-		const usize		size = Min( usize(_usedMemory.Size()) - usize(msg->offset), usize(msg->writableBuffer->Size()) );
+		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem{ BytesU(msg->offset), BytesU(msg->writableBuffer->Size()),
+															 EPipelineAccess::HostRead, EPipelineStage::Host };
+		SendTo( _GetParents().Front(), req_mem );
 		
-		MemCopy( *msg->writableBuffer, _usedMemory.SubArray( usize(msg->offset), size ) );
+		const BytesU	size = Min( req_mem->result->memory.Size(), msg->writableBuffer->Size() );
 
-		msg->result.Set( msg->writableBuffer->SubArray( 0, size ) );
+		UnsafeMem::MemCopy( OUT msg->writableBuffer->RawPtr(), req_mem->result->memory.RawPtr(), size );
+
+		msg->result.Set( msg->writableBuffer->SubArray( 0, usize(size) ) );
 		return true;
 	}
 	
@@ -472,9 +493,13 @@ namespace PlatformSW
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
 		CHECK_ERR( msg->offset < BytesUL(_usedMemory.Size()) );
 		
-		const usize		size = Min( usize(_usedMemory.Size()) - usize(msg->offset), usize(msg->data.Size()) );
-
-		MemCopy( _usedMemory.SubArray( 0, size ), msg->data );
+		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem{ BytesU(msg->offset), BytesU(msg->data.Size()),
+															 EPipelineAccess::HostWrite, EPipelineStage::Host };
+		SendTo( _GetParents().Front(), req_mem );
+		
+		const BytesU	size = Min( req_mem->result->memory.Size(), msg->data.Size() );
+		
+		UnsafeMem::MemCopy( OUT req_mem->result->memory.RawPtr(), msg->data.RawPtr(), size );
 
 		msg->wasWritten.Set( BytesUL(size) );
 		
@@ -487,10 +512,60 @@ namespace PlatformSW
 	_ReadFromImageMemory
 =================================================
 */
-	bool SWMemory::_ReadFromImageMemory (const Message< GpuMsg::ReadFromImageMemory > &)
+	bool SWMemory::_ReadFromImageMemory (const Message< GpuMsg::ReadFromImageMemory > &msg)
 	{
-		TODO( "" );
-		return false;
+		CHECK_ERR( _IsCreated() );
+		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
+		CHECK_ERR( msg->writableBuffer->Size() >= msg->dimension.z * msg->slicePitch );
+		CHECK_ERR( _binding == EBindingTarget::Image );
+		CHECK_ERR( IsNotZero( msg->dimension ) );
+		CHECK_ERR( msg->memOffset == BytesUL(0) );
+		CHECK_ERR( msg->layer.Get() == 0 or (msg->offset.z == 0 and msg->dimension.z == 1) );	// 3D texture array is not supported
+			
+		const uint	offset_z = Max( msg->layer.Get(), msg->offset.z );
+
+		Message< GpuMsg::GetSWImageMemoryLayout >	req_mem{ EPipelineAccess::HostRead, EPipelineStage::Host };
+		SendTo( _GetParents().Front(), req_mem );
+
+		// find array layer or z-slice
+		CHECK_ERR( req_mem->result );
+		//CHECK_ERR( req_mem->result->memAccess[EMemoryAccess::CpuRead] );
+		CHECK_ERR( offset_z < req_mem->result->layers.Count() and
+					offset_z + msg->dimension.z <= req_mem->result->layers.Count() );
+
+		auto const&	mem_layer = req_mem->result->layers[ offset_z ];
+
+		// find mipmap level
+		CHECK_ERR( msg->mipLevel.Get() < mem_layer.mipmaps.Count() );
+
+		auto const&	mem_level		= mem_layer.mipmaps[ msg->mipLevel.Get() ];
+		BytesU		bpp				= BytesU(EPixelFormat::BitPerPixel( mem_level.format ));
+		BytesU		src_row_pitch	= GXImageUtils::AlignedRowSize( mem_level.dimension.x, bpp, req_mem->result->align );
+		BytesU		row_size		= bpp * msg->dimension.x;
+
+		CHECK_ERR( mem_level.memory != null );
+		CHECK_ERR( All( msg->offset.xy() < mem_level.dimension ) );
+		CHECK_ERR( All( msg->offset.xy() + msg->dimension.xy() <= mem_level.dimension ) );
+		CHECK_ERR( msg->rowPitch >= row_size );
+		
+		SW_DEBUG_REPORT( mem_level.layout == EImageLayout::Preinitialized or mem_level.layout == EImageLayout::General,
+						"Mapping an image with layout '"_str << EImageLayout::ToString( mem_level.layout ) <<
+						"' can result in undefined behavior if this memory is used by the device.",
+						EDbgReport::Warning );
+
+		// read pixels
+		for (uint y = 0; y < msg->dimension.y; ++y)
+		{
+			BytesU			src_off = (bpp * msg->offset.x) + ((msg->offset.y + y) * src_row_pitch);
+
+			BinArrayCRef	src		= mem_level.Data().SubArray( usize(src_off), usize(row_size) );
+			BinArrayRef		dst		= msg->writableBuffer->SubArray( usize(y * msg->rowPitch), usize(row_size) );
+
+			MemCopy( OUT dst, src );
+		}
+
+		msg->result.Set( msg->writableBuffer->SubArray( 0, usize(msg->dimension.z * msg->slicePitch) ) );
+		return true;
 	}
 	
 /*
@@ -498,10 +573,63 @@ namespace PlatformSW
 	_WriteToImageMemory
 =================================================
 */
-	bool SWMemory::_WriteToImageMemory (const Message< GpuMsg::WriteToImageMemory > &)
+	bool SWMemory::_WriteToImageMemory (const Message< GpuMsg::WriteToImageMemory > &msg)
 	{
-		TODO("");
-		return false;
+		CHECK_ERR( _IsCreated() );
+		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
+		CHECK_ERR( msg->data.Size() >= msg->dimension.z * msg->slicePitch );
+		CHECK_ERR( _binding == EBindingTarget::Image );
+		CHECK_ERR( IsNotZero( msg->dimension ) );
+		CHECK_ERR( msg->memOffset == BytesUL(0) );
+		CHECK_ERR( msg->layer.Get() == 0 or (msg->offset.z == 0 and msg->dimension.z == 1) );	// 3D texture array is not supported
+			
+		const uint	offset_z = Max( msg->layer.Get(), msg->offset.z );
+			
+		Message< GpuMsg::GetSWImageMemoryLayout >	req_mem{ EPipelineAccess::HostWrite, EPipelineStage::Host };
+		SendTo( _GetParents().Front(), req_mem );
+
+		// find array layer or z-slice
+		CHECK_ERR( req_mem->result );
+		//CHECK_ERR( req_mem->result->memAccess[EMemoryAccess::CpuWrite] );
+		CHECK_ERR( offset_z < req_mem->result->layers.Count() and
+					offset_z + msg->dimension.z <= req_mem->result->layers.Count() );
+
+		auto&	mem_layer = req_mem->result->layers[ offset_z ];
+
+		// find mipmap level
+		CHECK_ERR( msg->mipLevel.Get() < mem_layer.mipmaps.Count() );
+
+		auto&	mem_level		= mem_layer.mipmaps[ msg->mipLevel.Get() ];
+		BytesU	bpp				= BytesU(EPixelFormat::BitPerPixel( mem_level.format ));
+		BytesU	dst_row_pitch	= GXImageUtils::AlignedRowSize( mem_level.dimension.x, bpp, req_mem->result->align );
+		BytesU	row_size		= bpp * msg->dimension.x;
+
+		CHECK_ERR( mem_level.memory != null );
+		CHECK_ERR( All( msg->offset.xy() < mem_level.dimension ) );
+		CHECK_ERR( All( msg->offset.xy() + msg->dimension.xy() <= mem_level.dimension ) );
+		CHECK_ERR( msg->rowPitch >= row_size );
+		
+		SW_DEBUG_REPORT( mem_level.layout == EImageLayout::Preinitialized or mem_level.layout == EImageLayout::General,
+						"Mapping an image with layout '"_str << EImageLayout::ToString( mem_level.layout ) <<
+						"' can result in undefined behavior if this memory is used by the device.",
+						EDbgReport::Warning );
+			
+		// write pixels
+		BytesU	written;
+
+		for (uint y = 0; y < mem_level.dimension.y; ++y)
+		{
+			BytesU			dst_off = (bpp * msg->offset.x) + ((msg->offset.y + y) * dst_row_pitch);
+
+			BinArrayRef		dst		= mem_level.Data().SubArray( usize(dst_off), usize(row_size) );
+			BinArrayCRef	src		= msg->data.SubArray( usize(y * msg->rowPitch), usize(row_size) );
+
+			MemCopy( OUT dst, src );
+			written += msg->rowPitch;
+		}
+
+		msg->wasWritten.Set( BytesUL(written) );
+		return true;
 	}
 	
 /*
@@ -512,6 +640,17 @@ namespace PlatformSW
 	bool SWMemory::_GetSWMemoryData (const Message< GpuMsg::GetSWMemoryData > &msg)
 	{
 		msg->result.Set( _usedMemory );
+		return true;
+	}
+	
+/*
+=================================================
+	_SWMemoryBarrier
+=================================================
+*/
+	bool SWMemory::_SWMemoryBarrier (const Message< GpuMsg::SWMemoryBarrier > &msg)
+	{
+		TODO( "" );
 		return true;
 	}
 

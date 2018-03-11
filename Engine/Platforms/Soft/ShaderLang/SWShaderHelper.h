@@ -6,11 +6,15 @@
 
 #pragma once
 
+#include "Engine/Config/Engine.Config.h"
+
+#ifdef GRAPHICS_API_SOFT
+
 #include "Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h"
 #include "Engine/Platforms/Soft/ShaderLang/SWLangImage.h"
 #include "Engine/Platforms/Soft/ShaderLang/SWLangTexture.h"
-
-#ifdef GRAPHICS_API_SOFT
+#include "Engine/Platforms/Soft/ShaderLang/SWLangShared.h"
+#include "Engine/Platforms/Soft/ShaderLang/SWLangBarrier.h"
 
 namespace SWShaderLang
 {
@@ -27,13 +31,19 @@ namespace Impl
 	protected:
 		using StringCRef		= GX_STL::GXTypes::StringCRef;
 		using EShader			= Engine::Platforms::EShader;
+		using EPipelineAccess	= Engine::Platforms::EPipelineAccess;
+		using EPipelineStage	= Engine::Platforms::EPipelineStage;
 
 		using ModulePtr			= Engine::Base::ModulePtr;
 		using VertexBuffers_t	= GX_STL::GXTypes::FixedSizeArray< ModulePtr, Engine::GlobalConst::Graphics_MaxAttribs >;
-		
-		using Fwd_GetSWBufferMemoryLayout		= Message< GpuMsg::ResourceTableForwardMsg< Message< GpuMsg::GetSWBufferMemoryLayout > > >;
-		using Fwd_GetSWImageViewMemoryLayout	= Message< GpuMsg::ResourceTableForwardMsg< Message< GpuMsg::GetSWImageViewMemoryLayout > > >;
-		using Fwd_GetSWTextureMemoryLayout		= Message< GpuMsg::ResourceTableForwardMsg< Message< GpuMsg::GetSWTextureMemoryLayout > > >;
+
+		using Atomic_t			= Barrier::Atomic_t;
+
+		template <typename T> using Message = Engine::Base::Message<T>;
+
+		using Fwd_GetSWBufferMemoryLayout		= Message< Engine::GpuMsg::ResourceTableForwardMsg< Message< Engine::GpuMsg::GetSWBufferMemoryLayout > > >;
+		using Fwd_GetSWImageViewMemoryLayout	= Message< Engine::GpuMsg::ResourceTableForwardMsg< Message< Engine::GpuMsg::GetSWImageViewMemoryLayout > > >;
+		using Fwd_GetSWTextureMemoryLayout		= Message< Engine::GpuMsg::ResourceTableForwardMsg< Message< Engine::GpuMsg::GetSWTextureMemoryLayout > > >;
 
 		struct VertexShader
 		{
@@ -93,36 +103,49 @@ namespace Impl
 			glm::uvec3			constWorkGroupSize;				// gl_WorkGroupSize
 		};
 
+		using ShaderState_t	= Union< VertexShader, GeometryShader,
+									 FragmentShader, ComputeShader >;
+
+		
+	public:
+		class IShaderModel
+		{
+		// types
+		public:
+			using Atomic_t							= SWShaderHelper::Atomic_t;
+			using Fwd_GetSWBufferMemoryLayout		= SWShaderHelper::Fwd_GetSWBufferMemoryLayout;
+			using Fwd_GetSWImageViewMemoryLayout	= SWShaderHelper::Fwd_GetSWImageViewMemoryLayout;
+			using Fwd_GetSWTextureMemoryLayout		= SWShaderHelper::Fwd_GetSWTextureMemoryLayout;
+
+		// interface
+		public:
+			virtual void InitBarrier (uint invocationID, uint index, OUT Atomic_t *&) const = 0;
+			virtual void GetSharedMemory (uint invocationID, uint index, BytesU size, OUT BinaryArray *&) const = 0;
+			virtual void GetBufferMemoryLayout (Fwd_GetSWBufferMemoryLayout &) const = 0;
+			virtual void GetImageViewMemoryLayout (Fwd_GetSWImageViewMemoryLayout &) const = 0;
+			virtual void GetTextureMemoryLayout (Fwd_GetSWTextureMemoryLayout &) const = 0;
+		};
+
 
 	// variables
 	protected:
-		VertexShader		_vertexShaderState;
-		GeometryShader		_geometryShaderState;
-		FragmentShader		_fragmentShaderState;
-		ComputeShader		_computeShaderState;
-		EShader::type		_stage;
+		Ptr<IShaderModel>	_shader;
+		uint				_invocationID	= 0;
+
+		ShaderState_t		_shaderState;
 
 
 	// methods
-	protected:
-		SWShaderHelper ();
+	public:
+		explicit SWShaderHelper (Ptr<IShaderModel> shader) : _shader{shader} {}
+
 		SWShaderHelper (SWShaderHelper &&) = default;
 		SWShaderHelper (const SWShaderHelper &) = default;
-
-		
-	// interface
-	protected:
-		virtual void _GetBufferMemoryLayout (const Fwd_GetSWBufferMemoryLayout &) const = 0;
-		virtual void _GetImageViewMemoryLayout (const Fwd_GetSWImageViewMemoryLayout &) const = 0;
-		virtual void _GetTextureMemoryLayout (const Fwd_GetSWTextureMemoryLayout &) const = 0;
-
-		virtual void _Reset ();
-
 
 	// shader interface
 	public:
 		// vertex shader only
-		bool VS_GetVertexBufferPtr (StringCRef bufferName, OUT void *&ptr) const;
+		/*bool VS_GetVertexBufferPtr (StringCRef bufferName, OUT void *&ptr) const;
 		bool VS_GetVertexBufferPtr (uint bindingIndex, OUT void *&ptr) const;
 		bool VS_GetIndexBufferPtr (OUT void *&ptr) const;
 
@@ -137,58 +160,88 @@ namespace Impl
 		bool FS_FragmentOutput (StringCRef name, const int4 &value) const;
 
 		bool FS_StencilOutput (int value) const;
-		bool FS_DepthOutput (float value) const;
+		bool FS_DepthOutput (float value) const;*/
 
 		
-		VertexShader const&		GetVertexShaderState () const		{ ASSERT( _stage == EShader::Vertex );   return _vertexShaderState; }
-		GeometryShader const&	GetGeometryShaderState () const		{ ASSERT( _stage == EShader::Geometry );  return _geometryShaderState; }
-		FragmentShader const&	GetFragmentShaderState () const		{ ASSERT( _stage == EShader::Fragment );  return _fragmentShaderState; }
-		ComputeShader const&	GetComputeShaderState () const		{ ASSERT( _stage == EShader::Compute );   return _computeShaderState; }
+		VertexShader const&		GetVertexShaderState () const		{ return _shaderState.Get< VertexShader >(); }
+		GeometryShader const&	GetGeometryShaderState () const		{ return _shaderState.Get< GeometryShader >(); }
+		FragmentShader const&	GetFragmentShaderState () const		{ return _shaderState.Get< FragmentShader >(); }
+		ComputeShader const&	GetComputeShaderState () const		{ return _shaderState.Get< ComputeShader >(); }
 
 
 		// for all shaders
-		//template <typename T>
-		//bool GetUniform (uint uniqueIndex, OUT T &value) const;
+		template <typename T>
+		void GetShared (uint index, usize arraySize, OUT SharedMemory<T> &value) const;
+
+		void InitBarrier (uint index, OUT Barrier &value) const;
 
 		template <typename T>
-		bool GetUniformBuffer (uint uniqueIndex, OUT UniformBuffer<T> &value) const;
+		void GetUniformBuffer (uint uniqueIndex, OUT UniformBuffer<T> &value) const;
 
 		template <typename T, EStorageAccess::type A>
-		bool GetStorageBuffer (uint uniqueIndex, OUT StorageBuffer<T,A> &value) const;
+		void GetStorageBuffer (uint uniqueIndex, OUT StorageBuffer<T,A> &value) const;
 		
 		template <typename T, EStorageAccess::type A>
-		bool GetImage (uint uniqueIndex, OUT Image2D<T,A> &value) const;
+		void GetImage (uint uniqueIndex, OUT Image2D<T,A> &value) const;
 		
 		template <typename T, EStorageAccess::type A>
-		bool GetImage (uint uniqueIndex, OUT Image2DArray<T,A> &value) const;
+		void GetImage (uint uniqueIndex, OUT Image2DArray<T,A> &value) const;
 
 		template <typename T, EStorageAccess::type A>
-		bool GetImage (uint uniqueIndex, OUT Image3D<T,A> &value) const;
+		void GetImage (uint uniqueIndex, OUT Image3D<T,A> &value) const;
 
 		template <typename T>
-		bool GetTexture (uint uniqueIndex, OUT Texture2D<T> &value) const;
+		void GetTexture (uint uniqueIndex, OUT Texture2D<T> &value) const;
 		
 		//template <typename T, typename R>
-		//bool GetTexture (uint uniqueIndex, OUT Texture2DArray<T,R> &value) const;
+		//void GetTexture (uint uniqueIndex, OUT Texture2DArray<T,R> &value) const;
 		
 		//template <typename T, typename R>
-		//bool GetTexture (uint uniqueIndex, OUT Texture3D<T,R> &value) const;
+		//void GetTexture (uint uniqueIndex, OUT Texture3D<T,R> &value) const;
+
+	private:
+		EShader::type			_GetShader () const;
+		EPipelineStage::type	_GetStage () const;
 	};
 
+
+/*
+=================================================
+	GetShared
+=================================================
+*/
+	template <typename T>
+	inline void SWShaderHelper::GetShared (uint index, usize arraySize, OUT SharedMemory<T> &value) const
+	{
+		BinaryArray*	arr = null;
+		_shader->GetSharedMemory( _invocationID, index, SizeOf<T> * arraySize, OUT arr );
+		value = SharedMemory<T>( *arr, arraySize );
+	}
 	
+/*
+=================================================
+	InitBarrier
+=================================================
+*/
+	inline void SWShaderHelper::InitBarrier (uint index, OUT Barrier &value) const
+	{
+		Atomic_t*	atomic = null;
+		_shader->InitBarrier( _invocationID, index, OUT atomic );
+		value = Barrier( *atomic );
+	}
+
 /*
 =================================================
 	GetUniformBuffer
 =================================================
 */
 	template <typename T>
-	inline bool SWShaderHelper::GetUniformBuffer (uint uniqueIndex, OUT UniformBuffer<T> &value) const
+	inline void SWShaderHelper::GetUniformBuffer (uint uniqueIndex, OUT UniformBuffer<T> &value) const
 	{
-		Fwd_GetSWBufferMemoryLayout		req_buf{ Message< GpuMsg::GetSWBufferMemoryLayout >{}, uniqueIndex };
-		_GetBufferMemoryLayout( req_buf );
+		Fwd_GetSWBufferMemoryLayout		req_buf{ uniqueIndex, EPipelineAccess::UniformRead, _GetStage() };
+		_shader->GetBufferMemoryLayout( req_buf );
 
 		value = UniformBuffer<T>{ *req_buf->message->result };
-		return true;
 	}
 	
 /*
@@ -197,13 +250,16 @@ namespace Impl
 =================================================
 */
 	template <typename T, EStorageAccess::type A>
-	inline bool SWShaderHelper::GetStorageBuffer (uint uniqueIndex, OUT StorageBuffer<T,A> &value) const
+	inline void SWShaderHelper::GetStorageBuffer (uint uniqueIndex, OUT StorageBuffer<T,A> &value) const
 	{
-		Fwd_GetSWBufferMemoryLayout		req_buf{ Message< GpuMsg::GetSWBufferMemoryLayout >{}, uniqueIndex };
-		_GetBufferMemoryLayout( req_buf );
+		Fwd_GetSWBufferMemoryLayout		req_buf{ uniqueIndex,
+												 EPipelineAccess::bits() |
+												 (EStorageAccess::HasReadAccess( A ) ? EPipelineAccess::ShaderRead : EPipelineAccess::type(0)) |
+												 (EStorageAccess::HasWriteAccess( A ) ? EPipelineAccess::ShaderWrite : EPipelineAccess::type(0)),
+												 _GetStage() };
+		_shader->GetBufferMemoryLayout( req_buf );
 
 		value = RVREF(StorageBuffer<T,A>{ *req_buf->message->result });
-		return true;
 	}
 		
 /*
@@ -212,33 +268,42 @@ namespace Impl
 =================================================
 */
 	template <typename T, EStorageAccess::type A>
-	inline bool SWShaderHelper::GetImage (uint uniqueIndex, OUT Image2D<T,A> &value) const
+	inline void SWShaderHelper::GetImage (uint uniqueIndex, OUT Image2D<T,A> &value) const
 	{
-		Fwd_GetSWImageViewMemoryLayout	req_img{ Message< GpuMsg::GetSWImageViewMemoryLayout >{}, uniqueIndex };
-		_GetImageViewMemoryLayout( req_img );
+		Fwd_GetSWImageViewMemoryLayout	req_img{ uniqueIndex,
+												 EPipelineAccess::bits() |
+												 (EStorageAccess::HasReadAccess( A ) ? EPipelineAccess::ShaderRead : EPipelineAccess::type(0)) |
+												 (EStorageAccess::HasWriteAccess( A ) ? EPipelineAccess::ShaderWrite : EPipelineAccess::type(0)),
+												 _GetStage() };
+		_shader->GetImageViewMemoryLayout( req_img );
 
 		value = RVREF(Image2D<T,A>{ RVREF(*req_img->message->result) });
-		return true;
 	}
 		
 	template <typename T, EStorageAccess::type A>
-	inline bool SWShaderHelper::GetImage (uint uniqueIndex, OUT Image2DArray<T,A> &value) const
+	inline void SWShaderHelper::GetImage (uint uniqueIndex, OUT Image2DArray<T,A> &value) const
 	{
-		Fwd_GetSWImageViewMemoryLayout	req_img{ Message< GpuMsg::GetSWImageViewMemoryLayout >{}, uniqueIndex };
-		_GetImageViewMemoryLayout( req_img );
+		Fwd_GetSWImageViewMemoryLayout	req_img{ uniqueIndex,
+												 EPipelineAccess::bits() |
+												 (EStorageAccess::HasReadAccess( A ) ? EPipelineAccess::ShaderRead : EPipelineAccess::type(0)) |
+												 (EStorageAccess::HasWriteAccess( A ) ? EPipelineAccess::ShaderWrite : EPipelineAccess::type(0)),
+												 _GetStage() };
+		_shader->GetImageViewMemoryLayout( req_img );
 
 		value = RVREF(Image2DArray<T,A>{ RVREF(*req_img->message->result) });
-		return true;
 	}
 
 	template <typename T, EStorageAccess::type A>
-	inline bool SWShaderHelper::GetImage (uint uniqueIndex, OUT Image3D<T,A> &value) const
+	inline void SWShaderHelper::GetImage (uint uniqueIndex, OUT Image3D<T,A> &value) const
 	{
-		Fwd_GetSWImageViewMemoryLayout	req_img{ Message< GpuMsg::GetSWImageViewMemoryLayout >{}, uniqueIndex };
-		_GetImageViewMemoryLayout( req_img );
+		Fwd_GetSWImageViewMemoryLayout	req_img{ uniqueIndex,
+												 EPipelineAccess::bits() |
+												 (EStorageAccess::HasReadAccess( A ) ? EPipelineAccess::ShaderRead : EPipelineAccess::type(0)) |
+												 (EStorageAccess::HasWriteAccess( A ) ? EPipelineAccess::ShaderWrite : EPipelineAccess::type(0)),
+												 _GetStage() };
+		_shader->GetImageViewMemoryLayout( req_img );
 
 		value = RVREF(Image3D<T,A>{ RVREF(*req_img->message->result) });
-		return true;
 	}
 	
 /*
@@ -247,12 +312,40 @@ namespace Impl
 =================================================
 */
 	template <typename T>
-	inline bool SWShaderHelper::GetTexture (uint uniqueIndex, OUT Texture2D<T> &value) const
+	inline void SWShaderHelper::GetTexture (uint uniqueIndex, OUT Texture2D<T> &value) const
 	{
 		TODO( "GetTexture" );
-		return true;
 	}
+	
+/*
+=================================================
+	_GetShader
+=================================================
+*/
+	inline SWShaderHelper::EShader::type  SWShaderHelper::_GetShader () const
+	{
+		if ( _shaderState.GetCurrentTypeId() == TypeIdOf<VertexShader>() )		return EShader::Vertex;
+		if ( _shaderState.GetCurrentTypeId() == TypeIdOf<GeometryShader>() )	return EShader::Geometry;
+		if ( _shaderState.GetCurrentTypeId() == TypeIdOf<FragmentShader>() )	return EShader::Fragment;
+		if ( _shaderState.GetCurrentTypeId() == TypeIdOf<ComputeShader>() )		return EShader::Compute;
 
+		return EShader::Unknown;
+	}
+	
+/*
+=================================================
+	_GetStage
+=================================================
+*/
+	inline SWShaderHelper::EPipelineStage::type  SWShaderHelper::_GetStage () const
+	{
+		if ( _shaderState.GetCurrentTypeId() == TypeIdOf<VertexShader>() )		return EPipelineStage::VertexShader;
+		if ( _shaderState.GetCurrentTypeId() == TypeIdOf<GeometryShader>() )	return EPipelineStage::GeometryShader;
+		if ( _shaderState.GetCurrentTypeId() == TypeIdOf<FragmentShader>() )	return EPipelineStage::FragmentShader;
+		if ( _shaderState.GetCurrentTypeId() == TypeIdOf<ComputeShader>() )		return EPipelineStage::ComputeShader;
+
+		return EPipelineStage::Unknown;
+	}
 
 }	// Impl
 }	// SWShaderLang

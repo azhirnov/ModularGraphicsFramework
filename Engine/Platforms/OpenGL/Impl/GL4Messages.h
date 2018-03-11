@@ -2,12 +2,14 @@
 
 #pragma once
 
-#include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/PipelineLayout.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/PipelineLayout.h"
 
 namespace Engine
 {

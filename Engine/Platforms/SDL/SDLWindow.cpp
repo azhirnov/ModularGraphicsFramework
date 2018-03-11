@@ -1,13 +1,15 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/OS/Window.h"
-#include "Engine/Platforms/Shared/OS/Display.h"
-#include "Engine/Platforms/Shared/OS/Platform.h"
+#include "Engine/STL/Common/Platforms.h"
+
+#ifdef PLATFORM_SDL
+
+#include "Engine/Platforms/Public/OS/Window.h"
+#include "Engine/Platforms/Public/OS/Display.h"
+#include "Engine/Platforms/Public/OS/Platform.h"
 #include "Engine/Platforms/SDL/SDLMessages.h"
 #include "Engine/Platforms/SDL/SDLObjectsConstructor.h"
 #include "Engine/Platforms/SDL/SDLDisplay.h"
-
-#ifdef PLATFORM_SDL
 
 namespace Engine
 {
@@ -406,7 +408,7 @@ namespace PlatformSDL
 
 		// allow subscribers to change settings
 		auto const					msg		= Message< OSMsg::WindowBeforeCreate >{ _createInfo };
-		CreateInfo::Window const&	info	= msg->editable;
+		CreateInfo::Window const&	info	= *msg->editable;
 
 		_SendEvent( msg );
 

@@ -234,7 +234,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline bool  Plane<T>::GetIntersection (const Self &other, OUT Vec3_t &result) const
+	inline bool  Plane<T>::GetIntersection (const Self &other, OUT Vec3_t &result) const
 	{
 		const Vec3_t	n = Cross( _normal, other._normal ).Normalize();
 		const T			d = n.LengthSqr();

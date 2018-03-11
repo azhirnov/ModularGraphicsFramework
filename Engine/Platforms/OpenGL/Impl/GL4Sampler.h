@@ -2,10 +2,12 @@
 
 #pragma once
 
-#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/Shared/GPU/Sampler.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
+#include "Engine/Platforms/Public/GPU/Sampler.h"
 
 namespace Engine
 {

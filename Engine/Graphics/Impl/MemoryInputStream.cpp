@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Graphics/Shared/MemStream.h"
+#include "Engine/Graphics/Public/MemStream.h"
 #include "Engine/Graphics/Impl/GraphicsBaseModule.h"
 #include "Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
 

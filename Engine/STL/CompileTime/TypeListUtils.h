@@ -371,7 +371,7 @@ namespace CompileTime
 		template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
 		struct TTypeList_MaxSize
 		{
-			typedef ValueToType< usize, (Max< usize, SizeOf<Type>::bytes, PrevFuncResult::value >) >	result;
+			typedef ValueToType< usize, (Max< usize, CompileTime::SizeOf<Type>::bytes, PrevFuncResult::value >) >	result;
 		};
 		
 		template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>

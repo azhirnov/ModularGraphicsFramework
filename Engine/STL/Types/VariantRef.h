@@ -57,6 +57,7 @@ namespace GXTypes
 		template <typename T>
 		CHECKRES forceinline static VariantRef  From (T &ref)
 		{
+			STATIC_ASSERT( not TypeTraits::IsConst<T> );
 			return VariantRef( ref );
 		}
 		
@@ -72,15 +73,6 @@ namespace GXTypes
 			ref._reference	= ptr;
 			ref._typeId		= typeId;
 			return ref;
-		}
-
-
-		// Warning: this is not safe!
-		// const reference may be a reference to a temporary object.
-		template <typename T>
-		CHECKRES forceinline static VariantRef  FromConst (const T& ref)
-		{
-			return VariantRef( const_cast<T &>( ref ) );
 		}
 
 

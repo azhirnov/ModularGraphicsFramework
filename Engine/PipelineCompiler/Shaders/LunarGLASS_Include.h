@@ -2,8 +2,11 @@
 
 #pragma once
 
+#include "Engine/STL/Common/Platforms.h"
+
 #ifdef COMPILER_MSVC
 # pragma warning (push, 1)
+# pragma warning (disable: 4100)
 #endif
 
 #define AMD_EXTENSIONS
@@ -27,9 +30,8 @@
 #include "LunarGLASS/Frontends/glslang/GlslangToTop.h"
 #include "LunarGLASS/Frontends/SPIRV/SpvToTop.h"
 #include "LunarGLASS/Core/Options.h"
-#include "LunarGLASS/Standalone/OptionParse.h"
-#include "LunarGLASS/Backends/GLSL/GlslManager.h"
 #include "LunarGLASS/Core/Exceptions.h"
+#include "LunarGLASS/Standalone/OptionParse.h"
 
 #ifdef COMPILER_MSVC
 # pragma warning (pop)

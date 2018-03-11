@@ -2,11 +2,13 @@
 
 #pragma once
 
-#include "Engine/Platforms/OpenCL/Impl/CL2Enums.h"
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Thread.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
+
+#include "Engine/Platforms/OpenCL/Impl/CL2Enums.h"
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Thread.h"
 
 namespace Engine
 {
@@ -31,7 +33,7 @@ namespace GpuMsg
 
 
 	//
-	// Get GPU Buffer ID
+	// Get Buffer ID
 	//
 	struct GetCLBufferID
 	{
@@ -40,7 +42,7 @@ namespace GpuMsg
 	
 
 	//
-	// Get GPU Compute Pipeline ID
+	// Get Compute Pipeline ID
 	//
 	struct GetCLComputePipelineID
 	{
@@ -56,7 +58,7 @@ namespace GpuMsg
 
 
 	//
-	// GPU Pipeline Resource Table ID (program arguments)
+	// Pipeline Resource Table ID (program arguments)
 	//
 	struct CLPipelineResourceTableApply
 	{
@@ -76,7 +78,7 @@ namespace GpuMsg
 
 
 	//
-	// Get GPU Image ID
+	// Get Image ID
 	//
 	struct GetCLImageID
 	{
@@ -85,7 +87,7 @@ namespace GpuMsg
 
 
 	//
-	// Get GPU Shader Module IDs
+	// Get Shader Module IDs
 	//
 	struct GetCLShaderModuleIDs
 	{

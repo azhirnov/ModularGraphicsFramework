@@ -1,11 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/OS/Windows/AtomicOp.h"
-#include "Engine/STL/Math/BinaryMath.h"
-#include "Engine/STL/Math/Interpolations.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/STL.Config.h"
 
 #if defined( PLATFORM_WINDOWS ) and not defined( GX_USE_STD )
 
+#include "Engine/STL/OS/Windows/AtomicOp.h"
+#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Math/Interpolations.h"
 #include "Engine/STL/OS/Windows/WinHeader.h"
 
 #ifdef COMPILER_GCC
@@ -105,4 +107,4 @@ namespace OS
 }	// OS
 }	// GX_STL
 
-#endif	// PLATFORM_WINDOWS
+#endif	// PLATFORM_WINDOWS and not GX_USE_STD

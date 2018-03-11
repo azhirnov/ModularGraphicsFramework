@@ -14,15 +14,15 @@
 
 
 // Batch Renderer
-#include "Engine/Graphics/Shared/BatchRenderer.h"
-#include "Engine/Graphics/Shared/Vertices.h"
-#include "Engine/Graphics/Shared/Primitives.h"
+#include "Engine/Graphics/Public/BatchRenderer.h"
+#include "Engine/Graphics/Public/Vertices.h"
+#include "Engine/Graphics/Public/Primitives.h"
 
 // Font
-#include "Engine/Graphics/Shared/Font.h"
+#include "Engine/Graphics/Public/Font.h"
 
 // Helpers
-#include "Engine/Graphics/Shared/Commands.h"
+#include "Engine/Graphics/Public/Commands.h"
 
 // Procedural
 

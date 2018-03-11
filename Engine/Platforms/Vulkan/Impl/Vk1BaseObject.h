@@ -2,10 +2,12 @@
 
 #pragma once
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
 
 namespace Engine
 {

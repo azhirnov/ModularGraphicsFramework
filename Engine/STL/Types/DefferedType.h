@@ -49,14 +49,14 @@ namespace GXTypes
 			_typeid( other._typeid ),
 			_isDefined( other._isDefined )
 		{
-			UnsafeMem::MemCopy( _data, other._data, SizeOf(_data) );
+			UnsafeMem::MemCopy( _data, other._data, BytesU::SizeOf(_data) );
 		}
 
 		DeferredType (Self &&other) :
 			_typeid( other._typeid ),
 			_isDefined( other._isDefined )
 		{
-			UnsafeMem::MemCopy( _data, other._data, SizeOf(_data) );
+			UnsafeMem::MemCopy( _data, other._data, BytesU::SizeOf(_data) );
 			other._Destroy();
 		}
 
@@ -86,7 +86,7 @@ namespace GXTypes
 		{
 			ASSERT( _typeid == other._typeid );
 
-			UnsafeMem::MemCopy( _data, other._data, SizeOf(_data) );
+			UnsafeMem::MemCopy( _data, other._data, BytesU::SizeOf(_data) );
 			_isDefined = other._isDefined;
 			return *this;
 		}
@@ -95,7 +95,7 @@ namespace GXTypes
 		{
 			ASSERT( _typeid == other._typeid );
 
-			UnsafeMem::MemCopy( _data, other._data, SizeOf(_data) );
+			UnsafeMem::MemCopy( _data, other._data, BytesU::SizeOf(_data) );
 			_isDefined = other._isDefined;
 
 			other._Destroy();

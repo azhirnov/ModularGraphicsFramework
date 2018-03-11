@@ -21,7 +21,7 @@ namespace Impl
 		
 	// types
 	private:
-		using BufferData_t	= GpuMsg::GetSWBufferMemoryLayout::Data;
+		using BufferData_t	= Engine::GpuMsg::GetSWBufferMemoryLayout::Data;
 
 
 	// variables
@@ -54,7 +54,7 @@ namespace Impl
 	template <typename T>
 	inline T const*  UniformBuffer<T>::operator -> () const
 	{
-		ASSERT( _data.access[ EMemoryAccess::GpuRead ] );
+		ASSERT( _data.memAccess[ EMemoryAccess::GpuRead ] );
 		return (T const *) _data.memory.ptr();
 	}
 //-----------------------------------------------------------------------------
@@ -73,7 +73,7 @@ namespace Impl
 		
 	// types
 	private:
-		using BufferData_t	= GpuMsg::GetSWBufferMemoryLayout::Data;
+		using BufferData_t	= Engine::GpuMsg::GetSWBufferMemoryLayout::Data;
 
 
 	// variables
@@ -104,13 +104,13 @@ namespace Impl
 	template <typename T, EStorageAccess::type A>
 	StorageBuffer<T,A>::StorageBuffer (const BufferData_t &data) : _data(data)
 	{
-		//ASSERT( _data.memory.Size() == SizeOf<T>() );
+		ASSERT( _data.memory.Size() >= SizeOf<T> );
 	}
 
 	template <typename T, EStorageAccess::type A>
 	inline decltype(auto)  StorageBuffer<T,A>::operator -> ()
 	{
-		if_constexpr( EStorageAccess::CanWrite(A) )
+		if_constexpr( EStorageAccess::HasWriteAccess(A) )
 			return _Write();
 		else
 			return _Read();
@@ -119,16 +119,16 @@ namespace Impl
 	template <typename T, EStorageAccess::type A>
 	inline T const *  StorageBuffer<T,A>::_Read ()
 	{
-		STATIC_ASSERT( EStorageAccess::CanRead(A) );
-		ASSERT( _data.access[ EMemoryAccess::GpuRead ] );
+		STATIC_ASSERT( EStorageAccess::HasReadAccess(A) );
+		ASSERT( _data.memAccess[ EMemoryAccess::GpuRead ] );
 		return (T const *) _data.memory.ptr();
 	}
 	
 	template <typename T, EStorageAccess::type A>
 	inline T *  StorageBuffer<T,A>::_Write ()
 	{
-		STATIC_ASSERT( EStorageAccess::CanWrite(A) );
-		ASSERT( _data.access[ EMemoryAccess::GpuWrite ] );
+		STATIC_ASSERT( EStorageAccess::HasWriteAccess(A) );
+		ASSERT( _data.memAccess[ EMemoryAccess::GpuWrite ] );
 		return (T *) _data.memory.ptr();
 	}
 //-----------------------------------------------------------------------------

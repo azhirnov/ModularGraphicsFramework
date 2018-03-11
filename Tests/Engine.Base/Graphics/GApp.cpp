@@ -3,7 +3,7 @@
 #include "GApp.h"
 #include "../Pipelines/all_pipelines.h"
 #include "Engine/Profilers/Engine.Profilers.h"
-#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
+#include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 
 struct GApp::Vertex
@@ -59,7 +59,7 @@ bool GApp::Initialize (GAPI::type api)
 	thread->AddModule( gpuIDs.thread, CreateInfo::GpuThread{
 					   GraphicsSettings{
 							api,
-							CreateInfo::GpuContext::EFlags::bits() | CreateInfo::GpuContext::EFlags::DebugContext
+							CreateInfo::GpuContext::EFlags::DebugContext
 						} } );
 
 	auto	input		= thread->GetModuleByID( InputThreadModuleID );
@@ -150,13 +150,17 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 
 	// clear image
 	{
-		cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::bits() | EPipelineStage::Transfer,
-					  EImageLayout::Undefined, EImageLayout::TransferDstOptimal, texture, EImageAspect::bits() | EImageAspect::Color });
+		cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::TopOfPipe, EPipelineStage::Transfer,
+														 EPipelineAccess::bits(), EPipelineAccess::TransferWrite,
+														 EImageLayout::Undefined, EImageLayout::TransferDstOptimal,
+														 texture, EImageAspect::Color });
 
 		cmdBuilder->Send< GpuMsg::CmdClearColorImage >({ texture, EImageLayout::TransferDstOptimal, float4(0.5f) });
 
-		cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({  EPipelineStage::bits() | EPipelineStage::Transfer,  EPipelineStage::AllGraphics,
-					  EImageLayout::TransferDstOptimal, EImageLayout::ShaderReadOnlyOptimal, texture, EImageAspect::bits() | EImageAspect::Color });
+		cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::Transfer, EPipelineStage::FragmentShader,
+														 EPipelineAccess::TransferWrite, EPipelineAccess::ShaderRead,
+														 EImageLayout::TransferDstOptimal, EImageLayout::ShaderReadOnlyOptimal,
+														 texture, EImageAspect::Color });
 	}
 
 	// draw triangle to framebuffer
@@ -170,7 +174,7 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 		RectU		area		= RectU( 0, 0, fb_descr.size.x, fb_descr.size.y );
 
 		GpuMsg::CmdClearAttachments	clear;
-		clear.attachments.PushBack({ EImageAspect::bits() | EImageAspect::Color, 0, float4(1.0f) });
+		clear.attachments.PushBack({ EImageAspect::Color, 0, float4(1.0f) });
 		clear.clearRects.PushBack({ area });
 
 		cmdBuilder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, framebuffer, area });
@@ -273,7 +277,7 @@ bool GApp::_CreatePipeline2 ()
 	create_gpp->topology	= EPrimitive::TriangleList;
 	create_gpp->vertexInput.Add( "at_Position", &Vertex::position )
 							.Add( "at_Texcoord", &Vertex::texcoord )
-							.Bind( "", SizeOf<Vertex>() );
+							.Bind( "", SizeOf<Vertex> );
 	
 	pipelineTemplate2->Send( create_gpp );
 	gpipeline2 = create_gpp->result.Get();
@@ -316,7 +320,7 @@ bool GApp::_CreateCmdBuffers ()
 						gthread->GlobalSystems(),
 						CreateInfo::GpuCommandBuffer{
 							gthread,
-							CommandBufferDescriptor{ ECmdBufferCreate::bits() | ECmdBufferCreate::ImplicitResetable }
+							CommandBufferDescriptor{ ECmdBufferCreate::ImplicitResetable }
 						},
 						OUT cmdBuffers[i] )
 		);
@@ -348,9 +352,9 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 												EImage::Tex2D,
 												uint4( 1024, 1024, 0, 0 ),
 												EPixelFormat::RGBA8_UNorm,
-												EImageUsage::bits() | EImageUsage::Sampled | EImageUsage::ColorAttachment
+												EImageUsage::Sampled | EImageUsage::ColorAttachment
 											},
-											EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+											EGpuMemory::LocalInGPU,
 											EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
 					OUT fbColorImage ) );
 	/*
@@ -361,9 +365,9 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 												EImage::Tex2D,
 												uint4( 4, 4, 0, 0 ),
 												EPixelFormat::RGBA8_UNorm,
-												EImageUsage::bits() | EImageUsage::Sampled | EImageUsage::TransferDst
+												EImageUsage::Sampled | EImageUsage::TransferDst
 											},
-											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+											EGpuMemory::CoherentWithCPU,
 											EMemoryAccess::All },
 					OUT texture ) );
 	/*/
@@ -374,9 +378,9 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 												EImage::Tex2D,
 												uint4( 128, 128, 0, 0 ),
 												EPixelFormat::RGBA8_UNorm,
-												EImageUsage::bits() | EImageUsage::Sampled | EImageUsage::TransferDst
+												EImageUsage::Sampled | EImageUsage::TransferDst
 											},
-											EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+											EGpuMemory::LocalInGPU,
 											EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
 					OUT texture ) );
 	//*/
@@ -395,10 +399,10 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					gpuIDs.buffer,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuBuffer{	BufferDescriptor{
-												SizeOf<Vertex>() * 4,
-												EBufferUsage::bits() | EBufferUsage::Vertex
+												SizeOf<Vertex> * 4,
+												EBufferUsage::Vertex
 											},
-											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+											EGpuMemory::CoherentWithCPU,
 											EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite  },
 					OUT vbuffer ) );
 
@@ -406,10 +410,10 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					gpuIDs.buffer,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuBuffer{	BufferDescriptor{
-												SizeOf<uint>() * 6,
-												EBufferUsage::bits() | EBufferUsage::Index
+												SizeOf<uint> * 6,
+												EBufferUsage::Index
 											},
-											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+											EGpuMemory::CoherentWithCPU,
 											EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite },
 					OUT ibuffer ) );
 
@@ -417,10 +421,10 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 					gpuIDs.buffer,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuBuffer{	BufferDescriptor{
-												SizeOf<Pipelines::UB>(),
-												EBufferUsage::bits() | EBufferUsage::Uniform
+												SizeOf<Pipelines::UB>,
+												EBufferUsage::Uniform
 											},
-											EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+											EGpuMemory::CoherentWithCPU,
 											EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite },
 					OUT ubuffer ) );
 
@@ -462,7 +466,7 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 	};
 
 	Pipelines::UB	ub_data;	ub_data.color = float4(1.0f);
-
+	
 	vbuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::From(vertices) });
 	ibuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::From(indices) });
 	ubuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::FromValue(ub_data) });

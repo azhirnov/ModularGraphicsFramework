@@ -41,8 +41,8 @@ namespace GXTypes
 	CHECKRES constexpr TimeL operator "" _microSec (unsigned long long value)	{ return TimeL::FromMicroSeconds( value ); }
 	CHECKRES constexpr TimeD operator "" _microSec (long double value)			{ return TimeD::FromMicroSeconds( (double)value ); }
 
-	CHECKRES constexpr TimeL operator "" _miliSec (unsigned long long value)	{ return TimeL::FromMilliSeconds( value ); }
-	CHECKRES constexpr TimeD operator "" _miliSec (long double value)			{ return TimeD::FromMilliSeconds( (double)value ); }
+	CHECKRES constexpr TimeL operator "" _milliSec (unsigned long long value)	{ return TimeL::FromMilliSeconds( value ); }
+	CHECKRES constexpr TimeD operator "" _milliSec (long double value)			{ return TimeD::FromMilliSeconds( (double)value ); }
 	
 	CHECKRES constexpr TimeL operator "" _sec (unsigned long long value)		{ return TimeL::FromSeconds( value ); }
 	CHECKRES constexpr TimeD operator "" _sec (long double value)				{ return TimeD::FromSeconds( (double)value ); }

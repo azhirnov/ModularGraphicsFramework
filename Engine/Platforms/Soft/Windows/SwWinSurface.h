@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/GPU/Context.h"
+#include "Engine/Platforms/Public/GPU/Context.h"
 #include "Engine/Platforms/Soft/Impl/SWEnums.h"
 
 #if defined( GRAPHICS_API_SOFT ) and defined( PLATFORM_WINDOWS )

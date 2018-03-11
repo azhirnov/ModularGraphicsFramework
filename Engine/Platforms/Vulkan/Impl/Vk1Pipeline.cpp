@@ -1,14 +1,16 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/Shared/GPU/VertexInputState.h"
+#include "Engine/Config/Engine.Config.h"
+
+#ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/VertexInputState.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
-
-#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {

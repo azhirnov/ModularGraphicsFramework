@@ -2,12 +2,16 @@
 
 #pragma once
 
-#include "Engine/Platforms/Soft/Impl/SWEnums.h"
-#include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
-#include "Engine/Platforms/Soft/Impl/SWMessages.h"
-#include "Engine/Platforms/Soft/ShaderLang/SWLangGLM.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/GPU/PixelFormatEnums.h"
+#include "Engine/Platforms/Public/GPU/ShaderEnums.h"
+
+#include "Engine/Platforms/Soft/Impl/SWEnums.h"
+#include "Engine/Platforms/Soft/Impl/SWMessages.h"
+#include "Engine/Platforms/Soft/ShaderLang/SWLangGLM.h"
 
 namespace SWShaderLang
 {
@@ -16,33 +20,11 @@ namespace Impl
 
 	using namespace GX_STL::GXMath;
 
-	using namespace Engine;
-	using namespace Engine::Base;
+	using EStorageAccess	= Engine::Platforms::EShaderMemoryModel;
 
-	
-	struct EStorageAccess
-	{
-		enum type
-		{
-			ReadOnly,
-			WriteOnly,
-			Coherent,
-			Restrict,
-			Volatile,
-		};
+	using EMemoryAccess		= Engine::Base::EMemoryAccess;
 
-		static constexpr bool CanRead (type value)
-		{
-			return value != WriteOnly;
-		}
-
-		static constexpr bool CanWrite (type value)
-		{
-			return value != ReadOnly;
-		}
-
-		// TODO: barriers?
-	};
+	//using EPixelFormat	= Engine::Platforms::EPixelFormat;
 
 
 }	// Impl

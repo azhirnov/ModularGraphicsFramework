@@ -1,14 +1,16 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
-#include "Engine/Platforms/Soft/Impl/SWShader.h"
-#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+#include "Engine/STL/Math/Image/ImageUtils.h"
 
 namespace Engine
 {
@@ -58,8 +60,6 @@ namespace PlatformSW
 		BinaryArray					_bufferData;
 		BinaryArray					_pushConstData;
 		ERecordingState				_recordingState;
-
-		SWShader					_helper;
 
 		// states
 		ModulePtr					_computeShader;
@@ -477,7 +477,7 @@ namespace PlatformSW
 		
 		_PrepareForCompute();
 
-		CHECK_ERR( _helper.DispatchCompute( data.groupCount, _computeShader, _computeResTable ) );
+		CHECK_ERR( GetDevice()->DispatchCompute( data.groupCount, _computeShader, _computeResTable ) );
 		return true;
 	}
 	
@@ -521,22 +521,23 @@ namespace PlatformSW
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyBuffer >();
 		
-		Message< GpuMsg::GetSWBufferMemoryLayout >	req_src_mem;
-		Message< GpuMsg::GetSWBufferMemoryLayout >	req_dst_mem;
-
-		data.srcBuffer->Send( req_src_mem );
-		data.dstBuffer->Send( req_dst_mem );
-
-		CHECK_ERR( req_src_mem->result and req_src_mem->result->access[ EMemoryAccess::GpuRead ] );
-		CHECK_ERR( req_dst_mem->result and req_dst_mem->result->access[ EMemoryAccess::GpuWrite ] );
-
-		BinArrayCRef	src = req_src_mem->result->memory;
-		BinArrayRef		dst = req_dst_mem->result->memory;
-
 		for (auto& reg : Range(data.regions))
 		{
-			MemCopy( dst.SubArray( usize(reg.dstOffset), usize(reg.size) ),
-					 src.SubArray( usize(reg.srcOffset), usize(reg.size) ) );
+			Message< GpuMsg::GetSWBufferMemoryLayout >	req_src_mem { BytesU(reg.srcOffset), BytesU(reg.size), EPipelineAccess::TransferRead, EPipelineStage::Transfer };
+			Message< GpuMsg::GetSWBufferMemoryLayout >	req_dst_mem { BytesU(reg.dstOffset), BytesU(reg.size), EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
+
+			data.srcBuffer->Send( req_src_mem );
+			data.dstBuffer->Send( req_dst_mem );
+
+			CHECK_ERR( req_src_mem->result and req_src_mem->result->memAccess[ EMemoryAccess::GpuRead ] );
+			CHECK_ERR( req_dst_mem->result and req_dst_mem->result->memAccess[ EMemoryAccess::GpuWrite ] );
+			
+			BinArrayCRef	src_reg = req_src_mem->result->memory;
+			BinArrayRef		dst_reg = req_dst_mem->result->memory;
+
+			CHECK_ERR( src_reg.Size() == dst_reg.Size() );
+
+			MemCopy( dst_reg, src_reg );
 		}
 		return true;
 	}
@@ -550,8 +551,8 @@ namespace PlatformSW
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyImage >();
 		
-		Message< GpuMsg::GetSWImageMemoryLayout >	req_src_mem;
-		Message< GpuMsg::GetSWImageMemoryLayout >	req_dst_mem;
+		Message< GpuMsg::GetSWImageMemoryLayout >	req_src_mem { EPipelineAccess::TransferRead, EPipelineStage::Transfer };
+		Message< GpuMsg::GetSWImageMemoryLayout >	req_dst_mem { EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
 		Message< GpuMsg::GetImageDescriptor >		req_src_descr;
 		Message< GpuMsg::GetImageDescriptor >		req_dst_descr;
 
@@ -560,14 +561,73 @@ namespace PlatformSW
 		SendTo( data.srcImage, req_src_descr );
 		SendTo( data.dstImage, req_dst_descr );
 
-		CHECK_ERR( req_src_mem->result and req_src_mem->result->access[ EMemoryAccess::GpuRead ] );
-		CHECK_ERR( req_dst_mem->result and req_dst_mem->result->access[ EMemoryAccess::GpuWrite ] );
+		CHECK_ERR( req_src_mem->result and req_src_mem->result->memAccess[ EMemoryAccess::GpuRead ] );
+		CHECK_ERR( req_dst_mem->result and req_dst_mem->result->memAccess[ EMemoryAccess::GpuWrite ] );
 		CHECK_ERR( req_src_descr->result and req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
 		CHECK_ERR( req_dst_descr->result and req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
-
+		CHECK_ERR( req_src_descr->result->samples == req_dst_descr->result->samples );
+		
 		for (auto& reg : Range(data.regions))
 		{
-			// TODO
+			// find array layer or z-slice
+			CHECK_ERR( (reg.srcLayers.baseLayer.Get() == 0 and reg.srcLayers.layerCount == 1) or
+					   (reg.srcOffset.z == 0 and reg.size.z == 1) );
+			
+			CHECK_ERR( (reg.dstLayers.baseLayer.Get() == 0 and reg.dstLayers.layerCount == 1) or
+					   (reg.dstOffset.z == 0 and reg.size.z == 1) );
+
+			const uint	src_off_z	= Max( reg.srcLayers.baseLayer.Get(), reg.srcOffset.z );
+			const uint	dst_off_z	= Max( reg.dstLayers.baseLayer.Get(), reg.dstOffset.z );
+			const uint	src_dim_z	= Max( reg.srcLayers.layerCount, reg.size.z );
+			const uint	dst_dim_z	= Max( reg.dstLayers.layerCount, reg.size.z );
+
+			CHECK_ERR( src_dim_z == dst_dim_z );
+
+			CHECK_ERR( src_off_z < req_src_mem->result->layers.Count() );
+			CHECK_ERR( src_off_z + src_dim_z <= req_src_mem->result->layers.Count() );
+			
+			CHECK_ERR( dst_off_z < req_dst_mem->result->layers.Count() );
+			CHECK_ERR( dst_off_z + dst_dim_z <= req_dst_mem->result->layers.Count() );
+			
+			for (uint z = 0; z < src_dim_z; ++z)
+			{
+				auto const&	src_layer	= req_src_mem->result->layers[ src_off_z + z ];
+				auto&		dst_layer	= req_dst_mem->result->layers[ dst_off_z + z ];
+
+				// find mipmap level
+				CHECK_ERR( reg.srcLayers.mipLevel.Get() < src_layer.mipmaps.Count() );
+				CHECK_ERR( reg.dstLayers.mipLevel.Get() < dst_layer.mipmaps.Count() );
+			
+				auto const&	src_level		= src_layer.mipmaps[ reg.srcLayers.mipLevel.Get() ];
+				auto&		dst_level		= dst_layer.mipmaps[ reg.dstLayers.mipLevel.Get() ];
+				BytesU		src_bpp			= BytesU(EPixelFormat::BitPerPixel( src_level.format ));
+				BytesU		dst_bpp			= BytesU(EPixelFormat::BitPerPixel( dst_level.format ));
+				BytesU		src_row_pitch	= GXImageUtils::AlignedRowSize( src_level.dimension.x, src_bpp, req_src_mem->result->align );
+				BytesU		dst_row_pitch	= GXImageUtils::AlignedRowSize( dst_level.dimension.x, dst_bpp, req_dst_mem->result->align );
+				BytesU		row_size		= src_bpp * reg.size.x;
+
+				CHECK_ERR( src_bpp == dst_bpp );
+				CHECK_ERR( src_level.memory != null and dst_level.memory != null );
+				CHECK_ERR( All( reg.srcOffset.xy() < src_level.dimension ) );
+				CHECK_ERR( All( reg.srcOffset.xy() + reg.size.xy() <= src_level.dimension ) );
+				CHECK_ERR( All( reg.dstOffset.xy() < dst_level.dimension ) );
+				CHECK_ERR( All( reg.dstOffset.xy() + reg.size.xy() <= dst_level.dimension ) );
+
+				SW_DEBUG_REPORT2( src_level.layout == EImageLayout::TransferSrcOptimal or src_level.layout == EImageLayout::General, EDbgReport::Error );
+				SW_DEBUG_REPORT2( dst_level.layout == EImageLayout::TransferDstOptimal or dst_level.layout == EImageLayout::General, EDbgReport::Error );
+
+				// copy pixels
+				for (uint y = 0; y < reg.size.y; ++y)
+				{
+					BytesU			src_off	= (src_bpp * reg.srcOffset.x) + ((reg.srcOffset.y + y) * src_row_pitch);
+					BytesU			dst_off	= (dst_bpp * reg.dstOffset.x) + ((reg.dstOffset.y + y) * dst_row_pitch);
+
+					BinArrayCRef	src		= src_level.Data().SubArray( usize(src_off), usize(row_size) );
+					BinArrayRef		dst		= dst_level.Data().SubArray( usize(dst_off), usize(row_size) );
+
+					MemCopy( OUT dst, src );
+				}
+			}
 		}
 		return true;
 	}
@@ -581,7 +641,61 @@ namespace PlatformSW
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyBufferToImage >();
 		
-		TODO( "" );
+		Message< GpuMsg::GetBufferDescriptor >		req_src_descr;
+		Message< GpuMsg::GetImageDescriptor >		req_dst_descr;
+		data.srcBuffer->Send( req_src_descr );
+		data.dstImage->Send( req_dst_descr );
+		
+		CHECK_ERR( req_src_descr->result and req_src_descr->result->usage[ EBufferUsage::TransferSrc ] );
+		CHECK_ERR( req_dst_descr->result and req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
+
+		BytesU	bpp	= BytesU(EPixelFormat::BitPerPixel( req_dst_descr->result->format ));
+
+		for (auto& reg : Range(data.regions))
+		{
+			// find array layer or z-slice
+			CHECK_ERR( (reg.imageLayers.baseLayer.Get() == 0 and reg.imageLayers.layerCount == 1) or
+					   (reg.imageOffset.z == 0 and reg.imageSize.z == 1) );
+			
+			const uint		dst_off_z		= Max( reg.imageLayers.baseLayer.Get(), reg.imageOffset.z );
+			const uint		dst_dim_z		= Max( reg.imageLayers.layerCount, reg.imageSize.z );
+			const BytesU	row_size		= reg.imageSize.x * bpp;
+			const BytesU	src_row_pitch	= reg.bufferRowLength * bpp;
+			const BytesU	src_slice_pitch	= reg.bufferImageHeight * src_row_pitch;
+
+			for (uint z = 0; z < dst_dim_z; ++z)
+			{
+				Message< GpuMsg::GetSWImageViewMemoryLayout >	req_dst_mem { EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
+				req_dst_mem->viewDescr.viewType		= req_dst_descr->result->imageType;
+				req_dst_mem->viewDescr.format		= req_dst_descr->result->format;
+				req_dst_mem->viewDescr.baseLevel	= reg.imageLayers.mipLevel;
+				req_dst_mem->viewDescr.baseLayer	= reg.imageLayers.baseLayer;
+				data.dstImage->Send( req_dst_mem );
+
+				CHECK_ERR( z + reg.imageOffset.z < req_dst_mem->result->layers.Count() );
+				CHECK_ERR( reg.imageLayers.mipLevel.Get() < req_dst_mem->result->layers[z + reg.imageOffset.z].mipmaps.Count() );
+
+				auto&	dst_layer		= req_dst_mem->result->layers[ z + reg.imageOffset.z ];
+				auto&	dst_level		= dst_layer.mipmaps[ reg.imageLayers.mipLevel.Get() ];
+				BytesU	dst_row_pitch	= GXImageUtils::AlignedRowSize( dst_level.dimension.x, bpp, req_dst_mem->result->align );
+
+				for (uint y = 0; y < reg.imageSize.y; ++y)
+				{
+					const BytesU	dst_offset = reg.imageOffset.x * bpp + dst_row_pitch * (y + reg.imageOffset.y);
+					const BytesU	src_offset	= BytesU(reg.bufferOffset) + z * src_slice_pitch + y * src_row_pitch;
+
+					Message< GpuMsg::GetSWBufferMemoryLayout >	req_src_mem { src_offset, row_size, EPipelineAccess::TransferRead, EPipelineStage::Transfer };
+					data.srcBuffer->Send( req_src_mem );
+
+					SW_DEBUG_REPORT2( dst_level.layout == EImageLayout::TransferDstOptimal or dst_level.layout == EImageLayout::General, EDbgReport::Error );
+
+					BinArrayRef		dst	= dst_level.Data().SubArray( usize(dst_offset), usize(row_size) );
+					BinArrayCRef 	src	= req_src_mem->result->memory.SubArray( 0, usize(row_size) );
+
+					MemCopy( OUT dst, src );
+				}
+			}
+		}
 		return true;
 	}
 	
@@ -594,7 +708,61 @@ namespace PlatformSW
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyImageToBuffer >();
 		
-		TODO( "" );
+		Message< GpuMsg::GetImageDescriptor >		req_src_descr;
+		Message< GpuMsg::GetBufferDescriptor >		req_dst_descr;
+		data.srcImage->Send( req_src_descr );
+		data.dstBuffer->Send( req_dst_descr );
+		
+		CHECK_ERR( req_src_descr->result and req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
+		CHECK_ERR( req_dst_descr->result and req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
+
+		BytesU	bpp	= BytesU(EPixelFormat::BitPerPixel( req_src_descr->result->format ));
+
+		for (auto& reg : Range(data.regions))
+		{
+			// find array layer or z-slice
+			CHECK_ERR( (reg.imageLayers.baseLayer.Get() == 0 and reg.imageLayers.layerCount == 1) or
+					   (reg.imageOffset.z == 0 and reg.imageSize.z == 1) );
+			
+			const uint		src_off_z		= Max( reg.imageLayers.baseLayer.Get(), reg.imageOffset.z );
+			const uint		src_dim_z		= Max( reg.imageLayers.layerCount, reg.imageSize.z );
+			const BytesU	row_size		= reg.imageSize.x * bpp;
+			const BytesU	dst_row_pitch	= reg.bufferRowLength * bpp;
+			const BytesU	dst_slice_pitch	= reg.bufferImageHeight * dst_row_pitch;
+
+			for (uint z = 0; z < src_dim_z; ++z)
+			{
+				Message< GpuMsg::GetSWImageViewMemoryLayout >	req_src_mem { EPipelineAccess::TransferRead, EPipelineStage::Transfer };
+				req_src_mem->viewDescr.viewType		= req_src_descr->result->imageType;
+				req_src_mem->viewDescr.format		= req_src_descr->result->format;
+				req_src_mem->viewDescr.baseLevel	= reg.imageLayers.mipLevel;
+				req_src_mem->viewDescr.baseLayer	= reg.imageLayers.baseLayer;
+				data.srcImage->Send( req_src_mem );
+
+				CHECK_ERR( z + reg.imageOffset.z < req_src_mem->result->layers.Count() );
+				CHECK_ERR( reg.imageLayers.mipLevel.Get() < req_src_mem->result->layers[z + reg.imageOffset.z].mipmaps.Count() );
+
+				auto&	src_layer		= req_src_mem->result->layers[ z + reg.imageOffset.z ];
+				auto&	src_level		= src_layer.mipmaps[ reg.imageLayers.mipLevel.Get() ];
+				BytesU	src_row_pitch	= GXImageUtils::AlignedRowSize( src_level.dimension.x, bpp, req_src_mem->result->align );
+
+				for (uint y = 0; y < reg.imageSize.y; ++y)
+				{
+					const BytesU	src_offset = reg.imageOffset.x * bpp + src_row_pitch * (y + reg.imageOffset.y);
+					const BytesU	dst_offset	= BytesU(reg.bufferOffset) + z * dst_slice_pitch + y * dst_row_pitch;
+
+					Message< GpuMsg::GetSWBufferMemoryLayout >	req_dst_mem { dst_offset, row_size, EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
+					data.dstBuffer->Send( req_dst_mem );
+
+					SW_DEBUG_REPORT2( src_level.layout == EImageLayout::TransferSrcOptimal or src_level.layout == EImageLayout::General, EDbgReport::Error );
+
+					BinArrayCRef	src	= src_level.Data().SubArray( usize(src_offset), usize(row_size) );
+					BinArrayRef 	dst	= req_dst_mem->result->memory.SubArray( 0, usize(row_size) );
+
+					MemCopy( OUT dst, src );
+				}
+			}
+		}
 		return true;
 	}
 	
@@ -607,7 +775,7 @@ namespace PlatformSW
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdUpdateBuffer >();
 		
-		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem;
+		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem { BytesU(data.dstOffset), data.data.Size(), EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
 		Message< GpuMsg::GetBufferDescriptor >		req_descr;
 		
 		data.dstBuffer->Send( req_mem );
@@ -615,10 +783,11 @@ namespace PlatformSW
 		
 		CHECK_ERR( data.dstOffset < req_descr->result->size );
 		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
-		CHECK_ERR( req_mem->result->access[ EMemoryAccess::GpuWrite ] );
+		CHECK_ERR( req_mem->result->memAccess[ EMemoryAccess::GpuWrite ] );
 		CHECK_ERR( (BytesU(data.dstOffset) % req_mem->result->align) == 0 );
+		CHECK_ERR( req_mem->result->memory.Size() == data.data.Size() );
 
-		MemCopy( OUT req_mem->result->memory.SubArray( usize(data.dstOffset), data.data.Count() ), BinArrayCRef(data.data) );
+		MemCopy( OUT req_mem->result->memory, BinArrayCRef(data.data) );
 		return true;
 	}
 	
@@ -631,7 +800,7 @@ namespace PlatformSW
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdFillBuffer >();
 		
-		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem;
+		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem { BytesU(data.dstOffset), BytesU(data.size), EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
 		Message< GpuMsg::GetBufferDescriptor >		req_descr;
 
 		data.dstBuffer->Send( req_mem );
@@ -639,8 +808,9 @@ namespace PlatformSW
 		
 		CHECK_ERR( data.dstOffset < req_descr->result->size );
 		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
-		CHECK_ERR( req_mem->result->access[ EMemoryAccess::GpuWrite ] );
+		CHECK_ERR( req_mem->result->memAccess[ EMemoryAccess::GpuWrite ] );
 		CHECK_ERR( (BytesU(data.dstOffset) % req_mem->result->align) == 0 );
+		CHECK_ERR( req_mem->result->memory.Size() == BytesU(data.size) );
 		
 		const ubyte	pattern[4]	= { data.pattern & 0xFF,
 									(data.pattern >> 8) & 0xFF,
@@ -649,7 +819,7 @@ namespace PlatformSW
 
 		for (usize i = 0; i < usize(data.size); ++i)
 		{
-			req_mem->result->memory[i + usize(data.dstOffset)] = pattern[i&3];
+			req_mem->result->memory[i] = pattern[i&3];
 		}
 		return true;
 	}
@@ -670,13 +840,28 @@ namespace PlatformSW
 /*
 =================================================
 	_CmdPipelineBarrier
+----
+	https://gpuopen.com/vulkan-barriers-explained/
 =================================================
 */
 	bool SWCommandBuffer::_CmdPipelineBarrier (const Command_t &cmd)
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdPipelineBarrier >();
+
+		for (auto& src : Range(data.imageBarriers))
+		{
+			CHECK_ERR( src.image );
+			SendTo< GpuMsg::SWImageBarrier >( src.image, {src, data.srcStageMask, data.dstStageMask} );
+		}
+
+		for (auto& src : Range(data.bufferBarriers))
+		{
+			CHECK_ERR( src.buffer );
+			SendTo< GpuMsg::SWBufferBarrier >( src.buffer, {src, data.srcStageMask, data.dstStageMask} );
+		}
 		
-		TODO( "" );
+		ASSERT( data.memoryBarriers.Empty() );	// not supported yet
+
 		return true;
 	}
 	

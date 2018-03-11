@@ -1,8 +1,27 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
-#include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
-#include <sstream>
+# include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
+# include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
+
+#ifdef COMPILER_MSVC
+# pragma warning (push, 1)
+# pragma warning (disable: 4456)
+# pragma warning (disable: 4458)
+# pragma warning (disable: 4244)
+# pragma warning (disable: 4668)
+# pragma warning (disable: 4996)
+# pragma warning (disable: 4946)
+#endif
+
+# include <sstream>
+# include "LunarGLASS/Core/metadata.h"
+# include "llvm/IR/Instructions.h"
+# include "llvm/IR/LLVMContext.h"
+# include "LunarGLASS/Backends/GLSL/GlslManager.h"
+
+#ifdef COMPILER_MSVC
+# pragma warning (pop)
+#endif
 
 namespace PipelineCompiler
 {

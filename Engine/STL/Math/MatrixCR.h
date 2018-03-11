@@ -215,7 +215,7 @@
 	template <typename T, ulong U>
 	inline Matrix<T,C,R,U>::Matrix (const Self &m)
 	{
-		UnsafeMem::MemCopy( ptr(), m.ptr(), SizeOf(m) );
+		UnsafeMem::MemCopy( ptr(), m.ptr(), BytesU::SizeOf(m) );
 	}
 	
 /*

@@ -712,8 +712,9 @@ namespace GXTypes
 
 		if_constexpr ( not CompileTime::IsCtorAvailable< Self > and CompileTime::IsMemCopyAvailable< Self > )
 		{
-			UnsafeMem::MemMove( _data, other._data, SizeOf(_data) );
+			UnsafeMem::MemMove( OUT _data, other._data, BytesU::SizeOf(_data) );
 			_currentIndex = other._currentIndex;
+			DEBUG_ONLY( _dbgType = other._dbgType );
 		}
 		else
 		{
@@ -735,14 +736,20 @@ namespace GXTypes
 		
 		if_constexpr ( CompileTime::IsMemCopyAvailable< Self > )
 		{
-			UnsafeMem::MemMove( _data, other._data, SizeOf(_data) );
+			UnsafeMem::MemMove( OUT _data, other._data, BytesU::SizeOf(_data) );
+			
 			_currentIndex = other._currentIndex;
 			other._currentIndex = INVALID_INDEX;
+
+			DEBUG_ONLY( _dbgType = other._dbgType );
+			DEBUG_ONLY( other._dbgType = TypeId() );
 		}
 		else
 		{
 			_TypeList_Move	func( other, *this );
 			TypeList_t::RuntimeForEach( func );
+
+			other.Destroy();
 		}
 	}
 

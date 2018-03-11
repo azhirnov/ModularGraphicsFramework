@@ -2,9 +2,12 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/Common.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/Engine.Config.h"
 
 #if defined( GRAPHICS_API_OPENGL ) and defined( PLATFORM_WINDOWS )
+
+#include "Engine/Platforms/Public/Common.h"
 
 namespace Engine
 {

@@ -1,12 +1,18 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/VR.h"
-#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/OS/Window.h"
-#include "Engine/Platforms/Shared/OS/Input.h"
+#include "Engine/Config/Engine.Config.h"
+
+#ifdef GX_EMULATOR_VR
+
+#include "Engine/Platforms/Public/GPU/VR.h"
+#include "Engine/Platforms/Public/GPU/Framebuffer.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/OS/Window.h"
+#include "Engine/Platforms/Public/OS/Input.h"
 #include "Engine/Platforms/VR/VRObjectsConstructor.h"
+
+#include "Engine/STL/Math/3D/PerspectiveCamera.h"
 
 #ifdef GRAPHICS_API_OPENGL
 #	include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
@@ -16,8 +22,6 @@
 #ifdef GRAPHICS_API_VULKAN
 #	include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
 #endif
-
-#ifdef GX_EMULATOR_VR
 
 namespace Engine
 {
@@ -44,10 +48,15 @@ namespace PlatformVR
 										>;
 
 		using PrivateMsgList_t		= MessageListFrom<
+										#ifdef GRAPHICS_API_OPENGL
 											GpuMsg::GetGLPrivateClasses,
 											GpuMsg::GetGLDeviceInfo,
+										#endif
+										#ifdef GRAPHICS_API_VULKAN
 											GpuMsg::GetVkPrivateClasses,
-											GpuMsg::GetVkDeviceInfo
+											GpuMsg::GetVkDeviceInfo,
+										#endif
+											CompileTime::TypeListEnd
 										>;
 
 		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
@@ -151,10 +160,15 @@ namespace PlatformVR
 		bool _GpuDeviceCreated (const Message< GpuMsg::DeviceCreated > &);
 		bool _GpuDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
 		
+	#ifdef GRAPHICS_API_OPENGL
 		bool _GetGLDeviceInfo_Empty (const Message< GpuMsg::GetGLDeviceInfo > &)			{ return false; }
 		bool _GetGLPrivateClasses_Empty (const Message< GpuMsg::GetGLPrivateClasses > &)	{ return false; }
+	#endif
+
+	#ifdef GRAPHICS_API_VULKAN
 		bool _GetVkDeviceInfo_Empty (const Message< GpuMsg::GetVkDeviceInfo > &)			{ return false; }
 		bool _GetVkPrivateClasses_Empty (const Message< GpuMsg::GetVkPrivateClasses > &)	{ return false; }
+	#endif
 
 		// event handlers
 		void _OnTouchX (const ModuleMsg::InputMotion &);
@@ -205,10 +219,15 @@ namespace PlatformVR
 		_SubscribeOnMsg( this, &EmulatorVRThread::_ThreadEndVRFrame );
 		_SubscribeOnMsg( this, &EmulatorVRThread::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &EmulatorVRThread::_GetVRDeviceInfo );
+		
+	#ifdef GRAPHICS_API_OPENGL
 		_SubscribeOnMsg( this, &EmulatorVRThread::_GetGLDeviceInfo_Empty );
 		_SubscribeOnMsg( this, &EmulatorVRThread::_GetGLPrivateClasses_Empty );
+	#endif	
+	#ifdef GRAPHICS_API_VULKAN
 		_SubscribeOnMsg( this, &EmulatorVRThread::_GetVkDeviceInfo_Empty );
 		_SubscribeOnMsg( this, &EmulatorVRThread::_GetVkPrivateClasses_Empty );
+	#endif
 
 		_frameIndex = 1;
 		_perFrame.Resize( 2 );
@@ -425,10 +444,10 @@ namespace PlatformVR
 		end->fence				= msg->fence;
 		end->signalSemaphores	= msg->signalSemaphores;
 		end->signalSemaphores	<< per_frame.lastFrameRendered;
-		end->waitSemaphores.PushBack({ per_frame.mainFrameRendered, EPipelineStage::bits() | EPipelineStage::BottomOfPipe });
+		end->waitSemaphores.PushBack({ per_frame.mainFrameRendered, EPipelineStage::BottomOfPipe });
 
 		if ( last_frame.lastFrameRendered != GpuSemaphoreId::Unknown ) {
-			end->waitSemaphores.PushBack({ last_frame.lastFrameRendered, EPipelineStage::bits() | EPipelineStage::BottomOfPipe });
+			end->waitSemaphores.PushBack({ last_frame.lastFrameRendered, EPipelineStage::BottomOfPipe });
 		}
 		_gpuThread->Send( end );
 
@@ -570,6 +589,7 @@ namespace PlatformVR
 		{
 			if ( _isOpenGL )
 			{
+			#ifdef GRAPHICS_API_OPENGL
 				Message< GpuMsg::CmdBlitGLFramebuffers >	blit;
 				blit->srcFramebuffer	= _framebuffers[i].framebuffer;
 				blit->dstFramebuffer	= _onScreenFramebuffer;
@@ -593,6 +613,7 @@ namespace PlatformVR
 				}
 
 				CHECK( _builder->Send( blit ) );
+			#endif
 			}
 			else
 			{
@@ -686,7 +707,7 @@ namespace PlatformVR
 													MipmapLevel(1),
 													req_settings->result->samples
 												},
-												EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+												EGpuMemory::LocalInGPU,
 												EMemoryAccess::GpuReadWrite
 											},
 											OUT color_image ) );
@@ -710,7 +731,7 @@ namespace PlatformVR
 													MipmapLevel(1),
 													req_settings->result->samples
 												},
-												EGpuMemory::bits() | EGpuMemory::LocalInGPU,
+												EGpuMemory::LocalInGPU,
 												EMemoryAccess::GpuReadWrite
 											},
 											OUT depth_image ) );

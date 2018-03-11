@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Graphics/Shared/BatchRenderer.h"
-#include "Engine/Graphics/Shared/Commands.h"
+#include "Engine/Graphics/Public/BatchRenderer.h"
+#include "Engine/Graphics/Public/Commands.h"
 #include "Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
 #include "Engine/Graphics/Impl/GraphicsBaseModule.h"
 
@@ -750,11 +750,8 @@ namespace Graphics
 						_moduleIDs.buffer,
 						GlobalSystems(),
 						CreateInfo::GpuBuffer{
-							BufferDescriptor{
-								_vertices.Size(),
-								EBufferUsage::bits() | EBufferUsage::Vertex
-							},
-							EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+							BufferDescriptor{ _vertices.Size(), EBufferUsage::Vertex },
+							EGpuMemory::CoherentWithCPU,
 							EMemoryAccess::All },
 						OUT vbuffer ) );
 
@@ -763,11 +760,8 @@ namespace Graphics
 						_moduleIDs.buffer,
 						GlobalSystems(),
 						CreateInfo::GpuBuffer{
-							BufferDescriptor{
-								indices_size,
-								EBufferUsage::bits() | EBufferUsage::Index
-							},
-							EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+							BufferDescriptor{ indices_size, EBufferUsage::Index },
+							EGpuMemory::CoherentWithCPU,
 							EMemoryAccess::All },
 						OUT ibuffer ) );
 

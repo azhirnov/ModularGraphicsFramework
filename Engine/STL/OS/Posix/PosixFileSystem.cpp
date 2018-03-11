@@ -1,10 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/OS/Posix/FileSystem.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_BASE_POSIX
 
+#include "Engine/STL/OS/Posix/FileSystem.h"
+#include "Engine/STL/Math/BinaryMath.h"
 #include "Engine/STL/OS/Posix/PosixHeader.h"
 
 namespace GX_STL
@@ -154,6 +155,7 @@ namespace OS
 */
 	bool PosixFileSystem::GetAllFilesInPath (StringCRef path, OUT Array<String> &fileNames)
 	{
+		TODO("GetAllFilesInPath");
 		return false;
 	}
 	
@@ -164,9 +166,75 @@ namespace OS
 */
 	bool PosixFileSystem::GetAllDirsInPath (StringCRef path, OUT Array<String> &directories)
 	{
+		TODO("GetAllDirsInPath");
+		return false;
+	}
+	
+/*
+=================================================
+	CopyFile
+=================================================
+*/
+	bool PosixFileSystem::CopyFile (StringCRef fromFile, StringCRef toFile)
+	{
+		TODO("CopyFile");
 		return false;
 	}
 
+/*
+=================================================
+	CopyDirectory
+=================================================
+*/
+	bool PosixFileSystem::CopyDirectory (StringCRef fromDir, StringCRef toDir)
+	{
+		TODO("CopyDirectory");
+		return false;
+	}
+	
+/*
+=================================================
+	MoveFile
+=================================================
+*/
+	bool PosixFileSystem::MoveFile (StringCRef oldName, StringCRef newName, bool async)
+	{
+		TODO("MoveFile");
+		return false;
+	}
+	
+/*
+=================================================
+	GetFileLastModificationTime
+=================================================
+*/
+	Date PosixFileSystem::GetFileLastModificationTime (StringCRef filename)
+	{
+		TODO("GetFileLastModificationTime");
+		return Uninitialized;
+	}
+
+/*
+=================================================
+	GetFileCreationTime
+=================================================
+*/
+	Date PosixFileSystem::GetFileCreationTime (StringCRef filename)
+	{
+		TODO("GetFileCreationTime");
+		return Uninitialized;
+	}
+
+/*
+=================================================
+	GetFileSize
+=================================================
+*/
+	BytesUL PosixFileSystem::GetFileSize (StringCRef filename)
+	{
+		TODO("GetFileSize");
+		return Uninitialized;
+	}
 
 }	// OS
 }	// GX_STL

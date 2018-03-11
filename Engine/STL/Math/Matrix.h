@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "Trigonometry.h"
-#include "Matrix2.h"
-#include "Matrix3.h"
-#include "Matrix4.h"
+#include "Engine/STL/Math/Trigonometry.h"
+#include "Engine/STL/Math/Matrix2.h"
+#include "Engine/STL/Math/Matrix3.h"
+#include "Engine/STL/Math/Matrix4.h"
 
 #undef MAT_BIN_OPERATOR_SCALAR
 #undef MAT_BIN_OPERATOR_MAT

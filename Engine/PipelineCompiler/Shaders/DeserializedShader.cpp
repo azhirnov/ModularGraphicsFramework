@@ -49,7 +49,7 @@ namespace PipelineCompiler
 			<< "\n  unit:          " << unit
 			<< "\n  descriptorSet: " << descriptorSet
 			<< "\n  imageType:     " << EImage::ToString( imageType )
-			<< "\n  memoryModel:   " << EGpuMemoryModel::ToString( memoryModel )
+			<< "\n  memoryModel:   " << EShaderMemoryModel::ToString( memoryModel )
 			<< "\n  format:        " << (format == EPixelFormat::Unknown ? "none" : EPixelFormat::ToString( format ))
 			<< "\n}";
 		return str;
@@ -68,7 +68,7 @@ namespace PipelineCompiler
 			//<< "\n  typeName:    " << typeName
 			<< "\n  precision:   " << EPrecision::ToString( precision )
 			<< "\n  qualifier:   " << EVariableQualifier::ToString( qualifier )
-			<< "\n  memoryModel: " << EGpuMemoryModel::ToString( memoryModel )
+			<< "\n  memoryModel: " << EShaderMemoryModel::ToString( memoryModel )
 			<< "\n  format:      " << (format == EPixelFormat::Unknown ? "none" : EPixelFormat::ToString( format ))
 			<< "\n  arraySize:   " << arraySize;
 		return str;
@@ -156,7 +156,7 @@ namespace PipelineCompiler
 			<< "\n  typeName:      " << typeName
 			<< "\n  bindingIndex:  " << bindingIndex
 			<< "\n  descriptorSet: " << descriptorSet
-			<< "\n  memoryModel:   " << EGpuMemoryModel::ToString( memoryModel )
+			<< "\n  memoryModel:   " << EShaderMemoryModel::ToString( memoryModel )
 			<< "\n  packing:       " << (packing != EVariablePacking::Unknown ? EVariablePacking::ToString( packing ) : "")
 			<< "\n  size:          " << GX_STL::GXTypes::ToString( size );
 

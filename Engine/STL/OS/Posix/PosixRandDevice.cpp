@@ -1,10 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/OS/Posix/RandDevice.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_BASE_POSIX
 
+#include "Engine/STL/OS/Posix/RandDevice.h"
+#include "Engine/STL/Math/BinaryMath.h"
 #include "Engine/STL/OS/Posix/PosixHeader.h"
 
 namespace GX_STL

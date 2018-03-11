@@ -1,14 +1,15 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
-#include "Engine/Platforms/Soft/Impl/SWDeviceLimits.h"
-#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
 
 namespace Engine
 {
@@ -409,7 +410,7 @@ namespace PlatformSW
 	bool SWCommandBuilder::_CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < BytesU(SWDeviceLimits::maxUpdateBufferSize) );
+		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < BytesU(SWDeviceProperties.limits.maxUpdateBufferSize) );
 		
 		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
 		return true;

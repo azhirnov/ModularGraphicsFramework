@@ -2,11 +2,13 @@
 
 #pragma once
 
-#include "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Vulkan/Impl/Vk1BaseObject.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
 
 namespace Engine
 {

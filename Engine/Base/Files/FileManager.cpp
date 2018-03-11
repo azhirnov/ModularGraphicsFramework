@@ -1,6 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "FileManager.h"
+#include "Engine/Base/Files/FileManager.h"
+#include "Engine/STL/Files/HDDFile.h"
+#include "Engine/STL/Files/MemFile.h"
 
 namespace Engine
 {

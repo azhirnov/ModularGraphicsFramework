@@ -31,8 +31,8 @@ bool CApp::_Test_CopyBuffer ()
 					gpuIDs.buffer,
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
-						BufferDescriptor{ data.Size(), EBufferUsage::bits() | EBufferUsage::TransferSrc },
-						EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+						BufferDescriptor{ data.Size(), EBufferUsage::TransferSrc },
+						EGpuMemory::CoherentWithCPU,
 						EMemoryAccess::All
 					},
 					OUT src_buffer
@@ -43,8 +43,8 @@ bool CApp::_Test_CopyBuffer ()
 					gpuIDs.buffer,
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
-						BufferDescriptor{ data.Size(), EBufferUsage::bits() | EBufferUsage::TransferDst },
-						EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
+						BufferDescriptor{ data.Size(), EBufferUsage::TransferDst },
+						EGpuMemory::CoherentWithCPU,
 						EMemoryAccess::All
 					},
 					OUT dst_buffer

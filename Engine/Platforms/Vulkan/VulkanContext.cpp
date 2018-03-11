@@ -1,19 +1,21 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Context.h"
-#include "Engine/Platforms/Shared/GPU/Thread.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
+#include "Engine/Config/Engine.Config.h"
+
+#ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Public/GPU/Context.h"
+#include "Engine/Platforms/Public/GPU/Thread.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Framebuffer.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
-
-#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {

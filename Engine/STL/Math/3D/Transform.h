@@ -2,7 +2,10 @@
 
 #pragma once
 
-#include "MathTypes3D.h"
+#include "Engine/STL/Math/3D/MathTypes3D.h"
+#include "Engine/STL/Math/Vec.h"
+#include "Engine/STL/Math/Quaternion.h"
+#include "Engine/STL/Math/Matrix.h"
 
 namespace GX_STL
 {

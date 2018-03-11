@@ -130,11 +130,10 @@ namespace GXTypes
 		CHECKRES static constexpr Self	FromMb (T value)	{ return Self( value << 20 ); }
 		CHECKRES static constexpr Self	FromGb (T value)	{ return Self( value << 30 ); }
 
-		template <typename B>
-		CHECKRES static constexpr Self	SizeOf ()			{ return Self( sizeof(B) ); }
-		
-		template <typename B>
-		CHECKRES static constexpr Self	SizeOf (B value)	{ return Self( sizeof(B) ); }
+		template <typename B>	CHECKRES static constexpr Self	SizeOf ()			{ return Self( sizeof(B) ); }
+		template <typename B>	CHECKRES static constexpr Self	SizeOf (const B &)	{ return Self( sizeof(B) ); }
+		template <typename B>	CHECKRES static constexpr Self	AlignOf ()			{ return Self( alignof(B) ); }
+		template <typename B>	CHECKRES static constexpr Self	AlignOf (const B &)	{ return Self( alignof(B) ); }
 
 
 		_GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value );
@@ -196,11 +195,10 @@ namespace GXTypes
 		CHECKRES explicit constexpr operator ulong ()	const	{ return Cast<ulong>( _value ); }
 		
 
-		template <typename B>
-		CHECKRES static constexpr Self SizeOf ()			{ return Bytes<T>::template SizeOf<B>().ToBits(); }
-		
-		template <typename B>
-		CHECKRES static constexpr Self SizeOf (B value)		{ return Bytes<T>::template SizeOf<B>().ToBits(); }
+		template <typename B>	CHECKRES static constexpr Self SizeOf ()			{ return Bytes<T>::template SizeOf<B>().ToBits(); }
+		template <typename B>	CHECKRES static constexpr Self SizeOf (const B &)	{ return Bytes<T>::template SizeOf<B>().ToBits(); }
+		template <typename B>	CHECKRES static constexpr Self AlignOf ()			{ return Bytes<T>::template AlignOf<B>().ToBits(); }
+		template <typename B>	CHECKRES static constexpr Self AlignOf (const B &)	{ return Bytes<T>::template AlignOf<B>().ToBits(); }
 
 
 		_GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value );
@@ -209,31 +207,12 @@ namespace GXTypes
 
 
 
-	/*template <typename T>
-	constexpr Bytes<T> ToBytes (T value)
-	{
-		return Bytes<T>( value );
-	}
-	
-	template <typename T>
-	constexpr Bits<T> ToBits (T value)
-	{
-		return Bits<T>( value );
-	}*/
-	
 
 	template <typename T>
-	CHECKRES constexpr forceinline BytesU SizeOf ()
-	{
-		return BytesU::SizeOf<T>();
-	}
+	static constexpr BytesU SizeOf = BytesU::SizeOf<T>();
 	
 	template <typename T>
-	CHECKRES constexpr forceinline BytesU SizeOf (const T&)
-	{
-		return BytesU::SizeOf<T>();
-	}
-	
+	static constexpr BytesU	AlignOf = BytesU::AlignOf<T>();
 
 	template <typename A, typename B>
 	CHECKRES constexpr forceinline BytesU OffsetOf (A (B::*member))

@@ -124,29 +124,34 @@ namespace Astrophysics
 	DistanceToString
 =================================================
 */
-	inline String DistanceToString (Meters distance)
+	template <typename Distance>
+	inline String DistanceToString (Distance distance)
 	{
+		STATIC_ASSERT( IsDistanceUnits<Distance> );
+
+		using T = typename Distance::Value_t;
+
 		String	str;
 
-		if ( distance > Meters(Parsecs(1.0r)) )
+		if ( distance > Distance(Parsecs(T(1))) )
 			str << Parsecs(distance).ref() << " pc";
 		else
-		if ( distance > Meters(LightYears(1.0r)) )
+		if ( distance > Distance(LightYears(T(1))) )
 			str << LightYears(distance).ref() << " ly";
 		else
-		if ( distance > Meters(LightDays(1.0r)) )
+		if ( distance > Distance(LightDays(T(1))) )
 			str << LightDays(distance).ref() << " ld";
 		else
-		if ( distance > Meters(LightHours(1.0r)) )
+		if ( distance > Distance(LightHours(T(1))) )
 			str << LightHours(distance).ref() << " lh";
 		else
-		if ( distance > Meters(LightMinutes(1.0r)) )
+		if ( distance > Distance(LightMinutes(T(1))) )
 			str << LightMinutes(distance).ref() << " lm";
 		else
-		if ( distance > Meters(LightSeconds(1.0r)) )
+		if ( distance > Distance(LightSeconds(T(1))) )
 			str << LightSeconds(distance).ref() << " ls";
 		else
-		if ( distance > Meters(AstronomicalUnits(0.01r)) )
+		if ( distance > Distance(AstronomicalUnits(T(0.01))) )
 			str << AstronomicalUnits(distance).ref() << " au";
 		else
 			str << distance.ref() << " m";

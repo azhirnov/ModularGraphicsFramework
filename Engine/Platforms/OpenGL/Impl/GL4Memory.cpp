@@ -1,13 +1,15 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/Tools/MemoryMapperHelper.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/Tools/MemoryMapperHelper.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 namespace Engine
 {
@@ -98,6 +100,12 @@ namespace PlatformGL
 		bool _AllocForImage ();
 		bool _AllocForBuffer ();
 		void _FreeMemory ();
+		
+		bool _ReadImage200 (const GpuMsg::ReadFromImageMemory &msg, const uint4 &levelSize,
+							GL4PixelFormat fmt, GL4PixelType type, const ImageDescriptor &descr);
+
+		bool _ReadImage450 (const GpuMsg::ReadFromImageMemory &msg, GL4PixelFormat fmt,
+							GL4PixelType type, const ImageDescriptor &descr);
 	};
 //-----------------------------------------------------------------------------
 
@@ -242,7 +250,6 @@ namespace PlatformGL
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
-		//CHECK_ERR( _GetParents().IsExist( msg.Sender() ) );
 
 		CHECK_ERR( not _IsCreated() );
 		CHECK_ERR( _GetParents().Count() >= 1 );
@@ -532,136 +539,7 @@ namespace PlatformGL
 		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, msg->offset, BytesUL(size) });
 		return true;
 	}
-	
-/*
-=================================================
-	_ReadFromImageMemory
-=================================================
-*/
-	bool GL4Memory::_ReadFromImageMemory (const Message< GpuMsg::ReadFromImageMemory > &msg)
-	{
-		TODO( "copy image part to buffer and then read from buffer,"
-			  " there is no way instead of glGetTextureSubImage (GL 4.5) to get subregion of image" );
-		return false;
 
-		/*
-		CHECK_ERR( _IsCreated() );
-		CHECK_ERR( _access[EMemoryAccess::CpuRead] );
-		CHECK_ERR( _binding == EBindingTarget::Image );
-		CHECK_ERR( msg->memOffset == BytesUL(0) );	// not supported
-		
-		// just read from mapped memory
-		if ( _IsMapped() )
-		{
-			TODO( "" );
-			return false;
-		}
-		
-		// read without mapping
-		Message< GpuMsg::GetImageDescriptor >	req_descr;
-		SendTo( _GetParents().Front(), req_descr );
-
-		const uint4		level_size	= ImageUtils::LevelDimension( req_descr->result->imageType, req_descr->result->dimension, msg->level.Get() );
-		const BytesU	bpp			= BytesU(EPixelFormat::BitPerPixel( req_descr->result->format ));
-		const GLenum	target		= GL4Enum( req_descr->result->imageType );
-
-		CHECK_ERR( msg->writableBuffer and not msg->writableBuffer->Empty() );
-		CHECK_ERR( All( msg->offset + msg->dimension <= level_size ) );
-		
-		GL4InternalPixelFormat	ifmt;
-		GL4PixelFormat			fmt;
-		GL4PixelType			type;
-		CHECK_ERR( GL4Enum( req_descr->result->format, OUT ifmt, OUT fmt, OUT type ) );
-		
-		BytesU	row_align;
-		if ( msg->rowPitch % 4_b == 0 )		row_align = 4_b;	else
-		if ( msg->rowPitch % 2_b == 0 )		row_align = 2_b;	else
-											row_align = 1_b;
-		
-		ASSERT( msg->rowPitch == GXMath::ImageUtils::AlignedRowSize( msg->dimension.x, bpp, row_align ) );
-		ASSERT( msg->slicePitch == GXMath::ImageUtils::AlignedSliceSize( msg->dimension.xy(), bpp, row_align, row_align ) );
-		CHECK_ERR( msg->writableBuffer->Size() == msg->dimension.z * msg->slicePitch );
-
-		GL_CALL( glBindTexture( target, _objectId ) );
-		GL_CALL( glPixelStorei( GL_PACK_ALIGNMENT, (GLint) isize(row_align) ) );
-
-		switch ( req_descr->result->imageType )
-		{
-			case EImage::Buffer :
-			case EImage::Tex1D :
-			{
-				CHECK_ERR( IsZero( msg->offset.yzw() ) and IsZero( msg->dimension.yzw() ) );
-				CHECK_ERR( IsNotZero( msg->dimension.x ) );
-
-				GL_CALL( glGetTextureSubImage( _objectId, msg->level.Get(),
-												msg->offset.x, 0, 0,
-												msg->dimension.x, 1, 1,
-												fmt, type,
-												(GLsizei) isize(msg->writableBuffer->Size()),
-												(void*) msg->writableBuffer->ptr() ) );
-				break;
-			}
-			case EImage::Tex2D :
-			{
-				CHECK_ERR( IsZero( msg->offset.zw() ) and IsZero( msg->dimension.zw() ) );
-				CHECK_ERR( IsNotZero( msg->dimension.xy() ) );
-
-				GL_CALL( glGetTextureSubImage( _objectId, msg->level.Get(),
-												msg->offset.x, msg->offset.y, 0,
-												msg->dimension.x, msg->dimension.y, 1,
-												fmt, type,
-												(GLsizei) isize(msg->writableBuffer->Size()),
-												(void*) msg->writableBuffer->ptr() ) );
-				break;
-			}
-			case EImage::Tex3D :
-			{
-				CHECK_ERR( IsZero( msg->offset.w ) and IsZero( msg->dimension.w ) );
-				CHECK_ERR( IsNotZero( msg->dimension.xyz() ) );
-
-				GL_CALL( glGetTextureSubImage( _objectId, msg->level.Get(),
-													msg->offset.x, msg->offset.y, msg->offset.z,
-													msg->dimension.x, msg->dimension.y, msg->dimension.z,
-												    fmt, type,
-													(GLsizei) isize(msg->writableBuffer->Size()),
-												    (void*) msg->writableBuffer->ptr() ) );
-				break;
-			}
-			case EImage::Tex2DArray :
-			{
-				CHECK_ERR( IsZero( msg->offset.z ) and IsZero( msg->dimension.z ) );
-				CHECK_ERR( IsNotZero( msg->dimension.xyw() ) );
-
-				GL_CALL( glGetSubImageFromTexture( _objectId, target, msg->level.Get(),
-													msg->offset.x, msg->offset.y, msg->offset.w,
-													msg->dimension.x, msg->dimension.y, msg->dimension.w,
-												    fmt, type,
-													(GLsizei) isize(msg->writableBuffer->Size()),
-												    (void*) msg->writableBuffer->ptr() ) );
-				break;
-			}
-			case EImage::TexCube :
-			{
-				CHECK_ERR( msg->offset.z < 6 and msg->offset.z + msg->dimension.z <= 6 );
-				CHECK_ERR( IsZero( msg->offset.w ) and IsZero( msg->dimension.w ) );
-				CHECK_ERR( IsNotZero( msg->dimension.xyz() ) );
-
-				GL_CALL( glGetSubImageFromTexture( _objectId, target, msg->level.Get(),
-													msg->offset.x, msg->offset.y, msg->offset.z,
-													msg->dimension.x, msg->dimension.y, msg->dimension.z,
-													fmt, type,
-													(GLsizei) isize(msg->writableBuffer->Size()),
-													(void*) msg->writableBuffer->ptr() ) );
-				break;
-			}
-			default :
-				RETURN_ERR( "unsupported image type!" );
-		}
-		
-		msg->result.Set( *msg->writableBuffer );	// TODO: calc image size
-		return true;*/
-	}
-	
 /*
 =================================================
 	_WriteToImageMemory
@@ -670,21 +548,23 @@ namespace PlatformGL
 	bool GL4Memory::_WriteToImageMemory (const Message< GpuMsg::WriteToImageMemory > &msg)
 	{
 		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
-		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
+		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
 		CHECK_ERR( _binding == EBindingTarget::Image );
 		CHECK_ERR( msg->memOffset == BytesUL(0) );	// not supported
-		CHECK_ERR( not msg->data.Empty() );
+		CHECK_ERR( msg->data.Size() >= msg->dimension.z * msg->slicePitch );
+		CHECK_ERR( All( msg->dimension > 0 ) );
 		
 		// write without mapping
 		Message< GpuMsg::GetImageDescriptor >	req_descr;
 		SendTo( _GetParents().Front(), req_descr );
 		
-		const uint4		level_size	= ImageUtils::LevelDimension( req_descr->result->imageType, req_descr->result->dimension, msg->level.Get() );
+		const uint3		level_size	= Max( ImageUtils::LevelDimension( req_descr->result->imageType, req_descr->result->dimension, msg->mipLevel.Get() ).xyz(), 1u );
 		const BytesU	bpp			= BytesU(EPixelFormat::BitPerPixel( req_descr->result->format ));
 		const GLenum	target		= GL4Enum( req_descr->result->imageType );
 		
 		CHECK_ERR( All( msg->offset + msg->dimension <= level_size ) );
-		CHECK_ERR( msg->level < req_descr->result->maxLevel );
+		CHECK_ERR( msg->layer.Get() < req_descr->result->dimension.w );
+		CHECK_ERR( msg->mipLevel < req_descr->result->maxLevel );
 		
 		GL4InternalPixelFormat	ifmt;
 		GL4PixelFormat			fmt;
@@ -692,27 +572,31 @@ namespace PlatformGL
 		CHECK_ERR( GL4Enum( req_descr->result->format, OUT ifmt, OUT fmt, OUT type ) );
 		
 		BytesU	row_align;
-		if ( msg->rowPitch % 4_b == 0 )		row_align = 4_b;	else
-		if ( msg->rowPitch % 2_b == 0 )		row_align = 2_b;	else
-											row_align = 1_b;
-		
-		ASSERT( msg->rowPitch == GXImageUtils::AlignedRowSize( msg->dimension.x, bpp, row_align ) );
-		ASSERT( msg->slicePitch == GXImageUtils::AlignedSliceSize( msg->dimension.xy(), bpp, row_align, row_align ) );
+		if ( bpp % 8_b == 0 )	row_align = 8_b;	else
+		if ( bpp % 4_b == 0 )	row_align = 4_b;	else
+		if ( bpp % 2_b == 0 )	row_align = 2_b;	else
+								row_align = 1_b;
+
+		const usize		row_length	= usize(msg->rowPitch / bpp);
+		const usize		img_height	= usize(msg->slicePitch / msg->rowPitch);
+
 		CHECK_ERR( msg->data.Size() == msg->dimension.z * msg->slicePitch );
 		
 		GL_CALL( glBindTexture( target, _objectId ) );
-		GL_CALL( glPixelStorei( GL_UNPACK_ALIGNMENT, (GLint) isize(row_align) ) );
+		GL_CALL( glPixelStorei( GL_UNPACK_ALIGNMENT, GLint(row_align) ) );
+		GL_CALL( glPixelStorei( GL_UNPACK_ROW_LENGTH, GLint(row_length) ) );
+		GL_CALL( glPixelStorei( GL_UNPACK_IMAGE_HEIGHT, GLint(img_height) ) );
 
 		switch ( req_descr->result->imageType )
 		{
 			case EImage::Tex1D :
 			{
-				CHECK_ERR( level_size.x <= (msg->offset.x + msg->dimension.x) );
-				CHECK_ERR( IsNotZero( msg->dimension.x ) );
-				CHECK_ERR( IsZero( msg->offset.yzw() ) );
-				CHECK_ERR( All( msg->dimension.yzw() == uint3(1) ) );
+				CHECK_ERR( level_size.x >= (msg->offset.x + msg->dimension.x) );
+				CHECK_ERR( msg->dimension.x > 0 );
+				CHECK_ERR(All( msg->offset.yz() == 0 ));
+				CHECK_ERR(All( msg->dimension.yz() == 1 ));
 
-				GL_CALL( glTexSubImage1D(	target, msg->level.Get(),
+				GL_CALL( glTexSubImage1D(	target, msg->mipLevel.Get(),
 											msg->offset.x, msg->dimension.x,
 											fmt, type,
 											msg->data.ptr() ) );
@@ -720,12 +604,11 @@ namespace PlatformGL
 			}
 			case EImage::Tex2D :
 			{
-				CHECK_ERR( All( level_size.xy() >= (msg->offset.xy() + msg->dimension.xy()) ) );
-				CHECK_ERR( IsNotZero( msg->dimension.xy() ) );
-				CHECK_ERR( IsZero( msg->offset.zw() ) );
-				CHECK_ERR( All( msg->dimension.zw() == uint2(1) ) );
+				CHECK_ERR(All( level_size.xy() >= (msg->offset.xy() + msg->dimension.xy()) ));
+				CHECK_ERR(All( msg->dimension.xy() > 0 ));
+				CHECK_ERR( msg->offset.z == 0 and msg->dimension.z == 1 );
 
-				GL_CALL( glTexSubImage2D(	target, msg->level.Get(),
+				GL_CALL( glTexSubImage2D(	target, msg->mipLevel.Get(),
 											msg->offset.x, msg->offset.y,
 											msg->dimension.x, msg->dimension.y,
 											fmt, type,
@@ -734,12 +617,12 @@ namespace PlatformGL
 			}
 			case EImage::Tex2DArray :
 			{
-				CHECK_ERR( All( level_size.xy() >= (msg->offset.xy() + msg->dimension.xy()) ) );
-				CHECK_ERR( IsNotZero( msg->dimension.xy() ) );
+				CHECK_ERR(All( level_size.xy() >= (msg->offset.xy() + msg->dimension.xy()) ));
+				CHECK_ERR(All( msg->dimension.xy() > 0 ));
 				CHECK_ERR( msg->offset.z == 0 and msg->dimension.z == 1 );
 
-				GL_CALL( glTexSubImage3D(	target, msg->level.Get(),
-											msg->offset.x, msg->offset.y, msg->offset.w,
+				GL_CALL( glTexSubImage3D(	target, msg->mipLevel.Get(),
+											msg->offset.x, msg->offset.y, msg->layer.Get(),
 											msg->dimension.x, msg->dimension.y, 1,
 											fmt, type,
 											msg->data.ptr() ) );
@@ -747,11 +630,10 @@ namespace PlatformGL
 			}
 			case EImage::Tex3D :
 			{
-				CHECK_ERR( All( level_size.xyz() >= (msg->offset.xyz() + msg->dimension.xyz()) ) );
-				CHECK_ERR( IsNotZero( msg->dimension.xyw() ) );
-				CHECK_ERR( msg->offset.w == 0 and msg->dimension.w == 1 );
+				CHECK_ERR(All( level_size.xyz() >= (msg->offset.xyz() + msg->dimension.xyz()) ));
+				CHECK_ERR(All( msg->dimension.xy() > 0 ));
 				
-				GL_CALL( glTexSubImage3D(	target, msg->level.Get(),
+				GL_CALL( glTexSubImage3D(	target, msg->mipLevel.Get(),
 											msg->offset.x, msg->offset.y, msg->offset.z,
 											msg->dimension.x, msg->dimension.y, msg->dimension.z,
 											fmt, type,
@@ -760,13 +642,12 @@ namespace PlatformGL
 			}
 			case EImage::TexCube :
 			{
-				CHECK_ERR( All( level_size.xy() >= (msg->offset.xy() + msg->dimension.xy()) ) );
-				CHECK_ERR( IsNotZero( msg->dimension.xy() ) );
-				CHECK_ERR( IsZero( msg->offset.zw() ) );
-				CHECK_ERR( All( msg->dimension.zw() == uint(1) ) );
+				CHECK_ERR(All( level_size.xy() >= (msg->offset.xy() + msg->dimension.xy()) ));
+				CHECK_ERR(All( msg->dimension.xy() > 0 ));
+				CHECK_ERR( msg->offset.z == 0 and msg->dimension.z == 1 );
 				
-				GL_CALL( glBindTexture( GL_TEXTURE_CUBE_MAP_POSITIVE_X + msg->offset.z, 0 ) );
-				GL_CALL( glTexSubImage2D(	GL_TEXTURE_CUBE_MAP_POSITIVE_X + msg->offset.z, msg->level.Get(),
+				GL_CALL( glBindTexture(		GL_TEXTURE_CUBE_MAP_POSITIVE_X + msg->layer.Get(), _objectId ) );
+				GL_CALL( glTexSubImage2D(	GL_TEXTURE_CUBE_MAP_POSITIVE_X + msg->layer.Get(), msg->mipLevel.Get(),
 											msg->offset.x, msg->offset.y,
 											msg->dimension.x, msg->dimension.y,
 											fmt, type,
@@ -775,12 +656,12 @@ namespace PlatformGL
 			}
 			case EImage::TexCubeArray :
 			{
-				CHECK_ERR( All( level_size.xy() >= (msg->offset.xy() + msg->dimension.xy()) ) );
-				CHECK_ERR( IsNotZero( msg->dimension.xy() ) );
+				CHECK_ERR(All( level_size.xy() >= (msg->offset.xy() + msg->dimension.xy()) ));
+				CHECK_ERR(All( msg->dimension.xy() > 0 ));
 				CHECK_ERR( msg->offset.z == 0 and msg->dimension.z == 1 );
 
-				GL_CALL( glTexSubImage3D(	target, msg->level.Get(),
-											msg->offset.x, msg->offset.y, msg->offset.w * req_descr->result->dimension.z + msg->offset.z,
+				GL_CALL( glTexSubImage3D(	target, msg->mipLevel.Get(),
+											msg->offset.x, msg->offset.y, msg->layer.Get(),
 											msg->dimension.x, msg->dimension.y, 1,
 											fmt, type,
 											msg->data.ptr() ) );
@@ -790,10 +671,216 @@ namespace PlatformGL
 
 		GL_CALL( glBindTexture( target, 0 ) );
 		
-		msg->wasWritten.Set( BytesUL(msg->data.Size()) );	// TODO: calc real size
+		msg->wasWritten.Set( BytesUL(msg->dimension.z * msg->slicePitch) );
 		
 		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, msg->memOffset, BytesUL(msg->data.Size()) });	// TODO: calc mipmap and layer offset
 		return true;
+	}
+	
+/*
+=================================================
+	_ReadFromImageMemory
+=================================================
+*/
+	bool GL4Memory::_ReadFromImageMemory (const Message< GpuMsg::ReadFromImageMemory > &msg)
+	{
+		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
+		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
+		CHECK_ERR( _binding == EBindingTarget::Image );
+		CHECK_ERR( msg->memOffset == BytesUL(0) );	// not supported
+		
+		// read without mapping
+		Message< GpuMsg::GetImageDescriptor >	req_descr;
+		SendTo( _GetParents().Front(), req_descr );
+
+		const uint4		level_size	= Max( ImageUtils::LevelDimension( req_descr->result->imageType, req_descr->result->dimension, msg->mipLevel.Get() ), 1u );
+		const BytesU	bpp			= BytesU(EPixelFormat::BitPerPixel( req_descr->result->format ));
+
+		CHECK_ERR( All( msg->offset + msg->dimension <= level_size.xyz() ) );
+		CHECK_ERR( msg->layer.Get() < req_descr->result->dimension.w );
+		CHECK_ERR( msg->mipLevel < req_descr->result->maxLevel );
+		
+		GL4InternalPixelFormat	ifmt;
+		GL4PixelFormat			fmt;
+		GL4PixelType			type;
+		CHECK_ERR( GL4Enum( req_descr->result->format, OUT ifmt, OUT fmt, OUT type ) );
+		
+		BytesU	row_align;
+		if ( bpp % 8_b == 0 )	row_align = 8_b;	else
+		if ( bpp % 4_b == 0 )	row_align = 4_b;	else
+		if ( bpp % 2_b == 0 )	row_align = 2_b;	else
+								row_align = 1_b;
+		
+		const usize		row_length	= usize(msg->rowPitch / bpp);
+		const usize		img_height	= usize(msg->slicePitch / msg->rowPitch);
+		
+		CHECK_ERR( msg->writableBuffer->Size() >= msg->dimension.z * msg->slicePitch );
+		
+		GL_CALL( glBindBuffer( GL_PIXEL_PACK_BUFFER, 0 ) );
+		GL_CALL( glPixelStorei( GL_PACK_ALIGNMENT, GLint(row_align) ) );
+		GL_CALL( glPixelStorei( GL_PACK_ROW_LENGTH, GLint(row_length) ) );
+		GL_CALL( glPixelStorei( GL_PACK_IMAGE_HEIGHT, GLint(img_height) ) );
+
+		if ( gl::GL4_GetVersion() >= 450 )
+			return _ReadImage450( *msg, fmt, type, *req_descr->result );
+		else
+			return _ReadImage200( *msg, level_size, fmt, type, *req_descr->result );
+	}
+
+/*
+=================================================
+	_ReadImage200
+=================================================
+*/
+	bool GL4Memory::_ReadImage200 (const GpuMsg::ReadFromImageMemory &msg, const uint4 &levelSize,
+								   GL4PixelFormat fmt, GL4PixelType type, const ImageDescriptor &descr)
+	{
+		CHECK_ERR( All( msg.offset == 0 ) and msg.layer.Get() == 0 );
+		CHECK_ERR( All( msg.dimension.xyz() == levelSize.xyz() ) );
+		CHECK_ERR( levelSize.w == 1 );
+
+		const GLenum	target	= GL4Enum( descr.imageType );
+
+		GL_CALL( glBindTexture( target, _objectId ) );
+
+		switch ( descr.imageType )
+		{
+			case EImage::Buffer :
+			case EImage::Tex1D :
+			{
+				GL_CALL( glGetTexImage( target, msg.mipLevel.Get(),
+										fmt, type,
+										OUT msg.writableBuffer->ptr() ) );
+				break;
+			}
+			case EImage::Tex2D :
+			{
+				GL_CALL( glGetTexImage( target, msg.mipLevel.Get(),
+										fmt, type,
+										OUT msg.writableBuffer->ptr() ) );
+				break;
+			}
+			/*case EImage::Tex3D :
+			{
+				GL_CALL( glGetTexImage( target, msg.mipLevel.Get(),
+										fmt, type,
+										OUT msg.writableBuffer->ptr() ) );
+				break;
+			}*/
+			/*case EImage::Tex2DArray :
+			{
+				GL_CALL( glGetTexImage( target, msg.mipLevel.Get(),
+										fmt, type,
+										OUT msg.writableBuffer->ptr() ) );
+				break;
+			}*/
+			/*case EImage::TexCube :
+			{
+				CHECK_ERR( msg.layer.Get() < 6 );
+
+				GL_CALL( glGetTexImage( target, msg.mipLevel.Get(),
+										fmt, type,
+										OUT msg.writableBuffer->ptr() ) );
+				break;
+			}*/
+			default :
+				RETURN_ERR( "unsupported image type!" );
+		}
+		
+		msg.result.Set( msg.writableBuffer->SubArray( 0, usize(msg.dimension.z * msg.slicePitch) ) );
+		return true;
+	}
+	
+/*
+=================================================
+	_ReadImage450
+=================================================
+*/
+	bool GL4Memory::_ReadImage450 (const GpuMsg::ReadFromImageMemory &msg, GL4PixelFormat fmt, GL4PixelType type, const ImageDescriptor &descr)
+	{
+	#if GRAPHICS_API_OPENGL >= 450
+
+		switch ( descr.imageType )
+		{
+			case EImage::Buffer :
+			case EImage::Tex1D :
+			{
+				CHECK_ERR(All( msg.offset.yz() == 0 ));
+				CHECK_ERR(All( msg.dimension.yz() == 1 ));
+				CHECK_ERR( msg.dimension.x > 0 );
+
+				GL_CALL( glGetTextureSubImage(	_objectId, msg.mipLevel.Get(),
+												msg.offset.x, 0, 0,
+												msg.dimension.x, 1, 1,
+												fmt, type,
+												(GLsizei) isize(msg.writableBuffer->Size()),
+												OUT msg.writableBuffer->ptr() ) );
+				break;
+			}
+			case EImage::Tex2D :
+			{
+				CHECK_ERR(All( msg.dimension.xy() > 0 ));
+				CHECK_ERR( msg.offset.z == 0 );
+				CHECK_ERR( msg.dimension.z == 1 );
+
+				GL_CALL( glGetTextureSubImage(	_objectId, msg.mipLevel.Get(),
+												msg.offset.x, msg.offset.y, 0,
+												msg.dimension.x, msg.dimension.y, 1,
+												fmt, type,
+												(GLsizei) isize(msg.writableBuffer->Size()),
+												OUT msg.writableBuffer->ptr() ) );
+				break;
+			}
+			case EImage::Tex3D :
+			{
+				CHECK_ERR(All( msg.dimension.xyz() > 0 ));
+
+				GL_CALL( glGetTextureSubImage(	_objectId, msg.mipLevel.Get(),
+												msg.offset.x, msg.offset.y, msg.offset.z,
+												msg.dimension.x, msg.dimension.y, msg.dimension.z,
+												fmt, type,
+												(GLsizei) isize(msg.writableBuffer->Size()),
+												OUT msg.writableBuffer->ptr() ) );
+				break;
+			}
+			case EImage::Tex2DArray :
+			{
+				CHECK_ERR( msg.offset.z == 0 );
+				CHECK_ERR( msg.dimension.z == 1 );
+				CHECK_ERR(All( msg.dimension.xy() > 0 ));
+
+				GL_CALL( glGetTextureSubImage(	_objectId, msg.mipLevel.Get(),
+												msg.offset.x, msg.offset.y, msg.layer.Get(),
+												msg.dimension.x, msg.dimension.y, 1,
+												fmt, type,
+												(GLsizei) isize(msg.writableBuffer->Size()),
+												OUT msg.writableBuffer->ptr() ) );
+				break;
+			}
+			case EImage::TexCube :
+			{
+				CHECK_ERR( msg.layer.Get() < 6 );
+				CHECK_ERR( msg.offset.z == 0 and msg.dimension.z == 1 );
+				CHECK_ERR(All( msg.dimension.xy() > 0 ));
+
+				GL_CALL( glGetTextureSubImage(	_objectId, msg.mipLevel.Get(),
+												msg.offset.x, msg.offset.y, msg.layer.Get(),
+												msg.dimension.x, msg.dimension.y, 1,
+												fmt, type,
+												(GLsizei) isize(msg.writableBuffer->Size()),
+												OUT msg.writableBuffer->ptr() ) );
+				break;
+			}
+			default :
+				RETURN_ERR( "unsupported image type!" );
+		}
+		
+		msg.result.Set( msg.writableBuffer->SubArray( 0, usize(msg.dimension.z * msg.slicePitch) ) );
+		return true;
+
+	#else
+		RETURN_ERR( "not supported!" );
+	#endif
 	}
 
 }	// PlatformGL

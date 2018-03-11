@@ -7,10 +7,13 @@
 
 #pragma once
 
-#include "Engine/Platforms/Vulkan/Impl/vulkan1.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Vulkan/Impl/vulkan1.h"
+#include "Engine/Platforms/Vulkan/Impl/Vk1Enums.h"
+#include "Engine/STL/Containers/Adaptors.h"
 
 namespace Engine
 {

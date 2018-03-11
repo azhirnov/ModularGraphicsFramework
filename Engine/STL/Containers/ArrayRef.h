@@ -2,9 +2,10 @@
 
 #pragma once
 
-#include "CopyStrategy.h"
+#include "Engine/STL/Containers/CopyStrategy.h"
 #include "Engine/STL/Math/MathFunc.h"
 #include "Engine/STL/Algorithms/ArrayUtils.h"
+#include "Engine/STL/Memory/MemoryViewer.h"
 
 namespace GX_STL
 {
@@ -319,7 +320,7 @@ namespace GXTypes
 	inline ArrayRef<T>  ArrayRef<T>::FromStd (const std::vector<B> &vec)
 	{
 		if ( not vec.empty() )
-			return FromVoid( static_cast<void_ptr_t>(vec.data()), vec.size() * SizeOf<B>() );
+			return FromVoid( static_cast<void_ptr_t>(vec.data()), vec.size() * SizeOf<B> );
 		else
 			return ArrayRef<T>();
 	}
@@ -333,7 +334,7 @@ namespace GXTypes
 	inline ArrayRef<T>  ArrayRef<T>::FromVoid (void_ptr_t ptr, const BytesU size)
 	{
 		if ( ptr != null and size > 0 )
-			return ArrayRef<T>( static_cast< T *>( const_cast< void *>( ptr ) ), usize( size / SizeOf<T>() ) );
+			return ArrayRef<T>( static_cast< T *>( const_cast< void *>( ptr ) ), usize( size / SizeOf<T> ) );
 		else
 			return ArrayRef<T>();
 	}
@@ -727,7 +728,7 @@ namespace GXTypes
 	{
 		STATIC_ASSERT( not TypeTraits::IsConst<C> );
 		STATIC_ASSERT( CompileTime::IsPOD<C> );
-		ASSERT( buf.Size() >= SizeOf<T>() );
+		ASSERT( buf.Size() >= SizeOf<T> );
 
 		return UnsafeMem::PlacementNew<T>( buf.ptr() );
 	}
@@ -737,7 +738,7 @@ namespace GXTypes
 	{
 		STATIC_ASSERT( not TypeTraits::IsConst<C> );
 		STATIC_ASSERT( CompileTime::IsPOD<C> );
-		ASSERT( buf.Size() >= SizeOf<T>() );
+		ASSERT( buf.Size() >= SizeOf<T> );
 
 		return UnsafeMem::PlacementNew<T>( buf.ptr(), FW<Types>(args)... );
 	}

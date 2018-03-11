@@ -1,16 +1,18 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Framebuffer.h"
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/RenderPass.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
+
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Framebuffer.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 namespace Engine
 {
@@ -191,6 +193,9 @@ namespace PlatformGL
 		bool _CmdPipelineBarrier (const Command_t &cmd);
 		bool _GLCmdPushConstants (const Command_t &cmd);
 		
+		bool _CopyImageToBuffer200 (const GpuMsg::CmdCopyImageToBuffer &data);
+		bool _CopyImageToBuffer450 (const GpuMsg::CmdCopyImageToBuffer &data);
+
 		static void _ValidateDescriptor (INOUT CommandBufferDescriptor &descr);
 	};
 //-----------------------------------------------------------------------------
@@ -334,13 +339,10 @@ namespace PlatformGL
 								GLBufferModuleID,
 								GlobalSystems(),
 								CreateInfo::GpuBuffer{
-									BufferDescriptor{
-										msg->bufferData.Size(),
-										EBufferUsage::bits() | EBufferUsage::TransferSrc
-									},
+									BufferDescriptor{ msg->bufferData.Size(), EBufferUsage::TransferSrc },
 									null,
-									EGpuMemory::bits() | EGpuMemory::CoherentWithCPU,
-									EMemoryAccess::bits() | EMemoryAccess::GpuRead | EMemoryAccess::CpuWrite
+									EGpuMemory::CoherentWithCPU,
+									EMemoryAccess::GpuRead | EMemoryAccess::CpuWrite
 								},
 								OUT _tempBuffer ) );
 
@@ -1330,7 +1332,7 @@ namespace PlatformGL
 		CHECK_ERR( _indexType != EIndex::Unknown );
 
 		const auto&	data	= cmd.data.Get< GpuMsg::CmdDrawIndexed >();
-		const usize offset	= usize(_indexBuffer.offset + EIndex::Sizeof( _indexType ) * data.firstIndex);
+		const usize offset	= usize(_indexBuffer.offset + EIndex::SizeOf( _indexType ) * data.firstIndex);
 		
 		GL_CALL( glDrawElementsInstancedBaseInstance( GL4Enum( _primitive ), data.indexCount, GL4Enum( _indexType ),
 													  (void *)offset, data.instanceCount, data.firstInstance ) );
@@ -1474,8 +1476,51 @@ namespace PlatformGL
 	bool GL4CommandBuffer::_CmdCopyImage (const Command_t &cmd)
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyImage >();
+		
+		Message< GpuMsg::GetGLImageID >			req_src_id;
+		Message< GpuMsg::GetGLImageID >			req_dst_id;
+		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
+		Message< GpuMsg::GetImageDescriptor >	req_dst_descr;
+		
+		SendTo( data.srcImage, req_src_id );
+		SendTo( data.dstImage, req_dst_id );
+		SendTo( data.srcImage, req_src_descr );
+		SendTo( data.dstImage, req_dst_descr );
+		
+		ASSERT( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
+		ASSERT( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( data.srcLayout == EImageLayout::TransferSrcOptimal or data.srcLayout == EImageLayout::General );	// for vulkan compatibility
+		ASSERT( data.dstLayout == EImageLayout::TransferDstOptimal or data.dstLayout == EImageLayout::General );
+		ASSERT( EPixelFormat::BitPerPixel( req_src_descr->result->format ) == EPixelFormat::BitPerPixel( req_dst_descr->result->format ) );
+		ASSERT( req_src_descr->result->samples == req_dst_descr->result->samples );
 
-		TODO("");
+		for (auto& reg : Range(data.regions))
+		{
+			const uint	count = Min( reg.srcLayers.layerCount, reg.dstLayers.layerCount );
+
+			for (uint layer = 0; layer < count; ++layer)
+			{
+				const uint	src_z = reg.srcOffset.z + (reg.srcLayers.baseLayer.Get() + layer) * req_src_descr->result->dimension.z;
+				const uint	dst_z = reg.dstOffset.z + (reg.dstLayers.baseLayer.Get() + layer) * req_dst_descr->result->dimension.z;
+				
+				ASSERT( reg.srcLayers.mipLevel < req_src_descr->result->maxLevel );
+				ASSERT( reg.dstLayers.mipLevel < req_dst_descr->result->maxLevel );
+				ASSERT( reg.srcLayers.baseLayer.Get() + reg.srcLayers.layerCount <= req_src_descr->result->dimension.w );
+				ASSERT( reg.dstLayers.baseLayer.Get() + reg.dstLayers.layerCount <= req_dst_descr->result->dimension.w );
+				ASSERT(All( reg.srcOffset + reg.size <= Max(1u, req_src_descr->result->dimension.xyz() >> reg.srcLayers.mipLevel.Get()) ));
+				ASSERT(All( reg.dstOffset + reg.size <= Max(1u, req_dst_descr->result->dimension.xyz() >> reg.dstLayers.mipLevel.Get()) ));
+
+				GL_CALL( glCopyImageSubData( *req_src_id->result,
+											 GL4Enum( req_src_descr->result->imageType ),
+											 reg.srcLayers.mipLevel.Get(),
+											 reg.srcOffset.x, reg.srcOffset.y, src_z,
+											 *req_dst_id->result,
+											 GL4Enum( req_dst_descr->result->imageType ),
+											 reg.dstLayers.mipLevel.Get(),
+											 reg.dstOffset.x, reg.dstOffset.y, dst_z,
+											 reg.size.x, reg.size.y, reg.size.z ) );
+			}
+		}
 		return true;
 	}
 	
@@ -1488,7 +1533,118 @@ namespace PlatformGL
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyBufferToImage >();
 
-		TODO("");
+		Message< GpuMsg::GetGLBufferID >		req_src_id;
+		Message< GpuMsg::GetGLImageID >			req_dst_id;
+		Message< GpuMsg::GetBufferDescriptor >	req_src_descr;
+		Message< GpuMsg::GetImageDescriptor >	req_dst_descr;
+		
+		SendTo( data.srcBuffer, req_src_id );
+		SendTo( data.dstImage,  req_dst_id );
+		SendTo( data.srcBuffer, req_src_descr );
+		SendTo( data.dstImage,  req_dst_descr );
+		
+		ASSERT( req_src_descr->result->usage[ EBufferUsage::TransferSrc ] );
+		ASSERT( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
+		ASSERT( data.dstLayout == EImageLayout::TransferDstOptimal or data.dstLayout == EImageLayout::General );	// for vulkan compatibility
+		
+		const GLenum			target	= GL4Enum( req_dst_descr->result->imageType );
+		const BytesU			bpp		= BytesU(EPixelFormat::BitPerPixel( req_dst_descr->result->format ));
+		
+		GL4InternalPixelFormat	ifmt;
+		GL4PixelFormat			fmt;
+		GL4PixelType			type;
+		CHECK_ERR( GL4Enum( req_dst_descr->result->format, OUT ifmt, OUT fmt, OUT type ) );
+		
+		BytesU	row_align;
+		if ( bpp % 8_b == 0 )	row_align = 8_b;	else
+		if ( bpp % 4_b == 0 )	row_align = 4_b;	else
+		if ( bpp % 2_b == 0 )	row_align = 2_b;	else
+								row_align = 1_b;
+
+		GL_CALL( glBindBuffer( GL_PIXEL_UNPACK_BUFFER, *req_src_id->result ) );
+		GL_CALL( glBindTexture( target, *req_dst_id->result ) );
+
+		for (auto& reg : Range(data.regions))
+		{
+			for (uint layer = 0; layer < reg.imageLayers.layerCount; ++layer)
+			{
+				const uint		curr_layer	= reg.imageLayers.baseLayer.Get() + layer;
+				const uint		mip_level	= reg.imageLayers.mipLevel.Get();
+				const uint3		level_size	= Max( ImageUtils::LevelDimension( req_dst_descr->result->imageType, req_dst_descr->result->dimension, mip_level ).xyz(), 1u );
+				const uint3		offset		= reg.imageOffset;
+				const uint3		dim			= reg.imageSize;
+				const void*		pixels		= reg.bufferOffset.ToVoidPtr();
+
+				ASSERT( reg.imageLayers.mipLevel < req_dst_descr->result->maxLevel );
+				ASSERT( reg.imageLayers.baseLayer.Get() + reg.imageLayers.layerCount <= req_dst_descr->result->dimension.w );
+				ASSERT(All( (offset + dim) <= Max(1u, req_dst_descr->result->dimension.xyz() >> mip_level) ));
+				
+				GL_CALL( glPixelStorei( GL_UNPACK_ALIGNMENT, GLint(row_align) ) );
+				GL_CALL( glPixelStorei( GL_UNPACK_ROW_LENGTH, GLint(reg.bufferRowLength) ) );
+				GL_CALL( glPixelStorei( GL_UNPACK_IMAGE_HEIGHT, GLint(reg.bufferImageHeight) ) );
+
+				switch ( req_dst_descr->result->imageType )
+				{
+					case EImage::Tex1D :
+					{
+						GL_CALL( glTexSubImage1D(	target, mip_level,
+													offset.x, dim.x,
+													fmt, type, pixels ) );
+						break;
+					}
+					case EImage::Tex2D :
+					{
+						GL_CALL( glTexSubImage2D(	target, mip_level,
+													offset.x, offset.y,
+													dim.x, dim.y,
+													fmt, type, pixels ) );
+						break;
+					}
+					case EImage::Tex2DArray :
+					{
+						GL_CALL( glTexSubImage3D(	target, mip_level,
+													offset.x, offset.y, curr_layer,
+													dim.x, dim.y, 1,
+													fmt, type, pixels ) );
+						break;
+					}
+					case EImage::Tex3D :
+					{
+						GL_CALL( glTexSubImage3D(	target, mip_level,
+													offset.x, offset.y, offset.z,
+													dim.x, dim.y, dim.z,
+													fmt, type, pixels ) );
+						break;
+					}
+					case EImage::TexCube :
+					{
+						GL_CALL( glBindTexture(		GL_TEXTURE_CUBE_MAP_POSITIVE_X + curr_layer, *req_dst_id->result ) );
+						GL_CALL( glTexSubImage2D(	GL_TEXTURE_CUBE_MAP_POSITIVE_X + curr_layer, mip_level,
+													offset.x, offset.y,
+													dim.x, dim.y,
+													fmt, type,
+													pixels ) );
+						break;
+					}
+					case EImage::TexCubeArray :
+					{
+						GL_CALL( glTexSubImage3D(	target, mip_level,
+													offset.x, offset.y, curr_layer,
+													dim.x, dim.y, 1,
+													fmt, type,
+													pixels ) );
+						break;
+					}
+					default :
+					{
+						RETURN_ERR( "unknown image type!" );
+					}
+				}
+			}
+		}
+
+		GL_CALL( glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 ) );
+		GL_CALL( glBindTexture( target, 0 ) );
 		return true;
 	}
 	
@@ -1500,11 +1656,242 @@ namespace PlatformGL
 	bool GL4CommandBuffer::_CmdCopyImageToBuffer (const Command_t &cmd)
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyImageToBuffer >();
+		
+		if ( gl::GL4_GetVersion() >= 450 )
+			return _CopyImageToBuffer450( data );
+		else
+			return _CopyImageToBuffer200( data );
+	}
+	
+/*
+=================================================
+	_CopyImageToBuffer200
+=================================================
+*/
+	bool GL4CommandBuffer::_CopyImageToBuffer200 (const GpuMsg::CmdCopyImageToBuffer &data)
+	{
+		Message< GpuMsg::GetGLImageID >			req_src_id;
+		Message< GpuMsg::GetGLBufferID >		req_dst_id;
+		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
+		Message< GpuMsg::GetBufferDescriptor >	req_dst_descr;
+		
+		SendTo( data.srcImage,  req_src_id );
+		SendTo( data.dstBuffer, req_dst_id );
+		SendTo( data.srcImage,  req_src_descr );
+		SendTo( data.dstBuffer, req_dst_descr );
+		
+		ASSERT( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
+		ASSERT( req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
+		ASSERT( data.srcLayout == EImageLayout::TransferSrcOptimal or data.srcLayout == EImageLayout::General );	// for vulkan compatibility
+		
+		const GLenum			target		= GL4Enum( req_src_descr->result->imageType );
+		const BytesU			bpp			= BytesU(EPixelFormat::BitPerPixel( req_src_descr->result->format ));
+		
+		GL4InternalPixelFormat	ifmt;
+		GL4PixelFormat			fmt;
+		GL4PixelType			type;
+		CHECK_ERR( GL4Enum( req_src_descr->result->format, OUT ifmt, OUT fmt, OUT type ) );
+		
+		BytesU	row_align;
+		if ( bpp % 8_b == 0 )	row_align = 8_b;	else
+		if ( bpp % 4_b == 0 )	row_align = 4_b;	else
+		if ( bpp % 2_b == 0 )	row_align = 2_b;	else
+								row_align = 1_b;
 
-		TODO("");
+		GL_CALL( glBindBuffer( GL_PIXEL_PACK_BUFFER, *req_dst_id->result ) );
+		GL_CALL( glBindTexture( target, *req_src_id->result ) );
+
+		for (auto& reg : Range(data.regions))
+		{
+			const uint		mip_level	= reg.imageLayers.mipLevel.Get();
+			const uint4		level_size	= Max( ImageUtils::LevelDimension( req_src_descr->result->imageType, req_src_descr->result->dimension, mip_level ), 1u );
+			void *			pixels		= const_cast<void*>( reg.bufferOffset.ToVoidPtr() );
+
+			CHECK_ERR( All( reg.imageOffset == 0 ) and reg.imageLayers.baseLayer.Get() == 0 );
+			CHECK_ERR( All( reg.imageSize == level_size.xyz() ) );
+			CHECK_ERR( level_size.w == 1 and reg.imageLayers.layerCount == 1 );
+			
+			GL_CALL( glPixelStorei( GL_PACK_ALIGNMENT, GLint(row_align) ) );
+			GL_CALL( glPixelStorei( GL_PACK_ROW_LENGTH, GLint(reg.bufferRowLength) ) );
+			GL_CALL( glPixelStorei( GL_PACK_IMAGE_HEIGHT, GLint(reg.bufferImageHeight) ) );
+			
+			switch ( req_src_descr->result->imageType )
+			{
+				case EImage::Buffer :
+				case EImage::Tex1D :
+				{
+					GL_CALL( glGetTexImage( target, mip_level, fmt, type, OUT pixels ) );
+					break;
+				}
+				case EImage::Tex2D :
+				{
+					GL_CALL( glGetTexImage( target, mip_level, fmt, type, OUT pixels ) );
+					break;
+				}
+				/*case EImage::Tex3D :
+				{
+					GL_CALL( glGetTexImage( target, mip_level, fmt, type, OUT pixels ) );
+					break;
+				}*/
+				/*case EImage::Tex2DArray :
+				{
+					GL_CALL( glGetTexImage( target, mip_level, fmt, type, OUT pixels ) );
+					break;
+				}*/
+				/*case EImage::TexCube :
+				{
+					CHECK_ERR( msg.layer.Get() < 6 );
+					
+					GL_CALL( glGetTexImage( target, mip_level, fmt, type, OUT pixels ) );
+					break;
+				}*/
+				default :
+					RETURN_ERR( "unsupported image type!" );
+			}
+		}
 		return true;
 	}
 	
+/*
+=================================================
+	_CopyImageToBuffer450
+=================================================
+*/
+	bool GL4CommandBuffer::_CopyImageToBuffer450 (const GpuMsg::CmdCopyImageToBuffer &data)
+	{
+	#if GRAPHICS_API_OPENGL >= 450
+		
+		Message< GpuMsg::GetGLImageID >			req_src_id;
+		Message< GpuMsg::GetGLBufferID >		req_dst_id;
+		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
+		Message< GpuMsg::GetBufferDescriptor >	req_dst_descr;
+		
+		SendTo( data.srcImage,  req_src_id );
+		SendTo( data.dstBuffer, req_dst_id );
+		SendTo( data.srcImage,  req_src_descr );
+		SendTo( data.dstBuffer, req_dst_descr );
+		
+		ASSERT( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
+		ASSERT( req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
+		ASSERT( data.srcLayout == EImageLayout::TransferSrcOptimal or data.srcLayout == EImageLayout::General );	// for vulkan compatibility
+		
+		const BytesU			bpp	= BytesU(EPixelFormat::BitPerPixel( req_src_descr->result->format ));
+		
+		GL4InternalPixelFormat	ifmt;
+		GL4PixelFormat			fmt;
+		GL4PixelType			type;
+		CHECK_ERR( GL4Enum( req_src_descr->result->format, OUT ifmt, OUT fmt, OUT type ) );
+		
+		BytesU	row_align;
+		if ( bpp % 8_b == 0 )	row_align = 8_b;	else
+		if ( bpp % 4_b == 0 )	row_align = 4_b;	else
+		if ( bpp % 2_b == 0 )	row_align = 2_b;	else
+								row_align = 1_b;
+
+		GL_CALL( glBindBuffer( GL_PIXEL_PACK_BUFFER, *req_dst_id->result ) );
+
+		for (auto& reg : Range(data.regions))
+		{
+			for (uint layer = 0; layer < reg.imageLayers.layerCount; ++layer)
+			{
+				const uint		curr_layer	= reg.imageLayers.baseLayer.Get() + layer;
+				const uint		mip_level	= reg.imageLayers.mipLevel.Get();
+				const uint3		level_size	= Max( ImageUtils::LevelDimension( req_src_descr->result->imageType, req_src_descr->result->dimension, mip_level ).xyz(), 1u );
+				const uint3		offset		= reg.imageOffset;
+				const uint3		dim			= reg.imageSize;
+				void *			pixels		= const_cast<void*>( reg.bufferOffset.ToVoidPtr() );
+				const BytesUL	buf_size	= req_dst_descr->result->size - reg.bufferOffset;
+
+				ASSERT( mip_level < req_src_descr->result->maxLevel.Get() );
+				ASSERT( reg.imageLayers.baseLayer.Get() + reg.imageLayers.layerCount <= req_src_descr->result->dimension.w );
+				ASSERT(All( (offset + dim) <= Max(1u, req_src_descr->result->dimension.xyz() >> mip_level) ));
+				
+				GL_CALL( glPixelStorei( GL_PACK_ALIGNMENT, GLint(row_align) ) );
+				GL_CALL( glPixelStorei( GL_PACK_ROW_LENGTH, GLint(reg.bufferRowLength) ) );
+				GL_CALL( glPixelStorei( GL_PACK_IMAGE_HEIGHT, GLint(reg.bufferImageHeight) ) );
+
+				switch ( req_src_descr->result->imageType )
+				{
+					case EImage::Buffer :
+					case EImage::Tex1D :
+					{
+						CHECK_ERR(All( reg.imageOffset.yz() == 0 ));
+						CHECK_ERR(All( reg.imageSize.yz() == 1 ));
+						CHECK_ERR( reg.imageSize.x > 0 );
+
+						GL_CALL( glGetTextureSubImage(	*req_src_id->result, mip_level,
+														reg.imageOffset.x, 0, 0,
+														reg.imageSize.x, 1, 1,
+														fmt, type,
+														GLsizei(buf_size),
+														OUT pixels ) );
+						break;
+					}
+					case EImage::Tex2D :
+					{
+						CHECK_ERR(All( reg.imageSize.xy() > 0 ));
+						CHECK_ERR( reg.imageOffset.z == 0 and reg.imageSize.z == 1 );
+
+						GL_CALL( glGetTextureSubImage(	*req_src_id->result, mip_level,
+														reg.imageOffset.x, reg.imageOffset.y, 0,
+														reg.imageSize.x, reg.imageSize.y, 1,
+														fmt, type,
+														GLsizei(buf_size),
+														OUT pixels ) );
+						break;
+					}
+					case EImage::Tex3D :
+					{
+						CHECK_ERR(All( reg.imageSize.xyz() > 0 ));
+
+						GL_CALL( glGetTextureSubImage(	*req_src_id->result, mip_level,
+														reg.imageOffset.x, reg.imageOffset.y, reg.imageOffset.z,
+														reg.imageSize.x, reg.imageSize.y, reg.imageSize.z,
+														fmt, type,
+														GLsizei(buf_size),
+														OUT pixels ) );
+						break;
+					}
+					case EImage::Tex2DArray :
+					{
+						CHECK_ERR( reg.imageOffset.z == 0 );
+						CHECK_ERR( reg.imageSize.z == 1 );
+						CHECK_ERR(All( reg.imageSize.xy() > 0 ));
+
+						GL_CALL( glGetTextureSubImage(	*req_src_id->result, mip_level,
+														reg.imageOffset.x, reg.imageOffset.y, curr_layer,
+														reg.imageSize.x, reg.imageSize.y, 1,
+														fmt, type,
+														GLsizei(buf_size),
+														OUT pixels ) );
+						break;
+					}
+					case EImage::TexCube :
+					{
+						CHECK_ERR( curr_layer < 6 );
+						CHECK_ERR( reg.imageOffset.z == 0 and reg.imageSize.z == 1 );
+						CHECK_ERR(All( reg.imageSize.xy() > 0 ));
+
+						GL_CALL( glGetTextureSubImage(	*req_src_id->result, mip_level,
+														reg.imageOffset.x, reg.imageOffset.y, curr_layer,
+														reg.imageSize.x, reg.imageSize.y, 1,
+														fmt, type,
+														GLsizei(buf_size),
+														OUT pixels ) );
+						break;
+					}
+					default :
+						RETURN_ERR( "unsupported image type!" );
+				}
+			}
+		}
+		return true;
+
+	#else
+		RETURN_ERR( "not supported!" );
+	#endif
+	}
+
 /*
 =================================================
 	_CmdBlitImage
@@ -1552,10 +1939,8 @@ namespace PlatformGL
 
 		const GLenum	filter = data.linearFilter ? GL_LINEAR : GL_NEAREST;
 
-		FOR( i, data.regions )
+		for (auto& r : Range(data.regions))
 		{
-			const auto& r = data.regions[i];
-
 			// depth image not supported, yet
 			ASSERT( r.dstOffset0.z == 0 and r.dstOffset1.z == 0 );
 			ASSERT( r.srcOffset0.z == 0 and r.srcOffset1.z == 0 );
@@ -1575,7 +1960,6 @@ namespace PlatformGL
 										buffers, filter ) );
 		}
 
-		
 		GL_CALL( glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 ) );
 		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 ) );
 		return true;
@@ -1616,10 +2000,8 @@ namespace PlatformGL
 		CHECK_ERR( buffers != 0 );
 
 
-		FOR( i, data.regions )
+		for (auto& r : Range(data.regions))
 		{
-			const auto&	r = data.regions[i];
-
 			GL_CALL( glBlitFramebuffer( r.srcOffset0.x, r.srcOffset0.y, r.srcOffset1.x, r.srcOffset1.y,
 									    r.dstOffset0.x, r.dstOffset0.y, r.dstOffset1.x, r.dstOffset1.y,
 										buffers, filter ) );
@@ -1655,7 +2037,7 @@ namespace PlatformGL
 										   *req_dst_id->result,
 										   GLintptr(data.srcOffset),
 										   GLintptr(data.dstOffset),
-										   GLsizeiptr(data.size) ) );
+										   GLsizei(data.size) ) );
 		return true;
 	}
 	
@@ -1704,19 +2086,16 @@ namespace PlatformGL
 		GL_CALL( glEnable( GL_SCISSOR_TEST ) );
 		//GL_CALL( glViewport( _renderPassArea.left, _renderPassArea.bottom, _renderPassArea.Width(), _renderPassArea.Height() ) );
 
-		FOR( i, data.clearRects )
+		for (auto r : Range(data.clearRects))
 		{
-			auto	r = data.clearRects[i];
-			
 			r.rect.LeftBottom()	= Max( r.rect.LeftBottom(), _renderPassArea.LeftBottom() );
 			r.rect.RightTop()	= Clamp( r.rect.RightTop(), _renderPassArea.LeftBottom(), _renderPassArea.RightTop() );
 
 			GL_CALL( glScissor( r.rect.left, r.rect.bottom, r.rect.Width(), r.rect.Height() ) );
 
-			FOR( j, data.attachments )
+			for (auto& att : Range(data.attachments))
 			{
-				const auto&	att		= data.attachments[j];
-				const bool	is_ds	= att.attachmentIdx >= _renderPassData.draw.colorBuffers.Count();
+				const bool	is_ds = att.attachmentIdx >= _renderPassData.draw.colorBuffers.Count();
 
 				CHECK_ERR( att.aspectMask[EImageAspect::Color] == not is_ds and
 						   (att.aspectMask[EImageAspect::Depth] == is_ds or att.aspectMask[EImageAspect::Stencil] == is_ds) );

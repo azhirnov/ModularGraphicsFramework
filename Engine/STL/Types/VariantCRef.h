@@ -57,6 +57,7 @@ namespace GXTypes
 		template <typename T>
 		CHECKRES forceinline static VariantCRef  From (T &ref)
 		{
+			STATIC_ASSERT( not TypeTraits::IsConst<T> );
 			return VariantCRef( ref );
 		}
 		

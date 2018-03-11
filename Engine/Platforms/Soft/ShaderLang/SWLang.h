@@ -32,6 +32,14 @@ namespace SWShaderLang
 	template <typename GenType>	using gsamplerCube		= Impl::Texture2D< GenType >;
 	template <typename GenType>	using gsamplerCubeArray	= Impl::Texture2D< GenType >;
 
+	// TODO
+	//inline void memoryBarrier () {}
+	//inline void memoryBarrierAtomicCounter () {}
+	//inline void memoryBarrierBuffer () {}
+	//inline void memoryBarrierImage () {}
+	//inline void memoryBarrierShared () {}
+	//inline void groupMemoryBarrier () {}
+
 }	// SWShaderLang
 
 #define _RCast		GX_STL::GXTypes::ReferenceCast

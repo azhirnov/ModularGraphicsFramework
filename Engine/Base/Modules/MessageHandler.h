@@ -165,7 +165,7 @@ namespace Base
 		STATIC_ASSERT( sizeof(Handler::data) >= sizeof(func) );
 
 		Handler		handler;
-		UnsafeMem::MemCopy( handler.data, (void *)&func, SizeOf(func) );
+		UnsafeMem::MemCopy( handler.data, (void *)&func, BytesU::SizeOf(func) );
 		handler.ptr		= obj;
 		handler.func	= &_Call< Class, Msg, Func >;
 		

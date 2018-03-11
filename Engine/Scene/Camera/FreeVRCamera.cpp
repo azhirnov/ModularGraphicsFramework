@@ -1,8 +1,9 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Scene/Shared/Camera.h"
+#include "Engine/Scene/Public/Camera.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
 #include "Engine/Scene/Impl/BaseSceneModule.h"
+#include "Engine/STL/Math/3D/PerspectiveCamera.h"
 
 namespace Engine
 {

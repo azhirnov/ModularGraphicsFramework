@@ -3,14 +3,14 @@
 #pragma once
 
 #include "Engine/STL/Engine.STL.h"
-#include "Engine/Platforms/Shared/GPU/ShaderEnums.h"
-#include "Engine/Platforms/Shared/GPU/PixelFormatEnums.h"
-#include "Engine/Platforms/Shared/GPU/ImageEnums.h"
-#include "Engine/Platforms/Shared/GPU/SamplerEnums.h"
-#include "Engine/Platforms/Shared/GPU/RenderState.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Shared/GPU/Sampler.h"
-#include "Engine/Platforms/Shared/GPU/VertexAttribs.h"
+#include "Engine/Platforms/Public/GPU/ShaderEnums.h"
+#include "Engine/Platforms/Public/GPU/PixelFormatEnums.h"
+#include "Engine/Platforms/Public/GPU/ImageEnums.h"
+#include "Engine/Platforms/Public/GPU/SamplerEnums.h"
+#include "Engine/Platforms/Public/GPU/RenderState.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/Sampler.h"
+#include "Engine/Platforms/Public/GPU/VertexAttribs.h"
 
 namespace PipelineCompiler
 {

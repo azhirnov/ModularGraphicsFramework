@@ -1,15 +1,17 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/OS/Display.h"
-#include "Engine/Platforms/Shared/OS/Platform.h"
-#include "Engine/Platforms/Shared/OS/OSEnums.h"
-#include "Engine/Platforms/Shared/OS/Input.h"
-#include "Engine/Platforms/Windows/WinMessages.h"
-#include "Engine/Platforms/Windows/WinDisplay.h"
-#include "Engine/Platforms/Windows/WinObjectsConstructor.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef PLATFORM_WINDOWS
 
+#include "Engine/Platforms/Public/OS/Display.h"
+#include "Engine/Platforms/Public/OS/Platform.h"
+#include "Engine/Platforms/Public/OS/OSEnums.h"
+#include "Engine/Platforms/Public/OS/Input.h"
+#include "Engine/Platforms/Windows/WinMessages.h"
+#include "Engine/Platforms/Windows/WinDisplay.h"
+#include "Engine/Platforms/Windows/WinObjectsConstructor.h"
 #include "Engine/STL/OS/Windows/WinHeader.h"
 
 namespace Engine

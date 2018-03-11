@@ -2,10 +2,11 @@
 
 #pragma once
 
-#include "Engine/STL/OS/Posix/OSPosix.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #if defined( PLATFORM_BASE_POSIX ) and not defined( PLATFORM_SDL )
 
+#include "Engine/STL/OS/Posix/OSPosix.h"
 #include <pthread.h>
 
 namespace GX_STL

@@ -4,6 +4,7 @@
 #include "Engine/Base/Modules/Module.h"
 #include "Engine/Base/Files/FileManager.h"
 #include "Engine/Base/Stream/StreamObjectsConstructor.h"
+#include "Engine/STL/Files/SubFile.h"
 
 namespace Engine
 {

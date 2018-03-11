@@ -112,6 +112,9 @@ namespace VS
 
 	static constexpr uint	ReservedLiteralSuffix				= 4455;		// 'operator "" ...': literal suffix identifiers that do not start with an underscore are reserved
 
+	static constexpr uint	EmptyControlledStatement			= 4390;		// empty controlled statement found; is this the intent?
+
+	static constexpr uint	AssignInConditionalExpr				= 4706;		// assignment within conditional expression
 
 	// Static Analyzer Warnings //
 	static constexpr uint	ReturnValueIgnored					= 6031;		// Return value ignored: 'name'

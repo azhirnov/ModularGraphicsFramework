@@ -1,12 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Image.h"
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Pipeline.h"
-#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
-#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
 
 namespace Engine
 {
@@ -32,13 +34,32 @@ namespace PlatformSW
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
 											Fwd_GetSWBufferMemoryLayout,
 											Fwd_GetSWImageViewMemoryLayout,
-											Fwd_GetSWTextureMemoryLayout
+											Fwd_GetSWTextureMemoryLayout,
+											GpuMsg::PipelineAttachBuffer,
+											GpuMsg::PipelineAttachImage
 										> >
 										::Append< LayoutMsgList_t >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;
 
-		using CachedResources_t		= Array<Pair< ModulePtr, ModulePtr >>;	// sorted by binding index, second used for samplers
+		struct BufferRange
+		{
+			BytesUL		offset;
+			BytesUL		size;
+		};
+
+		struct ResCache
+		{
+		// types
+			using ResDescr_t = Union< ImageViewDescriptor, BufferRange >;
+
+		// variables
+			ModulePtr	resource;
+			ModulePtr	sampler;	// only for texture	
+			ResDescr_t	descr;
+		};
+
+		using CachedResources_t		= Array< ResCache >;	// sorted by binding index
 
 		struct _CacheResources_Func;
 
@@ -68,7 +89,9 @@ namespace PlatformSW
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-
+		
+		bool _PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &);
+		bool _PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &);
 		bool _GetSWBufferMemoryLayout (const Message< Fwd_GetSWBufferMemoryLayout > &);
 		bool _GetSWTextureMemoryLayout (const Message< Fwd_GetSWTextureMemoryLayout > &);
 		bool _GetSWImageViewMemoryLayout (const Message< Fwd_GetSWImageViewMemoryLayout > &);
@@ -110,6 +133,8 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWPipelineResourceTable::_GetSWBufferMemoryLayout );
 		_SubscribeOnMsg( this, &SWPipelineResourceTable::_GetSWTextureMemoryLayout );
 		_SubscribeOnMsg( this, &SWPipelineResourceTable::_GetSWImageViewMemoryLayout );
+		_SubscribeOnMsg( this, &SWPipelineResourceTable::_PipelineAttachBuffer );
+		_SubscribeOnMsg( this, &SWPipelineResourceTable::_PipelineAttachImage );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -201,6 +226,28 @@ namespace PlatformSW
 		return true;
 	}
 	
+/*
+=================================================
+	_PipelineAttachBuffer
+=================================================
+*/
+	bool SWPipelineResourceTable::_PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &msg)
+	{
+		TODO( "" );
+		return false;
+	}
+	
+/*
+=================================================
+	_PipelineAttachImage
+=================================================
+*/
+	bool SWPipelineResourceTable::_PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &msg)
+	{
+		TODO( "" );
+		return false;
+	}
+
 /*
 =================================================
 	_DetachModule
@@ -295,15 +342,23 @@ namespace PlatformSW
 
 			auto&	cached = self._cached[ tex.binding ];
 
-			CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT cached.first ) );
-			CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT cached.second ) );
+			CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT cached.resource ) );
+			CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT cached.sampler ) );
 			
 			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
-			self.SendTo( cached.first, req_img_descr );
+			self.SendTo( cached.resource, req_img_descr );
 			
 			CHECK( req_img_descr->result->imageType == tex.textureType );
 			CHECK( req_img_descr->result->usage[ EImageUsage::Sampled ] );
 			CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( req_img_descr->result->format ) ) );
+			
+			ImageViewDescriptor	view;
+			view.format		= req_img_descr->result->format;
+			view.layerCount	= req_img_descr->result->dimension.w;
+			view.levelCount	= req_img_descr->result->maxLevel.Get();
+			view.viewType	= req_img_descr->result->imageType;
+
+			cached.descr.Create( view );
 			return true;
 		}
 		
@@ -317,12 +372,22 @@ namespace PlatformSW
 			CHECK_ERR( img.binding != UMax );
 			self._cached.Resize( img.binding+1 );
 			
-			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT self._cached[ img.binding ].first ) );
+			auto&	cached = self._cached[ img.binding ];
+
+			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT cached.resource ) );
 			
 			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
-			self.SendTo( self._cached[ img.binding ].first , req_img_descr );
+			self.SendTo( cached.resource , req_img_descr );
 			
 			CHECK( req_img_descr->result->usage[ EImageUsage::Storage ] );
+
+			ImageViewDescriptor	view;
+			view.format		= img.format != EPixelFormat::Unknown ? img.format : req_img_descr->result->format;
+			view.layerCount	= req_img_descr->result->dimension.w;
+			view.levelCount	= 1;
+			view.viewType	= req_img_descr->result->imageType;
+
+			cached.descr.Create( view );
 			return true;
 		}
 		
@@ -335,14 +400,22 @@ namespace PlatformSW
 		{
 			CHECK_ERR( buf.binding != UMax );
 			self._cached.Resize( buf.binding+1 );
+
+			auto&	cached = self._cached[ buf.binding ];
 			
-			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT self._cached[ buf.binding ].first ) );
+			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT cached.resource ) );
 			
 			Message< GpuMsg::GetBufferDescriptor >	req_descr;
-			self.SendTo( self._cached[ buf.binding ].first, req_descr );
+			self.SendTo( cached.resource, req_descr );
 			
-			CHECK( req_descr->result->size == BytesUL(buf.size) );
+			CHECK( req_descr->result->size >= BytesUL(buf.size) );
 			CHECK( req_descr->result->usage[ EBufferUsage::Uniform ] );
+
+			BufferRange	range;
+			range.offset	= BytesUL(0);
+			range.size		= BytesUL(buf.size);
+
+			cached.descr.Create( range );
 			return true;
 		}
 		
@@ -356,15 +429,23 @@ namespace PlatformSW
 			CHECK_ERR( buf.binding != UMax );
 			self._cached.Resize( buf.binding+1 );
 			
-			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT self._cached[ buf.binding ].first ) );
+			auto&	cached = self._cached[ buf.binding ];
+
+			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT cached.resource ) );
 			
 			Message< GpuMsg::GetBufferDescriptor >	req_descr;
-			self.SendTo( self._cached[ buf.binding ].first, req_descr );
+			self.SendTo( cached.resource, req_descr );
 			
 			CHECK( (req_descr->result->size >= buf.staticSize) and
 					(buf.arrayStride == 0 or
 					(req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
 			CHECK( req_descr->result->usage[ EBufferUsage::Storage ] );
+			
+			BufferRange	range;
+			range.offset	= BytesUL(0);
+			range.size		= req_descr->result->size;
+
+			cached.descr.Create( range );
 			return true;
 		}
 	};
@@ -409,9 +490,16 @@ namespace PlatformSW
 	bool SWPipelineResourceTable::_GetSWBufferMemoryLayout (const Message< Fwd_GetSWBufferMemoryLayout > &msg)
 	{
 		CHECK_ERR( msg->index < _cached.Count() );
-		CHECK_ERR( _cached[ msg->index ].first );
+		auto const&	cached = _cached[ msg->index ];
 
-		return _cached[ msg->index ].first->Send( msg->message );
+		CHECK_ERR( cached.resource and cached.descr.Is< BufferRange >() );
+		auto const&	range = cached.descr.Get< BufferRange >();
+
+		msg->message->offset = BytesU(range.offset);
+		msg->message->size	 = BytesU(range.size);
+
+		cached.resource->Send( msg->message );
+		return true;
 	}
 	
 /*
@@ -422,12 +510,16 @@ namespace PlatformSW
 	bool SWPipelineResourceTable::_GetSWTextureMemoryLayout (const Message< Fwd_GetSWTextureMemoryLayout > &msg)
 	{
 		CHECK_ERR( msg->index < _cached.Count() );
-		CHECK_ERR( _cached[ msg->index ].first and _cached[ msg->index ].second );
-		
-		CHECK( _cached[ msg->index ].first->Send( msg->message ) );
+		auto const&	cached = _cached[ msg->index ];
 
+		CHECK_ERR( cached.resource and cached.sampler and cached.descr.Is< ImageViewDescriptor >() );
+		
+		msg->message->viewDescr = cached.descr.Get< ImageViewDescriptor >();
+
+		CHECK( cached.resource->Send( msg->message ) );
+		
 		Message< GpuMsg::GetSamplerDescriptor >	req_descr;
-		CHECK( _cached[ msg->index ].second->Send( req_descr ) );
+		CHECK( cached.sampler->Send( req_descr ) );
 
 		msg->message->sampler.Set( *req_descr->result );
 		return true;
@@ -441,9 +533,13 @@ namespace PlatformSW
 	bool SWPipelineResourceTable::_GetSWImageViewMemoryLayout (const Message< Fwd_GetSWImageViewMemoryLayout > &msg)
 	{
 		CHECK_ERR( msg->index < _cached.Count() );
-		CHECK_ERR( _cached[ msg->index ].first );
+		auto const&	cached = _cached[ msg->index ];
 
-		return _cached[ msg->index ].first->Send( msg->message );
+		CHECK_ERR( cached.resource and cached.descr.Is< ImageViewDescriptor >() );
+		
+		msg->message->viewDescr = cached.descr.Get< ImageViewDescriptor >();
+
+		return cached.resource->Send( msg->message );
 	}
 
 }	// PlatformSW

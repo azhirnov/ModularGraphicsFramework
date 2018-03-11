@@ -41,7 +41,7 @@ namespace CompileTime
 		using Self	= ValueToType< T, Value >;
 		using type	= T;
 
-		static const T	value = Value;
+		static constexpr T	value = Value;
 	};
 
 
@@ -52,14 +52,14 @@ namespace CompileTime
 
 	template <bool Switch, typename IfTrue, typename IfFalse>
 	struct SwitchValue {
-		using type					= typename IfFalse::type;
-		static const type	value	= IfFalse::value;
+		using type						= typename IfFalse::type;
+		static constexpr type	value	= IfFalse::value;
 	};
 
 	template <typename IfTrue, typename IfFalse>
 	struct SwitchValue< true, IfTrue, IfFalse > {
-		using type					= typename IfTrue::type;
-		static const type	value	= IfTrue::value;
+		using type						= typename IfTrue::type;
+		static constexpr type	value	= IfTrue::value;
 	};
 
 
@@ -71,15 +71,15 @@ namespace CompileTime
 	template <typename T>
 	struct SizeOf
 	{
-		static const usize	bytes	= sizeof(T);
-		static const usize	bits	= bytes << 3;
+		static constexpr usize	bytes	= sizeof(T);
+		static constexpr usize	bits	= bytes << 3;
 	};
 	
 	template <>
 	struct SizeOf <void>
 	{
-		static const usize	bytes	= 0;
-		static const usize	bits	= 0;
+		static constexpr usize	bytes	= 0;
+		static constexpr usize	bits	= 0;
 	};
 
 
@@ -91,15 +91,15 @@ namespace CompileTime
 	template <typename T>
 	struct AlignOf
 	{
-		static const usize	bytes	= alignof(T);
-		static const usize	bits	= bytes << 3;
+		static constexpr usize	bytes	= alignof(T);
+		static constexpr usize	bits	= bytes << 3;
 	};
 
 	template <>
 	struct AlignOf <void>
 	{
-		static const usize	bytes	= 0;
-		static const usize	bits	= 0;
+		static constexpr usize	bytes	= 0;
+		static constexpr usize	bits	= 0;
 	};
 
 
@@ -127,6 +127,30 @@ namespace CompileTime
 	template <bool Condition, typename T = void>
 	using DisableIf = EnableIf< not Condition, T >;
 
+
+
+	//
+	// Enable / Disable If (Type)
+	//
+	
+	namespace _ctime_hidden_
+	{
+		template <bool Condition, typename T = void>
+		struct _TypeEnableIf {
+			using type	= T;
+		};
+
+		template <typename T>
+		struct _TypeEnableIf <false, T> {
+		};
+	}
+	template <bool Condition, typename T = void>
+	using TypeEnableIf = std::enable_if_t< Condition, T >;
+	//typename _ctime_hidden_::_TypeEnableIf< Condition, T >::type;
+
+	template <bool Condition, typename T = void>
+	using TypeDisableIf = TypeEnableIf< not Condition, T >;
+
 	
 
 	//
@@ -142,8 +166,8 @@ namespace CompileTime
 		using First_t	= FirstType;
 		using Second_t	= SecondType;
 
-		static const First_t	first	= First;
-		static const Second_t	second	= Second;
+		static constexpr First_t	first	= First;
+		static constexpr Second_t	second	= Second;
 	};
 
 

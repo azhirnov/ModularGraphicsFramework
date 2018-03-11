@@ -113,6 +113,8 @@ namespace GCC
 	static constexpr char	Undef[]					= "-Wundef";
 	static constexpr char	EndifLabels[]			= "-Wendif-labels";
 	static constexpr char	Shadow[]				= "-Wshadow";
+	static constexpr char	ShadowGlobal[]			= "-Wshadow=global";
+	static constexpr char	ShadowLocal[]			= "-Wshadow=local";
 	static constexpr char	FreeNonheapObject[]		= "-Wfree-nonheap-object";
 	static constexpr char	UnsafeLoopOpt[]			= "-Wunsafe-loop-optimizations";
 
@@ -150,6 +152,7 @@ namespace GCC
 	static constexpr char	PlacementNew[]			= "-Wplacement-new";
 
 	static constexpr char	LiteralSuffix[]			= "-Wliteral-suffix";
+	static constexpr char	Narrowing[]				= "-Wnarrowing";
 
 
 	inline String WarningToError (StringCRef code)
@@ -190,6 +193,10 @@ namespace GCC
 // linker options
 namespace GccLinker
 {
+
+	static constexpr char	Static[]			= "-static";
+	static constexpr char	StaticLibGCC[]		= "-static-libgcc";
+	static constexpr char	StaticLibStdCPP[]	= "-static-libstdc++";
 
 }	// GccLinker
 

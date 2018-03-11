@@ -2,11 +2,13 @@
 
 #pragma once
 
+#include "Engine/Config/Engine.Config.h"
+
+#ifdef COMPUTE_API_OPENCL
+
 #include "Engine/Platforms/OpenCL/Impl/cl2.h"
 #include "Engine/Platforms/OpenCL/Impl/CL2Enums.h"
 #include "Engine/Platforms/OpenCL/Impl/CL2Emulator.h"
-
-#ifdef COMPUTE_API_OPENCL
 
 namespace Engine
 {

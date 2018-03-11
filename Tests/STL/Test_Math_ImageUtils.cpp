@@ -37,7 +37,7 @@ static void Test_ImageConverter ()
 	R8u		src[4] = { R8u( 0xFF ), R8u( 0x1F ), R8u( 0x3F ), R8u( 0x07 ) };
 	R32u	dst[4] = { R32u( 1 ), R32u( 2 ), R32u( 3 ), R32u( 4 ) };
 
-	GXImageUtils::Copy( uint3( 2, 2, 1 ), src, dst );
+	GXImageUtils::Copy( uint3( 2, 2, 1 ), src, dst, 1_b, 1_b );
 
 	TEST( dst[0].r == 0xFF );
 	TEST( dst[1].r == 0x1F );
@@ -52,7 +52,7 @@ static void Test_ImageConverter ()
 	R32i	img[4*4] = {};
 
 	GXImageUtils::CopyPart( uint3( 2, 2, 0 ), uint3( 0 ), src,
-						    uint3( 4, 4, 0 ), uint3( 1, 1, 0 ), img );
+						    uint3( 4, 4, 0 ), uint3( 1, 1, 0 ), img, 1_b, 1_b );
 	
 	TEST( img[5].r == 0xFF );
 	TEST( img[6].r == 0x1F );
@@ -67,7 +67,7 @@ static void Test_ImageConverter ()
 	/*RGBA4_UNorm	pic[4*4] = {};
 
 	GXImageUtils::CopyPart( uint3( 2, 2, 0 ), uint3( 0 ), src,
-						    uint3( 4, 4, 0 ), uint3( 2, 2, 0 ), pic );
+						    uint3( 4, 4, 0 ), uint3( 2, 2, 0 ), pic, 1_b, 1_b );
 	
 	TEST( pic[5].bits.r == 0xFF );
 	TEST( pic[6].bits.r == 0x1F );

@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Engine/STL/Math/MathFunc.h"
+#include "Engine/STL/CompileTime/TypeInfoFunc.h"
 
 namespace GX_STL
 {

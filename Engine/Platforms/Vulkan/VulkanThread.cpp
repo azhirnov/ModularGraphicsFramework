@@ -1,9 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/Tools/WindowHelper.h"
-#include "Engine/Platforms/Shared/GPU/Thread.h"
-#include "Engine/Platforms/Shared/GPU/CommandBuffer.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
+#include "Engine/Config/Engine.Config.h"
+
+#ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Platforms/Public/Tools/WindowHelper.h"
+#include "Engine/Platforms/Public/GPU/Thread.h"
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #include "Engine/Platforms/Vulkan/Windows/VkWinSurface.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
@@ -11,8 +15,6 @@
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
-
-#ifdef GRAPHICS_API_VULKAN
 
 namespace Engine
 {

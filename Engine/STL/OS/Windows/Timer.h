@@ -2,12 +2,15 @@
 
 #pragma once
 
-#include "Engine/STL/OS/Windows/OSWindows.h"
-#include "Engine/STL/OS/Base/Date.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/STL.Config.h"
 
 #if defined( PLATFORM_WINDOWS ) and \
 	not defined( PLATFORM_SDL ) and \
 	not defined( GX_USE_STD )
+
+#include "Engine/STL/OS/Windows/OSWindows.h"
+#include "Engine/STL/OS/Base/Date.h"
 
 namespace GX_STL
 {
@@ -23,7 +26,7 @@ namespace OS
 	{
 	// types
 	private:
-		typedef HiddenOSTypeFrom< ulong >	Handle_t;	// LARGE_INTEGER
+		using Handle_t = HiddenOSTypeFrom< ulong >;	// LARGE_INTEGER
 
 
 	// variables
@@ -47,13 +50,13 @@ namespace OS
 	
 
 	template <>
-	inline TimeL  PerformanceTimer::Get (const TimeL &) const
+	forceinline TimeL  PerformanceTimer::Get (const TimeL &) const
 	{
 		return GetTimeMicroSec();
 	}
 	
 	template <>
-	inline TimeD  PerformanceTimer::Get (const TimeD &) const
+	forceinline TimeD  PerformanceTimer::Get (const TimeD &) const
 	{
 		return GetTime();
 	}
@@ -62,4 +65,4 @@ namespace OS
 }	// OS
 }	// GX_STL
 
-#endif	// PLATFORM_WINDOWS
+#endif	// PLATFORM_WINDOWS and not PLATFORM_SDL and not GX_USE_STD

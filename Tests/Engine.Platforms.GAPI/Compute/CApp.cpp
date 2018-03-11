@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "CApp.h"
-#include "Engine/Platforms/Shared/Tools/GPUThreadHelper.h"
+#include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 
 CApp::CApp ()
@@ -15,7 +15,11 @@ CApp::CApp ()
 			<< &CApp::_Test_UpdateBuffer
 			<< &CApp::_Test_BufferAlign
 			<< &CApp::_Test_DynamicBuffer
-			//<< &CApp::_Test_CopyImage2D
+			<< &CApp::_Test_CopyImage2D
+			<< &CApp::_Test_CopyBufferToImage2D
+			<< &CApp::_Test_CopyImage2DToBuffer
+			<< &CApp::_Test_ConvertFloatImage2D
+			//<< &CApp::_Test_ShaderBarrier
 			//<< &CApp::_Test_CopyImage3D
 			//<< &CApp::_Test_PushConstants
 		;
@@ -55,7 +59,7 @@ bool CApp::Initialize (GAPI::type api)
 						ms->GlobalSystems(), CreateInfo::GpuThread{
 							GraphicsSettings{
 								api,
-								CreateInfo::GpuContext::EFlags::bits() | CreateInfo::GpuContext::EFlags::DebugContext
+								CreateInfo::GpuContext::EFlags::DebugContext
 							} },
 						OUT gthread ) );
 	thread->Send< ModuleMsg::AttachModule >({ gthread });

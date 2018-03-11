@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'C:\Projects\graphxgenengine\Projects\ShaderEditorTools\DrawTexturedQuad.cpp'
-// Created at: 2018/02/17 - 11:15:30
+// Origin file: 'c:\projects\graphxgenengine\projects\shadereditortools\drawtexturedquad.cpp'
+// Created at: 2018/03/11 - 09:54:21
 
 #include "all_pipelines.h"
 
@@ -16,12 +16,12 @@ void Create_drawtexturedquad (PipelineTemplateDescriptor& descr)
 	descr.renderState.inputAssembly.topology         = EPrimitive::TriangleStrip;
 	descr.renderState.inputAssembly.primitiveRestart = false;
 
-	descr.dynamicStates = EPipelineDynamicState::bits() | EPipelineDynamicState::Viewport | EPipelineDynamicState::Scissor;
-	descr.supportedShaders = EShader::bits() | EShader::Vertex | EShader::Fragment;
-	descr.supportedPrimitives = EPrimitive::bits() | EPrimitive::TriangleStrip;
+	descr.dynamicStates = EPipelineDynamicState::Viewport | EPipelineDynamicState::Scissor;
+	descr.supportedShaders = EShader::Vertex | EShader::Fragment;
+	descr.supportedPrimitives = EPrimitive::TriangleStrip;
 
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::RGBA | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 0, 0, EShader::bits() | EShader::Fragment )
+			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::RGBA | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 0, 0, EShader::Fragment )
 			.Finish();
 
 	descr.Vertex().StringGLSL( 
@@ -123,15 +123,15 @@ layout(location=0) smooth out   vec2 v_Texcoord;
 
 
 
-const vec2 g_Positions[4] = { vec2(-1.0, 1.0), vec2(-1.0), vec2(1.0), vec2(1.0, -1.0) };
-const vec2 g_Texcoords[4] = { vec2(1.0, 0.0), vec2(1.0), vec2(0.0), vec2(0.0, 1.0) };
+const vec2 g_Positions[4] = { vec2( -1.0, 1.0 ), vec2( -1.0 ), vec2( 1.0 ), vec2( 1.0, -1.0 ) };
+const vec2 g_Texcoords[4] = { vec2( 1.0, 0.0 ), vec2( 1.0 ), vec2( 0.0 ), vec2( 0.0, 1.0 ) };
 
 //---------------------------------
 
 void main ()
 {
-	gl_Position=vec4( g_Positions[gl_VertexID], float(0.0), float(1.0) );
-	v_Texcoord=g_Texcoords[gl_VertexID];
+	gl_Position = vec4( g_Positions[gl_VertexID], float( 0.0 ), float( 1.0 ) );
+	v_Texcoord = g_Texcoords[gl_VertexID];
 }
 
 
@@ -267,7 +267,7 @@ layout(binding=0) uniform sampler2D un_ColorTexture;
 
 void main ()
 {
-	out_Color=texture( un_ColorTexture, v_Texcoord );
+	out_Color = texture( un_ColorTexture, v_Texcoord );
 }
 
 

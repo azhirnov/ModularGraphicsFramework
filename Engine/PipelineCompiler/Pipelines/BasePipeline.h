@@ -87,7 +87,7 @@ namespace PipelineCompiler
 		// variables
 			String							name;
 			EImage::type					imageType		= EImage::Tex2D;
-			EGpuMemoryModel::type			memoryModel		= EGpuMemoryModel::Coherent;
+			EShaderMemoryModel::type		memoryModel		= EShaderMemoryModel::Coherent;
 			EPixelFormat::type				format			= EPixelFormat::Unknown;
 			EShader::bits					shaderUsage;
 			Location						location;
@@ -105,9 +105,9 @@ namespace PipelineCompiler
 			EShaderVariable::type			type				= EShaderVariable::Unknown;
 			EPrecision::type				precision			= EPrecision::Default;
 			EVariableQualifier::bits		qualifier;											// only for varyings
-			EGpuMemoryModel::type			memoryModel			= EGpuMemoryModel::Default;		// for image and buffer
+			EShaderMemoryModel::type		memoryModel			= EShaderMemoryModel::Default;		// for image and buffer
 			EVariablePacking::bits			packing;
-			//EPixelFormat::type			format				= EPixelFormat::Unknown;		// for image only
+			EPixelFormat::type				format				= EPixelFormat::Unknown;		// for image only
 			uint							arraySize			= 1;							// 0 - dynamic array	// TODO: array of array
 			BytesU							offset				= ~0_b;
 			BytesU							align				= 0_b;
@@ -141,7 +141,7 @@ namespace PipelineCompiler
 			String							typeName;
 			BytesU							staticSize;
 			BytesU							arrayStride;	// for dynamic part of buffer
-			EGpuMemoryModel::type			memoryModel		= EGpuMemoryModel::Coherent;
+			EShaderMemoryModel::type		memoryModel		= EShaderMemoryModel::Coherent;
 			EVariablePacking::type			packing			= EVariablePacking::Std430;
 			EShader::bits					shaderUsage;
 			Location						location;
@@ -168,28 +168,28 @@ namespace PipelineCompiler
 			Bindings&  Sampler (StringCRef texName, const SamplerDescriptor &descr, bool canBeOverridden = false);	// set default sampler
 
 			Bindings&  Image (EImage::type imageType, StringCRef name, EPixelFormat::type format, EShader::bits shaderUsage = EShader::bits().SetAll(),
-							  EGpuMemoryModel::type access = EGpuMemoryModel::Coherent);
+							  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
 
 			Bindings&  UniformBuffer (StringCRef name, StringCRef typeName, EShader::bits shaderUsage = EShader::bits().SetAll());
 			Bindings&  StorageBuffer (StringCRef name, StringCRef typeName, EShader::bits shaderUsage = EShader::bits().SetAll(),
-									  EGpuMemoryModel::type access = EGpuMemoryModel::Coherent);
+									  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
 
 			// helpers
 			template <typename T> Bindings&  Texture2D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll());
 			template <typename T> Bindings&  Texture2DArray (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll());
 		
 			template <typename T> Bindings&  Image2D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-													  EGpuMemoryModel::type access = EGpuMemoryModel::Coherent);
+													  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
 			template <typename T> Bindings&  Image2DMS (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-														EGpuMemoryModel::type access = EGpuMemoryModel::Coherent);
+														EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
 			template <typename T> Bindings&  Image2DArray (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-														   EGpuMemoryModel::type access = EGpuMemoryModel::Coherent);
+														   EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
 			template <typename T> Bindings&  Image2DMSArray (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-															 EGpuMemoryModel::type access = EGpuMemoryModel::Coherent);
+															 EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
 			template <typename T> Bindings&  ImageCube (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-														EGpuMemoryModel::type access = EGpuMemoryModel::Coherent);
+														EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
 			template <typename T> Bindings&  Image3D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-													  EGpuMemoryModel::type access = EGpuMemoryModel::Coherent);
+													  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
 		};
 
 
@@ -439,32 +439,32 @@ namespace PipelineCompiler
 	}
 		
 	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2D (StringCRef name, EShader::bits shaderUsage, EGpuMemoryModel::type access) {
+	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2D (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
 		return Image( EImage::Tex2D, name, EPixelFormat::From<T>(), shaderUsage, access );
 	}
 
 	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2DMS (StringCRef name, EShader::bits shaderUsage, EGpuMemoryModel::type access) {
+	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2DMS (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
 		return Image( EImage::Tex2DMS, name, EPixelFormat::From<T>(), shaderUsage, access );
 	}
 
 	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2DArray (StringCRef name, EShader::bits shaderUsage, EGpuMemoryModel::type access) {
+	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2DArray (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
 		return Image( EImage::Tex2DArray, name, EPixelFormat::From<T>(), shaderUsage, access );
 	}
 
 	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2DMSArray (StringCRef name, EShader::bits shaderUsage, EGpuMemoryModel::type access) {
+	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2DMSArray (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
 		return Image( EImage::Tex2DMSArray, name, EPixelFormat::From<T>(), shaderUsage, access );
 	}
 
 	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::ImageCube (StringCRef name, EShader::bits shaderUsage, EGpuMemoryModel::type access) {
+	inline BasePipeline::Bindings&  BasePipeline::Bindings::ImageCube (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
 		return Image( EImage::TexCube, name, EPixelFormat::From<T>(), shaderUsage, access );
 	}
 
 	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image3D (StringCRef name, EShader::bits shaderUsage, EGpuMemoryModel::type access) {
+	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image3D (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
 		return Image( EImage::Tex3D, name, EPixelFormat::From<T>(), shaderUsage, access );
 	}*/
 

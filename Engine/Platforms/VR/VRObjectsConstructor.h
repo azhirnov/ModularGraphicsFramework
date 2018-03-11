@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Shared/Common.h"
+#include "Engine/Platforms/Public/Common.h"
 
 namespace Engine
 {

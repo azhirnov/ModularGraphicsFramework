@@ -1,2 +1,0 @@
-GLM required for software renderer shader language.
-Download from: https://glm.g-truc.net/0.9.8/index.html

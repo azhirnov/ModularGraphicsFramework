@@ -73,8 +73,8 @@ namespace Impl
 	template <>	inline BaseImage::BaseImage (MemLayout_t &&memLayout, UninitializedT<glm::ivec4>) : BaseImage{ RVREF(memLayout), EOutputFormat::Int4 }   {}
 	template <>	inline BaseImage::BaseImage (MemLayout_t &&memLayout, UninitializedT<glm::uvec4>) : BaseImage{ RVREF(memLayout), EOutputFormat::UInt4 }  {}
 	
-	inline void BaseImage::_Load (const int3 &coord, OUT void *texel) const	{ ASSERT( not _load );  return _load( _memLayout, coord, OUT texel ); }
-	inline void BaseImage::_Store (const int3 &coord, const void* texel)	{ ASSERT( not _store ); return _store( _memLayout, coord, texel ); }
+	inline void BaseImage::_Load (const int3 &coord, OUT void *texel) const	{ ASSERT( _load );  return _load( _memLayout, coord, OUT texel ); }
+	inline void BaseImage::_Store (const int3 &coord, const void* texel)	{ ASSERT( _store ); return _store( _memLayout, coord, texel ); }
 //-----------------------------------------------------------------------------
 
 
@@ -101,11 +101,28 @@ namespace Impl
 		Image2D (Image2D &&) = default;
 		Image2D (const Image2D &) = default;
 
-		T		Load (const int2 &point) const				{ T res;  _Load( point.xyo(), &res );  return res; }
-		void	Store (const int2 &point, const T &value)	{ _Store( point.xyo(), &value ); }
+		T		Load (const int2 &point) const;
+		void	Store (const int2 &point, const T &value);
 
 		// TODO: atomics
 	};
+	
+
+	template <typename T, EStorageAccess::type A>
+	inline T  Image2D<T,A>::Load (const int2 &point) const
+	{
+		STATIC_ASSERT( EStorageAccess::HasReadAccess(A) );
+		T res;
+		_Load( point.xyo(), OUT &res );
+		return res;
+	}
+		
+	template <typename T, EStorageAccess::type A>
+	inline void  Image2D<T,A>::Store (const int2 &point, const T &value)
+	{
+		STATIC_ASSERT( EStorageAccess::HasWriteAccess(A) );
+		_Store( point.xyo(), &value );
+	}
 //-----------------------------------------------------------------------------
 
 

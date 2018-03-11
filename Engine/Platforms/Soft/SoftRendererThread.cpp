@@ -1,12 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/Tools/WindowHelper.h"
-#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
-#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
-#include "Engine/Platforms/Soft/Impl/SWDeviceLimits.h"
-#include "Engine/Platforms/Soft/Windows/SwWinSurface.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/Tools/WindowHelper.h"
+#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/Windows/SwWinSurface.h"
 
 namespace Engine
 {
@@ -54,6 +55,7 @@ namespace Platforms
 										> >::Append< QueueEventList_t >;
 
 		using Surface_t				= PlatformSW::SWSurface;
+		using Device_t				= PlatformSW::SWDevice;
 
 
 	// constants
@@ -62,12 +64,13 @@ namespace Platforms
 		static const TypeIdList		_eventTypes;
 
 		static const uint			_ver_major		= 0;
-		static const uint			_ver_minor		= 1;
+		static const uint			_ver_minor		= 2;
 		static const char			_renderer_name[];
 
 		
 	// variables
 	private:
+		Device_t			_device;
 		GraphicsSettings	_settings;
 
 		ModulePtr			_window;
@@ -77,9 +80,7 @@ namespace Platforms
 		Surface_t			_surface;
 		ModulePtr			_framebuffer;
 		ModulePtr			_renderPass;
-		uint2				_surfaceSize;
 
-		bool				_isCreated;
 		bool				_isFrameStarted;
 		bool				_isWindowVisible;
 
@@ -136,7 +137,7 @@ namespace Platforms
 */
 	SoftRendererThread::SoftRendererThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
 		Module( gs, ModuleConfig{ SWThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
-		_settings( ci.settings ),
+		_device{ gs },				_settings{ ci.settings },
 		_isFrameStarted{ false },	_isWindowVisible{ false }
 	{
 		SetDebugName( "SoftRendererThread" );
@@ -375,6 +376,13 @@ namespace Platforms
 			case GAPI::type(0) :	break;
 			default :				RETURN_ERR( "unsupported software renderer version" );
 		}
+
+		_device.Initialize();
+
+		if ( _settings.flags[ GraphicsSettings::EFlags::DebugContext ] )
+		{
+			//_device.InitDebugReport();
+		}
 		
 		// create surface
 		{
@@ -389,7 +397,6 @@ namespace Platforms
 
 		_WriteDeviceInfo();
 
-		_isCreated = true;
 		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
 		return true;
 	}
@@ -434,9 +441,9 @@ namespace Platforms
 */
 	void SoftRendererThread::_DestroyDevice ()
 	{
-		if ( _isCreated )
+		if ( _device.IsDeviceCreated() )
 		{
-			_isCreated = false;
+			_device.Deinitialize();
 
 			//_commands.RunAll( DelegateBuilder( this, &SoftRendererThread::_SubmitQueue ) );
 
@@ -476,12 +483,10 @@ namespace Platforms
 */
 	bool SoftRendererThread::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
 	{
-		if ( _isCreated		and
+		if ( _device.IsDeviceCreated()		and
 			 msg->desc.visibility != WindowDesc::EVisibility::Invisible )
 		{
-			_surfaceSize = msg->desc.surfaceSize;
-
-			// TODO: resize framebuffer
+			_device.Resize( msg->desc.surfaceSize );
 		}
 		return true;
 	}
@@ -495,7 +500,7 @@ namespace Platforms
 	{
 		if ( _window )
 		{
-			CHECK( not _isCreated );
+			CHECK( not _device.IsDeviceCreated() );
 
 			_window->UnsubscribeAll( this );
 			_window = null;
@@ -537,7 +542,7 @@ namespace Platforms
 */
 	bool SoftRendererThread::_GetSWPrivateClasses (const Message< GpuMsg::GetSWPrivateClasses > &msg)
 	{
-		//msg->result.Set({ &_device });
+		msg->result.Set({ &_device });
 		return true;
 	}
 	
@@ -548,7 +553,7 @@ namespace Platforms
 */
 	bool SoftRendererThread::_GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &msg)
 	{
-		msg->result.Set({ _settings, _surfaceSize });
+		msg->result.Set({ _settings, _device.SurfaceSize() });
 		return true;
 	}
 	

@@ -54,6 +54,10 @@ private:
 	bool _Test_DynamicBuffer ();
 
 	bool _Test_CopyImage2D ();
-	bool _Test_CopyImage3D ();
-	bool _Test_PushConstants ();
+	bool _Test_CopyBufferToImage2D ();
+	bool _Test_CopyImage2DToBuffer ();
+	bool _Test_ConvertFloatImage2D ();
+	bool _Test_ShaderBarrier ();
+	//bool _Test_CopyImage3D ();
+	//bool _Test_PushConstants ();
 };

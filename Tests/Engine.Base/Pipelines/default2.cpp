@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'C:\Projects\graphxgenengine\Tests\PipelineCompiler\Pipelines\Default2.cpp'
-// Created at: 2018/02/02 - 00:40:13
+// Origin file: 'c:\projects\graphxgenengine\tests\pipelinecompiler\pipelines\default2.cpp'
+// Created at: 2018/03/11 - 09:59:54
 
 #include "all_pipelines.h"
 
@@ -16,13 +16,13 @@ void Create_default2 (PipelineTemplateDescriptor& descr)
 	descr.renderState.inputAssembly.topology         = EPrimitive::TriangleList;
 	descr.renderState.inputAssembly.primitiveRestart = false;
 
-	descr.dynamicStates = EPipelineDynamicState::bits() | EPipelineDynamicState::Viewport | EPipelineDynamicState::Scissor;
-	descr.supportedShaders = EShader::bits() | EShader::Vertex | EShader::Fragment;
-	descr.supportedPrimitives = EPrimitive::bits() | EPrimitive::TriangleList;
+	descr.dynamicStates = EPipelineDynamicState::Viewport | EPipelineDynamicState::Scissor;
+	descr.supportedShaders = EShader::Vertex | EShader::Fragment;
+	descr.supportedPrimitives = EPrimitive::TriangleList;
 
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::RGBA | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 0, 0, EShader::bits() | EShader::Fragment )
-			.AddUniformBuffer( "ub", 16_b, 0, 1, EShader::bits() | EShader::Fragment )
+			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::RGBA | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 0, 0, EShader::Fragment )
+			.AddUniformBuffer( "ub", 16_b, 0, 1, EShader::Fragment )
 			.Finish();
 
 	descr.attribs = VertexAttribs()
@@ -131,12 +131,10 @@ layout(location=0) smooth out   vec2 v_Texcoord;
 
 
 
-
-//---------------------------------
 void main ()
 {
-	gl_Position=vec4( at_Position, float(0.0), float(1.0) );
-	v_Texcoord=at_Texcoord;
+	gl_Position = vec4( at_Position, float( 0.0 ), float( 1.0 ) );
+	v_Texcoord = at_Texcoord;
 }
 
 
@@ -165,10 +163,10 @@ void main ()
 0x00000007, 0x00000002, 0x00040020, 0x00000012, 0x00000001, 0x00000011, 0x0004003B, 0x00000012, 0x00000013, 0x00000001, 0x0004002B, 0x00000007, 
 0x00000015, 0x00000000, 0x0004002B, 0x00000007, 0x00000016, 0x3F800000, 0x00040020, 0x0000001A, 0x00000003, 0x00000008, 0x00040020, 0x0000001C, 
 0x00000003, 0x00000011, 0x0004003B, 0x0000001C, 0x0000001D, 0x00000003, 0x0004003B, 0x00000012, 0x0000001E, 0x00000001, 0x00050036, 0x00000003, 
-0x00000005, 0x00000000, 0x00000004, 0x000200F8, 0x00000006, 0x00040008, 0x00000001, 0x0000006A, 0x00000000, 0x0004003D, 0x00000011, 0x00000014, 
+0x00000005, 0x00000000, 0x00000004, 0x000200F8, 0x00000006, 0x00040008, 0x00000001, 0x00000068, 0x00000000, 0x0004003D, 0x00000011, 0x00000014, 
 0x00000013, 0x00050051, 0x00000007, 0x00000017, 0x00000014, 0x00000000, 0x00050051, 0x00000007, 0x00000018, 0x00000014, 0x00000001, 0x00070050, 
 0x00000008, 0x00000019, 0x00000017, 0x00000018, 0x00000015, 0x00000016, 0x00050041, 0x0000001A, 0x0000001B, 0x0000000E, 0x00000010, 0x0003003E, 
-0x0000001B, 0x00000019, 0x00040008, 0x00000001, 0x0000006B, 0x00000000, 0x0004003D, 0x00000011, 0x0000001F, 0x0000001E, 0x0003003E, 0x0000001D, 
+0x0000001B, 0x00000019, 0x00040008, 0x00000001, 0x00000069, 0x00000000, 0x0004003D, 0x00000011, 0x0000001F, 0x0000001E, 0x0003003E, 0x0000001D, 
 0x0000001F, 0x000100FD, 0x00010038 });
 
 	descr.fragOutput = FragmentOutputState()
@@ -261,17 +259,15 @@ layout(location=0) out   vec4 out_Color;
 layout(binding=0) uniform sampler2D un_ColorTexture;
 
 layout(binding=0) layout(std140) uniform UB {
-	layout(offset=0, align=16) vec4  color;    // offset: 0, align: 16
+	layout(offset=0, align=16) vec4  color;
 
 } ub;
 
 
 
-
-//---------------------------------
 void main ()
 {
-	out_Color=(texture( un_ColorTexture, v_Texcoord )*ub.color);
+	out_Color = (texture( un_ColorTexture, v_Texcoord ) * ub.color);
 }
 
 
@@ -297,7 +293,7 @@ void main ()
 0x0000000E, 0x00000000, 0x00040017, 0x00000010, 0x00000007, 0x00000002, 0x00040020, 0x00000011, 0x00000001, 0x00000010, 0x0004003B, 0x00000011, 
 0x00000012, 0x00000001, 0x0003001E, 0x00000015, 0x00000008, 0x00040020, 0x00000016, 0x00000002, 0x00000015, 0x0004003B, 0x00000016, 0x00000017, 
 0x00000002, 0x00040015, 0x00000018, 0x00000020, 0x00000001, 0x0004002B, 0x00000018, 0x00000019, 0x00000000, 0x00040020, 0x0000001A, 0x00000002, 
-0x00000008, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 0x00000004, 0x000200F8, 0x00000006, 0x00040008, 0x00000001, 0x00000061, 0x00000000, 
+0x00000008, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 0x00000004, 0x000200F8, 0x00000006, 0x00040008, 0x00000001, 0x0000005F, 0x00000000, 
 0x0004003D, 0x0000000C, 0x0000000F, 0x0000000E, 0x0004003D, 0x00000010, 0x00000013, 0x00000012, 0x00050057, 0x00000008, 0x00000014, 0x0000000F, 
 0x00000013, 0x00050041, 0x0000001A, 0x0000001B, 0x00000017, 0x00000019, 0x0004003D, 0x00000008, 0x0000001C, 0x0000001B, 0x00050085, 0x00000008, 
 0x0000001D, 0x00000014, 0x0000001C, 0x0003003E, 0x0000000A, 0x0000001D, 0x000100FD, 0x00010038 });

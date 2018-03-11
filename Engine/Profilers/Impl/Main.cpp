@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Profilers/Impl/ProfilerObjectsConstructor.h"
-#include "Engine/Profilers/Shared/GpuStatistic.h"
+#include "Engine/Profilers/Public/GpuStatistic.h"
 
 namespace Engine
 {

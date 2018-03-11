@@ -1,11 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Shared/GPU/Buffer.h"
-#include "Engine/Platforms/Shared/GPU/Memory.h"
-#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
-#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
+
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/Public/GPU/Enums.ToString.h"
+#include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
 
 namespace Engine
 {
@@ -39,12 +42,30 @@ namespace PlatformSW
 											GpuMsg::SetBufferDescriptor,
 											GpuMsg::GpuMemoryRegionChanged,
 											GpuMsg::GetSWBufferMemoryLayout,
-											GpuMsg::GetSWBufferMemoryRequirements
+											GpuMsg::GetSWBufferMemoryRequirements,
+											GpuMsg::SWBufferBarrier
 										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
+		
+
+		struct Block : CompileTime::FastCopyable
+		{
+		// variables
+			BytesU					offset;
+			BytesU					size;
+			EPipelineAccess::bits	access;
+			EPipelineStage::type	stage	= EPipelineStage::Unknown;	// last synchronization stage
+
+		// methods
+			Block () {}
+			Block (BytesU offset, BytesU size, EPipelineAccess::bits access, EPipelineStage::type stage) :
+				offset{offset}, size{size}, access{access}, stage{stage} {}
+		};
+
+		using Blocks_t				= Array< Block >; //FixedSizeArray< Block, 16 >;
 
 
 	// constants
@@ -60,6 +81,7 @@ namespace PlatformSW
 		BufferDescriptor		_descr;
 		ModulePtr				_memObj;
 		BinArrayRef				_memory;
+		Blocks_t				_blocks;
 		
 		EGpuMemory::bits		_memFlags;		// -|-- this flags is requirements for memory obj, don't use it anywhere
 		EMemoryAccess::bits		_memAccess;		// -|
@@ -87,6 +109,7 @@ namespace PlatformSW
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
 		bool _GetSWBufferMemoryLayout (const Message< GpuMsg::GetSWBufferMemoryLayout > &);
 		bool _GetSWBufferMemoryRequirements (const Message< GpuMsg::GetSWBufferMemoryRequirements > &);
+		bool _SWBufferBarrier (const Message< GpuMsg::SWBufferBarrier > &);
 		
 	// event handlers
 		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
@@ -99,6 +122,11 @@ namespace PlatformSW
 		void _DestroyAll ();
 		void _OnMemoryBinded ();
 		void _OnMemoryUnbinded ();
+
+		void _MergeBlocks (Block newBlock);
+		//void _MergeBlocks (const Block &newBlock, EPipelineAccess::bits lastAccess, EPipelineStage::bits lastStage);
+		
+		void _CheckAccess (INOUT Block &block, EPipelineAccess::bits access, EPipelineStage::type stage) const;
 	};
 //-----------------------------------------------------------------------------
 
@@ -138,6 +166,7 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWBuffer::_GpuMemoryRegionChanged );
 		_SubscribeOnMsg( this, &SWBuffer::_GetSWBufferMemoryLayout );
 		_SubscribeOnMsg( this, &SWBuffer::_GetSWBufferMemoryRequirements );
+		_SubscribeOnMsg( this, &SWBuffer::_SWBufferBarrier );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -363,6 +392,9 @@ namespace PlatformSW
 		_memory		= *req_data->result;
 		_memAccess	= req_descr->result->access;
 
+		_blocks.Clear();
+		_blocks.PushBack(Block{ 0_b, _memory.Size(), EPipelineAccess::bits(), EPipelineStage::Unknown });
+
 		CHECK( BytesUL(_memory.Size()) == _descr.size );
 	}
 
@@ -382,6 +414,7 @@ namespace PlatformSW
 
 		_isBindedToMemory	= false;
 		_memory				= Uninitialized;
+		_blocks.Clear();
 	}
 
 /*
@@ -405,7 +438,19 @@ namespace PlatformSW
 	{
 		CHECK_ERR( _isBindedToMemory );
 
-		msg->result.Set({ _memory, _memAccess, _align });
+		// check access
+		/*for (auto& curr : Range(_blocks))
+		{
+			if ( curr.offset + curr.size > msg->offset or
+				 curr.offset < msg->offset + msg->size )
+			{
+				_CheckAccess( curr, msg->access, msg->stage );
+			}
+		}
+
+		_MergeBlocks(Block{ msg->offset, msg->size, msg->access, msg->stage });*/
+
+		msg->result.Set({ _memory.SubArray( usize(msg->offset), usize(msg->size) ), _align, _memAccess });
 		return true;
 	}
 
@@ -418,6 +463,152 @@ namespace PlatformSW
 	{
 		msg->result.Set({ BytesU(_descr.size), _align });
 		return true;
+	}
+	
+/*
+=================================================
+	_SWBufferBarrier
+=================================================
+*/
+	bool SWBuffer::_SWBufferBarrier (const Message< GpuMsg::SWBufferBarrier > &msg)
+	{
+		for (auto& br : Range(msg->barriers))
+		{
+			ASSERT( br.buffer == this );
+
+			_MergeBlocks(Block{ BytesU(br.offset), BytesU(br.size), br.dstAccessMask, EPipelineStage::BottomOfPipe });
+
+			//_MergeBlocks( Block{ BytesU(br.offset), BytesU(br.size), br.dstAccessMask, msg->dstStageMask }, br.srcAccessMask, msg->srcStageMask );
+		}
+		return true;
+	}
+
+/*
+=================================================
+	_MergeBlocks
+=================================================
+*/
+	void SWBuffer::_MergeBlocks (Block newBlock)
+	{
+		// insert new block
+		/*bool	inserted = false;
+
+		FOR( i, _blocks )
+		{
+			auto&	curr = _blocks[i];
+
+			if ( newBlock.offset == curr.offset )
+			{
+				if ( newBlock.size == curr.size )
+				{
+					curr		= newBlock;
+					inserted	= true;
+					break;
+				}
+				else
+				if ( newBlock.size < curr.size )
+				{
+					inserted	= true;
+					curr.size	= 
+					curr.offset = newBlock.offset + newBlock.size;
+					_blocks.Insert( newBlock, i );
+					break;
+				}
+				else // newBlock.size > curr.size
+				{
+					_blocks.Erase( i );
+					--i;
+					continue;
+				}
+			}
+			else
+			if ( newBlock.offset + newBlock.size > curr.offset )
+			{
+				inserted	= true;
+				curr.offset = newBlock.offset + newBlock.size;
+				
+				if ( i > 0 )
+				{
+					auto&	prev = _blocks[i-1];
+					prev.size = newBlock.offset - prev.offset;
+
+					_blocks.Insert( newBlock, i-1 );
+				}
+				else
+					_blocks.Insert( newBlock, 0 );
+
+				break;
+			}
+		}
+
+		if ( not inserted and newBlock.offset < _memory.Size() )
+		{
+			newBlock.size = Min( _memory.Size() - newBlock.offset, newBlock.size );
+			_blocks.PushBack( newBlock );
+			inserted = true;
+		}
+
+		if ( not inserted ) {
+			WARNING( "invalid buffer block range!" );
+			return;
+		}
+
+		// optimize
+		FOR( i, _blocks )
+		{
+			auto&	curr		= _blocks[i];
+			BytesU	next_off	= i+1 < _blocks.Count() ? _blocks[i+1].offset : _memory.Size();
+
+			ASSERT( curr.size > 0_b );
+			ASSERT( i > 0 or curr.offset == 0_b );
+			ASSERT( curr.offset + curr.size == next_off );
+
+			if ( i+1 < _blocks.Count() )
+			{
+				auto&	next = _blocks[i+1];
+
+				if ( curr.access == next.access and curr.stage == next.stage )
+				{
+					curr.size = (next.offset + next.size) - curr.offset;
+
+					_blocks.Erase( i );
+					--i;
+					continue;
+				}
+			}
+		}*/
+	}
+	
+	/*void SWBuffer::_MergeBlocks (const Block &newBlock, EPipelineAccess::bits lastAccess, EPipelineStage::bits lastStage)
+	{
+		// TODO
+		_MergeBlocks( newBlock );
+	}*/
+	
+/*
+=================================================
+	_CheckAccess
+=================================================
+*/
+	void SWBuffer::_CheckAccess (INOUT Block &block, EPipelineAccess::bits accessMask, EPipelineStage::type stage) const
+	{
+		const bool	was_written		= !!(block.access & EPipelineAccess::WriteMask);
+		const bool	will_be_read	= !!(accessMask & EPipelineAccess::ReadMask);
+		const bool	will_be_written	= !!(accessMask & EPipelineAccess::WriteMask);
+		const bool	need_sync		= was_written and will_be_read;
+		
+		// read,  read  -> no sync
+		// write, read  -> sync
+		// write, write -> no sync ?
+
+		SW_DEBUG_REPORT( not need_sync,
+						 "missed synchronization between read and write access: from stage '"_str <<
+						 EPipelineStage::ToString( block.stage ) << "', with access '" << EPipelineAccess::ToString( block.access ) <<
+						 "' to stage '" << EPipelineStage::ToString( stage ) << "', with access '" << EPipelineAccess::ToString( accessMask ) << "'",
+						 EDbgReport::Error );
+
+		block.access = accessMask;
+		block.stage  = stage;
 	}
 
 }	// PlatformSW

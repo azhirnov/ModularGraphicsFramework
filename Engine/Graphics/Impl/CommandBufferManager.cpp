@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Graphics/Impl/GraphicsBaseModule.h"
-#include "Engine/Graphics/Shared/Commands.h"
+#include "Engine/Graphics/Public/Commands.h"
 #include "Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
 
 namespace Engine
@@ -657,7 +657,7 @@ namespace Graphics
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
 								_GetManager(),
-								CommandBufferDescriptor{ ECmdBufferCreate::bits() | ECmdBufferCreate::ImplicitResetable }
+								CommandBufferDescriptor{ ECmdBufferCreate::ImplicitResetable }
 							},
 							OUT cmd_buf ) );
 

@@ -67,7 +67,7 @@ namespace GXTypes
 			// replace elements inside memory block
 			static void Replace (T *to, T *from, const usize count, bool inSingleMemBlock = false) noexcept
 			{
-				UnsafeMem::MemMove( to, from, SizeOf<T>() * count );
+				UnsafeMem::MemMove( to, from, SizeOf<T> * count );
 
 				// clear old values after replace
 				GX_UNUSED( inSingleMemBlock );
@@ -75,7 +75,7 @@ namespace GXTypes
 				if ( inSingleMemBlock ) {
 					for (T* t = from; t < from + count; ++t) {
 						if (t < to or t >= to + count) {
-							UnsafeMem::ZeroMem( t, SizeOf<T>() );
+							UnsafeMem::ZeroMem( t, SizeOf<T> );
 						}
 					}
 				})
@@ -172,24 +172,24 @@ namespace GXTypes
 			// create default elements
 			static void Create (T *ptr, const usize count) noexcept
 			{
-				UnsafeMem::ZeroMem( ptr, SizeOf<T>() * count );
+				UnsafeMem::ZeroMem( ptr, SizeOf<T> * count );
 			}
 
 			static void Destroy (T *ptr, const usize count) noexcept
 			{
-				DEBUG_ONLY( UnsafeMem::ZeroMem( ptr, SizeOf<T>() * count ) );
+				DEBUG_ONLY( UnsafeMem::ZeroMem( ptr, SizeOf<T> * count ) );
 			}
 			
 			// copy elements from one memblock to other memblock
 			static void Copy (T *to, const T * const from, const usize count) noexcept
 			{
-				UnsafeMem::MemCopy( to, from, SizeOf<T>() * count );
+				UnsafeMem::MemCopy( to, from, SizeOf<T> * count );
 			}
 			
 			// move elements from one memblock to other memblock
 			static void Move (T *to, T * from, const usize count) noexcept
 			{
-				UnsafeMem::MemMove( to, from, SizeOf<T>() * count );
+				UnsafeMem::MemMove( to, from, SizeOf<T> * count );
 			}
 			
 			// replace elements inside memory block
@@ -203,7 +203,7 @@ namespace GXTypes
 				if ( inSingleMemBlock ) {
 					for (T* t = from; t < from + count; ++t) {
 						if (t < to or t >= to + count) {
-							UnsafeMem::ZeroMem( t, SizeOf<T>() );
+							UnsafeMem::ZeroMem( t, SizeOf<T> );
 						}
 					}
 				})
@@ -224,7 +224,7 @@ namespace GXTypes
 	//
 
 	template <typename T>
-	struct AutoDetectCopyStrategy : public Noninstancable
+	struct AutoDetectCopyStrategy final : public Noninstancable
 	{
 		STATIC_ASSERT( not CompileTime::IsNoncopyable<T> );
 

@@ -1,10 +1,12 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/OS/Posix/Timer.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_BASE_POSIX
 
+#include "Engine/STL/OS/Posix/Timer.h"
+#include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/OS/Base/Date.h"
 #include "Engine/STL/OS/Posix/PosixHeader.h"
 
 namespace GX_STL
@@ -60,14 +62,14 @@ namespace OS
 
 		_year			= dt->tm_year + 1900;
 		_month			= dt->tm_mon;								// 0..11
-		_day			= dt->tm_mday-1;							// 1..31 convert to 0..30
+		_dayOfMonth		= dt->tm_mday-1;							// 1..31 convert to 0..30
 		_dayOfWeek		= dt->tm_wday == 0 ? 6 : dt->tm_wday-1;		// 0..6, Sun == 0 convert to mon..sun
 		_dayOfYear		= dt->tm_yday;								// 0..365
 
 		_hour			= dt->tm_hour;								// 0..23
 		_minute			= dt->tm_min;								// 0..59
 		_second			= dt->tm_sec;								// 0..59
-		_milliseconds	= tv.tv_usec / 1000;						// 0..1000
+		_millis			= tv.tv_usec / 1000;						// 0..1000
 
 		return *this;
 	}

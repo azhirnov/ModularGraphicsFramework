@@ -26,7 +26,7 @@ extern void Test_ComputeApi ()
 	
 		CHECK( app.ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Platforms.GAPI/Compute" ) );
 
-		app.Initialize( "GL 4.4"_GAPI );
+		app.Initialize( "GL 4.5"_GAPI );
 
 		// main loop
 		for (; app.Update();) {}

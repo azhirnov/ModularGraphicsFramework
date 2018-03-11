@@ -44,7 +44,7 @@ namespace PipelineCompiler
 			uint							unit				= UMax;
 			uint							descriptorSet		= UMax;
 			EImage::type					imageType			= EImage::Tex2D;
-			EGpuMemoryModel::type			memoryModel			= EGpuMemoryModel::Coherent;
+			EShaderMemoryModel::type		memoryModel			= EShaderMemoryModel::Coherent;
 			EPixelFormat::type				format				= EPixelFormat::Unknown;
 			
 			String ToString () const;
@@ -58,7 +58,7 @@ namespace PipelineCompiler
 			EShaderVariable::type			type				= EShaderVariable::Unknown;
 			EPrecision::type				precision			= EPrecision::Default;
 			EVariableQualifier::bits		qualifier;
-			EGpuMemoryModel::type			memoryModel			= EGpuMemoryModel::Default;		// for image and buffer
+			EShaderMemoryModel::type		memoryModel			= EShaderMemoryModel::Default;		// for image and buffer
 			EPixelFormat::type				format				= EPixelFormat::Unknown;		// for image only
 			uint							arraySize			= 1;							// 0 - dynamic array	// TODO: array of array
 			
@@ -106,7 +106,7 @@ namespace PipelineCompiler
 			Array<BufferVariable>			fields;
 			uint							bindingIndex		= UMax;
 			uint							descriptorSet		= UMax;
-			EGpuMemoryModel::type			memoryModel			= EGpuMemoryModel::Coherent;
+			EShaderMemoryModel::type		memoryModel			= EShaderMemoryModel::Coherent;
 			EVariablePacking::type			packing				= EVariablePacking::Unknown;
 			BytesU							size				= 0_b;
 			

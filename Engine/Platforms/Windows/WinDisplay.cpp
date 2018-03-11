@@ -1,9 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Platforms/Windows/WinDisplay.h"
+#include "Engine/STL/Common/Platforms.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef PLATFORM_WINDOWS
 
+#include "Engine/Platforms/Windows/WinDisplay.h"
 #include "Engine/STL/OS/Windows/WinHeader.h"
 
 #ifdef COMPILER_MSVC

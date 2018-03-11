@@ -26,7 +26,7 @@ namespace GXTypes
 		
 	// variables
 	private:
-		T *		_ptr;
+		mutable T *		_ptr;
 
 
 	// methods
@@ -50,7 +50,7 @@ namespace GXTypes
 			return *this;
 		}
 
-		forceinline Self & operator = (Self &right)
+		forceinline Self & operator = (const Self &right)
 		{
 			_ptr = right._ptr;
 			return *this;
@@ -102,7 +102,7 @@ namespace GXTypes
 
 		forceinline T * RawPtr () const
 		{
-			return const_cast< T* >( _ptr );
+			return _ptr;
 		}
 
 

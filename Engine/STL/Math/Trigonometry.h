@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Engine/STL/CompileTime/TypeListHelpers.h"
-#include "MathConstants.h"
-#include "MathTypes.h"
+#include "Engine/STL/Math/MathConstants.h"
+#include "Engine/STL/Math/MathTypes.h"
 #include "Engine/STL/Dimensions/RadiansAndDegrees.h"
 
 namespace GX_STL
