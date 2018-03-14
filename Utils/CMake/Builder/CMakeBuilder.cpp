@@ -46,25 +46,72 @@ namespace CMake
 			CHECK_ERR( OS::FileSystem::CreateDirectories( _baseFolder ) );
 		}
 
-		// clear fast build files
-		{
-			String	path = FileAddress::BuildPath( _baseFolder, CMakeBuilder::GetTempFolderForFastCpp() );
-
-			if ( OS::FileSystem::IsDirectoryExist( path ) )
-			{
-				CHECK( OS::FileSystem::DeleteDirectory( path ) );
-			}
-		}
-
+		_ClearSCUBuildDir();
 
 		String	src;
-		String	compiler_opt;
-
 		src << "# auto generated file\n"
 			<< "cmake_minimum_required (VERSION 3.6.0)\n\n"
 			<< "message( STATUS \"==========================================================================\\n\" )\n"
 			<< "message( STATUS \"project '" << _solutionName << "' generation started\" )\n";
 
+		_SetupProject( OUT src );
+		
+		src	<< "\n"
+			<< "project( \"" << _solutionName << "\" LANGUAGES CXX )\n"
+			<< "set_property( GLOBAL PROPERTY USE_FOLDERS ON )\n"
+			<< "set( " << _solutionName << "_VERSION_MAJOR " << _version.x << " )\n"
+			<< "set( " << _solutionName << "_VERSION_MINOR " << _version.y << " )\n\n";
+
+		_OptionsToString( OUT src );
+
+		String	compiler_opt;
+		CHECK_ERR( _CompilersToString( OUT src, OUT compiler_opt ) );
+
+		// for debuging
+		src	<< "message( STATUS \"Compiler: ${CMAKE_CXX_COMPILER_ID} (${CMAKE_CXX_COMPILER_VERSION})\" )\n"
+			<< "message( STATUS \"Compiler name: ${DETECTED_COMPILER}\" )\n"
+			<< "message( STATUS \"target system: ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_VERSION})\" )\n"
+			<< "message( STATUS \"host system: ${CMAKE_HOST_SYSTEM_NAME} (${CMAKE_HOST_SYSTEM_VERSION})\" )\n\n";
+
+		CHECK_ERR( _ExternalProjectsToString( OUT src ) );
+
+		CHECK_ERR( _ProjectsToString( OUT src, compiler_opt ) );
+
+		src << "message( STATUS \"project '" << _solutionName << "' generation ended\" )\n"
+			<< "message( STATUS \"\\n==========================================================================\" )\n\n";
+
+		// save project
+		auto	file = File::HddWFile::New( FileAddress::BuildPath( _baseFolder, filename ) );
+		CHECK_ERR( file );
+
+		file->Write( StringCRef(src) );
+
+		return true;
+	}
+	
+/*
+=================================================
+	_ClearSCUBuildDir
+=================================================
+*/
+	void CMakeBuilder::_ClearSCUBuildDir () const
+	{
+		// clear fast build files
+		String	path = FileAddress::BuildPath( _baseFolder, CMakeBuilder::GetTempFolderForFastCpp() );
+
+		if ( OS::FileSystem::IsDirectoryExist( path ) )
+		{
+			CHECK( OS::FileSystem::DeleteDirectory( path ) );
+		}
+	}
+	
+/*
+=================================================
+	_SetupProject
+=================================================
+*/
+	void CMakeBuilder::_SetupProject (OUT String &src) const
+	{
 		// system version and other options
 		FOR( i, _sourceBeforeProject )
 		{
@@ -74,18 +121,28 @@ namespace CMake
 				<< opt.first << "\n"
 				<< (opt.second.Empty() ? "" : "endif()\n");
 		}
-		
-		src	<< "\n"
-			<< "project( \"" << _solutionName << "\" LANGUAGES CXX )\n"
-			<< "set_property( GLOBAL PROPERTY USE_FOLDERS ON )\n"
-			<< "set( " << _solutionName << "_VERSION_MAJOR " << _version.x << " )\n"
-			<< "set( " << _solutionName << "_VERSION_MINOR " << _version.y << " )\n\n";
+	}
 
+/*
+=================================================
+	_OptionsToString
+=================================================
+*/
+	void CMakeBuilder::_OptionsToString (OUT String &src) const
+	{
 		// serialize options
 		FOR( i, _userOptions ) {
 			src << "option( " << _userOptions[i] << " \"test\")\n";
 		}
+	}
 
+/*
+=================================================
+	_CompilersToString
+=================================================
+*/
+	bool CMakeBuilder::_CompilersToString (OUT String &src, OUT String &compilerOpts) const
+	{
 		// check compilers
 		{
 			HashSet<String>	unique_names;
@@ -116,22 +173,45 @@ namespace CMake
 		}
 
 		// serialize compilers
+		HashMap<String, uint>	defines;
+
 		FOR( i, _compilers )
 		{
-			CHECK( _compilers[i]->ToString( OUT src ) );
-			CHECK( _compilers[i]->ToString2( OUT compiler_opt ) );
+			auto comp = _compilers[i].ToPtr<CMakeCompiler>();
+
+			CHECK( comp->ToString( OUT src ) );
+			CHECK( comp->ToString2_Opt_Pass1( OUT defines ) );
+		}
+
+		FOR( i, defines )
+		{
+			const auto&	item = defines[i];
+
+			if ( item.second == 1 )
+				continue;
+
+			compilerOpts << item.first << '\n';
+		}
+
+		FOR( i, _compilers )
+		{
+			CHECK( _compilers[i].ToPtr<CMakeCompiler>()->ToString2_Opt_Pass2( defines, OUT compilerOpts ) );
 		}
 
 		src << "if ( NOT DEFINED DETECTED_COMPILER )\n"
 			<< "	message( FATAL_ERROR \"current compiler: '${CMAKE_CXX_COMPILER_ID}' is not configured for this project!\" )\n"
 			<< "endif()\n\n";
 
-		// for debuging
-		src	<< "message( STATUS \"Compiler: ${CMAKE_CXX_COMPILER_ID} (${CMAKE_CXX_COMPILER_VERSION})\" )\n"
-			<< "message( STATUS \"Compiler name: ${DETECTED_COMPILER}\" )\n"
-			<< "message( STATUS \"target system: ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_VERSION})\" )\n"
-			<< "message( STATUS \"host system: ${CMAKE_HOST_SYSTEM_NAME} (${CMAKE_HOST_SYSTEM_VERSION})\" )\n\n";
-
+		return true;
+	}
+	
+/*
+=================================================
+	_ProjectsToString
+=================================================
+*/
+	bool CMakeBuilder::_ProjectsToString (OUT String &src, StringCRef compilerOpts) const
+	{
 		StringSet_t		existing_proj;
 
 		// external VS projects
@@ -176,7 +256,7 @@ namespace CMake
 			proj->_linkDirs.AddArray( _projectLinkDirs );
 			proj->_linkLibs.AddArray( _projectLinkLibs );
 			proj->_defines.AddArray( _projectDefines );
-			proj->SetCompilerOptions( compiler_opt );
+			proj->SetCompilerOptions( compilerOpts );
 
 			// validate dependencies
 			/*FOR( j, proj->_linkLibs ) {
@@ -189,11 +269,16 @@ namespace CMake
 
 			CHECK( proj->ToString( OUT src ) );
 		}
-		
-		src << "message( STATUS \"project '" << _solutionName << "' generation ended\" )\n"
-			<< "message( STATUS \"\n==========================================================================\" )\n\n";
-
-		// serialize external projects
+		return true;
+	}
+	
+/*
+=================================================
+	_ExternalProjectsToString
+=================================================
+*/
+	bool CMakeBuilder::_ExternalProjectsToString (OUT String &src) const
+	{
 		if ( not _externalProjects.Empty() )
 		{
 			src << "message( STATUS \"adding external projects\" )\n\n\n";
@@ -202,13 +287,6 @@ namespace CMake
 				CHECK( _externalProjects[i]->ToString( OUT src ) );
 			}
 		}
-
-		// save project
-		auto	file = File::HddWFile::New( FileAddress::BuildPath( _baseFolder, filename ) );
-		CHECK_ERR( file );
-
-		file->Write( StringCRef(src) );
-
 		return true;
 	}
 
@@ -360,7 +438,7 @@ namespace CMake
 		_userOptions.Add( name );
 		return this;
 	}
-	
+
 /*
 =================================================
 	SetVersion

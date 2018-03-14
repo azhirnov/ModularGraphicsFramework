@@ -82,10 +82,6 @@
 //#define GX_ZLIB_ENABLED
 
 
-// scripts
-//#define GX_ANGELSCRIPT_ENABLED
-
-
 // database
 //#define GX_SQLITE_DATABASE_ENABLED
 

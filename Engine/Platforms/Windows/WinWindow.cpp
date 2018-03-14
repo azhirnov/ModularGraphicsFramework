@@ -495,15 +495,15 @@ namespace PlatformWin
 		struct Utils {
 			static LRESULT CALLBACK MsgProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
-				WinWindow*	wp = (WinWindow *)GetWindowLongPtrA( hWnd, GWLP_USERDATA );
+				WinWindow*	wp = ReferenceCast<WinWindow *>(GetWindowLongPtrA( hWnd, GWLP_USERDATA ));
 				return wp->_ProcessMessage( uMsg, wParam, lParam );
 			}
 		};
 
 		CHECK_ERR( _IsCreated() and _looping, void() );
 
-		::SetWindowLongPtrA( _wnd.Get<HWND>(), GWLP_USERDATA, (LONG_PTR) this );
-		::SetWindowLongPtrA( _wnd.Get<HWND>(), GWLP_WNDPROC,  (LONG_PTR) &Utils::MsgProc );
+		::SetWindowLongPtrA( _wnd.Get<HWND>(), GWLP_USERDATA, ReferenceCast<LONG_PTR>( this ) );
+		::SetWindowLongPtrA( _wnd.Get<HWND>(), GWLP_WNDPROC,  ReferenceCast<LONG_PTR>( &Utils::MsgProc ) );
 	}
 	
 /*
@@ -699,7 +699,7 @@ namespace PlatformWin
 	{
 		if ( _IsCreated() )
 		{
-			::SetWindowLongPtrA( _wnd.Get<HWND>(), GWLP_WNDPROC, (LONG_PTR) ::DefWindowProcA );
+			::SetWindowLongPtrA( _wnd.Get<HWND>(), GWLP_WNDPROC, ReferenceCast<LONG_PTR>(&::DefWindowProcA) );
 
 			_SendEvent< OSMsg::WindowBeforeDestroy >({});
 

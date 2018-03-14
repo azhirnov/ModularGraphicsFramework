@@ -179,24 +179,41 @@ namespace CMake
 	
 /*
 =================================================
-	ToString2
+	ToString2_Opt_Pass1
 =================================================
 */
-	bool CMakeBuilder::CMakeCompiler::ToString2 (OUT String &src)
+	bool CMakeBuilder::CMakeCompiler::ToString2_Opt_Pass1 (OUT HashMap<String, uint> &defined) const
 	{
 		CHECK_ERR( not _configurations.Empty() );
 
-		src << "if ( " << _name << " )\n";
-
-		// serialize configurations
 		FOR( i, _configurations ) {
-			_configurations[i].second->ToString2( _configurations[i].first, OUT src );
+			_configurations[i].second->ToString2_Opt_Pass1( _configurations[i].first, OUT defined );
 		}
-		
-		src << "endif()\n\n\n";
 		return true;
 	}
 	
+/*
+=================================================
+	ToString2_Opt_Pass2
+=================================================
+*/
+	bool CMakeBuilder::CMakeCompiler::ToString2_Opt_Pass2 (const HashMap<String, uint> &defined, OUT String &src) const
+	{
+		CHECK_ERR( not _configurations.Empty() );
+
+		String	temp;
+
+		FOR( i, _configurations ) {
+			_configurations[i].second->ToString2_Opt_Pass2( _configurations[i].first, defined, OUT temp );
+		}
+		
+		if ( not temp.Empty() )
+		{
+			src << "if ( " << _name << " )\n" << temp << "endif()\n\n\n";
+		}
+		return true;
+	}
+
 /*
 =================================================
 	_CopyFrom
@@ -380,7 +397,7 @@ namespace CMake
 		FOR( i, _linkerFlags ) { src << ' ' << _linkerFlags[i]; }
 		src << " \" CACHE STRING \"\" FORCE )\n";
 
-		src << "set( CMAKE_SHARED_LINKER_FLAGS_" << uc_name << " \"${CMAKE_EXE_LINKER_FLAGS}";
+		src << "set( CMAKE_SHARED_LINKER_FLAGS_" << uc_name << " \"${CMAKE_SHARED_LINKER_FLAGS}";
 		FOR( i, _linkerFlags ) { src << ' ' << _linkerFlags[i]; }
 		src << " \" CACHE STRING \"\" FORCE )\n";
 		
@@ -407,44 +424,97 @@ namespace CMake
 		}
 		return true;
 	}
+	
+/*
+=================================================
+	Configuration_CxxFlags
+=================================================
+*/
+	inline String  Configuration_CxxFlags (StringCRef name, StringCRef upperCaseName)
+	{
+		return "target_compile_options( "_str << CMakeBuilder::GetTargetPlaceholder() << " PRIVATE $<$<CONFIG:"
+					<< name << ">: ${PROJECTS_SHARED_CXX_FLAGS_" << upperCaseName << "}> )";
+	}
+	
+/*
+=================================================
+	Configuration_Defines
+=================================================
+*/
+	inline String  Configuration_Defines (StringCRef name, StringCRef upperCaseName)
+	{
+		return "target_compile_definitions( "_str << CMakeBuilder::GetTargetPlaceholder() << " PRIVATE $<$<CONFIG:"
+					<< name << ">: ${PROJECTS_SHARED_DEFINES_" << upperCaseName << "}> )";
+	}
+	
+/*
+=================================================
+	Configuration_LinkerFlags
+=================================================
+*/
+	inline String  Configuration_LinkerFlags (StringCRef, StringCRef upperCaseName)
+	{
+		return "set_target_properties( "_str << CMakeBuilder::GetTargetPlaceholder() << " PROPERTIES LINK_FLAGS_"
+					<< upperCaseName << " ${PROJECTS_SHARED_LINKED_FLAGS_" << upperCaseName << "} )";
+	}
 
 /*
 =================================================
-	ToString2
+	ToString2_Opt_Pass1
 =================================================
 */
-	bool CMakeBuilder::CMakeCompiler::Configuration::ToString2 (StringCRef name, OUT String &src)
+	bool CMakeBuilder::CMakeCompiler::Configuration::ToString2_Opt_Pass1 (StringCRef name, OUT HashMap<String, uint> &defined) const
 	{
 		String	uc_name;
-
 		FOR( i, name ) {
 			uc_name << StringUtils::ToUpper( name[i] );
 		}
-		
-		if ( not _targetCxxFlags.Empty()	or
-			 not _targetDefines.Empty()		or
-			 not _targetLinkerFlags.Empty() )
-		{
-			src << "	# " << name << "\n";
-		}
 
-		if ( not _targetCxxFlags.Empty() )
-		{
-			src << "	target_compile_options( " << CMakeBuilder::GetTargetPlaceholder() << " PRIVATE $<$<CONFIG:" << name << ">: ${PROJECTS_SHARED_CXX_FLAGS_" << uc_name << "}> )\n";
-		}
+		auto	iter1 = defined.AddOrSkip( Configuration_CxxFlags( name, uc_name ), 0 );	iter1->second++;
 
-		if ( not _targetDefines.Empty() )
-		{
-			src << "	target_compile_definitions( " << CMakeBuilder::GetTargetPlaceholder() << " PRIVATE $<$<CONFIG:" << name << ">: ${PROJECTS_SHARED_DEFINES_" << uc_name << "}> )\n";
-		}
+		auto	iter2 = defined.AddOrSkip( Configuration_Defines( name, uc_name ), 0 );		iter2->second++;
 
-		if ( not _targetLinkerFlags.Empty() )
-		{
-			src << "	set_target_properties( " << CMakeBuilder::GetTargetPlaceholder() << " PROPERTIES LINK_FLAGS_" << uc_name << " ${PROJECTS_SHARED_LINKED_FLAGS_" << uc_name << "} )\n";
-		}
+		auto	iter3 = defined.AddOrSkip( Configuration_LinkerFlags( name, uc_name ), 0 );	iter3->second++;
+
 		return true;
 	}
 	
+/*
+=================================================
+	ToString2_Opt_Pass2
+=================================================
+*/
+	bool CMakeBuilder::CMakeCompiler::Configuration::ToString2_Opt_Pass2 (StringCRef name, const HashMap<String, uint> &defined, OUT String &src) const
+	{
+		String	uc_name;
+		FOR( i, name ) {
+			uc_name << StringUtils::ToUpper( name[i] );
+		}
+
+		String	temp;
+
+		if ( not _targetCxxFlags.Empty() and not defined.IsExist( Configuration_CxxFlags( name, uc_name ) ) )
+		{
+			temp << '\t' << Configuration_CxxFlags( name, uc_name ) << '\n';
+		}
+
+		if ( not _targetDefines.Empty() and not defined.IsExist( Configuration_Defines( name, uc_name ) ) )
+		{
+			temp << '\t' << Configuration_Defines( name, uc_name ) << '\n';
+		}
+
+		if ( not _targetLinkerFlags.Empty() and not defined.IsExist( Configuration_LinkerFlags( name, uc_name ) ) )
+		{
+			temp << '\t' << Configuration_LinkerFlags( name, uc_name ) << '\n';
+		}
+
+		if ( not temp.Empty() )
+		{
+			src << "	# " << name << "\n" << temp;
+		}
+		return true;
+	}
+
 /*
 =================================================
 	_CopyFrom

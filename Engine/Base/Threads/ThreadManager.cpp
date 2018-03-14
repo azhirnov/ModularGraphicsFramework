@@ -377,12 +377,13 @@ namespace Base
 
 		pt->_Loop();
 
-		ModulePtr	task_mod = pt->GetModuleByID( TaskModuleModuleID );
+		volatile ModulePtr	task_mod = pt->GetModuleByID( TaskModuleModuleID );
 
 		pt->_OnExit();
 
-		pt		 = null;
-		task_mod = null;
+		pt = null;
+
+		GX_UNUSED( task_mod );
 	}
 
 

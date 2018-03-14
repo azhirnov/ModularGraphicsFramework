@@ -145,8 +145,7 @@ namespace CompileTime
 		};
 	}
 	template <bool Condition, typename T = void>
-	using TypeEnableIf = std::enable_if_t< Condition, T >;
-	//typename _ctime_hidden_::_TypeEnableIf< Condition, T >::type;
+	using TypeEnableIf = typename _ctime_hidden_::_TypeEnableIf< Condition, T >::type;
 
 	template <bool Condition, typename T = void>
 	using TypeDisableIf = TypeEnableIf< not Condition, T >;

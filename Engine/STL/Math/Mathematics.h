@@ -4,7 +4,8 @@
 
 #include "Engine/STL/Math/Trigonometry.h"
 #include "Engine/STL/Dimensions/ByteAndBit.h"
-#include "Engine/STL/Experimental/FastMath.h"
+#include "Engine/STL/Math/FastMath.h"
+#include "Engine/STL/Math/Trigonometry.h"
 #include "Engine/STL/Algorithms/ArrayUtils.h"
 #include "Engine/STL/CompileTime/TypeInfoFunc.h"
 

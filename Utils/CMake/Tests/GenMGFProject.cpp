@@ -9,7 +9,7 @@ using namespace CMake;
 #define ENABLE_ENGINE
 #define ENABLE_UTILS
 #define ENABLE_PROJECTS
-//#define ENABLE_SDL			// use SDL2 instead of WinAPI and other OS functions
+#define ENABLE_EXTERNALS
 
 //#define ENABLE_SCU			// single compilation unit per thread
 #define NUM_THREADS	8
@@ -30,13 +30,16 @@ extern void GenMGFProject ()
 		// Visual C++
 		auto	msvc = builder.AddMSVisualStudioCompiler();
 		{
+			const String	dbg_lib = VS::MultiThreadedDebugDll;
+			const String	rel_lib = VS::MultiThreadedDll;
+
 			Array<String>	shared_linker_cfg{ VS_Linker::OptReferences, VS_Linker::COMDATFolding, VS_Linker::NoIncrementalLinking };
 
 			Array<String>	shared_cxx_flags{ VS::CppLastest, VS::MultiThreadCompilation, VS::NoMinimalRebuild, VS::RemUnrefCode,
 											  VS::NoFunctionLevelLinking, VS::FloatPointStrict, VS::FloatPointNoExceptions };
 
 			Array<String>	release_cxx_flags{ VS::InlineAll, VS::InlineAll, VS::Intrinsic, VS::OptFavorFastCode, VS::OptOmitFramePointers,
-											   VS::OptFiberSafe, VS::OptWholeProgram, VS::StringPooling, VS::NoSecurityCheck, VS::MultiThreadedDll };
+											   VS::OptFiberSafe, VS::OptWholeProgram, VS::StringPooling, VS::NoSecurityCheck, rel_lib };
 
 			Set<uint>	errors				= { VS::ReturningAddressOfLocalVariable, VS::TypeNameMismatch, VS::UninitializedVarUsed,
 												VS::TooManyParamsForMacro, VS::RecursiveOnAllControlPaths, VS::IllegalConversion,
@@ -83,31 +86,43 @@ extern void GenMGFProject ()
 
 			auto	debug_cfg = msvc->AddConfiguration( "Debug" );
 			{
+				debug_cfg->AddGlobalCFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled })
+						  ->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled })
+						  ->AddGlobalLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
+
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						 ->AddTargetCxxFlags({ VS::WarningLevel4, VS::NoWarningsAsErrors, VS::SDLChecks, VS::OptDisabled, VS::NoInline, VS::Exceptions,
 												VS::OptNoOmitFramePointers, VS::NoStringPooling, VS::SecurityCheck, /*VS::ControlFlowGuard,*/ VS::RTTI,
-												VS::MultiThreadedDebugDll, VS::NoStaticAnalyze, VS::DbgProgramDatabase, VS::StackFrameAndUninitVarCheck });
+												dbg_lib, VS::NoStaticAnalyze, VS::DbgProgramDatabase, VS::StackFrameAndUninitVarCheck });
 				debug_cfg->AddTargetLinkerFlags( shared_linker_cfg )->AddTargetLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
-				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG" });
+				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" });
 			}
 
 			auto	analyze_cfg = msvc->AddConfiguration( "DebugAnalyze" );
 			{
+				analyze_cfg->AddGlobalCFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled })
+							->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled })
+							->AddGlobalLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
+
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ VS::WarningLevel4, VS::NoWarningsAsErrors, VS::SDLChecks, VS::OptDisabled, VS::NoInline, VS::Exceptions,
 												  VS::OptNoOmitFramePointers, VS::NoStringPooling, VS::SecurityCheck, VS::ControlFlowGuard, VS::RTTI,
-												  VS::MultiThreadedDebugDll, VS::StaticAnalyze, VS::DbgProgramDatabase, VS::StackFrameAndUninitVarCheck });
+												  dbg_lib, VS::StaticAnalyze, VS::DbgProgramDatabase, VS::StackFrameAndUninitVarCheck });
 				analyze_cfg->AddTargetLinkerFlags( shared_linker_cfg )->AddTargetLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
-				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG" });
+				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" });
 			}
 
 			auto	profile_cfg = msvc->AddConfiguration( "Profile" );
 			{
+				profile_cfg->AddGlobalCFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptDisabled })
+							->AddGlobalCxxFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptDisabled })
+							->AddGlobalLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Debug, VS_Linker::Profile });
+
 				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )->AddTargetCxxFlags( release_cxx_flags )
 						->AddTargetCxxFlags({ VS::WarningLevel3, VS::OptDisabled, VS::NoStaticAnalyze, VS::Exceptions, VS::RTTI });
 				profile_cfg->AddTargetLinkerFlags( shared_linker_cfg )
 							->AddTargetLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Debug, VS_Linker::Profile });
-				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" });
 			}
 	
 			auto	release_cfg = msvc->AddConfiguration( "Release" );
@@ -121,12 +136,15 @@ extern void GenMGFProject ()
 						shared_cxx_flags[i].Erase( j, pos + 4 - j );
 					}
 				}
+				release_cfg->AddGlobalCFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptFull })
+							->AddGlobalCxxFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptFull })
+							->AddGlobalLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Release });
 
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )->AddTargetCxxFlags( release_cxx_flags )
 							->AddTargetCxxFlags({ VS::WarningLevel3, VS::OptFull, VS::NoStaticAnalyze, VS::NoExceptions, VS::NoRTTI });
 				release_cfg->AddTargetLinkerFlags( shared_linker_cfg )
 							->AddTargetLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Release, VS_Linker::RandomBaseAddress });
-				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
 			}
 
 			builder.SetSystemVersion( "8.1", "WIN32" );
@@ -137,8 +155,6 @@ extern void GenMGFProject ()
 		{
 			Array<String>	shared_cxx_flags{ GCC::Cpp1z };
 			Array<String>	shared_linked_flags{ GccLinker::Static, GccLinker::StaticLibGCC, GccLinker::StaticLibStdCPP };
-
-			//shared_cxx_flags.Append({, });
 
 			shared_cxx_flags.Append({ /*GCC::Pedantic,*/ GCC::CharSubscripts, GCC::DoublePromotion, GCC::Format, GCC::Main, GCC::MissingBraces, GCC::MissingIncludeDirs,
 									  GCC::Uninititalized, GCC::MayBeUninitialized, GCC::UnknownPragmas, GCC::Pragmas, GCC::StrictAliasing, GCC::StrictOverflow,
@@ -157,36 +173,47 @@ extern void GenMGFProject ()
 
 			auto	debug_cfg = gcc->AddConfiguration( "Debug" );
 			{
+				debug_cfg->AddGlobalCFlags({ GCC::Define( "_DEBUG" ), GCC::OptDebug })
+						  ->AddGlobalCxxFlags({ GCC::Define( "_DEBUG" ), GCC::OptDebug });
+
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
-						 ->AddTargetCxxFlags({ GCC::DebugGddb, /*GCC::Sanitize_Undefined,*/ GCC::CheckIncompleteType, GCC::OptDebug });
+						 ->AddTargetCxxFlags({ GCC::DebugGddb, /*GCC::Sanitize_Undefined,*/ GCC::CheckIncompleteType, GCC::OptDebug, GCC::DisableWarnings({ GCC::Terminate }) });
 				debug_cfg->AddTargetLinkerFlags( shared_linked_flags );
 				//debug_cfg->AddTargetLinkerFlags({ "-lubsan" });
-				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG" });
+				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" });
 			}
 
 			auto	analyze_cfg = gcc->AddConfiguration( "DebugAnalyze" );
 			{
+				analyze_cfg->AddGlobalCFlags({ GCC::Define( "_DEBUG" ), GCC::OptDebug })
+							->AddGlobalCxxFlags({ GCC::Define( "_DEBUG" ), GCC::OptDebug });
+
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
-						  ->AddTargetCxxFlags({ GCC::DebugGddb, GCC::Sanitize_Undefined, GCC::CheckIncompleteType, GCC::OptDebug });
+						  ->AddTargetCxxFlags({ GCC::DebugGddb, GCC::Sanitize_Undefined, GCC::CheckIncompleteType, GCC::OptDebug, GCC::DisableWarnings({ GCC::Terminate }) });
 				analyze_cfg->AddTargetLinkerFlags( shared_linked_flags );
-				//debug_cfg->AddTargetLinkerFlags({ "-lubsan" });
-				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG" });
+				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" });
 			}
 
 			auto	profile_cfg = gcc->AddConfiguration( "Profile" );
 			{
+				profile_cfg->AddGlobalCFlags({ GCC::Defines({ "_NDEBUG", "NDEBUG" }), GCC::Opt2 })
+							->AddGlobalCxxFlags({ GCC::Defines({ "_NDEBUG", "NDEBUG" }), GCC::Opt2 });
+
 				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )
-							->AddTargetCxxFlags({ GCC::Opt2, GCC::InlineAll });
+							->AddTargetCxxFlags({ GCC::Opt2 });
 				profile_cfg->AddTargetLinkerFlags( shared_linked_flags );
-				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" });
 			}
 
 			auto	release_cfg = gcc->AddConfiguration( "Release" );
 			{
+				release_cfg->AddGlobalCFlags({ GCC::Defines({ "_NDEBUG", "NDEBUG" }), GCC::Opt3, GCC::InlineAll })
+							->AddGlobalCxxFlags({ GCC::Defines({ "_NDEBUG", "NDEBUG" }), GCC::Opt3, GCC::InlineAll });
+
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ GCC::Opt3, GCC::OptFast, GCC::OptOmitFramePointers, GCC::InlineAll });
 				release_cfg->AddTargetLinkerFlags( shared_linked_flags );
-				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
 			}
 		}
 
@@ -214,30 +241,42 @@ extern void GenMGFProject ()
 
 			auto	debug_cfg = clang->AddConfiguration( "Debug" );
 			{
+				debug_cfg->AddGlobalCFlags({ GCC::Define( "_DEBUG" ), Clang::OptDebug })
+						  ->AddGlobalCxxFlags({ GCC::Define( "_DEBUG" ), Clang::OptDebug });
+
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						 ->AddTargetCxxFlags({ Clang::DebugGddb, /*Clang::Sanitize_Undefined,*/ Clang::CheckIncompleteType, Clang::OptDebug });
-				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG" });
+				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" });
 			}
 
 			auto	analyze_cfg = clang->AddConfiguration( "DebugAnalyze" );
 			{
+				analyze_cfg->AddGlobalCFlags({ GCC::Define( "_DEBUG" ), Clang::OptDebug })
+							->AddGlobalCxxFlags({ GCC::Define( "_DEBUG" ), Clang::OptDebug });
+
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						  ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::Sanitize_Undefined, Clang::CheckIncompleteType, Clang::OptDebug });
-				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG" });
+				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" });
 			}
 
 			auto	profile_cfg = clang->AddConfiguration( "Profile" );
 			{
+				profile_cfg->AddGlobalCFlags({ GCC::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt2 })
+							->AddGlobalCxxFlags({ GCC::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt2 });
+
 				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt2, Clang::InlineAll });
-				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" });
 			}
 
 			auto	release_cfg = clang->AddConfiguration( "Release" );
 			{
+				release_cfg->AddGlobalCFlags({ GCC::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt3 })
+							->AddGlobalCxxFlags({ GCC::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt3 });
+
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
-				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
 			}
 		}
 		#endif
@@ -263,30 +302,42 @@ extern void GenMGFProject ()
 
 			auto	debug_cfg = clang_apple->AddConfiguration( "Debug" );
 			{
+				debug_cfg->AddGlobalCFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug })
+						  ->AddGlobalCxxFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug });
+
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						 ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::OptDebug });
-				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG" });
+				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" });
 			}
 
 			auto	analyze_cfg = clang_apple->AddConfiguration( "DebugAnalyze" );
 			{
+				analyze_cfg->AddGlobalCFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug })
+							->AddGlobalCxxFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug });
+
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						  ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::Sanitize_Undefined, Clang::OptDebug });
-				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG" });
+				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" });
 			}
 
 			auto	profile_cfg = clang_apple->AddConfiguration( "Profile" );
 			{
+				profile_cfg->AddGlobalCFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt2 })
+							->AddGlobalCxxFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt2 });
+
 				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt2, Clang::InlineAll });
-				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" });
 			}
 
 			auto	release_cfg = clang_apple->AddConfiguration( "Release" );
 			{
+				release_cfg->AddGlobalCFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt3, Clang::InlineAll })
+							->AddGlobalCxxFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt3, Clang::InlineAll });
+
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
-				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
 			}
 		}
 
@@ -311,30 +362,42 @@ extern void GenMGFProject ()
 
 			auto	debug_cfg = clang_and->AddConfiguration( "Debug" );
 			{
+				debug_cfg->AddGlobalCFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug })
+						  ->AddGlobalCxxFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug });
+
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						 ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::OptDebug });
-				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" })->AddGlobalDefinitions({ "_DEBUG" });
+				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" });
 			}
 
 			auto	analyze_cfg = clang_and->AddConfiguration( "DebugAnalyze" );
 			{
+				analyze_cfg->AddGlobalCFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug })
+							->AddGlobalCxxFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug });
+
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						  ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::Sanitize_Undefined, Clang::OptDebug });
-				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" })->AddGlobalDefinitions({ "_DEBUG" });
+				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" });
 			}
 
 			auto	profile_cfg = clang_and->AddConfiguration( "Profile" );
 			{
+				profile_cfg->AddGlobalCFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt2 })
+							->AddGlobalCxxFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt2 });
+
 				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt2, Clang::InlineAll });
-				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" });
 			}
 
 			auto	release_cfg = clang_and->AddConfiguration( "Release" );
 			{
+				release_cfg->AddGlobalCFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt3, Clang::InlineAll })
+							->AddGlobalCxxFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt3, Clang::InlineAll });
+
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
-				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" })->AddGlobalDefinitions({ "_NDEBUG", "NDEBUG" });
+				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
 			}
 		}
 	}
@@ -352,10 +415,7 @@ extern void GenMGFProject ()
 		{
 			engine_stl->AddFoldersRecursive( "" );
 			engine_stl->LinkLibrary( engine_config );
-			
-			#ifdef ENABLE_SDL
-			engine_stl->AddDefinition( "PLATFORM_SDL" )->LinkLibrary( "SDL2-static" );
-			#endif
+			engine_stl->LinkLibrary( "SDL2", "ENABLE_SDL" );
 		}
 		
 		auto	test_stl = builder.AddExecutable( "Tests.STL", "Tests/STL" );
@@ -439,56 +499,36 @@ extern void GenMGFProject ()
 		}
 
 		#ifdef ENABLE_SCU
-			builder.AddExecutable( "Tests.Engine.STL.Fast" )->ProjFolder("Fast")->LinkLibrary( test_stl )->MergeCPP( NUM_THREADS );
-			builder.AddExecutable( "Tests.Engine.Base.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_base )->MergeCPP( NUM_THREADS );
-			builder.AddExecutable( "Tests.Engine.Graphics.Fast" )->ProjFolder("Fast")->LinkLibrary( test_engine_graphics )->MergeCPP( NUM_THREADS );
+			builder.AddExecutable( "Tests.Engine.STL.SCU" )->ProjFolder("SCU")->LinkLibrary( test_stl )->MergeCPP( NUM_THREADS );
+			builder.AddExecutable( "Tests.Engine.Base.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_base )->MergeCPP( NUM_THREADS );
+			builder.AddExecutable( "Tests.Engine.Graphics.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_graphics )->MergeCPP( NUM_THREADS );
+			builder.AddExecutable( "Tests.Platforms.GAPI.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_gapi )->MergeCPP( NUM_THREADS );
 		#endif
 	#endif	// ENABLE_ENGINE
 
 
 		// External //
-	#ifdef ENABLE_SDL
-		builder.AddExternal( "External/SDL2" );
-	#endif
-
-#ifdef ENABLE_EXTERNALS
-		//builder.SearchVSProjects( "External/FreeImage", "External/FreeImage" );
-
-	#ifdef ENABLE_LUNARGLASS
-		builder.SearchVSProjects( "build_LunarGLASS", "External/LunarGLASS" );
+	#ifdef ENABLE_EXTERNALS
+		builder.AddExternal( "External/cmake" );
+		builder.Projects_AddDefinition( "PLATFORM_SDL", "ENABLE_SDL" );
 
 		auto	engine_pipeline_compiler = builder.AddLibrary( "Engine.PipelineCompiler", "Engine/PipelineCompiler" );
 		{
-			engine_pipeline_compiler->EnableIf( "WIN32" );
 			engine_pipeline_compiler->ProjFolder( "EngineTools" );
 			engine_pipeline_compiler->AddFoldersRecursive( "" );
-
+			engine_pipeline_compiler->LinkLibrary( engine_platforms )->LinkLibrary( "LunarGLASS" );
 			engine_pipeline_compiler->IncludeDirectory( "External/LunarGLASS/glslang/.." );
 			engine_pipeline_compiler->IncludeDirectory( "External/LunarGLASS/glslang" );
 			engine_pipeline_compiler->IncludeDirectory( "External/LunarGLASS/.." );
 			engine_pipeline_compiler->IncludeDirectory( "External/LunarGLASS" );
 			engine_pipeline_compiler->IncludeDirectory( "External/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
-			engine_pipeline_compiler->IncludeDirectory( "build_LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
+			engine_pipeline_compiler->IncludeDirectory( "${CMAKE_BINARY_DIR}/LunarGLASS_bin/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
+		}
 
-			engine_pipeline_compiler->LinkLibrary( engine_platforms );
-
-			engine_pipeline_compiler->SearchLibraries( "build_LunarGLASS",
-								   { "GLSLBackend", "glslangFrontend", "SpvFrontend", "core",
-								     "LLVMAsmParser", "LLVMLinker", "LLVMipo", "LLVMScalarOpts", "LLVMInstCombine", "LLVMTransformUtils",
-									 "LLVMipa", "LLVMAnalysis", "LLVMTarget", "LLVMCore", "LLVMSupport",
-									 "glslang", "HLSL", "OSDependent", "OGLCompiler", "SPIRV", "SPVRemapper", "SPIRV-Tools", "SPIRV-Tools-opt" }, "NOT MSVC" );
-
-			engine_pipeline_compiler->AddDependency( {	"GLSLBackend", "glslangFrontend", "SpvFrontend", "core",
-														"LLVMAsmParser", "LLVMLinker", "LLVMipo", "LLVMScalarOpts", "LLVMInstCombine", "LLVMTransformUtils",
-														"LLVMipa", "LLVMAnalysis", "LLVMTarget", "LLVMCore", "LLVMSupport",
-														"glslang", "HLSL", "OSDependent", "OGLCompiler", "SPIRV", "SPVRemapper", "SPIRV-Tools", "SPIRV-Tools-opt" }, "MSVC" );
-
-			// this doesn't work but if you see warning you will go to change property in project
-			engine_pipeline_compiler->AddSource(R"#(
-if (MSVC)
-    set_target_properties( "Engine.PipelineCompiler" PROPERTIES STATIC_LIBRARY_FLAGS "\" LinkLibraryDependencies=\"true" )
-endif()
-)#");
+		auto	engine_res_pack = builder.AddExecutable( "Engine.ResourcePacker", "Engine/ResourcePacker" );
+		{
+			engine_res_pack->ProjFolder( "EngineTools" );
+			engine_res_pack->AddFoldersRecursive( "" );
 		}
 
 		auto	test_pipeline_compiler = builder.AddExecutable( "Tests.PipelineCompiler", "Tests/PipelineCompiler" );
@@ -505,8 +545,7 @@ endif()
 			test_engine_gapi_tools->AddFoldersRecursive( "" );
 			test_engine_gapi_tools->LinkLibrary( engine_pipeline_compiler );
 		}
-	#endif	// ENABLE_LUNARGLASS
-#endif	// ENABLE_EXTERNALS
+	#endif	// ENABLE_EXTERNALS
 
 
 		// Projects //
@@ -516,14 +555,14 @@ endif()
 			proj_shader_editor->AddFoldersRecursive( "" );
 			proj_shader_editor->LinkLibrary( engine_scene )->LinkLibrary( engine_profilers );
 		}
-
-	# ifdef ENABLE_LUNARGLASS
+		
+		#ifdef ENABLE_EXTERNALS
 		auto	proj_shader_editor_tools = builder.AddExecutable( "Projects.ShaderEditor.Tools", "Projects/ShaderEditorTools" );
 		{
 			proj_shader_editor_tools->AddFoldersRecursive( "" );
 			proj_shader_editor_tools->LinkLibrary( engine_pipeline_compiler );
 		}
-	# endif	// ENABLE_LUNARGLASS
+		#endif
 	#endif	// ENABLE_PROJECTS
 
 

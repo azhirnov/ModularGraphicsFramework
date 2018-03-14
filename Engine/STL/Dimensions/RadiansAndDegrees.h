@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine/STL/CompileTime/TemplateMath.h"
-#include "Engine/STL/Math/MathTypes.h"
+#include "Engine/STL/Math/MathFunc.h"
 
 namespace GX_STL
 {
@@ -281,8 +281,8 @@ namespace CompileTime {
 		
 		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }
 		static constexpr type	Min()		{ return type( TypeInfo< inner_type >::Min() ); }
-		static constexpr type	Inf()		{ return type(); }
-		static constexpr type	NaN()		{ return type(); }
+		static constexpr type	Inf()		{ return type( TypeInfo< inner_type >::Inf() ); }
+		static constexpr type	NaN()		{ return type( TypeInfo< inner_type >::NaN() ); }
 		
 		static constexpr type	Epsilon()	{ return type( TypeInfo< inner_type >::Epsilon() ); }
 		static constexpr uint	SignBit()	{ return TypeInfo< inner_type >::SignBit(); }

@@ -603,14 +603,21 @@ namespace CMake
 */
 	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::AddGroup (StringCRef groupName, ArrayCRef<StringCRef> files)
 	{
-		String				gr_name = groupName;	gr_name.ReplaceStrings( "/", "\\\\" );
+		String				gr_name = groupName;
 		Groups_t::iterator	iter;
+		
+		// format name
+		for (usize pos = 0; gr_name.FindAndDelete( "../", OUT pos );) {}
 
+		gr_name.ReplaceStrings( "/", "\\\\" );
+		
+		// create or reuse group
 		if ( not _groups.Find( gr_name, OUT iter ) )
 		{
 			iter = _groups.Add( gr_name, {} );
 		}
-
+		
+		// add files to group
 		FOR( i, files )
 		{
 			String	fname = FileAddress::BuildPath( _baseFolder, files[i] );
@@ -662,9 +669,15 @@ namespace CMake
 		Array< String >		names;
 		CHECK_ERR( OS::FileSystem::GetAllFilesInPath( dir, OUT names ) );
 		
-		String				gr_name = path;		gr_name.ReplaceStrings( "/", "\\\\" );
+		String				gr_name = path;
 		Groups_t::iterator	iter;
+		
+		// format name
+		for (usize pos = 0; gr_name.FindAndDelete( "../", OUT pos );) {}
 
+		gr_name.ReplaceStrings( "/", "\\\\" );
+		
+		// create or reuse group
 		if ( not _groups.Find( gr_name, OUT iter ) )
 		{
 			iter = _groups.Add( gr_name, {} );
@@ -725,6 +738,10 @@ namespace CMake
 			{
 				String	dir2;
 				CHECK_ERR( FileAddress::AbsoluteToRelativePath( folders.Front(), _baseFolder, OUT dir2 ) );
+				
+				// format name
+				for (usize pos = 0; dir2.FindAndDelete( "../", OUT pos );) {}
+
 				dir2.ReplaceStrings( "/", "\\\\" );
 
 				// create or reuse group

@@ -604,7 +604,7 @@ namespace GXTypes
 	inline usize TString<T,S,MC>::_GetLength (const void *begin, const void *end)
 	{
 		ASSERT( begin <= end );
-		return ( usize(end) - usize(begin) ) / sizeof(T);
+		return ( ReferenceCast<usize>(end) - ReferenceCast<usize>(begin) ) / sizeof(T);
 	}
 		
 /*

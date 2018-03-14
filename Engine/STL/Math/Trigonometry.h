@@ -6,6 +6,7 @@
 #include "Engine/STL/Math/MathConstants.h"
 #include "Engine/STL/Math/MathTypes.h"
 #include "Engine/STL/Dimensions/RadiansAndDegrees.h"
+#include "Engine/STL/Algorithms/ArrayUtils.h"
 
 namespace GX_STL
 {
@@ -158,11 +159,11 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline RadiansVec<T,2>  ASinCos (const T& x)
+	CHECKRES inline RadiansVec<T,2>  ASinCos (const T& value)
 	{
 		RadiansVec<T,2>	ret;
-		ret.x = ASin( x );
-		ret.y = ACos( x );
+		ret.x = ASin( value );
+		ret.y = ACos( value );
 		return ret;
 	}
 	
@@ -212,11 +213,11 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Vec<T,2>  SinCosH (const Radians<T>& x)
+	CHECKRES inline Vec<T,2>  SinCosH (const Radians<T>& value)
 	{
 		Vec<T,2>	ret;
-		ret.x = SinH( x );
-		ret.y = CosH( x );
+		ret.x = SinH( value );
+		ret.y = CosH( value );
 		return ret;
 	}
 	
@@ -269,11 +270,11 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline RadiansVec<T,2>  ASinCosH (const T& x)
+	CHECKRES inline RadiansVec<T,2>  ASinCosH (const T& value)
 	{
 		RadiansVec<T,2>	ret;
-		ret.x = ASinH( x );
-		ret.y = ACosH( x );
+		ret.x = ASinH( value );
+		ret.y = ACosH( value );
 		return ret;
 	}
 	

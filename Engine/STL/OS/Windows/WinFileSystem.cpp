@@ -293,7 +293,7 @@ namespace OS
 							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
 							null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );
 
-		if ( file == null or ::GetFileTime( file, null, OUT &atime, OUT &wtime ) != TRUE )
+		if ( file == null or ::GetFileTime( file, null, OUT &atime, OUT &wtime ) == FALSE )
 			return Uninitialized;
 
 		ulong	a = (ulong(atime.dwHighDateTime) << 32) | ulong(atime.dwLowDateTime);
@@ -319,7 +319,7 @@ namespace OS
 							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
 							null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );
 
-		if ( file == null or ::GetFileTime( file, OUT &time, null, null ) != TRUE )
+		if ( file == null or ::GetFileTime( file, OUT &time, null, null ) == FALSE )
 			return Uninitialized;
 		
 		SYSTEMTIME	sys_time = {};

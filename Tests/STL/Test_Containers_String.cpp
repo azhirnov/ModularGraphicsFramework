@@ -109,7 +109,7 @@ static void String_FormatF ()
 
 	float	f2 = 1.234e+12f;
 	String	a2 = String().FormatF( f2, StringFormatF().Fmt(0,4).Exp().CutZeros() );
-	TEST( a2 == "1.2340e+12" );
+	TEST( (a2 == "1.2340e+12") or (a2 == "1.2340e+012") );
 
 
 	double	d0 = 123456789.123456;
@@ -122,7 +122,7 @@ static void String_FormatF ()
 
 	double	d2 = 1.234567e+27;
 	String	b2 = String().FormatF( d2, StringFormatF().Fmt(0,9).Exp().CutZeros() );
-	TEST( b2 == "1.234567000e+27" );
+	TEST( (b2 == "1.234567000e+27") or (b2 == "1.234567000e+027") );
 	
 	double	d3 = 2.74234e-134;
 	String	b3 = String().FormatF( d3, StringFormatF().Fmt(0,10) );

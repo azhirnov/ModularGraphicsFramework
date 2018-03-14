@@ -1335,7 +1335,7 @@ namespace PlatformGL
 		const usize offset	= usize(_indexBuffer.offset + EIndex::SizeOf( _indexType ) * data.firstIndex);
 		
 		GL_CALL( glDrawElementsInstancedBaseInstance( GL4Enum( _primitive ), data.indexCount, GL4Enum( _indexType ),
-													  (void *)offset, data.instanceCount, data.firstInstance ) );
+													  ReferenceCast<const void *>(offset), data.instanceCount, data.firstInstance ) );
 		return true;
 	}
 	

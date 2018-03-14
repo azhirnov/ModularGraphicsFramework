@@ -32,7 +32,7 @@ namespace CMake
 		Array<TargetInfo>	targets;
 		Array<String>		dir_stack;	dir_stack.PushBack( _baseFolder );
 
-		CHECK_ERR( _ReqursiveGetTargets( EKeyType::SubDir, dir_stack, OUT targets ) );
+		//CHECK_ERR( _ReqursiveGetTargets( EKeyType::SubDir, dir_stack, OUT targets ) );
 
 		outSrc	<< "#==================================================================================================\n"
 				<< "# External: " << _path << "\n"
@@ -41,8 +41,8 @@ namespace CMake
 		if ( not _enableIf.Empty() )
 			outSrc << "if (" << _enableIf << ")\n";
 
-		src	<< "message( STATUS \"external project '" << _path << "' generation started\" )\n"
-			<< "message( STATUS \"-----------------------------------------------------\" )\n\n";
+		src	<< "message( STATUS \"-----------------------------------------------------\" )\n"
+			<< "message( STATUS \"external project '" << _path << "' generation started\" )\n";
 
 		FOR( i, _options ) {
 			src << "set( " << _options[i].first << " " << _options[i].second << " )\n";
@@ -249,7 +249,8 @@ namespace CMake
 				}
 
 				// TODO: check builtin includes
-				if ( line.EqualsIC( "CMakePackageConfigHelpers" ) )
+				if ( line.EqualsIC( "CMakePackageConfigHelpers" ) or
+					 line.EqualsIC( "ExternalProject" ) )
 					return true;
 
 				RETURN_ERR( "file '" << line << "' not found!" );

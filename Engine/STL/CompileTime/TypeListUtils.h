@@ -335,7 +335,7 @@ namespace CompileTime
 			{
 				static const usize	val0 = IsSameTypes< Type, RefType > ? Index : UMax;
 				static const usize	val1 = PrevFuncResult::value;
-				static const usize	val2 = val0 != UMax and val1 != UMax ?
+				static const usize	val2 = (val0 != UMax and val1 != UMax) ?
 											Max< usize, val0, val1 > :
 											Min< usize, val0, val1 >;
 				

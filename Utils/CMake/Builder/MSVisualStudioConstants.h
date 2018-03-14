@@ -163,6 +163,20 @@ namespace VS
 		return res;
 	}
 
+	inline String Define (StringCRef definition)
+	{
+		return "/D"_str << definition;
+	}
+
+	inline String Defines (ArrayCRef<StringCRef> definitions)
+	{
+		String	res;
+		FOR( i, definitions ) {
+			res << Define( definitions[i] ) << ' ';
+		}
+		return res;
+	}
+
 
 	// Runtime checks
 	static constexpr char	SmallerTypeCheck[]		= "/RTCc";

@@ -261,6 +261,8 @@
 
 // Other //
 
+//#define GX_PRAGMA				__pragma
+
 //#define GX_BREAK_POINT()		__asm { int 3 }
 #define GX_BREAK_POINT()		__debugbreak()
 

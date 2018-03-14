@@ -26,7 +26,6 @@ namespace CMake
 		{
 		public:
 			virtual bool ToString (OUT String &src) = 0;
-			virtual bool ToString2 (OUT String &src) = 0;
 		};
 
 		class CMakeProject;
@@ -98,6 +97,14 @@ namespace CMake
 		
 		static StringCRef GetTargetPlaceholder ();
 		static StringCRef GetTempFolderForFastCpp ();
+
+	private:
+		void _ClearSCUBuildDir () const;
+		void _SetupProject (OUT String &src) const;
+		void _OptionsToString (OUT String &src) const;
+		bool _CompilersToString (OUT String &src, OUT String &compilerOpts) const;
+		bool _ProjectsToString (OUT String &src, StringCRef compilerOpts) const;
+		bool _ExternalProjectsToString (OUT String &src) const;
 	};
 
 
@@ -151,7 +158,6 @@ namespace CMake
 		CMakeProject (CMakeBuilder *builder, EProjectType type, StringCRef name, StringCRef folder);
 
 		bool ToString (OUT String &src) override;
-		bool ToString2 (OUT String &) override { return true; }
 
 		void SetCompilerOptions (StringCRef str);
 
@@ -255,7 +261,9 @@ namespace CMake
 		CMakeCompiler (CMakeBuilder *builder, ECompilerClass compiler, StringCRef name);
 
 		bool ToString (OUT String &src) override;
-		bool ToString2 (OUT String &src) override;
+
+		bool ToString2_Opt_Pass1 (OUT HashMap<String, uint> &defined) const;
+		bool ToString2_Opt_Pass2 (const HashMap<String, uint> &defined, OUT String &src) const;
 
 		void _CopyFrom (CMakeCompiler *other);
 		
@@ -311,7 +319,9 @@ namespace CMake
 		Configuration ();
 		
 		bool ToString (StringCRef name, OUT String &src);
-		bool ToString2 (StringCRef name, OUT String &src);
+		
+		bool ToString2_Opt_Pass1 (StringCRef name, OUT HashMap<String, uint> &defined) const;
+		bool ToString2_Opt_Pass2 (StringCRef name, const HashMap<String, uint> &defined, OUT String &src) const;
 
 		void _CopyFrom (const Configuration &other);
 
@@ -377,7 +387,6 @@ namespace CMake
 		CMakeExternalProjects (CMakeBuilder *builder, StringCRef path, StringCRef enableIf);
 		
 		bool ToString (OUT String &src) override;
-		bool ToString2 (OUT String &) override { return false; }
 
 		static bool _ReqursiveGetTargets (EKeyType type, Array<String> dirs, OUT Array<TargetInfo> &result);
 		static bool _ParseCMake (StringCRef filename, Array<String> dirs, OUT Array<TargetInfo> &result);
@@ -423,7 +432,6 @@ namespace CMake
 		CMakeExternalVSProject (CMakeBuilder *builder, StringCRef filename, StringCRef enableIf);
 
 		bool ToString (OUT String &src) override;
-		bool ToString2 (OUT String &) override { return false; }
 		
 	public:
 		Self*	ProjFolder (StringCRef folder);

@@ -59,7 +59,6 @@ extern void Test_OS_Atomic ();
 extern void Test_OS_Date ();
 extern void Test_OS_FileSystem ();
 
-extern void Test_SimpleScript ();
 extern void Test_Temp ();
 
 
@@ -121,8 +120,6 @@ int main ()
 	Test_OS_Atomic();
 	Test_OS_Date();
 	Test_OS_FileSystem();
-
-	Test_SimpleScript();
 
 	TEST( !"Tests Finished!" );
 

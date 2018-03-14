@@ -454,8 +454,10 @@ namespace GXMath
 	template <>
 	CHECKRES inline Vec<ubyte,4>  ColorUtils::FromRGBA8<ubyte> (uint x)
 	{
-		const ubyte *	p_rgba = (const ubyte *) &x;
-		return Vec<ubyte,4>( p_rgba[3], p_rgba[2], p_rgba[1], p_rgba[0] );
+		return Vec<ubyte, 4>{ ubyte((x >> 24) & 0xFF),
+							  ubyte((x >> 16) & 0xFF),
+							  ubyte((x >>  8) & 0xFF),
+							  ubyte((x) & 0xFF)	};
 	}
 
 
@@ -467,16 +469,12 @@ namespace GXMath
 
 
 	template <>
-	CHECKRES inline uint  ColorUtils::ToRGBA8<ubyte> (const Vec<ubyte,4> &x)
+	CHECKRES inline uint  ColorUtils::ToRGBA8<ubyte> (const Vec<ubyte,4> &c)
 	{
-		uint	u_rgba = 0;
-		ubyte *	p_rgba = (ubyte *)&u_rgba;
-
-		p_rgba[0] = x[3];
-		p_rgba[1] = x[2];
-		p_rgba[2] = x[1];
-		p_rgba[3] = x[0];
-
+		uint	u_rgba =	(uint(c.x) << 24) |
+							(uint(c.y) << 16) |
+							(uint(c.z) <<  8) |
+							(uint(c.w));
 		return u_rgba;
 	}
 

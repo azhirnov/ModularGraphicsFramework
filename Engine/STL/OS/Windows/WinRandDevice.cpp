@@ -58,7 +58,7 @@ namespace OS
 		{
 			len = sizeof(buf);
 
-			if ( ::CryptEnumProviders( i, null, 0, &type, buf, &len ) != TRUE )
+			if ( ::CryptEnumProviders( i, null, 0, OUT &type, OUT buf, OUT &len ) == FALSE )
 				return false;
 
 			if ( provider == buf )

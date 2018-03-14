@@ -245,12 +245,18 @@
 
 // Other //
 
+//#define GX_PRAGMA		_Pragma
+
 #if defined( PLATFORM_ANDROID )
 #	define GX_BREAK_POINT()		{}
-#else
+#elif 0
 #	include <csignal>
 #	define GX_BREAK_POINT()		std::raise(SIGINT)
-//#	define GX_BREAK_POINT()		__asm__("int3")		// or asm("int $3");
+#elif 0
+#	define GX_BREAK_POINT()		__asm__("int3")		// or asm("int $3");
+#elif 1
+#	include <exception>
+#	define GX_BREAK_POINT() 	throw std::runtime_error("breakpoint")
 #endif
 
 

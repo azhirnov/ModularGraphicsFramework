@@ -222,7 +222,7 @@ namespace GXTypes
 			int		tmp;
 			U () : tmp(0) {}
 		} u;
-		return BytesU( usize(&(u.b.*member)) - usize(&u.b) );
+		return BytesU( ReferenceCast<usize>(&(u.b.*member)) - ReferenceCast<usize>(&u.b) );
 	}
 
 

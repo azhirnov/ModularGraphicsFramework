@@ -153,6 +153,7 @@ namespace GCC
 
 	static constexpr char	LiteralSuffix[]			= "-Wliteral-suffix";
 	static constexpr char	Narrowing[]				= "-Wnarrowing";
+	static constexpr char	Terminate[]				= "-Wterminate";
 
 
 	inline String WarningToError (StringCRef code)
@@ -186,6 +187,21 @@ namespace GCC
 		}
 		return res;
 	}
+
+	inline String Define (StringCRef definition)
+	{
+		return "-D"_str << definition;
+	}
+
+	inline String Defines (ArrayCRef<StringCRef> definitions)
+	{
+		String	res;
+		FOR( i, definitions ) {
+			res << Define( definitions[i] ) << ' ';
+		}
+		return res;
+	}
+
 
 }	// GCC
 

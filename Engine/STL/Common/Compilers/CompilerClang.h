@@ -204,6 +204,8 @@
 
 // Other //
 
+//#define GX_PRAGMA		_Pragma
+
 #if defined( PLATFORM_ANDROID )
 #	define GX_BREAK_POINT()		{}
 #else

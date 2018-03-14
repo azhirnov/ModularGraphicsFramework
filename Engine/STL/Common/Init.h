@@ -110,14 +110,5 @@ namespace GX_STL
 		using namespace GXTypes;
 	}
 # endif
-	
-# ifdef GX_ANGELSCRIPT_ENABLED
-	namespace GXScript
-	{
-		using namespace GXTypes;
 
-		namespace _script_hidden_ {}
-	}
-# endif
-
-}
+}	// GX_STL

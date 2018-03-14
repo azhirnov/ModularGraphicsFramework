@@ -2,9 +2,8 @@
 
 #pragma once
 
-#include "SubFile.h"
+#include "Engine/STL/Files/SubFile.h"
 #include "Engine/STL/Containers/StaticArray.h"
-#include "Engine/STL/Experimental/Unroll.h"
 
 namespace GX_STL
 {
@@ -22,24 +21,6 @@ namespace File
 	public:
 		typedef StaticArray< ubyte, Size >			password_t;
 		typedef SimpleFileCryptAlgorithm< Size >	Self;
-		
-	private:
-		struct _RecursiveXor
-		{
-		private:
-			const password_t &	pw;
-			usize				pos;
-			ubyte	&			c;
-
-		public:
-			_RecursiveXor (const password_t &pw, usize p, ubyte &c) : pw(pw), pos(p), c(c)
-			{}
-
-			void operator () (usize i)
-			{
-				c ^= pw[i] + (pos * i);
-			}
-		};
 
 
 	// variables
@@ -65,8 +46,10 @@ namespace File
 
 		void Encrypt (BytesU pos, INOUT ubyte &c) const
 		{
-			_RecursiveXor	rx( _password, (usize)pos, c );
-			UnrollLoop< password_t::STATIC_COUNT >::Run( rx );
+			FOR( i, _password )
+			{
+				c ^= _password[i] + (pos * i);
+			}
 		}
 
 		void Decrypt (BytesU pos, INOUT ubyte &c) const
