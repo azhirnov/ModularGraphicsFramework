@@ -2,7 +2,7 @@
 set( ANGELSCRIPT_TARGET "angelscript" )
 
 ExternalProject_Add( "External.AngelScript"
-		DEPENDS			Download_Externals
+		DEPENDS			"External.Download"
 		LIST_SEPARATOR	"${EXTERNAL_LIST_SEPARATOR}"
 		# configure
 		SOURCE_DIR		"${EXTERNALS_PATH}/AngelScript/sdk/angelscript/projects/cmake"

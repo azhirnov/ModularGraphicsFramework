@@ -12,7 +12,7 @@
 #endif
 
 #define GLM_FORCE_SWIZZLE
-#include "External/glm/glm/glm.hpp"
+#include "glm/glm/glm.hpp"
 
 namespace glm
 {

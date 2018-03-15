@@ -9,7 +9,7 @@
 
 #ifdef PLATFORM_SDL
 #include "Engine/Platforms/SDL/SDLMessages.h"
-#include "External/SDL2/include/SDL_syswm.h"
+#include "SDL2/include/SDL_syswm.h"
 #undef FindWindow
 #endif
 

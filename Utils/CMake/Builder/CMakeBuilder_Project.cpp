@@ -156,7 +156,7 @@ namespace CMake
 		{
 			const bool	has_option = not _includeDirs[i].second.Empty() and _includeDirs[i].second != _enableIf; 
 
-			CHECK( _ValidateInclude( _includeDirs[i].first, has_option ) );
+			//CHECK( _ValidateInclude( _includeDirs[i].first, has_option ) );
 
 			src << (has_option ? "if ("_str << _includeDirs[i].second << ")\n\t" : "")
 				<< "target_include_directories( \"" << _name << "\" PUBLIC \"" << _includeDirs[i].first << "\" )\n"
@@ -167,7 +167,7 @@ namespace CMake
 		{
 			const bool	has_option = not _includeDirsPrivate[i].second.Empty() and _includeDirsPrivate[i].second != _enableIf; 
 
-			CHECK( _ValidateInclude( _includeDirsPrivate[i].first, has_option ) );
+			//CHECK( _ValidateInclude( _includeDirsPrivate[i].first, has_option ) );
 
 			src << (has_option ? "if ("_str << _includeDirsPrivate[i].second << ")\n\t" : "")
 				<< "target_include_directories( \"" << _name << "\" PRIVATE \"" << _includeDirsPrivate[i].first << "\" )\n"

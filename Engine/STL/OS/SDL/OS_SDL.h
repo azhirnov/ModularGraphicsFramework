@@ -15,7 +15,7 @@
 # endif
 
 #	define SDL_MAIN_HANDLED
-#	include "External/SDL2/include/SDL.h"
+#	include "SDL2/include/SDL.h"
 
 # ifdef COMPILER_MSVC
 #	pragma warning (pop)

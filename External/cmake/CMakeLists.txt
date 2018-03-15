@@ -10,7 +10,7 @@ set_property( GLOBAL PROPERTY USE_FOLDERS ON )
 #----------------------------------------------------------------------------------
 # setup
 
-set( EXTERNALS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/.." CACHE STRING "Path to external projects sources" )
+set( EXTERNALS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../downloaded" CACHE STRING "Path to external projects sources" )
 
 set( DOWNLOAD_EXTERNALS ON CACHE BOOL "download source from repository" )
 set( ENABLE_SDL ON CACHE BOOL "use SDL2 library" )
@@ -26,7 +26,7 @@ endif()
 
 message( STATUS "EXTERNALS_PATH: ${EXTERNALS_PATH}" )
 
-if (NOT EXISTS ${EXTERNALS_PATH})
+if (NOT ${DOWNLOAD_EXTERNALS} AND NOT EXISTS ${EXTERNALS_PATH})
 	message( FATAL_ERROR "Invalid external projects path!" )
 endif ()
 
@@ -72,7 +72,7 @@ source_group( "LunarGLASS" FILES "LunarGLASS/build.cmake" "LunarGLASS/CMakeLists
 if (DOWNLOAD_EXTERNALS)
 	include( "download.cmake" )
 else()
-	add_library( Download_Externals INTERFACE )
+	add_library( "External.Download" INTERFACE )
 endif ()
 
 

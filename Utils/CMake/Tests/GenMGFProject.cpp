@@ -23,7 +23,9 @@ extern void GenMGFProject ()
 	CMakeBuilder	builder{ "", "ModularGraphicsFramework" };
 
 	builder.SetVersion( Engine::_ENGINE_VERSION_MAJ, Engine::_ENGINE_VERSION_MIN );
-	builder.Projects_IncludeDirectory( "Engine/.." );
+	builder.Projects_IncludeDirectory( "Engine/.." )
+			->Projects_IncludeDirectory( "External" )
+			->Projects_IncludeDirectory( "${EXTERNALS_PATH}" );
 
 	// compilers
 	{
@@ -86,8 +88,8 @@ extern void GenMGFProject ()
 
 			auto	debug_cfg = msvc->AddConfiguration( "Debug" );
 			{
-				debug_cfg->AddGlobalCFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled })
-						  ->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled })
+				debug_cfg->AddGlobalCFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation })
+						  ->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation })
 						  ->AddGlobalLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
 
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
@@ -100,8 +102,8 @@ extern void GenMGFProject ()
 
 			auto	analyze_cfg = msvc->AddConfiguration( "DebugAnalyze" );
 			{
-				analyze_cfg->AddGlobalCFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled })
-							->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled })
+				analyze_cfg->AddGlobalCFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation })
+							->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation })
 							->AddGlobalLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
 
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
@@ -114,8 +116,8 @@ extern void GenMGFProject ()
 
 			auto	profile_cfg = msvc->AddConfiguration( "Profile" );
 			{
-				profile_cfg->AddGlobalCFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptDisabled })
-							->AddGlobalCxxFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptDisabled })
+				profile_cfg->AddGlobalCFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptDisabled, VS::MultiThreadCompilation })
+							->AddGlobalCxxFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptDisabled, VS::MultiThreadCompilation })
 							->AddGlobalLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Debug, VS_Linker::Profile });
 
 				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )->AddTargetCxxFlags( release_cxx_flags )
@@ -136,8 +138,8 @@ extern void GenMGFProject ()
 						shared_cxx_flags[i].Erase( j, pos + 4 - j );
 					}
 				}
-				release_cfg->AddGlobalCFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptFull })
-							->AddGlobalCxxFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptFull })
+				release_cfg->AddGlobalCFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptFull, VS::MultiThreadCompilation })
+							->AddGlobalCxxFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptFull, VS::MultiThreadCompilation })
 							->AddGlobalLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Release });
 
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )->AddTargetCxxFlags( release_cxx_flags )
@@ -517,19 +519,19 @@ extern void GenMGFProject ()
 			engine_pipeline_compiler->ProjFolder( "EngineTools" );
 			engine_pipeline_compiler->AddFoldersRecursive( "" );
 			engine_pipeline_compiler->LinkLibrary( engine_platforms )->LinkLibrary( "LunarGLASS" );
-			engine_pipeline_compiler->IncludeDirectory( "External/LunarGLASS/glslang/.." );
-			engine_pipeline_compiler->IncludeDirectory( "External/LunarGLASS/glslang" );
-			engine_pipeline_compiler->IncludeDirectory( "External/LunarGLASS/.." );
-			engine_pipeline_compiler->IncludeDirectory( "External/LunarGLASS" );
-			engine_pipeline_compiler->IncludeDirectory( "External/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
+			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/glslang/.." );
+			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/glslang" );
+			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/.." );
+			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS" );
+			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
 			engine_pipeline_compiler->IncludeDirectory( "${CMAKE_BINARY_DIR}/LunarGLASS_bin/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
 		}
 
-		auto	engine_res_pack = builder.AddExecutable( "Engine.ResourcePacker", "Engine/ResourcePacker" );
+		/*auto	engine_res_pack = builder.AddExecutable( "Engine.ResourcePacker", "Engine/ResourcePacker" );
 		{
 			engine_res_pack->ProjFolder( "EngineTools" );
 			engine_res_pack->AddFoldersRecursive( "" );
-		}
+		}*/
 
 		auto	test_pipeline_compiler = builder.AddExecutable( "Tests.PipelineCompiler", "Tests/PipelineCompiler" );
 		{
