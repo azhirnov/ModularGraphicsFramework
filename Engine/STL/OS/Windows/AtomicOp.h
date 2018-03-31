@@ -18,7 +18,7 @@ namespace OS
 	// Atomic Operations
 	//
 
-	struct _STL_EXPORT_ AtomicOp final : public Noninstancable
+	struct AtomicOp final : public Noninstancable
 	{
 		// type cast //
 #		define type_cast( _val_ )	& ReferenceCast< volatile CompileTime::NearInt::FromType<T>, volatile T >( _val_ )

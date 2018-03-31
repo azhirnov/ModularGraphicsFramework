@@ -282,13 +282,39 @@ namespace GpuMsg
 	//
 	struct PipelineAttachImage : ModuleMsg::AttachModule
 	{
+	// types
+		using ImageViewDescriptor	= Platforms::ImageViewDescriptor;
+		using EImageLayout			= Platforms::EImageLayout;
+
 	// variables
-		Platforms::ImageViewDescriptor		descr;
-		Platforms::EImageLayout::type		layout	= Uninitialized;
+		ImageViewDescriptor		descr;
+		EImageLayout::type		layout	= Uninitialized;
 
 	// methods
-		PipelineAttachImage (StringCRef name, const ModulePtr &mod, const Platforms::ImageViewDescriptor &descr, Platforms::EImageLayout::type layout) :
+		PipelineAttachImage (StringCRef name, const ModulePtr &mod, const ImageViewDescriptor &descr, EImageLayout::type layout = EImageLayout::General) :
 			AttachModule{name, mod}, descr{descr}, layout{layout} {}
+	};
+
+
+	//
+	// Bind Texture to Pipeline
+	//
+	struct PipelineAttachTexture : ModuleMsg::AttachModule
+	{
+	// types
+		using ImageViewDescriptor	= Platforms::ImageViewDescriptor;
+		using EImageLayout			= Platforms::EImageLayout;
+
+	// variables
+		ModulePtr				sampler;
+		ImageViewDescriptor		descr;
+		EImageLayout::type		layout	= Uninitialized;
+
+	// methods
+		PipelineAttachTexture (StringCRef name, const ModulePtr &texture, const ModulePtr &sampler,
+							   const ImageViewDescriptor &descr, EImageLayout::type layout = EImageLayout::General) :
+			AttachModule{name, texture}, sampler{sampler}, descr{descr}, layout{layout}
+		{}
 	};
 
 

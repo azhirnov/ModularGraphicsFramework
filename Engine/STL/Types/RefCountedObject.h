@@ -21,7 +21,7 @@ namespace GXTypes
 	//
 	// Reference Counted Debug Object
 	//
-	class _STL_EXPORT_ DbgRefCountedObject : public CompileTime::TypeQualifier< CompileTime::ETypeQualifier::Def_Noncopyable >
+	class DbgRefCountedObject : public CompileTime::TypeQualifier< CompileTime::ETypeQualifier::Def_Noncopyable >
 	{
 	protected:
 		DbgRefCountedObject ()
@@ -95,7 +95,7 @@ namespace GXTypes
 	//
 
 	template <typename CounterType = RefCounter2>
-	class _STL_EXPORT_ RefCountedObject : public DbgRefCountedObject
+	class RefCountedObject : public DbgRefCountedObject
 	{
 		friend class  StaticRefCountedObject;
 		friend struct SharedPointerStrategy< RefCountedObject< CounterType > >;

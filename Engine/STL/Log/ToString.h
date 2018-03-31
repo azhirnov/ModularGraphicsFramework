@@ -22,6 +22,14 @@
 
 namespace GX_STL
 {
+	inline int  __write_to_log (GXTypes::StringCRef msg, ELog::type type, const char *file, int line) {
+		return __write_to_log( msg.cstr(), type, file, line );
+	}
+
+	inline void __debug_console_write (GXTypes::StringCRef msg, const char *file, int line) {
+		return __debug_console_write( msg.cstr(), file, line );
+	}
+
 namespace GXTypes
 {
 	

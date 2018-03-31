@@ -2,9 +2,11 @@
 
 #pragma once
 
-#include "Engine/Base/Common/Common.h"
+#include "Engine/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
+
+#include "Engine/Base/Common/Common.h"
 
 namespace vk
 {

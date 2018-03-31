@@ -33,7 +33,7 @@ namespace PipelineCompiler
 
 	// variables
 	private:
-		Set< BasePipeline* >	_pipelines;
+		Set< BasePipeline* >	_pipelines;		// registered pipelines
 		mutable StructTypes		_structTypes;
 		mutable SharedTypes		_bindings;
 
@@ -46,15 +46,21 @@ namespace PipelineCompiler
 		void Add (Ptr<BasePipeline> pp);
 		void Remove (Ptr<BasePipeline> pp);
 
-		bool Convert (StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &cfg) const;
+		bool ConvertAll (StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &cfg) const;
+		
+		bool Convert (ArrayCRef<BasePipeline *> pipelines, StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &cfg) const;
+		bool Convert (ArrayCRef<BasePipelinePtr> pipelines, StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &cfg) const;
 
 		static Ptr<PipelineManager>	Instance ();
 
 	private:
-		bool _ProcessSharedTypes (StringCRef path, Ptr<ISerializer> ser, INOUT ConverterConfig &cfg) const;
+		template <typename PplnCollection>
+		bool _Convert (const PplnCollection &pipelines, StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &cfg) const;
+		
+		template <typename PplnCollection>
+		bool _ProcessSharedTypes (const PplnCollection &pipelines, StringCRef path, Ptr<ISerializer> ser, INOUT ConverterConfig &cfg) const;
 
 		bool _SaveSharedTypes (StringCRef path, Ptr<ISerializer> ser, StringCRef nameSpace, OUT String &glslSource, OUT String &filename) const;
 	};
-
 
 }	// PipelineCompiler

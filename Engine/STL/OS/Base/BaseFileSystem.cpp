@@ -202,7 +202,8 @@ namespace OS
 	bool FileSystem::FindAndSetCurrentDir (StringCRef dirname, uint searchDepth)
 	{
 		String	dir;
-		CHECK_ERR( SearchDirBackward( dirname, searchDepth, dir ) or SearchDir( dirname, searchDepth, dir ) );
+		CHECK_ERR( SearchDirBackward( dirname, searchDepth, OUT dir ) or
+				   SearchDir( dirname, searchDepth, OUT dir ) );
 		
 		CHECK_ERR( SetCurrentDirectory( dir.cstr() ) );
 		return true;

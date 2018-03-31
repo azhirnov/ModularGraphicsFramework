@@ -5,11 +5,18 @@
 #include "Engine/Platforms/Public/GPU/ShaderEnums.h"
 #include "Engine/Platforms/Public/GPU/ImageEnums.h"
 #include "Engine/Platforms/Public/GPU/VertexEnums.h"
+#include "Engine/STL/Types/Bool.h"
 
 namespace Engine
 {
 namespace Platforms
 {
+	using Bool32	= GX_STL::GXTypes::Bool< int >;
+	using Bool32_2	= GX_STL::GXMath::Vec< Bool32, 2 >;
+	using Bool32_3	= GX_STL::GXMath::Vec< Bool32, 3 >;
+	using Bool32_4	= GX_STL::GXMath::Vec< Bool32, 4 >;
+
+
 
 	//
 	// Pipeline Layout Descriptor

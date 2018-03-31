@@ -15,7 +15,7 @@ namespace GXTypes
 	// String Parser
 	//
 
-	struct _STL_EXPORT_ StringParser
+	struct StringParser final : Noninstancable
 	{
 	public:
 		// move cursor //

@@ -18,7 +18,7 @@ namespace OS
 	// SDL Utils
 	//
 
-	struct _STL_EXPORT_ SDLUtils
+	struct SDLUtils final : Noninstancable
 	{
 	public:
 		

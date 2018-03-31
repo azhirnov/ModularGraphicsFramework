@@ -24,10 +24,10 @@ namespace PlatformGL
 	{
 	// types
 	protected:
-		using HWND_t			= OS::HiddenOSTypeFrom<void*>;
-		using HDC_t				= OS::HiddenOSTypeFrom<void*>;
-		using HGLRC_t			= OS::HiddenOSTypeFrom<void*>;
-		using FuncPtr_t			= OS::HiddenOSTypeFrom<void*>;
+		using HWND_t			= DeferredTypeFrom<void*>;
+		using HDC_t				= DeferredTypeFrom<void*>;
+		using HGLRC_t			= DeferredTypeFrom<void*>;
+		using FuncPtr_t			= DeferredTypeFrom<void*>;
 		using EFlags			= GraphicsSettings::EFlags;
 
 

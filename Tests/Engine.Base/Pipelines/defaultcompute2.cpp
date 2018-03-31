@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'c:\projects\graphxgenengine\tests\pipelinecompiler\pipelines\defaultcompute2.cpp'
-// Created at: 2018/03/11 - 09:59:54
+// Origin file: 'Engine.Base\Pipelines/DefaultCompute2.ppln.c'
+// Created at: 2018/03/28 - 00:42:50
 
 #include "all_pipelines.h"
 
@@ -111,11 +111,11 @@ vec2 iResolution;
 
 vec2 polarMap (in vec2 uv, in float shift, in float inner);
 float fire (in vec2 n);
-float rand (in vec2 n);
-float noise (in vec2 n);
-vec3 ramp (in float t);
 float shade (in vec2 uv, in float t);
 vec3 color (in float grad);
+float rand (in vec2 n);
+vec3 ramp (in float t);
+float noise (in vec2 n);
 void mainImage (out vec4 fragColor, in vec2 fragCoord);
 
 //---------------------------------

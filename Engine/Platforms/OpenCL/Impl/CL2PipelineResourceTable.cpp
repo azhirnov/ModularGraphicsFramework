@@ -25,14 +25,19 @@ namespace PlatformCL
 	{
 	// types
 	private:
+		using LayoutMsgList_t		= MessageListFrom<
+											GpuMsg::GetPipelineLayoutDescriptor
+										>;
+
 		using SupportedMessages_t	= CL2BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetPipelineLayoutDescriptor,
-											GpuMsg::CLPipelineResourceTableApply
-										> >;
+											GpuMsg::CLPipelineResourceTableApply,
+											GpuMsg::PipelineAttachBuffer,
+											GpuMsg::PipelineAttachImage,
+											GpuMsg::PipelineAttachTexture
+										> >::Append< LayoutMsgList_t >;
 
 		using SupportedEvents_t		= CL2BaseModule::SupportedEvents_t;
-
-		using LayoutMsgList_t		= MessageListFrom< GpuMsg::GetPipelineLayoutDescriptor >;
 		
 		struct BaseArg {
 			uint		index	= UMax;
@@ -49,6 +54,21 @@ namespace PlatformCL
 
 		using ResourceDescr_t		= Union< MemObjectArg, PushConstantArg >;
 		using ResourceDescrArray_t	= Array< ResourceDescr_t >;
+		
+		struct BufferAttachment
+		{
+			BytesUL		offset;
+			BytesUL		size;
+		};
+
+		struct ImageAttachment
+		{
+			ImageViewDescriptor		descr;
+			EImageLayout::type		layout	= Uninitialized;
+		};
+
+		using AttachmentInfo_t		= Union< BufferAttachment, ImageAttachment >;
+		using AttachmentInfoMap_t	= Map< const void*, AttachmentInfo_t >;
 
 		struct _CreateResourceDescriptor_Func;
 		struct _WriteDescriptor_Func;
@@ -62,8 +82,8 @@ namespace PlatformCL
 
 	// variables
 	private:
+		AttachmentInfoMap_t		_attachmentInfo;
 		ResourceDescrArray_t	_resources;
-		
 		ModulePtr				_layout;
 
 
@@ -78,10 +98,12 @@ namespace PlatformCL
 		bool _Link (const Message< ModuleMsg::Link > &);
 		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &);
-		bool _CLPipelineResourceTableApply (const Message< GpuMsg::CLPipelineResourceTableApply > &);
 		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &);
+		bool _PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &);
+		bool _PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &);
+		bool _CLPipelineResourceTableApply (const Message< GpuMsg::CLPipelineResourceTableApply > &);
 
 	private:
 		bool _CreateResourceTable ();
@@ -117,10 +139,10 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_GetCLPrivateClasses );
-		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_GetPipelineLayoutDescriptor );
+		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_PipelineAttachImage );
+		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_PipelineAttachBuffer );
+		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_PipelineAttachTexture );
 		_SubscribeOnMsg( this, &CL2PipelineResourceTable::_CLPipelineResourceTableApply );
-
-		CHECK( _ValidateMsgSubscriptions() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -147,7 +169,8 @@ namespace PlatformCL
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 
 		CHECK_ATTACHMENT( _layout = GetModuleByMsg< LayoutMsgList_t >() );
-		
+		CHECK_ERR( _CopySubscriptions< LayoutMsgList_t >( _layout ) );
+
 		CHECK( _SetState( EState::Linked ) );
 		return true;
 	}
@@ -186,18 +209,10 @@ namespace PlatformCL
 		_SendForEachAttachments( msg );
 
 		_DestroyResourceTable();
+		
+		_attachmentInfo.Clear();
 
 		return Module::_Delete_Impl( msg );
-	}
-	
-/*
-=================================================
-	_GetPipelineLayoutDescriptor
-=================================================
-*/
-	bool CL2PipelineResourceTable::_GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &msg)
-	{
-		return _layout ? SendTo( _layout, msg ) : false;
 	}
 	
 /*
@@ -221,6 +236,58 @@ namespace PlatformCL
 	
 /*
 =================================================
+	_PipelineAttachImage
+=================================================
+*/
+	bool CL2PipelineResourceTable::_PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &msg)
+	{
+		CHECK_ERR( msg->newModule );
+
+		ImageAttachment	img;
+		img.descr	= msg->descr;
+		img.layout	= msg->layout;
+
+		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		
+		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _SetState( EState::Initial ) );
+
+		return true;
+	}
+	
+/*
+=================================================
+	_PipelineAttachBuffer
+=================================================
+*/
+	bool CL2PipelineResourceTable::_PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &msg)
+	{
+		CHECK_ERR( msg->newModule );
+
+		BufferAttachment	buf;
+		buf.offset	= msg->offset;
+		buf.size	= msg->size;
+
+		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{buf} );
+		
+		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _SetState( EState::Initial ) );
+
+		return true;
+	}
+	
+/*
+=================================================
+	_PipelineAttachTexture
+=================================================
+*/
+	bool CL2PipelineResourceTable::_PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &)
+	{
+		RETURN_ERR( "texture is not supported in OpenCL 1.2" );
+	}
+
+/*
+=================================================
 	_DetachModule
 =================================================
 */
@@ -229,7 +296,9 @@ namespace PlatformCL
 		if ( _Detach( msg->oldModule ) )
 		{
 			CHECK( _SetState( EState::Initial ) );
-			_DestroyResourceTable();
+			
+			if ( msg->oldModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >() )
+				_DestroyResourceTable();
 		}
 		return true;
 	}
@@ -343,19 +412,40 @@ namespace PlatformCL
 			ModulePtr	buf_mod;
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT buf_mod ) );
 
-			Message< GpuMsg::GetCLBufferID >		req_buffer;
 			Message< GpuMsg::GetBufferDescriptor >	req_descr;
-
-			// TODO: check result
-			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
 			CHECK( req_descr->result.Get().size == BytesUL(buf.size) );
 			CHECK( req_descr->result->usage[ EBufferUsage::Uniform ] );
 			
+			// find attachment info
+			AttachmentInfoMap_t::iterator	info;
+			cl::cl_mem						buffer_id = null;
+
+			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
+			{
+				auto const&		buf_info = info->second.Get<BufferAttachment>();
+				CHECK_ERR( buf_info.size == BytesUL(buf.size) );
+
+				Message< GpuMsg::CreateCLSubBuffer >	req_subbuffer{ buf_info.offset, buf_info.size };
+				self.SendTo( buf_mod, req_subbuffer );
+
+				buffer_id = req_subbuffer->result.Get( null );
+			}
+			else
+			{
+				CHECK_ERR( req_descr->result->size >= BytesUL(buf.size) );
+
+				Message< GpuMsg::GetCLBufferID >	req_buffer;
+				self.SendTo( buf_mod, req_buffer );
+
+				buffer_id = req_buffer->result.Get( null );
+			}
+			
+			// create descriptor
 			MemObjectArg	descr;
 			descr.index		= buf.binding;
-			descr.id		= req_buffer->result.Get( null );
+			descr.id		= buffer_id;
 			descr.module	= buf_mod;
 			
 			resources.PushBack(ResourceDescr_t( descr ));
@@ -372,21 +462,42 @@ namespace PlatformCL
 			ModulePtr	buf_mod;
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT buf_mod ) );
 
-			Message< GpuMsg::GetCLBufferID >		req_buffer;
 			Message< GpuMsg::GetBufferDescriptor >	req_descr;
-
-			// TODO: check result
-			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 			
-			CHECK( (req_descr->result->size >= buf.staticSize) and
-					(buf.arrayStride == 0 or
-					(req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
 			CHECK( req_descr->result->usage[ EBufferUsage::Storage ] );
 			
+			// find attachment info
+			AttachmentInfoMap_t::iterator	info;
+			cl::cl_mem						buffer_id = null;
+
+			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
+			{
+				auto const&		buf_info = info->second.Get<BufferAttachment>();
+				
+				CHECK_ERR(	(buf_info.size >= buf.staticSize) and
+							(buf.arrayStride == 0 or (buf_info.size - buf.staticSize) % buf.arrayStride == 0) );
+				
+				Message< GpuMsg::CreateCLSubBuffer >	req_subbuffer{ buf_info.offset, buf_info.size };
+				self.SendTo( buf_mod, req_subbuffer );
+
+				buffer_id = req_subbuffer->result.Get( null );
+			}
+			else
+			{
+				CHECK_ERR(	(req_descr->result->size >= buf.staticSize) and
+							(buf.arrayStride == 0 or (req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
+
+				Message< GpuMsg::GetCLBufferID >	req_buffer;
+				self.SendTo( buf_mod, req_buffer );
+
+				buffer_id = req_buffer->result.Get( null );
+			}
+			
+			// create descriptor
 			MemObjectArg	descr;
 			descr.index		= buf.binding;
-			descr.id		= req_buffer->result.Get( null );
+			descr.id		= buffer_id;
 			descr.module	= buf_mod;
 
 			resources.PushBack(ResourceDescr_t( descr ));

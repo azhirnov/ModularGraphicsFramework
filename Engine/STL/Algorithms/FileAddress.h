@@ -18,13 +18,14 @@ namespace GXTypes
 	// File Address Utils
 	//
 
-	struct _STL_EXPORT_ FileAddress
+	struct FileAddress final : Noninstancable
 	{
 	// methods
 	public:
 		CHECKRES static StringCRef	GetPath (StringCRef filename);
 		CHECKRES static StringCRef	GetName (StringCRef filename);
 		CHECKRES static StringCRef	GetExtension (StringCRef filename);
+		CHECKRES static StringCRef	GetExtensions (StringCRef filename);
 		CHECKRES static StringCRef	GetNameAndExt (StringCRef filename);
 
 		CHECKRES static StringCRef	ToShortPath (StringCRef filename, uint maxFolders = 1);

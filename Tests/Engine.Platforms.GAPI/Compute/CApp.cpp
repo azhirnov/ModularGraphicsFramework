@@ -15,6 +15,7 @@ CApp::CApp ()
 			<< &CApp::_Test_UpdateBuffer
 			<< &CApp::_Test_BufferAlign
 			<< &CApp::_Test_DynamicBuffer
+			<< &CApp::_Test_BufferRange
 			<< &CApp::_Test_CopyImage2D
 			<< &CApp::_Test_CopyBufferToImage2D
 			<< &CApp::_Test_CopyImage2DToBuffer
@@ -50,17 +51,23 @@ bool CApp::Initialize (GAPI::type api)
 	auto		thread	= ms->GlobalSystems()->parallelThread;
 	
 	ModulePtr	window;
-	CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::Window{}, OUT window ) );
+	CHECK_ERR( factory->Create( 0, ms->GlobalSystems(),
+								CreateInfo::Window{
+								   Uninitialized,
+								   Uninitialized,
+								   uint2(1,1),
+								   int2(),
+								   CreateInfo::Window::EVisibility::Invisible
+								},
+								OUT window ) );
 	thread->Send< ModuleMsg::AttachModule >({ window });
 
 	ModulePtr	gthread;
 	CHECK_ERR( factory->Create(
 						gpuIDs.thread,
 						ms->GlobalSystems(), CreateInfo::GpuThread{
-							GraphicsSettings{
-								api,
-								CreateInfo::GpuContext::EFlags::DebugContext
-							} },
+							ComputeSettings{ api, "", bool("debug") }
+						},
 						OUT gthread ) );
 	thread->Send< ModuleMsg::AttachModule >({ gthread });
 

@@ -141,7 +141,7 @@ typedef VkResult (VKAPI_PTR *PFN_vkGetSemaphoreWin32HandleKHX)(VkDevice device, 
 #endif /* VK_USE_PLATFORM_WIN32_KHX */
 
 
-#define VK1_WIN_FUNCTIONS( _buildFunc_ ) \
+#define VK1_OS_FUNCTIONS( _buildFunc_ ) \
 	_buildFunc_( VkResult, vkCreateWin32SurfaceKHR, ( VkInstance instance , const VkWin32SurfaceCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSurfaceKHR * pSurface ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( VkBool32, vkGetPhysicalDeviceWin32PresentationSupportKHR, ( VkPhysicalDevice physicalDevice , uint32_t queueFamilyIndex ) , (VkBool32)(0) ) \
 	_buildFunc_( VkResult, vkGetMemoryWin32HandleNV, ( VkDevice device , VkDeviceMemory memory , VkExternalMemoryHandleTypeFlagsNV handleType , HANDLE * pHandle ) , VK_RESULT_MAX_ENUM ) \

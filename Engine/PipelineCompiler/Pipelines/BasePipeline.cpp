@@ -14,9 +14,15 @@ namespace PipelineCompiler
 */
 	BasePipeline::BasePipeline (StringCRef name) :
 		_path( name ),
-		_name( FileAddress::GetName(name) ),
+		_name( FileAddress::GetNameAndExt(name) ),
 		shaderFormat{ EShaderSrcFormat::GLSL }
 	{
+		usize	pos = 0;
+		if ( _name.Find( '.', OUT pos ) )
+		{
+			_name.Erase( pos, _name.Length() - pos );
+		}
+
 		FOR( i, _name ) {
 			_name[i] = StringUtils::ToLower( _name[i] );
 		}
@@ -34,6 +40,28 @@ namespace PipelineCompiler
 		PipelineManager::Instance()->Remove( this );
 	}
 	
+/*
+=================================================
+	Path
+=================================================
+*/
+	String BasePipeline::Path () const
+	{
+		if ( not OS::FileSystem::IsAbsolutePath( _path ) )
+		{
+			String	str;
+			OS::FileSystem::GetCurrentDirectory( OUT str );
+
+			str.ReplaceChars( '\\', '/' );
+			str = FileAddress::BuildPath( str, _path );
+
+			ASSERT( OS::FileSystem::IsFileExist( str ) );
+			return FileAddress::ToShortPath( str, 3 );
+		}
+
+		return FileAddress::ToShortPath( _path, 3 );
+	}
+
 /*
 =================================================
 	_VaryingsToString
@@ -577,6 +605,15 @@ namespace PipelineCompiler
 //=========================================================
 	
 
+	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	BasePipeline::ShaderModule::ShaderModule (const ShaderModule &other) :
+		_source{other._source}, _io{other._io}, entry{other.entry}, type{other.type}
+	{}
 
 /*
 =================================================
@@ -587,12 +624,11 @@ namespace PipelineCompiler
 	{
 		File::RFilePtr	file;
 		CHECK_ERR( (file = File::HddRFile::New( path )), *this );
+		
+		const usize	len		= usize(file->RemainingSize());
+		String		src;	src.Resize( len );
 
-		String	src;
-		BytesU	len	= file->RemainingSize();
-
-		src.Resize( usize(len) );
-		CHECK_ERR( file->Read( ArrayRef<char>( src ) ), *this );
+		CHECK_ERR( file->Read( src.ptr(), src.LengthInBytes() ), *this );
 
 		defines >> src;
 
@@ -635,6 +671,22 @@ namespace PipelineCompiler
 	bool BasePipeline::ShaderModule::IsEnabled () const
 	{
 		return not _source.Empty();
+	}
+
+/*
+=================================================
+	ShaderModule::operator =
+=================================================
+*/
+	BasePipeline::ShaderModule&  BasePipeline::ShaderModule::operator = (const ShaderModule &right)
+	{
+		ASSERT( type == right.type );
+
+		_source = right._source;
+		_io		= right._io;
+		entry	= right.entry;
+
+		return *this;
 	}
 //=========================================================
 

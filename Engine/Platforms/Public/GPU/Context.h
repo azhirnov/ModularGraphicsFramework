@@ -44,9 +44,10 @@ namespace Platforms
 		{
 			enum type : uint
 			{
-				DebugContext,
-				NoErrorContext,
-				VSync,
+				DebugContext,	// create debug context
+				NoErrorContext,	// OpenGL only
+				VSync,			// enable vertical synchronization
+				NoSurface,		// create context without surface
 				_Count
 			};
 
@@ -59,10 +60,10 @@ namespace Platforms
 		GAPI::type			version;
 		EFlags::bits		flags;
 
-		EPixelFormat::type	colorFmt;
-		EPixelFormat::type	depthStencilFmt;
+		EPixelFormat::type	colorFmt;			// render surface color format
+		EPixelFormat::type	depthStencilFmt;	// render surface depth format
 
-		MultiSamples		samples;
+		MultiSamples		samples;			// render surface with multisampling
 		uint				swapchainLength;
 
 
@@ -104,7 +105,7 @@ namespace CreateInfo
 		explicit GpuContext (const Platforms::GraphicsSettings &settings) : settings{ settings } {}
 
 		explicit GpuContext (const Platforms::ComputeSettings &settings) :
-			settings{ settings.version, (settings.isDebug ? EFlags::DebugContext : EFlags::type(0)),
+			settings{ settings.version, (settings.isDebug ? EFlags::DebugContext : EFlags::type(0)) | EFlags::NoSurface,
 					  Platforms::EPixelFormat::Unknown, Platforms::EPixelFormat::Unknown,
 					  Platforms::MultiSamples(), settings.device, 0 }
 		{}

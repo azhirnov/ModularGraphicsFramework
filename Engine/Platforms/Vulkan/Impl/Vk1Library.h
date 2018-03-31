@@ -21,7 +21,6 @@ namespace vk
 		using FuncPtr_t		= PFN_vkVoidFunction;
 		using StringCRef	= GX_STL::GXTypes::StringCRef;
 		using Library		= GX_STL::OS::Library;
-		using VoidFunc_t	= void (CALLBACK *) ();
 
 
 	// variables
@@ -39,7 +38,7 @@ namespace vk
 
 		void Unload ();
 
-		VoidFunc_t GetProc (vk::VkInstance instance, vk::VkDevice device, StringCRef address) const;
+		FuncPtr_t GetProc (vk::VkInstance instance, vk::VkDevice device, StringCRef address) const;
 
 		static StringCRef  GetDefaultName ();
 
@@ -101,7 +100,7 @@ namespace vk
 	GetProc
 =================================================
 */
-	inline Vk1Library::VoidFunc_t  Vk1Library::GetProc (vk::VkInstance instance, vk::VkDevice device, StringCRef address) const
+	inline Vk1Library::FuncPtr_t  Vk1Library::GetProc (vk::VkInstance instance, vk::VkDevice device, StringCRef address) const
 	{
 		using namespace GX_STL::GXTypes;
 
@@ -121,7 +120,7 @@ namespace vk
 			return res;
 		}
 		
-		if ( (res = ReferenceCast<VoidFunc_t>(_lib.GetProc( address ))) != null )
+		if ( (res = ReferenceCast<FuncPtr_t>(_lib.GetProc( address ))) != null )
 			return res;
 
 		return null;
@@ -134,7 +133,12 @@ namespace vk
 */
 	inline GX_STL::GXTypes::StringCRef  Vk1Library::GetDefaultName ()
 	{
+#	ifdef PLATFORM_WINDOWS
 		return "vulkan-1.dll";
+#	endif
+#	ifdef PLATFORM_ANDROID
+		return "libvulkan.so";
+#	endif
 	}
 	
 /*

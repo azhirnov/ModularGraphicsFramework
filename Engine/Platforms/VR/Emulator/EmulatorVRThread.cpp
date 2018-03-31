@@ -444,10 +444,10 @@ namespace PlatformVR
 		end->fence				= msg->fence;
 		end->signalSemaphores	= msg->signalSemaphores;
 		end->signalSemaphores	<< per_frame.lastFrameRendered;
-		end->waitSemaphores.PushBack({ per_frame.mainFrameRendered, EPipelineStage::BottomOfPipe });
+		end->waitSemaphores.PushBack({ per_frame.mainFrameRendered, EPipelineStage::AllGraphics });
 
 		if ( last_frame.lastFrameRendered != GpuSemaphoreId::Unknown ) {
-			end->waitSemaphores.PushBack({ last_frame.lastFrameRendered, EPipelineStage::BottomOfPipe });
+			end->waitSemaphores.PushBack({ last_frame.lastFrameRendered, EPipelineStage::AllGraphics });
 		}
 		_gpuThread->Send( end );
 

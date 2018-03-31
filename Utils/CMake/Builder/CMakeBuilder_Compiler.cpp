@@ -402,23 +402,23 @@ namespace CMake
 		src << " \" CACHE STRING \"\" FORCE )\n";
 		
 
-		if ( not _targetCxxFlags.Empty() )
+		//if ( not _targetCxxFlags.Empty() )
 		{
 			src << "set( PROJECTS_SHARED_CXX_FLAGS_" << uc_name << " ";
 			FOR( i, _targetCxxFlags ) { src << ' ' << _targetCxxFlags[i]; }
 			src << " CACHE INTERNAL \"\" FORCE )\n";
 		}
 		
-		if ( not _targetDefines.Empty() )
+		//if ( not _targetDefines.Empty() )
 		{
 			src << "set( PROJECTS_SHARED_DEFINES_" << uc_name << " ";
 			FOR( i, _targetDefines ) { src << ' ' << _targetDefines[i]; }
 			src << " CACHE INTERNAL \"\" FORCE )\n";
 		}
 		
-		if ( not _targetLinkerFlags.Empty() )
+		//if ( not _targetLinkerFlags.Empty() )
 		{
-			src << "set( PROJECTS_SHARED_LINKED_FLAGS_" << uc_name << " \"";
+			src << "set( PROJECTS_SHARED_LINKER_FLAGS_" << uc_name << " \"";
 			FOR( i, _targetLinkerFlags ) { src << ' ' << _targetLinkerFlags[i]; }
 			src << "\" CACHE INTERNAL \"\" FORCE )\n";
 		}
@@ -455,7 +455,7 @@ namespace CMake
 	inline String  Configuration_LinkerFlags (StringCRef, StringCRef upperCaseName)
 	{
 		return "set_target_properties( "_str << CMakeBuilder::GetTargetPlaceholder() << " PROPERTIES LINK_FLAGS_"
-					<< upperCaseName << " ${PROJECTS_SHARED_LINKED_FLAGS_" << upperCaseName << "} )";
+					<< upperCaseName << " ${PROJECTS_SHARED_LINKER_FLAGS_" << upperCaseName << "} )";
 	}
 
 /*

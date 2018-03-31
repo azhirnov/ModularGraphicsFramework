@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'c:\projects\graphxgenengine\tests\engine.platforms.gapi.tools\compute\bufferaligntest.cpp'
-// Created at: 2018/03/11 - 09:53:08
+// Origin file: 'Engine.Platforms.GAPI/Compute/BufferAlignTest.ppln.c'
+// Created at: 2018/03/31 - 16:59:16
 
 #include "all_pipelines.h"
 // C++ shader

@@ -20,9 +20,16 @@ namespace GCC
 	static constexpr char	Cpp14[]					= "-std=c++14";
 	static constexpr char	Cpp1y[]					= "-std=c++1y";
 	static constexpr char	Cpp1z[]					= "-std=c++1z";
+
+	static constexpr char	LibCpp[]				= "-stdlib=libc++";
+	static constexpr char	LibStdCpp[]				= "-stdlib=libstdc++";
 	
 	static constexpr char	RTTI[]					= "-frtti";
 	static constexpr char	Exceptions[]			= "-fexceptions";
+
+	static constexpr char	PositionIndependentCode[]	= "-fpic";
+	static constexpr char	PositionIndependentCode2[]	= "-fPIC";
+	static constexpr char	PositionIndependentExe[]	= "-fpie";
 
 	// Debugging
 	static constexpr char	Debug[]					= "-g";
@@ -154,6 +161,7 @@ namespace GCC
 	static constexpr char	LiteralSuffix[]			= "-Wliteral-suffix";
 	static constexpr char	Narrowing[]				= "-Wnarrowing";
 	static constexpr char	Terminate[]				= "-Wterminate";
+	static constexpr char	Attribute[]				= "-Wattributes";
 
 
 	inline String WarningToError (StringCRef code)
@@ -210,9 +218,34 @@ namespace GCC
 namespace GccLinker
 {
 
-	static constexpr char	Static[]			= "-static";
 	static constexpr char	StaticLibGCC[]		= "-static-libgcc";
 	static constexpr char	StaticLibStdCPP[]	= "-static-libstdc++";
+
+	static constexpr char	NoDefaultLibs[]		= "-nodefaultlibs";
+	static constexpr char	NoStdLib[]			= "-nostdlib";
+
+	static constexpr char	PositionIndependentExe[]	= "-pie";
+
+	static constexpr char	Static[]			= "-static";		// On systems that support dynamic linking, this prevents linking with the shared libraries.
+	static constexpr char	Shared[]			= "-shared";		// Produce a shared object which can then be linked with other objects to form an executable.
+	static constexpr char	Dynamic[]			= "-rdynamic";		// This instructs the linker to add all symbols, not only used ones, to the dynamic symbol table.
+	static constexpr char	Split[]				= "-s";				// Remove all symbol table and relocation information from the executable.
+
+	static constexpr char	Symbolic[]			= "-symbolic";
+
+	inline String Link (StringCRef libName)
+	{
+		return "-l"_str << libName;
+	}
+
+	inline String Link (ArrayCRef<StringCRef> libs)
+	{
+		String	str;
+		FOR( i, libs ) {
+			str << " -l" << libs[i];
+		}
+		return str;
+	}
 
 }	// GccLinker
 

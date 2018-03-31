@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'c:\projects\graphxgenengine\tests\engine.platforms.gapi.tools\compute\dynamicbuffertest.cpp'
-// Created at: 2018/03/11 - 09:53:09
+// Origin file: 'Engine.Platforms.GAPI/Compute/DynamicBufferTest.ppln.c'
+// Created at: 2018/03/31 - 16:59:17
 
 #include "all_pipelines.h"
 // C++ shader

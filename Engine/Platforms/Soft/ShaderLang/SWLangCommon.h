@@ -26,7 +26,6 @@ namespace Impl
 
 	//using EPixelFormat	= Engine::Platforms::EPixelFormat;
 
-
 }	// Impl
 }	// SWShaderLang
 

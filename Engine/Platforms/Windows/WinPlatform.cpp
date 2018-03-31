@@ -47,7 +47,7 @@ namespace PlatformWin
 		using ModArray_t			= Set< ModulePtr >;
 		using Directories_t			= StaticArray< String, EDirectory::_Count >;
 
-		using HMODULE_t				= OS::HiddenOSTypeFrom<void*>;
+		using HMODULE_t				= DeferredTypeFrom<void*>;
 		
 
 	// constants

@@ -22,7 +22,7 @@ namespace PlatformGL
 	{
 	// types
 	private:
-		using FuncPtr_t	= OS::HiddenOSTypeFrom<void*>;
+		using FuncPtr_t	= DeferredTypeFrom<void*>;
 
 
 	// variables

@@ -643,6 +643,7 @@ namespace PlatformVK
 	{
 		ASSERT( IsDeviceCreated() );
 
+		// TODO: check device lost error
 		VK_CALL( vkDeviceWaitIdle( _logicalDevice ) );
 	}
 
@@ -659,7 +660,7 @@ namespace PlatformVK
 		//CHECK_ERR( not IsSwapchainCreated() );
 
 		VkSurfaceCapabilitiesKHR	surf_caps;
-		VK_CHECK( vkGetPhysicalDeviceSurfaceCapabilitiesKHR( _physicalDevice, _surface, &surf_caps ) );
+		VK_CHECK( vkGetPhysicalDeviceSurfaceCapabilitiesKHR( _physicalDevice, _surface, OUT &surf_caps ) );
 
 		VkSwapchainKHR				old_swapchain	= _swapchain;
 		VkSwapchainCreateInfoKHR	swapchain_info	= {};
@@ -712,9 +713,13 @@ namespace PlatformVK
 	bool Vk1Device::RecreateSwapchain (const uint2 &size)
 	{
 		CHECK_ERR( IsSwapchainCreated() );
+		
+		// TODO: check device lost error
 		VK_CALL( vkDeviceWaitIdle( _logicalDevice ) );
 
 		CHECK_ERR( CreateSwapchain( size, _vsync ) );	// TODO imageArrayLayers
+		
+		// TODO: check device lost error
 		VK_CALL( vkDeviceWaitIdle( _logicalDevice ) );
 		return true;
 	}
@@ -807,10 +812,16 @@ namespace PlatformVK
 			EQueueFamily::bits	flags;
 
 			VkBool32	supports_present = false;
-			VK_CALL( vkGetPhysicalDeviceSurfaceSupportKHR( _physicalDevice, uint32_t(i), _surface, OUT &supports_present ) );
+			
+			if ( _surface )
+			{
+				VK_CALL( vkGetPhysicalDeviceSurfaceSupportKHR( _physicalDevice, uint32_t(i), _surface, OUT &supports_present ) );
+			}
 
 			if ( supports_present )
+			{
 				flags |= EQueueFamily::Present;
+			}
 
 			if ( queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT )
 			{

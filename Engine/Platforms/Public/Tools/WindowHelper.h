@@ -22,8 +22,8 @@ namespace PlatformTools
 		struct WinAPIWindow
 		{
 		// types
-			using HWND_t	= OS::HiddenOSTypeFrom<void*>;
-			using HMODULE_t	= OS::HiddenOSTypeFrom<void*>;
+			using HWND_t	= DeferredTypeFrom<void*>;
+			using HMODULE_t	= DeferredTypeFrom<void*>;
 
 		// variables
 			HWND_t		window;
@@ -31,6 +31,18 @@ namespace PlatformTools
 
 		// methods
 			WinAPIWindow (void *inst, void *wnd);
+		};
+
+		struct AndroidWindow
+		{
+		// types
+			using AWindow_t	= DeferredTypeFrom<void*>;
+
+		// variables
+			AWindow_t	window;
+
+		// methods
+			AndroidWindow (void *wnd);
 		};
 
 
@@ -47,8 +59,13 @@ namespace PlatformTools
 
 		//template <typename MsgList, typename EventList>
 		//static ModulePtr  FindWindowMsgEvent (GlobalSystemsRef gs);
-
+		
+#		ifdef PLATFORM_WINDOWS
 		static bool GetWindowHandle (const ModulePtr &window, const Function<bool (const WinAPIWindow &)> &func);
+#		endif
+#		ifdef PLATFORM_ANDROID
+		static bool GetWindowHandle (const ModulePtr &window, const Function<bool (const AndroidWindow &)> &func);
+#		endif
 	};
 
 

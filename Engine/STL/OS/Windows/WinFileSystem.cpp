@@ -76,15 +76,37 @@ namespace OS
 	IsDirectoryExist
 =================================================
 */
-	bool WindowsFileSystem::IsDirectoryExist (StringCRef dirname)
+	bool WindowsFileSystem::IsDirectoryExist (StringCRef folder)
 	{
-		if ( dirname.Empty() )
+		if ( folder.Empty() )
 			return true;
 
-		int i_code = ::GetFileAttributes( dirname.cstr() );
+		int i_code = ::GetFileAttributes( folder.cstr() );
 		return (i_code != -1) and (FILE_ATTRIBUTE_DIRECTORY & i_code);
 	}
 	
+/*
+=================================================
+	IsAbsolutePath
+=================================================
+*/
+	bool WindowsFileSystem::IsAbsolutePath (StringCRef path)
+	{
+		for (usize i = 0; i < path.Length(); ++i)
+		{
+			const char	c = path[i];
+
+			if ( c == '\\' or c == '/' )
+			{
+				if ( i > 1 and path[i-1] == ':' )
+					return true;
+
+				return false;
+			}
+		}
+		return false;
+	}
+
 /*
 =================================================
 	NewDirectory
@@ -141,7 +163,7 @@ namespace OS
 	GetAllFilesInPath
 =================================================
 */
-	bool WindowsFileSystem::GetAllFilesInPath (StringCRef path, Array<String> &fileNames)
+	bool WindowsFileSystem::GetAllFilesInPath (StringCRef path, OUT Array<String> &fileNames)
 	{
 		ASSERT( IsDirectoryExist( path ) );
 

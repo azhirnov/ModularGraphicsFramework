@@ -74,7 +74,7 @@ namespace Base
 			SubSysProperty () {}
 
 			T *  operator -> ()				{ return _ptr; }
-			T *  Ptr ()						{ return _ptr; }
+			T *  ptr ()						{ return _ptr; }
 
 			explicit operator bool () const	{ return bool(_ptr); }
 

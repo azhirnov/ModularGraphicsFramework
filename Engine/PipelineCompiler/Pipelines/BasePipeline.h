@@ -219,8 +219,13 @@ namespace PipelineCompiler
 			const EShader::type		type;
 		
 		// methods
+			ShaderModule () : type{EShader::Unknown} {}
+			ShaderModule (const ShaderModule &other);
+
 			explicit ShaderModule (EShader::type shaderType) : entry("main"), type(shaderType) {}
 			
+			ShaderModule& operator = (const ShaderModule &right);
+
 			ShaderModule& Load (StringCRef path);
 			ShaderModule& Load (StringCRef path, StringCRef defines);
 			ShaderModule& Load (StringCRef path, StringCRef filename, StringCRef defines);
@@ -354,7 +359,7 @@ namespace PipelineCompiler
 
 	public:
 		StringCRef	Name () const	{ return _name; }
-		StringCRef	Path () const	{ return _path; }
+		String		Path () const;
 
 		virtual bool Prepare (const ConverterConfig &cfg) = 0;
 		virtual bool Convert (OUT String &src, Ptr<ISerializer> ser, const ConverterConfig &cfg) const = 0;

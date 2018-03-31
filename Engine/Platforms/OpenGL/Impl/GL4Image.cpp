@@ -472,9 +472,7 @@ namespace PlatformGL
 		
 		if ( _CanHaveImageView() )
 		{
-			Message< GpuMsg::CreateGLImageView >	create;
-			create->viewDescr.layerCount = _descr.dimension.w;
-			create->viewDescr.levelCount = _descr.maxLevel.Get();
+			Message< GpuMsg::CreateGLImageView >	create{ _descr };
 
 			CHECK_ERR( _CreateGLImageView( create ) );
 

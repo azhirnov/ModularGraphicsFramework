@@ -17,11 +17,11 @@ namespace OS
 	// Random Device
 	//
 
-	struct _STL_EXPORT_ PlatformRandomDevice final : public Noncopyable
+	struct PlatformRandomDevice final : public Noncopyable
 	{
 	// types
 	private:
-		typedef HiddenOSTypeFrom< usize >	Handle_t;	// HCRYPTPROV
+		typedef DeferredTypeFrom< usize >	Handle_t;	// HCRYPTPROV
 
 
 	// variables

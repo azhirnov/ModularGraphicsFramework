@@ -43,7 +43,8 @@ namespace Platforms
 	// methods
 		ImageDescriptor (GX_DEFCTOR) : imageType( EImage::Unknown ), format( EPixelFormat::Unknown )
 		{}
-
+		
+		explicit
 		ImageDescriptor  (EImage::type			imageType,
 						  const uint4	&		dimension,
 						  EPixelFormat::type	format,
@@ -78,6 +79,9 @@ namespace Platforms
 							 ImageLayer			baseLayer	= Uninitialized,
 							 uint				layerCount	= 1,
 							 Swizzle::type		swizzle		= "RGBA"_Swizzle);
+
+		explicit
+		ImageViewDescriptor (const ImageDescriptor &descr);
 
 		bool operator == (const ImageViewDescriptor &right) const;
 		bool operator >  (const ImageViewDescriptor &right) const;

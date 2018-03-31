@@ -163,7 +163,7 @@ namespace  Java
 		}
 
 
-		_STL_EXPORT_ bool GetExceptionMessage (INOUT String &msg) const;
+		bool GetExceptionMessage (INOUT String &msg) const;
 
 
 	//		JavaVM		//

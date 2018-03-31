@@ -9,7 +9,7 @@
 #include "Engine/STL/Files/HDDFile.h"
 #include "Engine/STL/Containers/Map.h"
 #include "Engine/STL/Math/Color/Color.h"
-#include "ELog.h"
+#include "Engine/STL/Log/ELog.h"
 
 namespace GX_STL
 {
@@ -20,7 +20,7 @@ namespace GXTypes
 	// Logger
 	//
 
-	class _STL_EXPORT_ Logger
+	class Logger final
 	{
 	// types
 	private:

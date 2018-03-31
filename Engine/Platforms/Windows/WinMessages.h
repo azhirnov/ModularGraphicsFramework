@@ -20,7 +20,7 @@ namespace OSMsg
 	//
 	struct GetWinWindowHandle
 	{
-		using HWND_t = OS::HiddenOSTypeFrom<void*>;
+		using HWND_t = DeferredTypeFrom<void*>;
 
 		Out< HWND_t >	result;
 	};
@@ -50,7 +50,7 @@ namespace OSMsg
 	struct OnWinPlatformCreated
 	{
 	// types
-		using HMODULE_t		= OS::HiddenOSTypeFrom<void*>;
+		using HMODULE_t		= DeferredTypeFrom<void*>;
 
 	// variables
 		HMODULE_t		instance;

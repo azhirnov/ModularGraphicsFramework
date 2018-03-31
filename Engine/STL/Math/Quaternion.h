@@ -41,8 +41,8 @@ namespace GXMath
 		using Self				= Quaternion<T,U>;
 		using Value_t			= T;
 		using Vec3_t			= Vec<T,3,U>;
-		using mat3_t			= Matrix<T,3,3,U>;
-		using mat4_t			= Matrix<T,4,4,U>;
+		using Mat3_t			= Matrix<T,3,3,U>;
+		using Mat4_t			= Matrix<T,4,4,U>;
 		using Arr_t				= T[4];
 		using _is_quaternion	= bool;
 
@@ -53,8 +53,8 @@ namespace GXMath
 
 		// constructors
 		Quaternion (GX_DEFCTOR): x(0), y(0), z(0), w(1) {}
-		Quaternion (const mat3_t &matrix);
-		Quaternion (const mat4_t &matrix);
+		Quaternion (const Mat3_t &matrix);
+		Quaternion (const Mat4_t &matrix);
 		Quaternion (T x, T y, T z, T w): x(x), y(y), z(z), w(w) {}
 		Quaternion (const Vec3_t &vec, T w): x(vec.x), y(vec.y), z(vec.z), w(w) {}
 
@@ -164,7 +164,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Quaternion<T,U>::Quaternion (const mat3_t &right): x(0), y(0), z(0), w(1)
+	inline Quaternion<T,U>::Quaternion (const Mat3_t &right): x(0), y(0), z(0), w(1)
 	{
 		T			s		= T(0);
 		const T		trace	= right(0,0) + right(1,1) + right(2,2);
@@ -213,7 +213,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	inline Quaternion<T,U>::Quaternion (const mat4_t &right): x(0), y(0), z(0), w(1)
+	inline Quaternion<T,U>::Quaternion (const Mat4_t &right): x(0), y(0), z(0), w(1)
 	{
 		T			s		= T(0);
 		const T		trace	= right(0,0) + right(1,1) + right(2,2);

@@ -83,7 +83,9 @@ namespace CMake
 		Self*	Projects_LinkDirectory (StringCRef folder, StringCRef enableIf = Uninitialized);
 		Self*	Projects_LinkLibrary (StringCRef lib, StringCRef enableIf = Uninitialized);
 
-		Self*	AddCondition (StringCRef name);
+		Self*	AddOption (StringCRef name, StringCRef info, bool value = false, StringCRef enableIf = Uninitialized);
+		Self*	AddOption (StringCRef name, StringCRef info, int value, StringCRef enableIf = Uninitialized);
+		Self*	AddOption (StringCRef name, StringCRef info, StringCRef value, StringCRef enableIf = Uninitialized);
 
 		Self*	SetVersion (uint major, uint minor);
 
@@ -206,6 +208,9 @@ namespace CMake
 		Self*	LinkLibrary (ArrayCRef<CMakeExternalVSProject*> projs);
 
 		Self*	SearchLibraries (StringCRef path, ArrayCRef<String> libs, StringCRef enableIf = Uninitialized);
+		
+		Self*	AddDependency (CMakeProject *lib);
+		Self*	AddDependency (ArrayCRef<CMakeProject*> libs);
 
 		Self*	AddDependency (StringCRef dep, StringCRef enableIf = Uninitialized);
 		Self*	AddDependency (Array<String> deps, StringCRef enableIf = Uninitialized);
@@ -213,6 +218,11 @@ namespace CMake
 		Self*	AddSource (StringCRef cmakeSrc);
 
 		Self*	MergeCPP (uint numThreads);
+
+		String			GetRelativePath () const;
+		StringCRef		GetName () const			{ return _name; }
+
+		Groups_t const&	GetSources () const			{ return _groups; }
 	};
 
 

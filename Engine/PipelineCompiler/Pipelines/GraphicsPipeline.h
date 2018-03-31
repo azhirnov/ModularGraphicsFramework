@@ -23,6 +23,9 @@ namespace PipelineCompiler
 			ShaderModule	tessEvaluation	{ EShader::TessEvaluation };
 			ShaderModule	geometry		{ EShader::Geometry };
 			ShaderModule	fragment		{ EShader::Fragment };
+
+		// methods
+			Shaders () {}
 		};
 	
 

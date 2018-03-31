@@ -22,11 +22,11 @@ namespace OS
 	// Performance Timer
 	//
 
-	struct _STL_EXPORT_ PerformanceTimer final : public Noncopyable
+	struct PerformanceTimer final : public Noncopyable
 	{
 	// types
 	private:
-		using Handle_t = HiddenOSTypeFrom< ulong >;	// LARGE_INTEGER
+		using Handle_t = DeferredTypeFrom< ulong >;	// LARGE_INTEGER
 
 
 	// variables

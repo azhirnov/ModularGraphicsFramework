@@ -21,7 +21,7 @@ namespace PlatformVK
 	{
 	// types
 	public:
-		using HWND_t	= OS::HiddenOSTypeFrom<void*>;
+		using HWND_t	= DeferredTypeFrom<void*>;
 
 	// methods
 	public:

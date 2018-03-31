@@ -163,6 +163,9 @@ extern void Test_CompileTime_TypeTraits ()
 	STATIC_ASSERT( not IsConst< int & > );
 	STATIC_ASSERT( not IsConst< int [] > );
 	//STATIC_ASSERT(     IsConst< const int [54] >::value );
+	STATIC_ASSERT(     IsConst< RemoveQualifier<const int *> > );
+	STATIC_ASSERT(     IsConst< RemoveQualifier<const int &> > );
+	STATIC_ASSERT( not IsConst< RemoveQualifier<const int **> > );
 
 
 	// CopyConst //

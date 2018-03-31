@@ -105,11 +105,11 @@ bool CApp::_Test_DynamicBuffer ()
 	for (uint i = 0; i < 100; ++i)
 	{
 		CHECK_ERR(All( res_dynbuf[i].i2 == int2( st_buf.i4.x, i ) ));
-		CHECK_ERR(All( res_dynbuf[i].b1 == ((i&1) == 0) ));
+		CHECK_ERR(All( res_dynbuf[i].b1 == Bool32((i&1) == 0) ));
 		CHECK_ERR(All( res_dynbuf[i].f2 == -st_buf.f2 ));
 		CHECK_ERR(All( res_dynbuf[i].i3.xy() == int2(0) ));
 		CHECK_ERR(All( res_dynbuf[i].i3.z == ~0 ));
-		CHECK_ERR(All( res_dynbuf[i].b2 != uint2(0) ));
+		CHECK_ERR(All( res_dynbuf[i].b2 != Bool32_2(false) ));
 	}
 
 	LOG( "DynamicBuffer - OK", ELog::Info );

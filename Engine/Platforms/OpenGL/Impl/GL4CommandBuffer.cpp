@@ -1657,7 +1657,7 @@ namespace PlatformGL
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyImageToBuffer >();
 		
-		if ( gl::GL4_GetVersion() >= 450 )
+		if ( GRAPHICS_API_OPENGL >= 450 and gl::GL4_GetVersion() >= 450 )
 			return _CopyImageToBuffer450( data );
 		else
 			return _CopyImageToBuffer200( data );

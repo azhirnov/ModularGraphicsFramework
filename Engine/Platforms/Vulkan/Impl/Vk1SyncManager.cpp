@@ -306,6 +306,7 @@ namespace PlatformVK
 		}
 
 		if ( not fence_ids.Empty() ) {
+			// TODO: check device lost error
 			VK_CALL( vkWaitForFences( GetVkDevice(), fence_ids.Count(), fence_ids.ptr(), true, msg->timeout.NanoSeconds() ) );
 		}
 		return true;

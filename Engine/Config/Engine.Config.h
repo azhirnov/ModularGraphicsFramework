@@ -10,7 +10,7 @@
 //#	define GX_ENABLE_DEBUGGING
 #endif
 
-
+/*
 // Graphics
 #define GRAPHICS_API_OPENGL			450		// 4.x		graphics & compute
 #define GRAPHICS_API_VULKAN			100		// 1.x		graphics & compute
@@ -19,7 +19,7 @@
 #define COMPUTE_API_OPENCL			120		// 1.x or 2.x
 //#define COMPUTE_API_CUDA			7000	// --		// not supported
 #define GRAPHICS_API_SOFT			100		//			compute
-
+*/
 
 // VR
 //#define PLATFORM_OCULUS_VR		100
@@ -55,29 +55,13 @@ namespace GX_STL
 
 	namespace GlobalConst
 	{
-		// Engine.Base
-		static const int	Base_MaxSubSystems					= 64;
-
 		// Engine.Graphics
 		static const int	Graphics_MaxColorBuffers			= 8;
 		static const int	Graphics_MaxAttribs					= 16;
 		static const int	Graphics_MaxViewports				= 16;
-		static const int	Graphics_MaxTextureSize				= 1<<14;
+		//static const int	Graphics_MaxTextureSize				= 1<<14;
 		static const int	Graphics_MaxRenderPassSubpasses		= 8;
 
-		// Engine.Compute
-		//static const int	Compute_MaxTextureSize				= 1<<14;
-
-		// Engine.Scene.Renderer
-		//static const int	Graphics_MaxMaterialTextures		= 8;
-		//static const int	Graphics_MaxMaterialUniforms		= 16;
-		//static const int	Graphics_MaxRenderPassTextures		= 6;	// render pass input textures
-		//static const int	Graphics_MaxModelDrawGroups			= 32;
-		//static const int	Graphics_MaxRenderPassDrawGroups	= 32;
-		//static const int	Graphics_MaxUniformBlocks			= 6;
-		//static const int	Graphics_MaxUniformBlockSizeKb		= 128;
-		//static const int	Graphics_MaxUniformNameLength		= 32;
-		//static const int	Graphics_MaterialCompatibilityBits	= 32;
 	};
 
 }	// GX_STL

@@ -15,6 +15,13 @@ extern void Test_Types_FileAddress ()
 	const String name = FileAddress::GetName( filename );				TEST( name == "55" );
 	const String path = FileAddress::GetPath( filename );				TEST( path == "../11/../22/33\\44" );
 	const String name_ext = FileAddress::GetNameAndExt( filename );		TEST( name_ext == "55.ab" );
+	
+	const String ext1 = FileAddress::GetExtensions( "aa/bb.c.d" );		TEST( ext1 == "c.d" );
+	const String ext2 = FileAddress::GetExtensions( "bb.cx.d" );		TEST( ext2 == "cx.d" );
+	const String ext3 = FileAddress::GetExtension( "aabb" );			TEST( ext3 == "" );
+	const String ext4 = FileAddress::GetExtensions( "aabb" );			TEST( ext4 == "" );
+	const String ext5 = FileAddress::GetExtension( "." );				TEST( ext5 == "" );
+	const String ext6 = FileAddress::GetExtensions( "." );				TEST( ext6 == "" );
 
 	Array<StringCRef> path_arr;
 	FileAddress::DividePath( filename, path_arr );

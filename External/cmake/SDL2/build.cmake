@@ -45,7 +45,7 @@ endif ()
 if ( ${CONFIGURATION_DEPENDENT_PATH} )
 	add_custom_command (
 		TARGET "External.SDL2" POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 				"${BINARY_DIR}/$<CONFIG>/${SDL2_LIB_NAME}"
 				"${BINARY_DIR}/lib/${SDL2_LIB_NAME}"
 		COMMENT "Copying SDL2 library..."
@@ -53,7 +53,7 @@ if ( ${CONFIGURATION_DEPENDENT_PATH} )
 else ()
 	add_custom_command (
 		TARGET "External.SDL2" POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 				"${BINARY_DIR}/${SDL2_LIB_NAME}"
 				"${BINARY_DIR}/lib/${SDL2_LIB_NAME}"
 		COMMENT "Copying SDL2 library..."

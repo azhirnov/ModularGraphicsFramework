@@ -77,10 +77,10 @@ namespace Platforms
 	{
 		CHECK_ERR( file );
 
-		usize	len = (usize)file->RemainingSize();
-		String	str;	str.Resize( len );
+		const usize	len		= usize(file->RemainingSize());
+		String		str;	str.Resize( len );
 
-		CHECK_ERR( file->Read(ArrayRef<char>( str )) );
+		CHECK_ERR( file->Read( str.ptr(), str.LengthInBytes() ) );
 
 		StringGLSL( str );
 		return true;
@@ -104,11 +104,11 @@ namespace Platforms
 	bool PipelineTemplateDescriptor::ShaderSource::FileCL (const RFilePtr &file)
 	{
 		CHECK_ERR( file );
+		
+		const usize	len		= usize(file->RemainingSize());
+		String		str;	str.Resize( len );
 
-		usize	len = (usize)file->RemainingSize();
-		String	str;	str.Resize( len );
-
-		CHECK_ERR( file->Read(ArrayRef<char>( str )) );
+		CHECK_ERR( file->Read( str.ptr(), str.LengthInBytes() ) );
 
 		StringCL( str );
 		return true;
@@ -132,11 +132,11 @@ namespace Platforms
 	bool PipelineTemplateDescriptor::ShaderSource::FileCLAsm (const RFilePtr &file)
 	{
 		CHECK_ERR( file );
+		
+		const usize	len		= usize(file->RemainingSize());
+		String		str;	str.Resize( len );
 
-		usize	len = (usize)file->RemainingSize();
-		String	str;	str.Resize( len );
-
-		CHECK_ERR( file->Read(ArrayRef<char>( str )) );
+		CHECK_ERR( file->Read( str.ptr(), str.LengthInBytes() ) );
 
 		StringCLAsm( str );
 		return true;
@@ -161,7 +161,7 @@ namespace Platforms
 	{
 		CHECK_ERR( file );
 
-		usize		len = (usize)file->RemainingSize();
+		usize		len		= (usize)file->RemainingSize();
 		Array<uint>	arr;	arr.Resize( len / sizeof(uint) );
 
 		CHECK_ERR( file->Read(ArrayRef<uint>( arr )) );

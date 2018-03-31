@@ -1,4 +1,6 @@
 # Compile external projects
+# https://cmake.org/cmake/help/v3.0/module/ExternalProject.html
+
 cmake_minimum_required (VERSION 3.6.0)
 
 cmake_policy( SET CMP0022 NEW )
@@ -17,16 +19,9 @@ set( ENABLE_SDL ON CACHE BOOL "use SDL2 library" )
 set( ENABLE_ANGELSCRIPT ON CACHE BOOL "use AngelScript" )
 set( ENABLE_LUNARGLASS ON CACHE BOOL "use LunarGLASS" )
 
-if (MSVC)
-	set( CONFIGURATION_DEPENDENT_PATH ON )
-else()
-	set( CONFIGURATION_DEPENDENT_PATH OFF )
-endif()
-
-
 message( STATUS "EXTERNALS_PATH: ${EXTERNALS_PATH}" )
 
-if (NOT ${DOWNLOAD_EXTERNALS} AND NOT EXISTS ${EXTERNALS_PATH})
+if (NOT DOWNLOAD_EXTERNALS AND NOT EXISTS ${EXTERNALS_PATH})
 	message( FATAL_ERROR "Invalid external projects path!" )
 endif ()
 
@@ -57,6 +52,7 @@ add_library( "External.All" STATIC
 	"download.cmake"
 	"SDL2/build.cmake"
 	"AngelScript/build.cmake"
+	"AngelScript/CMakeLists.txt"
 	"LunarGLASS/build.cmake"
 	"LunarGLASS/CMakeLists.txt"
 	"LunarGLASS/main.cpp"
@@ -64,7 +60,7 @@ add_library( "External.All" STATIC
 set_property( TARGET "External.All" PROPERTY FOLDER "External" )
 source_group( "" FILES "CMakeLists.txt" "download.cmake" )
 source_group( "SDL2" FILES "SDL2/build.cmake" )
-source_group( "AngelScript" FILES "AngelScript/build.cmake" )
+source_group( "AngelScript" FILES "AngelScript/build.cmake" "AngelScript/CMakeLists.txt" )
 source_group( "LunarGLASS" FILES "LunarGLASS/build.cmake" "LunarGLASS/CMakeLists.txt" "LunarGLASS/main.cpp" )
 
 

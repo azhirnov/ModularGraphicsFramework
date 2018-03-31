@@ -25,7 +25,7 @@ namespace vk
 
 	// default Functions //
 #	define VULKAN1_DEFFUNC( _retType_, _funcName_, _funcParams_, _retValue_ ) \
-		_retType_ VKAPI_CALL Default##_funcName_ _funcParams_ \
+		VKAPI_ATTR _retType_ VKAPI_CALL Default##_funcName_ _funcParams_ \
 		{ \
 			using namespace Engine; \
 			LOG( "Used dummy function " TOSTRING( _funcName_ ), ELog::Debug ); \

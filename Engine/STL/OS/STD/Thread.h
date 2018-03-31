@@ -33,7 +33,7 @@ namespace OS
 	// Current Thread
 	//
 
-	struct _STL_EXPORT_ CurrentThread
+	struct CurrentThread
 	{
 	// varables
 	protected:
@@ -65,7 +65,7 @@ namespace OS
 	// Thread
 	//
 
-	struct _STL_EXPORT_ Thread
+	struct Thread
 	{
 	// types
 	public:

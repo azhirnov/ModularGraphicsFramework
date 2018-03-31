@@ -23,7 +23,7 @@ extern bool Test_PipelineCompilation ()
 	//cfg.target					|= EShaderDstFormat::CL_Binary;
 	//cfg.target					|= EShaderDstFormat::CPP_Module;
 
-	PipelineManager::Instance()->Convert( "out/all_pipelines", new CppSerializer(), cfg );
+	PipelineManager::Instance()->ConvertAll( "out/all_pipelines", new CppSerializer(), cfg );
 
 	ShaderCompiler::Instance()->DestroyContext();
 	return true;

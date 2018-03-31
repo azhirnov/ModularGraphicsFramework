@@ -151,12 +151,10 @@ namespace CMake
 		File::RFilePtr	file;
 		CHECK_ERR( file = File::HddRFile::New( filename ) );
 
-		String	buf;
-		const usize	len = usize(file->RemainingSize());
+		const usize	len		= usize(file->RemainingSize());
+		String		buf;	buf.Resize( len );
 
-		buf.Reserve( len+1 );
-		CHECK_ERR( file->Read( buf.ptr(), BytesU(len) ) );
-		buf.SetLength( len );
+		CHECK_ERR( file->Read( buf.ptr(), buf.LengthInBytes() ) );
 		file = null;
 
 		StringCRef		line;

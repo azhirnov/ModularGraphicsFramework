@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'c:\projects\graphxgenengine\projects\shadereditortools\glowballs.cpp'
-// Created at: 2018/03/11 - 09:54:21
+// Origin file: 'ShaderEditor\Pipelines/Glowballs.ppln.c'
+// Created at: 2018/03/31 - 16:58:16
 
 #include "all_pipelines.h"
 
@@ -317,14 +317,14 @@ float divergence;
 
 //---------------------------------
 
-HitTest minT (in HitTest a, in HitTest b, in HitTest c);
-HitTest minT (in HitTest a, in HitTest b);
-HitTest minT (in HitTest a, in HitTest b, in HitTest c, in HitTest d, in HitTest e);
-vec4 traceScene (in Camera cam, in vec2 seed, in float lastB);
-Camera setupCam (in vec3 pos, in vec3 target, in float fov, in vec2 uv);
-void mainImage (out vec4 fragColor, in vec2 fragCoord);
 HitTest intersectBox (in Ray r, in Box b);
 HitTest intersectSphere (in Ray r, in Sphere s);
+HitTest minT (in HitTest a, in HitTest b);
+Camera setupCam (in vec3 pos, in vec3 target, in float fov, in vec2 uv);
+void mainImage (out vec4 fragColor, in vec2 fragCoord);
+HitTest minT (in HitTest a, in HitTest b, in HitTest c);
+HitTest minT (in HitTest a, in HitTest b, in HitTest c, in HitTest d, in HitTest e);
+vec4 traceScene (in Camera cam, in vec2 seed, in float lastB);
 float nrand (in vec2 n);
 
 //---------------------------------

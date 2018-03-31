@@ -36,7 +36,8 @@ namespace PlatformVK
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetVkPipelineResourceTableID,
 											GpuMsg::PipelineAttachBuffer,
-											GpuMsg::PipelineAttachImage
+											GpuMsg::PipelineAttachImage,
+											GpuMsg::PipelineAttachTexture
 										> >::Append< LayoutMsgList_t >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
@@ -68,13 +69,25 @@ namespace PlatformVK
 			BytesUL		size;
 		};
 
-		using DescriptorPoolSizes_t	= FixedSizeArray< VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE >;
-		
-		using ResourceCache_t		= Union< ImageViewDescriptor, BufferRange >;
-		using CachedResources_t		= Array< ResourceCache_t >;
-
 		using ResourceDescr_t		= Union< ImageDescr, BufferDescr, TextureBufferDescr >;
 		using ResourceDescrArray_t	= Array< ResourceDescr_t >;
+
+		struct BufferAttachment
+		{
+			BytesUL		offset;
+			BytesUL		size;
+		};
+
+		struct ImageAttachment
+		{
+			ImageViewDescriptor		descr;
+			EImageLayout::type		layout	= Uninitialized;
+		};
+
+		using AttachmentInfo_t		= Union< BufferAttachment, ImageAttachment >;
+		using AttachmentInfoMap_t	= Map< const void*, AttachmentInfo_t >;
+
+		using DescriptorPoolSizes_t	= FixedSizeArray< VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE >;
 		
 		struct _CreateResourceDescriptor_Func;
 		struct _WriteDescriptor_Func;
@@ -90,6 +103,7 @@ namespace PlatformVK
 	private:
 		VkDescriptorPool		_descriptorPoolId;
 		VkDescriptorSet			_descriptorSetId;
+		AttachmentInfoMap_t		_attachmentInfo;
 		ResourceDescrArray_t	_resources;
 		ModulePtr				_layout;
 
@@ -109,6 +123,7 @@ namespace PlatformVK
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &);
 		bool _PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &);
+		bool _PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &);
 		bool _GetVkPipelineResourceTableID (const Message< GpuMsg::GetVkPipelineResourceTableID > &);
 
 	private:
@@ -151,6 +166,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_PipelineAttachImage );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_PipelineAttachBuffer );
+		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_PipelineAttachTexture );
 		_SubscribeOnMsg( this, &Vk1PipelineResourceTable::_GetVkPipelineResourceTableID );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
@@ -219,6 +235,8 @@ namespace PlatformVK
 
 		_DestroyResourceTable();
 
+		_attachmentInfo.Clear();
+
 		return Module::_Delete_Impl( msg );
 	}
 
@@ -254,21 +272,65 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_AttachModule
+	_PipelineAttachImage
 =================================================
 */
 	bool Vk1PipelineResourceTable::_PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &msg)
 	{
+		CHECK_ERR( msg->newModule );
+
+		ImageAttachment	img;
+		img.descr	= msg->descr;
+		img.layout	= msg->layout;
+
+		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		
+		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _SetState( EState::Initial ) );
+
 		return true;
 	}
 	
 /*
 =================================================
-	_AttachModule
+	_PipelineAttachTexture
+=================================================
+*/
+	bool Vk1PipelineResourceTable::_PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &msg)
+	{
+		CHECK_ERR( msg->newModule and msg->sampler );
+
+		ImageAttachment	img;
+		img.descr	= msg->descr;
+		img.layout	= msg->layout;
+
+		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		
+		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _Attach( msg->name + ".sampler", msg->sampler, false ) );
+		CHECK( _SetState( EState::Initial ) );
+
+		return true;
+	}
+
+/*
+=================================================
+	_PipelineAttachBuffer
 =================================================
 */
 	bool Vk1PipelineResourceTable::_PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &msg)
 	{
+		CHECK_ERR( msg->newModule );
+
+		BufferAttachment	buf;
+		buf.offset	= msg->offset;
+		buf.size	= msg->size;
+
+		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{buf} );
+		
+		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _SetState( EState::Initial ) );
+
 		return true;
 	}
 
@@ -376,12 +438,10 @@ namespace PlatformVK
 				CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT tex_mod ) );
 				CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT samp_mod ) );
 
-				Message< GpuMsg::GetVkImageID >			req_image;
 				Message< GpuMsg::GetVkSamplerID >		req_sampler;
 				Message< GpuMsg::GetImageDescriptor >	req_img_descr;
 
 				// TODO: check result
-				self.SendTo( tex_mod, req_image );
 				self.SendTo( tex_mod, req_img_descr );
 				self.SendTo( samp_mod, req_sampler );
 
@@ -391,11 +451,34 @@ namespace PlatformVK
 
 				// TODO: use default sampler
 				// TODO: check format
+				
+				// find attachment info
+				VkImageView						img_view = VK_NULL_HANDLE;
+				VkImageLayout					layout	 = VK_IMAGE_LAYOUT_GENERAL;
+				AttachmentInfoMap_t::iterator	info;
 
+				if ( self._attachmentInfo.Find( tex_mod.RawPtr(), OUT info ) )
+				{
+					auto const&								att_info = info->second.Get<ImageAttachment>();
+					Message< GpuMsg::CreateVkImageView >	req_imageview{ att_info.descr };
+					self.SendTo( tex_mod, req_imageview );
+
+					img_view	= req_imageview->result.Get( VK_NULL_HANDLE );
+					layout		= Vk1Enum( att_info.layout );
+				}
+				else
+				{
+					Message< GpuMsg::GetVkImageID >		req_image;
+					self.SendTo( tex_mod, req_image );
+
+					img_view = req_image->defaultView.Get( VK_NULL_HANDLE );
+				}
+				
+				// create descriptor
 				ImageDescr				descr;
 				descr.info.sampler		= req_sampler->result.Get( VK_NULL_HANDLE );
-				descr.info.imageView	= req_image->defaultView.Get( VK_NULL_HANDLE );
-				descr.info.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				descr.info.imageView	= img_view;
+				descr.info.imageLayout	= layout;
 				descr.descriptorType	= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 				descr.binding			= tex.uniqueIndex;
 				
@@ -428,20 +511,40 @@ namespace PlatformVK
 			ModulePtr	img_mod;
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT img_mod ) );
 
-			Message< GpuMsg::GetVkImageID >			req_image;
 			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
-
-			self.SendTo( img_mod, req_image );	// TODO: check result
 			self.SendTo( img_mod, req_img_descr );
 
 			// TODO: check format
 			
 			CHECK( req_img_descr->result->usage[ EImageUsage::Storage ] );
+			
+			// find attachment info
+			VkImageView						img_view = VK_NULL_HANDLE;
+			VkImageLayout					layout	 = VK_IMAGE_LAYOUT_GENERAL;
+			AttachmentInfoMap_t::iterator	info;
 
+			if ( self._attachmentInfo.Find( img_mod.RawPtr(), OUT info ) )
+			{
+				auto const&								att_info = info->second.Get<ImageAttachment>();
+				Message< GpuMsg::CreateVkImageView >	req_imageview{ att_info.descr };
+				self.SendTo( img_mod, req_imageview );
+
+				img_view	= req_imageview->result.Get( VK_NULL_HANDLE );
+				layout		= Vk1Enum( att_info.layout );
+			}
+			else
+			{
+				Message< GpuMsg::GetVkImageID >		req_image;
+				self.SendTo( img_mod, req_image );
+
+				img_view = req_image->defaultView.Get( VK_NULL_HANDLE );
+			}
+
+			// create descriptor
 			ImageDescr				descr;
 			descr.info.sampler		= VK_NULL_HANDLE;
-			descr.info.imageView	= req_image->defaultView.Get( VK_NULL_HANDLE );
-			descr.info.imageLayout	= VK_IMAGE_LAYOUT_GENERAL;
+			descr.info.imageView	= img_view;
+			descr.info.imageLayout	= layout;
 			descr.descriptorType	= VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			descr.binding			= img.uniqueIndex;
 			
@@ -469,12 +572,29 @@ namespace PlatformVK
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			CHECK( req_descr->result->size == BytesUL(buf.size) );
 			CHECK( req_descr->result->usage[ EBufferUsage::Uniform ] );
+			
+			// find attachment info
+			AttachmentInfoMap_t::iterator	info;
+			BytesUL							offset;
 
+			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
+			{
+				auto const&		buf_info = info->second.Get<BufferAttachment>();
+
+				offset = buf_info.offset;
+
+				CHECK_ERR( buf_info.size == BytesUL(buf.size) );
+			}
+			else
+			{
+				CHECK_ERR( req_descr->result->size >= BytesUL(buf.size) );
+			}
+			
+			// create descriptor
 			BufferDescr				descr;
 			descr.info.buffer		= req_buffer->result.Get( VK_NULL_HANDLE );
-			descr.info.offset		= 0;
+			descr.info.offset		= (VkDeviceSize) offset;
 			descr.info.range		= (VkDeviceSize) buf.size;
 			descr.descriptorType	= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			descr.binding			= buf.uniqueIndex;
@@ -503,15 +623,34 @@ namespace PlatformVK
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			CHECK( (req_descr->result->size >= buf.staticSize) and
-					(buf.arrayStride == 0 or
-					(req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
 			CHECK( req_descr->result->usage[ EBufferUsage::Storage ] );
+			
+			// find attachment info
+			AttachmentInfoMap_t::iterator	info;
+			BytesUL							offset;
+			BytesUL							size	= req_descr->result->size;
 
+			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
+			{
+				auto const&		buf_info = info->second.Get<BufferAttachment>();
+
+				offset	= buf_info.offset;
+				size	= buf_info.size;
+				
+				CHECK_ERR(	(size >= buf.staticSize) and
+							(buf.arrayStride == 0 or (size - buf.staticSize) % buf.arrayStride == 0) );
+			}
+			else
+			{
+				CHECK_ERR(	(req_descr->result->size >= buf.staticSize) and
+							(buf.arrayStride == 0 or (req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
+			}
+			
+			// create descriptor
 			BufferDescr				descr;
 			descr.info.buffer		= req_buffer->result.Get( VK_NULL_HANDLE );
-			descr.info.offset		= 0;
-			descr.info.range		= (VkDeviceSize) req_descr->result->size;
+			descr.info.offset		= (VkDeviceSize) offset;
+			descr.info.range		= (VkDeviceSize) size;
 			descr.descriptorType	= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			descr.binding			= buf.uniqueIndex;
 			

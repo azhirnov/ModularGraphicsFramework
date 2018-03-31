@@ -38,8 +38,8 @@ namespace Platforms
 										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::DeviceCreated,
-											GpuMsg::DeviceBeforeDestroy
-											// TODO: device lost event
+											GpuMsg::DeviceBeforeDestroy,
+											GpuMsg::DeviceLost
 										> >;
 		
 		using Device				= PlatformCL::CL2Device;
@@ -264,8 +264,9 @@ namespace Platforms
 		{
 			Message< GpuMsg::WaitCLSemaphore >	wait;
 
-			FOR( i, msg->waitSemaphores ) {
-				wait->semaphores.PushBack( msg->waitSemaphores[i].first );
+			for (auto& sem : Range(msg->waitSemaphores)) {
+				ASSERT(sem.second == EPipelineStage::AllCommands );
+				wait->semaphores.PushBack( sem.first );
 			}
 
 			if ( not wait->semaphores.Empty() ) {

@@ -35,11 +35,11 @@ namespace OS
 	// Current Thread
 	//
 
-	struct _STL_EXPORT_ CurrentThread
+	struct CurrentThread
 	{
 	// types
 	protected:
-		typedef HiddenOSTypeFrom< void* >	Handle_t;	// HANDLE
+		typedef DeferredTypeFrom< void* >	Handle_t;	// HANDLE
 
 
 	// varables
@@ -90,7 +90,7 @@ namespace OS
 	// Thread
 	//
 
-	struct _STL_EXPORT_ Thread final : public CurrentThread
+	struct Thread final : public CurrentThread
 	{
 	// types
 	public:

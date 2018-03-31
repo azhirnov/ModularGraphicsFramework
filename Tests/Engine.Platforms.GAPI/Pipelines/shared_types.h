@@ -1,5 +1,5 @@
 // This is generated file
-// Created at: 2018/03/11 - 09:53:08
+// Created at: 2018/03/31 - 16:59:16
 
 #pragma once
 
@@ -10,14 +10,14 @@ struct BufferAlign_Struct final
 {
 	int4  i4;    // offset: 0, align: 16
 	float2  f2;    // offset: 16, align: 8
-	uint  b1;    // offset: 24, align: 4
+	Bool32  b1;    // offset: 24, align: 4
 	float  _padding0;    // offset: 28, align: 4
 	uint4  u3;    // offset: 32, align: 16
 	int  i1;    // offset: 48, align: 4
 	float  _padding1;    // offset: 52, align: 4
 	float  _padding2;    // offset: 56, align: 4
 	float  _padding3;    // offset: 60, align: 4
-	uint4  b3;    // offset: 64, align: 16
+	Bool32_4  b3;    // offset: 64, align: 16
 	float  f1;    // offset: 80, align: 4
 	float  _padding4;    // offset: 84, align: 4
 	float  _padding5;    // offset: 88, align: 4
@@ -47,12 +47,12 @@ struct BufferAlign_Struct final
 struct DynamicBuffer_Struct final
 {
 	int2  i2;    // offset: 0, align: 8
-	uint  b1;    // offset: 8, align: 4
+	Bool32  b1;    // offset: 8, align: 4
 	float  _padding0;    // offset: 12, align: 4
 	float2  f2;    // offset: 16, align: 8
 	float2  _padding1;    // offset: 24, align: 8
 	int4  i3;    // offset: 32, align: 16
-	uint2  b2;    // offset: 48, align: 8
+	Bool32_2  b2;    // offset: 48, align: 8
 	float2  _padding2;    // offset: 56, align: 8
 
 	DynamicBuffer_Struct ()

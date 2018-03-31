@@ -44,6 +44,13 @@ namespace Platforms
 		baseLayer{baseLayer},	layerCount{layerCount},
 		swizzle{swizzle}
 	{}
+	
+	ImageViewDescriptor::ImageViewDescriptor (const ImageDescriptor &descr) :
+		viewType{ descr.imageType },	format{ descr.format },
+		baseLevel{},					levelCount{ descr.maxLevel.Get() },
+		baseLayer{},					layerCount{ descr.dimension.w },
+		swizzle{ "RGBA"_Swizzle }
+	{}
 
 /*
 =================================================

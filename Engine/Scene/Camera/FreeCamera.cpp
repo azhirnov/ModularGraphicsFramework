@@ -278,7 +278,7 @@ namespace Scene
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( msg->framebuffers.Count() == 1 );
 
-		CameraState_t	state{ _camera.Frustum(), _camera.Transform(), _camera.ViewMatrix(), _camera.ProjMatrix() };
+		CameraState_t	state{ _camera.GetFrustum(), _camera.Transform(), _camera.ViewMatrix(), _camera.ProjMatrix() };
 
 		CHECK_ERR( _SendEvent< SceneMsg::CameraRequestUpdate >({ ArrayCRef<CameraState_t>{ state }, msg->framebuffers, msg->cmdBuilder }) );
 
@@ -303,7 +303,7 @@ namespace Scene
 */
 	bool FreeCamera::_CameraGetState (const Message< SceneMsg::CameraGetState > &msg)
 	{
-		msg->result.Set({{ _camera.Frustum(), _camera.Transform(), _camera.ViewMatrix(), _camera.ProjMatrix() }});
+		msg->result.Set({{ _camera.GetFrustum(), _camera.Transform(), _camera.ViewMatrix(), _camera.ProjMatrix() }});
 		return true;
 	}
 	

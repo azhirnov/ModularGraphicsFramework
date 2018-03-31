@@ -266,8 +266,8 @@ namespace Base
 		{
 			ASSERT( id != UntypedID_t(0) and id != UntypedID_t(-1) );
 
-			ModulePtr	where =	TModID::_ID == (GetModuleID() & TModID::_IDMask) ?  ModulePtr( GlobalSystems()->mainSystem.Ptr() ) :
-								OModID::_ID == (GetModuleID() & OModID::_IDMask) ?  ModulePtr( GlobalSystems()->parallelThread.Ptr() ) :
+			ModulePtr	where =	TModID::_ID == (GetModuleID() & TModID::_IDMask) ?  ModulePtr( GlobalSystems()->mainSystem.ptr() ) :
+								OModID::_ID == (GetModuleID() & OModID::_IDMask) ?  ModulePtr( GlobalSystems()->parallelThread.ptr() ) :
 								null;
 			CHECK_ERR( where );
 

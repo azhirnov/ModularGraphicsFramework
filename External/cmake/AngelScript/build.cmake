@@ -1,21 +1,25 @@
 
-set( ANGELSCRIPT_TARGET "angelscript" )
+set( ANGELSCRIPT_TARGET "AngelScript_Dependencies" )
+set( ANGELSCRIPT_OUTPUT "${CMAKE_BINARY_DIR}/AngelScript_bin" )
 
 ExternalProject_Add( "External.AngelScript"
 		DEPENDS			"External.Download"
 		LIST_SEPARATOR	"${EXTERNAL_LIST_SEPARATOR}"
 		# configure
-		SOURCE_DIR		"${EXTERNALS_PATH}/AngelScript/sdk/angelscript/projects/cmake"
+		SOURCE_DIR		"${CMAKE_CURRENT_SOURCE_DIR}/AngelScript"
 		CMAKE_GENERATOR	"${CMAKE_GENERATOR}"
 		CMAKE_GENERATOR_TOOLSET	"${CMAKE_GENERATOR_TOOLSET}"
 		CMAKE_ARGS		"-DCMAKE_CONFIGURATION_TYPES=${EXTERNAL_CONFIGURATION_TYPES}"
 						"-DCMAKE_SYSTEM_VERSION=${CMAKE_SYSTEM_VERSION}"
 						"-DCMAKE_DEBUG_POSTFIX="
 						"-DCMAKE_RELEASE_POSTFIX="
+						"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${ANGELSCRIPT_OUTPUT}"
+						"-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=${ANGELSCRIPT_OUTPUT}"
+						"-DEXTERNALS_PATH=${EXTERNALS_PATH}"
 						${EXTERNAL_BUILD_TARGET_FLAGS}
 		LOG_CONFIGURE 	1
 		# build
-		BINARY_DIR		"${CMAKE_BINARY_DIR}/AngelScript_bin"
+		BINARY_DIR		"${ANGELSCRIPT_OUTPUT}"
 		BUILD_COMMAND	"${CMAKE_COMMAND}"
 						--build .
 						--target ${ANGELSCRIPT_TARGET}
@@ -34,24 +38,35 @@ set_property( TARGET "External.AngelScript" PROPERTY FOLDER "External" )
 
 set( ANGELSCRIPT_LIB_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}${ANGELSCRIPT_TARGET}${CMAKE_STATIC_LIBRARY_SUFFIX}" )
 
-add_library( "AngelScript" STATIC IMPORTED GLOBAL )
-add_dependencies( "AngelScript" "External.AngelScript" )
-set_property( TARGET "AngelScript" PROPERTY IMPORTED_LOCATION "${BINARY_DIR}/lib/${ANGELSCRIPT_LIB_NAME}" )
+set( ANGELSCRIPT_DEPS "AngelScript" "${ANGELSCRIPT_TARGET}" )
+set( ANGELSCRIPT_DEPS_SRC "" )
+set( ANGELSCRIPT_DEPS_DST "" )
+
 
 if ( ${CONFIGURATION_DEPENDENT_PATH} )
-	add_custom_command (
-		TARGET "External.AngelScript" POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy
-				"${BINARY_DIR}/$<CONFIG>/${ANGELSCRIPT_LIB_NAME}"
-				"${BINARY_DIR}/lib/${ANGELSCRIPT_LIB_NAME}"
-		COMMENT "Copying AngelScript library..."
-	)
+	foreach ( DEP ${ANGELSCRIPT_DEPS} )
+		set( ANGELSCRIPT_DEPS_SRC "${ANGELSCRIPT_DEPS_SRC}" "${BINARY_DIR}/$<CONFIG>/${CMAKE_STATIC_LIBRARY_PREFIX}${DEP}${CMAKE_STATIC_LIBRARY_SUFFIX}" )
+	endforeach ()
 else ()
+	foreach ( DEP ${ANGELSCRIPT_DEPS} )
+		set( ANGELSCRIPT_DEPS_SRC "${ANGELSCRIPT_DEPS_SRC}" "${BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${DEP}${CMAKE_STATIC_LIBRARY_SUFFIX}" )
+	endforeach ()
+endif ()
+
+
+foreach ( SRC ${ANGELSCRIPT_DEPS_SRC} )
+	get_filename_component( DST_NAME "${SRC}" NAME )
+	set( DST "${BINARY_DIR}/lib/${DST_NAME}" )
+	set( ANGELSCRIPT_DEPS_DST "${ANGELSCRIPT_DEPS_DST}" "${DST}" )
+
 	add_custom_command (
 		TARGET "External.AngelScript" POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy
-				"${BINARY_DIR}/${ANGELSCRIPT_LIB_NAME}"
-				"${BINARY_DIR}/lib/${ANGELSCRIPT_LIB_NAME}"
-		COMMENT "Copying AngelScript library..."
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SRC}" "${DST}"
+		COMMENT "Copying ${DST_NAME} library..."
 	)
-endif ()
+endforeach ()
+
+
+add_library( "AngelScript" INTERFACE )
+add_dependencies( "AngelScript" "External.AngelScript" )
+set_property( TARGET "AngelScript" PROPERTY INTERFACE_LINK_LIBRARIES ${ANGELSCRIPT_DEPS_DST} )

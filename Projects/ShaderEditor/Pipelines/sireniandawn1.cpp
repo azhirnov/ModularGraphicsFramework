@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'c:\projects\graphxgenengine\projects\shadereditortools\sireniandawn1.cpp'
-// Created at: 2018/03/11 - 09:54:21
+// Origin file: 'ShaderEditor\Pipelines/SirenianDawn1.ppln.c'
+// Created at: 2018/03/31 - 16:58:16
 
 #include "all_pipelines.h"
 
@@ -285,22 +285,22 @@ const mat2x2 m2 = mat2x2( 0.80000001, 0.60000002, -0.60000002, 0.80000001 );
 
 //---------------------------------
 
-vec3 noised (in vec2 x);
-void mainImage (out vec4 fragColor, in vec2 fragCoord);
-float terrain (in vec2 p);
-float map (in vec3 p);
-vec3 stars (in vec3 p);
-float march (in vec3 ro, in vec3 rd, out float itrc);
-vec3 normal (in vec3 p, in float ds);
-float noise (in vec2 x);
-float bnoise (in vec2 p);
-float fbm (in vec2 p);
 vec3 bump (in vec3 p, in vec3 n, in float ds);
 float curv (in vec3 p, in float w);
+vec3 noised (in vec2 x);
+float terrain (in vec2 p);
+void mainImage (out vec4 fragColor, in vec2 fragCoord);
+float march (in vec3 ro, in vec3 rd, out float itrc);
+float map (in vec3 p);
+vec3 normal (in vec3 p, in float ds);
+float noise (in vec2 x);
+float fbm (in vec2 p);
+float bnoise (in vec2 p);
+vec3 hash33 (in vec3 p);
+vec3 stars (in vec3 p);
 vec3 fog (in vec3 ro, in vec3 rd, in vec3 col, in float ds);
 float linstep (in float mn, in float mx, in float x);
 vec3 scatter (in vec3 ro, in vec3 rd);
-vec3 hash33 (in vec3 p);
 
 //---------------------------------
 

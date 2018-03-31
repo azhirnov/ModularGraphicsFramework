@@ -1,8 +1,9 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "FileAddress.h"
+#include "Engine/STL/Algorithms/FileAddress.h"
 #include "Engine/STL/Math/Vec.h"
 #include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/OS/Base/BaseFileSystem.h"
 
 namespace GX_STL
 {
@@ -83,10 +84,36 @@ namespace GXTypes
 	StringCRef  FileAddress::GetExtension (StringCRef filename)
 	{
 		const usize	name_pos = _SafeInc( _GetNamePos( filename ), filename );
-		const usize ext_pos  = GXMath::Max( name_pos, _SafeInc( _GetExtensionPos( filename ), filename ) );
-		return StringCRef( filename.ptr() + ext_pos, filename.Length() - ext_pos );
+		const usize ext_pos  = _GetExtensionPos( filename ) + 1;
+
+		if ( ext_pos < filename.Length() )
+			return StringCRef( filename.ptr() + ext_pos, filename.Length() - ext_pos );
+
+		return StringCRef();
 	}
 	
+/*
+=================================================
+	GetExtensions
+=================================================
+*/
+	StringCRef  FileAddress::GetExtensions (StringCRef filename)
+	{
+		const usize	name_pos = _SafeInc( _GetNamePos( filename ), filename );
+		usize		ext_pos  = name_pos;
+
+		for (; ext_pos < filename.Length(); ++ext_pos)
+		{
+			if ( filename[ext_pos] == '.' and ext_pos+1 < filename.Length() )
+			{
+				++ext_pos;
+				return StringCRef( filename.ptr() + ext_pos, filename.Length() - ext_pos );
+			}
+		}
+
+		return StringCRef();
+	}
+
 /*
 =================================================
 	GetNameAndExt
@@ -408,6 +435,8 @@ namespace GXTypes
 */
 	String  FileAddress::BuildPath (StringCRef path, StringCRef nameWithExt)
 	{
+		ASSERT( not OS::FileSystem::IsAbsolutePath( nameWithExt ) );
+
 		String	result = path;
 		AddNameToPath( INOUT result, nameWithExt );
 		return result;
@@ -420,6 +449,8 @@ namespace GXTypes
 */
 	String  FileAddress::BuildPath (StringCRef path, StringCRef name, StringCRef ext)
 	{
+		ASSERT( not OS::FileSystem::IsAbsolutePath( name ) );
+
 		String	result = path;
 		AddNameToPath( INOUT result, name );
 		AddExtensionToName( INOUT result, ext );

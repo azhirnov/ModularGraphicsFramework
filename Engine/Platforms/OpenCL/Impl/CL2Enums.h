@@ -52,6 +52,25 @@ namespace PlatformCL
 	MemoryAccess
 =================================================
 */
+	inline CL2MemoryAccess CL2Enum (EMemoryAccess::bits access)
+	{
+		if ( access[EMemoryAccess::GpuRead] and access[EMemoryAccess::GpuWrite] )
+			return (CL2MemoryAccess) cl::CL_MEM_READ_WRITE;
+
+		if ( access[EMemoryAccess::GpuRead] )
+			return (CL2MemoryAccess) cl::CL_MEM_READ_ONLY;
+
+		if ( access[EMemoryAccess::GpuWrite] )
+			return (CL2MemoryAccess) cl::CL_MEM_WRITE_ONLY;
+
+		RETURN_ERR( "unsupported memory access flags!", CL2MemoryAccess() );
+	}
+	
+/*
+=================================================
+	MemoryAccess
+=================================================
+*/
 	inline CL2MemoryAccess CL2Enum (EMemoryAccess::bits access, GpuMsg::MapMemoryToCpu::EMappingFlags flags)
 	{
 		using EMappingFlags = GpuMsg::MapMemoryToCpu::EMappingFlags;

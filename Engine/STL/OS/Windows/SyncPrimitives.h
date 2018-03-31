@@ -23,7 +23,7 @@ namespace OS
 	// Critical Section
 	//
 
-	struct _STL_EXPORT_ CriticalSection final : public Noncopyable
+	struct CriticalSection final : public Noncopyable
 	{
 		friend struct ConditionVariable;
 
@@ -77,14 +77,14 @@ namespace OS
 	// Single Read, Multiple Write (with WinXP support)
 	//
 
-	struct _STL_EXPORT_ ReadWriteSync final : public Noncopyable
+	struct ReadWriteSync final : public Noncopyable
 	{
 		friend struct ConditionVariable;
 
 	// types
 	public:
 		typedef ReadWriteSync				Self;
-		typedef HiddenOSTypeFrom< void* >	Handle_t;	// SRWLOCK
+		typedef DeferredTypeFrom< void* >	Handle_t;	// SRWLOCK
 
 
 	// variables
@@ -136,12 +136,12 @@ namespace OS
 	// Condition Variable
 	//
 
-	struct _STL_EXPORT_ ConditionVariable final : public Noncopyable
+	struct ConditionVariable final : public Noncopyable
 	{
 	// types
 	public:
 		typedef ConditionVariable			Self;
-		typedef HiddenOSTypeFrom< void* >	Handle_t;	// CONDITION_VARIABLE
+		typedef DeferredTypeFrom< void* >	Handle_t;	// CONDITION_VARIABLE
 
 
 	// variables
@@ -176,12 +176,12 @@ namespace OS
 	// Synchronization Event
 	//
 	
-	struct _STL_EXPORT_ SyncEvent final : public Noncopyable
+	struct SyncEvent final : public Noncopyable
 	{
 	// types
 	public:
 		typedef SyncEvent					Self;
-		typedef HiddenOSTypeFrom< void* >	Handle_t;	// HANDLE
+		typedef DeferredTypeFrom< void* >	Handle_t;	// HANDLE
 
 		enum EFlags {
 			MANUAL_RESET		= 0,
@@ -222,12 +222,12 @@ namespace OS
 	// Semaphore
 	//
 
-	struct _STL_EXPORT_ Semaphore final : public Noncopyable
+	struct Semaphore final : public Noncopyable
 	{
 	// types
 	public:
 		typedef Semaphore					Self;
-		typedef HiddenOSTypeFrom< void* >	Handle_t;	// HANDLE
+		typedef DeferredTypeFrom< void* >	Handle_t;	// HANDLE
 
 
 	// variables

@@ -4,6 +4,7 @@
 
 #include "Engine/Platforms/Public/GPU/RenderStateEnums.h"
 #include "Engine/Platforms/Public/GPU/MultiSamples.h"
+#include "Engine/STL/Containers/StaticBitArray.h"
 
 namespace Engine
 {
@@ -251,7 +252,7 @@ namespace Platforms
 		{
 		// types
 			using Self			= MultisampleState;
-			using SampleMask	= StaticArray< uint, 4 >;
+			using SampleMask	= StaticBitArray< 4*32 >;
 
 		// variables
 			SampleMask			sampleMask;
@@ -265,7 +266,7 @@ namespace Platforms
 
 		// methods
 			MultisampleState (GX_DEFCTOR) :
-				sampleMask{ UMax, UMax, UMax, UMax },
+				sampleMask{ SampleMask{}.SetAll() },
 				samples( 1 ),				minSampleShading(),		sampleShading( false ),
 				alphaToCoverage( false ),	alphaToOne( false )
 			{}

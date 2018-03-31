@@ -89,7 +89,6 @@ namespace GXTypes
 	public:
 		forceinline SharedPointer (GX_DEFCTOR)
 		{
-			STATIC_ASSERT(( CompileTime::IsBaseOf< B, T > ));
 		}
 
 		forceinline SharedPointer (NullPtr_t)
@@ -97,6 +96,7 @@ namespace GXTypes
 
 		forceinline SharedPointer (T *ptr) : _ptr(ptr)
 		{
+			STATIC_ASSERT(( CompileTime::IsBaseOf< B, T > ));
 			_Inc();
 		}
 

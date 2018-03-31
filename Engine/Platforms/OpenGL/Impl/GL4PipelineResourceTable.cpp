@@ -31,9 +31,11 @@ namespace PlatformGL
 										>;
 
 		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GLPipelineResourceTableApply
-										> >
-										::Append< LayoutMsgList_t >;
+											GpuMsg::GLPipelineResourceTableApply,
+											GpuMsg::PipelineAttachBuffer,
+											GpuMsg::PipelineAttachImage,
+											GpuMsg::PipelineAttachTexture
+										> >::Append< LayoutMsgList_t >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
 
@@ -63,11 +65,28 @@ namespace PlatformGL
 		{
 			GLenum		target		= 0;
 			GLuint		bufferID	= 0;
+			GLintptr	offset		= 0;
+			GLsizeiptr	size		= 0;
 		};
 
 		using ResourceDescr_t		= Union< TextureDescr, ImageDescr, BufferDescr >;
 		using ResourceDescrArray_t	= Array< ResourceDescr_t >;
 		
+		struct BufferAttachment
+		{
+			BytesUL		offset;
+			BytesUL		size;
+		};
+
+		struct ImageAttachment
+		{
+			ImageViewDescriptor		descr;
+			EImageLayout::type		layout	= Uninitialized;
+		};
+
+		using AttachmentInfo_t		= Union< BufferAttachment, ImageAttachment >;
+		using AttachmentInfoMap_t	= Map< const void*, AttachmentInfo_t >;
+
 		struct _CreateResourceDescriptor_Func;
 		struct _ApplyDescriptors_Func;
 
@@ -80,6 +99,7 @@ namespace PlatformGL
 
 	// variables
 	private:
+		AttachmentInfoMap_t		_attachmentInfo;
 		ResourceDescrArray_t	_resources;
 		ModulePtr				_layout;
 
@@ -97,7 +117,9 @@ namespace PlatformGL
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-
+		bool _PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &);
+		bool _PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &);
+		bool _PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &);
 		bool _GLPipelineResourceTableApply (const Message< GpuMsg::GLPipelineResourceTableApply > &);
 
 	private:
@@ -134,6 +156,9 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GetGLPrivateClasses );
+		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_PipelineAttachImage );
+		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_PipelineAttachBuffer );
+		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_PipelineAttachTexture );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GLPipelineResourceTableApply );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
@@ -202,6 +227,8 @@ namespace PlatformGL
 
 		_DestroyResourceTable();
 
+		_attachmentInfo.Clear();
+
 		return Module::_Delete_Impl( msg );
 	}
 	
@@ -240,7 +267,7 @@ namespace PlatformGL
 		void operator () (const BufferDescr &buf) const
 		{
 			if ( buf.bufferID != UMax ) {
-				GL_CALL( glBindBufferBase( buf.target, buf.binding, buf.bufferID ) );
+				GL_CALL( glBindBufferRange( buf.target, buf.binding, buf.bufferID, buf.offset, buf.size ) );
 			} else {
 				CHECK( pushConstants.bufferID != 0 );
 				GL_CALL( glBindBufferRange( buf.target, buf.binding, pushConstants.bufferID, pushConstants.offset, pushConstants.size ) );
@@ -286,6 +313,70 @@ namespace PlatformGL
 		return true;
 	}
 	
+/*
+=================================================
+	_PipelineAttachImage
+=================================================
+*/
+	bool GL4PipelineResourceTable::_PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &msg)
+	{
+		CHECK_ERR( msg->newModule );
+
+		ImageAttachment	img;
+		img.descr	= msg->descr;
+		img.layout	= msg->layout;
+
+		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		
+		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _SetState( EState::Initial ) );
+
+		return true;
+	}
+	
+/*
+=================================================
+	_PipelineAttachTexture
+=================================================
+*/
+	bool GL4PipelineResourceTable::_PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &msg)
+	{
+		CHECK_ERR( msg->newModule and msg->sampler );
+
+		ImageAttachment	img;
+		img.descr	= msg->descr;
+		img.layout	= msg->layout;
+
+		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		
+		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _Attach( msg->name + ".sampler", msg->sampler, false ) );
+		CHECK( _SetState( EState::Initial ) );
+
+		return true;
+	}
+
+/*
+=================================================
+	_PipelineAttachBuffer
+=================================================
+*/
+	bool GL4PipelineResourceTable::_PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &msg)
+	{
+		CHECK_ERR( msg->newModule );
+
+		BufferAttachment	buf;
+		buf.offset	= msg->offset;
+		buf.size	= msg->size;
+
+		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{buf} );
+		
+		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _SetState( EState::Initial ) );
+
+		return true;
+	}
+
 /*
 =================================================
 	_DetachModule
@@ -382,23 +473,41 @@ namespace PlatformGL
 			CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT tex_mod ) );
 			CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT samp_mod ) );
 
-			Message< GpuMsg::GetGLImageID >			req_image;
 			Message< GpuMsg::GetGLSamplerID >		req_sampler;
 			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
 
 			// TODO: check result
-			self.SendTo( tex_mod, req_image );
 			self.SendTo( tex_mod, req_img_descr );
 			self.SendTo( samp_mod, req_sampler );
 
 			CHECK( req_img_descr->result->imageType == tex.textureType );
 			CHECK( req_img_descr->result->usage[ EImageUsage::Sampled ] );
 			CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( req_img_descr->result->format ) ) );
+			
+			// find attachment info
+			GLuint							img_view = 0;
+			AttachmentInfoMap_t::iterator	info;
 
+			if ( self._attachmentInfo.Find( tex_mod.RawPtr(), OUT info ) )
+			{
+				Message< GpuMsg::CreateGLImageView >	req_imageview{ info->second.Get<ImageAttachment>().descr };
+				self.SendTo( tex_mod, req_imageview );
+
+				img_view = req_imageview->result.Get( 0 );
+			}
+			else
+			{
+				Message< GpuMsg::GetGLImageID >		req_image;
+				self.SendTo( tex_mod, req_image );
+
+				img_view = req_image->result.Get( 0 );
+			}
+			
+			// create descriptor
 			TextureDescr	descr;
 			descr.target		= GL4Enum( tex.textureType );
 			descr.sampID		= req_sampler->result.Get(0);
-			descr.texID			= req_image->result.Get(0);
+			descr.texID			= img_view;
 			descr.binding		= tex.binding;
 			descr.stageFlags	= tex.stageFlags;
 
@@ -416,19 +525,36 @@ namespace PlatformGL
 			ModulePtr	img_mod;
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT img_mod ) );
 
-			Message< GpuMsg::GetGLImageID >			req_image;
 			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
-
-			self.SendTo( img_mod, req_image );	// TODO: check result
 			self.SendTo( img_mod, req_img_descr );
 
 			CHECK( req_img_descr->result->usage[ EImageUsage::Storage ] );
+			
+			// find attachment info
+			GLuint							img_view = 0;
+			AttachmentInfoMap_t::iterator	info;
 
+			if ( self._attachmentInfo.Find( img_mod.RawPtr(), OUT info ) )
+			{
+				Message< GpuMsg::CreateGLImageView >	req_imageview{ info->second.Get<ImageAttachment>().descr };
+				self.SendTo( img_mod, req_imageview );
+
+				img_view = req_imageview->result.Get( 0 );
+			}
+			else
+			{
+				Message< GpuMsg::GetGLImageID >		req_image;
+				self.SendTo( img_mod, req_image );
+
+				img_view = req_image->result.Get( 0 );
+			}
+
+			// create descriptor
 			ImageDescr			descr;
 			descr.format		= GL4Enum( img.format );
-			descr.level			= 0;	// TODO
+			descr.level			= 0;
 			descr.layer			= UMax;
-			descr.imgID			= req_image->result.Get(0);
+			descr.imgID			= img_view;
 			descr.binding		= img.binding;
 			descr.stageFlags	= img.stageFlags;
 			descr.access		= EShaderMemoryModel::HasReadWriteAccess( img.access ) ? GL_READ_WRITE :
@@ -456,14 +582,33 @@ namespace PlatformGL
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			CHECK( req_descr->result->size == BytesUL(buf.size) );
 			CHECK( req_descr->result->usage[ EBufferUsage::Uniform ] );
 			
+			// find attachment info
+			AttachmentInfoMap_t::iterator	info;
+			BytesUL							offset;
+
+			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
+			{
+				auto const&		buf_info = info->second.Get<BufferAttachment>();
+
+				offset = buf_info.offset;
+
+				CHECK_ERR( buf_info.size == BytesUL(buf.size) );
+			}
+			else
+			{
+				CHECK_ERR( req_descr->result->size >= BytesUL(buf.size) );
+			}
+			
+			// create descriptor
 			BufferDescr		descr;
 			descr.bufferID		= req_buffer->result.Get(0);
 			descr.target		= GL_UNIFORM_BUFFER;
 			descr.binding		= buf.binding;
 			descr.stageFlags	= buf.stageFlags;
+			descr.offset		= GLintptr(offset);
+			descr.size			= GLsizeiptr(buf.size);
 
 			resources.PushBack(ResourceDescr_t( descr ));
 			return true;
@@ -486,16 +631,37 @@ namespace PlatformGL
 			self.SendTo( buf_mod, req_buffer );
 			self.SendTo( buf_mod, req_descr );
 
-			CHECK( (req_descr->result->size >= buf.staticSize) and
-					(buf.arrayStride == 0 or
-					(req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
 			CHECK( req_descr->result->usage[ EBufferUsage::Storage ] );
+			
+			// find attachment info
+			AttachmentInfoMap_t::iterator	info;
+			BytesUL							offset;
+			BytesUL							size	= req_descr->result->size;
 
+			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
+			{
+				auto const&		buf_info = info->second.Get<BufferAttachment>();
+
+				offset	= buf_info.offset;
+				size	= buf_info.size;
+				
+				CHECK_ERR(	(size >= buf.staticSize) and
+							(buf.arrayStride == 0 or (size - buf.staticSize) % buf.arrayStride == 0) );
+			}
+			else
+			{
+				CHECK_ERR(	(req_descr->result->size >= buf.staticSize) and
+							(buf.arrayStride == 0 or (req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
+			}
+			
+			// create descriptor
 			BufferDescr		descr;
 			descr.bufferID		= req_buffer->result.Get(0);
 			descr.target		= GL_SHADER_STORAGE_BUFFER;
 			descr.binding		= buf.binding;
 			descr.stageFlags	= buf.stageFlags;
+			descr.offset		= GLintptr(offset);
+			descr.size			= GLsizeiptr(size);
 
 			resources.PushBack(ResourceDescr_t( descr ));
 			return true;
@@ -517,6 +683,8 @@ namespace PlatformGL
 			descr.target		= GL_UNIFORM_BUFFER;
 			descr.binding		= pcb.binding;
 			descr.stageFlags	= pcb.stageFlags;
+			//descr.offset		= 
+			//descr.size		=
 
 			resources.PushBack(ResourceDescr_t( descr ));
 			return true;

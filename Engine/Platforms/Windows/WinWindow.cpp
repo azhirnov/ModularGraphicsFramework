@@ -51,7 +51,7 @@ namespace PlatformWin
 											OSMsg::OnWinWindowRawMessage
 										>;
 		
-		using HWND_t				= OS::HiddenOSTypeFrom<void*>;
+		using HWND_t				= DeferredTypeFrom<void*>;
 
 		using EVisibility			= CreateInfo::Window::EVisibility;
 		using EWindowFlags			= CreateInfo::Window::EWindowFlags;

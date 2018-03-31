@@ -48,8 +48,8 @@ namespace Platforms
 											GpuMsg::ThreadBeginFrame,
 											GpuMsg::ThreadEndFrame,
 											GpuMsg::DeviceCreated,
-											GpuMsg::DeviceBeforeDestroy
-											// TODO: device lost event
+											GpuMsg::DeviceBeforeDestroy,
+											GpuMsg::DeviceLost
 										> >;
 
 		using AsyncCommands_t		= PlatformTools::AsyncCommandsEmulator;
@@ -407,6 +407,9 @@ namespace Platforms
 		Message< OSMsg::WindowGetDescriptor >	req_descr;
 		SendTo( _window, req_descr );
 
+		if ( _settings.colorFmt == EPixelFormat::Unknown )
+			_settings.colorFmt = EPixelFormat::RGBA8_UNorm;
+
 		CHECK_ERR( WindowHelper::GetWindowHandle( _window,
 						LAMBDA( this ) (const WindowHelper::WinAPIWindow &data)
 						{
@@ -589,9 +592,10 @@ namespace Platforms
 		);
 
 		// wait for signal
-		FOR( i, cmd.waitSemaphores )
+		for (auto& sem : Range(cmd.waitSemaphores))
 		{
-			Message< GpuMsg::WaitGLSemaphore >	wait{ cmd.waitSemaphores[i].first };
+			ASSERT(sem.second == EPipelineStage::AllCommands );
+			Message< GpuMsg::WaitGLSemaphore >	wait{ sem.first };
 			CHECK( _syncManager->Send( wait ) );
 		}
 
@@ -606,9 +610,9 @@ namespace Platforms
 		}
 
 		// enqueue semaphores
-		FOR( i, cmd.signalSemaphores )
+		for (auto& sem : Range(cmd.signalSemaphores))
 		{
-			Message< GpuMsg::GLSemaphoreEnqueue >	sem_sync{ cmd.signalSemaphores[i] };
+			Message< GpuMsg::GLSemaphoreEnqueue >	sem_sync{ sem };
 			CHECK( _syncManager->Send( sem_sync ) );
 		}
 		return true;

@@ -13,8 +13,8 @@ namespace vk
 #	pragma warning (disable : 4100)	// 'identifier' : unreferenced formal parameter
 # endif
 
-	VK1_WIN_FUNCTIONS( VULKAN1_DEFFUNC )
-	VK1_WIN_FUNCTIONS( VULKAN1_INITFUNC )
+	VK1_OS_FUNCTIONS( VULKAN1_DEFFUNC )
+	VK1_OS_FUNCTIONS( VULKAN1_INITFUNC )
 	
 # ifdef COMPILER_MSVC
 #	pragma warning (pop)
@@ -35,7 +35,7 @@ namespace vk
 		CHECK_ERR( instance != null );
 		CHECK_ERR( Vk1_LoadLibrary() );
 		
-		VK1_WIN_FUNCTIONS( VULKAN1_GETFUNC )
+		VK1_OS_FUNCTIONS( VULKAN1_GETFUNC )
 
 		/*if ( missing > 0 )
 		{
@@ -54,7 +54,7 @@ namespace vk
 */
 	void Vk1_PlatformDelete ()
 	{
-		VK1_WIN_FUNCTIONS( VULKAN1_ZEROFUNC )
+		VK1_OS_FUNCTIONS( VULKAN1_ZEROFUNC )
 		
 		//Vk1_UnloadLibrary();
 	}

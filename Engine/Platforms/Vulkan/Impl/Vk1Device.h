@@ -193,11 +193,11 @@ namespace PlatformVK
 		bool IsDebugCallbackCreated ()	const						{ return _debugCallback	 != VK_NULL_HANDLE; }
 		bool IsQueueCreated ()			const						{ return _queue			 != VK_NULL_HANDLE; }
 
-		vk::VkInstance			GetInstance ()				const	{ return _instance; }
-		vk::VkPhysicalDevice	GetPhyiscalDevice ()		const	{ return _physicalDevice; }
-		vk::VkDevice			GetLogicalDevice ()			const	{ return _logicalDevice; }
-		vk::VkSurfaceKHR		GetSurface ()				const	{ return _surface; }
-		vk::VkSwapchainKHR		GetSwapchain ()				const	{ return _swapchain; }
+		vk::VkInstance			GetInstance ()				const	{ ASSERT( IsInstanceCreated() );  return _instance; }
+		vk::VkPhysicalDevice	GetPhyiscalDevice ()		const	{ ASSERT( HasPhyiscalDevice() );  return _physicalDevice; }
+		vk::VkDevice			GetLogicalDevice ()			const	{ ASSERT( IsDeviceCreated() );    return _logicalDevice; }
+		vk::VkSurfaceKHR		GetSurface ()				const	{ ASSERT( IsSurfaceCreated() );   return _surface; }
+		vk::VkSwapchainKHR		GetSwapchain ()				const	{ ASSERT( IsSwapchainCreated() ); return _swapchain; }
 		vk::VkFormat			GetColorFormat ()			const	{ return _colorFormat; }
 		vk::VkColorSpaceKHR		GetColorSpace ()			const	{ return _colorSpace; }
 		vk::VkFormat			GetDepthStencilFormat ()	const	{ return _depthStencilFormat; }
@@ -209,7 +209,7 @@ namespace PlatformVK
 
 		uint2 const&			GetSurfaceSize ()			const	{ return _surfaceSize; }
 
-		vk::VkQueue				GetQueue ()					const	{ return _queue; }
+		vk::VkQueue				GetQueue ()					const	{ ASSERT( IsQueueCreated() );  return _queue; }
 		vk::uint32_t			GetQueueIndex ()			const	{ return _queueIndex; }
 		EQueueFamily::bits		GetQueueFamily ()			const	{ return _queueFamily; }
 		

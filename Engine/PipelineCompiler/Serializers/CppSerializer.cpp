@@ -1262,8 +1262,8 @@ namespace PipelineCompiler
 		// TODO: use Bool type...
 		if ( typeName.StartsWith("bool") )
 		{
-			if ( typeName.Length() == 4 )	type_name = "uint";								else
-			if ( typeName.Length() == 5 )	type_name = "uint"_str << typeName.SubString( 4 );
+			if ( typeName.Length() == 4 )	type_name = "Bool32";								else
+			if ( typeName.Length() == 5 )	type_name = "Bool32_"_str << typeName.SubString( 4 );
 		}
 
 		String	str;

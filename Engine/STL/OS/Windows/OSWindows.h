@@ -18,13 +18,6 @@ namespace GX_STL
 namespace OS
 {
 	
-	//
-	// Hidden OS Type from same type
-	//
-
-	template <typename T, bool WithDestructor = false>
-	using HiddenOSTypeFrom = DeferredType< sizeof(T), alignof(T), WithDestructor >;
-
 }	// OS
 }	// GX_STL
 

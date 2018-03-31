@@ -1,5 +1,5 @@
 // This is generated file
-// Created at: 2018/03/11 - 09:59:53
+// Created at: 2018/03/28 - 00:42:49
 
 #pragma once
 
@@ -14,18 +14,6 @@ struct UB final
 	{
 		STATIC_ASSERT( sizeof(UB) == 16 );
 		STATIC_ASSERT( (offsetof( UB, color ) == 0) and (sizeof( color ) == 16) );
-	}
-};
-
-// Packing: Std140
-struct SSBO final
-{
-	float4  data;    // offset: 0, align: 16
-
-	SSBO ()
-	{
-		STATIC_ASSERT( sizeof(SSBO) == 16 );
-		STATIC_ASSERT( (offsetof( SSBO, data ) == 0) and (sizeof( data ) == 16) );
 	}
 };
 

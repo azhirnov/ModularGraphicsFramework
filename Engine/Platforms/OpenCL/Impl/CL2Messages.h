@@ -39,6 +39,21 @@ namespace GpuMsg
 	{
 		Out< cl::cl_mem >			result;
 	};
+
+
+	//
+	// Create Sub Buffer
+	//
+	struct CreateCLSubBuffer
+	{
+	// variables
+		BytesUL					offset;
+		BytesUL					size;
+		Out< cl::cl_mem >		result;
+
+	// methods
+		CreateCLSubBuffer (BytesUL off, BytesUL size) : offset{off}, size{size} {};
+	};
 	
 
 	//

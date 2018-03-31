@@ -4,9 +4,9 @@
 
 #ifdef PLATFORM_BASE_POSIX
 
+#include "Engine/STL/OS/Posix/PosixHeader.h"
 #include "Engine/STL/OS/Posix/RandDevice.h"
 #include "Engine/STL/Math/BinaryMath.h"
-#include "Engine/STL/OS/Posix/PosixHeader.h"
 
 namespace GX_STL
 {

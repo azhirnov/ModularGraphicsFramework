@@ -55,7 +55,7 @@ namespace GXTypes
 	// Aligned Allocator
 	//
 	
-# ifdef PLATFORM_ANDROID
+# if 1 //def PLATFORM_ANDROID
 //#	pragma message ("aligned allocation changed to default")
 	
 	template <typename T, usize AlignInBytes = 16>

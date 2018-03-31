@@ -19,8 +19,8 @@ namespace PlatformSW
 	{
 	// types
 	private:
-		using HWND_t	= OS::HiddenOSTypeFrom<void*>;
-		using HDC_t		= OS::HiddenOSTypeFrom<void*>;
+		using HWND_t	= DeferredTypeFrom<void*>;
+		using HDC_t		= DeferredTypeFrom<void*>;
 
 
 	// variables

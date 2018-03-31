@@ -19,7 +19,7 @@ namespace OS
 	// Windows File System
 	//
 
-	struct _STL_EXPORT_ WindowsFileSystem : public Noninstancable
+	struct WindowsFileSystem : public Noninstancable
 	{
 	public:
 		static bool DeleteFile (StringCRef filename);
@@ -28,7 +28,8 @@ namespace OS
 		static bool GetCurrentDirectory (OUT String &dir);
 
 		static bool IsFileExist (StringCRef filename);
-		static bool IsDirectoryExist (StringCRef dirname);
+		static bool IsDirectoryExist (StringCRef folder);
+		static bool IsAbsolutePath (StringCRef path);
 
 		static bool NewDirectory (StringCRef dir);			// create directory in current directory
 		//static bool CreateDirectories (StringCRef path);	// create directories for path

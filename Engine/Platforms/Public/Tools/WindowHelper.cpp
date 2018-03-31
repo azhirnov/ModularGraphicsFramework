@@ -3,16 +3,19 @@
 #include "Engine/Platforms/Public/Tools/WindowHelper.h"
 
 #ifdef PLATFORM_WINDOWS
-#include "Engine/Platforms/Windows/WinMessages.h"
-#include "Engine/STL/OS/Windows/WinHeader.h"
+#	include "Engine/Platforms/Windows/WinMessages.h"
+#	include "Engine/STL/OS/Windows/WinHeader.h"
 #endif
 
 #ifdef PLATFORM_SDL
-#include "Engine/Platforms/SDL/SDLMessages.h"
-#include "SDL2/include/SDL_syswm.h"
-#undef FindWindow
+#	include "Engine/Platforms/SDL/SDLMessages.h"
+#	include "SDL2/include/SDL_syswm.h"
+#	undef FindWindow
 #endif
 
+#ifdef PLATFORM_ANDROID
+#	include <android/native_window.h>
+#endif
 
 namespace Engine
 {
@@ -128,7 +131,7 @@ namespace PlatformTools
 */
 	ModulePtr  WindowHelper::FindWindow (GlobalSystemsRef gs)
 	{
-		return FindWindowInAttachment( gs->parallelThread.Ptr() );
+		return FindWindowInAttachment( gs->parallelThread.ptr() );
 	}
 	
 /*
@@ -149,7 +152,10 @@ namespace PlatformTools
 
 		return mod->GetModuleByMsgEvent< MsgList_t, EventList_t >();
 	}
+//-----------------------------------------------------------------------------
 
+	
+#ifdef PLATFORM_WINDOWS
 /*
 =================================================
 	WinAPIWindow
@@ -158,7 +164,7 @@ namespace PlatformTools
 	WindowHelper::WinAPIWindow::WinAPIWindow (void *inst, void *wnd) :
 		window{Cast<HWND>(wnd)}, instance{Cast<HMODULE>(inst)}
 	{}
-	
+
 /*
 =================================================
 	GetWindowHandle
@@ -185,7 +191,6 @@ namespace PlatformTools
 		}
 	#endif
 		
-	#ifdef PLATFORM_WINDOWS
 		using WinMsgList_t	= CompileTime::TypeListFrom< Message<OSMsg::GetWinWindowHandle> >;
 		
 		if ( window->GetSupportedMessages().HasAllTypes< WinMsgList_t >() )
@@ -198,11 +203,55 @@ namespace PlatformTools
 			CHECK_ERR( func( WinAPIWindow( inst, req_wnd->result->Get<HWND>() ) ) );
 			return true;
 		}
-	#endif
 
 		return false;
 	}
 
+#endif	// PLATFORM_WINDOWS
+//-----------------------------------------------------------------------------
+	
+
+#ifdef PLATFORM_ANDROID	
+/*
+=================================================
+	AndroidWindow
+=================================================
+*/
+	WindowHelper::AndroidWindow::AndroidWindow (void *wnd) :
+		window{Cast<ANativeWindow*>(wnd)}
+	{}
+
+/*
+=================================================
+	GetWindowHandle
+=================================================
+*/
+	bool WindowHelper::GetWindowHandle (const ModulePtr &window, const Function<bool (const AndroidWindow &)> &func)
+	{
+	#ifdef PLATFORM_SDL
+		using SDLMsgList_t	= CompileTime::TypeListFrom< Message<OSMsg::GetSDLWindowHandle> >;
+
+		if ( window->GetSupportedMessages().HasAllTypes< SDLMsgList_t >() )
+		{
+			Message<OSMsg::GetSDLWindowHandle>	req_wnd;
+			CHECK( window->Send( req_wnd ) );
+
+			SDL_SysWMinfo	info = {};
+			SDL_VERSION( &info.version );
+
+			CHECK_ERR( SDL_GetWindowWMInfo( *req_wnd->result, OUT &info ) == SDL_TRUE );
+			CHECK_ERR( info.subsystem == SDL_SYSWM_ANDROID );
+
+			CHECK_ERR( func( AndroidWindow( info.info.android.window ) ) );
+			return true;
+		}
+	#endif
+		
+		return false;
+	}
+
+#endif	// PLATFORM_ANDROID
+//-----------------------------------------------------------------------------
 		
 }	// PlatformTools
 }	// Engine

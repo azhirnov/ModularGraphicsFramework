@@ -23,7 +23,7 @@ namespace GXTypes
 	// Static Reference Counted Object
 	//
 
-	class _STL_EXPORT_ StaticRefCountedObject : public RefCountedObject<>
+	class StaticRefCountedObject : public RefCountedObject<>
 	{
 	// types
 	private:
@@ -100,7 +100,7 @@ namespace GXTypes
 
 	private:
 		// use 'New' function
-		forceinline void * operator new (usize size) noexcept
+		forceinline void * operator new (size_t size) noexcept
 		{
 			return ::operator new( size );
 		}

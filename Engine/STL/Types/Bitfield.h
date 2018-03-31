@@ -218,6 +218,16 @@ namespace GXTypes
 
 	template <typename EnumType>
 	using EnumBitfield = Bitfield< EnumType::_Count, typename EnumType::type >;
+	
+	
+	template <usize B, typename I>
+	CHECKRES inline constexpr Bitfield<B,I>  operator | (const I lhs, const Bitfield<B,I> &rhs)	{ return Bitfield<B,I>(lhs) | rhs; }
+
+	template <usize B, typename I>
+	CHECKRES inline constexpr Bitfield<B,I>  operator & (const I lhs, const Bitfield<B,I> &rhs)	{ return Bitfield<B,I>(lhs) & rhs; }
+
+	template <usize B, typename I>
+	CHECKRES inline constexpr Bitfield<B,I>  operator ^ (const I lhs, const Bitfield<B,I> &rhs)	{ return Bitfield<B,I>(lhs) ^ rhs; }
 
 	
 	template <usize B, typename IT>

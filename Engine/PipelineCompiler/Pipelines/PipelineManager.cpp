@@ -218,13 +218,39 @@ namespace PipelineCompiler
 
 /*
 =================================================
-	Convert
+	ConvertAll
 ----
 	convert all pipelines to c++ code with glsl shaders,
 	spirv binary and other.
 =================================================
 */
-	bool PipelineManager::Convert (StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &constCfg) const
+	bool PipelineManager::ConvertAll (StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &cfg) const
+	{
+		return Convert( _pipelines, filename, ser, cfg );
+	}
+	
+/*
+=================================================
+	Convert
+=================================================
+*/
+	bool PipelineManager::Convert (ArrayCRef<BasePipelinePtr> pipelines, StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &cfg) const
+	{
+		return _Convert( pipelines, filename, ser, cfg );
+	}
+	
+	bool PipelineManager::Convert (ArrayCRef<BasePipeline *> pipelines, StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &cfg) const
+	{
+		return _Convert( pipelines, filename, ser, cfg );
+	}
+	
+/*
+=================================================
+	_Convert
+=================================================
+*/
+	template <typename PplnCollection>
+	bool PipelineManager::_Convert (const PplnCollection &pipelines, StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &constCfg) const
 	{
 		ConverterConfig		cfg			= constCfg;
 		const String		path		= FileAddress::GetPath( filename );
@@ -240,9 +266,9 @@ namespace PipelineCompiler
 		
 
 		// prepare
-		FOR( i, _pipelines )
+		FOR( i, pipelines )
 		{
-			const auto&		pp = _pipelines[i];
+			const auto&		pp = pipelines[i];
 
 			CHECK_ERR( pp->Prepare( cfg ) );
 
@@ -260,7 +286,7 @@ namespace PipelineCompiler
 			}
 		}
 
-		CHECK_ERR( _ProcessSharedTypes( path, ser, INOUT cfg ) );
+		CHECK_ERR( _ProcessSharedTypes( pipelines, path, ser, INOUT cfg ) );
 
 
 		String	includes;
@@ -280,9 +306,9 @@ namespace PipelineCompiler
 
 
 		// convert
-		FOR( i, _pipelines )
+		FOR( i, pipelines )
 		{
-			const auto&		pp		= _pipelines[i];
+			const auto&		pp		= pipelines[i];
 			const String	fname	= FileAddress::BuildPath( path, pp->Name(), ser->GetSourceFileExt() );
 
 			if ( cfg.errorIfFileExist ) {
@@ -379,7 +405,8 @@ namespace PipelineCompiler
 	_ProcessSharedTypes
 =================================================
 */
-	bool PipelineManager::_ProcessSharedTypes (StringCRef path, Ptr<ISerializer> ser, INOUT ConverterConfig &cfg) const
+	template <typename PplnCollection>
+	bool PipelineManager::_ProcessSharedTypes (const PplnCollection &pipelines, StringCRef path, Ptr<ISerializer> ser, INOUT ConverterConfig &cfg) const
 	{
 		// update offsets by packing
 		CHECK_ERR( BasePipeline::_CalculateOffsets( _structTypes ) );
@@ -397,22 +424,22 @@ namespace PipelineCompiler
 		{
 			auto&	textures	= _bindings[ BindableTypes::IndexOf<TextureUniform> ];
 			FOR( i, textures ) {
-				textures[i].second.Get<TextureUniform>().location.index = i;
+				textures[i].second.template Get<TextureUniform>().location.index = i;
 			}
 
 			auto&	images		= _bindings[ BindableTypes::IndexOf<ImageUniform> ];
 			FOR( i, images ) {
-				images[i].second.Get<ImageUniform>().location.index = i;
+				images[i].second.template Get<ImageUniform>().location.index = i;
 			}
 
 			auto&	uniform_buffers	= _bindings[ BindableTypes::IndexOf<UniformBuffer> ];
 			FOR( i, uniform_buffers ) {
-				uniform_buffers[i].second.Get<UniformBuffer>().location.index = i;
+				uniform_buffers[i].second.template Get<UniformBuffer>().location.index = i;
 			}
 
 			auto&	storage_buffers = _bindings[ BindableTypes::IndexOf<StorageBuffer> ];
 			FOR( i, storage_buffers ) {
-				storage_buffers[i].second.Get<StorageBuffer>().location.index = i;
+				storage_buffers[i].second.template Get<StorageBuffer>().location.index = i;
 			}
 		}
 
@@ -421,9 +448,9 @@ namespace PipelineCompiler
 			usize	replaced	= 0;
 			usize	skiped		= 0;
 
-			FOR( i, _pipelines )
+			FOR( i, pipelines )
 			{
-				auto&	pp = _pipelines[i];
+				auto&	pp = pipelines[i];
 
 				// replace struct types
 				FOR( j, pp->_structTypes )

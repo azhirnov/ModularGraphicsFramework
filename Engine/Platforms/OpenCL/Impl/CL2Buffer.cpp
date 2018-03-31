@@ -40,6 +40,7 @@ namespace PlatformCL
 											GpuMsg::GetBufferDescriptor,
 											GpuMsg::SetBufferDescriptor,
 											GpuMsg::GetCLBufferID,
+											GpuMsg::CreateCLSubBuffer,
 											GpuMsg::GpuMemoryRegionChanged
 										> >::Append< ForwardToMem_t >;
 
@@ -47,6 +48,8 @@ namespace PlatformCL
 		
 		using MemoryMsg_t			= MessageListFrom< GpuMsg::GetGpuMemoryDescriptor >;
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
+
+		using SubBufferMap_t		= HashMap< Pair<BytesUL, BytesUL>, cl::cl_mem >;
 
 
 	// constants
@@ -60,6 +63,7 @@ namespace PlatformCL
 		BufferDescriptor		_descr;
 		ModulePtr				_memObj;
 		cl::cl_mem				_bufferId;
+		SubBufferMap_t			_subBuffers;
 		
 		EGpuMemory::bits		_memFlags;		// -|-- this flags is requirements for memory obj, don't use it anywhere
 		EMemoryAccess::bits		_memAccess;		// -|
@@ -82,6 +86,7 @@ namespace PlatformCL
 		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
 		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
 		bool _GetCLBufferID (const Message< GpuMsg::GetCLBufferID > &);
+		bool _CreateCLSubBuffer (const Message< GpuMsg::CreateCLSubBuffer > &);
 		bool _SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &);
 		bool _GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
@@ -134,6 +139,7 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL2Buffer::_Delete );
 		_SubscribeOnMsg( this, &CL2Buffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetCLBufferID );
+		_SubscribeOnMsg( this, &CL2Buffer::_CreateCLSubBuffer );
 		_SubscribeOnMsg( this, &CL2Buffer::_SetBufferDescriptor );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetBufferDescriptor );
 		_SubscribeOnMsg( this, &CL2Buffer::_GetDeviceInfo );
@@ -303,6 +309,46 @@ namespace PlatformCL
 	
 /*
 =================================================
+	_GetCLBufferID
+=================================================
+*/
+	bool CL2Buffer::_CreateCLSubBuffer (const Message< GpuMsg::CreateCLSubBuffer > &msg)
+	{
+		using namespace cl;
+
+		CHECK_ERR( _IsCreated() and _isBindedToMemory );
+		CHECK_ERR( msg->offset < _descr.size and msg->offset + msg->size <= _descr.size );
+
+		if ( msg->offset == BytesUL(0) and msg->size == _descr.size )
+		{
+			msg->result.Set( _bufferId );
+			return true;
+		}
+
+		SubBufferMap_t::iterator		iter;
+		const SubBufferMap_t::Key_t		key {msg->offset, msg->size};
+
+		if ( not _subBuffers.Find( key, OUT iter ) )
+		{
+			struct cl_buffer_region {
+				size_t origin;
+				size_t size;
+			};
+
+			cl_buffer_region	info	= { size_t(msg->offset), size_t(msg->size) };
+			cl_int				cl_err	= 0;
+			cl_mem				sub_buf = null;
+			CL_CALL( (sub_buf = clCreateSubBuffer( _bufferId, CL2Enum( _memAccess ), CL_BUFFER_CREATE_TYPE_REGION, &info, OUT &cl_err )), cl_err );
+
+			iter = _subBuffers.Add( key, sub_buf );
+		}
+
+		msg->result.Set( iter->second );
+		return true;
+	}
+
+/*
+=================================================
 	_OnMemoryBindingChanged
 =================================================
 */
@@ -369,6 +415,11 @@ namespace PlatformCL
 	{
 		using namespace cl;
 		
+		FOR( i, _subBuffers ) {
+			CL_CALL( clReleaseMemObject( _subBuffers[i].second ) );
+		}
+		_subBuffers.Clear();
+
 		if ( _bufferId != null ) {
 			CL_CALL( clReleaseMemObject( _bufferId ) );
 		}

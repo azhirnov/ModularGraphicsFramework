@@ -8,6 +8,7 @@
 #include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
 #include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
 #include "Engine/Platforms/Soft/Windows/SwWinSurface.h"
+#include "Engine/Platforms/Soft/Android/SwAndSurface.h"
 
 namespace Engine
 {
@@ -63,8 +64,8 @@ namespace Platforms
 		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
-		static const uint			_ver_major		= 0;
-		static const uint			_ver_minor		= 2;
+		static constexpr uint		_ver_major		= 0;
+		static constexpr uint		_ver_minor		= 3;
 		static const char			_renderer_name[];
 
 		
@@ -389,7 +390,7 @@ namespace Platforms
 			using namespace Engine::PlatformTools;
 
 			CHECK_ERR( WindowHelper::GetWindowHandle( _window,
-							LAMBDA( this ) (const WindowHelper::WinAPIWindow &data)
+							LAMBDA( this ) (const auto &data)
 							{
 								return _surface.Create( data.window, OUT _settings );
 							}) );

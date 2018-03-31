@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'c:\projects\graphxgenengine\projects\shadereditortools\sireniandawn2.cpp'
-// Created at: 2018/03/11 - 09:54:22
+// Origin file: 'ShaderEditor\Pipelines/SirenianDawn2.ppln.c'
+// Created at: 2018/03/31 - 16:58:16
 
 #include "all_pipelines.h"
 

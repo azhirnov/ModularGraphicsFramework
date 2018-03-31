@@ -221,6 +221,7 @@ namespace GXTypes
 			B		b;
 			int		tmp;
 			U () : tmp(0) {}
+			~U () {}
 		} u;
 		return BytesU( ReferenceCast<usize>(&(u.b.*member)) - ReferenceCast<usize>(&u.b) );
 	}

@@ -96,9 +96,11 @@ namespace PlatformTools
 		SemaphoreSet_t	all_wait_semaphores;
 		
 		// get all signal & wait semaphores
-		FOR( i, pendingCommands ) {
-			FOR( j, pendingCommands[i].waitSemaphores ) {
-				all_wait_semaphores.Add( pendingCommands[i].waitSemaphores[j].first );
+		FOR( i, pendingCommands )
+		{
+			for (auto& wait_sem : Range(pendingCommands[i].waitSemaphores)) {
+				ASSERT( wait_sem.second == EPipelineStage::AllCommands );
+				all_wait_semaphores.Add( wait_sem.first );
 			}
 			all_signal_semaphores.AddArray( pendingCommands[i].signalSemaphores );
 		}
@@ -113,14 +115,14 @@ namespace PlatformTools
 				bool	maybe_ready	= true;
 
 				// check wait semaphores
-				FOR( j, cmd.waitSemaphores )
+				for (auto& wait_sem : Range(cmd.waitSemaphores))
 				{
-					if ( not signaled_semaphores.IsExist( cmd.waitSemaphores[j].first ) )
+					if ( not signaled_semaphores.IsExist( wait_sem.first ) )
 					{
 						ready = false;
 
 						// waiting semaphore from other command
-						if ( all_signal_semaphores.IsExist( cmd.waitSemaphores[j].first ) )
+						if ( all_signal_semaphores.IsExist( wait_sem.first ) )
 							maybe_ready = false;
 					}
 				}

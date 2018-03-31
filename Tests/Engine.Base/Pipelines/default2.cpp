@@ -1,6 +1,6 @@
 // This is generated file
-// Origin file: 'c:\projects\graphxgenengine\tests\pipelinecompiler\pipelines\default2.cpp'
-// Created at: 2018/03/11 - 09:59:54
+// Origin file: 'Engine.Base\Pipelines/Default2.ppln.c'
+// Created at: 2018/03/28 - 00:42:50
 
 #include "all_pipelines.h"
 

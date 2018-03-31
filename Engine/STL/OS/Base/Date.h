@@ -13,7 +13,7 @@ namespace OS
 	// Date
 	//
 
-	struct _STL_EXPORT_ Date final : public CompileTime::PODType
+	struct Date final : public CompileTime::PODType
 	{
 	// types
 	public:

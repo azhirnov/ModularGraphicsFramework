@@ -25,7 +25,7 @@ namespace PlatformWin
 	{
 	// types
 	private:
-		using HMONITOR_t			= OS::HiddenOSTypeFrom<void*>;
+		using HMONITOR_t			= DeferredTypeFrom<void*>;
 
 		using Displays_t			= OSMsg::GetDisplays::Displays_t;
 		using MonitorHandles_t		= FixedSizeArray< HMONITOR_t, Displays_t::MemoryContainer_t::SIZE >;

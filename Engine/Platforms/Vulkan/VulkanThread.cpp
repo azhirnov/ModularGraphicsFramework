@@ -10,6 +10,7 @@
 #include "Engine/Platforms/Public/GPU/Memory.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #include "Engine/Platforms/Vulkan/Windows/VkWinSurface.h"
+#include "Engine/Platforms/Vulkan/Android/VkAndSurface.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h"
@@ -29,10 +30,7 @@ namespace Platforms
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Compose
-										> >
-										::Append< MessageListFrom<
+		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
@@ -53,8 +51,8 @@ namespace Platforms
 											GpuMsg::ThreadBeginFrame,
 											GpuMsg::ThreadEndFrame,
 											GpuMsg::DeviceCreated,
-											GpuMsg::DeviceBeforeDestroy
-											// TODO: device lost event
+											GpuMsg::DeviceBeforeDestroy,
+											GpuMsg::DeviceLost
 										> >;
 
 		using CmdBUffers_t			= GpuMsg::ThreadEndFrame::Commands_t;
@@ -105,6 +103,7 @@ namespace Platforms
 	private:
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _Link (const Message< ModuleMsg::Link > &);
+		bool _Compose (const Message< ModuleMsg::Compose > &);
 		bool _Update (const Message< ModuleMsg::Update > &);
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
@@ -167,6 +166,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &VulkanThread::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &VulkanThread::_Update );
 		_SubscribeOnMsg( this, &VulkanThread::_Link );
+		_SubscribeOnMsg( this, &VulkanThread::_Compose );
 		_SubscribeOnMsg( this, &VulkanThread::_Delete );
 		_SubscribeOnMsg( this, &VulkanThread::_GetGraphicsModules );
 		_SubscribeOnMsg( this, &VulkanThread::_ThreadBeginFrame );
@@ -212,13 +212,18 @@ namespace Platforms
 
 		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
 		
-		CHECK_LINKING(( _window = PlatformTools::WindowHelper::FindWindow( GlobalSystems() ) ));
+		const bool	with_surface = not _settings.flags[ GraphicsSettings::EFlags::NoSurface ];
 
-		_window->Subscribe( this, &VulkanThread::_WindowCreated );
-		_window->Subscribe( this, &VulkanThread::_WindowBeforeDestroy );
-		_window->Subscribe( this, &VulkanThread::_WindowVisibilityChanged );
-		_window->Subscribe( this, &VulkanThread::_WindowDescriptorChanged );
-		
+		if ( with_surface )
+		{
+			CHECK_LINKING(( _window = PlatformTools::WindowHelper::FindWindow( GlobalSystems() ) ));
+
+			_window->Subscribe( this, &VulkanThread::_WindowCreated );
+			_window->Subscribe( this, &VulkanThread::_WindowBeforeDestroy );
+			_window->Subscribe( this, &VulkanThread::_WindowVisibilityChanged );
+			_window->Subscribe( this, &VulkanThread::_WindowDescriptorChanged );
+		}
+
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 
 		// create sync manager
@@ -234,11 +239,31 @@ namespace Platforms
 		}
 		
 		// if window already created
-		if ( _IsComposedState( _window->GetState() ) )
+		if ( with_surface and _IsComposedState( _window->GetState() ) )
 		{
 			_SendMsg< OSMsg::WindowCreated >({});
 		}
 		return true;
+	}
+	
+/*
+=================================================
+	_Compose
+=================================================
+*/
+	bool VulkanThread::_Compose (const Message< ModuleMsg::Compose > &)
+	{
+		if ( _IsComposedState( GetState() ) )
+			return true;	// already composed
+
+		CHECK_ERR( GetState() == EState::Linked );
+		
+		if ( _window )
+			return false;
+
+		CHECK_COMPOSING( _CreateDevice() );
+
+		return _DefCompose( false );
 	}
 	
 /*
@@ -474,7 +499,13 @@ namespace Platforms
 		submit_info.signalSemaphoreCount	= (uint32_t) signal_semaphores.Count();
 		submit_info.pSignalSemaphores		= signal_semaphores.RawPtr();
 
-		VK_CHECK( vkQueueSubmit( _device.GetQueue(), 1, &submit_info, fence ) );
+		VkResult	vk_err = vkQueueSubmit( _device.GetQueue(), 1, &submit_info, fence );
+		VK_CALL( vk_err );
+
+		if ( vk_err == VK_ERROR_DEVICE_LOST )
+		{
+			_SendEvent< GpuMsg::DeviceLost >({});
+		}
 		
 		ModuleUtils::Send( msg->commands, Message< GpuMsg::SetCommandBufferState >{ GpuMsg::SetCommandBufferState::EState::Pending });
 		return true;
@@ -514,13 +545,10 @@ namespace Platforms
 	bool VulkanThread::_WindowCreated (const Message< OSMsg::WindowCreated > &)
 	{
 		CHECK_ERR( GetState() == EState::Linked );
+		
+		CHECK_COMPOSING( _CreateDevice() );
 
-		if ( _CreateDevice() ) {
-			CHECK( _DefCompose( false ) );
-		} else {
-			CHECK( _SetState( EState::ComposingFailed ) );
-		}
-		return true;
+		return _DefCompose( false );
 	}
 
 /*
@@ -535,17 +563,16 @@ namespace Platforms
 		using namespace CreateInfo;
 		
 		using EContextFlags = CreateInfo::GpuContext::EFlags;
-
-		Message< OSMsg::WindowGetDescriptor >	req_descr;
-		SendTo( _window, req_descr );
-
-		uint	vk_version = 0;
+		
+		uint	vk_version	 = 0;
 
 		// choose version
 		switch ( _settings.version )
 		{
 			case "VK 1.0"_GAPI :
 			case "vulkan 1.0"_GAPI :	vk_version = VK_API_VERSION_1_0; break;
+			//case "VK 1.1"_GAPI :
+			//case "vulkan 1.1"_GAPI :	vk_version = VK_API_VERSION_1_1; break;		// TODO
 			case GAPI::type(0) :		vk_version = VK_API_VERSION_1_0; break;
 			default :					RETURN_ERR( "unsupported Vulkan version" );
 		}
@@ -554,7 +581,7 @@ namespace Platforms
 		{
 			const bool				is_debug		= _settings.flags[EContextFlags::DebugContext];
 			Array<const char*>		extensions		= {};
-			Array<const char*>		layers			= {	"VK_LAYER_NV_optimus" };
+			Array<const char*>		layers			= {};
 			const int				debug_flags		= VK_DEBUG_REPORT_WARNING_BIT_EXT |
 													  VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
 													  VK_DEBUG_REPORT_ERROR_BIT_EXT;
@@ -603,13 +630,14 @@ namespace Platforms
 		}
 
 		// create surface
+		if ( _window )
 		{
 			using namespace Engine::PlatformTools;
 
 			VkSurfaceKHR	surface	= VK_NULL_HANDLE;
 
 			CHECK_ERR( WindowHelper::GetWindowHandle( _window,
-							LAMBDA( this, &surface ) (const WindowHelper::WinAPIWindow &data)
+							LAMBDA( this, &surface ) (const auto &data)
 							{
 								return _surface.Create( _device.GetInstance(), data.window, OUT surface );
 							}) );
@@ -624,16 +652,26 @@ namespace Platforms
 			VkPhysicalDeviceFeatures	device_features	= {};
 			vkGetPhysicalDeviceFeatures( _device.GetPhyiscalDevice(), &device_features );
 
-			CHECK_ERR( _device.CreateDevice( device_features, EQueueFamily::All ) );
+			EQueueFamily::bits	family = EQueueFamily::All;
+
+			if ( not _window )
+				family.Reset( EQueueFamily::Present );
+
+			CHECK_ERR( _device.CreateDevice( device_features, family ) );
 		}
 
 		// create swapchain
+		if ( _window )
 		{
 			using EFlags = CreateInfo::GpuContext::EFlags;
+			
+			Message< OSMsg::WindowGetDescriptor >	req_descr;
+			SendTo( _window, req_descr );
 
 			CHECK_ERR( _device.CreateSwapchain( req_descr->result->surfaceSize, _settings.flags[ EFlags::VSync ] ) );
-			CHECK_ERR( _device.CreateQueue() );
 		}
+
+		CHECK_ERR( _device.CreateQueue() );
 
 		_device.WritePhysicalDeviceInfo();
 		

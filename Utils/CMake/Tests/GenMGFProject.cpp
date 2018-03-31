@@ -27,11 +27,19 @@ extern void GenMGFProject ()
 			->Projects_IncludeDirectory( "External" )
 			->Projects_IncludeDirectory( "${EXTERNALS_PATH}" );
 
+	// setup graphics api version or disable it (pass 0 to version)
+	builder.AddOption( "OPENGL_VERSION", "Define OpenGL version, supported: 440, 450", 450 );
+	builder.AddOption( "OPENCL_VERSION", "Define OpenCL version, supported: 110, 120, 200", 120 );
+	builder.AddOption( "VULKAN_VERSION", "Define Vulkan version, supported: 100, 110", 100 );
+	builder.AddOption( "SOFTRENDER_VERSION", "Define Software renderer version, 100 is supported", 100 );
+
 	// compilers
 	{
 		// Visual C++
 		auto	msvc = builder.AddMSVisualStudioCompiler();
 		{
+			msvc->AddSource( "set( CONFIGURATION_DEPENDENT_PATH ON CACHE INTERNAL \"\" FORCE )" );
+
 			const String	dbg_lib = VS::MultiThreadedDebugDll;
 			const String	rel_lib = VS::MultiThreadedDll;
 
@@ -155,8 +163,10 @@ extern void GenMGFProject ()
 		// GCC
 		auto	gcc = builder.AddGCCompiler();
 		{
+			gcc->AddSource( "set( CONFIGURATION_DEPENDENT_PATH OFF CACHE INTERNAL \"\" FORCE )" );
+
 			Array<String>	shared_cxx_flags{ GCC::Cpp1z };
-			Array<String>	shared_linked_flags{ GccLinker::Static, GccLinker::StaticLibGCC, GccLinker::StaticLibStdCPP };
+			Array<String>	shared_linked_flags{ GccLinker::Static, GccLinker::StaticLibGCC, GccLinker::StaticLibStdCPP, GccLinker::Link("dl") };
 
 			shared_cxx_flags.Append({ /*GCC::Pedantic,*/ GCC::CharSubscripts, GCC::DoublePromotion, GCC::Format, GCC::Main, GCC::MissingBraces, GCC::MissingIncludeDirs,
 									  GCC::Uninititalized, GCC::MayBeUninitialized, GCC::UnknownPragmas, GCC::Pragmas, GCC::StrictAliasing, GCC::StrictOverflow,
@@ -165,7 +175,7 @@ extern void GenMGFProject ()
 									  GCC::SizeofPointerMemaccess, /*GCC::SizeofPointerDiv,*/ GCC::LogicalOp });
 
 			shared_cxx_flags.PushBack( GCC::DisableWarnings({ GCC::Unused, GCC::NonTemplateFriend, GCC::ZeroAsNullConst, GCC::Shadow, GCC::EnumCompare,
-															  GCC::Narrowing }) );
+															  GCC::Narrowing, GCC::Attribute, GCC::InvalidOffsetof }) );
 			
 			shared_cxx_flags.PushBack( GCC::WarningsToErrors({ GCC::InitSelf, GCC::Parentheses, GCC::ReturnLocalAddr, GCC::ReturnType,
 															   GCC::ArrayBounds, GCC::DivByZero, GCC::Address, GCC::MissingFieldInit, /*GCC::AlignedNew,*/
@@ -223,6 +233,8 @@ extern void GenMGFProject ()
 		#if 0
 		auto	clang = builder.AddClangCompiler()->EnableIf("WIN32 OR UNIX");
 		{
+			clang->AddSource( "set( CONFIGURATION_DEPENDENT_PATH OFF CACHE INTERNAL \"\" FORCE )" );
+
 			Array<String>	shared_cxx_flags{ Clang::Cpp1z };
 
 			//shared_cxx_flags.Append({ Clang::Shadow, });
@@ -286,6 +298,8 @@ extern void GenMGFProject ()
 		// Clang MacOS
 		auto	clang_apple = builder.AddClangCompiler( "CLANG_APPLE" )->EnableIf("APPLE");
 		{
+			clang_apple->AddSource( "set( CONFIGURATION_DEPENDENT_PATH ON CACHE INTERNAL \"\" FORCE )" );
+
 			Array<String>	shared_cxx_flags{ Clang::Cpp1z };
 
 			shared_cxx_flags.Append({ Clang::CharSubscripts, Clang::DoublePromotion, Clang::Format, Clang::Main, Clang::MissingBraces, Clang::MissingIncludeDirs,
@@ -344,9 +358,14 @@ extern void GenMGFProject ()
 		}
 
 		// Clang Android
-		auto	clang_and = builder.AddClangCompiler( "CLANG_ANDROID" )->EnableIf("DEFINED ANDROID");
+		auto	clang_android = builder.AddClangCompiler( "CLANG_ANDROID" )->EnableIf("DEFINED ANDROID");
 		{
+			clang_android->AddSource( "set( CONFIGURATION_DEPENDENT_PATH OFF CACHE INTERNAL \"\" FORCE )" );
+
 			Array<String>	shared_cxx_flags{ Clang::Cpp1z };
+			Array<String>	shared_linked_flags{ ClangLinker::Static };
+
+			//builder.Projects_LinkLibrary( "dl log android EGL OpenSLES", "ANDROID" );
 
 			shared_cxx_flags.Append({ Clang::CharSubscripts, Clang::DoublePromotion, Clang::Format, Clang::Main, Clang::MissingBraces, Clang::MissingIncludeDirs,
 									  Clang::Uninititalized, Clang::UnknownPragmas, Clang::Pragmas, Clang::StrictAliasing, Clang::StrictOverflow,
@@ -361,48 +380,53 @@ extern void GenMGFProject ()
 			shared_cxx_flags.PushBack( Clang::DisableWarnings({ Clang::Comment, Clang::UndefinedInline, Clang::Switch, Clang::Narrowing, Clang::Unused,
 															    Clang::Cxx14Extensions, Clang::Cxx1ZExtensions }) );
 
-
-			auto	debug_cfg = clang_and->AddConfiguration( "Debug" );
+			auto	debug_cfg = clang_android->AddConfiguration( "Debug" );
 			{
 				debug_cfg->AddGlobalCFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug })
 						  ->AddGlobalCxxFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug });
 
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						 ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::OptDebug });
+				debug_cfg->AddTargetLinkerFlags( shared_linked_flags );
 				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" });
 			}
 
-			auto	analyze_cfg = clang_and->AddConfiguration( "DebugAnalyze" );
+			auto	analyze_cfg = clang_android->AddConfiguration( "DebugAnalyze" );
 			{
 				analyze_cfg->AddGlobalCFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug })
 							->AddGlobalCxxFlags({ Clang::Define( "_DEBUG" ), Clang::OptDebug });
 
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						  ->AddTargetCxxFlags({ Clang::DebugGddb, Clang::Sanitize_Undefined, Clang::OptDebug });
+				analyze_cfg->AddTargetLinkerFlags( shared_linked_flags );
 				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" });
 			}
 
-			auto	profile_cfg = clang_and->AddConfiguration( "Profile" );
+			auto	profile_cfg = clang_android->AddConfiguration( "Profile" );
 			{
 				profile_cfg->AddGlobalCFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt2 })
 							->AddGlobalCxxFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt2 });
 
 				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt2, Clang::InlineAll });
+				profile_cfg->AddTargetLinkerFlags( shared_linked_flags );
 				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" });
 			}
 
-			auto	release_cfg = clang_and->AddConfiguration( "Release" );
+			auto	release_cfg = clang_android->AddConfiguration( "Release" );
 			{
 				release_cfg->AddGlobalCFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt3, Clang::InlineAll })
 							->AddGlobalCxxFlags({ Clang::Defines({ "_NDEBUG", "NDEBUG" }), Clang::Opt3, Clang::InlineAll });
 
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
+				release_cfg->AddTargetLinkerFlags( shared_linked_flags );
 				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
 			}
 		}
-	}
+	}	// compilers
+	//----------------------------------------------------------------------------
+
 
 	// projects
 	{
@@ -416,7 +440,6 @@ extern void GenMGFProject ()
 		auto	engine_stl = builder.AddLibrary( "Engine.STL", "Engine/STL" );
 		{
 			engine_stl->AddFoldersRecursive( "" );
-			engine_stl->LinkLibrary( engine_config );
 			engine_stl->LinkLibrary( "SDL2", "ENABLE_SDL" );
 		}
 		
@@ -438,6 +461,7 @@ extern void GenMGFProject ()
 			test_physics->LinkLibrary( engine_physics );
 		}
 	#endif	// ENABLE_STL
+	//----------------------------------------------------------------------------
 
 
 		// Engine //
@@ -460,6 +484,11 @@ extern void GenMGFProject ()
 			engine_platforms->LinkLibrary( "dxgi.lib", "WIN32" );
 			// Windows Platform
 			engine_platforms->LinkLibrary( "Shcore.lib", "(MSVC AND WIN32)" )->LinkLibrary( "Dxva2.lib", "WIN32" );
+			
+			engine_platforms->AddDefinition( "GRAPHICS_API_OPENGL=${OPENGL_VERSION}", "DEFINED OPENGL_VERSION AND NOT (OPENGL_VERSION EQUAL \"0\")" );
+			engine_platforms->AddDefinition( "COMPUTE_API_OPENCL=${OPENCL_VERSION}", "DEFINED OPENCL_VERSION AND NOT (OPENCL_VERSION EQUAL \"0\")" );
+			engine_platforms->AddDefinition( "GRAPHICS_API_VULKAN=${VULKAN_VERSION}", "DEFINED VULKAN_VERSION AND NOT (VULKAN_VERSION EQUAL \"0\")" );
+			engine_platforms->AddDefinition( "GRAPHICS_API_SOFT=${SOFTRENDER_VERSION}", "DEFINED SOFTRENDER_VERSION AND NOT (SOFTRENDER_VERSION EQUAL \"0\")" );
 		}
 		
 		auto	engine_graphics = builder.AddLibrary( "Engine.Graphics", "Engine/Graphics" );
@@ -479,34 +508,8 @@ extern void GenMGFProject ()
 			engine_scene->AddFoldersRecursive( "" );
 			engine_scene->LinkLibrary( engine_graphics );
 		}
-
-		// Tests //
-		auto	test_engine_base = builder.AddExecutable( "Tests.Engine.Base", "Tests/Engine.Base" );
-		{
-			test_engine_base->AddFoldersRecursive( "" );
-			test_engine_base->LinkLibrary( engine_platforms )->LinkLibrary( engine_profilers );
-		}
-		
-		auto	test_engine_graphics = builder.AddExecutable( "Tests.Engine.Graphics", "Tests/Engine.Graphics" );
-		{
-			test_engine_graphics->AddFoldersRecursive( "" );
-			test_engine_graphics->LinkLibrary( engine_graphics )->LinkLibrary( engine_profilers );
-		}
-		
-
-		auto	test_engine_gapi = builder.AddExecutable( "Tests.Engine.Platforms.GAPI", "Tests/Engine.Platforms.GAPI" );
-		{
-			test_engine_gapi->AddFoldersRecursive( "" );
-			test_engine_gapi->LinkLibrary( engine_platforms );
-		}
-
-		#ifdef ENABLE_SCU
-			builder.AddExecutable( "Tests.Engine.STL.SCU" )->ProjFolder("SCU")->LinkLibrary( test_stl )->MergeCPP( NUM_THREADS );
-			builder.AddExecutable( "Tests.Engine.Base.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_base )->MergeCPP( NUM_THREADS );
-			builder.AddExecutable( "Tests.Engine.Graphics.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_graphics )->MergeCPP( NUM_THREADS );
-			builder.AddExecutable( "Tests.Platforms.GAPI.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_gapi )->MergeCPP( NUM_THREADS );
-		#endif
 	#endif	// ENABLE_ENGINE
+	//----------------------------------------------------------------------------
 
 
 		// External //
@@ -527,27 +530,65 @@ extern void GenMGFProject ()
 			engine_pipeline_compiler->IncludeDirectory( "${CMAKE_BINARY_DIR}/LunarGLASS_bin/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
 		}
 
-		/*auto	engine_res_pack = builder.AddExecutable( "Engine.ResourcePacker", "Engine/ResourcePacker" );
-		{
-			engine_res_pack->ProjFolder( "EngineTools" );
-			engine_res_pack->AddFoldersRecursive( "" );
-		}*/
-
 		auto	test_pipeline_compiler = builder.AddExecutable( "Tests.PipelineCompiler", "Tests/PipelineCompiler" );
 		{
-			test_pipeline_compiler->EnableIf( "WIN32" );
 			test_pipeline_compiler->AddFolder( "" );
 			test_pipeline_compiler->AddFolder( "Pipelines" );
 			test_pipeline_compiler->LinkLibrary( engine_pipeline_compiler );
 		}
-
-		auto	test_engine_gapi_tools = builder.AddExecutable( "Tests.Engine.Platforms.GAPI.Tools", "Tests/Engine.Platforms.GAPI.Tools" );
+		
+		auto	engine_script = builder.AddLibrary( "Engine.Scipt", "Engine/Script" );
 		{
-			test_engine_gapi_tools->EnableIf( "WIN32" );
-			test_engine_gapi_tools->AddFoldersRecursive( "" );
-			test_engine_gapi_tools->LinkLibrary( engine_pipeline_compiler );
+			engine_script->AddFoldersRecursive( "" );
+			engine_script->LinkLibrary( engine_stl )->LinkLibrary( "AngelScript" );
+		}
+
+		auto	test_script = builder.AddExecutable( "Tests.Scipt", "Tests/Script" );
+		{
+			test_script->AddFoldersRecursive( "" );
+			test_script->LinkLibrary( engine_script );
+		}
+
+		auto	engine_res_pack = builder.AddExecutable( "Engine.ResourcePacker", "Engine/ResourcePacker" );
+		{
+			engine_res_pack->ProjFolder( "EngineTools" );
+			engine_res_pack->AddFoldersRecursive( "" );
+			engine_res_pack->LinkLibrary( engine_pipeline_compiler )->LinkLibrary( engine_script );
+			engine_res_pack->AddSource(
+				"if ( CONFIGURATION_DEPENDENT_PATH )\n"
+				"	set( RESOURCE_PACKER_EXE \"${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/"_str << engine_res_pack->GetName() << "${CMAKE_EXECUTABLE_SUFFIX}\" )\n"
+				"else ()\n"
+				"	set( RESOURCE_PACKER_EXE \"${CMAKE_CURRENT_BINARY_DIR}/"_str << engine_res_pack->GetName() << "${CMAKE_EXECUTABLE_SUFFIX}\" )\n"
+				"endif ()\n"
+			);
 		}
 	#endif	// ENABLE_EXTERNALS
+	//----------------------------------------------------------------------------
+		
+		
+		// Engine //
+	#ifdef ENABLE_ENGINE
+
+		// Tests //
+		auto	test_engine_base = builder.AddExecutable( "Tests.Engine.Base", "Tests/Engine.Base" );
+		{
+			test_engine_base->AddFoldersRecursive( "" );
+			test_engine_base->LinkLibrary( engine_platforms )->LinkLibrary( engine_profilers );
+		}
+		
+		auto	test_engine_graphics = builder.AddExecutable( "Tests.Engine.Graphics", "Tests/Engine.Graphics" );
+		{
+			test_engine_graphics->AddFoldersRecursive( "" );
+			test_engine_graphics->LinkLibrary( engine_graphics )->LinkLibrary( engine_profilers );
+		}
+
+		auto	test_engine_gapi = builder.AddExecutable( "Tests.Engine.Platforms.GAPI", "Tests/Engine.Platforms.GAPI" );
+		{
+			test_engine_gapi->AddFoldersRecursive( "" );
+			test_engine_gapi->LinkLibrary( engine_platforms );
+		}
+	#endif	// ENABLE_ENGINE
+	//----------------------------------------------------------------------------
 
 
 		// Projects //
@@ -557,15 +598,47 @@ extern void GenMGFProject ()
 			proj_shader_editor->AddFoldersRecursive( "" );
 			proj_shader_editor->LinkLibrary( engine_scene )->LinkLibrary( engine_profilers );
 		}
-		
-		#ifdef ENABLE_EXTERNALS
-		auto	proj_shader_editor_tools = builder.AddExecutable( "Projects.ShaderEditor.Tools", "Projects/ShaderEditorTools" );
-		{
-			proj_shader_editor_tools->AddFoldersRecursive( "" );
-			proj_shader_editor_tools->LinkLibrary( engine_pipeline_compiler );
-		}
-		#endif
 	#endif	// ENABLE_PROJECTS
+	//----------------------------------------------------------------------------
+
+
+		// External //
+	#ifdef ENABLE_EXTERNALS
+		const auto	PackRes =	LAMBDA( engine_res_pack ) (auto* proj, StringCRef resourceScript)
+							{
+								proj->AddDependency( engine_res_pack );
+								proj->AddSource(
+									"if (NOT DEFINED RESOURCE_PACKER_EXE)\n"
+									"	message( FATAL_ERROR \"RESOURCE_PACKER_EXE is not defined\" )\n"
+									"endif ()\n"
+									"add_custom_command(\n"_str
+									"	TARGET \"" << proj->GetName() << "\" PRE_BUILD\n"
+									"	COMMAND ${RESOURCE_PACKER_EXE} -R \"${CMAKE_SOURCE_DIR}/" << FileAddress::BuildPath( proj->GetRelativePath(), resourceScript ) << "\"\n"
+									"	COMMENT \"Pack resources for '" << proj->GetName() << "'...\"\n"
+									")\n" );
+							};
+
+		if ( test_engine_base )
+		{
+			PackRes( test_engine_base, "Pipelines/resources.as.c" );
+		}
+
+		if ( test_engine_gapi )
+		{
+			PackRes( test_engine_gapi, "resources.as.c" );
+		}
+
+		if ( test_engine_graphics )
+		{
+			PackRes( test_engine_graphics, "Pipelines/resources.as.c" );
+		}
+
+		if ( proj_shader_editor )
+		{
+			PackRes( proj_shader_editor, "Pipelines/resources.as.c" );
+		}
+	#endif	// ENABLE_EXTERNALS
+	//----------------------------------------------------------------------------
 
 
 		// Utils //
@@ -579,6 +652,7 @@ extern void GenMGFProject ()
 	#ifdef ENABLE_UTILS
 	#endif	// ENABLE_UTILS
 	}
+	//----------------------------------------------------------------------------
 
 	// save
 	builder.Save();

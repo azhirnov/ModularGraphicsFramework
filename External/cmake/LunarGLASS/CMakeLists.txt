@@ -1,5 +1,3 @@
-# Includes engine dependencies
-# https://cmake.org/cmake/help/v3.0/module/ExternalProject.html
 
 cmake_minimum_required (VERSION 3.6.0)
 

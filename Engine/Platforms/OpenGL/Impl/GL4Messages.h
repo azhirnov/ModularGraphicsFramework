@@ -152,8 +152,13 @@ namespace GpuMsg
 	//
 	struct CreateGLImageView
 	{
+	// variables
 		Platforms::ImageViewDescriptor		viewDescr;
 		Out< gl::GLuint >					result;
+
+	// methods
+		explicit CreateGLImageView (const Platforms::ImageDescriptor &descr) : viewDescr{descr} {}
+		explicit CreateGLImageView (const Platforms::ImageViewDescriptor &descr) : viewDescr{descr} {}
 	};
 
 

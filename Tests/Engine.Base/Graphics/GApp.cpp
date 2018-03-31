@@ -247,9 +247,12 @@ bool GApp::_CreatePipeline1 ()
 					CreateInfo::PipelineResourceTable{},
 					OUT resourceTable1 )
 	);
+	
+	Message< GpuMsg::GetImageDescriptor >	req_img_descr;
+	texture->Send( req_img_descr );
 
 	resourceTable1->Send< ModuleMsg::AttachModule >({ "pipeline", gpipeline1 });
-	resourceTable1->Send< ModuleMsg::AttachModule >({ "un_ColorTexture", texture });
+	resourceTable1->Send< GpuMsg::PipelineAttachImage >({ "un_ColorTexture", texture, ImageViewDescriptor{*req_img_descr->result}, EImageLayout::ShaderReadOnlyOptimal });
 	resourceTable1->Send< ModuleMsg::AttachModule >({ "un_ColorTexture.sampler", sampler });
 	return true;
 }
@@ -289,8 +292,11 @@ bool GApp::_CreatePipeline2 ()
 					OUT resourceTable2 )
 	);
 
+	Message< GpuMsg::GetImageDescriptor >	req_img_descr;
+	fbColorImage->Send( req_img_descr );
+
 	resourceTable2->Send< ModuleMsg::AttachModule >({ "pipeline", gpipeline2 });
-	resourceTable2->Send< ModuleMsg::AttachModule >({ "un_ColorTexture", fbColorImage });
+	resourceTable2->Send< GpuMsg::PipelineAttachImage >({ "un_ColorTexture", fbColorImage, ImageViewDescriptor{*req_img_descr->result}, EImageLayout::ShaderReadOnlyOptimal });
 	resourceTable2->Send< ModuleMsg::AttachModule >({ "un_ColorTexture.sampler", sampler });
 	resourceTable2->Send< ModuleMsg::AttachModule >({ "ub", ubuffer });
 	return true;

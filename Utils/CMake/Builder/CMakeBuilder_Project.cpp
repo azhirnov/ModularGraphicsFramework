@@ -21,6 +21,18 @@ namespace CMake
 	
 /*
 =================================================
+	GetRelativePath
+=================================================
+*/
+	String  CMakeBuilder::CMakeProject::GetRelativePath () const
+	{
+		String	res;
+		FileAddress::AbsoluteToRelativePath( _baseFolder, _builder->_baseFolder, OUT res );
+		return res;
+	}
+
+/*
+=================================================
 	ToString
 =================================================
 */
@@ -917,6 +929,7 @@ namespace CMake
 	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::LinkLibrary (CMakeProject *lib)
 	{
 		//CHECK( lib->_projType == EProjectType::Library or lib->_projType == EProjectType::SharedLibrary );
+		CHECK_ERR( lib, this );
 
 		return LinkLibrary( lib->_name, lib->_enableIf );
 	}
@@ -936,6 +949,8 @@ namespace CMake
 */
 	CMakeBuilder::CMakeProject* CMakeBuilder::CMakeProject::LinkLibrary (CMakeExternalVSProject *proj)
 	{
+		CHECK_ERR( proj, this );
+
 		return LinkLibrary( proj->_name, proj->_enableIf );
 	}
 	
@@ -1021,6 +1036,26 @@ namespace CMake
 	{
 		FOR( i, deps ) {
 			AddDependency( deps[i], enableIf );
+		}
+		return this;
+	}
+	
+/*
+=================================================
+	AddDependency
+=================================================
+*/
+	CMakeBuilder::CMakeProject*  CMakeBuilder::CMakeProject::AddDependency (CMakeProject *lib)
+	{
+		CHECK_ERR( lib, this );
+
+		return AddDependency( lib->_name, lib->_enableIf );
+	}
+
+	CMakeBuilder::CMakeProject*  CMakeBuilder::CMakeProject::AddDependency (ArrayCRef<CMakeProject*> libs)
+	{
+		FOR( i, libs ) {
+			AddDependency( libs[i] );
 		}
 		return this;
 	}

@@ -25,17 +25,17 @@ namespace GXTypes
 
 	// pointer & size type
 #if PLATFORM_BITS == 16
-//	using usize		= unsigned short;
+	using usize		= unsigned short;
 	using isize		= signed short;
 #elif PLATFORM_BITS == 32
-//	using usize		= unsigned int;
+	using usize		= unsigned int;
 	using isize		= signed int;
 #elif PLATFORM_BITS == 64
-//	using usize		= unsigned long long;
+	using usize		= unsigned long long;
 	using isize		= signed long long;
 #endif
 
-	using usize		= std::size_t;
+	//using usize		= std::size_t;
 
 	// check size types
 	STATIC_ASSERT( sizeof(void *) == sizeof(usize),	"unsigned size type is incorrect" );

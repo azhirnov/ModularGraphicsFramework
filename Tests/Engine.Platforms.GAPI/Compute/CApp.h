@@ -52,6 +52,7 @@ private:
 	bool _Test_UpdateBuffer ();
 	bool _Test_BufferAlign ();
 	bool _Test_DynamicBuffer ();
+	bool _Test_BufferRange ();
 
 	bool _Test_CopyImage2D ();
 	bool _Test_CopyBufferToImage2D ();

@@ -31,7 +31,7 @@ namespace OS
 	// Current Thread
 	//
 
-	struct _STL_EXPORT_ CurrentThread
+	struct CurrentThread
 	{
 	// types
 	protected:
@@ -78,7 +78,7 @@ namespace OS
 	// Thread
 	//
 
-	struct _STL_EXPORT_ Thread final : CurrentThread
+	struct Thread final : CurrentThread
 	{
 	// types
 	public:

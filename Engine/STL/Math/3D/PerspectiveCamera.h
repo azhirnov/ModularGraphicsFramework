@@ -20,20 +20,20 @@ namespace GXMath
 	// types
 	public:
 		typedef PerspectiveCamera<T>	Self;
-		typedef Transformation<T>		transform_t;
-		typedef Frustum<T>				frustum_t;
-		typedef Quaternion<T>			quat_t;
-		typedef Matrix<T,4,4>			mat4_t;
+		typedef Transformation<T>		Transform_t;
+		typedef Frustum<T>				Frustum_t;
+		typedef Quaternion<T>			Quat_t;
+		typedef Matrix<T,4,4>			Mat4_t;
 
 		typedef Vec<T,3>				Vec3_t;
 		typedef Vec<T,2>				Vec2_t;
 
-		typedef Radians<T>				radians_t;
-		typedef RadiansVec<T,2>			radians2_t;
-		typedef RadiansVec<T,3>			radians3_t;
+		typedef Radians<T>				Radians_t;
+		typedef RadiansVec<T,2>			Radians2_t;
+		typedef RadiansVec<T,3>			Radians3_t;
 
-		typedef DegreesVec<T,2>			degrees2_t;
-		typedef DegreesVec<T,3>			degrees3_t;
+		typedef DegreesVec<T,2>			Degrees2_t;
+		typedef DegreesVec<T,3>			Degrees3_t;
 
 	private:
 		struct EChangedFlag {
@@ -46,19 +46,19 @@ namespace GXMath
 
 	// variables
 	protected:
-		transform_t		_transform;
-		mat4_t			_projMatrix;
-		mat4_t			_viewMatrix;
-		mat4_t			_cachedViewProj;
-		frustum_t		_frustum;
+		Transform_t		_transform;
+		Mat4_t			_projMatrix;
+		Mat4_t			_viewMatrix;
+		Mat4_t			_cachedViewProj;
+		Frustum_t		_frustum;
 
-		radians3_t		_rotation;
-		radians3_t		_rotationMinAngle;
-		radians3_t		_rotationMaxAngle;
+		Radians3_t		_rotation;
+		Radians3_t		_rotationMinAngle;
+		Radians3_t		_rotationMaxAngle;
 		bool3			_rotationLimitMask;
 
 		Vec2_t			_clipPlanes;			// near, far
-		radians_t		_fovY;
+		Radians_t		_fovY;
 		T				_viewAspect;			// width/height
 		T				_zoom;
 		Bitfield<2>		_changed;				// 1- view proj matrix, 2 - for frustum
@@ -68,31 +68,31 @@ namespace GXMath
 	// methods
 	protected:
 		Vec3_t	&		_Position ()				{ return _transform.Position(); }
-		quat_t	&		_Orientation ()				{ return _transform.Orientation(); }
-		transform_t	&	_Transform ()				{ return _transform; }
-		mat4_t	&		_ProjMatrix ()				{ return _projMatrix; }
-		mat4_t	&		_ViewMatrix ()				{ return _viewMatrix; }
+		Quat_t	&		_Orientation ()				{ return _transform.Orientation(); }
+		Transform_t	&	_Transform ()				{ return _transform; }
+		Mat4_t	&		_ProjMatrix ()				{ return _projMatrix; }
+		Mat4_t	&		_ViewMatrix ()				{ return _viewMatrix; }
 
-		void _Rotate (const radians3_t &rotation);
-		void _LimitRotation (radians3_t &rotation) const;
+		void _Rotate (const Radians3_t &rotation);
+		void _LimitRotation (Radians3_t &rotation) const;
 
 	public:
 		PerspectiveCamera (GX_DEFCTOR);
 		
-		radians3_t const &	Rotation ()			const	{ return _rotation; }
-		radians3_t const &	RotationMinAngle ()	const	{ return _rotationMinAngle; }
-		radians3_t const &	RotationMaxAngle ()	const	{ return _rotationMaxAngle; }
+		Radians3_t const &	Rotation ()			const	{ return _rotation; }
+		Radians3_t const &	RotationMinAngle ()	const	{ return _rotationMinAngle; }
+		Radians3_t const &	RotationMaxAngle ()	const	{ return _rotationMaxAngle; }
 
 		Vec3_t const &		Position ()			const	{ return _transform.Position(); }
-		quat_t const &		Orientation ()		const	{ return _transform.Orientation(); }
-		mat4_t const &		ViewMatrix ()		const	{ return _viewMatrix; }
-		transform_t const &	Transform ()		const	{ return _transform; }
-		mat4_t const &		ProjMatrix ()		const	{ return _projMatrix; }
+		Quat_t const &		Orientation ()		const	{ return _transform.Orientation(); }
+		Mat4_t const &		ViewMatrix ()		const	{ return _viewMatrix; }
+		Transform_t const &	Transform ()		const	{ return _transform; }
+		Mat4_t const &		ProjMatrix ()		const	{ return _projMatrix; }
 		
-		frustum_t const &	Frustum ();
-		mat4_t const &		ViewProjMatrix ();
+		Frustum_t const &	GetFrustum ();
+		Mat4_t const &		ViewProjMatrix ();
 
-		mat4_t const		GetModelMatrix ()	const;
+		Mat4_t const		GetModelMatrix ()	const;
 
 		Vec3_t	const		GetAxisX ()			const	{ return Vec3_t( _viewMatrix(0,0), _viewMatrix(1,0), _viewMatrix(2,0) ); }
 		Vec3_t	const		GetAxisY ()			const	{ return Vec3_t( _viewMatrix(0,1), _viewMatrix(1,1), _viewMatrix(2,1) ); }
@@ -101,31 +101,31 @@ namespace GXMath
 		Vec2_t const &		ClipPlanes ()		const	{ return _clipPlanes; }
 		T					GetAspect ()		const	{ return _viewAspect; }
 
-		radians_t			GetDefaultFovY()	const	{ return _fovY; }
-		radians_t			GetFovY ()			const	{ return _fovY * _zoom; }
-		radians2_t			GetFOVs ()			const	{ return radians2_t( _fovY / _viewAspect, _fovY ) * _zoom; }
+		Radians_t			GetDefaultFovY()	const	{ return _fovY; }
+		Radians_t			GetFovY ()			const	{ return _fovY * _zoom; }
+		Radians2_t			GetFOVs ()			const	{ return Radians2_t( _fovY / _viewAspect, _fovY ) * _zoom; }
 		T					GetZoom ()			const	{ return _zoom; }
 
 		T					VisibilityRange ()	const	{ return _clipPlanes.y - _clipPlanes.x; }
 
-		void Create (const transform_t &transform, radians_t fovY, T viewAspect, const Vec2_t &clipPlanes);
-		void Create (const transform_t &transform, const Vec2_t &viewSize, T distanceInMeters, const Vec2_t &clipPlanes);
+		void Create (const Transform_t &transform, Radians_t fovY, T viewAspect, const Vec2_t &clipPlanes);
+		void Create (const Transform_t &transform, const Vec2_t &viewSize, T distanceInMeters, const Vec2_t &clipPlanes);
 	
 		void SetClipPlanes (const Vec2_t &clipPlanes);
 		void Recalculate ();
 
-		void Resize (radians_t fovY, T viewAspect);
+		void Resize (Radians_t fovY, T viewAspect);
 		void Resize (const Vec2_t &viewSize, T distanceInMeters);
 
 		void Increase (T newZoom = T(1));
 
-		void LimitRotation (bool enabled, const radians3_t &minAngle = radians3_t(), const radians3_t &maxAngle = radians3_t());
-		void LimitRotation (bool enabled, const degrees3_t &minAngle = degrees3_t(), const degrees3_t &maxAngle = degrees3_t());
+		void LimitRotation (bool enabled, const Radians3_t &minAngle = Radians3_t(), const Radians3_t &maxAngle = Radians3_t());
+		void LimitRotation (bool enabled, const Degrees3_t &minAngle = Degrees3_t(), const Degrees3_t &maxAngle = Degrees3_t());
 
 
 		// FPS Camera //
-		void RotateFPS (const radians2_t &rotation);
-		void RotateFPS (const degrees2_t &rotation);
+		void RotateFPS (const Radians2_t &rotation);
+		void RotateFPS (const Degrees2_t &rotation);
 		void MoveFPS (const Vec3_t &delta);
 		void TransformFPS (const Vec3_t &delta, Vec3_t &pos);
 
@@ -134,8 +134,8 @@ namespace GXMath
 		void TransformFPSFree (const Vec3_t &delta, Vec3_t &pos);
 
 		// Flight Camera //
-		void RotateFlight (const radians3_t &rotation);
-		void RotateFlight (const degrees3_t &rotation);
+		void RotateFlight (const Radians3_t &rotation);
+		void RotateFlight (const Degrees3_t &rotation);
 		void MoveFlight (const Vec3_t &delta);
 		void TransformFlight (const Vec3_t &delta, Vec3_t &pos);
 
@@ -165,9 +165,9 @@ namespace GXMath
 	{
 		_changed.SetAll();
 
-		_projMatrix		= mat4_t::Identity();
-		_viewMatrix		= mat4_t::Identity();
-		_cachedViewProj	= mat4_t::Identity();
+		_projMatrix		= Mat4_t::Identity();
+		_viewMatrix		= Mat4_t::Identity();
+		_cachedViewProj	= Mat4_t::Identity();
 	}
 	
 /*
@@ -178,16 +178,16 @@ namespace GXMath
 	template <typename T>
 	CHECKRES inline Matrix<T,4,4> const  PerspectiveCamera<T>::GetModelMatrix () const
 	{
-		return mat4_t::Translate( -Position() );
+		return Mat4_t::Translate( -Position() );
 	}
 	
 /*
 =================================================
-	Frustum
+	GetFrustum
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Frustum<T> const &  PerspectiveCamera<T>::Frustum ()
+	CHECKRES inline Frustum<T> const &  PerspectiveCamera<T>::GetFrustum ()
 	{
 		if ( _changed[ EChangedFlag::Frustum ] )
 		{
@@ -221,12 +221,12 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::Create (const transform_t &transform, radians_t fovY, T viewAspect, const Vec2_t &clipPlanes)
+	inline void PerspectiveCamera<T>::Create (const Transform_t &transform, Radians_t fovY, T viewAspect, const Vec2_t &clipPlanes)
 	{
 		_zoom		= T(1);
 		_transform	= transform;
 		_clipPlanes	= clipPlanes;
-		_viewMatrix	= mat4_t::FromQuat( transform.Orientation() );
+		_viewMatrix	= Mat4_t::FromQuat( transform.Orientation() );
 		Resize( fovY, viewAspect );
 	}
 	
@@ -236,12 +236,12 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::Create (const transform_t &transform, const Vec2_t &viewSize, T distanceInMeters, const Vec2_t &clipPlanes)
+	inline void PerspectiveCamera<T>::Create (const Transform_t &transform, const Vec2_t &viewSize, T distanceInMeters, const Vec2_t &clipPlanes)
 	{
 		_zoom		= T(1);
 		_transform	= transform;
 		_clipPlanes	= clipPlanes;
-		_viewMatrix	= mat4_t::FromQuat( transform.Orientation() );
+		_viewMatrix	= Mat4_t::FromQuat( transform.Orientation() );
 		Resize( viewSize, distanceInMeters );
 	}
 	
@@ -267,7 +267,7 @@ namespace GXMath
 	template <typename T>
 	inline void PerspectiveCamera<T>::Recalculate ()
 	{
-		_projMatrix = mat4_t::BuildPerspective( Clamp( _fovY / _zoom, T(0.1), T(170) ), _viewAspect, _clipPlanes );
+		_projMatrix = Mat4_t::BuildPerspective( Clamp( _fovY / _zoom, T(0.1), T(170) ), _viewAspect, _clipPlanes );
 	}
 	
 /*
@@ -276,7 +276,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::Resize (radians_t fovY, T viewAspect)
+	inline void PerspectiveCamera<T>::Resize (Radians_t fovY, T viewAspect)
 	{
 		_fovY		 = fovY;
 		_viewAspect	 = viewAspect;
@@ -323,7 +323,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::LimitRotation (bool enabled, const radians3_t &minAngle, const radians3_t &maxAngle)
+	inline void PerspectiveCamera<T>::LimitRotation (bool enabled, const Radians3_t &minAngle, const Radians3_t &maxAngle)
 	{
 		_limitRotationEnabled	= enabled;
 		_rotationMinAngle		= minAngle;
@@ -332,9 +332,9 @@ namespace GXMath
 	}
 	
 	template <typename T>
-	inline void PerspectiveCamera<T>::LimitRotation (bool enabled, const degrees3_t &minAngle, const degrees3_t &maxAngle)
+	inline void PerspectiveCamera<T>::LimitRotation (bool enabled, const Degrees3_t &minAngle, const Degrees3_t &maxAngle)
 	{
-		LimitRotation( enabled, minAngle.template To< radians3_t >(), maxAngle.template To< radians3_t >() );
+		LimitRotation( enabled, minAngle.template To< Radians3_t >(), maxAngle.template To< Radians3_t >() );
 	}
 	
 /*
@@ -343,11 +343,11 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::_LimitRotation (OUT radians3_t &rotation) const
+	inline void PerspectiveCamera<T>::_LimitRotation (OUT Radians3_t &rotation) const
 	{
 		if ( _limitRotationEnabled )
 		{
-			radians3_t	last_rot = _rotation + rotation;
+			Radians3_t	last_rot = _rotation + rotation;
 
 			if ( _rotationLimitMask.x )	rotation.x = Clamp( last_rot.x, _rotationMinAngle.x, _rotationMaxAngle.x ) - _rotation.x;
 			if ( _rotationLimitMask.y )	rotation.y = Clamp( last_rot.y, _rotationMinAngle.y, _rotationMaxAngle.y ) - _rotation.y;
@@ -361,9 +361,9 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::_Rotate (const radians3_t &rotation)
+	inline void PerspectiveCamera<T>::_Rotate (const Radians3_t &rotation)
 	{
-		const radians_t	max_angle = radians_t::Pi() * T(2);
+		const Radians_t	max_angle = Radians_t::Pi() * T(2);
 
 		_rotation += rotation;
 
@@ -381,24 +381,24 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::RotateFPS (const radians2_t &rotation)
+	inline void PerspectiveCamera<T>::RotateFPS (const Radians2_t &rotation)
 	{
 		if ( IsZero( rotation ) )
 			return;
 
-		quat_t&		q		= _Orientation();
-		radians3_t	rot		= radians3_t( rotation, radians_t() );
+		Quat_t&		q		= _Orientation();
+		Radians3_t	rot		= Radians3_t( rotation, Radians_t() );
 		bool		changed	= false;
 
 		_LimitRotation( rot );
 		
 		if ( IsNotZero( rot.y ) ) {
-			q = quat_t().RotationX( rot.y ) * q;
+			q = Quat_t().RotationX( rot.y ) * q;
 			changed = true;
 		}
 
 		if ( IsNotZero( rot.x ) ) {
-			q = q * quat_t().RotationY( rot.x );
+			q = q * Quat_t().RotationY( rot.x );
 			changed = true;
 		}
 
@@ -408,14 +408,14 @@ namespace GXMath
 			_changed.SetAll();
 
 			q.Normalize();
-			_viewMatrix = mat4_t::FromQuat( q );
+			_viewMatrix = Mat4_t::FromQuat( q );
 		}
 	}
 	
 	template <typename T>
-	inline void PerspectiveCamera<T>::RotateFPS (const degrees2_t &rotation)
+	inline void PerspectiveCamera<T>::RotateFPS (const Degrees2_t &rotation)
 	{
-		RotateFPS( rotation.template To< radians2_t >() );
+		RotateFPS( rotation.template To< Radians2_t >() );
 	}
 	
 /*
@@ -486,28 +486,28 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	inline void PerspectiveCamera<T>::RotateFlight (const radians3_t &rotation)
+	inline void PerspectiveCamera<T>::RotateFlight (const Radians3_t &rotation)
 	{
 		if ( IsZero( rotation ) )
 			return;
 		
-		radians3_t	rot = rotation;
+		Radians3_t	rot = rotation;
 		_LimitRotation( rot );
 
-		quat_t & q = _Orientation();
-		q = q * quat_t().Set( rot.y, rot.x, rot.z );
+		Quat_t & q = _Orientation();
+		q = q * Quat_t().Set( rot.y, rot.x, rot.z );
 	
 		_Rotate( rot );
 		_changed.SetAll();
 
 		q.Normalize();
-		_viewMatrix = mat4_t::FromQuat( q );
+		_viewMatrix = Mat4_t::FromQuat( q );
 	}
 	
 	template <typename T>
-	inline void PerspectiveCamera<T>::RotateFlight (const degrees3_t &rotation)
+	inline void PerspectiveCamera<T>::RotateFlight (const Degrees3_t &rotation)
 	{
-		RotateFlight( rotation.template To< radians3_t >() );
+		RotateFlight( rotation.template To< Radians3_t >() );
 	}
 	
 /*

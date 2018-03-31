@@ -34,7 +34,7 @@ namespace CreateInfo
 		{}
 
 		explicit GpuThread (const Platforms::ComputeSettings &settings) :
-			settings{ settings.version, (settings.isDebug ? EFlags::DebugContext : EFlags::type(0)),
+			settings{ settings.version, (settings.isDebug ? EFlags::DebugContext : EFlags::type(0)) | EFlags::NoSurface,
 					  Platforms::EPixelFormat::Unknown, Platforms::EPixelFormat::Unknown,
 					  Platforms::MultiSamples(), settings.device, 0 }
 		{}

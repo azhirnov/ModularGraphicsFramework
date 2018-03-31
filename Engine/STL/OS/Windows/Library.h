@@ -19,11 +19,11 @@ namespace OS
 	// Library
 	//
 
-	struct _STL_EXPORT_ Library final : public Noncopyable
+	struct Library final : public Noncopyable
 	{
 	// types
 	public:
-		using Handle_t	= HiddenOSTypeFrom<void *>;	// HMODULE
+		using Handle_t	= DeferredTypeFrom<void *>;	// HMODULE
 		using Self		= Library;
 		using Func_t	= SharedLibFunction_t;
 

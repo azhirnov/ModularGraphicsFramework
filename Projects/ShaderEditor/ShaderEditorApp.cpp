@@ -126,14 +126,14 @@ namespace ShaderEditor
 				CHECK_ERR( _renderer.Add( "main", sh_main ) );
 			#endif
 
-			#if 0
+			#if 1
 				Renderer::ShaderDescr	sh_main;
 				sh_main.Pipeline( Pipelines::Create_glowballs );
 				sh_main.InChannel( "main", 0 );
 				CHECK_ERR( _renderer.Add( "main", sh_main ) );
 			#endif
 
-			#if 1
+			#if 0
 				Renderer::ShaderDescr	sh_main;
 				sh_main.Pipeline( Pipelines::Create_skyline );
 				CHECK_ERR( _renderer.Add( "main", sh_main ) );

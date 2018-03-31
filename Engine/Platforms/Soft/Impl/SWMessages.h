@@ -378,7 +378,7 @@ namespace GpuMsg
 	{
 	// variables
 		mutable Msg		message;
-		uint			index	= UMax;
+		uint			index	= UMax;		// resource unique index
 
 	// methods
 		explicit ResourceTableForwardMsg (uint idx) : index{idx} {}

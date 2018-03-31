@@ -258,9 +258,9 @@ namespace Base
 		CreateParallelThreadData (GlobalSystemsRef gs, CreateInfo::Thread &&info) :
 			info( RVREF( info ) ),
 			sync( OS::SyncEvent::MANUAL_RESET ),
-			main( gs->mainSystem.Ptr() ),
-			factory( gs->modulesFactory.Ptr() ),
-			fileMngr( gs->fileManager.Ptr() )
+			main( gs->mainSystem.ptr() ),
+			factory( gs->modulesFactory.ptr() ),
+			fileMngr( gs->fileManager.ptr() )
 		{}
 	};
 	

@@ -5,20 +5,12 @@
 #include "Engine/STL/Common/Platforms.h"
 #include "Engine/Config/STL.Config.h"
 
-#ifdef __GX_BUILD_LIB__
-#	define _STL_EXPORT_
-#elif defined( __GX_STL_BUILD__ )
-#	define _STL_EXPORT_		GX_DLL_EXPORT
-#else
-#	define _STL_EXPORT_		GX_DLL_IMPORT
-#endif
-
 #if defined(COMPILER_MSVC)
 #	pragma warning (push, 0)
 #endif
 
 #include <stdio.h>
-#include <math.h>
+#include <cmath>
 #include <string.h>
 #include <stdlib.h>
 #include <new>
@@ -76,7 +68,7 @@ namespace GX_STL
 		namespace _math_hidden_ {}
 		namespace _color_hidden_ {}
 
-		_STL_EXPORT_ void InitializeSTLMath ();
+		void InitializeSTLMath ();
 	}
 	
 	namespace  Java

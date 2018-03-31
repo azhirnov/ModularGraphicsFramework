@@ -190,7 +190,7 @@ namespace GXTypes
 
 		bool FindAndChange (TStringRef<const T> searchStr, TStringRef<const T> newStr, OUT usize &pos, usize start = 0);
 
-		void ChangeChars (const T searchChar, const T newChar);
+		void ReplaceChars (const T searchChar, const T newChar);
 		void ReplaceStrings (TStringRef<const T> pattern, TStringRef<const T> newString, usize start = 0);
 
 		void CutChars (const T value);
@@ -237,8 +237,6 @@ namespace GXTypes
 		bool HasSubStringIC (TStringRef<const T> right) const			{ return TStringRef<const T>(*this).HasSubStringIC( right ); }
 
 		bool EqualsIC (TStringRef<const T> right) const					{ return TStringRef<const T>(*this).EqualsIC( right ); }
-
-		//bool NumericLess (TStringRef<const T> right) const			{ return TStringRef<const T>(*this).NumericLess( right ); }
 		
 		bool LessThan (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this).LessThan( right ); }
 		bool LessThanIC (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this).LessThanIC( right ); }
@@ -996,11 +994,11 @@ namespace GXTypes
 	
 /*
 =================================================
-	ChangeChars
+	ReplaceChars
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void TString<T,S,MC>::ChangeChars (const T searchChar, const T newChar)
+	inline void TString<T,S,MC>::ReplaceChars (const T searchChar, const T newChar)
 	{
 		if ( searchChar == 0 or newChar == 0 )
 			RET_VOID;

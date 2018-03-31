@@ -721,7 +721,7 @@ namespace PlatformGL
 		GL_CALL( glPixelStorei( GL_PACK_ROW_LENGTH, GLint(row_length) ) );
 		GL_CALL( glPixelStorei( GL_PACK_IMAGE_HEIGHT, GLint(img_height) ) );
 
-		if ( gl::GL4_GetVersion() >= 450 )
+		if ( GRAPHICS_API_OPENGL >= 450 and gl::GL4_GetVersion() >= 450 )
 			return _ReadImage450( *msg, fmt, type, *req_descr->result );
 		else
 			return _ReadImage200( *msg, level_size, fmt, type, *req_descr->result );

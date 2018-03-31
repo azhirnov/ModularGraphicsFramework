@@ -4,9 +4,9 @@
 
 #ifdef PLATFORM_BASE_POSIX
 
+#include "Engine/STL/OS/Posix/PosixHeader.h"
 #include "Engine/STL/OS/Posix/FileSystem.h"
 #include "Engine/STL/Math/BinaryMath.h"
-#include "Engine/STL/OS/Posix/PosixHeader.h"
 
 namespace GX_STL
 {
@@ -69,15 +69,26 @@ namespace OS
 	IsDirectoryExist
 =================================================
 */
-	bool PosixFileSystem::IsDirectoryExist (StringCRef dirname)
+	bool PosixFileSystem::IsDirectoryExist (StringCRef folder)
 	{
-		if ( dirname.Empty() )
+		if ( folder.Empty() )
 			return true;
 
 		struct stat	st;
-		return ( ::stat( dirname.cstr(), &st ) == 0 and S_ISDIR(st.st_mode) );
+		return ( ::stat( folder.cstr(), &st ) == 0 and S_ISDIR(st.st_mode) );
 	}
 	
+/*
+=================================================
+	IsAbsolutePath
+=================================================
+*/
+	bool PosixFileSystem::IsAbsolutePath (StringCRef path)
+	{
+		TODO( "IsAbsolutePath" );
+		return false;
+	}
+
 /*
 =================================================
 	NewDirectory

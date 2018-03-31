@@ -8,7 +8,7 @@ bool CApp::_Test_BufferAlign ()
 	// generate data
 	Pipelines::BufferAlign_Struct	st1;
 	st1.b1	= true;
-	st1.b3	= uint4( true );
+	st1.b3	= Bool32_4( true );
 	st1.f1	= 4.123f;
 	st1.f2	= float2( 6.434f, 9.23f );
 	st1.i1	= 753;
@@ -21,7 +21,7 @@ bool CApp::_Test_BufferAlign ()
 	st2.b1 = true;
 	st2.u3 = uint4( 9, 8, 7, 0 );
 	st2.i1 = 0x123456;
-	st2.b3 = uint4( false, true, false, 0 );
+	st2.b3 = Bool32_4( false, true, false, false );
 	st2.f1 = 1.4335f;
 
 	BytesU	buf_size = SizeOf<Pipelines::BufferAlign_Struct> * 3;

@@ -132,7 +132,7 @@ namespace CMake
 	{
 		// serialize options
 		FOR( i, _userOptions ) {
-			src << "option( " << _userOptions[i] << " \"test\")\n";
+			src << _userOptions[i];
 		}
 	}
 
@@ -430,12 +430,64 @@ namespace CMake
 	
 /*
 =================================================
-	AddCondition
+	AddOption
 =================================================
 */
-	CMakeBuilder*  CMakeBuilder::AddCondition (StringCRef name)
+	CMakeBuilder*  CMakeBuilder::AddOption (StringCRef name, StringCRef info, bool value, StringCRef enableIf)
 	{
-		_userOptions.Add( name );
+		String	str;
+		
+		if ( not enableIf.Empty() )
+			str << "if (" << enableIf << ")\n\t";
+
+		str << "set( " << name << " " << (value ? "ON" : "OFF") << " CACHE BOOL \"" << info << "\" " << " )\n";
+		
+		if ( not enableIf.Empty() )
+			str << "endif()\n";
+
+		_userOptions.Add( RVREF(str) );
+		return this;
+	}
+	
+/*
+=================================================
+	AddOption
+=================================================
+*/
+	CMakeBuilder*  CMakeBuilder::AddOption (StringCRef name, StringCRef info, int value, StringCRef enableIf)
+	{
+		String	str;
+		
+		if ( not enableIf.Empty() )
+			str << "if (" << enableIf << ")\n\t";
+
+		str << "set( " << name << " \"" << value << "\" CACHE STRING \"" << info << "\" " << " )\n";
+		
+		if ( not enableIf.Empty() )
+			str << "endif()\n";
+
+		_userOptions.Add( RVREF(str) );
+		return this;
+	}
+	
+/*
+=================================================
+	AddOption
+=================================================
+*/
+	CMakeBuilder*  CMakeBuilder::AddOption (StringCRef name, StringCRef info, StringCRef value, StringCRef enableIf)
+	{
+		String	str;
+
+		if ( not enableIf.Empty() )
+			str << "if (" << enableIf << ")\n\t";
+
+		str << "set( " << name << " \"" << value << "\" CACHE STRING \"" << info << "\" " << " )\n";
+
+		if ( not enableIf.Empty() )
+			str << "endif()\n";
+
+		_userOptions.Add( RVREF(str) );
 		return this;
 	}
 
