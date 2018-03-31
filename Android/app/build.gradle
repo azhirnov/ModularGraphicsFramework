@@ -1,0 +1,70 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 24
+    //buildToolsVersion '27.0.3'
+
+    defaultConfig {
+        minSdkVersion 24
+        targetSdkVersion 24
+        versionCode 1
+        versionName "0.3"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            jniDebuggable true
+            renderscriptDebuggable false
+        }
+    }
+
+    flavorDimensions "normal"
+    productFlavors {
+        normal {
+            dimension "normal"
+            applicationIdSuffix ".normal"
+            versionNameSuffix "-normal"
+
+            applicationId "mgf.android"
+            externalNativeBuild {
+                cmake {
+                    arguments "-DANDROID_TOOLCHAIN=clang"   // or gcc
+                    //arguments "-DANDROID_PLATFORM=android-24"
+                    arguments "-DANDROID_STL=c++_static"
+                    //arguments "-DANDROID_NATIVE_API_LEVEL=24"
+                    //arguments "-DANDROID_ALLOW_UNDEFINED_SYMBOLS=FALSE"
+                    arguments "-DANDROID=1"
+                    arguments "-DOPENGL_VERSION=0"
+                    arguments "-DOPENCL_VERSION=0"
+                    abiFilters "armeabi-v7a"
+                }
+            }
+        }
+    }
+
+    sourceSets {
+        main {
+            assets {
+                srcDirs = ["src/main/assets"]
+            }
+        }
+    }
+
+    aaptOptions {
+        ignoreAssetsPattern '!*gitignore'
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "../../CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+}
