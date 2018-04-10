@@ -537,7 +537,7 @@ namespace PlatformVK
 
 		str << "\n---------------------";
 
-		LOG( str.cstr(), ELog::Info | ELog::SpoilerFlag );
+		LOG( str, ELog::Info | ELog::SpoilerFlag );
 		return true;
 	}
 	
@@ -607,7 +607,7 @@ namespace PlatformVK
 			}
 			log << "\n------------------------";
 
-			LOG( log.cstr(), ELog::Info | ELog::SpoilerFlag );
+			LOG( log, ELog::Info | ELog::SpoilerFlag );
 		}
 		return true;
 	}
@@ -1000,8 +1000,8 @@ namespace PlatformVK
 		CHECK_ERR( IsQueueCreated() );
 		CHECK_ERR( waitSemaphore.Count() == waitStages.Count() );
 		
-		using Semaphores_t		= FixedSizeArray< VkSemaphore, 16 >;
-		using PipelineStages_t	= FixedSizeArray< VkPipelineStageFlags, 16 >;
+		using Semaphores_t		= FixedSizeArray< VkSemaphore, GlobalConst::GAPI_MaxWaitSemaphores*2 >;
+		using PipelineStages_t	= FixedSizeArray< VkPipelineStageFlags, GlobalConst::GAPI_MaxWaitSemaphores*2 >;
 
 		// submit command buffers to grpahics/compute queue
 		VkSubmitInfo		submit_info			= {};
@@ -1543,7 +1543,7 @@ namespace PlatformVK
 			
 			if ( not HasDeviceExtension( name ) )
 			{
-				LOG( ("Vulkan device extension \""_str << name << "\" not supported and will be removed").cstr(), ELog::Info );
+				LOG( "Vulkan device extension \""_str << name << "\" not supported and will be removed", ELog::Info );
 
 				extensions.Erase( i );
 				--i;
@@ -1565,7 +1565,7 @@ namespace PlatformVK
 			
 			if ( not HasLayer( name ) )
 			{
-				LOG( ("Vulkan layer \""_str << name << "\" not supported and will be removed").cstr(), ELog::Info );
+				LOG( "Vulkan layer \""_str << name << "\" not supported and will be removed", ELog::Info );
 
 				layers.Erase( i );
 				--i;
@@ -1587,7 +1587,7 @@ namespace PlatformVK
 			
 			if ( not HasExtension( name ) )
 			{
-				LOG( ("Vulkan extension \""_str << name << "\" not supported and will be removed").cstr(), ELog::Info );
+				LOG( "Vulkan extension \""_str << name << "\" not supported and will be removed", ELog::Info );
 
 				extensions.Erase( i );
 				--i;
@@ -1659,7 +1659,7 @@ namespace PlatformVK
 			<< ", layer: " << pLayerPrefix << '(' << messageCode << ')'
 			<< ", message:\n" << pMessage;
 
-		LOG( log.cstr(), _DebugReportFlagsToLogType( (VkDebugReportFlagBitsEXT)flags ) );
+		LOG( log, _DebugReportFlagsToLogType( (VkDebugReportFlagBitsEXT)flags ) );
 
 		Cast< Vk1Device *>(pUserData)->_debugReportCounter++;
 

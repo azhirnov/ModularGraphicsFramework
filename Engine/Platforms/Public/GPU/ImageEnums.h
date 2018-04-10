@@ -93,7 +93,7 @@ namespace Platforms
 			Stencil,
 			DepthStencil,
 			Color0,
-			ColorMax	= Color0 + GlobalConst::Graphics_MaxColorBuffers,
+			ColorMax	= Color0 + GlobalConst::GAPI_MaxColorBuffers,
 
 			_Count		= ColorMax,
 			Unknown		= ~0u,
@@ -142,7 +142,7 @@ namespace Platforms
 	
 	inline constexpr ERenderTarget::type  ERenderTarget::ToColor (uint index)
 	{
-		//ASSERT(index < GlobalConst::Graphics_MaxColorBuffers);
+		//ASSERT(index < GlobalConst::GAPI_MaxColorBuffers);
 		return type( index + Color0 );
 	}
 
@@ -165,7 +165,7 @@ namespace Platforms
 	template <uint I>
 	struct ERenderTarget::_ToColor
 	{
-		STATIC_ASSERT( I < GlobalConst::Graphics_MaxColorBuffers );
+		STATIC_ASSERT( I < GlobalConst::GAPI_MaxColorBuffers );
 
 		static const type	value = type( I + Color0 );
 	};

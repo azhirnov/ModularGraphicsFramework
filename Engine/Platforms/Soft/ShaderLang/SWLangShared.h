@@ -22,6 +22,7 @@ namespace Impl
 	// variables
 	private:
 		Ptr<BinaryArray>	_data;
+		ArrayRef<T>			_view;
 		usize				_count	= 0;
 
 
@@ -47,7 +48,8 @@ namespace Impl
 
 
 	template <typename T>
-	inline SharedMemory<T>::SharedMemory (BinaryArray &data, usize count) : _data(&data), _count(count)
+	inline SharedMemory<T>::SharedMemory (BinaryArray &data, usize count) :
+		_data{ &data }, _view{ ArrayRef<T>::From( data ) }, _count{ count }
 	{
 		ASSERT( _data->Size() == (SizeOf<T> * count) );
 	}
@@ -56,28 +58,26 @@ namespace Impl
 	inline T const*  SharedMemory<T>::operator -> () const
 	{
 		ASSERT( _count == 1 );
-		return (T const *) _data->ptr();
+		return _view.ptr();
 	}
 	
 	template <typename T>
 	inline T *  SharedMemory<T>::operator -> ()
 	{
 		ASSERT( _count == 1 );
-		return (T *) _data->ptr();
+		return _view.ptr();
 	}
 
 	template <typename T>
 	inline T const&  SharedMemory<T>::operator [] (usize i) const
 	{
-		ASSERT( i < _count );
-		return *(T const*)(_data->ptr() + (SizeOf<T> * i));
+		return _view[i];
 	}
 	
 	template <typename T>
 	inline T&  SharedMemory<T>::operator [] (usize i)
 	{
-		ASSERT( i < _count );
-		return *(T *)(_data->ptr() + (SizeOf<T> * i));
+		return _view[i];
 	}
 //-----------------------------------------------------------------------------
 

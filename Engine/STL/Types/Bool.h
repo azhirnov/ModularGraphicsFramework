@@ -39,13 +39,13 @@ namespace GXTypes
 
 		explicit Bool (T value) : _value{ value }	{}
 
-		operator bool () const						{ return !!_value; }
+		operator bool () const							{ return !!_value; }
 
-		//bool	operator ! () const					{ return !_value; }
+		//bool	operator ! () const						{ return !_value; }
 
-		Self &	operator = (const Self &right)		{ _value = right._value;  return *this; }
-		Self &	operator = (bool right)				{ _value = (right ? 1 : 0);  return *this; }
-		Self &	operator = (T right)				{ _value = right;  return *this; }
+		Self &	operator = (const Self &right)			{ _value = right._value;  return *this; }
+		Self &	operator = (bool right)					{ _value = (right ? 1 : 0);  return *this; }
+		Self &	operator = (T right)					{ _value = right;  return *this; }
 
 		bool	operator == (const Self &right)	const	{ return bool(*this) == bool(right); }
 		//bool	operator == (bool right) const			{ return bool(*this) == right; }

@@ -89,7 +89,7 @@ namespace PlatformCL
 
 	// methods
 	public:
-		CL2PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci);
+		CL2PipelineResourceTable (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci);
 		~CL2PipelineResourceTable ();
 
 
@@ -121,8 +121,8 @@ namespace PlatformCL
 	constructor
 =================================================
 */
-	CL2PipelineResourceTable::CL2PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLPipelineResourceTableModuleID, UMax }, &_msgTypes, &_eventTypes )
+	CL2PipelineResourceTable::CL2PipelineResourceTable (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
+		CL2BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "CL2PipelineResourceTable" );
 
@@ -583,9 +583,9 @@ namespace PlatformCL
 
 namespace Platforms
 {
-	ModulePtr OpenCLObjectsConstructor::CreateCL2PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2PipelineResourceTable (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
 	{
-		return New< PlatformCL::CL2PipelineResourceTable >( gs, ci );
+		return New< PlatformCL::CL2PipelineResourceTable >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

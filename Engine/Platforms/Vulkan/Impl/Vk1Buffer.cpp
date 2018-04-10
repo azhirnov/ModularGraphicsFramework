@@ -70,7 +70,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci);
+		Vk1Buffer (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci);
 		~Vk1Buffer ();
 
 
@@ -109,8 +109,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1Buffer::Vk1Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1Buffer::Vk1Buffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),				_memManager( ci.memManager ),
 		_bufferId( VK_NULL_HANDLE ),	_memFlags( ci.memFlags ),
 		_memAccess( ci.access ),		_useMemMngr( ci.allocMem or ci.memManager.IsNotNull() ),
@@ -412,9 +412,9 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanObjectsConstructor::CreateVk1Buffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1Buffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
 	{
-		return New< PlatformVK::Vk1Buffer >( gs, ci );
+		return New< PlatformVK::Vk1Buffer >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

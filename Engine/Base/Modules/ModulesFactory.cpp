@@ -62,7 +62,7 @@ namespace Base
 		if ( _constructors.Find( ConstructorID( id, msg.GetValueTypeId() ), OUT iter ) and
 			 iter->second->IsValid( msg.GetValueTypeId() ) )
 		{
-			result = iter->second->Call( gs, msg );
+			result = iter->second->Call( id, gs, msg );
 
 			return result.IsNotNull();
 		}

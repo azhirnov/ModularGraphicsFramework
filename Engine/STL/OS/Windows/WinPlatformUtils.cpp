@@ -10,6 +10,7 @@
 #include "Engine/STL/Math/BinaryMath.h"
 #include "Engine/STL/OS/Base/BaseFileSystem.h"
 #include "Engine/STL/OS/Windows/WinHeader.h"
+#include "Engine/STL/Log/ToString.h"
 
 #include "winnls.h"
 #include "shobjidl.h"
@@ -180,7 +181,7 @@ namespace OS
 
 		str << StringCRef( buf, size-2 );
 
-		LOG( str.cstr(), ELog::Warning, file.cstr(), line );
+		LOG( str, ELog::Warning, file.cstr(), line );
 		return false;
 	}
 	

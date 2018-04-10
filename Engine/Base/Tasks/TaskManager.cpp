@@ -16,8 +16,8 @@ namespace Base
 	constructor
 =================================================
 */
-	TaskManager::TaskManager (GlobalSystemsRef gs, const CreateInfo::TaskManager &) :
-		Module( gs, ModuleConfig{ TaskManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
+	TaskManager::TaskManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::TaskManager &) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "TaskManager" );
 
@@ -194,9 +194,9 @@ namespace Base
 	_CreateTaskManager
 =================================================
 */
-	ModulePtr TaskManager::_CreateTaskManager (GlobalSystemsRef gs, const CreateInfo::TaskManager &ci)
+	ModulePtr TaskManager::_CreateTaskManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::TaskManager &ci)
 	{
-		return New< TaskManager >( gs, ci );
+		return New< TaskManager >( id, gs, ci );
 	}
 
 

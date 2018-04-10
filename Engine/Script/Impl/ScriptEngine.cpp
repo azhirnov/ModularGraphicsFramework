@@ -3,6 +3,7 @@
 #include "Engine/Script/Impl/ScriptEngine.h"
 #include "Engine/Script/Impl/ScriptModule.h"
 #include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Log/ToString.h"
 
 namespace GX_STL
 {
@@ -159,7 +160,7 @@ namespace GXScript
 			}
 		}
 
-		LOG( str.cstr(), type );
+		LOG( str, type );
 	}
 	
 /*
@@ -219,7 +220,7 @@ namespace GXScript
 		str << ", in " << asFunc;
 		str << ", function: " << func;
 
-		LOG( str.cstr(), ELog::Error, file.cstr(), line );
+		LOG( str, ELog::Error, file.cstr(), line );
 		return false;
 	}
 

@@ -5,7 +5,7 @@
 #ifdef COMPUTE_API_OPENCL
 
 # if defined( GRAPHICS_API_OPENGL )
-#	include "Engine/Platforms/OpenGL/Impl/gl4.h"
+#	include "Engine/Platforms/OpenGL/450/gl4.h"
 # endif
 
 namespace cl

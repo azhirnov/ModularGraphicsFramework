@@ -53,7 +53,7 @@ namespace Platforms
 
 	// methods
 	public:
-		OpenCLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
+		OpenCLContext (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
 		~OpenCLContext ();
 
 		
@@ -88,8 +88,8 @@ namespace Platforms
 	constructor
 =================================================
 */
-	OpenCLContext::OpenCLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
-		Module( gs, ModuleConfig{ CLContextModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	OpenCLContext::OpenCLContext (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci )
 	{
 		SetDebugName( "OpenCLContext" );
@@ -249,9 +249,9 @@ namespace Platforms
 	CreateOpenCLContext
 =================================================
 */
-	ModulePtr OpenCLObjectsConstructor:: CreateOpenCLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+	ModulePtr OpenCLObjectsConstructor:: CreateOpenCLContext (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
-		return New< OpenCLContext >( gs, ci );
+		return New< OpenCLContext >( id, gs, ci );
 	}
 
 }	// Platforms

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/ResourcePacker/Pipelines/PipelineConverter.h"
+#include "Engine/ResourcePacker/FilePacker/IFilePacker.h"
 
 namespace ResPack
 {
@@ -22,10 +23,13 @@ namespace ResPack
 		using PipelinePtr				= PipelineConverter::PipelinePtr;
 		using PipelineConverterConfig	= PipelineConverter::ConverterConfig;
 
+		using IFilePackerPtr			= UniquePtr< IFilePacker >;
+
 
 	// variables
 	private:
 		PipelineConverter		_pplnConverter;
+		String					_exeName;
 
 
 	// methods
@@ -38,12 +42,18 @@ namespace ResPack
 
 		bool Initialize ();
 
+		void SetExecutable (StringCRef name);
+
 		bool Run (StringCRef res);
 		
 		void AddPipeline (const PipelinePtr &ppln);
 
+		StringCRef GetExecutableName () const	{ return _exeName; }
+
 
 	private:
+		bool _PackFile (IFilePackerPtr &&file, StringCRef input, StringCRef output);
+
 		static void _Bind (GXScript::ScriptEnginePtr se);
 	};
 

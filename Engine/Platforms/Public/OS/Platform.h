@@ -52,7 +52,7 @@ namespace OSMsg
 	//
 	struct GetDisplays
 	{
-		using Displays_t = FixedSizeArray< Platforms::Display, 8 >;
+		using Displays_t = FixedSizeArray< Platforms::Display, GlobalConst::OS_MaxDisplays >;
 
 		Out< Displays_t >	result;
 	};

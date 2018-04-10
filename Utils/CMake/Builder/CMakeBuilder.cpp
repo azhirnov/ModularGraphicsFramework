@@ -263,9 +263,9 @@ namespace CMake
 				CHECK_ERR( existing_proj.IsExist( proj->_linkLibs[j].first ) );
 			}*/
 
-			FOR( j, proj->_dependencies ) {
-				CHECK( existing_proj.IsExist( proj->_dependencies[j].first ) );
-			}
+			//FOR( j, proj->_dependencies ) {
+			//	CHECK( existing_proj.IsExist( proj->_dependencies[j].first ) );
+			//}
 
 			CHECK( proj->ToString( OUT src ) );
 		}

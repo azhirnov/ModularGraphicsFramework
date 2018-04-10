@@ -96,10 +96,10 @@ namespace OS
 	
 /*
 =================================================
-	Load
+	_LoadFromHandle
 =================================================
 */
-	bool Library::LoadFromHandle (const Handle_t &lib, bool canFree)
+	bool Library::_LoadFromHandle (const Handle_t &lib, bool canFree)
 	{
 		Unload();
 
@@ -107,14 +107,14 @@ namespace OS
 			
 		_freeWhenDelete	 = canFree;
 		_library		 = lib;
-		uint	size	 = ::GetModuleFileNameA( _library.Get<HMODULE>(), a_buf, (DWORD) CountOf(a_buf) );
+		uint	size	 = ::GetModuleFileNameA( _library.Get<HMODULE>(), OUT a_buf, (DWORD) CountOf(a_buf) );
 
 		if ( size == 0 ) {
 			_library = null;
 			return false;
 		}
 
-		_name.Copy( StringCRef( a_buf, size ) );
+		_name = StringCRef( a_buf, size );
 		return IsValid();
 	}
 	
@@ -125,7 +125,7 @@ namespace OS
 */
 	bool Library::LoadSelf ()
 	{
-		return LoadFromHandle( Handle_t( ::GetModuleHandle( (LPCSTR)null ) ) );
+		return _LoadFromHandle( Handle_t( ::GetModuleHandle( (LPCSTR)null ) ) );
 	}
 	
 /*
@@ -152,12 +152,12 @@ namespace OS
 	GetProc
 =================================================
 */
-	Library::Func_t Library::GetProc (StringCRef procName, Func_t defProc) const
+	Library::Func_t  Library::GetProc (StringCRef procName, Func_t defProc) const
 	{
 		ASSERT( IsValid() );
 		ASSERT( not procName.Empty() );
 
-		Func_t tmp = ReferenceCast<Func_t>( GetProcAddress( _library.Get<HMODULE>(), procName.cstr() ) );
+		Func_t tmp = ReferenceCast<Func_t>( ::GetProcAddress( _library.Get<HMODULE>(), procName.cstr() ) );
 		return tmp != null ? tmp : defProc;
 	}
 

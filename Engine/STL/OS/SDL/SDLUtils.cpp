@@ -6,6 +6,7 @@
 
 #include "Engine/STL/OS/SDL/SDLUtils.h"
 #include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Log/ToString.h"
 
 namespace GX_STL
 {
@@ -28,7 +29,7 @@ namespace OS
 		
 		str << err << "\n in " << sdlCall << ", function " << func;
 
-		LOG( str.cstr(), ELog::Warning, file.cstr(), line );
+		LOG( str, ELog::Warning, file.cstr(), line );
 
 		SDL_ClearError();
 		return false;

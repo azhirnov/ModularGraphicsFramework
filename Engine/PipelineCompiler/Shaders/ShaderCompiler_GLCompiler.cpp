@@ -2,7 +2,7 @@
 
 #include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
+#include "Engine/Platforms/OpenGL/450/GL4Messages.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -36,7 +36,7 @@ namespace PipelineCompiler
 	_CompileShader
 =================================================
 */
-	static bool _CompileShader (GLuint shader, EShader::type shaderType, ArrayCRef<StringCRef> sources, OUT String &log)
+	static bool _CompileShader (GLuint shader, ArrayCRef<StringCRef> sources, OUT String &log)
 	{
 		CHECK_ERR( shader != 0 and not sources.Empty() );
 
@@ -528,7 +528,7 @@ namespace PipelineCompiler
 		_DumpBufferBlockInfo( prog, INOUT str );
 		_DumpUniformsInfo( prog, INOUT str );
 
-		LOG( str.cstr(), ELog::Info | ELog::SpoilerFlag );
+		LOG( str, ELog::Info | ELog::SpoilerFlag );
 	}
 
 /*
@@ -550,7 +550,7 @@ namespace PipelineCompiler
 
 			GL_CALL( shader_id = glCreateShader( GL4Enum(shader.type) ) );
 
-			res &= _CompileShader( shader_id, shader.type, shader.src, OUT log );
+			res &= _CompileShader( shader_id, shader.src, OUT log );
 		}
 
 		// link program

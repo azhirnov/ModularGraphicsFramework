@@ -41,11 +41,11 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	ModulePtr  Vk1PipelineCache::Create (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
+	ModulePtr  Vk1PipelineCache::Create (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
 	{
 		// TODO: validate and cache
 
-		auto	result = VulkanObjectsConstructor::CreateVk1GraphicsPipeline( gs, ci );
+		auto	result = VulkanObjectsConstructor::CreateVk1GraphicsPipeline( id, gs, ci );
 
 		/*ModuleUtils::Initialize({ result });
 
@@ -60,11 +60,11 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	ModulePtr  Vk1PipelineCache::Create (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
+	ModulePtr  Vk1PipelineCache::Create (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
 	{
 		// TODO: validate and cache
 
-		auto	result = VulkanObjectsConstructor::CreateVk1ComputePipeline( gs, ci );
+		auto	result = VulkanObjectsConstructor::CreateVk1ComputePipeline( id, gs, ci );
 
 		/*ModuleUtils::Initialize({ result });
 

@@ -46,7 +46,7 @@ namespace PlatformVK
 			AttachmentInfo () {}
 		};
 	
-		using Attachments_t		= FixedSizeArray< AttachmentInfo, GlobalConst::Graphics_MaxColorBuffers >;
+		using Attachments_t		= FixedSizeArray< AttachmentInfo, GlobalConst::GAPI_MaxColorBuffers >;
 
 
 	// constants
@@ -66,7 +66,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1Framebuffer (GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci);
+		Vk1Framebuffer (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci);
 		~Vk1Framebuffer ();
 
 
@@ -103,8 +103,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1Framebuffer::Vk1Framebuffer (GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkFramebufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1Framebuffer::Vk1Framebuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_framebufferId( VK_NULL_HANDLE ),
 		_descr( ci.size, ci.layers )
 	{
@@ -363,8 +363,8 @@ namespace PlatformVK
 		CHECK_ERR( not _attachments.Empty() );
 
 		using ImageViewMessages_t		= MessageListFrom< GpuMsg::GetImageDescriptor, GpuMsg::CreateVkImageView >;
-		using ImageViews_t				= FixedSizeArray< VkImageView, GlobalConst::Graphics_MaxColorBuffers + 1 >;
-		using ColorAttachmentInfos_t	= FixedSizeArray< AttachmentInfo, GlobalConst::Graphics_MaxColorBuffers >;
+		using ImageViews_t				= FixedSizeArray< VkImageView, GlobalConst::GAPI_MaxColorBuffers + 1 >;
+		using ColorAttachmentInfos_t	= FixedSizeArray< AttachmentInfo, GlobalConst::GAPI_MaxColorBuffers >;
 
 		RenderPassDescriptor	render_pass_descr;
 		VkRenderPass			render_pass		= VK_NULL_HANDLE;
@@ -605,9 +605,9 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanObjectsConstructor::CreateVk1Framebuffer (GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1Framebuffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci)
 	{
-		return New< PlatformVK::Vk1Framebuffer >( gs, ci );
+		return New< PlatformVK::Vk1Framebuffer >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

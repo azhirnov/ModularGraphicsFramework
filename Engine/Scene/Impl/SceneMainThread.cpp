@@ -39,7 +39,7 @@ namespace Scene
 
 	// methods
 	public:
-		SceneMainThread (GlobalSystemsRef, const CreateInfo::SceneMain &);
+		SceneMainThread (UntypedID_t, GlobalSystemsRef, const CreateInfo::SceneMain &);
 		~SceneMainThread ();
 
 
@@ -64,8 +64,8 @@ namespace Scene
 	constructor
 =================================================
 */
-	SceneMainThread::SceneMainThread (GlobalSystemsRef gs, const CreateInfo::SceneMain &ci) :
-		Module( gs, ModuleConfig{ SceneModuleID, 1 }, &_msgTypes, &_eventTypes )
+	SceneMainThread::SceneMainThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::SceneMain &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "SceneMainThread" );
 		
@@ -183,9 +183,9 @@ namespace Scene
 	CreateSceneMainThread
 =================================================
 */
-	ModulePtr  SceneObjectConstructor::CreateSceneMainThread (GlobalSystemsRef gs, const CreateInfo::SceneMain &ci)
+	ModulePtr  SceneObjectConstructor::CreateSceneMainThread (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::SceneMain &ci)
 	{
-		return New<SceneMainThread>( gs, ci );
+		return New< SceneMainThread >( id, gs, ci );
 	}
 
 }	// Scene

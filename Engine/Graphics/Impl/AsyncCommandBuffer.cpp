@@ -118,7 +118,7 @@ namespace Graphics
 
 	// methods
 	public:
-		AsyncCommandBuffer (GlobalSystemsRef gs, const CreateInfo::AsyncCommandBuffer &ci);
+		AsyncCommandBuffer (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::AsyncCommandBuffer &ci);
 		~AsyncCommandBuffer ();
 
 
@@ -154,8 +154,8 @@ namespace Graphics
 	constructor
 =================================================
 */
-	AsyncCommandBuffer::AsyncCommandBuffer (GlobalSystemsRef gs, const CreateInfo::AsyncCommandBuffer &ci) :
-		GraphicsBaseModule( gs, ModuleConfig{ AsyncCommandBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	AsyncCommandBuffer::AsyncCommandBuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::AsyncCommandBuffer &ci) :
+		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_cmdBufferMngr{ ci.cmdBufMngr },	_cmdBufferId{ 0 },
 		_currCmdIndex{ UMax }
 	{
@@ -587,9 +587,9 @@ namespace Graphics
 	CreateAsyncCommandBuffer
 =================================================
 */
-	ModulePtr  GraphicsObjectsConstructor::CreateAsyncCommandBuffer (GlobalSystemsRef gs, const CreateInfo::AsyncCommandBuffer &ci)
+	ModulePtr  GraphicsObjectsConstructor::CreateAsyncCommandBuffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::AsyncCommandBuffer &ci)
 	{
-		return New< AsyncCommandBuffer >( gs, ci );
+		return New< AsyncCommandBuffer >( id, gs, ci );
 	}
 
 }	// Graphics

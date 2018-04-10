@@ -60,7 +60,7 @@ namespace PipelineCompiler
 
 		_GetTranslationErrors() << message << ", file: \"LunarGLASS\"\n";
 
-		//LOG( ("LunarGLASS: "_str << message).cstr(), ELog::Error );
+		//LOG( "LunarGLASS: "_str << message, ELog::Error );
 	}
 //-----------------------------------------------------------------------------
 
@@ -522,13 +522,14 @@ namespace PipelineCompiler
 		{
 			case EShaderDstFormat::SPIRV_Source :
 			case EShaderDstFormat::SPIRV_Binary :
+			{
 				version			= VULKAN_VERSION;
-				client			= glslang::EShClientVulkan;		// is_vulkan ? glslang::EShClientVulkan : glslang::EShClientOpenGL
-				client_version	= VULKAN_VERSION;				// is_vulkan ? VULKAN_VERSION : GLSL_VERSION;
+				client			= is_vulkan ? glslang::EShClientVulkan : glslang::EShClientOpenGL;
+				client_version	= is_vulkan ? VULKAN_VERSION : GLSL_VERSION;
 				target			= glslang::EshTargetSpv;
 				target_version	= SPIRV_VERSION;
 				break;
-
+			}
 			case EShaderDstFormat::GLSL_Source :
 			default :
 				break;
@@ -600,6 +601,7 @@ namespace PipelineCompiler
 		switch ( cfg.target )
 		{
 			case EShaderDstFormat::GLSL_Source :
+			//case EShaderDstFormat::GLSL_VulkanSource :
 			//case EShaderDstFormat::GLSL_ES_Source :
 			{
 				switch ( cfg.source )
@@ -625,6 +627,39 @@ namespace PipelineCompiler
 
 						CHECK_COMP( _GLSLangParse( cfg2, data, OUT log, OUT glslang_data ) );
 						CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
+						CHECK_COMP( _TranslateGXSLtoGLSL( cfg2, glslang_data, OUT log, OUT result ) );
+						
+						if ( cfg.optimize )
+						{
+							_ShaderData	data2 = data;
+							data2.src.Clear();
+							data2.src << (const char*) result.ptr();
+							data2.entry = "main";
+
+							cfg2				= cfg;
+							cfg2.source			= EShaderSrcFormat::GLSL;
+							cfg2.typeReplacer	= Uninitialized;
+
+							BinaryArray	temp;
+							CHECK_COMP( _OptimizeGLSL( cfg2, data2, OUT log, OUT temp ) );
+
+							result = RVREF( temp );
+						}
+						return true;
+					}
+					//case EShaderSrcFormat::GLSL_Vulkan :
+					case EShaderSrcFormat::GXSL_Vulkan :
+					{
+						_GLSLangResult	glslang_data;
+						Config			cfg2 = cfg;
+						
+						cfg2.skipExternals	= cfg.optimize ? false : cfg.skipExternals;
+						cfg2.target			= EShaderDstFormat::SPIRV_Source;
+
+						CHECK_COMP( _GLSLangParse( cfg2, data, OUT log, OUT glslang_data ) );
+						CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
+						
+						cfg2.target = cfg.target;
 						CHECK_COMP( _TranslateGXSLtoGLSL( cfg2, glslang_data, OUT log, OUT result ) );
 						
 						if ( cfg.optimize )

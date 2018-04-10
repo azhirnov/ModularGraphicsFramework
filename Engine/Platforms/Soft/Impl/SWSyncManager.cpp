@@ -67,7 +67,7 @@ namespace PlatformSW
 
 	// methods
 	public:
-		SWSyncManager (GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci);
+		SWSyncManager (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci);
 		~SWSyncManager ();
 
 
@@ -100,8 +100,8 @@ namespace PlatformSW
 	constructor
 =================================================
 */
-	SWSyncManager::SWSyncManager (GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci) :
-		SWBaseModule( gs, ModuleConfig{ SWSyncManagerModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	SWSyncManager::SWSyncManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci) :
+		SWBaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_counter{ 0 }
 	{
 		SetDebugName( "SWSyncManager" );
@@ -383,9 +383,9 @@ namespace PlatformSW
 
 namespace Platforms
 {
-	ModulePtr SoftRendererObjectsConstructor::CreateSWSyncManager (GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreateSWSyncManager (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci)
 	{
-		return New< PlatformSW::SWSyncManager >( gs, ci );
+		return New< PlatformSW::SWSyncManager >( id, gs, ci );
 	}
 
 }	// Platforms

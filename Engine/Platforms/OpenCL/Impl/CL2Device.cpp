@@ -517,7 +517,7 @@ namespace PlatformCL
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_EXTENSIONS, 0, null, OUT &size ) );
 		info.Reserve( size );
 
-		LOG( log.cstr(), ELog::Debug | ELog::SpoilerFlag );
+		LOG( log, ELog::Debug | ELog::SpoilerFlag );
 
 		// write extensions
 		log.Clear();
@@ -542,7 +542,7 @@ namespace PlatformCL
 
 		log << info.SubString( pos+1 );
 		
-		LOG( log.cstr(), ELog::Debug | ELog::SpoilerFlag );
+		LOG( log, ELog::Debug | ELog::SpoilerFlag );
 		return true;
 	}
 

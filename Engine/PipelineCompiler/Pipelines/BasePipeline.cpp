@@ -3,6 +3,7 @@
 #include "Engine/PipelineCompiler/Pipelines/BasePipeline.h"
 #include "Engine/PipelineCompiler/Pipelines/PipelineManager.h"
 #include "Engine/PipelineCompiler/Common/ToGLSL.h"
+#include "Engine/PipelineCompiler/glsl/glsl_source_vfs.h"
 
 namespace PipelineCompiler
 {
@@ -27,6 +28,23 @@ namespace PipelineCompiler
 			_name[i] = StringUtils::ToLower( _name[i] );
 		}
 
+		_lastEditTime = OS::FileSystem::GetFileLastModificationTime( _path ).ToTime();
+
+		PipelineManager::Instance()->Add( this );
+	}
+	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	BasePipeline::BasePipeline (StringCRef path, StringCRef name) :
+		_path( path ),
+		_name( name ),
+		shaderFormat{ EShaderSrcFormat::GLSL }
+	{
+		_lastEditTime = OS::FileSystem::GetFileLastModificationTime( _path ).ToTime();
+
 		PipelineManager::Instance()->Add( this );
 	}
 	
@@ -40,6 +58,18 @@ namespace PipelineCompiler
 		PipelineManager::Instance()->Remove( this );
 	}
 	
+/*
+=================================================
+	Depends
+=================================================
+*/
+	void BasePipeline::Depends (StringCRef filename)
+	{
+		CHECK_ERR( OS::FileSystem::IsFileExist( filename ), void() );
+
+		_lastEditTime = Max( _lastEditTime, OS::FileSystem::GetFileLastModificationTime( filename ).ToTime() );
+	}
+
 /*
 =================================================
 	Path
@@ -210,7 +240,7 @@ namespace PipelineCompiler
 
 #ifdef GL_ARB_gpu_shader_int64
 #extension GL_ARB_gpu_shader_int64 : require
-#define ARB_gpu_shader_int64_enabled  1
+//#define ARB_gpu_shader_int64_enabled  1
 #endif
 
 // for vulkan compatibility
@@ -338,7 +368,7 @@ namespace PipelineCompiler
 		str << EShader::ToString( shaderType ) << " shader \"" << Name() << "\" in \""
 			<< Path() << "\" compilation error\n---------------\n" << log;
 		
-		LOG( str.cstr(), ELog::Error | ELog::OpenSpoilerFlag );
+		LOG( str, ELog::Error | ELog::OpenSpoilerFlag );
 		return false;
 	}
 //=========================================================
@@ -622,13 +652,28 @@ namespace PipelineCompiler
 */
 	BasePipeline::ShaderModule&  BasePipeline::ShaderModule::Load (StringCRef path, StringCRef defines)
 	{
-		File::RFilePtr	file;
-		CHECK_ERR( (file = File::HddRFile::New( path )), *this );
-		
-		const usize	len		= usize(file->RemainingSize());
-		String		src;	src.Resize( len );
+		CHECK_ERR( not path.Empty(), *this );
 
-		CHECK_ERR( file->Read( src.ptr(), src.LengthInBytes() ), *this );
+		String	src;
+
+		// load shader from standart library
+		if ( path.Length() > 2 and path.Front() == '<' and path.Back() == '>' )
+		{
+			CHECK_ERR( glsl_vfs::LoadFile( path.SubString( 1, path.Length()-2 ), OUT src ), *this );
+		}
+		else
+		// load from file system
+		{
+			File::RFilePtr	file;
+			CHECK_ERR( (file = File::HddRFile::New( path )), *this );
+		
+			const usize	len	= usize(file->RemainingSize());
+			src.Resize( len );
+
+			CHECK_ERR( file->Read( src.ptr(), src.LengthInBytes() ), *this );
+
+			_maxEditTime = Max( _maxEditTime, OS::FileSystem::GetFileLastModificationTime( path ).ToTime() );
+		}
 
 		defines >> src;
 
@@ -665,12 +710,35 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	ShaderModule::Depends
+=================================================
+*/
+	BasePipeline::ShaderModule&  BasePipeline::ShaderModule::Depends (StringCRef filename)
+	{
+		CHECK_ERR( OS::FileSystem::IsFileExist( filename ), *this );
+
+		_maxEditTime = Max( _maxEditTime, OS::FileSystem::GetFileLastModificationTime( filename ).ToTime() );
+		return *this;
+	}
+
+/*
+=================================================
 	ShaderModule::IsEnabled
 =================================================
 */
 	bool BasePipeline::ShaderModule::IsEnabled () const
 	{
 		return not _source.Empty();
+	}
+	
+/*
+=================================================
+	ShaderModule::LastEditTime
+=================================================
+*/
+	TimeL BasePipeline::ShaderModule::LastEditTime () const
+	{
+		return _maxEditTime;
 	}
 
 /*

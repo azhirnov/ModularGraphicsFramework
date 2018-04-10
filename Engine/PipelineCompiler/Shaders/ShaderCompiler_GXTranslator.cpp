@@ -41,9 +41,11 @@ namespace PipelineCompiler
 		bool TranslateArg (const TypeInfo &, INOUT String &src) override;
 		bool TranslateType (const TypeInfo &, INOUT String &src) override;
 		bool TranslateName (const TypeInfo &, INOUT String &src) override;
+		bool TranslateFunctionName (INOUT String &name) override;
 
 		bool TranslateExternal (glslang::TIntermTyped*, const TypeInfo &, INOUT String &src) override;
 		bool TranslateOperator (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) override;
+		bool TranslateFunction (StringCRef name, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) override;
 		bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) override;
 		
 		bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) override;
@@ -227,8 +229,8 @@ namespace PipelineCompiler
 			res << "layout(" << ToStringGLSL( t.format ) << ") ";	// TODO: for writeonly access format you may skip explicit format
 
 		// precision
-		if ( t.precision != EPrecision::Default )
-			res << ToStringGLSL( t.precision ) << ' ';
+		//if ( t.precision != EPrecision::Default )
+		//	res << ToStringGLSL( t.precision ) << ' ';
 
 		// type
 		if ( not t.typeName.Empty() ) {
@@ -300,8 +302,8 @@ namespace PipelineCompiler
 			res << "layout(" << ToStringGLSL( t.format ) << ") ";	// TODO: for writeonly access format you may skip explicit format
 
 		// precision
-		if ( t.precision != EPrecision::Default )
-			res << ToStringGLSL( t.precision ) << ' ';
+		//if ( t.precision != EPrecision::Default )
+		//	res << ToStringGLSL( t.precision ) << ' ';
 
 		// type
 		if ( not t.typeName.Empty() ) {
@@ -324,6 +326,20 @@ namespace PipelineCompiler
 		src << t.name;
 		return true;
 	}
+	
+/*
+=================================================
+	TranslateFunctionName
+=================================================
+*/
+	bool GLSL_DstLanguage::TranslateFunctionName (INOUT String &name)
+	{
+		usize	pos = 0;
+		if ( name.Find( '(', OUT pos ) ) {
+			name = name.SubString( 0, pos );
+		}
+		return true;
+	}
 
 /*
 =================================================
@@ -333,31 +349,28 @@ namespace PipelineCompiler
 	bool GLSL_DstLanguage::TranslateExternal (glslang::TIntermTyped* typed, const TypeInfo &info, INOUT String &str)
 	{
 		glslang::TType const&	type	= typed->getType();
-		auto const&				qual	= type.getQualifier();
-
-		if ( type.getBasicType() == glslang::TBasicType::EbtBlock and
-			(qual.storage == glslang::TStorageQualifier::EvqBuffer or qual.storage == glslang::TStorageQualifier::EvqUniform) )
-		{
+		
+		if ( EShaderVariable::IsBuffer( info.type ) ) {
 			CHECK_ERR( _TranslateBuffer( type, info, INOUT str ) );
 		}
 		else
-		if ( type.isImage() or type.getSampler().isCombined() ) {
+		if ( EShaderVariable::IsImage( info.type ) or EShaderVariable::IsTexture( info.type ) ) {
 			CHECK_ERR( _TranslateImage( type, info, INOUT str ) );
 		}
 		else
-		if ( qual.storage == glslang::TStorageQualifier::EvqShared ) {
+		if ( info.qualifier[ EVariableQualifier::Shared ] ) {
 			CHECK_ERR( _TranslateShared( info, INOUT str ) );
 		}
 		else
-		if ( qual.storage == glslang::TStorageQualifier::EvqVaryingIn or qual.storage == glslang::TStorageQualifier::EvqVaryingOut ) {
+		if ( info.qualifier[ EVariableQualifier::In ] or info.qualifier[ EVariableQualifier::Out ] ) {
 			CHECK_ERR( _TranslateVarying( type, info, INOUT str ) );
 		}
 		else
-		if ( qual.storage == glslang::TStorageQualifier::EvqConst ) {
+		if ( info.qualifier[ EVariableQualifier::Constant ] ) {
 			CHECK_ERR( _TranslateConst( typed, info, INOUT str ) );
 		}
 		else
-		if ( qual.storage == glslang::TStorageQualifier::EvqGlobal ) {
+		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqGlobal ) {
 			CHECK_ERR( _TranslateGlobal( typed, info, INOUT str ) );
 		}
 		else {
@@ -627,7 +640,7 @@ namespace PipelineCompiler
 				case glslang::TOperator::EOpAndAssign :					src << '('<<args[0] <<" &= "<< args[1]<<')';	break;
 				case glslang::TOperator::EOpInclusiveOrAssign :			src << '('<<args[0] <<" |= "<< args[1]<<')';	break;
 				case glslang::TOperator::EOpExclusiveOrAssign :			src << '('<<args[0] <<" ^= "<< args[1]<<')';	break;
-				case glslang::TOperator::EOpLeftShiftAssign :			src << '('<<args[0] <<" << ="<< args[1]<<')';	break;
+				case glslang::TOperator::EOpLeftShiftAssign :			src << '('<<args[0] <<" <<= "<< args[1]<<')';	break;
 				case glslang::TOperator::EOpRightShiftAssign :			src << '('<<args[0] <<" >>= "<< args[1]<<')';	break;
 
 				case glslang::TOperator::EOpAtan :						src << "atan" << all_args;						break;
@@ -828,10 +841,27 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	TranslateFunction
+=================================================
+*/
+	bool GLSL_DstLanguage::TranslateFunction (StringCRef name, const TypeInfo &, ArrayCRef<String> args, ArrayCRef<TypeInfo const*>, INOUT String &src)
+	{
+		src << name << '(';
+
+		FOR( i, args ) {
+			src << (i ? ", " : "") << args[i];
+		}
+
+		src << ')';
+		return true;
+	}
+	
+/*
+=================================================
 	TranslateSwizzle
 =================================================
 */
-	bool GLSL_DstLanguage::TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src)
+	bool GLSL_DstLanguage::TranslateSwizzle (const TypeInfo &, StringCRef val, StringCRef swizzle, INOUT String &src)
 	{
 		src << val << '.' << swizzle;
 		return true;
@@ -842,7 +872,7 @@ namespace PipelineCompiler
 	TranslateEntry
 =================================================
 */
-	bool GLSL_DstLanguage::TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src)
+	bool GLSL_DstLanguage::TranslateEntry (const TypeInfo &, StringCRef, ArrayCRef<TypeInfo>, INOUT String &)
 	{
 		return true;
 	}
@@ -852,7 +882,7 @@ namespace PipelineCompiler
 	TranslateStructAccess
 =================================================
 */
-	bool GLSL_DstLanguage::TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src)
+	bool GLSL_DstLanguage::TranslateStructAccess (const TypeInfo &, StringCRef objName, const TypeInfo &fieldType, INOUT String &src)
 	{
 		if ( not objName.Empty() )
 			src << objName << ".";
@@ -883,7 +913,7 @@ namespace PipelineCompiler
 			}
 		}
 		
-		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqBuffer )
+		if ( info.type == EShaderVariable::StorageBlock )
 		{
 			if ( info.memoryModel != EShaderMemoryModel::Default )
 				str << ToStringGLSL( info.memoryModel ) << ' ';
@@ -932,8 +962,8 @@ namespace PipelineCompiler
 		}
 
 		// precision
-		if ( info.precision != EPrecision::Default )
-			str << ToStringGLSL( info.precision ) << ' ';
+		//if ( info.precision != EPrecision::Default )
+		//	str << ToStringGLSL( info.precision ) << ' ';
 
 		// type
 		if ( not info.typeName.Empty() ) {
@@ -1050,7 +1080,6 @@ namespace PipelineCompiler
 		CHECK_ERR( typed->getAsSymbolNode() );
 
 		glslang::TType const&				type	= typed->getType();
-		glslang::TQualifier const&			qual	= type.getQualifier();
 		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
 
 		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );

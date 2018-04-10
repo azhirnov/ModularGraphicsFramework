@@ -63,6 +63,8 @@ namespace GXTypes
 		usize			Capacity ()		const			{ return _memory.Capacity(); }
 		constexpr usize MaxCapacity ()	const			{ return _memory.MaxSize(); }	// max available for allocation count of elements
 		usize			Count ()		const			{ return _memory.Count(); }
+		bool			Empty ()		const			{ return Count() <= 1; }
+
 		void			Clear ()						{ _memory.Resize(1); }
 
 		bool operator == (ArrayCRef<T> right) const		{ return ArrayCRef<T>(*this) == right; }

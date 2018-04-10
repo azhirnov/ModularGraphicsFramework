@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "CApp.h"
-#include "../Pipelines/all_pipelines.h"
+#include "Pipelines/all_pipelines.h"
 
 bool CApp::_Test_DynamicBuffer ()
 {
@@ -34,7 +34,7 @@ bool CApp::_Test_DynamicBuffer ()
 				) );
 
 	CreateInfo::PipelineTemplate	pt_ci;
-	Pipelines::Create_dynamicbuffertest( OUT pt_ci.descr );
+	Pipelines::Create_dynamicbuffer( OUT pt_ci.descr );
 	
 	ModulePtr	pipeline_template;
 	CHECK_ERR( factory->Create(

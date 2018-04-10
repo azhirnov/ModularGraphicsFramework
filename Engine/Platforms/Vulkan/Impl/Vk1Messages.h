@@ -109,7 +109,7 @@ namespace GpuMsg
 		};
 
 		using Name_t			= Platforms::PipelineLayoutDescriptor::Name_t;
-		using PushConstants_t	= FixedSizeMultiHashMap< Name_t, PushConstant, 8 >;
+		using PushConstants_t	= FixedSizeMultiHashMap< Name_t, PushConstant, GlobalConst::GAPI_MaxPushConstants/4 >;
 
 	// variables
 		Out< PushConstants_t >		result;

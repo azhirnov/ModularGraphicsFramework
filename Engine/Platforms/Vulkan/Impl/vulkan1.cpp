@@ -123,7 +123,7 @@ namespace vk
 		msg << ", in " << vkcall;
 		msg << ", function: " << func;
 
-		LOG( msg.cstr(), ELog::Error, file, line );
+		LOG( msg, ELog::Error, file, line );
 		return false;
 	}
 

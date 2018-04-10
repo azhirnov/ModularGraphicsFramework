@@ -68,6 +68,8 @@ namespace Platforms
 
 		static constexpr bits	AllCommands	=	bits().SetAll();
 
+		static constexpr bool	IsGraphics (type value);
+
 		static StringCRef	ToString (type value);
 		static String		ToString (bits values);
 	};
@@ -130,6 +132,14 @@ namespace Platforms
 		GX_ENUM_BITFIELD( ESubpassDependency );
 	};
 	
+	
+//-----------------------------------------------------------------------------//
+// EPipelineStage
+	
+	inline constexpr bool  EPipelineStage::IsGraphics (type value)
+	{
+		return value >= TopOfPipe and value <= BottomOfPipe;
+	}
 
 }	// Platforms
 }	// Engine

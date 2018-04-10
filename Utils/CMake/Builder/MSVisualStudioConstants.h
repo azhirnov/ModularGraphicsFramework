@@ -116,6 +116,8 @@ namespace VS
 
 	static constexpr uint	AssignInConditionalExpr				= 4706;		// assignment within conditional expression
 
+	static constexpr uint	ShiftCountNegativeOrBig				= 4293;		// '>>': shift count negative or too big, undefined behavior
+
 	// Static Analyzer Warnings //
 	static constexpr uint	ReturnValueIgnored					= 6031;		// Return value ignored: 'name'
 

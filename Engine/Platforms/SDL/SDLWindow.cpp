@@ -75,7 +75,7 @@ namespace PlatformSDL
 
 	// methods
 	public:
-		SDLWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci);
+		SDLWindow (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Window &ci);
 		~SDLWindow ();
 		
 
@@ -118,8 +118,8 @@ namespace PlatformSDL
 	constructor
 =================================================
 */
-	SDLWindow::SDLWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci) :
-		Module( gs, ModuleConfig{ SDLWindowModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	SDLWindow::SDLWindow (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Window &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci ),
 		_requestQuit( false ),
 		_looping( false )
@@ -671,9 +671,9 @@ namespace Platforms
 	CreateSDLWindow
 =================================================
 */
-	ModulePtr SDLObjectsConstructor::CreateSDLWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci)
+	ModulePtr SDLObjectsConstructor::CreateSDLWindow (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Window &ci)
 	{
-		return New< PlatformSDL::SDLWindow >( gs, ci );
+		return New< PlatformSDL::SDLWindow >( id, gs, ci );
 	}
 
 }	// Platforms

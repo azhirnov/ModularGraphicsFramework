@@ -1,9 +1,23 @@
 // This is generated file
-// Created at: 2018/03/27 - 23:07:58
+// Created at: 2018/04/10 - 21:05:57
 
 #pragma once
 
-#include "pipelines_common.h"
+#include "Engine/Platforms/Engine.Platforms.h"
+
+#ifdef GRAPHICS_API_SOFT
+#include "Engine/Platforms/Soft/ShaderLang/SWLang.h"
+#endif
+
+namespace Pipelines
+{
+	using namespace GX_STL;
+	using namespace GX_STL::GXTypes;
+	using namespace GX_STL::GXMath;
+
+	using namespace Engine::Platforms;
+}
+
 #include "shared_types.h"
 
 namespace Pipelines

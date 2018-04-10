@@ -139,7 +139,7 @@ namespace Graphics
 
 	// methods
 	public:
-		CommandBufferManager (GlobalSystemsRef gs, const CreateInfo::CommandBufferManager &ci);
+		CommandBufferManager (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::CommandBufferManager &ci);
 		~CommandBufferManager ();
 
 
@@ -184,8 +184,8 @@ namespace Graphics
 	constructor
 =================================================
 */
-	CommandBufferManager::CommandBufferManager (GlobalSystemsRef gs, const CreateInfo::CommandBufferManager &ci) :
-		GraphicsBaseModule( gs, ModuleConfig{ CommandBufferManagerModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	CommandBufferManager::CommandBufferManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::CommandBufferManager &ci) :
+		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_bufferChainLength{ Max( 2u, ci.bufferChainLength ) },		_bufferIndex{ 0 },
 		_scope{ EScope::None },										_frameIndex{ 0 },
 		_isVRCompatible{ false },									_isVRFrame{ false }
@@ -703,9 +703,9 @@ namespace Graphics
 	CreateCommandBufferManager
 =================================================
 */
-	ModulePtr  GraphicsObjectsConstructor::CreateCommandBufferManager (GlobalSystemsRef gs, const CreateInfo::CommandBufferManager &ci)
+	ModulePtr  GraphicsObjectsConstructor::CreateCommandBufferManager (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::CommandBufferManager &ci)
 	{
-		return New< CommandBufferManager >( gs, ci );
+		return New< CommandBufferManager >( id, gs, ci );
 	}
 
 }	// Graphics

@@ -15,15 +15,12 @@ namespace PipelineCompiler
 	_CompileCL
 =================================================
 */
-	bool ShaderCompiler::_CompileCL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result)
+	bool ShaderCompiler::_CompileCL (const Config &, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result)
 	{
 		CHECK_ERR( InitializeContext() );
 		
 		Message< GpuMsg::GetCLDeviceInfo >		req_dev;
 		CHECK( _app->CLThread()->Send( req_dev ) );
-
-		auto	cl_dev		= req_dev->result->device;
-		auto	cl_context	= req_dev->result->context;
 
 		Array<const char*>	parts;
 

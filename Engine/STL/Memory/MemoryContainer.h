@@ -387,7 +387,7 @@ namespace GXTypes
 			{
 				this->_memory = _buf;
 
-				UnsafeMem::MemCopy( this->_buf, other._buf, sizeof(_buf) );
+				UnsafeMem::MemCopy( this->_buf, other._buf, BytesU::SizeOf(_buf) );
 				DEBUG_ONLY( ZeroMem( other._buf ) );
 			}
 			else

@@ -63,7 +63,7 @@ namespace Scene
 
 	// methods
 	public:
-		SceneManager (GlobalSystemsRef, const CreateInfo::SceneManager &);
+		SceneManager (UntypedID_t, GlobalSystemsRef, const CreateInfo::SceneManager &);
 		~SceneManager ();
 
 
@@ -87,8 +87,8 @@ namespace Scene
 	constructor
 =================================================
 */
-	SceneManager::SceneManager (GlobalSystemsRef gs, const CreateInfo::SceneManager &ci) :
-		Module( gs, ModuleConfig{ SceneManagerModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	SceneManager::SceneManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::SceneManager &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_settings{ ci.settings },	_vrSettings{ ci.vrSettings }
 	{
 		SetDebugName( "SceneManager" );
@@ -345,9 +345,9 @@ namespace Scene
 	CreateSceneManager
 =================================================
 */
-	ModulePtr  SceneObjectConstructor::CreateSceneManager (GlobalSystemsRef gs, const CreateInfo::SceneManager &ci)
+	ModulePtr  SceneObjectConstructor::CreateSceneManager (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::SceneManager &ci)
 	{
-		return New<SceneManager>( gs, ci );
+		return New< SceneManager >( id, gs, ci );
 	}
 
 }	// Scene

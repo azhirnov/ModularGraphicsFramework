@@ -59,7 +59,7 @@ namespace Base
 
 	// methods
 	public:
-		ThreadManager (GlobalSystemsRef gs, const CreateInfo::ThreadManager &info);
+		ThreadManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ThreadManager &info);
 		~ThreadManager ();
 		
 		static void Register (GlobalSystemsRef);
@@ -81,8 +81,8 @@ namespace Base
 	private:
 		bool _SendToAllThreads (CallInThreadFunc_t func, bool exceptMain = false);
 
-		static ModulePtr _CreateParallelThread (GlobalSystemsRef, const CreateInfo::Thread &);
-		static ModulePtr _CreateThreadManager (GlobalSystemsRef, const CreateInfo::ThreadManager &);
+		static ModulePtr _CreateParallelThread (UntypedID_t, GlobalSystemsRef, const CreateInfo::Thread &);
+		static ModulePtr _CreateThreadManager (UntypedID_t, GlobalSystemsRef, const CreateInfo::ThreadManager &);
 
 		static void _RunAsync (void *);
 	};

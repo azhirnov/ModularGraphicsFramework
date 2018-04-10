@@ -47,7 +47,7 @@ namespace Base
 
 	// methods
 	public:
-		ParallelThreadImpl (GlobalSystemsRef gs, const CreateInfo::Thread &);
+		ParallelThreadImpl (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Thread &);
 		~ParallelThreadImpl ();
 
 

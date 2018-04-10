@@ -37,9 +37,9 @@ namespace Platforms
 		static void Register ();
 		static void Unregister ();
 
-		static ModulePtr CreateEmulatorVRThread (GlobalSystemsRef, const CreateInfo::VRThread &);
+		static ModulePtr CreateEmulatorVRThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::VRThread &);
 
-		static ModulePtr CreateOculusVRThread (GlobalSystemsRef, const CreateInfo::VRThread &);
+		static ModulePtr CreateOculusVRThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::VRThread &);
 	};
 
 

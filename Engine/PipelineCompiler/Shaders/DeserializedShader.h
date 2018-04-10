@@ -58,8 +58,9 @@ namespace PipelineCompiler
 			EShaderVariable::type			type				= EShaderVariable::Unknown;
 			EPrecision::type				precision			= EPrecision::Default;
 			EVariableQualifier::bits		qualifier;
-			EShaderMemoryModel::type		memoryModel			= EShaderMemoryModel::Default;		// for image and buffer
+			EShaderMemoryModel::type		memoryModel			= EShaderMemoryModel::Default;	// for image and buffer
 			EPixelFormat::type				format				= EPixelFormat::Unknown;		// for image only
+			uint							specConstID			= UMax;							// specialization const id
 			uint							arraySize			= 1;							// 0 - dynamic array	// TODO: array of array
 			
 			String _ToString () const;

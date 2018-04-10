@@ -17,6 +17,8 @@ namespace Base
 	{
 	// types
 	private:
+		using UntypedID_t	= ModuleMsg::UntypedID_t;
+
 
 		//
 		// Contructor interface
@@ -27,7 +29,7 @@ namespace Base
 			virtual ~IContructor () {}
 
 			virtual bool	  IsValid (TypeId id) const = 0;
-			virtual ModulePtr Call (GlobalSystemsRef gs, VariantCRef) const = 0;
+			virtual ModulePtr Call (UntypedID_t, GlobalSystemsRef, VariantCRef) const = 0;
 		};
 
 
@@ -38,7 +40,7 @@ namespace Base
 		struct ContructorImpl final : IContructor
 		{
 		// types
-			using CtorMsg_t	= ModulePtr (*) (GlobalSystemsRef gs, const CtorMsg &);
+			using CtorMsg_t	= ModulePtr (*) (UntypedID_t, GlobalSystemsRef, const CtorMsg &);
 
 		// variables
 			CtorMsg_t	_ctorMsg;
@@ -52,17 +54,16 @@ namespace Base
 				return _ctorMsg and id == TypeIdOf<CtorMsg>();
 			}
 
-			ModulePtr Call (GlobalSystemsRef gs, VariantCRef msg) const override
+			ModulePtr Call (UntypedID_t id, GlobalSystemsRef gs, VariantCRef msg) const override
 			{
 				if ( _ctorMsg and msg.IsType<CtorMsg>() )
-					return _ctorMsg( gs, msg.Get<CtorMsg>() );
+					return _ctorMsg( id, gs, msg.Get<CtorMsg>() );
 
 				return null;
 			}
 		};
 
-		using Constructor_t			= VariantInterface< IContructor, sizeof(ContructorImpl<int>) >;
-		using UntypedID_t			= ModuleMsg::UntypedID_t;
+		using Constructor_t	= VariantInterface< IContructor, sizeof(ContructorImpl<int>) >;
 
 
 		//
@@ -115,7 +116,7 @@ namespace Base
 		bool Search (StringCRef startsWith, OUT Array<UntypedID_t> &result) const;
 
 		template <typename ModIdType, typename CtorMsg>
-		bool Register (ModIdType id, ModulePtr (*ctor) (GlobalSystemsRef gs, const CtorMsg &));
+		bool Register (ModIdType id, ModulePtr (*ctor) (UntypedID_t, GlobalSystemsRef, const CtorMsg &));
 		
 		template <typename CtorMsg, typename ModIdType>
 		bool Unregister (ModIdType id);
@@ -155,7 +156,7 @@ namespace Base
 =================================================
 */
 	template <typename ModIdType, typename CtorMsg>
-	inline bool ModulesFactory::Register (ModIdType id, ModulePtr (*ctor) (GlobalSystemsRef gs, const CtorMsg &))
+	inline bool ModulesFactory::Register (ModIdType id, ModulePtr (*ctor) (UntypedID_t, GlobalSystemsRef, const CtorMsg &))
 	{
 		STATIC_ASSERT(( not CompileTime::IsSameTypes< ModIdType, UntypedID_t > ));
 		CHECK_ERR( ctor != null );

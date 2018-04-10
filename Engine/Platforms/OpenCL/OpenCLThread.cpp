@@ -61,7 +61,7 @@ namespace Platforms
 
 	// methods
 	public:
-		OpenCLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
+		OpenCLThread (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
 		~OpenCLThread ();
 		
 
@@ -96,8 +96,8 @@ namespace Platforms
 	constructor
 =================================================
 */
-	OpenCLThread::OpenCLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, ModuleConfig{ CLThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	OpenCLThread::OpenCLThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_settings( ci.settings.version, ci.settings.device, ci.settings.flags[ GraphicsSettings::EFlags::DebugContext ] ),
 		_device( GlobalSystems() )
 	{
@@ -450,9 +450,9 @@ namespace Platforms
 	CreateOpenCLThread
 =================================================
 */
-	ModulePtr OpenCLObjectsConstructor::CreateOpenCLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateOpenCLThread (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
-		return New< OpenCLThread >( gs, ci );
+		return New< OpenCLThread >( id, gs, ci );
 	}
 
 

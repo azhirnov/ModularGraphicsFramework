@@ -44,7 +44,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
+		Vk1RenderPass (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
 		~Vk1RenderPass ();
 
 		RenderPassDescriptor const&	GetDescriptor ()	const	{ return _descr; }
@@ -74,8 +74,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1RenderPass::Vk1RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkRenderPassModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1RenderPass::Vk1RenderPass (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_renderPassId( VK_NULL_HANDLE )
 	{
@@ -419,7 +419,7 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	Vk1RenderPassCache::Vk1RenderPassPtr  Vk1RenderPassCache::Create (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
+	Vk1RenderPassCache::Vk1RenderPassPtr  Vk1RenderPassCache::Create (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
 	{
 		// TODO: validate
 		
@@ -433,7 +433,7 @@ namespace PlatformVK
 		}
 		
 		// create new render pass
-		auto	result = New< Vk1RenderPass >( gs, ci );
+		auto	result = New< Vk1RenderPass >( id, gs, ci );
 
 		ModuleUtils::Initialize( {result}, null );
 
@@ -465,7 +465,7 @@ namespace PlatformVK
 namespace Platforms
 {
 
-	ModulePtr VulkanObjectsConstructor::CreateVk1RenderPass (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1RenderPass (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
 	{
 		ModulePtr	mod;
 		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetVkPrivateClasses>> >() );
@@ -474,7 +474,7 @@ namespace Platforms
 		mod->Send( req_cl );
 		CHECK_ERR( req_cl->result.IsDefined() and req_cl->result->renderPassCache );
 
-		return req_cl->result->renderPassCache->Create( gs, ci );
+		return req_cl->result->renderPassCache->Create( id, gs, ci );
 	}
 
 }	// Platforms

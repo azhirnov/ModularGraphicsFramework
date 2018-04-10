@@ -80,7 +80,7 @@ namespace PlatformWin
 
 	// methods
 	public:
-		WinWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci);
+		WinWindow (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::Window &ci);
 		~WinWindow ();
 		
 
@@ -125,8 +125,8 @@ namespace PlatformWin
 	constructor
 =================================================
 */
-	WinWindow::WinWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci) :
-		Module( gs, ModuleConfig{ WinWindowModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	WinWindow::WinWindow (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Window &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci ),
 		_wnd( UninitializedT< HWND >() ),
 		_requestQuit( false ),
@@ -742,9 +742,9 @@ namespace Platforms
 	CreateWinWindow
 =================================================
 */
-	ModulePtr WinObjectsConstructor::CreateWinWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci)
+	ModulePtr WinObjectsConstructor::CreateWinWindow (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Window &ci)
 	{
-		return New< PlatformWin::WinWindow >( gs, ci );
+		return New< PlatformWin::WinWindow >( id, gs, ci );
 	}
 
 }	// Platforms

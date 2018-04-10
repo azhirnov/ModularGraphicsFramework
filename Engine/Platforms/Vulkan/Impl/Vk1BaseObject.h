@@ -30,7 +30,7 @@ namespace PlatformVK
 		explicit Vk1BaseObject (Ptr<Vk1Device> dev) : _vkDevice(dev) {}
 
 		Ptr< Vk1Device >	GetDevice ()	const	{ return _vkDevice; }
-		vk::VkDevice		GetVkDevice ()	const	{ return GetDevice()->GetLogicalDevice(); }
+		vk::VkDevice		GetVkDevice ()	const	{ return _vkDevice and _vkDevice->IsDeviceCreated() ? _vkDevice->GetLogicalDevice() : null; }
 	};
 
 

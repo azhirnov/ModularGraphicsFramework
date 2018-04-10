@@ -84,8 +84,8 @@ namespace Base
 */
 	void MainSystem::_Create () noexcept
 	{
-		_taskMngr	= New<TaskManager>( GlobalSystems(), CreateInfo::TaskManager() );
-		_threadMngr = New<ThreadManager>( GlobalSystems(), CreateInfo::ThreadManager() );
+		_taskMngr	= New<TaskManager>( TaskManagerModuleID, GlobalSystems(), CreateInfo::TaskManager() );
+		_threadMngr = New<ThreadManager>( ThreadManagerModuleID, GlobalSystems(), CreateInfo::ThreadManager() );
 
 		CHECK( _SetState( EState::Initial ) );
 
@@ -150,9 +150,9 @@ namespace Base
 	_CreateThreadManager
 =================================================
 */
-	ModulePtr MainSystem::_CreateThreadManager (GlobalSystemsRef gs, const CreateInfo::ThreadManager &info)
+	ModulePtr MainSystem::_CreateThreadManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ThreadManager &info)
 	{
-		return New<ThreadManager>( gs, info );
+		return New<ThreadManager>( id, gs, info );
 	}
 	
 /*
@@ -160,9 +160,9 @@ namespace Base
 	_CreateTaskManager
 =================================================
 */
-	ModulePtr MainSystem::_CreateTaskManager (GlobalSystemsRef gs, const CreateInfo::TaskManager &info)
+	ModulePtr MainSystem::_CreateTaskManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::TaskManager &info)
 	{
-		return New<TaskManager>( gs, info );
+		return New<TaskManager>( id, gs, info );
 	}
 
 	

@@ -5,37 +5,31 @@
 #include "Engine/STL/OS/Posix/AtomicOp.h"
 #include "Engine/STL/OS/Windows/AtomicOp.h"
 
-#ifdef GX_USE_STD
-#	include <atomic>
-#endif
+# if not (defined( GX_ATOMIC_SUPPORTED ) and defined( GX_USE_STD ))
 
 namespace GX_STL
 {
 namespace GXTypes
 {
 
-# ifndef GX_USE_STD
-	
-
 	//
 	// Atomic
 	//
 
 	template <typename T>
-	struct Atomic
+	struct Atomic final
 	{
 	// types
 	public:
-		typedef T				Value_t;
-		typedef Atomic<T>		Self;
+		using Value_t	= T;
+		using Self		= Atomic<T>;
 
 	private:
-		typedef OS::AtomicOp	Op;
+		using Op		= OS::AtomicOp;
 
-		typedef CompileTime::TypeListFrom< bool,
-					byte, short, int, ilong, isize,
-					ubyte, ushort, uint, ulong, usize >		ValidTypeList_t;
-
+		using ValidTypeList_t	= CompileTime::TypeListFrom< bool,
+										byte, short, int, ilong, isize,
+										ubyte, ushort, uint, ulong, usize >;
 		STATIC_ASSERT( ValidTypeList_t::HasType<T> );
 
 
@@ -52,26 +46,26 @@ namespace GXTypes
 		forceinline explicit Atomic (const Self &other) : _value(other.Get()) {}
 		forceinline explicit Atomic (Self &&other) : _value(other.Get()) {}
 
-		CHECKRES forceinline explicit	operator T ()	const	{ return Get(); }
-		CHECKRES forceinline const T	Get ()			const	{ return Op::Get<T>( _value ); }
+		CHECKRES forceinline explicit	operator const T ()	const	{ return Get(); }
+		CHECKRES forceinline const T	Get ()				const	{ return Op::Get<T>( _value ); }
 
-		forceinline const T	operator ++ ()						{ return Op::Inc<T>( _value ); }
-		forceinline const T	operator -- ()						{ return Op::Dec<T>( _value ); }
-		forceinline const T	operator += (const T& right)		{ return Op::Add<T>( _value, right ); }
-		forceinline const T	operator -= (const T& right)		{ return Op::Sub<T>( _value, right ); }
-		forceinline const T	operator =  (const T& right)		{ return Op::Set<T>( _value, right ); }
-		forceinline const T	operator |= (const T& right)		{ return Op::Or<T> ( _value, right ); }
-		forceinline const T	operator &= (const T& right)		{ return Op::And<T>( _value, right ); }
-		forceinline const T	operator ^= (const T& right)		{ return Op::Xor<T>( _value, right ); }
+		forceinline const T	operator ++ ()							{ return Op::Inc<T>( _value ); }
+		forceinline const T	operator -- ()							{ return Op::Dec<T>( _value ); }
+		forceinline const T	operator += (const T& right)			{ return Op::Add<T>( _value, right ); }
+		forceinline const T	operator -= (const T& right)			{ return Op::Sub<T>( _value, right ); }
+		forceinline const T	operator =  (const T& right)			{ return Op::Set<T>( _value, right ); }
+		forceinline const T	operator |= (const T& right)			{ return Op::Or<T> ( _value, right ); }
+		forceinline const T	operator &= (const T& right)			{ return Op::And<T>( _value, right ); }
+		forceinline const T	operator ^= (const T& right)			{ return Op::Xor<T>( _value, right ); }
 		
-		forceinline const T	Inc ()								{ return Op::Inc<T>( _value ); }
-		forceinline const T	Dec ()								{ return Op::Dec<T>( _value ); }
-		forceinline const T	Add (const T& right)				{ return Op::Add<T>( _value, right ); }
-		forceinline const T	Sub (const T& right)				{ return Op::Sub<T>( _value, right ); }
-		forceinline const T	Set (const T& right)				{ return Op::Set<T>( _value, right ); }
-		forceinline const T	Or  (const T& right)				{ return Op::Or<T> ( _value, right ); }
-		forceinline const T	And (const T& right)				{ return Op::And<T>( _value, right ); }
-		forceinline const T	Xor (const T& right)				{ return Op::Xor<T>( _value, right ); }
+		forceinline const T	Inc ()									{ return Op::Inc<T>( _value ); }
+		forceinline const T	Dec ()									{ return Op::Dec<T>( _value ); }
+		forceinline const T	Add (const T& right)					{ return Op::Add<T>( _value, right ); }
+		forceinline const T	Sub (const T& right)					{ return Op::Sub<T>( _value, right ); }
+		forceinline const T	Set (const T& right)					{ return Op::Set<T>( _value, right ); }
+		forceinline const T	Or  (const T& right)					{ return Op::Or<T> ( _value, right ); }
+		forceinline const T	And (const T& right)					{ return Op::And<T>( _value, right ); }
+		forceinline const T	Xor (const T& right)					{ return Op::Xor<T>( _value, right ); }
 
 		forceinline const T	operator ++ (int)
 		{
@@ -88,7 +82,7 @@ namespace GXTypes
 		}
 
 		// if *this == compare then *this = val returns old *this
-		forceinline T CompareEx (const T& val, const T& compare)
+		forceinline const T CompareEx (const T& val, const T& compare)
 		{
 			return Op::CmpExch<T>( _value, val, compare );
 		}
@@ -97,87 +91,182 @@ namespace GXTypes
 		_GX_DIM_CMP_OPERATORS_TYPE( Get(), const T&, );
 	};
 
-# else
-	
+}	// GXTypes
+}	// GX_STL
+//-----------------------------------------------------------------------------
+
+
+# elif 1
+# include <atomic>
+
+namespace GX_STL
+{
+namespace GXTypes
+{
 
 	//
 	// Atomic
 	//
 
 	template <typename T>
-	struct Atomic
+	struct Atomic final
 	{
 	// types
 	public:
-		typedef T				Value_t;
-		typedef Atomic<T>		Self;
-
-	private:
-		typedef CompileTime::TypeListFrom< bool,
-					byte, short, int, ilong, isize,
-					ubyte, ushort, uint, ulong, usize >		ValidTypeList_t;
-
-		STATIC_ASSERT( ValidTypeList_t::HasType<T> );
+		using Value_t	= T;
+		using Self		= Atomic<T>;
 
 
 	// variables
 	private:
 		volatile std::atomic<T>			_atomic;
 
-		//static const std::memory_order	_memoryOrder = std::memory_order_seq_cst;
-
 
 	// methods
 	public:
-		Atomic (GX_DEFCTOR) : _atomic(0) {}
+		forceinline Atomic (GX_DEFCTOR) : _atomic(0) {}
 
-		explicit Atomic (T val) : _atomic(val) {}
-		explicit Atomic (const Self &sObj) : _atomic(sObj.Get()) {}
+		forceinline explicit Atomic (const T &val) : _atomic(val) {}
+		forceinline explicit Atomic (const Self &other) : _atomic(other.Get()) {}
+		forceinline explicit Atomic (Self &&other) : _atomic(other.Get()) {}
 
-		CHECKRES operator const volatile T () const		{ return Get(); }
-		CHECKRES T		Get ()	const					{ return _atomic.load(); }
+		forceinline CHECKRES explicit	operator const T ()	const	{ return Get(); }
+		forceinline CHECKRES const T	Get ()				const	{ return _atomic.load(); }
 
-		Self &	operator ++ ()					{ ++_atomic;				return *this; }
-		Self &	operator -- ()					{ --_atomic;				return *this; }
-		Self &	operator += (const T& right)	{ Add( right );				return *this; }
-		Self &	operator -= (const T& right)	{ Sub( right );				return *this; }
-		Self &	operator =  (const T& right)	{ _atomic.store( right );	return *this; }
-		Self &	operator |= (const T& right)	{ Or(  right );				return *this; }
-		Self &	operator &= (const T& right)	{ And( right );				return *this; }
-		Self &	operator ^= (const T& right)	{ Xor( right );				return *this; }
+		forceinline const T	operator ++ ()							{ return ++_atomic; }
+		forceinline const T	operator -- ()							{ return --_atomic; }
+		forceinline const T	operator += (const T& right)			{ return _atomic += right; }
+		forceinline const T	operator -= (const T& right)			{ return _atomic += right; }
+		forceinline const T	operator =  (const T& right)			{ _atomic.exchange( right );  return right; }
+		forceinline const T	operator |= (const T& right)			{ return _atomic |= right; }
+		forceinline const T	operator &= (const T& right)			{ return _atomic &= right; }
+		forceinline const T	operator ^= (const T& right)			{ return _atomic ^= right; }
 		
-		T		Inc ()							{ return Add( 1 ); }
-		T		Dec ()							{ return Sub( 1 ); }
-		T		Add (const T& right)			{ return _atomic.fetch_add( right ); }
-		T		Sub (const T& right)			{ return _atomic.fetch_sub( right ); }
-		T		Set (const T& right)			{ return _atomic.exchange( right ); }
-		T		Or  (const T& right)			{ return _atomic.fetch_or( right ); }
-		T		And (const T& right)			{ return _atomic.fetch_and( right ); }
-		T		Xor (const T& right)			{ return _atomic.fetch_xor( right ); }
+		forceinline const T	Inc ()									{ return ++_atomic; }
+		forceinline const T	Dec ()									{ return --_atomic; }
+		forceinline const T	Add (const T& right)					{ return _atomic += right; }
+		forceinline const T	Sub (const T& right)					{ return _atomic -= right; }
+		forceinline const T	Set (const T& right)					{ _atomic.exchange( right );  return right; }
+		forceinline const T	Or  (const T& right)					{ return _atomic |= right; }
+		forceinline const T	And (const T& right)					{ return _atomic &= right; }
+		forceinline const T	Xor (const T& right)					{ return _atomic ^= right; }
 
-		Self	operator ++ (int)
+		forceinline const T	operator ++ (int)
 		{
-			const Self  ret( _atomic );
+			const T  ret = Get();
 			++(*this);
 			return ret;
 		}
 
-		Self	operator -- (int)
+		forceinline const T	operator -- (int)
 		{
-			const Self  ret( _atomic );
+			const T  ret = Get();
 			--(*this);
 			return ret;
 		}
 
+		
+		// if *this == compare then *this = val returns old *this
+		forceinline const T CompareEx (const T& val, const T& compare)
+		{
+			T	tmp = compare;
+			_atomic.compare_exchange_strong( tmp, val );
+			return tmp;
+		}
 
-		// if *this == compare then *this = val return old *this
-		//T CompareEx (const T& val, const T& compare)
-		//{
-		//	return _atomic.compare_exchange_strong( val, compare );
-		//}
+		_GX_DIM_CMP_OPERATORS_SELF( Get() );
+		_GX_DIM_CMP_OPERATORS_TYPE( Get(), const T&, );
 	};
-
-# endif	// GX_USE_STD
 
 }	// GXTypes
 }	// GX_STL
+//-----------------------------------------------------------------------------
+
+
+# else
+
+# include "Engine/STL/OS/OSLowLevel.h"
+
+namespace GX_STL
+{
+namespace GXTypes
+{
+
+	//
+	// Atomic (emulated)
+	//
+
+	template <typename T>
+	struct Atomic final
+	{
+	// types
+	public:
+		using Value_t	= T;
+		using Self		= Atomic<T>;
+
+	private:
+		using ValidTypeList_t	= CompileTime::TypeListFrom< bool,
+										byte, short, int, ilong, isize,
+										ubyte, ushort, uint, ulong, usize >;
+		STATIC_ASSERT( ValidTypeList_t::HasType<T> );
+
+
+	// variables
+	private:
+		volatile T				_value;
+		mutable OS::Mutex		_mutex;
+
+
+	// methods
+	public:
+		forceinline Atomic (GX_DEFCTOR): _value(0) {}
+
+		forceinline explicit Atomic (const T &val) : _value(val) {}
+		forceinline explicit Atomic (const Self &other) : _value(other.Get()) {}
+		forceinline explicit Atomic (Self &&other) : _value(other.Get()) {}
+
+		CHECKRES forceinline explicit	operator const T ()	const	{ return Get(); }
+		CHECKRES forceinline const T	Get ()				const	{ _mutex.Lock();  T ret = _value;  _mutex.Unlock();  return ret; }
+
+		forceinline const T	operator ++ ()							{ _mutex.Lock();  T ret = (++_value);         _mutex.Unlock();  return ret; }
+		forceinline const T	operator -- ()							{ _mutex.Lock();  T ret = (--_value);         _mutex.Unlock();  return ret; }
+		forceinline const T	operator ++ (int)						{ _mutex.Lock();  T ret = (_value++);         _mutex.Unlock();  return ret; }
+		forceinline const T	operator -- (int)						{ _mutex.Lock();  T ret = (_value--);         _mutex.Unlock();  return ret; }
+		forceinline const T	operator += (const T& right)			{ _mutex.Lock();  T ret = (_value += right);  _mutex.Unlock();  return ret; }
+		forceinline const T	operator -= (const T& right)			{ _mutex.Lock();  T ret = (_value -= right);  _mutex.Unlock();  return ret; }
+		forceinline const T	operator =  (const T& right)			{ _mutex.Lock();  T ret = (_value  = right);  _mutex.Unlock();  return ret; }
+		forceinline const T	operator |= (const T& right)			{ _mutex.Lock();  T ret = (_value |= right);  _mutex.Unlock();  return ret; }
+		forceinline const T	operator &= (const T& right)			{ _mutex.Lock();  T ret = (_value &= right);  _mutex.Unlock();  return ret; }
+		forceinline const T	operator ^= (const T& right)			{ _mutex.Lock();  T ret = (_value ^= right);  _mutex.Unlock();  return ret; }
+		
+		forceinline const T	Inc ()									{ return ++(*this); }
+		forceinline const T	Dec ()									{ return --(*this); }
+		forceinline const T	Add (const T& right)					{ return (*this += right); }
+		forceinline const T	Sub (const T& right)					{ return (*this -= right); }
+		forceinline const T	Set (const T& right)					{ return (*this  = right); }
+		forceinline const T	Or  (const T& right)					{ return (*this |= right); }
+		forceinline const T	And (const T& right)					{ return (*this &= right); }
+		forceinline const T	Xor (const T& right)					{ return (*this ^= right); }
+
+		// if *this == compare then *this = val returns old *this
+		forceinline T CompareEx (const T& val, const T& compare)
+		{
+			_mutex.Lock();
+			T ret = _value;
+
+			if ( _value == compare )
+				_value = val;
+
+			_mutex.Unlock();
+			return ret;
+		}
+
+		_GX_DIM_CMP_OPERATORS_SELF( Get() );
+		_GX_DIM_CMP_OPERATORS_TYPE( Get(), const T&, );
+	};
+	
+}	// GXTypes
+}	// GX_STL
+//-----------------------------------------------------------------------------
+
+# endif	// GX_USE_STD

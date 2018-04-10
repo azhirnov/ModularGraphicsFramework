@@ -71,7 +71,7 @@ namespace PlatformWin
 
 	// methods
 	public:
-		WinPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci);
+		WinPlatform (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::Platform &ci);
 		~WinPlatform ();
 
 
@@ -108,8 +108,8 @@ namespace PlatformWin
 	constructor
 =================================================
 */
-	WinPlatform::WinPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci) :
-		Module( gs, ModuleConfig{ WinPlatformModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	WinPlatform::WinPlatform (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Platform &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci ),
 		_instance( UninitializedT< HMODULE >() )
 	{
@@ -473,9 +473,9 @@ namespace Platforms
 	CreateWinPlatform
 =================================================
 */
-	ModulePtr WinObjectsConstructor::CreateWinPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci)
+	ModulePtr WinObjectsConstructor::CreateWinPlatform (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Platform &ci)
 	{
-		return New< PlatformWin::WinPlatform >( gs, ci );
+		return New< PlatformWin::WinPlatform >( id, gs, ci );
 	}
 
 }	// Platforms

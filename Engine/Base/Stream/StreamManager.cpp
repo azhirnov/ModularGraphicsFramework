@@ -48,7 +48,7 @@ namespace Base
 
 	// methods
 	public:
-		StreamManager (GlobalSystemsRef gs, const CreateInfo::StreamManager &info);
+		StreamManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::StreamManager &info);
 		~StreamManager ();
 		
 
@@ -71,8 +71,8 @@ namespace Base
 	constructor
 =================================================
 */
-	StreamManager::StreamManager (GlobalSystemsRef gs, const CreateInfo::StreamManager &) :
-		Module( gs, ModuleConfig{ StreamManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
+	StreamManager::StreamManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::StreamManager &) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "StreamManager" );
 
@@ -214,9 +214,9 @@ namespace Base
 	CreateStreamManager
 =================================================
 */
-	ModulePtr StreamObjectsConstructor::CreateStreamManager (GlobalSystemsRef gs, const CreateInfo::StreamManager &ci)
+	ModulePtr StreamObjectsConstructor::CreateStreamManager (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::StreamManager &ci)
 	{
-		return New< StreamManager >( gs, ci );
+		return New< StreamManager >( id, gs, ci );
 	}
 
 }	// Base

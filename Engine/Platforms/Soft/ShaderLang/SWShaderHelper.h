@@ -35,7 +35,7 @@ namespace Impl
 		using EPipelineStage	= Engine::Platforms::EPipelineStage;
 
 		using ModulePtr			= Engine::Base::ModulePtr;
-		using VertexBuffers_t	= GX_STL::GXTypes::FixedSizeArray< ModulePtr, Engine::GlobalConst::Graphics_MaxAttribs >;
+		using VertexBuffers_t	= GX_STL::GXTypes::FixedSizeArray< ModulePtr, Engine::GlobalConst::GAPI_MaxAttribs >;
 
 		using Atomic_t			= Barrier::Atomic_t;
 
@@ -227,7 +227,7 @@ namespace Impl
 	{
 		Atomic_t*	atomic = null;
 		_shader->InitBarrier( _invocationID, index, OUT atomic );
-		value = Barrier( *atomic );
+		value = Barrier( atomic );
 	}
 
 /*

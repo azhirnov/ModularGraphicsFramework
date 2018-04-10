@@ -65,7 +65,7 @@ namespace PlatformSDL
 
 	// methods
 	public:
-		SDLPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci);
+		SDLPlatform (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::Platform &ci);
 		~SDLPlatform ();
 
 
@@ -100,8 +100,8 @@ namespace PlatformSDL
 	constructor
 =================================================
 */
-	SDLPlatform::SDLPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci) :
-		Module( gs, ModuleConfig{ SDLPlatformModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	SDLPlatform::SDLPlatform (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Platform &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci ), _isCreated( false )
 	{
 		SetDebugName( "SDLPlatform" );
@@ -406,9 +406,9 @@ namespace Platforms
 	CreateSDLPlatform
 =================================================
 */
-	ModulePtr SDLObjectsConstructor::CreateSDLPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci)
+	ModulePtr SDLObjectsConstructor::CreateSDLPlatform (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Platform &ci)
 	{
-		return New< PlatformSDL::SDLPlatform >( gs, ci );
+		return New< PlatformSDL::SDLPlatform >( id, gs, ci );
 	}
 
 }	// Platforms

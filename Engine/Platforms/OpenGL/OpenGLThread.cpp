@@ -6,7 +6,8 @@
 
 #include "Engine/Platforms/Public/Tools/WindowHelper.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/450/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/450/GL4Sampler.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinContext.h"
 #include "Engine/Platforms/Public/Tools/AsyncCommandsEmulator.h"
 
@@ -54,8 +55,9 @@ namespace Platforms
 
 		using AsyncCommands_t		= PlatformTools::AsyncCommandsEmulator;
 
-		using GLContext				= PlatformGL::GLRenderingContext;
-		using GLDevice				= PlatformGL::GL4Device;
+		using Context				= PlatformGL::GLRenderingContext;
+		using Device				= PlatformGL::GL4Device;
+		using SamplerCache			= PlatformGL::GL4SamplerCache;
 
 
 	// constants
@@ -71,8 +73,10 @@ namespace Platforms
 		ModulePtr			_window;
 		ModulePtr			_syncManager;
 		
-		GLContext			_context;
-		GLDevice			_device;
+		Context				_context;
+		Device				_device;
+		
+		SamplerCache		_samplerCache;
 
 		AsyncCommands_t		_commands;
 		uint				_framesWithoutSubmitting;
@@ -82,10 +86,10 @@ namespace Platforms
 
 	// methods
 	public:
-		OpenGLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
+		OpenGLThread (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
 		~OpenGLThread ();
 		
-		Ptr< GLDevice >			GetDevice ()			{ return &_device; }
+		Ptr< Device >	GetDevice ()		{ return &_device; }
 
 
 	// message handlers
@@ -132,10 +136,10 @@ namespace Platforms
 	constructor
 =================================================
 */
-	OpenGLThread::OpenGLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, ModuleConfig{ GLThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
-		_settings( ci.settings ),
-		_device( gs ),				_framesWithoutSubmitting{ 0 },
+	OpenGLThread::OpenGLThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		_settings( ci.settings ),	_device( gs ),
+		_samplerCache(),			_framesWithoutSubmitting{ 0 },
 		_isWindowVisible( false )
 	{
 		SetDebugName( "OpenGLThread" );
@@ -544,7 +548,7 @@ namespace Platforms
 */
 	bool OpenGLThread::_GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &msg)
 	{
-		msg->result.Set({ &_device });
+		msg->result.Set({ &_device, &_samplerCache });
 		return true;
 	}
 	
@@ -625,9 +629,9 @@ namespace Platforms
 	CreateOpenGLThread
 =================================================
 */
-	ModulePtr OpenGLObjectsConstructor::CreateOpenGLThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateOpenGLThread (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
-		return New< OpenGLThread >( gs, ci );
+		return New< OpenGLThread >( id, gs, ci );
 	}
 
 }	// Platforms

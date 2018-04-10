@@ -39,7 +39,7 @@ namespace Platforms
 
 	// methods
 	public:
-		InputManager (GlobalSystemsRef gs, const CreateInfo::InputManager &ci);
+		InputManager (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::InputManager &ci);
 		~InputManager ();
 		
 		static void Register ();
@@ -52,8 +52,8 @@ namespace Platforms
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
 		
 	private:
-		static ModulePtr _CreateInputThread (GlobalSystemsRef, const CreateInfo::InputThread &);
-		static ModulePtr _CreateInputManager (GlobalSystemsRef, const CreateInfo::InputManager &);
+		static ModulePtr _CreateInputThread (UntypedID_t, GlobalSystemsRef, const CreateInfo::InputThread &);
+		static ModulePtr _CreateInputManager (UntypedID_t, GlobalSystemsRef, const CreateInfo::InputManager &);
 	};
 
 

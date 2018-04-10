@@ -121,7 +121,7 @@ namespace PlatformSW
 		}
 
 		str << "] " << msg;
-		LOG( str.cstr(), log, file.cstr(), line );
+		LOG( str, log, file.cstr(), line );
 
 		++_debugReportCounter;
 	}

@@ -55,8 +55,8 @@ namespace PlatformVK
 		explicit Vk1PipelineCache (Ptr<Vk1Device> dev);
 		~Vk1PipelineCache ();
 
-		ModulePtr	Create (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci);
-		ModulePtr	Create (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
+		ModulePtr	Create (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
+		ModulePtr	Create (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ComputePipeline &);
 
 		bool CreatePipeline (OUT vk::VkPipeline &pipelineId,
 							 ArrayCRef< ShaderModule > shaders,

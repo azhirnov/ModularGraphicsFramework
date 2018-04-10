@@ -44,8 +44,8 @@ namespace Base
 	constructor
 =================================================
 */
-	ParallelThreadImpl::ParallelThreadImpl (GlobalSystemsRef gs, const CreateInfo::Thread &info) :
-		ParallelThread( gs, ModuleConfig{ ParallelThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	ParallelThreadImpl::ParallelThreadImpl (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Thread &info) :
+		ParallelThread( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_onStarted( RVREF( info.onStarted.Get() ) ),
 		_isLooping( false )
 	{

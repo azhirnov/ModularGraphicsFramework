@@ -19,46 +19,6 @@ namespace Base
 	
 /*
 =================================================
-	_Send
-=================================================
-*/
-	bool MessageHandler::_Send (VariantCRef msg)
-	{
-		using FixedMapRange_t	= Array< HandlersMap_t::const_pair_t >;	//FixedSizeArray< HandlersMap_t::const_pair_t, 32 >;
-		
-		FixedMapRange_t	temp;	temp.Reserve( 32 );
-
-		{
-			SCOPELOCK( _lock );
-
-			usize	first;
-			if ( _handlers.FindFirstIndex( msg.GetValueTypeId(), OUT first ) )
-			{
-				for (usize i = first; i < _handlers.Count() and _handlers[i].first == msg.GetValueTypeId(); ++i)
-				{
-					if ( _handlers[i].second.ptr.Lock() == null )
-					{
-						_handlers.EraseByIndex( i );
-						--i;
-						continue;
-					}
-
-					temp.PushBack( _handlers[i] );
-				}
-			}
-		}
-		
-		FOR( i, temp )
-		{
-			auto&	handler = temp[i].second;
-
-			handler.func( handler.ptr, handler.data, msg );
-		}
-		return not temp.Empty();
-	}
-	
-/*
-=================================================
 	_Subscribe2
 =================================================
 */
@@ -71,7 +31,7 @@ namespace Base
 		if ( checked and not validTypes.HasType( id ) )
 			RETURN_ERR( "Can't subscribe for event '" << ToString( id ) << "'" );
 
-		SCOPELOCK( _lock );
+		//SCOPELOCK( _lock );
 		
 		usize	first;
 		if ( _handlers.FindFirstIndex( id, OUT first ) )
@@ -97,7 +57,7 @@ namespace Base
 */
 	bool MessageHandler::_CopySubscriptions (const TypeIdList& validTypes, const ObjectPtr_t &obj, const MessageHandler &other, ArrayCRef<TypeId> ids)
 	{
-		SCOPELOCK( other._lock );
+		//SCOPELOCK( other._lock );
 
 		FOR( j, ids )
 		{
@@ -129,7 +89,7 @@ namespace Base
 */
 	void MessageHandler::_UnsubscribeAll (const ObjectPtr_t &ptr)
 	{
-		SCOPELOCK( _lock );
+		//SCOPELOCK( _lock );
 
 		FOR( i, _handlers )
 		{
@@ -148,7 +108,7 @@ namespace Base
 */
 	void MessageHandler::Clear ()
 	{
-		SCOPELOCK( _lock );
+		//SCOPELOCK( _lock );
 
 		_handlers.Clear();
 	}
@@ -162,7 +122,7 @@ namespace Base
 */
 	bool MessageHandler::Validate (const TypeIdList &typelist) const
 	{
-		SCOPELOCK( _lock );
+		//SCOPELOCK( _lock );
 
 		// is all handlers presented in typelist?
 		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
@@ -197,7 +157,7 @@ namespace Base
 */
 	bool MessageHandler::Validate (const TypeIdList &msgTypes, const TypeIdList &eventTypes) const
 	{
-		SCOPELOCK( _lock );
+		//SCOPELOCK( _lock );
 
 		// is all handlers presented in typelist?
 		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))

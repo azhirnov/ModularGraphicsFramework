@@ -17,7 +17,15 @@ namespace PipelineCompiler
 	private:
 		struct PipelineLayoutToStringFunc;
 
-		using StructTypes	= Stack<Pair< /*typename*/String, /*tests*/String >>;
+		struct StructInfo
+		{
+			String		typeName;
+			String		tests;
+			String		fieldAsArguments;
+			String		fieldInitialized;
+		};
+
+		using StructTypes	= Stack< StructInfo >;
 
 
 	// variables
@@ -59,6 +67,7 @@ namespace PipelineCompiler
 
 		String	BeginStruct (StringCRef typeName, uint sizeOf) const override;
 		String	StructField (StringCRef name, StringCRef typeName, uint arraySize, uint offset, uint align, uint sizeOf) const override;
+		String	StructCtorForInitializerList () const override;
 		String	EndStruct () const override;
 		
 		String	Include (StringCRef filename) const override;

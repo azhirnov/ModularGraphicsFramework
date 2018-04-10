@@ -57,7 +57,7 @@ namespace PlatformSDL
 
 	// methods
 	public:
-		SDLKeyInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
+		SDLKeyInput (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
 		~SDLKeyInput ();
 
 
@@ -88,8 +88,8 @@ namespace PlatformSDL
 	constructor
 =================================================
 */
-	SDLKeyInput::SDLKeyInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
-		Module( gs, ModuleConfig{ SDLKeyInputModuleID, 1 }, &_msgTypes, &_eventTypes )
+	SDLKeyInput::SDLKeyInput (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "SDLKeyInput" );
 
@@ -499,9 +499,9 @@ namespace Platforms
 	CreateSDLKeyInput
 =================================================
 */
-	ModulePtr SDLObjectsConstructor::CreateSDLKeyInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
+	ModulePtr SDLObjectsConstructor::CreateSDLKeyInput (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
 	{
-		return New< PlatformSDL::SDLKeyInput >( gs, ci );
+		return New< PlatformSDL::SDLKeyInput >( id, gs, ci );
 	}
 
 }	// Platforms

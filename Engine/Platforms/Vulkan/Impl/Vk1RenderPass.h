@@ -59,7 +59,7 @@ namespace PlatformVK
 	public:
 		explicit Vk1RenderPassCache (Ptr<Vk1Device> dev);
 
-		Vk1RenderPassPtr	Create (GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
+		Vk1RenderPassPtr	Create (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
 
 		void Destroy ();
 	};

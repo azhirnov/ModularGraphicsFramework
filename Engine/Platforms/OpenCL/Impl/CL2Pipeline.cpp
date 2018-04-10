@@ -52,7 +52,7 @@ namespace PlatformCL
 
 	// methods
 	public:
-		CL2ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
+		CL2ComputePipeline (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
 		~CL2ComputePipeline ();
 
 
@@ -85,8 +85,8 @@ namespace PlatformCL
 	constructor
 =================================================
 */
-	CL2ComputePipeline::CL2ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLComputePipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	CL2ComputePipeline::CL2ComputePipeline (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
+		CL2BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_programId( null ),		_kernelId( null ),
 		_descr( ci.descr ),
 		_preferredMultipleOfWorkGroupSize(0)
@@ -313,9 +313,9 @@ namespace PlatformCL
 
 namespace Platforms
 {
-	ModulePtr OpenCLObjectsConstructor::CreateCL2ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2ComputePipeline (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
 	{
-		return New< PlatformCL::CL2ComputePipeline >( gs, ci );
+		return New< PlatformCL::CL2ComputePipeline >( id, gs, ci );
 	}
 
 }	// Platforms

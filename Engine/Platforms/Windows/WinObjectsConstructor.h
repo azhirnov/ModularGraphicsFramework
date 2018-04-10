@@ -33,10 +33,10 @@ namespace Platforms
 		
 		static OSModuleIDs GetModuleIDs ();
 
-		static ModulePtr  CreateWinKeyInput (GlobalSystemsRef, const CreateInfo::RawInputHandler &);
-		static ModulePtr  CreateWinMouseInput (GlobalSystemsRef, const CreateInfo::RawInputHandler &);
-		static ModulePtr  CreateWinWindow (GlobalSystemsRef, const CreateInfo::Window &);
-		static ModulePtr  CreateWinPlatform (GlobalSystemsRef, const CreateInfo::Platform &);
+		static ModulePtr  CreateWinKeyInput (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::RawInputHandler &);
+		static ModulePtr  CreateWinMouseInput (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::RawInputHandler &);
+		static ModulePtr  CreateWinWindow (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::Window &);
+		static ModulePtr  CreateWinPlatform (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::Platform &);
 	};
 
 

@@ -73,7 +73,7 @@ namespace PlatformCL
 
 	// methods
 	public:
-		CL2Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci);
+		CL2Image (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci);
 		~CL2Image ();
 
 
@@ -114,8 +114,8 @@ namespace PlatformCL
 	constructor
 =================================================
 */
-	CL2Image::CL2Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLImageModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	CL2Image::CL2Image (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
+		CL2BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),				_imageId( null ),
 		_layout( EImageLayout::Unknown ),
 		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
@@ -482,9 +482,9 @@ namespace PlatformCL
 
 namespace Platforms
 {
-	ModulePtr OpenCLObjectsConstructor::CreateCL2Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2Image (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
 	{
-		return New< PlatformCL::CL2Image >( gs, ci );
+		return New< PlatformCL::CL2Image >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

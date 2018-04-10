@@ -111,7 +111,7 @@ namespace GXTypes
 		template <typename T>
 		struct _IsFinite< T, false >
 		{
-			static constexpr bool Get (const T& x)
+			static constexpr bool Get (const T&)
 			{
 				return true;
 			}

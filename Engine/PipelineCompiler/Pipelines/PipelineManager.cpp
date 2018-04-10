@@ -255,6 +255,7 @@ namespace PipelineCompiler
 		ConverterConfig		cfg			= constCfg;
 		const String		path		= FileAddress::GetPath( filename );
 		const String		inc_name	= FileAddress::BuildPath( path, FileAddress::GetName( filename ), ser->GetHeaderFileExt() );
+		const String		types_fname	= FileAddress::BuildPath( path, "shared_types", ser->GetHeaderFileExt() );
 		
 		if ( cfg.errorIfFileExist ) {
 			CHECK_ERR( not OS::FileSystem::IsFileExist( inc_name ) );
@@ -286,17 +287,43 @@ namespace PipelineCompiler
 			}
 		}
 
-		CHECK_ERR( _ProcessSharedTypes( pipelines, path, ser, INOUT cfg ) );
+		String	shared_types_src;
+		CHECK_ERR( _ProcessSharedTypes( pipelines, ser, OUT shared_types_src, INOUT cfg ) );
 
 
 		String	includes;
 		includes << ser->Comment( "This is generated file" );
 		includes << ser->Comment( "Created at: "_str << ToString( OS::Date().Now() ) ) << '\n';
-		includes << ser->BeginFile( true ) << '\n';
+		includes << ser->BeginFile( true );
+
+		if ( ser->GetSourceFileExt().EqualsIC( "cpp" ) )
+		{
+			includes << R"#(
+#include "Engine/Platforms/Engine.Platforms.h"
+
+#ifdef GRAPHICS_API_SOFT
+#include "Engine/Platforms/Soft/ShaderLang/SWLang.h"
+#endif
+
+namespace Pipelines
+{
+	using namespace GX_STL;
+	using namespace GX_STL::GXTypes;
+	using namespace GX_STL::GXMath;
+
+	using namespace Engine::Platforms;
+}
+
+)#";
+		}
 
 		FOR( i, cfg.includings ) {
 			includes << ser->Include( cfg.includings[i] );
 		}
+		
+		if ( cfg.searchForSharedTypes )
+			includes << ser->Include( FileAddress::BuildPath( "", "shared_types", ser->GetHeaderFileExt() ) );
+
 		includes << '\n';
 		includes << ser->DeclNamespace( cfg.nameSpace );
 		includes << ser->BeginScope();
@@ -306,22 +333,42 @@ namespace PipelineCompiler
 
 
 		// convert
+		bool	any_file_builded = false;
+
 		FOR( i, pipelines )
 		{
 			const auto&		pp		= pipelines[i];
 			const String	fname	= FileAddress::BuildPath( path, pp->Name(), ser->GetSourceFileExt() );
+			bool			rebuild	= true;
 
-			if ( cfg.errorIfFileExist ) {
-				CHECK_ERR( not OS::FileSystem::IsFileExist( fname ) );
+			if ( OS::FileSystem::IsFileExist( fname ) )
+			{
+				const TimeL	time = OS::FileSystem::GetFileLastModificationTime( fname ).ToTime();
+
+				rebuild = (pp->LastEditTime() > time or not constCfg.minimalRebuild);
+
+				if ( cfg.errorIfFileExist )
+					RETURN_ERR( "output file already exist!" );
 			}
 
-			WFilePtr		file	= File::HddWFile::New( fname );
-			CHECK_ERR( file );
+			if ( rebuild )
+			{
+				WFilePtr		file	= File::HddWFile::New( fname );
+				CHECK_ERR( file );
 
-			String			str;
-			CHECK_ERR( pp->Convert( OUT str, ser, cfg ) );
+				String			str;
+				CHECK_ERR( pp->Convert( OUT str, ser, cfg ) );
 
-			CHECK_ERR( file->Write( StringCRef(str) ) );
+				CHECK_ERR( file->Write( StringCRef(str) ) );
+
+				LOG( "Converted pipeline '"_str << fname << "'", ELog::Debug );
+			}
+			else
+			{
+				LOG( "Pipeline '"_str << fname << "' skiped, no changes detected", ELog::Debug );
+			}
+
+			any_file_builded |= rebuild;
 
 			includes << ser->Comment( "From file '"_str << FileAddress::GetNameAndExt( fname ) << "'" );
 			includes << ser->DeclFunction( "void", "Create_"_str << pp->Name(),
@@ -332,12 +379,24 @@ namespace PipelineCompiler
 		includes << ser->EndFile( true );
 
 
-		// save
+		// save 'all_pipelines'
+		if ( any_file_builded or
+			 not OS::FileSystem::IsFileExist( inc_name ) )
 		{
 			WFilePtr	file = File::HddWFile::New( inc_name );
 			CHECK_ERR( file );
 
 			CHECK_ERR( file->Write( StringCRef(includes) ) );
+		}
+		
+		// save 'shared_types'
+		if ( cfg.searchForSharedTypes and
+			 (any_file_builded or not OS::FileSystem::IsFileExist( types_fname )) )
+		{
+			WFilePtr	file = File::HddWFile::New( types_fname );
+			CHECK_ERR( file );
+		
+			CHECK_ERR( file->Write( StringCRef(shared_types_src) ) );
 		}
 		return true;
 	}
@@ -406,7 +465,7 @@ namespace PipelineCompiler
 =================================================
 */
 	template <typename PplnCollection>
-	bool PipelineManager::_ProcessSharedTypes (const PplnCollection &pipelines, StringCRef path, Ptr<ISerializer> ser, INOUT ConverterConfig &cfg) const
+	bool PipelineManager::_ProcessSharedTypes (const PplnCollection &pipelines, Ptr<ISerializer> ser, OUT String &fileSource, INOUT ConverterConfig &cfg) const
 	{
 		// update offsets by packing
 		CHECK_ERR( BasePipeline::_CalculateOffsets( _structTypes ) );
@@ -483,15 +542,14 @@ namespace PipelineCompiler
 				CHECK_ERR( pp->_UpdateBufferSizes() );
 			}
 
-			LOG( ("Replaced shader types: "_str << replaced << ", skiped: " << skiped).cstr(), ELog::Debug );
+			LOG( "Replaced shader types: "_str << replaced << ", skiped: " << skiped, ELog::Debug );
 		}
 		
 
 		// save shared types
 		if ( cfg.searchForSharedTypes /*and not _structTypes.Empty()*/ )
 		{
-			cfg.includings.PushBack( String() );
-			CHECK_ERR( _SaveSharedTypes( path, ser, cfg.nameSpace, OUT cfg._glslTypes, OUT cfg.includings.Back() ) );
+			CHECK_ERR( _SaveSharedTypes( ser, cfg.nameSpace, OUT fileSource, OUT cfg._glslTypes ) );
 		}
 		return true;
 	}
@@ -501,12 +559,9 @@ namespace PipelineCompiler
 	_SaveSharedTypes
 =================================================
 */
-	bool PipelineManager::_SaveSharedTypes (StringCRef path, Ptr<ISerializer> ser, StringCRef nameSpace, OUT String &glslSource, OUT String &filename) const
+	bool PipelineManager::_SaveSharedTypes (Ptr<ISerializer> ser, StringCRef nameSpace, OUT String &fileSource, OUT String &glslSource) const
 	{
-		filename = FileAddress::BuildPath( "", "shared_types", ser->GetHeaderFileExt() );
-
-		const String	fname		= FileAddress::BuildPath( path, filename );
-		String			str;
+		String&	str = fileSource;
 		
 		str << ser->Comment( "This is generated file" );
 		str << ser->Comment( "Created at: "_str << ToString( OS::Date().Now() ) ) << '\n';
@@ -518,13 +573,6 @@ namespace PipelineCompiler
 		
 		str << ser->EndScope();	// namespace
 		str << ser->EndFile( true );
-
-
-		// save c++ file
-		WFilePtr		file	= File::HddWFile::New( fname );
-		CHECK_ERR( file );
-		
-		CHECK_ERR( file->Write( StringCRef(str) ) );
 		return true;
 	}
 

@@ -15,6 +15,8 @@ namespace Base
 
 	class MessageHandler final
 	{
+		friend class Module;
+
 	// types
 	private:
 		template <typename T> using SP = SharedPointerType<T>;
@@ -26,7 +28,7 @@ namespace Base
 		using HandlerData_t		= usize[2];
 		using Callback_t		= bool (*) (const ObjectPtr_t &, HandlerData_t &, VariantCRef);
 
-		struct Handler : CompileTime::FastCopyable
+		struct Handler final : CompileTime::FastCopyable
 		{
 			ObjectPtr_t		ptr;
 			HandlerData_t	data	= {};
@@ -40,15 +42,10 @@ namespace Base
 	private:
 		HandlersMap_t		_handlers;
 
-		mutable OS::Mutex	_lock;		// TODO: is it needed?
-
 
 	// methods
 	public:
 		MessageHandler ();
-		
-		template <typename T>
-		bool Send (const Message<T> &msg);
 		
 		template <typename Class, typename Class2, typename T>
 		bool Subscribe (const TypeIdList& validTypes, const SP<Class> &obj, bool (Class2::*) (const Message<T> &), bool checked = true);
@@ -86,7 +83,6 @@ namespace Base
 		bool Validate (const TypeIdList &msgTypes, const TypeIdList &eventTypes) const;
 
 	private:
-		bool _Send (VariantCRef);
 		bool _Subscribe2 (const TypeIdList& validTypes, TypeId id, Handler &&handler, bool checked);
 		bool _CopySubscriptions (const TypeIdList& validTypes, const ObjectPtr_t &otherObj, const MessageHandler &other, ArrayCRef<TypeId> ids);
 		void _UnsubscribeAll (const ObjectPtr_t &obj);
@@ -98,18 +94,6 @@ namespace Base
 		static bool _Call (const ObjectPtr_t &, HandlerData_t &, VariantCRef);
 	};
 
-
-	
-/*
-=================================================
-	Send
-=================================================
-*/
-	template <typename T>
-	forceinline bool MessageHandler::Send (const Message<T> &msg)
-	{
-		return _Send( VariantCRef::FromConst( msg ) );
-	}
 
 /*
 =================================================

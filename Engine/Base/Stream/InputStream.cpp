@@ -53,9 +53,9 @@ namespace Base
 
 	// methods
 	public:
-		InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci);
-		InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci);
-		InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci);
+		InputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci);
+		InputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci);
+		InputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci);
 		~InputStream ();
 
 
@@ -83,8 +83,8 @@ namespace Base
 	constructor
 =================================================
 */
-	InputStream::InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci) :
-		Module( gs, ModuleConfig{ InputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
+	InputStream::InputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci) :
+		Module( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -115,8 +115,8 @@ namespace Base
 	constructor
 =================================================
 */
-	InputStream::InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci) :
-		Module( gs, ModuleConfig{ InputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
+	InputStream::InputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci) :
+		Module( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -148,8 +148,8 @@ namespace Base
 	constructor
 =================================================
 */
-	InputStream::InputStream (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci) :
-		Module( gs, ModuleConfig{ InputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
+	InputStream::InputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci) :
+		Module( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &InputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &InputStream::_OnModuleDetached_Impl );
@@ -279,19 +279,19 @@ namespace Base
 	CreateInputStream*
 =================================================
 */
-	ModulePtr StreamObjectsConstructor::CreateInStreamFromFile (GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci)
+	ModulePtr StreamObjectsConstructor::CreateInStreamFromFile (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InStreamFromFile &ci)
 	{
-		return New< InputStream >( gs, ci );
+		return New< InputStream >( id, gs, ci );
 	}
 	
-	ModulePtr StreamObjectsConstructor::CreateInStreamFromUri (GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci)
+	ModulePtr StreamObjectsConstructor::CreateInStreamFromUri (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InStreamFromUri &ci)
 	{
-		return New< InputStream >( gs, ci );
+		return New< InputStream >( id, gs, ci );
 	}
 
-	ModulePtr StreamObjectsConstructor::CreateInStreamFromMemory (GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci)
+	ModulePtr StreamObjectsConstructor::CreateInStreamFromMemory (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InStreamFromMemory &ci)
 	{
-		return New< InputStream >( gs, ci );
+		return New< InputStream >( id, gs, ci );
 	}
 
 }	// Base

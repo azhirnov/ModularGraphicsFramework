@@ -66,9 +66,9 @@
 		CHECKRES constexpr T		MicroSeconds ()				const		{ return _time * T(1.0e+6); }
 		CHECKRES constexpr T		NanoSeconds ()				const		{ return _time * T(1.0e+9); }
 		
-		CHECKRES constexpr bool	IsZero ()						const		{ return GXMath::IsZero( _time ); }
+		CHECKRES constexpr bool		IsZero ()					const		{ return GXMath::IsZero( _time ); }
 		
-		CHECKRES explicit operator T ()							const		{ return Seconds(); }
+		CHECKRES explicit operator const T ()					const		{ return Seconds(); }
 
 		_GX_DIM_CMP_OPERATORS_SELF( _time );
 		_GX_DIM_CMP_OPERATORS_TYPE( _time, const Value_t&, );

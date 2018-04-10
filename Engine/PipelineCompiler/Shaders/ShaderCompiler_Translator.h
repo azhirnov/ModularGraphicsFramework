@@ -33,17 +33,18 @@ namespace PipelineCompiler
 		struct TypeInfo : CompileTime::ComplexType
 		{
 		// variables
-			Array< TypeInfo >			fields;		// struct fields
-			String						typeName;	// for struct only
-			String						name;		// if part of struct, empty otherwise
+			Array< TypeInfo >			fields;			// struct fields
+			String						typeName;		// for struct only
+			String						name;			// if part of struct, empty otherwise
 			EVariableQualifier::bits	qualifier;
-			EShaderMemoryModel::type	memoryModel	= EShaderMemoryModel::Default;
-			EShaderVariable::type		type		= EShaderVariable::Unknown;
-			EPrecision::type			precision	= EPrecision::Unknown;
-			EPixelFormat::type			format		= EPixelFormat::Unknown;
-			uint						arraySize	= 0;		// 0 - not array, > 0 - static array, ~0 - dynamic
-			uint						binding		= UMax;
-			bool						isGlobal	= false;	// in some languages globals are forbbiden
+			EShaderMemoryModel::type	memoryModel		= EShaderMemoryModel::Default;
+			EShaderVariable::type		type			= EShaderVariable::Unknown;
+			EPrecision::type			precision		= EPrecision::Unknown;
+			EPixelFormat::type			format			= EPixelFormat::Unknown;
+			uint						specConstID		= UMax;		// specialization const id
+			uint						arraySize		= 0;		// 0 - not array, > 0 - static array, ~0 - dynamic
+			uint						binding			= UMax;
+			bool						isGlobal		= false;	// in some languages globals are forbbiden
 
 		// methods
 			TypeInfo() {}
@@ -75,6 +76,7 @@ namespace PipelineCompiler
 		using StringStack_t		= Stack< String >;
 		using LocalReplacer_t	= HashMap< String, String >;
 		using CustomTypes_t		= HashMap< String, TypeInfo >;
+		using AtomicTypes_t		= MultiHashMap< String, Array<String> >;		// typename, fields
 
 		class IDstLanguage;
 		using IDstLanguagePtr	= UniquePtr< IDstLanguage >;
@@ -116,8 +118,11 @@ namespace PipelineCompiler
 		struct {
 			CustomTypes_t		globalTypes;
 			HashSet<String>		definedInExteranal;		// this type must be skiped if 'skipExternals' is true
+			AtomicTypes_t		atomics;
 
 		}					types;
+
+		Array<TIntermNode*>	nodeStack;
 
 		IDstLanguagePtr		language;
 		String				entryPoint;
@@ -153,9 +158,11 @@ namespace PipelineCompiler
 		virtual bool TranslateArg (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateType (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateName (const TypeInfo &, INOUT String &src) = 0;
+		virtual bool TranslateFunctionName (INOUT String &name) = 0;
 
 		virtual bool TranslateExternal (glslang::TIntermTyped *, const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateOperator (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) = 0;
+		virtual bool TranslateFunction (StringCRef name, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) = 0;
 		virtual bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) = 0;
 
 		virtual bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) = 0;
@@ -264,76 +271,5 @@ namespace PipelineCompiler
 		}
 	};
 
-
-	/*
-	struct CU_ToString_Func
-	{
-	public:
-		String &	str;
-
-		CU_ToString_Func (String &str) : str(str)
-		{}
-
-		template <typename T>
-		void operator () (const T &value) const
-		{
-			str << "(" << _ToString( value ) << ")";
-		}
-		
-		template <typename T, usize I>
-		void operator () (const Vec<T,I> &value) const
-		{
-			if ( All( value == value.x ) )
-				str << "(" << _ToString( value.x ) << ")";
-			else
-				str << "(" << _ToString( value ) << ")";
-		}
-
-		template <typename T, usize C, usize R>
-		void operator () (const Matrix<T,C,R> &value) const
-		{
-			str << "(" << _ToString( value ) << ")";
-		}
-
-
-	private:
-		static String _ToString (float value)
-		{
-			return String().FormatF( value, StringFormatF().Fmt(0,8).CutZeros() );
-		}
-
-		static String _ToString (double value)
-		{
-			return String().FormatF( value, StringFormatF().Fmt(0,16).CutZeros() );
-		}
-
-		template <typename T>
-		static String _ToString (const T &value)
-		{
-			return ToString( value );
-		}
-
-		template <typename T, usize I>
-		static String _ToString (const Vec<T,I> &value)
-		{
-			String	str;
-
-			FOR( i, value ) {
-				str << (i ? ", " : "") << _ToString( value[i] );
-			}
-			return str;
-		}
-
-		template <typename T, usize C, usize R>
-		static String _ToString (const Matrix<T,C,R> &value)
-		{
-			String	str;
-
-			FOR( i, value ) {
-				str << (i ? ", " : "") << _ToString( value[i] );
-			}
-			return str;
-		}
-	};*/
 
 }	// PipelineCompiler

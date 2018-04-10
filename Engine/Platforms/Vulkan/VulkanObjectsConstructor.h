@@ -46,27 +46,26 @@ namespace Platforms
 		static GraphicsModuleIDs GetGraphicsModules ();
 		static ComputeModuleIDs GetComputeModules ();
 
-		static ModulePtr CreateVulkanThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
-		static ModulePtr CreateVulkanContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
-		static ModulePtr CreateVk1Image (GlobalSystemsRef, const CreateInfo::GpuImage &);
-		//static ModulePtr CreateVk1Memory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
-		static ModulePtr CreateVk1Buffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);
-		static ModulePtr CreateVk1Sampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
-		static ModulePtr CreateVk1ManagedMemory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
-		static ModulePtr CreateVk1RenderPass (GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
-		static ModulePtr CreateVk1SyncManager (GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
-		static ModulePtr CreateVk1Framebuffer (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
-		static ModulePtr CreatePipelineTemplate (GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
-		static ModulePtr CreateVk1CommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
-		static ModulePtr CreateVk1MemoryManager (GlobalSystemsRef, const CreateInfo::GpuMemoryManager &);
-		static ModulePtr CreateVk1CommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
-		static ModulePtr CreateCachedVk1ComputePipeline (GlobalSystemsRef, const CreateInfo::ComputePipeline &);
-		static ModulePtr CreateCachedVk1GraphicsPipeline (GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
-		static ModulePtr CreateVk1PipelineResourceTable (GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
+		static ModulePtr CreateVulkanThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuThread &);
+		static ModulePtr CreateVulkanContext (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuContext &);
+		static ModulePtr CreateVk1Image (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuImage &);
+		static ModulePtr CreateVk1Buffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuBuffer &);
+		static ModulePtr CreateVk1Sampler (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr CreateVk1ManagedMemory (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemory &);
+		static ModulePtr CreateVk1RenderPass (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
+		static ModulePtr CreateVk1SyncManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
+		static ModulePtr CreateVk1Framebuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
+		static ModulePtr CreatePipelineTemplate (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
+		static ModulePtr CreateVk1CommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
+		static ModulePtr CreateVk1MemoryManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemoryManager &);
+		static ModulePtr CreateVk1CommandBuilder (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
+		static ModulePtr CreateCachedVk1ComputePipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+		static ModulePtr CreateCachedVk1GraphicsPipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
+		static ModulePtr CreateVk1PipelineResourceTable (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
 		
 		// for internal usage
-		static ModulePtr CreateVk1ComputePipeline (GlobalSystemsRef, const CreateInfo::ComputePipeline &);
-		static ModulePtr CreateVk1GraphicsPipeline (GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
+		static ModulePtr CreateVk1ComputePipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+		static ModulePtr CreateVk1GraphicsPipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
 	};
 
 

@@ -43,9 +43,13 @@ extern void Test_Math_Bit ()
 
 	uint	d0 = BitRotateLeft( 1u,			1_bit );		TEST( d0 == 0x00000002 );
 	uint	d1 = BitRotateLeft( 1u << 31,	1_bit );		TEST( d1 == 0x00000001 );
+	uint	d2 = BitRotateLeft( 1u,			31_bit );		TEST( d2 == 0x80000000 );
+	uint	d3 = BitRotateLeft( 1u,			32_bit );		TEST( d3 == 0x00000001 );
 
-	uint	d2 = BitRotateRight( 1u,		1_bit );		TEST( d2 == 0x80000000 );
-	uint	d3 = BitRotateRight( 1u << 31,	1_bit );		TEST( d3 == 0x40000000 );
+	uint	d4 = BitRotateRight( 1u,		1_bit );		TEST( d4 == 0x80000000 );
+	uint	d5 = BitRotateRight( 1u << 31,	1_bit );		TEST( d5 == 0x40000000 );
+	uint	d6 = BitRotateRight( 1u,		31_bit );		TEST( d6 == 0x00000002 );
+	uint	d7 = BitRotateRight( 1u,		32_bit );		TEST( d7 == 0x00000001 );
 
 	BitsU	e0 = BitScanReverse( 0x101u );			TEST( e0 == 8 );
 	BitsU	e1 = BitScanReverse( 0x202u );			TEST( e1 == 9 );
@@ -64,7 +68,6 @@ extern void Test_Math_Bit ()
 	uint	i1 = ReverseBitOrder( 0x80000000u );	TEST( i1 == 0x00000001u );
 	uint	i2 = ReverseBitOrder( 0x00001001u );	TEST( i2 == 0x80080000u );
 	uint	i3 = ReverseBitOrder( 0x10100001u );	TEST( i3 == 0x80000808u );
-
 
 	Bitfield<10>	g;
 	g.SetAll( true );	usize	g0 = (uint) g;		TEST( g0 == ToMask<uint>( 10_bit ) );

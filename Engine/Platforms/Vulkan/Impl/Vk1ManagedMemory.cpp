@@ -72,7 +72,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1ManagedMemory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci);
+		Vk1ManagedMemory (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci);
 		~Vk1ManagedMemory ();
 
 
@@ -114,8 +114,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1ManagedMemory::Vk1ManagedMemory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkManagedMemoryModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	Vk1ManagedMemory::Vk1ManagedMemory (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_mem( VK_NULL_HANDLE ),					_memMapper( ci.memFlags, ci.access ),
 		_binding( EBindingTarget::Unbinded ),	_flags( ci.memFlags ),
 		_memManager( ci.memManager )
@@ -705,9 +705,9 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanObjectsConstructor::CreateVk1ManagedMemory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1ManagedMemory (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
 	{
-		return New< PlatformVK::Vk1ManagedMemory >( gs, ci );
+		return New< PlatformVK::Vk1ManagedMemory >( id, gs, ci );
 	}
 
 }	// Platforms

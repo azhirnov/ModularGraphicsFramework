@@ -72,7 +72,7 @@ namespace Debug
 
 		static void ToLog ()
 		{
-			LOG( ToString().cstr(), ELog::Debug );
+			LOG( ToString(), ELog::Debug );
 		}
 
 		static void Show ()

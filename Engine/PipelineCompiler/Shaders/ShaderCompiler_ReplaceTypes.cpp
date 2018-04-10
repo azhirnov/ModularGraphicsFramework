@@ -165,7 +165,7 @@ namespace PipelineCompiler
 			}
 		}
 
-		LOG( ("TIntermBinary: struct field access: "_str << st_type << "::" << field.name).cstr(), ELog::Info );
+		//LOG( "TIntermBinary: struct field access: "_str << st_type << "::" << field.name, ELog::Info );
 
 		const FieldTypeInfo		src_field = field;
 

@@ -87,7 +87,7 @@ namespace PlatformSW
 
 	// methods
 	public:
-		SWPipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci);
+		SWPipelineResourceTable (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci);
 		~SWPipelineResourceTable ();
 
 
@@ -122,8 +122,8 @@ namespace PlatformSW
 	constructor
 =================================================
 */
-	SWPipelineResourceTable::SWPipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		SWBaseModule( gs, ModuleConfig{ SWPipelineResourceTableModuleID, UMax }, &_msgTypes, &_eventTypes )
+	SWPipelineResourceTable::SWPipelineResourceTable (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "SWPipelineResourceTable" );
 
@@ -625,9 +625,9 @@ namespace PlatformSW
 
 namespace Platforms
 {
-	ModulePtr SoftRendererObjectsConstructor::CreateSWPipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreateSWPipelineResourceTable (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
 	{
-		return New< PlatformSW::SWPipelineResourceTable >( gs, ci );
+		return New< PlatformSW::SWPipelineResourceTable >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

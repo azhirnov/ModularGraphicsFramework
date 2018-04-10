@@ -80,7 +80,7 @@ namespace PlatformSW
 
 	// methods
 	public:
-		SWMemory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci);
+		SWMemory (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci);
 		~SWMemory ();
 
 
@@ -127,8 +127,8 @@ namespace PlatformSW
 	constructor
 =================================================
 */
-	SWMemory::SWMemory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci) :
-		SWBaseModule( gs, ModuleConfig{ SWMemoryModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	SWMemory::SWMemory (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci) :
+		SWBaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_memMapper( ci.memFlags, ci.access ),	_flags( ci.memFlags ),
 		_binding( EBindingTarget::Unbinded )
 	{
@@ -659,9 +659,9 @@ namespace PlatformSW
 
 namespace Platforms
 {
-	ModulePtr SoftRendererObjectsConstructor::CreateSWMemory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreateSWMemory (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
 	{
-		return New< PlatformSW::SWMemory >( gs, ci );
+		return New< PlatformSW::SWMemory >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

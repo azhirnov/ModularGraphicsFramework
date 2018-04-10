@@ -33,13 +33,13 @@ namespace Graphics
 		static void Register ();
 		static void Unregister ();
 
-		static ModulePtr CreateFont (GlobalSystemsRef, const CreateInfo::Font &);
-		static ModulePtr CreateFontManager (GlobalSystemsRef, const CreateInfo::FontManager &);
-		static ModulePtr CreateBatchRenderer (GlobalSystemsRef, const CreateInfo::BatchRenderer &);
-		static ModulePtr CreateAsyncCommandBuffer (GlobalSystemsRef, const CreateInfo::AsyncCommandBuffer &);
-		static ModulePtr CreateCommandBufferManager (GlobalSystemsRef, const CreateInfo::CommandBufferManager &);
-		static ModulePtr CreateMemoryInputStream (GlobalSystemsRef, const CreateInfo::GpuMemoryInStream &);
-		static ModulePtr CreateMemoryOutputStream (GlobalSystemsRef, const CreateInfo::GpuMemoryOutStream &);
+		static ModulePtr CreateFont (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::Font &);
+		static ModulePtr CreateFontManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::FontManager &);
+		static ModulePtr CreateBatchRenderer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::BatchRenderer &);
+		static ModulePtr CreateAsyncCommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::AsyncCommandBuffer &);
+		static ModulePtr CreateCommandBufferManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::CommandBufferManager &);
+		static ModulePtr CreateMemoryInputStream (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemoryInStream &);
+		static ModulePtr CreateMemoryOutputStream (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemoryOutStream &);
 	};
 
 

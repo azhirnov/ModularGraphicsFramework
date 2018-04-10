@@ -46,21 +46,21 @@ namespace Platforms
 		static GraphicsModuleIDs GetGraphicsModules ();
 		static ComputeModuleIDs GetComputeModules ();
 		
-		static ModulePtr CreateOpenGLThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
-		static ModulePtr CreateOpenGLContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
-		static ModulePtr CreateGL4Image (GlobalSystemsRef, const CreateInfo::GpuImage &);
-		static ModulePtr CreateGL4Memory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
-		static ModulePtr CreateGL4Buffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);
-		static ModulePtr CreateGL4Sampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
-		static ModulePtr CreateGL4RenderPass (GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
-		static ModulePtr CreateGL4Framebuffer (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
-		static ModulePtr CreateGL4SyncManager (GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
-		static ModulePtr CreatePipelineTemplate (GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
-		static ModulePtr CreateGL4CommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
-		static ModulePtr CreateGL4CommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
-		static ModulePtr CreateGL4ComputePipeline (GlobalSystemsRef, const CreateInfo::ComputePipeline &);
-		static ModulePtr CreateGL4GraphicsPipeline (GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
-		static ModulePtr CreateGL4PipelineResourceTable (GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
+		static ModulePtr CreateOpenGLThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuThread &);
+		static ModulePtr CreateOpenGLContext (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuContext &);
+		static ModulePtr CreateGL4Image (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuImage &);
+		static ModulePtr CreateGL4Memory (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemory &);
+		static ModulePtr CreateGL4Buffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuBuffer &);
+		static ModulePtr CreateGL4Sampler (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr CreateGL4RenderPass (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
+		static ModulePtr CreateGL4Framebuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
+		static ModulePtr CreateGL4SyncManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
+		static ModulePtr CreatePipelineTemplate (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
+		static ModulePtr CreateGL4CommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
+		static ModulePtr CreateGL4CommandBuilder (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
+		static ModulePtr CreateGL4ComputePipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+		static ModulePtr CreateGL4GraphicsPipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
+		static ModulePtr CreateGL4PipelineResourceTable (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
 	};
 
 

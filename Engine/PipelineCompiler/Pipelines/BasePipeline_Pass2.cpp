@@ -263,9 +263,11 @@ namespace PipelineCompiler
 		// convert to target
 		FOR( i, indices )
 		{
-			const auto&		st			= structTypes[indices[i]];
+			const auto&		st = structTypes[indices[i]];
+			CHECK_ERR( not st.second.fields.Empty() );
+
 			const bool		glsl_keep	= st.second.type == EShaderVariable::Struct;			// keep struct, varying
-			const bool		ser_keep	= not st.second.packing[ EVariablePacking::Varying ];	// keep struct, buffer
+			const bool		ser_keep	= not st.second.packing[ EVariablePacking::Varying ];	// keep struct, buffer, vertex
 			const bool		is_dynamic	= st.second.fields.Back().arraySize == 0;
 
 			if ( ser_keep ) {
@@ -315,6 +317,9 @@ namespace PipelineCompiler
 
 			if ( glsl_keep ) {
 				glslSource << "};\n\n";
+			}
+			if ( ser_keep and st.second.packing[ EVariablePacking::VertexAttrib ] ) {
+				str << ser->StructCtorForInitializerList();
 			}
 			if ( ser_keep ) {
 				str << ser->EndStruct() << '\n';
@@ -468,6 +473,11 @@ namespace PipelineCompiler
 		FOR( i, structTypes )
 		{
 			auto&	var = structTypes[i].second;
+
+			// skip varyings and vertices
+			if ( var.packing == EVariablePacking::Varying or var.packing == EVariablePacking::VertexAttrib )
+				continue;
+
 			BytesU	offset;
 			CHECK_ERR( helper.ProcessStruct( INOUT offset, INOUT var, EVariablePacking::GetMaxPacking( var.packing ) ) );
 		}
@@ -525,17 +535,21 @@ namespace PipelineCompiler
 	bool BasePipeline::_AddPaddingToStructs (INOUT StructTypes &structTypes)
 	{
 		_ReplaceTypes_Helper	helper( structTypes );
-		EVariablePacking::bits	mask;	mask |= EVariablePacking::Varying;
 
 		FOR( i, structTypes )
 		{
 			auto&	var = structTypes[i].second;
 				
-			if ( var.packing == mask )
+			if ( var.packing == EVariablePacking::Varying or var.packing == EVariablePacking::VertexAttrib )
 				continue;
 
-			BytesU	offset, align;
-			CHECK_ERR( helper.RecursiveProcess( var.typeName, INOUT var.fields, OUT offset, OUT align ) );
+			BytesU	offset;
+			BytesU	align	= var.align;
+
+			CHECK_ERR( helper.RecursiveProcess( var.typeName, INOUT var.fields, OUT offset, INOUT align ) );
+
+			var.align	= Max( var.align, align );
+			var.stride	= Max( var.align, var.stride );
 		}
 		return true;
 	}

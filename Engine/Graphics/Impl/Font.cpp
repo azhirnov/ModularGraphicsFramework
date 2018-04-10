@@ -34,7 +34,7 @@ namespace Graphics
 
 	// methods
 	public:
-		Font (GlobalSystemsRef gs, const CreateInfo::Font &ci);
+		Font (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::Font &ci);
 		~Font ();
 
 
@@ -60,8 +60,8 @@ namespace Graphics
 	constructor
 =================================================
 */
-	Font::Font (GlobalSystemsRef gs, const CreateInfo::Font &ci) :
-		Module( gs, ModuleConfig{ FontModuleID, ~0u }, &_msgTypes, &_eventTypes )
+	Font::Font (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Font &ci) :
+		Module( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "Font" );
 
@@ -127,9 +127,9 @@ namespace Graphics
 	CreateFont
 =================================================
 */
-	ModulePtr GraphicsObjectsConstructor::CreateFont (GlobalSystemsRef gs, const CreateInfo::Font &ci)
+	ModulePtr GraphicsObjectsConstructor::CreateFont (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Font &ci)
 	{
-		return New< Font >( gs, ci );
+		return New< Font >( id, gs, ci );
 	}
 
 }	// Graphics

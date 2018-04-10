@@ -40,6 +40,8 @@ namespace PipelineCompiler
 			_Count,
 			Unknown		= ~0u,
 		};
+
+		static constexpr bool IsVulkan (type value);
 	};
 
 
@@ -155,7 +157,7 @@ namespace PipelineCompiler
 	{
 		enum type : uint
 		{
-			Patch,		// for tessellation shaders
+			Patch,			// for tessellation shaders
 
 			Flat,
 			NoPerspective,
@@ -184,6 +186,9 @@ namespace PipelineCompiler
 			Uniform,
 
 			Specialization,	// vulkan only
+			//PushConstant,
+
+			Volatile,		// if used as atomic
 
 			_Count
 		};
@@ -206,6 +211,7 @@ namespace PipelineCompiler
 			Shared,			// UB
 			Packed,			// UB
 			Varying,		// io
+			VertexAttrib,	// attrib
 
 			_Count,
 			Unknown	= uint(-1),
@@ -440,10 +446,11 @@ namespace PipelineCompiler
 			UIntImageBuffer				= _vtypeinfo::_UINT | ImageBuffer,
 
 			_EXT2_OFF					= _vtypeinfo::_MAX,
-			_EXT2_MASK					= 0x3 << _EXT2_OFF,
+			_EXT2_MASK					= 0x5 << _EXT2_OFF,
 			Struct						= 1 << _EXT2_OFF,
 			UniformBlock				= 2 << _EXT2_OFF,
 			StorageBlock				= 3 << _EXT2_OFF,
+			VertexAttribs				= 4 << _EXT2_OFF,
 			
 			_MAX						= CompileTime::IntLog2< uint, _EXT2_MASK > + 1,
 				
@@ -491,6 +498,16 @@ namespace PipelineCompiler
 		static type		FromString (StringCRef typeName);
 	};
 
+
+
+	
+//-----------------------------------------------------------------------------//
+// EShaderSrcFormat
+
+	inline constexpr bool EShaderSrcFormat::IsVulkan (type value)
+	{
+		return value == GXSL_Vulkan or value == GLSL_Vulkan;
+	}
 
 
 
@@ -638,12 +655,13 @@ namespace PipelineCompiler
 
 			switch ( t )
 			{
-				case Default :	str << "Default";	break;
-				case Std140 :	str << "Std140";	break;
-				case Std430 :	str << "Std430";	break;
-				case Shared :	str << "Shared";	break;
-				case Packed :	str << "Packed";	break;
-				case Varying :	str << "Varying";	break;
+				case Default :		str << "Default";	break;
+				case Std140 :		str << "Std140";	break;
+				case Std430 :		str << "Std430";	break;
+				case Shared :		str << "Shared";	break;
+				case Packed :		str << "Packed";	break;
+				case Varying :		str << "Varying";	break;
+				case VertexAttrib :	str << "vertex";	break;
 				default :		RETURN_ERR( "unknown buffer packing type!" );
 			}
 		}
@@ -664,13 +682,14 @@ namespace PipelineCompiler
 
 			switch ( t )
 			{
-				case Default :	break;
-				case Std140 :	max_packing = Std140;										break;
-				case Std430 :	max_packing = (max_packing == Std140 ? Std140 : Std430);	break;
-				case Shared :	break;
-				case Packed :	break;
-				case Varying :	break;
-				default :		RETURN_ERR( "unknown buffer packing type!" );
+				case Default :		break;
+				case Std140 :		max_packing = Std140;										break;
+				case Std430 :		max_packing = (max_packing == Std140 ? Std140 : Std430);	break;
+				case Shared :		break;
+				case Packed :		break;
+				case Varying :		break;
+				case VertexAttrib :	break;
+				default :			RETURN_ERR( "unknown buffer packing type!" );
 			}
 		}
 		return max_packing;

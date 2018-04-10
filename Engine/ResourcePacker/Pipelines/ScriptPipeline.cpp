@@ -54,6 +54,7 @@ namespace ResPack
 				self.addPaddingToStructs	= true;
 				self.optimizeSource			= false;
 				self.optimizeBindings		= true;
+				self.minimalRebuild			= true;
 				self.includings				<< "common.h";
 				self.nameSpace				= "Pipelines";
 				self.target					|= EShaderDstFormat::GLSL_Source;
@@ -77,6 +78,7 @@ namespace ResPack
 		binder.AddProperty( &ConverterConfig::obfuscate,			"obfuscate" );
 		binder.AddProperty( &ConverterConfig::validation,			"validation" );
 		binder.AddProperty( &ConverterConfig::nameSpace,			"nameSpace" );
+		binder.AddProperty( &ConverterConfig::minimalRebuild,		"minimalRebuild" );
 
 		binder.AddMethodFromGlobal( &ConverterConfigUtils::Include,		"Include" );
 		binder.AddMethodFromGlobal( &ConverterConfigUtils::SetDefaults,	"SetDefaults" );
@@ -89,16 +91,29 @@ namespace ResPack
 */
 	void ScriptPipeline::_Bind_ShaderModule (ScriptEnginePtr se)
 	{
-		struct ShaderModuleFunc {
-			static void AddSource (ShaderModule *module, const String &src) {
+		struct ShaderModuleFunc
+		{
+			static void AddSource (ShaderModule *module, const String &src)
+			{
 				module->Source( src );
 			}
 
-			static void Load (ShaderModule *module, const String &src) {
-				module->Load( src );
+			static void Load (ShaderModule *module, const String &src)
+			{
+				if ( src.Front() == '<' )
+				{
+					module->Load( src );
+					return;
+				}
+
+				StringCRef	path  = FileAddress::GetPath( ScriptHelper::CurrentFileName() );
+				String		fname = FileAddress::BuildPath( path, src );
+
+				module->Load( fname );
 			}
 
-			static void LoadSelf (ShaderModule *module) {
+			static void LoadSelf (ShaderModule *module)
+			{
 				StringCRef		fname	= ScriptHelper::CurrentFileName();
 				File::RFilePtr	file	= File::HddRFile::New( fname );
 				const usize		len		= usize(file->RemainingSize());
@@ -351,8 +366,10 @@ namespace ResPack
 		EnumBinder< EShaderSrcFormat::type >	binder{ se };
 		
 		binder.Create();
-		binder.AddValue( "GLSL", EShaderSrcFormat::GLSL );
-		binder.AddValue( "GXSL", EShaderSrcFormat::GXSL );
+		binder.AddValue( "GLSL",		EShaderSrcFormat::GLSL );
+		binder.AddValue( "GXSL",		EShaderSrcFormat::GXSL );
+		binder.AddValue( "GLSL_Vulkan", EShaderSrcFormat::GLSL_Vulkan );
+		binder.AddValue( "GXSL_Vulkan", EShaderSrcFormat::GXSL_Vulkan );
 	}
 	
 /*

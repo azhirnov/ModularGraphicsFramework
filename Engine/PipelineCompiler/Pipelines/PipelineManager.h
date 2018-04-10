@@ -58,9 +58,9 @@ namespace PipelineCompiler
 		bool _Convert (const PplnCollection &pipelines, StringCRef filename, Ptr<ISerializer> ser, const ConverterConfig &cfg) const;
 		
 		template <typename PplnCollection>
-		bool _ProcessSharedTypes (const PplnCollection &pipelines, StringCRef path, Ptr<ISerializer> ser, INOUT ConverterConfig &cfg) const;
+		bool _ProcessSharedTypes (const PplnCollection &pipelines, Ptr<ISerializer> ser, OUT String &fileSource, INOUT ConverterConfig &cfg) const;
 
-		bool _SaveSharedTypes (StringCRef path, Ptr<ISerializer> ser, StringCRef nameSpace, OUT String &glslSource, OUT String &filename) const;
+		bool _SaveSharedTypes (Ptr<ISerializer> ser, StringCRef nameSpace, OUT String &fileSource, OUT String &glslSource) const;
 	};
 
 }	// PipelineCompiler

@@ -72,7 +72,7 @@ namespace Scene
 
 	// methods
 	public:
-		FreeVRCamera (GlobalSystemsRef gs, const CreateInfo::Camera &ci);
+		FreeVRCamera (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::Camera &ci);
 		~FreeVRCamera ();
 		
 
@@ -108,8 +108,8 @@ namespace Scene
 	constructor
 =================================================
 */
-	FreeVRCamera::FreeVRCamera (GlobalSystemsRef gs, const CreateInfo::Camera &ci) :
-		BaseSceneModule( gs, ModuleConfig{ FreeVRCameraModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	FreeVRCamera::FreeVRCamera (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Camera &ci) :
+		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_settings{ ci.settings }
 	{
 		SetDebugName( "Scene.FreeVRCamera" );
@@ -329,9 +329,9 @@ namespace Scene
 	CreateFreeVRCamera
 =================================================
 */
-	ModulePtr  SceneObjectConstructor::CreateFreeVRCamera (GlobalSystemsRef gs, const CreateInfo::Camera &ci)
+	ModulePtr  SceneObjectConstructor::CreateFreeVRCamera (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Camera &ci)
 	{
-		return New< FreeVRCamera >( gs, ci );
+		return New< FreeVRCamera >( id, gs, ci );
 	}
 
 }	// Scene

@@ -53,7 +53,7 @@ namespace Platforms
 
 	// methods
 	public:
-		InputThread (GlobalSystemsRef gs, const CreateInfo::InputThread &ci);
+		InputThread (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::InputThread &ci);
 		~InputThread ();
 		
 
@@ -81,8 +81,8 @@ namespace Platforms
 	constructor
 =================================================
 */
-	InputThread::InputThread (GlobalSystemsRef gs, const CreateInfo::InputThread &) :
-		Module( gs, ModuleConfig{ InputThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	InputThread::InputThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InputThread &) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_lockBindings( false )
 	{
 		SetDebugName( "InputThread" );
@@ -333,9 +333,9 @@ namespace Platforms
 	
 
 
-	ModulePtr InputManager::_CreateInputThread (GlobalSystemsRef gs, const CreateInfo::InputThread &ci)
+	ModulePtr InputManager::_CreateInputThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InputThread &ci)
 	{
-		return New< InputThread >( gs, ci );
+		return New< InputThread >( id, gs, ci );
 	}
 
 }	// Platforms

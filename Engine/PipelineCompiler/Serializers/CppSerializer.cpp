@@ -787,7 +787,7 @@ namespace PipelineCompiler
 */
 	String  CppSerializer::ToString (StringCRef value) const
 	{
-		const usize	max_len = 16000;	// 16380 is max for MSVS
+		constexpr usize	max_len = 16000;	// 16380 is max for MSVS
 
 		ASSERT( not value.HasSubString( ")#" ) );
 
@@ -1238,9 +1238,9 @@ namespace PipelineCompiler
 		String	indent;		indent.Resize( _structStack.Count()-1, '\t' );
 
 		if ( sizeOf > 0 )
-			_structStack.Push({ typeName,  String(indent) << "\t\tSTATIC_ASSERT( sizeof(" << typeName << ") == " << sizeOf << " );\n" });
+			_structStack.Push({ typeName,  String(indent) << "\t\tSTATIC_ASSERT( sizeof(" << typeName << ") == " << sizeOf << " );\n", "", "" });
 		else
-			_structStack.Push({ typeName, "" });
+			_structStack.Push({ typeName, "", "", "" });
 
 		return String(indent) << "struct " << typeName << " final\n" << indent << "{\n";
 	}
@@ -1254,31 +1254,68 @@ namespace PipelineCompiler
 	{
 		String	indent;		indent.Resize( _structStack.Count()-2, '\t' );
 
-		_structStack.Get().second << indent << "\t\tSTATIC_ASSERT( (offsetof( " << _structStack.Get().first << ", " << name << " ) == "
-								  << offset << ") and (sizeof( " << name << " ) == " << sizeOf << ") );\n";
+		auto&	curr_st = _structStack.Get();
+
+		curr_st.tests << indent << "\t\tSTATIC_ASSERT( (offsetof( " << _structStack.Get().typeName << ", " << name << " ) == "
+								 << offset << ") and (sizeof( " << name << " ) == " << sizeOf << ") );\n";
 
 		String	type_name = typeName;
 
-		// TODO: use Bool type...
 		if ( typeName.StartsWith("bool") )
 		{
 			if ( typeName.Length() == 4 )	type_name = "Bool32";								else
 			if ( typeName.Length() == 5 )	type_name = "Bool32_"_str << typeName.SubString( 4 );
 		}
 
-		String	str;
-		str << indent << "\t" << type_name << "  " << name;
+		String	field_str;
+		String	arg_str;
 
-		if ( arraySize > 1 )
-			str << "[" << arraySize << "]";
+		field_str << indent << "\t" << type_name << "  " << name;
+
+		if ( arraySize == 1 )
+		{
+			arg_str << "const " << type_name << " &" << name;
+		}
 		else
-		if ( arraySize == 0 )
+		if ( arraySize > 1 )
+		{
+			field_str << '[' << arraySize << ']';
+			
+			arg_str << "const " << type_name << " (&" << name << ")[" << arraySize << ']';
+		}
+		else
+		//if ( arraySize == 0 )
 		{
 			WARNING( "dynamic arrays are not supported!" );
-			str << "[]";
+			field_str << "[]";
 		}
+		
+		curr_st.fieldAsArguments << (curr_st.fieldAsArguments.Empty() ? "" : ", ") << arg_str;
+		
+		curr_st.fieldInitialized << (curr_st.fieldInitialized.Empty() ? "" : ", ") << name << '{' << name << '}';
 
-		str << ";    // offset: " << offset << ", align: " << align << "\n";
+		field_str << ";    // offset: " << offset << ", align: " << align << "\n";
+		return field_str;
+	}
+	
+/*
+=================================================
+	StructCtorForInitializerList
+=================================================
+*/
+	String  CppSerializer::StructCtorForInitializerList () const
+	{
+		if ( _structStack.Get().fieldAsArguments.Empty() )
+			return {};
+		
+		String	indent;		indent.Resize( _structStack.Count()-2, '\t' );
+
+		String	str;
+		
+		str << "\n\t" << indent << /*"explicit " <<*/ _structStack.Get().typeName << " (" << _structStack.Get().fieldAsArguments << ") :\n"
+			<< indent << "\t\t" << _structStack.Get().fieldInitialized << '\n'
+			<< indent << "\t{}\n";
+
 		return str;
 	}
 
@@ -1293,9 +1330,10 @@ namespace PipelineCompiler
 
 		String	str;
 
-		if ( not _structStack.Get().second.Empty() ) {
-			str << "\n\t" << indent << _structStack.Get().first << " ()\n"
-				<< indent << "\t{\n" << _structStack.Get().second << indent << "\t}\n";
+		if ( not _structStack.Get().tests.Empty() )
+		{
+			str << "\n\t" << indent << _structStack.Get().typeName << " ()\n"
+				<< indent << "\t{\n" << _structStack.Get().tests << indent << "\t}\n";
 		}
 
 		_structStack.Pop();

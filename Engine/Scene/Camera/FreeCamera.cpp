@@ -64,7 +64,7 @@ namespace Scene
 
 	// methods
 	public:
-		FreeCamera (GlobalSystemsRef gs, const CreateInfo::Camera &ci);
+		FreeCamera (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::Camera &ci);
 		~FreeCamera ();
 		
 
@@ -105,8 +105,8 @@ namespace Scene
 	constructor
 =================================================
 */
-	FreeCamera::FreeCamera (GlobalSystemsRef gs, const CreateInfo::Camera &ci) :
-		BaseSceneModule( gs, ModuleConfig{ FreeCameraModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	FreeCamera::FreeCamera (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Camera &ci) :
+		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_settings{ ci.settings }
 	{
 		SetDebugName( "Scene.FreeCamera" );
@@ -391,9 +391,9 @@ namespace Scene
 	CreateFreeCamera
 =================================================
 */
-	ModulePtr  SceneObjectConstructor::CreateFreeCamera (GlobalSystemsRef gs, const CreateInfo::Camera &ci)
+	ModulePtr  SceneObjectConstructor::CreateFreeCamera (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Camera &ci)
 	{
-		return New< FreeCamera >( gs, ci );
+		return New< FreeCamera >( id, gs, ci );
 	}
 
 }	// Scene

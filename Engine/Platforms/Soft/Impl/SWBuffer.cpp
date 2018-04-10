@@ -55,17 +55,16 @@ namespace PlatformSW
 		{
 		// variables
 			BytesU					offset;
-			BytesU					size;
 			EPipelineAccess::bits	access;
 			EPipelineStage::type	stage	= EPipelineStage::Unknown;	// last synchronization stage
 
 		// methods
 			Block () {}
-			Block (BytesU offset, BytesU size, EPipelineAccess::bits access, EPipelineStage::type stage) :
-				offset{offset}, size{size}, access{access}, stage{stage} {}
+			Block (BytesU offset, EPipelineAccess::bits access, EPipelineStage::type stage) :
+				offset{offset}, access{access}, stage{stage} {}
 		};
 
-		using Blocks_t				= Array< Block >; //FixedSizeArray< Block, 16 >;
+		using Blocks_t				= Array< Block >;
 
 
 	// constants
@@ -93,7 +92,7 @@ namespace PlatformSW
 
 	// methods
 	public:
-		SWBuffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci);
+		SWBuffer (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci);
 		~SWBuffer ();
 
 
@@ -123,10 +122,12 @@ namespace PlatformSW
 		void _OnMemoryBinded ();
 		void _OnMemoryUnbinded ();
 
-		void _MergeBlocks (Block newBlock);
+		bool _MergeBlocks (Block newBlock, BytesU size);
 		//void _MergeBlocks (const Block &newBlock, EPipelineAccess::bits lastAccess, EPipelineStage::bits lastStage);
 		
-		void _CheckAccess (INOUT Block &block, EPipelineAccess::bits access, EPipelineStage::type stage) const;
+		void _CheckAccess (const Block &block, EPipelineAccess::bits access, EPipelineStage::type stage) const;
+
+		static bool _IsIntersects (const Block &curr, const Block &next, BytesU offset, BytesU size);
 	};
 //-----------------------------------------------------------------------------
 
@@ -140,8 +141,8 @@ namespace PlatformSW
 	constructor
 =================================================
 */
-	SWBuffer::SWBuffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
-		SWBaseModule( gs, ModuleConfig{ SWBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	SWBuffer::SWBuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),			_memFlags( ci.memFlags ),
 		_memAccess( ci.access ),	_useMemMngr( ci.allocMem ),
 		_isCreated( false ),		_isBindedToMemory( false )
@@ -393,7 +394,8 @@ namespace PlatformSW
 		_memAccess	= req_descr->result->access;
 
 		_blocks.Clear();
-		_blocks.PushBack(Block{ 0_b, _memory.Size(), EPipelineAccess::bits(), EPipelineStage::Unknown });
+		_blocks.PushBack(Block{ 0_b, EPipelineAccess::bits(), EPipelineStage::Unknown });
+		_blocks.PushBack(Block{ _memory.Size(), EPipelineAccess::bits(), EPipelineStage::Unknown });
 
 		CHECK( BytesUL(_memory.Size()) == _descr.size );
 	}
@@ -431,6 +433,17 @@ namespace PlatformSW
 	
 /*
 =================================================
+	_IsIntersects
+=================================================
+*/
+	bool SWBuffer::_IsIntersects (const Block &curr, const Block &next, BytesU offset, BytesU size)
+	{
+		return !!(	((curr.offset < offset + size) & (next.offset > offset)) |
+					((offset + size < curr.offset) & (offset > next.offset)) );
+	}
+
+/*
+=================================================
 	_GetSWBufferMemoryLayout
 =================================================
 */
@@ -439,16 +452,18 @@ namespace PlatformSW
 		CHECK_ERR( _isBindedToMemory );
 
 		// check access
-		/*for (auto& curr : Range(_blocks))
+		for (usize i = 1; i < _blocks.Count(); ++i)
 		{
-			if ( curr.offset + curr.size > msg->offset or
-				 curr.offset < msg->offset + msg->size )
+			auto const&	curr = _blocks[i-1];
+			auto const&	next = _blocks[i];
+
+			if ( _IsIntersects( curr, next, msg->offset, msg->size ) )
 			{
 				_CheckAccess( curr, msg->access, msg->stage );
 			}
 		}
 
-		_MergeBlocks(Block{ msg->offset, msg->size, msg->access, msg->stage });*/
+		_MergeBlocks( Block{ msg->offset, msg->access, msg->stage }, msg->size );
 
 		msg->result.Set({ _memory.SubArray( usize(msg->offset), usize(msg->size) ), _align, _memAccess });
 		return true;
@@ -476,7 +491,7 @@ namespace PlatformSW
 		{
 			ASSERT( br.buffer == this );
 
-			_MergeBlocks(Block{ BytesU(br.offset), BytesU(br.size), br.dstAccessMask, EPipelineStage::BottomOfPipe });
+			_MergeBlocks( Block{ BytesU(br.offset), br.dstAccessMask, EPipelineStage::BottomOfPipe }, BytesU(br.size ));
 
 			//_MergeBlocks( Block{ BytesU(br.offset), BytesU(br.size), br.dstAccessMask, msg->dstStageMask }, br.srcAccessMask, msg->srcStageMask );
 		}
@@ -488,95 +503,66 @@ namespace PlatformSW
 	_MergeBlocks
 =================================================
 */
-	void SWBuffer::_MergeBlocks (Block newBlock)
+	bool SWBuffer::_MergeBlocks (Block newBlock, BytesU blockSize)
 	{
-		// insert new block
-		/*bool	inserted = false;
+		// insert new blocks
+		Block	curr_block	= _blocks.Front();
 
-		FOR( i, _blocks )
+		for (usize i = 1; i < _blocks.Count(); ++i)
 		{
-			auto&	curr = _blocks[i];
+			auto&			curr	= _blocks[i-1];
+			auto const&		next	= _blocks[i];
+			const BytesU	size	= next.offset - curr.offset;
+			
+			if ( not _IsIntersects( curr, next, newBlock.offset, blockSize ) )
+				continue;
 
-			if ( newBlock.offset == curr.offset )
+			if ( curr.offset < newBlock.offset and
+				 newBlock.offset < next.offset )
 			{
-				if ( newBlock.size == curr.size )
+				curr_block = curr;
+				curr_block.offset = newBlock.offset;
+
+				_blocks.Insert( curr_block, i );
+				continue;
+			}
+
+			if ( curr.offset == newBlock.offset and
+				 blockSize > 0 )
+			{
+				curr_block	= curr;
+				curr		= newBlock;
+
+				if ( blockSize < size )
 				{
-					curr		= newBlock;
-					inserted	= true;
+					curr_block.offset += blockSize;
+
+					_blocks.Insert( curr_block, i );
 					break;
 				}
 				else
-				if ( newBlock.size < curr.size )
 				{
-					inserted	= true;
-					curr.size	= 
-					curr.offset = newBlock.offset + newBlock.size;
-					_blocks.Insert( newBlock, i );
-					break;
-				}
-				else // newBlock.size > curr.size
-				{
-					_blocks.Erase( i );
-					--i;
-					continue;
+					blockSize		-= size;
+					newBlock.offset += size;
 				}
 			}
-			else
-			if ( newBlock.offset + newBlock.size > curr.offset )
-			{
-				inserted	= true;
-				curr.offset = newBlock.offset + newBlock.size;
-				
-				if ( i > 0 )
-				{
-					auto&	prev = _blocks[i-1];
-					prev.size = newBlock.offset - prev.offset;
-
-					_blocks.Insert( newBlock, i-1 );
-				}
-				else
-					_blocks.Insert( newBlock, 0 );
-
-				break;
-			}
-		}
-
-		if ( not inserted and newBlock.offset < _memory.Size() )
-		{
-			newBlock.size = Min( _memory.Size() - newBlock.offset, newBlock.size );
-			_blocks.PushBack( newBlock );
-			inserted = true;
-		}
-
-		if ( not inserted ) {
-			WARNING( "invalid buffer block range!" );
-			return;
+				 
 		}
 
 		// optimize
-		FOR( i, _blocks )
+		for (usize i = 1; i+1 < _blocks.Count(); ++i)
 		{
-			auto&	curr		= _blocks[i];
-			BytesU	next_off	= i+1 < _blocks.Count() ? _blocks[i+1].offset : _memory.Size();
+			auto const&		curr	= _blocks[i-1];
+			auto const&		next	= _blocks[i];
 
-			ASSERT( curr.size > 0_b );
-			ASSERT( i > 0 or curr.offset == 0_b );
-			ASSERT( curr.offset + curr.size == next_off );
-
-			if ( i+1 < _blocks.Count() )
+			if ( curr.access == next.access and
+				 curr.stage == next.stage )
 			{
-				auto&	next = _blocks[i+1];
-
-				if ( curr.access == next.access and curr.stage == next.stage )
-				{
-					curr.size = (next.offset + next.size) - curr.offset;
-
-					_blocks.Erase( i );
-					--i;
-					continue;
-				}
+				_blocks.Erase( i );
+				--i;
 			}
-		}*/
+		}
+		return true;
 	}
 	
 	/*void SWBuffer::_MergeBlocks (const Block &newBlock, EPipelineAccess::bits lastAccess, EPipelineStage::bits lastStage)
@@ -590,7 +576,7 @@ namespace PlatformSW
 	_CheckAccess
 =================================================
 */
-	void SWBuffer::_CheckAccess (INOUT Block &block, EPipelineAccess::bits accessMask, EPipelineStage::type stage) const
+	void SWBuffer::_CheckAccess (const Block &block, EPipelineAccess::bits accessMask, EPipelineStage::type stage) const
 	{
 		const bool	was_written		= !!(block.access & EPipelineAccess::WriteMask);
 		const bool	will_be_read	= !!(accessMask & EPipelineAccess::ReadMask);
@@ -606,9 +592,6 @@ namespace PlatformSW
 						 EPipelineStage::ToString( block.stage ) << "', with access '" << EPipelineAccess::ToString( block.access ) <<
 						 "' to stage '" << EPipelineStage::ToString( stage ) << "', with access '" << EPipelineAccess::ToString( accessMask ) << "'",
 						 EDbgReport::Error );
-
-		block.access = accessMask;
-		block.stage  = stage;
 	}
 
 }	// PlatformSW
@@ -616,9 +599,9 @@ namespace PlatformSW
 
 namespace Platforms
 {
-	ModulePtr SoftRendererObjectsConstructor::CreateSWBuffer (GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreateSWBuffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
 	{
-		return New< PlatformSW::SWBuffer >( gs, ci );
+		return New< PlatformSW::SWBuffer >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

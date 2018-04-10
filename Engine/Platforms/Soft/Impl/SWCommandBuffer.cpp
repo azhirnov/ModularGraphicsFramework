@@ -68,7 +68,7 @@ namespace PlatformSW
 
 	// methods
 	public:
-		SWCommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci);
+		SWCommandBuffer (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci);
 		~SWCommandBuffer ();
 
 
@@ -124,8 +124,8 @@ namespace PlatformSW
 	constructor
 =================================================
 */
-	SWCommandBuffer::SWCommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
-		SWBaseModule( gs, ModuleConfig{ SWCommandBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	SWCommandBuffer::SWCommandBuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr{ ci.descr },			_recordingState{ ERecordingState::Deleted },
 		_computeShader{ null }
 	{
@@ -896,9 +896,9 @@ namespace PlatformSW
 
 namespace Platforms
 {
-	ModulePtr SoftRendererObjectsConstructor::CreateSWCommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreateSWCommandBuffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
 	{
-		return New< PlatformSW::SWCommandBuffer >( gs, ci );
+		return New< PlatformSW::SWCommandBuffer >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

@@ -101,20 +101,22 @@ namespace OS
 		uint			DaysInMonth ()		const	{ return _DaysInMonth( _year, _month ); }
 
 
-		ulong	ToMillisecondsSince1970 () const		{ return _ToMilliseconds( 1970 ); }
-		Date &	SetMillisecondsSince1970 (ulong ms)		{ return _SetMilliseconds( 1970, ms ); }
+		ulong	ToMillisecondsSince1970 () const	{ return _ToMilliseconds( 1970 ); }
+		Date &	SetMillisecondsSince1970 (ulong ms)	{ return _SetMilliseconds( 1970, ms ); }
 
-		ulong	ToMillisecondsSinceEpoch () const		{ return _ToMilliseconds( 0 ); }
-		Date &	SetMillisecondsSinceEpoch (ulong ms)	{ return _SetMilliseconds( 0, ms ); }
+		ulong	ToMillisecondsSinceEpoch () const	{ return _ToMilliseconds( 0 ); }
+		Date &	SetMillisecondsSinceEpoch (ulong ms){ return _SetMilliseconds( 0, ms ); }
+
+		TimeL	ToTime () const						{ return TimeL::FromMilliSeconds( ToMillisecondsSince1970() ); }	// 1970 .. 2262
 
 
-		Date &  SetYear (uint value)		{ _year = value; return *this; }
-		Date &	SetMonth (uint value)		{ _month = value; return *this; }
+		Date &  SetYear (uint value)				{ _year = value; return *this; }
+		Date &	SetMonth (uint value)				{ _month = value; return *this; }
 		Date &	SetDay (uint value);
-		Date &	SetHour (uint value)		{ _hour = value; return *this; }
-		Date &	SetMinute (uint value)		{ _minute = value; return *this; }
-		Date &	SetSecond (uint value)		{ _second = value; return *this; }
-		Date &	SetMillis (uint value)		{ _millis = value; return *this; }
+		Date &	SetHour (uint value)				{ _hour = value; return *this; }
+		Date &	SetMinute (uint value)				{ _minute = value; return *this; }
+		Date &	SetSecond (uint value)				{ _second = value; return *this; }
+		Date &	SetMillis (uint value)				{ _millis = value; return *this; }
 
 		String ToString (StringCRef fmt) const;
 		

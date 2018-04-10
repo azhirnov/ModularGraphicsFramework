@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "CApp.h"
-#include "../Pipelines/all_pipelines.h"
+#include "Pipelines/all_pipelines.h"
 
 bool CApp::_Test_ConvertFloatImage2D ()
 {
@@ -18,8 +18,6 @@ bool CApp::_Test_ConvertFloatImage2D ()
 	FOR( i, data ) {
 		data[i] = Random::Int<ubyte>();
 	}
-
-	BytesU	buf_size = img_dim.Area() * SizeOf<float4>;
 
 
 	// create resources

@@ -69,7 +69,7 @@ namespace GXMath
 
 		public:
 			template <uint sizeR, uint sizeG, uint sizeB, uint sizeA, typename ColorType>
-			CHECKRES static IntColorFormatInfo PackedType (const ColorType &color)
+			CHECKRES static IntColorFormatInfo  PackedType (const ColorType &color)
 			{
 				STATIC_ASSERT( (sizeR + sizeG + sizeB + sizeA) == CompileTime::SizeOf<ColorType>::bits );
 				return IntColorFormatInfo( sizeR, sizeG, sizeB, sizeA, color );
@@ -77,7 +77,7 @@ namespace GXMath
 
 
 			template <typename ValueType, uint ChannelsCount, typename ColorType>
-			CHECKRES static IntColorFormatInfo SimpleType (const ColorType &color)
+			CHECKRES static IntColorFormatInfo  SimpleType (const ColorType &color)
 			{
 				const uint channel_size = CompileTime::SizeOf<ValueType>::bits;
 
@@ -93,7 +93,7 @@ namespace GXMath
 
 
 			template <uint R, uint G, uint B, uint A>
-			IntColorFormatInfo GetSwizzledFormat () const
+			CHECKRES IntColorFormatInfo  GetSwizzledFormat () const
 			{
 				IntColorFormatInfo	res;
 				res.sizeInBits = IntFormat( this->sizeInBits[R&3], this->sizeInBits[G&3],
@@ -103,32 +103,32 @@ namespace GXMath
 			}
 
 
-			IntFormat MaxValue() const
+			CHECKRES IntFormat  MaxValue () const
 			{
 				return ToMask< IntFormat::Value_t >( Max( sizeInBits - int(isSigned), IntFormat() ).To<BitsVec<usize,4>>() );
 			}
 
-			FloatFormat MaxValueF() const
+			CHECKRES FloatFormat  MaxValueF () const
 			{
 				return this->MaxValue().To<FloatFormat>();
 			}
 
-			IntFormat MinValue() const
+			CHECKRES IntFormat  MinValue () const
 			{
 				return isSigned ? (-MaxValue()-1) : IntFormat(0);
 			}
 
-			IntFormat GetShiftTo (const IntColorFormatInfo &fmt) const
+			CHECKRES IntFormat  GetShiftTo (const IntColorFormatInfo &fmt) const
 			{
 				return fmt.sizeInBits - sizeInBits;
 			}
 
-			IntFormat GetShiftFrom (const IntColorFormatInfo &fmt) const
+			CHECKRES IntFormat  GetShiftFrom (const IntColorFormatInfo &fmt) const
 			{
 				return -GetShiftTo( fmt );
 			}
 
-			IntFormat Clamp (const IntFormat &value) const
+			CHECKRES IntFormat  Clamp (const IntFormat &value) const
 			{
 				typedef Vec< CompileTime::NearInt::FromType< IntFormat::Value_t >, 4 >	sign_t;
 				typedef Vec< CompileTime::NearUInt::FromType< IntFormat::Value_t >, 4 >	unsign_t;
@@ -161,23 +161,23 @@ namespace GXMath
 
 		public:
 			template <typename ValueType>
-			CHECKRES static FloatColorFormatInfo SimpleType ()
+			CHECKRES static FloatColorFormatInfo  SimpleType ()
 			{
 				const ValueType	min_value = GXTypes::MinValue<ValueType>();
 				const ValueType	max_value = GXTypes::MaxValue<ValueType>();
 
-				return FloatColorFormatInfo( FloatFormat(max_value), FloatFormat(min_value), true );
+				return FloatColorFormatInfo( FloatFormat{max_value}, FloatFormat{min_value}, true );
 			}
 
 
-			CHECKRES static FloatColorFormatInfo PackedType (const FloatFormat &maxValue)
+			CHECKRES static FloatColorFormatInfo  PackedType (const FloatFormat &maxValue)
 			{
 				return FloatColorFormatInfo( maxValue, FloatFormat(0.0f), false );
 			}
 
 
 			template <uint R, uint G, uint B, uint A>
-			FloatColorFormatInfo GetSwizzledFormat () const
+			CHECKRES FloatColorFormatInfo  GetSwizzledFormat () const
 			{
 				FloatColorFormatInfo	res( FloatFormat( this->maxValue[R&3], this->maxValue[G&3],
 														  this->maxValue[B&3], this->maxValue[A&3] ),
@@ -188,20 +188,20 @@ namespace GXMath
 			}
 
 
-			FloatFormat MaxValue() const
+			CHECKRES FloatFormat  MaxValue () const
 			{
 				return maxValue;
 			}
 
-			FloatFormat MinValue() const
+			CHECKRES FloatFormat  MinValue () const
 			{
 				return isSigned ? -maxValue : FloatFormat(0.0f);
 			}
 
-			FloatFormat Clamp (const FloatFormat &value) const
+			CHECKRES FloatFormat  Clamp (const FloatFormat &value) const
 			{
-				FloatFormat	ret;
-				FOR( i, ret )	ret[i] = Max( value[i], FloatFormat::Value_t(0.0f) );
+				FloatFormat		ret;
+				FOR( i, ret )	ret[i] = GXMath::Clamp( value[i], MinValue()[i], MaxValue()[i] );
 				return ret;
 			}
 		};

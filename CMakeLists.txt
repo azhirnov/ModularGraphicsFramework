@@ -12,6 +12,7 @@ set_property( GLOBAL PROPERTY USE_FOLDERS ON )
 set( ModularGraphicsFramework_VERSION_MAJOR 0 )
 set( ModularGraphicsFramework_VERSION_MINOR 220 )
 
+set( OPENGLES_VERSION "320" CACHE STRING "Define OpenGLES version, supported: 200, 300, 310, 320"  )
 set( VULKAN_VERSION "100" CACHE STRING "Define Vulkan version, supported: 100, 110"  )
 set( OPENGL_VERSION "450" CACHE STRING "Define OpenGL version, supported: 440, 450"  )
 set( SOFTRENDER_VERSION "100" CACHE STRING "Define Software renderer version, 100 is supported"  )
@@ -40,19 +41,19 @@ if ( COMPILER_MSVC )
 	# DebugAnalyze
 	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:DebugAnalyze>: > )
 	set( CMAKE_C_FLAGS_DEBUGANALYZE "${CMAKE_C_FLAGS} /D_DEBUG /MDd /Od /MP " CACHE STRING "" FORCE )
-	set( CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} /D_DEBUG /MDd /Od /MP " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} /D_DEBUG /MDd /Od /MP /Zi " CACHE STRING "" FORCE )
 	set( CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} /DEBUG:FULL /LTCG " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_SHARED_LINKER_FLAGS} /DEBUG:FULL /LTCG " CACHE STRING "" FORCE )
-	set( PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4293 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" CACHE INTERNAL "" FORCE )
 	# Debug
 	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: > )
 	set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} /D_DEBUG /MDd /Od /MP " CACHE STRING "" FORCE )
-	set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} /D_DEBUG /MDd /Od /MP " CACHE STRING "" FORCE )
+	set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} /D_DEBUG /MDd /Od /MP /Zi " CACHE STRING "" FORCE )
 	set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} /DEBUG:FULL /LTCG " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS} /DEBUG:FULL /LTCG " CACHE STRING "" FORCE )
-	set( PROJECTS_SHARED_CXX_FLAGS_DEBUG  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUG  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4293 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" CACHE INTERNAL "" FORCE )
 	# Profile
@@ -61,7 +62,7 @@ if ( COMPILER_MSVC )
 	set( CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} /D_NDEBUG /DNDEBUG  /MD /Od /MP " CACHE STRING "" FORCE )
 	set( CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} /LTCG /DEBUG /PROFILE " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_SHARED_LINKER_FLAGS} /LTCG /DEBUG /PROFILE " CACHE STRING "" FORCE )
-	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /GT /GL /GF /GS- /MD /W3 /Od /analyze- /EHsc /GR CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4293 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /GT /GL /GF /GS- /MD /W3 /Od /analyze- /EHsc /GR CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /DEBUG /PROFILE" CACHE INTERNAL "" FORCE )
 	# Release
@@ -70,7 +71,7 @@ if ( COMPILER_MSVC )
 	set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} /D_NDEBUG /DNDEBUG  /MD /Ox /MP " CACHE STRING "" FORCE )
 	set( CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /LTCG /RELEASE " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS} /LTCG /RELEASE " CACHE STRING "" FORCE )
-	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /GT /GL /GF /GS- /MD /W3 /Ox /analyze- /EHs-c- /GR- CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4293 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4700 /we4702 /we4706 /we4715 /we4716 /we4717 /we4927  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /GT /GL /GF /GS- /MD /W3 /Ox /analyze- /EHs-c- /GR- CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_RELEASE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /RELEASE /DYNAMICBASE" CACHE INTERNAL "" FORCE )
 	set( CMAKE_BUILD_TYPE "Debug")
@@ -105,7 +106,7 @@ if ( COMPILER_GCC )
 	set( CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og -Wno-terminate  CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUGANALYZE " -static -static-libgcc -static-libstdc++ -ldl" CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUGANALYZE " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
 	# Debug
 	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: > )
 	set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -D_DEBUG -Og " CACHE STRING "" FORCE )
@@ -114,7 +115,7 @@ if ( COMPILER_GCC )
 	set( CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( PROJECTS_SHARED_CXX_FLAGS_DEBUG  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local  -ggdb -fchkp-check-incomplete-type -Og -Wno-terminate  CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUG " -static -static-libgcc -static-libstdc++ -ldl" CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUG " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
 	# Profile
 	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Profile>: > )
 	set( CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS} -D_NDEBUG -DNDEBUG  -O2 " CACHE STRING "" FORCE )
@@ -123,7 +124,7 @@ if ( COMPILER_GCC )
 	set( CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local  -O2 CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_LINKER_FLAGS_PROFILE " -static -static-libgcc -static-libstdc++ -ldl" CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKER_FLAGS_PROFILE " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
 	# Release
 	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>: > )
 	set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -D_NDEBUG -DNDEBUG  -O3 -finline-functions " CACHE STRING "" FORCE )
@@ -132,7 +133,7 @@ if ( COMPILER_GCC )
 	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_LINKER_FLAGS_RELEASE " -static -static-libgcc -static-libstdc++ -ldl" CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKER_FLAGS_RELEASE " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
 	set( CMAKE_BUILD_TYPE "Debug")
 	#--------------------------------------------
 	set( CONFIGURATION_DEPENDENT_PATH OFF CACHE INTERNAL "" FORCE )
@@ -466,6 +467,7 @@ set( SOURCES
 		"Engine/STL/OS/SDL/Library.h"
 		"Engine/STL/OS/SDL/OS_SDL.h"
 		"Engine/STL/OS/SDL/RandDevice.h"
+		"Engine/STL/OS/SDL/SdlLibrary.cpp"
 		"Engine/STL/OS/SDL/SdlThread.cpp"
 		"Engine/STL/OS/SDL/SDLUtils.cpp"
 		"Engine/STL/OS/SDL/SDLUtils.h"
@@ -588,7 +590,7 @@ source_group( "OS\\Posix" FILES "Engine/STL/OS/Posix/AtomicOp.h" "Engine/STL/OS/
 source_group( "OS\\Android" FILES "Engine/STL/OS/Android/OSAndroid.h" )
 source_group( "Math" FILES "Engine/STL/Math/Algebra.h" "Engine/STL/Math/BinaryMath.h" "Engine/STL/Math/FastMath.h" "Engine/STL/Math/Interpolations.h" "Engine/STL/Math/MathConstants.h" "Engine/STL/Math/Mathematics.h" "Engine/STL/Math/MathFunc.h" "Engine/STL/Math/MathTypeCast.h" "Engine/STL/Math/MathTypes.h" "Engine/STL/Math/Matrix.h" "Engine/STL/Math/Matrix2.h" "Engine/STL/Math/Matrix3.h" "Engine/STL/Math/Matrix4.h" "Engine/STL/Math/MatrixCR.h" "Engine/STL/Math/MatrixUtils.h" "Engine/STL/Math/Quaternion.h" "Engine/STL/Math/Trigonometry.h" "Engine/STL/Math/Vec.h" "Engine/STL/Math/VecI.h" )
 source_group( "OS\\Base" FILES "Engine/STL/OS/Base/BaseFileSystem.cpp" "Engine/STL/OS/Base/BaseFileSystem.h" "Engine/STL/OS/Base/Common.h" "Engine/STL/OS/Base/ConditionVariableEmulation.h" "Engine/STL/OS/Base/Date.cpp" "Engine/STL/OS/Base/Date.h" "Engine/STL/OS/Base/Endianes.h" "Engine/STL/OS/Base/ReadWriteSyncEmulation.h" "Engine/STL/OS/Base/ScopeLock.h" "Engine/STL/OS/Base/SemaphoreEmulator.h" "Engine/STL/OS/Base/SyncEventEmulation.h" )
-source_group( "OS\\SDL" FILES "Engine/STL/OS/SDL/FileSystem.h" "Engine/STL/OS/SDL/Library.h" "Engine/STL/OS/SDL/OS_SDL.h" "Engine/STL/OS/SDL/RandDevice.h" "Engine/STL/OS/SDL/SdlThread.cpp" "Engine/STL/OS/SDL/SDLUtils.cpp" "Engine/STL/OS/SDL/SDLUtils.h" "Engine/STL/OS/SDL/SyncPrimitives.h" "Engine/STL/OS/SDL/Thread.h" "Engine/STL/OS/SDL/Timer.h" )
+source_group( "OS\\SDL" FILES "Engine/STL/OS/SDL/FileSystem.h" "Engine/STL/OS/SDL/Library.h" "Engine/STL/OS/SDL/OS_SDL.h" "Engine/STL/OS/SDL/RandDevice.h" "Engine/STL/OS/SDL/SdlLibrary.cpp" "Engine/STL/OS/SDL/SdlThread.cpp" "Engine/STL/OS/SDL/SDLUtils.cpp" "Engine/STL/OS/SDL/SDLUtils.h" "Engine/STL/OS/SDL/SyncPrimitives.h" "Engine/STL/OS/SDL/Thread.h" "Engine/STL/OS/SDL/Timer.h" )
 source_group( "Defines" FILES "Engine/STL/Defines/AuxiliaryDefines.h" "Engine/STL/Defines/Defines.h" "Engine/STL/Defines/EnumHelpers.h" "Engine/STL/Defines/Errors.h" "Engine/STL/Defines/MemberDetector.h" "Engine/STL/Defines/OperatorHelpers.h" "Engine/STL/Defines/PublicMacro.h" )
 source_group( "Algorithms\\Crypt" FILES "Engine/STL/Algorithms/Crypt/SimpleCrypt.h" )
 source_group( "Common" FILES "Engine/STL/Common/AllFunc.h" "Engine/STL/Common/Cast.h" "Engine/STL/Common/Init.h" "Engine/STL/Common/Main.cpp" "Engine/STL/Common/Platforms.h" "Engine/STL/Common/TypeId.h" "Engine/STL/Common/Types.h" "Engine/STL/Common/UMax.h" "Engine/STL/Common/Uninitialized.h" )
@@ -830,6 +832,7 @@ set( SOURCES
 		"Engine/Base/Modules/Module.cpp"
 		"Engine/Base/Modules/Module.h"
 		"Engine/Base/Modules/Module.inl.h"
+		"Engine/Base/Modules/Module.Send.inl.h"
 		"Engine/Base/Modules/ModuleAsyncTasks.h"
 		"Engine/Base/Modules/ModuleMessages.h"
 		"Engine/Base/Modules/ModulesFactory.cpp"
@@ -856,7 +859,7 @@ add_library( "Engine.Base" STATIC ${SOURCES} )
 source_group( "Stream" FILES "Engine/Base/Stream/InputStream.cpp" "Engine/Base/Stream/OutputStream.cpp" "Engine/Base/Stream/Stream.h" "Engine/Base/Stream/StreamManager.cpp" "Engine/Base/Stream/StreamObjectsConstructor.h" )
 source_group( "Tasks" FILES "Engine/Base/Tasks/AsyncMessage.h" "Engine/Base/Tasks/AsyncTask.h" "Engine/Base/Tasks/TaskManager.cpp" "Engine/Base/Tasks/TaskManager.h" "Engine/Base/Tasks/TaskModule.cpp" "Engine/Base/Tasks/TaskModule.h" )
 source_group( "Main" FILES "Engine/Base/Main/MainSystem.cpp" "Engine/Base/Main/MainSystem.h" )
-source_group( "Modules" FILES "Engine/Base/Modules/CreateInfo.h" "Engine/Base/Modules/Message.h" "Engine/Base/Modules/MessageHandler.cpp" "Engine/Base/Modules/MessageHandler.h" "Engine/Base/Modules/MessageHelpers.h" "Engine/Base/Modules/Module.cpp" "Engine/Base/Modules/Module.h" "Engine/Base/Modules/Module.inl.h" "Engine/Base/Modules/ModuleAsyncTasks.h" "Engine/Base/Modules/ModuleMessages.h" "Engine/Base/Modules/ModulesFactory.cpp" "Engine/Base/Modules/ModulesFactory.h" "Engine/Base/Modules/ModuleUtils.h" "Engine/Base/Modules/ProfilingMessages.h" )
+source_group( "Modules" FILES "Engine/Base/Modules/CreateInfo.h" "Engine/Base/Modules/Message.h" "Engine/Base/Modules/MessageHandler.cpp" "Engine/Base/Modules/MessageHandler.h" "Engine/Base/Modules/MessageHelpers.h" "Engine/Base/Modules/Module.cpp" "Engine/Base/Modules/Module.h" "Engine/Base/Modules/Module.inl.h" "Engine/Base/Modules/Module.Send.inl.h" "Engine/Base/Modules/ModuleAsyncTasks.h" "Engine/Base/Modules/ModuleMessages.h" "Engine/Base/Modules/ModulesFactory.cpp" "Engine/Base/Modules/ModulesFactory.h" "Engine/Base/Modules/ModuleUtils.h" "Engine/Base/Modules/ProfilingMessages.h" )
 source_group( "Common" FILES "Engine/Base/Common/BaseObject.h" "Engine/Base/Common/Common.h" "Engine/Base/Common/Defines.h" "Engine/Base/Common/EModuleGroup.h" "Engine/Base/Common/EngineSubSystems.h" "Engine/Base/Common/Enums.h" "Engine/Base/Common/IDs.h" "Engine/Base/Common/ThreadID.h" )
 source_group( "Files" FILES "Engine/Base/Files/FileManager.cpp" "Engine/Base/Files/FileManager.h" )
 source_group( "" FILES "Engine/Base/Engine.Base.h" )
@@ -890,29 +893,6 @@ target_compile_options( "Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHAR
 # project: Engine.Platforms
 #==================================================================================================
 set( SOURCES 
-		"Engine/Platforms/OpenGL/Impl/gl4.cpp"
-		"Engine/Platforms/OpenGL/Impl/gl4.h"
-		"Engine/Platforms/OpenGL/Impl/GL4BaseModule.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
-		"Engine/Platforms/OpenGL/Impl/GL4Buffer.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4CommandBuffer.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4CommandBuilder.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4Device.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4Device.h"
-		"Engine/Platforms/OpenGL/Impl/GL4Emulator.h"
-		"Engine/Platforms/OpenGL/Impl/GL4Enums.h"
-		"Engine/Platforms/OpenGL/Impl/GL4FlippedSystemFramebuffer.h"
-		"Engine/Platforms/OpenGL/Impl/GL4Framebuffer.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4Image.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4Memory.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4Messages.h"
-		"Engine/Platforms/OpenGL/Impl/GL4Pipeline.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4PipelineResourceTable.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4RenderPass.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4Sampler.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4Sampler.h"
-		"Engine/Platforms/OpenGL/Impl/GL4SyncManager.cpp"
-		"Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h"
 		"Engine/Platforms/Vulkan/Android/VkAndSurface.cpp"
 		"Engine/Platforms/Vulkan/Android/VkAndSurface.h"
 		"Engine/Platforms/Soft/SoftRendererContext.cpp"
@@ -929,6 +909,8 @@ set( SOURCES
 		"Engine/Platforms/OpenGL/OpenGLContext.cpp"
 		"Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 		"Engine/Platforms/OpenGL/OpenGLThread.cpp"
+		"Engine/Platforms/OpenGL/300es/gles3.cpp"
+		"Engine/Platforms/OpenGL/300es/gles3.h"
 		"Engine/Platforms/OpenCL/OpenCLContext.cpp"
 		"Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 		"Engine/Platforms/OpenCL/OpenCLThread.cpp"
@@ -1071,6 +1053,29 @@ set( SOURCES
 		"Engine/Platforms/Public/Tools/MemoryMapperHelper.h"
 		"Engine/Platforms/Public/Tools/WindowHelper.cpp"
 		"Engine/Platforms/Public/Tools/WindowHelper.h"
+		"Engine/Platforms/OpenGL/450/gl4.cpp"
+		"Engine/Platforms/OpenGL/450/gl4.h"
+		"Engine/Platforms/OpenGL/450/GL4BaseModule.cpp"
+		"Engine/Platforms/OpenGL/450/GL4BaseModule.h"
+		"Engine/Platforms/OpenGL/450/GL4Buffer.cpp"
+		"Engine/Platforms/OpenGL/450/GL4CommandBuffer.cpp"
+		"Engine/Platforms/OpenGL/450/GL4CommandBuilder.cpp"
+		"Engine/Platforms/OpenGL/450/GL4Device.cpp"
+		"Engine/Platforms/OpenGL/450/GL4Device.h"
+		"Engine/Platforms/OpenGL/450/GL4Emulator.h"
+		"Engine/Platforms/OpenGL/450/GL4Enums.h"
+		"Engine/Platforms/OpenGL/450/GL4FlippedSystemFramebuffer.h"
+		"Engine/Platforms/OpenGL/450/GL4Framebuffer.cpp"
+		"Engine/Platforms/OpenGL/450/GL4Image.cpp"
+		"Engine/Platforms/OpenGL/450/GL4Memory.cpp"
+		"Engine/Platforms/OpenGL/450/GL4Messages.h"
+		"Engine/Platforms/OpenGL/450/GL4Pipeline.cpp"
+		"Engine/Platforms/OpenGL/450/GL4PipelineResourceTable.cpp"
+		"Engine/Platforms/OpenGL/450/GL4RenderPass.cpp"
+		"Engine/Platforms/OpenGL/450/GL4Sampler.cpp"
+		"Engine/Platforms/OpenGL/450/GL4Sampler.h"
+		"Engine/Platforms/OpenGL/450/GL4SyncManager.cpp"
+		"Engine/Platforms/OpenGL/450/GL4SystemFramebuffer.h"
 		"Engine/Platforms/Public/OS/Display.h"
 		"Engine/Platforms/Public/OS/IDs.h"
 		"Engine/Platforms/Public/OS/Input.h"
@@ -1102,11 +1107,11 @@ set( SOURCES
 		"Engine/Platforms/VR/VRObjectsConstructor.cpp"
 		"Engine/Platforms/VR/VRObjectsConstructor.h" )
 add_library( "Engine.Platforms" STATIC ${SOURCES} )
-source_group( "OpenGL\\Impl" FILES "Engine/Platforms/OpenGL/Impl/gl4.cpp" "Engine/Platforms/OpenGL/Impl/gl4.h" "Engine/Platforms/OpenGL/Impl/GL4BaseModule.cpp" "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h" "Engine/Platforms/OpenGL/Impl/GL4Buffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4CommandBuffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4CommandBuilder.cpp" "Engine/Platforms/OpenGL/Impl/GL4Device.cpp" "Engine/Platforms/OpenGL/Impl/GL4Device.h" "Engine/Platforms/OpenGL/Impl/GL4Emulator.h" "Engine/Platforms/OpenGL/Impl/GL4Enums.h" "Engine/Platforms/OpenGL/Impl/GL4FlippedSystemFramebuffer.h" "Engine/Platforms/OpenGL/Impl/GL4Framebuffer.cpp" "Engine/Platforms/OpenGL/Impl/GL4Image.cpp" "Engine/Platforms/OpenGL/Impl/GL4Memory.cpp" "Engine/Platforms/OpenGL/Impl/GL4Messages.h" "Engine/Platforms/OpenGL/Impl/GL4Pipeline.cpp" "Engine/Platforms/OpenGL/Impl/GL4PipelineResourceTable.cpp" "Engine/Platforms/OpenGL/Impl/GL4RenderPass.cpp" "Engine/Platforms/OpenGL/Impl/GL4Sampler.cpp" "Engine/Platforms/OpenGL/Impl/GL4Sampler.h" "Engine/Platforms/OpenGL/Impl/GL4SyncManager.cpp" "Engine/Platforms/OpenGL/Impl/GL4SystemFramebuffer.h" )
 source_group( "Vulkan\\Android" FILES "Engine/Platforms/Vulkan/Android/VkAndSurface.cpp" "Engine/Platforms/Vulkan/Android/VkAndSurface.h" )
 source_group( "Soft" FILES "Engine/Platforms/Soft/SoftRendererContext.cpp" "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h" "Engine/Platforms/Soft/SoftRendererThread.cpp" )
 source_group( "SDL" FILES "Engine/Platforms/SDL/SDLDisplay.cpp" "Engine/Platforms/SDL/SDLDisplay.h" "Engine/Platforms/SDL/SDLKeyInput.cpp" "Engine/Platforms/SDL/SDLMessages.h" "Engine/Platforms/SDL/SDLMouseInput.cpp" "Engine/Platforms/SDL/SDLObjectsConstructor.h" "Engine/Platforms/SDL/SDLPlatform.cpp" "Engine/Platforms/SDL/SDLWindow.cpp" )
 source_group( "OpenGL" FILES "Engine/Platforms/OpenGL/OpenGLContext.cpp" "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h" "Engine/Platforms/OpenGL/OpenGLThread.cpp" )
+source_group( "OpenGL\\300es" FILES "Engine/Platforms/OpenGL/300es/gles3.cpp" "Engine/Platforms/OpenGL/300es/gles3.h" )
 source_group( "OpenCL" FILES "Engine/Platforms/OpenCL/OpenCLContext.cpp" "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h" "Engine/Platforms/OpenCL/OpenCLThread.cpp" )
 source_group( "Input" FILES "Engine/Platforms/Input/InputManager.cpp" "Engine/Platforms/Input/InputManager.h" "Engine/Platforms/Input/InputThread.cpp" )
 source_group( "Soft\\ShaderLang" FILES "Engine/Platforms/Soft/ShaderLang/gen_Image.h" "Engine/Platforms/Soft/ShaderLang/gen_Texture.h" "Engine/Platforms/Soft/ShaderLang/SWLang.h" "Engine/Platforms/Soft/ShaderLang/SWLangBarrier.h" "Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h" "Engine/Platforms/Soft/ShaderLang/SWLangCommon.h" "Engine/Platforms/Soft/ShaderLang/SWLangGLM.h" "Engine/Platforms/Soft/ShaderLang/SWLangImage.cpp" "Engine/Platforms/Soft/ShaderLang/SWLangImage.h" "Engine/Platforms/Soft/ShaderLang/SWLangShared.h" "Engine/Platforms/Soft/ShaderLang/SWLangTexture.h" "Engine/Platforms/Soft/ShaderLang/SWShaderHelper.h" )
@@ -1122,6 +1127,7 @@ source_group( "OpenGL\\Windows" FILES "Engine/Platforms/OpenGL/Windows/GLWinCont
 source_group( "Soft\\Android" FILES "Engine/Platforms/Soft/Android/SwAndSurface.cpp" "Engine/Platforms/Soft/Android/SwAndSurface.h" )
 source_group( "Public" FILES "Engine/Platforms/Public/Common.h" )
 source_group( "Public\\Tools" FILES "Engine/Platforms/Public/Tools/AsyncCommandsEmulator.h" "Engine/Platforms/Public/Tools/GPUThreadHelper.cpp" "Engine/Platforms/Public/Tools/GPUThreadHelper.h" "Engine/Platforms/Public/Tools/ImageViewHashMap.h" "Engine/Platforms/Public/Tools/MemoryMapperHelper.cpp" "Engine/Platforms/Public/Tools/MemoryMapperHelper.h" "Engine/Platforms/Public/Tools/WindowHelper.cpp" "Engine/Platforms/Public/Tools/WindowHelper.h" )
+source_group( "OpenGL\\450" FILES "Engine/Platforms/OpenGL/450/gl4.cpp" "Engine/Platforms/OpenGL/450/gl4.h" "Engine/Platforms/OpenGL/450/GL4BaseModule.cpp" "Engine/Platforms/OpenGL/450/GL4BaseModule.h" "Engine/Platforms/OpenGL/450/GL4Buffer.cpp" "Engine/Platforms/OpenGL/450/GL4CommandBuffer.cpp" "Engine/Platforms/OpenGL/450/GL4CommandBuilder.cpp" "Engine/Platforms/OpenGL/450/GL4Device.cpp" "Engine/Platforms/OpenGL/450/GL4Device.h" "Engine/Platforms/OpenGL/450/GL4Emulator.h" "Engine/Platforms/OpenGL/450/GL4Enums.h" "Engine/Platforms/OpenGL/450/GL4FlippedSystemFramebuffer.h" "Engine/Platforms/OpenGL/450/GL4Framebuffer.cpp" "Engine/Platforms/OpenGL/450/GL4Image.cpp" "Engine/Platforms/OpenGL/450/GL4Memory.cpp" "Engine/Platforms/OpenGL/450/GL4Messages.h" "Engine/Platforms/OpenGL/450/GL4Pipeline.cpp" "Engine/Platforms/OpenGL/450/GL4PipelineResourceTable.cpp" "Engine/Platforms/OpenGL/450/GL4RenderPass.cpp" "Engine/Platforms/OpenGL/450/GL4Sampler.cpp" "Engine/Platforms/OpenGL/450/GL4Sampler.h" "Engine/Platforms/OpenGL/450/GL4SyncManager.cpp" "Engine/Platforms/OpenGL/450/GL4SystemFramebuffer.h" )
 source_group( "Public\\OS" FILES "Engine/Platforms/Public/OS/Display.h" "Engine/Platforms/Public/OS/IDs.h" "Engine/Platforms/Public/OS/Input.h" "Engine/Platforms/Public/OS/OSEnums.h" "Engine/Platforms/Public/OS/Platform.h" "Engine/Platforms/Public/OS/ScreenCoords.h" "Engine/Platforms/Public/OS/Window.h" )
 source_group( "OpenCL\\Impl" FILES "Engine/Platforms/OpenCL/Impl/cl2.cpp" "Engine/Platforms/OpenCL/Impl/cl2.h" "Engine/Platforms/OpenCL/Impl/CL2BaseModule.cpp" "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h" "Engine/Platforms/OpenCL/Impl/CL2Buffer.cpp" "Engine/Platforms/OpenCL/Impl/CL2CommandBuffer.cpp" "Engine/Platforms/OpenCL/Impl/CL2CommandBuilder.cpp" "Engine/Platforms/OpenCL/Impl/CL2Device.cpp" "Engine/Platforms/OpenCL/Impl/CL2Device.h" "Engine/Platforms/OpenCL/Impl/CL2Emulator.cpp" "Engine/Platforms/OpenCL/Impl/CL2Emulator.h" "Engine/Platforms/OpenCL/Impl/CL2Enums.h" "Engine/Platforms/OpenCL/Impl/CL2Image.cpp" "Engine/Platforms/OpenCL/Impl/CL2Memory.cpp" "Engine/Platforms/OpenCL/Impl/CL2Messages.h" "Engine/Platforms/OpenCL/Impl/CL2Pipeline.cpp" "Engine/Platforms/OpenCL/Impl/CL2PipelineResourceTable.cpp" "Engine/Platforms/OpenCL/Impl/CL2SyncManager.cpp" )
 source_group( "Vulkan\\Windows" FILES "Engine/Platforms/Vulkan/Windows/VkWinSurface.cpp" "Engine/Platforms/Vulkan/Windows/VkWinSurface.h" )
@@ -1147,6 +1153,9 @@ if (WIN32)
 endif()
 if (WIN32)
 	target_link_libraries( "Engine.Platforms" "dxgi.lib" )
+endif()
+if (DEFINED OPENGLES_VERSION AND NOT (OPENGLES_VERSION EQUAL "0"))
+	target_compile_definitions( "Engine.Platforms" PUBLIC "GRAPHICS_API_OPENGLES=${OPENGLES_VERSION}" )
 endif()
 if (ENABLE_SDL)
 	target_compile_definitions( "Engine.Platforms" PUBLIC "PLATFORM_SDL" )
@@ -1337,12 +1346,8 @@ target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHA
 # project: Engine.PipelineCompiler
 #==================================================================================================
 set( SOURCES 
-		"Engine/PipelineCompiler/glsl/Common/Cmp.glsl"
-		"Engine/PipelineCompiler/glsl/Common/Defines.glsl"
-		"Engine/PipelineCompiler/glsl/Common/GlobalIndex.glsl"
-		"Engine/PipelineCompiler/glsl/Common/TypeInfo.glsl"
-		"Engine/PipelineCompiler/glsl/Particles/Colors.glsl"
-		"Engine/PipelineCompiler/glsl/Particles/Emitters.glsl"
+		"Engine/PipelineCompiler/Serializers/AngelScriptSerializer.cpp"
+		"Engine/PipelineCompiler/Serializers/AngelScriptSerializer.h"
 		"Engine/PipelineCompiler/Serializers/CppSerializer.cpp"
 		"Engine/PipelineCompiler/Serializers/CppSerializer.h"
 		"Engine/PipelineCompiler/Serializers/ISerializer.h"
@@ -1360,23 +1365,6 @@ set( SOURCES
 		"Engine/PipelineCompiler/Pipelines/GraphicsPipeline.h"
 		"Engine/PipelineCompiler/Pipelines/PipelineManager.cpp"
 		"Engine/PipelineCompiler/Pipelines/PipelineManager.h"
-		"Engine/PipelineCompiler/glsl/Math2D/Line2.glsl"
-		"Engine/PipelineCompiler/glsl/Math2D/Rect.glsl"
-		"Engine/PipelineCompiler/glsl/SDF/DefaultSDF.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/Billow.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/Cellular.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/FBM.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/Gabor.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/Perlin.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/Simplex.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/Turbulence.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/Voronoi.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/VoronoiLines.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/VoronoiNoise.glsl"
-		"Engine/PipelineCompiler/glsl/Noise/_NoiseUtils.glsl"
-		"Engine/PipelineCompiler/glsl/Physics/Gravity.glsl"
-		"Engine/PipelineCompiler/glsl/Physics/Magnetism.glsl"
-		"Engine/PipelineCompiler/glsl/Effects/Blur.glsl"
 		"Engine/PipelineCompiler/Shaders/DeserializedShader.cpp"
 		"Engine/PipelineCompiler/Shaders/DeserializedShader.h"
 		"Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
@@ -1395,39 +1383,57 @@ set( SOURCES
 		"Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.h"
 		"Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h"
 		"Engine/PipelineCompiler/Shaders/ShaderCompiler_VkCompiler.cpp"
-		"Engine/PipelineCompiler/cl/funcs.cl"
-		"Engine/PipelineCompiler/cl/matrix.cl"
-		"Engine/PipelineCompiler/glsl/Math3D/AABBox.glsl"
-		"Engine/PipelineCompiler/glsl/Math3D/Line3.glsl"
-		"Engine/PipelineCompiler/glsl/Math3D/Plane.glsl"
-		"Engine/PipelineCompiler/glsl/Math3D/Ray.glsl"
-		"Engine/PipelineCompiler/glsl/Math/BitMath.glsl"
-		"Engine/PipelineCompiler/glsl/Math/Color.glsl"
-		"Engine/PipelineCompiler/glsl/Math/Math.glsl"
-		"Engine/PipelineCompiler/glsl/Math/MathDef.glsl"
-		"Engine/PipelineCompiler/glsl/Math/Matrix.glsl"
-		"Engine/PipelineCompiler/glsl/Math/Quaternion.glsl"
-		"Engine/PipelineCompiler/glsl/Math/Utils.glsl"
-		"Engine/PipelineCompiler/glsl/Hash/DHash.glsl"
-		"Engine/PipelineCompiler/glsl/Hash/Hash.glsl"
-		"Engine/PipelineCompiler/glsl/Hash/Hash2.glsl"
-		"Engine/PipelineCompiler/glsl/Hash/IHash.glsl" )
+		"Engine/PipelineCompiler/cl/cl_source_vfs.cpp"
+		"Engine/PipelineCompiler/cl/cl_source_vfs.h"
+		"Engine/PipelineCompiler/cl/funcs.cpp"
+		"Engine/PipelineCompiler/cl/matrix.cpp"
+		"Engine/PipelineCompiler/glsl/AABBox.cpp"
+		"Engine/PipelineCompiler/glsl/Billow.cpp"
+		"Engine/PipelineCompiler/glsl/BitMath.cpp"
+		"Engine/PipelineCompiler/glsl/Blur.cpp"
+		"Engine/PipelineCompiler/glsl/Cellular.cpp"
+		"Engine/PipelineCompiler/glsl/Cmp.cpp"
+		"Engine/PipelineCompiler/glsl/Color.cpp"
+		"Engine/PipelineCompiler/glsl/Colors.cpp"
+		"Engine/PipelineCompiler/glsl/DefaultSDF.cpp"
+		"Engine/PipelineCompiler/glsl/Defines.cpp"
+		"Engine/PipelineCompiler/glsl/DHash.cpp"
+		"Engine/PipelineCompiler/glsl/Emitters.cpp"
+		"Engine/PipelineCompiler/glsl/FBM.cpp"
+		"Engine/PipelineCompiler/glsl/Gabor.cpp"
+		"Engine/PipelineCompiler/glsl/GlobalIndex.cpp"
+		"Engine/PipelineCompiler/glsl/glsl_source_vfs.cpp"
+		"Engine/PipelineCompiler/glsl/glsl_source_vfs.h"
+		"Engine/PipelineCompiler/glsl/Gravity.cpp"
+		"Engine/PipelineCompiler/glsl/Hash.cpp"
+		"Engine/PipelineCompiler/glsl/Hash2.cpp"
+		"Engine/PipelineCompiler/glsl/IHash.cpp"
+		"Engine/PipelineCompiler/glsl/Line2.cpp"
+		"Engine/PipelineCompiler/glsl/Line3.cpp"
+		"Engine/PipelineCompiler/glsl/Magnetism.cpp"
+		"Engine/PipelineCompiler/glsl/Math.cpp"
+		"Engine/PipelineCompiler/glsl/MathDef.cpp"
+		"Engine/PipelineCompiler/glsl/Matrix.cpp"
+		"Engine/PipelineCompiler/glsl/Perlin.cpp"
+		"Engine/PipelineCompiler/glsl/Plane.cpp"
+		"Engine/PipelineCompiler/glsl/Quaternion.cpp"
+		"Engine/PipelineCompiler/glsl/Ray.cpp"
+		"Engine/PipelineCompiler/glsl/Rect.cpp"
+		"Engine/PipelineCompiler/glsl/Simplex.cpp"
+		"Engine/PipelineCompiler/glsl/Turbulence.cpp"
+		"Engine/PipelineCompiler/glsl/TypeInfo.cpp"
+		"Engine/PipelineCompiler/glsl/Utils.cpp"
+		"Engine/PipelineCompiler/glsl/Voronoi.cpp"
+		"Engine/PipelineCompiler/glsl/VoronoiLines.cpp"
+		"Engine/PipelineCompiler/glsl/VoronoiNoise.cpp"
+		"Engine/PipelineCompiler/glsl/_NoiseUtils.cpp" )
 add_library( "Engine.PipelineCompiler" STATIC ${SOURCES} )
-source_group( "glsl\\Common" FILES "Engine/PipelineCompiler/glsl/Common/Cmp.glsl" "Engine/PipelineCompiler/glsl/Common/Defines.glsl" "Engine/PipelineCompiler/glsl/Common/GlobalIndex.glsl" "Engine/PipelineCompiler/glsl/Common/TypeInfo.glsl" )
-source_group( "glsl\\Particles" FILES "Engine/PipelineCompiler/glsl/Particles/Colors.glsl" "Engine/PipelineCompiler/glsl/Particles/Emitters.glsl" )
-source_group( "Serializers" FILES "Engine/PipelineCompiler/Serializers/CppSerializer.cpp" "Engine/PipelineCompiler/Serializers/CppSerializer.h" "Engine/PipelineCompiler/Serializers/ISerializer.h" )
+source_group( "Serializers" FILES "Engine/PipelineCompiler/Serializers/AngelScriptSerializer.cpp" "Engine/PipelineCompiler/Serializers/AngelScriptSerializer.h" "Engine/PipelineCompiler/Serializers/CppSerializer.cpp" "Engine/PipelineCompiler/Serializers/CppSerializer.h" "Engine/PipelineCompiler/Serializers/ISerializer.h" )
 source_group( "Common" FILES "Engine/PipelineCompiler/Common/Common.h" "Engine/PipelineCompiler/Common/Packing.h" "Engine/PipelineCompiler/Common/ShaderEnums.h" "Engine/PipelineCompiler/Common/ToGLSL.h" )
 source_group( "Pipelines" FILES "Engine/PipelineCompiler/Pipelines/BasePipeline.cpp" "Engine/PipelineCompiler/Pipelines/BasePipeline.h" "Engine/PipelineCompiler/Pipelines/BasePipeline_Pass1.cpp" "Engine/PipelineCompiler/Pipelines/BasePipeline_Pass2.cpp" "Engine/PipelineCompiler/Pipelines/ComputePipeline.cpp" "Engine/PipelineCompiler/Pipelines/ComputePipeline.h" "Engine/PipelineCompiler/Pipelines/GraphicsPipeline.cpp" "Engine/PipelineCompiler/Pipelines/GraphicsPipeline.h" "Engine/PipelineCompiler/Pipelines/PipelineManager.cpp" "Engine/PipelineCompiler/Pipelines/PipelineManager.h" )
-source_group( "glsl\\Math2D" FILES "Engine/PipelineCompiler/glsl/Math2D/Line2.glsl" "Engine/PipelineCompiler/glsl/Math2D/Rect.glsl" )
-source_group( "glsl\\SDF" FILES "Engine/PipelineCompiler/glsl/SDF/DefaultSDF.glsl" )
-source_group( "glsl\\Noise" FILES "Engine/PipelineCompiler/glsl/Noise/Billow.glsl" "Engine/PipelineCompiler/glsl/Noise/Cellular.glsl" "Engine/PipelineCompiler/glsl/Noise/FBM.glsl" "Engine/PipelineCompiler/glsl/Noise/Gabor.glsl" "Engine/PipelineCompiler/glsl/Noise/Perlin.glsl" "Engine/PipelineCompiler/glsl/Noise/Simplex.glsl" "Engine/PipelineCompiler/glsl/Noise/Turbulence.glsl" "Engine/PipelineCompiler/glsl/Noise/Voronoi.glsl" "Engine/PipelineCompiler/glsl/Noise/VoronoiLines.glsl" "Engine/PipelineCompiler/glsl/Noise/VoronoiNoise.glsl" "Engine/PipelineCompiler/glsl/Noise/_NoiseUtils.glsl" )
-source_group( "glsl\\Physics" FILES "Engine/PipelineCompiler/glsl/Physics/Gravity.glsl" "Engine/PipelineCompiler/glsl/Physics/Magnetism.glsl" )
-source_group( "glsl\\Effects" FILES "Engine/PipelineCompiler/glsl/Effects/Blur.glsl" )
 source_group( "Shaders" FILES "Engine/PipelineCompiler/Shaders/DeserializedShader.cpp" "Engine/PipelineCompiler/Shaders/DeserializedShader.h" "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler_CLCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_CLTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_CPPTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_GLCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_GLParser.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_GXTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_HLSLCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_HLSLTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_ReplaceTypes.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler_VkCompiler.cpp" )
-source_group( "cl" FILES "Engine/PipelineCompiler/cl/funcs.cl" "Engine/PipelineCompiler/cl/matrix.cl" )
-source_group( "glsl\\Math3D" FILES "Engine/PipelineCompiler/glsl/Math3D/AABBox.glsl" "Engine/PipelineCompiler/glsl/Math3D/Line3.glsl" "Engine/PipelineCompiler/glsl/Math3D/Plane.glsl" "Engine/PipelineCompiler/glsl/Math3D/Ray.glsl" )
-source_group( "glsl\\Math" FILES "Engine/PipelineCompiler/glsl/Math/BitMath.glsl" "Engine/PipelineCompiler/glsl/Math/Color.glsl" "Engine/PipelineCompiler/glsl/Math/Math.glsl" "Engine/PipelineCompiler/glsl/Math/MathDef.glsl" "Engine/PipelineCompiler/glsl/Math/Matrix.glsl" "Engine/PipelineCompiler/glsl/Math/Quaternion.glsl" "Engine/PipelineCompiler/glsl/Math/Utils.glsl" )
-source_group( "glsl\\Hash" FILES "Engine/PipelineCompiler/glsl/Hash/DHash.glsl" "Engine/PipelineCompiler/glsl/Hash/Hash.glsl" "Engine/PipelineCompiler/glsl/Hash/Hash2.glsl" "Engine/PipelineCompiler/glsl/Hash/IHash.glsl" )
+source_group( "cl" FILES "Engine/PipelineCompiler/cl/cl_source_vfs.cpp" "Engine/PipelineCompiler/cl/cl_source_vfs.h" "Engine/PipelineCompiler/cl/funcs.cpp" "Engine/PipelineCompiler/cl/matrix.cpp" )
+source_group( "glsl" FILES "Engine/PipelineCompiler/glsl/AABBox.cpp" "Engine/PipelineCompiler/glsl/Billow.cpp" "Engine/PipelineCompiler/glsl/BitMath.cpp" "Engine/PipelineCompiler/glsl/Blur.cpp" "Engine/PipelineCompiler/glsl/Cellular.cpp" "Engine/PipelineCompiler/glsl/Cmp.cpp" "Engine/PipelineCompiler/glsl/Color.cpp" "Engine/PipelineCompiler/glsl/Colors.cpp" "Engine/PipelineCompiler/glsl/DefaultSDF.cpp" "Engine/PipelineCompiler/glsl/Defines.cpp" "Engine/PipelineCompiler/glsl/DHash.cpp" "Engine/PipelineCompiler/glsl/Emitters.cpp" "Engine/PipelineCompiler/glsl/FBM.cpp" "Engine/PipelineCompiler/glsl/Gabor.cpp" "Engine/PipelineCompiler/glsl/GlobalIndex.cpp" "Engine/PipelineCompiler/glsl/glsl_source_vfs.cpp" "Engine/PipelineCompiler/glsl/glsl_source_vfs.h" "Engine/PipelineCompiler/glsl/Gravity.cpp" "Engine/PipelineCompiler/glsl/Hash.cpp" "Engine/PipelineCompiler/glsl/Hash2.cpp" "Engine/PipelineCompiler/glsl/IHash.cpp" "Engine/PipelineCompiler/glsl/Line2.cpp" "Engine/PipelineCompiler/glsl/Line3.cpp" "Engine/PipelineCompiler/glsl/Magnetism.cpp" "Engine/PipelineCompiler/glsl/Math.cpp" "Engine/PipelineCompiler/glsl/MathDef.cpp" "Engine/PipelineCompiler/glsl/Matrix.cpp" "Engine/PipelineCompiler/glsl/Perlin.cpp" "Engine/PipelineCompiler/glsl/Plane.cpp" "Engine/PipelineCompiler/glsl/Quaternion.cpp" "Engine/PipelineCompiler/glsl/Ray.cpp" "Engine/PipelineCompiler/glsl/Rect.cpp" "Engine/PipelineCompiler/glsl/Simplex.cpp" "Engine/PipelineCompiler/glsl/Turbulence.cpp" "Engine/PipelineCompiler/glsl/TypeInfo.cpp" "Engine/PipelineCompiler/glsl/Utils.cpp" "Engine/PipelineCompiler/glsl/Voronoi.cpp" "Engine/PipelineCompiler/glsl/VoronoiLines.cpp" "Engine/PipelineCompiler/glsl/VoronoiNoise.cpp" "Engine/PipelineCompiler/glsl/_NoiseUtils.cpp" )
 set_property( TARGET "Engine.PipelineCompiler" PROPERTY FOLDER "EngineTools" )
 target_include_directories( "Engine.PipelineCompiler" PRIVATE "Engine/PipelineCompiler" )
 target_include_directories( "Engine.PipelineCompiler" PUBLIC "External" )
@@ -1605,6 +1611,11 @@ target_compile_options( "Tests.Scipt" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHAR
 # project: Engine.ResourcePacker
 #==================================================================================================
 set( SOURCES 
+		"Engine/ResourcePacker/FilePacker/BinaryFilePacker.cpp"
+		"Engine/ResourcePacker/FilePacker/BinaryFilePacker.h"
+		"Engine/ResourcePacker/FilePacker/IFilePacker.h"
+		"Engine/ResourcePacker/FilePacker/TextFilePacker.cpp"
+		"Engine/ResourcePacker/FilePacker/TextFilePacker.h"
 		"Engine/ResourcePacker/Pipelines/PipelineConverter.cpp"
 		"Engine/ResourcePacker/Pipelines/PipelineConverter.h"
 		"Engine/ResourcePacker/Pipelines/ScriptComputePipeline.cpp"
@@ -1623,6 +1634,7 @@ if (DEFINED ANDROID)
 else()
 	add_executable( "Engine.ResourcePacker" ${SOURCES} )
 endif()
+source_group( "FilePacker" FILES "Engine/ResourcePacker/FilePacker/BinaryFilePacker.cpp" "Engine/ResourcePacker/FilePacker/BinaryFilePacker.h" "Engine/ResourcePacker/FilePacker/IFilePacker.h" "Engine/ResourcePacker/FilePacker/TextFilePacker.cpp" "Engine/ResourcePacker/FilePacker/TextFilePacker.h" )
 source_group( "Pipelines" FILES "Engine/ResourcePacker/Pipelines/PipelineConverter.cpp" "Engine/ResourcePacker/Pipelines/PipelineConverter.h" "Engine/ResourcePacker/Pipelines/ScriptComputePipeline.cpp" "Engine/ResourcePacker/Pipelines/ScriptComputePipeline.h" "Engine/ResourcePacker/Pipelines/ScriptGraphicsPipeline.cpp" "Engine/ResourcePacker/Pipelines/ScriptGraphicsPipeline.h" "Engine/ResourcePacker/Pipelines/ScriptPipeline.cpp" "Engine/ResourcePacker/Pipelines/ScriptPipeline.h" )
 source_group( "" FILES "Engine/ResourcePacker/Main.cpp" )
 source_group( "Packer" FILES "Engine/ResourcePacker/Packer/Common.h" "Engine/ResourcePacker/Packer/ResourcePacker.cpp" "Engine/ResourcePacker/Packer/ResourcePacker.h" "Engine/ResourcePacker/Packer/ScriptHelper.cpp" )
@@ -1672,13 +1684,12 @@ set( SOURCES
 		"Tests/Engine.Base/Graphics/Test.GWindow.cpp"
 		"Tests/Engine.Base/Pipelines/all_pipelines.h"
 		"Tests/Engine.Base/Pipelines/default.cpp"
-		"Tests/Engine.Base/Pipelines/Default.ppln.c"
+		"Tests/Engine.Base/Pipelines/Default.ppln"
 		"Tests/Engine.Base/Pipelines/default2.cpp"
-		"Tests/Engine.Base/Pipelines/Default2.ppln.c"
+		"Tests/Engine.Base/Pipelines/Default2.ppln"
 		"Tests/Engine.Base/Pipelines/defaultcompute2.cpp"
-		"Tests/Engine.Base/Pipelines/DefaultCompute2.ppln.c"
-		"Tests/Engine.Base/Pipelines/pipelines_common.h"
-		"Tests/Engine.Base/Pipelines/resources.as.c"
+		"Tests/Engine.Base/Pipelines/DefaultCompute2.ppln"
+		"Tests/Engine.Base/Pipelines/resources.as"
 		"Tests/Engine.Base/Pipelines/shared_types.h"
 		"Tests/Engine.Base/Window/Test.Window.cpp"
 		"Tests/Engine.Base/Common.h"
@@ -1690,7 +1701,7 @@ else()
 endif()
 source_group( "Compute" FILES "Tests/Engine.Base/Compute/CApp.cpp" "Tests/Engine.Base/Compute/CApp.h" "Tests/Engine.Base/Compute/Test.CWindow.cpp" )
 source_group( "Graphics" FILES "Tests/Engine.Base/Graphics/GApp.cpp" "Tests/Engine.Base/Graphics/GApp.h" "Tests/Engine.Base/Graphics/Test.GWindow.cpp" )
-source_group( "Pipelines" FILES "Tests/Engine.Base/Pipelines/all_pipelines.h" "Tests/Engine.Base/Pipelines/default.cpp" "Tests/Engine.Base/Pipelines/Default.ppln.c" "Tests/Engine.Base/Pipelines/default2.cpp" "Tests/Engine.Base/Pipelines/Default2.ppln.c" "Tests/Engine.Base/Pipelines/defaultcompute2.cpp" "Tests/Engine.Base/Pipelines/DefaultCompute2.ppln.c" "Tests/Engine.Base/Pipelines/pipelines_common.h" "Tests/Engine.Base/Pipelines/resources.as.c" "Tests/Engine.Base/Pipelines/shared_types.h" )
+source_group( "Pipelines" FILES "Tests/Engine.Base/Pipelines/all_pipelines.h" "Tests/Engine.Base/Pipelines/default.cpp" "Tests/Engine.Base/Pipelines/Default.ppln" "Tests/Engine.Base/Pipelines/default2.cpp" "Tests/Engine.Base/Pipelines/Default2.ppln" "Tests/Engine.Base/Pipelines/defaultcompute2.cpp" "Tests/Engine.Base/Pipelines/DefaultCompute2.ppln" "Tests/Engine.Base/Pipelines/resources.as" "Tests/Engine.Base/Pipelines/shared_types.h" )
 source_group( "Window" FILES "Tests/Engine.Base/Window/Test.Window.cpp" )
 source_group( "" FILES "Tests/Engine.Base/Common.h" "Tests/Engine.Base/Main.cpp" )
 set_property( TARGET "Tests.Engine.Base" PROPERTY FOLDER "Tests" )
@@ -1703,7 +1714,7 @@ target_link_libraries( "Tests.Engine.Base" "Engine.Platforms" )
 if (ENABLE_SDL)
 	target_compile_definitions( "Tests.Engine.Base" PUBLIC "PLATFORM_SDL" )
 endif()
-add_dependencies( "Tests.Engine.Base" "Engine.ResourcePacker" )
+add_dependencies( "Tests.Engine.Base" "Deps_Tests.Engine.Base" )
 # compiler
 set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1722,11 +1733,14 @@ target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECT
 if (NOT DEFINED RESOURCE_PACKER_EXE)
 	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
 endif ()
-add_custom_command(
-	TARGET "Tests.Engine.Base" PRE_BUILD
-	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Base/Pipelines/resources.as.c"
+add_custom_target( "Deps_Tests.Engine.Base"
+	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Base/Pipelines/resources.as"
+	DEPENDS ${RESOURCE_PACKER_EXE} ""${CMAKE_SOURCE_DIR}/Tests/Engine.Base/Pipelines/resources.as""
 	COMMENT "Pack resources for 'Tests.Engine.Base'..."
+	VERBATIM
 )
+add_dependencies( "Deps_Tests.Engine.Base" "Engine.ResourcePacker" )
+set_property( TARGET "Deps_Tests.Engine.Base" PROPERTY FOLDER "_deps_" )
 
 #-----------------------------------
 
@@ -1737,9 +1751,8 @@ add_custom_command(
 set( SOURCES 
 		"Tests/Engine.Graphics/Pipelines/all_pipelines.h"
 		"Tests/Engine.Graphics/Pipelines/default3.cpp"
-		"Tests/Engine.Graphics/Pipelines/Default3.ppln.c"
-		"Tests/Engine.Graphics/Pipelines/pipelines_common.h"
-		"Tests/Engine.Graphics/Pipelines/resources.as.c"
+		"Tests/Engine.Graphics/Pipelines/Default3.ppln"
+		"Tests/Engine.Graphics/Pipelines/resources.as"
 		"Tests/Engine.Graphics/Pipelines/shared_types.h"
 		"Tests/Engine.Graphics/GApp.cpp"
 		"Tests/Engine.Graphics/GApp.h"
@@ -1749,7 +1762,7 @@ if (DEFINED ANDROID)
 else()
 	add_executable( "Tests.Engine.Graphics" ${SOURCES} )
 endif()
-source_group( "Pipelines" FILES "Tests/Engine.Graphics/Pipelines/all_pipelines.h" "Tests/Engine.Graphics/Pipelines/default3.cpp" "Tests/Engine.Graphics/Pipelines/Default3.ppln.c" "Tests/Engine.Graphics/Pipelines/pipelines_common.h" "Tests/Engine.Graphics/Pipelines/resources.as.c" "Tests/Engine.Graphics/Pipelines/shared_types.h" )
+source_group( "Pipelines" FILES "Tests/Engine.Graphics/Pipelines/all_pipelines.h" "Tests/Engine.Graphics/Pipelines/default3.cpp" "Tests/Engine.Graphics/Pipelines/Default3.ppln" "Tests/Engine.Graphics/Pipelines/resources.as" "Tests/Engine.Graphics/Pipelines/shared_types.h" )
 source_group( "" FILES "Tests/Engine.Graphics/GApp.cpp" "Tests/Engine.Graphics/GApp.h" "Tests/Engine.Graphics/Main.cpp" )
 set_property( TARGET "Tests.Engine.Graphics" PROPERTY FOLDER "Tests" )
 target_include_directories( "Tests.Engine.Graphics" PRIVATE "Tests/Engine.Graphics" )
@@ -1761,7 +1774,7 @@ target_link_libraries( "Tests.Engine.Graphics" "Engine.Graphics" )
 if (ENABLE_SDL)
 	target_compile_definitions( "Tests.Engine.Graphics" PUBLIC "PLATFORM_SDL" )
 endif()
-add_dependencies( "Tests.Engine.Graphics" "Engine.ResourcePacker" )
+add_dependencies( "Tests.Engine.Graphics" "Deps_Tests.Engine.Graphics" )
 # compiler
 set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1780,11 +1793,14 @@ target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PRO
 if (NOT DEFINED RESOURCE_PACKER_EXE)
 	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
 endif ()
-add_custom_command(
-	TARGET "Tests.Engine.Graphics" PRE_BUILD
-	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Graphics/Pipelines/resources.as.c"
+add_custom_target( "Deps_Tests.Engine.Graphics"
+	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Graphics/Pipelines/resources.as"
+	DEPENDS ${RESOURCE_PACKER_EXE} ""${CMAKE_SOURCE_DIR}/Tests/Engine.Graphics/Pipelines/resources.as""
 	COMMENT "Pack resources for 'Tests.Engine.Graphics'..."
+	VERBATIM
 )
+add_dependencies( "Deps_Tests.Engine.Graphics" "Engine.ResourcePacker" )
+set_property( TARGET "Deps_Tests.Engine.Graphics" PROPERTY FOLDER "_deps_" )
 
 #-----------------------------------
 
@@ -1793,9 +1809,9 @@ add_custom_command(
 # project: Tests.Engine.Platforms.GAPI
 #==================================================================================================
 set( SOURCES 
-		"Tests/Engine.Platforms.GAPI/Compute/BufferAlignTest.ppln.c"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp.h"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_AtomicAdd.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_BufferAlign.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_BufferRange.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_ClearBuffer.cpp"
@@ -1805,34 +1821,45 @@ set( SOURCES
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2D.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2DToBuffer.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_FindLSB.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/CApp_FindMSB.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_ShaderBarrier.cpp"
 		"Tests/Engine.Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp"
-		"Tests/Engine.Platforms.GAPI/Compute/CopyFloatImage2D.ppln.c"
-		"Tests/Engine.Platforms.GAPI/Compute/DynamicBufferTest.ppln.c"
-		"Tests/Engine.Platforms.GAPI/Compute/SharedMemoryTest.ppln.c"
 		"Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/all_pipelines.h"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/atomicadd.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/AtomicAdd.ppln"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/bufferalign.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/BufferAlign.ppln"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/copyfloatimage2d.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/CopyFloatImage2D.ppln"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/dynamicbuffer.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/DynamicBuffer.ppln"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/findlsb.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/FindLSB.ppln"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/findmsb.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/FindMSB.ppln"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/shaderbarrier.cpp"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/ShaderBarrier.ppln"
+		"Tests/Engine.Platforms.GAPI/Compute/Pipelines/shared_types.h"
 		"Tests/Engine.Platforms.GAPI/Graphics/GApp.cpp"
 		"Tests/Engine.Platforms.GAPI/Graphics/GApp.h"
 		"Tests/Engine.Platforms.GAPI/Graphics/Test.GraphicsApi.cpp"
-		"Tests/Engine.Platforms.GAPI/Pipelines/all_pipelines.h"
-		"Tests/Engine.Platforms.GAPI/Pipelines/bufferaligntest.cpp"
-		"Tests/Engine.Platforms.GAPI/Pipelines/copyfloatimage2d.cpp"
-		"Tests/Engine.Platforms.GAPI/Pipelines/dynamicbuffertest.cpp"
-		"Tests/Engine.Platforms.GAPI/Pipelines/pipelines_common.h"
-		"Tests/Engine.Platforms.GAPI/Pipelines/sharedmemorytest.cpp"
-		"Tests/Engine.Platforms.GAPI/Pipelines/shared_types.h"
+		"Tests/Engine.Platforms.GAPI/Graphics/Pipelines/all_pipelines.h"
+		"Tests/Engine.Platforms.GAPI/Graphics/Pipelines/shared_types.h"
 		"Tests/Engine.Platforms.GAPI/Common.h"
 		"Tests/Engine.Platforms.GAPI/Main.cpp"
-		"Tests/Engine.Platforms.GAPI/resources.as.c" )
+		"Tests/Engine.Platforms.GAPI/resources.as" )
 if (DEFINED ANDROID)
 	add_library( "Tests.Engine.Platforms.GAPI" SHARED ${SOURCES} )
 else()
 	add_executable( "Tests.Engine.Platforms.GAPI" ${SOURCES} )
 endif()
-source_group( "Compute" FILES "Tests/Engine.Platforms.GAPI/Compute/BufferAlignTest.ppln.c" "Tests/Engine.Platforms.GAPI/Compute/CApp.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp.h" "Tests/Engine.Platforms.GAPI/Compute/CApp_BufferAlign.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_BufferRange.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ClearBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ConvertFloatImage2D.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBufferToImage2D.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2D.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2DToBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ShaderBarrier.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CopyFloatImage2D.ppln.c" "Tests/Engine.Platforms.GAPI/Compute/DynamicBufferTest.ppln.c" "Tests/Engine.Platforms.GAPI/Compute/SharedMemoryTest.ppln.c" "Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp" )
+source_group( "Compute" FILES "Tests/Engine.Platforms.GAPI/Compute/CApp.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp.h" "Tests/Engine.Platforms.GAPI/Compute/CApp_AtomicAdd.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_BufferAlign.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_BufferRange.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ClearBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ConvertFloatImage2D.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyBufferToImage2D.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2D.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2DToBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_FindLSB.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_FindMSB.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_ShaderBarrier.cpp" "Tests/Engine.Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp" )
+source_group( "Compute\\Pipelines" FILES "Tests/Engine.Platforms.GAPI/Compute/Pipelines/all_pipelines.h" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/atomicadd.cpp" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/AtomicAdd.ppln" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/bufferalign.cpp" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/BufferAlign.ppln" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/copyfloatimage2d.cpp" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/CopyFloatImage2D.ppln" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/dynamicbuffer.cpp" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/DynamicBuffer.ppln" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/findlsb.cpp" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/FindLSB.ppln" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/findmsb.cpp" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/FindMSB.ppln" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/shaderbarrier.cpp" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/ShaderBarrier.ppln" "Tests/Engine.Platforms.GAPI/Compute/Pipelines/shared_types.h" )
 source_group( "Graphics" FILES "Tests/Engine.Platforms.GAPI/Graphics/GApp.cpp" "Tests/Engine.Platforms.GAPI/Graphics/GApp.h" "Tests/Engine.Platforms.GAPI/Graphics/Test.GraphicsApi.cpp" )
-source_group( "Pipelines" FILES "Tests/Engine.Platforms.GAPI/Pipelines/all_pipelines.h" "Tests/Engine.Platforms.GAPI/Pipelines/bufferaligntest.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/copyfloatimage2d.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/dynamicbuffertest.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/pipelines_common.h" "Tests/Engine.Platforms.GAPI/Pipelines/sharedmemorytest.cpp" "Tests/Engine.Platforms.GAPI/Pipelines/shared_types.h" )
-source_group( "" FILES "Tests/Engine.Platforms.GAPI/Common.h" "Tests/Engine.Platforms.GAPI/Main.cpp" "Tests/Engine.Platforms.GAPI/resources.as.c" )
+source_group( "Graphics\\Pipelines" FILES "Tests/Engine.Platforms.GAPI/Graphics/Pipelines/all_pipelines.h" "Tests/Engine.Platforms.GAPI/Graphics/Pipelines/shared_types.h" )
+source_group( "" FILES "Tests/Engine.Platforms.GAPI/Common.h" "Tests/Engine.Platforms.GAPI/Main.cpp" "Tests/Engine.Platforms.GAPI/resources.as" )
 set_property( TARGET "Tests.Engine.Platforms.GAPI" PROPERTY FOLDER "Tests" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PRIVATE "Tests/Engine.Platforms.GAPI" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "External" )
@@ -1842,7 +1869,7 @@ target_link_libraries( "Tests.Engine.Platforms.GAPI" "Engine.Platforms" )
 if (ENABLE_SDL)
 	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PUBLIC "PLATFORM_SDL" )
 endif()
-add_dependencies( "Tests.Engine.Platforms.GAPI" "Engine.ResourcePacker" )
+add_dependencies( "Tests.Engine.Platforms.GAPI" "Deps_Tests.Engine.Platforms.GAPI" )
 # compiler
 set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1861,11 +1888,14 @@ target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>:
 if (NOT DEFINED RESOURCE_PACKER_EXE)
 	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
 endif ()
-add_custom_command(
-	TARGET "Tests.Engine.Platforms.GAPI" PRE_BUILD
-	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Platforms.GAPI/resources.as.c"
+add_custom_target( "Deps_Tests.Engine.Platforms.GAPI"
+	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Platforms.GAPI/resources.as"
+	DEPENDS ${RESOURCE_PACKER_EXE} ""${CMAKE_SOURCE_DIR}/Tests/Engine.Platforms.GAPI/resources.as""
 	COMMENT "Pack resources for 'Tests.Engine.Platforms.GAPI'..."
+	VERBATIM
 )
+add_dependencies( "Deps_Tests.Engine.Platforms.GAPI" "Engine.ResourcePacker" )
+set_property( TARGET "Deps_Tests.Engine.Platforms.GAPI" PROPERTY FOLDER "_deps_" )
 
 #-----------------------------------
 
@@ -1876,23 +1906,24 @@ add_custom_command(
 set( SOURCES 
 		"Projects/ShaderEditor/Pipelines/all_pipelines.h"
 		"Projects/ShaderEditor/Pipelines/drawtexturedquad.cpp"
-		"Projects/ShaderEditor/Pipelines/DrawTexturedQuad.ppln.c"
+		"Projects/ShaderEditor/Pipelines/DrawTexturedQuad.ppln"
 		"Projects/ShaderEditor/Pipelines/experimental.cpp"
-		"Projects/ShaderEditor/Pipelines/Experimental.ppln.c"
+		"Projects/ShaderEditor/Pipelines/Experimental.ppln"
 		"Projects/ShaderEditor/Pipelines/glowballs.cpp"
-		"Projects/ShaderEditor/Pipelines/Glowballs.ppln.c"
-		"Projects/ShaderEditor/Pipelines/pipelines_common.h"
-		"Projects/ShaderEditor/Pipelines/resources.as.c"
-		"Projects/ShaderEditor/Pipelines/ShaderToy.tmpl.c"
+		"Projects/ShaderEditor/Pipelines/Glowballs.ppln"
+		"Projects/ShaderEditor/Pipelines/resources.as"
+		"Projects/ShaderEditor/Pipelines/ShaderToy.tmpl"
 		"Projects/ShaderEditor/Pipelines/shared_types.h"
 		"Projects/ShaderEditor/Pipelines/sireniandawn1.cpp"
-		"Projects/ShaderEditor/Pipelines/SirenianDawn1.ppln.c"
+		"Projects/ShaderEditor/Pipelines/SirenianDawn1.ppln"
 		"Projects/ShaderEditor/Pipelines/sireniandawn2.cpp"
-		"Projects/ShaderEditor/Pipelines/SirenianDawn2.ppln.c"
-		"Projects/ShaderEditor/Pipelines/Skyline.ppln_"
+		"Projects/ShaderEditor/Pipelines/SirenianDawn2.ppln"
+		"Projects/ShaderEditor/Pipelines/skyline.cpp"
+		"Projects/ShaderEditor/Pipelines/Skyline.ppln"
 		"Projects/ShaderEditor/Pipelines/voronnoirecursion.cpp"
-		"Projects/ShaderEditor/Pipelines/VoronnoiRecursion.ppln.c"
+		"Projects/ShaderEditor/Pipelines/VoronnoiRecursion.ppln"
 		"Projects/ShaderEditor/Common.h"
+		"Projects/ShaderEditor/README.md"
 		"Projects/ShaderEditor/Renderer.cpp"
 		"Projects/ShaderEditor/Renderer.h"
 		"Projects/ShaderEditor/ShaderEditorApp.cpp"
@@ -1902,8 +1933,8 @@ if (DEFINED ANDROID)
 else()
 	add_executable( "Projects.ShaderEditor" ${SOURCES} )
 endif()
-source_group( "Pipelines" FILES "Projects/ShaderEditor/Pipelines/all_pipelines.h" "Projects/ShaderEditor/Pipelines/drawtexturedquad.cpp" "Projects/ShaderEditor/Pipelines/DrawTexturedQuad.ppln.c" "Projects/ShaderEditor/Pipelines/experimental.cpp" "Projects/ShaderEditor/Pipelines/Experimental.ppln.c" "Projects/ShaderEditor/Pipelines/glowballs.cpp" "Projects/ShaderEditor/Pipelines/Glowballs.ppln.c" "Projects/ShaderEditor/Pipelines/pipelines_common.h" "Projects/ShaderEditor/Pipelines/resources.as.c" "Projects/ShaderEditor/Pipelines/ShaderToy.tmpl.c" "Projects/ShaderEditor/Pipelines/shared_types.h" "Projects/ShaderEditor/Pipelines/sireniandawn1.cpp" "Projects/ShaderEditor/Pipelines/SirenianDawn1.ppln.c" "Projects/ShaderEditor/Pipelines/sireniandawn2.cpp" "Projects/ShaderEditor/Pipelines/SirenianDawn2.ppln.c" "Projects/ShaderEditor/Pipelines/Skyline.ppln_" "Projects/ShaderEditor/Pipelines/voronnoirecursion.cpp" "Projects/ShaderEditor/Pipelines/VoronnoiRecursion.ppln.c" )
-source_group( "" FILES "Projects/ShaderEditor/Common.h" "Projects/ShaderEditor/Renderer.cpp" "Projects/ShaderEditor/Renderer.h" "Projects/ShaderEditor/ShaderEditorApp.cpp" "Projects/ShaderEditor/ShaderEditorApp.h" )
+source_group( "Pipelines" FILES "Projects/ShaderEditor/Pipelines/all_pipelines.h" "Projects/ShaderEditor/Pipelines/drawtexturedquad.cpp" "Projects/ShaderEditor/Pipelines/DrawTexturedQuad.ppln" "Projects/ShaderEditor/Pipelines/experimental.cpp" "Projects/ShaderEditor/Pipelines/Experimental.ppln" "Projects/ShaderEditor/Pipelines/glowballs.cpp" "Projects/ShaderEditor/Pipelines/Glowballs.ppln" "Projects/ShaderEditor/Pipelines/resources.as" "Projects/ShaderEditor/Pipelines/ShaderToy.tmpl" "Projects/ShaderEditor/Pipelines/shared_types.h" "Projects/ShaderEditor/Pipelines/sireniandawn1.cpp" "Projects/ShaderEditor/Pipelines/SirenianDawn1.ppln" "Projects/ShaderEditor/Pipelines/sireniandawn2.cpp" "Projects/ShaderEditor/Pipelines/SirenianDawn2.ppln" "Projects/ShaderEditor/Pipelines/skyline.cpp" "Projects/ShaderEditor/Pipelines/Skyline.ppln" "Projects/ShaderEditor/Pipelines/voronnoirecursion.cpp" "Projects/ShaderEditor/Pipelines/VoronnoiRecursion.ppln" )
+source_group( "" FILES "Projects/ShaderEditor/Common.h" "Projects/ShaderEditor/README.md" "Projects/ShaderEditor/Renderer.cpp" "Projects/ShaderEditor/Renderer.h" "Projects/ShaderEditor/ShaderEditorApp.cpp" "Projects/ShaderEditor/ShaderEditorApp.h" )
 set_property( TARGET "Projects.ShaderEditor" PROPERTY FOLDER "Projects" )
 target_include_directories( "Projects.ShaderEditor" PRIVATE "Projects/ShaderEditor" )
 target_include_directories( "Projects.ShaderEditor" PUBLIC "External" )
@@ -1914,7 +1945,7 @@ target_link_libraries( "Projects.ShaderEditor" "Engine.Scene" )
 if (ENABLE_SDL)
 	target_compile_definitions( "Projects.ShaderEditor" PUBLIC "PLATFORM_SDL" )
 endif()
-add_dependencies( "Projects.ShaderEditor" "Engine.ResourcePacker" )
+add_dependencies( "Projects.ShaderEditor" "Deps_Projects.ShaderEditor" )
 # compiler
 set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1933,11 +1964,14 @@ target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PRO
 if (NOT DEFINED RESOURCE_PACKER_EXE)
 	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
 endif ()
-add_custom_command(
-	TARGET "Projects.ShaderEditor" PRE_BUILD
-	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Projects/ShaderEditor/Pipelines/resources.as.c"
+add_custom_target( "Deps_Projects.ShaderEditor"
+	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Projects/ShaderEditor/Pipelines/resources.as"
+	DEPENDS ${RESOURCE_PACKER_EXE} ""${CMAKE_SOURCE_DIR}/Projects/ShaderEditor/Pipelines/resources.as""
 	COMMENT "Pack resources for 'Projects.ShaderEditor'..."
+	VERBATIM
 )
+add_dependencies( "Deps_Projects.ShaderEditor" "Engine.ResourcePacker" )
+set_property( TARGET "Deps_Projects.ShaderEditor" PROPERTY FOLDER "_deps_" )
 
 #-----------------------------------
 

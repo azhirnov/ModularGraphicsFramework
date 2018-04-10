@@ -86,7 +86,7 @@ namespace PlatformVK
 					   const TypeIdList *eventTypes);
 
 		Ptr< Vk1Device >	GetDevice ()	const	{ return _vkDevice; }
-		vk::VkDevice		GetVkDevice ()	const	{ return _vkDevice ? _vkDevice->GetLogicalDevice() : null; }
+		vk::VkDevice		GetVkDevice ()	const	{ return _vkDevice and _vkDevice->IsDeviceCreated() ? _vkDevice->GetLogicalDevice() : null; }
 
 		ModulePtr _GetGPUThread (const ModulePtr &);
 

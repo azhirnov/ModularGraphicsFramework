@@ -73,7 +73,9 @@ namespace GXMath
 	public:
 		// TODO: change for Int_t type
 		CHECKRES static Int_t Int (const int &x)		{ return _Int( x ); }
+		CHECKRES static Int_t Int (const uint &x)		{ return Int( int(x) ); }
 		CHECKRES static Int_t Int (const ilong &x)		{ return _Int( (x & 0xFFFFFFFF) ^ (x >> 32) ); }
+		CHECKRES static Int_t Int (const ulong &x)		{ return Int( ilong(x) ); }
 		/*
 		template <typename T, usize I, ulong U>
 		static Int_t Int (const Vec<T,I,U> &x)

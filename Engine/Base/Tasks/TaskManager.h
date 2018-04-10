@@ -54,7 +54,7 @@ namespace Base
 
 	// methods
 	public:
-		TaskManager (GlobalSystemsRef gs, const CreateInfo::TaskManager &);
+		TaskManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::TaskManager &);
 		~TaskManager ();
 
 		static void Register (GlobalSystemsRef);
@@ -70,8 +70,8 @@ namespace Base
 		bool _PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg) noexcept;
 
 	private:
-		static ModulePtr _CreateTaskModule (GlobalSystemsRef, const CreateInfo::TaskModule &);
-		static ModulePtr _CreateTaskManager (GlobalSystemsRef, const CreateInfo::TaskManager &);
+		static ModulePtr _CreateTaskModule (UntypedID_t, GlobalSystemsRef, const CreateInfo::TaskModule &);
+		static ModulePtr _CreateTaskManager (UntypedID_t, GlobalSystemsRef, const CreateInfo::TaskManager &);
 	};
 
 

@@ -26,6 +26,11 @@ namespace Platforms
 
 	struct GraphicsPipelineDescriptor final : CompileTime::FastCopyable
 	{
+	// types
+		using ConstantName_t			= StaticString<32>;
+		using Constant_t				= Union< int, uint, ilong, ulong, float, double >;
+		using SpecializationConstants_t	= FixedSizeHashMap< ConstantName_t, Constant_t, GlobalConst::GAPI_MaxSpecializationConstants >;
+
 	// variables
 		VertexInputState				vertexInput;
 		RenderState						renderState;
@@ -34,7 +39,7 @@ namespace Platforms
 		PipelineLayoutDescriptor		layout;
 		uint							patchControlPoints;
 		uint							subpass;
-		// TODO: specialization constants, viewports
+		// TODO: viewports
 
 	// methods
 		GraphicsPipelineDescriptor (GX_DEFCTOR);
@@ -56,6 +61,9 @@ namespace Platforms
 
 	struct ComputePipelineDescriptor final : CompileTime::FastCopyable
 	{
+	// types
+		using SpecializationConstants_t	= GraphicsPipelineDescriptor::SpecializationConstants_t;
+
 	// variables
 		PipelineLayoutDescriptor		layout;
 		uint3							localGroupSize;
@@ -330,8 +338,12 @@ namespace GpuMsg
 	//
 	struct CreateGraphicsPipelineDescriptor
 	{
+	// types
+		using SpecializationConstants_t	= Platforms::GraphicsPipelineDescriptor::SpecializationConstants_t;
+
 	// variables
 		Platforms::VertexInputState						vertexInput;
+		SpecializationConstants_t						constants;	// optional
 		Platforms::EPrimitive::type						topology	= Uninitialized;
 		Out< Platforms::GraphicsPipelineDescriptor >	result;
 
@@ -347,7 +359,15 @@ namespace GpuMsg
 	//
 	struct CreateComputePipelineDescriptor
 	{
+	// types
+		using SpecializationConstants_t	= Platforms::ComputePipelineDescriptor::SpecializationConstants_t;
+
+	// variables
+		SpecializationConstants_t						constants;	// optional
 		Out< Platforms::ComputePipelineDescriptor >		result;
+
+	// methods
+		CreateComputePipelineDescriptor () {}
 	};
 
 
@@ -356,6 +376,9 @@ namespace GpuMsg
 	//
 	struct CreateGraphicsPipeline
 	{
+	// types
+		using SpecializationConstants_t	= Platforms::GraphicsPipelineDescriptor::SpecializationConstants_t;
+
 	// variables
 		Out< ModulePtr >				result;
 		UntypedID_t						moduleID	= 0;
@@ -363,6 +386,7 @@ namespace GpuMsg
 		ModulePtr						renderPass;
 		Platforms::VertexInputState		vertexInput;
 		Platforms::EPrimitive::type		topology	= Uninitialized;
+		SpecializationConstants_t		constants;	// optional
 
 	// methods
 		CreateGraphicsPipeline (GX_DEFCTOR) {}
@@ -384,10 +408,14 @@ namespace GpuMsg
 	//
 	struct CreateComputePipeline
 	{
+	// types
+		using SpecializationConstants_t	= Platforms::ComputePipelineDescriptor::SpecializationConstants_t;
+
 	// variables
-		Out< ModulePtr >		result;
-		UntypedID_t				moduleID	= 0;
-		ModulePtr				gpuThread;
+		Out< ModulePtr >				result;
+		UntypedID_t						moduleID	= 0;
+		ModulePtr						gpuThread;
+		SpecializationConstants_t		constants;	// optional
 		
 	// methods
 		CreateComputePipeline (GX_DEFCTOR) {}

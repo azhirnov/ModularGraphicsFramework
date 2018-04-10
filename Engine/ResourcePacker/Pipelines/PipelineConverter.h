@@ -20,6 +20,7 @@ namespace ResPack
 		using PipelinePtr		= PipelineCompiler::BasePipelinePtr;
 		using PipelinesSet		= Set< PipelinePtr >;
 		using PepelineTemplates	= HashMap< String, PipelinePtr >;
+		using Dependencies_t	= Set< String >;
 
 
 	// variables
@@ -29,6 +30,8 @@ namespace ResPack
 		PipelinesSet		_pipelines;
 		PepelineTemplates	_templates;
 
+		Dependencies_t		_dependencies;
+
 
 	// methods
 	public:
@@ -36,9 +39,10 @@ namespace ResPack
 		~PipelineConverter ();
 		
 		void AddPipeline (const PipelinePtr &ppln);
+		void AddDependency (StringCRef fname);
 		
 		bool LoadPipeline (StringCRef fname);
-		bool LoadAllPipelines (StringCRef folder);
+		bool LoadAllPipelines (StringCRef folder, bool searchInSubfolders);
 
 		bool LoadPipelineTemplate (StringCRef fname, StringCRef funcName);
 		

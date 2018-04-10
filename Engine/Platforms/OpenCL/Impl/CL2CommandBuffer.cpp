@@ -76,7 +76,7 @@ namespace PlatformCL
 
 	// methods
 	public:
-		CL2CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci);
+		CL2CommandBuffer (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci);
 		~CL2CommandBuffer ();
 
 
@@ -131,8 +131,8 @@ namespace PlatformCL
 	constructor
 =================================================
 */
-	CL2CommandBuffer::CL2CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLCommandBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	CL2CommandBuffer::CL2CommandBuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
+		CL2BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),			_recordingState( ERecordingState::Deleted ),
 		_kernelId( null ),			_maxInvocations( 0 ),
 		_isInitialized( false )
@@ -915,9 +915,9 @@ namespace PlatformCL
 
 namespace Platforms
 {
-	ModulePtr OpenCLObjectsConstructor::CreateCL2CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2CommandBuffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
 	{
-		return New< PlatformCL::CL2CommandBuffer >( gs, ci );
+		return New< PlatformCL::CL2CommandBuffer >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

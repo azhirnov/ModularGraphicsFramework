@@ -73,7 +73,7 @@ namespace PlatformCL
 
 	// methods
 	public:
-		CL2CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci);
+		CL2CommandBuilder (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci);
 		~CL2CommandBuilder ();
 
 
@@ -113,8 +113,8 @@ namespace PlatformCL
 	constructor
 =================================================
 */
-	CL2CommandBuilder::CL2CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLCommandBuilderModuleID, UMax }, &_msgTypes, &_eventTypes )
+	CL2CommandBuilder::CL2CommandBuilder (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
+		CL2BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "CL2CommandBuilder" );
 
@@ -490,9 +490,9 @@ namespace PlatformCL
 	
 namespace Platforms
 {
-	ModulePtr OpenCLObjectsConstructor::CreateCL2CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2CommandBuilder (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
 	{
-		return New< PlatformCL::CL2CommandBuilder >( gs, ci );
+		return New< PlatformCL::CL2CommandBuilder >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

@@ -59,7 +59,7 @@ namespace Platforms
 		};
 
 		using Name_t			= StaticString<32>;
-		using FragOutputs_t		= FixedSizeHashMap< Name_t, FragOutput, GlobalConst::Graphics_MaxColorBuffers >;
+		using FragOutputs_t		= FixedSizeHashMap< Name_t, FragOutput, GlobalConst::GAPI_MaxColorBuffers >;
 
 
 	// variables

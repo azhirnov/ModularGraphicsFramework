@@ -56,7 +56,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci);
+		Vk1CommandBuffer (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci);
 		~Vk1CommandBuffer ();
 
 
@@ -99,8 +99,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1CommandBuffer::Vk1CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkCommandBufferModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1CommandBuffer::Vk1CommandBuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),		_cmdId( VK_NULL_HANDLE ),	
 		_recordingState( ERecordingState::Deleted )
 	{
@@ -480,9 +480,9 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanObjectsConstructor::CreateVk1CommandBuffer (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1CommandBuffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
 	{
-		return New< PlatformVK::Vk1CommandBuffer >( gs, ci );
+		return New< PlatformVK::Vk1CommandBuffer >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

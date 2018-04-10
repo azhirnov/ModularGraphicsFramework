@@ -39,7 +39,7 @@ namespace Scene
 
 	// methods
 	public:
-		ScenePhysicsMainThread (GlobalSystemsRef, const CreateInfo::ScenePhysics &);
+		ScenePhysicsMainThread (UntypedID_t, GlobalSystemsRef, const CreateInfo::ScenePhysics &);
 		~ScenePhysicsMainThread ();
 
 
@@ -64,8 +64,8 @@ namespace Scene
 	constructor
 =================================================
 */
-	ScenePhysicsMainThread::ScenePhysicsMainThread (GlobalSystemsRef gs, const CreateInfo::ScenePhysics &ci) :
-		Module( gs, ModuleConfig{ ScenePhysicsModuleID, 1 }, &_msgTypes, &_eventTypes )
+	ScenePhysicsMainThread::ScenePhysicsMainThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ScenePhysics &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "ScenePhysicsMainThread" );
 		
@@ -183,9 +183,9 @@ namespace Scene
 	CreateScenePhysics
 =================================================
 */
-	ModulePtr  SceneObjectConstructor::CreateScenePhysics (GlobalSystemsRef gs, const CreateInfo::ScenePhysics &ci)
+	ModulePtr  SceneObjectConstructor::CreateScenePhysics (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ScenePhysics &ci)
 	{
-		return New<ScenePhysicsMainThread>( gs, ci );
+		return New< ScenePhysicsMainThread >( id, gs, ci );
 	}
 
 }	// Scene

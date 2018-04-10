@@ -47,22 +47,22 @@ namespace Platforms
 		static GraphicsModuleIDs GetGraphicsModules ();
 		static ComputeModuleIDs GetComputeModules ();
 		
-		static ModulePtr CreateSoftRendererThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
-		static ModulePtr CreateSoftRendererContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
-		static ModulePtr CreateSWImage (GlobalSystemsRef, const CreateInfo::GpuImage &);
-		static ModulePtr CreateSWMemory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
-		static ModulePtr CreateSWBuffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);
-		static ModulePtr CreateSWSampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
-		static ModulePtr CreateSWRenderPass (GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
-		static ModulePtr CreateSWFramebuffer (GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
-		static ModulePtr CreatePipelineTemplate (GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
-		static ModulePtr CreateSWCommandQueue (GlobalSystemsRef, const CreateInfo::GpuCommandQueue &);
-		static ModulePtr CreateSWSyncManager (GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
-		static ModulePtr CreateSWCommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
-		static ModulePtr CreateSWCommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
-		static ModulePtr CreateSWComputePipeline (GlobalSystemsRef, const CreateInfo::ComputePipeline &);
-		static ModulePtr CreateSWGraphicsPipeline (GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
-		static ModulePtr CreateSWPipelineResourceTable (GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
+		static ModulePtr CreateSoftRendererThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuThread &);
+		static ModulePtr CreateSoftRendererContext (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuContext &);
+		static ModulePtr CreateSWImage (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuImage &);
+		static ModulePtr CreateSWMemory (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemory &);
+		static ModulePtr CreateSWBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuBuffer &);
+		static ModulePtr CreateSWSampler (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr CreateSWRenderPass (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
+		static ModulePtr CreateSWFramebuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
+		static ModulePtr CreatePipelineTemplate (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
+		static ModulePtr CreateSWCommandQueue (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandQueue &);
+		static ModulePtr CreateSWSyncManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
+		static ModulePtr CreateSWCommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
+		static ModulePtr CreateSWCommandBuilder (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
+		static ModulePtr CreateSWComputePipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+		static ModulePtr CreateSWGraphicsPipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
+		static ModulePtr CreateSWPipelineResourceTable (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
 	};
 
 

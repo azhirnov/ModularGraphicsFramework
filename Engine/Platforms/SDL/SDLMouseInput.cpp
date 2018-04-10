@@ -69,7 +69,7 @@ namespace PlatformSDL
 
 	// methods
 	public:
-		SDLMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
+		SDLMouseInput (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
 		~SDLMouseInput ();
 
 
@@ -98,8 +98,8 @@ namespace PlatformSDL
 	constructor
 =================================================
 */
-	SDLMouseInput::SDLMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
-		Module( gs, ModuleConfig{ SDLMouseInputModuleID, 1 }, &_msgTypes, &_eventTypes )
+	SDLMouseInput::SDLMouseInput (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "SDLMouseInput" );
 		
@@ -366,9 +366,9 @@ namespace Platforms
 	CreateSDLMouseInput
 =================================================
 */
-	ModulePtr SDLObjectsConstructor::CreateSDLMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
+	ModulePtr SDLObjectsConstructor::CreateSDLMouseInput (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
 	{
-		return New< PlatformSDL::SDLMouseInput >( gs, ci );
+		return New< PlatformSDL::SDLMouseInput >( id, gs, ci );
 	}
 
 }	// Platforms

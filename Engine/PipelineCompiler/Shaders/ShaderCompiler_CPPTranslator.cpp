@@ -48,9 +48,11 @@ namespace PipelineCompiler
 		bool TranslateArg (const TypeInfo &, INOUT String &src) override;
 		bool TranslateType (const TypeInfo &, INOUT String &src) override;
 		bool TranslateName (const TypeInfo &, INOUT String &src) override;
+		bool TranslateFunctionName (INOUT String &name) override;
 
 		bool TranslateExternal (glslang::TIntermTyped*, const TypeInfo &, INOUT String &src) override;
 		bool TranslateOperator (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) override;
+		bool TranslateFunction (StringCRef name, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) override;
 		bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) override;
 		
 		bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) override;
@@ -59,8 +61,8 @@ namespace PipelineCompiler
 		bool DeclExternalTypes () const	override	{ return true; }
 
 	private:
-		bool _TranslateBuffer (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str);
-		bool _TranslateImage (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str);
+		bool _TranslateBuffer (Translator::TypeInfo const& info, OUT String &str);
+		bool _TranslateImage (Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateConst (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateShared (Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateBuiltin (StringCRef name, OUT String &str) const;
@@ -130,8 +132,15 @@ namespace PipelineCompiler
 	TranslateShaderInfo
 =================================================
 */
-	static bool TranslateShaderInfo (const glslang::TIntermediate* intermediate, bool skipExternals, Translator &translator)
+	static bool TranslateShaderInfo (const glslang::TIntermediate*, bool, Translator &translator)
 	{
+		String &	src = translator.src;
+
+		src << "#define INOUT\n"
+			<< "#define IN\n"
+			<< "#define OUT\n"
+			<< "\n";
+
 		// TODO
 		return true;
 	}
@@ -158,6 +167,11 @@ namespace PipelineCompiler
 		// precision
 		//if ( t.precision != EPrecision::Default )
 		//	res << _ToString( t.precision ) << ' ';
+		
+		const bool	is_atomic = t.qualifier[ EVariableQualifier::Volatile ];
+
+		if ( is_atomic )
+			res << "Atomic<";
 
 		// type
 		if ( not t.typeName.Empty() ) {
@@ -165,6 +179,9 @@ namespace PipelineCompiler
 		} else {
 			res << _ToString( t.type );
 		}
+
+		if ( is_atomic )
+			res << ">";
 
 		res << " " << t.name << (t.arraySize == 0 ? "" : (t.arraySize == UMax ? "[]" : "["_str << t.arraySize << "]"));
 		return true;
@@ -199,18 +216,37 @@ namespace PipelineCompiler
 	{
 		// qualifies
 		if ( t.qualifier[ EVariableQualifier::Constant ] )
-		{}	//res << "const ";
+			res << "const ";
 		else
 		if ( t.qualifier[ EVariableQualifier::InArg ] and t.qualifier[ EVariableQualifier::OutArg ] )
-			res << "inout ";
+			res << "INOUT ";
 		else
 		if ( t.qualifier[ EVariableQualifier::InArg ] )
-			res << "in ";
+			res << "IN ";
 		else
 		if ( t.qualifier[ EVariableQualifier::OutArg ] )
-			res << "out ";
+			res << "OUT ";
+		
+		// type
+		if ( not t.typeName.Empty() ) {
+			res << t.typeName;
+		} else {
+			res << _ToString( t.type );
+		}
+		
+		if ( t.qualifier[ EVariableQualifier::InArg ] and t.qualifier[ EVariableQualifier::OutArg ] )
+			res << " &";
+		else
+		if ( t.qualifier[ EVariableQualifier::InArg ] )
+			res << " ";
+		else
+		if ( t.qualifier[ EVariableQualifier::OutArg ] )
+			res << " &";
+		else
+			res << " ";
 
-		return TranslateLocalVar( t, INOUT res );
+		res << t.name << (t.arraySize == 0 ? "" : (t.arraySize == UMax ? "[]" : "["_str << t.arraySize << "]"));
+		return true;
 	}
 	
 /*
@@ -232,12 +268,20 @@ namespace PipelineCompiler
 		//if ( t.precision != EPrecision::Default )
 		//	res << _ToString( t.precision ) << ' ';
 
+		const bool	is_atomic = t.qualifier[ EVariableQualifier::Volatile ];
+
+		if ( is_atomic )
+			res << "Atomic<";
+
 		// type
 		if ( not t.typeName.Empty() ) {
 			res << t.typeName;
 		} else {
 			res << _ToString( t.type );
 		}
+
+		if ( is_atomic )
+			res << ">";
 
 		res << (t.arraySize == 0 ? "" : (t.arraySize == UMax ? "[]" : "["_str << t.arraySize << "]"));
 		return true;
@@ -256,6 +300,20 @@ namespace PipelineCompiler
 		}
 
 		src << t.name;
+		return true;
+	}
+	
+/*
+=================================================
+	TranslateFunctionName
+=================================================
+*/
+	bool CPP_DstLanguage::TranslateFunctionName (INOUT String &name)
+	{
+		usize	pos = 0;
+		if ( name.Find( '(', OUT pos ) ) {
+			name = name.SubString( 0, pos );
+		}
 		return true;
 	}
 
@@ -737,10 +795,27 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	TranslateFunction
+=================================================
+*/
+	bool CPP_DstLanguage::TranslateFunction (StringCRef name, const TypeInfo &, ArrayCRef<String> args, ArrayCRef<TypeInfo const*>, INOUT String &src)
+	{
+		src << name << '(';
+
+		FOR( i, args ) {
+			src << (i ? ", " : "") << args[i];
+		}
+
+		src << ')';
+		return true;
+	}
+	
+/*
+=================================================
 	TranslateSwizzle
 =================================================
 */
-	bool CPP_DstLanguage::TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src)
+	bool CPP_DstLanguage::TranslateSwizzle (const TypeInfo &, StringCRef val, StringCRef swizzle, INOUT String &src)
 	{
 		src << val << '.' << swizzle;
 		return true;
@@ -764,27 +839,22 @@ namespace PipelineCompiler
 		// externals
 		FOR( i, _externals )
 		{
-			glslang::TIntermTyped*	typed	= _externals[i].first;
-			TypeInfo const&			info	= _externals[i].second;
-			glslang::TType const&	type	= typed->getType();
-			auto const&				qual	= type.getQualifier();
-
-			if ( type.getBasicType() == glslang::TBasicType::EbtBlock and
-				(qual.storage == glslang::TStorageQualifier::EvqBuffer or qual.storage == glslang::TStorageQualifier::EvqUniform) )
-			{
-				CHECK_ERR( _TranslateBuffer( type, info, INOUT src ) );
+			TypeInfo const&		info = _externals[i].second;
+			
+			if ( EShaderVariable::IsBuffer( info.type ) ) {
+				CHECK_ERR( _TranslateBuffer( info, INOUT src ) );
 			}
 			else
-			if ( type.isImage() or type.getSampler().isCombined() ) {
-				CHECK_ERR( _TranslateImage( type, info, INOUT src ) );
+			if ( EShaderVariable::IsImage( info.type ) or EShaderVariable::IsTexture( info.type ) ) {
+				CHECK_ERR( _TranslateImage( info, INOUT src ) );
 			}
 			else
-			if ( qual.storage == glslang::TStorageQualifier::EvqShared ) {
+			if ( info.qualifier[ EVariableQualifier::Shared ] ) {
 				CHECK_ERR( _TranslateShared( info, INOUT src ) );
 			}
 			else
-			if ( qual.storage == glslang::TStorageQualifier::EvqConst ) {
-				CHECK_ERR( _TranslateConst( typed, info, INOUT src ) );
+			if ( info.qualifier[ EVariableQualifier::Constant ] ) {
+				CHECK_ERR( _TranslateConst( _externals[i].first, info, INOUT src ) );
 			}
 		}
 
@@ -997,11 +1067,11 @@ namespace PipelineCompiler
 	_TranslateBuffer
 =================================================
 */
-	bool CPP_DstLanguage::_TranslateBuffer (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str)
+	bool CPP_DstLanguage::_TranslateBuffer (Translator::TypeInfo const& info, OUT String &str)
 	{
 		CHECK_ERR( info.arraySize == 0 );
 
-		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqBuffer )
+		if ( info.type == EShaderVariable::StorageBlock )
 		{
 			str << "\tImpl::StorageBuffer< " << info.typeName << ", "
 				<< _ToString( info.memoryModel ) << " > " << info.name
@@ -1009,10 +1079,15 @@ namespace PipelineCompiler
 				<< ", " << info.name << " );\n";
 		}
 		else
+		if ( info.type == EShaderVariable::UniformBlock )
 		{
 			str << "\tImpl::UniformBuffer< " << info.typeName << " > " << info.name
 				<< ";	_helper_.GetUniformBuffer( " << info.binding
 				<< ", " << info.name << " );\n";
+		}
+		else
+		{
+			RETURN_ERR( "unknown buffer type!" );
 		}
 		return true;
 	}
@@ -1022,11 +1097,11 @@ namespace PipelineCompiler
 	_TranslateImage
 =================================================
 */
-	bool CPP_DstLanguage::_TranslateImage (glslang::TType const& type, Translator::TypeInfo const& info, OUT String &str)
+	bool CPP_DstLanguage::_TranslateImage (Translator::TypeInfo const& info, OUT String &str)
 	{
 		CHECK_ERR( info.arraySize == 0 );
 		
-		if ( type.isImage() )
+		if ( EShaderVariable::IsImage( info.type ) )
 		{
 			str << "\t" << _ToImageType( info.type ) << ", " << _ToString( info.memoryModel )
 				<< " > " << info.name << ";		_helper_.GetImage( " << info.binding

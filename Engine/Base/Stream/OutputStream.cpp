@@ -53,8 +53,8 @@ namespace Base
 
 	// methods
 	public:
-		OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci);
-		OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci);
+		OutputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci);
+		OutputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci);
 		//OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamToMemory &ci);
 		~OutputStream ();
 
@@ -78,8 +78,8 @@ namespace Base
 	constructor
 =================================================
 */
-	OutputStream::OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci) :
-		Module( gs, ModuleConfig{ OutputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
+	OutputStream::OutputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci) :
+		Module( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleDetached_Impl );
@@ -110,8 +110,8 @@ namespace Base
 	constructor
 =================================================
 */
-	OutputStream::OutputStream (GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci) :
-		Module( gs, ModuleConfig{ OutputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
+	OutputStream::OutputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci) :
+		Module( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &OutputStream::_OnModuleDetached_Impl );
@@ -226,14 +226,14 @@ namespace Base
 	CreateOutputStream*
 =================================================
 */
-	ModulePtr StreamObjectsConstructor::CreateOutStreamFromFile (GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci)
+	ModulePtr StreamObjectsConstructor::CreateOutStreamFromFile (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::OutStreamFromFile &ci)
 	{
-		return New< OutputStream >( gs, ci );
+		return New< OutputStream >( id, gs, ci );
 	}
 	
-	ModulePtr StreamObjectsConstructor::CreateOutStreamFromUri (GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci)
+	ModulePtr StreamObjectsConstructor::CreateOutStreamFromUri (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::OutStreamFromUri &ci)
 	{
-		return New< OutputStream >( gs, ci );
+		return New< OutputStream >( id, gs, ci );
 	}
 
 }	// Base

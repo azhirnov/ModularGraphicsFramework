@@ -35,6 +35,8 @@ namespace PipelineCompiler
 		CHECK_ERR( _UpdateBindings() );
 		CHECK_ERR( _UpdateDescriptorSets() );
 
+		_lastEditTime = Max( _lastEditTime, shader.LastEditTime() );
+
 		return true;
 	}
 	

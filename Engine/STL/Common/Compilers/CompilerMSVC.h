@@ -252,6 +252,13 @@
 #	define GX_AUTO_IN_TEMPLATE_SUPPORTED	1
 #endif
 
+
+// atomic
+#if COMPILER_VERSION >= 1900
+#	define GX_ATOMIC_SUPPORTED	1
+#endif
+
+
 // TODO
 #define GX_RTTI_SUPPORTED
 

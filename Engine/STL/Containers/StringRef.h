@@ -878,6 +878,13 @@ namespace GXTypes
 	{
 		return From( TStringRef<const B>( str ) );
 	}
+	
+	template <typename T>
+	template <typename B>
+	inline ArrayRef<T>  ArrayRef<T>::FromStd (std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str)
+	{
+		return From( TStringRef<B>( str ) );
+	}
 
 /*
 =================================================

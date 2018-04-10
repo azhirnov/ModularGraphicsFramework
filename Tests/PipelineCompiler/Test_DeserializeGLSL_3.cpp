@@ -59,13 +59,13 @@ void main ()
 		Deserialize( EShaderSrcFormat::GLSL, EShader::Fragment, source, "main", OUT log, OUT des ) );
 
 	des.CalculateOffsets();
-	LOG( des.ToString().cstr(), ELog::Debug );
+	LOG( des.ToString(), ELog::Debug );
 
 	des.ReplaceTypesInStructs();
 	des.CalculateOffsets();
 
 	//des.CalculateLocations();
 
-	LOG( des.ToString().cstr(), ELog::Debug );
+	LOG( des.ToString(), ELog::Debug );
 	return true;
 }

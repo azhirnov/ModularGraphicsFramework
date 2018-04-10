@@ -32,6 +32,7 @@ int main (int argc, char** argv)
 		}
 	}
 
+	packer->SetExecutable( argv[0] );
 	packer->Run( res_file );
 	
 	return 0;

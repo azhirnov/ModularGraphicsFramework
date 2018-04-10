@@ -58,7 +58,7 @@ namespace Platforms
 
 	// methods
 	public:
-		VulkanContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
+		VulkanContext (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
 		~VulkanContext ();
 
 		
@@ -80,8 +80,8 @@ namespace Platforms
 	constructor
 =================================================
 */
-	VulkanContext::VulkanContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
-		Module( gs, ModuleConfig{ VkContextModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	VulkanContext::VulkanContext (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci )
 	{
 		SetDebugName( "VulkanContext" );
@@ -275,9 +275,9 @@ namespace Platforms
 	CreateVulkanContext
 =================================================
 */	
-	ModulePtr VulkanObjectsConstructor::CreateVulkanContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVulkanContext (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
-		return New< VulkanContext >( gs, ci );
+		return New< VulkanContext >( id, gs, ci );
 	}
 
 

@@ -37,23 +37,19 @@ namespace OS
 
 	// methods
 	public:
+		explicit Library (StringCRef name, bool canFree = true);
+
 		Library ();
-
-		explicit
-		Library (StringCRef name, bool canFree = true);
-
 		~Library ();
-		
-		//void * Handle () const;
-		bool IsValid () const;
-
-		const String & GetName () const		{ return _name; }
 
 		bool FindAndLoad (StringCRef name, uint searchDepth, bool canFree = true);
-		bool LoadFromHandle (const Handle_t &lib, bool canFree = false);
 		bool Load (StringCRef name, bool canFree = true);
 		bool LoadSelf ();
 		bool Unload ();
+		
+		bool		IsValid () const;
+
+		StringCRef	GetName () const		{ return _name; }
 
 		template <typename T>
 		bool GetProc (OUT T &proc, StringCRef procName) const
@@ -71,7 +67,10 @@ namespace OS
 			return false;
 		}
 
-		Func_t GetProc (StringCRef procName, Func_t defProc = null) const;
+		CHECKRES Func_t GetProc (StringCRef procName, Func_t defProc = null) const;
+
+	private:
+		bool _LoadFromHandle (const Handle_t &lib, bool canFree = false);
 	};
 
 	

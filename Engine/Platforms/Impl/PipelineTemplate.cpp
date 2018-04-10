@@ -15,8 +15,8 @@
 #endif
 
 #ifdef GRAPHICS_API_OPENGL
-#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4Enums.h"
+#include "Engine/Platforms/OpenGL/450/GL4Messages.h"
+#include "Engine/Platforms/OpenGL/450/GL4Enums.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #endif
 
@@ -171,7 +171,7 @@ namespace Platforms
 
 	// methods
 	public:
-		PipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci);
+		PipelineTemplate (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci);
 		~PipelineTemplate ();
 
 
@@ -231,8 +231,8 @@ namespace Platforms
 	constructor
 =================================================
 */
-	PipelineTemplate::PipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci) :
-		Module( gs, ModuleConfig{ PipelineTemplateModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	PipelineTemplate::PipelineTemplate (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr )
 	{
 		SetDebugName( "PipelineTemplate" );
@@ -582,7 +582,7 @@ namespace Platforms
 			GL_CALL( glGetProgramInfoLog( prog, log_size, null, OUT info.ptr() ) );
 			info.CalculateLength();
 			
-			LOG( ("OpenGL Program compilation message: "_str << info).cstr(), linked ? ELog::Debug : ELog::Error );
+			LOG( "OpenGL Program compilation message: "_str << info, linked ? ELog::Debug : ELog::Error );
 		}
 
 		if ( not linked )
@@ -776,9 +776,6 @@ namespace Platforms
 			" -cl-denorms-are-zero"
 			" -cl-finite-math-only"
 			" -cl-std=CL1.2"
-//#			if COMPUTE_API_OPENCL >= 200
-//			" -cl-kernel-arg-info"
-//#			endif
 			;
 		
 		CL_CALL( (prog_id = clCreateProgramWithSource(
@@ -802,7 +799,7 @@ namespace Platforms
 			CL_CALL( clGetProgramBuildInfo( prog_id, devices[0], CL_PROGRAM_BUILD_LOG, log_size, OUT info.ptr(), null ) );
 			info.CalculateLength();
 		
-			LOG( ("OpenCL compute program build message:\n"_str << info).cstr(), compiled ? ELog::Debug : ELog::Warning );
+			LOG( "OpenCL compute program build message:\n"_str << info, compiled ? ELog::Debug : ELog::Warning );
 		}
 		
 		if ( not compiled ) {
@@ -1133,37 +1130,37 @@ namespace Platforms
 	
 	
 #ifdef GRAPHICS_API_VULKAN
-	ModulePtr VulkanObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
+	ModulePtr VulkanObjectsConstructor::CreatePipelineTemplate (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
-		return New< PipelineTemplate >( gs, ci );
+		return New< PipelineTemplate >( id, gs, ci );
 	}
 #endif
 	
 #ifdef GRAPHICS_API_OPENGL
-	ModulePtr OpenGLObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
+	ModulePtr OpenGLObjectsConstructor::CreatePipelineTemplate (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
-		return New< PipelineTemplate >( gs, ci );
+		return New< PipelineTemplate >( id, gs, ci );
 	}
 #endif
 	
 #ifdef COMPUTE_API_OPENCL
-	ModulePtr OpenCLObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
+	ModulePtr OpenCLObjectsConstructor::CreatePipelineTemplate (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
-		return New< PipelineTemplate >( gs, ci );
+		return New< PipelineTemplate >( id, gs, ci );
 	}
 #endif
 	
 #ifdef GRAPHICS_API_DIRECTX
-	ModulePtr DirectXObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
+	ModulePtr DirectXObjectsConstructor::CreatePipelineTemplate (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
-		return New< PipelineTemplate >( gs, ci );
+		return New< PipelineTemplate >( id, gs, ci );
 	}
 #endif
 	
 #ifdef GRAPHICS_API_SOFT
-	ModulePtr SoftRendererObjectsConstructor::CreatePipelineTemplate (GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreatePipelineTemplate (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci)
 	{
-		return New< PipelineTemplate >( gs, ci );
+		return New< PipelineTemplate >( id, gs, ci );
 	}
 #endif
 

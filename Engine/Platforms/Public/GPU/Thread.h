@@ -88,8 +88,8 @@ namespace GpuMsg
 		using Fence_t			= Platforms::GpuFenceId;
 		using Semaphore_t		= Platforms::GpuSemaphoreId;
 		using EPipelineStage	= Platforms::EPipelineStage;
-		using Semaphores_t		= FixedSizeArray< Semaphore_t, 8 >;
-		using WaitSemaphores_t	= FixedSizeArray<Pair< Semaphore_t, EPipelineStage::bits >, 8 >;
+		using Semaphores_t		= FixedSizeArray< Semaphore_t, GlobalConst::GAPI_MaxWaitSemaphores >;
+		using WaitSemaphores_t	= FixedSizeArray<Pair< Semaphore_t, EPipelineStage::bits >, GlobalConst::GAPI_MaxWaitSemaphores >;
 
 	// variables
 		Commands_t			commands;			// command to submit.

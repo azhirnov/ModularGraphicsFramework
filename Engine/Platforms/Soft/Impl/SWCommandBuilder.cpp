@@ -73,7 +73,7 @@ namespace PlatformSW
 
 	// methods
 	public:
-		SWCommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci);
+		SWCommandBuilder (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci);
 		~SWCommandBuilder ();
 
 
@@ -113,8 +113,8 @@ namespace PlatformSW
 	constructor
 =================================================
 */
-	SWCommandBuilder::SWCommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
-		SWBaseModule( gs, ModuleConfig{ SWCommandBuilderModuleID, UMax }, &_msgTypes, &_eventTypes )
+	SWCommandBuilder::SWCommandBuilder (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "SWCommandBuilder" );
 
@@ -488,9 +488,9 @@ namespace PlatformSW
 	
 namespace Platforms
 {
-	ModulePtr SoftRendererObjectsConstructor::CreateSWCommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreateSWCommandBuilder (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
 	{
-		return New< PlatformSW::SWCommandBuilder >( gs, ci );
+		return New< PlatformSW::SWCommandBuilder >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

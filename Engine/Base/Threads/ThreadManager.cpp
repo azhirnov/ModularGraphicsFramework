@@ -18,10 +18,9 @@ namespace Base
 	constructor
 =================================================
 */
-	ThreadManager::ThreadManager (GlobalSystemsRef gs, const CreateInfo::ThreadManager &) :
-		Module( gs, ModuleConfig{ ThreadManagerModuleID, 1 }, &_msgTypes, &_eventTypes ),
-		//_currentThread( gs, CreateInfo::Thread{ "MainThread", null } )
-		_currentThread{New<ParallelThreadImpl>( gs, CreateInfo::Thread{ "MainThread", null } )}
+	ThreadManager::ThreadManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ThreadManager &) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		_currentThread{New<ParallelThreadImpl>( ParallelThreadModuleID, gs, CreateInfo::Thread{ "MainThread", null } )}
 	{
 		SetDebugName( "ThreadManager" );
 
@@ -245,6 +244,7 @@ namespace Base
 	struct ThreadManager::CreateParallelThreadData
 	{
 	// variables
+		UntypedID_t					id;
 		CreateInfo::Thread			info;
 		OS::Thread					thread;
 		OS::SyncEvent				sync;			// sync primitive
@@ -255,7 +255,8 @@ namespace Base
 		Ptr< FileManager >			fileMngr;
 
 	// methods
-		CreateParallelThreadData (GlobalSystemsRef gs, CreateInfo::Thread &&info) :
+		CreateParallelThreadData (UntypedID_t id, GlobalSystemsRef gs, CreateInfo::Thread &&info) :
+			id{ id },
 			info( RVREF( info ) ),
 			sync( OS::SyncEvent::MANUAL_RESET ),
 			main( gs->mainSystem.ptr() ),
@@ -269,7 +270,7 @@ namespace Base
 	_CreateParallelThread
 =================================================
 */
-	ModulePtr ThreadManager::_CreateParallelThread (GlobalSystemsRef gs, const CreateInfo::Thread &ci)
+	ModulePtr ThreadManager::_CreateParallelThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Thread &ci)
 	{
 		// find manager for thread
 		ModulePtr	mngr = ci.manager;
@@ -291,7 +292,7 @@ namespace Base
 		CHECK_ERR( mngr );
 
 
-		CreateParallelThreadData	data{ gs, CreateInfo::Thread{ ci.name, mngr, RVREF( ci.onStarted.Get() ) } };
+		CreateParallelThreadData	data{ id, gs, CreateInfo::Thread{ ci.name, mngr, RVREF( ci.onStarted.Get() ) } };
 
 		// start thread and set 'data' to new thread
 		data.thread.Create( &_RunAsync, &data );
@@ -310,9 +311,9 @@ namespace Base
 	_CreateThreadManager
 =================================================
 */
-	ModulePtr ThreadManager::_CreateThreadManager (GlobalSystemsRef gs, const CreateInfo::ThreadManager &ci)
+	ModulePtr ThreadManager::_CreateThreadManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ThreadManager &ci)
 	{
-		return New< ThreadManager >( gs, ci );
+		return New< ThreadManager >( id, gs, ci );
 	}
 	
 /*
@@ -359,7 +360,7 @@ namespace Base
 			global_sys.modulesFactory.Set( data.factory );
 			global_sys.fileManager.Set( data.fileMngr );
 
-			pt = New< ParallelThreadImpl >( GlobalSystemsRef(global_sys), data.info );
+			pt = New< ParallelThreadImpl >( data.id, GlobalSystemsRef(global_sys), data.info );
 
 			pt->_thread		= RVREF( data.thread );
 

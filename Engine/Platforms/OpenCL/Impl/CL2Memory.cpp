@@ -71,7 +71,7 @@ namespace PlatformCL
 
 	// methods
 	public:
-		CL2Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci);
+		CL2Memory (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci);
 		~CL2Memory ();
 
 
@@ -112,8 +112,8 @@ namespace PlatformCL
 	constructor
 =================================================
 */
-	CL2Memory::CL2Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLMemoryModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	CL2Memory::CL2Memory (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci) :
+		CL2BaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_mem( null ),				_memMapper( ci.memFlags, ci.access ),
 		_flags( ci.memFlags ),		_binding( EBindingTarget::Unbinded )
 	{
@@ -758,9 +758,9 @@ namespace PlatformCL
 
 namespace Platforms
 {
-	ModulePtr OpenCLObjectsConstructor::CreateCL2Memory (GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2Memory (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci)
 	{
-		return New< PlatformCL::CL2Memory >( gs, ci );
+		return New< PlatformCL::CL2Memory >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

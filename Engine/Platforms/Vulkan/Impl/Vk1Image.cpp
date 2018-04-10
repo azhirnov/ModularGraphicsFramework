@@ -83,7 +83,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci);
+		Vk1Image (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci);
 		~Vk1Image ();
 
 
@@ -130,8 +130,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1Image::Vk1Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkImageModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1Image::Vk1Image (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),					_memManager( ci.memManager ),
 		_imageId( VK_NULL_HANDLE ),			_imageView( VK_NULL_HANDLE ),
 		_layout( EImageLayout::Unknown ),	_memFlags( ci.memFlags ),
@@ -629,9 +629,9 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanObjectsConstructor::CreateVk1Image (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1Image (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
 	{
-		return New< PlatformVK::Vk1Image >( gs, ci );
+		return New< PlatformVK::Vk1Image >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

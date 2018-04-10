@@ -250,7 +250,7 @@ namespace PlatformSW
 
 	// methods
 	public:
-		SWComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
+		SWComputePipeline (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
 		~SWComputePipeline ();
 
 
@@ -284,8 +284,8 @@ namespace PlatformSW
 	constructor
 =================================================
 */
-	SWComputePipeline::SWComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
-		SWBaseModule( gs, ModuleConfig{ SWComputePipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	SWComputePipeline::SWComputePipeline (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr{ ci.descr },		_func{ null }
 	{
 		SetDebugName( "SWComputePipeline" );
@@ -510,9 +510,9 @@ namespace Platforms
 		return New< PlatformSW::SWGraphicsPipeline >( gs, msg );
 	}*/
 
-	ModulePtr SoftRendererObjectsConstructor::CreateSWComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &msg)
+	ModulePtr SoftRendererObjectsConstructor::CreateSWComputePipeline (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &msg)
 	{
-		return New< PlatformSW::SWComputePipeline >( gs, msg );
+		return New< PlatformSW::SWComputePipeline >( id, gs, msg );
 	}
 
 }	// Platforms

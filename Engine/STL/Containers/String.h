@@ -1349,6 +1349,13 @@ namespace GXTypes
 		return From( TStringRef<const B>( str ) );
 	}
 
+	template <typename T>
+	template <typename B, typename S, typename MC>
+	inline ArrayRef<T>  ArrayRef<T>::From (TString<B,S,MC> &str)
+	{
+		return From( TStringRef<B>( str ) );
+	}
+
 	
 /*
 =================================================

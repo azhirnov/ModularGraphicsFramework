@@ -15,8 +15,8 @@ namespace Platforms
 	constructor
 =================================================
 */
-	InputManager::InputManager (GlobalSystemsRef gs, const CreateInfo::InputManager &) :
-		Module( gs, ModuleConfig{ InputManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
+	InputManager::InputManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InputManager &) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "InputManager" );
 
@@ -89,9 +89,9 @@ namespace Platforms
 	_CreateInputManager
 =================================================
 */
-	ModulePtr InputManager::_CreateInputManager (GlobalSystemsRef gs, const CreateInfo::InputManager &ci)
+	ModulePtr InputManager::_CreateInputManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InputManager &ci)
 	{
-		return New< InputManager >( gs, ci );
+		return New< InputManager >( id, gs, ci );
 	}
 	
 /*

@@ -1,0 +1,46 @@
+
+#ifdef ANGELSCRIPT
+void main ()
+{
+	ComputePipeline	self = ComputePipeline();
+	
+	self.shaderFormat = EShaderSrcFormat_GXSL;
+	self.compute.LoadSelf();
+}
+#endif
+//-----------------------------------------------------------------------------
+
+
+#ifdef SHADER
+#if SHADER & SH_COMPUTE
+
+struct AtomicAdd_Struct
+{
+	int		value;
+	bool	found;
+};
+
+layout(binding=0, std430) buffer AtomicAdd_SSBO
+{
+	AtomicAdd_Struct	st;
+	uint				result;
+	uint				resultList[10];
+} ssb;
+
+void main ()
+{
+	uint r = atomicAdd( ssb.result, 1 );
+
+	if ( gl_GlobalInvocationID.x < ssb.resultList.length() )
+	{
+		ssb.resultList[gl_GlobalInvocationID.x] = r;
+	}
+
+	if ( atomicAdd( ssb.st.value, -2 ) == 0 )
+	{
+		ssb.st.found = true;
+	}
+}
+
+#endif
+#endif	// SHADER

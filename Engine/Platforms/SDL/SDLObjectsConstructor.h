@@ -33,10 +33,10 @@ namespace Platforms
 		
 		static OSModuleIDs GetModuleIDs ();
 
-		static ModulePtr  CreateSDLKeyInput (GlobalSystemsRef, const CreateInfo::RawInputHandler &);
-		static ModulePtr  CreateSDLMouseInput (GlobalSystemsRef, const CreateInfo::RawInputHandler &);
-		static ModulePtr  CreateSDLWindow (GlobalSystemsRef, const CreateInfo::Window &);
-		static ModulePtr  CreateSDLPlatform (GlobalSystemsRef, const CreateInfo::Platform &);
+		static ModulePtr  CreateSDLKeyInput (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::RawInputHandler &);
+		static ModulePtr  CreateSDLMouseInput (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::RawInputHandler &);
+		static ModulePtr  CreateSDLWindow (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::Window &);
+		static ModulePtr  CreateSDLPlatform (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::Platform &);
 	};
 
 

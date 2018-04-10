@@ -394,7 +394,7 @@ namespace PipelineCompiler
 		}
 		
 
-		virtual bool RecursiveProcess (StringCRef typeName, INOUT Array<Variable> &fields, OUT BytesU &offset, OUT BytesU &maxAlign)
+		virtual bool RecursiveProcess (StringCRef typeName, INOUT Array<Variable> &fields, OUT BytesU &offset, INOUT BytesU &maxAlign)
 		{
 			if ( _processedTypes.IsExist( typeName ) )
 				return true;
@@ -424,7 +424,6 @@ namespace PipelineCompiler
 			// check padding
 			_paddingCount	= 0;
 			offset			= 0_b;
-			maxAlign		= 0_b;
 
 			FOR( i, fields )
 			{

@@ -88,7 +88,7 @@ namespace Platforms
 
 	// methods
 	public:
-		SoftRendererThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
+		SoftRendererThread (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
 		~SoftRendererThread ();
 
 
@@ -136,8 +136,8 @@ namespace Platforms
 	constructor
 =================================================
 */
-	SoftRendererThread::SoftRendererThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, ModuleConfig{ SWThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	SoftRendererThread::SoftRendererThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_device{ gs },				_settings{ ci.settings },
 		_isFrameStarted{ false },	_isWindowVisible{ false }
 	{
@@ -396,6 +396,8 @@ namespace Platforms
 							}) );
 		}
 
+		_cmdQueue->Send< ModuleMsg::Compose >({});
+
 		_WriteDeviceInfo();
 
 		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
@@ -416,7 +418,7 @@ namespace Platforms
 			<< "\nVersion:      " << _ver_major << '.' << _ver_minor
 			<< "\n---------------";
 
-		LOG( log.cstr(), ELog::Debug | ELog::SpoilerFlag );
+		LOG( log, ELog::Debug | ELog::SpoilerFlag );
 	}
 
 /*
@@ -581,9 +583,9 @@ namespace Platforms
 	CreateSoftRendererThread
 =================================================
 */
-	ModulePtr SoftRendererObjectsConstructor::CreateSoftRendererThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreateSoftRendererThread (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
-		return New< SoftRendererThread >( gs, ci );
+		return New< SoftRendererThread >( id, gs, ci );
 	}
 
 }	// Platforms

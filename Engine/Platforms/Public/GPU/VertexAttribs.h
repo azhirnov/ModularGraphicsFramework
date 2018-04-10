@@ -45,7 +45,7 @@ namespace Platforms
 			bool operator <  (const Attrib &right) const;
 		};
 
-		using Attribs	= FixedSizeHashMap< Name_t, Attrib, GlobalConst::Graphics_MaxAttribs >;
+		using Attribs	= FixedSizeHashMap< Name_t, Attrib, GlobalConst::GAPI_MaxAttribs >;
 		using PairPtr	= Ptr< const Pair<const Name_t, Attrib> >;
 		using PairRef	= Pair<const Name_t, Attrib> const&;
 
@@ -72,21 +72,15 @@ namespace Platforms
 
 		PairPtr  Get (StringCRef name) const;
 
-		bool IsExist (StringCRef name) const {
-			return _attribs.IsExist( name );
-		}
+		bool	IsExist (StringCRef name) const		{ return _attribs.IsExist( name ); }
 
-		void Clear () {
-			_attribs.Clear();
-		}
+		void	Clear ()							{ _attribs.Clear(); }
 
-		usize Count () const {
-			return _attribs.Count();
-		}
+		bool	Empty () const						{ return _attribs.Empty(); }
 
-		PairRef  operator [] (usize index) const {
-			return _attribs[index];
-		}
+		usize	Count () const						{ return _attribs.Count(); }
+
+		PairRef	operator [] (usize index) const		{ return _attribs[index]; }
 	};
 	
 

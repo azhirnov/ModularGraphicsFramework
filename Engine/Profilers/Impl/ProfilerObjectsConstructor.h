@@ -24,7 +24,7 @@ namespace Profilers
 	{
 	// methods
 	public:
-		static ModulePtr CreateFPSCounter (GlobalSystemsRef, const CreateInfo::FPSCounter &);
+		static ModulePtr CreateFPSCounter (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::FPSCounter &);
 	};
 
 

@@ -53,7 +53,7 @@ namespace Scene
 
 	// methods
 	public:
-		SceneRendererMainThread (GlobalSystemsRef, const CreateInfo::SceneRenderer &);
+		SceneRendererMainThread (UntypedID_t, GlobalSystemsRef, const CreateInfo::SceneRenderer &);
 		~SceneRendererMainThread ();
 
 
@@ -83,8 +83,8 @@ namespace Scene
 	constructor
 =================================================
 */
-	SceneRendererMainThread::SceneRendererMainThread (GlobalSystemsRef gs, const CreateInfo::SceneRenderer &ci) :
-		Module( gs, ModuleConfig{ SceneRendererModuleID, 1 }, &_msgTypes, &_eventTypes )
+	SceneRendererMainThread::SceneRendererMainThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::SceneRenderer &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "SceneRendererMainThread" );
 		
@@ -274,9 +274,9 @@ namespace Scene
 	CreateSceneRenderer
 =================================================
 */
-	ModulePtr  SceneObjectConstructor::CreateSceneRenderer (GlobalSystemsRef gs, const CreateInfo::SceneRenderer &ci)
+	ModulePtr  SceneObjectConstructor::CreateSceneRenderer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::SceneRenderer &ci)
 	{
-		return New<SceneRendererMainThread>( gs, ci );
+		return New< SceneRendererMainThread >( id, gs, ci );
 	}
 
 }	// Scene

@@ -6,11 +6,7 @@
 #include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 
-struct GApp::Vertex
-{
-	float2	position;
-	float2	texcoord;
-};
+using Vertex = Pipelines::NativeVertex_default2;
 
 
 GApp::GApp ()
@@ -278,8 +274,8 @@ bool GApp::_CreatePipeline2 ()
 	create_gpp->gpuThread	= gthread;
 	create_gpp->moduleID	= gpuIDs.pipeline;
 	create_gpp->topology	= EPrimitive::TriangleList;
-	create_gpp->vertexInput.Add( "at_Position", &Vertex::position )
-							.Add( "at_Texcoord", &Vertex::texcoord )
+	create_gpp->vertexInput.Add( "at_Position", &Vertex::at_Position )
+							.Add( "at_Texcoord", &Vertex::at_Texcoord )
 							.Bind( "", SizeOf<Vertex> );
 	
 	pipelineTemplate2->Send( create_gpp );

@@ -152,8 +152,8 @@ namespace GXMath
 	
 	template <typename T>				constexpr T		ReverseBitOrder (const T& x);
 
-	template <typename T>		constexpr Bits<usize>	BitScanReverse (const T& x);	// clz, findMSB
-	template <typename T>		constexpr Bits<usize>	BitScanForward (const T& x);	// ctz, findLSB
+	template <typename T>		constexpr Bits<usize>	BitScanReverse (const T& x);	// findMSB
+	template <typename T>		constexpr Bits<usize>	BitScanForward (const T& x);	// findLSB
 
 
 

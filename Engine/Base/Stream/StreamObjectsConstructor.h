@@ -19,12 +19,12 @@ namespace Base
 		static void Register (GlobalSystemsRef);
 		static void Unregister (GlobalSystemsRef);
 
-		static ModulePtr CreateStreamManager (GlobalSystemsRef, const CreateInfo::StreamManager &);
-		static ModulePtr CreateInStreamFromFile (GlobalSystemsRef, const CreateInfo::InStreamFromFile &);
-		static ModulePtr CreateInStreamFromUri (GlobalSystemsRef, const CreateInfo::InStreamFromUri &);
-		static ModulePtr CreateInStreamFromMemory (GlobalSystemsRef, const CreateInfo::InStreamFromMemory &);
-		static ModulePtr CreateOutStreamFromFile (GlobalSystemsRef, const CreateInfo::OutStreamFromFile &);
-		static ModulePtr CreateOutStreamFromUri (GlobalSystemsRef, const CreateInfo::OutStreamFromUri &);
+		static ModulePtr CreateStreamManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::StreamManager &);
+		static ModulePtr CreateInStreamFromFile (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::InStreamFromFile &);
+		static ModulePtr CreateInStreamFromUri (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::InStreamFromUri &);
+		static ModulePtr CreateInStreamFromMemory (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::InStreamFromMemory &);
+		static ModulePtr CreateOutStreamFromFile (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::OutStreamFromFile &);
+		static ModulePtr CreateOutStreamFromUri (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::OutStreamFromUri &);
 	};
 
 

@@ -26,8 +26,8 @@ namespace Platforms
 		using Self		= RenderPassDescriptor;
 		using Name_t	= StaticString<64>;
 
-		static const uint	MAX_COLOR_ATTACHMENTS	= GlobalConst::Graphics_MaxColorBuffers;
-		static const uint	MAX_SUBPASSES			= GlobalConst::Graphics_MaxRenderPassSubpasses;
+		static const uint	MAX_COLOR_ATTACHMENTS	= GlobalConst::GAPI_MaxColorBuffers;
+		static const uint	MAX_SUBPASSES			= GlobalConst::GAPI_MaxRenderPassSubpasses;
 		static const uint	MAX_DEPENDENCIES		= MAX_SUBPASSES * 2;
 
 
@@ -299,7 +299,7 @@ namespace Platforms
 			DefaultAttachment (StringCRef name, EPixelFormat::type fmt) : name(name), format(fmt) {}
 			DefaultAttachment (StringCRef name, EPixelFormat::type fmt, uint samp) : name(name), format(fmt), samples(samp) {}
 		};
-		using DefAttachments_t	= FixedSizeArray< DefaultAttachment, GlobalConst::Graphics_MaxColorBuffers+1 >;
+		using DefAttachments_t	= FixedSizeArray< DefaultAttachment, GlobalConst::GAPI_MaxColorBuffers+1 >;
 		using Self				= SimpleBuilder;
 
 

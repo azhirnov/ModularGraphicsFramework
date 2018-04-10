@@ -86,7 +86,7 @@ namespace GpuMsg
 	// types
 		using Time_t	= Platforms::TimeL;
 		using Fence_t	= Platforms::GpuFenceId;
-		using Fences_t	= FixedSizeArray< Fence_t, 16 >;
+		using Fences_t	= FixedSizeArray< Fence_t, GlobalConst::GAPI_MaxWaitFence >;
 
 		static constexpr Time_t		MAX_TIME = Time_t(ulong(UMax));
 

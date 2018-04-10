@@ -21,6 +21,7 @@ namespace PipelineCompiler
 		_ShaderData		shader_data;
 
 		cfg.source	= shaderFmt;
+		cfg.target	= EShaderSrcFormat::IsVulkan( shaderFmt ) ? EShaderDstFormat::SPIRV_Source : EShaderDstFormat::GLSL_Source;
 
 		shader_data.entry	= entryPoint;
 		shader_data.type	= shaderType;
@@ -36,21 +37,21 @@ namespace PipelineCompiler
 
 		// deserialize shader
 		TIntermNode*	root	= intermediate->getTreeRoot();
-		uint			uid		= 0;
 		
 		result._shaderType		= shaderType;
-
-		CHECK_ERR( _RecursiveProcessAggregateNode( null, root, OUT uid, OUT result ) );
+		
+		CHECK_ERR( _ProcessExternalObjects( null, root, OUT result ) );
+		CHECK_ERR( _RecursiveProcessAggregateNode( null, root, OUT result ) );
 		CHECK_ERR( _ProcessShaderInfo( intermediate, INOUT result ) );
 		return true;
 	}
 	
 /*
 =================================================
-	_RecursiveProcessAggregateNode
+	_ProcessExternalObjects
 =================================================
 */
-	bool ShaderCompiler::_RecursiveProcessAggregateNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, INOUT DeserializedShader &result)
+	bool ShaderCompiler::_ProcessExternalObjects (TIntermNode*, TIntermNode* node, INOUT DeserializedShader &result)
 	{
 		glslang::TIntermAggregate* aggr = node->getAsAggregate();
 
@@ -61,15 +62,8 @@ namespace PipelineCompiler
 			{
 				FOR( i, aggr->getSequence() )
 				{
-					CHECK_ERR( _RecursiveProcessNode( aggr, aggr->getSequence()[i], INOUT ++uid, INOUT result ) );
+					CHECK_ERR( _ProcessExternalObjects( aggr, aggr->getSequence()[i], INOUT result ) );
 				}
-				return true;
-			}
-
-			// function definition
-			case glslang::TOperator::EOpFunction :
-			{
-				CHECK_ERR( _DeserializeFunction( aggr, INOUT uid, INOUT result ) );
 				return true;
 			}
 
@@ -78,10 +72,55 @@ namespace PipelineCompiler
 			{
 				FOR( i, aggr->getSequence() )
 				{
-					CHECK_ERR( _DeserializeExternalObjects( aggr->getSequence()[i], INOUT ++uid, INOUT result ) );
+					CHECK_ERR( _DeserializeExternalObjects( aggr->getSequence()[i], INOUT result ) );
 				}
 				return true;
 			}
+		}
+		return true;
+	}
+
+/*
+=================================================
+	_RecursiveProcessAggregateNode
+=================================================
+*/
+	bool ShaderCompiler::_RecursiveProcessAggregateNode (TIntermNode*, TIntermNode* node, INOUT DeserializedShader &result)
+	{
+		glslang::TIntermAggregate* aggr = node->getAsAggregate();
+
+		switch ( aggr->getOp() )
+		{
+			// continue deserializing
+			case glslang::TOperator::EOpSequence :
+			{
+				FOR( i, aggr->getSequence() )
+				{
+					CHECK_ERR( _RecursiveProcessNode( aggr, aggr->getSequence()[i], INOUT result ) );
+				}
+				return true;
+			}
+
+			// function definition
+			case glslang::TOperator::EOpFunction :
+			{
+				CHECK_ERR( _DeserializeFunction( aggr, INOUT result ) );
+				return true;
+			}
+			
+			// 2 args, first is atomic
+			case glslang::TOperator::EOpAtomicAdd :
+			case glslang::TOperator::EOpAtomicAnd :
+			case glslang::TOperator::EOpAtomicOr :
+			case glslang::TOperator::EOpAtomicXor :
+			case glslang::TOperator::EOpAtomicMin :
+			case glslang::TOperator::EOpAtomicMax :
+			case glslang::TOperator::EOpAtomicExchange :
+
+			// 3 args, first is atomic
+			case glslang::TOperator::EOpAtomicCompSwap :
+				CHECK_ERR( _DeserializeAtomicArg( aggr->getSequence()[0], INOUT result ) );
+				return true;
 
 			// ignore
 			default :
@@ -95,14 +134,14 @@ namespace PipelineCompiler
 	_RecursiveProcessNode
 =================================================
 */
-	bool ShaderCompiler::_RecursiveProcessNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, INOUT DeserializedShader &result)
+	bool ShaderCompiler::_RecursiveProcessNode (TIntermNode* root, TIntermNode* node, INOUT DeserializedShader &result)
 	{
 		if ( not node )
 			return true;
 
 		if ( node->getAsAggregate() )
 		{
-			CHECK_ERR( _RecursiveProcessAggregateNode( root, node, INOUT uid, INOUT result ) );
+			CHECK_ERR( _RecursiveProcessAggregateNode( root, node, INOUT result ) );
 			return true;
 		}
 
@@ -111,10 +150,105 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	_RecursiveProcessNode
+=================================================
+*/
+	bool ShaderCompiler::_DeserializeAtomicArg (TIntermNode* node, INOUT DeserializedShader &result)
+	{
+		Array< glslang::TIntermBinary *>	stack;	stack.PushBack( node->getAsBinaryNode() );
+		CHECK_ERR( stack.Back() );
+
+		for (; stack.Back()->getLeft()->getAsBinaryNode();)
+		{
+			stack.PushBack( stack.Back()->getLeft()->getAsBinaryNode() );
+		}
+
+
+		// find SSBO
+		const auto&							left_typename	= stack.Back()->getLeft()->getType().getTypeName();
+		DeserializedShader::StorageBuffer*	ssb_ptr			= null;
+
+		if ( &left_typename != null )
+		{
+			String	ssbo_type	= left_typename.c_str();
+
+			FOR( i, result._storageBuffers )
+			{
+				if ( result._storageBuffers[i].typeName == ssbo_type )
+				{
+					ssb_ptr = &result._storageBuffers[i];
+					break;
+				}
+			}
+		}
+		CHECK_ERR( ssb_ptr );
+
+
+		// find struct field
+		DeserializedShader::BufferVariable*	var_ptr = null;
+
+		for (; not stack.Empty();)
+		{
+			glslang::TIntermBinary *	binary = stack.Back();		stack.PopBack();
+
+			CHECK_ERR( binary and binary->getOp() == glslang::TOperator::EOpIndexDirectStruct  );
+			
+			CHECK_ERR( binary->getLeft()->getType().isStruct() and binary->getRight()->getAsConstantUnion() );
+
+			const auto&	st_type = *binary->getLeft()->getType().getStruct();
+				
+			glslang::TIntermConstantUnion*		cu		= binary->getRight()->getAsConstantUnion();
+			glslang::TConstUnionArray const&	cu_arr	= cu->getConstArray();
+		
+			// constant union must be correct index of struct field
+			CHECK_ERR( cu_arr.size() == 1 and (cu->getType().getBasicType() == glslang::EbtInt or cu->getType().getBasicType() == glslang::EbtUint) );
+			CHECK_ERR( (cu_arr[0].getType() == glslang::EbtInt or cu_arr[0].getType() == glslang::EbtUint) and
+						cu_arr[0].getIConst() >= 0 and cu_arr[0].getIConst() < int(st_type.size()) );
+
+			glslang::TType const&	field_type = *st_type[ cu_arr[0].getIConst() ].type;
+		
+			DeserializedShader::BufferVariable*	old_ptr = var_ptr;
+			var_ptr = null;
+
+			if ( old_ptr )
+			{
+				FOR( i, old_ptr->fields )
+				{
+					if ( old_ptr->fields[i].name == field_type.getFieldName().c_str() )
+					{
+						var_ptr = &old_ptr->fields[i];
+						break;
+					}
+				}
+			}
+			else
+			{
+				FOR( i, ssb_ptr->fields )
+				{
+					if ( ssb_ptr->fields[i].name == field_type.getFieldName().c_str() )
+					{
+						var_ptr = &ssb_ptr->fields[i];
+						break;
+					}
+				}
+			}
+
+			CHECK_ERR( var_ptr );
+		}
+		
+		CHECK_ERR( var_ptr );
+		
+		var_ptr->qualifier |= EVariableQualifier::Volatile;
+
+		return true;
+	}
+
+/*
+=================================================
 	_DeserializeFunction
 =================================================
 */
-	bool ShaderCompiler::_DeserializeFunction (TIntermNode* node, INOUT uint &uid, INOUT DeserializedShader &result)
+	bool ShaderCompiler::_DeserializeFunction (TIntermNode* node, INOUT DeserializedShader &result)
 	{
 		glslang::TIntermAggregate*		aggr = node->getAsAggregate();
 		DeserializedShader::Function	func;
@@ -158,8 +292,7 @@ namespace PipelineCompiler
 			}
 			else
 			{
-				// function body is not needed
-				CHECK_ERR( _RecursiveProcessNode( aggr, n, INOUT ++uid, INOUT result ) );
+				CHECK_ERR( _RecursiveProcessNode( aggr, n, INOUT result ) );
 			}
 		}
 
@@ -332,8 +465,10 @@ namespace PipelineCompiler
 			if ( q.sample )
 				arg.qualifier |= EVariableQualifier::Sample;
 			
-			if ( q.specConstant )
-				arg.qualifier |= EVariableQualifier::Specialization;
+			if ( q.specConstant or q.hasSpecConstantId() ) {
+				arg.qualifier  |= EVariableQualifier::Specialization;
+				arg.specConstID = q.layoutSpecConstantId;
+			}
 
 			CHECK_ERR( (q.coherent + q.volatil + q.restrict + q.readonly + q.writeonly) <= 1 );
 
@@ -391,7 +526,8 @@ namespace PipelineCompiler
 			arg.qualifier.Or( EVariableQualifier::OutArg, parent->qualifier[EVariableQualifier::OutArg] );
 			arg.qualifier.Or( EVariableQualifier::Shared, parent->qualifier[EVariableQualifier::Shared] );
 			arg.qualifier.Or( EVariableQualifier::BuiltIn, parent->qualifier[EVariableQualifier::BuiltIn] );
-			arg.qualifier.Or( EVariableQualifier::Specialization, parent->qualifier[EVariableQualifier::Specialization] );
+			
+			CHECK_ERR( not parent->qualifier[EVariableQualifier::Specialization] );
 
 			//if ( arg.memoryModel == EShaderMemoryModel::Default )
 			//	arg.memoryModel = parent->memoryModel;
@@ -536,8 +672,6 @@ namespace PipelineCompiler
 	bool ShaderCompiler::_DeserializeConstant (TIntermNode* node, glslang::TType const &type, glslang::TSourceLoc const &loc,
 												OUT DeserializedShader::Constant &result)
 	{
-		auto const&		qual = type.getQualifier();
-
 		CHECK_ERR( _DeserializeVariable( node, type, loc, null, OUT result ) );
 		CHECK_ERR( not type.isStruct() );	// constant must be scalar/vector/matrix type!
 
@@ -555,7 +689,7 @@ namespace PipelineCompiler
 	_DeserializeExternalObjects
 =================================================
 */
-	bool ShaderCompiler::_DeserializeExternalObjects (TIntermNode* node, INOUT uint &uid, INOUT DeserializedShader &result)
+	bool ShaderCompiler::_DeserializeExternalObjects (TIntermNode* node, INOUT DeserializedShader &result)
 	{
 		glslang::TIntermTyped *			tnode	= node->getAsTyped();
 		auto const&						type	= tnode->getType();

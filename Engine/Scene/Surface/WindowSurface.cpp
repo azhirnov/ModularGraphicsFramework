@@ -59,7 +59,7 @@ namespace Scene
 
 	// methods
 	public:
-		WindowSurface (GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci);
+		WindowSurface (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci);
 		~WindowSurface ();
 		
 
@@ -87,8 +87,8 @@ namespace Scene
 	constructor
 =================================================
 */
-	WindowSurface::WindowSurface (GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci) :
-		BaseSceneModule( gs, ModuleConfig{ WindowSurfaceModuleID, UMax }, &_msgTypes, &_eventTypes )
+	WindowSurface::WindowSurface (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci) :
+		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "Scene.WindowSurface" );
 
@@ -257,9 +257,9 @@ namespace Scene
 	CreateWindowSurface
 =================================================
 */
-	ModulePtr  SceneObjectConstructor::CreateWindowSurface (GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci)
+	ModulePtr  SceneObjectConstructor::CreateWindowSurface (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci)
 	{
-		return New< WindowSurface >( gs, ci );
+		return New< WindowSurface >( id, gs, ci );
 	}
 
 }	// Scene

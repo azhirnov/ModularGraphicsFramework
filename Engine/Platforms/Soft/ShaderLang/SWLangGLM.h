@@ -14,6 +14,9 @@
 #define GLM_FORCE_SWIZZLE
 #include "glm/glm/glm.hpp"
 
+#include <atomic>
+#include <type_traits>
+
 namespace glm
 {
 
@@ -66,7 +69,10 @@ namespace glm
 	using Double4x4	= dmat4x4;
 
 
-	struct Bool
+	//
+	// Bool
+	//
+	struct Bool final
 	{
 	private:
 		uint	_value;
@@ -88,8 +94,11 @@ namespace glm
 	template <typename T, precision P> struct Bool4_t;
 
 
+	//
+	// Bool2
+	//
 	template <typename T = Bool, precision P = defaultp>
-	struct Bool2_t
+	struct Bool2_t final
 	{
 	public:
 		union {
@@ -131,8 +140,11 @@ namespace glm
 	};
 
 	
+	//
+	// Bool3
+	//
 	template <typename T = Bool, precision P = defaultp>
-	struct Bool3_t
+	struct Bool3_t final
 	{
 	public:
 		union
@@ -175,8 +187,11 @@ namespace glm
 	};
 
 	
+	//
+	// Bool4
+	//
 	template <typename T = Bool, precision P = defaultp>
-	struct Bool4_t
+	struct Bool4_t final
 	{
 	public:
 		union
@@ -254,6 +269,76 @@ namespace glm
 	{
 		return value.x || value.y || value.z || value.w;
 	}
+
+
+	//
+	// Atomic
+	//
+	template <typename T>
+	struct Atomic final
+	{
+	private:
+		std::atomic<T>	_value;
+
+	public:
+		Atomic () : _value{0} {}
+		explicit Atomic (T value) : _value{value} {}
+		explicit Atomic (const Atomic<T> &other) : _value{other._value} {}
+
+		Atomic& operator = (const Atomic<T> &right)
+		{
+			_value = right._value;
+			return *this;
+		}
+
+		explicit operator const T () const noexcept
+		{
+			return mem._value.load();
+		}
+
+		friend T atomicAdd (INOUT Atomic<T> &mem, const T data) noexcept
+		{
+			return mem._value.fetch_add( data );
+		}
+
+		friend T atomicAnd (INOUT Atomic<T> &mem, const T data) noexcept
+		{
+			return mem._value.fetch_and( data );
+		}
+
+		friend T atomicCompSwap (INOUT Atomic<T> &mem, T compare, const T data) noexcept
+		{
+			mem._value.compare_exchange_strong( INOUT compare, data );
+			return compare;
+		}
+
+		friend T atomicExchange (INOUT Atomic<T> &mem, const T data) noexcept
+		{
+			return mem._value.exchange( data );
+		}
+		
+		friend T atomicMax (INOUT Atomic<T> &mem, const T data) noexcept
+		{
+			return std::max( mem._value.load(), data );
+		}
+
+		friend T atomicMin (INOUT Atomic<T> &mem, const T data) noexcept
+		{
+			return std::min( mem._value.load(), data );
+		}
+
+		friend T atomicOr (INOUT Atomic<T> &mem, const T data) noexcept
+		{
+			return mem._value.fetch_or( data );
+		}
+
+		friend T atomicXor (INOUT Atomic<T> &mem, const T data) noexcept
+		{
+			return mem._value.fetch_xor( data );
+		}
+
+		static_assert( std::is_integral_v<T>, "atomic type must be integer scalar!" );
+	};
 
 }	// glm
 

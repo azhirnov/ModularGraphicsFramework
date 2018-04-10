@@ -1309,9 +1309,62 @@ enum
 	GL_QUERY_BUFFER_BINDING		= 0x9193,
 	GL_QUERY_RESULT_NO_WAIT		= 0x9194,
 	GL_MIRROR_CLAMP_TO_EDGE		= 0x8743,
-	GL_BLEND_COLOR		= 0x8005,
-	GL_BLEND_EQUATION		= 0x8009,
-	GL_CONTEXT_ROBUST_ACCESS		= 0x90F3,
+	GL_UNSIGNED_INT64_ARB		= 0x140F,
+	GL_SYNC_CL_EVENT_ARB		= 0x8240,
+	GL_SYNC_CL_EVENT_COMPLETE_ARB		= 0x8241,
+	GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB		= 0x9344,
+	GL_MAX_COMPUTE_FIXED_GROUP_INVOCATIONS_ARB		= 0x90EB,
+	GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB		= 0x9345,
+	GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB		= 0x91BF,
+	GL_PARAMETER_BUFFER_ARB		= 0x80EE,
+	GL_PARAMETER_BUFFER_BINDING_ARB		= 0x80EF,
+	GL_SRGB_DECODE_ARB		= 0x8299,
+	GL_VERTICES_SUBMITTED_ARB		= 0x82EE,
+	GL_PRIMITIVES_SUBMITTED_ARB		= 0x82EF,
+	GL_VERTEX_SHADER_INVOCATIONS_ARB		= 0x82F0,
+	GL_TESS_CONTROL_SHADER_PATCHES_ARB		= 0x82F1,
+	GL_TESS_EVALUATION_SHADER_INVOCATIONS_ARB		= 0x82F2,
+	GL_GEOMETRY_SHADER_PRIMITIVES_EMITTED_ARB		= 0x82F3,
+	GL_FRAGMENT_SHADER_INVOCATIONS_ARB		= 0x82F4,
+	GL_COMPUTE_SHADER_INVOCATIONS_ARB		= 0x82F5,
+	GL_CLIPPING_INPUT_PRIMITIVES_ARB		= 0x82F6,
+	GL_CLIPPING_OUTPUT_PRIMITIVES_ARB		= 0x82F7,
+	GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB		= 0x00000004,
+	GL_LOSE_CONTEXT_ON_RESET_ARB		= 0x8252,
+	GL_GUILTY_CONTEXT_RESET_ARB		= 0x8253,
+	GL_INNOCENT_CONTEXT_RESET_ARB		= 0x8254,
+	GL_UNKNOWN_CONTEXT_RESET_ARB		= 0x8255,
+	GL_RESET_NOTIFICATION_STRATEGY_ARB		= 0x8256,
+	GL_NO_RESET_NOTIFICATION_ARB		= 0x8261,
+	GL_SAMPLE_SHADING_ARB		= 0x8C36,
+	GL_MIN_SAMPLE_SHADING_VALUE_ARB		= 0x8C37,
+	GL_SPARSE_STORAGE_BIT_ARB		= 0x0400,
+	GL_SPARSE_BUFFER_PAGE_SIZE_ARB		= 0x82F8,
+	GL_TEXTURE_SPARSE_ARB		= 0x91A6,
+	GL_VIRTUAL_PAGE_SIZE_INDEX_ARB		= 0x91A7,
+	GL_NUM_SPARSE_LEVELS_ARB		= 0x91AA,
+	GL_NUM_VIRTUAL_PAGE_SIZES_ARB		= 0x91A8,
+	GL_VIRTUAL_PAGE_SIZE_X_ARB		= 0x9195,
+	GL_VIRTUAL_PAGE_SIZE_Y_ARB		= 0x9196,
+	GL_VIRTUAL_PAGE_SIZE_Z_ARB		= 0x9197,
+	GL_MAX_SPARSE_TEXTURE_SIZE_ARB		= 0x9198,
+	GL_MAX_SPARSE_3D_TEXTURE_SIZE_ARB		= 0x9199,
+	GL_MAX_SPARSE_ARRAY_TEXTURE_LAYERS_ARB		= 0x919A,
+	GL_SPARSE_TEXTURE_FULL_ARRAY_CUBE_MIPMAPS_ARB		= 0x91A9,
+	GL_COMPRESSED_RGBA_BPTC_UNORM_ARB		= 0x8E8C,
+	GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB		= 0x8E8D,
+	GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB		= 0x8E8E,
+	GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB		= 0x8E8F,
+	GL_TEXTURE_CUBE_MAP_ARRAY_ARB		= 0x9009,
+	GL_TEXTURE_BINDING_CUBE_MAP_ARRAY_ARB		= 0x900A,
+	GL_PROXY_TEXTURE_CUBE_MAP_ARRAY_ARB		= 0x900B,
+	GL_SAMPLER_CUBE_MAP_ARRAY_ARB		= 0x900C,
+	GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW_ARB		= 0x900D,
+	GL_INT_SAMPLER_CUBE_MAP_ARRAY_ARB		= 0x900E,
+	GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY_ARB		= 0x900F,
+	GL_MIN_PROGRAM_TEXTURE_GATHER_OFFSET_ARB		= 0x8E5E,
+	GL_MAX_PROGRAM_TEXTURE_GATHER_OFFSET_ARB		= 0x8E5F,
+	GL_MAX_PROGRAM_TEXTURE_GATHER_COMPONENTS_ARB		= 0x8F9F,
 	GL_COMPRESSED_RGBA_ASTC_4x4_KHR		= 0x93B0,
 	GL_COMPRESSED_RGBA_ASTC_5x4_KHR		= 0x93B1,
 	GL_COMPRESSED_RGBA_ASTC_5x5_KHR		= 0x93B2,
@@ -1346,7 +1399,9 @@ enum
 	GL_COMPRESSED_RGBA_S3TC_DXT5_EXT		= 0x83F3,
 	GL_TEXTURE_MAX_ANISOTROPY_EXT		= 0x84FE,
 	GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT		= 0x84FF,
-	GL_EXT_direct_state_access		= 1,
+	GL_PROGRAM_MATRIX_EXT		= 0x8E2D,
+	GL_TRANSPOSE_PROGRAM_MATRIX_EXT		= 0x8E2E,
+	GL_PROGRAM_MATRIX_STACK_DEPTH_EXT		= 0x8E2F,
 };
 
 #define GL4_CORE_FUNCTIONS( _buildFunc_ ) \
@@ -1893,7 +1948,43 @@ enum
 	_buildFunc_( void, BindSamplers, ( GLuint first , GLsizei count , const GLuint * samplers ), (void)(0) ) \
 	_buildFunc_( void, BindImageTextures, ( GLuint first , GLsizei count , const GLuint * textures ), (void)(0) ) \
 	_buildFunc_( void, BindVertexBuffers, ( GLuint first , GLsizei count , const GLuint * buffers , const GLintptr * offsets , const GLsizei * strides ), (void)(0) ) \
+	_buildFunc_( GLuint64, GetTextureHandleARB, ( GLuint texture ), (GLuint64)(0) ) \
+	_buildFunc_( GLuint64, GetTextureSamplerHandleARB, ( GLuint texture , GLuint sampler ), (GLuint64)(0) ) \
+	_buildFunc_( void, MakeTextureHandleResidentARB, ( GLuint64 handle ), (void)(0) ) \
+	_buildFunc_( void, MakeTextureHandleNonResidentARB, ( GLuint64 handle ), (void)(0) ) \
+	_buildFunc_( GLuint64, GetImageHandleARB, ( GLuint texture , GLint level , GLboolean layered , GLint layer , GLenum format ), (GLuint64)(0) ) \
+	_buildFunc_( void, MakeImageHandleResidentARB, ( GLuint64 handle , GLenum access ), (void)(0) ) \
+	_buildFunc_( void, MakeImageHandleNonResidentARB, ( GLuint64 handle ), (void)(0) ) \
+	_buildFunc_( void, UniformHandleui64ARB, ( GLint location , GLuint64 value ), (void)(0) ) \
+	_buildFunc_( void, UniformHandleui64vARB, ( GLint location , GLsizei count , const GLuint64 * value ), (void)(0) ) \
+	_buildFunc_( void, ProgramUniformHandleui64ARB, ( GLuint program , GLint location , GLuint64 value ), (void)(0) ) \
+	_buildFunc_( void, ProgramUniformHandleui64vARB, ( GLuint program , GLint location , GLsizei count , const GLuint64 * values ), (void)(0) ) \
+	_buildFunc_( GLboolean, IsTextureHandleResidentARB, ( GLuint64 handle ), (GLboolean)(0) ) \
+	_buildFunc_( GLboolean, IsImageHandleResidentARB, ( GLuint64 handle ), (GLboolean)(0) ) \
+	_buildFunc_( void, VertexAttribL1ui64ARB, ( GLuint index , GLuint64EXT x ), (void)(0) ) \
+	_buildFunc_( void, VertexAttribL1ui64vARB, ( GLuint index , const GLuint64EXT * v ), (void)(0) ) \
+	_buildFunc_( void, GetVertexAttribLui64vARB, ( GLuint index , GLenum pname , GLuint64EXT * params ), (void)(0) ) \
+	_buildFunc_( GLsync, CreateSyncFromCLeventARB, ( struct _cl_context * context , struct _cl_event * event , GLbitfield flags ), (GLsync)(0) ) \
+	_buildFunc_( void, DispatchComputeGroupSizeARB, ( GLuint num_groups_x , GLuint num_groups_y , GLuint num_groups_z , GLuint group_size_x , GLuint group_size_y , GLuint group_size_z ), (void)(0) ) \
+	_buildFunc_( void, BlendEquationiARB, ( GLuint buf , GLenum mode ), (void)(0) ) \
+	_buildFunc_( void, BlendEquationSeparateiARB, ( GLuint buf , GLenum modeRGB , GLenum modeAlpha ), (void)(0) ) \
+	_buildFunc_( void, BlendFunciARB, ( GLuint buf , GLenum src , GLenum dst ), (void)(0) ) \
+	_buildFunc_( void, BlendFuncSeparateiARB, ( GLuint buf , GLenum srcRGB , GLenum dstRGB , GLenum srcAlpha , GLenum dstAlpha ), (void)(0) ) \
+	_buildFunc_( void, MultiDrawArraysIndirectCountARB, ( GLenum mode , GLintptr indirect , GLintptr drawcount , GLsizei maxdrawcount , GLsizei stride ), (void)(0) ) \
+	_buildFunc_( void, MultiDrawElementsIndirectCountARB, ( GLenum mode , GLenum type , GLintptr indirect , GLintptr drawcount , GLsizei maxdrawcount , GLsizei stride ), (void)(0) ) \
+	_buildFunc_( GLenum, GetGraphicsResetStatusARB, ( void ), (GLenum)(0) ) \
+	_buildFunc_( void, GetnTexImageARB, ( GLenum target , GLint level , GLenum format , GLenum type , GLsizei bufSize , void * img ), (void)(0) ) \
+	_buildFunc_( void, ReadnPixelsARB, ( GLint x , GLint y , GLsizei width , GLsizei height , GLenum format , GLenum type , GLsizei bufSize , void * data ), (void)(0) ) \
+	_buildFunc_( void, GetnCompressedTexImageARB, ( GLenum target , GLint lod , GLsizei bufSize , void * img ), (void)(0) ) \
+	_buildFunc_( void, GetnUniformfvARB, ( GLuint program , GLint location , GLsizei bufSize , GLfloat * params ), (void)(0) ) \
+	_buildFunc_( void, GetnUniformivARB, ( GLuint program , GLint location , GLsizei bufSize , GLint * params ), (void)(0) ) \
+	_buildFunc_( void, GetnUniformuivARB, ( GLuint program , GLint location , GLsizei bufSize , GLuint * params ), (void)(0) ) \
+	_buildFunc_( void, GetnUniformdvARB, ( GLuint program , GLint location , GLsizei bufSize , GLdouble * params ), (void)(0) ) \
+	_buildFunc_( void, MinSampleShadingARB, ( GLfloat value ), (void)(0) ) \
+	_buildFunc_( void, BufferPageCommitmentARB, ( GLenum target , GLintptr offset , GLsizeiptr size , GLboolean commit ), (void)(0) ) \
 	_buildFunc_( void, NamedBufferPageCommitmentEXT, ( GLuint buffer , GLintptr offset , GLsizeiptr size , GLboolean commit ), (void)(0) ) \
+	_buildFunc_( void, NamedBufferPageCommitmentARB, ( GLuint buffer , GLintptr offset , GLsizeiptr size , GLboolean commit ), (void)(0) ) \
+	_buildFunc_( void, TexPageCommitmentARB, ( GLenum target , GLint level , GLint xoffset , GLint yoffset , GLint zoffset , GLsizei width , GLsizei height , GLsizei depth , GLboolean resident ), (void)(0) ) \
 	_buildFunc_( void, TextureParameterfEXT, ( GLuint texture , GLenum target , GLenum pname , GLfloat param ), (void)(0) ) \
 	_buildFunc_( void, TextureParameterfvEXT, ( GLuint texture , GLenum target , GLenum pname , const GLfloat * params ), (void)(0) ) \
 	_buildFunc_( void, TextureParameteriEXT, ( GLuint texture , GLenum target , GLenum pname , GLint param ), (void)(0) ) \

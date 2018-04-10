@@ -57,6 +57,8 @@ namespace PipelineCompiler
 			CHECK_ERR( _MergeStructTypes( disasm[i].structTypes, INOUT _structTypes ) );
 		}
 
+		CHECK_ERR( _AttribsToStructTypes( Name(), attribs, INOUT _structTypes ) );
+
 		_originTypes = _structTypes;
 
 		CHECK_ERR( _UpdateBindings() );
@@ -64,7 +66,12 @@ namespace PipelineCompiler
 
 		if ( renderState.inputAssembly.topology != EPrimitive::Unknown )
 			supportedTopology |= renderState.inputAssembly.topology;
-
+		
+		_lastEditTime = Max( _lastEditTime, shaders.vertex.LastEditTime() );
+		_lastEditTime = Max( _lastEditTime, shaders.tessControl.LastEditTime() );
+		_lastEditTime = Max( _lastEditTime, shaders.tessEvaluation.LastEditTime() );
+		_lastEditTime = Max( _lastEditTime, shaders.geometry.LastEditTime() );
+		_lastEditTime = Max( _lastEditTime, shaders.fragment.LastEditTime() );
 		return true;
 	}
 	

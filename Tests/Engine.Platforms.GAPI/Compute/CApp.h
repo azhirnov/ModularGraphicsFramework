@@ -47,18 +47,27 @@ private:
 
 // Tests
 private:
+	// buffer
 	bool _Test_CopyBuffer ();
 	bool _Test_ClearBuffer ();
 	bool _Test_UpdateBuffer ();
 	bool _Test_BufferAlign ();
 	bool _Test_DynamicBuffer ();
 	bool _Test_BufferRange ();
+	bool _Test_SpecializationConstants ();
+	bool _Test_ShaderBarrier ();
+	//bool _Test_PushConstants ();
 
+	// image
 	bool _Test_CopyImage2D ();
 	bool _Test_CopyBufferToImage2D ();
 	bool _Test_CopyImage2DToBuffer ();
 	bool _Test_ConvertFloatImage2D ();
-	bool _Test_ShaderBarrier ();
 	//bool _Test_CopyImage3D ();
-	//bool _Test_PushConstants ();
+
+	// shader functions
+	bool _Test_FindMSB ();
+	bool _Test_FindLSB ();
+	bool _Test_BitfieldReverse ();
+	bool _Test_AtomicAdd ();
 };

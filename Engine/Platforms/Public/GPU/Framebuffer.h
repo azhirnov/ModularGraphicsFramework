@@ -37,7 +37,7 @@ namespace Platforms
 			bool IsEnabled () const		{ return imageType != EImage::Unknown; }
 		};
 
-		using Attachments_t = FixedSizeArray< AttachmentInfo, GlobalConst::Graphics_MaxColorBuffers >;
+		using Attachments_t = FixedSizeArray< AttachmentInfo, GlobalConst::GAPI_MaxColorBuffers >;
 
 
 	// variables

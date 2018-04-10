@@ -58,7 +58,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1MemoryManager (GlobalSystemsRef gs, const CreateInfo::GpuMemoryManager &ci);
+		Vk1MemoryManager (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuMemoryManager &ci);
 		~Vk1MemoryManager ();
 
 
@@ -82,8 +82,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1MemoryManager::Vk1MemoryManager (GlobalSystemsRef gs, const CreateInfo::GpuMemoryManager &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkMemoryManagerModuleID, 1 }, &_msgTypes, &_eventTypes )
+	Vk1MemoryManager::Vk1MemoryManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemoryManager &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "Vk1MemoryManager" );
 
@@ -254,9 +254,9 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanObjectsConstructor::CreateVk1MemoryManager (GlobalSystemsRef gs, const CreateInfo::GpuMemoryManager &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1MemoryManager (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemoryManager &ci)
 	{
-		return New< PlatformVK::Vk1MemoryManager >( gs, ci );
+		return New< PlatformVK::Vk1MemoryManager >( id, gs, ci );
 	}
 
 }	// Platforms

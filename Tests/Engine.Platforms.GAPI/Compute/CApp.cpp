@@ -16,13 +16,18 @@ CApp::CApp ()
 			<< &CApp::_Test_BufferAlign
 			<< &CApp::_Test_DynamicBuffer
 			<< &CApp::_Test_BufferRange
+			//<< &CApp::_Test_SpecializationConstants
+			<< &CApp::_Test_ShaderBarrier
 			<< &CApp::_Test_CopyImage2D
 			<< &CApp::_Test_CopyBufferToImage2D
 			<< &CApp::_Test_CopyImage2DToBuffer
 			<< &CApp::_Test_ConvertFloatImage2D
-			//<< &CApp::_Test_ShaderBarrier
 			//<< &CApp::_Test_CopyImage3D
 			//<< &CApp::_Test_PushConstants
+			<< &CApp::_Test_FindMSB
+			<< &CApp::_Test_FindLSB
+			//<< &CApp::_Test_BitfieldReverse
+			<< &CApp::_Test_AtomicAdd
 		;
 }
 

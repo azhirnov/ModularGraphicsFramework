@@ -611,6 +611,59 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	_AttribsToStructTypes
+=================================================
+*/
+	bool BasePipeline::_AttribsToStructTypes (StringCRef name, const VertexAttribs &attribs, INOUT StructTypes &types)
+	{
+		if ( attribs.Empty() )
+			return true;
+
+		_StructField	st;
+		st.typeName		= "NativeVertex_"_str << name;
+		st.type			= EShaderVariable::VertexAttribs;
+		st.align		= 1_b;
+		st.packing		= EVariablePacking::VertexAttrib;
+
+		FOR( i, attribs )
+		{
+			auto const&	attr = attribs[i];
+
+			_StructField	field;
+			field.name		= attr.first;
+			field.offset	= BytesU(attr.second.index);
+			field.type		= EShaderVariable::type(attr.second.type);
+			field.packing	= st.packing;
+			field.stride	= EShaderVariable::SizeOf( field.type );
+			field.align		= field.stride % 4 == 0 ? 4_b : 1_b;
+
+			st.fields.PushBack( RVREF(field) );
+		}
+
+		Sort( st.fields, LAMBDA() (const auto& lhs, const auto &rhs) { return lhs.offset > rhs.offset; } );
+
+		BytesU	offset;
+
+		FOR( i, st.fields )
+		{
+			auto&	field = st.fields[i];
+
+			offset = AlignToLarge( offset, field.align );
+
+			field.offset	= offset;
+			st.align		= Max( field.align, st.align );
+
+			offset += EShaderVariable::SizeOf( field.type ) * field.arraySize;
+		}
+
+		st.stride = offset;
+
+		types.Add( st.typeName, st );
+		return true;
+	}
+
+/*
+=================================================
 	_UpdateBindingIndices_Func
 =================================================
 */
@@ -803,7 +856,7 @@ namespace PipelineCompiler
 	_DisasembleShader
 =================================================
 */
-	bool BasePipeline::_DisasembleShader (const ConverterConfig &convCfg, INOUT ShaderModule &shader, OUT ShaderDisasembly &disasm)
+	bool BasePipeline::_DisasembleShader (const ConverterConfig &, INOUT ShaderModule &shader, OUT ShaderDisasembly &disasm)
 	{
 		String				str;
 		String				log;
@@ -840,62 +893,6 @@ namespace PipelineCompiler
 			}
 		}
 
-		#if 0
-		// optimize before deserializing
-		if ( convCfg.optimizeSource )
-		{
-			ShaderCompiler::Config	cfg;
-			cfg.filterInactive	= true;
-			cfg.obfuscate		= false;
-			cfg.skipExternals	= false;
-			cfg.optimize		= true;
-			cfg.source			= shaderFormat;
-			cfg.target			= EShaderDstFormat::GLSL_Source;
-
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, shader_entry, cfg, OUT log, OUT optimized ) )
-			{
-				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
-			}
-
-			StringCRef	temp = (const char*) optimized.ptr();
-			
-			source.Clear();
-			source		 << temp;
-			shader_entry = "main";
-			/*
-			usize	pos;
-			CHECK_ERR( temp.FindIC( "main(", OUT pos ) );
-			StringParser::ToBeginOfLine( temp, INOUT pos );
-
-			shader._sourceOnly = BinArrayCRef::From( temp.SubString( pos ) );*/
-		}
-		else
-		// GXSL to GLSL
-		if ( shaderFormat == EShaderSrcFormat::GXSL or
-			 shaderFormat == EShaderSrcFormat::GLSL or
-			 shaderFormat == EShaderSrcFormat::GXSL_Vulkan or
-			 shaderFormat == EShaderSrcFormat::GLSL_Vulkan )
-		{
-			/*ShaderCompiler::Config	cfg;
-			cfg.filterInactive	= false;
-			cfg.obfuscate		= false;
-			cfg.skipExternals	= true;
-			cfg.optimize		= false;
-			cfg.source			= shaderFormat;
-			cfg.target			= EShaderDstFormat::GLSL_Source;
-
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, shader.entry, cfg, OUT log, OUT shader._sourceOnly ) )
-			{
-				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
-			}*/
-		}
-		else
-		{
-			// remove externals
-			TODO( "not supported yet" );
-		}
-		#endif
-
 		// deserialize
 		{
 			if ( not ShaderCompiler::Instance()->Deserialize( shaderFormat, shader.type, source, shader_entry, OUT log, OUT deserialized ) )
@@ -905,7 +902,7 @@ namespace PipelineCompiler
 
 			CHECK_ERR( deserialized.CalculateOffsets() );
 			CHECK_ERR( deserialized.CalculateLocations() );
-			//LOG( deserialized.ToString().cstr(), ELog::Debug );
+			//LOG( deserialized.ToString(), ELog::Debug );
 
 			CHECK_ERR( _ExtractTextures( deserialized, OUT disasm.textures ) );
 			CHECK_ERR( _ExtractImages( deserialized, OUT disasm.images ) );

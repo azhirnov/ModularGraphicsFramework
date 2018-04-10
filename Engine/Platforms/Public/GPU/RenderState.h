@@ -72,7 +72,7 @@ namespace Platforms
 		struct ColorBuffersState final : public CompileTime::PODStruct
 		{
 		// types
-			using ColorBuffers_t	= StaticArray< ColorBuffer, GlobalConst::Graphics_MaxColorBuffers >;
+			using ColorBuffers_t	= StaticArray< ColorBuffer, GlobalConst::GAPI_MaxColorBuffers >;
 			using Self				= ColorBuffersState;
 
 		// variables

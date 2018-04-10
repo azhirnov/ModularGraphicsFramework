@@ -183,7 +183,7 @@ void main ()
 	des.CalculateOffsets();
 	des.CalculateLocations();
 
-	LOG( des.ToString().cstr(), ELog::Debug );
+	LOG( des.ToString(), ELog::Debug );
 
 
 	BinaryArray				binary;

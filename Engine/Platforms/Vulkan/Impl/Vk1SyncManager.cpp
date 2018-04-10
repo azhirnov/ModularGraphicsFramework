@@ -76,7 +76,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1SyncManager (GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci);
+		Vk1SyncManager (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci);
 		~Vk1SyncManager ();
 
 
@@ -111,8 +111,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1SyncManager::Vk1SyncManager (GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkSyncManagerModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1SyncManager::Vk1SyncManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_counter{ 0 }
 	{
 		SetDebugName( "Vk1SyncManager" );
@@ -509,9 +509,9 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanObjectsConstructor::CreateVk1SyncManager (GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1SyncManager (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci)
 	{
-		return New< PlatformVK::Vk1SyncManager >( gs, ci );
+		return New< PlatformVK::Vk1SyncManager >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

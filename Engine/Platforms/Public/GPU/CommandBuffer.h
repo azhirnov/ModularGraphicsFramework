@@ -143,7 +143,7 @@ namespace GpuMsg
 			Viewport (const RectU &rect, const float2 &depth) : rect(rect), depthRange(depth) {}
 		};
 
-		using Viewports_t	= FixedSizeArray< Viewport, GlobalConst::Graphics_MaxViewports >;
+		using Viewports_t	= FixedSizeArray< Viewport, GlobalConst::GAPI_MaxViewports >;
 
 
 	// variables
@@ -171,7 +171,7 @@ namespace GpuMsg
 	struct CmdSetScissor
 	{
 	// types
-		using Scissors_t	= FixedSizeArray< RectU, GlobalConst::Graphics_MaxViewports >;
+		using Scissors_t	= FixedSizeArray< RectU, GlobalConst::GAPI_MaxViewports >;
 
 	// variables
 		Scissors_t		scissors;
@@ -302,7 +302,7 @@ namespace GpuMsg
 		};
 
 		using ClearValue_t	= Union< float4, uint4, int4, DepthStencil >;
-		using ClearValues_t	= FixedSizeArray< ClearValue_t, GlobalConst::Graphics_MaxColorBuffers+1 >;
+		using ClearValues_t	= FixedSizeArray< ClearValue_t, GlobalConst::GAPI_MaxColorBuffers+1 >;
 
 	// variables
 		ModulePtr		renderPass;
@@ -355,8 +355,8 @@ namespace GpuMsg
 	struct CmdBindVertexBuffers
 	{
 	// types
-		using Buffers_t		= FixedSizeArray< ModulePtr, GlobalConst::Graphics_MaxAttribs >;
-		using Offsets_t		= FixedSizeArray< BytesUL, GlobalConst::Graphics_MaxAttribs >;
+		using Buffers_t		= FixedSizeArray< ModulePtr, GlobalConst::GAPI_MaxAttribs >;
+		using Offsets_t		= FixedSizeArray< BytesUL, GlobalConst::GAPI_MaxAttribs >;
 
 	// variables
 		Buffers_t		vertexBuffers;
@@ -553,7 +553,7 @@ namespace GpuMsg
 			Region (Bytes<ulong> srcOffset, Bytes<ulong> dstOffset, Bytes<ulong> size) : srcOffset(srcOffset), dstOffset(dstOffset), size(size) {}
 		};
 
-		using Regions_t	= FixedSizeArray< Region, 8 >;
+		using Regions_t	= FixedSizeArray< Region, GlobalConst::GAPI_MaxCopyRegions >;
 
 
 	// variables
@@ -635,7 +635,7 @@ namespace GpuMsg
 				srcLayers{srcLayers}, srcOffset{srcOffset}, dstLayers{dstLayers}, dstOffset{dstOffset}, size{size}
 			{}
 		};
-		using Regions_t		= FixedSizeArray< Region, 8 >;
+		using Regions_t		= FixedSizeArray< Region, GlobalConst::GAPI_MaxCopyRegions >;
 
 
 	// variables
@@ -694,7 +694,7 @@ namespace GpuMsg
 				imageLayers{imageLayers}, imageOffset{imageOffset}, imageSize{imageSize}
 			{}
 		};
-		using Regions_t	= FixedSizeArray< Region, 8 >;
+		using Regions_t	= FixedSizeArray< Region, GlobalConst::GAPI_MaxCopyRegions >;
 
 
 	// variables
@@ -783,7 +783,7 @@ namespace GpuMsg
 				dstLayers{dstLayers}, dstOffset0{dstOffset0}, dstOffset1{dstOffset1}
 			{}
 		};
-		using Regions_t		= FixedSizeArray< Region, 8 >;
+		using Regions_t		= FixedSizeArray< Region, GlobalConst::GAPI_MaxBlitRegions >;
 
 
 	// variables
@@ -898,8 +898,8 @@ namespace GpuMsg
 			ClearRect (const RectU &rect, ImageLayer layer = ImageLayer(0), uint count = 1) : rect(rect), baseLayer(layer), layerCount(count) {}
 		};
 
-		using Attachments_t		= FixedSizeArray< Attachment, GlobalConst::Graphics_MaxColorBuffers >;
-		using ClearRects_t		= FixedSizeArray< ClearRect, 16 >;
+		using Attachments_t		= FixedSizeArray< Attachment, GlobalConst::GAPI_MaxColorBuffers >;
+		using ClearRects_t		= FixedSizeArray< ClearRect, GlobalConst::GAPI_MaxClearRects >;
 
 
 	// variables
@@ -943,7 +943,7 @@ namespace GpuMsg
 				aspectMask(aspect), baseMipLevel(baseMipLevel), baseLayer(baseLayer), levelCount(levelCount), layerCount(layerCount)
 			{}
 		};
-		using Ranges_t		= FixedSizeArray< ImageRange, 16 >;
+		using Ranges_t		= FixedSizeArray< ImageRange, GlobalConst::GAPI_MaxClearRects >;
 
 
 	// variables
@@ -1010,7 +1010,7 @@ namespace GpuMsg
 	{
 	// types
 		using Event_t		= Platforms::GpuEventId;
-		using Events_t		= FixedSizeArray< Event_t, 16 >;
+		using Events_t		= FixedSizeArray< Event_t, GlobalConst::GAPI_MaxWaitEvents >;
 
 	// variables
 		Events_t		events;
@@ -1028,7 +1028,7 @@ namespace GpuMsg
 	struct CmdPushConstants
 	{
 	// types
-		using Data_t	= FixedSizeArray< uint, 32 >;
+		using Data_t	= FixedSizeArray< uint, GlobalConst::GAPI_MaxPushConstants >;
 		using EShader	= Platforms::EShader;
 
 	// variables
@@ -1057,7 +1057,7 @@ namespace GpuMsg
 									 float2x2, float3x3, float4x4,
 									 double, double2, double3, double4 >;
 		using Name_t		= StaticString<64>;
-		using ValueMap_t	= FixedSizeArray< Pair< Name_t, Value_t >, 8 >;
+		using ValueMap_t	= FixedSizeArray< Pair< Name_t, Value_t >, GlobalConst::GAPI_MaxPushConstants / 4 >;
 
 	// variables
 		ModulePtr		pipelineLayout;

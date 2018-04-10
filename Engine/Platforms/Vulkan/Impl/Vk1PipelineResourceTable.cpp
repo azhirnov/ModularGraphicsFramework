@@ -110,7 +110,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci);
+		Vk1PipelineResourceTable (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci);
 		~Vk1PipelineResourceTable ();
 
 
@@ -144,8 +144,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1PipelineResourceTable::Vk1PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkPipelineResourceTableModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1PipelineResourceTable::Vk1PipelineResourceTable (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descriptorPoolId( VK_NULL_HANDLE ),
 		_descriptorSetId( VK_NULL_HANDLE )
 	{
@@ -846,9 +846,9 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanObjectsConstructor::CreateVk1PipelineResourceTable (GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1PipelineResourceTable (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
 	{
-		return New< PlatformVK::Vk1PipelineResourceTable >( gs, ci );
+		return New< PlatformVK::Vk1PipelineResourceTable >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

@@ -74,8 +74,8 @@ namespace Platforms
 		};
 
 		
-		using Attribs_t		= FixedSizeHashMap< Name_t, Attrib, GlobalConst::Graphics_MaxAttribs >;
-		using Bindings_t	= FixedSizeHashMap< Name_t, Binding, GlobalConst::Graphics_MaxAttribs >;
+		using Attribs_t		= FixedSizeHashMap< Name_t, Attrib, GlobalConst::GAPI_MaxAttribs >;
+		using Bindings_t	= FixedSizeHashMap< Name_t, Binding, GlobalConst::GAPI_MaxAttribs >;
 		using PairRef		= Pair< Attrib const&, Binding const& >;
 		
 		friend struct GX_STL::GXTypes::Hash < VertexInputState::Attrib >;

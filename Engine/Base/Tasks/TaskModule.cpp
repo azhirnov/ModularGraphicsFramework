@@ -78,7 +78,7 @@ namespace Base
 
 	// methods
 	public:
-		TaskModuleImpl (GlobalSystemsRef gs, const CreateInfo::TaskModule &);
+		TaskModuleImpl (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::TaskModule &);
 		~TaskModuleImpl ();
 
 
@@ -108,8 +108,8 @@ namespace Base
 	constructor
 =================================================
 */
-	TaskModuleImpl::TaskModuleImpl (GlobalSystemsRef gs, const CreateInfo::TaskModule &info) :
-		TaskModule( gs, ModuleConfig{ TaskModuleModuleID, 1 }, &_msgTypes, &_eventTypes )
+	TaskModuleImpl::TaskModuleImpl (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::TaskModule &info) :
+		TaskModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( GlobalSystems()->parallelThread->GetDebugName() + "_Tasks"_str );
 
@@ -270,10 +270,10 @@ namespace Base
 	_CreateTaskModule
 =================================================
 */
-	ModulePtr TaskManager::_CreateTaskModule (GlobalSystemsRef gs, const CreateInfo::TaskModule &ci)
+	ModulePtr TaskManager::_CreateTaskModule (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::TaskModule &ci)
 	{
 		CHECK_ERR( ci.manager );
-		return New< TaskModuleImpl >( gs, ci );
+		return New< TaskModuleImpl >( id, gs, ci );
 	}
 	
 }	// Base

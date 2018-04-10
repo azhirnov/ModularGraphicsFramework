@@ -100,18 +100,18 @@ namespace PipelineCompiler
 		struct _StructField : CompileTime::FastCopyable
 		{
 			String							name;
-			String							typeName;											// for 'Struct' only
+			String							typeName;										// for 'Struct' only
 			Array<_StructField>				fields;
-			EShaderVariable::type			type				= EShaderVariable::Unknown;
-			EPrecision::type				precision			= EPrecision::Default;
-			EVariableQualifier::bits		qualifier;											// only for varyings
-			EShaderMemoryModel::type		memoryModel			= EShaderMemoryModel::Default;		// for image and buffer
+			EShaderVariable::type			type			= EShaderVariable::Unknown;
+			EPrecision::type				precision		= EPrecision::Default;
+			EVariableQualifier::bits		qualifier;										// only for varyings
+			EShaderMemoryModel::type		memoryModel		= EShaderMemoryModel::Default;	// for image and buffer
 			EVariablePacking::bits			packing;
-			EPixelFormat::type				format				= EPixelFormat::Unknown;		// for image only
-			uint							arraySize			= 1;							// 0 - dynamic array	// TODO: array of array
-			BytesU							offset				= ~0_b;
-			BytesU							align				= 0_b;
-			BytesU							stride				= 0_b;
+			EPixelFormat::type				format			= EPixelFormat::Unknown;		// for image only
+			uint							arraySize		= 1;							// 0 - dynamic array	// TODO: array of array
+			BytesU							offset			= ~0_b;
+			BytesU							align			= 0_b;
+			BytesU							stride			= 0_b;
 
 			bool operator == (const _StructField &right) const;
 			bool operator != (const _StructField &right) const		{ return not (*this == right); }
@@ -214,6 +214,7 @@ namespace PipelineCompiler
 		// variables
 			Array<String>			_source;		// origin source
 			Array<Varying>			_io;			// for compute shader must be empty
+			TimeL					_maxEditTime;
 
 			String					entry;
 			const EShader::type		type;
@@ -231,7 +232,11 @@ namespace PipelineCompiler
 			ShaderModule& Load (StringCRef path, StringCRef filename, StringCRef defines);
 			ShaderModule& Source (StringCRef src);
 
+			ShaderModule& Depends (StringCRef filename);
+
 			bool IsEnabled () const;
+
+			TimeL LastEditTime () const;
 		};
 
 
@@ -307,11 +312,14 @@ namespace PipelineCompiler
 			// search for same names and set same locations/binding indices for all shaders.
 			bool						optimizeBindings		= true;
 
-			// 
+			// obfuscate source code.
 			bool						obfuscate				= false;
 
 			// validate comiled shader to check errors
 			bool						validation				= false;
+
+			// allow minimal rebuild based on file modification time.
+			bool						minimalRebuild			= true;
 		};
 
 
@@ -337,6 +345,7 @@ namespace PipelineCompiler
 	protected:
 		mutable StructTypes		_structTypes;
 		mutable StructTypes		_originTypes;
+		TimeL					_lastEditTime;
 		
 		VertexAttribs			attribs;
 		FragmentOutputState		fragOutput;
@@ -349,7 +358,8 @@ namespace PipelineCompiler
 
 	// methods
 	protected:
-		explicit BasePipeline (StringCRef name);
+		explicit BasePipeline (StringCRef path);
+		explicit BasePipeline (StringCRef path, StringCRef name);
 
 		BasePipeline (const BasePipeline &) = delete;
 		BasePipeline (BasePipeline &&) = delete;
@@ -358,8 +368,11 @@ namespace PipelineCompiler
 		
 
 	public:
-		StringCRef	Name () const	{ return _name; }
+		StringCRef	Name () const			{ return _name; }
 		String		Path () const;
+		TimeL		LastEditTime () const	{ return _lastEditTime; }
+
+		void Depends (StringCRef filename);
 
 		virtual bool Prepare (const ConverterConfig &cfg) = 0;
 		virtual bool Convert (OUT String &src, Ptr<ISerializer> ser, const ConverterConfig &cfg) const = 0;
@@ -388,6 +401,7 @@ namespace PipelineCompiler
 		static bool _ExtractVaryings (const DeserializedShader &shader, OUT Array<Varying> &input, OUT Array<Varying> &output);
 		static bool _ExtractAttribs (const Array<Varying> &input, OUT VertexAttribs &attribs);
 		static bool _ExtractFragOutput (const Array<Varying> &output, OUT FragmentOutputState &fragOutput);
+		static bool _AttribsToStructTypes (StringCRef name, const VertexAttribs &attribs, INOUT StructTypes &types);
 
 		static bool _RecursiveProcessBuffer (const Array<DeserializedShader::BufferVariable> &fields, EVariablePacking::type packing,
 											 OUT _StructField &curr, INOUT Array<_StructField> &result);

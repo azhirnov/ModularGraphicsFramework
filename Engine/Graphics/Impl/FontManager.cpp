@@ -35,7 +35,7 @@ namespace Graphics
 
 	// methods
 	public:
-		FontManager (GlobalSystemsRef gs, const CreateInfo::FontManager &ci);
+		FontManager (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::FontManager &ci);
 		~FontManager ();
 
 
@@ -61,8 +61,8 @@ namespace Graphics
 	constructor
 =================================================
 */
-	FontManager::FontManager (GlobalSystemsRef gs, const CreateInfo::FontManager &ci) :
-		GraphicsBaseModule( gs, ModuleConfig{ FontManagerModuleID, ~0u }, &_msgTypes, &_eventTypes )
+	FontManager::FontManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::FontManager &ci) :
+		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "FontManager" );
 
@@ -128,9 +128,9 @@ namespace Graphics
 	CreateFontManager
 =================================================
 */
-	ModulePtr GraphicsObjectsConstructor::CreateFontManager (GlobalSystemsRef gs, const CreateInfo::FontManager &ci)
+	ModulePtr GraphicsObjectsConstructor::CreateFontManager (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::FontManager &ci)
 	{
-		return New< FontManager >( gs, ci );
+		return New< FontManager >( id, gs, ci );
 	}
 
 }	// Graphics

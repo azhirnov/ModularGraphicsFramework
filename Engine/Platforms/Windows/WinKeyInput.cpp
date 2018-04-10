@@ -60,7 +60,7 @@ namespace PlatformWin
 
 	// methods
 	public:
-		WinKeyInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
+		WinKeyInput (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
 		~WinKeyInput ();
 
 
@@ -91,8 +91,8 @@ namespace PlatformWin
 	constructor
 =================================================
 */
-	WinKeyInput::WinKeyInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
-		Module( gs, ModuleConfig{ WinKeyInputModuleID, 1 }, &_msgTypes, &_eventTypes )
+	WinKeyInput::WinKeyInput (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "WinKeyInput" );
 
@@ -531,9 +531,9 @@ namespace Platforms
 	CreateWinKeyInput
 =================================================
 */
-	ModulePtr WinObjectsConstructor::CreateWinKeyInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
+	ModulePtr WinObjectsConstructor::CreateWinKeyInput (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
 	{
-		return New< PlatformWin::WinKeyInput >( gs, ci );
+		return New< PlatformWin::WinKeyInput >( id, gs, ci );
 	}
 
 }	// Platforms

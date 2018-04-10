@@ -27,12 +27,22 @@ namespace ResPack
 =================================================
 	AddPipeline
 =================================================
-*/	
+*/
 	void PipelineConverter::AddPipeline (const PipelinePtr &ppln)
 	{
 		_pipelines.Add( ppln );
 	}
 	
+/*
+=================================================
+	AddDependency
+=================================================
+*/
+	void PipelineConverter::AddDependency (StringCRef fname)
+	{
+		_dependencies.Add( fname );
+	}
+
 /*
 =================================================
 	SetConfig
@@ -59,7 +69,7 @@ namespace ResPack
 	LoadAllPipelines
 =================================================
 */
-	bool PipelineConverter::LoadAllPipelines (StringCRef folder)
+	bool PipelineConverter::LoadAllPipelines (StringCRef folder, bool searchInSubfolders)
 	{
 		const auto IsPipelineExt = LAMBDA() (StringCRef ext)
 		{{
@@ -75,19 +85,39 @@ namespace ResPack
 
 		CHECK_ERR( OS::FileSystem::IsDirectoryExist( folder ) );
 
-		String	dir;
-		OS::FileSystem::GetCurrentDirectory( OUT dir );
-		dir = FileAddress::BuildPath( dir, folder );
-
-		Array<String>	files;
-		CHECK_ERR( OS::FileSystem::GetAllFilesInPath( dir, OUT files ) );
-
-		for (auto& file : Range(files))
+		Queue<String> folder_stack;
 		{
-			if ( not IsPipelineExt( FileAddress::GetExtensions( file ) ) )
-				continue;
+			String	dir;
+			OS::FileSystem::GetCurrentDirectory( OUT dir );
+			dir = FileAddress::BuildPath( dir, folder );
 
-			CHECK_ERR( ScriptHelper::RunScript( FileAddress::BuildPath( dir, file ) ) );
+			folder_stack.PushBack( RVREF(dir) );
+		}
+
+		for (; not folder_stack.Empty();)
+		{
+			Array<String>	files;
+			CHECK_ERR( OS::FileSystem::GetAllFilesInPath( folder_stack.Front(), OUT files ) );
+
+			for (auto& file : Range(files))
+			{
+				if ( not IsPipelineExt( FileAddress::GetExtensions( file ) ) )
+					continue;
+
+				CHECK_ERR( ScriptHelper::RunScript( FileAddress::BuildPath( folder_stack.Front(), file ) ) );
+			}
+
+			if ( not searchInSubfolders )
+				break;
+
+			files.Clear();
+			CHECK_ERR( OS::FileSystem::GetAllDirsInPath( folder_stack.Front(), OUT files ) );
+
+			FOR( i, files ) {
+				folder_stack.PushBack( FileAddress::BuildPath( folder_stack.Front(), files[i] ) );
+			}
+			
+			folder_stack.PopFront();
 		}
 		return true;
 	}
@@ -101,6 +131,7 @@ namespace ResPack
 	{
 		PipelinesSet	saved_pplns = RVREF( _pipelines );
 
+		_dependencies.Add( fname );
 		_pipelines.Clear();
 
 		CHECK_ERR( ScriptHelper::RunScript( fname ) );
@@ -182,6 +213,17 @@ namespace ResPack
 	{
 		CHECK_ERR( OS::FileSystem::IsDirectoryExist( outFolder ) );
 
+		// add dependency to resource packer executable
+		{
+			FOR( i, _pipelines )
+			{
+				FOR( j, _dependencies ) {
+					_pipelines[i]->Depends( _dependencies[j] );
+				}
+			}
+		}
+
+		// convert pipelines
 		CHECK_ERR( PipelineManager::Instance()->Convert(
 						_pipelines,
 						FileAddress::BuildPath( outFolder, "all_pipelines" ),
@@ -191,6 +233,9 @@ namespace ResPack
 		ShaderCompiler::Instance()->DestroyContext();
 
 		_pipelines.Clear();
+		_dependencies.Clear();
+		_templates.Clear();
+
 		return true;
 	}
 		

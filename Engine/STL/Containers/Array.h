@@ -226,6 +226,8 @@ namespace GXTypes
 	template <typename T, usize Size>
 	using FixedSizeArray = Array< T, typename AutoDetectCopyStrategy<T>::type, StaticMemoryContainer<T, Size> >;
 	
+	template <typename T, usize Size>
+	using MixedSizeArray = Array< T, typename AutoDetectCopyStrategy<T>::type, MixedMemoryContainer<T, Size> >;
 	
 /*
 =================================================
@@ -236,8 +238,14 @@ namespace GXTypes
 	template <typename B, typename S, typename MC>
 	inline ArrayRef<T>  ArrayRef<T>::From (const Array<B,S,MC> &arr)
 	{
-		ArrayCRef<B> buf = arr;
-		return From<const B>( buf );
+		return FromVoid( static_cast<void_ptr_t>(arr.ptr()), arr.Size() );
+	}
+
+	template <typename T>
+	template <typename B, typename S, typename MC>
+	inline ArrayRef<T>  ArrayRef<T>::From (Array<B,S,MC> &arr)
+	{
+		return FromVoid( static_cast<void_ptr_t>(arr.ptr()), arr.Size() );
 	}
 
 /*

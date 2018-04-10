@@ -95,7 +95,7 @@ namespace Platforms
 
 	// methods
 	public:
-		VulkanThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
+		VulkanThread (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci);
 		~VulkanThread ();
 		
 
@@ -146,8 +146,8 @@ namespace Platforms
 	constructor
 =================================================
 */
-	VulkanThread::VulkanThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, ModuleConfig{ VkThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	VulkanThread::VulkanThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_settings( ci.settings ),		_device( GlobalSystems() ),
 		_samplerCache( &_device ),		_pipelineCache( &_device ),
 		_layoutCache( &_device ),		_renderPassCache( &_device ),
@@ -877,9 +877,9 @@ namespace Platforms
 	CreateVulkanThread
 =================================================
 */	
-	ModulePtr VulkanObjectsConstructor::CreateVulkanThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVulkanThread (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
-		return New< VulkanThread >( gs, ci );
+		return New< VulkanThread >( id, gs, ci );
 	}
 
 }	// Platforms

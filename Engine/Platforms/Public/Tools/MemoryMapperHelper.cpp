@@ -14,9 +14,9 @@ namespace PlatformTools
 */
 	MemoryMapperHelper::MemoryMapperHelper (EGpuMemory::bits flags, EMemoryAccess::bits access) :
 		_ptr{ null },
+		_access{ access & _GpuMemoryToMemoryAccess( flags ) },
 		_isCachedInCPU{ flags[EGpuMemory::CachedInCPU] },
 		_isCoherentWithCPU{ flags[EGpuMemory::CoherentWithCPU] },
-		_access{ access & _GpuMemoryToMemoryAccess( flags ) },
 		_changed{ false }
 	{
 	}

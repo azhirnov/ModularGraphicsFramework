@@ -62,7 +62,7 @@ namespace PlatformCL
 
 	// methods
 	public:
-		CL2SyncManager (GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci);
+		CL2SyncManager (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci);
 		~CL2SyncManager ();
 
 
@@ -98,8 +98,8 @@ namespace PlatformCL
 	constructor
 =================================================
 */
-	CL2SyncManager::CL2SyncManager (GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci) :
-		CL2BaseModule( gs, ModuleConfig{ CLSyncManagerModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	CL2SyncManager::CL2SyncManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci) :
+		CL2BaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_counter{ 0 }
 	{
 		SetDebugName( "CL2SyncManager" );
@@ -532,9 +532,9 @@ namespace PlatformCL
 
 namespace Platforms
 {
-	ModulePtr OpenCLObjectsConstructor::CreateCL2SyncManager (GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci)
+	ModulePtr OpenCLObjectsConstructor::CreateCL2SyncManager (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci)
 	{
-		return New< PlatformCL::CL2SyncManager >( gs, ci );
+		return New< PlatformCL::CL2SyncManager >( id, gs, ci );
 	}
 
 }	// Platforms

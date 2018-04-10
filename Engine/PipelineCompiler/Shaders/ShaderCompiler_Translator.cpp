@@ -12,31 +12,35 @@ namespace PipelineCompiler
 		CHECK_COMP( _func_ ); \
 	}
 
-	static bool RecursiveProcessAggregateNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessBranchNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessSwitchNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessConstUnionNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessSelectionNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessMethodNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessSymbolNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessTypedNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessOperatorNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessUnaryNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessBinaryNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
-	static bool RecursiveProcessLoopNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessAggregateNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessBranchNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessSwitchNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessConstUnionNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessSelectionNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessMethodNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessSymbolNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessTypedNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessOperatorNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessUnaryNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessBinaryNode (TIntermNode* node, const uint uid, Translator &translator);
+	static bool RecursiveProcessLoopNode (TIntermNode* node, const uint uid, Translator &translator);
+
+	static bool RecursiveFindAtomics (TIntermNode* node, Translator &translator);
+	static bool AddAtomicArgQualifier (TIntermNode* node, Translator &translator);
 
 	static bool TranslateFunction (glslang::TIntermAggregate* aggr, const uint uid, Translator &translator);
 	static bool TranslateExternalObjects (glslang::TIntermAggregate* aggr, const uint uid, Translator &translator);
 	static bool TranslateSharedObjects (glslang::TIntermAggregate* aggr, const uint uid, Translator &translator);
 	static bool TranslateGlobals (glslang::TIntermAggregate* aggr, const uint uid, Translator &translator);
-	static bool ConvertType (TIntermNode*, glslang::TType const &, glslang::TSourceLoc const &, const Translator::TypeInfo *parent, const Translator &, OUT Translator::TypeInfo &);
+	static bool ConvertType (TIntermNode* node, glslang::TType const &, glslang::TSourceLoc const &, const Translator::TypeInfo *parent, const Translator &, OUT Translator::TypeInfo &);
+	static bool IsBuiltinName (StringCRef name);
 	static bool TranslateVectorSwizzle (glslang::TIntermOperator* node, const uint uid, Translator &translator);
 	static bool TranslateIndexDirectStruct (glslang::TIntermOperator* node, const uint uid, Translator &translator);
 	static bool TranslateOperatorCall (TIntermNode* node, const uint uid, Translator &translator);
 	static bool TranslateFunctionCall (TIntermNode* node, const uint uid, Translator &translator);
 	static bool TranslateInlineFunctionCall (TIntermNode* node, const uint uid, TIntermNode* func, Translator &translator);
-	static bool TranslateMain (TIntermNode* root, const uint uid, bool skipExternals, Translator &translator);
+	static bool TranslateMain (TIntermNode* node, const uint uid, bool skipExternals, Translator &translator);
 	static bool TranslateConstUnionAccess (TIntermNode* node, const uint uid, Translator &translator);
 	static bool TranslateFunctionForwardDecl (glslang::TIntermAggregate* node, const Translator &translator, INOUT String &src);
 
@@ -49,9 +53,16 @@ namespace PipelineCompiler
 	Main
 =================================================
 */
-	bool Translator::Main (TIntermNode* root, bool skipExternals)
+	bool Translator::Main (TIntermNode* node, bool skipExternals)
 	{
-		return TranslateMain( root, this->uid, skipExternals, *this );
+		nodeStack.PushBack( node );
+
+		CHECK_ERR( TranslateMain( node, this->uid, skipExternals, *this ) );
+
+		nodeStack.PopBack();
+		CHECK( nodeStack.Empty() );
+
+		return true;
 	}
 
 /*
@@ -221,13 +232,16 @@ namespace PipelineCompiler
 	TranslateMain
 =================================================
 */
-	static bool TranslateMain (TIntermNode* root, const uint uid, bool skipExternals, Translator &translator)
+	static bool TranslateMain (TIntermNode* rootNode, const uint, bool skipExternals, Translator &translator)
 	{
 		using DeclFunction_t	= Set< glslang::TIntermAggregate* >;
 
-		glslang::TIntermAggregate* aggr = root->getAsAggregate();
+		glslang::TIntermAggregate* aggr = rootNode->getAsAggregate();
 		CHECK_ERR( aggr and aggr->getOp() == glslang::TOperator::EOpSequence );
 		
+		// find atomics and add 'volatile' qualifier
+		CHECK_ERR( RecursiveFindAtomics( rootNode, translator ) );
+
 		// get external objects
 		const uint		ext_uid		= ++translator.uid;
 		const uint		global_uid	= ++translator.uid;
@@ -262,7 +276,7 @@ namespace PipelineCompiler
 				continue;
 
 			const uint	arg_uid = ++translator.uid;
-			CHECK_ERR( RecursiveProcessNode( root, node, arg_uid, translator ) );
+			CHECK_ERR( RecursiveProcessNode( node, arg_uid, translator ) );
 			
 			// node may not exist if it is a function declaration
 			if ( not translator.nodes.IsExist( arg_uid ) )
@@ -277,15 +291,6 @@ namespace PipelineCompiler
 		// custom types declaration
 		if ( not translator.types.globalTypes.Empty() )
 		{
-			/*FOR( i, translator.types.globalTypes )
-			{
-				if ( skipExternals and translator.types.definedInExteranal.IsExist( translator.types.globalTypes[i].first ) )
-					continue;
-
-				CHECK_ERR( TranslateCustomType( translator.types.globalTypes[i].second, translator, INOUT translator.src ) );
-			}
-			translator.src << "\n//---------------------------------\n\n";*/
-
 			CHECK_ERR( TranslateCustomTypes( translator, skipExternals ) );
 		}
 
@@ -352,22 +357,14 @@ namespace PipelineCompiler
 		
 		Translator::TypeInfo			ret_type;
 		Array< Translator::TypeInfo >	func_args;
-		String							func_name;
-		bool							will_inlined = false;
+		String							func_name		= aggr->getName().c_str();
+		bool							will_inlined	= false;
 
 		// get result type
 		CHECK_ERR( ConvertType( aggr, aggr->getType(), aggr->getLoc(), null, translator, OUT ret_type ) );
 		
 		// get name
-		{
-			String	signature	= aggr->getName().c_str();
-			usize	pos			= 0;
-
-			if ( signature.Find( '(', OUT pos ) )
-				func_name = signature.SubString( 0, pos );
-			else
-				func_name = signature;
-		}
+		CHECK_ERR( translator.language->TranslateFunctionName( INOUT func_name ) );
 		
 		if (func_name == translator.entryPoint)
 			return true;
@@ -419,11 +416,10 @@ namespace PipelineCompiler
 	RecursiveProcessAggregateNode
 =================================================
 */
-	static bool RecursiveProcessAggregateNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessAggregateNode (TIntermNode* node, const uint uid, Translator &translator)
 	{
 		glslang::TIntermAggregate* aggr = node->getAsAggregate();
 		
-		// continue
 		if ( aggr->getOp() == glslang::TOperator::EOpSequence )
 		{
 			// search loop node
@@ -431,7 +427,7 @@ namespace PipelineCompiler
 			{
 				if ( aggr->getSequence()[i]->getAsLoopNode() )
 				{
-					CHECK_ERR( RecursiveProcessLoopNode( root, aggr, uid, translator ) );
+					CHECK_ERR( RecursiveProcessLoopNode( aggr, uid, translator ) );
 					return true;
 				}
 			}
@@ -442,7 +438,7 @@ namespace PipelineCompiler
 			FOR( i, aggr->getSequence() )
 			{
 				const uint	arg_uid = ++translator.uid;
-				CHECK_ERR( RecursiveProcessNode( node, aggr->getSequence()[i], arg_uid, translator ) );
+				CHECK_ERR( RecursiveProcessNode( aggr->getSequence()[i], arg_uid, translator ) );
 
 				// add local variable declaration
 				FOR( j, translator.fwd.pendingVars )
@@ -516,22 +512,15 @@ namespace PipelineCompiler
 
 		Translator::Node				dst_node;
 		Array< Translator::TypeInfo >	func_args;
-		String							func_name;
+		String							func_name	= aggr->getName().c_str();
 		const uint						body_uid	= ++translator.uid;
 
 		// get result type
 		CHECK_ERR( ConvertType( aggr, aggr->getType(), aggr->getLoc(), null, translator, OUT dst_node.typeInfo ) );
 		
 		// get name
-		{
-			String	signature	= aggr->getName().c_str();
-			usize	pos			= 0;
+		CHECK_ERR( translator.language->TranslateFunctionName( INOUT func_name ) );
 
-			if ( signature.Find( '(', OUT pos ) )
-				func_name = signature.SubString( 0, pos );
-			else
-				func_name = signature;
-		}
 		const bool	is_entry = (func_name == translator.entryPoint);
 
 		
@@ -579,7 +568,7 @@ namespace PipelineCompiler
 				ASSERT( not translator.isMain );
 				translator.isMain = is_entry;
 	
-				CHECK_ERR( RecursiveProcessNode( aggr, n, body_uid, translator ) );
+				CHECK_ERR( RecursiveProcessNode( n, body_uid, translator ) );
 				
 				translator.isMain = false;
 			}
@@ -615,8 +604,8 @@ namespace PipelineCompiler
 	ConvertType
 =================================================
 */
-	static bool ConvertType (TIntermNode* node, glslang::TType const &type, glslang::TSourceLoc const &loc, const Translator::TypeInfo *parent, const Translator &translator,
-							 OUT Translator::TypeInfo &result)
+	static bool ConvertType (TIntermNode* node, glslang::TType const &type, glslang::TSourceLoc const &loc, const Translator::TypeInfo *parent,
+							 const Translator &translator, OUT Translator::TypeInfo &result)
 	{
 		auto const&		qual = type.getQualifier();
 
@@ -747,8 +736,8 @@ namespace PipelineCompiler
 			auto const&	q = type.getQualifier();
 			
 			if ( type.isBuiltIn()					or
-				 result.typeName.StartsWith("gl_")	or
-				 result.name.StartsWith("gl_")		or
+				 IsBuiltinName( result.typeName )	or
+				 IsBuiltinName( result.name )		or
 				(parent and parent->qualifier[ EVariableQualifier::BuiltIn ]) )
 			{
 				result.qualifier |= EVariableQualifier::BuiltIn;
@@ -777,9 +766,11 @@ namespace PipelineCompiler
 
 			if ( q.sample )
 				result.qualifier |= EVariableQualifier::Sample;
-
-			if ( q.specConstant )
-				result.qualifier |= EVariableQualifier::Specialization;
+			
+			if ( q.specConstant or q.hasSpecConstantId() ) {
+				result.qualifier  |= EVariableQualifier::Specialization;
+				result.specConstID = q.layoutSpecConstantId;
+			}
 			
 			CHECK_ERR( (q.coherent + q.volatil + q.restrict + q.readonly + q.writeonly) <= 1 );
 
@@ -848,7 +839,8 @@ namespace PipelineCompiler
 			result.qualifier.Or( EVariableQualifier::Shared, parent->qualifier[EVariableQualifier::Shared] );
 			result.qualifier.Or( EVariableQualifier::BuiltIn, parent->qualifier[EVariableQualifier::BuiltIn] );
 			result.qualifier.Or( EVariableQualifier::Local, parent->qualifier[EVariableQualifier::Local] );
-			result.qualifier.Or( EVariableQualifier::Specialization, parent->qualifier[EVariableQualifier::Specialization] );
+			
+			CHECK_ERR( not parent->qualifier[EVariableQualifier::Specialization] );
 
 			//if ( result.memoryModel == EShaderMemoryModel::Default )
 			//	result.memoryModel = parent->memoryModel;
@@ -879,6 +871,16 @@ namespace PipelineCompiler
 		}
 		return true;
 	}
+	
+/*
+=================================================
+	IsBuiltinName
+=================================================
+*/
+	static bool IsBuiltinName (StringCRef name)
+	{
+		return name.StartsWithIC( "gl_" ) or name.StartsWithIC( "gles_" );
+	}
 
 /*
 =================================================
@@ -899,6 +901,48 @@ namespace PipelineCompiler
 				RecursiveExtractTypesFromExternal( translator, field );
 			}
 		}
+	}
+	
+/*
+=================================================
+	ApplyAtomicTypes
+=================================================
+*/
+	static bool ApplyAtomicTypes (Translator &translator, INOUT Translator::TypeInfo &info)
+	{
+		auto&	atomics	= translator.types.atomics;
+		usize	idx		= UMax;
+
+		if ( not atomics.FindFirstIndex( info.typeName, OUT idx ) )
+			return true;
+
+		for (; idx < atomics.Count() and atomics[idx].first == info.typeName; ++idx)
+		{
+			Translator::TypeInfo *	curr			= &info;
+			const auto &			atomic_fields	= atomics[idx].second;
+			
+			for (auto& fld_name : Range(atomic_fields))
+			{
+				bool	found = false;
+
+				FOR( i, curr->fields )
+				{
+					if ( curr->fields[i].name == fld_name )
+					{
+						curr  = &curr->fields[i];
+						found = true;
+						break;
+					}
+				}
+
+				CHECK_ERR( found );
+			}
+
+			CHECK_ERR( EShaderVariable::IsInt( curr->type ) );
+
+			curr->qualifier |= EVariableQualifier::Volatile;
+		}
+		return true;
 	}
 
 /*
@@ -931,11 +975,13 @@ namespace PipelineCompiler
 			CHECK_ERR( ConvertType( node, type, typed->getLoc(), null, translator, OUT info ) );
 			
 			// skip builtin
-			if ( type.isBuiltIn() or info.typeName.StartsWithIC("gl_") ) {
+			if ( type.isBuiltIn() or IsBuiltinName( info.typeName ) ) {
 				continue;
 			}
 
 			CHECK_ERR( GXCheckExternalQualifiers( translator, type.getQualifier() ) );
+			
+			CHECK_ERR( ApplyAtomicTypes( translator, info ) );
 			
 			RecursiveExtractTypesFromExternal( translator, info );
 
@@ -988,7 +1034,7 @@ namespace PipelineCompiler
 			CHECK_ERR( ConvertType( node, type, typed->getLoc(), null, translator, OUT info ) );
 			
 			// skip builtin
-			if ( type.isBuiltIn() or info.typeName.StartsWithIC("gl_") ) {
+			if ( type.isBuiltIn() or IsBuiltinName( info.typeName ) ) {
 				continue;
 			}
 
@@ -1036,7 +1082,7 @@ namespace PipelineCompiler
 			CHECK_ERR( ConvertType( node, type, typed->getLoc(), null, translator, OUT info ) );
 			
 			// skip builtin
-			if ( type.isBuiltIn() or info.typeName.StartsWithIC("gl_") ) {
+			if ( type.isBuiltIn() or IsBuiltinName( info.typeName ) ) {
 				continue;
 			}
 			
@@ -1066,85 +1112,80 @@ namespace PipelineCompiler
 	RecursiveProcessNode
 =================================================
 */
-	static bool RecursiveProcessNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessNode (TIntermNode* node, const uint uid, Translator &translator)
 	{
 		if ( not node )
 			return false;
 
+		translator.nodeStack.PushBack( node );
+
 		if ( node->getAsAggregate() )
 		{
-			CHECK_ERR( RecursiveProcessAggregateNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessAggregateNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsUnaryNode() )
 		{
-			CHECK_ERR( RecursiveProcessUnaryNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessUnaryNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsBinaryNode() )
 		{
-			CHECK_ERR( RecursiveProcessBinaryNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessBinaryNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsOperator() )
 		{
-			CHECK_ERR( RecursiveProcessOperatorNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessOperatorNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsBranchNode() )
 		{
-			CHECK_ERR( RecursiveProcessBranchNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessBranchNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsSwitchNode() )
 		{
-			CHECK_ERR( RecursiveProcessSwitchNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessSwitchNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsConstantUnion() )
 		{
-			CHECK_ERR( RecursiveProcessConstUnionNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessConstUnionNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsSelectionNode() )
 		{
-			CHECK_ERR( RecursiveProcessSelectionNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessSelectionNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsMethodNode() )
 		{
-			CHECK_ERR( RecursiveProcessMethodNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessMethodNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsSymbolNode() )
 		{
-			CHECK_ERR( RecursiveProcessSymbolNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessSymbolNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsTyped() )
 		{
-			CHECK_ERR( RecursiveProcessTypedNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessTypedNode( node, uid, translator ) );
 		}
-
+		else
 		if ( node->getAsLoopNode() )
 		{
-			CHECK_ERR( RecursiveProcessLoopNode( root, node, uid, translator ) );
-			return true;
+			CHECK_ERR( RecursiveProcessLoopNode( node, uid, translator ) );
 		}
-		
-		TODO( "" );
-		return false;
+		else
+		{
+			TODO( "" );
+			return false;
+		}
+
+		translator.nodeStack.PopBack();
+		return true;
 	}
 	
 /*
@@ -1152,7 +1193,7 @@ namespace PipelineCompiler
 	RecursiveProcessBranchNode
 =================================================
 */
-	static bool RecursiveProcessBranchNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessBranchNode (TIntermNode* node, const uint uid, Translator &translator)
 	{
 		glslang::TIntermBranch*		branch	= node->getAsBranchNode();
 		Translator::Node			dst_node;					dst_node.uid = uid;
@@ -1180,7 +1221,7 @@ namespace PipelineCompiler
 		if ( branch->getExpression() )
 		{
 			const uint	arg_uid = ++translator.uid;
-			CHECK_ERR( RecursiveProcessNode( node, branch->getExpression(), arg_uid, translator ) );
+			CHECK_ERR( RecursiveProcessNode( branch->getExpression(), arg_uid, translator ) );
 
 			const auto&	arg = translator.nodes( arg_uid );
 			CHECK_ERR( not arg.src.Empty() );
@@ -1209,12 +1250,12 @@ namespace PipelineCompiler
 	RecursiveProcessSwitchNode
 =================================================
 */
-	static bool RecursiveProcessSwitchNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessSwitchNode (TIntermNode* node, const uint, Translator &translator)
 	{
 		glslang::TIntermSwitch*		sw = node->getAsSwitchNode();
 
-		CHECK_ERR( RecursiveProcessNode( node, sw->getCondition(), ++translator.uid, translator ) );
-		CHECK_ERR( RecursiveProcessNode( node, sw->getBody(), ++translator.uid, translator ) );
+		CHECK_ERR( RecursiveProcessNode( sw->getCondition(), ++translator.uid, translator ) );
+		CHECK_ERR( RecursiveProcessNode( sw->getBody(), ++translator.uid, translator ) );
 
 		TODO( "" );
 		return true;
@@ -1278,7 +1319,7 @@ namespace PipelineCompiler
 	RecursiveProcessConstUnionNode
 =================================================
 */
-	static bool RecursiveProcessConstUnionNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessConstUnionNode (TIntermNode* node, const uint uid, Translator &translator)
 	{
 		glslang::TIntermConstantUnion*		cu		= node->getAsConstantUnion();
 		const glslang::TConstUnionArray&	cu_arr	= cu->getConstArray();
@@ -1398,7 +1439,7 @@ namespace PipelineCompiler
 	RecursiveProcessSelectionNode
 =================================================
 */
-	static bool RecursiveProcessSelectionNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessSelectionNode (TIntermNode* node, const uint uid, Translator &translator)
 	{
 		glslang::TIntermSelection*	selection = node->getAsSelectionNode();
 		Translator::Node			dst_node;		dst_node.uid = uid;
@@ -1411,7 +1452,7 @@ namespace PipelineCompiler
 		if ( selection->getCondition() )
 		{
 			const uint	cond_uid = ++translator.uid;
-			CHECK_ERR( RecursiveProcessNode( node, selection->getCondition(), cond_uid, translator ) );
+			CHECK_ERR( RecursiveProcessNode( selection->getCondition(), cond_uid, translator ) );
 			cond_src = translator.nodes( cond_uid ).src;
 		}
 
@@ -1419,7 +1460,7 @@ namespace PipelineCompiler
 		if ( selection->getTrueBlock() )
 		{
 			const uint	true_uid = ++translator.uid;
-			CHECK_ERR( RecursiveProcessNode( node, selection->getTrueBlock(), true_uid, translator ) );
+			CHECK_ERR( RecursiveProcessNode( selection->getTrueBlock(), true_uid, translator ) );
 			true_src = translator.nodes( true_uid ).src;
 		}
 
@@ -1427,7 +1468,7 @@ namespace PipelineCompiler
 		if ( selection->getFalseBlock() )
 		{
 			const uint	false_uid = ++translator.uid;
-			CHECK_ERR( RecursiveProcessNode( node, selection->getFalseBlock(), false_uid, translator ) );
+			CHECK_ERR( RecursiveProcessNode( selection->getFalseBlock(), false_uid, translator ) );
 			false_src = translator.nodes( false_uid ).src;
 		}
 
@@ -1467,11 +1508,11 @@ namespace PipelineCompiler
 	RecursiveProcessMethodNode
 =================================================
 */
-	static bool RecursiveProcessMethodNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessMethodNode (TIntermNode* node, const uint, Translator &translator)
 	{
 		glslang::TIntermMethod*		method = node->getAsMethodNode();
 
-		CHECK_ERR( RecursiveProcessNode( node, method->getObject(), ++translator.uid, translator ) );
+		CHECK_ERR( RecursiveProcessNode( method->getObject(), ++translator.uid, translator ) );
 		
 		TODO( "" );
 		return true;
@@ -1482,9 +1523,10 @@ namespace PipelineCompiler
 	RecursiveProcessSymbolNode
 =================================================
 */
-	static bool RecursiveProcessSymbolNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessSymbolNode (TIntermNode* node, const uint uid, Translator &translator)
 	{
-		glslang::TIntermSymbol*		symbol = node->getAsSymbolNode();
+		TIntermNode*				root	= translator.nodeStack.Count() > 2 ? translator.nodeStack[ translator.nodeStack.Count()-2 ] : null;
+		glslang::TIntermSymbol*		symbol	= node->getAsSymbolNode();
 		Translator::Node			dst_node;
 
 		CHECK_ERR( ConvertType( symbol, symbol->getType(), symbol->getLoc(), null, translator, OUT dst_node.typeInfo ) );
@@ -1530,7 +1572,7 @@ namespace PipelineCompiler
 				translator.fwd.definedLocalVars.Add( symbol->getId(), dst_node.typeInfo.name );
 
 				// pattern: <type> <name> = ...;
-				if ( root->getAsOperator() and root->getAsOperator()->getOp() == glslang::TOperator::EOpAssign )
+				if ( root and root->getAsOperator() and root->getAsOperator()->getOp() == glslang::TOperator::EOpAssign )
 				{
 					CHECK_ERR( translator.language->TranslateLocalVar( dst_node.typeInfo, OUT dst_node.src ) );
 				}
@@ -1556,9 +1598,9 @@ namespace PipelineCompiler
 	RecursiveProcessTypedNode
 =================================================
 */
-	static bool RecursiveProcessTypedNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessTypedNode (TIntermNode*, const uint, Translator &)
 	{
-		glslang::TIntermTyped*		typed = node->getAsTyped();
+		//glslang::TIntermTyped*		typed = node->getAsTyped();
 
 		TODO( "" );
 		return true;
@@ -1569,9 +1611,9 @@ namespace PipelineCompiler
 	RecursiveProcessOperatorNode
 =================================================
 */
-	static bool RecursiveProcessOperatorNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessOperatorNode (TIntermNode*, const uint, Translator &)
 	{
-		glslang::TIntermOperator*	op = node->getAsOperator();
+		//glslang::TIntermOperator*	op = node->getAsOperator();
 		
 		TODO( "" );
 		return true;
@@ -1582,7 +1624,7 @@ namespace PipelineCompiler
 	RecursiveProcessUnaryNode
 =================================================
 */
-	static bool RecursiveProcessUnaryNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessUnaryNode (TIntermNode* node, const uint uid, Translator &translator)
 	{
 		glslang::TIntermUnary*		unary	= node->getAsUnaryNode();
 		const uint					arg_uid	= ++translator.uid;
@@ -1591,7 +1633,7 @@ namespace PipelineCompiler
 		CHECK_ERR( ConvertType( node, unary->getType(), unary->getLoc(), null, translator, OUT dst_node.typeInfo ) );
 		CHECK_COMP2( GXCheckAccessToExternal( translator, dst_node ) );
 
-		CHECK_ERR( RecursiveProcessNode( node, unary->getOperand(), arg_uid, translator ) );
+		CHECK_ERR( RecursiveProcessNode( unary->getOperand(), arg_uid, translator ) );
 
 		const auto&		arg_node = translator.nodes( arg_uid );
 		CHECK_ERR( not arg_node.src.Empty() );
@@ -1607,7 +1649,7 @@ namespace PipelineCompiler
 	RecursiveProcessBinaryNode
 =================================================
 */
-	static bool RecursiveProcessBinaryNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessBinaryNode (TIntermNode* node, const uint uid, Translator &translator)
 	{
 		glslang::TIntermBinary*		binary = node->getAsBinaryNode();
 
@@ -1635,8 +1677,8 @@ namespace PipelineCompiler
 		const uint	lhs_uid	= ++translator.uid;
 		const uint	rhs_uid	= ++translator.uid;
 
-		CHECK_ERR( RecursiveProcessNode( node, binary->getLeft(), lhs_uid, translator ) );
-		CHECK_ERR( RecursiveProcessNode( node, binary->getRight(), rhs_uid, translator ) );
+		CHECK_ERR( RecursiveProcessNode( binary->getLeft(), lhs_uid, translator ) );
+		CHECK_ERR( RecursiveProcessNode( binary->getRight(), rhs_uid, translator ) );
 
 		const auto &		lhs = translator.nodes( lhs_uid );
 		const auto &		rhs = translator.nodes( rhs_uid );
@@ -1659,7 +1701,7 @@ namespace PipelineCompiler
 	RecursiveProcessLoopNode
 =================================================
 */
-	static bool RecursiveProcessLoopNode (TIntermNode* root, TIntermNode* node, const uint uid, Translator &translator)
+	static bool RecursiveProcessLoopNode (TIntermNode* node, const uint uid, Translator &translator)
 	{
 		glslang::TIntermLoop*	loop = node->getAsLoopNode();
 		Translator::Node		dst_node;
@@ -1682,7 +1724,7 @@ namespace PipelineCompiler
 				}
 				
 				const uint	arg_uid = ++translator.uid;
-				CHECK_ERR( RecursiveProcessNode( node, aggr->getSequence()[i], arg_uid, translator ) );
+				CHECK_ERR( RecursiveProcessNode( aggr->getSequence()[i], arg_uid, translator ) );
 
 				// add local variable declaration
 				FOR( j, translator.fwd.pendingVars )
@@ -1712,7 +1754,7 @@ namespace PipelineCompiler
 		String		terminal_src;
 
 		const uint	body_uid = ++translator.uid;
-		CHECK_ERR( RecursiveProcessNode( node, loop->getBody(), body_uid, translator ) );
+		CHECK_ERR( RecursiveProcessNode( loop->getBody(), body_uid, translator ) );
 
 		loop_src = translator.nodes( body_uid ).src;
 		CHECK_ERR( not loop_src.Empty() );
@@ -1721,7 +1763,7 @@ namespace PipelineCompiler
 		if ( loop->getTest() )
 		{
 			const uint	test_uid = ++translator.uid;
-			CHECK_ERR( RecursiveProcessNode( node, loop->getTest(), test_uid, translator ) );
+			CHECK_ERR( RecursiveProcessNode( loop->getTest(), test_uid, translator ) );
 
 			test_src = translator.nodes( test_uid ).src;
 			CHECK_ERR( not test_src.Empty() );
@@ -1731,7 +1773,7 @@ namespace PipelineCompiler
 		if ( loop->getTerminal() )
 		{
 			const uint	terminal_uid = ++translator.uid;
-			CHECK_ERR( RecursiveProcessNode( node, loop->getTerminal(), terminal_uid, translator ) );
+			CHECK_ERR( RecursiveProcessNode( loop->getTerminal(), terminal_uid, translator ) );
 
 			terminal_src = translator.nodes( terminal_uid ).src;
 			CHECK_ERR( not terminal_src.Empty() );
@@ -1786,7 +1828,7 @@ namespace PipelineCompiler
 		CHECK_ERR( binary and (binary->getOp() == glslang::TOperator::EOpVectorSwizzle or binary->getOp() == glslang::TOperator::EOpIndexDirect) );
 
 		const uint	lhs_uid	= ++translator.uid;
-		CHECK_ERR( RecursiveProcessNode( node, binary->getLeft(), lhs_uid, translator ) );
+		CHECK_ERR( RecursiveProcessNode( binary->getLeft(), lhs_uid, translator ) );
 		
 		const auto&	lhs = translator.nodes( lhs_uid );
 		CHECK_ERR( not lhs.src.Empty() );
@@ -1847,13 +1889,14 @@ namespace PipelineCompiler
 		const auto&	st_type = *binary->getLeft()->getType().getStruct();
 
 		const uint	lhs_uid	= ++translator.uid;
-		CHECK_ERR( RecursiveProcessNode( node, binary->getLeft(), lhs_uid, translator ) );
+		CHECK_ERR( RecursiveProcessNode( binary->getLeft(), lhs_uid, translator ) );
 		
 		const auto&	lhs = translator.nodes( lhs_uid );
 
 		glslang::TIntermConstantUnion*		cu		= binary->getRight()->getAsConstantUnion();
 		glslang::TConstUnionArray const&	cu_arr	= cu->getConstArray();
 		
+		// constant union must be correct index of struct field
 		CHECK_ERR( cu_arr.size() == 1 and (cu->getType().getBasicType() == glslang::EbtInt or cu->getType().getBasicType() == glslang::EbtUint) );
 		CHECK_ERR( (cu_arr[0].getType() == glslang::EbtInt or cu_arr[0].getType() == glslang::EbtUint) and
 				   cu_arr[0].getIConst() >= 0 and cu_arr[0].getIConst() < int(st_type.size()) );
@@ -1898,7 +1941,7 @@ namespace PipelineCompiler
 		CHECK_ERR( not dst_node.src.Empty() );
 
 		const uint		rhs_uid	= ++translator.uid;
-		CHECK_ERR( RecursiveProcessNode( node, binary->getRight(), rhs_uid, translator ) );
+		CHECK_ERR( RecursiveProcessNode( binary->getRight(), rhs_uid, translator ) );
 
 		const auto&		rhs = translator.nodes( rhs_uid ).src;
 		CHECK_ERR( not rhs.Empty() );
@@ -1919,41 +1962,46 @@ namespace PipelineCompiler
 		glslang::TIntermAggregate*	aggr = node->getAsAggregate();
 		CHECK_ERR( aggr and aggr->getOp() == glslang::TOperator::EOpFunctionCall );
 
-		String	name = aggr->getName().c_str();
-		usize	pos	 = 0;
+		String	func_name = aggr->getName().c_str();
 
 		if ( translator.useGXrules )
 		{
 			Translator::InlFunctionsMap_t::iterator	iter;
-			if ( translator.inl.functions.Find( name, OUT iter ) )
+			if ( translator.inl.functions.Find( func_name, OUT iter ) )
 				return TranslateInlineFunctionCall( node, uid, iter->second, translator );
 		}
+		
+		CHECK_ERR( translator.language->TranslateFunctionName( INOUT func_name ) );
 
-		if ( name.Find( '(', OUT pos ) ) {
-			name = name.SubString( 0, pos );
-		}
-
-		Translator::Node	dst_node;
+		Translator::Node						dst_node;
+		Array< uint >							args_uids;
+		Array< String >							args_src;
+		Array< Translator::TypeInfo const* >	args_types;
 
 		// get result type
 		CHECK_ERR( ConvertType( node, aggr->getType(), aggr->getLoc(), null, translator, OUT dst_node.typeInfo ) );
-
-		dst_node.src << name << "(";
 		
 		FOR( i, aggr->getSequence() )
 		{
 			const uint	arg_uid = ++translator.uid;
 
-			CHECK_ERR( RecursiveProcessNode( node, aggr->getSequence()[i], arg_uid, translator ) );
+			CHECK_ERR( RecursiveProcessNode( aggr->getSequence()[i], arg_uid, translator ) );
 
-			const auto&	arg = translator.nodes( arg_uid ).src;
-			CHECK_ERR( not arg.Empty() );
-
-			dst_node.src << (i ? ", " : " ") << arg;
+			args_uids.PushBack( arg_uid );
 		}
 
+		FOR( i, args_uids )
+		{
+			const auto&	arg = translator.nodes( args_uids[i] );
+			CHECK_ERR( not arg.src.Empty() );
+
+			args_src.PushBack( arg.src );
+			args_types.PushBack( &arg.typeInfo );
+		}
+
+		CHECK_ERR( translator.language->TranslateFunction( func_name, dst_node.typeInfo, args_src, args_types, OUT dst_node.src ) );
+
 		dst_node.uid = uid;
-		dst_node.src << " )";
 
 		translator.nodes.Add( uid, RVREF(dst_node) );
 		return true;
@@ -1972,7 +2020,7 @@ namespace PipelineCompiler
 		String		result;
 
 		if_constexpr ( sizeof(hash) > sizeof(uint) ) {
-			hash = ((hash >> 32) ^ hash) & 0xFFFFFFFF;
+			hash = ((hash >> 31) ^ hash) & 0xFFFFFFFF;
 		}
 		hash = ((hash >> 16) ^ hash) & 0xFFFF;
 
@@ -2044,7 +2092,7 @@ namespace PipelineCompiler
 
 				// get argument value
 				const uint	arg_uid = ++translator.uid;
-				CHECK_ERR( RecursiveProcessNode( node, aggr->getSequence()[i], arg_uid, translator ) );
+				CHECK_ERR( RecursiveProcessNode( aggr->getSequence()[i], arg_uid, translator ) );
 
 				const auto&	arg = translator.nodes( arg_uid );
 				CHECK_ERR( not arg.src.Empty() );
@@ -2088,7 +2136,7 @@ namespace PipelineCompiler
 			glslang::TIntermAggregate*		body		= func->getSequence()[1]->getAsAggregate();
 			const uint						body_uid	= ++translator.uid;
 			
-			CHECK_ERR( RecursiveProcessNode( func, body, body_uid, translator ) );
+			CHECK_ERR( RecursiveProcessNode( body, body_uid, translator ) );
 
 			String		body_src = translator.nodes( body_uid ).src;
 			CHECK_ERR( not body_src.Empty() );
@@ -2116,7 +2164,8 @@ namespace PipelineCompiler
 		glslang::TIntermOperator*				op = node->getAsOperator();
 		Translator::Node						dst_node;
 		Array< String >							args_src;
-		Array< Translator::TypeInfo const* >	arg_types;
+		Array< Translator::TypeInfo const* >	args_types;
+		Array< uint >							args_uids;
 
 		// get result type
 		dst_node.uid = uid;
@@ -2131,19 +2180,161 @@ namespace PipelineCompiler
 			{
 				const uint	arg_uid = ++translator.uid;
 
-				CHECK_ERR( RecursiveProcessNode( node, aggr->getSequence()[i], arg_uid, translator ) );
+				CHECK_ERR( RecursiveProcessNode( aggr->getSequence()[i], arg_uid, translator ) );
 
-				const auto&	arg = translator.nodes( arg_uid );
-				CHECK_ERR( not arg.src.Empty() );
-
-				args_src.PushBack( arg.src );
-				arg_types.PushBack( &arg.typeInfo );
+				args_uids.PushBack( arg_uid );
 			}
 		}
 
-		CHECK_ERR( translator.language->TranslateOperator( op->getOp(), dst_node.typeInfo, args_src, arg_types, OUT dst_node.src ) );
+		FOR( i, args_uids )
+		{
+			const auto&	arg = translator.nodes( args_uids[i] );
+			CHECK_ERR( not arg.src.Empty() );
+
+			args_src.PushBack( arg.src );
+			args_types.PushBack( &arg.typeInfo );
+		}
+
+		CHECK_ERR( translator.language->TranslateOperator( op->getOp(), dst_node.typeInfo, args_src, args_types, OUT dst_node.src ) );
 
 		translator.nodes.Add( uid, RVREF(dst_node) );
+		return true;
+	}
+	
+/*
+=================================================
+	RecursiveFindAtomics
+=================================================
+*/
+	static bool RecursiveFindAtomics (TIntermNode* node, Translator &translator)
+	{
+		if ( not node )
+			return true;
+
+		if ( glslang::TIntermAggregate* aggr = node->getAsAggregate() )
+		{
+			switch ( aggr->getOp() )
+			{
+				case glslang::TOperator::EOpLinkerObjects :
+					return true;
+
+				// 2 args, first is atomic
+				case glslang::TOperator::EOpAtomicAdd :
+				case glslang::TOperator::EOpAtomicAnd :
+				case glslang::TOperator::EOpAtomicOr :
+				case glslang::TOperator::EOpAtomicXor :
+				case glslang::TOperator::EOpAtomicMin :
+				case glslang::TOperator::EOpAtomicMax :
+				case glslang::TOperator::EOpAtomicExchange :
+
+				// 3 args, first is atomic
+				case glslang::TOperator::EOpAtomicCompSwap :
+					CHECK_ERR( AddAtomicArgQualifier( aggr->getSequence()[0], translator ) );
+					break;
+			}
+
+			FOR( i, aggr->getSequence() )
+			{
+				CHECK_ERR( RecursiveFindAtomics( aggr->getSequence()[i], translator ) );
+			}
+		}
+		else
+		if ( glslang::TIntermUnary* unary = node->getAsUnaryNode() )
+		{
+			CHECK_ERR( RecursiveFindAtomics( unary->getOperand(), translator ) );
+		}
+		else
+		if ( glslang::TIntermBinary* binary = node->getAsBinaryNode() )
+		{
+			CHECK_ERR( RecursiveFindAtomics( binary->getLeft(), translator ) );
+			CHECK_ERR( RecursiveFindAtomics( binary->getRight(), translator ) );
+		}
+		else
+		if ( glslang::TIntermBranch* branch = node->getAsBranchNode() )
+		{
+			CHECK_ERR( RecursiveFindAtomics( branch->getExpression(), translator ) );
+		}
+		else
+		if ( glslang::TIntermSwitch* sw = node->getAsSwitchNode() )
+		{
+			CHECK_ERR( RecursiveFindAtomics( sw->getCondition(), translator ) );
+			CHECK_ERR( RecursiveFindAtomics( sw->getBody(), translator ) );
+		}
+		else
+		if ( glslang::TIntermSelection* selection = node->getAsSelectionNode() )
+		{
+			CHECK_ERR( RecursiveFindAtomics( selection->getCondition(), translator ) );
+			CHECK_ERR( RecursiveFindAtomics( selection->getTrueBlock(), translator ) );
+			CHECK_ERR( RecursiveFindAtomics( selection->getFalseBlock(), translator ) );
+		}
+		return true;
+	}
+
+/*
+=================================================
+	AddAtomicArgQualifier
+=================================================
+*/
+	static bool AddAtomicArgQualifier (TIntermNode* node, Translator &translator)
+	{
+		Array< glslang::TIntermBinary *>	stack;	stack.PushBack( node->getAsBinaryNode() );
+		CHECK_ERR( stack.Back() );
+
+		for (; stack.Back()->getLeft()->getAsBinaryNode();)
+		{
+			stack.PushBack( stack.Back()->getLeft()->getAsBinaryNode() );
+		}
+
+		// add SSBO type
+		const auto&		ssbo_typename	= stack.Back()->getLeft()->getType().getTypeName();
+		CHECK_ERR( &ssbo_typename != null );
+		
+		String			ssb_type	= ssbo_typename.c_str();
+		Array<String>	ssb_fields;
+
+		// add fields
+		for (; not stack.Empty();)
+		{
+			glslang::TIntermBinary *	binary = stack.Back();		stack.PopBack();
+
+			CHECK_ERR( binary and binary->getOp() == glslang::TOperator::EOpIndexDirectStruct  );
+			CHECK_ERR( binary->getLeft()->getType().isStruct() and binary->getRight()->getAsConstantUnion() );
+
+			const auto&	st_type = *binary->getLeft()->getType().getStruct();
+				
+			glslang::TIntermConstantUnion*		cu		= binary->getRight()->getAsConstantUnion();
+			glslang::TConstUnionArray const&	cu_arr	= cu->getConstArray();
+		
+			// constant union must be correct index of struct field
+			CHECK_ERR( cu_arr.size() == 1 and (cu->getType().getBasicType() == glslang::EbtInt or cu->getType().getBasicType() == glslang::EbtUint) );
+			CHECK_ERR( (cu_arr[0].getType() == glslang::EbtInt or cu_arr[0].getType() == glslang::EbtUint) and
+						cu_arr[0].getIConst() >= 0 and cu_arr[0].getIConst() < int(st_type.size()) );
+
+			const auto&	field_name = st_type[ cu_arr[0].getIConst() ].type->getFieldName();
+			CHECK_ERR( &field_name != null );
+
+			ssb_fields.PushBack( field_name.c_str() );
+		}
+
+		// check for duplicates
+		usize	idx		= UMax;
+		auto&	atomics	= translator.types.atomics;
+
+		if ( atomics.FindFirstIndex( ssb_type, OUT idx ) )
+		{
+			for (; idx < atomics.Count() and atomics[idx].first == ssb_type; ++idx)
+			{
+				const auto& fields = atomics[idx].second;
+
+				if ( ssb_fields == fields )
+				{
+					// fields already added
+					return true;
+				}
+			}
+		}
+
+		atomics.Add( RVREF(ssb_type), RVREF(ssb_fields) );
 		return true;
 	}
 

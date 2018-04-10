@@ -137,10 +137,13 @@ namespace PipelineCompiler
 
 	// GLSL deserializer
 	private:
-		static bool _RecursiveProcessAggregateNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, INOUT DeserializedShader &result);
-		static bool _RecursiveProcessNode (TIntermNode* root, TIntermNode* node, INOUT uint &uid, INOUT DeserializedShader &result);
+		static bool _ProcessExternalObjects (TIntermNode* root, TIntermNode* node, INOUT DeserializedShader &result);
+		static bool _RecursiveProcessAggregateNode (TIntermNode* root, TIntermNode* node, INOUT DeserializedShader &result);
+		static bool _RecursiveProcessNode (TIntermNode* root, TIntermNode* node, INOUT DeserializedShader &result);
 		
-		static bool _DeserializeFunction (TIntermNode* node, INOUT uint &uid, INOUT DeserializedShader &result);
+		static bool _DeserializeFunction (TIntermNode* node, INOUT DeserializedShader &result);
+		
+		static bool _DeserializeAtomicArg (TIntermNode* node, INOUT DeserializedShader &result);
 
 		static bool _DeserializeFunctionArg (TIntermNode* node, glslang::TType const &ttype, glslang::TSourceLoc const &loc,
 											 const DeserializedShader::FunctionArgument *parent, OUT DeserializedShader::FunctionArgument &result);
@@ -151,7 +154,7 @@ namespace PipelineCompiler
 		static bool _DeserializeBufferVariable (TIntermNode* node, glslang::TType const &ttype, glslang::TSourceLoc const &loc,
 												const DeserializedShader::BufferVariable *parent, OUT DeserializedShader::BufferVariable &result);
 
-		static bool _DeserializeExternalObjects (TIntermNode* node, INOUT uint &uid, INOUT DeserializedShader &result);
+		static bool _DeserializeExternalObjects (TIntermNode* node, INOUT DeserializedShader &result);
 
 		static bool _DeserializeIOVariable (TIntermNode* node, glslang::TType const &ttype, glslang::TSourceLoc const &loc,
 											const DeserializedShader::IOVariable *parent, OUT DeserializedShader::IOVariable &result);

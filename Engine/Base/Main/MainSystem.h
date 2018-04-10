@@ -73,8 +73,8 @@ namespace Base
 		void _Create () noexcept;
 		void _Destroy () noexcept;
 
-		static ModulePtr _CreateThreadManager (GlobalSystemsRef, const CreateInfo::ThreadManager &);
-		static ModulePtr _CreateTaskManager (GlobalSystemsRef, const CreateInfo::TaskManager &);
+		static ModulePtr _CreateThreadManager (UntypedID_t, GlobalSystemsRef, const CreateInfo::ThreadManager &);
+		static ModulePtr _CreateTaskManager (UntypedID_t, GlobalSystemsRef, const CreateInfo::TaskManager &);
 	};
 
 

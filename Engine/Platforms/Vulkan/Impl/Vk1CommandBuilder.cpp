@@ -123,7 +123,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci);
+		Vk1CommandBuilder (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci);
 		~Vk1CommandBuilder ();
 
 
@@ -200,10 +200,10 @@ namespace PlatformVK
 
 
 	
-	using Viewports_t				= FixedSizeArray< VkViewport, GlobalConst::Graphics_MaxColorBuffers >;
-	using Scissors_t				= FixedSizeArray< VkRect2D, GlobalConst::Graphics_MaxColorBuffers >;
-	using ClearValues_t				= FixedSizeArray< VkClearValue, GlobalConst::Graphics_MaxColorBuffers >;
-	using VertexBuffers_t			= FixedSizeArray< VkBuffer, GlobalConst::Graphics_MaxAttribs >;
+	using Viewports_t				= FixedSizeArray< VkViewport, GlobalConst::GAPI_MaxColorBuffers >;
+	using Scissors_t				= FixedSizeArray< VkRect2D, GlobalConst::GAPI_MaxColorBuffers >;
+	using ClearValues_t				= FixedSizeArray< VkClearValue, GlobalConst::GAPI_MaxColorBuffers >;
+	using VertexBuffers_t			= FixedSizeArray< VkBuffer, GlobalConst::GAPI_MaxAttribs >;
 	using CmdBuffers_t				= FixedSizeArray< VkCommandBuffer, GpuMsg::CmdExecute::CmdBuffers_t::MemoryContainer_t::SIZE >;
 	using BufferCopyRegions_t		= FixedSizeArray< VkBufferCopy, GpuMsg::CmdCopyBuffer::Regions_t::MemoryContainer_t::SIZE >;
 	using ImageCopyRegions_t		= FixedSizeArray< VkImageCopy, GpuMsg::CmdCopyImage::Regions_t::MemoryContainer_t::SIZE >;
@@ -225,8 +225,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1CommandBuilder::Vk1CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkCommandBuilderModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1CommandBuilder::Vk1CommandBuilder (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_cmdPool( VK_NULL_HANDLE ),		_cmdId( VK_NULL_HANDLE ),
 		_scope( EScope::None ),			_subpassIndex( 0 ),
 		_maxSubpasses( 0 )
@@ -1904,9 +1904,9 @@ namespace PlatformVK
 	
 namespace Platforms
 {
-	ModulePtr VulkanObjectsConstructor::CreateVk1CommandBuilder (GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1CommandBuilder (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
 	{
-		return New< PlatformVK::Vk1CommandBuilder >( gs, ci );
+		return New< PlatformVK::Vk1CommandBuilder >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

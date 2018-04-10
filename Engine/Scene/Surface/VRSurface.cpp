@@ -62,7 +62,7 @@ namespace Scene
 
 	// methods
 	public:
-		VRSurface (GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci);
+		VRSurface (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci);
 		~VRSurface ();
 		
 
@@ -89,8 +89,8 @@ namespace Scene
 	constructor
 =================================================
 */
-	VRSurface::VRSurface (GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci) :
-		BaseSceneModule( gs, ModuleConfig{ VRSurfaceModuleID, UMax }, &_msgTypes, &_eventTypes )
+	VRSurface::VRSurface (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci) :
+		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "Scene.VRSurface" );
 
@@ -236,9 +236,9 @@ namespace Scene
 	CreateVRSurface
 =================================================
 */
-	ModulePtr  SceneObjectConstructor::CreateVRSurface (GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci)
+	ModulePtr  SceneObjectConstructor::CreateVRSurface (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci)
 	{
-		return New< VRSurface >( gs, ci );
+		return New< VRSurface >( id, gs, ci );
 	}
 
 }	// Scene

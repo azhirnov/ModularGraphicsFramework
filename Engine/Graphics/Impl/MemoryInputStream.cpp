@@ -39,7 +39,7 @@ namespace Graphics
 
 	// methods
 	public:
-		MemoryInputStream (GlobalSystemsRef gs, const CreateInfo::GpuMemoryInStream &ci);
+		MemoryInputStream (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuMemoryInStream &ci);
 		~MemoryInputStream ();
 
 
@@ -59,8 +59,8 @@ namespace Graphics
 	constructor
 =================================================
 */
-	MemoryInputStream::MemoryInputStream (GlobalSystemsRef gs, const CreateInfo::GpuMemoryInStream &ci) :
-		GraphicsBaseModule( gs, ModuleConfig{ MemoryInputStreamModuleID, UMax }, &_msgTypes, &_eventTypes )
+	MemoryInputStream::MemoryInputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemoryInStream &ci) :
+		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
 	{
 		_SubscribeOnMsg( this, &MemoryInputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &MemoryInputStream::_OnModuleDetached_Impl );
@@ -90,9 +90,9 @@ namespace Graphics
 	CreateMemoryInputStream
 =================================================
 */
-	ModulePtr GraphicsObjectsConstructor::CreateMemoryInputStream (GlobalSystemsRef gs, const CreateInfo::GpuMemoryInStream &ci)
+	ModulePtr GraphicsObjectsConstructor::CreateMemoryInputStream (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemoryInStream &ci)
 	{
-		return New< MemoryInputStream >( gs, ci );
+		return New< MemoryInputStream >( id, gs, ci );
 	}
 
 }	// Graphics

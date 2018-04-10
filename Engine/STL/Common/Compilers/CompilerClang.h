@@ -193,6 +193,12 @@
 #endif
 
 
+// atomic
+#if __has_feature(c_atomic)
+#	define GX_ATOMIC_SUPPORTED	1
+#endif
+
+
 // TODO
 #if !defined( PLATFORM_ANDROID )
 #	define GX_RTTI_SUPPORTED

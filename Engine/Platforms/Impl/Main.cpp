@@ -47,11 +47,11 @@ namespace Engine
 namespace Platforms
 {
 
-	static ModulePtr CreateDefaultPlatform (GlobalSystemsRef, const CreateInfo::Platform &);
-	static ModulePtr CreateDefaultWindow (GlobalSystemsRef, const CreateInfo::Window &);
-	static ModulePtr CreateDefaultGpuContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
-	static ModulePtr CreateDefaultGpuThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
-	static ModulePtr CreateDefaultVRThread (GlobalSystemsRef, const CreateInfo::VRThread &);
+	static ModulePtr CreateDefaultPlatform (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::Platform &);
+	static ModulePtr CreateDefaultWindow (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::Window &);
+	static ModulePtr CreateDefaultGpuContext (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuContext &);
+	static ModulePtr CreateDefaultGpuThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuThread &);
+	static ModulePtr CreateDefaultVRThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::VRThread &);
 
 /*
 =================================================
@@ -150,7 +150,7 @@ namespace Platforms
 	CreateDefaultPlatform
 =================================================
 */
-	static ModulePtr CreateDefaultPlatform (GlobalSystemsRef gs, const CreateInfo::Platform &ci)
+	static ModulePtr CreateDefaultPlatform (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::Platform &ci)
 	{
 		auto	factory = gs->modulesFactory;
 
@@ -172,7 +172,7 @@ namespace Platforms
 	CreateDefaultWindow
 =================================================
 */
-	static ModulePtr CreateDefaultWindow (GlobalSystemsRef gs, const CreateInfo::Window &ci)
+	static ModulePtr CreateDefaultWindow (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::Window &ci)
 	{
 		ModulePtr	platform = gs->mainSystem->GetModuleByMsg< CompileTime::TypeListFrom< Message<OSMsg::GetOSModules> > >();
 
@@ -193,7 +193,7 @@ namespace Platforms
 	CreateDefaultGpuContext
 =================================================
 */
-	static ModulePtr CreateDefaultGpuContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+	static ModulePtr CreateDefaultGpuContext (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
 		auto	factory = gs->modulesFactory;
 		auto	api		= GAPI::ToString( ci.settings.version );
@@ -225,7 +225,7 @@ namespace Platforms
 	CreateDefaultGpuThread
 =================================================
 */
-	static ModulePtr CreateDefaultGpuThread (GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
+	static ModulePtr CreateDefaultGpuThread (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
 		auto		ctx		= gs->mainSystem->GetModuleByMsg< CompileTime::TypeListFrom< Message<GpuMsg::GetGraphicsModules> > >();
 		auto		factory	= gs->modulesFactory;
@@ -245,7 +245,7 @@ namespace Platforms
 	CreateDefaultGpuThread
 =================================================
 */
-	static ModulePtr CreateDefaultVRThread (GlobalSystemsRef gs, const CreateInfo::VRThread &ci)
+	static ModulePtr CreateDefaultVRThread (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::VRThread &ci)
 	{
 		auto	factory	= gs->modulesFactory;
 		

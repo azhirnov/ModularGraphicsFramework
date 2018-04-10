@@ -15,8 +15,8 @@
 #include "Engine/STL/Math/3D/PerspectiveCamera.h"
 
 #ifdef GRAPHICS_API_OPENGL
-#	include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
-#	include "Engine/Platforms/OpenGL/Impl/GL4BaseModule.h"
+#	include "Engine/Platforms/OpenGL/450/GL4Messages.h"
+#	include "Engine/Platforms/OpenGL/450/GL4BaseModule.h"
 #endif
 
 #ifdef GRAPHICS_API_VULKAN
@@ -141,7 +141,7 @@ namespace PlatformVR
 
 	// methods
 	public:
-		EmulatorVRThread (GlobalSystemsRef gs, const CreateInfo::VRThread &ci);
+		EmulatorVRThread (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::VRThread &ci);
 		~EmulatorVRThread ();
 
 		
@@ -196,8 +196,8 @@ namespace PlatformVR
 	constructor
 =================================================
 */
-	EmulatorVRThread::EmulatorVRThread (GlobalSystemsRef gs, const CreateInfo::VRThread &ci) :
-		Module( gs, ModuleConfig{ EmulatorVRThreadModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	EmulatorVRThread::EmulatorVRThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::VRThread &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_settings( ci.settings ),		_eyeTextureDimension( ci.eyeTextureDimension ),
 		_gpuThread( ci.gpuThread ),		_frameIndex( 0 ),				_lastFrameIndex( 0 ),
 		_isCreated( false ),			_isFrameStarted( false ),		_isOpenGL( false )
@@ -817,9 +817,9 @@ namespace PlatformVR
 
 namespace Platforms
 {
-	ModulePtr VRObjectsConstructor::CreateEmulatorVRThread (GlobalSystemsRef gs, const CreateInfo::VRThread &ci)
+	ModulePtr VRObjectsConstructor::CreateEmulatorVRThread (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::VRThread &ci)
 	{
-		return New< PlatformVR::EmulatorVRThread >( gs, ci );
+		return New< PlatformVR::EmulatorVRThread >( id, gs, ci );
 	}
 
 }	// Platforms

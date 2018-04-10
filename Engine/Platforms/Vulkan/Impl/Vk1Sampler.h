@@ -59,7 +59,7 @@ namespace PlatformVK
 	public:
 		explicit Vk1SamplerCache (Ptr<Vk1Device> dev);
 
-		Vk1SamplerPtr	Create (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
+		Vk1SamplerPtr	Create (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
 
 		void Destroy ();
 

@@ -53,7 +53,7 @@ namespace Profilers
 
 	// methods
 	public:
-		FPSCounter (GlobalSystemsRef gs, const CreateInfo::FPSCounter &);
+		FPSCounter (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::FPSCounter &);
 		~FPSCounter ();
 
 
@@ -80,8 +80,8 @@ namespace Profilers
 	constructor
 =================================================
 */
-	FPSCounter::FPSCounter (GlobalSystemsRef gs, const CreateInfo::FPSCounter &ci) :
-		Module( gs, ModuleConfig{ FPSCounterModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	FPSCounter::FPSCounter (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::FPSCounter &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_interval{ ci.interval },	_frameCounter{ 0 }
 	{
 		SetDebugName( "FPSCounter" );
@@ -208,9 +208,9 @@ namespace Profilers
 	CreateFPSCounter
 =================================================
 */
-	ModulePtr ProfilerObjectsConstructor::CreateFPSCounter (GlobalSystemsRef gs, const CreateInfo::FPSCounter &ci)
+	ModulePtr ProfilerObjectsConstructor::CreateFPSCounter (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::FPSCounter &ci)
 	{
-		return New< FPSCounter >( gs, ci );
+		return New< FPSCounter >( id, gs, ci );
 	}
 
 }	// Profilers

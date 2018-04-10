@@ -45,18 +45,18 @@ namespace Platforms
 		
 		static ComputeModuleIDs GetComputeModules ();
 		
-		static ModulePtr CreateOpenCLThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
-		static ModulePtr CreateOpenCLContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
-		static ModulePtr CreateCL2SyncManager (GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
-		static ModulePtr CreateCL2Image (GlobalSystemsRef, const CreateInfo::GpuImage &);
-		static ModulePtr CreateCL2Memory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
-		static ModulePtr CreateCL2Buffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);
-		static ModulePtr CreateCL2Sampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
-		static ModulePtr CreatePipelineTemplate (GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
-		static ModulePtr CreateCL2CommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
-		static ModulePtr CreateCL2CommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
-		static ModulePtr CreateCL2ComputePipeline (GlobalSystemsRef, const CreateInfo::ComputePipeline &);
-		static ModulePtr CreateCL2PipelineResourceTable (GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
+		static ModulePtr CreateOpenCLThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuThread &);
+		static ModulePtr CreateOpenCLContext (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuContext &);
+		static ModulePtr CreateCL2SyncManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
+		static ModulePtr CreateCL2Image (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuImage &);
+		static ModulePtr CreateCL2Memory (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemory &);
+		static ModulePtr CreateCL2Buffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuBuffer &);
+		static ModulePtr CreateCL2Sampler (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr CreatePipelineTemplate (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
+		static ModulePtr CreateCL2CommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
+		static ModulePtr CreateCL2CommandBuilder (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
+		static ModulePtr CreateCL2ComputePipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+		static ModulePtr CreateCL2PipelineResourceTable (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
 	};
 
 

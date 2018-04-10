@@ -43,7 +43,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
+		Vk1Sampler (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
 		~Vk1Sampler ();
 
 		SamplerDescriptor const&	GetDescriptor ()	const	{ return _descr; }
@@ -73,8 +73,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1Sampler::Vk1Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkSamplerModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1Sampler::Vk1Sampler (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),
 		_samplerId( VK_NULL_HANDLE )
 	{
@@ -291,7 +291,7 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	Vk1SamplerCache::Vk1SamplerPtr  Vk1SamplerCache::Create (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
+	Vk1SamplerCache::Vk1SamplerPtr  Vk1SamplerCache::Create (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
 		SamplerDescriptor::Builder	builder( ci.descr );
 
@@ -360,7 +360,7 @@ namespace PlatformVK
 		create_info.gpuThread	= ci.gpuThread;
 		create_info.descr		= builder.Finish();
 
-		auto result = New< Vk1Sampler >( gs, create_info );
+		auto result = New< Vk1Sampler >( id, gs, create_info );
 
 		ModuleUtils::Initialize( {result}, null );
 
@@ -391,7 +391,7 @@ namespace PlatformVK
 
 namespace Platforms
 {
-	ModulePtr VulkanObjectsConstructor::CreateVk1Sampler (GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1Sampler (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
 		ModulePtr	mod;
 		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetVkPrivateClasses>> >() );
@@ -400,7 +400,7 @@ namespace Platforms
 		mod->Send( req_cl );
 		CHECK_ERR( req_cl->result.IsDefined() and req_cl->result->samplerCache );
 
-		return req_cl->result->samplerCache->Create( gs, ci );
+		return req_cl->result->samplerCache->Create( id, gs, ci );
 	}
 
 }	// Platforms

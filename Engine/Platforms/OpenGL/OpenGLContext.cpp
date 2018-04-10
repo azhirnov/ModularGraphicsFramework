@@ -12,7 +12,7 @@
 #include "Engine/Platforms/Public/GPU/RenderPass.h"
 #include "Engine/Platforms/Public/GPU/Sampler.h"
 #include "Engine/Platforms/Public/GPU/Memory.h"
-#include "Engine/Platforms/OpenGL/Impl/GL4Messages.h"
+#include "Engine/Platforms/OpenGL/450/GL4Messages.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 namespace Engine
@@ -56,7 +56,7 @@ namespace Platforms
 
 	// methods
 	public:
-		OpenGLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
+		OpenGLContext (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
 		~OpenGLContext ();
 
 		
@@ -78,8 +78,8 @@ namespace Platforms
 	constructor
 =================================================
 */
-	OpenGLContext::OpenGLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
-		Module( gs, ModuleConfig{ GLContextModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	OpenGLContext::OpenGLContext (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci )
 	{
 		SetDebugName( "OpenGLContext" );
@@ -268,9 +268,9 @@ namespace Platforms
 	CreateOpenGLContext
 =================================================
 */
-	ModulePtr OpenGLObjectsConstructor::CreateOpenGLContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+	ModulePtr OpenGLObjectsConstructor::CreateOpenGLContext (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
-		return New< OpenGLContext >( gs, ci );
+		return New< OpenGLContext >( id, gs, ci );
 	}
 
 

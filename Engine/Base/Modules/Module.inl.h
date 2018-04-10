@@ -18,8 +18,10 @@ namespace Base
 		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
 		
 		GX_PROFILE_MSG( _SendUncheckedEvent(Message< ProfilingMsg::OnSendMsg >{ this, msg }.Async()) );
+		
+		VariantCRef		var_msg = VariantCRef::FromConst( msg );
 
-		return _msgHandler.Send( msg );
+		#include "Module.Send.inl.h"
 	}
 
 /*
@@ -88,20 +90,6 @@ namespace Base
 
 /*
 =================================================
-	Unsubscribe
-=================================================
-*
-	template <typename ...Types>
-	forceinline bool Module::Unsubscribe (Types&& ...args)
-	{
-		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
-
-		_msgHandler.Unsubscribe( FW<Types>( args )... );
-		return true;
-	}
-	
-/*
-=================================================
 	UnsubscribeAll
 =================================================
 */
@@ -147,7 +135,9 @@ namespace Base
 		if ( not GetSupportedMessages().HasType( TypeIdOf< Message<T> >() ) )
 			RETURN_ERR( "Unsupported message type '" << ToString( TypeIdOf<T>() ) << "'" );
 
-		return _msgHandler.Send( msg.From( this ) );
+		VariantCRef		var_msg = VariantCRef::FromConst( msg.From( this ) );
+		
+		#include "Module.Send.inl.h"
 	}
 		
 /*
@@ -164,16 +154,20 @@ namespace Base
 		
 		if ( not GetSupportedEvents().HasType( TypeIdOf< Message<T> >() ) )
 			RETURN_ERR( "Unsupported event type '" << ToString( TypeIdOf<T>() ) << "'" );
-
-		return _msgHandler.Send( msg.From( this ) );
+		
+		VariantCRef		var_msg = VariantCRef::FromConst( msg.From( this ) );
+		
+		#include "Module.Send.inl.h"
 	}
 	
 	template <typename T>
 	forceinline bool Module::_SendUncheckedEvent (const Message<T> &msg)
 	{
 		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
-
-		return _msgHandler.Send( msg.From( this ) );
+		
+		VariantCRef		var_msg = VariantCRef::FromConst( msg.From( this ) );
+		
+		#include "Module.Send.inl.h"
 	}
 
 /*

@@ -44,6 +44,7 @@ namespace PipelineCompiler
 
 		virtual String	BeginStruct (StringCRef typeName, uint sizeOf) const = 0;
 		virtual String	StructField (StringCRef name, StringCRef typeName, uint arraySize, uint offset, uint align, uint sizeOf) const = 0;
+		virtual String	StructCtorForInitializerList () const = 0;
 		virtual String	EndStruct () const = 0;
 
 		virtual String	Include (StringCRef filename) const = 0;

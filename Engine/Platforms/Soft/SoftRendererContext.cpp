@@ -62,7 +62,7 @@ namespace Platforms
 
 	// methods
 	public:
-		SoftRendererContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
+		SoftRendererContext (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci);
 		~SoftRendererContext ();
 
 		
@@ -84,8 +84,8 @@ namespace Platforms
 	constructor
 =================================================
 */
-	SoftRendererContext::SoftRendererContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
-		Module( gs, ModuleConfig{ SWContextModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	SoftRendererContext::SoftRendererContext (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_createInfo( ci )
 	{
 		SetDebugName( "SoftRendererContext" );
@@ -276,9 +276,9 @@ namespace Platforms
 	CreateSoftRendererContext
 =================================================
 */
-	ModulePtr SoftRendererObjectsConstructor::CreateSoftRendererContext (GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreateSoftRendererContext (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci)
 	{
-		return New< SoftRendererContext >( gs, ci );
+		return New< SoftRendererContext >( id, gs, ci );
 	}
 
 

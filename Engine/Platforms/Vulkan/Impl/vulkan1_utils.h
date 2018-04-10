@@ -60,7 +60,7 @@ namespace vk
 		
 		DEBUG_ONLY(
 		if ( ptr == null ) {
-			LOG( ("Can't get address of "_str << name).cstr(), ELog::Debug );
+			LOG( "Can't get address of "_str << name, ELog::Debug );
 		})
 		return ptr;
 	}

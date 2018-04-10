@@ -234,6 +234,12 @@
 #endif
 
 
+// atomic
+#if COMPILER_VERSION >= 500		// TODO
+#	define GX_ATOMIC_SUPPORTED	1
+#endif
+
+
 // TODO
 #if !defined( PLATFORM_ANDROID )
 #	define GX_RTTI_SUPPORTED

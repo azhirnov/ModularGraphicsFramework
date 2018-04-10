@@ -63,6 +63,7 @@ foreach ( SRC ${ANGELSCRIPT_DEPS_SRC} )
 		TARGET "External.AngelScript" POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SRC}" "${DST}"
 		COMMENT "Copying ${DST_NAME} library..."
+		VERBATIM
 	)
 endforeach ()
 

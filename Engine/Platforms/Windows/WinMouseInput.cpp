@@ -61,7 +61,7 @@ namespace PlatformWin
 
 	// methods
 	public:
-		WinMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
+		WinMouseInput (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci);
 		~WinMouseInput ();
 
 
@@ -90,8 +90,8 @@ namespace PlatformWin
 	constructor
 =================================================
 */
-	WinMouseInput::WinMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
-		Module( gs, ModuleConfig{ WinMouseInputModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	WinMouseInput::WinMouseInput (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_lbPressed{ false }
 	{
 		SetDebugName( "WinMouseInput" );
@@ -339,9 +339,9 @@ namespace Platforms
 	CreateWinMouseInput
 =================================================
 */
-	ModulePtr WinObjectsConstructor::CreateWinMouseInput (GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
+	ModulePtr WinObjectsConstructor::CreateWinMouseInput (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &ci)
 	{
-		return New< PlatformWin::WinMouseInput >( gs, ci );
+		return New< PlatformWin::WinMouseInput >( id, gs, ci );
 	}
 
 }	// Platforms

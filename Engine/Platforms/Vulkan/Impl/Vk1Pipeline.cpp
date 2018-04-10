@@ -57,7 +57,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci);
+		Vk1GraphicsPipeline (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci);
 		~Vk1GraphicsPipeline ();
 
 
@@ -94,8 +94,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1GraphicsPipeline::Vk1GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkGraphicsPipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1GraphicsPipeline::Vk1GraphicsPipeline (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_pipelineId( VK_NULL_HANDLE ),
 		_descr( ci.descr )
 	{
@@ -478,7 +478,7 @@ namespace PlatformVK
 
 	// methods
 	public:
-		Vk1ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
+		Vk1ComputePipeline (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci);
 		~Vk1ComputePipeline ();
 
 
@@ -514,8 +514,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	Vk1ComputePipeline::Vk1ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkComputePipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	Vk1ComputePipeline::Vk1ComputePipeline (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_pipelineId( VK_NULL_HANDLE ),
 		_descr( ci.descr )
 	{
@@ -798,17 +798,17 @@ namespace PlatformVK
 namespace Platforms
 {
 
-	ModulePtr VulkanObjectsConstructor::CreateVk1GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1GraphicsPipeline (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
 	{
-		return New< PlatformVK::Vk1GraphicsPipeline >( gs, ci );
+		return New< PlatformVK::Vk1GraphicsPipeline >( id, gs, ci );
 	}
 	
-	ModulePtr VulkanObjectsConstructor::CreateVk1ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
+	ModulePtr VulkanObjectsConstructor::CreateVk1ComputePipeline (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
 	{
-		return New< PlatformVK::Vk1ComputePipeline >( gs, ci );
+		return New< PlatformVK::Vk1ComputePipeline >( id, gs, ci );
 	}
 
-	ModulePtr VulkanObjectsConstructor::CreateCachedVk1GraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
+	ModulePtr VulkanObjectsConstructor::CreateCachedVk1GraphicsPipeline (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
 	{
 		ModulePtr	mod;
 		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetVkPrivateClasses>> >() );
@@ -817,10 +817,10 @@ namespace Platforms
 		mod->Send( req_cl );
 		CHECK_ERR( req_cl->result.IsDefined() and req_cl->result->pipelineCache );
 
-		return req_cl->result->pipelineCache->Create( gs, ci );
+		return req_cl->result->pipelineCache->Create( id, gs, ci );
 	}
 		
-	ModulePtr VulkanObjectsConstructor::CreateCachedVk1ComputePipeline (GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
+	ModulePtr VulkanObjectsConstructor::CreateCachedVk1ComputePipeline (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
 	{
 		ModulePtr	mod;
 		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetVkPrivateClasses>> >() );
@@ -829,7 +829,7 @@ namespace Platforms
 		mod->Send( req_cl );
 		CHECK_ERR( req_cl->result.IsDefined() and req_cl->result->pipelineCache );
 
-		return req_cl->result->pipelineCache->Create( gs, ci );
+		return req_cl->result->pipelineCache->Create( id, gs, ci );
 	}
 
 }	// Platforms

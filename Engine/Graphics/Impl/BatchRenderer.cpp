@@ -106,7 +106,7 @@ namespace Graphics
 
 	// methods
 	public:
-		BatchRenderer (GlobalSystemsRef gs, const CreateInfo::BatchRenderer &ci);
+		BatchRenderer (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::BatchRenderer &ci);
 		~BatchRenderer ();
 
 
@@ -155,8 +155,8 @@ namespace Graphics
 	constructor
 =================================================
 */
-	BatchRenderer::BatchRenderer (GlobalSystemsRef gs, const CreateInfo::BatchRenderer &ci) :
-		GraphicsBaseModule( gs, ModuleConfig{ BatchRendererModuleID, ~0u }, &_msgTypes, &_eventTypes ),
+	BatchRenderer::BatchRenderer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::BatchRenderer &ci) :
+		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci )
 	{
 		SetDebugName( "BatchRenderer" );
@@ -853,9 +853,9 @@ namespace Graphics
 	CreateBatchRenderer
 =================================================
 */
-	ModulePtr GraphicsObjectsConstructor::CreateBatchRenderer (GlobalSystemsRef gs, const CreateInfo::BatchRenderer &ci)
+	ModulePtr GraphicsObjectsConstructor::CreateBatchRenderer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::BatchRenderer &ci)
 	{
-		return New< BatchRenderer >( gs, ci );
+		return New< BatchRenderer >( id, gs, ci );
 	}
 
 }	// Graphics

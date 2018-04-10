@@ -1,8 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/ResourcePacker/Packer/ResourcePacker.h"
+
 #include "Engine/ResourcePacker/Pipelines/ScriptGraphicsPipeline.h"
 #include "Engine/ResourcePacker/Pipelines/ScriptComputePipeline.h"
+
+#include "Engine/ResourcePacker/FilePacker/BinaryFilePacker.h"
+#include "Engine/ResourcePacker/FilePacker/TextFilePacker.h"
+
 #include "Engine/Script/Bindings/DefaultBindings.h"
 
 namespace ResPack
@@ -64,6 +69,28 @@ namespace ResPack
 	
 /*
 =================================================
+	SetExecutable
+=================================================
+*/
+	void ResourcePacker::SetExecutable (StringCRef name)
+	{
+		if ( OS::FileSystem::IsAbsolutePath( name ) )
+		{
+			_exeName = name;
+		}
+		else
+		{
+			String	dir;
+			OS::FileSystem::GetCurrentDirectory( OUT dir );
+
+			_exeName = FileAddress::BuildPath( dir, name );
+		}
+
+		ASSERT( OS::FileSystem::IsFileExist( _exeName ) );
+	}
+
+/*
+=================================================
 	Run
 =================================================
 */
@@ -76,6 +103,19 @@ namespace ResPack
 		CHECK_ERR( ScriptHelper::RunScript( res ) );
 		return true;
 	}
+	
+/*
+=================================================
+	_PackFile
+=================================================
+*/
+	bool ResourcePacker::_PackFile (IFilePackerPtr &&file, StringCRef input, StringCRef output)
+	{
+		CHECK_ERR( file->Load( input ) );
+		CHECK_ERR( file->Save( output ) );
+
+		return true;
+	}
 
 /*
 =================================================
@@ -84,29 +124,52 @@ namespace ResPack
 */
 	class ResourcePacker::ScriptResourcePacker final
 	{
+	private:
+		Ptr< PipelineConverter >	_pplnConv;
+
 	public:
-		ScriptResourcePacker () {}
+		ScriptResourcePacker () : _pplnConv{ &Instance()->_pplnConverter } {}
 		ScriptResourcePacker (const ScriptResourcePacker &) = default;
 		~ScriptResourcePacker () {}
 
 		void SetPipelineConfig (const PipelineConverterConfig &cfg) {
-			Instance()->_pplnConverter.SetConfig( cfg );
+			_pplnConv->SetConfig( cfg );
 		}
 
-		void AddPipeline (const String &folder) {
-			Instance()->_pplnConverter.LoadPipeline( folder );
+		void AddPipeline (const String &filename) {
+			_pplnConv->LoadPipeline( filename );
+			_pplnConv->AddDependency( ScriptHelper::CurrentFileName() );
+			_pplnConv->AddDependency( Instance()->GetExecutableName() );
 		}
 
 		void AddAllPipelines (const String &folder) {
-			Instance()->_pplnConverter.LoadAllPipelines( folder );
+			_pplnConv->LoadAllPipelines( folder, false );
+			_pplnConv->AddDependency( ScriptHelper::CurrentFileName() );
+			_pplnConv->AddDependency( Instance()->GetExecutableName() );
+		}
+		
+		void RecursiveAddAllPipelines (const String &folder) {
+			_pplnConv->LoadAllPipelines( folder, true );
+			_pplnConv->AddDependency( ScriptHelper::CurrentFileName() );
+			_pplnConv->AddDependency( Instance()->GetExecutableName() );
 		}
 
 		void AddPipelineTemplate (const String &filename, const String &funcName) {
-			Instance()->_pplnConverter.LoadPipelineTemplate( filename, funcName );
+			_pplnConv->LoadPipelineTemplate( filename, funcName );
+			_pplnConv->AddDependency( ScriptHelper::CurrentFileName() );
+			_pplnConv->AddDependency( Instance()->GetExecutableName() );
 		}
 
 		void ConvertPipelines (const String &output) {
-			Instance()->_pplnConverter.ConvertPipelines( output );
+			_pplnConv->ConvertPipelines( output );
+		}
+
+		void PackTextFile (const String &input, const String &output) {
+			//Instance()->_PackFile( IFilePackerPtr{new TextFilePacker()}, input, output );
+		}
+
+		void PackBinaryFile (const String &input, const String &output) {
+			//Instance()->_PackFile( IFilePackerPtr{new BinaryFilePacker()}, input, output );
 		}
 	};
 	
@@ -133,11 +196,14 @@ namespace ResPack
 		ClassBinder<Self>		binder{ se, "ResourcePacker" };
 
 		binder.CreateClassValue();
-		binder.AddMethod( &Self::SetPipelineConfig,		"SetConfig" );
-		binder.AddMethod( &Self::AddPipeline,			"AddPipeline" );
-		binder.AddMethod( &Self::AddAllPipelines,		"AddAllPipelines" );
-		binder.AddMethod( &Self::AddPipelineTemplate,	"AddPipelineTemplate" );
-		binder.AddMethod( &Self::ConvertPipelines,		"ConvertPipelines" );
+		binder.AddMethod( &Self::SetPipelineConfig,			"SetConfig" );
+		binder.AddMethod( &Self::AddPipeline,				"AddPipeline" );
+		binder.AddMethod( &Self::AddAllPipelines,			"AddAllPipelines" );
+		binder.AddMethod( &Self::RecursiveAddAllPipelines,	"RecursiveAddPipelines" );
+		binder.AddMethod( &Self::AddPipelineTemplate,		"AddPipelineTemplate" );
+		binder.AddMethod( &Self::ConvertPipelines,			"ConvertPipelines" );
+		binder.AddMethod( &Self::PackTextFile,				"PackTextFile" );
+		binder.AddMethod( &Self::PackBinaryFile,			"PackBinaryFile" );
 	}
 
 }	// ResPack

@@ -86,7 +86,7 @@ namespace PlatformSW
 
 	// methods
 	public:
-		SWCommandQueue (GlobalSystemsRef gs, const CreateInfo::GpuCommandQueue &ci);
+		SWCommandQueue (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuCommandQueue &ci);
 		~SWCommandQueue ();
 
 
@@ -118,8 +118,8 @@ namespace PlatformSW
 	constructor
 =================================================
 */
-	SWCommandQueue::SWCommandQueue (GlobalSystemsRef gs, const CreateInfo::GpuCommandQueue &ci) :
-		SWBaseModule( gs, ModuleConfig{ SWCommandQueueModuleID, 1 }, &_msgTypes, &_eventTypes ),
+	SWCommandQueue::SWCommandQueue (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandQueue &ci) :
+		SWBaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_family{ ci.family },	_lockQueue{ false }
 	{
 		SetDebugName( "SWCommandQueue" );
@@ -449,9 +449,9 @@ namespace PlatformSW
 
 namespace Platforms
 {
-	ModulePtr SoftRendererObjectsConstructor::CreateSWCommandQueue (GlobalSystemsRef gs, const CreateInfo::GpuCommandQueue &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreateSWCommandQueue (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandQueue &ci)
 	{
-		return New< PlatformSW::SWCommandQueue >( gs, ci );
+		return New< PlatformSW::SWCommandQueue >( id, gs, ci );
 	}
 
 }	// Platforms

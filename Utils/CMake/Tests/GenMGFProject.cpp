@@ -29,6 +29,7 @@ extern void GenMGFProject ()
 
 	// setup graphics api version or disable it (pass 0 to version)
 	builder.AddOption( "OPENGL_VERSION", "Define OpenGL version, supported: 440, 450", 450 );
+	builder.AddOption( "OPENGLES_VERSION", "Define OpenGLES version, supported: 200, 300, 310, 320", 320 );
 	builder.AddOption( "OPENCL_VERSION", "Define OpenCL version, supported: 110, 120, 200", 120 );
 	builder.AddOption( "VULKAN_VERSION", "Define Vulkan version, supported: 100, 110", 100 );
 	builder.AddOption( "SOFTRENDER_VERSION", "Define Software renderer version, 100 is supported", 100 );
@@ -43,23 +44,23 @@ extern void GenMGFProject ()
 			const String	dbg_lib = VS::MultiThreadedDebugDll;
 			const String	rel_lib = VS::MultiThreadedDll;
 
-			Array<String>	shared_linker_cfg{ VS_Linker::OptReferences, VS_Linker::COMDATFolding, VS_Linker::NoIncrementalLinking };
+			Array<String>	shared_linker_cfg	= { VS_Linker::OptReferences, VS_Linker::COMDATFolding, VS_Linker::NoIncrementalLinking };
 
-			Array<String>	shared_cxx_flags{ VS::CppLastest, VS::MultiThreadCompilation, VS::NoMinimalRebuild, VS::RemUnrefCode,
-											  VS::NoFunctionLevelLinking, VS::FloatPointStrict, VS::FloatPointNoExceptions };
+			Array<String>	shared_cxx_flags	= { VS::CppLastest, VS::MultiThreadCompilation, VS::NoMinimalRebuild, VS::RemUnrefCode,
+													VS::NoFunctionLevelLinking, VS::FloatPointStrict, VS::FloatPointNoExceptions };
 
-			Array<String>	release_cxx_flags{ VS::InlineAll, VS::InlineAll, VS::Intrinsic, VS::OptFavorFastCode, VS::OptOmitFramePointers,
-											   VS::OptFiberSafe, VS::OptWholeProgram, VS::StringPooling, VS::NoSecurityCheck, rel_lib };
+			Array<String>	release_cxx_flags	= { VS::InlineAll, VS::InlineAll, VS::Intrinsic, VS::OptFavorFastCode, VS::OptOmitFramePointers,
+													VS::OptFiberSafe, VS::OptWholeProgram, VS::StringPooling, VS::NoSecurityCheck, rel_lib };
 
-			Set<uint>	errors				= { VS::ReturningAddressOfLocalVariable, VS::TypeNameMismatch, VS::UninitializedVarUsed,
-												VS::TooManyParamsForMacro, VS::RecursiveOnAllControlPaths, VS::IllegalConversion,
-												VS::UnrecognizedEscapeSequence, VS::UnreachableCode, VS::MultipleAssignmentOperators,
-												VS::InconsistentDllLinkage, VS::ClassNeedsDllInterface, VS::EmptyControlledStatement,
-												VS::AssignInConditionalExpr };
-			Set<uint>	enabled_warnings	= { VS::InitOrder, VS::UnknownMacro, VS::UnsafeFunctionorVariable, VS::ConditionalExprIsConstant,
-												VS::ReintCastBetwenRelatedClasses };
-			Set<uint>	disabled_warnings	= { VS::DecoratedNameWasTruncated, VS::CastTruncatesConstantValue, VS::UnusedInlineFunction,
-												VS::ConversionSignedUnsignedMismatch, VS::ReservedLiteralSuffix };
+			Set<uint>		errors				= { VS::ReturningAddressOfLocalVariable, VS::TypeNameMismatch, VS::UninitializedVarUsed,
+													VS::TooManyParamsForMacro, VS::RecursiveOnAllControlPaths, VS::IllegalConversion,
+													VS::UnrecognizedEscapeSequence, VS::UnreachableCode, VS::MultipleAssignmentOperators,
+													VS::InconsistentDllLinkage, VS::ClassNeedsDllInterface, VS::EmptyControlledStatement,
+													VS::AssignInConditionalExpr, VS::ShiftCountNegativeOrBig };
+			Set<uint>		enabled_warnings	= { VS::InitOrder, VS::UnknownMacro, VS::UnsafeFunctionorVariable, VS::ConditionalExprIsConstant,
+													VS::ReintCastBetwenRelatedClasses };
+			Set<uint>		disabled_warnings	= { VS::DecoratedNameWasTruncated, VS::CastTruncatesConstantValue, VS::UnusedInlineFunction,
+													VS::ConversionSignedUnsignedMismatch, VS::ReservedLiteralSuffix };
 
 			errors.AddArray( VS::ReturnType );
 			errors.AddArray( VS::MemberNoOverride );
@@ -97,7 +98,7 @@ extern void GenMGFProject ()
 			auto	debug_cfg = msvc->AddConfiguration( "Debug" );
 			{
 				debug_cfg->AddGlobalCFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation })
-						  ->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation })
+						  ->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation, VS::DbgProgramDatabase })
 						  ->AddGlobalLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
 
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
@@ -111,7 +112,7 @@ extern void GenMGFProject ()
 			auto	analyze_cfg = msvc->AddConfiguration( "DebugAnalyze" );
 			{
 				analyze_cfg->AddGlobalCFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation })
-							->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation })
+							->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation, VS::DbgProgramDatabase })
 							->AddGlobalLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
 
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
@@ -166,7 +167,7 @@ extern void GenMGFProject ()
 			gcc->AddSource( "set( CONFIGURATION_DEPENDENT_PATH OFF CACHE INTERNAL \"\" FORCE )" );
 
 			Array<String>	shared_cxx_flags{ GCC::Cpp1z };
-			Array<String>	shared_linked_flags{ GccLinker::Static, GccLinker::StaticLibGCC, GccLinker::StaticLibStdCPP, GccLinker::Link("dl") };
+			Array<String>	shared_linked_flags{ GccLinker::Static, GccLinker::StaticLibGCC, GccLinker::StaticLibStdCPP };
 
 			shared_cxx_flags.Append({ /*GCC::Pedantic,*/ GCC::CharSubscripts, GCC::DoublePromotion, GCC::Format, GCC::Main, GCC::MissingBraces, GCC::MissingIncludeDirs,
 									  GCC::Uninititalized, GCC::MayBeUninitialized, GCC::UnknownPragmas, GCC::Pragmas, GCC::StrictAliasing, GCC::StrictOverflow,
@@ -486,6 +487,7 @@ extern void GenMGFProject ()
 			engine_platforms->LinkLibrary( "Shcore.lib", "(MSVC AND WIN32)" )->LinkLibrary( "Dxva2.lib", "WIN32" );
 			
 			engine_platforms->AddDefinition( "GRAPHICS_API_OPENGL=${OPENGL_VERSION}", "DEFINED OPENGL_VERSION AND NOT (OPENGL_VERSION EQUAL \"0\")" );
+			engine_platforms->AddDefinition( "GRAPHICS_API_OPENGLES=${OPENGLES_VERSION}", "DEFINED OPENGLES_VERSION AND NOT (OPENGLES_VERSION EQUAL \"0\")" );
 			engine_platforms->AddDefinition( "COMPUTE_API_OPENCL=${OPENCL_VERSION}", "DEFINED OPENCL_VERSION AND NOT (OPENCL_VERSION EQUAL \"0\")" );
 			engine_platforms->AddDefinition( "GRAPHICS_API_VULKAN=${VULKAN_VERSION}", "DEFINED VULKAN_VERSION AND NOT (VULKAN_VERSION EQUAL \"0\")" );
 			engine_platforms->AddDefinition( "GRAPHICS_API_SOFT=${SOFTRENDER_VERSION}", "DEFINED SOFTRENDER_VERSION AND NOT (SOFTRENDER_VERSION EQUAL \"0\")" );
@@ -606,36 +608,44 @@ extern void GenMGFProject ()
 	#ifdef ENABLE_EXTERNALS
 		const auto	PackRes =	LAMBDA( engine_res_pack ) (auto* proj, StringCRef resourceScript)
 							{
-								proj->AddDependency( engine_res_pack );
+								String	res_script;
+								res_script << "\"${CMAKE_SOURCE_DIR}/" << FileAddress::BuildPath( proj->GetRelativePath(), resourceScript ) << '"';
+
+								proj->AddDependency( "Deps_"_str << proj->GetName() );
 								proj->AddSource(
 									"if (NOT DEFINED RESOURCE_PACKER_EXE)\n"
 									"	message( FATAL_ERROR \"RESOURCE_PACKER_EXE is not defined\" )\n"
-									"endif ()\n"
-									"add_custom_command(\n"_str
-									"	TARGET \"" << proj->GetName() << "\" PRE_BUILD\n"
-									"	COMMAND ${RESOURCE_PACKER_EXE} -R \"${CMAKE_SOURCE_DIR}/" << FileAddress::BuildPath( proj->GetRelativePath(), resourceScript ) << "\"\n"
+									"endif ()\n"_str
+									<<
+									"add_custom_target( \"Deps_" << proj->GetName() << "\"\n"
+									"	COMMAND ${RESOURCE_PACKER_EXE} -R " << res_script << "\n"
+									"	DEPENDS ${RESOURCE_PACKER_EXE} \"" << res_script << "\"\n"
 									"	COMMENT \"Pack resources for '" << proj->GetName() << "'...\"\n"
-									")\n" );
+									"	VERBATIM\n"
+									")\n"
+									"add_dependencies( \"Deps_" << proj->GetName() << "\" \"" << engine_res_pack->GetName() << "\" )\n"
+									"set_property( TARGET \"Deps_" << proj->GetName() << "\" PROPERTY FOLDER \"_deps_\" )\n"
+								);
 							};
 
 		if ( test_engine_base )
 		{
-			PackRes( test_engine_base, "Pipelines/resources.as.c" );
+			PackRes( test_engine_base, "Pipelines/resources.as" );
 		}
 
 		if ( test_engine_gapi )
 		{
-			PackRes( test_engine_gapi, "resources.as.c" );
+			PackRes( test_engine_gapi, "resources.as" );
 		}
 
 		if ( test_engine_graphics )
 		{
-			PackRes( test_engine_graphics, "Pipelines/resources.as.c" );
+			PackRes( test_engine_graphics, "Pipelines/resources.as" );
 		}
 
 		if ( proj_shader_editor )
 		{
-			PackRes( proj_shader_editor, "Pipelines/resources.as.c" );
+			PackRes( proj_shader_editor, "Pipelines/resources.as" );
 		}
 	#endif	// ENABLE_EXTERNALS
 	//----------------------------------------------------------------------------
@@ -653,6 +663,7 @@ extern void GenMGFProject ()
 	#endif	// ENABLE_UTILS
 	}
 	//----------------------------------------------------------------------------
+
 
 	// save
 	builder.Save();

@@ -30,17 +30,17 @@ namespace Scene
 	{
 	// methods
 	public:
-		static ModulePtr  CreateFreeCamera (GlobalSystemsRef, const CreateInfo::Camera &);
-		static ModulePtr  CreateFreeVRCamera (GlobalSystemsRef, const CreateInfo::Camera &);
+		static ModulePtr  CreateFreeCamera (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::Camera &);
+		static ModulePtr  CreateFreeVRCamera (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::Camera &);
 
-		static ModulePtr  CreateWindowSurface (GlobalSystemsRef, const CreateInfo::RenderSurface &);
-		static ModulePtr  CreateVRSurface (GlobalSystemsRef, const CreateInfo::RenderSurface &);
+		static ModulePtr  CreateWindowSurface (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::RenderSurface &);
+		static ModulePtr  CreateVRSurface (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::RenderSurface &);
 
-		static ModulePtr  CreateSceneManager (GlobalSystemsRef, const CreateInfo::SceneManager &);
-		static ModulePtr  CreateSceneMainThread (GlobalSystemsRef, const CreateInfo::SceneMain &);
-		static ModulePtr  CreateSceneRenderer (GlobalSystemsRef, const CreateInfo::SceneRenderer &);
-		static ModulePtr  CreateScenePhysics (GlobalSystemsRef, const CreateInfo::ScenePhysics &);
-		static ModulePtr  CreateSceneLogic (GlobalSystemsRef, const CreateInfo::SceneLogic &);
+		static ModulePtr  CreateSceneManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::SceneManager &);
+		static ModulePtr  CreateSceneMainThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::SceneMain &);
+		static ModulePtr  CreateSceneRenderer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::SceneRenderer &);
+		static ModulePtr  CreateScenePhysics (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ScenePhysics &);
+		static ModulePtr  CreateSceneLogic (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::SceneLogic &);
 	};
 
 

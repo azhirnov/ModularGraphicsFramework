@@ -81,7 +81,7 @@ namespace PlatformSW
 
 	// methods
 	public:
-		SWImage (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci);
+		SWImage (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci);
 		~SWImage ();
 
 
@@ -131,8 +131,8 @@ namespace PlatformSW
 	constructor
 =================================================
 */
-	SWImage::SWImage (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
-		SWBaseModule( gs, ModuleConfig{ SWImageModuleID, UMax }, &_msgTypes, &_eventTypes ),
+	SWImage::SWImage (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
 		_descr( ci.descr ),				_imageLayout( Uninitialized ),
 		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
 		_useMemMngr( ci.allocMem ),		_isBindedToMemory( false )
@@ -673,9 +673,9 @@ namespace PlatformSW
 
 namespace Platforms
 {
-	ModulePtr SoftRendererObjectsConstructor::CreateSWImage (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
+	ModulePtr SoftRendererObjectsConstructor::CreateSWImage (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
 	{
-		return New< PlatformSW::SWImage >( gs, ci );
+		return New< PlatformSW::SWImage >( id, gs, ci );
 	}
 }	// Platforms
 }	// Engine

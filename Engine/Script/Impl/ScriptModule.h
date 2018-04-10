@@ -68,6 +68,8 @@ namespace GXScript
 		using namespace AngelScript;
 		
 		CHECK_ERR( _module );
+		CHECK_ERR( not script.Empty() );
+		CHECK_ERR( not entry.Empty() );
 
 		// prepare script
 		String	signature;

@@ -495,19 +495,19 @@ namespace GXScript
 	struct LogFunc
 	{
 		static void Err (const String &msg) {
-			LOG( msg.cstr(), ELog::Error );
+			LOG( msg, ELog::Error );
 		}
 
 		static void Warn (const String &msg) {
-			LOG( msg.cstr(), ELog::Warning );
+			LOG( msg, ELog::Warning );
 		}
 
 		static void Info (const String &msg) {
-			LOG( msg.cstr(), ELog::Info );
+			LOG( msg, ELog::Info );
 		}
 
 		static void Dbg (const String &msg) {
-			LOG( msg.cstr(), ELog::Debug );
+			LOG( msg, ELog::Debug );
 		}
 	};
 	

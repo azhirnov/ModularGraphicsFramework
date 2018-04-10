@@ -162,9 +162,15 @@ namespace GXTypes
 
 		template <typename B, typename S, typename MC>
 		CHECKRES static Self From (const Array<B,S,MC> &arr);
+		
+		template <typename B, typename S, typename MC>
+		CHECKRES static Self From (Array<B,S,MC> &arr);
 
 		template <typename B, typename S, typename MC>
 		CHECKRES static Self From (const TString<B,S,MC> &str);
+		
+		template <typename B, typename S, typename MC>
+		CHECKRES static Self From (TString<B,S,MC> &str);
 
 		CHECKRES static Self FromVoid (void_ptr_t ptr, BytesU size);
 		
@@ -175,7 +181,13 @@ namespace GXTypes
 		CHECKRES static Self FromStd (const std::vector<B> &vec);
 		
 		template <typename B>
+		CHECKRES static Self FromStd (std::vector<B> &vec);
+		
+		template <typename B>
 		CHECKRES static Self FromStd (const std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str);
+		
+		template <typename B>
+		CHECKRES static Self FromStd (std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str);
 
 		template <typename B>
 		CHECKRES static Self FromValue (B &ref);
@@ -318,6 +330,16 @@ namespace GXTypes
 	template <typename T>
 	template <typename B>
 	inline ArrayRef<T>  ArrayRef<T>::FromStd (const std::vector<B> &vec)
+	{
+		if ( not vec.empty() )
+			return FromVoid( static_cast<void_ptr_t>(vec.data()), vec.size() * SizeOf<B> );
+		else
+			return ArrayRef<T>();
+	}
+	
+	template <typename T>
+	template <typename B>
+	inline ArrayRef<T>  ArrayRef<T>::FromStd (std::vector<B> &vec)
 	{
 		if ( not vec.empty() )
 			return FromVoid( static_cast<void_ptr_t>(vec.data()), vec.size() * SizeOf<B> );

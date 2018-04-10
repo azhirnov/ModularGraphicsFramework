@@ -276,7 +276,7 @@ namespace cl
 		msg << ", in " << clcall;
 		msg << ", function: " << func;
 
-		LOG( msg.cstr(), ELog::Error, file, line );
+		LOG( msg, ELog::Error, file, line );
 		return false;
 	}
 

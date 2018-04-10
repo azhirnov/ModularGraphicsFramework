@@ -55,13 +55,22 @@ namespace GX_STL
 
 	namespace GlobalConst
 	{
-		// Engine.Graphics
-		static const int	Graphics_MaxColorBuffers			= 8;
-		static const int	Graphics_MaxAttribs					= 16;
-		static const int	Graphics_MaxViewports				= 16;
-		//static const int	Graphics_MaxTextureSize				= 1<<14;
-		static const int	Graphics_MaxRenderPassSubpasses		= 8;
+		// Engine.Platforms
+		static constexpr int	GAPI_MaxColorBuffers			= 8;
+		static constexpr int	GAPI_MaxAttribs					= 16;
+		static constexpr int	GAPI_MaxViewports				= 16;
+		//static constexpr int	GAPI_MaxTextureSize				= 1<<14;
+		static constexpr int	GAPI_MaxRenderPassSubpasses		= 8;
+		static constexpr int	GAPI_MaxSpecializationConstants	= 16;
+		static constexpr int	GAPI_MaxPushConstants			= 32;
+		static constexpr int	GAPI_MaxCopyRegions				= 8;
+		static constexpr int	GAPI_MaxBlitRegions				= 8;
+		static constexpr int	GAPI_MaxClearRects				= 16;
+		static constexpr int	GAPI_MaxWaitEvents				= 8;
+		static constexpr int	GAPI_MaxWaitFence				= 8;
+		static constexpr int	GAPI_MaxWaitSemaphores			= 8;
 
+		static constexpr int	OS_MaxDisplays						= 8;
 	};
 
 }	// GX_STL

@@ -10,8 +10,6 @@ class GApp final : public StaticRefCountedObject
 // types
 private:
 	using RenderPassMsgList_t = CompileTime::TypeListFrom< Message<GpuMsg::GetRenderPassDescriptor> >;
-	
-	struct Vertex;
 
 
 // variables
