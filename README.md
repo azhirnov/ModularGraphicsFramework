@@ -21,12 +21,12 @@ Supported APIs:
 
 Supported OS:
 - Windows
-- (other with SDL2 - not tested)
-- (Android - somewhen)
+- Linux (WIP)
+- Android (WIP)
 
 Supported compilers:
 - VS 2017 (tested with 15.5.7)
-- MinGW (tested with 7.2.0)
+- MinGW (tested with 7.2.0, LunarGLASS is not supported)
 
 Dependencies:
 - LunarGLASS, SDL2, GLM and other https://github.com/azhirnov/ModularGraphicsFramework-Externals
