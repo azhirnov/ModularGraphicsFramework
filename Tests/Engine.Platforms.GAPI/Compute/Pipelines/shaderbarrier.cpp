@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'Compute/Pipelines/ShaderBarrier.ppln'
-// Created at: 2018/04/10 - 21:16:06
+// Created at: 2018/04/10 - 21:49:16
 
 #include "all_pipelines.h"
 // C++ shader
@@ -11,8 +11,8 @@ namespace SWShaderLang
 	#define IN
 	#define OUT
 	
-	Float MaxMag (const Float a, const Float b);
 	Float4 MaxMag (const Float4 a, const Float4 b);
+	Float MaxMag (const Float a, const Float b);
 	
 	//---------------------------------
 	

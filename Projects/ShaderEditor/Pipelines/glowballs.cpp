@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'ShaderEditor\Pipelines/Glowballs.ppln'
-// Created at: 2018/04/10 - 21:14:09
+// Created at: 2018/04/10 - 21:50:35
 
 #include "all_pipelines.h"
 
@@ -321,12 +321,12 @@ float divergence;
 vec4 traceScene (in Camera cam, in vec2 seed, in float lastB);
 Camera setupCam (in vec3 pos, in vec3 target, in float fov, in vec2 uv);
 void mainImage (out vec4 fragColor, in vec2 fragCoord);
-HitTest intersectBox (in Ray r, in Box b);
-float nrand (in vec2 n);
-HitTest intersectSphere (in Ray r, in Sphere s);
 HitTest minT (in HitTest a, in HitTest b);
 HitTest minT (in HitTest a, in HitTest b, in HitTest c);
 HitTest minT (in HitTest a, in HitTest b, in HitTest c, in HitTest d, in HitTest e);
+HitTest intersectBox (in Ray r, in Box b);
+float nrand (in vec2 n);
+HitTest intersectSphere (in Ray r, in Sphere s);
 
 //---------------------------------
 

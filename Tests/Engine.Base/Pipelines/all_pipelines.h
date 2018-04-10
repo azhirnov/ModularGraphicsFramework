@@ -1,5 +1,5 @@
 // This is generated file
-// Created at: 2018/04/10 - 20:59:35
+// Created at: 2018/04/10 - 21:51:55
 
 #pragma once
 
@@ -22,13 +22,13 @@ namespace Pipelines
 
 namespace Pipelines
 {
-// From file 'default2.cpp'
-void Create_default2 (PipelineTemplateDescriptor& descr);
+// From file 'defaultcompute2.cpp'
+void Create_defaultcompute2 (PipelineTemplateDescriptor& descr);
 
 // From file 'default.cpp'
 void Create_default (PipelineTemplateDescriptor& descr);
 
-// From file 'defaultcompute2.cpp'
-void Create_defaultcompute2 (PipelineTemplateDescriptor& descr);
+// From file 'default2.cpp'
+void Create_default2 (PipelineTemplateDescriptor& descr);
 
 };

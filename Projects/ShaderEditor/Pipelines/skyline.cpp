@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'ShaderEditor\Pipelines/Skyline.ppln'
-// Created at: 2018/04/10 - 21:14:09
+// Created at: 2018/04/10 - 21:50:36
 
 #include "all_pipelines.h"
 
@@ -300,31 +300,31 @@ float voxelPad;
 
 //---------------------------------
 
-float mixP (in float f0, in float f1, in float a);
+Ray Ray_From (const vec3 leftBottom, const vec3 rightBottom, const vec3 leftTop, const vec3 rightTop, const vec3 origin, const float nearPlane, const vec2 unormCoord);
+float Hash21 (in vec2 uv);
+vec2 Hash22 (in vec2 uv);
+float Hash11 (in float a);
+float Hash2d (in vec2 uv);
 float Hash3d (in vec3 uv);
+float mixP (in float f0, in float f1, in float a);
 float noise2d (in vec2 uv);
-float saturate (in float a);
 float noise (in vec3 uv);
+float saturate (in float a);
 vec3 saturate (in vec3 a);
 vec3 GetSunColorSmall (in vec3 rayDir, in vec3 sunDir);
 vec3 GetEnvMap (in vec3 rayDir, in vec3 sunDir);
 vec3 GetEnvMapSkyline (in vec3 rayDir, in vec3 sunDir, in float height);
-float sdBox (in vec3 p, in vec3 radius);
 vec2 matmin (in vec2 a, in vec2 b);
+float sdBox (in vec3 p, in vec3 radius);
 float cylCap (in vec3 p, in float r, in float lenRad);
-float smin (in float a, in float b, in float k);
 float Repeat (in float a, in float len);
+float smin (in float a, in float b, in float k);
 vec2 Car (in vec3 baseCenter, in float unique);
 vec2 CityBlock (in vec3 p, in vec2 pint);
 vec2 DistanceToObject (in vec3 p);
 void CalcWindows (in vec2 block, in vec3 pos, inout vec3 texColor, inout float windowRef, inout vec3 normal);
 vec3 RayTrace (const vec2 fragCoord, const Ray ray);
 void mainImage (out vec4 fragColor, in vec2 fragCoord);
-Ray Ray_From (const vec3 leftBottom, const vec3 rightBottom, const vec3 leftTop, const vec3 rightTop, const vec3 origin, const float nearPlane, const vec2 unormCoord);
-vec2 Hash22 (in vec2 uv);
-float Hash21 (in vec2 uv);
-float Hash11 (in float a);
-float Hash2d (in vec2 uv);
 
 //---------------------------------
 

@@ -1,5 +1,5 @@
 // This is generated file
-// Created at: 2018/04/10 - 21:14:08
+// Created at: 2018/04/10 - 21:50:35
 
 #pragma once
 
@@ -31,16 +31,16 @@ void Create_drawtexturedquad (PipelineTemplateDescriptor& descr);
 // From file 'glowballs.cpp'
 void Create_glowballs (PipelineTemplateDescriptor& descr);
 
-// From file 'voronnoirecursion.cpp'
-void Create_voronnoirecursion (PipelineTemplateDescriptor& descr);
+// From file 'sireniandawn2.cpp'
+void Create_sireniandawn2 (PipelineTemplateDescriptor& descr);
 
 // From file 'skyline.cpp'
 void Create_skyline (PipelineTemplateDescriptor& descr);
 
-// From file 'sireniandawn2.cpp'
-void Create_sireniandawn2 (PipelineTemplateDescriptor& descr);
-
 // From file 'sireniandawn1.cpp'
 void Create_sireniandawn1 (PipelineTemplateDescriptor& descr);
+
+// From file 'voronnoirecursion.cpp'
+void Create_voronnoirecursion (PipelineTemplateDescriptor& descr);
 
 };

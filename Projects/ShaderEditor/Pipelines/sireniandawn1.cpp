@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'ShaderEditor\Pipelines/SirenianDawn1.ppln'
-// Created at: 2018/04/10 - 21:14:10
+// Created at: 2018/04/10 - 21:50:37
 
 #include "all_pipelines.h"
 
@@ -286,22 +286,22 @@ const mat2x2 m2 = mat2x2( 0.80000001, 0.60000002, -0.60000002, 0.80000001 );
 
 //---------------------------------
 
-float terrain (in vec2 p);
-float map (in vec3 p);
-float march (in vec3 ro, in vec3 rd, out float itrc);
-vec3 fog (in vec3 ro, in vec3 rd, in vec3 col, in float ds);
-float linstep (in float mn, in float mx, in float x);
 vec3 stars (in vec3 p);
-vec3 scatter (in vec3 ro, in vec3 rd);
-vec3 hash33 (in vec3 p);
 void mainImage (out vec4 fragColor, in vec2 fragCoord);
-float noise (in vec2 x);
 vec3 normal (in vec3 p, in float ds);
-float bnoise (in vec2 p);
+float noise (in vec2 x);
+vec3 hash33 (in vec3 p);
+vec3 scatter (in vec3 ro, in vec3 rd);
 float fbm (in vec2 p);
+float bnoise (in vec2 p);
 vec3 bump (in vec3 p, in vec3 n, in float ds);
 float curv (in vec3 p, in float w);
 vec3 noised (in vec2 x);
+vec3 fog (in vec3 ro, in vec3 rd, in vec3 col, in float ds);
+float linstep (in float mn, in float mx, in float x);
+float terrain (in vec2 p);
+float map (in vec3 p);
+float march (in vec3 ro, in vec3 rd, out float itrc);
 
 //---------------------------------
 
