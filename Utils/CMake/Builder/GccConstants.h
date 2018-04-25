@@ -163,6 +163,7 @@ namespace GCC
 	static constexpr char	Terminate[]				= "-Wterminate";
 	static constexpr char	Attribute[]				= "-Wattributes";
 
+	static constexpr char	Reorder[]				= "-Wreorder";
 
 	inline String WarningToError (StringCRef code)
 	{

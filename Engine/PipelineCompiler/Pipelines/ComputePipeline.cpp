@@ -29,6 +29,9 @@ namespace PipelineCompiler
 		// unite struct and block types from shaders
 		_structTypes.Clear();
 		CHECK_ERR( _MergeStructTypes( disasm.structTypes, INOUT _structTypes ) );
+		
+		// update offsets by packing
+		CHECK_ERR( _CalculateOffsets( INOUT _structTypes ) );
 
 		_originTypes = _structTypes;
 		
@@ -60,7 +63,7 @@ namespace PipelineCompiler
 		// add c++ types localy
 		if ( not cfg.searchForSharedTypes )
 		{
-			cfg._glslTypes = "";
+			/*cfg._glslTypes = "";
 			
 			CHECK_ERR( _CalculateOffsets( INOUT _structTypes ) );
 		
@@ -73,7 +76,7 @@ namespace PipelineCompiler
 			String	ser_str;
 			CHECK_ERR( _AllStructsToString( _structTypes, ser, OUT ser_str, OUT cfg._glslTypes ) );
 
-			src << ser_str;
+			src << ser_str;*/
 		}
 
 		FOR( i, cfg.includings ) {

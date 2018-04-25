@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'Compute/Pipelines/CopyFloatImage2D.ppln'
-// Created at: 2018/04/10 - 21:49:15
+// Created at: 2018/04/25 - 16:07:56
 
 #include "all_pipelines.h"
 // C++ shader
@@ -21,7 +21,9 @@ namespace SWShaderLang
 		// shader
 	{
 		Int2 coord = Int3( gl_GlobalInvocationID ).xy;
+		;
 		Float4 color = imageLoad( un_SrcImage, coord );
+		;
 		imageStore( un_DstImage, coord, color );
 	}
 	
@@ -54,10 +56,12 @@ layout(binding=1) layout(rgba8) readonly uniform image2D un_SrcImage;
 
 //---------------------------------
 
-void main ()
+void main()
 {
 	ivec2 coord = ivec3( gl_GlobalInvocationID ).xy;
+	;
 	vec4 color = imageLoad( un_SrcImage, coord );
+	;
 	imageStore( un_DstImage, coord, color );
 }
 
@@ -85,8 +89,8 @@ void main ()
 0x00000005, 0x00000000, 0x00000004, 0x000200F8, 0x00000006, 0x0004003B, 0x00000009, 0x0000000A, 0x00000007, 0x0004003B, 0x00000015, 0x00000016, 
 0x00000007, 0x00040008, 0x00000001, 0x0000000B, 0x00000000, 0x0004003D, 0x0000000C, 0x0000000F, 0x0000000E, 0x0004007C, 0x00000010, 0x00000011, 
 0x0000000F, 0x0007004F, 0x00000008, 0x00000012, 0x00000011, 0x00000011, 0x00000000, 0x00000001, 0x0003003E, 0x0000000A, 0x00000012, 0x00040008, 
-0x00000001, 0x0000000C, 0x00000000, 0x0004003D, 0x00000017, 0x0000001A, 0x00000019, 0x0004003D, 0x00000008, 0x0000001B, 0x0000000A, 0x00050062, 
-0x00000014, 0x0000001C, 0x0000001A, 0x0000001B, 0x0003003E, 0x00000016, 0x0000001C, 0x00040008, 0x00000001, 0x0000000D, 0x00000000, 0x0004003D, 
+0x00000001, 0x0000000D, 0x00000000, 0x0004003D, 0x00000017, 0x0000001A, 0x00000019, 0x0004003D, 0x00000008, 0x0000001B, 0x0000000A, 0x00050062, 
+0x00000014, 0x0000001C, 0x0000001A, 0x0000001B, 0x0003003E, 0x00000016, 0x0000001C, 0x00040008, 0x00000001, 0x0000000F, 0x00000000, 0x0004003D, 
 0x0000001D, 0x00000020, 0x0000001F, 0x0004003D, 0x00000008, 0x00000021, 0x0000000A, 0x0004003D, 0x00000014, 0x00000022, 0x00000016, 0x00040063, 
 0x00000020, 0x00000021, 0x00000022, 0x000100FD, 0x00010038 });
 	descr.Compute().StringCL( 
@@ -239,7 +243,9 @@ kernel void main (
 
 {
 	int2 coord = convert_int3( ((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))) ).xy;
+	;
 	float4 color = read_imagef(un_SrcImage, coord);
+	;
 	write_imagef(un_DstImage, coord, color);
 }
 

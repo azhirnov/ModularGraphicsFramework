@@ -46,8 +46,8 @@ namespace GXPhysics
 	{
 	// types
 	public:
-		typedef TPhysicsDimension< Dim, FracPower >	Self;
-		typedef FracPower							POWER;
+		using Self		= TPhysicsDimension< Dim, FracPower >;
+		using POWER		= FracPower;
 	
 		static const EPhysicsDimension::type		DIMENSION	= Dim;
 
@@ -59,21 +59,21 @@ namespace GXPhysics
 
 		template <typename T>
 		struct Mul1 {
-			typedef TPhysicsDimension< DIMENSION, typename POWER::template Add< typename T::POWER > >	type;
+			using type = TPhysicsDimension< DIMENSION, typename POWER::template Add< typename T::POWER > >;
 		};
 
 		template <typename T>
 		struct MulIfSame1 {
-			typedef typename CompileTime::SwitchType< IsSame1<T>::value, typename Mul1<T>::type, Self >	type;
+			using type = typename CompileTime::SwitchType< IsSame1<T>::value, typename Mul1<T>::type, Self >;
 		};
 
 		struct Inverse1 {
-			typedef TPhysicsDimension< DIMENSION, typename POWER::Neg >	type;
+			using type = TPhysicsDimension< DIMENSION, typename POWER::Neg >;
 		};
 
 		template <typename ToFracPower>
 		struct Power1 {
-			typedef TPhysicsDimension< DIMENSION, typename POWER::template Mul< ToFracPower > >		type;
+			using type = TPhysicsDimension< DIMENSION, typename POWER::template Mul< ToFracPower > >;
 		};
 
 		template <typename T>
@@ -129,8 +129,8 @@ namespace GXPhysics
 			template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
 			struct Func
 			{
-				typedef typename Type::template MulIfSame1< Dim >::type	type;
-				typedef CompileTime::TypeList< type, PrevFuncResult >	result;
+				using type		= typename Type::template MulIfSame1< Dim >::type;
+				using result	= CompileTime::TypeList< type, PrevFuncResult >;
 			};
 		};
 		
@@ -140,13 +140,13 @@ namespace GXPhysics
 			template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
 			struct Func
 			{
-				typedef typename Dims::template Get2< (EPhysicsDimension::type)Index >::type	right;
+				using right		= typename Dims::template Get2< (EPhysicsDimension::type)Index >::type;
 
 				STATIC_ASSERT( Type::template IsSame1< right >::value );
 
-				typedef typename Type::template Mul1< right >::type		type;
+				using type		= typename Type::template Mul1< right >::type;
 
-				typedef CompileTime::TypeList< type, PrevFuncResult >	result;
+				using result	= CompileTime::TypeList< type, PrevFuncResult >;
 			};
 		};
 		
@@ -156,15 +156,15 @@ namespace GXPhysics
 			template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
 			struct Func
 			{
-				 typedef typename Type::template Power1< ToFracPower >::type	type;
-				 typedef CompileTime::TypeList< type, PrevFuncResult >			result;
+				 using type		= typename Type::template Power1< ToFracPower >::type;
+				 using result	= CompileTime::TypeList< type, PrevFuncResult >;
 			};
 		};
 
 		template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
 		struct _IsNonDimFunc
 		{
-			typedef CompileTime::ValueToType< bool, (Type::POWER::IsZero::value and PrevFuncResult::value) >	result;
+			using result = CompileTime::ValueToType< bool, (Type::POWER::IsZero::value and PrevFuncResult::value) >;
 		};
 
 		struct _ToStringFunc
@@ -192,13 +192,13 @@ namespace GXPhysics
 
 
 	public:
-		typedef bool											_is_physics_dimensions_list;
-		typedef DimensionsTypeList								DimensionsTypeList_t;
-		typedef TPhysicsDimensionsList< DimensionsTypeList >	Self;
+		using _is_physics_dimensions_list	= bool;
+		using DimensionsTypeList_t			= DimensionsTypeList;
+		using Self							= TPhysicsDimensionsList< DimensionsTypeList >;
 
 		template <typename Dim>
 		struct _MulDim {
-			typedef TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _MulDimFunc< Dim >::template Func > >	type;
+			using type = TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _MulDimFunc< Dim >::template Func > >;
 		};
 
 		template <typename Dims>
@@ -210,40 +210,40 @@ namespace GXPhysics
 		struct Add2 {
 			//STATIC_ASSERT( typename Dims::_is_physics_dimensions_list(true) );
 			STATIC_ASSERT( Self::template Equal< Dims >::value );
-			typedef Self	type;
+			using type = Self;
 		};
 
 		template <typename Dims>
 		struct Sub2 {
 			//STATIC_ASSERT( typename Dims::_is_physics_dimensions_list(true) );
 			STATIC_ASSERT( Self::template Equal< Dims >::value );
-			typedef Self	type;
+			using type = Self;
 		};
 	
 		template <typename Dims>
 		struct Mul2 {
 			//STATIC_ASSERT( typename Dims::_is_physics_dimensions_list(true) );
-			typedef TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _MulFunc< Dims >::template Func > >		type;
+			using type = TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _MulFunc< Dims >::template Func > >;
 		};
 
 		template <typename Dims>
 		struct Div2 {
 			//STATIC_ASSERT( typename Dims::_is_physics_dimensions_list(true) );
-			typedef typename Mul2< typename Dims::Inverse2::type >::type		type;
+			using type = typename Mul2< typename Dims::Inverse2::type >::type;
 		};
 	
 		template <typename ToFracPower>
 		struct Power2 {
-			typedef TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _PowerFunc< ToFracPower >::template Func > >		type;
+			using type = TPhysicsDimensionsList< typename DimensionsTypeList::template ReverseForEach< _PowerFunc< ToFracPower >::template Func > >;
 		};
 
 		struct Inverse2 {
-			typedef typename Power2< CompileTime::Fractional32<-1> >::type	type;
+			using type = typename Power2< CompileTime::Fractional32<-1> >::type;
 		};
 
 		template <EPhysicsDimension::type Index>
 		struct Get2 {
-			typedef typename DimensionsTypeList::template Get< Index >	type;
+			using type = typename DimensionsTypeList::template Get< Index >;
 		};
 
 		struct IsNonDimensional {
@@ -287,9 +287,9 @@ namespace GXPhysics
 		private:
 			template <typename Dims>
 			struct _From {
-				typedef typename Dims::DimensionsTypeList_t	tl;
+				using tl = typename Dims::DimensionsTypeList_t;
 
-				typedef PhysDimList<
+				using type = PhysDimList<
 							tl::template Get< EPhysicsDimension::Seconds   >::POWER::N,	tl::template Get< EPhysicsDimension::Seconds   >::POWER::D,
 							tl::template Get< EPhysicsDimension::Kilograms >::POWER::N,	tl::template Get< EPhysicsDimension::Kilograms >::POWER::D,
 							tl::template Get< EPhysicsDimension::Meters    >::POWER::N,	tl::template Get< EPhysicsDimension::Meters    >::POWER::D,
@@ -298,21 +298,21 @@ namespace GXPhysics
 							tl::template Get< EPhysicsDimension::Moles     >::POWER::N,	tl::template Get< EPhysicsDimension::Moles     >::POWER::D,
 							tl::template Get< EPhysicsDimension::Candelas  >::POWER::N,	tl::template Get< EPhysicsDimension::Candelas  >::POWER::D,
 							tl::template Get< EPhysicsDimension::Currency  >::POWER::N,	tl::template Get< EPhysicsDimension::Currency  >::POWER::D,
-							tl::template Get< EPhysicsDimension::Bits      >::POWER::N,	tl::template Get< EPhysicsDimension::Bits      >::POWER::D >	type;
+							tl::template Get< EPhysicsDimension::Bits      >::POWER::N,	tl::template Get< EPhysicsDimension::Bits      >::POWER::D >;
 			};
 
 		public:
-			typedef PhysDimList< SecondsNom,	SecondsDenom,
-								 KilogramsNom,	KilogramsDenom,
-								 MetersNom,		MetersDenom,
-								 AmpersNom,		AmpersDenom,
-								 KelvinsNom,	KelvinsDenom,
-								 MolesNom,		MolesDenom,
-								 CandelasNom,	CandelsDenom,
-								 CurrencyNom,	CurrencyDenom,
-								 BitsNom,		BitsDenom		>	Self;
+			using Self = PhysDimList< SecondsNom,	SecondsDenom,
+									 KilogramsNom,	KilogramsDenom,
+									 MetersNom,		MetersDenom,
+									 AmpersNom,		AmpersDenom,
+									 KelvinsNom,	KelvinsDenom,
+									 MolesNom,		MolesDenom,
+									 CandelasNom,	CandelsDenom,
+									 CurrencyNom,	CurrencyDenom,
+									 BitsNom,		BitsDenom	>;
 
-			typedef TPhysicsDimensionsList< CompileTime::TypeListFrom<
+			using dim_t = TPhysicsDimensionsList< CompileTime::TypeListFrom<
 						TPhysicsDimension< EPhysicsDimension::Seconds,		typename CompileTime::Fractional32< SecondsNom,		SecondsDenom > >,
 						TPhysicsDimension< EPhysicsDimension::Kilograms,	typename CompileTime::Fractional32< KilogramsNom,	KilogramsDenom > >,
 						TPhysicsDimension< EPhysicsDimension::Meters,		typename CompileTime::Fractional32< MetersNom,		MetersDenom > >,
@@ -322,7 +322,7 @@ namespace GXPhysics
 						TPhysicsDimension< EPhysicsDimension::Candelas,		typename CompileTime::Fractional32< CandelasNom,	CandelsDenom > >,
 						TPhysicsDimension< EPhysicsDimension::Currency,		typename CompileTime::Fractional32< CurrencyNom,	CurrencyDenom > >,
 						TPhysicsDimension< EPhysicsDimension::Bits,			typename CompileTime::Fractional32< BitsNom,		BitsDenom > >
-					> >		dim_t;
+					> >	;
 
 			template <typename Dims>
 			using Add = typename _From< typename dim_t::template Add2< typename Dims::dim_t >::type >::type;
@@ -357,7 +357,7 @@ namespace GXPhysics
 		protected:
 			template <typename Dim>
 			struct _MulDim {
-				typedef typename _From< typename dim_t::template _MulDim< Dim >::type >::type	type;
+				using type = typename _From< typename dim_t::template _MulDim< Dim >::type >::type;
 			};
 
 

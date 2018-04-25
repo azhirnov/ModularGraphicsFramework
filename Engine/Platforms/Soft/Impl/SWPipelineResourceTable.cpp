@@ -175,6 +175,8 @@ namespace PlatformSW
 		CHECK_ERR( _CopySubscriptions< LayoutMsgList_t >( _layout ) );
 		
 		CHECK( _SetState( EState::Linked ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
 		return true;
 	}
 
@@ -199,6 +201,8 @@ namespace PlatformSW
 		CHECK( _ValidateAllSubscriptions() );
 
 		CHECK( _SetState( EState::ComposedMutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 
@@ -291,8 +295,17 @@ namespace PlatformSW
 		CHECK_ERR( msg->newModule and msg->sampler );
 
 		ImageAttachment	img;
-		img.descr	= msg->descr;
 		img.layout	= msg->layout;
+		
+		if ( not msg->descr.IsDefined() )
+		{
+			Message< GpuMsg::GetImageDescriptor >	req_descr;
+			CHECK( msg->newModule->Send( req_descr ) );
+
+			img.descr = ImageViewDescriptor{ *req_descr->result };
+		}
+		else
+			img.descr = *msg->descr;
 
 		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
 		

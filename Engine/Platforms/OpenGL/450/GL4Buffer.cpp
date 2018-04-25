@@ -308,6 +308,8 @@ namespace PlatformGL
 			if ( _isBindedToMemory )
 			{
 				CHECK( _SetState( EState::ComposedMutable ) );
+				
+				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 			}
 			else
 			{

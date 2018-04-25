@@ -186,6 +186,8 @@ namespace Scene
 		_SendForEachAttachments( msg );
 
 		CHECK( _SetState( EState::Linked ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
 		return true;
 	}
 	

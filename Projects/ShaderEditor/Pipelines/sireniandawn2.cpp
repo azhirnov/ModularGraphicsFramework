@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'ShaderEditor\Pipelines/SirenianDawn2.ppln'
-// Created at: 2018/04/10 - 21:50:35
+// Created at: 2018/04/25 - 16:09:28
 
 #include "all_pipelines.h"
 
@@ -124,13 +124,13 @@ out gl_PerVertex {
 
 
 
-const vec2 g_Positions[4] = { vec2( -1.0, 1.0 ), vec2( -1.0 ), vec2( 1.0 ), vec2( 1.0, -1.0 ) };
+const vec2 g_Positions[4] = { vec2( -1.0f, 1.0f ), vec2( -1.0f ), vec2( 1.0f ), vec2( 1.0f, -1.0f ) };
 
 //---------------------------------
 
-void main ()
+void main()
 {
-	gl_Position = vec4( g_Positions[gl_VertexID], float( 0.0 ), float( 1.0 ) );
+	gl_Position = vec4( g_Positions[gl_VertexID], float( 0.0f ), float( 1.0f ) );
 }
 
 
@@ -277,20 +277,21 @@ layout(binding=0) layout(std140) uniform ShadertoyUB {
 
 
 
-void mainImage (out vec4 fragColor, in vec2 fragCoord);
+void mainImage(out vec4 fragColor, in vec2 fragCoord);
 
 //---------------------------------
 
-void main ()
+void main()
 {
 	vec2 coord = gl_FragCoord.xy;
+	;
 	mainImage(out_Color0, coord);
 }
 
 
-void mainImage (out vec4 fragColor, in vec2 fragCoord)
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
 {
-	fragColor = vec4( texture( iChannel0, (fragCoord.xy / iResolution.xy) ).xyz, float( 1.0 ) );
+	fragColor = vec4( texture( iChannel0, (fragCoord.xy / iResolution.xy) ).xyz, float( 1.0f ) );
 }
 
 
@@ -340,10 +341,10 @@ void mainImage (out vec4 fragColor, in vec2 fragCoord)
 0x3F800000, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 0x00000004, 0x000200F8, 0x00000006, 0x0004003B, 0x0000000B, 0x00000011, 0x00000007, 
 0x0004003B, 0x00000009, 0x00000018, 0x00000007, 0x0004003B, 0x0000000B, 0x00000019, 0x00000007, 0x00040008, 0x00000001, 0x00000070, 0x00000000, 
 0x0004003D, 0x00000008, 0x00000014, 0x00000013, 0x0007004F, 0x0000000A, 0x00000015, 0x00000014, 0x00000014, 0x00000000, 0x00000001, 0x0003003E, 
-0x00000011, 0x00000015, 0x00040008, 0x00000001, 0x00000071, 0x00000000, 0x0004003D, 0x0000000A, 0x0000001A, 0x00000011, 0x0003003E, 0x00000019, 
+0x00000011, 0x00000015, 0x00040008, 0x00000001, 0x00000072, 0x00000000, 0x0004003D, 0x0000000A, 0x0000001A, 0x00000011, 0x0003003E, 0x00000019, 
 0x0000001A, 0x00060039, 0x00000003, 0x0000001B, 0x0000000F, 0x00000018, 0x00000019, 0x0004003D, 0x00000008, 0x0000001C, 0x00000018, 0x0003003E, 
 0x00000017, 0x0000001C, 0x000100FD, 0x00010038, 0x00050036, 0x00000003, 0x0000000F, 0x00000000, 0x0000000C, 0x00030037, 0x00000009, 0x0000000D, 
-0x00030037, 0x0000000B, 0x0000000E, 0x000200F8, 0x00000010, 0x00040008, 0x00000001, 0x00000077, 0x00000000, 0x0004003D, 0x0000001E, 0x00000021, 
+0x00030037, 0x0000000B, 0x0000000E, 0x000200F8, 0x00000010, 0x00040008, 0x00000001, 0x00000078, 0x00000000, 0x0004003D, 0x0000001E, 0x00000021, 
 0x00000020, 0x0004003D, 0x0000000A, 0x00000022, 0x0000000E, 0x00050041, 0x0000002D, 0x0000002E, 0x0000002B, 0x0000002C, 0x0004003D, 0x00000008, 
 0x0000002F, 0x0000002E, 0x0007004F, 0x0000000A, 0x00000030, 0x0000002F, 0x0000002F, 0x00000000, 0x00000001, 0x00050088, 0x0000000A, 0x00000031, 
 0x00000022, 0x00000030, 0x00050057, 0x00000008, 0x00000032, 0x00000021, 0x00000031, 0x0008004F, 0x00000033, 0x00000034, 0x00000032, 0x00000032, 

@@ -1,10 +1,36 @@
 // This is generated file
-// Created at: 2018/04/10 - 21:49:15
+// Created at: 2018/04/25 - 16:07:55
 
 #pragma once
 
 namespace Pipelines
 {
+// Packing: Std430
+struct FindLSB_SSBO final
+{
+	uint  results[16];    // offset: 0, align: 4
+
+	FindLSB_SSBO ()
+	{
+		STATIC_ASSERT( sizeof(FindLSB_SSBO) == 64 );
+		STATIC_ASSERT( (offsetof( FindLSB_SSBO, results ) == 0) and (sizeof( results ) == 64) );
+	}
+};
+
+// Packing: Std430
+struct AtomicAdd_Struct final
+{
+	int  value;    // offset: 0, align: 4
+	Bool32  found;    // offset: 4, align: 4
+
+	AtomicAdd_Struct ()
+	{
+		STATIC_ASSERT( sizeof(AtomicAdd_Struct) == 8 );
+		STATIC_ASSERT( (offsetof( AtomicAdd_Struct, value ) == 0) and (sizeof( value ) == 4) );
+		STATIC_ASSERT( (offsetof( AtomicAdd_Struct, found ) == 4) and (sizeof( found ) == 4) );
+	}
+};
+
 // Packing: Std140
 struct DynamicBuffer_Struct final
 {
@@ -78,32 +104,6 @@ struct BufferAlign_Struct final
 		STATIC_ASSERT( (offsetof( BufferAlign_Struct, _padding4 ) == 84) and (sizeof( _padding4 ) == 4) );
 		STATIC_ASSERT( (offsetof( BufferAlign_Struct, _padding5 ) == 88) and (sizeof( _padding5 ) == 4) );
 		STATIC_ASSERT( (offsetof( BufferAlign_Struct, _padding6 ) == 92) and (sizeof( _padding6 ) == 4) );
-	}
-};
-
-// Packing: Std430
-struct AtomicAdd_Struct final
-{
-	int  value;    // offset: 0, align: 4
-	Bool32  found;    // offset: 4, align: 4
-
-	AtomicAdd_Struct ()
-	{
-		STATIC_ASSERT( sizeof(AtomicAdd_Struct) == 8 );
-		STATIC_ASSERT( (offsetof( AtomicAdd_Struct, value ) == 0) and (sizeof( value ) == 4) );
-		STATIC_ASSERT( (offsetof( AtomicAdd_Struct, found ) == 4) and (sizeof( found ) == 4) );
-	}
-};
-
-// Packing: Std430
-struct FindLSB_SSBO final
-{
-	uint  results[16];    // offset: 0, align: 4
-
-	FindLSB_SSBO ()
-	{
-		STATIC_ASSERT( sizeof(FindLSB_SSBO) == 64 );
-		STATIC_ASSERT( (offsetof( FindLSB_SSBO, results ) == 0) and (sizeof( results ) == 64) );
 	}
 };
 

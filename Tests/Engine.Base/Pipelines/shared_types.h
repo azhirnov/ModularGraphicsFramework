@@ -1,22 +1,10 @@
 // This is generated file
-// Created at: 2018/04/10 - 21:51:55
+// Created at: 2018/04/25 - 16:05:06
 
 #pragma once
 
 namespace Pipelines
 {
-// Packing: Std140
-struct UB final
-{
-	float4  color;    // offset: 0, align: 16
-
-	UB ()
-	{
-		STATIC_ASSERT( sizeof(UB) == 16 );
-		STATIC_ASSERT( (offsetof( UB, color ) == 0) and (sizeof( color ) == 16) );
-	}
-};
-
 // Packing: vertex
 struct NativeVertex_default2 final
 {
@@ -32,6 +20,18 @@ struct NativeVertex_default2 final
 		STATIC_ASSERT( sizeof(NativeVertex_default2) == 16 );
 		STATIC_ASSERT( (offsetof( NativeVertex_default2, at_Position ) == 0) and (sizeof( at_Position ) == 8) );
 		STATIC_ASSERT( (offsetof( NativeVertex_default2, at_Texcoord ) == 8) and (sizeof( at_Texcoord ) == 8) );
+	}
+};
+
+// Packing: Std140
+struct UB final
+{
+	float4  color;    // offset: 0, align: 16
+
+	UB ()
+	{
+		STATIC_ASSERT( sizeof(UB) == 16 );
+		STATIC_ASSERT( (offsetof( UB, color ) == 0) and (sizeof( color ) == 16) );
 	}
 };
 

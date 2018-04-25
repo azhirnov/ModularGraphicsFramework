@@ -365,6 +365,8 @@ namespace PlatformCL
 			if ( _isBindedToMemory )
 			{
 				CHECK( _SetState( EState::ComposedMutable ) );
+				
+				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 			}
 			else
 			{
@@ -468,6 +470,13 @@ namespace Platforms
 	{
 		return New< PlatformCL::CL2Buffer >( id, gs, ci );
 	}
+	
+	ModulePtr OpenCLObjectsConstructor::CreateCL2SharedBuffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSharedBuffer &ci)
+	{
+		return null;
+		//return New< PlatformCL::CL2Buffer >( id, gs, ci );
+	}
+
 }	// Platforms
 }	// Engine
 

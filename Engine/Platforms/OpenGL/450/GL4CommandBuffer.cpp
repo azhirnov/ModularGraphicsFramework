@@ -275,6 +275,8 @@ namespace PlatformGL
 		CHECK( _ValidateAllSubscriptions() );
 
 		CHECK( _SetState( EState::ComposedMutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 	
@@ -2059,11 +2061,13 @@ namespace PlatformGL
 		CHECK_ERR( data.dstOffset < req_descr->result->size );
 		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
 
+		const BytesUL	size = Min( req_descr->result->size - data.dstOffset, data.size );
+
 		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, *req_id->result ) );
 		GL_CALL( glClearBufferSubData( GL_COPY_READ_BUFFER,
 										GL_RGBA8UI,
 										GLintptr(data.dstOffset),
-										GLsizeiptr(Min( data.size, req_descr->result->size - data.dstOffset )),
+										GLsizeiptr(size),
 										GL_RGBA, GL_UNSIGNED_BYTE,
 										&data.pattern ) );
 

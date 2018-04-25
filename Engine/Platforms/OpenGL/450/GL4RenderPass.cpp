@@ -132,6 +132,8 @@ namespace PlatformGL
 		CHECK( _ValidateAllSubscriptions() );
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 	

@@ -54,11 +54,12 @@ extern void GenMGFProject ()
 
 			Set<uint>		errors				= { VS::ReturningAddressOfLocalVariable, VS::TypeNameMismatch, VS::UninitializedVarUsed,
 													VS::TooManyParamsForMacro, VS::RecursiveOnAllControlPaths, VS::IllegalConversion,
-													VS::UnrecognizedEscapeSequence, VS::UnreachableCode, VS::MultipleAssignmentOperators,
+													VS::UnrecognizedEscapeSequence, VS::MultipleAssignmentOperators,
 													VS::InconsistentDllLinkage, VS::ClassNeedsDllInterface, VS::EmptyControlledStatement,
-													VS::AssignInConditionalExpr, VS::ShiftCountNegativeOrBig };
+													VS::AssignInConditionalExpr, VS::ShiftCountNegativeOrBig, VS::ForcingValueToBool,
+													VS::OperatorPrecedence };
 			Set<uint>		enabled_warnings	= { VS::InitOrder, VS::UnknownMacro, VS::UnsafeFunctionorVariable, VS::ConditionalExprIsConstant,
-													VS::ReintCastBetwenRelatedClasses };
+													VS::ReintCastBetwenRelatedClasses, VS::UnreachableCode };
 			Set<uint>		disabled_warnings	= { VS::DecoratedNameWasTruncated, VS::CastTruncatesConstantValue, VS::UnusedInlineFunction,
 													VS::ConversionSignedUnsignedMismatch, VS::ReservedLiteralSuffix };
 
@@ -72,6 +73,7 @@ extern void GenMGFProject ()
 			enabled_warnings.AddArray( VS::Unused );
 			enabled_warnings.AddArray( VS::Conversion );
 			enabled_warnings.AddArray( VS::ConversionSign );
+			enabled_warnings.AddArray( VS::MayBeUninitialized );
 
 			disabled_warnings.AddArray( VS::DeletedConstructor );
 			disabled_warnings.AddArray( VS::FunctionNotInlined );
@@ -244,11 +246,13 @@ extern void GenMGFProject ()
 									  Clang::Unused, Clang::Uninititalized, Clang::MayBeUninitialized, Clang::UnknownPragmas, Clang::Pragmas, Clang::StrictAliasing, Clang::StrictOverflow,
 									  Clang::Undef, Clang::EndifLabels, Clang::FreeNonheapObject, Clang::PointerArith, Clang::WriteStrings,
 									  /*Clang::Conversion,*/ Clang::ConversionNull, Clang::ZeroAsNullConst, Clang::EnumCompare, Clang::SignCompare, /*Clang::SignConvertsion,*/ Clang::SizeofPointerMemaccess,
-									  Clang::LogicalOp, Clang::RTTI, Clang::Exceptions });
+									  Clang::LogicalOp, Clang::RTTI, Clang::Exceptions, Clang::LoopAnalysis, Clang::IncrementBool });
 			
 			shared_cxx_flags.PushBack( Clang::WarningsToErrors({ Clang::InitSelf, Clang::Parentheses, Clang::ReturnLocalAddr, Clang::ReturnType, Clang::NonTemplateFriend,
-															   Clang::ArrayBounds, Clang::DivByZero, Clang::Address, Clang::MissingFieldInit, /*Clang::AlignedNew,*/
-															   Clang::PlacementNew, Clang::CastQual, Clang::CastAlign, Clang::UnknownWarning, Clang::UserDefinedLiterals }) );
+																Clang::ArrayBounds, Clang::DivByZero, Clang::Address, Clang::MissingFieldInit, /*Clang::AlignedNew,*/
+																Clang::PlacementNew, Clang::CastQual, Clang::CastAlign, Clang::UnknownWarning, Clang::UserDefinedLiterals,
+																Clang::KeywordMacro, Clang::LargeByValueCopy, Clang::InstantiationAfterSpec, Clang::MethodSignatures,
+															    Clang::SelfAssign, Clang::SelfMove, Clang::InfiniteRecursion, Clang::PessimizingMove, Clang::DanglingElse }) );
 
 			shared_cxx_flags.PushBack( Clang::DisableWarnings({ Clang::NonTemplateFriend, Clang::Comment, Clang::UndefinedInline, Clang::Switch, Clang::Narrowing,
 															    Clang::Cxx14Extensions, Clang::Cxx1ZExtensions }) );
@@ -307,11 +311,12 @@ extern void GenMGFProject ()
 									  Clang::Uninititalized, Clang::UnknownPragmas, Clang::Pragmas, Clang::StrictAliasing, Clang::StrictOverflow,
 									  Clang::Undef, Clang::EndifLabels, Clang::PointerArith, Clang::WriteStrings,
 									  Clang::ConversionNull, Clang::EnumCompare, Clang::SignCompare, Clang::SizeofPointerMemaccess,
-									  Clang::RTTI, Clang::Exceptions });
+									  Clang::RTTI, Clang::Exceptions, Clang::LoopAnalysis, Clang::IncrementBool });
 			
 			shared_cxx_flags.PushBack( Clang::WarningsToErrors({ Clang::InitSelf, Clang::Parentheses, Clang::ReturnLocalAddr, Clang::ReturnType, Clang::UserDefinedLiterals,
-															   Clang::ArrayBounds, Clang::DivByZero, Clang::Address, Clang::MissingFieldInit,
-															   Clang::CastQual, Clang::UnknownWarning }) );
+																Clang::ArrayBounds, Clang::DivByZero, Clang::Address, Clang::MissingFieldInit, Clang::InstantiationAfterSpec,
+																Clang::CastQual, Clang::UnknownWarning, Clang::KeywordMacro, Clang::LargeByValueCopy, Clang::MethodSignatures,
+																Clang::SelfAssign, Clang::SelfMove, Clang::InfiniteRecursion, Clang::PessimizingMove, Clang::DanglingElse }) );
 
 			shared_cxx_flags.PushBack( Clang::DisableWarnings({ Clang::Comment, Clang::UndefinedInline, Clang::Switch, Clang::Narrowing, Clang::Unused,
 															    Clang::Cxx14Extensions, Clang::Cxx1ZExtensions }) );
@@ -372,11 +377,12 @@ extern void GenMGFProject ()
 									  Clang::Uninititalized, Clang::UnknownPragmas, Clang::Pragmas, Clang::StrictAliasing, Clang::StrictOverflow,
 									  Clang::Undef, Clang::EndifLabels, Clang::PointerArith, Clang::WriteStrings,
 									  Clang::ConversionNull, Clang::EnumCompare, Clang::SignCompare, Clang::SizeofPointerMemaccess,
-									  Clang::RTTI, Clang::Exceptions });
+									  Clang::RTTI, Clang::Exceptions, Clang::LoopAnalysis, Clang::IncrementBool });
 			
 			shared_cxx_flags.PushBack( Clang::WarningsToErrors({ Clang::InitSelf, Clang::Parentheses, Clang::ReturnLocalAddr, Clang::ReturnType, Clang::UserDefinedLiterals,
-															   Clang::ArrayBounds, Clang::DivByZero, Clang::Address, Clang::MissingFieldInit,
-															   Clang::CastQual, Clang::UnknownWarning }) );
+																Clang::ArrayBounds, Clang::DivByZero, Clang::Address, Clang::MissingFieldInit, Clang::InstantiationAfterSpec,
+																Clang::CastQual, Clang::UnknownWarning, Clang::KeywordMacro, Clang::LargeByValueCopy, Clang::DanglingElse,
+															    Clang::MethodSignatures, Clang::SelfAssign, Clang::SelfMove, Clang::InfiniteRecursion, Clang::PessimizingMove }) );
 
 			shared_cxx_flags.PushBack( Clang::DisableWarnings({ Clang::Comment, Clang::UndefinedInline, Clang::Switch, Clang::Narrowing, Clang::Unused,
 															    Clang::Cxx14Extensions, Clang::Cxx1ZExtensions }) );
@@ -441,7 +447,12 @@ extern void GenMGFProject ()
 		auto	engine_stl = builder.AddLibrary( "Engine.STL", "Engine/STL" );
 		{
 			engine_stl->AddFoldersRecursive( "" );
+			
+			#ifdef ENABLE_EXTERNALS
 			engine_stl->LinkLibrary( "SDL2", "ENABLE_SDL" );
+			#endif
+
+			engine_stl->LinkLibrary( "dl;pthread", "UNIX" );
 		}
 		
 		auto	test_stl = builder.AddExecutable( "Tests.STL", "Tests/STL" );
@@ -523,20 +534,13 @@ extern void GenMGFProject ()
 		{
 			engine_pipeline_compiler->ProjFolder( "EngineTools" );
 			engine_pipeline_compiler->AddFoldersRecursive( "" );
-			engine_pipeline_compiler->LinkLibrary( engine_platforms )->LinkLibrary( "LunarGLASS" );
+			engine_pipeline_compiler->LinkLibrary( engine_platforms )->LinkLibrary( "LunarGLASS", "ENABLE_LUNARGLASS" );
 			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/glslang/.." );
 			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/glslang" );
 			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/.." );
 			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS" );
 			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
 			engine_pipeline_compiler->IncludeDirectory( "${CMAKE_BINARY_DIR}/LunarGLASS_bin/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
-		}
-
-		auto	test_pipeline_compiler = builder.AddExecutable( "Tests.PipelineCompiler", "Tests/PipelineCompiler" );
-		{
-			test_pipeline_compiler->AddFolder( "" );
-			test_pipeline_compiler->AddFolder( "Pipelines" );
-			test_pipeline_compiler->LinkLibrary( engine_pipeline_compiler );
 		}
 		
 		auto	engine_script = builder.AddLibrary( "Engine.Scipt", "Engine/Script" );
@@ -568,10 +572,9 @@ extern void GenMGFProject ()
 	//----------------------------------------------------------------------------
 		
 		
-		// Engine //
+		// Tests //
 	#ifdef ENABLE_ENGINE
 
-		// Tests //
 		auto	test_engine_base = builder.AddExecutable( "Tests.Engine.Base", "Tests/Engine.Base" );
 		{
 			test_engine_base->AddFoldersRecursive( "" );
@@ -595,6 +598,16 @@ extern void GenMGFProject ()
 
 		// Projects //
 	#ifdef ENABLE_PROJECTS
+		auto	proj_codegen = builder.AddExecutable( "Projects.CodeGen", "Projects/CodeGen" );
+		{
+			proj_codegen->AddFoldersRecursive( "" );
+			proj_codegen->LinkLibrary( engine_platforms );
+			
+			#ifdef ENABLE_EXTERNALS
+				proj_codegen->LinkLibrary( engine_pipeline_compiler )->LinkLibrary( engine_script );
+			#endif
+		}
+
 		auto	proj_shader_editor = builder.AddExecutable( "Projects.ShaderEditor", "Projects/ShaderEditor" );
 		{
 			proj_shader_editor->AddFoldersRecursive( "" );

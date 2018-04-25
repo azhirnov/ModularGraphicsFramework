@@ -22,6 +22,9 @@ namespace Platforms
 	{
 	// types
 	private:
+		using QueueMsgList_t		= MessageListFrom< GpuMsg::SubmitComputeQueueCommands >;
+		using QueueEventList_t		= MessageListFrom< GpuMsg::DeviceLost >;
+
 		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
 											ModuleMsg::Update
 										> >
@@ -31,16 +34,15 @@ namespace Platforms
 											ModuleMsg::OnManagerChanged,
 											GpuMsg::GetGraphicsModules,
 											GpuMsg::GetComputeSettings,
-											GpuMsg::SubmitComputeQueueCommands,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetCLDeviceInfo,
 											GpuMsg::GetCLPrivateClasses
-										> >;
+										> >::Append< QueueMsgList_t >;
+
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::DeviceCreated,
-											GpuMsg::DeviceBeforeDestroy,
-											GpuMsg::DeviceLost
-										> >;
+											GpuMsg::DeviceBeforeDestroy
+										> >::Append< QueueEventList_t >;
 		
 		using Device				= PlatformCL::CL2Device;
 
@@ -54,7 +56,9 @@ namespace Platforms
 	// variables
 	private:
 		ComputeSettings		_settings;
+
 		ModulePtr			_syncManager;
+		ModulePtr			_cmdQueue;
 
 		Device				_device;
 
@@ -75,7 +79,6 @@ namespace Platforms
 
 		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
 		bool _GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &);
-		bool _SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &);
 		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
 		bool _GetCLDeviceInfo (const Message< GpuMsg::GetCLDeviceInfo > &);
 		bool _GetCLPrivateClasses (const Message< GpuMsg::GetCLPrivateClasses > &);
@@ -117,12 +120,9 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenCLThread::_Delete );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetGraphicsModules );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetComputeSettings );
-		_SubscribeOnMsg( this, &OpenCLThread::_SubmitComputeQueueCommands );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetCLPrivateClasses );
-		
-		CHECK( _ValidateMsgSubscriptions() );
 		
 		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
 
@@ -160,8 +160,24 @@ namespace Platforms
 											OUT _syncManager ) );
 
 			CHECK_ERR( _Attach( "sync", _syncManager, true ) );
-			_syncManager->Send( msg );
 		}
+
+		// create queue
+		{
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
+											CLCommandQueueModuleID,
+											GlobalSystems(),
+											CreateInfo::GpuCommandQueue{ this, EQueueFamily::All },
+											OUT _cmdQueue ) );
+			
+			CHECK_ERR( _Attach( "queue", _cmdQueue, true ) );
+
+			CHECK_ERR( _CopySubscriptions< QueueMsgList_t >( _cmdQueue ) );
+			CHECK_ERR( ReceiveEvents< QueueEventList_t >( _cmdQueue ) );
+		}
+
+		_syncManager->Send( msg );
+		_cmdQueue->Send( msg );
 
 		return Module::_Link_Impl( msg );
 	}
@@ -179,8 +195,7 @@ namespace Platforms
 		CHECK_ERR( GetState() == EState::Linked );
 
 		CHECK_COMPOSING( _CreateDevice() );
-
-		return _DefCompose( false );
+		return true;
 	}
 
 /*
@@ -235,61 +250,6 @@ namespace Platforms
 	bool OpenCLThread::_GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &msg)
 	{
 		msg->result.Set( _settings );
-		return true;
-	}
-
-/*
-=================================================
-	_SubmitComputeQueueCommands
-=================================================
-*/
-	bool OpenCLThread::_SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &msg)
-	{
-		using namespace cl;
-
-		CHECK_ERR( _device.HasCommandQueue() );
-		
-		DEBUG_ONLY(
-			FOR( i, msg->commands )
-			{
-				Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
-				msg->commands[i]->Send( req_descr );
-				CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
-			}
-		);
-		
-		ModuleUtils::Send( msg->commands, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
-
-		// wait for signal
-		{
-			Message< GpuMsg::WaitCLSemaphore >	wait;
-
-			for (auto& sem : Range(msg->waitSemaphores)) {
-				ASSERT(sem.second == EPipelineStage::AllCommands );
-				wait->semaphores.PushBack( sem.first );
-			}
-
-			if ( not wait->semaphores.Empty() ) {
-				CHECK( _syncManager->Send( wait ) );
-			}
-		}
-
-		// execute command buffers
-		ModuleUtils::Send( msg->commands, Message<GpuMsg::ExecuteCLCommandBuffer>{} );
-		
-		// enqueue fence
-		if ( msg->fence != GpuFenceId::Unknown )
-		{
-			Message< GpuMsg::CLFenceSync >	fence_sync{ msg->fence };
-			CHECK( _syncManager->Send( fence_sync ) );
-		}
-
-		// enqueue semaphores
-		FOR( i, msg->signalSemaphores )
-		{
-			Message< GpuMsg::CLSemaphoreEnqueue >	sem_sync{ msg->signalSemaphores[i] };
-			CHECK( _syncManager->Send( sem_sync ) );
-		}
 		return true;
 	}
 
@@ -372,6 +332,8 @@ namespace Platforms
 		CHECK_ERR( _device.CreateQueue( _settings.isDebug ) );
 
 		_device.WriteInfo();
+		
+		CHECK( _DefCompose( false ) );
 
 		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
 		return true;
@@ -389,6 +351,12 @@ namespace Platforms
 			_device.Synchronize();
 
 			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
+		}
+
+		if ( _cmdQueue )
+		{
+			_cmdQueue->Send< ModuleMsg::Delete >({});
+			_cmdQueue = null;
 		}
 		
 		if ( _syncManager )

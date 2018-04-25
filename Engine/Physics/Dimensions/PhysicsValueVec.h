@@ -183,7 +183,7 @@ namespace CompileTime
 	>
 	struct TypeInfo< GXPhysics::PhysicsValueVec<GXPhysics::PhysicsValue<ValueType, Dimensions, ValueScale>, I, U> > {
 	private:
-		typedef CompileTime::TypeInfo<ValueType> _value_type_info;
+		using _value_type_info	= CompileTime::TypeInfo<ValueType>;
 
 	public:
 		using type			= GXPhysics::PhysicsValueVec<GXPhysics::PhysicsValue<ValueType, Dimensions, ValueScale>, I, U>;

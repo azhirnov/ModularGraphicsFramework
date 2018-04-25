@@ -135,7 +135,7 @@ namespace CreateInfo
 	//
 	// Image Create Info
 	//
-	struct GpuImage // TODO: rename
+	struct GpuImage
 	{
 	// types
 		using ImageDescriptor	= Platforms::ImageDescriptor;
@@ -160,6 +160,27 @@ namespace CreateInfo
 
 		GpuImage (const ImageDescriptor &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
 			memManager{memMngr}, descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
+	};
+
+
+	//
+	// Shared Image Create Info
+	//
+	struct GpuSharedImage
+	{
+	// types
+		using EMemoryAccess		= Platforms::EMemoryAccess;
+		
+	// variables
+		ModulePtr				gpuThread;			// can be null
+		ModulePtr				sharedImage;
+		//ImageViewDescriptor	descr;
+		EMemoryAccess::bits		access;
+
+	// methods
+		GpuSharedImage (GX_DEFCTOR) {}
+
+		GpuSharedImage (const ModulePtr &img, EMemoryAccess::bits access) : sharedImage{img}, access{access} {}
 	};
 
 }	// CreateInfo

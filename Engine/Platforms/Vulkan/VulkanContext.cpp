@@ -229,6 +229,7 @@ namespace Platforms
 		CHECK( mf->Register( VkRenderPassModuleID, &CreateVk1RenderPass ) );
 		CHECK( mf->Register( VkSyncManagerModuleID, CreateVk1SyncManager ) );
 		CHECK( mf->Register( VkFramebufferModuleID, &CreateVk1Framebuffer ) );
+		CHECK( mf->Register( VkCommandQueueModuleID, &CreateVk1CommandQueue ) );
 		CHECK( mf->Register( VkManagedMemoryModuleID, &CreateVk1ManagedMemory ) );
 		CHECK( mf->Register( VkMemoryManagerModuleID, &CreateVk1MemoryManager ) );
 		CHECK( mf->Register( VkCommandBufferModuleID, &CreateVk1CommandBuffer ) );
@@ -258,6 +259,7 @@ namespace Platforms
 		mf->UnregisterAll( VkSamplerModuleID );
 		mf->UnregisterAll( VkRenderPassModuleID );
 		mf->UnregisterAll( VkFramebufferModuleID );
+		mf->UnregisterAll( VkCommandQueueModuleID );
 		mf->UnregisterAll( VkManagedMemoryModuleID );
 		mf->UnregisterAll( VkMemoryManagerModuleID );
 		mf->UnregisterAll( VkCommandBufferModuleID );

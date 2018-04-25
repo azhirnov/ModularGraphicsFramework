@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'Engine.Base\Pipelines/Default2.ppln'
-// Created at: 2018/04/10 - 21:51:56
+// Created at: 2018/04/25 - 16:05:07
 
 #include "all_pipelines.h"
 
@@ -131,9 +131,9 @@ layout(location=0) smooth out   vec2 v_Texcoord;
 
 
 
-void main ()
+void main()
 {
-	gl_Position = vec4( at_Position, float( 0.0 ), float( 1.0 ) );
+	gl_Position = vec4( at_Position, float( 0.0f ), float( 1.0f ) );
 	v_Texcoord = at_Texcoord;
 }
 
@@ -267,7 +267,7 @@ layout(binding=0) layout(std140) uniform UB {
 
 
 
-void main ()
+void main()
 {
 	out_Color = (texture( un_ColorTexture, v_Texcoord ) * ub.color);
 }

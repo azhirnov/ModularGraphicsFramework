@@ -179,7 +179,8 @@ namespace PlatformWin
 		CHECK( _SetState( EState::ComposedImmutable ) );
 
 		LOG( "platform created", ELog::Debug );
-
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		_SendEvent< OSMsg::OnWinPlatformCreated >({ _instance, _className });
 
 		// async message

@@ -80,8 +80,8 @@ namespace PipelineCompiler
 
 	// methods
 		_BindingsToString_Func (BasePipeline const *pp, EShader::type shaderType, EShaderType shaderApi, bool useOriginTypes, OUT String &str) :
-			_pp(pp),							_shaderType(shaderType),
-			_shaderApi(shaderApi),				_str(str),
+			_pp(pp),							_str(str),
+			_shaderType(shaderType),			_shaderApi(shaderApi),				
 			_useOriginTypes(useOriginTypes),	_skipBufferLayouts(shaderApi == EShaderType::SPIRV)
 		{}
 
@@ -164,119 +164,144 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	_AllStructsToString
+	_StructsToString
 =================================================
 */
-	bool BasePipeline::_AllStructsToString (const StructTypes &structTypes, Ptr<ISerializer> ser, OUT String &serialized, OUT String &glslSource)
+	bool BasePipeline::_StructsToString (const StructTypes &structTypes, OUT String &glslSource)
 	{
-		using Dependencies_t = HashMap<StringCRef, HashSet<StringCRef>>;
+		using StArray_t	= Array< StructTypes::const_pair_t const *>;
 
-		String &			str		= serialized;
-		Dependencies_t		depends;
-
+		HashSet<StringCRef>		defined;	defined.Reserve( structTypes.Count() );
+		StArray_t				sorted;		sorted.Reserve( structTypes.Count() );
+		StArray_t				pending;	pending.Resize( structTypes.Count() );
 		
-		// build dependencies pass 1
 		FOR( i, structTypes ) {
-			depends.Add( structTypes[i].first, Uninitialized );
+			pending[i] = &structTypes[i];
 		}
-		
-		// build dependencies pass 2
-		FOR( i, structTypes )
-		{
-			const auto&					st	= structTypes[i];
-			Dependencies_t::iterator	iter;
 
-			if ( depends.Find( st.first, OUT iter ) )
-			{
-				FOR( j, st.second.fields )
-				{
-					const auto&		fl = st.second.fields[j];
-
-					if ( EShaderVariable::IsStruct( fl.type ) and
-						 depends.IsExist( fl.typeName ) )
-					{
-						iter->second.Add( fl.typeName );
-					}
-				}
-			}
-		}
-		
-		// build dependencies pass 3
+		// sort by dependencies of other types
 		for (bool changed = true; changed;)
 		{
 			changed = false;
 
-			FOR( i, depends )
+			FOR( i, pending )
 			{
-				auto&			curr		= depends[i];
-				const usize		deps_count	= curr.second.Count();
+				bool	all_deps_defined = true;
 
-				FOR( j, curr.second )
+				// check fields
+				for (auto& fd : Range(pending[i]->second.fields))
 				{
-					Dependencies_t::iterator	iter;
-
-					if ( depends.Find( curr.second[j], OUT iter ) )
+					if ( EShaderVariable::IsStruct( fd.type ) )
 					{
-						// add dependencies of dependent type
-						FOR( k, iter->second ) {
-							curr.second.Add( iter->second[k] );
-						}
-
-						// this condition depends of HashSet implementation,
-						// in other implementations you must restart loop if 'Add' method used
-						if ( deps_count != curr.second.Count() )
-							break;
+						all_deps_defined &= defined.IsExist( fd.typeName );
 					}
 				}
 
-				if ( deps_count != curr.second.Count() )
+				if ( all_deps_defined )
 				{
 					changed = true;
-					break;
+					sorted  << pending[i];
+					defined << pending[i]->first; 
+
+					pending.Erase( i );
+					--i;
 				}
 			}
 		}
+		CHECK_ERR( pending.Empty() );
 
-
-		// sort by dependent types
-		Array<usize>	indices;	indices.Resize( depends.Count() );
-
-		FOR( i, indices ) { indices[i] = i; }
-
-		Sort( indices, LAMBDA( &depends ) (auto left, auto right)
-						{
-							const auto&	l = depends[left];
-							const auto&	r = depends[right];
-							FOR( i, l.second ) {
-								if ( l.second[i] == r.first )
-									return true;	// left is dependent of right
-							}
-							FOR( i, r.second ) {
-								if ( r.second[i] == l.first )
-									return false;	// right is dependent of left
-							}
-							return l.second.Count() > r.second.Count();	// left is not dependent of right, just for sorting
-						}
-			);
-
-
-		// convert to target
-		FOR( i, indices )
+		// serialize
+		FOR( i, sorted )
 		{
-			const auto&		st = structTypes[indices[i]];
-			CHECK_ERR( not st.second.fields.Empty() );
+			auto const&	st = *sorted[i];
+			
+			// keep struct, varying
+			if ( st.second.type != EShaderVariable::Struct )
+				continue;
 
-			const bool		glsl_keep	= st.second.type == EShaderVariable::Struct;			// keep struct, varying
-			const bool		ser_keep	= not st.second.packing[ EVariablePacking::Varying ];	// keep struct, buffer, vertex
-			const bool		is_dynamic	= st.second.fields.Back().arraySize == 0;
+			glslSource << "struct " << st.second.typeName << "\n{\n";
 
-			if ( ser_keep ) {
-				str << ser->Comment( "Packing: "_str << EVariablePacking::ToString(st.second.packing) )
-					<< ser->BeginStruct( st.second.typeName, (uint)st.second.stride );
+			// staticaly sized UB or SSB
+			FOR( j, st.second.fields )
+			{
+				const auto&		fl			= st.second.fields[j];
+				const String	type_name	= EShaderVariable::IsStruct( fl.type ) ? fl.typeName : ToStringGLSL( fl.type );
+				const uint		array_size	= fl.arraySize;
+				const uint		align		= (usize) fl.align;
+				const uint		offset		= (usize) fl.offset;
+
+				glslSource	<< "\t" << type_name << "  " << fl.name
+							<< ( array_size > 1 ? ("["_str << array_size << "]") : (array_size == 0 ? "[]" : "") )
+							<< ";  // offset: " << offset << ", align: " << align << "\n";
 			}
-			if ( glsl_keep ) {
-				glslSource << "struct " << st.second.typeName << "\n{\n";
+
+			glslSource << "};\n\n";
+		}
+
+		return true;
+	}
+	
+	
+/*
+=================================================
+	_SerializeStructs
+=================================================
+*/
+	bool BasePipeline::_SerializeStructs (const StructTypes &structTypes, Ptr<ISerializer> ser, OUT String &serialized)
+	{
+		using StArray_t	= Array< StructTypes::const_pair_t const *>;
+
+		HashSet<StringCRef>		defined;	defined.Reserve( structTypes.Count() );
+		StArray_t				sorted;		sorted.Reserve( structTypes.Count() );
+		StArray_t				pending;	pending.Resize( structTypes.Count() );
+		String &				str		= serialized;
+		
+		FOR( i, structTypes ) {
+			pending[i] = &structTypes[i];
+		}
+
+		// sort by dependencies of other types
+		for (bool changed = true; changed;)
+		{
+			changed = false;
+
+			FOR( i, pending )
+			{
+				bool	all_deps_defined = true;
+
+				// check fields
+				for (auto& fd : Range(pending[i]->second.fields))
+				{
+					if ( EShaderVariable::IsStruct( fd.type ) )
+					{
+						all_deps_defined &= defined.IsExist( fd.typeName );
+					}
+				}
+
+				if ( all_deps_defined )
+				{
+					changed = true;
+					sorted  << pending[i];
+					defined << pending[i]->first; 
+
+					pending.Erase( i );
+					--i;
+				}
 			}
+		}
+		CHECK_ERR( pending.Empty() );
+
+		// serialize
+		FOR( i, sorted )
+		{
+			auto const&	st = *sorted[i];
+
+			// keep struct, buffer, vertex
+			if ( st.second.packing[ EVariablePacking::Varying ] )
+				continue;
+			
+			str << ser->Comment( "Packing: "_str << EVariablePacking::ToString(st.second.packing) )
+				<< ser->BeginStruct( st.second.typeName, (uint)st.second.stride );
 
 			// staticaly sized UB or SSB
 			FOR( j, st.second.fields )
@@ -287,17 +312,10 @@ namespace PipelineCompiler
 				const uint		align		= (usize) fl.align;
 				const uint		offset		= (usize) fl.offset;
 
-				if ( ser_keep and array_size == 0 ) {
+				if ( array_size == 0 ) {
 					ASSERT( j == st.second.fields.LastIndex() );
-				}
-				else
-				if ( ser_keep ) {
+				} else {
 					str << ser->StructField( fl.name, type_name, array_size, offset, align, uint(fl.stride) * fl.arraySize );
-				}
-				if ( glsl_keep ) {
-					glslSource	<< "\t" << type_name << "  " << fl.name
-								<< ( array_size > 1 ? ("["_str << array_size << "]") : (array_size == 0 ? "[]" : "") )
-								<< ";  // offset: " << offset << ", align: " << align << "\n";
 				}
 			}
 				
@@ -315,17 +333,13 @@ namespace PipelineCompiler
 				str << ser->EndStruct();
 			}
 
-			if ( glsl_keep ) {
-				glslSource << "};\n\n";
-			}
-			if ( ser_keep and st.second.packing[ EVariablePacking::VertexAttrib ] ) {
+			if ( st.second.packing[ EVariablePacking::VertexAttrib ] ) {
 				str << ser->StructCtorForInitializerList();
 			}
-			if ( ser_keep ) {
-				str << ser->EndStruct() << '\n';
-			}
-
+			
+			str << ser->EndStruct() << '\n';
 		}
+
 		return true;
 	}
 
@@ -571,6 +585,15 @@ namespace PipelineCompiler
 											//shaderFormat == EShaderSrcFormat::GXSL ?		EShaderSrcFormat::GLSL :
 											shaderFormat;
 
+		if ( convCfg.searchForSharedTypes and convCfg.addPaddingToStructs )
+		{
+			// replace types to aligned types and padding
+			CHECK_ERR( _AddPaddingToStructs( _structTypes ) );
+
+			// update offsets by packing
+			CHECK_ERR( _CalculateOffsets( _structTypes ) );
+		}
+
 		// replace types
 		BinaryArray		glsl_source;
 		{
@@ -596,6 +619,12 @@ namespace PipelineCompiler
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 			}
 		}
+		
+		String	glsl_types;
+		CHECK_ERR( _StructsToString( _structTypes, OUT glsl_types ) );
+
+		String	varyings;
+		_VaryingsToString( shader._io, OUT varyings );
 
 
 		ShaderCompiler::Config	cfg;
@@ -610,13 +639,13 @@ namespace PipelineCompiler
 			source.Clear();
 			str.Clear();
 
-			str << _VaryingsToString( shader._io ) << '\n';
+			str << varyings << '\n';
 			_BindingsToString( shader.type, EShaderType::GLSL, false, OUT str );
 
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
-					<< convCfg._glslTypes
+					<< glsl_types
 					<< str
 					<< (const char*) glsl_source.ptr();
 				
@@ -653,13 +682,13 @@ namespace PipelineCompiler
 			source.Clear();
 			str.Clear();
 
-			str << _VaryingsToString( shader._io ) << '\n';
+			str << varyings << '\n';
 			_BindingsToString( shader.type, EShaderType::SPIRV, false, OUT str );
 
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
-					<< convCfg._glslTypes
+					<< glsl_types
 					<< str
 					<< (const char*) glsl_source.ptr();
 				
@@ -690,13 +719,13 @@ namespace PipelineCompiler
 			source.Clear();
 			str.Clear();
 
-			str << _VaryingsToString( shader._io ) << '\n';
+			str << varyings << '\n';
 			_BindingsToString( shader.type, EShaderType::Software, false, OUT str );
 			
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
-					<< convCfg._glslTypes
+					<< glsl_types
 					<< str
 					<< (const char*) glsl_source.ptr();
 			
@@ -716,13 +745,13 @@ namespace PipelineCompiler
 			source.Clear();
 			str.Clear();
 
-			str << _VaryingsToString( shader._io ) << '\n';
+			str << varyings << '\n';
 			_BindingsToString( shader.type, EShaderType::CL, false, OUT str );
 			
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
-					<< convCfg._glslTypes						// TODO: convert to CL ?
+					<< glsl_types
 					<< str
 					<< (const char*) glsl_source.ptr();
 			

@@ -185,6 +185,8 @@ namespace PlatformSW
 		CHECK( _ValidateAllSubscriptions() );
 
 		CHECK( _SetState( EState::ComposedMutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 	
@@ -800,24 +802,27 @@ namespace PlatformSW
 	{
 		const auto&	data = cmd.data.Get< GpuMsg::CmdFillBuffer >();
 		
-		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem { BytesU(data.dstOffset), BytesU(data.size), EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
 		Message< GpuMsg::GetBufferDescriptor >		req_descr;
-
-		data.dstBuffer->Send( req_mem );
 		data.dstBuffer->Send( req_descr );
-		
+
 		CHECK_ERR( data.dstOffset < req_descr->result->size );
 		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
+
+		const BytesUL	size = Min( req_descr->result->size - data.dstOffset, data.size );
+		
+		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem { BytesU(data.dstOffset), BytesU(size), EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
+		data.dstBuffer->Send( req_mem );
+
 		CHECK_ERR( req_mem->result->memAccess[ EMemoryAccess::GpuWrite ] );
 		CHECK_ERR( (BytesU(data.dstOffset) % req_mem->result->align) == 0 );
-		CHECK_ERR( req_mem->result->memory.Size() == BytesU(data.size) );
+		CHECK_ERR( req_mem->result->memory.Size() == BytesU(size) );
 		
 		const ubyte	pattern[4]	= { data.pattern & 0xFF,
 									(data.pattern >> 8) & 0xFF,
 									(data.pattern >> 16) & 0xFF,
 									(data.pattern >> 24) & 0xFF };
 
-		for (usize i = 0; i < usize(data.size); ++i)
+		for (usize i = 0; i < usize(size); ++i)
 		{
 			req_mem->result->memory[i] = pattern[i&3];
 		}

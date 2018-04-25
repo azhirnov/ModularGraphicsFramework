@@ -13,8 +13,9 @@ namespace ShaderEditor
 */
 	ShaderEditorApp::ShaderEditorApp () :
 		_renderer( GetMainSystemInstance()->GlobalSystems() ),
-		_looping( true ),
-		_vrMode( false )
+		_currSample{ UMax },	_nextSample{ 0 },
+		_looping{ true },
+		_vrMode{ false }
 	{
 		Platforms::RegisterPlatforms();
 		Profilers::RegisterProfilers();
@@ -44,7 +45,7 @@ namespace ShaderEditor
 		scene_mngr->Subscribe( this, &ShaderEditorApp::_Init );
 		scene_mngr->Subscribe( this, &ShaderEditorApp::_GInit );
 
-		// create SceneMain, SceneRenderer, ScenePhysics and SceneLogic here or it will be created automaticaly
+		// create SceneMain, SceneRenderer, ScenePhysics and SceneLogic here or they will be created automaticaly
 
 		// finish initialization
 		ModuleUtils::Initialize({ GetMainSystemInstance() });
@@ -75,10 +76,14 @@ namespace ShaderEditor
 			const auto	camera_id	= _vrMode ? Scene::FreeVRCameraModuleID : Scene::FreeCameraModuleID;
 			const auto	surface_id	= _vrMode ? Scene::VRSurfaceModuleID : Scene::WindowSurfaceModuleID;
 
+			CameraSettings	settings;
+			settings.mouseSens = float2(-1.0f, 1.0f);
+			settings.fovY = Rad( 90.0_deg );
+
 			CHECK_ERR( gs->modulesFactory->Create(
 								camera_id,
 								gs,
-								CreateInfo::Camera{},
+								CreateInfo::Camera{ null, settings },
 								OUT _camera ) );
 
 			CHECK_ERR( gs->modulesFactory->Create(
@@ -90,9 +95,18 @@ namespace ShaderEditor
 			_camera->Send< ModuleMsg::AttachModule >({ "surface", _surface });
 			_camera->Subscribe( this, &ShaderEditorApp::_Draw );
 			gs->parallelThread->Send< ModuleMsg::AttachModule >({ "surface", _surface });
-			//gs->parallelThread->Send< ModuleMsg::AttachModule >({ "camera",  _camera });
+			gs->parallelThread->Send< ModuleMsg::AttachModule >({ "camera",  _camera });
 
 			ModuleUtils::Initialize({ _camera });
+		}
+
+		// subscribe on input
+		{
+			ModulePtr	input = GetMainSystemInstance()->GlobalSystems()->parallelThread->GetModuleByID( InputThreadModuleID );
+			CHECK_ERR( input );
+
+			input->Send< ModuleMsg::InputKeyBind >({ this, &ShaderEditorApp::_OnKey, "["_KeyID, EKeyState::OnKeyDown });
+			input->Send< ModuleMsg::InputKeyBind >({ this, &ShaderEditorApp::_OnKey, "]"_KeyID, EKeyState::OnKeyDown });
 		}
 		return true;
 	}
@@ -108,37 +122,7 @@ namespace ShaderEditor
 		{
 			CHECK_ERR( _renderer.Inititalize() );
 
-			#if 0
-				Renderer::ShaderDescr	sh_main;
-				sh_main.Pipeline( Pipelines::Create_voronnoirecursion );
-				CHECK_ERR( _renderer.Add( "main", sh_main ) );
-			#endif
-
-			#if 0
-				Renderer::ShaderDescr	sh_bufA;
-				sh_bufA.Pipeline( Pipelines::Create_sireniandawn1 );
-				sh_bufA.InChannel( "noise", 0 );
-				sh_bufA.InChannel( "bufA", 1 );
-				CHECK_ERR( _renderer.Add( "bufA", sh_bufA ) );
-
-				Renderer::ShaderDescr	sh_main;
-				sh_main.Pipeline( Pipelines::Create_sireniandawn2 );
-				sh_bufA.InChannel( "bufA", 0 );
-				CHECK_ERR( _renderer.Add( "main", sh_main ) );
-			#endif
-
-			#if 0
-				Renderer::ShaderDescr	sh_main;
-				sh_main.Pipeline( Pipelines::Create_glowballs );
-				sh_main.InChannel( "main", 0 );
-				CHECK_ERR( _renderer.Add( "main", sh_main ) );
-			#endif
-
-			#if 1
-				Renderer::ShaderDescr	sh_main;
-				sh_main.Pipeline( Pipelines::Create_skyline );
-				CHECK_ERR( _renderer.Add( "main", sh_main ) );
-			#endif
+			_InitSamples();
 		}
 		return true;
 	}
@@ -150,10 +134,34 @@ namespace ShaderEditor
 */
 	bool ShaderEditorApp::_Draw (const Message< SceneMsg::CameraRequestUpdate > &msg)
 	{
+		// select sample
+		if ( _currSample != _nextSample )
+		{
+			_nextSample = Wrap( _nextSample, 0u, _samples.LastIndex() );
+			_currSample = _nextSample;
+
+			_renderer.Reset();
+			_samples[_currSample].Call( _renderer );
+		}
+
 		CHECK_ERR( _renderer.Update( *msg ) );
 		return true;
 	}
 	
+/*
+=================================================
+	_OnKey
+=================================================
+*/
+	void ShaderEditorApp::_OnKey (const ModuleMsg::InputKey &msg)
+	{
+		switch ( msg.key )
+		{
+			case "["_KeyID :	--_nextSample;	break;
+			case "]"_KeyID :	++_nextSample;	break;
+		}
+	}
+
 /*
 =================================================
 	Quit
@@ -196,8 +204,8 @@ int main ()
 	{
 		ShaderEditorApp	app;
 	
-		app.Initialize( "GL 4.4"_GAPI );
-		//app.Initialize( "VK 1.0"_GAPI );
+		//app.Initialize( "GL 4.4"_GAPI );
+		app.Initialize( "VK 1.0"_GAPI );
 
 		// main loop
 		for (; app.Update();) {}

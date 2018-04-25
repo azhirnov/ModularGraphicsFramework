@@ -168,7 +168,7 @@ namespace Scene
 		ModulePtr	window		= PlatformTools::WindowHelper::FindWindow( GlobalSystems() );
 		ModulePtr	vr_thread	= PlatformTools::GPUThreadHelper::FindVRThread( GlobalSystems() );
 		ModulePtr	gpu_thread	= PlatformTools::GPUThreadHelper::FindGraphicsThread( GlobalSystems() );
-		ModulePtr	input_thread= GlobalSystems()->parallelThread->GetModuleByID( InputThreadModuleID );
+		ModulePtr	input_thread= GlobalSystems()->parallelThread->GetModuleByID( InputThreadModuleID );	// TODO
 
 		if ( not window )
 		{

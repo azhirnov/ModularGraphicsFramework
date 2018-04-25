@@ -280,12 +280,6 @@ namespace GpuMsg
 		explicit GLFenceSync (Platforms::GpuFenceId id) : fenceId{id} {}
 	};
 
-	/*struct GetGLFence
-	{
-		Platforms::GpuFenceId	fenceId;
-		Out< gl::GLsync >		result;
-	};*/
-
 
 	//
 	// Event
@@ -309,7 +303,8 @@ namespace GpuMsg
 	// variables
 		Platforms::GpuSemaphoreId	semId;
 		Out< gl::GLsync >			result;
-
+		
+	// methods
 		explicit GLSemaphoreEnqueue (Platforms::GpuSemaphoreId id) : semId{id} {}
 	};
 
@@ -326,6 +321,14 @@ namespace GpuMsg
 	struct WaitGLSemaphore
 	{
 		Platforms::GpuSemaphoreId	semId;
+	};
+
+
+	//
+	// Flush Queue
+	//
+	struct GLFlushQueue
+	{
 	};
 
 

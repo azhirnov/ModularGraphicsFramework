@@ -66,8 +66,8 @@ private:
 	//bool _Test_CopyImage3D ();
 
 	// shader functions
-	bool _Test_FindMSB ();
-	bool _Test_FindLSB ();
-	bool _Test_BitfieldReverse ();
+	bool _Test_FindMSB ();			// emulated in OpenCL
+	bool _Test_FindLSB ();			// emulated in OpenCL
+	bool _Test_BitfieldReverse ();	// emulated in OpenCL
 	bool _Test_AtomicAdd ();
 };

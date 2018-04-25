@@ -226,6 +226,7 @@ namespace Platforms
 		CHECK( mf->Register( GLRenderPassModuleID, &CreateGL4RenderPass ) );
 		CHECK( mf->Register( GLFramebufferModuleID, &CreateGL4Framebuffer ) );
 		CHECK( mf->Register( GLSyncManagerModuleID, &CreateGL4SyncManager ) );
+		CHECK( mf->Register( GLCommandQueueModuleID, &CreateGL4CommandQueue ) );
 		CHECK( mf->Register( GLCommandBufferModuleID, &CreateGL4CommandBuffer ) );
 		CHECK( mf->Register( GLCommandBuilderModuleID, &CreateGL4CommandBuilder ) );
 		CHECK( mf->Register( GLComputePipelineModuleID, &CreateGL4ComputePipeline ) );
@@ -255,6 +256,7 @@ namespace Platforms
 		mf->UnregisterAll( GLRenderPassModuleID );
 		mf->UnregisterAll( GLFramebufferModuleID );
 		mf->UnregisterAll( GLSyncManagerModuleID );
+		mf->UnregisterAll( GLCommandQueueModuleID );
 		mf->UnregisterAll( GLCommandBufferModuleID );
 		mf->UnregisterAll( GLCommandBuilderModuleID );
 		mf->UnregisterAll( GLGraphicsPipelineModuleID );

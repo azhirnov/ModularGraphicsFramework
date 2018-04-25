@@ -144,6 +144,8 @@ namespace Scene
 		CHECK_ERR( _builder );
 
 		CHECK( _SetState( EState::Linked ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
 		return true;
 	}
 	

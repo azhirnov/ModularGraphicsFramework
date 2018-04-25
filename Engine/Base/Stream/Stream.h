@@ -92,9 +92,17 @@ namespace ModuleMsg
 	//
 	struct ReadFromStream
 	{
+	// variables
 		BytesUL					offset;
 		Optional< BytesUL >		size;
 		Out< BinArrayCRef >		result;
+
+	// methods
+		ReadFromStream () {}
+		explicit ReadFromStream (Bytes<uint> off) : offset{off} {}
+		explicit ReadFromStream (Bytes<ulong> off) : offset{off} {}
+		explicit ReadFromStream (Bytes<uint> off, Bytes<uint> size) : offset{off}, size{size} {}
+		explicit ReadFromStream (Bytes<ulong> off, Bytes<ulong> size) : offset{off}, size{size} {}
 	};
 
 

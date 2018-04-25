@@ -23,7 +23,6 @@ GApp::GApp ()
 
 	Platforms::RegisterPlatforms();
 	Profilers::RegisterProfilers();
-	//ImportExport::RegisterImportExport();
 	Graphics::RegisterGraphics();
 }
 

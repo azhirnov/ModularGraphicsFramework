@@ -60,7 +60,9 @@ namespace PipelineCompiler
 		template <typename PplnCollection>
 		bool _ProcessSharedTypes (const PplnCollection &pipelines, Ptr<ISerializer> ser, OUT String &fileSource, INOUT ConverterConfig &cfg) const;
 
-		bool _SaveSharedTypes (Ptr<ISerializer> ser, StringCRef nameSpace, OUT String &fileSource, OUT String &glslSource) const;
+		bool _SaveSharedTypes (Ptr<ISerializer> ser, StringCRef nameSpace, OUT String &fileSource) const;
+		
+		static bool _StructsToString (const StructTypes &structTypes, Ptr<ISerializer> ser, OUT String &serialized);
 	};
 
 }	// PipelineCompiler

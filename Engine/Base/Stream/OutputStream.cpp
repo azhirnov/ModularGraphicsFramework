@@ -100,6 +100,8 @@ namespace Base
 		if ( _file )
 		{
 			CHECK( _SetState( EState::ComposedImmutable ) );
+
+			//_SendUncheckedEvent< ModuleMsg::AfterCompose >({});	// TODO
 		}
 		else
 			_SetState( EState::ComposingFailed );
@@ -132,6 +134,8 @@ namespace Base
 			_file = File::SubWFile::New( ci.file, ci.file->Pos(), ci.file->RemainingSize() );
 			
 			CHECK( _SetState( EState::ComposedImmutable ) );
+			
+			//_SendUncheckedEvent< ModuleMsg::AfterCompose >({});	// TODO
 		}
 		else
 			_SetState( EState::ComposingFailed );

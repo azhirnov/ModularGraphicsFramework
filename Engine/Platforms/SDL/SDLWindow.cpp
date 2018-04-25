@@ -212,6 +212,8 @@ namespace PlatformSDL
 			
 			_SendForEachAttachments< ModuleMsg::Link >({});
 			_SendForEachAttachments< ModuleMsg::Compose >({});
+			
+			_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		}
 		else
 		{

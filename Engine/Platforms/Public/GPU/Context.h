@@ -31,6 +31,8 @@ namespace Platforms
 						 bool		isDebug		= false) :
 			device(deviceName), version(version), isDebug(isDebug)
 		{}
+
+		String GetAPIName () const;
 	};
 
 
@@ -80,6 +82,8 @@ namespace Platforms
 			colorFmt{ colorFmt },	depthStencilFmt{ depthStencilFmt },
 			samples{ samples },		swapchainLength{ swapchainLength }
 		{}
+
+		String GetAPIName () const;
 	};
 
 

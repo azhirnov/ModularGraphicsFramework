@@ -45,7 +45,7 @@ namespace CreateInfo
 	//
 	struct Camera
 	{
-		ModulePtr				scene;
+		ModulePtr				scene;		// can be null
 
 		Scene::CameraSettings	settings;
 

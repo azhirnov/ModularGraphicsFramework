@@ -333,6 +333,8 @@ namespace PlatformVK
 		CHECK( _ValidateAllSubscriptions() );
 
 		CHECK( _SetState( EState::ComposedMutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 	
@@ -603,7 +605,7 @@ namespace PlatformVK
 		// check buffer state
 		Message< GpuMsg::GetCommandBufferState >	req_state;
 		SendTo( _cmdBuffer, req_state );
-		CHECK_ERR( req_state->result.Get() == ERecordingState::Recording );
+		CHECK_ERR( *req_state->result == ERecordingState::Recording );
 
 		_scope = EScope::Command;
 		return true;
@@ -655,8 +657,8 @@ namespace PlatformVK
 		SendTo( msg->renderPass, req_pass );
 		SendTo( msg->renderPass, req_pass_descr );
 
-		auto const&	fb_descr	= req_fb_descr->result.Get();
-		auto const&	rp_descr	= req_pass_descr->result.Get();
+		auto const&	fb_descr	= *req_fb_descr->result;
+		auto const&	rp_descr	= *req_pass_descr->result;
 
 		CHECK_ERR( _CheckCompatibility( fb_descr, rp_descr ) );
 		
@@ -1007,7 +1009,7 @@ namespace PlatformVK
 			DEBUG_ONLY(
 				Message< GpuMsg::GetCommandBufferState >	req_state;
 				SendTo( cmd, req_state );
-				CHECK( req_state->result.Get() == GpuMsg::GetCommandBufferState::EState::Executable );
+				CHECK( *req_state->result == GpuMsg::GetCommandBufferState::EState::Executable );
 			);
 
 			Message< GpuMsg::GetVkCommandBufferID >		req_id;
@@ -1189,9 +1191,9 @@ namespace PlatformVK
 		_resources.Add( msg->dstImage );
 
 		vkCmdCopyImage( _cmdId,
-						req_src_id->result.Get(),
+						*req_src_id->result,
 						Vk1Enum( msg->srcLayout ),
-						req_dst_id->result.Get(),
+						*req_dst_id->result,
 						Vk1Enum( msg->dstLayout ),
 						(uint32_t) regions.Count(),
 						(VkImageCopy const*) regions.ptr() );
@@ -1226,8 +1228,10 @@ namespace PlatformVK
 
 		FOR( i, msg->regions )
 		{
-			auto const&			src = msg->regions[i];
+			auto const&			src			= msg->regions[i];
 			VkBufferImageCopy	dst;
+			const int3			img_offset	= int3(src.imageOffset);
+			const uint3			img_size	= Max( src.imageSize, 1u );
 
 			dst.bufferOffset					= (VkDeviceSize) src.bufferOffset;
 			dst.bufferRowLength					= src.bufferRowLength;
@@ -1237,8 +1241,8 @@ namespace PlatformVK
 			dst.imageSubresource.mipLevel		= src.imageLayers.mipLevel.Get();
 			dst.imageSubresource.baseArrayLayer	= src.imageLayers.baseLayer.Get();
 			dst.imageSubresource.layerCount		= src.imageLayers.layerCount;
-			dst.imageOffset						= VkOffset3D{ int(src.imageOffset.x), int(src.imageOffset.y), int(src.imageOffset.z) };
-			dst.imageExtent						= VkExtent3D{ src.imageSize.x, src.imageSize.y, src.imageSize.z };
+			dst.imageOffset						= VkOffset3D{ img_offset.x, img_offset.y, img_offset.z };
+			dst.imageExtent						= VkExtent3D{ img_size.x, img_size.y, img_size.z };
 
 			regions.PushBack( dst );
 		}
@@ -1247,8 +1251,8 @@ namespace PlatformVK
 		_resources.Add( msg->dstImage );
 
 		vkCmdCopyBufferToImage( _cmdId,
-								req_src_id->result.Get(),
-								req_dst_id->result.Get(),
+								*req_src_id->result,
+								*req_dst_id->result,
 								Vk1Enum( msg->dstLayout ),
 								(uint32_t) regions.Count(),
 								regions.ptr() );
@@ -1304,9 +1308,9 @@ namespace PlatformVK
 		_resources.Add( msg->dstBuffer );
 
 		vkCmdCopyImageToBuffer( _cmdId,
-								req_src_id->result.Get(),
+								*req_src_id->result,
 								Vk1Enum( msg->srcLayout ),
-								req_dst_id->result.Get(),
+								*req_dst_id->result,
 								(uint32_t) regions.Count(),
 								regions.ptr() );
 		return true;
@@ -1365,9 +1369,9 @@ namespace PlatformVK
 		_resources.Add( msg->dstImage );
 
 		vkCmdBlitImage( _cmdId,
-						req_src_id->result.Get(),
+						*req_src_id->result,
 						Vk1Enum( msg->srcLayout ),
-						req_dst_id->result.Get(),
+						*req_dst_id->result,
 						Vk1Enum( msg->dstLayout ),
 						(uint32_t) regions.Count(),
 						regions.ptr(),
@@ -1421,14 +1425,17 @@ namespace PlatformVK
 		SendTo( msg->dstBuffer, req_id );
 		SendTo( msg->dstBuffer, req_descr );
 		
+		ASSERT( msg->dstOffset < req_descr->result->size );
 		ASSERT( req_descr->result->usage[ EBufferUsage::TransferDst ] );
 		
 		_resources.Add( msg->dstBuffer );
 
+		const BytesUL	size = Min( msg->size, req_descr->result->size - msg->dstOffset );
+
 		vkCmdFillBuffer( _cmdId,
-						 req_id->result.Get(),
-						 (VkDeviceSize) msg->dstOffset,
-						 (VkDeviceSize) Min( msg->size, req_descr->result.Get().size - msg->dstOffset ),
+						 *req_id->result,
+						 VkDeviceSize(msg->dstOffset),
+						 VkDeviceSize(size),
 						 msg->pattern );
 		return true;
 	}
@@ -1519,7 +1526,7 @@ namespace PlatformVK
 		_resources.Add( msg->image );
 
 		vkCmdClearColorImage( _cmdId,
-							  req_id->result.Get(),
+							  *req_id->result,
 							  Vk1Enum( msg->layout ),
 							  &clear_value,
 							  (uint32_t) ranges.Count(),
@@ -1570,7 +1577,7 @@ namespace PlatformVK
 		_resources.Add( msg->image );
 
 		vkCmdClearDepthStencilImage( _cmdId,
-									 req_id->result.Get(),
+									 *req_id->result,
 									 Vk1Enum( msg->layout ),
 									 &clear_value,
 									 (uint32_t) ranges.Count(),

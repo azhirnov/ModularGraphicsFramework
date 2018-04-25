@@ -454,6 +454,8 @@ namespace PlatformSW
 			{
 				CHECK( _CreateDefaultView() );
 				CHECK( _SetState( EState::ComposedMutable ) );
+				
+				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 			}
 			else
 			{
@@ -677,6 +679,13 @@ namespace Platforms
 	{
 		return New< PlatformSW::SWImage >( id, gs, ci );
 	}
+	
+	ModulePtr SoftRendererObjectsConstructor::CreateSWSharedImage (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSharedImage &ci)
+	{
+		return null;
+		//return New< PlatformSW::SWImage >( id, gs, ci );
+	}
+
 }	// Platforms
 }	// Engine
 

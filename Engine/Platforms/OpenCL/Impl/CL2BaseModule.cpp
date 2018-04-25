@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
+#include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 #ifdef COMPUTE_API_OPENCL
 

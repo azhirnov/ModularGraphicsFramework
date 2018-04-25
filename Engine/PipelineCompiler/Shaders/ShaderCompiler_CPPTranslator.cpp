@@ -45,28 +45,36 @@ namespace PipelineCompiler
 
 		bool TranslateLocalVar (const TypeInfo &, INOUT String &src) override;
 		bool TranslateStruct (const TypeInfo &, INOUT String &src) override;
-		bool TranslateArg (const TypeInfo &, INOUT String &src) override;
 		bool TranslateType (const TypeInfo &, INOUT String &src) override;
 		bool TranslateName (const TypeInfo &, INOUT String &src) override;
-		bool TranslateFunctionName (INOUT String &name) override;
 
+		bool TranslateFunctionDecl (StringCRef sign, const TypeInfo &resultType, ArrayCRef<TypeInfo> args, INOUT String &src) override;
+		bool TranslateFunctionCall (StringCRef sign, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) override;
+		
+		bool TranslateConstant (const glslang::TConstUnionArray &, const TypeInfo &, INOUT String &src) override;
 		bool TranslateExternal (glslang::TIntermTyped*, const TypeInfo &, INOUT String &src) override;
 		bool TranslateOperator (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) override;
-		bool TranslateFunction (StringCRef name, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) override;
 		bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) override;
 		
-		bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) override;
+		bool TranslateEntry (const TypeInfo &ret, StringCRef sign, ArrayCRef<TypeInfo> args, INOUT String &src) override;
 		bool TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) override;
 		
+		bool TranslateValue (VariantCRef value, INOUT String &src) const override;
+
 		bool DeclExternalTypes () const	override	{ return true; }
 
 	private:
+		String _TranslateFunctionName (StringCRef sign);
+		bool _TranslateArg (const TypeInfo &t, INOUT String &res);
+
 		bool _TranslateBuffer (Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateImage (Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateConst (glslang::TIntermTyped* typed, Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateShared (Translator::TypeInfo const& info, OUT String &str);
 		bool _TranslateBuiltin (StringCRef name, OUT String &str) const;
 		bool _TranslateBarrier (uint index, OUT String &str) const;
+		
+		bool _RecursiveInitConstStruct (const Array<Translator::TypeInfo> &fields, const glslang::TConstUnionArray& cu_arr, INOUT int &index, OUT String &src);
 
 		static String _ToString (EShaderMemoryModel::type value);
 		static String _ToString (EShaderVariable::type value);
@@ -103,9 +111,10 @@ namespace PipelineCompiler
 		TIntermNode*	root	= intermediate->getTreeRoot();
 		Translator		translator;
 
-		translator.useGXrules	= intermediate->getSource() == glslang::EShSourceGxsl;
-		translator.entryPoint	= intermediate->getEntryPointName().c_str();
-		translator.language		= new CPP_DstLanguage( translator, ConvertShaderType( glslangData.shader->getStage() ) );
+		translator.states.useGXrules	= intermediate->getSource() == glslang::EShSourceGxsl;
+		translator.states.inlineAll		= cfg.inlineAll;
+		translator.entryPoint			= intermediate->getEntryPointName().c_str();
+		translator.language				= new CPP_DstLanguage( translator, ConvertShaderType( glslangData.shader->getStage() ) );
 
 		CHECK_ERR( TranslateShaderInfo( intermediate, cfg.skipExternals, translator ) );
 		
@@ -206,48 +215,6 @@ namespace PipelineCompiler
 		src << "};\n\n";
 		return true;
 	}
-
-/*
-=================================================
-	TranslateArg
-=================================================
-*/
-	bool CPP_DstLanguage::TranslateArg (const TypeInfo &t, INOUT String &res)
-	{
-		// qualifies
-		if ( t.qualifier[ EVariableQualifier::Constant ] )
-			res << "const ";
-		else
-		if ( t.qualifier[ EVariableQualifier::InArg ] and t.qualifier[ EVariableQualifier::OutArg ] )
-			res << "INOUT ";
-		else
-		if ( t.qualifier[ EVariableQualifier::InArg ] )
-			res << "IN ";
-		else
-		if ( t.qualifier[ EVariableQualifier::OutArg ] )
-			res << "OUT ";
-		
-		// type
-		if ( not t.typeName.Empty() ) {
-			res << t.typeName;
-		} else {
-			res << _ToString( t.type );
-		}
-		
-		if ( t.qualifier[ EVariableQualifier::InArg ] and t.qualifier[ EVariableQualifier::OutArg ] )
-			res << " &";
-		else
-		if ( t.qualifier[ EVariableQualifier::InArg ] )
-			res << " ";
-		else
-		if ( t.qualifier[ EVariableQualifier::OutArg ] )
-			res << " &";
-		else
-			res << " ";
-
-		res << t.name << (t.arraySize == 0 ? "" : (t.arraySize == UMax ? "[]" : "["_str << t.arraySize << "]"));
-		return true;
-	}
 	
 /*
 =================================================
@@ -305,16 +272,18 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	TranslateFunctionName
+	_TranslateFunctionName
 =================================================
 */
-	bool CPP_DstLanguage::TranslateFunctionName (INOUT String &name)
+	String CPP_DstLanguage::_TranslateFunctionName (StringCRef signature)
 	{
-		usize	pos = 0;
+		usize	pos  = 0;
+		String	name = signature;
+
 		if ( name.Find( '(', OUT pos ) ) {
 			name = name.SubString( 0, pos );
 		}
-		return true;
+		return name;
 	}
 
 /*
@@ -322,9 +291,14 @@ namespace PipelineCompiler
 	TranslateExternal
 =================================================
 */
-	bool CPP_DstLanguage::TranslateExternal (glslang::TIntermTyped* typed, const TypeInfo &info, INOUT String &)
+	bool CPP_DstLanguage::TranslateExternal (glslang::TIntermTyped* typed, const TypeInfo &info, INOUT String &src)
 	{
-		_externals.PushBack({ typed, info });
+		if ( info.qualifier[ EVariableQualifier::Constant ] ) {
+			CHECK_ERR( _TranslateConst( typed, info, INOUT src ) );
+		}
+		else
+			_externals.PushBack({ typed, info });
+
 		return true;
 	}
 	
@@ -795,15 +769,79 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	TranslateFunction
+	TranslateFunctionCall
 =================================================
 */
-	bool CPP_DstLanguage::TranslateFunction (StringCRef name, const TypeInfo &, ArrayCRef<String> args, ArrayCRef<TypeInfo const*>, INOUT String &src)
+	bool CPP_DstLanguage::TranslateFunctionCall (StringCRef signature, const TypeInfo &, ArrayCRef<String> args, ArrayCRef<TypeInfo const*>, INOUT String &src)
 	{
-		src << name << '(';
+		src << _TranslateFunctionName( signature ) << '(';
 
 		FOR( i, args ) {
 			src << (i ? ", " : "") << args[i];
+		}
+
+		src << ')';
+		return true;
+	}
+
+/*
+=================================================
+	_TranslateArg
+=================================================
+*/
+	bool CPP_DstLanguage::_TranslateArg (const TypeInfo &t, INOUT String &res)
+	{
+		// qualifies
+		if ( t.qualifier[ EVariableQualifier::Constant ] )
+			res << "const ";
+		else
+		if ( t.qualifier[ EVariableQualifier::InArg ] and t.qualifier[ EVariableQualifier::OutArg ] )
+			res << "INOUT ";
+		else
+		if ( t.qualifier[ EVariableQualifier::InArg ] )
+			res << "IN ";
+		else
+		if ( t.qualifier[ EVariableQualifier::OutArg ] )
+			res << "OUT ";
+		
+		// type
+		if ( not t.typeName.Empty() ) {
+			res << t.typeName;
+		} else {
+			res << _ToString( t.type );
+		}
+		
+		if ( t.qualifier[ EVariableQualifier::InArg ] and t.qualifier[ EVariableQualifier::OutArg ] )
+			res << " &";
+		else
+		if ( t.qualifier[ EVariableQualifier::InArg ] )
+			res << " ";
+		else
+		if ( t.qualifier[ EVariableQualifier::OutArg ] )
+			res << " &";
+		else
+			res << " ";
+
+		res << t.name << (t.arraySize == 0 ? "" : (t.arraySize == UMax ? "[]" : "["_str << t.arraySize << "]"));
+		return true;
+	}
+	
+/*
+=================================================
+	TranslateSwizzle
+=================================================
+*/
+	bool CPP_DstLanguage::TranslateFunctionDecl (StringCRef signature, const TypeInfo &resultType, ArrayCRef<TypeInfo> args, INOUT String &src)
+	{
+		CHECK_ERR( TranslateType( resultType, INOUT src ) );
+
+		src << ' ' << _TranslateFunctionName( signature ) << '(';
+		
+		FOR( i, args )
+		{
+			src << (i ? ", " : "");
+
+			CHECK_ERR( _TranslateArg( args[i], OUT src ) );
 		}
 
 		src << ')';
@@ -826,7 +864,7 @@ namespace PipelineCompiler
 	TranslateEntry
 =================================================
 */
-	bool CPP_DstLanguage::TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src)
+	bool CPP_DstLanguage::TranslateEntry (const TypeInfo &ret, StringCRef, ArrayCRef<TypeInfo> args, INOUT String &src)
 	{
 		CHECK_ERR( args.Empty() );
 		CHECK_ERR( ret.type == EShaderVariable::Void );
@@ -851,10 +889,6 @@ namespace PipelineCompiler
 			else
 			if ( info.qualifier[ EVariableQualifier::Shared ] ) {
 				CHECK_ERR( _TranslateShared( info, INOUT src ) );
-			}
-			else
-			if ( info.qualifier[ EVariableQualifier::Constant ] ) {
-				CHECK_ERR( _TranslateConst( _externals[i].first, info, INOUT src ) );
 			}
 		}
 
@@ -1157,6 +1191,119 @@ namespace PipelineCompiler
 			<< "\t_helper_.InitBarrier( " << index << ", " << "__barrier_obj" << index << " );\n";
 		return true;
 	}
+	
+/*
+=================================================
+	_RecursiveInitConstStruct
+=================================================
+*/
+	bool CPP_DstLanguage::_RecursiveInitConstStruct (const Array<Translator::TypeInfo> &fields, const glslang::TConstUnionArray& cu_arr, INOUT int &index, OUT String &src)
+	{
+		DeserializedShader::Constant::ValueArray_t	values;
+
+		src << "( ";
+
+		FOR( i, fields )
+		{
+			const auto&	field	= fields[i];
+			const uint	count	= field.arraySize == 0 ? 1 : field.arraySize;
+			const bool	is_arr	= field.arraySize != 0;
+
+			CHECK_ERR( field.arraySize != UMax );
+			
+			src << (i ? ", " : "");
+
+			if ( is_arr )
+				src << "{ ";
+
+			if ( EShaderVariable::IsStruct( field.type ) )
+			{
+				for (uint j = 0; j < count; ++j) {
+					CHECK_ERR( _RecursiveInitConstStruct( field.fields, cu_arr, INOUT index, INOUT src ) );
+				}
+			}
+			else
+			{
+				for (uint j = 0; j < count; ++j)
+				{
+					values.Clear();
+					CHECK_ERR( DeserializeConstant::Process( field.type, cu_arr, index, true, OUT values, OUT index ) );
+
+					CU_ToArray_Func	func{ this };
+					
+					src << (j ? ", " : "");
+					values.Front().Apply( func );
+
+					CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+												  field, func.GetStrings(), func.GetTypes(), INOUT src ) );
+				}
+			}
+			
+			if ( is_arr )
+				src << " }";
+		}
+		src << " )";
+		return true;
+	}
+	
+/*
+=================================================
+	TranslateConstant
+=================================================
+*/
+	bool CPP_DstLanguage::TranslateConstant (const glslang::TConstUnionArray &cu_arr, const TypeInfo &info, INOUT String &str)
+	{
+		// array
+		if ( info.arraySize > 0 )
+		{
+			Translator::TypeInfo	scalar_info = info;		scalar_info.arraySize = 0;
+
+			str << "{ ";
+			
+			DeserializedShader::Constant::ValueArray_t	values;
+			CHECK_ERR( DeserializeConstant::Process( scalar_info.type, cu_arr, OUT values ) );
+
+			FOR( i, values )
+			{
+				CU_ToArray_Func	func{ this };
+
+				str << (i ? ", " : "");
+				values[i].Apply( func );
+
+				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+												scalar_info, func.GetStrings(), func.GetTypes(), INOUT str ) );
+			}
+
+			str << " }";
+		}
+		else
+		// struct
+		if ( EShaderVariable::IsStruct( info.type ) )
+		{
+			str << info.typeName;
+
+			int index = 0;
+			CHECK_ERR( _RecursiveInitConstStruct( info.fields, cu_arr, INOUT index, INOUT str ) );
+		}
+		else
+		// scalar
+		{
+			DeserializedShader::Constant::ValueArray_t	values;
+			CHECK_ERR( DeserializeConstant::Process( info.type, cu_arr, OUT values ) );
+
+			FOR( i, values )
+			{
+				CU_ToArray_Func	func{ this };
+
+				str << (i ? ", " : "");
+				values[i].Apply( func );
+				
+				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
+												info, func.GetStrings(), func.GetTypes(), INOUT str ) );
+			}
+		}
+		return true;
+	}
 
 /*
 =================================================
@@ -1167,57 +1314,81 @@ namespace PipelineCompiler
 	{
 		CHECK_ERR( typed->getAsSymbolNode() );
 
-		glslang::TType const&				type	= typed->getType();
 		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
 
 		str << "\t";
 		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
 		str << " = ";
-
-		if ( type.isArray() )
-		{
-			Translator::TypeInfo	scalar_info = info;		scalar_info.arraySize = 0;
-
-			str << "{ ";
-			
-			DeserializedShader::Constant::ValueArray_t	values;
-			CHECK_ERR( DeserializeConstant::Process( scalar_info.type, cu_arr, OUT values ) );
 		
-			FOR( i, values )
-			{
-				CU_ToArray_Func	func;
-
-				str << (i ? ", " : "");
-				values[i].Apply( func );
-				
-				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
-												scalar_info, func.GetStrings(), func.GetTypes(), INOUT str ) );
-			}
-
-			str << " };\n";
+		CHECK_ERR( TranslateConstant( cu_arr, info, INOUT str ) );
+			
+		str << ";\n";
+		return true;
+	}
+	
+/*
+=================================================
+	TranslateValue
+=================================================
+*/
+	bool CPP_DstLanguage::TranslateValue (VariantCRef value, INOUT String &src) const
+	{
+		src.Clear();
+		
+		// bool
+		if ( value.GetValueTypeId() == TypeIdOf<bool>() )
+		{
+			src << ToString( value.Get<bool>() );
 		}
 		else
-		if ( type.isStruct() )
+		// int
+		if ( value.GetValueTypeId() == TypeIdOf<int>() )
 		{
-			TODO( "" );
+			const int	val = value.Get<int>();
+
+			if ( val != MinValue(val) )
+				src << ToString( val );
+			else
+				src << "(" << (MinValue(val)+1) << " - 1)";
 		}
 		else
+		// long
+		if ( value.GetValueTypeId() == TypeIdOf<ilong>() )
 		{
-			DeserializedShader::Constant::ValueArray_t	values;
-			CHECK_ERR( DeserializeConstant::Process( info.type, cu_arr, OUT values ) );
+			const ilong	val = value.Get<ilong>();
 
-			FOR( i, values )
-			{
-				CU_ToArray_Func	func;
-
-				str << (i ? ", " : "");
-				values[i].Apply( func );
-				
-				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
-												info, func.GetStrings(), func.GetTypes(), INOUT str ) );
-			}
-			str << ";\n";
+			if ( val != MinValue(val) )
+				src << ToString( val ) << "LL";
+			else
+				src << "(" << (MinValue(val)+1) << "LL - 1)";
 		}
+		else
+		// uint
+		if ( value.GetValueTypeId() == TypeIdOf<uint>() )
+		{
+			src << ToString( value.Get<uint>() ) << "U";
+		}
+		else
+		// ulong
+		if ( value.GetValueTypeId() == TypeIdOf<ulong>() )
+		{
+			src << ToString( value.Get<ulong>() ) << "ULL";
+		}
+		else
+		// float
+		if ( value.GetValueTypeId() == TypeIdOf<float>() )
+		{
+			src << String().FormatF( value.Get<float>(), StringFormatF().Fmt(0,8).CutZeros() ) << "f";
+		}
+		else
+		// double
+		if ( value.GetValueTypeId() == TypeIdOf<double>() )
+		{
+			src << String().FormatF( value.Get<double>(), StringFormatF().Fmt(0,16).CutZeros() );
+		}
+		else
+			RETURN_ERR( "unsupported scalar type" );
+
 		return true;
 	}
 	

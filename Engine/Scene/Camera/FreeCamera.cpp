@@ -60,6 +60,7 @@ namespace Scene
 		float2						_mouseDelta;
 		float3						_positionDelta;
 		float						_zoom;
+		bool						_mousePressed;
 
 
 	// methods
@@ -85,6 +86,7 @@ namespace Scene
 		void _OnMouseX (const ModuleMsg::InputMotion &);
 		void _OnMouseY (const ModuleMsg::InputMotion &);
 		void _OnMouseWheel (const ModuleMsg::InputMotion &);
+		void _OnMouseLBPressed (const ModuleMsg::InputKey &);
 
 		void _OnKeyStepForward (const ModuleMsg::InputKey &);
 		void _OnKeyStepBackward (const ModuleMsg::InputKey &);
@@ -107,7 +109,8 @@ namespace Scene
 */
 	FreeCamera::FreeCamera (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Camera &ci) :
 		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
-		_settings{ ci.settings }
+		_settings{ ci.settings },
+		_mousePressed{ false }
 	{
 		SetDebugName( "Scene.FreeCamera" );
 
@@ -163,6 +166,9 @@ namespace Scene
 			input->Send< ModuleMsg::InputMotionBind >({ this, &FreeCamera::_OnMouseY,		"mouse.y"_MotionID });
 			input->Send< ModuleMsg::InputMotionBind >({ this, &FreeCamera::_OnMouseWheel,	"mouse.wheel"_MotionID });
 
+			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnMouseLBPressed,	"mouse 0"_KeyID,	EKeyState::OnKeyDown });
+			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnMouseLBPressed,	"mouse 0"_KeyID,	EKeyState::OnKeyUp });
+
 			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepForward,	"W"_KeyID,			EKeyState::OnKeyPressed });
 			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepBackward,	"S"_KeyID,			EKeyState::OnKeyPressed });
 			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepLeft,		"A"_KeyID,			EKeyState::OnKeyPressed });
@@ -187,6 +193,8 @@ namespace Scene
 		_SendForEachAttachments( msg );
 
 		CHECK( _SetState( EState::Linked ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
 		return true;
 	}
 	
@@ -336,17 +344,24 @@ namespace Scene
 */
 	void FreeCamera::_OnMouseX (const ModuleMsg::InputMotion &m)
 	{
-		_mouseDelta.x += m.relative;
+		if ( _mousePressed )
+			_mouseDelta.x += m.relative;
 	}
 
 	void FreeCamera::_OnMouseY (const ModuleMsg::InputMotion &m)
 	{
-		_mouseDelta.y += m.relative;
+		if ( _mousePressed )
+			_mouseDelta.y += m.relative;
 	}
 	
 	void FreeCamera::_OnMouseWheel (const ModuleMsg::InputMotion &m)
 	{
 		_zoom += m.relative;
+	}
+	
+	void FreeCamera::_OnMouseLBPressed (const ModuleMsg::InputKey &k)
+	{
+		_mousePressed = k.IsDown();
 	}
 
 /*

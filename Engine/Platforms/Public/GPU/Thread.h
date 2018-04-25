@@ -5,6 +5,7 @@
 #include "Engine/Platforms/Public/Common.h"
 #include "Engine/Platforms/Public/GPU/Context.h"
 #include "Engine/Platforms/Public/GPU/Sync.h"
+#include "Engine/Platforms/Public/GPU/CommandEnums.h"
 #include "Engine/Platforms/Public/GPU/RenderPassEnums.h"
 
 namespace Engine
@@ -38,6 +39,22 @@ namespace CreateInfo
 					  Platforms::EPixelFormat::Unknown, Platforms::EPixelFormat::Unknown,
 					  Platforms::MultiSamples(), settings.device, 0 }
 		{}
+	};
+
+
+	//
+	// GPU Command Queue Create Info
+	//
+	struct GpuCommandQueue
+	{
+	// variables
+		ModulePtr						gpuThread;
+		Platforms::EQueueFamily::bits	family;
+
+	// methods
+		GpuCommandQueue () {}
+
+		GpuCommandQueue (const ModulePtr &gpuThread, Platforms::EQueueFamily::bits family) : gpuThread{gpuThread}, family{family} {}
 	};
 
 }	// CreateInfo

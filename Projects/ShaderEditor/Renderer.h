@@ -93,8 +93,10 @@ namespace ShaderEditor
 
 		SHARED_POINTER( Shader );
 
-		using ShadersMap_t	= HashMap< String, ShaderPtr >;
-		using ResTables_t	= StaticArray< ModulePtr, MAX_PASSES >;
+		using ShadersMap_t		= HashMap< String, ShaderPtr >;
+		using ResTables_t		= StaticArray< ModulePtr, MAX_PASSES >;
+
+		using LoadedImages_t	= HashMap< String, ModulePtr >;
 
 
 	// variables
@@ -103,6 +105,9 @@ namespace ShaderEditor
 
 		ShadersMap_t					_shaders;
 		Array< ShaderPtr >				_ordered;
+
+		LoadedImages_t					_loadedImages;
+		ModulePtr						_asyncCmdBuilder;
 
 		ModulePtr						_nearestClampSampler;
 		ModulePtr						_linearClampSampler;
@@ -136,13 +141,19 @@ namespace ShaderEditor
 
 		bool Add (StringCRef name, const ShaderDescr &descr);
 
+		void Reset ();
+
 		bool Update (const SceneMsg::CameraRequestUpdate &);
 
 	private:
 		bool _RecreateAll (const uint2 &newSize);
 		bool _CreateShader (const ShaderPtr &shader, const uint2 &newSize);
+		bool _LoadImage (StringCRef filename, OUT ModulePtr &mod);
+		
 		bool _CreateSamplers ();
+		bool _CreateCmdBuffer (const ModulePtr &cmdBuilder);
 		bool _CreateDrawTexQuadPipeline ();
+		
 		void _UpdateShaderData (const SceneMsg::CameraGetState::State &);
 		
 		void _OnMouseX (const ModuleMsg::InputMotion &);

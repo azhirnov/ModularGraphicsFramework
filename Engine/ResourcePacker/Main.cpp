@@ -24,7 +24,7 @@ int main (int argc, char** argv)
 
 		if ( key == "-R" )
 		{
-			res_file = value;
+			res_file = value;	// TODO: check for multiple commands
 		}
 		else
 		{

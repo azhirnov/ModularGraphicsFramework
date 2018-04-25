@@ -482,6 +482,7 @@ namespace PipelineCompiler
 		static bool		IsBuffer (type value);
 		static bool		IsTexture (type value);
 		static bool		IsImage (type value);
+		static bool		IsScalar (type value);
 
 		static bool		IsFloat (type value);
 		static bool		IsFloat32 (type value);
@@ -983,6 +984,12 @@ namespace PipelineCompiler
 		return !!(value & _vtypeinfo::_IMAGE);
 	}
 	
+
+	inline bool  EShaderVariable::IsScalar (type value)
+	{
+		return VecSize( value ) == 1;
+	}
+
 
 	inline bool  EShaderVariable::IsFloat (type value)
 	{

@@ -99,9 +99,8 @@ namespace PipelineCompiler
 	pass 1 & 2
 =================================================
 */
-	String  BasePipeline::_VaryingsToString (const Array<Varying> &varyings) const
+	void BasePipeline::_VaryingsToString (const Array<Varying> &varyings, OUT String &str)
 	{
-		String			str;
 		const BytesU	vec4_align	= EShaderVariable::SizeOf( EShaderVariable::Float4, 0_b );
 
 		FOR( i, varyings )
@@ -135,7 +134,6 @@ namespace PipelineCompiler
 
 			str << ";\n";
 		}
-		return str;
 	}
 	
 /*

@@ -123,6 +123,7 @@ namespace GpuMsg
 
 	// methods
 		MapMemoryToCpu () {}
+		MapMemoryToCpu (EMappingFlags flags) : size{BytesUL(~0ull)}, flags{flags} {}
 		MapMemoryToCpu (EMappingFlags flags, Bytes<uint> size, Bytes<uint> offset = Uninitialized) : offset(offset), size(size), flags(flags) {}
 		MapMemoryToCpu (EMappingFlags flags, Bytes<ulong> size, Bytes<ulong> offset = Uninitialized) : offset(offset), size(size), flags(flags) {}
 	};

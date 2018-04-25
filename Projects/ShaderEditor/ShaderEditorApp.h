@@ -13,6 +13,7 @@ namespace ShaderEditor
 	{
 	// types
 	private:
+		using Samples_t	= Array< Function< void (Renderer&) > >;
 
 
 	// variables
@@ -21,6 +22,10 @@ namespace ShaderEditor
 		ModulePtr		_surface;
 
 		Renderer		_renderer;
+
+		Samples_t		_samples;
+		usize			_currSample;
+		usize			_nextSample;
 
 		bool			_looping;
 		const bool		_vrMode;
@@ -39,6 +44,10 @@ namespace ShaderEditor
 		bool _Init (const Message< ModuleMsg::Compose > &);
 		bool _GInit (const Message< GpuMsg::DeviceCreated > &);
 		bool _Draw (const Message< SceneMsg::CameraRequestUpdate > &);
+
+		void _OnKey (const ModuleMsg::InputKey &);
+
+		void _InitSamples ();
 	};
 
 }	// ShaderEditor

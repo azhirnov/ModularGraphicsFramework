@@ -107,6 +107,8 @@ namespace VS
 	static constexpr uint	ConditionalExprIsConstant			= 4127;		// conditional expression is constant	(use if constexpr)
 
 	static constexpr uint	UninitializedVarUsed				= 4700;		// uninitialized local variable 'name' used
+	static constexpr uint	MayBeUninitialized[]				= { 4701,	// Potentially uninitialized local variable 'name' used
+																	4703 };	// Potentially uninitialized local pointer variable 'name' used
 
 	static constexpr uint	IllegalConversion					= 4927;		// illegal conversion; more than one user-defined conversion has been implicitly applied
 
@@ -117,6 +119,10 @@ namespace VS
 	static constexpr uint	AssignInConditionalExpr				= 4706;		// assignment within conditional expression
 
 	static constexpr uint	ShiftCountNegativeOrBig				= 4293;		// '>>': shift count negative or too big, undefined behavior
+
+	static constexpr uint	OperatorPrecedence					= 4554;		// operator' : check operator precedence for possible error; use parentheses to clarify precedence
+
+	static constexpr uint	ForcingValueToBool					= 4800;		// 'type' : forcing value to bool 'true' or 'false' (performance warning)
 
 	// Static Analyzer Warnings //
 	static constexpr uint	ReturnValueIgnored					= 6031;		// Return value ignored: 'name'

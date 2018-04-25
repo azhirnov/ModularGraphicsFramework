@@ -281,9 +281,6 @@ namespace PipelineCompiler
 	public:
 		struct ConverterConfig
 		{
-			// reserved
-			String						_glslTypes;
-
 			// add custom includings.
 			Array<String>				includings;
 
@@ -426,7 +423,8 @@ namespace PipelineCompiler
 
 		static bool _CalculateOffsets (INOUT StructTypes &structTypes);
 		static bool _AddPaddingToStructs (INOUT StructTypes &structTypes);
-		static bool _AllStructsToString (const StructTypes &structTypes, Ptr<ISerializer> ser, OUT String &serialized, OUT String &glsl);
+		static bool _StructsToString (const StructTypes &structTypes, OUT String &glslSource);
+		static bool _SerializeStructs (const StructTypes &structTypes, Ptr<ISerializer> ser, OUT String &serialized);
 		static bool _MergeStructTypes (const StructTypes &newTypes, INOUT StructTypes &currTypes);
 
 		static bool _ValidateShader (EShader::type, const CompiledShader &);
@@ -436,8 +434,8 @@ namespace PipelineCompiler
 	private:
 		bool _OnCompilationFailed (EShader::type shaderType, EShaderSrcFormat::type fmt, ArrayCRef<StringCRef> source, StringCRef log) const;
 		
-		String _VaryingsToString (const Array<Varying> &varyings) const;
-		
+		static void _VaryingsToString (const Array<Varying> &varyings, OUT String &str);
+
 		static bool _AddStructType (const _StructField &structType, INOUT StructTypes &currTypes);
 
 		static String     _GetVersionGLSL ();

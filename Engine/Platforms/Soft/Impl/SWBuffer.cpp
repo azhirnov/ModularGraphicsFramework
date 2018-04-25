@@ -331,6 +331,8 @@ namespace PlatformSW
 			{
 				_OnMemoryBinded();
 				CHECK( _SetState( EState::ComposedMutable ) );
+				
+				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 			}
 			else
 			{
@@ -603,6 +605,13 @@ namespace Platforms
 	{
 		return New< PlatformSW::SWBuffer >( id, gs, ci );
 	}
+	
+	ModulePtr SoftRendererObjectsConstructor::CreateSWSharedBuffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSharedBuffer &ci)
+	{
+		return null;	// TODO
+		//return New< PlatformSW::SWBuffer >( id, gs, ci );
+	}
+
 }	// Platforms
 }	// Engine
 

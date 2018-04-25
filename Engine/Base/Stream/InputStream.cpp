@@ -169,6 +169,8 @@ namespace Base
 		if ( not _cache.Empty() )
 		{
 			CHECK( _SetState( EState::ComposedImmutable ) );
+			
+			//_SendUncheckedEvent< ModuleMsg::AfterCompose >({});	// TODO
 		}
 		else
 			_SetState( EState::ComposingFailed );
@@ -195,6 +197,8 @@ namespace Base
 		_cache.Reserve( (usize) cache_size );
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 	}
 
 /*

@@ -29,7 +29,18 @@ namespace Platforms
 											ModuleMsg::InputMotion		// not recomended to use
 										> >;
 
-		using KeyBinds_t			= MultiMap< KeyID::type, ModuleMsg::InputKeyBind >;
+		struct KeyBindState
+		{
+		// variables
+			ModuleMsg::InputKeyBind		bind;
+			bool						pressed	= false;
+
+		// methods
+			KeyBindState () {}
+			explicit KeyBindState (const ModuleMsg::InputKeyBind &bind) : bind{RVREF(bind)} {}
+		};
+
+		using KeyBinds_t			= MultiMap< KeyID::type, KeyBindState >;
 		using MotionBinds_t			= MultiMap< MotionID::type, ModuleMsg::InputMotionBind >;
 
 		using ModulesSet_t			= Set< ModulePtr >;
@@ -169,7 +180,7 @@ namespace Platforms
 			msg->module->Subscribe( this, &InputThread::_InputMotion );
 		}
 
-		// attached module haven't any known input events
+		// attached module hasn't any known input events
 		CHECK( subscribed );
 		return true;
 	}
@@ -214,12 +225,32 @@ namespace Platforms
 		{
 			for (usize i = idx; i < _keyBinds.Count() and _keyBinds[i].first == msg->key; ++i)
 			{
-				auto&	bind = _keyBinds[i].second;
+				auto&	state = _keyBinds[i].second;
 
-				if ( bind.callback.IsValid() )
+				if ( state.bind.callback.IsValid() )
 				{
-					if ( bind.state == EKeyState::OnKeyDown )
-						bind.callback( *msg );
+					if ( msg->IsDown() and not state.pressed )
+					{
+						// first press
+						state.pressed = true;
+						
+						if ( state.bind.state == EKeyState::OnKeyDown )
+							state.bind.callback( *msg );
+					}
+					else
+					if ( msg->IsDown() )
+					{
+						// continue pressing
+						if ( state.bind.state == EKeyState::OnKeyPressed )
+							state.bind.callback( *msg );
+					}
+					else
+					{
+						state.pressed = false;
+						
+						if ( state.bind.state == EKeyState::OnKeyUp )
+							state.bind.callback( *msg );
+					}
 				}
 				else {
 					_keyBinds.EraseByIndex( i );
@@ -271,7 +302,7 @@ namespace Platforms
 	{
 		CHECK_ERR( msg->callback );
 
-		_keyBinds.Add( msg->key, *msg );
+		_keyBinds.Add( msg->key, KeyBindState{*msg} );
 		return true;
 	}
 	
@@ -300,7 +331,7 @@ namespace Platforms
 
 		FOR( i, _keyBinds )
 		{
-			if ( _keyBinds[i].second.callback.EqualPointers( msg->object.RawPtr() ) )
+			if ( _keyBinds[i].second.bind.callback.EqualPointers( msg->object.RawPtr() ) )
 			{
 				_keyBinds.EraseByIndex( i );
 				--i;

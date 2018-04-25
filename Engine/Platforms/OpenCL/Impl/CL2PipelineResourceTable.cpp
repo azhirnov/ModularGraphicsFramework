@@ -172,6 +172,8 @@ namespace PlatformCL
 		CHECK_ERR( _CopySubscriptions< LayoutMsgList_t >( _layout ) );
 
 		CHECK( _SetState( EState::Linked ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
 		return true;
 	}
 

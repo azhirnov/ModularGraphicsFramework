@@ -272,6 +272,8 @@ namespace PlatformGL
 		Resize( surfaceSize );
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 	

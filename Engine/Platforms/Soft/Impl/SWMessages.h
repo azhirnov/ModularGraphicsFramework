@@ -26,40 +26,6 @@ namespace PlatformSW
 }	// PlatformSW
 
 
-namespace CreateInfo
-{
-
-	//
-	// Command Queue Create Info
-	//
-	struct GpuCommandQueue
-	{
-	// types
-		struct EQueueFamily
-		{
-			enum type : uint
-			{
-				Graphics,
-				Compute,
-				Transfer,
-				_Count,
-
-				Unknown = ~0u
-			};
-			
-			GX_ENUM_BITFIELD( EQueueFamily );
-
-			static constexpr bits	All = bits().SetAll();
-		};
-
-	// variables
-		ModulePtr			gpuThread;
-		EQueueFamily::bits	family;
-	};
-
-}	// CreateInfo
-
-
 namespace GpuMsg
 {
 

@@ -170,7 +170,7 @@ namespace ShaderEditor
 		}
 
 		CHECK_ERR( _CreateSamplers() );
-		
+
 		// subscribe on input events
 		{
 			using InputThreadMsgList_t	= CompileTime::TypeListFrom< 
@@ -202,6 +202,20 @@ namespace ShaderEditor
 
 		_shaders.Add( name, New<Shader>( descr ) );
 		return true;
+	}
+	
+/*
+=================================================
+	Reset
+=================================================
+*/
+	void Renderer::Reset ()
+	{
+		_surfaceSize	= uint2();
+		_frameCounter	= 0;
+		
+		_shaders.Clear();
+		_ordered.Clear();
 	}
 
 /*
@@ -250,8 +264,7 @@ namespace ShaderEditor
 							OUT _resourceTables[i] ) );
 
 			_resourceTables[i]->Send< ModuleMsg::AttachModule >({ "pipeline", _drawTexQuadPipeline });
-			_resourceTables[i]->Send< ModuleMsg::AttachModule >({ "un_ColorTexture", iter->second->_perPass[i].image });
-			_resourceTables[i]->Send< ModuleMsg::AttachModule >({ "un_ColorTexture.sampler", _nearestClampSampler });
+			_resourceTables[i]->Send< GpuMsg::PipelineAttachTexture >({ "un_ColorTexture", iter->second->_perPass[i].image, _nearestClampSampler, EImageLayout::ShaderReadOnlyOptimal });
 		}
 		CHECK_ERR( ModuleUtils::Initialize( _resourceTables ) );
 
@@ -319,6 +332,26 @@ namespace ShaderEditor
 		CHECK_ERR( ModuleUtils::Initialize({ _nearestClampSampler, _linearClampSampler, _nearestRepeatSampler, _linearRepeatSampler }) );
 		return true;
 	}
+	
+/*
+=================================================
+	_CreateCmdBuffer
+=================================================
+*/
+	bool Renderer::_CreateCmdBuffer (const ModulePtr &cmdBuilder)
+	{
+		if ( _asyncCmdBuilder )
+			return true;
+		
+		CHECK_ERR( _gs->modulesFactory->Create(
+						Graphics::AsyncCommandBufferModuleID,
+						_gs,
+						CreateInfo::AsyncCommandBuffer{ null, cmdBuilder },
+						OUT _asyncCmdBuilder ) );
+
+		ModuleUtils::Initialize({ _asyncCmdBuilder });
+		return true;
+	}
 
 /*
 =================================================
@@ -376,20 +409,32 @@ namespace ShaderEditor
 		{
 			auto&	ch = shader->_descr._channels[i];
 
+			// find channel in shader passes
 			ShadersMap_t::iterator	iter;
-			CHECK_ERR( _shaders.Find( ch.first, OUT iter ) );
-
-			if ( iter->second == shader )
-				continue;
-
-			FOR( j, iter->second->_perPass )
+			if ( _shaders.Find( ch.first, OUT iter ) )
 			{
-				auto&	pass = iter->second->_perPass[j];
+				if ( iter->second == shader )
+					continue;
 
-				// wait until all dependencies will be initialized
-				if ( pass.framebuffer.IsNull() or pass.image.IsNull() )
-					return false;
+				FOR( j, iter->second->_perPass )
+				{
+					auto&	pass = iter->second->_perPass[j];
+
+					// wait until all dependencies will be initialized
+					if ( pass.framebuffer.IsNull() or pass.image.IsNull() )
+						return false;
+				}
+				continue;
 			}
+
+			// find channel in loadable images
+			ModulePtr	mod;
+			if ( _LoadImage( ch.first, OUT mod ) )
+			{
+				continue;
+			}
+
+			RETURN_ERR( "unknown channel type, it is not a shader pass and not a file" );
 		}
 
 		// create framebuffers
@@ -491,24 +536,91 @@ namespace ShaderEditor
 			{
 				auto&	ch = shader->_descr._channels[j];
 				
+				// find channel in shader passes
 				ShadersMap_t::iterator	iter;
-				CHECK_ERR( _shaders.Find( ch.first, OUT iter ) );
-
-				if ( iter->second == shader )
+				if ( _shaders.Find( ch.first, OUT iter ) )
 				{
-					// use image from previous pass
-					pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j, shader->_perPass[(i-1) & 1].image });
-					pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j << ".sampler", _linearClampSampler });	// TODO
+					if ( iter->second == shader )
+					{
+						// use image from previous pass
+						pass.resourceTable->Send< GpuMsg::PipelineAttachTexture >({ "iChannel"_str << j, shader->_perPass[(i-1) & 1].image, _linearClampSampler });	// TODO: sampler
+					}
+					else
+						pass.resourceTable->Send< GpuMsg::PipelineAttachTexture >({ "iChannel"_str << j, iter->second->_perPass[i].image, _linearClampSampler });	// TODO: sampler
+
 					continue;
 				}
 				
-				pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j, iter->second->_perPass[i].image });
-				pass.resourceTable->Send< ModuleMsg::AttachModule >({ "iChannel"_str << j << ".sampler", _linearClampSampler });	// TODO
+				// find channel in loadable images
+				ModulePtr	image_mod;
+				if ( _LoadImage( ch.first, OUT image_mod ) )
+				{
+					pass.resourceTable->Send< GpuMsg::PipelineAttachTexture >({ "iChannel"_str << j, image_mod, _linearClampSampler });	// TODO: sampler
+					continue;
+				}
+				
+				RETURN_ERR( "unknown channel type, it is not a shader pass and not a file" );
 			}
 			
 			CHECK_ERR( ModuleUtils::Initialize({ pass.resourceTable }) );
 		}
 		return true;
+	}
+	
+/*
+=================================================
+	_LoadImage
+=================================================
+*/
+	bool Renderer::_LoadImage (StringCRef filename, OUT ModulePtr &mod)
+	{
+		/*String	path = filename;
+		FileAddress::FormatPath( path );
+
+		LoadedImages_t::iterator	iter;
+
+		if ( _loadedImages.Find( path, OUT iter ) )
+		{
+			mod = iter->second;
+			return true;
+		}
+
+		CHECK_ERR( _asyncCmdBuilder );
+
+		auto	factory = _gs->modulesFactory;
+
+		ModulePtr	image;
+		CHECK_ERR( factory->Create(
+						_ids.image,
+						_gs,
+						CreateInfo::GpuImage{
+							ImageDescriptor{
+								EImage::Tex2D,
+								uint4(1,1,0,0),
+								EPixelFormat::RGBA8_UNorm,
+								EImageUsage::Sampled | EImageUsage::TransferDst
+							},
+							EGpuMemory::LocalInGPU,
+							EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite
+						},
+						OUT image ) );
+
+		ModulePtr	img_loader;
+		CHECK_ERR( factory->Create(
+							ImportExport::FreeImageImageLoaderModuleID,
+							_gs,
+							CreateInfo::ImageLoader{ filename, EImageLayout::ShaderReadOnlyOptimal },
+							OUT img_loader ) );
+
+		image->Send< ModuleMsg::AttachModule >({ "loader", img_loader });
+		img_loader->Send< ModuleMsg::AttachModule >({ "cmd", _asyncCmdBuilder });
+
+		ModuleUtils::Initialize({ image });
+
+		mod = image;
+		_loadedImages.Add( path, image );
+		return true;*/
+		return false;
 	}
 
 /*
@@ -524,6 +636,11 @@ namespace ShaderEditor
 		Message< GpuMsg::GetFramebufferDescriptor >	req_descr;
 		msg.framebuffers.Front().framebuffer->Send( req_descr );
 
+		ModulePtr	builder = msg.cmdBuilder;
+
+		CHECK_ERR( _CreateCmdBuffer( builder ) );
+
+		// recreate shaders
 		if ( Any( _surfaceSize != req_descr->result->size ) )
 		{
 			CHECK_ERR( _RecreateAll( req_descr->result->size ) );
@@ -531,7 +648,6 @@ namespace ShaderEditor
 		
 		++_passIdx;
 
-		ModulePtr	builder = msg.cmdBuilder;
 		CHECK( builder->Send< GraphicsMsg::CmdBegin >({}) );
 
 		// draw quad to screen

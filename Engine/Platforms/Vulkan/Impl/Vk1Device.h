@@ -28,23 +28,6 @@ namespace PlatformVK
 	{
 	// types
 	public:
-		struct EQueueFamily
-		{
-			enum type : uint
-			{
-				Graphics = 0,
-				Compute,
-				Transfer,
-				SparseBinding,
-				Present,
-				_Count
-			};
-
-			GX_ENUM_BITFIELD( EQueueFamily );
-
-			static constexpr bits	All = bits().SetAll();
-		};
-
 		struct DeviceInfo
 		{
 			vk::VkPhysicalDevice	id						= VK_NULL_HANDLE;
@@ -119,10 +102,6 @@ namespace PlatformVK
 		Framebuffers_t					_framebuffers;
 
 		uint							_currentImageIndex;
-		bool							_graphicsQueueSubmited;
-
-		vk::VkSemaphore					_imageAvailable;
-		vk::VkSemaphore					_renderFinished;
 
 		vk::VkDebugReportCallbackEXT	_debugCallback;
 
@@ -173,12 +152,8 @@ namespace PlatformVK
 		bool CreateQueue ();
 		void DestroyQueue ();
 
-		bool SubmitQueue (ArrayCRef<vk::VkCommandBuffer> cmdBuffers, vk::VkFence fence = VK_NULL_HANDLE,
-						  ArrayCRef<vk::VkSemaphore> waitSemaphore = Uninitialized, ArrayCRef<vk::VkPipelineStageFlags> waitStages = Uninitialized,
-						  ArrayCRef<vk::VkSemaphore> signalSemaphores = Uninitialized);
-
-		bool BeginFrame ();
-		bool EndFrame ();
+		bool BeginFrame (vk::VkSemaphore imageAvailable);
+		bool EndFrame (vk::VkSemaphore renderFinished);
 		bool IsFrameStarted () const;
 		
 		bool GetMemoryTypeIndex (vk::uint32_t memoryTypeBits, vk::VkMemoryPropertyFlags flags, OUT vk::uint32_t &index) const;
@@ -244,9 +219,6 @@ namespace PlatformVK
 
 		bool _CreateFramebuffers ();
 		void _DeleteFramebuffers ();
-
-		bool _CreateSemaphores ();
-		void _DestroySemaphores ();
 
 		// Surface
 		bool _ChooseColorFormat (OUT vk::VkFormat &colorFormat, OUT vk::VkColorSpaceKHR &colorSpace,

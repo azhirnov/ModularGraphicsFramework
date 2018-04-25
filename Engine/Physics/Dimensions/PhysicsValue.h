@@ -31,11 +31,11 @@ namespace GXPhysics
 	private:
 		template <typename D, typename S>
 		struct _Add {
-			typedef PhysicsValue< Value_t, D, S >											Right;
-			typedef typename ValueScale_t::template _Add4< typename Right::ValueScale_t >	conv_add_op_t;
-			typedef PhysicsValue< Value_t,
-						typename Dimensions_t::template Add< typename Right::Dimensions_t >,
-						typename conv_add_op_t::type >										type;
+			using Right			= PhysicsValue< Value_t, D, S >;
+			using conv_add_op_t	= typename ValueScale_t::template _Add4< typename Right::ValueScale_t >;
+			using type			= PhysicsValue< Value_t,
+										typename Dimensions_t::template Add< typename Right::Dimensions_t >,
+										typename conv_add_op_t::type >;
 
 			static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_add_op_t::Get( left, right );
@@ -44,11 +44,11 @@ namespace GXPhysics
 		
 		template <typename D, typename S>
 		struct _Sub {
-			typedef PhysicsValue< Value_t, D, S >											Right;
-			typedef typename ValueScale_t::template _Sub4< typename Right::ValueScale_t >	conv_sub_op_t;
-			typedef PhysicsValue< Value_t,
-						typename Dimensions_t::template Sub< typename Right::Dimensions_t >,
-						typename conv_sub_op_t::type >										type;
+			using Right			= PhysicsValue< Value_t, D, S >;
+			using conv_sub_op_t	= typename ValueScale_t::template _Sub4< typename Right::ValueScale_t >;
+			using type			= PhysicsValue< Value_t,
+										typename Dimensions_t::template Sub< typename Right::Dimensions_t >,
+										typename conv_sub_op_t::type >;
 
 			static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_sub_op_t::Get( left, right );
@@ -57,11 +57,11 @@ namespace GXPhysics
 		
 		template <typename D, typename S>
 		struct _Mul {
-			typedef PhysicsValue< Value_t, D, S >											Right;
-			typedef typename ValueScale_t::template _Mul4< typename Right::ValueScale_t >	conv_mul_op_t;
-			typedef PhysicsValue< Value_t,
-						typename Dimensions_t::template Mul< typename Right::Dimensions_t >,
-						typename conv_mul_op_t::type >										type;
+			using Right			= PhysicsValue< Value_t, D, S >;
+			using conv_mul_op_t	= typename ValueScale_t::template _Mul4< typename Right::ValueScale_t >;
+			using type			= PhysicsValue< Value_t,
+										typename Dimensions_t::template Mul< typename Right::Dimensions_t >,
+										typename conv_mul_op_t::type >;
 
 			static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_mul_op_t::Get( left, right );
@@ -70,11 +70,11 @@ namespace GXPhysics
 		
 		template <typename D, typename S>
 		struct _Div {
-			typedef PhysicsValue< Value_t, D, S >											Right;
-			typedef typename ValueScale_t::template _Div4< typename Right::ValueScale_t >	conv_div_op_t;
-			typedef PhysicsValue< Value_t,
-						typename Dimensions_t::template Div< typename Right::Dimensions_t >,
-						typename conv_div_op_t::type >										type;
+			using Right			= PhysicsValue< Value_t, D, S >;
+			using conv_div_op_t	= typename ValueScale_t::template _Div4< typename Right::ValueScale_t >;
+			using type			= PhysicsValue< Value_t,
+										typename Dimensions_t::template Div< typename Right::Dimensions_t >,
+										typename conv_div_op_t::type >;
 
 			static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_div_op_t::Get( left, right );
@@ -83,17 +83,17 @@ namespace GXPhysics
 		
 		template <isize PowNum, isize PowDenom = 1>
 		struct _Pow {
-			typedef typename CompileTime::Fractional32< PowNum, PowDenom >		pow_t;
-			typedef PhysicsValue< Value_t,
-						typename Dimensions_t::template Power< pow_t >,
-						typename ValueScale_t::template Pow< pow_t > >			type;
+			using pow_t	= typename CompileTime::Fractional32< PowNum, PowDenom >;
+			using type	= PhysicsValue< Value_t,
+								typename Dimensions_t::template Power< pow_t >,
+								typename ValueScale_t::template Pow< pow_t > >;
 		};
 
 		template <typename NewValueType>
 		struct _NewConv {
-			typedef typename PhysicsDimensionScale< NewValueType >::template 
-						BaseConversion< ValueScale_t::Scale::MANTISSA, ValueScale_t::Scale::EXPONENT,
-										ValueScale_t::Power::N, ValueScale_t::Power::D >	type;
+			using type	= typename PhysicsDimensionScale< NewValueType >::template 
+							BaseConversion< ValueScale_t::Scale::MANTISSA, ValueScale_t::Scale::EXPONENT,
+											ValueScale_t::Power::N, ValueScale_t::Power::D >;
 		};
 
 		using SelfInversed	= PhysicsValue< ValueType, typename Dimensions_t::Inverse,
@@ -153,8 +153,8 @@ namespace GXPhysics
 		template <typename D, typename S>
 		CHECKRES auto  operator +  (const PhysicsValue<Value_t,D,S> &right) const
 		{
-			typedef _Add< D, S >			add_op;
-			typedef typename add_op::type	Result_t;
+			using add_op	= _Add< D, S >;
+			using Result_t	= typename add_op::type;
 
 			return Result_t( add_op::Get( _value, right.ref() ) );
 		}
@@ -162,8 +162,8 @@ namespace GXPhysics
 		template <typename D, typename S>
 		CHECKRES auto  operator -  (const PhysicsValue<Value_t,D,S> &right) const
 		{
-			typedef _Sub< D, S >			sub_op;
-			typedef typename sub_op::type	Result_t;
+			using sub_op	= _Sub< D, S >;
+			using Result_t	= typename sub_op::type;
 
 			return Result_t( sub_op::Get( _value, right.ref() ) );
 		}
@@ -171,8 +171,8 @@ namespace GXPhysics
 		template <typename D, typename S>
 		CHECKRES auto  operator *  (const PhysicsValue<Value_t,D,S> &right) const
 		{
-			typedef _Mul< D, S >			mul_op;
-			typedef typename mul_op::type	Result_t;
+			using mul_op	= _Mul< D, S >;
+			using Result_t	= typename mul_op::type;
 
 			return Result_t( mul_op::Get( _value, right.ref() ) );
 		}
@@ -180,8 +180,8 @@ namespace GXPhysics
 		template <typename D, typename S>
 		CHECKRES auto  operator /  (const PhysicsValue<Value_t,D,S> &right) const
 		{
-			typedef _Div< D, S >			div_op;
-			typedef typename div_op::type	Result_t;
+			using div_op	= _Div< D, S >;
+			using Result_t	= typename div_op::type;
 
 			return Result_t( div_op::Get( _value, right.ref() ) );
 		}
@@ -202,9 +202,9 @@ namespace GXPhysics
 		template <isize PowNum, isize PowDenom>
 		CHECKRES auto  Pow () const
 		{
-			typedef typename _Pow< PowNum, PowDenom >::type						Result_t;
-			typedef typename CompileTime::Fractional32< PowNum, PowDenom >		pow_t;
-			typedef typename CompileTime::NearFloat::FromType<ValueType>		Float_t;
+			using Result_t	= typename _Pow< PowNum, PowDenom >::type;
+			using pow_t		= typename CompileTime::Fractional32< PowNum, PowDenom >;
+			using Float_t	= typename CompileTime::NearFloat::FromType<ValueType>;
 
 			return Result_t( GXMath::Pow( _value, pow_t::template ToFloat< Float_t >() ) );
 		}
@@ -213,7 +213,7 @@ namespace GXPhysics
 		template <isize Power>
 		CHECKRES auto  Pow () const
 		{
-			typedef typename CompileTime::NearFloat::FromType<ValueType>		Float_t;
+			using Float_t	= typename CompileTime::NearFloat::FromType<ValueType>;
 
 			return typename _Pow< Power >::type( GXMath::Pow( _value, Float_t( Power ) ) );
 		}
@@ -275,10 +275,10 @@ namespace GXPhysics
 		{
 			STATIC_ASSERT( Dimensions_t::template Equal< typename T::Dimensions_t >::value );
 
-			typedef typename CompileTime::GenType< Value_t, typename T::Value_t >		main_value_t;
-			typedef typename ValueScale_t::template To< main_value_t >					scale1_t;
-			typedef typename T::ValueScale_t::template To< main_value_t >				scale2_t;
-			typedef typename scale1_t::template _Div4< scale2_t >						div_op_t;
+			using main_value_t	= typename CompileTime::GenType< Value_t, typename T::Value_t >;
+			using scale1_t		= typename ValueScale_t::template To< main_value_t >;
+			using scale2_t		= typename T::ValueScale_t::template To< main_value_t >;
+			using div_op_t		= typename scale1_t::template _Div4< scale2_t >;
 
 			return T( (typename T::Value_t) div_op_t::Get( _value, main_value_t(1) ) );
 		}
@@ -302,20 +302,20 @@ namespace GXPhysics
 			  typename ValueScale
 			 >
 	struct PhysicsValue< ValueType, DefaultPhysicsDimensionsList::CreateNonDimensional, ValueScale > :
-		public CompileTime::CopyQualifiers< ValueType >
+				public CompileTime::CopyQualifiers< ValueType >
 	{
 	// types
 	public:
-		typedef ValueType													Value_t;
-		typedef DefaultPhysicsDimensionsList::CreateNonDimensional			Dimensions_t;
-		typedef ValueScale													ValueScale_t;
-		typedef PhysicsValue< Value_t, Dimensions_t, ValueScale_t >		Self;
+		using Value_t		= ValueType;
+		using Dimensions_t	= DefaultPhysicsDimensionsList::CreateNonDimensional;
+		using ValueScale_t	= ValueScale;
+		using Self			= PhysicsValue< Value_t, Dimensions_t, ValueScale_t >;
 		
 		STATIC_ASSERT( Dimensions_t::IsNonDimensional::value );
 
 	private:
-		typedef PhysicsValue< ValueType, typename Dimensions_t::Inverse,
-							  typename ValueScale_t::Inverse >				SelfInversed;
+		using SelfInversed	= PhysicsValue< ValueType, typename Dimensions_t::Inverse,
+											typename ValueScale_t::Inverse >;
 
 
 	// variables
@@ -376,8 +376,8 @@ namespace GXPhysics
 		template <isize PowNum, isize PowDenom>
 		CHECKRES Value_t  Pow () const
 		{
-			typedef typename CompileTime::Fractional32< PowNum, PowDenom >		pow_t;
-			typedef typename CompileTime::NearFloat::FromType< Value_t >		Float_t;
+			using pow_t		= typename CompileTime::Fractional32< PowNum, PowDenom >;
+			using Float_t	= typename CompileTime::NearFloat::FromType< Value_t >;
 
 			return GXMath::Pow( Get(), pow_t::template ToFloat< Float_t >() );
 		}

@@ -45,7 +45,6 @@ namespace PlatformSW
 											GpuMsg::ExecuteSWCommandBuffer
 										>;
 
-		using EQueueFamily			= CreateInfo::GpuCommandQueue::EQueueFamily;
 		using ExecuteCmdBufferMsg	= GpuMsg::ExecuteSWCommandBuffer;
 
 		struct Submitted : CompileTime::FastCopyable
@@ -156,6 +155,7 @@ namespace PlatformSW
 */
 	SWCommandQueue::~SWCommandQueue ()
 	{
+		ASSERT( _queue.Empty() );
 	}
 
 /*
@@ -165,6 +165,8 @@ namespace PlatformSW
 */
 	bool SWCommandQueue::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
+		CHECK( _Execute() );
+
 		return Module::_Delete_Impl( msg );
 	}
 	

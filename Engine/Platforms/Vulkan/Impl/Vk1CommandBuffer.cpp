@@ -162,6 +162,8 @@ namespace PlatformVK
 		CHECK_COMPOSING( _CreateCmdBuffer() );
 
 		CHECK( _SetState( EState::ComposedMutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 	

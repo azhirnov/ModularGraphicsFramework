@@ -58,6 +58,7 @@ namespace PipelineCompiler
 			bool						filterInactive		= false;
 			bool						skipExternals		= false;		// uniforms, buffers, in/out
 			bool						optimize			= false;
+			bool						inlineAll			= false;
 		};
 
 

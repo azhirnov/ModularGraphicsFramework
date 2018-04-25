@@ -633,6 +633,8 @@ namespace PlatformGL
 			{
 				CHECK( _CreateDefaultView() );
 				CHECK( _SetState( EState::ComposedMutable ) );
+		
+				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 			}
 			else
 			{

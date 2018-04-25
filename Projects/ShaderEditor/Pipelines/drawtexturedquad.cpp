@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'ShaderEditor\Pipelines/DrawTexturedQuad.ppln'
-// Created at: 2018/04/10 - 21:50:35
+// Created at: 2018/04/25 - 16:09:27
 
 #include "all_pipelines.h"
 
@@ -123,14 +123,14 @@ layout(location=0) smooth out   vec2 v_Texcoord;
 
 
 
-const vec2 g_Positions[4] = { vec2( -1.0, 1.0 ), vec2( -1.0 ), vec2( 1.0 ), vec2( 1.0, -1.0 ) };
-const vec2 g_Texcoords[4] = { vec2( 1.0, 0.0 ), vec2( 1.0 ), vec2( 0.0 ), vec2( 0.0, 1.0 ) };
+const vec2 g_Positions[4] = { vec2( -1.0f, 1.0f ), vec2( -1.0f ), vec2( 1.0f ), vec2( 1.0f, -1.0f ) };
+const vec2 g_Texcoords[4] = { vec2( 1.0f, 0.0f ), vec2( 1.0f ), vec2( 0.0f ), vec2( 0.0f, 1.0f ) };
 
 //---------------------------------
 
-void main ()
+void main()
 {
-	gl_Position = vec4( g_Positions[gl_VertexID], float( 0.0 ), float( 1.0 ) );
+	gl_Position = vec4( g_Positions[gl_VertexID], float( 0.0f ), float( 1.0f ) );
 	v_Texcoord = g_Texcoords[gl_VertexID];
 }
 
@@ -266,7 +266,7 @@ layout(binding=0) uniform sampler2D un_ColorTexture;
 
 
 
-void main ()
+void main()
 {
 	out_Color = texture( un_ColorTexture, v_Texcoord );
 }

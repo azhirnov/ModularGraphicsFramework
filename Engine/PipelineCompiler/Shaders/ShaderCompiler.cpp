@@ -83,30 +83,30 @@ namespace PipelineCompiler
 		ModulePtr	clcontext;
 
 		CHECK_ERR( mf->Create(
-						CLContextModuleID,
+						0,
 						ms->GlobalSystems(),
-						CreateInfo::GpuContext{},
+						CreateInfo::GpuContext{ ComputeSettings{ "CL 1.2"_GAPI } },
 						OUT clcontext ) );
 
 		CHECK_ERR( mf->Create(
-						GLContextModuleID,
+						0,
 						ms->GlobalSystems(),
-						CreateInfo::GpuContext{},
+						CreateInfo::GpuContext{ ComputeSettings{ "GL 4.4"_GAPI } },
 						OUT glcontext ) );
 
 		ms->Send< ModuleMsg::AttachModule >({ glcontext });
 		ms->Send< ModuleMsg::AttachModule >({ clcontext });
 
 		CHECK_ERR( mf->Create(
-						CLThreadModuleID,
+						0,
 						ms->GlobalSystems(),
 						CreateInfo::GpuThread{ ComputeSettings{ "CL 1.2"_GAPI } },
 						OUT _clthread ) );
 
 		CHECK_ERR( mf->Create(
-						GLThreadModuleID,
+						0,
 						ms->GlobalSystems(),
-						CreateInfo::GpuThread{ GraphicsSettings{ "GL 4.4"_GAPI } },
+						CreateInfo::GpuThread{ ComputeSettings{ "GL 4.4"_GAPI } },
 						OUT _glthread ) );
 	
 		thread->Send< ModuleMsg::AttachModule >({ _glthread });

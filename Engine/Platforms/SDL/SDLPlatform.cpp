@@ -169,7 +169,8 @@ namespace PlatformSDL
 		CHECK( _SetState( EState::ComposedImmutable ) );
 
 		LOG( "platform created", ELog::Debug );
-
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		_SendEvent< OSMsg::OnSDLPlatformCreated >({});
 
 		// async message

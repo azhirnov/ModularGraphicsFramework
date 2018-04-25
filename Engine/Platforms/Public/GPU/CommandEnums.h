@@ -44,6 +44,25 @@ namespace Platforms
 		GX_ENUM_BITFIELD( ECmdBufferCreate );
 	};
 
+	
+	struct EQueueFamily
+	{
+		enum type : uint
+		{
+			Graphics = 0,
+			Compute,
+			Transfer,
+			SparseBinding,
+			Present,
+			_Count,
+
+			Unknown = ~0u
+		};
+			
+		GX_ENUM_BITFIELD( EQueueFamily );
+
+		static constexpr bits	All = bits().SetAll();
+	};
 
 }	// Platforms
 }	// Engine

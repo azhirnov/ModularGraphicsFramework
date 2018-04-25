@@ -226,8 +226,10 @@ namespace Platforms
 		CHECK( mf->Register( SWThreadModuleID, &CreateSoftRendererThread ) );
 		
 		CHECK( mf->Register( SWImageModuleID, &CreateSWImage ) );
+		CHECK( mf->Register( SWImageModuleID, &CreateSWSharedImage ) );
 		CHECK( mf->Register( SWMemoryModuleID, &CreateSWMemory ) );
 		CHECK( mf->Register( SWBufferModuleID, &CreateSWBuffer ) );
+		CHECK( mf->Register( SWBufferModuleID, &CreateSWSharedBuffer ) );
 		//CHECK( mf->Register( SWSamplerModuleID, &CreateSWSampler ) );
 		//CHECK( mf->Register( SWRenderPassModuleID, &CreateSWRenderPass ) );
 		//CHECK( mf->Register( SWFramebufferModuleID, &CreateSWFramebuffer ) );

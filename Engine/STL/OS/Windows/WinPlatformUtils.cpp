@@ -8,6 +8,7 @@
 #include "Engine/STL/OS/Windows/PlatformUtils.h"
 #include "Engine/STL/OS/Windows/FileSystem.h"
 #include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Math/Interpolations.h"
 #include "Engine/STL/OS/Base/BaseFileSystem.h"
 #include "Engine/STL/OS/Windows/WinHeader.h"
 #include "Engine/STL/Log/ToString.h"

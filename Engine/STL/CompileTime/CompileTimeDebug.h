@@ -7,6 +7,7 @@
 
 #include "TemplateUtils.h"
 //#include "TypeList.h"
+#include "Engine/STL/Log/ToString.h"
 
 namespace GX_STL
 {

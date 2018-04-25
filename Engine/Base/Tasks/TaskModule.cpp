@@ -149,6 +149,8 @@ namespace Base
 		}
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
+
+		//_SendUncheckedEvent< ModuleMsg::AfterCompose >({});	// TODO
 	}
 	
 /*

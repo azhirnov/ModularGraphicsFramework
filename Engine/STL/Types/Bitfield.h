@@ -26,6 +26,7 @@ namespace GXTypes
 		using T			= typename CompileTime::NearUInt::FromBits< CompileTime::Max< uint, B, 32 > >;
 		using Value_t	= T;
 		using Index_t	= IndexType;
+		using IntIdx_t	= CompileTime::NearUInt::FromSize< sizeof(IndexType) >;
 
 
 	// variables
@@ -54,17 +55,17 @@ namespace GXTypes
 
 		static constexpr Self	From (const T value)						{ Self res;  res._bits = value;  return res; }
 
-		constexpr Self &	Set (Index_t i)									{ ASSUME(i<B);  _bits |= (T(1) << i);  return *this; }
-		constexpr Self &	Reset (Index_t i)								{ ASSUME(i<B);  _bits &= ~(T(1) << i);  return *this; }
-		constexpr Self &	SetAt (Index_t i, bool bit)						{ ASSUME(i<B);  _bits &= ~(T(1) << i);  _bits |= (T(bit) << i);  return *this; }
+		constexpr Self &	Set (Index_t i)									{ ASSUME(IntIdx_t(i) < B);  _bits |= (T(1) << IntIdx_t(i));  return *this; }
+		constexpr Self &	Reset (Index_t i)								{ ASSUME(IntIdx_t(i) < B);  _bits &= ~(T(1) << IntIdx_t(i));  return *this; }
+		constexpr Self &	SetAt (Index_t i, bool bit)						{ ASSUME(IntIdx_t(i) < B);  _bits &= ~(T(1) << IntIdx_t(i));  _bits |= (T(bit) << IntIdx_t(i));  return *this; }
 
-		constexpr Self &	And (Index_t i, bool bit = true)				{ ASSUME(i<B);  _bits &= (T(bit) << i);  return *this; }
-		constexpr Self &	Or (Index_t i, bool bit = true)					{ ASSUME(i<B);  _bits |= (T(bit) << i);  return *this; }
-		constexpr Self &	Xor (Index_t i, bool bit = true)				{ ASSUME(i<B);  _bits ^= (T(bit) << i);  return *this; }
+		constexpr Self &	And (Index_t i, bool bit = true)				{ ASSUME(IntIdx_t(i) < B);  _bits &= (T(bit) << IntIdx_t(i));  return *this; }
+		constexpr Self &	Or (Index_t i, bool bit = true)					{ ASSUME(IntIdx_t(i) < B);  _bits |= (T(bit) << IntIdx_t(i));  return *this; }
+		constexpr Self &	Xor (Index_t i, bool bit = true)				{ ASSUME(IntIdx_t(i) < B);  _bits ^= (T(bit) << IntIdx_t(i));  return *this; }
 
 		constexpr Self &	SetAll (bool bit = true)						{ _bits = bit ? _MAX_VALUE : T(0);  return *this; }
 
-		CHECKRES constexpr bool		Get (const Index_t i) const				{ ASSUME(i<B);  return !!( _bits & (T(1) << i) ); }
+		CHECKRES constexpr bool		Get (const Index_t i) const				{ ASSUME(IntIdx_t(i) < B);  return !!( _bits & (T(1) << IntIdx_t(i)) ); }
 
 		CHECKRES constexpr bool		IsZero ()	const						{ return _bits == 0; }
 		CHECKRES constexpr bool		IsNotZero () const						{ return _bits != 0; }
@@ -99,7 +100,7 @@ namespace GXTypes
 				 constexpr	Self &	operator &= (const Self &right)			{ _bits &= right._bits;  return *this; }
 		CHECKRES constexpr	Self	operator &  (const Self &right) const	{ return Self(*this) &= right; }
 
-		CHECKRES			BitRef	operator [] (const Index_t i)			{ ASSUME(i < B);  return BitRef( *this, i ); }
+		CHECKRES			BitRef	operator [] (const Index_t i)			{ ASSUME(IntIdx_t(i) < B);  return BitRef( *this, i ); }
 		CHECKRES constexpr	bool 	operator [] (const Index_t i) const		{ return Get( i ); }
 		
 
@@ -108,28 +109,28 @@ namespace GXTypes
 
 		forceinline constexpr Self& SetInterval (const Index_t first, const Index_t last)
 		{
-			ASSUME( first <= last and last < B );
-			_bits |= GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
+			ASSUME( IntIdx_t(first) <= IntIdx_t(last) and IntIdx_t(last) < B );
+			_bits |= GXMath::ToMask<T>( BitsU(IntIdx_t(first)), BitsU(IntIdx_t(last)+1) );
 			return *this;
 		}
 
 		forceinline constexpr Self& ResetInterval (const Index_t first, const Index_t last)
 		{
-			ASSUME( first <= last and last < B );
-			_bits &= ~GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
+			ASSUME( IntIdx_t(first) <= IntIdx_t(last) and IntIdx_t(last) < B );
+			_bits &= ~GXMath::ToMask<T>( BitsU(IntIdx_t(first)), BitsU(IntIdx_t(last)+1) );
 			return *this;
 		}
 
 		CHECKRES forceinline constexpr bool HasInterval (const Index_t first, const Index_t last) const
 		{
-			ASSUME( first <= last and last < B );
-			const T	mask = GXMath::ToMask<T>( BitsU(first), BitsU(last+1) );
+			ASSUME( IntIdx_t(first) <= IntIdx_t(last) and IntIdx_t(last) < B );
+			const T	mask = GXMath::ToMask<T>( BitsU(IntIdx_t(first)), BitsU(IntIdx_t(last)+1) );
 			return (_bits & mask) == mask;
 		}
 
 		CHECKRES forceinline constexpr bool HasAll () const
 		{
-			return HasInterval( 0, B-1 );
+			return HasInterval( Index_t(0), Index_t(B-1) );
 		}
 
 		CHECKRES forceinline constexpr bool BitsEq (const Self &right) const
@@ -216,9 +217,26 @@ namespace GXTypes
 	};
 
 
+	namespace _types_hidden_
+	{
+		template <typename EnumType, bool IsEnumCpp11>
+		struct _EBitfield
+		{
+			using type	= Bitfield< CompileTime::SizeOf<EnumType>::bits, EnumType >;
+		};
+
+		template <typename EnumType>
+		struct _EBitfield< EnumType, false >
+		{
+			using type	= Bitfield< EnumType::_Count, typename EnumType::type >; 
+		};
+
+	}	// _types_hidden_
+
+
 	template <typename EnumType>
-	using EnumBitfield = Bitfield< EnumType::_Count, typename EnumType::type >;
-	
+	using EnumBitfield = typename _types_hidden_::_EBitfield< EnumType, TypeTraits::IsEnum<EnumType> >::type;
+
 	
 	template <usize B, typename I>
 	CHECKRES inline constexpr Bitfield<B,I>  operator | (const I lhs, const Bitfield<B,I> &rhs)	{ return Bitfield<B,I>(lhs) | rhs; }

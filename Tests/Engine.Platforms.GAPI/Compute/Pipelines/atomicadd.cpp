@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'Compute/Pipelines/AtomicAdd.ppln'
-// Created at: 2018/04/10 - 21:49:15
+// Created at: 2018/04/25 - 16:07:56
 
 #include "all_pipelines.h"
 // C++ shader
@@ -35,14 +35,15 @@ namespace SWShaderLang
 	
 		// shader
 	{
-		UInt r = atomicAdd( ssb->result, UInt( 1 ) );
-		if ( (gl_GlobalInvocationID.x < UInt( 10 )))
+		UInt r = atomicAdd( ssb->result, UInt( 1U ) );
+		;
+		if ((gl_GlobalInvocationID.x < UInt( 10U )))
 		{
 			(ssb->resultList[gl_GlobalInvocationID.x]) = r;
 		;
 		}
 		;
-		if ( (atomicAdd( ssb->st.value, Int( -2 ) ) == Int( 0 )))
+		if ((atomicAdd( ssb->st.value, Int( -2 ) ) == Int( 0 )))
 		{
 			ssb->st.found = Bool( true );
 		;
@@ -90,16 +91,17 @@ layout(binding=0) layout(std430) buffer AtomicAdd_SSBO{
 
 //---------------------------------
 
-void main ()
+void main()
 {
-	uint r = atomicAdd( ssb.result, uint( 1 ) );
-	if ( (gl_GlobalInvocationID.x < uint( 10 )))
+	uint r = atomicAdd( ssb.result, uint( 1U ) );
+	;
+	if ((gl_GlobalInvocationID.x < uint( 10U )))
 	{
 		(ssb.resultList[gl_GlobalInvocationID.x]) = r;
 	;
 	}
 	;
-	if ( (atomicAdd( ssb.st.value, int( -2 ) ) == int( 0 )))
+	if ((atomicAdd( ssb.st.value, int( -2 ) ) == int( 0 )))
 	{
 		ssb.st.found = bool( true );
 	;
@@ -135,14 +137,14 @@ void main ()
 0x0004002B, 0x0000000A, 0x00000029, 0xFFFFFFFE, 0x00030029, 0x0000001D, 0x0000002E, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 0x00000004, 
 0x000200F8, 0x00000006, 0x0004003B, 0x00000008, 0x00000009, 0x00000007, 0x00040008, 0x00000001, 0x00000017, 0x00000000, 0x00050041, 0x00000012, 
 0x00000013, 0x00000010, 0x00000011, 0x000700EA, 0x00000007, 0x00000016, 0x00000013, 0x00000014, 0x00000015, 0x00000014, 0x0003003E, 0x00000009, 
-0x00000016, 0x00040008, 0x00000001, 0x00000018, 0x00000000, 0x00050041, 0x0000001A, 0x0000001B, 0x00000019, 0x00000015, 0x0004003D, 0x00000007, 
+0x00000016, 0x00040008, 0x00000001, 0x00000019, 0x00000000, 0x00050041, 0x0000001A, 0x0000001B, 0x00000019, 0x00000015, 0x0004003D, 0x00000007, 
 0x0000001C, 0x0000001B, 0x000500B0, 0x0000001D, 0x0000001E, 0x0000001C, 0x0000000C, 0x000300F7, 0x00000020, 0x00000000, 0x000400FA, 0x0000001E, 
-0x0000001F, 0x00000020, 0x000200F8, 0x0000001F, 0x00040008, 0x00000001, 0x0000001A, 0x00000000, 0x00050041, 0x0000001A, 0x00000022, 0x00000019, 
+0x0000001F, 0x00000020, 0x000200F8, 0x0000001F, 0x00040008, 0x00000001, 0x0000001B, 0x00000000, 0x00050041, 0x0000001A, 0x00000022, 0x00000019, 
 0x00000015, 0x0004003D, 0x00000007, 0x00000023, 0x00000022, 0x0004003D, 0x00000007, 0x00000024, 0x00000009, 0x00060041, 0x00000012, 0x00000025, 
 0x00000010, 0x00000021, 0x00000023, 0x0003003E, 0x00000025, 0x00000024, 0x000200F9, 0x00000020, 0x000200F8, 0x00000020, 0x00040008, 0x00000001, 
-0x0000001E, 0x00000000, 0x00060041, 0x00000027, 0x00000028, 0x00000010, 0x00000026, 0x00000026, 0x000700EA, 0x0000000A, 0x0000002A, 0x00000028, 
+0x0000001F, 0x00000000, 0x00060041, 0x00000027, 0x00000028, 0x00000010, 0x00000026, 0x00000026, 0x000700EA, 0x0000000A, 0x0000002A, 0x00000028, 
 0x00000014, 0x00000015, 0x00000029, 0x000500AA, 0x0000001D, 0x0000002B, 0x0000002A, 0x00000026, 0x000300F7, 0x0000002D, 0x00000000, 0x000400FA, 
-0x0000002B, 0x0000002C, 0x0000002D, 0x000200F8, 0x0000002C, 0x00040008, 0x00000001, 0x00000020, 0x00000000, 0x000600A9, 0x00000007, 0x0000002F, 
+0x0000002B, 0x0000002C, 0x0000002D, 0x000200F8, 0x0000002C, 0x00040008, 0x00000001, 0x00000021, 0x00000000, 0x000600A9, 0x00000007, 0x0000002F, 
 0x0000002E, 0x00000014, 0x00000015, 0x00060041, 0x00000012, 0x00000030, 0x00000010, 0x00000026, 0x00000011, 0x0003003E, 0x00000030, 0x0000002F, 
 0x000200F9, 0x0000002D, 0x000200F8, 0x0000002D, 0x000100FD, 0x00010038 });
 	descr.Compute().StringCL( 
@@ -290,14 +292,14 @@ R"#(#define FORMAT( _fmt_ )
 
 struct AtomicAdd_Struct
 {
-	int value;
+	volatile int value;
 	int found;
 };
 
 struct AtomicAdd_SSBO
 {
 	struct AtomicAdd_Struct st;
-	uint result;
+	volatile uint result;
 	uint resultList [10];
 };
 
@@ -305,18 +307,19 @@ struct AtomicAdd_SSBO
 //---------------------------------
 
 kernel void main (
-	/*0*/__global read_only struct AtomicAdd_SSBO* ssb)
+	/*0*/__global read_write struct AtomicAdd_SSBO* ssb)
 {
 
 {
-	uint r = atomic_add(&(ssb->result), ((uint)( 1 )));
-	if ( (((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))).x < ((uint)( 10 ))))
+	uint r = atomic_add(&(ssb->result), ((uint)( 1U )));
+	;
+	if ((((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))).x < ((uint)( 10U ))))
 	{
 		(ssb->resultList[((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))).x]) = r;
 	;
 	}
 	;
-	if ( (atomic_add(&(ssb->st.value), ((int)( -2 ))) == ((int)( 0 ))))
+	if ((atomic_add(&(ssb->st.value), ((int)( -2 ))) == ((int)( 0 ))))
 	{
 		ssb->st.found = ((int)( true ));
 	;

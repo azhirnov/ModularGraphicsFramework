@@ -293,7 +293,7 @@ namespace glm
 
 		explicit operator const T () const noexcept
 		{
-			return mem._value.load();
+			return _value.load();
 		}
 
 		friend T atomicAdd (INOUT Atomic<T> &mem, const T data) noexcept

@@ -28,6 +28,31 @@ namespace Clang
 
 	static constexpr char	UserDefinedLiterals[]	= "-Wuser-defined-literals";
 
+	static constexpr char	ShadowAll[]				= "-Wshadow-all";
+
+	static constexpr char	UnusedArgument[]		= "-Wunused-argument";
+
+	static constexpr char	LoopAnalysis[]			= "-Wloop-nalysis";
+
+	static constexpr char	IncrementBool[]			= "-Wincrement-bool";
+
+	static constexpr char	KeywordMacro[]			= "-Wkeyword-macro";
+
+	static constexpr char	LargeByValueCopy[]		= "-Wlarge-by-value-copy";
+
+	static constexpr char	InstantiationAfterSpec[]	= "-Winstantiation-after-specialization";
+
+	static constexpr char	MethodSignatures[]			= "-Wmethod-signatures";
+
+	static constexpr char	SelfAssign[]				= "-Wself-assign";
+	static constexpr char	SelfMove[]					= "-Wself-move";
+
+	static constexpr char	InfiniteRecursion[]			= "-Winfinite-recursion";
+
+	static constexpr char	PessimizingMove[]			= "-Wpessimizing-move";
+
+	static constexpr char	DanglingElse[]				= "-Wdangling-else";
+
 	// Microsoft extensions
 	static constexpr char	MSExtensions[]				= "-fms-extensions";
 	static constexpr char	MSCompatibility[]			= "-fms-compatibility";

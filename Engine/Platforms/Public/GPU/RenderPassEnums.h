@@ -66,6 +66,9 @@ namespace Platforms
 												TessEvaluationShader | GeometryShader | FragmentShader | EarlyFragmentTests |
 												LateFragmentTests | ColorAttachmentOutput | BottomOfPipe;
 
+		static constexpr bits	AllShaders	=	bits() | VertexShader | TessControlShader | TessEvaluationShader |
+												GeometryShader | FragmentShader | ComputeShader;
+
 		static constexpr bits	AllCommands	=	bits().SetAll();
 
 		static constexpr bool	IsGraphics (type value);

@@ -243,7 +243,7 @@ namespace Graphics
 		CHECK_ERR( GetState() == EState::Linked );
 		
 		Message< GpuMsg::GetDeviceInfo >	req_dev;
-		_GetManager()->Send( req_dev );
+		CHECK( _GetManager()->Send( req_dev ) );
 		CHECK_COMPOSING( _syncManager = req_dev->result->syncManager );
 		
 		_SendForEachAttachments( msg );
@@ -252,6 +252,8 @@ namespace Graphics
 		CHECK( _ValidateAllSubscriptions() );
 
 		CHECK( _SetState( EState::ComposedMutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 	
@@ -264,9 +266,9 @@ namespace Graphics
 	{
 		_SendForEachAttachments( msg );
 
-		_builder			= null;
+		_builder		= null;
 		_cmdBufferMngr	= null;
-		_syncManager		= null;
+		_syncManager	= null;
 
 		return Module::_Delete_Impl( msg );
 	}
@@ -322,7 +324,7 @@ namespace Graphics
 
 		// wait before start recording
 		if ( not msg->waitFences.Empty() ) {
-			_syncManager->Send< GpuMsg::ClientWaitFence >({ msg->waitFences });
+			CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ msg->waitFences }) );
 		}
 
 		// begin recording
@@ -483,7 +485,7 @@ namespace Graphics
 				Message< GraphicsMsg::CmdAddFrameDependency >	deps;
 
 				submit->signalSemaphores.PushBack( cmd.beforeFrameExecuting );
-				deps->waitSemaphores.PushBack({ cmd.beforeFrameExecuting, EPipelineStage::BottomOfPipe });	// TODO
+				deps->waitSemaphores.PushBack({ cmd.beforeFrameExecuting, EPipelineStage::AllCommands });	// TODO
 				
 				CHECK( _cmdBufferMngr->Send( deps ) );
 			}

@@ -19,6 +19,7 @@ namespace CreateInfo
 	struct GpuRenderPass;
 	struct GpuFramebuffer;
 	struct GpuSyncManager;
+	struct GpuCommandQueue;
 	struct PipelineTemplate;
 	struct GpuCommandBuffer;
 	struct GpuCommandBuilder;
@@ -31,6 +32,24 @@ namespace CreateInfo
 
 namespace Platforms
 {
+	
+	// OpenGL
+	static constexpr GModID::type  GLContextModuleID				= "gl.ctx"_GModID;
+	static constexpr TModID::type  GLThreadModuleID					= "gl.thread"_TModID;
+	static constexpr OModID::type  GLBufferModuleID					= "gl.buffer"_OModID;
+	static constexpr OModID::type  GLCommandQueueModuleID			= "gl.queue"_OModID;
+	static constexpr OModID::type  GLCommandBufferModuleID			= "gl.cmdbuf"_OModID;
+	static constexpr OModID::type  GLCommandBuilderModuleID			= "gl.cmdbuild"_OModID;
+	static constexpr OModID::type  GLFramebufferModuleID			= "gl.fbuffer"_OModID;
+	static constexpr OModID::type  GLImageModuleID					= "gl.image"_OModID;
+	static constexpr OModID::type  GLMemoryModuleID					= "gl.memory"_OModID;
+	static constexpr OModID::type  GLGraphicsPipelineModuleID		= "gl.g-ppln"_OModID;
+	static constexpr OModID::type  GLComputePipelineModuleID		= "gl.c-ppln"_OModID;
+	static constexpr OModID::type  GLPipelineResourceTableModuleID	= "gl.restable"_OModID;
+	static constexpr OModID::type  GLRenderPassModuleID				= "gl.renpass"_OModID;
+	static constexpr OModID::type  GLSamplerModuleID				= "gl.sampler"_OModID;
+	static constexpr OModID::type  GLSyncManagerModuleID			= "gl.sync"_OModID;
+
 
 	//
 	// OpenGL Objects Constructor
@@ -55,6 +74,7 @@ namespace Platforms
 		static ModulePtr CreateGL4RenderPass (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
 		static ModulePtr CreateGL4Framebuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
 		static ModulePtr CreateGL4SyncManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
+		static ModulePtr CreateGL4CommandQueue (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandQueue &);
 		static ModulePtr CreatePipelineTemplate (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
 		static ModulePtr CreateGL4CommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
 		static ModulePtr CreateGL4CommandBuilder (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);

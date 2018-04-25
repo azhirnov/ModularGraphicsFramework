@@ -314,11 +314,15 @@ namespace GpuMsg
 		using EImageLayout			= Platforms::EImageLayout;
 
 	// variables
-		ModulePtr				sampler;
-		ImageViewDescriptor		descr;
-		EImageLayout::type		layout	= Uninitialized;
+		ModulePtr						sampler;
+		Optional<ImageViewDescriptor>	descr;
+		EImageLayout::type				layout	= Uninitialized;
 
 	// methods
+		PipelineAttachTexture (StringCRef name, const ModulePtr &texture, const ModulePtr &sampler, EImageLayout::type layout = EImageLayout::General) :
+			AttachModule{name, texture}, sampler{sampler}, layout{layout}
+		{}
+
 		PipelineAttachTexture (StringCRef name, const ModulePtr &texture, const ModulePtr &sampler,
 							   const ImageViewDescriptor &descr, EImageLayout::type layout = EImageLayout::General) :
 			AttachModule{name, texture}, sampler{sampler}, descr{descr}, layout{layout}

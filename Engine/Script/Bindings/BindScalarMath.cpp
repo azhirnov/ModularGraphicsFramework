@@ -51,6 +51,11 @@ namespace GXScript
 		static T Lerp (T x, T y, T factor) {
 			return GXMath::Lerp( x, y, factor );
 		}
+
+		template <typename T>
+		static T Rand_FloatRange (T min, T max) {
+			return ImprovedRandom::FloatRange( min, max );
+		}
 	};
 	
 /*
@@ -82,12 +87,19 @@ namespace GXScript
 	template <typename T>
 	static void BindFloatScalar (ScriptEngine *se)
 	{
+		// trigonometry
 		se->AddFunction( &ScalarFunc::Sin<T>,		"Sin" );
 		se->AddFunction( &ScalarFunc::Cos<T>,		"Cos" );
 		se->AddFunction( &ScalarFunc::Tan<T>,		"Tan" );
+
 		se->AddFunction( &ScalarFunc::Square<T>,	"Square" );
 		se->AddFunction( &ScalarFunc::Sqrt<T>,		"Sqrt" );
+
+		// interpolation
 		se->AddFunction( &ScalarFunc::Lerp<T>,		"Lerp" );
+		
+		// random
+		se->AddFunction( &ScalarFunc::Rand_FloatRange<T>,	"Rand_FloatRange" );
 	}
 
 /*

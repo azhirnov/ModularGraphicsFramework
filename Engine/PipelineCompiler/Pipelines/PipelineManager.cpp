@@ -468,7 +468,7 @@ namespace Pipelines
 	bool PipelineManager::_ProcessSharedTypes (const PplnCollection &pipelines, Ptr<ISerializer> ser, OUT String &fileSource, INOUT ConverterConfig &cfg) const
 	{
 		// update offsets by packing
-		CHECK_ERR( BasePipeline::_CalculateOffsets( _structTypes ) );
+		//CHECK_ERR( BasePipeline::_CalculateOffsets( _structTypes ) );
 		
 		if ( cfg.addPaddingToStructs )
 		{
@@ -549,7 +549,7 @@ namespace Pipelines
 		// save shared types
 		if ( cfg.searchForSharedTypes /*and not _structTypes.Empty()*/ )
 		{
-			CHECK_ERR( _SaveSharedTypes( ser, cfg.nameSpace, OUT fileSource, OUT cfg._glslTypes ) );
+			CHECK_ERR( _SaveSharedTypes( ser, cfg.nameSpace, OUT fileSource ) );
 		}
 		return true;
 	}
@@ -559,7 +559,7 @@ namespace Pipelines
 	_SaveSharedTypes
 =================================================
 */
-	bool PipelineManager::_SaveSharedTypes (Ptr<ISerializer> ser, StringCRef nameSpace, OUT String &fileSource, OUT String &glslSource) const
+	bool PipelineManager::_SaveSharedTypes (Ptr<ISerializer> ser, StringCRef nameSpace, OUT String &fileSource) const
 	{
 		String&	str = fileSource;
 		
@@ -569,12 +569,11 @@ namespace Pipelines
 		str << ser->DeclNamespace( nameSpace );
 		str << ser->BeginScope();
 
-		CHECK_ERR( BasePipeline::_AllStructsToString( _structTypes, ser, OUT str, OUT glslSource ) );
+		CHECK_ERR( BasePipeline::_SerializeStructs( _structTypes, ser, OUT str ) );
 		
 		str << ser->EndScope();	// namespace
 		str << ser->EndFile( true );
 		return true;
 	}
-
 
 }	// PipelineCompiler

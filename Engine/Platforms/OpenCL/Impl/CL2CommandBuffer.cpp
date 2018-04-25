@@ -193,6 +193,8 @@ namespace PlatformCL
 		CHECK( _ValidateAllSubscriptions() );
 
 		CHECK( _SetState( EState::ComposedMutable ) );
+		
+		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 		return true;
 	}
 	
@@ -844,6 +846,8 @@ namespace PlatformCL
 		
 		CHECK_ERR( data.dstOffset < req_descr->result->size );
 		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
+
+		const BytesUL	size = Min( req_descr->result->size - data.dstOffset, data.size );
 		
 		CL_CHECK( clEnqueueFillBuffer(
 					GetCommandQueue(),
@@ -851,7 +855,7 @@ namespace PlatformCL
 					&data.pattern,
 					sizeof(data.pattern),
 					size_t(data.dstOffset),
-					size_t(data.size),
+					size_t(size),
 					0, null,
 					null ) );
 

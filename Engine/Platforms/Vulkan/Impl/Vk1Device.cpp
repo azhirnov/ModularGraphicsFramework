@@ -9,6 +9,7 @@
 #include "Engine/Platforms/Public/GPU/Framebuffer.h"
 #include "Engine/Platforms/Public/GPU/RenderPass.h"
 #include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #include "Engine/Platforms/Vulkan/Impl/Vk1SwapchainImage.h"
 
 
@@ -41,9 +42,6 @@ namespace PlatformVK
 		_queueIndex( UMax ),
 		_queueFamily(),
 		_currentImageIndex( UMax ),
-		_graphicsQueueSubmited( false ),
-		_imageAvailable( VK_NULL_HANDLE ),
-		_renderFinished( VK_NULL_HANDLE ),
 		_debugCallback( VK_NULL_HANDLE ),
 		_enableDebugMarkers( false ),
 		_isInstanceFunctionsLoaded( false ),
@@ -700,7 +698,6 @@ namespace PlatformVK
 		CHECK_ERR( _CreateDepthStencilAttachment( depthStencilFormat ) );
 		CHECK_ERR( _CreateRenderPass() );
 		CHECK_ERR( _CreateFramebuffers() );
-		CHECK_ERR( _CreateSemaphores() );
 
 		return true;
 	}
@@ -747,7 +744,6 @@ namespace PlatformVK
 		_renderPass = null;
 
 		_DeleteDepthStencilAttachment();
-		_DestroySemaphores();
 
 		_surfaceSize = uint2();
 		return true;
@@ -909,15 +905,15 @@ namespace PlatformVK
 	BeginFrame
 =================================================
 */
-	bool Vk1Device::BeginFrame ()
+	bool Vk1Device::BeginFrame (VkSemaphore imageAvailable)
 	{
 		CHECK_ERR( IsSwapchainCreated() );
+		CHECK_ERR( not IsFrameStarted() );
 
-		_graphicsQueueSubmited	= false;
 		_currentImageIndex		= UMax;
 
 		uint32_t	image_index = UMax;
-		VkResult	result		= vkAcquireNextImageKHR( _logicalDevice, _swapchain, UMax, _imageAvailable,
+		VkResult	result		= vkAcquireNextImageKHR( _logicalDevice, _swapchain, UMax, imageAvailable,
 														 VK_NULL_HANDLE, OUT &image_index );
 
 		if ( result == VK_SUCCESS )
@@ -944,32 +940,28 @@ namespace PlatformVK
 	EndFrame
 =================================================
 */
-	bool Vk1Device::EndFrame ()
+	bool Vk1Device::EndFrame (VkSemaphore renderFinished)
 	{
 		CHECK_ERR( IsSwapchainCreated() );
-		CHECK_ERR( _currentImageIndex < _framebuffers.Count() );
+		CHECK_ERR( IsFrameStarted() );
 		
-		VkPresentInfoKHR	present_info		= {};
-		VkSwapchainKHR		swap_chains[]		= { _swapchain };
-		VkSemaphore			signal_semaphores[] = { _renderFinished };
+		VkSwapchainKHR		swap_chains[]	= { _swapchain };
 
-		present_info.sType			= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		present_info.swapchainCount	= (uint32_t) CountOf( swap_chains );
-		present_info.pSwapchains	= swap_chains;
-		present_info.pImageIndices	= &_currentImageIndex;
+		VkPresentInfoKHR	present_info = {};
+		present_info.sType				= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		present_info.swapchainCount		= (uint32_t) CountOf( swap_chains );
+		present_info.pSwapchains		= swap_chains;
+		present_info.pImageIndices		= &_currentImageIndex;
 
-		if ( _graphicsQueueSubmited ) {
-			present_info.waitSemaphoreCount	= (uint32_t) CountOf( signal_semaphores );
-			present_info.pWaitSemaphores	= signal_semaphores;
-		}
-		else {
-			present_info.waitSemaphoreCount	= 0;
-			present_info.pWaitSemaphores	= null;
+		if ( renderFinished != VK_NULL_HANDLE )
+		{
+			VkSemaphore		wait_semaphores[]	= { renderFinished };
+			present_info.waitSemaphoreCount		= (uint32_t) CountOf( wait_semaphores );
+			present_info.pWaitSemaphores		= wait_semaphores;
 		}
 
 		VK_CHECK( vkQueuePresentKHR( GetQueue(), &present_info ) );
 		
-		_graphicsQueueSubmited	= false;
 		_currentImageIndex		= UMax;
 		return true;
 	}
@@ -982,50 +974,6 @@ namespace PlatformVK
 	bool Vk1Device::IsFrameStarted () const
 	{
 		return _currentImageIndex < _framebuffers.Count();
-	}
-	
-/*
-=================================================
-	SubmitQueue
-----
-	this method used for submit command buffers with synchronization between frame changes,
-	if you don't need sync, use GetQueue() and write your own submission.
-=================================================
-*/
-	bool Vk1Device::SubmitQueue (ArrayCRef<VkCommandBuffer> cmdBuffers, VkFence fence,
-								 ArrayCRef<VkSemaphore> waitSemaphore, ArrayCRef<VkPipelineStageFlags> waitStages,
-								 ArrayCRef<VkSemaphore> signalSemaphores)
-	{
-		CHECK_ERR( _currentImageIndex < _framebuffers.Count() );
-		CHECK_ERR( IsQueueCreated() );
-		CHECK_ERR( waitSemaphore.Count() == waitStages.Count() );
-		
-		using Semaphores_t		= FixedSizeArray< VkSemaphore, GlobalConst::GAPI_MaxWaitSemaphores*2 >;
-		using PipelineStages_t	= FixedSizeArray< VkPipelineStageFlags, GlobalConst::GAPI_MaxWaitSemaphores*2 >;
-
-		// submit command buffers to grpahics/compute queue
-		VkSubmitInfo		submit_info			= {};
-		Semaphores_t		wait_semaphores;
-		PipelineStages_t	wait_stages;
-		Semaphores_t		signal_semaphores;
-
-		wait_semaphores.PushBack( _imageAvailable );							wait_semaphores.Append( waitSemaphore );
-		wait_stages.PushBack( VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT );	wait_stages.Append( waitStages );
-		signal_semaphores.PushBack( _renderFinished );							signal_semaphores.Append( signalSemaphores );
-
-		submit_info.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.waitSemaphoreCount		= (uint32_t) wait_semaphores.Count();
-		submit_info.pWaitSemaphores			= wait_semaphores.RawPtr();
-		submit_info.pWaitDstStageMask		= wait_stages.RawPtr();
-		submit_info.commandBufferCount		= (uint32_t) cmdBuffers.Count();
-		submit_info.pCommandBuffers			= cmdBuffers.RawPtr();
-		submit_info.signalSemaphoreCount	= (uint32_t) signal_semaphores.Count();
-		submit_info.pSignalSemaphores		= signal_semaphores.RawPtr();
-
-		VK_CHECK( vkQueueSubmit( GetQueue(), 1, &submit_info, fence ) );
-
-		_graphicsQueueSubmited = true;
-		return true;
 	}
 
 /*
@@ -1594,47 +1542,6 @@ namespace PlatformVK
 			}
 		}
 		return true;
-	}
-
-/*
-=================================================
-	_CreateSemaphores
-=================================================
-*/
-	bool Vk1Device::_CreateSemaphores ()
-	{
-		if ( _imageAvailable != VK_NULL_HANDLE and
-			 _renderFinished != VK_NULL_HANDLE )
-		{
-			return true;
-		}
-
-		VkSemaphoreCreateInfo	info = {};
-		info.sType	= VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-		VK_CHECK( vkCreateSemaphore( _logicalDevice, &info, null, OUT &_imageAvailable ) );
-		VK_CHECK( vkCreateSemaphore( _logicalDevice, &info, null, OUT &_renderFinished ) );
-		return true;
-	}
-	
-/*
-=================================================
-	_DestroySemaphores
-=================================================
-*/
-	void Vk1Device::_DestroySemaphores ()
-	{
-		if ( _imageAvailable != VK_NULL_HANDLE )
-		{
-			vkDestroySemaphore( _logicalDevice, _imageAvailable, null );
-			_imageAvailable = VK_NULL_HANDLE;
-		}
-
-		if ( _renderFinished != VK_NULL_HANDLE )
-		{
-			vkDestroySemaphore( _logicalDevice, _renderFinished, null );
-			_renderFinished = VK_NULL_HANDLE;
-		}
 	}
 
 /*

@@ -78,6 +78,13 @@ namespace PipelineCompiler
 		using CustomTypes_t		= HashMap< String, TypeInfo >;
 		using AtomicTypes_t		= MultiHashMap< String, Array<String> >;		// typename, fields
 
+		struct Scope
+		{
+			PendingVars_t		pendingVars;		// this variables will be added before current line
+			PendingStrings_t	addBeforeLine;		// this source lines will be added before current line
+			bool				reqEndLine	= true;
+		};
+
 		class IDstLanguage;
 		using IDstLanguagePtr	= UniquePtr< IDstLanguage >;
 
@@ -109,8 +116,7 @@ namespace PipelineCompiler
 		struct {
 			LocalVarSet_t		definedLocalVars;		// list of defined (local) variables
 			LocalVarSet_t		funcArguments;			// list of function arguments
-			PendingVars_t		pendingVars;			// this variables will be added before current line
-			PendingStrings_t	addBeforeLine;			// this source lines will be added before current line
+			Array<Scope>		scope;
 
 		}					fwd;
 
@@ -122,13 +128,19 @@ namespace PipelineCompiler
 
 		}					types;
 
+		// states
+		struct {
+			bool				isMain				= false;
+			bool				useGXrules			= true;
+			bool				inlineAll			= false;
+
+		}					states;
+
 		Array<TIntermNode*>	nodeStack;
 
 		IDstLanguagePtr		language;
 		String				entryPoint;
 		uint				uid			= 0;		// counter
-		bool				isMain		= false;
-		bool				useGXrules	= true;
 
 
 	// methods
@@ -152,24 +164,20 @@ namespace PipelineCompiler
 	{
 	public:
 		virtual ~IDstLanguage () {}
-
 		virtual bool TranslateLocalVar (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateStruct (const TypeInfo &, INOUT String &src) = 0;
-		virtual bool TranslateArg (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateType (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateName (const TypeInfo &, INOUT String &src) = 0;
-		virtual bool TranslateFunctionName (INOUT String &name) = 0;
-
+		virtual bool TranslateFunctionDecl (StringCRef sign, const TypeInfo &resultType, ArrayCRef<TypeInfo> args, INOUT String &src) = 0;
+		virtual bool TranslateFunctionCall (StringCRef sign, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) = 0;
+		virtual bool TranslateConstant (const glslang::TConstUnionArray &, const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateExternal (glslang::TIntermTyped *, const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateOperator (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) = 0;
-		virtual bool TranslateFunction (StringCRef name, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) = 0;
 		virtual bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) = 0;
-
 		virtual bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) = 0;
-
 		virtual bool TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) = 0;
-
-		virtual bool DeclExternalTypes () const	{ return false; }
+		virtual bool TranslateValue (VariantCRef value, INOUT String &src) const = 0;
+		virtual bool DeclExternalTypes () const	= 0;
 	};
 	
 	
@@ -187,14 +195,19 @@ namespace PipelineCompiler
 
 	// variables
 	private:
+		Ptr< Translator::IDstLanguage >		_language;
+
 		Array<String>			_strArr;
 		Array<TypeInfo const*>	_typeArr;
 		TypeInfo				_type;
+		bool					_supportVecFromScalar = true;	// except HLSL
 
 
 	// methods
 	public:
-		CU_ToArray_Func () {}
+		explicit CU_ToArray_Func (Ptr<Translator::IDstLanguage> lang, bool supportVecFromScalar = true) :
+			_language{lang}, _supportVecFromScalar{supportVecFromScalar}
+		{}
 
 		ArrayCRef<String>			GetStrings ()	const	{ return _strArr; }
 		ArrayCRef<TypeInfo const*>	GetTypes ()		const	{ return _typeArr; }
@@ -202,7 +215,7 @@ namespace PipelineCompiler
 		template <typename T>
 		void operator () (const T &value)
 		{
-			_CreateType<T>( _type );
+			_CreateType<T>( OUT _type );
 			_strArr.PushBack( _ToString( value ) );
 			_typeArr.PushBack( &_type );
 		}
@@ -210,9 +223,9 @@ namespace PipelineCompiler
 		template <typename T, usize I>
 		void operator () (const Vec<T,I> &value)
 		{
-			_CreateType<T>( _type );
+			_CreateType<T>( OUT _type );
 			
-			if ( All( value == value.x ) )
+			if ( _supportVecFromScalar and All( value == value.x ) )
 			{
 				_strArr.PushBack( _ToString( value.x ) );
 				_typeArr.PushBack( &_type );
@@ -230,7 +243,7 @@ namespace PipelineCompiler
 		template <typename T, usize C, usize R>
 		void operator () (const Matrix<T,C,R> &value)
 		{
-			_CreateType<T>( _type );
+			_CreateType<T>( OUT _type );
 			
 			FOR( i, value )
 			{
@@ -253,21 +266,14 @@ namespace PipelineCompiler
 			type.type			= EShaderVariable::ToScalar<T>();
 		}
 
-		static String _ToString (float value)
-		{
-			return String().FormatF( value, StringFormatF().Fmt(0,8).CutZeros() );
-		}
-
-		static String _ToString (double value)
-		{
-			return String().FormatF( value, StringFormatF().Fmt(0,16).CutZeros() );
-		}
-
 		template <typename T>
-		static String _ToString (const T &value)
+		String _ToString (const T &value)
 		{
 			STATIC_ASSERT( CompileTime::IsScalar<T> );
-			return ToString( value );
+
+			String	str;
+			_language->TranslateValue( value, OUT str );
+			return str;
 		}
 	};
 

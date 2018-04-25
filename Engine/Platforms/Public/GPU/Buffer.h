@@ -34,7 +34,7 @@ namespace CreateInfo
 {
 
 	//
-	// GPU Buffer Create Info
+	// Buffer Create Info
 	//
 	struct GpuBuffer
 	{
@@ -61,6 +61,26 @@ namespace CreateInfo
 
 		GpuBuffer (const BufferDescriptor &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
 			memManager{memMngr}, descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
+	};
+
+
+	//
+	// Shared Buffer Create Info
+	//
+	struct GpuSharedBuffer
+	{
+	// types
+		using EMemoryAccess		= Platforms::EMemoryAccess;
+
+	// variables
+		ModulePtr				gpuThread;		// can be null
+		ModulePtr				sharedBuffer;
+		EMemoryAccess::bits		access;
+
+	// methods
+		GpuSharedBuffer (GX_DEFCTOR) {}
+
+		GpuSharedBuffer (const ModulePtr &buf, EMemoryAccess::bits access) : sharedBuffer{buf}, access{access} {}
 	};
 
 }	// CreateInfo

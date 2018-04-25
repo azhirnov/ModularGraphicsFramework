@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'Compute/Pipelines/BufferAlign.ppln'
-// Created at: 2018/04/10 - 21:49:15
+// Created at: 2018/04/25 - 16:07:56
 
 #include "all_pipelines.h"
 // C++ shader
@@ -48,12 +48,12 @@ namespace SWShaderLang
 	{
 		ssb->dst1 = ssb->src;
 		ssb->dst2.i4 = Int4( 1, -2, 3, -4 );
-		ssb->dst2.f2 = Float2( 3.0999999, 5.5 );
+		ssb->dst2.f2 = Float2( 3.0999999f, 5.5f );
 		ssb->dst2.b1 = Bool( true );
-		ssb->dst2.u3.xyz = UInt3( 9, 8, 7 );
+		ssb->dst2.u3.xyz = UInt3( 9U, 8U, 7U );
 		ssb->dst2.i1 = Int( 1193046 );
 		ssb->dst2.b3.xyz = Bool3( false, true, false );
-		ssb->dst2.f1 = Float( 1.43350005 );
+		ssb->dst2.f1 = Float( 1.43350005f );
 	}
 	
 	
@@ -108,16 +108,16 @@ layout(binding=0) layout(std430) buffer BufferAlign_SSBO{
 
 //---------------------------------
 
-void main ()
+void main()
 {
 	ssb.dst1 = ssb.src;
 	ssb.dst2.i4 = ivec4( 1, -2, 3, -4 );
-	ssb.dst2.f2 = vec2( 3.0999999, 5.5 );
+	ssb.dst2.f2 = vec2( 3.0999999f, 5.5f );
 	ssb.dst2.b1 = bool( true );
-	ssb.dst2.u3.xyz = uvec3( 9, 8, 7 );
+	ssb.dst2.u3.xyz = uvec3( 9U, 8U, 7U );
 	ssb.dst2.i1 = int( 1193046 );
 	ssb.dst2.b3.xyz = bvec3( false, true, false );
-	ssb.dst2.f1 = float( 1.43350005 );
+	ssb.dst2.f1 = float( 1.43350005f );
 }
 
 
@@ -350,18 +350,18 @@ struct BufferAlign_SSBO
 //---------------------------------
 
 kernel void main (
-	/*0*/__global read_only struct BufferAlign_SSBO* ssb)
+	/*0*/__global read_write struct BufferAlign_SSBO* ssb)
 {
 
 {
 	ssb->dst1 = ssb->src;
 	ssb->dst2.i4 = ((int4)( 1, -2, 3, -4 ));
-	ssb->dst2.f2 = ((float2)( 3.0999999, 5.5 ));
+	ssb->dst2.f2 = ((float2)( 3.0999999f, 5.5f ));
 	ssb->dst2.b1 = ((int)( true ));
-	ssb->dst2.u3.xyz = ((uint3)( 9, 8, 7 ));
+	ssb->dst2.u3.xyz = ((uint3)( 9U, 8U, 7U ));
 	ssb->dst2.i1 = ((int)( 1193046 ));
 	ssb->dst2.b3.xyz = ((int3)( false, true, false ));
-	ssb->dst2.f1 = ((float)( 1.43350005 ));
+	ssb->dst2.f1 = ((float)( 1.43350005f ));
 }
 
 

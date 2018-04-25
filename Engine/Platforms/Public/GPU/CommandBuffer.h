@@ -40,7 +40,6 @@ namespace CreateInfo
 	//
 	// GPU Command Buffer Create Info
 	//
-
 	struct GpuCommandBuffer
 	{
 	// variables
@@ -59,7 +58,6 @@ namespace CreateInfo
 	//
 	// GPU Command Buffer Builder Create Info
 	//
-
 	struct GpuCommandBuilder
 	{
 		ModulePtr	gpuThread;			// can be null
@@ -855,6 +853,9 @@ namespace GpuMsg
 
 	// methods
 		CmdFillBuffer () {}
+
+		CmdFillBuffer (const ModulePtr &buffer, uint pattern) :
+			dstBuffer{buffer}, size{BytesUL(~0ull)}, pattern{pattern} {}
 
 		CmdFillBuffer (const ModulePtr &buffer, uint pattern, Bytes<uint> size, Bytes<uint> off = Uninitialized) :
 			dstBuffer{buffer}, dstOffset{BytesUL(off)}, size{BytesUL(size)}, pattern{pattern} {}

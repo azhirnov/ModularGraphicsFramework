@@ -4,6 +4,7 @@
 
 #ifdef GRAPHICS_API_OPENGL
 
+#include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #include "Engine/Platforms/OpenGL/450/GL4Device.h"
 #include "Engine/Platforms/OpenGL/450/GL4SystemFramebuffer.h"
 #include "Engine/Platforms/OpenGL/450/GL4FlippedSystemFramebuffer.h"

@@ -253,7 +253,7 @@ namespace PipelineCompiler
 		{}
 
 
-		void _AddPadding (INOUT Array<Variable> &fields, INOUT usize i, const BytesU freeSpace, const BytesU align)
+		void _AddPadding (INOUT Array<Variable> &fields, INOUT usize i, const BytesU freeSpace, const BytesU)
 		{
 			// calculate padding
 			usize	padding_vec = usize(freeSpace / 4_b);
@@ -387,7 +387,7 @@ namespace PipelineCompiler
 		}
 
 
-		virtual bool ProcessType (StringCRef typeName)
+		virtual bool ProcessType (StringCRef)
 		{
 			// override this method to process other types
 			return false;

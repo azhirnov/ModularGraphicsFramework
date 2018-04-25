@@ -498,6 +498,8 @@ namespace PlatformVR
 			_framebuffers[1].viewMat = _camera.ViewMatrix() * _camera.GetModelMatrix();
 		}
 		
+		CHECK( _DefCompose( false ) );
+
 		_SendEvent< GpuMsg::DeviceCreated >({});
 		return true;
 	}
@@ -507,14 +509,9 @@ namespace PlatformVR
 	_GpuDeviceCreated
 =================================================
 */
-	bool EmulatorVRThread::_GpuDeviceCreated (const Message< GpuMsg::DeviceCreated > &msg)
+	bool EmulatorVRThread::_GpuDeviceCreated (const Message< GpuMsg::DeviceCreated > &)
 	{
-		if ( _CreateDevice() ) {
-			CHECK( _DefCompose( false ) );
-		}
-		else {
-			CHECK( _SetState( EState::ComposingFailed ) );
-		}
+		CHECK_COMPOSING( _CreateDevice() );
 		return true;
 	}
 	

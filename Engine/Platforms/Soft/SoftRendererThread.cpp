@@ -217,8 +217,6 @@ namespace Platforms
 
 		// create queue
 		{
-			using EQueueFamily = CreateInfo::GpuCommandQueue::EQueueFamily;
-
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											SWCommandQueueModuleID,
 											GlobalSystems(),
@@ -351,12 +349,8 @@ namespace Platforms
 	bool SoftRendererThread::_WindowCreated (const Message< OSMsg::WindowCreated > &)
 	{
 		CHECK_ERR( GetState() == EState::Linked );
-
-		if ( _CreateDevice() ) {
-			CHECK( _DefCompose( false ) );
-		} else {
-			CHECK( _SetState( EState::ComposingFailed ) );
-		}
+		
+		CHECK_COMPOSING( _CreateDevice() );
 		return true;
 	}
 	
@@ -399,6 +393,8 @@ namespace Platforms
 		_cmdQueue->Send< ModuleMsg::Compose >({});
 
 		_WriteDeviceInfo();
+		
+		CHECK( _DefCompose( false ) );
 
 		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
 		return true;
@@ -448,21 +444,19 @@ namespace Platforms
 		{
 			_device.Deinitialize();
 
-			//_commands.RunAll( DelegateBuilder( this, &SoftRendererThread::_SubmitQueue ) );
-
 			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
-		}
-
-		if ( _syncManager )
-		{
-			_syncManager->Send< ModuleMsg::Delete >({});
-			_syncManager = null;
 		}
 
 		if ( _cmdQueue )
 		{
 			_cmdQueue->Send< ModuleMsg::Delete >({});
 			_cmdQueue = null;
+		}
+
+		if ( _syncManager )
+		{
+			_syncManager->Send< ModuleMsg::Delete >({});
+			_syncManager = null;
 		}
 
 		_surface.Destroy();

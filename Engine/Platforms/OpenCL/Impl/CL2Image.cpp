@@ -456,6 +456,8 @@ namespace PlatformCL
 			if ( _isBindedToMemory )
 			{
 				CHECK( _SetState( EState::ComposedMutable ) );
+
+				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
 			}
 			else
 			{
@@ -486,6 +488,13 @@ namespace Platforms
 	{
 		return New< PlatformCL::CL2Image >( id, gs, ci );
 	}
+	
+	ModulePtr OpenCLObjectsConstructor::CreateCL2SharedImage (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSharedImage &ci)
+	{
+		return null;	// TODO
+		//return New< PlatformCL::CL2Image >( id, gs, ci );
+	}
+
 }	// Platforms
 }	// Engine
 
