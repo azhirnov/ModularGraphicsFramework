@@ -1,5 +1,5 @@
 // This is generated file
-// Created at: 2018/04/25 - 16:09:27
+// Created at: 2018/04/26 - 11:18:09
 
 #pragma once
 
@@ -22,17 +22,17 @@ namespace Pipelines
 
 namespace Pipelines
 {
+// From file 'glowballs.cpp'
+void Create_glowballs (PipelineTemplateDescriptor& descr);
+
+// From file 'drawtexturedquad.cpp'
+void Create_drawtexturedquad (PipelineTemplateDescriptor& descr);
+
 // From file 'experimental.cpp'
 void Create_experimental (PipelineTemplateDescriptor& descr);
 
 // From file 'sireniandawn1.cpp'
 void Create_sireniandawn1 (PipelineTemplateDescriptor& descr);
-
-// From file 'drawtexturedquad.cpp'
-void Create_drawtexturedquad (PipelineTemplateDescriptor& descr);
-
-// From file 'glowballs.cpp'
-void Create_glowballs (PipelineTemplateDescriptor& descr);
 
 // From file 'sireniandawn2.cpp'
 void Create_sireniandawn2 (PipelineTemplateDescriptor& descr);

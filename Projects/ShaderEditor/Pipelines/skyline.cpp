@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'ShaderEditor\Pipelines/Skyline.ppln'
-// Created at: 2018/04/25 - 16:09:28
+// Created at: 2018/04/26 - 11:18:09
 
 #include "all_pipelines.h"
 
@@ -135,7 +135,7 @@ void main()
 
 )#"_str );
 	descr.Vertex().ArraySPIRV({ 
-0x07230203, 0x00010000, 0x00080002, 0x0000002A, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
+0x07230203, 0x00010000, 0x00080006, 0x0000002A, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
 0x00000000, 0x0003000E, 0x00000000, 0x00000001, 0x0008000F, 0x00000000, 0x00000005, 0x6E69616D, 0x00000000, 0x0000000E, 0x0000001C, 0x00000029, 
 0x00030007, 0x00000001, 0x00000000, 0x002D0003, 0x00000002, 0x000001C2, 0x00000001, 0x4F202F2F, 0x646F4D70, 0x50656C75, 0x65636F72, 0x64657373, 
 0x746E6520, 0x702D7972, 0x746E696F, 0x69616D20, 0x2F2F0A6E, 0x4D704F20, 0x6C75646F, 0x6F725065, 0x73736563, 0x63206465, 0x6E65696C, 0x706F2074, 
@@ -300,31 +300,31 @@ float voxelPad;
 
 //---------------------------------
 
-Ray Ray_From(const vec3 leftBottom, const vec3 rightBottom, const vec3 leftTop, const vec3 rightTop, const vec3 origin, const float nearPlane, const vec2 unormCoord);
-float Hash11(in float a);
-float Hash21(in vec2 uv);
-vec2 Hash22(in vec2 uv);
-float Hash2d(in vec2 uv);
-float mixP(in float f0, in float f1, in float a);
-float Hash3d(in vec3 uv);
-float noise2d(in vec2 uv);
-vec3 saturate(in vec3 a);
-float noise(in vec3 uv);
-vec3 GetSunColorSmall(in vec3 rayDir, in vec3 sunDir);
-float saturate(in float a);
-vec3 GetEnvMap(in vec3 rayDir, in vec3 sunDir);
-vec3 GetEnvMapSkyline(in vec3 rayDir, in vec3 sunDir, in float height);
-vec2 matmin(in vec2 a, in vec2 b);
-float sdBox(in vec3 p, in vec3 radius);
-float cylCap(in vec3 p, in float r, in float lenRad);
-float smin(in float a, in float b, in float k);
-float Repeat(in float a, in float len);
-vec2 Car(in vec3 baseCenter, in float unique);
 vec2 CityBlock(in vec3 p, in vec2 pint);
 vec2 DistanceToObject(in vec3 p);
 void CalcWindows(in vec2 block, in vec3 pos, inout vec3 texColor, inout float windowRef, inout vec3 normal);
 vec3 RayTrace(const vec2 fragCoord, const Ray ray);
 void mainImage(out vec4 fragColor, in vec2 fragCoord);
+Ray Ray_From(const vec3 leftBottom, const vec3 rightBottom, const vec3 leftTop, const vec3 rightTop, const vec3 origin, const float nearPlane, const vec2 unormCoord);
+vec2 Hash22(in vec2 uv);
+float Hash11(in float a);
+float Hash21(in vec2 uv);
+float Hash2d(in vec2 uv);
+float mixP(in float f0, in float f1, in float a);
+float Hash3d(in vec3 uv);
+float noise2d(in vec2 uv);
+float noise(in vec3 uv);
+float saturate(in float a);
+vec3 saturate(in vec3 a);
+vec3 GetSunColorSmall(in vec3 rayDir, in vec3 sunDir);
+vec3 GetEnvMap(in vec3 rayDir, in vec3 sunDir);
+float sdBox(in vec3 p, in vec3 radius);
+vec3 GetEnvMapSkyline(in vec3 rayDir, in vec3 sunDir, in float height);
+vec2 matmin(in vec2 a, in vec2 b);
+float smin(in float a, in float b, in float k);
+float cylCap(in vec3 p, in float r, in float lenRad);
+float Repeat(in float a, in float len);
+vec2 Car(in vec3 baseCenter, in float unique);
 
 //---------------------------------
 
@@ -1192,7 +1192,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 
 )#"_str );
 	descr.Fragment().ArraySPIRV({ 
-0x07230203, 0x00010000, 0x00080002, 0x00000B72, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
+0x07230203, 0x00010000, 0x00080006, 0x00000B72, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
 0x00000000, 0x0003000E, 0x00000000, 0x00000001, 0x0007000F, 0x00000004, 0x00000005, 0x6E69616D, 0x00000000, 0x0000008B, 0x0000008F, 0x00030010, 
 0x00000005, 0x00000008, 0x00030007, 0x00000001, 0x00000000, 0x002D0003, 0x00000002, 0x000001C2, 0x00000001, 0x4F202F2F, 0x646F4D70, 0x50656C75, 
 0x65636F72, 0x64657373, 0x746E6520, 0x702D7972, 0x746E696F, 0x69616D20, 0x2F2F0A6E, 0x4D704F20, 0x6C75646F, 0x6F725065, 0x73736563, 0x63206465, 

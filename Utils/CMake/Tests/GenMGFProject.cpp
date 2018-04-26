@@ -632,7 +632,7 @@ extern void GenMGFProject ()
 									<<
 									"add_custom_target( \"Deps_" << proj->GetName() << "\"\n"
 									"	COMMAND ${RESOURCE_PACKER_EXE} -R " << res_script << "\n"
-									"	DEPENDS ${RESOURCE_PACKER_EXE} \"" << res_script << "\"\n"
+									"	DEPENDS ${RESOURCE_PACKER_EXE} " << res_script << "\n"
 									"	COMMENT \"Pack resources for '" << proj->GetName() << "'...\"\n"
 									"	VERBATIM\n"
 									")\n"

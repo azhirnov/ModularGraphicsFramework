@@ -1693,7 +1693,7 @@ if (NOT DEFINED RESOURCE_PACKER_EXE)
 endif ()
 add_custom_target( "Deps_Tests.Engine.Base"
 	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Base/Pipelines/resources.as"
-	DEPENDS ${RESOURCE_PACKER_EXE} ""${CMAKE_SOURCE_DIR}/Tests/Engine.Base/Pipelines/resources.as""
+	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Tests/Engine.Base/Pipelines/resources.as"
 	COMMENT "Pack resources for 'Tests.Engine.Base'..."
 	VERBATIM
 )
@@ -1753,7 +1753,7 @@ if (NOT DEFINED RESOURCE_PACKER_EXE)
 endif ()
 add_custom_target( "Deps_Tests.Engine.Graphics"
 	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Graphics/Pipelines/resources.as"
-	DEPENDS ${RESOURCE_PACKER_EXE} ""${CMAKE_SOURCE_DIR}/Tests/Engine.Graphics/Pipelines/resources.as""
+	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Tests/Engine.Graphics/Pipelines/resources.as"
 	COMMENT "Pack resources for 'Tests.Engine.Graphics'..."
 	VERBATIM
 )
@@ -1848,7 +1848,7 @@ if (NOT DEFINED RESOURCE_PACKER_EXE)
 endif ()
 add_custom_target( "Deps_Tests.Engine.Platforms.GAPI"
 	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Platforms.GAPI/resources.as"
-	DEPENDS ${RESOURCE_PACKER_EXE} ""${CMAKE_SOURCE_DIR}/Tests/Engine.Platforms.GAPI/resources.as""
+	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Tests/Engine.Platforms.GAPI/resources.as"
 	COMMENT "Pack resources for 'Tests.Engine.Platforms.GAPI'..."
 	VERBATIM
 )
@@ -1873,6 +1873,7 @@ set( SOURCES
 		"Projects/CodeGen/CodeGenApp.h"
 		"Projects/CodeGen/CodeGenApp_Script.cpp"
 		"Projects/CodeGen/Common.h"
+		"Projects/CodeGen/README.md"
 		"Projects/CodeGen/Generators/BigInt.glsl"
 		"Projects/CodeGen/Generators/BigInteger.h"
 		"Projects/CodeGen/Generators/Commands.cpp"
@@ -1890,7 +1891,7 @@ else()
 endif()
 source_group( "Generators\\Bruteforce" FILES "Projects/CodeGen/Generators/Bruteforce/Bruteforce.glsl" "Projects/CodeGen/Generators/Bruteforce/BruteforceGenerator.cpp" "Projects/CodeGen/Generators/Bruteforce/BruteforceGenerator.h" "Projects/CodeGen/Generators/Bruteforce/BruteforceGenerator_Compiler.cpp" )
 source_group( "Tests" FILES "Projects/CodeGen/Tests/test1.as" "Projects/CodeGen/Tests/test2.as" "Projects/CodeGen/Tests/test3.as" )
-source_group( "" FILES "Projects/CodeGen/CodeGenApp.cpp" "Projects/CodeGen/CodeGenApp.h" "Projects/CodeGen/CodeGenApp_Script.cpp" "Projects/CodeGen/Common.h" )
+source_group( "" FILES "Projects/CodeGen/CodeGenApp.cpp" "Projects/CodeGen/CodeGenApp.h" "Projects/CodeGen/CodeGenApp_Script.cpp" "Projects/CodeGen/Common.h" "Projects/CodeGen/README.md" )
 source_group( "Generators" FILES "Projects/CodeGen/Generators/BigInt.glsl" "Projects/CodeGen/Generators/BigInteger.h" "Projects/CodeGen/Generators/Commands.cpp" "Projects/CodeGen/Generators/Commands.h" "Projects/CodeGen/Generators/Constants.cpp" "Projects/CodeGen/Generators/IGenerator.h" "Projects/CodeGen/Generators/ResultSearch.cpp" "Projects/CodeGen/Generators/ResultSearch.h" "Projects/CodeGen/Generators/Scalar.h" "Projects/CodeGen/Generators/TestCase.h" )
 set_property( TARGET "Projects.CodeGen" PROPERTY FOLDER "Projects" )
 target_include_directories( "Projects.CodeGen" PRIVATE "Projects/CodeGen" )
@@ -1986,7 +1987,7 @@ if (NOT DEFINED RESOURCE_PACKER_EXE)
 endif ()
 add_custom_target( "Deps_Projects.ShaderEditor"
 	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Projects/ShaderEditor/Pipelines/resources.as"
-	DEPENDS ${RESOURCE_PACKER_EXE} ""${CMAKE_SOURCE_DIR}/Projects/ShaderEditor/Pipelines/resources.as""
+	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Projects/ShaderEditor/Pipelines/resources.as"
 	COMMENT "Pack resources for 'Projects.ShaderEditor'..."
 	VERBATIM
 )

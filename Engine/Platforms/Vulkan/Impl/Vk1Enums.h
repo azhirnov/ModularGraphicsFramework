@@ -605,9 +605,9 @@ namespace PlatformVK
 
 			switch ( t )
 			{
-				case ESubpassDependency::ByRegion		: flags |= VK_DEPENDENCY_BY_REGION_BIT;			break;
-				case ESubpassDependency::ViewLocal		: flags |= VK_DEPENDENCY_VIEW_LOCAL_BIT_KHX;	break;
-				case ESubpassDependency::DeviceGroup	: flags |= VK_DEPENDENCY_DEVICE_GROUP_BIT_KHX;	break;
+				case ESubpassDependency::ByRegion		: flags |= VK_DEPENDENCY_BY_REGION_BIT;		break;
+				case ESubpassDependency::DeviceGroup	: flags |= VK_DEPENDENCY_DEVICE_GROUP_BIT;	break;
+				case ESubpassDependency::ViewLocal		: flags |= VK_DEPENDENCY_VIEW_LOCAL_BIT;	break;
 				default									: RETURN_ERR( "invalid dependency type", VK_DEPENDENCY_FLAG_BITS_MAX_ENUM );
 			}
 		}
