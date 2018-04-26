@@ -31,8 +31,8 @@ namespace PipelineCompiler
 		static const uint	GLSL_VERSION	= 450;
 		static const uint	GLSL_ES_VERSION	= 320;
 		static const uint	HLSL_VERSION	= 1100;
-		static const uint	VULKAN_VERSION	= 100;
-		static const uint	SPIRV_VERSION	= 0x00001000;
+		static const uint	VULKAN_VERSION	= 100;	// 100, 110
+		static const uint	SPIRV_VERSION	= 100;	// 100, 130
 
 		struct FieldTypeInfo
 		{

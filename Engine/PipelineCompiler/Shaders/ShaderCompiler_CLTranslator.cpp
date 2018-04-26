@@ -384,8 +384,8 @@ namespace PipelineCompiler
 			all_args << (i ? ", " : "( ") << args[i];
 		}
 		all_args << " )";
-
-		if ( op >= glslang::TOperator::EOpConvIntToBool and op <= glslang::TOperator::EOpConvUint16ToUint64 )
+		
+		if ( op >= glslang::TOperator::EOpConvInt8ToBool and op <= glslang::TOperator::EOpConvDoubleToFloat )
 		{
 			String	tname;
 			CHECK_ERR( args.Count() == 1 );

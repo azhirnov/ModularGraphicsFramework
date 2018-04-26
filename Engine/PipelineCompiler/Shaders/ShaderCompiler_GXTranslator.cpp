@@ -385,7 +385,7 @@ namespace PipelineCompiler
 		}
 		all_args << " )";
 
-		if ( op >= glslang::TOperator::EOpConvIntToBool and op <= glslang::TOperator::EOpConvUint16ToUint64 )
+		if ( op >= glslang::TOperator::EOpConvInt8ToBool and op <= glslang::TOperator::EOpConvDoubleToFloat )
 		{
 			CHECK_ERR( args.Count() == 1 );
 			CHECK_ERR( TranslateType( resultType, INOUT src ) );

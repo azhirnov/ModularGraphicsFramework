@@ -12,7 +12,7 @@ int main (int argc, char** argv)
 
 	CHECK_ERR( packer->Initialize(), -1 );
 
-	String	res_file;
+	Array<String>	res_files;
 
 	for (int i = 1; i < argc; ++i)
 	{
@@ -22,9 +22,9 @@ int main (int argc, char** argv)
 		if ( ++i < argc )
 			value = argv[i];
 
-		if ( key == "-R" )
+		if ( key == "-R" or key == "-r" )
 		{
-			res_file = value;	// TODO: check for multiple commands
+			res_files << value;
 		}
 		else
 		{
@@ -33,7 +33,9 @@ int main (int argc, char** argv)
 	}
 
 	packer->SetExecutable( argv[0] );
-	packer->Run( res_file );
-	
+
+	FOR( i, res_files ) {
+		packer->Run( res_files[i] );
+	}	
 	return 0;
 }

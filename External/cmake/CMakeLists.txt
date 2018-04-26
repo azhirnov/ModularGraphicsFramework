@@ -93,6 +93,3 @@ if (ENABLE_LUNARGLASS)
 endif ()
 
 
-# FreeImage
-
-

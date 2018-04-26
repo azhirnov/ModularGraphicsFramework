@@ -464,16 +464,16 @@ namespace PipelineCompiler
 	{
 		log.Clear();
 		
-		glslang::EShClient			client			= glslang::EShClientOpenGL;
-		uint						client_version	= GLSL_VERSION;
+		glslang::EShClient					client			= glslang::EShClientOpenGL;
+		glslang::EshTargetClientVersion		client_version	= glslang::EShTargetOpenGL_450;
 
-		glslang::EShTargetLanguage	target			= glslang::EShTargetNone;
-		uint						target_version	= 0;
+		glslang::EShTargetLanguage			target			= glslang::EShTargetNone;
+		glslang::EShTargetLanguageVersion	target_version	= glslang::EShTargetLanguageVersion(0);
 
-		uint						version			= 0;
-		glslang::EShSource			sh_source;
+		uint								version			= 0;
+		glslang::EShSource					sh_source;
 
-		bool						is_vulkan		= false;
+		bool								is_vulkan		= false;
 
 		switch ( cfg.source )
 		{
@@ -525,9 +525,11 @@ namespace PipelineCompiler
 			{
 				version			= VULKAN_VERSION;
 				client			= is_vulkan ? glslang::EShClientVulkan : glslang::EShClientOpenGL;
-				client_version	= is_vulkan ? VULKAN_VERSION : GLSL_VERSION;
+				client_version	= is_vulkan ?
+										(VULKAN_VERSION == 110 ? glslang::EShTargetVulkan_1_1 : glslang::EShTargetVulkan_1_0) :
+										glslang::EShTargetOpenGL_450;
 				target			= glslang::EshTargetSpv;
-				target_version	= SPIRV_VERSION;
+				target_version	= SPIRV_VERSION == 130 ? glslang::EShTargetSpv_1_3 : glslang::EShTargetSpv_1_0;
 				break;
 			}
 			case EShaderDstFormat::GLSL_Source :
