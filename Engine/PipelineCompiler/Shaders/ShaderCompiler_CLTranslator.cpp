@@ -326,6 +326,9 @@ namespace PipelineCompiler
 			}
 		}
 
+		if ( name == "main" )
+			name = "Main";
+
 		_definedFuncs.Add( signature, { name, Uninitialized } );
 		_existingFuncs.Add( name );
 		return name;
@@ -1092,7 +1095,7 @@ namespace PipelineCompiler
 		CHECK_ERR( EShaderVariable::IsBuffer( info.type ) );
 		CHECK_ERR( info.arraySize == 0 );
 
-		str << "__global " << ToStringCL( info.memoryModel )
+		str << "__global " << (info.memoryModel == EShaderMemoryModel::ReadOnly ? "const" : "")
 			<< " struct " << (info.typeName.Empty() ? ToStringCL( info.type ) : info.typeName)
 			<< "* " << info.name;
 

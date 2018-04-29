@@ -88,7 +88,7 @@ bool CApp::_Test_FindMSB ()
 
 	auto* st = Cast<const Pipelines::FindMSB_SSBO *>( read_cmd->result->ptr() );
 
-	CHECK_ERR( st->results[0] == 3 );
+	CHECK_ERR( st->results[0] == 31 );
 	CHECK_ERR( st->results[1] == 30 );
 	CHECK_ERR( st->results[2] == 28 );
 	CHECK_ERR( st->results[3] == 26 );

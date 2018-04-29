@@ -635,7 +635,7 @@ namespace PipelineCompiler
 						{
 							_ShaderData	data2 = data;
 							data2.src.Clear();
-							data2.src << (const char*) result.ptr();
+							data2.src << StringCRef::From( result );
 							data2.entry = "main";
 
 							cfg2				= cfg;
@@ -668,7 +668,7 @@ namespace PipelineCompiler
 						{
 							_ShaderData	data2 = data;
 							data2.src.Clear();
-							data2.src << (const char*) result.ptr();
+							data2.src << StringCRef::From( result );
 							data2.entry = "main";
 
 							cfg2				= cfg;
@@ -699,7 +699,7 @@ namespace PipelineCompiler
 
 				_ShaderData	data2 = data;
 				data2.src.Clear();
-				data2.src << (const char*) temp.ptr();
+				data2.src << StringCRef::From( temp );
 				data2.entry = "main";
 
 				cfg2		= cfg;
@@ -723,7 +723,7 @@ namespace PipelineCompiler
 				
 				_ShaderData	data2 = data;
 				data2.src.Clear();
-				data2.src << (const char*) temp.ptr();
+				data2.src << StringCRef::From( temp );
 				data2.entry = "main";
 
 				cfg2		= cfg;
@@ -765,7 +765,7 @@ namespace PipelineCompiler
 						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
 
 						data2.src.Clear();
-						data2.src << (const char*) temp.ptr();
+						data2.src << StringCRef::From( temp );
 						data2.entry = "main";
 
 						cfg2				= cfg;
@@ -793,7 +793,7 @@ namespace PipelineCompiler
 				CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
 
 				data2.src.Clear();
-				data2.src << (const char*) temp.ptr();
+				data2.src << StringCRef::From( temp );
 				data2.entry = "main";
 
 				cfg2				= cfg;
@@ -826,7 +826,7 @@ namespace PipelineCompiler
 						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
 
 						data2.src.Clear();
-						data2.src << (const char*) temp.ptr();
+						data2.src << StringCRef::From( temp );
 						data2.entry = "main";
 
 						cfg2				= cfg;
@@ -866,7 +866,7 @@ namespace PipelineCompiler
 						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
 
 						data2.src.Clear();
-						data2.src << (const char*) temp.ptr();
+						data2.src << StringCRef::From( temp );
 						data2.entry = "main";
 
 						cfg2				= cfg;
@@ -894,7 +894,7 @@ namespace PipelineCompiler
 				CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
 
 				data2.src.Clear();
-				data2.src << (const char*) temp.ptr();
+				data2.src << StringCRef::From( temp );
 				data2.entry = "main";
 
 				cfg2				= cfg;
@@ -1077,11 +1077,11 @@ namespace PipelineCompiler
 	{
 		switch ( shaderFmt )
 		{
-			case EShaderDstFormat::GLSL_Source :	return _ValidateGLSLSource( shaderType, StringCRef( (const char*)data.ptr() ) );
+			case EShaderDstFormat::GLSL_Source :	return _ValidateGLSLSource( shaderType, StringCRef::From( data ) );
 			case EShaderDstFormat::GLSL_Binary :	return _ValidateGLSLBinary( shaderType, data );
-			case EShaderDstFormat::CL_Source :		return _ValidateCLSource( shaderType, StringCRef( (const char*)data.ptr() ) );
+			case EShaderDstFormat::CL_Source :		return _ValidateCLSource( shaderType, StringCRef::From( data ) );
 			case EShaderDstFormat::CL_Binary :		return _ValidateCLBinary( shaderType, data );
-			case EShaderDstFormat::HLSL_Source :	return _ValidateHLSLSource( shaderType, StringCRef( (const char*)data.ptr() ) );
+			case EShaderDstFormat::HLSL_Source :	return _ValidateHLSLSource( shaderType, StringCRef::From( data ) );
 			case EShaderDstFormat::HLSL_Binary :	return _ValidateHLSLBinary( shaderType, data );
 			case EShaderDstFormat::SPIRV_Binary :	return _ValidateSPIRV( shaderType, data );
 		}

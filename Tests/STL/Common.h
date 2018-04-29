@@ -4,4 +4,4 @@
 
 #include "Engine/STL/Engine.STL.h"
 
-#define TEST( ... )		CHECK( __VA_ARGS__ )
+#define TEST	CHECK_FATAL

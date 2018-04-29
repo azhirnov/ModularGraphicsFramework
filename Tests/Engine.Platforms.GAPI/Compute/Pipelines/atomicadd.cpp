@@ -1,6 +1,6 @@
 // This is generated file
 // Origin file: 'Compute/Pipelines/AtomicAdd.ppln'
-// Created at: 2018/04/26 - 11:15:56
+// Created at: 2018/04/29 - 17:03:04
 
 #include "all_pipelines.h"
 // C++ shader
@@ -224,37 +224,37 @@ R"#(#define FORMAT( _fmt_ )
 // findLSB 32
 #define GenTemplate_FindLSB32( _type_ ) \
 	_type_ findLSB_##_type_ (_type_ x) { \
-		return	(convert_##_type_(!!( x >> 31 )) & convert_##_type_(!( x & convert_##_type_(0x7FFFFFFF) ))) + \
-				(convert_##_type_(!!( x >> 30 )) & convert_##_type_(!( x & convert_##_type_(0x3FFFFFFF) ))) + \
-				(convert_##_type_(!!( x >> 29 )) & convert_##_type_(!( x & convert_##_type_(0x1FFFFFFF) ))) + \
-				(convert_##_type_(!!( x >> 28 )) & convert_##_type_(!( x & convert_##_type_(0xFFFFFFF) ))) + \
-				(convert_##_type_(!!( x >> 27 )) & convert_##_type_(!( x & convert_##_type_(0x7FFFFFF) ))) + \
-				(convert_##_type_(!!( x >> 26 )) & convert_##_type_(!( x & convert_##_type_(0x3FFFFFF) ))) + \
-				(convert_##_type_(!!( x >> 25 )) & convert_##_type_(!( x & convert_##_type_(0x1FFFFFF) ))) + \
-				(convert_##_type_(!!( x >> 24 )) & convert_##_type_(!( x & convert_##_type_(0xFFFFFF) ))) + \
-				(convert_##_type_(!!( x >> 23 )) & convert_##_type_(!( x & convert_##_type_(0x7FFFFF) ))) + \
-				(convert_##_type_(!!( x >> 22 )) & convert_##_type_(!( x & convert_##_type_(0x3FFFFF) ))) + \
-				(convert_##_type_(!!( x >> 21 )) & convert_##_type_(!( x & convert_##_type_(0x1FFFFF) ))) + \
-				(convert_##_type_(!!( x >> 20 )) & convert_##_type_(!( x & convert_##_type_(0xFFFFF) ))) + \
-				(convert_##_type_(!!( x >> 19 )) & convert_##_type_(!( x & convert_##_type_(0x7FFFF) ))) + \
-				(convert_##_type_(!!( x >> 18 )) & convert_##_type_(!( x & convert_##_type_(0x3FFFF) ))) + \
-				(convert_##_type_(!!( x >> 17 )) & convert_##_type_(!( x & convert_##_type_(0x1FFFF) ))) + \
-				(convert_##_type_(!!( x >> 16 )) & convert_##_type_(!( x & convert_##_type_(0xFFFF) ))) + \
-				(convert_##_type_(!!( x >> 15 )) & convert_##_type_(!( x & convert_##_type_(0x7FFF) ))) + \
-				(convert_##_type_(!!( x >> 14 )) & convert_##_type_(!( x & convert_##_type_(0x3FFF) ))) + \
-				(convert_##_type_(!!( x >> 13 )) & convert_##_type_(!( x & convert_##_type_(0x1FFF) ))) + \
-				(convert_##_type_(!!( x >> 12 )) & convert_##_type_(!( x & convert_##_type_(0xFFF) ))) + \
-				(convert_##_type_(!!( x >> 11 )) & convert_##_type_(!( x & convert_##_type_(0x7FF) ))) + \
-				(convert_##_type_(!!( x >> 10 )) & convert_##_type_(!( x & convert_##_type_(0x3FF) ))) + \
-				(convert_##_type_(!!( x >>  9 )) & convert_##_type_(!( x & convert_##_type_(0x1FF) ))) + \
-				(convert_##_type_(!!( x >>  8 )) & convert_##_type_(!( x & convert_##_type_(0xFF) ))) + \
-				(convert_##_type_(!!( x >>  7 )) & convert_##_type_(!( x & convert_##_type_(0x7F) ))) + \
-				(convert_##_type_(!!( x >>  6 )) & convert_##_type_(!( x & convert_##_type_(0x3F) ))) + \
-				(convert_##_type_(!!( x >>  5 )) & convert_##_type_(!( x & convert_##_type_(0x1F) ))) + \
-				(convert_##_type_(!!( x >>  4 )) & convert_##_type_(!( x & convert_##_type_(0xF) ))) + \
-				(convert_##_type_(!!( x >>  3 )) & convert_##_type_(!( x & convert_##_type_(0x7) ))) + \
-				(convert_##_type_(!!( x >>  2 )) & convert_##_type_(!( x & convert_##_type_(0x3) ))) + \
-				(convert_##_type_(!!( x >>  1 )) & convert_##_type_(!( x & convert_##_type_(0x1) ))) + \
+		return	(convert_##_type_(!!( x >> 31 )) & convert_##_type_(!( x & (_type_)(0x7FFFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 30 )) & convert_##_type_(!( x & (_type_)(0x3FFFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 29 )) & convert_##_type_(!( x & (_type_)(0x1FFFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 28 )) & convert_##_type_(!( x & (_type_)(0xFFFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 27 )) & convert_##_type_(!( x & (_type_)(0x7FFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 26 )) & convert_##_type_(!( x & (_type_)(0x3FFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 25 )) & convert_##_type_(!( x & (_type_)(0x1FFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 24 )) & convert_##_type_(!( x & (_type_)(0xFFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 23 )) & convert_##_type_(!( x & (_type_)(0x7FFFFF) ))) + \
+				(convert_##_type_(!!( x >> 22 )) & convert_##_type_(!( x & (_type_)(0x3FFFFF) ))) + \
+				(convert_##_type_(!!( x >> 21 )) & convert_##_type_(!( x & (_type_)(0x1FFFFF) ))) + \
+				(convert_##_type_(!!( x >> 20 )) & convert_##_type_(!( x & (_type_)(0xFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 19 )) & convert_##_type_(!( x & (_type_)(0x7FFFF) ))) + \
+				(convert_##_type_(!!( x >> 18 )) & convert_##_type_(!( x & (_type_)(0x3FFFF) ))) + \
+				(convert_##_type_(!!( x >> 17 )) & convert_##_type_(!( x & (_type_)(0x1FFFF) ))) + \
+				(convert_##_type_(!!( x >> 16 )) & convert_##_type_(!( x & (_type_)(0xFFFF) ))) + \
+				(convert_##_type_(!!( x >> 15 )) & convert_##_type_(!( x & (_type_)(0x7FFF) ))) + \
+				(convert_##_type_(!!( x >> 14 )) & convert_##_type_(!( x & (_type_)(0x3FFF) ))) + \
+				(convert_##_type_(!!( x >> 13 )) & convert_##_type_(!( x & (_type_)(0x1FFF) ))) + \
+				(convert_##_type_(!!( x >> 12 )) & convert_##_type_(!( x & (_type_)(0xFFF) ))) + \
+				(convert_##_type_(!!( x >> 11 )) & convert_##_type_(!( x & (_type_)(0x7FF) ))) + \
+				(convert_##_type_(!!( x >> 10 )) & convert_##_type_(!( x & (_type_)(0x3FF) ))) + \
+				(convert_##_type_(!!( x >>  9 )) & convert_##_type_(!( x & (_type_)(0x1FF) ))) + \
+				(convert_##_type_(!!( x >>  8 )) & convert_##_type_(!( x & (_type_)(0xFF) ))) + \
+				(convert_##_type_(!!( x >>  7 )) & convert_##_type_(!( x & (_type_)(0x7F) ))) + \
+				(convert_##_type_(!!( x >>  6 )) & convert_##_type_(!( x & (_type_)(0x3F) ))) + \
+				(convert_##_type_(!!( x >>  5 )) & convert_##_type_(!( x & (_type_)(0x1F) ))) + \
+				(convert_##_type_(!!( x >>  4 )) & convert_##_type_(!( x & (_type_)(0xF) ))) + \
+				(convert_##_type_(!!( x >>  3 )) & convert_##_type_(!( x & (_type_)(0x7) ))) + \
+				(convert_##_type_(!!( x >>  2 )) & convert_##_type_(!( x & (_type_)(0x3) ))) + \
+				(convert_##_type_(!!( x >>  1 )) & convert_##_type_(!( x & (_type_)(0x1) ))) + \
 				convert_##_type_(!!( x )) - 1; \
 	}
 	Gen_IntTemplates( GenTemplate_FindLSB32 )
@@ -306,8 +306,8 @@ struct AtomicAdd_SSBO
 
 //---------------------------------
 
-kernel void main (
-	/*0*/__global read_write struct AtomicAdd_SSBO* ssb)
+kernel void Main (
+	/*0*/__global  struct AtomicAdd_SSBO* ssb)
 {
 
 {

@@ -49,11 +49,12 @@ namespace CodeGen
 		struct CommandData final
 		{
 		// types
-			using FuncToStr	= void (*) (OUT String &);
+			using FuncToGLSL	= void (*) (OUT String &);
+			using FuncToSrc		= void (*) (ArrayCRef<StringCRef>, OUT String &);
 
 		// variables
-			FuncToStr	toStr	= null;		// covert function to source code
-			FuncToStr	toGPU	= null;		// covert function to GLSL source code
+			FuncToSrc	toStr	= null;		// covert function to source code
+			FuncToGLSL	toGPU	= null;		// covert function to GLSL source code
 			String		name;
 			ushort		ticks	= 0;		// processor ticks for this function
 			ubyte		args	= 0;		// number of input arguments
@@ -64,7 +65,7 @@ namespace CodeGen
 			CommandData (CommandData &&) = default;
 			CommandData (const CommandData &) = default;
 
-			CommandData (FuncToStr toStr, FuncToStr toGPU, StringCRef name, ubyte args, ushort ticks) :
+			CommandData (FuncToSrc toStr, FuncToGLSL toGPU, StringCRef name, ubyte args, ushort ticks) :
 				toStr(toStr), toGPU(toGPU), name(name), ticks(ticks), args(args)
 			{}
 		};

@@ -44,9 +44,13 @@ namespace CodeGen
 
 		ci.descr.supportedShaders	|= EShader::Compute;
 		ci.descr.localGroupSize		= uint3( _localThreads, 1, 1 );
+		
+		const BytesU	inbuf_size		= AlignToLarge( _bigIntSize + SizeOf<float>, 16_b ) + _testCaseSize * _testsCount;
+		const BytesU	outbuf_size		= _atomicsSize + _resultSize * _maxResults;
+
 		ci.descr.layout				= PipelineLayoutDescriptor::Builder()
-										.AddStorageBuffer( "ssb_input", _constSize, _testCaseSize, EShaderMemoryModel::ReadOnly, 0, 0, EShader::Compute )
-										.AddStorageBuffer( "ssb_output", _atomicsSize, _resultSize, EShaderMemoryModel::Coherent, 1, 1, EShader::Compute )
+										.AddStorageBuffer( "ssb_input", inbuf_size, 0_b, EShaderMemoryModel::ReadOnly, 0, 0, EShader::Compute )
+										.AddStorageBuffer( "ssb_output", outbuf_size, 0_b, EShaderMemoryModel::Coherent, 1, 1, EShader::Compute )
 										.Finish();
 
 		switch ( cfg.target )
@@ -68,5 +72,5 @@ namespace CodeGen
 		}
 		return true;
 	}
-
+	
 }	// CodeGen

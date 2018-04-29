@@ -3,11 +3,12 @@
 #include "CodeGenApp.h"
 #include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
-//extern bool Test_BigInt ();
 //extern bool Test_Bruteforce ();
 
 namespace CodeGen
 {
+	extern bool Test_BigInt ();
+	extern void Test_BigInteger ();
 
 /*
 =================================================
@@ -173,7 +174,8 @@ namespace CodeGen
 */
 	void CodeGenApp::_RunTests ()
 	{
-		//Test_BigInt();
+		Test_BigInteger();
+		Test_BigInt();
 		//Run( LAMBDA() () { Test_Bruteforce(); } );
 	}
 	
@@ -196,6 +198,8 @@ namespace CodeGen
 	{
 		using namespace GX_STL::GXScript;
 		
+		LOG( "Run script: '"_str << fname << "'", ELog::Debug );
+
 		// load from file
 		File::RFilePtr	file = File::HddRFile::New( fname );
 		CHECK_ERR( file );
@@ -243,7 +247,8 @@ int main (int argc, char** argv)
 	CHECK( GetMainSystemInstance()->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Projects/CodeGen" ) );
 	
 	// find input scripts
-	String	script_file;
+	Array<String>	script_files;
+	String			api = "CL 1.2";
 
 	for (int i = 1; i < argc; ++i)
 	{
@@ -253,9 +258,14 @@ int main (int argc, char** argv)
 		if ( ++i < argc )
 			value = argv[i];
 
-		if ( key == "-G" )
+		if ( key.EqualsIC( "-g" ) )
 		{
-			script_file = value;	// TODO: check for multiple commands
+			script_files << value;
+		}
+		else
+		if ( key.EqualsIC( "-api" ) )
+		{
+			api = value;
 		}
 		else
 		{
@@ -268,12 +278,16 @@ int main (int argc, char** argv)
 		CodeGenApp	app;
 		//app.Initialize( "VK 1.0"_GAPI );
 		//app.Initialize( "GL 4.5"_GAPI );
-		app.Initialize( "CL 1.2"_GAPI );
+		//app.Initialize( "CL 1.2"_GAPI );
 		//app.Initialize( "SW 1.0"_GAPI );
+		app.Initialize( GAPI::FromString( api ) );
 
-		app.Run( LAMBDA(script_file, &app) ()
+		app.Run( LAMBDA( &script_files, &app ) ()
 				{
-					app.RunScript( script_file );
+					FOR( i, script_files ) {
+						app.RunScript( script_files[i] );
+					}
+					app.Exit();
 				} );
 
 		// main loop

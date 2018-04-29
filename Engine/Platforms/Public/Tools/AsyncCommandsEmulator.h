@@ -68,7 +68,6 @@ namespace PlatformTools
 */
 	inline bool AsyncCommandsEmulator::Run (GpuFenceId fenceId, const SubmitQueue_t &submitQueueFunc)
 	{
-		CHECK_ERR( fenceId != GpuFenceId::Unknown );
 		CHECK_ERR( not _locked );
 		SCOPE_SETTER( _locked = true, false );
 

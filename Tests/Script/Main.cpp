@@ -24,8 +24,8 @@ int main ()
 	Test_ScriptString();
 	Test_Eval();
 
-
-	TEST( !"Tests Finished!" );
+	
+	LOG( "Tests Finished!", ELog::Info );
 
 	Logger::GetInstance()->Close();
 	

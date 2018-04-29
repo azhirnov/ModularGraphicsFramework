@@ -30,7 +30,7 @@ namespace CodeGen
 	{
 	// types
 	public:
-		using HashCode_t	= BigInteger< ulong, 1 >;
+		using HashCode_t	= BigInteger< uint, 4 >;
 
 		struct GenFunction final
 		{
@@ -77,8 +77,6 @@ namespace CodeGen
 							   OUT GenFunctions_t &functions) = 0;
 		
 		//virtual bool Run (VariantCRef input, const GenFunction &func, OUT VariantRef result) = 0;
-
-		virtual bool ToSource (const GenFunction &func, OUT String &src) const = 0;
 
 		//virtual bool CreateFromNodes (SrcNodes_t nodes, TypeId typeId, OUT GenFunction &func) = 0;
 	};

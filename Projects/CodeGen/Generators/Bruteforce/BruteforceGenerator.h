@@ -20,15 +20,7 @@ namespace CodeGen
 			uint	total;
 			uint	total2;		// if 'total' overflow
 			uint	results;
-			//uint	checked;
-		};
-
-		struct _ConstData
-		{
-			//BigInt	initHash;
-			float	maxAccuracy;
-			uint	resultsCapacity;
-			uint	testCasesCount;
+			uint	checked;
 		};
 		
 		struct _Result
@@ -38,7 +30,7 @@ namespace CodeGen
 			float	accuracy;
 		};
 
-		using _BigIntBuf = FixedSizeArray< uint, 16 >;
+		using _BigIntBuf = StaticArray< ubyte, 64 >;
 
 
 	// variables
@@ -48,7 +40,6 @@ namespace CodeGen
 		
 		ModulePtr		_cmdBuilder;
 		ModulePtr		_cmdBuffer;
-		GpuFenceId		_fence;
 
 		ModulePtr		_inBuffer;
 		ModulePtr		_outBuffer;
@@ -59,17 +50,16 @@ namespace CodeGen
 		
 		BytesU			_testCaseSize;
 		BytesU			_bigIntSize;
-		BytesU			_constSize;
 		BytesU			_atomicsSize;
 		BytesU			_resultSize;
+		BitsU			_maxBits;		// number of actual bits in hash
 
 		uint			_maxCommands;
 		uint			_maxInputs;
 		uint			_bigintCount;
+		uint			_testsCount;
 
-		uint			_iterationsCount;
-		uint			_groupSize;
-
+		const uint		_maxResults;
 		const uint		_localThreads;
 
 
@@ -79,8 +69,6 @@ namespace CodeGen
 
 		bool Generate (VariantCRef testCases, ECommandSet::bits commandSetType, EConstantSet::bits constantType,
 						float maxAccuracy, uint maxCommands, OUT GenFunctions_t &functions) override;
-		
-		bool ToSource (const GenFunction &func, OUT String &src) const override;
 
 
 	private:
@@ -90,15 +78,17 @@ namespace CodeGen
 		
 		void _Clear ();
 
+		void _WriteBigInt (INOUT BinArrayRef &dst, const HashCode_t &src) const;
+
 		template <typename T>	bool _Prepare (ArrayCRef<TestCase<T>> testCases, ECommandSet::bits commandSetType);
 		template <typename T>	bool _CheckTests (ArrayCRef<TestCase<T>> testCases, OUT uint &maxInputs) const;
 		template <typename T>	bool _CreateSource (ECommandSet::bits commandSetType);
 								bool _CompileProgram (ArrayCRef<StringCRef> src, OUT CreateInfo::PipelineTemplate &ci);
-								bool _CreateResources (usize testsCount, usize resultsCount);
-		template <typename T>	bool _InitBuffer (ArrayCRef<TestCase<T>> testCases, float maxAccuracy, usize resultsCount);
+								bool _CreateResources ();
+		template <typename T>	bool _InitBuffer (ArrayCRef<TestCase<T>> testCases, float maxAccuracy);
 								bool _BuildCommandBuffer ();
 								bool _Execute ();
-								bool _ProcessResults (usize resultsCount, ValueID::type typeId,
+								bool _ProcessResults (ValueID::type typeId,
 													  ECommandSet::bits commandSetType, EConstantSet::bits constantType,
 													  OUT GenFunctions_t &functions);
 	};

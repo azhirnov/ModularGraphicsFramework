@@ -6,7 +6,7 @@
 #include "Engine/Script/Bindings/DefaultBindings.h"
 #include "Engine/STL/Log/Logger.h"
 
-#define TEST( ... )		CHECK( __VA_ARGS__ )
+#define TEST	CHECK_FATAL
 
 
 using namespace GX_STL;

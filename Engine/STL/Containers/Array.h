@@ -976,6 +976,18 @@ namespace GXTypes
 	
 /*
 =================================================
+	TStringRef<T>::From
+=================================================
+*/
+	template <typename T>
+	template <typename B, typename S, typename MC>
+	inline TStringRef<const T>  TStringRef<T>::From (const Array<B,S,MC> &arr)
+	{
+		return From( ArrayCRef<B>(arr) );
+	}
+
+/*
+=================================================
 	Hash
 =================================================
 */

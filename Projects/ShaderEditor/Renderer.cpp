@@ -2,6 +2,7 @@
 
 #include "Projects/ShaderEditor/Renderer.h"
 #include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
+#include "Engine/ImportExport/Engine.ImportExport.h"
 
 namespace ShaderEditor
 {
@@ -574,7 +575,7 @@ namespace ShaderEditor
 */
 	bool Renderer::_LoadImage (StringCRef filename, OUT ModulePtr &mod)
 	{
-		/*String	path = filename;
+		String	path = filename;
 		FileAddress::FormatPath( path );
 
 		LoadedImages_t::iterator	iter;
@@ -619,8 +620,7 @@ namespace ShaderEditor
 
 		mod = image;
 		_loadedImages.Add( path, image );
-		return true;*/
-		return false;
+		return true;
 	}
 
 /*

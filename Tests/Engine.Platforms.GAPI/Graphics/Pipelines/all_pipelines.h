@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "pipelines_common.h"
 #include "shared_types.h"
 
 namespace Pipelines

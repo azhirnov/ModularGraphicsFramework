@@ -27,6 +27,8 @@ private:
 	ModulePtr			cmdBuilder;
 
 	TestQueue_t			tests;
+	uint				testsPassed	= 0;
+	uint				testsFailed	= 0;
 
 
 // methods

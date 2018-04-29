@@ -85,7 +85,7 @@ bool CApp::_Test_ClearBuffer ()
 		else
 			equals &= (pattern_arr[i&3] == read_cmd->result->operator[](i));
 	}
-	CHECK_ERR( equals );
+	CHECK_ERR( equals );	// bug in Intel OpenGL implementation
 
 	LOG( "ClearBuffer - OK", ELog::Info );
 	return true;

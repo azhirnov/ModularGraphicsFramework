@@ -2064,11 +2064,12 @@ namespace PlatformGL
 		const BytesUL	size = Min( req_descr->result->size - data.dstOffset, data.size );
 
 		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, *req_id->result ) );
+
 		GL_CALL( glClearBufferSubData( GL_COPY_READ_BUFFER,
-										GL_RGBA8UI,
+										GL_R32UI,
 										GLintptr(data.dstOffset),
 										GLsizeiptr(size),
-										GL_RGBA, GL_UNSIGNED_BYTE,
+										GL_RED_INTEGER, GL_UNSIGNED_INT,
 										&data.pattern ) );
 
 		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, 0 ) );

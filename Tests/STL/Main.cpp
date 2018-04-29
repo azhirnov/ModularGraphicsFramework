@@ -120,8 +120,8 @@ int main ()
 	Test_OS_Atomic();
 	Test_OS_Date();
 	Test_OS_FileSystem();
-
-	TEST( !"Tests Finished!" );
+	
+	LOG( "Tests Finished!", ELog::Info );
 
 	Logger::GetInstance()->Close();
 	

@@ -647,7 +647,7 @@ namespace PipelineCompiler
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< glsl_types
 					<< str
-					<< (const char*) glsl_source.ptr();
+					<< StringCRef::From( glsl_source );
 				
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::GLSL_Source;
@@ -662,7 +662,7 @@ namespace PipelineCompiler
 			if ( convCfg.target[ EShaderDstFormat::GLSL_Binary ] )
 			{
 				source.Clear();
-				source << (const char*)compiled.glsl.ptr();
+				source << StringCRef::From( compiled.glsl );
 				
 				ShaderCompiler::Config	cfg2;
 				cfg2.source	= EShaderSrcFormat::GLSL;
@@ -690,7 +690,7 @@ namespace PipelineCompiler
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< glsl_types
 					<< str
-					<< (const char*) glsl_source.ptr();
+					<< StringCRef::From( glsl_source );
 				
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::SPIRV_Binary;
@@ -727,7 +727,7 @@ namespace PipelineCompiler
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< glsl_types
 					<< str
-					<< (const char*) glsl_source.ptr();
+					<< StringCRef::From( glsl_source );
 			
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::CPP_Module;
@@ -753,7 +753,7 @@ namespace PipelineCompiler
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< glsl_types
 					<< str
-					<< (const char*) glsl_source.ptr();
+					<< StringCRef::From( glsl_source );
 			
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::CL_Source;
@@ -768,7 +768,7 @@ namespace PipelineCompiler
 			if ( convCfg.target[ EShaderDstFormat::CL_Binary ] )
 			{
 				source.Clear();
-				source << (const char*)compiled.cl.ptr();
+				source << StringCRef::From( compiled.cl );
 				
 				ShaderCompiler::Config	cfg2;
 				cfg2.source	= EShaderSrcFormat::CL;

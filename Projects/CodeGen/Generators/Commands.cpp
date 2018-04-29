@@ -27,23 +27,23 @@ namespace CodeGen
 	{
 		struct CmdToString
 		{
-			static void Minus	(String &str)	{ str << "T Minus(T a) { return -a; }"; }
-			static void Plus	(String &str)	{ str << "T Plus(T a) { return +a; }"; }
-			static void Add		(String &str)	{ str << "T Add(T a, T b) { return a + b; }"; }
-			static void Sub		(String &str)	{ str << "T Sub(T a, T b) { return a - b; }"; }
-			static void Mul		(String &str)	{ str << "T Mul(T a, T b) { return a * b; }"; }
-			static void Div		(String &str)	{ str << "T Div(T a, T b) { return a / b; }"; }
+			static void Minus	(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 1 );  str << '-' << in[0]; }
+			static void Plus	(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 1 );  str << in[0]; }
+			static void Add		(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 2 );  str << '(' << in[0] << " + " << in[1] << ')'; }
+			static void Sub		(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 2 );  str << '(' << in[0] << " - " << in[1] << ')'; }
+			static void Mul		(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 2 );  str << '(' << in[0] << " * " << in[1] << ')'; }
+			static void Div		(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 2 );  str << '(' << in[0] << " / " << in[1] << ')'; }
 
-			static void Pow		(String &str)	{ str << "T Pow(T a, T b) { return pow( a, b ); }"; }
-			static void Sin		(String &str)	{ str << "T Sin(T a) { return sin( a ); }"; }
-			static void Cos		(String &str)	{ str << "T Cos(T a) { return cos( a ); }"; }
-			static void Tan		(String &str)	{ str << "T Tan(T a) { return tan( a ); }"; }
+			static void Pow		(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 2 );  str << "Pow(" << in[0] << ", " << in[1] << ")"; }
+			static void Sin		(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 1 );  str << "Sin(" << in[0] << ')'; }
+			static void Cos		(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 1 );  str << "Cos(" << in[0] << ')'; }
+			static void Tan		(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 1 );  str << "Tan(" << in[0] << ')'; }
 
-			static void Equals	(String &str)	{ str << "T Equals(T a, T b) { return ( a == b ? T(1) : T(-1) ); }"; }
-			static void Less	(String &str)	{ str << "T Less(T a, T b) { return ( a < b ? T(1) : T(-1) ); }"; }
-			static void Greater	(String &str)	{ str << "T Greater(T a, T b) { return ( a > b ? T(1) : T(-1) ); }"; }
+			static void Equals	(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 2 );  str << '(' << in[0] << " == " << in[1] << " ? c_one : -c_one)"; }
+			static void Less	(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 2 );  str << '(' << in[0] <<  " < " << in[1] << " ? c_one : -c_one)"; }
+			static void Greater	(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 2 );  str << '(' << in[0] <<  " > " << in[1] << " ? c_one : -c_one)"; }
 
-			static void Select	(String &str)	{ str << "T Select(T a, T b, T c) { return a >= T(0) ? b : c; }"; }
+			static void Select	(ArrayCRef<StringCRef> in, String &str)	{ ASSERT( in.Count() == 3 );  str << '(' << in[0] << " >= c_zero ? " << in[1] << " : " << in[2] << ')'; }
 		};
 
 		struct GPUCmdSource

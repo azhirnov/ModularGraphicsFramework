@@ -984,7 +984,7 @@ namespace PipelineCompiler
 			if ( inFile )
 				RETURN_ERR( "not supported" )
 			else
-				str << name << ".StringGLSL( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() )) << " );\n";
+				str << name << ".StringGLSL( \n" << ToString(StringCRef::From( shaderSrc )) << " );\n";
 		}
 		return str;
 	}
@@ -1002,7 +1002,7 @@ namespace PipelineCompiler
 			if ( inFile )
 				RETURN_ERR( "not supported" )
 			else
-				str << name << ".ArrayGLSLBin({ " << ToString(StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() )) << " });\n";
+				str << name << ".ArrayGLSLBin({ " << ToString(StringCRef::From( shaderSrc )) << " });\n";
 				//str << name << ".ArrayGLSLBin({ " << ToString(ArrayCRef<ubyte>::From( shaderSrc )) << " });\n";
 		}
 		return str;
@@ -1039,7 +1039,7 @@ namespace PipelineCompiler
 			if ( inFile )
 				RETURN_ERR( "not supported" )
 			else
-				str << name << ".StringSpirvAsm( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() )) << " );\n";
+				str << name << ".StringSpirvAsm( \n" << ToString(StringCRef::From( shaderSrc )) << " );\n";
 		}
 		return str;
 	}
@@ -1057,7 +1057,7 @@ namespace PipelineCompiler
 			if ( inFile )
 				RETURN_ERR( "not supported" )
 			else
-				str << name << ".StringCLAsm( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() )) << " );\n";
+				str << name << ".StringCLAsm( \n" << ToString(StringCRef::From( shaderSrc )) << " );\n";
 		}
 		return str;
 	}
@@ -1075,7 +1075,7 @@ namespace PipelineCompiler
 			if ( inFile )
 				RETURN_ERR( "not supported" )
 			else
-				str << name << ".StringCL( \n" << ToString(StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() )) << " );\n";
+				str << name << ".StringCL( \n" << ToString(StringCRef::From( shaderSrc )) << " );\n";
 		}
 		return str;
 	}
@@ -1103,7 +1103,7 @@ namespace PipelineCompiler
 			const usize	start	= str.Length();
 			usize		pos		= 0;
 
-			str << StringCRef( (const char*)shaderSrc.ptr(), shaderSrc.Count() );
+			str << StringCRef::From( shaderSrc );
 
 			str.FindAndChange( "##main##", funcName, OUT pos, start );
 		}

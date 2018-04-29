@@ -49,7 +49,7 @@ extern void GenMGFProject ()
 			Array<String>	shared_cxx_flags	= { VS::CppLastest, VS::MultiThreadCompilation, VS::NoMinimalRebuild, VS::RemUnrefCode,
 													VS::NoFunctionLevelLinking, VS::FloatPointStrict, VS::FloatPointNoExceptions };
 
-			Array<String>	release_cxx_flags	= { VS::InlineAll, VS::InlineAll, VS::Intrinsic, VS::OptFavorFastCode, VS::OptOmitFramePointers,
+			Array<String>	release_cxx_flags	= { VS::InlineAll, VS::Intrinsic, VS::OptFavorFastCode, VS::OptOmitFramePointers,
 													VS::OptFiberSafe, VS::OptWholeProgram, VS::StringPooling, VS::NoSecurityCheck, rel_lib };
 
 			Set<uint>		errors				= { VS::ReturningAddressOfLocalVariable, VS::TypeNameMismatch, VS::UninitializedVarUsed,
@@ -101,13 +101,13 @@ extern void GenMGFProject ()
 			{
 				debug_cfg->AddGlobalCFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation })
 						  ->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation, VS::DbgProgramDatabase })
-						  ->AddGlobalLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
+						  ->AddGlobalLinkerFlags({ VS_Linker::DebugFull/*, VS_Linker::LinkTimeCodeGen*/ });
 
 				debug_cfg->AddTargetCxxFlags( shared_cxx_flags )
 						 ->AddTargetCxxFlags({ VS::WarningLevel4, VS::NoWarningsAsErrors, VS::SDLChecks, VS::OptDisabled, VS::NoInline, VS::Exceptions,
 												VS::OptNoOmitFramePointers, VS::NoStringPooling, VS::SecurityCheck, /*VS::ControlFlowGuard,*/ VS::RTTI,
 												dbg_lib, VS::NoStaticAnalyze, VS::DbgProgramDatabase, VS::StackFrameAndUninitVarCheck });
-				debug_cfg->AddTargetLinkerFlags( shared_linker_cfg )->AddTargetLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
+				debug_cfg->AddTargetLinkerFlags( shared_linker_cfg )->AddTargetLinkerFlags({ VS_Linker::DebugFull/*, VS_Linker::LinkTimeCodeGen*/ });
 				debug_cfg->AddTargetDefinitions({ "__GX_DEBUG__" });
 			}
 
@@ -115,13 +115,13 @@ extern void GenMGFProject ()
 			{
 				analyze_cfg->AddGlobalCFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation })
 							->AddGlobalCxxFlags({ VS::Define( "_DEBUG" ), dbg_lib, VS::OptDisabled, VS::MultiThreadCompilation, VS::DbgProgramDatabase })
-							->AddGlobalLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
+							->AddGlobalLinkerFlags({ VS_Linker::DebugFull/*, VS_Linker::LinkTimeCodeGen*/ });
 
 				analyze_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ VS::WarningLevel4, VS::NoWarningsAsErrors, VS::SDLChecks, VS::OptDisabled, VS::NoInline, VS::Exceptions,
 												  VS::OptNoOmitFramePointers, VS::NoStringPooling, VS::SecurityCheck, VS::ControlFlowGuard, VS::RTTI,
 												  dbg_lib, VS::StaticAnalyze, VS::DbgProgramDatabase, VS::StackFrameAndUninitVarCheck });
-				analyze_cfg->AddTargetLinkerFlags( shared_linker_cfg )->AddTargetLinkerFlags({ VS_Linker::DebugFull, VS_Linker::LinkTimeCodeGen });
+				analyze_cfg->AddTargetLinkerFlags( shared_linker_cfg )->AddTargetLinkerFlags({ VS_Linker::DebugFull/*, VS_Linker::LinkTimeCodeGen*/ });
 				analyze_cfg->AddTargetDefinitions({ "__GX_DEBUG__", "__GX_ANALYZE__" });
 			}
 
@@ -129,12 +129,12 @@ extern void GenMGFProject ()
 			{
 				profile_cfg->AddGlobalCFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptDisabled, VS::MultiThreadCompilation })
 							->AddGlobalCxxFlags({ VS::Defines({ "_NDEBUG", "NDEBUG" }), rel_lib, VS::OptDisabled, VS::MultiThreadCompilation })
-							->AddGlobalLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Debug, VS_Linker::Profile });
+							->AddGlobalLinkerFlags({ /*VS_Linker::LinkTimeCodeGen,*/ VS_Linker::Debug, VS_Linker::Profile });
 
 				profile_cfg->AddTargetCxxFlags( shared_cxx_flags )->AddTargetCxxFlags( release_cxx_flags )
 						->AddTargetCxxFlags({ VS::WarningLevel3, VS::OptDisabled, VS::NoStaticAnalyze, VS::Exceptions, VS::RTTI });
 				profile_cfg->AddTargetLinkerFlags( shared_linker_cfg )
-							->AddTargetLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Debug, VS_Linker::Profile });
+							->AddTargetLinkerFlags({ /*VS_Linker::LinkTimeCodeGen,*/ VS_Linker::Debug, VS_Linker::Profile });
 				profile_cfg->AddTargetDefinitions({ "GX_ENABLE_PROFILING" });
 			}
 	
@@ -154,10 +154,10 @@ extern void GenMGFProject ()
 							->AddGlobalLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Release });
 
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )->AddTargetCxxFlags( release_cxx_flags )
-							->AddTargetCxxFlags({ VS::WarningLevel3, VS::OptFull, VS::NoStaticAnalyze, VS::NoExceptions, VS::NoRTTI });
+							->AddTargetCxxFlags({ VS::WarningLevel3, VS::OptFull, VS::NoStaticAnalyze, VS::NoExceptions/*, VS::NoRTTI*/ });
 				release_cfg->AddTargetLinkerFlags( shared_linker_cfg )
 							->AddTargetLinkerFlags({ VS_Linker::LinkTimeCodeGen, VS_Linker::Release, VS_Linker::RandomBaseAddress });
-				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
+				release_cfg->AddTargetDefinitions({ /*"__GX_FAST__",*/ "__GX_NO_EXCEPTIONS__" });
 			}
 
 			builder.SetSystemVersion( "8.1", "WIN32" );
@@ -228,7 +228,7 @@ extern void GenMGFProject ()
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ GCC::Opt3, GCC::OptFast, GCC::OptOmitFramePointers, GCC::InlineAll });
 				release_cfg->AddTargetLinkerFlags( shared_linked_flags );
-				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
+				release_cfg->AddTargetDefinitions({ /*"__GX_FAST__",*/ "__GX_NO_EXCEPTIONS__" });
 			}
 		}
 
@@ -295,7 +295,7 @@ extern void GenMGFProject ()
 
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
-				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
+				release_cfg->AddTargetDefinitions({ /*"__GX_FAST__",*/ "__GX_NO_EXCEPTIONS__" });
 			}
 		}
 		#endif
@@ -359,7 +359,7 @@ extern void GenMGFProject ()
 
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
-				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
+				release_cfg->AddTargetDefinitions({ /*"__GX_FAST__",*/ "__GX_NO_EXCEPTIONS__" });
 			}
 		}
 
@@ -428,7 +428,7 @@ extern void GenMGFProject ()
 				release_cfg->AddTargetCxxFlags( shared_cxx_flags )
 							->AddTargetCxxFlags({ Clang::Opt3, Clang::OptFast, Clang::OptOmitFramePointers, Clang::InlineAll });
 				release_cfg->AddTargetLinkerFlags( shared_linked_flags );
-				release_cfg->AddTargetDefinitions({ "__GX_FAST__", "__GX_NO_EXCEPTIONS__" });
+				release_cfg->AddTargetDefinitions({ /*"__GX_FAST__",*/ "__GX_NO_EXCEPTIONS__" });
 			}
 		}
 	}	// compilers

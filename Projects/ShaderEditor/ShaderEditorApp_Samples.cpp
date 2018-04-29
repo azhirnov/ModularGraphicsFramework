@@ -15,6 +15,14 @@ namespace ShaderEditor
 		_samples.PushBack( LAMBDA() (Renderer &renderer)
 		{
 			Renderer::ShaderDescr	sh_main;
+			sh_main.Pipeline( Pipelines::Create_experimental );
+			sh_main.InChannel( "C:/Projects/graphxgenengine/Projects/ShaderEditor/res/img1.png", 0 );
+			CHECK( renderer.Add( "main", sh_main ) );
+		});
+
+		_samples.PushBack( LAMBDA() (Renderer &renderer)
+		{
+			Renderer::ShaderDescr	sh_main;
 			sh_main.Pipeline( Pipelines::Create_voronnoirecursion );
 			CHECK( renderer.Add( "main", sh_main ) );
 		});

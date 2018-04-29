@@ -18,8 +18,8 @@ namespace CodeGen
 
 	// types
 	public:
-		using value_t	= T;
-		using Array_t	= StaticArray< value_t, Size >;
+		using Value_t	= T;
+		using Array_t	= StaticArray< Value_t, Size >;
 		using Self		= BigInteger< T, Size >;
 
 
@@ -37,43 +37,52 @@ namespace CodeGen
 		BigInteger (Self &&) = default;
 		BigInteger (const Self &) = default;
 
-		forceinline explicit BigInteger (value_t val)
+		explicit BigInteger (Value_t val)
 		{
 			_value[0]	= val;
 			_lastBit	= _CalcBits( 0 );
 		}
 
-		forceinline Self&	operator = (Self &&) = default;
-		forceinline Self&	operator = (const Self &) = default;
+		Self&	operator = (Self &&) = default;
+		Self&	operator = (const Self &) = default;
 
-		forceinline Self&	operator ++ ()
+		Self&	operator ++ ()
 		{
 			_Add( 1 );
 			return *this;
 		}
 
-		forceinline Self&	operator += (value_t val)
+		Self&	operator += (Value_t val)
 		{
 			_Add( val );
 			return *this;
 		}
+		
+		template <typename B, usize S>
+		Self&	operator += (const BigInteger<B,S> &val);
+		
+		bool	operator == (const Self &right) const;
 
-		forceinline BitsU Count () const
+		bool	operator != (const Self &right) const	{ return not (*this == right); }
+
+		BitsU Count () const
 		{
 			return _lastBit;
 		}
 
-		forceinline static BitsU MaxSize ()
+		static BitsU MaxSize ()
 		{
-			return BitsU::SizeOf<value_t>() * Array_t::STATIC_COUNT;
+			return BitsU::SizeOf<Value_t>() * Array_t::STATIC_COUNT;
 		}
 
 		
 		template <typename B, usize S>
 		void	Assign (const BigInteger<B,S> &other);
 
-		value_t	Read (BitsU pos, BitsU count) const;
-		void	Write (value_t value, BitsU pos, BitsU count);
+		void	Fill (BitsU count);
+
+		Value_t	Read (BitsU pos, BitsU count) const;
+		void	Write (Value_t value, BitsU pos, BitsU count);
 		bool	IsZero (BitsU pos) const;
 
 		String	ToString () const;
@@ -82,7 +91,7 @@ namespace CodeGen
 
 
 	private:
-		void _Add (value_t val);
+		void _Add (Value_t val);
 
 		BitsU _CalcBits (usize i) const;
 	};
@@ -94,9 +103,9 @@ namespace CodeGen
 =================================================
 */
 	template <typename T, usize Size>
-	forceinline typename BigInteger<T,Size>::value_t  BigInteger<T,Size>::Read (BitsU pos, BitsU count) const
+	inline T  BigInteger<T,Size>::Read (BitsU pos, BitsU count) const
 	{
-		const BitsU		maxBits = BitsU::SizeOf<value_t>();
+		const BitsU		maxBits = BitsU::SizeOf<Value_t>();
 		const usize		i		= usize(pos / maxBits);
 
 		ASSERT( count <= maxBits );
@@ -104,12 +113,12 @@ namespace CodeGen
 
 		pos -= maxBits * i;
 		
-		value_t	result		= (_value[i] >> (usize)pos) & ToMask<value_t>( count );
+		Value_t	result		= (_value[i] >> (usize)pos) & ToMask<Value_t>( count );
 		BitsU	max_count	= maxBits - pos;
 
 		if ( count > max_count )
 		{
-			result |= ( _value[i+1] & ToMask<value_t>( count - max_count ) ) << usize(max_count);
+			result |= ( _value[i+1] & ToMask<Value_t>( count - max_count ) ) << usize(max_count);
 		}
 		return result;
 	}
@@ -120,9 +129,9 @@ namespace CodeGen
 =================================================
 */
 	template <typename T, usize Size>
-	forceinline void BigInteger<T,Size>::Write (value_t value, BitsU pos, BitsU count)
+	inline void BigInteger<T,Size>::Write (Value_t value, BitsU pos, BitsU count)
 	{
-		const BitsU		maxBits = BitsU::SizeOf<value_t>();
+		const BitsU		maxBits = BitsU::SizeOf<Value_t>();
 
 		ASSERT( count <= maxBits );
 		ASSERT( pos + count <= MaxSize() );
@@ -130,7 +139,7 @@ namespace CodeGen
 		usize	i	= usize(pos / maxBits);
 
 		pos		-= maxBits * i;
-		value	&= ToMask<value_t>( count );
+		value	&= ToMask<Value_t>( count );
 		
 		BitsU	max_count = maxBits - pos;
 
@@ -150,9 +159,9 @@ namespace CodeGen
 =================================================
 */
 	template <typename T, usize Size>
-	forceinline bool BigInteger<T,Size>::IsZero (BitsU pos) const
+	inline bool BigInteger<T,Size>::IsZero (BitsU afterPos) const
 	{
-		return pos >= _lastBit;
+		return afterPos >= _lastBit;
 	}
 	
 /*
@@ -161,23 +170,21 @@ namespace CodeGen
 =================================================
 */
 	template <typename T, usize Size>
-	forceinline void BigInteger<T,Size>::_Add (value_t val)
+	inline void BigInteger<T,Size>::_Add (Value_t val)
 	{
-		const value_t	maxVal	= MaxValue<value_t>();
-
 		if ( val == 0 )
 			return;
 
 		FOR( i, _value )
 		{
-			value_t	prev = _value[i];
+			Value_t	prev = _value[i];
 
 			_value[i] += val;
 
 			if ( _value[i] >= prev )
 			{
-				_lastBit = Max( _lastBit, _CalcBits( i ) );
-				return;
+				_lastBit = Clamp( _CalcBits( i ), _lastBit, MaxSize() );
+				break;
 			}
 	
 			val = 1;
@@ -186,13 +193,74 @@ namespace CodeGen
 	
 /*
 =================================================
+	operator +=
+=================================================
+*/
+	template <typename T, usize Size>
+	template <typename B, usize S>
+	inline BigInteger<T,Size>&  BigInteger<T,Size>::operator += (const BigInteger<B,S> &right)
+	{
+		FOR( j, right._value )
+		{
+			Value_t	val = right._value[j];
+
+			if ( val == 0 )
+				continue;
+
+			FORv( i, j, _value )
+			{
+				Value_t	prev = _value[i];
+
+				_value[i] += val;
+
+				if ( _value[i] >= prev )
+				{
+					_lastBit = Clamp( _CalcBits( i ), _lastBit, MaxSize() );
+					break;
+				}
+	
+				val = 1;
+			}
+		}
+		return *this;
+	}
+	
+/*
+=================================================
+	operator ==
+=================================================
+*/
+	template <typename T, usize Size>
+	inline bool BigInteger<T,Size>::operator == (const Self &right) const
+	{
+		if ( _lastBit != right._lastBit )
+			return false;
+
+		FOR( i, _value )
+		{
+			const BitsU		first_bit	= i * BitsU::SizeOf<Value_t>();
+			const BitsU		last_bit	= Min( _lastBit - first_bit, BitsU::SizeOf<Value_t>() );
+			const Value_t	mask		= ToMask<Value_t>( BitsU(0), last_bit );
+
+			if ( (_value[i] & mask) != (right._value[i] & mask) )
+				return false;
+
+			if ( last_bit < BitsU::SizeOf<Value_t>() )
+				break;
+		}
+
+		return true;
+	}
+
+/*
+=================================================
 	_CalcBits
 =================================================
 */
 	template <typename T, usize Size>
-	forceinline BitsU  BigInteger<T,Size>::_CalcBits (usize i) const
+	inline BitsU  BigInteger<T,Size>::_CalcBits (usize i) const
 	{
-		return BitScanReverse( _value[i] ) + 1 + (i * BitsU::SizeOf<value_t>());
+		return BitScanReverse( _value[i] ) + 1 + (i * BitsU::SizeOf<Value_t>());
 	}
 
 /*
@@ -204,7 +272,7 @@ namespace CodeGen
 	inline String  BigInteger<T,Size>::ToString () const
 	{
 		static const uint	radix	= 16;
-		static const uint	align	= CompileTime::SizeOf<value_t>::bits / CompileTime::IntLog2< uint, radix >;
+		static const uint	align	= CompileTime::SizeOf<Value_t>::bits / CompileTime::IntLog2< uint, radix >;
 
 		String	str;	str << "{ ";
 
@@ -223,7 +291,7 @@ namespace CodeGen
 */
 	template <typename T, usize Size>
 	template <typename B, usize S>
-	void BigInteger<T,Size>::Assign (const BigInteger<B,S> &other)
+	inline void BigInteger<T,Size>::Assign (const BigInteger<B,S> &other)
 	{
 		BitsU	pos;
 		BitsU	step	= Min( BitsU::SizeOf<T>(), BitsU::SizeOf<B>() );
@@ -237,6 +305,29 @@ namespace CodeGen
 			T	r = (T) other.Read( pos, step );
 
 			Write( r, pos, step );
+		}
+	}
+	
+/*
+=================================================
+	Fill
+=================================================
+*/
+	template <typename T, usize Size>
+	inline void BigInteger<T,Size>::Fill (BitsU count)
+	{
+		_lastBit = Clamp( count, _lastBit, MaxSize() );
+
+		FOR( i, _value )
+		{
+			const BitsU		first_bit	= i * BitsU::SizeOf<Value_t>();
+			const BitsU		last_bit	= Min( _lastBit - first_bit, BitsU::SizeOf<Value_t>() );
+			const Value_t	mask		= ToMask<Value_t>( BitsU(0), last_bit );
+
+			_value[i] |= mask;
+
+			if ( last_bit < BitsU::SizeOf<Value_t>() )
+				break;
 		}
 	}
 

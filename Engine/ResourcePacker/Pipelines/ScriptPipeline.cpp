@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/ResourcePacker/Pipelines/ScriptPipeline.h"
+#include "Engine/Script/Bindings/DefaultBindings.h"
 
 namespace ResPack
 {

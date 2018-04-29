@@ -42,37 +42,37 @@ if ( COMPILER_MSVC )
 	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:DebugAnalyze>: > )
 	set( CMAKE_C_FLAGS_DEBUGANALYZE "${CMAKE_C_FLAGS} /D_DEBUG /MDd /Od /MP " CACHE STRING "" FORCE )
 	set( CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} /D_DEBUG /MDd /Od /MP /Zi " CACHE STRING "" FORCE )
-	set( CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} /DEBUG:FULL /LTCG " CACHE STRING "" FORCE )
-	set( CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_SHARED_LINKER_FLAGS} /DEBUG:FULL /LTCG " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} /DEBUG:FULL " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_SHARED_LINKER_FLAGS} /DEBUG:FULL " CACHE STRING "" FORCE )
 	set( PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4293 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4554 /we4700 /we4706 /we4715 /we4716 /we4717 /we4800 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14701 /w14702 /w14703 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /guard:cf /GR /MDd /analyze /Zi /RTCsu CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUGANALYZE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL" CACHE INTERNAL "" FORCE )
 	# Debug
 	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>: > )
 	set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} /D_DEBUG /MDd /Od /MP " CACHE STRING "" FORCE )
 	set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} /D_DEBUG /MDd /Od /MP /Zi " CACHE STRING "" FORCE )
-	set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} /DEBUG:FULL /LTCG " CACHE STRING "" FORCE )
-	set( CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS} /DEBUG:FULL /LTCG " CACHE STRING "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} /DEBUG:FULL " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS} /DEBUG:FULL " CACHE STRING "" FORCE )
 	set( PROJECTS_SHARED_CXX_FLAGS_DEBUG  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4293 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4554 /we4700 /we4706 /we4715 /we4716 /we4717 /we4800 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14701 /w14702 /w14703 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /W4 /WX- /sdl /Od /Ob0 /EHsc /Oy- /GF- /GS /GR /MDd /analyze- /Zi /RTCsu CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL /LTCG" CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUG " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG:FULL" CACHE INTERNAL "" FORCE )
 	# Profile
 	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Profile>: > )
 	set( CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS} /D_NDEBUG /DNDEBUG  /MD /Od /MP " CACHE STRING "" FORCE )
 	set( CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} /D_NDEBUG /DNDEBUG  /MD /Od /MP " CACHE STRING "" FORCE )
-	set( CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} /LTCG /DEBUG /PROFILE " CACHE STRING "" FORCE )
-	set( CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_SHARED_LINKER_FLAGS} /LTCG /DEBUG /PROFILE " CACHE STRING "" FORCE )
-	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4293 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4554 /we4700 /we4706 /we4715 /we4716 /we4717 /we4800 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14701 /w14702 /w14703 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /GT /GL /GF /GS- /MD /W3 /Od /analyze- /EHsc /GR CACHE INTERNAL "" FORCE )
+	set( CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} /DEBUG /PROFILE " CACHE STRING "" FORCE )
+	set( CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_SHARED_LINKER_FLAGS} /DEBUG /PROFILE " CACHE STRING "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4293 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4554 /we4700 /we4706 /we4715 /we4716 /we4717 /we4800 /we4927  /w14018 /w14100 /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14701 /w14702 /w14703 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Oi /Ot /Oy /GT /GL /GF /GS- /MD /W3 /Od /analyze- /EHsc /GR CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_LINKER_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /DEBUG /PROFILE" CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_LINKER_FLAGS_PROFILE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /DEBUG /PROFILE" CACHE INTERNAL "" FORCE )
 	# Release
 	set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>: > )
 	set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} /D_NDEBUG /DNDEBUG  /MD /Ox /MP " CACHE STRING "" FORCE )
 	set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} /D_NDEBUG /DNDEBUG  /MD /Ox /MP " CACHE STRING "" FORCE )
 	set( CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /LTCG /RELEASE " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS} /LTCG /RELEASE " CACHE STRING "" FORCE )
-	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4293 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4554 /we4700 /we4706 /we4715 /we4716 /we4717 /we4800 /we4927  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14701 /w14702 /w14703 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Ob2 /Oi /Ot /Oy /GT /GL /GF /GS- /MD /W3 /Ox /analyze- /EHs-c- /GR- CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  /std:c++latest /MP /Gm- /Zc:inline /Gy- /fp:strict /fp:except- /we4002 /we4099 /we4129 /we4172 /we4201 /we4238 /we4239 /we4251 /we4263 /we4264 /we4266 /we4273 /we4293 /we4390 /we4456 /we4457 /we4458 /we4459 /we4473 /we4474 /we4480 /we4522 /we4552 /we4553 /we4554 /we4700 /we4706 /we4715 /we4716 /we4717 /we4800 /we4927  /w14018  /w14127 /w14189 /w14244 /w14245 /w14287 /w14389 /w14505 /w14668 /w14701 /w14702 /w14703 /w14838 /w14946 /w14996 /w15038  /wd4061 /wd4062 /wd4063 /wd4310 /wd4365 /wd4455 /wd4503 /wd4514 /wd4623 /wd4625 /wd4626 /wd4710 /wd4714 /wd5026 /wd5027  /Ob2 /Oi /Ot /Oy /GT /GL /GF /GS- /MD /W3 /Ox /analyze- /EHs-c- CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_RELEASE " /OPT:REF /OPT:ICF /INCREMENTAL:NO /LTCG /RELEASE /DYNAMICBASE" CACHE INTERNAL "" FORCE )
 	set( CMAKE_BUILD_TYPE "Debug")
 	#--------------------------------------------
@@ -132,7 +132,7 @@ if ( COMPILER_GCC )
 	set( CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_RELEASE " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
 	set( CMAKE_BUILD_TYPE "Debug")
 	#--------------------------------------------
@@ -192,7 +192,7 @@ if ( COMPILER_CLANG_APPLE )
 	set( CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wpointer-arith -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -frtti -fexceptions -Wloop-nalysis -Wincrement-bool -Werror=init-self -Werror=parentheses -Werror=return-stack-address -Werror=return-type -Werror=user-defined-literals -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=instantiation-after-specialization -Werror=cast-qual -Werror=unknown-warning-option -Werror=keyword-macro -Werror=large-by-value-copy -Werror=method-signatures -Werror=self-assign -Werror=self-move -Werror=infinite-recursion -Werror=pessimizing-move -Werror=dangling-else  -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-unused -Wno-c++14-extensions -Wno-c++1z-extensions  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_RELEASE "" CACHE INTERNAL "" FORCE )
 	set( CMAKE_BUILD_TYPE "Debug")
 	#--------------------------------------------
@@ -252,7 +252,7 @@ if ( COMPILER_CLANG_ANDROID )
 	set( CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wpointer-arith -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -frtti -fexceptions -Wloop-nalysis -Wincrement-bool -Werror=init-self -Werror=parentheses -Werror=return-stack-address -Werror=return-type -Werror=user-defined-literals -Werror=array-bounds -Werror=div-by-zero -Werror=address -Werror=missing-field-initializers -Werror=instantiation-after-specialization -Werror=cast-qual -Werror=unknown-warning-option -Werror=keyword-macro -Werror=large-by-value-copy -Werror=dangling-else -Werror=method-signatures -Werror=self-assign -Werror=self-move -Werror=infinite-recursion -Werror=pessimizing-move  -Wno-comment -Wno-undefined-inline -Wno-switch -Wno-c++11-narrowing -Wno-unused -Wno-c++14-extensions -Wno-c++1z-extensions  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE )
-	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_FAST__ __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_RELEASE " -static" CACHE INTERNAL "" FORCE )
 	set( CMAKE_BUILD_TYPE "Debug")
 	#--------------------------------------------
@@ -270,20 +270,6 @@ message( STATUS "Compiler name: ${DETECTED_COMPILER}" )
 message( STATUS "target system: ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_VERSION})" )
 message( STATUS "host system: ${CMAKE_HOST_SYSTEM_NAME} (${CMAKE_HOST_SYSTEM_VERSION})" )
 
-message( STATUS "adding external projects" )
-
-
-#==================================================================================================
-# External: External/cmake
-#==================================================================================================
-message( STATUS "-----------------------------------------------------" )
-message( STATUS "external project 'External/cmake' generation started" )
-add_subdirectory( "External/cmake" )
-
-message( STATUS "external project 'External/cmake' generation ended" )
-message( STATUS "-----------------------------------------------------" )
-
-
 #==================================================================================================
 # project: Engine.Config
 #==================================================================================================
@@ -299,9 +285,6 @@ target_include_directories( "Engine.Config" PRIVATE "Engine/Config" )
 target_include_directories( "Engine.Config" PUBLIC "External" )
 target_include_directories( "Engine.Config" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Engine.Config" PUBLIC "Engine/.." )
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.Config" PUBLIC "PLATFORM_SDL" )
-endif()
 # compiler
 set_target_properties( "Engine.Config" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Engine.Config" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -610,14 +593,8 @@ target_include_directories( "Engine.STL" PRIVATE "Engine/STL" )
 target_include_directories( "Engine.STL" PUBLIC "External" )
 target_include_directories( "Engine.STL" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Engine.STL" PUBLIC "Engine/.." )
-if (ENABLE_SDL)
-	target_link_libraries( "Engine.STL" "SDL2" )
-endif()
 if (UNIX)
 	target_link_libraries( "Engine.STL" "dl;pthread" )
-endif()
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.STL" PUBLIC "PLATFORM_SDL" )
 endif()
 # compiler
 set_target_properties( "Engine.STL" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
@@ -700,9 +677,6 @@ target_include_directories( "Tests.STL" PUBLIC "External" )
 target_include_directories( "Tests.STL" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Tests.STL" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.STL" "Engine.STL" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Tests.STL" PUBLIC "PLATFORM_SDL" )
-endif()
 # compiler
 set_target_properties( "Tests.STL" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.STL" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -752,9 +726,6 @@ target_include_directories( "Engine.Physics" PUBLIC "External" )
 target_include_directories( "Engine.Physics" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Engine.Physics" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.Physics" "Engine.STL" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.Physics" PUBLIC "PLATFORM_SDL" )
-endif()
 # compiler
 set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Engine.Physics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -791,9 +762,6 @@ target_include_directories( "Tests.Physics" PUBLIC "External" )
 target_include_directories( "Tests.Physics" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Tests.Physics" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Physics" "Engine.Physics" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Tests.Physics" PUBLIC "PLATFORM_SDL" )
-endif()
 # compiler
 set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.Physics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -873,9 +841,6 @@ target_include_directories( "Engine.Base" PUBLIC "External" )
 target_include_directories( "Engine.Base" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Engine.Base" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.Base" "Engine.STL" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.Base" PUBLIC "PLATFORM_SDL" )
-endif()
 # compiler
 set_target_properties( "Engine.Base" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Engine.Base" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1164,9 +1129,6 @@ endif()
 if (DEFINED OPENGLES_VERSION AND NOT (OPENGLES_VERSION EQUAL "0"))
 	target_compile_definitions( "Engine.Platforms" PUBLIC "GRAPHICS_API_OPENGLES=${OPENGLES_VERSION}" )
 endif()
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.Platforms" PUBLIC "PLATFORM_SDL" )
-endif()
 if (DEFINED VULKAN_VERSION AND NOT (VULKAN_VERSION EQUAL "0"))
 	target_compile_definitions( "Engine.Platforms" PUBLIC "GRAPHICS_API_VULKAN=${VULKAN_VERSION}" )
 endif()
@@ -1230,9 +1192,6 @@ target_include_directories( "Engine.Graphics" PUBLIC "External" )
 target_include_directories( "Engine.Graphics" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Engine.Graphics" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.Graphics" "Engine.Platforms" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.Graphics" PUBLIC "PLATFORM_SDL" )
-endif()
 # compiler
 set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Engine.Graphics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1270,9 +1229,6 @@ target_include_directories( "Engine.Profilers" PUBLIC "External" )
 target_include_directories( "Engine.Profilers" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Engine.Profilers" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.Profilers" "Engine.Platforms" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.Profilers" PUBLIC "PLATFORM_SDL" )
-endif()
 # compiler
 set_target_properties( "Engine.Profilers" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Engine.Profilers" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1330,9 +1286,6 @@ target_include_directories( "Engine.Scene" PUBLIC "External" )
 target_include_directories( "Engine.Scene" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Engine.Scene" PUBLIC "Engine/.." )
 target_link_libraries( "Engine.Scene" "Engine.Graphics" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.Scene" PUBLIC "PLATFORM_SDL" )
-endif()
 # compiler
 set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1347,287 +1300,6 @@ set_target_properties( "Engine.Scene" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHA
 target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
 target_compile_options( "Engine.Scene" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
 
-
-
-#==================================================================================================
-# project: Engine.PipelineCompiler
-#==================================================================================================
-set( SOURCES 
-		"Engine/PipelineCompiler/Serializers/AngelScriptSerializer.cpp"
-		"Engine/PipelineCompiler/Serializers/AngelScriptSerializer.h"
-		"Engine/PipelineCompiler/Serializers/CppSerializer.cpp"
-		"Engine/PipelineCompiler/Serializers/CppSerializer.h"
-		"Engine/PipelineCompiler/Serializers/ISerializer.h"
-		"Engine/PipelineCompiler/Common/Common.h"
-		"Engine/PipelineCompiler/Common/Packing.h"
-		"Engine/PipelineCompiler/Common/ShaderEnums.h"
-		"Engine/PipelineCompiler/Common/ToGLSL.h"
-		"Engine/PipelineCompiler/Pipelines/BasePipeline.cpp"
-		"Engine/PipelineCompiler/Pipelines/BasePipeline.h"
-		"Engine/PipelineCompiler/Pipelines/BasePipeline_Pass1.cpp"
-		"Engine/PipelineCompiler/Pipelines/BasePipeline_Pass2.cpp"
-		"Engine/PipelineCompiler/Pipelines/ComputePipeline.cpp"
-		"Engine/PipelineCompiler/Pipelines/ComputePipeline.h"
-		"Engine/PipelineCompiler/Pipelines/GraphicsPipeline.cpp"
-		"Engine/PipelineCompiler/Pipelines/GraphicsPipeline.h"
-		"Engine/PipelineCompiler/Pipelines/PipelineManager.cpp"
-		"Engine/PipelineCompiler/Pipelines/PipelineManager.h"
-		"Engine/PipelineCompiler/Shaders/DeserializedShader.cpp"
-		"Engine/PipelineCompiler/Shaders/DeserializedShader.h"
-		"Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_CLCompiler.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_CLTranslator.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_CPPTranslator.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_GLCompiler.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_GLParser.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_GXTranslator.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_HLSLCompiler.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_HLSLTranslator.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_ReplaceTypes.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.cpp"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.h"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h"
-		"Engine/PipelineCompiler/Shaders/ShaderCompiler_VkCompiler.cpp"
-		"Engine/PipelineCompiler/cl/cl_source_vfs.cpp"
-		"Engine/PipelineCompiler/cl/cl_source_vfs.h"
-		"Engine/PipelineCompiler/cl/funcs.cpp"
-		"Engine/PipelineCompiler/cl/matrix.cpp"
-		"Engine/PipelineCompiler/glsl/AABBox.cpp"
-		"Engine/PipelineCompiler/glsl/Billow.cpp"
-		"Engine/PipelineCompiler/glsl/BitMath.cpp"
-		"Engine/PipelineCompiler/glsl/Blur.cpp"
-		"Engine/PipelineCompiler/glsl/Cellular.cpp"
-		"Engine/PipelineCompiler/glsl/Cmp.cpp"
-		"Engine/PipelineCompiler/glsl/Color.cpp"
-		"Engine/PipelineCompiler/glsl/Colors.cpp"
-		"Engine/PipelineCompiler/glsl/DefaultSDF.cpp"
-		"Engine/PipelineCompiler/glsl/Defines.cpp"
-		"Engine/PipelineCompiler/glsl/DHash.cpp"
-		"Engine/PipelineCompiler/glsl/Emitters.cpp"
-		"Engine/PipelineCompiler/glsl/FBM.cpp"
-		"Engine/PipelineCompiler/glsl/Gabor.cpp"
-		"Engine/PipelineCompiler/glsl/GlobalIndex.cpp"
-		"Engine/PipelineCompiler/glsl/glsl_source_vfs.cpp"
-		"Engine/PipelineCompiler/glsl/glsl_source_vfs.h"
-		"Engine/PipelineCompiler/glsl/Gravity.cpp"
-		"Engine/PipelineCompiler/glsl/Hash.cpp"
-		"Engine/PipelineCompiler/glsl/Hash2.cpp"
-		"Engine/PipelineCompiler/glsl/IHash.cpp"
-		"Engine/PipelineCompiler/glsl/Line2.cpp"
-		"Engine/PipelineCompiler/glsl/Line3.cpp"
-		"Engine/PipelineCompiler/glsl/Magnetism.cpp"
-		"Engine/PipelineCompiler/glsl/Math.cpp"
-		"Engine/PipelineCompiler/glsl/MathDef.cpp"
-		"Engine/PipelineCompiler/glsl/Matrix.cpp"
-		"Engine/PipelineCompiler/glsl/Perlin.cpp"
-		"Engine/PipelineCompiler/glsl/Plane.cpp"
-		"Engine/PipelineCompiler/glsl/Quaternion.cpp"
-		"Engine/PipelineCompiler/glsl/Ray.cpp"
-		"Engine/PipelineCompiler/glsl/Rect.cpp"
-		"Engine/PipelineCompiler/glsl/Simplex.cpp"
-		"Engine/PipelineCompiler/glsl/Turbulence.cpp"
-		"Engine/PipelineCompiler/glsl/TypeInfo.cpp"
-		"Engine/PipelineCompiler/glsl/Utils.cpp"
-		"Engine/PipelineCompiler/glsl/Voronoi.cpp"
-		"Engine/PipelineCompiler/glsl/VoronoiLines.cpp"
-		"Engine/PipelineCompiler/glsl/VoronoiNoise.cpp"
-		"Engine/PipelineCompiler/glsl/_NoiseUtils.cpp" )
-add_library( "Engine.PipelineCompiler" STATIC ${SOURCES} )
-source_group( "Serializers" FILES "Engine/PipelineCompiler/Serializers/AngelScriptSerializer.cpp" "Engine/PipelineCompiler/Serializers/AngelScriptSerializer.h" "Engine/PipelineCompiler/Serializers/CppSerializer.cpp" "Engine/PipelineCompiler/Serializers/CppSerializer.h" "Engine/PipelineCompiler/Serializers/ISerializer.h" )
-source_group( "Common" FILES "Engine/PipelineCompiler/Common/Common.h" "Engine/PipelineCompiler/Common/Packing.h" "Engine/PipelineCompiler/Common/ShaderEnums.h" "Engine/PipelineCompiler/Common/ToGLSL.h" )
-source_group( "Pipelines" FILES "Engine/PipelineCompiler/Pipelines/BasePipeline.cpp" "Engine/PipelineCompiler/Pipelines/BasePipeline.h" "Engine/PipelineCompiler/Pipelines/BasePipeline_Pass1.cpp" "Engine/PipelineCompiler/Pipelines/BasePipeline_Pass2.cpp" "Engine/PipelineCompiler/Pipelines/ComputePipeline.cpp" "Engine/PipelineCompiler/Pipelines/ComputePipeline.h" "Engine/PipelineCompiler/Pipelines/GraphicsPipeline.cpp" "Engine/PipelineCompiler/Pipelines/GraphicsPipeline.h" "Engine/PipelineCompiler/Pipelines/PipelineManager.cpp" "Engine/PipelineCompiler/Pipelines/PipelineManager.h" )
-source_group( "Shaders" FILES "Engine/PipelineCompiler/Shaders/DeserializedShader.cpp" "Engine/PipelineCompiler/Shaders/DeserializedShader.h" "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler_CLCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_CLTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_CPPTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_GLCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_GLParser.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_GXTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_HLSLCompiler.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_HLSLTranslator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_ReplaceTypes.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.cpp" "Engine/PipelineCompiler/Shaders/ShaderCompiler_Translator.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h" "Engine/PipelineCompiler/Shaders/ShaderCompiler_VkCompiler.cpp" )
-source_group( "cl" FILES "Engine/PipelineCompiler/cl/cl_source_vfs.cpp" "Engine/PipelineCompiler/cl/cl_source_vfs.h" "Engine/PipelineCompiler/cl/funcs.cpp" "Engine/PipelineCompiler/cl/matrix.cpp" )
-source_group( "glsl" FILES "Engine/PipelineCompiler/glsl/AABBox.cpp" "Engine/PipelineCompiler/glsl/Billow.cpp" "Engine/PipelineCompiler/glsl/BitMath.cpp" "Engine/PipelineCompiler/glsl/Blur.cpp" "Engine/PipelineCompiler/glsl/Cellular.cpp" "Engine/PipelineCompiler/glsl/Cmp.cpp" "Engine/PipelineCompiler/glsl/Color.cpp" "Engine/PipelineCompiler/glsl/Colors.cpp" "Engine/PipelineCompiler/glsl/DefaultSDF.cpp" "Engine/PipelineCompiler/glsl/Defines.cpp" "Engine/PipelineCompiler/glsl/DHash.cpp" "Engine/PipelineCompiler/glsl/Emitters.cpp" "Engine/PipelineCompiler/glsl/FBM.cpp" "Engine/PipelineCompiler/glsl/Gabor.cpp" "Engine/PipelineCompiler/glsl/GlobalIndex.cpp" "Engine/PipelineCompiler/glsl/glsl_source_vfs.cpp" "Engine/PipelineCompiler/glsl/glsl_source_vfs.h" "Engine/PipelineCompiler/glsl/Gravity.cpp" "Engine/PipelineCompiler/glsl/Hash.cpp" "Engine/PipelineCompiler/glsl/Hash2.cpp" "Engine/PipelineCompiler/glsl/IHash.cpp" "Engine/PipelineCompiler/glsl/Line2.cpp" "Engine/PipelineCompiler/glsl/Line3.cpp" "Engine/PipelineCompiler/glsl/Magnetism.cpp" "Engine/PipelineCompiler/glsl/Math.cpp" "Engine/PipelineCompiler/glsl/MathDef.cpp" "Engine/PipelineCompiler/glsl/Matrix.cpp" "Engine/PipelineCompiler/glsl/Perlin.cpp" "Engine/PipelineCompiler/glsl/Plane.cpp" "Engine/PipelineCompiler/glsl/Quaternion.cpp" "Engine/PipelineCompiler/glsl/Ray.cpp" "Engine/PipelineCompiler/glsl/Rect.cpp" "Engine/PipelineCompiler/glsl/Simplex.cpp" "Engine/PipelineCompiler/glsl/Turbulence.cpp" "Engine/PipelineCompiler/glsl/TypeInfo.cpp" "Engine/PipelineCompiler/glsl/Utils.cpp" "Engine/PipelineCompiler/glsl/Voronoi.cpp" "Engine/PipelineCompiler/glsl/VoronoiLines.cpp" "Engine/PipelineCompiler/glsl/VoronoiNoise.cpp" "Engine/PipelineCompiler/glsl/_NoiseUtils.cpp" )
-set_property( TARGET "Engine.PipelineCompiler" PROPERTY FOLDER "EngineTools" )
-target_include_directories( "Engine.PipelineCompiler" PRIVATE "Engine/PipelineCompiler" )
-target_include_directories( "Engine.PipelineCompiler" PUBLIC "External" )
-target_include_directories( "Engine.PipelineCompiler" PUBLIC "${EXTERNALS_PATH}" )
-target_include_directories( "Engine.PipelineCompiler" PUBLIC "Engine/.." )
-target_include_directories( "Engine.PipelineCompiler" PRIVATE "${EXTERNALS_PATH}/LunarGLASS" )
-target_include_directories( "Engine.PipelineCompiler" PRIVATE "${EXTERNALS_PATH}/LunarGLASS/.." )
-target_include_directories( "Engine.PipelineCompiler" PRIVATE "${CMAKE_BINARY_DIR}/LunarGLASS_bin/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." )
-target_include_directories( "Engine.PipelineCompiler" PRIVATE "${EXTERNALS_PATH}/LunarGLASS/glslang/.." )
-target_include_directories( "Engine.PipelineCompiler" PRIVATE "${EXTERNALS_PATH}/LunarGLASS/glslang" )
-target_include_directories( "Engine.PipelineCompiler" PRIVATE "${EXTERNALS_PATH}/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." )
-if (ENABLE_LUNARGLASS)
-	target_link_libraries( "Engine.PipelineCompiler" "LunarGLASS" )
-endif()
-target_link_libraries( "Engine.PipelineCompiler" "Engine.Platforms" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.PipelineCompiler" PUBLIC "PLATFORM_SDL" )
-endif()
-# compiler
-set_target_properties( "Engine.PipelineCompiler" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
-set_target_properties( "Engine.PipelineCompiler" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
-target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
-set_target_properties( "Engine.PipelineCompiler" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKER_FLAGS_DEBUGANALYZE} )
-target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
-target_compile_options( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
-target_compile_options( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
-target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
-target_compile_definitions( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
-set_target_properties( "Engine.PipelineCompiler" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKER_FLAGS_DEBUG} )
-target_compile_options( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
-target_compile_options( "Engine.PipelineCompiler" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
-
-
-
-#==================================================================================================
-# project: Engine.Scipt
-#==================================================================================================
-set( SOURCES 
-		"Engine/Script/Impl/ClassBinder.h"
-		"Engine/Script/Impl/EnumBinder.h"
-		"Engine/Script/Impl/ScriptBinder.cpp"
-		"Engine/Script/Impl/ScriptEngine.cpp"
-		"Engine/Script/Impl/ScriptEngine.h"
-		"Engine/Script/Impl/ScriptEngine.inl.h"
-		"Engine/Script/Impl/ScriptModule.cpp"
-		"Engine/Script/Impl/ScriptModule.h"
-		"Engine/Script/Impl/ScriptTypes.h"
-		"Engine/Script/Bindings/BindScalarMath.cpp"
-		"Engine/Script/Bindings/BindString.cpp"
-		"Engine/Script/Bindings/BindVectorMath.cpp"
-		"Engine/Script/Bindings/DefaultBindings.h"
-		"Engine/Script/Engine.Script.h" )
-add_library( "Engine.Scipt" STATIC ${SOURCES} )
-source_group( "Impl" FILES "Engine/Script/Impl/ClassBinder.h" "Engine/Script/Impl/EnumBinder.h" "Engine/Script/Impl/ScriptBinder.cpp" "Engine/Script/Impl/ScriptEngine.cpp" "Engine/Script/Impl/ScriptEngine.h" "Engine/Script/Impl/ScriptEngine.inl.h" "Engine/Script/Impl/ScriptModule.cpp" "Engine/Script/Impl/ScriptModule.h" "Engine/Script/Impl/ScriptTypes.h" )
-source_group( "Bindings" FILES "Engine/Script/Bindings/BindScalarMath.cpp" "Engine/Script/Bindings/BindString.cpp" "Engine/Script/Bindings/BindVectorMath.cpp" "Engine/Script/Bindings/DefaultBindings.h" )
-source_group( "" FILES "Engine/Script/Engine.Script.h" )
-set_property( TARGET "Engine.Scipt" PROPERTY FOLDER "Engine" )
-target_include_directories( "Engine.Scipt" PRIVATE "Engine/Script" )
-target_include_directories( "Engine.Scipt" PUBLIC "External" )
-target_include_directories( "Engine.Scipt" PUBLIC "${EXTERNALS_PATH}" )
-target_include_directories( "Engine.Scipt" PUBLIC "Engine/.." )
-target_link_libraries( "Engine.Scipt" "Engine.STL" )
-target_link_libraries( "Engine.Scipt" "AngelScript" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.Scipt" PUBLIC "PLATFORM_SDL" )
-endif()
-# compiler
-set_target_properties( "Engine.Scipt" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
-set_target_properties( "Engine.Scipt" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
-target_compile_definitions( "Engine.Scipt" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
-set_target_properties( "Engine.Scipt" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKER_FLAGS_DEBUGANALYZE} )
-target_compile_definitions( "Engine.Scipt" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
-target_compile_options( "Engine.Scipt" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
-target_compile_options( "Engine.Scipt" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
-target_compile_definitions( "Engine.Scipt" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
-target_compile_definitions( "Engine.Scipt" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
-set_target_properties( "Engine.Scipt" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKER_FLAGS_DEBUG} )
-target_compile_options( "Engine.Scipt" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
-target_compile_options( "Engine.Scipt" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
-
-
-
-#==================================================================================================
-# project: Tests.Scipt
-#==================================================================================================
-set( SOURCES 
-		"Tests/Script/Common.h"
-		"Tests/Script/Main.cpp"
-		"Tests/Script/Test_Eval.cpp"
-		"Tests/Script/Test_ScriptClass.cpp"
-		"Tests/Script/Test_ScriptScalarMath.cpp"
-		"Tests/Script/Test_ScriptString.cpp"
-		"Tests/Script/Test_ScriptVectorMath.cpp" )
-if (DEFINED ANDROID)
-	add_library( "Tests.Scipt" SHARED ${SOURCES} )
-else()
-	add_executable( "Tests.Scipt" ${SOURCES} )
-endif()
-source_group( "" FILES "Tests/Script/Common.h" "Tests/Script/Main.cpp" "Tests/Script/Test_Eval.cpp" "Tests/Script/Test_ScriptClass.cpp" "Tests/Script/Test_ScriptScalarMath.cpp" "Tests/Script/Test_ScriptString.cpp" "Tests/Script/Test_ScriptVectorMath.cpp" )
-set_property( TARGET "Tests.Scipt" PROPERTY FOLDER "Tests" )
-target_include_directories( "Tests.Scipt" PRIVATE "Tests/Script" )
-target_include_directories( "Tests.Scipt" PUBLIC "External" )
-target_include_directories( "Tests.Scipt" PUBLIC "${EXTERNALS_PATH}" )
-target_include_directories( "Tests.Scipt" PUBLIC "Engine/.." )
-target_link_libraries( "Tests.Scipt" "Engine.Scipt" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Tests.Scipt" PUBLIC "PLATFORM_SDL" )
-endif()
-# compiler
-set_target_properties( "Tests.Scipt" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
-set_target_properties( "Tests.Scipt" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
-target_compile_definitions( "Tests.Scipt" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
-set_target_properties( "Tests.Scipt" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKER_FLAGS_DEBUGANALYZE} )
-target_compile_definitions( "Tests.Scipt" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
-target_compile_options( "Tests.Scipt" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
-target_compile_options( "Tests.Scipt" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
-target_compile_definitions( "Tests.Scipt" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
-target_compile_definitions( "Tests.Scipt" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
-set_target_properties( "Tests.Scipt" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKER_FLAGS_DEBUG} )
-target_compile_options( "Tests.Scipt" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
-target_compile_options( "Tests.Scipt" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
-
-
-
-#==================================================================================================
-# project: Engine.ResourcePacker
-#==================================================================================================
-set( SOURCES 
-		"Engine/ResourcePacker/FilePacker/BinaryFilePacker.cpp"
-		"Engine/ResourcePacker/FilePacker/BinaryFilePacker.h"
-		"Engine/ResourcePacker/FilePacker/IFilePacker.h"
-		"Engine/ResourcePacker/FilePacker/TextFilePacker.cpp"
-		"Engine/ResourcePacker/FilePacker/TextFilePacker.h"
-		"Engine/ResourcePacker/Pipelines/PipelineConverter.cpp"
-		"Engine/ResourcePacker/Pipelines/PipelineConverter.h"
-		"Engine/ResourcePacker/Pipelines/ScriptComputePipeline.cpp"
-		"Engine/ResourcePacker/Pipelines/ScriptComputePipeline.h"
-		"Engine/ResourcePacker/Pipelines/ScriptGraphicsPipeline.cpp"
-		"Engine/ResourcePacker/Pipelines/ScriptGraphicsPipeline.h"
-		"Engine/ResourcePacker/Pipelines/ScriptPipeline.cpp"
-		"Engine/ResourcePacker/Pipelines/ScriptPipeline.h"
-		"Engine/ResourcePacker/Main.cpp"
-		"Engine/ResourcePacker/Packer/Common.h"
-		"Engine/ResourcePacker/Packer/ResourcePacker.cpp"
-		"Engine/ResourcePacker/Packer/ResourcePacker.h"
-		"Engine/ResourcePacker/Packer/ScriptHelper.cpp" )
-if (DEFINED ANDROID)
-	add_library( "Engine.ResourcePacker" SHARED ${SOURCES} )
-else()
-	add_executable( "Engine.ResourcePacker" ${SOURCES} )
-endif()
-source_group( "FilePacker" FILES "Engine/ResourcePacker/FilePacker/BinaryFilePacker.cpp" "Engine/ResourcePacker/FilePacker/BinaryFilePacker.h" "Engine/ResourcePacker/FilePacker/IFilePacker.h" "Engine/ResourcePacker/FilePacker/TextFilePacker.cpp" "Engine/ResourcePacker/FilePacker/TextFilePacker.h" )
-source_group( "Pipelines" FILES "Engine/ResourcePacker/Pipelines/PipelineConverter.cpp" "Engine/ResourcePacker/Pipelines/PipelineConverter.h" "Engine/ResourcePacker/Pipelines/ScriptComputePipeline.cpp" "Engine/ResourcePacker/Pipelines/ScriptComputePipeline.h" "Engine/ResourcePacker/Pipelines/ScriptGraphicsPipeline.cpp" "Engine/ResourcePacker/Pipelines/ScriptGraphicsPipeline.h" "Engine/ResourcePacker/Pipelines/ScriptPipeline.cpp" "Engine/ResourcePacker/Pipelines/ScriptPipeline.h" )
-source_group( "" FILES "Engine/ResourcePacker/Main.cpp" )
-source_group( "Packer" FILES "Engine/ResourcePacker/Packer/Common.h" "Engine/ResourcePacker/Packer/ResourcePacker.cpp" "Engine/ResourcePacker/Packer/ResourcePacker.h" "Engine/ResourcePacker/Packer/ScriptHelper.cpp" )
-set_property( TARGET "Engine.ResourcePacker" PROPERTY FOLDER "EngineTools" )
-target_include_directories( "Engine.ResourcePacker" PRIVATE "Engine/ResourcePacker" )
-target_include_directories( "Engine.ResourcePacker" PUBLIC "External" )
-target_include_directories( "Engine.ResourcePacker" PUBLIC "${EXTERNALS_PATH}" )
-target_include_directories( "Engine.ResourcePacker" PUBLIC "Engine/.." )
-target_link_libraries( "Engine.ResourcePacker" "Engine.Scipt" )
-target_link_libraries( "Engine.ResourcePacker" "Engine.PipelineCompiler" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Engine.ResourcePacker" PUBLIC "PLATFORM_SDL" )
-endif()
-# compiler
-set_target_properties( "Engine.ResourcePacker" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
-set_target_properties( "Engine.ResourcePacker" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
-target_compile_definitions( "Engine.ResourcePacker" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_DEFINES_DEBUG}> )
-set_target_properties( "Engine.ResourcePacker" PROPERTIES LINK_FLAGS_DEBUGANALYZE ${PROJECTS_SHARED_LINKER_FLAGS_DEBUGANALYZE} )
-target_compile_definitions( "Engine.ResourcePacker" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_DEFINES_DEBUGANALYZE}> )
-target_compile_options( "Engine.ResourcePacker" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_CXX_FLAGS_PROFILE}> )
-target_compile_options( "Engine.ResourcePacker" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_CXX_FLAGS_RELEASE}> )
-target_compile_definitions( "Engine.ResourcePacker" PRIVATE $<$<CONFIG:Profile>: ${PROJECTS_SHARED_DEFINES_PROFILE}> )
-target_compile_definitions( "Engine.ResourcePacker" PRIVATE $<$<CONFIG:Release>: ${PROJECTS_SHARED_DEFINES_RELEASE}> )
-set_target_properties( "Engine.ResourcePacker" PROPERTIES LINK_FLAGS_DEBUG ${PROJECTS_SHARED_LINKER_FLAGS_DEBUG} )
-target_compile_options( "Engine.ResourcePacker" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
-target_compile_options( "Engine.ResourcePacker" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
-
-#-----------------------------------
-if ( CONFIGURATION_DEPENDENT_PATH )
-	set( RESOURCE_PACKER_EXE "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/Engine.ResourcePacker${CMAKE_EXECUTABLE_SUFFIX}" )
-else ()
-	set( RESOURCE_PACKER_EXE "${CMAKE_CURRENT_BINARY_DIR}/Engine.ResourcePacker${CMAKE_EXECUTABLE_SUFFIX}" )
-endif ()
-
-#-----------------------------------
 
 
 #==================================================================================================
@@ -1669,10 +1341,6 @@ target_include_directories( "Tests.Engine.Base" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Tests.Engine.Base" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Engine.Base" "Engine.Profilers" )
 target_link_libraries( "Tests.Engine.Base" "Engine.Platforms" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Tests.Engine.Base" PUBLIC "PLATFORM_SDL" )
-endif()
-add_dependencies( "Tests.Engine.Base" "Deps_Tests.Engine.Base" )
 # compiler
 set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1687,20 +1355,6 @@ set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_DEBUG ${PROJECT
 target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
 target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
 
-#-----------------------------------
-if (NOT DEFINED RESOURCE_PACKER_EXE)
-	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
-endif ()
-add_custom_target( "Deps_Tests.Engine.Base"
-	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Base/Pipelines/resources.as"
-	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Tests/Engine.Base/Pipelines/resources.as"
-	COMMENT "Pack resources for 'Tests.Engine.Base'..."
-	VERBATIM
-)
-add_dependencies( "Deps_Tests.Engine.Base" "Engine.ResourcePacker" )
-set_property( TARGET "Deps_Tests.Engine.Base" PROPERTY FOLDER "_deps_" )
-
-#-----------------------------------
 
 
 #==================================================================================================
@@ -1729,10 +1383,6 @@ target_include_directories( "Tests.Engine.Graphics" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Tests.Engine.Graphics" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Engine.Graphics" "Engine.Profilers" )
 target_link_libraries( "Tests.Engine.Graphics" "Engine.Graphics" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Tests.Engine.Graphics" PUBLIC "PLATFORM_SDL" )
-endif()
-add_dependencies( "Tests.Engine.Graphics" "Deps_Tests.Engine.Graphics" )
 # compiler
 set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1747,20 +1397,6 @@ set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUG ${PRO
 target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
 target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
 
-#-----------------------------------
-if (NOT DEFINED RESOURCE_PACKER_EXE)
-	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
-endif ()
-add_custom_target( "Deps_Tests.Engine.Graphics"
-	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Graphics/Pipelines/resources.as"
-	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Tests/Engine.Graphics/Pipelines/resources.as"
-	COMMENT "Pack resources for 'Tests.Engine.Graphics'..."
-	VERBATIM
-)
-add_dependencies( "Deps_Tests.Engine.Graphics" "Engine.ResourcePacker" )
-set_property( TARGET "Deps_Tests.Engine.Graphics" PROPERTY FOLDER "_deps_" )
-
-#-----------------------------------
 
 
 #==================================================================================================
@@ -1824,10 +1460,6 @@ target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "External" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Engine.Platforms.GAPI" "Engine.Platforms" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Tests.Engine.Platforms.GAPI" PUBLIC "PLATFORM_SDL" )
-endif()
-add_dependencies( "Tests.Engine.Platforms.GAPI" "Deps_Tests.Engine.Platforms.GAPI" )
 # compiler
 set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1842,20 +1474,6 @@ set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_DEBUG
 target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
 target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
 
-#-----------------------------------
-if (NOT DEFINED RESOURCE_PACKER_EXE)
-	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
-endif ()
-add_custom_target( "Deps_Tests.Engine.Platforms.GAPI"
-	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Platforms.GAPI/resources.as"
-	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Tests/Engine.Platforms.GAPI/resources.as"
-	COMMENT "Pack resources for 'Tests.Engine.Platforms.GAPI'..."
-	VERBATIM
-)
-add_dependencies( "Deps_Tests.Engine.Platforms.GAPI" "Engine.ResourcePacker" )
-set_property( TARGET "Deps_Tests.Engine.Platforms.GAPI" PROPERTY FOLDER "_deps_" )
-
-#-----------------------------------
 
 
 #==================================================================================================
@@ -1866,19 +1484,30 @@ set( SOURCES
 		"Projects/CodeGen/Generators/Bruteforce/BruteforceGenerator.cpp"
 		"Projects/CodeGen/Generators/Bruteforce/BruteforceGenerator.h"
 		"Projects/CodeGen/Generators/Bruteforce/BruteforceGenerator_Compiler.cpp"
+		"Projects/CodeGen/Tests/all_pipelines.h"
+		"Projects/CodeGen/Tests/biginttest.cpp"
+		"Projects/CodeGen/Tests/BigIntTest.ppln"
+		"Projects/CodeGen/Tests/resources.as"
+		"Projects/CodeGen/Tests/shared_types.h"
 		"Projects/CodeGen/Tests/test1.as"
 		"Projects/CodeGen/Tests/test2.as"
 		"Projects/CodeGen/Tests/test3.as"
+		"Projects/CodeGen/Tests/test4.as"
+		"Projects/CodeGen/Tests/Test_BigInt.cpp"
+		"Projects/CodeGen/Tests/Test_BigInteger.cpp"
+		"Projects/CodeGen/Tests/Test_Bruteforce.cpp"
 		"Projects/CodeGen/CodeGenApp.cpp"
 		"Projects/CodeGen/CodeGenApp.h"
 		"Projects/CodeGen/CodeGenApp_Script.cpp"
 		"Projects/CodeGen/Common.h"
 		"Projects/CodeGen/README.md"
 		"Projects/CodeGen/Generators/BigInt.glsl"
-		"Projects/CodeGen/Generators/BigInteger.h"
+		"Projects/CodeGen/Generators/biginteger.h"
 		"Projects/CodeGen/Generators/Commands.cpp"
 		"Projects/CodeGen/Generators/Commands.h"
 		"Projects/CodeGen/Generators/Constants.cpp"
+		"Projects/CodeGen/Generators/GenFunctionSerializer.cpp"
+		"Projects/CodeGen/Generators/GenFunctionSerializer.h"
 		"Projects/CodeGen/Generators/IGenerator.h"
 		"Projects/CodeGen/Generators/ResultSearch.cpp"
 		"Projects/CodeGen/Generators/ResultSearch.h"
@@ -1890,20 +1519,15 @@ else()
 	add_executable( "Projects.CodeGen" ${SOURCES} )
 endif()
 source_group( "Generators\\Bruteforce" FILES "Projects/CodeGen/Generators/Bruteforce/Bruteforce.glsl" "Projects/CodeGen/Generators/Bruteforce/BruteforceGenerator.cpp" "Projects/CodeGen/Generators/Bruteforce/BruteforceGenerator.h" "Projects/CodeGen/Generators/Bruteforce/BruteforceGenerator_Compiler.cpp" )
-source_group( "Tests" FILES "Projects/CodeGen/Tests/test1.as" "Projects/CodeGen/Tests/test2.as" "Projects/CodeGen/Tests/test3.as" )
+source_group( "Tests" FILES "Projects/CodeGen/Tests/all_pipelines.h" "Projects/CodeGen/Tests/biginttest.cpp" "Projects/CodeGen/Tests/BigIntTest.ppln" "Projects/CodeGen/Tests/resources.as" "Projects/CodeGen/Tests/shared_types.h" "Projects/CodeGen/Tests/test1.as" "Projects/CodeGen/Tests/test2.as" "Projects/CodeGen/Tests/test3.as" "Projects/CodeGen/Tests/test4.as" "Projects/CodeGen/Tests/Test_BigInt.cpp" "Projects/CodeGen/Tests/Test_BigInteger.cpp" "Projects/CodeGen/Tests/Test_Bruteforce.cpp" )
 source_group( "" FILES "Projects/CodeGen/CodeGenApp.cpp" "Projects/CodeGen/CodeGenApp.h" "Projects/CodeGen/CodeGenApp_Script.cpp" "Projects/CodeGen/Common.h" "Projects/CodeGen/README.md" )
-source_group( "Generators" FILES "Projects/CodeGen/Generators/BigInt.glsl" "Projects/CodeGen/Generators/BigInteger.h" "Projects/CodeGen/Generators/Commands.cpp" "Projects/CodeGen/Generators/Commands.h" "Projects/CodeGen/Generators/Constants.cpp" "Projects/CodeGen/Generators/IGenerator.h" "Projects/CodeGen/Generators/ResultSearch.cpp" "Projects/CodeGen/Generators/ResultSearch.h" "Projects/CodeGen/Generators/Scalar.h" "Projects/CodeGen/Generators/TestCase.h" )
+source_group( "Generators" FILES "Projects/CodeGen/Generators/BigInt.glsl" "Projects/CodeGen/Generators/biginteger.h" "Projects/CodeGen/Generators/Commands.cpp" "Projects/CodeGen/Generators/Commands.h" "Projects/CodeGen/Generators/Constants.cpp" "Projects/CodeGen/Generators/GenFunctionSerializer.cpp" "Projects/CodeGen/Generators/GenFunctionSerializer.h" "Projects/CodeGen/Generators/IGenerator.h" "Projects/CodeGen/Generators/ResultSearch.cpp" "Projects/CodeGen/Generators/ResultSearch.h" "Projects/CodeGen/Generators/Scalar.h" "Projects/CodeGen/Generators/TestCase.h" )
 set_property( TARGET "Projects.CodeGen" PROPERTY FOLDER "Projects" )
 target_include_directories( "Projects.CodeGen" PRIVATE "Projects/CodeGen" )
 target_include_directories( "Projects.CodeGen" PUBLIC "External" )
 target_include_directories( "Projects.CodeGen" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Projects.CodeGen" PUBLIC "Engine/.." )
-target_link_libraries( "Projects.CodeGen" "Engine.Scipt" )
 target_link_libraries( "Projects.CodeGen" "Engine.Platforms" )
-target_link_libraries( "Projects.CodeGen" "Engine.PipelineCompiler" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Projects.CodeGen" PUBLIC "PLATFORM_SDL" )
-endif()
 # compiler
 set_target_properties( "Projects.CodeGen" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Projects.CodeGen" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1963,10 +1587,6 @@ target_include_directories( "Projects.ShaderEditor" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Projects.ShaderEditor" PUBLIC "Engine/.." )
 target_link_libraries( "Projects.ShaderEditor" "Engine.Profilers" )
 target_link_libraries( "Projects.ShaderEditor" "Engine.Scene" )
-if (ENABLE_SDL)
-	target_compile_definitions( "Projects.ShaderEditor" PUBLIC "PLATFORM_SDL" )
-endif()
-add_dependencies( "Projects.ShaderEditor" "Deps_Projects.ShaderEditor" )
 # compiler
 set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1981,20 +1601,6 @@ set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_DEBUG ${PRO
 target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
 target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
 
-#-----------------------------------
-if (NOT DEFINED RESOURCE_PACKER_EXE)
-	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
-endif ()
-add_custom_target( "Deps_Projects.ShaderEditor"
-	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Projects/ShaderEditor/Pipelines/resources.as"
-	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Projects/ShaderEditor/Pipelines/resources.as"
-	COMMENT "Pack resources for 'Projects.ShaderEditor'..."
-	VERBATIM
-)
-add_dependencies( "Deps_Projects.ShaderEditor" "Engine.ResourcePacker" )
-set_property( TARGET "Deps_Projects.ShaderEditor" PROPERTY FOLDER "_deps_" )
-
-#-----------------------------------
 
 
 #==================================================================================================
@@ -2025,9 +1631,6 @@ if (NOT DEFINED ANDROID)
 	target_include_directories( "Utils.CMake" PUBLIC "${EXTERNALS_PATH}" )
 	target_include_directories( "Utils.CMake" PUBLIC "Engine/.." )
 	target_link_libraries( "Utils.CMake" "Engine.STL" )
-	if (ENABLE_SDL)
-		target_compile_definitions( "Utils.CMake" PUBLIC "PLATFORM_SDL" )
-	endif()
 	# compiler
 	set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 	set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )

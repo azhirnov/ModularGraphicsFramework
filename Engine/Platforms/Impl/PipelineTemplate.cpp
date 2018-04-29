@@ -773,8 +773,8 @@ namespace Platforms
 		static const char	options[]	=				// TODO: add options to descriptor
 			" -cl-single-precision-constant"
 			" -cl-mad-enable"
-			" -cl-denorms-are-zero"
-			" -cl-finite-math-only"
+			//" -cl-denorms-are-zero"
+			//" -cl-finite-math-only"
 			" -cl-std=CL1.2"
 			;
 		
@@ -858,7 +858,7 @@ namespace Platforms
 
 			module.type		= EShader::type(i);
 			module.id		= (cl::cl_program) _clData.shaders[i];
-			module.entry	= "main";
+			module.entry	= "Main";	// Intel compiler generate error for 'main' kernel
 
 			result.PushBack( RVREF(module) );
 		}

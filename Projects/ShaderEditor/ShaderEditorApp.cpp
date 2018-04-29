@@ -2,6 +2,7 @@
 
 #include "Projects/ShaderEditor/ShaderEditorApp.h"
 #include "Engine/Profilers/Engine.Profilers.h"
+#include "Engine/ImportExport/Engine.ImportExport.h"
 
 namespace ShaderEditor
 {
@@ -21,6 +22,7 @@ namespace ShaderEditor
 		Profilers::RegisterProfilers();
 		Graphics::RegisterGraphics();
 		Scene::RegisterScene();
+		ImportExport::RegisterImportExport();
 	}
 	
 /*

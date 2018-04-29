@@ -571,7 +571,7 @@ namespace PlatformVK
 			result.slicePitch = BytesUL(sub_res_layout.arrayPitch);
 		}
 		
-		ASSERT( result.slicePitch * result.dimension.z == result.size );
+		ASSERT( result.slicePitch > 0 ? (result.slicePitch * result.dimension.z == result.size) : true );
 
 		msg->result.Set( result );
 		return true;

@@ -1,6 +1,6 @@
 float expectedFunc (float a, float b, float c, float d)
 {
-	return (a * b + c / d) * 2;
+	return (a * b + c / d) * 3;
 }
 
 float rnd ()
@@ -25,8 +25,8 @@ void main ()
 
 	BruteforceCodeGen	bfcg;
 	bfcg.SetTests( tc );
-	bfcg.SetMaxAccuracy( 0.001f );
-	bfcg.SetMaxCommands( 10 );
+	bfcg.SetMaxAccuracy( 1.0f );
+	bfcg.SetMaxCommands( 11 );
 	bfcg.AddCommandSet( ECommandSet_FloatBaseCommands );
-	bfcg.Run( "test3_res.txt" );
+	bfcg.Run( "test4_res.txt" );
 }

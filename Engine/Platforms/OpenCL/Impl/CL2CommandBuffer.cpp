@@ -895,7 +895,7 @@ namespace PlatformCL
 */
 	bool CL2CommandBuffer::_CmdPushConstants (const Command_t &cmd)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdPipelineBarrier >();
+		const auto&	data = cmd.data.Get< GpuMsg::CmdPushConstants >();
 		
 		TODO( "" );
 		return true;

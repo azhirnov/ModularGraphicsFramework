@@ -121,7 +121,7 @@ namespace GXMath
 */
 	CHECKRES forceinline float  FSqrt (float x)
 	{
-		return 1.f / FInvSqrt(x);
+		return x * FInvSqrt(x);
 	}
 	
 /*

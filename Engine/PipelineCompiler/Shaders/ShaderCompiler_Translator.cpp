@@ -176,6 +176,7 @@ namespace PipelineCompiler
 
 		if ( skipExternals )
 		{
+			// remove external types
 			FOR( i, translator.types.definedInExteranal )
 			{
 				translator.types.globalTypes.Erase( translator.types.definedInExteranal[i] );
@@ -1338,7 +1339,9 @@ namespace PipelineCompiler
 		// create constant
 		if ( not found )
 		{
-			if ( translator.constants.optimize )
+			if ( translator.constants.optimize or
+				 EShaderVariable::IsStruct( dst_node.typeInfo.type ) or
+				 dst_node.typeInfo.arraySize > 0 )
 			{
 				String			name;
 				String&			src			= translator.constants.source;
@@ -1462,6 +1465,26 @@ namespace PipelineCompiler
 		TODO( "" );
 		return true;
 	}
+
+/*
+=================================================
+	RecursiveExtractTypesFromInternalTypes
+=================================================
+*/
+	static void RecursiveExtractTypesFromInternalTypes (Translator &translator, const Translator::TypeInfo &info)
+	{
+		// search for struct types
+		for (auto& field : Range(info.fields))
+		{
+			if ( EShaderVariable::IsStruct( field.type ) and
+				 not translator.types.globalTypes.IsExist( field.typeName ) )
+			{
+				translator.types.globalTypes.Add( field.typeName, field );
+
+				RecursiveExtractTypesFromInternalTypes( translator, field );
+			}
+		}
+	}
 	
 /*
 =================================================
@@ -1483,6 +1506,8 @@ namespace PipelineCompiler
 			 not translator.types.globalTypes.IsExist( dst_node.typeInfo.typeName ) )
 		{
 			translator.types.globalTypes.Add( dst_node.typeInfo.typeName, dst_node.typeInfo );
+
+			RecursiveExtractTypesFromInternalTypes( translator, dst_node.typeInfo );
 		}
 
 		// if inside inline function
@@ -1715,12 +1740,16 @@ namespace PipelineCompiler
 		String				terminal_src;
 		Translator::Node	dst_node;	dst_node.uid = uid;
 
-		const uint	body_uid = ++translator.uid;
-		CHECK_ERR( RecursiveProcessNode( loop->getBody(), body_uid, translator ) );
+		// loop body
+		if ( loop->getBody() )
+		{
+			const uint	body_uid = ++translator.uid;
+			CHECK_ERR( RecursiveProcessNode( loop->getBody(), body_uid, translator ) );
 
-		loop_src = translator.nodes( body_uid ).src;
-		CHECK_ERR( not loop_src.Empty() );
-		
+			loop_src = translator.nodes( body_uid ).src;
+			CHECK_ERR( not loop_src.Empty() );
+		}
+
 		// loop exit condition
 		if ( loop->getTest() )
 		{

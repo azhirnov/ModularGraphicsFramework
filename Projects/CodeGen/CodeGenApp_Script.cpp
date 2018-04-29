@@ -3,6 +3,7 @@
 #include "CodeGenApp.h"
 #include "Generators/TestCase.h"
 #include "Generators/Scalar.h"
+#include "Generators/GenFunctionSerializer.h"
 #include "Generators/Bruteforce/BruteforceGenerator.h"
 #include "Engine/Script/Bindings/DefaultBindings.h"
 
@@ -10,8 +11,6 @@ namespace CodeGen
 {
 	using namespace GX_STL::GXScript;
 	
-	static Ptr<CodeGenApp>	_appInstance;
-
 
 	//
 	// Test Case Array
@@ -181,23 +180,21 @@ namespace CodeGen
 
 			CHECK_ERR( gen.Generate( _tests, _commandSet, _constantSet, _maxAccuracy, _maxCommands, OUT funcs ), void() );
 
-			String	src;
-			FOR( i, funcs )
+			if ( not funcs.Empty() )
 			{
-				String	str;
-				gen.ToSource( funcs[i], OUT str );
+				String	src;
+				FOR( i, funcs )
+				{
+					String	str;
+					GenFunctionSerializer::ToSource( funcs[i], OUT str );
 
-				src << str << "//====================================\n\n\n";
-			}
+					src << str << "//====================================\n\n\n";
+				}
 
-			WFilePtr	file = File::HddWFile::New( output );
-			CHECK_ERR( file, void() );
+				WFilePtr	file = File::HddWFile::New( output );
+				CHECK_ERR( file, void() );
 
-			file->Write( StringCRef(src) );
-
-			if ( _appInstance ) {
-				_appInstance->Exit();
-				_appInstance = null;
+				file->Write( StringCRef(src) );
 			}
 		}
 	};
@@ -444,8 +441,6 @@ namespace CodeGen
 */
 	void CodeGenApp::_BindToScript ()
 	{
-		_appInstance = this;
-		
 		DefaultBindings::BindScalarMath( &_scriptEngine );
 		DefaultBindings::BindVectorMath( &_scriptEngine );
 		DefaultBindings::BindString( &_scriptEngine );

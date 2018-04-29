@@ -158,14 +158,14 @@ namespace File
 		bool Write (const ArrayRef<T> data)
 		{
 			STATIC_ASSERT( CompileTime::IsMemCopyFromFileAvailable<T> );
-			return Write( data.ptr(), data.Size() );
+			return Write( data.RawPtr(), data.Size() );
 		}
 
 		template <typename T>
 		bool Write (const TStringRef<T> data)
 		{
 			STATIC_ASSERT( CompileTime::IsMemCopyFromFileAvailable<T> );
-			return Write( data.ptr(), data.LengthInBytes() );
+			return Write( data.RawPtr(), data.LengthInBytes() );
 		}
 	};
 	

@@ -190,7 +190,7 @@ namespace GXMath
 			if ( right(1,1) > right(0,0) )
 				i = 1;
 
-			if ( right(2,2) > right(1,1) )
+			if ( right(2,2) > right(i,i) )
 				i = 2;
 
 			j = nxt[i];

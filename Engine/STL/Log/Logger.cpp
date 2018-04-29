@@ -497,6 +497,15 @@ namespace GXTypes
 			}
 		}
 
+		// on failure
+		if ( EnumEqMask( type, ELog::Fatal, ELog::_FlagsMask ) )
+		{
+			Close();
+			GX_BREAK_POINT();
+
+			::exit( EXIT_FAILURE );
+		}
+
 		return res;
 	}
 	

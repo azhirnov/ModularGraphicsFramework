@@ -366,7 +366,7 @@ namespace PipelineCompiler
 		str << EShader::ToString( shaderType ) << " shader \"" << Name() << "\" in \""
 			<< Path() << "\" compilation error\n---------------\n" << log;
 		
-		LOG( str, ELog::Error | ELog::OpenSpoilerFlag );
+		LOG( str, ELog::Fatal | ELog::OpenSpoilerFlag );
 		return false;
 	}
 //=========================================================

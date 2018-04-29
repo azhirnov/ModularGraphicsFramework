@@ -20,7 +20,7 @@ int main ()
 
 	Test_Algorithms_Orbit();
 	
-	TEST( !"Tests Finished!" );
+	LOG( "Tests Finished!", ELog::Info );
 
 	Logger::GetInstance()->Close();
 	

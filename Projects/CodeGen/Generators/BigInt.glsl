@@ -17,12 +17,13 @@ struct BigInt
 
 void BigInt_Create (out BigInt bi);
 void BigInt_CreateFrom (out BigInt bi, const uint values[], const uint count);
-void BigInt_Copy (out BigInt bi, const BigInt other);
+void BigInt_Copy (out BigInt bi, in BigInt other);
 
 void BigInt_Inc (inout BigInt bi);
 void BigInt_Add (inout BigInt bi, uint value);
-bool BigInt_IsZero (const BigInt bi, const uint pos);
-uint BigInt_Read (const BigInt bi, const uint pos, const uint count);
+void BigInt_Add (inout BigInt bi, in BigInt value);
+bool BigInt_IsZero (in BigInt bi, const uint pos);
+uint BigInt_Read (in BigInt bi, const uint pos, const uint count);
 void BigInt_Write (inout BigInt bi, uint value, uint pos, const uint count);
 uint BigInt_MaxSize ();
 
@@ -31,7 +32,7 @@ uint BigInt_MaxSize ();
 
 #define BIGINT_VALUE_SIZE	(32)
 
-uint _BigInt_CalcBits (const BigInt bi, const uint i);
+uint _BigInt_CalcBits (in BigInt bi, const uint i);
 
 
 void BigInt_Create (out BigInt bi)
@@ -59,7 +60,7 @@ void BigInt_CreateFrom (out BigInt bi, const uint values[], const uint count)
 }
 
 
-void BigInt_Copy (out BigInt bi, const BigInt other)
+void BigInt_Copy (out BigInt bi, in BigInt other)
 {
 	uint	last_nonzero = 0;
 
@@ -92,7 +93,7 @@ void BigInt_Add (inout BigInt bi, uint right)
 		if ( bi.value[i] >= prev )
 		{
 			bi.lastBit = max( bi.lastBit, _BigInt_CalcBits( bi, i ) );
-			return;
+			break;
 		}
 
 		right = 1;
@@ -100,13 +101,40 @@ void BigInt_Add (inout BigInt bi, uint right)
 }
 
 
-bool BigInt_IsZero (const BigInt bi, const uint pos)
+void BigInt_Add (inout BigInt bi, in BigInt right)
+{
+	for (uint j = 0; j < BIGINT_SIZE; ++j)
+	{
+		uint	val = right.value[j];
+
+		if ( val == 0 )
+			continue;
+
+		for (uint i = j; i < BIGINT_SIZE; ++i)
+		{
+			const uint	prev = bi.value[i];
+
+			bi.value[i] += val;
+
+			if ( bi.value[i] >= prev )
+			{
+				bi.lastBit = max( bi.lastBit, _BigInt_CalcBits( bi, i ) );
+				break;
+			}
+
+			val = 1;
+		}
+	}
+}
+
+
+bool BigInt_IsZero (in BigInt bi, const uint pos)
 {
 	return pos >= bi.lastBit;
 }
 
 
-uint BigInt_Read (const BigInt bi, const uint pos, const uint count)
+uint BigInt_Read (in BigInt bi, const uint pos, const uint count)
 {
 	const uint	maxBits = BIGINT_VALUE_SIZE;
 	const uint	i		= clamp( pos / maxBits, 0u, uint(BIGINT_SIZE-1) );
@@ -152,7 +180,7 @@ uint BigInt_MaxSize ()
 }
 
 
-uint _BigInt_CalcBits (const BigInt bi, const uint i)
+uint _BigInt_CalcBits (in BigInt bi, const uint i)
 {
 	return BitScanReverse( bi.value[i] ) + 1 + (i * BIGINT_VALUE_SIZE);
 }

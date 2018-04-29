@@ -1,5 +1,5 @@
 // This is generated file
-// Created at: 2018/04/26 - 11:15:56
+// Created at: 2018/04/29 - 17:07:30
 
 #pragma once
 
@@ -25,22 +25,22 @@ namespace Pipelines
 // From file 'copyfloatimage2d.cpp'
 void Create_copyfloatimage2d (PipelineTemplateDescriptor& descr);
 
+// From file 'dynamicbuffer.cpp'
+void Create_dynamicbuffer (PipelineTemplateDescriptor& descr);
+
+// From file 'atomicadd.cpp'
+void Create_atomicadd (PipelineTemplateDescriptor& descr);
+
 // From file 'findlsb.cpp'
 void Create_findlsb (PipelineTemplateDescriptor& descr);
+
+// From file 'bufferalign.cpp'
+void Create_bufferalign (PipelineTemplateDescriptor& descr);
 
 // From file 'findmsb.cpp'
 void Create_findmsb (PipelineTemplateDescriptor& descr);
 
 // From file 'shaderbarrier.cpp'
 void Create_shaderbarrier (PipelineTemplateDescriptor& descr);
-
-// From file 'bufferalign.cpp'
-void Create_bufferalign (PipelineTemplateDescriptor& descr);
-
-// From file 'atomicadd.cpp'
-void Create_atomicadd (PipelineTemplateDescriptor& descr);
-
-// From file 'dynamicbuffer.cpp'
-void Create_dynamicbuffer (PipelineTemplateDescriptor& descr);
 
 };

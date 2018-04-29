@@ -122,14 +122,21 @@ bool CApp::_Draw (const Message< ModuleMsg::Update > &)
 
 	if ( not tests.Empty() )
 	{
-		TestFunc_t	func = tests.Front();
+		TestFunc_t	func	= tests.Front();
+		bool		passed	= (this->*func)();
 
-		CHECK( (this->*func)() );
+		testsPassed += uint(passed);
+		testsFailed += uint(not passed);
 
 		tests.PopFront();
 	}
 	else
+	{
 		Quit();
+
+		LOG( "Tests passed: "_str << testsPassed << ", failed: " << testsFailed, ELog::Info );
+		CHECK_FATAL( testsFailed == 0 );
+	}
 
 	return true;
 }

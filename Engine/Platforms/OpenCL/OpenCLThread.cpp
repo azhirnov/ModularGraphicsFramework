@@ -279,7 +279,6 @@ namespace Platforms
 		cl::cl_device_id	high_perf_device	= null;
 		float				max_performance		= 0.0f;
 		cl::cl_device_id	match_name_device	= null;
-		cl::cl_device_id	match_ver_device	= null;
 
 		CHECK_ERR( _device.GetDeviceInfo( OUT dev_info ) );
 
@@ -294,7 +293,9 @@ namespace Platforms
 									float(info.globalMemory.Mb()) / 1024.0f +						// we need more memory
 									float(info.isGPU ? info.maxInvocations : 1) / 1024.0f;
 
-			if ( OS::IsLittleEndian() != info.littleEndian or not info.compilerSupported )
+			if ( OS::IsLittleEndian() != info.littleEndian	or
+				 not info.compilerSupported					or
+				 info.version < version )
 				continue;
 
 			if ( perf > max_performance ) {
@@ -304,9 +305,6 @@ namespace Platforms
 
 			if ( gpu_device == null and info.isGPU )
 				gpu_device = info.id;
-
-			if ( match_ver_device == null and info.version == version )
-				match_ver_device = info.id;
 
 			if ( match_name_device == null		and
 				 not _settings.device.Empty()	and
@@ -319,7 +317,6 @@ namespace Platforms
 		cl::cl_device_id	dev = null;
 
 		if ( high_perf_device )		dev = high_perf_device;		else
-		if ( match_ver_device )		dev = match_ver_device;		else
 		if ( match_name_device )	dev = match_name_device;	else
 		if ( gpu_device )			dev = gpu_device;			else
 									RETURN_ERR( "no OpenCL device found" );

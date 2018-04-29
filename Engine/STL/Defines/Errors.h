@@ -65,6 +65,11 @@
 	__GX_CHECK_WARN( (_func_), GX_TO_ANSI_STRING( _func_ ), ::GX_STL::ELog::_DefError )
 
 
+// check and exit from application if error
+#define CHECK_FATAL( _func_ ) \
+	__GX_CHECK_WARN( (_func_), GX_TO_ANSI_STRING( _func_ ), ::GX_STL::ELog::Fatal )
+
+
 // debug only //
 #if defined( __GX_DEBUG__ )
 

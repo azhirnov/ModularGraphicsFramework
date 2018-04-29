@@ -26,7 +26,7 @@ namespace CodeGen
 =================================================
 */
 	BruteforceGenerator::BruteforceGenerator () :
-		_localThreads{ 1024 }
+		_maxResults{ 10000 }, _localThreads{ 256 }
 	{}
 	
 /*
@@ -38,25 +38,24 @@ namespace CodeGen
 	bool BruteforceGenerator::_Gen (ArrayCRef<TestCase<T>> testCases, ECommandSet::bits commandSetType, EConstantSet::bits constantType,
 									float maxAccuracy, uint maxCommands, OUT GenFunctions_t &functions)
 	{
-		const usize		max_results	= 10000;
-
 		_Clear();
 		
 		_maxCommands = maxCommands;
+		_testsCount	 = testCases.Count();
 
 		CHECK_ERR( _Prepare( testCases, commandSetType ) );
 
 		CHECK_ERR( _CreateSource<T>( commandSetType ) );
 
-		CHECK_ERR( _CreateResources( testCases.Count(), max_results ) );
+		CHECK_ERR( _CreateResources() );
 
-		CHECK_ERR( _InitBuffer( testCases, maxAccuracy, max_results ) );
+		CHECK_ERR( _InitBuffer( testCases, maxAccuracy ) );
 
 		CHECK_ERR( _BuildCommandBuffer() );
 
 		CHECK_ERR( _Execute() );
 
-		CHECK_ERR( _ProcessResults( max_results, TypeToValueID<T>(), commandSetType, constantType, OUT functions ) );
+		CHECK_ERR( _ProcessResults( TypeToValueID<T>(), commandSetType, constantType, OUT functions ) );
 
 		_Clear();
 		return true;
@@ -117,34 +116,23 @@ namespace CodeGen
 
 		_maxCommands = Max( _maxCommands, min_commands );
 
-		// calculate number of threads and iterations
 		const BitsU		max_bits		= bits_per_cmd * _maxCommands;
 		const usize		bigint_count	= usize(max_bits / CompileTime::SizeOf<uint>::bits) + 1;
-		const BitsU		max_block_size	= ( (BitsU::SizeOf<uint>() - 1) / bits_per_cmd ) * (bits_per_cmd - 1);
-		const BitsU		block_size		= Min( max_bits, max_block_size );
-		const uint		iterations		= 1u << usize(max_bits - block_size);
-		const uint		num_threads		= 1u << usize(block_size);
-		const uint		num_groups		= num_threads / _localThreads;
 		uint			max_inputs		= 0;
-		
-		ASSERT( iterations == 1 );	// TODO
 
-		CHECK_ERR( num_threads % _localThreads == 0 );
 		CHECK_ERR( max_bits <= HashCode_t::MaxSize() );
 
 		CHECK_ERR( _CheckTests( testCases, OUT max_inputs ) );
 		CHECK_ERR( max_inputs > 0 );
 
-		_maxInputs			= max_inputs;
-		_bigintCount		= bigint_count;
-		_iterationsCount	= iterations;
-		_groupSize			= num_groups;
+		_maxInputs		= max_inputs;
+		_bigintCount	= bigint_count;
+		_maxBits		= max_bits;
 		
-		_testCaseSize		= SizeOf<T> * (_maxInputs + 1);
-		_bigIntSize			= SizeOf<uint> * (_bigintCount + 1);
-		_constSize			= /*initHash*/_bigIntSize + SizeOf<_ConstData>;
-		_atomicsSize		= SizeOf<_Atomics>;
-		_resultSize			= _bigIntSize + SizeOf<_Result>;
+		_testCaseSize	= SizeOf<T> * (_maxInputs + 1);
+		_bigIntSize		= SizeOf<uint> * (_bigintCount + 1);
+		_atomicsSize	= SizeOf<_Atomics>;
+		_resultSize		= _bigIntSize + SizeOf<_Result>;
 
 		return true;
 	}
@@ -246,11 +234,13 @@ namespace CodeGen
 				max_args = Max( max_args, data[i].args );
 			}
 
-			src << "#define MAX_ARGS         " << max_args << "\n"
+			src << "#define MAX_CMD_ARGS     " << max_args << "\n"
 				<< "#define MAX_INPUTS       " << _maxInputs << "\n"
 				<< "#define BIGINT_SIZE      " << _bigintCount << "\n"
 				<< "#define MAX_COMMANDS     " << _maxCommands << "\n"
 				<< "#define BITS_PER_COMMAND " << usize(bits_per_cmd) << "\n"
+				<< "#define MAX_TESTS        " << _testsCount << "\n"
+				<< "#define MAX_RESULTS      " << _maxResults << "\n"
 				<< "#define T                " << _TypeToString<T>() << "\n\n"
 
 				<< "layout (local_size_x=" << _localThreads << ", local_size_y=1, local_size_z=1) in;\n\n";
@@ -264,7 +254,7 @@ namespace CodeGen
 		{
 			String&	src = _func_src;
 
-			src << "T CallFunction (const uint id, const T args[MAX_ARGS], const int argsCount)\n{\n"
+			src << "T CallFunction (const uint id, const T args[MAX_CMD_ARGS], const int argsCount)\n{\n"
 				<< "\tswitch ( id & " << ToMask<uint>( bits_per_cmd ) << " )\n\t{\n";
 
 			FOR( i, data )
@@ -325,7 +315,7 @@ namespace CodeGen
 	_CreateResources
 =================================================
 */
-	bool BruteforceGenerator::_CreateResources (const usize testsCount, const usize resultsCount)
+	bool BruteforceGenerator::_CreateResources ()
 	{
 		// create resources
 		auto	factory	= GetMainSystemInstance()->GlobalSystems()->modulesFactory;
@@ -336,10 +326,6 @@ namespace CodeGen
 		Message< GpuMsg::GetGraphicsModules >	req_ids;
 		_gpuThread->Send( req_ids );
 		ComputeModuleIDs	gpu_ids = *req_ids->compute;
-		
-		Message< GpuMsg::CreateFence >	fence_ctor;
-		_syncManager->Send( fence_ctor );
-		_fence = *fence_ctor->result;
 		
 		CHECK_ERR( factory->Create(
 						gpu_ids.commandBuilder,
@@ -356,8 +342,8 @@ namespace CodeGen
 		_cmdBuilder->Send< ModuleMsg::AttachModule >({ _cmdBuffer });
 
 
-		const BytesU	inbuf_size		= _constSize + _testCaseSize * testsCount;
-		const BytesU	outbuf_size		= _atomicsSize + _resultSize * resultsCount;
+		const BytesU	inbuf_size		= AlignToLarge( _bigIntSize + SizeOf<float>, 16_b ) + _testCaseSize * _testsCount;
+		const BytesU	outbuf_size		= _atomicsSize + _resultSize * _maxResults;
 
 		CHECK_ERR( factory->Create(
 						gpu_ids.buffer,
@@ -407,7 +393,7 @@ namespace CodeGen
 =================================================
 */
 	template <typename T>
-	bool BruteforceGenerator::_InitBuffer (ArrayCRef<TestCase<T>> testCases, const float maxAccuracy, const usize resultsCount)
+	bool BruteforceGenerator::_InitBuffer (ArrayCRef<TestCase<T>> testCases, const float maxAccuracy)
 	{
 		_inBuffer->Send< GpuMsg::MapMemoryToCpu >({ GpuMsg::MapMemoryToCpu::EMappingFlags::Write });
 		
@@ -415,23 +401,21 @@ namespace CodeGen
 
 		// write const data
 		{
-			_BigIntBuf	init_hash;
-			init_hash.Resize( _bigintCount+1 );
+			_BigIntBuf	buf;
+			BinArrayRef	initial_hash = buf;
+			_WriteBigInt( INOUT initial_hash, HashCode_t() );
 
-			_inBuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::From(init_hash), offset });
-			offset += init_hash.Size();
+			_inBuffer->Send< GpuMsg::WriteToGpuMemory >({ initial_hash, offset });
+			offset += initial_hash.Size();
 			
-			_ConstData	cdata;
-			cdata.maxAccuracy		= maxAccuracy;
-			cdata.resultsCapacity	= resultsCount;
-			cdata.testCasesCount	= testCases.Count();
-			
-			_inBuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::FromValue(cdata), offset });
-			offset += SizeOf<_ConstData>;
+			_inBuffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::FromValue(maxAccuracy), offset });
+			offset += sizeof(maxAccuracy);
 		}
 
 		// write test cases
 		{
+			offset = AlignToLarge( offset, 16_b );
+
 			if_constexpr( CompileTime::IsSameTypes< T, float > )
 			{
 				FixedSizeArray< float, 32 >		buf;
@@ -521,16 +505,39 @@ namespace CodeGen
 */
 	bool BruteforceGenerator::_BuildCommandBuffer ()
 	{
+		HashCode_t		hash;
+		HashCode_t		max_hash;	max_hash.Fill( _maxBits );
+		const BitsU		max_step	= Min( BitsU::SizeOf<uint>()-5, _maxBits );
+		const BitsU		step		= Min( max_step, _maxBits );
+		const uint		num_threads	= 1u << usize(step);
+		const uint		num_groups	= (num_threads + _localThreads - 1) / _localThreads;
+		
+
 		_cmdBuilder->Send< GpuMsg::CmdBegin >({ _cmdBuffer });
 		_cmdBuilder->Send< GpuMsg::CmdFillBuffer >({ _outBuffer, 0u });
 
 		_cmdBuilder->Send< GpuMsg::CmdBindComputePipeline >({ _pipeline });
 		_cmdBuilder->Send< GpuMsg::CmdBindComputeResourceTable >({ _resourceTable });
 
-		_cmdBuilder->Send< GpuMsg::CmdDispatch >({ uint3( _groupSize, 1, 1 ) });
+		for (; hash.Count() <= _maxBits;)
+		{
+			// update initial hash
+			{
+				_BigIntBuf	buf;
+				BinArrayRef	initial_hash = buf;
+				_WriteBigInt( INOUT initial_hash, hash );
 
-		Message< GpuMsg::CmdEnd >	cmd_end;
-		_cmdBuilder->Send( cmd_end );
+				_cmdBuilder->Send< GpuMsg::CmdUpdateBuffer >({ _inBuffer, initial_hash });
+			}
+			
+			_cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({});
+
+			_cmdBuilder->Send< GpuMsg::CmdDispatch >({ uint3( num_groups, 1, 1 ) });
+		
+			hash += (num_groups * _localThreads);
+		}
+
+		_cmdBuilder->Send< GpuMsg::CmdEnd >({});
 
 		return true;
 	}
@@ -542,10 +549,14 @@ namespace CodeGen
 */
 	bool BruteforceGenerator::_Execute ()
 	{
-		_gpuThread->Send< GpuMsg::SubmitComputeQueueCommands >({ _cmdBuffer, _fence });
+		TimeProfilerD	timer;
+		timer.Start();
 
-		_syncManager->Send< GpuMsg::ClientWaitFence >({ _fence });
+		_gpuThread->Send< GpuMsg::SubmitComputeQueueCommands >({ _cmdBuffer });
 
+		_syncManager->Send< GpuMsg::ClientWaitDeviceIdle >({});
+
+		LOG( "program synthesing time: "_str << ToString( timer.GetTimeDelta() ), ELog::Info );
 		return true;
 	}
 
@@ -554,7 +565,7 @@ namespace CodeGen
 	_ProcessResults
 =================================================
 */
-	bool BruteforceGenerator::_ProcessResults (const usize resultsCount, ValueID::type typeId,
+	bool BruteforceGenerator::_ProcessResults (ValueID::type typeId,
 											   ECommandSet::bits commandSetType, EConstantSet::bits constantType,
 											   OUT GenFunctions_t &functions)
 	{
@@ -572,7 +583,7 @@ namespace CodeGen
 		Message< ModuleMsg::ReadFromStream >	results{ BytesU::SizeOf( atomics ) };
 		_outBuffer->Send( results );
 
-		const usize	res_count = Min( atomics.results, resultsCount );
+		const usize	res_count = Min( atomics.results, _maxResults );
 
 		CHECK_ERR( ResultSearch::SearchResults( *results->result, res_count, _maxInputs, _resultSize,
 											    _bigIntSize, typeId, commandSetType, constantType, OUT functions ) );
@@ -588,16 +599,11 @@ namespace CodeGen
 */
 	void BruteforceGenerator::_Clear ()
 	{
-		if ( _syncManager and _fence != GpuFenceId::Unknown ) {
-			_syncManager->Send< GpuMsg::DestroyFence >({ _fence });
-		}
-
 		_gpuThread		= null;
 		_syncManager	= null;
 		
 		_cmdBuilder		= null;
 		_cmdBuffer		= null;
-		_fence			= Uninitialized;
 
 		_inBuffer		= null;
 		_outBuffer		= null;
@@ -605,22 +611,53 @@ namespace CodeGen
 		_pipelineTempl	= null;
 		_pipeline		= null;
 		_resourceTable	= null;
+		
+		_testCaseSize	= BytesU();
+		_bigIntSize		= BytesU();
+		_atomicsSize	= BytesU();
+		_resultSize		= BytesU();
+		_maxBits		= BitsU();
 
 		_maxCommands	= 0;
 		_maxInputs		= 0;
 		_bigintCount	= 0;
-		_iterationsCount= 0;
-		_groupSize		= 0;
+		_testsCount		= 0;
 	}
 	
 /*
 =================================================
-	ToSource
+	_WriteBigInt
 =================================================
 */
-	bool BruteforceGenerator::ToSource (const GenFunction &func, OUT String &src) const
+	void BruteforceGenerator::_WriteBigInt (INOUT BinArrayRef &dst, const HashCode_t &hash) const
 	{
-		return ResultSearch::ToSource( func, OUT src );
+		CHECK( dst.Size() >= _bigIntSize );
+
+		BytesU	offset;
+
+		// write hash data
+		for (uint i = 0; i < _bigintCount; ++i)
+		{
+			const auto	src = BinArrayCRef::FromValue( hash.ToArray()[i] );
+
+			MemCopy( dst, src );
+
+			offset += src.Size();
+		}
+
+		// write hash size
+		{
+			const uint	last_bit = uint(hash.Count());
+			const auto	src = BinArrayCRef::FromValue( last_bit );
+		
+			MemCopy( dst, src );
+
+			offset += src.Size();
+		}
+
+		ASSERT( offset == _bigIntSize );
+
+		dst = dst.SubArray( 0, usize(_bigIntSize) );
 	}
 
 }	// CodeGen

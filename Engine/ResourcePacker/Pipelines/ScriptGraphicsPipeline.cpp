@@ -2,6 +2,7 @@
 
 #include "Engine/ResourcePacker/Pipelines/ScriptGraphicsPipeline.h"
 #include "Engine/ResourcePacker/Packer/ResourcePacker.h"
+#include "Engine/Script/Bindings/DefaultBindings.h"
 
 namespace ResPack
 {

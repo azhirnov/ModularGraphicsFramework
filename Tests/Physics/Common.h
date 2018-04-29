@@ -4,4 +4,4 @@
 
 #include "Engine/Physics/Engine.Physics.h"
 
-#define TEST( ... )		CHECK( __VA_ARGS__ )
+#define TEST	CHECK_FATAL

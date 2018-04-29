@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "ArrayRef.h"
+#include "Engine/STL/Containers/ArrayRef.h"
 
 namespace GX_STL
 {
@@ -99,6 +99,8 @@ namespace GXTypes
 		T		*	ptr ();
 		T const	*	ptr ()					const;
 		T const	*	cstr ()					const	{ ASSERT( IsNullTerminated() ); return ptr(); }
+
+		T const	*	RawPtr ()				const	{ return _memory; }
 		
 		T		&	Back ()							{ return (*this)[ Length()-1 ]; }
 		T const	&	Back ()					const	{ return (*this)[ Length()-1 ]; }
@@ -171,6 +173,13 @@ namespace GXTypes
 
 		static constexpr bool	IsLinearMemory ()	{ return true; }
 		static constexpr bool	IsStaticMemory ()	{ return false; }
+
+
+		template <typename B, typename S, typename MC>
+		static TStringRef<const T> From (const Array<B,S,MC> &arr);
+
+		template <typename B>	static TStringRef<const T> From (ArrayRef<B> arr);
+		template <typename B>	static TStringRef<const T> From (ArrayCRef<B> arr);
 
 	private:
 		static bool _Equals (const T *left, const T *right, usize length);
@@ -884,6 +893,28 @@ namespace GXTypes
 	inline ArrayRef<T>  ArrayRef<T>::FromStd (std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str)
 	{
 		return From( TStringRef<B>( str ) );
+	}
+	
+/*
+=================================================
+	From
+=================================================
+*/
+	template <typename T>
+	template <typename B>
+	inline TStringRef<const T>  TStringRef<T>::From (ArrayRef<B> arr)
+	{
+		return From( ArrayCRef<B>(arr) );
+	}
+
+	template <typename T>
+	template <typename B>
+	inline TStringRef<const T>  TStringRef<T>::From (ArrayCRef<B> arr)
+	{
+		if ( not arr.Empty() )
+			return TStringRef<const T>{ Cast<const T*>(arr.RawPtr()), usize(arr.Size() / SizeOf<T>) };
+		else
+			return TStringRef<const T>{};
 	}
 
 /*
