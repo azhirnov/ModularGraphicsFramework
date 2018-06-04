@@ -329,80 +329,80 @@ enum
 	CL_PROFILING_COMMAND_END		= 0x1283 ,
 };
 
-#define CL2_CORE_FUNCTIONS( _buildFunc_ ) \
-	_buildFunc_( cl_int, GetPlatformIDs, ( cl_uint num_entries , cl_platform_id * platforms , cl_uint * num_platforms ) , cl_int() ) \
-	_buildFunc_( cl_int, GetPlatformInfo, ( cl_platform_id platform , cl_platform_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_int, GetDeviceIDs, ( cl_platform_id platform , cl_device_type device_type , cl_uint num_entries , cl_device_id * devices , cl_uint * num_devices ) , cl_int() ) \
-	_buildFunc_( cl_int, GetDeviceInfo, ( cl_device_id device , cl_device_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_context, CreateContext, ( const cl_context_properties * properties , cl_uint num_devices , const cl_device_id * devices , void ( CL_CALLBACK * pfn_notify ) ( const char * , const void * , size_t , void * ) , void * user_data , cl_int * errcode_ret ) , cl_context() ) \
-	_buildFunc_( cl_context, CreateContextFromType, ( const cl_context_properties * properties , cl_device_type device_type , void ( CL_CALLBACK * pfn_notify ) ( const char * , const void * , size_t , void * ) , void * user_data , cl_int * errcode_ret ) , cl_context() ) \
-	_buildFunc_( cl_int, RetainContext, ( cl_context context ) , cl_int() ) \
-	_buildFunc_( cl_int, ReleaseContext, ( cl_context context ) , cl_int() ) \
-	_buildFunc_( cl_int, GetContextInfo, ( cl_context context , cl_context_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_command_queue, CreateCommandQueue, ( cl_context context , cl_device_id device , cl_command_queue_properties properties , cl_int * errcode_ret ) , cl_command_queue() ) \
-	_buildFunc_( cl_int, RetainCommandQueue, ( cl_command_queue command_queue ) , cl_int() ) \
-	_buildFunc_( cl_int, ReleaseCommandQueue, ( cl_command_queue command_queue ) , cl_int() ) \
-	_buildFunc_( cl_int, GetCommandQueueInfo, ( cl_command_queue command_queue , cl_command_queue_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_int, SetCommandQueueProperty, ( cl_command_queue command_queue , cl_command_queue_properties properties , cl_bool enable , cl_command_queue_properties * old_properties ) , cl_int() ) \
-	_buildFunc_( cl_mem, CreateBuffer, ( cl_context context , cl_mem_flags flags , size_t size , void * host_ptr , cl_int * errcode_ret ) , cl_mem() ) \
-	_buildFunc_( cl_mem, CreateSubBuffer, ( cl_mem buffer , cl_mem_flags flags , cl_buffer_create_type buffer_create_type , const void * buffer_create_info , cl_int * errcode_ret ) , cl_mem() ) \
-	_buildFunc_( cl_mem, CreateImage2D, ( cl_context context , cl_mem_flags flags , const cl_image_format * image_format , size_t image_width , size_t image_height , size_t image_row_pitch , void * host_ptr , cl_int * errcode_ret ) , cl_mem() ) \
-	_buildFunc_( cl_mem, CreateImage3D, ( cl_context context , cl_mem_flags flags , const cl_image_format * image_format , size_t image_width , size_t image_height , size_t image_depth , size_t image_row_pitch , size_t image_slice_pitch , void * host_ptr , cl_int * errcode_ret ) , cl_mem() ) \
-	_buildFunc_( cl_int, RetainMemObject, ( cl_mem memobj ) , cl_int() ) \
-	_buildFunc_( cl_int, ReleaseMemObject, ( cl_mem memobj ) , cl_int() ) \
-	_buildFunc_( cl_int, GetSupportedImageFormats, ( cl_context context , cl_mem_flags flags , cl_mem_object_type image_type , cl_uint num_entries , cl_image_format * image_formats , cl_uint * num_image_formats ) , cl_int() ) \
-	_buildFunc_( cl_int, GetMemObjectInfo, ( cl_mem memobj , cl_mem_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_int, GetImageInfo, ( cl_mem image , cl_image_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_int, SetMemObjectDestructorCallback, ( cl_mem memobj , void ( CL_CALLBACK * pfn_notify ) ( cl_mem memobj , void * user_data ) , void * user_data ) , cl_int() ) \
-	_buildFunc_( cl_sampler, CreateSampler, ( cl_context context , cl_bool normalized_coords , cl_addressing_mode addressing_mode , cl_filter_mode filter_mode , cl_int * errcode_ret ) , cl_sampler() ) \
-	_buildFunc_( cl_int, RetainSampler, ( cl_sampler sampler ) , cl_int() ) \
-	_buildFunc_( cl_int, ReleaseSampler, ( cl_sampler sampler ) , cl_int() ) \
-	_buildFunc_( cl_int, GetSamplerInfo, ( cl_sampler sampler , cl_sampler_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_program, CreateProgramWithSource, ( cl_context context , cl_uint count , const char * * strings , const size_t * lengths , cl_int * errcode_ret ) , cl_program() ) \
-	_buildFunc_( cl_program, CreateProgramWithBinary, ( cl_context context , cl_uint num_devices , const cl_device_id * device_list , const size_t * lengths , const unsigned char * * binaries , cl_int * binary_status , cl_int * errcode_ret ) , cl_program() ) \
-	_buildFunc_( cl_int, RetainProgram, ( cl_program program ) , cl_int() ) \
-	_buildFunc_( cl_int, ReleaseProgram, ( cl_program program ) , cl_int() ) \
-	_buildFunc_( cl_int, BuildProgram, ( cl_program program , cl_uint num_devices , const cl_device_id * device_list , const char * options , void ( CL_CALLBACK * pfn_notify ) ( cl_program program , void * user_data ) , void * user_data ) , cl_int() ) \
-	_buildFunc_( cl_int, UnloadCompiler, ( void ) , cl_int() ) \
-	_buildFunc_( cl_int, GetProgramInfo, ( cl_program program , cl_program_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_int, GetProgramBuildInfo, ( cl_program program , cl_device_id device , cl_program_build_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_kernel, CreateKernel, ( cl_program program , const char * kernel_name , cl_int * errcode_ret ) , cl_kernel() ) \
-	_buildFunc_( cl_int, CreateKernelsInProgram, ( cl_program program , cl_uint num_kernels , cl_kernel * kernels , cl_uint * num_kernels_ret ) , cl_int() ) \
-	_buildFunc_( cl_int, RetainKernel, ( cl_kernel kernel ) , cl_int() ) \
-	_buildFunc_( cl_int, ReleaseKernel, ( cl_kernel kernel ) , cl_int() ) \
-	_buildFunc_( cl_int, SetKernelArg, ( cl_kernel kernel , cl_uint arg_index , size_t arg_size , const void * arg_value ) , cl_int() ) \
-	_buildFunc_( cl_int, GetKernelInfo, ( cl_kernel kernel , cl_kernel_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_int, GetKernelWorkGroupInfo, ( cl_kernel kernel , cl_device_id device , cl_kernel_work_group_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_int, WaitForEvents, ( cl_uint num_events , const cl_event * event_list ) , cl_int() ) \
-	_buildFunc_( cl_int, GetEventInfo, ( cl_event event , cl_event_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_event, CreateUserEvent, ( cl_context context , cl_int * errcode_ret ) , cl_event() ) \
-	_buildFunc_( cl_int, RetainEvent, ( cl_event event ) , cl_int() ) \
-	_buildFunc_( cl_int, ReleaseEvent, ( cl_event event ) , cl_int() ) \
-	_buildFunc_( cl_int, SetUserEventStatus, ( cl_event event , cl_int execution_status ) , cl_int() ) \
-	_buildFunc_( cl_int, SetEventCallback, ( cl_event event , cl_int command_exec_callback_type , void ( CL_CALLBACK * pfn_notify ) ( cl_event , cl_int , void * ) , void * user_data ) , cl_int() ) \
-	_buildFunc_( cl_int, GetEventProfilingInfo, ( cl_event event , cl_profiling_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_int, Flush, ( cl_command_queue command_queue ) , cl_int() ) \
-	_buildFunc_( cl_int, Finish, ( cl_command_queue command_queue ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueReadBuffer, ( cl_command_queue command_queue , cl_mem buffer , cl_bool blocking_read , size_t offset , size_t cb , void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueReadBufferRect, ( cl_command_queue command_queue , cl_mem buffer , cl_bool blocking_read , const size_t * buffer_origin , const size_t * host_origin , const size_t * region , size_t buffer_row_pitch , size_t buffer_slice_pitch , size_t host_row_pitch , size_t host_slice_pitch , void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueWriteBuffer, ( cl_command_queue command_queue , cl_mem buffer , cl_bool blocking_write , size_t offset , size_t cb , const void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueWriteBufferRect, ( cl_command_queue command_queue , cl_mem buffer , cl_bool blocking_write , const size_t * buffer_origin , const size_t * host_origin , const size_t * region , size_t buffer_row_pitch , size_t buffer_slice_pitch , size_t host_row_pitch , size_t host_slice_pitch , const void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueCopyBuffer, ( cl_command_queue command_queue , cl_mem src_buffer , cl_mem dst_buffer , size_t src_offset , size_t dst_offset , size_t cb , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueCopyBufferRect, ( cl_command_queue command_queue , cl_mem src_buffer , cl_mem dst_buffer , const size_t * src_origin , const size_t * dst_origin , const size_t * region , size_t src_row_pitch , size_t src_slice_pitch , size_t dst_row_pitch , size_t dst_slice_pitch , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueReadImage, ( cl_command_queue command_queue , cl_mem image , cl_bool blocking_read , const size_t * origin , const size_t * region , size_t row_pitch , size_t slice_pitch , void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueWriteImage, ( cl_command_queue command_queue , cl_mem image , cl_bool blocking_write , const size_t * origin , const size_t * region , size_t input_row_pitch , size_t input_slice_pitch , const void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueCopyImage, ( cl_command_queue command_queue , cl_mem src_image , cl_mem dst_image , const size_t * src_origin , const size_t * dst_origin , const size_t * region , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueCopyImageToBuffer, ( cl_command_queue command_queue , cl_mem src_image , cl_mem dst_buffer , const size_t * src_origin , const size_t * region , size_t dst_offset , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueCopyBufferToImage, ( cl_command_queue command_queue , cl_mem src_buffer , cl_mem dst_image , size_t src_offset , const size_t * dst_origin , const size_t * region , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( void*, EnqueueMapBuffer, ( cl_command_queue command_queue , cl_mem buffer , cl_bool blocking_map , cl_map_flags map_flags , size_t offset , size_t cb , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event , cl_int * errcode_ret ) , void() ) \
-	_buildFunc_( void*, EnqueueMapImage, ( cl_command_queue command_queue , cl_mem image , cl_bool blocking_map , cl_map_flags map_flags , const size_t * origin , const size_t * region , size_t * image_row_pitch , size_t * image_slice_pitch , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event , cl_int * errcode_ret ) , void() ) \
-	_buildFunc_( cl_int, EnqueueUnmapMemObject, ( cl_command_queue command_queue , cl_mem memobj , void * mapped_ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueNDRangeKernel, ( cl_command_queue command_queue , cl_kernel kernel , cl_uint work_dim , const size_t * global_work_offset , const size_t * global_work_size , const size_t * local_work_size , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueTask, ( cl_command_queue command_queue , cl_kernel kernel , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueNativeKernel, ( cl_command_queue command_queue , void ( CL_CALLBACK * user_func ) ( void * ) , void * args , size_t cb_args , cl_uint num_mem_objects , const cl_mem * mem_list , const void * * args_mem_loc , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueMarker, ( cl_command_queue command_queue , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueWaitForEvents, ( cl_command_queue command_queue , cl_uint num_events , const cl_event * event_list ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueBarrier, ( cl_command_queue command_queue ) , cl_int() ) \
-	_buildFunc_( void, GetExtensionFunctionAddress, ( const char * func_name ) , void() ) \
+#define CL1_CORE_FUNCTIONS( _buildFunc_ ) \
+	_buildFunc_( cl_int , GetPlatformIDs, ( cl_uint num_entries , cl_platform_id * platforms , cl_uint * num_platforms ) , cl_int () ) \
+	_buildFunc_( cl_int , GetPlatformInfo, ( cl_platform_id platform , cl_platform_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , GetDeviceIDs, ( cl_platform_id platform , cl_device_type device_type , cl_uint num_entries , cl_device_id * devices , cl_uint * num_devices ) , cl_int () ) \
+	_buildFunc_( cl_int , GetDeviceInfo, ( cl_device_id device , cl_device_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_context , CreateContext, ( const cl_context_properties * properties , cl_uint num_devices , const cl_device_id * devices , void ( CL_CALLBACK * pfn_notify ) ( const char * , const void * , size_t , void * ) , void * user_data , cl_int * errcode_ret ) , cl_context () ) \
+	_buildFunc_( cl_context , CreateContextFromType, ( const cl_context_properties * properties , cl_device_type device_type , void ( CL_CALLBACK * pfn_notify ) ( const char * , const void * , size_t , void * ) , void * user_data , cl_int * errcode_ret ) , cl_context () ) \
+	_buildFunc_( cl_int , RetainContext, ( cl_context context ) , cl_int () ) \
+	_buildFunc_( cl_int , ReleaseContext, ( cl_context context ) , cl_int () ) \
+	_buildFunc_( cl_int , GetContextInfo, ( cl_context context , cl_context_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_command_queue , CreateCommandQueue, ( cl_context context , cl_device_id device , cl_command_queue_properties properties , cl_int * errcode_ret ) , cl_command_queue () ) \
+	_buildFunc_( cl_int , RetainCommandQueue, ( cl_command_queue command_queue ) , cl_int () ) \
+	_buildFunc_( cl_int , ReleaseCommandQueue, ( cl_command_queue command_queue ) , cl_int () ) \
+	_buildFunc_( cl_int , GetCommandQueueInfo, ( cl_command_queue command_queue , cl_command_queue_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , SetCommandQueueProperty, ( cl_command_queue command_queue , cl_command_queue_properties properties , cl_bool enable , cl_command_queue_properties * old_properties ) , cl_int () ) \
+	_buildFunc_( cl_mem , CreateBuffer, ( cl_context context , cl_mem_flags flags , size_t size , void * host_ptr , cl_int * errcode_ret ) , cl_mem () ) \
+	_buildFunc_( cl_mem , CreateSubBuffer, ( cl_mem buffer , cl_mem_flags flags , cl_buffer_create_type buffer_create_type , const void * buffer_create_info , cl_int * errcode_ret ) , cl_mem () ) \
+	_buildFunc_( cl_mem , CreateImage2D, ( cl_context context , cl_mem_flags flags , const cl_image_format * image_format , size_t image_width , size_t image_height , size_t image_row_pitch , void * host_ptr , cl_int * errcode_ret ) , cl_mem () ) \
+	_buildFunc_( cl_mem , CreateImage3D, ( cl_context context , cl_mem_flags flags , const cl_image_format * image_format , size_t image_width , size_t image_height , size_t image_depth , size_t image_row_pitch , size_t image_slice_pitch , void * host_ptr , cl_int * errcode_ret ) , cl_mem () ) \
+	_buildFunc_( cl_int , RetainMemObject, ( cl_mem memobj ) , cl_int () ) \
+	_buildFunc_( cl_int , ReleaseMemObject, ( cl_mem memobj ) , cl_int () ) \
+	_buildFunc_( cl_int , GetSupportedImageFormats, ( cl_context context , cl_mem_flags flags , cl_mem_object_type image_type , cl_uint num_entries , cl_image_format * image_formats , cl_uint * num_image_formats ) , cl_int () ) \
+	_buildFunc_( cl_int , GetMemObjectInfo, ( cl_mem memobj , cl_mem_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , GetImageInfo, ( cl_mem image , cl_image_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , SetMemObjectDestructorCallback, ( cl_mem memobj , void ( CL_CALLBACK * pfn_notify ) ( cl_mem memobj , void * user_data ) , void * user_data ) , cl_int () ) \
+	_buildFunc_( cl_sampler , CreateSampler, ( cl_context context , cl_bool normalized_coords , cl_addressing_mode addressing_mode , cl_filter_mode filter_mode , cl_int * errcode_ret ) , cl_sampler () ) \
+	_buildFunc_( cl_int , RetainSampler, ( cl_sampler sampler ) , cl_int () ) \
+	_buildFunc_( cl_int , ReleaseSampler, ( cl_sampler sampler ) , cl_int () ) \
+	_buildFunc_( cl_int , GetSamplerInfo, ( cl_sampler sampler , cl_sampler_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_program , CreateProgramWithSource, ( cl_context context , cl_uint count , const char * * strings , const size_t * lengths , cl_int * errcode_ret ) , cl_program () ) \
+	_buildFunc_( cl_program , CreateProgramWithBinary, ( cl_context context , cl_uint num_devices , const cl_device_id * device_list , const size_t * lengths , const unsigned char * * binaries , cl_int * binary_status , cl_int * errcode_ret ) , cl_program () ) \
+	_buildFunc_( cl_int , RetainProgram, ( cl_program program ) , cl_int () ) \
+	_buildFunc_( cl_int , ReleaseProgram, ( cl_program program ) , cl_int () ) \
+	_buildFunc_( cl_int , BuildProgram, ( cl_program program , cl_uint num_devices , const cl_device_id * device_list , const char * options , void ( CL_CALLBACK * pfn_notify ) ( cl_program program , void * user_data ) , void * user_data ) , cl_int () ) \
+	_buildFunc_( cl_int , UnloadCompiler, ( void ) , cl_int () ) \
+	_buildFunc_( cl_int , GetProgramInfo, ( cl_program program , cl_program_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , GetProgramBuildInfo, ( cl_program program , cl_device_id device , cl_program_build_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_kernel , CreateKernel, ( cl_program program , const char * kernel_name , cl_int * errcode_ret ) , cl_kernel () ) \
+	_buildFunc_( cl_int , CreateKernelsInProgram, ( cl_program program , cl_uint num_kernels , cl_kernel * kernels , cl_uint * num_kernels_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , RetainKernel, ( cl_kernel kernel ) , cl_int () ) \
+	_buildFunc_( cl_int , ReleaseKernel, ( cl_kernel kernel ) , cl_int () ) \
+	_buildFunc_( cl_int , SetKernelArg, ( cl_kernel kernel , cl_uint arg_index , size_t arg_size , const void * arg_value ) , cl_int () ) \
+	_buildFunc_( cl_int , GetKernelInfo, ( cl_kernel kernel , cl_kernel_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , GetKernelWorkGroupInfo, ( cl_kernel kernel , cl_device_id device , cl_kernel_work_group_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , WaitForEvents, ( cl_uint num_events , const cl_event * event_list ) , cl_int () ) \
+	_buildFunc_( cl_int , GetEventInfo, ( cl_event event , cl_event_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_event , CreateUserEvent, ( cl_context context , cl_int * errcode_ret ) , cl_event () ) \
+	_buildFunc_( cl_int , RetainEvent, ( cl_event event ) , cl_int () ) \
+	_buildFunc_( cl_int , ReleaseEvent, ( cl_event event ) , cl_int () ) \
+	_buildFunc_( cl_int , SetUserEventStatus, ( cl_event event , cl_int execution_status ) , cl_int () ) \
+	_buildFunc_( cl_int , SetEventCallback, ( cl_event event , cl_int command_exec_callback_type , void ( CL_CALLBACK * pfn_notify ) ( cl_event , cl_int , void * ) , void * user_data ) , cl_int () ) \
+	_buildFunc_( cl_int , GetEventProfilingInfo, ( cl_event event , cl_profiling_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , Flush, ( cl_command_queue command_queue ) , cl_int () ) \
+	_buildFunc_( cl_int , Finish, ( cl_command_queue command_queue ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueReadBuffer, ( cl_command_queue command_queue , cl_mem buffer , cl_bool blocking_read , size_t offset , size_t cb , void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueReadBufferRect, ( cl_command_queue command_queue , cl_mem buffer , cl_bool blocking_read , const size_t * buffer_origin , const size_t * host_origin , const size_t * region , size_t buffer_row_pitch , size_t buffer_slice_pitch , size_t host_row_pitch , size_t host_slice_pitch , void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueWriteBuffer, ( cl_command_queue command_queue , cl_mem buffer , cl_bool blocking_write , size_t offset , size_t cb , const void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueWriteBufferRect, ( cl_command_queue command_queue , cl_mem buffer , cl_bool blocking_write , const size_t * buffer_origin , const size_t * host_origin , const size_t * region , size_t buffer_row_pitch , size_t buffer_slice_pitch , size_t host_row_pitch , size_t host_slice_pitch , const void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueCopyBuffer, ( cl_command_queue command_queue , cl_mem src_buffer , cl_mem dst_buffer , size_t src_offset , size_t dst_offset , size_t cb , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueCopyBufferRect, ( cl_command_queue command_queue , cl_mem src_buffer , cl_mem dst_buffer , const size_t * src_origin , const size_t * dst_origin , const size_t * region , size_t src_row_pitch , size_t src_slice_pitch , size_t dst_row_pitch , size_t dst_slice_pitch , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueReadImage, ( cl_command_queue command_queue , cl_mem image , cl_bool blocking_read , const size_t * origin , const size_t * region , size_t row_pitch , size_t slice_pitch , void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueWriteImage, ( cl_command_queue command_queue , cl_mem image , cl_bool blocking_write , const size_t * origin , const size_t * region , size_t input_row_pitch , size_t input_slice_pitch , const void * ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueCopyImage, ( cl_command_queue command_queue , cl_mem src_image , cl_mem dst_image , const size_t * src_origin , const size_t * dst_origin , const size_t * region , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueCopyImageToBuffer, ( cl_command_queue command_queue , cl_mem src_image , cl_mem dst_buffer , const size_t * src_origin , const size_t * region , size_t dst_offset , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueCopyBufferToImage, ( cl_command_queue command_queue , cl_mem src_buffer , cl_mem dst_image , size_t src_offset , const size_t * dst_origin , const size_t * region , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( void * , EnqueueMapBuffer, ( cl_command_queue command_queue , cl_mem buffer , cl_bool blocking_map , cl_map_flags map_flags , size_t offset , size_t cb , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event , cl_int * errcode_ret ) , nullptr ) \
+	_buildFunc_( void * , EnqueueMapImage, ( cl_command_queue command_queue , cl_mem image , cl_bool blocking_map , cl_map_flags map_flags , const size_t * origin , const size_t * region , size_t * image_row_pitch , size_t * image_slice_pitch , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event , cl_int * errcode_ret ) , nullptr ) \
+	_buildFunc_( cl_int , EnqueueUnmapMemObject, ( cl_command_queue command_queue , cl_mem memobj , void * mapped_ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueNDRangeKernel, ( cl_command_queue command_queue , cl_kernel kernel , cl_uint work_dim , const size_t * global_work_offset , const size_t * global_work_size , const size_t * local_work_size , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueTask, ( cl_command_queue command_queue , cl_kernel kernel , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueNativeKernel, ( cl_command_queue command_queue , void ( CL_CALLBACK * user_func ) ( void * ) , void * args , size_t cb_args , cl_uint num_mem_objects , const cl_mem * mem_list , const void * * args_mem_loc , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueMarker, ( cl_command_queue command_queue , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueWaitForEvents, ( cl_command_queue command_queue , cl_uint num_events , const cl_event * event_list ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueBarrier, ( cl_command_queue command_queue ) , cl_int () ) \
+	_buildFunc_( void * , GetExtensionFunctionAddress, ( const char * func_name ) , nullptr ) \
 
 

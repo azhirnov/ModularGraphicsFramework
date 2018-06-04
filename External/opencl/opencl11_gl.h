@@ -33,15 +33,15 @@ enum
 	CL_CGL_SHAREGROUP_KHR		= 0x200C ,
 };
 
-#define CL2_GL_FUNCTIONS( _buildFunc_ ) \
-	_buildFunc_( cl_mem, CreateFromGLBuffer, ( cl_context context , cl_mem_flags flags , cl_GLuint bufobj , int * errcode_ret ) , cl_mem() ) \
-	_buildFunc_( cl_mem, CreateFromGLTexture2D, ( cl_context context , cl_mem_flags flags , cl_GLenum target , cl_GLint miplevel , cl_GLuint texture , cl_int * errcode_ret ) , cl_mem() ) \
-	_buildFunc_( cl_mem, CreateFromGLTexture3D, ( cl_context context , cl_mem_flags flags , cl_GLenum target , cl_GLint miplevel , cl_GLuint texture , cl_int * errcode_ret ) , cl_mem() ) \
-	_buildFunc_( cl_mem, CreateFromGLRenderbuffer, ( cl_context context , cl_mem_flags flags , cl_GLuint renderbuffer , cl_int * errcode_ret ) , cl_mem() ) \
-	_buildFunc_( cl_int, GetGLObjectInfo, ( cl_mem memobj , cl_gl_object_type * gl_object_type , cl_GLuint * gl_object_name ) , cl_int() ) \
-	_buildFunc_( cl_int, GetGLTextureInfo, ( cl_mem memobj , cl_gl_texture_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueAcquireGLObjects, ( cl_command_queue command_queue , cl_uint num_objects , const cl_mem * mem_objects , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, EnqueueReleaseGLObjects, ( cl_command_queue command_queue , cl_uint num_objects , const cl_mem * mem_objects , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int() ) \
-	_buildFunc_( cl_int, GetGLContextInfoKHR, ( const cl_context_properties * properties , cl_gl_context_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int() ) \
+#define CL1_GL_FUNCTIONS( _buildFunc_ ) \
+	_buildFunc_( cl_mem , CreateFromGLBuffer, ( cl_context context , cl_mem_flags flags , cl_GLuint bufobj , int * errcode_ret ) , cl_mem () ) \
+	_buildFunc_( cl_mem , CreateFromGLTexture2D, ( cl_context context , cl_mem_flags flags , cl_GLenum target , cl_GLint miplevel , cl_GLuint texture , cl_int * errcode_ret ) , cl_mem () ) \
+	_buildFunc_( cl_mem , CreateFromGLTexture3D, ( cl_context context , cl_mem_flags flags , cl_GLenum target , cl_GLint miplevel , cl_GLuint texture , cl_int * errcode_ret ) , cl_mem () ) \
+	_buildFunc_( cl_mem , CreateFromGLRenderbuffer, ( cl_context context , cl_mem_flags flags , cl_GLuint renderbuffer , cl_int * errcode_ret ) , cl_mem () ) \
+	_buildFunc_( cl_int , GetGLObjectInfo, ( cl_mem memobj , cl_gl_object_type * gl_object_type , cl_GLuint * gl_object_name ) , cl_int () ) \
+	_buildFunc_( cl_int , GetGLTextureInfo, ( cl_mem memobj , cl_gl_texture_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueAcquireGLObjects, ( cl_command_queue command_queue , cl_uint num_objects , const cl_mem * mem_objects , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueReleaseGLObjects, ( cl_command_queue command_queue , cl_uint num_objects , const cl_mem * mem_objects , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , GetGLContextInfoKHR, ( const cl_context_properties * properties , cl_gl_context_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
 
 

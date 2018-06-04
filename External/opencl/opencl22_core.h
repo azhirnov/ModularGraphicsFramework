@@ -53,6 +53,7 @@ typedef cl_uint cl_kernel_arg_address_qualifier ;
 typedef cl_uint cl_kernel_arg_access_qualifier ;
 typedef cl_bitfield cl_kernel_arg_type_qualifier ;
 typedef cl_uint cl_kernel_work_group_info ;
+typedef cl_uint cl_kernel_sub_group_info ;
 typedef cl_uint cl_event_info ;
 typedef cl_uint cl_command_type ;
 typedef cl_uint cl_profiling_info ;
@@ -148,6 +149,8 @@ enum
 	CL_INVALID_DEVICE_PARTITION_COUNT		= - 68 ,
 	CL_INVALID_PIPE_SIZE		= - 69 ,
 	CL_INVALID_DEVICE_QUEUE		= - 70 ,
+	CL_INVALID_SPEC_ID		= - 71 ,
+	CL_MAX_SIZE_RESTRICTION_EXCEEDED		= - 72 ,
 	CL_FALSE		= 0 ,
 	CL_TRUE		= 1 ,
 	CL_BLOCKING		= CL_TRUE ,
@@ -157,6 +160,7 @@ enum
 	CL_PLATFORM_NAME		= 0x0902 ,
 	CL_PLATFORM_VENDOR		= 0x0903 ,
 	CL_PLATFORM_EXTENSIONS		= 0x0904 ,
+	CL_PLATFORM_HOST_TIMER_RESOLUTION		= 0x0905 ,
 	CL_DEVICE_TYPE_DEFAULT		= ( 1 << 0 ) ,
 	CL_DEVICE_TYPE_CPU		= ( 1 << 1 ) ,
 	CL_DEVICE_TYPE_GPU		= ( 1 << 2 ) ,
@@ -255,6 +259,9 @@ enum
 	CL_DEVICE_PREFERRED_PLATFORM_ATOMIC_ALIGNMENT		= 0x1058 ,
 	CL_DEVICE_PREFERRED_GLOBAL_ATOMIC_ALIGNMENT		= 0x1059 ,
 	CL_DEVICE_PREFERRED_LOCAL_ATOMIC_ALIGNMENT		= 0x105A ,
+	CL_DEVICE_IL_VERSION		= 0x105B ,
+	CL_DEVICE_MAX_NUM_SUB_GROUPS		= 0x105C ,
+	CL_DEVICE_SUB_GROUP_INDEPENDENT_FORWARD_PROGRESS		= 0x105D ,
 	CL_FP_DENORM		= ( 1 << 0 ) ,
 	CL_FP_INF_NAN		= ( 1 << 1 ) ,
 	CL_FP_ROUND_TO_NEAREST		= ( 1 << 2 ) ,
@@ -299,6 +306,7 @@ enum
 	CL_QUEUE_REFERENCE_COUNT		= 0x1092 ,
 	CL_QUEUE_PROPERTIES		= 0x1093 ,
 	CL_QUEUE_SIZE		= 0x1094 ,
+	CL_QUEUE_DEVICE_DEFAULT		= 0x1095 ,
 	CL_MEM_READ_WRITE		= ( 1 << 0 ) ,
 	CL_MEM_WRITE_ONLY		= ( 1 << 1 ) ,
 	CL_MEM_READ_ONLY		= ( 1 << 2 ) ,
@@ -349,6 +357,7 @@ enum
 	CL_HALF_FLOAT		= 0x10DD ,
 	CL_FLOAT		= 0x10DE ,
 	CL_UNORM_INT24		= 0x10DF ,
+	CL_UNORM_INT_101010_2		= 0x10E0 ,
 	CL_MEM_OBJECT_BUFFER		= 0x10F0 ,
 	CL_MEM_OBJECT_IMAGE2D		= 0x10F1 ,
 	CL_MEM_OBJECT_IMAGE3D		= 0x10F2 ,
@@ -407,6 +416,9 @@ enum
 	CL_PROGRAM_BINARIES		= 0x1166 ,
 	CL_PROGRAM_NUM_KERNELS		= 0x1167 ,
 	CL_PROGRAM_KERNEL_NAMES		= 0x1168 ,
+	CL_PROGRAM_IL		= 0x1169 ,
+	CL_PROGRAM_SCOPE_GLOBAL_CTORS_PRESENT		= 0x116A ,
+	CL_PROGRAM_SCOPE_GLOBAL_DTORS_PRESENT		= 0x116B ,
 	CL_PROGRAM_BUILD_STATUS		= 0x1181 ,
 	CL_PROGRAM_BUILD_OPTIONS		= 0x1182 ,
 	CL_PROGRAM_BUILD_LOG		= 0x1183 ,
@@ -426,6 +438,8 @@ enum
 	CL_KERNEL_CONTEXT		= 0x1193 ,
 	CL_KERNEL_PROGRAM		= 0x1194 ,
 	CL_KERNEL_ATTRIBUTES		= 0x1195 ,
+	CL_KERNEL_MAX_NUM_SUB_GROUPS		= 0x11B9 ,
+	CL_KERNEL_COMPILE_NUM_SUB_GROUPS		= 0x11BA ,
 	CL_KERNEL_ARG_ADDRESS_QUALIFIER		= 0x1196 ,
 	CL_KERNEL_ARG_ACCESS_QUALIFIER		= 0x1197 ,
 	CL_KERNEL_ARG_TYPE_NAME		= 0x1198 ,
@@ -450,6 +464,9 @@ enum
 	CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE		= 0x11B3 ,
 	CL_KERNEL_PRIVATE_MEM_SIZE		= 0x11B4 ,
 	CL_KERNEL_GLOBAL_WORK_SIZE		= 0x11B5 ,
+	CL_KERNEL_MAX_SUB_GROUP_SIZE_FOR_NDRANGE		= 0x2033 ,
+	CL_KERNEL_SUB_GROUP_COUNT_FOR_NDRANGE		= 0x2034 ,
+	CL_KERNEL_LOCAL_SIZE_FOR_SUB_GROUP_COUNT		= 0x11B8 ,
 	CL_KERNEL_EXEC_INFO_SVM_PTRS		= 0x11B6 ,
 	CL_KERNEL_EXEC_INFO_SVM_FINE_GRAIN_SYSTEM		= 0x11B7 ,
 	CL_EVENT_COMMAND_QUEUE		= 0x11D0 ,
@@ -507,6 +524,9 @@ enum
 	_buildFunc_( cl_int , CreateSubDevices, ( cl_device_id in_device , const cl_device_partition_property * properties , cl_uint num_devices , cl_device_id * out_devices , cl_uint * num_devices_ret ) , cl_int () ) \
 	_buildFunc_( cl_int , RetainDevice, ( cl_device_id device ) , cl_int () ) \
 	_buildFunc_( cl_int , ReleaseDevice, ( cl_device_id device ) , cl_int () ) \
+	_buildFunc_( cl_int , SetDefaultDeviceCommandQueue, ( cl_context context , cl_device_id device , cl_command_queue command_queue ) , cl_int () ) \
+	_buildFunc_( cl_int , GetDeviceAndHostTimer, ( cl_device_id device , cl_ulong * device_timestamp , cl_ulong * host_timestamp ) , cl_int () ) \
+	_buildFunc_( cl_int , GetHostTimer, ( cl_device_id device , cl_ulong * host_timestamp ) , cl_int () ) \
 	_buildFunc_( cl_context , CreateContext, ( const cl_context_properties * properties , cl_uint num_devices , const cl_device_id * devices , void ( CL_CALLBACK * pfn_notify ) ( const char * , const void * , size_t , void * ) , void * user_data , cl_int * errcode_ret ) , cl_context () ) \
 	_buildFunc_( cl_context , CreateContextFromType, ( const cl_context_properties * properties , cl_device_type device_type , void ( CL_CALLBACK * pfn_notify ) ( const char * , const void * , size_t , void * ) , void * user_data , cl_int * errcode_ret ) , cl_context () ) \
 	_buildFunc_( cl_int , RetainContext, ( cl_context context ) , cl_int () ) \
@@ -536,16 +556,20 @@ enum
 	_buildFunc_( cl_program , CreateProgramWithSource, ( cl_context context , cl_uint count , const char * * strings , const size_t * lengths , cl_int * errcode_ret ) , cl_program () ) \
 	_buildFunc_( cl_program , CreateProgramWithBinary, ( cl_context context , cl_uint num_devices , const cl_device_id * device_list , const size_t * lengths , const unsigned char * * binaries , cl_int * binary_status , cl_int * errcode_ret ) , cl_program () ) \
 	_buildFunc_( cl_program , CreateProgramWithBuiltInKernels, ( cl_context context , cl_uint num_devices , const cl_device_id * device_list , const char * kernel_names , cl_int * errcode_ret ) , cl_program () ) \
+	_buildFunc_( cl_program , CreateProgramWithIL, ( cl_context context , const void * il , size_t length , cl_int * errcode_ret ) , cl_program () ) \
 	_buildFunc_( cl_int , RetainProgram, ( cl_program program ) , cl_int () ) \
 	_buildFunc_( cl_int , ReleaseProgram, ( cl_program program ) , cl_int () ) \
 	_buildFunc_( cl_int , BuildProgram, ( cl_program program , cl_uint num_devices , const cl_device_id * device_list , const char * options , void ( CL_CALLBACK * pfn_notify ) ( cl_program program , void * user_data ) , void * user_data ) , cl_int () ) \
 	_buildFunc_( cl_int , CompileProgram, ( cl_program program , cl_uint num_devices , const cl_device_id * device_list , const char * options , cl_uint num_input_headers , const cl_program * input_headers , const char * * header_include_names , void ( CL_CALLBACK * pfn_notify ) ( cl_program program , void * user_data ) , void * user_data ) , cl_int () ) \
 	_buildFunc_( cl_program , LinkProgram, ( cl_context context , cl_uint num_devices , const cl_device_id * device_list , const char * options , cl_uint num_input_programs , const cl_program * input_programs , void ( CL_CALLBACK * pfn_notify ) ( cl_program program , void * user_data ) , void * user_data , cl_int * errcode_ret ) , cl_program () ) \
+	_buildFunc_( cl_int , SetProgramReleaseCallback, ( cl_program program , void ( CL_CALLBACK * pfn_notify ) ( cl_program program , void * user_data ) , void * user_data ) , cl_int () ) \
+	_buildFunc_( cl_int , SetProgramSpecializationConstant, ( cl_program program , cl_uint spec_id , size_t spec_size , const void * spec_value ) , cl_int () ) \
 	_buildFunc_( cl_int , UnloadPlatformCompiler, ( cl_platform_id platform ) , cl_int () ) \
 	_buildFunc_( cl_int , GetProgramInfo, ( cl_program program , cl_program_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
 	_buildFunc_( cl_int , GetProgramBuildInfo, ( cl_program program , cl_device_id device , cl_program_build_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
 	_buildFunc_( cl_kernel , CreateKernel, ( cl_program program , const char * kernel_name , cl_int * errcode_ret ) , cl_kernel () ) \
 	_buildFunc_( cl_int , CreateKernelsInProgram, ( cl_program program , cl_uint num_kernels , cl_kernel * kernels , cl_uint * num_kernels_ret ) , cl_int () ) \
+	_buildFunc_( cl_kernel , CloneKernel, ( cl_kernel source_kernel , cl_int * errcode_ret ) , cl_kernel () ) \
 	_buildFunc_( cl_int , RetainKernel, ( cl_kernel kernel ) , cl_int () ) \
 	_buildFunc_( cl_int , ReleaseKernel, ( cl_kernel kernel ) , cl_int () ) \
 	_buildFunc_( cl_int , SetKernelArg, ( cl_kernel kernel , cl_uint arg_index , size_t arg_size , const void * arg_value ) , cl_int () ) \
@@ -554,6 +578,7 @@ enum
 	_buildFunc_( cl_int , GetKernelInfo, ( cl_kernel kernel , cl_kernel_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
 	_buildFunc_( cl_int , GetKernelArgInfo, ( cl_kernel kernel , cl_uint arg_indx , cl_kernel_arg_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
 	_buildFunc_( cl_int , GetKernelWorkGroupInfo, ( cl_kernel kernel , cl_device_id device , cl_kernel_work_group_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
+	_buildFunc_( cl_int , GetKernelSubGroupInfo, ( cl_kernel kernel , cl_device_id device , cl_kernel_sub_group_info param_name , size_t input_value_size , const void * input_value , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
 	_buildFunc_( cl_int , WaitForEvents, ( cl_uint num_events , const cl_event * event_list ) , cl_int () ) \
 	_buildFunc_( cl_int , GetEventInfo, ( cl_event event , cl_event_info param_name , size_t param_value_size , void * param_value , size_t * param_value_size_ret ) , cl_int () ) \
 	_buildFunc_( cl_event , CreateUserEvent, ( cl_context context , cl_int * errcode_ret ) , cl_event () ) \
@@ -590,6 +615,7 @@ enum
 	_buildFunc_( cl_int , EnqueueSVMMemFill, ( cl_command_queue command_queue , void * svm_ptr , const void * pattern , size_t pattern_size , size_t size , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
 	_buildFunc_( cl_int , EnqueueSVMMap, ( cl_command_queue command_queue , cl_bool blocking_map , cl_map_flags flags , void * svm_ptr , size_t size , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
 	_buildFunc_( cl_int , EnqueueSVMUnmap, ( cl_command_queue command_queue , void * svm_ptr , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
+	_buildFunc_( cl_int , EnqueueSVMMigrateMem, ( cl_command_queue command_queue , cl_uint num_svm_pointers , const void * * svm_pointers , const size_t * sizes , cl_mem_migration_flags flags , cl_uint num_events_in_wait_list , const cl_event * event_wait_list , cl_event * event ) , cl_int () ) \
 	_buildFunc_( void * , GetExtensionFunctionAddressForPlatform, ( cl_platform_id platform , const char * func_name ) , nullptr ) \
 
 

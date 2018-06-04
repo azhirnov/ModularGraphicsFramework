@@ -12,12 +12,17 @@ set_property( GLOBAL PROPERTY USE_FOLDERS ON )
 #----------------------------------------------------------------------------------
 # setup
 
-set( EXTERNALS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../downloaded" CACHE STRING "Path to external projects sources" )
+set( EXTERNALS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/.." CACHE STRING "Path to external projects sources" )
 
-set( DOWNLOAD_EXTERNALS ON CACHE BOOL "download source from repository" )
+set( DOWNLOAD_EXTERNALS OFF CACHE BOOL "download source from repository" )
 set( ENABLE_SDL ON CACHE BOOL "use SDL2 library" )
 set( ENABLE_ANGELSCRIPT ON CACHE BOOL "use AngelScript" )
-set( ENABLE_LUNARGLASS ON CACHE BOOL "use LunarGLASS" )
+set( ENABLE_GLSLANG ON CACHE BOOL "use glslang" )
+set( ENABLE_FREEIMAGE OFF CACHE BOOL "use FreeImage" )
+set( ENABLE_LZ4 ON CACHE BOOL "use LZ4" )
+set( ENABLE_MINIZ ON CACHE BOOL "use MiniZ" )
+set( ENABLE_LODEPNG ON CACHE BOOL "use lodepng" )
+set( ENABLE_DEVIL ON CACHE BOOL "use DevIL" )
 
 message( STATUS "EXTERNALS_PATH: ${EXTERNALS_PATH}" )
 
@@ -27,7 +32,7 @@ endif ()
 
 set( EXTERNAL_LIST_SEPARATOR "|" )
 string( REPLACE ";" "${EXTERNAL_LIST_SEPARATOR}" EXTERNAL_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" )
-set( EXTERNAL_BUILD_TARGET_FLAGS "" )
+set( EXTERNAL_BUILD_TARGET_FLAGS "-DEXTERNALS_PATH=${EXTERNALS_PATH}" )
 
 foreach ( CONFIG ${CMAKE_CONFIGURATION_TYPES} )
 	string( TOUPPER ${CONFIG} OUT_CONFIG )
@@ -50,18 +55,32 @@ include( ExternalProject )
 add_library( "External.All" STATIC
 	"CMakeLists.txt"
 	"download.cmake"
+	"options.cmake"
 	"SDL2/build.cmake"
 	"AngelScript/build.cmake"
 	"AngelScript/CMakeLists.txt"
-	"LunarGLASS/build.cmake"
-	"LunarGLASS/CMakeLists.txt"
-	"LunarGLASS/main.cpp"
+	"glslang/build.cmake"
+	"FreeImage/build.cmake"
+	"lz4/build.cmake"
+	"lz4/CMakeLists.txt"
+	"miniz/build.cmake"
+	"miniz/CMakeLists.txt"
+	"lodepng/build.cmake"
+	"DevIL/build.cmake"
+	"DirectX/dx11.cmake"
 )
+set_target_properties( "External.All" PROPERTIES LINKER_LANGUAGE CXX )
 set_property( TARGET "External.All" PROPERTY FOLDER "External" )
-source_group( "" FILES "CMakeLists.txt" "download.cmake" )
+source_group( "" FILES "CMakeLists.txt" "download.cmake" "options.cmake" )
 source_group( "SDL2" FILES "SDL2/build.cmake" )
 source_group( "AngelScript" FILES "AngelScript/build.cmake" "AngelScript/CMakeLists.txt" )
-source_group( "LunarGLASS" FILES "LunarGLASS/build.cmake" "LunarGLASS/CMakeLists.txt" "LunarGLASS/main.cpp" )
+source_group( "glslang" FILES "glslang/build.cmake" )
+source_group( "FreeImage" FILES "FreeImage/build.cmake" )
+source_group( "lz4" FILES "lz4/build.cmake" "lz4/CMakeLists.txt" )
+source_group( "miniz" FILES "miniz/build.cmake" "miniz/CMakeLists.txt" )
+source_group( "lodepng" FILES "lodepng/build.cmake" )
+source_group( "DevIL" FILES "DevIL/build.cmake" )
+source_group( "DirectX" FILES "DirectX/dx11.cmake" )
 
 
 # download
@@ -86,10 +105,47 @@ if (ENABLE_ANGELSCRIPT)
 endif ()
 
 
-# LunarGLASS
-if (ENABLE_LUNARGLASS)
-	include( "LunarGLASS/build.cmake" )
-	add_dependencies( "External.All" LunarGLASS )
+# glslang
+if (ENABLE_GLSLANG)
+	include( "glslang/build.cmake" )
+	add_dependencies( "External.All" glsl )
 endif ()
 
 
+# FreeImage
+if (ENABLE_FREEIMAGE)
+	include( "FreeImage/build.cmake" )
+	add_dependencies( "External.All" FreeImage )
+endif ()
+
+
+# lz4
+if (ENABLE_LZ4)
+	include( "lz4/build.cmake" )
+	add_dependencies( "External.All" LZ4 )
+endif ()
+
+
+# MiniZ
+if (ENABLE_MINIZ)
+	include( "miniz/build.cmake" )
+	add_dependencies( "External.All" MiniZ )
+endif ()
+
+
+# lodepng
+if (ENABLE_LODEPNG)
+	include( "lodepng/build.cmake" )
+	add_dependencies( "External.All" lodepng )
+endif ()
+
+
+# DevIL
+if (ENABLE_DEVIL)
+	include( "DevIL/build.cmake" )
+	add_dependencies( "External.All" DevIL )
+endif ()
+
+
+# DirectX
+include( "DirectX/dx11.cmake" )

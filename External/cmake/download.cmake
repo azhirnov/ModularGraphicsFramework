@@ -4,7 +4,7 @@ ExternalProject_Add( "External.Download"
 	# download
 	DOWNLOAD_DIR		"${EXTERNALS_PATH}"
 	GIT_REPOSITORY		https://github.com/azhirnov/ModularGraphicsFramework-Externals.git
-	GIT_TAG				master
+	GIT_TAG				ca59680a37ea47d19b103cff22fca2b734f1154e	#master
 	EXCLUDE_FROM_ALL	1
 	LOG_DOWNLOAD		1
 	# update
