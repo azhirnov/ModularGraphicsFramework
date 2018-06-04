@@ -8,8 +8,10 @@ using namespace CMake;
 #define ENABLE_STL
 #define ENABLE_ENGINE
 #define ENABLE_UTILS
+#define ENABLE_ENGINE_SAMPLES
 #define ENABLE_PROJECTS
 #define ENABLE_EXTERNALS
+//#define ENABLE_PIPELINE_BUILDING
 
 //#define ENABLE_SCU			// single compilation unit per thread
 #define NUM_THREADS	8
@@ -175,15 +177,16 @@ extern void GenMGFProject ()
 									  GCC::Uninititalized, GCC::MayBeUninitialized, GCC::UnknownPragmas, GCC::Pragmas, GCC::StrictAliasing, GCC::StrictOverflow,
 									  GCC::Undef, GCC::EndifLabels, GCC::FreeNonheapObject, GCC::PointerArith, GCC::CastAlign, GCC::WriteStrings,
 									  /*GCC::Conversion,*/ GCC::ConversionNull, /*GCC::ZeroAsNullConst,*/ GCC::EnumCompare, GCC::SignCompare, /*GCC::SignConvertsion,*/
-									  GCC::SizeofPointerMemaccess, /*GCC::SizeofPointerDiv,*/ GCC::LogicalOp });
+									  GCC::SizeofPointerMemaccess, /*GCC::SizeofPointerDiv,*/ GCC::LogicalOp, GCC::Address });
 
 			shared_cxx_flags.PushBack( GCC::DisableWarnings({ GCC::Unused, GCC::NonTemplateFriend, GCC::ZeroAsNullConst, GCC::Shadow, GCC::EnumCompare,
 															  GCC::Narrowing, GCC::Attribute, GCC::InvalidOffsetof }) );
 			
 			shared_cxx_flags.PushBack( GCC::WarningsToErrors({ GCC::InitSelf, GCC::Parentheses, GCC::ReturnLocalAddr, GCC::ReturnType,
-															   GCC::ArrayBounds, GCC::DivByZero, GCC::Address, GCC::MissingFieldInit, /*GCC::AlignedNew,*/
+															   GCC::ArrayBounds, GCC::DivByZero, GCC::MissingFieldInit, /*GCC::AlignedNew,*/
 															   GCC::PlacementNew, GCC::SignCompare, GCC::CastQual, GCC::CastAlign, GCC::LiteralSuffix,
-															   GCC::ShadowLocal }) );
+															   GCC::ShadowLocal, GCC::DeleteIncomplete, GCC::SubobjectLinkage, GCC::ODR,
+															   GCC::OldStyleCast, GCC::OldStyleDeclaration, GCC::OldStyleDefinition }) );
 
 
 			auto	debug_cfg = gcc->AddConfiguration( "Debug" );
@@ -234,7 +237,7 @@ extern void GenMGFProject ()
 
 		// Clang (Windows, Linux)
 		#if 0
-		auto	clang = builder.AddClangCompiler()->EnableIf("WIN32 OR UNIX");
+		auto	clang = builder.AddClangCompiler()->EnableIf( "WIN32 OR UNIX" );
 		{
 			clang->AddSource( "set( CONFIGURATION_DEPENDENT_PATH OFF CACHE INTERNAL \"\" FORCE )" );
 
@@ -447,12 +450,10 @@ extern void GenMGFProject ()
 		auto	engine_stl = builder.AddLibrary( "Engine.STL", "Engine/STL" );
 		{
 			engine_stl->AddFoldersRecursive( "" );
-			
-			#ifdef ENABLE_EXTERNALS
-			engine_stl->LinkLibrary( "SDL2", "ENABLE_SDL" );
-			#endif
-
-			engine_stl->LinkLibrary( "dl;pthread", "UNIX" );
+			engine_stl->LinkLibrary( "SDL2", "ENABLE_SDL" )
+						->LinkLibrary( "LZ4", "ENABLE_LZ4" )
+						->LinkLibrary( "MiniZ", "ENABLE_MINIZ" )
+						->LinkLibrary( "dl;pthread", "UNIX" );
 		}
 		
 		auto	test_stl = builder.AddExecutable( "Tests.STL", "Tests/STL" );
@@ -515,6 +516,13 @@ extern void GenMGFProject ()
 			engine_profilers->AddFoldersRecursive( "" );
 			engine_profilers->LinkLibrary( engine_platforms );
 		}
+
+		// without external dependencies
+		auto	engine_importexport = builder.AddLibrary( "Engine.ImportExport", "Engine/ImportExport" );
+		{
+			engine_importexport->AddFoldersRecursive( "" );
+			engine_importexport->LinkLibrary( engine_graphics );
+		}
 		
 		auto	engine_scene = builder.AddLibrary( "Engine.Scene", "Engine/Scene" );
 		{
@@ -527,20 +535,16 @@ extern void GenMGFProject ()
 
 		// External //
 	#ifdef ENABLE_EXTERNALS
-		builder.AddExternal( "External/cmake" );
-		builder.Projects_AddDefinition( "PLATFORM_SDL", "ENABLE_SDL" );
+		builder.AddExternal( "External/cmake" )->AddSource( "include( \"External/cmake/options.cmake\" )" );
 
 		auto	engine_pipeline_compiler = builder.AddLibrary( "Engine.PipelineCompiler", "Engine/PipelineCompiler" );
 		{
 			engine_pipeline_compiler->ProjFolder( "EngineTools" );
 			engine_pipeline_compiler->AddFoldersRecursive( "" );
-			engine_pipeline_compiler->LinkLibrary( engine_platforms )->LinkLibrary( "LunarGLASS", "ENABLE_LUNARGLASS" );
-			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/glslang/.." );
-			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/glslang" );
-			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/.." );
-			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS" );
-			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
-			engine_pipeline_compiler->IncludeDirectory( "${CMAKE_BINARY_DIR}/LunarGLASS_bin/LunarGLASS/Core/LLVM/llvm-3.4/include/llvm/.." );
+			engine_pipeline_compiler->LinkLibrary( engine_stl )
+									->LinkLibrary( "glsl", "ENABLE_GLSLANG" )
+									->LinkLibrary( "${D3DCOMPILER_LIBRARY}", "D3DCOMPILER_LIBRARY" );
+			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/glslang" );
 		}
 		
 		auto	engine_script = builder.AddLibrary( "Engine.Scipt", "Engine/Script" );
@@ -560,6 +564,9 @@ extern void GenMGFProject ()
 			engine_res_pack->ProjFolder( "EngineTools" );
 			engine_res_pack->AddFoldersRecursive( "" );
 			engine_res_pack->LinkLibrary( engine_pipeline_compiler )->LinkLibrary( engine_script );
+			engine_res_pack->LinkLibrary( "FreeImage", "ENABLE_FREEIMAGE" )
+							->LinkLibrary( "lodepng", "ENABLE_LODEPNG" )
+							->LinkLibrary( "DevIL", "ENABLE_DEVIL" );
 			engine_res_pack->AddSource(
 				"if ( CONFIGURATION_DEPENDENT_PATH )\n"
 				"	set( RESOURCE_PACKER_EXE \"${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/"_str << engine_res_pack->GetName() << "${CMAKE_EXECUTABLE_SUFFIX}\" )\n"
@@ -584,7 +591,7 @@ extern void GenMGFProject ()
 		auto	test_engine_graphics = builder.AddExecutable( "Tests.Engine.Graphics", "Tests/Engine.Graphics" );
 		{
 			test_engine_graphics->AddFoldersRecursive( "" );
-			test_engine_graphics->LinkLibrary( engine_graphics )->LinkLibrary( engine_profilers );
+			test_engine_graphics->LinkLibrary( engine_importexport )->LinkLibrary( engine_profilers );
 		}
 
 		auto	test_engine_gapi = builder.AddExecutable( "Tests.Engine.Platforms.GAPI", "Tests/Engine.Platforms.GAPI" );
@@ -611,14 +618,14 @@ extern void GenMGFProject ()
 		auto	proj_shader_editor = builder.AddExecutable( "Projects.ShaderEditor", "Projects/ShaderEditor" );
 		{
 			proj_shader_editor->AddFoldersRecursive( "" );
-			proj_shader_editor->LinkLibrary( engine_scene )->LinkLibrary( engine_profilers );
+			proj_shader_editor->LinkLibrary( engine_scene )->LinkLibrary( engine_profilers )->LinkLibrary( engine_importexport );
 		}
 	#endif	// ENABLE_PROJECTS
 	//----------------------------------------------------------------------------
 
 
 		// External //
-	#ifdef ENABLE_EXTERNALS
+	#if defined(ENABLE_EXTERNALS) and defined(ENABLE_PIPELINE_BUILDING) and defined(ENABLE_ENGINE)
 		const auto	PackRes =	LAMBDA( engine_res_pack ) (auto* proj, StringCRef resourceScript)
 							{
 								String	res_script;
@@ -641,25 +648,23 @@ extern void GenMGFProject ()
 								);
 							};
 
-		if ( test_engine_base )
-		{
+		if ( test_engine_base ) {
 			PackRes( test_engine_base, "Pipelines/resources.as" );
 		}
 
-		if ( test_engine_gapi )
-		{
+		if ( test_engine_gapi ) {
 			PackRes( test_engine_gapi, "resources.as" );
 		}
 
-		if ( test_engine_graphics )
-		{
+		if ( test_engine_graphics ) {
 			PackRes( test_engine_graphics, "Pipelines/resources.as" );
 		}
 
-		if ( proj_shader_editor )
-		{
-			PackRes( proj_shader_editor, "Pipelines/resources.as" );
+	# ifdef ENABLE_PROJECTS
+		if ( proj_shader_editor ) {
+			PackRes( proj_shader_editor, "resources.as" );
 		}
+	# endif	// ENABLE_PROJECTS
 	#endif	// ENABLE_EXTERNALS
 	//----------------------------------------------------------------------------
 

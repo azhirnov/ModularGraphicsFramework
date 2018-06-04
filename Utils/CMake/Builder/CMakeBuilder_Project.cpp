@@ -127,7 +127,7 @@ namespace CMake
 		FOR( i, _groups )
 		{
 			FOR( j, _groups[i].second ) {
-				src << "\n\t\t\"" << _groups[i].second[j] << "\"";
+				src << "\n\t\"" << _groups[i].second[j] << "\"";
 			}
 		}
 		src << " )\n";
@@ -511,7 +511,7 @@ namespace CMake
 */
 	bool CMakeBuilder::CMakeProject::_GenNewFile (StringCRef filename, BytesUL maxSize, INOUT Array<StringCRef> &files, OUT BytesUL &totalSize) const
 	{
-		File::WFilePtr	file = File::HddWFile::New( filename );
+		WFilePtr	file = GXFile::HddWFile::New( filename );
 		CHECK_ERR( file );
 
 		String	data;
@@ -638,6 +638,8 @@ namespace CMake
 			String	fname2;
 			CHECK_ERR( FileAddress::AbsoluteToRelativePath( fname, _builder->_baseFolder, OUT fname2 ) );
 
+			FileAddress::FormatPath( INOUT fname2 );
+
 			iter->second << fname2;
 		}
 		return this;
@@ -706,6 +708,8 @@ namespace CMake
 			
 			String	fname2;
 			CHECK_ERR( FileAddress::AbsoluteToRelativePath( fname, _builder->_baseFolder, OUT fname2 ) );
+			
+			FileAddress::FormatPath( INOUT fname2 );
 
 			iter->second << fname2;
 		}
@@ -775,6 +779,8 @@ namespace CMake
 					
 					String	fname2;
 					CHECK_ERR( FileAddress::AbsoluteToRelativePath( fname, _builder->_baseFolder, OUT fname2 ) );
+					
+					FileAddress::FormatPath( INOUT fname2 );
 
 					iter->second << fname2;
 				}

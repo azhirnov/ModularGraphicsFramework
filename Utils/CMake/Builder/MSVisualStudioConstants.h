@@ -57,9 +57,10 @@ namespace VS
 	static constexpr uint	ConversionToRef						= 4239;		// nonstandard extension used: 'argument': conversion from 'type' to 'type &'
 	static constexpr uint	ClassRValueUsedAsLValue				= 4238;		// nonstandard extension used: class rvalue used as lvalue
 	static constexpr uint	NamelessStructOrUnion				= 4201;		// nonstandard extension used : nameless struct/union
-	static constexpr uint	UnderlyingTypeForEnum				= 4480;		// nonstandard extension used: specifying underlying type for enum
+	static constexpr uint	UnderlyingTypeForEnum				= 4480;		// nonstandard extension used: specifying underlying type for enum, valid until c++11
+	static constexpr uint	ClassRedefinitionExt				= 4240;		// nonstandard extension used : access to 'classname' now defined to be 'access specifier', previously it was defined to be 'access specifier'
 
-	static constexpr uint	Extensions[]						= { ConversionToRef, ClassRValueUsedAsLValue, NamelessStructOrUnion, UnderlyingTypeForEnum };
+	static constexpr uint	Extensions[]						= { ConversionToRef, ClassRValueUsedAsLValue, NamelessStructOrUnion, ClassRedefinitionExt };
 
 	static constexpr uint	UnusedFormalParameter				= 4100;		// unreferenced formal parameter
 	static constexpr uint	UnusedLocalVariable					= 4189;		// 'variable': local variable is initialized but not referenced
@@ -237,7 +238,7 @@ namespace VS
 
 	// Calling convention
 	static constexpr char	Cdecl[]					= "/Gd";
-	static constexpr char	Fascall[]				= "/Gr";
+	static constexpr char	Fastcall[]				= "/Gr";
 	static constexpr char	Stdcall[]				= "/Gz";
 	static constexpr char	Vectorcall[]			= "/Gv";
 

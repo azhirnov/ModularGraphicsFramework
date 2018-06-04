@@ -12,6 +12,8 @@ namespace CMake
 	using namespace GX_STL;
 	using namespace GX_STL::GXTypes;
 
+	using WFilePtr	= GXFile::WFilePtr;
+	using RFilePtr	= GXFile::RFilePtr;
 
 
 	//
@@ -65,6 +67,8 @@ namespace CMake
 	// methods
 	public:
 		CMakeBuilder (StringCRef baseFolder, StringCRef solutionName);
+		CMakeBuilder (const CMakeBuilder &) = default;
+		CMakeBuilder (CMakeBuilder &&) = default;
 		~CMakeBuilder ();
 
 		bool Save (StringCRef filename = "CMakeLists.txt");
@@ -91,7 +95,7 @@ namespace CMake
 
 		CMakeExternalProjects* AddExternal (StringCRef path, StringCRef enableIf = Uninitialized);
 		CMakeExternalVSProject* AddVSProject (StringCRef filename, StringCRef enableIf = Uninitialized);
-		Self* SearchVSProjects (StringCRef path, StringCRef projFolder = Uninitialized, StringCRef enableIf = Uninitialized);
+		Self*	SearchVSProjects (StringCRef path, StringCRef projFolder = Uninitialized, StringCRef enableIf = Uninitialized);
 
 		Self*	SetSystemVersion (StringCRef value, StringCRef enableIf = Uninitialized);
 

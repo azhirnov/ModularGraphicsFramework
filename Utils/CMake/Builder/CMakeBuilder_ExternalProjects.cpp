@@ -148,8 +148,8 @@ namespace CMake
 													{ EKeyType::Incl,	"include"			},
 													{ EKeyType::Prop,	"set_property"		}};
 
-		File::RFilePtr	file;
-		CHECK_ERR( file = File::HddRFile::New( filename ) );
+		RFilePtr	file;
+		CHECK_ERR( file = GXFile::HddRFile::New( filename ) );
 
 		const usize	len		= usize(file->RemainingSize());
 		String		buf;	buf.Resize( len );

@@ -32,7 +32,7 @@ namespace Clang
 
 	static constexpr char	UnusedArgument[]		= "-Wunused-argument";
 
-	static constexpr char	LoopAnalysis[]			= "-Wloop-nalysis";
+	static constexpr char	LoopAnalysis[]			= "-Wloop-analysis";
 
 	static constexpr char	IncrementBool[]			= "-Wincrement-bool";
 

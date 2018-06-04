@@ -165,6 +165,16 @@ namespace GCC
 
 	static constexpr char	Reorder[]				= "-Wreorder";
 
+	static constexpr char	DeleteIncomplete[]		= "-Wdelete-incomplete";
+	static constexpr char	ODR[]					= "-Wodr";
+	static constexpr char	SubobjectLinkage[]		= "-Wsubobject-linkage";
+	static constexpr char	LtoOdrTypeMergin[]		= "-flto-odr-type-merging";
+
+	static constexpr char	OldStyleCast[]			= "-Wold-style-cast";
+	static constexpr char	OldStyleDeclaration[]	= "-Wold-style-declaration";
+	static constexpr char	OldStyleDefinition[]	= "-Wold-style-definition";
+
+
 	inline String WarningToError (StringCRef code)
 	{
 		const usize	off = code.StartsWithIC( "-Wno-" ) ? 5u : code.StartsWithIC( "-W" ) ? 2u : 0u;

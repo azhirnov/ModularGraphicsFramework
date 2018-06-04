@@ -81,7 +81,7 @@ namespace CMake
 			<< "message( STATUS \"\\n==========================================================================\" )\n\n";
 
 		// save project
-		auto	file = File::HddWFile::New( FileAddress::BuildPath( _baseFolder, filename ) );
+		auto	file = GXFile::HddWFile::New( FileAddress::BuildPath( _baseFolder, filename ) );
 		CHECK_ERR( file );
 
 		file->Write( StringCRef(src) );
