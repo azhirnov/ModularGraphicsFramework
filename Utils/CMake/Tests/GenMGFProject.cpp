@@ -11,7 +11,7 @@ using namespace CMake;
 #define ENABLE_ENGINE_SAMPLES
 #define ENABLE_PROJECTS
 #define ENABLE_EXTERNALS
-//#define ENABLE_PIPELINE_BUILDING
+#define ENABLE_PIPELINE_BUILDING
 
 //#define ENABLE_SCU			// single compilation unit per thread
 #define NUM_THREADS	8

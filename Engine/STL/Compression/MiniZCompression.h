@@ -6,7 +6,7 @@
 
 #ifdef GX_ENABLE_MINIZ
 
-#include "External/miniz/miniz.h"
+#include "miniz/miniz.h"
 
 namespace GX_STL
 {

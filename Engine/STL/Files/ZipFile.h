@@ -6,7 +6,7 @@
 
 #ifdef GX_ZLIB_ENABLED
 
-#include "External/Zip/zip.h"
+#include "Zip/zip.h"
 
 namespace GX_STL
 {

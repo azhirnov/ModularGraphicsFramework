@@ -6,7 +6,7 @@
 
 #ifdef GX_LZMA_ENABLED
 
-#include "External/LZMA/lzma.h"
+#include "LZMA/lzma.h"
 
 namespace GX_STL
 {

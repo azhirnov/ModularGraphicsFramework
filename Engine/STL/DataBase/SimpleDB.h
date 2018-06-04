@@ -7,7 +7,7 @@
 #ifdef GX_SQLITE_DATABASE_ENABLED
 
 #include "Utf8StringUtils.h"
-#include "External/sqLite/sqlite3.h"
+#include "sqLite/sqlite3.h"
 
 namespace GX_STL
 {

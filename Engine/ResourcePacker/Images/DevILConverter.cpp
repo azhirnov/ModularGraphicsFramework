@@ -3,8 +3,8 @@
 #include "Engine/ResourcePacker/Images/ImageConverter.h"
 
 #ifdef GX_ENABLE_DEVIL
-#	include "External/DevIL/include/IL/il.h"
-#	include "External/DevIL/include/IL/ilu.h"
+#	include "DevIL/include/IL/il.h"
+#	include "DevIL/include/IL/ilu.h"
 #endif
 
 namespace ResPack

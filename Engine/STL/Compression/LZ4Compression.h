@@ -6,7 +6,7 @@
 
 #ifdef GX_ENABLE_LZ4
 
-#include "External/lz4/lib/lz4.h"
+#include "lz4/lib/lz4.h"
 
 namespace GX_STL
 {
