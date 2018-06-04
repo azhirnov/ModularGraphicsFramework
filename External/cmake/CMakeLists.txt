@@ -12,21 +12,21 @@ set_property( GLOBAL PROPERTY USE_FOLDERS ON )
 #----------------------------------------------------------------------------------
 # setup
 
-set( EXTERNALS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/.." CACHE STRING "Path to external projects sources" )
+set( EXTERNALS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../downloaded" CACHE STRING "Path to external projects sources" )
 
-set( DOWNLOAD_EXTERNALS OFF CACHE BOOL "download source from repository" )
+set( DOWNLOAD_EXTERNALS ON CACHE BOOL "download source from repository" )
 set( ENABLE_SDL ON CACHE BOOL "use SDL2 library" )
 set( ENABLE_ANGELSCRIPT ON CACHE BOOL "use AngelScript" )
 set( ENABLE_GLSLANG ON CACHE BOOL "use glslang" )
 set( ENABLE_FREEIMAGE OFF CACHE BOOL "use FreeImage" )
-set( ENABLE_LZ4 ON CACHE BOOL "use LZ4" )
+set( ENABLE_LZ4 OFF CACHE BOOL "use LZ4" )
 set( ENABLE_MINIZ ON CACHE BOOL "use MiniZ" )
-set( ENABLE_LODEPNG ON CACHE BOOL "use lodepng" )
+set( ENABLE_LODEPNG OFF CACHE BOOL "use lodepng" )
 set( ENABLE_DEVIL ON CACHE BOOL "use DevIL" )
 
 message( STATUS "EXTERNALS_PATH: ${EXTERNALS_PATH}" )
 
-if (NOT DOWNLOAD_EXTERNALS AND NOT EXISTS ${EXTERNALS_PATH})
+if (NOT ${DOWNLOAD_EXTERNALS} AND NOT EXISTS ${EXTERNALS_PATH})
 	message( FATAL_ERROR "Invalid external projects path!" )
 endif ()
 
@@ -84,7 +84,7 @@ source_group( "DirectX" FILES "DirectX/dx11.cmake" )
 
 
 # download
-if (DOWNLOAD_EXTERNALS)
+if (${DOWNLOAD_EXTERNALS})
 	include( "download.cmake" )
 else()
 	add_library( "External.Download" INTERFACE )
@@ -92,56 +92,56 @@ endif ()
 
 
 # SDL2
-if (ENABLE_SDL)
+if (${ENABLE_SDL})
 	include( "SDL2/build.cmake" )
 	add_dependencies( "External.All" SDL2 )
 endif ()
 
 
 # AngelScript
-if (ENABLE_ANGELSCRIPT)
+if (${ENABLE_ANGELSCRIPT})
 	include( "AngelScript/build.cmake" )
 	add_dependencies( "External.All" AngelScript )
 endif ()
 
 
 # glslang
-if (ENABLE_GLSLANG)
+if (${ENABLE_GLSLANG})
 	include( "glslang/build.cmake" )
 	add_dependencies( "External.All" glsl )
 endif ()
 
 
 # FreeImage
-if (ENABLE_FREEIMAGE)
+if (${ENABLE_FREEIMAGE})
 	include( "FreeImage/build.cmake" )
 	add_dependencies( "External.All" FreeImage )
 endif ()
 
 
 # lz4
-if (ENABLE_LZ4)
+if (${ENABLE_LZ4})
 	include( "lz4/build.cmake" )
 	add_dependencies( "External.All" LZ4 )
 endif ()
 
 
 # MiniZ
-if (ENABLE_MINIZ)
+if (${ENABLE_MINIZ})
 	include( "miniz/build.cmake" )
 	add_dependencies( "External.All" MiniZ )
 endif ()
 
 
 # lodepng
-if (ENABLE_LODEPNG)
+if (${ENABLE_LODEPNG})
 	include( "lodepng/build.cmake" )
 	add_dependencies( "External.All" lodepng )
 endif ()
 
 
 # DevIL
-if (ENABLE_DEVIL)
+if (${ENABLE_DEVIL})
 	include( "DevIL/build.cmake" )
 	add_dependencies( "External.All" DevIL )
 endif ()

@@ -12,12 +12,12 @@ Features:
 - Virtual Reality (Emulator, Oculus - WIP).
 
 Supported APIs:
-- Vulkan 1.0 (primary)
-- OpenGL 4.4
+- Vulkan 1.0 - 1.1 (primary)
+- OpenGL 4.4 - 4.6
 - DirectX 11 (WIP)
-- OpenCL 1.1
+- OpenCL 1.1 - 2.0
 - Software renderer
-- (OpenGL ES 3.0 - somewhen)
+- OpenGL ES 3.0 - 3.2 (WIP)
 
 Supported OS:
 - Windows
@@ -25,8 +25,8 @@ Supported OS:
 - Android (WIP)
 
 Supported compilers:
-- VS 2017 (tested with 15.5.7)
-- MinGW (tested with 7.2.0, LunarGLASS is not supported)
+- VS 2017 (tested on 15.6.7)
+- MinGW (tested on 7.2.0)
 
-Dependencies:
-- LunarGLASS, SDL2, GLM and other https://github.com/azhirnov/ModularGraphicsFramework-Externals
+Optional dependencies:
+- glslang, SDL2, GLM and other
