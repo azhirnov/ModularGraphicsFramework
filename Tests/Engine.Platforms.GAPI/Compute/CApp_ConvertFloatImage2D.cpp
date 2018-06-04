@@ -8,17 +8,10 @@ bool CApp::_Test_ConvertFloatImage2D ()
 	using Region		= GpuMsg::CmdCopyImage::Region;
 	using ImageLayers	= GpuMsg::CmdCopyImage::ImageLayers;
 
-	const uint		align1 = 4;
-	const uint		align2 = 4;
+	using SrcPixel		= ubyte4;	// normalized
+	using DstPixel		= float4;
+
 	const uint2		img_dim {128, 128};
-
-	// generate data
-	BinaryArray		data;	data.Resize( AlignToLarge( img_dim.x, align1 ) * img_dim.y * sizeof(ubyte4) );
-
-	FOR( i, data ) {
-		data[i] = Random::Int<ubyte>();
-	}
-
 
 	// create resources
 	auto	factory	= ms->GlobalSystems()->modulesFactory;
@@ -40,9 +33,7 @@ bool CApp::_Test_ConvertFloatImage2D ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA8_UNorm, EImageUsage::TransferSrc },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
+						EGpuMemory::CoherentWithCPU },
 					OUT staging_src_image ) );
 	
 	ModulePtr	staging_dst_image;
@@ -51,9 +42,7 @@ bool CApp::_Test_ConvertFloatImage2D ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA32F, EImageUsage::TransferDst },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
+						EGpuMemory::CoherentWithCPU },
 					OUT staging_dst_image ) );
 
 	ModulePtr	src_image;
@@ -63,10 +52,8 @@ bool CApp::_Test_ConvertFloatImage2D ()
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA8_UNorm, EImageUsage::TransferDst | EImageUsage::Storage },
 						EGpuMemory::LocalInGPU,
-						EMemoryAccess::GpuReadWrite
-					},
-					OUT src_image
-				) );
+						EMemoryAccess::GpuReadWrite },
+					OUT src_image ) );
 	
 	ModulePtr	dst_image;
 	CHECK_ERR( factory->Create(
@@ -75,10 +62,8 @@ bool CApp::_Test_ConvertFloatImage2D ()
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA32F, EImageUsage::TransferDst | EImageUsage::TransferSrc | EImageUsage::Storage },
 						EGpuMemory::LocalInGPU,
-						EMemoryAccess::GpuReadWrite
-					},
-					OUT dst_image
-				) );
+						EMemoryAccess::GpuReadWrite },
+					OUT dst_image ) );
 
 	CreateInfo::PipelineTemplate	pt_ci;
 	Pipelines::Create_copyfloatimage2d( OUT pt_ci.descr );
@@ -109,10 +94,20 @@ bool CApp::_Test_ConvertFloatImage2D ()
 	ModuleUtils::Initialize({ cmd_buffer, staging_src_image, staging_dst_image, src_image, dst_image, pipeline, resource_table });
 
 	
+	// generate image data
+	Message< GpuMsg::GetImageMemoryLayout >	req_src_layout;
+	staging_src_image->Send( req_src_layout );
+	
+	BinaryArray		image_data;		image_data.Resize( usize(req_src_layout->result->rowPitch * req_src_layout->result->dimension.y) );
+
+	FOR( i, image_data ) {
+		image_data[i] = Random::Int<ubyte>();
+	}
+
 	// write data to staging image
-	Message< GpuMsg::WriteToImageMemory >	write_cmd{ data, uint3(img_dim), SizeOf<ubyte4>, uint3(), align1 * SizeOf<ubyte4> };
+	Message< GpuMsg::WriteToImageMemory >	write_cmd{ image_data, uint3(), uint3(img_dim), req_src_layout->result->rowPitch };
 	staging_src_image->Send( write_cmd );
-	CHECK_ERR( *write_cmd->wasWritten == BytesUL(data.Size()) );
+	CHECK_ERR( *write_cmd->wasWritten == BytesUL(image_data.Size()) );
 
 
 	// build command buffer
@@ -120,6 +115,8 @@ bool CApp::_Test_ConvertFloatImage2D ()
 	
 	// copy image to gpu
 	{
+		//cmdBuilder->Send< GpuMsg::CmdDebugMarker >({ "copy image to gpu" });
+
 		cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::Host,
 														 EPipelineStage::Transfer,
 														 EPipelineAccess::HostWrite,
@@ -153,6 +150,8 @@ bool CApp::_Test_ConvertFloatImage2D ()
 
 	// run pipeline
 	{
+		//cmdBuilder->Send< GpuMsg::CmdDebugMarker >({ "run pipeline" });
+
 		cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::Transfer,
 														 EPipelineStage::ComputeShader,
 														 EPipelineAccess::TransferWrite,
@@ -178,6 +177,8 @@ bool CApp::_Test_ConvertFloatImage2D ()
 
 	// copy image back to cpu
 	{
+		//cmdBuilder->Send< GpuMsg::CmdDebugMarker >({ "copy image back to cpu" });
+
 		cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::ComputeShader,
 														 EPipelineStage::Transfer,
 														 EPipelineAccess::ShaderWrite,
@@ -219,27 +220,29 @@ bool CApp::_Test_ConvertFloatImage2D ()
 
 
 	// read from image
-	BinaryArray	dst_data;	dst_data.Resize( AlignToLarge( img_dim.x, align2 ) * img_dim.y * sizeof(float4) );
+	Message< GpuMsg::GetImageMemoryLayout >	req_dst_layout;
+	staging_dst_image->Send( req_dst_layout );
 
-	Message< GpuMsg::ReadFromImageMemory >	read_cmd{ dst_data, uint3(img_dim), SizeOf<float4>, uint3(), align2 * SizeOf<float4> };
+	BinaryArray	dst_data;	dst_data.Resize( usize(req_dst_layout->result->rowPitch * req_dst_layout->result->dimension.y) );
+
+	Message< GpuMsg::ReadFromImageMemory >	read_cmd{ dst_data, uint3(), uint3(img_dim), req_dst_layout->result->rowPitch };
 	staging_dst_image->Send( read_cmd );
 	CHECK_ERR( dst_data.Size() == read_cmd->result->Size() );
 
-	ubyte4 const*	src_ptr = (ubyte4 const*) data.ptr();
-	float4 const*	dst_ptr = (float4 const*) dst_data.ptr();
 
 	for (uint y = 0; y < img_dim.y; ++y)
-	for (uint x = 0; x < img_dim.x; ++x)
 	{
-		uint	i = x + (y * AlignToLarge( img_dim.x, align2 ));
-		uint	j = x + (y * AlignToLarge( img_dim.x, align2 ));
+		SrcPixel const*	src_row = (SrcPixel const*) (image_data.ptr() + req_src_layout->result->rowPitch * y);
+		DstPixel const*	dst_row = (DstPixel const*) (dst_data.ptr() + req_dst_layout->result->rowPitch * y);
 
-		float4	src = TypeCast::IntToUNorm<float>( src_ptr[i] ).To<float4>();
-		float4	dst = dst_ptr[j];
+		for (uint x = 0; x < img_dim.x; ++x)
+		{
+			DstPixel	src = TypeCast::IntToUNorm<float>( src_row[x] ).To<DstPixel>();
+			DstPixel	dst = dst_row[x];
 
-		CHECK_ERR(All( Equals( src, dst ) ));
+			CHECK_ERR(All( Equals( src, dst ) ));
+		}
 	}
-
 	LOG( "CopyFloatImage2D - OK", ELog::Info );
 	return true;
 }

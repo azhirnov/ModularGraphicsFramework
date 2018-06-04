@@ -1,12 +1,10 @@
 // This is generated file
-// Created at: 2018/04/29 - 09:56:52
-
 #pragma once
 
 namespace Pipelines
 {
 // Packing: vertex
-struct NativeVertex_default3 final
+struct NativeVertex_default3 final : CompileTime::PODStruct
 {
 	float2  at_Position;    // offset: 0, align: 4
 	float2  at_Texcoord;    // offset: 8, align: 4

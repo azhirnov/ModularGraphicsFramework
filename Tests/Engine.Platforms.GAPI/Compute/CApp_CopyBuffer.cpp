@@ -32,11 +32,8 @@ bool CApp::_Test_CopyBuffer ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ data.Size(), EBufferUsage::TransferSrc },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT src_buffer
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT src_buffer ) );
 	
 	ModulePtr	dst_buffer;
 	CHECK_ERR( factory->Create(
@@ -44,11 +41,8 @@ bool CApp::_Test_CopyBuffer ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ data.Size(), EBufferUsage::TransferDst },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT dst_buffer
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT dst_buffer ) );
 
 	ModuleUtils::Initialize({ cmd_buffer, src_buffer, dst_buffer });
 

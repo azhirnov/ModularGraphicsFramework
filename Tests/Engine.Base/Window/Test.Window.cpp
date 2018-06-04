@@ -82,7 +82,7 @@ extern void Test_Window ()
 
 	Platforms::RegisterPlatforms();
 	
-	CHECK( ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Base" ) );
 	
 	ModulePtr	platform;
 	CHECK( mf->Create( 0, ms->GlobalSystems(), CreateInfo::Platform{}, OUT platform ) );
@@ -92,7 +92,7 @@ extern void Test_Window ()
 	CHECK( platform->Send( req_ids ) );
 
 	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager() );
-	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager() );
+	ms->AddModule( DataProviderManagerModuleID, CreateInfo::DataProviderManager() );
 	
 	{
 		auto		thread		= ms->GlobalSystems()->parallelThread;

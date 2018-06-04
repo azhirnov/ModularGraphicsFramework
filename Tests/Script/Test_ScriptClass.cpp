@@ -63,8 +63,10 @@ struct Value
 		return self.i;
 	}
 };
-	
-GX_DECL_SCRIPT_TYPE( Value,	"Value" );
+
+namespace GX_STL::GXScript {
+	GX_DECL_SCRIPT_TYPE( Value,	"Value" );
+}
 
 static void TestScript_ValueClass (ScriptEngine &se)
 {
@@ -105,7 +107,9 @@ struct EEnum
 	GX_ENUM_BITFIELD( EEnum );
 };
 
-GX_DECL_SCRIPT_TYPE( EEnum::type,	"EEnum" );
+namespace GX_STL::GXScript {
+	GX_DECL_SCRIPT_TYPE( EEnum::type,	"EEnum" );
+}
 
 static void TestScript_Enum (ScriptEngine &se)
 {

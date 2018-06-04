@@ -48,11 +48,8 @@ bool CApp::_Test_BufferRange ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ buf_size, EBufferUsage::Storage },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT buffer
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT buffer ) );
 
 	CreateInfo::PipelineTemplate	pt_ci;
 	Pipelines::Create_bufferalign( OUT pt_ci.descr );
@@ -83,7 +80,7 @@ bool CApp::_Test_BufferRange ()
 
 
 	// write data to buffer
-	Message< GpuMsg::WriteToGpuMemory >	write_cmd{ BinArrayCRef::FromValue(st1), buf_off };
+	Message< GpuMsg::WriteToGpuMemory >	write_cmd{ buf_off, BinArrayCRef::FromValue(st1) };
 	buffer->Send( write_cmd );
 	CHECK_ERR( *write_cmd->wasWritten == BytesUL::SizeOf(st1) );
 
@@ -115,31 +112,31 @@ bool CApp::_Test_BufferRange ()
 	
 	++res_st;
 	++res_st;
-	CHECK_ERR(	All( st1.b1	== res_st->b1 )	and
-				All( st1.b3	== res_st->b3 )	and
-				All( st1.f1	== res_st->f1 )	and
-				All( st1.f2	== res_st->f2 )	and
-				All( st1.i1	== res_st->i1 )	and
-				All( st1.i4	== res_st->i4 )	and
-				All( st1.u3	== res_st->u3 )	);
+	CHECK_ERR(	All( st1.b1			== res_st->b1		)	and
+				All( st1.b3.xyz()	== res_st->b3.xyz() )	and
+				All( st1.f1			== res_st->f1		)	and
+				All( st1.f2.xy()	== res_st->f2.xy()	)	and
+				All( st1.i1			== res_st->i1		)	and
+				All( st1.i4.xyzw()	== res_st->i4.xyzw())	and
+				All( st1.u3.xyz()	== res_st->u3.xyz() )	);
 	
 	++res_st;
-	CHECK_ERR(	All( st1.b1	== res_st->b1 )	and
-				All( st1.b3	== res_st->b3 )	and
-				All( st1.f1	== res_st->f1 )	and
-				All( st1.f2	== res_st->f2 )	and
-				All( st1.i1	== res_st->i1 )	and
-				All( st1.i4	== res_st->i4 )	and
-				All( st1.u3	== res_st->u3 )	);
+	CHECK_ERR(	All( st1.b1			== res_st->b1		)	and
+				All( st1.b3.xyz()	== res_st->b3.xyz() )	and
+				All( st1.f1			== res_st->f1		)	and
+				All( st1.f2.xy()	== res_st->f2.xy()	)	and
+				All( st1.i1			== res_st->i1		)	and
+				All( st1.i4.xyzw()	== res_st->i4.xyzw())	and
+				All( st1.u3.xyz()	== res_st->u3.xyz() )	);
 
 	++res_st;
-	CHECK_ERR(	All( st2.b1	== res_st->b1 )	and
-				All( st2.b3	== res_st->b3 )	and
-				All( st2.f1	== res_st->f1 )	and
-				All( st2.f2	== res_st->f2 )	and
-				All( st2.i1	== res_st->i1 )	and
-				All( st2.i4	== res_st->i4 )	and
-				All( st2.u3	== res_st->u3 )	);
+	CHECK_ERR(	All( st2.b1			== res_st->b1		)	and
+				All( st2.b3.xyz()	== res_st->b3.xyz() )	and
+				All( st2.f1			== res_st->f1		)	and
+				All( st2.f2.xy()	== res_st->f2.xy()	)	and
+				All( st2.i1			== res_st->i1		)	and
+				All( st2.i4.xyzw()	== res_st->i4.xyzw())	and
+				All( st2.u3.xyz()	== res_st->u3.xyz() )	);
 
 	LOG( "BufferRange - OK", ELog::Info );
 	return true;

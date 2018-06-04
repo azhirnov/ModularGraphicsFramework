@@ -2,15 +2,14 @@
 
 #include "CApp.h"
 	
-extern void Test_ComputeApi ()
+extern void Test_ComputeApi (StringCRef device)
 {
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Platforms.GAPI/Compute" ) );
+
 	#ifdef GRAPHICS_API_VULKAN
 	{
 		CApp	app;
-	
-		CHECK( app.ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Platforms.GAPI/Compute" ) );
-
-		app.Initialize( "VK 1.0"_GAPI );
+		app.Initialize( "VK 1.0"_GAPI, device );
 
 		// main loop
 		for (; app.Update();) {}
@@ -23,10 +22,7 @@ extern void Test_ComputeApi ()
 	#ifdef GRAPHICS_API_OPENGL
 	{
 		CApp	app;
-	
-		CHECK( app.ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Platforms.GAPI/Compute" ) );
-
-		app.Initialize( "GL 4.5"_GAPI );
+		app.Initialize( "GL 4.5"_GAPI, device );
 
 		// main loop
 		for (; app.Update();) {}
@@ -39,10 +35,7 @@ extern void Test_ComputeApi ()
 	#ifdef COMPUTE_API_OPENCL
 	{
 		CApp	app;
-	
-		CHECK( app.ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Platforms.GAPI/Compute" ) );
-
-		app.Initialize( "CL 1.2"_GAPI );
+		app.Initialize( "CL 1.2"_GAPI, device );
 
 		// main loop
 		for (; app.Update();) {}
@@ -55,10 +48,7 @@ extern void Test_ComputeApi ()
 	#ifdef GRAPHICS_API_SOFT
 	{
 		CApp	app;
-	
-		CHECK( app.ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Platforms.GAPI/Compute" ) );
-
-		app.Initialize( "SW 1.0"_GAPI );
+		app.Initialize( "SW 1.0"_GAPI, device );
 
 		// main loop
 		for (; app.Update();) {}

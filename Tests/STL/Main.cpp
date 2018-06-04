@@ -30,6 +30,7 @@ extern void Test_Containers_Map ();
 extern void Test_Containers_HashSet ();
 extern void Test_Containers_IndexedArray ();
 extern void Test_Containers_Adaptors ();
+extern void Test_Containers_Tuple ();
 
 extern void Test_Math_Abs ();
 extern void Test_Math_Color ();
@@ -43,14 +44,15 @@ extern void Test_Math_FloorCeilTruncRoundFract ();
 extern void Test_Math_Bit ();
 extern void Test_Math_Frustum ();
 extern void Test_Math_Plane ();
+extern void Test_Math_OverflowCheck ();
 
-extern void Test_Types_ExtString ();
 extern void Test_Types_FileAddress ();
 extern void Test_Types_Function ();
 extern void Test_Types_StringParser ();
 extern void Test_Types_Union ();
 extern void Test_Types_Cast ();
 extern void Test_Types_Time ();
+extern void Test_Type_Optional ();
 
 extern void Test_Algorithms_InvokeWithVariant ();
 extern void Test_Algorithms_Range ();
@@ -92,6 +94,7 @@ int main ()
 	Test_Containers_HashSet();
 	Test_Containers_IndexedArray();
 	Test_Containers_Adaptors();
+	Test_Containers_Tuple();
 
 	Test_Math_Abs();
 	Test_Math_Color();
@@ -105,14 +108,15 @@ int main ()
 	Test_Math_Bit();
 	Test_Math_Frustum();
 	Test_Math_Plane();
+	Test_Math_OverflowCheck();
 
-	//Test_Types_ExtString();
 	Test_Types_FileAddress();
 	Test_Types_Function();
 	Test_Types_StringParser();
 	Test_Types_Union();
 	Test_Types_Cast();
 	Test_Types_Time();
+	Test_Type_Optional();
 
 	Test_Algorithms_InvokeWithVariant();
 	Test_Algorithms_Range();

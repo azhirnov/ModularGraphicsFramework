@@ -47,6 +47,7 @@ private:
 	Array<ModulePtr>	cmdBuffers;
 	Array<GpuFenceId>	cmdFence;
 	ModulePtr			cmdBuilder;
+	bool				firstCall	= true;
 
 
 // methods

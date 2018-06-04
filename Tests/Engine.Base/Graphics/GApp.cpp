@@ -33,7 +33,7 @@ bool GApp::Initialize (GAPI::type api)
 	}
 
 	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager{} );
-	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager{} );
+	ms->AddModule( DataProviderManagerModuleID, CreateInfo::DataProviderManager() );
 
 	{
 		ModulePtr	context;
@@ -131,11 +131,14 @@ bool GApp::_Draw (const Message< ModuleMsg::Update > &)
 	if ( not looping )
 		return false;
 
-	auto		gthread	= PlatformTools::GPUThreadHelper::FindGraphicsThread( ms->GlobalSystems() );
-	uint		prev_idx= cmdBufIndex % cmdBuffers.Count();
-	uint		index	= (++cmdBufIndex) % cmdBuffers.Count();
+	auto		gthread		= PlatformTools::GPUThreadHelper::FindGraphicsThread( ms->GlobalSystems() );
+	uint		prev_idx	= cmdBufIndex % cmdBuffers.Count();
+	uint		index		= (++cmdBufIndex) % cmdBuffers.Count();
 
-	syncManager->Send< GpuMsg::ClientWaitFence >({ cmdFence[prev_idx] });
+	if ( not firstCall ) {
+		syncManager->Send< GpuMsg::ClientWaitFence >({ cmdFence[prev_idx] });
+	}
+	firstCall = false;
 
 	Message< GpuMsg::ThreadBeginFrame >	begin_frame;
 	gthread->Send( begin_frame );
@@ -321,7 +324,6 @@ bool GApp::_CreateCmdBuffers ()
 						gpuIDs.commandBuffer,
 						gthread->GlobalSystems(),
 						CreateInfo::GpuCommandBuffer{
-							gthread,
 							CommandBufferDescriptor{ ECmdBufferCreate::ImplicitResetable }
 						},
 						OUT cmdBuffers[i] )
@@ -350,93 +352,69 @@ bool GApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 	CHECK_ERR( factory->Create(
 					gpuIDs.image,
 					gthread->GlobalSystems(),
-					CreateInfo::GpuImage{	ImageDescriptor{
-												EImage::Tex2D,
-												uint4( 1024, 1024, 0, 0 ),
-												EPixelFormat::RGBA8_UNorm,
-												EImageUsage::Sampled | EImageUsage::ColorAttachment
-											},
-											EGpuMemory::LocalInGPU,
-											EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
+					CreateInfo::GpuImage{
+						ImageDescriptor{ EImage::Tex2D, uint4( 1024, 1024, 0, 0 ), EPixelFormat::RGBA8_UNorm, EImageUsage::Sampled | EImageUsage::ColorAttachment },
+						EGpuMemory::LocalInGPU,
+						EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
 					OUT fbColorImage ) );
 	/*
 	CHECK_ERR( factory->Create(
 					gpuIDs.image,
 					gthread->GlobalSystems(),
-					CreateInfo::GpuImage{	ImageDescriptor{
-												EImage::Tex2D,
-												uint4( 4, 4, 0, 0 ),
-												EPixelFormat::RGBA8_UNorm,
-												EImageUsage::Sampled | EImageUsage::TransferDst
-											},
-											EGpuMemory::CoherentWithCPU,
-											EMemoryAccess::All },
+					CreateInfo::GpuImage{
+						ImageDescriptor{ EImage::Tex2D, uint4( 4, 4, 0, 0 ), EPixelFormat::RGBA8_UNorm, EImageUsage::Sampled | EImageUsage::TransferDst },
+						EGpuMemory::CoherentWithCPU },
 					OUT texture ) );
 	/*/
 	CHECK_ERR( factory->Create(
 					gpuIDs.image,
 					gthread->GlobalSystems(),
-					CreateInfo::GpuImage{	ImageDescriptor{
-												EImage::Tex2D,
-												uint4( 128, 128, 0, 0 ),
-												EPixelFormat::RGBA8_UNorm,
-												EImageUsage::Sampled | EImageUsage::TransferDst
-											},
-											EGpuMemory::LocalInGPU,
-											EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
+					CreateInfo::GpuImage{
+						ImageDescriptor{ EImage::Tex2D, uint4( 128, 128, 0, 0 ), EPixelFormat::RGBA8_UNorm, EImageUsage::Sampled | EImageUsage::TransferDst },
+						EGpuMemory::LocalInGPU,
+						EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
 					OUT texture ) );
 	//*/
 	CHECK_ERR( factory->Create(
 					gpuIDs.sampler,
 					gthread->GlobalSystems(),
-					CreateInfo::GpuSampler{ gthread,
-											SamplerDescriptor::Builder()
-												.SetAddressMode( EAddressMode::Clamp )
-												.SetFilter( EFilter::MinMagMipLinear )
-												.Finish()
-										  },
+					CreateInfo::GpuSampler{ SamplerDescriptor::Builder()
+						.SetAddressMode( EAddressMode::Clamp )
+						.SetFilter( EFilter::MinMagMipLinear )
+						.Finish() },
 					OUT sampler ) );
 
 	CHECK_ERR( factory->Create(
 					gpuIDs.buffer,
 					gthread->GlobalSystems(),
-					CreateInfo::GpuBuffer{	BufferDescriptor{
-												SizeOf<Vertex> * 4,
-												EBufferUsage::Vertex
-											},
-											EGpuMemory::CoherentWithCPU,
-											EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite  },
+					CreateInfo::GpuBuffer{
+						BufferDescriptor{ SizeOf<Vertex> * 4, EBufferUsage::Vertex },
+						EGpuMemory::CoherentWithCPU,
+						EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite  },
 					OUT vbuffer ) );
 
 	CHECK_ERR( factory->Create(
 					gpuIDs.buffer,
 					gthread->GlobalSystems(),
-					CreateInfo::GpuBuffer{	BufferDescriptor{
-												SizeOf<uint> * 6,
-												EBufferUsage::Index
-											},
-											EGpuMemory::CoherentWithCPU,
-											EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite },
+					CreateInfo::GpuBuffer{
+						BufferDescriptor{ SizeOf<uint> * 6, EBufferUsage::Index },
+						EGpuMemory::CoherentWithCPU,
+						EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite },
 					OUT ibuffer ) );
 
 	CHECK_ERR( factory->Create(
 					gpuIDs.buffer,
 					gthread->GlobalSystems(),
-					CreateInfo::GpuBuffer{	BufferDescriptor{
-												SizeOf<Pipelines::UB>,
-												EBufferUsage::Uniform
-											},
-											EGpuMemory::CoherentWithCPU,
-											EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite },
+					CreateInfo::GpuBuffer{
+						BufferDescriptor{ SizeOf<Pipelines::UB>, EBufferUsage::Uniform },
+						EGpuMemory::CoherentWithCPU,
+						EMemoryAccess::CpuRead | EMemoryAccess::CpuWrite },
 					OUT ubuffer ) );
 
 	CHECK_ERR( factory->Create(
 					gpuIDs.framebuffer,
 					gthread->GlobalSystems(),
-					CreateInfo::GpuFramebuffer{
-						gthread,
-						uint2(1024, 1024), 1
-					},
+					CreateInfo::GpuFramebuffer{ uint2(1024, 1024) },
 					OUT framebuffer ) );
 	
 	ImageViewDescriptor	view_descr;

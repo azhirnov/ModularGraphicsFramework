@@ -32,11 +32,8 @@ bool CApp::_Test_ClearBuffer ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ data.Size(), EBufferUsage::TransferSrc | EBufferUsage::TransferDst },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT buffer
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT buffer ) );
 
 	ModuleUtils::Initialize({ cmd_buffer, buffer });
 
@@ -85,7 +82,7 @@ bool CApp::_Test_ClearBuffer ()
 		else
 			equals &= (pattern_arr[i&3] == read_cmd->result->operator[](i));
 	}
-	CHECK_ERR( equals );	// bug in Intel OpenGL implementation
+	CHECK_ERR( equals );
 
 	LOG( "ClearBuffer - OK", ELog::Info );
 	return true;

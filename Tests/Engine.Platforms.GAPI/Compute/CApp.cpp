@@ -4,6 +4,11 @@
 #include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 
+/*
+=================================================
+	constructor
+=================================================
+*/
 CApp::CApp ()
 {
 	ms = GetMainSystemInstance();
@@ -24,28 +29,39 @@ CApp::CApp ()
 			<< &CApp::_Test_ConvertFloatImage2D
 			//<< &CApp::_Test_CopyImage3D
 			//<< &CApp::_Test_PushConstants
-			<< &CApp::_Test_FindMSB
-			<< &CApp::_Test_FindLSB
-			//<< &CApp::_Test_BitfieldReverse
-			<< &CApp::_Test_AtomicAdd
+			<< &CApp::_Test_Image2DNearestFilter
+			<< &CApp::_Test_Image2DBilinearFilter
 		;
 }
 
-
+/*
+=================================================
+	destructor
+=================================================
+*/
 CApp::~CApp ()
 {
 }
 
-
-bool CApp::Initialize (GAPI::type api)
+/*
+=================================================
+	Initialize
+=================================================
+*/
+bool CApp::Initialize (GAPI::type api, StringCRef dev)
 {
 	auto	factory	= ms->GlobalSystems()->modulesFactory;
 
 	ms->AddModule( 0, CreateInfo::Platform{} );
 
+	ComputeSettings	settings;
+	settings.version	= api;
+	settings.device		= dev;
+	settings.isDebug	= true;
+
 	{
 		ModulePtr	context;
-		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ api }, OUT context ) );
+		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ settings }, OUT context ) );
 		ms->Send< ModuleMsg::AttachModule >({ context });
 
 		Message< GpuMsg::GetGraphicsModules >	req_ids;
@@ -71,7 +87,7 @@ bool CApp::Initialize (GAPI::type api)
 	CHECK_ERR( factory->Create(
 						gpuIDs.thread,
 						ms->GlobalSystems(), CreateInfo::GpuThread{
-							ComputeSettings{ api, "", bool("debug") }
+							ComputeSettings{ settings }
 						},
 						OUT gthread ) );
 	thread->Send< ModuleMsg::AttachModule >({ gthread });
@@ -86,7 +102,11 @@ bool CApp::Initialize (GAPI::type api)
 	return true;
 }
 
-
+/*
+=================================================
+	Quit
+=================================================
+*/
 void CApp::Quit ()
 {
 	looping = false;
@@ -97,7 +117,11 @@ void CApp::Quit ()
 		gpuThread->Send< ModuleMsg::Delete >({});
 }
 
-
+/*
+=================================================
+	Update
+=================================================
+*/
 bool CApp::Update ()
 {
 	if ( not looping )
@@ -107,14 +131,22 @@ bool CApp::Update ()
 	return true;
 }
 
-
+/*
+=================================================
+	_OnWindowClosed
+=================================================
+*/
 bool CApp::_OnWindowClosed (const Message<OSMsg::WindowAfterDestroy> &)
 {
 	looping = false;
 	return true;
 }
 
-
+/*
+=================================================
+	_Draw
+=================================================
+*/
 bool CApp::_Draw (const Message< ModuleMsg::Update > &)
 {
 	if ( not looping )
@@ -141,7 +173,11 @@ bool CApp::_Draw (const Message< ModuleMsg::Update > &)
 	return true;
 }
 
-
+/*
+=================================================
+	_GInit
+=================================================
+*/
 bool CApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 {
 	gpuThread = PlatformTools::GPUThreadHelper::FindComputeThread( ms->GlobalSystems() );
@@ -160,10 +196,15 @@ bool CApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
 	return true;
 }
 
-
+/*
+=================================================
+	_GDelete
+=================================================
+*/
 bool CApp::_GDelete (const Message< GpuMsg::DeviceBeforeDestroy > &)
 {
 	gpuThread	= null;
 	syncManager	= null;
+	cmdBuilder	= null;
 	return true;
 }

@@ -1,0 +1,31 @@
+
+#ifdef ANGELSCRIPT
+void main ()
+{
+	ComputePipeline	self = ComputePipeline();
+
+	self.shaderFormat = EShaderSrcFormat_GXSL;
+	self.compute.LoadSelf();
+}
+#endif
+//-----------------------------------------------------------------------------
+
+
+#ifdef SHADER
+#if SHADER & SH_COMPUTE
+
+						uniform sampler2D  un_SrcTexture;
+layout(rgba8) writeonly uniform image2D    un_DstImage;
+
+void main ()
+{
+	int2	coord	= int3(gl_GlobalInvocationID).xy;
+	int2	size	= int3(gl_NumWorkGroups * gl_WorkGroupSize).xy;
+	float2	point	= float2(coord) / float2(size-1);
+	float4	color	= textureOffset( un_SrcTexture, point, int2(-2,0) );
+
+	imageStore( un_DstImage, coord, color );
+}
+
+#endif
+#endif	// SHADER

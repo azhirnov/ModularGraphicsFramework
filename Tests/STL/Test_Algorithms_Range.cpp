@@ -120,9 +120,137 @@ static void TestRange3 ()
 }
 
 
+static void TestRange4 ()
+{
+	const HashSet<int>	set{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+	usize	cnt = 0;
+	for (auto a : set) {
+		++cnt;
+	}
+	TEST( cnt == CountOf(set) );
+
+	cnt = 0;
+	int	sum = 0;
+	for (auto a : Range(set)) {
+		sum += a;
+	}
+	TEST( sum == 45 );
+
+	cnt = 0;
+	for (auto a : Range(set, 0, UMax)) {
+		++cnt;
+	}
+	TEST( cnt == CountOf(set) );
+
+	cnt = 0;
+	for (auto a : Range(set, UMax, 0)) {
+		++cnt;
+	}
+	TEST( cnt == 0 );
+}
+
+
+static void TestRange5 ()
+{
+	HashMap<String, int>	map{ {"1",1}, {"2",2}, {"3",3}, {"4",4}, {"5",5}, {"6",6}, {"7",7}, {"8",8}, {"9",9} };
+
+	usize	cnt = 0;
+	for (auto& a : Range(map)) {
+		++cnt;
+	}
+	TEST( cnt == CountOf(map) );
+
+	cnt = 0;
+	int	sum = 0;
+	for (auto& a : Range(map)) {
+		sum += a.second;
+	}
+	TEST( sum == 45 );
+
+	cnt = 0;
+	for (auto& a : Range(map, 0, UMax)) {
+		++cnt;
+	}
+	TEST( cnt == CountOf(map) );
+
+	cnt = 0;
+	for (auto& a : Range(map, UMax, 0)) {
+		++cnt;
+	}
+	TEST( cnt == 0 );
+}
+
+
+static void TestRange6 ()
+{
+	Set<int>	set{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+	usize	cnt = 0;
+	for (auto a : set) {
+		++cnt;
+	}
+	TEST( cnt == CountOf(set) );
+
+	cnt = 0;
+	int	sum = 0;
+	for (auto a : Range(set)) {
+		sum += a;
+	}
+	TEST( sum == 45 );
+
+	cnt = 0;
+	for (auto a : Range(set, 0, UMax)) {
+		++cnt;
+	}
+	TEST( cnt == CountOf(set) );
+
+	cnt = 0;
+	for (auto a : Range(set, UMax, 0)) {
+		++cnt;
+	}
+	TEST( cnt == 0 );
+}
+
+
+static void TestRange7 ()
+{
+	const Map<String, int>	map{ {"1",1}, {"2",2}, {"3",3}, {"4",4}, {"5",5}, {"6",6}, {"7",7}, {"8",8}, {"9",9} };
+
+	usize	cnt = 0;
+	for (auto& a : Range(map)) {
+		++cnt;
+	}
+	TEST( cnt == CountOf(map) );
+
+	cnt = 0;
+	int	sum = 0;
+	for (auto& a : Range(map)) {
+		sum += a.second;
+	}
+	TEST( sum == 45 );
+
+	cnt = 0;
+	for (auto& a : Range(map, 0, UMax)) {
+		++cnt;
+	}
+	TEST( cnt == CountOf(map) );
+
+	cnt = 0;
+	for (auto& a : Range(map, UMax, 0)) {
+		++cnt;
+	}
+	TEST( cnt == 0 );
+}
+
+
 extern void Test_Algorithms_Range ()
 {
 	TestRange1();
 	TestRange2();
 	TestRange3();
+	TestRange4();
+	TestRange5();
+	TestRange6();
+	TestRange7();
 }

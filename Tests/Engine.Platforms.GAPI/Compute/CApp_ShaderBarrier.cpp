@@ -8,7 +8,6 @@ bool CApp::_Test_ShaderBarrier ()
 	using Region		= GpuMsg::CmdCopyImage::Region;
 	using ImageLayers	= GpuMsg::CmdCopyImage::ImageLayers;
 	
-
 	CreateInfo::PipelineTemplate	pt_ci;
 	Pipelines::Create_shaderbarrier( OUT pt_ci.descr );
 
@@ -17,24 +16,6 @@ bool CApp::_Test_ShaderBarrier ()
 	const uint2		img_dim		= local_size * group_count;
 	const float		max_value	= 100.0f;
 
-	// generate data
-	Array<float4>		data;	data.Resize( img_dim.x * img_dim.y );
-
-	for (uint y1 = 0; y1 < group_count.y; ++y1)
-	for (uint x1 = 0; x1 < group_count.x; ++x1)
-	{
-		const float4	rnd = Random::Float( float4() );
-
-		for (uint y2 = 0; y2 < local_size.y; ++y2)
-		for (uint x2 = 0; x2 < local_size.x; ++x2)
-		{
-			const uint		i = (x1 * local_size.x + x2) + (y1 * local_size.y + y2) * (local_size.x * group_count.x);
-
-			const float4	off = float4{ float(x2), float(y2), float((local_size.x - x2) * 2), float((local_size.y - y2) * 2) };
-
-			data[i] = rnd + off;
-		}
-	}
 
 
 	// create resources
@@ -57,9 +38,7 @@ bool CApp::_Test_ShaderBarrier ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA32F, EImageUsage::TransferSrc },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
+						EGpuMemory::CoherentWithCPU },
 					OUT staging_src_image ) );
 	
 	ModulePtr	staging_dst_image;
@@ -68,9 +47,7 @@ bool CApp::_Test_ShaderBarrier ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA32F, EImageUsage::TransferDst },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
+						EGpuMemory::CoherentWithCPU },
 					OUT staging_dst_image ) );
 
 	ModulePtr	src_image;
@@ -80,10 +57,8 @@ bool CApp::_Test_ShaderBarrier ()
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA32F, EImageUsage::TransferDst | EImageUsage::Storage },
 						EGpuMemory::LocalInGPU,
-						EMemoryAccess::GpuReadWrite
-					},
-					OUT src_image
-				) );
+						EMemoryAccess::GpuReadWrite },
+					OUT src_image ) );
 	
 	ModulePtr	dst_image;
 	CHECK_ERR( factory->Create(
@@ -92,10 +67,8 @@ bool CApp::_Test_ShaderBarrier ()
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA32F, EImageUsage::TransferDst | EImageUsage::TransferSrc | EImageUsage::Storage },
 						EGpuMemory::LocalInGPU,
-						EMemoryAccess::GpuReadWrite
-					},
-					OUT dst_image
-				) );
+						EMemoryAccess::GpuReadWrite },
+					OUT dst_image ) );
 
 	ModulePtr	pipeline_template;
 	CHECK_ERR( factory->Create(
@@ -123,10 +96,33 @@ bool CApp::_Test_ShaderBarrier ()
 	ModuleUtils::Initialize({ cmd_buffer, staging_src_image, staging_dst_image, src_image, dst_image, pipeline, resource_table });
 
 	
+	// generate image data
+	Message< GpuMsg::GetImageMemoryLayout >	req_src_layout;
+	staging_src_image->Send( req_src_layout );
+	
+	Array<float4>	image_data;
+	image_data.Resize( usize(req_src_layout->result->rowPitch * req_src_layout->result->dimension.y) / sizeof(float4) );
+
+	for (uint y1 = 0; y1 < group_count.y; ++y1)
+	for (uint x1 = 0; x1 < group_count.x; ++x1)
+	{
+		const float4	rnd = Random::Float( float4() );
+
+		for (uint y2 = 0; y2 < local_size.y; ++y2)
+		for (uint x2 = 0; x2 < local_size.x; ++x2)
+		{
+			const usize		i = (x1 * local_size.x + x2) + usize(req_src_layout->result->rowPitch * (y1 * local_size.y + y2)) / sizeof(float4);
+
+			const float4	off = float4{ float(x2), float(y2), float((local_size.x - x2) * 2), float((local_size.y - y2) * 2) };
+
+			image_data[i] = rnd + off;
+		}
+	}
+
 	// write data to staging image
-	Message< GpuMsg::WriteToImageMemory >	write_cmd{ BinArrayCRef::From(data), uint3(img_dim), SizeOf<float4> };
+	Message< GpuMsg::WriteToImageMemory >	write_cmd{ BinArrayCRef::From(image_data), uint3(), uint3(img_dim), req_src_layout->result->rowPitch };
 	staging_src_image->Send( write_cmd );
-	CHECK_ERR( *write_cmd->wasWritten == BytesUL(data.Size()) );
+	CHECK_ERR( *write_cmd->wasWritten == BytesUL(image_data.Size()) );
 
 
 	// build command buffer
@@ -233,16 +229,20 @@ bool CApp::_Test_ShaderBarrier ()
 
 
 	// read from image
-	Array<float4>	dst_data;	dst_data.Resize( img_dim.x * img_dim.y );
+	Message< GpuMsg::GetImageMemoryLayout >	req_dst_layout;
+	staging_dst_image->Send( req_dst_layout );
 
-	Message< GpuMsg::ReadFromImageMemory >	read_cmd{ BinArrayRef::From(dst_data), uint3(img_dim), SizeOf<float4> };
+	Array<float4>	dst_data;
+	dst_data.Resize( usize(req_dst_layout->result->rowPitch * req_dst_layout->result->dimension.y) / sizeof(float4) );
+
+	Message< GpuMsg::ReadFromImageMemory >	read_cmd{ BinArrayRef::From(dst_data), uint3(), uint3(img_dim), req_dst_layout->result->rowPitch };
 	staging_dst_image->Send( read_cmd );
 	CHECK_ERR( dst_data.Size() == read_cmd->result->Size() );
 
 	for (uint y = 0; y < img_dim.y; ++y)
 	for (uint x = 0; x < img_dim.x; ++x)
 	{
-		const uint	i  = x + y * img_dim.x;
+		const usize	i  = x + usize(req_dst_layout->result->rowPitch * y) / sizeof(float4);
 		const float	vx = (float) MaxMag( int(x % local_size.x) - int(local_size.x-1), int(x % local_size.x) );
 		const float	vy = (float) MaxMag( int(y % local_size.y) - int(local_size.y-1), int(y % local_size.y) );
 

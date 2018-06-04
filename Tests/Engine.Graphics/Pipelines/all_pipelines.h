@@ -1,6 +1,4 @@
 // This is generated file
-// Created at: 2018/04/29 - 09:56:52
-
 #pragma once
 
 #include "Engine/Platforms/Engine.Platforms.h"

@@ -27,11 +27,8 @@ bool CApp::_Test_DynamicBuffer ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ buf_size, EBufferUsage::TransferDst | EBufferUsage::Storage },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT buffer
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT buffer ) );
 
 	CreateInfo::PipelineTemplate	pt_ci;
 	Pipelines::Create_dynamicbuffer( OUT pt_ci.descr );

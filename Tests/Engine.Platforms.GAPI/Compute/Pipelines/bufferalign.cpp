@@ -1,16 +1,15 @@
 // This is generated file
 // Origin file: 'Compute/Pipelines/BufferAlign.ppln'
-// Created at: 2018/04/29 - 17:03:04
-
 #include "all_pipelines.h"
 // C++ shader
 #ifdef GRAPHICS_API_SOFT
-namespace SWShaderLang
-{
-	#define INOUT
-	#define IN
-	#define OUT
-	
+namespace SWShaderLang {
+namespace {
+
+#	define INOUT
+#	define IN
+#	define OUT
+
 	struct BufferAlign_Struct
 	{
 		Int4 i4;
@@ -27,6 +26,32 @@ namespace SWShaderLang
 		Float _padding4;
 		Float _padding5;
 		Float _padding6;
+	
+		BufferAlign_Struct () {}
+		BufferAlign_Struct (BufferAlign_Struct &&) = default;
+		BufferAlign_Struct (const BufferAlign_Struct &) = default;
+		explicit BufferAlign_Struct(const Int4 &i4, const Float2 &f2, const Bool &b1, const Float &_padding0, const UInt4 &u3, const Int &i1, const Float &_padding1, const Float &_padding2, const Float &_padding3, const Bool4 &b3, const Float &f1, const Float &_padding4, const Float &_padding5, const Float &_padding6) : i4{i4}, f2{f2}, b1{b1}, _padding0{_padding0}, u3{u3}, i1{i1}, _padding1{_padding1}, _padding2{_padding2}, _padding3{_padding3}, b3{b3}, f1{f1}, _padding4{_padding4}, _padding5{_padding5}, _padding6{_padding6} {}
+	
+		BufferAlign_Struct& operator = (BufferAlign_Struct &&) = default;
+		BufferAlign_Struct& operator = (const BufferAlign_Struct &) = default;
+		Bool operator == (const BufferAlign_Struct &right) const {
+			return	all( i4 == right.i4 ) &&
+					all( f2 == right.f2 ) &&
+					all( b1 == right.b1 ) &&
+					all( _padding0 == right._padding0 ) &&
+					all( u3 == right.u3 ) &&
+					all( i1 == right.i1 ) &&
+					all( _padding1 == right._padding1 ) &&
+					all( _padding2 == right._padding2 ) &&
+					all( _padding3 == right._padding3 ) &&
+					all( b3 == right.b3 ) &&
+					all( f1 == right.f1 ) &&
+					all( _padding4 == right._padding4 ) &&
+					all( _padding5 == right._padding5 ) &&
+					all( _padding6 == right._padding6 );
+		}
+		Bool operator != (const BufferAlign_Struct &right) const { return !(*this == right); }
+	
 	};
 	
 	struct BufferAlign_SSBO
@@ -34,6 +59,21 @@ namespace SWShaderLang
 		BufferAlign_Struct src;
 		BufferAlign_Struct dst1;
 		BufferAlign_Struct dst2;
+	
+		BufferAlign_SSBO () {}
+		BufferAlign_SSBO (BufferAlign_SSBO &&) = default;
+		BufferAlign_SSBO (const BufferAlign_SSBO &) = default;
+		explicit BufferAlign_SSBO(const BufferAlign_Struct &src, const BufferAlign_Struct &dst1, const BufferAlign_Struct &dst2) : src{src}, dst1{dst1}, dst2{dst2} {}
+	
+		BufferAlign_SSBO& operator = (BufferAlign_SSBO &&) = default;
+		BufferAlign_SSBO& operator = (const BufferAlign_SSBO &) = default;
+		Bool operator == (const BufferAlign_SSBO &right) const {
+			return	all( src == right.src ) &&
+					all( dst1 == right.dst1 ) &&
+					all( dst2 == right.dst2 );
+		}
+		Bool operator != (const BufferAlign_SSBO &right) const { return !(*this == right); }
+	
 	};
 	
 	
@@ -42,23 +82,23 @@ namespace SWShaderLang
 	static void sw_bufferalign_comp (const Impl::SWShaderHelper &_helper_)
 	{
 		// prepare externals
-		Impl::StorageBuffer< BufferAlign_SSBO, Impl::EStorageAccess::Coherent > ssb;	_helper_.GetStorageBuffer( 0, ssb );
+		Impl::StorageBuffer< BufferAlign_SSBO, Impl::EStorageAccess::Coherent >  ssb;    _helper_.GetStorageBuffer( 0, ssb );
 	
 		// shader
-	{
-		ssb->dst1 = ssb->src;
-		ssb->dst2.i4 = Int4( 1, -2, 3, -4 );
-		ssb->dst2.f2 = Float2( 3.0999999f, 5.5f );
-		ssb->dst2.b1 = Bool( true );
-		ssb->dst2.u3.xyz = UInt3( 9U, 8U, 7U );
-		ssb->dst2.i1 = Int( 1193046 );
-		ssb->dst2.b3.xyz = Bool3( false, true, false );
-		ssb->dst2.f1 = Float( 1.43350005f );
+		{
+			ssb->dst1 = ssb->src;
+			ssb->dst2.i4 = Int4(1, -2, 3, -4);
+			ssb->dst2.f2 = Float2(3.0999999f, 5.5f);
+			ssb->dst2.b1 = Bool(true);
+			ssb->dst2.u3.xyz = UInt3(9u, 8u, 7u);
+			ssb->dst2.i1 = Int(1193046);
+			ssb->dst2.b3.xyz = Bool3(false, true, false);
+			ssb->dst2.f1 = Float(1.43350005f);
+		}
 	}
 	
-	
-	}
-}	// SWShaderLang
+}		// anonymous namespace
+}		// SWShaderLang
 #endif	// GRAPHICS_API_SOFT
 
 
@@ -72,7 +112,7 @@ void Create_bufferalign (PipelineTemplateDescriptor& descr)
 
 	descr.localGroupSize = uint3(1, 1, 1);
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddStorageBuffer( "ssb", 288_b, 0_b, EShaderMemoryModel::Default, 0, 0, EShader::Compute )
+			.AddStorageBuffer( "ssb", 288_b, 0_b, EShaderMemoryModel::Default, 0u, 0u, EShader::Compute )
 			.Finish();
 
 	descr.Compute().StringGLSL( 
@@ -108,13 +148,13 @@ layout(binding=0) layout(std430) buffer BufferAlign_SSBO{
 
 //---------------------------------
 
-void main()
+void main ()
 {
 	ssb.dst1 = ssb.src;
 	ssb.dst2.i4 = ivec4( 1, -2, 3, -4 );
 	ssb.dst2.f2 = vec2( 3.0999999f, 5.5f );
 	ssb.dst2.b1 = bool( true );
-	ssb.dst2.u3.xyz = uvec3( 9U, 8U, 7U );
+	ssb.dst2.u3.xyz = uvec3( 9u, 8u, 7u );
 	ssb.dst2.i1 = int( 1193046 );
 	ssb.dst2.b3.xyz = bvec3( false, true, false );
 	ssb.dst2.f1 = float( 1.43350005f );
@@ -353,19 +393,82 @@ kernel void Main (
 	/*0*/__global  struct BufferAlign_SSBO* ssb)
 {
 
+	{
+		ssb->dst1 = ssb->src;
+		ssb->dst2.i4 = ((int4)( 1, -2, 3, -4 ));
+		ssb->dst2.f2 = ((float2)( 3.0999999f, 5.5f ));
+		ssb->dst2.b1 = ((int)( true ));
+		ssb->dst2.u3.xyz = ((uint3)( 9u, 8u, 7u ));
+		ssb->dst2.i1 = ((int)( 1193046 ));
+		ssb->dst2.b3.xyz = ((int3)( false, true, false ));
+		ssb->dst2.f1 = ((float)( 1.43350005f ));
+	}
+}
+
+)#"_str );
+	descr.Compute().StringHLSL( 
+R"#(cbuffer ComputeBuiltins : register(b0)
 {
-	ssb->dst1 = ssb->src;
-	ssb->dst2.i4 = ((int4)( 1, -2, 3, -4 ));
-	ssb->dst2.f2 = ((float2)( 3.0999999f, 5.5f ));
-	ssb->dst2.b1 = ((int)( true ));
-	ssb->dst2.u3.xyz = ((uint3)( 9U, 8U, 7U ));
-	ssb->dst2.i1 = ((int)( 1193046 ));
-	ssb->dst2.b3.xyz = ((int3)( false, true, false ));
-	ssb->dst2.f1 = ((float)( 1.43350005f ));
+	uint3		dx_NumWorkGroups;
+};
+
+struct BufferAlign_Struct
+{
+	int4 i4;
+	float2 f2;
+	int b1;
+	float _padding0;
+	uint4 u3;
+	int i1;
+	float _padding1;
+	float _padding2;
+	float _padding3;
+	int4 b3;
+	float f1;
+	float _padding4;
+	float _padding5;
+	float _padding6;
+};
+
+
+//---------------------------------
+
+struct BufferAlign_SSBO{
+	BufferAlign_Struct src;
+	BufferAlign_Struct dst1;
+	BufferAlign_Struct dst2;
+};
+RWByteAddressBuffer<BufferAlign_SSBO> ssb : register(u0);
+
+//---------------------------------
+
+BufferAlign_Struct Load_BufferAlign_Struct (ByteAddressBuffer buf, uint off)
+{
+	BufferAlign_Struct result;
+	result.i4 = asint(buf.Load4(off + 0));
+	result.f2 = asfloat(buf.Load2(off + 16));
+	result.b1 = bool(buf.Load(off + 24));
+	result.u3 = (buf.Load4(off + 32));
+	result.i1 = asint(buf.Load(off + 48));
+	result.b3 = bool4(buf.Load4(off + 64));
+	result.f1 = asfloat(buf.Load(off + 80));
+	return result;
+}
+
+[numthreads(1, 1, 1)]
+void main (uint3 dx_DispatchThreadID : SV_DispatchThreadID, uint3 dx_GroupThreadID : SV_GroupThreadID, uint3 dx_GroupID : SV_GroupID)
+{
+	Load_BufferAlign_Struct(ssb, /*dst1*/96) = Load_BufferAlign_Struct(ssb, /*src*/0);
+	Load_BufferAlign_Struct(ssb, /*dst2*/192).i4 = int4( 1, -2, 3, -4 );
+	Load_BufferAlign_Struct(ssb, /*dst2*/192).f2 = float2( 3.0999999f, 5.5f );
+	Load_BufferAlign_Struct(ssb, /*dst2*/192).b1 = int( true );
+	Load_BufferAlign_Struct(ssb, /*dst2*/192).u3.xyz = uint3( 9u, 8u, 7u );
+	Load_BufferAlign_Struct(ssb, /*dst2*/192).i1 = int( 1193046 );
+	Load_BufferAlign_Struct(ssb, /*dst2*/192).b3.xyz = int3( false, true, false );
+	Load_BufferAlign_Struct(ssb, /*dst2*/192).f1 = float( 1.43350005f );
 }
 
 
-}
 )#"_str );
 #ifdef GRAPHICS_API_SOFT
 	descr.Compute().FuncSW( &SWShaderLang::sw_bufferalign_comp );

@@ -20,6 +20,7 @@ public:
 private:
 	bool				looping		= true;
 	GraphicsModuleIDs	gpuIDs;
+	ComputeModuleIDs	computeIDs;
 
 	ModulePtr			syncManager;
 	ModulePtr			gpuThread;
@@ -31,7 +32,7 @@ private:
 // methods
 public:
 	GApp ();
-	bool Initialize (GAPI::type api);
+	bool Initialize (GAPI::type api, StringCRef device);
 	void Quit ();
 	bool Update ();
 
@@ -44,4 +45,8 @@ private:
 	
 // Tests
 private:
+
+	// texture
+	bool _Test_Texture2DBilinearFilter ();
+	bool _Test_Texture2DNearestFilter ();
 };

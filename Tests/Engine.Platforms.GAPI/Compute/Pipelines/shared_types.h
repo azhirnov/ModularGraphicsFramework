@@ -1,38 +1,10 @@
 // This is generated file
-// Created at: 2018/04/29 - 17:07:30
-
 #pragma once
 
 namespace Pipelines
 {
-// Packing: Std430
-struct FindLSB_SSBO final
-{
-	uint  results[16];    // offset: 0, align: 4
-
-	FindLSB_SSBO ()
-	{
-		STATIC_ASSERT( sizeof(FindLSB_SSBO) == 64 );
-		STATIC_ASSERT( (offsetof( FindLSB_SSBO, results ) == 0) and (sizeof( results ) == 64) );
-	}
-};
-
-// Packing: Std430
-struct AtomicAdd_Struct final
-{
-	int  value;    // offset: 0, align: 4
-	Bool32  found;    // offset: 4, align: 4
-
-	AtomicAdd_Struct ()
-	{
-		STATIC_ASSERT( sizeof(AtomicAdd_Struct) == 8 );
-		STATIC_ASSERT( (offsetof( AtomicAdd_Struct, value ) == 0) and (sizeof( value ) == 4) );
-		STATIC_ASSERT( (offsetof( AtomicAdd_Struct, found ) == 4) and (sizeof( found ) == 4) );
-	}
-};
-
 // Packing: Std140
-struct DynamicBuffer_Struct final
+struct DynamicBuffer_Struct final : CompileTime::PODStruct
 {
 	int2  i2;    // offset: 0, align: 8
 	Bool32  b1;    // offset: 8, align: 4
@@ -57,20 +29,8 @@ struct DynamicBuffer_Struct final
 	}
 };
 
-// Packing: Std430
-struct FindMSB_SSBO final
-{
-	uint  results[16];    // offset: 0, align: 4
-
-	FindMSB_SSBO ()
-	{
-		STATIC_ASSERT( sizeof(FindMSB_SSBO) == 64 );
-		STATIC_ASSERT( (offsetof( FindMSB_SSBO, results ) == 0) and (sizeof( results ) == 64) );
-	}
-};
-
 // Packing: Std140
-struct BufferAlign_Struct final
+struct BufferAlign_Struct final : CompileTime::PODStruct
 {
 	int4  i4;    // offset: 0, align: 16
 	float2  f2;    // offset: 16, align: 8
@@ -108,7 +68,7 @@ struct BufferAlign_Struct final
 };
 
 // Packing: Std140
-struct BufferAlign_SSBO final
+struct BufferAlign_SSBO final : CompileTime::PODStruct
 {
 	BufferAlign_Struct  src;    // offset: 0, align: 16
 	BufferAlign_Struct  dst1;    // offset: 96, align: 16
@@ -123,31 +83,15 @@ struct BufferAlign_SSBO final
 	}
 };
 
-// Packing: Std430
-struct AtomicAdd_SSBO final
-{
-	AtomicAdd_Struct  st;    // offset: 0, align: 4
-	uint  result;    // offset: 8, align: 4
-	uint  resultList[10];    // offset: 12, align: 4
-
-	AtomicAdd_SSBO ()
-	{
-		STATIC_ASSERT( sizeof(AtomicAdd_SSBO) == 52 );
-		STATIC_ASSERT( (offsetof( AtomicAdd_SSBO, st ) == 0) and (sizeof( st ) == 8) );
-		STATIC_ASSERT( (offsetof( AtomicAdd_SSBO, result ) == 8) and (sizeof( result ) == 4) );
-		STATIC_ASSERT( (offsetof( AtomicAdd_SSBO, resultList ) == 12) and (sizeof( resultList ) == 40) );
-	}
-};
-
 // Packing: Std140
-struct DynamicBuffer_SSBO final
+struct DynamicBuffer_SSBO final : CompileTime::PODStruct
 {
 	float2  f2;    // offset: 0, align: 8
 	float2  _padding0;    // offset: 8, align: 8
 	int4  i4;    // offset: 16, align: 16
 
 	// Element  arr[];   offset: 32, align: 16
-	struct Element final
+	struct Element final : CompileTime::PODStruct
 	{
 		DynamicBuffer_Struct  arr;    // offset: 0, align: 16
 

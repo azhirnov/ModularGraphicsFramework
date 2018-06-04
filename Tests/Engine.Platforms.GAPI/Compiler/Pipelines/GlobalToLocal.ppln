@@ -1,0 +1,42 @@
+
+#ifdef ANGELSCRIPT
+void main ()
+{
+	ComputePipeline	self = ComputePipeline();
+	
+	self.shaderFormat = EShaderSrcFormat_GXSL;
+
+	self.compute.LoadSelf();
+}
+#endif
+//-----------------------------------------------------------------------------
+
+
+#ifdef SHADER
+#if SHADER & SH_COMPUTE
+
+layout(binding=0, std430) buffer GlobalToLocal_SSBO
+{
+	uint	data[4];
+	uint	results[2];
+} ssb;
+
+
+uint WithGlobalAccess (const uint data[4])
+{
+	return data[0] + data[1] + data[2] + data[3];
+}
+
+uint WithGlobalAccess2 (const uint data[4])
+{
+	return WithGlobalAccess( data ) + 1;
+}
+
+void main ()
+{
+	ssb.results[0] = WithGlobalAccess( ssb.data );	// must be inlined in OpenCL 1.2, or use generic for 2.0
+	//ssb.results[1] = WithGlobalAccess2( ssb.data );
+}
+
+#endif
+#endif	// SHADER

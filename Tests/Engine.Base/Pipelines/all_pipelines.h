@@ -1,6 +1,4 @@
 // This is generated file
-// Created at: 2018/04/29 - 13:45:30
-
 #pragma once
 
 #include "Engine/Platforms/Engine.Platforms.h"
@@ -24,9 +22,6 @@ namespace Pipelines
 {
 // From file 'default.cpp'
 void Create_default (PipelineTemplateDescriptor& descr);
-
-// From file 'defaultcompute2.cpp'
-void Create_defaultcompute2 (PipelineTemplateDescriptor& descr);
 
 // From file 'default2.cpp'
 void Create_default2 (PipelineTemplateDescriptor& descr);

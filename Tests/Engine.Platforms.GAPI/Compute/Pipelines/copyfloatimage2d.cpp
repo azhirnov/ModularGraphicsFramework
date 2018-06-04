@@ -1,35 +1,34 @@
 // This is generated file
 // Origin file: 'Compute/Pipelines/CopyFloatImage2D.ppln'
-// Created at: 2018/04/29 - 17:03:04
-
 #include "all_pipelines.h"
 // C++ shader
 #ifdef GRAPHICS_API_SOFT
-namespace SWShaderLang
-{
-	#define INOUT
-	#define IN
-	#define OUT
-	
+namespace SWShaderLang {
+namespace {
+
+#	define INOUT
+#	define IN
+#	define OUT
+
 	static void sw_copyfloatimage2d_comp (const Impl::SWShaderHelper &_helper_)
 	{
 		// prepare externals
-		Impl::Image2D< vec4, Impl::EStorageAccess::WriteOnly > un_DstImage;		_helper_.GetImage( 0, un_DstImage );
-		Impl::Image2D< vec4, Impl::EStorageAccess::ReadOnly > un_SrcImage;		_helper_.GetImage( 1, un_SrcImage );
+		Impl::Image2D< vec4, Impl::EStorageAccess::WriteOnly >  un_DstImage;    _helper_.GetImage( 0, un_DstImage );
+		Impl::Image2D< vec4, Impl::EStorageAccess::ReadOnly >  un_SrcImage;    _helper_.GetImage( 1, un_SrcImage );
 		auto& gl_GlobalInvocationID = _helper_.GetComputeShaderState().inGlobalInvocationID;
 	
 		// shader
-	{
-		Int2 coord = Int3( gl_GlobalInvocationID ).xy;
-		;
-		Float4 color = imageLoad( un_SrcImage, coord );
-		;
-		imageStore( un_DstImage, coord, color );
+		{
+			Int2 coord = Int3(gl_GlobalInvocationID).xy;
+			;
+			Float4 color = imageLoad(un_SrcImage, coord);
+			;
+			imageStore(un_DstImage, coord, color);
+		}
 	}
 	
-	
-	}
-}	// SWShaderLang
+}		// anonymous namespace
+}		// SWShaderLang
 #endif	// GRAPHICS_API_SOFT
 
 
@@ -43,8 +42,8 @@ void Create_copyfloatimage2d (PipelineTemplateDescriptor& descr)
 
 	descr.localGroupSize = uint3(1, 1, 1);
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddImage( "un_DstImage", EImage::Tex2D, EPixelFormat::RGBA32F, EShaderMemoryModel::WriteOnly, 0, 0, EShader::Compute )
-			.AddImage( "un_SrcImage", EImage::Tex2D, EPixelFormat::RGBA8_UNorm, EShaderMemoryModel::ReadOnly, 1, 1, EShader::Compute )
+			.AddImage( "un_DstImage", EImage::Tex2D, EPixelFormat::RGBA32F, EShaderMemoryModel::WriteOnly, 0u, 0u, EShader::Compute )
+			.AddImage( "un_SrcImage", EImage::Tex2D, EPixelFormat::RGBA8_UNorm, EShaderMemoryModel::ReadOnly, 1u, 1u, EShader::Compute )
 			.Finish();
 
 	descr.Compute().StringGLSL( 
@@ -56,7 +55,7 @@ layout(binding=1) layout(rgba8) readonly uniform image2D un_SrcImage;
 
 //---------------------------------
 
-void main()
+void main ()
 {
 	ivec2 coord = ivec3( gl_GlobalInvocationID ).xy;
 	;
@@ -241,16 +240,38 @@ kernel void Main (
 	/*1*/read_only FORMAT(rgba8_unorm) image2d_t un_SrcImage)
 {
 
+	{
+		int2 coord = convert_int3( ((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))) ).xy;
+		;
+		float4 color = read_imagef(un_SrcImage, coord);
+		;
+		write_imagef(un_DstImage, coord, color);
+	}
+}
+
+)#"_str );
+	descr.Compute().StringHLSL( 
+R"#(cbuffer ComputeBuiltins : register(b0)
 {
-	int2 coord = convert_int3( ((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))) ).xy;
+	uint3		dx_NumWorkGroups;
+};
+
+globallycoherent RWTexture2D<float4> un_DstImage : register(u0);
+Texture2D<float4> un_SrcImage : register(t1);
+
+//---------------------------------
+
+[numthreads(1, 1, 1)]
+void main (uint3 dx_DispatchThreadID : SV_DispatchThreadID, uint3 dx_GroupThreadID : SV_GroupThreadID, uint3 dx_GroupID : SV_GroupID)
+{
+	int2 coord = int3( dx_DispatchThreadID ).xy;
 	;
-	float4 color = read_imagef(un_SrcImage, coord);
+	float4 color = un_SrcImage.Load(int3(coord, 0));
 	;
-	write_imagef(un_DstImage, coord, color);
+	(un_DstImage)[coord] = color;
 }
 
 
-}
 )#"_str );
 #ifdef GRAPHICS_API_SOFT
 	descr.Compute().FuncSW( &SWShaderLang::sw_copyfloatimage2d_comp );

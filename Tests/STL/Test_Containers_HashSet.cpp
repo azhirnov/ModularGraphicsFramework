@@ -16,9 +16,7 @@ struct Value
 	Value (int x) : val(x) {}
 	
 	bool operator == (const Value &right) const		{ return val == right.val; }
-	bool operator != (const Value &right) const		{ return val != right.val; }
 	bool operator >  (const Value &right) const		{ return val >  right.val; }
-	bool operator <  (const Value &right) const		{ return val <  right.val; }
 };
 
 namespace GX_STL
@@ -28,9 +26,7 @@ namespace GXTypes
 	template <>
 	struct Hash< Value >
 	{
-		typedef usize	Result_t;
-
-		Result_t operator () (const Value &) const noexcept
+		usize operator () (const Value &) const noexcept
 		{
 			return 0;
 		}

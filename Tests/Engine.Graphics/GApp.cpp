@@ -3,6 +3,7 @@
 #include "GApp.h"
 #include "Pipelines/all_pipelines.h"
 #include "Engine/Profilers/Engine.Profilers.h"
+#include "Engine/ImportExport/Engine.ImportExport.h"
 
 using Vertex1		= Graphics::DefVertices::Vertex2D;
 using Rectangle1	= Graphics::DefPrimitives::Rectangle< Vertex1 >;
@@ -23,6 +24,7 @@ GApp::GApp ()
 
 	Platforms::RegisterPlatforms();
 	Profilers::RegisterProfilers();
+	//ImportExport::RegisterImportExport();
 	Graphics::RegisterGraphics();
 }
 
@@ -33,7 +35,7 @@ bool GApp::Initialize (GAPI::type api)
 
 	ms->AddModule( 0, CreateInfo::Platform{} );
 	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager{} );
-	ms->AddModule( StreamManagerModuleID, CreateInfo::StreamManager{} );
+	ms->AddModule( DataProviderManagerModuleID, CreateInfo::DataProviderManager{} );
 	
 	{
 		ModulePtr	context;
@@ -210,12 +212,7 @@ bool GApp::_CreatePipeline ()
 					ids.image,
 					gthread->GlobalSystems(),
 					CreateInfo::GpuImage{
-						ImageDescriptor{
-							EImage::Tex2D,
-							uint4( 128, 128, 0, 0 ),
-							EPixelFormat::RGBA8_UNorm,
-							EImageUsage::Sampled | EImageUsage::TransferDst
-						},
+						ImageDescriptor{ EImage::Tex2D, uint4( 128, 128, 0, 0 ), EPixelFormat::RGBA8_UNorm, EImageUsage::Sampled | EImageUsage::TransferDst },
 						EGpuMemory::LocalInGPU,
 						EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite },
 					OUT texture ) );
@@ -223,13 +220,10 @@ bool GApp::_CreatePipeline ()
 	CHECK_ERR( factory->Create(
 					ids.sampler,
 					gthread->GlobalSystems(),
-					CreateInfo::GpuSampler{
-						gthread,
-						SamplerDescriptor::Builder()
-							.SetAddressMode( EAddressMode::Clamp )
-							.SetFilter( EFilter::MinMagMipLinear )
-							.Finish()
-						},
+					CreateInfo::GpuSampler{	SamplerDescriptor::Builder()
+						.SetAddressMode( EAddressMode::Clamp )
+						.SetFilter( EFilter::MinMagMipLinear )
+						.Finish() },
 					OUT sampler ) );
 
 	CHECK_ERR( factory->Create(

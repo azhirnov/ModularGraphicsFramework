@@ -1,0 +1,30 @@
+
+#ifdef ANGELSCRIPT
+void main ()
+{
+	ComputePipeline	self = ComputePipeline();
+	
+	self.shaderFormat = EShaderSrcFormat_GXSL;
+
+	self.compute.LoadSelf();
+}
+#endif
+//-----------------------------------------------------------------------------
+
+
+#ifdef SHADER
+#if SHADER & SH_COMPUTE
+
+layout(binding=0, std430) buffer UnnamedBuffer_SSBO
+{
+	readonly  uint	data[2];
+	writeonly uint	result;
+};
+
+void main ()
+{
+	result = data[1] + data[0];
+}
+
+#endif
+#endif	// SHADER

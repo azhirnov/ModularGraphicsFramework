@@ -67,7 +67,7 @@ static void ColorFormat_ConversionIntToInt2 ()
 static void ColorFormat_ConversionNormFloatToInt ()
 {
 	RGBA32f const	src( 1.0f, 0.5f, 0.25f, 0.0f );
-	RGBA8u			dst8;
+	RGBA8_UNorm		dst8;
 	R5_G6_B5_UNorm	dst5;
 
 	ColorFormatConverter::NormFloatToNormInt( dst8, src );

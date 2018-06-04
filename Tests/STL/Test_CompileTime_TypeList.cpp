@@ -112,6 +112,7 @@ extern void Test_CompileTime_TypeList ()
 	STATIC_ASSERT( typeList26::HasType<float > );
 	STATIC_ASSERT( typeList26::HasType<short > );
 	STATIC_ASSERT( typeList26::HasType<int > );
+	STATIC_ASSERT( not typeList26::HasType<ulong> );
 
 	typedef TypeListFrom< TypeListEnd >::Minimize::type		typeList27;
 	STATIC_ASSERT( typeList27::Empty );
@@ -125,4 +126,18 @@ extern void Test_CompileTime_TypeList ()
 
 	//Debug::TypeListToString< typeList28 >::Show();
 
+
+	struct Base {
+		int	i;
+	};
+	struct Derived final : Base {
+		float	f;
+	};
+	struct Derived2 final : Base {
+		double	d;
+	};
+	typedef TypeListFrom< int, Base, Derived >	typeList30;
+	STATIC_ASSERT( typeList30::HasType<Base> );
+	STATIC_ASSERT( typeList30::HasType<Derived> );
+	STATIC_ASSERT( not typeList30::HasType<Derived2> );
 }

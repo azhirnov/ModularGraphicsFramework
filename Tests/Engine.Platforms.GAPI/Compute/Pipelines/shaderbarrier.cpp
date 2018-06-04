@@ -1,82 +1,81 @@
 // This is generated file
 // Origin file: 'Compute/Pipelines/ShaderBarrier.ppln'
-// Created at: 2018/04/29 - 17:03:04
-
 #include "all_pipelines.h"
 // C++ shader
 #ifdef GRAPHICS_API_SOFT
-namespace SWShaderLang
-{
-	#define INOUT
-	#define IN
-	#define OUT
-	
-	Float MaxMag(const Float a, const Float b);
-	Float4 MaxMag(const Float4 a, const Float4 b);
+namespace SWShaderLang {
+namespace {
+
+#	define INOUT
+#	define IN
+#	define OUT
+
+	static Float MaxMag (const Float a, const Float b);
+	static Float4 MaxMag (const Float4 a1, const Float4 b1);
 	
 	//---------------------------------
 	
-	Float MaxMag(const Float a, const Float b)
+	static Float MaxMag (const Float a, const Float b)
 	{
-		if ((abs( a ) > abs( b )))
+		if ((glm::abs(a) > glm::abs(b)))
 		{
 			return a;
 		;
 		}
 		;
-		if ((abs( a ) < abs( b )))
+		if ((glm::abs(a) < glm::abs(b)))
 		{
 			return b;
 		;
 		}
 		;
-		return max( a, b );
+		return glm::max(a, b);
 	}
 	
 	
-	Float4 MaxMag(const Float4 a, const Float4 b)
+	static Float4 MaxMag (const Float4 a1, const Float4 b1)
 	{
-		return Float4( MaxMag(a.x, b.x), MaxMag(a.y, b.y), MaxMag(a.z, b.z), MaxMag(a.w, b.w) );
+		return Float4(MaxMag(a1.x, b1.x), MaxMag(a1.y, b1.y), MaxMag(a1.z, b1.z), MaxMag(a1.w, b1.w));
 	}
 	
 	
 	static void sw_shaderbarrier_comp (const Impl::SWShaderHelper &_helper_)
 	{
 		// prepare externals
-		Impl::Image2D< vec4, Impl::EStorageAccess::WriteOnly > un_DstImage;		_helper_.GetImage( 0, un_DstImage );
-		Impl::Image2D< vec4, Impl::EStorageAccess::ReadOnly > un_SrcImage;		_helper_.GetImage( 1, un_SrcImage );
-		Impl::SharedMemory< Float4 >	sharedMemory;	_helper_.GetShared( 1, 16, sharedMemory );
+		Impl::Image2D< vec4, Impl::EStorageAccess::WriteOnly >  un_DstImage;    _helper_.GetImage( 0, un_DstImage );
+		Impl::Image2D< vec4, Impl::EStorageAccess::ReadOnly >  un_SrcImage;    _helper_.GetImage( 1, un_SrcImage );
+		Impl::SharedMemory< Float4 >	sharedMemory;	_helper_.GetShared( 0, 16, sharedMemory );
 		Impl::Barrier __barrier_obj0;	_helper_.InitBarrier( 0, __barrier_obj0 );
 		auto& gl_GlobalInvocationID = _helper_.GetComputeShaderState().inGlobalInvocationID;
 		auto& gl_LocalInvocationIndex = _helper_.GetComputeShaderState().inLocalInvocationIndex;
 	
 		// shader
-	{
-		Int2 coord = Int3( gl_GlobalInvocationID ).xy;
-		;
-		Int idx = Int( gl_LocalInvocationIndex );
-		;
-		(sharedMemory[idx]) = imageLoad( un_SrcImage, coord );
-		__barrier_obj0.Wait();
-		Float4 value = Float4( 0.0f );
-		;
-		for(Int y = Int( 0 ); (UInt( y ) < UInt( 4U )); ++( y ))
 		{
-			for(Int x = Int( 0 ); (UInt( x ) < UInt( 4U )); ++( x ))
+			Int2 coord = Int3(gl_GlobalInvocationID).xy;
+			;
+			Int idx = Int(gl_LocalInvocationIndex);
+			;
+			(sharedMemory[idx]) = imageLoad(un_SrcImage, coord);
+			__barrier_obj0.Wait();
+			Float4 value = Float4(0.0f);
+			;
+			for (Int y = Int(0); (UInt(y) < UInt(4u)); ++(y))
 			{
-				const Float4 diff = ((sharedMemory[idx]) - (sharedMemory[(UInt( x ) + (UInt( y ) * UInt( 4U )))]));
+				for (Int x = Int(0); (UInt(x) < UInt(4u)); ++(x))
+				{
+					const Float4 diff = ((sharedMemory[idx]) - (sharedMemory[(UInt(x) + (UInt(y) * UInt(4u)))]));
+					;
+					value = MaxMag(value, diff);
+				}
 				;
-				value = MaxMag(value, diff);
 			}
 			;
+			imageStore(un_DstImage, coord, value);
 		}
-		;
-		imageStore( un_DstImage, coord, value );
 	}
 	
-	
-	}
-}	// SWShaderLang
+}		// anonymous namespace
+}		// SWShaderLang
 #endif	// GRAPHICS_API_SOFT
 
 
@@ -90,8 +89,8 @@ void Create_shaderbarrier (PipelineTemplateDescriptor& descr)
 
 	descr.localGroupSize = uint3(4, 4, 1);
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddImage( "un_DstImage", EImage::Tex2D, EPixelFormat::RGBA32F, EShaderMemoryModel::WriteOnly, 0, 0, EShader::Compute )
-			.AddImage( "un_SrcImage", EImage::Tex2D, EPixelFormat::RGBA32F, EShaderMemoryModel::ReadOnly, 1, 1, EShader::Compute )
+			.AddImage( "un_DstImage", EImage::Tex2D, EPixelFormat::RGBA32F, EShaderMemoryModel::WriteOnly, 0u, 0u, EShader::Compute )
+			.AddImage( "un_SrcImage", EImage::Tex2D, EPixelFormat::RGBA32F, EShaderMemoryModel::ReadOnly, 1u, 1u, EShader::Compute )
 			.Finish();
 
 	descr.Compute().StringGLSL( 
@@ -107,12 +106,12 @@ shared vec4 sharedMemory[16];
 
 //---------------------------------
 
-vec4 MaxMag(const vec4 a, const vec4 b);
-float MaxMag(const float a, const float b);
+float MaxMag (const float a, const float b);
+vec4 MaxMag (const vec4 a1, const vec4 b1);
 
 //---------------------------------
 
-float MaxMag(const float a, const float b)
+float MaxMag (const float a, const float b)
 {
 	if ((abs( a ) > abs( b )))
 	{
@@ -130,13 +129,13 @@ float MaxMag(const float a, const float b)
 }
 
 
-vec4 MaxMag(const vec4 a, const vec4 b)
+vec4 MaxMag (const vec4 a1, const vec4 b1)
 {
-	return vec4( MaxMag(a.x, b.x), MaxMag(a.y, b.y), MaxMag(a.z, b.z), MaxMag(a.w, b.w) );
+	return vec4( MaxMag(a1.x, b1.x), MaxMag(a1.y, b1.y), MaxMag(a1.z, b1.z), MaxMag(a1.w, b1.w) );
 }
 
 
-void main()
+void main ()
 {
 	ivec2 coord = ivec3( gl_GlobalInvocationID ).xy;
 	;
@@ -146,11 +145,11 @@ void main()
 	barrier();
 	vec4 value = vec4( 0.0f );
 	;
-	for(int y = int( 0 ); (uint( y ) < uint( 4U )); ++( y ))
+	for (int y = int( 0 ); (uint( y ) < uint( 4u )); ++( y ))
 	{
-		for(int x = int( 0 ); (uint( x ) < uint( 4U )); ++( x ))
+		for (int x = int( 0 ); (uint( x ) < uint( 4u )); ++( x ))
 		{
-			const vec4 diff = ((sharedMemory[idx]) - (sharedMemory[(uint( x ) + (uint( y ) * uint( 4U )))]));
+			const vec4 diff = ((sharedMemory[idx]) - (sharedMemory[(uint( x ) + (uint( y ) * uint( 4u )))]));
 			;
 			value = MaxMag(value, diff);
 		}
@@ -171,7 +170,7 @@ void main()
 0x72617420, 0x2D746567, 0x20766E65, 0x6E65706F, 0x2F0A6C67, 0x704F202F, 0x75646F4D, 0x7250656C, 0x7365636F, 0x20646573, 0x72746E65, 0x6F702D79, 
 0x20746E69, 0x6E69616D, 0x696C230A, 0x3120656E, 0x0000000A, 0x00040005, 0x00000005, 0x6E69616D, 0x00000000, 0x00060005, 0x0000000B, 0x4D78614D, 
 0x66286761, 0x31663B31, 0x0000003B, 0x00030005, 0x00000009, 0x00000061, 0x00030005, 0x0000000A, 0x00000062, 0x00060005, 0x00000011, 0x4D78614D, 
-0x76286761, 0x763B3466, 0x003B3466, 0x00030005, 0x0000000F, 0x00000061, 0x00030005, 0x00000010, 0x00000062, 0x00040005, 0x0000003A, 0x726F6F63, 
+0x76286761, 0x763B3466, 0x003B3466, 0x00030005, 0x0000000F, 0x00003161, 0x00030005, 0x00000010, 0x00003162, 0x00040005, 0x0000003A, 0x726F6F63, 
 0x00000064, 0x00080005, 0x0000003D, 0x475F6C67, 0x61626F6C, 0x766E496C, 0x7461636F, 0x496E6F69, 0x00000044, 0x00030005, 0x00000043, 0x00786469, 
 0x00080005, 0x00000045, 0x4C5F6C67, 0x6C61636F, 0x6F766E49, 0x69746163, 0x6E496E6F, 0x00786564, 0x00060005, 0x0000004B, 0x72616873, 0x654D6465, 
 0x79726F6D, 0x00000000, 0x00050005, 0x0000004F, 0x535F6E75, 0x6D496372, 0x00656761, 0x00040005, 0x00000057, 0x756C6176, 0x00000065, 0x00030005, 
@@ -380,12 +379,12 @@ R"#(#define FORMAT( _fmt_ )
 #undef Gen_FloatTemplates
 #undef Gen_DoubleTemplates
 
-float MaxMag(const float a, const float b);
-float4 MaxMag_1(const float4 a, const float4 b);
+float4 MaxMag_1 (const float4 a1, const float4 b1);
+float MaxMag (const float a, const float b);
 
 //---------------------------------
 
-float MaxMag(const float a, const float b)
+float MaxMag (const float a, const float b)
 {
 	if ((fabs( a ) > fabs( b )))
 	{
@@ -403,9 +402,9 @@ float MaxMag(const float a, const float b)
 }
 
 
-float4 MaxMag_1(const float4 a, const float4 b)
+float4 MaxMag_1 (const float4 a1, const float4 b1)
 {
-	return ((float4)( MaxMag(a.x, b.x), MaxMag(a.y, b.y), MaxMag(a.z, b.z), MaxMag(a.w, b.w) ));
+	return ((float4)( MaxMag(a1.x, b1.x), MaxMag(a1.y, b1.y), MaxMag(a1.z, b1.z), MaxMag(a1.w, b1.w) ));
 }
 
 
@@ -415,31 +414,232 @@ kernel void Main (
 {
 __local float4 sharedMemory [16];
 
-{
-	int2 coord = convert_int3( ((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))) ).xy;
-	;
-	int idx = convert_int( ((uint)(get_local_linear_id())) );
-	;
-	(sharedMemory[idx]) = read_imagef(un_SrcImage, coord);
-	barrier(CLK_LOCAL_MEM_FENCE);
-	float4 value = ((float4)( 0.0f ));
-	;
-	for(int y = ((int)( 0 )); (convert_uint( y ) < ((uint)( 4U ))); ++( y ))
 	{
-		for(int x = ((int)( 0 )); (convert_uint( x ) < ((uint)( 4U ))); ++( x ))
+		int2 coord = convert_int3( ((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))) ).xy;
+		;
+		int idx = convert_int( ((uint)((get_local_id(2) * get_local_size(1) * get_local_size(0)) + (get_local_id(1) * get_local_size(0)) + get_local_id(0))) );
+		;
+		(sharedMemory[idx]) = read_imagef(un_SrcImage, coord);
+		barrier(CLK_LOCAL_MEM_FENCE);
+		float4 value = ((float4)( 0.0f ));
+		;
+		for (int y = ((int)( 0 )); (convert_uint( y ) < ((uint)( 4u ))); ++( y ))
 		{
-			const float4 diff = ((sharedMemory[idx]) - (sharedMemory[(convert_uint( x ) + (convert_uint( y ) * ((uint)( 4U ))))]));
+			for (int x = ((int)( 0 )); (convert_uint( x ) < ((uint)( 4u ))); ++( x ))
+			{
+				const float4 diff = ((sharedMemory[idx]) - (sharedMemory[(convert_uint( x ) + (convert_uint( y ) * ((uint)( 4u ))))]));
+				;
+				value = MaxMag_1(value, diff);
+			}
 			;
-			value = MaxMag_1(value, diff);
+		}
+		;
+		write_imagef(un_DstImage, coord, value);
+	}
+}
+
+)#"_str );
+	descr.Compute().StringHLSL( 
+R"#(cbuffer ComputeBuiltins : register(b0)
+{
+	uint3		dx_NumWorkGroups;
+};
+
+globallycoherent RWTexture2D<float4> un_DstImage : register(u0);
+Texture2D<float4> un_SrcImage : register(t1);
+
+//---------------------------------
+
+groupshared float4 sharedMemory[16];
+
+//---------------------------------
+
+float MaxMag (const float a, const float b);
+float4 MaxMag (const float4 a1, const float4 b1);
+
+//---------------------------------
+
+[numthreads(4, 4, 1)]
+void main (uint3 dx_DispatchThreadID : SV_DispatchThreadID, uint3 dx_GroupThreadID : SV_GroupThreadID, uint3 dx_GroupID : SV_GroupID)
+{
+	int2 coord = int3( dx_DispatchThreadID ).xy;
+	;
+	int idx = int( (dx_GroupThreadID.x + dx_GroupThreadID.y * 4 + dx_GroupThreadID.z * 16) );
+	;
+	(sharedMemory[idx]) = un_SrcImage.Load(int3(coord, 0));
+	GroupMemoryBarrierWithGroupSync();
+	float4 value = float4( 0.0f, 0.0f, 0.0f, 0.0f );
+	;
+	for (int y = int( 0 ); (uint( y ) < uint( 4u )); ++( y ))
+	{
+		for (int x = int( 0 ); (uint( x ) < uint( 4u )); ++( x ))
+		{
+			const float4 diff = ((sharedMemory[idx]) - (sharedMemory[(uint( x ) + (uint( y ) * uint( 4u )))]));
+			;
+			
+			// MaxMag(vf4;vf4;
+			const float4 xY_a1 = value;
+			const float4 xY_b1 = diff;
+			float4 xY_return = float4( 0 );
+			int xY_exit = int( false );
+			do {
+				
+				// MaxMag(f1;f1;
+				const float xX_a = xY_a1.x;
+				const float xX_b = xY_b1.x;
+				float xX_return = float( 0 );
+				int xX_exit = int( false );
+				do {
+					if ((abs( xX_a ) > abs( xX_b )))
+					{
+						{
+							xX_return = xX_a;
+							xX_exit = true;
+							break;
+						};
+					;
+					}
+					;
+					if ((abs( xX_a ) < abs( xX_b )))
+					{
+						{
+							xX_return = xX_b;
+							xX_exit = true;
+							break;
+						};
+					;
+					}
+					;
+					{
+						xX_return = max( xX_a, xX_b );
+						xX_exit = true;
+						break;
+					};
+				
+				} while(false);
+				// end MaxMag(f1;f1;;
+				
+				// MaxMag(f1;f1;
+				const float xR_a = xY_a1.y;
+				const float xR_b = xY_b1.y;
+				float xR_return = float( 0 );
+				int xR_exit = int( false );
+				do {
+					if ((abs( xR_a ) > abs( xR_b )))
+					{
+						{
+							xR_return = xR_a;
+							xR_exit = true;
+							break;
+						};
+					;
+					}
+					;
+					if ((abs( xR_a ) < abs( xR_b )))
+					{
+						{
+							xR_return = xR_b;
+							xR_exit = true;
+							break;
+						};
+					;
+					}
+					;
+					{
+						xR_return = max( xR_a, xR_b );
+						xR_exit = true;
+						break;
+					};
+				
+				} while(false);
+				// end MaxMag(f1;f1;;
+				
+				// MaxMag(f1;f1;
+				const float xO_a = xY_a1.z;
+				const float xO_b = xY_b1.z;
+				float xO_return = float( 0 );
+				int xO_exit = int( false );
+				do {
+					if ((abs( xO_a ) > abs( xO_b )))
+					{
+						{
+							xO_return = xO_a;
+							xO_exit = true;
+							break;
+						};
+					;
+					}
+					;
+					if ((abs( xO_a ) < abs( xO_b )))
+					{
+						{
+							xO_return = xO_b;
+							xO_exit = true;
+							break;
+						};
+					;
+					}
+					;
+					{
+						xO_return = max( xO_a, xO_b );
+						xO_exit = true;
+						break;
+					};
+				
+				} while(false);
+				// end MaxMag(f1;f1;;
+				
+				// MaxMag(f1;f1;
+				const float xI_a = xY_a1.w;
+				const float xI_b = xY_b1.w;
+				float xI_return = float( 0 );
+				int xI_exit = int( false );
+				do {
+					if ((abs( xI_a ) > abs( xI_b )))
+					{
+						{
+							xI_return = xI_a;
+							xI_exit = true;
+							break;
+						};
+					;
+					}
+					;
+					if ((abs( xI_a ) < abs( xI_b )))
+					{
+						{
+							xI_return = xI_b;
+							xI_exit = true;
+							break;
+						};
+					;
+					}
+					;
+					{
+						xI_return = max( xI_a, xI_b );
+						xI_exit = true;
+						break;
+					};
+				
+				} while(false);
+				// end MaxMag(f1;f1;;
+				{
+					xY_return = float4( xX_return, xR_return, xO_return, xI_return );
+					xY_exit = true;
+					break;
+				};
+			
+			} while(false);
+			// end MaxMag(vf4;vf4;;
+			value = xY_return;
 		}
 		;
 	}
 	;
-	write_imagef(un_DstImage, coord, value);
+	(un_DstImage)[coord] = value;
 }
 
 
-}
 )#"_str );
 #ifdef GRAPHICS_API_SOFT
 	descr.Compute().FuncSW( &SWShaderLang::sw_shaderbarrier_comp );

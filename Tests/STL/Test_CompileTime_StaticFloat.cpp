@@ -3,7 +3,7 @@
 #include "Tests/STL/Common.h"
 
 using namespace GX_STL;
-using namespace CompileTime;
+using namespace GX_STL::CompileTime;
 
 
 extern void Test_CompileTime_StaticFloat ()

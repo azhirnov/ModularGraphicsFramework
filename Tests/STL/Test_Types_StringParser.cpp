@@ -90,7 +90,7 @@ static void StringParser_Tokenize_2 ()
 static void StringParser_CStyleDivideString ()
 {
 	Array< StringCRef >	tokens;
-	StringParser::DivideString_CPP( "a=122; _bc+=5/ 7*34\",,\"--->", tokens );
+	StringParser::DivideString_CPP( "a=122; _bc+=5/ 7*34\",,\"--->", OUT tokens );
 
 	TEST( tokens.Count() == 17 );
 	TEST( tokens[0] == "a" );

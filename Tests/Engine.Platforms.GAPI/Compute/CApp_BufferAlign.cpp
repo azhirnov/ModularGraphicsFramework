@@ -47,11 +47,8 @@ bool CApp::_Test_BufferAlign ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ buf_size, EBufferUsage::Storage },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT buffer
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT buffer ) );
 
 	CreateInfo::PipelineTemplate	pt_ci;
 	Pipelines::Create_bufferalign( OUT pt_ci.descr );
@@ -93,7 +90,7 @@ bool CApp::_Test_BufferAlign ()
 	cmdBuilder->Send< GpuMsg::CmdBindComputePipeline >({ pipeline });
 	cmdBuilder->Send< GpuMsg::CmdBindComputeResourceTable >({ resource_table });
 	cmdBuilder->Send< GpuMsg::CmdDispatch >({ uint3(1) });
-	
+
 	Message< GpuMsg::CmdEnd >	cmd_end;
 	cmdBuilder->Send( cmd_end );
 
@@ -112,31 +109,31 @@ bool CApp::_Test_BufferAlign ()
 
 	Pipelines::BufferAlign_Struct const*	res_st = reinterpret_cast< Pipelines::BufferAlign_Struct const *>( dst_data.ptr() );
 
-	CHECK_ERR(	All( st1.b1	== res_st->b1 )	and
-				All( st1.b3	== res_st->b3 )	and
-				All( st1.f1	== res_st->f1 )	and
-				All( st1.f2	== res_st->f2 )	and
-				All( st1.i1	== res_st->i1 )	and
-				All( st1.i4	== res_st->i4 )	and
-				All( st1.u3	== res_st->u3 )	);
+	CHECK_ERR(	All( st1.b1			== res_st->b1		)	and
+				All( st1.b3.xyz()	== res_st->b3.xyz() )	and
+				All( st1.f1			== res_st->f1		)	and
+				All( st1.f2.xy()	== res_st->f2.xy()	)	and
+				All( st1.i1			== res_st->i1		)	and
+				All( st1.i4.xyzw()	== res_st->i4.xyzw())	and
+				All( st1.u3.xyz()	== res_st->u3.xyz() )	);
 	
 	++res_st;
-	CHECK_ERR(	All( st1.b1	== res_st->b1 )	and
-				All( st1.b3	== res_st->b3 )	and
-				All( st1.f1	== res_st->f1 )	and
-				All( st1.f2	== res_st->f2 )	and
-				All( st1.i1	== res_st->i1 )	and
-				All( st1.i4	== res_st->i4 )	and
-				All( st1.u3	== res_st->u3 )	);
+	CHECK_ERR(	All( st1.b1			== res_st->b1		)	and
+				All( st1.b3.xyz()	== res_st->b3.xyz() )	and
+				All( st1.f1			== res_st->f1		)	and
+				All( st1.f2.xy()	== res_st->f2.xy()	)	and
+				All( st1.i1			== res_st->i1		)	and
+				All( st1.i4.xyzw()	== res_st->i4.xyzw())	and
+				All( st1.u3.xyz()	== res_st->u3.xyz() )	);
 
 	++res_st;
-	CHECK_ERR(	All( st2.b1	== res_st->b1 )	and
-				All( st2.b3	== res_st->b3 )	and
-				All( st2.f1	== res_st->f1 )	and
-				All( st2.f2	== res_st->f2 )	and
-				All( st2.i1	== res_st->i1 )	and
-				All( st2.i4	== res_st->i4 )	and
-				All( st2.u3	== res_st->u3 )	);
+	CHECK_ERR(	All( st2.b1			== res_st->b1		)	and
+				All( st2.b3.xyz()	== res_st->b3.xyz() )	and
+				All( st2.f1			== res_st->f1		)	and
+				All( st2.f2.xy()	== res_st->f2.xy()	)	and
+				All( st2.i1			== res_st->i1		)	and
+				All( st2.i4.xyzw()	== res_st->i4.xyzw())	and
+				All( st2.u3.xyz()	== res_st->u3.xyz() )	);
 
 	LOG( "BufferAlign - OK", ELog::Info );
 	return true;

@@ -37,11 +37,8 @@ bool CApp::_Test_UpdateBuffer ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ data.Size(), EBufferUsage::TransferSrc | EBufferUsage::TransferDst },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT buffer
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT buffer ) );
 
 	ModuleUtils::Initialize({ cmd_buffer, buffer });
 
@@ -55,7 +52,12 @@ bool CApp::_Test_UpdateBuffer ()
 	// build command buffer
 	cmdBuilder->Send< GpuMsg::CmdBegin >({ cmd_buffer });
 
-	cmdBuilder->Send< GpuMsg::CmdUpdateBuffer >({ buffer, data2, data.Size() - data2.Size() });
+	const usize		subdata_size = 128;
+	BinArrayCRef	subdata1 = data2.SubArray( 0, subdata_size );
+	BinArrayCRef	subdata2 = data2.SubArray( subdata_size, data2.Count() - subdata_size );
+
+	cmdBuilder->Send< GpuMsg::CmdUpdateBuffer >({ buffer, subdata1, data.Size() - data2.Size() });
+	cmdBuilder->Send< GpuMsg::CmdUpdateBuffer >({ buffer, subdata2, data.Size() - subdata2.Size() });
 	
 	Message< GpuMsg::CmdEnd >	cmd_end;
 	cmdBuilder->Send( cmd_end );

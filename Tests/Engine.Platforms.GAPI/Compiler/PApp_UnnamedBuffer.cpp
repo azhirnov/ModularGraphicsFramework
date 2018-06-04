@@ -1,11 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "CApp.h"
+#include "PApp.h"
 #include "Pipelines/all_pipelines.h"
 
-bool CApp::_Test_FindMSB ()
+bool PApp::_Test_UnnamedBuffer ()
 {
-	BytesU	buf_size = SizeOf< Pipelines::FindMSB_SSBO >;
+	const BytesU	buf_size = SizeOf< Pipelines::UnnamedBuffer_SSBO >;
+
+	decltype(Pipelines::UnnamedBuffer_SSBO::data)	in_data = { 1, 20 };
 
 
 	// create resources
@@ -28,14 +30,11 @@ bool CApp::_Test_FindMSB ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ buf_size, EBufferUsage::Storage },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT buffer
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT buffer ) );
 
 	CreateInfo::PipelineTemplate	pt_ci;
-	Pipelines::Create_findmsb( OUT pt_ci.descr );
+	Pipelines::Create_unnamedbuffer( OUT pt_ci.descr );
 	
 	ModulePtr	pipeline_template;
 	CHECK_ERR( factory->Create(
@@ -58,9 +57,15 @@ bool CApp::_Test_FindMSB ()
 					OUT resource_table ) );
 	
 	resource_table->Send< ModuleMsg::AttachModule >({ "pipeline", pipeline });
-	resource_table->Send< GpuMsg::PipelineAttachBuffer >({ "ssb", buffer, buf_size, 0_b });
+	resource_table->Send< GpuMsg::PipelineAttachBuffer >({ "", buffer, buf_size, 0_b });
 
 	ModuleUtils::Initialize({ cmd_buffer, buffer, pipeline, resource_table });
+	
+
+	// write data to buffer
+	Message< GpuMsg::WriteToGpuMemory >	write_cmd{ BinArrayCRef::FromValue(in_data) };
+	buffer->Send( write_cmd );
+	CHECK_ERR( *write_cmd->wasWritten == BytesUL::SizeOf(in_data) );
 
 
 	// build command buffer
@@ -86,25 +91,10 @@ bool CApp::_Test_FindMSB ()
 	Message< GpuMsg::ReadFromGpuMemory >	read_cmd{ dst_data };
 	buffer->Send( read_cmd );
 
-	auto* st = Cast<const Pipelines::FindMSB_SSBO *>( read_cmd->result->ptr() );
+	auto* st = Cast<const Pipelines::UnnamedBuffer_SSBO *>( read_cmd->result->ptr() );
 
-	CHECK_ERR( st->results[0] == 31 );
-	CHECK_ERR( st->results[1] == 30 );
-	CHECK_ERR( st->results[2] == 28 );
-	CHECK_ERR( st->results[3] == 26 );
-	CHECK_ERR( st->results[4] == 24 );
-	CHECK_ERR( st->results[5] == 22 );
-	CHECK_ERR( st->results[6] == 20 );
-	CHECK_ERR( st->results[7] == 18 );
-	CHECK_ERR( st->results[8] == 16 );
-	CHECK_ERR( st->results[9] == 18 );
-	CHECK_ERR( st->results[10] == 20 );
-	CHECK_ERR( st->results[11] == 22 );
-	CHECK_ERR( st->results[12] == 24 );
-	CHECK_ERR( st->results[13] == 26 );
-	CHECK_ERR( st->results[14] == 28 );
-	CHECK_ERR( st->results[15] == 30 );
+	CHECK_ERR( st->result == (st->data[0] + st->data[1]) );
 
-	LOG( "FindMSB - OK", ELog::Info );
+	LOG( "UnnamedBuffer - OK", ELog::Info );
 	return true;
 }

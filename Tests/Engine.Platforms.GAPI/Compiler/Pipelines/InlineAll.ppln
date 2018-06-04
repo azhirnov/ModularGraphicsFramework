@@ -1,0 +1,73 @@
+
+#ifdef ANGELSCRIPT
+void main ()
+{
+	ComputePipeline	self = ComputePipeline();
+	
+	self.shaderFormat = EShaderSrcFormat_GLSL;
+	self.localGroupSize = uint3(4,4,0);
+	self.compute.LoadSelf();
+}
+#endif
+//-----------------------------------------------------------------------------
+
+
+#ifdef SHADER
+#if SHADER & SH_COMPUTE
+
+layout(binding=0, std430) writeonly buffer InlineAll_SSBO
+{
+	 uint	results[gl_WorkGroupSize.x * gl_WorkGroupSize.y];
+} ssb;
+
+
+uint Hash (uint value)
+{
+	uint res = ((value << 7) | (value << 11));
+	return res;
+}
+
+void Loop (uint value, out uint result)
+{
+	for (uint j = 0; j < 4; ++j)
+	{
+		for (uint i = 0; i < 16; ++i)
+		{
+			value ^= (0x3 << i);
+
+			if ( ((value >> 13) & 1) == 1 )
+			{
+				result = 0;
+				return;
+			}
+		}
+
+		++result;
+	}
+	result = value + 4;
+}
+
+void main ()
+{
+	uint index = gl_LocalInvocationIndex;
+	uint result = 0;
+
+	if ( index > 0 )
+	{
+		result |= Hash( index * 17 );
+		result |= Hash( index * 211 );
+	}
+	else
+	{
+		result |= Hash( 456 );
+
+		uint	temp = 1;
+		Loop( result ^ (result << 4), temp );
+		result |= temp;
+	}
+
+	ssb.results[index] = result;
+}
+
+#endif
+#endif	// SHADER

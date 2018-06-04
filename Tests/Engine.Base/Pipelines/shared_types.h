@@ -1,12 +1,10 @@
 // This is generated file
-// Created at: 2018/04/29 - 13:45:30
-
 #pragma once
 
 namespace Pipelines
 {
 // Packing: vertex
-struct NativeVertex_default2 final
+struct NativeVertex_default2 final : CompileTime::PODStruct
 {
 	float2  at_Position;    // offset: 0, align: 4
 	float2  at_Texcoord;    // offset: 8, align: 4
@@ -24,7 +22,7 @@ struct NativeVertex_default2 final
 };
 
 // Packing: Std140
-struct UB final
+struct UB final : CompileTime::PODStruct
 {
 	float4  color;    // offset: 0, align: 16
 

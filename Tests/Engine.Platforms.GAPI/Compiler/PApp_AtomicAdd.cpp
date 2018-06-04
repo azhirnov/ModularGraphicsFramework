@@ -1,11 +1,18 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "CApp.h"
+#include "PApp.h"
 #include "Pipelines/all_pipelines.h"
 
-bool CApp::_Test_FindLSB ()
+bool PApp::_Test_AtomicAdd ()
 {
-	BytesU	buf_size = SizeOf< Pipelines::FindLSB_SSBO >;
+	const BytesU	buf_size	= SizeOf< Pipelines::AtomicAdd_SSBO >;
+	const uint		num_threads	= 10;
+
+	Pipelines::AtomicAdd_SSBO	st1;
+	st1.result		= 0;
+	st1.st.value	= (num_threads-1) * 2;
+	st1.st.found	= false;
+	ZeroMem( st1.resultList );
 
 
 	// create resources
@@ -28,14 +35,11 @@ bool CApp::_Test_FindLSB ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
 						BufferDescriptor{ buf_size, EBufferUsage::Storage },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT buffer
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT buffer ) );
 
 	CreateInfo::PipelineTemplate	pt_ci;
-	Pipelines::Create_findlsb( OUT pt_ci.descr );
+	Pipelines::Create_atomicadd( OUT pt_ci.descr );
 	
 	ModulePtr	pipeline_template;
 	CHECK_ERR( factory->Create(
@@ -61,6 +65,12 @@ bool CApp::_Test_FindLSB ()
 	resource_table->Send< GpuMsg::PipelineAttachBuffer >({ "ssb", buffer, buf_size, 0_b });
 
 	ModuleUtils::Initialize({ cmd_buffer, buffer, pipeline, resource_table });
+	
+
+	// write data to buffer
+	Message< GpuMsg::WriteToGpuMemory >	write_cmd{ BinArrayCRef::FromValue(st1) };
+	buffer->Send( write_cmd );
+	CHECK_ERR( *write_cmd->wasWritten == BytesUL::SizeOf(st1) );
 
 
 	// build command buffer
@@ -68,7 +78,7 @@ bool CApp::_Test_FindLSB ()
 
 	cmdBuilder->Send< GpuMsg::CmdBindComputePipeline >({ pipeline });
 	cmdBuilder->Send< GpuMsg::CmdBindComputeResourceTable >({ resource_table });
-	cmdBuilder->Send< GpuMsg::CmdDispatch >({ uint3(1) });
+	cmdBuilder->Send< GpuMsg::CmdDispatch >({ uint3(num_threads, 1, 1) });
 	
 	Message< GpuMsg::CmdEnd >	cmd_end;
 	cmdBuilder->Send( cmd_end );
@@ -86,25 +96,12 @@ bool CApp::_Test_FindLSB ()
 	Message< GpuMsg::ReadFromGpuMemory >	read_cmd{ dst_data };
 	buffer->Send( read_cmd );
 
-	auto* st = Cast<const Pipelines::FindLSB_SSBO *>( read_cmd->result->ptr() );
+	auto* ssb = Cast<const Pipelines::AtomicAdd_SSBO *>( read_cmd->result->ptr() );
 
-	CHECK_ERR( st->results[0] == 0 );
-	CHECK_ERR( st->results[1] == 2 );
-	CHECK_ERR( st->results[2] == 4 );
-	CHECK_ERR( st->results[3] == 6 );
-	CHECK_ERR( st->results[4] == 7 );
-	CHECK_ERR( st->results[5] == 8 );
-	CHECK_ERR( st->results[6] == 9 );
-	CHECK_ERR( st->results[7] == 10 );
-	CHECK_ERR( st->results[8] == 11 );
-	CHECK_ERR( st->results[9] == 12 );
-	CHECK_ERR( st->results[10] == 12 );
-	CHECK_ERR( st->results[11] == 10 );
-	CHECK_ERR( st->results[12] == 8 );
-	CHECK_ERR( st->results[13] == 6 );
-	CHECK_ERR( st->results[14] == 4 );
-	CHECK_ERR( st->results[15] == 2 );
+	CHECK_ERR( ssb->result   == num_threads );
+	CHECK_ERR( ssb->st.value == -2 );
+	CHECK_ERR( ssb->st.found );
 
-	LOG( "FindLSB - OK", ELog::Info );
+	LOG( "AtomicAdd - OK", ELog::Info );
 	return true;
 }

@@ -1,0 +1,66 @@
+
+#ifdef ANGELSCRIPT
+void main ()
+{
+	ComputePipeline	self = ComputePipeline();
+	
+	self.shaderFormat = EShaderSrcFormat_GXSL;
+
+	self.compute.LoadSelf();
+}
+#endif
+//-----------------------------------------------------------------------------
+
+
+#ifdef SHADER
+#if SHADER & SH_COMPUTE
+
+layout(binding=0, std430) writeonly buffer VecSwizzle_SSBO
+{
+	 uint	results[8];
+} ssb;
+
+
+uint idot (uint2 a, uint2 b)
+{
+	return a.x * b.x + a.y * b.y;
+}
+
+uint idot (float2 a, float2 b)
+{
+	return uint(a.x * b.x + a.y * b.y);
+}
+
+void Foo (inout uvec2 ref)
+{
+	ref = ref.yx | uvec2(0x1111, 0x2222);
+}
+
+
+void main ()
+{
+	const uint	i = gl_LocalInvocationIndex + 1;
+	const uint4	v = uint4(2,3,4,5) << i;
+	uint4		w = v;
+
+	ssb.results[0] = idot(v.xz, v.wy);
+	ssb.results[1] = v.zyx.x * 2;
+
+	w.wyzx.x *= 11;
+	ssb.results[2] = w.w;
+
+	w.yz += 1;
+	ssb.results[3] = w.y;
+	ssb.results[4] = w.z;
+
+	w.yxwz.wx += 3;
+	ssb.results[5] = w.z;
+	ssb.results[6] = w.y;
+
+	// not supported in OpenCL
+	//Foo( w.wx );
+	//ssb.results[7] = w.w;
+}
+
+#endif
+#endif	// SHADER

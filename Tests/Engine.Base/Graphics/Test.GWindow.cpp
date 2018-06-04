@@ -4,13 +4,12 @@
 	
 extern void Test_GWindow ()
 {
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Base" ) );
+
 	#ifdef GRAPHICS_API_OPENGL
 	{
 		GApp	app;
-	
-		CHECK( app.ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
-
-		app.Initialize( "GL 4.4"_GAPI );
+		app.Initialize( "GL 4.5"_GAPI );
 
 		// main loop
 		for (; app.Update();) {}
@@ -23,9 +22,6 @@ extern void Test_GWindow ()
 	#ifdef GRAPHICS_API_VULKAN
 	{
 		GApp	app;
-	
-		CHECK( app.ms->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Tests/Engine.Base" ) );
-
 		app.Initialize( "VK 1.0"_GAPI );
 
 		// main loop

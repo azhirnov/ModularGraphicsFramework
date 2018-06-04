@@ -4,7 +4,7 @@
 
 bool CApp::_Test_CopyImage2D ()
 {
-	const uint		align		= 8;
+	using Pixel		= ubyte4;
 
 	const uint2		img_dim		{125, 125};
 	const uint2		img2_dim	= img_dim * 2;
@@ -16,14 +16,6 @@ bool CApp::_Test_CopyImage2D ()
 	const uint3		src_off2	= uint3(32, 54, 0);
 	const uint3		dst_off2	= uint3(88, 66, 0);
 	const uint3		size2		= uint3(83, 51, 1);
-	
-
-	// generate data
-	BinaryArray		data;	data.Resize( AlignToLarge( img_dim.x, align ) * img_dim.y * sizeof(ubyte4) );
-
-	FOR( i, data ) {
-		data[i] = Random::Int<ubyte>();
-	}
 
 
 	// create resources
@@ -46,11 +38,8 @@ bool CApp::_Test_CopyImage2D ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA8U, EImageUsage::TransferSrc },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT src_image
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT src_image ) );
 	
 	ModulePtr	dst_image;
 	CHECK_ERR( factory->Create(
@@ -58,19 +47,26 @@ bool CApp::_Test_CopyImage2D ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img2_dim), EPixelFormat::RGBA8U, EImageUsage::TransferDst },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT dst_image
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT dst_image ) );
 
 	ModuleUtils::Initialize({ cmd_buffer, src_image, dst_image });
 
+	
+	// generate image data
+	Message< GpuMsg::GetImageMemoryLayout >	req_src_layout;
+	src_image->Send( req_src_layout );
+
+	BinaryArray		image_data;		image_data.Resize( usize(req_src_layout->result->rowPitch * req_src_layout->result->dimension.y) );
+
+	FOR( i, image_data ) {
+		image_data[i] = Random::Int<ubyte>();
+	}
 
 	// write data to image
-	Message< GpuMsg::WriteToImageMemory >	write_cmd{ data, uint3(img_dim), SizeOf<ubyte4>, uint3(), align * SizeOf<ubyte4> };
+	Message< GpuMsg::WriteToImageMemory >	write_cmd{ image_data, uint3(), uint3(img_dim), req_src_layout->result->rowPitch };
 	src_image->Send( write_cmd );
-	CHECK_ERR( *write_cmd->wasWritten == BytesUL(data.Size()) );
+	CHECK_ERR( *write_cmd->wasWritten == BytesUL(image_data.Size()) );
 
 
 	// build command buffer
@@ -127,35 +123,44 @@ bool CApp::_Test_CopyImage2D ()
 	syncManager->Send< GpuMsg::ClientWaitFence >({ *fence_ctor->result });
 
 
-	// read
-	BinaryArray	dst_data;	dst_data.Resize( AlignToLarge( img2_dim.x, align ) * img2_dim.y * sizeof(ubyte4) );
+	// read from image
+	Message< GpuMsg::GetImageMemoryLayout >	req_dst_layout;
+	dst_image->Send( req_dst_layout );
 
-	Message< GpuMsg::ReadFromImageMemory >	read_cmd{ dst_data, uint3(img2_dim), SizeOf<ubyte4>, uint3(), align * SizeOf<ubyte4> };
+	BinaryArray	dst_data;	dst_data.Resize( usize(req_dst_layout->result->rowPitch * req_dst_layout->result->dimension.y) );
+
+	Message< GpuMsg::ReadFromImageMemory >	read_cmd{ dst_data, uint3(), uint3(img2_dim), req_dst_layout->result->rowPitch };
 	dst_image->Send( read_cmd );
 	CHECK_ERR( dst_data.Size() == read_cmd->result->Size() );
 	
 
 	// compare
-	ubyte4 const*	src = (ubyte4 const*) data.ptr();
-	ubyte4 const*	dst = (ubyte4 const*) dst_data.ptr();
-	uint2 c;
-
-	for (c.y = 0; c.y < size1.y; ++c.y)
-	for (c.x = 0; c.x < size1.x; ++c.x)
+	for (uint y = 0; y < size1.y; ++y)
 	{
-		uint	i = (c.x + src_off1.x) + (c.y + src_off1.y) * AlignToLarge( img_dim.x, align );
-		uint	j = (c.x + dst_off1.x) + (c.y + dst_off1.y) * AlignToLarge( img2_dim.x, align );
+		Pixel const*	src_row = (Pixel const*) (image_data.ptr() + req_src_layout->result->rowPitch * (y + src_off1.y));
+		Pixel const*	dst_row = (Pixel const*) (dst_data.ptr() + req_dst_layout->result->rowPitch * (y + dst_off1.y));
 
-		CHECK_ERR(All( src[i] == dst[j] ));
+		for (uint x = 0; x < size1.x; ++x)
+		{
+			Pixel	src = src_row[ x + src_off1.x ];
+			Pixel	dst = dst_row[ x + dst_off1.x ];
+
+			CHECK_ERR(All( src == dst ));
+		}
 	}
 	
-	for (c.y = 0; c.y < size2.y; ++c.y)
-	for (c.x = 0; c.x < size2.x; ++c.x)
+	for (uint y = 0; y < size2.y; ++y)
 	{
-		uint	i = (c.x + src_off2.x) + (c.y + src_off2.y) * AlignToLarge( img_dim.x, align );
-		uint	j = (c.x + dst_off2.x) + (c.y + dst_off2.y) * AlignToLarge( img2_dim.x, align );
+		Pixel const*	src_row = (Pixel const*) (image_data.ptr() + req_src_layout->result->rowPitch * (y + src_off2.y));
+		Pixel const*	dst_row = (Pixel const*) (dst_data.ptr() + req_dst_layout->result->rowPitch * (y + dst_off2.y));
 
-		CHECK_ERR(All( src[i] == dst[j] ));
+		for (uint x = 0; x < size2.x; ++x)
+		{
+			Pixel	src = src_row[ x + src_off2.x ];
+			Pixel	dst = dst_row[ x + dst_off2.x ];
+
+			CHECK_ERR(All( src == dst ));
+		}
 	}
 	
 	LOG( "CopyImage2D - OK", ELog::Info );

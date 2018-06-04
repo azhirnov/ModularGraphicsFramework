@@ -54,6 +54,6 @@ extern void Test_CompileTime_TypeInfo ()
 	STATIC_ASSERT( not IsVector<float> );
 
 	// Constants //
-	//TEST( IsNaN( NaN<float>() ) );
-	//TEST( IsNaN( NaN<double>() ) );
+	TEST( IsNaN( NaN<float>() ) );
+	TEST( IsNaN( NaN<double>() ) );
 }

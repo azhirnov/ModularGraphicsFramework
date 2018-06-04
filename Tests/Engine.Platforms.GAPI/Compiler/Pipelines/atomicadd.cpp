@@ -1,16 +1,15 @@
 // This is generated file
-// Origin file: 'Compute/Pipelines/AtomicAdd.ppln'
-// Created at: 2018/04/29 - 17:03:04
-
+// Origin file: 'Compiler/Pipelines/AtomicAdd.ppln'
 #include "all_pipelines.h"
 // C++ shader
 #ifdef GRAPHICS_API_SOFT
-namespace SWShaderLang
-{
-	#define INOUT
-	#define IN
-	#define OUT
-	
+namespace SWShaderLang {
+namespace {
+
+#	define INOUT
+#	define IN
+#	define OUT
+
 	struct AtomicAdd_Struct
 	{
 		Atomic<Int> value;
@@ -21,7 +20,7 @@ namespace SWShaderLang
 	{
 		AtomicAdd_Struct st;
 		Atomic<UInt> result;
-		UInt resultList[10];
+		SArr<UInt,10> resultList;
 	};
 	
 	
@@ -30,30 +29,30 @@ namespace SWShaderLang
 	static void sw_atomicadd_comp (const Impl::SWShaderHelper &_helper_)
 	{
 		// prepare externals
-		Impl::StorageBuffer< AtomicAdd_SSBO, Impl::EStorageAccess::Coherent > ssb;	_helper_.GetStorageBuffer( 0, ssb );
+		Impl::StorageBuffer< AtomicAdd_SSBO, Impl::EStorageAccess::Coherent >  ssb;    _helper_.GetStorageBuffer( 0, ssb );
 		auto& gl_GlobalInvocationID = _helper_.GetComputeShaderState().inGlobalInvocationID;
 	
 		// shader
-	{
-		UInt r = atomicAdd( ssb->result, UInt( 1U ) );
-		;
-		if ((gl_GlobalInvocationID.x < UInt( 10U )))
 		{
-			(ssb->resultList[gl_GlobalInvocationID.x]) = r;
-		;
+			UInt r = atomicAdd(ssb->result, UInt(1u));
+			;
+			if ((gl_GlobalInvocationID.x < UInt(10u)))
+			{
+				(ssb->resultList[gl_GlobalInvocationID.x]) = r;
+			;
+			}
+			;
+			if ((atomicAdd(ssb->st.value, Int(-2)) == Int(0)))
+			{
+				ssb->st.found = Bool(true);
+			;
+			}
+			;
 		}
-		;
-		if ((atomicAdd( ssb->st.value, Int( -2 ) ) == Int( 0 )))
-		{
-			ssb->st.found = Bool( true );
-		;
-		}
-		;
 	}
 	
-	
-	}
-}	// SWShaderLang
+}		// anonymous namespace
+}		// SWShaderLang
 #endif	// GRAPHICS_API_SOFT
 
 
@@ -67,7 +66,7 @@ void Create_atomicadd (PipelineTemplateDescriptor& descr)
 
 	descr.localGroupSize = uint3(1, 1, 1);
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddStorageBuffer( "ssb", 52_b, 0_b, EShaderMemoryModel::Default, 0, 0, EShader::Compute )
+			.AddStorageBuffer( "ssb", 52_b, 0_b, EShaderMemoryModel::Default, 0u, 0u, EShader::Compute )
 			.Finish();
 
 	descr.Compute().StringGLSL( 
@@ -91,11 +90,11 @@ layout(binding=0) layout(std430) buffer AtomicAdd_SSBO{
 
 //---------------------------------
 
-void main()
+void main ()
 {
-	uint r = atomicAdd( ssb.result, uint( 1U ) );
+	uint r = atomicAdd( ssb.result, uint( 1u ) );
 	;
-	if ((gl_GlobalInvocationID.x < uint( 10U )))
+	if ((gl_GlobalInvocationID.x < uint( 10u )))
 	{
 		(ssb.resultList[gl_GlobalInvocationID.x]) = r;
 	;
@@ -310,25 +309,77 @@ kernel void Main (
 	/*0*/__global  struct AtomicAdd_SSBO* ssb)
 {
 
+	{
+		uint r = atomic_add(&(ssb->result), ((uint)( 1u )));
+		;
+		if ((((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))).x < ((uint)( 10u ))))
+		{
+			(ssb->resultList[((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))).x]) = r;
+		;
+		}
+		;
+		if ((atomic_add(&(ssb->st.value), ((int)( -2 ))) == ((int)( 0 ))))
+		{
+			ssb->st.found = ((int)( true ));
+		;
+		}
+		;
+	}
+}
+
+)#"_str );
+	descr.Compute().StringHLSL( 
+R"#(cbuffer ComputeBuiltins : register(b0)
 {
-	uint r = atomic_add(&(ssb->result), ((uint)( 1U )));
+	uint3		dx_NumWorkGroups;
+};
+
+struct AtomicAdd_Struct
+{
+	int value;
+	int found;
+};
+
+
+//---------------------------------
+
+struct AtomicAdd_SSBO{
+	AtomicAdd_Struct st;
+	uint result;
+	uint resultList[10];
+};
+RWByteAddressBuffer<AtomicAdd_SSBO> ssb : register(u0);
+
+//---------------------------------
+
+AtomicAdd_Struct Load_AtomicAdd_Struct (ByteAddressBuffer buf, uint off)
+{
+	AtomicAdd_Struct result;
+	result.value = asint(buf.Load(off + 0));
+	result.found = bool(buf.Load(off + 4));
+	return result;
+}
+
+[numthreads(1, 1, 1)]
+void main (uint3 dx_DispatchThreadID : SV_DispatchThreadID, uint3 dx_GroupThreadID : SV_GroupThreadID, uint3 dx_GroupID : SV_GroupID)
+{
+	uint r = atomicAdd( ((ssb).Load1(/*result*/8)), uint( 1u ) );
 	;
-	if ((((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))).x < ((uint)( 10U ))))
+	if ((dx_DispatchThreadID.x < uint( 10u )))
 	{
-		(ssb->resultList[((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2))).x]) = r;
+		(((ssb).Load1(/*resultList*/12))[dx_DispatchThreadID.x]) = r;
 	;
 	}
 	;
-	if ((atomic_add(&(ssb->st.value), ((int)( -2 ))) == ((int)( 0 ))))
+	if ((atomicAdd( Load_AtomicAdd_Struct(ssb, /*st*/0).value, int( -2 ) ) == int( 0 )))
 	{
-		ssb->st.found = ((int)( true ));
+		Load_AtomicAdd_Struct(ssb, /*st*/0).found = int( true );
 	;
 	}
 	;
 }
 
 
-}
 )#"_str );
 #ifdef GRAPHICS_API_SOFT
 	descr.Compute().FuncSW( &SWShaderLang::sw_atomicadd_comp );

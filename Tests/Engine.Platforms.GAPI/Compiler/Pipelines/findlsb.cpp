@@ -1,19 +1,31 @@
 // This is generated file
-// Origin file: 'Compute/Pipelines/FindLSB.ppln'
-// Created at: 2018/04/29 - 17:03:04
-
+// Origin file: 'Compiler/Pipelines/FindLSB.ppln'
 #include "all_pipelines.h"
 // C++ shader
 #ifdef GRAPHICS_API_SOFT
-namespace SWShaderLang
-{
-	#define INOUT
-	#define IN
-	#define OUT
-	
+namespace SWShaderLang {
+namespace {
+
+#	define INOUT
+#	define IN
+#	define OUT
+
 	struct FindLSB_SSBO
 	{
-		UInt results[16];
+		SArr<UInt,16> results;
+	
+		FindLSB_SSBO () {}
+		FindLSB_SSBO (FindLSB_SSBO &&) = default;
+		FindLSB_SSBO (const FindLSB_SSBO &) = default;
+		explicit FindLSB_SSBO(const SArr<UInt,16> &results) : results{results} {}
+	
+		FindLSB_SSBO& operator = (FindLSB_SSBO &&) = default;
+		FindLSB_SSBO& operator = (const FindLSB_SSBO &) = default;
+		Bool operator == (const FindLSB_SSBO &right) const {
+			return	all( results == right.results );
+		}
+		Bool operator != (const FindLSB_SSBO &right) const { return !(*this == right); }
+	
 	};
 	
 	
@@ -22,28 +34,28 @@ namespace SWShaderLang
 	static void sw_findlsb_comp (const Impl::SWShaderHelper &_helper_)
 	{
 		// prepare externals
-		Impl::StorageBuffer< FindLSB_SSBO, Impl::EStorageAccess::WriteOnly > ssb;	_helper_.GetStorageBuffer( 0, ssb );
+		Impl::StorageBuffer< FindLSB_SSBO, Impl::EStorageAccess::WriteOnly >  ssb;    _helper_.GetStorageBuffer( 0, ssb );
 	
 		// shader
-	{
-		for(Int i = Int( 0 ); (i < Int( 16 )); ++( i ))
 		{
-			Int j1 = (i * Int( 2 ));
+			for (Int i = Int(0); (i < Int(16)); ++(i))
+			{
+				Int j1 = (i * Int(2));
+				;
+				Int j2 = (Int(32) - j1);
+				;
+				Int j3 = (i + Int(3));
+				;
+				UInt v = UInt((((Int(1) << j1) | (Int(1) << j2)) | (Int(1) << j3)));
+				;
+				(ssb->results[i]) = UInt(findLSB(v));
+			}
 			;
-			Int j2 = (Int( 32 ) - j1);
-			;
-			Int j3 = (i + Int( 3 ));
-			;
-			UInt v = UInt( (((Int( 1 ) << j1) | (Int( 1 ) << j2)) | (Int( 1 ) << j3)) );
-			;
-			(ssb->results[i]) = UInt( findLSB( v ) );
 		}
-		;
 	}
 	
-	
-	}
-}	// SWShaderLang
+}		// anonymous namespace
+}		// SWShaderLang
 #endif	// GRAPHICS_API_SOFT
 
 
@@ -57,7 +69,7 @@ void Create_findlsb (PipelineTemplateDescriptor& descr)
 
 	descr.localGroupSize = uint3(1, 1, 1);
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddStorageBuffer( "ssb", 64_b, 0_b, EShaderMemoryModel::WriteOnly, 0, 0, EShader::Compute )
+			.AddStorageBuffer( "ssb", 64_b, 0_b, EShaderMemoryModel::WriteOnly, 0u, 0u, EShader::Compute )
 			.Finish();
 
 	descr.Compute().StringGLSL( 
@@ -70,9 +82,9 @@ layout(binding=0) layout(std430) writeonly buffer FindLSB_SSBO{
 
 //---------------------------------
 
-void main()
+void main ()
 {
-	for(int i = int( 0 ); (i < int( 16 )); ++( i ))
+	for (int i = int( 0 ); (i < int( 16 )); ++( i ))
 	{
 		int j1 = (i * int( 2 ));
 		;
@@ -280,24 +292,56 @@ kernel void Main (
 	/*0*/__global  struct FindLSB_SSBO* ssb)
 {
 
-{
-	for(int i = ((int)( 0 )); (i < ((int)( 16 ))); ++( i ))
 	{
-		int j1 = (i * ((int)( 2 )));
+		for (int i = ((int)( 0 )); (i < ((int)( 16 ))); ++( i ))
+		{
+			int j1 = (i * ((int)( 2 )));
+			;
+			int j2 = (((int)( 32 )) - j1);
+			;
+			int j3 = (i + ((int)( 3 )));
+			;
+			uint v = convert_uint( (((((int)( 1 )) << j1) | (((int)( 1 )) << j2)) | (((int)( 1 )) << j3)) );
+			;
+			(ssb->results[i]) = convert_uint( findLSB_uint( v ) );
+		}
 		;
-		int j2 = (((int)( 32 )) - j1);
+	}
+}
+
+)#"_str );
+	descr.Compute().StringHLSL( 
+R"#(cbuffer ComputeBuiltins : register(b0)
+{
+	uint3		dx_NumWorkGroups;
+};
+
+struct FindLSB_SSBO{
+	uint results[16];
+};
+RWByteAddressBuffer<FindLSB_SSBO> ssb : register(u0);
+
+//---------------------------------
+
+[numthreads(1, 1, 1)]
+void main (uint3 dx_DispatchThreadID : SV_DispatchThreadID, uint3 dx_GroupThreadID : SV_GroupThreadID, uint3 dx_GroupID : SV_GroupID)
+{
+	for (int i = int( 0 ); (i < int( 16 )); ++( i ))
+	{
+		int j1 = (i * int( 2 ));
 		;
-		int j3 = (i + ((int)( 3 )));
+		int j2 = (int( 32 ) - j1);
 		;
-		uint v = convert_uint( (((((int)( 1 )) << j1) | (((int)( 1 )) << j2)) | (((int)( 1 )) << j3)) );
+		int j3 = (i + int( 3 ));
 		;
-		(ssb->results[i]) = convert_uint( findLSB_uint( v ) );
+		uint v = uint( (((int( 1 ) << j1) | (int( 1 ) << j2)) | (int( 1 ) << j3)) );
+		;
+		(((ssb).Load1(/*results*/0))[i]) = uint( firstbitlow( v ) );
 	}
 	;
 }
 
 
-}
 )#"_str );
 #ifdef GRAPHICS_API_SOFT
 	descr.Compute().FuncSW( &SWShaderLang::sw_findlsb_comp );

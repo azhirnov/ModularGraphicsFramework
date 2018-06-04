@@ -38,24 +38,24 @@ enum ETestEnum {};
 
 // EnableIf //
 template <typename T>
-static int Test1 (T , CompileTime::EnableIf< (sizeof(T) > 2), int > = 0)			{ return 1; }
+static CompileTime::EnableIf< (sizeof(T) > 2), int >  Test1 (T)					{ return 1; }
 
 template <typename T>
-static float Test1 (T , CompileTime::EnableIf< (sizeof(T) <= 2), int > = 0)		{ return 2.0f; }
+static CompileTime::EnableIf< (sizeof(T) <= 2), float >  Test1 (T)				{ return 2.0f; }
 
 template <typename T>
-static int Test2 (T , CompileTime::EnableIf< (IsPointer<T>), int > = 0)			{ return 4; }
+static CompileTime::EnableIf< (IsPointer<T>), int >  Test2 (T)					{ return 4; }
 
 template <typename T>
-static float Test2 (T , CompileTime::EnableIf< (not IsPointer<T>), int > = 0)		{ return 5.0f; }
+static CompileTime::EnableIf< (not IsPointer<T>), float >  Test2 (T)			{ return 5.0f; }
 
 
 // SwitchType //
 template <typename T>
-static int Test3 (CompileTime::SwitchType< (sizeof(T) > 2), T, void >)				{ return 1; }
+static int Test3 (CompileTime::SwitchType< (sizeof(T) > 2), T, void >)			{ return 1; }
 
 template <typename T>
-static float Test3 (CompileTime::SwitchType< (sizeof(T) <= 2), T, void >)				{ return 2.0f; }
+static float Test3 (CompileTime::SwitchType< (sizeof(T) <= 2), T, void >)		{ return 2.0f; }
 
 
 void StaticFunc1 ()				{}
@@ -281,11 +281,12 @@ extern void Test_CompileTime_TypeTraits ()
 
 
 	// IsMovable //
-	STATIC_ASSERT( IsMovable< int > );
+	/*STATIC_ASSERT( IsMovable< int > );
+	STATIC_ASSERT( IsMovable< volatile int > );
 	STATIC_ASSERT( not IsMovable< int *> );
 	STATIC_ASSERT( not IsMovable< int &> );
 	STATIC_ASSERT( not IsMovable< int const > );
-	STATIC_ASSERT( not IsMovable< int const& > );
+	STATIC_ASSERT( not IsMovable< int const& > );*/
 	
 
 	//ubyte	param = 1;	// error: 'initializing': conversion from 'float' to 'int', possible loss of data

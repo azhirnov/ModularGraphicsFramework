@@ -5,6 +5,8 @@
 #include "Engine/Script/Engine.Script.h"
 #include "Engine/Script/Bindings/DefaultBindings.h"
 #include "Engine/STL/Log/Logger.h"
+#include "Engine/STL/Math/Interpolations.h"
+#include "Engine/STL/Math/BinaryMath.h"
 
 #define TEST	CHECK_FATAL
 

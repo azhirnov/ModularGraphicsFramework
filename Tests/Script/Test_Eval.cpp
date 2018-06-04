@@ -2,7 +2,6 @@
 
 #include "Tests/Script/Common.h"
 
-
 class Script
 {
 public:

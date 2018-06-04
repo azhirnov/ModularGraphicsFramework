@@ -9,10 +9,14 @@ GApp::GApp ()
 	ms = GetMainSystemInstance();
 
 	Platforms::RegisterPlatforms();
+	
+	tests	<< &GApp::_Test_Texture2DNearestFilter
+			<< &GApp::_Test_Texture2DBilinearFilter
+		;
 }
 
 
-bool GApp::Initialize (GAPI::type api)
+bool GApp::Initialize (GAPI::type api, StringCRef device)
 {
 	auto	factory	= ms->GlobalSystems()->modulesFactory;
 
@@ -35,6 +39,7 @@ bool GApp::Initialize (GAPI::type api)
 		Message< GpuMsg::GetGraphicsModules >	req_ids;
 		context->Send( req_ids );
 		gpuIDs = *req_ids->graphics;
+		computeIDs = *req_ids->compute;
 	}
 
 	auto		thread	= ms->GlobalSystems()->parallelThread;

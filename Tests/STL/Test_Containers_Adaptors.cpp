@@ -85,8 +85,7 @@ static void Test_Func3 (OUT ContainerAdaptors::Erasable<const int> arr)
 	{
 		if ( arr[i] == 2 )
 		{
-			arr.Erase( i );
-			--i;
+			i = arr.Erase( i );
 		}
 	}
 }

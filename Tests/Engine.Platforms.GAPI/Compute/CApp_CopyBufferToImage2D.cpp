@@ -4,8 +4,6 @@
 
 bool CApp::_Test_CopyBufferToImage2D ()
 {
-	const uint		align		= 1;
-
 	const uint2		img_dim		{125, 125};
 	const uint2		img2_dim	= img_dim * 2;
 
@@ -16,15 +14,21 @@ bool CApp::_Test_CopyBufferToImage2D ()
 	const uint3		src_off2	= uint3(32, 54, 0);
 	const uint3		dst_off2	= uint3(88, 66, 0);
 	const uint3		size2		= uint3(83, 51, 1);
-	
 
-	// generate data
-	BinaryArray		data;	data.Resize( AlignToLarge( img_dim.x, align ) * img_dim.y * sizeof(ubyte4) );
+	using Pixel		= ubyte4;
+	const BytesU	align_bytes	= 4_b;
+	const BytesUL	row_pitch	= BytesUL(AlignToLarge( img_dim.x * sizeof(Pixel), align_bytes ));
+	const uint		row_length	= uint(row_pitch / sizeof(Pixel));
 
-	FOR( i, data ) {
-		data[i] = Random::Int<ubyte>();
+	// check alignment
+	CHECK_ERR( row_pitch == BytesUL(row_length * sizeof(Pixel)) );
+
+	// generate buffer data
+	BinaryArray		buf_data;	buf_data.Resize( usize(row_pitch * img_dim.y) );
+
+	FOR( i, buf_data ) {
+		buf_data[i] = Random::Int<ubyte>();
 	}
-
 
 	// create resources
 	auto	factory	= ms->GlobalSystems()->modulesFactory;
@@ -45,12 +49,9 @@ bool CApp::_Test_CopyBufferToImage2D ()
 					gpuIDs.buffer,
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuBuffer{
-						BufferDescriptor{ data.Size(), EBufferUsage::TransferSrc },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT src_buffer
-				) );
+						BufferDescriptor{ buf_data.Size(), EBufferUsage::TransferSrc },
+						EGpuMemory::CoherentWithCPU },
+					OUT src_buffer ) );
 	
 	ModulePtr	dst_image;
 	CHECK_ERR( factory->Create(
@@ -58,19 +59,16 @@ bool CApp::_Test_CopyBufferToImage2D ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescriptor{ EImage::Tex2D, uint4(img2_dim), EPixelFormat::RGBA8U, EImageUsage::TransferDst },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT dst_image
-				) );
+						EGpuMemory::CoherentWithCPU },
+					OUT dst_image ) );
 
 	ModuleUtils::Initialize({ cmd_buffer, src_buffer, dst_image });
 
 
 	// write data to image
-	Message< GpuMsg::WriteToGpuMemory >	write_cmd{ data };
+	Message< GpuMsg::WriteToGpuMemory >	write_cmd{ buf_data };
 	src_buffer->Send( write_cmd );
-	CHECK_ERR( *write_cmd->wasWritten == BytesUL(data.Size()) );
+	CHECK_ERR( *write_cmd->wasWritten == BytesUL(buf_data.Size()) );
 
 
 	// build command buffer
@@ -81,7 +79,7 @@ bool CApp::_Test_CopyBufferToImage2D ()
 													 EPipelineAccess::HostWrite,
 													 EPipelineAccess::TransferRead,
 												     src_buffer,
-												     BytesUL(0), BytesUL(data.Size()) });
+												     BytesUL(0), BytesUL(buf_data.Size()) });
 	
 	cmdBuilder->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::TopOfPipe,
 													 EPipelineStage::Transfer,
@@ -100,13 +98,13 @@ bool CApp::_Test_CopyBufferToImage2D ()
 	copy_cmd->dstImage	= dst_image;
 	copy_cmd->dstLayout = EImageLayout::TransferDstOptimal;
 	copy_cmd->regions	= ArrayCRef<Region>{
-							Region{ BytesUL::SizeOf<ubyte4>() * (src_off1.x + src_off1.y * AlignToLarge( img_dim.x, align )),
-									AlignToLarge( img_dim.x, align ), img_dim.y,
+							Region{ BytesUL(src_off1.x * sizeof(Pixel) + src_off1.y * row_pitch),
+									row_length, img_dim.y,
 									ImageLayers{EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1},
 									dst_off1,
 									size1 },
-							Region{ BytesUL::SizeOf<ubyte4>() * (src_off2.x + src_off2.y * AlignToLarge( img_dim.x, align )),
-									AlignToLarge( img_dim.x, align ), img_dim.y,
+							Region{ BytesUL(src_off2.x * sizeof(Pixel) + src_off2.y * row_pitch),
+									row_length, img_dim.y,
 									ImageLayers{EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1},
 									dst_off2,
 									size2 },
@@ -124,37 +122,45 @@ bool CApp::_Test_CopyBufferToImage2D ()
 	syncManager->Send< GpuMsg::ClientWaitFence >({ *fence_ctor->result });
 
 
-	// read
-	BinaryArray	dst_data;	dst_data.Resize( AlignToLarge( img2_dim.x, align ) * img2_dim.y * sizeof(ubyte4) );
+	// read image
+	Message< GpuMsg::GetImageMemoryLayout >	req_dst_layout;
+	dst_image->Send( req_dst_layout );
 
-	Message< GpuMsg::ReadFromImageMemory >	read_cmd{ dst_data, uint3(img2_dim), SizeOf<ubyte4>, uint3(), align * SizeOf<ubyte4> };
+	BinaryArray	dst_data;	dst_data.Resize( usize(req_dst_layout->result->rowPitch * req_dst_layout->result->dimension.y) );
+
+	Message< GpuMsg::ReadFromImageMemory >	read_cmd{ dst_data, uint3(), uint3(img2_dim), req_dst_layout->result->rowPitch };
 	dst_image->Send( read_cmd );
 	CHECK_ERR( dst_data.Size() == read_cmd->result->Size() );
 	
 
 	// compare
-	ubyte4 const*	src = (ubyte4 const*) data.ptr();
-	ubyte4 const*	dst = (ubyte4 const*) dst_data.ptr();
-	uint2 c;
-
-	for (c.y = 0; c.y < size1.y; ++c.y)
-	for (c.x = 0; c.x < size1.x; ++c.x)
+	for (uint y = 0; y < size1.y; ++y)
 	{
-		uint	i = (c.x + src_off1.x) + (c.y + src_off1.y) * AlignToLarge( img_dim.x, align );
-		uint	j = (c.x + dst_off1.x) + (c.y + dst_off1.y) * AlignToLarge( img2_dim.x, align );
+		Pixel const*	src_row = (Pixel const*) (buf_data.ptr() + (y + src_off1.y) * row_pitch);
+		Pixel const*	dst_row = (Pixel const*) (dst_data.ptr() + req_dst_layout->result->rowPitch * (y + dst_off1.y));
 
-		CHECK_ERR(All( src[i] == dst[j] ));
+		for (uint x = 0; x < size1.x; ++x)
+		{
+			Pixel	src = src_row[ x + src_off1.x ];
+			Pixel	dst = dst_row[ x + dst_off1.x ];
+
+			CHECK_ERR(All( src == dst ));
+		}
 	}
 	
-	for (c.y = 0; c.y < size2.y; ++c.y)
-	for (c.x = 0; c.x < size2.x; ++c.x)
+	for (uint y = 0; y < size2.y; ++y)
 	{
-		uint	i = (c.x + src_off2.x) + (c.y + src_off2.y) * AlignToLarge( img_dim.x, align );
-		uint	j = (c.x + dst_off2.x) + (c.y + dst_off2.y) * AlignToLarge( img2_dim.x, align );
+		Pixel const*	src_row = (Pixel const*) (buf_data.ptr() + (y + src_off2.y) * row_pitch);
+		Pixel const*	dst_row = (Pixel const*) (dst_data.ptr() + req_dst_layout->result->rowPitch * (y + dst_off2.y));
 
-		CHECK_ERR(All( src[i] == dst[j] ));
+		for (uint x = 0; x < size2.x; ++x)
+		{
+			ubyte4	src = src_row[ x + src_off2.x ];
+			ubyte4	dst = dst_row[ x + dst_off2.x ];
+
+			CHECK_ERR(All( src == dst ));
+		}
 	}
-	
 	LOG( "CopyBufferToImage2D - OK", ELog::Info );
 	return true;
 }

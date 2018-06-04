@@ -19,12 +19,11 @@ public:
 
 private:
 	bool				looping		= true;
-	uint				cmdBufIndex	= 0;
-	ComputeModuleIDs	gpuIDs;
-
+	
 	ModulePtr			gpuThread;
 	ModulePtr			syncManager;
 	ModulePtr			cmdBuilder;
+	ComputeModuleIDs	gpuIDs;
 
 	TestQueue_t			tests;
 	uint				testsPassed	= 0;
@@ -36,7 +35,7 @@ public:
 	CApp ();
 	~CApp ();
 
-	bool Initialize (GAPI::type api);
+	bool Initialize (GAPI::type api, StringCRef dev);
 	void Quit ();
 	bool Update ();
 
@@ -66,10 +65,6 @@ private:
 	bool _Test_CopyImage2DToBuffer ();
 	bool _Test_ConvertFloatImage2D ();
 	//bool _Test_CopyImage3D ();
-
-	// shader functions
-	bool _Test_FindMSB ();			// emulated in OpenCL
-	bool _Test_FindLSB ();			// emulated in OpenCL
-	bool _Test_BitfieldReverse ();	// emulated in OpenCL
-	bool _Test_AtomicAdd ();
+	bool _Test_Image2DNearestFilter ();
+	bool _Test_Image2DBilinearFilter ();
 };
