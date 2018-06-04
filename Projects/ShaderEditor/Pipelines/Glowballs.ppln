@@ -2,16 +2,18 @@
 #ifdef ANGELSCRIPT
 void main ()
 {
-	GraphicsPipeline	ppln = ShadertoyTemplate();
+	ComputePipeline  ppln = ShadertoyCompTemplate();
+	
+	ppln.compute.LoadSelf();
 
-	ppln.shaders.fragment.LoadSelf();
+	ppln.localGroupSize = uint3(32, 32, 0);
 }
 #endif	// ANGELSCRIPT
 //-----------------------------------------------------------------------------
 
 
 #ifdef SHADER
-#if SHADER & SH_FRAGMENT
+#if SHADER & SH_COMPUTE
 // from https://www.shadertoy.com/view/4tGXWW
 
 #define MAXRAYS 30

@@ -71,6 +71,7 @@ namespace ShaderEditor
 				ModulePtr	framebuffer;
 				ModulePtr	image;
 				ModulePtr	ubuffer;
+				uint2		viewport;
 			};
 
 			using PerPass_t	= StaticArray< PerPass, MAX_PASSES >;
@@ -81,14 +82,19 @@ namespace ShaderEditor
 			ModulePtr			_pipelineTemplate;
 			ModulePtr			_pipeline;
 			PerPass_t			_perPass;
+			bool				_isCompute	= false;
 
 		// methods
 		public:
 			explicit Shader (const ShaderDescr &descr);
 
 			bool Update (const ModulePtr &builder, const ShaderData &data, uint passIdx);
-			bool UpdateUBuffer (const ModulePtr &builder, const ShaderData &data, uint passIdx);
 			void Destroy ();
+			
+		private:
+			bool _UpdateUBuffer (const ModulePtr &builder, const ShaderData &data, uint passIdx);
+			bool _UpdateGraphics (const ModulePtr &builder, const ShaderData &data, uint passIdx);
+			bool _UpdateCompute (const ModulePtr &builder, const ShaderData &data, uint passIdx);
 		};
 
 		SHARED_POINTER( Shader );
@@ -102,12 +108,14 @@ namespace ShaderEditor
 	// variables
 	private:
 		GraphicsModuleIDs				_ids;
+		ComputeModuleIDs				_computeIDs;
 
 		ShadersMap_t					_shaders;
 		Array< ShaderPtr >				_ordered;
 
 		LoadedImages_t					_loadedImages;
 		ModulePtr						_asyncCmdBuilder;
+		ModulePtr						_builtinFileProvider;
 
 		ModulePtr						_nearestClampSampler;
 		ModulePtr						_linearClampSampler;

@@ -2,16 +2,18 @@
 #ifdef ANGELSCRIPT
 void main ()
 {
-	GraphicsPipeline	ppln = ShadertoyTemplate();
+	ComputePipeline  ppln = ShadertoyCompTemplate();
 
-	ppln.shaders.fragment.LoadSelf();
+	ppln.compute.LoadSelf();
+	
+	ppln.localGroupSize = uint3(32, 32, 0);
 }
 #endif	// ANGELSCRIPT
 //-----------------------------------------------------------------------------
 
 
 #ifdef SHADER
-#if SHADER & SH_FRAGMENT
+#if SHADER & SH_COMPUTE
 
 #define ANIMATE		0.5		// animation speed
 //#define COLORED

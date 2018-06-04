@@ -3,6 +3,7 @@
 #include "Projects/ShaderEditor/Renderer.h"
 #include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 #include "Engine/ImportExport/Engine.ImportExport.h"
+#include "Projects/ShaderEditor/images/vfs_images_main.h"
 
 namespace ShaderEditor
 {
@@ -50,16 +51,25 @@ namespace ShaderEditor
 	bool Renderer::Shader::Update (const ModulePtr &builder, const ShaderData &data, const uint passIdx)
 	{
 		CHECK_ERR( passIdx < _perPass.Count() );
-		CHECK_ERR( UpdateUBuffer( builder, data, passIdx ) );
+		CHECK_ERR( _UpdateUBuffer( builder, data, passIdx ) );
 
+		if ( _isCompute )
+			return _UpdateCompute( builder, data, passIdx );
+		else
+			return _UpdateGraphics( builder, data, passIdx );
+	}
+	
+/*
+=================================================
+	_UpdateGraphics
+=================================================
+*/
+	bool Renderer::Shader::_UpdateGraphics (const ModulePtr &builder, const ShaderData &data, uint passIdx)
+	{
 		auto&		pass		= _perPass[ passIdx ];
 		ModulePtr	render_pass	= pass.framebuffer->GetModuleByMsg< RenderPassMsgList_t >();
 
-		Message< GpuMsg::GetFramebufferDescriptor >	fb_descr_request;
-		pass.framebuffer->Send( fb_descr_request );
-
-		auto const&	fb_descr	= fb_descr_request->result.Get();
-		RectU		area		= RectU( 0, 0, fb_descr.size.x, fb_descr.size.y );
+		RectU		area		= RectU( 0, 0, pass.viewport.x, pass.viewport.y );
 
 		GpuMsg::CmdClearAttachments	clear;
 		clear.attachments.PushBack({ EImageAspect::Color, 0, float4(0.0f) });
@@ -79,10 +89,27 @@ namespace ShaderEditor
 	
 /*
 =================================================
-	UpdateUBuffer
+	_UpdateCompute
 =================================================
 */
-	bool Renderer::Shader::UpdateUBuffer (const ModulePtr &builder, const ShaderData &data, const uint passIdx)
+	bool Renderer::Shader::_UpdateCompute (const ModulePtr &builder, const ShaderData &data, uint passIdx)
+	{
+		auto&	pass = _perPass[ passIdx ];
+
+		builder->Send< GpuMsg::CmdClearColorImage >({ pass.image, EImageLayout::General, float4(0.0f) });
+		builder->Send< GpuMsg::CmdBindComputePipeline >({ _pipeline });
+		builder->Send< GpuMsg::CmdBindComputeResourceTable >({ pass.resourceTable });
+		builder->Send< GpuMsg::CmdDispatch >({ uint3( pass.viewport.x, pass.viewport.y, 1 ) });
+
+		return true;
+	}
+
+/*
+=================================================
+	_UpdateUBuffer
+=================================================
+*/
+	bool Renderer::Shader::_UpdateUBuffer (const ModulePtr &builder, const ShaderData &data, const uint passIdx)
 	{
 		auto&					pass	= _perPass[ passIdx ];
 		Pipelines::ShadertoyUB	ub_data	= {};
@@ -136,6 +163,7 @@ namespace ShaderEditor
 			pass.image			= null;
 			pass.resourceTable	= null;
 			pass.ubuffer		= null;
+			pass.viewport		= uint2();
 		}
 	}
 //-----------------------------------------------------------------------------
@@ -167,10 +195,26 @@ namespace ShaderEditor
 			Message< GpuMsg::GetGraphicsModules >	req_ids;
 			CHECK( gthread->Send( req_ids ) );
 
-			_ids = *req_ids->graphics;
+			_ids		= *req_ids->graphics;
+			_computeIDs	= *req_ids->compute;
 		}
 
 		CHECK_ERR( _CreateSamplers() );
+
+		// create data provider
+		{
+			ModulePtr	mngr = _gs->mainSystem->GetModuleByID( DataProviderManagerModuleID );
+
+			CHECK_ERR( _gs->modulesFactory->Create(
+								BuiltinStorageDataProviderModuleID,
+								_gs,
+								CreateInfo::BuiltinStorageDataProvider{ &vfs_images::GetBuiltinFileLoader },
+								OUT _builtinFileProvider ) );
+
+			ModuleUtils::Initialize({ _builtinFileProvider });
+
+			_gs->parallelThread->Send< ModuleMsg::AttachModule >({ _builtinFileProvider });
+		}
 
 		// subscribe on input events
 		{
@@ -286,7 +330,6 @@ namespace ShaderEditor
 						_ids.sampler,
 						_gs,
 						CreateInfo::GpuSampler{
-							gthread,
 							SamplerDescriptor::Builder()
 								.SetAddressMode( EAddressMode::Clamp )
 								.SetFilter( EFilter::MinMagMipNearest )
@@ -298,7 +341,6 @@ namespace ShaderEditor
 						_ids.sampler,
 						_gs,
 						CreateInfo::GpuSampler{
-							gthread,
 							SamplerDescriptor::Builder()
 								.SetAddressMode( EAddressMode::Clamp )
 								.SetFilter( EFilter::MinMagMipLinear )
@@ -310,7 +352,6 @@ namespace ShaderEditor
 						_ids.sampler,
 						_gs,
 						CreateInfo::GpuSampler{
-							gthread,
 							SamplerDescriptor::Builder()
 								.SetAddressMode( EAddressMode::Repeat )
 								.SetFilter( EFilter::MinMagMipNearest )
@@ -322,7 +363,6 @@ namespace ShaderEditor
 						_ids.sampler,
 						_gs,
 						CreateInfo::GpuSampler{
-							gthread,
 							SamplerDescriptor::Builder()
 								.SetAddressMode( EAddressMode::Repeat )
 								.SetFilter( EFilter::MinMagMipLinear )
@@ -438,42 +478,7 @@ namespace ShaderEditor
 			RETURN_ERR( "unknown channel type, it is not a shader pass and not a file" );
 		}
 
-		// create framebuffers
-		FOR( i, shader->_perPass )
-		{
-			auto&	pass = shader->_perPass[i];
-
-			CHECK_ERR( factory->Create(
-							_ids.framebuffer,
-							_gs,
-							CreateInfo::GpuFramebuffer{
-								gthread,
-								newSize, 1
-							},
-							OUT pass.framebuffer ) );
-
-			CHECK_ERR( factory->Create(
-							_ids.image,
-							_gs,
-							CreateInfo::GpuImage{
-								ImageDescriptor{
-									EImage::Tex2D,
-									uint4( newSize, 0, 0 ),
-									EPixelFormat::RGBA8_UNorm,
-									EImageUsage::Sampled | EImageUsage::ColorAttachment
-								},
-								EGpuMemory::LocalInGPU,
-								EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite
-							},
-							OUT pass.image ) );
-			
-			ImageViewDescriptor		view_descr;
-			pass.framebuffer->Send< GpuMsg::FramebufferAttachImage >({ "Color0", pass.image, view_descr });
-
-			CHECK_ERR( ModuleUtils::Initialize({ pass.image, pass.framebuffer }) );
-		}
-
-		// create pipeline
+		// load pipeline
 		{
 			CreateInfo::PipelineTemplate	pp_templ;
 			shader->_descr._pplnCtor( OUT pp_templ.descr );
@@ -484,20 +489,97 @@ namespace ShaderEditor
 							pp_templ,
 							OUT shader->_pipelineTemplate ) );
 
-			Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
+			Message< GpuMsg::GetPipelineTemplateInfo >	req_info;
+			shader->_pipelineTemplate->Send( req_info );
 
-			create_gpp->gpuThread	= gthread;
-			create_gpp->moduleID	= _ids.pipeline;
-			create_gpp->topology	= EPrimitive::TriangleStrip;
-			create_gpp->renderPass	= shader->_perPass.Front().framebuffer->GetModuleByMsg< RenderPassMsgList_t >();
+			shader->_isCompute = req_info->result->shaders[ EShader::Compute ];
+		}
+		
+		FOR( i, shader->_perPass )
+		{
+			auto&	pass = shader->_perPass[i];
+
+			pass.viewport = newSize;
+			
+			CHECK_ERR( factory->Create(
+							_ids.image,
+							_gs,
+							CreateInfo::GpuImage{
+								ImageDescriptor{
+									EImage::Tex2D,
+									uint4( newSize, 0, 0 ),
+									EPixelFormat::RGBA8_UNorm,
+									EImageUsage::TransferDst | EImageUsage::Storage | EImageUsage::Sampled | EImageUsage::ColorAttachment },
+								EGpuMemory::LocalInGPU,
+								EMemoryAccess::GpuReadWrite },
+							OUT pass.image ) );
+
+			CHECK_ERR( ModuleUtils::Initialize({ pass.image }) );
+		}
+
+		// setup compute pipeline
+		if ( shader->_isCompute )
+		{
+			Message< GpuMsg::CreateComputePipeline >	create_cpp;
+
+			create_cpp->gpuThread	= gthread;
+			create_cpp->moduleID	= _computeIDs.pipeline;
 	
-			shader->_pipelineTemplate->Send( create_gpp );
-			shader->_pipeline = create_gpp->result.Get();
+			shader->_pipelineTemplate->Send( create_cpp );
+			shader->_pipeline = *create_cpp->result;
 
 			CHECK_ERR( shader->_pipeline );
 			CHECK_ERR( ModuleUtils::Initialize({ shader->_pipeline }) );
+
+			Message< GpuMsg::GetComputePipelineDescriptor >	req_ppln_descr;
+			shader->_pipeline->Send( req_ppln_descr );
+
+			const uint2	kernel_size = req_ppln_descr->result->localGroupSize.xy();
+
+			for (auto& pass : shader->_perPass)
+			{
+				pass.viewport = (pass.viewport + kernel_size - 1) / kernel_size;
+			}
 		}
-		
+		else
+		// setup graphics pipeline
+		{
+			// create framebuffers
+			FOR( i, shader->_perPass )
+			{
+				auto&	pass = shader->_perPass[i];
+
+				pass.viewport = newSize;
+
+				CHECK_ERR( factory->Create(
+								_ids.framebuffer,
+								_gs,
+								CreateInfo::GpuFramebuffer{ newSize },
+								OUT pass.framebuffer ) );
+			
+				ImageViewDescriptor		view_descr;
+				pass.framebuffer->Send< GpuMsg::FramebufferAttachImage >({ "Color0", pass.image, view_descr });
+
+				CHECK_ERR( ModuleUtils::Initialize({ pass.framebuffer }) );
+			}
+
+			// create pipeline
+			{
+				Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
+
+				create_gpp->gpuThread	= gthread;
+				create_gpp->moduleID	= _ids.pipeline;
+				create_gpp->topology	= EPrimitive::TriangleStrip;
+				create_gpp->renderPass	= shader->_perPass.Front().framebuffer->GetModuleByMsg< RenderPassMsgList_t >();
+	
+				shader->_pipelineTemplate->Send( create_gpp );
+				shader->_pipeline = *create_gpp->result;
+
+				CHECK_ERR( shader->_pipeline );
+				CHECK_ERR( ModuleUtils::Initialize({ shader->_pipeline }) );
+			}
+		}
+
 		// create uniform buffers
 		FOR( i, shader->_perPass )
 		{
@@ -507,13 +589,9 @@ namespace ShaderEditor
 							_ids.buffer,
 							_gs,
 							CreateInfo::GpuBuffer{
-								BufferDescriptor{
-									SizeOf<Pipelines::ShadertoyUB>,
-									EBufferUsage::Uniform | EBufferUsage::TransferDst
-								},
+								BufferDescriptor{ SizeOf<Pipelines::ShadertoyUB>, EBufferUsage::Uniform | EBufferUsage::TransferDst },
 								EGpuMemory::LocalInGPU,
-								EMemoryAccess::GpuReadWrite
-							},
+								EMemoryAccess::GpuReadWrite },
 							OUT pass.ubuffer ) );
 
 			CHECK_ERR( ModuleUtils::Initialize({ pass.ubuffer }) );
@@ -532,6 +610,12 @@ namespace ShaderEditor
 
 			pass.resourceTable->Send< ModuleMsg::AttachModule >({ "pipeline", shader->_pipeline });
 			pass.resourceTable->Send< ModuleMsg::AttachModule >({ "", pass.ubuffer });
+
+			if ( shader->_isCompute )
+			{
+				ImageViewDescriptor		view_descr;
+				pass.resourceTable->Send< GpuMsg::PipelineAttachImage >({ "un_DstImage", pass.image, view_descr });
+			}
 
 			FOR( j, shader->_descr._channels )
 			{
@@ -590,27 +674,26 @@ namespace ShaderEditor
 
 		auto	factory = _gs->modulesFactory;
 
+		ModulePtr	data_input;
+		CHECK_ERR( factory->Create( 0, _gs, CreateInfo::DataInput{ filename, _builtinFileProvider }, OUT data_input ) );
+		
+		ModuleUtils::Initialize({ data_input });
+
 		ModulePtr	image;
 		CHECK_ERR( factory->Create(
 						_ids.image,
 						_gs,
 						CreateInfo::GpuImage{
-							ImageDescriptor{
-								EImage::Tex2D,
-								uint4(1,1,0,0),
-								EPixelFormat::RGBA8_UNorm,
-								EImageUsage::Sampled | EImageUsage::TransferDst
-							},
+							ImageDescriptor{ EImage::Tex2D, uint4(1), EPixelFormat::RGBA8_UNorm, EImageUsage::Sampled | EImageUsage::TransferDst },
 							EGpuMemory::LocalInGPU,
-							EMemoryAccess::GpuRead | EMemoryAccess::GpuWrite
-						},
+							EMemoryAccess::GpuReadWrite },
 						OUT image ) );
 
 		ModulePtr	img_loader;
 		CHECK_ERR( factory->Create(
-							ImportExport::FreeImageImageLoaderModuleID,
+							ImportExport::GXImageLoaderModuleID,
 							_gs,
-							CreateInfo::ImageLoader{ filename, EImageLayout::ShaderReadOnlyOptimal },
+							CreateInfo::ImageLoader{ data_input, EImageLayout::ShaderReadOnlyOptimal },
 							OUT img_loader ) );
 
 		image->Send< ModuleMsg::AttachModule >({ "loader", img_loader });
@@ -702,7 +785,7 @@ namespace ShaderEditor
 		if ( _frameCounter == 0 )
 			_timer.Start();
 
-		OS::Date	date;	date.Now();
+		Date	date;	date.Now();
 
 		_ubData.iResolution			= _surfaceSize.To<float3>();
 		_ubData.iTime				= float(_timer.GetTimeDelta().Seconds());

@@ -1,12 +1,10 @@
 // This is generated file
-// Created at: 2018/04/21 - 00:03:00
-
 #pragma once
 
 namespace Pipelines
 {
 // Packing: Std140
-struct ShadertoyUB final
+struct ShadertoyUB final : CompileTime::PODStruct
 {
 	float4  iResolution;    // offset: 0, align: 16
 	float  iTime;    // offset: 16, align: 4

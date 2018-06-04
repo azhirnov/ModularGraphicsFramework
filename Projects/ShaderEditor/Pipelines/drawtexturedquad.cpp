@@ -1,7 +1,5 @@
 // This is generated file
-// Origin file: 'ShaderEditor\Pipelines/DrawTexturedQuad.ppln'
-// Created at: 2018/04/21 - 00:03:00
-
+// Origin file: 'ShaderEditor/Pipelines/DrawTexturedQuad.ppln'
 #include "all_pipelines.h"
 
 namespace Pipelines
@@ -21,7 +19,7 @@ void Create_drawtexturedquad (PipelineTemplateDescriptor& descr)
 	descr.supportedPrimitives = EPrimitive::TriangleStrip;
 
 	descr.layout = PipelineLayoutDescriptor::Builder()
-			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::RGBA | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 0, 0, EShader::Fragment )
+			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::AnyColorChannels | EPixelFormatClass::LinearColorSpace | EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm, 0u, 0u, EShader::Fragment )
 			.Finish();
 
 	descr.Vertex().StringGLSL( 
@@ -138,7 +136,7 @@ void main ()
 
 )#"_str );
 	descr.Vertex().ArraySPIRV({ 
-0x07230203, 0x00010000, 0x00080002, 0x00000034, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
+0x07230203, 0x00010000, 0x00080006, 0x00000034, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
 0x00000000, 0x0003000E, 0x00000000, 0x00000001, 0x0009000F, 0x00000000, 0x00000005, 0x6E69616D, 0x00000000, 0x0000000E, 0x0000001C, 0x0000002A, 
 0x00000033, 0x00030007, 0x00000001, 0x00000000, 0x002D0003, 0x00000002, 0x000001C2, 0x00000001, 0x4F202F2F, 0x646F4D70, 0x50656C75, 0x65636F72, 
 0x64657373, 0x746E6520, 0x702D7972, 0x746E696F, 0x69616D20, 0x2F2F0A6E, 0x4D704F20, 0x6C75646F, 0x6F725065, 0x73736563, 0x63206465, 0x6E65696C, 
@@ -275,7 +273,7 @@ void main ()
 
 )#"_str );
 	descr.Fragment().ArraySPIRV({ 
-0x07230203, 0x00010000, 0x00080002, 0x00000015, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
+0x07230203, 0x00010000, 0x00080006, 0x00000015, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
 0x00000000, 0x0003000E, 0x00000000, 0x00000001, 0x0007000F, 0x00000004, 0x00000005, 0x6E69616D, 0x00000000, 0x0000000A, 0x00000012, 0x00030010, 
 0x00000005, 0x00000008, 0x00030007, 0x00000001, 0x00000000, 0x002D0003, 0x00000002, 0x000001C2, 0x00000001, 0x4F202F2F, 0x646F4D70, 0x50656C75, 
 0x65636F72, 0x64657373, 0x746E6520, 0x702D7972, 0x746E696F, 0x69616D20, 0x2F2F0A6E, 0x4D704F20, 0x6C75646F, 0x6F725065, 0x73736563, 0x63206465, 

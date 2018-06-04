@@ -201,13 +201,13 @@ int main ()
 	using namespace ShaderEditor;
 
 	Logger::GetInstance()->Open( "log", false );
-	CHECK( GetMainSystemInstance()->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Projects/ShaderEditor" ) );
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Projects/ShaderEditor" ) );
 	
 	{
 		ShaderEditorApp	app;
 	
-		//app.Initialize( "GL 4.4"_GAPI );
-		app.Initialize( "VK 1.0"_GAPI );
+		app.Initialize( "GL 4.5"_GAPI );
+		//app.Initialize( "VK 1.0"_GAPI );
 
 		// main loop
 		for (; app.Update();) {}
