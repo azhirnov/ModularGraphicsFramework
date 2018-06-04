@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
+#include "Engine/PipelineCompiler/Shaders/glslang_include.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
 	
 namespace PipelineCompiler
@@ -13,7 +13,7 @@ namespace PipelineCompiler
 	ConvertBasicType
 =================================================
 */
-	inline EShaderVariable::type  ConvertBasicType (const glslang::TBasicType &basicType, int vectorSize = 0, int matrixCols = 0, int matrixRows = 0)
+	ND_ inline EShaderVariable::type  ConvertBasicType (const glslang::TBasicType &basicType, int vectorSize = 0, int matrixCols = 0, int matrixRows = 0)
 	{
 		EShaderVariable::type	var_type = EShaderVariable::Void;
 		
@@ -52,7 +52,7 @@ namespace PipelineCompiler
 	ConvertImageLayoutFormat
 =================================================
 */
-	inline EPixelFormat::type  ConvertImageLayoutFormat (glslang::TLayoutFormat format)
+	ND_ inline EPixelFormat::type  ConvertImageLayoutFormat (glslang::TLayoutFormat format)
 	{
 		switch ( format )
 		{

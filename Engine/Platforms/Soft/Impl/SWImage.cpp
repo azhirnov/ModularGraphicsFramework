@@ -9,7 +9,7 @@
 #include "Engine/Platforms/Public/GPU/Enums.ToString.h"
 #include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
 #include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
-#include "Engine/Platforms/Public/Tools/ImageViewHashMap.h"
+#include "Engine/Platforms/Public/Tools/ImageUtils.h"
 
 namespace Engine
 {
@@ -25,9 +25,10 @@ namespace PlatformSW
 	// types
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::ReadFromStream,
-											ModuleMsg::WriteToStream,
+											DSMsg::GetDataSourceDescriptor,
+											DSMsg::ReadRegion,
+											DSMsg::WriteRegion,
+											GpuMsg::GetGpuMemoryDescriptor,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -49,11 +50,13 @@ namespace PlatformSW
 											GpuMsg::SWImageBarrier
 										> >::Append< ForwardToMem_t >;
 
-		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;
+		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t::Append< MessageListFrom<
+											GpuMsg::SetImageDescriptor
+										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 
-		using Utils					= Platforms::ImageUtils;
+		using Utils					= PlatformTools::ImageUtils;
 		using ImgLayer_t			= GpuMsg::GetSWImageMemoryLayout::ImgLayer;
 		using ImgLayers3D_t			= GpuMsg::GetSWImageMemoryLayout::ImgLayers3D;
 
@@ -162,8 +165,10 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWImage::_SWImageBarrier );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
-
-		Utils::ValidateDescriptor( INOUT _descr );
+		
+		// descriptor may be invalid for sharing or for delayed initialization
+		if ( Utils::IsValidDescriptor( _descr ) )
+			Utils::ValidateDescriptor( INOUT _descr );
 	}
 	
 /*
@@ -186,7 +191,7 @@ namespace PlatformSW
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		
 		_memObj = GetModuleByEvent< MemoryEvents_t >();
 
@@ -196,10 +201,10 @@ namespace PlatformSW
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								SWMemoryModuleID,
 								GlobalSystems(),
-								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
+								CreateInfo::GpuMemory{ _memFlags, _memAccess },
 								OUT mem_module ) );
 
-			CHECK_ERR( _Attach( "mem", mem_module, true ) );
+			CHECK_ERR( _Attach( "mem", mem_module ) );
 			_memObj = mem_module;
 		}
 		CHECK_ATTACHMENT( _memObj );
@@ -227,7 +232,6 @@ namespace PlatformSW
 		
 		_SendForEachAttachments( msg );
 		
-		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
 
 		// composed state will be changed when memory binded to image
@@ -255,7 +259,7 @@ namespace PlatformSW
 	{
 		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_mem ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 
 		if ( is_mem )
 		{
@@ -274,7 +278,7 @@ namespace PlatformSW
 	{
 		CHECK( _Detach( msg->oldModule ) );
 
-		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		if ( msg->oldModule == _memObj )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyViews();
@@ -304,7 +308,7 @@ namespace PlatformSW
 
 		CHECK_ERR( not _IsImageCreated() );
 		CHECK_ERR( not EPixelFormat::IsCompressed( _descr.format ) );
-		CHECK_ERR( _descr.samples.Get() <= 1 );
+		CHECK_ERR( not _descr.samples.IsEnabled() );
 		CHECK_ERR( _descr.dimension.z == 1 or _descr.dimension.w == 1 );
 		
 		_memLayout	= Uninitialized;
@@ -315,17 +319,17 @@ namespace PlatformSW
 		_memLayout.dimension = uint3( _descr.dimension.xy(), _descr.dimension.z*_descr.dimension.w );
 		_memLayout.layers.Resize( _memLayout.dimension.z );
 
-		for (auto& layer : Range(_memLayout.layers))
+		for (auto& layer : _memLayout.layers)
 		{
 			uint2	dim = _descr.dimension.xy();
 
 			layer.dimension = dim;
 
-			for (; layer.mipmaps.Count() <= _descr.maxLevel.Get();)
+			for (; layer.mipmaps.Count() < _descr.maxLevel.Get();)
 			{
 				Mipmap_t		mip;
 				mip.dimension	= dim;
-				mip.size		= GXImageUtils::AlignedDataSize( uint3(dim, 1), BytesU(bpp), _memLayout.align, _memLayout.align );
+				mip.size		= GXImageUtils::AlignedRowSize( dim.x, bpp, _memLayout.align ) * dim.y;
 				mip.format		= _descr.format;
 				layer.size		= AlignToLarge( layer.size + mip.size, _memLayout.align );
 
@@ -362,9 +366,9 @@ namespace PlatformSW
 		void *	ptr = req_data->result->ptr();
 		BytesU	off;
 
-		for (auto& layer : Range(_memLayout.layers))
+		for (auto& layer : _memLayout.layers)
 		{
-			for (auto& mip : Range(layer.mipmaps))
+			for (auto& mip : layer.mipmaps)
 			{
 				mip.memory	= ptr + off;
 				off			= AlignToLarge( off + mip.size, _memLayout.align );
@@ -470,7 +474,7 @@ namespace PlatformSW
 	_GpuMemoryRegionChanged
 =================================================
 */
-	bool SWImage::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &msg)
+	bool SWImage::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &)
 	{
 		// request image memory barrier
 		TODO( "" );
@@ -486,9 +490,9 @@ namespace PlatformSW
 	{
 		CHECK_ERR( _IsImageCreated() );
 		
-		for (auto& layer : Range(_memLayout.layers))
+		for (auto& layer : _memLayout.layers)
 		{
-			for (auto& mipmap : Range(layer.mipmaps))
+			for (auto& mipmap : layer.mipmaps)
 			{
 				_CheckLevelAccess( INOUT mipmap, msg->accessMask, msg->stage );
 			}
@@ -509,9 +513,9 @@ namespace PlatformSW
 		CHECK_ERR( _CanHaveImageView() or msg->accessMask[EPipelineAccess::TransferRead] or msg->accessMask[EPipelineAccess::TransferWrite] );
 		CHECK_ERR( EPixelFormat::BitPerPixel( _descr.format ) == EPixelFormat::BitPerPixel( msg->viewDescr.format ) );
 
-		CHECK_ERR( msg->viewDescr.baseLevel <= _descr.maxLevel and
+		CHECK_ERR( msg->viewDescr.baseLevel < _descr.maxLevel and
 				   msg->viewDescr.levelCount > 0 and
-				   msg->viewDescr.baseLevel.Get() + msg->viewDescr.levelCount <= _descr.maxLevel.Get()+1 );
+				   msg->viewDescr.baseLevel.Get() + msg->viewDescr.levelCount <= _descr.maxLevel.Get() );
 
 		CHECK_ERR( msg->viewDescr.baseLayer.Get() < _descr.dimension.w and
 				   msg->viewDescr.layerCount > 0 and
@@ -579,12 +583,12 @@ namespace PlatformSW
 
 		GpuMsg::GetImageMemoryLayout::MemLayout	result;
 		result.offset		= BytesUL(0);
-		result.dimension	= Max( ImageUtils::LevelDimension( _descr.imageType, _descr.dimension, msg->mipLevel.Get() ).xyz(), 1u );
+		result.dimension	= Max( Utils::LevelDimension( _descr.imageType, _descr.dimension, msg->mipLevel.Get() ).xyz(), 1u );
 		result.size			= BytesUL(_memLayout.size);
 		result.rowPitch		= GXImageUtils::AlignedRowSize( result.dimension.x, bpp, BytesUL(_memLayout.align) );
-		result.slicePitch	= GXImageUtils::AlignedRowSize( ulong(result.rowPitch) * result.dimension.y, bpp, BytesUL(_memLayout.align) );
+		result.slicePitch	= GXImageUtils::AlignedRowSize( ulong(result.rowPitch) * result.dimension.y, BytesUL(1), BytesUL(_memLayout.align) );
 
-		ASSERT( result.slicePitch * result.dimension.z == result.size );
+		ASSERT( result.slicePitch * result.dimension.z <= result.size );
 
 		msg->result.Set( result );
 		return true;
@@ -599,7 +603,7 @@ namespace PlatformSW
 	{
 		CHECK_ERR( _IsImageCreated() and _isBindedToMemory );
 
-		for (auto& br : Range(msg->barriers))
+		for (auto& br : msg->barriers)
 		{
 			ASSERT( br.image == this );
 
@@ -648,12 +652,12 @@ namespace PlatformSW
 		// read,  read  -> no sync
 		// write, read  -> sync
 		// write, write -> no sync ?
-		
+		/*
 		SW_DEBUG_REPORT( not need_sync,
 						 "missed synchronization between read and write access: from stage '"_str <<
 						 EPipelineStage::ToString( mipmap.stage ) << "', with access '" << EPipelineAccess::ToString( mipmap.access ) <<
 						 "' to stage '" << EPipelineStage::ToString( stage ) << "', with access '" << EPipelineAccess::ToString( accessMask ) << "'",
-						 EDbgReport::Error );
+						 EDbgReport::Error );*/
 
 		//mipmap.layout = msg->layout;
 		mipmap.access = accessMask;
@@ -678,12 +682,6 @@ namespace Platforms
 	ModulePtr SoftRendererObjectsConstructor::CreateSWImage (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
 	{
 		return New< PlatformSW::SWImage >( id, gs, ci );
-	}
-	
-	ModulePtr SoftRendererObjectsConstructor::CreateSWSharedImage (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSharedImage &ci)
-	{
-		return null;
-		//return New< PlatformSW::SWImage >( id, gs, ci );
 	}
 
 }	// Platforms

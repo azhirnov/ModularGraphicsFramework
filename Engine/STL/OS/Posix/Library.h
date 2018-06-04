@@ -46,9 +46,11 @@ namespace OS
 		bool LoadSelf ();
 		void Unload ();
 		
-		StringCRef	GetName () const		{ return _name; }
+		ND_ StringCRef	GetName () const		{ return _name; }
 		
-		bool		IsValid () const		{ return _library != null; }
+		ND_ bool		IsValid () const		{ return _library != null; }
+
+		ND_ Func_t		GetProc (StringCRef procName, Func_t defProc = null) const;
 
 		template <typename T>
 		bool GetProc (OUT T &proc, StringCRef procName) const
@@ -59,8 +61,6 @@ namespace OS
 			T * tmp = ReferenceCast<T>( GetProc( procName ) );
 			return tmp != null;
 		}
-
-		CHECKRES Func_t  GetProc (StringCRef procName, Func_t defProc = null) const;
 
 	private:
 		bool _LoadFromHandle (void * lib, bool canFree = false);

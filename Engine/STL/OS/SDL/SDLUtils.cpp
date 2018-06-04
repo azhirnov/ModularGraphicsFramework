@@ -6,6 +6,7 @@
 
 #include "Engine/STL/OS/SDL/SDLUtils.h"
 #include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Math/Interpolations.h"
 #include "Engine/STL/Log/ToString.h"
 
 namespace GX_STL

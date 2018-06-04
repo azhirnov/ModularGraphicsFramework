@@ -76,8 +76,8 @@ namespace ResPack
 			const char* script_ext[] = {
 				"ppln", "ppln.c", "ppln.cpp"
 			};
-			FOR( i, script_ext ) {
-				if ( ext.EqualsIC( script_ext[i] ) )
+			for (auto e : script_ext) {
+				if ( ext.EqualsIC( e ) )
 					return true;
 			}
 			return false;
@@ -99,7 +99,7 @@ namespace ResPack
 			Array<String>	files;
 			CHECK_ERR( OS::FileSystem::GetAllFilesInPath( folder_stack.Front(), OUT files ) );
 
-			for (auto& file : Range(files))
+			for (auto& file : files)
 			{
 				if ( not IsPipelineExt( FileAddress::GetExtensions( file ) ) )
 					continue;
@@ -113,8 +113,8 @@ namespace ResPack
 			files.Clear();
 			CHECK_ERR( OS::FileSystem::GetAllDirsInPath( folder_stack.Front(), OUT files ) );
 
-			FOR( i, files ) {
-				folder_stack.PushBack( FileAddress::BuildPath( folder_stack.Front(), files[i] ) );
+			for (auto& fname : files) {
+				folder_stack.PushBack( FileAddress::BuildPath( folder_stack.Front(), fname ) );
 			}
 			
 			folder_stack.PopFront();
@@ -215,10 +215,10 @@ namespace ResPack
 
 		// add dependency to resource packer executable
 		{
-			FOR( i, _pipelines )
+			for (auto& ppln : _pipelines)
 			{
-				FOR( j, _dependencies ) {
-					_pipelines[i]->Depends( _dependencies[j] );
+				for (auto& dep : _dependencies) {
+					ppln->Depends( dep );
 				}
 			}
 		}

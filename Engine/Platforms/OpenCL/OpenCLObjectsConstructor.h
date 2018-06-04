@@ -13,6 +13,7 @@ namespace CreateInfo
 	struct GpuThread;
 	struct GpuContext;
 	struct GpuSyncManager;
+	struct GpuCommandQueue;
 	struct GpuImage;
 	struct GpuMemory;
 	struct GpuBuffer;
@@ -25,9 +26,6 @@ namespace CreateInfo
 	struct ComputePipeline;
 	struct GraphicsPipeline;
 	struct PipelineResourceTable;
-
-	struct GpuSharedImage;
-	struct GpuSharedBuffer;
 
 }	// CreateInfo
 
@@ -43,7 +41,6 @@ namespace Platforms
 	static constexpr OModID::type  CLCommandBufferModuleID			= "cl.cmdbuf"_OModID;
 	static constexpr OModID::type  CLCommandBuilderModuleID			= "cl.cmdbuild"_OModID;
 	static constexpr OModID::type  CLImageModuleID					= "cl.image"_OModID;
-	static constexpr OModID::type  CLMemoryModuleID					= "cl.memory"_OModID;
 	static constexpr OModID::type  CLComputePipelineModuleID		= "cl.c-ppln"_OModID;
 	static constexpr OModID::type  CLPipelineResourceTableModuleID	= "cl.restable"_OModID;
 	static constexpr OModID::type  CLSamplerModuleID				= "cl.sampler"_OModID;
@@ -65,19 +62,16 @@ namespace Platforms
 		
 		static ModulePtr CreateOpenCLThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuThread &);
 		static ModulePtr CreateOpenCLContext (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuContext &);
-		static ModulePtr CreateCL2SyncManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
-		static ModulePtr CreateCL2Image (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuImage &);
-		static ModulePtr CreateCL2SharedImage (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSharedImage &);
-		static ModulePtr CreateCL2Memory (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemory &);
-		static ModulePtr CreateCL2Buffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuBuffer &);
-		static ModulePtr CreateCL2SharedBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSharedBuffer &);
-		static ModulePtr CreateCL2Sampler (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
-		static ModulePtr CreateCL2CommandQueue (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandQueue &);
+		static ModulePtr CreateCL1SyncManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSyncManager &);
+		static ModulePtr CreateCL1Image (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuImage &);
+		static ModulePtr CreateCL1Buffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuBuffer &);
+		static ModulePtr CreateCL1Sampler (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr CreateCL1CommandQueue (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandQueue &);
 		static ModulePtr CreatePipelineTemplate (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
-		static ModulePtr CreateCL2CommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
-		static ModulePtr CreateCL2CommandBuilder (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
-		static ModulePtr CreateCL2ComputePipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ComputePipeline &);
-		static ModulePtr CreateCL2PipelineResourceTable (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
+		static ModulePtr CreateCL1CommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
+		static ModulePtr CreateCL1CommandBuilder (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
+		static ModulePtr CreateCL1ComputePipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+		static ModulePtr CreateCL1PipelineResourceTable (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
 	};
 
 

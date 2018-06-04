@@ -45,11 +45,11 @@ namespace OS
 		bool Load (StringCRef name, bool canFree = true);
 		void Unload ();
 
-		bool		IsValid () const	{ return _handle != null; }
+		ND_ bool		IsValid () const	{ return _handle != null; }
 
-		StringCRef	GetName () const	{ return _name; }
+		ND_ StringCRef	GetName () const	{ return _name; }
 
-		CHECKRES Func_t GetProc (StringCRef name, Func_t defProc = null) const;
+		ND_ Func_t		GetProc (StringCRef name, Func_t defProc = null) const;
 
 		template <typename T>
 		bool GetProc (OUT T &func, StringCRef name)

@@ -613,24 +613,24 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPixelFormat
 
-	inline constexpr bool EPixelFormat::IsCompressed (type value)
+	ND_ inline constexpr bool EPixelFormat::IsCompressed (type value)
 	{
 		return EnumEq( value, _vtypeinfo::_COMPRESSED );
 	}
 	
 
-	inline constexpr bool EPixelFormat::IsLinear (type value)
+	ND_ inline constexpr bool EPixelFormat::IsLinear (type value)
 	{
 		return not IsNonLinear( value );
 	}
 
 
-	inline constexpr bool EPixelFormat::IsNonLinear (type value)
+	ND_ inline constexpr bool EPixelFormat::IsNonLinear (type value)
 	{
 		return EnumEq( value, sRGB_Flag );
 	}
 	
-	inline constexpr bool EPixelFormat::IsFloat (type value)
+	ND_ inline constexpr bool EPixelFormat::IsFloat (type value)
 	{
 		const uint val = (value & _vtypeinfo::_TYPE_MASK);
 		return	val == _vtypeinfo::_HALF		or
@@ -639,22 +639,22 @@ namespace Platforms
 				val == _vtypeinfo::_FLOAT_11_11_10;		// TODO: compressed formats
 	}
 
-	inline constexpr bool EPixelFormat::IsIntNorm (type value)
+	ND_ inline constexpr bool EPixelFormat::IsIntNorm (type value)
 	{
 		return EnumEq( value, _vtypeinfo::_NORM ) and not IsFloat( value );
 	}
 
-	inline constexpr bool EPixelFormat::IsUInt (type value)
+	ND_ inline constexpr bool EPixelFormat::IsUInt (type value)
 	{
 		return not EnumEq( value, _vtypeinfo::_NORM ) and EnumEq( value, _vtypeinfo::_UNSIGNED ) and IsFloat( value );
 	}
 
-	inline constexpr bool EPixelFormat::IsInt (type value)
+	ND_ inline constexpr bool EPixelFormat::IsInt (type value)
 	{
 		return not EnumEq( value, _vtypeinfo::_NORM ) and not EnumEq( value, _vtypeinfo::_UNSIGNED ) and IsFloat( value );
 	}
 
-	inline BitsVec<usize, 4>  EPixelFormat::BitsPerChannel (type value)
+	ND_ inline BitsVec<usize, 4>  EPixelFormat::BitsPerChannel (type value)
 	{
 		if ( value == Unknown ) {
 			return BitsVec<usize, 4>();
@@ -702,13 +702,13 @@ namespace Platforms
 	}
 		
 
-	inline BitsU  EPixelFormat::BitPerPixel (type value)
+	ND_ inline BitsU  EPixelFormat::BitPerPixel (type value)
 	{
 		return BitsPerChannel( value ).Sum();
 	}
 		
 
-	inline constexpr uint EPixelFormat::ColorChannelsCount (type value)
+	ND_ inline constexpr uint EPixelFormat::ColorChannelsCount (type value)
 	{
 		return	( value & _vtypeinfo::_COL_MASK ) >= _vtypeinfo::_R and
 				( value & _vtypeinfo::_COL_MASK ) <= _vtypeinfo::_RGBA ?
@@ -717,37 +717,37 @@ namespace Platforms
 	}
 
 	
-	inline constexpr bool EPixelFormat::IsColor (type value)
+	ND_ inline constexpr bool EPixelFormat::IsColor (type value)
 	{
 		return ColorChannelsCount( value ) > 0;
 	}
 
 
-	inline constexpr bool EPixelFormat::IsDepth (type value)
+	ND_ inline constexpr bool EPixelFormat::IsDepth (type value)
 	{
 		return ( value & _vtypeinfo::_COL_MASK ) == _vtypeinfo::_DEPTH;
 	}
 
 
-	inline constexpr bool EPixelFormat::IsStencil (type value)
+	ND_ inline constexpr bool EPixelFormat::IsStencil (type value)
 	{
 		return ( value & _vtypeinfo::_COL_MASK ) == _vtypeinfo::_STENCIL;
 	}
 
 
-	inline constexpr bool EPixelFormat::IsDepthStencil (type value)
+	ND_ inline constexpr bool EPixelFormat::IsDepthStencil (type value)
 	{
 		return ( value & _vtypeinfo::_COL_MASK ) == _vtypeinfo::_DEPTH_STENCIL;
 	}
 	
 
-	inline constexpr bool EPixelFormat::HasDepth (type value)
+	ND_ inline constexpr bool EPixelFormat::HasDepth (type value)
 	{
 		return IsDepth( value ) or IsDepthStencil( value );
 	}
 
 
-	inline constexpr bool EPixelFormat::HasStencil (type value)
+	ND_ inline constexpr bool EPixelFormat::HasStencil (type value)
 	{
 		return IsStencil( value ) or IsDepthStencil( value );
 	}
@@ -757,7 +757,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPixelFormatClass
 	
-	inline EPixelFormatClass::type  EPixelFormatClass::From (EPixelFormat::type value)
+	ND_ inline EPixelFormatClass::type  EPixelFormatClass::From (EPixelFormat::type value)
 	{
 		using VTI	= _platforms_hidden_::EValueTypeInfo;
 
@@ -817,7 +817,7 @@ namespace Platforms
 	}
 
 	
-	inline bool  EPixelFormatClass::StrongComparison (type value, type mask)
+	ND_ inline bool  EPixelFormatClass::StrongComparison (type value, type mask)
 	{
 		const bool	channels_equals		= !!((value & mask) & AnyChannel);
 		const bool	color_space_equals	= !!((value & mask) & AnyColorSpace);
@@ -826,7 +826,7 @@ namespace Platforms
 	}
 
 
-	inline bool  EPixelFormatClass::WeakComparison (type value, type mask)
+	ND_ inline bool  EPixelFormatClass::WeakComparison (type value, type mask)
 	{
 		const bool	channels_equals		= (value & AnyChannel) == 0 or !!((value & mask) & AnyChannel);
 		const bool	color_space_equals	= (value & AnyColorSpace) == 0 or !!((value & mask) & AnyColorSpace);

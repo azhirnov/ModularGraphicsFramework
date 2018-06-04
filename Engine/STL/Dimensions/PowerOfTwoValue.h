@@ -41,18 +41,18 @@ namespace GXMath
 		constexpr explicit PowOf2Value (T value) : _value(value) {}
 
 
-		constexpr T  GetPower ()	const
+		ND_ constexpr T  GetPower ()	const
 		{
 			return _value;
 		}
 
-		constexpr T  GetValue ()	const
+		ND_ constexpr T  GetValue ()	const
 		{
 			ASSERT( _value < CompileTime::SizeOf<T>::bits );
 			return T(1) << _value;
 		}
 
-		CHECKRES constexpr static Self  From (T value)
+		ND_ constexpr static Self  From (T value)
 		{
 			ASSERT( value > 0 and _IsPowOf2( value ) );
 			return PowOf2Value( _IntLog2( value ) );

@@ -37,7 +37,7 @@ namespace GXPhysics
 										typename Dimensions_t::template Add< typename Right::Dimensions_t >,
 										typename conv_add_op_t::type >;
 
-			static Value_t Get (const Value_t &left, const Value_t &right) {
+			ND_ forceinline static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_add_op_t::Get( left, right );
 			}
 		};
@@ -50,7 +50,7 @@ namespace GXPhysics
 										typename Dimensions_t::template Sub< typename Right::Dimensions_t >,
 										typename conv_sub_op_t::type >;
 
-			static Value_t Get (const Value_t &left, const Value_t &right) {
+			ND_ forceinline static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_sub_op_t::Get( left, right );
 			}
 		};
@@ -63,7 +63,7 @@ namespace GXPhysics
 										typename Dimensions_t::template Mul< typename Right::Dimensions_t >,
 										typename conv_mul_op_t::type >;
 
-			static Value_t Get (const Value_t &left, const Value_t &right) {
+			ND_ forceinline static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_mul_op_t::Get( left, right );
 			}
 		};
@@ -76,7 +76,7 @@ namespace GXPhysics
 										typename Dimensions_t::template Div< typename Right::Dimensions_t >,
 										typename conv_div_op_t::type >;
 
-			static Value_t Get (const Value_t &left, const Value_t &right) {
+			ND_ forceinline static Value_t Get (const Value_t &left, const Value_t &right) {
 				return conv_div_op_t::Get( left, right );
 			}
 		};
@@ -119,39 +119,39 @@ namespace GXPhysics
 			_value(other.template ToScale< ValueScale_t >().ref())
 		{}
 
-		//Value_t &		ref ()									{ return _value; }
-		Value_t const &	ref ()							const	{ return _value; }
+		//ND_ Value_t &		ref ()							{ return _value; }
+		ND_ Value_t const &	ref ()					const	{ return _value; }
 
-		CHECKRES Value_t Get ()							const	{ return ValueScale_t::Func::Get( _value ); }
+		ND_ Value_t Get ()							const	{ return ValueScale_t::Func::Get( _value ); }
 
-		CHECKRES Self	operator -  ()					const	{ return Self( -_value ); }
+		ND_ Self	operator -  ()					const	{ return Self( -_value ); }
 
-				 Self &	operator =  (const Self &right)			{ _value = right.ref();  return *this; }
+			Self &	operator =  (const Self &right)			{ _value = right.ref();  return *this; }
 
-		CHECKRES bool	IsZero ()						const	{ return GXMath::IsZero( _value ); }
+		ND_ bool	IsZero ()						const	{ return GXMath::IsZero( _value ); }
 
-		CHECKRES bool	operator == (const Self &right)	const	{ return ( _value == right.ref() ); }
-		CHECKRES bool	operator != (const Self &right)	const	{ return not ( *this == right ); }
-		CHECKRES bool	operator >  (const Self &right)	const	{ return _value >  right.ref(); }
-		CHECKRES bool	operator >= (const Self &right)	const	{ return _value >= right.ref(); }
-		CHECKRES bool	operator <  (const Self &right)	const	{ return _value <  right.ref(); }
-		CHECKRES bool	operator <= (const Self &right)	const	{ return _value <= right.ref(); }
+		ND_ bool	operator == (const Self &right)	const	{ return ( _value == right.ref() ); }
+		ND_ bool	operator != (const Self &right)	const	{ return not ( *this == right ); }
+		ND_ bool	operator >  (const Self &right)	const	{ return _value >  right.ref(); }
+		ND_ bool	operator >= (const Self &right)	const	{ return _value >= right.ref(); }
+		ND_ bool	operator <  (const Self &right)	const	{ return _value <  right.ref(); }
+		ND_ bool	operator <= (const Self &right)	const	{ return _value <= right.ref(); }
 
-				 Self &	operator += (const Self &right)			{ _value += right.ref();  return *this; }
-				 Self &	operator -= (const Self &right)			{ _value -= right.ref();  return *this; }
+			Self &	operator += (const Self &right)			{ _value += right.ref();  return *this; }
+			Self &	operator -= (const Self &right)			{ _value -= right.ref();  return *this; }
 
-		CHECKRES Self	operator +  (const Self &right)	const	{ return Self( _value + right.ref() ); }
-		CHECKRES Self	operator -  (const Self &right)	const	{ return Self( _value - right.ref() ); }
+		ND_ Self	operator +  (const Self &right)	const	{ return Self( _value + right.ref() ); }
+		ND_ Self	operator -  (const Self &right)	const	{ return Self( _value - right.ref() ); }
 
-				 Self &	operator *= (Value_t right)				{ _value *= right;  return *this; }
-				 Self &	operator /= (Value_t right)				{ _value /= right;  return *this; }
+			Self &	operator *= (Value_t right)				{ _value *= right;  return *this; }
+			Self &	operator /= (Value_t right)				{ _value /= right;  return *this; }
 
-		CHECKRES Self	operator *  (Value_t right)		const	{ return Self( _value * right ); }
-		CHECKRES Self	operator /  (Value_t right)		const	{ return Self( _value / right ); }
+		ND_ Self	operator *  (Value_t right)		const	{ return Self( _value * right ); }
+		ND_ Self	operator /  (Value_t right)		const	{ return Self( _value / right ); }
 
 		
 		template <typename D, typename S>
-		CHECKRES auto  operator +  (const PhysicsValue<Value_t,D,S> &right) const
+		ND_ auto  operator +  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			using add_op	= _Add< D, S >;
 			using Result_t	= typename add_op::type;
@@ -160,7 +160,7 @@ namespace GXPhysics
 		}
 		
 		template <typename D, typename S>
-		CHECKRES auto  operator -  (const PhysicsValue<Value_t,D,S> &right) const
+		ND_ auto  operator -  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			using sub_op	= _Sub< D, S >;
 			using Result_t	= typename sub_op::type;
@@ -169,7 +169,7 @@ namespace GXPhysics
 		}
 		
 		template <typename D, typename S>
-		CHECKRES auto  operator *  (const PhysicsValue<Value_t,D,S> &right) const
+		ND_ auto  operator *  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			using mul_op	= _Mul< D, S >;
 			using Result_t	= typename mul_op::type;
@@ -178,7 +178,7 @@ namespace GXPhysics
 		}
 		
 		template <typename D, typename S>
-		CHECKRES auto  operator /  (const PhysicsValue<Value_t,D,S> &right) const
+		ND_ auto  operator /  (const PhysicsValue<Value_t,D,S> &right) const
 		{
 			using div_op	= _Div< D, S >;
 			using Result_t	= typename div_op::type;
@@ -187,20 +187,20 @@ namespace GXPhysics
 		}
 
 
-		CHECKRES friend Self  operator * (Value_t left, const Self &right)
+		ND_ friend Self  operator * (Value_t left, const Self &right)
 		{
 			return Self( left * right.ref() );
 		}
 	
 
-		CHECKRES friend SelfInversed  operator / (Value_t left, const Self &right)
+		ND_ friend SelfInversed  operator / (Value_t left, const Self &right)
 		{
 			return SelfInversed( left / right.ref() );
 		}
 
 		
 		template <isize PowNum, isize PowDenom>
-		CHECKRES auto  Pow () const
+		ND_ auto  Pow () const
 		{
 			using Result_t	= typename _Pow< PowNum, PowDenom >::type;
 			using pow_t		= typename CompileTime::Fractional32< PowNum, PowDenom >;
@@ -211,7 +211,7 @@ namespace GXPhysics
 		
 
 		template <isize Power>
-		CHECKRES auto  Pow () const
+		ND_ auto  Pow () const
 		{
 			using Float_t	= typename CompileTime::NearFloat::FromType<ValueType>;
 
@@ -219,19 +219,19 @@ namespace GXPhysics
 		}
 
 
-		CHECKRES auto  Square () const
+		ND_ auto  Square () const
 		{
 			return Pow< 2 >();
 		}
 
 
-		CHECKRES auto  Sqrt () const
+		ND_ auto  Sqrt () const
 		{
 			return Pow< 1, 2 >();
 		}
 
 
-		CHECKRES SelfInversed  Inverse () const
+		ND_ SelfInversed  Inverse () const
 		{
 			return Value_t(1) / (*this);
 		}
@@ -251,27 +251,27 @@ namespace GXPhysics
 		}
 
 
-		CHECKRES String ToString () const
+		ND_ String ToString () const
 		{
 			return String().FormatF( Get() ) << '[' << Dimensions_t::ToString("*") << ']';
 		}
 
 
-		CHECKRES String ToDebugString () const
+		ND_ String ToDebugString () const
 		{
 			return String().FormatF( ref() ) << " * " << ValueScale_t::ToString() << " [" << Dimensions_t::ToString("*") << ']';
 		}
 
 
 		template <typename T>
-		CHECKRES auto  Convert () const
+		ND_ auto  Convert () const
 		{
 			return PhysicsValue< T, Dimensions_t, typename _NewConv<T>::type >( T( _value ) );
 		}
 
 
 		template <typename T>
-		CHECKRES T  To () const
+		ND_ T  To () const
 		{
 			STATIC_ASSERT( Dimensions_t::template Equal< typename T::Dimensions_t >::value );
 
@@ -285,7 +285,7 @@ namespace GXPhysics
 
 
 		template <typename ToValueScale>
-		CHECKRES PhysicsValue< Value_t, Dimensions_t, ToValueScale >  ToScale () const
+		ND_ PhysicsValue< Value_t, Dimensions_t, ToValueScale >  ToScale () const
 		{
 			return PhysicsValue< Value_t, Dimensions_t, ToValueScale >(
 						Get() / ToValueScale::Func::Get( Value_t(1) ) );
@@ -333,48 +333,48 @@ namespace GXPhysics
 		constexpr PhysicsValue (const Self &other) : _value(other.ref()) {}
 		
 
-		//Value_t &		ref ()									{ return _value; }
-		Value_t const &	ref ()							const	{ return _value; }
+		//ND_ Value_t &		ref ()							{ return _value; }
+		ND_ Value_t const &	ref ()				const		{ return _value; }
 
-		CHECKRES Value_t Get ()							const	{ return ValueScale_t::Func::Get( _value ); }
+		ND_ Value_t Get ()						const		{ return ValueScale_t::Func::Get( _value ); }
 
-		CHECKRES operator Value_t ()					const	{ return Get(); }
+		ND_ operator Value_t ()					const		{ return Get(); }
 
-				 Self &	operator =  (const Self &right)			{ _value = right.ref();  return *this; }
+			Self &	operator =  (const Self &right)			{ _value = right.ref();  return *this; }
 
-		CHECKRES bool	operator == (const Self &right)	const	{ return ( _value == right.ref() ); }
-		CHECKRES bool	operator != (const Self &right)	const	{ return not ( *this == right ); }
-		CHECKRES bool	operator >  (const Self &right)	const	{ return _value >  right.ref(); }
-		CHECKRES bool	operator >= (const Self &right)	const	{ return _value >= right.ref(); }
-		CHECKRES bool	operator <  (const Self &right)	const	{ return _value <  right.ref(); }
-		CHECKRES bool	operator <= (const Self &right)	const	{ return _value <= right.ref(); }
+		ND_ bool	operator == (const Self &right)	const	{ return ( _value == right.ref() ); }
+		ND_ bool	operator != (const Self &right)	const	{ return not ( *this == right ); }
+		ND_ bool	operator >  (const Self &right)	const	{ return _value >  right.ref(); }
+		ND_ bool	operator >= (const Self &right)	const	{ return _value >= right.ref(); }
+		ND_ bool	operator <  (const Self &right)	const	{ return _value <  right.ref(); }
+		ND_ bool	operator <= (const Self &right)	const	{ return _value <= right.ref(); }
 
-				 Self &	operator += (const Self &right)			{ _value += right.ref();  return *this; }
-				 Self &	operator -= (const Self &right)			{ _value -= right.ref();  return *this; }
+			Self &	operator += (const Self &right)			{ _value += right.ref();  return *this; }
+			Self &	operator -= (const Self &right)			{ _value -= right.ref();  return *this; }
 		
-		CHECKRES Self	operator +  (const Self &right)	const	{ return Self( _value + right.ref() ); }
-		CHECKRES Self	operator -  (const Self &right)	const	{ return Self( _value - right.ref() ); }
+		ND_ Self	operator +  (const Self &right)	const	{ return Self( _value + right.ref() ); }
+		ND_ Self	operator -  (const Self &right)	const	{ return Self( _value - right.ref() ); }
 
-				 Self &	operator *= (Value_t right)				{ _value *= right;  return *this; }
-				 Self &	operator /= (Value_t right)				{ _value /= right;  return *this; }
+			Self &	operator *= (Value_t right)				{ _value *= right;  return *this; }
+			Self &	operator /= (Value_t right)				{ _value /= right;  return *this; }
 		
-		CHECKRES Self	operator *  (Value_t right)		const	{ return Self( _value * right ); }
-		CHECKRES Self	operator /  (Value_t right)		const	{ return Self( _value / right ); }
+		ND_ Self	operator *  (Value_t right)		const	{ return Self( _value * right ); }
+		ND_ Self	operator /  (Value_t right)		const	{ return Self( _value / right ); }
 
 
-		CHECKRES friend Self	operator * (Value_t left, const Self &right)
+		ND_ friend Self	operator * (Value_t left, const Self &right)
 		{
 			return Self( left * right.ref() );
 		}
 	
-		CHECKRES friend SelfInversed	operator / (Value_t left, const Self &right)
+		ND_ friend SelfInversed	operator / (Value_t left, const Self &right)
 		{
 			return SelfInversed( left / right.ref() );
 		}
 
 
 		template <isize PowNum, isize PowDenom>
-		CHECKRES Value_t  Pow () const
+		ND_ Value_t  Pow () const
 		{
 			using pow_t		= typename CompileTime::Fractional32< PowNum, PowDenom >;
 			using Float_t	= typename CompileTime::NearFloat::FromType< Value_t >;
@@ -384,37 +384,37 @@ namespace GXPhysics
 		
 
 		template <isize Power>
-		CHECKRES Value_t  Pow () const
+		ND_ Value_t  Pow () const
 		{
 			return GXMath::Pow< Power >( Get() );
 		}
 
 
-		CHECKRES Value_t  Square () const
+		ND_ Value_t  Square () const
 		{
 			return GXMath::Square( Get() );
 		}
 
 
-		CHECKRES Value_t  Sqrt () const
+		ND_ Value_t  Sqrt () const
 		{
 			return GXMath::Sqrt( Get() );
 		}
 
 
-		CHECKRES SelfInversed  Inverse () const
+		ND_ SelfInversed  Inverse () const
 		{
 			return SelfInversed( Value_t(1) / _value );
 		}
 
 
-		CHECKRES String ToString () const
+		ND_ String ToString () const
 		{
 			return String().FormatF( Get() ) << " []";
 		}
 
 
-		CHECKRES String ToDebugString () const
+		ND_ String ToDebugString () const
 		{
 			return String().FormatF( ref() ) << " * (" << ValueScale_t::Scale::ToString()
 					<< ")^" << ValueScale_t::Power::ToString() << " []";
@@ -479,7 +479,7 @@ namespace GXTypes
 			 >
 	struct Hash< GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale > >
 	{
-		CHECKRES HashResult  operator () (const GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale > &x) const
+		ND_ HashResult  operator () (const GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale > &x) const
 		{
 			return HashOf( x.ref() );
 		}
@@ -491,7 +491,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename D, typename S>
-	CHECKRES inline String  ToStringImpl (const GXPhysics::PhysicsValue<T,D,S> &value)
+	ND_ inline String  ToStringImpl (const GXPhysics::PhysicsValue<T,D,S> &value)
 	{
 		return value.ToString();
 	}

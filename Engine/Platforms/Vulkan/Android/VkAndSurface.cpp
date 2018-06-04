@@ -5,7 +5,7 @@
 #if defined( GRAPHICS_API_VULKAN ) and defined( PLATFORM_ANDROID )
 
 #include <android/native_window.h>
-#include "Engine/Platforms/Vulkan/Impl/vulkan1_platform.h"
+#include "Engine/Platforms/Vulkan/110/vulkan1_platform.h"
 
 namespace Engine
 {

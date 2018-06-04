@@ -12,7 +12,9 @@
 #include "Engine/Platforms/Public/GPU/Pipeline.h"
 #include "Engine/Platforms/Public/GPU/RenderPass.h"
 #include "Engine/Platforms/OpenGL/450/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/450/GL4ResourceCache.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
+#include "Engine/Platforms/Public/Tools/ImageUtils.h"
 
 namespace Engine
 {
@@ -66,12 +68,16 @@ namespace PlatformGL
 		using RenderSubpasses_t		= RenderPassDescriptor::Subpasses_t;
 		using Viewports_t			= StaticArray< GpuMsg::CmdSetViewport::Viewport, GlobalConst::GAPI_MaxColorBuffers >;
 		using Scissors_t			= StaticArray< RectU, GlobalConst::GAPI_MaxColorBuffers >;
+		
+		using ImageUtils			= PlatformTools::ImageUtils;
 
 
 	// constants
 	private:
 		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
+
+		static const GLenum			_debugMarkerSeverity = GL_DEBUG_SEVERITY_LOW;
 
 
 	// variables
@@ -87,7 +93,6 @@ namespace PlatformGL
 		CommandArray_t				_commands;
 		UsedResources_t				_resources;
 		ERecordingState				_recordingState;
-		//ulong3					_maxWorkGroupCount;
 
 		// states
 		PipelineStages_t			_pipelineStages;
@@ -155,43 +160,46 @@ namespace PlatformGL
 		bool _InvalidateRenderPassAttachment (ArrayCRef<GLenum> buffers);
 		void _SetViewports ();
 
-		bool _CmdSetViewport (const Command_t &cmd);
-		bool _CmdSetScissor (const Command_t &cmd);
-		bool _CmdSetDepthBounds (const Command_t &cmd);
-		bool _CmdSetBlendColor (const Command_t &cmd);
-		bool _CmdSetDepthBias (const Command_t &cmd);
-		bool _CmdSetLineWidth (const Command_t &cmd);
-		bool _CmdSetStencilCompareMask (const Command_t &cmd);
-		bool _CmdSetStencilWriteMask (const Command_t &cmd);
-		bool _CmdSetStencilReference (const Command_t &cmd);
-		bool _CmdBeginRenderPass (const Command_t &cmd);
-		bool _CmdEndRenderPass (const Command_t &cmd);
-		bool _CmdBindGraphicsPipeline (const Command_t &cmd);
-		bool _CmdBindComputePipeline (const Command_t &cmd);
-		bool _CmdBindVertexBuffers (const Command_t &cmd);
-		bool _CmdBindIndexBuffer (const Command_t &cmd);
-		bool _CmdDraw (const Command_t &cmd);
-		bool _CmdDrawIndexed (const Command_t &cmd);
-		bool _CmdDrawIndirect (const Command_t &cmd);
-		bool _CmdDrawIndexedIndirect (const Command_t &cmd);
-		bool _CmdDispatch (const Command_t &cmd);
-		bool _CmdDispatchIndirect (const Command_t &cmd);
-		bool _CmdExecute (const Command_t &cmd);
-		bool _CmdBindGraphicsResourceTable (const Command_t &cmd);
-		bool _CmdBindComputeResourceTable (const Command_t &cmd);
-		bool _CmdCopyBuffer (const Command_t &cmd);
-		bool _CmdCopyImage (const Command_t &cmd);
-		bool _CmdCopyBufferToImage (const Command_t &cmd);
-		bool _CmdCopyImageToBuffer (const Command_t &cmd);
-		bool _CmdBlitImage (const Command_t &cmd);
-		bool _CmdBlitGLFramebuffers (const Command_t &cmd);
-		bool _CmdUpdateBuffer (const Command_t &cmd);
-		bool _CmdFillBuffer (const Command_t &cmd);
-		bool _CmdClearAttachments (const Command_t &cmd);
-		bool _CmdClearColorImage (const Command_t &cmd);
-		bool _CmdClearDepthStencilImage (const Command_t &cmd);
-		bool _CmdPipelineBarrier (const Command_t &cmd);
-		bool _GLCmdPushConstants (const Command_t &cmd);
+		bool _CmdSetViewport (const Command_t &cmdData);
+		bool _CmdSetScissor (const Command_t &cmdData);
+		bool _CmdSetDepthBounds (const Command_t &cmdData);
+		bool _CmdSetBlendColor (const Command_t &cmdData);
+		bool _CmdSetDepthBias (const Command_t &cmdData);
+		bool _CmdSetLineWidth (const Command_t &cmdData);
+		bool _CmdSetStencilCompareMask (const Command_t &cmdData);
+		bool _CmdSetStencilWriteMask (const Command_t &cmdData);
+		bool _CmdSetStencilReference (const Command_t &cmdData);
+		bool _CmdBeginRenderPass (const Command_t &cmdData);
+		bool _CmdEndRenderPass (const Command_t &cmdData);
+		bool _CmdBindGraphicsPipeline (const Command_t &cmdData);
+		bool _CmdBindComputePipeline (const Command_t &cmdData);
+		bool _CmdBindVertexBuffers (const Command_t &cmdData);
+		bool _CmdBindIndexBuffer (const Command_t &cmdData);
+		bool _CmdDraw (const Command_t &cmdData);
+		bool _CmdDrawIndexed (const Command_t &cmdData);
+		bool _CmdDrawIndirect (const Command_t &cmdData);
+		bool _CmdDrawIndexedIndirect (const Command_t &cmdData);
+		bool _CmdDispatch (const Command_t &cmdData);
+		bool _CmdDispatchIndirect (const Command_t &cmdData);
+		bool _CmdExecute (const Command_t &cmdData);
+		bool _CmdBindGraphicsResourceTable (const Command_t &cmdData);
+		bool _CmdBindComputeResourceTable (const Command_t &cmdData);
+		bool _CmdCopyBuffer (const Command_t &cmdData);
+		bool _CmdCopyImage (const Command_t &cmdData);
+		bool _CmdCopyBufferToImage (const Command_t &cmdData);
+		bool _CmdCopyImageToBuffer (const Command_t &cmdData);
+		bool _CmdBlitImage (const Command_t &cmdData);
+		bool _CmdBlitGLFramebuffers (const Command_t &cmdData);
+		bool _CmdUpdateBuffer (const Command_t &cmdData);
+		bool _CmdFillBuffer (const Command_t &cmdData);
+		bool _CmdClearAttachments (const Command_t &cmdData);
+		bool _CmdClearColorImage (const Command_t &cmdData);
+		bool _CmdClearDepthStencilImage (const Command_t &cmdData);
+		bool _CmdPipelineBarrier (const Command_t &cmdData);
+		bool _GLCmdPushConstants (const Command_t &cmdData);
+		bool _CmdDebugMarker (const Command_t &cmdData);
+		bool _CmdPushDebugGroup (const Command_t &cmdData);
+		bool _CmdPopDebugGroup (const Command_t &cmdData);
 		
 		bool _CopyImageToBuffer200 (const GpuMsg::CmdCopyImageToBuffer &data);
 		bool _CopyImageToBuffer450 (const GpuMsg::CmdCopyImageToBuffer &data);
@@ -296,7 +304,7 @@ namespace PlatformGL
 	_ValidateDescriptor
 =================================================
 */
-	void GL4CommandBuffer::_ValidateDescriptor (INOUT CommandBufferDescriptor &descr)
+	void GL4CommandBuffer::_ValidateDescriptor (INOUT CommandBufferDescriptor &)
 	{
 	}
 
@@ -459,6 +467,9 @@ namespace PlatformGL
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdClearDepthStencilImage> :	_CmdClearDepthStencilImage( data );		break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPipelineBarrier> :			_CmdPipelineBarrier( data );			break;
 				case CmdDataTypes_t::IndexOf<GpuMsg::GLCmdPushConstants> :			_GLCmdPushConstants( data );			break;
+				case CmdDataTypes_t::IndexOf<GpuMsg::CmdDebugMarker> :				_CmdDebugMarker( data );				break;
+				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPushDebugGroup> :			_CmdPushDebugGroup( data );				break;
+				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPopDebugGroup> :			_CmdPopDebugGroup( data );				break;
 				default :															WARNING( "unknown command!" );
 			}
 		}
@@ -1044,12 +1055,12 @@ namespace PlatformGL
 	_CmdSetViewport
 =================================================
 */
-	bool GL4CommandBuffer::_CmdSetViewport (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdSetViewport (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdSetViewport >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdSetViewport >();
 
-		FOR( i, data.viewports ) {
-			_viewports[i + data.firstViewport] = data.viewports[i];
+		FOR( i, cmd.viewports ) {
+			_viewports[i + cmd.firstViewport] = cmd.viewports[i];
 		}
 		return true;
 	}
@@ -1059,12 +1070,12 @@ namespace PlatformGL
 	_CmdSetScissor
 =================================================
 */
-	bool GL4CommandBuffer::_CmdSetScissor (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdSetScissor (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdSetScissor >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdSetScissor >();
 
-		FOR( i, data.scissors ) {
-			_scissors[i + data.firstScissor] = data.scissors[i];
+		FOR( i, cmd.scissors ) {
+			_scissors[i + cmd.firstScissor] = cmd.scissors[i];
 		}
 		return true;
 	}
@@ -1074,9 +1085,9 @@ namespace PlatformGL
 	_CmdSetDepthBounds
 =================================================
 */
-	bool GL4CommandBuffer::_CmdSetDepthBounds (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdSetDepthBounds (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdSetDepthBounds >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdSetDepthBounds >();
 
 		TODO("");
 		return true;
@@ -1087,11 +1098,11 @@ namespace PlatformGL
 	_CmdSetBlendColor
 =================================================
 */
-	bool GL4CommandBuffer::_CmdSetBlendColor (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdSetBlendColor (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdSetBlendColor >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdSetBlendColor >();
 
-		GL_CALL( glBlendColor( data.color.R(), data.color.G(), data.color.B(), data.color.A() ) );
+		GL_CALL( glBlendColor( cmd.color.R(), cmd.color.G(), cmd.color.B(), cmd.color.A() ) );
 		return true;
 	}
 	
@@ -1100,9 +1111,9 @@ namespace PlatformGL
 	_CmdSetDepthBias
 =================================================
 */
-	bool GL4CommandBuffer::_CmdSetDepthBias (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdSetDepthBias (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdSetDepthBias >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdSetDepthBias >();
 
 		// glPolygonOffset ?
 		TODO("");
@@ -1114,11 +1125,11 @@ namespace PlatformGL
 	_CmdSetLineWidth
 =================================================
 */
-	bool GL4CommandBuffer::_CmdSetLineWidth (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdSetLineWidth (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdSetLineWidth >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdSetLineWidth >();
 
-		GL_CALL( glLineWidth( data.width ) );
+		GL_CALL( glLineWidth( cmd.width ) );
 		return true;
 	}
 	
@@ -1127,9 +1138,9 @@ namespace PlatformGL
 	_CmdSetStencilCompareMask
 =================================================
 */
-	bool GL4CommandBuffer::_CmdSetStencilCompareMask (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdSetStencilCompareMask (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdSetStencilCompareMask >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdSetStencilCompareMask >();
 
 		// glStencilFunc - mask ?
 		TODO("");
@@ -1141,9 +1152,9 @@ namespace PlatformGL
 	_CmdSetStencilWriteMask
 =================================================
 */
-	bool GL4CommandBuffer::_CmdSetStencilWriteMask (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdSetStencilWriteMask (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdSetStencilWriteMask >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdSetStencilWriteMask >();
 
 		// glStencilMask ?
 		TODO("");
@@ -1155,9 +1166,9 @@ namespace PlatformGL
 	_CmdSetStencilReference
 =================================================
 */
-	bool GL4CommandBuffer::_CmdSetStencilReference (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdSetStencilReference (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdSetStencilReference >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdSetStencilReference >();
 
 		// glStencilFunc - ref ?
 		TODO("");
@@ -1169,31 +1180,29 @@ namespace PlatformGL
 	_CmdBeginRenderPass
 =================================================
 */
-	bool GL4CommandBuffer::_CmdBeginRenderPass (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdBeginRenderPass (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdBeginRenderPass >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdBeginRenderPass >();
 		
-		Message< GpuMsg::GetGLFramebufferID >		req_fb;
-		Message< GpuMsg::GetFramebufferDescriptor >	req_fb_descr;
+		const auto&	fb_res = GetResourceCache()->GetFramebufferID( cmd.framebuffer );
+
 		Message< GpuMsg::GetGLRenderPassID >		req_rp;
 		Message< GpuMsg::GetRenderPassDescriptor >	req_rp_descr;
 
-		SendTo( data.framebuffer, req_fb );
-		SendTo( data.framebuffer, req_fb_descr );
-		SendTo( data.renderPass, req_rp );
-		SendTo( data.renderPass, req_rp_descr );
+		SendTo( cmd.renderPass, req_rp );
+		SendTo( cmd.renderPass, req_rp_descr );
 		
 		_renderPassData		= *req_rp->result;
-		_framebufferSize	= uint3( req_fb_descr->result->size, req_fb_descr->result->layers );
-		_renderPassArea		= data.area;
+		_framebufferSize	= uint3( fb_res.Get<1>().size, fb_res.Get<1>().layers );
+		_renderPassArea		= cmd.area;
 		_renderSubpasses	= req_rp_descr->result->Subpasses();
 
-		GLuint	fb_id		= req_fb->result.Get(0);
+		GLuint	fb_id		= fb_res.Get<0>();
 
 		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, fb_id ) );
 		GL_CALL( glDrawBuffers( GLsizei(_renderPassData.draw.colorBuffers.Count()), _renderPassData.draw.colorBuffers.ptr() ) );
 
-		_ClearRenderPassAttachment( data.clearValues );
+		_ClearRenderPassAttachment( cmd.clearValues );
 		_InvalidateRenderPassAttachment( _renderPassData.invalidateBefore );
 		return true;
 	}
@@ -1203,9 +1212,9 @@ namespace PlatformGL
 	_CmdEndRenderPass
 =================================================
 */
-	bool GL4CommandBuffer::_CmdEndRenderPass (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdEndRenderPass (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdEndRenderPass >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdEndRenderPass >();
 		
 		_InvalidateRenderPassAttachment( _renderPassData.invalidateAfter );
 
@@ -1223,20 +1232,15 @@ namespace PlatformGL
 	_CmdBindGraphicsPipeline
 =================================================
 */
-	bool GL4CommandBuffer::_CmdBindGraphicsPipeline (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdBindGraphicsPipeline (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdBindGraphicsPipeline >();
+		const auto&	cmd		 = cmdData.data.Get< GpuMsg::CmdBindGraphicsPipeline >();
+		const auto&	ppln_res = GetResourceCache()->GetGraphicsPipelineID( cmd.pipeline );
 
-		Message< GpuMsg::GetGLGraphicsPipelineID >			req_id;
-		Message< GpuMsg::GetGraphicsPipelineDescriptor >	req_descr;
-
-		SendTo( data.pipeline, req_id );
-		SendTo( data.pipeline, req_descr );
-
-		_pipelineStages			= req_id->result->programs;
-		_pipelineObj			= req_id->result->pipeline;
-		_vertexAttribs			= req_id->result->vertexAttribs;
-		_graphicsPipelineDescr	= RVREF(*req_descr->result);
+		_pipelineStages			= ppln_res.Get<0>().programs;
+		_pipelineObj			= ppln_res.Get<0>().pipeline;
+		_vertexAttribs			= ppln_res.Get<0>().vertexAttribs;
+		_graphicsPipelineDescr	= ppln_res.Get<1>();
 		_computePipelineDescr	= Uninitialized;
 		_resourceTable			= null;
 
@@ -1248,23 +1252,18 @@ namespace PlatformGL
 	_CmdBindComputePipeline
 =================================================
 */
-	bool GL4CommandBuffer::_CmdBindComputePipeline (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdBindComputePipeline (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdBindComputePipeline >();
-		
-		Message< GpuMsg::GetGLComputePipelineID >		req_id;
-		Message< GpuMsg::GetComputePipelineDescriptor >	req_descr;
-
-		SendTo( data.pipeline, req_id );
-		SendTo( data.pipeline, req_descr );
+		const auto&	cmd		 = cmdData.data.Get< GpuMsg::CmdBindComputePipeline >();
+		const auto&	ppln_res = GetResourceCache()->GetComputePipelineID( cmd.pipeline );
 
 		_pipelineStages.Clear();
-		_pipelineStages[ EShader::Compute ] = req_id->result->program;
-		_pipelineObj			= req_id->result->pipeline;
+		_pipelineStages[ EShader::Compute ] = ppln_res.Get<0>().program;
+		_pipelineObj			= ppln_res.Get<0>().pipeline;
 		_vertexAttribs			= 0;
 		_resourceTable			= null;
 		_graphicsPipelineDescr	= Uninitialized;
-		_computePipelineDescr	= RVREF(*req_descr->result);
+		_computePipelineDescr	= ppln_res.Get<1>();
 
 		return true;
 	}
@@ -1274,18 +1273,17 @@ namespace PlatformGL
 	_CmdBindVertexBuffers
 =================================================
 */
-	bool GL4CommandBuffer::_CmdBindVertexBuffers (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdBindVertexBuffers (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdBindVertexBuffers >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdBindVertexBuffers >();
 
 		_vertexBuffers.Clear();
 
-		FOR( i, data.vertexBuffers )
+		FOR( i, cmd.vertexBuffers )
 		{
-			Message< GpuMsg::GetGLBufferID >	req_id;
-			SendTo( data.vertexBuffers[i], req_id );
+			const auto&	buf_res = GetResourceCache()->GetBufferID( cmd.vertexBuffers[i] );
 
-			_vertexBuffers[ data.firstBinding+i ] = GLBuffer{ req_id->result.Get(0), data.offsets[i] }; 
+			_vertexBuffers[ cmd.firstBinding+i ] = GLBuffer{ buf_res.Get<0>(), cmd.offsets[i] }; 
 		}
 		return true;
 	}
@@ -1295,15 +1293,13 @@ namespace PlatformGL
 	_CmdBindIndexBuffer
 =================================================
 */
-	bool GL4CommandBuffer::_CmdBindIndexBuffer (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdBindIndexBuffer (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdBindIndexBuffer >();
-		
-		Message< GpuMsg::GetGLBufferID >	req_id;
-		SendTo( data.indexBuffer, req_id );
+		const auto&	cmd		= cmdData.data.Get< GpuMsg::CmdBindIndexBuffer >();
+		const auto&	buf_res = GetResourceCache()->GetBufferID( cmd.indexBuffer );
 
-		_indexBuffer = GLBuffer{ req_id->result.Get(0),	data.offset };
-		_indexType	 = data.indexType;
+		_indexBuffer = GLBuffer{ buf_res.Get<0>(), cmd.offset };
+		_indexType	 = cmd.indexType;
 		return true;
 	}
 	
@@ -1312,13 +1308,13 @@ namespace PlatformGL
 	_CmdDraw
 =================================================
 */
-	bool GL4CommandBuffer::_CmdDraw (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdDraw (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdDraw >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdDraw >();
 
 		CHECK_ERR( _PrepareForDraw() );
-		GL_CALL( glDrawArraysInstancedBaseInstance( GL4Enum( _primitive ), data.firstVertex,
-								data.vertexCount, data.instanceCount, data.firstInstance ) );
+		GL_CALL( glDrawArraysInstancedBaseInstance( GL4Enum( _primitive ), cmd.firstVertex,
+								cmd.vertexCount, cmd.instanceCount, cmd.firstInstance ) );
 		return true;
 	}
 	
@@ -1327,17 +1323,17 @@ namespace PlatformGL
 	_CmdDrawIndexed
 =================================================
 */
-	bool GL4CommandBuffer::_CmdDrawIndexed (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdDrawIndexed (const Command_t &cmdData)
 	{
 		CHECK_ERR( _PrepareForDraw() );
 		CHECK_ERR( _indexBuffer.id != 0 );
 		CHECK_ERR( _indexType != EIndex::Unknown );
 
-		const auto&	data	= cmd.data.Get< GpuMsg::CmdDrawIndexed >();
-		const usize offset	= usize(_indexBuffer.offset + EIndex::SizeOf( _indexType ) * data.firstIndex);
+		const auto&	cmd		= cmdData.data.Get< GpuMsg::CmdDrawIndexed >();
+		const usize offset	= usize(_indexBuffer.offset + EIndex::SizeOf( _indexType ) * cmd.firstIndex);
 		
-		GL_CALL( glDrawElementsInstancedBaseInstance( GL4Enum( _primitive ), data.indexCount, GL4Enum( _indexType ),
-													  ReferenceCast<const void *>(offset), data.instanceCount, data.firstInstance ) );
+		GL_CALL( glDrawElementsInstancedBaseInstance( GL4Enum( _primitive ), cmd.indexCount, GL4Enum( _indexType ),
+													  ReferenceCast<const void *>(offset), cmd.instanceCount, cmd.firstInstance ) );
 		return true;
 	}
 	
@@ -1346,9 +1342,9 @@ namespace PlatformGL
 	_CmdDrawIndirect
 =================================================
 */
-	bool GL4CommandBuffer::_CmdDrawIndirect (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdDrawIndirect (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdDrawIndirect >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdDrawIndirect >();
 
 		TODO("");
 		return true;
@@ -1359,9 +1355,9 @@ namespace PlatformGL
 	_CmdDrawIndexedIndirect
 =================================================
 */
-	bool GL4CommandBuffer::_CmdDrawIndexedIndirect (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdDrawIndexedIndirect (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdDrawIndexedIndirect >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdDrawIndexedIndirect >();
 
 		TODO("");
 		return true;
@@ -1372,14 +1368,22 @@ namespace PlatformGL
 	_CmdDispatch
 =================================================
 */
-	bool GL4CommandBuffer::_CmdDispatch (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdDispatch (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdDispatch >();
+		const auto&		cmd				= cmdData.data.Get< GpuMsg::CmdDispatch >();
 		
-		//CHECK_ERR( All( ulong3(data.groupCount) <= _maxWorkGroupCount ) );
+		const uint		invocations		= _computePipelineDescr.localGroupSize.Volume();
+
+		const uint3		max_group_count	= GetDevice()->GetProperties().maxComputeWorkGroupCount;
+		const uint3		max_local_size	= GetDevice()->GetProperties().maxComputeWorkGroupSize;
+		const uint		max_invocations	= GetDevice()->GetProperties().maxComputeWorkGroupInvocations;
+		
+		CHECK_ERR( invocations <= max_invocations );
+		CHECK_ERR( All( _computePipelineDescr.localGroupSize <= max_invocations ) );
+		CHECK_ERR( All( cmd.groupCount <= max_group_count ) );
 
 		CHECK_ERR( _PrepareForCompute() );
-		GL_CALL( glDispatchCompute( data.groupCount.x, data.groupCount.y, data.groupCount.z ) );
+		GL_CALL( glDispatchCompute( cmd.groupCount.x, cmd.groupCount.y, cmd.groupCount.z ) );
 		return true;
 	}
 	
@@ -1388,9 +1392,9 @@ namespace PlatformGL
 	_CmdDispatchIndirect
 =================================================
 */
-	bool GL4CommandBuffer::_CmdDispatchIndirect (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdDispatchIndirect (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdDispatchIndirect >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdDispatchIndirect >();
 
 		TODO("");
 		return true;
@@ -1401,13 +1405,13 @@ namespace PlatformGL
 	_CmdExecute
 =================================================
 */
-	bool GL4CommandBuffer::_CmdExecute (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdExecute (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdExecute >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdExecute >();
 		
-		ModuleUtils::Send( data.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
-		ModuleUtils::Send( data.cmdBuffers, Message<GpuMsg::ExecuteGLCommandBuffer>{} );
-		//ModuleUtils::Send( data.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Completed });
+		ModuleUtils::Send( cmd.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
+		ModuleUtils::Send( cmd.cmdBuffers, Message<GpuMsg::ExecuteGLCommandBuffer>{} );
+		//ModuleUtils::Send( cmd.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Completed });
 
 		return true;
 	}
@@ -1417,12 +1421,12 @@ namespace PlatformGL
 	_CmdBindGraphicsResourceTable
 =================================================
 */
-	bool GL4CommandBuffer::_CmdBindGraphicsResourceTable (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdBindGraphicsResourceTable (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdBindGraphicsResourceTable >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdBindGraphicsResourceTable >();
 		
-		ASSERT( data.index == 0 );
-		_resourceTable = data.resourceTable;
+		ASSERT( cmd.index == 0 );
+		_resourceTable = cmd.resourceTable;
 		return true;
 	}
 	
@@ -1431,12 +1435,12 @@ namespace PlatformGL
 	_CmdBindComputeResourceTable
 =================================================
 */
-	bool GL4CommandBuffer::_CmdBindComputeResourceTable (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdBindComputeResourceTable (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdBindComputeResourceTable >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdBindComputeResourceTable >();
 		
-		ASSERT( data.index == 0 );
-		_resourceTable = data.resourceTable;
+		ASSERT( cmd.index == 0 );
+		_resourceTable = cmd.resourceTable;
 		return true;
 	}
 	
@@ -1445,24 +1449,20 @@ namespace PlatformGL
 	_CmdCopyBuffer
 =================================================
 */
-	bool GL4CommandBuffer::_CmdCopyBuffer (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdCopyBuffer (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyBuffer >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyBuffer >();
+		
+		const auto	src_res	= GetResourceCache()->GetBufferID( cmd.srcBuffer );
+		const auto	dst_res	= GetResourceCache()->GetBufferID( cmd.dstBuffer );
+		
+		ASSERT( src_res.Get<1>().usage[ EBufferUsage::TransferSrc ] );
+		ASSERT( dst_res.Get<1>().usage[ EBufferUsage::TransferDst ] );
 
-		Message< GpuMsg::GetGLBufferID >		req_src_id;
-		Message< GpuMsg::GetGLBufferID >		req_dst_id;
-		Message< GpuMsg::GetBufferDescriptor >	req_src_descr;
-		Message< GpuMsg::GetBufferDescriptor >	req_dst_descr;
-
-		SendTo( data.srcBuffer, req_src_id );
-		SendTo( data.dstBuffer, req_dst_id );
-		SendTo( data.srcBuffer, req_src_descr );
-		SendTo( data.dstBuffer, req_dst_descr );
-
-		for (auto& reg : Range(data.regions))
+		for (auto& reg : cmd.regions)
 		{
-			GL_CALL( glCopyNamedBufferSubData(	*req_src_id->result,
-												*req_dst_id->result,
+			GL_CALL( glCopyNamedBufferSubData(	src_res.Get<0>(),
+												dst_res.Get<0>(),
 												GLintptr(reg.srcOffset),
 												GLintptr(reg.dstOffset),
 												GLsizei(reg.size) ) );
@@ -1475,49 +1475,42 @@ namespace PlatformGL
 	_CmdCopyImage
 =================================================
 */
-	bool GL4CommandBuffer::_CmdCopyImage (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdCopyImage (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyImage >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyImage >();
 		
-		Message< GpuMsg::GetGLImageID >			req_src_id;
-		Message< GpuMsg::GetGLImageID >			req_dst_id;
-		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
-		Message< GpuMsg::GetImageDescriptor >	req_dst_descr;
+		const auto	src_res	= GetResourceCache()->GetImageID( cmd.srcImage );
+		const auto	dst_res	= GetResourceCache()->GetImageID( cmd.dstImage );
 		
-		SendTo( data.srcImage, req_src_id );
-		SendTo( data.dstImage, req_dst_id );
-		SendTo( data.srcImage, req_src_descr );
-		SendTo( data.dstImage, req_dst_descr );
-		
-		ASSERT( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
-		ASSERT( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
-		ASSERT( data.srcLayout == EImageLayout::TransferSrcOptimal or data.srcLayout == EImageLayout::General );	// for vulkan compatibility
-		ASSERT( data.dstLayout == EImageLayout::TransferDstOptimal or data.dstLayout == EImageLayout::General );
-		ASSERT( EPixelFormat::BitPerPixel( req_src_descr->result->format ) == EPixelFormat::BitPerPixel( req_dst_descr->result->format ) );
-		ASSERT( req_src_descr->result->samples == req_dst_descr->result->samples );
+		ASSERT( src_res.Get<1>().usage[ EImageUsage::TransferSrc ] );
+		ASSERT( dst_res.Get<1>().usage[ EImageUsage::TransferDst ] );
+		ASSERT( cmd.srcLayout == EImageLayout::TransferSrcOptimal or cmd.srcLayout == EImageLayout::General );	// for vulkan compatibility
+		ASSERT( cmd.dstLayout == EImageLayout::TransferDstOptimal or cmd.dstLayout == EImageLayout::General );
+		ASSERT( EPixelFormat::BitPerPixel( src_res.Get<1>().format ) == EPixelFormat::BitPerPixel( dst_res.Get<1>().format ) );
+		ASSERT( src_res.Get<1>().samples == dst_res.Get<1>().samples );
 
-		for (auto& reg : Range(data.regions))
+		for (auto& reg : cmd.regions)
 		{
 			const uint	count = Min( reg.srcLayers.layerCount, reg.dstLayers.layerCount );
 
 			for (uint layer = 0; layer < count; ++layer)
 			{
-				const uint	src_z = reg.srcOffset.z + (reg.srcLayers.baseLayer.Get() + layer) * req_src_descr->result->dimension.z;
-				const uint	dst_z = reg.dstOffset.z + (reg.dstLayers.baseLayer.Get() + layer) * req_dst_descr->result->dimension.z;
+				const uint	src_z = reg.srcOffset.z + (reg.srcLayers.baseLayer.Get() + layer) * src_res.Get<1>().dimension.z;
+				const uint	dst_z = reg.dstOffset.z + (reg.dstLayers.baseLayer.Get() + layer) * dst_res.Get<1>().dimension.z;
 				
-				ASSERT( reg.srcLayers.mipLevel < req_src_descr->result->maxLevel );
-				ASSERT( reg.dstLayers.mipLevel < req_dst_descr->result->maxLevel );
-				ASSERT( reg.srcLayers.baseLayer.Get() + reg.srcLayers.layerCount <= req_src_descr->result->dimension.w );
-				ASSERT( reg.dstLayers.baseLayer.Get() + reg.dstLayers.layerCount <= req_dst_descr->result->dimension.w );
-				ASSERT(All( reg.srcOffset + reg.size <= Max(1u, req_src_descr->result->dimension.xyz() >> reg.srcLayers.mipLevel.Get()) ));
-				ASSERT(All( reg.dstOffset + reg.size <= Max(1u, req_dst_descr->result->dimension.xyz() >> reg.dstLayers.mipLevel.Get()) ));
+				ASSERT( reg.srcLayers.mipLevel < src_res.Get<1>().maxLevel );
+				ASSERT( reg.dstLayers.mipLevel < dst_res.Get<1>().maxLevel );
+				ASSERT( reg.srcLayers.baseLayer.Get() + reg.srcLayers.layerCount <= src_res.Get<1>().dimension.w );
+				ASSERT( reg.dstLayers.baseLayer.Get() + reg.dstLayers.layerCount <= dst_res.Get<1>().dimension.w );
+				ASSERT(All( reg.srcOffset + reg.size <= Max(1u, src_res.Get<1>().dimension.xyz() >> reg.srcLayers.mipLevel.Get()) ));
+				ASSERT(All( reg.dstOffset + reg.size <= Max(1u, dst_res.Get<1>().dimension.xyz() >> reg.dstLayers.mipLevel.Get()) ));
 
-				GL_CALL( glCopyImageSubData( *req_src_id->result,
-											 GL4Enum( req_src_descr->result->imageType ),
+				GL_CALL( glCopyImageSubData( src_res.Get<0>(),
+											 GL4Enum( src_res.Get<1>().imageType ),
 											 reg.srcLayers.mipLevel.Get(),
 											 reg.srcOffset.x, reg.srcOffset.y, src_z,
-											 *req_dst_id->result,
-											 GL4Enum( req_dst_descr->result->imageType ),
+											 dst_res.Get<0>(),
+											 GL4Enum( dst_res.Get<1>().imageType ),
 											 reg.dstLayers.mipLevel.Get(),
 											 reg.dstOffset.x, reg.dstOffset.y, dst_z,
 											 reg.size.x, reg.size.y, reg.size.z ) );
@@ -1531,31 +1524,24 @@ namespace PlatformGL
 	_CmdCopyBufferToImage
 =================================================
 */
-	bool GL4CommandBuffer::_CmdCopyBufferToImage (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdCopyBufferToImage (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyBufferToImage >();
-
-		Message< GpuMsg::GetGLBufferID >		req_src_id;
-		Message< GpuMsg::GetGLImageID >			req_dst_id;
-		Message< GpuMsg::GetBufferDescriptor >	req_src_descr;
-		Message< GpuMsg::GetImageDescriptor >	req_dst_descr;
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyBufferToImage >();
 		
-		SendTo( data.srcBuffer, req_src_id );
-		SendTo( data.dstImage,  req_dst_id );
-		SendTo( data.srcBuffer, req_src_descr );
-		SendTo( data.dstImage,  req_dst_descr );
+		const auto	src_res	= GetResourceCache()->GetBufferID( cmd.srcBuffer );
+		const auto	dst_res	= GetResourceCache()->GetImageID( cmd.dstImage );
 		
-		ASSERT( req_src_descr->result->usage[ EBufferUsage::TransferSrc ] );
-		ASSERT( req_dst_descr->result->usage[ EImageUsage::TransferDst ] );
-		ASSERT( data.dstLayout == EImageLayout::TransferDstOptimal or data.dstLayout == EImageLayout::General );	// for vulkan compatibility
+		ASSERT( src_res.Get<1>().usage[ EBufferUsage::TransferSrc ] );
+		ASSERT( dst_res.Get<1>().usage[ EImageUsage::TransferDst ] );
+		ASSERT( cmd.dstLayout == EImageLayout::TransferDstOptimal or cmd.dstLayout == EImageLayout::General );	// for vulkan compatibility
 		
-		const GLenum			target	= GL4Enum( req_dst_descr->result->imageType );
-		const BytesU			bpp		= BytesU(EPixelFormat::BitPerPixel( req_dst_descr->result->format ));
+		const GLenum			target	= GL4Enum( dst_res.Get<1>().imageType );
+		const BytesU			bpp		= BytesU(EPixelFormat::BitPerPixel( dst_res.Get<1>().format ));
 		
 		GL4InternalPixelFormat	ifmt;
 		GL4PixelFormat			fmt;
 		GL4PixelType			type;
-		CHECK_ERR( GL4Enum( req_dst_descr->result->format, OUT ifmt, OUT fmt, OUT type ) );
+		CHECK_ERR( GL4Enum( dst_res.Get<1>().format, OUT ifmt, OUT fmt, OUT type ) );
 		
 		BytesU	row_align;
 		if ( bpp % 8_b == 0 )	row_align = 8_b;	else
@@ -1563,29 +1549,29 @@ namespace PlatformGL
 		if ( bpp % 2_b == 0 )	row_align = 2_b;	else
 								row_align = 1_b;
 
-		GL_CALL( glBindBuffer( GL_PIXEL_UNPACK_BUFFER, *req_src_id->result ) );
-		GL_CALL( glBindTexture( target, *req_dst_id->result ) );
+		GL_CALL( glBindBuffer( GL_PIXEL_UNPACK_BUFFER, src_res.Get<0>() ) );
+		GL_CALL( glBindTexture( target, dst_res.Get<0>() ) );
 
-		for (auto& reg : Range(data.regions))
+		for (auto& reg : cmd.regions)
 		{
 			for (uint layer = 0; layer < reg.imageLayers.layerCount; ++layer)
 			{
 				const uint		curr_layer	= reg.imageLayers.baseLayer.Get() + layer;
 				const uint		mip_level	= reg.imageLayers.mipLevel.Get();
-				const uint3		level_size	= Max( ImageUtils::LevelDimension( req_dst_descr->result->imageType, req_dst_descr->result->dimension, mip_level ).xyz(), 1u );
+				const uint3		level_size	= Max( ImageUtils::LevelDimension( dst_res.Get<1>().imageType, dst_res.Get<1>().dimension, mip_level ).xyz(), 1u );
 				const uint3		offset		= reg.imageOffset;
 				const uint3		dim			= reg.imageSize;
 				const void*		pixels		= reg.bufferOffset.ToVoidPtr();
 
-				ASSERT( reg.imageLayers.mipLevel < req_dst_descr->result->maxLevel );
-				ASSERT( reg.imageLayers.baseLayer.Get() + reg.imageLayers.layerCount <= req_dst_descr->result->dimension.w );
-				ASSERT(All( (offset + dim) <= Max(1u, req_dst_descr->result->dimension.xyz() >> mip_level) ));
+				ASSERT( reg.imageLayers.mipLevel < dst_res.Get<1>().maxLevel );
+				ASSERT( reg.imageLayers.baseLayer.Get() + reg.imageLayers.layerCount <= dst_res.Get<1>().dimension.w );
+				ASSERT(All( (offset + dim) <= Max(1u, dst_res.Get<1>().dimension.xyz() >> mip_level) ));
 				
 				GL_CALL( glPixelStorei( GL_UNPACK_ALIGNMENT, GLint(row_align) ) );
 				GL_CALL( glPixelStorei( GL_UNPACK_ROW_LENGTH, GLint(reg.bufferRowLength) ) );
 				GL_CALL( glPixelStorei( GL_UNPACK_IMAGE_HEIGHT, GLint(reg.bufferImageHeight) ) );
 
-				switch ( req_dst_descr->result->imageType )
+				switch ( dst_res.Get<1>().imageType )
 				{
 					case EImage::Tex1D :
 					{
@@ -1620,7 +1606,7 @@ namespace PlatformGL
 					}
 					case EImage::TexCube :
 					{
-						GL_CALL( glBindTexture(		GL_TEXTURE_CUBE_MAP_POSITIVE_X + curr_layer, *req_dst_id->result ) );
+						GL_CALL( glBindTexture(		GL_TEXTURE_CUBE_MAP_POSITIVE_X + curr_layer, dst_res.Get<0>() ) );
 						GL_CALL( glTexSubImage2D(	GL_TEXTURE_CUBE_MAP_POSITIVE_X + curr_layer, mip_level,
 													offset.x, offset.y,
 													dim.x, dim.y,
@@ -1655,14 +1641,14 @@ namespace PlatformGL
 	_CmdCopyImageToBuffer
 =================================================
 */
-	bool GL4CommandBuffer::_CmdCopyImageToBuffer (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdCopyImageToBuffer (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdCopyImageToBuffer >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyImageToBuffer >();
 		
 		if ( GRAPHICS_API_OPENGL >= 450 and gl::GL4_GetVersion() >= 450 )
-			return _CopyImageToBuffer450( data );
+			return _CopyImageToBuffer450( cmd );
 		else
-			return _CopyImageToBuffer200( data );
+			return _CopyImageToBuffer200( cmd );
 	}
 	
 /*
@@ -1670,29 +1656,22 @@ namespace PlatformGL
 	_CopyImageToBuffer200
 =================================================
 */
-	bool GL4CommandBuffer::_CopyImageToBuffer200 (const GpuMsg::CmdCopyImageToBuffer &data)
+	bool GL4CommandBuffer::_CopyImageToBuffer200 (const GpuMsg::CmdCopyImageToBuffer &cmd)
 	{
-		Message< GpuMsg::GetGLImageID >			req_src_id;
-		Message< GpuMsg::GetGLBufferID >		req_dst_id;
-		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
-		Message< GpuMsg::GetBufferDescriptor >	req_dst_descr;
+		const auto	src_res	= GetResourceCache()->GetImageID( cmd.srcImage );
+		const auto	dst_res	= GetResourceCache()->GetBufferID( cmd.dstBuffer );
 		
-		SendTo( data.srcImage,  req_src_id );
-		SendTo( data.dstBuffer, req_dst_id );
-		SendTo( data.srcImage,  req_src_descr );
-		SendTo( data.dstBuffer, req_dst_descr );
+		ASSERT( src_res.Get<1>().usage[ EImageUsage::TransferSrc ] );
+		ASSERT( dst_res.Get<1>().usage[ EBufferUsage::TransferDst ] );
+		ASSERT( cmd.srcLayout == EImageLayout::TransferSrcOptimal or cmd.srcLayout == EImageLayout::General );	// for vulkan compatibility
 		
-		ASSERT( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
-		ASSERT( req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
-		ASSERT( data.srcLayout == EImageLayout::TransferSrcOptimal or data.srcLayout == EImageLayout::General );	// for vulkan compatibility
-		
-		const GLenum			target		= GL4Enum( req_src_descr->result->imageType );
-		const BytesU			bpp			= BytesU(EPixelFormat::BitPerPixel( req_src_descr->result->format ));
+		const GLenum			target		= GL4Enum( src_res.Get<1>().imageType );
+		const BytesU			bpp			= BytesU(EPixelFormat::BitPerPixel( src_res.Get<1>().format ));
 		
 		GL4InternalPixelFormat	ifmt;
 		GL4PixelFormat			fmt;
 		GL4PixelType			type;
-		CHECK_ERR( GL4Enum( req_src_descr->result->format, OUT ifmt, OUT fmt, OUT type ) );
+		CHECK_ERR( GL4Enum( src_res.Get<1>().format, OUT ifmt, OUT fmt, OUT type ) );
 		
 		BytesU	row_align;
 		if ( bpp % 8_b == 0 )	row_align = 8_b;	else
@@ -1700,13 +1679,13 @@ namespace PlatformGL
 		if ( bpp % 2_b == 0 )	row_align = 2_b;	else
 								row_align = 1_b;
 
-		GL_CALL( glBindBuffer( GL_PIXEL_PACK_BUFFER, *req_dst_id->result ) );
-		GL_CALL( glBindTexture( target, *req_src_id->result ) );
+		GL_CALL( glBindBuffer( GL_PIXEL_PACK_BUFFER, dst_res.Get<0>() ) );
+		GL_CALL( glBindTexture( target, src_res.Get<0>() ) );
 
-		for (auto& reg : Range(data.regions))
+		for (auto& reg : cmd.regions)
 		{
 			const uint		mip_level	= reg.imageLayers.mipLevel.Get();
-			const uint4		level_size	= Max( ImageUtils::LevelDimension( req_src_descr->result->imageType, req_src_descr->result->dimension, mip_level ), 1u );
+			const uint4		level_size	= Max( ImageUtils::LevelDimension( src_res.Get<1>().imageType, src_res.Get<1>().dimension, mip_level ), 1u );
 			void *			pixels		= const_cast<void*>( reg.bufferOffset.ToVoidPtr() );
 
 			CHECK_ERR( All( reg.imageOffset == 0 ) and reg.imageLayers.baseLayer.Get() == 0 );
@@ -1717,7 +1696,7 @@ namespace PlatformGL
 			GL_CALL( glPixelStorei( GL_PACK_ROW_LENGTH, GLint(reg.bufferRowLength) ) );
 			GL_CALL( glPixelStorei( GL_PACK_IMAGE_HEIGHT, GLint(reg.bufferImageHeight) ) );
 			
-			switch ( req_src_descr->result->imageType )
+			switch ( src_res.Get<1>().imageType )
 			{
 				case EImage::Buffer :
 				case EImage::Tex1D :
@@ -1759,30 +1738,23 @@ namespace PlatformGL
 	_CopyImageToBuffer450
 =================================================
 */
-	bool GL4CommandBuffer::_CopyImageToBuffer450 (const GpuMsg::CmdCopyImageToBuffer &data)
+	bool GL4CommandBuffer::_CopyImageToBuffer450 (const GpuMsg::CmdCopyImageToBuffer &cmd)
 	{
 	#if GRAPHICS_API_OPENGL >= 450
 		
-		Message< GpuMsg::GetGLImageID >			req_src_id;
-		Message< GpuMsg::GetGLBufferID >		req_dst_id;
-		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
-		Message< GpuMsg::GetBufferDescriptor >	req_dst_descr;
+		const auto	src_res	= GetResourceCache()->GetImageID( cmd.srcImage );
+		const auto	dst_res	= GetResourceCache()->GetBufferID( cmd.dstBuffer );
 		
-		SendTo( data.srcImage,  req_src_id );
-		SendTo( data.dstBuffer, req_dst_id );
-		SendTo( data.srcImage,  req_src_descr );
-		SendTo( data.dstBuffer, req_dst_descr );
+		ASSERT( src_res.Get<1>().usage[ EImageUsage::TransferSrc ] );
+		ASSERT( dst_res.Get<1>().usage[ EBufferUsage::TransferDst ] );
+		ASSERT( cmd.srcLayout == EImageLayout::TransferSrcOptimal or cmd.srcLayout == EImageLayout::General );	// for vulkan compatibility
 		
-		ASSERT( req_src_descr->result->usage[ EImageUsage::TransferSrc ] );
-		ASSERT( req_dst_descr->result->usage[ EBufferUsage::TransferDst ] );
-		ASSERT( data.srcLayout == EImageLayout::TransferSrcOptimal or data.srcLayout == EImageLayout::General );	// for vulkan compatibility
-		
-		const BytesU			bpp	= BytesU(EPixelFormat::BitPerPixel( req_src_descr->result->format ));
+		const BytesU			bpp	= BytesU(EPixelFormat::BitPerPixel( src_res.Get<1>().format ));
 		
 		GL4InternalPixelFormat	ifmt;
 		GL4PixelFormat			fmt;
 		GL4PixelType			type;
-		CHECK_ERR( GL4Enum( req_src_descr->result->format, OUT ifmt, OUT fmt, OUT type ) );
+		CHECK_ERR( GL4Enum( src_res.Get<1>().format, OUT ifmt, OUT fmt, OUT type ) );
 		
 		BytesU	row_align;
 		if ( bpp % 8_b == 0 )	row_align = 8_b;	else
@@ -1790,29 +1762,29 @@ namespace PlatformGL
 		if ( bpp % 2_b == 0 )	row_align = 2_b;	else
 								row_align = 1_b;
 
-		GL_CALL( glBindBuffer( GL_PIXEL_PACK_BUFFER, *req_dst_id->result ) );
+		GL_CALL( glBindBuffer( GL_PIXEL_PACK_BUFFER, dst_res.Get<0>() ) );
 
-		for (auto& reg : Range(data.regions))
+		for (auto& reg : cmd.regions)
 		{
 			for (uint layer = 0; layer < reg.imageLayers.layerCount; ++layer)
 			{
 				const uint		curr_layer	= reg.imageLayers.baseLayer.Get() + layer;
 				const uint		mip_level	= reg.imageLayers.mipLevel.Get();
-				const uint3		level_size	= Max( ImageUtils::LevelDimension( req_src_descr->result->imageType, req_src_descr->result->dimension, mip_level ).xyz(), 1u );
+				const uint3		level_size	= Max( ImageUtils::LevelDimension( src_res.Get<1>().imageType, src_res.Get<1>().dimension, mip_level ).xyz(), 1u );
 				const uint3		offset		= reg.imageOffset;
 				const uint3		dim			= reg.imageSize;
 				void *			pixels		= const_cast<void*>( reg.bufferOffset.ToVoidPtr() );
-				const BytesUL	buf_size	= req_dst_descr->result->size - reg.bufferOffset;
+				const BytesUL	buf_size	= dst_res.Get<1>().size - reg.bufferOffset;
 
-				ASSERT( mip_level < req_src_descr->result->maxLevel.Get() );
-				ASSERT( reg.imageLayers.baseLayer.Get() + reg.imageLayers.layerCount <= req_src_descr->result->dimension.w );
-				ASSERT(All( (offset + dim) <= Max(1u, req_src_descr->result->dimension.xyz() >> mip_level) ));
+				ASSERT( mip_level < src_res.Get<1>().maxLevel.Get() );
+				ASSERT( reg.imageLayers.baseLayer.Get() + reg.imageLayers.layerCount <= src_res.Get<1>().dimension.w );
+				ASSERT(All( (offset + dim) <= Max(1u, src_res.Get<1>().dimension.xyz() >> mip_level) ));
 				
 				GL_CALL( glPixelStorei( GL_PACK_ALIGNMENT, GLint(row_align) ) );
 				GL_CALL( glPixelStorei( GL_PACK_ROW_LENGTH, GLint(reg.bufferRowLength) ) );
 				GL_CALL( glPixelStorei( GL_PACK_IMAGE_HEIGHT, GLint(reg.bufferImageHeight) ) );
 
-				switch ( req_src_descr->result->imageType )
+				switch ( src_res.Get<1>().imageType )
 				{
 					case EImage::Buffer :
 					case EImage::Tex1D :
@@ -1821,7 +1793,7 @@ namespace PlatformGL
 						CHECK_ERR(All( reg.imageSize.yz() == 1 ));
 						CHECK_ERR( reg.imageSize.x > 0 );
 
-						GL_CALL( glGetTextureSubImage(	*req_src_id->result, mip_level,
+						GL_CALL( glGetTextureSubImage(	src_res.Get<0>(), mip_level,
 														reg.imageOffset.x, 0, 0,
 														reg.imageSize.x, 1, 1,
 														fmt, type,
@@ -1834,7 +1806,7 @@ namespace PlatformGL
 						CHECK_ERR(All( reg.imageSize.xy() > 0 ));
 						CHECK_ERR( reg.imageOffset.z == 0 and reg.imageSize.z == 1 );
 
-						GL_CALL( glGetTextureSubImage(	*req_src_id->result, mip_level,
+						GL_CALL( glGetTextureSubImage(	src_res.Get<0>(), mip_level,
 														reg.imageOffset.x, reg.imageOffset.y, 0,
 														reg.imageSize.x, reg.imageSize.y, 1,
 														fmt, type,
@@ -1846,7 +1818,7 @@ namespace PlatformGL
 					{
 						CHECK_ERR(All( reg.imageSize.xyz() > 0 ));
 
-						GL_CALL( glGetTextureSubImage(	*req_src_id->result, mip_level,
+						GL_CALL( glGetTextureSubImage(	src_res.Get<0>(), mip_level,
 														reg.imageOffset.x, reg.imageOffset.y, reg.imageOffset.z,
 														reg.imageSize.x, reg.imageSize.y, reg.imageSize.z,
 														fmt, type,
@@ -1860,7 +1832,7 @@ namespace PlatformGL
 						CHECK_ERR( reg.imageSize.z == 1 );
 						CHECK_ERR(All( reg.imageSize.xy() > 0 ));
 
-						GL_CALL( glGetTextureSubImage(	*req_src_id->result, mip_level,
+						GL_CALL( glGetTextureSubImage(	src_res.Get<0>(), mip_level,
 														reg.imageOffset.x, reg.imageOffset.y, curr_layer,
 														reg.imageSize.x, reg.imageSize.y, 1,
 														fmt, type,
@@ -1874,7 +1846,7 @@ namespace PlatformGL
 						CHECK_ERR( reg.imageOffset.z == 0 and reg.imageSize.z == 1 );
 						CHECK_ERR(All( reg.imageSize.xy() > 0 ));
 
-						GL_CALL( glGetTextureSubImage(	*req_src_id->result, mip_level,
+						GL_CALL( glGetTextureSubImage(	src_res.Get<0>(), mip_level,
 														reg.imageOffset.x, reg.imageOffset.y, curr_layer,
 														reg.imageSize.x, reg.imageSize.y, 1,
 														fmt, type,
@@ -1899,11 +1871,11 @@ namespace PlatformGL
 	_CmdBlitImage
 =================================================
 */
-	bool GL4CommandBuffer::_CmdBlitImage (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdBlitImage (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdBlitImage >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdBlitImage >();
 
-		const auto	CheckFBStatus = LAMBDA() (GLuint fb, GLenum target) 
+		const auto	CheckFBStatus = LAMBDA() (GLuint, GLenum target) 
 									{
 										GLenum status = 0;
 										GL_CALL( status = glCheckFramebufferStatus( target ) );
@@ -1916,32 +1888,25 @@ namespace PlatformGL
 		if ( _dstBlitFramebuffer == 0 ) {
 			GL_CALL( glGenFramebuffers( 1, &_dstBlitFramebuffer ) );
 		}
-
-		Message< GpuMsg::GetGLImageID >			req_src_id;
-		Message< GpuMsg::GetGLImageID >			req_dst_id;
-		Message< GpuMsg::GetImageDescriptor >	req_src_descr;
-		Message< GpuMsg::GetImageDescriptor >	req_dst_descr;
-
-		data.srcImage->Send( req_src_id );
-		data.srcImage->Send( req_src_descr );
-		data.dstImage->Send( req_dst_id );
-		data.dstImage->Send( req_dst_descr );
+		
+		const auto	src_res	= GetResourceCache()->GetImageID( cmd.srcImage );
+		const auto	dst_res	= GetResourceCache()->GetImageID( cmd.dstImage );
 		
 		GL_CALL( glDisable( GL_SCISSOR_TEST ) );
 
 		GL_CALL( glBindFramebuffer( GL_READ_FRAMEBUFFER, _srcBlitFramebuffer ) );
-		GL_CALL( glFramebufferTexture( GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, req_src_id->result.Get(0), 0 ) );
+		GL_CALL( glFramebufferTexture( GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, src_res.Get<0>(), 0 ) );
 		GL_CALL( glReadBuffer( GL_COLOR_ATTACHMENT0 ) );
 		CHECK_ERR( CheckFBStatus( _srcBlitFramebuffer, GL_READ_FRAMEBUFFER ) );
 
 		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, _dstBlitFramebuffer ) );
-		GL_CALL( glFramebufferTexture( GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, req_src_id->result.Get(0), 0 ) );
+		GL_CALL( glFramebufferTexture( GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dst_res.Get<0>(), 0 ) );
 		GL_CALL( glDrawBuffer( GL_COLOR_ATTACHMENT0 ) );
 		CHECK_ERR( CheckFBStatus( _dstBlitFramebuffer, GL_DRAW_FRAMEBUFFER ) );
 
-		const GLenum	filter = data.linearFilter ? GL_LINEAR : GL_NEAREST;
+		const GLenum	filter = cmd.linearFilter ? GL_LINEAR : GL_NEAREST;
 
-		for (auto& r : Range(data.regions))
+		for (auto& r : cmd.regions)
 		{
 			// depth image not supported, yet
 			ASSERT( r.dstOffset0.z == 0 and r.dstOffset1.z == 0 );
@@ -1972,20 +1937,15 @@ namespace PlatformGL
 	_CmdBlitGLFramebuffers
 =================================================
 */
-	bool GL4CommandBuffer::_CmdBlitGLFramebuffers (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdBlitGLFramebuffers (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdBlitGLFramebuffers >();
-
-		Message< GpuMsg::GetGLFramebufferID >	req_src_id;
-		Message< GpuMsg::GetGLFramebufferID >	req_dst_id;
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdBlitGLFramebuffers >();
 		
-		data.srcFramebuffer->Send( req_src_id );
-		data.dstFramebuffer->Send( req_dst_id );
+		const auto	src_res	= GetResourceCache()->GetFramebufferID( cmd.srcFramebuffer );
+		const auto	dst_res	= GetResourceCache()->GetFramebufferID( cmd.dstFramebuffer );
 
-		CHECK_ERR( req_src_id->result and req_dst_id->result );
-
-		GLuint	src_fb	= *req_src_id->result;
-		GLuint	dst_fb	= *req_dst_id->result;
+		GLuint	src_fb	= src_res.Get<0>();
+		GLuint	dst_fb	= dst_res.Get<0>();
 
 		GL_CALL( glDisable( GL_SCISSOR_TEST ) );
 		GL_CALL( glBindFramebuffer( GL_READ_FRAMEBUFFER, src_fb ) );
@@ -1994,15 +1954,15 @@ namespace PlatformGL
 		GL_CALL( glReadBuffer( src_fb ? GL_COLOR_ATTACHMENT0 : GL_BACK ) );
 		GL_CALL( glDrawBuffer( dst_fb ? GL_COLOR_ATTACHMENT0 : GL_BACK ) );
 		
-		const GLenum	filter	= data.linearFilter ? GL_LINEAR : GL_NEAREST;
+		const GLenum	filter	= cmd.linearFilter ? GL_LINEAR : GL_NEAREST;
 
-		const GLenum	buffers	= (data.imageAspect[ EImageAspect::Color ] ? GL_COLOR_BUFFER_BIT : 0) |
-								  (data.imageAspect[ EImageAspect::Depth ] ? GL_DEPTH_BUFFER_BIT : 0) |
-								  (data.imageAspect[ EImageAspect::Stencil ] ? GL_STENCIL_BUFFER_BIT : 0);
+		const GLenum	buffers	= (cmd.imageAspect[ EImageAspect::Color ] ? GL_COLOR_BUFFER_BIT : 0) |
+								  (cmd.imageAspect[ EImageAspect::Depth ] ? GL_DEPTH_BUFFER_BIT : 0) |
+								  (cmd.imageAspect[ EImageAspect::Stencil ] ? GL_STENCIL_BUFFER_BIT : 0);
 		CHECK_ERR( buffers != 0 );
 
 
-		for (auto& r : Range(data.regions))
+		for (auto& r : cmd.regions)
 		{
 			GL_CALL( glBlitFramebuffer( r.srcOffset0.x, r.srcOffset0.y, r.srcOffset1.x, r.srcOffset1.y,
 									    r.dstOffset0.x, r.dstOffset0.y, r.dstOffset1.x, r.dstOffset1.y,
@@ -2020,26 +1980,21 @@ namespace PlatformGL
 	_CmdUpdateBuffer
 =================================================
 */
-	bool GL4CommandBuffer::_CmdUpdateBuffer (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdUpdateBuffer (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::GLCmdUpdateBuffer >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::GLCmdUpdateBuffer >();
 		
-		Message< GpuMsg::GetGLBufferID >		req_dst_id;
-		Message< GpuMsg::GetGLBufferID >		req_src_id;
-		Message< GpuMsg::GetBufferDescriptor >	req_descr;
+		const auto	src_res	= GetResourceCache()->GetBufferID( _tempBuffer );
+		const auto	dst_res	= GetResourceCache()->GetBufferID( cmd.dstBuffer );
 		
-		data.dstBuffer->Send( req_dst_id );
-		data.dstBuffer->Send( req_descr );
-		_tempBuffer->Send( req_src_id );
-		
-		CHECK_ERR( data.dstOffset < req_descr->result->size );
-		CHECK_ERR( data.size + data.dstOffset <= req_descr->result->size );
+		CHECK_ERR( cmd.dstOffset < dst_res.Get<1>().size );
+		CHECK_ERR( cmd.size + cmd.dstOffset <= dst_res.Get<1>().size );
 
-		GL_CALL( glCopyNamedBufferSubData( *req_src_id->result,
-										   *req_dst_id->result,
-										   GLintptr(data.srcOffset),
-										   GLintptr(data.dstOffset),
-										   GLsizei(data.size) ) );
+		GL_CALL( glCopyNamedBufferSubData( src_res.Get<0>(),
+										   dst_res.Get<0>(),
+										   GLintptr(cmd.srcOffset),
+										   GLintptr(cmd.dstOffset),
+										   GLsizei(cmd.size) ) );
 		return true;
 	}
 	
@@ -2048,29 +2003,24 @@ namespace PlatformGL
 	_CmdFillBuffer
 =================================================
 */
-	bool GL4CommandBuffer::_CmdFillBuffer (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdFillBuffer (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdFillBuffer >();
-
-		Message< GpuMsg::GetGLBufferID >		req_id;
-		Message< GpuMsg::GetBufferDescriptor >	req_descr;
-
-		data.dstBuffer->Send( req_id );
-		data.dstBuffer->Send( req_descr );
+		const auto&	cmd		= cmdData.data.Get< GpuMsg::CmdFillBuffer >();
+		const auto	buf_res	= GetResourceCache()->GetBufferID( cmd.dstBuffer );
 		
-		CHECK_ERR( data.dstOffset < req_descr->result->size );
-		CHECK_ERR( req_descr->result->usage[ EBufferUsage::TransferDst ] );
+		CHECK_ERR( cmd.dstOffset < buf_res.Get<1>().size );
+		CHECK_ERR( buf_res.Get<1>().usage[ EBufferUsage::TransferDst ] );
 
-		const BytesUL	size = Min( req_descr->result->size - data.dstOffset, data.size );
+		const BytesUL	size = Min( buf_res.Get<1>().size - cmd.dstOffset, cmd.size );
 
-		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, *req_id->result ) );
+		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, buf_res.Get<0>() ) );
 
 		GL_CALL( glClearBufferSubData( GL_COPY_READ_BUFFER,
 										GL_R32UI,
-										GLintptr(data.dstOffset),
+										GLintptr(cmd.dstOffset),
 										GLsizeiptr(size),
 										GL_RED_INTEGER, GL_UNSIGNED_INT,
-										&data.pattern ) );
+										&cmd.pattern ) );
 
 		GL_CALL( glBindBuffer( GL_COPY_READ_BUFFER, 0 ) );
 		return true;
@@ -2081,24 +2031,24 @@ namespace PlatformGL
 	_CmdClearAttachments
 =================================================
 */
-	bool GL4CommandBuffer::_CmdClearAttachments (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdClearAttachments (const Command_t &cmdData)
 	{
 		using ValueList			= GpuMsg::CmdClearAttachments::ClearValue_t::TypeList_t;
 		using DepthStencil_t	= GpuMsg::CmdClearAttachments::DepthStencil_t;
 
-		const auto&	data = cmd.data.Get< GpuMsg::CmdClearAttachments >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdClearAttachments >();
 
 		GL_CALL( glEnable( GL_SCISSOR_TEST ) );
 		//GL_CALL( glViewport( _renderPassArea.left, _renderPassArea.bottom, _renderPassArea.Width(), _renderPassArea.Height() ) );
 
-		for (auto r : Range(data.clearRects))
+		for (auto r : cmd.clearRects)
 		{
 			r.rect.LeftBottom()	= Max( r.rect.LeftBottom(), _renderPassArea.LeftBottom() );
 			r.rect.RightTop()	= Clamp( r.rect.RightTop(), _renderPassArea.LeftBottom(), _renderPassArea.RightTop() );
 
 			GL_CALL( glScissor( r.rect.left, r.rect.bottom, r.rect.Width(), r.rect.Height() ) );
 
-			for (auto& att : Range(data.attachments))
+			for (auto& att : cmd.attachments)
 			{
 				const bool	is_ds = att.attachmentIdx >= _renderPassData.draw.colorBuffers.Count();
 
@@ -2150,25 +2100,19 @@ namespace PlatformGL
 	_CmdClearColorImage
 =================================================
 */
-	bool GL4CommandBuffer::_CmdClearColorImage (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdClearColorImage (const Command_t &cmdData)
 	{
 		using Colors_t	= GpuMsg::CmdClearColorImage::ClearColor_t::TypeList_t;
 
-		const auto&	data = cmd.data.Get< GpuMsg::CmdClearColorImage >();
+		const auto&	cmd		= cmdData.data.Get< GpuMsg::CmdClearColorImage >();
+		const auto&	img_res = GetResourceCache()->GetImageID( cmd.image );
 		
-		Message< GpuMsg::GetGLImageID >			req_id;
-		Message< GpuMsg::GetImageDescriptor >	req_descr;
-		
-		// TODO: check result
-		SendTo( data.image, req_id );
-		SendTo( data.image, req_descr );
-		
-		CHECK_ERR( req_descr->result->usage[ EImageUsage::TransferDst ] );
+		CHECK_ERR( img_res.Get<1>().usage[ EImageUsage::TransferDst ] );
 
 		GLenum	clear_fmt	= GL_RGBA;
 		GLenum	clear_type	= GL_FLOAT;
 
-		switch ( data.clearValue.GetCurrentIndex() )
+		switch ( cmd.clearValue.GetCurrentIndex() )
 		{
 			case Colors_t::IndexOf<float4> :	clear_type = GL_FLOAT;			clear_fmt = GL_RGBA;			break;
 			case Colors_t::IndexOf<uint4> :		clear_type = GL_UNSIGNED_INT;	clear_fmt = GL_RGBA_INTEGER;	break;
@@ -2176,19 +2120,19 @@ namespace PlatformGL
 			default :							RETURN_ERR( "unsupported" );
 		}
 		
-		FOR( i, data.ranges )
+		FOR( i, cmd.ranges )
 		{
-			auto const&		src = data.ranges[i];
+			auto const&		src = cmd.ranges[i];
 
 			ASSERT( src.baseLayer.Get() == 0 and src.layerCount == 1 );	// TODO: use glClearTexSubImage to clear layers
 
 			for (uint j = 0; j < src.levelCount; ++j)
 			{
-				glClearTexImage( req_id->result.Get(),
-								 src.baseMipLevel.Get() + j,
-								 clear_fmt,
-								 clear_type,
-								 data.clearValue.GetData().ptr() );
+				GL_CALL( glClearTexImage( img_res.Get<0>(),
+										  src.baseMipLevel.Get() + j,
+										  clear_fmt,
+										  clear_type,
+										  cmd.clearValue.GetData().ptr() ) );
 			}
 		}
 
@@ -2200,9 +2144,9 @@ namespace PlatformGL
 	_CmdClearDepthStencilImage
 =================================================
 */
-	bool GL4CommandBuffer::_CmdClearDepthStencilImage (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdClearDepthStencilImage (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdClearDepthStencilImage >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdClearDepthStencilImage >();
 
 		TODO("");
 		return true;
@@ -2213,11 +2157,64 @@ namespace PlatformGL
 	_CmdPipelineBarrier
 =================================================
 */
-	bool GL4CommandBuffer::_CmdPipelineBarrier (const Command_t &cmd)
+	bool GL4CommandBuffer::_CmdPipelineBarrier (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::CmdPipelineBarrier >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPipelineBarrier >();
 
-		//TODO("");
+		GLbitfield	bits = 0;
+
+		for (auto& buf : cmd.bufferBarriers)
+		{
+			const auto& buf_res = GetResourceCache()->GetBufferID( buf.buffer );
+
+			FOR( i, buf_res.Get<1>().usage )
+			{
+				if ( not buf_res.Get<1>().usage[ EBufferUsage::type(i) ] )
+					continue;
+
+				switch ( EBufferUsage::type(i) )
+				{
+					case EBufferUsage::TransferSrc :
+					case EBufferUsage::TransferDst :	bits |= (GL_BUFFER_UPDATE_BARRIER_BIT | GL_PIXEL_BUFFER_BARRIER_BIT);  break;
+					case EBufferUsage::UniformTexel :
+					case EBufferUsage::StorageTexel :	bits |= GL_TEXTURE_FETCH_BARRIER_BIT;  break;
+					case EBufferUsage::Uniform :		bits |= GL_UNIFORM_BARRIER_BIT;  break;
+					case EBufferUsage::Storage :		bits |= GL_SHADER_STORAGE_BARRIER_BIT;  break;
+					case EBufferUsage::Index :			bits |= GL_ELEMENT_ARRAY_BARRIER_BIT;  break;
+					case EBufferUsage::Vertex :			bits |= GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT;  break;
+					case EBufferUsage::Indirect :		bits |= GL_COMMAND_BARRIER_BIT;  break;
+					// TODO: GL_ATOMIC_COUNTER_BARRIER_BIT, GL_QUERY_BUFFER_BARRIER_BIT, GL_TRANSFORM_FEEDBACK_BARRIER_BIT
+				}
+			}
+		}
+
+		for (auto& img : cmd.imageBarriers)
+		{
+			const auto&	img_res = GetResourceCache()->GetImageID( img.image );
+
+			FOR( i, img_res.Get<1>().usage )
+			{
+				if ( not img_res.Get<1>().usage[ EImageUsage::type(i) ] )
+					continue;
+
+				switch ( EImageUsage::type(i) )
+				{
+					case EImageUsage::TransferSrc :
+					case EImageUsage::TransferDst :				bits |= GL_TEXTURE_UPDATE_BARRIER_BIT;  break;
+					case EImageUsage::Sampled :					bits |= GL_TEXTURE_FETCH_BARRIER_BIT;  break;
+					case EImageUsage::Storage :					bits |= GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;  break;
+					case EImageUsage::ColorAttachment :			bits |= GL_FRAMEBUFFER_BARRIER_BIT;  break;
+					case EImageUsage::DepthStencilAttachment :	bits |= GL_FRAMEBUFFER_BARRIER_BIT;  break;
+					//case EImageUsage::TransientAttachment :
+					//case EImageUsage::InputAttachment :
+				}
+			}
+		}
+
+		// TODO: memory barriers
+		// TODO: check src access mask, dst access mask
+
+		GL_CALL( glMemoryBarrier( bits ) );
 		return true;
 	}
 	
@@ -2226,11 +2223,54 @@ namespace PlatformGL
 	_GLCmdPushConstants
 =================================================
 */
-	bool GL4CommandBuffer::_GLCmdPushConstants (const Command_t &cmd)
+	bool GL4CommandBuffer::_GLCmdPushConstants (const Command_t &cmdData)
 	{
-		const auto&	data = cmd.data.Get< GpuMsg::GLCmdPushConstants >();
+		const auto&	cmd = cmdData.data.Get< GpuMsg::GLCmdPushConstants >();
 		
 		TODO("");
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdDebugMarker
+=================================================
+*/
+	bool GL4CommandBuffer::_CmdDebugMarker (const Command_t &cmdData)
+	{
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdDebugMarker >();
+		
+		GL_CALL( glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0, _debugMarkerSeverity, cmd.info.Length(), cmd.info.cstr() ) );
+		
+		if ( cmd.breakPoint ) {
+			GX_BREAK_POINT();
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushDebugGroup
+=================================================
+*/
+	bool GL4CommandBuffer::_CmdPushDebugGroup (const Command_t &cmdData)
+	{
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPushDebugGroup >();
+		
+		GL_CALL( glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, 0, _debugMarkerSeverity, cmd.info.Length(), cmd.info.cstr() ) );
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPopDebugGroup
+=================================================
+*/
+	bool GL4CommandBuffer::_CmdPopDebugGroup (const Command_t &cmdData)
+	{
+		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPopDebugGroup >();
+		
+		GL_CALL( glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_POP_GROUP, 0, _debugMarkerSeverity, 0, "" ) );
 		return true;
 	}
 

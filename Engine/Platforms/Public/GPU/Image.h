@@ -83,47 +83,8 @@ namespace Platforms
 		explicit
 		ImageViewDescriptor (const ImageDescriptor &descr);
 
-		bool operator == (const ImageViewDescriptor &right) const;
-		bool operator >  (const ImageViewDescriptor &right) const;
-		bool operator <  (const ImageViewDescriptor &right) const;
-	};
-
-
-
-	//
-	// Image Utils
-	//
-
-	class ImageUtils final
-	{
-	public:
-		static ulong4	ValidateDimension (EImage::type imageType, const ulong4 &dim);
-		static uint4	ValidateDimension (EImage::type imageType, const uint4 &dim);
-
-		static ulong3	LevelDimension (EImage::type imageType, const ulong3 &dim, uint level);
-		static uint3	LevelDimension (EImage::type imageType, const uint3 &dim, uint level);
-		static ulong4	LevelDimension (EImage::type imageType, const ulong4 &dim, uint level);
-		static uint4	LevelDimension (EImage::type imageType, const uint4 &dim, uint level);
-
-		static uint		NumberOfMipmaps (EImage::type imageType, const ulong4 &dim);
-		static uint		NumberOfMipmaps (EImage::type imageType, const uint4 &dim);
-			
-		static ulong3	ConvertOffset (EImage::type imgType, const ulong4 &offset);
-		static uint3	ConvertOffset (EImage::type imgType, const uint4 &offset);
-
-		static ulong4	ConvertSize (EImage::type imgType, const ulong3 &size);
-		static uint4	ConvertSize (EImage::type imgType, const uint3 &size);
-
-		static ulong3	ConvertSize (EImage::type imgType, const ulong4 &size);
-		static uint3	ConvertSize (EImage::type imgType, const uint4 &size);
-		
-		static BytesUL	GetImageSize (EPixelFormat::type format, EImage::type type, const ulong4 &dim, BytesU xAlign, BytesU xyAlign);
-		static BytesU	GetImageSize (EPixelFormat::type format, EImage::type type, const uint4 &dim, BytesU xAlign, BytesU xyAlign);
-
-		static BytesUL	GetImageSize (EPixelFormat::type format, EImage::type type, const ulong3 &size, BytesU xAlign, BytesU xyAlign);
-		static BytesU	GetImageSize (EPixelFormat::type format, EImage::type type, const uint3 &size, BytesU xAlign, BytesU xyAlign);
-		
-		static void		ValidateDescriptor (INOUT ImageDescriptor &descr);
+		ND_ bool operator == (const ImageViewDescriptor &right) const;
+		ND_ bool operator >  (const ImageViewDescriptor &right) const;
 	};
 
 }	// Platforms
@@ -155,32 +116,11 @@ namespace CreateInfo
 		
 		GpuImage (const ImageDescriptor &descr) : descr{descr}, allocMem{false} {}
 
-		GpuImage (const ImageDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+		GpuImage (const ImageDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
 			descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
 
-		GpuImage (const ImageDescriptor &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+		GpuImage (const ImageDescriptor &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
 			memManager{memMngr}, descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
-	};
-
-
-	//
-	// Shared Image Create Info
-	//
-	struct GpuSharedImage
-	{
-	// types
-		using EMemoryAccess		= Platforms::EMemoryAccess;
-		
-	// variables
-		ModulePtr				gpuThread;			// can be null
-		ModulePtr				sharedImage;
-		//ImageViewDescriptor	descr;
-		EMemoryAccess::bits		access;
-
-	// methods
-		GpuSharedImage (GX_DEFCTOR) {}
-
-		GpuSharedImage (const ModulePtr &img, EMemoryAccess::bits access) : sharedImage{img}, access{access} {}
 	};
 
 }	// CreateInfo
@@ -189,7 +129,7 @@ namespace CreateInfo
 namespace GpuMsg
 {
 	//
-	// Image Descriptor Request
+	// Set / Get Image Descriptor
 	//
 	struct GetImageDescriptor
 	{
@@ -212,9 +152,9 @@ namespace GpuMsg
 		{
 			BytesUL		offset;		// offset for mipmap level and array layer, may be zero for all levels and layers if not supported
 			BytesUL		rowPitch;
-			BytesUL		slicePitch;	// size of array layer or 3D image slice
+			BytesUL		slicePitch;	// size of array layer or 3D image slice, may be zero for 1D and 2D images
 			BytesUL		size;
-			uint3		dimension;	// dimension of current 
+			uint3		dimension;	// dimension of current layer/level
 		};
 		using MipmapLevel	= Platforms::MipmapLevel;
 		using ImageLayer	= Platforms::ImageLayer;
@@ -228,20 +168,6 @@ namespace GpuMsg
 		GetImageMemoryLayout () {}
 		explicit GetImageMemoryLayout (MipmapLevel mipLevel, ImageLayer layer) : mipLevel{mipLevel}, layer{layer} {}
 	};
-
-
-	//
-	// Set/Get Image Layout
-	//
-	/*struct SetImageLayout
-	{
-		Platforms::EImageLayout::type			newLayout;		// TODO: layout can be changed with barrier operation
-	};
-
-	struct GetImageLayout
-	{
-		Out< Platforms::EImageLayout::type >	result;
-	};*/
 
 
 }	// GpuMsg

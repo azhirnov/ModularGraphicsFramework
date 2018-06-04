@@ -16,6 +16,8 @@ namespace GXTypes
 	template <typename T>
 	struct alignas(T) Optional : CompileTime::CopyQualifiers< CompileTime::PODStruct, T >
 	{
+		STATIC_ASSERT( TypeTraits::IsCopyConstructible<T> );
+
 	// types
 	public:
 		using Self		= Optional< T >;
@@ -37,28 +39,19 @@ namespace GXTypes
 		{
 			_ClearMem();
 		}
-		
-		explicit
-		Optional (const Self *value) : _isDefined(false)
-		{
-			_ClearMem();
-
-			if ( value != null )
-				_Create( *value );
-		}
 
 
 		Optional (const T &value) : _isDefined(false)
 		{
 			_ClearMem();
-			_Create( value );
+			_Create<T>( value );
 		}
 
 
 		Optional (T &&value) : _isDefined(false)
 		{
 			_ClearMem();
-			_Create( FW<T>( value ) );
+			_Create<T>( FW<T>( value ) );
 		}
 
 		
@@ -67,7 +60,18 @@ namespace GXTypes
 			_ClearMem();
 
 			if ( other.IsDefined() )
-				_Create( other.Get() );
+				_Create<T>( other._value );
+		}
+
+		
+		Optional (Self &&other) : _isDefined(false)
+		{
+			_ClearMem();
+
+			if ( other.IsDefined() )
+				_Create<T>( FW<T>( other._value ) );
+
+			other.Undefine();
 		}
 
 
@@ -77,59 +81,82 @@ namespace GXTypes
 		}
 
 
-		Self &	operator =  (const T& value)
+		Self &	operator =  (const T& right)
 		{
-			_Create( value );
+			_Create<T>( right );
 			return *this;
 		}
 
 
-		Self &	operator =  (T&& value)
+		Self &	operator =  (T&& right)
 		{
-			_Create( RVREF( value ) );
+			_Create<T>( FW<T>( right ) );
 			return *this;
 		}
 
 
-		CHECKRES bool	operator == (const Self &other) const
+		Self &	operator =  (const Self &right)
 		{
-			return IsDefined() and other.IsDefined() and GXMath::All( Get() == other.Get() );
+			if ( right.IsDefined() )
+				_Create<T>( right._value );
+			else
+				_Destroy();
+
+			return *this;
 		}
 
 
-		CHECKRES bool	operator != (const Self &other) const
+		Self &	operator =  (Self &&right)
 		{
-			return not (*this == other);
+			if ( right.IsDefined() ) {
+				_Create<T>( FW<T>( right._value ) );
+				right.Undefine();
+			} else
+				_Destroy();
+
+			return *this;
 		}
 
 
-		explicit operator bool	()	const				{ return IsDefined(); }
+		ND_ bool	operator == (const Self &right) const
+		{
+			return IsDefined() and right.IsDefined() and GXMath::All( Get() == right.Get() );
+		}
 
-		T const &	operator * ()	const				{ return Get(); }
-		T &			operator * ()						{ return Get(); }
 
-		T *			operator -> ()						{ return GetPtr(); }
-		T const *	operator -> ()	const				{ return GetPtr(); }
+		ND_ bool	operator != (const Self &right) const
+		{
+			return not (*this == right);
+		}
 
-		bool		IsDefined ()	const				{ return _isDefined; }
-		void		Undefine ()							{ _Destroy(); }
 
-		T const &	Get ()			const				{ ASSERT( IsDefined() );  return _value; }
-		T &			Get ()								{ ASSERT( IsDefined() );  return _value; }
+		ND_ explicit operator bool	()	const				{ return IsDefined(); }
 
-		T const		Get (const T defaultValue)	const	{ return IsDefined() ? _value : defaultValue; }
-		T const&	Get (T& defaultValue) const			{ return IsDefined() ? _value : defaultValue; }
+		ND_ T const &	operator * ()	const				{ return Get(); }
+		ND_ T &			operator * ()						{ return Get(); }
 
-		T *			GetPtrOrNull ()						{ return IsDefined() ? GetPtr() : null; }
-		T const *	GetPtrOrNUll ()	const				{ return IsDefined() ? GetPtr() : null; }
+		ND_ T *			operator -> ()						{ return GetPtr(); }
+		ND_ T const *	operator -> ()	const				{ return GetPtr(); }
 
-		T const *	GetPtr ()		const
+		ND_ bool		IsDefined ()	const				{ return _isDefined; }
+			void		Undefine ()							{ _Destroy(); }
+
+		ND_ T const &	Get ()			const				{ ASSERT( IsDefined() );  return _value; }
+		ND_ T &			Get ()								{ ASSERT( IsDefined() );  return _value; }
+
+		ND_ T const		Get (const T defaultValue)	const	{ return IsDefined() ? _value : defaultValue; }
+		ND_ T const&	Get (T& defaultValue) const			{ return IsDefined() ? _value : defaultValue; }
+
+		ND_ T *			GetPtrOrNull ()						{ return IsDefined() ? GetPtr() : null; }
+		ND_ T const *	GetPtrOrNUll ()	const				{ return IsDefined() ? GetPtr() : null; }
+
+		ND_ T const *	GetPtr ()		const
 		{
 			ASSERT( IsDefined() );
 			return &_value;
 		}
 
-		T *			GetPtr ()
+		ND_ T *		GetPtr ()
 		{
 			ASSERT( IsDefined() );
 			return &_value;
@@ -137,38 +164,43 @@ namespace GXTypes
 
 		T &			CreateDefault ()
 		{
-			_Create( RVREF( T() ) );
+			_Create<T>( RVREF( T() ) );
 			return Get();
 		}
 
-		T &			GetOrCreate ()
+		ND_ T &		GetOrCreate ()
 		{
-			if ( not IsDefined() )	CreateDefault();
+			if ( not IsDefined() )
+				return CreateDefault();
 			return Get();
 		}
 
-		T &			GetOrCreate (const T& defaultValue)
+		ND_ T &		GetOrCreate (const T& defaultValue)
 		{
-			if ( not IsDefined() )	_Create( defaultValue );
+			if ( not IsDefined() )
+				return _Create<T>( defaultValue );
 			return Get();
 		}
 
-		T &			GetOrCreate (T&& defaultValue)
+		ND_ T &		GetOrCreate (T&& defaultValue)
 		{
-			if ( not IsDefined() )	_Create( RVREF(defaultValue) );
+			if ( not IsDefined() )
+				return _Create<T>( FW<T>( defaultValue ) );
 			return Get();
 		}
 
 
 	private:
-		void _Create (const T &value) noexcept
+		template <typename B>
+		CompileTime::EnableIf<TypeTraits::IsCopyConstructible<B>>  _Create (const B &value) noexcept
 		{
 			_Destroy();
 			UnsafeMem::PlacementNew<T>( &_value, value );
 			_isDefined = true;
 		}
 
-		void _Create (T &&value) noexcept
+		template <typename B>
+		CompileTime::EnableIf<TypeTraits::IsMoveConstructible<B>>  _Create (B &&value) noexcept
 		{
 			_Destroy();
 			UnsafeMem::PlacementNew<T>( &_value, FW<T>( value ) );
@@ -197,13 +229,13 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline Optional<T> OptionalFrom (const T &value, bool isDefined = true)
+	ND_ inline Optional<T> OptionalFrom (const T &value, bool isDefined = true)
 	{
 		return isDefined ? Optional<T>( value ) : Optional<T>();
 	}
 
 	template <typename T>
-	inline Optional<T> OptionalFrom (T &&value, bool isDefined = true)
+	ND_ inline Optional<T> OptionalFrom (T &&value, bool isDefined = true)
 	{
 		return isDefined ? Optional<T>( RVREF(value) ) : Optional<T>();
 	}
@@ -216,7 +248,7 @@ namespace GXTypes
 	template <typename T>
 	struct Hash< Optional<T> >
 	{
-		HashResult  operator () (const Optional<T> &x) const noexcept
+		ND_ HashResult  operator () (const Optional<T> &x) const noexcept
 		{
 			return x ? HashOf( x.Get() ) : HashResult();
 		}

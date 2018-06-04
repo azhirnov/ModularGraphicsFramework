@@ -27,23 +27,9 @@ namespace PlatformSW
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::CmdBegin,
 											GpuMsg::CmdEnd,
-											GpuMsg::CmdBindComputePipeline,
-											GpuMsg::CmdDispatch,
-											GpuMsg::CmdExecute,
-											GpuMsg::CmdBindComputeResourceTable,
-											GpuMsg::CmdCopyBuffer,
-											GpuMsg::CmdCopyImage,
-											GpuMsg::CmdCopyBufferToImage,
-											GpuMsg::CmdCopyImageToBuffer,
-											GpuMsg::CmdUpdateBuffer,
-											GpuMsg::CmdFillBuffer,
-											GpuMsg::CmdClearColorImage,
-											GpuMsg::CmdPipelineBarrier,
-											GpuMsg::CmdPushConstants,
-											GpuMsg::CmdPushNamedConstants,
 											GpuMsg::SetCommandBufferDependency,
 											GpuMsg::GetCommandBufferState
-										> >;
+										> >::Append< GpuMsg::DefaultComputeCommands_t >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;
 
@@ -100,6 +86,9 @@ namespace PlatformSW
 		bool _CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &);
 		bool _CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &);
 		bool _CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &);
+		bool _CmdDebugMarker (const Message< GpuMsg::CmdDebugMarker > &);
+		bool _CmdPushDebugGroup (const Message< GpuMsg::CmdPushDebugGroup > &);
+		bool _CmdPopDebugGroup (const Message< GpuMsg::CmdPopDebugGroup > &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -150,7 +139,10 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdPipelineBarrier );
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdPushConstants );
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdPushNamedConstants );
-		
+		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdDebugMarker );
+		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdPushDebugGroup );
+		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdPopDebugGroup );
+
 		CHECK( _ValidateMsgSubscriptions() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
@@ -254,12 +246,11 @@ namespace PlatformSW
 							SWCommandBufferModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
-								_GetManager(),
 								CommandBufferDescriptor{ msg->flags }
 							},
-							OUT _cmdBuffer )
-			);
-			CHECK_ERR( _Attach( "", _cmdBuffer, false ) );
+							OUT _cmdBuffer ) );
+
+			CHECK_ERR( _Attach( "", _cmdBuffer ) );
 		}
 
 		ModuleUtils::Initialize( {_cmdBuffer}, this );
@@ -478,6 +469,45 @@ namespace PlatformSW
 =================================================
 */
 	bool SWCommandBuilder::_CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		
+		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdDebugMarker
+=================================================
+*/
+	bool SWCommandBuilder::_CmdDebugMarker (const Message< GpuMsg::CmdDebugMarker > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		
+		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		return true;
+	}
+
+/*
+=================================================
+	_CmdPushDebugGroup
+=================================================
+*/
+	bool SWCommandBuilder::_CmdPushDebugGroup (const Message< GpuMsg::CmdPushDebugGroup > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		
+		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		return true;
+	}
+
+/*
+=================================================
+	_CmdPopDebugGroup
+=================================================
+*/
+	bool SWCommandBuilder::_CmdPopDebugGroup (const Message< GpuMsg::CmdPopDebugGroup > &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		

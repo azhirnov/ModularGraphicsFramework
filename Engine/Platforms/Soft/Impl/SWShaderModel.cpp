@@ -73,7 +73,7 @@ namespace PlatformSW
 		}
 
 		// run
-		for (auto& shaderThread : Range(shaders))
+		for (auto& shaderThread : shaders)
 		{
 			shaderThread._thread.Create( LAMBDA() (void *param)
 				{
@@ -109,7 +109,7 @@ namespace PlatformSW
 		}
 		
 		// wait until the end
-		for (auto& shaderThread : Range(shaders)) {
+		for (auto& shaderThread : shaders) {
 			shaderThread._thread.Wait();
 		}
 	}

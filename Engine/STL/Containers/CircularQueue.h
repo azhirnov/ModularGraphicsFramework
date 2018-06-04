@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "Array.h"
+#include "Engine/STL/Containers/Array.h"
+#include "Engine/STL/Containers/IndexedIterator.h"
 
 namespace GX_STL
 {
@@ -31,6 +32,8 @@ namespace GXTypes
 		using MemoryContainer_t	= MC;
 		using Value_t			= T;
 		using Self				= CircularQueue<T,S,MC>;
+		using iterator			= IndexedIterator<T>;
+		using const_iterator	= IndexedIterator<const T>;
 
 
 	// variables
@@ -72,33 +75,33 @@ namespace GXTypes
 
 		~CircularQueue ()												{ Free(); }
 		
-		T		&	Front ();
-		T const	&	Front () const;
+		ND_ T		&	Front ();
+		ND_ T const	&	Front () const;
 
-		T		&	Back ();
-		T const	&	Back () const;
+		ND_ T		&	Back ();
+		ND_ T const	&	Back () const;
 		
-		T		&	operator [] (usize i);
-		T const	&	operator [] (usize i) const;
+		ND_ T		&	operator [] (usize i);
+		ND_ T const	&	operator [] (usize i) const;
 		
-		Self &		operator =  (ArrayCRef<T> right)					{ Copy( right );					return *this; }
-		Self &		operator =  (const Self &right)						{ Copy( right );					return *this; }
-		Self &		operator =  (Self &&right)							{ Free();  _Move( RVREF(right) );	return *this; }
+			Self &		operator =  (ArrayCRef<T> right)				{ Copy( right );					return *this; }
+			Self &		operator =  (const Self &right)					{ Copy( right );					return *this; }
+			Self &		operator =  (Self &&right)						{ Free();  _Move( RVREF(right) );	return *this; }
 
-		Self &		operator << (const T& right)						{ PushBack( right );				return *this; }
-		Self &		operator << (Self &&right)							{ AppendBack( RVREF( right ) );		return *this; }
-		Self &		operator << (const Self &right)						{ AppendBack( right );				return *this; }
-		Self &		operator << (ArrayCRef<T> right)					{ AppendBack( right );				return *this; }
+			Self &		operator << (const T& right)					{ PushBack( right );				return *this; }
+			Self &		operator << (Self &&right)						{ AppendBack( RVREF( right ) );		return *this; }
+			Self &		operator << (const Self &right)					{ AppendBack( right );				return *this; }
+			Self &		operator << (ArrayCRef<T> right)				{ AppendBack( right );				return *this; }
 
 		friend Self &	operator >> (const T& left, Self &right)		{ right.PushFront( left );				return right; }
 		friend Self &	operator >> (Self &&left, Self &right)			{ right.AppendFront( RVREF( left ) );	return right; }
 		friend Self &	operator >> (const Self &left, Self &right)		{ right.AppendFront( left );			return right; }
 		friend Self &	operator >> (ArrayCRef<T> left, Self &right)	{ right.AppendFront( left );			return right; }
 		
-		bool			operator == (ArrayCRef<T> right)	const;
-		bool			operator == (const Self &right)		const;
-		bool			operator != (ArrayCRef<T> right)	const		{ return not ( (*this) == right ); }
-		bool			operator != (const Self &right)		const		{ return not ( (*this) == right ); }
+		ND_ bool		operator == (ArrayCRef<T> right)	const;
+		ND_ bool		operator == (const Self &right)		const;
+		ND_ bool		operator != (ArrayCRef<T> right)	const		{ return not ( (*this) == right ); }
+		ND_ bool		operator != (const Self &right)		const		{ return not ( (*this) == right ); }
 
 		void PushBack (const T &value);
 		void PushBack (T&& value);
@@ -129,17 +132,22 @@ namespace GXTypes
 		void GetParts (OUT ArrayRef<T> &part0, OUT ArrayRef<T> &part1);
 		void GetParts (OUT ArrayCRef<T> &part0, OUT ArrayCRef<T> &part1) const;
 
-		usize			Count ()		const;
-		BytesU			Size ()			const				{ return BytesU( sizeof(T) * Count() ); }
-		usize			Capacity ()		const				{ return _size-1; }
-		constexpr usize	MaxCapacity ()	const				{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		BytesU			FullSize ()		const				{ return BytesU( sizeof(T) * Capacity() ); }
-		bool			Empty ()		const				{ return _first == _end; }
-		usize			LastIndex ()	const				{ return Count()-1; }
+		ND_ usize			Count ()		const;
+		ND_ BytesU			Size ()			const				{ return BytesU( sizeof(T) * Count() ); }
+		ND_ usize			Capacity ()		const				{ return _size-1; }
+		ND_ constexpr usize MaxCapacity ()	const				{ return _memory.MaxSize(); }	// max available for allocation count of elements
+		ND_ BytesU			FullSize ()		const				{ return BytesU( sizeof(T) * Capacity() ); }
+		ND_ bool			Empty ()		const				{ return _first == _end; }
+		ND_ usize			LastIndex ()	const				{ return Count()-1; }
 		
+		ND_ auto			begin ()							{ return IndexedIterator<T>{ *this, 0 }; }
+		ND_ auto			begin ()		const				{ return IndexedIterator<const T>{ *this, 0 }; }
+		ND_ auto			end ()								{ return IndexedIterator<T>{ *this, Count() }; }
+		ND_ auto			end ()			const				{ return IndexedIterator<const T>{ *this, Count() }; }
 
-		static constexpr bool	IsLinearMemory ()			{ return false; }
-		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStatic(); }
+
+		static constexpr bool	IsLinearMemory ()				{ return false; }
+		constexpr bool			IsStaticMemory ()	const		{ return _memory.IsStatic(); }
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{
@@ -923,7 +931,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	struct Hash< CircularQueue<T,S,MC> >
 	{
-		CHECKRES HashResult  operator () (const CircularQueue<T,S,MC> &x) const noexcept
+		ND_ HashResult  operator () (const CircularQueue<T,S,MC> &x) const noexcept
 		{
 			ArrayCRef<T>			part0;
 			ArrayCRef<T>			part1;

@@ -5,6 +5,7 @@
 #ifdef GRAPHICS_API_SOFT
 
 #include "Engine/Platforms/Soft/Impl/SWDevice.h"
+#include "Engine/Platforms/Soft/Impl/SWDeviceProperties.h"
 
 namespace Engine
 {
@@ -46,6 +47,8 @@ namespace PlatformSW
 	bool SWDevice::Initialize ()
 	{
 		_initialized = true;
+
+		_UpdateProperties();
 		return true;
 	}
 	
@@ -125,7 +128,18 @@ namespace PlatformSW
 
 		++_debugReportCounter;
 	}
-
+	
+/*
+=================================================
+	_UpdateProperties
+=================================================
+*/
+	void SWDevice::_UpdateProperties ()
+	{
+		_properties.maxComputeWorkGroupInvocations	= SWDeviceProperties.limits.maxComputeWorkGroupInvocations;
+		_properties.maxComputeWorkGroupSize			= SWDeviceProperties.limits.maxComputeWorkGroupSize;
+		_properties.maxComputeWorkGroupCount		= SWDeviceProperties.limits.maxComputeWorkGroupCount;
+	}
 
 }	// PlatformSW
 }	// Engine

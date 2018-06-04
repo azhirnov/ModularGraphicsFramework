@@ -131,7 +131,7 @@ namespace Scene
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 
 		_SendForEachAttachments( msg );
 		

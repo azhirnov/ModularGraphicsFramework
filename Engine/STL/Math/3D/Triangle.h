@@ -56,7 +56,7 @@ namespace GXMath
 =================================================
 */
 	template <typename VecType>
-	CHECKRES inline bool  Triangle<VecType>::InnerPoint (const VecType &p) const
+	ND_ inline bool  Triangle<VecType>::InnerPoint (const VecType &p) const
 	{
 		struct Util {
 			static forceinline bool Sign (const Vec_t &a, const Vec_t &b, const Vec_t &c) {
@@ -77,7 +77,7 @@ namespace GXMath
 =================================================
 */
 	template <typename VecType>
-	CHECKRES inline typename Triangle<VecType>::Vec3_t  Triangle<VecType>::PointToBarycentric (const Vec_t &p) const
+	ND_ inline typename Triangle<VecType>::Vec3_t  Triangle<VecType>::PointToBarycentric (const Vec_t &p) const
 	{
 		Vec_t const		v0 = _points[1] - _points[0];
 		Vec_t const		v1 = _points[2] - _points[0];
@@ -104,7 +104,7 @@ namespace GXMath
 =================================================
 */
 	template <typename VecType>
-	CHECKRES inline VecType  Triangle<VecType>::PointFromBarycentric (const Vec3_t &b) const
+	ND_ inline VecType  Triangle<VecType>::PointFromBarycentric (const Vec3_t &b) const
 	{
 		return _points[0] * b.x + _points[1] * b.y + _points[2] * b.z;
 	}
@@ -118,7 +118,7 @@ namespace GXTypes
 	template <typename VecType>
 	struct Hash< GXMath::Triangle<VecType> >
 	{
-		CHECKRES HashResult  operator () (const GXMath::Triangle<VecType> &x) const noexcept
+		ND_ HashResult  operator () (const GXMath::Triangle<VecType> &x) const noexcept
 		{
 			return HashOf( x[0] ) + HashOf( x[1] ) + HashOf( x[2] );
 		}

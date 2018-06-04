@@ -18,8 +18,10 @@ namespace StringUtils
 =================================================
 */
 	template <typename T>
-	constexpr forceinline bool IsUpper (const T &c)
+	ND_ constexpr forceinline bool IsUpper (const T &c)
 	{
+		STATIC_ASSERT( CompileTime::IsScalar<T> );
+
 		return ( c >= T('A') and c <= T('Z') );
 	}
 	
@@ -29,8 +31,10 @@ namespace StringUtils
 =================================================
 */
 	template <typename T>
-	constexpr forceinline bool IsLower (const T &c)
+	ND_ constexpr forceinline bool IsLower (const T &c)
 	{
+		STATIC_ASSERT( CompileTime::IsScalar<T> );
+
 		return ( c >= T('a') and c <= T('z') );
 	}
 	
@@ -40,7 +44,7 @@ namespace StringUtils
 =================================================
 */
 	template <typename T>
-	constexpr forceinline T ToUpper (const T &c)
+	ND_ forceinline T ToUpper (const T &c)
 	{
 		return ( IsLower( c ) ? c + T('A' - 'a') : c );
 	}
@@ -51,11 +55,37 @@ namespace StringUtils
 =================================================
 */
 	template <typename T>
-	constexpr forceinline T ToLower (const T &c)
+	ND_ forceinline T ToLower (const T &c)
 	{
 		return ( IsUpper( c ) ? c + T('a' - 'A') : c );
 	}
 	
+/*
+=================================================
+	StringToUpper
+=================================================
+*/
+	template <typename StringContainer>
+	inline void StringToUpper (INOUT StringContainer &str)
+	{
+		for (usize i = 0; i < str.Length(); ++i) {
+			str[i] = ToUpper( str[i] );
+		}
+	}
+	
+/*
+=================================================
+	StringToLower
+=================================================
+*/
+	template <typename StringContainer>
+	inline void StringToLower (INOUT StringContainer &str)
+	{
+		for (usize i = 0; i < str.Length(); ++i) {
+			str[i] = ToLower( str[i] );
+		}
+	}
+
 /*
 =================================================
 	ConvertArrayToString
@@ -64,7 +94,7 @@ namespace StringUtils
 =================================================
 */
 	template <typename T>
-	inline String  ConvertArrayToString (ArrayCRef<T> arr)
+	ND_ inline String  ConvertArrayToString (ArrayCRef<T> arr)
 	{
 		String	str;
 		str.Reserve( (usize)arr.Size() * 4 );
@@ -90,11 +120,11 @@ namespace StringUtils
 	Repeat String
 =================================================
 */
-	inline String  RepeatString (StringCRef part, uint count)
+	ND_ inline String  RepeatString (StringCRef part, uint count)
 	{
 		String	str = part;
 
-		for (uint i = 0; i < count; ++i) {
+		for (uint i = 1; i < count; ++i) {
 			str << part;
 		}
 		return str;
@@ -102,18 +132,18 @@ namespace StringUtils
 
 
 	
-	inline int		ToInt32 (StringCRef sStr)			{ return atoi( sStr.cstr() ); }
+	ND_ inline int		ToInt32 (StringCRef sStr)			{ return atoi( sStr.cstr() ); }
 
 #ifdef COMPILER_MSVC
-	inline ilong	ToInt64 (StringCRef sStr)			{ return _atoi64( sStr.cstr() ); }
+	ND_ inline ilong	ToInt64 (StringCRef sStr)			{ return _atoi64( sStr.cstr() ); }
 #endif
 
 #ifdef COMPILER_GCC
-	inline ilong	ToInt64 (StringCRef sStr)			{ return atoll( sStr.cstr() ); }
+	ND_ inline ilong	ToInt64 (StringCRef sStr)			{ return atoll( sStr.cstr() ); }
 #endif
 	
-	inline float	ToFloat (StringCRef sStr)			{ return float( atof( sStr.cstr() ) ); }
-	inline double	ToDouble (StringCRef sStr)			{ return atof( sStr.cstr() ); }
+	ND_ inline float	ToFloat (StringCRef sStr)			{ return float( atof( sStr.cstr() ) ); }
+	ND_ inline double	ToDouble (StringCRef sStr)			{ return atof( sStr.cstr() ); }
 
 
 }	// StringUtils

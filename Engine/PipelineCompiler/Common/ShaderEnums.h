@@ -339,6 +339,9 @@ namespace PipelineCompiler
 			Double4x3		= _vtypeinfo::_DOUBLE | _vtypeinfo::_COL4 | _vtypeinfo::_ROW3,
 			Double4x4		= _vtypeinfo::_DOUBLE | _vtypeinfo::_COL4 | _vtypeinfo::_ROW4,
 			
+			// uniform sampler
+			Sampler						= _vtypeinfo::_SAMPLER,
+
 			// any sampler
 			Sampler1D					= _vtypeinfo::_SAMPLER | _vtypeinfo::_SAMP_1D,
 			Sampler1DShadow				= _vtypeinfo::_SAMPLER | _vtypeinfo::_SAMP_1DS,
@@ -481,6 +484,7 @@ namespace PipelineCompiler
 		static bool		IsStruct (type value);
 		static bool		IsBuffer (type value);
 		static bool		IsTexture (type value);
+		static bool		IsShadowTexture (type value);
 		static bool		IsImage (type value);
 		static bool		IsScalar (type value);
 
@@ -491,6 +495,9 @@ namespace PipelineCompiler
 		static bool		IsInt (type value);
 		static bool		IsInt32 (type value);
 		static bool		IsInt64 (type value);
+		static bool		IsUnsigned (type value);
+
+		static bool		IsBool (type value);
 
 		static BytesU	SizeOf (type value, BytesU rowAlign = 4_b);
 		static uint		VecSize (type value);
@@ -505,7 +512,7 @@ namespace PipelineCompiler
 //-----------------------------------------------------------------------------//
 // EShaderSrcFormat
 
-	inline constexpr bool EShaderSrcFormat::IsVulkan (type value)
+	ND_ inline constexpr bool EShaderSrcFormat::IsVulkan (type value)
 	{
 		return value == GXSL_Vulkan or value == GLSL_Vulkan;
 	}
@@ -515,7 +522,7 @@ namespace PipelineCompiler
 //-----------------------------------------------------------------------------//
 // ETessellationSpacing
 	
-	inline StringCRef  ETessellationSpacing::ToString (type value)
+	ND_ inline StringCRef  ETessellationSpacing::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -531,7 +538,7 @@ namespace PipelineCompiler
 //-----------------------------------------------------------------------------//
 // ETessellationInputPrimitive
 	
-	inline StringCRef  ETessellationInputPrimitive::ToString (type value)
+	ND_ inline StringCRef  ETessellationInputPrimitive::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -548,7 +555,7 @@ namespace PipelineCompiler
 //-----------------------------------------------------------------------------//
 // EGeometryInputPrimitive
 	
-	inline StringCRef  EGeometryInputPrimitive::ToString (type value)
+	ND_ inline StringCRef  EGeometryInputPrimitive::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -566,7 +573,7 @@ namespace PipelineCompiler
 //-----------------------------------------------------------------------------//
 // EGeometryOutputPrimitive
 	
-	inline StringCRef  EGeometryOutputPrimitive::ToString (type value)
+	ND_ inline StringCRef  EGeometryOutputPrimitive::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -582,19 +589,19 @@ namespace PipelineCompiler
 //-----------------------------------------------------------------------------//
 // EVariableQualifier
 	
-	inline String EVariableQualifier::ToString (bits value)
+	ND_ inline String  EVariableQualifier::ToString (bits value)
 	{
 		String str;
 
 		FOR( i, value )
 		{
-			if ( not value.Get(type(i)) )
+			if ( not value[type(i)] )
 				continue;
 
 			if ( not str.Empty() )
 				str << " | ";
 
-			switch (type(i))
+			switch ( type(i) )
 			{
 				case Patch :			str << "Patch";			break;
 				case Flat :				str << "Flat";			break;
@@ -627,7 +634,7 @@ namespace PipelineCompiler
 //-----------------------------------------------------------------------------//
 // EVariablePacking
 	
-	inline StringCRef  EVariablePacking::ToString (type value)
+	ND_ inline StringCRef  EVariablePacking::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -640,21 +647,19 @@ namespace PipelineCompiler
 	}
 	
 
-	inline String  EVariablePacking::ToString (bits value)
+	ND_ inline String  EVariablePacking::ToString (bits value)
 	{
 		String	str;
 		
 		FOR( i, value )
 		{
-			const auto	t = EVariablePacking::type(i);
-
-			if ( not value[t] )
+			if ( not value[type(i)] )
 				continue;
 
 			if ( not str.Empty() )
 				str << " | ";
 
-			switch ( t )
+			switch ( type(i) )
 			{
 				case Default :		str << "Default";	break;
 				case Std140 :		str << "Std140";	break;
@@ -663,25 +668,23 @@ namespace PipelineCompiler
 				case Packed :		str << "Packed";	break;
 				case Varying :		str << "Varying";	break;
 				case VertexAttrib :	str << "vertex";	break;
-				default :		RETURN_ERR( "unknown buffer packing type!" );
+				default :			RETURN_ERR( "unknown buffer packing type!" );
 			}
 		}
 		return str;
 	}
 
 
-	inline EVariablePacking::type  EVariablePacking::GetMaxPacking (bits value)
+	ND_ inline EVariablePacking::type  EVariablePacking::GetMaxPacking (bits value)
 	{
 		EVariablePacking::type	max_packing = EVariablePacking::Default;
 
 		FOR( i, value )
 		{
-			const auto	t = EVariablePacking::type(i);
-
-			if ( not value[t] )
+			if ( not value[type(i)] )
 				continue;
 
-			switch ( t )
+			switch ( type(i) )
 			{
 				case Default :		break;
 				case Std140 :		max_packing = Std140;										break;
@@ -701,7 +704,7 @@ namespace PipelineCompiler
 //-----------------------------------------------------------------------------//
 // EPrecision
 	
-	inline StringCRef  EPrecision::ToString (type value)
+	ND_ inline StringCRef  EPrecision::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -718,7 +721,7 @@ namespace PipelineCompiler
 //-----------------------------------------------------------------------------//
 // EShaderVariable
 	
-	inline EShaderVariable::type  EShaderVariable::ToVec (type basic, uint vecSize)
+	ND_ inline EShaderVariable::type  EShaderVariable::ToVec (type basic, uint vecSize)
 	{
 		ASSERT( vecSize > 0 and vecSize <= 4 );
 
@@ -729,7 +732,7 @@ namespace PipelineCompiler
 	}
 
 
-	inline EShaderVariable::type  EShaderVariable::ToMat (type basic, uint columns, uint rows)
+	ND_ inline EShaderVariable::type  EShaderVariable::ToMat (type basic, uint columns, uint rows)
 	{
 		ASSERT( columns > 0 and columns <= 4 );
 		ASSERT( rows > 0 and rows <= 4 );
@@ -743,33 +746,31 @@ namespace PipelineCompiler
 	}
 	
 
-	inline EShaderVariable::type  EShaderVariable::ToSampler (type samplerType, type dataType)
+	ND_ inline EShaderVariable::type  EShaderVariable::ToSampler (type samplerType, type dataType)
 	{
-		return type( (samplerType & _vtypeinfo::_SAMP_MASK) | _vtypeinfo::_SAMPLER |
-					 (dataType & (_TYPE_MASK /*| _vtypeinfo::_COL_MASK*/)) );
+		return type( (samplerType & _vtypeinfo::_SAMP_MASK) | _vtypeinfo::_SAMPLER | (dataType & _TYPE_MASK) );
 	}
 
 
-	inline EShaderVariable::type  EShaderVariable::ToImage (type samplerType, type dataType)
+	ND_ inline EShaderVariable::type  EShaderVariable::ToImage (type samplerType, type dataType)
 	{
-		return type( (samplerType & _vtypeinfo::_SAMP_MASK) | _vtypeinfo::_IMAGE |
-					 (dataType & (_TYPE_MASK /*| _vtypeinfo::_COL_MASK*/)) );
+		return type( (samplerType & _vtypeinfo::_SAMP_MASK) | _vtypeinfo::_IMAGE | (dataType & _TYPE_MASK) );
 	}
 	
 
-	inline EShaderVariable::type  EShaderVariable::ToScalar (type value)
+	ND_ inline EShaderVariable::type  EShaderVariable::ToScalar (type value)
 	{
 		return type( (value & _TYPE_MASK) | _vtypeinfo::_COL1 );
 	}
 	
 
-	template <>	inline EShaderVariable::type  EShaderVariable::ToScalar<bool> ()	{ return EShaderVariable::Bool; }
-	template <>	inline EShaderVariable::type  EShaderVariable::ToScalar<int> ()		{ return EShaderVariable::Int; }
-	template <>	inline EShaderVariable::type  EShaderVariable::ToScalar<uint> ()	{ return EShaderVariable::UInt; }
-	template <>	inline EShaderVariable::type  EShaderVariable::ToScalar<ilong> ()	{ return EShaderVariable::Long; }
-	template <>	inline EShaderVariable::type  EShaderVariable::ToScalar<ulong> ()	{ return EShaderVariable::ULong; }
-	template <>	inline EShaderVariable::type  EShaderVariable::ToScalar<float> ()	{ return EShaderVariable::Float; }
-	template <>	inline EShaderVariable::type  EShaderVariable::ToScalar<double> ()	{ return EShaderVariable::Double; }
+	template <>	ND_ inline EShaderVariable::type  EShaderVariable::ToScalar<bool> ()	{ return EShaderVariable::Bool; }
+	template <>	ND_ inline EShaderVariable::type  EShaderVariable::ToScalar<int> ()		{ return EShaderVariable::Int; }
+	template <>	ND_ inline EShaderVariable::type  EShaderVariable::ToScalar<uint> ()	{ return EShaderVariable::UInt; }
+	template <>	ND_ inline EShaderVariable::type  EShaderVariable::ToScalar<ilong> ()	{ return EShaderVariable::Long; }
+	template <>	ND_ inline EShaderVariable::type  EShaderVariable::ToScalar<ulong> ()	{ return EShaderVariable::ULong; }
+	template <>	ND_ inline EShaderVariable::type  EShaderVariable::ToScalar<float> ()	{ return EShaderVariable::Float; }
+	template <>	ND_ inline EShaderVariable::type  EShaderVariable::ToScalar<double> ()	{ return EShaderVariable::Double; }
 
 
 	inline bool EShaderVariable::ToTexture (type value, OUT EImage::type &imageType, OUT bool &isShadow)
@@ -797,7 +798,7 @@ namespace PipelineCompiler
 	}
 	
 
-	inline EShaderVariable::type  EShaderVariable::ToSampler (EImage::type imageType, bool isShadow, EPixelFormatClass::type format)
+	ND_ inline EShaderVariable::type  EShaderVariable::ToSampler (EImage::type imageType, bool isShadow, EPixelFormatClass::type format)
 	{
 		uint	result = _vtypeinfo::_SAMPLER;
 
@@ -826,7 +827,7 @@ namespace PipelineCompiler
 	}
 	
 
-	inline EShaderVariable::type  EShaderVariable::ToImage (EImage::type imageType, EPixelFormat::type format)
+	ND_ inline EShaderVariable::type  EShaderVariable::ToImage (EImage::type imageType, EPixelFormat::type format)
 	{
 		uint	result = _vtypeinfo::_IMAGE;
 
@@ -854,7 +855,7 @@ namespace PipelineCompiler
 	}
 
 
-	inline EPixelFormat::type  EShaderVariable::ToPixelFormat (type value)
+	ND_ inline EPixelFormat::type  EShaderVariable::ToPixelFormat (type value)
 	{
 		bool		is_shadow	= false;
 		const uint	mask		= _TYPE_MASK | _vtypeinfo::_COL_MASK;
@@ -883,23 +884,13 @@ namespace PipelineCompiler
 	}
 
 
-	inline EPixelFormatClass::type  EShaderVariable::ToPixelFormatClass (type value)
+	ND_ inline EPixelFormatClass::type  EShaderVariable::ToPixelFormatClass (type value)
 	{
 		using VTI	= _platforms_hidden_::EValueTypeInfo;
 
 		uint	result = 0;
 
-		/*switch ( value & VTI::_COL_MASK )
-		{
-			case VTI::_R				: result |= EPixelFormatClass::R;				break;
-			case VTI::_RG				: result |= EPixelFormatClass::RG;				break;
-			case VTI::_RGB				: result |= EPixelFormatClass::RGB;				break;
-			case VTI::_RGBA				: result |= EPixelFormatClass::RGBA;			break;
-			case VTI::_DEPTH			: result |= EPixelFormatClass::Depth;			break;
-			case VTI::_DEPTH_STENCIL	: result |= EPixelFormatClass::DepthStencil;	break;
-			default						: RETURN_ERR( "unsupported channels type" );
-		}*/
-		result |= EPixelFormatClass::RGBA;
+		result |= EPixelFormatClass::AnyColorChannels;
 
 		switch ( value & (VTI::_TYPE_MASK | VTI::_UNSIGNED | VTI::_NORM) )
 		{
@@ -938,19 +929,19 @@ namespace PipelineCompiler
 	}
 	
 
-	inline EVertexAttribute::type  EShaderVariable::ToAttrib (type value)
+	ND_ inline EVertexAttribute::type  EShaderVariable::ToAttrib (type value)
 	{
 		return EVertexAttribute::type( value );		// TODO
 	}
 
 
-	inline EFragOutput::type  EShaderVariable::ToFragOutput (type value)
+	ND_ inline EFragOutput::type  EShaderVariable::ToFragOutput (type value)
 	{
 		return EFragOutput::type( value );		// TODO
 	}
 	
 
-	inline bool  EShaderVariable::IsStruct (type value)
+	ND_ inline bool  EShaderVariable::IsStruct (type value)
 	{
 		switch ( value )
 		{
@@ -962,7 +953,7 @@ namespace PipelineCompiler
 	}
 	
 
-	inline bool  EShaderVariable::IsBuffer (type value)
+	ND_ inline bool  EShaderVariable::IsBuffer (type value)
 	{
 		switch ( value )
 		{
@@ -973,57 +964,83 @@ namespace PipelineCompiler
 	}
 
 
-	inline bool  EShaderVariable::IsTexture (type value)
+	ND_ inline bool  EShaderVariable::IsTexture (type value)
 	{
-		return !!(value & _vtypeinfo::_SAMPLER);
+		return !!(value & _vtypeinfo::_SAMPLER) && !!(value & _vtypeinfo::_SAMP_MASK);
+	}
+	
+
+	ND_ inline bool  EShaderVariable::IsShadowTexture (type value)
+	{
+		const uint	samp = value & _vtypeinfo::_SAMP_MASK;
+		switch ( samp ) {
+			case _vtypeinfo::_SAMP_1DS :
+			case _vtypeinfo::_SAMP_1DAS :
+			case _vtypeinfo::_SAMP_2DS :
+			case _vtypeinfo::_SAMP_2DAS :
+			case _vtypeinfo::_SAMP_CUBES :
+				return true;
+		}
+		return false;
 	}
 
 
-	inline bool  EShaderVariable::IsImage (type value)
+	ND_ inline bool  EShaderVariable::IsImage (type value)
 	{
 		return !!(value & _vtypeinfo::_IMAGE);
 	}
 	
 
-	inline bool  EShaderVariable::IsScalar (type value)
+	ND_ inline bool  EShaderVariable::IsScalar (type value)
 	{
 		return VecSize( value ) == 1;
 	}
 
 
-	inline bool  EShaderVariable::IsFloat (type value)
+	ND_ inline bool  EShaderVariable::IsFloat (type value)
 	{
 		return IsFloat32( value ) or IsFloat64( value );
 	}
 
-	inline bool  EShaderVariable::IsFloat32 (type value)
+	ND_ inline bool  EShaderVariable::IsFloat32 (type value)
 	{
 		return (value & _vtypeinfo::_TYPE_MASK) == _vtypeinfo::_FLOAT;
 	}
 
-	inline bool  EShaderVariable::IsFloat64 (type value)
+	ND_ inline bool  EShaderVariable::IsFloat64 (type value)
 	{
 		return (value & _vtypeinfo::_TYPE_MASK) == _vtypeinfo::_DOUBLE;
 	}
 	
 	
-	inline bool  EShaderVariable::IsInt (type value)
+	ND_ inline bool  EShaderVariable::IsInt (type value)
 	{
 		return IsInt32( value ) or IsInt64( value );
 	}
 
-	inline bool  EShaderVariable::IsInt32 (type value)
+	ND_ inline bool  EShaderVariable::IsInt32 (type value)
 	{
 		return (value & _vtypeinfo::_TYPE_MASK) == _vtypeinfo::_INT;
 	}
 
-	inline bool  EShaderVariable::IsInt64 (type value)
+	ND_ inline bool  EShaderVariable::IsInt64 (type value)
 	{
 		return (value & _vtypeinfo::_TYPE_MASK) == _vtypeinfo::_LONG;
 	}
+	
+	ND_ inline bool  EShaderVariable::IsUnsigned (type value)
+	{
+		return (value & _vtypeinfo::_UNSIGNED) == _vtypeinfo::_UNSIGNED;
+	}
+
+	
+	ND_ inline bool  EShaderVariable::IsBool (type value)
+	{
+		return (value & _vtypeinfo::_BOOL) == _vtypeinfo::_BOOL;
+	}
 
 
-	inline BytesU  EShaderVariable::SizeOf (type value, BytesU rowAlign)
+	ND_ inline BytesU  EShaderVariable::SizeOf (type value, BytesU rowAlign)
 	{
 		switch ( value )
 		{
@@ -1090,7 +1107,7 @@ namespace PipelineCompiler
 	}
 	
 
-	inline uint  EShaderVariable::VecSize (type value)
+	ND_ inline uint  EShaderVariable::VecSize (type value)
 	{
 		switch ( value )
 		{
@@ -1132,7 +1149,7 @@ namespace PipelineCompiler
 	}
 
 
-	inline uint2  EShaderVariable::MatSize (type value)
+	ND_ inline uint2  EShaderVariable::MatSize (type value)
 	{
 		switch ( value )
 		{
@@ -1169,7 +1186,7 @@ namespace PipelineCompiler
 	}
 	
 
-	inline EShaderVariable::type  EShaderVariable::FromString (StringCRef name)
+	ND_ inline EShaderVariable::type  EShaderVariable::FromString (StringCRef name)
 	{
 		if ( name == "void" )		return Void;
 		if ( name == "bool" )		return Bool;

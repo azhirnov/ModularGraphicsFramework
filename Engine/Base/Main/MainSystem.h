@@ -9,13 +9,11 @@
 #include "Engine/Base/Common/IDs.h"
 #include "Engine/Base/Tasks/TaskManager.h"
 #include "Engine/Base/Threads/ThreadManager.h"
-#include "Engine/Base/Files/FileManager.h"
 
 namespace Engine
 {
 namespace Base
 {
-
 
 	//
 	// Main System
@@ -56,7 +54,6 @@ namespace Base
 		ModulesFactory		_factory;
 		TaskManagerPtr		_taskMngr;
 		ThreadManagerPtr	_threadMngr;
-		FileManager			_fileMngr;
 
 
 	// methods

@@ -8,11 +8,9 @@
 #include "Engine/Base/Modules/ModulesFactory.h"
 #include "Engine/Base/Modules/ModuleUtils.h"
 
-#include "Engine/Base/Tasks/TaskModule.h"
+#include "Engine/Base/Public/TaskModule.h"
 #include "Engine/Base/Tasks/AsyncTask.h"
 
-#include "Engine/Base/Threads/ParallelThread.h"
+#include "Engine/Base/Public/ParallelThread.h"
 
-#include "Engine/Base/Stream/Stream.h"
-
-#include "Engine/Base/Main/MainSystem.h"
+#include "Engine/Base/Public/DataProvider.h"

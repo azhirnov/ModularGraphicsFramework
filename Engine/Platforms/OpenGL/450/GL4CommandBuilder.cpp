@@ -25,50 +25,13 @@ namespace PlatformGL
 	// types
 	private:
 		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::CmdSetViewport,
-											GpuMsg::CmdSetScissor,
-											GpuMsg::CmdSetDepthBounds,
-											GpuMsg::CmdSetBlendColor,
-											GpuMsg::CmdSetDepthBias,
-											GpuMsg::CmdSetLineWidth,
-											GpuMsg::CmdSetStencilCompareMask,
-											GpuMsg::CmdSetStencilWriteMask,
-											GpuMsg::CmdSetStencilReference,
 											GpuMsg::CmdBegin,
 											GpuMsg::CmdEnd,
-											GpuMsg::CmdBeginRenderPass,
-											GpuMsg::CmdEndRenderPass,
-											GpuMsg::CmdNextSubpass,
-											GpuMsg::CmdBindGraphicsPipeline,
-											GpuMsg::CmdBindComputePipeline,
-											GpuMsg::CmdBindVertexBuffers,
-											GpuMsg::CmdBindIndexBuffer,
-											GpuMsg::CmdDraw,
-											GpuMsg::CmdDrawIndexed,
-											GpuMsg::CmdDrawIndirect,
-											GpuMsg::CmdDrawIndexedIndirect,
-											GpuMsg::CmdDispatch,
-											GpuMsg::CmdDispatchIndirect,
-											GpuMsg::CmdExecute,
-											GpuMsg::CmdBindGraphicsResourceTable,
-											GpuMsg::CmdBindComputeResourceTable,
-											GpuMsg::CmdCopyBuffer,
-											GpuMsg::CmdCopyImage,
-											GpuMsg::CmdCopyBufferToImage,
-											GpuMsg::CmdCopyImageToBuffer,
-											GpuMsg::CmdBlitImage,
 											GpuMsg::CmdBlitGLFramebuffers,
-											GpuMsg::CmdUpdateBuffer,
-											GpuMsg::CmdFillBuffer,
-											GpuMsg::CmdClearAttachments,
-											GpuMsg::CmdClearColorImage,
-											GpuMsg::CmdClearDepthStencilImage,
-											GpuMsg::CmdPipelineBarrier,
-											GpuMsg::CmdPushConstants,
-											GpuMsg::CmdPushNamedConstants,
 											GpuMsg::SetCommandBufferDependency,
-											GpuMsg::GetCommandBufferState
-										> >;
+											GpuMsg::GetCommandBufferState > >
+										::Append< GpuMsg::DefaultComputeCommands_t >
+										::Append< GpuMsg::DefaultGraphicsCommands_t >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
 
@@ -161,6 +124,9 @@ namespace PlatformGL
 		bool _CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &);
 		bool _CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &);
 		bool _CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &);
+		bool _CmdDebugMarker (const Message< GpuMsg::CmdDebugMarker > &);
+		bool _CmdPushDebugGroup (const Message< GpuMsg::CmdPushDebugGroup > &);
+		bool _CmdPopDebugGroup (const Message< GpuMsg::CmdPopDebugGroup > &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -237,7 +203,10 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdPipelineBarrier );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdPushConstants );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdPushNamedConstants );
-		
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdDebugMarker );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdPushDebugGroup );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdPopDebugGroup );
+
 		CHECK( _ValidateMsgSubscriptions() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
@@ -343,12 +312,11 @@ namespace PlatformGL
 							GLCommandBufferModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
-								_GetManager(),
 								CommandBufferDescriptor{ msg->flags }
 							},
-							OUT _cmdBuffer )
-			);
-			CHECK_ERR( _Attach( "", _cmdBuffer, false ) );
+							OUT _cmdBuffer ) );
+
+			CHECK_ERR( _Attach( "", _cmdBuffer ) );
 		}
 
 		ModuleUtils::Initialize( {_cmdBuffer}, this );
@@ -942,7 +910,7 @@ namespace PlatformGL
 	_CmdPushConstants
 =================================================
 */
-	bool GL4CommandBuilder::_CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &msg)
+	bool GL4CommandBuilder::_CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
@@ -956,12 +924,54 @@ namespace PlatformGL
 	_CmdPushNamedConstants
 =================================================
 */
-	bool GL4CommandBuilder::_CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &msg)
+	bool GL4CommandBuilder::_CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		
 		TODO("");
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushNamedConstants
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdDebugMarker (const Message< GpuMsg::CmdDebugMarker > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope != EScope::None );
+		
+		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushNamedConstants
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdPushDebugGroup (const Message< GpuMsg::CmdPushDebugGroup > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope != EScope::None );
+		
+		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdPushNamedConstants
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdPopDebugGroup (const Message< GpuMsg::CmdPopDebugGroup > &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope != EScope::None );
+		
+		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
 		return true;
 	}
 

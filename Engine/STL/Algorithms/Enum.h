@@ -15,7 +15,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T1, typename T2, typename T3>
-	forceinline constexpr bool EnumEqMask (const T1& left, const T2& right, const T3& mask)
+	ND_ forceinline constexpr bool EnumEqMask (const T1& left, const T2& right, const T3& mask)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum< T1 > );
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum< T2 > );
@@ -32,7 +32,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T1, typename T2>
-	forceinline constexpr bool EnumEq (const T1& left, const T2& right)
+	ND_ forceinline constexpr bool EnumEq (const T1& left, const T2& right)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum< T1 > );
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum< T2 > );
@@ -48,7 +48,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T1, typename T2>
-	forceinline constexpr bool  EnumAnyEq (const T1& left, const T2& right)
+	ND_ forceinline constexpr bool  EnumAnyEq (const T1& left, const T2& right)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum< T1 > );
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum< T2 > );

@@ -113,7 +113,7 @@ namespace Profilers
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 
 		// must be attached to window
 		CHECK_LINKING( _GetParents().Count() == 1 );

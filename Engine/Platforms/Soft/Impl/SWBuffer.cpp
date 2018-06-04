@@ -24,9 +24,10 @@ namespace PlatformSW
 	// types
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::ReadFromStream,
-											ModuleMsg::WriteToStream,
+											DSMsg::GetDataSourceDescriptor,
+											DSMsg::ReadRegion,
+											DSMsg::WriteRegion,
+											GpuMsg::GetGpuMemoryDescriptor,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -46,7 +47,9 @@ namespace PlatformSW
 											GpuMsg::SWBufferBarrier
 										> >::Append< ForwardToMem_t >;
 
-		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;
+		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t::Append< MessageListFrom<
+											GpuMsg::SetBufferDescriptor
+										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 		
@@ -192,7 +195,7 @@ namespace PlatformSW
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		
 		_memObj = GetModuleByEvent< MemoryEvents_t >();
 
@@ -202,10 +205,10 @@ namespace PlatformSW
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								SWMemoryModuleID,
 								GlobalSystems(),
-								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
+								CreateInfo::GpuMemory{ _memFlags, _memAccess },
 								OUT mem_module ) );
 
-			CHECK_ERR( _Attach( "mem", mem_module, true ) );
+			CHECK_ERR( _Attach( "mem", mem_module ) );
 			_memObj = mem_module;
 		}
 		CHECK_ATTACHMENT( _memObj );
@@ -233,7 +236,6 @@ namespace PlatformSW
 
 		_SendForEachAttachments( msg );
 		
-		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
 		
 		// composed state will be changed when memory binded to image
@@ -261,9 +263,9 @@ namespace PlatformSW
 	{
 		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_mem ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 
-		if (is_mem )
+		if ( is_mem )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
@@ -280,7 +282,7 @@ namespace PlatformSW
 	{
 		CHECK( _Detach( msg->oldModule ) );
 
-		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		if ( msg->oldModule == _memObj )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
@@ -489,7 +491,7 @@ namespace PlatformSW
 */
 	bool SWBuffer::_SWBufferBarrier (const Message< GpuMsg::SWBufferBarrier > &msg)
 	{
-		for (auto& br : Range(msg->barriers))
+		for (auto& br : msg->barriers)
 		{
 			ASSERT( br.buffer == this );
 
@@ -604,12 +606,6 @@ namespace Platforms
 	ModulePtr SoftRendererObjectsConstructor::CreateSWBuffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
 	{
 		return New< PlatformSW::SWBuffer >( id, gs, ci );
-	}
-	
-	ModulePtr SoftRendererObjectsConstructor::CreateSWSharedBuffer (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSharedBuffer &ci)
-	{
-		return null;	// TODO
-		//return New< PlatformSW::SWBuffer >( id, gs, ci );
 	}
 
 }	// Platforms

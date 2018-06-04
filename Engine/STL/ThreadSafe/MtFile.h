@@ -6,7 +6,7 @@
 
 namespace GX_STL
 {
-namespace File
+namespace GXFile
 {
 
 	//
@@ -28,7 +28,7 @@ namespace File
 		{}
 
 
-		CHECKRES static SharedPointerType< MtRFile >  New (const RFilePtr &file)
+		ND_ static SharedPointerType< MtRFile >  New (const RFilePtr &file)
 		{
 			ASSERT( file->GetType() != EFile::Multithreaded );
 			return new MtRFile( file );
@@ -143,7 +143,7 @@ namespace File
 		{}
 
 
-		CHECKRES static SharedPointerType< MtWFile >  New (const WFilePtr &file)
+		ND_ static SharedPointerType< MtWFile >  New (const WFilePtr &file)
 		{
 			ASSERT( file->GetType() != EFile::Multithreaded );
 			return new MtWFile( file );
@@ -232,5 +232,5 @@ namespace File
 	};
 
 
-}	// File
+}	// GXFile
 }	// GX_STL

@@ -6,7 +6,7 @@
 
 namespace Engine
 {
-namespace ModuleMsg
+namespace _BaseMessages_
 {
 	
 	//
@@ -30,19 +30,19 @@ namespace ModuleMsg
 		Out (Out &&) = default;
 		Out (const Out &) = default;
 
-		void Set (const T &val)		const	{ _value = val; }
-		void Set (T &&val)			const	{ _value = FW<T>(val); }
+		void Set (const T &val)		const		{ _value = val; }
+		void Set (T &&val)			const		{ _value = FW<T>(val); }
 
 		// available only for sender
-		bool			IsDefined ()		{ return _value.IsDefined(); }
-		Optional<T>&	GetOptional ()		{ return _value; }
-		T &				Get ()				{ return _value.Get(); }
-		T				Get (const T& def)	{ return _value.Get( def ); }
+		ND_ bool			IsDefined ()		{ return _value.IsDefined(); }
+		ND_ Optional<T> &	GetOptional ()		{ return _value; }
+		ND_ T &				Get ()				{ return _value.Get(); }
+		ND_ T				Get (const T& def)	{ return _value.Get( def ); }
 
-		T *				operator -> ()		{ return _value.GetPtr(); }
-		T &				operator * ()		{ return _value.Get(); }
+		ND_ T *				operator -> ()		{ return _value.GetPtr(); }
+		ND_ T &				operator * ()		{ return _value.Get(); }
 
-		explicit operator bool ()			{ return IsDefined(); }
+		ND_ explicit operator bool ()			{ return IsDefined(); }
 
 		bool MoveTo (OUT T &dst)
 		{
@@ -66,9 +66,6 @@ namespace ModuleMsg
 			}
 			return false;
 		}
-
-		//friend void		operator << (OUT T& dst, Out<T> &src)				{ src.MoveTo( OUT dst ); }
-		//friend void		operator << (OUT Optional<T> &dst, Out<T> &src)		{ src.MoveTo( OUT dst ); }
 	};
 
 
@@ -88,14 +85,14 @@ namespace ModuleMsg
 		InOut (const InOut &) = default;
 		
 		// available for sender and receiver
-		bool			IsDefined ()	const	{ return this->_value.IsDefined(); }
-		Optional<T> &	GetOptional ()	const	{ return this->_value; }
-		T &				Get ()			const	{ return this->_value.Get(); }
+		ND_ bool			IsDefined ()	const	{ return this->_value.IsDefined(); }
+		ND_ Optional<T> &	GetOptional ()	const	{ return this->_value; }
+		ND_ T &				Get ()			const	{ return this->_value.Get(); }
 		
-		T *				operator -> ()	const	{ return this->_value.GetPtr(); }
-		T &				operator * ()	const	{ return this->_value.Get(); }
+		ND_ T *				operator -> ()	const	{ return this->_value.GetPtr(); }
+		ND_ T &				operator * ()	const	{ return this->_value.Get(); }
 
-		explicit operator bool ()		const	{ return IsDefined(); }
+		ND_ explicit operator bool ()		const	{ return IsDefined(); }
 	};
 
 
@@ -145,7 +142,7 @@ namespace ModuleMsg
 		ReadOnce (ReadOnce &&other) : _value(RVREF(other._value)), _isDefined(other._isDefined) { other._isDefined = false; }
 		ReadOnce (const ReadOnce &other) : _value(RVREF(other._value)), _isDefined(other._isDefined) { other._isDefined = false; }
 
-		T& Get () const
+		ND_ T &  Get () const
 		{
 			ASSERT( _isDefined );
 			_isDefined = false;
@@ -176,7 +173,7 @@ namespace ModuleMsg
 				_value = RVREF( value );
 		}
 
-		Optional<T>& Get ()
+		ND_ Optional<T> &  Get ()
 		{
 			return _value;
 		}
@@ -210,10 +207,10 @@ namespace ModuleMsg
 		
 		_GX_DIM_CMP_OPERATORS_TYPE( _value, T, );
 
-		T*	operator -> () const				{ return &_value; }
-		T&	operator * () const					{ return _value; }
+		ND_ T *	operator -> () const			{ return &_value; }
+		ND_ T &	operator * () const				{ return _value; }
 	};
 
 
-}	// ModuleMsg
+}	// _BaseMessages_
 }	// Engine

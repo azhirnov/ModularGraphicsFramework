@@ -50,12 +50,6 @@ namespace Platforms
 				return	type != right.type	?	type	> right.type	:
 												index	> right.index;
 			}
-
-			bool operator <  (const FragOutput &right) const
-			{
-				return	type != right.type	?	type	< right.type	:
-												index	< right.index;
-			}
 		};
 
 		using Name_t			= StaticString<32>;
@@ -72,11 +66,11 @@ namespace Platforms
 		FragmentOutputState (GX_DEFCTOR)
 		{}
 
-		Pair<const Name_t, FragOutput> const&  operator [] (usize index) const {
+		ND_ Pair<const Name_t, FragOutput> const&  operator [] (usize index) const {
 			return _outputs[ index ];
 		}
 
-		Ptr<const FragOutput> operator () (StringCRef name) const
+		ND_ Ptr<const FragOutput> operator () (StringCRef name) const
 		{
 			FragOutputs_t::const_iterator	iter;
 			_outputs.Find( name, OUT iter );
@@ -94,11 +88,11 @@ namespace Platforms
 			return *this;
 		}
 
-		bool IsExist (StringCRef name) const {
+		ND_ bool IsExist (StringCRef name) const {
 			return _outputs.IsExist( name );
 		}
 
-		usize Count () const {
+		ND_ usize Count () const {
 			return _outputs.Count();
 		}
 

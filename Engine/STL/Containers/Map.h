@@ -4,6 +4,7 @@
 
 #include "Engine/STL/Containers/MapUtils.h"
 #include "Engine/STL/Containers/IndexedArray.h"
+#include "Engine/STL/Containers/IndexedIterator.h"
 
 namespace GX_STL
 {
@@ -32,14 +33,17 @@ namespace _types_hidden_
 		using Key_t					= K;
 		using Value_t				= T;
 
-		using pair_t				= Pair< Key_t, Value_t >;
-		using const_pair_t			= Pair< const Key_t, Value_t >;
+		using Pair_t				= Pair< Key_t, Value_t >;
+		using CPair_t				= Pair< const Key_t, Value_t >;
 		
-		using iterator				= Ptr< const_pair_t >;
-		using const_iterator		= Ptr< const const_pair_t >;
+		using iterator				= Ptr< CPair_t >;
+		using const_iterator		= Ptr< const CPair_t >;
 		
-		using values_range_t		= ArrayRef< const_pair_t >;
-		using const_values_range_t	= ArrayCRef< const_pair_t >;
+		using values_range_t		= ArrayRef< CPair_t >;
+		using const_values_range_t	= ArrayCRef< CPair_t >;
+		
+		using idx_iterator			= IndexedIterator< CPair_t >;
+		using idx_const_iterator	= IndexedIterator< const CPair_t >;
 
 	private:
 		template <typename Key>
@@ -50,15 +54,15 @@ namespace _types_hidden_
 			
 		// methods
 			_KeySearchCmp (const Key *k): _key(*k) {}
-			_KeySearchCmp (const pair_t *p): _key(p->first) {}
+			_KeySearchCmp (const Pair_t *p): _key(p->first) {}
 			
-			bool operator == (const pair_t &pair) const		{ return GXMath::All( _key == pair.first ); }
-			bool operator != (const pair_t &pair) const		{ return not ( *this == pair.first ); }
-			bool operator <  (const pair_t &pair) const		{ return GXMath::All( _key < pair.first ); }
-			bool operator >  (const pair_t &pair) const		{ return GXMath::All( _key > pair.first ); }
+			bool operator == (const Pair_t &pair) const		{ return _key == pair.first; }
+			bool operator != (const Pair_t &pair) const		{ return not ( *this == pair.first ); }
+			bool operator <  (const Pair_t &pair) const		{ return pair.first > _key; }
+			bool operator >  (const Pair_t &pair) const		{ return _key > pair.first; }
 		};
 
-		using _MapUtils_t	= _types_hidden_::MapUtils< Container< pair_t, S, MC >, Key_t, _KeySearchCmp, IsUnique >;
+		using _MapUtils_t	= _types_hidden_::MapUtils< Container< Pair_t, S, MC >, Key_t, _KeySearchCmp, IsUnique >;
 
 
 	// variables
@@ -77,42 +81,50 @@ namespace _types_hidden_
 		BaseMap (Self &&other) : _memory( RVREF( other._memory ) )
 		{}
 		
-		BaseMap (InitializerList<pair_t> list)
+		BaseMap (InitializerList<Pair_t> list)
 		{
-			AddArray( ArrayCRef<pair_t>( list ) );
+			AddArray( ArrayCRef<Pair_t>( list ) );
 		}
 		
-		BaseMap (ArrayCRef<pair_t> list)
+		BaseMap (ArrayCRef<Pair_t> list)
 		{
 			AddArray( list );
 		}
 
-		operator	ArrayCRef< pair_t > () const
+		ND_ operator ArrayCRef<CPair_t> () const
 		{
-			return ArrayCRef< typename _MapUtils_t::Value_t >( _memory );
-			//return const_values_range_t( _memory.ptr(), _memory.ptr() + _memory.Count() );
+			return ArrayCRef<CPair_t>::From( ArrayCRef<Pair_t>( _memory ) );
+		}
+		
+		ND_ operator UniBuffer<CPair_t> ()
+		{
+			return UniBuffer<CPair_t>{ ArrayRef<CPair_t>::From( ArrayRef<Pair_t>{_memory} ) };
+		}
+		
+		ND_ operator UniBuffer<const CPair_t> () const
+		{
+			return UniBuffer<const CPair_t>{ ArrayCRef<CPair_t>::From( ArrayCRef<Pair_t>{_memory} ) };
 		}
 
-
-		const_pair_t &	operator [] (usize i)
+		ND_ CPair_t &		operator [] (usize i)
 		{
-			return ReferenceCast< const_pair_t >( _memory[i] );
+			return ReferenceCast< CPair_t >( _memory[i] );
 		}
 
-		const_pair_t const&	operator [] (usize i) const
+		ND_ CPair_t const&	operator [] (usize i) const
 		{
-			return ReferenceCast< const const_pair_t >( _memory[i] );
+			return ReferenceCast< const CPair_t >( _memory[i] );
 		}
 		
 
-		Value_t &	operator () (const Key_t &key)
+		ND_ Value_t &		operator () (const Key_t &key)
 		{
 			usize	i = 0;
 			FindIndex( key, OUT i );
 			return (*this)[i].second;
 		}
 		
-		Value_t const&	operator () (const Key_t &key) const
+		ND_ Value_t const&	operator () (const Key_t &key) const
 		{
 			usize	i = 0;
 			FindIndex( key, OUT i );
@@ -120,25 +132,25 @@ namespace _types_hidden_
 		}
 
 
-		Self &		operator << (const pair_t &value)
+		Self &		operator << (const Pair_t &value)
 		{
 			Add( value );
 			return *this;
 		}
 
-		Self &		operator << (pair_t &&value)
+		Self &		operator << (Pair_t &&value)
 		{
 			Add( RVREF( value ) );
 			return *this;
 		}
 
 
-		bool		operator == (const_values_range_t right) const
+		ND_ bool	operator == (const_values_range_t right) const
 		{
 			return _memory == right._memory;
 		}
 
-		bool		operator != (const_values_range_t right) const
+		ND_ bool	operator != (const_values_range_t right) const
 		{
 			return not (*this == right);
 		}
@@ -148,40 +160,46 @@ namespace _types_hidden_
 		Self &		operator =  (const Self &right)	= default;
 
 
-		const_pair_t &		Front ()			{ return (*this)[0]; }
-		const_pair_t const&	Front ()	const	{ return (*this)[0]; }
-
-		const_pair_t &		Back ()				{ return (*this)[ LastIndex() ]; }
-		const_pair_t const&	Back ()		const	{ return (*this)[ LastIndex() ]; }
+		ND_ CPair_t &		Front ()				{ return (*this)[0]; }
+		ND_ CPair_t const&	Front ()		const	{ return (*this)[0]; }
+		
+		ND_ CPair_t &		Back ()					{ return (*this)[ LastIndex() ]; }
+		ND_ CPair_t const&	Back ()			const	{ return (*this)[ LastIndex() ]; }
 		
 
-		bool			Empty ()		const	{ return _memory.Empty(); }
-		usize			Count ()		const	{ return _memory.Count(); }
-		usize			LastIndex ()	const	{ return _memory.LastIndex(); }
-		BytesU			Size ()			const	{ return _memory.Size(); }
-
+		ND_ bool			Empty ()		const	{ return _memory.Empty(); }
+		ND_ usize			Count ()		const	{ return _memory.Count(); }
+		ND_ usize			LastIndex ()	const	{ return _memory.LastIndex(); }
+		ND_ BytesU			Size ()			const	{ return _memory.Size(); }
 		
+		
+		ND_ auto			begin ()				{ return idx_iterator{ *this, 0 }; }
+		ND_ auto			begin ()		const	{ return idx_const_iterator{ *this, 0 }; }
+		ND_ auto			end ()					{ return idx_iterator{ *this, Count() }; }
+		ND_ auto			end ()			const	{ return idx_const_iterator{ *this, Count() }; }
+		
+
 		// if IsUnique == true
 		// if Map contains same value, then the old value will be replaced
 		iterator Add (const Key_t &key, const Value_t &value)
 		{
-			const usize	idx = _memory.AddOrReplace( RVREF( pair_t( key, value ) ) );
+			const usize	idx = _memory.AddOrReplace( RVREF( Pair_t( key, value ) ) );
 			return &(*this)[ idx ];
 		}
 		
 		iterator Add (Key_t &&key, Value_t &&value)
 		{
-			const usize	idx = _memory.AddOrReplace( RVREF( pair_t( RVREF(key), RVREF(value) ) ) );
+			const usize	idx = _memory.AddOrReplace( RVREF( Pair_t( RVREF(key), RVREF(value) ) ) );
 			return &(*this)[ idx ];
 		}
 
-		iterator Add (const pair_t &value)
+		iterator Add (const Pair_t &value)
 		{
 			const usize	idx = _memory.AddOrReplace( value );
 			return &(*this)[ idx ];
 		}
 
-		iterator Add (pair_t &&value)
+		iterator Add (Pair_t &&value)
 		{
 			const usize	idx = _memory.AddOrReplace( RVREF( value ) );
 			return &(*this)[ idx ];
@@ -192,30 +210,30 @@ namespace _types_hidden_
 		// if Map contains same value, then the old value will remains
 		iterator AddOrSkip (const Key_t &key, const Value_t &value)
 		{
-			const usize	idx = _memory.AddOrSkip( RVREF( pair_t( key, value ) ) );
+			const usize	idx = _memory.AddOrSkip( RVREF( Pair_t( key, value ) ) );
 			return &(*this)[ idx ];
 		}
 		
 		iterator AddOrSkip (Key_t &&key, Value_t &&value)
 		{
-			const usize	idx = _memory.AddOrSkip( RVREF( pair_t( RVREF(key), RVREF(value) ) ) );
+			const usize	idx = _memory.AddOrSkip( RVREF( Pair_t( RVREF(key), RVREF(value) ) ) );
 			return &(*this)[ idx ];
 		}
 
-		iterator AddOrSkip (const pair_t &value)
+		iterator AddOrSkip (const Pair_t &value)
 		{
 			const usize	idx = _memory.AddOrSkip( value );
 			return &(*this)[ idx ];
 		}
 
-		iterator AddOrSkip (pair_t &&value)
+		iterator AddOrSkip (Pair_t &&value)
 		{
 			const usize	idx = _memory.AddOrSkip( RVREF( value ) );
 			return &(*this)[ idx ];
 		}
 
 
-		void AddArray (ArrayCRef<pair_t> value)
+		void AddArray (ArrayCRef<Pair_t> value)
 		{
 			FOR( i, value ) {
 				Add( value[i] );
@@ -258,7 +276,7 @@ namespace _types_hidden_
 		}
 
 
-		bool IsExist (const Key_t &key) const
+		ND_ bool IsExist (const Key_t &key) const
 		{
 			usize idx = 0;
 			return FindIndex( key, OUT idx );
@@ -317,19 +335,19 @@ namespace _types_hidden_
 		}
 
 
-		values_range_t  GetRange (const usize first, const usize last)
+		ND_ values_range_t  GetRange (const usize first, const usize last)
 		{
 			return const_values_range_t(*this).SubArray( first, last - first + 1 );
 		}
 
-		const_values_range_t  GetRange (const usize first, const usize last) const
+		ND_ const_values_range_t  GetRange (const usize first, const usize last) const
 		{
 			return const_values_range_t(*this).SubArray( first, last - first + 1 );
 		}
 
 
-		void EraseByIter (const_iterator iter)		{ EraseByIndex( _memory.GetIndex( (pair_t const*) iter.RawPtr() ) ); }
-		void EraseByIter (iterator iter)			{ EraseByIndex( _memory.GetIndex( (pair_t const*) iter.RawPtr() ) ); }
+		void EraseByIter (const_iterator iter)		{ EraseByIndex( _memory.GetIndex( (Pair_t const*) iter.RawPtr() ) ); }
+		void EraseByIter (iterator iter)			{ EraseByIndex( _memory.GetIndex( (Pair_t const*) iter.RawPtr() ) ); }
 		void EraseByIndex (usize index)				{ _memory.EraseByIndex( index ); }
 		bool Erase (const Key_t &key)				{ return _memory.Erase( key ); }
 
@@ -437,6 +455,7 @@ namespace _types_hidden_
 }	// _types_hidden_
 
 
+	// dynamic size
 	template <	typename K,
 				typename T,
 				typename S = typename AutoDetectCopyStrategy< Pair<K, T> >::type,
@@ -461,6 +480,7 @@ namespace _types_hidden_
 	using MultiMap = _types_hidden_::BaseMap< Array, K, T, false, S, MC >;
 	
 
+	// static size
 	template <typename K, typename T, usize Size>
 	using FixedSizeMap = _types_hidden_::BaseMap< Array, K, T, true,
 								typename AutoDetectCopyStrategy< Pair<K,T> >::type,
@@ -469,6 +489,19 @@ namespace _types_hidden_
 
 	template <typename K, typename T, usize Size>
 	using FixedSizeMultiMap = _types_hidden_::BaseMap< Array, K, T, false,
+									typename AutoDetectCopyStrategy< Pair<K, T> >::type,
+									StaticMemoryContainer< Pair<K, T>, Size > >;
+	
+
+	// static + dynamic size
+	template <typename K, typename T, usize Size>
+	using MixedSizeMap = _types_hidden_::BaseMap< Array, K, T, true,
+								typename AutoDetectCopyStrategy< Pair<K,T> >::type,
+								StaticMemoryContainer< Pair<K,T>, Size > >;
+	
+
+	template <typename K, typename T, usize Size>
+	using MixedSizeMultiMap = _types_hidden_::BaseMap< Array, K, T, false,
 									typename AutoDetectCopyStrategy< Pair<K, T> >::type,
 									StaticMemoryContainer< Pair<K, T>, Size > >;
 

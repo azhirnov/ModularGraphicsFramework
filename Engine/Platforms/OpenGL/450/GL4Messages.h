@@ -143,7 +143,6 @@ namespace GpuMsg
 	struct GetGLImageID
 	{
 		Out< gl::GLuint >		result;
-		Out< gl::GLuint >		defaultView;
 	};
 
 
@@ -415,7 +414,10 @@ namespace GpuMsg
 								CmdClearColorImage,
 								CmdClearDepthStencilImage,
 								CmdPipelineBarrier,
-								GLCmdPushConstants >;
+								GLCmdPushConstants,
+								CmdDebugMarker,
+								CmdPushDebugGroup,
+								CmdPopDebugGroup >;
 
 		struct Command
 		{

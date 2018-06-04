@@ -74,31 +74,32 @@ namespace ContainerAdaptors
 			_Create( other );
 		}
 
-		bool IsValid () const
+		ND_ bool IsValid () const
 		{
 			return _ref and _eraseByIdx;
 		}
 
-		void Erase (usize index)
+		usize Erase (usize index)
 		{
 			ASSERT( IsValid() );
 			ASSERT( index < _arr.Count() );
 
 			_eraseByIdx( _ref, index, OUT _arr );
+			return index-1;
 		}
 		
-		explicit operator bool ()				const		{ return IsValid(); }
+		ND_ explicit operator bool ()				const		{ return IsValid(); }
 
-		T&			operator [] (usize index)				{ return _arr[index]; }
-		T const&	operator [] (usize index)	const		{ return _arr[ index ]; }
+		ND_ T&			operator [] (usize index)				{ return _arr[index]; }
+		ND_ T const&	operator [] (usize index)	const		{ return _arr[ index ]; }
 
-		usize		Count ()					const		{ return _arr.Count(); }
-		bool		Empty ()					const		{ return _arr.Empty(); }
+		ND_ usize		Count ()					const		{ return _arr.Count(); }
+		ND_ bool		Empty ()					const		{ return _arr.Empty(); }
 		
 
 	private:
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_Erase<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_Erase<C>>  _Create (C &other)
 		{
 			_arr			= other;
 			_ref			= PointerCast<void>( &other );
@@ -111,7 +112,7 @@ namespace ContainerAdaptors
 		}
 
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_EraseByIndex<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_EraseByIndex<C>>  _Create (C &other)
 		{
 			_arr			= other;
 			_ref			= PointerCast<void>( &other );
@@ -124,7 +125,7 @@ namespace ContainerAdaptors
 		}
 
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_erase<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_erase<C>>  _Create (C &other)
 		{
 			_arr			= ArrayRef<T>::FromStd( other );
 			_ref			= PointerCast<void>( &other );

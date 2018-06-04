@@ -69,47 +69,47 @@ namespace GXTypes
 
 		~Union ();
 
-		bool IsDefined () const;
-		bool IsSame (const Self &other) const;
-		void Destroy () noexcept;
+		ND_ bool IsDefined () const;
+		ND_ bool IsSame (const Self &other) const;
+			void Destroy () noexcept;
 
-		TypeId			GetCurrentTypeId ()		const;
-		usize			GetCurrentIndex ()		const		{ return _currentIndex; }
-		BytesU			GetSizeOf ()			const;
-		BinArrayCRef	GetData ()				const		{ return BinArrayCRef::From( _data ); }	// TODO: use GetSizeOf ?
-		VariantRef		GetVariantRef ()					{ return VariantRef::FromVoid( _data, GetCurrentTypeId() ); }
-		VariantCRef		GetVariantRef ()		const		{ return VariantCRef::FromVoid( _data, GetCurrentTypeId() ); }
+		ND_ TypeId			GetCurrentTypeId ()		const;
+		ND_ usize			GetCurrentIndex ()		const		{ return _currentIndex; }
+		ND_ BytesU			GetSizeOf ()			const;
+		ND_ BinArrayCRef	GetData ()				const		{ return BinArrayCRef::From( _data ); }	// TODO: use GetSizeOf ?
+		ND_ VariantRef		GetVariantRef ()					{ return VariantRef::FromVoid( _data, GetCurrentTypeId() ); }
+		ND_ VariantCRef		GetVariantRef ()		const		{ return VariantCRef::FromVoid( _data, GetCurrentTypeId() ); }
 
 
-		bool operator == (const Self &right) const;
-		bool operator >  (const Self &right) const;
-		bool operator <  (const Self &right) const;
-		bool operator != (const Self &right) const			{ return not (*this == right); }
-		bool operator >= (const Self &right) const			{ return not (*this <  right); }
-		bool operator <= (const Self &right) const			{ return not (*this >  right); }
+		ND_ bool operator == (const Self &right) const;
+		ND_ bool operator >  (const Self &right) const;
+		ND_ bool operator <  (const Self &right) const			{ return (right > *this); }
+		ND_ bool operator != (const Self &right) const			{ return not (*this == right); }
+		ND_ bool operator >= (const Self &right) const			{ return not (*this <  right); }
+		ND_ bool operator <= (const Self &right) const			{ return not (*this >  right); }
 
 		Self& operator = (const Self &right);
 		Self& operator = (Self &&right);
 		
-		explicit operator bool () const						{ return IsDefined(); }
+		ND_ explicit operator bool () const						{ return IsDefined(); }
 
 
 		// Type Access //
-		template <typename T>		Self &		Create (const T &value) noexcept;
-		template <typename T>		Self &		Create2 (T &&value) noexcept;
-		template <typename T>		Self &		Set (const T &value) noexcept;
+		template <typename T>			Self &		Create (const T &value) noexcept;
+		template <typename T>			Self &		Create2 (T &&value) noexcept;
+		template <typename T>			Self &		Set (const T &value) noexcept;
 
-		template <typename Func>	void		Apply (Func& func) noexcept;
-		template <typename Func>	void		Apply (const Func& func) const noexcept;
+		template <typename Func>		void		Apply (Func& func) noexcept;
+		template <typename Func>		void		Apply (const Func& func) const noexcept;
 
-		template <typename T>		bool		Is () const;
+		template <typename T>		ND_ bool		Is () const;
 
-		template <typename T>		T &			Get ();
-		template <typename T>		T const &	Get () const;
-		template <typename T>		T			Get (const T &defaultValue) const;
+		template <typename T>		ND_ T &			Get ();
+		template <typename T>		ND_ T const &	Get () const;
+		template <typename T>		ND_ T			Get (const T &defaultValue) const;
 
-		template <typename T>		T &			Cast ();
-		template <typename T>		T const &	Cast () const;
+		template <typename T>		ND_ T &			Cast ();
+		template <typename T>		ND_ T const &	Cast () const;
 
 
 	private:
@@ -306,13 +306,8 @@ namespace GXTypes
 				{
 					result = Comp( left.Get<T>() ) < Comp( right.Get<T>() );
 				}
-				else
-				if_constexpr ( CmpType == 2 )
-				{
-					result = Comp( left.Get<T>() ) > Comp( right.Get<T>() );
-				}
 
-				STATIC_ASSERT( CmpType < 3 );
+				STATIC_ASSERT( CmpType < 2 );
 			}
 		}
 	};
@@ -618,22 +613,6 @@ namespace GXTypes
 			return false;
 		
 		_TypeList_Compare<1>	func( *this, right );
-		TypeList_t::RuntimeForEach( func );
-		return func.result;
-	}
-	
-/*
-=================================================
-	operator <
-=================================================
-*/
-	template <typename ...Types>
-	forceinline bool Union<Types...>::operator <  (const Self &right) const
-	{
-		if ( not IsSame( right ) )
-			return false;
-		
-		_TypeList_Compare<2>	func( *this, right );
 		TypeList_t::RuntimeForEach( func );
 		return func.result;
 	}

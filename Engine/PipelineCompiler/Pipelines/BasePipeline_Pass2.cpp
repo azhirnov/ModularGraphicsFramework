@@ -169,7 +169,7 @@ namespace PipelineCompiler
 */
 	bool BasePipeline::_StructsToString (const StructTypes &structTypes, OUT String &glslSource)
 	{
-		using StArray_t	= Array< StructTypes::const_pair_t const *>;
+		using StArray_t	= Array< StructTypes::CPair_t const *>;
 
 		HashSet<StringCRef>		defined;	defined.Reserve( structTypes.Count() );
 		StArray_t				sorted;		sorted.Reserve( structTypes.Count() );
@@ -189,7 +189,7 @@ namespace PipelineCompiler
 				bool	all_deps_defined = true;
 
 				// check fields
-				for (auto& fd : Range(pending[i]->second.fields))
+				for (auto& fd : pending[i]->second.fields)
 				{
 					if ( EShaderVariable::IsStruct( fd.type ) )
 					{
@@ -225,7 +225,7 @@ namespace PipelineCompiler
 			FOR( j, st.second.fields )
 			{
 				const auto&		fl			= st.second.fields[j];
-				const String	type_name	= EShaderVariable::IsStruct( fl.type ) ? fl.typeName : ToStringGLSL( fl.type );
+				const String	type_name	= EShaderVariable::IsStruct( fl.type ) ? StringCRef(fl.typeName) : ToStringGLSL( fl.type );
 				const uint		array_size	= fl.arraySize;
 				const uint		align		= (usize) fl.align;
 				const uint		offset		= (usize) fl.offset;
@@ -249,7 +249,7 @@ namespace PipelineCompiler
 */
 	bool BasePipeline::_SerializeStructs (const StructTypes &structTypes, Ptr<ISerializer> ser, OUT String &serialized)
 	{
-		using StArray_t	= Array< StructTypes::const_pair_t const *>;
+		using StArray_t	= Array< StructTypes::CPair_t const *>;
 
 		HashSet<StringCRef>		defined;	defined.Reserve( structTypes.Count() );
 		StArray_t				sorted;		sorted.Reserve( structTypes.Count() );
@@ -270,7 +270,7 @@ namespace PipelineCompiler
 				bool	all_deps_defined = true;
 
 				// check fields
-				for (auto& fd : Range(pending[i]->second.fields))
+				for (auto& fd : pending[i]->second.fields)
 				{
 					if ( EShaderVariable::IsStruct( fd.type ) )
 					{
@@ -580,10 +580,8 @@ namespace PipelineCompiler
 		Array<StringCRef>		source;
 		String					log;
 		String					str;
-		const String			version	=	_GetVersionGLSL();
-		EShaderSrcFormat::type	src_fmt	=	//shaderFormat == EShaderSrcFormat::GXSL_Vulkan ?	EShaderSrcFormat::GLSL_Vulkan : 
-											//shaderFormat == EShaderSrcFormat::GXSL ?		EShaderSrcFormat::GLSL :
-											shaderFormat;
+		const String			version	= _GetVersionGLSL();
+		EShaderSrcFormat::type	src_fmt	= shaderFormat;
 
 		if ( convCfg.searchForSharedTypes and convCfg.addPaddingToStructs )
 		{
@@ -598,17 +596,20 @@ namespace PipelineCompiler
 		BinaryArray		glsl_source;
 		{
 			ShaderCompiler::Config	cfg;
-			cfg.filterInactive	= false;
-			cfg.obfuscate		= false;
 			cfg.skipExternals	= true;
 			cfg.optimize		= false;
 			cfg.source			= shaderFormat;
 			cfg.target			= EShaderDstFormat::GLSL_Source;
 			cfg.typeReplacer	= DelegateBuilder( this, &BasePipeline::_TypeReplacer );
+			
+			if ( shader.type == EShader::Compute ) {
+				str << _LocalGroupSizeToStringGLSL( localGroupSize );
+			}
 
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
-					<< _GetPerShaderHeaderGLSL( shader.type );
+					<< _GetPerShaderHeaderGLSL( shader.type )
+					<< str;
 
 			FOR( i, shader._source ) {
 				source << StringCRef(shader._source[i]);
@@ -628,13 +629,11 @@ namespace PipelineCompiler
 
 
 		ShaderCompiler::Config	cfg;
-		cfg.filterInactive	= true;
-		cfg.obfuscate		= convCfg.obfuscate;
 		cfg.optimize		= convCfg.optimizeSource;
 		cfg.skipExternals	= false;
 
 		// compile (optimize) for OpenGL
-		if ( convCfg.target[ EShaderDstFormat::GLSL_Source ] )
+		if ( convCfg.target[ EShaderDstFormat::GLSL_Source ] or convCfg.target[ EShaderDstFormat::GLSL_Binary ] )
 		{
 			source.Clear();
 			str.Clear();
@@ -673,6 +672,9 @@ namespace PipelineCompiler
 					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
 				}
 			}
+
+			if ( not convCfg.target[ EShaderDstFormat::GLSL_Source ] )
+				compiled.glsl.Clear();
 		}
 
 
@@ -740,7 +742,8 @@ namespace PipelineCompiler
 
 
 		// compile for CL
-		if ( shader.type == EShader::Compute and convCfg.target[ EShaderDstFormat::CL_Source ] )
+		if ( shader.type == EShader::Compute and
+			 (convCfg.target[ EShaderDstFormat::CL_Source ] or convCfg.target[ EShaderDstFormat::CL_Binary ]) )
 		{
 			source.Clear();
 			str.Clear();
@@ -779,11 +782,56 @@ namespace PipelineCompiler
 					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
 				}
 			}
-		}
 
-		// not supported
-		ASSERT( not convCfg.target[ EShaderDstFormat::HLSL_Source ] );
-		ASSERT( not convCfg.target[ EShaderDstFormat::HLSL_Binary ] );
+			if ( not convCfg.target[ EShaderDstFormat::CL_Source ] )
+				compiled.cl.Clear();
+		}
+		
+
+		// compile for HLSL
+		if ( convCfg.target[ EShaderDstFormat::HLSL_Source ] or convCfg.target[ EShaderDstFormat::HLSL_Binary ] )
+		{
+			source.Clear();
+			str.Clear();
+
+			str << varyings << '\n';
+			_BindingsToString( shader.type, EShaderType::HLSL, false, OUT str );
+			
+			source	<< version
+					<< _GetDefaultHeaderGLSL()
+					<< _GetPerShaderHeaderGLSL( shader.type )
+					<< glsl_types
+					<< str
+					<< StringCRef::From( glsl_source );
+			
+			cfg.source = src_fmt;
+			cfg.target = EShaderDstFormat::HLSL_Source;
+			
+			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.hlsl ) )
+			{
+				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
+			}
+
+
+			// compile HLSL source to binary
+			if ( convCfg.target[ EShaderDstFormat::HLSL_Binary ] )
+			{
+				source.Clear();
+				source << StringCRef::From( compiled.hlsl );
+				
+				ShaderCompiler::Config	cfg2;
+				cfg2.source	= EShaderSrcFormat::HLSL;
+				cfg2.target = EShaderDstFormat::HLSL_Binary;
+
+				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg2, OUT log, OUT compiled.hlslBinary ) )
+				{
+					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
+				}
+			}
+
+			if ( not convCfg.target[ EShaderDstFormat::HLSL_Source ] )
+				compiled.hlsl.Clear();
+		}
 		
 		return true;
 	}

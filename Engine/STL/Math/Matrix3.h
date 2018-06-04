@@ -66,7 +66,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildTextureMatrix (const T& a, const Vec2_t &center,
+	ND_ inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::BuildTextureMatrix (const T& a, const Vec2_t &center,
 																			const Vec2_t &pos, const Vec2_t &scale)
 	{
 		Self			m;

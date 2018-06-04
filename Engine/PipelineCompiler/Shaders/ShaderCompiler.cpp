@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-# include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
-# include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
+#include "Engine/PipelineCompiler/Shaders/glslang_include.h"
+#include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
 
 #ifdef COMPILER_MSVC
 # pragma warning (push, 1)
@@ -12,12 +12,6 @@
 # pragma warning (disable: 4996)
 # pragma warning (disable: 4946)
 #endif
-
-# include <sstream>
-# include "LunarGLASS/Core/metadata.h"
-# include "llvm/IR/Instructions.h"
-# include "llvm/IR/LLVMContext.h"
-# include "LunarGLASS/Backends/GLSL/GlslManager.h"
 
 #ifdef COMPILER_MSVC
 # pragma warning (pop)
@@ -40,31 +34,7 @@ namespace PipelineCompiler
 //-----------------------------------------------------------------------------
 
 
-/*
-=================================================
-	UnsupportedFunctionalityHandler
-=================================================
-*/
-	static bool glaHasTranslationErrors = false;
-	
-	static String& _GetTranslationErrors ()
-	{
-		static String	str;
-		return str;
-	}
-
-	static void UnsupportedFunctionalityHandler (const std::string &message, gla::EAbortType at)
-	{
-		if ( at == gla::EAbortType::EATAbort )
-			glaHasTranslationErrors = true;
-
-		_GetTranslationErrors() << message << ", file: \"LunarGLASS\"\n";
-
-		//LOG( "LunarGLASS: "_str << message, ELog::Error );
-	}
-//-----------------------------------------------------------------------------
-
-	
+#ifdef GX_PIPELINECOMPILER_USE_PLATFORMS
 /*
 =================================================
 	Initialize
@@ -91,7 +61,7 @@ namespace PipelineCompiler
 		CHECK_ERR( mf->Create(
 						0,
 						ms->GlobalSystems(),
-						CreateInfo::GpuContext{ ComputeSettings{ "GL 4.4"_GAPI } },
+						CreateInfo::GpuContext{ ComputeSettings{ "GL 4.5"_GAPI } },
 						OUT glcontext ) );
 
 		ms->Send< ModuleMsg::AttachModule >({ glcontext });
@@ -106,7 +76,7 @@ namespace PipelineCompiler
 		CHECK_ERR( mf->Create(
 						0,
 						ms->GlobalSystems(),
-						CreateInfo::GpuThread{ ComputeSettings{ "GL 4.4"_GAPI } },
+						CreateInfo::GpuThread{ ComputeSettings{ "GL 4.5"_GAPI } },
 						OUT _glthread ) );
 	
 		thread->Send< ModuleMsg::AttachModule >({ _glthread });
@@ -120,7 +90,7 @@ namespace PipelineCompiler
 
 		return true;
 	}
-	
+
 /*
 =================================================
 	_CLInit
@@ -178,6 +148,7 @@ namespace PipelineCompiler
 		GetMainSystemInstance()->Send< ModuleMsg::Update >({});
 		return true;
 	}
+#endif	// GX_PIPELINECOMPILER_USE_PLATFORMS
 //-----------------------------------------------------------------------------
 
 
@@ -189,8 +160,6 @@ namespace PipelineCompiler
 	ShaderCompiler::ShaderCompiler ()
 	{
 		glslang::InitializeProcess();
-		gla::RegisterUnsupportedFunctionalityHandler( &UnsupportedFunctionalityHandler );
-
 	}
 
 /*
@@ -212,6 +181,7 @@ namespace PipelineCompiler
 */
 	bool ShaderCompiler::InitializeContext ()
 	{
+	#ifdef GX_PIPELINECOMPILER_USE_PLATFORMS
 		if ( not _app )
 		{
 			Platforms::RegisterPlatforms();
@@ -224,6 +194,8 @@ namespace PipelineCompiler
 				OS::CurrentThread::Yield();
 			}
 		}
+	#endif
+
 		return true;
 	}
 	
@@ -234,6 +206,7 @@ namespace PipelineCompiler
 */
 	void ShaderCompiler::DestroyContext ()
 	{
+	#ifdef GX_PIPELINECOMPILER_USE_PLATFORMS
 		if ( not _app )
 			return;
 
@@ -241,6 +214,7 @@ namespace PipelineCompiler
 		_app = null;
 
 		GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
+	#endif
 	}
 
 /*
@@ -252,33 +226,13 @@ namespace PipelineCompiler
 	{
 		return SingletonMultiThread::Instance<ShaderCompiler>();
 	}
-
-/*
-=================================================
-	_CheckGLAErrors
-=================================================
-*/
-	bool ShaderCompiler::_CheckGLAErrors (OUT String *log) const
-	{
-		if ( log )
-		{
-			*log << '\n' << _GetTranslationErrors();
-		}
-
-		_GetTranslationErrors().Clear();
-
-		bool res = glaHasTranslationErrors;
-
-		glaHasTranslationErrors = false;
-		return not res;
-	}
 	
 /*
 =================================================
 	_OnCompilationFailed
 =================================================
 */
-	bool ShaderCompiler::_OnCompilationFailed (EShader::type shaderType, EShaderSrcFormat::type fmt, ArrayCRef<StringCRef> source, INOUT String &log) const
+	bool ShaderCompiler::_OnCompilationFailed (EShader::type, EShaderSrcFormat::type, ArrayCRef<StringCRef> source, INOUT String &log) const
 	{
 		// pattern: <error/warning>: <number:<line>: <description>		// glslang errors format
 		
@@ -612,9 +566,8 @@ namespace PipelineCompiler
 					//case EShaderSrcFormat::GLSL_ES_2 :
 					//case EShaderSrcFormat::GLSL_ES_3 :
 					{
-						if ( cfg.optimize )
-							return _OptimizeGLSL( cfg, data, OUT log, OUT result );
-						else
+						ASSERT( not cfg.optimize and "not supported" );
+
 						if ( cfg.skipExternals or cfg.typeReplacer )
 							;	// go to 'case GXSL'
 						else
@@ -623,30 +576,10 @@ namespace PipelineCompiler
 					case EShaderSrcFormat::GXSL :
 					{
 						_GLSLangResult	glslang_data;
-						Config			cfg2 = cfg;
-						
-						cfg2.skipExternals = cfg.optimize ? false : cfg.skipExternals;
 
-						CHECK_COMP( _GLSLangParse( cfg2, data, OUT log, OUT glslang_data ) );
-						CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
-						CHECK_COMP( _TranslateGXSLtoGLSL( cfg2, glslang_data, OUT log, OUT result ) );
-						
-						if ( cfg.optimize )
-						{
-							_ShaderData	data2 = data;
-							data2.src.Clear();
-							data2.src << StringCRef::From( result );
-							data2.entry = "main";
-
-							cfg2				= cfg;
-							cfg2.source			= EShaderSrcFormat::GLSL;
-							cfg2.typeReplacer	= Uninitialized;
-
-							BinaryArray	temp;
-							CHECK_COMP( _OptimizeGLSL( cfg2, data2, OUT log, OUT temp ) );
-
-							result = RVREF( temp );
-						}
+						CHECK_COMP( _GLSLangParse( cfg, data, OUT log, OUT glslang_data ) );
+						CHECK_COMP( _ReplaceTypes( glslang_data, cfg ) );
+						CHECK_COMP( _TranslateGXSLtoGLSL( cfg, glslang_data, OUT log, OUT result ) );
 						return true;
 					}
 					//case EShaderSrcFormat::GLSL_Vulkan :
@@ -655,31 +588,12 @@ namespace PipelineCompiler
 						_GLSLangResult	glslang_data;
 						Config			cfg2 = cfg;
 						
-						cfg2.skipExternals	= cfg.optimize ? false : cfg.skipExternals;
-						cfg2.target			= EShaderDstFormat::SPIRV_Source;
-
+						cfg2.target = EShaderDstFormat::SPIRV_Source;
 						CHECK_COMP( _GLSLangParse( cfg2, data, OUT log, OUT glslang_data ) );
 						CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 						
 						cfg2.target = cfg.target;
 						CHECK_COMP( _TranslateGXSLtoGLSL( cfg2, glslang_data, OUT log, OUT result ) );
-						
-						if ( cfg.optimize )
-						{
-							_ShaderData	data2 = data;
-							data2.src.Clear();
-							data2.src << StringCRef::From( result );
-							data2.entry = "main";
-
-							cfg2				= cfg;
-							cfg2.source			= EShaderSrcFormat::GLSL;
-							cfg2.typeReplacer	= Uninitialized;
-
-							BinaryArray	temp;
-							CHECK_COMP( _OptimizeGLSL( cfg2, data2, OUT log, OUT temp ) );
-
-							result = RVREF( temp );
-						}
 						return true;
 					}
 					default :
@@ -734,7 +648,7 @@ namespace PipelineCompiler
 				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 
 				cfg2.typeReplacer = Uninitialized;
-				CHECK_COMP( _CompileWithLunarGOO( cfg2, glslang_data, OUT log, OUT result ) );
+				CHECK_COMP( _CompileSPIRV( cfg2, glslang_data, OUT log, OUT result ) );
 
 				return true;
 			}
@@ -757,7 +671,6 @@ namespace PipelineCompiler
 
 					default :
 					{
-						cfg2.optimize		= true;
 						cfg2.skipExternals	= false;
 						cfg2.target			= EShaderDstFormat::GLSL_Source;
 						cfg2.typeReplacer	= Uninitialized;
@@ -818,7 +731,6 @@ namespace PipelineCompiler
 
 					default :
 					{
-						cfg2.optimize		= true;
 						cfg2.skipExternals	= false;
 						cfg2.target			= EShaderDstFormat::GLSL_Source;
 						cfg2.typeReplacer	= Uninitialized;
@@ -858,7 +770,6 @@ namespace PipelineCompiler
 
 					default :
 					{
-						cfg2.optimize		= true;
 						cfg2.skipExternals	= false;
 						cfg2.target			= EShaderDstFormat::GLSL_Source;
 						cfg2.typeReplacer	= Uninitialized;
@@ -884,22 +795,31 @@ namespace PipelineCompiler
 
 			case EShaderDstFormat::HLSL_Binary :
 			{
-				BinaryArray	temp;
 				_ShaderData	data2 = data;
 				Config		cfg2  = cfg;
+				BinaryArray	temp;
+				
+				switch ( cfg.source )
+				{
+					case EShaderSrcFormat::HLSL :
+						break;
 
-				cfg2.skipExternals	= false;
-				cfg2.target			= EShaderDstFormat::HLSL_Source;
+					default :
+					{
+						cfg2.skipExternals	= false;
+						cfg2.target			= EShaderDstFormat::HLSL_Source;
 
-				CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
+						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
 
-				data2.src.Clear();
-				data2.src << StringCRef::From( temp );
-				data2.entry = "main";
+						data2.src.Clear();
+						data2.src << StringCRef::From( temp );
+						data2.entry = "main";
 
-				cfg2				= cfg;
-				cfg2.source			= EShaderSrcFormat::HLSL;
-				cfg2.typeReplacer	= Uninitialized;
+						cfg2				= cfg;
+						cfg2.source			= EShaderSrcFormat::HLSL;
+						cfg2.typeReplacer	= Uninitialized;
+					}
+				}
 
 				CHECK_COMP( _CompileHLSL( cfg2, data2, OUT log, OUT result ) );
 				return true;
@@ -910,141 +830,6 @@ namespace PipelineCompiler
 			default :
 				RETURN_ERR( "unsupported shader compilation target!" );
 		}
-		return true;
-	}
-	
-/*
-=================================================
-	_CompileWithLunarGOO
-=================================================
-*/
-	bool ShaderCompiler::_CompileWithLunarGOO (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const
-	{
-		ASSERT( not cfg.typeReplacer );
-
-		// choose target
-		EProfile	shader_profile	= ENoProfile;
-		uint		shader_version	= 0;
-		bool		use_spirv		= false;
-
-		switch ( cfg.source )
-		{
-			case EShaderSrcFormat::GLSL :
-			case EShaderSrcFormat::GXSL :
-			case EShaderSrcFormat::GLSL_ES_2 :
-			case EShaderSrcFormat::GLSL_ES_3 :
-				break;
-
-			case EShaderSrcFormat::GLSL_Vulkan :
-			case EShaderSrcFormat::GXSL_Vulkan :
-				break;
-
-			default :
-				RETURN_ERR( "unsupported shader source!" );
-		}
-
-		switch ( cfg.target )
-		{
-			case EShaderDstFormat::GLSL_Source :
-				shader_profile	= ECoreProfile;
-				shader_version	= GLSL_VERSION;
-				break;
-
-			case EShaderDstFormat::GLSL_ES_Source :
-				shader_profile	= EEsProfile;
-				shader_version	= GLSL_ES_VERSION;
-				break;
-
-			case EShaderDstFormat::SPIRV_Source :
-			case EShaderDstFormat::SPIRV_Binary :
-				shader_profile	= ECoreProfile;
-				shader_version	= GLSL_VERSION;
-				use_spirv		= true;
-				CHECK_ERR( not cfg.skipExternals );
-				break;
-			
-			default :
-				RETURN_ERR( "unsupported shader compilation target!" );
-		}
-
-		// optimize shader
-		const int		substitution_level	= 1;
-		
-		const glslang::TIntermediate* intermediate = glslangData.prog.getIntermediate( glslangData.shader->getStage() );
-		CHECK_ERR( intermediate );
-
-        gla::GlslManager manager( cfg.obfuscate, cfg.filterInactive, substitution_level );
-
-        manager.options.backend								= gla::BackendOption::GLSL;
-
-		manager.options.optimizations.adce					= true;
-		manager.options.optimizations.coalesce				= true;
-		manager.options.optimizations.flattenHoistThreshold = 20;
-		manager.options.optimizations.gvn					= true;
-		manager.options.optimizations.inlineThreshold		= cfg.inlineThreshold;
-		manager.options.optimizations.loopUnrollThreshold	= cfg.loopUnrollThreshold;
-		manager.options.optimizations.reassociate			= true;
-
-		if ( use_spirv )
-		{
-			std::vector<unsigned int>	spirv;
-			std::stringstream			spv_source;
-			glslang::SpvOptions			spv_options;
-
-			spv_options.generateDebugInfo	= not cfg.optimize;
-			spv_options.disableOptimizer	= not cfg.optimize;
-			spv_options.optimizeSize		= cfg.optimize;
-			
-			glslang::GlslangToSpv( *intermediate, OUT spirv, &spv_options );
-
-			if ( cfg.target == EShaderDstFormat::SPIRV_Source )
-			{
-				spv::Parameterize();
-				spv::Disassemble( OUT spv_source, spirv );
-
-				result = BinArrayCRef::FromStd( spv_source.str() );
-				return true;
-			}
-			else
-			{
-				result = BinArrayCRef::FromStd( spirv );
-				return true;
-			}
-		}
-		else
-		{
-			TranslateGlslangToTop( *intermediate, manager );
-		}
-
-		manager.setVersion( shader_version );
-		manager.setProfile( shader_profile );
-
-		_CheckGLAErrors();	// clear errors
-
-		manager.translateTopToBottom();
-		manager.translateBottomToTarget();
-
-		CHECK_COMP( _CheckGLAErrors( OUT &log ) );
-
-		result = BinArrayCRef::From(StringCRef( cfg.skipExternals ? manager.getIndexShader() : manager.getGeneratedShader() ));
-		return true;
-	}
-	
-/*
-=================================================
-	_OptimizeGLSL
-=================================================
-*/
-	bool ShaderCompiler::_OptimizeGLSL (const Config &cfg, const _ShaderData &data, OUT String &log, OUT BinaryArray &result) const
-	{
-		Config			cfg2 = cfg;
-		_GLSLangResult	glslang_data;
-
-		CHECK_COMP( _GLSLangParse( cfg2, data, OUT log, OUT glslang_data ) );
-		CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
-
-		cfg2.typeReplacer = Uninitialized;
-		CHECK_COMP( _CompileWithLunarGOO( cfg2, glslang_data, OUT log, OUT result ) );
 		return true;
 	}
 	

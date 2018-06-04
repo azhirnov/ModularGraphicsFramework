@@ -8,7 +8,7 @@ namespace Engine
 {
 namespace PlatformTools
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//
@@ -48,23 +48,23 @@ namespace PlatformTools
 
 	// methods
 	public:
-		static ModulePtr  FindWinAPIPlatform (GlobalSystemsRef gs);
-		static ModulePtr  FindSDLPlatform (GlobalSystemsRef gs);
-		static ModulePtr  FindPlatform (GlobalSystemsRef gs);
+		ND_ static ModulePtr  FindWinAPIPlatform (GlobalSystemsRef gs);
+		ND_ static ModulePtr  FindSDLPlatform (GlobalSystemsRef gs);
+		ND_ static ModulePtr  FindPlatform (GlobalSystemsRef gs);
 
-		static ModulePtr  FindWinAPIWindow (GlobalSystemsRef gs);
-		static ModulePtr  FindSDLWindow (GlobalSystemsRef gs);
-		static ModulePtr  FindWindow (GlobalSystemsRef gs);
-		static ModulePtr  FindWindowInAttachment (const ModulePtr &mod);
+		ND_ static ModulePtr  FindWinAPIWindow (GlobalSystemsRef gs);
+		ND_ static ModulePtr  FindSDLWindow (GlobalSystemsRef gs);
+		ND_ static ModulePtr  FindWindow (GlobalSystemsRef gs);
+		ND_ static ModulePtr  FindWindowInAttachment (const ModulePtr &mod);
 
 		//template <typename MsgList, typename EventList>
 		//static ModulePtr  FindWindowMsgEvent (GlobalSystemsRef gs);
 		
 #		ifdef PLATFORM_WINDOWS
-		static bool GetWindowHandle (const ModulePtr &window, const Function<bool (const WinAPIWindow &)> &func);
+		ND_ static bool GetWindowHandle (const ModulePtr &window, const Function<bool (const WinAPIWindow &)> &func);
 #		endif
 #		ifdef PLATFORM_ANDROID
-		static bool GetWindowHandle (const ModulePtr &window, const Function<bool (const AndroidWindow &)> &func);
+		ND_ static bool GetWindowHandle (const ModulePtr &window, const Function<bool (const AndroidWindow &)> &func);
 #		endif
 	};
 

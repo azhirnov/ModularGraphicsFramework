@@ -15,7 +15,7 @@ namespace Engine
 {
 namespace PlatformSW
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 }	// PlatformSW

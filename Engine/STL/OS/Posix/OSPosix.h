@@ -17,7 +17,7 @@ namespace GX_STL
 {
 namespace OS
 {
-	using namespace GXTypes;
+	using namespace GX_STL::GXTypes;
 
 }	// OS
 }	// GX_STL

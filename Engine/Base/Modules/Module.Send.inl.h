@@ -1,6 +1,6 @@
 // This is part of 'Module::Send' function.
 {
-	using FixedMapRange_t	= MixedSizeArray< MessageHandler::HandlersMap_t::const_pair_t, 32 >;
+	using FixedMapRange_t	= MixedSizeArray< MessageHandler::HandlersMap_t::CPair_t, 32 >;
 
 	FixedMapRange_t	temp;
 	{
@@ -23,11 +23,9 @@
 		}
 	}
 		
-	FOR( i, temp )
+	for (auto& handler : temp)
 	{
-		auto&	handler = temp[i].second;
-
-		handler.func( handler.ptr, handler.data, var_msg );
+		handler.second.func( handler.second.ptr, handler.second.data, var_msg );
 	}
 	return not temp.Empty();
 }

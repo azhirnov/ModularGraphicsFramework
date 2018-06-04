@@ -121,22 +121,6 @@ namespace GXTypes
 				}
 				return type0 < type1;
 			}
-		
-			forceinline bool Greater (const Interface_t *right) const
-			{
-				const BytesU	size0 = Size();
-				const BytesU	size1 = right->Size();
-				const TypeId	type0 = TypeIdOf();
-				const TypeId	type1 = right->TypeIdOf();
-			
-				if ( type0 == type1 ) {
-					if ( size0 == size1 )
-						return UnsafeMem::MemCmp( (void *)this, (void *)right, size0 ) > 0;
-					else
-						return size0 > size1;
-				}
-				return type0 > type1;
-			}
 		};
 
 
@@ -328,35 +312,35 @@ namespace GXTypes
 			return *this;
 		}
 
-		forceinline bool EqualPointers (const void *ptr) const
+		ND_ forceinline bool EqualPointers (const void *ptr) const
 		{
 			return _IsCreated() and _Internal()->ClassPtr() == ptr;
 		}
 
-		forceinline operator	bool ()								const	{ return IsValid(); }
+		ND_ forceinline explicit operator	bool ()				const	{ return IsValid(); }
 
-		forceinline bool		IsValid ()							const	{ return _IsCreated() and _Internal()->IsValid(); }
+		ND_ forceinline bool		IsValid ()					const	{ return _IsCreated() and _Internal()->IsValid(); }
 
-		forceinline Result_t	operator () (Args... args)			const	{ ASSERT( IsValid() );  return _Internal()->Call( FW<Args>(args)... ); }
+		forceinline Result_t		operator () (Args... args)	const	{ ASSERT( IsValid() );  return _Internal()->Call( FW<Args>(args)... ); }
 		
-		forceinline Result_t	Call (Args... args)					const	{ ASSERT( IsValid() );	return _Internal()->Call( FW<Args>(args)... ); }
-		forceinline Result_t	SafeCall (Args... args)				const	{ return IsValid() ? _Internal()->Call( FW<Args>(args)... ) : Result_t(); }
+		forceinline Result_t		Call (Args... args)			const	{ ASSERT( IsValid() );	return _Internal()->Call( FW<Args>(args)... ); }
+		forceinline Result_t		SafeCall (Args... args)		const	{ return IsValid() ? _Internal()->Call( FW<Args>(args)... ) : Result_t(); }
 
-		forceinline TypeId		GetType ()							const	{ return IsValid() ? _Internal()->TypeIdOf() : TypeId(); }
+		ND_ forceinline TypeId		GetType ()					const	{ return IsValid() ? _Internal()->TypeIdOf() : TypeId(); }
 
-		forceinline bool operator == (const Self &right)			const	{ ASSERT( IsValid() );  return _Internal()->Cmp( right._Internal() );  }
-		forceinline bool operator <  (const Self &right)			const	{ ASSERT( IsValid() );  return _Internal()->Less( right._Internal() ); }
-		forceinline bool operator >  (const Self &right)			const	{ ASSERT( IsValid() );  return _Internal()->Greater( right._Internal() ); }
-		forceinline bool operator != (const Self &right)			const	{ return not (*this == right); }
-		forceinline bool operator <= (const Self &right)			const	{ return not (*this >  right); }
-		forceinline bool operator >= (const Self &right)			const	{ return not (*this <  right); }
+		ND_ forceinline bool operator == (const Self &right)	const	{ ASSERT( IsValid() );  return _Internal()->Cmp( right._Internal() );  }
+		ND_ forceinline bool operator <  (const Self &right)	const	{ ASSERT( IsValid() );  return _Internal()->Less( right._Internal() ); }
+		ND_ forceinline bool operator >  (const Self &right)	const	{ ASSERT( IsValid() );  return right._Internal()->Less( _Internal() ); }
+		ND_ forceinline bool operator != (const Self &right)	const	{ return not (*this == right); }
+		ND_ forceinline bool operator <= (const Self &right)	const	{ return not (*this >  right); }
+		ND_ forceinline bool operator >= (const Self &right)	const	{ return not (*this <  right); }
 
 
 	private:
-		forceinline _Interface_t const *	_Internal ()			const	{ return (_Interface_t const*) _storage.buf; }
-		forceinline _Interface_t *			_Internal ()					{ return (_Interface_t *) _storage.buf; }
-		forceinline BinArrayRef				_Data ()						{ return BinArrayRef( _storage.buf ); }
-		forceinline bool					_IsCreated ()			const	{ return _storage.maxAlign != 0; }
+		forceinline _Interface_t const *	_Internal ()		const	{ return (_Interface_t const*) _storage.buf; }
+		forceinline _Interface_t *			_Internal ()				{ return (_Interface_t *) _storage.buf; }
+		forceinline BinArrayRef				_Data ()					{ return BinArrayRef( _storage.buf ); }
+		forceinline bool					_IsCreated ()		const	{ return _storage.maxAlign != 0; }
 
 		forceinline void _Delete () noexcept
 		{
@@ -399,7 +383,7 @@ namespace GXTypes
 
 	// statics
 	public:
-		forceinline static Self  Create (Ret (*fn) (Args...)) noexcept
+		ND_ forceinline static Self  Create (Ret (*fn) (Args...)) noexcept
 		{
 			using DI = _types_hidden_::StaticDelegate< Ret, Args... >;
 
@@ -410,7 +394,7 @@ namespace GXTypes
 		}
 
 		template <typename C, typename Class>
-		forceinline static Self  Create (const C &classPtr, Ret (Class:: *fn) (Args...)) noexcept
+		ND_ forceinline static Self  Create (const C &classPtr, Ret (Class:: *fn) (Args...)) noexcept
 		{
 			STATIC_ASSERT(( _types_hidden_::FB_IsSame< C, Class > ));
 
@@ -421,22 +405,9 @@ namespace GXTypes
 			DEBUG_ONLY( del._dbgType = TypeIdOf( fn ) );
 			return del;
 		}
-
-		/*template <typename C, typename Class>
-		forceinline static Self  Create (C &&classPtr, Ret (Class:: *fn) (Args...)) noexcept
-		{
-			STATIC_ASSERT(( _types_hidden_::FB_IsSame< C, Class > ));
-
-			using DI = _types_hidden_::MemberDelegate< C, Class, Ret, Args... >;
-
-			Self	del;
-			PlacementNew<DI>( del._Data(), DI( FW<C>(classPtr), fn ) );
-			DEBUG_ONLY( del._dbgType = TypeIdOf( fn ) );
-			return del;
-		}*/
 
 		template <typename C, typename Class>
-		forceinline static Self  Create (const C &classPtr, Ret (Class:: *fn) (Args...) const) noexcept
+		ND_ forceinline static Self  Create (const C &classPtr, Ret (Class:: *fn) (Args...) const) noexcept
 		{
 			STATIC_ASSERT(( _types_hidden_::FB_IsSame< C, Class > ));
 
@@ -447,19 +418,6 @@ namespace GXTypes
 			DEBUG_ONLY( del._dbgType = TypeIdOf( fn ) );
 			return del;
 		}
-
-		/*template <typename C, typename Class>
-		forceinline static Self  Create (C &&classPtr, Ret (Class:: *fn) (Args...) const) noexcept
-		{
-			STATIC_ASSERT(( _types_hidden_::FB_IsSame< C, Class > ));
-
-			using DI = _types_hidden_::MemberDelegateConst< C, Class, Ret, Args... >;
-
-			Self	del;
-			PlacementNew<DI>( del._Data(), DI( FW<C>(classPtr), fn ) );
-			DEBUG_ONLY( del._dbgType = TypeIdOf( fn ) );
-			return del;
-		}*/
 	};
 
 
@@ -469,34 +427,22 @@ namespace GXTypes
 =================================================
 */
 	template <typename Ret, typename ...Args>
-	forceinline Delegate< Ret (Args...) >  DelegateBuilder (Ret (*fn) (Args...)) noexcept
+	ND_ forceinline Delegate< Ret (Args...) >  DelegateBuilder (Ret (*fn) (Args...)) noexcept
 	{
 		return Delegate< Ret (Args...) >::Create( fn );
 	}
 
 	template <typename C, typename Class, typename Ret, typename ...Args>
-	forceinline Delegate< Ret (Args...) >  DelegateBuilder (const C &classPtr, Ret (Class:: *fn) (Args...)) noexcept
+	ND_ forceinline Delegate< Ret (Args...) >  DelegateBuilder (const C &classPtr, Ret (Class:: *fn) (Args...)) noexcept
 	{
 		return Delegate< Ret (Args...) >::Create( classPtr, fn );
 	}
-
-	/*template <typename C, typename Class, typename Ret, typename ...Args>
-	forceinline Delegate< Ret (Args...) >  DelegateBuilder (C &&classPtr, Ret (Class:: *fn) (Args...)) noexcept
-	{
-		return Delegate< Ret (Args...) >::Create( FW<C>(classPtr), fn );
-	}*/
 
 	template <typename C, typename Class, typename Ret, typename ...Args>
-	forceinline Delegate< Ret (Args...) >  DelegateBuilder (const C &classPtr, Ret (Class:: *fn) (Args...) const) noexcept
+	ND_ forceinline Delegate< Ret (Args...) >  DelegateBuilder (const C &classPtr, Ret (Class:: *fn) (Args...) const) noexcept
 	{
 		return Delegate< Ret (Args...) >::Create( classPtr, fn );
 	}
-
-	/*template <typename C, typename Class, typename Ret, typename ...Args>
-	forceinline Delegate< Ret (Args...) >  DelegateBuilder (C &&classPtr, Ret (Class:: *fn) (Args...) const) noexcept
-	{
-		return Delegate< Ret (Args...) >::Create( FW<C>(classPtr), fn );
-	}*/
 
 
 
@@ -562,15 +508,15 @@ namespace GXTypes
 		forceinline void Clear ()													{ _delegates.Clear(); }
 
 
-		forceinline void Call (Args... args)					const				{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
+		forceinline void Call (Args... args)						const			{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
 
-		forceinline void operator () (Args... args)				const				{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
+		forceinline void operator () (Args... args)					const			{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
 
-		forceinline bool Empty ()								const				{ return _delegates.Empty(); }
+		ND_ forceinline bool Empty ()								const			{ return _delegates.Empty(); }
 
-		forceinline usize Count ()								const				{ return _delegates.Count(); }
+		ND_ forceinline usize Count ()								const			{ return _delegates.Count(); }
 
-		forceinline Delegate_t const&	Get (usize index)		const				{ return _delegates[index]; }
+		ND_ forceinline Delegate_t const&	Get (usize index)		const			{ return _delegates[index]; }
 
 
 		forceinline void RemoveAllFor (const void *ptr)

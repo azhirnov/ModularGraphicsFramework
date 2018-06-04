@@ -177,8 +177,7 @@ namespace Platforms
 			Front		= 1	<< 0,
 			Back		= 1 << 1,
 			FontAndBack	= Front | Back,
-
-			//Unknown		= (1u << 31),
+			Unknown		= None,
 		};
 
 		GX_ENUM_BIT_OPERATIONS( type );		// TODO: use GX_ENUM_BITFIELD

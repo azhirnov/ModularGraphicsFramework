@@ -136,31 +136,31 @@ namespace GXTypes
 		}
 		
 
-		bool			IsCreated () const
+		ND_ bool	IsCreated () const
 		{
 			return _storage.maxAlign != 0;
 		}
 
 
-		Ptr<BaseClass>	operator -> () const
+		ND_ Ptr<BaseClass>	operator -> () const
 		{
 			return GetInterface();
 		}
 
-		Ptr<BaseClass>	GetInterface () const
+		ND_ Ptr<BaseClass>	GetInterface () const
 		{
 			return IsCreated() ? _GetBase() : null;
 		}
 
 
 		template <typename T>
-		Ptr<T>			Get () const
+		ND_ Ptr<T>			Get () const
 		{
 			return IsCreated() and TypeIdOf<T>() == GetTypeId() ? (T *) _GetBase() : null;
 		}
 
 
-		TypeId			GetTypeId ()					const	{ return IsCreated() ? _Internal()->TypeIdOf() : TypeId(); }
+		ND_ TypeId			GetTypeId ()			const	{ return IsCreated() ? _Internal()->TypeIdOf() : TypeId(); }
 
 
 	private:

@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "Engine/Base/Tasks/AsyncMessage.h"
+#include "Engine/Base/Public/AsyncMessage.h"
 #include "Engine/Base/Modules/Module.h"
-#include "Engine/Base/Tasks/TaskModule.h"
+#include "Engine/Base/Public/TaskModule.h"
 #include "Engine/Base/Main/MainSystem.h"
 
 namespace Engine
@@ -58,8 +58,8 @@ namespace Base
 
 		void PublishProgress (Progress_t &&) noexcept;
 
-		ModulePtr const&	CurrentThreadModule ()		{ return _currentThreadModule; }
-		ModulePtr const&	TargetThreadModule ()		{ return _targetThreadModule; }
+		ND_ ModulePtr const&	CurrentThreadModule ()		{ return _currentThreadModule; }
+		ND_ ModulePtr const&	TargetThreadModule ()		{ return _targetThreadModule; }
 
 
 	private:

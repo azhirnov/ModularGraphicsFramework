@@ -486,7 +486,7 @@ namespace GXScript
 		signature << ' ' << name;
 
 		const isize	offset = isize(&value) - isize(&self);
-		CHECK_ERR( offset >= 0 and offset < (sizeof(T) - sizeof(B)) );
+		CHECK_ERR( offset >= 0 and offset < isize(sizeof(T) - sizeof(B)) );
 
 		AS_CALL_R( GetASEngine()->RegisterObjectProperty( _name.cstr(), signature.cstr(), int(offset) ) );
 		return true;

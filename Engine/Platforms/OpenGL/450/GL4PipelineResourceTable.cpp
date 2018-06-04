@@ -8,6 +8,7 @@
 #include "Engine/Platforms/Public/GPU/Buffer.h"
 #include "Engine/Platforms/Public/GPU/Pipeline.h"
 #include "Engine/Platforms/OpenGL/450/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/450/GL4ResourceCache.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 namespace Engine
@@ -139,7 +140,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4PipelineResourceTable::GL4PipelineResourceTable (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
+		GL4BaseModule( gs, ModuleConfig{ id, UMax, true }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "GL4PipelineResourceTable" );
 
@@ -183,7 +184,7 @@ namespace PlatformGL
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 
 		CHECK_ATTACHMENT( _layout = GetModuleByMsg< LayoutMsgList_t >() );
 		CHECK_ERR( _CopySubscriptions< LayoutMsgList_t >( _layout ) );
@@ -308,7 +309,7 @@ namespace PlatformGL
 		// pipeline layout must be unique
 		bool	is_layout = msg->newModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_layout ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		if ( is_layout )
@@ -332,7 +333,7 @@ namespace PlatformGL
 
 		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
 		
-		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -362,8 +363,8 @@ namespace PlatformGL
 
 		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
 		
-		CHECK( _Attach( msg->name, msg->newModule, false ) );
-		CHECK( _Attach( msg->name + ".sampler", msg->sampler, false ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg->name + ".sampler", msg->sampler ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -384,7 +385,7 @@ namespace PlatformGL
 
 		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{buf} );
 		
-		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -423,32 +424,47 @@ namespace PlatformGL
 		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
 		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
 		using PushConstBuffer	= PipelineLayoutDescriptor::PushConstantsBuffer;
-
 		using ImageMsgList		= MessageListFrom< GpuMsg::GetGLImageID >;
 		using SamplerMsgList	= MessageListFrom< GpuMsg::GetGLSamplerID >;
 		using BufferMsgList		= MessageListFrom< GpuMsg::GetGLBufferID >;
+		using ResourceMsgList	= CompileTime::TypeListFrom< ImageMsgList, SamplerMsgList, BufferMsgList >;
+		using ModuleMap			= HashMap< ModuleName_t, ModulePtr >;
 
 
 	// variables
 		GL4PipelineResourceTable&	self;
 		ResourceDescrArray_t&		resources;
+		mutable ModuleMap			moduleMap;
 
 
 	// methods
 		_CreateResourceDescriptor_Func (OUT ResourceDescrArray_t &resources, GL4PipelineResourceTable& self) :
 			self( self ), resources( resources )
-		{}
+		{
+			moduleMap.Reserve( self._GetAttachments().Count() );
+
+			for (const auto& mod : self._GetAttachments())
+			{
+				if ( mod.second->GetSupportedMessages().HasAnyType< ResourceMsgList >() )
+					moduleMap.Add( mod.first, mod.second );
+			}
+		}
 
 		~_CreateResourceDescriptor_Func ()
 		{
+			DEBUG_ONLY(
+				FOR( i, moduleMap ) {
+					LOG( "Unused module in resource table: "_str << moduleMap[i].first, ELog::Warning );
+				}
+			)
 		}
 		
-		void operator () (const SubpassInput &sp) const
+		void operator () (const SubpassInput &) const
 		{
 			WARNING( "not supported" );
 		}
 
-		bool operator () (const SamplerUniform &samp) const
+		bool operator () (const SamplerUniform &) const
 		{
 			RETURN_ERR( "unsupported!" );
 		}
@@ -461,16 +477,15 @@ namespace PlatformGL
 		template <typename MsgList>
 		bool FindModule (StringCRef name, OUT ModulePtr &result) const
 		{
-			FOR( i, self._GetAttachments() )
+			ModuleMap::const_iterator	iter;
+			
+			if ( moduleMap.Find( name, OUT iter ) )
 			{
-				const auto&	pair = self._GetAttachments()[i];
-
-				if ( pair.first == name )
-				{
-					CHECK_ERR( pair.second->GetSupportedMessages().HasAllTypes< MsgList >() );
-					result = pair.second;
-					return true;
-				}
+				CHECK_ERR( iter->second->GetSupportedMessages().HasAllTypes< MsgList >() );
+				result = iter->second;
+				
+				DEBUG_ONLY( moduleMap.EraseByIter( iter ) );
+				return true;
 			}
 			return false;
 		}
@@ -485,20 +500,18 @@ namespace PlatformGL
 			ModulePtr	tex_mod, samp_mod;
 			CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT tex_mod ) );
 			CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT samp_mod ) );
-
-			Message< GpuMsg::GetGLSamplerID >		req_sampler;
-			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
-
-			// TODO: check result
-			self.SendTo( tex_mod, req_img_descr );
+			
+			Message< GpuMsg::GetGLSamplerID >	req_sampler;
 			self.SendTo( samp_mod, req_sampler );
 
-			CHECK( req_img_descr->result->imageType == tex.textureType );
-			CHECK( req_img_descr->result->usage[ EImageUsage::Sampled ] );
-			CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( req_img_descr->result->format ) ) );
+			const auto&	img_res = self.GetResourceCache()->GetImageID( tex_mod );	// warning: reference may be invalid after any changes
+
+			CHECK( img_res.Get<1>().imageType == tex.textureType );
+			CHECK( img_res.Get<1>().usage[ EImageUsage::Sampled ] );
+			CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( img_res.Get<1>().format ) ) );
 			
 			// find attachment info
-			GLuint							img_view = 0;
+			GLuint							img_view = img_res.Get<0>();
 			AttachmentInfoMap_t::iterator	info;
 
 			if ( self._attachmentInfo.Find( tex_mod.RawPtr(), OUT info ) )
@@ -507,13 +520,6 @@ namespace PlatformGL
 				self.SendTo( tex_mod, req_imageview );
 
 				img_view = req_imageview->result.Get( 0 );
-			}
-			else
-			{
-				Message< GpuMsg::GetGLImageID >		req_image;
-				self.SendTo( tex_mod, req_image );
-
-				img_view = req_image->result.Get( 0 );
 			}
 			
 			// create descriptor
@@ -537,14 +543,13 @@ namespace PlatformGL
 		{
 			ModulePtr	img_mod;
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT img_mod ) );
+			
+			const auto&	img_res = self.GetResourceCache()->GetImageID( img_mod );	// warning: reference may be invalid after any changes
 
-			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
-			self.SendTo( img_mod, req_img_descr );
-
-			CHECK( req_img_descr->result->usage[ EImageUsage::Storage ] );
+			CHECK( img_res.Get<1>().usage[ EImageUsage::Storage ] );
 			
 			// find attachment info
-			GLuint							img_view = 0;
+			GLuint							img_view = img_res.Get<0>();
 			AttachmentInfoMap_t::iterator	info;
 
 			if ( self._attachmentInfo.Find( img_mod.RawPtr(), OUT info ) )
@@ -553,13 +558,6 @@ namespace PlatformGL
 				self.SendTo( img_mod, req_imageview );
 
 				img_view = req_imageview->result.Get( 0 );
-			}
-			else
-			{
-				Message< GpuMsg::GetGLImageID >		req_image;
-				self.SendTo( img_mod, req_image );
-
-				img_view = req_image->result.Get( 0 );
 			}
 
 			// create descriptor
@@ -587,15 +585,10 @@ namespace PlatformGL
 		{
 			ModulePtr	buf_mod;
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT buf_mod ) );
+			
+			const auto&	buf_res = self.GetResourceCache()->GetBufferID( buf_mod );	// warning: reference may be invalid after any changes
 
-			Message< GpuMsg::GetGLBufferID >		req_buffer;
-			Message< GpuMsg::GetBufferDescriptor >	req_descr;
-
-			// TODO: check result
-			self.SendTo( buf_mod, req_buffer );
-			self.SendTo( buf_mod, req_descr );
-
-			CHECK( req_descr->result->usage[ EBufferUsage::Uniform ] );
+			CHECK( buf_res.Get<1>().usage[ EBufferUsage::Uniform ] );
 			
 			// find attachment info
 			AttachmentInfoMap_t::iterator	info;
@@ -611,12 +604,12 @@ namespace PlatformGL
 			}
 			else
 			{
-				CHECK_ERR( req_descr->result->size >= BytesUL(buf.size) );
+				CHECK_ERR( buf_res.Get<1>().size >= BytesUL(buf.size) );
 			}
 			
 			// create descriptor
 			BufferDescr		descr;
-			descr.bufferID		= req_buffer->result.Get(0);
+			descr.bufferID		= buf_res.Get<0>();
 			descr.target		= GL_UNIFORM_BUFFER;
 			descr.binding		= buf.binding;
 			descr.stageFlags	= buf.stageFlags;
@@ -636,20 +629,15 @@ namespace PlatformGL
 		{
 			ModulePtr	buf_mod;
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT buf_mod ) );
+			
+			const auto&	buf_res = self.GetResourceCache()->GetBufferID( buf_mod );	// warning: reference may be invalid after any changes
 
-			Message< GpuMsg::GetGLBufferID >		req_buffer;
-			Message< GpuMsg::GetBufferDescriptor >	req_descr;
-
-			// TODO: check result
-			self.SendTo( buf_mod, req_buffer );
-			self.SendTo( buf_mod, req_descr );
-
-			CHECK( req_descr->result->usage[ EBufferUsage::Storage ] );
+			CHECK( buf_res.Get<1>().usage[ EBufferUsage::Storage ] );
 			
 			// find attachment info
 			AttachmentInfoMap_t::iterator	info;
 			BytesUL							offset;
-			BytesUL							size	= req_descr->result->size;
+			BytesUL							size	= buf_res.Get<1>().size;
 
 			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
 			{
@@ -663,13 +651,13 @@ namespace PlatformGL
 			}
 			else
 			{
-				CHECK_ERR(	(req_descr->result->size >= buf.staticSize) and
-							(buf.arrayStride == 0 or (req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
+				CHECK_ERR(	(buf_res.Get<1>().size >= buf.staticSize) and
+							(buf.arrayStride == 0 or (buf_res.Get<1>().size - buf.staticSize) % buf.arrayStride == 0) );
 			}
 			
 			// create descriptor
 			BufferDescr		descr;
-			descr.bufferID		= req_buffer->result.Get(0);
+			descr.bufferID		= buf_res.Get<0>();
 			descr.target		= GL_SHADER_STORAGE_BUFFER;
 			descr.binding		= buf.binding;
 			descr.stageFlags	= buf.stageFlags;
@@ -685,8 +673,9 @@ namespace PlatformGL
 	operator (PushConstant)
 =================================================
 */
-		void operator () (const PushConstant &pc) const
+		void operator () (const PushConstant &) const
 		{
+			TODO("");
 		}
 		
 		bool operator () (const PushConstBuffer &pcb) const

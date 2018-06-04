@@ -144,10 +144,10 @@ namespace PipelineCompiler
 		{
 			ASSERT( EShaderVariable::IsStruct( var.type ) );
 			
-			// process fields
+			// process fields to get structure size and align
 			BytesU	max_align	= 0_b;
 			BytesU	size		= 0_b;
-			RecursiveProcess( INOUT var.fields, INOUT size, INOUT max_align, packing );
+			RecursiveProcess( INOUT var.fields, OUT size, OUT max_align, packing );
 
 			// calc align of structure
 			switch ( packing )

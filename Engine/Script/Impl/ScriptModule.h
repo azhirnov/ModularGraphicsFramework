@@ -138,7 +138,7 @@ namespace GXScript
 	template <typename Ret, typename ...Args>
 	inline bool ScriptModule::RunFromFile (StringCRef filename, StringCRef entry, OUT Ret &result, Args ...args)
 	{
-		File::HddRFile	file;
+		GXFile::HddRFile	file;
 		CHECK_ERR( file.Open( filename ) );
 
 		const usize	len		= usize(file.Size());

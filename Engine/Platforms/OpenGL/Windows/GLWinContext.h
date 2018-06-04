@@ -13,7 +13,7 @@ namespace Engine
 {
 namespace PlatformGL
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//
@@ -62,8 +62,6 @@ namespace PlatformGL
 	protected:
 		bool _InitOpenGL (INOUT GraphicsSettings &vs);
 		bool _InitOpenGL2 ();
-
-		bool _GetApiVersion (const GraphicsSettings &vs, OUT uint2 &version);
 	};
 
 

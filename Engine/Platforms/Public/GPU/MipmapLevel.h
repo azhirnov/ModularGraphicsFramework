@@ -34,7 +34,7 @@ namespace Platforms
 		MipmapLevel (uint value) : _value(value)
 		{}
 
-		uint Get () const		{ return _value; }
+		ND_ uint Get () const		{ return _value; }
 
 		_GX_DIM_CMP_OPERATORS_SELF( _value )
 	};
@@ -80,7 +80,7 @@ namespace GXTypes
 	template <>
 	struct Hash< Engine::Platforms::MipmapLevel >
 	{
-		HashResult  operator () (const Engine::Platforms::MipmapLevel &value) const
+		ND_ HashResult  operator () (const Engine::Platforms::MipmapLevel &value) const
 		{
 			return HashOf( value.Get() );
 		}

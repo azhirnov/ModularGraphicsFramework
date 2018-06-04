@@ -164,8 +164,8 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EVertexAttribute
 
-	 inline EVertexAttribute::type  EVertexAttribute::ToDstType (type value)
-	 {
+	ND_ inline EVertexAttribute::type  EVertexAttribute::ToDstType (type value)
+	{
 		const uint	count	= uint( value & _vtypeinfo::_COL_MASK );
 		const bool	norm	= EnumEq( value, _vtypeinfo::_NORM );
 		const type	ftype	= type( _vtypeinfo::_FLOAT | count );
@@ -193,25 +193,25 @@ namespace Platforms
 		}
 			
 		RETURN_ERR( "invalid attrib type", ftype );
-	 }
+	}
 	 
-	inline EVertexAttribute::type  EVertexAttribute::SetNormalized (type value, bool norm)
+	ND_ inline EVertexAttribute::type  EVertexAttribute::SetNormalized (type value, bool norm)
 	{
 		return type( (value & ~NormalizedFlag) | (norm ? NormalizedFlag : 0) );
 	}
 	
-	inline bool EVertexAttribute::ValueType::IsInteger (type value)
+	ND_ inline bool EVertexAttribute::ValueType::IsInteger (type value)
 	{
 		return	EnumEqMask( ToDstType( value ), _vtypeinfo::_INT,  _vtypeinfo::_TYPE_MASK ) or
 				EnumEqMask( ToDstType( value ), _vtypeinfo::_UINT, _vtypeinfo::_TYPE_MASK );
 	}
 
-	inline bool EVertexAttribute::ValueType::IsFloat (type value)
+	ND_ inline bool EVertexAttribute::ValueType::IsFloat (type value)
 	{
 		return EnumEqMask( ToDstType( value ), _vtypeinfo::_FLOAT, _vtypeinfo::_TYPE_MASK );
 	}
 
-	inline bool EVertexAttribute::ValueType::IsDouble (type value)
+	ND_ inline bool EVertexAttribute::ValueType::IsDouble (type value)
 	{
 		return EnumEqMask( ToDstType( value ), _vtypeinfo::_DOUBLE, _vtypeinfo::_TYPE_MASK );
 	}
@@ -220,10 +220,10 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EIndex
 
-	template <>	inline constexpr EIndex::type  EIndex::From< ushort > ()	{ return UShort; }
-	template <>	inline constexpr EIndex::type  EIndex::From< uint > ()		{ return UInt; }
+	template <>	ND_ inline constexpr EIndex::type  EIndex::From< ushort > ()	{ return UShort; }
+	template <>	ND_ inline constexpr EIndex::type  EIndex::From< uint > ()		{ return UInt; }
 	
-	inline BytesU EIndex::SizeOf (type value)
+	ND_ inline BytesU EIndex::SizeOf (type value)
 	{
 		switch ( value )
 		{

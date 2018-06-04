@@ -47,12 +47,12 @@ namespace GXTypes
 		Self &	operator =  (Self &&right)		= default;
 		Self &	operator =  (const Self &right)	= default;
 
-		bool	operator == (const Self &right) const	{ return first == right.first and second == right.second; }
-		bool	operator != (const Self &right)	const	{ return not (*this == right); }
-		bool	operator >  (const Self &right) const	{ return first != right.first ? first > right.first : second > right.second; }
-		bool	operator <  (const Self &right) const	{ return first != right.first ? first < right.first : second < right.second; }
-		bool	operator >= (const Self &right) const	{ return not (*this < right); }
-		bool	operator <= (const Self &right) const	{ return not (*this > right); }
+		ND_ bool	operator == (const Self &right) const	{ return first == right.first and second == right.second; }
+		ND_ bool	operator != (const Self &right)	const	{ return not (*this == right); }
+		ND_ bool	operator >  (const Self &right) const	{ return first != right.first ? first > right.first : second > right.second; }
+		ND_ bool	operator <  (const Self &right) const	{ return first != right.first ? first < right.first : second < right.second; }
+		ND_ bool	operator >= (const Self &right) const	{ return not (*this < right); }
+		ND_ bool	operator <= (const Self &right) const	{ return not (*this > right); }
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{
@@ -69,13 +69,13 @@ namespace GXTypes
 =================================================
 */
 	template <typename FirstType, typename SecondType>
-	CHECKRES Pair<FirstType, SecondType>  MakePair (const FirstType &first, const SecondType &second)
+	ND_ Pair<FirstType, SecondType>  MakePair (const FirstType &first, const SecondType &second)
 	{
 		return Pair<FirstType, SecondType>( first, second );
 	}
 
 	template <typename FirstType, typename SecondType>
-	CHECKRES Pair<FirstType, SecondType>  MakePair (FirstType &&first, SecondType &&second)
+	ND_ Pair<FirstType, SecondType>  MakePair (FirstType &&first, SecondType &&second)
 	{
 		return Pair<FirstType, SecondType>( FW<FirstType>( first ), FW<SecondType>( second ) );
 	}
@@ -89,7 +89,7 @@ namespace GXTypes
 	template <typename FirstType, typename SecondType>
 	struct Hash< Pair< FirstType, SecondType > >
 	{
-		CHECKRES HashResult  operator () (const Pair< FirstType, SecondType > &x) const noexcept
+		ND_ HashResult  operator () (const Pair< FirstType, SecondType > &x) const noexcept
 		{
 			return HashOf( x.first ) + HashOf( x.second );
 		}

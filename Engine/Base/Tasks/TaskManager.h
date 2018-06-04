@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Engine/Base/Common/IDs.h"
-#include "Engine/Base/Tasks/TaskModule.h"
-#include "Engine/Base/Tasks/AsyncMessage.h"
+#include "Engine/Base/Public/TaskModule.h"
+#include "Engine/Base/Public/AsyncMessage.h"
 
 namespace Engine
 {
@@ -19,8 +19,6 @@ namespace Base
 	{
 	// types
 	private:
-		SHARED_POINTER( TaskModule );
-
 		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::AddTaskSchedulerToManager,

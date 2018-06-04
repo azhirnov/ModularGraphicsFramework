@@ -13,7 +13,7 @@
 
 namespace GX_STL
 {
-	using namespace GXTypes;
+	using namespace GX_STL::GXTypes;
 
 /*
 =================================================
@@ -120,7 +120,7 @@ namespace GXTypes
 
 		_buffer.Reserve( 256 );
 
-		using namespace GXMath;
+		using namespace GX_STL::GXMath;
 
 		_threadColors.Add(
 			OS::Thread::GetCurrentThreadId(),
@@ -214,7 +214,7 @@ namespace GXTypes
 
 		SCOPELOCK( _lockLog );
 		
-		CHECK_ERR( (_logFile = File::HddWFile::New( log_name )) );
+		CHECK_ERR( (_logFile = GXFile::HddWFile::New( log_name )) );
 
 		static const char	header[] =	"<html> <head> <title> log </title> </head> <body BGCOLOR=\"#ffffff\">"
 										"<p><PRE><font face=\"Lucida Console, Times New Roman\""
@@ -282,8 +282,8 @@ namespace GXTypes
 		crash_file.Clear();
 		crash_file << filename << ".crash";
 
-		File::WFilePtr	file;
-		CHECK_ERR( (file = File::HddWFile::New( crash_file )) );
+		GXFile::WFilePtr	file;
+		CHECK_ERR( (file = GXFile::HddWFile::New( crash_file )) );
 
 		String	msg;
 
@@ -308,8 +308,8 @@ namespace GXTypes
 		if ( _crashFileName.Empty() )
 			return true;
 		
-		File::WFilePtr	file;
-		CHECK_ERR( (file = File::HddWFile::New( _crashFileName, File::HddWFile::EOpenFlags::Append )) );
+		GXFile::WFilePtr	file;
+		CHECK_ERR( (file = GXFile::HddWFile::New( _crashFileName, GXFile::HddWFile::EOpenFlags::Append )) );
 
 		String	msg;
 
@@ -327,12 +327,12 @@ namespace GXTypes
 	ReadCrashFile
 =================================================
 */
-	bool Logger::ReadCrashFile (StringCRef filename, OUT bool &wasCrashed, OUT OS::Date &time)
+	bool Logger::ReadCrashFile (StringCRef filename, OUT bool &wasCrashed, OUT Date &time)
 	{
 		SCOPELOCK( _lockLog );
 
 		wasCrashed	= false;
-		time		= OS::Date();
+		time		= Date();
 
 		String	fname = filename;
 
@@ -345,9 +345,9 @@ namespace GXTypes
 		}
 		
 
-		File::RFilePtr	file;
+		GXFile::RFilePtr	file;
 
-		if ( not (file = File::HddRFile::New( fname )) )
+		if ( not (file = GXFile::HddRFile::New( fname )) )
 			return false;
 
 		// read file
@@ -560,7 +560,7 @@ namespace GXTypes
 */
 	inline void Logger::_AddThreadColor (INOUT String &str, usize threadId)
 	{
-		using namespace GXMath;
+		using namespace GX_STL::GXMath;
 
 		if ( not _perThreadColors )
 			return;
@@ -639,7 +639,7 @@ namespace GXTypes
 */
 	inline void Logger::_GetDate (INOUT String &str)
 	{
-		str << OS::Date().Now().ToString( "yyyy/mm/dm - hh:mi:ss" );
+		str << Date().Now().ToString( "yyyy/mm/dm - hh:mi:ss" );
 	}
 	
 /*
@@ -651,7 +651,7 @@ namespace GXTypes
 */
 	inline void Logger::_GetDateForFName (INOUT String &str)
 	{
-		str << OS::Date().Now().ToString( "yyyy.mm.dm-hh.mi.ss" );
+		str << Date().Now().ToString( "yyyy.mm.dm-hh.mi.ss" );
 	}
 	
 /*

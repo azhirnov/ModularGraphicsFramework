@@ -1,13 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
+#include "Engine/PipelineCompiler/Shaders/glslang_include.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
-#include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
+#include "Engine/Platforms/OpenCL/120/CL1Messages.h"
 
-#ifdef COMPUTE_API_OPENCL
 
 namespace PipelineCompiler
 {
+# ifdef COMPUTE_API_OPENCL
+
 	using namespace cl;
 
 /*
@@ -83,7 +84,7 @@ namespace PipelineCompiler
 	_ValidateCLSource
 =================================================
 */
-	bool ShaderCompiler::_ValidateCLSource (EShader::type shaderType, StringCRef src) const
+	bool ShaderCompiler::_ValidateCLSource (EShader::type, StringCRef) const
 	{
 		TODO( "_ValidateCLSource" );
 		return false;
@@ -94,12 +95,30 @@ namespace PipelineCompiler
 	_ValidateCLBinary
 =================================================
 */
-	bool ShaderCompiler::_ValidateCLBinary (EShader::type shaderType, BinArrayCRef bin) const
+	bool ShaderCompiler::_ValidateCLBinary (EShader::type, BinArrayCRef) const
 	{
 		TODO( "_ValidateCLBinary" );
 		return false;
 	}
 
+# else
+
+	bool ShaderCompiler::_CompileCL (const Config &, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result)
+	{
+		return false;
+	}
+	
+	bool ShaderCompiler::_ValidateCLSource (EShader::type, StringCRef) const
+	{
+		return false;
+	}
+	
+	bool ShaderCompiler::_ValidateCLBinary (EShader::type, BinArrayCRef) const
+	{
+		return false;
+	}
+
+# endif	// COMPUTE_API_OPENCL
+
 }	// PipelineCompiler
 
-#endif	// COMPUTE_API_OPENCL

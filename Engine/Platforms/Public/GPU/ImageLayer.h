@@ -34,9 +34,9 @@ namespace Platforms
 		ImageLayer (uint value) : _value(value)
 		{}
 
-		bool IsDefined ()	const	{ return _value != UMax; }
+		ND_ bool IsDefined ()	const	{ return _value != UMax; }
 
-		uint Get ()			const	{ return IsDefined() ? _value : 0; }
+		ND_ uint Get ()			const	{ return IsDefined() ? _value : 0; }
 
 		_GX_DIM_CMP_OPERATORS_SELF( _value )
 	};
@@ -52,7 +52,7 @@ namespace GXTypes
 	template <>
 	struct Hash< Engine::Platforms::ImageLayer >
 	{
-		HashResult  operator () (const Engine::Platforms::ImageLayer &value) const
+		ND_ HashResult  operator () (const Engine::Platforms::ImageLayer &value) const
 		{
 			return HashOf( value.Get() );
 		}

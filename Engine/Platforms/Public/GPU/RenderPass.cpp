@@ -35,21 +35,6 @@ namespace Platforms
 			_subpasses.Count()		 != right._subpasses.Count()		?	_subpasses.Count()		 > right._subpasses.Count()			:
 																	MemCmp( _depthStencilAttachment, right._depthStencilAttachment ) > 0;
 	}
-	
-/*
-=================================================
-	operator <
-=================================================
-*/
-	bool RenderPassDescriptor::operator <  (const Self &right) const
-	{
-		return	
-			this->_hash				 != right._hash						?	this->_hash				 < right._hash						:
-			_colorAttachmens.Count() != right._colorAttachmens.Count()	?	_colorAttachmens.Count() < right._colorAttachmens.Count()	:
-			_dependencies.Count()	 != right._dependencies.Count()		?	_dependencies.Count()	 < right._dependencies.Count()		:
-			_subpasses.Count()		 != right._subpasses.Count()		?	_subpasses.Count()		 < right._subpasses.Count()			:
-																	MemCmp( _depthStencilAttachment, right._depthStencilAttachment ) < 0;
-	}
 //-----------------------------------------------------------------------------
 
 

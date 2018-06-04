@@ -8,7 +8,9 @@
 #include "Engine/Platforms/Public/GPU/RenderPass.h"
 #include "Engine/Platforms/Public/GPU/Framebuffer.h"
 #include "Engine/Platforms/OpenGL/450/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/450/GL4ResourceCache.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
+#include "Engine/Platforms/Public/Tools/ImageUtils.h"
 
 namespace Engine
 {
@@ -50,6 +52,8 @@ namespace PlatformGL
 		};
 	
 		using Attachments_t		= FixedSizeArray< AttachmentInfo, GlobalConst::GAPI_MaxColorBuffers >;
+		
+		using ImageUtils			= PlatformTools::ImageUtils;
 
 
 	// constants
@@ -201,7 +205,7 @@ namespace PlatformGL
 		bool	is_render_pass	= msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
 		bool	is_image		= msg->newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
 
-		if ( _Attach( msg->name, msg->newModule, is_render_pass ) and (is_image or is_render_pass) )
+		if ( _Attach( msg->name, msg->newModule ) and (is_image or is_render_pass) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyFramebuffer();
@@ -248,7 +252,7 @@ namespace PlatformGL
 			_attachments.PushBack( new_att );
 		}
 		
-		if ( _Attach( msg->name, msg->image, false ) )
+		if ( _Attach( msg->name, msg->image ) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyFramebuffer();
@@ -283,6 +287,8 @@ namespace PlatformGL
 */
 	bool GL4Framebuffer::_GetGLFramebufferID (const Message< GpuMsg::GetGLFramebufferID > &msg)
 	{
+		ASSERT( _IsCreated() );
+
 		msg->result.Set( _framebufferId );
 		return true;
 	}
@@ -346,20 +352,14 @@ namespace PlatformGL
 			CHECK_ERR( mod = GetModuleByName( att.name ) );
 			CHECK_ERR( _IsComposedState( mod->GetState() ) );
 			
-			Message< GpuMsg::GetImageDescriptor >	req_descr;
-			Message< GpuMsg::GetGLImageID >			req_view;
+			const auto&	img_res = GetResourceCache()->GetImageID( mod );
 
-			SendTo( mod, req_descr );
-			SendTo( mod, req_view );
+			att.descr.format	= att.descr.format == EPixelFormat::Unknown ? img_res.Get<1>().format : att.descr.format;
+			att.descr.viewType	= att.descr.viewType == EImage::Unknown ? img_res.Get<1>().imageType : att.descr.viewType;
+			att.samples			= img_res.Get<1>().samples;
+			att.imageId			= img_res.Get<0>();
 
-			CHECK_ERR( req_descr->result.IsDefined() and req_view->result.IsDefined() );
-			
-			att.descr.format	= att.descr.format == EPixelFormat::Unknown ? req_descr->result->format : att.descr.format;
-			att.descr.viewType	= att.descr.viewType == EImage::Unknown ? req_descr->result->imageType : att.descr.viewType;
-			att.samples			= req_descr->result->samples;
-			att.imageId			= *req_view->result;
-
-			const uint4	dim	= Max( ImageUtils::LevelDimension( att.descr.viewType, req_descr->result->dimension, att.descr.baseLevel.Get() ), 1u );
+			const uint4	dim	= Max( ImageUtils::LevelDimension( att.descr.viewType, img_res.Get<1>().dimension, att.descr.baseLevel.Get() ), 1u );
 
 			// validate
 			CHECK_ERR( All( dim.xy() >= _descr.size ) );
@@ -513,7 +513,7 @@ namespace PlatformGL
 
 		ModuleUtils::Initialize({ render_pass });
 
-		CHECK_ERR( _Attach( "renderpass", render_pass, true ) );
+		CHECK_ERR( _Attach( "renderpass", render_pass ) );
 
 		Message< GpuMsg::GetRenderPassDescriptor >	req_descr;
 		SendTo( render_pass, req_descr );

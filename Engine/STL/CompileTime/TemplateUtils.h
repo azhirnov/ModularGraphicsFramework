@@ -103,7 +103,6 @@ namespace CompileTime
 	};
 
 
-
 	//
 	// Enable / Disable If
 	//
@@ -117,38 +116,13 @@ namespace CompileTime
 
 		template <typename T>
 		struct _EnableIf <false, T> {
-			using type	= void;
 		};
 	}
-
 	template <bool Condition, typename T = void>
 	using EnableIf = typename _ctime_hidden_::_EnableIf< Condition, T >::type;
 
 	template <bool Condition, typename T = void>
 	using DisableIf = EnableIf< not Condition, T >;
-
-
-
-	//
-	// Enable / Disable If (Type)
-	//
-	
-	namespace _ctime_hidden_
-	{
-		template <bool Condition, typename T = void>
-		struct _TypeEnableIf {
-			using type	= T;
-		};
-
-		template <typename T>
-		struct _TypeEnableIf <false, T> {
-		};
-	}
-	template <bool Condition, typename T = void>
-	using TypeEnableIf = typename _ctime_hidden_::_TypeEnableIf< Condition, T >::type;
-
-	template <bool Condition, typename T = void>
-	using TypeDisableIf = TypeEnableIf< not Condition, T >;
 
 	
 

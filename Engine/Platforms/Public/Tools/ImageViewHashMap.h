@@ -10,7 +10,7 @@ namespace Engine
 {
 namespace PlatformTools
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//
@@ -27,9 +27,7 @@ namespace PlatformTools
 	private:
 		struct ImageViewHash
 		{
-			using Result_t	= HashResult;
-
-			Result_t operator () (const Key_t &v) const;
+			ND_ HashResult operator () (const Key_t &v) const;
 		};
 
 		using ImageViewMap_t	= HashMap< Key_t, ViewType, ImageViewHash >;
@@ -51,13 +49,18 @@ namespace PlatformTools
 
 		static void Validate (INOUT Key_t &key, const ImageDescriptor &descr);
 
-		void			Clear ()						{ _map.Clear(); }
+		void				Clear ()						{ _map.Clear(); }
 
-		usize			Count ()				const	{ return _map.Count(); }
-		bool			Empty ()				const	{ return _map.Empty(); }
+		ND_ usize			Count ()				const	{ return _map.Count(); }
+		ND_ bool			Empty ()				const	{ return _map.Empty(); }
 
-		decltype(auto)	operator [] (usize i)	const	{ return _map[i]; }
-		decltype(auto)	operator [] (usize i)			{ return _map[i]; }
+		ND_ decltype(auto)	operator [] (usize i)	const	{ return _map[i]; }
+		ND_ decltype(auto)	operator [] (usize i)			{ return _map[i]; }
+
+		ND_ auto			begin ()						{ return _map.begin(); }
+		ND_ auto			begin ()				const	{ return _map.begin(); }
+		ND_ auto			end ()							{ return _map.end(); }
+		ND_ auto			end ()					const	{ return _map.end(); }
 	};
 	
 	

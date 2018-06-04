@@ -34,8 +34,8 @@ int main (int argc, char** argv)
 
 	packer->SetExecutable( argv[0] );
 
-	FOR( i, res_files ) {
-		packer->Run( res_files[i] );
+	for (auto& res : res_files) {
+		packer->Run( res );
 	}	
 	return 0;
 }

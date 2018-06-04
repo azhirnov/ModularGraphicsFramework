@@ -57,7 +57,7 @@ namespace PipelineCompiler
 		src.Clear();
 		src << ser->Comment( "This is generated file" );
 		src << ser->Comment( "Origin file: '"_str << Path() << "'" );
-		src << ser->Comment( "Created at: "_str << ToString( OS::Date().Now() ) ) << '\n';
+		//src << ser->Comment( "Created at: "_str << ToString( Date().Now() ) ) << '\n';
 		src << ser->BeginFile( false );
 		
 		// add c++ types localy
@@ -97,7 +97,7 @@ namespace PipelineCompiler
 		src << ser->DeclFunction( "void", "Create_"_str << Name(), {{"PipelineTemplateDescriptor&", "descr"}} );
 		src << ser->BeginScope();
 		src << ser->AssignVariable( "\tdescr", "PipelineTemplateDescriptor()" );
-		src << ser->ToString( "\tdescr.supportedShaders", EShader::bits() | EShader::Compute ) << '\n';
+		src << ser->ToString( "\tdescr.supportedShaders", EShader::Compute ) << '\n';
 		src << ser->ToString( "\tdescr.localGroupSize", localGroupSize );
 
 		CHECK_ERR( _ConvertLayout( "\tdescr.layout", INOUT src, ser ) );
@@ -131,7 +131,9 @@ namespace PipelineCompiler
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
 			<< ser->ShaderSrcCL( name, compiled.cl )
-			<< ser->ShaderBinCL( name, compiled.clAsm );
+			<< ser->ShaderBinCL( name, compiled.clAsm )
+			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
+			<< ser->ShaderBinHLSL( name, compiled.hlslBinary );
 		
 		if ( not compiled.cpp.Empty() )
 		{

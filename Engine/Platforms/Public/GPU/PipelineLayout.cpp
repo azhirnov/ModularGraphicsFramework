@@ -36,21 +36,6 @@ namespace Platforms
 				format			!= right.format			?	format			> right.format			:
 															name			> right.name;
 	}
-	
-/*
-=================================================
-	TextureUniform::operator <
-=================================================
-*/
-	bool PipelineLayoutDescriptor::TextureUniform::operator <  (const TextureUniform &right) const
-	{
-		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
-				binding			!= right.binding		?	binding			< right.binding			:
-				uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
-				textureType		!= right.textureType	?	textureType		< right.textureType		:
-				format			!= right.format			?	format			< right.format			:
-															name			< right.name;
-	}
 //-----------------------------------------------------------------------------
 		
 
@@ -80,19 +65,6 @@ namespace Platforms
 				uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
 															name			> right.name;
 	}
-	
-/*
-=================================================
-	SamplerUniform::operator <
-=================================================
-*/
-	bool PipelineLayoutDescriptor::SamplerUniform::operator <  (const SamplerUniform &right) const
-	{
-		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
-				binding			!= right.binding		?	binding			< right.binding			:
-				uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
-															name			< right.name;
-	}
 //-----------------------------------------------------------------------------
 			
 
@@ -121,19 +93,6 @@ namespace Platforms
 				binding			!= right.binding		?	binding			> right.binding			:
 				uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
 															name			> right.name;
-	}
-	
-/*
-=================================================
-	SubpassInput::operator <
-=================================================
-*/
-	bool PipelineLayoutDescriptor::SubpassInput::operator <  (const SubpassInput &right) const
-	{
-		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
-				binding			!= right.binding		?	binding			< right.binding			:
-				uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
-															name			< right.name;
 	}
 //-----------------------------------------------------------------------------
 			
@@ -170,22 +129,6 @@ namespace Platforms
 				access			!= right.access			?	access			> right.access			:
 															name			> right.name;
 	}
-	
-/*
-=================================================
-	ImageUniform::operator <
-=================================================
-*/
-	bool PipelineLayoutDescriptor::ImageUniform::operator <  (const ImageUniform &right) const
-	{
-		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
-				binding			!= right.binding		?	binding			< right.binding			:
-				uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
-				imageType		!= right.imageType		?	imageType		< right.imageType		:
-				format			!= right.format			?	format			< right.format			:
-				access			!= right.access			?	access			< right.access			:
-															name			< right.name;
-	}
 //-----------------------------------------------------------------------------
 			
 
@@ -216,20 +159,6 @@ namespace Platforms
 				uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
 				size			!= right.size			?	size			> right.size			:
 															name			> right.name;
-	}
-	
-/*
-=================================================
-	UniformBuffer::operator <
-=================================================
-*/
-	bool PipelineLayoutDescriptor::UniformBuffer::operator <  (const UniformBuffer &right) const
-	{
-		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
-				binding			!= right.binding		?	binding			< right.binding			:
-				uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
-				size			!= right.size			?	size			< right.size			:
-															name			< right.name;
 	}
 //-----------------------------------------------------------------------------
 			
@@ -266,22 +195,6 @@ namespace Platforms
 				access			!= right.access			?	access			> right.access			:
 															name			> right.name;
 	}
-	
-/*
-=================================================
-	StorageBuffer::operator <
-=================================================
-*/
-	bool PipelineLayoutDescriptor::StorageBuffer::operator <  (const StorageBuffer &right) const
-	{
-		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
-				binding			!= right.binding		?	binding			< right.binding			:
-				uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
-				staticSize		!= right.staticSize		?	staticSize		< right.staticSize		:
-				arrayStride		!= right.arrayStride	?	arrayStride		< right.arrayStride		:
-				access			!= right.access			?	access			< right.access			:
-															name			< right.name;
-	}
 //-----------------------------------------------------------------------------
 			
 
@@ -310,19 +223,6 @@ namespace Platforms
 				offset		!= right.offset		?	offset		> right.offset		:
 				size		!= right.size		?	size		> right.size		:
 													name		> right.name;
-	}
-	
-/*
-=================================================
-	PushConstant::operator <
-=================================================
-*/
-	bool PipelineLayoutDescriptor::PushConstant::operator <  (const PushConstant &right) const
-	{
-		return	stageFlags	!= right.stageFlags	?	stageFlags	< right.stageFlags	:
-				offset		!= right.offset		?	offset		< right.offset		:
-				size		!= right.size		?	size		< right.size		:
-													name		< right.name;
 	}
 //-----------------------------------------------------------------------------
 	
@@ -356,21 +256,6 @@ namespace Platforms
 				valueType		!= right.valueType		?	valueType		> right.valueType		:
 				arraySize		!= right.arraySize		?	arraySize		> right.arraySize		:
 															name			> right.name;
-	}
-
-/*
-=================================================
-	Uniform::operator <
-=================================================
-*
-	bool PipelineLayoutDescriptor::Uniform::operator <  (const Uniform &right) const
-	{
-		return	stageFlags		!= right.stageFlags		?	stageFlags		< right.stageFlags		:
-				binding			!= right.binding		?	binding			< right.binding			:
-				//uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
-				valueType		!= right.valueType		?	valueType		< right.valueType		:
-				arraySize		!= right.arraySize		?	arraySize		< right.arraySize		:
-															name			< right.name;
 	}
 //-----------------------------------------------------------------------------
 
@@ -542,17 +427,6 @@ namespace Platforms
 	{
 		return	_hash != right._hash	?	_hash		> right._hash	:
 											_uniforms	> right._uniforms;
-	}
-	
-/*
-=================================================
-	operator <
-=================================================
-*/
-	bool PipelineLayoutDescriptor::operator <  (const Self &right) const
-	{
-		return	_hash != right._hash	?	_hash		< right._hash	:
-											_uniforms	< right._uniforms;
 	}
 //-----------------------------------------------------------------------------
 	

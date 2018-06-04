@@ -55,19 +55,19 @@ namespace GXTypes
 
 
 		template <typename T>
-		CHECKRES forceinline static VariantRef  From (T &ref)
+		ND_ forceinline static VariantRef  From (T &ref)
 		{
 			STATIC_ASSERT( not TypeTraits::IsConst<T> );
 			return VariantRef( ref );
 		}
 		
 		template <typename T>
-		CHECKRES forceinline static VariantRef  From (const T *ptr)
+		ND_ forceinline static VariantRef  From (const T *ptr)
 		{
 			return VariantRef( *const_cast<T *>( ptr ) );
 		}
 
-		CHECKRES forceinline static VariantRef  FromVoid (void *ptr, TypeId typeId)
+		ND_ forceinline static VariantRef  FromVoid (void *ptr, TypeId typeId)
 		{
 			VariantRef	ref;
 			ref._reference	= ptr;
@@ -77,32 +77,32 @@ namespace GXTypes
 
 
 		template <typename T>
-		forceinline bool		IsType () const
+		ND_ forceinline bool		IsType () const
 		{
 			return TypeIdOf<T>() == _typeId;
 		}
 
 		template <typename T>
-		forceinline bool		IsTypeAs (const T&) const
+		ND_ forceinline bool		IsTypeAs (const T&) const
 		{
 			return IsType<T>();
 		}
 
 
-		forceinline TypeId		GetValueTypeId () const
+		ND_ forceinline TypeId		GetValueTypeId () const
 		{
 			return _typeId;
 		}
 
 
 		template <typename T>
-		forceinline T &			Get () const
+		ND_ forceinline T &		Get () const
 		{
 			return *GetPtr<T>();
 		}
 
 		template <typename T>
-		forceinline T *			GetPtr () const
+		ND_ forceinline T *		GetPtr () const
 		{
 			CHECK( IsType<T>() );
 			return const_cast< T* >( static_cast< T const *>( _reference ) );

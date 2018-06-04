@@ -6,7 +6,7 @@
 
 namespace GX_STL
 {
-namespace File
+namespace GXFile
 {
 	
 	struct EFile
@@ -49,14 +49,14 @@ namespace File
 		virtual bool SeekCur (BytesI offset) noexcept = 0;
 		virtual bool SeekEnd (BytesU offset) noexcept = 0;
 
-		virtual BytesU			RemainingSize ()	const noexcept = 0;
-		virtual BytesU			Size ()				const noexcept = 0;
-		virtual BytesU			Pos ()				const noexcept = 0;
-		virtual bool			IsEOF ()			const noexcept = 0;
-		virtual bool			IsOpened ()			const noexcept = 0;
+		ND_ virtual BytesU			RemainingSize ()	const noexcept = 0;
+		ND_ virtual BytesU			Size ()				const noexcept = 0;
+		ND_ virtual BytesU			Pos ()				const noexcept = 0;
+		ND_ virtual bool			IsEOF ()			const noexcept = 0;
+		ND_ virtual bool			IsOpened ()			const noexcept = 0;
 
-		virtual EFile::type		GetType ()			const = 0;
-		virtual StringCRef		Name ()				const = 0;
+		ND_ virtual EFile::type		GetType ()			const = 0;
+		ND_ virtual StringCRef		Name ()				const = 0;
 	};
 
 
@@ -112,7 +112,7 @@ namespace File
 		}
 
 		template <typename T>
-		T ReadValue ()
+		ND_ T ReadValue ()
 		{
 			T value;
 			Read( value );
@@ -173,5 +173,5 @@ namespace File
 	SHARED_POINTER( RFile );
 	SHARED_POINTER( WFile );
 
-}	// File
+}	// GXFile
 }	// GX_STL

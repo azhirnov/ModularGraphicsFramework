@@ -84,7 +84,7 @@ namespace GXPhysics
 
 	// methods
 	public:
-		static String ToString ()
+		ND_ static String ToString ()
 		{
 			static const char *	shortTypeNames[] = {
 				"s", "kg", "m", "A", "K", "mol", "cd", "$", "bit"
@@ -253,7 +253,7 @@ namespace GXPhysics
 
 	// methods
 	public:
-		CHECKRES static String ToString (StringCRef divider = "\n")
+		ND_ static String ToString (StringCRef divider = "\n")
 		{
 			_ToStringFunc	func( divider );
 
@@ -363,7 +363,7 @@ namespace GXPhysics
 
 		// methods
 		public:
-			static String ToString (StringCRef divider = "\n")
+			ND_ static String ToString (StringCRef divider = "\n")
 			{
 				return dim_t::ToString( divider );
 			}

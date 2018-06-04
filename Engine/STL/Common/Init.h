@@ -49,21 +49,21 @@ namespace GX_STL
 	
 	namespace TypeTraits
 	{
-		using namespace GXTypes;
+		using namespace GX_STL::GXTypes;
 
 		namespace _ttraits_hidden_ {}
 	}
 
 	namespace CompileTime
 	{
-		//using namespace GXTypes;
+		//using namespace GX_STL::GXTypes;
 
 		namespace _ctime_hidden_ {}
 	}
 
 	namespace GXMath
 	{
-		using namespace GXTypes;
+		using namespace GX_STL::GXTypes;
 
 		namespace _math_hidden_ {}
 		namespace _color_hidden_ {}
@@ -71,35 +71,35 @@ namespace GX_STL
 		void InitializeSTLMath ();
 	}
 	
-	namespace  Java
+	namespace Java
 	{
-		using namespace GXTypes;
+		using namespace GX_STL::GXTypes;
 
 		namespace _java_hidden_ {}
 	}
 
 	namespace OS
 	{
-		using namespace GXTypes;
+		using namespace GX_STL::GXTypes;
 
 		namespace _os_hidden_ {}
 	}
 
 	namespace GXFilters
 	{
-		using namespace GXTypes;
-		using namespace GXMath;
+		using namespace GX_STL::GXTypes;
+		using namespace GX_STL::GXMath;
 	}
 
-	namespace File	// TODO: rename
+	namespace GXFile
 	{
-		using namespace GXTypes;
+		using namespace GX_STL::GXTypes;
 	}
 	
 # ifdef GX_SQLITE_DATABASE_ENABLED
 	namespace GXDataBase
 	{
-		using namespace GXTypes;
+		using namespace GX_STL::GXTypes;
 	}
 # endif
 

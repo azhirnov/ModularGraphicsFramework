@@ -55,19 +55,19 @@ namespace GXTypes
 
 
 		template <typename T>
-		CHECKRES forceinline static VariantCRef  From (T &ref)
+		ND_ forceinline static VariantCRef  From (T &ref)
 		{
 			STATIC_ASSERT( not TypeTraits::IsConst<T> );
 			return VariantCRef( ref );
 		}
 		
 		template <typename T>
-		CHECKRES forceinline static VariantCRef  From (const T *ptr)
+		ND_ forceinline static VariantCRef  From (const T *ptr)
 		{
 			return VariantCRef( *const_cast<T *>( ptr ) );
 		}
 
-		CHECKRES forceinline static VariantCRef  FromVoid (const void *ptr, TypeId typeId)
+		ND_ forceinline static VariantCRef  FromVoid (const void *ptr, TypeId typeId)
 		{
 			VariantCRef	ref;
 			ref._reference	= ptr;
@@ -79,39 +79,39 @@ namespace GXTypes
 		// Warning: this is not safe!
 		// const reference may be a reference to a temporary object.
 		template <typename T>
-		CHECKRES forceinline static VariantCRef  FromConst (const T& ref)
+		ND_ forceinline static VariantCRef  FromConst (const T& ref)
 		{
 			return VariantCRef( const_cast<T &>( ref ) );
 		}
 
 
 		template <typename T>
-		forceinline bool		IsType () const
+		ND_ forceinline bool		IsType () const
 		{
 			return TypeIdOf<T>() == _typeId;
 		}
 
 		template <typename T>
-		forceinline bool		IsTypeAs (const T&) const
+		ND_ forceinline bool		IsTypeAs (const T&) const
 		{
 			return IsType<T>();
 		}
 
 
-		forceinline TypeId		GetValueTypeId () const
+		ND_ forceinline TypeId		GetValueTypeId () const
 		{
 			return _typeId;
 		}
 
 
 		template <typename T>
-		forceinline T const &	Get () const
+		ND_ forceinline T const &	Get () const
 		{
 			return *GetPtr<T>();
 		}
 
 		template <typename T>
-		forceinline T const *	GetPtr () const
+		ND_ forceinline T const *	GetPtr () const
 		{
 			CHECK( IsType<T>() );
 			return static_cast<T const *>( _reference );

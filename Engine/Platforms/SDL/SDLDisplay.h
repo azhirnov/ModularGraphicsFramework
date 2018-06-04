@@ -13,7 +13,7 @@ namespace Engine
 {
 namespace PlatformSDL
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//

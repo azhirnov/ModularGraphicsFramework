@@ -48,7 +48,7 @@ namespace GXTypes
 	ToString (GModID)
 =================================================
 */
-	inline decltype(auto) ToString (Engine::Base::GModID::type value)
+	ND_ inline decltype(auto) ToString (Engine::Base::GModID::type value)
 	{
 		return Engine::Base::GModID::ToString( value );
 	}

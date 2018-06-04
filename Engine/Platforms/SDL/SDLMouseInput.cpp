@@ -12,7 +12,7 @@ namespace Engine
 {
 namespace PlatformSDL
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//
@@ -164,7 +164,7 @@ namespace PlatformSDL
 */
 	bool SDLMouseInput::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
 	{
-		_surfaceSize = msg->desc.surfaceSize;
+		_surfaceSize = msg->descr.surfaceSize;
 		return true;
 	}
 	

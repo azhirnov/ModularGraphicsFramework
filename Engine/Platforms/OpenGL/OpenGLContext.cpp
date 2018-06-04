@@ -202,6 +202,7 @@ namespace Platforms
 		compute.commandBuilder	= GLCommandBuilderModuleID;
 		compute.buffer			= GLBufferModuleID;
 		compute.image			= GLImageModuleID;
+		compute.sampler			= GLSamplerModuleID;
 		compute.memory			= GLMemoryModuleID;
 		compute.resourceTable	= GLPipelineResourceTableModuleID;
 		return compute;

@@ -47,7 +47,7 @@ namespace GXTypes
 
 		
 		template <usize I>
-		ValueRef_t<I> 	Get () const
+		ND_ ValueRef_t<I> 	Get () const
 		{
 			return _containerRef[I].template Get< Value_t<I> >();
 		}
@@ -61,7 +61,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename Typelist, typename Container>
-	inline VariantRefIndexedContainer<Container, Typelist>  VariantRefIndexedContainerFrom (const Container &value)
+	ND_ inline VariantRefIndexedContainer<Container, Typelist>  VariantRefIndexedContainerFrom (const Container &value)
 	{
 		return VariantRefIndexedContainer<Container, Typelist>( value );
 	}

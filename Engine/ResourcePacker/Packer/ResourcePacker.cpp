@@ -5,8 +5,8 @@
 #include "Engine/ResourcePacker/Pipelines/ScriptGraphicsPipeline.h"
 #include "Engine/ResourcePacker/Pipelines/ScriptComputePipeline.h"
 
-#include "Engine/ResourcePacker/FilePacker/BinaryFilePacker.h"
-#include "Engine/ResourcePacker/FilePacker/TextFilePacker.h"
+#include "Engine/ResourcePacker/FilePacker/CppFileSystemPacker.h"
+#include "Engine/ResourcePacker/Images/ImageConverter.h"
 
 #include "Engine/Script/Bindings/DefaultBindings.h"
 
@@ -108,7 +108,7 @@ namespace ResPack
 =================================================
 	_PackFile
 =================================================
-*/
+*
 	bool ResourcePacker::_PackFile (IFilePackerPtr &&file, StringCRef input, StringCRef output)
 	{
 		CHECK_ERR( file->Load( input ) );
@@ -180,7 +180,7 @@ namespace ResPack
 */
 	void ResourcePacker::_Bind (GXScript::ScriptEnginePtr se)
 	{
-		using namespace GXScript;
+		using namespace GX_STL::GXScript;
 
 		DefaultBindings::BindScalarMath( se.ptr() );
 		DefaultBindings::BindVectorMath( se.ptr() );
@@ -190,6 +190,8 @@ namespace ResPack
 		ScriptPipeline::BindAll( se );
 		ScriptGraphicsPipeline::Bind( se );
 		ScriptComputePipeline::Bind( se );
+
+		ImageConverter::BindAll( se );
 
 		using Self = ScriptResourcePacker;
 

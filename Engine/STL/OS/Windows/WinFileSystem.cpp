@@ -67,8 +67,8 @@ namespace OS
 		if ( filename.Empty() )
 			return false;
 
-		int i_code = ::GetFileAttributes( filename.cstr() );
-		return (i_code != -1) and not (FILE_ATTRIBUTE_DIRECTORY & i_code);
+		DWORD	code = ::GetFileAttributesA( filename.cstr() );
+		return (code != INVALID_FILE_ATTRIBUTES) and not (FILE_ATTRIBUTE_DIRECTORY & code);
 	}
 	
 /*
@@ -81,10 +81,24 @@ namespace OS
 		if ( folder.Empty() )
 			return true;
 
-		int i_code = ::GetFileAttributes( folder.cstr() );
-		return (i_code != -1) and (FILE_ATTRIBUTE_DIRECTORY & i_code);
+		DWORD	code = ::GetFileAttributesA( folder.cstr() );
+		return (code != INVALID_FILE_ATTRIBUTES) and (FILE_ATTRIBUTE_DIRECTORY & code);
 	}
 	
+/*
+=================================================
+	IsReadOnly
+=================================================
+*/
+	bool WindowsFileSystem::IsReadOnly (StringCRef path)
+	{
+		if ( path.Empty() )
+			return false;
+		
+		DWORD	code = ::GetFileAttributesA( path.cstr() );
+		return (code != INVALID_FILE_ATTRIBUTES) and (FILE_ATTRIBUTE_READONLY & code);	// for XP, Vist, 7 only file attribute can be checked
+	}
+
 /*
 =================================================
 	IsAbsolutePath
@@ -155,7 +169,7 @@ namespace OS
 			null,
 			"" };
 
-		return SHFileOperation( &file_op ) == 0;
+		return ::SHFileOperationA( &file_op ) == 0;
 	}
 	
 /*
@@ -251,8 +265,7 @@ namespace OS
 */
 	bool WindowsFileSystem::CopyDirectory (StringCRef fromDir, StringCRef toDir)
 	{
-		SHFILEOPSTRUCTA s;
-		UnsafeMem::ZeroMem( &s, BytesU::SizeOf(s) );
+		SHFILEOPSTRUCTA s = {};
 
 		String	from_dir	= fromDir;
 		String	to_dir		= toDir;
@@ -266,7 +279,7 @@ namespace OS
 		s.pTo		= to_dir.cstr();
 		s.pFrom		= from_dir.cstr();
 
-		int res = SHFileOperation( &s );
+		int res = ::SHFileOperationA( &s );
 
 		ASSERT( res == 0 );
 		return res == 0;
@@ -281,7 +294,7 @@ namespace OS
 	{
 		const uint	flags = MOVEFILE_COPY_ALLOWED | (async ? 0 : MOVEFILE_WRITE_THROUGH);
 
-		return ::MoveFileEx( oldName.cstr(), newName.cstr(), flags ) != FALSE;
+		return ::MoveFileExA( oldName.cstr(), newName.cstr(), flags ) != FALSE;
 	}
 
 /*
@@ -309,21 +322,17 @@ namespace OS
 */
 	Date WindowsFileSystem::GetFileLastModificationTime (StringCRef filename)
 	{
-		FILETIME	atime = {};
-		FILETIME	wtime = {};
+		FILETIME	time = {};
 		HANDLE		file = ::CreateFileA( filename.cstr(), GENERIC_READ,
-							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
-							null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );
+								FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+								null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );
 
-		if ( file == null or ::GetFileTime( file, null, OUT &atime, OUT &wtime ) == FALSE )
+		if ( file == null or ::GetFileTime( file, null, null, OUT &time ) == FALSE )
 			return Uninitialized;
-
-		ulong	a = (ulong(atime.dwHighDateTime) << 32) | ulong(atime.dwLowDateTime);
-		ulong	w = (ulong(wtime.dwHighDateTime) << 32) | ulong(wtime.dwLowDateTime);
 
 		SYSTEMTIME	sys_time = {};
 
-		if ( ::FileTimeToSystemTime( a > w ? &atime : &wtime, OUT &sys_time ) == FALSE )
+		if ( ::FileTimeToSystemTime( &time, OUT &sys_time ) == FALSE )
 			return Uninitialized;
 
 		return SystemTimeToDate( sys_time );
@@ -338,8 +347,8 @@ namespace OS
 	{
 		FILETIME	time = {};
 		HANDLE		file = ::CreateFileA( filename.cstr(), GENERIC_READ,
-							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
-							null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );
+								FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+								null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null );
 
 		if ( file == null or ::GetFileTime( file, OUT &time, null, null ) == FALSE )
 			return Uninitialized;

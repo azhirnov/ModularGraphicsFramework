@@ -13,6 +13,12 @@
 
 namespace Engine
 {
+namespace PlatformSW
+{
+	class SWSamplerCache;
+
+}	// PlatformSW
+
 namespace GpuMsg
 {
 	//
@@ -21,7 +27,11 @@ namespace GpuMsg
 	struct GetSWPrivateClasses
 	{
 		struct Classes {
-			PlatformSW::SWDevice *	device	= null;
+			PlatformSW::SWDevice *			device			= null;
+			PlatformSW::SWSamplerCache *	samplerCache	= null;
+
+			Classes (PlatformSW::SWDevice *dev, PlatformSW::SWSamplerCache *sampCache) :
+				device{dev}, samplerCache{sampCache} {}
 		};
 
 		Out< Classes >		result;
@@ -74,9 +84,9 @@ namespace PlatformSW
 					   const TypeIdList *msgTypes,
 					   const TypeIdList *eventTypes);
 		
-		ModulePtr _GetGPUThread (const ModulePtr &);
+		ND_ ModulePtr _GetGPUThread (const ModulePtr &);
 		
-		Ptr< SWDevice >	GetDevice ()	const	{ return _swDevice; }
+		ND_ Ptr< SWDevice >	GetDevice ()	const	{ return _swDevice; }
 
 
 	// message handlers

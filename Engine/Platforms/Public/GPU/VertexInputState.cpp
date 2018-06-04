@@ -60,19 +60,6 @@ namespace Platforms
 				offset	!= right.offset	?	offset			> right.offset	:
 											bindingIndex	> right.bindingIndex;
 	}
-	
-/*
-=================================================
-	operator <
-=================================================
-*/
-	bool VertexInputState::Attrib::operator <  (const Attrib &right) const
-	{
-		return	type	!= right.type	?	type			< right.type	:
-				index	!= right.index	?	index			< right.index	:
-				offset	!= right.offset	?	offset			< right.offset	:
-											bindingIndex	< right.bindingIndex;
-	}
 //-----------------------------------------------------------------------------
 
 
@@ -112,18 +99,6 @@ namespace Platforms
 		return	index	!= right.index	?	index	> right.index	:
 				stride	!= right.stride	?	stride	> right.stride	:
 											rate	> right.rate;
-	}
-		
-/*
-=================================================
-	operator <
-=================================================
-*/	
-	bool VertexInputState::Binding::operator <  (const Binding &right) const
-	{
-		return	index	!= right.index	?	index	< right.index	:
-				stride	!= right.stride	?	stride	< right.stride	:
-											rate	< right.rate;
 	}
 //-----------------------------------------------------------------------------
 
@@ -280,9 +255,9 @@ namespace GXTypes
 {
 
 
-	HashResult  Hash < Engine::Platforms::VertexInputState >::operator () (const Key_t &x) const noexcept
+	HashResult  Hash < Engine::Platforms::VertexInputState >::operator () (const Engine::Platforms::VertexInputState &x) const noexcept
 	{
-		Result_t	res;
+		HashResult	res;
 
 		res += HashOf( x._attribs.Count() );
 		res += HashOf( x._bindings.Count() );

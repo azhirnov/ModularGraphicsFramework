@@ -80,8 +80,8 @@
 #	error GX_CONSTEXPR_SUPPORTED
 #endif
 
-#ifndef GX_CHECK_RESULT
-#	error GX_CHECK_RESULT
+#ifndef GX_NODISCARD
+#	error GX_NODISCARD
 #endif
 
 

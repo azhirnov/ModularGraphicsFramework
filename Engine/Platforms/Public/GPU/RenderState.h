@@ -42,7 +42,7 @@ namespace Platforms
 				_Pair (type rgba) : color(rgba), alpha(rgba) {}
 				_Pair (type rgb, type a) : color(rgb), alpha(a) {}
 
-				bool operator == (const _Pair<T> &right) const;
+				ND_ bool operator == (const _Pair<T> &right) const;
 			};
 
 
@@ -61,7 +61,7 @@ namespace Platforms
 				colorMask( true ),	blend( false )
 			{}
 
-			bool operator == (const Self &right) const;
+			ND_ bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -101,7 +101,7 @@ namespace Platforms
 
 			Self& SetColorMask (bool4 value);
 			
-			bool operator == (const Self &right) const;
+			ND_ bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -131,7 +131,7 @@ namespace Platforms
 				mask( UMax )
 			{}
 			
-			bool operator == (const Self &right) const;
+			ND_ bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -154,7 +154,7 @@ namespace Platforms
 				front(), back(), enabled( false )
 			{}
 			
-			bool operator == (const Self &right) const;
+			ND_ bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -179,7 +179,7 @@ namespace Platforms
 				write( true ),					enabled( false )
 			{}
 				
-			bool operator == (const Self &right) const;
+			ND_ bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -202,7 +202,7 @@ namespace Platforms
 				primitiveRestart( false )
 			{}
 			
-			bool operator == (const Self &right) const;
+			ND_ bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -240,7 +240,7 @@ namespace Platforms
 				cullMode( EPolygonFace::None ),		frontFaceCCW( true )
 			{}
 			
-			bool operator == (const Self &right) const;
+			ND_ bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -271,7 +271,7 @@ namespace Platforms
 				alphaToCoverage( false ),	alphaToOne( false )
 			{}
 			
-			bool operator == (const Self &right) const;
+			ND_ bool operator == (const Self &right) const;
 
 			DEBUG_ONLY( String ToString () const; )
 		};
@@ -292,7 +292,7 @@ namespace Platforms
 		RenderState (GX_DEFCTOR)
 		{}
 		
-		bool operator == (const Self &right) const;
+		ND_ bool operator == (const Self &right) const;
 
 		DEBUG_ONLY( String ToString () const; )
 	};

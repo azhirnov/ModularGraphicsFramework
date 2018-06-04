@@ -73,7 +73,7 @@ namespace Scene
 		// event handlers
 		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
 		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
-		bool _AfterCompose (const Message< GpuMsg::AfterCompose > &);
+		bool _AfterCompose (const Message< ModuleMsg::AfterCompose > &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -129,7 +129,7 @@ namespace Scene
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		CHECK_ERR( _GetManager() );
 
 		_SendForEachAttachments( msg );
@@ -231,10 +231,10 @@ namespace Scene
 	bool WindowSurface::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
 	{
 		if ( _IsComposedState( GetState() )									and
-			 msg->desc.visibility != WindowDesc::EVisibility::Invisible		and
-			 Any( msg->desc.surfaceSize != _size ) )
+			 msg->descr.visibility != WindowDesc::EVisibility::Invisible	and
+			 Any( msg->descr.surfaceSize != _size ) )
 		{
-			_size = msg->desc.surfaceSize;
+			_size = msg->descr.surfaceSize;
 
 			_SendEvent< SceneMsg::SurfaceOnResize >({ _size });
 		}

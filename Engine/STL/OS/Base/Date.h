@@ -108,10 +108,11 @@ namespace OS
 		Date &	SetMillisecondsSinceEpoch (ulong ms){ return _SetMilliseconds( 0, ms ); }
 
 		TimeL	ToTime () const						{ return TimeL::FromMilliSeconds( ToMillisecondsSince1970() ); }	// 1970 .. 2262
+		Date &	SetTime (TimeL value)				{ return SetMillisecondsSince1970( value.MilliSeconds() ); }
 
 
 		Date &  SetYear (uint value)				{ _year = value; return *this; }
-		Date &	SetMonth (uint value)				{ _month = value; return *this; }
+		Date &	SetMonth (uint value)				{ _month = value-1; return *this; }
 		Date &	SetDay (uint value);
 		Date &	SetHour (uint value)				{ _hour = value; return *this; }
 		Date &	SetMinute (uint value)				{ _minute = value; return *this; }
@@ -120,12 +121,12 @@ namespace OS
 
 		String ToString (StringCRef fmt) const;
 		
-		bool operator == (const Date &other) const;
-		bool operator >  (const Date &other) const;
-		bool operator <  (const Date &other) const;
-		bool operator != (const Date &other) const	{ return not (*this == other); }
-		bool operator >= (const Date &other) const	{ return not (*this < other); }
-		bool operator <= (const Date &other) const	{ return not (*this > other); }
+		bool operator == (const Date &right) const;
+		bool operator >  (const Date &right) const;
+		bool operator <  (const Date &right) const	{ return (right > *this); }
+		bool operator != (const Date &right) const	{ return not (*this == right); }
+		bool operator >= (const Date &right) const	{ return not (*this < right); }
+		bool operator <= (const Date &right) const	{ return not (*this > right); }
 
 
 	private:

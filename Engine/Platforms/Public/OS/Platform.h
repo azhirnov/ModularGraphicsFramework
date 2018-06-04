@@ -31,7 +31,7 @@ namespace CreateInfo
 
 
 	// variables
-		GXMath::uint2			resolution;
+		GXMath::uint2			resolution;			// TODO: multidisplay support
 		uint					frequency	= 0;
 		EPlatformFlags::bits	flags;
 
@@ -52,9 +52,14 @@ namespace OSMsg
 	//
 	struct GetDisplays
 	{
+	// types
 		using Displays_t = FixedSizeArray< Platforms::Display, GlobalConst::OS_MaxDisplays >;
 
+	// variables
 		Out< Displays_t >	result;
+
+	// methods
+		GetDisplays () {}
 	};
 
 
@@ -63,7 +68,62 @@ namespace OSMsg
 	//
 	struct GetOSModules
 	{
+	// variables
 		Out< Platforms::OSModuleIDs >	result;
+
+	// methods
+		GetOSModules () {}
+	};
+
+
+	//
+	// Get CPU Info
+	//
+	struct GetProccessorInfo
+	{
+	// types
+		enum class EProcessorArch {
+			Unknown,
+			ARM,
+			ARM64,
+			X86,
+			X64,
+		};
+
+		struct Info {
+			uint			coresCount	= 0;
+			uint			baseClock	= 0;
+			EProcessorArch	arch		= EProcessorArch::Unknown;
+		};
+
+	// variables
+		Out< Info >			result;
+
+	// methods
+		GetProccessorInfo () {}
+	};
+
+
+	//
+	// Get (RAM) Memory Info
+	//
+	struct GetMemoryInfo
+	{
+	// types
+		struct Info {
+			// physical
+			BytesUL			total;
+			BytesUL			available;
+			// virtual
+			BytesUL			totalVirtual;
+			BytesUL			availableVirtual;
+		};
+
+	// variables
+		Out< Info >			result;
+
+	// methods
+		GetMemoryInfo () {}
 	};
 
 

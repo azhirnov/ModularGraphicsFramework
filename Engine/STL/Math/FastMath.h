@@ -19,7 +19,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T> 
-	CHECKRES forceinline T  FSin (T x)
+	ND_ forceinline T  FSin (T x)
 	{
 		return ( x - ((x * x * x) / T(6)) + ((x * x * x * x * x) /
 					T(120)) - ((x * x * x * x * x * x * x) / T(5040)) );
@@ -31,7 +31,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T> 
-	CHECKRES forceinline T  FCos (T x)
+	ND_ forceinline T  FCos (T x)
 	{
 		return ( T(1) - (x * x * T(0.5)) + (x * x * x * x * T(0.041666666666)) -
 					(x * x * x * x * x * x * T(0.00138888888888)) );
@@ -43,7 +43,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T> 
-	CHECKRES forceinline T  FTan (T x)
+	ND_ forceinline T  FTan (T x)
 	{
 		return ( x + (x * x * x * T(0.3333333333)) + (x * x * x * x * x * T(0.1333333333333)) +
 				(x * x * x * x * x * x * x * T(0.0539682539)) );
@@ -55,7 +55,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T> 
-	CHECKRES forceinline T  FAsin (T x)
+	ND_ forceinline T  FAsin (T x)
 	{
 		return ( x + (x * x * x * T(0.166666667)) + (x * x * x * x * x * T(0.075)) +
 				(x * x * x * x * x * x * x * T(0.0446428571)) +
@@ -68,7 +68,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T> 
-	CHECKRES forceinline T  FAcos (T x)
+	ND_ forceinline T  FAcos (T x)
 	{
 		return ( T(1.5707963267948966192313216916398) - FAsin(x) );
 	}
@@ -79,7 +79,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T> 
-	CHECKRES forceinline T  FAtan (T y, T x)
+	ND_ forceinline T  FAtan (T y, T x)
 	{
 		return Abs( FAtan(y / x) ) * ( SignOrZero(y) * SignOrZero(x) );
 	}
@@ -90,7 +90,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T> 
-	CHECKRES forceinline T  FAtan (T x)
+	ND_ forceinline T  FAtan (T x)
 	{
 		return ( x - (x * x * x * T(0.333333333333)) + (x * x * x * x * x * T(0.2)) -
 				(x * x * x * x * x * x * x * T(0.1428571429)) +
@@ -103,7 +103,7 @@ namespace GXMath
 	FInvSqrt
 =================================================
 */
-	CHECKRES forceinline float  FInvSqrt (float x)
+	ND_ forceinline float  FInvSqrt (float x)
 	{
 		float	tmp		= x;
 		float	xhalf	= 0.5f * tmp;
@@ -119,7 +119,7 @@ namespace GXMath
 	FSqrt
 =================================================
 */
-	CHECKRES forceinline float  FSqrt (float x)
+	ND_ forceinline float  FSqrt (float x)
 	{
 		return x * FInvSqrt(x);
 	}
@@ -132,7 +132,7 @@ namespace GXMath
 #	if 0
 	// from http://stackoverflow.com/questions/18662261/fastest-implementation-of-sine-cosine-and-square-root-in-c-doesnt-need-to-b
 
-	CHECKRES forceinline float  FastSqrt (float x)
+	ND_ forceinline float  FastSqrt (float x)
 	{
 		uint	i = ReferenceCast<uint>( x );
 		i  += 127 << 23;
@@ -149,7 +149,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES forceinline T  FastPowI (T a, T b)
+	ND_ forceinline T  FastPowI (T a, T b)
 	{
 		CompileTime::MustBeInteger<T>();
 
@@ -171,7 +171,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES forceinline T  FastApproximatedFactorial (T n)
+	ND_ forceinline T  FastApproximatedFactorial (T n)
 	{
 		return Sqrt( Pi<T> * T(2) * n ) * Pow( n / EulerNumber<T> , n );
 	}
@@ -184,7 +184,7 @@ namespace GXMath
 	inline double FastGammaFunction (double x);
 	inline double FastLnGammaFunction (double x);
 
-	CHECKRES forceinline double  FastFactorial (double x)
+	ND_ forceinline double  FastFactorial (double x)
 	{
 		return FastGammaFunction( x ) * x;
 	}
@@ -196,7 +196,7 @@ namespace GXMath
 	from http://www.johndcook.com/blog/cpp_gamma/
 =================================================
 */
-	CHECKRES forceinline double  FastGammaFunction (double x)
+	ND_ forceinline double  FastGammaFunction (double x)
 	{
 		ASSERT( x > 0.0 );
 
@@ -288,7 +288,7 @@ namespace GXMath
 	from http://www.johndcook.com/blog/cpp_gamma/
 =================================================
 */
-	CHECKRES forceinline double  FastLnGammaFunction (double x)
+	ND_ forceinline double  FastLnGammaFunction (double x)
 	{
 		ASSERT( x > 0.0 );
 

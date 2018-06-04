@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Platforms/Vulkan/Impl/vulkan1.h"
+#include "Engine/Platforms/Vulkan/110/vulkan1.h"
 
 #if defined( GRAPHICS_API_VULKAN ) and defined( PLATFORM_ANDROID )
 
@@ -10,7 +10,7 @@ namespace Engine
 {
 namespace PlatformVK
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//

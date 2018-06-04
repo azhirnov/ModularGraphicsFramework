@@ -7,6 +7,8 @@
 
 #include "Engine/STL/Containers/Array.h"
 #include "Engine/STL/Algorithms/ArrayUtils.h"
+#include "Engine/STL/Containers/IndexedIterator.h"
+#include "Engine/STL/CompileTime/FunctionInfo.h"
 
 namespace GX_STL
 {
@@ -128,8 +130,8 @@ namespace GXTypes
 
 			_IndexRangeResult (Arr &arr, usize first, usize last) : _arr(arr), _first(first), _last(last) {}
 
-			decltype(auto)	begin ()		{ return &_arr[ _first ]; }		// TODO: use index iterator
-			auto			end ()			{ auto i = &_arr[ _last ];  return ++i; }
+			decltype(auto)	begin ()		{ return IndexedIterator<TypeTraits::RemoveAnyReference<decltype(_arr[0])>>{ _arr, _first }; }
+			auto			end ()			{ auto i = IndexedIterator<TypeTraits::RemoveAnyReference<decltype(_arr[0])>>{ _arr, _last };  return ++i; }
 		};
 		
 		template <typename Arr>
@@ -140,35 +142,39 @@ namespace GXTypes
 			const usize	_last;
 
 			_IndexRangeResult (const Arr &arr, usize first, usize last) : _arr(arr), _first(first), _last(last) {}
-
-			decltype(auto)	begin () const	{ return &_arr[ _first ]; }
-			auto			end ()	 const	{ auto i = &_arr[ _last ];  return ++i; }
+			
+			decltype(auto)	begin ()		{ return IndexedIterator<TypeTraits::RemoveAnyReference<decltype(_arr[0])>>{ _arr, _first }; }
+			auto			end ()			{ auto i = IndexedIterator<TypeTraits::RemoveAnyReference<decltype(_arr[0])>>{ _arr, _last };  return ++i; }
 		};
 
 		template <typename T>
 		struct _IndexRangeResult< T* >
 		{
+			using Iter = IndexedIterator< T >;
+
 			T *			_arr;
 			const usize	_first;
 			const usize	_last;
 
 			_IndexRangeResult (T *arr, usize first, usize last) : _arr(arr), _first(first), _last(last) {}
-
-			decltype(auto)	begin ()		{ return &_arr[ _first ]; }
-			auto			end ()			{ auto i = &_arr[ _last ];  return ++i; }
+			
+			decltype(auto)	begin ()		{ return Iter{ _arr, _first }; }
+			auto			end ()			{ auto i = Iter{ _arr, _last };  return ++i; }
 		};
 
 		template <typename T>
 		struct _IndexRangeResult< T const* >
 		{
+			using Iter = IndexedIterator< const T >;
+
 			T const *	_arr;
 			const usize	_first;
 			const usize	_last;
 
 			_IndexRangeResult (T const *arr, usize first, usize last) : _arr(arr), _first(first), _last(last) {}
-
-			decltype(auto)	begin () const	{ return &_arr[ _first ]; }
-			auto			end ()	 const	{ auto i = &_arr[ _last ];  return ++i; }
+			
+			decltype(auto)	begin ()		{ return Iter{ _arr, _first }; }
+			auto			end ()			{ auto i = Iter{ _arr, _last };  return ++i; }
 		};
 		
 /*
@@ -217,7 +223,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename Arr>
-	CHECKRES forceinline decltype(auto)  Range (Arr &container)
+	ND_ forceinline decltype(auto)  Range (Arr &container)
 	{
 		if_constexpr( _types_hidden_::HasBeginEnd<Arr> ) {
 			return _types_hidden_::_Range1( container );
@@ -230,7 +236,7 @@ namespace GXTypes
 	}
 
 	template <typename Arr>
-	CHECKRES forceinline decltype(auto)  Range (Arr &container, const usize first, const usize count)
+	ND_ forceinline decltype(auto)  Range (Arr &container, const usize first, const usize count)
 	{
 		return _types_hidden_::_Range3( container, first, count );
 	}
@@ -241,7 +247,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename Arr>
-	CHECKRES forceinline decltype(auto)  RevRange (Arr &container)
+	ND_ forceinline decltype(auto)  RevRange (Arr &container)
 	{
 		if_constexpr( _types_hidden_::HasBeginEnd<Arr> ) {
 			return _types_hidden_::_ReverseResult::Make( _types_hidden_::_Range1( container ) );
@@ -254,7 +260,7 @@ namespace GXTypes
 	}
 	
 	template <typename Arr>
-	CHECKRES forceinline decltype(auto)  RevRange (Arr &container, const usize first, const usize count)
+	ND_ forceinline decltype(auto)  RevRange (Arr &container, const usize first, const usize count)
 	{
 		return _types_hidden_::_ReverseResult::Make( _types_hidden_::_Range3( container, first, count ) );
 	}

@@ -70,13 +70,21 @@ namespace GXTypes
 
 
 using namespace GX_STL;
-using namespace GXTypes;
-using namespace GXMath;
-using namespace CompileTime;
+using namespace GX_STL::GXTypes;
+using namespace GX_STL::GXMath;
+using namespace GX_STL::CompileTime;
+using namespace GX_STL::TypeTraits;
+using namespace GX_STL::Java;
+using namespace GX_STL::OS;
+using namespace GX_STL::GXFilters;
+using namespace GX_STL::GXFile;
 
 
 // check hidden namespaces intersection
 using namespace _types_hidden_;
 using namespace _ctime_hidden_;
 using namespace _math_hidden_;
-
+using namespace _color_hidden_;
+using namespace _ttraits_hidden_;
+using namespace _java_hidden_;
+using namespace _os_hidden_;

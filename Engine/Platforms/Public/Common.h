@@ -24,17 +24,14 @@ namespace Platforms
 }	// Platforms
 
 namespace GpuMsg {
-	using namespace ModuleMsg;
-	using namespace GX_STL::GXMath;
+	using namespace Engine::_BaseMessages_;
 }
 
 namespace OSMsg {
-	using namespace ModuleMsg;
-	using namespace GX_STL::GXMath;
+	using namespace Engine::_BaseMessages_;
 }
 
 namespace CreateInfo
-{
+{}
 
-}	// CreateInfo
 }	// Engine

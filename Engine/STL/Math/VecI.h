@@ -43,7 +43,7 @@
 
 		Self& operator = (T X)								{ x = X; return *this; }
 
-		CHECKRES constexpr explicit operator T () const		{ return x; }
+		ND_ constexpr explicit operator T () const		{ return x; }
 #	endif
 
 #	if I == 2
@@ -154,23 +154,23 @@
 
 
 		// binary operators
-		CHECKRES T &				operator [] (usize i)						{ ASSUME(i<I);  return ptr()[i]; }
-		CHECKRES T const &			operator [] (usize i) const					{ ASSUME(i<I);  return ptr()[i]; }
+		ND_ T &					operator [] (usize i)						{ ASSUME(i<I);  return ptr()[i]; }
+		ND_ T const &			operator [] (usize i) const					{ ASSUME(i<I);  return ptr()[i]; }
 
-		CHECKRES constexpr BVec_t	operator == (const Self & right) const		{ return Equal( right ); }
-		CHECKRES constexpr BVec_t	operator != (const Self & right) const		{ return not Equal( right ); }
-		CHECKRES constexpr BVec_t	operator >  (const Self & right) const		{ return Greater( right ); }
-		CHECKRES constexpr BVec_t	operator >= (const Self & right) const		{ return not Less( right ); }
-		CHECKRES constexpr BVec_t	operator <  (const Self & right) const		{ return Less( right ); }
-		CHECKRES constexpr BVec_t	operator <= (const Self & right) const		{ return not Greater( right ); }
+		ND_ constexpr BVec_t	operator == (const Self & right) const		{ return Equal( right ); }
+		ND_ constexpr BVec_t	operator != (const Self & right) const		{ return not Equal( right ); }
+		ND_ constexpr BVec_t	operator >  (const Self & right) const		{ return Greater( right ); }
+		ND_ constexpr BVec_t	operator >= (const Self & right) const		{ return not Less( right ); }
+		ND_ constexpr BVec_t	operator <  (const Self & right) const		{ return Less( right ); }
+		ND_ constexpr BVec_t	operator <= (const Self & right) const		{ return not Greater( right ); }
 		
 #	if I == 1
-		CHECKRES constexpr bool		operator == (const T& right) const			{ return x == right; }
-		CHECKRES constexpr bool		operator != (const T& right) const			{ return x != right; }
-		CHECKRES constexpr bool		operator >  (const T& right) const			{ return x >  right; }
-		CHECKRES constexpr bool		operator >= (const T& right) const			{ return x >= right; }
-		CHECKRES constexpr bool		operator <  (const T& right) const			{ return x <  right; }
-		CHECKRES constexpr bool		operator <= (const T& right) const			{ return x <= right; }
+		ND_ constexpr bool		operator == (const T& right) const			{ return x == right; }
+		ND_ constexpr bool		operator != (const T& right) const			{ return x != right; }
+		ND_ constexpr bool		operator >  (const T& right) const			{ return x >  right; }
+		ND_ constexpr bool		operator >= (const T& right) const			{ return x >= right; }
+		ND_ constexpr bool		operator <  (const T& right) const			{ return x <  right; }
+		ND_ constexpr bool		operator <= (const T& right) const			{ return x <= right; }
 		
 		VEC_OP_BINARY_SCALAR( +,  T );
 		VEC_OP_BINARY_SCALAR( -,  T );
@@ -206,7 +206,7 @@
 			return *this;
 		}
 		
-		CHECKRES constexpr const Self  operator %  (const Self& right) const
+		ND_ constexpr const Self  operator %  (const Self& right) const
 		{
 			Self	ret;
 			FOR( i, *this )	 ret[i] = Mod( (*this)[i], right[i] );
@@ -219,32 +219,32 @@
 			return *this;
 		}
 
-		CHECKRES constexpr const Self  operator %  (const T& right) const
+		ND_ constexpr const Self  operator %  (const T& right) const
 		{
 			Self	ret;
 			FOR( i, *this )	 ret[i] = Mod( (*this)[i], right );
 			return ret;
 		}
 
-		CHECKRES friend constexpr const Self  operator % (const T& left, const Self& right)
+		ND_ friend constexpr const Self  operator % (const T& left, const Self& right)
 		{
 			return Self(left) % right;
 		}
 
 #	else
-		CHECKRES constexpr BVec_t		operator == (const T& right) const				{ return Equal( Self(right) ); }
-		CHECKRES constexpr BVec_t		operator != (const T& right) const				{ return not Equal( Self(right) ); }
-		CHECKRES constexpr BVec_t		operator >  (const T& right) const				{ return Greater( Self(right) ); }
-		CHECKRES constexpr BVec_t		operator >= (const T& right) const				{ return GEqual( Self(right) ); }
-		CHECKRES constexpr BVec_t		operator <  (const T& right) const				{ return Less( Self(right) ); }
-		CHECKRES constexpr BVec_t		operator <= (const T& right) const				{ return LEqual( Self(right) ); }
+		ND_ constexpr BVec_t		operator == (const T& right) const				{ return Equal( Self(right) ); }
+		ND_ constexpr BVec_t		operator != (const T& right) const				{ return not Equal( Self(right) ); }
+		ND_ constexpr BVec_t		operator >  (const T& right) const				{ return Greater( Self(right) ); }
+		ND_ constexpr BVec_t		operator >= (const T& right) const				{ return GEqual( Self(right) ); }
+		ND_ constexpr BVec_t		operator <  (const T& right) const				{ return Less( Self(right) ); }
+		ND_ constexpr BVec_t		operator <= (const T& right) const				{ return LEqual( Self(right) ); }
 
-		CHECKRES constexpr BVec_t		operator == (const Scalar_t& right) const		{ return Equal( Self(right.x) ); }
-		CHECKRES constexpr BVec_t		operator != (const Scalar_t& right) const		{ return not Equal( Self(right.x) ); }
-		CHECKRES constexpr BVec_t		operator >  (const Scalar_t& right) const		{ return Greater( Self(right.x) ); }
-		CHECKRES constexpr BVec_t		operator >= (const Scalar_t& right) const		{ return GEqual( Self(right.x) ); }
-		CHECKRES constexpr BVec_t		operator <  (const Scalar_t& right) const		{ return Less( Self(right.x) ); }
-		CHECKRES constexpr BVec_t		operator <= (const Scalar_t& right) const		{ return LEqual( Self(right.x) ); }
+		ND_ constexpr BVec_t		operator == (const Scalar_t& right) const		{ return Equal( Self(right.x) ); }
+		ND_ constexpr BVec_t		operator != (const Scalar_t& right) const		{ return not Equal( Self(right.x) ); }
+		ND_ constexpr BVec_t		operator >  (const Scalar_t& right) const		{ return Greater( Self(right.x) ); }
+		ND_ constexpr BVec_t		operator >= (const Scalar_t& right) const		{ return GEqual( Self(right.x) ); }
+		ND_ constexpr BVec_t		operator <  (const Scalar_t& right) const		{ return Less( Self(right.x) ); }
+		ND_ constexpr BVec_t		operator <= (const Scalar_t& right) const		{ return LEqual( Self(right.x) ); }
 
 		VEC_OP_BINARY_SCALAR( +,  T );
 		VEC_OP_BINARY_SCALAR( -,  T );
@@ -303,7 +303,7 @@
 			return *this;
 		}
 		
-		CHECKRES constexpr const Self  operator %  (const Self& right) const
+		ND_ constexpr const Self  operator %  (const Self& right) const
 		{
 			Self	ret;
 			FOR( i, *this )	 ret[i] = Mod( (*this)[i], right[i] );
@@ -316,14 +316,14 @@
 			return *this;
 		}
 
-		CHECKRES constexpr const Self  operator %  (const T& right) const
+		ND_ constexpr const Self  operator %  (const T& right) const
 		{
 			Self	ret;
 			FOR( i, *this )	 ret[i] = Mod( (*this)[i], right );
 			return ret;
 		}
 
-		CHECKRES friend constexpr const Self  operator % (const T& left, const Self& right)
+		ND_ friend constexpr const Self  operator % (const T& left, const Self& right)
 		{
 			return Self(left) % right;
 		}
@@ -331,10 +331,10 @@
 
 
 		// methods
-		T *			ptr ()										{ _CheckAlign();  return &x; }
-		T const *	ptr ()	const								{ _CheckAlign();  return &x; }
+		ND_ T *			ptr ()										{ _CheckAlign();  return &x; }
+		ND_ T const *	ptr ()	const								{ _CheckAlign();  return &x; }
 
-		static constexpr usize Count ()							{ return I; }
+		ND_ static constexpr usize Count ()							{ return I; }
 
 		T			Min () const;
 		T			Max () const;
@@ -378,90 +378,90 @@
 
 
 #	if I == 1
-		CHECKRES constexpr T		Sum ()		const	{ return x; }
-		CHECKRES constexpr T		SumAbs ()	const	{ return Abs(x); }
-		CHECKRES constexpr T		Area ()		const	{ return x*1; }
-		CHECKRES constexpr T		Volume ()	const	{ return x*1*1; }
+		ND_ constexpr T			Sum ()		const	{ return x; }
+		ND_ constexpr T			SumAbs ()	const	{ return Abs(x); }
+		ND_ constexpr T			Area ()		const	{ return x*1; }
+		ND_ constexpr T			Volume ()	const	{ return x*1*1; }
 #	endif
 
 #	if I >= 1
-		CHECKRES constexpr Vec2_t	xo ()		const	{ return Vec2_t( x, T(0) ); }
-		CHECKRES constexpr Vec2_t	ox ()		const	{ return Vec2_t( T(0), x ); }
-		CHECKRES constexpr Vec2_t	xx ()		const	{ return Vec2_t( x, x ); }
+		ND_ constexpr Vec2_t	xo ()		const	{ return Vec2_t( x, T(0) ); }
+		ND_ constexpr Vec2_t	ox ()		const	{ return Vec2_t( T(0), x ); }
+		ND_ constexpr Vec2_t	xx ()		const	{ return Vec2_t( x, x ); }
 
-		CHECKRES constexpr Vec3_t	xoo ()		const	{ return Vec3_t( x, T(0), T(0) ); }
+		ND_ constexpr Vec3_t	xoo ()		const	{ return Vec3_t( x, T(0), T(0) ); }
 
-		CHECKRES constexpr Vec4_t	xooo ()		const	{ return Vec4_t( x, T(0), T(0), T(0) ); }
+		ND_ constexpr Vec4_t	xooo ()		const	{ return Vec4_t( x, T(0), T(0), T(0) ); }
 #	endif
 
 #	if I == 2
-		CHECKRES constexpr T		Sum ()		const	{ return x + y; }
-		CHECKRES constexpr T		SumAbs ()	const	{ return Abs(x) + Abs(y); }
-		CHECKRES constexpr T		Volume ()	const	{ return x*y*1; }
+		ND_ constexpr T			Sum ()		const	{ return x + y; }
+		ND_ constexpr T			SumAbs ()	const	{ return Abs(x) + Abs(y); }
+		ND_ constexpr T			Volume ()	const	{ return x*y*1; }
 #	endif
 
 #	if I >= 2
-		CHECKRES constexpr T		Area ()		const	{ return x*y; }
-		CHECKRES constexpr Vec2_t	yo ()		const	{ return Vec2_t( y, T(0) ); }
-		CHECKRES constexpr Vec2_t	yx ()		const	{ return Vec2_t( y, x ); }
-		CHECKRES constexpr Vec2_t	xy ()		const	{ return Vec2_t( x, y ); }
-		CHECKRES constexpr Vec2_t	oy ()		const	{ return Vec2_t( T(0), y ); }
-		CHECKRES constexpr Vec2_t	yy ()		const	{ return Vec2_t( y, y ); }
+		ND_ constexpr T			Area ()		const	{ return x*y; }
+		ND_ constexpr Vec2_t	yo ()		const	{ return Vec2_t( y, T(0) ); }
+		ND_ constexpr Vec2_t	yx ()		const	{ return Vec2_t( y, x ); }
+		ND_ constexpr Vec2_t	xy ()		const	{ return Vec2_t( x, y ); }
+		ND_ constexpr Vec2_t	oy ()		const	{ return Vec2_t( T(0), y ); }
+		ND_ constexpr Vec2_t	yy ()		const	{ return Vec2_t( y, y ); }
 
-		CHECKRES constexpr Vec3_t	oyo ()		const	{ return Vec3_t( T(0), y, T(0) ); }
-		CHECKRES constexpr Vec3_t	xyo ()		const	{ return Vec3_t( x, y, T(0) ); }
-		CHECKRES constexpr Vec3_t	xoy ()		const	{ return Vec3_t( x, T(0), y ); }
-		CHECKRES constexpr Vec3_t	oyx ()		const	{ return Vec3_t( T(0), y, x ); }
+		ND_ constexpr Vec3_t	oyo ()		const	{ return Vec3_t( T(0), y, T(0) ); }
+		ND_ constexpr Vec3_t	xyo ()		const	{ return Vec3_t( x, y, T(0) ); }
+		ND_ constexpr Vec3_t	xoy ()		const	{ return Vec3_t( x, T(0), y ); }
+		ND_ constexpr Vec3_t	oyx ()		const	{ return Vec3_t( T(0), y, x ); }
 
-		CHECKRES constexpr Vec4_t	xooy ()		const	{ return Vec4_t( x, T(0), T(0), y ); }
-		CHECKRES constexpr Vec4_t	xyoo ()		const	{ return Vec4_t( x, y, T(0), T(0) ); }
-		CHECKRES constexpr Vec4_t	xyxy ()		const	{ return Vec4_t( x, y, x, y ); }
+		ND_ constexpr Vec4_t	xooy ()		const	{ return Vec4_t( x, T(0), T(0), y ); }
+		ND_ constexpr Vec4_t	xyoo ()		const	{ return Vec4_t( x, y, T(0), T(0) ); }
+		ND_ constexpr Vec4_t	xyxy ()		const	{ return Vec4_t( x, y, x, y ); }
 #	endif
 
 #	if I == 3
-		CHECKRES constexpr T		Sum ()		const	{ return x + y + z; }
-		CHECKRES constexpr T		SumAbs ()	const	{ return Abs(x) + Abs(y) + Abs(z); }
+		ND_ constexpr T			Sum ()		const	{ return x + y + z; }
+		ND_ constexpr T			SumAbs ()	const	{ return Abs(x) + Abs(y) + Abs(z); }
 #	endif
 
 #	if I >= 3
-		CHECKRES constexpr T		Volume ()	const	{ return x*y*z; }
-		CHECKRES constexpr Vec2_t	yz ()		const	{ return Vec2_t( y, z ); }
-		CHECKRES constexpr Vec2_t	xz ()		const	{ return Vec2_t( x, z ); }
-		CHECKRES constexpr Vec3_t	xyz ()		const	{ return Vec3_t( x, y, z ); }
-		CHECKRES constexpr Vec3_t	zyx ()		const	{ return Vec3_t( z, y, x ); }
-		CHECKRES constexpr Vec3_t	xzy ()		const	{ return Vec3_t( x, z, y ); }
+		ND_ constexpr T			Volume ()	const	{ return x*y*z; }
+		ND_ constexpr Vec2_t	yz ()		const	{ return Vec2_t( y, z ); }
+		ND_ constexpr Vec2_t	xz ()		const	{ return Vec2_t( x, z ); }
+		ND_ constexpr Vec3_t	xyz ()		const	{ return Vec3_t( x, y, z ); }
+		ND_ constexpr Vec3_t	zyx ()		const	{ return Vec3_t( z, y, x ); }
+		ND_ constexpr Vec3_t	xzy ()		const	{ return Vec3_t( x, z, y ); }
 
-		CHECKRES constexpr Vec3_t	ooz ()		const	{ return Vec3_t( T(0), T(0), z ); }
-		CHECKRES constexpr Vec3_t	xoz ()		const	{ return Vec3_t( x, T(0), z ); }
-		CHECKRES constexpr Vec3_t	oyz ()		const	{ return Vec3_t( T(0), y, z ); }
+		ND_ constexpr Vec3_t	ooz ()		const	{ return Vec3_t( T(0), T(0), z ); }
+		ND_ constexpr Vec3_t	xoz ()		const	{ return Vec3_t( x, T(0), z ); }
+		ND_ constexpr Vec3_t	oyz ()		const	{ return Vec3_t( T(0), y, z ); }
 		
-		CHECKRES constexpr Vec4_t	xyoz ()		const	{ return Vec4_t( x, y, T(0), z ); }
-		CHECKRES constexpr Vec4_t	xyzo ()		const	{ return Vec4_t( x, y, z, T(0) ); }
+		ND_ constexpr Vec4_t	xyoz ()		const	{ return Vec4_t( x, y, T(0), z ); }
+		ND_ constexpr Vec4_t	xyzo ()		const	{ return Vec4_t( x, y, z, T(0) ); }
 #	endif
 
 #	if I == 4
-		CHECKRES constexpr T		Sum ()		const	{ return x + y + z + w; }
-		CHECKRES constexpr T		SumAbs ()	const	{ return Abs(x) + Abs(y) + Abs(z) + Abs(w); }
+		ND_ constexpr T			Sum ()		const	{ return x + y + z + w; }
+		ND_ constexpr T			SumAbs ()	const	{ return Abs(x) + Abs(y) + Abs(z) + Abs(w); }
 #	endif
 
 #	if I >= 4
-		CHECKRES constexpr T		Volume4D ()	const	{ return x * y * z * w; }
-		CHECKRES constexpr Vec2_t	xw ()		const	{ return Vec2_t( x, w ); }
-		CHECKRES constexpr Vec2_t	yw ()		const	{ return Vec2_t( y, w ); }
-		CHECKRES constexpr Vec2_t	zw ()		const	{ return Vec2_t( z, w ); }
+		ND_ constexpr T			Volume4D ()	const	{ return x * y * z * w; }
+		ND_ constexpr Vec2_t	xw ()		const	{ return Vec2_t( x, w ); }
+		ND_ constexpr Vec2_t	yw ()		const	{ return Vec2_t( y, w ); }
+		ND_ constexpr Vec2_t	zw ()		const	{ return Vec2_t( z, w ); }
 		
-		CHECKRES constexpr Vec3_t	xwo ()		const	{ return Vec3_t( x, y, T(0) ); }
-		CHECKRES constexpr Vec3_t	xyw ()		const	{ return Vec3_t( x, y, w ); }
-		CHECKRES constexpr Vec3_t	yzw ()		const	{ return Vec3_t( y, z, w ); }
+		ND_ constexpr Vec3_t	xwo ()		const	{ return Vec3_t( x, y, T(0) ); }
+		ND_ constexpr Vec3_t	xyw ()		const	{ return Vec3_t( x, y, w ); }
+		ND_ constexpr Vec3_t	yzw ()		const	{ return Vec3_t( y, z, w ); }
 		
-		CHECKRES constexpr Vec4_t	xyzw ()		const	{ return Vec4_t( x, y, z, w ); }
-		CHECKRES constexpr Vec4_t	wzyx ()		const	{ return Vec4_t( w, z, y, x ); }
+		ND_ constexpr Vec4_t	xyzw ()		const	{ return Vec4_t( x, y, z, w ); }
+		ND_ constexpr Vec4_t	wzyx ()		const	{ return Vec4_t( w, z, y, x ); }
 #	endif
 
 		template <Swizzle::type SW>
-		CHECKRES constexpr auto Swizzle () const -> Vec< T, _math_hidden_::SWLength<SW>, U >;
+		ND_ constexpr auto		Swizzle () const -> Vec< T, _math_hidden_::SWLength<SW>, U >;
 
-		CHECKRES Vec4_t			Swizzle (Swizzle::type sw) const;
+		ND_ Vec4_t				Swizzle (Swizzle::type sw) const;
 
 
 	private:
@@ -500,7 +500,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline const Vec<T,I,U>  Vec<T,I,U>::operator ++ (int)
+	ND_ inline const Vec<T,I,U>  Vec<T,I,U>::operator ++ (int)
 	{
 		Self	ret(*this);
 		++(*this);
@@ -513,7 +513,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline const Vec<T,I,U>  Vec<T,I,U>::operator -- (int)
+	ND_ inline const Vec<T,I,U>  Vec<T,I,U>::operator -- (int)
 	{
 		Self	ret(*this);
 		--(*this);
@@ -526,7 +526,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline T  Vec<T,I,U>::Min () const
+	ND_ inline T  Vec<T,I,U>::Min () const
 	{
 		T	t_min = (*this)[0];
 		FOR( i, *this )  (*this)[i] < t_min ?  t_min = (*this)[i]  : 0;
@@ -539,7 +539,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline T  Vec<T,I,U>::Max () const
+	ND_ inline T  Vec<T,I,U>::Max () const
 	{
 		T	t_max = (*this)[0];
 		FOR( i, *this )  (*this)[i] > t_max ?  t_max = (*this)[i]  : 0;
@@ -552,7 +552,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline T  Vec<T,I,U>::Length () const
+	ND_ inline T  Vec<T,I,U>::Length () const
 	{
 		return Sqrt( LengthSqr() );
 	}
@@ -563,7 +563,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline T  Vec<T,I,U>::LengthSqr () const
+	ND_ inline T  Vec<T,I,U>::LengthSqr () const
 	{
 		Self	res;
 		FOR( i, *this )	res[i] = GXMath::Square( (*this)[i] );
@@ -576,7 +576,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<T,I,U>  Vec<T,I,U>::Normalized () const
+	ND_ inline Vec<T,I,U>  Vec<T,I,U>::Normalized () const
 	{
 		const T		len_sqr = LengthSqr();
 		return len_sqr != T(0) ?  Self(*this) * InvSqrt( len_sqr )  :  Self();
@@ -635,7 +635,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<T,I,U>  Vec<T,I,U>::WithLength (T len) const
+	ND_ inline Vec<T,I,U>  Vec<T,I,U>::WithLength (T len) const
 	{
 		return Self( *this ).SetLength( len );
 	}
@@ -670,7 +670,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline T  Vec<T,I,U>::Dot (const Self &right) const
+	ND_ inline T  Vec<T,I,U>::Dot (const Self &right) const
 	{
 		Self	res;
 		FOR( i, *this )	res[i] = (*this)[i] * right[i];
@@ -683,7 +683,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline T  Vec<T,I,U>::DotAbs (const Self &right) const
+	ND_ inline T  Vec<T,I,U>::DotAbs (const Self &right) const
 	{
 		Self	res;
 		FOR( i, *this )	res[i] = Abs( (*this)[i] * right[i] );
@@ -696,7 +696,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline T  Vec<T,I,U>::Distance (const Self &sVec) const
+	ND_ inline T  Vec<T,I,U>::Distance (const Self &sVec) const
 	{
 		return ( (*this) - sVec ).Length();
 	}
@@ -707,7 +707,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline T  Vec<T,I,U>::DistanceSqr (const Self &sVec) const
+	ND_ inline T  Vec<T,I,U>::DistanceSqr (const Self &sVec) const
 	{
 		return ( (*this) - sVec ).LengthSqr();
 	}
@@ -719,7 +719,7 @@
 */
 	template <typename T, ulong U>
 	template <typename T2>
-	CHECKRES inline const Vec<T2,I,U>  Vec<T,I,U>::Convert () const
+	ND_ inline const Vec<T2,I,U>  Vec<T,I,U>::Convert () const
 	{
 		Vec<T2,I,U>	ret;
 		FOR( i, *this )	ret[i] = T2( (*this)[i] );
@@ -733,7 +733,7 @@
 */
 	template <typename T, ulong U>
 	template <typename B>
-	CHECKRES inline const B  Vec<T,I,U>::To () const
+	ND_ inline const B  Vec<T,I,U>::To () const
 	{
 		STATIC_ASSERT( typename B::_is_vector(true), "type is not vector" );
 		
@@ -750,7 +750,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  Vec<T,I,U>::Equal (const Self &right) const
+	ND_ inline Vec<bool,I,U>  Vec<T,I,U>::Equal (const Self &right) const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = GXMath::Equals( (*this)[i], right[i] );
@@ -763,7 +763,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  Vec<T,I,U>::Less (const Self &right) const
+	ND_ inline Vec<bool,I,U>  Vec<T,I,U>::Less (const Self &right) const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] < right[i] ) & not GXMath::Equals( (*this)[i], right[i] );
@@ -776,7 +776,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  Vec<T,I,U>::LEqual (const Self &right) const
+	ND_ inline Vec<bool,I,U>  Vec<T,I,U>::LEqual (const Self &right) const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] < right[i] ) | GXMath::Equals( (*this)[i], right[i] );
@@ -789,7 +789,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  Vec<T,I,U>::Greater (const Self &right) const
+	ND_ inline Vec<bool,I,U>  Vec<T,I,U>::Greater (const Self &right) const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] > right[i] ) & not GXMath::Equals( (*this)[i], right[i] );
@@ -802,7 +802,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  Vec<T,I,U>::GEqual (const Self &right) const
+	ND_ inline Vec<bool,I,U>  Vec<T,I,U>::GEqual (const Self &right) const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = ( (*this)[i] > right[i] ) | GXMath::Equals( (*this)[i], right[i] );
@@ -815,7 +815,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  Vec<T,I,U>::IsZero () const
+	ND_ inline Vec<bool,I,U>  Vec<T,I,U>::IsZero () const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = GXMath::IsZero( (*this)[i] );
@@ -828,7 +828,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<bool,I,U>  Vec<T,I,U>::IsNotZero () const
+	ND_ inline Vec<bool,I,U>  Vec<T,I,U>::IsNotZero () const
 	{
 		Vec<bool,I,U>	ret;
 		FOR( i, *this )	ret[i] = GXMath::IsNotZero( (*this)[i] );
@@ -841,7 +841,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<T,I,U>  Vec<T,I,U>::Reflect (const Self &normal) const
+	ND_ inline Vec<T,I,U>  Vec<T,I,U>::Reflect (const Self &normal) const
 	{
 		return (*this) - T(2) * normal.Dot( *this ) * normal;
 	}
@@ -852,7 +852,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<T,I,U>  Vec<T,I,U>::Refract (const Self &normal, T eta) const
+	ND_ inline Vec<T,I,U>  Vec<T,I,U>::Refract (const Self &normal, T eta) const
 	{
 		T const		k = T(1) - eta * eta * ( T(1) - GXMath::Square( normal.Dot( *this ) ) );
 		Self		r;
@@ -870,7 +870,7 @@
 */
 	template <typename T, ulong U>
 	template <Swizzle::type SW>
-	CHECKRES inline constexpr auto  Vec<T,I,U>::Swizzle () const -> Vec< T, _math_hidden_::SWLength<SW>, U >
+	ND_ inline constexpr auto  Vec<T,I,U>::Swizzle () const -> Vec< T, _math_hidden_::SWLength<SW>, U >
 	{
 		Vec< T, _math_hidden_::SWLength<SW>, U >	res;
 		constexpr uint								swizzle = _math_hidden_::_ParseSwizzle( SW, I );
@@ -893,7 +893,7 @@
 =================================================
 */
 	template <typename T, ulong U>
-	CHECKRES inline Vec<T,4,U>  Vec<T,I,U>::Swizzle (Swizzle::type sw) const
+	ND_ inline Vec<T,4,U>  Vec<T,I,U>::Swizzle (Swizzle::type sw) const
 	{
 		Vec4_t	res;
 		const uint	swizzle = _math_hidden_::_ParseSwizzle( sw, I );

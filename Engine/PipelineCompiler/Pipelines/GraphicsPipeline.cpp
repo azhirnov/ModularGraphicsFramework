@@ -189,7 +189,7 @@ namespace PipelineCompiler
 		src.Clear();
 		src << ser->Comment( "This is generated file" );
 		src << ser->Comment( "Origin file: '"_str << Path() << "'" );
-		src << ser->Comment( "Created at: "_str << ToString( OS::Date().Now() ) ) << '\n';
+		//src << ser->Comment( "Created at: "_str << ToString( Date().Now() ) ) << '\n';
 		src << ser->BeginFile( false );
 
 		// add c++ types localy
@@ -271,6 +271,8 @@ namespace PipelineCompiler
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
+			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
+			<< ser->ShaderBinHLSL( name, compiled.hlslBinary )
 			<< '\n';
 
 		if ( cfg.validation ) {
@@ -303,6 +305,8 @@ namespace PipelineCompiler
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
+			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
+			<< ser->ShaderBinHLSL( name, compiled.hlslBinary )
 			<< '\n';
 		
 		if ( cfg.validation ) {
@@ -332,6 +336,8 @@ namespace PipelineCompiler
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
+			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
+			<< ser->ShaderBinHLSL( name, compiled.hlslBinary )
 			<< '\n';
 		
 		if ( cfg.validation ) {
@@ -361,6 +367,8 @@ namespace PipelineCompiler
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
+			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
+			<< ser->ShaderBinHLSL( name, compiled.hlslBinary )
 			<< '\n';
 		
 		if ( cfg.validation ) {
@@ -392,6 +400,8 @@ namespace PipelineCompiler
 			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
 			<< ser->ShaderBinSPIRV( name, compiled.spirv )
 			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
+			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
+			<< ser->ShaderBinHLSL( name, compiled.hlslBinary )
 			<< '\n';
 		
 		if ( cfg.validation ) {

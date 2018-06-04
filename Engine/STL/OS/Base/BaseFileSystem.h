@@ -31,7 +31,7 @@ namespace OS
 		static bool SearchDirBackward (StringCRef dir, uint depth, OUT String &result);
 		
 		static bool CreateDirectories (StringCRef path);	// create directories for path
-		static bool FindAndSetCurrentDir (StringCRef dirname, uint searchDepth);
+		static bool FindAndSetCurrentDir (StringCRef dirname, uint searchDepth = 5);
 		
 		template <typename Filter>
 		static void RecursiveFindFiles (StringCRef path, Filter filter, uint depth, INOUT Array<String> &fileNames);

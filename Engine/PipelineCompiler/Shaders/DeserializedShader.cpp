@@ -64,7 +64,7 @@ namespace PipelineCompiler
 	{
 		String	str;
 		str << "\n  name:        " << name
-			<< "\n  type:        " << /*EShaderVariable::ToString*/ (EShaderVariable::IsStruct( type ) ? typeName : ToStringGLSL( type ))
+			<< "\n  type:        " << /*EShaderVariable::ToString*/ (EShaderVariable::IsStruct( type ) ? StringCRef(typeName) : ToStringGLSL( type ))
 			//<< "\n  typeName:    " << typeName
 			<< "\n  precision:   " << EPrecision::ToString( precision )
 			<< "\n  qualifier:   " << EVariableQualifier::ToString( qualifier )

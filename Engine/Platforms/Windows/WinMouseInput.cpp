@@ -14,7 +14,7 @@ namespace Engine
 {
 namespace PlatformWin
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//
@@ -133,7 +133,7 @@ namespace PlatformWin
 */
 	bool WinMouseInput::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
 	{
-		_surfaceSize = msg->desc.surfaceSize;
+		_surfaceSize = msg->descr.surfaceSize;
 		return true;
 	}
 	

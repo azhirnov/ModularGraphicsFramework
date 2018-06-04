@@ -41,7 +41,7 @@ namespace GXTypes
 		Function (NullPtr_t value) noexcept : _func(value)				{}
 	
 		template <typename FN>
-		Function (FN value) noexcept : _func(FW<FN>(value))						{}
+		Function (FN value) noexcept : _func(FW<FN>(value))				{}
 
 		Function (const Func_t &fn) noexcept : _func(fn)				{}
 		Function (Func_t &&fn) noexcept : _func(RVREF(fn))				{}

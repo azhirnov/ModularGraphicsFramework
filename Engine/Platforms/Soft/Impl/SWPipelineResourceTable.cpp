@@ -123,7 +123,7 @@ namespace PlatformSW
 =================================================
 */
 	SWPipelineResourceTable::SWPipelineResourceTable (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
+		SWBaseModule( gs, ModuleConfig{ id, UMax, true }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "SWPipelineResourceTable" );
 
@@ -169,7 +169,7 @@ namespace PlatformSW
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 
 		CHECK_ATTACHMENT( _layout = GetModuleByMsg< LayoutMsgList_t >() );
 		CHECK_ERR( _CopySubscriptions< LayoutMsgList_t >( _layout ) );
@@ -232,9 +232,9 @@ namespace PlatformSW
 		CHECK_ERR( msg->newModule );
 
 		// pipeline layout must be unique
-		bool	is_layout = msg->newModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >();
+		const bool	is_layout = msg->newModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_layout ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		if ( is_layout )
@@ -258,7 +258,7 @@ namespace PlatformSW
 
 		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{buf} );
 		
-		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -279,7 +279,7 @@ namespace PlatformSW
 
 		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
 		
-		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -309,8 +309,8 @@ namespace PlatformSW
 
 		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
 		
-		CHECK( _Attach( msg->name, msg->newModule, false ) );
-		CHECK( _Attach( msg->name + ".sampler", msg->sampler, false ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg->name + ".sampler", msg->sampler ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -351,27 +351,47 @@ namespace PlatformSW
 		using ImageMsgList		= MessageListFrom< GpuMsg::GetSWImageViewMemoryLayout >;
 		using SamplerMsgList	= MessageListFrom< GpuMsg::GetSamplerDescriptor >;
 		using BufferMsgList		= MessageListFrom< GpuMsg::GetSWBufferMemoryLayout >;
+		using ResourceMsgList	= CompileTime::TypeListFrom< ImageMsgList, SamplerMsgList, BufferMsgList >;
+		using ModuleMap			= HashMap< ModuleName_t, ModulePtr >;
 
 
 	// variables
 		SWPipelineResourceTable&	self;
+		mutable ModuleMap			moduleMap;
 
 
 	// methods
 		explicit _CacheResources_Func (SWPipelineResourceTable &self) : self(self)
-		{}
+		{
+			moduleMap.Reserve( self._GetAttachments().Count() );
 
-		void operator () (const PushConstant &pc) const
+			for (const auto& mod : self._GetAttachments())
+			{
+				if ( mod.second->GetSupportedMessages().HasAnyType< ResourceMsgList >() )
+					moduleMap.Add( mod.first, mod.second );
+			}
+		}
+
+		~_CacheResources_Func ()
+		{
+			DEBUG_ONLY(
+				FOR( i, moduleMap ) {
+					LOG( "Unused module in resource table: "_str << moduleMap[i].first, ELog::Warning );
+				}
+			)
+		}
+
+		void operator () (const PushConstant &) const
 		{
 			TODO( "PushConstant" );
 		}
 		
-		void operator () (const SubpassInput &sp) const
+		void operator () (const SubpassInput &) const
 		{
 			TODO( "SubpassInput" );
 		}
 		
-		void operator () (const SamplerUniform &samp) const
+		void operator () (const SamplerUniform &) const
 		{
 			TODO( "SamplerUniform" );
 		}
@@ -384,16 +404,15 @@ namespace PlatformSW
 		template <typename MsgList>
 		bool FindModule (StringCRef name, OUT ModulePtr &result) const
 		{
-			FOR( i, self._GetAttachments() )
+			ModuleMap::const_iterator	iter;
+			
+			if ( moduleMap.Find( name, OUT iter ) )
 			{
-				const auto&	pair = self._GetAttachments()[i];
+				CHECK_ERR( iter->second->GetSupportedMessages().HasAllTypes< MsgList >() );
+				result = iter->second;
 
-				if ( pair.first == name )
-				{
-					CHECK_ERR( pair.second->GetSupportedMessages().HasAllTypes< MsgList >() );
-					result = pair.second;
-					return true;
-				}
+				DEBUG_ONLY( moduleMap.EraseByIter( iter ) );
+				return true;
 			}
 			return false;
 		}
@@ -405,10 +424,10 @@ namespace PlatformSW
 */
 		bool operator () (const TextureUniform &tex) const
 		{
-			CHECK_ERR( tex.binding != UMax );
-			self._cached.Resize( tex.binding+1 );
+			CHECK_ERR( tex.uniqueIndex != UMax );
+			self._cached.Resize( tex.uniqueIndex+1 );
 
-			auto&	cached = self._cached[ tex.binding ];
+			auto&	cached = self._cached[ tex.uniqueIndex ];
 
 			CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT cached.resource ) );
 			CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT cached.sampler ) );
@@ -434,10 +453,10 @@ namespace PlatformSW
 */
 		bool operator () (const ImageUniform &img) const
 		{
-			CHECK_ERR( img.binding != UMax );
-			self._cached.Resize( img.binding+1 );
+			CHECK_ERR( img.uniqueIndex != UMax );
+			self._cached.Resize( img.uniqueIndex+1 );
 			
-			auto&	cached = self._cached[ img.binding ];
+			auto&	cached = self._cached[ img.uniqueIndex ];
 
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT cached.resource ) );
 			
@@ -460,10 +479,10 @@ namespace PlatformSW
 */
 		bool operator () (const UniformBuffer &buf) const
 		{
-			CHECK_ERR( buf.binding != UMax );
-			self._cached.Resize( buf.binding+1 );
+			CHECK_ERR( buf.uniqueIndex != UMax );
+			self._cached.Resize( buf.uniqueIndex+1 );
 
-			auto&	cached = self._cached[ buf.binding ];
+			auto&	cached = self._cached[ buf.uniqueIndex ];
 			
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT cached.resource ) );
 			
@@ -494,10 +513,10 @@ namespace PlatformSW
 */
 		bool operator () (const StorageBuffer &buf) const
 		{
-			CHECK_ERR( buf.binding != UMax );
-			self._cached.Resize( buf.binding+1 );
+			CHECK_ERR( buf.uniqueIndex != UMax );
+			self._cached.Resize( buf.uniqueIndex+1 );
 			
-			auto&	cached = self._cached[ buf.binding ];
+			auto&	cached = self._cached[ buf.uniqueIndex ];
 
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT cached.resource ) );
 			
@@ -597,15 +616,14 @@ namespace PlatformSW
 		
 		const auto&	img_info = iter->second.Get< ImageAttachment >();
 		
-		// TODO: check layout
-		msg->message->viewDescr = img_info.descr;
-
-		CHECK( cached.resource->Send( msg->message ) );
+		Message< GpuMsg::GetSWImageViewMemoryLayout >	req_img{ img_info.descr, msg->message->accessMask, msg->message->stage };
+		CHECK( cached.resource->Send( req_img.Async() ) );
 		
-		Message< GpuMsg::GetSamplerDescriptor >	req_descr;
-		CHECK( cached.sampler->Send( req_descr ) );
-
-		msg->message->sampler.Set( *req_descr->result );
+		Message< GpuMsg::GetSamplerDescriptor >		req_samp;
+		CHECK( cached.sampler->Send( req_samp.Async() ) );
+		
+		msg->message->result.Set( *req_img->result );
+		msg->message->sampler.Set( *req_samp->result );
 		return true;
 	}
 

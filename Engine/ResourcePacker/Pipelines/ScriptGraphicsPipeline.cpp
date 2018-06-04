@@ -62,7 +62,7 @@ namespace ResPack
 */
 	void ScriptGraphicsPipeline::Bind (ScriptEnginePtr se)
 	{
-		using namespace GXScript;
+		using namespace GX_STL::GXScript;
 		using Self	= ScriptGraphicsPipeline;
 
 		ClassBinder<Self>	binder( se );

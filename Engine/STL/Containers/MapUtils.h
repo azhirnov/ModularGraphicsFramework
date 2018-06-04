@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Array.h"
-#include "Pair.h"
+#include "Engine/STL/Containers/Array.h"
+#include "Engine/STL/Containers/Pair.h"
 #include "Engine/STL/Types/Ptr.h"
 
 namespace GX_STL

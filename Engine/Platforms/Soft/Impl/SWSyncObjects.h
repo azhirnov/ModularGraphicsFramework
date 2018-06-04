@@ -23,11 +23,23 @@ namespace PlatformSW
 	// variables
 	private:
 		bool		_signaled;
+		bool		_enqueued;
 
 	// methods
 	public:
-		SWFence () : _signaled{false}
+		SWFence () : _signaled{false}, _enqueued{false}
 		{}
+
+		void Enqueue ()
+		{
+			_enqueued = true;
+			_signaled = false;
+		}
+
+		bool IsEnqueued () const
+		{
+			return _enqueued;
+		}
 
 		void Signal ()
 		{
@@ -37,7 +49,7 @@ namespace PlatformSW
 
 		bool Wait () const
 		{
-			return _signaled;
+			return _enqueued and _signaled;
 		}
 	};
 //-----------------------------------------------------------------------------
@@ -63,10 +75,11 @@ namespace PlatformSW
 	// variables
 	private:
 		bool		_locked;	// in vulkan this is a mutex
+		//bool		_enqueued;
 
 	// methods
 	public:
-		SWSemaphore () : _locked{false}
+		SWSemaphore () : _locked{false} //, _enqueued{false}
 		{}
 		
 		bool TryLock (EPipelineStage::bits stage)	// TODO: use 'stage'

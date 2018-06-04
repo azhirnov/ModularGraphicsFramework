@@ -6,7 +6,7 @@
 
 namespace GX_STL
 {
-namespace File
+namespace GXFile
 {
 
 	//
@@ -32,7 +32,7 @@ namespace File
 
 	// methods
 	public:
-		SubRFile (const File::RFilePtr &file, BytesU offset, BytesU size):
+		SubRFile (const RFilePtr &file, BytesU offset, BytesU size):
 			_file(file), _offset(offset), _size(size), _pos(0)
 		{
 			ASSERT( _file );
@@ -40,7 +40,7 @@ namespace File
 		}
 
 
-		CHECKRES static SubRFilePtr New (const File::RFilePtr &file, BytesU offset, BytesU size)
+		ND_ static SubRFilePtr New (const RFilePtr &file, BytesU offset, BytesU size)
 		{
 			return new Self( file, offset, size );
 		}
@@ -162,7 +162,7 @@ namespace File
 
 	// methods
 	public:
-		SubWFile (const File::WFilePtr &file, BytesU offset, BytesU size):
+		SubWFile (const WFilePtr &file, BytesU offset, BytesU size):
 			_file(file), _offset(offset), _size(size), _pos(0)
 		{
 			ASSERT( _file );
@@ -170,7 +170,7 @@ namespace File
 		}
 
 
-		CHECKRES static SubWFilePtr New (const File::WFilePtr &file, BytesU offset, BytesU size)
+		ND_ static SubWFilePtr New (const WFilePtr &file, BytesU offset, BytesU size)
 		{
 			return new Self( file, offset, size );
 		}
@@ -281,5 +281,5 @@ namespace File
 	};
 	
 
-}	// File
+}	// GXFile
 }	// GX_STL

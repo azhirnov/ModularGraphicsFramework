@@ -23,12 +23,13 @@ namespace Platforms
 
 	struct CommandBufferDescriptor : CompileTime::PODStruct
 	{
+	// variables
 		ECmdBufferCreate::bits	flags;
-
+		
+	// methods
 		CommandBufferDescriptor () {}
 
-		explicit CommandBufferDescriptor (ECmdBufferCreate::bits flags) : flags{flags}
-		{}
+		explicit CommandBufferDescriptor (ECmdBufferCreate::bits flags) : flags{flags} {}
 	};
 
 }	// Platforms
@@ -49,9 +50,7 @@ namespace CreateInfo
 
 	// methods
 		GpuCommandBuffer () {}
-
-		GpuCommandBuffer (const ModulePtr &gpuThread, const Platforms::CommandBufferDescriptor &descr) :
-			gpuThread{gpuThread}, descr{descr} {}
+		explicit GpuCommandBuffer (const Platforms::CommandBufferDescriptor &descr) : descr{descr} {}
 	};
 
 
@@ -83,6 +82,7 @@ namespace GpuMsg
 	//
 	struct SetCommandBufferState
 	{
+	// types
 		enum class EState : uint
 		{
 			Initial,		// initial or reseted state
@@ -93,14 +93,20 @@ namespace GpuMsg
 			Deleted,
 			Unknown		= ~0u
 		};
-
+		
+	// variables
 		EState	newState	= EState::Unknown;
+		
+	// methods
+		SetCommandBufferState (EState state) : newState{state} {}
 	};
 
 	struct GetCommandBufferState
 	{
+	// types
 		using EState = SetCommandBufferState::EState;
-
+		
+	// variables
 		Out< EState >	result;
 	};
 
@@ -110,10 +116,15 @@ namespace GpuMsg
 	//
 	struct OnCommandBufferStateChanged
 	{
+	// types
 		using EState = SetCommandBufferState::EState;
-
-		EState		oldState;
-		EState		newState;
+		
+	// variables
+		EState		oldState	= EState::Unknown;
+		EState		newState	= EState::Unknown;
+		
+	// methods
+		OnCommandBufferStateChanged (EState oldState, EState newState) : oldState{oldState}, newState{newState} {}
 	};
 
 
@@ -122,7 +133,11 @@ namespace GpuMsg
 	//
 	struct SetCommandBufferDependency
 	{
+	// variables
 		ReadOnce< Set<ModulePtr> >		resources;
+		
+	// methods
+		SetCommandBufferDependency (Set<ModulePtr> &&res) : resources{ RVREF(res) } {}
 	};
 
 
@@ -193,8 +208,13 @@ namespace GpuMsg
 	//
 	struct CmdSetDepthBounds
 	{
-		float	min;
-		float	max;
+	// variables
+		float	min		= 0.0f;
+		float	max		= 1.0f;
+		
+	// methods
+		CmdSetDepthBounds () {}
+		CmdSetDepthBounds (float min, float max) : min{min}, max{max} {}
 	};
 
 
@@ -203,7 +223,11 @@ namespace GpuMsg
 	//
 	struct CmdSetBlendColor
 	{
+	// variables
 		color4f		color;
+		
+	// methods
+		explicit CmdSetBlendColor (const color4f &color) : color{color} {}
 	};
 
 
@@ -212,9 +236,17 @@ namespace GpuMsg
 	//
 	struct CmdSetDepthBias
 	{
-		float	biasConstFactor;
-		float	biasClamp;
-		float	biasSlopeFactor;
+	// variables
+		float	biasConstFactor		= 0.0f;
+		float	biasClamp			= 0.0f;
+		float	biasSlopeFactor		= 0.0f;
+		
+	// methods
+		CmdSetDepthBias () {}
+
+		CmdSetDepthBias (float biasConstFactor, float biasClamp, float biasSlopeFactor) :
+			biasConstFactor{biasConstFactor}, biasClamp{biasClamp}, biasSlopeFactor{biasSlopeFactor}
+		{}
 	};
 
 
@@ -223,7 +255,11 @@ namespace GpuMsg
 	//
 	struct CmdSetLineWidth
 	{
-		float	width;
+	// variables
+		float	width	= 0.0f;
+		
+	// methods
+		explicit CmdSetLineWidth (float width) : width{width} {}
 	};
 
 	
@@ -232,8 +268,12 @@ namespace GpuMsg
 	//
 	struct CmdSetStencilCompareMask
 	{
-		Platforms::EPolygonFace::type	face;
-		uint							cmpMask;
+	// variables
+		Platforms::EPolygonFace::type	face		= Uninitialized;
+		uint							cmpMask		= 0;
+		
+	// methods
+		CmdSetStencilCompareMask (Platforms::EPolygonFace::type face, uint cmpMask) : face{face}, cmpMask{cmpMask} {}
 	};
 
 
@@ -242,8 +282,12 @@ namespace GpuMsg
 	//
 	struct CmdSetStencilWriteMask
 	{
-		Platforms::EPolygonFace::type	face;
-		uint							mask;
+	// variables
+		Platforms::EPolygonFace::type	face	= Uninitialized;
+		uint							mask	= 0;
+		
+	// methods
+		CmdSetStencilWriteMask (Platforms::EPolygonFace::type face, uint mask) : face{face}, mask{mask} {}
 	};
 
 
@@ -252,8 +296,12 @@ namespace GpuMsg
 	//
 	struct CmdSetStencilReference
 	{
-		Platforms::EPolygonFace::type	face;
-		uint							ref;
+	// variables
+		Platforms::EPolygonFace::type	face	= Uninitialized;
+		uint							ref		= 0;
+		
+	// methods
+		CmdSetStencilReference (Platforms::EPolygonFace::type face, uint ref) : face{face}, ref{ref} {}
 	};
 
 
@@ -338,12 +386,20 @@ namespace GpuMsg
 	//
 	struct CmdBindGraphicsPipeline
 	{
+	// variables
 		ModulePtr	pipeline;
+		
+	// methods
+		explicit CmdBindGraphicsPipeline (const ModulePtr &pipeline) : pipeline{pipeline} {}
 	};
 	
 	struct CmdBindComputePipeline
 	{
+	// variables
 		ModulePtr	pipeline;
+		
+	// methods
+		explicit CmdBindComputePipeline (const ModulePtr &pipeline) : pipeline{pipeline} {}
 	};
 
 
@@ -565,14 +621,22 @@ namespace GpuMsg
 
 		CmdCopyBuffer (const ModulePtr &srcBuffer,
 					   const ModulePtr &dstBuffer,
-					   BytesUL srcOffset,
-					   BytesUL dstOffset,
-					   BytesUL size) :
+					   Bytes<ulong> srcOffset,
+					   Bytes<ulong> dstOffset,
+					   Bytes<ulong> size) :
 			srcBuffer(srcBuffer),
 			dstBuffer(dstBuffer)
 		{
 			regions.PushBack( Region{ srcOffset, dstOffset, size } );
 		}
+
+		CmdCopyBuffer (const ModulePtr &srcBuffer,
+					   const ModulePtr &dstBuffer,
+					   Bytes<uint> srcOffset,
+					   Bytes<uint> dstOffset,
+					   Bytes<uint> size) :
+			CmdCopyBuffer{ srcBuffer, dstBuffer, BytesUL(srcOffset), BytesUL(dstOffset), BytesUL(size) }
+		{}
 
 		CmdCopyBuffer (const ModulePtr		&srcBuffer,
 						const ModulePtr		&dstBuffer,
@@ -814,10 +878,6 @@ namespace GpuMsg
 	//
 	struct CmdUpdateBuffer
 	{
-	// types
-		template <typename T>
-		using IsPOD_t = CompileTime::EnableIf< not CompileTime::IsCtorAvailable<T>, int >;
-
 	// variables
 		ModulePtr		dstBuffer;
 		BytesUL			dstOffset;
@@ -829,14 +889,6 @@ namespace GpuMsg
 
 		CmdUpdateBuffer (const ModulePtr &buf, BinArrayCRef data, Bytes<ulong> offset) :
 			dstBuffer{buf}, dstOffset{offset}, data{data} {}
-
-		//template <typename T>
-		//CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<uint> offset = Uninitialized, IsPOD_t<T> = 0) :
-		//	CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
-		
-		//template <typename T>
-		//CmdUpdateBuffer (const ModulePtr &buf, const T &data, Bytes<ulong> offset, IsPOD_t<T> = 0) :
-		//	CmdUpdateBuffer{ buf, BinArrayCRef::FromValue(data), offset } {}
 	};
 
 
@@ -849,12 +901,12 @@ namespace GpuMsg
 		ModulePtr		dstBuffer;
 		BytesUL			dstOffset;
 		BytesUL			size;
-		uint			pattern;
+		uint			pattern		= 0;
 
 	// methods
 		CmdFillBuffer () {}
 
-		CmdFillBuffer (const ModulePtr &buffer, uint pattern) :
+		explicit CmdFillBuffer (const ModulePtr &buffer, uint pattern = 0) :
 			dstBuffer{buffer}, size{BytesUL(~0ull)}, pattern{pattern} {}
 
 		CmdFillBuffer (const ModulePtr &buffer, uint pattern, Bytes<uint> size, Bytes<uint> off = Uninitialized) :
@@ -972,13 +1024,25 @@ namespace GpuMsg
 		using EImageLayout	= Platforms::EImageLayout;
 		using ImageRange	= CmdClearColorImage::ImageRange;
 		using DepthStencil	= CmdBeginRenderPass::DepthStencil;
+		using ImageRange_t	= CmdClearColorImage::ImageRange;
 		using Ranges_t		= CmdClearColorImage::Ranges_t;
 
 	// variables
 		ModulePtr			image;
-		EImageLayout::type	layout;
+		EImageLayout::type	layout		= EImageLayout::Unknown;
 		Ranges_t			ranges;
 		DepthStencil		clearValue;
+
+	// methods
+		CmdClearDepthStencilImage () {}
+
+		CmdClearDepthStencilImage (const ModulePtr &		image,
+									EImageLayout::type		layout,
+									ArrayCRef<ImageRange_t>	ranges,
+									DepthStencil			clearValue) :
+			image{image}, layout{layout},
+			ranges{ranges}, clearValue{clearValue}
+		{}
 	};
 	
 
@@ -1033,7 +1097,7 @@ namespace GpuMsg
 		using EShader	= Platforms::EShader;
 
 	// variables
-		ModulePtr		pipelineLayout;
+		ModulePtr		pipelineLayout;		// (resourceTable)
 		EShader::bits	stages;
 		BytesU			offset;
 		Data_t			data;
@@ -1131,10 +1195,6 @@ namespace GpuMsg
 				image(image), srcAccessMask(srcAccess), dstAccessMask(dstAccess), oldLayout(oldLayout), newLayout(newLayout),
 				range{ aspect, mip, levelCount, layer, layerCount }
 			{}
-
-			/*ImageMemoryBarrier (const ModulePtr &image, EImageLayout::type oldLayout, EImageLayout::type newLayout, EImageAspect::bits aspect,
-								MipmapLevel mip = Uninitialized, uint levelCount = 1,
-								ImageLayer layer = Uninitialized, uint layerCount = 1);*/
 		};
 
 
@@ -1175,7 +1235,11 @@ namespace GpuMsg
 
 		// Memory
 		CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
-							EPipelineAccess::bits srcAccess, EPipelineAccess::bits dstAccess);
+							EPipelineAccess::bits srcAccess, EPipelineAccess::bits dstAccess) :
+			srcStageMask( srcStage ),	dstStageMask( dstStage )
+		{
+			memoryBarriers.PushBack({ srcAccess, dstAccess });
+		}
 
 		// Image
 		CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
@@ -1183,128 +1247,142 @@ namespace GpuMsg
 							EImageLayout::type oldLayout, EImageLayout::type newLayout,
 							const ModulePtr &image, EImageAspect::bits aspectMask,
 							MipmapLevel baseMipLevel = Uninitialized, uint levelCount = 1,
-							ImageLayer baseLayer = Uninitialized, uint layerCount = 1);
-
-		/*CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
-							EImageLayout::type oldLayout, EImageLayout::type newLayout,
-							const ModulePtr &image, EImageAspect::bits aspectMask,
-							MipmapLevel baseMipLevel = Uninitialized, uint levelCount = 1,
-							ImageLayer baseLayer = Uninitialized, uint layerCount = 1);*/
+							ImageLayer baseLayer = Uninitialized, uint layerCount = 1) :
+			srcStageMask( srcStage ),	dstStageMask( dstStage )
+		{
+			imageBarriers.PushBack({ image, srcAccess, dstAccess, oldLayout, newLayout, ImageRange{aspectMask, baseMipLevel, levelCount, baseLayer, layerCount} });
+		}
 
 		// Buffer
 		CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
 							EPipelineAccess::bits srcAccess, EPipelineAccess::bits dstAccess,
-							const ModulePtr &buffer, Bytes<ulong> offset, Bytes<ulong> size);
+							const ModulePtr &buffer, Bytes<ulong> offset, Bytes<ulong> size) :
+			srcStageMask( srcStage ),	dstStageMask( dstStage )
+		{
+			bufferBarriers.PushBack({ buffer, srcAccess, dstAccess, offset, size });
+		}
 		
 		CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
 							EPipelineAccess::bits srcAccess, EPipelineAccess::bits dstAccess,
-							const ModulePtr &buffer, Bytes<uint> offset, Bytes<uint> size);
+							const ModulePtr &buffer, Bytes<uint> offset, Bytes<uint> size):
+			srcStageMask( srcStage ),	dstStageMask( dstStage )
+		{
+			bufferBarriers.PushBack({ buffer, srcAccess, dstAccess, BytesUL(offset), BytesUL(size) });
+		}
 	};
 
+
+	//
+	// Debug Marker
+	//
+	struct CmdDebugMarker
+	{
+	// variables
+		String		info;
+		bool		breakPoint	= false;
+
+	// methods
+		explicit CmdDebugMarker (StringCRef info, bool breakPoint = false) :
+			info{info}, breakPoint{breakPoint}
+		{}
+	};
 	
-/*
-=================================================
-	constructor
-=================================================
-*/
-	inline
-	CmdPipelineBarrier::CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
-											EPipelineAccess::bits srcAccess, EPipelineAccess::bits dstAccess) :
-		srcStageMask( srcStage ),	dstStageMask( dstStage )
+
+
+	//
+	// Push / Pop Debug Group
+	//
+	struct CmdPushDebugGroup
 	{
-		memoryBarriers.PushBack({ srcAccess, dstAccess });
-	}
+	// variables
+		String		info;
+
+	// methods
+		explicit CmdPushDebugGroup (StringCRef info) :
+			info{info}
+		{}
+	};
 	
-/*
-=================================================
-	constructor
-=================================================
-*/
-	inline
-	CmdPipelineBarrier::CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
-											EPipelineAccess::bits srcAccess, EPipelineAccess::bits dstAccess,
-											const ModulePtr &buffer, Bytes<ulong> offset, Bytes<ulong> size) :
-		srcStageMask( srcStage ),	dstStageMask( dstStage )
+	struct CmdPopDebugGroup
 	{
-		bufferBarriers.PushBack({ buffer, srcAccess, dstAccess, offset, size });
-	}
+	};
 
-	inline
-	CmdPipelineBarrier::CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
-											EPipelineAccess::bits srcAccess, EPipelineAccess::bits dstAccess,
-											const ModulePtr &buffer, Bytes<uint> offset, Bytes<uint> size) :
-		srcStageMask( srcStage ),	dstStageMask( dstStage )
-	{
-		bufferBarriers.PushBack({ buffer, srcAccess, dstAccess, BytesUL(offset), BytesUL(size) });
-	}
 
-/*
-=================================================
-	constructor
-=================================================
-*/
-	inline
-	CmdPipelineBarrier::CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
-											EPipelineAccess::bits srcAccess, EPipelineAccess::bits dstAccess,
-											EImageLayout::type oldLayout, EImageLayout::type newLayout,
-											const ModulePtr &image, EImageAspect::bits aspectMask,
-											MipmapLevel baseMipLevel, uint levelCount,
-											ImageLayer baseLayer, uint layerCount) :
-		srcStageMask( srcStage ),	dstStageMask( dstStage )
-	{
-		imageBarriers.PushBack({ image, srcAccess, dstAccess, oldLayout, newLayout, ImageRange{aspectMask, baseMipLevel, levelCount, baseLayer, layerCount} });
-	}
-	
-	/*inline
-	CmdPipelineBarrier::CmdPipelineBarrier (EPipelineStage::bits srcStage, EPipelineStage::bits dstStage, 
-											EImageLayout::type oldLayout, EImageLayout::type newLayout,
-											const ModulePtr &image, EImageAspect::bits aspectMask,
-											MipmapLevel baseMipLevel, uint levelCount,
-											ImageLayer baseLayer, uint layerCount) :
-		srcStageMask( srcStage ),	dstStageMask( dstStage )
-	{
-		imageBarriers.PushBack({ image, oldLayout, newLayout, aspectMask, baseMipLevel, levelCount, baseLayer, layerCount });
-	}
-	
-	inline
-	CmdPipelineBarrier::ImageMemoryBarrier::ImageMemoryBarrier (const ModulePtr &image, EImageLayout::type oldLayout, EImageLayout::type newLayout, EImageAspect::bits aspect,
-																MipmapLevel mip, uint levelCount, ImageLayer layer, uint layerCount)
-	{
-		EPipelineAccess::bits	src_access;
-		EPipelineAccess::bits	dst_access;
 
-		switch ( oldLayout )
-		{
-			case EImageLayout::Undefined :						break;
-			case EImageLayout::Preinitialized :					src_access |= EPipelineAccess::HostWrite;					break;
-			case EImageLayout::ColorAttachmentOptimal :			src_access |= EPipelineAccess::ColorAttachmentWrite;		break;
-			case EImageLayout::DepthStencilAttachmentOptimal :	src_access |= EPipelineAccess::DepthStencilAttachmentWrite;	break;
-			case EImageLayout::TransferSrcOptimal :				src_access |= EPipelineAccess::TransferRead;				break;
-			case EImageLayout::TransferDstOptimal :				src_access |= EPipelineAccess::TransferWrite;				break;
-			case EImageLayout::ShaderReadOnlyOptimal :			src_access |= EPipelineAccess::ShaderRead;					break;
-			default :											WARNING( "unsupported layout" );
-		}
+	using DefaultComputeCommands_t = MessageListFrom<
+										CmdBegin,
+										CmdEnd,
+										CmdBindComputePipeline,
+										CmdDispatch,
+										CmdExecute,
+										CmdBindComputeResourceTable,
+										CmdCopyBuffer,
+										CmdCopyImage,
+										CmdCopyBufferToImage,
+										CmdCopyImageToBuffer,
+										CmdUpdateBuffer,
+										CmdFillBuffer,
+										CmdClearColorImage,
+										//CmdSetEvent,
+										//CmdResetEvent,
+										//CmdWaitEvents,
+										CmdPipelineBarrier,
+										CmdPushConstants,
+										CmdPushNamedConstants,
+										CmdDebugMarker,
+										CmdPushDebugGroup,
+										CmdPopDebugGroup >;
 
-		switch ( newLayout )
-		{
-			case EImageLayout::TransferDstOptimal :				dst_access |= EPipelineAccess::TransferWrite;				break;
-			case EImageLayout::TransferSrcOptimal :				dst_access |= EPipelineAccess::TransferRead;				break;
-			case EImageLayout::ColorAttachmentOptimal :			dst_access |= EPipelineAccess::ColorAttachmentWrite;		break;
-			case EImageLayout::DepthStencilAttachmentOptimal :	dst_access |= EPipelineAccess::DepthStencilAttachmentWrite;	break;
-			case EImageLayout::ShaderReadOnlyOptimal :			dst_access |= EPipelineAccess::ShaderRead;
-																if ( src_access.IsZero() )
-																	src_access |= (EPipelineAccess::HostWrite | EPipelineAccess::TransferWrite);
-																break;
-			default :											WARNING( "unsupported layout" );
-		}
+	using DefaultGraphicsCommands_t	= MessageListFrom<
+										CmdBegin,
+										CmdEnd,
+										CmdSetViewport,
+										CmdSetScissor,
+										CmdSetDepthBounds,
+										CmdSetBlendColor,
+										CmdSetDepthBias,
+										CmdSetLineWidth,
+										CmdSetStencilCompareMask,
+										CmdSetStencilWriteMask,
+										CmdSetStencilReference,
+										CmdBegin,
+										CmdEnd,
+										CmdBeginRenderPass,
+										CmdEndRenderPass,
+										CmdNextSubpass,
+										CmdBindGraphicsPipeline,
+										CmdBindComputePipeline,
+										CmdBindVertexBuffers,
+										CmdBindIndexBuffer,
+										CmdDraw,
+										CmdDrawIndexed,
+										CmdDrawIndirect,
+										CmdDrawIndexedIndirect,
+										CmdDispatch,
+										CmdDispatchIndirect,
+										CmdExecute,
+										CmdBindGraphicsResourceTable,
+										CmdBindComputeResourceTable,
+										CmdCopyBuffer,
+										CmdCopyImage,
+										CmdCopyBufferToImage,
+										CmdCopyImageToBuffer,
+										CmdBlitImage,
+										CmdUpdateBuffer,
+										CmdFillBuffer,
+										CmdClearAttachments,
+										CmdClearColorImage,
+										CmdClearDepthStencilImage,
+										//CmdSetEvent,
+										//CmdResetEvent,
+										//CmdWaitEvents,
+										CmdPipelineBarrier,
+										CmdPushConstants,
+										CmdPushNamedConstants,
+										CmdDebugMarker,
+										CmdPushDebugGroup,
+										CmdPopDebugGroup >;
 
-		this->image			= image;
-		this->srcAccessMask	= src_access;
-		this->dstAccessMask	= dst_access;
-		this->oldLayout		= oldLayout;
-		this->newLayout		= newLayout;
-		this->range			= ImageRange{aspect, mip, levelCount, layer, layerCount};
-	}*/
 //-----------------------------------------------------------------------------
 
 }	// GpuMsg

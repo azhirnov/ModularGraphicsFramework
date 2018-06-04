@@ -22,7 +22,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T0, typename T1>
-	forceinline bool CheckPointersAliasing (const T0 *begin0, const T0 *end0, const T1 *begin1, const T1 *end1) noexcept
+	ND_ forceinline bool CheckPointersAliasing (const T0 *begin0, const T0 *end0, const T1 *begin1, const T1 *end1) noexcept
 	{
 		ASSERT( begin0 <= end0 );
 		ASSERT( begin1 <= end1 );
@@ -66,7 +66,7 @@ namespace GXTypes
 	MemCmp
 =================================================
 */
-		forceinline int MemCmp (const void *left, const void *right, BytesU size) noexcept
+		ND_ forceinline int MemCmp (const void *left, const void *right, BytesU size) noexcept
 		{
 			// TODO: add checks
 			return ::memcmp( left, right, usize(size) );
@@ -131,7 +131,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T0, typename T1>
-	CHECKRES inline int  MemCmp (const T0 &left, const T1 &right) noexcept
+	ND_ inline int  MemCmp (const T0 &left, const T1 &right) noexcept
 	{
 		STATIC_ASSERT( sizeof(left) == sizeof(right) );
 
@@ -139,7 +139,7 @@ namespace GXTypes
 	}
 
 	template <typename T0, typename T1>
-	CHECKRES inline int  MemCmp (ArrayRef<const T0> left, ArrayRef<const T1> right);
+	ND_ inline int  MemCmp (ArrayRef<const T0> left, ArrayRef<const T1> right);
 
 /*
 =================================================

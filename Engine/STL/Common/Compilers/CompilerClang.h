@@ -97,7 +97,7 @@
 // C++ 11/14/17 features //
 
 // constexpr
-#if __has_feature(cxx_constexpr)
+#if __has_feature( cxx_constexpr )
 #	define GX_CONSTEXPR_SUPPORTED			1
 #endif
 
@@ -111,13 +111,13 @@
 
 
 // right value reference
-#if __has_feature(cxx_rvalue_references)
+#if __has_feature( cxx_rvalue_references )
 #	define GX_RVALUE_REFERENCE_SUPPORTED	1
 #endif
 
 
 // auto
-#if __has_feature(cxx_auto_type)
+#if __has_feature( cxx_auto_type )
 #	define GX_AUTO_SUPPERTED				1
 #endif
 
@@ -135,47 +135,47 @@
 
 
 // lambda
-#if __has_feature(cxx_lambdas)
+#if __has_feature( cxx_lambdas )
 #	define GX_LAMBDA_SUPPORTED				1
 #endif
 
 
 // Unrestricted unions 
-#if __has_feature(cxx_unrestricted_unions)
+#if __has_feature( cxx_unrestricted_unions )
 #	define GX_UNRESTRICTED_UNIONS_SUPPORTED	1
 #endif
 
 
 // Variadic templates 
-#if __has_feature(cxx_variadic_templates)
+#if __has_feature( cxx_variadic_templates )
 #	define GX_VARIADIC_TEMPLATES_SUPPORTED	1
 #endif
 
 
 // Non-static data member initializers 
-#if __has_feature(cxx_nonstatic_member_init)
+#if __has_feature( cxx_nonstatic_member_init )
 #	define GX_FIELD_INITIALIZERS_SUPPORTED	1
 #endif
 
 
 // literal operator
-#if __has_feature(cxx_user_literals)
+#if __has_feature( cxx_user_literals )
 #	define	GX_LITERAL_OPERATOR_SUPPORTED	1
+#endif
+
+// deprecated attribute
+#if __has_feature( cxx_attributes )
+#	define GX_DEPRECATED( _reason_ )		[[ deprecated(_reason_) ]]
+#else
+#	define GX_DEPRECATED( _reason_ )
 #endif
 
 
 // notify compiler to generate error if function result unused
-#if __has_feature(cxx_attributes)
-#	define GX_CHECK_RESULT					[[nodiscard]]
+#if __has_feature( cxx_attributes )
+#	define GX_NODISCARD						[[nodiscard]]
 #else
-#	define GX_CHECK_RESULT
-#endif
-
-// deprecated attribute
-#if __has_feature(cxx_attributes)
-#	define GX_DEPRECATED( _reason_ )		[[ deprecated(_reason_) ]]
-#else
-#	define GX_DEPRECATED( _reason_ )
+#	define GX_NODISCARD
 #endif
 
 
@@ -200,8 +200,16 @@
 
 
 // TODO
-#if !defined( PLATFORM_ANDROID )
+#if 1 //!defined( PLATFORM_ANDROID )
 #	define GX_RTTI_SUPPORTED
+#endif
+
+
+// maybe unused attribute
+#if __has_feature( cxx_attributes )
+#	define GX_MAYBE_UNUSED			[[maybe_unused]]
+#else
+#	define GX_MAYBE_UNUSED
 #endif
 
 //-------------------------------------------------------------------
@@ -221,6 +229,8 @@
 #endif
 
 
+// TODO: check
+#define GX_MAX_STRING_LENGTH_BYTES	(5u << 20)
 
 
 #endif	// COMPILER_CLANG

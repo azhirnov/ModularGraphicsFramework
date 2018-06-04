@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "CopyStrategy.h"
-#include "ArrayRef.h"
+#include "Engine/STL/Containers/CopyStrategy.h"
+#include "Engine/STL/Containers/ArrayRef.h"
 
 namespace GX_STL
 {
@@ -17,13 +17,16 @@ namespace GXTypes
 	template <typename T>
 	struct UniBuffer : public CompileTime::FastCopyable
 	{
+		friend struct UniBuffer< typename TypeTraits::InvertConst<T> >;
+
 	// types
 	public:
-		typedef UniBuffer<T>		Self;
-		typedef T					Value_t;
+		using Self		= UniBuffer<T>;
+		using Value_t	= T;
 		
 	private:
-		typedef typename TypeTraits::CopyConstToPointer< T, void *>		void_ptr_t;
+		using VoidPtr_t		= typename TypeTraits::CopyConstToPointer< T, void *>;
+		using VoidCPtr_t	= const VoidPtr_t;
 
 		struct _CompareElements
 		{
@@ -36,7 +39,7 @@ namespace GXTypes
 
 	// variables
 	private:
-		void_ptr_t *	_memory;
+		VoidPtr_t		_memory;
 		usize			_count;
 		ushort			_offset;
 		ushort			_stride;
@@ -47,61 +50,72 @@ namespace GXTypes
 		char const * const	_Begin ()	const	{ return static_cast<char const * const>(_memory); }
 		char const * const	_End ()		const	{ return static_cast<char const * const>(_memory) + _count * _stride; }
 
-		UniBuffer (void_ptr_t memory, usize count, ushort offset, ushort stride);
+		UniBuffer (VoidPtr_t memory, usize count, ushort offset, ushort stride);
 
 	public:
 		UniBuffer (GX_DEFCTOR);
 
 		template <typename B>
-		UniBuffer (ArrayRef<B> buffer, T (B::*member));
+		explicit UniBuffer (ArrayRef<B> buffer);
+
+		template <typename B, typename C>
+		UniBuffer (ArrayRef<B> buffer, T (C::*member));
 		
-		template <typename B>
-		UniBuffer (B *memory, usize count, T (B::*member));
+		template <typename B, typename C>
+		UniBuffer (B *memory, usize count, T (C::*member));
+		
+		UniBuffer (VoidPtr_t memory, usize count, BytesU stride);
+		
+		template <typename B, usize I, typename C>
+		UniBuffer (B (&arr)[I], T (C::*member));
 
 		template <typename B, usize I>
-		UniBuffer (const B (&arr)[I], T (B::*member));
+		explicit UniBuffer (B (&arr)[I]);
 
 		UniBuffer (Self &&other) = default;
 		UniBuffer (const Self &other) = default;
 
-		bool		operator == (const Self &other) const;
-		bool		operator != (const Self &other) const;
+		ND_ bool		operator == (const Self &other) const;
+		ND_ bool		operator != (const Self &other) const;
 
-		operator	UniBuffer<const T> () const		{ return UniBuffer<const T>( _memory, _count, _offset, _stride ); }
+		ND_ operator	UniBuffer<const T> () const		{ return UniBuffer<const T>( _memory, _count, _offset, _stride ); }
 
-		T		&	operator [] (usize i);
-		T const	&	operator [] (usize i) const;
+		ND_ T		&	operator [] (usize i);
+		ND_ T const &	operator [] (usize i) const;
 		
-		Self &		operator =  (Self &&right)		= default;
-		Self &		operator =  (const Self &right)	= default;
+			Self &		operator =  (Self &&right)		= default;
+			Self &		operator =  (const Self &right)	= default;
 
-		T		&	Back ()							{ return (*this)[ LastIndex() ]; }
-		T const	&	Back () const					{ return (*this)[ LastIndex() ]; }
-		T		&	Front ()						{ return (*this)[0]; }
-		T const	&	Front () const					{ return (*this)[0]; }
+		ND_ VoidPtr_t	RawPtr ()						{ return _memory; }
+		ND_ VoidCPtr_t	RawPtr ()		const			{ return _memory; }
 
-		bool		Empty ()		const			{ return _count == 0; }
-		usize		Count ()		const			{ return _count; }
-		BytesU		Size ()			const			{ return BytesU( _count * _stride ); }
-		BytesU		Stride ()		const			{ return BytesU( _stride ); }
-		usize		LastIndex ()	const			{ return Count()-1; }
+		ND_ T		&	Back ()							{ return (*this)[ LastIndex() ]; }
+		ND_ T const &	Back ()			const			{ return (*this)[ LastIndex() ]; }
+		ND_ T		&	Front ()						{ return (*this)[0]; }
+		ND_ T const &	Front ()		const			{ return (*this)[0]; }
+
+		ND_ bool		Empty ()		const			{ return _count == 0; }
+		ND_ usize		Count ()		const			{ return _count; }
+		ND_ BytesU		Size ()			const			{ return BytesU( _count * _stride ); }
+		ND_ BytesU		Stride ()		const			{ return BytesU( _stride ); }
+		ND_ usize		LastIndex ()	const			{ return Count()-1; }
 
 		template <typename Cmp>
-		bool  Equals (const Self &other, Cmp sCmp) const;
+		ND_ bool  Equals (const Self &other, Cmp sCmp) const;
 		
-		usize GetIndex (const T &value) const;
-		bool  IsInArray (const T &value) const;
+		ND_ usize GetIndex (const T &value) const;
+		ND_ bool  IsInArray (const T &value) const;
 		
 		template <typename E>
-		bool  Find (OUT usize &index, const E &value, usize start = 0) const;
+			bool  Find (OUT usize &index, const E &value, usize start = 0) const;
 
 		template <typename E>
-		bool  IsExist (const E &value) const;
+		ND_ bool  IsExist (const E &value) const;
 
-		bool  Intersects (const Self &other) const;
+		ND_ bool  Intersects (const Self &other) const;
 
-		static constexpr bool	IsLinearMemory ()	{ return false; }
-		static constexpr bool	IsStaticMemory ()	{ return false; }
+		static constexpr bool	IsLinearMemory ()		{ return false; }
+		static constexpr bool	IsStaticMemory ()		{ return false; }
 	};
 
 
@@ -113,7 +127,8 @@ namespace GXTypes
 */
 	template <typename T>
 	inline UniBuffer<T>::UniBuffer (UninitializedType) :
-		_memory(null), _count(0), _offset(0), _stride(0)
+		_memory( null ),	_count( 0 ),
+		_offset( 0 ),		_stride( 0 )
 	{}
 	
 /*
@@ -122,30 +137,24 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline UniBuffer<T>::UniBuffer (void_ptr_t memory, const usize count, const ushort offset, const ushort stride) :
-		_memory(memory), _count(count), _offset(offset), _stride(stride)
+	template <typename B>
+	inline UniBuffer<T>::UniBuffer (ArrayRef<B> buffer) :
+		_memory( buffer.RawPtr() ),		_count( buffer.Count() ),
+		_offset( 0 ),					_stride( sizeof(B) )
 	{
 		ASSUME( _count == 0 or _memory != null );
 	}
-	
-/*
-=================================================
-	constructor
-=================================================
-*/
-	template <typename T>
-	template <typename B>
-	inline UniBuffer<T>::UniBuffer (ArrayRef<B> buffer, T (B::*member)) :
-		_memory(null), _count(0), _offset(0), _stride(0)
-	{
-		if ( not buffer.Empty() )
-		{
-			_memory = static_cast<void_ptr_t>( buffer.ptr() );
-			_count  = buffer.Count();
-			_offset = (ushort) OffsetOf( member );
-			_stride = (ushort) sizeof(B);
-		}
 
+/*
+=================================================
+	constructor
+=================================================
+*/
+	template <typename T>
+	inline UniBuffer<T>::UniBuffer (VoidPtr_t memory, const usize count, const ushort offset, const ushort stride) :
+		_memory( memory ),	_count( count ),
+		_offset( offset ),	_stride( stride )
+	{
 		ASSUME( _count == 0 or _memory != null );
 	}
 	
@@ -155,12 +164,38 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	template <typename B>
-	inline UniBuffer<T>::UniBuffer (B *memory, const usize count, T (B::*member)) :
-		_memory( static_cast<void_ptr_t>( memory ) ),
-		_count( count ),
-		_offset( (ushort) OffsetOf( member ) ),
-		_stride( (ushort) sizeof(B) )
+	template <typename B, typename C>
+	inline UniBuffer<T>::UniBuffer (ArrayRef<B> buffer, T (C::*member)) :
+		_memory{ buffer.RawPtr() },				_count{ buffer.Count() },
+		_offset{ ushort(OffsetOf( member )) },	_stride{ ushort(sizeof(B)) }
+	{
+		ASSUME( _count == 0 or _memory != null );
+	}
+	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	template <typename T>
+	template <typename B, typename C>
+	inline UniBuffer<T>::UniBuffer (B *memory, const usize count, T (C::*member)) :
+		_memory( static_cast<VoidPtr_t>( memory ) ),	_count( count ),
+		_offset( ushort(OffsetOf( member )) ),			_stride( ushort(sizeof(B)) )
+	{
+		ASSUME( _count == 0 or _memory != null );
+	}
+	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	template <typename T>
+	template <typename B, usize I, typename C>
+	inline UniBuffer<T>::UniBuffer (B (&arr)[I], T (C::*member)) :
+		_memory( static_cast<VoidPtr_t>( arr ) ),	_count( I ),
+		_offset( ushort(OffsetOf( member )) ),		_stride( ushort(sizeof(B)) )
 	{
 		ASSUME( _count == 0 or _memory != null );
 	}
@@ -172,15 +207,19 @@ namespace GXTypes
 */
 	template <typename T>
 	template <typename B, usize I>
-	inline UniBuffer<T>::UniBuffer (const B (&arr)[I], T (B::*member)) :
-		_memory( static_cast<void_ptr_t>( arr ) ),
-		_count( I ),
-		_offset( (ushort) OffsetOf( member ) ),
-		_stride( (ushort) sizeof(B) )
-	{
-		ASSUME( _count == 0 or _memory != null );
-	}
-	
+	inline UniBuffer<T>::UniBuffer (B (&arr)[I]) : UniBuffer(ArrayRef<B>( arr ))
+	{}
+
+/*
+=================================================
+	constructor
+=================================================
+*/
+	template <typename T>
+	inline UniBuffer<T>::UniBuffer (VoidPtr_t memory, usize count, BytesU stride) :
+		UniBuffer{ memory, count, 0, ushort(stride) }
+	{}
+
 /*
 =================================================
 	operator ==
@@ -212,7 +251,7 @@ namespace GXTypes
 	inline T &  UniBuffer<T>::operator [] (const usize i)
 	{
 		ASSERT( i < _count );
-		return *Cast<T *>( Cast<char *>(_memory) + (_offset + usize(_stride) * i) );
+		return *Cast<T *>( _memory + BytesU(_offset + usize(_stride) * i) );
 	}
 	
 /*

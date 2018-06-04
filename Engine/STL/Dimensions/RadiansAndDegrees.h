@@ -46,38 +46,37 @@ namespace GXMath
 	public:
 		Radians (GX_DEFCTOR) : _value(0) {}
 
-		explicit
-		constexpr Radians (T value) : _value(value) {}
+		explicit constexpr Radians (T value) : _value(value) {}
 
-		explicit operator T ()			const		{ return _value; }
-		explicit operator Degrees<T> ()	const		{ return ToDegrees(); }
+		ND_ explicit operator T ()			const	{ return _value; }
+		ND_ explicit operator Degrees<T> ()	const	{ return ToDegrees(); }
 
-		T &			ref ()							{ return _value; }
-		T const &	ref ()		const				{ return _value; }
+		ND_ T &			ref ()							{ return _value; }
+		ND_ T const &	ref ()		const				{ return _value; }
 
-		Degrees<T> ToDegrees () const;
+		ND_ Degrees<T> ToDegrees () const;
 		
 		template <typename B>
-		Degrees<B> ToDegrees () const;
+		ND_ Degrees<B> ToDegrees () const;
 
 		template <typename B>
-		Radians<B> To () const;
+		ND_ Radians<B> To () const;
 
-		Self	ToInterval (Self minValue, Self maxValue) const;
+		ND_ Self		ToInterval (Self minValue, Self maxValue) const;
 
 		_GX_DIM_ALL_FLOAT_OPERATORS_SELF( _value );
 		_GX_DIM_ALL_FLOAT_OPERATORS_TYPE( _value, const Value_t&, );
 
-		CHECKRES static constexpr Self	Pi (T scale)		{ return Self( GXMath::Pi<T> * scale ); }	// Pi * x
-		CHECKRES static constexpr Self	Pi ()				{ return Self( GXMath::Pi<T> ); }			// Pi
-		CHECKRES static constexpr Self	ReciporalPi ()		{ return Self( GXMath::ReciporalPi<T> ); }	// 1/Pi
-		CHECKRES static constexpr Self	DoublePi ()			{ return Self( Pi( T(2) ) ); }				// 2*Pi
-		CHECKRES static constexpr Self	HalfPi ()			{ return Self( Pi( T(0.5) ) ); }			// Pi/2
+		ND_ static constexpr Self	Pi (T scale)		{ return Self( GXMath::Pi<T> * scale ); }	// Pi * x
+		ND_ static constexpr Self	Pi ()				{ return Self( GXMath::Pi<T> ); }			// Pi
+		ND_ static constexpr Self	ReciporalPi ()		{ return Self( GXMath::ReciporalPi<T> ); }	// 1/Pi
+		ND_ static constexpr Self	DoublePi ()			{ return Self( Pi( T(2) ) ); }				// 2*Pi
+		ND_ static constexpr Self	HalfPi ()			{ return Self( Pi( T(0.5) ) ); }			// Pi/2
 
-		static Self FromArcminutes (T value);
-		static Self FromArcseconds (T value);
+		ND_ static Self FromArcminutes (T value);
+		ND_ static Self FromArcseconds (T value);
 		
-		static Self From (T deg, T arcmin = T(0), T arcsec = T(0));
+		ND_ static Self From (T deg, T arcmin = T(0), T arcsec = T(0));
 	};
 
 
@@ -106,93 +105,92 @@ namespace GXMath
 	public:
 		Degrees (GX_DEFCTOR) : _value(0) {}
 
-		explicit
-		constexpr Degrees (T value) : _value(value) {}
+		explicit constexpr Degrees (T value) : _value(value) {}
 
-		CHECKRES explicit operator T ()				const	{ return _value; }
-		CHECKRES explicit operator Radians<T> ()	const	{ return ToRadians(); }
+		ND_ explicit operator T ()			const	{ return _value; }
+		ND_ explicit operator Radians<T> ()	const	{ return ToRadians(); }
 
-		T &			ref ()									{ return _value; }
-		T const &	ref ()							const	{ return _value; }
+		ND_ T &			ref ()						{ return _value; }
+		ND_ T const &	ref ()				const	{ return _value; }
 
-		Radians<T> ToRadians () const;
-
-		template <typename B>
-		Radians<B> ToRadians () const;
+		ND_ Radians<T> ToRadians () const;
 
 		template <typename B>
-		Degrees<B> To () const;
+		ND_ Radians<B> ToRadians () const;
+
+		template <typename B>
+		ND_ Degrees<B> To () const;
 		
-		Self	ToInterval (Self minValue, Self maxValue) const;
+		ND_ Self		ToInterval (Self minValue, Self maxValue) const;
 
 		_GX_DIM_ALL_FLOAT_OPERATORS_SELF( _value );
 		_GX_DIM_ALL_FLOAT_OPERATORS_TYPE( _value, const Value_t&, );
 		
-		CHECKRES static constexpr Self	Pi (T scale)				{ return Self( T(180) * scale ); }				// Pi * x
-		CHECKRES static constexpr Self	Pi ()						{ return Self( T(180) ); }						// Pi
-		CHECKRES static constexpr Self	ReciporalPi ()				{ return Self( T(0.0055555555555555558) ); }	// 1/Pi
-		CHECKRES static constexpr Self	DoublePi ()					{ return Self( Pi( T(2) ) ); }					// 2*Pi
-		CHECKRES static constexpr Self	HalfPi ()					{ return Self( Pi( T(0.5) ) ); }				// Pi/2
+		ND_ static constexpr Self	Pi (T scale)				{ return Self( T(180) * scale ); }				// Pi * x
+		ND_ static constexpr Self	Pi ()						{ return Self( T(180) ); }						// Pi
+		ND_ static constexpr Self	ReciporalPi ()				{ return Self( T(0.0055555555555555558) ); }	// 1/Pi
+		ND_ static constexpr Self	DoublePi ()					{ return Self( Pi( T(2) ) ); }					// 2*Pi
+		ND_ static constexpr Self	HalfPi ()					{ return Self( Pi( T(0.5) ) ); }				// Pi/2
 		
-		CHECKRES static constexpr Self	FromArcminutes (T value)	{ return Self( value / T(60.0) ); }				// T(0.01666667)
-		CHECKRES static constexpr Self	FromArcseconds (T value)	{ return Self( value / T(3600.0) ); }			// T(0.0002777778)
+		ND_ static constexpr Self	FromArcminutes (T value)	{ return Self( value / T(60.0) ); }				// T(0.01666667)
+		ND_ static constexpr Self	FromArcseconds (T value)	{ return Self( value / T(3600.0) ); }			// T(0.0002777778)
 
-		static Self From (T deg, T arcmin = T(0), T arcsec = T(0));
+		ND_ static Self From (T deg, T arcmin = T(0), T arcsec = T(0));
 	};
 
 	
 
-	CHECKRES constexpr Rad operator "" _rad (long double value)			{ return Rad( real(value) ); }
-	CHECKRES constexpr Rad operator "" _rad (unsigned long long value)	{ return Rad( real(value) ); }
+	ND_ constexpr Rad operator "" _rad (long double value)			{ return Rad( real(value) ); }
+	ND_ constexpr Rad operator "" _rad (unsigned long long value)	{ return Rad( real(value) ); }
 	
-	CHECKRES constexpr Deg operator "" _deg (long double value)			{ return Deg( real(value) ); }
-	CHECKRES constexpr Deg operator "" _deg (unsigned long long value)	{ return Deg( real(value) ); }
+	ND_ constexpr Deg operator "" _deg (long double value)			{ return Deg( real(value) ); }
+	ND_ constexpr Deg operator "" _deg (unsigned long long value)	{ return Deg( real(value) ); }
 
 	
 
 //--------------------------------- Radians --------------------------------//
 	
 	template <typename T>
-	CHECKRES inline Degrees<T> Radians<T>::ToDegrees () const
+	ND_ inline Degrees<T> Radians<T>::ToDegrees () const
 	{
 		return ToDegrees<T>();
 	}
 		
 	template <typename T>
 	template <typename B>
-	CHECKRES inline Degrees<B> Radians<T>::ToDegrees () const
+	ND_ inline Degrees<B> Radians<T>::ToDegrees () const
 	{
 		return Degrees<B>( B(_value) * (B)Degrees<B>::Pi() * (B)Radians<B>::ReciporalPi() );
 	}
 	
 	template <typename T>
 	template <typename B>
-	CHECKRES inline Radians<B> Radians<T>::To () const
+	ND_ inline Radians<B> Radians<T>::To () const
 	{
 		return Radians<B>( B(_value) );
 	}
 	
 	template <typename T>
-	CHECKRES inline Radians<T>  Radians<T>::ToInterval (Self minValue, Self maxValue) const
+	ND_ inline Radians<T>  Radians<T>::ToInterval (Self minValue, Self maxValue) const
 	{
 		// 0..+2Pi, 0..+Pi, -Pi..0, -2Pi..0, and other
 		return (Self) GXMath::Wrap( _value, (T)minValue, (T)maxValue );
 	}
 	
 	template <typename T>
-	CHECKRES inline Radians<T>  Radians<T>::FromArcminutes (T value)
+	ND_ inline Radians<T>  Radians<T>::FromArcminutes (T value)
 	{
 		return Degrees<T>::FromArcminutes( value ).ToRadians();
 	}
 	
 	template <typename T>
-	CHECKRES inline Radians<T>  Radians<T>::FromArcseconds (T value)
+	ND_ inline Radians<T>  Radians<T>::FromArcseconds (T value)
 	{
 		return Degrees<T>::FromArcseconds( value ).ToRadians();
 	}
 	
 	template <typename T>
-	CHECKRES inline Radians<T>  Radians<T>::From (T deg, T arcmin, T arcsec)
+	ND_ inline Radians<T>  Radians<T>::From (T deg, T arcmin, T arcsec)
 	{
 		return Degrees<T>::From( deg, arcmin, arcsec ).ToRadians();
 	}
@@ -202,34 +200,34 @@ namespace GXMath
 //--------------------------------- Degrees --------------------------------//
 
 	template <typename T>
-	CHECKRES inline Radians<T> Degrees<T>::ToRadians () const
+	ND_ inline Radians<T> Degrees<T>::ToRadians () const
 	{
 		return ToRadians<T>();
 	}
 	
 	template <typename T>
 	template <typename B>
-	CHECKRES inline Radians<B> Degrees<T>::ToRadians () const
+	ND_ inline Radians<B> Degrees<T>::ToRadians () const
 	{
 		return Radians<B>( B(_value) * (B)Radians<B>::Pi() * (B)Degrees<B>::ReciporalPi() );
 	}
 	
 	template <typename T>
 	template <typename B>
-	CHECKRES inline Degrees<B> Degrees<T>::To () const
+	ND_ inline Degrees<B> Degrees<T>::To () const
 	{
 		return Degrees<B>( B(_value) );
 	}
 	
 	template <typename T>
-	CHECKRES inline Degrees<T>  Degrees<T>::ToInterval (Self minValue, Self maxValue) const
+	ND_ inline Degrees<T>  Degrees<T>::ToInterval (Self minValue, Self maxValue) const
 	{
 		// 0..+2Pi, 0..+Pi, -Pi..0, -2Pi..0, and other
 		return (Self) GXMath::Wrap( _value, (T)minValue, (T)maxValue );
 	}
 	
 	template <typename T>
-	CHECKRES inline Degrees<T>  Degrees<T>::From (T deg, T arcmin, T arcsec)
+	ND_ inline Degrees<T>  Degrees<T>::From (T deg, T arcmin, T arcsec)
 	{
 		return Degrees<T>( deg + (arcmin / T(60.0)) + (arcsec / T(3600.0)) );
 	}
@@ -301,7 +299,7 @@ namespace GXTypes
 	template <typename T>
 	struct Hash< GXMath::Radians<T> >
 	{
-		CHECKRES HashResult  operator () (const GXMath::Radians<T> &x) const
+		ND_ HashResult  operator () (const GXMath::Radians<T> &x) const
 		{
 			return HashOf( x.ref() );
 		}
@@ -311,7 +309,7 @@ namespace GXTypes
 	template <typename T>
 	struct Hash< GXMath::Degrees<T> >
 	{
-		CHECKRES HashResult  operator () (const GXMath::Degrees<T> &x) const
+		ND_ HashResult  operator () (const GXMath::Degrees<T> &x) const
 		{
 			return HashOf( x.ref() );
 		}

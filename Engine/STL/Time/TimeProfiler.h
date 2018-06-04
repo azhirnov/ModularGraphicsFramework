@@ -25,6 +25,9 @@ namespace GXTypes
 #	define T	uint
 #	include "IntTimeImpl.h"
 	
+#	define T	ilong
+#	include "IntTimeImpl.h"
+
 #	define T	ulong
 #	include "IntTimeImpl.h"
 
@@ -34,7 +37,7 @@ namespace GXTypes
 	using TimeProfilerF	= TimeProfiler<float>;
 	using TimeProfilerD	= TimeProfiler<double>;
 	using TimeProfilerU	= TimeProfiler<uint>;
-	using TimeProfilerL	= TimeProfiler<ulong>;
+	using TimeProfilerL	= TimeProfiler<ilong>;
 
 }	// GXTypes
 }	// GX_STL

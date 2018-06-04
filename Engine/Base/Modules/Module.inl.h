@@ -13,7 +13,7 @@ namespace Base
 =================================================
 */
 	template <typename T>
-	forceinline bool Module::Send (const Message<T> &msg) noexcept
+	GX_NO_INLINE bool Module::Send (const Message<T> &msg) noexcept
 	{
 		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
 		
@@ -103,6 +103,19 @@ namespace Base
 		
 /*
 =================================================
+	Unsubscribe
+=================================================
+*/
+	template <typename ...Types>
+	forceinline void Module::Unsubscribe (Types&& ...args)
+	{
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent(), void() );
+
+		return _msgHandler.Unsubscribe( FW<Types>( args )... );
+	}
+
+/*
+=================================================
 	_SubscribeOnEvent
 ----
 	subscribe external handlers for messages from
@@ -128,7 +141,7 @@ namespace Base
 =================================================
 */
 	template <typename T>
-	forceinline bool Module::_SendMsg (const Message<T> &msg)
+	GX_NO_INLINE bool Module::_SendMsg (const Message<T> &msg)
 	{
 		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
 		
@@ -148,7 +161,7 @@ namespace Base
 =================================================
 */
 	template <typename T>
-	forceinline bool Module::_SendEvent (const Message<T> &msg)
+	GX_NO_INLINE bool Module::_SendEvent (const Message<T> &msg)
 	{
 		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
 		
@@ -161,7 +174,7 @@ namespace Base
 	}
 	
 	template <typename T>
-	forceinline bool Module::_SendUncheckedEvent (const Message<T> &msg)
+	GX_NO_INLINE bool Module::_SendUncheckedEvent (const Message<T> &msg)
 	{
 		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
 		
@@ -198,9 +211,9 @@ namespace Base
 
 		AttachedModules_t	temp = _attachments;		// TODO: optimize
 
-		FOR( i, temp )
+		for (auto& attachment : temp)
 		{
-			temp[i].second->Send( msg.From( this ) );
+			attachment.second->Send( msg.From( this ) );
 		}
 		return true;
 	}

@@ -71,6 +71,11 @@ namespace GXScript
 		Self&	Op_Get ();
 
 		Self&	BindDefaults ();
+
+	private:
+		static Bitfield_t _EnumAndBitfield (Enum_t lhs, const Bitfield_t &rhs)		{ return lhs & rhs; }
+		static Bitfield_t _EnumOrBitfield (Enum_t lhs, const Bitfield_t &rhs)		{ return lhs | rhs; }
+		static Bitfield_t _EnumXorBitfield (Enum_t lhs, const Bitfield_t &rhs)		{ return lhs ^ rhs; }
 	};
 //-----------------------------------------------------------------------------
 
@@ -152,9 +157,9 @@ namespace GXScript
 	inline EnumBitfieldBinder<T>&  EnumBitfieldBinder<T>::Op_And ()
 	{
 		_binder.Operators()
-			.BinaryRH( EBinaryOperator::And, static_cast< Bitfield_t (*)(Enum_t, const Bitfield_t&) >( &operator & ))
-			.And<Enum_t>()		.AndAssign<Enum_t>()
-			.And<Bitfield_t>()	.AndAssign<Bitfield_t>();
+			.BinaryRH( EBinaryOperator::And, &_EnumAndBitfield )
+			.template And<Enum_t>()		.template AndAssign<Enum_t>()
+			.template And<Bitfield_t>()	.template AndAssign<Bitfield_t>();
 
 		return *this;
 	}
@@ -163,9 +168,9 @@ namespace GXScript
 	inline EnumBitfieldBinder<T>&  EnumBitfieldBinder<T>::Op_Or ()
 	{
 		_binder.Operators()
-			.BinaryRH( EBinaryOperator::Or, static_cast< Bitfield_t (*)(Enum_t, const Bitfield_t&) >( &operator | ))
-			.Or<Enum_t>()		.OrAssign<Enum_t>()
-			.Or<Bitfield_t>()	.OrAssign<Bitfield_t>();
+			.BinaryRH( EBinaryOperator::Or, &_EnumOrBitfield )
+			.template Or<Enum_t>()		.template OrAssign<Enum_t>()
+			.template Or<Bitfield_t>()	.template OrAssign<Bitfield_t>();
 
 		return *this;
 	}
@@ -174,9 +179,9 @@ namespace GXScript
 	inline EnumBitfieldBinder<T>&  EnumBitfieldBinder<T>::Op_Xor ()
 	{
 		_binder.Operators()
-			.BinaryRH( EBinaryOperator::Xor, static_cast< Bitfield_t (*)(Enum_t, const Bitfield_t&) >( &operator ^ ))
-			.Xor<Enum_t>()		.XorAssign<Enum_t>()
-			.Xor<Bitfield_t>()	.XorAssign<Bitfield_t>();
+			.BinaryRH( EBinaryOperator::Xor, &_EnumXorBitfield )
+			.template Xor<Enum_t>()		.template XorAssign<Enum_t>()
+			.template Xor<Bitfield_t>()	.template XorAssign<Bitfield_t>();
 
 		return *this;
 	}

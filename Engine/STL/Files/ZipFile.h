@@ -10,7 +10,7 @@
 
 namespace GX_STL
 {
-namespace File
+namespace GXFile
 {
 
 	//
@@ -235,13 +235,13 @@ namespace File
 		~ZipRFile ()	{ _Close(); }
 
 		
-		CHECKRES static ZipRFilePtr New ()
+		ND_ static ZipRFilePtr New ()
 		{
 			return new ZipRFile();
 		}
 
 
-		CHECKRES static ZipRFilePtr New (StringCRef archiveName, StringCRef fileInArchive,
+		ND_ static ZipRFilePtr New (StringCRef archiveName, StringCRef fileInArchive,
 										 StringCRef password = StringCRef())
 		{
 			ZipRFilePtr	zfile = new ZipRFile();
@@ -253,7 +253,7 @@ namespace File
 		}
 
 
-		CHECKRES static ZipRFilePtr New (const RFilePtr &file, StringCRef fileInArchive,
+		ND_ static ZipRFilePtr New (const RFilePtr &file, StringCRef fileInArchive,
 										 StringCRef password = StringCRef())
 		{
 			ZipRFilePtr	zfile = new ZipRFile();
@@ -387,7 +387,7 @@ namespace File
 	SHARED_POINTER( ZipRFile );
 	SHARED_POINTER( ZipWFile );
 
-}	// File
+}	// GXFile
 }	// GX_STL
 
 #endif	// GX_ZLIB_ENABLED

@@ -46,8 +46,8 @@ namespace GXTypes
 		forceinline explicit Atomic (const Self &other) : _value(other.Get()) {}
 		forceinline explicit Atomic (Self &&other) : _value(other.Get()) {}
 
-		CHECKRES forceinline explicit	operator const T ()	const	{ return Get(); }
-		CHECKRES forceinline const T	Get ()				const	{ return Op::Get<T>( _value ); }
+		ND_ forceinline explicit	operator const T ()	const		{ return Get(); }
+		ND_ forceinline const T		Get ()				const		{ return Op::Get<T>( _value ); }
 
 		forceinline const T	operator ++ ()							{ return Op::Inc<T>( _value ); }
 		forceinline const T	operator -- ()							{ return Op::Dec<T>( _value ); }
@@ -130,8 +130,8 @@ namespace GXTypes
 		forceinline explicit Atomic (const Self &other) : _atomic(other.Get()) {}
 		forceinline explicit Atomic (Self &&other) : _atomic(other.Get()) {}
 
-		forceinline CHECKRES explicit	operator const T ()	const	{ return Get(); }
-		forceinline CHECKRES const T	Get ()				const	{ return _atomic.load(); }
+		forceinline ND_ explicit	operator const T ()	const		{ return Get(); }
+		forceinline ND_ const T		Get ()				const		{ return _atomic.load(); }
 
 		forceinline const T	operator ++ ()							{ return ++_atomic; }
 		forceinline const T	operator -- ()							{ return --_atomic; }
@@ -225,8 +225,8 @@ namespace GXTypes
 		forceinline explicit Atomic (const Self &other) : _value(other.Get()) {}
 		forceinline explicit Atomic (Self &&other) : _value(other.Get()) {}
 
-		CHECKRES forceinline explicit	operator const T ()	const	{ return Get(); }
-		CHECKRES forceinline const T	Get ()				const	{ _mutex.Lock();  T ret = _value;  _mutex.Unlock();  return ret; }
+		ND_ forceinline explicit	operator const T ()	const		{ return Get(); }
+		ND_ forceinline const T		Get ()				const		{ _mutex.Lock();  T ret = _value;  _mutex.Unlock();  return ret; }
 
 		forceinline const T	operator ++ ()							{ _mutex.Lock();  T ret = (++_value);         _mutex.Unlock();  return ret; }
 		forceinline const T	operator -- ()							{ _mutex.Lock();  T ret = (--_value);         _mutex.Unlock();  return ret; }

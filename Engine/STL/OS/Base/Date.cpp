@@ -119,7 +119,7 @@ namespace OS
 		Array< StringCRef > tokens;
 		String				str;
 
-		StringParser::DivideString_Words(fmt, tokens);
+		StringParser::DivideString_Words( fmt, OUT tokens );
 
 		FOR( i, tokens )
 		{
@@ -182,14 +182,14 @@ namespace OS
 	operator ==
 =================================================
 */
-	bool Date::operator == (const Date &other) const
+	bool Date::operator == (const Date &right) const
 	{
-		return	Year()			== other.Year()			and
-				DayOfYear()		== other.DayOfYear()	and
-				Hour()			== other.Hour()			and
-				Minute()		== other.Minute()		and
-				Second()		== other.Second()		and
-				Milliseconds()	== other.Milliseconds();
+		return	Year()			== right.Year()			and
+				DayOfYear()		== right.DayOfYear()	and
+				Hour()			== right.Hour()			and
+				Minute()		== right.Minute()		and
+				Second()		== right.Second()		and
+				Milliseconds()	== right.Milliseconds();
 	}
 	
 /*
@@ -197,29 +197,14 @@ namespace OS
 	operator >
 =================================================
 */
-	bool Date::operator > (const Date &other) const
+	bool Date::operator > (const Date &right) const
 	{
-		return	Year()			!= other.Year()			?	Year()		> other.Year()		:
-				DayOfYear()		!= other.DayOfYear()	?	DayOfYear()	> other.DayOfYear()	:
-				Hour()			!= other.Hour()			?	Hour()		> other.Hour()		:
-				Minute()		!= other.Minute()		?	Minute()	> other.Minute()	:
-				Second()		!= other.Second()		?	Second()	> other.Second()	:
-				Milliseconds()	<  other.Milliseconds();
-	}
-	
-/*
-=================================================
-	operator <
-=================================================
-*/
-	bool Date::operator < (const Date &other) const
-	{
-		return	Year()			!= other.Year()			?	Year()		< other.Year()		:
-				DayOfYear()		!= other.DayOfYear()	?	DayOfYear()	< other.DayOfYear()	:
-				Hour()			!= other.Hour()			?	Hour()		< other.Hour()		:
-				Minute()		!= other.Minute()		?	Minute()	< other.Minute()	:
-				Second()		!= other.Second()		?	Second()	< other.Second()	:
-				Milliseconds()	<  other.Milliseconds();
+		return	Year()			!= right.Year()			?	Year()		> right.Year()		:
+				DayOfYear()		!= right.DayOfYear()	?	DayOfYear()	> right.DayOfYear()	:
+				Hour()			!= right.Hour()			?	Hour()		> right.Hour()		:
+				Minute()		!= right.Minute()		?	Minute()	> right.Minute()	:
+				Second()		!= right.Second()		?	Second()	> right.Second()	:
+				Milliseconds()	<  right.Milliseconds();
 	}
 
 /*
@@ -275,16 +260,27 @@ namespace OS
 */
 	uint Date::_CalcDayOfWeek (uint year, uint month, uint dayOfMonth)
 	{
+		using namespace GXMath;
+
 		int	m = month;
 		int y = year;
 
-		if ( m <= 0 )
+		if ( m < 0 )
 		{
 			m += 12;
 			y--;
 		}
 
-		int n = (dayOfMonth + (13 * m - 1) / 5 + (y % 100) + (y / 100) / 4 + (y % 100) / 4 - 2 * (y / 100)) % 7;
+		int k = dayOfMonth + 1;
+
+		m = (m < 2 ? 12+2 - m : m - 2) % 12 + 1;	// march is 1, february is 12
+
+		int D = y % 100;
+		int C = y / 100;
+
+		int n = k + ((13 * m - 1) / 5) + D + (D / 4) + (C / 4) - 2*C;
+
+		n %= 7;
 
 		if ( n < 0 )
 			n += 7;
@@ -297,17 +293,17 @@ namespace OS
 	_CalcMonthAndDayOfMonth
 =================================================
 */
-	void Date::_CalcMonthAndDayOfMonth (uint year, uint dayOfYear, OUT uint &month, OUT uint &dayOfMonth)
+	void Date::_CalcMonthAndDayOfMonth (const uint year, const uint dayOfYear, OUT uint &month, OUT uint &dayOfMonth)
 	{
 		uint days_in_month = _DaysInMonth( year, 0 );
 
-		for (month = 0; dayOfYear >= days_in_month; ++month)
-		{
-			dayOfYear		-= days_in_month;
-			days_in_month	 = _DaysInMonth( year, month );
-		}
-
 		dayOfMonth = dayOfYear;
+
+		for (month = 0; dayOfMonth >= days_in_month;)
+		{
+			dayOfMonth		-= days_in_month;
+			days_in_month	 = _DaysInMonth( year, ++month );
+		}
 	}
 	
 /*
@@ -317,7 +313,7 @@ namespace OS
 */
 	Date&  Date::SetDay (uint value)
 	{
-		_dayOfMonth	= value;
+		_dayOfMonth	= value-1;
 		_dayOfWeek	= _CalcDayOfWeek( _year, _month, _dayOfMonth );
 		_dayOfYear	= _CalcDayOfYear( _year, _month, _dayOfMonth );
 		return *this;

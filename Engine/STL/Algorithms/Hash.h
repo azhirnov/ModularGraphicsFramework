@@ -50,17 +50,17 @@ namespace GXTypes
 		constexpr explicit HashResult (usize val) : _value(val) {}
 
 
-		CHECKRES Value_t  Get () const noexcept
+		ND_ Value_t  Get () const noexcept
 		{
 			return _value;
 		}
 
-		CHECKRES Self operator ~ () const noexcept
+		ND_ Self operator ~ () const noexcept
 		{
 			return Self( ~_value );
 		}
 
-		CHECKRES Self operator + (const Self &right) const noexcept
+		ND_ Self operator + (const Self &right) const noexcept
 		{
 			return Self(*this) += right;
 		}
@@ -109,7 +109,7 @@ namespace GXTypes
 	{
 		using Key_t = typename TypeTraits::RemoveConstVolatile< T >;
 
-		CHECKRES HashResult  operator () (const Key_t &x) const noexcept
+		ND_ HashResult  operator () (const Key_t &x) const noexcept
 		{
 			return (HashResult) std::hash< Key_t >()( x );
 		}
@@ -123,7 +123,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	inline HashResult  HashOf (const T &x) noexcept
+	ND_ inline HashResult  HashOf (const T &x) noexcept
 	{
 		return Hash<T>()( x );
 	}

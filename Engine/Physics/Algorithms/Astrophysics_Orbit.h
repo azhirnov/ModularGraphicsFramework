@@ -52,7 +52,7 @@ namespace Astrophysics
 
 
 		DEBUG_ONLY(
-		String  ToString () const
+		ND_ String  ToString () const
 		{
 			String	s;
 			s	<< "axial tilt: " << Degrees<T>( axisTilt ).ToString()
@@ -209,7 +209,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename T>
-	inline typename Orbit<T>::AU_t  Orbit<T>::SemiMinorAxis () const
+	ND_ inline typename Orbit<T>::AU_t  Orbit<T>::SemiMinorAxis () const
 	{
 		return semiMajorAxis * Sqrt( T(1.0) - Square( eccentricity ) );
 	}
@@ -220,7 +220,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename T>
-	inline typename Orbit<T>::AU_t  Orbit<T>::ApoapsisRadius () const
+	ND_ inline typename Orbit<T>::AU_t  Orbit<T>::ApoapsisRadius () const
 	{
 		return ( T(1.0) + Abs(eccentricity) ) * semiMajorAxis;
 	}
@@ -231,7 +231,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename T>
-	inline typename Orbit<T>::AU_t  Orbit<T>::PeriapsisRadius () const
+	ND_ inline typename Orbit<T>::AU_t  Orbit<T>::PeriapsisRadius () const
 	{
 		return ( T(1.0) - Abs(eccentricity) ) * semiMajorAxis;
 	}
@@ -242,7 +242,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename T>
-	inline typename Orbit<T>::AU_t  Orbit<T>::Length () const
+	ND_ inline typename Orbit<T>::AU_t  Orbit<T>::Length () const
 	{
 		const T  a = semiMajorAxis.ref();
 		const T  b = SemiMinorAxis().ref();
@@ -255,7 +255,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename T>
-	inline typename Orbit<T>::Vel_t  Orbit<T>::MeanVelocity () const
+	ND_ inline typename Orbit<T>::Vel_t  Orbit<T>::MeanVelocity () const
 	{
 		return Length() / orbitalPeriod;
 	}
@@ -267,7 +267,7 @@ namespace Astrophysics
 */
 	DEBUG_ONLY(
 	template <typename T>
-	inline String  Orbit<T>::ToString () const
+	ND_ inline String  Orbit<T>::ToString () const
 	{
 		String	s;
 		s	<< "semi-major axis: " << semiMajorAxis.ToDebugString()

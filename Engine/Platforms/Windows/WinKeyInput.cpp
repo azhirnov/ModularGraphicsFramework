@@ -14,7 +14,7 @@ namespace Engine
 {
 namespace PlatformWin
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//
@@ -286,9 +286,9 @@ namespace PlatformWin
 	bool WinKeyInput::_Update (const Message< ModuleMsg::Update > &)
 	{
 		// send events to InputThread
-		FOR( i, _pendingKeys )
+		for (auto& pk : _pendingKeys)
 		{
-			_SendEvent< ModuleMsg::InputKey >({ _pendingKeys[i].key, _pendingKeys[i].pressure });
+			_SendEvent< ModuleMsg::InputKey >({ pk.key, pk.pressure });
 		}
 
 		_pendingKeys.Clear();

@@ -69,7 +69,7 @@ namespace GXMath
 
 		public:
 			template <uint sizeR, uint sizeG, uint sizeB, uint sizeA, typename ColorType>
-			CHECKRES static IntColorFormatInfo  PackedType (const ColorType &color)
+			ND_ static IntColorFormatInfo  PackedType (const ColorType &color)
 			{
 				STATIC_ASSERT( (sizeR + sizeG + sizeB + sizeA) == CompileTime::SizeOf<ColorType>::bits );
 				return IntColorFormatInfo( sizeR, sizeG, sizeB, sizeA, color );
@@ -77,7 +77,7 @@ namespace GXMath
 
 
 			template <typename ValueType, uint ChannelsCount, typename ColorType>
-			CHECKRES static IntColorFormatInfo  SimpleType (const ColorType &color)
+			ND_ static IntColorFormatInfo  SimpleType (const ColorType &color)
 			{
 				const uint channel_size = CompileTime::SizeOf<ValueType>::bits;
 
@@ -93,7 +93,7 @@ namespace GXMath
 
 
 			template <uint R, uint G, uint B, uint A>
-			CHECKRES IntColorFormatInfo  GetSwizzledFormat () const
+			ND_ IntColorFormatInfo  GetSwizzledFormat () const
 			{
 				IntColorFormatInfo	res;
 				res.sizeInBits = IntFormat( this->sizeInBits[R&3], this->sizeInBits[G&3],
@@ -103,32 +103,32 @@ namespace GXMath
 			}
 
 
-			CHECKRES IntFormat  MaxValue () const
+			ND_ IntFormat  MaxValue () const
 			{
 				return ToMask< IntFormat::Value_t >( Max( sizeInBits - int(isSigned), IntFormat() ).To<BitsVec<usize,4>>() );
 			}
 
-			CHECKRES FloatFormat  MaxValueF () const
+			ND_ FloatFormat  MaxValueF () const
 			{
 				return this->MaxValue().To<FloatFormat>();
 			}
 
-			CHECKRES IntFormat  MinValue () const
+			ND_ IntFormat  MinValue () const
 			{
 				return isSigned ? (-MaxValue()-1) : IntFormat(0);
 			}
 
-			CHECKRES IntFormat  GetShiftTo (const IntColorFormatInfo &fmt) const
+			ND_ IntFormat  GetShiftTo (const IntColorFormatInfo &fmt) const
 			{
 				return fmt.sizeInBits - sizeInBits;
 			}
 
-			CHECKRES IntFormat  GetShiftFrom (const IntColorFormatInfo &fmt) const
+			ND_ IntFormat  GetShiftFrom (const IntColorFormatInfo &fmt) const
 			{
 				return -GetShiftTo( fmt );
 			}
 
-			CHECKRES IntFormat  Clamp (const IntFormat &value) const
+			ND_ IntFormat  Clamp (const IntFormat &value) const
 			{
 				typedef Vec< CompileTime::NearInt::FromType< IntFormat::Value_t >, 4 >	sign_t;
 				typedef Vec< CompileTime::NearUInt::FromType< IntFormat::Value_t >, 4 >	unsign_t;
@@ -161,7 +161,7 @@ namespace GXMath
 
 		public:
 			template <typename ValueType>
-			CHECKRES static FloatColorFormatInfo  SimpleType ()
+			ND_ static FloatColorFormatInfo  SimpleType ()
 			{
 				const ValueType	min_value = GXTypes::MinValue<ValueType>();
 				const ValueType	max_value = GXTypes::MaxValue<ValueType>();
@@ -170,14 +170,14 @@ namespace GXMath
 			}
 
 
-			CHECKRES static FloatColorFormatInfo  PackedType (const FloatFormat &maxValue)
+			ND_ static FloatColorFormatInfo  PackedType (const FloatFormat &maxValue)
 			{
 				return FloatColorFormatInfo( maxValue, FloatFormat(0.0f), false );
 			}
 
 
 			template <uint R, uint G, uint B, uint A>
-			CHECKRES FloatColorFormatInfo  GetSwizzledFormat () const
+			ND_ FloatColorFormatInfo  GetSwizzledFormat () const
 			{
 				FloatColorFormatInfo	res( FloatFormat( this->maxValue[R&3], this->maxValue[G&3],
 														  this->maxValue[B&3], this->maxValue[A&3] ),
@@ -188,17 +188,17 @@ namespace GXMath
 			}
 
 
-			CHECKRES FloatFormat  MaxValue () const
+			ND_ FloatFormat  MaxValue () const
 			{
 				return maxValue;
 			}
 
-			CHECKRES FloatFormat  MinValue () const
+			ND_ FloatFormat  MinValue () const
 			{
 				return isSigned ? -maxValue : FloatFormat(0.0f);
 			}
 
-			CHECKRES FloatFormat  Clamp (const FloatFormat &value) const
+			ND_ FloatFormat  Clamp (const FloatFormat &value) const
 			{
 				FloatFormat		ret;
 				FOR( i, ret )	ret[i] = GXMath::Clamp( value[i], MinValue()[i], MaxValue()[i] );
@@ -214,32 +214,42 @@ namespace GXMath
 		struct ColorFormatConverter
 		{
 			template <typename ColorType>
+			static constexpr bool	IsInteger		= (ColorType::format & EColorFormatDescriptor::INTEGER) != 0;
+			
+			template <typename ColorType>
+			static constexpr bool	IsFloat			= (ColorType::format & EColorFormatDescriptor::FLOAT) != 0;
+			
+			template <typename ColorType>
+			static constexpr bool	IsNormalized	= (ColorType::format & EColorFormatDescriptor::NORMALIZED) != 0;
+			
+			template <typename ColorType>
+			static constexpr bool	IsUnnormalized	= (ColorType::format & EColorFormatDescriptor::NORMALIZED) == 0;
+
+
+			template <typename ColorType>
 			static void MustBeInteger ()
 			{
-				STATIC_ASSERT( (ColorType::format & EColorFormatDescriptor::INTEGER) != 0,
-								"color format must be integer" );
+				STATIC_ASSERT( IsInteger<ColorType>, "color format must be integer" );
 			}
 		
 			template <typename ColorType>
 			static void MustBeFloat ()
 			{
-				STATIC_ASSERT( (ColorType::format & EColorFormatDescriptor::FLOAT) != 0,
-								"color format must be float" );
+				STATIC_ASSERT( IsFloat<ColorType>, "color format must be float" );
 			}
 
 			template <typename ColorType>
 			static void MustBeNormalized ()
 			{
-				STATIC_ASSERT( (ColorType::format & EColorFormatDescriptor::NORMALIZED) != 0,
-								"color format must be normalized" );
+				STATIC_ASSERT( IsNormalized<ColorType>, "color format must be normalized" );
 			}
 
 			template <typename ColorType>
 			static void MustBeUnnormalized ()
 			{
-				STATIC_ASSERT( (ColorType::format & EColorFormatDescriptor::NORMALIZED) == 0,
-								"color format must be not normalized" );
+				STATIC_ASSERT( IsUnnormalized<ColorType>, "color format must be not normalized" );
 			}
+
 
 			// normalized int to normalized int
 			template <typename SrcColorType, typename DstColorType>
@@ -373,6 +383,7 @@ namespace GXMath
 			{
 				MustBeFloat< SrcColorType >();
 				MustBeInteger< DstColorType >();
+				MustBeNormalized< DstColorType >();
 
 				FloatColorFormatInfo const	sfmt(src);
 				IntColorFormatInfo const	dfmt(dst);
@@ -440,7 +451,7 @@ namespace GXMath
 		CONVERTER_SWITCH( false,  false,  true,    true,      FloatToFloat );
 			
 		CONVERTER_SWITCH( false,  true,   false,   false,     FloatToInt );
-		CONVERTER_SWITCH( false,  true,   false,   true,      FloatToNormInt );
+		CONVERTER_SWITCH( false,  true,   false,   true,      NormFloatToNormInt );
 		CONVERTER_SWITCH( false,  true,   true,    false,     FloatToInt );
 		CONVERTER_SWITCH( false,  true,   true,    true,      NormFloatToNormInt );
 		

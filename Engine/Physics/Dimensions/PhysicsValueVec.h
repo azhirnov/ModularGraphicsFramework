@@ -42,7 +42,7 @@ namespace GXPhysics
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline auto  operator * (const GXMath::Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
+	ND_ inline auto  operator * (const GXMath::Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U >	ret;
 		FOR( i, ret )	ret[i] = left[i] * right;
@@ -59,7 +59,7 @@ namespace GXPhysics
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline auto  operator * (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const GXMath::Vec<ValueType,I,U> &right)
+	ND_ inline auto  operator * (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const GXMath::Vec<ValueType,I,U> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U >	ret;
 		FOR( i, ret )	ret[i] = left * right[i];
@@ -76,7 +76,7 @@ namespace GXPhysics
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline auto  operator / (const GXMath::Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
+	ND_ inline auto  operator / (const GXMath::Vec<ValueType,I,U> &left, const PhysicsValue<ValueType, Dimensions, ValueScale> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U >	ret;
 		FOR( i, ret )	ret[i] = left[i] / right;
@@ -93,7 +93,7 @@ namespace GXPhysics
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline auto  operator / (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const GXMath::Vec<ValueType,I,U> &right)
+	ND_ inline auto  operator / (const PhysicsValue<ValueType, Dimensions, ValueScale> &left, const GXMath::Vec<ValueType,I,U> &right)
 	{
 		PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U >	ret;
 		FOR( i, ret )	ret[i] = left / right[i];
@@ -109,8 +109,8 @@ namespace GXPhysics
 			  typename Dimensions,
 			  typename ValueScale
 			 >
-	CHECKRES inline bool Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
-								 const PhysicsValue<ValueType, Dimensions, ValueScale>& b)
+	ND_ inline bool Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
+							const PhysicsValue<ValueType, Dimensions, ValueScale>& b)
 	{
 		return GXMath::Equals( a.ref(), b.ref() );
 	}
@@ -125,8 +125,8 @@ namespace GXPhysics
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline auto  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U > &a,
-								  const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U > &b)
+	ND_ inline auto  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U > &a,
+							 const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I, U > &b)
 	{
 		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i] );
@@ -142,9 +142,9 @@ namespace GXPhysics
 			  typename Dimensions,
 			  typename ValueScale
 			 >
-	CHECKRES inline auto  Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
-								  const PhysicsValue<ValueType, Dimensions, ValueScale>& b,
-								  /*Bits*/uint accuracy)
+	ND_ inline auto  Equals (const PhysicsValue<ValueType, Dimensions, ValueScale>& a,
+							 const PhysicsValue<ValueType, Dimensions, ValueScale>& b,
+							 /*Bits*/uint accuracy)
 	{
 		return GXMath::Equals( a.ref(), b.ref(), accuracy );
 	}
@@ -159,9 +159,9 @@ namespace GXPhysics
 			  typename ValueScale,
 			  usize I, ulong U
 			 >
-	CHECKRES inline auto  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
-								  const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b,
-								  /*Bits*/uint accuracy)
+	ND_ inline auto  Equals (const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &a,
+							 const PhysicsValueVec< PhysicsValue<ValueType, Dimensions, ValueScale>, I > &b,
+							 /*Bits*/uint accuracy)
 	{
 		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, ret )	ret[i] = Equals( a[i], b[i], accuracy );
@@ -196,19 +196,19 @@ namespace CompileTime
 			FLAGS = (int) _value_type_info::FLAGS | (int) GX_STL::CompileTime::_ctime_hidden_::VECTOR
 		};
 
-		static constexpr type Max() { return type(_value_type_info::Max()); }
+		static constexpr type	Max()		{ return type(_value_type_info::Max()); }
 
-		static constexpr type Min() { return type(_value_type_info::Min()); }
+		static constexpr type	Min()		{ return type(_value_type_info::Min()); }
 
-		static type Inf() { return type(_value_type_info::Inf()); }
+		static type				Inf()		{ return type(_value_type_info::Inf()); }
 
-		static type NaN() { return type(_value_type_info::NaN()); }
+		static type				NaN()		{ return type(_value_type_info::NaN()); }
 
-		static constexpr type Epsilon() { return type(_value_type_info::Epsilon()); }
+		static constexpr type	Epsilon()	{ return type(_value_type_info::Epsilon()); }
 
-		static constexpr uint SignBit() { return _value_type_info::SignBit(); }
+		static constexpr uint	SignBit()	{ return _value_type_info::SignBit(); }
 
-		static constexpr uint Count() { return I * _value_type_info::Count(); }
+		static constexpr uint	Count()		{ return I * _value_type_info::Count(); }
 	};
 
 }	// CompileTime
@@ -224,7 +224,7 @@ namespace GXTypes
 			 >
 	struct Hash< GXPhysics::PhysicsValueVec< GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > >
 	{
-		CHECKRES HashResult  operator () (const GXPhysics::PhysicsValueVec< GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > &x) const noexcept
+		ND_ HashResult  operator () (const GXPhysics::PhysicsValueVec< GXPhysics::PhysicsValue< ValueType, Dimensions, ValueScale >, I, U > &x) const noexcept
 		{
 			return HashOf( x.ref() );
 		}

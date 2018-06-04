@@ -130,11 +130,11 @@ namespace Scene
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 
 		ModulePtr	platform	= PlatformTools::WindowHelper::FindPlatform( GlobalSystems() );
 		ModulePtr	input_mngr	= GlobalSystems()->mainSystem->GetModuleByID( InputManagerModuleID );	// TODO
-		ModulePtr	stream_mngr	= GlobalSystems()->mainSystem->GetModuleByID( StreamManagerModuleID );	// TODO
+		ModulePtr	data_mngr	= GlobalSystems()->mainSystem->GetModuleByID( DataProviderManagerModuleID );	// TODO
 		ModulePtr	gpu_context	= GlobalSystems()->mainSystem->GetModuleByMsg< GpuContextMsgList_t >();
 
 		if ( not platform )
@@ -151,11 +151,11 @@ namespace Scene
 			input_mngr->Send( msg );
 		}
 
-		if ( not stream_mngr )
+		if ( not data_mngr )
 		{
-			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( StreamManagerModuleID, GlobalSystems(), CreateInfo::StreamManager{}, OUT stream_mngr ) );
-			GlobalSystems()->mainSystem->Send< ModuleMsg::AttachModule >({ stream_mngr });
-			stream_mngr->Send( msg );
+			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( DataProviderManagerModuleID, GlobalSystems(), CreateInfo::DataProviderManager{}, OUT data_mngr ) );
+			GlobalSystems()->mainSystem->Send< ModuleMsg::AttachModule >({ data_mngr });
+			data_mngr->Send( msg );
 		}
 
 		if ( not gpu_context )

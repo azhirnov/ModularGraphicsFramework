@@ -6,7 +6,7 @@
 
 namespace GX_STL
 {
-namespace File
+namespace GXFile
 {
 	
 	class BaseMemRFile;
@@ -169,13 +169,13 @@ namespace File
 		MemRFile () {}
 
 		
-		CHECKRES static MemRFilePtr New ()
+		ND_ static MemRFilePtr New ()
 		{
 			return new MemRFile();
 		}
 
 
-		CHECKRES static MemRFilePtr New (const RFilePtr &file)
+		ND_ static MemRFilePtr New (const RFilePtr &file)
 		{
 			MemRFilePtr	mfile = new MemRFile();
 
@@ -186,7 +186,7 @@ namespace File
 		}
 
 		template <typename T>
-		CHECKRES static MemRFilePtr New (ArrayCRef<T> arr, EFlag flag)
+		ND_ static MemRFilePtr New (ArrayCRef<T> arr, EFlag flag)
 		{
 			MemRFilePtr file = new MemRFile();
 
@@ -245,7 +245,7 @@ namespace File
 		}
 
 		
-		bool CreateFromArray (INOUT BinaryArray &arr, EFlag flag)
+		bool CreateFromArray (BinaryArray &arr, EFlag flag = EFlag::MOVE)
 		{
 			CHECK_ERR( not arr.Empty() );
 			
@@ -263,7 +263,9 @@ namespace File
 					break;
 
 				case MOVE :
-					RETURN_ERR( "move operation not supported for this array type" );
+					_memBuffer	= RVREF(arr);
+					_mem		= _memBuffer;
+					break;
 
 				default :
 					RETURN_ERR( "invalid flag" );
@@ -442,7 +444,7 @@ namespace File
 		MemWFile () {}
 
 
-		CHECKRES static MemWFilePtr New (BytesU reserve = BytesU())
+		ND_ static MemWFilePtr New (BytesU reserve = BytesU())
 		{
 			MemWFilePtr	file = new MemWFile();
 
@@ -487,5 +489,5 @@ namespace File
 	SHARED_POINTER( MemRFile );
 	SHARED_POINTER( MemWFile );
 
-}	// File
+}	// GXFile
 }	// GX_STL

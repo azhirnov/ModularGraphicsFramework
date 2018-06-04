@@ -54,6 +54,7 @@ namespace Platforms
 			Transfer,
 			SparseBinding,
 			Present,
+			Protected,
 			_Count,
 
 			Unknown = ~0u
@@ -61,7 +62,8 @@ namespace Platforms
 			
 		GX_ENUM_BITFIELD( EQueueFamily );
 
-		static constexpr bits	All = bits().SetAll();
+		static constexpr bits	Default	= bits() | Graphics | Compute | Transfer | Present;
+		static constexpr bits	All		= bits().SetAll();
 	};
 
 }	// Platforms

@@ -180,56 +180,56 @@ namespace GXTypes
 		}
 
 		
-		forceinline explicit operator bool () const
+		ND_ forceinline explicit operator bool () const
 		{
 			return IsNotNull();
 		}
 
 
-		forceinline T * operator -> () const
+		ND_ forceinline T * operator -> () const
 		{
 			return ptr();
 		}
 
 
-		forceinline T & operator * () const
+		ND_ forceinline T & operator * () const
 		{
 			return *ptr();
 		}
 
 
-		forceinline T * ptr () const
+		ND_ forceinline T * ptr () const
 		{
 			ASSUME( _ptr != null );
 			return RawPtr();
 		}
 
-		forceinline T * RawPtr () const
+		ND_ forceinline T * RawPtr () const
 		{
 			return const_cast< T* >( _ptr );
 		}
 
 
-		forceinline bool IsNull () const
+		ND_ forceinline bool IsNull () const
 		{
 			return ( _ptr == null );
 		}
 
-		forceinline bool IsNotNull () const
+		ND_ forceinline bool IsNotNull () const
 		{
 			return ( _ptr != null );
 		}
 
 
 		template <typename T2>
-		CHECKRES forceinline const T2 To () const
+		ND_ forceinline const T2 To () const
 		{
 			STATIC_ASSERT( typename T2::_is_shared_pointer(true) );
 			return T2( *this );
 		}
 
 		template <typename T2>
-		CHECKRES forceinline Ptr<T2> ToPtr () const
+		ND_ forceinline Ptr<T2> ToPtr () const
 		{
 			_CheckCast<T2>( _ptr );
 			return static_cast< T2 *>( RawPtr() );

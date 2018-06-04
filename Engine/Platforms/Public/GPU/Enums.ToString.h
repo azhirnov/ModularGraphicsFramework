@@ -23,7 +23,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EBlendFunc
 	
-	inline StringCRef EBlendFunc::ToString (type value)
+	ND_ inline StringCRef EBlendFunc::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -51,7 +51,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EBlendEq
 	
-	inline StringCRef EBlendEq::ToString (type value)
+	ND_ inline StringCRef EBlendEq::ToString (type value)
 	{
 		switch( value )
 		{
@@ -69,7 +69,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // ELogicOp
 	
-	inline StringCRef ELogicOp::ToString (type value)
+	ND_ inline StringCRef ELogicOp::ToString (type value)
 	{
 		switch( value )
 		{
@@ -99,7 +99,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // ECompareFunc
 	
-	inline StringCRef ECompareFunc::ToString (type value)
+	ND_ inline StringCRef ECompareFunc::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -121,7 +121,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EStencilOp
 	
-	inline StringCRef EStencilOp::ToString (type value)
+	ND_ inline StringCRef EStencilOp::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -142,7 +142,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPolygonMode
 	
-	inline StringCRef EPolygonMode::ToString (type value)
+	ND_ inline StringCRef EPolygonMode::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -158,7 +158,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPrimitive
 	
-	inline StringCRef EPrimitive::ToString (type value)
+	ND_ inline StringCRef EPrimitive::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -177,7 +177,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPolygonFace
 	
-	inline StringCRef EPolygonFace::ToString (type value)
+	ND_ inline StringCRef EPolygonFace::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -194,7 +194,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EFilter
 	
-	inline StringCRef EFilter::ToString (type value)
+	ND_ inline StringCRef EFilter::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -220,7 +220,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EAddressMode
 	
-	inline StringCRef EAddressMode::ToString (type value)
+	ND_ inline StringCRef EAddressMode::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -239,7 +239,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // ESamplerBorderColor
 	
-	inline String ESamplerBorderColor::ToString (bits value)
+	ND_ inline String ESamplerBorderColor::ToString (bits value)
 	{
 		String	str;
 
@@ -264,7 +264,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EShader
 	
-	inline StringCRef EShader::ToString (type value)
+	ND_ inline StringCRef EShader::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -283,7 +283,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EShaderMemoryModel
 	
-	inline StringCRef EShaderMemoryModel::ToString (type value)
+	ND_ inline StringCRef EShaderMemoryModel::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -302,7 +302,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EImage
 	
-	inline StringCRef EImage::ToString (type value)
+	ND_ inline StringCRef EImage::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -325,7 +325,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EImageLayout
 	
-	inline StringCRef  EImageLayout::ToString (type value)
+	ND_ inline StringCRef  EImageLayout::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -348,7 +348,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPipelineStage
 	
-	inline StringCRef  EPipelineStage::ToString (type value)
+	ND_ inline StringCRef  EPipelineStage::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -371,7 +371,7 @@ namespace Platforms
 		RETURN_ERR( "unknown pipeline stage!" );
 	}
 
-	inline String  EPipelineStage::ToString (bits values)
+	ND_ inline String  EPipelineStage::ToString (bits values)
 	{
 		String	str;
 
@@ -392,7 +392,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPipelineAccess
 	
-	inline StringCRef  EPipelineAccess::ToString (type value)
+	ND_ inline StringCRef  EPipelineAccess::ToString (type value)
 	{
 		switch ( value )
 		{
@@ -417,7 +417,7 @@ namespace Platforms
 		RETURN_ERR( "unknown access type!" );
 	}
 
-	inline String  EPipelineAccess::ToString (bits values)
+	ND_ inline String  EPipelineAccess::ToString (bits values)
 	{
 		String	str;
 
@@ -437,7 +437,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPixelFormat
 	
-	inline StringCRef  EPixelFormat::ToString (type value)
+	ND_ inline StringCRef  EPixelFormat::ToString (type value)
 	{
 		switch ( value )
 		{

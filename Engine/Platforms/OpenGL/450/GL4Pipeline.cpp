@@ -201,7 +201,7 @@ namespace PlatformGL
 
 			_descr.subpass	= 0;
 
-			CHECK_ERR( _Attach( "", req_dev->result->renderPass, true ) );
+			CHECK_ERR( _Attach( "", req_dev->result->renderPass ) );
 
 			LOG( "used default render pass", ELog::Debug );
 		}
@@ -249,7 +249,7 @@ namespace PlatformGL
 		bool	is_dependent =  msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >() or
 								msg->newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
 
-		if ( _Attach( msg->name, msg->newModule, is_dependent ) and is_dependent )
+		if ( _Attach( msg->name, msg->newModule ) and is_dependent )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyPipeline();
@@ -298,6 +298,8 @@ namespace PlatformGL
 */
 	bool GL4GraphicsPipeline::_GetGLGraphicsPipelineID (const Message< GpuMsg::GetGLGraphicsPipelineID > &msg)
 	{
+		ASSERT( _IsCreated() );
+
 		msg->result.Set({ _programs, _pipelineId, _vertexAttribs });
 		return true;
 	}
@@ -710,7 +712,7 @@ namespace PlatformGL
 		// render pass and shader must be unique
 		bool	is_dependent = msg->newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
 
-		if ( _Attach( msg->name, msg->newModule, is_dependent ) and is_dependent )
+		if ( _Attach( msg->name, msg->newModule ) and is_dependent )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyPipeline();
@@ -758,6 +760,8 @@ namespace PlatformGL
 */
 	bool GL4ComputePipeline::_GetGLComputePipelineID (const Message< GpuMsg::GetGLComputePipelineID > &msg)
 	{
+		ASSERT( _IsCreated() );
+
 		msg->result.Set({ _pipelineId, _programId });
 		return true;
 	}

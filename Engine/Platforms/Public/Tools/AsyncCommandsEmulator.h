@@ -9,7 +9,7 @@ namespace Engine
 {
 namespace PlatformTools
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//
@@ -95,13 +95,13 @@ namespace PlatformTools
 		SemaphoreSet_t	all_wait_semaphores;
 		
 		// get all signal & wait semaphores
-		FOR( i, pendingCommands )
+		for (auto& cmd : pendingCommands)
 		{
-			for (auto& wait_sem : Range(pendingCommands[i].waitSemaphores)) {
+			for (auto& wait_sem : cmd.waitSemaphores) {
 				ASSERT( wait_sem.second == EPipelineStage::AllCommands );
 				all_wait_semaphores.Add( wait_sem.first );
 			}
-			all_signal_semaphores.AddArray( pendingCommands[i].signalSemaphores );
+			all_signal_semaphores.AddArray( cmd.signalSemaphores );
 		}
 
 		// sort & run
@@ -114,7 +114,7 @@ namespace PlatformTools
 				bool	maybe_ready	= true;
 
 				// check wait semaphores
-				for (auto& wait_sem : Range(cmd.waitSemaphores))
+				for (auto& wait_sem : cmd.waitSemaphores)
 				{
 					if ( not signaled_semaphores.IsExist( wait_sem.first ) )
 					{

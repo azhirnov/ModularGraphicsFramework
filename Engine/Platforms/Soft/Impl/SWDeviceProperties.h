@@ -28,6 +28,9 @@ namespace PlatformSW
 			static constexpr uint3	maxComputeWorkGroupSize			= uint3( 1536, 1024, 64 );		// group local size
 			static constexpr uint3	maxComputeWorkGroupCount		= uint3( 2147483647, 65535, 65535 );
 
+			static constexpr int	maxProgramTexelOffset			= 16;
+			static constexpr int	minProgramTexelOffset			= -16;
+
 		}	limits {};
 
 		static constexpr struct _Features

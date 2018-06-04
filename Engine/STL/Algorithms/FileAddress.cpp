@@ -127,6 +127,17 @@ namespace GXTypes
 	
 /*
 =================================================
+	GetPathAndName
+=================================================
+*/
+	StringCRef  FileAddress::GetPathAndName (StringCRef filename)
+	{
+		const usize	ext_pos = _GetExtensionPos( filename );
+		return filename.SubString( 0, ext_pos );
+	}
+
+/*
+=================================================
 	ToShortPath
 =================================================
 */

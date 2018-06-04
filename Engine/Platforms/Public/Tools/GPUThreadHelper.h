@@ -9,7 +9,7 @@ namespace Engine
 {
 namespace PlatformTools
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//
@@ -20,9 +20,9 @@ namespace PlatformTools
 	{
 	// methods
 	public:
-		static ModulePtr  FindGraphicsThread (GlobalSystemsRef gs);
-		static ModulePtr  FindComputeThread (GlobalSystemsRef gs);
-		static ModulePtr  FindVRThread (GlobalSystemsRef gs);		// graphics + VR
+		ND_ static ModulePtr  FindGraphicsThread (GlobalSystemsRef gs);
+		ND_ static ModulePtr  FindComputeThread (GlobalSystemsRef gs);
+		ND_ static ModulePtr  FindVRThread (GlobalSystemsRef gs);		// graphics + VR
 	};
 
 

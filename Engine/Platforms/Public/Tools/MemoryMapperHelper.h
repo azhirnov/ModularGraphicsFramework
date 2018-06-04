@@ -8,7 +8,7 @@ namespace Engine
 {
 namespace PlatformTools
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//
@@ -20,7 +20,7 @@ namespace PlatformTools
 	// types
 	private:
 		using EBindingTarget	= GpuMsg::OnMemoryBindingChanged::EBindingTarget;
-		using EMappingFlags		= GpuMsg::MapMemoryToCpu::EMappingFlags;
+		using EMappingFlags		= GpuMsg::EMappingFlags;
 
 
 	// variables
@@ -43,16 +43,18 @@ namespace PlatformTools
 		~MemoryMapperHelper ();
 		
 		void Clear ();
+		void ResetFlags (EGpuMemory::bits flags, EMemoryAccess::bits access);
 
-		bool				IsMapped ()					const	{ return _ptr != null; }
-		void *				Pointer ()							{ return _ptr; }
-		bool				IsMappedMemoryChanged ()	const	{ return _changed; }
-		BytesUL				MappedOffset ()				const	{ return _offset; }
-		BytesUL				MappedSize ()				const	{ return _size; }
-		EMemoryAccess::bits	MemoryAccess ()				const	{ return _access; }
-		EMemoryAccess::bits	MappingAccess ()			const	{ return _mappingAccess; }
+		ND_ bool				IsMapped ()					const	{ return _ptr != null; }
+		ND_ void *				Pointer ()							{ return _ptr; }
+		ND_ bool				IsMappedMemoryChanged ()	const	{ return _changed; }
+		ND_ BytesUL				MappedOffset ()				const	{ return _offset; }
+		ND_ BytesUL				MappedSize ()				const	{ return _size; }
+		ND_ EMemoryAccess::bits	MemoryAccess ()				const	{ return _access; }
+		ND_ EMemoryAccess::bits	MappingAccess ()			const	{ return _mappingAccess; }
 
-		bool IsMappingAllowed (EMappingFlags mapFlags);
+		ND_ bool IsMappingAllowed (EMappingFlags mapFlags);
+
 		void OnMapped (void *ptr, BytesUL offset, BytesUL size, EMappingFlags mapFlags);
 		bool FlushMemoryRange (BytesUL offset, BytesUL size);
 		bool Unmap ();
@@ -60,10 +62,12 @@ namespace PlatformTools
 		bool Read (BytesUL offset, BytesUL size, OUT BinArrayCRef &result) const;
 		bool Write (BinArrayCRef data, BytesUL offset, OUT BytesUL &result);
 
-		bool ReadImage (OUT BytesUL &readn, OUT BinArrayRef result, const uint3 &dstDimension, BytesUL dstRowPitch, BytesUL dstSlicePitch,
+		bool ReadImage (OUT BytesUL &readn, OUT BinArrayRef result, BitsU bitPerPixel,
+						const uint3 &dstDimension, BytesUL dstRowPitch, BytesUL dstSlicePitch,
 						const uint3 &srcOffset, const uint3 &srcDimension, BytesUL srcMemOffset, BytesUL srcMemSize, BytesUL srcRowPitch, BytesUL srcSlicePitch) const;
 
-		bool WriteImage (OUT BytesUL &written, BinArrayCRef data, const uint3 &srcDimension, BytesUL srcRowPitch, BytesUL srcSlicePitch,
+		bool WriteImage (OUT BytesUL &written, BinArrayCRef data, BitsU bitPerPixel,
+						 const uint3 &srcDimension, BytesUL srcRowPitch, BytesUL srcSlicePitch,
 						 const uint3 &dstOffset, const uint3 &dstDimension, BytesUL dstMemOffset, BytesUL dstMemSize, BytesUL dstRowPitch, BytesUL dstSlicePitch);
 
 	private:

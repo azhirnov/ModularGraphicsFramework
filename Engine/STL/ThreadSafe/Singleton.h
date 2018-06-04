@@ -20,7 +20,7 @@ namespace GXTypes
 	{
 	public:
 		template <typename T>
-		static Ptr<T> Instance () noexcept
+		ND_ static Ptr<T> Instance () noexcept
 		{
 			static T inst;
 			return &inst;
@@ -44,7 +44,7 @@ namespace GXTypes
 
 	public:
 		template <typename T>
-		static Ptr<T> Instance () noexcept
+		ND_ static Ptr<T> Instance () noexcept
 		{
 			static T * volatile	inst;
 
@@ -75,7 +75,7 @@ namespace GXTypes
 	{
 	public:
 		template <typename T>
-		static Ptr<T> Instance () noexcept
+		ND_ static Ptr<T> Instance () noexcept
 		{
 			static thread_local T  inst;
 			return &inst;
@@ -97,7 +97,7 @@ namespace GXTypes
 
 	public:
 		template <typename T>
-		forceinline static Ptr<T> Instance() noexcept
+		ND_ forceinline static Ptr<T> Instance() noexcept
 		{
 			T *&	ptr = _Instance<T>();
 			return ( ptr != null ? ptr : (ptr = new T()) );

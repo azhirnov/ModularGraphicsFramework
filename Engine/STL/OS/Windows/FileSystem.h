@@ -27,9 +27,10 @@ namespace OS
 		static bool SetCurrentDirectory (StringCRef dir);
 		static bool GetCurrentDirectory (OUT String &dir);
 
-		static bool IsFileExist (StringCRef filename);
-		static bool IsDirectoryExist (StringCRef folder);
-		static bool IsAbsolutePath (StringCRef path);
+		ND_ static bool IsFileExist (StringCRef filename);
+		ND_ static bool IsDirectoryExist (StringCRef folder);
+		ND_ static bool IsAbsolutePath (StringCRef path);
+		ND_ static bool IsReadOnly (StringCRef path);			// directory or file
 
 		static bool NewDirectory (StringCRef dir);			// create directory in current directory
 		//static bool CreateDirectories (StringCRef path);	// create directories for path
@@ -43,14 +44,12 @@ namespace OS
 		static bool CopyFile (StringCRef fromFile, StringCRef toFile);
 		static bool CopyDirectory (StringCRef fromDir, StringCRef toDir);
 
-		// TODO: MoveFile
 		// TODO: MoveDirectory
-
 		static bool MoveFile (StringCRef oldName, StringCRef newName, bool async = false);
 
-		static Date GetFileLastModificationTime (StringCRef filename);
-		static Date GetFileCreationTime (StringCRef filename);
-		static BytesUL GetFileSize (StringCRef filename);
+		ND_ static Date GetFileLastModificationTime (StringCRef filename);
+		ND_ static Date GetFileCreationTime (StringCRef filename);
+		ND_ static BytesUL GetFileSize (StringCRef filename);
 	};
 	
 	using OSFileSystem = WindowsFileSystem;

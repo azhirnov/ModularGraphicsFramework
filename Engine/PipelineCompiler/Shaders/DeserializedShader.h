@@ -34,7 +34,7 @@ namespace PipelineCompiler
 			EPixelFormatClass::type			format				= EPixelFormatClass::Unknown;
 			bool							isShadow			= false;
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -47,7 +47,7 @@ namespace PipelineCompiler
 			EShaderMemoryModel::type		memoryModel			= EShaderMemoryModel::Coherent;
 			EPixelFormat::type				format				= EPixelFormat::Unknown;
 			
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 		
 
@@ -63,7 +63,7 @@ namespace PipelineCompiler
 			uint							specConstID			= UMax;							// specialization const id
 			uint							arraySize			= 1;							// 0 - dynamic array	// TODO: array of array
 			
-			String _ToString () const;
+			ND_ String _ToString () const;
 		};
 
 
@@ -71,7 +71,7 @@ namespace PipelineCompiler
 		{
 			uint							location			= ~0u;
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -82,7 +82,7 @@ namespace PipelineCompiler
 			BytesU							stride				= 0_b;							// size of 1 element in array
 			BytesU							align				= 0_b;							// explicit defined align, 0 - default
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -96,7 +96,7 @@ namespace PipelineCompiler
 			EVariablePacking::type			packing				= EVariablePacking::Unknown;
 			BytesU							size				= 0_b;
 			
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -111,7 +111,7 @@ namespace PipelineCompiler
 			EVariablePacking::type			packing				= EVariablePacking::Unknown;
 			BytesU							size				= 0_b;
 			
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -121,7 +121,7 @@ namespace PipelineCompiler
 			BytesU							offset;
 			BytesU							size;
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -130,7 +130,7 @@ namespace PipelineCompiler
 			Array< IOVariable >				fields;											// for 'Struct' only
 			uint							location			= UMax;
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -147,7 +147,7 @@ namespace PipelineCompiler
 
 			ValueArray_t	values;
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -155,7 +155,7 @@ namespace PipelineCompiler
 		{
 			Array< FunctionArgument >		fields;											// for 'Struct' only
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -166,7 +166,7 @@ namespace PipelineCompiler
 			Array<FunctionArgument>			args;
 			FunctionArgument				result;
 			
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 		// TODO: subroutine, transform-feedback
@@ -174,7 +174,7 @@ namespace PipelineCompiler
 
 		struct VertexShaderInfo final
 		{
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -182,7 +182,7 @@ namespace PipelineCompiler
 		{
 			uint								patchSize			= 0;	// output control points
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -192,7 +192,7 @@ namespace PipelineCompiler
 			ETessellationInputPrimitive::type	primitive			= ETessellationInputPrimitive::Unknown;
 			bool								ccw					= true;
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -203,7 +203,7 @@ namespace PipelineCompiler
 			uint								invocations			= 0;
 			uint								maxOutputVertices	= 0;
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -211,7 +211,7 @@ namespace PipelineCompiler
 		{
 			EFragmentShaderParams::type			flags				= EFragmentShaderParams::None;
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -219,7 +219,7 @@ namespace PipelineCompiler
 		{
 			uint3								localSize;		// 0 - auto size
 
-			String ToString () const;
+			ND_ String ToString () const;
 		};
 
 
@@ -253,34 +253,34 @@ namespace PipelineCompiler
 	public:
 		DeserializedShader () {}
 		
-		String ToString () const;
+		ND_ String ToString () const;
 
 		bool CalculateOffsets ();
 		bool CalculateLocations ();
 		bool ReplaceTypesInStructs ();
 
-		EShader::type					Type ()					const	{ return _shaderType; }
+		ND_ EShader::type					Type ()					const	{ return _shaderType; }
 
-		ArrayCRef<TextureUniform>		Textures ()				const	{ return _textures; }
-		ArrayCRef<ImageUniform>			Images ()				const	{ return _images; }
-		ArrayCRef<Uniform>				Uniforms ()				const	{ return _uniforms; }
+		ND_ ArrayCRef<TextureUniform>		Textures ()				const	{ return _textures; }
+		ND_ ArrayCRef<ImageUniform>			Images ()				const	{ return _images; }
+		ND_ ArrayCRef<Uniform>				Uniforms ()				const	{ return _uniforms; }
 
-		ArrayCRef<UniformBuffer>		UniformBuffers ()		const	{ return _uniformBuffers; }
-		ArrayCRef<StorageBuffer>		StorageBuffers ()		const	{ return _storageBuffers; }
-		ArrayCRef<PushConstant>			PushConstants ()		const	{ return _pushConstants; }
+		ND_ ArrayCRef<UniformBuffer>		UniformBuffers ()		const	{ return _uniformBuffers; }
+		ND_ ArrayCRef<StorageBuffer>		StorageBuffers ()		const	{ return _storageBuffers; }
+		ND_ ArrayCRef<PushConstant>			PushConstants ()		const	{ return _pushConstants; }
 
-		ArrayCRef<IOVariable>			Variables ()			const	{ return _variables; }
-		ArrayCRef<Constant>				Constants ()			const	{ return _constants; }
-		ArrayCRef<Function>				Functions ()			const	{ return _functions; }
+		ND_ ArrayCRef<IOVariable>			Variables ()			const	{ return _variables; }
+		ND_ ArrayCRef<Constant>				Constants ()			const	{ return _constants; }
+		ND_ ArrayCRef<Function>				Functions ()			const	{ return _functions; }
 
-		ArrayCRef<String>				Extensions ()			const	{ return _extensions; }
+		ND_ ArrayCRef<String>				Extensions ()			const	{ return _extensions; }
 
-		VertexShaderInfo const&			VertexShader ()			const	{ return _vertex; }
-		TessControlShaderInfo const&	TessControlShader ()	const	{ return _tessControl; }
-		TessEvaluationShaderInfo const&	TessEvaluationShader ()	const	{ return _tessEvaluation; }
-		GeometryShaderInfo const&		GeometryShader ()		const	{ return _geometry; }
-		FragmentShaderInfo const&		FragmentShader ()		const	{ return _fragment; }
-		ComputeShaderInfo const&		ComputeShader ()		const	{ return _compute; }
+		ND_ VertexShaderInfo const&			VertexShader ()			const	{ return _vertex; }
+		ND_ TessControlShaderInfo const&	TessControlShader ()	const	{ return _tessControl; }
+		ND_ TessEvaluationShaderInfo const&	TessEvaluationShader ()	const	{ return _tessEvaluation; }
+		ND_ GeometryShaderInfo const&		GeometryShader ()		const	{ return _geometry; }
+		ND_ FragmentShaderInfo const&		FragmentShader ()		const	{ return _fragment; }
+		ND_ ComputeShaderInfo const&		ComputeShader ()		const	{ return _compute; }
 	};
 
 	

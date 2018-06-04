@@ -29,7 +29,9 @@ namespace PlatformSDL
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											OSMsg::GetDisplays,
-											OSMsg::GetOSModules
+											OSMsg::GetOSModules,
+											OSMsg::GetProccessorInfo,
+											OSMsg::GetMemoryInfo
 										> >;
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Delete,
@@ -73,10 +75,13 @@ namespace PlatformSDL
 	private:
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _GetDisplays (const Message< OSMsg::GetDisplays > &);
-		bool _GetOSModules (const Message< OSMsg::GetOSModules > &);
 		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
 		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+
+		bool _GetDisplays (const Message< OSMsg::GetDisplays > &);
+		bool _GetOSModules (const Message< OSMsg::GetOSModules > &);
+		bool _GetProccessorInfo (const Message< OSMsg::GetProccessorInfo > &);
+		bool _GetMemoryInfo (const Message< OSMsg::GetMemoryInfo > &);
 
 	private:
 		bool _IsCreated () const;
@@ -120,6 +125,8 @@ namespace PlatformSDL
 		_SubscribeOnMsg( this, &SDLPlatform::_RemoveFromManager );
 		_SubscribeOnMsg( this, &SDLPlatform::_GetDisplays );
 		_SubscribeOnMsg( this, &SDLPlatform::_GetOSModules );
+		_SubscribeOnMsg( this, &SDLPlatform::_GetProccessorInfo );
+		_SubscribeOnMsg( this, &SDLPlatform::_GetMemoryInfo );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 	}
@@ -309,6 +316,34 @@ namespace PlatformSDL
 	bool SDLPlatform::_GetOSModules (const Message< OSMsg::GetOSModules > &msg)
 	{
 		msg->result.Set( SDLObjectsConstructor::GetModuleIDs() );
+		return true;
+	}
+	
+/*
+=================================================
+	_GetProccessorInfo
+=================================================
+*/
+	bool SDLPlatform::_GetProccessorInfo (const Message< OSMsg::GetProccessorInfo > &msg)
+	{
+		OSMsg::GetProccessorInfo::Info	info;
+		info.coresCount	= ::SDL_GetCPUCount();
+
+		msg->result.Set( info );
+		return true;
+	}
+	
+/*
+=================================================
+	_GetMemoryInfo
+=================================================
+*/
+	bool SDLPlatform::_GetMemoryInfo (const Message< OSMsg::GetMemoryInfo > &msg)
+	{
+		OSMsg::GetMemoryInfo::Info	info;
+		info.total	= BytesUL::FromMb( ::SDL_GetSystemRAM() );
+
+		msg->result.Set( info );
 		return true;
 	}
 

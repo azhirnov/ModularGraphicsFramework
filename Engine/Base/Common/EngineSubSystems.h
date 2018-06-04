@@ -13,7 +13,6 @@ namespace Engine
 namespace Base
 {
 
-
 	//
 	// Const Reference
 	//
@@ -45,26 +44,22 @@ namespace Base
 				 ConstReference (const Self &other) : _value(other._value) {}
 		explicit ConstReference (NullPtr_t)			: _value(null) {}
 
-		T *			operator -> ()	const			{ return _value; }
+		ND_ T *		operator -> ()	const			{ return _value; }
 	};
 
 }	// Base
 
 
 	//
-	// SubSystems Helper
+	// Global SubSystems
 	//
-	
-	template <typename AllowedSetter>
-	struct SubSystemsHelper
+
+	struct GlobalSubSystems
 	{
 	// types
 		template <typename T>
 		struct SubSysProperty
 		{
-			friend T;
-			friend AllowedSetter;
-
 		// variables
 		private:
 			Ptr< T >	_ptr;
@@ -73,32 +68,21 @@ namespace Base
 		public:
 			SubSysProperty () {}
 
-			T *  operator -> ()				{ return _ptr; }
-			T *  ptr ()						{ return _ptr; }
+			ND_ T *  operator -> ()				{ return _ptr; }
+			ND_ T *  ptr ()						{ return _ptr; }
 
-			explicit operator bool () const	{ return bool(_ptr); }
+			ND_ explicit operator bool () const	{ return bool(_ptr); }
 
-		private:
-			void Set (T *newPtr)	{ ASSERT( (_ptr == null) == (newPtr != null) );  _ptr = newPtr; }
+			void _Set (T *newPtr)				{ ASSERT( (_ptr == null) == (newPtr != null) );  _ptr = newPtr; }
 		};
 
 
 	// variables
-		SubSysProperty< Base::ParallelThread >	parallelThread;
-		SubSysProperty< Base::TaskModule >		taskModule;
-		SubSysProperty< Base::MainSystem >		mainSystem;
+		SubSysProperty< Base::Module >			parallelThread;
+		SubSysProperty< Base::Module >			taskModule;
+		SubSysProperty< Base::Module >			mainSystem;
 		SubSysProperty< Base::ModulesFactory >	modulesFactory;
-		SubSysProperty< Base::FileManager >		fileManager;
 	};
-
-
-
-	//
-	// Global SubSystems
-	//
-
-	struct GlobalSubSystems : SubSystemsHelper< Base::ThreadManager >
-	{};
 
 	using GlobalSystemsRef	= Base::ConstReference< GlobalSubSystems >;
 

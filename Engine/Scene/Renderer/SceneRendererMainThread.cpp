@@ -126,7 +126,7 @@ namespace Scene
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 
@@ -151,7 +151,7 @@ namespace Scene
 										CreateInfo::CommandBufferManager{ gthread, 2 },
 										OUT builder ) );
 
-			CHECK_ERR( _Attach( "builder", builder, true ) );
+			CHECK_ERR( _Attach( "builder", builder ) );
 			builder->Send( msg );
 		}
 
@@ -209,7 +209,7 @@ namespace Scene
 	{
 		const bool	is_builder	= msg->newModule->GetSupportedEvents().HasAllTypes< CmdBufferMngrMsg_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_builder ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 
 		if ( is_builder )
 		{

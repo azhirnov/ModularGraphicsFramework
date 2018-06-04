@@ -6,6 +6,13 @@
 #include "Engine/Platforms/Public/GPU/VR.h"
 #include "Engine/Platforms/Public/OS/Window.h"
 #include "Engine/Platforms/Public/OS/Platform.h"
+#include "Engine/Platforms/Public/GPU/Buffer.h"
+#include "Engine/Platforms/Public/GPU/CommandBuffer.h"
+#include "Engine/Platforms/Public/GPU/Framebuffer.h"
+#include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/Sampler.h"
+#include "Engine/Platforms/Public/GPU/Pipeline.h"
 
 #ifdef PLATFORM_WINDOWS
 #	include "Engine/Platforms/Windows/WinObjectsConstructor.h"
@@ -40,7 +47,7 @@
 #endif
 
 #include "Engine/Platforms/Input/InputManager.h"
-
+#include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 
 namespace Engine
 {
@@ -52,6 +59,16 @@ namespace Platforms
 	static ModulePtr CreateDefaultGpuContext (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuContext &);
 	static ModulePtr CreateDefaultGpuThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuThread &);
 	static ModulePtr CreateDefaultVRThread (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::VRThread &);
+	
+	static ModulePtr CreateDefaultBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuBuffer &);
+	static ModulePtr CreateDefaultCommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
+	static ModulePtr CreateDefaultCommandBuilder (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
+	static ModulePtr CreateDefaultFramebuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
+	static ModulePtr CreateDefaultImage (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuImage &);
+	static ModulePtr CreateDefaultRenderPass (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
+	static ModulePtr CreateDefaultSampler (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
+	static ModulePtr CreateDefaultGraphicsPipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
+	static ModulePtr CreateDefaultComputePipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ComputePipeline &);
 
 /*
 =================================================
@@ -101,6 +118,16 @@ namespace Platforms
 		factory->Register( 0, &CreateDefaultGpuContext );
 		factory->Register( 0, &CreateDefaultGpuThread );
 		factory->Register( 0, &CreateDefaultVRThread );
+		
+		factory->Register( 0, &CreateDefaultBuffer );
+		factory->Register( 0, &CreateDefaultCommandBuffer );
+		factory->Register( 0, &CreateDefaultCommandBuilder );
+		factory->Register( 0, &CreateDefaultFramebuffer );
+		factory->Register( 0, &CreateDefaultImage );
+		factory->Register( 0, &CreateDefaultRenderPass );
+		factory->Register( 0, &CreateDefaultSampler );
+		factory->Register( 0, &CreateDefaultGraphicsPipeline );
+		factory->Register( 0, &CreateDefaultComputePipeline );
 	}
 	
 /*
@@ -261,7 +288,174 @@ namespace Platforms
 		}
 		return null;
 	}
+	
+/*
+=================================================
+	CreateDefaultBuffer
+=================================================
+*/
+	template <typename Callback>
+	static ModulePtr CreateGraphicsObject (GlobalSystemsRef gs, ModulePtr gpuThread, Callback &&cb)
+	{
+		if ( not gpuThread )
+			gpuThread = PlatformTools::GPUThreadHelper::FindComputeThread( gs );
+		
+		if ( not gpuThread )
+			gpuThread = PlatformTools::GPUThreadHelper::FindGraphicsThread( gs );
 
+		CHECK_ERR( gpuThread );
+
+		Message< GpuMsg::GetGraphicsModules >	req_ids;
+		gpuThread->Send( req_ids );
+
+		CHECK_ERR( req_ids->compute or req_ids->graphics );
+
+		return cb( *req_ids );
+	}
+
+/*
+=================================================
+	CreateDefaultBuffer
+=================================================
+*/
+	static ModulePtr CreateDefaultBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci)
+	{
+		return CreateGraphicsObject( gs, ci.gpuThread,
+					LAMBDA( &gs, &ci ) (auto &ids)
+					{
+						ModulePtr mod;
+						gs->modulesFactory->Create( ids.compute->buffer, gs, ci, OUT mod );
+						return mod;
+					});
+	}
+	
+/*
+=================================================
+	CreateDefaultCommandBuffer
+=================================================
+*/
+	static ModulePtr CreateDefaultCommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci)
+	{
+		return CreateGraphicsObject( gs, ci.gpuThread,
+					LAMBDA( &gs, &ci ) (auto &ids)
+					{
+						ModulePtr mod;
+						gs->modulesFactory->Create( ids.compute->commandBuffer, gs, ci, OUT mod );
+						return mod;
+					});
+	}
+	
+/*
+=================================================
+	CreateDefaultCommandBuilder
+=================================================
+*/
+	static ModulePtr CreateDefaultCommandBuilder (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci)
+	{
+		return CreateGraphicsObject( gs, ci.gpuThread,
+					LAMBDA( &gs, &ci ) (auto &ids)
+					{
+						ModulePtr mod;
+						gs->modulesFactory->Create( ids.compute->commandBuilder, gs, ci, OUT mod );
+						return mod;
+					});
+	}
+	
+/*
+=================================================
+	CreateDefaultFramebuffer
+=================================================
+*/
+	static ModulePtr CreateDefaultFramebuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci)
+	{
+		return CreateGraphicsObject( gs, ci.gpuThread,
+					LAMBDA( &gs, &ci ) (auto &ids)
+					{
+						ModulePtr mod;
+						gs->modulesFactory->Create( ids.graphics->framebuffer, gs, ci, OUT mod );
+						return mod;
+					});
+	}
+	
+/*
+=================================================
+	CreateDefaultImage
+=================================================
+*/
+	static ModulePtr CreateDefaultImage (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci)
+	{
+		return CreateGraphicsObject( gs, ci.gpuThread,
+					LAMBDA( &gs, &ci ) (auto &ids)
+					{
+						ModulePtr mod;
+						gs->modulesFactory->Create( ids.compute->image, gs, ci, OUT mod );
+						return mod;
+					});
+	}
+	
+/*
+=================================================
+	CreateDefaultRenderPass
+=================================================
+*/
+	static ModulePtr CreateDefaultRenderPass (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
+	{
+		return CreateGraphicsObject( gs, ci.gpuThread,
+					LAMBDA( &gs, &ci ) (auto &ids)
+					{
+						ModulePtr mod;
+						gs->modulesFactory->Create( ids.graphics->renderPass, gs, ci, OUT mod );
+						return mod;
+					});
+	}
+	
+/*
+=================================================
+	CreateDefaultSampler
+=================================================
+*/
+	static ModulePtr CreateDefaultSampler (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
+	{
+		return CreateGraphicsObject( gs, ci.gpuThread,
+					LAMBDA( &gs, &ci ) (auto &ids)
+					{
+						ModulePtr mod;
+						gs->modulesFactory->Create( ids.graphics->sampler, gs, ci, OUT mod );
+						return mod;
+					});
+	}
+	
+/*
+=================================================
+	CreateDefaultGraphicsPipeline
+=================================================
+*/
+	static ModulePtr CreateDefaultGraphicsPipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci)
+	{
+		return CreateGraphicsObject( gs, ci.gpuThread,
+					LAMBDA( &gs, &ci ) (auto &ids)
+					{
+						ModulePtr mod;
+						gs->modulesFactory->Create( ids.graphics->pipeline, gs, ci, OUT mod );
+						return mod;
+					});
+	}
+	
+/*
+=================================================
+	CreateDefaultComputePipeline
+=================================================
+*/
+	static ModulePtr CreateDefaultComputePipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci)
+	{
+		return CreateGraphicsObject( gs, ci.gpuThread,
+					LAMBDA( &gs, &ci ) (auto &ids)
+					{
+						ModulePtr mod;
+						gs->modulesFactory->Create( ids.compute->pipeline, gs, ci, OUT mod );
+						return mod;
+					});
+	}
 
 }	// Platforms
 }	// Engine

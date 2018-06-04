@@ -6,35 +6,6 @@ namespace Engine
 {
 namespace Base
 {
-
-/*
-=================================================
-	constructor
-=================================================
-*/
-	ParallelThread::ParallelThread (const GlobalSystemsRef gs,
-									const ModuleConfig &config,
-									const TypeIdList *msgTypes,
-									const TypeIdList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes )
-	{
-		GlobalSystems()->parallelThread.Set( this );
-	}
-	
-/*
-=================================================
-	destructor
-=================================================
-*/
-	ParallelThread::~ParallelThread ()
-	{
-		if ( GetThreadID() == ThreadID::GetCurrent() ) {
-			GlobalSystems()->parallelThread.Set( null );
-		}
-	}
-//-----------------------------------------------------------------------------
-
-
 	
 	const TypeIdList	ParallelThreadImpl::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	ParallelThreadImpl::_eventTypes{ UninitializedT< SupportedEvents_t >() };
@@ -45,10 +16,12 @@ namespace Base
 =================================================
 */
 	ParallelThreadImpl::ParallelThreadImpl (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Thread &info) :
-		ParallelThread( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_onStarted( RVREF( info.onStarted.Get() ) ),
 		_isLooping( false )
 	{
+		GlobalSystems()->parallelThread._Set( this );
+
 		SetDebugName( info.name );
 
 		_SubscribeOnMsg( this, &ParallelThreadImpl::_OnModuleAttached_Impl );
@@ -75,6 +48,10 @@ namespace Base
 		LOG( "ParallelThread finalized", ELog::Debug );
 
 		ASSERT( not _isLooping );
+
+		if ( GetThreadID() == ThreadID::GetCurrent() ) {
+			GlobalSystems()->parallelThread._Set( null );
+		}
 	}
 	
 /*
@@ -153,14 +130,14 @@ namespace Base
 
 		while ( _isLooping )
 		{
-			const TimeD		dt = _timer.GetTimeDelta();		_timer.Start();
+			const TimeL		dt = _timer.GetTimeDelta();		_timer.Start();
 
 			// update attached modules
-			_SendForEachAttachments< ModuleMsg::Update >({ TimeF(dt) });
+			_SendForEachAttachments< ModuleMsg::Update >({ dt });
 
 			// calc time to sleep
-			const TimeD		upd_dt = _timer.GetTimeDelta();
-			double			factor = upd_dt.Seconds() / dt.Seconds();
+			const TimeD		upd_dt = TimeD(_timer.GetTimeDelta());
+			double			factor = upd_dt.Seconds() / TimeD(dt).Seconds();
 
 			if ( factor > 0.5 )
 				OS::Thread::Yield();
@@ -178,10 +155,10 @@ namespace Base
 	{
 		CHECK( GetThreadID() == ThreadID::GetCurrent() );
 
-		const TimeD		dt = _timer.GetTimeDelta();		_timer.Start();
+		const TimeL		dt = _timer.GetTimeDelta();		_timer.Start();
 
 		// last update to proccess messages
-		_SendForEachAttachments< ModuleMsg::Update >({ TimeF(dt) });
+		_SendForEachAttachments< ModuleMsg::Update >({ dt });
 
 		CHECK( Module::_Delete_Impl( Message< ModuleMsg::Delete >{} ) );
 	}
@@ -206,10 +183,10 @@ namespace Base
 		CHECK( GetThreadID() == ThreadID::GetCurrent() );
 		CHECK_ERR( _isLooping, void() );
 
-		const TimeD		dt = _timer.GetTimeDelta();		_timer.Start();
+		const TimeL		dt = _timer.GetTimeDelta();		_timer.Start();
 
 		// update attached modules
-		_SendForEachAttachments< ModuleMsg::Update >({ TimeF(dt) });
+		_SendForEachAttachments< ModuleMsg::Update >({ dt });
 	}
 
 /*

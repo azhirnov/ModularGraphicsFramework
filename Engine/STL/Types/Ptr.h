@@ -57,68 +57,68 @@ namespace GXTypes
 		}
 
 
-		forceinline explicit operator bool () const
+		ND_ forceinline explicit operator bool () const
 		{
 			return IsNotNull();
 		}
 		
 
-		forceinline operator T * () const
+		ND_ forceinline operator T * () const
 		{
 			return ptr();
 		}
 		
 
-		forceinline explicit operator T *& ()
+		ND_ forceinline explicit operator T *& ()
 		{
 			return _ptr;
 		}
 
 
-		forceinline T * operator -> () const
+		ND_ forceinline T * operator -> () const
 		{
 			return ptr();
 		}
 
 
-		forceinline T & operator * () const
+		ND_ forceinline T & operator * () const
 		{
 			return *ptr();
 		}
 
 
-		forceinline T * const * operator & () const
+		ND_ forceinline T * const * operator & () const
 		{
 			return &_ptr;
 		}
 
 
-		forceinline T * ptr () const
+		ND_ forceinline T * ptr () const
 		{
 			ASSUME( _ptr != null );
 			return RawPtr();
 		}
 
 
-		forceinline T * RawPtr () const
+		ND_ forceinline T * RawPtr () const
 		{
 			return _ptr;
 		}
 
 
-		forceinline bool IsNull () const
+		ND_ forceinline bool IsNull () const
 		{
 			return ( _ptr == null );
 		}
 
-		forceinline bool IsNotNull () const
+		ND_ forceinline bool IsNotNull () const
 		{
 			return ( _ptr != null );
 		}
 
 
 		template <typename T2>
-		forceinline T2  To () const
+		ND_ forceinline T2  To () const
 		{
 			STATIC_ASSERT( typename T2::_is_simple_ptr(true) );
 			_CheckCast< TypeTraits::RemovePointer<typename T2::Value_t>, T >( _ptr );
@@ -126,14 +126,14 @@ namespace GXTypes
 		}
 
 		template <typename R>
-		forceinline R *  ToPtr () const
+		ND_ forceinline R *  ToPtr () const
 		{
 			_CheckCast< R, Value_t >( _ptr );
 			return ptr();
 		}
 
 
-		bool operator == (NullPtr_t) const
+		ND_ forceinline bool operator == (NullPtr_t) const
 		{
 			return IsNull();
 		}

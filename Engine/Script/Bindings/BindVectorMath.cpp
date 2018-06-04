@@ -13,7 +13,7 @@ namespace GX_STL
 {
 namespace GXScript
 {
-	using namespace GXMath;
+	using namespace GX_STL::GXMath;
 
 
 	template <typename T>

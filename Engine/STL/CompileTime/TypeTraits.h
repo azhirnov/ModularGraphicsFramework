@@ -534,9 +534,20 @@ namespace TypeTraits
 
 
 	
-	//--------- IsMovable --------//
+	//--------- IsMovable* / IsCopy* --------//
+
+	//template <typename T>
+	//constexpr bool IsMovable			= IsRValueReference<T> or (not IsLValueReference<T> and not IsConst<T> and not IsPointer<T>);
+
+	//template <typename T>
+	//constexpr bool IsCopyable			= IsConst<T>;
+
 	template <typename T>
-	constexpr bool IsMovable	= IsRValueReference<T> or (not IsLValueReference<T> and not IsConstOrVolatile<T> and not IsPointer<T>);
+	constexpr bool IsMoveConstructible	= std::is_move_constructible<T>::value;
+
+	template <typename T>
+	constexpr bool IsCopyConstructible	= std::is_copy_constructible<T>::value;
+
 
 
 /*

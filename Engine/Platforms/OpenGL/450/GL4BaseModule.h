@@ -15,6 +15,7 @@ namespace Engine
 namespace PlatformGL
 {
 	class GL4SamplerCache;
+	class GL4ResourceCache;
 
 }	// PlatformGL
 
@@ -28,6 +29,10 @@ namespace GpuMsg
 		struct Classes {
 			PlatformGL::GL4Device *			device			= null;
 			PlatformGL::GL4SamplerCache *	samplerCache	= null;
+			PlatformGL::GL4ResourceCache *	resourceCache	= null;
+
+			Classes (PlatformGL::GL4Device *dev, PlatformGL::GL4SamplerCache *sampCache, PlatformGL::GL4ResourceCache *resCache) :
+				device{dev}, samplerCache{sampCache}, resourceCache{resCache} {}
 		};
 
 		Out< Classes >		result;
@@ -67,7 +72,8 @@ namespace PlatformGL
 
 	// variables
 	private:
-		Ptr< GL4Device >		_glDevice;
+		Ptr< GL4Device >			_glDevice;
+		Ptr< GL4ResourceCache >		_glResourceCache;
 
 
 	// methods
@@ -77,9 +83,10 @@ namespace PlatformGL
 					   const TypeIdList *msgTypes,
 					   const TypeIdList *eventTypes);
 		
-		ModulePtr _GetGPUThread (const ModulePtr &);
+		ND_ ModulePtr _GetGPUThread (const ModulePtr &);
 
-		Ptr< GL4Device >	GetDevice ()	const	{ return _glDevice; }
+		ND_ Ptr< GL4Device >		GetDevice ()		const	{ return _glDevice; }
+		ND_ Ptr< GL4ResourceCache >	GetResourceCache ()	const	{ return _glResourceCache; }
 
 
 	// message handlers

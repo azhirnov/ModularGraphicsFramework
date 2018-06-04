@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "Engine/Base/Modules/CreateInfo.h"
-#include "Engine/Base/Modules/ModuleMessages.h"
+#include "Engine/Base/Public/CreateInfo.h"
+#include "Engine/Base/Public/ModuleMessages.h"
+#include "Engine/Base/Public/ProfilingMessages.h"
 #include "Engine/Base/Modules/Message.h"
 #include "Engine/Base/Modules/MessageHandler.h"
-#include "Engine/Base/Modules/ProfilingMessages.h"
 
 namespace Engine
 {
@@ -83,8 +83,14 @@ namespace Base
 
 		struct ModuleConfig
 		{
-			UntypedID_t		id;
-			uint			maxParents;
+		// variables
+			UntypedID_t		id				= 0;
+			uint			maxParents		= 1;
+			bool			multiAttachment	= false;
+
+		// methods
+			ModuleConfig (UntypedID_t id, uint maxParents, bool multiAttachment = false) :
+				id{id}, maxParents{maxParents}, multiAttachment{multiAttachment} {}
 		};
 		
 
@@ -101,8 +107,7 @@ namespace Base
 		AttachedModules_t		_attachments;
 		EState					_state;
 		const ThreadID			_ownThread;		// TODO: use Atomic<> ?
-		const UntypedID_t		_compId;
-		const uint				_maxParents;
+		const ModuleConfig		_moduleCfg;
 		const TypeIdList&		_supportedMessages;
 		const TypeIdList&		_supportedEvents;
 
@@ -111,6 +116,11 @@ namespace Base
 	public:
 		template <typename T>
 		bool Send (const Message<T> &msg) noexcept;
+		
+		template <typename T,
+				  typename = CompileTime::EnableIf< not IsModuleMessage<T> >
+				 >
+		bool Send2 (T &&msgData) noexcept		{ return Send( Message<T>{ RVREF(msgData) } ); }	// experimental
 
 		template <typename ...Types>
 		bool Subscribe (Types&& ...args);
@@ -123,8 +133,8 @@ namespace Base
 			bool _SubscribeDbg (Types&& ...args);
 		)
 
-		//template <typename ...Types>
-		//bool Unsubscribe (Types&& ...args);
+		template <typename ...Types>
+		void Unsubscribe (Types&& ...args);
 		
 		template <typename T>
 		void UnsubscribeAll (const T &unit);
@@ -135,22 +145,22 @@ namespace Base
 		template <typename CreateInfo>
 		bool AddModule (StringCRef name, UntypedID_t id, const CreateInfo &createInfo);
 
-		ModulePtr GetModuleByID (UntypedID_t id);	// TODO: remove
-		ModulePtr GetModuleByName (StringCRef name);
+		ND_ ModulePtr  GetModuleByID (UntypedID_t id);	// TODO: remove
+		ND_ ModulePtr  GetModuleByName (StringCRef name);
 		
-		template <typename Typelist>				CHECKRES ModulePtr  GetModuleByMsg ();
-		template <typename Typelist>				CHECKRES ModulePtr  GetModuleByEvent ();
-		template <typename Msg, typename Events>	CHECKRES ModulePtr  GetModuleByMsgEvent ();
+		template <typename Typelist>				ND_ ModulePtr  GetModuleByMsg ();
+		template <typename Typelist>				ND_ ModulePtr  GetModuleByEvent ();
+		template <typename Msg, typename Events>	ND_ ModulePtr  GetModuleByMsgEvent ();
 		
-		template <typename Typelist>				CHECKRES ModulePtr  GetParentByMsg ();
-		template <typename Typelist>				CHECKRES ModulePtr  GetParentByEvent ();
-		template <typename Msg, typename Events>	CHECKRES ModulePtr  GetParentByMsgEvent ();
+		template <typename Typelist>				ND_ ModulePtr  GetParentByMsg ();
+		template <typename Typelist>				ND_ ModulePtr  GetParentByEvent ();
+		template <typename Msg, typename Events>	ND_ ModulePtr  GetParentByMsgEvent ();
 
-		TypeIdList const&	GetSupportedMessages ()		const	{ return _supportedMessages; }
-		TypeIdList const&	GetSupportedEvents ()		const	{ return _supportedEvents; }
-		UntypedID_t			GetModuleID ()				const	{ return _compId; }
-		EState				GetState ()					const	{ return _state; }
-		ThreadID			GetThreadID ()				const	{ return _ownThread; }
+		ND_ TypeIdList const&	GetSupportedMessages ()		const	{ return _supportedMessages; }
+		ND_ TypeIdList const&	GetSupportedEvents ()		const	{ return _supportedEvents; }
+		ND_ UntypedID_t			GetModuleID ()				const	{ return _moduleCfg.id; }
+		ND_ EState				GetState ()					const	{ return _state; }
+		ND_ ThreadID			GetThreadID ()				const	{ return _ownThread; }
 
 		
 	// hidden methods
@@ -162,7 +172,7 @@ namespace Base
 
 		~Module ();
 
-		bool _Attach (const ModuleName_t &name, const ModulePtr &unit, bool mustBeUniqueID);
+		bool _Attach (const ModuleName_t &name, const ModulePtr &unit, bool mustBeUniqueID = false);
 		bool _Detach (const ModulePtr &unit);
 
 		// helpers
@@ -202,17 +212,22 @@ namespace Base
 		bool _FindAllAttachments (ArrayCRef<TypeId> messages, ArrayCRef<TypeId> events, OUT Array<ModulePtr> &result) const;
 		bool _FindAllParents (ArrayCRef<TypeId> messages, ArrayCRef<TypeId> events, OUT Array<ModulePtr> &result) const;
 
-		static bool _IsMutableState (EState state);			// is module editable?
-		static bool _IsComposedState (EState state);		// is module completed?
-		static bool _IsErrorState (EState state);			// is module initialization failed?
-		static bool _IsComposedOrLinkedState (EState state);
+		ND_ static bool _IsMutableState (EState state);				// is module editable?
+		ND_ static bool _IsComposedState (EState state);			// is module completed?
+		ND_ static bool _IsErrorState (EState state);				// is module initialization failed?
+		ND_ static bool _IsComposedOrLinkedState (EState state);
+		ND_ static bool _IsInitialState (EState state);				// is module in initial or failed state?
 
-		ParentModules_t const&		_GetParents ()		const	{ return _parents; }
-		ModulePtr const&			_GetManager ()		const	{ return _manager; }
-		AttachedModules_t const&	_GetAttachments ()	const	{ return _attachments; }
+		ND_ ParentModules_t const&		_GetParents ()		const	{ return _parents; }
+		ND_ ModulePtr const&			_GetManager ()		const	{ return _manager; }
+		ND_ AttachedModules_t const&	_GetAttachments ()	const	{ return _attachments; }
+
 
 	private:
 		void _Release (RefCounter_t &) override final;
+		
+		bool _DetachSingle (const ModulePtr &unit);
+		bool _DetachMulti (const ModulePtr &unit);
 
 
 	// message handlers with implementation
@@ -228,6 +243,7 @@ namespace Base
 		bool _Link_Impl (const Message< ModuleMsg::Link > &);
 		bool _Compose_Impl (const Message< ModuleMsg::Compose > &);
 		bool _Delete_Impl (const Message< ModuleMsg::Delete > &);
+
 
 	// message handlers without implementation
 	protected:

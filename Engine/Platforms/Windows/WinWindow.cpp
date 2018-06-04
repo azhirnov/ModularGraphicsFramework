@@ -252,17 +252,17 @@ namespace PlatformWin
 		{
 			CHECK_ERR( GetState() != EState::Deleting );
 
-			_createInfo.caption				= msg->desc.caption;
-			_createInfo.flags				= msg->desc.flags;
-			_createInfo.initialVisibility	= msg->desc.visibility;
-			_createInfo.orientation			= msg->desc.orientation;
-			_createInfo.position			= msg->desc.position;
-			_createInfo.surfaceSize			= msg->desc.surfaceSize;
+			_createInfo.caption				= msg->descr.caption;
+			_createInfo.flags				= msg->descr.flags;
+			_createInfo.initialVisibility	= msg->descr.visibility;
+			_createInfo.orientation			= msg->descr.orientation;
+			_createInfo.position			= msg->descr.position;
+			_createInfo.surfaceSize			= msg->descr.surfaceSize;
 			// ignored msg->desc.size
 			return true;
 		}
 		
-		Ptr<const Display>	disp = _GetDisplayByCoord( msg->desc.position );
+		Ptr<const Display>	disp = _GetDisplayByCoord( msg->descr.position );
 
 		if ( not disp )
 			disp = &_display.GetDisplays().Front();
@@ -271,17 +271,17 @@ namespace PlatformWin
 
 		DWORD		wnd_style		= 0;
 		DWORD		wnd_ext_style	= WS_EX_APPWINDOW;
-		RECT		win_rect		= { 0, 0, int(msg->desc.surfaceSize.x), int(msg->desc.surfaceSize.y) };
+		RECT		win_rect		= { 0, 0, int(msg->descr.surfaceSize.x), int(msg->descr.surfaceSize.y) };
 		uint2 const	scr_res			= disp->Resolution();
 
 		// set window caption
-		if ( msg->desc.caption != _windowDesc.caption )
+		if ( msg->descr.caption != _windowDesc.caption )
 		{
-			_windowDesc.caption = msg->desc.caption;
-			::SetWindowTextA( wnd, msg->desc.caption.cstr() );
+			_windowDesc.caption = msg->descr.caption;
+			::SetWindowTextA( wnd, msg->descr.caption.cstr() );
 		}
 		
-		if ( msg->desc.flags[ EWindowFlags::Fullscreen ] )
+		if ( msg->descr.flags[ EWindowFlags::Fullscreen ] )
 		{
 			// setup for fullscreen
 			wnd_style				|= WS_POPUP;
@@ -294,7 +294,7 @@ namespace PlatformWin
 		else
 		{
 			// setup windowed
-			if ( msg->desc.flags[ EWindowFlags::Resizable ] )
+			if ( msg->descr.flags[ EWindowFlags::Resizable ] )
 				wnd_style = WS_OVERLAPPEDWINDOW;
 			else
 				wnd_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
@@ -302,10 +302,10 @@ namespace PlatformWin
 			::AdjustWindowRectEx( &win_rect, wnd_style, 0, wnd_ext_style );
 
 			_windowDesc.size		= uint2( win_rect.right - win_rect.left, win_rect.bottom - win_rect.top );
-			_windowDesc.surfaceSize	= msg->desc.surfaceSize;
-			_windowDesc.position	= msg->desc.position;
+			_windowDesc.surfaceSize	= msg->descr.surfaceSize;
+			_windowDesc.position	= msg->descr.position;
 
-			if ( msg->desc.flags[ EWindowFlags::Centered ] )
+			if ( msg->descr.flags[ EWindowFlags::Centered ] )
 			{
 				_windowDesc.position = disp->WorkArea().Center() - int2(_windowDesc.size) / 2;		
 			}
@@ -318,7 +318,7 @@ namespace PlatformWin
 					    win_rect.right - win_rect.left, win_rect.bottom - win_rect.top,
 					    SWP_FRAMECHANGED );
 
-		_ShowWindow( msg->desc.visibility );
+		_ShowWindow( msg->descr.visibility );
 		_UpdateDescriptor();
 
 		_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
@@ -721,10 +721,8 @@ namespace PlatformWin
 */
 	Ptr<const Display> WinWindow::_GetDisplayByCoord (const int2 &point) const
 	{
-		FOR( i, _display.GetDisplays() )
+		for (auto& disp : _display.GetDisplays())
 		{
-			const auto&	disp = _display.GetDisplays()[i];
-
 			if ( disp.FullArea().IsInnerPoint( point ) )
 			{
 				return &disp;

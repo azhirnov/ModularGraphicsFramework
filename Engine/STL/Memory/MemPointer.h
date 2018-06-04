@@ -62,27 +62,27 @@ namespace GXTypes
 =================================================
 */
 		template <typename R, typename T>
-		forceinline typename _types_hidden_::_PtrMove< T, R >::Result_t  MovePointer (T ptr, BytesI offset)
+		ND_ forceinline typename _types_hidden_::_PtrMove< T, R >::Result_t  MovePointer (T ptr, BytesI offset)
 		{
 			STATIC_ASSERT( TypeTraits::IsPointer<T>, "argument must be pointer" );
 			return _types_hidden_::_PtrMove< T, R >::Move( ptr, (isize)offset );
 		}
 
 		template <typename R, typename T>
-		forceinline typename _types_hidden_::_PtrMove< T, R >::Result_t  MovePointer (T ptr, BytesU offset)
+		ND_ forceinline typename _types_hidden_::_PtrMove< T, R >::Result_t  MovePointer (T ptr, BytesU offset)
 		{
 			STATIC_ASSERT( TypeTraits::IsPointer<T>, "argument must be pointer" );
 			return _types_hidden_::_PtrMove< T, R >::Move( ptr, (usize)offset );
 		}
 
 		template <typename T>
-		forceinline T  MovePointer (T ptr, BytesI offset)
+		ND_ forceinline T  MovePointer (T ptr, BytesI offset)
 		{
 			return MovePointer< TypeTraits::RemovePointer< T >, T >( ptr, offset );
 		}
 
 		template <typename T>
-		forceinline T  MovePointer (T ptr, BytesU offset)
+		ND_ forceinline T  MovePointer (T ptr, BytesU offset)
 		{
 			return MovePointer< TypeTraits::RemovePointer< T >, T >( ptr, offset );
 		}

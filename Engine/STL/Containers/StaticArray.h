@@ -63,27 +63,27 @@ namespace GXTypes
 
 		~StaticArray ();
 
-		T		*	ptr ()										{ return _memory; }
-		const T	*	ptr () const								{ return _memory; }
+		ND_ T		*	ptr ()										{ return _memory; }
+		ND_ const T*	ptr () const								{ return _memory; }
 		
-		T		&	Back ()										{ return _memory[Count()-1]; }
-		const T	&	Back () const								{ return _memory[Count()-1]; }
-		T		&	Front ()									{ return _memory[0]; }
-		const T	&	Front () const								{ return _memory[0]; }
+		ND_ T		&	Back ()										{ return _memory[Count()-1]; }
+		ND_ const T&	Back () const								{ return _memory[Count()-1]; }
+		ND_ T		&	Front ()									{ return _memory[0]; }
+		ND_ const T&	Front () const								{ return _memory[0]; }
 
-		bool		operator !  () const						{ return not Empty(); }
+		ND_ bool		operator !  () const						{ return not Empty(); }
 		
-		bool		operator == (ArrayCRef<T> right) const		{ return ArrayCRef<T>(*this) == right; }
-		bool		operator != (ArrayCRef<T> right) const		{ return not ( *this == right ); }
+		ND_ bool		operator == (ArrayCRef<T> right) const		{ return ArrayCRef<T>(*this) == right; }
+		ND_ bool		operator != (ArrayCRef<T> right) const		{ return not ( *this == right ); }
 		
-		Self &		operator =  (Self &&right)					{ _Move( RVREF(right) );  return *this; }
-		Self &		operator =  (const Self &right)				{ Copy( right );  return *this; }
+			Self &		operator =  (Self &&right)					{ _Move( RVREF(right) );  return *this; }
+			Self &		operator =  (const Self &right)				{ Copy( right );  return *this; }
 
-		operator	ArrayRef<T> ()								{ return ArrayRef<T>( _memory, Count() ); }
-		operator	ArrayCRef<T> () const						{ return ArrayCRef<T>( _memory, Count() ); }
+		ND_ operator	ArrayRef<T> ()								{ return ArrayRef<T>( _memory, Count() ); }
+		ND_ operator	ArrayCRef<T> () const						{ return ArrayCRef<T>( _memory, Count() ); }
 
-		T		&	operator [] (usize i);
-		const T	&	operator [] (usize i) const;
+		ND_ T		&	operator [] (usize i);
+		ND_ const T&	operator [] (usize i) const;
 
 		
 		bool At (usize index, OUT T & value) const;
@@ -98,35 +98,29 @@ namespace GXTypes
 
 		void Swap (usize first, usize second);
 		
-		usize GetIndex (const T &value) const		{ return ArrayCRef<T>(*this).GetIndex( value ); }
+		ND_ usize GetIndex (const T &value) const		{ return ArrayCRef<T>(*this).GetIndex( value ); }
 
-		static constexpr bool		Empty ()		{ return false; }
-		static constexpr usize		Count ()		{ return C; }
-		static constexpr usize		Capacity ()		{ return C; }
-		static constexpr usize		MaxCapacity ()	{ return Capacity(); }	// max available for allocation count of elements
-		static constexpr BytesU		Size ()			{ return BytesU( Count() * sizeof(T) ); }
-		static constexpr BytesU		FullSize ()		{ return BytesU( Capacity() * sizeof(T) ); }
-		static constexpr usize		LastIndex ()	{ return Count()-1; }
+		ND_ static constexpr bool		Empty ()		{ return false; }
+		ND_ static constexpr usize		Count ()		{ return C; }
+		ND_ static constexpr usize		Capacity ()		{ return C; }
+		ND_ static constexpr usize		MaxCapacity ()	{ return Capacity(); }	// max available for allocation count of elements
+		ND_ static constexpr BytesU		Size ()			{ return BytesU( Count() * sizeof(T) ); }
+		ND_ static constexpr BytesU		FullSize ()		{ return BytesU( Capacity() * sizeof(T) ); }
+		ND_ static constexpr usize		LastIndex ()	{ return Count()-1; }
 	
-		ArrayRef<T>			SubArray (usize pos, usize count = UMax)			{ return ArrayRef<T>(*this).SubArray( pos, count ); }
-		ArrayCRef<T>		SubArray (usize pos, usize count = UMax)	const	{ return ArrayCRef<T>(*this).SubArray( pos, count ); }
+		ND_ ArrayRef<T>		SubArray (usize pos, usize count = UMax)			{ return ArrayRef<T>(*this).SubArray( pos, count ); }
+		ND_ ArrayCRef<T>	SubArray (usize pos, usize count = UMax)	const	{ return ArrayCRef<T>(*this).SubArray( pos, count ); }
 
 
-		iterator		Begin ()				{ return _memory; }
-		const_iterator	Begin () const			{ return _memory; }
+		ND_ iterator		begin ()					{ return _memory; }
+		ND_ const_iterator	begin () const				{ return _memory; }
 
-		iterator		End ()					{ return _memory + Count(); }
-		const_iterator	End () const			{ return _memory + Count(); }
-
-		iterator		GetIter (usize index);
-		const_iterator	GetIter (usize index) const;
-
-		bool IsBegin (const_iterator iter)	const;
-		bool IsEnd (const_iterator iter)	const;
+		ND_ iterator		end ()						{ return _memory + Count(); }
+		ND_ const_iterator	end () const				{ return _memory + Count(); }
 		
 
-		static constexpr bool	IsLinearMemory ()	{ return true; }
-		static constexpr bool	IsStaticMemory ()	{ return true; }
+		static constexpr bool	IsLinearMemory ()		{ return true; }
+		static constexpr bool	IsStaticMemory ()		{ return true; }
 
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
@@ -220,7 +214,7 @@ namespace GXTypes
 			return;
 		}
 
-		if ( CheckPointersAliasing( Begin(), End(), other.Begin(), other.End() ) )
+		if ( CheckPointersAliasing( begin(), end(), other.begin(), other.end() ) )
 			RET_VOID;
 
 		if ( other.Count() > Count() )
@@ -351,47 +345,6 @@ namespace GXTypes
 		Strategy_t::Replace( _memory + second,	_memory + first,	1 );
 		Strategy_t::Replace( _memory + first,	&temp,				1 );
 	}
-	
-/*
-=================================================
-	GetIter
-=================================================
-*/
-	template <typename T, usize C, typename S>
-	inline T * StaticArray<T,C,S>::GetIter (const usize index)
-	{
-		ASSERT( index < Count() );
-		return _memory + index;
-	}
-	
-	template <typename T, usize C, typename S>
-	inline const T * StaticArray<T,C,S>::GetIter (const usize index) const
-	{
-		ASSERT( index < Count() );
-		return _memory + index;
-	}
-	
-/*
-=================================================
-	IsBegin
-=================================================
-*/
-	template <typename T, usize C, typename S>
-	inline bool StaticArray<T,C,S>::IsBegin (const_iterator iter) const
-	{
-		return iter == Begin();
-	}
-	
-/*
-=================================================
-	IsEnd
-=================================================
-*/
-	template <typename T, usize C, typename S>
-	inline bool StaticArray<T,C,S>::IsEnd (const_iterator iter) const
-	{
-		return iter == End();
-	}
 
 
 	#undef RET_ERROR
@@ -407,7 +360,7 @@ namespace GXTypes
 	template <typename T, usize C, typename S>
 	struct Hash< StaticArray<T,C,S> >
 	{
-		CHECKRES HashResult  operator () (const StaticArray<T,C,S> &x) const noexcept
+		ND_ HashResult  operator () (const StaticArray<T,C,S> &x) const noexcept
 		{
 			return HashOf( ArrayCRef<T>( x ) );
 		}
@@ -436,7 +389,7 @@ namespace GXTypes
 	}	// _types_hidden_
 
 	template <typename ...Args>
-	CHECKRES forceinline typename _types_hidden_::StaticArrayFrom<Args...>  MakeStaticArray (Args... args)
+	ND_ forceinline typename _types_hidden_::StaticArrayFrom<Args...>  MakeStaticArray (Args... args)
 	{
 		return typename _types_hidden_::StaticArrayFrom<Args...>{ FW<Args>(args)... };
 	}

@@ -26,9 +26,9 @@ namespace PlatformSW
 	// types
 	private:
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::ReadFromStream,
-											ModuleMsg::WriteToStream,
+											DSMsg::GetDataSourceDescriptor,
+											DSMsg::ReadRegion,
+											DSMsg::WriteRegion,
 											GpuMsg::ReadFromGpuMemory,
 											GpuMsg::WriteToGpuMemory,
 											GpuMsg::ReadFromImageMemory,
@@ -44,7 +44,7 @@ namespace PlatformSW
 										> >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t::Append< MessageListFrom<
-											ModuleMsg::DataRegionChanged,
+											//ModuleMsg::DataRegionChanged,
 											GpuMsg::OnMemoryBindingChanged
 										> >;
 		
@@ -88,13 +88,13 @@ namespace PlatformSW
 	private:
 		bool _GetGpuMemoryDescriptor (const Message< GpuMsg::GetGpuMemoryDescriptor > &);
 		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _GetStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &);
+		bool _GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &);
 		bool _ReadFromImageMemory (const Message< GpuMsg::ReadFromImageMemory > &);
 		bool _WriteToImageMemory (const Message< GpuMsg::WriteToImageMemory > &);
 		bool _ReadFromGpuMemory (const Message< GpuMsg::ReadFromGpuMemory > &) const;
 		bool _WriteToGpuMemory (const Message< GpuMsg::WriteToGpuMemory > &);
-		bool _ReadFromStream (const Message< ModuleMsg::ReadFromStream > &);
-		bool _WriteToStream (const Message< ModuleMsg::WriteToStream > &);
+		bool _ReadRegion (const Message< DSMsg::ReadRegion > &);
+		bool _WriteRegion (const Message< DSMsg::WriteRegion > &);
 		bool _MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &);
 		bool _MapImageToCpu (const Message< GpuMsg::MapImageToCpu > &);
 		bool _FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &);
@@ -144,13 +144,13 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWMemory::_Compose );
 		_SubscribeOnMsg( this, &SWMemory::_Delete );
 		_SubscribeOnMsg( this, &SWMemory::_OnManagerChanged );
-		_SubscribeOnMsg( this, &SWMemory::_GetStreamDescriptor );
+		_SubscribeOnMsg( this, &SWMemory::_GetDataSourceDescriptor );
 		_SubscribeOnMsg( this, &SWMemory::_ReadFromImageMemory );
 		_SubscribeOnMsg( this, &SWMemory::_WriteToImageMemory );
 		_SubscribeOnMsg( this, &SWMemory::_ReadFromGpuMemory );
 		_SubscribeOnMsg( this, &SWMemory::_WriteToGpuMemory );
-		_SubscribeOnMsg( this, &SWMemory::_ReadFromStream );
-		_SubscribeOnMsg( this, &SWMemory::_WriteToStream );
+		_SubscribeOnMsg( this, &SWMemory::_ReadRegion );
+		_SubscribeOnMsg( this, &SWMemory::_WriteRegion );
 		_SubscribeOnMsg( this, &SWMemory::_MapMemoryToCpu );
 		_SubscribeOnMsg( this, &SWMemory::_MapImageToCpu );
 		_SubscribeOnMsg( this, &SWMemory::_FlushMemoryRange );
@@ -311,12 +311,12 @@ namespace PlatformSW
 
 /*
 =================================================
-	_GetStreamDescriptor
+	_GetDataSourceDescriptor
 =================================================
 */
-	bool SWMemory::_GetStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &msg)
+	bool SWMemory::_GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &msg)
 	{
-		StreamDescriptor	descr;
+		DataSourceDescriptor	descr;
 
 		descr.memoryFlags	= _memMapper.MappingAccess();
 		descr.available		= _memMapper.MappedSize();
@@ -328,31 +328,34 @@ namespace PlatformSW
 	
 /*
 =================================================
-	_ReadFromStream
+	_ReadRegion
 =================================================
 */
-	bool SWMemory::_ReadFromStream (const Message< ModuleMsg::ReadFromStream > &msg)
+	bool SWMemory::_ReadRegion (const Message< DSMsg::ReadRegion > &msg)
 	{
 		BinArrayCRef	data;
-		CHECK_ERR( _memMapper.Read( msg->offset, msg->size.Get( UMax ), OUT data ) );
-		msg->result.Set( data );
+		CHECK_ERR( _memMapper.Read( msg->position, BytesUL(msg->writableBuffer->Size()), OUT data ) );
+
+		MemCopy( *msg->writableBuffer, data );
+
+		msg->result.Set( msg->writableBuffer->SubArray( 0, data.Count() ) );
 		
-		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuRead, _memMapper.MappedOffset() + msg->offset, BytesUL(data.Size()) });
+		//_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuRead, _memMapper.MappedOffset() + msg->offset, BytesUL(data.Size()) });
 		return true;
 	}
 	
 /*
 =================================================
-	_WriteToStream
+	_WriteRegion
 =================================================
 */
-	bool SWMemory::_WriteToStream (const Message< ModuleMsg::WriteToStream > &msg)
+	bool SWMemory::_WriteRegion (const Message< DSMsg::WriteRegion > &msg)
 	{
 		BytesUL	written;
-		CHECK_ERR( _memMapper.Write( msg->data, msg->offset, OUT written ) );
+		CHECK_ERR( _memMapper.Write( msg->data, msg->position, OUT written ) );
 		msg->wasWritten.Set( written );
 
-		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, _memMapper.MappedOffset() + msg->offset, written });
+		//_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, _memMapper.MappedOffset() + msg->offset, written });
 		return true;
 	}
 	
@@ -363,15 +366,15 @@ namespace PlatformSW
 */
 	bool SWMemory::_MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &msg)
 	{
-		using EMappingFlags = GpuMsg::MapMemoryToCpu::EMappingFlags;
-
 		CHECK_ERR( _IsCreated() and _memMapper.IsMappingAllowed( msg->flags ) );
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
-		CHECK_ERR( msg->offset < BytesUL(_usedMemory.Size()) );
+		CHECK_ERR( msg->position < BytesUL(_usedMemory.Size()) );
 		
 		const BytesUL	size = Min( BytesUL(_usedMemory.Size()), msg->size );
 		
-		_memMapper.OnMapped( _usedMemory.ptr() + msg->offset, msg->offset, size, msg->flags );
+		_memMapper.OnMapped( _usedMemory.ptr() + msg->position, msg->position, size, msg->flags );
+		
+		msg->result.Set( BinArrayRef::FromVoid( _usedMemory.ptr() + msg->position, BytesU(size) ) );
 		return true;
 	}
 	
@@ -467,9 +470,9 @@ namespace PlatformSW
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
 		CHECK_ERR( msg->writableBuffer->Size() > 0 );
-		CHECK_ERR( msg->offset < BytesUL(_usedMemory.Size()) );
+		CHECK_ERR( msg->position < BytesUL(_usedMemory.Size()) );
 		
-		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem{ BytesU(msg->offset), BytesU(msg->writableBuffer->Size()),
+		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem{ BytesU(msg->position), BytesU(msg->writableBuffer->Size()),
 															 EPipelineAccess::HostRead, EPipelineStage::Host };
 		SendTo( _GetParents().Front(), req_mem );
 		
@@ -491,9 +494,9 @@ namespace PlatformSW
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
-		CHECK_ERR( msg->offset < BytesUL(_usedMemory.Size()) );
+		CHECK_ERR( msg->position < BytesUL(_usedMemory.Size()) );
 		
-		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem{ BytesU(msg->offset), BytesU(msg->data.Size()),
+		Message< GpuMsg::GetSWBufferMemoryLayout >	req_mem{ BytesU(msg->position), BytesU(msg->data.Size()),
 															 EPipelineAccess::HostWrite, EPipelineStage::Host };
 		SendTo( _GetParents().Front(), req_mem );
 		
@@ -503,7 +506,7 @@ namespace PlatformSW
 
 		msg->wasWritten.Set( BytesUL(size) );
 		
-		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, msg->offset, BytesUL(size) });
+		//_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, msg->offset, BytesUL(size) });
 		return true;
 	}
 	
@@ -516,16 +519,17 @@ namespace PlatformSW
 	{
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
-		CHECK_ERR( msg->writableBuffer->Size() >= msg->dimension.z * msg->slicePitch );
 		CHECK_ERR( _binding == EBindingTarget::Image );
 		CHECK_ERR( IsNotZero( msg->dimension ) );
 		CHECK_ERR( msg->memOffset == BytesUL(0) );
 		CHECK_ERR( msg->layer.Get() == 0 or (msg->offset.z == 0 and msg->dimension.z == 1) );	// 3D texture array is not supported
-			
+		
 		const uint	offset_z = Max( msg->layer.Get(), msg->offset.z );
 
 		Message< GpuMsg::GetSWImageMemoryLayout >	req_mem{ EPipelineAccess::HostRead, EPipelineStage::Host };
+		Message< GpuMsg::GetImageDescriptor >		req_descr;
 		SendTo( _GetParents().Front(), req_mem );
+		SendTo( _GetParents().Front(), req_descr );
 
 		// find array layer or z-slice
 		CHECK_ERR( req_mem->result );
@@ -539,9 +543,9 @@ namespace PlatformSW
 		CHECK_ERR( msg->mipLevel.Get() < mem_layer.mipmaps.Count() );
 
 		auto const&	mem_level		= mem_layer.mipmaps[ msg->mipLevel.Get() ];
-		BytesU		bpp				= BytesU(EPixelFormat::BitPerPixel( mem_level.format ));
-		BytesU		src_row_pitch	= GXImageUtils::AlignedRowSize( mem_level.dimension.x, bpp, req_mem->result->align );
-		BytesU		row_size		= bpp * msg->dimension.x;
+		const BitsU		bpp				= EPixelFormat::BitPerPixel( mem_level.format ); // must be in bits becouse compressed image pixel may be less than 1 byte
+		const BytesU	src_row_pitch	= GXImageUtils::AlignedRowSize( mem_level.dimension.x, bpp, req_mem->result->align );
+		const BytesU	row_size		= BytesU(bpp * msg->dimension.x);
 
 		CHECK_ERR( mem_level.memory != null );
 		CHECK_ERR( All( msg->offset.xy() < mem_level.dimension ) );
@@ -552,19 +556,32 @@ namespace PlatformSW
 						"Mapping an image with layout '"_str << EImageLayout::ToString( mem_level.layout ) <<
 						"' can result in undefined behavior if this memory is used by the device.",
 						EDbgReport::Warning );
+		
+		if ( req_descr->result->imageType == EImage::Tex3D )
+		{
+			CHECK_ERR( msg->writableBuffer->Size() >= msg->slicePitch * msg->dimension.z );
+		}
+		else
+		{
+			CHECK_ERR( msg->writableBuffer->Size() >= msg->rowPitch * msg->dimension.y );
+		}
+
+		usize	readn	= 0;
 
 		// read pixels
 		for (uint y = 0; y < msg->dimension.y; ++y)
 		{
-			BytesU			src_off = (bpp * msg->offset.x) + ((msg->offset.y + y) * src_row_pitch);
+			BytesU			src_off = BytesU(bpp * msg->offset.x) + ((msg->offset.y + y) * src_row_pitch);
 
 			BinArrayCRef	src		= mem_level.Data().SubArray( usize(src_off), usize(row_size) );
 			BinArrayRef		dst		= msg->writableBuffer->SubArray( usize(y * msg->rowPitch), usize(row_size) );
 
 			MemCopy( OUT dst, src );
+
+			readn += usize(msg->rowPitch);
 		}
 
-		msg->result.Set( msg->writableBuffer->SubArray( 0, usize(msg->dimension.z * msg->slicePitch) ) );
+		msg->result.Set( msg->writableBuffer->SubArray( 0, readn ) );
 		return true;
 	}
 	
@@ -577,7 +594,6 @@ namespace PlatformSW
 	{
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
-		CHECK_ERR( msg->data.Size() >= msg->dimension.z * msg->slicePitch );
 		CHECK_ERR( _binding == EBindingTarget::Image );
 		CHECK_ERR( IsNotZero( msg->dimension ) );
 		CHECK_ERR( msg->memOffset == BytesUL(0) );
@@ -586,7 +602,9 @@ namespace PlatformSW
 		const uint	offset_z = Max( msg->layer.Get(), msg->offset.z );
 			
 		Message< GpuMsg::GetSWImageMemoryLayout >	req_mem{ EPipelineAccess::HostWrite, EPipelineStage::Host };
+		Message< GpuMsg::GetImageDescriptor >		req_descr;
 		SendTo( _GetParents().Front(), req_mem );
+		SendTo( _GetParents().Front(), req_descr );
 
 		// find array layer or z-slice
 		CHECK_ERR( req_mem->result );
@@ -599,10 +617,10 @@ namespace PlatformSW
 		// find mipmap level
 		CHECK_ERR( msg->mipLevel.Get() < mem_layer.mipmaps.Count() );
 
-		auto&	mem_level		= mem_layer.mipmaps[ msg->mipLevel.Get() ];
-		BytesU	bpp				= BytesU(EPixelFormat::BitPerPixel( mem_level.format ));
-		BytesU	dst_row_pitch	= GXImageUtils::AlignedRowSize( mem_level.dimension.x, bpp, req_mem->result->align );
-		BytesU	row_size		= bpp * msg->dimension.x;
+		auto&			mem_level		= mem_layer.mipmaps[ msg->mipLevel.Get() ];
+		const BitsU		bpp				= EPixelFormat::BitPerPixel( mem_level.format ); // must be in bits becouse compressed image pixel may be less than 1 byte
+		const BytesU	dst_row_pitch	= GXImageUtils::AlignedRowSize( mem_level.dimension.x, bpp, req_mem->result->align );
+		const BytesU	row_size		= BytesU(bpp * msg->dimension.x);
 
 		CHECK_ERR( mem_level.memory != null );
 		CHECK_ERR( All( msg->offset.xy() < mem_level.dimension ) );
@@ -613,13 +631,22 @@ namespace PlatformSW
 						"Mapping an image with layout '"_str << EImageLayout::ToString( mem_level.layout ) <<
 						"' can result in undefined behavior if this memory is used by the device.",
 						EDbgReport::Warning );
-			
+
+		if ( req_descr->result->imageType == EImage::Tex3D )
+		{
+			CHECK_ERR( msg->data.Size() >= msg->slicePitch * msg->dimension.z );
+		}
+		else
+		{
+			CHECK_ERR( msg->data.Size() >= msg->rowPitch * msg->dimension.y );
+		}
+		
 		// write pixels
 		BytesU	written;
 
 		for (uint y = 0; y < mem_level.dimension.y; ++y)
 		{
-			BytesU			dst_off = (bpp * msg->offset.x) + ((msg->offset.y + y) * dst_row_pitch);
+			BytesU			dst_off = BytesU(bpp * msg->offset.x) + ((msg->offset.y + y) * dst_row_pitch);
 
 			BinArrayRef		dst		= mem_level.Data().SubArray( usize(dst_off), usize(row_size) );
 			BinArrayCRef	src		= msg->data.SubArray( usize(y * msg->rowPitch), usize(row_size) );
@@ -648,7 +675,7 @@ namespace PlatformSW
 	_SWMemoryBarrier
 =================================================
 */
-	bool SWMemory::_SWMemoryBarrier (const Message< GpuMsg::SWMemoryBarrier > &msg)
+	bool SWMemory::_SWMemoryBarrier (const Message< GpuMsg::SWMemoryBarrier > &)
 	{
 		TODO( "" );
 		return true;

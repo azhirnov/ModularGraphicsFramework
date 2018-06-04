@@ -35,17 +35,17 @@ namespace Platforms
 			ASSERT( _value != UMax );
 		}
 
-		uint Get () const
+		ND_ uint Get () const
 		{
 			return _value;
 		}
 
-		uint4 ToVec () const
+		ND_ uint4 ToVec () const
 		{
 			return uint4( _value & 0xF, (_value >> 4) & 0xF, (_value >> 8) & 0xF, (_value >> 12) & 0xF );
 		}
 
-		bool IsDefault () const
+		ND_ bool IsDefault () const
 		{
 			return _value == ImageSwizzle().Get();
 		}
@@ -64,7 +64,7 @@ namespace GXTypes
 	template <>
 	struct Hash< Engine::Platforms::ImageSwizzle >
 	{
-		HashResult  operator () (const Engine::Platforms::ImageSwizzle &value) const
+		ND_ HashResult  operator () (const Engine::Platforms::ImageSwizzle &value) const
 		{
 			return HashOf( value.Get() == 0 ? Engine::Platforms::ImageSwizzle().Get() : value.Get() );
 		}

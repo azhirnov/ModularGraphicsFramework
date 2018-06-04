@@ -48,29 +48,33 @@ namespace GXMath
 		Percentage (GX_DEFCTOR) : _value(T(0)) {}
 
 		explicit
-		constexpr Percentage (T value) : _value(value)			{ /*ASSERT( value >= T(0) );*/ }
+		constexpr Percentage (T value) : _value(value)		{ /*ASSERT( value >= T(0) );*/ }
 
-		T const&	ref ()				const					{ return _value; }
-		T &			ref ()										{ return _value; }
+		ND_ T const&	ref ()		const					{ return _value; }
+		ND_ T &			ref ()								{ return _value; }
 
-		_GX_DIM_ALL_FLOAT_OPERATORS_SELF( _value )
+		_GX_DIM_OPERATORS_SELF( +,	_value );
+		_GX_DIM_OPERATORS_SELF( -,	_value );
+		_GX_DIM_OPERATORS_SELF( *,	_value );
+		_GX_DIM_OPERATORS_SELF( /,	_value );
+		_GX_DIM_CMP_OPERATORS_SELF( _value );
 
-		CHECKRES T	GetPercents ()		const					{ return _value; }					// 0..100%
-		CHECKRES T	GetFraction ()		const					{ return _value * T(0.01); }		// 0..1
+		ND_ T	GetPercents ()		const					{ return _value; }					// 0..100%
+		ND_ T	GetFraction ()		const					{ return _value * T(0.01); }		// 0..1
 
 		template <typename B>
-		CHECKRES B	Of (const B &value)	const					{ return B( value * GetFraction() ); }
+		ND_ B	Of (const B &value)	const					{ return B( value * GetFraction() ); }
 
-		CHECKRES static constexpr Self	FromPercents (T value)	{ return Self( value ); }
-		CHECKRES static constexpr Self	FromFraction (T value)	{ return Self( value * T(100.0) ); }
+		ND_ static constexpr Self	FromPercents (T value)	{ return Self( value ); }
+		ND_ static constexpr Self	FromFraction (T value)	{ return Self( value * T(100.0) ); }
 
-		CHECKRES static constexpr Self	Max ()					{ return Self( T(100.0) ); }
-		CHECKRES static constexpr Self	Min ()					{ return Self( T(0.0) ); }
+		ND_ static constexpr Self	Max ()					{ return Self( T(100.0) ); }
+		ND_ static constexpr Self	Min ()					{ return Self( T(0.0) ); }
 	};
 	
 	
-	CHECKRES constexpr Percents operator "" _pct (long double value)		{ return Percents::FromPercents( real(value) ); }
-	CHECKRES constexpr Percents operator "" _pct (unsigned long long value)	{ return Percents::FromPercents( real(value) ); }
+	ND_ constexpr Percents operator "" _pct (long double value)			{ return Percents::FromPercents( real(value) ); }
+	ND_ constexpr Percents operator "" _pct (unsigned long long value)	{ return Percents::FromPercents( real(value) ); }
 
 }	// GXMath
 
@@ -118,7 +122,7 @@ namespace GXTypes
 	template <typename T>
 	struct Hash< GXMath::Percentage<T> >
 	{
-		CHECKRES HashResult  operator () (const GXMath::Percentage<T> &x) const
+		ND_ HashResult  operator () (const GXMath::Percentage<T> &x) const
 		{
 			return HashOf( x.GetPercents() );
 		}

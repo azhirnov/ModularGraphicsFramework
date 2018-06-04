@@ -62,71 +62,71 @@ namespace Platforms
 			_size	= CalcPhysicalSize();
 		}
 
-		void SetWorkArea (const RectI &value)					{ _workRect = value.To<PixelsRect>(); }
-		void SetFullArea (const RectI &value)					{ _rect = value.To<PixelsRect>(); }
-		void SetPhysicalSize (const float2 &value)				{ _size = value.To<PhysicalCoord>(); }
-		void SetPixelsPerInch (const float2 &value)				{ _ppi = value; }
-		void SetPixelsPerMilimeter (const float2 &value)		{ _ppi = value / _MilimetersInInch(); }
-		void SetOrientation (EOrientation value)				{ _orient = value; }
-		void SetFrequency (uint value)							{ _freq = value; }
+		void SetWorkArea (const RectI &value)						{ _workRect = value.To<PixelsRect>(); }
+		void SetFullArea (const RectI &value)						{ _rect = value.To<PixelsRect>(); }
+		void SetPhysicalSize (const float2 &value)					{ _size = value.To<PhysicalCoord>(); }
+		void SetPixelsPerInch (const float2 &value)					{ _ppi = value; }
+		void SetPixelsPerMilimeter (const float2 &value)			{ _ppi = value / _MilimetersInInch(); }
+		void SetOrientation (EOrientation value)					{ _orient = value; }
+		void SetFrequency (uint value)								{ _freq = value; }
 
-		uint2			Resolution ()					const	{ return FullArea().Size().To<uint2>(); }
-		float2			PhysicalSize ()					const	{ return _size.To<float2>(); }
-		EOrientation	Orientation ()					const	{ return _orient; }
-		float2			PixelsPerInch ()				const	{ return _ppi; }
-		float			AspectRatio ()					const	{ return _rect.Width() / float(_rect.Height()); }
-		uint			Frequency ()					const	{ return _freq; }
+		ND_ uint2			Resolution ()					const	{ return FullArea().Size().To<uint2>(); }
+		ND_ float2			PhysicalSize ()					const	{ return _size.To<float2>(); }
+		ND_ EOrientation	Orientation ()					const	{ return _orient; }
+		ND_ float2			PixelsPerInch ()				const	{ return _ppi; }
+		ND_ float			AspectRatio ()					const	{ return _rect.Width() / float(_rect.Height()); }
+		ND_ uint			Frequency ()					const	{ return _freq; }
 
-		DisplayID_t		DisplayID ()					const	{ return _id; }
+		ND_ DisplayID_t		DisplayID ()					const	{ return _id; }
 
-		RectI			WorkArea ()						const	{ return _workRect.To<RectI>(); }
-		RectI			FullArea ()						const	{ return _rect.To<RectI>(); }
+		ND_ RectI			WorkArea ()						const	{ return _workRect.To<RectI>(); }
+		ND_ RectI			FullArea ()						const	{ return _rect.To<RectI>(); }
 
-		bool			IsHorizontal ()					const	{ return _rect.Width() > _rect.Height(); }
-		bool			IsVertical ()					const	{ return not IsHorizontal(); }
+		ND_ bool			IsHorizontal ()					const	{ return _rect.Width() > _rect.Height(); }
+		ND_ bool			IsVertical ()					const	{ return not IsHorizontal(); }
 
 		// calculation
-		PhysicalCoord	CalcPhysicalSize ()				const	{ return (_rect.Size().To<float2>() / _ppi * _MetersInInch()).To<PhysicalCoord>(); }
-		float2			CalcPixelsPerMilimeter ()		const	{ return _rect.Size().To<float2>() / (_size.To<float2>() * 1000.0f); }
-		float2			CalcPixelsPerInch ()			const	{ return _rect.Size().To<float2>() / _size.To<float2>() * _MetersInInch(); }
-		DipCoord		CalcDip ()						const	{ return ToDip( _rect.Size() ); }
+		ND_ PhysicalCoord	CalcPhysicalSize ()				const	{ return (_rect.Size().To<float2>() / _ppi * _MetersInInch()).To<PhysicalCoord>(); }
+		ND_ float2			CalcPixelsPerMilimeter ()		const	{ return _rect.Size().To<float2>() / (_size.To<float2>() * 1000.0f); }
+		ND_ float2			CalcPixelsPerInch ()			const	{ return _rect.Size().To<float2>() / _size.To<float2>() * _MetersInInch(); }
+		ND_ DipCoord		CalcDip ()						const	{ return ToDip( _rect.Size() ); }
 
 		// converter
-		DipCoord		ToDip (const PixelsCoord &c)	const	{ return (c.To<float2>() * _DipToPixel() / _ppi).To<DipCoord>(); }
-		DipCoord		ToDip (const PhysicalCoord &c)	const	{ return ToDip( ToPixels( c ) ); }
-		DipCoord		ToDip (const SNormCoord &c)		const	{ return ToDip( ToPixels( c ) ); }
-		DipCoord		ToDip (const UNormCoord &c)		const	{ return ToDip( ToPixels( c ) ); }
+		ND_ DipCoord		ToDip (const PixelsCoord &c)	const	{ return (c.To<float2>() * _DipToPixel() / _ppi).To<DipCoord>(); }
+		ND_ DipCoord		ToDip (const PhysicalCoord &c)	const	{ return ToDip( ToPixels( c ) ); }
+		ND_ DipCoord		ToDip (const SNormCoord &c)		const	{ return ToDip( ToPixels( c ) ); }
+		ND_ DipCoord		ToDip (const UNormCoord &c)		const	{ return ToDip( ToPixels( c ) ); }
 
-		PhysicalCoord	ToPhysical (const DipCoord &c)	const	{ return ToPhysical( ToUNorm( c ) ); }
-		PhysicalCoord	ToPhysical (const PixelsCoord &c)const	{ return ToPhysical( ToUNorm( c ) ); }
-		PhysicalCoord	ToPhysical (const SNormCoord &c)const	{ return ToPhysical( ToUNorm( c ) ); }
-		PhysicalCoord	ToPhysical (const UNormCoord &c)const	{ return (c.To<float2>() * _size.To<float2>()).To<PhysicalCoord>(); }
+		ND_ PhysicalCoord	ToPhysical (const DipCoord &c)	const	{ return ToPhysical( ToUNorm( c ) ); }
+		ND_ PhysicalCoord	ToPhysical (const PixelsCoord &c)const	{ return ToPhysical( ToUNorm( c ) ); }
+		ND_ PhysicalCoord	ToPhysical (const SNormCoord &c)const	{ return ToPhysical( ToUNorm( c ) ); }
+		ND_ PhysicalCoord	ToPhysical (const UNormCoord &c)const	{ return (c.To<float2>() * _size.To<float2>()).To<PhysicalCoord>(); }
 
-		PixelsCoord		ToPixels (const DipCoord &c)	const	{ return RoundToInt( c.To<float2>() * _ppi / _DipToPixel() ).To<PixelsCoord>(); }
-		PixelsCoord		ToPixels (const PhysicalCoord &c)const	{ return ToPixels( ToUNorm( c ) ); }
-		PixelsCoord		ToPixels (const SNormCoord &c)	const	{ return ToPixels( ToUNorm( c ) ); }
-		PixelsCoord		ToPixels (const UNormCoord &c)	const	{ return RoundToInt( c.To<float2>() * _rect.Size().To<float2>() ).To<PixelsCoord>(); }
+		ND_ PixelsCoord		ToPixels (const DipCoord &c)	const	{ return RoundToInt( c.To<float2>() * _ppi / _DipToPixel() ).To<PixelsCoord>(); }
+		ND_ PixelsCoord		ToPixels (const PhysicalCoord &c)const	{ return ToPixels( ToUNorm( c ) ); }
+		ND_ PixelsCoord		ToPixels (const SNormCoord &c)	const	{ return ToPixels( ToUNorm( c ) ); }
+		ND_ PixelsCoord		ToPixels (const UNormCoord &c)	const	{ return RoundToInt( c.To<float2>() * _rect.Size().To<float2>() ).To<PixelsCoord>(); }
 
-		UNormCoord		ToUNorm (const DipCoord &c)		const	{ return ToUNorm( ToPixels( c ) ); }
-		UNormCoord		ToUNorm (const PhysicalCoord &c)const	{ return (c.To<float2>() / _size.To<float2>()).To<UNormCoord>(); }
-		UNormCoord		ToUNorm (const PixelsCoord &c)	const	{ return (c.To<float2>() / _rect.Size().To<float2>()).To<UNormCoord>(); }
-		UNormCoord		ToUNorm (const SNormCoord &c)	const	{ return TypeCast::ToUNorm( c ); }
+		ND_ UNormCoord		ToUNorm (const DipCoord &c)		const	{ return ToUNorm( ToPixels( c ) ); }
+		ND_ UNormCoord		ToUNorm (const PhysicalCoord &c)const	{ return (c.To<float2>() / _size.To<float2>()).To<UNormCoord>(); }
+		ND_ UNormCoord		ToUNorm (const PixelsCoord &c)	const	{ return (c.To<float2>() / _rect.Size().To<float2>()).To<UNormCoord>(); }
+		ND_ UNormCoord		ToUNorm (const SNormCoord &c)	const	{ return TypeCast::ToUNorm( c ); }
 
-		SNormCoord		ToSNorm (const DipCoord &c)		const	{ return TypeCast::ToSNorm( ToUNorm( c ) ); }
-		SNormCoord		ToSNorm (const PhysicalCoord &c)const	{ return TypeCast::ToSNorm( ToUNorm( c ) ); }
-		SNormCoord		ToSNorm (const PixelsCoord &c)	const	{ return TypeCast::ToSNorm( ToUNorm( c ) ); }
-		SNormCoord		ToSNorm (const UNormCoord &c)	const	{ return TypeCast::ToSNorm( c ); }
+		ND_ SNormCoord		ToSNorm (const DipCoord &c)		const	{ return TypeCast::ToSNorm( ToUNorm( c ) ); }
+		ND_ SNormCoord		ToSNorm (const PhysicalCoord &c)const	{ return TypeCast::ToSNorm( ToUNorm( c ) ); }
+		ND_ SNormCoord		ToSNorm (const PixelsCoord &c)	const	{ return TypeCast::ToSNorm( ToUNorm( c ) ); }
+		ND_ SNormCoord		ToSNorm (const UNormCoord &c)	const	{ return TypeCast::ToSNorm( c ); }
 
-		PixelsCoord		Clamp (const PixelsCoord &c)	const	{ return GXMath::Clamp( c.To<int2>(),   int2(0),		_rect.Size().To<int2>()	).To<PixelsCoord>(); }
-		PhysicalCoord	Clamp (const PhysicalCoord &c)	const	{ return GXMath::Clamp( c.To<float2>(), float2(0),		_size.To<float2>()		).To<PhysicalCoord>(); }
-		DipCoord		Clamp (const DipCoord &c)		const	{ return GXMath::Clamp( c.To<float2>(), float2(0),		CalcDip().To<float2>()	).To<DipCoord>(); }
-		SNormCoord		Clamp (const SNormCoord &c)		const	{ return GXMath::Clamp( c.To<float2>(), float2(-1.0f),	float2(1.0f)			).To<SNormCoord>(); }
-		UNormCoord		Clamp (const UNormCoord &c)		const	{ return GXMath::Clamp( c.To<float2>(), float2(0),		float2(1.0f)			).To<UNormCoord>(); }
+		ND_ PixelsCoord		Clamp (const PixelsCoord &c)	const	{ return GXMath::Clamp( c.To<int2>(),   int2(0),		_rect.Size().To<int2>()	).To<PixelsCoord>(); }
+		ND_ PhysicalCoord	Clamp (const PhysicalCoord &c)	const	{ return GXMath::Clamp( c.To<float2>(), float2(0),		_size.To<float2>()		).To<PhysicalCoord>(); }
+		ND_ DipCoord		Clamp (const DipCoord &c)		const	{ return GXMath::Clamp( c.To<float2>(), float2(0),		CalcDip().To<float2>()	).To<DipCoord>(); }
+		ND_ SNormCoord		Clamp (const SNormCoord &c)		const	{ return GXMath::Clamp( c.To<float2>(), float2(-1.0f),	float2(1.0f)			).To<SNormCoord>(); }
+		ND_ UNormCoord		Clamp (const UNormCoord &c)		const	{ return GXMath::Clamp( c.To<float2>(), float2(0),		float2(1.0f)			).To<UNormCoord>(); }
 
 	private:
-		static float	_MilimetersInInch ()					{ return 25.4f; }
-		static float	_MetersInInch ()						{ return 0.0254f; }
-		static float	_DipToPixel ()							{ return 160.0f; }
+		static float		_MilimetersInInch ()					{ return 25.4f; }
+		static float		_MetersInInch ()						{ return 0.0254f; }
+		static float		_DipToPixel ()							{ return 160.0f; }
 	};
 
 

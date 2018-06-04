@@ -47,14 +47,13 @@ namespace Platforms
 						   //const float2 &lodRange = float2(),
 						   ECompareFunc::type compareOp = ECompareFunc::None);
 
-		bool operator == (const Self &right) const;
-		bool operator >  (const Self &right) const;
-		bool operator <  (const Self &right) const;
+		ND_ bool operator == (const Self &right) const;
+		ND_ bool operator >  (const Self &right) const;
 
-		AddressMode_t const&		AddressMode ()	const	{ return _addressMode; }
-		EFilter::type				Filter ()		const	{ return _filter; }
-		ESamplerBorderColor::bits	BorderColor ()	const	{ return _borderColor; }
-		ECompareFunc::type			CompareOp ()	const	{ return _compareOp; }
+		ND_ AddressMode_t const&		AddressMode ()	const	{ return _addressMode; }
+		ND_ EFilter::type				Filter ()		const	{ return _filter; }
+		ND_ ESamplerBorderColor::bits	BorderColor ()	const	{ return _borderColor; }
+		ND_ ECompareFunc::type			CompareOp ()	const	{ return _compareOp; }
 
 		DEBUG_ONLY( String ToString () const );
 	};
@@ -90,10 +89,10 @@ namespace Platforms
 
 		Builder& SetCompareOp (ECompareFunc::type value);
 		
-		AddressMode_t const&		AddressMode ()	const	{ return _state._addressMode; }
-		EFilter::type				Filter ()		const	{ return _state._filter; }
-		ESamplerBorderColor::bits	BorderColor ()	const	{ return _state._borderColor; }
-		ECompareFunc::type			CompareOp ()	const	{ return _state._compareOp; }
+		ND_ AddressMode_t const&		AddressMode ()	const	{ return _state._addressMode; }
+		ND_ EFilter::type				Filter ()		const	{ return _state._filter; }
+		ND_ ESamplerBorderColor::bits	BorderColor ()	const	{ return _state._borderColor; }
+		ND_ ECompareFunc::type			CompareOp ()	const	{ return _state._compareOp; }
 
 		// TODO
 		//void ValidateAnisotropy (uint maxAnisotropy);
@@ -104,7 +103,7 @@ namespace Platforms
 		//void ValidateFilter ();
 
 		// validate, calculate hash and return
-		SamplerDescriptor const& Finish ();
+		ND_ SamplerDescriptor const& Finish ();
 	};
 
 }	// Platforms
@@ -119,8 +118,13 @@ namespace CreateInfo
 
 	struct GpuSampler
 	{
+	// variables
 		ModulePtr						gpuThread;			// can be null
 		Platforms::SamplerDescriptor	descr;
+
+	// methods
+		GpuSampler () {}
+		explicit GpuSampler (const Platforms::SamplerDescriptor &descr) : descr{descr} {}
 	};
 
 }	// CreateInfo

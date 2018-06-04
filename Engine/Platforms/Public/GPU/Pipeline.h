@@ -40,6 +40,7 @@ namespace Platforms
 		uint							patchControlPoints;
 		uint							subpass;
 		// TODO: viewports
+		// TODO: specialization constants
 
 	// methods
 		GraphicsPipelineDescriptor (GX_DEFCTOR);
@@ -97,12 +98,15 @@ namespace Platforms
 				OpenCL,
 				OpenCL_Asm,
 				SoftRenderer,
+				HLSL,
+				HLSL_Bin,
 				_Count
 			}; };
 
 			using SWInvoke	= void (*) (const SWShaderLang::Impl::SWShaderHelper &);
 			using Data		= Union< uint, String, BinaryArray, Array<uint>, SWInvoke >;
 			using Sources	= StaticArray< Data, ESource::_Count >;
+			using RFilePtr	= GXFile::RFilePtr;
 			
 		// variables
 			Sources		src;
@@ -113,8 +117,7 @@ namespace Platforms
 			// GLSL source
 			void StringGLSL (StringCRef data);
 			bool FileGLSL (const RFilePtr &file);
-
-			StringCRef GetGLSL () const;
+			ND_ StringCRef  GetGLSL () const;
 
 			// GLSL binary
 			//void ArrayGLSLBin (BinArrayCRef data);
@@ -124,28 +127,33 @@ namespace Platforms
 			// CL source
 			void StringCL (StringCRef data);
 			bool FileCL (const RFilePtr &file);
-
-			StringCRef GetCL () const;
+			ND_ StringCRef  GetCL () const;
 
 			// CL binary
 			void StringCLAsm (StringCRef data);
 			bool FileCLAsm (const RFilePtr &file);
-			StringCRef GetCLAsm () const;
+			ND_ StringCRef  GetCLAsm () const;
 
 			// SPIRV binary
 			void ArraySPIRV (ArrayCRef<uint> data);
 			bool FileSPIRV (const RFilePtr &file);
-
-			ArrayCRef<uint> GetSPIRV () const;
+			ND_ ArrayCRef<uint>  GetSPIRV () const;
 
 			// SPIRV assembly
 			void StringSpirvAsm (StringCRef data);
 			StringCRef	GetSpirvAsm () const;
 
+			// HLSL Source
+			void StringHLSL (StringCRef data);
+			ND_ StringCRef GetHLSL () const;
+
+			// HLSL Binary
+			void StringBinHLSL (BinArrayCRef data);
+			ND_ BinArrayCRef GetHLSLBin () const;
+
 			// Software
 			void FuncSW (const SWInvoke &func);
-
-			SWInvoke GetSW () const;
+			ND_ SWInvoke  GetSW () const;
 		};
 
 		using Sources = StaticArray< ShaderSource, EShader::_Count >;
@@ -168,12 +176,12 @@ namespace Platforms
 	// methods
 		PipelineTemplateDescriptor (GX_DEFCTOR);
 
-		ShaderSource& Vertex ()				{ return shaders[ EShader::Vertex ]; }
-		ShaderSource& TessControl ()		{ return shaders[ EShader::TessControl ]; }
-		ShaderSource& TessEvaluation ()		{ return shaders[ EShader::TessEvaluation ]; }
-		ShaderSource& Geometry ()			{ return shaders[ EShader::Geometry ]; }
-		ShaderSource& Fragment ()			{ return shaders[ EShader::Fragment ]; }
-		ShaderSource& Compute ()			{ return shaders[ EShader::Compute ]; }
+		ND_ ShaderSource&  Vertex ()			{ return shaders[ EShader::Vertex ]; }
+		ND_ ShaderSource&  TessControl ()		{ return shaders[ EShader::TessControl ]; }
+		ND_ ShaderSource&  TessEvaluation ()	{ return shaders[ EShader::TessEvaluation ]; }
+		ND_ ShaderSource&  Geometry ()			{ return shaders[ EShader::Geometry ]; }
+		ND_ ShaderSource&  Fragment ()			{ return shaders[ EShader::Fragment ]; }
+		ND_ ShaderSource&  Compute ()			{ return shaders[ EShader::Compute ]; }
 	};
 
 }	// Platforms
@@ -335,6 +343,48 @@ namespace GpuMsg
 	//
 	//struct PipelineResourceTableUpdate
 	//{};
+
+
+	//
+	// Request Pipeline information
+	//
+	struct GetPipelineTemplateInfo
+	{
+	// types
+		struct EGraphicsAPI {
+			enum type {
+				OpenGL_210,
+				OpenGL_330,
+				OpenGL_450,
+
+				OpenGLES_200,
+				OpenGLES_320,
+
+				DirectX_11,
+				DirectX_12,
+
+				Vulkan_10,
+				Vulkan_11,
+
+				OpenCL_120,
+				OpenCL_210,
+
+				Soft,
+			};
+
+			GX_ENUM_BITFIELD( type );
+		};
+
+		using EShader	= Platforms::EShader;
+
+		struct Info {
+			EGraphicsAPI::bits		apiVersions;
+			EShader::bits			shaders;
+		};
+
+	// variables
+		Out< Info >			result;
+	};
 
 	
 	//

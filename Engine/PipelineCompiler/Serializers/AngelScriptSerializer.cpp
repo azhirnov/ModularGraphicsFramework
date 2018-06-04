@@ -708,7 +708,7 @@ namespace PipelineCompiler
 		}
 
 
-		void operator () (const SubpassInput &sp) const
+		void operator () (const SubpassInput &) const
 		{
 			TODO( "SubpassInput" );
 		}
@@ -1085,7 +1085,7 @@ namespace PipelineCompiler
 	ShaderSrcCPP
 =================================================
 */
-	String  AngelScriptSerializer::ShaderSrcCPP (StringCRef name, StringCRef funcName) const
+	String  AngelScriptSerializer::ShaderSrcCPP (StringCRef, StringCRef) const
 	{
 		RETURN_ERR( "not supported" );
 	}
@@ -1095,7 +1095,7 @@ namespace PipelineCompiler
 	ShaderSrcCPP_Impl
 =================================================
 */
-	String	AngelScriptSerializer::ShaderSrcCPP_Impl (StringCRef name, BinArrayCRef shaderSrc, StringCRef funcName) const
+	String	AngelScriptSerializer::ShaderSrcCPP_Impl (StringCRef, BinArrayCRef shaderSrc, StringCRef funcName) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )

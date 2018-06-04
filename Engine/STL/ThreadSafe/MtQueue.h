@@ -99,14 +99,14 @@ namespace GXTypes
 		}
 
 
-		usize GetPendingQueueCount ()
+		ND_ usize GetPendingQueueCount ()
 		{
 			SCOPELOCK( _lockPendingQueue );
 			return _pendingQueue.Count();
 		}
 
 
-		usize GetCurrentQueueCount ()
+		ND_ usize GetCurrentQueueCount ()
 		{
 			SCOPELOCK( _lockCurrentQueue );
 			return _currentQueue.Count();

@@ -70,23 +70,6 @@ namespace Platforms
 	
 /*
 =================================================
-	operator <
-=================================================
-*/
-	bool SamplerDescriptor::operator <  (const Self &right) const
-	{
-		return
-			this->_hash		!= right._hash			?	this->_hash		< right._hash			:
-			_addressMode.x	!= right._addressMode.x	?	_addressMode.x	< right._addressMode.x	:
-			_addressMode.y	!= right._addressMode.y	?	_addressMode.y	< right._addressMode.y	:
-			_addressMode.z	!= right._addressMode.z	?	_addressMode.z	< right._addressMode.z	:
-			_filter			!= right._filter		?	_filter			< right._filter			:
-			_borderColor	!= right._borderColor	?	_borderColor	< right._borderColor	:
-														_compareOp		< right._compareOp;
-	}
-	
-/*
-=================================================
 	ToString
 =================================================
 */

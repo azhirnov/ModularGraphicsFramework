@@ -8,13 +8,23 @@ namespace Engine
 {
 namespace Base
 {
+	namespace _engbase_hidden_
+	{
+		struct _MessageBase {};
+
+	}	// _engbase_hidden_
+
+
+	template <typename T>
+	static constexpr bool	IsModuleMessage = CompileTime::IsBaseOf< _engbase_hidden_::_MessageBase, T >;
+
 
 	//
 	// Message
 	//
 
 	template <typename T>
-	struct Message final
+	struct Message final : _engbase_hidden_::_MessageBase
 	{
 		friend class MessageHandler;
 
@@ -78,16 +88,16 @@ namespace Base
 			return *this;
 		}
 
-		T const&		Data ()				const	{ return _data; }
-		bool			IsDiscarded ()		const	{ return _numOfSends == 0; }
-		bool			IsAsync ()			const	{ return _async; }
-		Sender_t const&	Sender ()			const	{ return _sender; }
+		ND_ T const &			Data ()				const	{ return _data; }
+		ND_ bool				IsDiscarded ()		const	{ return _numOfSends == 0; }
+		ND_ bool				IsAsync ()			const	{ return _async; }
+		ND_ Sender_t const &	Sender ()			const	{ return _sender; }
 
-		T const *		operator -> ()		const	{ return &_data; }
-		T *				operator -> ()				{ return &_data; }
+		ND_ T const *			operator -> ()		const	{ return &_data; }
+		ND_ T *					operator -> ()				{ return &_data; }
 
-		T const &		operator * ()		const	{ return _data; }
-		T &				operator * ()				{ return _data; }
+		ND_ T const &			operator * ()		const	{ return _data; }
+		ND_ T &					operator * ()				{ return _data; }
 	};
 
 	

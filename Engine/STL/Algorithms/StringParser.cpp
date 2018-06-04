@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "StringParser.h"
+#include "Engine/STL/Algorithms/StringParser.h"
 #include "Engine/STL/Math/BinaryMath.h"
 
 namespace GX_STL
@@ -309,7 +309,7 @@ namespace GXTypes
 */
 	bool StringParser::DivideString_CPP (StringCRef str, OUT Array< StringCRef > &tokens)
 	{
-		return DivideString( str, _CStyleParser(), tokens );
+		return DivideString( str, _CStyleParser(), OUT tokens );
 	}
 	
 /*
@@ -319,7 +319,7 @@ namespace GXTypes
 */
 	bool StringParser::DivideString_Words (StringCRef str, OUT Array< StringCRef > &tokens)
 	{
-		return DivideString( str, _WordParser(), tokens );
+		return DivideString( str, _WordParser(), OUT tokens );
 	}
 
 /*
@@ -562,30 +562,6 @@ namespace GXTypes
 		result = str.SubString( start, pos );
 		return true;
 	}
-	
-/*
-=================================================
-	ReadToEndBracket
-----
-	read from 'openBracket' to 'closeBracket' for
-	first 'openBracket'
-=================================================
-*
-	bool StringParser::ReadToEndBracket (StringCRef str, StringCRef openBracket, StringCRef closeBracket,
-												INOUT usize &pos, OUT StringCRef &result)
-	{
-		result = StringCRef();
-
-		str.Find( openBracket, pos, pos );
-		
-		const usize	start = pos;
-
-		usize	prev = pos + openBracket.Length();
-
-		str.Find( closeBracket, pos, pos );
-
-
-	}
 
 /*
 =================================================
@@ -779,7 +755,41 @@ namespace GXTypes
 			prev = pos;
 		}
 	}
+	
+/*
+=================================================
+	CompareByWords
+=================================================
+*/
+	float StringParser::CompareByWords (StringCRef left, StringCRef right)
+	{
+		Array<StringCRef>	left_tokens;
+		Array<StringCRef>	right_tokens;
+		float				result		= 0.0f;
+		float				count		= 0.0f;
 
+		DivideString_Words( left, left_tokens );
+		DivideString_Words( right, right_tokens );
+
+		for (auto& rhs : right_tokens)
+		{
+			if ( rhs == " " ) continue;
+			count += 1.0f;
+
+			for (auto& lhs : left_tokens)
+			{
+				if ( lhs == " " ) continue;
+
+				if ( rhs.EqualsIC( lhs ) )
+				{
+					result += 1.0f;
+					break;
+				}
+			}
+		}
+
+		return GXMath::SafeDiv( result, count );
+	}
 
 }	// GXTypes
 }	// GX_STL

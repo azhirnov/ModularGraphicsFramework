@@ -123,29 +123,29 @@ namespace GXTypes
 
 
 		// type cast
-		CHECKRES operator const T ()	const		{ return _value; }
+		ND_ operator const T ()	const			{ return _value; }
 
 
 		// get
-		CHECKRES const T	Value ()	const		{ return _value; }
-		CHECKRES const T	Min ()		const		{ return _min; }
-		CHECKRES const T	Max ()		const		{ return _max; }
+		ND_ const T	Value ()	const			{ return _value; }
+		ND_ const T	Min ()		const			{ return _min; }
+		ND_ const T	Max ()		const			{ return _max; }
 		
 
 		// unary operators
-				 Self&	operator ++ ()				{ ++_value;  _Validate();  return *this; }
-				 Self&	operator -- ()				{ --_value;  _Validate();  return *this; }
-				 Self	operator ++ (int) 			{ Self ret(*this);  ++(*this);  return ret; }
-				 Self	operator -- (int)			{ Self ret(*this);  --(*this);  return ret; }
-		CHECKRES Self	operator +  ()	const		{ return Self( +_value ); }
-		CHECKRES Self	operator -  ()	const		{ return Self( -_value ); }
-		CHECKRES bool	operator ! ()	const		{ return not _value; }
-		CHECKRES Self	operator ~ ()	const		{ return Self( ~_value ); }
+			Self&	operator ++ ()				{ ++_value;  _Validate();  return *this; }
+			Self&	operator -- ()				{ --_value;  _Validate();  return *this; }
+			Self	operator ++ (int) 			{ Self ret(*this);  ++(*this);  return ret; }
+			Self	operator -- (int)			{ Self ret(*this);  --(*this);  return ret; }
+		ND_ Self	operator +  ()	const		{ return Self( +_value ); }
+		ND_ Self	operator -  ()	const		{ return Self( -_value ); }
+		ND_ bool	operator ! ()	const		{ return not _value; }
+		ND_ Self	operator ~ ()	const		{ return Self( ~_value ); }
 
 		
 		// binary operators
-		Self & operator = (const Self &right)		{ _value = right._value;  _Validate();  return *this; }
-		Self & operator = (const T &right)			{ _value = right;  _Validate();  return *this; }
+		Self & operator = (const Self &right)	{ _value = right._value;  _Validate();  return *this; }
+		Self & operator = (const T &right)		{ _value = right;  _Validate();  return *this; }
 
 		_LIMIT_OPERATOR2( + );
 		_LIMIT_OPERATOR2( - );
@@ -173,7 +173,7 @@ namespace GXTypes
 	template <typename T, template <typename> class S>
 	struct Hash< Limit< T, S > >
 	{
-		CHECKRES HashResult  operator () (const Limit< T, S > &x) const noexcept
+		ND_ HashResult  operator () (const Limit< T, S > &x) const noexcept
 		{
 			// TODO: is min and max limits needed here?
 			return HashOf( x.Value() );

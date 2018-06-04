@@ -39,8 +39,10 @@ namespace Platforms
 		MultiSamples (uint samples) : _value( PowOf2Value<uint>::From(samples) )
 		{}
 
-		uint Get ()			const		{ return _value.GetValue(); }
-		uint GetPowerOf2 ()	const		{ return _value.GetPower(); }
+		ND_ uint Get ()			const		{ return _value.GetValue(); }
+		ND_ uint GetPowerOf2 ()	const		{ return _value.GetPower(); }
+
+		ND_ bool IsEnabled ()	const		{ return _value.GetPower() > 0; }
 
 		_GX_DIM_CMP_OPERATORS_SELF( _value )
 	};

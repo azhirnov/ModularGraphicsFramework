@@ -77,11 +77,11 @@ namespace Base
 		{
 			SCOPELOCK( _lock );
 
-			FOR( i, _threads )
+			for (auto& thread : _threads)
 			{
-				_threads[i].second.wait();
+				thread.second.wait();
 				
-				_SendForEachAttachments< ModuleMsg::Update >({ TimeF::FromNanoSeconds(1.0) });
+				_SendForEachAttachments< ModuleMsg::Update >({ TimeL::FromNanoSeconds(1) });
 			}
 		}
 
@@ -109,18 +109,18 @@ namespace Base
 
 		auto	task_mngr = GlobalSystems()->mainSystem->GetModuleByMsg< TaskMngrMsgList >();
 		CHECK_ERR( task_mngr );
-
-		FOR( i, _threads )
+		
+		for (auto& thread : _threads)
 		{
-			if ( exceptMain and _threads[i].second.thread == _currentThread )
+			if ( exceptMain and thread.second.thread == _currentThread )
 				continue;
 
 			CHECK( task_mngr->Send( Message< ModuleMsg::PushAsyncMessage >{
 					AsyncMessage{
-						LAMBDA( func, mngr = ModulePtr(this), thread = _threads[i].second.thread ) (GlobalSystemsRef gs) {
+						LAMBDA( func, mngr = ModulePtr(this), thread = thread.second.thread ) (GlobalSystemsRef gs) {
 							func( mngr, thread, gs );
 					} },
-					_threads[i].first
+					thread.first
 				}.From( this ).Async()
 			));
 		}
@@ -250,9 +250,8 @@ namespace Base
 		OS::SyncEvent				sync;			// sync primitive
 		ModulePtr					result;			// out
 		BlockingWaitThread_t		waitFunc;		// out
-		Ptr< MainSystem >			main;
+		Ptr< Module >				main;
 		Ptr< ModulesFactory >		factory;
-		Ptr< FileManager >			fileMngr;
 
 	// methods
 		CreateParallelThreadData (UntypedID_t id, GlobalSystemsRef gs, CreateInfo::Thread &&info) :
@@ -260,8 +259,7 @@ namespace Base
 			info( RVREF( info ) ),
 			sync( OS::SyncEvent::MANUAL_RESET ),
 			main( gs->mainSystem.ptr() ),
-			factory( gs->modulesFactory.ptr() ),
-			fileMngr( gs->fileManager.ptr() )
+			factory( gs->modulesFactory.ptr() )
 		{}
 	};
 	
@@ -356,9 +354,8 @@ namespace Base
 		{
 			CreateParallelThreadData&	data = *Cast<CreateParallelThreadData *>(d);
 
-			global_sys.mainSystem.Set( data.main );
-			global_sys.modulesFactory.Set( data.factory );
-			global_sys.fileManager.Set( data.fileMngr );
+			global_sys.mainSystem._Set( data.main );
+			global_sys.modulesFactory._Set( data.factory );
 
 			pt = New< ParallelThreadImpl >( data.id, GlobalSystemsRef(global_sys), data.info );
 

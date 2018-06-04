@@ -11,9 +11,8 @@
 		- use target bindings
 		- parse GXSL/GLSL/HLSL with glslang
 		- replace buffer fields by aligned types
-		- GLSL: optimize with LunarGLASS
 		- HLSL/CL/C++: translate to target
-		- SPIRV: translate with LunarGLASS and optimize with SPIRV-tools
+		- SPIRV: translate with glslang and optimize with SPIRV-tools
 */
 
 #pragma once
@@ -71,7 +70,7 @@ namespace PipelineCompiler
 		// variables
 			String							name;
 			EImage::type					imageType				= EImage::Tex2D;
-			EPixelFormatClass::type			format					= EPixelFormatClass::AnyFloat | EPixelFormatClass::RGBA;
+			EPixelFormatClass::type			format					= EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm | EPixelFormatClass::AnyColorChannels;
 			Optional<SamplerDescriptor>		defaultSampler;
 			bool							samplerCanBeOverridden	= false;
 			EShader::bits					shaderUsage;
@@ -162,20 +161,19 @@ namespace PipelineCompiler
 		// methods
 			Bindings () {}
 
-			Bindings&  Texture (EImage::type imageType, StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-								EPixelFormatClass::type format = EPixelFormatClass::AnyFloat | EPixelFormatClass::RGBA);
+			Bindings&  Texture (EImage::type imageType, StringCRef name, EShader::bits shaderUsage, EPixelFormatClass::type format);
 
 			Bindings&  Sampler (StringCRef texName, const SamplerDescriptor &descr, bool canBeOverridden = false);	// set default sampler
 
-			Bindings&  Image (EImage::type imageType, StringCRef name, EPixelFormat::type format, EShader::bits shaderUsage = EShader::bits().SetAll(),
-							  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
+			Bindings&  Image (EImage::type imageType, StringCRef name, EPixelFormat::type format, EShader::bits shaderUsage,
+							  EShaderMemoryModel::type access = EShaderMemoryModel::Default);
 
-			Bindings&  UniformBuffer (StringCRef name, StringCRef typeName, EShader::bits shaderUsage = EShader::bits().SetAll());
-			Bindings&  StorageBuffer (StringCRef name, StringCRef typeName, EShader::bits shaderUsage = EShader::bits().SetAll(),
-									  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
+			Bindings&  UniformBuffer (StringCRef name, StringCRef typeName, EShader::bits shaderUsage);
+			Bindings&  StorageBuffer (StringCRef name, StringCRef typeName, EShader::bits shaderUsage,
+									  EShaderMemoryModel::type access = EShaderMemoryModel::Default);
 
 			// helpers
-			template <typename T> Bindings&  Texture2D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll());
+			/*template <typename T> Bindings&  Texture2D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll());
 			template <typename T> Bindings&  Texture2DArray (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll());
 		
 			template <typename T> Bindings&  Image2D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
@@ -189,7 +187,7 @@ namespace PipelineCompiler
 			template <typename T> Bindings&  ImageCube (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
 														EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
 			template <typename T> Bindings&  Image3D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-													  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
+													  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);*/
 		};
 
 
@@ -205,7 +203,7 @@ namespace PipelineCompiler
 			uint						location	= UMax;
 			
 		// methods
-			bool operator == (const Varying &) const;
+			ND_ bool operator == (const Varying &) const;
 		};
 
 
@@ -234,9 +232,9 @@ namespace PipelineCompiler
 
 			ShaderModule& Depends (StringCRef filename);
 
-			bool IsEnabled () const;
+			ND_ bool IsEnabled () const;
 
-			TimeL LastEditTime () const;
+			ND_ TimeL LastEditTime () const;
 		};
 
 
@@ -254,7 +252,7 @@ namespace PipelineCompiler
 		// methods
 			ShaderDisasembly () {}
 
-			bool IsEnabled () const		{ return not input.Empty() or not output.Empty(); /*not source.Empty()*/; }	// TODO
+			ND_ bool IsEnabled () const		{ return not input.Empty() or not output.Empty(); /*not source.Empty()*/; }	// TODO
 		};
 
 		using ShaderDisasemblies = StaticArray< ShaderDisasembly, EShader::_Count >;
@@ -309,9 +307,6 @@ namespace PipelineCompiler
 			// search for same names and set same locations/binding indices for all shaders.
 			bool						optimizeBindings		= true;
 
-			// obfuscate source code.
-			bool						obfuscate				= false;
-
 			// validate comiled shader to check errors
 			bool						validation				= false;
 
@@ -365,9 +360,9 @@ namespace PipelineCompiler
 		
 
 	public:
-		StringCRef	Name () const			{ return _name; }
-		String		Path () const;
-		TimeL		LastEditTime () const	{ return _lastEditTime; }
+		ND_ StringCRef	Name () const			{ return _name; }
+		ND_ String		Path () const;
+		ND_ TimeL		LastEditTime () const	{ return _lastEditTime; }
 
 		void Depends (StringCRef filename);
 
@@ -419,7 +414,7 @@ namespace PipelineCompiler
 		void _BindingsToString (EShader::type shaderType, EShaderType shaderApi, bool useOriginTypes, OUT String &str) const;
 		bool _TypeReplacer (StringCRef typeName, INOUT ShaderCompiler::FieldTypeInfo &field) const;
 
-		static String _StructToString (const StructTypes &types, StringCRef typeName, bool skipLayouts);
+		ND_ static String _StructToString (const StructTypes &types, StringCRef typeName, bool skipLayouts);
 
 		static bool _CalculateOffsets (INOUT StructTypes &structTypes);
 		static bool _AddPaddingToStructs (INOUT StructTypes &structTypes);
@@ -427,7 +422,7 @@ namespace PipelineCompiler
 		static bool _SerializeStructs (const StructTypes &structTypes, Ptr<ISerializer> ser, OUT String &serialized);
 		static bool _MergeStructTypes (const StructTypes &newTypes, INOUT StructTypes &currTypes);
 
-		static bool _ValidateShader (EShader::type, const CompiledShader &);
+		ND_ static bool _ValidateShader (EShader::type, const CompiledShader &);
 
 
 	// Utils for Preparing and Converting Passes //
@@ -438,9 +433,10 @@ namespace PipelineCompiler
 
 		static bool _AddStructType (const _StructField &structType, INOUT StructTypes &currTypes);
 
-		static String     _GetVersionGLSL ();
-		static StringCRef _GetDefaultHeaderGLSL ();
-		static StringCRef _GetPerShaderHeaderGLSL (EShader::type type);
+		ND_ static String     _GetVersionGLSL ();
+		ND_ static StringCRef _GetDefaultHeaderGLSL ();
+		ND_ static StringCRef _GetPerShaderHeaderGLSL (EShader::type type);
+		ND_ static String     _LocalGroupSizeToStringGLSL (const uint3 &value);
 	};
 
 

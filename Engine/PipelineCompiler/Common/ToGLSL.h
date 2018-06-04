@@ -13,7 +13,7 @@ namespace PipelineCompiler
 	ToStringGLSL (EShaderMemoryModel)
 =================================================
 */
-	inline StringCRef  ToStringGLSL (EShaderMemoryModel::type value)
+	ND_ inline StringCRef  ToStringGLSL (EShaderMemoryModel::type value)
 	{
 		switch ( value )
 		{
@@ -32,7 +32,7 @@ namespace PipelineCompiler
 	ToStringGLSL (EPrecision)
 =================================================
 */
-	inline StringCRef  ToStringGLSL (EPrecision::type value)
+	ND_ inline StringCRef  ToStringGLSL (EPrecision::type value)
 	{
 		switch ( value )
 		{
@@ -49,7 +49,7 @@ namespace PipelineCompiler
 	ToStringGLSL (EVariableQualifier)
 =================================================
 */
-	inline String  ToStringGLSL (EVariableQualifier::bits value)
+	ND_ inline String  ToStringGLSL (EVariableQualifier::bits value)
 	{
 		String str;
 
@@ -84,7 +84,7 @@ namespace PipelineCompiler
 	ToStringGLSL (EShaderVariable)
 =================================================
 */
-	inline StringCRef  ToStringGLSL (EShaderVariable::type value)
+	ND_ inline StringCRef  ToStringGLSL (EShaderVariable::type value)
 	{
 		switch ( value )
 		{
@@ -212,7 +212,7 @@ namespace PipelineCompiler
 	ToStringGLSL (VertexAttribs)
 =================================================
 */
-	inline String  ToStringGLSL (const VertexAttribs &attribs)
+	ND_ inline String  ToStringGLSL (const VertexAttribs &attribs)
 	{
 		String	str;
 		FOR( i, attribs )
@@ -229,7 +229,7 @@ namespace PipelineCompiler
 	ToStringGLSL (FragmentOutputState)
 =================================================
 */
-	inline String  ToStringGLSL (const FragmentOutputState &state)
+	ND_ inline String  ToStringGLSL (const FragmentOutputState &state)
 	{
 		String	str;
 
@@ -249,7 +249,7 @@ namespace PipelineCompiler
 	ToStringGLSL (EPixelFormat)
 =================================================
 */
-	inline StringCRef  ToStringGLSL (const EPixelFormat::type &value)
+	ND_ inline StringCRef  ToStringGLSL (const EPixelFormat::type &value)
 	{
 		switch ( value )
 		{
@@ -301,7 +301,7 @@ namespace PipelineCompiler
 	ToStringGLSL (EVariablePacking)
 =================================================
 */
-	inline StringCRef  ToStringGLSL (const EVariablePacking::type &value)
+	ND_ inline StringCRef  ToStringGLSL (const EVariablePacking::type &value)
 	{
 		return EVariablePacking::ToString( value );
 	}

@@ -176,7 +176,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Matrix<T,4,4> const  PerspectiveCamera<T>::GetModelMatrix () const
+	ND_ inline Matrix<T,4,4> const  PerspectiveCamera<T>::GetModelMatrix () const
 	{
 		return Mat4_t::Translate( -Position() );
 	}
@@ -187,7 +187,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Frustum<T> const &  PerspectiveCamera<T>::GetFrustum ()
+	ND_ inline Frustum<T> const &  PerspectiveCamera<T>::GetFrustum ()
 	{
 		if ( _changed[ EChangedFlag::Frustum ] )
 		{
@@ -204,7 +204,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Matrix<T,4,4> const &  PerspectiveCamera<T>::ViewProjMatrix ()
+	ND_ inline Matrix<T,4,4> const &  PerspectiveCamera<T>::ViewProjMatrix ()
 	{
 		if ( _changed[ EChangedFlag::ViewProjMat ] )
 		{

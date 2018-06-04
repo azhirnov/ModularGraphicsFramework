@@ -45,7 +45,7 @@ namespace DefPrimitives
 		{}
 
 	protected:
-		GraphicsMsg::AddBatch _ToBatch () const
+		ND_ GraphicsMsg::AddBatch  _ToBatch () const
 		{
 			if ( _indices.Empty() )
 				return GraphicsMsg::AddBatch{ ArrayCRef<VertType>(_vertices), _primitive };
@@ -83,7 +83,7 @@ namespace DefPrimitives
 			position(pos), texcoord(texc), color(color)
 		{}
 
-		operator GraphicsMsg::AddBatch ()
+		ND_ operator GraphicsMsg::AddBatch ()
 		{
 			this->_vertices.Resize( 4 );
 			this->_vertices[0] = typename Base_t::Vertex_t( float2(position.left,  position.top),		float2(texcoord.left,  texcoord.bottom),	color );

@@ -61,6 +61,7 @@
 #include "Containers/UniBuffer.h"
 #include "Containers/IndexedArray.h"
 #include "Containers/Adaptors.h"
+#include "Containers/Tuple.h"
 
 
 // Algorithms/Crypt //
@@ -132,6 +133,7 @@
 #include "Math/Trigonometry.h"
 #include "Math/BinaryMath.h"
 #include "Math/Interpolations.h"
+#include "Math/OverflowCheck.h"
 
 
 // Math/2D //

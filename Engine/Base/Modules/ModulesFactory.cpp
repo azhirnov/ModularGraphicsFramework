@@ -17,7 +17,7 @@ namespace Base
 	{
 		SetDebugName( "ModulesFactory" );
 
-		GlobalSystems()->modulesFactory.Set( this );
+		GlobalSystems()->modulesFactory._Set( this );
 
 		_constructors.Reserve( 128 );
 		_groups.Reserve( EModuleGroup::_Count );
@@ -34,7 +34,7 @@ namespace Base
 
 		Clear();
 
-		GlobalSystems()->modulesFactory.Set( null );
+		GlobalSystems()->modulesFactory._Set( null );
 	}
 	
 /*
@@ -170,14 +170,14 @@ namespace Base
 
 		result.Clear();
 
-		FOR( i, _constructors )
+		for (auto& ctor : _constructors)
 		{
-			if ( _constructors[i].first.createInfoType == ctorMsgType )
+			if ( ctor.first.createInfoType == ctorMsgType )
 			{
 				if ( startsWith.Empty() or
-					 ToString(GModID::type( _constructors[i].first.moduleID )).StartsWithIC( startsWith ) )
+					 ToString(GModID::type( ctor.first.moduleID )).StartsWithIC( startsWith ) )
 				{
-					result.PushBack( _constructors[i].first.moduleID );
+					result.PushBack( ctor.first.moduleID );
 				}
 			}
 		}

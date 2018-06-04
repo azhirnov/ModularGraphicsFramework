@@ -4,6 +4,8 @@
 
 #ifdef PLATFORM_SDL
 
+#include "Engine/STL/Math/BinaryMath.h"
+
 namespace GX_STL
 {
 namespace OS
@@ -91,6 +93,7 @@ namespace OS
 	Library::Func_t  Library::GetProc (StringCRef name, Func_t defProc) const
 	{
 		Func_t	tmp = reinterpret_cast<Func_t>(::SDL_LoadFunction( _handle, name.cstr() ));
+		SDL_ClearError();
 		return tmp != null ? tmp : defProc;
 	}
 

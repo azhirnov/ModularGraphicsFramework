@@ -4,10 +4,21 @@
 
 #ifdef COMPUTE_API_OPENCL
 
+#include "Engine/STL/Algorithms/StringParser.h"
 #include "Engine/Platforms/Public/GPU/Thread.h"
 #include "Engine/Platforms/Public/GPU/CommandBuffer.h"
-#include "Engine/Platforms/OpenCL/Impl/CL2BaseModule.h"
+#include "Engine/Platforms/OpenCL/120/CL1BaseModule.h"
+#include "Engine/Platforms/OpenCL/120/CL1SamplerCache.h"
+#include "Engine/Platforms/OpenCL/120/CL1ResourceCache.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
+
+#ifdef GRAPHICS_API_OPENGL
+#	include "Engine/Platforms/OpenGL/450/GL4Messages.h"
+#endif
+
+#ifdef GRAPHICS_API_DIRECTX
+#	include "Engine/Platforms/DirectX/Impl/DX11Messages.h"
+#endif
 
 namespace Engine
 {
@@ -36,7 +47,8 @@ namespace Platforms
 											GpuMsg::GetComputeSettings,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetCLDeviceInfo,
-											GpuMsg::GetCLPrivateClasses
+											GpuMsg::GetCLPrivateClasses,
+											GpuMsg::GetDeviceProperties
 										> >::Append< QueueMsgList_t >;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
@@ -44,7 +56,9 @@ namespace Platforms
 											GpuMsg::DeviceBeforeDestroy
 										> >::Append< QueueEventList_t >;
 		
-		using Device				= PlatformCL::CL2Device;
+		using Device				= PlatformCL::CL1Device;
+		using SamplerCache			= PlatformCL::CL1SamplerCache;
+		using ResourceCache			= PlatformCL::CL1ResourceCache;
 
 
 	// constants
@@ -61,6 +75,10 @@ namespace Platforms
 		ModulePtr			_cmdQueue;
 
 		Device				_device;
+		SamplerCache		_samplerCache;
+		ResourceCache		_resourceCache;
+
+		ModulePtr			_sharedThread;
 
 
 	// methods
@@ -82,6 +100,11 @@ namespace Platforms
 		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
 		bool _GetCLDeviceInfo (const Message< GpuMsg::GetCLDeviceInfo > &);
 		bool _GetCLPrivateClasses (const Message< GpuMsg::GetCLPrivateClasses > &);
+		bool _GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &);
+
+		// event handlers
+		bool _OnSharedThreadComposed (const Message< ModuleMsg::AfterCompose > &);
+		bool _OnSharedThreadDelete (const Message< ModuleMsg::Delete > &);
 
 	private:
 		bool _CreateDevice ();
@@ -102,7 +125,7 @@ namespace Platforms
 	OpenCLThread::OpenCLThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
 		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_settings( ci.settings.version, ci.settings.device, ci.settings.flags[ GraphicsSettings::EFlags::DebugContext ] ),
-		_device( GlobalSystems() )
+		_device( GlobalSystems() ),		_sharedThread{ ci.shared }
 	{
 		SetDebugName( "OpenCLThread" );
 		
@@ -123,8 +146,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenCLThread::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetCLPrivateClasses );
-		
-		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
+		_SubscribeOnMsg( this, &OpenCLThread::_GetDeviceProperties );
 
 		_AttachSelfToManager( ci.context, CLContextModuleID, false );
 	}
@@ -149,7 +171,7 @@ namespace Platforms
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 
 		// create sync manager
 		{
@@ -159,7 +181,7 @@ namespace Platforms
 											CreateInfo::GpuSyncManager{ this },
 											OUT _syncManager ) );
 
-			CHECK_ERR( _Attach( "sync", _syncManager, true ) );
+			CHECK_ERR( _Attach( "sync", _syncManager ) );
 		}
 
 		// create queue
@@ -167,10 +189,10 @@ namespace Platforms
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											CLCommandQueueModuleID,
 											GlobalSystems(),
-											CreateInfo::GpuCommandQueue{ this, EQueueFamily::All },
+											CreateInfo::GpuCommandQueue{ this, EQueueFamily::Default },
 											OUT _cmdQueue ) );
 			
-			CHECK_ERR( _Attach( "queue", _cmdQueue, true ) );
+			CHECK_ERR( _Attach( "queue", _cmdQueue ) );
 
 			CHECK_ERR( _CopySubscriptions< QueueMsgList_t >( _cmdQueue ) );
 			CHECK_ERR( ReceiveEvents< QueueEventList_t >( _cmdQueue ) );
@@ -179,7 +201,17 @@ namespace Platforms
 		_syncManager->Send( msg );
 		_cmdQueue->Send( msg );
 
-		return Module::_Link_Impl( msg );
+		Module::_Link_Impl( msg );
+
+		if ( _sharedThread )
+		{
+			_sharedThread->Subscribe( this, &OpenCLThread::_OnSharedThreadComposed );
+			_sharedThread->Subscribe( this, &OpenCLThread::_OnSharedThreadDelete );
+			
+			if ( _IsComposedState( _sharedThread->GetState() ) )
+				_OnSharedThreadComposed({});
+		}
+		return true;
 	}
 	
 /*
@@ -192,9 +224,38 @@ namespace Platforms
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
 
+		if ( _sharedThread )
+			return true;	// wait for shared thread composing
+
 		CHECK_ERR( GetState() == EState::Linked );
 
 		CHECK_COMPOSING( _CreateDevice() );
+		return true;
+	}
+	
+/*
+=================================================
+	_OnSharedThreadComposed
+=================================================
+*/
+	bool OpenCLThread::_OnSharedThreadComposed (const Message< ModuleMsg::AfterCompose > &)
+	{
+		CHECK_ERR( GetState() == EState::Linked );
+
+		CHECK_COMPOSING( _CreateDevice() );
+		return true;
+	}
+	
+/*
+=================================================
+	_OnSharedThreadDelete
+=================================================
+*/
+	bool OpenCLThread::_OnSharedThreadDelete (const Message< ModuleMsg::Delete > &)
+	{
+		// TODO
+
+		_sharedThread	= null;
 		return true;
 	}
 
@@ -206,6 +267,12 @@ namespace Platforms
 	bool OpenCLThread::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
 		_DestroyDevice();
+		
+		if ( _sharedThread )
+		{
+			_sharedThread->UnsubscribeAll( this );
+			_sharedThread = null;
+		}
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
 		return true;
@@ -262,23 +329,21 @@ namespace Platforms
 	{
 		uint	version = 0;
 
-		switch ( _settings.version )
+		// check version
 		{
-			case "CL 1.0"_GAPI :	version = 100;	break;
-			case "CL 1.1"_GAPI :	version = 110;	break;
-			case "CL 1.2"_GAPI :	version = 120;	break;
-			case "CL 2.0"_GAPI :	version = 200;	break;
-			case "CL 2.1"_GAPI :	version = 210;	break;
-			case GAPI::type(0) :	version = 210;	break;
-			default :				RETURN_ERR( "unsupported OpenCL version" );
+			const String	api_name = _settings.GetAPIName();
+			CHECK_ERR( api_name.StartsWithIC( "CL" ) or api_name.StartsWithIC( "opencl" ) );
+
+			version = _settings.GetAPIVersion();
 		}
 
 		Array<Device::DeviceInfo>	dev_info;
 
 		cl::cl_device_id	gpu_device			= null;
 		cl::cl_device_id	high_perf_device	= null;
-		float				max_performance		= 0.0f;
 		cl::cl_device_id	match_name_device	= null;
+		float				max_performance		= 0.0f;
+		float				name_match			= 0.0f;
 
 		CHECK_ERR( _device.GetDeviceInfo( OUT dev_info ) );
 
@@ -292,6 +357,8 @@ namespace Platforms
 									float(info.isGPU and not info.unifiedMemory ? 4 : 1) +			// cpu and integrated gpu has unified memory
 									float(info.globalMemory.Mb()) / 1024.0f +						// we need more memory
 									float(info.isGPU ? info.maxInvocations : 1) / 1024.0f;
+			
+			const float		nmatch	= _settings.device.Empty() ? 0.0f : StringParser::CompareByWords( info.device, _settings.device );
 
 			if ( OS::IsLittleEndian() != info.littleEndian	or
 				 not info.compilerSupported					or
@@ -299,36 +366,59 @@ namespace Platforms
 				continue;
 
 			if ( perf > max_performance ) {
-				max_performance	 = perf;
-				high_perf_device = info.id;
+				max_performance		= perf;
+				high_perf_device	= info.id;
 			}
 
 			if ( gpu_device == null and info.isGPU )
 				gpu_device = info.id;
-
-			if ( match_name_device == null		and
-				 not _settings.device.Empty()	and
-				 info.device.HasSubStringIC( _settings.device ) )
-			{
-				match_name_device = info.id;
+			
+			if ( nmatch > name_match ) {
+				match_name_device	= info.id;
+				name_match			= nmatch;
 			}
 		}
 
 		cl::cl_device_id	dev = null;
 
-		if ( high_perf_device )		dev = high_perf_device;		else
 		if ( match_name_device )	dev = match_name_device;	else
+		if ( high_perf_device )		dev = high_perf_device;		else
 		if ( gpu_device )			dev = gpu_device;			else
 									RETURN_ERR( "no OpenCL device found" );
 
-		// TODO: write new device name and version to '_settings'
+		// update settings
+		{
+			for (auto& info : dev_info) {
+				if ( info.id == dev ) {
+					_settings.device	= info.device;
+					_settings.version	= GAPI::FromString( "CL "_str << (info.version / 100) << '.' << ((info.version / 10) % 10) );
+					break;
+				}
+			}
+		}
 
 		CHECK_ERR( _device.CreateDevice( dev ) );
 		
-		CHECK_ERR( _device.CreateContext() );
-		CHECK_ERR( _device.CreateQueue( _settings.isDebug ) );
-
 		_device.WriteInfo();
+
+		if ( _sharedThread )
+		{
+			#ifdef GRAPHICS_API_OPENGL
+				if ( _sharedThread->GetSupportedMessages().HasAllTypes<MessageListFrom< GpuMsg::GetGLDeviceInfo >>() )
+					CHECK_ERR( _device.CreateGLSharedContext() );
+			#endif
+
+			#ifdef GRAPHICS_API_DIRECTX
+				if ( _sharedThread->GetSupportedMessages().HasAllTypes<MessageListFrom< GpuMsg::GetDXDeviceInfo >>() )
+					CHECK_ERR( _device.CreateDXSharedContext() );
+			#endif
+		}
+		else
+		{
+			CHECK_ERR( _device.CreateContext() );
+		}
+
+		CHECK_ERR( _device.CreateQueue( _settings.isDebug ) );
 		
 		CHECK( _DefCompose( false ) );
 
@@ -372,13 +462,15 @@ namespace Platforms
 */
 	bool OpenCLThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
 	{
-		msg->result.Set({
-			this,
-			null,
-			_syncManager,
-			null,
-			0
-		});
+		GpuMsg::GetDeviceInfo::Info	info;
+		info.gpuThread		= this;
+		info.sharedThread	= null;
+		info.syncManager	= _syncManager;
+		info.memManager		= null;
+		info.renderPass		= null;
+		info.imageCount		= 0;
+
+		msg->result.Set( info );
 		return true;
 	}
 	
@@ -391,8 +483,7 @@ namespace Platforms
 	{
 		msg->result.Set({
 			_device.GetDevice(),
-			_device.GetContext(),
-			_device.GetCommandQueue()
+			_device.GetContext()
 		});
 		return true;
 	}
@@ -404,7 +495,22 @@ namespace Platforms
 */
 	bool OpenCLThread::_GetCLPrivateClasses (const Message< GpuMsg::GetCLPrivateClasses > &msg)
 	{
-		msg->result.Set({ &_device });
+		msg->result.Set({
+			&_device,
+			&_samplerCache,
+			&_resourceCache
+		});
+		return true;
+	}
+	
+/*
+=================================================
+	_GetDeviceProperties
+=================================================
+*/
+	bool OpenCLThread::_GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &msg)
+	{
+		msg->result.Set( _device.GetProperties() );
 		return true;
 	}
 //-----------------------------------------------------------------------------

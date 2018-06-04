@@ -24,8 +24,6 @@ namespace Impl
 
 	using EMemoryAccess		= Engine::Base::EMemoryAccess;
 
-	//using EPixelFormat	= Engine::Platforms::EPixelFormat;
-
 }	// Impl
 }	// SWShaderLang
 

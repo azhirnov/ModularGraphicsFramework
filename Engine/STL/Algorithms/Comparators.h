@@ -28,13 +28,13 @@ namespace GXTypes
 	public:
 		forceinline explicit Comparator (const T &ref) : _ref(ref) {}
 
-		forceinline bool operator == (const Self &right) const		{ return _ref == right._ref; }
-		forceinline bool operator >  (const Self &right) const		{ return _ref >  right._ref; }
-		forceinline bool operator <  (const Self &right) const		{ return _ref <  right._ref; }
+		ND_ forceinline bool operator == (const Self &right) const		{ return _ref == right._ref; }
+		ND_ forceinline bool operator >  (const Self &right) const		{ return _ref >  right._ref; }
+		ND_ forceinline bool operator <  (const Self &right) const		{ return right._ref >  _ref; }
 
-		forceinline bool operator != (const Self &right) const		{ return not (*this == right); }
-		forceinline bool operator >= (const Self &right) const		{ return not (*this <  right); }
-		forceinline bool operator <= (const Self &right) const		{ return not (*this >  right); }
+		ND_ forceinline bool operator != (const Self &right) const		{ return not (*this == right); }
+		ND_ forceinline bool operator >= (const Self &right) const		{ return not (*this <  right); }
+		ND_ forceinline bool operator <= (const Self &right) const		{ return not (*this >  right); }
 	};
 
 
@@ -56,12 +56,12 @@ namespace GXTypes
 		forceinline explicit Comparator (const GXMath::Vec<T,I,U> &ref) : _ref(ref)
 		{}
 
-		forceinline bool operator == (const Self &right) const
+		ND_ forceinline bool operator == (const Self &right) const
 		{
 			return GXMath::All( _ref == right._ref );
 		}
 
-		forceinline bool operator > (const Self &right) const
+		ND_ forceinline bool operator > (const Self &right) const
 		{
 			for (usize i = 0; i < I-1; ++i) {
 				if ( _ref[i] != right._ref[i] )
@@ -70,18 +70,10 @@ namespace GXTypes
 			return _ref[I-1] > right._ref[I-1];
 		}
 
-		forceinline bool operator < (const Self &right) const
-		{
-			for (usize i = 0; i < I-1; ++i) {
-				if ( _ref[i] != right._ref[i] )
-					return _ref[i] < right._ref[i];
-			}
-			return _ref[I-1] < right._ref[I-1];
-		}
-		
-		forceinline bool operator != (const Self &right) const		{ return not (*this == right); }
-		forceinline bool operator >= (const Self &right) const		{ return not (*this <  right); }
-		forceinline bool operator <= (const Self &right) const		{ return not (*this >  right); }
+		ND_ forceinline bool operator <  (const Self &right) const		{ return (right > *this); }
+		ND_ forceinline bool operator != (const Self &right) const		{ return not (*this == right); }
+		ND_ forceinline bool operator >= (const Self &right) const		{ return not (*this <  right); }
+		ND_ forceinline bool operator <= (const Self &right) const		{ return not (*this >  right); }
 	};
 
 

@@ -32,7 +32,7 @@ namespace Base
 		ThreadID (GX_DEFCTOR) : _value(0)
 		{}
 
-		static ThreadID GetCurrent ()
+		ND_ static ThreadID GetCurrent ()
 		{
 			return ThreadID( OS::CurrentThread::GetCurrentThreadId() );
 		}

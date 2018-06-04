@@ -23,9 +23,10 @@ namespace PlatformGL
 	// types
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::ReadFromStream,
-											ModuleMsg::WriteToStream,
+											DSMsg::GetDataSourceDescriptor,
+											DSMsg::ReadRegion,
+											DSMsg::WriteRegion,
+											GpuMsg::GetGpuMemoryDescriptor,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -43,7 +44,9 @@ namespace PlatformGL
 											GpuMsg::GpuMemoryRegionChanged
 										> >::Append< ForwardToMem_t >;
 
-		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
+		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t::Append< MessageListFrom<
+											GpuMsg::SetBufferDescriptor
+										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 
@@ -159,7 +162,7 @@ namespace PlatformGL
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		
 		_memObj = GetModuleByEvent< MemoryEvents_t >();
 
@@ -169,10 +172,10 @@ namespace PlatformGL
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								GLMemoryModuleID,
 								GlobalSystems(),
-								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
+								CreateInfo::GpuMemory{ _memFlags, _memAccess },
 								OUT mem_module ) );
 
-			CHECK_ERR( _Attach( "mem", mem_module, true ) );
+			CHECK_ERR( _Attach( "mem", mem_module ) );
 			_memObj = mem_module;
 		}
 		CHECK_ATTACHMENT( _memObj );
@@ -200,7 +203,6 @@ namespace PlatformGL
 
 		_SendForEachAttachments( msg );
 		
-		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
 		
 		// composed state will be changed when memory binded to image
@@ -228,7 +230,7 @@ namespace PlatformGL
 	{
 		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_mem ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 
 		if (is_mem )
 		{
@@ -247,7 +249,7 @@ namespace PlatformGL
 	{
 		CHECK( _Detach( msg->oldModule ) );
 
-		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		if ( msg->oldModule == _memObj )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
@@ -286,6 +288,8 @@ namespace PlatformGL
 */
 	bool GL4Buffer::_GetGLBufferID (const Message< GpuMsg::GetGLBufferID > &msg)
 	{
+		ASSERT( _IsCreated() );
+
 		msg->result.Set( _bufferId );
 		return true;
 	}

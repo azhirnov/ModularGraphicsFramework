@@ -38,11 +38,11 @@ namespace Impl
 		SharedMemory (SharedMemory &&) = default;
 		SharedMemory (const SharedMemory &) = default;
 
-		T const* operator -> () const;
-		T *		 operator -> ();
+		ND_ T const* operator -> () const;
+		ND_ T *		 operator -> ();
 
-		T const& operator [] (usize i) const;
-		T &		 operator [] (usize i);
+		ND_ T const& operator [] (usize i) const;
+		ND_ T &		 operator [] (usize i);
 	};
 
 

@@ -21,7 +21,7 @@ namespace Graphics
 
 namespace GraphicsMsg
 {
-	using namespace Engine::ModuleMsg;
+	using namespace Engine::_BaseMessages_;
 
 }	// GraphicsMsg
 }	// Engine

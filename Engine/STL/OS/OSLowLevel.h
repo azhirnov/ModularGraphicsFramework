@@ -53,7 +53,13 @@ namespace GX_STL
 {
 namespace OS
 {
-	typedef CriticalSection		Mutex;
+	using Mutex		= CriticalSection;
 	
 }	// OS
+
+namespace GXTypes
+{
+	using Date		= OS::Date;
+
+}	// GXTypes
 }	// GX_STL

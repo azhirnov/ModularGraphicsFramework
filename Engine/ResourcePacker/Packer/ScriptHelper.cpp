@@ -90,14 +90,14 @@ namespace ResPack
 */
 	bool ScriptHelperImpl::RunScript (StringCRef fname)
 	{
-		using namespace GXScript;
+		using namespace GX_STL::GXScript;
 
 		LOG( "RunScript: '"_str << fname << "'", ELog::Debug );
 
 		_scriptFiles.Push( fname );
 
 		// open & read
-		File::RFilePtr	file = File::HddRFile::New( fname );
+		GXFile::RFilePtr	file = GXFile::HddRFile::New( fname );
 		CHECK_ERR( file );
 
 		const usize	len		= usize(file->RemainingSize());

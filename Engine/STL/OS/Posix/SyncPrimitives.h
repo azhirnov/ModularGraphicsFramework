@@ -44,13 +44,13 @@ namespace OS
 		CriticalSection ();
 		~CriticalSection ();
 
-		bool IsValid () const	{ return _inited; }
+		ND_ bool IsValid () const	{ return _inited; }
 
-		void Lock ();
-		bool TryLock ();
-		void Unlock ();
+			void Lock ();
+		ND_ bool TryLock ();
+			void Unlock ();
 
-		CHECKRES ScopeLock GetScopeLock ()
+		ND_ ScopeLock GetScopeLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->Lock(); }
@@ -60,7 +60,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		CHECKRES operator ScopeLock ()
+		ND_ operator ScopeLock ()
 		{
 			return GetScopeLock();
 		}
@@ -96,17 +96,17 @@ namespace OS
 		ReadWriteSync ();
 		~ReadWriteSync ();
 
-		bool IsValid () const	{ return _inited; }
+		ND_ bool IsValid () const	{ return _inited; }
 
-		void LockWrite ();
-		bool TryLockWrite ();
-		void UnlockWrite ();
+			void LockWrite ();
+		ND_ bool TryLockWrite ();
+			void UnlockWrite ();
 
-		void LockRead ();
-		bool TryLockRead ();
-		void UnlockRead ();
+			void LockRead ();
+		ND_ bool TryLockRead ();
+			void UnlockRead ();
 
-		CHECKRES ScopeLock GetScopeWriteLock ()
+		ND_ ScopeLock GetScopeWriteLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->LockWrite(); }
@@ -115,7 +115,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		CHECKRES ScopeLock GetScopeReadLock ()
+		ND_ ScopeLock GetScopeReadLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->LockRead(); }
@@ -153,7 +153,7 @@ namespace OS
 		ConditionVariable ();
 		~ConditionVariable ();
 
-		bool IsValid () const	{ return _inited; }
+		ND_ bool IsValid () const	{ return _inited; }
 
 		void Signal ();
 		void Broadcast ();
@@ -190,15 +190,15 @@ namespace OS
 		explicit Semaphore (GXTypes::uint initialValue);
 		~Semaphore ();
 
-		bool IsValid () const	{ return _inited; }
+		ND_ bool IsValid () const	{ return _inited; }
 
-		void Lock ();
-		bool TryLock ();
-		void Unlock ();
+			void Lock ();
+		ND_ bool TryLock ();
+			void Unlock ();
 
-		GXTypes::uint GetValue ();
+		ND_ GXTypes::uint GetValue ();
 		
-		CHECKRES ScopeLock GetScopeLock()
+		ND_ ScopeLock GetScopeLock()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->Lock(); }
@@ -208,7 +208,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		CHECKRES operator ScopeLock ()
+		ND_ operator ScopeLock ()
 		{
 			return GetScopeLock();
 		}
@@ -216,7 +216,7 @@ namespace OS
 	
 
 	struct SyncEventEmulation;
-	typedef SyncEventEmulation	SyncEvent;
+	using SyncEvent	= SyncEventEmulation;
 
 }	// OS
 }	// GX_STL

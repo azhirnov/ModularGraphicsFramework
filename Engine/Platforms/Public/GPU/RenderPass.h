@@ -69,7 +69,7 @@ namespace Platforms
 				stencilLoadOp( EAttachmentLoadOp::Unknown ),	stencilStoreOp( EAttachmentStoreOp::Unknown )
 			{}
 
-			bool IsEnabled () const		{ return format != EPixelFormat::Unknown; }
+			ND_ bool IsEnabled () const		{ return format != EPixelFormat::Unknown; }
 		};
 
 
@@ -88,7 +88,7 @@ namespace Platforms
 				layout( EImageLayout::Undefined )
 			{}
 
-			bool IsEnabled () const		{ return not name.Empty(); }
+			ND_ bool IsEnabled () const		{ return not name.Empty(); }
 		};
 
 		using AttachmentsRef_t		= FixedSizeArray< AttachmentRef_t, MAX_COLOR_ATTACHMENTS >;
@@ -156,18 +156,18 @@ namespace Platforms
 	public:
 		RenderPassDescriptor (GX_DEFCTOR) {}
 
-		ArrayCRef< ColorAttachment_t >		ColorAttachments ()			const	{ return _colorAttachmens; }
-		ArrayCRef< Subpass_t >				Subpasses ()				const	{ return _subpasses; }
-		ArrayCRef< SubpassDependency_t >	Dependencies ()				const	{ return _dependencies; }
-		DepthStencilAttachment_t const&		DepthStencilAttachment ()	const	{ return _depthStencilAttachment; }
+		ND_ ArrayCRef< ColorAttachment_t >		ColorAttachments ()			const	{ return _colorAttachmens; }
+		ND_ ArrayCRef< Subpass_t >				Subpasses ()				const	{ return _subpasses; }
+		ND_ ArrayCRef< SubpassDependency_t >	Dependencies ()				const	{ return _dependencies; }
+		ND_ DepthStencilAttachment_t const&		DepthStencilAttachment ()	const	{ return _depthStencilAttachment; }
 
-		bool operator == (const Self &right) const;
-		bool operator >  (const Self &right) const;
-		bool operator <  (const Self &right) const;
+		ND_ bool operator == (const Self &right) const;
+		ND_ bool operator >  (const Self &right) const;
+		ND_ bool operator <  (const Self &right) const		{ return (right > *this); }
 		
-		bool operator != (const Self &right) const		{ return not (*this == right); }
-		bool operator >= (const Self &right) const		{ return not (*this <  right); }
-		bool operator <= (const Self &right) const		{ return not (*this >  right); }
+		ND_ bool operator != (const Self &right) const		{ return not (*this == right); }
+		ND_ bool operator >= (const Self &right) const		{ return not (*this <  right); }
+		ND_ bool operator <= (const Self &right) const		{ return not (*this >  right); }
 	};
 
 
@@ -268,13 +268,13 @@ namespace Platforms
 							 ESubpassDependency::bits	dependency);
 
 		// validate, calculate hash and return
-		RenderPassDescriptor const& Finish ();
+		ND_ RenderPassDescriptor const& Finish ();
 
 		// default render pass for presenting to screen
-		static RenderPassDescriptor CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt, EImageLayout::type finalLayout = EImageLayout::PresentSrc);
+		ND_ static RenderPassDescriptor CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt, EImageLayout::type finalLayout = EImageLayout::PresentSrc);
 
 		// simplified builder
-		static SimpleBuilder CreateForFramebuffer ();
+		ND_ static SimpleBuilder CreateForFramebuffer ();
 	};
 
 
@@ -323,7 +323,7 @@ namespace Platforms
 
 		Self&	Add (StringCRef name, EPixelFormat::type fmt, MultiSamples samp = MultiSamples());
 
-		RenderPassDescriptor const& Finish ();
+		ND_ RenderPassDescriptor const& Finish ();
 	};
 
 	inline RenderPassDescrBuilder::SimpleBuilder  RenderPassDescrBuilder::CreateForFramebuffer () {

@@ -117,12 +117,12 @@ namespace ContainerAdaptors
 			_Create( other );
 		}
 
-		bool IsValid () const
+		ND_ bool IsValid () const
 		{
 			return _ref and _append and _appendMovable;
 		}
 
-		explicit operator bool () const						{ return IsValid(); }
+		ND_ explicit operator bool () const			{ return IsValid(); }
 
 		void PushBack (const T &value)						{ Append( ArrayCRef<T>( &value, 1 ) ); }
 		void PushBack (T &&value)							{ AppendMovable( ArrayRef<T>( &value, 1 ) ); }
@@ -133,7 +133,7 @@ namespace ContainerAdaptors
 
 	private:
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_PushBack<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_PushBack<C>>  _Create (C &other)
 		{
 			_ref			= PointerCast<void>( &other );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
@@ -149,7 +149,7 @@ namespace ContainerAdaptors
 		}
 
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_PushBack_Reserve<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_PushBack_Reserve<C>>  _Create (C &other)
 		{
 			_ref			= PointerCast<void>( &other );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
@@ -167,7 +167,7 @@ namespace ContainerAdaptors
 		}
 
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_Add<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_Add<C>>  _Create (C &other)
 		{
 			_ref			= PointerCast<void>( &other );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
@@ -183,7 +183,7 @@ namespace ContainerAdaptors
 		}
 
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_Add_Reserve<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_Add_Reserve<C>>  _Create (C &other)
 		{
 			_ref			= PointerCast<void>( &other );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
@@ -201,7 +201,7 @@ namespace ContainerAdaptors
 		}
 
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_pushback<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_pushback<C>>  _Create (C &other)
 		{
 			_ref			= PointerCast<void>( &other );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
@@ -217,7 +217,7 @@ namespace ContainerAdaptors
 		}
 
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_pushback_reserve<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_pushback_reserve<C>>  _Create (C &other)
 		{
 			_ref			= PointerCast<void>( &other );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
@@ -235,7 +235,7 @@ namespace ContainerAdaptors
 		}
 
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_insert<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_insert<C>>  _Create (C &other)
 		{
 			_ref			= PointerCast<void>( &other );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
@@ -251,7 +251,7 @@ namespace ContainerAdaptors
 		}
 
 		template <typename C>
-		void _Create (C &other, CompileTime::EnableIf< _adaptors_hidden_::Has_insert_reserve<C>, int > = 0)
+		CompileTime::EnableIf<_adaptors_hidden_::Has_insert_reserve<C>>  _Create (C &other)
 		{
 			_ref			= PointerCast<void>( &other );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)

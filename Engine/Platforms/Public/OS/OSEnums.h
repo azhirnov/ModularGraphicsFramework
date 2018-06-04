@@ -29,7 +29,7 @@ namespace Platforms
 			_Count
 		};
 
-		static const char * Name (type value)
+		ND_ static const char * Name (type value)
 		{
 			DEBUG_ONLY(
 				static const char *	names[] = {

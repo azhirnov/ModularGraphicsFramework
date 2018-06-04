@@ -59,25 +59,25 @@ namespace Base
 	{
 		//SCOPELOCK( other._lock );
 
-		FOR( j, ids )
+		for (auto id : ids)
 		{
 			uint	copied = 0;
 			usize	first;
 
-			if ( other._handlers.FindFirstIndex( ids[j], OUT first ) )
+			if ( other._handlers.FindFirstIndex( id, OUT first ) )
 			{
-				for (usize i = first; i < other._handlers.Count() and other._handlers[i].first == ids[j]; ++i)
+				for (usize i = first; i < other._handlers.Count() and other._handlers[i].first == id; ++i)
 				{
 					if ( other._handlers[i].second.ptr == obj )
 					{
-						_Subscribe2( validTypes, ids[j], Handler(other._handlers[i].second), false );
+						_Subscribe2( validTypes, id, Handler(other._handlers[i].second), false );
 						copied++;
 					}
 				}
 			}
 
 			if ( copied == 0 )
-				RETURN_ERR( "Handler for message '" << ToString( ids[j] ) << "' is not exist" );
+				RETURN_ERR( "Handler for message '" << ToString( id ) << "' is not exist" );
 		}
 		return true;
 	}
@@ -94,6 +94,26 @@ namespace Base
 		FOR( i, _handlers )
 		{
 			if ( _handlers[i].second.ptr == ptr )
+			{
+				_handlers.EraseByIndex( i );
+				--i;
+			}
+		}
+	}
+	
+/*
+=================================================
+	_Unsubscribe2
+=================================================
+*/
+	void MessageHandler::_Unsubscribe2 (const ObjectPtr_t &ptr, const HandlerData_t &data)
+	{
+		//SCOPELOCK( _lock );
+
+		FOR( i, _handlers )
+		{
+			if ( _handlers[i].second.ptr == ptr		and
+				 All( _handlers[i].second.data == data ) )
 			{
 				_handlers.EraseByIndex( i );
 				--i;

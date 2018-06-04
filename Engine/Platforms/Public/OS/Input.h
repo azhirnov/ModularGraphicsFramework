@@ -75,8 +75,8 @@ namespace ModuleMsg
 			key(key), pressure(pressure)
 		{}
 
-		bool IsDown ()	const	{ return pressure > 0.0f; }
-		bool IsUp ()	const	{ return not IsDown(); }
+		ND_ bool IsDown ()	const	{ return pressure > 0.0f; }
+		ND_ bool IsUp ()	const	{ return not IsDown(); }
 	};
 
 

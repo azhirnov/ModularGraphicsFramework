@@ -24,8 +24,8 @@ namespace Graphics
 											ModuleMsg::FindModule,
 											ModuleMsg::ModulesDeepSearch,
 											ModuleMsg::Delete,
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::WriteToStream
+											DSMsg::GetDataSourceDescriptor,
+											DSMsg::WriteRegion
 										>;
 
 		using SupportedEvents_t		= MessageListFrom< 
@@ -42,7 +42,7 @@ namespace Graphics
 
 	// variables
 	private:
-		File::WFilePtr	_file;
+		WFilePtr		_file;
 		BinaryArray		_cache;
 
 
@@ -55,10 +55,10 @@ namespace Graphics
 
 	// message handlers
 	private:
-		bool _GetFileStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &);
-		bool _GetMemStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &);
-		bool _WriteToFileStream (const Message< ModuleMsg::WriteToStream > &);
-		bool _WriteToMemStream (const Message< ModuleMsg::WriteToStream > &);
+		bool _GetFileStreamDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &);
+		bool _GetMemStreamDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &);
+		bool _WriteToFileStream (const Message< DSMsg::WriteRegion > &);
+		bool _WriteToMemStream (const Message< DSMsg::WriteRegion > &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -123,7 +123,7 @@ namespace Graphics
 
 		if ( ci.file )
 		{
-			_file = File::SubWFile::New( ci.file, ci.file->Pos(), ci.file->RemainingSize() );
+			_file = GXFile::SubWFile::New( ci.file, ci.file->Pos(), ci.file->RemainingSize() );
 			
 			CHECK( _SetState( EState::ComposedImmutable ) );
 		}
@@ -145,7 +145,7 @@ namespace Graphics
 	_GetFileStreamDescriptor
 =================================================
 */
-	bool OutputStream::_GetFileStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &msg)
+	bool OutputStream::_GetFileStreamDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &msg)
 	{
 		CHECK_ERR( _file and _file->IsOpened() );
 
@@ -164,7 +164,7 @@ namespace Graphics
 	_GetMemStreamDescriptor
 =================================================
 *
-	bool OutputStream::_GetMemStreamDescriptor (const Message< ModuleMsg::GetStreamDescriptor > &msg)
+	bool OutputStream::_GetMemStreamDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &msg)
 	{
 		StreamDescriptor	descr;
 
@@ -181,7 +181,7 @@ namespace Graphics
 	_WriteToFileStream
 =================================================
 */
-	bool OutputStream::_WriteToFileStream (const Message< ModuleMsg::WriteToStream > &msg)
+	bool OutputStream::_WriteToFileStream (const Message< DSMsg::WriteRegion > &msg)
 	{
 		CHECK_ERR( _file and _file->IsOpened() );
 
@@ -203,7 +203,7 @@ namespace Graphics
 	_WriteToMemStream
 =================================================
 *
-	bool OutputStream::_WriteToMemStream (const Message< ModuleMsg::WriteToStream > &msg)
+	bool OutputStream::_WriteToMemStream (const Message< DSMsg::WriteRegion > &msg)
 	{
 		const BytesU	cache_size	= _cache.Size();
 		const BytesU	offset		= Min( cache_size, BytesUL( msg->offset ) );

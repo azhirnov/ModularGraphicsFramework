@@ -13,7 +13,7 @@
 #define COMPILER_VERSION		_MSC_VER
 
 /*
-	MSVC++ 15.0 _MSC_VER == 1910 (Visual Studio 2017)
+	MSVC++ 15.0 _MSC_VER == 1910-1914 (Visual Studio 2017)
 	MSVC++ 14.0 _MSC_VER == 1900 (Visual Studio 2015)
 	MSVC++ 12.0 _MSC_VER == 1800 (Visual Studio 2013)
 	MSVC++ 11.0 _MSC_VER == 1700 (Visual Studio 2012)
@@ -231,11 +231,11 @@
 
 // notify compiler to generate error if function result unused
 #if COMPILER_VERSION >= 1912
-#	define GX_CHECK_RESULT					[[nodiscard]]
+#	define GX_NODISCARD						[[nodiscard]]
 #elif COMPILER_VERSION >= 1700
-#	define GX_CHECK_RESULT					_Check_return_	// Compile with '/analize' key
+#	define GX_NODISCARD						_Check_return_	// Compile with '/analize' key
 #else
-#	define GX_CHECK_RESULT
+#	define GX_NODISCARD
 #endif
 
 
@@ -248,7 +248,7 @@
 
 
 // 'auto' keyword in template parameters
-#if COMPILER_VERSION >= 2000	// TODO
+#if COMPILER_VERSION >= 1914
 #	define GX_AUTO_IN_TEMPLATE_SUPPORTED	1
 #endif
 
@@ -262,6 +262,14 @@
 // TODO
 #define GX_RTTI_SUPPORTED
 
+
+// maybe unused attribute
+#if COMPILER_VERSION >= 1912
+#	define GX_MAYBE_UNUSED			[[maybe_unused]]
+#else
+#	define GX_MAYBE_UNUSED
+#endif
+
 //-------------------------------------------------------------------
 
 
@@ -272,6 +280,11 @@
 
 //#define GX_BREAK_POINT()		__asm { int 3 }
 #define GX_BREAK_POINT()		__debugbreak()
+
+
+// The maximum length of a string literal is 16,384 (16K) bytes.
+// This limit applies to strings of type char[] and wchar_t[].
+#define GX_MAX_STRING_LENGTH_BYTES	(16u << 10)
 
 
 #ifndef and

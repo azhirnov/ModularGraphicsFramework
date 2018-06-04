@@ -19,13 +19,13 @@ namespace OS
 	// Critical Section
 	//
 
-	struct CriticalSection
+	struct CriticalSection final : public Noncopyable
 	{
 		friend struct ConditionVariable;
 
 	// types
 	public:
-		typedef	CriticalSection		Self;
+		using Self	= CriticalSection;
 
 
 	// variables
@@ -35,21 +35,8 @@ namespace OS
 
 	// methods
 	private:
-		bool _Create ()
-		{
-			_Delete();
-			_mutex = ::SDL_CreateMutex();
-			return IsValid();
-		}
-
-		void _Delete ()
-		{
-			if ( _mutex )
-			{
-				::SDL_DestroyMutex( _mutex );
-				_mutex = null;
-			}
-		}
+		bool _Create ();
+		void _Delete ();
 
 	public:
 		CriticalSection ()
@@ -67,24 +54,9 @@ namespace OS
 			return _mutex.IsNotNull();
 		}
 
-		void Lock ()
-		{
-			int result = ::SDL_LockMutex( _mutex );
-			ASSERT( result != -1 );
-		}
-
-		bool TryLock ()
-		{
-			int result = ::SDL_TryLockMutex( _mutex );
-			ASSERT( result != -1 );
-			return result == 0;
-		}
-
-		void Unlock ()
-		{
-			int result = ::SDL_UnlockMutex( _mutex );
-			ASSERT( result != -1 );
-		}
+		void Lock ();
+		bool TryLock ();
+		void Unlock ();
 		
 		ScopeLock GetScopeLock()
 		{
@@ -108,11 +80,11 @@ namespace OS
 	// Semaphore
 	//
 
-	struct Semaphore
+	struct Semaphore final : public Noncopyable
 	{
 	// types
 	public:
-		typedef	Semaphore	Self;
+		using Self	= Semaphore;
 
 
 	// variables
@@ -122,21 +94,8 @@ namespace OS
 
 	// methods
 	private:
-		bool _Create (uint initialValue)
-		{
-			_Delete();
-			_sem = ::SDL_CreateSemaphore( initialValue );
-			return IsValid();
-		}
-
-		void _Delete ()
-		{
-			if ( _sem )
-			{
-				::SDL_DestroySemaphore( _sem );
-				_sem = null;
-			}
-		}
+		bool _Create (uint initialValue);
+		void _Delete ();
 
 	public:
 		explicit
@@ -155,24 +114,9 @@ namespace OS
 			return _sem.IsNotNull();
 		}
 
-		void Lock ()
-		{
-			int result = ::SDL_SemWait( _sem );
-			ASSERT( result != -1 );
-		}
-
-		bool TryLock ()
-		{
-			int result = ::SDL_SemTryWait( _sem );
-			ASSERT( result != -1 );
-			return result == 0;
-		}
-
-		void Unlock ()
-		{
-			int result = ::SDL_SemPost( _sem );
-			ASSERT( result != -1 );
-		}
+		void Lock ();
+		bool TryLock ();
+		void Unlock ();
 
 		uint GetValue ()
 		{
@@ -201,7 +145,7 @@ namespace OS
 	// Condition Variable
 	//
 
-	struct ConditionVariable
+	struct ConditionVariable final : public Noncopyable
 	{
 	// variables
 	private:
@@ -210,21 +154,8 @@ namespace OS
 
 	// methods
 	private:
-		bool _Create ()
-		{
-			_Delete();
-			_cv = ::SDL_CreateCond();
-			return IsValid();
-		}
-
-		void _Delete ()
-		{
-			if ( _cv )
-			{
-				::SDL_DestroyCond( _cv );
-				_cv = null;
-			}
-		}
+		bool _Create ();
+		void _Delete ();
 
 	public:
 		ConditionVariable ()
@@ -242,39 +173,19 @@ namespace OS
 			return _cv.IsNotNull();
 		}
 
-		void Signal ()
-		{
-			int result = ::SDL_CondSignal( _cv );
-			ASSERT( result != -1 );
-		}
+		void Signal ();
+		void Broadcast ();
 
-		void Broadcast ()
-		{
-			int result = ::SDL_CondBroadcast( _cv );
-			ASSERT( result != -1 );
-		}
-
-		bool Wait (const CriticalSection &mutex)
-		{
-			int result = ::SDL_CondWait( _cv, mutex._mutex );
-			ASSERT( result != -1 );
-			return result != -1;
-		}
-
-		bool Wait (const CriticalSection &mutex, TimeL time)
-		{
-			int result = ::SDL_CondWaitTimeout( _cv, mutex._mutex, (uint)time.MilliSeconds() );
-			ASSERT( result != -1 );
-			return result != -1;
-		}
+		bool Wait (const CriticalSection &mutex);
+		bool Wait (const CriticalSection &mutex, TimeL time);
 	};
 
 
 	struct SyncEventEmulation;
 	struct ReadWriteSyncEmulation;
 
-	typedef SyncEventEmulation		SyncEvent;
-	typedef ReadWriteSyncEmulation	ReadWriteSync;
+	using SyncEvent		= SyncEventEmulation;
+	using ReadWriteSync	= ReadWriteSyncEmulation;
 
 }	// OS
 }	// GX_STL

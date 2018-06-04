@@ -20,6 +20,10 @@ namespace Platforms
 			Fragment,
 			Compute,
 
+			//RTX_RayGeneration,
+			//RTX_ClosestHit,
+			//RTX_Miss,
+
 			_Count,
 			Unknown		= ~0u,
 		};
@@ -62,9 +66,10 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EShaderMemoryModel
 	
-	inline constexpr bool EShaderMemoryModel::HasReadAccess (type value)
+	ND_ inline constexpr bool EShaderMemoryModel::HasReadAccess (type value)
 	{
 		switch ( value ) {
+			case Default :	// == Coherent
 			case Coherent :
 			case Volatile :
 			case Restrict :
@@ -73,9 +78,10 @@ namespace Platforms
 		return false;
 	}
 
-	inline constexpr bool EShaderMemoryModel::HasWriteAccess (type value)
+	ND_ inline constexpr bool EShaderMemoryModel::HasWriteAccess (type value)
 	{
 		switch ( value ) {
+			case Default :	// == Coherent
 			case Coherent :
 			case Volatile :
 			case Restrict :
@@ -84,7 +90,7 @@ namespace Platforms
 		return false;
 	}
 
-	inline constexpr bool EShaderMemoryModel::HasReadWriteAccess (type value)
+	ND_ inline constexpr bool EShaderMemoryModel::HasReadWriteAccess (type value)
 	{
 		return HasReadAccess( value ) and HasWriteAccess( value );
 	}

@@ -10,7 +10,7 @@ namespace ResPack
 	//
 	// Binary File Packer
 	//
-
+/*
 	class BinaryFilePacker final : public IFilePacker
 	{
 	// variables
@@ -24,6 +24,6 @@ namespace ResPack
 
 		bool Load (StringCRef filename) override;
 		bool Save (StringCRef filename) override;
-	};
+	};*/
 
 }	// ResPack

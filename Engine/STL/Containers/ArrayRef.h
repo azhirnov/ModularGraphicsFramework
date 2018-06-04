@@ -27,11 +27,14 @@ namespace GXTypes
 	{
 	// types
 	public:
-		using Value_t		= T;
-		using Self			= ArrayRef<T>;
+		using Value_t			= T;
+		using Self				= ArrayRef<T>;
 
-		using void_ptr_t	= typename TypeTraits::CopyConstToPointer< T, void *>;
-		using C				= typename TypeTraits::RemoveConst<T>;
+		using void_ptr_t		= typename TypeTraits::CopyConstToPointer< T, void *>;
+		using C					= typename TypeTraits::RemoveConst<T>;
+		
+		using iterator			= T *;
+		using const_iterator	= const T *;
 
 	private:
 		struct _CompareElements
@@ -72,125 +75,114 @@ namespace GXTypes
 		template <template <typename ...> class LinearMemoryContainerType, typename ...Types>
 		ArrayRef (const LinearMemoryContainerType< C, Types... > &container);
 
-		std::vector<C> ToStdVector () const;
+		ND_ std::vector<C> ToStdVector () const;
 
-		Self &		operator =  (Self &&right)		= default;
-		Self &		operator =  (const Self &right)	= default;
+			Self &		operator =  (Self &&right)		= default;
+			Self &		operator =  (const Self &right)	= default;
 
-		T		*	ptr ();
-		T const	*	ptr () const;
+		ND_ T		*	ptr ();
+		ND_ T const *	ptr () const;
 		
-		T *			RawPtr ()					{ return _memory; }
-		T const *	RawPtr () const				{ return _memory; }
+		ND_ T *			RawPtr ()					{ return _memory; }
+		ND_ T const *	RawPtr () const				{ return _memory; }
 		
-		T		&	Back ()						{ return (*this)[ LastIndex() ]; }
-		T const	&	Back () const				{ return (*this)[ LastIndex() ]; }
-		T		&	Front ()					{ return (*this)[ 0 ]; }
-		T const	&	Front () const				{ return (*this)[ 0 ]; }
+		ND_ T		&	Back ()						{ return (*this)[ LastIndex() ]; }
+		ND_ T const &	Back () const				{ return (*this)[ LastIndex() ]; }
+		ND_ T		&	Front ()					{ return (*this)[ 0 ]; }
+		ND_ T const &	Front () const				{ return (*this)[ 0 ]; }
 
-		T		&	operator [] (usize i);
-		T const	&	operator [] (usize i) const;
+		ND_ T		&	operator [] (usize i);
+		ND_ T const &	operator [] (usize i) const;
 		
-		bool		operator == (const Self &right) const;
-		bool		operator != (const Self &right) const;
-		bool		operator >  (const Self &right) const;
-		bool		operator >= (const Self &right) const;
-		bool		operator <  (const Self &right) const;
-		bool		operator <= (const Self &right) const;
+		ND_ bool		operator == (const Self &right) const;
+		ND_ bool		operator != (const Self &right) const	{ return not (*this == right); }
+		ND_ bool		operator >  (const Self &right) const;
+		ND_ bool		operator >= (const Self &right) const	{ return not (*this < right); }
+		ND_ bool		operator <  (const Self &right) const	{ return (right > *this); }
+		ND_ bool		operator <= (const Self &right) const	{ return not (*this > right); }
 
-		operator	ArrayRef<const T> () const	{ return ArrayRef<const T>( _memory, _count ); }
+		ND_ operator	ArrayRef<const T> () const	{ return ArrayRef<const T>( _memory, _count ); }
 
-		bool		Empty ()		const		{ return _count == 0; }
-		usize		Count ()		const		{ return _count; }
-		BytesU		Size ()			const		{ return BytesU( _count * sizeof(T) ); }
-		usize		LastIndex ()	const		{ return Count()-1; }
+		ND_ bool		Empty ()		const		{ return _count == 0; }
+		ND_ usize		Count ()		const		{ return _count; }
+		ND_ BytesU		Size ()			const		{ return BytesU( _count * sizeof(T) ); }
+		ND_ usize		LastIndex ()	const		{ return Count()-1; }
 
 		template <typename Cmp>
-		bool		Equals (const Self &other, Cmp sCmp) const;
+		ND_ bool		Equals (const Self &other, Cmp sCmp) const;
 		
-		usize		GetIndex (const T &valueRef) const;
-		bool		IsInArray (const T &valueRef) const;
+		ND_ usize		GetIndex (const T &valueRef) const;
+		ND_ bool		IsInArray (const T &valueRef) const;
 		
 		template <typename E>
-		bool		Find (OUT usize &index, const E &value, usize start = 0) const;
+			bool		Find (OUT usize &index, const E &value, usize start = 0) const;
 
 		template <typename E>
-		bool		IsExist (const E &value) const;
+		ND_ bool		IsExist (const E &value) const;
 
-		bool		Intersects (const Self &other) const;
+		ND_ bool		Intersects (const Self &other) const;
 
-		Self				SubArray (usize first, usize count = UMax);
-		ArrayRef<const T>	SubArray (usize first, usize count = UMax) const;
+		ND_ Self				SubArray (usize first, usize count = UMax);
+		ND_ ArrayRef<const T>	SubArray (usize first, usize count = UMax) const;
 
 
-		// iterators
-		using iterator			= T *;
-		using const_iterator	= const T *;
-
-		bool			IsBegin (const_iterator iter) const;
-		bool			IsEnd (const_iterator iter) const;
-
-		iterator		Begin ()					{ return RawPtr(); }
-		const_iterator	Begin () const				{ return RawPtr(); }
-
-		iterator		End ()						{ return RawPtr() + _count; }
-		const_iterator	End () const				{ return RawPtr() + _count; }
-
-		iterator		GetIter (usize i);
-		const_iterator	GetIter (usize i) const;
+		ND_ iterator		begin ()					{ return RawPtr(); }
+		ND_ const_iterator	begin () const				{ return RawPtr(); }
+		ND_ iterator		end ()						{ return RawPtr() + _count; }
+		ND_ const_iterator	end () const				{ return RawPtr() + _count; }
 
 
 		// compare operators for binary data (POD types only)
 		template <typename B>
-		bool BinEquals (const ArrayRef<const B> &right) const;
+		ND_ bool BinEquals (const ArrayRef<const B> &right) const;
 
 		template <typename B>
-		bool BinLess (const ArrayRef<const B> &right) const;
+		ND_ bool BinLess (const ArrayRef<const B> &right) const;
 
 		template <typename B>
-		bool BinGreater (const ArrayRef<const B> &right) const;
+		ND_ bool BinGreater (const ArrayRef<const B> &right) const;
 		
 
 
 	// static methods
 	public:
 		template <typename B>
-		CHECKRES static Self From (ArrayRef<B> arr);
+		ND_ static Self From (ArrayRef<B> arr);
 		
 		template <typename B>
-		CHECKRES static Self From (TStringRef<B> str);
+		ND_ static Self From (TStringRef<B> str);
 
 		template <typename B, typename S, typename MC>
-		CHECKRES static Self From (const Array<B,S,MC> &arr);
+		ND_ static Self From (const Array<B,S,MC> &arr);
 		
 		template <typename B, typename S, typename MC>
-		CHECKRES static Self From (Array<B,S,MC> &arr);
+		ND_ static Self From (Array<B,S,MC> &arr);
 
 		template <typename B, typename S, typename MC>
-		CHECKRES static Self From (const TString<B,S,MC> &str);
+		ND_ static Self From (const TString<B,S,MC> &str);
 		
 		template <typename B, typename S, typename MC>
-		CHECKRES static Self From (TString<B,S,MC> &str);
+		ND_ static Self From (TString<B,S,MC> &str);
 
-		CHECKRES static Self FromVoid (void_ptr_t ptr, BytesU size);
+		ND_ static Self FromVoid (void_ptr_t ptr, BytesU size);
 		
 		template <typename B, usize I>
-		CHECKRES static Self From (const B (&arr)[I]);
+		ND_ static Self From (const B (&arr)[I]);
 		
 		template <typename B>
-		CHECKRES static Self FromStd (const std::vector<B> &vec);
+		ND_ static Self FromStd (const std::vector<B> &vec);
 		
 		template <typename B>
-		CHECKRES static Self FromStd (std::vector<B> &vec);
+		ND_ static Self FromStd (std::vector<B> &vec);
 		
 		template <typename B>
-		CHECKRES static Self FromStd (const std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str);
+		ND_ static Self FromStd (const std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str);
 		
 		template <typename B>
-		CHECKRES static Self FromStd (std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str);
+		ND_ static Self FromStd (std::basic_string< B, std::char_traits<B>, std::allocator<B> > &str);
 
 		template <typename B>
-		CHECKRES static Self FromValue (B &ref);
+		ND_ static Self FromValue (B &ref);
 
 		static constexpr bool	IsLinearMemory ()	{ return true; }
 		static constexpr bool	IsStaticMemory ()	{ return false; }
@@ -371,6 +363,8 @@ namespace GXTypes
 	inline ArrayRef<T>  ArrayRef<T>::FromValue (B &ref)
 	{
 		STATIC_ASSERT( sizeof(B) % sizeof(T) == 0 );
+		STATIC_ASSERT( CompileTime::IsMemCopyAvailable<B> );
+
 		return ArrayRef<T>( PointerCast<T>( &ref ), sizeof(B) / sizeof(T) );
 	}
 	
@@ -422,12 +416,6 @@ namespace GXTypes
 	{
 		return Equals( other, _CompareElements() );
 	}
-
-	template <typename T>
-	inline bool ArrayRef<T>::operator != (const Self &other) const
-	{
-		return not ( *this == other );
-	}
 	
 /*
 =================================================
@@ -446,37 +434,6 @@ namespace GXTypes
 				return (_memory[i] > right._memory[i]);
 		}
 		return false;	// equals
-	}
-	
-	template <typename T>
-	inline bool ArrayRef<T>::operator >= (const Self &right) const
-	{
-		return not (*this < right);
-	}
-	
-/*
-=================================================
-	operator <
-=================================================
-*/
-	template <typename T>
-	inline bool ArrayRef<T>::operator <  (const Self &right) const
-	{
-		if ( Count() != right.Count() )
-			return (Count() < right.Count());
-
-		FOR( i, right )
-		{
-			if ( _memory[i] != right._memory[i] )
-				return (_memory[i] < right._memory[i]);
-		}
-		return false;	// equals
-	}
-	
-	template <typename T>
-	inline bool ArrayRef<T>::operator <= (const Self &right) const
-	{
-		return not (*this > right);
 	}
 
 /*
@@ -515,7 +472,7 @@ namespace GXTypes
 	inline usize ArrayRef<T>::GetIndex (const T &valueRef) const
 	{
 		ASSERT( IsInArray( valueRef ) );
-		return usize( &valueRef - Begin() );
+		return usize( &valueRef - begin() );
 	}
 	
 /*
@@ -526,7 +483,7 @@ namespace GXTypes
 	template <typename T>
 	inline bool ArrayRef<T>::IsInArray (const T &valueRef) const
 	{
-		return ( &valueRef >= Begin() and &valueRef < End() );
+		return ( &valueRef >= begin() and &valueRef < end() );
 	}
 	
 /*
@@ -612,55 +569,9 @@ namespace GXTypes
 	template <typename T>
 	inline bool  ArrayRef<T>::Intersects (const Self &other) const
 	{
-		ASSERT( Begin() <= End() );
-		ASSERT( other.Begin() <= other.End() );
-		return Begin() > other.End() or End() < other.Begin();
-	}
-	
-/*
-=================================================
-	GetIter
-=================================================
-*/
-	template <typename T>
-	inline T * ArrayRef<T>::GetIter (const usize i)
-	{
-		ASSUME( i < _count );
-		return & _memory[i];
-	}
-	
-/*
-=================================================
-	GetIter
-=================================================
-*/
-	template <typename T>
-	inline const T * ArrayRef<T>::GetIter (const usize i) const
-	{
-		ASSUME( i < _count );
-		return & _memory[i];
-	}
-	
-/*
-=================================================
-	IsBegin
-=================================================
-*/
-	template <typename T>
-	inline bool ArrayRef<T>::IsBegin (const_iterator iter) const
-	{
-		return Begin() == iter;
-	}
-	
-/*
-=================================================
-	IsEnd
-=================================================
-*/
-	template <typename T>
-	inline bool ArrayRef<T>::IsEnd (const_iterator iter) const
-	{
-		return End() == iter;
+		ASSERT( begin() <= end() );
+		ASSERT( other.begin() <= other.end() );
+		return begin() > other.end() or end() < other.begin();
 	}
 	
 /*
@@ -719,7 +630,7 @@ namespace GXTypes
 	template <typename T>
 	struct Hash< ArrayRef<T> >
 	{
-		CHECKRES HashResult  operator () (const ArrayRef<T> &x) const noexcept
+		ND_ HashResult  operator () (const ArrayRef<T> &x) const noexcept
 		{
 			HashResult	value = ~HashOf( x.Count() );
 
@@ -776,7 +687,7 @@ namespace GXTypes
 		STATIC_ASSERT( not TypeTraits::IsConst<T> );
 		STATIC_ASSERT( CompileTime::IsPOD<T> );
 
-		UnsafeMem::ZeroMem( buf.ptr(), buf.Size() );
+		UnsafeMem::ZeroMem( buf.RawPtr(), buf.Size() );
 	}
 	
 /*
@@ -793,7 +704,7 @@ namespace GXTypes
 		STATIC_ASSERT( CompileTime::IsPOD<T0> and CompileTime::IsPOD<T1> );
 		ASSERT( dst.Size() >= src.Size() );
 
-		UnsafeMem::MemCopy( dst.ptr(), src.ptr(), GXMath::Min( dst.Size(), src.Size() ) );
+		UnsafeMem::MemCopy( dst.RawPtr(), src.RawPtr(), GXMath::Min( dst.Size(), src.Size() ) );
 	}
 	
 /*
@@ -810,7 +721,7 @@ namespace GXTypes
 		STATIC_ASSERT( CompileTime::IsPOD<T0> and CompileTime::IsPOD<T1> );
 		ASSERT( dst.Size() >= src.Size() );
 
-		UnsafeMem::MemMove( dst.ptr(), src.ptr(), GXMath::Min( dst.Size(), src.Size() ) );
+		UnsafeMem::MemMove( dst.RawPtr(), src.RawPtr(), GXMath::Min( dst.Size(), src.Size() ) );
 	}
 	
 /*
@@ -823,7 +734,7 @@ namespace GXTypes
 	{
 		ASSERT( left.Size() == right.Size() );
 
-		return UnsafeMem::MemCmp( left.ptr(), right.ptr(), GXMath::Min( left.Size(), right.Size() ) );
+		return UnsafeMem::MemCmp( left.RawPtr(), right.RawPtr(), GXMath::Min( left.Size(), right.Size() ) );
 	}
 
 

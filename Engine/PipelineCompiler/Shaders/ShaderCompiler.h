@@ -4,7 +4,12 @@
 
 #include "Engine/PipelineCompiler/Common/Common.h"
 #include "Engine/PipelineCompiler/Shaders/DeserializedShader.h"
-#include "Engine/Platforms/Engine.Platforms.h"
+
+//#define GX_PIPELINECOMPILER_USE_PLATFORMS
+
+#ifdef GX_PIPELINECOMPILER_USE_PLATFORMS
+#	include "Engine/Platforms/Engine.Platforms.h"
+#endif
 
 class TIntermNode;
 struct TBuiltInResource;
@@ -28,11 +33,11 @@ namespace PipelineCompiler
 	{
 	// types
 	public:
-		static const uint	GLSL_VERSION	= 450;
-		static const uint	GLSL_ES_VERSION	= 320;
-		static const uint	HLSL_VERSION	= 1100;
-		static const uint	VULKAN_VERSION	= 100;	// 100, 110
-		static const uint	SPIRV_VERSION	= 100;	// 100, 130
+		static constexpr uint	GLSL_VERSION	= 450;
+		static constexpr uint	GLSL_ES_VERSION	= 320;
+		static constexpr uint	HLSL_VERSION	= 1100;
+		static constexpr uint	VULKAN_VERSION	= 100;	// 100, 110
+		static constexpr uint	SPIRV_VERSION	= 100;	// 100, 130
 
 		struct FieldTypeInfo
 		{
@@ -41,7 +46,7 @@ namespace PipelineCompiler
 			EShaderVariable::type	type		= EShaderVariable::Unknown;
 			uint					index		= 0;		// index of field in struct, update index if 'name' was changed
 
-			bool operator == (const FieldTypeInfo &right) const;
+			ND_ bool operator == (const FieldTypeInfo &right) const;
 		};
 
 		using ReplaceStructTypesFunc_t	= Delegate< bool (StringCRef typeName, INOUT FieldTypeInfo &field) >;
@@ -52,12 +57,8 @@ namespace PipelineCompiler
 			ReplaceStructTypesFunc_t	typeReplacer;
 			EShaderSrcFormat::type		source				= EShaderSrcFormat::GXSL;
 			EShaderDstFormat::type		target				= EShaderDstFormat::GLSL_Source;
-			uint						inlineThreshold		= 1000;
-			uint						loopUnrollThreshold	= 350;
-			bool						obfuscate			= false;
-			bool						filterInactive		= false;
 			bool						skipExternals		= false;		// uniforms, buffers, in/out
-			bool						optimize			= false;
+			bool						optimize			= false;		// SPRIV only
 			bool						inlineAll			= false;
 		};
 
@@ -66,6 +67,7 @@ namespace PipelineCompiler
 		struct _GLSLangResult;
 		struct _ShaderData;
 		
+		#ifdef GX_PIPELINECOMPILER_USE_PLATFORMS
 		class _BaseApp : public StaticRefCountedObject
 		{
 		private:
@@ -86,14 +88,12 @@ namespace PipelineCompiler
 			void Quit ();
 			bool Update ();
 
-			ModulePtr	CLThread ()		{ return _clthread; }
-			ModulePtr	GLThread ()		{ return _glthread; }
+			ND_ ModulePtr	CLThread ()		{ return _clthread; }
+			ND_ ModulePtr	GLThread ()		{ return _glthread; }
 		};
 
-
-	// variables
-	private:
 		SharedPointerType< _BaseApp >	_app;
+		#endif
 
 
 	// methods
@@ -119,8 +119,6 @@ namespace PipelineCompiler
 		bool _GLSLangParse (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT _GLSLangResult &result) const;
 
 		bool _Compile (const glslang::TIntermediate* intermediate, const Config &cfg, OUT String &log, OUT BinaryArray &result) const;
-
-		bool _CompileWithLunarGOO (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const;
 
 		bool _CopySource (const _ShaderData &data, OUT BinaryArray &result) const;
 
@@ -172,7 +170,6 @@ namespace PipelineCompiler
 	// GXSL/GLSL to GLSL translator
 	private:
 		bool _TranslateGXSLtoGLSL (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const;
-		bool _OptimizeGLSL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result) const;
 		bool _CompileGLSL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result);
 		bool _ValidateGLSLSource (EShader::type shaderType, StringCRef src) const;
 		bool _ValidateGLSLBinary (EShader::type shaderType, BinArrayCRef bin) const;
@@ -201,6 +198,7 @@ namespace PipelineCompiler
 
 	// SPIRV
 	private:
+		bool _CompileSPIRV (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const;
 		bool _ValidateSPIRV (EShader::type shaderType, BinArrayCRef bin) const;
 	};
 

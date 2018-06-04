@@ -4,6 +4,8 @@
 
 #include "Engine/STL/Containers/MapUtils.h"
 #include "Engine/STL/Containers/IndexedArray.h"
+#include "Engine/STL/Containers/UniBuffer.h"
+#include "Engine/STL/Containers/IndexedIterator.h"
 #include "Engine/STL/CompileTime/FunctionInfo.h"
 
 namespace GX_STL
@@ -33,13 +35,14 @@ namespace _types_hidden_
 
 		using Value_t			= Value;
 		using Hash_t			= H;
-		using const_iterator	= Ptr< const Value >;
+		using const_iterator	= Ptr< const Value >;		// TODO: rename
+		using idx_iterator		= IndexedIterator< const Value_t >;
 
 
 	private:
 		using KeyHash_t			= CompileTime::ResultOf<decltype(&H::operator())>;
 		using Key_t				= Value;
-		using hpair_t			= Pair< KeyHash_t, Key_t >;
+		using HPair_t			= Pair< KeyHash_t, Key_t >;
 		using KeyPair_t			= Pair< KeyHash_t, Key_t const& >;
 		
 		template <typename Key>
@@ -51,16 +54,16 @@ namespace _types_hidden_
 			
 		// methods
 			_KeySearchCmp (const Key_t *v) : _keyHash( Hash_t()(*v) ), _key( *v ) {}
-			_KeySearchCmp (const hpair_t *p) : _keyHash( p->first ), _key( p->second ) {}
+			_KeySearchCmp (const HPair_t *p) : _keyHash( p->first ), _key( p->second ) {}
 			_KeySearchCmp (const KeyPair_t *p) : _keyHash( p->first ), _key( p->second ) {}
 
-			bool operator == (const hpair_t &r) const	{ return _keyHash == r.first and _key == r.second; }
-			bool operator != (const hpair_t &r) const	{ return not ( *this == r ); }
-			bool operator <  (const hpair_t &r) const	{ return _keyHash == r.first ? _key < r.second : _keyHash < r.first; }
-			bool operator >  (const hpair_t &r) const	{ return _keyHash == r.first ? _key > r.second : _keyHash > r.first; }
+			bool operator == (const HPair_t &r) const	{ return _keyHash == r.first and _key == r.second; }
+			bool operator != (const HPair_t &r) const	{ return not ( *this == r ); }
+			bool operator <  (const HPair_t &r) const	{ return _keyHash != r.first ? _keyHash < r.first : r.second > _key; }
+			bool operator >  (const HPair_t &r) const	{ return _keyHash != r.first ? _keyHash > r.first : _key > r.second; }
 		};
 
-		using _MapUtils_t	= _types_hidden_::MapUtils< Container< hpair_t, S, MC >, KeyPair_t, _KeySearchCmp, IsUnique >;
+		using _MapUtils_t	= _types_hidden_::MapUtils< Container< HPair_t, S, MC >, KeyPair_t, _KeySearchCmp, IsUnique >;
 
 
 	// variables
@@ -91,12 +94,12 @@ namespace _types_hidden_
 		}
 
 
-		Value const &	operator [] (usize i) const
+		ND_ Value const &	operator [] (usize i) const
 		{
 			return _memory[i].second;
 		}
 		
-		Value const &	operator () (const Value &value) const
+		ND_ Value const &	operator () (const Value &value) const
 		{
 			usize	idx = 0;
 			FindIndex( value, OUT idx );
@@ -104,57 +107,67 @@ namespace _types_hidden_
 		}
 
 
-		Self &			operator << (Value &&value)
+		Self &		operator << (Value &&value)
 		{
 			Add( RVREF( value ) );
 			return *this;
 		}
 
 		template <typename V>
-		Self &			operator << (const V &value)
+		Self &		operator << (const V &value)
 		{
 			Add( Value(value) );
 			return *this;
 		}
 
 
-		bool			operator == (const Self &right) const
+		ND_ bool	operator == (const Self &right) const
 		{
 			return _memory == right._memory;
 		}
 
-		bool			operator != (const Self &right) const
+		ND_ bool	operator != (const Self &right) const
 		{
 			return not (*this == right);
 		}
 		
-
-		Self &			operator =  (Self &&right)		= default;
-		Self &			operator =  (const Self &right)	= default;
-
-
-		Value const &	Front ()		const	{ return (*this)[0]; }
-		Value const &	Back ()			const	{ return (*this)[ LastIndex() ]; }
-
-		bool			Empty ()		const	{ return _memory.Empty(); }
-		usize			Count ()		const	{ return _memory.Count(); }
-		usize			LastIndex ()	const	{ return _memory.LastIndex(); }
-		BytesU			Size ()			const	{ return _memory.Size(); }
-
 		
+		ND_ operator UniBuffer<const Value> () const
+		{
+			return UniBuffer<const Value>{ ArrayCRef<HPair_t>{_memory}, &HPair_t::second };
+		}
+
+
+		Self &		operator =  (Self &&right)		= default;
+		Self &		operator =  (const Self &right)	= default;
+
+
+		ND_ Value const &	Front ()		const	{ return (*this)[0]; }
+		ND_ Value const &	Back ()			const	{ return (*this)[ LastIndex() ]; }
+
+		ND_ bool			Empty ()		const	{ return _memory.Empty(); }
+		ND_ usize			Count ()		const	{ return _memory.Count(); }
+		ND_ usize			LastIndex ()	const	{ return _memory.LastIndex(); }
+		ND_ BytesU			Size ()			const	{ return _memory.Size(); }
+		
+
+		ND_ auto			begin ()		const	{ return idx_iterator{ *this, 0 }; }
+		ND_ auto			end ()			const	{ return idx_iterator{ *this, Count() }; }
+		
+
 		// if IsUnique == true
 		// if Map contains same value, then the old value will be replaced
 		const_iterator Add (const Value &value)
 		{
 			const KeyHash_t	hash = _hasher(value);
-			const usize		idx  = _memory.AddOrReplace( RVREF(hpair_t( hash, value )) );
+			const usize		idx  = _memory.AddOrReplace( RVREF(HPair_t( hash, value )) );
 			return &(*this)[ idx ];
 		}
 
 		const_iterator Add (Value &&value)
 		{
 			const KeyHash_t	hash = _hasher(value);
-			const usize		idx  = _memory.AddOrReplace( RVREF(hpair_t( hash, RVREF(value) )) );
+			const usize		idx  = _memory.AddOrReplace( RVREF(HPair_t( hash, RVREF(value) )) );
 			return &(*this)[ idx ];
 		}
 		
@@ -164,14 +177,14 @@ namespace _types_hidden_
 		const_iterator AddOrSkip (const Value &value)
 		{
 			const KeyHash_t	hash = _hasher(value);
-			const usize		idx  = _memory.AddOrSkip( RVREF(hpair_t( hash, value )) );
+			const usize		idx  = _memory.AddOrSkip( RVREF(HPair_t( hash, value )) );
 			return &(*this)[ idx ];
 		}
 
 		const_iterator AddOrSkip (Value &&value)
 		{
 			const KeyHash_t	hash = _hasher(value);
-			const usize		idx  = _memory.AddOrSkip( RVREF(hpair_t( hash, RVREF(value) )) );
+			const usize		idx  = _memory.AddOrSkip( RVREF(HPair_t( hash, RVREF(value) )) );
 			return &(*this)[ idx ];
 		}
 
@@ -214,7 +227,7 @@ namespace _types_hidden_
 		}
 
 
-		bool IsExist (const Value &key) const
+		ND_ bool IsExist (const Value &key) const
 		{
 			usize idx = 0;
 			return FindIndex( key, OUT idx );

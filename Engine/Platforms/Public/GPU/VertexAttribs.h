@@ -42,7 +42,6 @@ namespace Platforms
 
 			bool operator == (const Attrib &right) const;
 			bool operator >  (const Attrib &right) const;
-			bool operator <  (const Attrib &right) const;
 		};
 
 		using Attribs	= FixedSizeHashMap< Name_t, Attrib, GlobalConst::GAPI_MaxAttribs >;
@@ -70,17 +69,17 @@ namespace Platforms
 		template <typename ValueType>
 		Self & Add (StringCRef name, bool norm, StringCRef buffer = StringCRef());
 
-		PairPtr  Get (StringCRef name) const;
+		ND_ PairPtr	Get (StringCRef name) const;
 
-		bool	IsExist (StringCRef name) const		{ return _attribs.IsExist( name ); }
+		ND_ bool	IsExist (StringCRef name) const		{ return _attribs.IsExist( name ); }
 
-		void	Clear ()							{ _attribs.Clear(); }
+			void	Clear ()							{ _attribs.Clear(); }
 
-		bool	Empty () const						{ return _attribs.Empty(); }
+		ND_ bool	Empty () const						{ return _attribs.Empty(); }
 
-		usize	Count () const						{ return _attribs.Count(); }
+		ND_ usize	Count () const						{ return _attribs.Count(); }
 
-		PairRef	operator [] (usize index) const		{ return _attribs[index]; }
+		ND_ PairRef	operator [] (usize index) const		{ return _attribs[index]; }
 	};
 	
 
@@ -120,18 +119,6 @@ namespace Platforms
 		return	type	!= right.type	?	type	> right.type	:
 				index	!= right.index	?	index	> right.index	:
 											buffer	> right.buffer;
-	}
-	
-/*
-=================================================
-	operator <
-=================================================
-*/
-	inline bool VertexAttribs::Attrib::operator <  (const Attrib &right) const
-	{
-		return	type	!= right.type	?	type	< right.type	:
-				index	!= right.index	?	index	< right.index	:
-											buffer	< right.buffer;
 	}
 //-----------------------------------------------------------------------------
 

@@ -1,13 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/PipelineCompiler/Shaders/LunarGLASS_Include.h"
+#include "Engine/PipelineCompiler/Shaders/glslang_include.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
 #include "Engine/Platforms/OpenGL/450/GL4Messages.h"
 
-#ifdef GRAPHICS_API_OPENGL
 
 namespace PipelineCompiler
 {
+# ifdef GRAPHICS_API_OPENGL
+
 	using namespace gl;
 
 /*
@@ -536,7 +537,7 @@ namespace PipelineCompiler
 	_CompileGLSL
 =================================================
 */
-	bool ShaderCompiler::_CompileGLSL (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result)
+	bool ShaderCompiler::_CompileGLSL (const Config &, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result)
 	{
 		CHECK_ERR( InitializeContext() );
 
@@ -586,7 +587,7 @@ namespace PipelineCompiler
 	_ValidateGLSLSource
 =================================================
 */
-	bool ShaderCompiler::_ValidateGLSLSource (EShader::type shaderType, StringCRef src) const
+	bool ShaderCompiler::_ValidateGLSLSource (EShader::type, StringCRef) const
 	{
 		TODO( "_ValidateGLSLBinary" );
 		return false;
@@ -597,12 +598,30 @@ namespace PipelineCompiler
 	_ValidateGLSLBinary
 =================================================
 */
-	bool ShaderCompiler::_ValidateGLSLBinary (EShader::type shaderType, BinArrayCRef bin) const
+	bool ShaderCompiler::_ValidateGLSLBinary (EShader::type, BinArrayCRef) const
 	{
 		TODO( "_ValidateGLSLBinary" );
 		return false;
 	}
 
+# else
+
+	bool ShaderCompiler::_CompileGLSL (const Config &, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result)
+	{
+		return false;
+	}
+
+	bool ShaderCompiler::_ValidateGLSLSource (EShader::type, StringCRef) const
+	{
+		return false;
+	}
+	
+	bool ShaderCompiler::_ValidateGLSLBinary (EShader::type, BinArrayCRef) const
+	{
+		return false;
+	}
+
+# endif	// GRAPHICS_API_OPENGL
+
 }	// PipelineCompiler
 
-#endif	// GRAPHICS_API_OPENGL

@@ -4,6 +4,7 @@
 
 namespace PipelineCompiler
 {
+	using WFilePtr = GXFile::WFilePtr;
 	
 /*
 =================================================
@@ -293,7 +294,7 @@ namespace PipelineCompiler
 
 		String	includes;
 		includes << ser->Comment( "This is generated file" );
-		includes << ser->Comment( "Created at: "_str << ToString( OS::Date().Now() ) ) << '\n';
+		//includes << ser->Comment( "Created at: "_str << ToString( Date().Now() ) ) << '\n';
 		includes << ser->BeginFile( true );
 
 		if ( ser->GetSourceFileExt().EqualsIC( "cpp" ) )
@@ -353,7 +354,7 @@ namespace Pipelines
 
 			if ( rebuild )
 			{
-				WFilePtr		file	= File::HddWFile::New( fname );
+				WFilePtr		file	= GXFile::HddWFile::New( fname );
 				CHECK_ERR( file );
 
 				String			str;
@@ -383,7 +384,7 @@ namespace Pipelines
 		if ( any_file_builded or
 			 not OS::FileSystem::IsFileExist( inc_name ) )
 		{
-			WFilePtr	file = File::HddWFile::New( inc_name );
+			WFilePtr	file = GXFile::HddWFile::New( inc_name );
 			CHECK_ERR( file );
 
 			CHECK_ERR( file->Write( StringCRef(includes) ) );
@@ -393,7 +394,7 @@ namespace Pipelines
 		if ( cfg.searchForSharedTypes and
 			 (any_file_builded or not OS::FileSystem::IsFileExist( types_fname )) )
 		{
-			WFilePtr	file = File::HddWFile::New( types_fname );
+			WFilePtr	file = GXFile::HddWFile::New( types_fname );
 			CHECK_ERR( file );
 		
 			CHECK_ERR( file->Write( StringCRef(shared_types_src) ) );
@@ -467,9 +468,6 @@ namespace Pipelines
 	template <typename PplnCollection>
 	bool PipelineManager::_ProcessSharedTypes (const PplnCollection &pipelines, Ptr<ISerializer> ser, OUT String &fileSource, INOUT ConverterConfig &cfg) const
 	{
-		// update offsets by packing
-		//CHECK_ERR( BasePipeline::_CalculateOffsets( _structTypes ) );
-		
 		if ( cfg.addPaddingToStructs )
 		{
 			// replace types to aligned types and padding
@@ -547,7 +545,7 @@ namespace Pipelines
 		
 
 		// save shared types
-		if ( cfg.searchForSharedTypes /*and not _structTypes.Empty()*/ )
+		if ( cfg.searchForSharedTypes )
 		{
 			CHECK_ERR( _SaveSharedTypes( ser, cfg.nameSpace, OUT fileSource ) );
 		}
@@ -564,7 +562,7 @@ namespace Pipelines
 		String&	str = fileSource;
 		
 		str << ser->Comment( "This is generated file" );
-		str << ser->Comment( "Created at: "_str << ToString( OS::Date().Now() ) ) << '\n';
+		//str << ser->Comment( "Created at: "_str << ToString( Date().Now() ) ) << '\n';
 		str << ser->BeginFile( true ) << '\n';
 		str << ser->DeclNamespace( nameSpace );
 		str << ser->BeginScope();

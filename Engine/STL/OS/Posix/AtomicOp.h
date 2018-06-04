@@ -65,7 +65,7 @@ namespace OS
 		}
 
 		template <typename T>
-		CHECKRES forceinline static T Get (volatile T const & left) {
+		ND_ forceinline static T Get (volatile T const & left) {
 			T	value = left;
 			__sync_synchronize();
 			return value;

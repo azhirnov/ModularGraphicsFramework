@@ -22,45 +22,10 @@ namespace Graphics
 		using CmdBufferMsgList_t	= MessageListFrom<
 											GpuMsg::CmdBegin,
 											GpuMsg::CmdEnd,
-											GpuMsg::CmdSetViewport,
-											GpuMsg::CmdSetScissor,
-											GpuMsg::CmdSetDepthBounds,
-											GpuMsg::CmdSetBlendColor,
-											GpuMsg::CmdSetDepthBias,
-											GpuMsg::CmdSetLineWidth,
-											GpuMsg::CmdSetStencilCompareMask,
-											GpuMsg::CmdSetStencilWriteMask,
-											GpuMsg::CmdSetStencilReference,
-											GpuMsg::CmdBeginRenderPass,
-											GpuMsg::CmdEndRenderPass,
-											GpuMsg::CmdNextSubpass,
-											GpuMsg::CmdBindGraphicsPipeline,
-											GpuMsg::CmdBindComputePipeline,
-											GpuMsg::CmdBindVertexBuffers,
-											GpuMsg::CmdBindIndexBuffer,
-											GpuMsg::CmdDraw,
-											GpuMsg::CmdDrawIndexed,
-											GpuMsg::CmdDrawIndirect,
-											GpuMsg::CmdDrawIndexedIndirect,
-											GpuMsg::CmdDispatch,
-											GpuMsg::CmdDispatchIndirect,
-											GpuMsg::CmdExecute,
-											GpuMsg::CmdBindGraphicsResourceTable,
-											GpuMsg::CmdBindComputeResourceTable,
-											GpuMsg::CmdCopyBuffer,
-											GpuMsg::CmdCopyImage,
-											GpuMsg::CmdCopyBufferToImage,
-											GpuMsg::CmdCopyImageToBuffer,
-											GpuMsg::CmdBlitImage,
-											GpuMsg::CmdUpdateBuffer,
-											GpuMsg::CmdFillBuffer,
-											GpuMsg::CmdClearAttachments,
-											GpuMsg::CmdClearColorImage,
-											GpuMsg::CmdClearDepthStencilImage,
-											GpuMsg::CmdPipelineBarrier,
 											GpuMsg::SetCommandBufferDependency,
-											GpuMsg::GetCommandBufferState
-										>;
+											GpuMsg::GetCommandBufferState >
+										::Append< GpuMsg::DefaultComputeCommands_t >
+										::Append< GpuMsg::DefaultGraphicsCommands_t >;
 		
 		using SupportedMessages_t	= GraphicsBaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GraphicsMsg::CmdBegin,
@@ -72,8 +37,7 @@ namespace Graphics
 											GraphicsMsg::CmdAppend,
 											GraphicsMsg::CmdGetCurrentState,
 											GraphicsMsg::CmdAddFrameDependency,
-											GraphicsMsg::SubscribeOnFrameCompleted
-										> >
+											GraphicsMsg::SubscribeOnFrameCompleted > >
 										::Append< CmdBufferMsgList_t >;
 
 		using SupportedEvents_t		= GraphicsBaseModule::SupportedEvents_t::Append< MessageListFrom<
@@ -241,7 +205,7 @@ namespace Graphics
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		CHECK_ERR( _GetManager() /*and _IsComposedState( _GetManager()->GetState() )*/ );
 
 
@@ -263,7 +227,7 @@ namespace Graphics
 										CreateInfo::GpuCommandBuilder{ _GetManager() },
 										OUT _builder ) );
 
-			CHECK_ERR( _Attach( "builder", _builder, true ) );
+			CHECK_ERR( _Attach( "builder", _builder ) );
 			_builder->Send( msg );
 		}
 
@@ -288,12 +252,12 @@ namespace Graphics
 		_GetManager()->Send( req_dev );
 		CHECK_COMPOSING( _syncManager = req_dev->result->syncManager );
 
-		FOR( i, _perFrame )
+		for (auto& frame : _perFrame)
 		{
 			Message< GpuMsg::CreateFence >	req_fence;
 			CHECK( _syncManager->Send( req_fence ) );
 
-			_perFrame[i].fence = *req_fence->result;
+			frame.fence = *req_fence->result;
 		}
 		
 		_SendForEachAttachments( msg );
@@ -315,21 +279,16 @@ namespace Graphics
 	bool CommandBufferManager::_Delete (const Message< ModuleMsg::Delete > &msg)
 	{
 		_SendForEachAttachments( msg );
-
-		FOR( i, _perFrame )
+		
+		for (auto& frame : _perFrame)
 		{
-			auto&	cmds	= _perFrame[i].commands;
-			auto	fence	= _perFrame[i].fence;
-
-			if ( fence != GpuFenceId::Unknown )
+			if ( frame.fence != GpuFenceId::Unknown )
 			{
-				CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ fence }) );
-				CHECK( _syncManager->Send< GpuMsg::DestroyFence >({ fence }) );
+				CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ frame.fence }) );
+				CHECK( _syncManager->Send< GpuMsg::DestroyFence >({ frame.fence }) );
 			}
 
-			FOR( j, cmds ) {
-				cmds[j]->Send( msg );
-			}
+			ModuleUtils::Send( frame.commands, msg );
 		}
 
 		_perFrame.Clear();
@@ -348,7 +307,7 @@ namespace Graphics
 	{
 		const bool	is_builder	= msg->newModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_builder ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 
 		if ( is_builder )
 		{
@@ -387,9 +346,14 @@ namespace Graphics
 		// wait until executing will be completed
 		{
 			auto&	per_frame	= _perFrame[ _bufferIndex ];
-			per_frame.waitFences.PushFront( per_frame.fence );
+			usize	cmd_count	= per_frame.commands.Count() + per_frame.externalBuffers.Count();
 
-			CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ per_frame.waitFences }) );
+			if ( cmd_count > 0 and per_frame.waitFences.Count() > 0 )
+			{
+				per_frame.waitFences.PushFront( per_frame.fence );
+
+				CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ per_frame.waitFences }) );
+			}
 
 			Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
 
@@ -397,8 +361,8 @@ namespace Graphics
 			ModuleUtils::Send( per_frame.externalBuffers, completed_state );
 			ModuleUtils::Send( per_frame.externalBuffers, Message<ModuleMsg::Delete>{} );
 		
-			FOR( i, per_frame.callbacks ) {
-				per_frame.callbacks[i]( _bufferIndex );
+			for (auto& cb : per_frame.callbacks) {
+				cb( _bufferIndex );
 			}
 
 			per_frame.freeBuffers.Append( per_frame.commands );
@@ -658,7 +622,6 @@ namespace Graphics
 							_cmdBufferId,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
-								_GetManager(),
 								CommandBufferDescriptor{ ECmdBufferCreate::ImplicitResetable }
 							},
 							OUT cmd_buf ) );

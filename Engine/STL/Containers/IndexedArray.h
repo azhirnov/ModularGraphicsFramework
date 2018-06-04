@@ -4,6 +4,7 @@
 
 #include "Engine/STL/Containers/Array.h"
 #include "Engine/STL/Algorithms/Sorts.h"
+#include "Engine/STL/Containers/IndexedIterator.h"
 
 namespace GX_STL
 {
@@ -48,14 +49,14 @@ namespace GXTypes
 		IndexedArray (Self &&) = default;
 		IndexedArray (const Self &) = default;
 
-		Self&		operator = (Self &&) = default;
-		Self&		operator = (const Self &) = default;
+			Self&		operator = (Self &&) = default;
+			Self&		operator = (const Self &) = default;
 
-		T&			operator [] (usize index);
-		T const&	operator [] (usize index) const;
+			Self&		operator << (const T &value)			{ PushBack( value );		return *this; }
+			Self&		operator << (T &&value)					{ PushBack( RVREF(value) );	return *this; }
 
-		Self&		operator << (const T &value)					{ PushBack( value );		return *this; }
-		Self&		operator << (T &&value)							{ PushBack( RVREF(value) );	return *this; }
+		ND_ T&			operator [] (usize index);
+		ND_ T const&	operator [] (usize index) const;
 		
 		void Resize (usize newSize, bool allowReserve = true);
 		void Reserve (usize size);
@@ -68,18 +69,29 @@ namespace GXTypes
 
 		template <typename SortComparator>
 		void Sort (const SortComparator &func);
-		void Sort ()								{ Sort( TSortCmp<T>() ); }
+		void Sort ()											{ Sort( TSortCmp<T>() ); }
 
-		void	Free ()								{ _array.Free(); }
-		void	Clear ()							{ _array.Clear(); }
+		void		Free ()										{ _array.Free(); }
+		void		Clear ()									{ _array.Clear(); }
 
-		bool	Empty ()		const				{ return _array.Empty(); }
-		usize	Count ()		const				{ return _array.Count(); }
-		usize	LastIndex ()	const				{ return _array.LastIndex(); }
-		BytesU	Size ()			const				{ return _array.Size(); }
+		ND_ bool	Empty ()		const						{ return _array.Empty(); }
+		ND_ usize	Count ()		const						{ return _array.Count(); }
+		ND_ usize	LastIndex ()	const						{ return _array.LastIndex(); }
+		ND_ BytesU	Size ()			const						{ return _array.Size(); }
+		
 
-		constexpr bool IsStaticMemory ()	const	{ return _array.IsStaticMemory(); }
-		static constexpr bool IsLinearMemory ()		{ return Array_t::IsLinearMemory(); }
+		// iterators
+		using iterator			= IndexedIterator< T >;
+		using const_iterator	= IndexedIterator< const T >;
+
+		ND_ auto	begin ()				{ return iterator{ *this, 0 }; }
+		ND_ auto	begin ()		const	{ return const_iterator{ *this, 0 }; }
+		ND_ auto	end ()					{ return iterator{ *this, Count() }; }
+		ND_ auto	end ()			const	{ return const_iterator{ *this, Count() }; }
+
+
+		constexpr bool			IsStaticMemory () const			{ return _array.IsStaticMemory(); }
+		static constexpr bool	IsLinearMemory ()				{ return Array_t::IsLinearMemory(); }
 	};
 
 	
@@ -218,7 +230,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	struct Hash< IndexedArray<T,S,MC> >
 	{
-		CHECKRES HashResult  operator () (const IndexedArray<T,S,MC> &x) const noexcept
+		ND_ HashResult  operator () (const IndexedArray<T,S,MC> &x) const noexcept
 		{
 			return HashOf( ArrayCRef<T>(x) );
 		}

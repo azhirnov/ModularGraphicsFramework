@@ -29,7 +29,11 @@ namespace Platforms
 		};
 
 		static constexpr bool IsMultisampled (type value);
+
 		static constexpr bool IsArray (type value);
+		static constexpr bool IsArray1D (type value);
+		static constexpr bool IsArray2D (type value);
+		static constexpr bool IsArrayOr3D (type value);
 
 		static StringCRef ToString (type value);
 	};
@@ -115,22 +119,37 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EImage
 	
-	inline constexpr bool EImage::IsMultisampled (type value)
+	ND_ inline constexpr bool EImage::IsMultisampled (type value)
 	{
 		return value == Tex2DMS or value == Tex2DMSArray;
 	}
 	
-	inline constexpr bool EImage::IsArray (type value)
+	ND_ inline constexpr bool EImage::IsArray (type value)
 	{
-		return	value == Tex1DArray		or value == Tex2DArray	or
+		return IsArray1D( value ) or IsArray2D( value );
+	}
+	
+	ND_ inline constexpr bool EImage::IsArray1D (type value)
+	{
+		return	value == Tex1DArray;
+	}
+
+	ND_ inline constexpr bool EImage::IsArray2D (type value)
+	{
+		return	value == Tex2DArray		or
 				value == Tex2DMSArray	or value == TexCubeArray;
+	}
+
+	ND_ inline constexpr bool EImage::IsArrayOr3D (type value)
+	{
+		return IsArray( value ) or value == Tex3D;
 	}
 
 
 //-----------------------------------------------------------------------------//
 // EImageLayout
 	
-	inline constexpr bool EImageLayout::IsPresent (type value)
+	ND_ inline constexpr bool EImageLayout::IsPresent (type value)
 	{
 		// TODO: add other present layouts
 		return value == PresentSrc;
@@ -140,20 +159,20 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // ERenderTarget
 	
-	inline constexpr ERenderTarget::type  ERenderTarget::ToColor (uint index)
+	ND_ inline constexpr ERenderTarget::type  ERenderTarget::ToColor (uint index)
 	{
 		//ASSERT(index < GlobalConst::GAPI_MaxColorBuffers);
 		return type( index + Color0 );
 	}
 
 
-	inline constexpr bool  ERenderTarget::IsColor (type value)
+	ND_ inline constexpr bool  ERenderTarget::IsColor (type value)
 	{
 		return value >= Color0 and value < ColorMax;
 	}
 	
 
-	inline constexpr ERenderTarget::type  ERenderTarget::FromPixelFormat (EPixelFormat::type fmt, uint colorIndex)
+	ND_ inline constexpr ERenderTarget::type  ERenderTarget::FromPixelFormat (EPixelFormat::type fmt, uint colorIndex)
 	{
 		return	EPixelFormat::IsDepthStencil( fmt ) ?	DepthStencil :
 				EPixelFormat::IsDepth( fmt ) ?			Depth :

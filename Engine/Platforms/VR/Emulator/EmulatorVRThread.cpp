@@ -20,14 +20,14 @@
 #endif
 
 #ifdef GRAPHICS_API_VULKAN
-#	include "Engine/Platforms/Vulkan/Impl/Vk1BaseModule.h"
+#	include "Engine/Platforms/Vulkan/110/Vk1BaseModule.h"
 #endif
 
 namespace Engine
 {
 namespace PlatformVR
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 	
 
 	//
@@ -266,7 +266,7 @@ namespace PlatformVR
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 
 		// attach to input
 		ModulePtr	input;
@@ -535,7 +535,7 @@ namespace PlatformVR
 */
 	bool EmulatorVRThread::_DestroyDevice ()
 	{
-		Message< GpuMsg::Delete >	del_msg;
+		Message< ModuleMsg::Delete >	del_msg;
 
 		if ( _gpuThread )
 		{
@@ -676,17 +676,13 @@ namespace PlatformVR
 			CHECK( _gpuThread->Send( req_ids ) );
 			CHECK( _gpuThread->Send( req_settings ) );
 
-			const EImage::type	img_type	= req_settings->result->samples.Get() > 1 ? EImage::Tex2DMS : EImage::Tex2D;
+			const EImage::type	img_type	= req_settings->result->samples.IsEnabled() ? EImage::Tex2DMS : EImage::Tex2D;
 
 			ModulePtr	framebuffer;
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 										req_ids->graphics->framebuffer,
 										GlobalSystems(),
-										CreateInfo::GpuFramebuffer{
-											_gpuThread,
-											_eyeTextureDimension,
-											0
-										},
+										CreateInfo::GpuFramebuffer{ _eyeTextureDimension },
 										OUT framebuffer ) );
 
 			// create color target
@@ -742,8 +738,8 @@ namespace PlatformVR
 			_framebuffers[i].layer		 = 0;
 		}
 
-		CHECK_ERR( _Attach( "left_eye_fb",  _framebuffers[0].framebuffer, false ) );
-		CHECK_ERR( _Attach( "right_eye_fb", _framebuffers[1].framebuffer, false ) );
+		CHECK_ERR( _Attach( "left_eye_fb",  _framebuffers[0].framebuffer ) );
+		CHECK_ERR( _Attach( "right_eye_fb", _framebuffers[1].framebuffer ) );
 
 		#ifdef GRAPHICS_API_OPENGL
 		_isOpenGL = _framebuffers[0].framebuffer->GetSupportedMessages().HasType< Message<GpuMsg::GetGLFramebufferID> >();

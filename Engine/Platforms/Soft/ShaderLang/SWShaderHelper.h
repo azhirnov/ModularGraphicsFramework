@@ -12,9 +12,10 @@
 
 #include "Engine/Platforms/Soft/ShaderLang/SWLangBuffer.h"
 #include "Engine/Platforms/Soft/ShaderLang/SWLangImage.h"
-#include "Engine/Platforms/Soft/ShaderLang/SWLangTexture.h"
+#include "Engine/Platforms/Soft/ShaderLang/SWLangTexture2D.h"
 #include "Engine/Platforms/Soft/ShaderLang/SWLangShared.h"
 #include "Engine/Platforms/Soft/ShaderLang/SWLangBarrier.h"
+#include "Engine/Platforms/Soft/ShaderLang/SWLangArray.h"
 
 namespace SWShaderLang
 {
@@ -163,10 +164,10 @@ namespace Impl
 		bool FS_DepthOutput (float value) const;*/
 
 		
-		VertexShader const&		GetVertexShaderState () const		{ return _shaderState.Get< VertexShader >(); }
-		GeometryShader const&	GetGeometryShaderState () const		{ return _shaderState.Get< GeometryShader >(); }
-		FragmentShader const&	GetFragmentShaderState () const		{ return _shaderState.Get< FragmentShader >(); }
-		ComputeShader const&	GetComputeShaderState () const		{ return _shaderState.Get< ComputeShader >(); }
+		ND_ VertexShader const&		GetVertexShaderState () const		{ return _shaderState.Get< VertexShader >(); }
+		ND_ GeometryShader const&	GetGeometryShaderState () const		{ return _shaderState.Get< GeometryShader >(); }
+		ND_ FragmentShader const&	GetFragmentShaderState () const		{ return _shaderState.Get< FragmentShader >(); }
+		ND_ ComputeShader const&	GetComputeShaderState () const		{ return _shaderState.Get< ComputeShader >(); }
 
 
 		// for all shaders
@@ -271,7 +272,6 @@ namespace Impl
 	inline void SWShaderHelper::GetImage (uint uniqueIndex, OUT Image2D<T,A> &value) const
 	{
 		Fwd_GetSWImageViewMemoryLayout	req_img{ uniqueIndex,
-												 EPipelineAccess::bits() |
 												 (EStorageAccess::HasReadAccess( A ) ? EPipelineAccess::ShaderRead : EPipelineAccess::type(0)) |
 												 (EStorageAccess::HasWriteAccess( A ) ? EPipelineAccess::ShaderWrite : EPipelineAccess::type(0)),
 												 _GetStage() };
@@ -284,7 +284,6 @@ namespace Impl
 	inline void SWShaderHelper::GetImage (uint uniqueIndex, OUT Image2DArray<T,A> &value) const
 	{
 		Fwd_GetSWImageViewMemoryLayout	req_img{ uniqueIndex,
-												 EPipelineAccess::bits() |
 												 (EStorageAccess::HasReadAccess( A ) ? EPipelineAccess::ShaderRead : EPipelineAccess::type(0)) |
 												 (EStorageAccess::HasWriteAccess( A ) ? EPipelineAccess::ShaderWrite : EPipelineAccess::type(0)),
 												 _GetStage() };
@@ -297,7 +296,6 @@ namespace Impl
 	inline void SWShaderHelper::GetImage (uint uniqueIndex, OUT Image3D<T,A> &value) const
 	{
 		Fwd_GetSWImageViewMemoryLayout	req_img{ uniqueIndex,
-												 EPipelineAccess::bits() |
 												 (EStorageAccess::HasReadAccess( A ) ? EPipelineAccess::ShaderRead : EPipelineAccess::type(0)) |
 												 (EStorageAccess::HasWriteAccess( A ) ? EPipelineAccess::ShaderWrite : EPipelineAccess::type(0)),
 												 _GetStage() };
@@ -314,7 +312,11 @@ namespace Impl
 	template <typename T>
 	inline void SWShaderHelper::GetTexture (uint uniqueIndex, OUT Texture2D<T> &value) const
 	{
-		TODO( "GetTexture" );
+		Fwd_GetSWTextureMemoryLayout	req_tex{ uniqueIndex, EPipelineAccess::ShaderRead, _GetStage() };
+
+		_shader->GetTextureMemoryLayout( req_tex );
+
+		value = RVREF(Texture2D<T>{ RVREF(*req_tex->message->result), *req_tex->message->sampler });
 	}
 	
 /*

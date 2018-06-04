@@ -30,7 +30,6 @@
 #include "Engine/STL/Containers/Set.h"
 #include "Engine/STL/Containers/HashMap.h"
 #include "Engine/STL/Containers/HashSet.h"
-#include "Engine/STL/Algorithms/Range.h"
 
 #include "Engine/STL/Files/BaseFile.h"
 #include "Engine/STL/Time/TimeProfiler.h"
@@ -53,21 +52,12 @@ namespace Engine
 	{
 		class BaseObject;
 		class Module;
-		class MessageHandler;
-		class TaskModule;
-		class ParallelThread;
 		class ModulesFactory;
-		class ThreadManager;
-		class MainSystem;
-		class AsyncMessage;
-		class FileManager;
 
-		// TODO: FileManager
 		// TODO: Serializer
 
 		WEAK_POINTER( Module );
 		SHARED_POINTER( Module );
-		SHARED_POINTER( TaskModule );
 		SHARED_POINTER( ModulesFactory );
 
 		Ptr<Module>  GetMainSystemInstance ();
@@ -75,6 +65,8 @@ namespace Engine
 		template <typename T> struct Message;
 		
 		using TypeIdList = Runtime::TypeIdList;
+
+		namespace _engbase_hidden_ {}
 	}
 	
 	namespace ModuleMsg

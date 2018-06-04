@@ -22,45 +22,10 @@ namespace Graphics
 		using CmdBufferMsgList_t	= MessageListFrom<
 											GpuMsg::CmdBegin,
 											GpuMsg::CmdEnd,
-											GpuMsg::CmdSetViewport,
-											GpuMsg::CmdSetScissor,
-											GpuMsg::CmdSetDepthBounds,
-											GpuMsg::CmdSetBlendColor,
-											GpuMsg::CmdSetDepthBias,
-											GpuMsg::CmdSetLineWidth,
-											GpuMsg::CmdSetStencilCompareMask,
-											GpuMsg::CmdSetStencilWriteMask,
-											GpuMsg::CmdSetStencilReference,
-											GpuMsg::CmdBeginRenderPass,
-											GpuMsg::CmdEndRenderPass,
-											GpuMsg::CmdNextSubpass,
-											GpuMsg::CmdBindGraphicsPipeline,
-											GpuMsg::CmdBindComputePipeline,
-											GpuMsg::CmdBindVertexBuffers,
-											GpuMsg::CmdBindIndexBuffer,
-											GpuMsg::CmdDraw,
-											GpuMsg::CmdDrawIndexed,
-											GpuMsg::CmdDrawIndirect,
-											GpuMsg::CmdDrawIndexedIndirect,
-											GpuMsg::CmdDispatch,
-											GpuMsg::CmdDispatchIndirect,
-											GpuMsg::CmdExecute,
-											GpuMsg::CmdBindGraphicsResourceTable,
-											GpuMsg::CmdBindComputeResourceTable,
-											GpuMsg::CmdCopyBuffer,
-											GpuMsg::CmdCopyImage,
-											GpuMsg::CmdCopyBufferToImage,
-											GpuMsg::CmdCopyImageToBuffer,
-											GpuMsg::CmdBlitImage,
-											GpuMsg::CmdUpdateBuffer,
-											GpuMsg::CmdFillBuffer,
-											GpuMsg::CmdClearAttachments,
-											GpuMsg::CmdClearColorImage,
-											GpuMsg::CmdClearDepthStencilImage,
-											GpuMsg::CmdPipelineBarrier,
 											GpuMsg::SetCommandBufferDependency,
-											GpuMsg::GetCommandBufferState
-										>;
+											GpuMsg::GetCommandBufferState >
+										::Append< GpuMsg::DefaultComputeCommands_t >
+										::Append< GpuMsg::DefaultGraphicsCommands_t >;
 		
 		using SupportedMessages_t	= GraphicsBaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GraphicsMsg::CmdBeginAsync,
@@ -196,7 +161,7 @@ namespace Graphics
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		CHECK_ERR( _GetManager() );
 
 
@@ -218,7 +183,8 @@ namespace Graphics
 										OUT _builder ) );
 			ModuleUtils::Initialize({ _builder });
 
-			CHECK_ERR( _Attach( "builder", _builder, true ) );
+			CHECK_ERR( _Attach( "builder", _builder ) );
+			_builder->Send( msg );
 		}
 
 		CHECK_ERR( _CopySubscriptions< CmdBufferMsgList_t >( _builder ) );
@@ -282,7 +248,7 @@ namespace Graphics
 	{
 		const bool	is_builder	= msg->newModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_builder ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 
 		if ( is_builder )
 		{
@@ -370,7 +336,7 @@ namespace Graphics
 	_CmdEndAsync
 =================================================
 */
-	bool AsyncCommandBuffer::_CmdEndAsync (const Message< GraphicsMsg::CmdEndAsync > &msg)
+	bool AsyncCommandBuffer::_CmdEndAsync (const Message< GraphicsMsg::CmdEndAsync > &)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 

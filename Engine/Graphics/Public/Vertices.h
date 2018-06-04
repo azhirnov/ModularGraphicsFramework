@@ -31,7 +31,7 @@ namespace DefVertices
 			position(pos), texcoord(texc), color(color)
 		{}
 
-		static VertexInputState  GetAttribs ()
+		ND_ static VertexInputState  GetAttribs ()
 		{
 			return VertexInputState()
 				.Add( "position",	&Self::position )
@@ -40,7 +40,7 @@ namespace DefVertices
 				.Bind( "", SizeOf<Self> );
 		}
 
-		static TypeId GetTypeId ()
+		ND_ static TypeId GetTypeId ()
 		{
 			return TypeIdOf< Self >();
 		}
@@ -68,7 +68,7 @@ namespace DefVertices
 			position(pos), texcoord(texc), color(color)
 		{}
 
-		static VertexInputState  GetAttribs ()
+		ND_ static VertexInputState  GetAttribs ()
 		{
 			return VertexInputState()
 				.Add( "position",	&Self::position )
@@ -77,7 +77,7 @@ namespace DefVertices
 				.Bind( "", SizeOf<Self> );
 		}
 
-		static TypeId GetTypeId ()
+		ND_ static TypeId GetTypeId ()
 		{
 			return TypeIdOf< Self >();
 		}

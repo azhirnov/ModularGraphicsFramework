@@ -657,8 +657,8 @@ namespace PipelineCompiler
 			ASSERT( tex.binding != UMax and tex.uniqueIndex != UMax );
 
 			str << '\n' << indent << "\t\t.AddTexture( \"" << tex.name << "\", " << ToString( tex.textureType )
-				<< ", " << ToString( tex.format ) << ", " << tex.binding << ", " << tex.uniqueIndex
-				<< ", " << ToString( tex.stageFlags ) << " )";
+				<< ", " << ToString( tex.format ) << ", " << tex.binding << "u, " << tex.uniqueIndex
+				<< "u, " << ToString( tex.stageFlags ) << " )";
 		}
 
 
@@ -674,7 +674,7 @@ namespace PipelineCompiler
 
 			str << '\n' << indent << "\t\t.AddImage( \"" << img.name << "\", " << ToString( img.imageType )
 				<< ", " << ToString( img.format ) << ", " << ToString( img.access ) << ", "
-				<< img.binding << ", " << img.uniqueIndex << ", " << ToString( img.stageFlags ) << " )";
+				<< img.binding << "u, " << img.uniqueIndex << "u, " << ToString( img.stageFlags ) << " )";
 		}
 
 
@@ -684,7 +684,7 @@ namespace PipelineCompiler
 			ASSERT( ub.size > BytesU(0) );
 
 			str << '\n' << indent << "\t\t.AddUniformBuffer( \"" << ub.name << "\", " << usize(ub.size) << "_b, "
-				<< ub.binding << ", " << ub.uniqueIndex << ", " << ToString( ub.stageFlags ) << " )";
+				<< ub.binding << "u, " << ub.uniqueIndex << "u, " << ToString( ub.stageFlags ) << " )";
 		}
 
 
@@ -694,8 +694,8 @@ namespace PipelineCompiler
 			ASSERT( sb.staticSize > BytesUL(0) or sb.arrayStride > BytesUL(0) );
 
 			str << '\n' << indent << "\t\t.AddStorageBuffer( \"" << sb.name << "\", " << usize(sb.staticSize) << "_b, "
-				<< usize(sb.arrayStride) << "_b, " << ToString( sb.access ) << ", " << sb.binding << ", "
-				<< sb.uniqueIndex << ", " << ToString( sb.stageFlags ) << " )";
+				<< usize(sb.arrayStride) << "_b, " << ToString( sb.access ) << ", " << sb.binding << "u, "
+				<< sb.uniqueIndex << "u, " << ToString( sb.stageFlags ) << " )";
 		}
 
 
@@ -708,7 +708,7 @@ namespace PipelineCompiler
 		}
 
 
-		void operator () (const SubpassInput &sp) const
+		void operator () (const SubpassInput &) const
 		{
 			TODO( "SubpassInput" );
 		}
@@ -912,7 +912,7 @@ namespace PipelineCompiler
 		String	str;	str.Reserve( value.Count() * 6 );
 
 		FOR( i, value ) {
-			str << (i ? ", " : "") << (i%12 == 0 ? "\n" : "") << "0x" << String().FormatAlignedI( value[i], 2, '0', 16 );
+			str << (i ? ", " : "") << (i%36 == 0 ? "\n" : "") << "0x" << String().FormatAlignedI( value[i], 2, '0', 16 );
 		}
 		return str;
 	}
@@ -1101,7 +1101,7 @@ namespace PipelineCompiler
 	ShaderSrcCPP_Impl
 =================================================
 */
-	String	CppSerializer::ShaderSrcCPP_Impl (StringCRef name, BinArrayCRef shaderSrc, StringCRef funcName) const
+	String	CppSerializer::ShaderSrcCPP_Impl (StringCRef, BinArrayCRef shaderSrc, StringCRef funcName) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
@@ -1112,6 +1112,42 @@ namespace PipelineCompiler
 			str << StringCRef::From( shaderSrc );
 
 			str.FindAndChange( "##main##", funcName, OUT pos, start );
+		}
+		return str;
+	}
+	
+/*
+=================================================
+	ShaderBinHLSL
+=================================================
+*/
+	String  CppSerializer::ShaderBinHLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
+	{
+		String	str;
+		if ( not shaderSrc.Empty() )
+		{
+			if ( inFile )
+				RETURN_ERR( "not supported" )
+			else
+				str << name << ".StringBinHLSL({ " << ToString( shaderSrc ) << " });\n";
+		}
+		return str;
+	}
+	
+/*
+=================================================
+	ShaderSrcHLSL
+=================================================
+*/
+	String  CppSerializer::ShaderSrcHLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
+	{
+		String	str;
+		if ( not shaderSrc.Empty() )
+		{
+			if ( inFile )
+				RETURN_ERR( "not supported" )
+			else
+				str << name << ".StringHLSL( \n" << ToString(StringCRef::From( shaderSrc )) << " );\n";
 		}
 		return str;
 	}
@@ -1242,7 +1278,7 @@ namespace PipelineCompiler
 		else
 			_structStack.Push({ typeName, "", "", "" });
 
-		return String(indent) << "struct " << typeName << " final\n" << indent << "{\n";
+		return String(indent) << "struct " << typeName << " final : CompileTime::PODStruct\n" << indent << "{\n";
 	}
 	
 /*

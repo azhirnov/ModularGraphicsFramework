@@ -95,9 +95,14 @@ namespace CreateInfo
 
 	struct GpuFramebuffer
 	{
+	// variables
 		ModulePtr			gpuThread;			// can be null
 		GXMath::uint2		size;
 		uint				layers;
+
+	// methods
+		GpuFramebuffer () {}
+		explicit GpuFramebuffer (const GXMath::uint2 &size, uint layers = 1) : size{size}, layers{layers} {}
 	};
 
 }	// CreateInfo

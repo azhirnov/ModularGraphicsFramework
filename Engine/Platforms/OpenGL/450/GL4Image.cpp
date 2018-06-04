@@ -7,6 +7,7 @@
 #include "Engine/Platforms/Public/GPU/Image.h"
 #include "Engine/Platforms/Public/GPU/Memory.h"
 #include "Engine/Platforms/Public/Tools/ImageViewHashMap.h"
+#include "Engine/Platforms/Public/Tools/ImageUtils.h"
 #include "Engine/Platforms/OpenGL/450/GL4BaseModule.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
@@ -28,9 +29,10 @@ namespace PlatformGL
 	// types
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
-											ModuleMsg::GetStreamDescriptor,
-											ModuleMsg::ReadFromStream,
-											ModuleMsg::WriteToStream,
+											DSMsg::GetDataSourceDescriptor,
+											DSMsg::ReadRegion,
+											DSMsg::WriteRegion,
+											GpuMsg::GetGpuMemoryDescriptor,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -50,14 +52,16 @@ namespace PlatformGL
 											GpuMsg::GetImageMemoryLayout
 										> >::Append< ForwardToMem_t >;
 
-		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
+		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t::Append< MessageListFrom<
+											GpuMsg::SetImageDescriptor
+										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 
-		using Utils					= Platforms::ImageUtils;
+		using Utils					= PlatformTools::ImageUtils;
 		
-		using ImageViewMap_t	= PlatformTools::ImageViewHashMap< GLuint >;
-		using ImageView_t		= ImageViewMap_t::Key_t;
+		using ImageViewMap_t		= PlatformTools::ImageViewHashMap< GLuint >;
+		using ImageView_t			= ImageViewMap_t::Key_t;
 
 		
 	// constants
@@ -157,8 +161,10 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Image::_GetImageMemoryLayout );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
-
-		Utils::ValidateDescriptor( INOUT _descr );
+		
+		// descriptor may be invalid for sharing or for delayed initialization
+		if ( Utils::IsValidDescriptor( _descr ) )
+			Utils::ValidateDescriptor( INOUT _descr );
 	}
 	
 /*
@@ -181,7 +187,7 @@ namespace PlatformGL
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		
 		_memObj = GetModuleByEvent< MemoryEvents_t >();
 
@@ -191,10 +197,10 @@ namespace PlatformGL
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								GLMemoryModuleID,
 								GlobalSystems(),
-								CreateInfo::GpuMemory{ null, _memFlags, _memAccess },
+								CreateInfo::GpuMemory{ _memFlags, _memAccess },
 								OUT mem_module ) );
 
-			CHECK_ERR( _Attach( "mem", mem_module, true ) );
+			CHECK_ERR( _Attach( "mem", mem_module ) );
 			_memObj = mem_module;
 		}
 		CHECK_ATTACHMENT( _memObj );
@@ -222,7 +228,6 @@ namespace PlatformGL
 		
 		_SendForEachAttachments( msg );
 		
-		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
 
 		// composed state will be changed when memory binded to image
@@ -250,7 +255,7 @@ namespace PlatformGL
 	{
 		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_mem ) );
+		CHECK( _Attach( msg->name, msg->newModule ) );
 
 		if ( is_mem )
 		{
@@ -269,7 +274,7 @@ namespace PlatformGL
 	{
 		CHECK( _Detach( msg->oldModule ) );
 
-		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		if ( msg->oldModule == _memObj )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyViews();
@@ -528,6 +533,8 @@ namespace PlatformGL
 */
 	bool GL4Image::_GetGLImageID (const Message< GpuMsg::GetGLImageID > &msg)
 	{
+		ASSERT( _IsImageCreated() );
+
 		msg->result.Set( _imageId );
 		return true;
 	}
@@ -649,7 +656,7 @@ namespace PlatformGL
 	_GpuMemoryRegionChanged
 =================================================
 */
-	bool GL4Image::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &msg)
+	bool GL4Image::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &)
 	{
 		// request image memory barrier
 		TODO( "" );
@@ -666,7 +673,7 @@ namespace PlatformGL
 		CHECK_ERR( _IsImageCreated() );
 		CHECK_ERR( msg->mipLevel < _descr.maxLevel );
 
-		const uint4		lvl_size	= Max( ImageUtils::LevelDimension( _descr.imageType, _descr.dimension, msg->mipLevel.Get() ), 1u );
+		const uint4		lvl_size	= Max( Utils::LevelDimension( _descr.imageType, _descr.dimension, msg->mipLevel.Get() ), 1u );
 		const BytesUL	bpp			= BytesUL(EPixelFormat::BitPerPixel( _descr.format ));
 		const BytesUL	row_align	= BytesUL(uint(bpp) % 4 == 0 ? 4 : 1);
 
@@ -677,7 +684,7 @@ namespace PlatformGL
 		result.size			= result.slicePitch * lvl_size.z * lvl_size.w;
 		result.dimension	= lvl_size.xyz();
 		
-		ASSERT( result.slicePitch * result.dimension.z == result.size );
+		ASSERT( result.slicePitch * result.dimension.z <= result.size );
 
 		msg->result.Set( result );
 		return true;

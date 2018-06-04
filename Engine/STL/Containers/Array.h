@@ -5,6 +5,7 @@
 #include "Engine/STL/Memory/MemoryContainer.h"
 #include "Engine/STL/Containers/CopyStrategy.h"
 #include "Engine/STL/Containers/String.h"
+#include "Engine/STL/Containers/UniBuffer.h"
 #include "Engine/STL/Math/Mathematics.h"
 
 namespace GX_STL
@@ -68,44 +69,47 @@ namespace GXTypes
 
 		~Array ()														{ Free(); }
 
-		T		*		ptr ();
-		T const	*		ptr () const;
+		ND_ T		*	ptr ();
+		ND_ T const *	ptr () const;
 
-		T *				RawPtr ()										{ return _memory.Pointer(); }
-		T const *		RawPtr () const									{ return _memory.Pointer(); }
+		ND_ T *			RawPtr ()										{ return _memory.Pointer(); }
+		ND_ T const *	RawPtr () const									{ return _memory.Pointer(); }
 
-		T		&		Back ();
-		T const	&		Back () const;
-		T		&		Front ();
-		T const	&		Front () const;
+		ND_ T		&	Back ();
+		ND_ T const &	Back () const;
+		ND_ T		&	Front ();
+		ND_ T const &	Front () const;
 
-		T		&		operator [] (usize i);
-		T const	&		operator [] (usize i) const;
+		ND_ T		&	operator [] (usize i);
+		ND_ T const &	operator [] (usize i) const;
 
-		Self &			operator << (const T &value)					{ PushBack( value );		return *this; }
-		Self &			operator << (ArrayCRef<T> other)				{ Append( other );			return *this; }
-		Self &			operator << (T &&value)							{ PushBack( RVREF(value) );	return *this; }
-		Self &			operator << (Self &&other)						{ Append( RVREF(other) );	return *this; }
+			Self &		operator << (const T &value)					{ PushBack( value );		return *this; }
+			Self &		operator << (ArrayCRef<T> other)				{ Append( other );			return *this; }
+			Self &		operator << (T &&value)							{ PushBack( RVREF(value) );	return *this; }
+			Self &		operator << (Self &&other)						{ Append( RVREF(other) );	return *this; }
 
 		friend Self &	operator >> (const T &left, Self &right)		{ right.PushFront( left );  return right; }
 		friend Self &	operator >> (ArrayCRef<T> left, Self &right)	{ right.Insert( left, 0 );  return right; }
 		friend Self &	operator >> (T &&left, Self &right)				{ right.PushFront( RVREF(left) );  return right; }
 		friend Self &	operator >> (Self &&left, Self &right)			{ right.Insert( RVREF(left), 0 );  return right; }
 		
-		Self &			operator =  (ArrayCRef<T> right)				{ Copy( right );					return *this; }
-		Self &			operator =  (const Self &right)					{ Copy( right );					return *this; }
-		Self &			operator =  (Self &&right)						{ Free();  _Move( RVREF(right) );	return *this; }
+			Self &		operator =  (ArrayCRef<T> right)				{ Copy( right );					return *this; }
+			Self &		operator =  (const Self &right)					{ Copy( right );					return *this; }
+			Self &		operator =  (Self &&right)						{ Free();  _Move( RVREF(right) );	return *this; }
 
-		bool			operator == (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) == right; }
-		bool			operator != (ArrayCRef<T> right) const			{ return not ( (*this) == right ); }
+		ND_ bool		operator == (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) == right; }
+		ND_ bool		operator != (ArrayCRef<T> right) const			{ return not ( (*this) == right ); }
 		
-		bool			operator >  (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) >  right; }
-		bool			operator >= (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) >= right; }
-		bool			operator <  (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) <  right; }
-		bool			operator <= (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) <= right; }
+		ND_ bool		operator >  (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) >  right; }
+		ND_ bool		operator >= (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) >= right; }
+		ND_ bool		operator <  (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) <  right; }
+		ND_ bool		operator <= (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) <= right; }
 
+		ND_ operator UniBuffer<T> ()									{ return UniBuffer<T>{ RawPtr(), Count(), SizeOf<T> }; }
+		ND_ operator UniBuffer<const T> () const						{ return UniBuffer<const T>{ RawPtr(), Count(), SizeOf<T> }; }
 		
-		bool At (usize index, OUT T & value) const;
+
+		ND_ bool At (usize index, OUT T & value) const;
 
 		void Append (InitializerList<T> other)						{ Append( ArrayCRef<T>(other) ); }
 		void Append (ArrayCRef<T> other)							{ _Insert<const T>( other.RawPtr(), other.Count(), Count() ); }
@@ -139,10 +143,10 @@ namespace GXTypes
 		void FastErase (usize pos);
 
 		template <typename E>
-		bool Find (OUT usize &index, const E &value, usize start = 0) const	{ return ArrayCRef<T>(*this).Find( index, value, start ); }
+		bool Find (OUT usize &index, const E &value, usize start = 0) const		{ return ArrayCRef<T>(*this).Find( index, value, start ); }
 
 		template <typename E>
-		bool IsExist (const E &value) const							{ return ArrayCRef<T>(*this).IsExist( value ); }
+		ND_ bool IsExist (const E &value) const							{ return ArrayCRef<T>(*this).IsExist( value ); }
 
 		template <typename E>
 		bool FindAndErase (const E &value);
@@ -159,11 +163,11 @@ namespace GXTypes
 
 		void PushBack (const T& value);
 		void PushBack (T&& value);
-		T&   PushBack ()											{ PushBack( T() );  return Back(); }
+		//T&   PushBack ()											{ PushBack( T() );  return Back(); }
 
 		void PushFront (const T& value)								{ _Insert<const T>( &value, 1, 0 ); }
 		void PushFront (T&& value)									{ _Insert<T>( &value, 1, 0 ); }
-		T&   PushFront ()											{ PushFront( T() );  return Front(); }
+		//T&   PushFront ()											{ PushFront( T() );  return Front(); }
 		
 		void PopBack ();
 		void PopFront ();
@@ -177,38 +181,32 @@ namespace GXTypes
 		
 		void Swap (usize first, usize second);
 
-		ArrayRef<T>	 SubArray (usize pos, usize count = UMax)			{ return ArrayRef<T>(*this).SubArray( pos, count ); }
-		ArrayCRef<T> SubArray (usize pos, usize count = UMax)	const	{ return ArrayCRef<T>(*this).SubArray( pos, count ); }
+		ND_ ArrayRef<T>		SubArray (usize pos, usize count = UMax)			{ return ArrayRef<T>(*this).SubArray( pos, count ); }
+		ND_ ArrayCRef<T>	SubArray (usize pos, usize count = UMax)	const	{ return ArrayCRef<T>(*this).SubArray( pos, count ); }
 
 		template <typename T2, typename S2, typename A2>
 		void Convert (OUT Array<T2,S2,A2> &other) const;
 
-		usize GetIndex (const T &value)	const						{ return ArrayCRef<T>(*this).GetIndex( value ); }
-		bool  IsInArray (const T &value) const						{ return ArrayCRef<T>(*this).IsInArray( value ); }
+		ND_ usize				GetIndex (const T &value)	const				{ return ArrayCRef<T>(*this).GetIndex( value ); }
+		ND_ bool				IsInArray (const T &value)	const				{ return ArrayCRef<T>(*this).IsInArray( value ); }
 
-		bool			Empty ()		const	{ return _count == 0; }
-		usize			Count ()		const	{ return _count; }
-		usize			Capacity ()		const	{ return _size; }
-		constexpr usize	MaxCapacity ()	const	{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		BytesU			Size ()			const	{ return BytesU( Count() * sizeof(T) ); }
-		BytesU			FullSize ()		const	{ return BytesU( Capacity() * sizeof(T) ); }
-		usize			LastIndex ()	const	{ return Count()-1; }
-
-		iterator		Begin ();
-		const_iterator	Begin ()			const;
-
-		iterator		End ();
-		const_iterator	End ()				const;
-
-		iterator		GetIter (usize i);
-		const_iterator	GetIter (usize i)	const;
-
-		bool IsBegin (const_iterator iter)	const;
-		bool IsEnd (const_iterator iter)	const;
+		ND_ bool				Empty ()			const		{ return _count == 0; }
+		ND_ usize				Count ()			const		{ return _count; }
+		ND_ usize				Capacity ()			const		{ return _size; }
+		ND_ constexpr usize		MaxCapacity ()		const		{ return _memory.MaxSize(); }	// max available for allocation count of elements
+		ND_ BytesU				Size ()				const		{ return BytesU( Count() * sizeof(T) ); }
+		ND_ BytesU				FullSize ()			const		{ return BytesU( Capacity() * sizeof(T) ); }
+		ND_ usize				LastIndex ()		const		{ return Count()-1; }
 
 
-		static constexpr bool	IsLinearMemory ()			{ return true; }
-		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStatic(); }
+		ND_ iterator			begin ()						{ return RawPtr(); }
+		ND_ const_iterator		begin ()			const		{ return RawPtr(); }
+		ND_ iterator			end ()							{ return RawPtr() + _count; }
+		ND_ const_iterator		end ()				const		{ return RawPtr() + _count; }
+
+
+		static constexpr bool		IsLinearMemory ()			{ return true; }
+		constexpr bool				IsStaticMemory ()	const	{ return _memory.IsStatic(); }
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
 		{
@@ -371,7 +369,7 @@ namespace GXTypes
 		if ( pArray == null or count == 0 )
 			return;
 
-		if ( pos > _count or (not Empty() and _CheckIntersection( Begin(), End(), pArray, pArray + count )) )
+		if ( pos > _count or (not Empty() and _CheckIntersection( begin(), end(), pArray, pArray + count )) )
 			RET_VOID;
 		
 		_count += count;
@@ -869,104 +867,6 @@ namespace GXTypes
 			other[i] = T2( _memory.Pointer()[i] );
 		}
 	}
-	
-/*
-=================================================
-	Begin
-=================================================
-*/
-	template <typename T, typename S, typename MC>
-	inline T * Array<T,S,MC>::Begin ()
-	{
-		//ASSERT( _memory.Pointer() != null );
-		//return &_memory.Pointer()[0];
-		return RawPtr();
-	}
-	
-/*
-=================================================
-	Begin
-=================================================
-*/
-	template <typename T, typename S, typename MC>
-	inline const T * Array<T,S,MC>::Begin () const
-	{
-		//ASSERT( _memory.Pointer() != null );
-		//return &_memory.Pointer()[0];
-		return RawPtr();
-	}
-	
-/*
-=================================================
-	End
-=================================================
-*/
-	template <typename T, typename S, typename MC>
-	inline T * Array<T,S,MC>::End ()
-	{
-		//ASSERT( _count != 0 );
-		//return &_memory.Pointer()[_count];
-		return RawPtr() + _count;
-	}
-	
-/*
-=================================================
-	End
-=================================================
-*/
-	template <typename T, typename S, typename MC>
-	inline const T * Array<T,S,MC>::End () const
-	{
-		//ASSERT( _count != 0 );
-		//return &_memory.Pointer()[_count];
-		return RawPtr() + _count;
-	}
-	
-/*
-=================================================
-	GetIter
-=================================================
-*/
-	template <typename T, typename S, typename MC>
-	inline T * Array<T,S,MC>::GetIter (const usize index)
-	{
-		ASSERT( index < _count );
-		return &_memory.Pointer()[index];
-	}
-	
-/*
-=================================================
-	GetIter
-=================================================
-*/
-	template <typename T, typename S, typename MC>
-	inline const T * Array<T,S,MC>::GetIter (const usize index) const
-	{
-		ASSERT( index < _count );
-		return &_memory.Pointer()[index];
-	}
-	
-/*
-=================================================
-	IsBegin
-=================================================
-*/
-	template <typename T, typename S, typename MC>
-	inline bool Array<T,S,MC>::IsBegin (const_iterator iter) const
-	{
-		return ( iter == Begin() );
-	}
-	
-/*
-=================================================
-	IsEnd
-=================================================
-*/
-	template <typename T, typename S, typename MC>
-	inline bool Array<T,S,MC>::IsEnd (const_iterator iter) const
-	{
-		return ( iter == End() );
-	}
 
 	
 	#undef  RET_ERROR
@@ -994,7 +894,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	struct Hash< Array<T,S,MC> >
 	{
-		CHECKRES HashResult  operator () (const Array<T,S,MC> &x) const noexcept
+		ND_ HashResult  operator () (const Array<T,S,MC> &x) const noexcept
 		{
 			return HashOf( ArrayCRef<T>(x) );
 		}

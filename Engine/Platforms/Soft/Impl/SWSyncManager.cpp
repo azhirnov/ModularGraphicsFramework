@@ -165,7 +165,7 @@ namespace PlatformSW
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		CHECK_ERR( _GetManager() );
 
 		// find command queue
@@ -291,7 +291,7 @@ namespace PlatformSW
 	_SetEvent
 =================================================
 */
-	bool SWSyncManager::_SetEvent (const Message< GpuMsg::SetEvent > &msg)
+	bool SWSyncManager::_SetEvent (const Message< GpuMsg::SetEvent > &)
 	{
 		TODO( "" );
 		return false;
@@ -302,7 +302,7 @@ namespace PlatformSW
 	_ResetEvent
 =================================================
 */
-	bool SWSyncManager::_ResetEvent (const Message< GpuMsg::ResetEvent > &msg)
+	bool SWSyncManager::_ResetEvent (const Message< GpuMsg::ResetEvent > &)
 	{
 		TODO( "" );
 		return false;

@@ -66,7 +66,7 @@ namespace GXTypes
 			return --_counter;
 		}
 
-		T  Count () const
+		ND_ T  Count () const
 		{
 			return _counter.Get();
 		}
@@ -127,7 +127,7 @@ namespace GXTypes
 			return Op::Inc<T>( _ptr->count );
 		}
 
-		bool  TryInc ()
+		ND_ bool  TryInc ()
 		{
 			ASSUME( _ptr );
 			for (;;)
@@ -148,7 +148,7 @@ namespace GXTypes
 			return Op::Dec<T>( _ptr->count );
 		}
 
-		T  Count () const
+		ND_ T  Count () const
 		{
 			return _ptr ? Op::Get<T>( _ptr->count ) : 0;
 		}
@@ -167,7 +167,7 @@ namespace GXTypes
 			return res;
 		}
 
-		T  CountWeak () const
+		ND_ T  CountWeak () const
 		{
 			return _ptr ? Op::Get<T>( _ptr->weakCount ) : 0;
 		}

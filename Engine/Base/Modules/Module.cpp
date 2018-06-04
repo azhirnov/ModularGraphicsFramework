@@ -1,8 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Modules/Module.h"
-#include "Engine/Base/Tasks/TaskModule.h"
-#include "Engine/Base/Threads/ParallelThread.h"
+#include "Engine/Base/Public/TaskModule.h"
+#include "Engine/Base/Public/ParallelThread.h"
 #include "Engine/Base/Modules/ModuleAsyncTasks.h"
 
 namespace Engine
@@ -22,8 +22,7 @@ namespace Base
 		BaseObject( gs ),
 		_state( EState::Initial ),
 		_ownThread( ThreadID::GetCurrent() ),
-		_compId( config.id ),
-		_maxParents( config.maxParents ),
+		_moduleCfg( config ),
 		_supportedMessages( *msgTypes ),
 		_supportedEvents( *eventTypes )
 	{
@@ -86,20 +85,20 @@ namespace Base
 									  ((unit->GetModuleID() & TModID::_IDMask) == TModID::_ID) or
 										mustBeUniqueID;
 		
-		FOR( i, _attachments )
+		for (auto& attachment : _attachments)
 		{
-			if ( _attachments[i].second == unit )
+			if ( attachment.second == unit and not _moduleCfg.multiAttachment )
 			{
-				LOG( "module is already attached!", ELog::Debug );
+				LOG( "module is already attached!", ELog::Warning );
 				return true;
 			}
 
-			if ( not name.Empty() and _attachments[i].first == name )
+			if ( not name.Empty() and attachment.first == name )
 			{
 				RETURN_ERR( "module with name: \"" << name << "\" is already attached!" );
 			}
 
-			if ( _attachments[i].second->GetModuleID() == unit->GetModuleID() and must_be_unique )
+			if ( attachment.second->GetModuleID() == unit->GetModuleID() and must_be_unique )
 				RETURN_ERR( "module with ID '" << ToString( (GModID::type) unit->GetModuleID() ) << "' is alredy attached" );
 		}
 
@@ -120,13 +119,26 @@ namespace Base
 */
 	bool Module::_Detach (const ModulePtr &unit)
 	{
+		if ( _moduleCfg.multiAttachment )
+			return _DetachMulti( unit );
+		else
+			return _DetachSingle( unit );
+	}
+	
+/*
+=================================================
+	_DetachSingle
+=================================================
+*/
+	bool Module::_DetachSingle (const ModulePtr &unit)
+	{
 		CHECK_ERR( unit );
 		
 		FOR( i, _attachments )
 		{
 			if ( _attachments[i].second == unit )
 			{
-				Message< ModuleMsg::OnModuleDetached >	on_detached{ this, _attachments[i].first, unit };
+				Message< ModuleMsg::OnModuleDetached >	on_detached{ this, _attachments[i].first, unit, true };
 
 				_SendForEachAttachments( on_detached );
 				_SendUncheckedEvent( on_detached );
@@ -138,6 +150,54 @@ namespace Base
 		RETURN_ERR( "module is not attached" );
 	}
 	
+/*
+=================================================
+	_DetachMulti
+=================================================
+*/
+	bool Module::_DetachMulti (const ModulePtr &unit)
+	{
+		CHECK_ERR( unit );
+
+		usize	first	= UMax;
+		usize	count	= 0;
+
+		const auto	Prepare = LAMBDA( this, &unit, &first, &count ) ()
+		{{
+			first = UMax;
+			count = 0;
+			FOR( i, _attachments ) {
+				if ( _attachments[i].second == unit ) {
+					first = count ? first : i;
+					++count;
+				}
+			}
+		}};
+
+		const auto	Detach = LAMBDA( this ) (usize i, bool isLast)
+		{{
+			Message< ModuleMsg::OnModuleDetached >	on_detached{ this, _attachments[i].first, _attachments[i].second, isLast };
+
+			_SendForEachAttachments( on_detached );
+			_SendUncheckedEvent( on_detached );
+
+			_attachments.Erase( i );
+		}};
+
+		Prepare();
+
+		if ( count == 0 ) {
+			RETURN_ERR( "module is not attached" );
+		}
+
+		while ( count > 0 )
+		{
+			Detach( first, count == 1 );
+			Prepare();
+		}
+		return true;
+	}
+
 /*
 =================================================
 	_DetachAllAttachments
@@ -184,7 +244,7 @@ namespace Base
 */
 	bool Module::_OnAttachedToParent (const ModulePtr &parent)
 	{
-		CHECK_ERR( _parents.Count() < _maxParents );
+		CHECK_ERR( _parents.Count() < _moduleCfg.maxParents );
 
 		_parents.Add( parent );
 		return true;
@@ -422,12 +482,12 @@ namespace Base
 */
 	bool Module::_FindAttachment (ArrayCRef<TypeId> messages, ArrayCRef<TypeId> events, OUT ModulePtr &result) const
 	{
-		FOR( i, _attachments )
+		for (auto& attachment : _attachments)
 		{
-			if ( _attachments[i].second->GetSupportedMessages().HasAllTypes( messages ) and
-				 _attachments[i].second->GetSupportedEvents().HasAllTypes( events ) )
+			if ( attachment.second->GetSupportedMessages().HasAllTypes( messages ) and
+				 attachment.second->GetSupportedEvents().HasAllTypes( events ) )
 			{
-				result = _attachments[i].second;
+				result = attachment.second;
 				return true;
 			}
 		}
@@ -441,12 +501,12 @@ namespace Base
 */
 	bool Module::_FindParent (ArrayCRef<TypeId> messages, ArrayCRef<TypeId> events, OUT ModulePtr &result) const
 	{
-		FOR( i, _parents )
+		for (auto& parent : _parents)
 		{
-			if ( _parents[i]->GetSupportedMessages().HasAllTypes( messages ) and
-				 _parents[i]->GetSupportedEvents().HasAllTypes( events ) )
+			if ( parent->GetSupportedMessages().HasAllTypes( messages ) and
+				 parent->GetSupportedEvents().HasAllTypes( events ) )
 			{
-				result = _parents[i];
+				result = parent;
 				return true;
 			}
 		}
@@ -499,6 +559,17 @@ namespace Base
 				state == EState::ComposingFailed		or
 				state == EState::IncompleteAttachment;
 	}
+	
+/*
+=================================================
+	_IsInitialState
+=================================================
+*/
+	bool Module::_IsInitialState (EState state)
+	{
+		return	state == EState::Initial	or
+				state == EState::LinkingFailed;	// previous linking was failed, but you can try again
+	}
 
 /*
 =================================================
@@ -509,10 +580,10 @@ namespace Base
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 
-		FOR( i, _attachments )
+		for (auto& attachment : _attachments)
 		{
-			if ( _attachments[i].second->GetModuleID() == id )
-				return _attachments[i].second;
+			if ( attachment.second->GetModuleID() == id )
+				return attachment.second;
 		}
 		return null;
 	}
@@ -525,11 +596,11 @@ namespace Base
 	ModulePtr Module::GetModuleByName (StringCRef name)
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
-
-		FOR( i, _attachments )
+		
+		for (auto& attachment : _attachments)
 		{
-			if ( _attachments[i].first == name )
-				return _attachments[i].second;
+			if ( attachment.first == name )
+				return attachment.second;
 		}
 		return null;
 	}
@@ -612,7 +683,7 @@ namespace Base
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 
 		_SendForEachAttachments( msg );
 
@@ -691,7 +762,8 @@ namespace Base
 	{
 		if ( msg->detachedModule == this )
 		{
-			_OnDetachedFromParent( msg->parent );
+			if ( msg->isLast )
+				_OnDetachedFromParent( msg->parent );
 		}
 		else
 		{

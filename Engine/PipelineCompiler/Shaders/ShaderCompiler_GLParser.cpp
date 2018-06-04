@@ -626,7 +626,7 @@ namespace PipelineCompiler
 		
 		CHECK_ERR( _DeserializeVariable( node, type, loc, parent, OUT var ) );
 
-		var.location = (qual.hasLocation() ? qual.layoutLocation : UMax);
+		var.location = (qual.hasLocation() ? uint(qual.layoutLocation) : UMax);
 
 		if ( type.isStruct() )
 		{
@@ -658,7 +658,7 @@ namespace PipelineCompiler
 
 		CHECK_ERR( _DeserializeVariable( node, type, loc, parent, OUT result ) );
 
-		result.location	= (qual.hasLocation() ? qual.layoutLocation : UMax);
+		result.location	= (qual.hasLocation() ? uint(qual.layoutLocation) : UMax);
 		
 		CHECK_ERR( not type.isStruct() );	// uniform is a single uniform declaration, struct must be parsed as block/buffer
 		return true;
@@ -707,8 +707,8 @@ namespace PipelineCompiler
 				sampler.line			= var.line;
 				sampler.column			= var.column;
 				sampler.name			= var.name;
-				sampler.unit			= qual.hasBinding() ? qual.layoutBinding : UMax;
-				sampler.descriptorSet	= qual.hasSet() ? qual.layoutSet : UMax;
+				sampler.unit			= qual.hasBinding() ? uint(qual.layoutBinding) : UMax;
+				sampler.descriptorSet	= qual.hasSet() ? uint(qual.layoutSet) : UMax;
 				sampler.format			= EShaderVariable::ToPixelFormatClass( var.type );
 				CHECK_ERR( EShaderVariable::ToTexture( var.type, OUT sampler.imageType, OUT sampler.isShadow ) );
 
@@ -723,9 +723,9 @@ namespace PipelineCompiler
 				image.line			= var.line;
 				image.column		= var.column;
 				image.name			= var.name;
-				image.unit			= qual.hasBinding() ? qual.layoutBinding : UMax;
-				image.descriptorSet	= qual.hasSet() ? qual.layoutSet : UMax;
-				image.format		= ConvertImageLayoutFormat( qual.layoutFormat );	//EShaderVariable::ToPixelFormat( var.type );
+				image.unit			= qual.hasBinding() ? uint(qual.layoutBinding) : UMax;
+				image.descriptorSet	= qual.hasSet() ? uint(qual.layoutSet) : UMax;
+				image.format		= ConvertImageLayoutFormat( qual.layoutFormat );
 				image.memoryModel	= var.memoryModel;
 
 				bool	is_shadow;
@@ -785,8 +785,8 @@ namespace PipelineCompiler
 				buf.column			= var.column;
 				buf.name			= var.name;
 				buf.typeName		= type.getTypeName().c_str();
-				buf.bindingIndex	= qual.hasBinding() ? qual.layoutBinding : UMax;
-				buf.descriptorSet	= qual.hasSet() ? qual.layoutSet : UMax;
+				buf.bindingIndex	= qual.hasBinding() ? uint(qual.layoutBinding) : UMax;
+				buf.descriptorSet	= qual.hasSet() ? uint(qual.layoutSet) : UMax;
 				buf.packing			= packing;
 				buf.size			= 0_b;
 				buf.fields			= RVREF(struct_values);
@@ -803,8 +803,8 @@ namespace PipelineCompiler
 				buf.column			= var.column;
 				buf.name			= var.name;
 				buf.typeName		= type.getTypeName().c_str();
-				buf.bindingIndex	= qual.hasBinding() ? qual.layoutBinding : UMax;
-				buf.descriptorSet	= qual.hasSet() ? qual.layoutSet : UMax;
+				buf.bindingIndex	= qual.hasBinding() ? uint(qual.layoutBinding) : UMax;
+				buf.descriptorSet	= qual.hasSet() ? uint(qual.layoutSet) : UMax;
 				buf.memoryModel		= var.memoryModel;
 				buf.packing			= packing;
 				buf.size			= 0_b;

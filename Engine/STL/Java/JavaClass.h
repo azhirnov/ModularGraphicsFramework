@@ -115,7 +115,7 @@ namespace  Java
 
 
 		template <typename T>
-		CHECKRES static JavaClass FromType ()
+		ND_ static JavaClass FromType ()
 		{
 			typedef typename JniTypeName< T >::type	_is_jni_type;
 

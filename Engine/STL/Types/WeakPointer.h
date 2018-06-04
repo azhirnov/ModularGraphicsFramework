@@ -138,7 +138,7 @@ namespace GXTypes
 		}
 
 
-		CHECKRES forceinline RC Lock () const
+		ND_ forceinline RC Lock () const
 		{
 			if ( _ptr and Strategy_t::IncShared( _counter ) )
 			{
@@ -150,12 +150,12 @@ namespace GXTypes
 		}
 
 
-		forceinline explicit operator bool () const		{ return IsNotNull(); }
+		ND_ forceinline explicit operator bool () const		{ return IsNotNull(); }
 
-		forceinline bool IsNotNull ()	const			{ return _ptr != null; }
-		forceinline bool IsNull ()		const			{ return _ptr; }
+		ND_ forceinline bool	IsNotNull ()	const		{ return _ptr != null; }
+		ND_ forceinline bool	IsNull ()		const		{ return _ptr; }
 
-		forceinline T const* RawPtr ()	const			{ return _ptr; }
+		ND_ forceinline T const* RawPtr ()		const		{ return _ptr; }
 
 		
 		template <typename T2>
@@ -216,7 +216,7 @@ namespace GXTypes
 		}
 
 		template <typename T2>
-		CHECKRES forceinline T2 To ()
+		ND_ forceinline T2 To ()
 		{
 			STATIC_ASSERT( typename T2::_is_weak_ptr(true) );
 			return T2( *this );

@@ -48,9 +48,8 @@ namespace Platforms
 			
 			EVertexAttribute::type ToDstType () const;
 
-			bool operator == (const Attrib &right) const;
-			bool operator >  (const Attrib &right) const;
-			bool operator <  (const Attrib &right) const;
+			ND_ bool operator == (const Attrib &right) const;
+			ND_ bool operator >  (const Attrib &right) const;
 		};
 
 
@@ -68,9 +67,8 @@ namespace Platforms
 			Binding (GX_DEFCTOR);
 			Binding (BindingIndex index, BytesU stride, EVertexInputRate::type rate);
 
-			bool operator == (const Binding &right) const;
-			bool operator >  (const Binding &right) const;
-			bool operator <  (const Binding &right) const;
+			ND_ bool operator == (const Binding &right) const;
+			ND_ bool operator >  (const Binding &right) const;
 		};
 
 		
@@ -108,13 +106,13 @@ namespace Platforms
 
 		void  Clear ();
 
-		bool Merge (const VertexAttribs &attribs, OUT VertexInputState &result) const;
-		bool Equals (const VertexInputState &other, bool ignoreNames) const;
+			bool Merge (const VertexAttribs &attribs, OUT VertexInputState &result) const;
+		ND_ bool Equals (const VertexInputState &other, bool ignoreNames) const;
 
-		Attribs_t const&	Attribs () const	{ return _attribs; }
-		Bindings_t const&	Bindings () const	{ return _bindings; }
+		ND_ Attribs_t const&	Attribs () const	{ return _attribs; }
+		ND_ Bindings_t const&	Bindings () const	{ return _bindings; }
 
-		bool operator == (const VertexInputState &right) const;
+		ND_ bool operator == (const VertexInputState &right) const;
 	};
 	
 		
@@ -141,10 +139,7 @@ namespace GXTypes
 	template <>
 	struct Hash < Engine::Platforms::VertexInputState::Attrib >
 	{
-		using Key_t		= Engine::Platforms::VertexInputState::Attrib;
-		using Result_t	= HashResult;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		ND_ HashResult operator () (const Engine::Platforms::VertexInputState::Attrib &x) const noexcept
 		{
 			return HashOf( x.type ) + HashOf( x.index ) + HashOf( x.offset ) + HashOf( x.bindingIndex );
 		}
@@ -153,10 +148,7 @@ namespace GXTypes
 	template <>
 	struct Hash < Engine::Platforms::VertexInputState::Binding >
 	{
-		using Key_t		= Engine::Platforms::VertexInputState::Binding;
-		using Result_t	= HashResult;
-
-		Result_t operator () (const Key_t &x) const noexcept
+		ND_ HashResult operator () (const Engine::Platforms::VertexInputState::Binding &x) const noexcept
 		{
 			return HashOf( x.index ) + HashOf( x.stride ) + HashOf( x.rate );
 		}
@@ -165,10 +157,7 @@ namespace GXTypes
 	template <>
 	struct Hash < Engine::Platforms::VertexInputState >
 	{
-		using Key_t		= Engine::Platforms::VertexInputState;
-		using Result_t	= HashResult;
-
-		Result_t operator () (const Key_t &x) const noexcept;
+		ND_ HashResult operator () (const Engine::Platforms::VertexInputState &x) const noexcept;
 	};
 
 }	// GXTypes

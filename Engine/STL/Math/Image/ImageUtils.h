@@ -21,7 +21,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	CHECKRES static inline Vec<T,2>  ResCorrectionAspect (const Vec<T,2> &dim)
+	ND_ static inline Vec<T,2>  ResCorrectionAspect (const Vec<T,2> &dim)
 	{
 		// proportional_coords = normalized_coords * aspect
 		return	dim.x < dim.y ?
@@ -35,7 +35,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename B, usize I, ulong U>
-	CHECKRES static inline Vec<T,I,U>  AlignDimension (const Vec<T,I,U> &size, const B& align)
+	ND_ static inline Vec<T,I,U>  AlignDimension (const Vec<T,I,U> &size, const B& align)
 	{
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
 		ASSERT( IsPowerOfTwo( align ) and "align must be a power of 2" );
@@ -58,7 +58,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T>
-	CHECKRES static inline uint  GetNumberOfMipmaps (const T len)
+	ND_ static inline uint  GetNumberOfMipmaps (const T len)
 	{
 		return IntLog2( len );
 	}
@@ -92,7 +92,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename B>
-	CHECKRES static inline Bytes<B>  AlignedDataSize (const Vec<T,3> &dimension, Bytes<B> bytePerPixel, Bytes<B> rowAlign, Bytes<B> sliceAlign)
+	ND_ static inline Bytes<B>  AlignedDataSize (const Vec<T,3> &dimension, Bytes<B> bytePerPixel, Bytes<B> rowAlign, Bytes<B> sliceAlign)
 	{
 		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
 		using S3 = Vec<S,3>;
@@ -107,7 +107,7 @@ struct GXImageUtils : public Noninstancable
 	}
 
 	template <typename ColorType, typename T, typename B>
-	CHECKRES static inline Bytes<B> AlignedDataSize (const Vec<T,3> &dimension, Bytes<B> rowAlign, Bytes<B> sliceAlign)
+	ND_ static inline Bytes<B> AlignedDataSize (const Vec<T,3> &dimension, Bytes<B> rowAlign, Bytes<B> sliceAlign)
 	{
 		return AlignedDataSize( dimension, Bytes<B>::template SizeOf<ColorType>(), rowAlign, sliceAlign );
 	}
@@ -118,7 +118,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename B>
-	CHECKRES static inline Bytes<B>  AlignedRowSize (const T rowPixels, Bytes<B> bytePerPixel, Bytes<B> rowAlign)
+	ND_ static inline Bytes<B>  AlignedRowSize (const T rowPixels, Bytes<B> bytePerPixel, Bytes<B> rowAlign)
 	{
 		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
 
@@ -129,11 +129,26 @@ struct GXImageUtils : public Noninstancable
 	
 /*
 =================================================
+	AlignedRowSize
+=================================================
+*/
+	template <typename T, typename B>
+	ND_ static inline Bytes<B>  AlignedRowSize (const T rowPixels, Bits<B> bitPerPixel, Bytes<B> rowAlign)
+	{
+		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
+
+		STATIC_ASSERT( CompileTime::IsInteger<S> and CompileTime::IsScalar<T> );
+
+		return (Bytes<B>) GXMath::AlignToLarge( Max( (S(rowPixels) * S(bitPerPixel)) >> 3, S(1) ), rowAlign );
+	}
+	
+/*
+=================================================
 	AlignedSliceSize
 =================================================
 */
 	template <typename T, typename B>
-	CHECKRES static inline Bytes<B>  AlignedSliceSize (const Vec<T,2> dim, Bytes<B> bytePerPixel, Bytes<B> rowAlign, Bytes<B> sliceAlign)
+	ND_ static inline Bytes<B>  AlignedSliceSize (const Vec<T,2> dim, Bytes<B> bytePerPixel, Bytes<B> rowAlign, Bytes<B> sliceAlign)
 	{
 		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
 
@@ -148,7 +163,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename B>
-	CHECKRES static inline Bytes<B>  GetPixelOffset (const Vec<T,3> &coord, const Vec<T,3> &dimension, Bytes<B> bytePerPixel,
+	ND_ static inline Bytes<B>  GetPixelOffset (const Vec<T,3> &coord, const Vec<T,3> &dimension, Bytes<B> bytePerPixel,
 													 Bytes<B> rowAlign = Bytes<B>(1), Bytes<B> sliceAlign = Bytes<B>(1))
 	{
 		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
@@ -322,7 +337,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename ColorType>
-	CHECKRES inline static ColorType &  GetPixel (const Vec<T,3> &imageDim, ColorType *image, const Vec<T,3> &pixelCoord, uint rowAlignInBytes = 1)
+	ND_ inline static ColorType &  GetPixel (const Vec<T,3> &imageDim, ColorType *image, const Vec<T,3> &pixelCoord, uint rowAlignInBytes = 1)
 	{
 		ASSUME( image != null );
 			

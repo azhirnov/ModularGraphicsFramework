@@ -3,6 +3,7 @@
 #include "Engine/Script/Impl/ScriptEngine.h"
 #include "Engine/Script/Impl/ScriptModule.h"
 #include "Engine/STL/Math/BinaryMath.h"
+#include "Engine/STL/Math/Interpolations.h"
 #include "Engine/STL/Log/ToString.h"
 
 namespace GX_STL

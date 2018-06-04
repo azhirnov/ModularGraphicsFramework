@@ -4,6 +4,7 @@
 
 #ifdef GRAPHICS_API_VULKAN
 
+#include "Engine/STL/Algorithms/StringParser.h"
 #include "Engine/Platforms/Public/Tools/WindowHelper.h"
 #include "Engine/Platforms/Public/GPU/Thread.h"
 #include "Engine/Platforms/Public/GPU/CommandBuffer.h"
@@ -11,11 +12,13 @@
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #include "Engine/Platforms/Vulkan/Windows/VkWinSurface.h"
 #include "Engine/Platforms/Vulkan/Android/VkAndSurface.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Device.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1PipelineLayout.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
+#include "Engine/Platforms/Vulkan/110/Vk1Device.h"
+#include "Engine/Platforms/Vulkan/110/Vk1PipelineCache.h"
+#include "Engine/Platforms/Vulkan/110/Vk1PipelineLayout.h"
+#include "Engine/Platforms/Vulkan/110/Vk1RenderPass.h"
+
+#include "Engine/Platforms/Vulkan/110/Vk1SamplerCache.h"
+#include "Engine/Platforms/Vulkan/110/Vk1ResourceCache.h"
 
 namespace Engine
 {
@@ -45,11 +48,12 @@ namespace Platforms
 											GpuMsg::GetGraphicsModules,
 											GpuMsg::ThreadBeginFrame,
 											GpuMsg::ThreadEndFrame,
+											GpuMsg::GetGraphicsSettings,
+											GpuMsg::GetComputeSettings,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetVkDeviceInfo,
 											GpuMsg::GetVkPrivateClasses,
-											GpuMsg::GetGraphicsSettings,
-											GpuMsg::GetComputeSettings
+											GpuMsg::GetDeviceProperties
 										> >::Append< QueueMsgList_t >;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
@@ -65,6 +69,7 @@ namespace Platforms
 		using PipelineCache			= PlatformVK::Vk1PipelineCache;
 		using LayoutCache			= PlatformVK::Vk1PipelineLayoutCache;
 		using RenderPassCache		= PlatformVK::Vk1RenderPassCache;
+		using ResourceCache			= PlatformVK::Vk1ResourceCache;
 
 
 	// constants
@@ -92,6 +97,7 @@ namespace Platforms
 		PipelineCache			_pipelineCache;
 		LayoutCache				_layoutCache;
 		RenderPassCache			_renderPassCache;
+		ResourceCache			_resourceCache;
 
 		bool					_isWindowVisible;
 
@@ -125,6 +131,7 @@ namespace Platforms
 		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
 		bool _GetVkDeviceInfo (const Message< GpuMsg::GetVkDeviceInfo > &);
 		bool _GetVkPrivateClasses (const Message< GpuMsg::GetVkPrivateClasses > &);
+		bool _GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &);
 
 	private:
 		bool _CreateDevice ();
@@ -179,6 +186,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &VulkanThread::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &VulkanThread::_GetGraphicsSettings );
 		_SubscribeOnMsg( this, &VulkanThread::_GetComputeSettings );
+		_SubscribeOnMsg( this, &VulkanThread::_GetDeviceProperties );
 		
 		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
 
@@ -207,7 +215,7 @@ namespace Platforms
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		
 		const bool	with_surface = not _settings.flags[ GraphicsSettings::EFlags::NoSurface ];
 
@@ -231,7 +239,7 @@ namespace Platforms
 											CreateInfo::GpuSyncManager{ this },
 											OUT _syncManager ) );
 
-			CHECK_ERR( _Attach( "sync", _syncManager, true ) );
+			CHECK_ERR( _Attach( "sync", _syncManager ) );
 		}
 
 		// create queue
@@ -239,10 +247,10 @@ namespace Platforms
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											VkCommandQueueModuleID,
 											GlobalSystems(),
-											CreateInfo::GpuCommandQueue{ this, EQueueFamily::All },
+											CreateInfo::GpuCommandQueue{ this, EQueueFamily::Default },
 											OUT _cmdQueue ) );
 			
-			CHECK_ERR( _Attach( "queue", _cmdQueue, true ) );
+			CHECK_ERR( _Attach( "queue", _cmdQueue ) );
 
 			CHECK_ERR( _CopySubscriptions< QueueMsgList_t >( _cmdQueue ) );
 			CHECK_ERR( ReceiveEvents< QueueEventList_t >( _cmdQueue ) );
@@ -415,8 +423,8 @@ namespace Platforms
 	bool VulkanThread::_CreateDevice ()
 	{
 		using namespace vk;
-		using namespace PlatformVK;
-		using namespace CreateInfo;
+		using namespace Engine::PlatformVK;
+		using namespace Engine::CreateInfo;
 		
 		using EContextFlags = CreateInfo::GpuContext::EFlags;
 		
@@ -427,8 +435,8 @@ namespace Platforms
 		{
 			case "VK 1.0"_GAPI :
 			case "vulkan 1.0"_GAPI :	vk_version = VK_API_VERSION_1_0; break;
-			//case "VK 1.1"_GAPI :
-			//case "vulkan 1.1"_GAPI :	vk_version = VK_API_VERSION_1_1; break;		// TODO
+			case "VK 1.1"_GAPI :
+			case "vulkan 1.1"_GAPI :	vk_version = VK_API_VERSION_1_1; break;
 			case GAPI::type(0) :		vk_version = VK_API_VERSION_1_0; break;
 			default :					RETURN_ERR( "unsupported Vulkan version" );
 		}
@@ -463,26 +471,41 @@ namespace Platforms
 			VkPhysicalDevice	match_name_device	= 0;
 			VkPhysicalDevice	high_perf_device	= 0;
 			float				max_performance		= 0.0f;
+			float				name_match			= 0.0f;
 
-			FOR( i, dev_info )
+			for (auto& info : dev_info)
 			{
-				const auto&		info	= dev_info[i];
 																								// magic function:
-				float			perf	= float(info.globalMemory.Mb()) / 1024.0f +						// 
+				const float		perf	= float(info.globalMemory.Mb()) / 1024.0f +						// 
 										  float(info.isGPU and not info.integratedGPU ? 4 : 1) +		// 
 										  float(info.maxInvocations) / 1024.0f +						// 
 										  float(info.supportsTesselation + info.supportsGeometryShader);
+
+				const float		nmatch	= _settings.device.Empty() ? 0.0f : StringParser::CompareByWords( info.device, _settings.device );
 
 				if ( perf > max_performance ) {
 					max_performance		= perf;
 					high_perf_device	= info.id;
 				}
 
-				if ( not _settings.device.Empty() and info.device.HasSubStringIC( _settings.device ) )
-					match_name_device = info.id;
+				if ( nmatch > name_match ) {
+					match_name_device	= info.id;
+					name_match			= nmatch;
+				}
 			}
 
-			CHECK_ERR( _device.CreatePhysicalDevice( match_name_device ? match_name_device : high_perf_device ) );
+			VkPhysicalDevice	dev	= match_name_device ? match_name_device : high_perf_device;
+
+			CHECK_ERR( _device.CreatePhysicalDevice( dev ) );
+
+			// update settings
+			for (auto& info : dev_info) {
+				if ( info.id == dev ) {
+					_settings.version	= GAPI::FromString( "VK "_str << VK_VERSION_MAJOR(info.version) << '.' << VK_VERSION_MINOR(info.version) );
+					_settings.device	= info.device;
+					break;
+				}
+			}
 		}
 
 		// create surface
@@ -506,10 +529,13 @@ namespace Platforms
 			VkPhysicalDeviceFeatures	device_features	= {};
 			vkGetPhysicalDeviceFeatures( _device.GetPhyiscalDevice(), &device_features );
 
-			EQueueFamily::bits	family = EQueueFamily::All;
+			EQueueFamily::bits	family = EQueueFamily::Default;
 
 			if ( not _window )
+			{
 				family.Reset( EQueueFamily::Present );
+				_settings.flags.Reset( EContextFlags::NoSurface );
+			}
 
 			CHECK_ERR( _device.CreateDevice( device_features, family ) );
 		}
@@ -532,7 +558,7 @@ namespace Platforms
 		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								VkMemoryManagerModuleID,
 								GlobalSystems(),
-								CreateInfo::GpuMemoryManager{ this, BytesUL(0), ~BytesUL(0), EGpuMemory::bits().SetAll(), EMemoryAccess::bits().SetAll() },
+								CreateInfo::GpuMemoryManager{ BytesUL(0), ~BytesUL(0), EGpuMemory::bits().SetAll(), EMemoryAccess::bits().SetAll() },
 								OUT _memManager ) );
 		
 		CHECK( _DefCompose( false ) );
@@ -673,15 +699,15 @@ namespace Platforms
 	bool VulkanThread::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
 	{
 		if ( _device.IsDeviceCreated()									and
-			 msg->desc.visibility != WindowDesc::EVisibility::Invisible	and
-			 Any( msg->desc.surfaceSize != _device.GetSurfaceSize() ) )
+			 msg->descr.visibility != WindowDesc::EVisibility::Invisible	and
+			 Any( msg->descr.surfaceSize != _device.GetSurfaceSize() ) )
 		{
 			_device.DeviceWaitIdle();
 
 			// TODO:
 			// destroy command buffers with old framebuffers and images
 
-			CHECK_ERR( _device.RecreateSwapchain( msg->desc.surfaceSize ) );
+			CHECK_ERR( _device.RecreateSwapchain( msg->descr.surfaceSize ) );
 		}
 
 		return true;
@@ -710,13 +736,15 @@ namespace Platforms
 */
 	bool VulkanThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
 	{
-		msg->result.Set({
-			this,
-			_memManager,
-			_syncManager,
-			_device.GetDefaultRenderPass(),
-			_device.GetSwapchainLength()
-		});
+		GpuMsg::GetDeviceInfo::Info	info;
+		info.gpuThread		= this;
+		info.sharedThread	= null;
+		info.syncManager	= _syncManager;
+		info.memManager		= _memManager;
+		info.renderPass		= _device.GetDefaultRenderPass();
+		info.imageCount		= _device.GetSwapchainLength();
+
+		msg->result.Set( info );
 		return true;
 	}
 	
@@ -730,10 +758,7 @@ namespace Platforms
 		msg->result.Set({
 			_device.GetInstance(),
 			_device.GetPhyiscalDevice(),
-			_device.GetLogicalDevice(),
-			_device.GetQueue(),	_device.GetQueueIndex(),
-			_device.GetQueue(),	_device.GetQueueIndex(),
-			_device.GetQueue(),	_device.GetQueueIndex(),
+			_device.GetLogicalDevice()
 		});
 		return true;
 	}
@@ -751,6 +776,7 @@ namespace Platforms
 			&_pipelineCache,
 			&_layoutCache,
 			&_renderPassCache,
+			&_resourceCache,
 			_memManager.RawPtr()
 		});
 		return true;
@@ -780,6 +806,17 @@ namespace Platforms
 		cs.version	= _settings.version;
 
 		msg->result.Set( RVREF(cs) );
+		return true;
+	}
+	
+/*
+=================================================
+	_GetDeviceProperties
+=================================================
+*/
+	bool VulkanThread::_GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &msg)
+	{
+		msg->result.Set( _device.GetProperties() );
 		return true;
 	}
 //-----------------------------------------------------------------------------

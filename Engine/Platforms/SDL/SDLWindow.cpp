@@ -197,7 +197,7 @@ namespace PlatformSDL
 	_OnSDLPlatformCreated
 =================================================
 */
-	bool SDLWindow::_OnSDLPlatformCreated (const Message< OSMsg::OnSDLPlatformCreated > &msg)
+	bool SDLWindow::_OnSDLPlatformCreated (const Message< OSMsg::OnSDLPlatformCreated > &)
 	{
 		CHECK_ERR( not _IsComposedState( GetState() ) );
 
@@ -244,17 +244,17 @@ namespace PlatformSDL
 		{
 			CHECK_ERR( GetState() != EState::Deleting );
 
-			_createInfo.caption				= msg->desc.caption;
-			_createInfo.flags				= msg->desc.flags;
-			_createInfo.initialVisibility	= msg->desc.visibility;
-			_createInfo.orientation			= msg->desc.orientation;
-			_createInfo.position			= msg->desc.position;
-			_createInfo.surfaceSize			= msg->desc.surfaceSize;
+			_createInfo.caption				= msg->descr.caption;
+			_createInfo.flags				= msg->descr.flags;
+			_createInfo.initialVisibility	= msg->descr.visibility;
+			_createInfo.orientation			= msg->descr.orientation;
+			_createInfo.position			= msg->descr.position;
+			_createInfo.surfaceSize			= msg->descr.surfaceSize;
 			// ignored msg->desc.size
 			return true;
 		}
 		
-		Ptr<const Display>	disp = _GetDisplayByCoord( msg->desc.position );
+		Ptr<const Display>	disp = _GetDisplayByCoord( msg->descr.position );
 
 		if ( not disp )
 			disp = &_display.GetDisplays().Front();
@@ -262,13 +262,13 @@ namespace PlatformSDL
 		uint2 const		scr_res = disp->Resolution();
 
 		// set window caption
-		if ( msg->desc.caption != _windowDesc.caption )
+		if ( msg->descr.caption != _windowDesc.caption )
 		{
-			_windowDesc.caption = msg->desc.caption;
+			_windowDesc.caption = msg->descr.caption;
 			SDL_SetWindowTitle( _wnd, _windowDesc.caption.cstr() );
 		}
 		
-		if ( msg->desc.flags[ EWindowFlags::Fullscreen ] )
+		if ( msg->descr.flags[ EWindowFlags::Fullscreen ] )
 		{
 			// setup for fullscreen
 			_windowDesc.position	 = disp->FullArea().LeftBottom();
@@ -282,10 +282,10 @@ namespace PlatformSDL
 		else
 		{
 			// setup windowed
-			_windowDesc.surfaceSize	= msg->desc.surfaceSize;
-			_windowDesc.position	= msg->desc.position;
+			_windowDesc.surfaceSize	= msg->descr.surfaceSize;
+			_windowDesc.position	= msg->descr.position;
 
-			if ( msg->desc.flags[ EWindowFlags::Centered ] )
+			if ( msg->descr.flags[ EWindowFlags::Centered ] )
 			{
 				_windowDesc.position = disp->WorkArea().Center() - int2(_windowDesc.size) / 2;		
 			}

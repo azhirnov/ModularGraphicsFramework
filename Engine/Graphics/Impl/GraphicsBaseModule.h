@@ -43,7 +43,7 @@ namespace Graphics
 		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
 		
 	protected:
-		ModulePtr _GetGpuThread (const ModulePtr &gpuThread = null) const;
+		ND_ ModulePtr  _GetGpuThread (const ModulePtr &gpuThread = null) const;
 	};
 
 

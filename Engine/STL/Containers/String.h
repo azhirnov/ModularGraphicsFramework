@@ -3,9 +3,9 @@
 #pragma once
 
 #include "Engine/STL/Memory/MemoryContainer.h"
-#include "CopyStrategy.h"
-#include "ArrayRef.h"
-#include "StringRef.h"
+#include "Engine/STL/Containers/CopyStrategy.h"
+#include "Engine/STL/Containers/ArrayRef.h"
+#include "Engine/STL/Containers/StringRef.h"
 #include "Engine/STL/Math/Mathematics.h"
 #include "Engine/STL/Algorithms/Swap.h"
 
@@ -207,8 +207,8 @@ namespace GXTypes
 
 		void FreeReserve ();
 
-		TStringRef<T>		SubString (usize pos, usize count = UMax)			{ return TStringRef<T>(*this).SubString( pos, count ); }
-		TStringRef<const T>	SubString (usize pos, usize count = UMax)	const	{ return TStringRef<const T>(*this).SubString( pos, count ); }
+		ND_ TStringRef<T>		SubString (usize pos, usize count = UMax)			{ return TStringRef<T>(*this).SubString( pos, count ); }
+		ND_ TStringRef<const T>	SubString (usize pos, usize count = UMax)	const	{ return TStringRef<const T>(*this).SubString( pos, count ); }
 		
 		template <typename B>
 		Self &	FormatI (const B& value, int radix = 10);
@@ -224,63 +224,63 @@ namespace GXTypes
 		Self &	FormatF (float value, const StringFormatF &fmt = StringFormatF());
 		Self &	FormatF (double value, const StringFormatF &fmt = StringFormatF());
 
-		bool StartsWith (TStringRef<const T> right) const				{ return TStringRef<const T>(*this).StartsWith( right ); }
-		bool StartsWithIC (TStringRef<const T> right) const				{ return TStringRef<const T>(*this).StartsWithIC( right ); }
+		ND_ bool StartsWith (TStringRef<const T> right) const				{ return TStringRef<const T>(*this).StartsWith( right ); }
+		ND_ bool StartsWithIC (TStringRef<const T> right) const				{ return TStringRef<const T>(*this).StartsWithIC( right ); }
 
-		bool EndsWith (TStringRef<const T> right) const					{ return TStringRef<const T>(*this).EndsWith( right ); }
-		bool EndsWithIC (TStringRef<const T> right) const				{ return TStringRef<const T>(*this).EndsWithIC( right ); }
+		ND_ bool EndsWith (TStringRef<const T> right) const					{ return TStringRef<const T>(*this).EndsWith( right ); }
+		ND_ bool EndsWithIC (TStringRef<const T> right) const				{ return TStringRef<const T>(*this).EndsWithIC( right ); }
 		
-		bool HasChar (T right) const									{ return TStringRef<const T>(*this).HasChar( right ); }
-		bool HasCharIC (T right) const									{ return TStringRef<const T>(*this).HasCharIC( right ); }
+		ND_ bool HasChar (T right) const									{ return TStringRef<const T>(*this).HasChar( right ); }
+		ND_ bool HasCharIC (T right) const									{ return TStringRef<const T>(*this).HasCharIC( right ); }
 
-		bool HasSubString (TStringRef<const T> right) const				{ return TStringRef<const T>(*this).HasSubString( right ); }
-		bool HasSubStringIC (TStringRef<const T> right) const			{ return TStringRef<const T>(*this).HasSubStringIC( right ); }
+		ND_ bool HasSubString (TStringRef<const T> right) const				{ return TStringRef<const T>(*this).HasSubString( right ); }
+		ND_ bool HasSubStringIC (TStringRef<const T> right) const			{ return TStringRef<const T>(*this).HasSubStringIC( right ); }
 
-		bool EqualsIC (TStringRef<const T> right) const					{ return TStringRef<const T>(*this).EqualsIC( right ); }
+		ND_ bool EqualsIC (TStringRef<const T> right) const					{ return TStringRef<const T>(*this).EqualsIC( right ); }
 		
-		bool LessThan (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this).LessThan( right ); }
-		bool LessThanIC (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this).LessThanIC( right ); }
+		ND_ bool LessThan (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this).LessThan( right ); }
+		ND_ bool LessThanIC (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this).LessThanIC( right ); }
 		
-		bool GreaterThan (TStringRef<const T> right)	const			{ return TStringRef<const T>(*this).GreaterThan( right ); }
-		bool GreaterThanIC (TStringRef<const T> right)	const			{ return TStringRef<const T>(*this).GreaterThanIC( right ); }
+		ND_ bool GreaterThan (TStringRef<const T> right)	const			{ return TStringRef<const T>(*this).GreaterThan( right ); }
+		ND_ bool GreaterThanIC (TStringRef<const T> right)	const			{ return TStringRef<const T>(*this).GreaterThanIC( right ); }
 
-		bool EqualsInRange (TStringRef<const T> right, usize begin, usize end) const	{ return TStringRef<const T>(*this).EqualsInRange( right, begin, end ); }
-		bool EqualsInRangeIC (TStringRef<const T> right, usize begin, usize end) const	{ return TStringRef<const T>(*this).EqualsInRangeIC( right, begin, end ); }
+		ND_ bool EqualsInRange (TStringRef<const T> right, usize begin, usize end) const	{ return TStringRef<const T>(*this).EqualsInRange( right, begin, end ); }
+		ND_ bool EqualsInRangeIC (TStringRef<const T> right, usize begin, usize end) const	{ return TStringRef<const T>(*this).EqualsInRangeIC( right, begin, end ); }
 
-		usize GetIndex (const T &value) const							{ return TStringRef<const T>(*this).GetIndex( value ); }
+		ND_ usize GetIndex (const T &value) const							{ return TStringRef<const T>(*this).GetIndex( value ); }
 
-		T			*	ptr ();
-		T const		*	ptr ()								const;
-		T const		*	cstr ()								const		{ return ptr(); }
-		usize			Length ()							const		{ return _length; }
-		usize			Count ()							const		{ return Length(); }
-		BytesU			LengthInBytes ()					const		{ return BytesU( sizeof(T) * Length() ); }
-		BytesU			Size ()								const		{ return BytesU( sizeof(T) * _Count() ); }
-		usize			Capacity ()							const		{ return _size; }
-		constexpr usize	MaxCapacity ()						const		{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		BytesU			FullSize ()							const		{ return BytesU( _size * sizeof(T) ); }
-		bool			Empty ()							const		{ return Length() == 0; }
+		ND_ T		*		ptr ();
+		ND_ T const	*		ptr ()							const;
+		ND_ T const	*		cstr ()							const		{ return ptr(); }
+		ND_ usize			Length ()						const		{ return _length; }
+		ND_ usize			Count ()						const		{ return Length(); }
+		ND_ BytesU			LengthInBytes ()				const		{ return BytesU( sizeof(T) * Length() ); }
+		ND_ BytesU			Size ()							const		{ return BytesU( sizeof(T) * _Count() ); }
+		ND_ usize			Capacity ()						const		{ return _size; }
+		ND_ constexpr usize MaxCapacity ()					const		{ return _memory.MaxSize(); }	// max available for allocation count of elements
+		ND_ BytesU			FullSize ()						const		{ return BytesU( _size * sizeof(T) ); }
+		ND_ bool			Empty ()						const		{ return Length() == 0; }
 
-		T			*	Begin ()										{ return ptr(); }
-		T const		*	Begin ()							const		{ return ptr(); }
-		T			*	End ()											{ return ptr() + Length(); }
-		T const		*	End ()								const		{ return ptr() + Length(); }
+		ND_ T		*	Begin ()										{ return ptr(); }
+		ND_ T const	*	Begin ()							const		{ return ptr(); }
+		ND_ T		*	End ()											{ return ptr() + Length(); }
+		ND_ T const	*	End ()								const		{ return ptr() + Length(); }
 
-		T			&	Front ()										{ return ptr()[0]; }
-		T const		&	Front ()							const		{ return ptr()[0]; }
-		T			&	Back ();
-		T const		&	Back ()								const;
+		ND_ T		&	Front ()										{ return ptr()[0]; }
+		ND_ T const	&	Front ()							const		{ return ptr()[0]; }
+		ND_ T		&	Back ();
+		ND_ T const	&	Back ()								const;
 		
-		bool			operator !  ()						const		{ return not Empty(); }
+		ND_ bool		operator !  ()						const		{ return not Empty(); }
 		
-		operator		ArrayRef<T> ()									{ return ArrayRef<T>( _memory.Pointer(), Length() ); }
-		operator		ArrayCRef<T> () const							{ return ArrayCRef<T>( _memory.Pointer(), Length() ); }
+		ND_ operator	ArrayRef<T> ()									{ return ArrayRef<T>( _memory.Pointer(), Length() ); }
+		ND_ operator	ArrayCRef<T> () const							{ return ArrayCRef<T>( _memory.Pointer(), Length() ); }
 		
-		operator		TStringRef<T> ()								{ return TStringRef<T>( _memory.Pointer(), Length() ); }
-		operator		TStringRef<const T> () const					{ return TStringRef<const T>( _memory.Pointer(), Length() ); }
+		ND_ operator	TStringRef<T> ()								{ return TStringRef<T>( _memory.Pointer(), Length() ); }
+		ND_ operator	TStringRef<const T> () const					{ return TStringRef<const T>( _memory.Pointer(), Length() ); }
 
-		T			&	operator [] (usize i);
-		T const		&	operator [] (usize i) const;
+		ND_ T		&	operator [] (usize i);
+		ND_ T const	&	operator [] (usize i) const;
 
 		Self &			operator =  (const char *right)					{ Copy( TStringRef<const T>( right ) );	return *this; }
 		Self &			operator =  (TStringRef<const T> right)			{ Copy( right );					return *this; }
@@ -290,15 +290,15 @@ namespace GXTypes
 		template <typename B>
 		Self &			operator =  (const B &right)					{ Copy( Self( right ) );	return *this; }
 
-		bool			operator == (TStringRef<const T> right)	const	{ return TStringRef<const T>(*this) == right; }
-		bool			operator != (TStringRef<const T> right)	const	{ return not ( *this == right ); }
+		ND_ bool	operator == (TStringRef<const T> right)	const		{ return TStringRef<const T>(*this) == right; }
+		ND_ bool	operator != (TStringRef<const T> right)	const		{ return not ( *this == right ); }
 
 		template <typename B>
-		Self	operator +  (const B& right)				const		{ return Self(*this) += right; }
-		Self	operator +  (const Self &right)				const		{ return Self(*this) += right; }
+		ND_ Self	operator +  (const B& right)		const			{ return Self(*this) += right; }
+		ND_ Self	operator +  (const Self &right)		const			{ return Self(*this) += right; }
 
 		template <typename B> friend
-		Self	operator +  (const B& left, const Self &right)			{ return Self(left) += right; }
+		ND_ Self	operator +  (const B& left, const Self &right)		{ return Self(left) += right; }
 
 		template <usize I>
 		Self &	operator += (const T right[I])							{ return ( *this += TStringRef<const T>(right) ); }
@@ -318,27 +318,27 @@ namespace GXTypes
 		friend Self &	operator >> (TStringRef<const T> left, Self &right)	{ right.Insert( left, 0 );			return right; }
 		friend Self &	operator >> (const T left, Self &right)				{ right.Insert( left, 0 );			return right; }
 
-		bool	operator < (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this) < right; }
-		bool	operator > (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this) > right; }
-		bool	operator <= (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this) <= right; }
-		bool	operator >= (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this) >= right; }
+		ND_ bool	operator < (TStringRef<const T> right)	const		{ return TStringRef<const T>(*this) < right; }
+		ND_ bool	operator > (TStringRef<const T> right)	const		{ return TStringRef<const T>(*this) > right; }
+		ND_ bool	operator <= (TStringRef<const T> right)	const		{ return TStringRef<const T>(*this) <= right; }
+		ND_ bool	operator >= (TStringRef<const T> right)	const		{ return TStringRef<const T>(*this) >= right; }
 
-		bool	NumStrLess (TStringRef<const T> right)	const				{ return TStringRef<const T>(*this).NumStrLess( right ); }
+		ND_ bool	NumStrLess (TStringRef<const T> right)	const		{ return TStringRef<const T>(*this).NumStrLess( right ); }
 
 		template <typename T2, typename S2, typename A2>
 		void Convert (OUT TString<T2,S2,A2> &str) const;
 
 		
-		static constexpr bool	IsLinearMemory ()			{ return true; }
-		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStatic(); }
+		static constexpr bool	IsLinearMemory ()						{ return true; }
+		constexpr bool			IsStaticMemory ()	const				{ return _memory.IsStatic(); }
 
 
-		inline friend bool operator == (const T * const left, const Self &right)
+		ND_ inline friend bool operator == (const T * const left, const Self &right)
 		{
 			return right == left;
 		}
 		
-		inline friend bool operator != (const T * const left, const Self &right)
+		ND_ inline friend bool operator != (const T * const left, const Self &right)
 		{
 			return right != left;
 		}
@@ -354,12 +354,12 @@ namespace GXTypes
 	
 
 	
-	typedef TString< char >		String;
-	typedef	TString< wchar >	wstring;
+	using String	= TString< char >;
+	using WString	= TString< wchar >;
 
 
 	template <typename T>
-	inline String  ToString (const T &value);
+	ND_ inline String  ToString (const T &value);
 
 
 
@@ -391,8 +391,8 @@ namespace GXTypes
 	operator "" _str
 =================================================
 */
-	inline TString<char>		operator "" _str (const char *str, size_t len)		{ return TString<char>( str, len ); }
-	inline TString<wchar_t>		operator "" _str (const wchar_t *str, size_t len)	{ return TString<wchar_t>( str, len ); }
+	ND_ inline TString<char>		operator "" _str (const char *str, size_t len)		{ return TString<char>( str, len ); }
+	ND_ inline TString<wchar_t>		operator "" _str (const wchar_t *str, size_t len)	{ return TString<wchar_t>( str, len ); }
 	//inline TString<char16_t>	operator "" _str (const char16_t *str, size_t len)	{ return TString<char16_t>( str, len ); }
 	//inline TString<char32_t>	operator "" _str (const char32_t *str, size_t len)	{ return TString<char32_t>( str, len ); }
 
@@ -1365,7 +1365,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	struct Hash< TString<T,S,MC> >
 	{
-		CHECKRES HashResult  operator () (const TString<T,S,MC> &x) const noexcept
+		ND_ HashResult  operator () (const TString<T,S,MC> &x) const noexcept
 		{
 			return HashOf( ArrayCRef<T>( x ) );
 		}

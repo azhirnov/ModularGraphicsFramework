@@ -58,7 +58,7 @@ namespace PlatformGL
 	{
 		CHECK_ERR( GL4_Init() );
 
-		GL4_WriteInfo();
+		_UpdateProperties();
 		
 		CHECK_ERR( GL4_GetVersion() >= 450 or IsExtensionSupported("GL_EXT_direct_state_access") );
 
@@ -332,6 +332,192 @@ namespace PlatformGL
 			_framebuffer = fb;
 		}
 		return true;
+	}
+	
+/*
+=================================================
+	_UpdateProperties
+=================================================
+*/
+	void GL4Device::_UpdateProperties ()
+	{
+		GLint	idata[4] = {};
+
+		GL_CALL( glGetIntegerv( GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, OUT idata ) );
+		_properties.maxComputeWorkGroupInvocations = idata[0];
+
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, OUT &idata[0] ) );
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, OUT &idata[1] ) );
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, OUT &idata[2] ) );
+		_properties.maxComputeWorkGroupCount = uint3( idata[0], idata[1], idata[2] );
+		
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, OUT &idata[0] ) );
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, OUT &idata[1] ) );
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, OUT &idata[2] ) );
+		_properties.maxComputeWorkGroupSize = uint3( idata[0], idata[1], idata[2] );
+	}
+	
+/*
+=================================================
+	WriteInfo
+=================================================
+*/
+	void GL4Device::WriteInfo ()
+	{
+		String	log;
+		GLint	idata[4] = {};
+		float	fdata[4] = {};
+
+		log	<< "OpenGL info\n---------------"
+			<< "\nRenderer:                " << (const char*)glGetString( GL_RENDERER )
+			<< "\nVersion:                 " << (const char*)glGetString( GL_VERSION )
+			<< "\nVendor:                  " << (const char*)glGetString( GL_VENDOR )
+			<< "\nGLSL:                    " << (const char*)glGetString( GL_SHADING_LANGUAGE_VERSION );
+
+		GL_CALL( glGetIntegerv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, OUT idata ) );
+		log << "\nMax anisotropy:          " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_VERTEX_ATTRIBS, OUT idata ) );
+		log << "\nMax attribs:             " << idata[0];
+			
+		GL_CALL( glGetIntegerv( GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, OUT idata ) );
+		log << "\nMax texture units:       " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_IMAGE_UNITS, OUT idata ) );
+		log << "\nMax image units:         " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_COMBINED_IMAGE_UNITS_AND_FRAGMENT_OUTPUTS, OUT idata ) );
+		log << "\nMax image and output:    " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_TEXTURE_SIZE, OUT idata ) );
+		log << "\nMax texture size:        " << idata[0] << " px";
+		
+		GL_CALL( glGetIntegerv( GL_MAX_3D_TEXTURE_SIZE, OUT idata ) );
+		log << "\nMax texture 3d size:     " << idata[0] << " px";
+		
+		GL_CALL( glGetIntegerv( GL_MAX_ARRAY_TEXTURE_LAYERS, OUT idata ) );
+		log << "\nMax texture layers:      " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_CUBE_MAP_TEXTURE_SIZE, OUT idata ) );
+		log << "\nMax cube map size:       " << idata[0] << " px";
+		
+		GL_CALL( glGetIntegerv( GL_MAX_RENDERBUFFER_SIZE, OUT idata ) );
+		log << "\nMax render buf size:     " << idata[0] << " px";
+		
+		GL_CALL( glGetIntegerv( GL_MAX_TEXTURE_BUFFER_SIZE, OUT idata ) );
+		log << "\nMax texture buf size:    " << ToString( BytesU( idata[0] ) );
+		
+		GL_CALL( glGetIntegerv( GL_MAX_VIEWPORT_DIMS, OUT idata ) );
+		log << "\nMax viewport dim:        " << idata[0] << " px";
+		
+		GL_CALL( glGetIntegerv( GL_MAX_VIEWPORTS, OUT idata ) );
+		log << "\nMax viewports:           " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_COLOR_TEXTURE_SAMPLES, OUT idata ) );
+		log << "\nMax color tex samples:   " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_DEPTH_TEXTURE_SAMPLES, OUT idata ) );
+		log << "\nMax depth tex samples:   " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_INTEGER_SAMPLES, OUT idata ) );
+		log << "\nMax integer samples:     " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_COLOR_ATTACHMENTS, OUT idata ) );
+		log << "\nMax color attachments:   " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_DRAW_BUFFERS, OUT idata ) );
+		log << "\nMax draw buffers:        " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_DUAL_SOURCE_DRAW_BUFFERS, OUT idata ) );
+		log << "\nMax dual draw buffers:   " << idata[0];
+
+		GL_CALL( glGetIntegerv( GL_MAX_UNIFORM_BUFFER_BINDINGS, OUT idata ) );
+		log << "\nMax UBO bindings:        " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_UNIFORM_BLOCK_SIZE, OUT idata ) );
+		log << "\nMax UBO size:            " << ToString( BytesU( idata[0] ) );
+		
+		GL_CALL( glGetIntegerv( GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, OUT idata ) );
+		log << "\nMax SSBO bindings:       " << idata[0];
+			
+		GL_CALL( glGetIntegerv( GL_MAX_SHADER_STORAGE_BLOCK_SIZE, OUT idata ) );
+		log << "\nMax SSBO size:           " << ToString( BytesU( idata[0] ) );
+		
+		GL_CALL( glGetIntegerv( GL_MAX_COMBINED_SHADER_STORAGE_BLOCKS, OUT idata ) );
+		log << "\nMax SSBO blocks:         " << idata[0];
+
+		GL_CALL( glGetIntegerv( GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES, OUT idata ) );
+		log << "\nMax SSBO out blocks:     " << idata[0];
+
+		GL_CALL( glGetIntegerv( GL_MAX_TESS_GEN_LEVEL, OUT idata ) );
+		log << "\nMax tess gen level:      " << idata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_PATCH_VERTICES, OUT idata ) );
+		log << "\nMax patch vertices:      " << idata[0];
+
+		GL_CALL( glGetIntegerv( GL_MAX_VERTEX_ATTRIB_BINDINGS, OUT idata ) );
+		log << "\nMax vb bindings:         " << idata[0];
+		
+		GL_CALL( glGetFloatv( GL_ALIASED_LINE_WIDTH_RANGE, OUT fdata ) );
+		log << "\nAliased line width:      " << fdata[0] << " - " << fdata[1];
+		
+		GL_CALL( glGetFloatv( GL_SMOOTH_LINE_WIDTH_RANGE, OUT fdata ) );
+		log << "\nSmooth line width:       " << fdata[0] << " - " << fdata[1];
+		
+		GL_CALL( glGetFloatv( GL_SMOOTH_LINE_WIDTH_GRANULARITY, OUT fdata ) );
+		log << "\nSmooth line granularity: " << fdata[0];
+
+		GL_CALL( glGetFloatv( GL_POINT_SIZE_RANGE, OUT fdata ) );
+		log << "\nPoint size:              " << fdata[0] << " - " << fdata[1];
+
+		GL_CALL( glGetFloatv( GL_POINT_SIZE_GRANULARITY, OUT fdata ) );
+		log << "\nPoint size granularity:  " << fdata[0];
+		
+		GL_CALL( glGetIntegerv( GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, OUT idata ) );
+		log << "\nMax invocations:         " << idata[0];
+
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, OUT &idata[0] ) );
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, OUT &idata[1] ) );
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, OUT &idata[2] ) );
+		log << "\nMax compute groups:      " << idata[0] << ", " << idata[1] << ", " << idata[2];
+		
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, OUT &idata[0] ) );
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, OUT &idata[1] ) );
+		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, OUT &idata[2] ) );
+		log << "\nMax local groups:        " << idata[0] << ", " << idata[1] << ", " << idata[2];
+
+		//GL_CALL( glGetIntegerv( GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB, &idata[0] ) );
+		//log << "\nMax compute invocations: " << idata[0];
+
+		log << "\n---------------";
+
+		// TODO: GL_MAX_FRAMEBUFFER_WIDTH, GL_MAX_FRAMEBUFFER_HEIGHT,
+		//		GL_MAX_FRAMEBUFFER_LAYERS, GL_MAX_FRAMEBUFFER_SAMPLES,
+		//		GL_MAX_SERVER_WAIT_TIMEOUT
+
+		LOG( log, ELog::Debug | ELog::SpoilerFlag );
+
+		// write all extensions
+		#if 1
+			log.Clear();
+			log << "OpenGL Extensions\n---------------\n";
+
+			GLint			num_ext;
+			const char *	ext_str;
+			
+			GL_CALL( glGetIntegerv( GL_NUM_EXTENSIONS, &num_ext ) );
+			
+			for (GLint i = 0; i < num_ext; ++i)
+			{
+				GL_CALL( ext_str = (const char *) glGetStringi( GL_EXTENSIONS, i ) );
+
+				log << (i == 0 ? "" : ((i & 3) == 0 ? ",\n" : ", ")) << ext_str;
+			}
+			
+			log << "\n---------------";
+
+			LOG( log, ELog::Debug | ELog::SpoilerFlag );
+		#endif
 	}
 
 }	// PlatformGL

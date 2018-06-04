@@ -36,9 +36,9 @@ namespace Base
 			_globalSystems(gs)
 		{}
 
-		GlobalSystemsRef	GlobalSystems ()	const	{ return _globalSystems; }
+		ND_ GlobalSystemsRef	GlobalSystems ()	const	{ return _globalSystems; }
 
-		StringCRef			GetDebugName ()		const
+		ND_ StringCRef			GetDebugName ()		const
 		{
 			DEBUG_ONLY( return _debugName; )
 			RELEASE_ONLY( return ""; )

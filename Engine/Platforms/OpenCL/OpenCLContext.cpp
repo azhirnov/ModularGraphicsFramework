@@ -9,7 +9,8 @@
 #include "Engine/Platforms/Public/GPU/Image.h"
 #include "Engine/Platforms/Public/GPU/Thread.h"
 #include "Engine/Platforms/Public/GPU/Pipeline.h"
-#include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
+#include "Engine/Platforms/Public/GPU/Sampler.h"
+#include "Engine/Platforms/OpenCL/120/CL1Messages.h"
 #include "Engine/Platforms/OpenCL/OpenCLObjectsConstructor.h"
 
 namespace Engine
@@ -66,15 +67,15 @@ namespace Platforms
 	private:
 		static ModulePtr _CreateOpenCLThread (GlobalSystemsRef, const CreateInfo::GpuThread &);
 		static ModulePtr _CreateOpenCLContext (GlobalSystemsRef, const CreateInfo::GpuContext &);
-		static ModulePtr _CreateCL2Image (GlobalSystemsRef, const CreateInfo::GpuImage &);
-		static ModulePtr _CreateCL2Memory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
-		static ModulePtr _CreateCL2Buffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);
-		static ModulePtr _CreateCL2Sampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr _CreateCL1Image (GlobalSystemsRef, const CreateInfo::GpuImage &);
+		static ModulePtr _CreateCL1Memory (GlobalSystemsRef, const CreateInfo::GpuMemory &);
+		static ModulePtr _CreateCL1Buffer (GlobalSystemsRef, const CreateInfo::GpuBuffer &);
+		static ModulePtr _CreateCL1Sampler (GlobalSystemsRef, const CreateInfo::GpuSampler &);
 		static ModulePtr _CreatePipelineTemplate (GlobalSystemsRef, const CreateInfo::PipelineTemplate &);
-		static ModulePtr _CreateCL2CommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
-		static ModulePtr _CreateCL2CommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
-		static ModulePtr _CreateCL2ComputePipeline (GlobalSystemsRef, const CreateInfo::ComputePipeline &);
-		static ModulePtr _CreateCL2PipelineResourceTable (GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
+		static ModulePtr _CreateCL1CommandBuffer (GlobalSystemsRef, const CreateInfo::GpuCommandBuffer &);
+		static ModulePtr _CreateCL1CommandBuilder (GlobalSystemsRef, const CreateInfo::GpuCommandBuilder &);
+		static ModulePtr _CreateCL1ComputePipeline (GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+		static ModulePtr _CreateCL1PipelineResourceTable (GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -188,7 +189,7 @@ namespace Platforms
 		compute.commandBuilder	= CLCommandBuilderModuleID;
 		compute.buffer			= CLBufferModuleID;
 		compute.image			= CLImageModuleID;
-		compute.memory			= CLMemoryModuleID;
+		compute.sampler			= CLSamplerModuleID;
 		compute.resourceTable	= CLPipelineResourceTableModuleID;
 		return compute;
 	}
@@ -205,18 +206,15 @@ namespace Platforms
 		CHECK( mf->Register( CLThreadModuleID, &CreateOpenCLThread ) );
 		CHECK( mf->Register( CLContextModuleID, &CreateOpenCLContext ) );
 
-		CHECK( mf->Register( CLImageModuleID, &CreateCL2Image ) );
-		CHECK( mf->Register( CLImageModuleID, &CreateCL2SharedImage ) );
-		CHECK( mf->Register( CLMemoryModuleID, &CreateCL2Memory ) );
-		CHECK( mf->Register( CLBufferModuleID, &CreateCL2Buffer ) );
-		CHECK( mf->Register( CLBufferModuleID, &CreateCL2SharedBuffer ) );
-		//CHECK( mf->Register( CLSamplerModuleID, &CreateCL2Sampler ) );
-		CHECK( mf->Register( CLSyncManagerModuleID, &CreateCL2SyncManager ) );
-		CHECK( mf->Register( CLCommandQueueModuleID, &CreateCL2CommandQueue ) );
-		CHECK( mf->Register( CLCommandBufferModuleID, &CreateCL2CommandBuffer ) );
-		CHECK( mf->Register( CLCommandBuilderModuleID, &CreateCL2CommandBuilder ) );
-		CHECK( mf->Register( CLComputePipelineModuleID, &CreateCL2ComputePipeline ) );
-		CHECK( mf->Register( CLPipelineResourceTableModuleID, &CreateCL2PipelineResourceTable ) );
+		CHECK( mf->Register( CLImageModuleID, &CreateCL1Image ) );
+		CHECK( mf->Register( CLBufferModuleID, &CreateCL1Buffer ) );
+		CHECK( mf->Register( CLSamplerModuleID, &CreateCL1Sampler ) );
+		CHECK( mf->Register( CLSyncManagerModuleID, &CreateCL1SyncManager ) );
+		CHECK( mf->Register( CLCommandQueueModuleID, &CreateCL1CommandQueue ) );
+		CHECK( mf->Register( CLCommandBufferModuleID, &CreateCL1CommandBuffer ) );
+		CHECK( mf->Register( CLCommandBuilderModuleID, &CreateCL1CommandBuilder ) );
+		CHECK( mf->Register( CLComputePipelineModuleID, &CreateCL1ComputePipeline ) );
+		CHECK( mf->Register( CLPipelineResourceTableModuleID, &CreateCL1PipelineResourceTable ) );
 
 		if ( not mf->IsRegistered< CreateInfo::PipelineTemplate >( PipelineTemplateModuleID ) )
 			CHECK( mf->Register( PipelineTemplateModuleID, &CreatePipelineTemplate ) );
@@ -235,7 +233,6 @@ namespace Platforms
 		mf->UnregisterAll( CLContextModuleID );
 
 		mf->UnregisterAll( CLImageModuleID );
-		mf->UnregisterAll( CLMemoryModuleID );
 		mf->UnregisterAll( CLBufferModuleID );
 		mf->UnregisterAll( CLSamplerModuleID );
 		mf->UnregisterAll( CLSyncManagerModuleID );

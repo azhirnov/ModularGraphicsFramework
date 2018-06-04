@@ -8,6 +8,7 @@
 
 #include "Engine/Platforms/Soft/Impl/SWEnums.h"
 #include "Engine/Platforms/Soft/Impl/SWShaderModel.h"
+#include "Engine/Platforms/Public/GPU/Thread.h"
 
 namespace Engine
 {
@@ -36,6 +37,8 @@ namespace PlatformSW
 			GX_ENUM_BITFIELD( EDbgReport );
 		};
 
+		using DeviceProperties_t	= GpuMsg::GetDeviceProperties::Properties;
+
 
 	// variables
 	private:
@@ -43,6 +46,8 @@ namespace PlatformSW
 
 		SWShaderModel		_shaderModel;
 		mutable uint		_debugReportCounter;
+		
+		DeviceProperties_t	_properties;
 
 		bool				_debugReportEnabled;
 		bool				_initialized;
@@ -63,9 +68,15 @@ namespace PlatformSW
 		void InitDebugReport ();
 		void DebugReport (StringCRef log, EDbgReport::bits flags, StringCRef file, int line) const;
 
-		bool		IsDeviceCreated ()	const	{ return _initialized; }
+		ND_ bool						IsDeviceCreated ()	const	{ return _initialized; }
 
-		uint2		SurfaceSize ()		const	{ return _surfaceSize; }
+		ND_ uint2 const&				SurfaceSize ()		const	{ return _surfaceSize; }
+		
+		ND_ DeviceProperties_t const&	GetProperties ()	const	{ return _properties; }
+
+
+	private:
+		void _UpdateProperties ();
 	};
 
 

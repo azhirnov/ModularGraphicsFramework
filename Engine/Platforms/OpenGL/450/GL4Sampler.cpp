@@ -4,8 +4,10 @@
 
 #ifdef GRAPHICS_API_OPENGL
 
-#include "Engine/Platforms/OpenGL/450/GL4Sampler.h"
+#include "Engine/Platforms/OpenGL/450/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/450/GL4SamplerCache.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
+#include "Engine/Platforms/Public/Tools/SamplerUtils.h"
 
 namespace Engine
 {
@@ -155,6 +157,8 @@ namespace PlatformGL
 */
 	bool GL4Sampler::_GetGLSamplerID (const Message< GpuMsg::GetGLSamplerID > &msg)
 	{
+		ASSERT( _IsCreated() );
+
 		msg->result.Set( _samplerId );
 		return true;
 	}
@@ -192,7 +196,7 @@ namespace PlatformGL
 		CHECK_ERR( not _IsCreated() );
 
 		// create sampler
-		GL_CALL( glGenSamplers( 1, &_samplerId ) );
+		GL_CALL( glGenSamplers( 1, OUT &_samplerId ) );
 		CHECK_ERR( _samplerId != 0 );
 
 		// wrap
@@ -273,7 +277,6 @@ namespace PlatformGL
 */
 	inline bool GL4SamplerCache::SearchableSampler::operator == (const SearchableSampler &right) const	{ return samp->GetDescriptor() == right.samp->GetDescriptor(); }
 	inline bool GL4SamplerCache::SearchableSampler::operator >  (const SearchableSampler &right) const	{ return samp->GetDescriptor() >  right.samp->GetDescriptor(); }
-	inline bool GL4SamplerCache::SearchableSampler::operator <  (const SearchableSampler &right) const	{ return samp->GetDescriptor() <  right.samp->GetDescriptor(); }
 		
 //-----------------------------------------------------------------------------
 
@@ -285,7 +288,6 @@ namespace PlatformGL
 */	
 	inline bool GL4SamplerCache::SamplerSearch::operator == (const SearchableSampler &right) const	{ return descr == right.samp->GetDescriptor(); }
 	inline bool GL4SamplerCache::SamplerSearch::operator >  (const SearchableSampler &right) const	{ return descr >  right.samp->GetDescriptor(); }
-	inline bool GL4SamplerCache::SamplerSearch::operator <  (const SearchableSampler &right) const	{ return descr <  right.samp->GetDescriptor(); }
 	
 //-----------------------------------------------------------------------------
 
@@ -327,64 +329,14 @@ namespace PlatformGL
 		{
 			_Initialize();
 		}
-
-		SamplerDescriptor::Builder	builder( ci.descr );
-
-		const bool		unnorm_coords = (builder.AddressMode().x == EAddressMode::ClampUnnorm) or
-										(builder.AddressMode().y == EAddressMode::ClampUnnorm);
-
-		// validate filtering mode
-		{
-			// validate anisotropic filtering
-			if ( EnumEq( builder.Filter(), EFilter::_ANISOTROPIC ) )
-			{
-				builder.SetFilter( EFilter::type( (builder.Filter() ^ EFilter::_A_FACTOR_MASK) |
-												Clamp(	uint(builder.Filter() & EFilter::_A_FACTOR_MASK),
-														uint(SupportAnisotropyFiltering()) * 2,
-														GetMaxAnisotropyLevel() ) ) );
-			}
-
-			// validate for unnormalized coords
-			if ( unnorm_coords )
-			{
-				ASSERT( not EFilter::IsMipmapLinear( builder.Filter() ) );
-				ASSERT( EFilter::IsMinLinear( builder.Filter() ) == EFilter::IsMagLinear( builder.Filter() ) );
-				ASSERT( not EnumEq( builder.Filter(), EFilter::_ANISOTROPIC ) );
-
-				builder.SetFilter( EFilter::_MIP_NEAREST |
-									(EFilter::IsMinLinear( builder.Filter() ) or EFilter::IsMagLinear( builder.Filter() ) ?
-										EFilter::_MIN_LINEAR | EFilter::_MAG_LINEAR :
-										EFilter::_MIN_NEAREST | EFilter::_MAG_NEAREST) );
-			}
-		}
-
-		// validate addressing mode
-		{
-			FOR( i, builder.AddressMode() )
-			{
-				if ( unnorm_coords )
-				{
-					// unnormalized coords supports only with ClampToEdge addressing mode
-					ASSERT( i == 2 or builder.AddressMode()[i] == EAddressMode::ClampUnnorm );
-
-					builder.SetAddressMode( uint(i), EAddressMode::ClampUnnorm );
-				}
-			}
-		}
-
-		// validate compare mode
-		{
-			if ( unnorm_coords )
-			{
-				ASSERT( builder.CompareOp() == ECompareFunc::None );
-				builder.SetCompareOp( ECompareFunc::None );
-			}
-		}
+		
+		SamplerDescriptor	descr = ci.descr;
+		PlatformTools::SamplerUtils::ValidateDescriptor( INOUT descr, GetMaxAnisotropyLevel() );
 
 		// find cached sampler
 		Samplers_t::const_iterator	iter;
 
-		if ( _samplers.CustomSearch().Find( SamplerSearch( builder.Finish() ), OUT iter ) and
+		if ( _samplers.CustomSearch().Find( SamplerSearch( descr ), OUT iter ) and
 			 iter->samp->GetState() == Module::EState::ComposedImmutable )
 		{
 			return iter->samp;
@@ -393,7 +345,7 @@ namespace PlatformGL
 		// create new sampler
 		CreateInfo::GpuSampler	create_info;
 		create_info.gpuThread	= ci.gpuThread;
-		create_info.descr		= builder.Finish();
+		create_info.descr		= descr;
 
 		auto result = New< GL4Sampler >( id, gs, create_info );
 
@@ -415,11 +367,11 @@ namespace Platforms
 		ModulePtr	mod;
 		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetGLPrivateClasses>> >() );
 
-		Message< GpuMsg::GetGLPrivateClasses >	req_cl;
-		mod->Send( req_cl );
-		CHECK_ERR( req_cl->result.IsDefined() and req_cl->result->samplerCache );
+		Message< GpuMsg::GetGLPrivateClasses >	req_classes;
+		mod->Send( req_classes );
+		CHECK_ERR( req_classes->result.IsDefined() and req_classes->result->samplerCache );
 
-		return req_cl->result->samplerCache->Create( id, gs, ci );
+		return req_classes->result->samplerCache->Create( id, gs, ci );
 	}
 
 }	// Platforms

@@ -203,7 +203,7 @@
 
 
 // deprecated attribute
-#if COMPILER_VERSION >= 700
+#if __has_cpp_attribute( deprecated )
 #	define GX_DEPRECATED( _reason_ )		[[ deprecated(_reason_) ]]
 #else
 #	define GX_DEPRECATED( _reason_ )
@@ -211,20 +211,20 @@
 
 
 // notify compiler to generate error if function result unused
-#if COMPILER_VERSION >= 700
-#	define GX_CHECK_RESULT					[[nodiscard]]
+#if __has_cpp_attribute( nodiscard )
+#	define GX_NODISCARD						[[nodiscard]]
 #elif COMPILER_VERSION >= 400
-#	define GX_CHECK_RESULT					__attribute__ ((warn_unused_result))
+#	define GX_NODISCARD						__attribute__ ((warn_unused_result))
 #else
-#	define GX_CHECK_RESULT
+#	define GX_NODISCARD
 #endif
 
 
 // if constexpr
 #if COMPILER_VERSION >= 700
-#	define if_constexpr			if constexpr
+#	define if_constexpr					if constexpr
 #else
-#	define if_constexpr			if
+#	define if_constexpr					if
 #endif
 
 
@@ -236,13 +236,23 @@
 
 // atomic
 #if COMPILER_VERSION >= 500		// TODO
-#	define GX_ATOMIC_SUPPORTED	1
+#	define GX_ATOMIC_SUPPORTED				1
 #endif
 
 
 // TODO
-#if !defined( PLATFORM_ANDROID )
+#if 1 // !defined( PLATFORM_ANDROID )
 #	define GX_RTTI_SUPPORTED
+#endif
+
+
+// maybe unused attribute
+#if __has_cpp_attribute( maybe_unused )
+#	define GX_MAYBE_UNUSED				[[maybe_unused]]
+#elif __has_cpp_attribute( gnu::unused )
+#	define GX_MAYBE_UNUSED				[[gnu::unused]]
+#else
+#	define GX_MAYBE_UNUSED
 #endif
 
 //-------------------------------------------------------------------
@@ -265,5 +275,8 @@
 #	define GX_BREAK_POINT() 	throw std::runtime_error("breakpoint")
 #endif
 
+
+// TODO: check
+#define GX_MAX_STRING_LENGTH_BYTES	(5u << 20)
 
 #endif	// COMPILER_GCC

@@ -134,7 +134,7 @@ namespace CompileTime
 		// FirstIndexOf
 		template <typename Type>
 		static constexpr usize	FirstIndexOf	= ForEach< _ctime_hidden_::TTypeList_GetFirstIndexOfType< Type >::template Func,
-															ValueToType< usize, usize(-1) > >::value;
+															ValueToType< usize, usize(UMax) > >::value;
 		// IndexOf
 		template <typename Type>
 		static constexpr usize	IndexOf			= FirstIndexOf< Type >;
@@ -142,7 +142,7 @@ namespace CompileTime
 		// LastIndexOf
 		template <typename Type>
 		static constexpr usize	LastIndexOf		= ForEach< _ctime_hidden_::TTypeList_GetLastIndexOfType< Type >::template Func,
-															ValueToType< usize, usize(-1) > >::value;
+															ValueToType< usize, usize(UMax) > >::value;
 		// HasType
 		template <typename Type>
 		static constexpr bool	HasType			= ( IndexOf< Type > != UMax );

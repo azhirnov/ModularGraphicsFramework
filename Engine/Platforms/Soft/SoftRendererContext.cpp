@@ -187,7 +187,7 @@ namespace Platforms
 		graphics.commandBuilder	= SWCommandBuilderModuleID;
 		graphics.buffer			= SWBufferModuleID;
 		graphics.image			= SWImageModuleID;
-		//graphics.sampler		= SWSamplerModuleID;
+		graphics.sampler		= SWSamplerModuleID;
 		graphics.memory			= SWMemoryModuleID;
 		graphics.resourceTable	= SWPipelineResourceTableModuleID;
 		return graphics;
@@ -208,6 +208,7 @@ namespace Platforms
 		compute.commandBuilder	= SWCommandBuilderModuleID;
 		compute.buffer			= SWBufferModuleID;
 		compute.image			= SWImageModuleID;
+		compute.sampler			= SWSamplerModuleID;
 		compute.memory			= SWMemoryModuleID;
 		compute.resourceTable	= SWPipelineResourceTableModuleID;
 		return compute;
@@ -226,11 +227,9 @@ namespace Platforms
 		CHECK( mf->Register( SWThreadModuleID, &CreateSoftRendererThread ) );
 		
 		CHECK( mf->Register( SWImageModuleID, &CreateSWImage ) );
-		CHECK( mf->Register( SWImageModuleID, &CreateSWSharedImage ) );
 		CHECK( mf->Register( SWMemoryModuleID, &CreateSWMemory ) );
 		CHECK( mf->Register( SWBufferModuleID, &CreateSWBuffer ) );
-		CHECK( mf->Register( SWBufferModuleID, &CreateSWSharedBuffer ) );
-		//CHECK( mf->Register( SWSamplerModuleID, &CreateSWSampler ) );
+		CHECK( mf->Register( SWSamplerModuleID, &CreateSWSampler ) );
 		//CHECK( mf->Register( SWRenderPassModuleID, &CreateSWRenderPass ) );
 		//CHECK( mf->Register( SWFramebufferModuleID, &CreateSWFramebuffer ) );
 		CHECK( mf->Register( SWSyncManagerModuleID, &CreateSWSyncManager ) );
@@ -260,7 +259,7 @@ namespace Platforms
 		mf->UnregisterAll( SWImageModuleID );
 		mf->UnregisterAll( SWMemoryModuleID );
 		mf->UnregisterAll( SWBufferModuleID );
-		//mf->UnregisterAll( SWSamplerModuleID );
+		mf->UnregisterAll( SWSamplerModuleID );
 		//mf->UnregisterAll( SWRenderPassModuleID );
 		//mf->UnregisterAll( SWFramebufferModuleID );
 		mf->UnregisterAll( SWSyncManagerModuleID );

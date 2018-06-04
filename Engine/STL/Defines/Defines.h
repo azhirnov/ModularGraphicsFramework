@@ -48,7 +48,7 @@
 
 
 // Check function result //
-#define CHECKRES						GX_CHECK_RESULT
+#define ND_								GX_NODISCARD
 
 
 // Assume //
@@ -67,8 +67,9 @@
 #endif
 
 
-// Throw //
-#define THROW							noexcept(false)
+// Expected / Unexpected conditions //
+#define if_expected( _condition_ )		if (GX_BRANCH_EXPECT( _condition_ ))
+//#define if_unexpected( _condition_ )	if (GX_BRANCH_EXPECT_FALSE( _condition_ ))
 
 
 // Static Assert //

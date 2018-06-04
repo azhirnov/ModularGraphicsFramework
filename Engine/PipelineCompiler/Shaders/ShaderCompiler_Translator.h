@@ -3,6 +3,9 @@
 	Bugs:
 		- incorrect scope of local variable, initialize local variable to fix this issue.
 		- incorrect global variable initialization.
+
+	TODO:
+		- check variable names that equal to reserved keywords, unsupported prefixes and other.
 */
 
 #pragma once
@@ -12,24 +15,25 @@
 namespace PipelineCompiler
 {
 
-	struct ConstUnionHash
+	/*struct ConstUnionHash
 	{
-		using Result_t = HashResult;
-
 		HashResult operator () (const glslang::TConstUnionArray *key) const;
-
+		
+		HashResult _CUHash (const glslang::TConstUnionArray *cu) const;
 		HashResult _ArrHash (const glslang::TConstUnionArray &key) const;
 		HashResult _ValHash (const glslang::TConstUnion &key) const;
-	};
+	};*/
 
 
 	//
 	// Translator
 	//
 
-	struct Translator
+	struct Translator final
 	{
 	// types
+		enum SymbolID : uint {};
+
 		struct TypeInfo : CompileTime::ComplexType
 		{
 		// variables
@@ -41,13 +45,24 @@ namespace PipelineCompiler
 			EShaderVariable::type		type			= EShaderVariable::Unknown;
 			EPrecision::type			precision		= EPrecision::Unknown;
 			EPixelFormat::type			format			= EPixelFormat::Unknown;
-			uint						specConstID		= UMax;		// specialization const id
 			uint						arraySize		= 0;		// 0 - not array, > 0 - static array, ~0 - dynamic
-			uint						binding			= UMax;
 			bool						isGlobal		= false;	// in some languages globals are forbbiden
 
 		// methods
-			TypeInfo() {}
+			TypeInfo () {}
+		};
+
+		struct Symbol : TypeInfo
+		{
+		// variables
+			// 'name' - symbol name
+			SymbolID		id				= SymbolID(0);
+			uint			binding			= UMax;
+			uint			specConstID		= UMax;		// specialization const id
+			
+		// methods
+			Symbol () {}
+			explicit Symbol (const TypeInfo &other) : TypeInfo{other} {}
 		};
 
 
@@ -59,24 +74,38 @@ namespace PipelineCompiler
 		};
 
 
-		struct Const
+		struct ConstKey
+		{
+			glslang::TConstUnionArray const*	cu;
+			TypeInfo							info;
+
+			bool operator == (const ConstKey &right) const;
+			bool operator >  (const ConstKey &right) const;
+		};
+
+		struct ConstName
 		{
 			String					name;
 			glslang::TIntermSymbol*	node	= null;
 		};
+		
+		struct ConstKeyHash
+		{
+			HashResult operator () (const ConstKey &key) const;
+		};
 
-		using ConstMap_t		= HashMap< const glslang::TConstUnionArray*, Const, ConstUnionHash >;
+		using ConstMap_t		= HashMap< ConstKey, ConstName, ConstKeyHash >;
 
 		using NodeMap_t			= Map< uint, Node >;
-		using LocalVarSet_t		= Map< uint, String >;					// variable ID, name with prefix from inline function
-		using PendingVars_t		= Map< uint, TypeInfo >;
+		using LocalVarSet_t		= Map< SymbolID, String >;					// variable ID, name with prefix from inline function
+		using PendingVars_t		= Map< SymbolID, Symbol >;
 		using PendingStrings_t	= Array< String >;
-		using InlFunctionsMap_t	= HashMap< String, TIntermNode* >;		// function signature and node
+		using InlFunctionsMap_t	= HashMap< String, TIntermNode* >;			// function signature and node
 		using LocalNames_t		= HashSet< String >;
-		using StringStack_t		= Stack< String >;
-		using LocalReplacer_t	= HashMap< String, String >;
-		using CustomTypes_t		= HashMap< String, TypeInfo >;
-		using AtomicTypes_t		= MultiHashMap< String, Array<String> >;		// typename, fields
+		using LocalReplacer_t	= HashMap< SymbolID, String >;
+		using CustomTypes_t		= HashMap< String, TypeInfo >;				// typename, fields
+		using AtomicTypes_t		= MultiHashMap< String, Array<String> >;	// typename, field names
+		using FnLocalVarStack_t	= Array< LocalVarSet_t >;
 
 		struct Scope
 		{
@@ -85,8 +114,15 @@ namespace PipelineCompiler
 			bool				reqEndLine	= true;
 		};
 
+		struct InlFuncScope
+		{
+			String				prefix;				// 
+			Set<SymbolID>		localVars;			// 
+		};
+
 		class IDstLanguage;
 		using IDstLanguagePtr	= UniquePtr< IDstLanguage >;
+		using InlFuncStack_t	= Stack< InlFuncScope >;
 
 
 	// variables
@@ -106,17 +142,19 @@ namespace PipelineCompiler
 		// for inllining
 		struct {
 			InlFunctionsMap_t	functions;
+			InlFunctionsMap_t	allFunctions;
 			LocalNames_t		localNames;			// names in inline function must be unique, so we need to store all (local?) names
-			StringStack_t		prefixStack;		// if current string not empty then it is inline function and all local variables must have prefix
+			InlFuncStack_t		prefixStack;		// if current string not empty then it is inline function and all local variables must have prefix
 			LocalReplacer_t		localsReplacer;		// replace func args and local variables by new name
 
 		}					inl;
 
 		// function and variable forward declaration
 		struct {
-			LocalVarSet_t		definedLocalVars;		// list of defined (local) variables
+			//LocalVarSet_t		definedLocalVars;		// list of defined (local) variables
 			LocalVarSet_t		funcArguments;			// list of function arguments
 			Array<Scope>		scope;
+			FnLocalVarStack_t	fnScope;
 
 		}					fwd;
 
@@ -140,13 +178,14 @@ namespace PipelineCompiler
 
 		IDstLanguagePtr		language;
 		String				entryPoint;
+		String				dstEntryPoint;			// after translation entry point may be renamed
 		uint				uid			= 0;		// counter
 
 
 	// methods
 		Translator ()
 		{
-			inl.prefixStack.SetDefault( "" );
+			inl.prefixStack.SetDefault({ "", {} });
 		}
 
 		bool IsInline () const		{ return inl.prefixStack.Count() > 1; }
@@ -162,20 +201,31 @@ namespace PipelineCompiler
 
 	class Translator::IDstLanguage
 	{
+	// types
+	public:
+		using TypeInfo	= Translator::TypeInfo;
+		using Symbol	= Translator::Symbol;
+		using SymbolID	= Translator::SymbolID;
+		
+
+	// interface
 	public:
 		virtual ~IDstLanguage () {}
-		virtual bool TranslateLocalVar (const TypeInfo &, INOUT String &src) = 0;
+		virtual bool TranslateLocalVar (const Symbol &, INOUT String &src) = 0;
 		virtual bool TranslateStruct (const TypeInfo &, INOUT String &src) = 0;
 		virtual bool TranslateType (const TypeInfo &, INOUT String &src) = 0;
-		virtual bool TranslateName (const TypeInfo &, INOUT String &src) = 0;
-		virtual bool TranslateFunctionDecl (StringCRef sign, const TypeInfo &resultType, ArrayCRef<TypeInfo> args, INOUT String &src) = 0;
+		virtual bool TranslateName (const Symbol &, INOUT String &src) = 0;
+		virtual bool ValidateSymbolName (INOUT Symbol &, uint fnScopeId) = 0;	// local variables, function arguments, externals and other
+		virtual bool ValidateFieldName (INOUT TypeInfo &) = 0;	// struct fields only
+		virtual bool TranslateFunctionDecl (StringCRef sign, const TypeInfo &resultType, ArrayCRef<Symbol> args, INOUT String &src) = 0;
 		virtual bool TranslateFunctionCall (StringCRef sign, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) = 0;
+		virtual bool MustBeInlined (StringCRef sign, ArrayCRef<TypeInfo const*> argTypes) = 0;
 		virtual bool TranslateConstant (const glslang::TConstUnionArray &, const TypeInfo &, INOUT String &src) = 0;
-		virtual bool TranslateExternal (glslang::TIntermTyped *, const TypeInfo &, INOUT String &src) = 0;
+		virtual bool TranslateExternal (glslang::TIntermTyped *, const Symbol &, INOUT String &src) = 0;
 		virtual bool TranslateOperator (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, INOUT String &src) = 0;
-		virtual bool TranslateSwizzle (const TypeInfo &type, StringCRef val, StringCRef swizzle, INOUT String &src) = 0;
-		virtual bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<TypeInfo> args, INOUT String &src) = 0;
-		virtual bool TranslateStructAccess (const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) = 0;
+		virtual bool TranslateSwizzle (const TypeInfo &result, const TypeInfo &valType, StringCRef val, ArrayCRef<uint> swizzle, INOUT String &src) = 0;
+		virtual bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<Symbol> args, StringCRef body, OUT String &entryPoint, INOUT String &src) = 0;
+		virtual bool TranslateStructAccess (SymbolID id, const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) = 0;
 		virtual bool TranslateValue (VariantCRef value, INOUT String &src) const = 0;
 		virtual bool DeclExternalTypes () const	= 0;
 	};
@@ -258,7 +308,6 @@ namespace PipelineCompiler
 		static void _CreateType (OUT TypeInfo &type)
 		{
 			type.arraySize		= 0;
-			type.binding		= UMax;
 			type.isGlobal		= false;
 			type.memoryModel	= Uninitialized;
 			type.precision		= Uninitialized;

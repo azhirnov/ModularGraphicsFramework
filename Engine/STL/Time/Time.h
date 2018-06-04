@@ -43,21 +43,21 @@ namespace GXTypes
 	using TimeL		= Time<ilong>;	// max 106751.99 days
 	using TimeUL	= Time<ulong>;	// max 213503.98 days
 	
-	//CHECKRES constexpr TimeUL operator "" _nanoSec (unsigned long long value)	{ return TimeUL::FromNanoSeconds( value ); }
-	CHECKRES constexpr TimeL  operator "" _nanoSec (unsigned long long value)	{ return TimeL::FromNanoSeconds( value ); }
-	CHECKRES constexpr TimeD  operator "" _nanoSec (long double value)			{ return TimeD::FromNanoSeconds( (double)value ); }
+	//ND_ constexpr TimeUL operator "" _nanoSec (unsigned long long value)	{ return TimeUL::FromNanoSeconds( value ); }
+	ND_ constexpr TimeL  operator "" _nanoSec (unsigned long long value)	{ return TimeL::FromNanoSeconds( value ); }
+	ND_ constexpr TimeD  operator "" _nanoSec (long double value)			{ return TimeD::FromNanoSeconds( (double)value ); }
 	
-	//CHECKRES constexpr TimeUL operator "" _microSec (unsigned long long value){ return TimeUL::FromMicroSeconds( value ); }
-	CHECKRES constexpr TimeL  operator "" _microSec (unsigned long long value)	{ return TimeL::FromMicroSeconds( value ); }
-	CHECKRES constexpr TimeD  operator "" _microSec (long double value)			{ return TimeD::FromMicroSeconds( (double)value ); }
+	//ND_ constexpr TimeUL operator "" _microSec (unsigned long long value){ return TimeUL::FromMicroSeconds( value ); }
+	ND_ constexpr TimeL  operator "" _microSec (unsigned long long value)	{ return TimeL::FromMicroSeconds( value ); }
+	ND_ constexpr TimeD  operator "" _microSec (long double value)			{ return TimeD::FromMicroSeconds( (double)value ); }
 
-	//CHECKRES constexpr TimeUL operator "" _milliSec (unsigned long long value){ return TimeUL::FromMilliSeconds( value ); }
-	CHECKRES constexpr TimeL  operator "" _milliSec (unsigned long long value)	{ return TimeL::FromMilliSeconds( value ); }
-	CHECKRES constexpr TimeD  operator "" _milliSec (long double value)			{ return TimeD::FromMilliSeconds( (double)value ); }
+	//ND_ constexpr TimeUL operator "" _milliSec (unsigned long long value){ return TimeUL::FromMilliSeconds( value ); }
+	ND_ constexpr TimeL  operator "" _milliSec (unsigned long long value)	{ return TimeL::FromMilliSeconds( value ); }
+	ND_ constexpr TimeD  operator "" _milliSec (long double value)			{ return TimeD::FromMilliSeconds( (double)value ); }
 	
-	//CHECKRES constexpr TimeUL operator "" _sec (unsigned long long value)		{ return TimeUL::FromSeconds( value ); }
-	CHECKRES constexpr TimeL  operator "" _sec (unsigned long long value)		{ return TimeL::FromSeconds( value ); }
-	CHECKRES constexpr TimeD  operator "" _sec (long double value)				{ return TimeD::FromSeconds( (double)value ); }
+	//ND_ constexpr TimeUL operator "" _sec (unsigned long long value)		{ return TimeUL::FromSeconds( value ); }
+	ND_ constexpr TimeL  operator "" _sec (unsigned long long value)		{ return TimeL::FromSeconds( value ); }
+	ND_ constexpr TimeD  operator "" _sec (long double value)				{ return TimeD::FromSeconds( (double)value ); }
 
 
 }	// GXTypes

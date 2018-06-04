@@ -32,7 +32,8 @@ namespace Platforms
 			device(deviceName), version(version), isDebug(isDebug)
 		{}
 
-		String GetAPIName () const;
+		ND_ String GetAPIName () const;
+		ND_ uint   GetAPIVersion () const;
 	};
 
 
@@ -83,7 +84,8 @@ namespace Platforms
 			samples{ samples },		swapchainLength{ swapchainLength }
 		{}
 
-		String GetAPIName () const;
+		ND_ String GetAPIName () const;
+		ND_ uint   GetAPIVersion () const;
 	};
 
 

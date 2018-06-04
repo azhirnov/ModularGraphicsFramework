@@ -23,8 +23,9 @@
 #include "Engine/Platforms/Public/OS/Input.h"
 
 //#include "Engien/Platforms/DirectX/Impl/DX11Messages.h"
-//#include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
+//#include "Engine/Platforms/Vulkan/110/Vk1Messages.h"
 //#include "Engine/Platforms/OpenGL/450/GL4Messages.h"
-//#include "Engine/Platforms/OpenCL/Impl/CL2Messages.h"
+//#include "Engine/Platforms/OpenCL/120/CL1Messages.h"
 //#include "Engine/Platforms/Soft/Impl/SWMessages.h"
 //#include "Engine/Platforms/Windows/WinMessages.h"
+//#include "Engine/Platforms/SDL/SDLMessages.h"

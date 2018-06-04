@@ -29,7 +29,7 @@ namespace GXTypes
 
 	// variables
 	private:
-		File::WFilePtr			_logFile;
+		GXFile::WFilePtr		_logFile;
 		OS::Mutex				_lockLog;
 		String					_crashFileName;
 		String					_buffer;
@@ -73,7 +73,7 @@ namespace GXTypes
 		bool CreateCrashFile (StringCRef filename);	// on start application
 		bool CloseCrashFile ();						// on stop application
 
-		bool ReadCrashFile (StringCRef name, OUT bool &wasCrashed, OUT OS::Date &time);
+		bool ReadCrashFile (StringCRef name, OUT bool &wasCrashed, OUT Date &time);
 
 
 		// Utils //

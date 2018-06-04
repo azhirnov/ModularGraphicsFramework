@@ -17,8 +17,8 @@ namespace GXMath
 	
 	struct DefaultRandomEngine
 	{
-		CHECKRES uint	operator () ()	const	{ return uint(rand()); }
-		uint			Max()			const	{ return RAND_MAX; }
+		ND_ uint	operator () ()	const	{ return uint(rand()); }
+		ND_ uint	Max()			const	{ return RAND_MAX; }
 	};
 
 
@@ -38,8 +38,8 @@ namespace GXMath
 		PlatformRandomEngine () : _device( StringCRef() )
 		{}
 		
-		CHECKRES uint	operator () ()	const	{ uint result;  _device.Generate( result );  return result; }
-		uint			Max()			const	{ return MaxValue< uint >(); }
+		ND_ uint	operator () ()	const	{ uint result;  _device.Generate( result );  return result; }
+		ND_ uint	Max()			const	{ return MaxValue< uint >(); }
 	};
 
 
@@ -48,8 +48,8 @@ namespace GXMath
 	template <uint MAX = 0xffff>
 	struct TRandomEngineTicks
 	{
-		uint operator () ()	const	{ return ::GetTickCount() & MAX; }
-		uint Max()			const	{ return MAX; }
+		ND_ uint operator () ()	const	{ return ::GetTickCount() & MAX; }
+		ND_ uint Max()			const	{ return MAX; }
 	};
 #endif
 	*/

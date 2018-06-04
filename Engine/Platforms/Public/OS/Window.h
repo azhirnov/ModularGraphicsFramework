@@ -114,17 +114,31 @@ namespace OSMsg
 	//
 	struct WindowSetDescriptor
 	{
-		Platforms::WindowDesc			desc;
+	// variables
+		Platforms::WindowDesc			descr;
+
+	// methods
+		explicit WindowSetDescriptor (const Platforms::WindowDesc &descr) : descr{descr} {}
 	};
+
 
 	struct WindowGetDescriptor
 	{
+	// variables
 		Out< Platforms::WindowDesc >	result;
+
+	// methods
+		WindowGetDescriptor () {}
 	};
+
 
 	struct WindowDescriptorChanged
 	{
-		Platforms::WindowDesc			desc;
+	// variables
+		Platforms::WindowDesc			descr;
+
+	// methods
+		explicit WindowDescriptorChanged (const Platforms::WindowDesc &descr) : descr{descr} {}
 	};
 	
 
@@ -133,7 +147,11 @@ namespace OSMsg
 	//
 	struct WindowVisibilityChanged
 	{
+	// variables
 		CreateInfo::Window::EVisibility		state;
+
+	// methods
+		explicit WindowVisibilityChanged (CreateInfo::Window::EVisibility state) : state{state} {}
 	};
 
 

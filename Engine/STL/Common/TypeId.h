@@ -116,13 +116,13 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES forceinline static TypeId  TypeIdOf () noexcept
+	ND_ forceinline static TypeId  TypeIdOf () noexcept
 	{
 		return _types_hidden_::_TypeIdOf<T>::Get();
 	}
 
 	template <typename T>
-	CHECKRES forceinline static TypeId  TypeIdOf (const T&) noexcept
+	ND_ forceinline static TypeId  TypeIdOf (const T&) noexcept
 	{
 		return TypeIdOf<T>();
 	}
@@ -135,7 +135,7 @@ namespace GXTypes
 	template <>
 	struct Hash< TypeId >
 	{
-		CHECKRES HashResult  operator () (const TypeId &x) const noexcept
+		ND_ HashResult  operator () (const TypeId &x) const noexcept
 		{
 			return HashOf( x.Get() );
 		}

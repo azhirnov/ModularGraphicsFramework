@@ -57,12 +57,12 @@ namespace PipelineCompiler
 	{
 		_MergeTextures_Func	func( INOUT textures );
 
-		FOR( i, bindings.uniforms ) {
-			bindings.uniforms[i].Apply( func );
+		for (auto& un : bindings.uniforms) {
+			un.Apply( func );
 		}
-
-		FOR( i, textures ) {
-			bindings.uniforms.PushBack( Bindings::_Uniform{ textures[i] } );
+		
+		for (auto& tex : textures) {
+			bindings.uniforms.PushBack( Bindings::_Uniform{ tex } );
 		}
 	}
 	
@@ -114,12 +114,12 @@ namespace PipelineCompiler
 	{
 		_MergeImages_Func	func( INOUT images );
 
-		FOR( i, bindings.uniforms ) {
-			bindings.uniforms[i].Apply( func );
+		for (auto& un : bindings.uniforms) {
+			un.Apply( func );
 		}
 
-		FOR( i, images ) {
-			bindings.uniforms.PushBack( Bindings::_Uniform{ images[i] } );
+		for (auto& img : images) {
+			bindings.uniforms.PushBack( Bindings::_Uniform{ img } );
 		}
 	}
 	
@@ -169,12 +169,12 @@ namespace PipelineCompiler
 	{
 		_MergeUniformBuffers_Func	func( INOUT buffers );
 
-		FOR( i, bindings.uniforms ) {
-			bindings.uniforms[i].Apply( func );
+		for (auto& un : bindings.uniforms) {
+			un.Apply( func );
 		}
 
-		FOR( i, buffers ) {
-			bindings.uniforms.PushBack( Bindings::_Uniform{ buffers[i] } );
+		for (auto& buf : buffers) {
+			bindings.uniforms.PushBack( Bindings::_Uniform{ buf } );
 		}
 	}
 	
@@ -225,12 +225,12 @@ namespace PipelineCompiler
 	{
 		_MergeStorageBuffers_Func	func( INOUT buffers );
 
-		FOR( i, bindings.uniforms ) {
-			bindings.uniforms[i].Apply( func );
+		for (auto& un : bindings.uniforms) {
+			un.Apply( func );
 		}
 
-		FOR( i, buffers ) {
-			bindings.uniforms.PushBack( Bindings::_Uniform{ buffers[i] } );
+		for (auto& buf : buffers) {
+			bindings.uniforms.PushBack( Bindings::_Uniform{ buf } );
 		}
 	}
 	
@@ -243,9 +243,8 @@ namespace PipelineCompiler
 	{
 		result.Reserve( shader.Textures().Count() );
 
-		FOR( i, shader.Textures() )
+		for (const auto& src : shader.Textures())
 		{
-			const auto&		src	= shader.Textures()[i];
 			TextureUniform	dst;
 
 			dst.name		= src.name;
@@ -273,9 +272,8 @@ namespace PipelineCompiler
 	{
 		result.Reserve( shader.Images().Count() );
 
-		FOR( i, shader.Images() )
+		for (const auto& src : shader.Images())
 		{
-			const auto&		src = shader.Images()[i];
 			ImageUniform	dst;
 
 			dst.name		= src.name;
@@ -298,9 +296,8 @@ namespace PipelineCompiler
 	{
 		result.Reserve( shader.UniformBuffers().Count() );
 
-		FOR( i, shader.UniformBuffers() )
+		for (const auto& src : shader.UniformBuffers())
 		{
-			const auto&		src = shader.UniformBuffers()[i];
 			UniformBuffer	dst;
 
 			dst.name		= src.name;
@@ -321,9 +318,8 @@ namespace PipelineCompiler
 	{
 		result.Reserve( shader.StorageBuffers().Count() );
 
-		FOR( i, shader.StorageBuffers() )
+		for (const auto& src : shader.StorageBuffers())
 		{
-			const auto&		src = shader.StorageBuffers()[i];
 			StorageBuffer	dst;
 
 			dst.name		= src.name;
@@ -346,13 +342,12 @@ namespace PipelineCompiler
 	{
 		BytesU	min_offset	= ~0_b;
 
-		FOR( i, fields ) {
-			min_offset = Min( fields[i].offset, min_offset );
+		for (auto& fld : fields) {
+			min_offset = Min( fld.offset, min_offset );
 		}
 
-		FOR( i, fields )
+		for (auto& var : fields)
 		{
-			const auto&		var = fields[i];
 			_StructField	info;
 			
 			info.name			= var.name;
@@ -392,12 +387,11 @@ namespace PipelineCompiler
 	_RecursiveProcessVarying
 =================================================
 */
-	bool BasePipeline::_RecursiveProcessVarying (const Array<DeserializedShader::IOVariable> &fields, StringCRef parent,
+	bool BasePipeline::_RecursiveProcessVarying (const Array<DeserializedShader::IOVariable> &fields, StringCRef,
 												 INOUT Array<Varying> &input, INOUT Array<Varying> &output)
 	{
-		FOR( i, fields )
+		for (auto& src : fields)
 		{
-			const auto&		src = fields[i];
 			Varying			dst;
 
 			dst.name		= src.name;
@@ -450,11 +444,11 @@ namespace PipelineCompiler
 
 		attribs.Clear();
 
-		FOR( i, input )
+		for (auto& in : input)
 		{
-			auto	iter = old.Get( input[i].name );
+			auto	iter = old.Get( in.name );
 
-			attribs.Add( input[i].name, EShaderVariable::ToAttrib( input[i].type ), iter ? iter->second.buffer : "" );
+			attribs.Add( in.name, EShaderVariable::ToAttrib( in.type ), iter ? iter->second.buffer : "" );
 		}
 		return true;
 	}
@@ -468,9 +462,9 @@ namespace PipelineCompiler
 	{
 		fragOutput.Clear();
 
-		FOR( i, output )
+		for (auto& out : output)
 		{
-			fragOutput.Add( output[i].name, EShaderVariable::ToFragOutput( output[i].type ) );
+			fragOutput.Add( out.name, EShaderVariable::ToFragOutput( out.type ) );
 		}
 		return true;
 	}
@@ -486,13 +480,12 @@ namespace PipelineCompiler
 		uint	min_location	= 0;
 		BytesU	align			= 16_b;
 
-		FOR( i, fields ) {
-			min_location = Min( fields[i].location, min_location );
+		for (auto& fld : fields) {
+			min_location = Min( fld.location, min_location );
 		}
 
-		FOR( i, fields )
+		for (auto& var : fields)
 		{
-			const auto&		var = fields[i];
 			_StructField	info;
 			
 			// temp
@@ -533,9 +526,8 @@ namespace PipelineCompiler
 */
 	bool BasePipeline::_ExtractTypes (const DeserializedShader &shader, OUT Array<_StructField> &result)
 	{
-		FOR( i, shader.UniformBuffers() )
+		for (auto& src : shader.UniformBuffers())
 		{
-			const auto&		src = shader.UniformBuffers()[i];
 			_StructField	dst;
 			
 			dst.type		= EShaderVariable::UniformBlock;
@@ -546,9 +538,8 @@ namespace PipelineCompiler
 			result.PushBack( RVREF(dst) );
 		}
 
-		FOR( i, shader.StorageBuffers() )
+		for (auto& src : shader.StorageBuffers())
 		{
-			const auto&		src = shader.StorageBuffers()[i];
 			_StructField	dst;
 
 			dst.type		= EShaderVariable::StorageBlock;
@@ -559,9 +550,8 @@ namespace PipelineCompiler
 			result.PushBack( RVREF(dst) );
 		}
 
-		FOR( i, shader.Variables() )
+		for (auto& src : shader.Variables())
 		{
-			const auto&		src = shader.Variables()[i];
 			_StructField	dst;
 
 			if ( src.qualifier[ EVariableQualifier::BuiltIn ] or not EShaderVariable::IsStruct( src.type ) )
@@ -600,10 +590,8 @@ namespace PipelineCompiler
 */
 	bool BasePipeline::_MergeStructTypes (const Array<_StructField> &newTypes, INOUT StructTypes &currTypes)
 	{
-		FOR( i, newTypes )
+		for (auto& st : newTypes)
 		{
-			const auto&		st = newTypes[i];
-
 			CHECK_ERR( _AddStructType( st, INOUT currTypes ) );
 		}
 		return true;
@@ -644,10 +632,8 @@ namespace PipelineCompiler
 
 		BytesU	offset;
 
-		FOR( i, st.fields )
+		for (auto& field : st.fields)
 		{
-			auto&	field = st.fields[i];
-
 			offset = AlignToLarge( offset, field.align );
 
 			field.offset	= offset;
@@ -719,8 +705,8 @@ namespace PipelineCompiler
 	{
 		_UpdateBindingIndices_Func	func;
 
-		FOR( i, bindings.uniforms ) {
-			bindings.uniforms[i].Apply( func );
+		for (auto& un : bindings.uniforms) {
+			un.Apply( func );
 		}
 		return true;
 	}
@@ -781,8 +767,8 @@ namespace PipelineCompiler
 	{
 		_UpdateBufferSizes_Func	func( _structTypes );
 
-		FOR( i, bindings.uniforms ) {
-			bindings.uniforms[i].Apply( func );
+		for (auto& un : bindings.uniforms) {
+			un.Apply( func );
 		}
 		return true;
 	}
@@ -839,14 +825,14 @@ namespace PipelineCompiler
 	{
 		_UpdateDescriptorSets_Func	func;
 
-		FOR( i, bindings.uniforms ) {
-			bindings.uniforms[i].Apply( func );
+		for (auto& un : bindings.uniforms) {
+			un.Apply( func );
 		}
 
 		func.StartPass2();
 		
-		FOR( i, bindings.uniforms ) {
-			bindings.uniforms[i].Apply( func );
+		for (auto& un : bindings.uniforms) {
+			un.Apply( func );
 		}
 		return true;
 	}
@@ -881,6 +867,11 @@ namespace PipelineCompiler
 			str << ToStringGLSL( fragOutput );
 		}
 
+		if ( shader.type == EShader::Compute )
+		{
+			str << _LocalGroupSizeToStringGLSL( localGroupSize );
+		}
+
 		// build source
 		{
 			source	<< version
@@ -888,8 +879,8 @@ namespace PipelineCompiler
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< str;
 
-			FOR( i, shader._source ) {
-				source << StringCRef(shader._source[i]);
+			for (auto& src : shader._source) {
+				source << StringCRef(src);
 			}
 		}
 
@@ -936,20 +927,20 @@ namespace PipelineCompiler
 		{
 			shader._io.Clear();
 
-			FOR( i, disasm.input )
+			for (auto& in : disasm.input)
 			{
-				if ( disasm.input[i].qualifier[ EVariableQualifier::BuiltIn ] )
+				if ( in.qualifier[ EVariableQualifier::BuiltIn ] )
 					continue;
 
-				shader._io << disasm.input[i];
+				shader._io << in;
 			}
 		
-			FOR( i, disasm.output )
+			for (auto& out : disasm.output)
 			{
-				if ( disasm.output[i].qualifier[ EVariableQualifier::BuiltIn ] )
+				if ( out.qualifier[ EVariableQualifier::BuiltIn ] )
 					continue;
 
-				shader._io << disasm.output[i];
+				shader._io << out;
 			}
 		}
 		return true;

@@ -76,7 +76,7 @@ namespace GXMath
 	
 #	define VEC_OP_UNARY( _op_ ) \
 		\
-		CHECKRES constexpr const Self	operator _op_ () const \
+		ND_ constexpr const Self	operator _op_ () const \
 		{ \
 			Self	ret; \
 			FOR( i, *this )	 ret[i] = _op_ (*this)[i]; \
@@ -85,7 +85,7 @@ namespace GXMath
 
 #	define VEC_OP_BINARY_( _op_ ) \
 		\
-		CHECKRES constexpr Self 	operator _op_  (const Self& right) const \
+		ND_ constexpr Self 	operator _op_  (const Self& right) const \
 		{ \
 			Self	ret; \
 			FOR( i, *this )	 ret[i] = ( (*this)[i] _op_ right[i] ); \
@@ -102,14 +102,14 @@ namespace GXMath
 		
 #	define VEC_OP_BINARY_SCALAR_( _op_, _scalar_ ) \
 		\
-		CHECKRES constexpr Self	operator _op_  (const _scalar_& right) const \
+		ND_ constexpr Self	operator _op_  (const _scalar_& right) const \
 		{ \
 			Self	ret; \
 			FOR( i, *this )	 ret[i] = ( (*this)[i] _op_ right ); \
 			return ret; \
 		} \
 		\
-		CHECKRES friend constexpr Self operator _op_ (const _scalar_& left, const Self& right) \
+		ND_ friend constexpr Self operator _op_ (const _scalar_& left, const Self& right) \
 		{ \
 			return Self(left) _op_ right; \
 		}
@@ -153,7 +153,7 @@ namespace GXMath
 	
 
 	template <typename T, ulong U>
-	CHECKRES inline Vec<T,3,U>  Cross (const Vec<T,3,U> &left, const Vec<T,3,U> &right)
+	ND_ inline Vec<T,3,U>  Cross (const Vec<T,3,U> &left, const Vec<T,3,U> &right)
 	{
 		return Vec<T,3,U>(	left.y * right.z - right.y * left.z,
 							left.z * right.x - right.z * left.x,
@@ -162,14 +162,14 @@ namespace GXMath
 
 	
 	template <typename T, ulong U>
-	CHECKRES inline auto  Cross (const Vec<T,2,U> &left, const Vec<T,2,U> &right)
+	ND_ inline auto  Cross (const Vec<T,2,U> &left, const Vec<T,2,U> &right)
 	{
 		return left.x * right.y - left.y * right.x;
 	}
 
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline auto  Dot (const Vec<T,I,U> &left, const Vec<T,I,U> &right)
+	ND_ inline auto  Dot (const Vec<T,I,U> &left, const Vec<T,I,U> &right)
 	{
 		return left.Dot( right );
 	}
@@ -206,7 +206,7 @@ namespace GXTypes
 	//
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline GXMath::Vec<bool,I,U>  IsNaN (const GXMath::Vec<T,I,U>& x)
+	ND_ inline GXMath::Vec<bool,I,U>  IsNaN (const GXMath::Vec<T,I,U>& x)
 	{
 		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, ret )			ret[i] = IsNaN( x[i] );
@@ -214,7 +214,7 @@ namespace GXTypes
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline GXMath::Vec<bool,I,U>  IsInfinity (const GXMath::Vec<T,I,U>& x)
+	ND_ inline GXMath::Vec<bool,I,U>  IsInfinity (const GXMath::Vec<T,I,U>& x)
 	{
 		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, ret )			ret[i] = IsInfinity( x[i] );
@@ -222,7 +222,7 @@ namespace GXTypes
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline GXMath::Vec<bool,I,U>  IsFinite (const GXMath::Vec<T,I,U>& x)
+	ND_ inline GXMath::Vec<bool,I,U>  IsFinite (const GXMath::Vec<T,I,U>& x)
 	{
 		GXMath::Vec<bool,I,U>	ret;
 		FOR( i, ret )			ret[i] = IsFinite( x[i] );

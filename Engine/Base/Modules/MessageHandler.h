@@ -25,7 +25,7 @@ namespace Base
 		using uint2				= GXMath::uint2;
 		
 		using ObjectPtr_t		= WP< StaticRefCountedObject >;
-		using HandlerData_t		= usize[2];
+		using HandlerData_t		= GXMath::usize2;
 		using Callback_t		= bool (*) (const ObjectPtr_t &, HandlerData_t &, VariantCRef);
 
 		struct Handler final : CompileTime::FastCopyable
@@ -65,8 +65,6 @@ namespace Base
 		template <typename Class, typename Class2, typename T>
 		bool Subscribe (const TypeIdList& validTypes, Class *obj, bool (Class2::*) (const Message<T> &) const, bool checked = true);
 
-		template <typename Class>
-		bool CopySubscriptions (const TypeIdList& validTypes, const SP<Class> &obj, const MessageHandler &other, ArrayCRef<TypeId> msgIds);
 
 		template <typename Class>
 		void UnsubscribeAll (const SP<Class> &obj);
@@ -76,6 +74,20 @@ namespace Base
 
 		template <typename Class>
 		void UnsubscribeAll (Class *obj);
+		
+
+		template <typename Class, typename Func>
+		void Unsubscribe (const SP<Class> &obj, Func func);
+
+		template <typename Class, typename Func>
+		void Unsubscribe (const WP<Class> &obj, Func func);
+
+		template <typename Class, typename Func>
+		void Unsubscribe (Class *obj, Func func);
+
+
+		template <typename Class>
+		bool CopySubscriptions (const TypeIdList& validTypes, const SP<Class> &obj, const MessageHandler &other, ArrayCRef<TypeId> msgIds);
 
 		void Clear ();
 		
@@ -86,9 +98,13 @@ namespace Base
 		bool _Subscribe2 (const TypeIdList& validTypes, TypeId id, Handler &&handler, bool checked);
 		bool _CopySubscriptions (const TypeIdList& validTypes, const ObjectPtr_t &otherObj, const MessageHandler &other, ArrayCRef<TypeId> ids);
 		void _UnsubscribeAll (const ObjectPtr_t &obj);
+		void _Unsubscribe2 (const ObjectPtr_t &obj, const HandlerData_t &data);
 		
 		template <typename Msg, typename Class, typename Func>
 		bool _Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, Func func, bool checked = true);
+		
+		template <typename Class, typename Func>
+		void _Unsubscribe (const WP<Class> &obj, Func func);
 
 		template <typename Class, typename Msg, typename Func>
 		static bool _Call (const ObjectPtr_t &, HandlerData_t &, VariantCRef);
@@ -149,13 +165,52 @@ namespace Base
 		STATIC_ASSERT( sizeof(Handler::data) >= sizeof(func) );
 
 		Handler		handler;
-		UnsafeMem::MemCopy( handler.data, (void *)&func, BytesU::SizeOf(func) );
+		UnsafeMem::MemCopy( OUT &handler.data, (void *)&func, BytesU::SizeOf(func) );
 		handler.ptr		= obj;
 		handler.func	= &_Call< Class, Msg, Func >;
 		
 		return _Subscribe2( validTypes, TypeIdOf< Msg >(), RVREF(handler), checked );
 	}
+
+/*
+=================================================
+	_Unsubscribe
+=================================================
+*/
+	template <typename Class, typename Func>
+	forceinline void MessageHandler::_Unsubscribe (const WP<Class> &obj, Func func)
+	{
+		STATIC_ASSERT( sizeof(HandlerData_t) >= sizeof(func) );
+
+		HandlerData_t	data;
+		UnsafeMem::MemCopy( OUT &data, (void *)&func, BytesU::SizeOf(func) );
+
+		return _Unsubscribe2( obj, data );
+	}
 	
+/*
+=================================================
+	Unsubscribe
+=================================================
+*/
+	template <typename Class, typename Func>
+	forceinline void MessageHandler::Unsubscribe (const SP<Class> &obj, Func func)
+	{
+		return _Unsubscribe( WP<Class>(obj), func );
+	}
+
+	template <typename Class, typename Func>
+	forceinline void MessageHandler::Unsubscribe (const WP<Class> &obj, Func func)
+	{
+		return _Unsubscribe( obj, func );
+	}
+
+	template <typename Class, typename Func>
+	forceinline void MessageHandler::Unsubscribe (Class *obj, Func func)
+	{
+		return _Unsubscribe( WP<Class>(obj), func );
+	}
+
 /*
 =================================================
 	CopySubscriptions

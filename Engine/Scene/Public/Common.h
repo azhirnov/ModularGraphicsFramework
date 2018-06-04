@@ -24,7 +24,7 @@ namespace Scene
 
 namespace SceneMsg
 {
-	using namespace ModuleMsg;
+	using namespace Engine::_BaseMessages_;
 
 }	// SceneMsg
 }	// Engine

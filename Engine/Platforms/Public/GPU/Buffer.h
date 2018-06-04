@@ -23,8 +23,8 @@ namespace Platforms
 
 	// methods
 		BufferDescriptor (GX_DEFCTOR) {}
-		BufferDescriptor (Bytes<ulong> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
 		BufferDescriptor (Bytes<uint> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
+		BufferDescriptor (Bytes<ulong> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
 	};
 
 }	// Platforms
@@ -56,31 +56,11 @@ namespace CreateInfo
 
 		explicit GpuBuffer (const BufferDescriptor &descr) : descr{descr}, allocMem{false} {}
 
-		GpuBuffer (const BufferDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+		GpuBuffer (const BufferDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
 			descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
 
-		GpuBuffer (const BufferDescriptor &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
+		GpuBuffer (const BufferDescriptor &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
 			memManager{memMngr}, descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
-	};
-
-
-	//
-	// Shared Buffer Create Info
-	//
-	struct GpuSharedBuffer
-	{
-	// types
-		using EMemoryAccess		= Platforms::EMemoryAccess;
-
-	// variables
-		ModulePtr				gpuThread;		// can be null
-		ModulePtr				sharedBuffer;
-		EMemoryAccess::bits		access;
-
-	// methods
-		GpuSharedBuffer (GX_DEFCTOR) {}
-
-		GpuSharedBuffer (const ModulePtr &buf, EMemoryAccess::bits access) : sharedBuffer{buf}, access{access} {}
 	};
 
 }	// CreateInfo

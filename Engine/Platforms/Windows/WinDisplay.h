@@ -14,7 +14,7 @@ namespace Engine
 {
 namespace PlatformWin
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 
 
 	//

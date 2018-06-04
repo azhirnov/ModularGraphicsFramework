@@ -374,9 +374,11 @@ namespace PlatformSW
 		CHECK_ERR( msg->newModule );
 
 		// render pass and shader must be unique
-		bool	is_dependent = msg->newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		const bool	is_dependent = msg->newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
 
-		if ( _Attach( msg->name, msg->newModule, is_dependent ) and is_dependent )
+		CHECK( _Attach( msg->name, msg->newModule ) );
+
+		if ( is_dependent )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyPipeline();
@@ -393,7 +395,7 @@ namespace PlatformSW
 	{
 		CHECK_ERR( msg->oldModule );
 		
-		bool	is_dependent = msg->oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		const bool	is_dependent = msg->oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
 
 		if ( _Detach( msg->oldModule ) and is_dependent )
 		{

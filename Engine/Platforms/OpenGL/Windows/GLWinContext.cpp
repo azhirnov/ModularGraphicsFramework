@@ -8,6 +8,7 @@
 #include "Engine/Platforms/OpenGL/Windows/GLWinContext.h"
 #include "Engine/STL/OS/Windows/WinHeader.h"
 #include "External/opengl/wglext.h"
+#include <GL/gl.h>
 
 namespace Engine
 {
@@ -132,24 +133,72 @@ namespace PlatformGL
 	_GetApiVersion
 =================================================
 */
-	bool GLWinContext::_GetApiVersion (const GraphicsSettings &vs, OUT uint2 &version)
+	static bool _GetApiVersion (const GraphicsSettings &vs, OUT uint &version)
 	{
-		using namespace CreateInfo;
+		using namespace Engine::CreateInfo;
 
-		switch ( vs.version )
-		{
-			case "GL 4.3"_GAPI :
-			case "opengl 4.3"_GAPI :	version = uint2(4,3);	break;
-			case "GL 4.4"_GAPI :
-			case "opengl 4.4"_GAPI :	version = uint2(4,4);	break;
-			case "GL 4.5"_GAPI :
-			case "opengl 4.5"_GAPI :	version = uint2(4,5);	break;
-			case "GL 4.6"_GAPI :
-			case "opengl 4.6"_GAPI :	version = uint2(4,6);	break;
-			case GAPI::type(0) :		version = uint2(4,5);	break;
-			default :					RETURN_ERR( "unsupported OpenGL version" );
-		}
+		auto	api_name = vs.GetAPIName();
+		CHECK_ERR( api_name.StartsWithIC( "GL" ) or api_name.StartsWithIC( "opengl" ) );
+
+		version = vs.GetAPIVersion();
 		return true;
+	}
+	
+/*
+=================================================
+	_ConvertColorFormat
+=================================================
+*/
+	static EPixelFormat::type _ConvertColorFormat (uint colorBits, uint)
+	{
+		if ( colorBits == 32 )
+			return EPixelFormat::RGBA8_UNorm;
+		else
+			return EPixelFormat::RGB8_UNorm;
+	}
+
+/*
+=================================================
+	_ConvertDepthStencilFormat
+=================================================
+*/
+	static EPixelFormat::type _ConvertDepthStencilFormat (uint depthBits, uint stencilBits)
+	{
+		if ( depthBits == 32 )
+		{
+			if ( stencilBits == 8 )
+				return EPixelFormat::Depth32F_Stencil8;
+			else
+				return EPixelFormat::Depth32F;
+		}
+
+		if ( depthBits == 24 )
+		{
+			if ( stencilBits == 8 )
+				return EPixelFormat::Depth24_Stencil8;
+			else
+				return EPixelFormat::Depth24;
+		}
+
+		if ( depthBits == 16 )
+		{
+			if ( stencilBits == 8 )
+				return EPixelFormat::Depth16_Stencil8;
+			else
+				return EPixelFormat::Depth16;
+		}
+
+		return EPixelFormat::Unknown;
+	}
+	
+/*
+=================================================
+	_ConvertGLVersion
+=================================================
+*/
+	static GAPI::type _ConvertGLVersion (uint version)
+	{
+		return GAPI::FromString( "GL "_str << (version / 100) << '.' << ((version / 10) % 10) );
 	}
 
 /*
@@ -159,9 +208,12 @@ namespace PlatformGL
 */
 	bool GLWinContext::_InitOpenGL (INOUT GraphicsSettings &vs)
 	{
+		//ASSERT( not vs.flags[ EFlags::NoSurface ] );
+		vs.flags.Reset( EFlags::NoSurface );
+
 		// extract data from video settings
-		uint2	version;
-		CHECK_ERR( _GetApiVersion( vs, version ) );
+		uint	version;
+		CHECK_ERR( _GetApiVersion( vs, OUT version ) );
 
 		const auto	color_bits			= EPixelFormat::BitsPerChannel( vs.colorFmt ).To< uint4 >();
 		const auto	depth_stencil_bits	= EPixelFormat::BitsPerChannel( vs.depthStencilFmt ).To< uint2 >();
@@ -199,7 +251,7 @@ namespace PlatformGL
 			WGL_DOUBLE_BUFFER_ARB,				true,
 			WGL_STEREO_ARB,						false,	//vs.flags[ EFlags::Stereo ],
 			WGL_PIXEL_TYPE_ARB,					WGL_TYPE_RGBA_ARB,
-			WGL_SAMPLE_BUFFERS_ARB,				vs.samples.Get() > 1 ? true : false,
+			WGL_SAMPLE_BUFFERS_ARB,				vs.samples.IsEnabled(),
 			WGL_SAMPLES_ARB,					int(vs.samples.Get()),
             WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB,	true,
 			0,0
@@ -237,24 +289,24 @@ namespace PlatformGL
 
 		if ( rv != 0 )
 		{
-			pixformat		= rv;
-			//vs.depthBits	= (GpuContext::EDepthFromat) ctx_int_attribs[11];		// TODO
-			//vs.stencilBits	= (GpuContext::EStencilFormat) ctx_int_attribs[13];
-			vs.samples	= MultiSamples( ctx_int_attribs[21] );
+			pixformat			= rv;
+			vs.colorFmt			= _ConvertColorFormat( ctx_int_attribs[7], ctx_int_attribs[9] );
+			vs.depthStencilFmt	= _ConvertDepthStencilFormat( ctx_int_attribs[11], ctx_int_attribs[13] );
+			vs.samples			= MultiSamples( ctx_int_attribs[21] );
 			
 			if ( not DescribePixelFormat( dc, pixformat, sizeof(pfd), &pfd ) )
 				LOG( "Can't describe pixel format", ELog::Warning );
 		}
 
-		const bool	is_core_version =	( version[0] > 3 or (version[0] == 3 and version[1] == 3) );	// 3.3 or higher
+		const bool	is_core_version =	( version > 330 );	// 3.3 or higher
 
 		const uint	CONTEXT_FLAG_NO_ERROR_BIT_KHR = 0x00000008;
 
 		// Create OpenGL Context //
 		int	context_attribs[] =
 		{
-			WGL_CONTEXT_MAJOR_VERSION_ARB, int(version[0]),
-			WGL_CONTEXT_MINOR_VERSION_ARB, int(version[1]),
+			WGL_CONTEXT_MAJOR_VERSION_ARB, int(version / 100),
+			WGL_CONTEXT_MINOR_VERSION_ARB, int((version / 10) % 10),
 			WGL_CONTEXT_FLAGS_ARB,         WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB |
 												(vs.flags[ EFlags::DebugContext ] ? WGL_CONTEXT_DEBUG_BIT_ARB : 0) |
 												(vs.flags[ EFlags::NoErrorContext ] ? CONTEXT_FLAG_NO_ERROR_BIT_KHR : 0),
@@ -278,12 +330,14 @@ namespace PlatformGL
 				if ( context_attribs[5] & CONTEXT_FLAG_NO_ERROR_BIT_KHR )
 				{
 					context_attribs[5] = context_attribs[5] & ~CONTEXT_FLAG_NO_ERROR_BIT_KHR;
+					vs.flags.Reset( EFlags::NoErrorContext );
 					continue;
 				}
 				else
 				if ( context_attribs[5] & WGL_CONTEXT_DEBUG_BIT_ARB )
 				{
 					context_attribs[5] = context_attribs[5] & ~WGL_CONTEXT_DEBUG_BIT_ARB;
+					vs.flags.Reset( EFlags::DebugContext );
 					continue;
 				}
 			}
@@ -317,7 +371,15 @@ namespace PlatformGL
 
 			vs.flags.SetAt( EFlags::VSync, wglGetSwapInterval.Get<PFNWGLGETSWAPINTERVALEXTPROC>()() != 0 );
 		}
-		
+		else
+			vs.flags.Reset( EFlags::VSync );
+
+		// update settings
+		{
+			vs.device	= (const char*)glGetString( GL_RENDERER );
+			vs.version	= _ConvertGLVersion( version );
+		}
+
 		//wglMakeCurrent( dc, null );
 		return true;
 	}

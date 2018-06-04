@@ -60,80 +60,80 @@ namespace GXTypes
 		template <typename B>
 		explicit constexpr Bytes (Bytes<B> bytes) : _value( (T)(B)bytes ) {}
 
-		constexpr Bits<T> ToBits () const;
+		ND_ constexpr Bits<T> ToBits () const;
 		
 		template <typename B>
-		constexpr Bits<B> ToBits () const;
+		ND_ constexpr Bits<B> ToBits () const;
 
 		template <typename B>
-		constexpr Bytes<B> To () const;
+		ND_ constexpr Bytes<B> To () const;
 
-		explicit constexpr operator byte ()		const	{ return Cast<byte>( _value ); }
-		explicit constexpr operator short ()	const	{ return Cast<short>( _value ); }
-		explicit constexpr operator int ()		const	{ return Cast<int>( _value ); }
-		explicit constexpr operator ilong ()	const	{ return Cast<ilong>( _value ); }
+		ND_ explicit constexpr operator byte ()		const	{ return Cast<byte>( _value ); }
+		ND_ explicit constexpr operator short ()	const	{ return Cast<short>( _value ); }
+		ND_ explicit constexpr operator int ()		const	{ return Cast<int>( _value ); }
+		ND_ explicit constexpr operator ilong ()	const	{ return Cast<ilong>( _value ); }
 
-		explicit constexpr operator ubyte ()	const	{ return Cast<ubyte>( _value ); }
-		explicit constexpr operator ushort ()	const	{ return Cast<ushort>( _value ); }
-		explicit constexpr operator uint ()		const	{ return Cast<uint>( _value ); }
-		explicit constexpr operator ulong ()	const	{ return Cast<ulong>( _value ); }
+		ND_ explicit constexpr operator ubyte ()	const	{ return Cast<ubyte>( _value ); }
+		ND_ explicit constexpr operator ushort ()	const	{ return Cast<ushort>( _value ); }
+		ND_ explicit constexpr operator uint ()		const	{ return Cast<uint>( _value ); }
+		ND_ explicit constexpr operator ulong ()	const	{ return Cast<ulong>( _value ); }
 
-						void *	ToVoidPtr ()			{ return ReferenceCast<void *>( usize( *this ) ); }
-		constexpr const void *	ToVoidPtr ()	const	{ return ReferenceCast<const void *>( usize( *this ) ); }
+		ND_				void *		ToVoidPtr ()			{ return ReferenceCast<void *>( usize( *this ) ); }
+		ND_ constexpr const void *	ToVoidPtr ()	const	{ return ReferenceCast<const void *>( usize( *this ) ); }
 
 		// move any pointer
 		template <typename B>
-		CHECKRES friend B const*	operator + (B const *left, const Bytes<T> &right)
+		ND_ friend B const*	operator + (B const *left, const Bytes<T> &right)
 		{
 			return PointerCast<B>( PointerCast<byte>(left) + right._value );
 		}
 		
 		template <typename B>
-		CHECKRES friend B *			operator + (B *left, const Bytes<T> &right)
+		ND_ friend B *			operator + (B *left, const Bytes<T> &right)
 		{
 			return PointerCast<B>( PointerCast<byte>(left) + right._value );
 		}
 
 		template <typename B>
-		CHECKRES friend B const*	operator - (B const *left, const Bytes<T> &right)
+		ND_ friend B const*	operator - (B const *left, const Bytes<T> &right)
 		{
 			return PointerCast<B>( PointerCast<byte>(left) - right._value );
 		}
 		
 		template <typename B>
-		CHECKRES friend B *			operator - (B *left, const Bytes<T> &right)
+		ND_ friend B *			operator - (B *left, const Bytes<T> &right)
 		{
 			return PointerCast<B>( PointerCast<byte>(left) - right._value );
 		}
 
 
-		CHECKRES constexpr T		Kb ()	const			{ return _value >> 10; }
-		CHECKRES constexpr T		Mb ()	const			{ return _value >> 20; }
-		CHECKRES constexpr T		Gb ()	const			{ return _value >> 30; }
+		ND_ constexpr T		Kb ()	const				{ return _value >> 10; }
+		ND_ constexpr T		Mb ()	const				{ return _value >> 20; }
+		ND_ constexpr T		Gb ()	const				{ return _value >> 30; }
 		
 		template <typename B>
-		CHECKRES constexpr B		Kb ()	const			{ return B(_value) / (B(1) << 10); }
+		ND_ constexpr B		Kb ()	const				{ return B(_value) / (B(1) << 10); }
 
 		template <typename B>
-		CHECKRES constexpr B		Mb ()	const			{ return B(_value) / (B(1) << 20); }
+		ND_ constexpr B		Mb ()	const				{ return B(_value) / (B(1) << 20); }
 
 		template <typename B>
-		CHECKRES constexpr B		Gb ()	const			{ return B(_value) / (B(1) << 30); }
+		ND_ constexpr B		Gb ()	const				{ return B(_value) / (B(1) << 30); }
 
-		Self &	SetBytes (T value)							{ return (*this = FromBytes( value )); }
-		Self &	SetKb (T value)								{ return (*this = FromBytes( value )); }
-		Self &	SetMb (T value)								{ return (*this = FromBytes( value )); }
-		Self &	SetGb (T value)								{ return (*this = FromBytes( value )); }
+		Self &	SetBytes (T value)						{ return (*this = FromBytes( value )); }
+		Self &	SetKb (T value)							{ return (*this = FromBytes( value )); }
+		Self &	SetMb (T value)							{ return (*this = FromBytes( value )); }
+		Self &	SetGb (T value)							{ return (*this = FromBytes( value )); }
 
-		CHECKRES static constexpr Self	FromBytes (T value)	{ return Self( value ); }
-		CHECKRES static constexpr Self	FromKb (T value)	{ return Self( value << 10 ); }
-		CHECKRES static constexpr Self	FromMb (T value)	{ return Self( value << 20 ); }
-		CHECKRES static constexpr Self	FromGb (T value)	{ return Self( value << 30 ); }
+		ND_ static constexpr Self	FromBytes (T value)	{ return Self( value ); }
+		ND_ static constexpr Self	FromKb (T value)	{ return Self( value << 10 ); }
+		ND_ static constexpr Self	FromMb (T value)	{ return Self( value << 20 ); }
+		ND_ static constexpr Self	FromGb (T value)	{ return Self( value << 30 ); }
 
-		template <typename B>	CHECKRES static constexpr Self	SizeOf ()			{ return Self( sizeof(B) ); }
-		template <typename B>	CHECKRES static constexpr Self	SizeOf (const B &)	{ return Self( sizeof(B) ); }
-		template <typename B>	CHECKRES static constexpr Self	AlignOf ()			{ return Self( alignof(B) ); }
-		template <typename B>	CHECKRES static constexpr Self	AlignOf (const B &)	{ return Self( alignof(B) ); }
+		template <typename B>	ND_ static constexpr Self	SizeOf ()			{ return Self( sizeof(B) ); }
+		template <typename B>	ND_ static constexpr Self	SizeOf (const B &)	{ return Self( sizeof(B) ); }
+		template <typename B>	ND_ static constexpr Self	AlignOf ()			{ return Self( alignof(B) ); }
+		template <typename B>	ND_ static constexpr Self	AlignOf (const B &)	{ return Self( alignof(B) ); }
 
 
 		_GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value );
@@ -176,29 +176,29 @@ namespace GXTypes
 		template <typename B>
 		explicit constexpr Bits (Bits<B> bits) : _value( (T)(B)bits ) {}
 
-		constexpr Bytes<T> ToBytes () const;
+		ND_ constexpr Bytes<T> ToBytes () const;
 		
 		template <typename B>
-		constexpr Bytes<B> ToBytes () const;
+		ND_ constexpr Bytes<B> ToBytes () const;
 		
 		template <typename B>
-		constexpr Bits<B> To () const;
+		ND_ constexpr Bits<B> To () const;
 		
-		CHECKRES explicit constexpr operator byte ()	const	{ return Cast<byte>( _value ); }
-		CHECKRES explicit constexpr operator short ()	const	{ return Cast<short>( _value ); }
-		CHECKRES explicit constexpr operator int ()		const	{ return Cast<int>( _value ); }
-		CHECKRES explicit constexpr operator ilong ()	const	{ return Cast<ilong>( _value ); }
+		ND_ explicit constexpr operator byte ()		const	{ return Cast<byte>( _value ); }
+		ND_ explicit constexpr operator short ()	const	{ return Cast<short>( _value ); }
+		ND_ explicit constexpr operator int ()		const	{ return Cast<int>( _value ); }
+		ND_ explicit constexpr operator ilong ()	const	{ return Cast<ilong>( _value ); }
 
-		CHECKRES explicit constexpr operator ubyte ()	const	{ return Cast<ubyte>( _value ); }
-		CHECKRES explicit constexpr operator ushort ()	const	{ return Cast<ushort>( _value ); }
-		CHECKRES explicit constexpr operator uint ()	const	{ return Cast<uint>( _value ); }
-		CHECKRES explicit constexpr operator ulong ()	const	{ return Cast<ulong>( _value ); }
+		ND_ explicit constexpr operator ubyte ()	const	{ return Cast<ubyte>( _value ); }
+		ND_ explicit constexpr operator ushort ()	const	{ return Cast<ushort>( _value ); }
+		ND_ explicit constexpr operator uint ()		const	{ return Cast<uint>( _value ); }
+		ND_ explicit constexpr operator ulong ()	const	{ return Cast<ulong>( _value ); }
 		
 
-		template <typename B>	CHECKRES static constexpr Self SizeOf ()			{ return Bytes<T>::template SizeOf<B>().ToBits(); }
-		template <typename B>	CHECKRES static constexpr Self SizeOf (const B &)	{ return Bytes<T>::template SizeOf<B>().ToBits(); }
-		template <typename B>	CHECKRES static constexpr Self AlignOf ()			{ return Bytes<T>::template AlignOf<B>().ToBits(); }
-		template <typename B>	CHECKRES static constexpr Self AlignOf (const B &)	{ return Bytes<T>::template AlignOf<B>().ToBits(); }
+		template <typename B>	ND_ static constexpr Self SizeOf ()				{ return Bytes<T>::template SizeOf<B>().ToBits(); }
+		template <typename B>	ND_ static constexpr Self SizeOf (const B &)	{ return Bytes<T>::template SizeOf<B>().ToBits(); }
+		template <typename B>	ND_ static constexpr Self AlignOf ()			{ return Bytes<T>::template AlignOf<B>().ToBits(); }
+		template <typename B>	ND_ static constexpr Self AlignOf (const B &)	{ return Bytes<T>::template AlignOf<B>().ToBits(); }
 
 
 		_GX_DIM_ALL_INTEGER_OPERATORS_SELF( _value );
@@ -215,7 +215,7 @@ namespace GXTypes
 	static constexpr BytesU	AlignOf = BytesU::AlignOf<T>();
 
 	template <typename A, typename B>
-	CHECKRES constexpr forceinline BytesU OffsetOf (A (B::*member))
+	ND_ constexpr forceinline BytesU OffsetOf (A (B::*member))
 	{
 		const union U {
 			B		b;
@@ -237,7 +237,7 @@ namespace GXTypes
 
 
 	template <typename T>
-	CHECKRES constexpr Bits<T>  Bytes<T>::ToBits () const
+	ND_ constexpr Bits<T>  Bytes<T>::ToBits () const
 	{
 		return Bits<T>( *this );
 	}
@@ -245,7 +245,7 @@ namespace GXTypes
 
 	template <typename T>
 	template <typename B>
-	CHECKRES constexpr Bits<B>  Bytes<T>::ToBits () const
+	ND_ constexpr Bits<B>  Bytes<T>::ToBits () const
 	{
 		return Bits<B>( *this );
 	}
@@ -253,7 +253,7 @@ namespace GXTypes
 
 	template <typename T>
 	template <typename B>
-	CHECKRES constexpr Bytes<B>  Bytes<T>::To () const
+	ND_ constexpr Bytes<B>  Bytes<T>::To () const
 	{
 		return Bytes<B>( (B)_value );
 	}
@@ -268,7 +268,7 @@ namespace GXTypes
 	
 
 	template <typename T>
-	CHECKRES constexpr Bytes<T>  Bits<T>::ToBytes () const
+	ND_ constexpr Bytes<T>  Bits<T>::ToBytes () const
 	{
 		return Bytes<T>( *this );
 	}
@@ -276,7 +276,7 @@ namespace GXTypes
 
 	template <typename T>
 	template <typename B>
-	CHECKRES constexpr Bytes<B>  Bits<T>::ToBytes () const
+	ND_ constexpr Bytes<B>  Bits<T>::ToBytes () const
 	{
 		return Bytes<B>( *this );
 	}
@@ -284,19 +284,19 @@ namespace GXTypes
 
 	template <typename T>
 	template <typename B>
-	CHECKRES constexpr Bits<B>  Bits<T>::To () const
+	ND_ constexpr Bits<B>  Bits<T>::To () const
 	{
 		return Bits<B>( (B) _value );
 	}
 
 	
 
-	CHECKRES constexpr BytesU operator "" _b (unsigned long long value)		{ return BytesU::FromBytes( usize(value) ); }
-	CHECKRES constexpr BytesU operator "" _Kb (unsigned long long value)	{ return BytesU::FromKb( usize(value) ); }
-	CHECKRES constexpr BytesU operator "" _Mb (unsigned long long value)	{ return BytesU::FromMb( usize(value) ); }
-	CHECKRES constexpr BytesU operator "" _Gb (unsigned long long value)	{ return BytesU::FromGb( usize(value) ); }
+	ND_ constexpr BytesU operator "" _b (unsigned long long value)		{ return BytesU::FromBytes( usize(value) ); }
+	ND_ constexpr BytesU operator "" _Kb (unsigned long long value)		{ return BytesU::FromKb( usize(value) ); }
+	ND_ constexpr BytesU operator "" _Mb (unsigned long long value)		{ return BytesU::FromMb( usize(value) ); }
+	ND_ constexpr BytesU operator "" _Gb (unsigned long long value)		{ return BytesU::FromGb( usize(value) ); }
 
-	CHECKRES constexpr BitsU  operator "" _bit (unsigned long long value)	{ return BitsU(usize(value)); }
+	ND_ constexpr BitsU  operator "" _bit (unsigned long long value)	{ return BitsU(usize(value)); }
 
 	
 /*
@@ -307,7 +307,7 @@ namespace GXTypes
 	template <typename T>
 	struct Hash< Bytes<T> >
 	{
-		CHECKRES HashResult  operator () (const Bytes<T> &x) const
+		ND_ HashResult  operator () (const Bytes<T> &x) const
 		{
 			return HashOf( T(x) );
 		}
@@ -317,7 +317,7 @@ namespace GXTypes
 	template <typename T>
 	struct Hash< Bits<T> >
 	{
-		CHECKRES HashResult  operator () (const Bits<T> &x) const
+		ND_ HashResult  operator () (const Bits<T> &x) const
 		{
 			return HashOf( T(x) );
 		}

@@ -6,7 +6,7 @@
 
 namespace GX_STL
 {
-namespace File
+namespace GXFile
 {
 
 	//
@@ -32,12 +32,12 @@ namespace File
 		~HddRFile ()	{ _Close(); }
 
 
-		CHECKRES static HddRFilePtr New ()
+		ND_ static HddRFilePtr New ()
 		{
 			return new HddRFile();
 		}
 
-		CHECKRES static HddRFilePtr New (StringCRef address)
+		ND_ static HddRFilePtr New (StringCRef address)
 		{
 			HddRFilePtr	file = new HddRFile();
 
@@ -186,12 +186,12 @@ namespace File
 		~HddWFile ()	{ _Close(); }
 		
 
-		CHECKRES static HddWFilePtr New ()
+		ND_ static HddWFilePtr New ()
 		{
 			return new HddWFile();
 		}
 
-		CHECKRES static HddWFilePtr New (StringCRef address, EOpenFlags::type flags = EOpenFlags::None)
+		ND_ static HddWFilePtr New (StringCRef address, EOpenFlags::type flags = EOpenFlags::None)
 		{
 			HddWFilePtr	file = new HddWFile();
 
@@ -326,5 +326,5 @@ namespace File
 	SHARED_POINTER( HddRFile );
 	SHARED_POINTER( HddWFile );
 
-}	// File
+}	// GXFile
 }	// GX_STL

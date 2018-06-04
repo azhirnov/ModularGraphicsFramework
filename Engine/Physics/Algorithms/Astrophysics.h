@@ -20,7 +20,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename Distance, typename Mass>
-	CHECKRES inline PX_AUTO(MetersPerSeconds)  OrbitalSpeed (const Distance distance, const Mass mass)
+	ND_ inline PX_AUTO(MetersPerSeconds)  OrbitalSpeed (const Distance distance, const Mass mass)
 	{
 		STATIC_ASSERT( IsDistanceUnits<Distance> and IsMassUnits<Mass> );
 
@@ -37,7 +37,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename Distance, typename Mass>
-	CHECKRES inline PX_AUTO(MetersPerSeconds)  EscapeVelocity (const Distance distance, const Mass mass)
+	ND_ inline PX_AUTO(MetersPerSeconds)  EscapeVelocity (const Distance distance, const Mass mass)
 	{
 		STATIC_ASSERT( IsDistanceUnits<Distance> and IsMassUnits<Mass> );
 		
@@ -52,7 +52,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename Distance, typename Mass>
-	CHECKRES inline PX_AUTO(MetersPerSquareSeconds)  GravityAcceleration (const Distance distance, const Mass mass)
+	ND_ inline PX_AUTO(MetersPerSquareSeconds)  GravityAcceleration (const Distance distance, const Mass mass)
 	{
 		STATIC_ASSERT( IsDistanceUnits<Distance> and IsMassUnits<Mass> );
 		
@@ -67,7 +67,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename Accel, typename Mass>
-	CHECKRES inline PX_AUTO(AstronomicalUnits)  DistanceFromGravityAcceleration (const Accel acceleration, const Mass mass)
+	ND_ inline PX_AUTO(AstronomicalUnits)  DistanceFromGravityAcceleration (const Accel acceleration, const Mass mass)
 	{
 		STATIC_ASSERT( IsAccelerationUnits<Accel> and IsMassUnits<Mass> );
 		
@@ -82,7 +82,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename Distance, typename Mass1, typename Mass2>
-	CHECKRES inline PX_AUTO(Newtons)  Gravity (const Distance distance, const Mass1 otherMass, const Mass2 selfMass)
+	ND_ inline PX_AUTO(Newtons)  Gravity (const Distance distance, const Mass1 otherMass, const Mass2 selfMass)
 	{
 		STATIC_ASSERT( IsDistanceUnits<Distance> and IsMassUnits<Mass1> and IsMassUnits<Mass2> );
 
@@ -97,7 +97,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename Mass1, typename Mass2, typename Distance, typename Value>
-	CHECKRES inline PX_AUTO(Meters)  HillSphere (const Mass1 heavierBodyMass, const Mass2 smallerBodyMass, const Distance smallerBodySemiMajorAxis, const Value eccentricity)
+	ND_ inline PX_AUTO(Meters)  HillSphere (const Mass1 heavierBodyMass, const Mass2 smallerBodyMass, const Distance smallerBodySemiMajorAxis, const Value eccentricity)
 	{
 		STATIC_ASSERT( IsMassUnits<Mass1> and IsMassUnits<Mass2> and IsDistanceUnits<Distance> );
 		
@@ -115,7 +115,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename Mass1, typename Mass2, typename Distance>
-	CHECKRES inline PX_AUTO(Meters)  SphereOfInfluence (const Mass1 heavierBodyMass, const Mass2 smallerBodyMass, const Distance semiMajorAxis)
+	ND_ inline PX_AUTO(Meters)  SphereOfInfluence (const Mass1 heavierBodyMass, const Mass2 smallerBodyMass, const Distance semiMajorAxis)
 	{
 		STATIC_ASSERT( IsMassUnits<Mass1> and IsMassUnits<Mass2> and IsDistanceUnits<Distance> );
 
@@ -130,7 +130,7 @@ namespace Astrophysics
 =================================================
 */
 	template <typename Mass1, typename Mass2>
-	CHECKRES inline PX_AUTO(AstronomicalUnits)  RocheLobe (const Mass1 selfMass, const Mass2 otherMass)
+	ND_ inline PX_AUTO(AstronomicalUnits)  RocheLobe (const Mass1 selfMass, const Mass2 otherMass)
 	{
 		STATIC_ASSERT( IsMassUnits<Mass1> and IsMassUnits<Mass2> );
 		
@@ -153,7 +153,7 @@ namespace Astrophysics
 	struct RocheLimit
 	{
 		template <typename Mass1, typename Mass2, typename Radius>
-		CHECKRES static PX_AUTO(Meters)  ForRigid (const Mass1 primaryMassOrDensity, const Mass2 satelliteMassOrDensity, const Radius satelliteRadius)
+		ND_ static PX_AUTO(Meters)  ForRigid (const Mass1 primaryMassOrDensity, const Mass2 satelliteMassOrDensity, const Radius satelliteRadius)
 		{
 			STATIC_ASSERT( (IsMassUnits<Mass1> and IsMassUnits<Mass2>) or (IsDensityUnits<Mass1> and IsDensityUnits<Mass2>) );
 			STATIC_ASSERT( IsDistanceUnits<Radius> );
@@ -165,7 +165,7 @@ namespace Astrophysics
 		
 		
 		template <typename Mass1, typename Mass2, typename Radius>
-		CHECKRES static PX_AUTO(Meters)  ForFluid (const Mass1 primaryMassOrDensity, const Mass2 satelliteMassOrDensity, const Radius satelliteRadius)
+		ND_ static PX_AUTO(Meters)  ForFluid (const Mass1 primaryMassOrDensity, const Mass2 satelliteMassOrDensity, const Radius satelliteRadius)
 		{
 			// TODO: check is mass supported ???
 			STATIC_ASSERT( (IsMassUnits<Mass1> and IsMassUnits<Mass2>) or (IsDensityUnits<Mass1> and IsDensityUnits<Mass2>) );
@@ -188,7 +188,7 @@ namespace Astrophysics
 	{
 		// with star //
 		template <typename Time, typename Distance>
-		CHECKRES static PX_AUTO(SolarMass)  Mass (Time orbitalPeriod, Distance semiMajorAxis)
+		ND_ static PX_AUTO(SolarMass)  Mass (Time orbitalPeriod, Distance semiMajorAxis)
 		{
 			STATIC_ASSERT( IsTimeUnits<Time> and IsDistanceUnits<Distance> );
 			
@@ -199,7 +199,7 @@ namespace Astrophysics
 		}
 		
 		template <typename Mass, typename Distance>
-		CHECKRES static PX_AUTO(Days)  Period (Mass rootObjectMass, Distance semiMajorAxis)
+		ND_ static PX_AUTO(Days)  Period (Mass rootObjectMass, Distance semiMajorAxis)
 		{
 			STATIC_ASSERT( IsMassUnits<Mass> and IsDistanceUnits<Distance> );
 
@@ -210,7 +210,7 @@ namespace Astrophysics
 		}
 		
 		template <typename Mass, typename Time>
-		CHECKRES static PX_AUTO(AstronomicalUnits)  SemiMajorAxis (Mass rootObjectMass, Time orbitalPeriod)
+		ND_ static PX_AUTO(AstronomicalUnits)  SemiMajorAxis (Mass rootObjectMass, Time orbitalPeriod)
 		{
 			STATIC_ASSERT( IsMassUnits<Mass> and IsTimeUnits<Time> );
 			
@@ -221,7 +221,7 @@ namespace Astrophysics
 		}
 		
 		template <typename Mass, typename Distance, typename Time>
-		CHECKRES static bool  Equation (Mass rootObjectMass, Distance semiMajorAxis, Time orbitalPeriod)
+		ND_ static bool  Equation (Mass rootObjectMass, Distance semiMajorAxis, Time orbitalPeriod)
 		{
 			STATIC_ASSERT( IsMassUnits<Mass> and IsDistanceUnits<Distance> and IsTimeUnits<Time> );
 			
@@ -237,7 +237,7 @@ namespace Astrophysics
 
 		// with other object //
 		template <typename Distance1, typename Distance2, typename Time>
-		CHECKRES static PX_AUTO(Days)  Period (Distance1 semiMajorAxis1, Distance2 semiMajorAxis2, Time orbitalPeriod2)
+		ND_ static PX_AUTO(Days)  Period (Distance1 semiMajorAxis1, Distance2 semiMajorAxis2, Time orbitalPeriod2)
 		{
 			STATIC_ASSERT( IsDistanceUnits<Distance1> and IsDistanceUnits<Distance2> and IsTimeUnits<Time> );
 

@@ -180,7 +180,7 @@ namespace PlatformSW
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 		
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		CHECK_ERR( _GetManager() );
 
 		CHECK_LINKING( _syncManager = _GetManager()->GetModuleByMsg< SyncMngrMsgList_t >() );
@@ -241,7 +241,7 @@ namespace PlatformSW
 		Submitted	submit;
 
 		// copy command buffers
-		for (auto& cmd : Range(msg.commands))
+		for (auto& cmd : msg.commands)
 		{
 			CHECK_ERR( cmd and cmd->GetSupportedMessages().HasAllTypes< CmdBufferMsgList_t >() );
 
@@ -251,7 +251,7 @@ namespace PlatformSW
 		}
 
 		// copy signal semaphores
-		for (auto& sem : Range(msg.signalSemaphores))
+		for (auto& sem : msg.signalSemaphores)
 		{
 			Message< GpuMsg::GetSWSemaphore >	req_sem{ sem };
 			SendTo( _syncManager, req_sem );
@@ -260,7 +260,7 @@ namespace PlatformSW
 		}
 
 		// copy wait semaphores
-		for (auto& sem : Range(msg.waitSemaphores))
+		for (auto& sem : msg.waitSemaphores)
 		{
 			Message< GpuMsg::GetSWSemaphore >	req_sem{ sem.first };
 			SendTo( _syncManager, req_sem );
@@ -275,9 +275,7 @@ namespace PlatformSW
 			SendTo( _syncManager, req_fence );
 
 			submit.signalFence = *req_fence->result;
-
-			// must be in unsignaled state
-			CHECK_ERR( not submit.signalFence->Wait() );
+			submit.signalFence->Enqueue();
 		}
 
 		_queue.PushBack( RVREF(submit) );
@@ -349,7 +347,7 @@ namespace PlatformSW
 				// finish
 				if ( submited.commands.Empty() )
 				{
-					for (auto& sem : Range(submited.signalSemaphores)) {
+					for (auto& sem : submited.signalSemaphores) {
 						sem->Unlock();
 					}
 
@@ -417,13 +415,13 @@ namespace PlatformSW
 
 		FencesSet_t		fences;
 
-		FOR( i, msg->fences )
+		for (auto& wfence : msg->fences)
 		{
-			Message< GpuMsg::GetSWFence >	req_fence{ msg->fences[i] };
+			Message< GpuMsg::GetSWFence >	req_fence{ wfence };
 			SendTo( _syncManager, req_fence );
 
-			if ( req_fence->result and not (*req_fence->result)->Wait() )
-				fences.Add( *req_fence->result );
+			CHECK_ERR( req_fence->result and (*req_fence->result)->IsEnqueued() );
+			fences.Add( *req_fence->result );
 		}
 
 		if ( fences.Empty() )

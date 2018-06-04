@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Base/Main/MainSystem.h"
-#include "Engine/Base/Stream/StreamObjectsConstructor.h"
+#include "Engine/Base/DataProvider/DataProviderObjectsConstructor.h"
 
 namespace Engine
 {
@@ -35,12 +35,11 @@ namespace Base
 */
 	MainSystem::MainSystem (GlobalSystemsRef gs) :
 		Module( gs, ModuleConfig{ MainSystemModuleID, 0 }, &_msgTypes, &_eventTypes ),
-		_factory( GlobalSystems() ),
-		_fileMngr( GlobalSystems() )
+		_factory( GlobalSystems() )
 	{
 		SetDebugName( "MainSystem" );
 
-		GlobalSystems()->mainSystem.Set( this );
+		GlobalSystems()->mainSystem._Set( this );
 
 		_Create();
 	}
@@ -58,7 +57,7 @@ namespace Base
 
 		CHECK( _SetState( EState::Deleting ) );
 
-		GlobalSystems()->mainSystem.Set( null );
+		GlobalSystems()->mainSystem._Set( null );
 		
 		LOG( "MainSystem finalized", ELog::Debug );
 	}
@@ -102,7 +101,7 @@ namespace Base
 
 		TaskManager::Register( GlobalSystems() );
 		ThreadManager::Register( GlobalSystems() );
-		StreamObjectsConstructor::Register( GlobalSystems() );
+		DataProviderObjectsConstructor::Register( GlobalSystems() );
 
 		_SendMsg< ModuleMsg::AttachModule >({ _taskMngr });
 		_SendMsg< ModuleMsg::AttachModule >({ _threadMngr });

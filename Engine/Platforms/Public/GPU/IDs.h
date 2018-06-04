@@ -22,6 +22,7 @@ namespace Platforms
 		TModID::type	thread			= TModID::type(0);
 		OModID::type	buffer			= OModID::type(0);
 		OModID::type	image			= OModID::type(0);
+		OModID::type	sampler			= OModID::type(0);
 		OModID::type	memory			= OModID::type(0);
 		OModID::type	memoryManager	= OModID::type(0);
 		OModID::type	pipeline		= OModID::type(0);

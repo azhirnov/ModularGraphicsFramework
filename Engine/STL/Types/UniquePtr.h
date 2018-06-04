@@ -4,6 +4,7 @@
 
 #include "Engine/STL/Common/Types.h"
 #include "Engine/STL/Algorithms/Swap.h"
+#include "Engine/STL/Types/Ptr.h"
 
 namespace GX_STL
 {
@@ -146,44 +147,44 @@ namespace GXTypes
 		Self& operator = (const Self &right) = delete;
 
 
-		CHECKRES forceinline T * operator -> () const
+		ND_ forceinline T * operator -> () const
 		{
 			return ptr();
 		}
 
 
-		CHECKRES forceinline T & operator * () const
+		ND_ forceinline T & operator * () const
 		{
 			return *ptr();
 		}
 
 
-		CHECKRES forceinline T * ptr () const
+		ND_ forceinline T * ptr () const
 		{
 			ASSUME( IsNotNull() );
 			return RawPtr();
 		}
 
 
-		CHECKRES forceinline T * RawPtr () const
+		ND_ forceinline T * RawPtr () const
 		{
 			return const_cast< T* >( _ptr );
 		}
 
 
-		forceinline bool IsNull () const
+		ND_ forceinline bool IsNull () const
 		{
 			return ( _ptr == null );
 		}
 
 
-		forceinline bool IsNotNull () const
+		ND_ forceinline bool IsNotNull () const
 		{
 			return ( _ptr != null );
 		}
 
 
-		CHECKRES inline T* Release ()
+		ND_ inline T* Release ()
 		{
 			T*	res = _ptr;
 			_ptr = null;
@@ -191,32 +192,32 @@ namespace GXTypes
 		}
 		
 
-		CHECKRES forceinline explicit operator bool () const
+		ND_ forceinline explicit operator bool () const
 		{
 			return IsNotNull();
 		}
 
 		
-		CHECKRES forceinline bool operator == (const Self &right) const
+		ND_ forceinline bool operator == (const Self &right) const
 		{
 			return _ptr == right._ptr;
 		}
 
 		
-		CHECKRES forceinline bool operator != (const T *right) const
+		ND_ forceinline bool operator != (const T *right) const
 		{
 			return _ptr != right;
 		}
 		
 
-		CHECKRES forceinline bool operator != (const Self &right) const
+		ND_ forceinline bool operator != (const Self &right) const
 		{
 			return _ptr != right._ptr;
 		}
 
 
 		template <typename T2>
-		CHECKRES forceinline static Self CreateCopy (const T2& value)
+		ND_ forceinline static Self CreateCopy (const T2& value)
 		{
 			return Self( new T( value ) );
 		}
@@ -232,7 +233,7 @@ namespace GXTypes
 	template <typename T, typename B, typename S>
 	struct Hash< UniquePtr< T, B, S > >
 	{
-		CHECKRES HashResult  operator () (const UniquePtr< T, B, S > &x) const noexcept
+		ND_ HashResult  operator () (const UniquePtr< T, B, S > &x) const noexcept
 		{
 			return HashOf( Cast<T const *>( x.ptr() ) );
 		}
@@ -240,7 +241,7 @@ namespace GXTypes
 	
 
 	template <typename T, typename ...Args>
-	CHECKRES forceinline UniquePtr<T>  MakeUnique (Args&& ...args)
+	ND_ forceinline UniquePtr<T>  MakeUnique (Args&& ...args)
 	{
 		return UniquePtr<T>(new T( FW<Args>(args)... ));
 	}

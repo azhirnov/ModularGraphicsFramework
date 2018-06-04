@@ -152,7 +152,7 @@ namespace PlatformGL
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 		
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		CHECK_ERR( _GetManager() );
 
 		CHECK_LINKING( _syncManager = _GetManager()->GetModuleByMsg< SyncMngrMsgList_t >() );
@@ -241,7 +241,7 @@ namespace PlatformGL
 		);
 
 		// wait for signal
-		for (auto& sem : Range(cmd.waitSemaphores))
+		for (auto& sem : cmd.waitSemaphores)
 		{
 			ASSERT(sem.second == EPipelineStage::AllCommands );
 			Message< GpuMsg::WaitGLSemaphore >	wait{ sem.first };
@@ -259,7 +259,7 @@ namespace PlatformGL
 		}
 
 		// enqueue semaphores
-		for (auto& sem : Range(cmd.signalSemaphores))
+		for (auto& sem : cmd.signalSemaphores)
 		{
 			Message< GpuMsg::GLSemaphoreEnqueue >	sem_sync{ sem };
 			CHECK( _syncManager->Send( sem_sync ) );

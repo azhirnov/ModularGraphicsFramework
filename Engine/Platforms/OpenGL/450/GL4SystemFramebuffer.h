@@ -62,9 +62,6 @@ namespace PlatformGL
 		bool _Delete (const Message< ModuleMsg::Delete > &);
 		bool _GetGLFramebufferID (const Message< GpuMsg::GetGLFramebufferID > &);
 		bool _GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &);
-
-	private:
-		bool _IsCreated () const;
 	};
 //-----------------------------------------------------------------------------
 
@@ -125,9 +122,9 @@ namespace PlatformGL
 		_framebufferId	= 0;
 		_descr			= Uninitialized;
 
-		GL_CALL( glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, (GLint*)&_framebufferId ) );
+		GL_CALL( glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, OUT (GLint*)&_framebufferId ) );
 
-		const bool	is_multisampled	= samples.Get() > 1;
+		const bool	is_multisampled	= samples.IsEnabled();
 		
 		if ( colorFmt != EPixelFormat::Unknown )
 		{

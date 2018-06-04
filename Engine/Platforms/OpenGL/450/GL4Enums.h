@@ -24,7 +24,7 @@ namespace Engine
 {
 namespace PlatformGL
 {
-	using namespace Platforms;
+	using namespace Engine::Platforms;
 	
 	enum GL4InternalPixelFormat {};
 	enum GL4PixelFormat {};

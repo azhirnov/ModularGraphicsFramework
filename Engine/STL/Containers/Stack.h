@@ -41,41 +41,41 @@ namespace GXTypes
 
 		Stack (Self &&other): _memory( RVREF(other._memory) )	{}
 
-		~Stack ()										{}
+		~Stack ()												{}
 
-		void SetDefault (const T &value)				{ _memory[0] = value; }
-		void SetDefault (T &&value)						{ _memory[0] = RVREF( value ); }
+		void SetDefault (const T &value)						{ _memory[0] = value; }
+		void SetDefault (T &&value)								{ _memory[0] = RVREF( value ); }
 
-		void Reserve (usize size)						{ _memory.Reserve( size ); }
+		void Reserve (usize size)								{ _memory.Reserve( size ); }
 		
 		bool Pop ();
 		
 		void Push ();
-		void Push (const T &value)						{ _memory.PushBack( value ); }
-		void Push (T &&value)							{ _memory.PushBack( RVREF( value ) ); }
+		void Push (const T &value)								{ _memory.PushBack( value ); }
+		void Push (T &&value)									{ _memory.PushBack( RVREF( value ) ); }
 
-		T &  Get ()										{ return _memory.Back(); }
-		const T & Get ()	const						{ return _memory.Back(); }
+		ND_ T &			Get ()									{ return _memory.Back(); }
+		ND_ const T &	Get ()	const							{ return _memory.Back(); }
 		
-		void Set (const T &value)						{ _memory.Set( _memory.LastIndex(), value ); }
-		void Set (T &&value)							{ _memory.Set( _memory.LastIndex(), RVREF( value ) ); }
+		void Set (const T &value)								{ _memory.Set( _memory.LastIndex(), value ); }
+		void Set (T &&value)									{ _memory.Set( _memory.LastIndex(), RVREF( value ) ); }
 
-		usize			Capacity ()		const			{ return _memory.Capacity(); }
-		constexpr usize MaxCapacity ()	const			{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		usize			Count ()		const			{ return _memory.Count(); }
-		bool			Empty ()		const			{ return Count() <= 1; }
+		ND_ usize			Capacity ()		const				{ return _memory.Capacity(); }
+		ND_ constexpr usize MaxCapacity ()	const				{ return _memory.MaxSize(); }	// max available for allocation count of elements
+		ND_ usize			Count ()		const				{ return _memory.Count(); }
+		ND_ bool			Empty ()		const				{ return Count() <= 1; }
 
-		void			Clear ()						{ _memory.Resize(1); }
+		void				Clear ()							{ _memory.Resize(1); }
 
-		bool operator == (ArrayCRef<T> right) const		{ return ArrayCRef<T>(*this) == right; }
-		bool operator != (ArrayCRef<T> right) const		{ return not ((*this) == right); }
+		ND_ bool operator == (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) == right; }
+		ND_ bool operator != (ArrayCRef<T> right) const			{ return not ((*this) == right); }
 		
 		Self &	operator =  (Self &&right)		= default;
 		Self &	operator =  (const Self &right)	= default;
 		
 
-		static constexpr bool	IsLinearMemory ()			{ return Container_t::IsLinearMemory(); }
-		constexpr bool			IsStaticMemory ()	const	{ return _memory.IsStatic(); }
+		static constexpr bool	IsLinearMemory ()				{ return Container_t::IsLinearMemory(); }
+		constexpr bool			IsStaticMemory () const			{ return _memory.IsStatic(); }
 
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
@@ -128,7 +128,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	struct Hash< Stack<T,S,MC> >
 	{
-		CHECKRES HashResult  operator () (const Stack<T,S,MC> &x) const noexcept
+		ND_ HashResult  operator () (const Stack<T,S,MC> &x) const noexcept
 		{
 			return HashOf( ArrayCRef<T>( x ) );
 		}

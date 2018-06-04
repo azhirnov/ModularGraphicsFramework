@@ -7,6 +7,7 @@
 #include "Engine/Platforms/Public/Tools/WindowHelper.h"
 #include "Engine/Platforms/Soft/SoftRendererObjectsConstructor.h"
 #include "Engine/Platforms/Soft/Impl/SWBaseModule.h"
+#include "Engine/Platforms/Soft/Impl/SWSamplerCache.h"
 #include "Engine/Platforms/Soft/Windows/SwWinSurface.h"
 #include "Engine/Platforms/Soft/Android/SwAndSurface.h"
 
@@ -41,11 +42,12 @@ namespace Platforms
 											GpuMsg::GetGraphicsModules,
 											GpuMsg::ThreadBeginFrame,
 											GpuMsg::ThreadEndFrame,
+											GpuMsg::GetGraphicsSettings,
+											GpuMsg::GetComputeSettings,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetSWDeviceInfo,
 											GpuMsg::GetSWPrivateClasses,
-											GpuMsg::GetGraphicsSettings,
-											GpuMsg::GetComputeSettings
+											GpuMsg::GetDeviceProperties
 										> >::Append< QueueMsgList_t >;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
@@ -57,6 +59,7 @@ namespace Platforms
 
 		using Surface_t				= PlatformSW::SWSurface;
 		using Device_t				= PlatformSW::SWDevice;
+		using SamplerCache_t		= PlatformSW::SWSamplerCache;
 
 
 	// constants
@@ -81,6 +84,8 @@ namespace Platforms
 		Surface_t			_surface;
 		ModulePtr			_framebuffer;
 		ModulePtr			_renderPass;
+
+		SamplerCache_t		_samplerCache;
 
 		bool				_isFrameStarted;
 		bool				_isWindowVisible;
@@ -114,6 +119,7 @@ namespace Platforms
 		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
 		bool _GetSWDeviceInfo (const Message< GpuMsg::GetSWDeviceInfo > &);
 		bool _GetSWPrivateClasses (const Message< GpuMsg::GetSWPrivateClasses > &);
+		bool _GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &);
 
 	private:
 		bool _CreateDevice ();
@@ -165,6 +171,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &SoftRendererThread::_GetSWPrivateClasses );
 		_SubscribeOnMsg( this, &SoftRendererThread::_GetGraphicsSettings );
 		_SubscribeOnMsg( this, &SoftRendererThread::_GetComputeSettings );
+		_SubscribeOnMsg( this, &SoftRendererThread::_GetDeviceProperties );
 
 		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
 
@@ -193,7 +200,7 @@ namespace Platforms
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 		
 		CHECK_LINKING(( _window = PlatformTools::WindowHelper::FindWindow( GlobalSystems() ) ));
 
@@ -212,7 +219,7 @@ namespace Platforms
 											CreateInfo::GpuSyncManager{ this },
 											OUT _syncManager ) );
 
-			CHECK_ERR( _Attach( "sync", _syncManager, true ) );
+			CHECK_ERR( _Attach( "sync", _syncManager ) );
 		}
 
 		// create queue
@@ -220,10 +227,10 @@ namespace Platforms
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											SWCommandQueueModuleID,
 											GlobalSystems(),
-											CreateInfo::GpuCommandQueue{ this, EQueueFamily::All },
+											CreateInfo::GpuCommandQueue{ this, EQueueFamily::Default },
 											OUT _cmdQueue ) );
 			
-			CHECK_ERR( _Attach( "queue", _cmdQueue, true ) );
+			CHECK_ERR( _Attach( "queue", _cmdQueue ) );
 
 			CHECK_ERR( _CopySubscriptions< QueueMsgList_t >( _cmdQueue ) );
 			CHECK_ERR( ReceiveEvents< QueueEventList_t >( _cmdQueue ) );
@@ -481,9 +488,9 @@ namespace Platforms
 	bool SoftRendererThread::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
 	{
 		if ( _device.IsDeviceCreated()		and
-			 msg->desc.visibility != WindowDesc::EVisibility::Invisible )
+			 msg->descr.visibility != WindowDesc::EVisibility::Invisible )
 		{
-			_device.Resize( msg->desc.surfaceSize );
+			_device.Resize( msg->descr.surfaceSize );
 		}
 		return true;
 	}
@@ -511,13 +518,15 @@ namespace Platforms
 */
 	bool SoftRendererThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
 	{
-		msg->result.Set({
-			this,
-			null,
-			_syncManager,
-			_renderPass,
-			1
-		});
+		GpuMsg::GetDeviceInfo::Info	info;
+		info.gpuThread		= this;
+		info.sharedThread	= null;
+		info.syncManager	= _syncManager;
+		info.memManager		= null;
+		info.renderPass		= _renderPass;
+		info.imageCount		= 2;
+
+		msg->result.Set( info );
 		return true;
 	}
 	
@@ -526,7 +535,7 @@ namespace Platforms
 	_GetSWDeviceInfo
 =================================================
 */
-	bool SoftRendererThread::_GetSWDeviceInfo (const Message< GpuMsg::GetSWDeviceInfo > &msg)
+	bool SoftRendererThread::_GetSWDeviceInfo (const Message< GpuMsg::GetSWDeviceInfo > &)
 	{
 		TODO("");
 		return true;
@@ -539,7 +548,7 @@ namespace Platforms
 */
 	bool SoftRendererThread::_GetSWPrivateClasses (const Message< GpuMsg::GetSWPrivateClasses > &msg)
 	{
-		msg->result.Set({ &_device });
+		msg->result.Set({ &_device, &_samplerCache });
 		return true;
 	}
 	
@@ -567,6 +576,17 @@ namespace Platforms
 		cs.version	= _settings.version;
 
 		msg->result.Set( RVREF(cs) );
+		return true;
+	}
+	
+/*
+=================================================
+	_GetDeviceProperties
+=================================================
+*/
+	bool SoftRendererThread::_GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &msg)
+	{
+		msg->result.Set( _device.GetProperties() );
 		return true;
 	}
 //-----------------------------------------------------------------------------

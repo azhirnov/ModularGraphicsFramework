@@ -100,22 +100,22 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EFilter
 	
-	inline constexpr bool EFilter::IsMipmapLinear (type value)
+	ND_ inline constexpr bool EFilter::IsMipmapLinear (type value)
 	{
 		return EnumEq( value, EFilter::_MIP_LINEAR );
 	}
 
-	inline constexpr bool EFilter::IsMinLinear (type value)
+	ND_ inline constexpr bool EFilter::IsMinLinear (type value)
 	{
 		return EnumEq( value, EFilter::_MIN_LINEAR );
 	}
 
-	inline constexpr bool EFilter::IsMagLinear (type value)
+	ND_ inline constexpr bool EFilter::IsMagLinear (type value)
 	{
 		return EnumEq( value, EFilter::_MAG_LINEAR );
 	}
 	
-	inline constexpr uint EFilter::GetAnisotropic (type value)
+	ND_ inline constexpr uint EFilter::GetAnisotropic (type value)
 	{
 		return EnumEq( value, EFilter::_ANISOTROPIC ) ? uint(value & _A_FACTOR_MASK) : 0;
 	}

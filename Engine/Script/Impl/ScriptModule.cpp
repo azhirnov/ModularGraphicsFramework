@@ -77,7 +77,7 @@ namespace GXScript
 */
 	bool ScriptModule::RunFromFile (StringCRef filename, StringCRef entry)
 	{
-		File::HddRFile	file;
+		GXFile::HddRFile	file;
 		CHECK_ERR( file.Open( filename ) );
 
 		String			data;

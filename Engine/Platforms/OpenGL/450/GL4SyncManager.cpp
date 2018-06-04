@@ -176,8 +176,8 @@ namespace PlatformGL
 	{
 		_DeleteSync_Func	func;
 
-		FOR( i, _syncs ) {
-			_syncs[i].second.Apply( func );
+		for (auto& sync : _syncs) {
+			sync.second.Apply( func );
 		}
 
 		_syncs.Clear();
@@ -267,10 +267,10 @@ namespace PlatformGL
 	{
 		const GLuint64	timeout = msg->timeout.NanoSeconds();
 
-		FOR( i, msg->fences )
+		for (auto& wfence : msg->fences)
 		{
 			SyncArray_t::iterator	iter;
-			CHECK_ERR( _syncs.Find( ulong(msg->fences[i]), OUT iter ) );
+			CHECK_ERR( _syncs.Find( ulong(wfence), OUT iter ) );
 
 			GLsync	fence = iter->second.Get< GLsync >();
 
@@ -278,7 +278,7 @@ namespace PlatformGL
 				GL_CALL( glClientWaitSync( fence, GL_SYNC_FLUSH_COMMANDS_BIT, timeout ) );
 			}
 			else {
-				CHECK( _GetManager()->Send< GpuMsg::SyncGLClientWithDevice >( msg->fences[i] ) );
+				CHECK( _GetManager()->Send< GpuMsg::SyncGLClientWithDevice >( wfence ) );
 			}
 		}
 		return true;
@@ -538,10 +538,9 @@ namespace PlatformGL
 	{
 		Message< GpuMsg::GetGLSemaphore >	req_sem{ msg->semId };
 		CHECK_ERR( _GetGLSemaphore( req_sem ) );
+		CHECK_ERR( req_sem->result and *req_sem->result != null );
 
-		if ( *req_sem->result != null ) {
-			GL_CALL( glWaitSync( *req_sem->result, 0, GLuint64(GL_TIMEOUT_IGNORED) ) );
-		}
+		GL_CALL( glWaitSync( *req_sem->result, 0, GLuint64(GL_TIMEOUT_IGNORED) ) );
 		return true;
 	}
 

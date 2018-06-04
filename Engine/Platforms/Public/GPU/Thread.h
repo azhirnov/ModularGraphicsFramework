@@ -34,7 +34,8 @@ namespace CreateInfo
 			context{ context }, shared{ shared }, settings{ settings }
 		{}
 
-		explicit GpuThread (const Platforms::ComputeSettings &settings) :
+		explicit GpuThread (const Platforms::ComputeSettings &settings, const ModulePtr &context = null, const ModulePtr &shared = null) :
+			context{ context }, shared{ shared },
 			settings{ settings.version, (settings.isDebug ? EFlags::DebugContext : EFlags::type(0)) | EFlags::NoSurface,
 					  Platforms::EPixelFormat::Unknown, Platforms::EPixelFormat::Unknown,
 					  Platforms::MultiSamples(), settings.device, 0 }
@@ -85,8 +86,9 @@ namespace GpuMsg
 	{
 		struct Info {
 			ModulePtr	gpuThread;			// current gpu thread		// TODO: remove?
-			ModulePtr	memManager;			// may be null				// TODO: remove?
-			ModulePtr	syncManager;		// may be null				// TODO: remove?
+			ModulePtr	sharedThread;		// can be null
+			ModulePtr	memManager;			// can be null				// TODO: remove?
+			ModulePtr	syncManager;		// can be null				// TODO: remove?
 			ModulePtr	renderPass;			// this is default render pass used for on screen rendering
 			uint		imageCount;			// count of images in swapchain
 		};
@@ -198,6 +200,26 @@ namespace GpuMsg
 		Out< Platforms::ComputeSettings >	result;
 	};
 
+
+	//
+	// Get Device Properties
+	//
+	struct GetDeviceProperties
+	{
+	// types
+		using uint3	= GXMath::uint3;
+
+		struct Properties
+		{
+			// compute shader
+			uint	maxComputeWorkGroupInvocations	= 0;
+			uint3	maxComputeWorkGroupSize;		// local size
+			uint3	maxComputeWorkGroupCount;
+		};
+
+	// variables
+		Out< Properties >	result;
+	};
 
 }	// GpuMsg
 }	// Engine

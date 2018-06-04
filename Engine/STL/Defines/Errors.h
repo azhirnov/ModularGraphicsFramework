@@ -32,14 +32,14 @@
 		{ __GX_LOG( _text_, ::GX_STL::ELog::_DefError );  return _ret_; }
 
 #	define __GX_CHECK_ERRX( _expr_, _text_, _level_, _ret_ ) \
-		{ if (GX_BRANCH_EXPECT( _expr_ )) {}\
+		{ if_expected( _expr_ ) {}\
 		  else { \
 			__GX_LOG( _text_, (_level_) ); \
 			return _ret_; \
 		}}
 
 #	define __GX_CHECK_WARN( _expr_, _text_, _level_ ) \
-		{ if (GX_BRANCH_EXPECT( _expr_ )) {} \
+		{ if_expected( _expr_ ) {} \
 		  else { \
 			__GX_LOG( _text_, (_level_) ); \
 		}}
@@ -88,7 +88,7 @@
 
 	// assert
 #	define __ASSERT2( _expr_, _text_, _level_ ) \
-		{ if (GX_BRANCH_EXPECT( _expr_ )) {} \
+		{ if_expected( _expr_ ) {} \
 		  else { \
 			LOG( _text_, _level_ ); \
 		}}

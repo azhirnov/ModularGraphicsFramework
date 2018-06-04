@@ -24,10 +24,10 @@ namespace GXTypes
 		static void ToNextLine		(StringCRef str, INOUT usize &pos);
 		static void ToPrevLine		(StringCRef str, INOUT usize &pos);
 
-		static bool IsBeginOfLine	(StringCRef str, usize pos);
-		static bool IsEndOfLine		(StringCRef str, usize pos);
+		ND_ static bool IsBeginOfLine	(StringCRef str, usize pos);
+		ND_ static bool IsEndOfLine	(StringCRef str, usize pos);
 
-		static usize CalculateNumberOfLines	(StringCRef str);
+		ND_ static usize CalculateNumberOfLines (StringCRef str);
 
 		static void  ReadCurrLine (StringCRef str, INOUT usize &pos, OUT StringCRef &result);
 		static void  ReadLineToEnd (StringCRef str, INOUT usize &pos, OUT StringCRef &result);
@@ -36,12 +36,12 @@ namespace GXTypes
 
 
 		// Indent //
-		static void IncreaceIndent	(INOUT String &str, StringCRef indent = "\t");
-		static void DecreaceIndent	(INOUT String &str, StringCRef indent = "\t");
+		static void IncreaceIndent (INOUT String &str, StringCRef indent = "\t");
+		static void DecreaceIndent (INOUT String &str, StringCRef indent = "\t");
 
 
 		// utils //
-		static ubyte CharToNumber (char c);
+		ND_ static ubyte CharToNumber (char c);
 
 
 		// parser //
@@ -63,7 +63,8 @@ namespace GXTypes
 
 		static bool ReadTo (StringCRef str, StringCRef endSymbol, INOUT usize &pos, OUT StringCRef &result);
 
-		//static bool ReadToEndBracket (StringCRef str, StringCRef openBracket, StringCRef closeBracket, INOUT usize &pos, OUT StringCRef &result);
+		ND_ static float CompareByWords (StringCRef left, StringCRef right);
+
 
 	// types
 	private:

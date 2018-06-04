@@ -163,8 +163,11 @@ namespace GpuMsg
 		Out< Platforms::SamplerDescriptor >		sampler;
 
 	// methods
-		//GetSWTextureMemoryLayout () {}
-		//explicit GetSWTextureMemoryLayout (const Platforms::ImageViewDescriptor &descr) : GetSWImageViewMemoryLayout{descr} {}
+		explicit GetSWTextureMemoryLayout (EPipelineAccess::bits access, EPipelineStage::type stage) :
+			GetSWImageViewMemoryLayout{access, stage} {}
+
+		explicit GetSWTextureMemoryLayout (const Platforms::ImageViewDescriptor &descr, EPipelineAccess::bits access, EPipelineStage::type stage) :
+			GetSWImageViewMemoryLayout{descr, access, stage} {}
 	};
 
 
@@ -388,7 +391,10 @@ namespace GpuMsg
 								 CmdClearColorImage,
 								 CmdPipelineBarrier,
 								 CmdPushConstants,
-								 CmdPushNamedConstants >;
+								 CmdPushNamedConstants,
+								 CmdDebugMarker,
+								 CmdPushDebugGroup,
+								 CmdPopDebugGroup >;
 
 		using Func_t	= Delegate< void (VariantCRef data, StringCRef file, uint line) >;
 

@@ -7,6 +7,7 @@
 
 namespace PipelineCompiler
 {
+	using RFilePtr	= GXFile::RFilePtr;
 
 /*
 =================================================
@@ -24,9 +25,7 @@ namespace PipelineCompiler
 			_name.Erase( pos, _name.Length() - pos );
 		}
 
-		FOR( i, _name ) {
-			_name[i] = StringUtils::ToLower( _name[i] );
-		}
+		StringUtils::StringToLower( INOUT _name );
 
 		_lastEditTime = OS::FileSystem::GetFileLastModificationTime( _path ).ToTime();
 
@@ -103,10 +102,8 @@ namespace PipelineCompiler
 	{
 		const BytesU	vec4_align	= EShaderVariable::SizeOf( EShaderVariable::Float4, 0_b );
 
-		FOR( i, varyings )
+		for (auto& var : varyings)
 		{
-			const auto&		var = varyings[i];
-
 			if ( EShaderVariable::IsStruct( var.type ) )
 			{
 				if ( var.location != UMax )
@@ -354,12 +351,31 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	_LocalGroupSizeToStringGLSL
+----
+	pass 1 & 2
+=================================================
+*/
+	String BasePipeline::_LocalGroupSizeToStringGLSL (const uint3 &value)
+	{
+		if ( IsZero( value ) )
+			return "";
+
+		const uint3	size = Max( value, 1u );
+
+		String	str;
+		str << "layout (local_size_x=" << size.x << ", local_size_y=" << size.y << ", local_size_z=" << size.z << ") in;\n";
+		return str;
+	}
+
+/*
+=================================================
 	_OnCompilationFailed
 ----
 	pass 1 & 2
 =================================================
 */
-	bool BasePipeline::_OnCompilationFailed (EShader::type shaderType, EShaderSrcFormat::type fmt, ArrayCRef<StringCRef> source, StringCRef log) const
+	bool BasePipeline::_OnCompilationFailed (EShader::type shaderType, EShaderSrcFormat::type, ArrayCRef<StringCRef> source, StringCRef log) const
 	{
 		String	str;
 
@@ -385,7 +401,7 @@ namespace PipelineCompiler
 		tex.imageType	= imageType;
 		tex.format		= format;
 		tex.shaderUsage	= shaderUsage;
-
+		
 		uniforms.PushBack( _Uniform( RVREF(tex) ) );
 		return *this;
 	}
@@ -397,10 +413,8 @@ namespace PipelineCompiler
 */
 	BasePipeline::Bindings&  BasePipeline::Bindings::Sampler (StringCRef texName, const SamplerDescriptor &descr, bool canBeOverridden)
 	{
-		FOR( i, uniforms )
+		for (auto& un : uniforms)
 		{
-			auto&	un = uniforms[i];
-
 			if ( un.Is<TextureUniform>() )
 			{
 				auto&	tex = un.Get<TextureUniform>();
@@ -662,8 +676,8 @@ namespace PipelineCompiler
 		else
 		// load from file system
 		{
-			File::RFilePtr	file;
-			CHECK_ERR( (file = File::HddRFile::New( path )), *this );
+			RFilePtr	file;
+			CHECK_ERR( (file = GXFile::HddRFile::New( path )), *this );
 		
 			const usize	len	= usize(file->RemainingSize());
 			src.Resize( len );
@@ -773,3 +787,7 @@ namespace PipelineCompiler
 	}
 
 }	// PipelineCompiler
+
+#include "Engine/Platforms/Public/GPU/Sampler.cpp"
+#include "Engine/Platforms/Public/GPU/RenderState.cpp"
+#include "Engine/Platforms/Public/GPU/PipelineLayout.cpp"

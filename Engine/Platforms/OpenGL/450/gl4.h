@@ -97,7 +97,6 @@ namespace gl
 	// API
 	bool GL4_Init ();
 	void GL4_Delete ();
-	void GL4_WriteInfo ();
 
 	int  GL4_GetVersion ();
 	int  GL4_GetShaderVersion ();

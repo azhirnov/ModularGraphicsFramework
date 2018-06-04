@@ -14,7 +14,7 @@ namespace GX_STL
 {
 namespace Runtime
 {
-	using namespace GXTypes;
+	using namespace GX_STL::GXTypes;
 
 
 	//
@@ -39,8 +39,7 @@ namespace Runtime
 
 	// methods
 	public:
-		TypeIdList (GX_DEFCTOR)
-		{}
+		TypeIdList (GX_DEFCTOR) {}
 
 		template <typename T>
 		explicit TypeIdList (UninitializedT<T>);
@@ -50,33 +49,35 @@ namespace Runtime
 		explicit TypeIdList (ArrayCRef<TypeId> list) : _types(list) {}
 
 		template <typename T>
-		bool	HasAllTypes () const;
+		ND_ bool	HasAllTypes () const;
 
 		template <typename T>
-		bool	HasAnyType () const;
+		ND_ bool	HasAnyType () const;
 
-		bool	HasAllTypes (const TypeIdList &other) const		{ return HasAllTypes( TypesArray_t(other) ); }
-		bool	HasAnyType (const TypeIdList &other) const		{ return HasAnyType( TypesArray_t(other) ); }
+		ND_ bool	HasAllTypes (const TypeIdList &other) const		{ return HasAllTypes( TypesArray_t(other) ); }
+		ND_ bool	HasAnyType (const TypeIdList &other) const		{ return HasAnyType( TypesArray_t(other) ); }
 		
-		bool	HasAllTypes (const TypesArray_t &other) const;
-		bool	HasAnyType (const TypesArray_t &other) const;
+		ND_ bool	HasAllTypes (const TypesArray_t &other) const;
+		ND_ bool	HasAnyType (const TypesArray_t &other) const;
 
-		void	Erase (TypeId id)				{ _types.Erase( id ); }
-		void	EraseByIndex (usize index)		{ _types.EraseByIndex( index ); }
+			void	Erase (TypeId id)				{ _types.Erase( id ); }
+			void	EraseByIndex (usize index)		{ _types.EraseByIndex( index ); }
 
-		//String	ToString () const;
+		//	String	ToString () const;
 
 		template <typename T>
-		bool	HasType ()				const	{ return _types.IsExist( TypeIdOf<T>() ); }
+		ND_ bool	HasType ()				const	{ return _types.IsExist( TypeIdOf<T>() ); }
 
-		bool	HasType (TypeId id)		const	{ return _types.IsExist( id ); }
+		ND_ bool	HasType (TypeId id)		const	{ return _types.IsExist( id ); }
 
-		usize	Count ()				const	{ return _types.Count(); }
-		bool	Empty ()				const	{ return _types.Empty(); }
+		ND_ usize	Count ()				const	{ return _types.Count(); }
+		ND_ bool	Empty ()				const	{ return _types.Empty(); }
 
-		TypeId	Get (usize index)		const	{ return _types[ index ]; }
+		ND_ TypeId	Get (usize index)		const	{ return _types[ index ]; }
 
-		operator TypesArray_t ()		 const	{ return _types; }
+		ND_ TypeId	operator [] (usize i)	const	{ return _types[ i ]; }
+
+		ND_ operator TypesArray_t ()		const	{ return _types; }
 	};
 	
 

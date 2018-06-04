@@ -4,6 +4,8 @@
 
 #include "Engine/STL/Containers/MapUtils.h"
 #include "Engine/STL/Containers/IndexedArray.h"
+#include "Engine/STL/Containers/UniBuffer.h"
+#include "Engine/STL/Containers/IndexedIterator.h"
 #include "Engine/STL/CompileTime/FunctionInfo.h"
 #include "Engine/STL/CompileTime/FunctionInfo.h"
 
@@ -38,37 +40,41 @@ namespace _types_hidden_
 		using Value_t			= T;
 		using Hash_t			= H;
 
-		using pair_t			= Pair< K, T >;
-		using const_pair_t		= Pair< const K, T>;
+		using Pair_t			= Pair< K, T >;
+		using CPair_t			= Pair< const K, T>;
 
-		using iterator			= Ptr< const_pair_t >;
-		using const_iterator	= Ptr< const const_pair_t >;
+		using iterator			= Ptr< CPair_t >;
+		using const_iterator	= Ptr< const CPair_t >;	// TODO: rename
+		
+		using idx_iterator		= IndexedIterator< CPair_t >;
+		using idx_const_iterator= IndexedIterator< const CPair_t >;
 
 
 	private:
 		using KeyHash_t			= CompileTime::ResultOf<decltype(&H::operator())>;
 		using KeyPair_t			= Pair< KeyHash_t, Key_t const& >;
-		using triple_t			= Pair< KeyHash_t, pair_t >;
+		using Triple_t			= Pair< KeyHash_t, Pair_t >;
+		using CTriple_t			= Pair< KeyHash_t, CPair_t >;
 
 		template <typename Key>
 		struct _KeySearchCmp
 		{
 		// variables
-			KeyHash_t const	_keyHash;
+			KeyHash_t const		_keyHash;
 			Key_t const &		_key;
 			
 		// methods
 			_KeySearchCmp (const Key_t *k) : _keyHash( Hash_t()(*k) ), _key( *k ) {}
-			_KeySearchCmp (const triple_t *t) : _keyHash( t->first ), _key( t->second.first ) {}
+			_KeySearchCmp (const Triple_t *t) : _keyHash( t->first ), _key( t->second.first ) {}
 			_KeySearchCmp (const KeyPair_t *p) : _keyHash( p->first ), _key( p->second ) {}
 
-			bool operator == (const triple_t &r) const	{ return _keyHash == r.first and _key == r.second.first; }
-			bool operator != (const triple_t &r) const	{ return not ( *this == r ); }
-			bool operator <  (const triple_t &r) const	{ return _keyHash == r.first ? _key < r.second.first : _keyHash < r.first; }
-			bool operator >  (const triple_t &r) const	{ return _keyHash == r.first ? _key > r.second.first : _keyHash > r.first; }
+			bool operator == (const Triple_t &r) const	{ return _keyHash == r.first and _key == r.second.first; }
+			bool operator != (const Triple_t &r) const	{ return not ( *this == r ); }
+			bool operator <  (const Triple_t &r) const	{ return _keyHash != r.first ? _keyHash < r.first : r.second.first > _key; }
+			bool operator >  (const Triple_t &r) const	{ return _keyHash != r.first ? _keyHash > r.first : _key > r.second.first; }
 		};
 
-		using _MapUtils_t	= _types_hidden_::MapUtils< Container< triple_t, S, MC >, KeyPair_t, _KeySearchCmp, IsUnique >;
+		using _MapUtils_t	= _types_hidden_::MapUtils< Container< Triple_t, S, MC >, KeyPair_t, _KeySearchCmp, IsUnique >;
 
 
 	// variables
@@ -88,36 +94,36 @@ namespace _types_hidden_
 		BaseHashMap (Self &&other) : _memory( RVREF( other._memory ) )
 		{}
 		
-		BaseHashMap (InitializerList<pair_t> list)
+		BaseHashMap (InitializerList<Pair_t> list)
 		{
-			AddArray( ArrayCRef<pair_t>( list ) );
+			AddArray( ArrayCRef<Pair_t>( list ) );
 		}
 		
-		BaseHashMap (ArrayCRef<pair_t> list)
+		BaseHashMap (ArrayCRef<Pair_t> list)
 		{
 			AddArray( list );
 		}
 
 
-		const_pair_t &			operator [] (usize i)
+		ND_ CPair_t &		operator [] (usize i)
 		{
-			return ReferenceCast< const_pair_t >( _memory[i].second );
+			return ReferenceCast< CPair_t >( _memory[i].second );
 		}
 
-		const_pair_t const &	operator [] (usize i) const
+		ND_ CPair_t const &	operator [] (usize i) const
 		{
-			return ReferenceCast< const_pair_t >( _memory[i].second );
+			return ReferenceCast< CPair_t >( _memory[i].second );
 		}
 		
 
-		Value_t &		operator () (const Key_t &key)
+		ND_ Value_t &		operator () (const Key_t &key)
 		{
 			usize	idx = 0;
 			FindIndex( key, OUT idx );
 			return (*this)[ idx ].second.second;
 		}
 		
-		Value_t const&	operator () (const Key_t &key) const
+		ND_ Value_t const&	operator () (const Key_t &key) const
 		{
 			usize	idx = 0;
 			FindIndex( key, OUT idx );
@@ -125,20 +131,20 @@ namespace _types_hidden_
 		}
 
 
-		Self &			operator << (pair_t &&value)
+		Self &		operator << (Pair_t &&value)
 		{
 			Add( RVREF( value ) );
 			return *this;
 		}
 
-		Self &			operator << (const pair_t &value)
+		Self &		operator << (const Pair_t &value)
 		{
 			Add( value );
 			return *this;
 		}
 
 
-		bool			operator == (const Self &right) const
+		ND_ bool	operator == (const Self &right) const
 		{
 			if ( Count() != right.Count() )
 				return false;
@@ -150,54 +156,71 @@ namespace _types_hidden_
 			return true;
 		}
 
-		bool			operator != (const Self &right) const
+		ND_ bool	operator != (const Self &right) const
 		{
 			return not (*this == right);
 		}
 		
 
-		Self &			operator =  (Self &&right)		= default;
-		Self &			operator =  (const Self &right)	= default;
+		ND_ operator UniBuffer<CPair_t> ()
+		{
+			return UniBuffer<CPair_t>{ reinterpret_cast<CTriple_t *>(ArrayRef<Triple_t>{_memory}.RawPtr()) + OffsetOf( &Triple_t::second ), Count(), SizeOf<Triple_t> };
+		}
+		
+		ND_ operator UniBuffer<const CPair_t> () const
+		{
+			return UniBuffer<const CPair_t>{ reinterpret_cast<CTriple_t const*>(ArrayCRef<Triple_t>{_memory}.RawPtr()) + OffsetOf( &Triple_t::second ), Count(), SizeOf<Triple_t> };
+		}
 
 
-		const_pair_t &			Front ()				{ return (*this)[0]; }
-		const_pair_t const &	Front ()		const	{ return (*this)[0]; }
-		const_pair_t &			Back ()					{ return (*this)[ LastIndex() ]; }
-		const_pair_t const &	Back ()			const	{ return (*this)[ LastIndex() ]; }
+		Self &		operator =  (Self &&right)		= default;
+		Self &		operator =  (const Self &right)	= default;
 
-		bool					Empty ()		const	{ return _memory.Empty(); }
-		usize					Count ()		const	{ return _memory.Count(); }
-		usize					LastIndex ()	const	{ return _memory.LastIndex(); }
-		BytesU					Size ()			const	{ return _memory.Size(); }
+
+		ND_ CPair_t &			Front ()				{ return (*this)[0]; }
+		ND_ CPair_t const &		Front ()		const	{ return (*this)[0]; }
+		ND_ CPair_t &			Back ()					{ return (*this)[ LastIndex() ]; }
+		ND_ CPair_t const &		Back ()			const	{ return (*this)[ LastIndex() ]; }
+
+		ND_ bool				Empty ()		const	{ return _memory.Empty(); }
+		ND_ usize				Count ()		const	{ return _memory.Count(); }
+		ND_ usize				LastIndex ()	const	{ return _memory.LastIndex(); }
+		ND_ BytesU				Size ()			const	{ return _memory.Size(); }
 
 		
+		ND_ auto				begin ()				{ return idx_iterator{ *this, 0 }; }
+		ND_ auto				begin ()		const	{ return idx_const_iterator{ *this, 0 }; }
+		ND_ auto				end ()					{ return idx_iterator{ *this, Count() }; }
+		ND_ auto				end ()			const	{ return idx_const_iterator{ *this, Count() }; }
+
+
 		// if IsUnique == true
 		// if Map contains same value, then the old value will be replaced
 		iterator Add (const Key_t &key, const Value_t &value)
 		{
 			const KeyHash_t	hash = _hasher( key );
-			const usize		idx  = _memory.AddOrReplace( RVREF(triple_t( hash, pair_t( key, value ))) );
+			const usize		idx  = _memory.AddOrReplace( RVREF(Triple_t( hash, Pair_t( key, value ))) );
 			return &(*this)[ idx ];
 		}
 
 		iterator Add (Key_t &&key, Value_t &&value)
 		{
 			const KeyHash_t	hash = _hasher( key );
-			const usize		idx  = _memory.AddOrReplace( RVREF(triple_t( hash, RVREF(pair_t( RVREF(key), RVREF(value) )) )) );
+			const usize		idx  = _memory.AddOrReplace( RVREF(Triple_t( hash, RVREF(Pair_t( RVREF(key), RVREF(value) )) )) );
 			return &(*this)[ idx ];
 		}
 
-		iterator Add (const pair_t &value)
+		iterator Add (const Pair_t &value)
 		{
 			const KeyHash_t	hash = _hasher( value.first );
-			const usize		idx  = _memory.AddOrReplace( RVREF(triple_t( hash, RVREF(pair_t( value.first, value.second )) )) );
+			const usize		idx  = _memory.AddOrReplace( RVREF(Triple_t( hash, RVREF(Pair_t( value.first, value.second )) )) );
 			return &(*this)[ idx ];
 		}
 
-		iterator Add (pair_t &&value)
+		iterator Add (Pair_t &&value)
 		{
 			const KeyHash_t	hash = _hasher( value.first );
-			const usize		idx  = _memory.AddOrReplace( RVREF(triple_t( hash, RVREF(value) )) );
+			const usize		idx  = _memory.AddOrReplace( RVREF(Triple_t( hash, RVREF(value) )) );
 			return &(*this)[ idx ];
 		}
 		
@@ -207,33 +230,33 @@ namespace _types_hidden_
 		iterator AddOrSkip (const Key_t &key, const Value_t &value)
 		{
 			const KeyHash_t	hash = _hasher( key );
-			const usize		idx  = _memory.AddOrSkip( RVREF(triple_t( hash, key, value )) );
+			const usize		idx  = _memory.AddOrSkip( RVREF(Triple_t( hash, key, value )) );
 			return &(*this)[ idx ];
 		}
 
 		iterator AddOrSkip (Key_t &&key, Value_t &&value)
 		{
 			const KeyHash_t	hash = _hasher( key );
-			const usize		idx  = _memory.AddOrSkip( RVREF(triple_t( hash, RVREF(pair_t( RVREF(key), RVREF(value) )) )) );
+			const usize		idx  = _memory.AddOrSkip( RVREF(Triple_t( hash, RVREF(Pair_t( RVREF(key), RVREF(value) )) )) );
 			return &(*this)[ idx ];
 		}
 
-		iterator AddOrSkip (const pair_t &value)
+		iterator AddOrSkip (const Pair_t &value)
 		{
 			const KeyHash_t	hash = _hasher( value.first );
-			const usize		idx  = _memory.AddOrSkip( RVREF(triple_t( hash, RVREF(pair_t( value.first, value.second )) )) );
+			const usize		idx  = _memory.AddOrSkip( RVREF(Triple_t( hash, RVREF(Pair_t( value.first, value.second )) )) );
 			return &(*this)[ idx ];
 		}
 
-		iterator AddOrSkip (pair_t &&value)
+		iterator AddOrSkip (Pair_t &&value)
 		{
 			const KeyHash_t	hash = _hasher( value.first );
-			const usize		idx  = _memory.AddOrSkip( RVREF(triple_t( hash, RVREF(value) )) );
+			const usize		idx  = _memory.AddOrSkip( RVREF(Triple_t( hash, RVREF(value) )) );
 			return &(*this)[ idx ];
 		}
 
 
-		void AddArray (ArrayCRef<pair_t> value)
+		void AddArray (ArrayCRef<Pair_t> value)
 		{
 			FOR( i, value ) {
 				Add( value[i] );
@@ -271,7 +294,7 @@ namespace _types_hidden_
 		}
 
 
-		bool IsExist (const Key_t &key) const
+		ND_ bool IsExist (const Key_t &key) const
 		{
 			usize idx = 0;
 			return FindIndex( key, OUT idx );
@@ -302,8 +325,8 @@ namespace _types_hidden_
 
 		bool Erase (const Key_t &key)					{ return _memory.Erase( KeyPair_t( _hasher( key ), key ) ); }
 		void EraseByIndex (usize index)					{ _memory.EraseByIndex( index ); }
-		void EraseByIter (iterator it)					{ _memory.EraseByIndex( _memory.GetIndex( (triple_t const*) it.RawPtr() ) ); }
-		void EraseByIter (const_iterator it)			{ _memory.EraseByIndex( _memory.GetIndex( (triple_t const*) it.RawPtr() ) ); }
+		void EraseByIter (iterator it)					{ _memory.EraseByIndex( _memory.GetIndex( (Triple_t const*) it.RawPtr() ) ); }
+		void EraseByIter (const_iterator it)			{ _memory.EraseByIndex( _memory.GetIndex( (Triple_t const*) it.RawPtr() ) ); }
 
 		void Free ()									{ _memory.Free(); }
 		void Clear ()									{ _memory.Clear(); }

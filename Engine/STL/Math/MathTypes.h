@@ -29,7 +29,7 @@ namespace GXMath
 # endif
 
 
-	CHECKRES constexpr real operator "" _r (long double value)	{ return real(value); }
+	ND_ constexpr real operator "" _r (long double value)	{ return real(value); }
 
 
 

@@ -139,7 +139,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPipelineStage
 	
-	inline constexpr bool  EPipelineStage::IsGraphics (type value)
+	ND_ inline constexpr bool  EPipelineStage::IsGraphics (type value)
 	{
 		return value >= TopOfPipe and value <= BottomOfPipe;
 	}

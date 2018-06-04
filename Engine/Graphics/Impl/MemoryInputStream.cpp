@@ -1,5 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
+#if 0
+
 #include "Engine/Graphics/Public/MemStream.h"
 #include "Engine/Graphics/Impl/GraphicsBaseModule.h"
 #include "Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
@@ -33,7 +35,7 @@ namespace Graphics
 
 	// variables
 	private:
-		File::RFilePtr	_file;
+		RFilePtr		_file;
 		BinaryArray		_cache;
 
 
@@ -97,3 +99,5 @@ namespace Graphics
 
 }	// Graphics
 }	// Engine
+
+#endif

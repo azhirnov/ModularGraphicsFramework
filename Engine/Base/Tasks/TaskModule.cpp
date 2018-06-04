@@ -2,9 +2,9 @@
 
 #include "Engine/Base/Common/IDs.h"
 #include "Engine/Base/Modules/Module.h"
-#include "Engine/Base/Tasks/AsyncMessage.h"
+#include "Engine/Base/Public/AsyncMessage.h"
 #include "Engine/Base/Tasks/TaskManager.h"
-#include "Engine/Base/Threads/ParallelThread.h"
+#include "Engine/Base/Public/ParallelThread.h"
 
 #include "Engine/STL/Containers/CircularQueue.h"
 #include "Engine/STL/ThreadSafe/MtQueue.h"
@@ -14,40 +14,11 @@ namespace Engine
 namespace Base
 {
 
-/*
-=================================================
-	constructor
-=================================================
-*/
-	TaskModule::TaskModule (GlobalSystemsRef gs,
-							const ModuleConfig &config,
-							const TypeIdList *msgTypes,
-							const TypeIdList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes )
-	{
-		GlobalSystems()->taskModule.Set( this );
-	}
-	
-/*
-=================================================
-	destructor
-=================================================
-*/
-	TaskModule::~TaskModule ()
-	{
-		if ( GetThreadID() == ThreadID::GetCurrent() ) {
-			GlobalSystems()->taskModule.Set( null );
-		}
-	}
-//-----------------------------------------------------------------------------
-
-
-
 	//
 	// Async Task Module
 	//
 
-	class TaskModuleImpl final : public TaskModule
+	class TaskModuleImpl final : public Module
 	{
 	// types
 	private:
@@ -109,8 +80,10 @@ namespace Base
 =================================================
 */
 	TaskModuleImpl::TaskModuleImpl (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::TaskModule &info) :
-		TaskModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
+		GlobalSystems()->taskModule._Set( this );
+
 		SetDebugName( GlobalSystems()->parallelThread->GetDebugName() + "_Tasks"_str );
 
 		_SubscribeOnMsg( this, &TaskModuleImpl::_OnModuleAttached_Impl );
@@ -164,6 +137,10 @@ namespace Base
 
 		ASSERT( _msgQueue.GetCurrentQueueCount() == 0 );
 		ASSERT( _msgQueue.GetPendingQueueCount() == 0 );
+
+		if ( GetThreadID() == ThreadID::GetCurrent() ) {
+			GlobalSystems()->taskModule._Set( null );
+		}
 	}
 	
 /*

@@ -4,6 +4,7 @@
 
 #include "Engine/STL/Containers/MapUtils.h"
 #include "Engine/STL/Containers/IndexedArray.h"
+#include "Engine/STL/Containers/IndexedIterator.h"
 
 namespace GX_STL
 {
@@ -32,6 +33,7 @@ namespace _types_hidden_
 		using Value_t				= Value;
 
 		using const_iterator		= Ptr< const Value >;
+		using idx_iterator			= IndexedIterator< const Value_t >;
 
 		using values_range_t		= ArrayRef< Value >;
 		using const_values_range_t	= ArrayCRef< Value >;
@@ -47,10 +49,10 @@ namespace _types_hidden_
 		// methods
 			_ValueSearchCmp (const Key *k): _key(*k) {}
 
-			bool operator == (const Value &value) const		{ return GXMath::All( _key == value ); }
+			bool operator == (const Value &value) const		{ return _key == value; }
 			bool operator != (const Value &value) const		{ return not ( *this == value ); }
-			bool operator <  (const Value &value) const		{ return GXMath::All( _key < value ); }
-			bool operator >  (const Value &value) const		{ return GXMath::All( _key > value ); }
+			bool operator <  (const Value &value) const		{ return value > _key; }
+			bool operator >  (const Value &value) const		{ return _key > value; }
 		};
 
 		using _MapUtils_t	= _types_hidden_::MapUtils< Container< Value, S, MC >, Value, _ValueSearchCmp, IsUnique >;
@@ -83,18 +85,23 @@ namespace _types_hidden_
 		}
 
 
-		operator		const_values_range_t () const
+		ND_ operator ArrayCRef< Value > () const
 		{
 			return _memory;
 		}
+		
+		ND_ operator UniBuffer<const Value> () const
+		{
+			return UniBuffer<const Value>{ ArrayCRef< Value >{_memory} };
+		}
 
 
-		Value const &	operator [] (usize i) const
+		ND_ Value const &	operator [] (usize i) const
 		{
 			return ReferenceCast< const Value >( _memory[i] );
 		}
 		
-		Value const &	operator () (const Key_t &key) const
+		ND_ Value const &	operator () (const Key_t &key) const
 		{
 			usize	idx = 0;
 			FindIndex( key, OUT idx );
@@ -102,26 +109,26 @@ namespace _types_hidden_
 		}
 
 
-		Self &			operator << (Value &&value)
+		Self &		operator << (Value &&value)
 		{
 			Add( RVREF( value ) );
 			return *this;
 		}
 
 		template <typename V>
-		Self &			operator << (const V &value)
+		Self &		operator << (const V &value)
 		{
 			Add( Value(value) );
 			return *this;
 		}
 
 
-		bool			operator == (const_values_range_t right) const
+		ND_ bool	operator == (const_values_range_t right) const
 		{
 			return _memory == right._memory;
 		}
 
-		bool			operator != (const_values_range_t right) const
+		ND_ bool	operator != (const_values_range_t right) const
 		{
 			return not (*this == right);
 		}
@@ -131,15 +138,20 @@ namespace _types_hidden_
 		Self &		operator =  (const Self &right)	= default;
 
 
-		Value const &	Front ()		const	{ return (*this)[0]; }
-		Value const &	Back ()			const	{ return (*this)[ LastIndex() ]; }
+		ND_ Value const &	Front ()		const	{ return (*this)[0]; }
+		ND_ Value const &	Back ()			const	{ return (*this)[ LastIndex() ]; }
 
-		bool			Empty ()		const	{ return _memory.Empty(); }
-		usize			Count ()		const	{ return _memory.Count(); }
-		usize			LastIndex ()	const	{ return _memory.LastIndex(); }
-		BytesU			Size ()			const	{ return _memory.Size(); }
-
+		ND_ bool			Empty ()		const	{ return _memory.Empty(); }
+		ND_ usize			Count ()		const	{ return _memory.Count(); }
+		ND_ usize			LastIndex ()	const	{ return _memory.LastIndex(); }
+		ND_ BytesU			Size ()			const	{ return _memory.Size(); }
 		
+
+		// iterators
+		ND_ auto			begin ()		const	{ return idx_iterator{ *this, 0 }; }
+		ND_ auto			end ()			const	{ return idx_iterator{ *this, Count() }; }
+		
+
 		// if IsUnique == true
 		// if Map contains same value, then the old value will be replaced
 		const_iterator Add (const Value &value)
@@ -208,7 +220,7 @@ namespace _types_hidden_
 		}
 
 
-		bool IsExist (const Key_t &key) const
+		ND_ bool IsExist (const Key_t &key) const
 		{
 			usize idx = 0;
 			return FindIndex( key, OUT idx );
@@ -256,12 +268,12 @@ namespace _types_hidden_
 		}
 
 
-		values_range_t  GetRange (const usize first, const usize last)
+		ND_ values_range_t  GetRange (const usize first, const usize last)
 		{
 			return _memory.SubArray( first, last - first + 1 );
 		}
 
-		const_values_range_t  GetRange (const usize first, const usize last) const
+		ND_ const_values_range_t  GetRange (const usize first, const usize last) const
 		{
 			return _memory.SubArray( first, last - first + 1 );
 		}
@@ -358,6 +370,7 @@ namespace _types_hidden_
 }	// _types_hidden_
 
 
+	// dynamic size
 	template <	typename Value,
 				typename S = typename AutoDetectCopyStrategy< Value >::type,
 				typename MC = MemoryContainer< Value >
@@ -372,6 +385,7 @@ namespace _types_hidden_
 	using MultiSet = _types_hidden_::BaseSet< Array, Value, false, S, MC >;
 	
 
+	// static size
 	template <typename Value, usize Size>
 	using FixedSizeSet = _types_hidden_::BaseSet< Array, Value, true,
 								typename AutoDetectCopyStrategy< Value >::type,
@@ -382,9 +396,19 @@ namespace _types_hidden_
 	using FixedSizeMultiSet = _types_hidden_::BaseSet< Array, Value, false,
 									typename AutoDetectCopyStrategy< Value >::type,
 									StaticMemoryContainer< Value, Size > >;
+	
 
-	//template <typename EnumType>
-	//using EnumSet = FixedSizeSet< typename EnumType::type, EnumType::_Count >;
+	// static + dynamic size
+	template <typename Value, usize Size>
+	using MixedSizeSet = _types_hidden_::BaseSet< Array, Value, true,
+								typename AutoDetectCopyStrategy< Value >::type,
+								StaticMemoryContainer< Value, Size > >;
+	
+
+	template <typename Value, usize Size>
+	using MixedSizeMultiSet = _types_hidden_::BaseSet< Array, Value, false,
+									typename AutoDetectCopyStrategy< Value >::type,
+									StaticMemoryContainer< Value, Size > >;
 
 	
 	template <	template <typename, typename, typename> class Container,

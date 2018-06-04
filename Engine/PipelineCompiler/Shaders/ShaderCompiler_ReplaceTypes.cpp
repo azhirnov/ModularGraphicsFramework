@@ -654,12 +654,12 @@ namespace PipelineCompiler
 	ReplaceTypesInNode2Arr
 =================================================
 */
-	static bool ReplaceTypesInNode2Arr (glslang::TIntermBinary* node, const FieldTypeInfo &oldField, const FieldTypeInfo &newField, const Replacer &replacer)
+	static bool ReplaceTypesInNode2Arr (glslang::TIntermBinary*, const FieldTypeInfo &oldField, const FieldTypeInfo &newField, const Replacer &replacer)
 	{
 		CHECK_ERR( replacer.nodes.Count() >= 2 );
 
-		TIntermNode *	root1  = *(replacer.nodes.End() - 1);
-		TIntermNode *	root2 = *(replacer.nodes.End() - 2);
+		TIntermNode *	root1  = *(replacer.nodes.end() - 1);
+		TIntermNode *	root2 = *(replacer.nodes.end() - 2);
 
 		if ( root1 == null or
 			 root2 == null or
@@ -902,9 +902,9 @@ namespace PipelineCompiler
 	RecursiveProcessConstUnionNode
 =================================================
 */
-	static bool RecursiveProcessConstUnionNode (TIntermNode* node, Replacer &replacer)
+	static bool RecursiveProcessConstUnionNode (TIntermNode*, Replacer &)
 	{
-		glslang::TIntermConstantUnion*	cu = node->getAsConstantUnion();
+		//glslang::TIntermConstantUnion*	cu = node->getAsConstantUnion();
 		
 		_SLOG( ("TIntermConstantUnion ("_str << uid << ") " << cu->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
 
@@ -957,9 +957,9 @@ namespace PipelineCompiler
 	RecursiveProcessSymbolNode
 =================================================
 */
-	static bool RecursiveProcessSymbolNode (TIntermNode* node, Replacer &replacer)
+	static bool RecursiveProcessSymbolNode (TIntermNode*, Replacer &)
 	{
-		glslang::TIntermSymbol*		symbol = node->getAsSymbolNode();
+		//glslang::TIntermSymbol*		symbol = node->getAsSymbolNode();
 		
 		_SLOG( ("TIntermSymbol ("_str << uid << ") " << symbol->getName().c_str() << "; " << symbol->getId() << 
 				"; " << symbol->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
@@ -973,9 +973,9 @@ namespace PipelineCompiler
 	RecursiveProcessTypedNode
 =================================================
 */
-	static bool RecursiveProcessTypedNode (TIntermNode* node, Replacer &replacer)
+	static bool RecursiveProcessTypedNode (TIntermNode*, Replacer &)
 	{
-		glslang::TIntermTyped*		typed = node->getAsTyped();
+		//glslang::TIntermTyped*		typed = node->getAsTyped();
 		
 		_SLOG( ("TIntermTyped ("_str << uid << ") " << typed->getType().getCompleteString().c_str()).cstr(), ELog::Debug );
 
@@ -988,9 +988,9 @@ namespace PipelineCompiler
 	RecursiveProcessOperatorNode
 =================================================
 */
-	static bool RecursiveProcessOperatorNode (TIntermNode* node, Replacer &replacer)
+	static bool RecursiveProcessOperatorNode (TIntermNode*, Replacer &)
 	{
-		glslang::TIntermOperator*	op = node->getAsOperator();
+		//glslang::TIntermOperator*	op = node->getAsOperator();
 		
 		_SLOG( ("TIntermOperator ("_str << uid << ") " << op->getCompleteString().c_str()).cstr(), ELog::Debug );
 

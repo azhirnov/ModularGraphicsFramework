@@ -57,8 +57,8 @@ namespace GX_STL
 		{ \
 			switch ( ::GX_STL::__write_to_log( (_text_), (_type_), (_file_), (_line_) ) ) \
 			{ \
-				case /*retry*/-1 :	GX_BREAK_POINT();	break; \
-				case /*abort*/-2 :	::exit(1);			break; \
+				case /*retry*/-1 :	GX_BREAK_POINT();		break; \
+				case /*abort*/-2 :	::exit( EXIT_FAILURE );	break; \
 			} \
 		}
 #	endif	// __GX_FAST__

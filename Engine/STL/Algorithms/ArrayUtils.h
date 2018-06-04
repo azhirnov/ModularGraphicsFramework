@@ -16,19 +16,19 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, usize I>
-	CHECKRES constexpr forceinline usize  CountOf (const T (&)[I])
+	ND_ constexpr forceinline usize  CountOf (const T (&)[I])
 	{
 		return I;
 	}
 	
 	template <typename T, T First, T ...Values>
-	CHECKRES constexpr forceinline usize  CountOf ()
+	ND_ constexpr forceinline usize  CountOf ()
 	{
 		return sizeof...(Values) + 1;
 	}
 	
 	template <typename ...Types>
-	CHECKRES constexpr forceinline usize  CountOf ()
+	ND_ constexpr forceinline usize  CountOf ()
 	{
 		return sizeof...(Types);
 	}
@@ -67,13 +67,13 @@ namespace GXTypes
 
 
 	template <typename Arr>
-	CHECKRES constexpr forceinline usize CountOf (const Arr &arr, _types_hidden_::HasCountMethod_t<Arr> = 0)
+	ND_ constexpr forceinline usize CountOf (const Arr &arr, _types_hidden_::HasCountMethod_t<Arr> = 0)
 	{
 		return arr.Count();
 	}
 
 	template <typename Arr>
-	CHECKRES constexpr forceinline usize CountOf (const Arr &arr, _types_hidden_::HasStdSizeMethod_t<Arr> = 0)
+	ND_ constexpr forceinline usize CountOf (const Arr &arr, _types_hidden_::HasStdSizeMethod_t<Arr> = 0)
 	{
 		return arr.size();
 	}

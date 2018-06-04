@@ -7,7 +7,8 @@
 #include "Engine/Platforms/Public/Tools/WindowHelper.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 #include "Engine/Platforms/OpenGL/450/GL4BaseModule.h"
-#include "Engine/Platforms/OpenGL/450/GL4Sampler.h"
+#include "Engine/Platforms/OpenGL/450/GL4SamplerCache.h"
+#include "Engine/Platforms/OpenGL/450/GL4ResourceCache.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinContext.h"
 
 namespace Engine
@@ -42,11 +43,12 @@ namespace Platforms
 											GpuMsg::GetGraphicsModules,
 											GpuMsg::ThreadBeginFrame,
 											GpuMsg::ThreadEndFrame,
+											GpuMsg::GetGraphicsSettings,
+											GpuMsg::GetComputeSettings,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetGLDeviceInfo,
 											GpuMsg::GetGLPrivateClasses,
-											GpuMsg::GetGraphicsSettings,
-											GpuMsg::GetComputeSettings
+											GpuMsg::GetDeviceProperties
 										> >::Append< QueueMsgList_t >;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
@@ -59,6 +61,7 @@ namespace Platforms
 		using Context				= PlatformGL::GLRenderingContext;
 		using Device				= PlatformGL::GL4Device;
 		using SamplerCache			= PlatformGL::GL4SamplerCache;
+		using ResourceCache			= PlatformGL::GL4ResourceCache;
 
 
 	// constants
@@ -79,6 +82,7 @@ namespace Platforms
 		ModulePtr			_cmdQueue;
 		
 		SamplerCache		_samplerCache;
+		ResourceCache		_resourceCache;
 
 		bool				_isWindowVisible;
 
@@ -113,6 +117,7 @@ namespace Platforms
 		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
 		bool _GetGLDeviceInfo (const Message< GpuMsg::GetGLDeviceInfo > &);
 		bool _GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &);
+		bool _GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &);
 
 	private:
 		bool _CreateDevice ();
@@ -134,7 +139,7 @@ namespace Platforms
 	OpenGLThread::OpenGLThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
 		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
 		_settings( ci.settings ),	_device( gs ),
-		_samplerCache(),			_isWindowVisible( false )
+		_isWindowVisible( false )
 	{
 		SetDebugName( "OpenGLThread" );
 		
@@ -160,6 +165,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenGLThread::_GetGLPrivateClasses );
 		_SubscribeOnMsg( this, &OpenGLThread::_GetGraphicsSettings );
 		_SubscribeOnMsg( this, &OpenGLThread::_GetComputeSettings );
+		_SubscribeOnMsg( this, &OpenGLThread::_GetDeviceProperties );
 
 		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
 
@@ -188,7 +194,7 @@ namespace Platforms
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial or GetState() == EState::LinkingFailed );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 
 		CHECK_LINKING(( _window = PlatformTools::WindowHelper::FindWindow( GlobalSystems() ) ));
 
@@ -207,7 +213,7 @@ namespace Platforms
 											CreateInfo::GpuSyncManager{ this },
 											OUT _syncManager ) );
 
-			CHECK_ERR( _Attach( "sync", _syncManager, true ) );
+			CHECK_ERR( _Attach( "sync", _syncManager ) );
 		}
 
 		// create queue
@@ -215,10 +221,10 @@ namespace Platforms
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											GLCommandQueueModuleID,
 											GlobalSystems(),
-											CreateInfo::GpuCommandQueue{ this, EQueueFamily::All },
+											CreateInfo::GpuCommandQueue{ this, EQueueFamily::Default },
 											OUT _cmdQueue ) );
 			
-			CHECK_ERR( _Attach( "queue", _cmdQueue, true ) );
+			CHECK_ERR( _Attach( "queue", _cmdQueue ) );
 
 			CHECK_ERR( _CopySubscriptions< QueueMsgList_t >( _cmdQueue ) );
 			CHECK_ERR( ReceiveEvents< QueueEventList_t >( _cmdQueue ) );
@@ -378,6 +384,8 @@ namespace Platforms
 		if ( _settings.flags[ GraphicsSettings::EFlags::DebugContext ] )
 			CHECK( _device.InitDebugReport() );
 		
+		_device.WriteInfo();
+
 		CHECK( _DefCompose( false ) );
 
 		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
@@ -447,9 +455,9 @@ namespace Platforms
 	bool OpenGLThread::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
 	{
 		if ( _device.IsDeviceCreated()									and
-			 msg->desc.visibility != WindowDesc::EVisibility::Invisible )
+			 msg->descr.visibility != WindowDesc::EVisibility::Invisible )
 		{
-			CHECK_ERR( _device.OnResize( msg->desc.surfaceSize ) );
+			CHECK_ERR( _device.OnResize( msg->descr.surfaceSize ) );
 		}
 		return true;
 	}
@@ -478,13 +486,15 @@ namespace Platforms
 */
 	bool OpenGLThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
 	{
-		msg->result.Set({
-			this,
-			null,
-			_syncManager,
-			GetDevice()->GetDefaultRenderPass(),
-			GetDevice()->GetSwapchainLength()
-		});
+		GpuMsg::GetDeviceInfo::Info	info;
+		info.gpuThread		= this;
+		info.sharedThread	= null;
+		info.syncManager	= _syncManager;
+		info.memManager		= null;
+		info.renderPass		= GetDevice()->GetDefaultRenderPass();
+		info.imageCount		= GetDevice()->GetSwapchainLength();
+
+		msg->result.Set( info );
 		return true;
 	}
 	
@@ -493,7 +503,7 @@ namespace Platforms
 	_GetGLDeviceInfo
 =================================================
 */
-	bool OpenGLThread::_GetGLDeviceInfo (const Message< GpuMsg::GetGLDeviceInfo > &msg)
+	bool OpenGLThread::_GetGLDeviceInfo (const Message< GpuMsg::GetGLDeviceInfo > &)
 	{
 		TODO("");
 		return true;
@@ -506,7 +516,11 @@ namespace Platforms
 */
 	bool OpenGLThread::_GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &msg)
 	{
-		msg->result.Set({ &_device, &_samplerCache });
+		msg->result.Set({
+			&_device,
+			&_samplerCache,
+			&_resourceCache
+		});
 		return true;
 	}
 	
@@ -534,6 +548,17 @@ namespace Platforms
 		cs.version	= _settings.version;
 
 		msg->result.Set( RVREF(cs) );
+		return true;
+	}
+	
+/*
+=================================================
+	_GetDeviceProperties
+=================================================
+*/
+	bool OpenGLThread::_GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &msg)
+	{
+		msg->result.Set( _device.GetProperties() );
 		return true;
 	}
 //-----------------------------------------------------------------------------

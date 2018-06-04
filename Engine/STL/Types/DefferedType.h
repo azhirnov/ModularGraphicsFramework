@@ -19,7 +19,7 @@ namespace GXTypes
 	{
 	// types
 	private:
-		typedef DeferredType< Size, Align, false >	Self;
+		using Self	= DeferredType< Size, Align, false >;
 
 
 	// variables
@@ -104,33 +104,33 @@ namespace GXTypes
 
 
 		template <typename T>
-		CHECKRES forceinline T&  Get ()
+		ND_ forceinline T&  Get ()
 		{
 			ASSERT( IsDefined() and TypeIdOf<T>() == _typeid );
 			return ReferenceCast<T>( _data );
 		}
 
 		template <typename T>
-		CHECKRES forceinline T const&  Get () const
+		ND_ forceinline T const&  Get () const
 		{
 			ASSERT( IsDefined() and TypeIdOf<T>() == _typeid );
 			return ReferenceCast<T>( _data );
 		}
 
 
-		forceinline bool IsDefined () const
+		ND_ forceinline bool IsDefined () const
 		{
 			return _isDefined;
 		}
 		
 		template <typename T>
-		forceinline bool IsNull () const
+		ND_ forceinline bool IsNull () const
 		{
 			return not IsNotNull<T>();
 		}
 
 		template <typename T>
-		forceinline bool IsNotNull () const
+		ND_ forceinline bool IsNotNull () const
 		{
 			ASSERT( TypeIdOf<T>() == _typeid );
 
@@ -172,7 +172,7 @@ namespace GXTypes
 
 
 	//
-	// Hidden OS Type with destructor
+	// Deferred Type with destructor
 	//
 	
 	template <usize Size, usize Align>
@@ -180,10 +180,9 @@ namespace GXTypes
 	{
 	// types
 	private:
-		typedef DeferredType< Size, Align, true >	Self;
-		typedef DeferredType< Size, Align, false >	Base_t;
-		
-		typedef void (*Destructor_t) (void *);
+		using Self			= DeferredType< Size, Align, true >;
+		using Base_t		= DeferredType< Size, Align, false >;
+		using Destructor_t	= void (*) (void *);
 
 
 	// variables

@@ -11,10 +11,10 @@
 #include "Engine/Platforms/Public/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Public/GPU/Framebuffer.h"
 #include "Engine/Platforms/Public/GPU/Memory.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Messages.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1Sampler.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1RenderPass.h"
-#include "Engine/Platforms/Vulkan/Impl/Vk1PipelineCache.h"
+#include "Engine/Platforms/Vulkan/110/Vk1Messages.h"
+#include "Engine/Platforms/Vulkan/110/Vk1SamplerCache.h"
+#include "Engine/Platforms/Vulkan/110/Vk1RenderPass.h"
+#include "Engine/Platforms/Vulkan/110/Vk1PipelineCache.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 namespace Engine
@@ -205,6 +205,7 @@ namespace Platforms
 		compute.commandBuilder	= VkCommandBuilderModuleID;
 		compute.buffer			= VkBufferModuleID;
 		compute.image			= VkImageModuleID;
+		compute.sampler			= VkSamplerModuleID;
 		compute.memory			= VkManagedMemoryModuleID;
 		compute.memoryManager	= VkMemoryManagerModuleID;
 		compute.resourceTable	= VkPipelineResourceTableModuleID;

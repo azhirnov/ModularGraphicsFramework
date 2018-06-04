@@ -8,17 +8,10 @@ namespace GX_STL
 {
 namespace GXTypes
 {
-	namespace StringUtils
-	{
-		template <typename T>
-		constexpr forceinline T ToLower (const T &c);
-
-	}	// StringUtils
-	
 	namespace _types_hidden_
 	{
 		template <typename T>
-		forceinline usize StrLength (const T *str) noexcept;
+		ND_ forceinline usize StrLength (const T *str) noexcept;
 
 	}	// _types_hidden_
 
@@ -39,10 +32,9 @@ namespace GXTypes
 	{
 	// types
 	public:
-		typedef TStringRef<T>		Self;
-		typedef T					Value_t;
-
-		typedef typename TypeTraits::RemoveConst<T>		C;
+		using Self		= TStringRef<T>;
+		using Value_t	= T;
+		using C			= typename TypeTraits::RemoveConst<T>;
 
 
 	// variables
@@ -68,86 +60,86 @@ namespace GXTypes
 		TStringRef (Self &&other) = default;
 		TStringRef (const Self &other) = default;
 
-		T		&	operator [] (usize i);
-		T const	&	operator [] (usize i) const;
+		ND_ T		&	operator [] (usize i);
+		ND_ T const&	operator [] (usize i) const;
 		
-		Self &		operator =  (Self &&right)		= default;
-		Self &		operator =  (const Self &right)	= default;
+		Self &			operator =  (Self &&right)		= default;
+		Self &			operator =  (const Self &right)	= default;
 
-		bool		operator == (TStringRef<const T> right) const;
-		bool		operator != (TStringRef<const T> right) const;
-		bool		operator == (const T *right) const;
-		bool		operator != (const T *right) const;
+		ND_ bool		operator == (TStringRef<const T> right) const;
+		ND_ bool		operator != (TStringRef<const T> right) const;
+		ND_ bool		operator == (const T *right) const;
+		ND_ bool		operator != (const T *right) const;
 		
-		friend bool	operator == (const T * left, const Self &right)	{ return right == left; }
-		friend bool	operator != (const T * left, const Self &right)	{ return right != left; }
+		ND_ bool		operator <  (TStringRef<const T> right) const;
+		ND_ bool		operator >  (TStringRef<const T> right) const;
+		ND_ bool		operator <= (TStringRef<const T> right) const;
+		ND_ bool		operator >= (TStringRef<const T> right) const;
+
+		ND_ friend bool	operator == (const T * left, const Self &right)	{ return right == left; }
+		ND_ friend bool	operator != (const T * left, const Self &right)	{ return right != left; }
 		
-		bool		operator <  (TStringRef<const T> right) const;
-		bool		operator >  (TStringRef<const T> right) const;
-		bool		operator <= (TStringRef<const T> right) const;
-		bool		operator >= (TStringRef<const T> right) const;
+		ND_ friend bool	operator <  (const T * left, const Self &right)	{ return Self(left) < right; }
+		ND_ friend bool	operator >  (const T * left, const Self &right)	{ return Self(left) > right; }
+		ND_ friend bool	operator <= (const T * left, const Self &right)	{ return Self(left) <= right; }
+		ND_ friend bool	operator >= (const T * left, const Self &right)	{ return Self(left) >= right; }
+
+		ND_ operator	ArrayRef<T> ()					{ return ArrayRef<T>( _memory, Length() ); }
+		ND_ operator	ArrayCRef<T> ()			const	{ return ArrayCRef<T>( _memory, Length() ); }
+		ND_ operator	TStringRef<const T> ()	const	{ return TStringRef<const T>( _memory, Length() ); }
+
+		ND_ T		*	ptr ();
+		ND_ T const*	ptr ()					const;
+		ND_ T const*	cstr ()					const	{ ASSERT( IsNullTerminated() ); return ptr(); }
+
+		ND_ T const*	RawPtr ()				const	{ return _memory; }
 		
-		friend bool	operator <  (const T * left, const Self &right)	{ return Self(left) < right; }
-		friend bool	operator >  (const T * left, const Self &right)	{ return Self(left) > right; }
-		friend bool	operator <= (const T * left, const Self &right)	{ return Self(left) <= right; }
-		friend bool	operator >= (const T * left, const Self &right)	{ return Self(left) >= right; }
+		ND_ T		&	Back ()							{ return (*this)[ Length()-1 ]; }
+		ND_ T const&	Back ()					const	{ return (*this)[ Length()-1 ]; }
+		ND_ T		&	Front ()						{ return *ptr(); }
+		ND_ T const&	Front ()				const	{ return *ptr(); }
 
-		operator	ArrayRef<T> ()					{ return ArrayRef<T>( _memory, Length() ); }
-		operator	ArrayCRef<T> ()			const	{ return ArrayCRef<T>( _memory, Length() ); }
-		operator	TStringRef<const T> ()	const	{ return TStringRef<const T>( _memory, Length() ); }
+		ND_ usize		Length ()				const	{ return _count - usize(_count > 0); }
+		ND_ usize		Count ()				const	{ return Length(); }
+		ND_ BytesU		Size ()					const	{ return BytesU( sizeof(T) * _count ); }
+		ND_ BytesU		LengthInBytes ()		const	{ return BytesU( sizeof(T) * Length() ); }
 
-		T		*	ptr ();
-		T const	*	ptr ()					const;
-		T const	*	cstr ()					const	{ ASSERT( IsNullTerminated() ); return ptr(); }
-
-		T const	*	RawPtr ()				const	{ return _memory; }
+		ND_ bool		Empty ()				const	{ return _count <= 1; }
 		
-		T		&	Back ()							{ return (*this)[ Length()-1 ]; }
-		T const	&	Back ()					const	{ return (*this)[ Length()-1 ]; }
-		T		&	Front ()						{ return *ptr(); }
-		T const	&	Front ()				const	{ return *ptr(); }
-
-		usize		Length ()				const	{ return _count - usize(_count > 0); }
-		usize		Count ()				const	{ return Length(); }
-		BytesU		Size ()					const	{ return BytesU( sizeof(T) * _count ); }
-		BytesU		LengthInBytes ()		const	{ return BytesU( sizeof(T) * Length() ); }
-
-		bool		Empty ()				const	{ return _count <= 1; }
-		
-		T		*	Begin ()						{ return ptr(); }
-		T const	*	Begin ()				const	{ return ptr(); }
-		T		*	End ()							{ return ptr() + Length(); }
-		T const	*	End ()					const	{ return ptr() + Length(); }
+		ND_ T		*	Begin ()						{ return ptr(); }
+		ND_ T const*	Begin ()				const	{ return ptr(); }
+		ND_ T		*	End ()							{ return ptr() + Length(); }
+		ND_ T const*	End ()					const	{ return ptr() + Length(); }
 
 
 		// TODO: rename
-		bool  IsInString (const T &valueRef)const	{ return ArrayCRef<T>(*this).IsInArray( valueRef ); }
-		usize GetIndex (const T &valueRef)	const	{ return ArrayCRef<T>(*this).GetIndex( valueRef ); }
+		ND_ bool  IsInString (const T &valueRef)const	{ return ArrayCRef<T>(*this).IsInArray( valueRef ); }
+		ND_ usize GetIndex (const T &valueRef)	const	{ return ArrayCRef<T>(*this).GetIndex( valueRef ); }
 
-		bool EqualsIC (TStringRef<const T> right)	const;
+		ND_ bool EqualsIC (TStringRef<const T> right)	const;
 
-		bool StartsWith (TStringRef<const T> right) const;
-		bool StartsWithIC (TStringRef<const T> right) const;
+		ND_ bool StartsWith (TStringRef<const T> right) const;
+		ND_ bool StartsWithIC (TStringRef<const T> right) const;
 
-		bool EndsWith (TStringRef<const T> right) const;
-		bool EndsWithIC (TStringRef<const T> right) const;
+		ND_ bool EndsWith (TStringRef<const T> right) const;
+		ND_ bool EndsWithIC (TStringRef<const T> right) const;
 
-		bool HasChar (T right) const;
-		bool HasCharIC (T right) const;
+		ND_ bool HasChar (T right) const;
+		ND_ bool HasCharIC (T right) const;
 
-		bool HasSubString (TStringRef<const T> right) const;
-		bool HasSubStringIC (TStringRef<const T> right) const;
+		ND_ bool HasSubString (TStringRef<const T> right) const;
+		ND_ bool HasSubStringIC (TStringRef<const T> right) const;
 
 		//bool NumericLess (TStringRef<const T> right) const;
 
-		bool LessThan (TStringRef<const T> right) const;
-		bool LessThanIC (TStringRef<const T> right) const;
+		ND_ bool LessThan (TStringRef<const T> right) const;
+		ND_ bool LessThanIC (TStringRef<const T> right) const;
 		
-		bool GreaterThan (TStringRef<const T> right) const;
-		bool GreaterThanIC (TStringRef<const T> right) const;
+		ND_ bool GreaterThan (TStringRef<const T> right) const;
+		ND_ bool GreaterThanIC (TStringRef<const T> right) const;
 			  
-		bool EqualsInRange (TStringRef<const T> right, usize begin, usize end) const;
-		bool EqualsInRangeIC (TStringRef<const T> right, usize begin, usize end) const;
+		ND_ bool EqualsInRange (TStringRef<const T> right, usize begin, usize end) const;
+		ND_ bool EqualsInRangeIC (TStringRef<const T> right, usize begin, usize end) const;
 
 		bool Find (TStringRef<const T> value, OUT usize &pos, usize start = 0) const;
 		bool Find (const T value, OUT usize &pos, usize start = 0) const;
@@ -155,20 +147,20 @@ namespace GXTypes
 		bool FindIC (TStringRef<const T> value, OUT usize &pos, usize start = 0) const;
 		bool FindIC (const T value, OUT usize &pos, usize start = 0) const;
 
-		bool IsNullTerminated () const;
+		ND_ bool IsNullTerminated () const;
 
 		// get range
-		TStringRef<T>		SubString (usize pos, usize count = UMax);
-		TStringRef<const T>	SubString (usize pos, usize count = UMax) const;
+		ND_ TStringRef<T>		SubString (usize pos, usize count = UMax);
+		ND_ TStringRef<const T>	SubString (usize pos, usize count = UMax) const;
 		
-		TStringRef<T>		GetInterval (usize begin, usize end);
-		TStringRef<const T>	GetInterval (usize begin, usize end) const;
+		ND_ TStringRef<T>		GetInterval (usize begin, usize end);
+		ND_ TStringRef<const T>	GetInterval (usize begin, usize end) const;
 
-		TStringRef<T>		GetInterval (const T* begin, const T* end);
-		TStringRef<const T>	GetInterval (const T* begin, const T* end) const;
+		ND_ TStringRef<T>		GetInterval (const T* begin, const T* end);
+		ND_ TStringRef<const T>	GetInterval (const T* begin, const T* end) const;
 
 
-		bool				Intersects (TStringRef<const T> other) const;
+		ND_ bool				Intersects (TStringRef<const T> other) const;
 		
 
 		static constexpr bool	IsLinearMemory ()	{ return true; }
@@ -176,14 +168,15 @@ namespace GXTypes
 
 
 		template <typename B, typename S, typename MC>
-		static TStringRef<const T> From (const Array<B,S,MC> &arr);
+		ND_ static TStringRef<const T> From (const Array<B,S,MC> &arr);
 
-		template <typename B>	static TStringRef<const T> From (ArrayRef<B> arr);
-		template <typename B>	static TStringRef<const T> From (ArrayCRef<B> arr);
+		template <typename B>	ND_ static TStringRef<const T> From (ArrayRef<B> arr);
+		template <typename B>	ND_ static TStringRef<const T> From (ArrayCRef<B> arr);
 
 	private:
 		static bool _Equals (const T *left, const T *right, usize length);
 		static bool _EqualsIC (const T *left, const T *right, usize length);
+		static T    _ToLower (T c);
 	};
 	
 	
@@ -193,8 +186,8 @@ namespace GXTypes
 	operator "" _ref
 =================================================
 */
-	inline TStringRef<const char>		operator "" _ref (const char *str, size_t len)		{ return TStringRef<const char>( str, len ); }
-	inline TStringRef<const wchar_t>	operator "" _ref (const wchar_t *str, size_t len)	{ return TStringRef<const wchar_t>( str, len ); }
+	ND_ inline TStringRef<const char>		operator "" _ref (const char *str, size_t len)		{ return TStringRef<const char>( str, len ); }
+	ND_ inline TStringRef<const wchar_t>	operator "" _ref (const wchar_t *str, size_t len)	{ return TStringRef<const wchar_t>( str, len ); }
 	//inline TStringRef<const char16_t>	operator "" _ref (const char16_t *str, size_t len)	{ return TStringRef<const char16_t>( str, len ); }
 	//inline TStringRef<const char32_t>	operator "" _ref (const char32_t *str, size_t len)	{ return TStringRef<const char32_t>( str, len ); }
 	
@@ -327,17 +320,7 @@ namespace GXTypes
 	template <typename T>
 	inline bool TStringRef<T>::operator < (TStringRef<const T> right) const
 	{
-		typedef typename CompileTime::NearUInt::FromType<T>		UType;
-
-		if ( Length() != right.Length() )
-			return Length() < right.Length();
-
-		for (usize i = 0; i < right.Length(); ++i)
-		{
-			if ( (*this)[i] != right[i] )
-				return UType( (*this)[i] ) < UType( right[i] );
-		}
-		return false;
+		return (right > *this);
 	}
 		
 /*
@@ -544,12 +527,23 @@ namespace GXTypes
 	inline bool TStringRef<T>::_EqualsIC (const T *left, const T *right, const usize length)
 	{
 		for (usize i = 0; i < length; ++i) {
-			if ( StringUtils::ToLower( left[i] ) != StringUtils::ToLower( right[i] ) )
+			if ( _ToLower( left[i] ) != _ToLower( right[i] ) )
 				return false;
 		}
 		return true;
 	}
 	
+/*
+=================================================
+	_ToLower
+=================================================
+*/
+	template <typename T>
+	inline T TStringRef<T>::_ToLower (const T c)
+	{
+		return (c >= T('A') and c <= T('Z')) ? c + T('a' - 'A') : c;
+	}
+
 /*
 =================================================
 	Find
@@ -614,7 +608,7 @@ namespace GXTypes
 
 		for (usize i = start; i < Length(); ++i)
 		{
-			while ( StringUtils::ToLower( value[j] ) == StringUtils::ToLower( _memory[i+j] ) and
+			while ( _ToLower( value[j] ) == _ToLower( _memory[i+j] ) and
 					i+j < _count-1 and j < value.Length() )
 			{
 				++j;
@@ -639,11 +633,11 @@ namespace GXTypes
 		if ( Empty() )
 			return false;
 
-		const T	val = StringUtils::ToLower( tValue );
+		const T	val = _ToLower( tValue );
 
 		for (usize i = start; i < Length(); ++i)
 		{
-			if ( StringUtils::ToLower( _memory[i] ) == val ) {
+			if ( _ToLower( _memory[i] ) == val ) {
 				pos = i;
 				return true;
 			}
@@ -792,8 +786,8 @@ namespace GXTypes
 
 		for (usize i = 0; i < min_length; ++i)
 		{
-			const UType a = UType( StringUtils::ToLower( (*this)[i] ) );
-			const UType b = UType( StringUtils::ToLower( right[i] ) );
+			const UType a = UType( _ToLower( (*this)[i] ) );
+			const UType b = UType( _ToLower( right[i] ) );
 
 			if ( a != b )
 				return a < b;
@@ -815,8 +809,8 @@ namespace GXTypes
 
 		for (usize i = 0; i < min_length; ++i)
 		{
-			const UType a = UType( StringUtils::ToLower( (*this)[i] ) );
-			const UType b = UType( StringUtils::ToLower( right[i] ) );
+			const UType a = UType( _ToLower( (*this)[i] ) );
+			const UType b = UType( _ToLower( right[i] ) );
 
 			if ( a != b )
 				return a > b;
@@ -954,7 +948,7 @@ namespace GXTypes
 	template <typename T>
 	struct Hash< TStringRef<T> >
 	{
-		CHECKRES HashResult  operator () (const TStringRef<T> &x) const noexcept
+		ND_ HashResult  operator () (const TStringRef<T> &x) const noexcept
 		{
 			return HashOf( ArrayCRef<T>( x ) );
 		}

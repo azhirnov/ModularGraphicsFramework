@@ -76,8 +76,6 @@ namespace PlatformGL
 		bool _GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &);
 
 	private:
-		bool _IsCreated () const;
-
 		bool _CreateFlippedFramebuffer ();
 		void _DestroyFlippedFramebuffer ();
 
@@ -144,11 +142,11 @@ namespace PlatformGL
 		GL4InternalPixelFormat	ifmt;
 		CHECK_ERR( GL4Enum( format, OUT ifmt ) );
 
-		GL_CALL( glGenRenderbuffers( 1, &id ) );
+		GL_CALL( glGenRenderbuffers( 1, OUT &id ) );
 		CHECK_ERR( id != 0 );
 		GL_CALL( glBindRenderbuffer( GL_RENDERBUFFER, id ) );
 		
-		if ( samples.Get() > 1 ) {
+		if ( samples.IsEnabled() ) {
 			GL_CALL( glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples.Get(), ifmt, size.x, size.y ) );
 		} else {
 			GL_CALL( glRenderbufferStorage( GL_RENDERBUFFER, ifmt, size.x, size.y ) );
@@ -185,7 +183,7 @@ namespace PlatformGL
 		GLenum		attachment = 0;
 		
 		// create flipped framebuffer
-		GL_CALL( glGenFramebuffers( 1, &_flippedFramebufferId ) );
+		GL_CALL( glGenFramebuffers( 1, OUT &_flippedFramebufferId ) );
 		CHECK_ERR( _flippedFramebufferId != 0 );
 		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, _flippedFramebufferId ) );
 
@@ -255,9 +253,9 @@ namespace PlatformGL
 		_samples			= samples;
 
 		// get current binded framebuffer, it must be default framebuffer!
-		GL_CALL( glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, (GLint*)&_framebufferId ) );
+		GL_CALL( glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, OUT (GLint*)&_framebufferId ) );
 
-		const bool	is_multisampled	= samples.Get() > 1;
+		const bool	is_multisampled	= samples.IsEnabled();
 		
 		if ( colorFmt != EPixelFormat::Unknown )
 		{
@@ -349,6 +347,8 @@ namespace PlatformGL
 */
 	bool GL4Device::GL4FlippedSystemFramebuffer::_GetGLFramebufferID (const Message< GpuMsg::GetGLFramebufferID > &msg)
 	{
+		ASSERT( _flippedFramebufferId != 0 );
+
 		msg->result.Set( _flippedFramebufferId );
 		return true;
 	}

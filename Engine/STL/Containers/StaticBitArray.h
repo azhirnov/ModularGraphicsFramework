@@ -62,50 +62,51 @@ namespace GXTypes
 		
 		StaticBitArray (Self &&other) = default;
 		
-		Self &	operator =  (Self &&right)		= default;
-		Self &	operator =  (const Self &right)	= default;
+			Self &	operator =  (Self &&right)		= default;
+			Self &	operator =  (const Self &right)	= default;
 
-		bool	operator == (const Self &right) const;
-		bool	operator != (const Self &right) const;
+		ND_ bool	operator == (const Self &right) const;
+		ND_ bool	operator != (const Self &right) const;
 
-		BitRef	operator [] (index_t i);
-		bool	operator [] (index_t i) const;
+		ND_ BitRef	operator [] (index_t i);
+		ND_ bool	operator [] (index_t i) const;
 		
-		Self &	SetAt (index_t i, bool bit);
-		Self &	Set (index_t i);
-		Self &	Reset (index_t i);
-		bool	Get (index_t i) const;
+		ND_ bool	Get (index_t i) const;
 
-		Self &	And (index_t i);
-		Self &	Or (index_t i);
-		Self &	Xor (index_t i);
+			Self &	SetAt (index_t i, bool bit);
+			Self &	Set (index_t i);
+			Self &	Reset (index_t i);
+
+			Self &	And (index_t i);
+			Self &	Or (index_t i);
+			Self &	Xor (index_t i);
 		
-		Self &	SetAll (bool bit = true);
+			Self &	SetAll (bool bit = true);
 		
 		// add bit
-		Self &	operator |= (index_t i)				{ return Set( i ); }
-		Self	operator |  (index_t i) const		{ return Self(*this).Set( i ); }
+			Self &	operator |= (index_t i)				{ return Set( i ); }
+		ND_ Self	operator |  (index_t i) const		{ return Self(*this).Set( i ); }
 		
 		// remove bit
-		Self &	operator ^= (index_t i)				{ return Reset( i ); }
-		Self	operator ^  (index_t i) const		{ return Self(*this).Reset( i ); }
+			Self &	operator ^= (index_t i)				{ return Reset( i ); }
+		ND_ Self	operator ^  (index_t i) const		{ return Self(*this).Reset( i ); }
 		
-		bool	IsZero ()		const;
-		bool	IsNotZero ()	const				{ return not IsZero(); }
+		ND_ bool	IsZero ()		const;
+		ND_ bool	IsNotZero ()	const				{ return not IsZero(); }
 
-		constexpr bool		Empty ()		const	{ return false; }
-		constexpr usize		Count ()		const	{ return C; }
-		constexpr usize		Capacity ()		const	{ return C; }
-		constexpr usize		MaxCapacity ()	const	{ return Capacity(); }
-		constexpr BytesU	Size ()			const	{ return _memory.Size(); }
-		constexpr BytesU	FullSize ()		const	{ return _memory.FullSize(); }
-		constexpr usize		LastIndex ()	const	{ return Count()-1; }
+		ND_ constexpr bool		Empty ()		const	{ return false; }
+		ND_ constexpr usize		Count ()		const	{ return C; }
+		ND_ constexpr usize		Capacity ()		const	{ return C; }
+		ND_ constexpr usize		MaxCapacity ()	const	{ return Capacity(); }
+		ND_ constexpr BytesU	Size ()			const	{ return _memory.Size(); }
+		ND_ constexpr BytesU	FullSize ()		const	{ return _memory.FullSize(); }
+		ND_ constexpr usize		LastIndex ()	const	{ return Count()-1; }
 
-		operator ArrayCRef<Value_t> () const		{ return _memory; }
+		ND_ operator ArrayCRef<Value_t> ()		const	{ return _memory; }
 		
 
-		static constexpr bool	IsLinearMemory ()	{ return true; }
-		static constexpr bool	IsStaticMemory ()	{ return true; }
+		static constexpr bool	IsLinearMemory ()		{ return true; }
+		static constexpr bool	IsStaticMemory ()		{ return true; }
 
 
 		friend void SwapValues (INOUT Self &left, INOUT Self &right)
@@ -294,7 +295,7 @@ namespace GXTypes
 	template <usize C, typename I>
 	struct Hash< StaticBitArray<C,I> >
 	{
-		CHECKRES HashResult  operator () (const StaticBitArray<C,I> &x) const noexcept
+		ND_ HashResult  operator () (const StaticBitArray<C,I> &x) const noexcept
 		{
 			return HashOf( ArrayCRef<typename StaticBitArray<C,I>::Value_t>( x ) );
 		}

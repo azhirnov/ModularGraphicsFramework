@@ -38,18 +38,18 @@ namespace GXTypes
 	ToStringImpl
 =================================================
 */
-	CHECKRES inline String  ToStringImpl (bool value)		{ return String( value ); }
-	CHECKRES inline String  ToStringImpl (char value)		{ return String( &value, 1 ); }
-	CHECKRES inline String  ToStringImpl (byte value)		{ return String( int(value) ); }
-	CHECKRES inline String  ToStringImpl (ubyte value)		{ return String( uint(value) ); }
-	CHECKRES inline String  ToStringImpl (short value)		{ return String( int(value) ); }
-	CHECKRES inline String  ToStringImpl (ushort value)		{ return String( uint(value) ); }
-	CHECKRES inline String  ToStringImpl (int value)		{ return String( value ); }
-	CHECKRES inline String  ToStringImpl (uint value)		{ return String( value ); }
-	CHECKRES inline String  ToStringImpl (ilong value)		{ return String( value ); }
-	CHECKRES inline String  ToStringImpl (ulong value)		{ return String( value ); }
-	CHECKRES inline String  ToStringImpl (float value)		{ return String( value ); }
-	CHECKRES inline String  ToStringImpl (double value)		{ return String( value ); }
+	ND_ inline String  ToStringImpl (bool value)		{ return String( value ); }
+	ND_ inline String  ToStringImpl (char value)		{ return String( &value, 1 ); }
+	ND_ inline String  ToStringImpl (byte value)		{ return String( int(value) ); }
+	ND_ inline String  ToStringImpl (ubyte value)		{ return String( uint(value) ); }
+	ND_ inline String  ToStringImpl (short value)		{ return String( int(value) ); }
+	ND_ inline String  ToStringImpl (ushort value)		{ return String( uint(value) ); }
+	ND_ inline String  ToStringImpl (int value)			{ return String( value ); }
+	ND_ inline String  ToStringImpl (uint value)		{ return String( value ); }
+	ND_ inline String  ToStringImpl (ilong value)		{ return String( value ); }
+	ND_ inline String  ToStringImpl (ulong value)		{ return String( value ); }
+	ND_ inline String  ToStringImpl (float value)		{ return String( value ); }
+	ND_ inline String  ToStringImpl (double value)		{ return String( value ); }
 
 /*
 =================================================
@@ -93,7 +93,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, usize I, ulong U>
-	CHECKRES inline String  ToStringImpl (const GXMath::Vec<T,I,U> &value, bool shortly = true)
+	ND_ inline String  ToStringImpl (const GXMath::Vec<T,I,U> &value, bool shortly = true)
 	{
 		if ( shortly )
 			return _types_hidden_::VecToStringShort( value );
@@ -107,7 +107,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, usize C, usize R, ulong U>
-	CHECKRES inline String  ToStringImpl (const GXMath::Matrix<T,C,R,U> &value)
+	ND_ inline String  ToStringImpl (const GXMath::Matrix<T,C,R,U> &value)
 	{
 		String	str;
 
@@ -129,7 +129,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const GXMath::Quaternion<T> &value, bool shortly = true)
+	ND_ inline String  ToStringImpl (const GXMath::Quaternion<T> &value, bool shortly = true)
 	{
 		return ToStringImpl( value.xyzw(), shortly );
 	}
@@ -139,12 +139,12 @@ namespace GXTypes
 	ToStringImpl (Color)
 =================================================
 */
-	CHECKRES inline String  ToStringImpl (const GXMath::color4u &value, bool shortly = true)
+	ND_ inline String  ToStringImpl (const GXMath::color4u &value, bool shortly = true)
 	{
 		return ToStringImpl( GXMath::ubyte4( value ), shortly );
 	}
 
-	CHECKRES inline String  ToStringImpl (const GXMath::color4f &value, bool shortly = true)
+	ND_ inline String  ToStringImpl (const GXMath::color4f &value, bool shortly = true)
 	{
 		return ToStringImpl( GXMath::float4( value ), shortly );
 	}
@@ -155,13 +155,13 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const Time<T> &time)
+	ND_ inline String  ToStringImpl (const Time<T> &time)
 	{
 		return ToString( TimeD::FromTime( time ) );
 	}
 	
 	template <>
-	CHECKRES inline String  ToStringImpl (const TimeD &time)
+	ND_ inline String  ToStringImpl (const TimeD &time)
 	{
 		String	str;
 
@@ -191,7 +191,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const Bytes<T> &value)
+	ND_ inline String  ToStringImpl (const Bytes<T> &value)
 	{
 		const T	kb	= T(1) << 14;
 		const T mb	= T(1) << 24;
@@ -213,7 +213,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const Bits<T> &value)
+	ND_ inline String  ToStringImpl (const Bits<T> &value)
 	{
 		const T	kb	= T(1) << 14;
 		const T mb	= T(1) << 24;
@@ -235,7 +235,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const GXMath::Radians<T> &value)
+	ND_ inline String  ToStringImpl (const GXMath::Radians<T> &value)
 	{
 		String	str;
 		str.FormatF( T(value), StringFormatF().Fmt(0,2) ) << " rad";
@@ -248,7 +248,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const GXMath::Degrees<T> &value)
+	ND_ inline String  ToStringImpl (const GXMath::Degrees<T> &value)
 	{
 		String	str;
 		str.FormatF( T(value), StringFormatF().Fmt(0,2) ) << " deg";
@@ -261,7 +261,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const GXMath::Percentage<T> &value)
+	ND_ inline String  ToStringImpl (const GXMath::Percentage<T> &value)
 	{
 		String	str;
 		str.FormatF( value.GetPercents(), StringFormatF().Fmt(0,2) ) << "%";
@@ -274,7 +274,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const GXMath::Rectangle<T> &value)
+	ND_ inline String  ToStringImpl (const GXMath::Rectangle<T> &value)
 	{
 		return	"left: "_str << ToString( value.left ) << ", bottom: " << ToString( value.bottom ) <<
 				", right: " << ToString( value.right ) << ", top: " << ToString( value.top );
@@ -286,7 +286,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const GXMath::AABBox<T> &value)
+	ND_ inline String  ToStringImpl (const GXMath::AABBox<T> &value)
 	{
 		return "min( "_str << ToString( value.Min() ) << " ), max( " << ToString( value.Max() ) << " )";
 	}
@@ -297,7 +297,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const GXMath::Plane<T> &value)
+	ND_ inline String  ToStringImpl (const GXMath::Plane<T> &value)
 	{
 		return "norm: ("_str << ToString( value.Normal() ) << "), dist: " << ToString( value.Distance() );
 	}
@@ -307,7 +307,7 @@ namespace GXTypes
 	ToStringImpl (Date)
 =================================================
 */
-	CHECKRES inline String  ToStringImpl (const OS::Date &value)
+	ND_ inline String  ToStringImpl (const Date &value)
 	{
 		return value.ToString( "yyyy/mm/dm - hh:mi:ss" );
 	}
@@ -318,7 +318,7 @@ namespace GXTypes
 =================================================
 *
 	template <template <typename T, T N, T D> class SF, typename T, T Numerator, T Denominator = 1>
-	CHECKRES inline String  ToStringImpl ()
+	ND_ inline String  ToStringImpl ()
 	{
 		typedef SF
 
@@ -336,7 +336,7 @@ namespace GXTypes
 	ToStringImpl (TypeId)
 =================================================
 */
-	CHECKRES inline String  ToStringImpl (const TypeId &value)
+	ND_ inline String  ToStringImpl (const TypeId &value)
 	{
 		return value.Name();
 	}
@@ -347,7 +347,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const Optional<T> &value)
+	ND_ inline String  ToStringImpl (const Optional<T> &value)
 	{
 		return value ? ToString( value.Get() ) : "(none)";
 	}
@@ -358,7 +358,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (T const * value)
+	ND_ inline String  ToStringImpl (T const * value)
 	{
 		return String().FormatI( ReferenceCast<usize>( value ), 16 );
 	}
@@ -369,7 +369,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (const Ptr<T> &value)
+	ND_ inline String  ToStringImpl (const Ptr<T> &value)
 	{
 		return ToString( value.RawPtr() );
 	}
@@ -380,7 +380,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename B, typename S>
-	CHECKRES inline String  ToStringImpl (const SharedPointer<T,B,S> &value)
+	ND_ inline String  ToStringImpl (const SharedPointer<T,B,S> &value)
 	{
 		return ToString( value.RawPtr() );
 	}
@@ -391,7 +391,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename B, typename WS, typename SPS>
-	CHECKRES inline String  ToStringImpl (const WeakPointer<T,B,WS,SPS> &value)
+	ND_ inline String  ToStringImpl (const WeakPointer<T,B,WS,SPS> &value)
 	{
 		return ToString( value.RawPtr() );
 	}
@@ -402,7 +402,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToStringImpl (ArrayCRef<T> arr)
+	ND_ inline String  ToStringImpl (ArrayCRef<T> arr)
 	{
 		String	str;	str.Reserve( arr.Count() * 4 );
 		FOR( i, arr ) {
@@ -417,7 +417,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename T>
-	CHECKRES inline String  ToString (const T &value)
+	ND_ inline String  ToString (const T &value)
 	{
 		return ToStringImpl( value );
 	}

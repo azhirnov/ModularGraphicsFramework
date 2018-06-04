@@ -112,13 +112,13 @@ namespace PlatformSW
 */
 	ModulePtr SWBaseModule::_GetGPUThread (const ModulePtr &thread)
 	{
-		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetSWPrivateClasses >;
+		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetSWDeviceInfo, GpuMsg::GetSWPrivateClasses >;
 		using GThreadEventMsgList_t	= MessageListFrom< GpuMsg::DeviceBeforeDestroy, ModuleMsg::Delete >;
 
 		ModulePtr	result = thread;
 		
-		if ( not result )
-			result = GlobalSystems()->parallelThread->GetModuleByID( SWThreadModuleID );
+		//if ( not result )
+		//	result = GlobalSystems()->parallelThread->GetModuleByID( SWThreadModuleID );
 
 		if ( not result )
 			result = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventMsgList_t >();

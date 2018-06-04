@@ -4,7 +4,7 @@
 
 #if defined( GRAPHICS_API_VULKAN ) and defined( PLATFORM_WINDOWS )
 
-#include "Engine/Platforms/Vulkan/Impl/vulkan1_platform.h"
+#include "Engine/Platforms/Vulkan/110/vulkan1_platform.h"
 
 namespace Engine
 {
@@ -41,7 +41,7 @@ namespace PlatformVK
 		CHECK_ERR( instance != VK_NULL_HANDLE );
 		CHECK_ERR( windowHandle.IsNotNull<HWND>() );
 		
-		CHECK_ERR( Vk1_PlatformInit( instance ) );
+		CHECK_ERR( Vk1_PlatformInit( instance, null ) );
 
 		VkWin32SurfaceCreateInfoKHR		surface_info = {};
 

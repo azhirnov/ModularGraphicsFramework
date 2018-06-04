@@ -87,7 +87,6 @@ namespace Base
 
 			bool operator == (const ConstructorID &right) const;
 			bool operator >  (const ConstructorID &right) const;
-			bool operator <  (const ConstructorID &right) const;
 		};
 
 
@@ -233,20 +232,6 @@ namespace Base
 					moduleID > right.moduleID :
 					createInfoType != TypeId() and right.createInfoType != TypeId() ?
 						createInfoType > right.createInfoType :
-						false;			// types are equal
-	}
-	
-/*
-=================================================
-	ConstructorID::operator <
-=================================================
-*/
-	inline bool ModulesFactory::ConstructorID::operator <  (const ConstructorID &right) const
-	{
-		return	moduleID != right.moduleID ?
-					moduleID < right.moduleID :
-					createInfoType != TypeId() and right.createInfoType != TypeId() ?
-						createInfoType < right.createInfoType :
 						false;			// types are equal
 	}
 

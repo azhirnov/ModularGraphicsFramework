@@ -7,7 +7,7 @@
 
 namespace GX_STL
 {
-namespace File
+namespace GXFile
 {
 
 	//
@@ -81,23 +81,23 @@ namespace File
 
 	// methods
 	public:
-		RCryptFile (const File::RFilePtr &file, const CryptAlgorithm &alg) :
+		RCryptFile (const RFilePtr &file, const CryptAlgorithm &alg) :
 		  SubRFile( file, file->Pos(), file->RemainingSize() ), _crypt(alg)
 		{}
 
 
-		RCryptFile (const File::RFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg) :
+		RCryptFile (const RFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg) :
 			SubRFile( file, offset, size ), _crypt(alg)
 		{}
 
 			
-		CHECKRES static RCryptFilePtr New (const File::RFilePtr &file, const CryptAlgorithm &alg)
+		ND_ static RCryptFilePtr New (const RFilePtr &file, const CryptAlgorithm &alg)
 		{
 			return new Self( file, alg );
 		}
 
 			
-		CHECKRES static RCryptFilePtr New (const File::RFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg)
+		ND_ static RCryptFilePtr New (const RFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg)
 		{
 			return new Self( file, offset, size, alg );
 		}
@@ -126,7 +126,7 @@ namespace File
 
 
 	private:
-		static SubRFilePtr New (const File::RFilePtr &file, BytesU offset, BytesU size) = delete;
+		static SubRFilePtr New (const RFilePtr &file, BytesU offset, BytesU size) = delete;
 	};
 
 
@@ -153,23 +153,23 @@ namespace File
 
 	// methods
 	public:
-		WCryptFile (const File::WFilePtr &file, const CryptAlgorithm &alg, bool restoreData = true) :
+		WCryptFile (const WFilePtr &file, const CryptAlgorithm &alg, bool restoreData = true) :
 			SubWFile( file, file->Pos(), file->RemainingSize() ), _crypt(alg), _restoreData(restoreData)
 		{}
 
 
-		WCryptFile (const File::WFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg, bool restoreData = true) :
+		WCryptFile (const WFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg, bool restoreData = true) :
 			SubWFile( file, offset, size ), _crypt(alg), _restoreData(restoreData)
 		{}
 		
 
-		CHECKRES static WCryptFilePtr New (const File::WFilePtr &file, const CryptAlgorithm &alg, bool restoreData = true)
+		ND_ static WCryptFilePtr New (const WFilePtr &file, const CryptAlgorithm &alg, bool restoreData = true)
 		{
 			return new Self( file, alg, restoreData );
 		}
 		
 
-		CHECKRES static WCryptFilePtr New (const File::WFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg, bool restoreData = true)
+		ND_ static WCryptFilePtr New (const WFilePtr &file, BytesU offset, BytesU size, const CryptAlgorithm &alg, bool restoreData = true)
 		{
 			return new Self( file, offset, size, alg, restoreData );
 		}
@@ -202,9 +202,9 @@ namespace File
 
 
 	private:
-		static SubWFilePtr New (const File::WFilePtr &file, BytesU offset, BytesU size) = delete;
+		static SubWFilePtr New (const WFilePtr &file, BytesU offset, BytesU size) = delete;
 	};
 	
 
-}	// File
+}	// GXFile
 }	// GX_STL

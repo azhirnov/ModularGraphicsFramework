@@ -22,13 +22,13 @@ namespace GXMath
 	// Float -1.0..1.0
 	public:
 		template <typename T>
-		CHECKRES static Float_t Float (const T &val)
+		ND_ static Float_t Float (const T &val)
 		{
 			return _Float( val * T(16.0) );
 		}
 		
 		template <typename T, usize I, ulong U>
-		CHECKRES static Float_t Float (const Vec<T,I,U> &v)
+		ND_ static Float_t Float (const Vec<T,I,U> &v)
 		{
 			const float4	control( 40.0f, 64.0f, 256.0f, 96.0f );
 
@@ -38,13 +38,13 @@ namespace GXMath
 		}
 
 		template <typename T>
-		CHECKRES static Float_t Float (ArrayCRef<T> arr)
+		ND_ static Float_t Float (ArrayCRef<T> arr)
 		{
 			return _FloatI( Int( arr ) );
 		}
 		
 		template <typename T, usize I, ulong U>
-		CHECKRES static Vec<Float_t,I,U> FVec (const Vec<T,I,U> &v)
+		ND_ static Vec<Float_t,I,U> FVec (const Vec<T,I,U> &v)
 		{
 			const float4	control( 40.0f, 64.0f, 256.0f, 96.0f );
 
@@ -72,10 +72,10 @@ namespace GXMath
 	// Integer
 	public:
 		// TODO: change for Int_t type
-		CHECKRES static Int_t Int (const int &x)		{ return _Int( x ); }
-		CHECKRES static Int_t Int (const uint &x)		{ return Int( int(x) ); }
-		CHECKRES static Int_t Int (const ilong &x)		{ return _Int( (x & 0xFFFFFFFF) ^ (x >> 32) ); }
-		CHECKRES static Int_t Int (const ulong &x)		{ return Int( ilong(x) ); }
+		ND_ static Int_t Int (const int &x)			{ return _Int( x ); }
+		ND_ static Int_t Int (const uint &x)		{ return Int( int(x) ); }
+		ND_ static Int_t Int (const ilong &x)		{ return _Int( (x & 0xFFFFFFFF) ^ (x >> 32) ); }
+		ND_ static Int_t Int (const ulong &x)		{ return Int( ilong(x) ); }
 		/*
 		template <typename T, usize I, ulong U>
 		static Int_t Int (const Vec<T,I,U> &x)
@@ -84,7 +84,7 @@ namespace GXMath
 		}
 		*/
 		template <typename T>
-		CHECKRES static Int_t Int (ArrayCRef<T> arr)
+		ND_ static Int_t Int (ArrayCRef<T> arr)
 		{
 			Int_t	x = 0;
 			FOR( i, arr )	x ^= Int( arr[i] );
@@ -92,7 +92,7 @@ namespace GXMath
 		}
 
 		template <typename T, usize I, ulong U>
-		CHECKRES static Vec<Int_t,I,U> IVec (const Vec<T,I,U> &v)
+		ND_ static Vec<Int_t,I,U> IVec (const Vec<T,I,U> &v)
 		{
 			Vec<Int_t,I,U>	res;
 			FOR( i, res )	res[i] = Int( v[i] );

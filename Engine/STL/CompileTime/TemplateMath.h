@@ -270,8 +270,8 @@ namespace CompileTime
 			STATIC_ASSERT( (IsPowerOfTwo< uint, AlignTo >), "align must be power of two!" );
 
 			static const uint	_ALIGN_POT	= IntLog2< uint, AlignTo >;
-			static const uint	_ALIGN_MASK	= (1 << _ALIGN_POT) - 1;
-			static const uint	value		= ((Value + _ALIGN_MASK) & ~_ALIGN_MASK);
+			static const T		_ALIGN_MASK	= (T(1) << _ALIGN_POT) - 1;
+			static const T		value		= ((Value + _ALIGN_MASK) & ~_ALIGN_MASK);
 		};
 
 	}	// _ctime_hidden_
@@ -290,7 +290,7 @@ namespace CompileTime
 		template <typename T, uint BitIndex>
 		struct _ToMask
 		{
-			static const uint	value =	BitIndex < CompileTime::SizeOf<T>::bits ?
+			static const T	value =	BitIndex < CompileTime::SizeOf<T>::bits ?
 											(T(1) << (BitIndex & (CompileTime::SizeOf<T>::bits-1))) - 1 :
 											T(-1);
 		};

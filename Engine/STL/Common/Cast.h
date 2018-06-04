@@ -46,7 +46,7 @@ namespace GXTypes
 	}	// _types_hidden_
 
 	template <typename T, typename B>
-	CHECKRES forceinline constexpr typename _types_hidden_::_PointerCast< B, T >::Result_t  PointerCast (B val)
+	ND_ forceinline constexpr typename _types_hidden_::_PointerCast< B, T >::Result_t  PointerCast (B val)
 	{
 		STATIC_ASSERT( TypeTraits::IsPointer<B>, "argument must be pointer" );
 		return _types_hidden_::_PointerCast< B, T >::Cast( val );
@@ -58,7 +58,7 @@ namespace GXTypes
 =================================================
 */
 	template <typename R, typename B>
-	CHECKRES forceinline constexpr typename _types_hidden_::_PointerCast< B, R >::Result_t  PointerSafeCast (B val)
+	ND_ forceinline constexpr typename _types_hidden_::_PointerCast< B, R >::Result_t  PointerSafeCast (B val)
 	{
 		STATIC_ASSERT(( sizeof(R) == sizeof(TypeTraits::RemovePointer<B>) or CompileTime::IsBaseOf< B, R > ));
 		return PointerCast<R,B>( val );
@@ -70,14 +70,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename R, typename T>
-	CHECKRES forceinline constexpr const R & ReferenceCast (const T & t)
+	ND_ forceinline constexpr const R & ReferenceCast (const T & t)
 	{
 		STATIC_ASSERT( sizeof(R) == sizeof(T), "type size mismatch" );
 		return reinterpret_cast<const R &>( t );
 	}
 	
 	template <typename R, typename T>
-	CHECKRES forceinline constexpr R & ReferenceCast (T & t)
+	ND_ forceinline constexpr R & ReferenceCast (T & t)
 	{
 		STATIC_ASSERT( sizeof(R) == sizeof(T), "type size mismatch" );
 		return reinterpret_cast<R &>( t );
@@ -134,25 +134,25 @@ namespace GXTypes
 	}	// _types_hidden_
 
 	template <typename R, typename T>
-	CHECKRES forceinline constexpr R Cast (const T& value)
+	ND_ forceinline constexpr R Cast (const T& value)
 	{
 		return _types_hidden_::_Cast< R, T, CompileTime::IsArithmetic<T> and CompileTime::IsArithmetic<R> >::Get( value );
 	}
 	
 	template <typename R, typename T>
-	CHECKRES forceinline constexpr R Cast (T& value)
+	ND_ forceinline constexpr R Cast (T& value)
 	{
 		return _types_hidden_::_Cast< R, T, CompileTime::IsArithmetic<T> and CompileTime::IsArithmetic<R> >::Get( value );
 	}
 
 	template <typename R, typename T>
-	CHECKRES forceinline constexpr R Cast (const T* value)
+	ND_ forceinline constexpr R Cast (const T* value)
 	{
 		return PointerCast< TypeTraits::RemovePointer<R> >( value );
 	}
 	
 	template <typename R, typename T>
-	CHECKRES forceinline constexpr R Cast (T* value)
+	ND_ forceinline constexpr R Cast (T* value)
 	{
 		return PointerCast< TypeTraits::RemovePointer<R> >( value );
 	}

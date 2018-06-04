@@ -44,10 +44,10 @@ namespace Base
 	template <typename Collection, typename Msg>
 	inline void ModuleUtils::Send (const Collection &list, const Msg &msg, const Sender_t &sender)
 	{
-		FOR( i, list ) {
-			if ( list[i] ) {
-				list[i]->Send( msg.From( sender ) );
-			}
+		for (auto& mod : list)
+		{
+			if ( mod )
+				mod->Send( msg.From( sender ) );
 		}
 	}
 
@@ -70,24 +70,24 @@ namespace Base
 
 		auto	IsInitialized	= LAMBDA() (Module::EState state)	{ return state == Module::EState::ComposedImmutable or state == Module::EState::ComposedMutable; };
 		bool	result			= true;
-
-		FOR( i, list ) {
-			if ( list[i] ) {
-				list[i]->Send( link_msg.From( sender ) );
-			}
+		
+		for (auto& mod : list)
+		{
+			if ( mod )
+				mod->Send( link_msg.From( sender ) );
 		}
-
-		FOR( i, list ) {
-			if ( list[i] ) {
-				list[i]->Send( comp_msg.From( sender ) );
-			}
+		
+		for (auto& mod : list)
+		{
+			if ( mod )
+				mod->Send( comp_msg.From( sender ) );
 		}
 		
 		// wait when all modules will be composed
-		FOR( i, list ) {
-			if ( list[i] ) {
-				result &= IsInitialized( list[i]->GetState() );
-			}
+		for (auto& mod : list)
+		{
+			if ( mod )
+				result &= IsInitialized( mod->GetState() );
 		}
 		return result;
 	}
@@ -106,11 +106,11 @@ namespace Base
 	inline void ModuleUtils::Destroy (const Collection &list, const Sender_t &sender)
 	{
 		Message< ModuleMsg::Delete >	del_msg;
-
-		FOR( i, list ) {
-			if ( list[i] ) {
-				list[i]->Send( del_msg.From( sender ) );
-			}
+		
+		for (auto& mod : list)
+		{
+			if ( mod )
+				mod->Send( del_msg.From( sender ) );
 		}
 	}
 

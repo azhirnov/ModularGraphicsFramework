@@ -221,7 +221,7 @@ namespace Graphics
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
-		CHECK_ERR( GetState() == EState::Initial );
+		CHECK_ERR( _IsInitialState( GetState() ) );
 
 		Message< GpuMsg::GetGraphicsModules >	req_ids;
 		CHECK( _GetManager()->Send( req_ids ) );
@@ -504,10 +504,8 @@ namespace Graphics
 		const EPrimitive::type	primitive	= PrimitiveStripToList( msg->primitive );
 
 		// search in existing batches
-		FOR( i, _batches )
+		for (auto& batch : _batches)
 		{
-			auto&	batch = _batches[i];
-
 			if ( batch.primitive			== primitive			and
 				 batch.attribs.Attribs()	== msg->attribs.Attribs() )
 			{
@@ -729,8 +727,6 @@ namespace Graphics
 	{
 		CHECK_ERR( msg->framebuffer and msg->cmdBuilder );
 
-		using EMappingFlags = GpuMsg::MapMemoryToCpu::EMappingFlags;
-
 		auto		factory = GlobalSystems()->modulesFactory;
 
 		ModulePtr	vbuffer;
@@ -738,8 +734,8 @@ namespace Graphics
 
 		BytesU		indices_size;
 
-		FOR( i, _batches ) {
-			indices_size += _batches[i].indices.Size();
+		for (auto& batch : _batches) {
+			indices_size += batch.indices.Size();
 		}
 
 		// TODO: check render pass compatibility
@@ -751,8 +747,7 @@ namespace Graphics
 						GlobalSystems(),
 						CreateInfo::GpuBuffer{
 							BufferDescriptor{ _vertices.Size(), EBufferUsage::Vertex },
-							EGpuMemory::CoherentWithCPU,
-							EMemoryAccess::All },
+							EGpuMemory::CoherentWithCPU },
 						OUT vbuffer ) );
 
 		// create indix buffer
@@ -761,35 +756,28 @@ namespace Graphics
 						GlobalSystems(),
 						CreateInfo::GpuBuffer{
 							BufferDescriptor{ indices_size, EBufferUsage::Index },
-							EGpuMemory::CoherentWithCPU,
-							EMemoryAccess::All },
+							EGpuMemory::CoherentWithCPU },
 						OUT ibuffer ) );
 
 		ModuleUtils::Initialize({ vbuffer, ibuffer });
 
 		// copy vertices
 		{
-			vbuffer->Send< GpuMsg::MapMemoryToCpu >({ EMappingFlags::WriteDiscard, _vertices.Size() });
-			vbuffer->Send< GpuMsg::WriteToStream >({ _vertices });
+			vbuffer->Send< GpuMsg::MapMemoryToCpu >({ GpuMsg::EMappingFlags::WriteDiscard, 0_b, _vertices.Size() });
+			vbuffer->Send< DSMsg::WriteRegion >({ 0_b, _vertices });
 			vbuffer->Send< GpuMsg::UnmapMemory >({});
-			//vbuffer->Send< GpuMsg::WriteToGpuMemory >({ _vertices });
 		}
 
 		// copy indices
 		{
 			BytesU	offset;
-			ibuffer->Send< GpuMsg::MapMemoryToCpu >({ EMappingFlags::WriteDiscard, indices_size });
+			ibuffer->Send< GpuMsg::MapMemoryToCpu >({ GpuMsg::EMappingFlags::WriteDiscard, 0_b, indices_size });
 
-			FOR( i, _batches ) {
-				ibuffer->Send< GpuMsg::WriteToStream >({ ArrayCRef<uint>( _batches[i].indices ), offset });
-				offset += _batches[i].indices.Size();
+			for (auto& batch : _batches) {
+				ibuffer->Send< DSMsg::WriteRegion >({ offset, ArrayCRef<uint>( batch.indices ) });
+				offset += batch.indices.Size();
 			}
 			ibuffer->Send< GpuMsg::UnmapMemory >({});
-			
-			/*FOR( i, _batches ) {
-				ibuffer->Send< GpuMsg::WriteToGpuMemory >({ ArrayCRef<uint>( _batches[i].indices ), offset });
-				offset += _batches[i].indices.Size();
-			}*/
 		}
 
 		// build commands
@@ -802,10 +790,8 @@ namespace Graphics
 			builder->Send< GpuMsg::CmdBindVertexBuffers >({ vbuffer });
 			builder->Send< GpuMsg::CmdBindIndexBuffer >({ ibuffer, EIndex::UInt });
 
-			FOR( i, _batches )
+			for (const auto& batch : _batches)
 			{
-				auto const&	batch	= _batches[i];
-				
 				builder->Send< GpuMsg::CmdBindGraphicsPipeline >({ batch.material.pipeline });
 				builder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ batch.material.resourceTable });
 				builder->Send< GpuMsg::CmdSetViewport >({ msg->viewport, float2(0.0f, 1.0f) });

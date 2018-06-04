@@ -57,7 +57,7 @@ namespace GXMath
 	// Operation with sign
 	//
 
-	template <typename T>				inline T		Abs (const T& x);
+	template <typename T>				constexpr T		Abs (const T& x);
 	template <typename T>				inline T		SetSign (const T &x, bool bSign = true);
 	template <typename T>				inline T		CopySign (const T& from, const T& to);
 	template <typename T>				inline T		Sign (const T& x);
@@ -78,11 +78,11 @@ namespace GXMath
 	template <typename T>				inline T		Exp2 (const T& x);
 	template <typename T>				inline T		Exp10 (const T& x);
 	template <typename T>				constexpr uint	IntLog2 (const T &x);
-	template <typename T>				inline T		CeilPowerOfTwo (const T& x);
-	template <typename T>				inline T		FloorPowerOfTwo (const T& x);
-	template <typename T>				inline T		NearPowerOfTwo (const T& x);
-	template <typename T>				inline bool		IsPowerOfTwo (const T& x);
-	template <typename T>				inline T		Square (const T& x);
+	template <typename T>				constexpr T		CeilPowerOfTwo (const T& x);
+	template <typename T>				constexpr T		FloorPowerOfTwo (const T& x);
+	template <typename T>				constexpr T		NearPowerOfTwo (const T& x);
+	template <typename T>				constexpr bool	IsPowerOfTwo (const T& x);
+	template <typename T>				constexpr T		Square (const T& x);
 	template <typename T>				inline T		Sqrt (const T& x);
 	template <typename T>				inline T		SquareSign (const T& x);
 	template <typename T>				inline T		InvSqrt (const T& x);
@@ -167,6 +167,7 @@ namespace GXMath
 	template <typename A, typename B>				auto	Min (const A& a, const B& b);
 	template <typename A, typename B>				auto	Max (const A& a, const B& b);
 	template <typename A, typename B, typename C>	auto	Wrap (const A& value, const B& minValue, const C& maxValue);
+	template <typename A, typename B, typename C>	auto	MirroredWrap (const A& value, const B& minValue, const C& maxValue);
 	template <typename A, typename B>				auto	Mod (const A& left, const B& right);
 
 

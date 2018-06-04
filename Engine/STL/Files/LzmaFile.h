@@ -10,7 +10,7 @@
 
 namespace GX_STL
 {
-namespace File
+namespace GXFile
 {
 
 	//
@@ -55,13 +55,13 @@ namespace File
 		~LzmaRFile ()		{ _Close(); }
 
 		
-		CHECKRES static LzmaRFilePtr New ()
+		ND_ static LzmaRFilePtr New ()
 		{
 			return new LzmaRFile();
 		}
 
 
-		CHECKRES static LzmaRFilePtr New (const RFilePtr &file)
+		ND_ static LzmaRFilePtr New (const RFilePtr &file)
 		{
 			LzmaRFilePtr	lfile = new LzmaRFile();
 
@@ -255,7 +255,7 @@ namespace File
 
 			void Validate ()
 			{
-				using namespace GXMath;
+				using namespace GX_STL::GXMath;
 
 				level		= Clamp( level,		0,		9 );
 				lc			= Clamp( lc,		0,		8 );
@@ -275,7 +275,7 @@ namespace File
 		~LzmaWFile ()		{ _Close(); }
 		
 
-		CHECKRES static LzmaWFilePtr New (BytesU reserve = 0)
+		ND_ static LzmaWFilePtr New (BytesU reserve = 0)
 		{
 			LzmaWFilePtr	file = new LzmaWFile();
 
@@ -360,7 +360,7 @@ namespace File
 	SHARED_POINTER( LzmaWFile );
 
 
-}	// File
+}	// GXFile
 }	// GX_STL
 
 #endif	// GX_LZMA_ENABLED

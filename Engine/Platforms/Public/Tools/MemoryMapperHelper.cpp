@@ -13,12 +13,9 @@ namespace PlatformTools
 =================================================
 */
 	MemoryMapperHelper::MemoryMapperHelper (EGpuMemory::bits flags, EMemoryAccess::bits access) :
-		_ptr{ null },
-		_access{ access & _GpuMemoryToMemoryAccess( flags ) },
-		_isCachedInCPU{ flags[EGpuMemory::CachedInCPU] },
-		_isCoherentWithCPU{ flags[EGpuMemory::CoherentWithCPU] },
-		_changed{ false }
+		_ptr{ null },		_changed{ false }
 	{
+		ResetFlags( flags, access );
 	}
 	
 /*
@@ -45,6 +42,20 @@ namespace PlatformTools
 		_isCachedInCPU		= false;
 		_isCoherentWithCPU	= false;
 		_changed			= false;
+	}
+	
+/*
+=================================================
+	ResetFlags
+=================================================
+*/
+	void MemoryMapperHelper::ResetFlags (EGpuMemory::bits flags, EMemoryAccess::bits access)
+	{
+		CHECK_ERR( not _changed, void() );
+		
+		_access				= (access & _GpuMemoryToMemoryAccess( flags ));
+		_isCachedInCPU		= flags[EGpuMemory::CachedInCPU];
+		_isCoherentWithCPU	= flags[EGpuMemory::CoherentWithCPU];
 	}
 
 /*
@@ -167,32 +178,36 @@ namespace PlatformTools
 	ReadImage
 =================================================
 */
-	bool MemoryMapperHelper::ReadImage (OUT BytesUL &readn, OUT BinArrayRef result, const uint3 &dstDimension, BytesUL dstRowPitch, BytesUL dstSlicePitch,
+	bool MemoryMapperHelper::ReadImage (OUT BytesUL &readn, OUT BinArrayRef result, BitsU bitPerPixel,
+										const uint3 &dstDimension, BytesUL dstRowPitch, BytesUL dstSlicePitch,
 										const uint3 &srcOffset, const uint3 &srcDimension, BytesUL srcMemOffset, BytesUL srcMemSize, BytesUL srcRowPitch, BytesUL srcSlicePitch) const
 	{
 		CHECK_ERR( IsMapped() );
 		CHECK_ERR( _mappingAccess[EMemoryAccess::CpuRead] );
 		CHECK_ERR( All( dstDimension.xyz() > uint3(0) ) );
-		//CHECK_ERR( All ( srcDimension + srcOffset <= srcDimension ) );	// TODO
+		CHECK_ERR( All ( srcDimension + srcOffset <= dstDimension ) );
 		CHECK_ERR( srcMemOffset + srcMemSize <= _size );
 
-		uint3			coord;
-		const ubyte *	src_end	= _ptr + (srcMemOffset + srcMemSize);
-		BitsUL			bpp		= BitsUL(srcRowPitch) / srcDimension.x;
+		srcRowPitch		= Max( srcRowPitch, BytesUL(bitPerPixel * srcDimension.x) );
+		srcSlicePitch	= Max( srcSlicePitch, srcRowPitch * srcDimension.y );
+		dstRowPitch		= Max( dstRowPitch, BytesUL(bitPerPixel * dstDimension.x) );
+		dstSlicePitch	= Max( dstSlicePitch, dstRowPitch * dstDimension.y );
+		readn			= BytesUL(0);
 
-		readn = BytesUL(0);
+		CHECK_ERR( dstSlicePitch * dstDimension.z <= BytesUL(result.Size()) );
+		CHECK_ERR( srcSlicePitch * srcDimension.z <= srcMemSize );
 
-		for (; coord.z < dstDimension.z; ++coord.z)
+		for (uint z = 0; z < dstDimension.z; ++z)
 		{
 			readn = AlignToLarge( readn, dstSlicePitch );
 
-			for (; coord.y < dstDimension.y; ++coord.y)
+			for (uint y = 0; y < dstDimension.y; ++y)
 			{
-				const ubyte *	src		 = _ptr + (srcMemOffset + srcSlicePitch * (srcOffset.z + coord.z) + srcRowPitch * (srcOffset.y + coord.y) + BytesUL(bpp * srcOffset.x));
-				BytesUL			dst_size = (dstSlicePitch * coord.z + dstRowPitch * coord.y);
+				BytesUL			src_off	 = srcMemOffset + srcSlicePitch * (srcOffset.z + z) + srcRowPitch * (srcOffset.y + y) + BytesUL(bitPerPixel * srcOffset.x);
+				const ubyte *	src		 = _ptr + src_off;
+				BytesUL			dst_size = dstSlicePitch * z + dstRowPitch * y;
 				ubyte *			dst		 = result.ptr() + dst_size;
 
-				CHECK_ERR( src < src_end and dst < result.End() );
 				UnsafeMem::MemCopy( dst, src, BytesU(dstRowPitch) );
 
 				readn += dstRowPitch;
@@ -206,32 +221,36 @@ namespace PlatformTools
 	WriteImage
 =================================================
 */
-	bool MemoryMapperHelper::WriteImage (OUT BytesUL &written, BinArrayCRef data, const uint3 &srcDimension, BytesUL srcRowPitch, BytesUL srcSlicePitch,
+	bool MemoryMapperHelper::WriteImage (OUT BytesUL &written, BinArrayCRef data, BitsU bitPerPixel,
+										 const uint3 &srcDimension, BytesUL srcRowPitch, BytesUL srcSlicePitch,
 										 const uint3 &dstOffset, const uint3 &dstDimension, BytesUL dstMemOffset, BytesUL dstMemSize, BytesUL dstRowPitch, BytesUL dstSlicePitch)
 	{
 		CHECK_ERR( IsMapped() );
 		CHECK_ERR( _mappingAccess[EMemoryAccess::CpuWrite] );
 		CHECK_ERR( All( srcDimension.xyz() > uint3(0) ) );
-		CHECK_ERR( All ( srcDimension + dstOffset <= dstDimension ) );
+		CHECK_ERR( All( srcDimension + dstOffset <= dstDimension ) );
 		CHECK_ERR( dstMemOffset + dstMemSize <= _size );
+		
+		srcRowPitch		= Max( srcRowPitch, BytesUL(bitPerPixel * srcDimension.x) );
+		srcSlicePitch	= Max( srcSlicePitch, srcRowPitch * srcDimension.y );
+		dstRowPitch		= Max( dstRowPitch, BytesUL(bitPerPixel * dstDimension.x) );
+		dstSlicePitch	= Max( dstSlicePitch, dstRowPitch * dstDimension.y );
+		written			= BytesUL(0);
 
-		uint3			coord;
-		const ubyte*	dst_end	= _ptr + (dstMemOffset + dstMemSize);
-		const BitsUL	bpp		= BitsUL(dstRowPitch) / dstDimension.x;
+		CHECK_ERR( dstSlicePitch * dstDimension.z <= BytesUL(data.Size()) );
+		CHECK_ERR( dstSlicePitch * dstDimension.z <= dstMemSize );
 
-		written = BytesUL(0);
-
-		for (; coord.z < srcDimension.z; ++coord.z)
+		for (uint z = 0; z < srcDimension.z; ++z)
 		{
 			written = AlignToLarge( written, srcSlicePitch );
 
-			for (; coord.y < srcDimension.y; ++coord.y)
+			for (uint y = 0; y < srcDimension.y; ++y)
 			{
-				BytesUL			src_size = (coord.z * srcSlicePitch + coord.y * srcRowPitch + coord.x);
+				BytesUL			src_size = z * srcSlicePitch + y * srcRowPitch;
 				const ubyte *	src		 = data.ptr() + src_size;
-				ubyte *			dst		 = _ptr + (dstMemOffset + dstSlicePitch * (dstOffset.z + coord.z) + dstRowPitch * (dstOffset.y + coord.y) + BytesUL(bpp * dstOffset.x));
+				BytesUL			dst_off	 = dstMemOffset + dstSlicePitch * (dstOffset.z + z) + dstRowPitch * (dstOffset.y + y) + BytesUL(bitPerPixel * dstOffset.x);
+				ubyte *			dst		 = _ptr + dst_off;
 
-				CHECK_ERR( src < data.End() and dst < dst_end );
 				UnsafeMem::MemCopy( dst, src, BytesU(srcRowPitch) );
 
 				written += srcRowPitch;

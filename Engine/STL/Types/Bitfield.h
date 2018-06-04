@@ -41,67 +41,67 @@ namespace GXTypes
 
 	// methods
 	public:
-		constexpr Bitfield (GX_DEFCTOR): _bits( T(0) )						{}
+		constexpr Bitfield (GX_DEFCTOR): _bits( T(0) )					{}
 
-		constexpr Bitfield (const Index_t index) : _bits{T(0)}				{ STATIC_ASSERT( TypeTraits::IsEnum<Index_t> );  Set( index ); }
+		constexpr Bitfield (const Index_t index) : _bits{T(0)}			{ STATIC_ASSERT( TypeTraits::IsEnum<Index_t> );  Set( index ); }
 
 		constexpr Bitfield (Self &&other) = default;
 		constexpr Bitfield (const Self &other) = default;
 
 		//Self &	operator = (Index_t) = delete;
 
-		Self &	operator =  (Self &&right) = default;
-		Self &	operator =  (const Self &right) = default;
+			Self &	operator =  (Self &&right) = default;
+			Self &	operator =  (const Self &right) = default;
 
-		static constexpr Self	From (const T value)						{ Self res;  res._bits = value;  return res; }
+		ND_ static constexpr Self	From (const T value)				{ Self res;  res._bits = value;  return res; }
 
-		constexpr Self &	Set (Index_t i)									{ ASSUME(IntIdx_t(i) < B);  _bits |= (T(1) << IntIdx_t(i));  return *this; }
-		constexpr Self &	Reset (Index_t i)								{ ASSUME(IntIdx_t(i) < B);  _bits &= ~(T(1) << IntIdx_t(i));  return *this; }
-		constexpr Self &	SetAt (Index_t i, bool bit)						{ ASSUME(IntIdx_t(i) < B);  _bits &= ~(T(1) << IntIdx_t(i));  _bits |= (T(bit) << IntIdx_t(i));  return *this; }
+			constexpr Self &	Set (Index_t i)							{ ASSUME(IntIdx_t(i) < B);  _bits |= (T(1) << IntIdx_t(i));  return *this; }
+			constexpr Self &	Reset (Index_t i)						{ ASSUME(IntIdx_t(i) < B);  _bits &= ~(T(1) << IntIdx_t(i));  return *this; }
+			constexpr Self &	SetAt (Index_t i, bool bit)				{ ASSUME(IntIdx_t(i) < B);  _bits &= ~(T(1) << IntIdx_t(i));  _bits |= (T(bit) << IntIdx_t(i));  return *this; }
 
-		constexpr Self &	And (Index_t i, bool bit = true)				{ ASSUME(IntIdx_t(i) < B);  _bits &= (T(bit) << IntIdx_t(i));  return *this; }
-		constexpr Self &	Or (Index_t i, bool bit = true)					{ ASSUME(IntIdx_t(i) < B);  _bits |= (T(bit) << IntIdx_t(i));  return *this; }
-		constexpr Self &	Xor (Index_t i, bool bit = true)				{ ASSUME(IntIdx_t(i) < B);  _bits ^= (T(bit) << IntIdx_t(i));  return *this; }
+			constexpr Self &	And (Index_t i, bool bit = true)		{ ASSUME(IntIdx_t(i) < B);  _bits &= (T(bit) << IntIdx_t(i));  return *this; }
+			constexpr Self &	Or (Index_t i, bool bit = true)			{ ASSUME(IntIdx_t(i) < B);  _bits |= (T(bit) << IntIdx_t(i));  return *this; }
+			constexpr Self &	Xor (Index_t i, bool bit = true)		{ ASSUME(IntIdx_t(i) < B);  _bits ^= (T(bit) << IntIdx_t(i));  return *this; }
 
-		constexpr Self &	SetAll (bool bit = true)						{ _bits = bit ? _MAX_VALUE : T(0);  return *this; }
+			constexpr Self &	SetAll (bool bit = true)				{ _bits = bit ? _MAX_VALUE : T(0);  return *this; }
 
-		CHECKRES constexpr bool		Get (const Index_t i) const				{ ASSUME(IntIdx_t(i) < B);  return !!( _bits & (T(1) << IntIdx_t(i)) ); }
+		ND_ constexpr bool		Get (const Index_t i) const				{ ASSUME(IntIdx_t(i) < B);  return !!( _bits & (T(1) << IntIdx_t(i)) ); }
 
-		CHECKRES constexpr bool		IsZero ()	const						{ return _bits == 0; }
-		CHECKRES constexpr bool		IsNotZero () const						{ return _bits != 0; }
-		CHECKRES constexpr bool		Empty ()	const						{ return IsZero(); }
+		ND_ constexpr bool		IsZero ()	const						{ return _bits == 0; }
+		ND_ constexpr bool		IsNotZero () const						{ return _bits != 0; }
+		ND_ constexpr bool		Empty ()	const						{ return IsZero(); }
 
-		CHECKRES constexpr Index_t	MinIndex () const						{ return (Index_t) GXMath::BitScanForward( _bits ); }
-		CHECKRES constexpr Index_t	MaxIndex () const						{ return (Index_t) GXMath::BitScanReverse( _bits ); }
+		ND_ constexpr Index_t	MinIndex () const						{ return (Index_t) GXMath::BitScanForward( _bits ); }
+		ND_ constexpr Index_t	MaxIndex () const						{ return (Index_t) GXMath::BitScanReverse( _bits ); }
 
-		CHECKRES explicit constexpr operator bool () const					{ return IsNotZero(); }
-		CHECKRES explicit constexpr operator uint () const					{ return Cast<uint>(_bits); }
-		CHECKRES explicit constexpr operator ulong () const					{ return Cast<ulong>(_bits); }
+		ND_ explicit constexpr operator bool () const					{ return IsNotZero(); }
+		ND_ explicit constexpr operator uint () const					{ return Cast<uint>(_bits); }
+		ND_ explicit constexpr operator ulong () const					{ return Cast<ulong>(_bits); }
 
-		CHECKRES static constexpr usize Count ()							{ return B; }
+		ND_ static constexpr usize Count ()								{ return B; }
 
-		CHECKRES constexpr Self	operator ~  ()	const						{ return Self::From( ~_bits ); }
+		ND_ constexpr Self	operator ~  ()	const						{ return Self::From( ~_bits ); }
 		
-				 constexpr	Self &	operator |= (const Index_t i)			{ return Or( i ); }
-		CHECKRES constexpr	Self	operator |  (const Index_t i) const		{ return Self(*this).Or( i ); }
+			constexpr	Self &	operator |= (const Index_t i)			{ return Or( i ); }
+		ND_ constexpr	Self	operator |  (const Index_t i) const		{ return Self(*this).Or( i ); }
 
-				 constexpr	Self &	operator |= (const Self &right)			{ _bits |= right._bits;  return *this; }
-		CHECKRES constexpr	Self	operator |  (const Self &right) const	{ return Self(*this) |= right; }
+			constexpr	Self &	operator |= (const Self &right)			{ _bits |= right._bits;  return *this; }
+		ND_ constexpr	Self	operator |  (const Self &right) const	{ return Self(*this) |= right; }
 		
-				 constexpr	Self &	operator ^= (const Index_t i)			{ return Xor( i ); }
-		CHECKRES constexpr	Self	operator ^  (const Index_t i) const		{ return Self(*this).Xor( i ); }
+			constexpr	Self &	operator ^= (const Index_t i)			{ return Xor( i ); }
+		ND_ constexpr	Self	operator ^  (const Index_t i) const		{ return Self(*this).Xor( i ); }
 
-				 constexpr	Self &	operator ^= (const Self &right)			{ _bits ^= right._bits;  return *this; }
-		CHECKRES constexpr	Self	operator ^  (const Self &right) const	{ return Self(*this) ^= right; }
+			constexpr	Self &	operator ^= (const Self &right)			{ _bits ^= right._bits;  return *this; }
+		ND_ constexpr	Self	operator ^  (const Self &right) const	{ return Self(*this) ^= right; }
 
-				 constexpr	Self &	operator &= (const Index_t i)			{ return And( i ); }
-		CHECKRES constexpr	Self	operator &  (const Index_t i) const		{ return Self(*this).And( i ); }
+			constexpr	Self &	operator &= (const Index_t i)			{ return And( i ); }
+		ND_ constexpr	Self	operator &  (const Index_t i) const		{ return Self(*this).And( i ); }
 
-				 constexpr	Self &	operator &= (const Self &right)			{ _bits &= right._bits;  return *this; }
-		CHECKRES constexpr	Self	operator &  (const Self &right) const	{ return Self(*this) &= right; }
+			constexpr	Self &	operator &= (const Self &right)			{ _bits &= right._bits;  return *this; }
+		ND_ constexpr	Self	operator &  (const Self &right) const	{ return Self(*this) &= right; }
 
-		CHECKRES			BitRef	operator [] (const Index_t i)			{ ASSUME(IntIdx_t(i) < B);  return BitRef( *this, i ); }
-		CHECKRES constexpr	bool 	operator [] (const Index_t i) const		{ return Get( i ); }
+		ND_				BitRef	operator [] (const Index_t i)			{ ASSUME(IntIdx_t(i) < B);  return BitRef( *this, i ); }
+		ND_ constexpr	bool 	operator [] (const Index_t i) const		{ return Get( i ); }
 		
 
 		_GX_DIM_CMP_OPERATORS_SELF( _bits );
@@ -121,19 +121,19 @@ namespace GXTypes
 			return *this;
 		}
 
-		CHECKRES forceinline constexpr bool HasInterval (const Index_t first, const Index_t last) const
+		ND_ forceinline constexpr bool HasInterval (const Index_t first, const Index_t last) const
 		{
 			ASSUME( IntIdx_t(first) <= IntIdx_t(last) and IntIdx_t(last) < B );
 			const T	mask = GXMath::ToMask<T>( BitsU(IntIdx_t(first)), BitsU(IntIdx_t(last)+1) );
 			return (_bits & mask) == mask;
 		}
 
-		CHECKRES forceinline constexpr bool HasAll () const
+		ND_ forceinline constexpr bool HasAll () const
 		{
 			return HasInterval( Index_t(0), Index_t(B-1) );
 		}
 
-		CHECKRES forceinline constexpr bool BitsEq (const Self &right) const
+		ND_ forceinline constexpr bool BitsEq (const Self &right) const
 		{
 			// Compare only setted bits!
 			// Warning: not same result as right.BitsEq( *this )
@@ -141,7 +141,7 @@ namespace GXTypes
 			return (_bits & right._bits) == right._bits;
 		}
 
-		CHECKRES forceinline constexpr bool AnyBitEq (const Self &right) const
+		ND_ forceinline constexpr bool AnyBitEq (const Self &right) const
 		{
 			return (_bits & right._bits) != 0;
 		}
@@ -179,13 +179,13 @@ namespace GXTypes
 				return *this;
 			}
 
-			operator bool () const
+			ND_ operator bool () const
 			{
 				return _Get();
 			}
 
 			template <typename C>
-			explicit operator C () const
+			ND_ explicit operator C () const
 			{
 				return C( _Get() );
 			}
@@ -239,19 +239,19 @@ namespace GXTypes
 
 	
 	template <usize B, typename I>
-	CHECKRES inline constexpr Bitfield<B,I>  operator | (const I lhs, const Bitfield<B,I> &rhs)	{ return Bitfield<B,I>(lhs) | rhs; }
+	ND_ inline constexpr Bitfield<B,I>  operator | (const I lhs, const Bitfield<B,I> &rhs)	{ return Bitfield<B,I>(lhs) | rhs; }
 
 	template <usize B, typename I>
-	CHECKRES inline constexpr Bitfield<B,I>  operator & (const I lhs, const Bitfield<B,I> &rhs)	{ return Bitfield<B,I>(lhs) & rhs; }
+	ND_ inline constexpr Bitfield<B,I>  operator & (const I lhs, const Bitfield<B,I> &rhs)	{ return Bitfield<B,I>(lhs) & rhs; }
 
 	template <usize B, typename I>
-	CHECKRES inline constexpr Bitfield<B,I>  operator ^ (const I lhs, const Bitfield<B,I> &rhs)	{ return Bitfield<B,I>(lhs) ^ rhs; }
+	ND_ inline constexpr Bitfield<B,I>  operator ^ (const I lhs, const Bitfield<B,I> &rhs)	{ return Bitfield<B,I>(lhs) ^ rhs; }
 
 	
 	template <usize B, typename IT>
 	struct Hash < Bitfield<B,IT> >
 	{
-		CHECKRES HashResult  operator () (const Bitfield<B,IT> &x) const
+		ND_ HashResult  operator () (const Bitfield<B,IT> &x) const
 		{
 			return HashOf( T(x) );
 		}

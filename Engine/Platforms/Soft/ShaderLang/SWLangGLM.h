@@ -11,7 +11,14 @@
 # pragma warning (disable: 4201)
 #endif
 
+#ifndef GX_ENABLE_GLM
+# error GLM required to use C++ shaders
+#endif
+
 #define GLM_FORCE_SWIZZLE
+//#define GLM_FORCE_CXX14
+//#define GLM_FORCE_PURE
+//#define GLM_FORCE_EXPLICIT_CTOR
 #include "glm/glm/glm.hpp"
 
 #include <atomic>
@@ -69,6 +76,50 @@ namespace glm
 	using Double4x4	= dmat4x4;
 
 
+	STATIC_ASSERT( sizeof(Int2) == sizeof(int)*2 );
+	STATIC_ASSERT( sizeof(Int3) == sizeof(int)*3 );
+	STATIC_ASSERT( sizeof(Int4) == sizeof(int)*4 );
+
+	STATIC_ASSERT( sizeof(UInt2) == sizeof(uint)*2 );
+	STATIC_ASSERT( sizeof(UInt3) == sizeof(uint)*3 );
+	STATIC_ASSERT( sizeof(UInt4) == sizeof(uint)*4 );
+
+	STATIC_ASSERT( sizeof(Long2) == sizeof(int64_t)*2 );
+	STATIC_ASSERT( sizeof(Long3) == sizeof(int64_t)*3 );
+	STATIC_ASSERT( sizeof(Long4) == sizeof(int64_t)*4 );
+
+	STATIC_ASSERT( sizeof(ULong2) == sizeof(uint64_t)*2 );
+	STATIC_ASSERT( sizeof(ULong3) == sizeof(uint64_t)*3 );
+	STATIC_ASSERT( sizeof(ULong4) == sizeof(uint64_t)*4 );
+
+	STATIC_ASSERT( sizeof(Float2) == sizeof(float)*2 );
+	STATIC_ASSERT( sizeof(Float3) == sizeof(float)*3 );
+	STATIC_ASSERT( sizeof(Float4) == sizeof(float)*4 );
+	STATIC_ASSERT( sizeof(Float2x2) == sizeof(float)*2*2 );
+	STATIC_ASSERT( sizeof(Float2x3) == sizeof(float)*2*3 );
+	STATIC_ASSERT( sizeof(Float2x4) == sizeof(float)*2*4 );
+	STATIC_ASSERT( sizeof(Float3x2) == sizeof(float)*3*2 );
+	STATIC_ASSERT( sizeof(Float3x3) == sizeof(float)*3*3 );
+	STATIC_ASSERT( sizeof(Float3x4) == sizeof(float)*3*4 );
+	STATIC_ASSERT( sizeof(Float4x2) == sizeof(float)*4*2 );
+	STATIC_ASSERT( sizeof(Float4x3) == sizeof(float)*4*3 );
+	STATIC_ASSERT( sizeof(Float4x4) == sizeof(float)*4*4 );
+
+	STATIC_ASSERT( sizeof(Double2) == sizeof(double)*2 );
+	STATIC_ASSERT( sizeof(Double3) == sizeof(double)*3 );
+	STATIC_ASSERT( sizeof(Double4) == sizeof(double)*4 );
+	STATIC_ASSERT( sizeof(Double2x2) == sizeof(double)*2*2 );
+	STATIC_ASSERT( sizeof(Double2x3) == sizeof(double)*2*3 );
+	STATIC_ASSERT( sizeof(Double2x4) == sizeof(double)*2*4 );
+	STATIC_ASSERT( sizeof(Double3x2) == sizeof(double)*3*2 );
+	STATIC_ASSERT( sizeof(Double3x3) == sizeof(double)*3*3 );
+	STATIC_ASSERT( sizeof(Double3x4) == sizeof(double)*3*4 );
+	STATIC_ASSERT( sizeof(Double4x2) == sizeof(double)*4*2 );
+	STATIC_ASSERT( sizeof(Double4x3) == sizeof(double)*4*3 );
+	STATIC_ASSERT( sizeof(Double4x4) == sizeof(double)*4*4 );
+
+
+
 	//
 	// Bool
 	//
@@ -83,9 +134,12 @@ namespace glm
 		explicit Bool (Int v) : _value(v) {}
 		explicit Bool (UInt v) : _value(v) {}
 
-		operator bool () const		{ return !!_value; }
+		operator bool () const				{ return !!_value; }
 
-		Bool operator ! () const	{ return !_value; }
+		Bool operator ! () const			{ return !_value; }
+
+		bool operator == (Bool right) const	{ return _value == right._value; }
+		bool operator != (Bool right) const	{ return ! (*this == right); }
 	};
 
 
@@ -103,19 +157,11 @@ namespace glm
 	public:
 		union {
 			struct{ T x, y; };
-			struct{ T r, g; };
-			struct{ T s, t; };
 
 #			if GLM_SWIZZLE == GLM_SWIZZLE_ENABLED
 				_GLM_SWIZZLE2_2_MEMBERS(T, P, glm::Bool2_t, x, y)
-				_GLM_SWIZZLE2_2_MEMBERS(T, P, glm::Bool2_t, r, g)
-				_GLM_SWIZZLE2_2_MEMBERS(T, P, glm::Bool2_t, s, t)
 				_GLM_SWIZZLE2_3_MEMBERS(T, P, glm::Bool3_t, x, y)
-				_GLM_SWIZZLE2_3_MEMBERS(T, P, glm::Bool3_t, r, g)
-				_GLM_SWIZZLE2_3_MEMBERS(T, P, glm::Bool3_t, s, t)
 				_GLM_SWIZZLE2_4_MEMBERS(T, P, glm::Bool4_t, x, y)
-				_GLM_SWIZZLE2_4_MEMBERS(T, P, glm::Bool4_t, r, g)
-				_GLM_SWIZZLE2_4_MEMBERS(T, P, glm::Bool4_t, s, t)
 #			endif//GLM_SWIZZLE
 		};
 
@@ -128,15 +174,18 @@ namespace glm
 		explicit Bool2_t (const Int2 &v) : x(!!v.x), y(!!v.y) {}
 		explicit Bool2_t (const UInt2 &v) : x(!!v.x), y(!!v.y) {}
 
-		operator const bvec2 () const					{ return bvec2(x, y); }
+		operator const bvec2 () const							{ return bvec2(x, y); }
 
-		Bool2_t operator ! () const						{ return Bool2_t(!x, !y); }
+		Bool2_t operator ! () const								{ return Bool2_t(!x, !y); }
 		
 		typedef length_t length_type;
-		static constexpr length_type length ()			{ return 2; }
+		static constexpr length_type length ()					{ return 2; }
 
-		T &			operator [] (length_type i)			{ assert(i >= 0 && i < length());  return (&x)[i]; }
-		T const&	operator [] (length_type i) const	{ assert(i >= 0 && i < length());  return (&x)[i]; }
+		T &			operator [] (length_type i)					{ assert(i >= 0 && i < length());  return (&x)[i]; }
+		T const&	operator [] (length_type i) const			{ assert(i >= 0 && i < length());  return (&x)[i]; }
+		
+		Bool2_t		operator == (const Bool2_t &right) const	{ return Bool2_t{ x == right.x, y == right.y }; }
+		Bool2_t		operator != (const Bool2_t &right) const	{ return ! (*this == right); }
 	};
 
 	
@@ -150,19 +199,11 @@ namespace glm
 		union
 		{
 			struct{ T x, y, z; };
-			struct{ T r, g, b; };
-			struct{ T s, t, p; };
 
 #			if GLM_SWIZZLE == GLM_SWIZZLE_ENABLED
 				_GLM_SWIZZLE3_2_MEMBERS(T, P, glm::Bool2_t, x, y, z)
-				_GLM_SWIZZLE3_2_MEMBERS(T, P, glm::Bool2_t, r, g, b)
-				_GLM_SWIZZLE3_2_MEMBERS(T, P, glm::Bool2_t, s, t, p)
 				_GLM_SWIZZLE3_3_MEMBERS(T, P, glm::Bool3_t, x, y, z)
-				_GLM_SWIZZLE3_3_MEMBERS(T, P, glm::Bool3_t, r, g, b)
-				_GLM_SWIZZLE3_3_MEMBERS(T, P, glm::Bool3_t, s, t, p)
 				_GLM_SWIZZLE3_4_MEMBERS(T, P, glm::Bool4_t, x, y, z)
-				_GLM_SWIZZLE3_4_MEMBERS(T, P, glm::Bool4_t, r, g, b)
-				_GLM_SWIZZLE3_4_MEMBERS(T, P, glm::Bool4_t, s, t, p)
 #			endif//GLM_SWIZZLE
 		};
 
@@ -175,15 +216,18 @@ namespace glm
 		explicit Bool3_t (const Int3 &v) : x(!!v.x), y(!!v.y), z(!!v.z) {}
 		explicit Bool3_t (const UInt3 &v) : x(!!v.x), y(!!v.y), z(!!v.z) {}
 
-		operator const bvec3 () const					{ return bvec3(x, y, z); }
+		operator const bvec3 () const							{ return bvec3(x, y, z); }
 
-		Bool3_t operator ! () const						{ return Bool3_t(!x, !y, !z); }
+		Bool3_t operator ! () const								{ return Bool3_t(!x, !y, !z); }
 		
 		typedef length_t length_type;
-		static constexpr length_type length ()			{ return 3; }
+		static constexpr length_type length ()					{ return 3; }
 		
-		T &			operator [] (length_type i)			{ assert(i >= 0 && i < length());  return (&x)[i]; }
-		T const&	operator [] (length_type i) const	{ assert(i >= 0 && i < length());  return (&x)[i]; }
+		T &			operator [] (length_type i)					{ assert(i >= 0 && i < length());  return (&x)[i]; }
+		T const&	operator [] (length_type i) const			{ assert(i >= 0 && i < length());  return (&x)[i]; }
+		
+		Bool3_t		operator == (const Bool3_t &right) const	{ return Bool3_t{ x == right.x, y == right.y, z == right.z }; }
+		Bool3_t		operator != (const Bool3_t &right) const	{ return ! (*this == right); }
 	};
 
 	
@@ -197,19 +241,11 @@ namespace glm
 		union
 		{
 			struct { T x, y, z, w; };
-			struct { T r, g, b, a; };
-			struct { T s, t, p, q; };
 
 #			if GLM_SWIZZLE == GLM_SWIZZLE_ENABLED
 				_GLM_SWIZZLE4_2_MEMBERS(T, P, glm::Bool2_t, x, y, z, w)
-				_GLM_SWIZZLE4_2_MEMBERS(T, P, glm::Bool2_t, r, g, b, a)
-				_GLM_SWIZZLE4_2_MEMBERS(T, P, glm::Bool2_t, s, t, p, q)
 				_GLM_SWIZZLE4_3_MEMBERS(T, P, glm::Bool3_t, x, y, z, w)
-				_GLM_SWIZZLE4_3_MEMBERS(T, P, glm::Bool3_t, r, g, b, a)
-				_GLM_SWIZZLE4_3_MEMBERS(T, P, glm::Bool3_t, s, t, p, q)
 				_GLM_SWIZZLE4_4_MEMBERS(T, P, glm::Bool4_t, x, y, z, w)
-				_GLM_SWIZZLE4_4_MEMBERS(T, P, glm::Bool4_t, r, g, b, a)
-				_GLM_SWIZZLE4_4_MEMBERS(T, P, glm::Bool4_t, s, t, p, q)
 #			endif//GLM_SWIZZLE
 		};
 
@@ -222,15 +258,18 @@ namespace glm
 		explicit Bool4_t (const Int4 &v) : x(!!v.x), y(!!v.y), z(!!v.z), w(!!v.w) {}
 		explicit Bool4_t (const UInt4 &v) : x(!!v.x), y(!!v.y), z(!!v.z), w(!!v.w) {}
 
-		operator const bvec4 () const					{ return bvec4(x, y, z, w); }
+		operator const bvec4 () const							{ return bvec4(x, y, z, w); }
 
-		Bool4_t operator ! () const						{ return Bool4_t(!x, !y, !z, !w); }
+		Bool4_t operator ! () const								{ return Bool4_t(!x, !y, !z, !w); }
 		
 		typedef length_t length_type;
-		static constexpr length_type length ()			{ return 4; }
+		static constexpr length_type length ()					{ return 4; }
 
-		T &			operator [] (length_type i)			{ assert(i >= 0 && i < length());  return (&x)[i]; }
-		T const&	operator [] (length_type i) const	{ assert(i >= 0 && i < length());  return (&x)[i]; }
+		T &			operator [] (length_type i)					{ assert(i >= 0 && i < length());  return (&x)[i]; }
+		T const&	operator [] (length_type i) const			{ assert(i >= 0 && i < length());  return (&x)[i]; }
+
+		Bool4_t		operator == (const Bool4_t &right) const	{ return Bool4_t{ x == right.x, y == right.y, z == right.z, w == right.w }; }
+		Bool4_t		operator != (const Bool4_t &right) const	{ return ! (*this == right); }
 	};
 
 
@@ -239,36 +278,42 @@ namespace glm
 	using Bool4	= Bool4_t<>;
 
 
-	inline Bool all (const Bool2 &value)
+	ND_ inline Bool all (Bool value)
+	{
+		return value;
+	}
+
+	ND_ inline Bool all (const Bool2 &value)
 	{
 		return value.x && value.y;
 	}
 	
-	inline Bool all (const Bool3 &value)
+	ND_ inline Bool all (const Bool3 &value)
 	{
 		return value.x && value.y && value.z;
 	}
 	
-	inline Bool all (const Bool4 &value)
+	ND_ inline Bool all (const Bool4 &value)
 	{
 		return value.x && value.y && value.z && value.w;
 	}
 
 
-	inline Bool any (const Bool2 &value)
+	ND_ inline Bool any (const Bool2 &value)
 	{
 		return value.x || value.y;
 	}
 	
-	inline Bool any (const Bool3 &value)
+	ND_ inline Bool any (const Bool3 &value)
 	{
 		return value.x || value.y || value.z;
 	}
 	
-	inline Bool any (const Bool4 &value)
+	ND_ inline Bool any (const Bool4 &value)
 	{
 		return value.x || value.y || value.z || value.w;
 	}
+
 
 
 	//

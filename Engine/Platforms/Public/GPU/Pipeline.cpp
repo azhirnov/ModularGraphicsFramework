@@ -189,6 +189,26 @@ namespace Platforms
 	{
 		src[ ESource::SoftRenderer ].Create( func );
 	}
+	
+/*
+=================================================
+	StringHLSL
+=================================================
+*/
+	void PipelineTemplateDescriptor::ShaderSource::StringHLSL (StringCRef data)
+	{
+		src[ ESource::HLSL ].Create( String(data) );
+	}
+	
+/*
+=================================================
+	StringBinHLSL
+=================================================
+*/
+	void PipelineTemplateDescriptor::ShaderSource::StringBinHLSL (BinArrayCRef data)
+	{
+		src[ ESource::HLSL_Bin ].Create( BinaryArray(data) );
+	}
 
 /*
 =================================================
@@ -202,7 +222,8 @@ namespace Platforms
 		if ( data.Is< String >() )
 			return data.Get< String >();
 
-		RETURN_ERR( "GLSL source doesn't exists!" );
+		//RETURN_ERR( "GLSL source doesn't exists!" );
+		return Uninitialized;
 	}
 	
 /*
@@ -217,7 +238,8 @@ namespace Platforms
 		if ( data.Is< Array<uint> >() )
 			return data.Get< Array<uint> >();
 
-		RETURN_ERR( "SPIR-V binary doesn't exists!" );
+		//RETURN_ERR( "SPIR-V binary doesn't exists!" );
+		return Uninitialized;
 	}
 		
 /*
@@ -232,7 +254,8 @@ namespace Platforms
 		if ( data.Is< String >() )
 			return data.Get< String >();
 
-		RETURN_ERR( "SPIR-V assembly doesn't exists!" );
+		//RETURN_ERR( "SPIR-V assembly doesn't exists!" );
+		return Uninitialized;
 	}
 
 /*
@@ -247,7 +270,8 @@ namespace Platforms
 		if ( data.Is< String >() )
 			return data.Get< String >();
 
-		RETURN_ERR( "CL source doesn't exists!" );
+		//RETURN_ERR( "CL source doesn't exists!" );
+		return Uninitialized;
 	}
 	
 /*
@@ -262,7 +286,8 @@ namespace Platforms
 		if ( data.Is< String >() )
 			return data.Get< String >();
 
-		RETURN_ERR( "CL assembly doesn't exists!" );
+		//RETURN_ERR( "CL assembly doesn't exists!" );
+		return Uninitialized;
 	}
 	
 /*
@@ -278,7 +303,40 @@ namespace Platforms
 		if ( data.Is< SWInvoke >() )
 			return data.Get< SWInvoke >();
 
-		RETURN_ERR( "SW function doesn't exists!" );
+		//RETURN_ERR( "SW function doesn't exists!" );
+		return Uninitialized;
+	}
+	
+/*
+=================================================
+	GetHLSL
+=================================================
+*/
+	StringCRef  PipelineTemplateDescriptor::ShaderSource::GetHLSL () const
+	{
+		const auto&		data = src[ ESource::HLSL ];
+
+		if ( data.Is< String >() )
+			return data.Get< String >();
+
+		//RETURN_ERR( "HLSL source doesn't exists!" );
+		return Uninitialized;
+	}
+	
+/*
+=================================================
+	GetHLSLBin
+=================================================
+*/
+	BinArrayCRef  PipelineTemplateDescriptor::ShaderSource::GetHLSLBin () const
+	{
+		const auto&		data = src[ ESource::HLSL_Bin ];
+
+		if ( data.Is< BinaryArray >() )
+			return data.Get< BinaryArray >();
+
+		//RETURN_ERR( "HLSL binary doesn't exists!" );
+		return Uninitialized;
 	}
 
 }	// Platforms

@@ -41,14 +41,14 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline T  Sin (const Radians<T>& x)
+	ND_ inline T  Sin (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 		return (T) ::sin( _float_t( x ) );
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  Sin (const RadiansVec<T,I,U> &x)
+	ND_ inline Vec<T,I,U>  Sin (const RadiansVec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Sin( x[i] );
@@ -56,7 +56,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  Sin (const DegreesVec<T,I,U> &x)
+	ND_ inline Vec<T,I,U>  Sin (const DegreesVec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Sin( x[i] );
@@ -69,14 +69,14 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline T  Cos (const Radians<T>& x)
+	ND_ inline T  Cos (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 		return (T) ::cos( _float_t( x ) );
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  Cos (const RadiansVec<T,I,U> &x)
+	ND_ inline Vec<T,I,U>  Cos (const RadiansVec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Cos( x[i] );
@@ -84,7 +84,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  Cos (const DegreesVec<T,I,U> &x)
+	ND_ inline Vec<T,I,U>  Cos (const DegreesVec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Cos( x[i] );
@@ -97,7 +97,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Vec<T,2>  SinCos (const Radians<T>& x)
+	ND_ inline Vec<T,2>  SinCos (const Radians<T>& x)
 	{
 		Vec<T,2>	ret;
 		ret.x = Sin( x );
@@ -111,7 +111,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Radians<T>  ASin (const T& x)
+	ND_ inline Radians<T>  ASin (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -122,7 +122,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline RadiansVec<T,I,U>  ASin (const Vec<T,I,U> &x)
+	ND_ inline RadiansVec<T,I,U>  ASin (const Vec<T,I,U> &x)
 	{
 		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = ASin( x[i] );
@@ -135,7 +135,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Radians<T>  ACos (const T& x)
+	ND_ inline Radians<T>  ACos (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -146,7 +146,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline RadiansVec<T,I,U>  ACos (const Vec<T,I,U> &x)
+	ND_ inline RadiansVec<T,I,U>  ACos (const Vec<T,I,U> &x)
 	{
 		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = ACos( x[i] );
@@ -159,7 +159,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline RadiansVec<T,2>  ASinCos (const T& value)
+	ND_ inline RadiansVec<T,2>  ASinCos (const T& value)
 	{
 		RadiansVec<T,2>	ret;
 		ret.x = ASin( value );
@@ -173,14 +173,14 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline T  SinH (const Radians<T>& x)
+	ND_ inline T  SinH (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 		return (T) ::sinh( _float_t( x ) );
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  SinH (const RadiansVec<T,I,U> &x)
+	ND_ inline Vec<T,I,U>  SinH (const RadiansVec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = SinH( x[i] );
@@ -193,14 +193,14 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline T  CosH (const Radians<T>& x)
+	ND_ inline T  CosH (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 		return (T) ::cosh( _float_t( x ) );
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  CosH (const RadiansVec<T,I,U> &x)
+	ND_ inline Vec<T,I,U>  CosH (const RadiansVec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = CosH( x[i] );
@@ -213,7 +213,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Vec<T,2>  SinCosH (const Radians<T>& value)
+	ND_ inline Vec<T,2>  SinCosH (const Radians<T>& value)
 	{
 		Vec<T,2>	ret;
 		ret.x = SinH( value );
@@ -227,7 +227,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Radians<T>  ASinH (const T& x)
+	ND_ inline Radians<T>  ASinH (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -235,7 +235,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline RadiansVec<T,I,U>  ASinH (const Vec<T,I,U> &x)
+	ND_ inline RadiansVec<T,I,U>  ASinH (const Vec<T,I,U> &x)
 	{
 		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = ASinH( x[i] );
@@ -248,7 +248,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Radians<T>  ACosH (const T& x)
+	ND_ inline Radians<T>  ACosH (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -257,7 +257,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline RadiansVec<T,I,U>  ACosH (const Vec<T,I,U> &x)
+	ND_ inline RadiansVec<T,I,U>  ACosH (const Vec<T,I,U> &x)
 	{
 		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = ACosH( x[i] );
@@ -270,7 +270,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline RadiansVec<T,2>  ASinCosH (const T& value)
+	ND_ inline RadiansVec<T,2>  ASinCosH (const T& value)
 	{
 		RadiansVec<T,2>	ret;
 		ret.x = ASinH( value );
@@ -284,14 +284,14 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline T  Tan (const Radians<T>& x)
+	ND_ inline T  Tan (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 		return (T) ::tan( _float_t( x ) );
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  Tan (const RadiansVec<T,I,U> &x)
+	ND_ inline Vec<T,I,U>  Tan (const RadiansVec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = Tan( x[i] );
@@ -304,13 +304,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline T  CoTan (const Radians<T>& x)
+	ND_ inline T  CoTan (const Radians<T>& x)
 	{
 		return SafeDiv( T(1), Tan( x ), T(0) );
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  CoTan (const RadiansVec<T,I,U> &x)
+	ND_ inline Vec<T,I,U>  CoTan (const RadiansVec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = CoTan( x[i] );
@@ -323,14 +323,14 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline T  TanH (const Radians<T>& x)
+	ND_ inline T  TanH (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 		return (T) ::tanh( _float_t( x ) );
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  TanH (const RadiansVec<T,I,U> &x)
+	ND_ inline Vec<T,I,U>  TanH (const RadiansVec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = TanH( x[i] );
@@ -343,13 +343,13 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline T  CoTanH (const Radians<T>& x)
+	ND_ inline T  CoTanH (const Radians<T>& x)
 	{
 		return SafeDiv( T(1), TanH( x ), T(0) );
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline Vec<T,I,U>  CoTanH (const RadiansVec<T,I,U> &x)
+	ND_ inline Vec<T,I,U>  CoTanH (const RadiansVec<T,I,U> &x)
 	{
 		Vec<T,I,U>		ret;
 		FOR( i, ret )	ret[i] = CoTanH( x[i] );
@@ -362,7 +362,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Radians<T>  ATan (const T& y_over_x)
+	ND_ inline Radians<T>  ATan (const T& y_over_x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -371,7 +371,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline RadiansVec<T,I,U>  ATan (const Vec<T,I,U> &y_over_x)
+	ND_ inline RadiansVec<T,I,U>  ATan (const Vec<T,I,U> &y_over_x)
 	{
 		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = ATan( y_over_x[i] );
@@ -384,7 +384,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Radians<T>  ATan (const T& y, const T& x)
+	ND_ inline Radians<T>  ATan (const T& y, const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -393,7 +393,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline RadiansVec<T,I,U>  ATan (const Vec<T,I,U> &y, const Vec<T,I,U> &x)
+	ND_ inline RadiansVec<T,I,U>  ATan (const Vec<T,I,U> &y, const Vec<T,I,U> &x)
 	{
 		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = ATan( y[i], x[i] );
@@ -406,7 +406,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Radians<T>  ACoTan (const T& x)
+	ND_ inline Radians<T>  ACoTan (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -414,7 +414,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline RadiansVec<T,I,U>  ACoTan (const Vec<T,I,U> &x)
+	ND_ inline RadiansVec<T,I,U>  ACoTan (const Vec<T,I,U> &x)
 	{
 		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = ACoTan( x[i] );
@@ -427,7 +427,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Radians<T>  ATanH (const T& x)
+	ND_ inline Radians<T>  ATanH (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -439,7 +439,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline RadiansVec<T,I,U>  ATanH (const Vec<T,I,U> &x)
+	ND_ inline RadiansVec<T,I,U>  ATanH (const Vec<T,I,U> &x)
 	{
 		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )		ret[i] = ATanH( x[i] );
@@ -452,7 +452,7 @@ namespace GXMath
 =================================================
 */
 	template <typename T>
-	CHECKRES inline Radians<T>  ACoTanH (const T& x)
+	ND_ inline Radians<T>  ACoTanH (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
@@ -460,7 +460,7 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	CHECKRES inline RadiansVec<T,I,U>  ACoTanH (const Vec<T,I,U> &x)
+	ND_ inline RadiansVec<T,I,U>  ACoTanH (const Vec<T,I,U> &x)
 	{
 		RadiansVec<T,I,U>	ret;
 		FOR( i, ret )	ret[i] = ACoTanH( x[i] );

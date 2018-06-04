@@ -49,13 +49,13 @@ namespace OS
 		CriticalSection ();
 		~CriticalSection ();
 
-		bool IsValid () const	{ return _inited; }
+		ND_ bool IsValid () const	{ return _inited; }
 
-		bool TryLock ();
-		void Lock ();
-		void Unlock ();
+			void Lock ();
+		ND_ bool TryLock ();
+			void Unlock ();
 
-		CHECKRES ScopeLock  GetScopeLock ()
+		ND_ ScopeLock  GetScopeLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->Lock(); }
@@ -65,7 +65,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		CHECKRES operator ScopeLock ()
+		ND_ operator ScopeLock ()
 		{
 			return GetScopeLock();
 		}
@@ -102,16 +102,16 @@ namespace OS
 		ReadWriteSync ();
 		~ReadWriteSync ();
 
-		bool TryLockWrite ();
-		bool TryLockRead ();
 
-		void LockWrite ();
-		void UnlockWrite ();
+			void LockWrite ();
+		ND_ bool TryLockWrite ();
+			void UnlockWrite ();
 
-		void LockRead ();
-		void UnlockRead ();
+			void LockRead ();
+		ND_ bool TryLockRead ();
+			void UnlockRead ();
 
-		CHECKRES ScopeLock  GetScopeWriteLock ()
+		ND_ ScopeLock  GetScopeWriteLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->LockWrite(); }
@@ -120,7 +120,7 @@ namespace OS
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
 		}
 
-		CHECKRES ScopeLock  GetScopeReadLock ()
+		ND_ ScopeLock  GetScopeReadLock ()
 		{
 			struct Util {
 				static void Lock (void *p)		{ ((Self *)p)->LockRead(); }

@@ -36,7 +36,7 @@ namespace Platforms
 			Name_t				name;
 			EShader::bits		stageFlags;
 			uint				binding		= UMax;	// resource dependend index, may be optimized to minimize resource switches between pipelines, used in OpenGL, DirectX
-			uint				uniqueIndex	= UMax;	// resource unique index in current pipeline, used in Vulkan, OpenCL
+			uint				uniqueIndex	= UMax;	// resource unique index in current pipeline, used in Vulkan, OpenCL, software renderer
 		};
 
 
@@ -49,7 +49,6 @@ namespace Platforms
 		// methods
 			bool operator == (const TextureUniform &right) const;
 			bool operator >  (const TextureUniform &right) const;
-			bool operator <  (const TextureUniform &right) const;
 		};
 
 
@@ -61,7 +60,6 @@ namespace Platforms
 		// methods
 			bool operator == (const SamplerUniform &right) const;
 			bool operator >  (const SamplerUniform &right) const;
-			bool operator <  (const SamplerUniform &right) const;
 		};
 
 
@@ -73,7 +71,6 @@ namespace Platforms
 		// methods
 			bool operator == (const SubpassInput &right) const;
 			bool operator >  (const SubpassInput &right) const;
-			bool operator <  (const SubpassInput &right) const;
 		};
 
 
@@ -87,7 +84,6 @@ namespace Platforms
 		// methods
 			bool operator == (const ImageUniform &right) const;
 			bool operator >  (const ImageUniform &right) const;
-			bool operator <  (const ImageUniform &right) const;
 		};
 
 
@@ -101,7 +97,6 @@ namespace Platforms
 		// methods
 			bool operator == (const UniformBuffer &right) const;
 			bool operator >  (const UniformBuffer &right) const;
-			bool operator <  (const UniformBuffer &right) const;
 		};
 
 
@@ -117,7 +112,6 @@ namespace Platforms
 		// methods
 			bool operator == (const StorageBuffer &right) const;
 			bool operator >  (const StorageBuffer &right) const;
-			bool operator <  (const StorageBuffer &right) const;
 		};
 
 
@@ -133,7 +127,6 @@ namespace Platforms
 		// methods
 			bool operator == (const PushConstant &right) const;
 			bool operator >  (const PushConstant &right) const;
-			bool operator <  (const PushConstant &right) const;
 		};
 
 
@@ -157,12 +150,11 @@ namespace Platforms
 	public:
 		PipelineLayoutDescriptor (GX_DEFCTOR) {}
 
-		HashResult				GetHash ()			const	{ return _hash; }
-		ArrayCRef<Uniform_t>	GetUniforms ()		const	{ return _uniforms; }
+		ND_ HashResult				GetHash ()			const	{ return _hash; }
+		ND_ ArrayCRef<Uniform_t>	GetUniforms ()		const	{ return _uniforms; }
 
-		bool operator == (const Self &right) const;
-		bool operator >  (const Self &right) const;
-		bool operator <  (const Self &right) const;
+		ND_ bool operator == (const Self &right) const;
+		ND_ bool operator >  (const Self &right) const;
 	};
 	
 
@@ -199,10 +191,10 @@ namespace Platforms
 		Builder& AddPushConstant (StringCRef name, BytesU offset, BytesU size, EShader::bits stageFlags);
 		Builder& AddPushConstantsBuffer (StringCRef name, BytesU size, uint binding, uint uniqueIndex, EShader::bits stageFlags);
 		
-		ArrayCRef<Uniform_t>	GetUniforms ()	const	{ return _descr.GetUniforms(); }
+		ND_ ArrayCRef<Uniform_t>	GetUniforms ()	const	{ return _descr.GetUniforms(); }
 
 		// validate, calculate hash and return
-		PipelineLayoutDescriptor const& Finish ();
+		ND_ PipelineLayoutDescriptor const& Finish ();
 	};
 
 }	// Platforms
@@ -219,7 +211,7 @@ namespace GXTypes
 	template <>
 	struct Hash< Engine::Platforms::PipelineLayoutDescriptor > final
 	{
-		HashResult  operator () (const Engine::Platforms::PipelineLayoutDescriptor &key) const noexcept
+		ND_ HashResult  operator () (const Engine::Platforms::PipelineLayoutDescriptor &key) const noexcept
 		{
 			HashResult	res;
 

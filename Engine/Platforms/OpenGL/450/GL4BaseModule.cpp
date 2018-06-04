@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/OpenGL/450/GL4BaseModule.h"
+#include "Engine/Platforms/OpenGL/450/GL4ResourceCache.h"
 #include "Engine/Platforms/OpenGL/OpenGLObjectsConstructor.h"
 
 #ifdef GRAPHICS_API_OPENGL
@@ -30,21 +31,28 @@ namespace PlatformGL
 */
 	bool GL4BaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
 	{
-		_glDevice = null;
+		if ( msg->oldManager )
+		{
+			msg->oldManager->UnsubscribeAll( this );
+			
+			if ( _glResourceCache )
+				_glResourceCache->Erase( this );
+		}
+
+		_glDevice			= null;
+		_glResourceCache	= null;
 
 		if ( msg->newManager )
 		{
 			msg->newManager->Subscribe( this, &GL4BaseModule::_DeviceBeforeDestroy );
 			msg->newManager->Subscribe( this, &GL4BaseModule::_DeviceDeleted );
 
-			Message< GpuMsg::GetGLPrivateClasses >	req_dev;
-			CHECK( msg->newManager->Send( req_dev ) );
+			Message< GpuMsg::GetGLPrivateClasses >	req_classes;
+			CHECK( msg->newManager->Send( req_classes ) );
 
-			_glDevice = req_dev->result->device;
+			_glDevice			= req_classes->result->device;
+			_glResourceCache	= req_classes->result->resourceCache;
 		}
-
-		if ( msg->oldManager )
-			msg->oldManager->UnsubscribeAll( this );
 
 		return true;
 	}
@@ -57,8 +65,12 @@ namespace PlatformGL
 	bool GL4BaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
 	{
 		_SendMsg< ModuleMsg::Delete >({});
+		
+		if ( _glResourceCache )
+			_glResourceCache->Erase( this );
 
-		_glDevice = null;
+		_glDevice			= null;
+		_glResourceCache	= null;
 		return true;
 	}
 	
@@ -70,8 +82,12 @@ namespace PlatformGL
 	bool GL4BaseModule::_DeviceDeleted (const Message< ModuleMsg::Delete > &msg)
 	{
 		Send( msg );
+		
+		if ( _glResourceCache )
+			_glResourceCache->Erase( this );
 
-		_glDevice = null;
+		_glDevice			= null;
+		_glResourceCache	= null;
 		return true;
 	}
 
@@ -112,13 +128,10 @@ namespace PlatformGL
 */
 	ModulePtr GL4BaseModule::_GetGPUThread (const ModulePtr &thread)
 	{
-		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetGLPrivateClasses >;
+		using GThreadMsgList_t		= MessageListFrom< GpuMsg::ThreadBeginFrame, GpuMsg::ThreadEndFrame, GpuMsg::GetGLDeviceInfo, GpuMsg::GetGLPrivateClasses >;
 		using GThreadEventMsgList_t	= MessageListFrom< GpuMsg::DeviceBeforeDestroy, ModuleMsg::Delete >;
 
 		ModulePtr	result = thread;
-		
-		if ( not result )
-			result = GlobalSystems()->parallelThread->GetModuleByID( GLThreadModuleID );
 
 		if ( not result )
 			result = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GThreadMsgList_t, GThreadEventMsgList_t >();

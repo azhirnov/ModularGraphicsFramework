@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine/Base/Common/IDs.h"
-#include "Engine/Base/Threads/ParallelThread.h"
+#include "Engine/Base/Public/ParallelThread.h"
 
 namespace Engine
 {
@@ -14,7 +14,7 @@ namespace Base
 	// Parallel Thread
 	//
 
-	class ParallelThreadImpl final : public ParallelThread
+	class ParallelThreadImpl final : public Module
 	{
 		friend class ThreadManager;
 
@@ -41,7 +41,7 @@ namespace Base
 	private:
 		OS::Thread				_thread;
 		OnStartThreadFunc_t		_onStarted;
-		TimeProfilerD			_timer;
+		TimeProfilerL			_timer;
 		bool					_isLooping;
 
 

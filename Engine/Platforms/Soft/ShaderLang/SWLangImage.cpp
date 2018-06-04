@@ -179,11 +179,13 @@ namespace Impl
 	void BaseImage::_StoreTexel (MemLayout_t &memLayout, const int3 &coord, const void* texel)
 	{
 		auto&		layer	= memLayout.layers[ Clamp(coord.z, 0, int(memLayout.layers.Count())-1) ];
-		BytesU		bpp		= SizeOf<SrcColor>;
+		BytesU		bpp		= SizeOf<DstColor>;
 		BytesU		off		= GXImageUtils::GetPixelOffset( coord.xyo(), int2(layer.dimension).xyo(), bpp, memLayout.align );
 		auto&		mipmap	= layer.mipmaps.Front();
 		void*		ptr		= mipmap.memory + off;
 		
+		CHECK( off + bpp <= mipmap.size );
+
 		if ( Engine::PlatformSW::SWDeviceProperties.vulkanCompatibility )
 		{
 			CHECK( mipmap.layout == EImageLayout::General );

@@ -89,7 +89,7 @@ namespace Graphics
 		bool Create (const uint2 &dim);
 		void Destroy ();
 
-		bool Empty () const;
+		ND_ bool Empty () const;
 
 		bool AllocLine (OUT SubTextureId &id, const uint2 &dim);
 		bool DeallocLine (INOUT SubTextureId &id);
@@ -100,7 +100,7 @@ namespace Graphics
 
 		bool FindLine (OUT SubTextureId &id, uint lineHeight, uint requestFreeWidth = 0) const;
 
-		uint2 const &	Dimension () const	{ return _texDim; }
+		ND_ uint2 const &	Dimension () const	{ return _texDim; }
 	};
 
 

@@ -27,6 +27,7 @@ namespace Impl
 	// variables
 	private:
 		BufferData_t	_data;
+		T *				_ptr	= null;
 
 
 	// methods
@@ -41,21 +42,25 @@ namespace Impl
 		UniformBuffer (UniformBuffer &&) = default;
 		UniformBuffer (const UniformBuffer &) = default;
 
-		T const* operator -> () const;
+		ND_ T const* operator -> () const;
 	};
 
 	
 	template <typename T>
-	UniformBuffer<T>::UniformBuffer (const BufferData_t &data) : _data(data)
+	UniformBuffer<T>::UniformBuffer (const BufferData_t &data) :
+		_data{ data },
+		_ptr{ reinterpret_cast<T *>( _data.memory.RawPtr() ) }
 	{
-		ASSERT( _data.memory.Size() == SizeOf<T>() );
+		const BytesU	t_size = BytesU::SizeOf<T>();
+
+		ASSERT( _data.memory.Size() >= t_size );
 	}
 
 	template <typename T>
 	inline T const*  UniformBuffer<T>::operator -> () const
 	{
 		ASSERT( _data.memAccess[ EMemoryAccess::GpuRead ] );
-		return (T const *) _data.memory.ptr();
+		return _ptr;
 	}
 //-----------------------------------------------------------------------------
 
@@ -79,6 +84,7 @@ namespace Impl
 	// variables
 	private:
 		BufferData_t	_data;
+		T *				_ptr	= null;
 
 
 	// methods
@@ -96,15 +102,19 @@ namespace Impl
 		StorageBuffer (StorageBuffer &&) = default;
 		StorageBuffer (const StorageBuffer &) = default;
 
-		decltype(auto)	operator -> ();
+		ND_ decltype(auto)	operator -> ();
 	};
 
 	
 	
 	template <typename T, EStorageAccess::type A>
-	StorageBuffer<T,A>::StorageBuffer (const BufferData_t &data) : _data(data)
+	StorageBuffer<T,A>::StorageBuffer (const BufferData_t &data) :
+		_data{ data },
+		_ptr{ reinterpret_cast<T *>( _data.memory.RawPtr() ) }
 	{
-		ASSERT( _data.memory.Size() >= SizeOf<T> );
+		const BytesU	t_size = BytesU::SizeOf<T>();
+
+		ASSERT( _data.memory.Size() >= t_size );
 	}
 
 	template <typename T, EStorageAccess::type A>
@@ -121,7 +131,7 @@ namespace Impl
 	{
 		STATIC_ASSERT( EStorageAccess::HasReadAccess(A) );
 		ASSERT( _data.memAccess[ EMemoryAccess::GpuRead ] );
-		return (T const *) _data.memory.ptr();
+		return _ptr;
 	}
 	
 	template <typename T, EStorageAccess::type A>
@@ -129,7 +139,7 @@ namespace Impl
 	{
 		STATIC_ASSERT( EStorageAccess::HasWriteAccess(A) );
 		ASSERT( _data.memAccess[ EMemoryAccess::GpuWrite ] );
-		return (T *) _data.memory.ptr();
+		return _ptr;
 	}
 //-----------------------------------------------------------------------------
 

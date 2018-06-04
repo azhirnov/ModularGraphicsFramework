@@ -5,7 +5,7 @@
 
 namespace ResPack
 {
-	using namespace GXScript;
+	using namespace GX_STL::GXScript;
 	
 /*
 =================================================
@@ -76,7 +76,6 @@ namespace ResPack
 		binder.AddProperty( &ConverterConfig::searchForSharedTypes,	"searchForSharedTypes" );
 		binder.AddProperty( &ConverterConfig::addPaddingToStructs,	"addPaddingToStructs" );
 		binder.AddProperty( &ConverterConfig::optimizeBindings,		"optimizeBindings" );
-		binder.AddProperty( &ConverterConfig::obfuscate,			"obfuscate" );
 		binder.AddProperty( &ConverterConfig::validation,			"validation" );
 		binder.AddProperty( &ConverterConfig::nameSpace,			"nameSpace" );
 		binder.AddProperty( &ConverterConfig::minimalRebuild,		"minimalRebuild" );
@@ -115,10 +114,10 @@ namespace ResPack
 
 			static void LoadSelf (ShaderModule *module)
 			{
-				StringCRef		fname	= ScriptHelper::CurrentFileName();
-				File::RFilePtr	file	= File::HddRFile::New( fname );
-				const usize		len		= usize(file->RemainingSize());
-				String			src;	src.Resize( len );
+				StringCRef			fname	= ScriptHelper::CurrentFileName();
+				GXFile::RFilePtr	file	= GXFile::HddRFile::New( fname );
+				const usize			len		= usize(file->RemainingSize());
+				String				src;	src.Resize( len );
 
 				CHECK_ERR( file->Read( src.ptr(), src.LengthInBytes() ), void() );
 				CHECK_ERR( not src.Empty(), void() );
@@ -702,8 +701,8 @@ namespace ResPack
 			//binder.AddValue( "GLSL_ES_Binary",	EShaderDstFormat::GLSL_ES_Binary );
 			binder.AddValue( "CL_Source",			EShaderDstFormat::CL_Source );
 			binder.AddValue( "CL_Binary",			EShaderDstFormat::CL_Binary );
-			//binder.AddValue( "HLSL_Source",		EShaderDstFormat::HLSL_Source );
-			//binder.AddValue( "HLSL_Binary",		EShaderDstFormat::HLSL_Binary );
+			binder.AddValue( "HLSL_Source",			EShaderDstFormat::HLSL_Source );
+			binder.AddValue( "HLSL_Binary",			EShaderDstFormat::HLSL_Binary );
 			binder.AddValue( "SPIRV_Asm",			EShaderDstFormat::SPIRV_Source );
 			binder.AddValue( "SPIRV_Binary",		EShaderDstFormat::SPIRV_Binary );
 			//binder.AddValue( "Metal_Source",		EShaderDstFormat::Metal_Source );

@@ -101,7 +101,7 @@ namespace Impl
 		Image2D (Image2D &&) = default;
 		Image2D (const Image2D &) = default;
 
-		T		Load (const int2 &point) const;
+		ND_  T	Load (const int2 &point) const;
 		void	Store (const int2 &point, const T &value);
 
 		// TODO: atomics
@@ -149,11 +149,28 @@ namespace Impl
 		Image2DArray (Image2DArray &&) = default;
 		Image2DArray (const Image2DArray &) = default;
 
-		T		Load (const int3 &point) const;
+		ND_ T	Load (const int3 &point) const;
 		void	Store (const int3 &point, const T &value);
 
 		// TODO: atomics
 	};
+	
+
+	template <typename T, EStorageAccess::type A>
+	inline T  Image2DArray<T,A>::Load (const int3 &point) const
+	{
+		STATIC_ASSERT( EStorageAccess::HasReadAccess(A) );
+		T res;
+		_Load( point, OUT &res );
+		return res;
+	}
+		
+	template <typename T, EStorageAccess::type A>
+	inline void  Image2DArray<T,A>::Store (const int3 &point, const T &value)
+	{
+		STATIC_ASSERT( EStorageAccess::HasWriteAccess(A) );
+		_Store( point, &value );
+	}
 //-----------------------------------------------------------------------------
 
 
@@ -180,14 +197,29 @@ namespace Impl
 		Image3D (Image3D &&) = default;
 		Image3D (const Image3D &) = default;
 
-		T		Load (const int3 &point) const;
+		ND_ T	Load (const int3 &point) const;
 		void	Store (const int3 &point, const T &value);
 
 		// TODO: atomics
 	};
-//-----------------------------------------------------------------------------
-
 	
+
+	template <typename T, EStorageAccess::type A>
+	inline T  Image3D<T,A>::Load (const int3 &point) const
+	{
+		STATIC_ASSERT( EStorageAccess::HasReadAccess(A) );
+		T res;
+		_Load( point, OUT &res );
+		return res;
+	}
+		
+	template <typename T, EStorageAccess::type A>
+	inline void  Image3D<T,A>::Store (const int3 &point, const T &value)
+	{
+		STATIC_ASSERT( EStorageAccess::HasWriteAccess(A) );
+		_Store( point, &value );
+	}
+//-----------------------------------------------------------------------------
 
 
 }	// Impl
