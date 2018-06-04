@@ -1,0 +1,840 @@
+// This is generated file
+// Origin file: 'CodeGen\Tests/BruteforceTest.ppln'
+#include "all_pipelines.h"
+// C++ shader
+#ifdef GRAPHICS_API_SOFT
+namespace SWShaderLang
+{
+namespace {
+
+# ifdef _MSC_VER
+#	pragma warning (push)
+#	pragma warning (1: 4456)
+# endif // _MSC_VER
+
+#	define INOUT
+#	define IN
+#	define OUT
+
+	struct BigInt
+	{
+		SArr<UInt,2> value;
+		UInt lastBit;
+	
+		BigInt () {}
+		BigInt (BigInt &&) = default;
+		BigInt (const BigInt &) = default;
+		explicit BigInt(const SArr<UInt,2> &value, const UInt &lastBit) : value{value}, lastBit{lastBit} {}
+	
+		BigInt& operator = (BigInt &&) = default;
+		BigInt& operator = (const BigInt &) = default;
+		Bool operator == (const BigInt &right) const {
+			return	all( value == right.value ) &&
+					all( lastBit == right.lastBit );
+		}
+		Bool operator != (const BigInt &right) const { return !(*this == right); }
+	
+	};
+	
+	struct Bruteforce_SSBO
+	{
+		UInt result;
+		Float _padding0;
+		Float _padding1;
+		Float _padding2;
+	
+		Bruteforce_SSBO () {}
+		Bruteforce_SSBO (Bruteforce_SSBO &&) = default;
+		Bruteforce_SSBO (const Bruteforce_SSBO &) = default;
+		explicit Bruteforce_SSBO(const UInt &result, const Float &_padding0, const Float &_padding1, const Float &_padding2) : result{result}, _padding0{_padding0}, _padding1{_padding1}, _padding2{_padding2} {}
+	
+		Bruteforce_SSBO& operator = (Bruteforce_SSBO &&) = default;
+		Bruteforce_SSBO& operator = (const Bruteforce_SSBO &) = default;
+		Bool operator == (const Bruteforce_SSBO &right) const {
+			return	all( result == right.result ) &&
+					all( _padding0 == right._padding0 ) &&
+					all( _padding1 == right._padding1 ) &&
+					all( _padding2 == right._padding2 );
+		}
+		Bool operator != (const Bruteforce_SSBO &right) const { return !(*this == right); }
+	
+	};
+	
+	struct Bruteforce_Atomics
+	{
+		UInt results;
+		UInt bestResults;
+	
+		Bruteforce_Atomics () {}
+		Bruteforce_Atomics (Bruteforce_Atomics &&) = default;
+		Bruteforce_Atomics (const Bruteforce_Atomics &) = default;
+		explicit Bruteforce_Atomics(const UInt &results, const UInt &bestResults) : results{results}, bestResults{bestResults} {}
+	
+		Bruteforce_Atomics& operator = (Bruteforce_Atomics &&) = default;
+		Bruteforce_Atomics& operator = (const Bruteforce_Atomics &) = default;
+		Bool operator == (const Bruteforce_Atomics &right) const {
+			return	all( results == right.results ) &&
+					all( bestResults == right.bestResults );
+		}
+		Bool operator != (const Bruteforce_Atomics &right) const { return !(*this == right); }
+	
+	};
+	
+	struct Bruteforce_Result
+	{
+		BigInt funHash;
+		BigInt constHash;
+		Float ticks;
+		Float accuracy;
+	
+		Bruteforce_Result () {}
+		Bruteforce_Result (Bruteforce_Result &&) = default;
+		Bruteforce_Result (const Bruteforce_Result &) = default;
+		explicit Bruteforce_Result(const BigInt &funHash, const BigInt &constHash, const Float &ticks, const Float &accuracy) : funHash{funHash}, constHash{constHash}, ticks{ticks}, accuracy{accuracy} {}
+	
+		Bruteforce_Result& operator = (Bruteforce_Result &&) = default;
+		Bruteforce_Result& operator = (const Bruteforce_Result &) = default;
+		Bool operator == (const Bruteforce_Result &right) const {
+			return	all( funHash == right.funHash ) &&
+					all( constHash == right.constHash ) &&
+					all( ticks == right.ticks ) &&
+					all( accuracy == right.accuracy );
+		}
+		Bool operator != (const Bruteforce_Result &right) const { return !(*this == right); }
+	
+	};
+	
+	struct TestCase
+	{
+		SArr<Int,2> inArgs;
+		Int result;
+	
+		TestCase () {}
+		TestCase (TestCase &&) = default;
+		TestCase (const TestCase &) = default;
+		explicit TestCase(const SArr<Int,2> &inArgs, const Int &result) : inArgs{inArgs}, result{result} {}
+	
+		TestCase& operator = (TestCase &&) = default;
+		TestCase& operator = (const TestCase &) = default;
+		Bool operator == (const TestCase &right) const {
+			return	all( inArgs == right.inArgs ) &&
+					all( result == right.result );
+		}
+		Bool operator != (const TestCase &right) const { return !(*this == right); }
+	
+	};
+	
+	struct Bruteforce_InputsSSBO
+	{
+		BigInt initialHash;
+		BigInt constHash;
+		Float maxAccuracy;
+		Int numConstants;
+		Int constants;
+		SArr<TestCase,10> tests;
+	
+		Bruteforce_InputsSSBO () {}
+		Bruteforce_InputsSSBO (Bruteforce_InputsSSBO &&) = default;
+		Bruteforce_InputsSSBO (const Bruteforce_InputsSSBO &) = default;
+		explicit Bruteforce_InputsSSBO(const BigInt &initialHash, const BigInt &constHash, const Float &maxAccuracy, const Int &numConstants, const Int &constants, const SArr<TestCase,10> &tests) : initialHash{initialHash}, constHash{constHash}, maxAccuracy{maxAccuracy}, numConstants{numConstants}, constants{constants}, tests{tests} {}
+	
+		Bruteforce_InputsSSBO& operator = (Bruteforce_InputsSSBO &&) = default;
+		Bruteforce_InputsSSBO& operator = (const Bruteforce_InputsSSBO &) = default;
+		Bool operator == (const Bruteforce_InputsSSBO &right) const {
+			return	all( initialHash == right.initialHash ) &&
+					all( constHash == right.constHash ) &&
+					all( maxAccuracy == right.maxAccuracy ) &&
+					all( numConstants == right.numConstants ) &&
+					all( constants == right.constants ) &&
+					all( tests == right.tests );
+		}
+		Bool operator != (const Bruteforce_InputsSSBO &right) const { return !(*this == right); }
+	
+	};
+	
+	struct Bruteforce_OutputsSSBO
+	{
+		Bruteforce_Atomics stat;
+		SArr<Bruteforce_Result,10000> funcs;
+	
+		Bruteforce_OutputsSSBO () {}
+		Bruteforce_OutputsSSBO (Bruteforce_OutputsSSBO &&) = default;
+		Bruteforce_OutputsSSBO (const Bruteforce_OutputsSSBO &) = default;
+		explicit Bruteforce_OutputsSSBO(const Bruteforce_Atomics &stat, const SArr<Bruteforce_Result,10000> &funcs) : stat{stat}, funcs{funcs} {}
+	
+		Bruteforce_OutputsSSBO& operator = (Bruteforce_OutputsSSBO &&) = default;
+		Bruteforce_OutputsSSBO& operator = (const Bruteforce_OutputsSSBO &) = default;
+		Bool operator == (const Bruteforce_OutputsSSBO &right) const {
+			return	all( stat == right.stat ) &&
+					all( funcs == right.funcs );
+		}
+		Bool operator != (const Bruteforce_OutputsSSBO &right) const { return !(*this == right); }
+	
+	};
+	
+	
+	//---------------------------------
+	
+	static Bool Equals (const Float left, const Float right);
+	static Bool Equals (const Float left, const Float right, const UInt accuracyInBits);
+	
+	//---------------------------------
+	
+	static Bool Equals (const Float left, const Float right)
+	{
+		return Equals(left, right, UInt(10u));
+	}
+	
+	
+	static Bool Equals (const Float left, const Float right, const UInt accuracyInBits)
+	{
+		Int ileft = floatBitsToInt(left);
+		;
+		Int iright = floatBitsToInt(right);
+		;
+		ileft = ( ((ileft < Int(0))) ? ((Int((-2147483647 - 1)) - ileft)) : (ileft) );
+		iright = ( ((iright < Int(0))) ? ((Int((-2147483647 - 1)) - iright)) : (iright) );
+		return (abs((ileft - iright)) <= (Int(1) << (accuracyInBits & UInt(31u))));
+	}
+	
+	
+	static void sw_bruteforcetest_comp (const Impl::SWShaderHelper &_helper_)
+	{
+		// prepare externals
+		Impl::StorageBuffer< Bruteforce_SSBO, Impl::EStorageAccess::WriteOnly > ssb;	_helper_.GetStorageBuffer( 0, ssb );
+		Impl::StorageBuffer< Bruteforce_InputsSSBO, Impl::EStorageAccess::ReadOnly > ssb_input;	_helper_.GetStorageBuffer( 1, ssb_input );
+		Impl::StorageBuffer< Bruteforce_OutputsSSBO, Impl::EStorageAccess::ReadOnly > ssb_output;	_helper_.GetStorageBuffer( 2, ssb_output );
+	
+		// shader
+		{
+			UInt res = UInt(141u);
+			;
+			(res -= UInt(((ssb_input->initialHash.value[Int(0)]) == UInt(287454020u))));
+			(res -= UInt(((ssb_input->initialHash.value[Int(1)]) == UInt(1432778632u))));
+			(res -= UInt((ssb_input->initialHash.lastBit == UInt(64u))));
+			(res -= UInt(Equals(ssb_input->maxAccuracy, Float(1.0f))));
+			(res -= UInt((((ssb_input->tests[Int(0)]).inArgs[Int(0)]) == Int(1))));
+			(res -= UInt((((ssb_input->tests[Int(0)]).inArgs[Int(1)]) == Int(2))));
+			(res -= UInt(((ssb_input->tests[Int(0)]).result == Int(3))));
+			(res -= UInt((((ssb_input->tests[Int(1)]).inArgs[Int(0)]) == Int(10))));
+			(res -= UInt((((ssb_input->tests[Int(1)]).inArgs[Int(1)]) == Int(20))));
+			(res -= UInt(((ssb_input->tests[Int(1)]).result == Int(30))));
+			(res -= UInt((((ssb_input->tests[Int(2)]).inArgs[Int(0)]) == Int(11))));
+			(res -= UInt((((ssb_input->tests[Int(2)]).inArgs[Int(1)]) == Int(21))));
+			(res -= UInt(((ssb_input->tests[Int(2)]).result == Int(31))));
+			(res -= UInt((ssb_output->stat.results == UInt(1234u))));
+			(res -= UInt((ssb_output->stat.bestResults == UInt(543u))));
+			(res -= UInt((((ssb_output->funcs[Int(0)]).funHash.value[Int(0)]) == UInt(303174162u))));
+			(res -= UInt((((ssb_output->funcs[Int(0)]).funHash.value[Int(1)]) == UInt(0u))));
+			(res -= UInt(((ssb_output->funcs[Int(0)]).funHash.lastBit == UInt(32u))));
+			(res -= UInt(Equals((ssb_output->funcs[Int(0)]).ticks, Float(20.0f))));
+			(res -= UInt(Equals((ssb_output->funcs[Int(0)]).accuracy, Float(1.0f))));
+			(res -= UInt((((ssb_output->funcs[Int(1)]).funHash.value[Int(0)]) == UInt(555819297u))));
+			(res -= UInt((((ssb_output->funcs[Int(1)]).funHash.value[Int(1)]) == UInt(1u))));
+			(res -= UInt(((ssb_output->funcs[Int(1)]).funHash.lastBit == UInt(33u))));
+			(res -= UInt(Equals((ssb_output->funcs[Int(1)]).ticks, Float(22.0f))));
+			(res -= UInt(Equals((ssb_output->funcs[Int(1)]).accuracy, Float(2.0f))));
+			(res -= UInt((((ssb_output->funcs[Int(2)]).funHash.value[Int(0)]) == UInt(842150450u))));
+			(res -= UInt((((ssb_output->funcs[Int(2)]).funHash.value[Int(1)]) == UInt(2u))));
+			(res -= UInt(((ssb_output->funcs[Int(2)]).funHash.lastBit == UInt(34u))));
+			(res -= UInt(Equals((ssb_output->funcs[Int(2)]).ticks, Float(14.0f))));
+			(res -= UInt(Equals((ssb_output->funcs[Int(2)]).accuracy, Float(1.5f))));
+			ssb->result = res;
+		}
+	}
+	
+# ifdef _MSC_VER
+#	pragma warning (pop)
+# endif // _MSC_VER
+
+}		// anonymous namespace
+}		// SWShaderLang
+#endif	// GRAPHICS_API_SOFT
+
+
+namespace Pipelines
+{
+
+void Create_bruteforcetest (PipelineTemplateDescriptor& descr)
+{
+	descr = PipelineTemplateDescriptor();
+	descr.supportedShaders = EShader::Compute;
+
+	descr.localGroupSize = uint3(1, 1, 1);
+	descr.layout = PipelineLayoutDescriptor::Builder()
+			.AddStorageBuffer( "ssb", 16_b, 0_b, EShaderMemoryModel::WriteOnly, 0u, 0u, EShader::Compute )
+			.AddStorageBuffer( "ssb_input", 156_b, 0_b, EShaderMemoryModel::ReadOnly, 2u, 1u, EShader::Compute )
+			.AddStorageBuffer( "ssb_output", 320008_b, 0_b, EShaderMemoryModel::ReadOnly, 3u, 2u, EShader::Compute )
+			.Finish();
+
+	descr.Compute().StringGLSL( 
+R"#(#version 450 core
+layout (local_size_x=1, local_size_y=1, local_size_z=1) in;
+
+struct BigInt
+{
+	uint value[2];
+	uint lastBit;
+};
+
+struct Bruteforce_Atomics
+{
+	uint results;
+	uint bestResults;
+};
+
+struct Bruteforce_Result
+{
+	BigInt funHash;
+	BigInt constHash;
+	float ticks;
+	float accuracy;
+};
+
+struct TestCase
+{
+	int inArgs[2];
+	int result;
+};
+
+
+//---------------------------------
+
+layout(binding=0) layout(std430) writeonly buffer Bruteforce_SSBO{
+	uint result;
+	float _padding0;
+	float _padding1;
+	float _padding2;
+} ssb;
+layout(binding=2) layout(std430) readonly buffer Bruteforce_InputsSSBO{
+	BigInt initialHash;
+	BigInt constHash;
+	float maxAccuracy;
+	int numConstants;
+	int constants;
+	TestCase tests[10];
+} ssb_input;
+layout(binding=3) layout(std430) readonly buffer Bruteforce_OutputsSSBO{
+	Bruteforce_Atomics stat;
+	Bruteforce_Result funcs[10000];
+} ssb_output;
+
+//---------------------------------
+
+bool Equals (const float left, const float right);
+bool Equals (const float left, const float right, const uint accuracyInBits);
+
+//---------------------------------
+
+bool Equals (const float left, const float right)
+{
+	return Equals(left, right, uint( 10u ));
+}
+
+
+bool Equals (const float left, const float right, const uint accuracyInBits)
+{
+	int ileft = floatBitsToInt( left );
+	;
+	int iright = floatBitsToInt( right );
+	;
+	ileft = ( ((ileft < int( 0 ))) ? ((int( (-2147483647 - 1) ) - ileft)) : (ileft) );
+	iright = ( ((iright < int( 0 ))) ? ((int( (-2147483647 - 1) ) - iright)) : (iright) );
+	return (abs( (ileft - iright) ) <= (int( 1 ) << (accuracyInBits & uint( 31u ))));
+}
+
+
+void main ()
+{
+	uint res = uint( 141u );
+	;
+	(res -= uint( ((ssb_input.initialHash.value[int( 0 )]) == uint( 287454020u )) ));
+	(res -= uint( ((ssb_input.initialHash.value[int( 1 )]) == uint( 1432778632u )) ));
+	(res -= uint( (ssb_input.initialHash.lastBit == uint( 64u )) ));
+	(res -= uint( Equals(ssb_input.maxAccuracy, float( 1.0f )) ));
+	(res -= uint( (((ssb_input.tests[int( 0 )]).inArgs[int( 0 )]) == int( 1 )) ));
+	(res -= uint( (((ssb_input.tests[int( 0 )]).inArgs[int( 1 )]) == int( 2 )) ));
+	(res -= uint( ((ssb_input.tests[int( 0 )]).result == int( 3 )) ));
+	(res -= uint( (((ssb_input.tests[int( 1 )]).inArgs[int( 0 )]) == int( 10 )) ));
+	(res -= uint( (((ssb_input.tests[int( 1 )]).inArgs[int( 1 )]) == int( 20 )) ));
+	(res -= uint( ((ssb_input.tests[int( 1 )]).result == int( 30 )) ));
+	(res -= uint( (((ssb_input.tests[int( 2 )]).inArgs[int( 0 )]) == int( 11 )) ));
+	(res -= uint( (((ssb_input.tests[int( 2 )]).inArgs[int( 1 )]) == int( 21 )) ));
+	(res -= uint( ((ssb_input.tests[int( 2 )]).result == int( 31 )) ));
+	(res -= uint( (ssb_output.stat.results == uint( 1234u )) ));
+	(res -= uint( (ssb_output.stat.bestResults == uint( 543u )) ));
+	(res -= uint( (((ssb_output.funcs[int( 0 )]).funHash.value[int( 0 )]) == uint( 303174162u )) ));
+	(res -= uint( (((ssb_output.funcs[int( 0 )]).funHash.value[int( 1 )]) == uint( 0u )) ));
+	(res -= uint( ((ssb_output.funcs[int( 0 )]).funHash.lastBit == uint( 32u )) ));
+	(res -= uint( Equals((ssb_output.funcs[int( 0 )]).ticks, float( 20.0f )) ));
+	(res -= uint( Equals((ssb_output.funcs[int( 0 )]).accuracy, float( 1.0f )) ));
+	(res -= uint( (((ssb_output.funcs[int( 1 )]).funHash.value[int( 0 )]) == uint( 555819297u )) ));
+	(res -= uint( (((ssb_output.funcs[int( 1 )]).funHash.value[int( 1 )]) == uint( 1u )) ));
+	(res -= uint( ((ssb_output.funcs[int( 1 )]).funHash.lastBit == uint( 33u )) ));
+	(res -= uint( Equals((ssb_output.funcs[int( 1 )]).ticks, float( 22.0f )) ));
+	(res -= uint( Equals((ssb_output.funcs[int( 1 )]).accuracy, float( 2.0f )) ));
+	(res -= uint( (((ssb_output.funcs[int( 2 )]).funHash.value[int( 0 )]) == uint( 842150450u )) ));
+	(res -= uint( (((ssb_output.funcs[int( 2 )]).funHash.value[int( 1 )]) == uint( 2u )) ));
+	(res -= uint( ((ssb_output.funcs[int( 2 )]).funHash.lastBit == uint( 34u )) ));
+	(res -= uint( Equals((ssb_output.funcs[int( 2 )]).ticks, float( 14.0f )) ));
+	(res -= uint( Equals((ssb_output.funcs[int( 2 )]).accuracy, float( 1.5f )) ));
+	ssb.result = res;
+}
+
+
+)#"_str );
+	descr.Compute().ArraySPIRV({ 
+0x07230203, 0x00010000, 0x00080006, 0x0000012B, 0x00000000, 0x00020011, 0x00000001, 0x0006000B, 0x00000002, 0x4C534C47, 0x6474732E, 0x3035342E, 
+0x00000000, 0x0003000E, 0x00000000, 0x00000001, 0x0005000F, 0x00000005, 0x00000005, 0x6E69616D, 0x00000000, 0x00060010, 0x00000005, 0x00000011, 
+0x00000001, 0x00000001, 0x00000001, 0x00030007, 0x00000001, 0x00000000, 0x002D0003, 0x00000002, 0x000001C2, 0x00000001, 0x4F202F2F, 0x646F4D70, 
+0x50656C75, 0x65636F72, 0x64657373, 0x746E6520, 0x702D7972, 0x746E696F, 0x69616D20, 0x2F2F0A6E, 0x4D704F20, 0x6C75646F, 0x6F725065, 0x73736563, 
+0x63206465, 0x6E65696C, 0x706F2074, 0x6C676E65, 0x0A303031, 0x4F202F2F, 0x646F4D70, 0x50656C75, 0x65636F72, 0x64657373, 0x72617420, 0x2D746567, 
+0x20766E65, 0x6E65706F, 0x2F0A6C67, 0x704F202F, 0x75646F4D, 0x7250656C, 0x7365636F, 0x20646573, 0x72746E65, 0x6F702D79, 0x20746E69, 0x6E69616D, 
+0x696C230A, 0x3120656E, 0x0000000A, 0x00040005, 0x00000005, 0x6E69616D, 0x00000000, 0x00060005, 0x0000000C, 0x61757145, 0x6628736C, 0x31663B31, 
+0x0000003B, 0x00040005, 0x0000000A, 0x7466656C, 0x00000000, 0x00040005, 0x0000000B, 0x68676972, 0x00000074, 0x00070005, 0x00000013, 0x61757145, 
+0x6628736C, 0x31663B31, 0x3B31753B, 0x00000000, 0x00040005, 0x00000010, 0x7466656C, 0x00000000, 0x00040005, 0x00000011, 0x68676972, 0x00000074, 
+0x00060005, 0x00000012, 0x75636361, 0x79636172, 0x69426E49, 0x00007374, 0x00040005, 0x0000001B, 0x66656C69, 0x00000074, 0x00040005, 0x0000001D, 
+0x67697269, 0x00007468, 0x00030005, 0x00000041, 0x00736572, 0x00040005, 0x00000045, 0x49676942, 0x0000746E, 0x00050006, 0x00000045, 0x00000000, 
+0x756C6176, 0x00000065, 0x00050006, 0x00000045, 0x00000001, 0x7473616C, 0x00746942, 0x00050005, 0x00000047, 0x74736554, 0x65736143, 0x00000000, 
+0x00050006, 0x00000047, 0x00000000, 0x72416E69, 0x00007367, 0x00050006, 0x00000047, 0x00000001, 0x75736572, 0x0000746C, 0x00080005, 0x00000049, 
+0x74757242, 0x726F6665, 0x495F6563, 0x7475706E, 0x42535373, 0x0000004F, 0x00060006, 0x00000049, 0x00000000, 0x74696E69, 0x486C6169, 0x00687361, 
+0x00060006, 0x00000049, 0x00000001, 0x736E6F63, 0x73614874, 0x00000068, 0x00060006, 0x00000049, 0x00000002, 0x4178616D, 0x72756363, 0x00796361, 
+0x00070006, 0x00000049, 0x00000003, 0x436D756E, 0x74736E6F, 0x73746E61, 0x00000000, 0x00060006, 0x00000049, 0x00000004, 0x736E6F63, 0x746E6174, 
+0x00000073, 0x00050006, 0x00000049, 0x00000005, 0x74736574, 0x00000073, 0x00050005, 0x0000004B, 0x5F627373, 0x75706E69, 0x00000074, 0x00070005, 
+0x000000AC, 0x74757242, 0x726F6665, 0x415F6563, 0x696D6F74, 0x00007363, 0x00050006, 0x000000AC, 0x00000000, 0x75736572, 0x0073746C, 0x00060006, 
+0x000000AC, 0x00000001, 0x74736562, 0x75736552, 0x0073746C, 0x00070005, 0x000000AD, 0x74757242, 0x726F6665, 0x525F6563, 0x6C757365, 0x00000074, 
+0x00050006, 0x000000AD, 0x00000000, 0x486E7566, 0x00687361, 0x00060006, 0x000000AD, 0x00000001, 0x736E6F63, 0x73614874, 0x00000068, 0x00050006, 
+0x000000AD, 0x00000002, 0x6B636974, 0x00000073, 0x00060006, 0x000000AD, 0x00000003, 0x75636361, 0x79636172, 0x00000000, 0x00080005, 0x000000B0, 
+0x74757242, 0x726F6665, 0x4F5F6563, 0x75707475, 0x53537374, 0x00004F42, 0x00050006, 0x000000B0, 0x00000000, 0x74617473, 0x00000000, 0x00050006, 
+0x000000B0, 0x00000001, 0x636E7566, 0x00000073, 0x00050005, 0x000000B2, 0x5F627373, 0x7074756F, 0x00007475, 0x00060005, 0x00000126, 0x74757242, 
+0x726F6665, 0x535F6563, 0x004F4253, 0x00050006, 0x00000126, 0x00000000, 0x75736572, 0x0000746C, 0x00060006, 0x00000126, 0x00000001, 0x6461705F, 
+0x676E6964, 0x00000030, 0x00060006, 0x00000126, 0x00000002, 0x6461705F, 0x676E6964, 0x00000031, 0x00060006, 0x00000126, 0x00000003, 0x6461705F, 
+0x676E6964, 0x00000032, 0x00030005, 0x00000128, 0x00627373, 0x00040047, 0x00000044, 0x00000006, 0x00000004, 0x00050048, 0x00000045, 0x00000000, 
+0x00000023, 0x00000000, 0x00050048, 0x00000045, 0x00000001, 0x00000023, 0x00000008, 0x00040047, 0x00000046, 0x00000006, 0x00000004, 0x00050048, 
+0x00000047, 0x00000000, 0x00000023, 0x00000000, 0x00050048, 0x00000047, 0x00000001, 0x00000023, 0x00000008, 0x00040047, 0x00000048, 0x00000006, 
+0x0000000C, 0x00040048, 0x00000049, 0x00000000, 0x00000018, 0x00050048, 0x00000049, 0x00000000, 0x00000023, 0x00000000, 0x00040048, 0x00000049, 
+0x00000001, 0x00000018, 0x00050048, 0x00000049, 0x00000001, 0x00000023, 0x0000000C, 0x00040048, 0x00000049, 0x00000002, 0x00000018, 0x00050048, 
+0x00000049, 0x00000002, 0x00000023, 0x00000018, 0x00040048, 0x00000049, 0x00000003, 0x00000018, 0x00050048, 0x00000049, 0x00000003, 0x00000023, 
+0x0000001C, 0x00040048, 0x00000049, 0x00000004, 0x00000018, 0x00050048, 0x00000049, 0x00000004, 0x00000023, 0x00000020, 0x00040048, 0x00000049, 
+0x00000005, 0x00000018, 0x00050048, 0x00000049, 0x00000005, 0x00000023, 0x00000024, 0x00030047, 0x00000049, 0x00000003, 0x00040047, 0x0000004B, 
+0x00000022, 0x00000000, 0x00040047, 0x0000004B, 0x00000021, 0x00000001, 0x00050048, 0x000000AC, 0x00000000, 0x00000023, 0x00000000, 0x00050048, 
+0x000000AC, 0x00000001, 0x00000023, 0x00000004, 0x00050048, 0x000000AD, 0x00000000, 0x00000023, 0x00000000, 0x00050048, 0x000000AD, 0x00000001, 
+0x00000023, 0x0000000C, 0x00050048, 0x000000AD, 0x00000002, 0x00000023, 0x00000018, 0x00050048, 0x000000AD, 0x00000003, 0x00000023, 0x0000001C, 
+0x00040047, 0x000000AF, 0x00000006, 0x00000020, 0x00040048, 0x000000B0, 0x00000000, 0x00000018, 0x00050048, 0x000000B0, 0x00000000, 0x00000023, 
+0x00000000, 0x00040048, 0x000000B0, 0x00000001, 0x00000018, 0x00050048, 0x000000B0, 0x00000001, 0x00000023, 0x00000008, 0x00030047, 0x000000B0, 
+0x00000003, 0x00040047, 0x000000B2, 0x00000022, 0x00000000, 0x00040047, 0x000000B2, 0x00000021, 0x00000002, 0x00040048, 0x00000126, 0x00000000, 
+0x00000019, 0x00050048, 0x00000126, 0x00000000, 0x00000023, 0x00000000, 0x00040048, 0x00000126, 0x00000001, 0x00000019, 0x00050048, 0x00000126, 
+0x00000001, 0x00000023, 0x00000004, 0x00040048, 0x00000126, 0x00000002, 0x00000019, 0x00050048, 0x00000126, 0x00000002, 0x00000023, 0x00000008, 
+0x00040048, 0x00000126, 0x00000003, 0x00000019, 0x00050048, 0x00000126, 0x00000003, 0x00000023, 0x0000000C, 0x00030047, 0x00000126, 0x00000003, 
+0x00040047, 0x00000128, 0x00000022, 0x00000000, 0x00040047, 0x00000128, 0x00000021, 0x00000000, 0x00020013, 0x00000003, 0x00030021, 0x00000004, 
+0x00000003, 0x00030016, 0x00000007, 0x00000020, 0x00020014, 0x00000008, 0x00050021, 0x00000009, 0x00000008, 0x00000007, 0x00000007, 0x00040015, 
+0x0000000E, 0x00000020, 0x00000000, 0x00060021, 0x0000000F, 0x00000008, 0x00000007, 0x00000007, 0x0000000E, 0x0004002B, 0x0000000E, 0x00000015, 
+0x0000000A, 0x00040015, 0x00000019, 0x00000020, 0x00000001, 0x00040020, 0x0000001A, 0x00000007, 0x00000019, 0x0004002B, 0x00000019, 0x00000020, 
+0x00000000, 0x0004002B, 0x00000019, 0x00000025, 0x80000000, 0x0004002B, 0x00000019, 0x00000039, 0x00000001, 0x0004002B, 0x0000000E, 0x0000003A, 
+0x0000001F, 0x00040020, 0x00000040, 0x00000007, 0x0000000E, 0x0004002B, 0x0000000E, 0x00000042, 0x0000008D, 0x0004002B, 0x0000000E, 0x00000043, 
+0x00000002, 0x0004001C, 0x00000044, 0x0000000E, 0x00000043, 0x0004001E, 0x00000045, 0x00000044, 0x0000000E, 0x0004001C, 0x00000046, 0x00000019, 
+0x00000043, 0x0004001E, 0x00000047, 0x00000046, 0x00000019, 0x0004001C, 0x00000048, 0x00000047, 0x00000015, 0x0008001E, 0x00000049, 0x00000045, 
+0x00000045, 0x00000007, 0x00000019, 0x00000019, 0x00000048, 0x00040020, 0x0000004A, 0x00000002, 0x00000049, 0x0004003B, 0x0000004A, 0x0000004B, 
+0x00000002, 0x00040020, 0x0000004C, 0x00000002, 0x0000000E, 0x0004002B, 0x0000000E, 0x0000004F, 0x11223344, 0x0004002B, 0x0000000E, 0x00000051, 
+0x00000000, 0x0004002B, 0x0000000E, 0x00000052, 0x00000001, 0x0004002B, 0x0000000E, 0x00000058, 0x55667788, 0x0004002B, 0x0000000E, 0x0000005F, 
+0x00000040, 0x0004002B, 0x00000019, 0x00000064, 0x00000002, 0x00040020, 0x00000065, 0x00000002, 0x00000007, 0x0004002B, 0x00000007, 0x00000068, 
+0x3F800000, 0x0004002B, 0x00000019, 0x0000006D, 0x00000005, 0x00040020, 0x0000006E, 0x00000002, 0x00000019, 0x0004002B, 0x00000019, 0x0000007D, 
+0x00000003, 0x0004002B, 0x00000019, 0x00000084, 0x0000000A, 0x0004002B, 0x00000019, 0x0000008B, 0x00000014, 0x0004002B, 0x00000019, 0x00000092, 
+0x0000001E, 0x0004002B, 0x00000019, 0x00000099, 0x0000000B, 0x0004002B, 0x00000019, 0x000000A0, 0x00000015, 0x0004002B, 0x00000019, 0x000000A7, 
+0x0000001F, 0x0004001E, 0x000000AC, 0x0000000E, 0x0000000E, 0x0006001E, 0x000000AD, 0x00000045, 0x00000045, 0x00000007, 0x00000007, 0x0004002B, 
+0x0000000E, 0x000000AE, 0x00002710, 0x0004001C, 0x000000AF, 0x000000AD, 0x000000AE, 0x0004001E, 0x000000B0, 0x000000AC, 0x000000AF, 0x00040020, 
+0x000000B1, 0x00000002, 0x000000B0, 0x0004003B, 0x000000B1, 0x000000B2, 0x00000002, 0x0004002B, 0x0000000E, 0x000000B5, 0x000004D2, 0x0004002B, 
+0x0000000E, 0x000000BC, 0x0000021F, 0x0004002B, 0x0000000E, 0x000000C3, 0x12121212, 0x0004002B, 0x0000000E, 0x000000D0, 0x00000020, 0x0004002B, 
+0x00000007, 0x000000D7, 0x41A00000, 0x0004002B, 0x0000000E, 0x000000E4, 0x21212121, 0x0004002B, 0x0000000E, 0x000000F1, 0x00000021, 0x0004002B, 
+0x00000007, 0x000000F8, 0x41B00000, 0x0004002B, 0x00000007, 0x000000FF, 0x40000000, 0x0004002B, 0x0000000E, 0x00000106, 0x32323232, 0x0004002B, 
+0x0000000E, 0x00000113, 0x00000022, 0x0004002B, 0x00000007, 0x0000011A, 0x41600000, 0x0004002B, 0x00000007, 0x00000121, 0x3FC00000, 0x0006001E, 
+0x00000126, 0x0000000E, 0x00000007, 0x00000007, 0x00000007, 0x00040020, 0x00000127, 0x00000002, 0x00000126, 0x0004003B, 0x00000127, 0x00000128, 
+0x00000002, 0x00050036, 0x00000003, 0x00000005, 0x00000000, 0x00000004, 0x000200F8, 0x00000006, 0x0004003B, 0x00000040, 0x00000041, 0x00000007, 
+0x00040008, 0x00000001, 0x0000004F, 0x00000000, 0x0003003E, 0x00000041, 0x00000042, 0x00040008, 0x00000001, 0x00000051, 0x00000000, 0x00070041, 
+0x0000004C, 0x0000004D, 0x0000004B, 0x00000020, 0x00000020, 0x00000020, 0x0004003D, 0x0000000E, 0x0000004E, 0x0000004D, 0x000500AA, 0x00000008, 
+0x00000050, 0x0000004E, 0x0000004F, 0x000600A9, 0x0000000E, 0x00000053, 0x00000050, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x00000054, 
+0x00000041, 0x00050082, 0x0000000E, 0x00000055, 0x00000054, 0x00000053, 0x0003003E, 0x00000041, 0x00000055, 0x00040008, 0x00000001, 0x00000052, 
+0x00000000, 0x00070041, 0x0000004C, 0x00000056, 0x0000004B, 0x00000020, 0x00000020, 0x00000039, 0x0004003D, 0x0000000E, 0x00000057, 0x00000056, 
+0x000500AA, 0x00000008, 0x00000059, 0x00000057, 0x00000058, 0x000600A9, 0x0000000E, 0x0000005A, 0x00000059, 0x00000052, 0x00000051, 0x0004003D, 
+0x0000000E, 0x0000005B, 0x00000041, 0x00050082, 0x0000000E, 0x0000005C, 0x0000005B, 0x0000005A, 0x0003003E, 0x00000041, 0x0000005C, 0x00040008, 
+0x00000001, 0x00000053, 0x00000000, 0x00060041, 0x0000004C, 0x0000005D, 0x0000004B, 0x00000020, 0x00000039, 0x0004003D, 0x0000000E, 0x0000005E, 
+0x0000005D, 0x000500AA, 0x00000008, 0x00000060, 0x0000005E, 0x0000005F, 0x000600A9, 0x0000000E, 0x00000061, 0x00000060, 0x00000052, 0x00000051, 
+0x0004003D, 0x0000000E, 0x00000062, 0x00000041, 0x00050082, 0x0000000E, 0x00000063, 0x00000062, 0x00000061, 0x0003003E, 0x00000041, 0x00000063, 
+0x00040008, 0x00000001, 0x00000054, 0x00000000, 0x00050041, 0x00000065, 0x00000066, 0x0000004B, 0x00000064, 0x0004003D, 0x00000007, 0x00000067, 
+0x00000066, 0x00060039, 0x00000008, 0x00000069, 0x0000000C, 0x00000067, 0x00000068, 0x000600A9, 0x0000000E, 0x0000006A, 0x00000069, 0x00000052, 
+0x00000051, 0x0004003D, 0x0000000E, 0x0000006B, 0x00000041, 0x00050082, 0x0000000E, 0x0000006C, 0x0000006B, 0x0000006A, 0x0003003E, 0x00000041, 
+0x0000006C, 0x00040008, 0x00000001, 0x00000055, 0x00000000, 0x00080041, 0x0000006E, 0x0000006F, 0x0000004B, 0x0000006D, 0x00000020, 0x00000020, 
+0x00000020, 0x0004003D, 0x00000019, 0x00000070, 0x0000006F, 0x000500AA, 0x00000008, 0x00000071, 0x00000070, 0x00000039, 0x000600A9, 0x0000000E, 
+0x00000072, 0x00000071, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x00000073, 0x00000041, 0x00050082, 0x0000000E, 0x00000074, 0x00000073, 
+0x00000072, 0x0003003E, 0x00000041, 0x00000074, 0x00040008, 0x00000001, 0x00000056, 0x00000000, 0x00080041, 0x0000006E, 0x00000075, 0x0000004B, 
+0x0000006D, 0x00000020, 0x00000020, 0x00000039, 0x0004003D, 0x00000019, 0x00000076, 0x00000075, 0x000500AA, 0x00000008, 0x00000077, 0x00000076, 
+0x00000064, 0x000600A9, 0x0000000E, 0x00000078, 0x00000077, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x00000079, 0x00000041, 0x00050082, 
+0x0000000E, 0x0000007A, 0x00000079, 0x00000078, 0x0003003E, 0x00000041, 0x0000007A, 0x00040008, 0x00000001, 0x00000057, 0x00000000, 0x00070041, 
+0x0000006E, 0x0000007B, 0x0000004B, 0x0000006D, 0x00000020, 0x00000039, 0x0004003D, 0x00000019, 0x0000007C, 0x0000007B, 0x000500AA, 0x00000008, 
+0x0000007E, 0x0000007C, 0x0000007D, 0x000600A9, 0x0000000E, 0x0000007F, 0x0000007E, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x00000080, 
+0x00000041, 0x00050082, 0x0000000E, 0x00000081, 0x00000080, 0x0000007F, 0x0003003E, 0x00000041, 0x00000081, 0x00040008, 0x00000001, 0x00000058, 
+0x00000000, 0x00080041, 0x0000006E, 0x00000082, 0x0000004B, 0x0000006D, 0x00000039, 0x00000020, 0x00000020, 0x0004003D, 0x00000019, 0x00000083, 
+0x00000082, 0x000500AA, 0x00000008, 0x00000085, 0x00000083, 0x00000084, 0x000600A9, 0x0000000E, 0x00000086, 0x00000085, 0x00000052, 0x00000051, 
+0x0004003D, 0x0000000E, 0x00000087, 0x00000041, 0x00050082, 0x0000000E, 0x00000088, 0x00000087, 0x00000086, 0x0003003E, 0x00000041, 0x00000088, 
+0x00040008, 0x00000001, 0x00000059, 0x00000000, 0x00080041, 0x0000006E, 0x00000089, 0x0000004B, 0x0000006D, 0x00000039, 0x00000020, 0x00000039, 
+0x0004003D, 0x00000019, 0x0000008A, 0x00000089, 0x000500AA, 0x00000008, 0x0000008C, 0x0000008A, 0x0000008B, 0x000600A9, 0x0000000E, 0x0000008D, 
+0x0000008C, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x0000008E, 0x00000041, 0x00050082, 0x0000000E, 0x0000008F, 0x0000008E, 0x0000008D, 
+0x0003003E, 0x00000041, 0x0000008F, 0x00040008, 0x00000001, 0x0000005A, 0x00000000, 0x00070041, 0x0000006E, 0x00000090, 0x0000004B, 0x0000006D, 
+0x00000039, 0x00000039, 0x0004003D, 0x00000019, 0x00000091, 0x00000090, 0x000500AA, 0x00000008, 0x00000093, 0x00000091, 0x00000092, 0x000600A9, 
+0x0000000E, 0x00000094, 0x00000093, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x00000095, 0x00000041, 0x00050082, 0x0000000E, 0x00000096, 
+0x00000095, 0x00000094, 0x0003003E, 0x00000041, 0x00000096, 0x00040008, 0x00000001, 0x0000005B, 0x00000000, 0x00080041, 0x0000006E, 0x00000097, 
+0x0000004B, 0x0000006D, 0x00000064, 0x00000020, 0x00000020, 0x0004003D, 0x00000019, 0x00000098, 0x00000097, 0x000500AA, 0x00000008, 0x0000009A, 
+0x00000098, 0x00000099, 0x000600A9, 0x0000000E, 0x0000009B, 0x0000009A, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x0000009C, 0x00000041, 
+0x00050082, 0x0000000E, 0x0000009D, 0x0000009C, 0x0000009B, 0x0003003E, 0x00000041, 0x0000009D, 0x00040008, 0x00000001, 0x0000005C, 0x00000000, 
+0x00080041, 0x0000006E, 0x0000009E, 0x0000004B, 0x0000006D, 0x00000064, 0x00000020, 0x00000039, 0x0004003D, 0x00000019, 0x0000009F, 0x0000009E, 
+0x000500AA, 0x00000008, 0x000000A1, 0x0000009F, 0x000000A0, 0x000600A9, 0x0000000E, 0x000000A2, 0x000000A1, 0x00000052, 0x00000051, 0x0004003D, 
+0x0000000E, 0x000000A3, 0x00000041, 0x00050082, 0x0000000E, 0x000000A4, 0x000000A3, 0x000000A2, 0x0003003E, 0x00000041, 0x000000A4, 0x00040008, 
+0x00000001, 0x0000005D, 0x00000000, 0x00070041, 0x0000006E, 0x000000A5, 0x0000004B, 0x0000006D, 0x00000064, 0x00000039, 0x0004003D, 0x00000019, 
+0x000000A6, 0x000000A5, 0x000500AA, 0x00000008, 0x000000A8, 0x000000A6, 0x000000A7, 0x000600A9, 0x0000000E, 0x000000A9, 0x000000A8, 0x00000052, 
+0x00000051, 0x0004003D, 0x0000000E, 0x000000AA, 0x00000041, 0x00050082, 0x0000000E, 0x000000AB, 0x000000AA, 0x000000A9, 0x0003003E, 0x00000041, 
+0x000000AB, 0x00040008, 0x00000001, 0x0000005E, 0x00000000, 0x00060041, 0x0000004C, 0x000000B3, 0x000000B2, 0x00000020, 0x00000020, 0x0004003D, 
+0x0000000E, 0x000000B4, 0x000000B3, 0x000500AA, 0x00000008, 0x000000B6, 0x000000B4, 0x000000B5, 0x000600A9, 0x0000000E, 0x000000B7, 0x000000B6, 
+0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x000000B8, 0x00000041, 0x00050082, 0x0000000E, 0x000000B9, 0x000000B8, 0x000000B7, 0x0003003E, 
+0x00000041, 0x000000B9, 0x00040008, 0x00000001, 0x0000005F, 0x00000000, 0x00060041, 0x0000004C, 0x000000BA, 0x000000B2, 0x00000020, 0x00000039, 
+0x0004003D, 0x0000000E, 0x000000BB, 0x000000BA, 0x000500AA, 0x00000008, 0x000000BD, 0x000000BB, 0x000000BC, 0x000600A9, 0x0000000E, 0x000000BE, 
+0x000000BD, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x000000BF, 0x00000041, 0x00050082, 0x0000000E, 0x000000C0, 0x000000BF, 0x000000BE, 
+0x0003003E, 0x00000041, 0x000000C0, 0x00040008, 0x00000001, 0x00000060, 0x00000000, 0x00090041, 0x0000004C, 0x000000C1, 0x000000B2, 0x00000039, 
+0x00000020, 0x00000020, 0x00000020, 0x00000020, 0x0004003D, 0x0000000E, 0x000000C2, 0x000000C1, 0x000500AA, 0x00000008, 0x000000C4, 0x000000C2, 
+0x000000C3, 0x000600A9, 0x0000000E, 0x000000C5, 0x000000C4, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x000000C6, 0x00000041, 0x00050082, 
+0x0000000E, 0x000000C7, 0x000000C6, 0x000000C5, 0x0003003E, 0x00000041, 0x000000C7, 0x00040008, 0x00000001, 0x00000061, 0x00000000, 0x00090041, 
+0x0000004C, 0x000000C8, 0x000000B2, 0x00000039, 0x00000020, 0x00000020, 0x00000020, 0x00000039, 0x0004003D, 0x0000000E, 0x000000C9, 0x000000C8, 
+0x000500AA, 0x00000008, 0x000000CA, 0x000000C9, 0x00000051, 0x000600A9, 0x0000000E, 0x000000CB, 0x000000CA, 0x00000052, 0x00000051, 0x0004003D, 
+0x0000000E, 0x000000CC, 0x00000041, 0x00050082, 0x0000000E, 0x000000CD, 0x000000CC, 0x000000CB, 0x0003003E, 0x00000041, 0x000000CD, 0x00040008, 
+0x00000001, 0x00000062, 0x00000000, 0x00080041, 0x0000004C, 0x000000CE, 0x000000B2, 0x00000039, 0x00000020, 0x00000020, 0x00000039, 0x0004003D, 
+0x0000000E, 0x000000CF, 0x000000CE, 0x000500AA, 0x00000008, 0x000000D1, 0x000000CF, 0x000000D0, 0x000600A9, 0x0000000E, 0x000000D2, 0x000000D1, 
+0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x000000D3, 0x00000041, 0x00050082, 0x0000000E, 0x000000D4, 0x000000D3, 0x000000D2, 0x0003003E, 
+0x00000041, 0x000000D4, 0x00040008, 0x00000001, 0x00000063, 0x00000000, 0x00070041, 0x00000065, 0x000000D5, 0x000000B2, 0x00000039, 0x00000020, 
+0x00000064, 0x0004003D, 0x00000007, 0x000000D6, 0x000000D5, 0x00060039, 0x00000008, 0x000000D8, 0x0000000C, 0x000000D6, 0x000000D7, 0x000600A9, 
+0x0000000E, 0x000000D9, 0x000000D8, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x000000DA, 0x00000041, 0x00050082, 0x0000000E, 0x000000DB, 
+0x000000DA, 0x000000D9, 0x0003003E, 0x00000041, 0x000000DB, 0x00040008, 0x00000001, 0x00000064, 0x00000000, 0x00070041, 0x00000065, 0x000000DC, 
+0x000000B2, 0x00000039, 0x00000020, 0x0000007D, 0x0004003D, 0x00000007, 0x000000DD, 0x000000DC, 0x00060039, 0x00000008, 0x000000DE, 0x0000000C, 
+0x000000DD, 0x00000068, 0x000600A9, 0x0000000E, 0x000000DF, 0x000000DE, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x000000E0, 0x00000041, 
+0x00050082, 0x0000000E, 0x000000E1, 0x000000E0, 0x000000DF, 0x0003003E, 0x00000041, 0x000000E1, 0x00040008, 0x00000001, 0x00000065, 0x00000000, 
+0x00090041, 0x0000004C, 0x000000E2, 0x000000B2, 0x00000039, 0x00000039, 0x00000020, 0x00000020, 0x00000020, 0x0004003D, 0x0000000E, 0x000000E3, 
+0x000000E2, 0x000500AA, 0x00000008, 0x000000E5, 0x000000E3, 0x000000E4, 0x000600A9, 0x0000000E, 0x000000E6, 0x000000E5, 0x00000052, 0x00000051, 
+0x0004003D, 0x0000000E, 0x000000E7, 0x00000041, 0x00050082, 0x0000000E, 0x000000E8, 0x000000E7, 0x000000E6, 0x0003003E, 0x00000041, 0x000000E8, 
+0x00040008, 0x00000001, 0x00000066, 0x00000000, 0x00090041, 0x0000004C, 0x000000E9, 0x000000B2, 0x00000039, 0x00000039, 0x00000020, 0x00000020, 
+0x00000039, 0x0004003D, 0x0000000E, 0x000000EA, 0x000000E9, 0x000500AA, 0x00000008, 0x000000EB, 0x000000EA, 0x00000052, 0x000600A9, 0x0000000E, 
+0x000000EC, 0x000000EB, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x000000ED, 0x00000041, 0x00050082, 0x0000000E, 0x000000EE, 0x000000ED, 
+0x000000EC, 0x0003003E, 0x00000041, 0x000000EE, 0x00040008, 0x00000001, 0x00000067, 0x00000000, 0x00080041, 0x0000004C, 0x000000EF, 0x000000B2, 
+0x00000039, 0x00000039, 0x00000020, 0x00000039, 0x0004003D, 0x0000000E, 0x000000F0, 0x000000EF, 0x000500AA, 0x00000008, 0x000000F2, 0x000000F0, 
+0x000000F1, 0x000600A9, 0x0000000E, 0x000000F3, 0x000000F2, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x000000F4, 0x00000041, 0x00050082, 
+0x0000000E, 0x000000F5, 0x000000F4, 0x000000F3, 0x0003003E, 0x00000041, 0x000000F5, 0x00040008, 0x00000001, 0x00000068, 0x00000000, 0x00070041, 
+0x00000065, 0x000000F6, 0x000000B2, 0x00000039, 0x00000039, 0x00000064, 0x0004003D, 0x00000007, 0x000000F7, 0x000000F6, 0x00060039, 0x00000008, 
+0x000000F9, 0x0000000C, 0x000000F7, 0x000000F8, 0x000600A9, 0x0000000E, 0x000000FA, 0x000000F9, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 
+0x000000FB, 0x00000041, 0x00050082, 0x0000000E, 0x000000FC, 0x000000FB, 0x000000FA, 0x0003003E, 0x00000041, 0x000000FC, 0x00040008, 0x00000001, 
+0x00000069, 0x00000000, 0x00070041, 0x00000065, 0x000000FD, 0x000000B2, 0x00000039, 0x00000039, 0x0000007D, 0x0004003D, 0x00000007, 0x000000FE, 
+0x000000FD, 0x00060039, 0x00000008, 0x00000100, 0x0000000C, 0x000000FE, 0x000000FF, 0x000600A9, 0x0000000E, 0x00000101, 0x00000100, 0x00000052, 
+0x00000051, 0x0004003D, 0x0000000E, 0x00000102, 0x00000041, 0x00050082, 0x0000000E, 0x00000103, 0x00000102, 0x00000101, 0x0003003E, 0x00000041, 
+0x00000103, 0x00040008, 0x00000001, 0x0000006A, 0x00000000, 0x00090041, 0x0000004C, 0x00000104, 0x000000B2, 0x00000039, 0x00000064, 0x00000020, 
+0x00000020, 0x00000020, 0x0004003D, 0x0000000E, 0x00000105, 0x00000104, 0x000500AA, 0x00000008, 0x00000107, 0x00000105, 0x00000106, 0x000600A9, 
+0x0000000E, 0x00000108, 0x00000107, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x00000109, 0x00000041, 0x00050082, 0x0000000E, 0x0000010A, 
+0x00000109, 0x00000108, 0x0003003E, 0x00000041, 0x0000010A, 0x00040008, 0x00000001, 0x0000006B, 0x00000000, 0x00090041, 0x0000004C, 0x0000010B, 
+0x000000B2, 0x00000039, 0x00000064, 0x00000020, 0x00000020, 0x00000039, 0x0004003D, 0x0000000E, 0x0000010C, 0x0000010B, 0x000500AA, 0x00000008, 
+0x0000010D, 0x0000010C, 0x00000043, 0x000600A9, 0x0000000E, 0x0000010E, 0x0000010D, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x0000010F, 
+0x00000041, 0x00050082, 0x0000000E, 0x00000110, 0x0000010F, 0x0000010E, 0x0003003E, 0x00000041, 0x00000110, 0x00040008, 0x00000001, 0x0000006C, 
+0x00000000, 0x00080041, 0x0000004C, 0x00000111, 0x000000B2, 0x00000039, 0x00000064, 0x00000020, 0x00000039, 0x0004003D, 0x0000000E, 0x00000112, 
+0x00000111, 0x000500AA, 0x00000008, 0x00000114, 0x00000112, 0x00000113, 0x000600A9, 0x0000000E, 0x00000115, 0x00000114, 0x00000052, 0x00000051, 
+0x0004003D, 0x0000000E, 0x00000116, 0x00000041, 0x00050082, 0x0000000E, 0x00000117, 0x00000116, 0x00000115, 0x0003003E, 0x00000041, 0x00000117, 
+0x00040008, 0x00000001, 0x0000006D, 0x00000000, 0x00070041, 0x00000065, 0x00000118, 0x000000B2, 0x00000039, 0x00000064, 0x00000064, 0x0004003D, 
+0x00000007, 0x00000119, 0x00000118, 0x00060039, 0x00000008, 0x0000011B, 0x0000000C, 0x00000119, 0x0000011A, 0x000600A9, 0x0000000E, 0x0000011C, 
+0x0000011B, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x0000011D, 0x00000041, 0x00050082, 0x0000000E, 0x0000011E, 0x0000011D, 0x0000011C, 
+0x0003003E, 0x00000041, 0x0000011E, 0x00040008, 0x00000001, 0x0000006E, 0x00000000, 0x00070041, 0x00000065, 0x0000011F, 0x000000B2, 0x00000039, 
+0x00000064, 0x0000007D, 0x0004003D, 0x00000007, 0x00000120, 0x0000011F, 0x00060039, 0x00000008, 0x00000122, 0x0000000C, 0x00000120, 0x00000121, 
+0x000600A9, 0x0000000E, 0x00000123, 0x00000122, 0x00000052, 0x00000051, 0x0004003D, 0x0000000E, 0x00000124, 0x00000041, 0x00050082, 0x0000000E, 
+0x00000125, 0x00000124, 0x00000123, 0x0003003E, 0x00000041, 0x00000125, 0x00040008, 0x00000001, 0x0000006F, 0x00000000, 0x0004003D, 0x0000000E, 
+0x00000129, 0x00000041, 0x00050041, 0x0000004C, 0x0000012A, 0x00000128, 0x00000020, 0x0003003E, 0x0000012A, 0x00000129, 0x000100FD, 0x00010038, 
+0x00050036, 0x00000008, 0x0000000C, 0x00000000, 0x00000009, 0x00030037, 0x00000007, 0x0000000A, 0x00030037, 0x00000007, 0x0000000B, 0x000200F8, 
+0x0000000D, 0x00040008, 0x00000001, 0x0000003D, 0x00000000, 0x00070039, 0x00000008, 0x00000016, 0x00000013, 0x0000000A, 0x0000000B, 0x00000015, 
+0x000200FE, 0x00000016, 0x00010038, 0x00050036, 0x00000008, 0x00000013, 0x00000000, 0x0000000F, 0x00030037, 0x00000007, 0x00000010, 0x00030037, 
+0x00000007, 0x00000011, 0x00030037, 0x0000000E, 0x00000012, 0x000200F8, 0x00000014, 0x0004003B, 0x0000001A, 0x0000001B, 0x00000007, 0x0004003B, 
+0x0000001A, 0x0000001D, 0x00000007, 0x0004003B, 0x0000001A, 0x00000022, 0x00000007, 0x0004003B, 0x0000001A, 0x0000002D, 0x00000007, 0x00040008, 
+0x00000001, 0x00000043, 0x00000000, 0x0004007C, 0x00000019, 0x0000001C, 0x00000010, 0x0003003E, 0x0000001B, 0x0000001C, 0x00040008, 0x00000001, 
+0x00000045, 0x00000000, 0x0004007C, 0x00000019, 0x0000001E, 0x00000011, 0x0003003E, 0x0000001D, 0x0000001E, 0x00040008, 0x00000001, 0x00000047, 
+0x00000000, 0x0004003D, 0x00000019, 0x0000001F, 0x0000001B, 0x000500B1, 0x00000008, 0x00000021, 0x0000001F, 0x00000020, 0x000300F7, 0x00000024, 
+0x00000000, 0x000400FA, 0x00000021, 0x00000023, 0x00000028, 0x000200F8, 0x00000023, 0x0004003D, 0x00000019, 0x00000026, 0x0000001B, 0x00050082, 
+0x00000019, 0x00000027, 0x00000025, 0x00000026, 0x0003003E, 0x00000022, 0x00000027, 0x000200F9, 0x00000024, 0x000200F8, 0x00000028, 0x0004003D, 
+0x00000019, 0x00000029, 0x0000001B, 0x0003003E, 0x00000022, 0x00000029, 0x000200F9, 0x00000024, 0x000200F8, 0x00000024, 0x0004003D, 0x00000019, 
+0x0000002A, 0x00000022, 0x0003003E, 0x0000001B, 0x0000002A, 0x00040008, 0x00000001, 0x00000048, 0x00000000, 0x0004003D, 0x00000019, 0x0000002B, 
+0x0000001D, 0x000500B1, 0x00000008, 0x0000002C, 0x0000002B, 0x00000020, 0x000300F7, 0x0000002F, 0x00000000, 0x000400FA, 0x0000002C, 0x0000002E, 
+0x00000032, 0x000200F8, 0x0000002E, 0x0004003D, 0x00000019, 0x00000030, 0x0000001D, 0x00050082, 0x00000019, 0x00000031, 0x00000025, 0x00000030, 
+0x0003003E, 0x0000002D, 0x00000031, 0x000200F9, 0x0000002F, 0x000200F8, 0x00000032, 0x0004003D, 0x00000019, 0x00000033, 0x0000001D, 0x0003003E, 
+0x0000002D, 0x00000033, 0x000200F9, 0x0000002F, 0x000200F8, 0x0000002F, 0x0004003D, 0x00000019, 0x00000034, 0x0000002D, 0x0003003E, 0x0000001D, 
+0x00000034, 0x00040008, 0x00000001, 0x00000049, 0x00000000, 0x0004003D, 0x00000019, 0x00000035, 0x0000001B, 0x0004003D, 0x00000019, 0x00000036, 
+0x0000001D, 0x00050082, 0x00000019, 0x00000037, 0x00000035, 0x00000036, 0x0006000C, 0x00000019, 0x00000038, 0x00000002, 0x00000005, 0x00000037, 
+0x000500C7, 0x0000000E, 0x0000003B, 0x00000012, 0x0000003A, 0x000500C4, 0x00000019, 0x0000003C, 0x00000039, 0x0000003B, 0x000500B3, 0x00000008, 
+0x0000003D, 0x00000038, 0x0000003C, 0x000200FE, 0x0000003D, 0x00010038 });
+	descr.Compute().StringCL( 
+R"#(#define FORMAT( _fmt_ )
+#define INOUT
+#define OUT
+// Functions for GLSL compatibility
+
+#define Gen_IntTemplates( _gen_ ) \
+	_gen_( int ) \
+	_gen_( int2 ) \
+	_gen_( int3 ) \
+	_gen_( int4 )
+
+#define Gen_UIntTemplates( _gen_ ) \
+	_gen_( uint ) \
+	_gen_( uint2 ) \
+	_gen_( uint3 ) \
+	_gen_( uint4 )
+	
+#define Gen_LongTemplates( _gen_ ) \
+	_gen_( long ) \
+	_gen_( long2 ) \
+	_gen_( long3 ) \
+	_gen_( long4 )
+	
+#define Gen_ULongTemplates( _gen_ ) \
+	_gen_( ulong ) \
+	_gen_( ulong2 ) \
+	_gen_( ulong3 ) \
+	_gen_( ulong4 )
+
+#define Gen_FloatTemplates( _gen_ ) \
+	_gen_( float ) \
+	_gen_( float2 ) \
+	_gen_( float3 ) \
+	_gen_( float4 )
+
+#define Gen_DoubleTemplates( _gen_ ) \
+	_gen_( double ) \
+	_gen_( double2 ) \
+	_gen_( double3 ) \
+	_gen_( double4 )
+
+
+// Fract
+#define GenTemplate_Fract( _type_ ) \
+	_type_ fractTempl_##_type_ (_type_ x) { \
+		_type_	ipart; \
+		return fract( x, &ipart ); \
+	}
+	Gen_FloatTemplates( GenTemplate_Fract )
+	Gen_DoubleTemplates( GenTemplate_Fract )
+#undef GenTemplate_Fract
+
+
+// findMSB 32
+#define GenTemplate_FindMSB32( _type_ ) \
+	_type_ findMSB_##_type_ (_type_ x) { \
+		return 31 - clz( x ); \
+	}
+	Gen_IntTemplates( GenTemplate_FindMSB32 )
+	Gen_UIntTemplates( GenTemplate_FindMSB32 )
+#undef GenTemplate_FindMSB32
+	
+
+// findMSB 64
+#define GenTemplate_FindMSB64( _type_ ) \
+	_type_ findMSB_##_type_ (_type_ x) { \
+		return 63 - clz( x ); \
+	}
+	Gen_LongTemplates( GenTemplate_FindMSB64 )
+	Gen_ULongTemplates( GenTemplate_FindMSB64 )
+#undef GenTemplate_FindMSB64
+
+
+// findLSB 32
+#define GenTemplate_FindLSB32( _type_ ) \
+	_type_ findLSB_##_type_ (_type_ x) { \
+		return	(convert_##_type_(!!( x >> 31 )) & convert_##_type_(!( x & (_type_)(0x7FFFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 30 )) & convert_##_type_(!( x & (_type_)(0x3FFFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 29 )) & convert_##_type_(!( x & (_type_)(0x1FFFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 28 )) & convert_##_type_(!( x & (_type_)(0xFFFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 27 )) & convert_##_type_(!( x & (_type_)(0x7FFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 26 )) & convert_##_type_(!( x & (_type_)(0x3FFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 25 )) & convert_##_type_(!( x & (_type_)(0x1FFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 24 )) & convert_##_type_(!( x & (_type_)(0xFFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 23 )) & convert_##_type_(!( x & (_type_)(0x7FFFFF) ))) + \
+				(convert_##_type_(!!( x >> 22 )) & convert_##_type_(!( x & (_type_)(0x3FFFFF) ))) + \
+				(convert_##_type_(!!( x >> 21 )) & convert_##_type_(!( x & (_type_)(0x1FFFFF) ))) + \
+				(convert_##_type_(!!( x >> 20 )) & convert_##_type_(!( x & (_type_)(0xFFFFF) ))) + \
+				(convert_##_type_(!!( x >> 19 )) & convert_##_type_(!( x & (_type_)(0x7FFFF) ))) + \
+				(convert_##_type_(!!( x >> 18 )) & convert_##_type_(!( x & (_type_)(0x3FFFF) ))) + \
+				(convert_##_type_(!!( x >> 17 )) & convert_##_type_(!( x & (_type_)(0x1FFFF) ))) + \
+				(convert_##_type_(!!( x >> 16 )) & convert_##_type_(!( x & (_type_)(0xFFFF) ))) + \
+				(convert_##_type_(!!( x >> 15 )) & convert_##_type_(!( x & (_type_)(0x7FFF) ))) + \
+				(convert_##_type_(!!( x >> 14 )) & convert_##_type_(!( x & (_type_)(0x3FFF) ))) + \
+				(convert_##_type_(!!( x >> 13 )) & convert_##_type_(!( x & (_type_)(0x1FFF) ))) + \
+				(convert_##_type_(!!( x >> 12 )) & convert_##_type_(!( x & (_type_)(0xFFF) ))) + \
+				(convert_##_type_(!!( x >> 11 )) & convert_##_type_(!( x & (_type_)(0x7FF) ))) + \
+				(convert_##_type_(!!( x >> 10 )) & convert_##_type_(!( x & (_type_)(0x3FF) ))) + \
+				(convert_##_type_(!!( x >>  9 )) & convert_##_type_(!( x & (_type_)(0x1FF) ))) + \
+				(convert_##_type_(!!( x >>  8 )) & convert_##_type_(!( x & (_type_)(0xFF) ))) + \
+				(convert_##_type_(!!( x >>  7 )) & convert_##_type_(!( x & (_type_)(0x7F) ))) + \
+				(convert_##_type_(!!( x >>  6 )) & convert_##_type_(!( x & (_type_)(0x3F) ))) + \
+				(convert_##_type_(!!( x >>  5 )) & convert_##_type_(!( x & (_type_)(0x1F) ))) + \
+				(convert_##_type_(!!( x >>  4 )) & convert_##_type_(!( x & (_type_)(0xF) ))) + \
+				(convert_##_type_(!!( x >>  3 )) & convert_##_type_(!( x & (_type_)(0x7) ))) + \
+				(convert_##_type_(!!( x >>  2 )) & convert_##_type_(!( x & (_type_)(0x3) ))) + \
+				(convert_##_type_(!!( x >>  1 )) & convert_##_type_(!( x & (_type_)(0x1) ))) + \
+				convert_##_type_(!!( x )) - 1; \
+	}
+	Gen_IntTemplates( GenTemplate_FindLSB32 )
+	Gen_UIntTemplates( GenTemplate_FindLSB32 )
+#undef GenTemplate_FindLSB32
+	
+/*
+// findLSB 64
+#define GenTemplate_FindLSB64( _type_ ) \
+	_type_ findLSB_##_type_ (_type_ x) { \
+		return 63 - clz( rotate( x, 63 ) ); \
+	}
+	Gen_LongTemplates( GenTemplate_FindLSB64 )
+	Gen_ULongTemplates( GenTemplate_FindLSB64 )
+#undef GenTemplate_FindLSB64
+
+
+
+// bitfieldReverse 32
+#define GenTemplate_BitfieldReverse32( _type_ ) \
+	_type_ bitfieldReverse_##_type_ (_type_ x) { \
+		return ; \
+	}
+	Gen_IntTemplates( GenTemplate_BitfieldReverse32 )
+	Gen_UIntTemplates( GenTemplate_BitfieldReverse32 )
+#undef GenTemplate_BitfieldReverse32
+*/
+
+#undef Gen_IntTemplates
+#undef Gen_UIntTemplates
+#undef Gen_LongTemplates
+#undef Gen_ULongTemplates
+#undef Gen_FloatTemplates
+#undef Gen_DoubleTemplates
+
+struct BigInt
+{
+	uint value [2];
+	uint lastBit;
+};
+
+struct Bruteforce_SSBO
+{
+	uint result;
+	float _padding0;
+	float _padding1;
+	float _padding2;
+};
+
+struct Bruteforce_Atomics
+{
+	uint results;
+	uint bestResults;
+};
+
+struct Bruteforce_Result
+{
+	struct BigInt funHash;
+	struct BigInt constHash;
+	float ticks;
+	float accuracy;
+};
+
+struct TestCase
+{
+	int inArgs [2];
+	int result;
+};
+
+struct Bruteforce_InputsSSBO
+{
+	struct BigInt initialHash;
+	struct BigInt constHash;
+	float maxAccuracy;
+	int numConstants;
+	int constants;
+	struct TestCase tests [10];
+};
+
+struct Bruteforce_OutputsSSBO
+{
+	struct Bruteforce_Atomics stat;
+	struct Bruteforce_Result funcs [10000];
+};
+
+
+//---------------------------------
+
+int Equals (const float left, const float right);
+int Equals_1 (const float left, const float right, const uint accuracyInBits);
+
+//---------------------------------
+
+int Equals (const float left, const float right)
+{
+	return Equals_1(left, right, ((uint)( 10u )));
+}
+
+
+int Equals_1 (const float left, const float right, const uint accuracyInBits)
+{
+	int ileft = as_int( left );
+	;
+	int iright = as_int( right );
+	;
+	ileft = ( ((ileft < ((int)( 0 )))) ? ((((int)( (-2147483647 - 1) )) - ileft)) : (ileft) );
+	iright = ( ((iright < ((int)( 0 )))) ? ((((int)( (-2147483647 - 1) )) - iright)) : (iright) );
+	return (abs( (ileft - iright) ) <= (((int)( 1 )) << (accuracyInBits & ((uint)( 31u )))));
+}
+
+
+kernel void Main (
+	/*0*/__global  struct Bruteforce_SSBO* ssb,
+	/*1*/__global const struct Bruteforce_InputsSSBO* ssb_input,
+	/*2*/__global const struct Bruteforce_OutputsSSBO* ssb_output)
+{
+
+	{
+		uint res = ((uint)( 141u ));
+		;
+		(res -= convert_uint( ((ssb_input->initialHash.value[((int)( 0 ))]) == ((uint)( 287454020u ))) ));
+		(res -= convert_uint( ((ssb_input->initialHash.value[((int)( 1 ))]) == ((uint)( 1432778632u ))) ));
+		(res -= convert_uint( (ssb_input->initialHash.lastBit == ((uint)( 64u ))) ));
+		(res -= convert_uint( Equals(ssb_input->maxAccuracy, ((float)( 1.0f ))) ));
+		(res -= convert_uint( (((ssb_input->tests[((int)( 0 ))]).inArgs[((int)( 0 ))]) == ((int)( 1 ))) ));
+		(res -= convert_uint( (((ssb_input->tests[((int)( 0 ))]).inArgs[((int)( 1 ))]) == ((int)( 2 ))) ));
+		(res -= convert_uint( ((ssb_input->tests[((int)( 0 ))]).result == ((int)( 3 ))) ));
+		(res -= convert_uint( (((ssb_input->tests[((int)( 1 ))]).inArgs[((int)( 0 ))]) == ((int)( 10 ))) ));
+		(res -= convert_uint( (((ssb_input->tests[((int)( 1 ))]).inArgs[((int)( 1 ))]) == ((int)( 20 ))) ));
+		(res -= convert_uint( ((ssb_input->tests[((int)( 1 ))]).result == ((int)( 30 ))) ));
+		(res -= convert_uint( (((ssb_input->tests[((int)( 2 ))]).inArgs[((int)( 0 ))]) == ((int)( 11 ))) ));
+		(res -= convert_uint( (((ssb_input->tests[((int)( 2 ))]).inArgs[((int)( 1 ))]) == ((int)( 21 ))) ));
+		(res -= convert_uint( ((ssb_input->tests[((int)( 2 ))]).result == ((int)( 31 ))) ));
+		(res -= convert_uint( (ssb_output->stat.results == ((uint)( 1234u ))) ));
+		(res -= convert_uint( (ssb_output->stat.bestResults == ((uint)( 543u ))) ));
+		(res -= convert_uint( (((ssb_output->funcs[((int)( 0 ))]).funHash.value[((int)( 0 ))]) == ((uint)( 303174162u ))) ));
+		(res -= convert_uint( (((ssb_output->funcs[((int)( 0 ))]).funHash.value[((int)( 1 ))]) == ((uint)( 0u ))) ));
+		(res -= convert_uint( ((ssb_output->funcs[((int)( 0 ))]).funHash.lastBit == ((uint)( 32u ))) ));
+		(res -= convert_uint( Equals((ssb_output->funcs[((int)( 0 ))]).ticks, ((float)( 20.0f ))) ));
+		(res -= convert_uint( Equals((ssb_output->funcs[((int)( 0 ))]).accuracy, ((float)( 1.0f ))) ));
+		(res -= convert_uint( (((ssb_output->funcs[((int)( 1 ))]).funHash.value[((int)( 0 ))]) == ((uint)( 555819297u ))) ));
+		(res -= convert_uint( (((ssb_output->funcs[((int)( 1 ))]).funHash.value[((int)( 1 ))]) == ((uint)( 1u ))) ));
+		(res -= convert_uint( ((ssb_output->funcs[((int)( 1 ))]).funHash.lastBit == ((uint)( 33u ))) ));
+		(res -= convert_uint( Equals((ssb_output->funcs[((int)( 1 ))]).ticks, ((float)( 22.0f ))) ));
+		(res -= convert_uint( Equals((ssb_output->funcs[((int)( 1 ))]).accuracy, ((float)( 2.0f ))) ));
+		(res -= convert_uint( (((ssb_output->funcs[((int)( 2 ))]).funHash.value[((int)( 0 ))]) == ((uint)( 842150450u ))) ));
+		(res -= convert_uint( (((ssb_output->funcs[((int)( 2 ))]).funHash.value[((int)( 1 ))]) == ((uint)( 2u ))) ));
+		(res -= convert_uint( ((ssb_output->funcs[((int)( 2 ))]).funHash.lastBit == ((uint)( 34u ))) ));
+		(res -= convert_uint( Equals((ssb_output->funcs[((int)( 2 ))]).ticks, ((float)( 14.0f ))) ));
+		(res -= convert_uint( Equals((ssb_output->funcs[((int)( 2 ))]).accuracy, ((float)( 1.5f ))) ));
+		ssb->result = res;
+	}
+}
+
+)#"_str );
+#ifdef GRAPHICS_API_SOFT
+	descr.Compute().FuncSW( &SWShaderLang::sw_bruteforcetest_comp );
+#endif
+
+};
+};

@@ -28,7 +28,7 @@ namespace SWShaderLang
 		Float result;
 	};
 	
-	struct Bruteforce_Atomics
+	struct Bruteforce_Atomics : GX_STL::CompileTime::PODStruct
 	{
 		Atomic<UInt> total;
 		Atomic<UInt> total2;
@@ -433,8 +433,7 @@ namespace SWShaderLang
 		;
 		BigInt hash;
 		BigInt_Create(hash);
-		//BigInt_Add(hash, initial_hash);
-		BigInt_Add(hash, gl_GlobalInvocationID.x + 0xFFFFFFF);
+		BigInt_Add(hash, initial_hash);
 		Float ticks = Float( 0.0f );
 		;
 		NodeArray tmp_commands;
@@ -497,200 +496,199 @@ namespace SWShaderLang
 #include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 #include "Generators/BigInteger.h"
 
-extern bool Test_Bruteforce ()
+namespace CodeGen
 {
-	using namespace Engine;
-	using namespace Engine::Platforms;
-	using namespace CodeGen;
-
-	auto			ms			= GetMainSystemInstance();
-	auto			factory		= ms->GlobalSystems()->modulesFactory;
-	ModulePtr		gpu_thread	= PlatformTools::GPUThreadHelper::FindComputeThread( ms->GlobalSystems() );
-	ModulePtr		sync_mngr	= gpu_thread->GetModuleByMsg<CompileTime::TypeListFrom< Message<GpuMsg::CreateFence> >>();
-	
-	const BytesU	testcase_size	= SizeOf< SWShaderLang::TestCase >;
-	const BytesU	bigint_size		= SizeOf< SWShaderLang::BigInt >;
-	const BytesU	const_size		= SizeOf< SWShaderLang::Bruteforce_ConstData >;
-	const BytesU	atomics_size	= SizeOf< SWShaderLang::Bruteforce_Atomics >;
-	const BytesU	result_size		= SizeOf< SWShaderLang::Bruteforce_Result >;
-
-	const uint		max_results		= 10000;
-	const uint		testcases_count	= 10;
-	const BitsU		max_bits		= 32_bit;
-	const uint		local_threads	= 8;
-
-	const BytesU	inbuf_size		= const_size + testcase_size * testcases_count;
-	const BytesU	outbuf_size		= atomics_size + result_size * max_results;
-
-	CreateInfo::PipelineTemplate	pt_ci;
-	pt_ci.descr.supportedShaders = EShader::Compute;
-
-	pt_ci.descr.localGroupSize = uint3(local_threads, 1, 1);
-	pt_ci.descr.layout = PipelineLayoutDescriptor::Builder()
-							.AddStorageBuffer( "ssb_input", const_size, testcase_size, EShaderMemoryModel::ReadOnly, 0, 0, EShader::Compute )
-							.AddStorageBuffer( "ssb_output", atomics_size, result_size, EShaderMemoryModel::Coherent, 1, 1, EShader::Compute )
-							.Finish();
-
-	pt_ci.descr.Compute().FuncSW( &SWShaderLang::sw_bruteforce );
-	
-	ModulePtr	pipeline_template;
-	CHECK_ERR( factory->Create(
-					PipelineTemplateModuleID,
-					ms->GlobalSystems(),
-					pt_ci,
-					OUT pipeline_template ) );
-
-	ModuleUtils::Initialize({ pipeline_template });
-	
-	Message< GpuMsg::GetGraphicsModules >	req_ids;
-	gpu_thread->Send( req_ids );
-	ComputeModuleIDs	gpu_ids = *req_ids->compute;
-	
-	Message< GpuMsg::CreateFence >	fence_ctor;
-	sync_mngr->Send( fence_ctor );
-	
-	ModulePtr	cmd_builder;
-	CHECK_ERR( factory->Create(
-					gpu_ids.commandBuilder,
-					ms->GlobalSystems(),
-					CreateInfo::GpuCommandBuilder{},
-					OUT cmd_builder )
-	);
-
-	ModulePtr	cmd_buffer;
-	CHECK_ERR( factory->Create(
-					gpu_ids.commandBuffer,
-					ms->GlobalSystems(),
-					CreateInfo::GpuCommandBuffer{},
-					OUT cmd_buffer ) );
-	cmd_builder->Send< ModuleMsg::AttachModule >({ cmd_buffer });
-	
-	ModulePtr	in_buffer;
-	CHECK_ERR( factory->Create(
-					gpu_ids.buffer,
-					ms->GlobalSystems(),
-					CreateInfo::GpuBuffer{
-						BufferDescriptor{ inbuf_size, EBufferUsage::Storage | EBufferUsage::TransferDst },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT in_buffer ) );
-		
-	ModulePtr	out_buffer;
-	CHECK_ERR( factory->Create(
-					gpu_ids.buffer,
-					ms->GlobalSystems(),
-					CreateInfo::GpuBuffer{
-						BufferDescriptor{ outbuf_size, EBufferUsage::Storage | EBufferUsage::TransferDst },
-						EGpuMemory::CoherentWithCPU,
-						EMemoryAccess::All
-					},
-					OUT out_buffer ) );
-	
-	Message< GpuMsg::CreateComputePipeline >	cppl_ctor{ gpu_ids.pipeline, gpu_thread };
-	pipeline_template->Send( cppl_ctor );
-
-	ModulePtr	pipeline = *cppl_ctor->result;
-	
-	ModulePtr	resource_table;
-	CHECK_ERR( factory->Create(
-					gpu_ids.resourceTable,
-					ms->GlobalSystems(),
-					CreateInfo::PipelineResourceTable{},
-					OUT resource_table ) );
-	
-	resource_table->Send< ModuleMsg::AttachModule >({ "pipeline",   pipeline  });
-	resource_table->Send< ModuleMsg::AttachModule >({ "ssb_input",  in_buffer  });
-	resource_table->Send< ModuleMsg::AttachModule >({ "ssb_output", out_buffer });
-	
-	ModuleUtils::Initialize({ cmd_builder, cmd_buffer, in_buffer, out_buffer, pipeline, resource_table });
-	
-	// write data to buffer
+	extern bool Test_Bruteforce ()
 	{
-		auto	rnd =			LAMBDA() () {
-									return ImprovedRandom::FloatRange( -5.0f, 5.0f );
-								};
-		auto	expectedFunc =	LAMBDA() (ArrayCRef<SWShaderLang::Float> args) {
-									return (args[0] * args[1] + args[2] / args[3]) * 8;
-								};
+		using namespace Engine;
+		using namespace Engine::Platforms;
+		using namespace CodeGen;
 
-		in_buffer->Send< GpuMsg::MapMemoryToCpu >({ GpuMsg::MapMemoryToCpu::EMappingFlags::Write });
+		auto			ms			= GetMainSystemInstance();
+		auto			factory		= ms->GlobalSystems()->modulesFactory;
+		ModulePtr		gpu_thread	= PlatformTools::GPUThreadHelper::FindComputeThread( ms->GlobalSystems() );
+		ModulePtr		sync_mngr	= gpu_thread->GetModuleByMsg<CompileTime::TypeListFrom< Message<GpuMsg::CreateFence> >>();
+	
+		const BytesU	testcase_size	= SizeOf< SWShaderLang::TestCase >;
+		const BytesU	bigint_size		= SizeOf< SWShaderLang::BigInt >;
+		const BytesU	const_size		= SizeOf< SWShaderLang::Bruteforce_ConstData >;
+		const BytesU	atomics_size	= SizeOf< SWShaderLang::Bruteforce_Atomics >;
+		const BytesU	result_size		= SizeOf< SWShaderLang::Bruteforce_Result >;
 
-		SWShaderLang::Bruteforce_ConstData	cdata;
-		cdata.testCasesCount	= testcases_count;
-		cdata.resultsCapacity	= max_results;
-		cdata.maxAccuracy		= 0.001f;
-		cdata.initialHash		= {};
+		const uint		max_results		= 10000;
+		const uint		testcases_count	= 10;
+		const BitsU		max_bits		= 32_bit;
+		const uint		local_threads	= 8;
+
+		const BytesU	inbuf_size		= const_size + testcase_size * testcases_count;
+		const BytesU	outbuf_size		= atomics_size + result_size * max_results;
+
+		CreateInfo::PipelineTemplate	pt_ci;
+		pt_ci.descr.supportedShaders = EShader::Compute;
+
+		pt_ci.descr.localGroupSize = uint3(local_threads, 1, 1);
+		pt_ci.descr.layout = PipelineLayoutDescriptor::Builder()
+								.AddStorageBuffer( "ssb_input", const_size, testcase_size, EShaderMemoryModel::ReadOnly, 0, 0, EShader::Compute )
+								.AddStorageBuffer( "ssb_output", atomics_size, result_size, EShaderMemoryModel::Coherent, 1, 1, EShader::Compute )
+								.Finish();
+
+		pt_ci.descr.Compute().FuncSW( &SWShaderLang::sw_bruteforce );
+	
+		ModulePtr	pipeline_template;
+		CHECK_ERR( factory->Create(
+						PipelineTemplateModuleID,
+						ms->GlobalSystems(),
+						pt_ci,
+						OUT pipeline_template ) );
+
+		ModuleUtils::Initialize({ pipeline_template });
+	
+		Message< GpuMsg::GetGraphicsModules >	req_ids;
+		gpu_thread->Send( req_ids );
+		ComputeModuleIDs	gpu_ids = *req_ids->compute;
+	
+		Message< GpuMsg::CreateFence >	fence_ctor;
+		sync_mngr->Send( fence_ctor );
+	
+		ModulePtr	cmd_builder;
+		CHECK_ERR( factory->Create(
+						gpu_ids.commandBuilder,
+						ms->GlobalSystems(),
+						CreateInfo::GpuCommandBuilder{},
+						OUT cmd_builder )
+		);
+
+		ModulePtr	cmd_buffer;
+		CHECK_ERR( factory->Create(
+						gpu_ids.commandBuffer,
+						ms->GlobalSystems(),
+						CreateInfo::GpuCommandBuffer{},
+						OUT cmd_buffer ) );
+		cmd_builder->Send< ModuleMsg::AttachModule >({ cmd_buffer });
+	
+		ModulePtr	in_buffer;
+		CHECK_ERR( factory->Create(
+						gpu_ids.buffer,
+						ms->GlobalSystems(),
+						CreateInfo::GpuBuffer{
+							BufferDescriptor{ inbuf_size, EBufferUsage::Storage | EBufferUsage::TransferDst },
+							EGpuMemory::CoherentWithCPU },
+						OUT in_buffer ) );
 		
-		BytesU	offset;
-		in_buffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::FromValue(cdata), offset });
-		offset += BytesU::SizeOf( cdata );
+		ModulePtr	out_buffer;
+		CHECK_ERR( factory->Create(
+						gpu_ids.buffer,
+						ms->GlobalSystems(),
+						CreateInfo::GpuBuffer{
+							BufferDescriptor{ outbuf_size, EBufferUsage::Storage | EBufferUsage::TransferDst },
+							EGpuMemory::CoherentWithCPU },
+						OUT out_buffer ) );
+	
+		Message< GpuMsg::CreateComputePipeline >	cppl_ctor{ gpu_ids.pipeline, gpu_thread };
+		pipeline_template->Send( cppl_ctor );
 
-		for (uint i = 0; i < testcases_count; ++i)
+		ModulePtr	pipeline = *cppl_ctor->result;
+	
+		ModulePtr	resource_table;
+		CHECK_ERR( factory->Create(
+						gpu_ids.resourceTable,
+						ms->GlobalSystems(),
+						CreateInfo::PipelineResourceTable{},
+						OUT resource_table ) );
+	
+		resource_table->Send< ModuleMsg::AttachModule >({ "pipeline",   pipeline  });
+		resource_table->Send< ModuleMsg::AttachModule >({ "ssb_input",  in_buffer  });
+		resource_table->Send< ModuleMsg::AttachModule >({ "ssb_output", out_buffer });
+	
+		ModuleUtils::Initialize({ cmd_builder, cmd_buffer, in_buffer, out_buffer, pipeline, resource_table });
+	
+		// write data to buffer
 		{
-			SWShaderLang::TestCase	tc;
-			tc.inArgs[0] = rnd();
-			tc.inArgs[1] = rnd();
-			tc.inArgs[2] = rnd();
-			tc.inArgs[3] = rnd();
-			tc.result = expectedFunc( tc.inArgs );
+			auto	rnd =			LAMBDA() () {
+										return ImprovedRandom::FloatRange( -5.0f, 5.0f );
+									};
+			auto	expectedFunc =	LAMBDA() (ArrayCRef<SWShaderLang::Float> args) {
+										return (args[0] * args[1] + args[2] / args[3]) * 8;
+									};
 
-			in_buffer->Send< GpuMsg::WriteToGpuMemory >({ BinArrayCRef::FromValue(tc), offset });
-			offset += BytesU::SizeOf( tc );
+			in_buffer->Send< GpuMsg::MapMemoryToCpu >({ GpuMsg::EMappingFlags::Write });
+
+			SWShaderLang::Bruteforce_ConstData	cdata;
+			cdata.testCasesCount	= testcases_count;
+			cdata.resultsCapacity	= max_results;
+			cdata.maxAccuracy		= 0.001f;
+			cdata.initialHash		= {};
+		
+			BytesU	offset;
+			in_buffer->Send< GpuMsg::WriteToGpuMemory >({ offset, BinArrayCRef::FromValue(cdata) });
+			offset += BytesU::SizeOf( cdata );
+
+			for (uint i = 0; i < testcases_count; ++i)
+			{
+				SWShaderLang::TestCase	tc;
+				tc.inArgs[0] = rnd();
+				tc.inArgs[1] = rnd();
+				tc.inArgs[2] = rnd();
+				tc.inArgs[3] = rnd();
+				tc.result = expectedFunc( tc.inArgs );
+
+				in_buffer->Send< GpuMsg::WriteToGpuMemory >({ offset, BinArrayCRef::FromValue(tc) });
+				offset += BytesU::SizeOf( tc );
+			}
+
+			in_buffer->Send< GpuMsg::UnmapMemory >({});
+			CHECK( inbuf_size == offset );
 		}
 
-		in_buffer->Send< GpuMsg::UnmapMemory >({});
-		CHECK( inbuf_size == offset );
-	}
-
-	// build command buffer
-	{
-		BigInteger<uint,4>	hash;		hash += MaxValue<uint>() >> 3;
-		const BitsU			max_step	= Min( BitsU::SizeOf<uint>()-5, max_bits );
-		const BitsU			step		= Min( max_step, max_bits );
-		const uint			num_threads	= 1u << usize(step);
-		const uint			num_groups	= (num_threads + local_threads - 1) / local_threads;
-
-		cmd_builder->Send< GpuMsg::CmdBegin >({ cmd_buffer });
-		cmd_builder->Send< GpuMsg::CmdFillBuffer >({ out_buffer, 0u });
-
-		cmd_builder->Send< GpuMsg::CmdBindComputePipeline >({ pipeline });
-		cmd_builder->Send< GpuMsg::CmdBindComputeResourceTable >({ resource_table });
-		
-		for (; hash.Count() <= max_bits;)
+		// build command buffer
 		{
-			// update initial hash
-			/*{
-				SWShaderLang::BigInt	initial_hash;
-				initial_hash.lastBit	= uint(hash.Count());
+			BigInteger<uint,4>	hash;		hash += MaxValue<uint>() >> 3;
+			const BitsU			max_step	= Min( BitsU::SizeOf<uint>()-5, max_bits );
+			const BitsU			step		= Min( max_step, max_bits );
+			const uint			num_threads	= 1u << usize(step);
+			const uint			num_groups	= (num_threads + local_threads - 1) / local_threads;
 
-				FOR( i, initial_hash.value ) {
-					initial_hash.value[i] = hash.ToArray()[i];
+			cmd_builder->Send< GpuMsg::CmdBegin >({ cmd_buffer });
+			cmd_builder->Send< GpuMsg::CmdFillBuffer >({ out_buffer, 0u });
+
+			cmd_builder->Send< GpuMsg::CmdBindComputePipeline >({ pipeline });
+			cmd_builder->Send< GpuMsg::CmdBindComputeResourceTable >({ resource_table });
+		
+			for (; hash.Count() <= max_bits;)
+			{
+				// update initial hash
+				{
+					SWShaderLang::BigInt	initial_hash;
+					initial_hash.lastBit	= uint(hash.Count());
+
+					FOR( i, initial_hash.value ) {
+						initial_hash.value[i] = hash.ToArray()[i];
+					}
+
+					cmd_builder->Send< GpuMsg::CmdUpdateBuffer >({ in_buffer, BinArrayCRef::FromValue(initial_hash) });
 				}
 
-				cmd_builder->Send< GpuMsg::CmdUpdateBuffer >({ in_buffer, BinArrayCRef::FromValue(initial_hash) });
-			}*/
-
-			cmd_builder->Send< GpuMsg::CmdDispatch >({ uint3( num_groups, 1, 1 ) });
+				cmd_builder->Send< GpuMsg::CmdDispatch >({ uint3( num_groups, 1, 1 ) });
 			
-			hash += (num_groups * local_threads);
+				hash += (num_groups * local_threads);
+			}
+			cmd_builder->Send< GpuMsg::CmdEnd >({});
 		}
-		cmd_builder->Send< GpuMsg::CmdEnd >({});
-	}
 	
-	gpu_thread->Send< GpuMsg::SubmitComputeQueueCommands >({ cmd_buffer, *fence_ctor->result });
+		gpu_thread->Send< GpuMsg::SubmitComputeQueueCommands >({ cmd_buffer, *fence_ctor->result });
 
-	sync_mngr->Send< GpuMsg::ClientWaitFence >({ *fence_ctor->result });
+		sync_mngr->Send< GpuMsg::ClientWaitFence >({ *fence_ctor->result });
 
-	{
-		out_buffer->Send< GpuMsg::MapMemoryToCpu >({ GpuMsg::MapMemoryToCpu::EMappingFlags::Read });
+		{
+			out_buffer->Send< GpuMsg::MapMemoryToCpu >({ GpuMsg::EMappingFlags::Read });
 
-		SWShaderLang::Bruteforce_Atomics	atomics;
-		out_buffer->Send< GpuMsg::ReadFromGpuMemory >({ BinArrayRef::FromValue(atomics) });
+			SWShaderLang::Bruteforce_Atomics	atomics;
+			out_buffer->Send< GpuMsg::ReadFromGpuMemory >({ BinArrayRef::FromValue(atomics) });
 		
-		CHECK_FATAL( uint(atomics.results) > 0 and uint(atomics.results) < max_results );
+			CHECK_FATAL( uint(atomics.results) > 0 and uint(atomics.results) < max_results );
+		}
+		return true;
 	}
-	return true;
-}
 
+}	// CodeGen
 #endif

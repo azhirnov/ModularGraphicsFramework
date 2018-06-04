@@ -45,7 +45,7 @@ namespace CodeGen
 	private:
 		template <typename T> static bool _ToAngelScript (const GenFunction &func, OUT String &src);
 		
-		static bool _BuildFuncList (const ArrayCRef<CmdData> data, const BitsU bitsPerCommand,
+		static bool _BuildFuncList (ArrayCRef<CmdData> data, BitsU bitsPerCommand, uint programArgsCount,
 									INOUT GenFunction &func, INOUT Array<CmdNode> &tmpNodes, INOUT Array<CmdNode> &nodes);
 	};
 

@@ -17,10 +17,8 @@ namespace CodeGen
 	private:
 		struct _Atomics
 		{
-			uint	total;
-			uint	total2;		// if 'total' overflow
 			uint	results;
-			uint	checked;
+			uint	bestResults;
 		};
 		
 		struct _Result
@@ -30,19 +28,36 @@ namespace CodeGen
 			float	accuracy;
 		};
 
-		using _BigIntBuf = StaticArray< ubyte, 64 >;
+		struct CmdBuffer
+		{
+			ModulePtr		cmd;
+			ModulePtr		outputBuf;
+			GpuFenceId		fence	= Uninitialized;
+		};
+
+		using _BigIntBuf	= StaticArray< ubyte, FunctionHash_t::Array_t::STATIC_COUNT * sizeof(FunctionHash_t::Value_t) >;
+
+		using CmdBuffers_t	= StaticArray< CmdBuffer, 2 >;
+		using Limit1_t		= StaticLimit< uint, 0, CmdBuffers_t::STATIC_COUNT-1 >;
+
+		using DeviceProps_t	= GpuMsg::GetDeviceProperties::Properties;
+		using Timer_t		= TimeProfilerD;
 
 
 	// variables
 	private:
 		ModulePtr		_gpuThread;
 		ModulePtr		_syncManager;
+		DeviceProps_t	_devProperties;
 		
 		ModulePtr		_cmdBuilder;
-		ModulePtr		_cmdBuffer;
+		CmdBuffers_t	_cmdBuffers;
+		Limit1_t		_cmdBufferIndex;
 
 		ModulePtr		_inBuffer;
+		ModulePtr		_inStagingBuffer;
 		ModulePtr		_outBuffer;
+		ModulePtr		_outStagingBuffer;
 
 		ModulePtr		_pipelineTempl;
 		ModulePtr		_pipeline;
@@ -52,45 +67,64 @@ namespace CodeGen
 		BytesU			_bigIntSize;
 		BytesU			_atomicsSize;
 		BytesU			_resultSize;
+		BytesU			_inputBufferSize;
+		BytesU			_outputBufferSize;
 		BitsU			_maxBits;		// number of actual bits in hash
+		BitsU			_maxConstBits;
 
-		uint			_maxCommands;
-		uint			_maxInputs;
+		uint			_maxFuncArgs;
 		uint			_bigintCount;
 		uint			_testsCount;
 
+		FunctionHash_t	_funHash;
+		ConstantHash_t	_constHash;
+		Config			_config;
+		Statistic		_statistic;
+		ValueID::type	_typeId;
+		Timer_t			_timer;
+
+		uint			_localThreads;
+		uint			_groupCount;
+
 		const uint		_maxResults;
-		const uint		_localThreads;
+		bool			_completed;
+		bool			_firstCall;
+
+		bool			_breakOnBestResult;
+		bool			_bestResultFound;
 
 
 	// methods
 	public:
 		BruteforceGenerator ();
+		
+		bool Initialize (VariantCRef testCases, const Config &cfg) override;
 
-		bool Generate (VariantCRef testCases, ECommandSet::bits commandSetType, EConstantSet::bits constantType,
-						float maxAccuracy, uint maxCommands, OUT GenFunctions_t &functions) override;
+		bool Update () override;
+
+		bool GetResults (OUT Statistic &stat, OUT GenFunctions_t &functions, usize maxResults) override;
 
 
 	private:
 		template <typename T>
-		bool _Gen (ArrayCRef<TestCase<T>> testCases, ECommandSet::bits commandSetType, EConstantSet::bits constantType,
-					float maxAccuracy, uint maxCommands, OUT GenFunctions_t &functions);
+		bool _Gen (ArrayCRef<TestCase<T>> testCases);
 		
 		void _Clear ();
+		bool _SaveDataToFile (uint size);
 
-		void _WriteBigInt (INOUT BinArrayRef &dst, const HashCode_t &src) const;
+		template <typename T, usize S>
+		static void _WriteBigInt (INOUT BinArrayRef &dst, const BigInteger<T,S> &src, uint numParts);
 
-		template <typename T>	bool _Prepare (ArrayCRef<TestCase<T>> testCases, ECommandSet::bits commandSetType);
+		template <typename T>	bool _Prepare (ArrayCRef<TestCase<T>> testCases);
 		template <typename T>	bool _CheckTests (ArrayCRef<TestCase<T>> testCases, OUT uint &maxInputs) const;
-		template <typename T>	bool _CreateSource (ECommandSet::bits commandSetType);
+		template <typename T>	bool _CreateSource ();
 								bool _CompileProgram (ArrayCRef<StringCRef> src, OUT CreateInfo::PipelineTemplate &ci);
 								bool _CreateResources ();
-		template <typename T>	bool _InitBuffer (ArrayCRef<TestCase<T>> testCases, float maxAccuracy);
-								bool _BuildCommandBuffer ();
-								bool _Execute ();
-								bool _ProcessResults (ValueID::type typeId,
-													  ECommandSet::bits commandSetType, EConstantSet::bits constantType,
-													  OUT GenFunctions_t &functions);
+		template <typename T>	bool _InitBuffer (ArrayCRef<TestCase<T>> testCases);
+		template <typename T>	bool _ProcessBlock (ArrayCRef<T> constants);
+		template <typename T>	bool _ProcessBlockWithConst ();
+								bool _CopyOutputToStagingBuffer ();
+								bool _ProcessResults (OUT GenFunctions_t &functions, usize maxResults);
 	};
 
 }	// CodeGen

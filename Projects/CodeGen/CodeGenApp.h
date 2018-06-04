@@ -6,6 +6,8 @@
 
 namespace CodeGen
 {
+	class IGenerator;
+
 
 	//
 	// Code Generator Application
@@ -15,7 +17,9 @@ namespace CodeGen
 	{
 	// types
 	private:
-		using CmdQueue	= Queue< Function<void()> >;
+		using CmdQueue_t			= Queue< Function<void()> >;
+		using Generator_t			= UniquePtr< IGenerator >;
+		using GeneratorCallback_t	= Function<void (IGenerator*)>;
 
 
 	// variables
@@ -24,7 +28,10 @@ namespace CodeGen
 		
 		GXScript::ScriptEngine	_scriptEngine;
 
-		CmdQueue				_cmdQueue;
+		CmdQueue_t				_cmdQueue;
+
+		Generator_t				_currGenerator;
+		GeneratorCallback_t		_onGenerationCompleted;
 
 		bool					_looping		= true;
 
@@ -34,14 +41,16 @@ namespace CodeGen
 		CodeGenApp ();
 		~CodeGenApp ();
 		
-		bool Initialize (GAPI::type api);
+		bool Initialize (GAPI::type api, StringCRef device);
 		void Quit ();
 		bool Update ();
 
 		void Run (Function<void()> &&func);
+		void SetGenerator (Generator_t &&gen, GeneratorCallback_t &&cb);
+
 		bool RunScript (StringCRef fname);
-		
-		void Exit ();
+
+		static Ptr<CodeGenApp> Instance ();
 
 	private:
 		bool _OnWindowClosed (const Message<OSMsg::WindowAfterDestroy> &);

@@ -1,6 +1,4 @@
 // This is generated file
-// Created at: 2018/04/29 - 14:47:12
-
 #pragma once
 
 #include "Engine/Platforms/Engine.Platforms.h"
@@ -22,6 +20,9 @@ namespace Pipelines
 
 namespace Pipelines
 {
+// From file 'bruteforcetest.cpp'
+void Create_bruteforcetest (PipelineTemplateDescriptor& descr);
+
 // From file 'biginttest.cpp'
 void Create_biginttest (PipelineTemplateDescriptor& descr);
 

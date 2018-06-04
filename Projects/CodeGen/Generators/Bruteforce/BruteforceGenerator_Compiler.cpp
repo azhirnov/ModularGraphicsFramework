@@ -3,6 +3,14 @@
 #include "Generators/Bruteforce/BruteforceGenerator.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
 
+#ifdef CG_RUN_ON_SOFT
+#ifdef GRAPHICS_API_SOFT
+namespace SWShaderLang {
+	extern void sw_bruteforce (const Impl::SWShaderHelper &_helper_);
+}
+#endif	// GRAPHICS_API_SOFT
+#endif
+
 namespace CodeGen
 {
 
@@ -16,7 +24,6 @@ namespace CodeGen
 		using namespace PipelineCompiler;
 
 		ShaderCompiler::Config	cfg;
-		cfg.obfuscate	= false;
 		cfg.optimize	= false;
 		cfg.source		= EShaderSrcFormat::GXSL;
 
@@ -44,28 +51,31 @@ namespace CodeGen
 
 		ci.descr.supportedShaders	|= EShader::Compute;
 		ci.descr.localGroupSize		= uint3( _localThreads, 1, 1 );
-		
-		const BytesU	inbuf_size		= AlignToLarge( _bigIntSize + SizeOf<float>, 16_b ) + _testCaseSize * _testsCount;
-		const BytesU	outbuf_size		= _atomicsSize + _resultSize * _maxResults;
 
-		ci.descr.layout				= PipelineLayoutDescriptor::Builder()
-										.AddStorageBuffer( "ssb_input", inbuf_size, 0_b, EShaderMemoryModel::ReadOnly, 0, 0, EShader::Compute )
-										.AddStorageBuffer( "ssb_output", outbuf_size, 0_b, EShaderMemoryModel::Coherent, 1, 1, EShader::Compute )
-										.Finish();
+		ci.descr.layout = PipelineLayoutDescriptor::Builder()
+								.AddStorageBuffer( "ssb_input",  _inputBufferSize,  0_b, EShaderMemoryModel::ReadOnly, 0, 0, EShader::Compute )
+								.AddStorageBuffer( "ssb_output", _outputBufferSize, 0_b, EShaderMemoryModel::Coherent, 1, 1, EShader::Compute )
+								.Finish();
 
 		switch ( cfg.target )
 		{
 			case EShaderDstFormat::GLSL_Source :
-				ci.descr.Compute().StringGLSL( StringCRef( (const char *)compiled.ptr() ) );
+				ci.descr.Compute().StringGLSL( StringCRef::From( compiled ) );
 				break;
 
 			case EShaderDstFormat::CL_Source :
-				ci.descr.Compute().StringCL( StringCRef( (const char *)compiled.ptr() ) );
+				ci.descr.Compute().StringCL( StringCRef::From( compiled ) );
 				break;
 				
 			case EShaderDstFormat::SPIRV_Binary :
 				ci.descr.Compute().ArraySPIRV( ArrayCRef<uint>::From( compiled ) );
 				break;
+
+			#ifdef CG_RUN_ON_SOFT
+			case EShaderDstFormat::CPP_Module :
+				ci.descr.Compute().FuncSW( &SWShaderLang::sw_bruteforce );
+				break;
+			#endif
 
 			default :
 				RETURN_ERR( "unsupported shader format!" );

@@ -1,0 +1,53 @@
+
+#ifdef ANGELSCRIPT
+void main ()
+{
+	ComputePipeline ppln = ComputePipeline();
+	
+	ppln.compute.LoadSelf();
+	
+	ppln.shaderFormat = EShaderSrcFormat_GLSL;
+}
+#endif	// ANGELSCRIPT
+//-----------------------------------------------------------------------------
+
+
+#ifdef SHADER
+#if SHADER & SH_COMPUTE
+
+layout(std140) uniform ShadertoyUB
+{
+	float3	iResolution;			// viewport resolution (in pixels)
+	float	iTime;					// shader playback time (in seconds)
+	float	iTimeDelta;				// render time (in seconds)
+	int		iFrame;					// shader playback frame
+	float	iChannelTime[4];		// channel playback time (in seconds)
+	float3	iChannelResolution[4];	// channel resolution (in pixels)
+	float4	iMouse;					// mouse pixel coords. xy: current (if MLB down), zw: click
+	float4	iDate;					// (year, month, day, time in seconds)
+	float	iSampleRate;			// sound sample rate (i.e., 44100)
+	float3	iCameraFrustum[4];		// frustum rays (left bottom, right bottom, left top, right top)
+	float3	iCameraPos;				// camera position in world space
+};
+
+// input channel, TODO: 2D and Cube support
+//uniform sampler2D	iChannel0;
+//uniform sampler2D	iChannel1;
+//uniform sampler2D	iChannel2;
+//uniform sampler2D	iChannel3;
+
+layout(rgba8) writeonly uniform image2D un_DstImage;
+
+void mainImage (out float4 fragColor, in float2 fragCoord);
+
+void main ()
+{
+	vec2 coord = vec2(gl_GlobalInvocationID.xy) + 0.5;
+	vec4 color;
+
+	mainImage( color, coord );
+
+	imageStore( un_DstImage, int2(gl_GlobalInvocationID.xy), color );
+}
+#endif
+#endif	// SHADER

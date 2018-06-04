@@ -115,6 +115,17 @@ namespace CodeGen
 		}
 
 
+		static void TestWrite2 ()
+		{
+			BigInteger< uint, 4 >	bi;
+
+			bi.Write( 0xFFFFF0, 0_bit, 32_bit );
+			bi.Write( 0x11, 8_bit, 8_bit );
+
+			TEST( bi._value[0] == 0xFF11F0 );
+		}
+
+
 		static void TestAssign ()
 		{
 			BigInteger< ulong, 4 >	bi0;
@@ -160,6 +171,38 @@ namespace CodeGen
 		}
 
 
+		static void TestFill ()
+		{
+			BigInteger< uint, 4 >	bi;
+
+			bi.Write( 1, 60_bit, 1_bit );
+			
+			BigInteger< uint, 4 >	a0 = bi;
+			a0.Fill( 0_bit, 8_bit );
+			TEST( a0._value[0] == 0x000000FF );
+			TEST( a0._value[1] == 0x10000000 );
+			TEST( a0._lastBit == 61 );
+
+			BigInteger< uint, 4 >	a1 = bi;
+			a1.Fill( 8_bit, 16_bit );
+			TEST( a1._value[0] == 0x00FFFF00 );
+			TEST( a1._value[1] == 0x10000000 );
+			TEST( a1._lastBit == 61 );
+
+			BigInteger< uint, 4 >	a2 = bi;
+			a2.Fill( 16_bit, 24_bit );
+			TEST( a2._value[0] == 0xFFFF0000 );
+			TEST( a2._value[1] == 0x100000FF );
+			TEST( a2._lastBit == 61 );
+
+			BigInteger< uint, 4 >	a3 = bi;
+			a3.Fill( 31_bit, 33_bit );
+			TEST( a3._value[0] == 0x80000000 );
+			TEST( a3._value[1] == 0xFFFFFFFF );
+			TEST( a3._lastBit == 64 );
+		}
+
+
 	public:
 		static void RunTests ()
 		{
@@ -168,8 +211,10 @@ namespace CodeGen
 			TestRead2();
 			TestLastBit();
 			TestWrite();
+			TestWrite2();
 			TestAssign();
 			TestAddBigInt();
+			TestFill();
 		}
 	};
 
@@ -177,6 +222,8 @@ namespace CodeGen
 	extern void Test_BigInteger ()
 	{
 		BigIntegerTest::RunTests();
+		
+		LOG( "Test_BigInteger - OK", ELog::Info );
 	}
 
 }	// CodeGen

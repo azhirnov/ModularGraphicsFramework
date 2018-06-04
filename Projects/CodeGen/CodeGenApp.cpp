@@ -1,14 +1,18 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "CodeGenApp.h"
+#include "Generators/IGenerator.h"
 #include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
-
-//extern bool Test_Bruteforce ();
 
 namespace CodeGen
 {
-	extern bool Test_BigInt ();
+	extern bool Test_GpuBigInt ();
+	extern bool Test_GpuBruteforce ();
+
 	extern void Test_BigInteger ();
+	//extern bool Test_Bruteforce ();
+
+	static CodeGenApp*	_codeGenAppInstance = null;
 
 /*
 =================================================
@@ -17,6 +21,8 @@ namespace CodeGen
 */
 	CodeGenApp::CodeGenApp ()
 	{
+		_codeGenAppInstance = this;
+
 		Platforms::RegisterPlatforms();
 	}
 	
@@ -27,6 +33,17 @@ namespace CodeGen
 */
 	CodeGenApp::~CodeGenApp ()
 	{
+		_codeGenAppInstance = null;
+	}
+	
+/*
+=================================================
+	Instance
+=================================================
+*/
+	Ptr<CodeGenApp>  CodeGenApp::Instance ()
+	{
+		return _codeGenAppInstance;
 	}
 
 /*
@@ -34,17 +51,22 @@ namespace CodeGen
 	Initialize
 =================================================
 */
-	bool CodeGenApp::Initialize (GAPI::type api)
+	bool CodeGenApp::Initialize (GAPI::type api, StringCRef device)
 	{
 		auto	ms		= GetMainSystemInstance();
 		auto	factory	= ms->GlobalSystems()->modulesFactory;
 
 		ms->AddModule( 0, CreateInfo::Platform{} );
 
+		ComputeSettings	settings;
+		settings.version	= api;
+		settings.device		= device;
+		settings.isDebug	= true;
+
 		ComputeModuleIDs	gpu_ids;
 		{
 			ModulePtr	context;
-			CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ api }, OUT context ) );
+			CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ settings }, OUT context ) );
 			ms->Send< ModuleMsg::AttachModule >({ context });
 
 			Message< GpuMsg::GetGraphicsModules >	req_ids;
@@ -70,7 +92,7 @@ namespace CodeGen
 		CHECK_ERR( factory->Create(
 							gpu_ids.thread,
 							ms->GlobalSystems(), CreateInfo::GpuThread{
-								ComputeSettings{ api, "", bool("debug") }
+								ComputeSettings{ settings }
 							},
 							OUT gthread ) );
 		thread->Send< ModuleMsg::AttachModule >({ gthread });
@@ -133,11 +155,23 @@ namespace CodeGen
 		if ( not _looping )
 			return false;
 
+		if ( _currGenerator )
+		{
+			if ( not _currGenerator->Update() )
+			{
+				_onGenerationCompleted.SafeCall( _currGenerator.ptr() );
+				_currGenerator = null;
+			}
+		}
+		else
 		if ( not _cmdQueue.Empty() )
 		{
 			_cmdQueue.Front()();
 			_cmdQueue.PopFront();
 		}
+		else
+			_looping = false;
+
 		return true;
 	}
 	
@@ -175,7 +209,8 @@ namespace CodeGen
 	void CodeGenApp::_RunTests ()
 	{
 		Test_BigInteger();
-		Test_BigInt();
+		Test_GpuBigInt();
+		Test_GpuBruteforce();
 		//Run( LAMBDA() () { Test_Bruteforce(); } );
 	}
 	
@@ -191,6 +226,20 @@ namespace CodeGen
 	
 /*
 =================================================
+	SetGenerator
+=================================================
+*/
+	void CodeGenApp::SetGenerator (Generator_t &&gen, GeneratorCallback_t &&cb)
+	{
+		// can't override generator
+		ASSERT( not _currGenerator );
+
+		_currGenerator			= RVREF(gen);
+		_onGenerationCompleted	= RVREF(cb);
+	}
+
+/*
+=================================================
 	RunScript
 =================================================
 */
@@ -201,7 +250,7 @@ namespace CodeGen
 		LOG( "Run script: '"_str << fname << "'", ELog::Debug );
 
 		// load from file
-		File::RFilePtr	file = File::HddRFile::New( fname );
+		GXFile::RFilePtr	file = GXFile::HddRFile::New( fname );
 		CHECK_ERR( file );
 
 		const usize	len		= usize(file->RemainingSize());
@@ -219,16 +268,6 @@ namespace CodeGen
 		return true;
 	}
 
-/*
-=================================================
-	Exit
-=================================================
-*/
-	void CodeGenApp::Exit ()
-	{
-		_looping = false;
-	}
-
 }	// CodeGen
 
 
@@ -244,11 +283,12 @@ int main (int argc, char** argv)
 	CHECK_ERR( argv > 0 );
 
 	Logger::GetInstance()->Open( "log", false );
-	CHECK( GetMainSystemInstance()->GlobalSystems()->fileManager->FindAndSetCurrentDir( "Projects/CodeGen" ) );
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Projects/CodeGen" ) );
 	
 	// find input scripts
 	Array<String>	script_files;
-	String			api = "CL 1.2";
+	String			api			= "CL 1.2";
+	String			device;
 
 	for (int i = 1; i < argc; ++i)
 	{
@@ -268,26 +308,30 @@ int main (int argc, char** argv)
 			api = value;
 		}
 		else
+		if ( key.EqualsIC( "-dev" ) )
+		{
+			device = value;
+		}
+		else
 		{
 			RETURN_ERR( "unsupported command arg: " << key, 1 );
 		}
 	}
 
+	#ifdef CG_RUN_ON_SOFT
+		api = "SW 1.0";
+	#endif
+
 	// run application
 	{
 		CodeGenApp	app;
-		//app.Initialize( "VK 1.0"_GAPI );
-		//app.Initialize( "GL 4.5"_GAPI );
-		//app.Initialize( "CL 1.2"_GAPI );
-		//app.Initialize( "SW 1.0"_GAPI );
-		app.Initialize( GAPI::FromString( api ) );
+		app.Initialize( GAPI::FromString( api ), device );
 
 		app.Run( LAMBDA( &script_files, &app ) ()
 				{
 					FOR( i, script_files ) {
 						app.RunScript( script_files[i] );
 					}
-					app.Exit();
 				} );
 
 		// main loop

@@ -17,12 +17,13 @@ namespace CodeGen
 	private:
 		using GenFunction		= IGenerator::GenFunction;
 		using GenFunctions_t	= IGenerator::GenFunctions_t;
+		using Parameters_t		= IGenerator::Parameters;
 
 
 	// methods
 	public:
-		static bool SearchResults (BinArrayCRef results, usize resultsCount, uint maxInputs, BytesU resultSize,
-								   BytesU bigIntSize, ValueID::type typeId, ECommandSet::bits commandSet, EConstantSet::bits constantSet,
+		static bool SearchResults (BinArrayCRef results, usize resultsCount, uint maxConstants, uint argsCount, BytesU resultSize,
+								   BytesU bigIntSize, const Parameters_t &params, usize maxOutputResults,
 								   OUT GenFunctions_t &functions);
 
 	private:

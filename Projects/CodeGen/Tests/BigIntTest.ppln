@@ -12,7 +12,6 @@ void main ()
 	self.compute.Load( "<Common/Defines.glsl>" );
 	self.compute.Load( "<Common/Cmp.glsl>" );
 	self.compute.Load( "<Math/BitMath.glsl>" );
-	self.compute.Load( "Settings.glsl" );
 	self.compute.Load( "../Generators/BigInt.glsl" );
 	self.compute.LoadSelf();
 }

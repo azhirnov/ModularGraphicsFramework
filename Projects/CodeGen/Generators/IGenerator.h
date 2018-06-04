@@ -14,8 +14,9 @@
 
 #include "Generators/BigInteger.h"
 #include "Generators/Commands.h"
+#include "Generators/Fitness/FitnessFunctions.h"
 #include "Generators/TestCase.h"
-#include "Generators/Scalar.h"
+#include "Generators/Mixed.h"
 
 namespace CodeGen
 {
@@ -30,25 +31,47 @@ namespace CodeGen
 	{
 	// types
 	public:
-		using HashCode_t	= BigInteger< uint, 4 >;
+		using FunctionHash_t	= BigInteger< uint, 4 >;
+		using ConstantHash_t	= BigInteger< uint, 4 >;
 
-		struct GenFunction final
+		struct Parameters
 		{
 		// variables
-			HashCode_t			hash;			// function hash
-			ValueID::type		typeId;			// int/float/double/scalarf
-			ulong				ticks;			// determines the execution time of the function
-			float				accuracy;		// function results medium accuracy
-			uint				inputsCount;	// args + constants
-			uint				argsCount;
-			ECommandSet::bits	commandSet;
-			EConstantSet::bits	constants;
+			ValueID::type			typeId;			// int/float/double/scalarf/...
+			ECommandSet::bits		commandSet;
+			EConstantSet::bits		constants;
+			EFitnessFunction::type	fitnessFunc;
 
 		// methods
-			GenFunction () :
-				typeId(), ticks(0), accuracy(0.0f), inputsCount(0), argsCount(0)
+			Parameters (GX_DEFCTOR) :
+				typeId(Uninitialized), fitnessFunc{Uninitialized}
 			{}
 		};
+
+
+		struct GenFunction final : Parameters
+		{
+		// variables
+			FunctionHash_t			funHash;
+			ConstantHash_t			constHash;
+			ulong					ticks;			// determines the execution time of the function
+			float					accuracy;		// function results medium accuracy
+			uint					maxInputs;		// args + max constants
+			uint					argsCount;
+
+		// methods
+			GenFunction (GX_DEFCTOR) :
+				ticks(0), accuracy(0.0f), maxInputs(0), argsCount(0)
+			{}
+
+			void SetParams (const Parameters &p) {
+				typeId		= p.typeId;
+				commandSet	= p.commandSet;
+				constants	= p.constants;
+				fitnessFunc	= p.fitnessFunc;
+			}
+		};
+
 
 		struct SrcNode final
 		{
@@ -60,7 +83,7 @@ namespace CodeGen
 			ArgIndices_t	args;	// node indices to put into command arguments
 
 		// methods
-			SrcNode () {}
+			SrcNode (GX_DEFCTOR) {}
 			SrcNode (StringCRef name, ArrayCRef<uint> list) : name(name), args(list) {}
 		};
 		
@@ -68,17 +91,46 @@ namespace CodeGen
 		using SrcNodes_t		= ArrayCRef< SrcNode >;
 
 
+		struct Config
+		{
+		// variables
+			ECommandSet::bits		commandSetType;
+			EConstantSet::bits		constantType;
+			EFitnessFunction::type	fitnessFunc;
+			float					maxAccuracy;
+			uint					maxConstants;
+			uint					maxCommands;
+
+		// methods
+			Config (GX_DEFCTOR) :
+				fitnessFunc{Uninitialized}, maxAccuracy{0.001f}, maxConstants{0}, maxCommands{10}
+			{}
+		};
+
+
+		struct Statistic
+		{
+		// variables
+			TimeD	duration;
+			uint	commandCount;
+			uint	resultCount;
+
+		// methods
+			Statistic (GX_DEFCTOR) :
+				commandCount{0}, resultCount{0}
+			{}
+		};
+
+
 	// interface
 	public:
-		
-		virtual bool Generate (VariantCRef testCases,
-							   ECommandSet::bits commandSetType, EConstantSet::bits constantType,
-							   float maxAccuracy, uint maxCommands,
-							   OUT GenFunctions_t &functions) = 0;
-		
-		//virtual bool Run (VariantCRef input, const GenFunction &func, OUT VariantRef result) = 0;
+		virtual ~IGenerator () {}
 
-		//virtual bool CreateFromNodes (SrcNodes_t nodes, TypeId typeId, OUT GenFunction &func) = 0;
+		virtual bool Initialize (VariantCRef testCases, const Config &cfg) = 0;
+
+		virtual bool Update () = 0;
+
+		virtual bool GetResults (OUT Statistic &stat, OUT GenFunctions_t &functions, usize maxResults = 10) = 0;
 	};
 
 }	// CodeGen

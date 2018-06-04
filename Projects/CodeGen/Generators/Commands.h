@@ -15,6 +15,8 @@ namespace CodeGen
 			Physics,
 			MathMostPopularOnly,
 			PhysicsMostPopularOnly,
+			PrimeNumbers,
+			Values0to255,
 
 			_Count,
 			Unknown = ~0u,
@@ -27,7 +29,9 @@ namespace CodeGen
 	{
 		enum type : uint
 		{
-			FloatBaseCommands,
+			FloatArithmetic,
+			IntArithmetic,
+			IntBitwise,
 
 			_Count,
 			Unknown = ~0u,
@@ -42,7 +46,7 @@ namespace CodeGen
 	// Generator Commands
 	//
 
-	class Commands
+	class Commands final : public Noninstancable
 	{
 	// types
 	public:
@@ -75,12 +79,22 @@ namespace CodeGen
 	public:
 		static ArrayCRef<CommandData>  GetCommands (ECommandSet::bits flags);
 
-		//template <typename T>
-		//static Array<T>  GetConstants (EConstantSet::bits flags);
+		template <typename T>
+		static Set<T>  GetConstants (EConstantSet::bits flags);
 
 
 	private:
-		static ArrayCRef<CommandData>  _GetFloatBaseCommands ();
+		static ArrayCRef<CommandData>  _GetFloatArithmetic ();
+		static ArrayCRef<CommandData>  _GetIntArithmetic ();
+		static ArrayCRef<CommandData>  _GetIntBitwise ();
+
+		template <typename T>  static Array<T>  _GetMathConstantsF ();
+		template <typename T>  static Array<T>  _GetPhysicsConstantsF ();
+		template <typename T>  static Array<T>  _GetMathMostPopularOnlyConstantsF ();
+		template <typename T>  static Array<T>  _GetPhysicsMostPopularOnlyConstantsF ();
+
+		template <typename T>  static Array<T>  _GetPrimeNumbersConstants ();
+		template <typename T>  static Array<T>  _GetValues0to255Constants ();
 	};
 
 }	// CodeGen

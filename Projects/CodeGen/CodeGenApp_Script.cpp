@@ -2,7 +2,7 @@
 
 #include "CodeGenApp.h"
 #include "Generators/TestCase.h"
-#include "Generators/Scalar.h"
+#include "Generators/Mixed.h"
 #include "Generators/GenFunctionSerializer.h"
 #include "Generators/Bruteforce/BruteforceGenerator.h"
 #include "Engine/Script/Bindings/DefaultBindings.h"
@@ -109,80 +109,88 @@ namespace CodeGen
 	{
 	// variables
 	private:
-		float				_maxAccuracy;
-		uint				_maxCommands;
-		ECommandSet::bits	_commandSet;
-		EConstantSet::bits	_constantSet;
-		VariantCRef			_tests;
+		IGenerator::Config		_config;
+		VariantCRef				_tests;
 
 	// methods
 	public:
-		BruteforceCodeGen () :
-			_maxAccuracy{0.0f}, _maxCommands{1}
-		{}
-
-		void SetTestF1 (const TestCaseArray<float,1> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestF2 (const TestCaseArray<float,2> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestF3 (const TestCaseArray<float,3> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestF4 (const TestCaseArray<float,4> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestF5 (const TestCaseArray<float,5> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestF6 (const TestCaseArray<float,6> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestF7 (const TestCaseArray<float,7> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestF8 (const TestCaseArray<float,8> &tc) { _tests = tc.GetUntyped(); }
-
-		void SetTestD1 (const TestCaseArray<double,1> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestD2 (const TestCaseArray<double,2> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestD3 (const TestCaseArray<double,3> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestD4 (const TestCaseArray<double,4> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestD5 (const TestCaseArray<double,5> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestD6 (const TestCaseArray<double,6> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestD7 (const TestCaseArray<double,7> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestD8 (const TestCaseArray<double,8> &tc) { _tests = tc.GetUntyped(); }
+		BruteforceCodeGen ()
+		{
+			_config.maxCommands	= 10;
+			_config.maxAccuracy	= 0.001f;
+			_config.fitnessFunc	= EFitnessFunction::FloatLinear;
+		}
 		
-		void SetTestI1 (const TestCaseArray<int,1> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestI2 (const TestCaseArray<int,2> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestI3 (const TestCaseArray<int,3> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestI4 (const TestCaseArray<int,4> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestI5 (const TestCaseArray<int,5> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestI6 (const TestCaseArray<int,6> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestI7 (const TestCaseArray<int,7> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestI8 (const TestCaseArray<int,8> &tc) { _tests = tc.GetUntyped(); }
-
-		void SetTestSF1 (const TestCaseArray<ScalarF,1> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestSF2 (const TestCaseArray<ScalarF,2> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestSF3 (const TestCaseArray<ScalarF,3> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestSF4 (const TestCaseArray<ScalarF,4> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestSF5 (const TestCaseArray<ScalarF,5> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestSF6 (const TestCaseArray<ScalarF,6> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestSF7 (const TestCaseArray<ScalarF,7> &tc) { _tests = tc.GetUntyped(); }
-		void SetTestSF8 (const TestCaseArray<ScalarF,8> &tc) { _tests = tc.GetUntyped(); }
+		template <typename T, usize Count>
+		void SetTests (const TestCaseArray<T,Count> &tc) {
+			_tests = tc.GetUntyped();
+		}
 
 		void SetMaxAccuracy (float value) {
-			_maxAccuracy = value;
+			_config.maxAccuracy = value;
 		}
 
 		void SetMaxCommands (uint value) {
-			_maxCommands = value;
+			_config.maxCommands = value;
+		}
+
+		void SetMaxConstants (uint value) {
+			_config.maxConstants = value;
 		}
 
 		void AddCommandType (ECommandSet::type value) {
-			_commandSet |= value;
+			_config.commandSetType |= value;
 		}
 
 		void AddCommandSet (ECommandSet::bits value) {
-			_commandSet |= value;
+			_config.commandSetType |= value;
+		}
+
+		void AddConstantType (EConstantSet::type value) {
+			_config.constantType |= value;
+		}
+
+		void AddConstantSet (EConstantSet::bits value) {
+			_config.constantType |= value;
+		}
+
+		void SetCommands (ECommandSet::bits value) {
+			_config.commandSetType = value;
+		}
+
+		void SetFitnessFunction (EFitnessFunction::type value) {
+			_config.fitnessFunc = value;
 		}
 
 		void Run (const String &output)
 		{
-			BruteforceGenerator			gen;
-			IGenerator::GenFunctions_t	funcs;
+			UniquePtr<IGenerator>	gen{ new BruteforceGenerator() };
 
-			CHECK_ERR( gen.Generate( _tests, _commandSet, _constantSet, _maxAccuracy, _maxCommands, OUT funcs ), void() );
+			CHECK_ERR( gen->Initialize( _tests, _config ), void() );
+
+			CodeGenApp::Instance()->SetGenerator(
+				RVREF(gen),
+				LAMBDA( str = output ) (IGenerator *gen) {
+					OnGenerationCompleted( gen, str );
+				}
+			);
+		}
+
+		static void OnGenerationCompleted (IGenerator *gen, StringCRef output)
+		{
+			IGenerator::GenFunctions_t	funcs;
+			IGenerator::Statistic		stat;
+			String						src;
+
+			CHECK( gen->GetResults( OUT stat, OUT funcs ) );
+
+			GXFile::WFilePtr	file = GXFile::HddWFile::New( output );
+			CHECK_ERR( file, void() );
+
+			LOG( "Program synthesing time "_str << ToString( stat.duration ), ELog::Debug );
 
 			if ( not funcs.Empty() )
 			{
-				String	src;
 				FOR( i, funcs )
 				{
 					String	str;
@@ -191,9 +199,11 @@ namespace CodeGen
 					src << str << "//====================================\n\n\n";
 				}
 
-				WFilePtr	file = File::HddWFile::New( output );
-				CHECK_ERR( file, void() );
-
+				file->Write( StringCRef(src) );
+			}
+			else
+			{
+				src = "// 0 results found, increase max commands count or max accuracy value\n";
 				file->Write( StringCRef(src) );
 			}
 		}
@@ -204,7 +214,7 @@ namespace CodeGen
 
 namespace GX_STL::GXScript
 {
-	using ScalarF = CodeGen::ScalarF;
+	using MixedF = CodeGen::MixedF;
 
 	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<1>::TC<float>,	"TestCasesF1" );
 	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<2>::TC<float>,	"TestCasesF2" );
@@ -232,15 +242,24 @@ namespace GX_STL::GXScript
 	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<6>::TC<int>,		"TestCasesI6" );
 	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<7>::TC<int>,		"TestCasesI7" );
 	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<8>::TC<int>,		"TestCasesI8" );
+	
+	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<1>::TC<uint>,		"TestCasesU1" );
+	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<2>::TC<uint>,		"TestCasesU2" );
+	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<3>::TC<uint>,		"TestCasesU3" );
+	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<4>::TC<uint>,		"TestCasesU4" );
+	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<5>::TC<uint>,		"TestCasesU5" );
+	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<6>::TC<uint>,		"TestCasesU6" );
+	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<7>::TC<uint>,		"TestCasesU7" );
+	GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<8>::TC<uint>,		"TestCasesU8" );
 
-	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<1>::TC<ScalarF>,	"TestCasesSF1" );
-	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<2>::TC<ScalarF>,	"TestCasesSF2" );
-	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<3>::TC<ScalarF>,	"TestCasesSF3" );
-	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<4>::TC<ScalarF>,	"TestCasesSF4" );
-	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<5>::TC<ScalarF>,	"TestCasesSF5" );
-	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<6>::TC<ScalarF>,	"TestCasesSF6" );
-	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<7>::TC<ScalarF>,	"TestCasesSF7" );
-	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<8>::TC<ScalarF>,	"TestCasesSF8" );
+	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<1>::TC<MixedF>,	"TestCasesMF1" );
+	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<2>::TC<MixedF>,	"TestCasesMF2" );
+	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<3>::TC<MixedF>,	"TestCasesMF3" );
+	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<4>::TC<MixedF>,	"TestCasesMF4" );
+	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<5>::TC<MixedF>,	"TestCasesMF5" );
+	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<6>::TC<MixedF>,	"TestCasesMF6" );
+	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<7>::TC<MixedF>,	"TestCasesMF7" );
+	//GX_DECL_SCRIPT_TYPE( CodeGen::_TestCaseSizedArray<8>::TC<MixedF>,	"TestCasesMF8" );
 	
 	GX_DECL_SCRIPT_TYPE( CodeGen::BruteforceCodeGen,					"BruteforceCodeGen" );
 
@@ -249,6 +268,8 @@ namespace GX_STL::GXScript
 
 	GX_DECL_SCRIPT_TYPE( CodeGen::EConstantSet::type,					"EConstantSet" );
 	GX_DECL_SCRIPT_TYPE( CodeGen::EConstantSet::bits,					"EConstantSetBits" );
+	
+	GX_DECL_SCRIPT_TYPE( CodeGen::EFitnessFunction::type,				"EFitnessFunction" );
 }
 
 namespace CodeGen
@@ -330,7 +351,8 @@ namespace CodeGen
 		CHECK_ERR( BindTestCase<float>(   se ) );
 		CHECK_ERR( BindTestCase<double>(  se ) );
 		CHECK_ERR( BindTestCase<int>(     se ) );
-		//CHECK_ERR( BindTestCase<ScalarF>( se ) );
+		CHECK_ERR( BindTestCase<uint>(    se ) );
+		//CHECK_ERR( BindTestCase<MixedF>( se ) );
 		return true;
 	}
 	
@@ -346,37 +368,50 @@ namespace CodeGen
 		ClassBinder<BFCG>	binder( se );
 		binder.CreateClassValue();
 
-		binder.AddMethod( &BFCG::SetTestF1, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestF2, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestF3, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestF4, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestF5, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestF6, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestF7, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestF8, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<float,1>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<float,2>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<float,3>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<float,4>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<float,5>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<float,6>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<float,7>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<float,8>, "SetTests" );
 		
-		binder.AddMethod( &BFCG::SetTestD1, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestD2, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestD3, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestD4, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestD5, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestD6, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestD7, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestD8, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<double,1>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<double,2>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<double,3>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<double,4>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<double,5>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<double,6>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<double,7>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<double,8>, "SetTests" );
 		
-		binder.AddMethod( &BFCG::SetTestI1, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestI2, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestI3, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestI4, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestI5, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestI6, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestI7, "SetTests" );
-		binder.AddMethod( &BFCG::SetTestI8, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<int,1>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<int,2>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<int,3>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<int,4>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<int,5>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<int,6>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<int,7>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<int,8>, "SetTests" );
 		
-		binder.AddMethod( &BFCG::SetMaxAccuracy, "SetMaxAccuracy" );
-		binder.AddMethod( &BFCG::SetMaxCommands, "SetMaxCommands" );
-		binder.AddMethod( &BFCG::AddCommandType, "AddCommandSet" );
-		binder.AddMethod( &BFCG::AddCommandSet,  "AddCommandSet" );
+		binder.AddMethod( &BFCG::SetTests<uint,1>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<uint,2>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<uint,3>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<uint,4>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<uint,5>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<uint,6>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<uint,7>, "SetTests" );
+		binder.AddMethod( &BFCG::SetTests<uint,8>, "SetTests" );
+		
+		binder.AddMethod( &BFCG::SetMaxAccuracy,		"SetMaxAccuracy" );
+		binder.AddMethod( &BFCG::SetMaxCommands,		"SetMaxCommands" );
+		binder.AddMethod( &BFCG::SetMaxConstants,		"SetMaxConstants" );
+		binder.AddMethod( &BFCG::AddCommandType,		"AddCommandSet" );
+		binder.AddMethod( &BFCG::AddCommandSet,			"AddCommandSet" );
+		binder.AddMethod( &BFCG::AddConstantType,		"AddConstantSet" );
+		binder.AddMethod( &BFCG::AddConstantSet,		"AddConstantSet" );
+		binder.AddMethod( &BFCG::SetFitnessFunction,	"SetFitnessFunction" );
 
 		binder.AddMethod( &BFCG::Run, "Run" );
 
@@ -395,7 +430,9 @@ namespace CodeGen
 			EnumBinder< ECommandSet::type >	binder{ se };
 		
 			binder.Create();
-			binder.AddValue( "FloatBaseCommands",	ECommandSet::FloatBaseCommands );
+			binder.AddValue( "FloatArithmetic",		ECommandSet::FloatArithmetic );
+			binder.AddValue( "IntArithmetic",		ECommandSet::IntArithmetic );
+			binder.AddValue( "IntBitwise",			ECommandSet::IntBitwise );
 		}
 
 		// bits
@@ -423,6 +460,8 @@ namespace CodeGen
 			binder.AddValue( "Physics",					EConstantSet::Physics );
 			binder.AddValue( "MathMostPopularOnly",		EConstantSet::MathMostPopularOnly );
 			binder.AddValue( "PhysicsMostPopularOnly",	EConstantSet::PhysicsMostPopularOnly );
+			binder.AddValue( "PrimeNumbers",			EConstantSet::PrimeNumbers );
+			binder.AddValue( "Values0to255",			EConstantSet::Values0to255 );
 		}
 
 		// bits
@@ -431,6 +470,21 @@ namespace CodeGen
 
 			binder.BindDefaults();
 		}
+		return true;
+	}
+	
+/*
+=================================================
+	BindEFitnessFunction
+=================================================
+*/
+	static bool BindEFitnessFunction (const ScriptEnginePtr &se)
+	{
+		EnumBinder< EFitnessFunction::type >	binder{ se };
+		
+		binder.Create();
+		binder.AddValue( "FloatLinear",		EFitnessFunction::FloatLinear );
+		binder.AddValue( "Bitwise",			EFitnessFunction::Bitwise );
 		return true;
 	}
 
@@ -449,6 +503,7 @@ namespace CodeGen
 		CHECK( BindTestCaseToScript( &_scriptEngine ) );
 		CHECK( BindECommandSet( &_scriptEngine ) );
 		CHECK( BindEConstantSet( &_scriptEngine ) );
+		CHECK( BindEFitnessFunction( &_scriptEngine ) );
 		CHECK( BindBruteforceToScript( &_scriptEngine ) );
 	}
 

@@ -7,7 +7,7 @@
 namespace CodeGen
 {
 
-	extern bool Test_BigInt ()
+	extern bool Test_GpuBigInt ()
 	{
 		// create resources
 		auto		factory		= GetMainSystemInstance()->GlobalSystems()->modulesFactory;
@@ -30,8 +30,7 @@ namespace CodeGen
 						gpuIDs.commandBuilder,
 						gpu_thread->GlobalSystems(),
 						CreateInfo::GpuCommandBuilder{},
-						OUT cmd_builder )
-		);
+						OUT cmd_builder ) );
 
 		ModulePtr	cmd_buffer;
 		CHECK_ERR( factory->Create(
@@ -47,11 +46,8 @@ namespace CodeGen
 						gpu_thread->GlobalSystems(),
 						CreateInfo::GpuBuffer{
 							BufferDescriptor{ 16_b, EBufferUsage::Storage },
-							EGpuMemory::CoherentWithCPU,
-							EMemoryAccess::All
-						},
-						OUT buffer
-					) );
+							EGpuMemory::CoherentWithCPU },
+						OUT buffer ) );
 
 		CreateInfo::PipelineTemplate	pt_ci;
 		Pipelines::Create_biginttest( OUT pt_ci.descr );
@@ -106,7 +102,7 @@ namespace CodeGen
 
 		CHECK_FATAL( result == 111 );
 
-		LOG( "Test_BigInt - OK", ELog::Info );
+		LOG( "Test_GpuBigInt - OK", ELog::Info );
 		return true;
 	}
 
