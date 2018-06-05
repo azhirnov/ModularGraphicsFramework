@@ -100,7 +100,7 @@ namespace GXMath
 
 		typedef CompileTime::NearUInt::FromType<T>	Unsigned_t;
 
-		return (T) _math_hidden_::_BitRotateLeft( Unsigned_t(x), usize(shift) );
+		return T(_math_hidden_::_BitRotateLeft( Unsigned_t(x), usize(shift) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -147,7 +147,7 @@ namespace GXMath
 
 		typedef CompileTime::NearUInt::FromType<T>	Unsigned_t;
 
-		return (T) _math_hidden_::_BitRotateRight( Unsigned_t(x), usize(shift) );
+		return T(_math_hidden_::_BitRotateRight( Unsigned_t(x), usize(shift) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -174,7 +174,7 @@ namespace GXMath
 	template <typename T>
 	ND_ forceinline constexpr T  ToBit (BitsU bitIndex)
 	{
-		return SafeLeftBitShift( T(1), (usize)bitIndex );
+		return SafeLeftBitShift( T(1), usize(bitIndex) );
 	}
 
 	template <typename T, usize I, ulong U>
@@ -204,7 +204,7 @@ namespace GXMath
 
 				return	lastBitIndex < 0 ? T(0) :
 							lastBitIndex < CompileTime::SizeOf<T>::bits ?
-								(T(1) << (usize)lastBitIndex) - 1 :
+								(T(1) << usize(lastBitIndex)) - 1 :
 								T(-1);
 			}
 		};

@@ -240,8 +240,8 @@ bool CApp::_Test_Image2DNearestFilter ()
 	for (uint y = 0; y < dst_img_dim.y-1; ++y)
 	{
 		uint			y1		= y * 2 + (y >= dst_img_dim.y/2 ? 1 : 0);
-		Pixel const*	src_row = (Pixel const*) (image_data.ptr() + req_src_layout->result->rowPitch * y1);
-		Pixel const*	dst_row = (Pixel const*) (dst_data.ptr() + req_dst_layout->result->rowPitch * y);
+		Pixel const*	src_row = Cast<Pixel const*>(image_data.ptr() + req_src_layout->result->rowPitch * y1);
+		Pixel const*	dst_row = Cast<Pixel const*>(dst_data.ptr() + req_dst_layout->result->rowPitch * y);
 
 		for (uint x = 0; x < dst_img_dim.x-1; ++x)
 		{

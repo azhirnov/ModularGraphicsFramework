@@ -245,7 +245,7 @@ namespace PlatformGL
 
 		for (int i = 0; i < count; ++i)
 		{
-			GL_CALL( ext = (const char *) glGetStringi( GL_EXTENSIONS, i ) );
+			GL_CALL( ext = Cast<const char *>(glGetStringi( GL_EXTENSIONS, i )) );
 
 			if ( name.EqualsIC( ext ) )
 				return true;
@@ -369,10 +369,10 @@ namespace PlatformGL
 		float	fdata[4] = {};
 
 		log	<< "OpenGL info\n---------------"
-			<< "\nRenderer:                " << (const char*)glGetString( GL_RENDERER )
-			<< "\nVersion:                 " << (const char*)glGetString( GL_VERSION )
-			<< "\nVendor:                  " << (const char*)glGetString( GL_VENDOR )
-			<< "\nGLSL:                    " << (const char*)glGetString( GL_SHADING_LANGUAGE_VERSION );
+			<< "\nRenderer:                " << Cast<const char*>(glGetString( GL_RENDERER ))
+			<< "\nVersion:                 " << Cast<const char*>(glGetString( GL_VERSION ))
+			<< "\nVendor:                  " << Cast<const char*>(glGetString( GL_VENDOR ))
+			<< "\nGLSL:                    " << Cast<const char*>(glGetString( GL_SHADING_LANGUAGE_VERSION ));
 
 		GL_CALL( glGetIntegerv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, OUT idata ) );
 		log << "\nMax anisotropy:          " << idata[0];
@@ -509,7 +509,7 @@ namespace PlatformGL
 			
 			for (GLint i = 0; i < num_ext; ++i)
 			{
-				GL_CALL( ext_str = (const char *) glGetStringi( GL_EXTENSIONS, i ) );
+				GL_CALL( ext_str = Cast<const char *>(glGetStringi( GL_EXTENSIONS, i )) );
 
 				log << (i == 0 ? "" : ((i & 3) == 0 ? ",\n" : ", ")) << ext_str;
 			}

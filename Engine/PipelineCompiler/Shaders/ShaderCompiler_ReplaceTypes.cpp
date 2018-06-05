@@ -403,7 +403,7 @@ namespace PipelineCompiler
 
 		FOR( i, swizzle_mask->getSequence() )
 		{
-			glslang::TConstUnionArray		arr(1);		arr[0].setIConst( i );
+			glslang::TConstUnionArray		arr(1);		arr[0].setIConst( int(i) );
 			glslang::TIntermConstantUnion*	c_union		= new glslang::TIntermConstantUnion( arr, *cu_type );
 
 			swizzle_mask->getSequence()[i] = c_union;

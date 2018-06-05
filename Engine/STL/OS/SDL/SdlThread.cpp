@@ -99,7 +99,7 @@ namespace OS
 */
 	void CurrentThread::Sleep (TimeL time)
 	{
-		::SDL_Delay( (uint)time.MilliSeconds() );
+		::SDL_Delay( uint(time.MilliSeconds()) );
 	}
 	
 /*
@@ -119,7 +119,7 @@ namespace OS
 */
 	void CurrentThread::_SetCurrentThreadPriority (EThreadPriority::type priority)
 	{
-		::SDL_SetThreadPriority( (SDL_ThreadPriority) priority );
+		::SDL_SetThreadPriority( SDL_ThreadPriority(priority) );
 	}
 	
 //-----------------------------------------------------------------------------
@@ -171,7 +171,7 @@ namespace OS
 */
 	int SDLCALL Thread::_ThreadProcWrapper (void *param)
 	{
-		Thread *	thread = (Thread *)param;
+		Thread *	thread = Cast<Thread *>(param);
 		thread->_proc( thread->_parameter );
 		return 0;
 	}
@@ -218,7 +218,7 @@ namespace OS
 	Id
 =================================================
 */
-	uint Thread::Id () const
+	usize Thread::Id () const
 	{
 		return _id;
 	}

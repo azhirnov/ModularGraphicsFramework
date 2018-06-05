@@ -104,7 +104,7 @@ if ( COMPILER_GCC )
 	set( CMAKE_CXX_FLAGS_DEBUGANALYZE "${CMAKE_CXX_FLAGS} -D_DEBUG -Og " CACHE STRING "" FORCE )
 	set( CMAKE_EXE_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_DEBUGANALYZE "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
-	set( PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Waddress -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local -Werror=delete-incomplete -Werror=subobject-linkage -Werror=odr -Werror=old-style-cast -Werror=old-style-declaration -Werror=old-style-definition  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og -Wno-terminate  CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Waddress -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local -Werror=delete-incomplete -Werror=subobject-linkage -Werror=odr -Werror=old-style-declaration -Werror=old-style-definition  -ggdb -fsanitize=undefined -fchkp-check-incomplete-type -Og -Wno-terminate  CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_DEBUGANALYZE  __GX_DEBUG__ __GX_ANALYZE__ CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUGANALYZE " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
 	# Debug
@@ -113,7 +113,7 @@ if ( COMPILER_GCC )
 	set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -D_DEBUG -Og " CACHE STRING "" FORCE )
 	set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
-	set( PROJECTS_SHARED_CXX_FLAGS_DEBUG  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Waddress -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local -Werror=delete-incomplete -Werror=subobject-linkage -Werror=odr -Werror=old-style-cast -Werror=old-style-declaration -Werror=old-style-definition  -ggdb -fchkp-check-incomplete-type -Og -Wno-terminate  CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_DEBUG  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Waddress -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local -Werror=delete-incomplete -Werror=subobject-linkage -Werror=odr -Werror=old-style-declaration -Werror=old-style-definition  -ggdb -fchkp-check-incomplete-type -Og -Wno-terminate  CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_DEBUG  __GX_DEBUG__ CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_DEBUG " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
 	# Profile
@@ -122,7 +122,7 @@ if ( COMPILER_GCC )
 	set( CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS} -D_NDEBUG -DNDEBUG  -O2 " CACHE STRING "" FORCE )
 	set( CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
-	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Waddress -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local -Werror=delete-incomplete -Werror=subobject-linkage -Werror=odr -Werror=old-style-cast -Werror=old-style-declaration -Werror=old-style-definition  -O2 CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_PROFILE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Waddress -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local -Werror=delete-incomplete -Werror=subobject-linkage -Werror=odr -Werror=old-style-declaration -Werror=old-style-definition  -O2 CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_PROFILE  GX_ENABLE_PROFILING CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_PROFILE " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
 	# Release
@@ -131,7 +131,7 @@ if ( COMPILER_GCC )
 	set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -D_NDEBUG -DNDEBUG  -O3 -finline-functions " CACHE STRING "" FORCE )
 	set( CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} " CACHE STRING "" FORCE )
 	set( CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS} " CACHE STRING "" FORCE )
-	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Waddress -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local -Werror=delete-incomplete -Werror=subobject-linkage -Werror=odr -Werror=old-style-cast -Werror=old-style-declaration -Werror=old-style-definition  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE )
+	set( PROJECTS_SHARED_CXX_FLAGS_RELEASE  -std=c++1z -Wchar-subscripts -Wdouble-promotion -Wformat -Wmain -Wmissing-braces -Wmissing-include-dirs -Wuninitialized -Wmaybe-uninitialized -Wunknown-pragmas -Wpragmas -Wstrict-aliasing -Wstrict-overflow -Wundef -Wendif-labels -Wfree-nonheap-object -Wpointer-arith -Wcast-align -Wwrite-strings -Wconversion-null -Wenum-compare -Wsign-compare -Wsizeof-pointer-memaccess -Wlogical-op -Waddress -Wno-unused -Wno-non-template-friend -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-enum-compare -Wno-narrowing -Wno-attributes -Wno-invalid-offsetof  -Werror=init-self -Werror=parentheses -Werror=return-local-addr -Werror=return-type -Werror=array-bounds -Werror=div-by-zero -Werror=missing-field-initializers -Werror=placement-new -Werror=sign-compare -Werror=cast-qual -Werror=cast-align -Werror=literal-suffix -Werror=shadow=local -Werror=delete-incomplete -Werror=subobject-linkage -Werror=odr -Werror=old-style-declaration -Werror=old-style-definition  -O3 -Ofast -fomit-frame-pointer -finline-functions CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_DEFINES_RELEASE  __GX_NO_EXCEPTIONS__ CACHE INTERNAL "" FORCE )
 	set( PROJECTS_SHARED_LINKER_FLAGS_RELEASE " -static -static-libgcc -static-libstdc++" CACHE INTERNAL "" FORCE )
 	set( CMAKE_BUILD_TYPE "Debug")
@@ -1715,6 +1715,7 @@ target_include_directories( "Tests.Engine.Base" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Tests.Engine.Base" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Engine.Base" "Engine.Profilers" )
 target_link_libraries( "Tests.Engine.Base" "Engine.Platforms" )
+add_dependencies( "Tests.Engine.Base" "Deps_Tests.Engine.Base" )
 # compiler
 set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1729,6 +1730,20 @@ set_target_properties( "Tests.Engine.Base" PROPERTIES LINK_FLAGS_DEBUG ${PROJECT
 target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
 target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
 
+#-----------------------------------
+if (NOT DEFINED RESOURCE_PACKER_EXE)
+	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
+endif ()
+add_custom_target( "Deps_Tests.Engine.Base"
+	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Base/Pipelines/resources.as"
+	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Tests/Engine.Base/Pipelines/resources.as"
+	COMMENT "Pack resources for 'Tests.Engine.Base'..."
+	VERBATIM
+)
+add_dependencies( "Deps_Tests.Engine.Base" "Engine.ResourcePacker" )
+set_property( TARGET "Deps_Tests.Engine.Base" PROPERTY FOLDER "_deps_" )
+
+#-----------------------------------
 
 
 #==================================================================================================
@@ -1757,6 +1772,7 @@ target_include_directories( "Tests.Engine.Graphics" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Tests.Engine.Graphics" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Engine.Graphics" "Engine.Profilers" )
 target_link_libraries( "Tests.Engine.Graphics" "Engine.ImportExport" )
+add_dependencies( "Tests.Engine.Graphics" "Deps_Tests.Engine.Graphics" )
 # compiler
 set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1771,6 +1787,20 @@ set_target_properties( "Tests.Engine.Graphics" PROPERTIES LINK_FLAGS_DEBUG ${PRO
 target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
 target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
 
+#-----------------------------------
+if (NOT DEFINED RESOURCE_PACKER_EXE)
+	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
+endif ()
+add_custom_target( "Deps_Tests.Engine.Graphics"
+	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Graphics/Pipelines/resources.as"
+	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Tests/Engine.Graphics/Pipelines/resources.as"
+	COMMENT "Pack resources for 'Tests.Engine.Graphics'..."
+	VERBATIM
+)
+add_dependencies( "Deps_Tests.Engine.Graphics" "Engine.ResourcePacker" )
+set_property( TARGET "Deps_Tests.Engine.Graphics" PROPERTY FOLDER "_deps_" )
+
+#-----------------------------------
 
 
 #==================================================================================================
@@ -1873,6 +1903,7 @@ target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "External" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "${EXTERNALS_PATH}" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "Engine/.." )
 target_link_libraries( "Tests.Engine.Platforms.GAPI" "Engine.Platforms" )
+add_dependencies( "Tests.Engine.Platforms.GAPI" "Deps_Tests.Engine.Platforms.GAPI" )
 # compiler
 set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -1887,6 +1918,20 @@ set_target_properties( "Tests.Engine.Platforms.GAPI" PROPERTIES LINK_FLAGS_DEBUG
 target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
 target_compile_options( "Tests.Engine.Platforms.GAPI" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
 
+#-----------------------------------
+if (NOT DEFINED RESOURCE_PACKER_EXE)
+	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
+endif ()
+add_custom_target( "Deps_Tests.Engine.Platforms.GAPI"
+	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Tests/Engine.Platforms.GAPI/resources.as"
+	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Tests/Engine.Platforms.GAPI/resources.as"
+	COMMENT "Pack resources for 'Tests.Engine.Platforms.GAPI'..."
+	VERBATIM
+)
+add_dependencies( "Deps_Tests.Engine.Platforms.GAPI" "Engine.ResourcePacker" )
+set_property( TARGET "Deps_Tests.Engine.Platforms.GAPI" PROPERTY FOLDER "_deps_" )
+
+#-----------------------------------
 
 
 #==================================================================================================
@@ -2019,6 +2064,7 @@ target_include_directories( "Projects.ShaderEditor" PUBLIC "Engine/.." )
 target_link_libraries( "Projects.ShaderEditor" "Engine.Profilers" )
 target_link_libraries( "Projects.ShaderEditor" "Engine.Scene" )
 target_link_libraries( "Projects.ShaderEditor" "Engine.ImportExport" )
+add_dependencies( "Projects.ShaderEditor" "Deps_Projects.ShaderEditor" )
 # compiler
 set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
 set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_PROFILE ${PROJECTS_SHARED_LINKER_FLAGS_PROFILE} )
@@ -2033,6 +2079,20 @@ set_target_properties( "Projects.ShaderEditor" PROPERTIES LINK_FLAGS_DEBUG ${PRO
 target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:DebugAnalyze>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUGANALYZE}> )
 target_compile_options( "Projects.ShaderEditor" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
 
+#-----------------------------------
+if (NOT DEFINED RESOURCE_PACKER_EXE)
+	message( FATAL_ERROR "RESOURCE_PACKER_EXE is not defined" )
+endif ()
+add_custom_target( "Deps_Projects.ShaderEditor"
+	COMMAND ${RESOURCE_PACKER_EXE} -R "${CMAKE_SOURCE_DIR}/Projects/ShaderEditor/resources.as"
+	DEPENDS ${RESOURCE_PACKER_EXE} "${CMAKE_SOURCE_DIR}/Projects/ShaderEditor/resources.as"
+	COMMENT "Pack resources for 'Projects.ShaderEditor'..."
+	VERBATIM
+)
+add_dependencies( "Deps_Projects.ShaderEditor" "Engine.ResourcePacker" )
+set_property( TARGET "Deps_Projects.ShaderEditor" PROPERTY FOLDER "_deps_" )
+
+#-----------------------------------
 
 
 #==================================================================================================

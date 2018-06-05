@@ -52,7 +52,7 @@ namespace PlatformVK
 		layout_info.sType					= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		layout_info.setLayoutCount			= 1u;
 		layout_info.pSetLayouts				= &_descriptorId;
-		layout_info.pushConstantRangeCount	= (uint) pc_ranges.Count();
+		layout_info.pushConstantRangeCount	= uint(pc_ranges.Count());
 		layout_info.pPushConstantRanges		= pc_ranges.RawPtr();
 
 		VK_CHECK( vkCreatePipelineLayout( GetVkDevice(), &layout_info, null, OUT &_layoutId ) );
@@ -156,8 +156,8 @@ namespace PlatformVK
 		{
 			VkPushConstantRange		range = {};
 			range.stageFlags	= Vk1Enum( pc.stageFlags );
-			range.offset		= (uint) pc.offset;
-			range.size			= (uint) pc.size;
+			range.offset		= uint(pc.offset);
+			range.size			= uint(pc.size);
 
 			pushConstRanges.PushBack( range );
 			pushConstMap.Add( pc.name, { pc.stageFlags, pc.offset, pc.size } );
@@ -207,7 +207,7 @@ namespace PlatformVK
 
 		descriptor_info.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		descriptor_info.pBindings		= descr_binding.RawPtr();
-		descriptor_info.bindingCount	= (uint) descr_binding.Count();
+		descriptor_info.bindingCount	= uint(descr_binding.Count());
 
 		VK_CHECK( vkCreateDescriptorSetLayout( GetVkDevice(), &descriptor_info, null, OUT &_descriptorId ) );
 		return true;

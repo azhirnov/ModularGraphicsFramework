@@ -165,7 +165,7 @@ namespace Base
 		STATIC_ASSERT( sizeof(Handler::data) >= sizeof(func) );
 
 		Handler		handler;
-		UnsafeMem::MemCopy( OUT &handler.data, (void *)&func, BytesU::SizeOf(func) );
+		UnsafeMem::MemCopy( OUT &handler.data, Cast<void *>(&func), BytesU::SizeOf(func) );
 		handler.ptr		= obj;
 		handler.func	= &_Call< Class, Msg, Func >;
 		
@@ -183,7 +183,7 @@ namespace Base
 		STATIC_ASSERT( sizeof(HandlerData_t) >= sizeof(func) );
 
 		HandlerData_t	data;
-		UnsafeMem::MemCopy( OUT &data, (void *)&func, BytesU::SizeOf(func) );
+		UnsafeMem::MemCopy( OUT &data, Cast<void *>(&func), BytesU::SizeOf(func) );
 
 		return _Unsubscribe2( obj, data );
 	}

@@ -22,6 +22,7 @@ namespace PipelineCompiler
 	CppSerializer::~CppSerializer ()
 	{
 		ASSERT( _structStack.Count() == 1 );	// 1 becouse of default value in bottom of the stack
+		ASSERT( _nsStack.Count() == 1 );
 		ASSERT( _fileCounter == 0 );
 		ASSERT( _scopeCounter == 0 );
 	}
@@ -1210,12 +1211,37 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	DeclNamespace
+	BeginNamespace
 =================================================
 */
-	String  CppSerializer::DeclNamespace (StringCRef name) const
+	String  CppSerializer::BeginNamespace (StringCRef name) const
 	{
-		return "namespace "_str << name << "\n";
+		_nsStack.Push( name );
+		return "namespace "_str << name << "\n{\n";
+	}
+	
+/*
+=================================================
+	EndNamespace
+=================================================
+*/
+	String  CppSerializer::EndNamespace () const
+	{
+		String	res;
+		res << "}	// " << _nsStack.Get() << "\n";
+
+		_nsStack.Pop();
+
+		if ( _nsStack.Count() == 1 and not _podTypes.Empty() )
+		{
+			res << "\nnamespace GX_STL::CompileTime::_ctime_hidden_ {\n"
+				<< _podTypes
+				<< "}\n\n";
+
+			_podTypes.Clear();
+		}
+
+		return res;
 	}
 
 /*
@@ -1269,8 +1295,24 @@ namespace PipelineCompiler
 	BeginStruct
 =================================================
 */
-	String	CppSerializer::BeginStruct (StringCRef typeName, uint sizeOf) const
+	String	CppSerializer::BeginStruct (StringCRef typeName, uint sizeOf, bool isPOD) const
 	{
+		// declarate POD type
+		if ( isPOD )
+		{
+			_podTypes <<
+				"	template <> struct _IsPOD< ";
+
+			for (const auto& ns : _nsStack) {
+				_podTypes << ns << "::";
+			}
+			for (const auto& st : _structStack) {
+				_podTypes << st.typeName << "::";
+			}
+
+			_podTypes << typeName << " > { static const bool value = true; };\n";
+		}
+
 		String	indent;		indent.Resize( _structStack.Count()-1, '\t' );
 
 		if ( sizeOf > 0 )
@@ -1278,7 +1320,7 @@ namespace PipelineCompiler
 		else
 			_structStack.Push({ typeName, "", "", "" });
 
-		return String(indent) << "struct " << typeName << " final : CompileTime::PODStruct\n" << indent << "{\n";
+		return String(indent) << "struct " << typeName << " final\n" << indent << "{\n";
 	}
 	
 /*

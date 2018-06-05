@@ -46,7 +46,7 @@ namespace PlatformVK
 		VkWin32SurfaceCreateInfoKHR		surface_info = {};
 
 		surface_info.sType		= VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		surface_info.hinstance	= ::GetModuleHandle( (LPCSTR) null );
+		surface_info.hinstance	= ::GetModuleHandle( LPCSTR(null) );
 		surface_info.hwnd		= windowHandle.Get<HWND>();
 		
 		VK_CHECK( vkCreateWin32SurfaceKHR( instance, &surface_info, null, OUT &surface ) );

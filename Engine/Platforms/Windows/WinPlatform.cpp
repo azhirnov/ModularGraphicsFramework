@@ -274,7 +274,7 @@ namespace PlatformWin
 	{
 		CHECK_ERR( not _IsCreated() );
 
-		_instance = ::GetModuleHandle( (LPCSTR) null );
+		_instance = ::GetModuleHandle( LPCSTR(null) );
 
 		CHECK_ERR( _GetDirectories() );
 		CHECK_ERR( _RegisterClass() );
@@ -307,7 +307,7 @@ namespace PlatformWin
 	bool WinPlatform::_GetDirectories ()
 	{
 		char	buf[ MAX_PATH<<2 ] = {0};
-		CHECK_ERR( ::GetModuleFileName( _instance.Get<HMODULE>(), buf, (DWORD) CountOf(buf) ) != 0 );
+		CHECK_ERR( ::GetModuleFileName( _instance.Get<HMODULE>(), buf, DWORD(CountOf( buf )) ) != 0 );
 
 		_directories[ EDirectory::Internal ]		= "internal";
 		_directories[ EDirectory::InternalCache ]	= "internal_cache";
@@ -389,7 +389,7 @@ namespace PlatformWin
 
 		HMODULE		instance	= _instance.Get<HMODULE>();
 		WNDCLASSA	tmp			= {};
-		bool		ret			= GetClassInfo( instance, _className.cstr(), &tmp ) != FALSE;
+		bool		ret			= ::GetClassInfo( instance, _className.cstr(), &tmp ) != FALSE;
 		
 		if ( ret or ( _className == tmp.lpszClassName and instance == tmp.hInstance ) )
 			return true;
@@ -397,16 +397,16 @@ namespace PlatformWin
 		WNDCLASSEXA		window_class = {};
 		window_class.cbSize			= sizeof(window_class);
 		window_class.style			= CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-		window_class.lpfnWndProc	= &DefWindowProcA;
+		window_class.lpfnWndProc	= &::DefWindowProcA;
 		window_class.cbClsExtra		= 0;
 		window_class.cbWndExtra		= 0;
 		window_class.hInstance		= instance;
-		window_class.hbrBackground	= (HBRUSH) COLOR_WINDOW+1; //(HBRUSH) COLOR_WINDOWFRAME;
-		window_class.hIcon			= (HICON) null;
-		window_class.hCursor		= LoadCursor( null, IDC_ARROW );
+		window_class.hbrBackground	= HBRUSH(COLOR_WINDOW+1); //(HBRUSH) COLOR_WINDOWFRAME;
+		window_class.hIcon			= HICON(null);
+		window_class.hCursor		= ::LoadCursor( null, IDC_ARROW );
 		window_class.lpszMenuName	= null;
 		window_class.lpszClassName	= _className.cstr();
-		window_class.hIconSm		= (HICON) null;
+		window_class.hIconSm		= HICON(null);
 
 		CHECK_ERR( ::RegisterClassExA( &window_class ) != 0 );
 
@@ -443,10 +443,10 @@ namespace PlatformWin
 	{
 		DEVMODEA	mode = {};
 		mode.dmSize				= sizeof( mode );
-		mode.dmPelsWidth		= (DWORD) size.x;
-		mode.dmPelsHeight		= (DWORD) size.y;
-		mode.dmBitsPerPel		= (DWORD) 8;
-		mode.dmDisplayFrequency	= (DWORD) freq;
+		mode.dmPelsWidth		= DWORD(size.x);
+		mode.dmPelsHeight		= DWORD(size.y);
+		mode.dmBitsPerPel		= DWORD(8);
+		mode.dmDisplayFrequency	= DWORD(freq);
 		mode.dmFields			= DM_BITSPERPEL | DM_PELSWIDTH |
 								  DM_PELSHEIGHT | (freq ? DM_DISPLAYFREQUENCY : 0);
 
@@ -467,7 +467,7 @@ namespace PlatformWin
 */
 	bool WinPlatform::_ReturnToDefaultResolution ()
 	{
-		CHECK_ERR( ::ChangeDisplaySettings( (DEVMODEA *)null, CDS_RESET ) != DISP_CHANGE_SUCCESSFUL );
+		CHECK_ERR( ::ChangeDisplaySettings( Cast<DEVMODEA *>(null), CDS_RESET ) != DISP_CHANGE_SUCCESSFUL );
 		return true;
 	}
 

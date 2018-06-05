@@ -346,8 +346,8 @@ namespace _types_hidden_
 		}
 
 
-		void EraseByIter (const_iterator iter)		{ EraseByIndex( _memory.GetIndex( (Pair_t const*) iter.RawPtr() ) ); }
-		void EraseByIter (iterator iter)			{ EraseByIndex( _memory.GetIndex( (Pair_t const*) iter.RawPtr() ) ); }
+		void EraseByIter (const_iterator iter)		{ EraseByIndex( _memory.GetIndex( Cast<Pair_t const*>(iter.RawPtr()) ) ); }
+		void EraseByIter (iterator iter)			{ EraseByIndex( _memory.GetIndex( Cast<Pair_t const*>(iter.RawPtr()) ) ); }
 		void EraseByIndex (usize index)				{ _memory.EraseByIndex( index ); }
 		bool Erase (const Key_t &key)				{ return _memory.Erase( key ); }
 

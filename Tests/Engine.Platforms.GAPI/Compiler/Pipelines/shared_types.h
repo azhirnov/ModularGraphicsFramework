@@ -4,7 +4,7 @@
 namespace Pipelines
 {
 // Packing: Std430
-struct UnnamedBuffer_SSBO final : CompileTime::PODStruct
+struct UnnamedBuffer_SSBO final
 {
 	uint  data[2];    // offset: 0, align: 4
 	uint  result;    // offset: 8, align: 4
@@ -18,7 +18,7 @@ struct UnnamedBuffer_SSBO final : CompileTime::PODStruct
 };
 
 // Packing: Std430
-struct FindLSB_SSBO final : CompileTime::PODStruct
+struct FindLSB_SSBO final
 {
 	uint  results[16];    // offset: 0, align: 4
 
@@ -30,7 +30,7 @@ struct FindLSB_SSBO final : CompileTime::PODStruct
 };
 
 // Packing: Std430
-struct GlobalToLocal_SSBO final : CompileTime::PODStruct
+struct GlobalToLocal_SSBO final
 {
 	uint  data[4];    // offset: 0, align: 4
 	uint  results[2];    // offset: 16, align: 4
@@ -44,7 +44,7 @@ struct GlobalToLocal_SSBO final : CompileTime::PODStruct
 };
 
 // Packing: Std430
-struct VecSwizzle_SSBO final : CompileTime::PODStruct
+struct VecSwizzle_SSBO final
 {
 	uint  results[8];    // offset: 0, align: 4
 
@@ -56,7 +56,7 @@ struct VecSwizzle_SSBO final : CompileTime::PODStruct
 };
 
 // Packing: Std430
-struct AtomicAdd_Struct final : CompileTime::PODStruct
+struct AtomicAdd_Struct final
 {
 	int  value;    // offset: 0, align: 4
 	Bool32  found;    // offset: 4, align: 4
@@ -70,7 +70,7 @@ struct AtomicAdd_Struct final : CompileTime::PODStruct
 };
 
 // Packing: Std430
-struct InlineAll_SSBO final : CompileTime::PODStruct
+struct InlineAll_SSBO final
 {
 	uint  results[16];    // offset: 0, align: 4
 
@@ -82,7 +82,7 @@ struct InlineAll_SSBO final : CompileTime::PODStruct
 };
 
 // Packing: Std430
-struct FindMSB_SSBO final : CompileTime::PODStruct
+struct FindMSB_SSBO final
 {
 	uint  results[16];    // offset: 0, align: 4
 
@@ -94,7 +94,7 @@ struct FindMSB_SSBO final : CompileTime::PODStruct
 };
 
 // Packing: Std430
-struct AtomicAdd_SSBO final : CompileTime::PODStruct
+struct AtomicAdd_SSBO final
 {
 	AtomicAdd_Struct  st;    // offset: 0, align: 4
 	uint  result;    // offset: 8, align: 4
@@ -109,4 +109,16 @@ struct AtomicAdd_SSBO final : CompileTime::PODStruct
 	}
 };
 
-};
+}	// Pipelines
+
+namespace GX_STL::CompileTime::_ctime_hidden_ {
+	template <> struct _IsPOD< Pipelines::UnnamedBuffer_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::FindLSB_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::GlobalToLocal_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::VecSwizzle_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::AtomicAdd_Struct > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::InlineAll_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::FindMSB_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::AtomicAdd_SSBO > { static const bool value = true; };
+}
+

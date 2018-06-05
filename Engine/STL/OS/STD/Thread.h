@@ -88,8 +88,7 @@ namespace OS
 	public:
 		Thread ();
 
-		explicit
-		Thread (PThreadProc_t proc, void *param = null);
+		explicit Thread (PThreadProc_t proc, void *param = null);
 		
 		~Thread ();
 		

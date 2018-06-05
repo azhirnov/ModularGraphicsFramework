@@ -3,4 +3,4 @@
 
 namespace Pipelines
 {
-};
+}	// Pipelines

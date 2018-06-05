@@ -139,11 +139,6 @@ namespace PipelineCompiler
 		"#ifdef GRAPHICS_API_SOFT\n"
 		"namespace SWShaderLang {\n"
 		"namespace {\n\n"		// anonymous namespace to avoid ODR problem
-		
-		//"# ifdef _MSC_VER\n"
-		//"#	pragma warning (push)\n"
-		//"#	pragma warning (1: 4456)\n"
-		//"# endif // _MSC_VER\n\n"
 
 		"#	define INOUT\n"
 		"#	define IN\n"
@@ -151,10 +146,6 @@ namespace PipelineCompiler
 			>> translator.src;
 
 		translator.src <<
-			//"# ifdef _MSC_VER\n"
-			//"#	pragma warning (pop)\n"
-			//"# endif // _MSC_VER\n\n"
-
 			"}		// anonymous namespace\n"
 			"}		// SWShaderLang\n"
 			"#endif	// GRAPHICS_API_SOFT\n\n";
@@ -218,9 +209,7 @@ namespace PipelineCompiler
 	{
 		const bool	is_atomic = t.qualifier[ EVariableQualifier::Volatile ];
 
-		if ( t.arraySize == UMax )
-			res << "DArr<";
-		else if ( t.arraySize > 0 )
+		if ( t.arraySize > 0 and t.arraySize != UMax )
 			res << "SArr<";
 
 		if ( is_atomic )
@@ -236,12 +225,10 @@ namespace PipelineCompiler
 		if ( is_atomic )
 			res << ">";
 		
-		if ( t.arraySize == UMax )
-			res << ">";
-		else if ( t.arraySize > 0 )
+		if ( t.arraySize > 0 and t.arraySize != UMax )
 			res << "," << t.arraySize << ">";
 
-		res << " " << t.name;
+		res << " " << t.name << (t.arraySize == UMax ? "[]" : "");
 		return true;
 	}
 
@@ -342,9 +329,7 @@ namespace PipelineCompiler
 
 		const bool	is_atomic = t.qualifier[ EVariableQualifier::Volatile ];
 		
-		if ( t.arraySize == UMax )
-			res << "DArr<";
-		else if ( t.arraySize > 0 )
+		if ( t.arraySize > 0 and t.arraySize != UMax )
 			res << "SArr<";
 
 		if ( is_atomic )
@@ -361,7 +346,7 @@ namespace PipelineCompiler
 			res << ">";
 		
 		if ( t.arraySize == UMax )
-			res << ">";
+			res << "[]";
 		else if ( t.arraySize > 0 )
 			res << "," << t.arraySize << ">";
 
@@ -1044,9 +1029,7 @@ namespace PipelineCompiler
 		
 		const bool	is_atomic	= t.qualifier[ EVariableQualifier::Volatile ];
 
-		if ( t.arraySize == UMax )
-			res << "DArr<";
-		else if ( t.arraySize > 0 )
+		if ( t.arraySize > 0 and t.arraySize != UMax )
 			res << "SArr<";
 
 		if ( is_atomic )
@@ -1058,10 +1041,11 @@ namespace PipelineCompiler
 		} else {
 			res << _ToString( t.type );
 		}
-
-		if ( t.arraySize == UMax )
+		
+		if ( is_atomic )
 			res << ">";
-		else if ( t.arraySize > 0 )
+
+		if ( t.arraySize > 0 and t.arraySize != UMax )
 			res << "," << t.arraySize << ">";
 
 		if ( t.qualifier[ EVariableQualifier::InArg ] and t.qualifier[ EVariableQualifier::OutArg ] )
@@ -1076,6 +1060,10 @@ namespace PipelineCompiler
 			res << " ";
 
 		res << t.name;
+		
+		if ( t.arraySize == UMax )
+			res << "[]";
+
 		return true;
 	}
 	

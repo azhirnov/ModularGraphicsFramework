@@ -97,7 +97,7 @@ namespace StringUtils
 	ND_ inline String  ConvertArrayToString (ArrayCRef<T> arr)
 	{
 		String	str;
-		str.Reserve( (usize)arr.Size() * 4 );
+		str.Reserve( usize(arr.Size()) * 4 );
 
 		FOR( i, arr )
 		{

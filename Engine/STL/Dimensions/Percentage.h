@@ -96,7 +96,7 @@ namespace CompileTime
 		using CreateWith = GXMath::Percentage< OtherType >;
 
 		enum {
-			FLAGS	= (int)TypeInfo< inner_type >::FLAGS | int(_ctime_hidden_::WRAPPER),
+			FLAGS	= int(TypeInfo< inner_type >::FLAGS) | int(_ctime_hidden_::WRAPPER),
 		};
 
 		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }

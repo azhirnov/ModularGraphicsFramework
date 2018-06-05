@@ -38,7 +38,7 @@ namespace GXScript
 		ScriptTypeInfo<T>::Name( OUT signature );
 		signature << ' ' << name;
 
-		AS_CALL( _engine->RegisterGlobalProperty( signature.cstr(), (void *) &var ) );
+		AS_CALL( _engine->RegisterGlobalProperty( signature.cstr(), Cast<void *>(&var) ) );
 	}
 	
 /*
@@ -53,7 +53,7 @@ namespace GXScript
 		ScriptTypeInfo<T>::Name( OUT signature );
 		signature << ' ' << name;
 
-                AS_CALL( _engine->RegisterGlobalProperty( signature.cstr(), (void *) const_cast<T*>(&var) ) );
+				AS_CALL( _engine->RegisterGlobalProperty( signature.cstr(), Cast<void *>(const_cast<T*>(&var)) ) );
 	}
 
 }	// GXScript

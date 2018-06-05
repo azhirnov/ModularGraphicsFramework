@@ -354,10 +354,10 @@ namespace GXTypes
 		String	data;
 		BytesU	size = file->Size();
 
-		CHECK_ALLOC( data.Reserve( (usize)size + 1 ) );
+		CHECK_ALLOC( data.Reserve( usize(size) + 1 ) );
 
 		CHECK_ERR( file->Read( data.ptr(), size ) );
-		data.SetLength( (usize)size );
+		data.SetLength( usize(size) );
 
 		// is started and closed?
 		usize	pos = 0;

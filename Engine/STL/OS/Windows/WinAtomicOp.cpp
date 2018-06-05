@@ -29,43 +29,43 @@ namespace OS
 	// byte //
 	byte  AtomicOp::Inc (volatile byte * ptr)							{ return Add( ptr, 1 ); }
 	byte  AtomicOp::Dec (volatile byte * ptr)							{ return Add( ptr, -1 ); }
-	byte  AtomicOp::Add (volatile byte * ptr, byte val)					{ return ::_InterlockedExchangeAdd8( (volatile char *)ptr, val ) + val; }
-	byte  AtomicOp::Sub (volatile byte * ptr, byte val)					{ return ::_InterlockedExchangeAdd8( (volatile char *)ptr, -val ) - val; }
-	byte  AtomicOp::Set (volatile byte * ptr, byte val)					{ ::_InterlockedExchange8( (volatile char *)ptr, val );  return val; }
-	byte  AtomicOp::CmpExch (volatile byte * ptr, byte val, byte cmp)	{ return ::_InterlockedCompareExchange8( (volatile char *)ptr, val, cmp ); }
-	byte  AtomicOp::Or  (volatile byte * ptr, byte val)					{ return byte(::_InterlockedOr8( (volatile char *)ptr, val ) | val); }
-	byte  AtomicOp::Xor (volatile byte * ptr, byte val)					{ return byte(::_InterlockedXor8( (volatile char *)ptr, val ) ^ val); }
-	byte  AtomicOp::And (volatile byte * ptr, byte val)					{ return byte(::_InterlockedAnd8( (volatile char *)ptr, val ) & val); }
+	byte  AtomicOp::Add (volatile byte * ptr, byte val)					{ return ::_InterlockedExchangeAdd8( Cast<volatile char *>(ptr), val ) + val; }
+	byte  AtomicOp::Sub (volatile byte * ptr, byte val)					{ return ::_InterlockedExchangeAdd8( Cast<volatile char *>(ptr), -val ) - val; }
+	byte  AtomicOp::Set (volatile byte * ptr, byte val)					{ ::_InterlockedExchange8( Cast<volatile char *>(ptr), val );  return val; }
+	byte  AtomicOp::CmpExch (volatile byte * ptr, byte val, byte cmp)	{ return ::_InterlockedCompareExchange8( Cast<volatile char *>(ptr), val, cmp ); }
+	byte  AtomicOp::Or  (volatile byte * ptr, byte val)					{ return byte(::_InterlockedOr8( Cast<volatile char *>(ptr), val ) | val); }
+	byte  AtomicOp::Xor (volatile byte * ptr, byte val)					{ return byte(::_InterlockedXor8( Cast<volatile char *>(ptr), val ) ^ val); }
+	byte  AtomicOp::And (volatile byte * ptr, byte val)					{ return byte(::_InterlockedAnd8( Cast<volatile char *>(ptr), val ) & val); }
 		
 	// short //
-	short AtomicOp::Inc (volatile short * ptr)							{ return ::_InterlockedIncrement16( (volatile short *)ptr ); }
-	short AtomicOp::Dec (volatile short * ptr)							{ return ::_InterlockedDecrement16( (volatile short *)ptr ); }
-	short AtomicOp::Add (volatile short * ptr, short val)				{ return ::_InterlockedExchangeAdd16( (volatile short *)ptr, val ) + val; }
-	short AtomicOp::Sub (volatile short * ptr, short val)				{ return ::_InterlockedExchangeAdd16( (volatile short *)ptr, -val ) - val; }
-	short AtomicOp::Set (volatile short * ptr, short val)				{ ::_InterlockedExchange16( (volatile short *)ptr, val );  return val; }
-	short AtomicOp::CmpExch (volatile short * ptr, short val, short cmp){ return ::_InterlockedCompareExchange16( (volatile short *)ptr, val, cmp ); }
-	short AtomicOp::Or  (volatile short * ptr, short val)				{ return ::_InterlockedOr16( (volatile short *)ptr, val ) | val; }
-	short AtomicOp::Xor (volatile short * ptr, short val)				{ return ::_InterlockedXor16( (volatile short *)ptr, val ) ^ val; }
-	short AtomicOp::And (volatile short * ptr, short val)				{ return ::_InterlockedAnd16( (volatile short *)ptr, val ) & val; }
+	short AtomicOp::Inc (volatile short * ptr)							{ return ::_InterlockedIncrement16( Cast<volatile short *>(ptr) ); }
+	short AtomicOp::Dec (volatile short * ptr)							{ return ::_InterlockedDecrement16( Cast<volatile short *>(ptr) ); }
+	short AtomicOp::Add (volatile short * ptr, short val)				{ return ::_InterlockedExchangeAdd16( Cast<volatile short *>(ptr), val ) + val; }
+	short AtomicOp::Sub (volatile short * ptr, short val)				{ return ::_InterlockedExchangeAdd16( Cast<volatile short *>(ptr), -val ) - val; }
+	short AtomicOp::Set (volatile short * ptr, short val)				{ ::_InterlockedExchange16( Cast<volatile short *>(ptr), val );  return val; }
+	short AtomicOp::CmpExch (volatile short * ptr, short val, short cmp){ return ::_InterlockedCompareExchange16( Cast<volatile short *>(ptr), val, cmp ); }
+	short AtomicOp::Or  (volatile short * ptr, short val)				{ return ::_InterlockedOr16( Cast<volatile short *>(ptr), val ) | val; }
+	short AtomicOp::Xor (volatile short * ptr, short val)				{ return ::_InterlockedXor16( Cast<volatile short *>(ptr), val ) ^ val; }
+	short AtomicOp::And (volatile short * ptr, short val)				{ return ::_InterlockedAnd16( Cast<volatile short *>(ptr), val ) & val; }
 
 # endif	// COMPILER_MSVC
 
 	// int //
-	int AtomicOp::Inc (volatile int * ptr)								{ return ::_InterlockedIncrement( (volatile long *)ptr ); }
-	int AtomicOp::Dec (volatile int * ptr)								{ return ::_InterlockedDecrement( (volatile long *)ptr ); }
-	int AtomicOp::Add (volatile int * ptr, int val)						{ return ::_InterlockedExchangeAdd( (volatile long *)ptr, val ) + val; }
-	int AtomicOp::Sub (volatile int * ptr, int val)						{ return ::_InterlockedExchangeAdd( (volatile long *)ptr, -val ) - val; }
-	int AtomicOp::Set (volatile int * ptr, int val)						{ ::_InterlockedExchange( (volatile long *)ptr, val );  return val; }
-	int AtomicOp::CmpExch (volatile int * ptr, int val, int cmp)		{ return ::_InterlockedCompareExchange( (volatile long *)ptr, val, cmp ); }
-	int AtomicOp::Or  (volatile int * ptr, int val)						{ return ::_InterlockedOr( (volatile long *)ptr, val ) | val; }
-	int AtomicOp::Xor (volatile int * ptr, int val)						{ return ::_InterlockedXor( (volatile long *)ptr, val ) ^ val; }
-	int AtomicOp::And (volatile int * ptr, int val)						{ return ::_InterlockedAnd( (volatile long *)ptr, val ) & val; }
+	int AtomicOp::Inc (volatile int * ptr)								{ return ::_InterlockedIncrement( Cast<volatile long *>(ptr) ); }
+	int AtomicOp::Dec (volatile int * ptr)								{ return ::_InterlockedDecrement( Cast<volatile long *>(ptr) ); }
+	int AtomicOp::Add (volatile int * ptr, int val)						{ return ::_InterlockedExchangeAdd( Cast<volatile long *>(ptr), val ) + val; }
+	int AtomicOp::Sub (volatile int * ptr, int val)						{ return ::_InterlockedExchangeAdd( Cast<volatile long *>(ptr), -val ) - val; }
+	int AtomicOp::Set (volatile int * ptr, int val)						{ ::_InterlockedExchange( Cast<volatile long *>(ptr), val );  return val; }
+	int AtomicOp::CmpExch (volatile int * ptr, int val, int cmp)		{ return ::_InterlockedCompareExchange( Cast<volatile long *>(ptr), val, cmp ); }
+	int AtomicOp::Or  (volatile int * ptr, int val)						{ return ::_InterlockedOr( Cast<volatile long *>(ptr), val ) | val; }
+	int AtomicOp::Xor (volatile int * ptr, int val)						{ return ::_InterlockedXor( Cast<volatile long *>(ptr), val ) ^ val; }
+	int AtomicOp::And (volatile int * ptr, int val)						{ return ::_InterlockedAnd( Cast<volatile long *>(ptr), val ) & val; }
 		
 #	if PLATFORM_BITS == 32
 		
 	// pointers //
-	void * AtomicOp::SetPtr (volatile void ** ptr, void * val)				{ ::_InterlockedExchange( (volatile long *)ptr, (long)val );  return val; }
-	void * AtomicOp::CmpExchP (volatile void **ptr, void *val, void *cmp)	{ return (void *)::_InterlockedCompareExchange( (volatile long *)ptr, (long)val, (long)cmp ); }
+	void * AtomicOp::SetPtr (volatile void ** ptr, void * val)				{ ::_InterlockedExchange( Cast<volatile long *>(ptr), long(val) );  return val; }
+	void * AtomicOp::CmpExchP (volatile void **ptr, void *val, void *cmp)	{ return (void *)(::_InterlockedCompareExchange( Cast<volatile long *>(ptr), long(val), long(cmp) )); }
 
 #	endif	// 32
 

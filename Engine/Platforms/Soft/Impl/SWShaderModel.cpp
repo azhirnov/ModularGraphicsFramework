@@ -77,7 +77,7 @@ namespace PlatformSW
 		{
 			shaderThread._thread.Create( LAMBDA() (void *param)
 				{
-					ShaderHelper*	self	= (ShaderHelper *)param;
+					ShaderHelper*	self	= Cast<ShaderHelper *>(param);
 					auto&			state	= self->Init();
 					const uint3		size	= self->_groupSize + self->_groupOffset;
 

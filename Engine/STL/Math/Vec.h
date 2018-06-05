@@ -251,7 +251,7 @@ namespace CompileTime
 		using CreateWith =  GXMath::Vec< OtherType, I, U >;
 
 		enum {
-			FLAGS	= (int)_value_type_info::FLAGS | (int)GX_STL::CompileTime::_ctime_hidden_::VECTOR,
+			FLAGS	= int(_value_type_info::FLAGS) | int(GX_STL::CompileTime::_ctime_hidden_::VECTOR),
 		};
 
 		static constexpr type	Max()		{ return type( _value_type_info::Max() ); }

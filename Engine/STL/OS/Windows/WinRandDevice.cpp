@@ -75,7 +75,7 @@ namespace OS
 */
 	bool PlatformRandomDevice::_CreateFromType (uint type)
 	{
-		return ::CryptAcquireContext( &_prov.Get<HCRYPTPROV>(), null, (LPCSTR)null, type, CRYPT_VERIFYCONTEXT | CRYPT_SILENT ) != FALSE;
+		return ::CryptAcquireContext( &_prov.Get<HCRYPTPROV>(), null, LPCSTR(null), type, CRYPT_VERIFYCONTEXT | CRYPT_SILENT ) != FALSE;
 	}
 	
 /*
@@ -115,7 +115,7 @@ namespace OS
 */
 	bool PlatformRandomDevice::_Generate (ubyte *ptr, usize size) const
 	{
-		return CryptGenRandom( _prov.Get<HCRYPTPROV>(), (DWORD) size, ptr ) != FALSE;
+		return CryptGenRandom( _prov.Get<HCRYPTPROV>(), DWORD(size), ptr ) != FALSE;
 	}
 
 

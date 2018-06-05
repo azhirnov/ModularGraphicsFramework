@@ -71,8 +71,8 @@ namespace GXTypes
 		ND_ constexpr bool		IsNotZero () const						{ return _bits != 0; }
 		ND_ constexpr bool		Empty ()	const						{ return IsZero(); }
 
-		ND_ constexpr Index_t	MinIndex () const						{ return (Index_t) GXMath::BitScanForward( _bits ); }
-		ND_ constexpr Index_t	MaxIndex () const						{ return (Index_t) GXMath::BitScanReverse( _bits ); }
+		ND_ constexpr Index_t	MinIndex () const						{ return Index_t(GXMath::BitScanForward( _bits )); }
+		ND_ constexpr Index_t	MaxIndex () const						{ return Index_t(GXMath::BitScanReverse( _bits )); }
 
 		ND_ explicit constexpr operator bool () const					{ return IsNotZero(); }
 		ND_ explicit constexpr operator uint () const					{ return Cast<uint>(_bits); }
@@ -175,7 +175,7 @@ namespace GXTypes
 			template <typename C>
 			BitRef & operator = (const C &right)
 			{
-				_Set( (bool)right );
+				_Set( bool(right) );
 				return *this;
 			}
 
@@ -193,21 +193,21 @@ namespace GXTypes
 			template <typename C>
 			BitRef &	operator |= (const C right)
 			{
-				_Or( (bool)right );
+				_Or( bool(right) );
 				return *this;
 			}
 
 			template <typename C>
 			BitRef &	operator &= (const C right)
 			{
-				_And( (bool)right );
+				_And( bool(right) );
 				return *this;
 			}
 
 			template <typename C>
 			BitRef &	operator ^= (const C right)
 			{
-				_Xor( (bool)right );
+				_Xor( bool(right) );
 				return *this;
 			}
 		};

@@ -27,7 +27,7 @@ namespace GXCompression
 
 		bool Compress (BinArrayCRef src, INOUT BinArrayRef &dst)
 		{
-			const int	size = LZ4_compress_default( (const char *)src.RawPtr(), OUT (char *)dst.RawPtr(), int(src.Size()), int(dst.Size()) );
+			const int	size = LZ4_compress_default( Cast<const char *>(src.RawPtr()), OUT Cast<char *>(dst.RawPtr()), int(src.Size()), int(dst.Size()) );
 
 			if ( size < 0 ) {
 				dst = BinArrayRef();
@@ -55,7 +55,7 @@ namespace GXCompression
 
 		bool Decompress (BinArrayCRef src, INOUT BinArrayRef &dst)
 		{
-			const int	size = LZ4_decompress_safe( (const char *)src.RawPtr(), OUT (char *)dst.RawPtr(), int(src.Size()), int(dst.Size()) );
+			const int	size = LZ4_decompress_safe( Cast<const char *>(src.RawPtr()), OUT Cast<char *>(dst.RawPtr()), int(src.Size()), int(dst.Size()) );
 			
 			if ( size < 0 ) {
 				dst = BinArrayRef();

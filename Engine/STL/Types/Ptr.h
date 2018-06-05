@@ -122,7 +122,7 @@ namespace GXTypes
 		{
 			STATIC_ASSERT( typename T2::_is_simple_ptr(true) );
 			_CheckCast< TypeTraits::RemovePointer<typename T2::Value_t>, T >( _ptr );
-			return T2( (typename T2::Value_t) RawPtr() );
+			return T2( static_cast<typename T2::Value_t>(RawPtr()) );
 		}
 
 		template <typename R>

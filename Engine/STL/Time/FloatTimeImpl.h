@@ -39,11 +39,11 @@
 		template <typename B>
 		forceinline constexpr Self&	SetTime (const B &time)
 		{
-			if ( time.GetSecondsPowerOf10() <= 0 )		return SetSeconds( (T) time.Seconds() );
-			if ( time.GetSecondsPowerOf10() <= 3 )		return SetMilliSeconds( (T) time.MilliSeconds() );
-			if ( time.GetSecondsPowerOf10() <= 6 )		return SetMicroSeconds( (T) time.MicroSeconds() );
+			if ( time.GetSecondsPowerOf10() <= 0 )		return SetSeconds( T(time.Seconds()) );
+			if ( time.GetSecondsPowerOf10() <= 3 )		return SetMilliSeconds( T(time.MilliSeconds()) );
+			if ( time.GetSecondsPowerOf10() <= 6 )		return SetMicroSeconds( T(time.MicroSeconds()) );
 
-			return SetNanoSeconds( (T) time.NanoSeconds() );
+			return SetNanoSeconds( T(time.NanoSeconds()) );
 		}
 
 		template <typename B>

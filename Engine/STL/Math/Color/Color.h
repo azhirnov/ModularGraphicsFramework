@@ -323,8 +323,8 @@ namespace GXMath
 	};
 
 	
-	inline color4u::color4u (const color4f &c) : ubyte4( ColorUtils::Convert<ubyte>( (float4)c ) ) {}
-	inline color4f::color4f (const color4u &c) : float4( ColorUtils::Convert<float>( (ubyte4)c ) ) {}
+	inline color4u::color4u (const color4f &c) : ubyte4( ColorUtils::Convert<ubyte>( float4(c) ) ) {}
+	inline color4f::color4f (const color4u &c) : float4( ColorUtils::Convert<float>( ubyte4(c) ) ) {}
 
 	
 
@@ -499,10 +499,10 @@ namespace GXMath
 	{
 		typedef typename CompileTime::GenType< B, T, float >		main_t;
 
-		static const main_t		s_tK   = (main_t)Limits<B>::Max() / (main_t)Limits<T>::Max();
-		static const main_t		s_tAdd = main_t( CompileTime::IsInteger<B> ? 0.5 : 0 );
+		static const main_t		s_tK   = main_t(Limits<B>::Max()) / main_t(Limits<T>::Max());
+		static const main_t		s_tAdd = main_t(CompileTime::IsInteger<B> ? 0.5 : 0);
 
-		Vec<B,I,U>	ret;
+		Vec<B,I,U>		ret;
 		FOR( i, ret )	ret[i] = B( x[i] * s_tK + s_tAdd );
 		return ret;
 	}

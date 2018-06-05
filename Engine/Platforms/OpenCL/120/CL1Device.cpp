@@ -194,7 +194,7 @@ namespace PlatformCL
 				dev_info.is64bit = (value32 >= 64);
 
 				CL_CALL( clGetDeviceInfo( devices[j], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size), OUT &size, null ) );
-				dev_info.maxInvocations = size;
+				dev_info.maxInvocations = uint(size);
 		
 				CL_CALL( clGetDeviceInfo( devices[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(value64), OUT &value64, null ) );
 				dev_info.globalMemory.SetBytes( value64 );
@@ -299,7 +299,7 @@ namespace PlatformCL
 
 		CL_CALL( clGetPlatformInfo( _platform, CL_PLATFORM_VERSION, CountOf(buf), OUT buf, null ) );
 
-		_version = (uint) RoundToInt( StringUtils::ToDouble( StringCRef( buf ).SubString( /*OpenCL*/6 ) ) * 100.0 );	// TODO
+		_version = uint(RoundToInt( StringUtils::ToDouble( StringCRef( buf ).SubString( /*OpenCL*/6 ) ) * 100.0 ));	// TODO
 
 		CHECK_ERR( _version >= MIN_VERSION );
 		return true;
@@ -324,9 +324,9 @@ namespace PlatformCL
 
 		cl_context_properties properties[] =
 		{
-			CL_CONTEXT_PLATFORM,	(cl_context_properties) _platform,
-			CL_GL_CONTEXT_KHR,		(cl_context_properties) rc,
-			CL_WGL_HDC_KHR,			(cl_context_properties) dc,
+			CL_CONTEXT_PLATFORM,	cl_context_properties( _platform ),
+			CL_GL_CONTEXT_KHR,		cl_context_properties( rc ),
+			CL_WGL_HDC_KHR,			cl_context_properties( dc ),
 			0,	0
 		};
 		
@@ -384,7 +384,7 @@ namespace PlatformCL
 
 		cl_context_properties properties[] =
 		{
-			CL_CONTEXT_PLATFORM,	(cl_context_properties) _platform,
+			CL_CONTEXT_PLATFORM,	cl_context_properties( _platform ),
 			0,	0
 		};
 		
@@ -485,7 +485,7 @@ namespace PlatformCL
 
 			#ifdef GRAPHICS_API_OPENGL
 			if ( _sharedApi == ESharing::OpenGL ) {
-				CL_CALL( clEnqueueAcquireGLObjects( GetCommandQueue(), objects.Count(), objects.ptr(), 0, null, null ) );
+				CL_CALL( clEnqueueAcquireGLObjects( GetCommandQueue(), cl_uint(objects.Count()), objects.ptr(), 0, null, null ) );
 			} else
 			#endif
 
@@ -523,7 +523,7 @@ namespace PlatformCL
 			
 			#ifdef GRAPHICS_API_OPENGL
 			if ( _sharedApi == ESharing::OpenGL ) {
-				CL_CALL( clEnqueueReleaseGLObjects( GetCommandQueue(), objects.Count(), objects.ptr(), 0, null, null ) );
+				CL_CALL( clEnqueueReleaseGLObjects( GetCommandQueue(), cl_uint(objects.Count()), objects.ptr(), 0, null, null ) );
 			} else
 			#endif
 

@@ -284,22 +284,22 @@ const mat2x2 m2 = mat2x2( 0.80000001f, 0.60000002f, -0.60000002f, 0.80000001f );
 
 //---------------------------------
 
-float map (in vec3 p1);
-float terrain (in vec2 p);
-float march (in vec3 ro, in vec3 rd, out float itrc);
-float curv (in vec3 p6, in float w);
-vec3 fog (in vec3 ro1, in vec3 rd1, in vec3 col, in float ds2);
-float linstep (in float mn, in float mx, in float x2);
-vec3 hash33 (in vec3 p7);
-vec3 scatter (in vec3 ro2, in vec3 rd2);
-float noise (in vec2 x1);
 vec3 normal (in vec3 p2, in float ds);
+vec3 bump (in vec3 p5, in vec3 n, in float ds1);
+float noise (in vec2 x1);
 float fbm (in vec2 p3);
 float bnoise (in vec2 p4);
-vec3 bump (in vec3 p5, in vec3 n, in float ds1);
+float curv (in vec3 p6, in float w);
 void mainImage (out vec4 fragColor, in vec2 fragCoord);
+vec3 hash33 (in vec3 p7);
+float linstep (in float mn, in float mx, in float x2);
+vec3 fog (in vec3 ro1, in vec3 rd1, in vec3 col, in float ds2);
+vec3 scatter (in vec3 ro2, in vec3 rd2);
 vec3 stars (in vec3 p8);
 vec3 noised (in vec2 x);
+float terrain (in vec2 p);
+float map (in vec3 p1);
+float march (in vec3 ro, in vec3 rd, out float itrc);
 
 //---------------------------------
 
@@ -1269,4 +1269,4 @@ void mainImage (out vec4 fragColor, in vec2 fragCoord)
 0x00000051, 0x000004C7, 0x000004C4, 0x000004C5, 0x000004C6, 0x000000C4, 0x0003003E, 0x00000054, 0x000004C7, 0x000100FD, 0x00010038 });
 
 };
-};
+}	// Pipelines

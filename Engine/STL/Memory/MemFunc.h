@@ -42,8 +42,8 @@ namespace GXTypes
 		forceinline void * MemCopy (void *dst, const void *src, BytesU size) noexcept
 		{
 			// TODO: add checks
-			ASSERT( not CheckPointersAliasing( (ubyte *)dst, (ubyte *)dst + usize(size),
-											   (const ubyte *)src, (const ubyte *)src + usize(size) ) );
+			ASSERT( not CheckPointersAliasing( Cast<ubyte *>(dst), Cast<ubyte *>(dst) + usize(size),
+											   Cast<const ubyte *>(src), Cast<const ubyte *>(src) + usize(size) ) );
 
 			return ::memcpy( dst, src, usize(size) );
 		}

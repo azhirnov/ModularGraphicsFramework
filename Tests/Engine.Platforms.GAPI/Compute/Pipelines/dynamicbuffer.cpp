@@ -47,7 +47,7 @@ namespace {
 		Float2 f2;
 		Float2 _padding0;
 		Int4 i4;
-		DArr<DynamicBuffer_Struct> arr;
+		DynamicBuffer_Struct arr[];
 	};
 	
 	
@@ -485,4 +485,4 @@ void main (uint3 dx_DispatchThreadID : SV_DispatchThreadID, uint3 dx_GroupThread
 #endif
 
 };
-};
+}	// Pipelines

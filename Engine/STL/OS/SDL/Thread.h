@@ -110,7 +110,7 @@ namespace OS
 
 		bool IsValid () const;
 
-		uint Id () const;
+		usize Id () const;
 
 		bool IsCurrent () const;
 		

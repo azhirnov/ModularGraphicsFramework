@@ -415,7 +415,7 @@ namespace PlatformVK
 			}
 		}
 
-		flags = (VkBufferCreateFlagBits) result;
+		flags = VkBufferCreateFlagBits( result );
 		return true;
 	}
 	
@@ -448,7 +448,7 @@ namespace PlatformVK
 			}
 		}
 		
-		flags = (VkImageCreateFlagBits) result;
+		flags = VkImageCreateFlagBits( result );
 		return true;
 	}
 	
@@ -519,7 +519,7 @@ namespace PlatformVK
 	{
 		using namespace vk;
 
-		return Clamp( (VkSampleCountFlagBits)value.Get(), VK_SAMPLE_COUNT_1_BIT, VK_SAMPLE_COUNT_64_BIT );
+		return Clamp( VkSampleCountFlagBits(value.Get()), VK_SAMPLE_COUNT_1_BIT, VK_SAMPLE_COUNT_64_BIT );
 	}
 	
 /*

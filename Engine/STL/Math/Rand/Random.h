@@ -98,7 +98,7 @@ namespace GXMath
 		template <typename T>
 		ND_ static T Int (const T & = T())
 		{
-			return (T) RndEngine()();
+			return T(RndEngine()());
 		}
 		
 		template <typename T, usize I, ulong U>
@@ -120,7 +120,7 @@ namespace GXMath
 		template <typename T>
 		ND_ static T Float (const T & = T())
 		{
-			return (T) RndEngine()() * T(0.1);
+			return T(RndEngine()()) * T(0.1);
 		}
 		
 		template <typename T, usize I, ulong U>
@@ -212,7 +212,7 @@ namespace GXMath
 		ND_ static T IntRange (const T& minValue, const T& maxValue)
 		{
 			typedef typename CompileTime::NearFloat::FromType<T>  Float_t;
-			return (T) RoundToInt( FloatRange( Float_t(minValue), Float_t(maxValue) ) );
+			return T(RoundToInt( FloatRange( Float_t(minValue), Float_t(maxValue) ) ));
 		}
 		
 		template <typename T, usize I, ulong U>

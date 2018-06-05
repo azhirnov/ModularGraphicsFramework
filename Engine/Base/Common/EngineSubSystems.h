@@ -39,10 +39,10 @@ namespace Base
 		void operator = (const Self &) {}
 
 	public:
-		explicit ConstReference (T &value)			: _value(&value) {}
-		explicit ConstReference (const T *value)	: _value((T*)value) {}
-				 ConstReference (const Self &other) : _value(other._value) {}
-		explicit ConstReference (NullPtr_t)			: _value(null) {}
+		explicit ConstReference (T &value)			: _value( &value ) {}
+		explicit ConstReference (const T *value)	: _value( Cast<T *>(value) ) {}
+				 ConstReference (const Self &other) : _value( other._value ) {}
+		explicit ConstReference (NullPtr_t)			: _value( null ) {}
 
 		ND_ T *		operator -> ()	const			{ return _value; }
 	};

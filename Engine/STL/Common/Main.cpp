@@ -26,7 +26,7 @@ namespace GXMath
 		template <typename T, usize Index>
 		void Process ()
 		{
-			result += (uint) GXMath::TRandomGenerator<T>::Initialize();
+			result += uint(GXMath::TRandomGenerator<T>::Initialize());
 		}
 	};
 

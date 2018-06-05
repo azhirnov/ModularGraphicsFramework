@@ -196,7 +196,7 @@ namespace GXTypes
 		const T	kb	= T(1) << 14;
 		const T mb	= T(1) << 24;
 		const T	gb	= T(1) << GXMath::Min( T(34), T(Bits<T>::template SizeOf<T>())-1 );
-		const T	val	= (T) value;
+		const T	val	= T(value);
 
 		String	str;
 
@@ -218,7 +218,7 @@ namespace GXTypes
 		const T	kb	= T(1) << 14;
 		const T mb	= T(1) << 24;
 		const T	gb	= T(1) << GXMath::Min( T(34), T(Bits<T>::template SizeOf<T>()-1) );
-		const T	val	= (T) value;
+		const T	val	= T(value);
 
 		String	str;
 

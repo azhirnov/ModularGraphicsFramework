@@ -352,7 +352,7 @@ namespace PlatformVK
 		info.pNext			= null;
 		info.flags			= 0;
 		info.usage			= Vk1Enum( _descr.usage );
-		info.size			= (VkDeviceSize) _descr.size;
+		info.size			= VkDeviceSize( _descr.size );
 		info.sharingMode	= VK_SHARING_MODE_EXCLUSIVE;
 
 		VK_CHECK( vkCreateBuffer( GetVkDevice(), &info, null, OUT &_bufferId ) );

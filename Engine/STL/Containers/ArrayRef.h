@@ -213,7 +213,7 @@ namespace GXTypes
 */
 	template <typename T>
 	inline ArrayRef<T>::ArrayRef (void_ptr_t begin, void_ptr_t end) :
-		_memory( static_cast<T*>( begin ) ),
+		_memory( Cast<T*>( begin ) ),
 		_count( ( usize(end) - usize(begin) ) / sizeof(T) )
 	{
 		ASSERT( _count == 0 or _memory != null );
@@ -239,7 +239,7 @@ namespace GXTypes
 	template <typename T>
 	template <usize I>
 	inline ArrayRef<T>::ArrayRef (T (&arr)[I]) :
-		_memory( static_cast<T *>(arr) ), _count( I )
+		_memory( Cast<T *>(arr) ), _count( I )
 	{
 		ASSERT( _count == 0 or _memory != null );
 	}
@@ -301,7 +301,7 @@ namespace GXTypes
 	inline ArrayRef<T>  ArrayRef<T>::From (ArrayRef<B> arr)
 	{
 		if ( not arr.Empty() )
-			return FromVoid( static_cast<void_ptr_t>( const_cast< TypeTraits::RemoveConst<B *> >( arr.ptr() ) ), arr.Size() );
+			return FromVoid( Cast<void_ptr_t>( const_cast< TypeTraits::RemoveConst<B *> >( arr.ptr() ) ), arr.Size() );
 		else
 			return ArrayRef<T>();
 	}
@@ -324,7 +324,7 @@ namespace GXTypes
 	inline ArrayRef<T>  ArrayRef<T>::FromStd (const std::vector<B> &vec)
 	{
 		if ( not vec.empty() )
-			return FromVoid( static_cast<void_ptr_t>(vec.data()), vec.size() * SizeOf<B> );
+			return FromVoid( Cast<void_ptr_t>(vec.data()), vec.size() * SizeOf<B> );
 		else
 			return ArrayRef<T>();
 	}
@@ -334,7 +334,7 @@ namespace GXTypes
 	inline ArrayRef<T>  ArrayRef<T>::FromStd (std::vector<B> &vec)
 	{
 		if ( not vec.empty() )
-			return FromVoid( static_cast<void_ptr_t>(vec.data()), vec.size() * SizeOf<B> );
+			return FromVoid( Cast<void_ptr_t>(vec.data()), vec.size() * SizeOf<B> );
 		else
 			return ArrayRef<T>();
 	}
@@ -348,7 +348,7 @@ namespace GXTypes
 	inline ArrayRef<T>  ArrayRef<T>::FromVoid (void_ptr_t ptr, const BytesU size)
 	{
 		if ( ptr != null and size > 0 )
-			return ArrayRef<T>( static_cast< T *>( const_cast< void *>( ptr ) ), usize( size / SizeOf<T> ) );
+			return ArrayRef<T>( Cast<T *>( const_cast< void *>( ptr ) ), usize( size / SizeOf<T> ) );
 		else
 			return ArrayRef<T>();
 	}
@@ -636,7 +636,7 @@ namespace GXTypes
 
 			if ( CompileTime::IsPOD<T> )
 			{
-				value += _types_hidden_::HashForMemoryBlock( (const ubyte *)x.RawPtr(), (usize)x.Size() );
+				value += _types_hidden_::HashForMemoryBlock( Cast<const ubyte *>(x.RawPtr()), usize(x.Size()) );
 			}
 			else
 			{

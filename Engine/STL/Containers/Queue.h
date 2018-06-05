@@ -31,7 +31,8 @@ namespace GXTypes
 		using MemoryContainer_t	= MC;
 		using Value_t			= T;
 		using Self				= Queue<T,S,MC>;
-		
+		using iterator			= T *;
+		using const_iterator	= const T *;
 
 	// variables
 	private:
@@ -130,14 +131,10 @@ namespace GXTypes
 		ND_ usize			LastIndex ()	const				{ return Count()-1; }
 		
 
-		// iterators
-		using iterator			= T *;
-		using const_iterator	= const T *;
-		
-		ND_ iterator		begin ()							{ return RawPtr(); }
-		ND_ const_iterator	begin ()		const				{ return RawPtr(); }
-		ND_ iterator		end ()								{ return RawPtr() + Count(); }
-		ND_ const_iterator	end ()			const				{ return RawPtr() + Count(); }
+		ND_ iterator		begin ()							{ return ptr(); }
+		ND_ const_iterator	begin ()		const				{ return ptr(); }
+		ND_ iterator		end ()								{ return ptr() + Count(); }
+		ND_ const_iterator	end ()			const				{ return ptr() + Count(); }
 
 
 		static constexpr bool	IsLinearMemory ()				{ return true; }
@@ -284,7 +281,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline void Queue<T,S,MC>::_ReplaceToLeft (const usize offset)
 	{
-		if ( _last + (isize)offset < (isize)_size ) {
+		if ( _last + isize(offset) < isize(_size) ) {
 			_last += offset;
 			return;
 		}
@@ -369,14 +366,14 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline T * Queue<T,S,MC>::ptr ()
 	{
-		ASSUME( _memory.Pointer() != null and _first < (isize)_size );
+		ASSUME( _memory.Pointer() != null and _first < isize(_size) );
 		return _memory.Pointer() + _first;
 	}
 	
 	template <typename T, typename S, typename MC>
 	inline const T * Queue<T,S,MC>::ptr () const
 	{
-		ASSUME( _memory.Pointer() != null and _first < (isize)_size );
+		ASSUME( _memory.Pointer() != null and _first < isize(_size) );
 		return _memory.Pointer() + _first;
 	}
 	
@@ -388,14 +385,14 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline T & Queue<T,S,MC>::Front ()
 	{
-		ASSUME( _memory.Pointer() != null and _first < (isize)_size );
+		ASSUME( _memory.Pointer() != null and _first < isize(_size) );
 		return _memory.Pointer()[_first];
 	}
 	
 	template <typename T, typename S, typename MC>
 	inline const T & Queue<T,S,MC>::Front () const
 	{
-		ASSUME( _memory.Pointer() != null and _first < (isize)_size );
+		ASSUME( _memory.Pointer() != null and _first < isize(_size) );
 		return _memory.Pointer()[_first];
 	}
 	
@@ -407,14 +404,14 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline T & Queue<T,S,MC>::Back ()
 	{
-		ASSUME( _memory.Pointer() != null and _last < (isize)_size );
+		ASSUME( _memory.Pointer() != null and _last < isize(_size) );
 		return _memory.Pointer()[_last];
 	}
 	
 	template <typename T, typename S, typename MC>
 	inline const T & Queue<T,S,MC>::Back () const
 	{
-		ASSUME( _memory.Pointer() != null and _last < (isize)_size );
+		ASSUME( _memory.Pointer() != null and _last < isize(_size) );
 		return _memory.Pointer()[_last];
 	}
 	

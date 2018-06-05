@@ -63,7 +63,7 @@ namespace PlatformVK
 		// device features
 		ND_ bool	SupportAnisotropyFiltering ()	const	{ return GetDevice()->GetDeviceFeatures().samplerAnisotropy == VK_TRUE; }
 		ND_ float	GetMaxAnisotropy ()				const	{ return GetDevice()->GetDeviceProperties().limits.maxSamplerAnisotropy; }
-		ND_ uint	GetMaxAnisotropyLevel ()		const	{ return (uint) GetMaxAnisotropy(); }	// TODO: 2..16
+		ND_ uint	GetMaxAnisotropyLevel ()		const	{ return uint(GetMaxAnisotropy()); }	// TODO: 2..16
 	};
 
 

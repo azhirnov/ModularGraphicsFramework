@@ -352,4 +352,4 @@ void mainImage (out vec4 fragColor, in vec2 fragCoord)
 0x00000000, 0x00000000, 0x0003003E, 0x0000000D, 0x00000035, 0x000100FD, 0x00010038 });
 
 };
-};
+}	// Pipelines

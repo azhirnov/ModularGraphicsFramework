@@ -21,7 +21,7 @@ namespace GXTypes
 		{
 			ASSUME( size > 0 );
 
-			ptr = (T*) ::operator new( sizeof(T) * size );
+			ptr = static_cast<T *>(::operator new( sizeof(T) * size ));
 			ASSERT( ptr != null and "can't allocate memory!" );
 
 			return ptr != null;

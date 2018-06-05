@@ -18,7 +18,7 @@ namespace std
 	{
 		size_t operator () (const GX_STL::GXTypes::String &str) const
 		{
-			return (size_t) GX_STL::GXTypes::HashOf( str ).Get();
+			return size_t(GX_STL::GXTypes::HashOf( str ).Get());
 		}
 	};
 
@@ -101,7 +101,7 @@ namespace GXScript
 		if ( ptr == null )
 			return asERROR;
 
-		auto*	str = (String *) const_cast<void*>( ptr );
+		auto*	str = Cast<String *>(const_cast<void *>( ptr ));
 
 		_instances.Erase( str );
 
@@ -125,7 +125,7 @@ namespace GXScript
 		auto*	str = reinterpret_cast<const String *>( ptr );
 
 		if ( length )
-			*length = (asUINT)str->Length();
+			*length = asUINT(str->Length());
 
 		if ( data )
 		{
@@ -203,7 +203,7 @@ namespace GXScript
 		else
 			iter = _cache.insert({ str, 1 }).first;
 
-		return reinterpret_cast<const void *>( &iter->first );
+		return Cast<const void *>( &iter->first );
 	}
 	
 /*
@@ -218,7 +218,7 @@ namespace GXScript
 		if ( str == null )
 			return asERROR;
 
-		StringCache_t::iterator	iter = _cache.find( *reinterpret_cast<const String *>(str) );
+		StringCache_t::iterator	iter = _cache.find( *Cast<const String *>(str) );
 
 		if ( iter == _cache.end() )
 			return asERROR;
@@ -244,10 +244,10 @@ namespace GXScript
 		auto* str = reinterpret_cast<const String *>( ptr );
 
 		if ( length )
-			*length = (asUINT)str->Length();
+			*length = asUINT(str->Length());
 
 		if ( data )
-			memcpy( data, str->cstr(), str->Length() );
+			::memcpy( data, str->cstr(), str->Length() );
 
 		return asSUCCESS;
 	}

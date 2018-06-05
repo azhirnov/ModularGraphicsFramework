@@ -33,7 +33,6 @@ namespace SWShaderLang
 	template <typename GenType>	using gsamplerCubeArray	= Impl::Texture2D< GenType >;
 
 	template <typename GenType, size_t Count>	using SArr = Impl::SWArray< GenType, Count >;
-	template <typename GenType>					using DArr = Impl::SWArray< GenType, 0 >;
 
 	// TODO
 	//inline void memoryBarrier () {}

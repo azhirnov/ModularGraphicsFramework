@@ -45,7 +45,7 @@ namespace GXTypes
 			bool IsValid () const			{ return _ptr != null; }
 
 			decltype(auto) Ref () const		{ return *_ptr; }
-			void const*    Ptr () const		{ return (void const*) &(*_ptr); }
+			void const*    Ptr () const		{ return Cast<void const*>(&(*_ptr)); }
 		};
 		
 
@@ -67,7 +67,7 @@ namespace GXTypes
 			bool IsValid () const		{ return _ptr.Lock().IsNotNull(); }
 
 			T &			Ref () const	{ return *_ptr.Lock(); }
-			void const*	Ptr () const	{ return (void const *) _ptr.RawPtr(); }
+			void const*	Ptr () const	{ return Cast<void const *>(_ptr.RawPtr()); }
 		};
 
 
@@ -103,7 +103,7 @@ namespace GXTypes
 				const BytesU size = Size();
 				return	( size == right->Size() ) and
 						( TypeIdOf() == right->TypeIdOf() ) and
-						UnsafeMem::MemCmp( static_cast<const void *>(this), static_cast<const void *>(right), size ) == 0;
+						UnsafeMem::MemCmp( Cast<const void *>(this), Cast<const void *>(right), size ) == 0;
 			}
 		
 			forceinline bool Less (const Interface_t *right) const
@@ -115,7 +115,7 @@ namespace GXTypes
 			
 				if ( type0 == type1 ) {
 					if ( size0 == size1 )
-						return UnsafeMem::MemCmp( static_cast<const void *>(this), static_cast<const void *>(right), size0 ) < 0;
+						return UnsafeMem::MemCmp( Cast<const void *>(this), Cast<const void *>(right), size0 ) < 0;
 					else
 						return size0 < size1;
 				}
@@ -337,8 +337,8 @@ namespace GXTypes
 
 
 	private:
-		forceinline _Interface_t const *	_Internal ()		const	{ return (_Interface_t const*) _storage.buf; }
-		forceinline _Interface_t *			_Internal ()				{ return (_Interface_t *) _storage.buf; }
+		forceinline _Interface_t const *	_Internal ()		const	{ return Cast<_Interface_t const*>(_storage.buf); }
+		forceinline _Interface_t *			_Internal ()				{ return Cast<_Interface_t *>(_storage.buf); }
 		forceinline BinArrayRef				_Data ()					{ return BinArrayRef( _storage.buf ); }
 		forceinline bool					_IsCreated ()		const	{ return _storage.maxAlign != 0; }
 
@@ -534,7 +534,7 @@ namespace GXTypes
 		template <typename T>
 		forceinline void RemoveAllFor (const T &ptr)
 		{
-			return RemoveAllFor( (const void *) &(*ptr) );
+			return RemoveAllFor( Cast<const void *>(&(*ptr)) );
 		}
 
 		forceinline friend void SwapValues (Self &left, Self &right)

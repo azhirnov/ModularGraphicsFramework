@@ -34,16 +34,17 @@ namespace PlatformSDL
 		FOR( i, _displays )
 		{
 			auto&			disp	= _displays[i];
+			const int		disp_idx = int(i);
 
 			SDL_DisplayMode	mode	= {};
 			SDL_Rect		warea	= {};
 			SDL_Rect		area	= {};
 			float3			dpi;
 
-			SDL_CALL( SDL_GetCurrentDisplayMode( i, OUT &mode ) );
-			SDL_CALL( SDL_GetDisplayBounds( i, OUT &area ) );
-			SDL_CALL( SDL_GetDisplayUsableBounds( i, OUT &warea ) );
-			SDL_CALL( SDL_GetDisplayDPI( i, OUT &dpi[0], OUT &dpi[1], OUT &dpi[2] ) );
+			SDL_CALL( SDL_GetCurrentDisplayMode( disp_idx, OUT &mode ) );
+			SDL_CALL( SDL_GetDisplayBounds( disp_idx, OUT &area ) );
+			SDL_CALL( SDL_GetDisplayUsableBounds( disp_idx, OUT &warea ) );
+			SDL_CALL( SDL_GetDisplayDPI( disp_idx, OUT &dpi[0], OUT &dpi[1], OUT &dpi[2] ) );
 
 			disp = Platforms::Display( i,
 									   RectI(warea.x, warea.y, warea.x + warea.w, warea.y + warea.h),

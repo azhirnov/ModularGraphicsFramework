@@ -1188,7 +1188,7 @@ namespace PipelineCompiler
 			FOR( i, stType.fields )
 			{
 				if ( stType.fields[i].name == fieldType.name ) {
-					fld_index = i;
+					fld_index = uint(i);
 					break;
 				}
 

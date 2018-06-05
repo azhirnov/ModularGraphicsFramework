@@ -161,7 +161,7 @@ namespace Platforms
 	{
 		CHECK_ERR( file );
 
-		usize		len		= (usize)file->RemainingSize();
+		usize		len		= usize(file->RemainingSize());
 		Array<uint>	arr;	arr.Resize( len / sizeof(uint) );
 
 		CHECK_ERR( file->Read(ArrayRef<uint>( arr )) );

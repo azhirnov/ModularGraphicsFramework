@@ -18,7 +18,7 @@ namespace gles
 	// get function address from driver //
 #	define OPENGLES3_GET_PROC( _p_, _n_, _d_ ) \
 		++counter; \
-		if ( (_n_ = (_p_)GLES3_GetProcAddress( TOSTRING( _n_ ) )) == null ) \
+		if ( (_n_ = reinterpret_cast<_p_>(GLES3_GetProcAddress( TOSTRING( _n_ ) ))) == null ) \
 		{ \
 			_n_ = _d_; \
 			missing++; \
@@ -138,10 +138,10 @@ namespace gles
 		float	fdata[4] = {};
 
 		log	<< "OpenGL info\n---------------"
-			<< "\nRenderer:                " << (const char*)glGetString( GL_RENDERER )
-			<< "\nVersion:                 " << (const char*)glGetString( GL_VERSION )
-			<< "\nVendor:                  " << (const char*)glGetString( GL_VENDOR )
-			<< "\nGLSL:                    " << (const char*)glGetString( GL_SHADING_LANGUAGE_VERSION );
+			<< "\nRenderer:                " << Cast<const char*>(glGetString( GL_RENDERER ))
+			<< "\nVersion:                 " << Cast<const char*>(glGetString( GL_VERSION ))
+			<< "\nVendor:                  " << Cast<const char*>(glGetString( GL_VENDOR ))
+			<< "\nGLSL:                    " << Cast<const char*>(glGetString( GL_SHADING_LANGUAGE_VERSION ));
 
 		//ES_CALL( glGetIntegerv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, idata ) );
 		//log << "\nMax anisotropy:          " << idata[0];
@@ -266,7 +266,7 @@ namespace gles
 			
 			for (GLint i = 0; i < num_ext; ++i)
 			{
-				ES_CALL( ext_str = (const char *) glGetStringi( GL_EXTENSIONS, i ) );
+				ES_CALL( ext_str = Cast<const char *>(glGetStringi( GL_EXTENSIONS, i )) );
 
 				log << (i == 0 ? "" : ((i & 3) == 0 ? ",\n" : ", ")) << ext_str;
 			}

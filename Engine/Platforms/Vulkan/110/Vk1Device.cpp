@@ -179,10 +179,10 @@ namespace PlatformVK
 		instance_create_info.sType						= VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		instance_create_info.pApplicationInfo			= &app_info;
 
-		instance_create_info.enabledExtensionCount		= (uint32_t) instance_extensions.Count();
+		instance_create_info.enabledExtensionCount		= uint32_t(instance_extensions.Count());
 		instance_create_info.ppEnabledExtensionNames	= instance_extensions.ptr();
 		
-		instance_create_info.enabledLayerCount			= (uint32_t) layers.Count();
+		instance_create_info.enabledLayerCount			= uint32_t(layers.Count());
 		instance_create_info.ppEnabledLayerNames		= layers.ptr();
 
 
@@ -583,13 +583,13 @@ namespace PlatformVK
 		_enableDebugMarkers = HasExtension( VK_EXT_DEBUG_MARKER_EXTENSION_NAME );
 		
 		device_info.sType					= VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		device_info.queueCreateInfoCount	= (uint32_t) queue_infos.Count();
+		device_info.queueCreateInfoCount	= uint32_t(queue_infos.Count());
 		device_info.pQueueCreateInfos		= queue_infos.ptr();
 		device_info.pEnabledFeatures		= &enabledFeatures;
 		
 		if ( not device_extensions.Empty() )
 		{
-			device_info.enabledExtensionCount	= (uint32_t) device_extensions.Count();
+			device_info.enabledExtensionCount	= uint32_t(device_extensions.Count());
 			device_info.ppEnabledExtensionNames	= device_extensions.ptr();
 		}
 
@@ -972,14 +972,14 @@ namespace PlatformVK
 
 		VkPresentInfoKHR	present_info = {};
 		present_info.sType				= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		present_info.swapchainCount		= (uint32_t) CountOf( swap_chains );
+		present_info.swapchainCount		= uint32_t(CountOf( swap_chains ));
 		present_info.pSwapchains		= swap_chains;
 		present_info.pImageIndices		= &_currentImageIndex;
 
 		if ( renderFinished != VK_NULL_HANDLE )
 		{
 			VkSemaphore		wait_semaphores[]	= { renderFinished };
-			present_info.waitSemaphoreCount		= (uint32_t) CountOf( wait_semaphores );
+			present_info.waitSemaphoreCount		= uint32_t(CountOf( wait_semaphores ));
 			present_info.pWaitSemaphores		= wait_semaphores;
 		}
 
@@ -1584,13 +1584,13 @@ namespace PlatformVK
 	{
 		String	log;
 
-		log << "Vulkan " << _DebugReportFlagsToString( (VkDebugReportFlagBitsEXT)flags )
+		log << "Vulkan " << _DebugReportFlagsToString( VkDebugReportFlagBitsEXT(flags) )
 			<< " in object: " << _DebugReportObjectTypeToString( objectType )
 			<< '(' << String().FormatAlignedI( object, 8, '0', 16 ) << ')'
 			<< ", layer: " << pLayerPrefix << '(' << messageCode << ')'
 			<< ", message:\n" << pMessage;
 
-		LOG( log, _DebugReportFlagsToLogType( (VkDebugReportFlagBitsEXT)flags ) );
+		LOG( log, _DebugReportFlagsToLogType( VkDebugReportFlagBitsEXT(flags) ) );
 
 		Cast< Vk1Device *>(pUserData)->_debugReportCounter++;
 

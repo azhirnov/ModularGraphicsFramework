@@ -121,9 +121,9 @@ namespace GXTypes
 				T,		{ return left  / T(right.Get()); }
 		)
 		_HALF_OPERATOR( %,
-				float,	{ return (float)::fmod( Get(), right.Get() ); },
-				float,	{ return (float)::fmod( Get(), float(right) ); },
-				T,		{ return (float)::fmod( left, T(right.Get()) ); }
+				float,	{ return float(::fmod( Get(), right.Get() )); },
+				float,	{ return float(::fmod( Get(), float(right) )); },
+				T,		{ return float(::fmod( left, T(right.Get()) )); }
 		);
 
 		_HALF_CMP_OPERATOR( == );
@@ -335,15 +335,15 @@ namespace CompileTime
 		using CreateWith = OtherType;
 
 		enum {
-			FLAGS	= (int)_ctime_hidden_::FLOAT | (int)_ctime_hidden_::SIGNED | (int)_ctime_hidden_::SOFTWARE,
+			FLAGS	= int(_ctime_hidden_::FLOAT) | int(_ctime_hidden_::SIGNED) | int(_ctime_hidden_::SOFTWARE),
 		};
 
-		static			 type	Max()		{ return (type) GXTypes::MaxValue<float>(); }
-		static			 type	Min()		{ return (type) GXTypes::MinValue<float>(); }
+		static			 type	Max()		{ return type(GXTypes::MaxValue<float>()); }
+		static			 type	Min()		{ return type(GXTypes::MinValue<float>()); }
 		static			 type	Inf()		{ return type(0); }	// TODO
 		static			 type	NaN()		{ return type(0); }	// TODO
 		
-		static			 type	Epsilon()	{ return (type) GXTypes::Epsilon<float>(); }
+		static			 type	Epsilon()	{ return type(GXTypes::Epsilon<float>()); }
 		static constexpr uint	SignBit()	{ return CompileTime::SizeOf<type>::bits-1; }
 		static constexpr uint	Count()		{ return 1; }
 	};

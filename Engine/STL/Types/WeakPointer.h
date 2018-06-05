@@ -72,7 +72,7 @@ namespace GXTypes
 		template <typename T2>
 		forceinline bool _CmpPtr (const T2 *p) const
 		{
-			return ((const void *) _ptr) == ((const void *) p);
+			return Cast<const void *>(_ptr) == Cast<const void *>(p);
 		}
 
 		template <typename ToType, typename FromType>

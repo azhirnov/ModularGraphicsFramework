@@ -95,7 +95,7 @@ namespace PlatformTools
 			default :							RETURN_ERR( "unknown mapping flags", void() );
 		}
 
-		_ptr		= (ubyte*) ptr;
+		_ptr		= Cast<ubyte *>(ptr);
 		_offset		= offset;
 		_size		= size;
 		_changed	= false;
@@ -146,8 +146,8 @@ namespace PlatformTools
 		CHECK_ERR( _mappingAccess[EMemoryAccess::CpuRead] );
 		CHECK_ERR( offset < MappedSize() );
 
-		const usize		c_offset	= (usize) offset;
-		const usize		c_size		= (usize) Min( MappedSize() - offset, size );
+		const usize		c_offset	= usize(offset);
+		const usize		c_size		= usize(Min( MappedSize() - offset, size ));
 
 		result = BinArrayCRef( _ptr + c_offset, c_size );
 		return true;
@@ -164,7 +164,7 @@ namespace PlatformTools
 		CHECK_ERR( _mappingAccess[EMemoryAccess::CpuWrite] );
 		CHECK_ERR( offset < MappedSize() );
 			
-		const usize		c_offset	= (usize) offset;
+		const usize		c_offset	= usize(offset);
 		const usize		c_size		= Min( usize(MappedSize()), usize(data.Size()) );
 
 		MemCopy( BinArrayRef( _ptr + c_offset, c_size ), data );

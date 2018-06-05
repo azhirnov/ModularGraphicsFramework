@@ -442,7 +442,7 @@ namespace PlatformCL
 
 			SamplerArg			samp_descr;
 			samp_descr.id		= *req_sampler->result;
-			samp_descr.index	= maxIndex++;
+			samp_descr.index	= uint(maxIndex++);
 			resources.PushBack(ResourceDescr_t( samp_descr ));
 			return true;
 		}

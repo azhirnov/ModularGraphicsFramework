@@ -325,8 +325,8 @@ namespace _types_hidden_
 
 		bool Erase (const Key_t &key)					{ return _memory.Erase( KeyPair_t( _hasher( key ), key ) ); }
 		void EraseByIndex (usize index)					{ _memory.EraseByIndex( index ); }
-		void EraseByIter (iterator it)					{ _memory.EraseByIndex( _memory.GetIndex( (Triple_t const*) it.RawPtr() ) ); }
-		void EraseByIter (const_iterator it)			{ _memory.EraseByIndex( _memory.GetIndex( (Triple_t const*) it.RawPtr() ) ); }
+		void EraseByIter (iterator it)					{ _memory.EraseByIndex( _memory.GetIndex( Cast<Triple_t const*>(it.RawPtr()) ) ); }
+		void EraseByIter (const_iterator it)			{ _memory.EraseByIndex( _memory.GetIndex( Cast<Triple_t const*>(it.RawPtr()) ) ); }
 
 		void Free ()									{ _memory.Free(); }
 		void Clear ()									{ _memory.Clear(); }

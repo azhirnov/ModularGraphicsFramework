@@ -100,8 +100,8 @@ struct GXImageUtils : public Noninstancable
 		STATIC_ASSERT( CompileTime::IsInteger<S> );
 
 		const S3	dim			= S3(Max( dimension, Vec<T,3>(1) ));
-		const S		row_size	= (S) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
-		const S		slice_size	= (S) AlignedRowSize( dim.y * row_size, Bytes<B>(1), sliceAlign );
+		const S		row_size	= S(AlignedRowSize( dim.x, bytePerPixel, rowAlign ));
+		const S		slice_size	= S(AlignedRowSize( dim.y * row_size, Bytes<B>(1), sliceAlign ));
 		const S		size		= slice_size * dim.z;
 		return Bytes<B>( size );
 	}
@@ -124,7 +124,7 @@ struct GXImageUtils : public Noninstancable
 
 		STATIC_ASSERT( CompileTime::IsInteger<S> and CompileTime::IsScalar<T> );
 
-		return (Bytes<B>) GXMath::AlignToLarge( Max( S(rowPixels), S(1) ) * S(bytePerPixel), rowAlign );
+		return Bytes<B>{GXMath::AlignToLarge( Max( S(rowPixels), S(1) ) * S(bytePerPixel), rowAlign )};
 	}
 	
 /*
@@ -139,7 +139,7 @@ struct GXImageUtils : public Noninstancable
 
 		STATIC_ASSERT( CompileTime::IsInteger<S> and CompileTime::IsScalar<T> );
 
-		return (Bytes<B>) GXMath::AlignToLarge( Max( (S(rowPixels) * S(bitPerPixel)) >> 3, S(1) ), rowAlign );
+		return Bytes<B>{GXMath::AlignToLarge( Max( (S(rowPixels) * S(bitPerPixel)) >> 3, S(1) ), rowAlign )};
 	}
 	
 /*
@@ -152,8 +152,8 @@ struct GXImageUtils : public Noninstancable
 	{
 		using S = CompileTime::GenType<T, typename Bytes<B>::Value_t>;
 
-		const S	row_size	= (S) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
-		const S slice_size	= (S) AlignedRowSize( dim.y * row_size, Bytes<B>(1), sliceAlign );
+		const S	row_size	= S(AlignedRowSize( dim.x, bytePerPixel, rowAlign ));
+		const S slice_size	= S(AlignedRowSize( dim.y * row_size, Bytes<B>(1), sliceAlign ));
 		return Bytes<B>( slice_size );
 	}
 
@@ -172,8 +172,8 @@ struct GXImageUtils : public Noninstancable
 		STATIC_ASSERT( CompileTime::IsInteger<S> );
 
 		const S3		dim			= S3(Max( dimension, Vec<T,3>(1) ));
-		const S			row_size	= (S) AlignedRowSize( dim.x, bytePerPixel, rowAlign );
-		const S			slice_size	= (S) AlignedRowSize( dim.y * row_size, Bytes<B>(1), sliceAlign );
+		const S			row_size	= S(AlignedRowSize( dim.x, bytePerPixel, rowAlign ));
+		const S			slice_size	= S(AlignedRowSize( dim.y * row_size, Bytes<B>(1), sliceAlign ));
 		const S3		point		= S3(Clamp( S3(coord), S3(0), dim-1 ));
 		const S			z_off		= slice_size * point.z;
 		const S			y_off		= z_off + row_size * point.y;
@@ -214,10 +214,10 @@ struct GXImageUtils : public Noninstancable
 		const S3		src_off = S3(srcOff);
 		const S3		dst_dim	= S3(Max( dstDim, Vec<T,3>(1) ));
 		const S3		dst_off	= S3(dstOff);
-		const S			src_row	= (S) AlignedRowSize( src_dim.x, Bytes<B>::template SizeOf<SrcType>(), srcRowAlignInBytes );
-		const S			dst_row	= (S) AlignedRowSize( dst_dim.x, Bytes<B>::template SizeOf<DstType>(), dstRowAlignInBytes );
-		const void *	src		= (const void *) srcImage;
-		void *			dst		= (void *) dstImage;
+		const S			src_row	= S(AlignedRowSize( src_dim.x, Bytes<B>::template SizeOf<SrcType>(), srcRowAlignInBytes ));
+		const S			dst_row	= S(AlignedRowSize( dst_dim.x, Bytes<B>::template SizeOf<DstType>(), dstRowAlignInBytes ));
+		const void *	src		= Cast<const void *>(srcImage);
+		void *			dst		= Cast<void *>(dstImage);
 
 		const S3		src_size = src_dim - src_off;
 		const S3		dst_size = dst_dim - dst_off;
@@ -267,7 +267,7 @@ struct GXImageUtils : public Noninstancable
 		const uint3		dst_dim	= Max( dstDim, Vec<T,3>(1) ).template To<uint3>();
 		const uint3		dst_off	= dstOff.template To<uint3>();
 		const BytesU	dst_row	= AlignedRowSize( dst_dim.x, BytesU::SizeOf<DstType>(), dstRowAlignInBytes );
-		void *			dst		= (void *) dstImage;
+		void *			dst		= Cast<void *>(dstImage);
 			
 		CHECK_ERR( All( src_dim <= dst_dim - dst_off ) );
 
@@ -307,7 +307,7 @@ struct GXImageUtils : public Noninstancable
 		const uint3		dst_dim	= Max( dim, Vec<T,3>(1) ).template To<uint3>();
 		const uint3		dst_off	= offset.template To<uint3>();
 		const BytesU	dst_row	= AlignedRowSize( dst_dim.x, BytesU::SizeOf<ColorType>(), dstRowAlignInBytes );
-		void *			dst		= (void *) image;
+		void *			dst		= Cast<void *>(image);
 			
 		CHECK_ERR( All( src_dim <= dst_dim - dst_off ) );
 

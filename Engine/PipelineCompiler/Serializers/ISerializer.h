@@ -35,14 +35,16 @@ namespace PipelineCompiler
 		ND_ virtual String	BeginScope () const = 0;
 		ND_ virtual String	EndScope () const = 0;
 
+		ND_ virtual String  BeginNamespace (StringCRef name) const = 0;
+		ND_ virtual String  EndNamespace () const = 0;
+
 		ND_ virtual String	DeclVariable (StringCRef typeName, StringCRef name, StringCRef value = Uninitialized) const = 0;
 		ND_ virtual String  AssignVariable (StringCRef name, StringCRef value) const = 0;
 		ND_ virtual String	DeclFunction (StringCRef result, StringCRef name, ArrayCRef<Pair<StringCRef, StringCRef>> args,
 										  bool isForwardDeclaration = false) const = 0;
 		ND_ virtual String  CallFunction (StringCRef name, ArrayCRef<StringCRef> args) const = 0;
-		ND_ virtual String  DeclNamespace (StringCRef name) const = 0; 
 
-		ND_ virtual String	BeginStruct (StringCRef typeName, uint sizeOf) const = 0;
+		ND_ virtual String	BeginStruct (StringCRef typeName, uint sizeOf, bool isPOD) const = 0;
 		ND_ virtual String	StructField (StringCRef name, StringCRef typeName, uint arraySize, uint offset, uint align, uint sizeOf) const = 0;
 		ND_ virtual String	StructCtorForInitializerList () const = 0;
 		ND_ virtual String	EndStruct () const = 0;

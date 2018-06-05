@@ -43,6 +43,26 @@ namespace GXTypes
 				return static_cast< Result_t >( static_cast< const void * const >( val ) );
 			}
 		};
+		
+		template <typename T, typename B>
+		struct _PointerCast< volatile T *, B >
+		{
+			using Result_t	= volatile B *;
+
+			forceinline constexpr static Result_t Cast (volatile T * val) {
+				return static_cast< Result_t >( static_cast< volatile void * >( val ) );
+			}
+		};
+		
+		template <typename T, typename B>
+		struct _PointerCast < const volatile T *, B >
+		{
+			using Result_t	= const volatile B *;
+
+			forceinline constexpr static Result_t Cast (const volatile T * val) {
+				return static_cast< Result_t >( static_cast< const volatile void * const >( val ) );
+			}
+		};
 	}	// _types_hidden_
 
 	template <typename T, typename B>

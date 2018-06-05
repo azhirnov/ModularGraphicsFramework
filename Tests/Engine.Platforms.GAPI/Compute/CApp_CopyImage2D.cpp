@@ -137,8 +137,8 @@ bool CApp::_Test_CopyImage2D ()
 	// compare
 	for (uint y = 0; y < size1.y; ++y)
 	{
-		Pixel const*	src_row = (Pixel const*) (image_data.ptr() + req_src_layout->result->rowPitch * (y + src_off1.y));
-		Pixel const*	dst_row = (Pixel const*) (dst_data.ptr() + req_dst_layout->result->rowPitch * (y + dst_off1.y));
+		Pixel const*	src_row = Cast<Pixel const*>(image_data.ptr() + req_src_layout->result->rowPitch * (y + src_off1.y));
+		Pixel const*	dst_row = Cast<Pixel const*>(dst_data.ptr() + req_dst_layout->result->rowPitch * (y + dst_off1.y));
 
 		for (uint x = 0; x < size1.x; ++x)
 		{
@@ -151,8 +151,8 @@ bool CApp::_Test_CopyImage2D ()
 	
 	for (uint y = 0; y < size2.y; ++y)
 	{
-		Pixel const*	src_row = (Pixel const*) (image_data.ptr() + req_src_layout->result->rowPitch * (y + src_off2.y));
-		Pixel const*	dst_row = (Pixel const*) (dst_data.ptr() + req_dst_layout->result->rowPitch * (y + dst_off2.y));
+		Pixel const*	src_row = Cast<Pixel const*>(image_data.ptr() + req_src_layout->result->rowPitch * (y + src_off2.y));
+		Pixel const*	dst_row = Cast<Pixel const*>(dst_data.ptr() + req_dst_layout->result->rowPitch * (y + dst_off2.y));
 
 		for (uint x = 0; x < size2.x; ++x)
 		{

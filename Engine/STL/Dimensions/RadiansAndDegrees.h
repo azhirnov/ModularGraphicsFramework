@@ -160,7 +160,7 @@ namespace GXMath
 	template <typename B>
 	ND_ inline Degrees<B> Radians<T>::ToDegrees () const
 	{
-		return Degrees<B>( B(_value) * (B)Degrees<B>::Pi() * (B)Radians<B>::ReciporalPi() );
+		return Degrees<B>( B(_value) * B(Degrees<B>::Pi()) * B(Radians<B>::ReciporalPi()) );
 	}
 	
 	template <typename T>
@@ -174,7 +174,7 @@ namespace GXMath
 	ND_ inline Radians<T>  Radians<T>::ToInterval (Self minValue, Self maxValue) const
 	{
 		// 0..+2Pi, 0..+Pi, -Pi..0, -2Pi..0, and other
-		return (Self) GXMath::Wrap( _value, (T)minValue, (T)maxValue );
+		return Self{GXMath::Wrap( _value, T(minValue), T(maxValue) )};
 	}
 	
 	template <typename T>
@@ -209,7 +209,7 @@ namespace GXMath
 	template <typename B>
 	ND_ inline Radians<B> Degrees<T>::ToRadians () const
 	{
-		return Radians<B>( B(_value) * (B)Radians<B>::Pi() * (B)Degrees<B>::ReciporalPi() );
+		return Radians<B>( B(_value) * B(Radians<B>::Pi()) * B(Degrees<B>::ReciporalPi()) );
 	}
 	
 	template <typename T>
@@ -223,7 +223,7 @@ namespace GXMath
 	ND_ inline Degrees<T>  Degrees<T>::ToInterval (Self minValue, Self maxValue) const
 	{
 		// 0..+2Pi, 0..+Pi, -Pi..0, -2Pi..0, and other
-		return (Self) GXMath::Wrap( _value, (T)minValue, (T)maxValue );
+		return Self{GXMath::Wrap( _value, T(minValue), T(maxValue) )};
 	}
 	
 	template <typename T>
@@ -251,7 +251,7 @@ namespace CompileTime {
 		using CreateWith = GXMath::Radians< OtherType >;
 
 		enum {
-			FLAGS	= (int)TypeInfo< inner_type >::FLAGS | int(_ctime_hidden_::WRAPPER),
+			FLAGS	= int(TypeInfo< inner_type >::FLAGS) | int(_ctime_hidden_::WRAPPER),
 		};
 		
 		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }
@@ -274,7 +274,7 @@ namespace CompileTime {
 		using CreateWith = GXMath::Degrees< OtherType >;
 
 		enum {
-			FLAGS	= (int)TypeInfo< inner_type >::FLAGS | int(_ctime_hidden_::WRAPPER),
+			FLAGS	= int(TypeInfo< inner_type >::FLAGS) | int(_ctime_hidden_::WRAPPER),
 		};
 		
 		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }

@@ -33,7 +33,7 @@ namespace GXMath
 			const float4	control( 40.0f, 64.0f, 256.0f, 96.0f );
 
 			Vec<T,I,U>		tmp;
-			FOR( i, tmp )	tmp[i] = v[i] * (T) control[i];
+			FOR( i, tmp )	tmp[i] = v[i] * T(control[i]);
 			return _Float( tmp.Sum() );
 		}
 

@@ -109,11 +109,11 @@ namespace PlatformGL
 
 			if ( rc != null and wglMakeCurrent( dc, rc ) != FALSE )
 			{
-				wglChoosePixelFormat	= (PFNWGLCHOOSEPIXELFORMATARBPROC) wglGetProcAddress("wglChoosePixelFormatARB");
-				wglCreateContextAttribs	= (PFNWGLCREATECONTEXTATTRIBSARBPROC) wglGetProcAddress("wglCreateContextAttribsARB");
+				wglChoosePixelFormat	= reinterpret_cast<PFNWGLCHOOSEPIXELFORMATARBPROC>(wglGetProcAddress("wglChoosePixelFormatARB"));
+				wglCreateContextAttribs	= reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(wglGetProcAddress("wglCreateContextAttribsARB"));
 		
-				wglSwapInterval			= (PFNWGLSWAPINTERVALEXTPROC) wglGetProcAddress("wglSwapIntervalEXT");
-				wglGetSwapInterval		= (PFNWGLGETSWAPINTERVALEXTPROC) wglGetProcAddress("wglGetSwapIntervalEXT");
+				wglSwapInterval			= reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
+				wglGetSwapInterval		= reinterpret_cast<PFNWGLGETSWAPINTERVALEXTPROC>(wglGetProcAddress("wglGetSwapIntervalEXT"));
 
 				swapControlSupported	= wglSwapInterval.IsNotNull<PFNWGLSWAPINTERVALEXTPROC>() and
 										  wglGetSwapInterval.IsNotNull<PFNWGLGETSWAPINTERVALEXTPROC>();
@@ -376,7 +376,7 @@ namespace PlatformGL
 
 		// update settings
 		{
-			vs.device	= (const char*)glGetString( GL_RENDERER );
+			vs.device	= Cast<const char*>(glGetString( GL_RENDERER ));
 			vs.version	= _ConvertGLVersion( version );
 		}
 

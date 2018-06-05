@@ -232,8 +232,8 @@ bool CApp::_Test_ConvertFloatImage2D ()
 
 	for (uint y = 0; y < img_dim.y; ++y)
 	{
-		SrcPixel const*	src_row = (SrcPixel const*) (image_data.ptr() + req_src_layout->result->rowPitch * y);
-		DstPixel const*	dst_row = (DstPixel const*) (dst_data.ptr() + req_dst_layout->result->rowPitch * y);
+		SrcPixel const*	src_row = Cast<SrcPixel const*>(image_data.ptr() + req_src_layout->result->rowPitch * y);
+		DstPixel const*	dst_row = Cast<DstPixel const*>(dst_data.ptr() + req_dst_layout->result->rowPitch * y);
 
 		for (uint x = 0; x < img_dim.x; ++x)
 		{

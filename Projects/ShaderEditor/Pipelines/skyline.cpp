@@ -299,27 +299,27 @@ float voxelPad;
 //---------------------------------
 
 Ray Ray_From (const vec3 leftBottom, const vec3 rightBottom, const vec3 leftTop, const vec3 rightTop, const vec3 origin, const float nearPlane, const vec2 unormCoord);
+float Hash2d (in vec2 uv2);
 float Hash11 (in float a);
 float Hash21 (in vec2 uv);
 vec2 Hash22 (in vec2 uv1);
-float Hash2d (in vec2 uv2);
 float Hash3d (in vec3 uv3);
-float mixP (in float f0, in float f1, in float a1);
 float noise2d (in vec2 uv4);
-vec3 saturate (in vec3 a2);
+float mixP (in float f0, in float f1, in float a1);
 float noise (in vec3 uv5);
+vec3 saturate (in vec3 a2);
 float saturate (in float a3);
 vec3 GetSunColorSmall (in vec3 rayDir, in vec3 sunDir);
 vec3 GetEnvMap (in vec3 rayDir1, in vec3 sunDir1);
+float smin (in float a5, in float b1, in float k);
+float Repeat (in float a6, in float len);
 vec3 GetEnvMapSkyline (in vec3 rayDir2, in vec3 sunDir2, in float height);
 vec2 matmin (in vec2 a4, in vec2 b);
-float smin (in float a5, in float b1, in float k);
 float sdBox (in vec3 p, in vec3 radius);
 float cylCap (in vec3 p1, in float r, in float lenRad);
-float Repeat (in float a6, in float len);
 vec2 Car (in vec3 baseCenter, in float unique);
-vec2 CityBlock (in vec3 p2, in vec2 pint);
 vec2 DistanceToObject (in vec3 p3);
+vec2 CityBlock (in vec3 p2, in vec2 pint);
 void CalcWindows (in vec2 block, in vec3 pos, inout vec3 texColor, inout float windowRef, inout vec3 normal);
 vec3 RayTrace (const vec2 fragCoord, const Ray ray);
 void mainImage (out vec4 fragColor, in vec2 fragCoord1);
@@ -2812,4 +2812,4 @@ void mainImage (out vec4 fragColor, in vec2 fragCoord1)
 0x000100FD, 0x00010038 });
 
 };
-};
+}	// Pipelines

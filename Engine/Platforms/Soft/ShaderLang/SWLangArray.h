@@ -6,11 +6,6 @@
 
 #ifdef GRAPHICS_API_SOFT
 
-# ifdef COMPILER_MSVC
-#	pragma warning (push)
-#	pragma warning (disable: 4200)
-# endif
-
 namespace SWShaderLang
 {
 namespace Impl
@@ -23,6 +18,8 @@ namespace Impl
 	template <typename T, usize I>
 	struct SWArray final
 	{
+		STATIC_ASSERT( I > 0 );
+
 	// variables
 	private:
 		T	_elements[I];
@@ -64,47 +61,7 @@ namespace Impl
 		}
 	};
 
-
-
-	//
-	// Dynamic Array
-	//
-
-	template <typename T>
-	struct SWArray< T, 0 > final
-	{
-	// variables
-	private:
-		T	_elements[];
-
-
-	// methods
-	public:
-		SWArray () {}
-
-		SWArray (SWArray &&) = default;
-		SWArray (const SWArray &) = default;
-
-		SWArray& operator = (SWArray &&) = default;
-		SWArray& operator = (const SWArray &) = default;
-
-		T &  operator [] (const usize index)
-		{
-			return _elements[index];
-		}
-
-		T const &  operator [] (const usize index) const
-		{
-			return _elements[index];
-		}
-	};
-
-
 }	// Impl
 }	// SWShaderLang
-
-# ifdef COMPILER_MSVC
-#	pragma warning (pop)
-# endif
 
 #endif	// GRAPHICS_API_SOFT

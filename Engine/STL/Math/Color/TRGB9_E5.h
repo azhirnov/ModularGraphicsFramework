@@ -145,10 +145,10 @@ namespace GXMath
 
 		ASSERT( Any( v < Vec3_t(0) ) and "only unsigned value supported" );
 
-		Vec3_t		v_color = Clamp( v, Vec3_t(0), Vec3_t( (FT)s_uSharedExpMax ) );
+		Vec3_t		v_color = Clamp( v, Vec3_t(0), Vec3_t( FT(s_uSharedExpMax) ) );
 
 		Float_t		f_max_c	= v_color.Max();
-		int			i_exp_p	= Max( -B-1, (int)Log2( f_max_c ) ) + B + 1;
+		int			i_exp_p	= Max( -B-1, int(Log2( f_max_c )) ) + B + 1;
 		Float_t		f_max_s	= f_max_c / _math_hidden_::_Pow2< Float_t, int >( i_exp_p - B - N ) + FT(0.5);
 		int			i_exp_s	= i_exp_p + not ( f_max_s < Float_t(1<<N) );
 		Float_t		f_2e	= _math_hidden_::_Pow2< Float_t, int >( i_exp_s - B - N );

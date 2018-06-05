@@ -20,15 +20,6 @@ namespace Pipelines
 
 namespace Pipelines
 {
-// From file 'dynamicbuffer.cpp'
-void Create_dynamicbuffer (PipelineTemplateDescriptor& descr);
-
-// From file 'bufferalign.cpp'
-void Create_bufferalign (PipelineTemplateDescriptor& descr);
-
-// From file 'copyfloatimage2d.cpp'
-void Create_copyfloatimage2d (PipelineTemplateDescriptor& descr);
-
 // From file 'image2dbilinearfilter.cpp'
 void Create_image2dbilinearfilter (PipelineTemplateDescriptor& descr);
 
@@ -38,4 +29,13 @@ void Create_image2dnearestfilter (PipelineTemplateDescriptor& descr);
 // From file 'shaderbarrier.cpp'
 void Create_shaderbarrier (PipelineTemplateDescriptor& descr);
 
-};
+// From file 'bufferalign.cpp'
+void Create_bufferalign (PipelineTemplateDescriptor& descr);
+
+// From file 'copyfloatimage2d.cpp'
+void Create_copyfloatimage2d (PipelineTemplateDescriptor& descr);
+
+// From file 'dynamicbuffer.cpp'
+void Create_dynamicbuffer (PipelineTemplateDescriptor& descr);
+
+}	// Pipelines

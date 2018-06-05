@@ -106,7 +106,7 @@ namespace GXFile
 		// RFile //
 		virtual BytesU ReadBuf (void * buf, BytesU size) noexcept override
 		{
-			ubyte *	data = (ubyte *) buf;
+			ubyte *	data = Cast<ubyte *>(buf);
 			BytesU	pos  = Pos();
 			BytesU	r	 = SubRFile::ReadBuf( buf, size );
 
@@ -178,7 +178,7 @@ namespace GXFile
 		// WFile //
 		virtual BytesU WriteBuf (const void * buf, BytesU size) noexcept override
 		{
-			ubyte *	data = (ubyte *) buf;
+			ubyte *	data = Cast<ubyte *>(buf);
 			BytesU	pos  = Pos();
 
 			for (usize i = 0; i < size; ++i) {

@@ -49,7 +49,7 @@ namespace GXFile
 			if ( usize(_pos + size) > _mem.Count() )
 				size = BytesU( _mem.Count() - _pos );
 
-			UnsafeMem::MemCopy( buf, _mem.ptr() + (usize)_pos, size );
+			UnsafeMem::MemCopy( buf, _mem.ptr() + usize(_pos), size );
 			_pos += size;
 
 			return size;
@@ -201,7 +201,7 @@ namespace GXFile
 		{
 			CHECK_ERR( this != file.ptr() );
 
-			usize	size = (usize)file->RemainingSize();
+			usize	size = usize(file->RemainingSize());
 			
 			_pos	= BytesU();
 			_opened = true;
@@ -222,7 +222,7 @@ namespace GXFile
 			switch ( flag )
 			{
 				case COPY :
-					_memBuffer.Copy( (ubyte *)arr.ptr(), arr.Size() );
+					_memBuffer.Copy( Cast<ubyte *>(arr.ptr()), arr.Size() );
 					_mem	= _memBuffer;
 					break;
 
@@ -283,7 +283,7 @@ namespace GXFile
 
 		BinArrayCRef GetData () const
 		{
-			return (BinArrayCRef) _mem;
+			return BinArrayCRef{_mem};
 		}
 	};
 
@@ -318,7 +318,7 @@ namespace GXFile
 
 			if ( usize(_pos) != _mem.Count() )
 			{
-				_mem.Resize( (usize)_pos );
+				_mem.Resize( usize(_pos) );
 			}
 			
 			_mem.Append( BinArrayCRef::FromVoid( buf, size ) );
@@ -458,7 +458,7 @@ namespace GXFile
 		bool Create (BytesU reserve)
 		{
 			_mem.Clear();
-			_mem.Reserve( (usize)reserve );
+			_mem.Reserve( usize(reserve) );
 
 			_pos	= BytesU();
 			_opened	= true;

@@ -23,4 +23,4 @@ namespace Pipelines
 // From file 'default3.cpp'
 void Create_default3 (PipelineTemplateDescriptor& descr);
 
-};
+}	// Pipelines

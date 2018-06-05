@@ -111,17 +111,17 @@ namespace GXTypes
 
 		ND_ bool At (usize index, OUT T & value) const;
 
-		void Append (InitializerList<T> other)						{ Append( ArrayCRef<T>(other) ); }
+		void Append (InitializerList<T> other)						{ Append( ArrayCRef<T>{other} ); }
 		void Append (ArrayCRef<T> other)							{ _Insert<const T>( other.RawPtr(), other.Count(), Count() ); }
-		void Append (const Self &other)								{ Append( (ArrayCRef<T>) other ); }
+		void Append (const Self &other)								{ Append( ArrayCRef<T>{other} ); }
 		void Append (Self &&other)									{ _Insert<T>( other._memory.Pointer(), other.Count(), Count() ); }
 		
-		void AppendFront (InitializerList<T> other)					{ AppendFront( ArrayCRef<T>(other) ); }
+		void AppendFront (InitializerList<T> other)					{ AppendFront( ArrayCRef<T>{other} ); }
 		void AppendFront (ArrayCRef<T> other)						{ Insert( other, 0 ); }
-		void AppendFront (const Self &other)						{ AppendFront( (ArrayCRef<T>) other ); }
+		void AppendFront (const Self &other)						{ AppendFront( ArrayCRef<T>{other} ); }
 		void AppendFront (Self &&other)								{ _Insert<T>( other._memory.Pointer(), other.Count(), Count() ); }
 		
-		void AppendBack (InitializerList<T> other)					{ Append( ArrayCRef<T>(other) ); }
+		void AppendBack (InitializerList<T> other)					{ Append( ArrayCRef<T>{other} ); }
 		void AppendBack (ArrayCRef<T> other)						{ Append( other ); }
 		void AppendBack (const Self &other)							{ Append( other ); }
 		void AppendBack (Self &&other)								{ Append( RVREF( other ) ); }
@@ -158,7 +158,7 @@ namespace GXTypes
 		void Insert (T&& value, usize pos)							{ _Insert<T>( &value, 1, pos ); }
 
 		void Insert (ArrayCRef<T> other, usize pos)					{ _Insert<const T>( other.RawPtr(), other.Count(), pos ); }
-		void Insert (const Self &other, usize pos)					{ Insert( (ArrayCRef<T>) other, pos ); }
+		void Insert (const Self &other, usize pos)					{ Insert( ArrayCRef<T>{other}, pos ); }
 		void Insert (Self &&other, usize pos)						{ _Insert<T>( other._memory.Pointer(), other.Count(), Count() ); }
 
 		void PushBack (const T& value);
@@ -236,14 +236,14 @@ namespace GXTypes
 	template <typename B, typename S, typename MC>
 	inline ArrayRef<T>  ArrayRef<T>::From (const Array<B,S,MC> &arr)
 	{
-		return FromVoid( static_cast<void_ptr_t>(arr.ptr()), arr.Size() );
+		return FromVoid( Cast<void_ptr_t>(arr.ptr()), arr.Size() );
 	}
 
 	template <typename T>
 	template <typename B, typename S, typename MC>
 	inline ArrayRef<T>  ArrayRef<T>::From (Array<B,S,MC> &arr)
 	{
-		return FromVoid( static_cast<void_ptr_t>(arr.ptr()), arr.Size() );
+		return FromVoid( Cast<void_ptr_t>(arr.ptr()), arr.Size() );
 	}
 
 /*
@@ -413,7 +413,7 @@ namespace GXTypes
 		if_constexpr( TypeTraits::IsConst<B> )
 			Strategy_t::Copy( _memory.Pointer() + pos, pArray, count );
 		else
-			Strategy_t::Move( _memory.Pointer() + pos, (T *) pArray, count );
+			Strategy_t::Move( _memory.Pointer() + pos, Cast<T *>(pArray), count );
 	}
 	
 /*

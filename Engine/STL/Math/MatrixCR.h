@@ -188,9 +188,9 @@
 		// set noise to matrix elements
 		DEBUG_ONLY(
 			FOR( i, *this ) {
-				(*this)[i] = (T) ReferenceCast<float>( uint( (i << 28) | ((C*R-i) << 24) | ((i&C) << 20) |
+				(*this)[i] = T(ReferenceCast<float>( uint( (i << 28) | ((C*R-i) << 24) | ((i&C) << 20) |
 															 ((i&R) << 16) | ((~i << 12) & 0xF) |
-															 (((i << 8) | (i << 4) | (i)) & 0x123) ) );
+															 (((i << 8) | (i << 4) | (i)) & 0x123) ) ));
 			}
 		)
 	}

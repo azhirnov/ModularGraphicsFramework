@@ -47,8 +47,8 @@ namespace GXTypes
 
 	// methods
 	private:
-		char const * const	_Begin ()	const	{ return static_cast<char const * const>(_memory); }
-		char const * const	_End ()		const	{ return static_cast<char const * const>(_memory) + _count * _stride; }
+		char const * const	_Begin ()	const	{ return Cast<char const * const>(_memory); }
+		char const * const	_End ()		const	{ return Cast<char const * const>(_memory) + _count * _stride; }
 
 		UniBuffer (VoidPtr_t memory, usize count, ushort offset, ushort stride);
 
@@ -180,8 +180,8 @@ namespace GXTypes
 	template <typename T>
 	template <typename B, typename C>
 	inline UniBuffer<T>::UniBuffer (B *memory, const usize count, T (C::*member)) :
-		_memory( static_cast<VoidPtr_t>( memory ) ),	_count( count ),
-		_offset( ushort(OffsetOf( member )) ),			_stride( ushort(sizeof(B)) )
+		_memory( Cast<VoidPtr_t>( memory ) ),		_count( count ),
+		_offset( ushort(OffsetOf( member )) ),		_stride( ushort(sizeof(B)) )
 	{
 		ASSUME( _count == 0 or _memory != null );
 	}
@@ -194,7 +194,7 @@ namespace GXTypes
 	template <typename T>
 	template <typename B, usize I, typename C>
 	inline UniBuffer<T>::UniBuffer (B (&arr)[I], T (C::*member)) :
-		_memory( static_cast<VoidPtr_t>( arr ) ),	_count( I ),
+		_memory( Cast<VoidPtr_t>( arr ) ),			_count( I ),
 		_offset( ushort(OffsetOf( member )) ),		_stride( ushort(sizeof(B)) )
 	{
 		ASSUME( _count == 0 or _memory != null );
@@ -300,7 +300,7 @@ namespace GXTypes
 	inline usize UniBuffer<T>::GetIndex (const T &value) const
 	{
 		ASSERT( IsInArray( value ) );
-		return (usize( ((const char * const) &value) - _Begin() ) - _offset) / _stride;
+		return (usize( Cast<const char * const>(&value) - _Begin() ) - _offset) / _stride;
 	}
 	
 /*
@@ -311,7 +311,7 @@ namespace GXTypes
 	template <typename T>
 	inline bool UniBuffer<T>::IsInArray (const T &value) const
 	{
-		char const * const	value_ptr	= (char const * const) &value;
+		char const * const	value_ptr	= Cast<char const * const>(&value);
 
 		return value_ptr >= _Begin() and value_ptr < _End();
 	}

@@ -220,7 +220,7 @@ namespace PlatformVK
 		pipeline_info.basePipelineIndex		= -1;
 		pipeline_info.basePipelineHandle	= VK_NULL_HANDLE;
 		pipeline_info.layout				= layout;
-		pipeline_info.stageCount			= (uint32_t) _tempStages.Count();
+		pipeline_info.stageCount			= uint32_t(_tempStages.Count());
 		pipeline_info.pStages				= _tempStages.RawPtr();
 		pipeline_info.renderPass			= renderPass;
 		pipeline_info.subpass				= subpass;
@@ -279,9 +279,9 @@ namespace PlatformVK
 		outState.pNext			= null;
 		outState.flags			= 0;
 		outState.pViewports		= tmpViewports.RawPtr();
-		outState.viewportCount	= (uint32_t) tmpViewports.Count();
+		outState.viewportCount	= uint32_t( tmpViewports.Count() );
 		outState.pScissors		= tmpScissors.RawPtr();
-		outState.scissorCount	= (uint32_t) tmpScissors.Count();
+		outState.scissorCount	= uint32_t( tmpScissors.Count() );
 	}
 
 /*
@@ -304,7 +304,7 @@ namespace PlatformVK
 		outState.sType				= VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		outState.pNext				= null;
 		outState.flags				= 0;
-		outState.attachmentCount	= (uint32_t) count;
+		outState.attachmentCount	= uint32_t(count);
 		outState.pAttachments		= count ? attachment.ptr() : null;
 		outState.logicOpEnable		= logic_op_enabled;
 		outState.logicOp			= logic_op_enabled ? Vk1Enum( inState.logicOp ) : VK_LOGIC_OP_COPY;
@@ -420,7 +420,7 @@ namespace PlatformVK
 		outState.depthClampEnable			= inState.depthClamp;
 		outState.rasterizerDiscardEnable	= inState.rasterizerDiscard;
 		outState.frontFace					= inState.frontFaceCCW ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE;
-		outState.cullMode					= (VkCullModeFlags) cull_mode_flags;
+		outState.cullMode					= VkCullModeFlags(cull_mode_flags);
 	}
 	
 /*
@@ -532,7 +532,7 @@ namespace PlatformVK
 			descr.binding	= attr.bindingIndex;
 			descr.format	= Vk1Enum( attr.type );
 			descr.location	= attr.index;
-			descr.offset	= (uint32_t) attr.offset;
+			descr.offset	= uint32_t(attr.offset);
 
 			attribDescr.PushBack( descr );
 		}
@@ -544,7 +544,7 @@ namespace PlatformVK
 
 			descr.binding	= binding.index;
 			descr.inputRate	= Vk1Enum( binding.rate );
-			descr.stride	= (uint32_t) binding.stride;
+			descr.stride	= uint32_t(binding.stride);
 
 			vertexBinding.PushBack( descr );
 		}
@@ -553,10 +553,10 @@ namespace PlatformVK
 		CHECK( attribDescr.Empty() == vertexBinding.Empty() );
 
 		outState.pVertexAttributeDescriptions		= attribDescr.RawPtr();
-		outState.vertexAttributeDescriptionCount	= (uint32_t) attribDescr.Count();
+		outState.vertexAttributeDescriptionCount	= uint32_t( attribDescr.Count() );
 
 		outState.pVertexBindingDescriptions			= vertexBinding.RawPtr();
-		outState.vertexBindingDescriptionCount		= (uint32_t) vertexBinding.Count();
+		outState.vertexBindingDescriptionCount		= uint32_t( vertexBinding.Count() );
 	}
 
 

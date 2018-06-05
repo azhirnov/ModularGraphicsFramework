@@ -22,14 +22,14 @@ namespace GXCompression
 	public:
 		BytesU GetPrefferedSize (BytesU uncompressedSize) const
 		{
-			return BytesU(compressBound( usize(uncompressedSize) ));
+			return BytesU(compressBound( mz_ulong(usize(uncompressedSize)) ));
 		}
 
 		bool Compress (BinArrayCRef src, INOUT BinArrayRef &dst)
 		{
-			mz_ulong	dst_size = usize(dst.Size());
+			mz_ulong	dst_size = mz_ulong(usize(dst.Size()));
 
-			if ( mz_compress2( OUT dst.RawPtr(), INOUT &dst_size, src.RawPtr(), usize(src.Size()), MZ_BEST_COMPRESSION ) != MZ_OK ) {
+			if ( mz_compress2( OUT dst.RawPtr(), INOUT &dst_size, src.RawPtr(), mz_ulong(usize(src.Size())), MZ_BEST_COMPRESSION ) != MZ_OK ) {
 				dst = BinArrayRef();
 				return false;
 			}
@@ -55,9 +55,9 @@ namespace GXCompression
 
 		bool Decompress (BinArrayCRef src, INOUT BinArrayRef &dst)
 		{
-			mz_ulong	dst_size = usize(dst.Size());
+			mz_ulong	dst_size = mz_ulong(usize(dst.Size()));
 
-			if ( uncompress( OUT dst.RawPtr(), INOUT &dst_size, src.RawPtr(), usize(src.Size()) ) != MZ_OK )
+			if ( uncompress( OUT dst.RawPtr(), INOUT &dst_size, src.RawPtr(), mz_ulong(usize(src.Size())) ) != MZ_OK )
 			{
 				dst = BinArrayRef();
 				return false;

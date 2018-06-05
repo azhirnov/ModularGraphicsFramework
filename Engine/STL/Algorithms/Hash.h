@@ -83,14 +83,14 @@ namespace GXTypes
 			// MS Visual C++ std implementation
 			#if defined(COMPILER_MSVC)
 			# if defined(_HASH_SEQ_DEFINED)
-				return (HashResult) std::_Hash_seq( ptr, count );
+				return HashResult{std::_Hash_seq( ptr, count )};
 			# elif COMPILER_VERSION >= 1911
-				return (HashResult) std::_Hash_bytes( ptr, count );
+				return HashResult{std::_Hash_bytes( ptr, count )};
 			# endif
 			#elif defined(COMPILER_GCC) //or defined(PLATFORM_ANDROID)
-				return (HashResult) std::_Hash_bytes( ptr, count, 0 );
+				return HashResult{std::_Hash_bytes( ptr, count, 0 )};
 			#elif defined(COMPILER_CLANG)
-				return (HashResult) std::__murmur2_or_cityhash<size_t>()( ptr, count );
+				return HashResult{std::__murmur2_or_cityhash<size_t>()( ptr, count )};
 			#else
 				#error "hash function not defined!"
 			#endif
@@ -111,7 +111,7 @@ namespace GXTypes
 
 		ND_ HashResult  operator () (const Key_t &x) const noexcept
 		{
-			return (HashResult) std::hash< Key_t >()( x );
+			return HashResult{std::hash< Key_t >()( x )};
 		}
 	};
 

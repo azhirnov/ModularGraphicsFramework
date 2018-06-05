@@ -99,7 +99,7 @@ namespace Base
 			}
 
 			if ( attachment.second->GetModuleID() == unit->GetModuleID() and must_be_unique )
-				RETURN_ERR( "module with ID '" << ToString( (GModID::type) unit->GetModuleID() ) << "' is alredy attached" );
+				RETURN_ERR( "module with ID '" << ToString( GModID::type(unit->GetModuleID()) ) << "' is alredy attached" );
 		}
 
 		_attachments.PushBack({ name, unit });

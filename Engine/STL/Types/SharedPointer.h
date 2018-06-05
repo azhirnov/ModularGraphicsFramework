@@ -66,7 +66,7 @@ namespace GXTypes
 		template <typename T2>
 		forceinline bool _CmpPtr (const T2 *p) const
 		{
-			return ((const void *) _ptr) == ((const void *) p);
+			return Cast<const void *>(_ptr) == Cast<const void *>(p);
 		}
 
 		template <typename T2, typename B2, typename S2>
@@ -232,14 +232,14 @@ namespace GXTypes
 		ND_ forceinline Ptr<T2> ToPtr () const
 		{
 			_CheckCast<T2>( _ptr );
-			return static_cast< T2 *>( RawPtr() );
+			return Cast< T2 *>( RawPtr() );
 		}
 
 		forceinline int GetRefCount () const
 		{
 			STATIC_ASSERT( sizeof(T) > 0 and sizeof(B) > 0 );
 
-			if ( _ptr != null )	return S::Count( static_cast<B *>(_ptr) );
+			if ( _ptr != null )	return S::Count( Cast<B *>(_ptr) );
 			else				{ WARNING(""); return -1; }
 		}
 

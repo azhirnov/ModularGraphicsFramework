@@ -145,7 +145,7 @@ namespace Platforms
 		ASSERT( not _bindings.IsExist( name ) );
 
 		if ( index == BindingIndex_Auto )
-			index = (uint) _bindings.Count();
+			index = uint(_bindings.Count());
 
 		_bindings.Add( name, Binding( BindingIndex(index), stride, rate ) );
 		return *this;

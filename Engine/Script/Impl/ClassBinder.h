@@ -369,13 +369,13 @@ namespace GXScript
 		if ( addRef != null )
 		{
 			AS_CALL_R( GetASEngine()->RegisterObjectBehaviour( _name.cstr(), asBEHAVE_ADDREF,		"void AddRef()",
-							asSMethodPtr<sizeof(void (T::*)())>::Convert((void (T::*)())(addRef)),	asCALL_THISCALL ) );
+							asSMethodPtr<sizeof(void (T::*)())>::Convert(Cast<void (T::*)()>(addRef)),	asCALL_THISCALL ) );
 		}
 
 		if ( releaseRef != null )
 		{
 			AS_CALL_R( GetASEngine()->RegisterObjectBehaviour( _name.cstr(), asBEHAVE_RELEASE,	"void Release()",
-							asSMethodPtr<sizeof(void (T::*)())>::Convert((void (T::*)())(releaseRef)),	asCALL_THISCALL ) );
+							asSMethodPtr<sizeof(void (T::*)())>::Convert(Cast<void (T::*)()>(releaseRef)),	asCALL_THISCALL ) );
 		}
 
 		if ( create != null )
@@ -468,7 +468,7 @@ namespace GXScript
 		ScriptTypeInfo<B>::Name( OUT signature );
 		signature << ' ' << name;
 
-		AS_CALL_R( GetASEngine()->RegisterObjectProperty( _name.cstr(), signature.cstr(), (int)OffsetOf( value ) ) );
+		AS_CALL_R( GetASEngine()->RegisterObjectProperty( _name.cstr(), signature.cstr(), int(OffsetOf( value )) ) );
 		return true;
 	}
 	
@@ -507,7 +507,7 @@ namespace GXScript
 		MemberFunction<Func>::GetDescriptor( OUT signature, name );
 
 		AS_CALL_R( GetASEngine()->RegisterObjectMethod( _name.cstr(), signature.cstr(),
-							asSMethodPtr< sizeof( void (T::*)() ) >::Convert( (void (T::*)()) (methodPtr) ),
+							asSMethodPtr< sizeof( void (T::*)() ) >::Convert( reinterpret_cast<void (T::*)()>(methodPtr) ),
 							asCALL_THISCALL ) );
 		return true;
 	}
@@ -680,7 +680,7 @@ namespace GXScript
 		using Result	= decltype( T().operator = (CInType()) );
 		using Func		= Result (Class_t::*) (const InType &);
 
-		_binder->AddMethod( static_cast< Func >( &T::operator = ), "opAssign" );
+		_binder->AddMethod( Cast< Func >( &T::operator = ), "opAssign" );
 		return *this;
 	}
 	
@@ -807,9 +807,9 @@ namespace GXScript
 	inline typename ClassBinder<T>::OperatorBinder&  ClassBinder<T>::OperatorBinder::Index ()
 	{
 		if_constexpr( TypeTraits::IsConst<OutType>() )
-			return Index( static_cast< OutType (T::*) (InTypes...) const >( &T::operator [] ) );
+			return Index( Cast< OutType (T::*) (InTypes...) const >( &T::operator [] ) );
 		else
-			return Index( static_cast< OutType (T::*) (InTypes...) >( &T::operator [] ) );
+			return Index( Cast< OutType (T::*) (InTypes...) >( &T::operator [] ) );
 	}
 	
 	template <typename T>
@@ -871,7 +871,7 @@ namespace GXScript
 	template <typename OutType>
 	inline typename ClassBinder<T>::OperatorBinder&  ClassBinder<T>::OperatorBinder::Convert ()
 	{
-		return Convert( static_cast< OutType (T::*) () const >() );
+		return Convert( Cast< OutType (T::*) () const >() );
 	}*/
 	
 	template <typename T>
@@ -899,7 +899,7 @@ namespace GXScript
 	template <typename OutType>
 	inline typename ClassBinder<T>::OperatorBinder&  ClassBinder<T>::OperatorBinder::Cast ()
 	{
-		return Cast( static_cast< OutType const& (T::*) () const >( &T::operator OutType ) );
+		return Cast( Cast< OutType const& (T::*) () const >( &T::operator OutType ) );
 	}
 	
 	template <typename T>

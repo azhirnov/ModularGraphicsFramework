@@ -228,7 +228,7 @@ namespace ResPack
 				if ( j == 0 ) {
 					layer_dim = layer.dimension;
 					CHECK_ERR( All( layer_dim > 0 ) );
-					CHECK_ERR( All( layer_dim == Max( dimension >> j, 1u ) ) );
+					CHECK_ERR( All( layer_dim == Max( dimension >> uint(j), 1u ) ) );
 				}
 				else {
 					CHECK_ERR( All( layer_dim == layer.dimension ) );
@@ -248,12 +248,12 @@ namespace ResPack
 		image.header.width		= dimension.x;
 		image.header.height		= dimension.y;
 		image.header.depth		= dimension.z;
-		image.header.layers		= num_layers;
+		image.header.layers		= uint(num_layers);
 		image.header.maxLevel	= uint(image.mipmaps.Count());
 		image.header.samples	= 1;
 		image.header.flags		= EFlags::None;
 		image.header.pixelFormat= format;
-		image.header.blockSize	= 0_b;	// TODO
+		image.header.blockSize	= Bytes<uint>(0);	// TODO
 
 		return true;
 	}

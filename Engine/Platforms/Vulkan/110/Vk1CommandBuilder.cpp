@@ -640,7 +640,7 @@ namespace PlatformVK
 		pass_info.renderArea.offset.y		= msg->area.bottom;
 		pass_info.renderArea.extent.width	= msg->area.Width();
 		pass_info.renderArea.extent.height	= msg->area.Height();
-		pass_info.clearValueCount			= (uint32_t) clear_values.Count();
+		pass_info.clearValueCount			= uint32_t(clear_values.Count());
 		pass_info.pClearValues				= clear_values.ptr();
 		pass_info.framebuffer				= fb_res.Get<0>();
 		
@@ -756,9 +756,9 @@ namespace PlatformVK
 		
 		vkCmdBindVertexBuffers( _cmdId,
 								msg->firstBinding,
-								(uint32_t) buffers.Count(),
+								uint32_t(buffers.Count()),
 								buffers.ptr(),
-								PointerCast< VkDeviceSize const >( msg->offsets.ptr() ) );
+								Cast< VkDeviceSize const *>( msg->offsets.ptr() ) );
 		return true;
 	}
 	
@@ -780,7 +780,7 @@ namespace PlatformVK
 
 		vkCmdBindIndexBuffer( _cmdId,
 							  buf_res.Get<0>(),
-							  (VkDeviceSize) msg->offset,
+							  VkDeviceSize( msg->offset ),
 							  Vk1Enum( msg->indexType ) );
 		return true;
 	}
@@ -845,9 +845,9 @@ namespace PlatformVK
 
 		vkCmdDrawIndirect(	_cmdId,
 							buf_res.Get<0>(),
-							(VkDeviceSize) msg->offset,
+							VkDeviceSize( msg->offset ),
 							msg->drawCount,
-							(uint32_t) msg->stride );
+							uint32_t( msg->stride ) );
 
 		_CheckGraphicsWritableResources();
 		return true;
@@ -872,9 +872,9 @@ namespace PlatformVK
 
 		vkCmdDrawIndexedIndirect( _cmdId,
 								  buf_res.Get<0>(),
-								  (VkDeviceSize) msg->offset,
+								  VkDeviceSize( msg->offset ),
 								  msg->drawCount,
-								  (uint32_t) msg->stride );
+								  uint32_t( msg->stride ) );
 
 		_CheckGraphicsWritableResources();
 		return true;
@@ -994,7 +994,7 @@ namespace PlatformVK
 								 bindPoint,
 								 des_res.Get<0>(),
 								 firstIndex,
-								 CountOf(descr_set), descr_set,
+								 uint32_t(CountOf( descr_set )), descr_set,
 								 0, null );
 		return true;
 	}
@@ -1038,7 +1038,7 @@ namespace PlatformVK
 		vkCmdCopyBuffer( _cmdId,
 						 src_res.Get<0>(),
 						 dst_res.Get<0>(),
-						 (uint32_t) regions.Count(),
+						 uint32_t( regions.Count() ),
 						 regions.ptr() );
 		return true;
 	}
@@ -1103,7 +1103,7 @@ namespace PlatformVK
 						dst_res.Get<0>().id,
 						Vk1Enum( msg->dstLayout ),
 						uint32_t(regions.Count()),
-						(VkImageCopy const*) regions.ptr() );
+						Cast<VkImageCopy const*>(regions.ptr()) );
 		return true;
 	}
 	
@@ -1133,7 +1133,7 @@ namespace PlatformVK
 			const int3			img_offset	= int3(src.imageOffset);
 			const uint3			img_size	= Max( src.imageSize, 1u );
 
-			dst.bufferOffset					= (VkDeviceSize) src.bufferOffset;
+			dst.bufferOffset					= VkDeviceSize( src.bufferOffset );
 			dst.bufferRowLength					= src.bufferRowLength;
 			dst.bufferImageHeight				= src.bufferImageHeight;
 
@@ -1154,7 +1154,7 @@ namespace PlatformVK
 								src_res.Get<0>(),
 								dst_res.Get<0>().id,
 								Vk1Enum( msg->dstLayout ),
-								(uint32_t) regions.Count(),
+								uint32_t(regions.Count()),
 								regions.ptr() );
 		return true;
 	}
@@ -1183,7 +1183,7 @@ namespace PlatformVK
 			auto const&			src = msg->regions[i];
 			VkBufferImageCopy	dst;
 
-			dst.bufferOffset					= (VkDeviceSize) src.bufferOffset;
+			dst.bufferOffset					= VkDeviceSize( src.bufferOffset );
 			dst.bufferRowLength					= src.bufferRowLength;
 			dst.bufferImageHeight				= src.bufferImageHeight;
 
@@ -1259,7 +1259,7 @@ namespace PlatformVK
 						Vk1Enum( msg->srcLayout ),
 						dst_res.Get<0>().id,
 						Vk1Enum( msg->dstLayout ),
-						(uint32_t) regions.Count(),
+						uint32_t(regions.Count()),
 						regions.ptr(),
 						msg->linearFilter ? VK_FILTER_LINEAR: VK_FILTER_NEAREST );	// TODO
 		return true;
@@ -1283,8 +1283,8 @@ namespace PlatformVK
 
 		vkCmdUpdateBuffer( _cmdId,
 						   buf_res.Get<0>(),
-						   (VkDeviceSize) msg->dstOffset,
-						   (VkDeviceSize) msg->data.Size(),
+						   VkDeviceSize( msg->dstOffset ),
+						   VkDeviceSize( msg->data.Size() ),
 						   msg->data.ptr() );
 		return true;
 	}
@@ -1354,9 +1354,9 @@ namespace PlatformVK
 		}
 
 		vkCmdClearAttachments( _cmdId,
-							   (uint32_t) attachments.Count(),
+							   uint32_t( attachments.Count() ),
 							   attachments.ptr(),
-							   (uint32_t) clear_rects.Count(),
+							   uint32_t( clear_rects.Count() ),
 							   clear_rects.ptr() );
 		return true;
 	}

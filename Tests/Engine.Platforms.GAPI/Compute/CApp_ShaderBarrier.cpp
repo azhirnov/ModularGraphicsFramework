@@ -243,8 +243,8 @@ bool CApp::_Test_ShaderBarrier ()
 	for (uint x = 0; x < img_dim.x; ++x)
 	{
 		const usize	i  = x + usize(req_dst_layout->result->rowPitch * y) / sizeof(float4);
-		const float	vx = (float) MaxMag( int(x % local_size.x) - int(local_size.x-1), int(x % local_size.x) );
-		const float	vy = (float) MaxMag( int(y % local_size.y) - int(local_size.y-1), int(y % local_size.y) );
+		const float	vx = float(MaxMag( int(x % local_size.x) - int(local_size.x-1), int(x % local_size.x) ));
+		const float	vy = float(MaxMag( int(y % local_size.y) - int(local_size.y-1), int(y % local_size.y) ));
 
 		CHECK_ERR( Equals( dst_data[i].x, vx ) );
 		CHECK_ERR( Equals( dst_data[i].y, vy ) );

@@ -48,7 +48,7 @@ namespace OS
 	{
 		dir.Reserve( MAX_PATH+1 );
 
-		if ( ::GetCurrentDirectoryA( (DWORD) dir.Capacity(), dir.ptr() ) != 0 )
+		if ( ::GetCurrentDirectoryA( DWORD(dir.Capacity()), dir.ptr() ) != 0 )
 		{
 			dir.CalculateLength();
 			return true;

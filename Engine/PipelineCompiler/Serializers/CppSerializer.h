@@ -25,14 +25,17 @@ namespace PipelineCompiler
 			String		fieldInitialized;
 		};
 
-		using StructTypes	= Stack< StructInfo >;
+		using StructTypes_t		= Stack< StructInfo >;
+		using NamespaceStack_t	= Stack< String >;
 
 
 	// variables
 	private:
-		mutable StructTypes		_structStack;
-		mutable int				_fileCounter	= 0;
-		mutable int				_scopeCounter	= 0;
+		mutable StructTypes_t		_structStack;
+		mutable NamespaceStack_t	_nsStack;
+		mutable String				_podTypes;
+		mutable int					_fileCounter	= 0;
+		mutable int					_scopeCounter	= 0;
 
 
 	// methods
@@ -58,14 +61,16 @@ namespace PipelineCompiler
 		String	BeginScope () const override;
 		String	EndScope () const override;
 		
+		String  BeginNamespace (StringCRef name) const override;
+		String  EndNamespace () const override;
+
 		String	DeclVariable (StringCRef typeName, StringCRef name, StringCRef value) const override;
 		String  AssignVariable (StringCRef name, StringCRef value) const override;
 		String	DeclFunction (StringCRef result, StringCRef name, ArrayCRef<Pair<StringCRef, StringCRef>> args,
 							  bool isForwardDeclaration) const override;
 		String  CallFunction (StringCRef name, ArrayCRef<StringCRef> args) const override;
-		String  DeclNamespace (StringCRef name) const override; 
 
-		String	BeginStruct (StringCRef typeName, uint sizeOf) const override;
+		String	BeginStruct (StringCRef typeName, uint sizeOf, bool isPOD) const override;
 		String	StructField (StringCRef name, StringCRef typeName, uint arraySize, uint offset, uint align, uint sizeOf) const override;
 		String	StructCtorForInitializerList () const override;
 		String	EndStruct () const override;

@@ -326,8 +326,7 @@ namespace Pipelines
 			includes << ser->Include( FileAddress::BuildPath( "", "shared_types", ser->GetHeaderFileExt() ) );
 
 		includes << '\n';
-		includes << ser->DeclNamespace( cfg.nameSpace );
-		includes << ser->BeginScope();
+		includes << ser->BeginNamespace( cfg.nameSpace );
 
 		cfg.includings.Clear();
 		cfg.includings.PushFront( FileAddress::GetNameAndExt( inc_name ) );
@@ -376,7 +375,7 @@ namespace Pipelines
 							{{"PipelineTemplateDescriptor&", "descr"}}, true ) << '\n';
 		}
 
-		includes << ser->EndScope();	// namespace
+		includes << ser->EndNamespace();
 		includes << ser->EndFile( true );
 
 
@@ -481,22 +480,22 @@ namespace Pipelines
 		{
 			auto&	textures	= _bindings[ BindableTypes::IndexOf<TextureUniform> ];
 			FOR( i, textures ) {
-				textures[i].second.template Get<TextureUniform>().location.index = i;
+				textures[i].second.template Get<TextureUniform>().location.index = uint(i);
 			}
 
 			auto&	images		= _bindings[ BindableTypes::IndexOf<ImageUniform> ];
 			FOR( i, images ) {
-				images[i].second.template Get<ImageUniform>().location.index = i;
+				images[i].second.template Get<ImageUniform>().location.index = uint(i);
 			}
 
 			auto&	uniform_buffers	= _bindings[ BindableTypes::IndexOf<UniformBuffer> ];
 			FOR( i, uniform_buffers ) {
-				uniform_buffers[i].second.template Get<UniformBuffer>().location.index = i;
+				uniform_buffers[i].second.template Get<UniformBuffer>().location.index = uint(i);
 			}
 
 			auto&	storage_buffers = _bindings[ BindableTypes::IndexOf<StorageBuffer> ];
 			FOR( i, storage_buffers ) {
-				storage_buffers[i].second.template Get<StorageBuffer>().location.index = i;
+				storage_buffers[i].second.template Get<StorageBuffer>().location.index = uint(i);
 			}
 		}
 
@@ -564,12 +563,11 @@ namespace Pipelines
 		str << ser->Comment( "This is generated file" );
 		//str << ser->Comment( "Created at: "_str << ToString( Date().Now() ) ) << '\n';
 		str << ser->BeginFile( true ) << '\n';
-		str << ser->DeclNamespace( nameSpace );
-		str << ser->BeginScope();
+		str << ser->BeginNamespace( nameSpace );
 
 		CHECK_ERR( BasePipeline::_SerializeStructs( _structTypes, ser, OUT str ) );
 		
-		str << ser->EndScope();	// namespace
+		str << ser->EndNamespace();
 		str << ser->EndFile( true );
 		return true;
 	}

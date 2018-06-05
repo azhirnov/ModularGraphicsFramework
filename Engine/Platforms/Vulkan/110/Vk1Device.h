@@ -184,7 +184,7 @@ namespace PlatformVK
 		ModulePtr				GetDefaultRenderPass ()		const	{ return _renderPass; }
 		ModulePtr				GetCurrentFramebuffer ()	const	{ return _framebuffers[ _currentImageIndex ]; }
 		uint					GetImageIndex ()			const	{ return _currentImageIndex; }
-		uint					GetSwapchainLength ()		const	{ return (uint)_framebuffers.Count(); }
+		uint					GetSwapchainLength ()		const	{ return uint(_framebuffers.Count()); }
 
 		uint2 const&			GetSurfaceSize ()			const	{ return _surfaceSize; }
 

@@ -18,7 +18,7 @@ namespace gl
 	// get function address from driver //
 #	define OPENGL4_GET_PROC( _p_, _n_, _d_ ) \
 		++counter; \
-		if ( (_n_ = (_p_)GL4_GetProcAddress( TOSTRING( _n_ ) )) == null ) \
+		if ( (_n_ = reinterpret_cast<_p_>(GL4_GetProcAddress( TOSTRING( _n_ ) ))) == null ) \
 		{ \
 			_n_ = _d_; \
 			missing++; \

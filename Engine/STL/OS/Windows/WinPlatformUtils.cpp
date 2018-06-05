@@ -173,7 +173,7 @@ namespace OS
 	bool PlatformUtils::_CheckError (StringCRef file, int line)
 	{
 		char	buf[128] = {};
-		uint	size	 = (uint)CountOf(buf);
+		uint	size	 = uint(CountOf(buf));
 
 		if ( _GetWinApiError( buf, size ) )
 			return true;
@@ -205,7 +205,7 @@ namespace OS
 								 null,
 								 CLSCTX_INPROC_SERVER,
 								 IID_IShellLink,
-								 (LPVOID*)&psl );
+								 Cast<LPVOID*>(&psl) );
 
 		if ( FAILED(hres) )
 			return false;
@@ -215,7 +215,7 @@ namespace OS
 		
 		IPersistFile* ppf;
  
-		hres = psl->QueryInterface( IID_IPersistFile, (LPVOID*)&ppf );
+		hres = psl->QueryInterface( IID_IPersistFile, Cast<LPVOID*>(&ppf) );
  
 		if ( SUCCEEDED(hres) )
 		{
@@ -254,7 +254,7 @@ namespace OS
 									null,
 									dw,
 									MAKELANGID( LANG_ENGLISH, SUBLANG_DEFAULT ),
-									(LPTSTR) buf,
+									LPTSTR(buf),
 									bufSize,
 									null );
 

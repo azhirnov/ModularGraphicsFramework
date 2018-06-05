@@ -529,7 +529,7 @@ namespace PipelineCompiler
 			helper.RecursiveProcess( INOUT buf.fields, INOUT offset, INOUT align, buf.packing );
 
 			buf.size			= AlignToLarge( offset, vec4_align );
-			buf.bindingIndex	= i;
+			buf.bindingIndex	= uint(i);
 		}
 		
 		FOR( i, _storageBuffers )
@@ -541,7 +541,7 @@ namespace PipelineCompiler
 			helper.RecursiveProcess( INOUT buf.fields, INOUT offset, INOUT align, buf.packing );
 
 			buf.size			= offset;
-			buf.bindingIndex	= i;
+			buf.bindingIndex	= uint(i);
 		}
 		return true;
 	}
@@ -648,7 +648,7 @@ namespace PipelineCompiler
 			Sort( _textures, TexSorting() );
 
 			FOR( i, _textures ) {
-				_textures[i].unit = i;
+				_textures[i].unit = uint(i);
 			}
 		}
 
@@ -662,7 +662,7 @@ namespace PipelineCompiler
 			Sort( _images, ImgSorting() );
 
 			FOR( i, _images ) {
-				_images[i].unit = i;
+				_images[i].unit = uint(i);
 			}
 		}
 		return true;

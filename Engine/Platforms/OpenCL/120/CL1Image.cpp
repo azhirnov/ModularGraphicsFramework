@@ -388,8 +388,8 @@ namespace PlatformCL
 		cl_image_format		img_format	= {};
 		cl_image_desc		img_desc	= {};
 
-		img_format.image_channel_order		= (cl_channel_order) order;
-		img_format.image_channel_data_type	= (cl_channel_type) data_type;
+		img_format.image_channel_order		= cl_channel_order( order );
+		img_format.image_channel_data_type	= cl_channel_type( data_type );
 
 		img_desc.image_type			= CL1Enum( _descr.imageType );
 		img_desc.image_width		= size.x;

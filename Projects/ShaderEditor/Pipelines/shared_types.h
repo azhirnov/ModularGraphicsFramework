@@ -4,7 +4,7 @@
 namespace Pipelines
 {
 // Packing: Std140
-struct ShadertoyUB final : CompileTime::PODStruct
+struct ShadertoyUB final
 {
 	float4  iResolution;    // offset: 0, align: 16
 	float  iTime;    // offset: 16, align: 4
@@ -43,4 +43,9 @@ struct ShadertoyUB final : CompileTime::PODStruct
 	}
 };
 
-};
+}	// Pipelines
+
+namespace GX_STL::CompileTime::_ctime_hidden_ {
+	template <> struct _IsPOD< Pipelines::ShadertoyUB > { static const bool value = true; };
+}
+

@@ -18,7 +18,7 @@ namespace cl
 	// get function address from driver //
 #	define OPENCL1_GET_PROC( _p_, _n_, _d_ ) \
 		++counter; \
-		if ( (_n_ = (_p_)CL1_GetProcAddress( TOSTRING( _n_ ) )) == null ) \
+		if ( (_n_ = reinterpret_cast<_p_>(CL1_GetProcAddress( TOSTRING( _n_ ) ))) == null ) \
 		{ \
 			_n_ = _d_; \
 			missing++; \

@@ -196,7 +196,7 @@ namespace GXScript
 		template <typename T>
 		static void CopyConstructor (AngelScript::asIScriptGeneric *gen)
 		{
-			T const*	src = static_cast<const T *>( gen->GetArgObject(0) );
+			T const*	src = Cast<const T *>( gen->GetArgObject(0) );
 			void *		dst = gen->GetObject();
 			new( dst ) T( *src );
 		}
@@ -205,15 +205,15 @@ namespace GXScript
 		template <typename T>
 		static void Destructor (AngelScript::asIScriptGeneric *gen)
 		{
-			((T *) gen->GetObject() )->~T();
+			static_cast<T *>(gen->GetObject())->~T();
 		}
 
 
 		template <typename T>
 		static void CopyAssign (AngelScript::asIScriptGeneric *gen)
 		{
-			T const*	src = static_cast<const T *>( gen->GetArgObject(0) );
-			T*			dst = static_cast<T *>( gen->GetObject() );
+			T const*	src = Cast<const T *>( gen->GetArgObject(0) );
+			T*			dst = Cast<T *>( gen->GetObject() );
 			//*dst = *src;
 
 			dst->~T();
@@ -432,7 +432,7 @@ namespace GXScript
 			template <> \
 			struct ContextSetterGetter < _type_ > \
 			{ \
-				static _type_ Get (AngelScript::asIScriptContext *ctx)									{ return (_type_) ctx->_get_(); } \
+				static _type_ Get (AngelScript::asIScriptContext *ctx)									{ return _type_(ctx->_get_()); } \
 				static int    Set (AngelScript::asIScriptContext *ctx, int arg, const _type_ &value)	{ return ctx->_set_( arg, value ); } \
 			}
 
@@ -450,8 +450,8 @@ namespace GXScript
 		template <typename T>
 		struct ContextSetterGetter < T * >
 		{
-			static T *  Get (AngelScript::asIScriptContext *ctx)									{ return (T *) ctx->GetReturnAddress(); }
-			static int  Set (AngelScript::asIScriptContext *ctx, int arg, const T * const & ptr)	{ return ctx->SetArgAddress( arg, (void *) ptr ); }
+			static T *  Get (AngelScript::asIScriptContext *ctx)									{ return Cast<T *>(ctx->GetReturnAddress()); }
+			static int  Set (AngelScript::asIScriptContext *ctx, int arg, const T * const & ptr)	{ return ctx->SetArgAddress( arg, Cast<void *>(ptr) ); }
 		};
 
 #		undef DECL_CONTEXT_RESULT

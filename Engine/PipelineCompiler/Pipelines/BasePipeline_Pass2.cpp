@@ -227,8 +227,8 @@ namespace PipelineCompiler
 				const auto&		fl			= st.second.fields[j];
 				const String	type_name	= EShaderVariable::IsStruct( fl.type ) ? StringCRef(fl.typeName) : ToStringGLSL( fl.type );
 				const uint		array_size	= fl.arraySize;
-				const uint		align		= (usize) fl.align;
-				const uint		offset		= (usize) fl.offset;
+				const uint		align		= uint(fl.align);
+				const uint		offset		= uint(fl.offset);
 
 				glslSource	<< "\t" << type_name << "  " << fl.name
 							<< ( array_size > 1 ? ("["_str << array_size << "]") : (array_size == 0 ? "[]" : "") )
@@ -301,7 +301,7 @@ namespace PipelineCompiler
 				continue;
 			
 			str << ser->Comment( "Packing: "_str << EVariablePacking::ToString(st.second.packing) )
-				<< ser->BeginStruct( st.second.typeName, (uint)st.second.stride );
+				<< ser->BeginStruct( st.second.typeName, uint(st.second.stride), true );
 
 			// staticaly sized UB or SSB
 			FOR( j, st.second.fields )
@@ -309,8 +309,8 @@ namespace PipelineCompiler
 				const auto&		fl			= st.second.fields[j];
 				const String	type_name	= EShaderVariable::IsStruct( fl.type ) ? fl.typeName : ser->ToString( fl.type );
 				const uint		array_size	= fl.arraySize;
-				const uint		align		= (usize) fl.align;
-				const uint		offset		= (usize) fl.offset;
+				const uint		align		= uint(fl.align);
+				const uint		offset		= uint(fl.offset);
 
 				if ( array_size == 0 ) {
 					ASSERT( j == st.second.fields.LastIndex() );
@@ -328,7 +328,7 @@ namespace PipelineCompiler
 
 				str << "\n\t";
 				str << ser->Comment( "Element  "_str << arr.name << "[];   offset: " << uint(arr.offset) << ", align: " << uint(arr.align) );
-				str << ser->BeginStruct( "Element", uint(arr.stride) );
+				str << ser->BeginStruct( "Element", uint(arr.stride), true );
 				str << ser->StructField( arr.name, type_name, 1, 0, uint(arr.align), uint(arr.stride) );
 				str << ser->EndStruct();
 			}

@@ -1167,12 +1167,22 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	DeclNamespace
+	BeginNamespace
 =================================================
 */
-	String  AngelScriptSerializer::DeclNamespace (StringCRef name) const
+	String  AngelScriptSerializer::BeginNamespace (StringCRef name) const
 	{
 		return "namespace "_str << name << "\n";
+	}
+	
+/*
+=================================================
+	EndNamespace
+=================================================
+*/
+	String  AngelScriptSerializer::EndNamespace () const
+	{
+		return "}\n";
 	}
 
 /*
@@ -1226,7 +1236,7 @@ namespace PipelineCompiler
 	BeginStruct
 =================================================
 */
-	String	AngelScriptSerializer::BeginStruct (StringCRef typeName, uint sizeOf) const
+	String	AngelScriptSerializer::BeginStruct (StringCRef typeName, uint sizeOf, bool) const
 	{
 		String	indent;		indent.Resize( _structStack.Count()-1, '\t' );
 

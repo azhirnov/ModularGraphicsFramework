@@ -141,7 +141,7 @@ namespace GXTypes
 		{
 			if ( index == Index )
 			{
-				((T *) ptr)->~T();
+				static_cast<T *>( ptr )->~T();
 			}
 		}
 	};

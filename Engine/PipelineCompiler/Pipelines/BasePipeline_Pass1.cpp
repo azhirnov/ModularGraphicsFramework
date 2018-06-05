@@ -794,7 +794,7 @@ namespace PipelineCompiler
 			changeDescriptors = true;
 
 			FOR( i, _descriptors ) {
-				_descriptors[i].second = i;
+				_descriptors[i].second = uint(i);
 			}
 		}
 

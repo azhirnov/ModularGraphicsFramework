@@ -260,7 +260,7 @@ namespace PipelineCompiler
 	template <> inline uint		DeserializeConstant::_Get (const glslang::TConstUnion& un)	{ ASSERT( un.getType() == glslang::TBasicType::EbtUint );    return un.getUConst(); }
 	template <> inline ilong	DeserializeConstant::_Get (const glslang::TConstUnion& un)	{ ASSERT( un.getType() == glslang::TBasicType::EbtInt64 );   return un.getI64Const(); }
 	template <> inline ulong	DeserializeConstant::_Get (const glslang::TConstUnion& un)	{ ASSERT( un.getType() == glslang::TBasicType::EbtUint64 );  return un.getU64Const(); }
-	template <> inline float	DeserializeConstant::_Get (const glslang::TConstUnion& un)	{ ASSERT( un.getType() == glslang::TBasicType::EbtDouble );  return (float)un.getDConst(); }
+	template <> inline float	DeserializeConstant::_Get (const glslang::TConstUnion& un)	{ ASSERT( un.getType() == glslang::TBasicType::EbtDouble );  return float(un.getDConst()); }
 	template <> inline double	DeserializeConstant::_Get (const glslang::TConstUnion& un)	{ ASSERT( un.getType() == glslang::TBasicType::EbtDouble );  return un.getDConst(); }
 
 

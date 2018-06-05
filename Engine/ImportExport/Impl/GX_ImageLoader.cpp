@@ -381,7 +381,7 @@ namespace ImportExport
 			copy->srcBuffer		= buffer;
 			copy->dstLayout		= EImageLayout::TransferDstOptimal;
 			copy->regions.PushBack({});
-			copy->regions.Back().bufferRowLength		 = uint(level.rowPitch.ToBits() / bpp);
+			copy->regions.Back().bufferRowLength		 = uint(level.rowPitch.ToBits()) / uint(bpp);
 			copy->regions.Back().bufferImageHeight		 = uint(level.slicePitch / level.rowPitch);
 			copy->regions.Back().imageSize				 = level.dimension;
 			copy->regions.Back().imageLayers.aspectMask	|= EImageAspect::Color;

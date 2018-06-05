@@ -4,7 +4,7 @@
 namespace Pipelines
 {
 // Packing: Std140
-struct DynamicBuffer_Struct final : CompileTime::PODStruct
+struct DynamicBuffer_Struct final
 {
 	int2  i2;    // offset: 0, align: 8
 	Bool32  b1;    // offset: 8, align: 4
@@ -30,7 +30,7 @@ struct DynamicBuffer_Struct final : CompileTime::PODStruct
 };
 
 // Packing: Std140
-struct BufferAlign_Struct final : CompileTime::PODStruct
+struct BufferAlign_Struct final
 {
 	int4  i4;    // offset: 0, align: 16
 	float2  f2;    // offset: 16, align: 8
@@ -68,7 +68,7 @@ struct BufferAlign_Struct final : CompileTime::PODStruct
 };
 
 // Packing: Std140
-struct BufferAlign_SSBO final : CompileTime::PODStruct
+struct BufferAlign_SSBO final
 {
 	BufferAlign_Struct  src;    // offset: 0, align: 16
 	BufferAlign_Struct  dst1;    // offset: 96, align: 16
@@ -84,14 +84,14 @@ struct BufferAlign_SSBO final : CompileTime::PODStruct
 };
 
 // Packing: Std140
-struct DynamicBuffer_SSBO final : CompileTime::PODStruct
+struct DynamicBuffer_SSBO final
 {
 	float2  f2;    // offset: 0, align: 8
 	float2  _padding0;    // offset: 8, align: 8
 	int4  i4;    // offset: 16, align: 16
 
 	// Element  arr[];   offset: 32, align: 16
-	struct Element final : CompileTime::PODStruct
+	struct Element final
 	{
 		DynamicBuffer_Struct  arr;    // offset: 0, align: 16
 
@@ -111,4 +111,13 @@ struct DynamicBuffer_SSBO final : CompileTime::PODStruct
 	}
 };
 
-};
+}	// Pipelines
+
+namespace GX_STL::CompileTime::_ctime_hidden_ {
+	template <> struct _IsPOD< Pipelines::DynamicBuffer_Struct > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::BufferAlign_Struct > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::BufferAlign_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::DynamicBuffer_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::DynamicBuffer_SSBO::Element > { static const bool value = true; };
+}
+

@@ -471,7 +471,7 @@ namespace PlatformVK
 		
 		fb_info.sType			= VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		fb_info.renderPass		= render_pass;
-		fb_info.attachmentCount	= (uint32_t) img_views.Count();
+		fb_info.attachmentCount	= uint32_t(img_views.Count());
 		fb_info.pAttachments	= img_views.RawPtr();
 		fb_info.width			= _descr.size.x;
 		fb_info.height			= _descr.size.y;

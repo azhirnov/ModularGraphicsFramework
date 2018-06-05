@@ -59,15 +59,15 @@ namespace {
 	
 	//---------------------------------
 	
-	static Float Hash11 (IN Float a);
-	static Float2 Hash22 (IN Float2 p);
-	static Float Hash21 (IN Float2 p1);
-	static Float2 Hash12 (IN Float f);
-	static void mainImage (OUT Float4 &fragColor, IN Float2 fragCoord);
-	static Float3 VoronoiFactal (IN Float2 coord, IN Float time);
 	static Float4 voronoi (IN Float2 x);
 	static Float3 Rainbow (IN Float color, IN Float dist);
 	static Float3 HSVtoRGB (IN Float3 hsv);
+	static Float3 VoronoiFactal (IN Float2 coord, IN Float time);
+	static void mainImage (OUT Float4 &fragColor, IN Float2 fragCoord);
+	static Float Hash21 (IN Float2 p1);
+	static Float2 Hash12 (IN Float f);
+	static Float2 Hash22 (IN Float2 p);
+	static Float Hash11 (IN Float a);
 	
 	//---------------------------------
 	
@@ -492,13 +492,13 @@ layout(binding=0) layout(std140) uniform ShadertoyUB {
 layout (local_size_x=32, local_size_y=32, local_size_z=1) in;
 
 float Hash21 (in vec2 p1);
-vec2 Hash22 (in vec2 p);
 vec2 Hash12 (in float f);
+vec2 Hash22 (in vec2 p);
 float Hash11 (in float a);
 vec4 voronoi (in vec2 x);
+void mainImage (out vec4 fragColor, in vec2 fragCoord);
 vec3 HSVtoRGB (in vec3 hsv);
 vec3 Rainbow (in float color, in float dist);
-void mainImage (out vec4 fragColor, in vec2 fragCoord);
 vec3 VoronoiFactal (in vec2 coord, in float time);
 
 //---------------------------------
@@ -921,4 +921,4 @@ void mainImage (out vec4 fragColor, in vec2 fragCoord)
 #endif
 
 };
-};
+}	// Pipelines

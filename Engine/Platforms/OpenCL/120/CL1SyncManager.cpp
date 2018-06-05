@@ -303,7 +303,7 @@ namespace PlatformCL
 		}
 		
 		if ( not events.Empty() ) {
-			CL_CALL( clWaitForEvents( events.Count(), events.RawPtr() ) );
+			CL_CALL( clWaitForEvents( cl_uint(events.Count()), events.RawPtr() ) );
 		}
 		return true;
 	}
@@ -526,7 +526,7 @@ namespace PlatformCL
 		}
 
 		if ( not ids.Empty() ) {
-			CL_CALL( clEnqueueMarkerWithWaitList( GetCommandQueue(), ids.Count(), ids.RawPtr(), null ) );
+			CL_CALL( clEnqueueMarkerWithWaitList( GetCommandQueue(), cl_uint(ids.Count()), ids.RawPtr(), null ) );
 		}
 		return true;
 	}

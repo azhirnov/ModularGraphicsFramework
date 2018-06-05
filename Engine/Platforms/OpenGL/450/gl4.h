@@ -6,13 +6,11 @@
 
 #ifdef GRAPHICS_API_OPENGL
 
+#include <stddef.h>
+
 namespace gl
 {
 #	define GL4_APIENTRY		CALLBACK
-
-	typedef GX_STL::GXTypes::isize		ptrdiff_t;
-	typedef GX_STL::GXTypes::ilong		int64_t;
-	typedef GX_STL::GXTypes::ulong		uint64_t;
 
 	typedef unsigned	int		GLenum;
 	typedef unsigned	char	GLboolean;
@@ -31,14 +29,14 @@ namespace gl
 	typedef void				GLvoid;
 
 	typedef char				GLchar;
-	typedef ptrdiff_t			GLintptr;
-	typedef ptrdiff_t			GLsizeiptr;
+	typedef ::ptrdiff_t			GLintptr;
+	typedef ::ptrdiff_t			GLsizeiptr;
 	typedef unsigned short		GLhalf;
 
-	typedef int64_t				GLint64EXT;
-	typedef uint64_t			GLuint64EXT;
-	typedef int64_t				GLint64;
-	typedef uint64_t			GLuint64;
+	typedef ::int64_t			GLint64EXT;
+	typedef ::uint64_t			GLuint64EXT;
+	typedef ::int64_t			GLint64;
+	typedef ::uint64_t			GLuint64;
 	typedef struct __GLsync *	GLsync;
 
 	struct _cl_context;

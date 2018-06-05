@@ -163,8 +163,8 @@ namespace ResPack
 		}
 
 		mipmap.dimension	= uint3(width, height, depth);
-		mipmap.rowPitch		= BytesU(width * bpp);
-		mipmap.slicePitch	= BytesU(width * height * bpp);
+		mipmap.rowPitch		= Bytes<uint>(width * bpp);
+		mipmap.slicePitch	= Bytes<uint>(width * height * bpp);
 		mipmap.dataPtr		= pixels.RawPtr();
 		mipmap.pixelFormat	= format;
 

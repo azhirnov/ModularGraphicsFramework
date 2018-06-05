@@ -31,8 +31,8 @@ namespace {
 	
 	//---------------------------------
 	
-	static UInt Hash (IN UInt value);
 	static void Loop (IN UInt value1, OUT UInt &result);
+	static UInt Hash (IN UInt value);
 	
 	//---------------------------------
 	
@@ -784,4 +784,4 @@ void main (uint3 dx_DispatchThreadID : SV_DispatchThreadID, uint3 dx_GroupThread
 #endif
 
 };
-};
+}	// Pipelines

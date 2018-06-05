@@ -165,15 +165,15 @@ namespace {
 	
 	//---------------------------------
 	
-	static HitTest minT (IN HitTest a1, IN HitTest b1, IN HitTest c);
-	static HitTest minT (IN HitTest a2, IN HitTest b2, IN HitTest c1, IN HitTest d, IN HitTest e);
 	static Float4 traceScene (IN Camera cam, IN Float2 seed, IN Float lastB);
-	static HitTest intersectSphere (IN Ray r1, IN Sphere s);
-	static Float nrand (IN Float2 n);
-	static HitTest intersectBox (IN Ray r, IN Box b3);
-	static HitTest minT (IN HitTest a, IN HitTest b);
 	static Camera setupCam (IN Float3 pos, IN Float3 target, IN Float fov, IN Float2 uv);
 	static void mainImage (OUT Float4 &fragColor, IN Float2 fragCoord);
+	static HitTest minT (IN HitTest a1, IN HitTest b1, IN HitTest c);
+	static HitTest minT (IN HitTest a, IN HitTest b);
+	static HitTest minT (IN HitTest a2, IN HitTest b2, IN HitTest c1, IN HitTest d, IN HitTest e);
+	static HitTest intersectBox (IN Ray r, IN Box b3);
+	static HitTest intersectSphere (IN Ray r1, IN Sphere s);
+	static Float nrand (IN Float2 n);
 	
 	//---------------------------------
 	
@@ -1040,15 +1040,15 @@ float divergence;
 
 //---------------------------------
 
-HitTest minT (in HitTest a2, in HitTest b2, in HitTest c1, in HitTest d, in HitTest e);
-void mainImage (out vec4 fragColor, in vec2 fragCoord);
 HitTest intersectBox (in Ray r, in Box b3);
-HitTest intersectSphere (in Ray r1, in Sphere s);
 float nrand (in vec2 n);
-HitTest minT (in HitTest a, in HitTest b);
-HitTest minT (in HitTest a1, in HitTest b1, in HitTest c);
+HitTest intersectSphere (in Ray r1, in Sphere s);
 vec4 traceScene (in Camera cam, in vec2 seed, in float lastB);
 Camera setupCam (in vec3 pos, in vec3 target, in float fov, in vec2 uv);
+void mainImage (out vec4 fragColor, in vec2 fragCoord);
+HitTest minT (in HitTest a1, in HitTest b1, in HitTest c);
+HitTest minT (in HitTest a, in HitTest b);
+HitTest minT (in HitTest a2, in HitTest b2, in HitTest c1, in HitTest d, in HitTest e);
 
 //---------------------------------
 
@@ -1886,4 +1886,4 @@ void mainImage (out vec4 fragColor, in vec2 fragCoord)
 #endif
 
 };
-};
+}	// Pipelines

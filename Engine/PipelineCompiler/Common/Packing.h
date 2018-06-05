@@ -143,7 +143,7 @@ namespace PipelineCompiler
 		virtual bool ProcessStruct (INOUT BytesU &offset, INOUT Variable &var, EVariablePacking::type packing)
 		{
 			ASSERT( EShaderVariable::IsStruct( var.type ) );
-			
+
 			// process fields to get structure size and align
 			BytesU	max_align	= 0_b;
 			BytesU	size		= 0_b;
@@ -189,7 +189,10 @@ namespace PipelineCompiler
 
 			ASSERT( max_align <= var.align );
 			ASSERT( offset - var.offset == size );
-			ASSERT( (offset + size * (var.arraySize - 1)) == (var.offset + var.stride * var.arraySize) );
+
+			if ( var.arraySize > 0 ) {
+				ASSERT( (offset + size * (var.arraySize - 1)) == (var.offset + var.stride * var.arraySize) );
+			}
 
 			offset		= var.offset + var.stride * var.arraySize;
 			return true;
@@ -256,7 +259,7 @@ namespace PipelineCompiler
 		void _AddPadding (INOUT Array<Variable> &fields, INOUT usize i, const BytesU freeSpace, const BytesU)
 		{
 			// calculate padding
-			usize	padding_vec = usize(freeSpace / 4_b);
+			uint	padding_vec = uint(freeSpace / 4_b);
 
 			if ( padding_vec % 4 == 0 )	padding_vec = 4;	else
 			if ( padding_vec % 2 == 0 )	padding_vec = 2;	else
@@ -350,7 +353,7 @@ namespace PipelineCompiler
 			else
 			if ( vec_size > 0u )
 			{
-				const usize		new_vsize	= usize(var.stride / scalar_size);
+				const uint		new_vsize	= uint(var.stride / scalar_size);
 				ASSERT( new_vsize == 1 or new_vsize == 2 or new_vsize == 4 );
 
 				// convert to aligned vector
@@ -364,7 +367,7 @@ namespace PipelineCompiler
 
 			if ( padding_size != 0_b )
 			{
-				const usize		new_vsize	= usize(padding_size / 4_b);
+				const uint		new_vsize	= uint(padding_size / 4_b);
 				Variable		padding;
 
 				padding.name		= "_padding"_str << (_paddingCount++);

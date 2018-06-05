@@ -228,7 +228,7 @@ namespace GXTypes
 */
 	template <typename T>
 	inline TStringRef<T>::TStringRef (void *pBegin, void *pEnd) :
-		_memory( static_cast<T*>(pBegin) ), _count( ( usize(pEnd) - usize(pBegin) ) / sizeof(T) )
+		_memory( Cast<T *>(pBegin) ), _count( ( usize(pEnd) - usize(pBegin) ) / sizeof(T) )
 	{}
 	
 /*
@@ -238,7 +238,7 @@ namespace GXTypes
 */
 	template <typename T>
 	inline TStringRef<T>::TStringRef (const std::basic_string< C, std::char_traits<C>, std::allocator<C> > &str) :
-		_memory( static_cast<T *>(str.data()) ), _count( str.empty() ? 0 : str.length()+1 )
+		_memory( Cast<T *>(str.data()) ), _count( str.empty() ? 0 : str.length()+1 )
 	{}
 	
 /*

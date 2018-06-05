@@ -20,10 +20,10 @@ namespace Pipelines
 
 namespace Pipelines
 {
-// From file 'texture2dbilinearfilter.cpp'
-void Create_texture2dbilinearfilter (PipelineTemplateDescriptor& descr);
-
 // From file 'texture2dnearestfilter.cpp'
 void Create_texture2dnearestfilter (PipelineTemplateDescriptor& descr);
 
-};
+// From file 'texture2dbilinearfilter.cpp'
+void Create_texture2dbilinearfilter (PipelineTemplateDescriptor& descr);
+
+}	// Pipelines

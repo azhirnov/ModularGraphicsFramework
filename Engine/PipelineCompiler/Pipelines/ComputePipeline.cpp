@@ -89,8 +89,7 @@ namespace PipelineCompiler
 			src << ser->Comment( "C++ shader" );
 		}
 
-		src << '\n' << ser->DeclNamespace( cfg.nameSpace );
-		src << ser->BeginScope() << '\n';
+		src << '\n' << ser->BeginNamespace( cfg.nameSpace ) << '\n';
 		
 
 		// serialize descriptor
@@ -104,8 +103,8 @@ namespace PipelineCompiler
 		
 		CHECK_ERR( _ConvertComputeShader( INOUT src, ser, cfg ) );
 
-		src << ser->EndScope();	// function
-		src << ser->EndScope();	// namespace
+		src << ser->EndScope();		// function
+		src << ser->EndNamespace();
 		src << ser->EndFile( false );
 		return true;
 	}

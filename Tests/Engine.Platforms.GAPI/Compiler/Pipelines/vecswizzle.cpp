@@ -437,4 +437,4 @@ void main (uint3 dx_DispatchThreadID : SV_DispatchThreadID, uint3 dx_GroupThread
 #endif
 
 };
-};
+}	// Pipelines

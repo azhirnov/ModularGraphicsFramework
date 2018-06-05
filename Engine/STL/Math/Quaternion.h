@@ -709,10 +709,10 @@ namespace GXMath
 =================================================
 */
 	template <typename T, ulong U>
-	template <typename T2>
-	ND_ inline const Quaternion<T2>  Quaternion<T,U>::Convert () const
+	template <typename B>
+	ND_ inline const Quaternion<B>  Quaternion<T,U>::Convert () const
 	{
-		return Quaternion<T2>( (T2)x, (T2)y, (T2)z, (T2)w );
+		return Quaternion<B>( B(x), B(y), B(z), B(w) );
 	}
 	
 /*

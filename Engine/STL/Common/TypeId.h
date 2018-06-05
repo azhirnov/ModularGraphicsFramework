@@ -42,8 +42,8 @@ namespace GXTypes
 		{
 			static _StaticTypeID  Get () noexcept
 			{
-				static usize id = (usize) &id;
-				return (_StaticTypeID const &) id;
+				static usize id = usize(&id);
+				return static_cast<_StaticTypeID const &>(id);
 			}
 		};
 

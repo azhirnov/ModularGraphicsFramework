@@ -51,22 +51,22 @@ namespace OS
 		{}
 
 	public:
-		CurrentThread(): _thread(INVALID_ID)
+		CurrentThread (): _thread(INVALID_ID)
 		{
 			_thread = ::pthread_self();
 		}
 
-		GXTypes::usize Id() const
+		usize Id () const
 		{
 			return GXTypes::ReferenceCast< GXTypes::usize >( _thread );
 		}
 
-		bool IsValid() const
+		bool IsValid () const
 		{
 			return _thread != INVALID_ID;
 		}
 
-		bool IsCurrent() const
+		bool IsCurrent () const
 		{
 			return ::pthread_equal( pthread_self(), _thread );
 		}
@@ -76,7 +76,7 @@ namespace OS
 			return false;
 		}
 
-		static GXTypes::usize GetCurrentThreadId()
+		static usize GetCurrentThreadId ()
 		{
 			return GXTypes::ReferenceCast< GXTypes::usize >( ::pthread_self() );
 		}
@@ -109,7 +109,7 @@ namespace OS
 	{
 	// types
 	public:
-		typedef void (*PThreadProc_t) (void *param);
+		using PThreadProc_t	= void (*) (void *param);
 
 		enum {
 			UNKNOWN_EXIT_CODE	= -1,
@@ -137,8 +137,7 @@ namespace OS
 			CurrentThread(INVALID_ID), _proc(null), _parameter(null)
 		{}
 
-		explicit
-		Thread (PThreadProc_t proc, void *param = null) :
+		explicit Thread (PThreadProc_t proc, void *param = null) :
 			CurrentThread(INVALID_ID), _proc(null), _parameter(null)
 		{
 			Create( proc, param );

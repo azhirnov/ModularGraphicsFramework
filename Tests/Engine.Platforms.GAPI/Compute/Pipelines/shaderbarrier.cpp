@@ -379,8 +379,8 @@ R"#(#define FORMAT( _fmt_ )
 #undef Gen_FloatTemplates
 #undef Gen_DoubleTemplates
 
-float4 MaxMag_1 (const float4 a1, const float4 b1);
 float MaxMag (const float a, const float b);
+float4 MaxMag_1 (const float4 a1, const float4 b1);
 
 //---------------------------------
 
@@ -646,4 +646,4 @@ void main (uint3 dx_DispatchThreadID : SV_DispatchThreadID, uint3 dx_GroupThread
 #endif
 
 };
-};
+}	// Pipelines

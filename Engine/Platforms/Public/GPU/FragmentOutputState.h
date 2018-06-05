@@ -78,7 +78,7 @@ namespace Platforms
 		}
 
 		Self& Add (StringCRef name, EFragOutput::type type) {
-			return Add( name, type, (uint)_outputs.Count() );
+			return Add( name, type, uint(_outputs.Count()) );
 		}
 
 		Self& Add (StringCRef name, EFragOutput::type type, uint index)

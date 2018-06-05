@@ -471,17 +471,17 @@ namespace PlatformGL
 			
 			if ( Value_t::IsDouble( vs_type ) )
 			{
-				GL_CALL( glVertexAttribLFormat( attr.index, size, type, (GLsizei) isize(attr.offset) ) );
+				GL_CALL( glVertexAttribLFormat( attr.index, size, type, GLsizei(attr.offset) ) );
 			}
 			else
 			if ( Value_t::IsInteger( vs_type ) )
 			{
-				GL_CALL( glVertexAttribIFormat( attr.index, size, type, (GLsizei) isize(attr.offset) ) );
+				GL_CALL( glVertexAttribIFormat( attr.index, size, type, GLsizei(attr.offset) ) );
 			}
 			else
 			{
 				CHECK( Value_t::IsFloat( vs_type ) );
-				GL_CALL( glVertexAttribFormat( attr.index, size, type, norm, (GLsizei) isize(attr.offset) ) );
+				GL_CALL( glVertexAttribFormat( attr.index, size, type, norm, GLsizei(attr.offset) ) );
 			}
 		}
 

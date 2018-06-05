@@ -44,7 +44,7 @@ namespace GXMath
 	ND_ inline T  Sin (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::sin( _float_t( x ) );
+		return T(::sin( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -72,7 +72,7 @@ namespace GXMath
 	ND_ inline T  Cos (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::cos( _float_t( x ) );
+		return T(::cos( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -118,7 +118,7 @@ namespace GXMath
 		ASSERT( x >= T(-1) and x <= T(1) );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (Radians<T>) ::asin( _float_t( x ) );
+		return Radians<T>{::asin( _float_t( x ) )};
 	}
 
 	template <typename T, usize I, ulong U>
@@ -142,7 +142,7 @@ namespace GXMath
 		ASSERT( x >= T(-1) and x <= T(1) );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (Radians<T>) ::acos( _float_t( x ) );
+		return Radians<T>{::acos( _float_t( x ) )};
 	}
 
 	template <typename T, usize I, ulong U>
@@ -176,7 +176,7 @@ namespace GXMath
 	ND_ inline T  SinH (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::sinh( _float_t( x ) );
+		return T(::sinh( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -196,7 +196,7 @@ namespace GXMath
 	ND_ inline T  CosH (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::cosh( _float_t( x ) );
+		return T(::cosh( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -253,7 +253,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
 		ASSERT( x >= T(1) );
-		return (Radians<T>) Ln( x + Sqrt( (x*x) - T(1) ) );
+		return Radians<T>{Ln( x + Sqrt( (x*x) - T(1) ) )};
 	}
 
 	template <typename T, usize I, ulong U>
@@ -287,7 +287,7 @@ namespace GXMath
 	ND_ inline T  Tan (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::tan( _float_t( x ) );
+		return T(::tan( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -326,7 +326,7 @@ namespace GXMath
 	ND_ inline T  TanH (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::tanh( _float_t( x ) );
+		return T(::tanh( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -367,7 +367,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (Radians<T>) ::atan( _float_t( y_over_x ) );
+		return Radians<T>{::atan( _float_t( y_over_x ) )};
 	}
 
 	template <typename T, usize I, ulong U>
@@ -389,7 +389,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (Radians<T>) ::atan2( _float_t( y ), _float_t( x ) );
+		return Radians<T>{::atan2( _float_t( y ), _float_t( x ) )};
 	}
 
 	template <typename T, usize I, ulong U>
@@ -410,7 +410,7 @@ namespace GXMath
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
-		return (Radians<T>) SafeDiv( T(1), ATan( x ), T(0) );
+		return Radians<T>{SafeDiv( T(1), ATan( x ), T(0) )};
 	}
 
 	template <typename T, usize I, ulong U>
@@ -456,14 +456,14 @@ namespace GXMath
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
-		return (Radians<T>) SafeDiv( T(1), ATanH( x ), T(0) );
+		return Radians<T>{SafeDiv( T(1), ATanH( x ), T(0) )};
 	}
 
 	template <typename T, usize I, ulong U>
 	ND_ inline RadiansVec<T,I,U>  ACoTanH (const Vec<T,I,U> &x)
 	{
 		RadiansVec<T,I,U>	ret;
-		FOR( i, ret )	ret[i] = ACoTanH( x[i] );
+		FOR( i, ret )		ret[i] = ACoTanH( x[i] );
 		return ret;
 	}
 

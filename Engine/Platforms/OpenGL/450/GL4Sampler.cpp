@@ -209,7 +209,7 @@ namespace PlatformGL
 		{
 			uint4	color;
 			CHECK_ERR( GL4Enum( _descr.BorderColor(), OUT color ) );
-			GL_CALL( glSamplerParameteriv( _samplerId, GL_TEXTURE_BORDER_COLOR, (GLint const*) color.ptr() ) );
+			GL_CALL( glSamplerParameteriv( _samplerId, GL_TEXTURE_BORDER_COLOR, Cast<GLint const*>(color.ptr()) ) );
 		}
 		else
 		{
@@ -315,7 +315,7 @@ namespace PlatformGL
 
 		_initialized = true;
 
-		GL_CALL( glGetIntegerv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, (GLint*) &_maxAnisotropy ) );
+		GL_CALL( glGetIntegerv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, Cast<GLint*>(&_maxAnisotropy) ) );
 	}
 
 /*

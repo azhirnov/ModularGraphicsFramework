@@ -42,13 +42,13 @@ namespace GXScript
 
 		template <typename T>	static T Sin (T value)						{ return GXMath::Sin( Radians<T>{value} ); }
 		template <typename T>	static T SinH (T value)						{ return GXMath::SinH( Radians<T>{value} ); }
-		template <typename T>	static T ASin (T value)						{ return (T) GXMath::ASin( value ); }
+		template <typename T>	static T ASin (T value)						{ return T(GXMath::ASin( value )); }
 		template <typename T>	static T Cos (T value)						{ return GXMath::Cos( Radians<T>{value} ); }
 		template <typename T>	static T CosH (T value)						{ return GXMath::CosH( Radians<T>{value} ); }
-		template <typename T>	static T ACos (T value)						{ return (T) GXMath::ACos( value ); }
+		template <typename T>	static T ACos (T value)						{ return T(GXMath::ACos( value )); }
 		template <typename T>	static T Tan (T value)						{ return GXMath::Tan( Radians<T>{value} ); }
 		template <typename T>	static T TanH (T value)						{ return GXMath::TanH( Radians<T>{value} ); }
-		template <typename T>	static T ATan (T y, T x)					{ return (T) GXMath::ATan( y, x ); }
+		template <typename T>	static T ATan (T y, T x)					{ return T(GXMath::ATan( y, x )); }
 
 		template <typename T>	static T Square (T value)					{ return GXMath::Square( value ); }
 		template <typename T>	static T Sqrt (T value)						{ return GXMath::Sqrt( value ); }

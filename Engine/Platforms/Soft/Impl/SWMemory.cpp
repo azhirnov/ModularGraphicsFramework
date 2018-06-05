@@ -229,7 +229,7 @@ namespace PlatformSW
 		_align = req_mem->result->align;
 		CHECK_ERR( IsPowerOfTwo( _align ) );
 
-		_memory.Resize( (usize)AlignToLarge( req_mem->result->size + _align, _align ), false );
+		_memory.Resize( usize(AlignToLarge( req_mem->result->size + _align, _align )), false );
 		_usedMemory = _memory.SubArray( _GetAlignedOffset( _memory.ptr(), _align ), usize(req_mem->result->size) );
 
 		_binding = EBindingTarget::Image;
@@ -251,7 +251,7 @@ namespace PlatformSW
 		_align = req_mem->result->align;
 		CHECK_ERR( IsPowerOfTwo( _align ) );
 
-		_memory.Resize( (usize)AlignToLarge( req_mem->result->size + _align, _align ), false );
+		_memory.Resize( usize(AlignToLarge( req_mem->result->size + _align, _align )), false );
 		_usedMemory = _memory.SubArray( _GetAlignedOffset( _memory.ptr(), _align ), usize(req_mem->result->size) );
 
 		_binding = EBindingTarget::Buffer;

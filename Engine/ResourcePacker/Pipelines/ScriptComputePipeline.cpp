@@ -28,7 +28,7 @@ namespace ResPack
 	ScriptComputePipeline::ScriptComputePipeline (const PipelineCompiler::ComputePipeline *other) :
 		ScriptComputePipeline()
 	{
-		auto*	ppln = static_cast<Pipeline *>(const_cast<PipelineCompiler::ComputePipeline *>(other));
+		auto*	ppln = Cast<Pipeline *>(const_cast<PipelineCompiler::ComputePipeline *>(other));
 
 		_shaderFormat	= ppln->GetShaderFormat();
 		_compute		= ppln->GetShader();

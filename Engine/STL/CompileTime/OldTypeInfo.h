@@ -368,7 +368,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::INTEGER | (int)_ctime_hidden_::UNSIGNED,
+			FLAGS	= int(_ctime_hidden_::INTEGER) | int(_ctime_hidden_::UNSIGNED),
 		};
 
 		static constexpr type	Max()		{ return true; }
@@ -392,7 +392,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::INTEGER | (int)_ctime_hidden_::SIGNED,
+			FLAGS	= int(_ctime_hidden_::INTEGER) | int(_ctime_hidden_::SIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::INT8_MAX; }
@@ -416,7 +416,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::INTEGER | (int)_ctime_hidden_::UNSIGNED,
+			FLAGS	= int(_ctime_hidden_::INTEGER) | int(_ctime_hidden_::UNSIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::UINT8_MAX; }
@@ -440,7 +440,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::INTEGER | (int)_ctime_hidden_::SIGNED,
+			FLAGS	= int(_ctime_hidden_::INTEGER) | int(_ctime_hidden_::SIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::INT8_MAX; }
@@ -464,7 +464,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::INTEGER | (int)_ctime_hidden_::SIGNED,
+			FLAGS	= int(_ctime_hidden_::INTEGER) | int(_ctime_hidden_::SIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::INT16_MAX; }
@@ -488,7 +488,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::INTEGER | (int)_ctime_hidden_::UNSIGNED,
+			FLAGS	= int(_ctime_hidden_::INTEGER) | int(_ctime_hidden_::UNSIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::UINT16_MAX; }
@@ -515,7 +515,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::INTEGER | (int)_ctime_hidden_::SIGNED,
+			FLAGS	= int(_ctime_hidden_::INTEGER) | int(_ctime_hidden_::SIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::INT32_MAX; }
@@ -539,7 +539,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::INTEGER | (int)_ctime_hidden_::UNSIGNED,
+			FLAGS	= int(_ctime_hidden_::INTEGER) | int(_ctime_hidden_::UNSIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::UINT32_MAX; }
@@ -563,7 +563,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::INTEGER | (int)_ctime_hidden_::SIGNED,
+			FLAGS	= int(_ctime_hidden_::INTEGER) | int(_ctime_hidden_::SIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::INT64_MAX; }
@@ -587,7 +587,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::INTEGER | (int)_ctime_hidden_::UNSIGNED,
+			FLAGS	= int(_ctime_hidden_::INTEGER) | int(_ctime_hidden_::UNSIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::UINT64_MAX; }
@@ -611,7 +611,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::FLOAT | (int)_ctime_hidden_::SIGNED,
+			FLAGS	= int(_ctime_hidden_::FLOAT) | int(_ctime_hidden_::SIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::FLOAT_MAX; }
@@ -637,7 +637,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::FLOAT | (int)_ctime_hidden_::SIGNED,
+			FLAGS	= int(_ctime_hidden_::FLOAT) | int(_ctime_hidden_::SIGNED),
 		};
 
 		static constexpr type	Max()		{ return _ctime_hidden_::DOUBLE_MAX; }
@@ -663,7 +663,7 @@ namespace CompileTime
 
 		// type descriptor //
 		enum {
-			FLAGS	= (int)_ctime_hidden_::FLOAT | (int)_ctime_hidden_::SIGNED,
+			FLAGS	= int(_ctime_hidden_::FLOAT) | int(_ctime_hidden_::SIGNED),
 		};
 
 		static constexpr type	Max()		{ return type(_ctime_hidden_::DOUBLE_MAX); }

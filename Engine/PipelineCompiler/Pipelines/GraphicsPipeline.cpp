@@ -214,8 +214,7 @@ namespace PipelineCompiler
 		FOR( i, cfg.includings ) {
 			src << ser->Include( cfg.includings[i] );
 		}
-		src << '\n' << ser->DeclNamespace( cfg.nameSpace );
-		src << ser->BeginScope() << '\n';
+		src << '\n' << ser->BeginNamespace( cfg.nameSpace ) << '\n';
 
 		EShader::bits	shader_bits;
 		if ( shaders.vertex.IsEnabled() )			shader_bits |= EShader::Vertex;
@@ -243,7 +242,7 @@ namespace PipelineCompiler
 		CHECK_ERR( _ConvertFragmentShader( INOUT src, ser, cfg ) );
 
 		src << ser->EndScope();	// function
-		src << ser->EndScope();	// namespace
+		src << ser->EndNamespace();
 		src << ser->EndFile( false );
 		return true;
 	}

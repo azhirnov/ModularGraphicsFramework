@@ -281,7 +281,7 @@ namespace GXTypes
 
 		bool _IsInStaticMemory () const
 		{
-			return _memory == (T const*) _buf;
+			return _memory == Cast<T const*>(_buf);
 		}
 
 

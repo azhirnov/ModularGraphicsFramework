@@ -21,11 +21,12 @@ namespace GXTypes
 	{
 	// types
 	public:
-		using Strategy_t			= S;
+		using Strategy_t		= S;
 		using MemoryContainer_t	= MC;
 		using Value_t			= T;
 		using Self				= Stack<T,S,MC>;
 		using Container_t		= Array<T,S,MC>;
+		using const_iterator	= typename Container_t::const_iterator;
 
 
 	// variables
@@ -67,12 +68,16 @@ namespace GXTypes
 
 		void				Clear ()							{ _memory.Resize(1); }
 
-		ND_ bool operator == (ArrayCRef<T> right) const			{ return ArrayCRef<T>(*this) == right; }
-		ND_ bool operator != (ArrayCRef<T> right) const			{ return not ((*this) == right); }
+		ND_ bool	operator == (ArrayCRef<T> right) const		{ return ArrayCRef<T>(*this) == right; }
+		ND_ bool	operator != (ArrayCRef<T> right) const		{ return not ((*this) == right); }
 		
-		Self &	operator =  (Self &&right)		= default;
-		Self &	operator =  (const Self &right)	= default;
+		Self &		operator =  (Self &&right)		= default;
+		Self &		operator =  (const Self &right)	= default;
 		
+		ND_ T const& operator [] (usize index) const			{ return _memory[index+1]; }
+		
+		ND_ const_iterator		begin ()			const		{ return _memory.begin() + 1; }	// skip default
+		ND_ const_iterator		end ()				const		{ return _memory.end(); }
 
 		static constexpr bool	IsLinearMemory ()				{ return Container_t::IsLinearMemory(); }
 		constexpr bool			IsStaticMemory () const			{ return _memory.IsStatic(); }

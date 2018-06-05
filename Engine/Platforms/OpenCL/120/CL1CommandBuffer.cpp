@@ -525,7 +525,7 @@ namespace PlatformCL
 		CL_CALL( clEnqueueNDRangeKernel(
 						GetCommandQueue(),
 						_kernelId,
-						_kernelLocalSize.Count(),
+						cl_uint(_kernelLocalSize.Count()),
 						null,
 						global_size.ptr(),
 						usize3(_kernelLocalSize).ptr(),
@@ -596,9 +596,9 @@ namespace PlatformCL
 						GetCommandQueue(),
 						src_id,
 						dst_id,
-						(size_t) reg.srcOffset,
-						(size_t) reg.dstOffset,
-						(size_t) reg.size,
+						size_t(reg.srcOffset),
+						size_t(reg.dstOffset),
+						size_t(reg.size),
 						0, null,
 						null ) );
 		}

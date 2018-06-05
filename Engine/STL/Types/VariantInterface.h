@@ -156,7 +156,7 @@ namespace GXTypes
 		template <typename T>
 		ND_ Ptr<T>			Get () const
 		{
-			return IsCreated() and TypeIdOf<T>() == GetTypeId() ? (T *) _GetBase() : null;
+			return IsCreated() and TypeIdOf<T>() == GetTypeId() ? Cast<T *>(_GetBase()) : null;
 		}
 
 
@@ -164,9 +164,9 @@ namespace GXTypes
 
 
 	private:
-		forceinline BaseClass *			_GetBase ()		const	{ return (BaseClass *) &_storage.buf[sizeof(void *)]; }
-		forceinline _Interface const*	_Internal ()	const	{ return (_Interface const*) _storage.buf; }
-		forceinline _Interface *		_Internal ()			{ return (_Interface *) _storage.buf; }
+		forceinline BaseClass *			_GetBase ()		const	{ return Cast<BaseClass *>(&_storage.buf[sizeof(void *)]); }
+		forceinline _Interface const*	_Internal ()	const	{ return Cast<_Interface const*>(_storage.buf); }
+		forceinline _Interface *		_Internal ()			{ return Cast<_Interface *>(_storage.buf); }
 		forceinline BinArrayRef			_Data ()				{ return BinArrayRef( _storage.buf ); }
 
 		forceinline void _Delete ()

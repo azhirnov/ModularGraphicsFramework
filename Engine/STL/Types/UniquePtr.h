@@ -48,7 +48,7 @@ namespace GXTypes
 		{
 			if ( _ptr != null )
 			{
-				S::Delete( (B*)_ptr );
+				S::Delete( Cast<B*>(_ptr) );
 				_ptr = null;
 			}
 		}
@@ -118,7 +118,7 @@ namespace GXTypes
 		template <typename T2>
 		forceinline Self & operator = (UniquePtr<T2,B,S> &&right)
 		{
-			if ( (void*)_ptr == (void*)right._ptr ) {
+			if ( Cast<void*>(_ptr) == Cast<void*>(right._ptr) ) {
 				WARNING( "" );
 				return *this;
 			}

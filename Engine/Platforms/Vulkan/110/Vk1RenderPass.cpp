@@ -274,13 +274,13 @@ namespace PlatformVK
 			descr.flags						= 0;	// no flags, only vendor specific flags exists
 			descr.pipelineBindPoint			= VK_PIPELINE_BIND_POINT_GRAPHICS;	// only graphics subpasses are supported (vulkan spec 1.0)
 
-			descr.colorAttachmentCount		= (uint32_t) subpass.colors.Count();
+			descr.colorAttachmentCount		= uint32_t(subpass.colors.Count());
 			descr.pColorAttachments			= subpass.colors.Empty() ? null : color_attach_ref.RawPtr() + color_attach_ref.Count();
 
-			descr.inputAttachmentCount		= (uint32_t) subpass.inputs.Count();
+			descr.inputAttachmentCount		= uint32_t(subpass.inputs.Count());
 			descr.pInputAttachments			= subpass.inputs.Empty() ? null : input_attach_ref.RawPtr() + input_attach_ref.Count();
 
-			descr.preserveAttachmentCount	= (uint32_t) subpass.preserves.Count();
+			descr.preserveAttachmentCount	= uint32_t(subpass.preserves.Count());
 			descr.pPreserveAttachments		= preserves.Empty() ? null : preserves.RawPtr() + preserves.Count();
 
 			descr.pResolveAttachments		= subpass.resolve.IsEnabled() ?
@@ -346,11 +346,11 @@ namespace PlatformVK
 
 		VkRenderPassCreateInfo	info = {};
 		info.sType				= VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		info.attachmentCount	= (uint32_t) attachments.Count();
+		info.attachmentCount	= uint32_t(attachments.Count());
 		info.pAttachments		= attachments.RawPtr();
-		info.subpassCount		= (uint32_t) subpasses.Count();
+		info.subpassCount		= uint32_t(subpasses.Count());
 		info.pSubpasses			= subpasses.RawPtr();
-		info.dependencyCount	= (uint32_t) dependencies.Count();
+		info.dependencyCount	= uint32_t(dependencies.Count());
 		info.pDependencies		= dependencies.RawPtr();
 		
 		VK_CHECK( vkCreateRenderPass( GetVkDevice(), &info, null, OUT &_renderPassId ) );

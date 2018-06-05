@@ -58,7 +58,7 @@ namespace GXTypes
 		explicit constexpr Bytes (Bits<B> bits);
 
 		template <typename B>
-		explicit constexpr Bytes (Bytes<B> bytes) : _value( (T)(B)bytes ) {}
+		explicit constexpr Bytes (Bytes<B> bytes) : _value( T(B(bytes)) ) {}
 
 		ND_ constexpr Bits<T> ToBits () const;
 		
@@ -174,7 +174,7 @@ namespace GXTypes
 		explicit constexpr Bits (Bytes<B> bytes);
 		
 		template <typename B>
-		explicit constexpr Bits (Bits<B> bits) : _value( (T)(B)bits ) {}
+		explicit constexpr Bits (Bits<B> bits) : _value( T(B(bits)) ) {}
 
 		ND_ constexpr Bytes<T> ToBytes () const;
 		
@@ -232,7 +232,7 @@ namespace GXTypes
 	
 	template <typename T>
 	template <typename B>
-	constexpr Bytes<T>::Bytes (Bits<B> bits) : _value( T((B)bits) >> 3 )
+	constexpr Bytes<T>::Bytes (Bits<B> bits) : _value( T(B(bits)) >> 3 )
 	{}
 
 
@@ -255,7 +255,7 @@ namespace GXTypes
 	template <typename B>
 	ND_ constexpr Bytes<B>  Bytes<T>::To () const
 	{
-		return Bytes<B>( (B)_value );
+		return Bytes<B>( B(_value) );
 	}
 	
 
@@ -263,7 +263,7 @@ namespace GXTypes
 
 	template <typename T>
 	template <typename B>
-	constexpr Bits<T>::Bits (Bytes<B> bytes) : _value( T((B)bytes) << 3 )
+	constexpr Bits<T>::Bits (Bytes<B> bytes) : _value( T(B(bytes)) << 3 )
 	{}
 	
 
@@ -286,7 +286,7 @@ namespace GXTypes
 	template <typename B>
 	ND_ constexpr Bits<B>  Bits<T>::To () const
 	{
-		return Bits<B>( (B) _value );
+		return Bits<B>( B(_value) );
 	}
 
 	
@@ -342,7 +342,7 @@ namespace CompileTime
 		using CreateWith = GXTypes::Bytes< OtherType >;
 
 		enum {
-			FLAGS	= (int)TypeInfo< inner_type >::FLAGS | int(_ctime_hidden_::WRAPPER),
+			FLAGS	= int(TypeInfo< inner_type >::FLAGS) | int(_ctime_hidden_::WRAPPER),
 		};
 		
 		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }
@@ -364,7 +364,7 @@ namespace CompileTime
 		using CreateWith = GXTypes::Bits< OtherType >;
 
 		enum {
-			FLAGS	= (int)TypeInfo< inner_type >::FLAGS | int(_ctime_hidden_::WRAPPER),
+			FLAGS	= int(TypeInfo< inner_type >::FLAGS) | int(_ctime_hidden_::WRAPPER),
 		};
 		
 		static constexpr type	Max()		{ return type( TypeInfo< inner_type >::Max() ); }

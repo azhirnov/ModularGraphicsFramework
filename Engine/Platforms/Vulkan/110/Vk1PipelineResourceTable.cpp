@@ -601,8 +601,8 @@ namespace PlatformVK
 			// create descriptor
 			BufferDescr				descr;
 			descr.info.buffer		= buf_res.Get<0>();
-			descr.info.offset		= (VkDeviceSize) offset;
-			descr.info.range		= (VkDeviceSize) buf.size;
+			descr.info.offset		= VkDeviceSize( offset );
+			descr.info.range		= VkDeviceSize( buf.size );
 			descr.descriptorType	= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			descr.binding			= buf.uniqueIndex;
 
@@ -651,8 +651,8 @@ namespace PlatformVK
 			// create descriptor
 			BufferDescr				descr;
 			descr.info.buffer		= buf_res.Get<0>();
-			descr.info.offset		= (VkDeviceSize) offset;
-			descr.info.range		= (VkDeviceSize) size;
+			descr.info.offset		= VkDeviceSize( offset );
+			descr.info.range		= VkDeviceSize( size );
 			descr.descriptorType	= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			descr.binding			= buf.uniqueIndex;
 			
@@ -704,7 +704,7 @@ namespace PlatformVK
 		// create pool
 		VkDescriptorPoolCreateInfo	pool_info = {};
 		pool_info.sType				= VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		pool_info.poolSizeCount		= (uint) pool_sizes.Count();
+		pool_info.poolSizeCount		= uint( pool_sizes.Count() );
 		pool_info.pPoolSizes		= pool_sizes.RawPtr();
 		pool_info.maxSets			= 1;
 
@@ -803,7 +803,7 @@ namespace PlatformVK
 			res.Apply( func );
 		}
 		
-		vkUpdateDescriptorSets( GetVkDevice(), (uint)write_descr.Count(), write_descr.RawPtr(), 0, null );
+		vkUpdateDescriptorSets( GetVkDevice(), uint(write_descr.Count()), write_descr.RawPtr(), 0, null );
 		return true;
 	}
 

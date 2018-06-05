@@ -473,8 +473,8 @@ namespace Platforms
 
 			VkShaderModuleCreateInfo	shader_info = {};
 			shader_info.sType		= VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-			shader_info.codeSize	= (usize) data.Size();
-			shader_info.pCode		= (vk::uint32_t const*) data.ptr();
+			shader_info.codeSize	= usize(data.Size());
+			shader_info.pCode		= Cast<vk::uint32_t const*>( data.ptr() );
 
 			VkShaderModule	shader = {};
 			VK_CHECK( vkCreateShaderModule( VkDevice(_vkData.device), &shader_info, null, OUT &shader ) );
@@ -809,7 +809,7 @@ namespace Platforms
 		StringCRef	data = _descr.shaders[EShader::Compute].GetCL();
 		CHECK_ERR( not data.Empty() );
 		
-		const cl_device_id	devices[]	= { (cl_device_id)_clData.device };
+		const cl_device_id	devices[]	= { cl_device_id(_clData.device) };
 		usize				log_size	= 0;
 		cl_int				cl_err		= 0;
 		cl_program			prog_id		= null;
@@ -823,14 +823,14 @@ namespace Platforms
 			;
 		
 		CL_CALL( (prog_id = clCreateProgramWithSource(
-								(cl_context) _clData.context,
+								cl_context(_clData.context),
 								1,
 								&src,
 								null,
 								OUT &cl_err )), cl_err );
 		CHECK_ERR( prog_id != null );
 
-		cl_err = clBuildProgram( prog_id, (cl_uint)CountOf(devices), devices, options, null, null );
+		cl_err = clBuildProgram( prog_id, cl_uint(CountOf( devices )), devices, options, null, null );
 		const bool compiled = (cl_err == CL_SUCCESS);
 		
 		CL_CALL( clGetProgramBuildInfo( prog_id, devices[0], CL_PROGRAM_BUILD_LOG, 0, null, OUT &log_size ) );
@@ -868,7 +868,7 @@ namespace Platforms
 		{
 			if ( _clData.shaders[i] )
 			{
-				CL_CALL( clReleaseProgram( (cl_program)_clData.shaders[i] ) );
+				CL_CALL( clReleaseProgram( cl_program(_clData.shaders[i]) ) );
 				_clData.shaders[i] = null;
 			}
 		}
@@ -901,7 +901,7 @@ namespace Platforms
 			Shaders_t::Value_t	module;
 
 			module.type		= EShader::type(i);
-			module.id		= (cl::cl_program) _clData.shaders[i];
+			module.id		= cl::cl_program(_clData.shaders[i]);
 			module.entry	= "Main";	// Intel compiler generate error for 'main' kernel
 
 			result.PushBack( RVREF(module) );

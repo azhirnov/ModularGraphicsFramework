@@ -207,8 +207,8 @@ namespace CompileTime
 			}; \
 			\
 			ND_ forceinline static type  FromString (::GX_STL::GXTypes::StringCRef str) noexcept { \
-				return (type) ::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper:: \
-								CalcHash( str.cstr(), str.Count(), _type_(_name_::_ID) ); \
+				return type(::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper:: \
+								CalcHash( str.cstr(), str.Count(), _type_(_name_::_ID) )); \
 			} \
 			\
 			ND_ forceinline static ::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper::StString_t \
@@ -219,8 +219,8 @@ namespace CompileTime
 		\
 		ND_ forceinline constexpr _name_::type  operator "" _##_name_ (char const * const str, const size_t size) noexcept \
 		{ \
-			return (_name_::type) ::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper:: \
-											CalcHash( str, size, _name_::_type_(_name_::_ID) ); \
+			return _name_::type(::GX_STL::CompileTime::_ctime_hidden_::_StringToID_Helper:: \
+											CalcHash( str, size, _name_::_type_(_name_::_ID) )); \
 		} \
 
 	

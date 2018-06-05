@@ -65,14 +65,14 @@ namespace GXTypes
 		ND_ forceinline typename _types_hidden_::_PtrMove< T, R >::Result_t  MovePointer (T ptr, BytesI offset)
 		{
 			STATIC_ASSERT( TypeTraits::IsPointer<T>, "argument must be pointer" );
-			return _types_hidden_::_PtrMove< T, R >::Move( ptr, (isize)offset );
+			return _types_hidden_::_PtrMove< T, R >::Move( ptr, isize(offset) );
 		}
 
 		template <typename R, typename T>
 		ND_ forceinline typename _types_hidden_::_PtrMove< T, R >::Result_t  MovePointer (T ptr, BytesU offset)
 		{
 			STATIC_ASSERT( TypeTraits::IsPointer<T>, "argument must be pointer" );
-			return _types_hidden_::_PtrMove< T, R >::Move( ptr, (usize)offset );
+			return _types_hidden_::_PtrMove< T, R >::Move( ptr, usize(offset) );
 		}
 
 		template <typename T>

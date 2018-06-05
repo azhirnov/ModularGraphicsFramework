@@ -138,7 +138,7 @@ namespace Platforms
 
 	inline VertexAttribs &  VertexAttribs::Add (StringCRef name, EVertexAttribute::type type, StringCRef buffer)
 	{
-		return Add( name, type, (uint)_attribs.Count(), buffer );
+		return Add( name, type, uint(_attribs.Count()), buffer );
 	}
 		
 /*

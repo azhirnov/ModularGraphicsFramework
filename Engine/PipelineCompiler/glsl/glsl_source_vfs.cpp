@@ -2,7 +2,6 @@
 
 #include "glsl_source_vfs.h"
 #include "Engine/STL/Containers/HashMap.h"
-#include "Engine/STL/Math/BinaryMath.h"
 
 namespace glsl_vfs
 {

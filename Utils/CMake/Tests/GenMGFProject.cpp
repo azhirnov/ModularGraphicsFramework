@@ -177,7 +177,7 @@ extern void GenMGFProject ()
 									  GCC::Uninititalized, GCC::MayBeUninitialized, GCC::UnknownPragmas, GCC::Pragmas, GCC::StrictAliasing, GCC::StrictOverflow,
 									  GCC::Undef, GCC::EndifLabels, GCC::FreeNonheapObject, GCC::PointerArith, GCC::CastAlign, GCC::WriteStrings,
 									  /*GCC::Conversion,*/ GCC::ConversionNull, /*GCC::ZeroAsNullConst,*/ GCC::EnumCompare, GCC::SignCompare, /*GCC::SignConvertsion,*/
-									  GCC::SizeofPointerMemaccess, /*GCC::SizeofPointerDiv,*/ GCC::LogicalOp, GCC::Address });
+									  GCC::SizeofPointerMemaccess, /*GCC::SizeofPointerDiv,*/ GCC::LogicalOp, GCC::Address/*, GCC::OldStyleCast*/ });
 
 			shared_cxx_flags.PushBack( GCC::DisableWarnings({ GCC::Unused, GCC::NonTemplateFriend, GCC::ZeroAsNullConst, GCC::Shadow, GCC::EnumCompare,
 															  GCC::Narrowing, GCC::Attribute, GCC::InvalidOffsetof }) );
@@ -186,7 +186,7 @@ extern void GenMGFProject ()
 															   GCC::ArrayBounds, GCC::DivByZero, GCC::MissingFieldInit, /*GCC::AlignedNew,*/
 															   GCC::PlacementNew, GCC::SignCompare, GCC::CastQual, GCC::CastAlign, GCC::LiteralSuffix,
 															   GCC::ShadowLocal, GCC::DeleteIncomplete, GCC::SubobjectLinkage, GCC::ODR,
-															   GCC::OldStyleCast, GCC::OldStyleDeclaration, GCC::OldStyleDefinition }) );
+															   GCC::OldStyleDeclaration, GCC::OldStyleDefinition }) );
 
 
 			auto	debug_cfg = gcc->AddConfiguration( "Debug" );

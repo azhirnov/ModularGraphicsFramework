@@ -676,7 +676,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline void TString<T,S,MC>::Append (const void *begin, const void *end)
 	{
-		Append( (const T *)begin, _GetLength( begin, end ) );
+		Append( Cast<const T *>(begin), _GetLength( begin, end ) );
 	}
 
 /*
@@ -839,7 +839,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline void TString<T,S,MC>::Insert (const void *begin, const void *end, const usize pos)
 	{
-		Insert( TStringRef<const T>( (const T*)begin, _GetLength( begin, end ) ), pos );
+		Insert( TStringRef<const T>( Cast<const T*>(begin), _GetLength( begin, end ) ), pos );
 	}
 	
 /*
@@ -1161,9 +1161,9 @@ namespace GXTypes
 
 		for (--i; (i >= 0 and k != 0); --i)
 		{
-			_memory.Pointer()[--k] = (T)a_buf[i];
+			_memory.Pointer()[--k] = T(a_buf[i]);
 
-			if ( ++j >= (isize)stepSize and k != 0 ) {
+			if ( ++j >= isize(stepSize) and k != 0 ) {
 				_memory.Pointer()[--k] = spaceChar;
 				j = 0;
 			}
@@ -1278,7 +1278,7 @@ namespace GXTypes
 		str.Reserve( _length + 4 );
 
 		for (usize i = 0; i < _length; ++i) {
-			str[i] = (T2)_memory.Pointer()[i];
+			str[i] = T2(_memory.Pointer()[i]);
 		}
 
 		str.SetLength( _length );

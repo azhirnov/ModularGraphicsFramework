@@ -289,7 +289,7 @@ namespace GXTypes
 	template <typename T, typename S, typename MC>
 	inline usize CircularQueue<T,S,MC>::_WrapIndex (const isize i) const
 	{
-		return ( i < 0 ? _size + i : ( i >= (isize)_size ? i - _size : i ) );
+		return ( i < 0 ? _size + i : ( i >= isize(_size) ? i - _size : i ) );
 	}
 	
 /*
@@ -475,55 +475,18 @@ namespace GXTypes
 		if ( Empty() )
 		{
 			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray, count );
-			else									Strategy_t::Move( _memory.Pointer(), (T*)pArray, count );
+			else									Strategy_t::Move( _memory.Pointer(), const_cast<T*>(pArray), count );
 
 			_first = 0;
 			_end   = count;
 		}
 		else
-			/*
-		if ( _first < _end )
-		{
-			usize	cnt = GXMath::Min( count, _size - _end );
-
-			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, cnt );
-			else									Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, cnt );
-
-			_end += cnt;
-			
-			if ( cnt != count )
-			{
-				_end = count - cnt;
-
-				if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray + cnt, count - cnt );
-				else									Strategy_t::Move( _memory.Pointer(), (T*)pArray + cnt, count - cnt );
-			}
-		}*//*
-		if ( _first < _end )
-		{
-			usize	cnt = GXMath::Min( count, _first );
-
-			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - count, pArray + count - count, cnt );
-			else									Strategy_t::Move( _memory.Pointer() + _first - count, (T*)pArray + count - count, cnt );
-
-			_first -= cnt;
-			
-			if ( cnt != count )
-			{
-				count   = count - count;
-				_first = _size - cnt;
-
-				if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first, pArray, count );
-				else									Strategy_t::Move( _memory.Pointer() + _first, (T*)pArray, count );
-			}
-		}
-		else*/
 		if ( _first < _end )
 		{
 			const usize	cnt = GXMath::Min( count, _first );
 
 			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - cnt, pArray + count - cnt, cnt );
-			else									Strategy_t::Move( _memory.Pointer() + _first - cnt, (T*)pArray + count - cnt, cnt );
+			else									Strategy_t::Move( _memory.Pointer() + _first - cnt, const_cast<T*>(pArray) + count - cnt, cnt );
 
 			_first -= cnt;
 			
@@ -532,13 +495,13 @@ namespace GXTypes
 				_first = _size - (count - cnt);
 
 				if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first, pArray, count - cnt );
-				else									Strategy_t::Move( _memory.Pointer() + _first, (T*)pArray, count - cnt );
+				else									Strategy_t::Move( _memory.Pointer() + _first, const_cast<T*>(pArray), count - cnt );
 			}
 		}
 		else
 		{
 			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _first - count, pArray, count );
-			else									Strategy_t::Move( _memory.Pointer() + _first - count, (T*)pArray, count );
+			else									Strategy_t::Move( _memory.Pointer() + _first - count, const_cast<T*>(pArray), count );
 
 			_first -= count;
 		}
@@ -565,7 +528,7 @@ namespace GXTypes
 		if ( Empty() )
 		{
 			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray, count );
-			else									Strategy_t::Move( _memory.Pointer(), (T*)pArray, count );
+			else									Strategy_t::Move( _memory.Pointer(), const_cast<T*>(pArray), count );
 
 			_first = 0;
 			_end   = count;
@@ -576,7 +539,7 @@ namespace GXTypes
 			const usize	cnt = GXMath::Min( count, _size - _end );
 
 			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, cnt );
-			else									Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, cnt );
+			else									Strategy_t::Move( _memory.Pointer() + _end, const_cast<T*>(pArray), cnt );
 
 			_end += cnt;
 			
@@ -585,13 +548,13 @@ namespace GXTypes
 				_end = count - cnt;
 
 				if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer(), pArray + cnt, count - cnt );
-				else									Strategy_t::Move( _memory.Pointer(), (T*)pArray + cnt, count - cnt );
+				else									Strategy_t::Move( _memory.Pointer(), const_cast<T*>(pArray) + cnt, count - cnt );
 			}
 		}
 		else
 		{
 			if_constexpr( TypeTraits::IsConst<B> )	Strategy_t::Copy( _memory.Pointer() + _end, pArray, count );
-			else									Strategy_t::Move( _memory.Pointer() + _end, (T*)pArray, count );
+			else									Strategy_t::Move( _memory.Pointer() + _end, const_cast<T*>(pArray), count );
 
 			_end += count;
 		}

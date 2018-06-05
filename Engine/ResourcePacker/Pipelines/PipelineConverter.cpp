@@ -184,7 +184,7 @@ namespace ResPack
 		ASSERT( gen->GetArgCount() == 0 );
 		
 		void *	dst = gen->GetAddressOfReturnLocation();
-		auto *	src = static_cast<PipelineCompiler::GraphicsPipeline const *>(gen->GetAuxiliary());
+		auto *	src = Cast<PipelineCompiler::GraphicsPipeline const *>(gen->GetAuxiliary());
 
 		UnsafeMem::PlacementNew< ScriptGraphicsPipeline >( dst, src );
 	}
@@ -199,7 +199,7 @@ namespace ResPack
 		ASSERT( gen->GetArgCount() == 0 );
 		
 		void *	dst = gen->GetAddressOfReturnLocation();
-		auto *	src = static_cast<PipelineCompiler::ComputePipeline const *>(gen->GetAuxiliary());
+		auto *	src = Cast<PipelineCompiler::ComputePipeline const *>(gen->GetAuxiliary());
 		
 		UnsafeMem::PlacementNew< ScriptComputePipeline >( dst, src );
 	}

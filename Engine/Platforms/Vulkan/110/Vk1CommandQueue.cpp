@@ -202,12 +202,12 @@ namespace PlatformVK
 		
 		VkSubmitInfo					submit_info = {};
 		submit_info.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.commandBufferCount		= (uint) cmd_ids.Count();
+		submit_info.commandBufferCount		= uint(cmd_ids.Count());
 		submit_info.pCommandBuffers			= cmd_ids.RawPtr();
-		submit_info.waitSemaphoreCount		= (uint32_t) wait_semaphores.Count();
+		submit_info.waitSemaphoreCount		= uint32_t(wait_semaphores.Count());
 		submit_info.pWaitSemaphores			= wait_semaphores.RawPtr();
 		submit_info.pWaitDstStageMask		= wait_stages.RawPtr();
-		submit_info.signalSemaphoreCount	= (uint32_t) signal_semaphores.Count();
+		submit_info.signalSemaphoreCount	= uint32_t(signal_semaphores.Count());
 		submit_info.pSignalSemaphores		= signal_semaphores.RawPtr();
 
 		VkResult	vk_err = vkQueueSubmit( GetDevice()->GetQueue(), 1, &submit_info, fence );

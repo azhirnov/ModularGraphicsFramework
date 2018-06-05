@@ -43,10 +43,10 @@ namespace GXTypes
 
 #	define _LIMIT_OPERATOR2( _op_ ) \
 		_LIMIT_OPERATOR( _op_, \
-				Self&,	{ _value _op_##= (T)right;  _Validate();  return *this; }, \
+				Self&,	{ _value _op_##= T(right);  _Validate();  return *this; }, \
 				Self,	{ return Self(*this) _op_##= right.Value(); }, \
-				Self,	{ return Self(*this) _op_##= (T)right; }, \
-				B,		{ return left _op_ (B)right.Value(); } \
+				Self,	{ return Self(*this) _op_##= T(right); }, \
+				B,		{ return left _op_ B(right.Value()); } \
 		)
 
 
@@ -158,10 +158,10 @@ namespace GXTypes
 		_LIMIT_OPERATOR2( << );
 
 		_LIMIT_OPERATOR( %,
-				Self&,	{ return _value = Mod( Value(), (T)right ); },
+				Self&,	{ return _value = Mod( Value(), T(right) ); },
 				Self,	{ return Self(*this) %= right.Value(); },
-				Self,	{ return Self(*this) %= (T)right; },
-				B,		{ return Mod( left, (B)right.Value() ); }
+				Self,	{ return Self(*this) %= T(right); },
+				B,		{ return Mod( left, B(right.Value()) ); }
 		);
 	};
 

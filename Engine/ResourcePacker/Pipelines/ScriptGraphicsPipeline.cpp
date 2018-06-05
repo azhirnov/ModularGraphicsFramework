@@ -27,7 +27,7 @@ namespace ResPack
 	ScriptGraphicsPipeline::ScriptGraphicsPipeline (const PipelineCompiler::GraphicsPipeline *other) :
 		ScriptGraphicsPipeline()
 	{
-		auto*	ppln = static_cast<Pipeline *>(const_cast<PipelineCompiler::GraphicsPipeline *>( other ));
+		auto*	ppln = Cast<Pipeline *>(const_cast<PipelineCompiler::GraphicsPipeline *>( other ));
 
 		_shaderFormat		= ppln->GetShaderFormat();
 		_shaders			= ppln->GetShaders();

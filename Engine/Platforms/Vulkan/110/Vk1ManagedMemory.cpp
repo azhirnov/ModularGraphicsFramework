@@ -369,7 +369,7 @@ namespace PlatformVK
 		const BytesUL	size	= Min( _size, msg->size );
 		void *			ptr		= null;
 
-		VK_CHECK( vkMapMemory( GetVkDevice(), _mem, (VkDeviceSize) offset, (VkDeviceSize) size, 0, &ptr ) );
+		VK_CHECK( vkMapMemory( GetVkDevice(), _mem, VkDeviceSize(offset), VkDeviceSize(size), 0, &ptr ) );
 		_memMapper.OnMapped( ptr, msg->position, size, msg->flags );
 		
 		msg->result.Set( BinArrayRef::FromVoid( ptr, BytesU(size) ) );

@@ -253,7 +253,7 @@ namespace PlatformGL
 		_samples			= samples;
 
 		// get current binded framebuffer, it must be default framebuffer!
-		GL_CALL( glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, OUT (GLint*)&_framebufferId ) );
+		GL_CALL( glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, OUT Cast<GLint *>(&_framebufferId) ) );
 
 		const bool	is_multisampled	= samples.IsEnabled();
 		

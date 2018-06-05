@@ -60,7 +60,7 @@ namespace GXMath
 		//T				RadiusSqr ()				const	{ return _radius * _radius; }
 
 		T			Length ()						const	{ return Pi<T> * T(2) * Radius(); }
-		T			ArcLength (Radians<T> angle)	const	{ return (T)angle * Radius(); }
+		T			ArcLength (Radians<T> angle)	const	{ return T(angle) * Radius(); }
 		T			Square ()						const	{ return Pi<T> * Square( Radius() ); }
 
 		Radians<T>	GetAngle (const Vec_t &point)	const;
@@ -138,7 +138,7 @@ namespace GXMath
 	template <typename T, ulong U>
 	ND_ inline Vec<T,2,U>  Circle<T,U>::GetPoint (Radians<T> angle) const
 	{
-		return _center + _radius * SinCos( (T)angle ).yx();
+		return _center + _radius * SinCos( T(angle) ).yx();
 	}
 	
 

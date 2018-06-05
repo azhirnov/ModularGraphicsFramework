@@ -467,7 +467,7 @@ namespace PlatformCL
 		CL_CHECK(( (_bufferId = clCreateBuffer(
 							GetContext(),
 							CL1Enum( _memFlags, _memMapper.MemoryAccess() ),
-							(size_t) _descr.size,
+							size_t(_descr.size),
 							null,
 							OUT &cl_err )), cl_err ));
 		return true;

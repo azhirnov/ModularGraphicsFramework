@@ -4,7 +4,7 @@
 namespace Pipelines
 {
 // Packing: vertex
-struct NativeVertex_default2 final : CompileTime::PODStruct
+struct NativeVertex_default2 final
 {
 	float2  at_Position;    // offset: 0, align: 4
 	float2  at_Texcoord;    // offset: 8, align: 4
@@ -22,7 +22,7 @@ struct NativeVertex_default2 final : CompileTime::PODStruct
 };
 
 // Packing: Std140
-struct UB final : CompileTime::PODStruct
+struct UB final
 {
 	float4  color;    // offset: 0, align: 16
 
@@ -33,4 +33,10 @@ struct UB final : CompileTime::PODStruct
 	}
 };
 
-};
+}	// Pipelines
+
+namespace GX_STL::CompileTime::_ctime_hidden_ {
+	template <> struct _IsPOD< Pipelines::NativeVertex_default2 > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::UB > { static const bool value = true; };
+}
+

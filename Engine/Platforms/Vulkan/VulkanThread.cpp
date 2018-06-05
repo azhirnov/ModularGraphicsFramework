@@ -460,7 +460,7 @@ namespace Platforms
 			CHECK_ERR( _device.CreateInstance( "", 0, vk_version, extensions, layers ) );
 
 			if ( is_debug )
-				CHECK( _device.CreateDebugCallback( (VkDebugReportFlagBitsEXT) debug_flags ) );
+				CHECK( _device.CreateDebugCallback( VkDebugReportFlagBitsEXT(debug_flags) ) );
 		}
 
 		// Choose physical device

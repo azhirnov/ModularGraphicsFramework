@@ -76,7 +76,7 @@ namespace GXMath
 			{
 				typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 
-				return (T) std::abs( _float_t(val) );
+				return T(std::abs( _float_t(val) ));
 			}
 		};
 		
@@ -189,8 +189,8 @@ namespace GXMath
 			template <typename T>
 			static T setsign (const T& x, bool s)
 			{
-				if ( (  s and x > (T)0 ) or
-					 ( not s and x < (T)0 ) )
+				if ( (  s and x > T(0) ) or
+					 ( not s and x < T(0) ) )
 				{
 					return x == MinValue<T>() ? -(x+1) : -x;
 				}
@@ -470,7 +470,7 @@ namespace GXMath
 				if ( i_a < Int_t(0) )	i_a = MinValue<Int_t>() - i_a;
 				if ( i_b < Int_t(0) )	i_b = MinValue<Int_t>() - i_b;
 
-				UInt_t	diff = (UInt_t)Abs( i_a - i_b );
+				UInt_t	diff = UInt_t(Abs( i_a - i_b ));
 
 				return ( diff <= ( UInt_t(1) << ac ) );
 			}
@@ -985,7 +985,7 @@ namespace GXMath
 
 		typedef typename CompileTime::GenType<T,B>				main_t;
 		typedef typename _math_hidden_::ToNearFloat< main_t >	_float_t;
-		return (T) ::pow( _float_t( x ), _float_t( y ) );
+		return T(::pow( _float_t( x ), _float_t( y ) ));
 	}
 
 	template <typename T, typename B, usize I, ulong U>
@@ -1008,7 +1008,7 @@ namespace GXMath
 		ASSERT( x >= T(0) );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::log( _float_t( x ) );
+		return T(::log( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1102,7 +1102,7 @@ namespace GXMath
 		ASSERT( x >= T(0) );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::log10( _float_t( x ) );
+		return T(::log10( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1124,7 +1124,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::exp( _float_t( x ) );
+		return T(::exp( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1146,7 +1146,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::pow( _float_t( 2 ), _float_t( x ) );
+		return T(::pow( _float_t( 2 ), _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1168,7 +1168,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::pow( _float_t( 10 ), _float_t( x ) );
+		return T(::pow( _float_t( 10 ), _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1305,7 +1305,7 @@ namespace GXMath
 		ASSERT( x >= T(0) );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::sqrt( _float_t( x ) );
+		return T(::sqrt( _float_t( x ) ));
 	}
 
 #ifdef GX_FAST_MATH
@@ -1393,14 +1393,14 @@ namespace GXMath
 			forceinline static main_t  Mod (const A& l, const B& r)
 			{
 				typedef _math_hidden_::ToNearFloat< main_t >	_float_t;
-				return (main_t) ::fmod( _float_t(l), _float_t(r) );
+				return main_t(::fmod( _float_t(l), _float_t(r) ));
 			}
 
 			template <typename C>
 			forceinline static main_t  SafeMod (const A& l, const B& r, const C& def)
 			{
 				typedef _math_hidden_::ToNearFloat< main_t >	_float_t;
-				return IsNotZero( r ) ? (main_t) ::fmod( _float_t(l), _float_t(r) ) : maint_t(def);
+				return IsNotZero( r ) ? main_t(::fmod( _float_t(l), _float_t(r) )) : maint_t(def);
 			}
 		};
 
@@ -1483,7 +1483,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::floor( _float_t( x ) );
+		return T(::floor( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1506,7 +1506,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::ceil( _float_t( x ) );
+		return T(::ceil( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1565,7 +1565,7 @@ namespace GXMath
 
 	#if 1
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return (T) ::trunc( _float_t( x ) );
+		return T(::trunc( _float_t( x ) ));
 
 	#else
 		return CopySign( x, Floor( Abs(x) ) );	// if trunc not supported
@@ -1783,7 +1783,7 @@ namespace GXMath
 			{
 				typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 
-				return (R) ::round( _float_t( val ) );
+				return R(::round( _float_t( val ) ));
 				//return R( val + ( val > T(0) ? T(0.5) : T(-0.5) ) );	// if round not supported
 			}
 		};
@@ -1796,7 +1796,7 @@ namespace GXMath
 			{
 				typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 
-				return (R) ::round( _float_t( val ) );
+				return R(::round( _float_t( val ) ));
 				//return (R) Trunc( val + ( val > T(0) ? T(0.5) : T(-0.5) ) );	// if round not supported
 			}
 		};
@@ -2137,7 +2137,7 @@ namespace GXMath
 	template <typename T>
 	ND_ forceinline T  Factorial (const T& x)
 	{
-		return (T) FastFactorial( double(x) );
+		return T(FastFactorial( double(x) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -2156,7 +2156,7 @@ namespace GXMath
 	template <typename T>
 	ND_ forceinline T  Gamma (const T& x)
 	{
-		return (T) FastGammaFunction( double(x) );
+		return T(FastGammaFunction( double(x) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -2175,7 +2175,7 @@ namespace GXMath
 	template <typename T>
 	ND_ forceinline T  LnGamma (const T& x)
 	{
-		return (T) FastLnGammaFunction( double(x) );
+		return T(FastLnGammaFunction( double(x) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -2444,7 +2444,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<S> and CompileTime::IsUnsigned<S> );
 
-		const T	a = (T) Max( align, S(1) );
+		const T	a = T(Max( align, S(1) ));
 
 		return T( ((value + (a-1)) / a) * a );
 	}

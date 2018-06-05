@@ -985,7 +985,7 @@ namespace PlatformGL
 		if ( buffers.Empty() )
 			return true;
 
-		GL_CALL( glInvalidateSubFramebuffer( GL_DRAW_FRAMEBUFFER, (GLsizei)buffers.Count(), buffers.ptr(),
+		GL_CALL( glInvalidateSubFramebuffer( GL_DRAW_FRAMEBUFFER, GLsizei(buffers.Count()), buffers.ptr(),
 											_renderPassArea.left, _renderPassArea.bottom, _renderPassArea.Width(), _renderPassArea.Height() ) );
 		return true;
 	}
@@ -2240,7 +2240,7 @@ namespace PlatformGL
 	{
 		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdDebugMarker >();
 		
-		GL_CALL( glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0, _debugMarkerSeverity, cmd.info.Length(), cmd.info.cstr() ) );
+		GL_CALL( glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0, _debugMarkerSeverity, GLsizei(cmd.info.Length()), cmd.info.cstr() ) );
 		
 		if ( cmd.breakPoint ) {
 			GX_BREAK_POINT();
@@ -2257,7 +2257,7 @@ namespace PlatformGL
 	{
 		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPushDebugGroup >();
 		
-		GL_CALL( glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, 0, _debugMarkerSeverity, cmd.info.Length(), cmd.info.cstr() ) );
+		GL_CALL( glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, 0, _debugMarkerSeverity, GLsizei(cmd.info.Length()), cmd.info.cstr() ) );
 		return true;
 	}
 	

@@ -155,7 +155,7 @@ namespace PlatformWin
 		Rid[0].dwFlags		= 0;
 		Rid[0].hwndTarget	= req_hwnd->result->Get<HWND>();
 
-		CHECK( RegisterRawInputDevices( &Rid[0], (UINT) CountOf(Rid), sizeof(Rid[0]) ) != FALSE );
+		CHECK( RegisterRawInputDevices( &Rid[0], UINT(CountOf( Rid )), sizeof(Rid[0]) ) != FALSE );
 
 		CHECK( _DefCompose( false ) );
 		return true;
@@ -187,9 +187,9 @@ namespace PlatformWin
 			ubyte	input_data[60];
 			uint	data_size = sizeof(input_data);
 
-			if ( ::GetRawInputData( (HRAWINPUT) msg->lParam, RID_INPUT, input_data, &data_size, sizeof(RAWINPUTHEADER) ) != UMax )
+			if ( ::GetRawInputData( HRAWINPUT(msg->lParam), RID_INPUT, input_data, &data_size, sizeof(RAWINPUTHEADER) ) != UMax )
 			{
-				RAWINPUT  *	p_data = (RAWINPUT *)input_data;
+				RAWINPUT  *	p_data = Cast<RAWINPUT *>(input_data);
 				
 				// MOUSE //
 				if ( p_data->header.dwType == RIM_TYPEMOUSE )

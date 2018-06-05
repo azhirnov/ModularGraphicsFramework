@@ -357,7 +357,7 @@ namespace PlatformGL
 
 		//map_flags |= GL_MAP_UNSYNCHRONIZED_BIT;	// TODO: is that needed for vulkan compatibility?
 
-		GL_CALL( ptr = glMapNamedBufferRange( _objectId, GLintptr(msg->position), GLsizeiptr(size), map_flags ) );
+		GL_CALL( ptr = glMapNamedBufferRange( _objectId, GLintptr(msg->position), GLsizei(size), map_flags ) );
 
 		_memMapper.OnMapped( ptr, msg->position, size, msg->flags );
 		
@@ -840,7 +840,7 @@ namespace PlatformGL
 												msg.offset.x, 0, 0,
 												msg.dimension.x, 1, 1,
 												fmt, type,
-												(GLsizei) isize(msg.writableBuffer->Size()),
+												GLsizei(msg.writableBuffer->Size()),
 												OUT msg.writableBuffer->ptr() ) );
 				break;
 			}
@@ -854,7 +854,7 @@ namespace PlatformGL
 												msg.offset.x, msg.offset.y, 0,
 												msg.dimension.x, msg.dimension.y, 1,
 												fmt, type,
-												(GLsizei) isize(msg.writableBuffer->Size()),
+												GLsizei(msg.writableBuffer->Size()),
 												OUT msg.writableBuffer->ptr() ) );
 				break;
 			}
@@ -866,7 +866,7 @@ namespace PlatformGL
 												msg.offset.x, msg.offset.y, msg.offset.z,
 												msg.dimension.x, msg.dimension.y, msg.dimension.z,
 												fmt, type,
-												(GLsizei) isize(msg.writableBuffer->Size()),
+												GLsizei(msg.writableBuffer->Size()),
 												OUT msg.writableBuffer->ptr() ) );
 				break;
 			}
@@ -880,7 +880,7 @@ namespace PlatformGL
 												msg.offset.x, msg.offset.y, msg.layer.Get(),
 												msg.dimension.x, msg.dimension.y, 1,
 												fmt, type,
-												(GLsizei) isize(msg.writableBuffer->Size()),
+												GLsizei(msg.writableBuffer->Size()),
 												OUT msg.writableBuffer->ptr() ) );
 				break;
 			}
@@ -894,7 +894,7 @@ namespace PlatformGL
 												msg.offset.x, msg.offset.y, msg.layer.Get(),
 												msg.dimension.x, msg.dimension.y, 1,
 												fmt, type,
-												(GLsizei) isize(msg.writableBuffer->Size()),
+												GLsizei(msg.writableBuffer->Size()),
 												OUT msg.writableBuffer->ptr() ) );
 				break;
 			}

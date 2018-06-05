@@ -287,16 +287,16 @@ namespace GXMath
 		v_up_aux		= Cross( v_look_at, v_obj_to_cam_proj );
 		t_angle_cosine	= Dot( v_look_at, v_obj_to_cam_proj );
 
-		if ( t_angle_cosine < (T)0.9999 and t_angle_cosine > (T)-0.9999 )
+		if ( t_angle_cosine < T(0.9999) and t_angle_cosine > T(-0.9999) )
 			s_mv *= Rotation( acos(t_angle_cosine), v_up_aux );
 
 
 		v_obj_to_cam	= (cameraPos - pos).Normalized();
 		t_angle_cosine	= Dot( v_obj_to_cam_proj, v_obj_to_cam );
 
-		if ( (t_angle_cosine < (T)0.9999) and (t_angle_cosine > (T)-0.9999) )
+		if ( t_angle_cosine < T(0.9999) and t_angle_cosine > T(-0.9999) )
 		{
-			if ( v_obj_to_cam.y < (T)0 )
+			if ( v_obj_to_cam.y < T(0) )
 				s_mv *= Rotation( acos(t_angle_cosine), Vec3_t( 1, 0, 0 ) );
 			else
 				s_mv *= Rotation( acos(t_angle_cosine), Vec3_t( -1, 0, 0 ) );

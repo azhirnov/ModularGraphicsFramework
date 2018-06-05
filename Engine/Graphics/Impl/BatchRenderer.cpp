@@ -344,7 +344,7 @@ namespace Graphics
 		const BytesU	stride	= batch->attribs.Bindings().Front().second.stride;
 		const BytesU	aligned	= AlignToLarge( _vertices.Size(), stride );
 
-		_vertices.Resize( (usize)aligned );
+		_vertices.Resize( usize(aligned) );
 	}
 
 /*
@@ -355,10 +355,10 @@ namespace Graphics
 	bool BatchRenderer::_CopyVertices (Ptr<Batch> batch, const GraphicsMsg::AddBatch &data)
 	{
 		// add vertices
-		const usize		src_stride	= (usize) data.attribs.Bindings().Front().second.stride;
-		const usize		dst_stride	= (usize) batch->attribs.Bindings().Front().second.stride;
-		const usize		count		= (usize) data.vertices.Size() / src_stride;
-		const usize		offset		= (usize) _vertices.Size();
+		const usize		src_stride	= usize(data.attribs.Bindings().Front().second.stride);
+		const usize		dst_stride	= usize(batch->attribs.Bindings().Front().second.stride);
+		const usize		count		= usize(data.vertices.Size() / src_stride);
+		const usize		offset		= usize(_vertices.Size());
 		
 		ASSERT( offset % dst_stride == 0 );
 
@@ -399,11 +399,11 @@ namespace Graphics
 	inline bool BatchRenderer::_CopyIndicesT (Ptr<Batch> batch, const GraphicsMsg::AddBatch &data)
 	{
 		// add indices
-		const usize		offset	= (usize) _vertices.Size();
-		const usize		stride	= (usize) batch->attribs.Bindings().Front().second.stride;
+		const usize		offset	= usize(_vertices.Size());
+		const usize		stride	= usize(batch->attribs.Bindings().Front().second.stride);
 		const usize		first	= offset / stride;
-		const usize		count	= (usize) data.indices.Size() / sizeof(T);
-		const T *		indices	= PointerCast< const T >( data.indices.ptr() );
+		const usize		count	= usize(data.indices.Size() / sizeof(T));
+		const T *		indices	= Cast< const T *>( data.indices.ptr() );
 
 		CHECK_ERR( _CheckIndicesCount( count, data.primitive ) );
 
@@ -461,9 +461,9 @@ namespace Graphics
 */
 	bool BatchRenderer::_GenIndexSequence (Ptr<Batch> batch, const GraphicsMsg::AddBatch &data)
 	{
-		const usize		offset	= (usize) _vertices.Size();
-		const usize		stride	= (usize) batch->attribs.Bindings().Front().second.stride;
-		const usize		count	= (usize) data.vertices.Size() / stride;
+		const usize		offset	= usize(_vertices.Size());
+		const usize		stride	= usize(batch->attribs.Bindings().Front().second.stride);
+		const usize		count	= usize(data.vertices.Size() / stride);
 		const usize		first	= offset / stride;
 
 		ASSERT( offset % stride == 0 );

@@ -151,7 +151,7 @@ namespace GXTypes
 			template <typename ...Args>
 			explicit _TupleTL (Args&&... args) : Base{ FW<Args>(args)... }
 			{
-				STATIC_ASSERT( CountOf<Args...>() == Typelist_t::Count );
+				STATIC_ASSERT( sizeof...(Args) == Typelist_t::Count );
 			}
 
 			template <typename T>

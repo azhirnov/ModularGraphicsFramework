@@ -61,8 +61,8 @@ namespace OS
 		ScopeLock GetScopeLock()
 		{
 			struct Util {
-				static void Lock (void *p)		{ ((Self *)p)->Lock(); }
-				static void Unlock (void *p)	{ ((Self *)p)->Unlock(); }
+				static void Lock (void *p)		{ Cast<Self *>(p)->Lock(); }
+				static void Unlock (void *p)	{ Cast<Self *>(p)->Unlock(); }
 			};
 
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );
@@ -126,8 +126,8 @@ namespace OS
 		ScopeLock GetScopeLock()
 		{
 			struct Util {
-				static void Lock (void *p)		{ ((Self *)p)->Lock(); }
-				static void Unlock (void *p)	{ ((Self *)p)->Unlock(); }
+				static void Lock (void *p)		{ Cast<Self *>(p)->Lock(); }
+				static void Unlock (void *p)	{ Cast<Self *>(p)->Unlock(); }
 			};
 
 			return ScopeLock( this, &Util::Lock, &Util::Unlock, false );

@@ -122,7 +122,7 @@ namespace PlatformGL
 		_framebufferId	= 0;
 		_descr			= Uninitialized;
 
-		GL_CALL( glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, OUT (GLint*)&_framebufferId ) );
+		GL_CALL( glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, OUT Cast<GLint *>(&_framebufferId) ) );
 
 		const bool	is_multisampled	= samples.IsEnabled();
 		
