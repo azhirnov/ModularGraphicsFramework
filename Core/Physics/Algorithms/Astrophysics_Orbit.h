@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "Engine/Physics/Dimensions/PhysicsValueMath.h"
-#include "Engine/STL/Containers/Array.h"
-#include "Engine/STL/Algorithms/StringParser.h"
+#include "Core/Physics/Dimensions/PhysicsValueMath.h"
+#include "Core/STL/Containers/Array.h"
+#include "Core/STL/Algorithms/StringParser.h"
 
 namespace GXPhysics
 {

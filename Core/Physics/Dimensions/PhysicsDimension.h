@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Physics/Common/Common.h"
+#include "Core/Physics/Common/Common.h"
 
 namespace GXPhysics
 {

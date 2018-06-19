@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Engine/STL/CompileTime/TypeListHelpers.h"
-#include "Engine/Physics/Dimensions/PhysicsValue.h"
+#include "Core/STL/CompileTime/TypeListHelpers.h"
+#include "Core/Physics/Dimensions/PhysicsValue.h"
 
 namespace GXPhysics
 {

@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "Engine/Physics/Dimensions/PhysicsValueMath.h"
-#include "Engine/Physics/CompileTime/PhysTypeInfo.h"
-#include "Engine/Physics/CompileTime/GenType.h"
+#include "Core/Physics/Dimensions/PhysicsValueMath.h"
+#include "Core/Physics/CompileTime/PhysTypeInfo.h"
+#include "Core/Physics/CompileTime/GenType.h"
 
 namespace GXPhysics
 {

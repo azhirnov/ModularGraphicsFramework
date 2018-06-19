@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Physics/Dimensions/PhysicsDimension.h"
+#include "Core/Physics/Dimensions/PhysicsDimension.h"
 
 namespace GXPhysics
 {

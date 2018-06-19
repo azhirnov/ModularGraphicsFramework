@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Physics/Dimensions/PhysicsValueMath.h"
+#include "Core/Physics/Dimensions/PhysicsValueMath.h"
 
 namespace GXPhysics
 {
