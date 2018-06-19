@@ -14,14 +14,12 @@ class GApp final : public StaticRefCountedObject
 {
 // types
 private:
-	using RenderPassMsgList_t = CompileTime::TypeListFrom< Message<GpuMsg::GetRenderPassDescriptor> >;
+	using RenderPassMsgList_t = ModuleMsg::MessageListFrom< GpuMsg::GetRenderPassDescription >;
 
 
 // variables
-public:
-	Ptr< Module >		ms;
-
 private:
+	Ptr< Module >		ms;
 	bool				looping		= true;
 	GraphicsModuleIDs	ids;
 
@@ -46,10 +44,10 @@ public:
 	void Quit ();
 	bool Update ();
 	
-	bool _GraphicsInit (const Message< GpuMsg::DeviceCreated > &);
-	bool _GraphicsDelete (const Message< GpuMsg::DeviceBeforeDestroy > &);
-	bool _Draw (const Message< ModuleMsg::Update > &);
-	bool _OnWindowClosed (const Message< OSMsg::WindowAfterDestroy > &);
+	bool _GraphicsInit (const GpuMsg::DeviceCreated &);
+	bool _GraphicsDelete (const GpuMsg::DeviceBeforeDestroy &);
+	bool _Draw (const ModuleMsg::Update &);
+	bool _OnWindowClosed (const OSMsg::WindowAfterDestroy &);
 
 	bool _CreatePipeline ();
 };

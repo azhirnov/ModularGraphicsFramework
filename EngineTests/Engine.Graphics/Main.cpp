@@ -3,6 +3,11 @@
 #include "GApp.h"
 
 
+/*
+=================================================
+	main
+=================================================
+*/
 int main ()
 {
 	Logger::GetInstance()->Open( "log", false );
@@ -19,7 +24,7 @@ int main ()
 
 		app.Quit();
 	}
-	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
+	GetMainSystemInstance()->Send( ModuleMsg::Delete{} );
 	#endif
 	
 	#ifdef GRAPHICS_API_OPENGL
@@ -32,7 +37,7 @@ int main ()
 
 		app.Quit();
 	}
-	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
+	GetMainSystemInstance()->Send( ModuleMsg::Delete{} );
 	#endif
 
 	return 0;
