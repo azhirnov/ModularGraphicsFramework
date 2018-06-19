@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Tests/Script/Common.h"
-#include "Engine/STL/Types/Bitfield.h"
+#include "CoreTests/Script/Common.h"
+#include "Core/STL/Types/Bitfield.h"
 
 
 // class
@@ -64,7 +64,7 @@ struct Value
 	}
 };
 
-namespace GX_STL::GXScript {
+namespace GXScript {
 	GX_DECL_SCRIPT_TYPE( Value,	"Value" );
 }
 
@@ -107,7 +107,7 @@ struct EEnum
 	GX_ENUM_BITFIELD( EEnum );
 };
 
-namespace GX_STL::GXScript {
+namespace GXScript {
 	GX_DECL_SCRIPT_TYPE( EEnum::type,	"EEnum" );
 }
 

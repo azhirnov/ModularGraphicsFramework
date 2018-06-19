@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Tests/Script/Common.h"
+#include "CoreTests/Script/Common.h"
 
 //extern void Test_SimpleScript ();
 
