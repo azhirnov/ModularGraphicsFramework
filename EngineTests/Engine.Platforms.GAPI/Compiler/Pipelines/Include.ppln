@@ -1,0 +1,32 @@
+
+#ifdef ANGELSCRIPT
+void main ()
+{
+	ComputePipeline	self = ComputePipeline();
+	
+	self.shaderFormat = EShaderSrcFormat_GXSL;
+
+	self.compute.LoadSelf();
+}
+#endif
+//-----------------------------------------------------------------------------
+
+
+#ifdef SHADER
+#if SHADER & SH_COMPUTE
+
+#include <Math/Math.glsl>
+
+layout(binding=0, std430) writeonly buffer Include_SSBO
+{
+	float	results[2];
+} ssb;
+
+void main ()
+{
+	ssb.results[0] = Wrap( 1.0f,  0.0f, 4.0f );
+	ssb.results[1] = Wrap( 6.0f, -1.0f, 3.0f );
+}
+
+#endif
+#endif	// SHADER
