@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Public/GPU/VertexEnums.h"
-#include "Engine/STL/Math/Color/Half.h"
+#include "Core/STL/Math/Color/Half.h"
 
 namespace Engine
 {

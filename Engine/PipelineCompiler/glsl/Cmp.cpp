@@ -10,6 +10,8 @@ namespace glsl_vfs
 	This is generated file, don't change anything!
 */
 
+#include <Common/Defines.glsl>
+
 #define AllLess( _a_, _b_ )			All( Less( (_a_), (_b_) ) )
 #define AllLessEqual( _a_, _b_ )	All( LessEqual( (_a_), (_b_) ) )
 
@@ -30,7 +32,6 @@ namespace glsl_vfs
 
 #define NotAllEqual( _a_, _b_ )		not All( Equals( (_a_), (_b_) ) )
 #define NotAnyEqual( _a_, _b_ )		not Any( Equals( (_a_), (_b_) ) )
-
 
 // Less, Greater, LessEqual, GreaterEqual
 bool Less (const float x, const float y);
@@ -349,10 +350,10 @@ bool Less (const ulong x, const ulong y)  { return x < y; }
 bool Greater (const ulong x, const ulong y)  { return x > y; }
 bool LessEqual (const ulong x, const ulong y)  { return x <= y; }
 bool GreaterEqual (const ulong x, const ulong y)  { return x >= y; }
-bool2 Less (const ulong2 x, const ulong2 y)  { return lessThan( x, y ); }
-)#";
+bool2 Less (const ulong2 x, const ulong2 y))#";
 
-		src << R"#(bool2 Greater (const ulong2 x, const ulong2 y)  { return greaterThan( x, y ); }
+		src << R"#(  { return lessThan( x, y ); }
+bool2 Greater (const ulong2 x, const ulong2 y)  { return greaterThan( x, y ); }
 bool2 LessEqual (const ulong2 x, const ulong2 y)  { return lessThanEqual( x, y ); }
 bool2 GreaterEqual (const ulong2 x, const ulong2 y)  { return greaterThanEqual( x, y ); }
 bool3 Less (const ulong3 x, const ulong3 y)  { return lessThan( x, y ); }

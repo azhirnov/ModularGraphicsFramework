@@ -1,7 +1,7 @@
 // This is generated file, don't change anything!
 
 #include "glsl_source_vfs.h"
-#include "Engine/STL/Containers/HashMap.h"
+#include "Core/STL/Containers/HashMap.h"
 
 namespace glsl_vfs
 {

@@ -1,6 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Pipelines/PipelineManager.h"
+#include "Engine/PipelineCompiler/Pipelines/GraphicsPipeline.h"
+#include "Core/STL/ThreadSafe/Singleton.h"
 
 namespace PipelineCompiler
 {
@@ -263,28 +265,44 @@ namespace PipelineCompiler
 		}
 		CHECK_ERR( OS::FileSystem::IsDirectoryExist( path ) );
 
-		_structTypes.Clear();
-		_bindings.Clear();
+		_sharedStructTypes.Clear();
+		_sharedBindings.Clear();
+		_sharedVertexInput.Clear();
+		_sharedFragmentOutput.Clear();
 		
 
 		// prepare
-		FOR( i, pipelines )
+		for (auto& pp : pipelines)
 		{
-			const auto&		pp = pipelines[i];
-
 			CHECK_ERR( pp->Prepare( cfg ) );
 
 			if ( cfg.searchForSharedTypes ) {
-				CHECK_ERR( BasePipeline::_MergeStructTypes( pp->_structTypes, INOUT _structTypes ) );
+				CHECK_ERR( BasePipeline::_MergeStructTypes( pp->_structTypes, INOUT _sharedStructTypes ) );
 			}
 
+			// extract resource bindings
 			if ( cfg.optimizeBindings )
 			{
-				_AddBinding_Func	func( _bindings );
+				_AddBinding_Func	func( INOUT _sharedBindings );
 
 				FOR( j, pp->bindings.uniforms ) {
 					pp->bindings.uniforms[j].Apply( func );
 				}
+			}
+
+			// extract attribs
+			if ( cfg.optimizeVertexInput )
+			{
+				/*if ( auto* gppln = DynCast<GraphicsPipeline *>(pp) )
+				{
+					CHECK( _MergeVertexInput( gppln->shaders.vertex, INOUT _sharedAttribs ) );
+				}*/
+			}
+
+			// extract fragment output
+			if ( cfg.optimizeFragmentOutput )
+			{
+				// TODO
 			}
 		}
 
@@ -372,7 +390,7 @@ namespace Pipelines
 
 			includes << ser->Comment( "From file '"_str << FileAddress::GetNameAndExt( fname ) << "'" );
 			includes << ser->DeclFunction( "void", "Create_"_str << pp->Name(),
-							{{"PipelineTemplateDescriptor&", "descr"}}, true ) << '\n';
+							{{"PipelineTemplateDescription&", "descr"}}, true ) << '\n';
 		}
 
 		includes << ser->EndNamespace();
@@ -470,33 +488,38 @@ namespace Pipelines
 		if ( cfg.addPaddingToStructs )
 		{
 			// replace types to aligned types and padding
-			CHECK_ERR( BasePipeline::_AddPaddingToStructs( _structTypes ) );
+			CHECK_ERR( BasePipeline::_AddPaddingToStructs( _sharedStructTypes ) );
 
 			// update offsets by packing
-			CHECK_ERR( BasePipeline::_CalculateOffsets( _structTypes ) );
+			CHECK_ERR( BasePipeline::_CalculateOffsets( _sharedStructTypes ) );
 		}
 
 		// update location and bindings
 		{
-			auto&	textures	= _bindings[ BindableTypes::IndexOf<TextureUniform> ];
+			auto&	textures	= _sharedBindings[ BindableTypes::IndexOf<TextureUniform> ];
 			FOR( i, textures ) {
 				textures[i].second.template Get<TextureUniform>().location.index = uint(i);
 			}
 
-			auto&	images		= _bindings[ BindableTypes::IndexOf<ImageUniform> ];
+			auto&	images		= _sharedBindings[ BindableTypes::IndexOf<ImageUniform> ];
 			FOR( i, images ) {
 				images[i].second.template Get<ImageUniform>().location.index = uint(i);
 			}
 
-			auto&	uniform_buffers	= _bindings[ BindableTypes::IndexOf<UniformBuffer> ];
+			auto&	uniform_buffers	= _sharedBindings[ BindableTypes::IndexOf<UniformBuffer> ];
 			FOR( i, uniform_buffers ) {
 				uniform_buffers[i].second.template Get<UniformBuffer>().location.index = uint(i);
 			}
 
-			auto&	storage_buffers = _bindings[ BindableTypes::IndexOf<StorageBuffer> ];
+			auto&	storage_buffers = _sharedBindings[ BindableTypes::IndexOf<StorageBuffer> ];
 			FOR( i, storage_buffers ) {
 				storage_buffers[i].second.template Get<StorageBuffer>().location.index = uint(i);
 			}
+		}
+
+		// update vertex input
+		{
+			// TODO
 		}
 
 		// replace per-shader types with shared types
@@ -504,17 +527,14 @@ namespace Pipelines
 			usize	replaced	= 0;
 			usize	skiped		= 0;
 
-			FOR( i, pipelines )
+			for (auto& pp : pipelines)
 			{
-				auto&	pp = pipelines[i];
-
 				// replace struct types
-				FOR( j, pp->_structTypes )
+				for (auto& st : pp->_structTypes)
 				{
-					auto&					st	= pp->_structTypes[j];
 					StructTypes::iterator	iter;
 
-					if ( _structTypes.Find( st.first, OUT iter ) )
+					if ( _sharedStructTypes.Find( st.first, OUT iter ) )
 					{
 						st.second = iter->second;
 						++replaced;
@@ -526,10 +546,9 @@ namespace Pipelines
 				// replace bindings
 				if ( cfg.optimizeBindings )
 				{
-					FOR( j, pp->bindings.uniforms )
+					for (auto& bind : pp->bindings.uniforms)
 					{
-						auto&					bind	= pp->bindings.uniforms[j];
-						auto&					map		= _bindings[ bind.GetCurrentIndex() ];
+						auto&					map		= _sharedBindings[ bind.GetCurrentIndex() ];
 						_ReplaceBinding_Func	func( map );
 
 						bind.Apply( func );
@@ -537,6 +556,17 @@ namespace Pipelines
 				}
 
 				CHECK_ERR( pp->_UpdateBufferSizes() );
+
+				// replace vertex input
+				if ( cfg.optimizeVertexInput )
+				{
+				}
+
+				// replace fragment output
+				if ( cfg.optimizeFragmentOutput )
+				{
+					// TODO
+				}
 			}
 
 			LOG( "Replaced shader types: "_str << replaced << ", skiped: " << skiped, ELog::Debug );
@@ -565,11 +595,58 @@ namespace Pipelines
 		str << ser->BeginFile( true ) << '\n';
 		str << ser->BeginNamespace( nameSpace );
 
-		CHECK_ERR( BasePipeline::_SerializeStructs( _structTypes, ser, OUT str ) );
+		CHECK_ERR( BasePipeline::_SerializeStructs( _sharedStructTypes, ser, OUT str ) );
 		
 		str << ser->EndNamespace();
 		str << ser->EndFile( true );
 		return true;
+	}
+	
+/*
+=================================================
+	_MergeVertexInput
+=================================================
+*/
+	bool PipelineManager::_MergeVertexInput (const ArrayCRef<Varying> &input, INOUT Array<Varying> &output)
+	{
+		for (const auto& left : input)
+		{
+			if ( not left.qualifier[ EVariableQualifier::In ] )
+				continue;
+
+			bool	found = false;
+
+			for (const auto& right : output)
+			{
+				if ( right.name == left.name )
+				{
+					CHECK_ERR( left.type		== right.type );
+					CHECK_ERR( left.arraySize	== right.arraySize );
+					CHECK_ERR( left.location	== right.location );
+					CHECK_ERR( left.fields		== right.fields );
+
+					found = true;
+					break;
+				}
+			}
+
+			if ( not found )
+			{
+				output.PushBack( left );
+			}
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_MergeFragmentOutput
+=================================================
+*/
+	bool PipelineManager::_MergeFragmentOutput (const ArrayCRef<Varying> &input, INOUT Array<Varying> &output)
+	{
+		TODO( "" );
+		return false;
 	}
 
 }	// PipelineCompiler

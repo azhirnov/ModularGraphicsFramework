@@ -10,10 +10,10 @@ namespace glsl_vfs
 	3D Plane
 	
 	license: free
-
-	depends of:
-		Math3D/Line3
 */
+
+#include <Math3D/Line3.glsl>
+#include <Math/Math.glsl>
 
 struct Plane
 {

@@ -6,7 +6,11 @@ namespace glsl_vfs
 {
 	extern void VFS_Noise_Gabor (OUT String &src)
 	{
-		src << R"#(
+		src << R"#(/*
+	Gabor noise
+*/
+
+#include <Common/Defines.glsl>
 
 real GaborNoise (in real2 point, int numBlobs, real blobSize);
 

@@ -10,11 +10,12 @@ namespace glsl_vfs
 	3D Ray
 	
 	license: free
-
-	depends of:
-		Math/Quaternion
-		Math3D/Line3
 */
+
+#include <Math/Quaternion.glsl>
+#include <Math3D/Line3.glsl>
+#include <Math/Math.glsl>
+#include <Math/Utils.glsl>
 
 struct Ray
 {

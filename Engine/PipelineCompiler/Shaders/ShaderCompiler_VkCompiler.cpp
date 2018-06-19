@@ -38,12 +38,16 @@ namespace PipelineCompiler
 
 		std::vector<unsigned int>	spirv;
 		glslang::SpvOptions			spv_options;
+		spv::SpvBuildLogger			logger;
 
 		spv_options.generateDebugInfo	= not cfg.optimize;
 		spv_options.disableOptimizer	= not cfg.optimize;
 		spv_options.optimizeSize		= cfg.optimize;
-			
-		glslang::GlslangToSpv( *intermediate, OUT spirv, &spv_options );
+		
+		glslang::GlslangToSpv( *intermediate, OUT spirv, &logger, &spv_options );
+
+		log << StringCRef(logger.getAllMessages());
+		CHECK_ERR( not spirv.empty() );
 
 		if ( cfg.target == EShaderDstFormat::SPIRV_Source )
 		{

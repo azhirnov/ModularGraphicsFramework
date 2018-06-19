@@ -12,17 +12,17 @@ namespace Platforms
 	constructor
 =================================================
 */
-	GraphicsPipelineDescriptor::GraphicsPipelineDescriptor (UninitializedType) :
+	GraphicsPipelineDescription::GraphicsPipelineDescription (UninitializedType) :
 		patchControlPoints(0), subpass(0)
 	{}
 	
-	GraphicsPipelineDescriptor::GraphicsPipelineDescriptor (const VertexInputState &vertexInput,
-															const RenderState &renderState,
-															const PipelineLayoutDescriptor &layout,
-															EPipelineDynamicState::bits dynamicStates,
-															const FragmentOutputState &fragOutput,
-															uint patchControlPoints,
-															uint subpass) :
+	GraphicsPipelineDescription::GraphicsPipelineDescription  (const VertexInputState &				vertexInput,
+																const RenderState &					renderState,
+																const PipelineLayoutDescription&	layout,
+																EPipelineDynamicState::bits			dynamicStates,
+																const FragmentOutputState &			fragOutput,
+																uint								patchControlPoints,
+																uint								subpass) :
 		vertexInput(vertexInput),		renderState(renderState),
 		dynamicStates(dynamicStates),	fragOutput(fragOutput),
 		layout(layout),					patchControlPoints(patchControlPoints),
@@ -37,10 +37,10 @@ namespace Platforms
 	constructor
 =================================================
 */
-	ComputePipelineDescriptor::ComputePipelineDescriptor (UninitializedType)
+	ComputePipelineDescription::ComputePipelineDescription (UninitializedType)
 	{}
 
-	ComputePipelineDescriptor::ComputePipelineDescriptor (const PipelineLayoutDescriptor &layout,
+	ComputePipelineDescription::ComputePipelineDescription (const PipelineLayoutDescription &layout,
 														  const uint3 &localGroupSize) :
 		layout(layout), localGroupSize(localGroupSize)
 	{}
@@ -53,7 +53,7 @@ namespace Platforms
 	constructor
 =================================================
 */
-	PipelineTemplateDescriptor::PipelineTemplateDescriptor (UninitializedType) :
+	PipelineTemplateDescription::PipelineTemplateDescription (UninitializedType) :
 		patchControlPoints(0), subpass(0)
 	{
 	}
@@ -63,7 +63,7 @@ namespace Platforms
 	StringGLSL
 =================================================
 */
-	void PipelineTemplateDescriptor::ShaderSource::StringGLSL (StringCRef data)
+	void PipelineTemplateDescription::ShaderSource::StringGLSL (StringCRef data)
 	{
 		src[ ESource::GLSL ].Create2( String(data) );
 	}
@@ -73,7 +73,7 @@ namespace Platforms
 	FileGLSL
 =================================================
 */
-	bool PipelineTemplateDescriptor::ShaderSource::FileGLSL (const RFilePtr &file)
+	bool PipelineTemplateDescription::ShaderSource::FileGLSL (const RFilePtr &file)
 	{
 		CHECK_ERR( file );
 
@@ -91,7 +91,7 @@ namespace Platforms
 	StringCL
 =================================================
 */
-	void PipelineTemplateDescriptor::ShaderSource::StringCL (StringCRef data)
+	void PipelineTemplateDescription::ShaderSource::StringCL (StringCRef data)
 	{
 		src[ ESource::OpenCL ].Create2( String(data) );
 	}
@@ -101,7 +101,7 @@ namespace Platforms
 	FileCL
 =================================================
 */
-	bool PipelineTemplateDescriptor::ShaderSource::FileCL (const RFilePtr &file)
+	bool PipelineTemplateDescription::ShaderSource::FileCL (const RFilePtr &file)
 	{
 		CHECK_ERR( file );
 		
@@ -119,7 +119,7 @@ namespace Platforms
 	StringCLAsm
 =================================================
 */
-	void PipelineTemplateDescriptor::ShaderSource::StringCLAsm (StringCRef data)
+	void PipelineTemplateDescription::ShaderSource::StringCLAsm (StringCRef data)
 	{
 		src[ ESource::OpenCL_Asm ].Create2( String(data) );
 	}
@@ -129,7 +129,7 @@ namespace Platforms
 	FileCLAsm
 =================================================
 */
-	bool PipelineTemplateDescriptor::ShaderSource::FileCLAsm (const RFilePtr &file)
+	bool PipelineTemplateDescription::ShaderSource::FileCLAsm (const RFilePtr &file)
 	{
 		CHECK_ERR( file );
 		
@@ -147,7 +147,7 @@ namespace Platforms
 	ArraySPIRV
 =================================================
 */
-	void PipelineTemplateDescriptor::ShaderSource::ArraySPIRV (ArrayCRef<uint> data)
+	void PipelineTemplateDescription::ShaderSource::ArraySPIRV (ArrayCRef<uint> data)
 	{
 		src[ ESource::SPIRV ].Create2( Array<uint>(data) );
 	}
@@ -157,7 +157,7 @@ namespace Platforms
 	FileSPIRV
 =================================================
 */
-	bool PipelineTemplateDescriptor::ShaderSource::FileSPIRV (const RFilePtr &file)
+	bool PipelineTemplateDescription::ShaderSource::FileSPIRV (const RFilePtr &file)
 	{
 		CHECK_ERR( file );
 
@@ -175,7 +175,7 @@ namespace Platforms
 	StringSpirvAsm
 =================================================
 */
-	void PipelineTemplateDescriptor::ShaderSource::StringSpirvAsm (StringCRef data)
+	void PipelineTemplateDescription::ShaderSource::StringSpirvAsm (StringCRef data)
 	{
 		src[ ESource::SPIRV_Asm ].Create2( String(data) );
 	}
@@ -185,7 +185,7 @@ namespace Platforms
 	FuncSW
 =================================================
 */
-	void PipelineTemplateDescriptor::ShaderSource::FuncSW (const SWInvoke &func)
+	void PipelineTemplateDescription::ShaderSource::FuncSW (const SWInvoke &func)
 	{
 		src[ ESource::SoftRenderer ].Create( func );
 	}
@@ -195,7 +195,7 @@ namespace Platforms
 	StringHLSL
 =================================================
 */
-	void PipelineTemplateDescriptor::ShaderSource::StringHLSL (StringCRef data)
+	void PipelineTemplateDescription::ShaderSource::StringHLSL (StringCRef data)
 	{
 		src[ ESource::HLSL ].Create( String(data) );
 	}
@@ -205,7 +205,7 @@ namespace Platforms
 	StringBinHLSL
 =================================================
 */
-	void PipelineTemplateDescriptor::ShaderSource::StringBinHLSL (BinArrayCRef data)
+	void PipelineTemplateDescription::ShaderSource::StringBinHLSL (BinArrayCRef data)
 	{
 		src[ ESource::HLSL_Bin ].Create( BinaryArray(data) );
 	}
@@ -215,7 +215,7 @@ namespace Platforms
 	GetGLSL
 =================================================
 */
-	StringCRef  PipelineTemplateDescriptor::ShaderSource::GetGLSL () const
+	StringCRef  PipelineTemplateDescription::ShaderSource::GetGLSL () const
 	{
 		const auto&		data = src[ ESource::GLSL ];
 
@@ -231,7 +231,7 @@ namespace Platforms
 	GetSPIRV
 =================================================
 */
-	ArrayCRef<uint>  PipelineTemplateDescriptor::ShaderSource::GetSPIRV () const
+	ArrayCRef<uint>  PipelineTemplateDescription::ShaderSource::GetSPIRV () const
 	{
 		const auto&		data = src[ ESource::SPIRV ];
 
@@ -247,7 +247,7 @@ namespace Platforms
 	GetSpirvAsm
 =================================================
 */
-	StringCRef	PipelineTemplateDescriptor::ShaderSource::GetSpirvAsm () const
+	StringCRef	PipelineTemplateDescription::ShaderSource::GetSpirvAsm () const
 	{
 		const auto&		data = src[ ESource::SPIRV_Asm ];
 
@@ -263,7 +263,7 @@ namespace Platforms
 	GetCL
 =================================================
 */
-	StringCRef  PipelineTemplateDescriptor::ShaderSource::GetCL () const
+	StringCRef  PipelineTemplateDescription::ShaderSource::GetCL () const
 	{
 		const auto&		data = src[ ESource::OpenCL ];
 
@@ -279,7 +279,7 @@ namespace Platforms
 	GetCLAsm
 =================================================
 */
-	StringCRef PipelineTemplateDescriptor::ShaderSource::GetCLAsm () const
+	StringCRef PipelineTemplateDescription::ShaderSource::GetCLAsm () const
 	{
 		const auto&		data = src[ ESource::OpenCL_Asm ];
 
@@ -295,8 +295,8 @@ namespace Platforms
 	GetSW
 =================================================
 */
-	PipelineTemplateDescriptor::ShaderSource::SWInvoke
-		PipelineTemplateDescriptor::ShaderSource::GetSW () const
+	PipelineTemplateDescription::ShaderSource::SWInvoke
+		PipelineTemplateDescription::ShaderSource::GetSW () const
 	{
 		const auto&		data = src[ ESource::SoftRenderer ];
 
@@ -312,7 +312,7 @@ namespace Platforms
 	GetHLSL
 =================================================
 */
-	StringCRef  PipelineTemplateDescriptor::ShaderSource::GetHLSL () const
+	StringCRef  PipelineTemplateDescription::ShaderSource::GetHLSL () const
 	{
 		const auto&		data = src[ ESource::HLSL ];
 
@@ -328,7 +328,7 @@ namespace Platforms
 	GetHLSLBin
 =================================================
 */
-	BinArrayCRef  PipelineTemplateDescriptor::ShaderSource::GetHLSLBin () const
+	BinArrayCRef  PipelineTemplateDescription::ShaderSource::GetHLSLBin () const
 	{
 		const auto&		data = src[ ESource::HLSL_Bin ];
 

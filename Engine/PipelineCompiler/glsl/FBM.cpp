@@ -6,7 +6,11 @@ namespace glsl_vfs
 {
 	extern void VFS_Noise_FBM (OUT String &src)
 	{
-		src << R"#(
+		src << R"#(/*
+	FBM
+*/
+
+#include <Common/Defines.glsl>
 
 //real FractionalBrownianMotion (in real2 point, int octaves);
 

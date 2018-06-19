@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -29,10 +29,10 @@ namespace PlatformGL
 	// types
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::ReadRegion,
 											DSMsg::WriteRegion,
-											GpuMsg::GetGpuMemoryDescriptor,
+											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -44,8 +44,8 @@ namespace PlatformGL
 										>;
 
 		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetImageDescriptor,
-											GpuMsg::SetImageDescriptor,
+											GpuMsg::GetImageDescription,
+											GpuMsg::SetImageDescription,
 											GpuMsg::GetGLImageID,
 											GpuMsg::CreateGLImageView,
 											GpuMsg::GpuMemoryRegionChanged,
@@ -53,7 +53,7 @@ namespace PlatformGL
 										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t::Append< MessageListFrom<
-											GpuMsg::SetImageDescriptor
+											GpuMsg::SetImageDescription
 										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
@@ -72,7 +72,7 @@ namespace PlatformGL
 
 	// variables
 	private:
-		ImageDescriptor			_descr;
+		ImageDescription		_descr;
 		ModulePtr				_memObj;
 		ImageViewMap_t			_viewMap;
 		GLuint					_imageId;
@@ -93,20 +93,20 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		bool _GetGLImageID (const Message< GpuMsg::GetGLImageID > &);
-		bool _CreateGLImageView (const Message< GpuMsg::CreateGLImageView > &);
-		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
-		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
-		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		bool _GetGLImageID (const GpuMsg::GetGLImageID &);
+		bool _CreateGLImageView (const GpuMsg::CreateGLImageView &);
+		bool _GetImageDescription (const GpuMsg::GetImageDescription &);
+		bool _SetImageDescription (const GpuMsg::SetImageDescription &);
+		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
+		bool _GetImageMemoryLayout (const GpuMsg::GetImageMemoryLayout &);
 		
 	// event handlers
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+		bool _OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &);
 
 	private:
 		bool _IsImageCreated () const;
@@ -152,8 +152,8 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Image::_OnManagerChanged );
 		_SubscribeOnMsg( this, &GL4Image::_GetGLImageID );
 		_SubscribeOnMsg( this, &GL4Image::_CreateGLImageView );
-		_SubscribeOnMsg( this, &GL4Image::_GetImageDescriptor );
-		_SubscribeOnMsg( this, &GL4Image::_SetImageDescriptor );
+		_SubscribeOnMsg( this, &GL4Image::_GetImageDescription );
+		_SubscribeOnMsg( this, &GL4Image::_SetImageDescription );
 		_SubscribeOnMsg( this, &GL4Image::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Image::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Image::_GetGLPrivateClasses );
@@ -163,8 +163,8 @@ namespace PlatformGL
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 		
 		// descriptor may be invalid for sharing or for delayed initialization
-		if ( Utils::IsValidDescriptor( _descr ) )
-			Utils::ValidateDescriptor( INOUT _descr );
+		if ( Utils::IsValidDescription( _descr ) )
+			Utils::ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -182,7 +182,7 @@ namespace PlatformGL
 	_Link
 =================================================
 */
-	bool GL4Image::_Link (const Message< ModuleMsg::Link > &msg)
+	bool GL4Image::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -217,7 +217,7 @@ namespace PlatformGL
 	_Compose
 =================================================
 */
-	bool GL4Image::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool GL4Image::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -239,7 +239,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4Image::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4Image::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyAll();
 
@@ -251,11 +251,11 @@ namespace PlatformGL
 	_AttachModule
 =================================================
 */
-	bool GL4Image::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool GL4Image::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
+		const bool	is_mem	= msg.newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		if ( is_mem )
 		{
@@ -270,11 +270,11 @@ namespace PlatformGL
 	_DetachModule
 =================================================
 */
-	bool GL4Image::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool GL4Image::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule == _memObj )
+		if ( msg.oldModule == _memObj )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyViews();
@@ -477,11 +477,11 @@ namespace PlatformGL
 		
 		if ( _CanHaveImageView() )
 		{
-			Message< GpuMsg::CreateGLImageView >	create{ _descr };
+			GpuMsg::CreateGLImageView	create{ _descr };
 
 			CHECK_ERR( _CreateGLImageView( create ) );
 
-			_imageView = *create->result;
+			_imageView = *create.result;
 		}
 		return true;
 	}
@@ -531,11 +531,11 @@ namespace PlatformGL
 	_GetGLImageID
 =================================================
 */
-	bool GL4Image::_GetGLImageID (const Message< GpuMsg::GetGLImageID > &msg)
+	bool GL4Image::_GetGLImageID (const GpuMsg::GetGLImageID &msg)
 	{
 		ASSERT( _IsImageCreated() );
 
-		msg->result.Set( _imageId );
+		msg.result.Set( _imageId );
 		return true;
 	}
 	
@@ -544,13 +544,13 @@ namespace PlatformGL
 	_CreateGLImageView
 =================================================
 */
-	bool GL4Image::_CreateGLImageView (const Message< GpuMsg::CreateGLImageView > &msg)
+	bool GL4Image::_CreateGLImageView (const GpuMsg::CreateGLImageView &msg)
 	{
 		CHECK_ERR( _IsImageCreated() );
 		CHECK_ERR( _isBindedToMemory );
 		CHECK_ERR( _CanHaveImageView() );
 
-		ImageView_t		descr = msg->viewDescr;
+		ImageView_t		descr = msg.viewDescr;
 		
 		ImageViewMap_t::Validate( INOUT descr, _descr );
 		
@@ -559,7 +559,7 @@ namespace PlatformGL
 		
 		if ( img_view != 0 )
 		{
-			msg->result.Set( img_view );
+			msg.result.Set( img_view );
 			return true;
 		}
 
@@ -591,33 +591,33 @@ namespace PlatformGL
 
 		_viewMap.Add( descr, img_view );
 
-		msg->result.Set( img_view );
+		msg.result.Set( img_view );
 		return true;
 	}
 
 /*
 =================================================
-	_GetImageDescriptor
+	_GetImageDescription
 =================================================
 */
-	bool GL4Image::_GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &msg)
+	bool GL4Image::_GetImageDescription (const GpuMsg::GetImageDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_SetImageDescriptor
+	_SetImageDescription
 =================================================
 */
-	bool GL4Image::_SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &msg)
+	bool GL4Image::_SetImageDescription (const GpuMsg::SetImageDescription &msg)
 	{
 		CHECK_ERR( GetState() == EState::Initial );
 
-		_descr = msg->descr;
+		_descr = msg.descr;
 
-		Utils::ValidateDescriptor( INOUT _descr );
+		Utils::ValidateDescription( INOUT _descr );
 		return true;
 	}
 
@@ -626,26 +626,26 @@ namespace PlatformGL
 	_OnMemoryBindingChanged
 =================================================
 */
-	bool GL4Image::_OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &msg)
+	bool GL4Image::_OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &msg)
 	{
 		CHECK_ERR( _IsComposedOrLinkedState( GetState() ) );
 
 		using EBindingTarget = GpuMsg::OnMemoryBindingChanged::EBindingTarget;
 
-		if (  msg->targetObject == this )
+		if (  msg.targetObject == this )
 		{
-			_isBindedToMemory = ( msg->newState == EBindingTarget::Image );
+			_isBindedToMemory = ( msg.newState == EBindingTarget::Image );
 
 			if ( _isBindedToMemory )
 			{
 				CHECK( _CreateDefaultView() );
 				CHECK( _SetState( EState::ComposedMutable ) );
 		
-				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+				_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 			}
 			else
 			{
-				CHECK( _SetState( EState::Linked ) );
+				_SendMsg( ModuleMsg::Delete{} );
 			}
 		}
 		return true;
@@ -656,7 +656,7 @@ namespace PlatformGL
 	_GpuMemoryRegionChanged
 =================================================
 */
-	bool GL4Image::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &)
+	bool GL4Image::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
 	{
 		// request image memory barrier
 		TODO( "" );
@@ -668,12 +668,12 @@ namespace PlatformGL
 	_GetImageMemoryLayout
 =================================================
 */
-	bool GL4Image::_GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &msg)
+	bool GL4Image::_GetImageMemoryLayout (const GpuMsg::GetImageMemoryLayout &msg)
 	{
 		CHECK_ERR( _IsImageCreated() );
-		CHECK_ERR( msg->mipLevel < _descr.maxLevel );
+		CHECK_ERR( msg.mipLevel < _descr.maxLevel );
 
-		const uint4		lvl_size	= Max( Utils::LevelDimension( _descr.imageType, _descr.dimension, msg->mipLevel.Get() ), 1u );
+		const uint4		lvl_size	= Max( Utils::LevelDimension( _descr.imageType, _descr.dimension, msg.mipLevel.Get() ), 1u );
 		const BytesUL	bpp			= BytesUL(EPixelFormat::BitPerPixel( _descr.format ));
 		const BytesUL	row_align	= BytesUL(uint(bpp) % 4 == 0 ? 4 : 1);
 
@@ -686,7 +686,7 @@ namespace PlatformGL
 		
 		ASSERT( result.slicePitch * result.dimension.z <= result.size );
 
-		msg->result.Set( result );
+		msg.result.Set( result );
 		return true;
 	}
 	

@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -26,22 +26,22 @@ namespace PlatformVK
 	// types
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetFramebufferDescriptor,
+											GpuMsg::GetFramebufferDescription,
 											GpuMsg::GetVkFramebufferID,
 											GpuMsg::FramebufferAttachImage
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
 
-		using RenderPassMsgList_t	= MessageListFrom< GpuMsg::GetRenderPassDescriptor, GpuMsg::GetVkRenderPassID >;
-		using ImageMsgList_t		= MessageListFrom< GpuMsg::GetImageDescriptor, GpuMsg::CreateVkImageView >;
+		using RenderPassMsgList_t	= MessageListFrom< GpuMsg::GetRenderPassDescription, GpuMsg::GetVkRenderPassID >;
+		using ImageMsgList_t		= MessageListFrom< GpuMsg::GetImageDescription, GpuMsg::CreateVkImageView >;
 
 		struct AttachmentInfo : CompileTime::PODStruct
 		{
 		// variables
 			ModuleName_t			name;
 			vk::VkImageView			view	= VK_NULL_HANDLE;
-			ImageViewDescriptor		descr;
+			ImageViewDescription	descr;
 			MultiSamples			samples;
 
 		// methods
@@ -63,7 +63,7 @@ namespace PlatformVK
 	private:
 		vk::VkFramebuffer			_framebufferId;
 
-		FramebufferDescriptor		_descr;
+		FramebufferDescription		_descr;
 
 		Attachments_t				_attachments;
 
@@ -76,24 +76,24 @@ namespace PlatformVK
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		//bool _ReplaceModule (const Message< ModuleMsg::ReplaceModule > &);
-		bool _GetVkFramebufferID (const Message< GpuMsg::GetVkFramebufferID > &);
-		bool _GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &);
-		bool _FramebufferAttachImage (const Message< GpuMsg::FramebufferAttachImage > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		//bool _ReplaceModule (const ModuleMsg::ReplaceModule &);
+		bool _GetVkFramebufferID (const GpuMsg::GetVkFramebufferID &);
+		bool _GetFramebufferDescription (const GpuMsg::GetFramebufferDescription &);
+		bool _FramebufferAttachImage (const GpuMsg::FramebufferAttachImage &);
 
 	private:
 		bool _IsCreated () const;
 		bool _CreateFramebuffer ();
 		void _DestroyFramebuffer ();
 
-		bool _CreateRenderPassByAttachment (OUT RenderPassDescriptor &rpDescr, OUT vk::VkRenderPass &renderPass);
-		bool _ValidateAttachment (const RenderPassDescriptor &rpDescr) const;
+		bool _CreateRenderPassByAttachment (OUT RenderPassDescription &rpDescr, OUT vk::VkRenderPass &renderPass);
+		bool _ValidateAttachment (const RenderPassDescription &rpDescr) const;
 
-		static void _ValidateDescriptor (INOUT FramebufferDescriptor &descr);
+		static void _ValidateDescription (INOUT FramebufferDescription &descr);
 	};
 //-----------------------------------------------------------------------------
 
@@ -126,7 +126,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetVkFramebufferID );
-		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetFramebufferDescriptor );
+		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetFramebufferDescription );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetVkPrivateClasses );
@@ -136,7 +136,7 @@ namespace PlatformVK
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
-		_ValidateDescriptor( INOUT _descr );
+		_ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -154,7 +154,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1Framebuffer::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool Vk1Framebuffer::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -170,7 +170,7 @@ namespace PlatformVK
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -179,7 +179,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1Framebuffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1Framebuffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyFramebuffer();
 
@@ -194,19 +194,19 @@ namespace PlatformVK
 	_AttachModule
 =================================================
 */
-	bool Vk1Framebuffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool Vk1Framebuffer::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 		
-		if ( msg->newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >() )
+		if ( msg.newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >() )
 		{
-			return _FramebufferAttachImage({ msg->name, msg->newModule });
+			return _FramebufferAttachImage({ msg.name, msg.newModule });
 		}
 
 		// render pass must be unique
-		const bool	is_render_pass	= msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		const bool	is_render_pass	= msg.newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule, is_render_pass ) );
+		CHECK( _Attach( msg.name, msg.newModule, is_render_pass ) );
 
 		if ( is_render_pass )
 		{
@@ -221,38 +221,38 @@ namespace PlatformVK
 	_ReplaceModule
 =================================================
 *
-	bool Vk1Framebuffer::_ReplaceModule (const Message< ModuleMsg::ReplaceModule > &msg)
+	bool Vk1Framebuffer::_ReplaceModule (const ModuleMsg::ReplaceModule &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 		
-		ModulePtr	old_mod = msg->oldModule;
+		ModulePtr	old_mod = msg.oldModule;
 
-		if ( not msg->name.Empty() )
+		if ( not msg.name.Empty() )
 		{
-			old_mod = GetModuleByName( msg->name );
-			CHECK_ERR( old_mod.IsNull() or msg->oldModule.IsNull() or old_mod == msg->oldModule );
-			old_mod = old_mod ? old_mod : msg->oldModule;	// module by name has more priority
+			old_mod = GetModuleByName( msg.name );
+			CHECK_ERR( old_mod.IsNull() or msg.oldModule.IsNull() or old_mod == msg.oldModule );
+			old_mod = old_mod ? old_mod : msg.oldModule;	// module by name has more priority
 		}
 		CHECK_ERR( old_mod );
 
-		bool	is_render_pass	= msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_render_pass	= msg.newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
 		bool	was_render_pass	= old_mod->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
-		bool	is_image		= msg->newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+		bool	is_image		= msg.newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
 		bool	was_image		= old_mod->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
 
 		CHECK_ERR( is_render_pass == was_render_pass and is_image == was_image );
 
 		if ( is_image )
 		{
-			Message< GpuMsg::GetImageDescriptor >	req_descr1;
-			Message< GpuMsg::GetImageDescriptor >	req_descr2;
+			GpuMsg::GetImageDescription >	req_descr1;
+			GpuMsg::GetImageDescription >	req_descr2;
 
 			old_mod->Send( req_descr1 );
-			msg->newModule->Send( req_descr2 );
+			msg.newModule->Send( req_descr2 );
 		}
 
 		CHECK( _Detach( old_mod ) );
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 		
 		CHECK( _SetState( EState::Initial ) );
 		_DestroyFramebuffer();
@@ -264,9 +264,9 @@ namespace PlatformVK
 	_FramebufferAttachImage
 =================================================
 */
-	bool Vk1Framebuffer::_FramebufferAttachImage (const Message< GpuMsg::FramebufferAttachImage > &msg)
+	bool Vk1Framebuffer::_FramebufferAttachImage (const GpuMsg::FramebufferAttachImage &msg)
 	{
-		ModulePtr	mod = GetModuleByName( msg->name );
+		ModulePtr	mod = GetModuleByName( msg.name );
 		if ( mod ) {
 			CHECK( _Detach( mod ) );
 		}
@@ -274,18 +274,18 @@ namespace PlatformVK
 		bool			found = false;
 		AttachmentInfo	new_att;
 		
-		new_att.name			= msg->name;
-		new_att.descr			= msg->viewDescr;
+		new_att.name			= msg.name;
+		new_att.descr			= msg.viewDescr;
 		new_att.descr.swizzle	= ImageSwizzle();
 
-		CHECK( new_att.descr.swizzle == msg->viewDescr.swizzle );
+		CHECK( new_att.descr.swizzle == msg.viewDescr.swizzle );
 
 		FOR( i, _attachments )
 		{
 			auto&	att = _attachments[i];
 
 			// replace
-			if ( att.name == msg->name )
+			if ( att.name == msg.name )
 			{
 				att		= new_att;
 				found	= true;
@@ -298,7 +298,7 @@ namespace PlatformVK
 			_attachments.PushBack( new_att );
 		}
 
-		if ( _Attach( msg->name, msg->image ) )
+		if ( _Attach( msg.name, msg.image ) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyFramebuffer();
@@ -311,14 +311,14 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1Framebuffer::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool Vk1Framebuffer::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK_ERR( msg->oldModule );
+		CHECK_ERR( msg.oldModule );
 
-		bool	is_render_pass	= msg->oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
-		bool	is_image		= msg->oldModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+		bool	is_render_pass	= msg.oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_image		= msg.oldModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
 
-		if ( _Detach( msg->oldModule ) and (is_image or is_render_pass) )
+		if ( _Detach( msg.oldModule ) and (is_image or is_render_pass) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyFramebuffer();
@@ -331,22 +331,22 @@ namespace PlatformVK
 	_GetVkFramebufferID
 =================================================
 */
-	bool Vk1Framebuffer::_GetVkFramebufferID (const Message< GpuMsg::GetVkFramebufferID > &msg)
+	bool Vk1Framebuffer::_GetVkFramebufferID (const GpuMsg::GetVkFramebufferID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set( _framebufferId );
+		msg.result.Set( _framebufferId );
 		return true;
 	}
 
 /*
 =================================================
-	_GetFramebufferDescriptor
+	_GetFramebufferDescription
 =================================================
 */
-	bool Vk1Framebuffer::_GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &msg)
+	bool Vk1Framebuffer::_GetFramebufferDescription (const GpuMsg::GetFramebufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
@@ -372,11 +372,11 @@ namespace PlatformVK
 		CHECK_ERR( not _IsCreated() );
 		CHECK_ERR( not _attachments.Empty() );
 
-		using ImageViewMessages_t		= MessageListFrom< GpuMsg::GetImageDescriptor, GpuMsg::CreateVkImageView >;
+		using ImageViewMessages_t		= MessageListFrom< GpuMsg::GetImageDescription, GpuMsg::CreateVkImageView >;
 		using ImageViews_t				= FixedSizeArray< VkImageView, GlobalConst::GAPI_MaxColorBuffers + 1 >;
 		using ColorAttachmentInfos_t	= FixedSizeArray< AttachmentInfo, GlobalConst::GAPI_MaxColorBuffers >;
 
-		RenderPassDescriptor	render_pass_descr;
+		RenderPassDescription	render_pass_descr;
 		VkRenderPass			render_pass		= VK_NULL_HANDLE;
 		ImageViews_t			img_views;
 
@@ -404,13 +404,13 @@ namespace PlatformVK
 			
 			const auto&	img_res = GetResourceCache()->GetImageID( mod );
 
-			Message< GpuMsg::CreateVkImageView >	req_view{ att.descr };
-			SendTo( mod, req_view );
+			GpuMsg::CreateVkImageView	req_view{ att.descr };
+			mod->Send( req_view );
 			
 			att.descr.format	= att.descr.format == EPixelFormat::Unknown ? img_res.Get<1>().format : att.descr.format;
 			att.descr.viewType	= att.descr.viewType == EImage::Unknown ? img_res.Get<1>().imageType : att.descr.viewType;
 			att.samples			= img_res.Get<1>().samples;
-			att.view			= *req_view->result;
+			att.view			= *req_view.result;
 			
 			const uint4	dim	= Max( ImageUtils::LevelDimension( att.descr.viewType, img_res.Get<1>().dimension, att.descr.baseLevel.Get() ), 1u );
 
@@ -461,9 +461,9 @@ namespace PlatformVK
 			img_views[idx] = att.view;
 
 			if ( is_depth )
-				_descr.depthStencilAttachment = FramebufferDescriptor::AttachmentInfo{ att.name, att.descr.viewType };
+				_descr.depthStencilAttachment = FramebufferDescription::AttachmentInfo{ att.name, att.descr.viewType };
 			else
-				_descr.colorAttachments[idx] = FramebufferDescriptor::AttachmentInfo{ att.name, att.descr.viewType };
+				_descr.colorAttachments[idx] = FramebufferDescription::AttachmentInfo{ att.name, att.descr.viewType };
 		}
 
 		// create framebuffer
@@ -488,7 +488,7 @@ namespace PlatformVK
 	_CreateRenderPassByAttachment
 =================================================
 */
-	bool Vk1Framebuffer::_CreateRenderPassByAttachment (OUT RenderPassDescriptor &rpDescr, OUT vk::VkRenderPass &renderPass)
+	bool Vk1Framebuffer::_CreateRenderPassByAttachment (OUT RenderPassDescription &rpDescr, OUT vk::VkRenderPass &renderPass)
 	{
 		auto	builder = RenderPassDescrBuilder::CreateForFramebuffer();
 
@@ -526,7 +526,7 @@ namespace PlatformVK
 	_ValidateAttachment
 =================================================
 */
-	bool Vk1Framebuffer::_ValidateAttachment (const RenderPassDescriptor &rpDescr) const
+	bool Vk1Framebuffer::_ValidateAttachment (const RenderPassDescription &rpDescr) const
 	{
 		CHECK_ERR( _attachments.Count() == rpDescr.ColorAttachments().Count() + uint(rpDescr.DepthStencilAttachment().IsEnabled()) );
 
@@ -586,10 +586,10 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_ValidateDescriptor
+	_ValidateDescription
 =================================================
 */
-	void Vk1Framebuffer::_ValidateDescriptor (INOUT FramebufferDescriptor &descr)
+	void Vk1Framebuffer::_ValidateDescription (INOUT FramebufferDescription &descr)
 	{
 		CHECK( All( descr.size != uint2(0) ) );
 

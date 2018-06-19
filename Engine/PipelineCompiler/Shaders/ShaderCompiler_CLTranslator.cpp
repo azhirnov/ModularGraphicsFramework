@@ -7,6 +7,8 @@
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler_NameValidator.h"
 #include "Engine/PipelineCompiler/cl/cl_source_vfs.h"
 
+#define USE_BUFFER_LOAD_STORE	0
+
 namespace PipelineCompiler
 {
 
@@ -23,23 +25,37 @@ namespace PipelineCompiler
 		using SamplerMap_t		= HashMap< String, String >;		// { texture name, sampler name }
 		using NamedExternals_t	= Map< SymbolID, String >;			// used for unnameed buffers
 		using FuncSignMap_t		= HashMap< String, Bitfield<64> >;	// bitfield bit setted if function argument is a pointer
+		using StFieldReplacer_t	= HashMap< String, HashMap<String, String> >;	// { typename, { src_field, dst_field } }
+
+		struct StructInfo
+		{
+			String		reader;
+			String		writer;
+		};
+		using StructRWMap_t		= HashMap< String, StructInfo >;	// { typename, reader/writer }
+		using CustomTypes_t		= HashMap< String, String >;		// { type, definition }
 
 
 	// variables
 	private:
+		Translator &			_translator;
 		StringMap_t				_builtinMap;
 		Externals_t				_externals;
 		SamplerMap_t			_samplerMap;
 		NamedExternals_t		_externalNames;
-		
 		ShaderVarNameValidator	_nameValidator;
-
 		FuncSignMap_t			_definedFuncs;
+		StFieldReplacer_t		_fieldReplacer;
+		CustomTypes_t			_customTypes;
+
+		#if USE_BUFFER_LOAD_STORE
+		StructRWMap_t			_structBufferRW;
+		#endif
 
 
 	// methods
 	public:
-		CL_DstLanguage ();
+		CL_DstLanguage (Translator &translator);
 		~CL_DstLanguage () {}
 
 		bool TranslateLocalVar (const Symbol &, INOUT String &src) override;
@@ -61,15 +77,25 @@ namespace PipelineCompiler
 
 		bool TranslateEntry (const TypeInfo &ret, StringCRef sign, ArrayCRef<Symbol> args, StringCRef body, OUT String &entryPoint, INOUT String &src) override;
 		bool TranslateStructAccess (SymbolID id, const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) override;
+
+		bool TranslateBufferLoad (SymbolID id, StringCRef objName, StringCRef fieldOffset, const TypeInfo &fieldType, INOUT String &src) override;
+		bool TranslateBufferStore (SymbolID id, StringCRef objName, StringCRef fieldOffset, const TypeInfo &fieldType,
+								   StringCRef dataStr, const TypeInfo &dataType, INOUT String &src) override;
 		
 		bool TranslateValue (VariantCRef value, INOUT String &src) const override;
 
-		bool DeclExternalTypes () const	override	{ return true; }
+		bool DeclExternalTypes () const	override		{ return true; }
+		bool ReplaceStructByBuffer () const override	{ return bool(USE_BUFFER_LOAD_STORE); }
+
+		bool AddSource (const glslang::TIntermediate* intermediate) const;
 
 	private:
 		String _TranslateFunctionName (StringCRef sign);
 		bool _TranslateArg (const Symbol &t, INOUT String &res);
 		bool _TranslateField (const TypeInfo &t, INOUT String &res);
+		
+		bool _CreateStructRW (TypeInfo const& info);
+		bool _CreateUnion (EShaderVariable::type first, EShaderVariable::type second, OUT String &str);
 
 		bool _TranslateBuffer (Symbol const& info, OUT String &str);
 		bool _TranslateImage (Symbol const& info, OUT String &str);
@@ -88,6 +114,7 @@ namespace PipelineCompiler
 		static String ToStringCL (EShaderMemoryModel::type value);
 		static String ToStringCL (EPixelFormat::type value);
 		static String ToStringCL (EShaderVariable::type value);
+		static String TypenameToStringCL (EShaderVariable::type value, StringCRef typeName);
 	};
 
 	
@@ -97,8 +124,6 @@ namespace PipelineCompiler
 	_TranslateGXSLtoGLSL
 =================================================
 */
-	static bool TranslateShaderInfo (const glslang::TIntermediate* intermediate, Translator &translator);
-
 	bool ShaderCompiler::_TranslateGXSLtoCL (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const
 	{
 		CHECK_ERR(	cfg.source == EShaderSrcFormat::GXSL or
@@ -115,54 +140,32 @@ namespace PipelineCompiler
 		CHECK_ERR( intermediate );
 		CHECK_ERR( intermediate->getStage() == EShLanguage::EShLangCompute );
 
+		Translator		translator{ log };
 		TIntermNode*	root	= intermediate->getTreeRoot();
-		Translator		translator;
+		auto			lang	= new CL_DstLanguage( translator );
 
 		translator.states.useGXrules	= intermediate->getSource() == glslang::EShSourceGxsl;
 		translator.states.inlineAll		= cfg.inlineAll or (not translator.states.useGXrules);
 		translator.entryPoint			= intermediate->getEntryPointName().c_str();
-		translator.language				= new CL_DstLanguage();
-
-		CHECK_ERR( TranslateShaderInfo( intermediate, translator ) );
+		translator.language				= lang;
 
 		CHECK_ERR( translator.Main( root, false ) );
 
-		log		<< translator.log;
+		lang->AddSource( intermediate );
+
 		result	= BinArrayCRef::From( translator.src );
 		return true;
 	}
 //-----------------------------------------------------------------------------
 
-
-
-/*
-=================================================
-	TranslateShaderInfo
-=================================================
-*/
-	static bool TranslateShaderInfo (const glslang::TIntermediate*, Translator &translator)
-	{
-		String&	str = translator.src;
-		
-		str << "#define FORMAT( _fmt_ )\n";
-
-		str << "#define INOUT\n"
-			<< "#define OUT\n";
-
-		CHECK_ERR( cl_vfs::LoadFile( "funcs.cl", OUT str ) );
-
-		str << "\n";
-
-		// TODO
-		return true;
-	}
 	
 /*
 =================================================
 	constructor
 =================================================
 */
-	CL_DstLanguage::CL_DstLanguage () :
+	CL_DstLanguage::CL_DstLanguage (Translator &translator) :
+		_translator{translator},
 		_nameValidator{EShaderDstFormat::CL_Source, /*overloading*/false}
 	{
 		//_builtinMap.Add( "gl_LocalInvocationIndex",	"((uint)(get_local_linear_id()))" );
@@ -172,6 +175,39 @@ namespace PipelineCompiler
 		_builtinMap.Add( "gl_NumWorkGroups",		"((uint3)(get_num_groups(0), get_num_groups(1), get_num_groups(2)))" );
 		_builtinMap.Add( "gl_WorkGroupID",			"((uint3)(get_global_id(0),  get_global_id(1),  get_global_id(2)))" );
 		_builtinMap.Add( "gl_WorkGroupSize",		"((uint3)(get_local_size(0), get_local_size(1), get_local_size(2)))" );
+	}
+	
+/*
+=================================================
+	AddSource
+=================================================
+*/
+	bool CL_DstLanguage::AddSource (const glslang::TIntermediate*) const
+	{
+		String	str;
+		str << "#define FORMAT( _fmt_ )\n";
+
+		str << "#define INOUT\n"
+			<< "#define OUT\n";
+
+		CHECK_ERR( cl_vfs::LoadFile( "funcs.cl", INOUT str ) );
+
+		#if USE_BUFFER_LOAD_STORE
+			CHECK_ERR( cl_vfs::LoadFile( "vload.cl", INOUT str ) );
+		#endif
+
+		for (auto& type : _customTypes) {
+			str << type.second;
+		}
+		
+		#if USE_BUFFER_LOAD_STORE
+		for (auto& rw : _structBufferRW) {
+			str << rw.second.reader << '\n' << rw.second.writer << '\n';
+		}
+		#endif
+
+		str >> _translator.src;
+		return true;
 	}
 
 /*
@@ -196,15 +232,15 @@ namespace PipelineCompiler
 
 		// type
 		if ( not t.typeName.Empty() ) {
-			res << "struct " << t.typeName;
+			res << TypenameToStringCL( t.type, t.typeName );
 		} else {
 			res << ToStringCL( t.type );
 		}
 		res << " ";
 		
-		if ( t.arraySize == 0 )		res << t.name;				else
-		if ( t.arraySize == UMax )	res << "* " << t.name;		else
-									res << t.name << " [" << t.arraySize << "]";
+		if ( t.arraySize.IsNotArray() )		res << t.name;				else
+		if ( t.arraySize.IsDynamicArray() )	res << "* " << t.name;		else
+											res << t.name << " [" << t.arraySize.Size() << "]";
 		return true;
 	}
 	
@@ -224,15 +260,15 @@ namespace PipelineCompiler
 
 		// type
 		if ( not t.typeName.Empty() ) {
-			src << "struct " << t.typeName;
+			src << TypenameToStringCL( t.type, t.typeName );
 		} else {
 			src << ToStringCL( t.type );
 		}
 		src << " ";
 		
-		if ( t.arraySize == 0 )		src << t.name;				else
-		if ( t.arraySize == UMax )	src << t.name << " []";		else			// array memory placed in struct
-									src << t.name << " [" << t.arraySize << "]";
+		if ( t.arraySize.IsNotArray() )		src << t.name;				else
+		if ( t.arraySize.IsDynamicArray() )	src << t.name << " []";		else			// array memory placed in struct
+											src << t.name << " [" << t.arraySize.Size() << "]";
 		return true;
 	}
 
@@ -241,6 +277,7 @@ namespace PipelineCompiler
 	TranslateStruct
 =================================================
 */
+	#if USE_BUFFER_LOAD_STORE
 	bool CL_DstLanguage::TranslateStruct (const TypeInfo &info, INOUT String &src)
 	{
 		src << "struct " << info.typeName << "\n{\n";
@@ -255,7 +292,77 @@ namespace PipelineCompiler
 		src << "};\n\n";
 		return true;
 	}
+
+	#else
+	bool CL_DstLanguage::TranslateStruct (const TypeInfo &info, INOUT String &src)
+	{
+		auto	iter = _fieldReplacer.Add( info.typeName, {} );
+
+		src << "struct " << info.typeName << "\n{\n";
+
+		FOR( i, info.fields )
+		{
+			const auto&	fld = info.fields[i];
+
+			if ( EShaderVariable::VecSize( fld.type ) == 3 )
+			{
+				TypeInfo const&	next = info.fields[i+1];
+				TypeInfo		fld2 = fld;
+				
+				fld2.type = EShaderVariable::Union;
+				fld2.name << "_" << next.name;
+				
+				CHECK_ERR( EShaderVariable::VecSize( next.type ) == 1 );
+				CHECK_ERR( _CreateUnion( EShaderVariable::ToVec( fld.type, 4 ), EShaderVariable::ToVec( next.type, 4 ), OUT fld2.typeName ) );
+
+				src << "\t";
+				CHECK_ERR( _TranslateField( fld2, INOUT src ) );
+				src << ";\n";
+
+				iter->second.Add( fld.name, fld2.name + ".fst.xyz" );
+				iter->second.Add( next.name, fld2.name + ".sec.w" );
+
+				++i;
+				continue;
+			}
+
+			src << "\t";
+			CHECK_ERR( _TranslateField( fld, INOUT src ) );
+			src << ";\n";
+		}
+
+		src << "};\n\n";
+
+		if ( iter->second.Empty() )
+			_fieldReplacer.EraseByIter( iter );
+
+		return true;
+	}
+	#endif
 	
+/*
+=================================================
+	_CreateUnion
+=================================================
+*/
+	bool CL_DstLanguage::_CreateUnion (EShaderVariable::type first, EShaderVariable::type second, OUT String &str)
+	{
+		str.Clear();
+		str << "U_" << ToStringCL( first ) << '_' << ToStringCL( second );
+
+		if ( _customTypes.IsExist( str ) )
+			return true;
+		
+		String	decl;
+		decl << "union " << str << " {\n"
+			 << "	" << ToStringCL( first ) << "  fst;\n"
+			 << "	" << ToStringCL( second ) << "  sec;\n"
+			 << "};\n\n";
+
+		_customTypes.Add( String(str), RVREF(decl) );
+		return true;
+	}
+
 /*
 =================================================
 	TranslateType
@@ -272,14 +379,14 @@ namespace PipelineCompiler
 
 		// type
 		if ( not t.typeName.Empty() ) {
-			res << "struct " << t.typeName;
+			res << TypenameToStringCL( t.type, t.typeName );
 		} else {
 			res << ToStringCL( t.type );
 		}
 		
-		if ( t.arraySize == 0 )		{}				else
-		if ( t.arraySize == UMax )	res << "* ";	else
-									res << " [" << t.arraySize << "]";
+		if ( t.arraySize.IsNotArray() )		{}				else
+		if ( t.arraySize.IsDynamicArray() )	res << "* ";	else
+											res << " [" << t.arraySize.Size() << "]";
 
 		return true;
 	}
@@ -394,6 +501,10 @@ namespace PipelineCompiler
 				_externalNames.Add( info.id, name );
 				_externals.Back().name = name;
 			}
+
+			#if USE_BUFFER_LOAD_STORE
+				CHECK_ERR( _CreateStructRW( info ) );
+			#endif
 		}
 		else
 		if ( EShaderVariable::IsImage( info.type ) ) {
@@ -663,9 +774,9 @@ namespace PipelineCompiler
 	{
 		using vinfo = _platforms_hidden_::EValueTypeInfo;
 
-		const bool	is_vec	=	(resultType.arraySize == 0 and EShaderVariable::VecSize( resultType.type ) > 1)		and
-								(argTypes[0]->arraySize == 0 and EShaderVariable::VecSize( argTypes[0]->type ) > 1)	and
-								(argTypes[1]->arraySize == 0 and EShaderVariable::VecSize( argTypes[1]->type ) > 1);
+		const bool	is_vec	=	(resultType.arraySize.IsNotArray() and EShaderVariable::VecSize( resultType.type ) > 1)		and
+								(argTypes[0]->arraySize.IsNotArray() and EShaderVariable::VecSize( argTypes[0]->type ) > 1)	and
+								(argTypes[1]->arraySize.IsNotArray() and EShaderVariable::VecSize( argTypes[1]->type ) > 1);
 			
 		const bool	is_float = (EShaderVariable::IsFloat( argTypes[0]->type ) or EShaderVariable::IsFloat( argTypes[1]->type ));
 
@@ -1095,7 +1206,7 @@ namespace PipelineCompiler
 	{
 		for (auto arg : argTypes)
 		{
-			if ( arg->isGlobal and arg->arraySize > 0 )
+			if ( arg->isGlobal and arg->arraySize.IsArray() )
 			{
 				return true;
 			}
@@ -1131,7 +1242,7 @@ namespace PipelineCompiler
 
 		// type
 		if ( not t.typeName.Empty() ) {
-			res << "struct " << t.typeName;
+			res << TypenameToStringCL( t.type, t.typeName );
 		} else {
 			res << ToStringCL( t.type );
 		}
@@ -1140,9 +1251,9 @@ namespace PipelineCompiler
 		if ( t.qualifier[ EVariableQualifier::OutArg ] or EShaderVariable::IsStruct( t.type ) )
 			res << "*";
 
-		if ( t.arraySize == 0 )		res << t.name;				else
-		if ( t.arraySize == UMax )	res << "* " << t.name;		else
-									res << t.name << " [" << t.arraySize << "]";
+		if ( t.arraySize.IsNotArray() )		res << t.name;				else
+		if ( t.arraySize.IsDynamicArray() )	res << "* " << t.name;		else
+											res << t.name << " [" << t.arraySize.Size() << "]";
 		return true;
 	}
 	
@@ -1277,31 +1388,216 @@ namespace PipelineCompiler
 */
 	bool CL_DstLanguage::TranslateStructAccess (SymbolID id, const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src)
 	{
-		if ( objName.Empty() and EShaderVariable::IsBuffer( stType.type ) )
-		{
-			NamedExternals_t::iterator	iter;
-			CHECK_ERR( _externalNames.Find( id, OUT iter ) );
+		String	obj_name = objName;
 
-			src << iter->second << "->";
-		}
-		else
-		if ( not objName.Empty() )
+		#if USE_BUFFER_LOAD_STORE
+			if ( EShaderVariable::IsBuffer( stType.type ) )
+			{
+				RETURN_ERR( "structured buffer is not supported" );
+			}
+		#else
+			if ( obj_name.Empty() and EShaderVariable::IsBuffer( stType.type ) )
+			{
+				NamedExternals_t::iterator	iter;
+				CHECK_ERR( _externalNames.Find( id, OUT iter ) );
+
+				obj_name = iter->second;
+			}
+		#endif
+
+		if ( not obj_name.Empty() )
 		{
 			if ( EShaderVariable::IsBuffer( stType.type )			or
 				 stType.qualifier[ EVariableQualifier::OutArg ]		or
 				 (stType.qualifier[ EVariableQualifier::InArg ] and stType.qualifier[ EVariableQualifier::Constant ]) )
 			{
-				src << objName << "->";
+				src << obj_name << "->";
 			} else
-				src << objName << '.';
+				src << obj_name << '.';
 		}
+
+		#if not USE_BUFFER_LOAD_STORE
+		StFieldReplacer_t::const_iterator	iter;
+		if ( _fieldReplacer.Find( stType.typeName, OUT iter ) )
+		{
+			StFieldReplacer_t::Value_t::const_iterator	iter2;
+			if ( iter->second.Find( fieldType.name, OUT iter2 ) )
+			{
+				src << iter2->second;
+				return true;
+			}
+		}
+		#endif
 
 		src << fieldType.name;
 		return true;
 	}
-//-----------------------------------------------------------------------------
+	
+/*
+=================================================
+	TranslateBufferLoad
+=================================================
+*/
+	#if USE_BUFFER_LOAD_STORE
+	bool CL_DstLanguage::TranslateBufferLoad (SymbolID id, StringCRef objName, StringCRef fieldOffset, const TypeInfo &fieldType, INOUT String &src)
+	{
+		if ( objName.Empty() )
+		{
+			NamedExternals_t::iterator	iter;
+			CHECK_ERR( _externalNames.Find( id, OUT iter ) );
 
+			objName = iter->second;
+		}
 
+		const uint	vec_size	= EShaderVariable::VecSize( fieldType.type );
+		const uint2	mat_size	= EShaderVariable::MatSize( fieldType.type );
+		const auto	scalar_type	= EShaderVariable::ToScalar( fieldType.type );
+
+		if ( fieldType.arraySize.IsArray() )
+		{
+			src << "((const __global " << (fieldType.typeName.Empty() ? ToStringCL( fieldType.type ) : fieldType.typeName)
+				<< "*)(&" << objName << "[(" << fieldOffset << ")>>2]))";
+			return true;
+		}
+		else
+		if ( vec_size > 0 )
+		{
+			src << "vload_" << ToStringCL( scalar_type ) << vec_size << '(' << fieldOffset << ", " << objName << ')';
+			return true;
+		}
+		else
+		if ( All( mat_size > 0 ) )
+		{
+			src << "vload_" << ToStringCL( scalar_type ) << mat_size.x << 'x' << mat_size.y << '(' << fieldOffset << ", " << objName << ')';
+			return true;
+		}
+		else
+		if ( not fieldType.typeName.Empty() )
+		{
+			src << "vload_" << fieldType.typeName << '(' << fieldOffset << ", " << objName << ')';
+			return true;
+		}
+		return false;
+	}
+	
+	#else
+	bool CL_DstLanguage::TranslateBufferLoad (SymbolID, StringCRef, StringCRef, const TypeInfo &, INOUT String &)
+	{
+		return false;
+	}
+	#endif
+	
+/*
+=================================================
+	TranslateBufferStore
+=================================================
+*/
+	#if USE_BUFFER_LOAD_STORE
+	bool CL_DstLanguage::TranslateBufferStore (SymbolID id, StringCRef objName, StringCRef fieldOffset, const TypeInfo &fieldType,
+											   StringCRef dataStr, const TypeInfo &dataType, INOUT String &src)
+	{
+		if ( objName.Empty() )
+		{
+			NamedExternals_t::iterator	iter;
+			CHECK_ERR( _externalNames.Find( id, OUT iter ) );
+
+			objName = iter->second;
+		}
+
+		const uint	vec_size	= EShaderVariable::VecSize( fieldType.type );
+		const uint2	mat_size	= EShaderVariable::MatSize( fieldType.type );
+		const auto	scalar_type	= EShaderVariable::ToScalar( fieldType.type );
+
+		if ( fieldType.arraySize.IsArray() )
+		{
+			src << "<not supported>";
+			return true;
+		}
+		else
+		if ( vec_size > 0 )
+		{
+			src << "vstore_" << ToStringCL( scalar_type ) << vec_size << '(' << dataStr << ", " << fieldOffset << ", " << objName << ')';
+			return true;
+		}
+		else
+		if ( All( mat_size > 0 ) )
+		{
+			src << "vstore_" << ToStringCL( scalar_type ) << mat_size.x << 'x' << mat_size.y << '(' << dataStr << ", " << fieldOffset << ", " << objName << ')';
+			return true;
+		}
+		else
+		if ( not fieldType.typeName.Empty() )
+		{
+			src << "vstore_" << fieldType.typeName << "(" << dataStr << ", " << fieldOffset << ", " << objName << ')';
+			return true;
+		}
+		return false;
+	}
+
+	#else
+	bool CL_DstLanguage::TranslateBufferStore (SymbolID, StringCRef, StringCRef, const TypeInfo &, StringCRef, const TypeInfo &, INOUT String &)
+	{
+		return false;
+	}
+	#endif
+	
+/*
+=================================================
+	_CreateStructRW
+=================================================
+*/
+	#if USE_BUFFER_LOAD_STORE
+	bool CL_DstLanguage::_CreateStructRW (TypeInfo const& info)
+	{
+		const auto	CreateRader = LAMBDA( this ) (const TypeInfo &info, OUT String &src) -> bool
+		{{
+			usize	offset = 0;
+			src << TypenameToStringCL( info.type, info.typeName ) << " vload_" << info.typeName << " (size_t offset, const __global float* ptr)\n{\n"
+				<< '\t' << TypenameToStringCL( info.type, info.typeName ) << " data;\n";
+			for (auto& fld : info.fields)
+			{
+				src << "\tdata." << fld.name << " = ";
+				CHECK_ERR( TranslateBufferLoad( SymbolID(0), "ptr", "offset + "_str << offset, fld, INOUT src ) );
+				src << ";\n";
+				offset += usize(fld.sizeOf);
+			}
+			src << "\treturn data;\n}\n";
+			return true;
+		}};
+
+		const auto	CreateWriter = LAMBDA( this ) (const TypeInfo &info, OUT String &src) -> bool
+		{{
+			usize	offset = 0;
+			src << "void vstore_" << info.typeName << " (const struct " << info.typeName << " data, size_t offset, __global float* ptr)\n{\n";
+			for (auto& fld : info.fields)
+			{
+				src << '\t';
+				CHECK_ERR( TranslateBufferStore( SymbolID(0), "ptr", "offset + "_str << offset, fld, "data." + fld.name, INOUT src ) );
+				src << ";\n";
+				offset += usize(fld.sizeOf);
+			}
+			src << "}\n";
+			return true;
+		}};
+		
+
+		for (auto& fld : info.fields)
+		{
+			if ( not fld.typeName.Empty() )
+			{
+				if ( _structBufferRW.IsExist( fld.typeName ) )
+					continue;
+
+				StructInfo	st;
+				CHECK_ERR( CreateRader( fld, st.reader ) );
+				CHECK_ERR( CreateWriter( fld, st.writer ) );
+
+				_structBufferRW.Add( info.typeName, st );
+			}
+		}
+		return true;
+	}
+	#endif
 	
 /*
 =================================================
@@ -1311,10 +1607,14 @@ namespace PipelineCompiler
 	bool CL_DstLanguage::_TranslateBuffer (Symbol const& info, OUT String &str)
 	{
 		CHECK_ERR( EShaderVariable::IsBuffer( info.type ) );
-		CHECK_ERR( info.arraySize == 0 );
+		CHECK_ERR( info.arraySize.IsNotArray() );
 
 		str << "__global " << (info.memoryModel == EShaderMemoryModel::ReadOnly ? "const" : "")
-			<< " struct " << (info.typeName.Empty() ? ToStringCL( info.type ) : info.typeName)
+			#if USE_BUFFER_LOAD_STORE
+				<< " float"
+			#else
+				<< " struct " << (info.typeName.Empty() ? ToStringCL( info.type ) : info.typeName)
+			#endif
 			<< "* " << info.name;
 
 		return true;
@@ -1327,7 +1627,7 @@ namespace PipelineCompiler
 */
 	bool CL_DstLanguage::_TranslateImage (Symbol const& info, OUT String &str)
 	{
-		CHECK_ERR( info.arraySize == 0 );
+		CHECK_ERR( info.arraySize.IsNotArray() );
 		CHECK_ERR( not info.name.Empty() );
 
 		str << ToStringCL( info.memoryModel ) << ' ';
@@ -1346,7 +1646,7 @@ namespace PipelineCompiler
 */
 	bool CL_DstLanguage::_TranslateSampler (Symbol const& info, OUT String &str)
 	{
-		CHECK_ERR( info.arraySize == 0 );
+		CHECK_ERR( info.arraySize.IsNotArray() );
 		CHECK_ERR( not info.name.Empty() );
 
 		str << "sampler_t " << info.name;
@@ -1380,10 +1680,10 @@ namespace PipelineCompiler
 		FOR( i, fields )
 		{
 			const auto&	field	= fields[i];
-			const uint	count	= field.arraySize == 0 ? 1 : field.arraySize;
-			const bool	is_arr	= field.arraySize != 0;
+			const uint	count	= field.arraySize.Size();
+			const bool	is_arr	= field.arraySize.IsArray();
 
-			CHECK_ERR( field.arraySize != UMax );
+			CHECK_ERR( not field.arraySize.IsDynamicArray() );
 			
 			src << (i ? ", " : "");
 
@@ -1428,9 +1728,9 @@ namespace PipelineCompiler
 	bool CL_DstLanguage::TranslateConstant (const glslang::TConstUnionArray &cu_arr, const TypeInfo &info, INOUT String &str)
 	{
 		// array
-		if ( info.arraySize > 0 )
+		if ( info.arraySize.IsArray() )
 		{
-			TypeInfo	scalar_info = info;		scalar_info.arraySize = 0;
+			TypeInfo	scalar_info = info;		scalar_info.arraySize.MakeNonArray();
 
 			str << "{ ";
 			
@@ -1490,6 +1790,7 @@ namespace PipelineCompiler
 		CHECK_ERR( not info.name.Empty() );
 
 		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
+		CHECK_ERR( not cu_arr.empty() );
 		
 		// read-only
 		if ( info.qualifier[ EVariableQualifier::Constant ] )
@@ -1501,15 +1802,15 @@ namespace PipelineCompiler
 
 		// type
 		if ( not info.typeName.Empty() ) {
-			str << "struct " << info.typeName;
+			str << TypenameToStringCL( info.type, info.typeName );
 		} else {
 			str << ToStringCL( info.type );
 		}
 		str << " ";
 		
-		if ( info.arraySize == 0 )		str << info.name;				else
-		if ( info.arraySize == UMax )	str << "* " << info.name;		else
-										str << info.name << " [" << info.arraySize << "]";
+		if ( info.arraySize.IsNotArray() )		str << info.name;				else
+		if ( info.arraySize.IsDynamicArray() )	str << "* " << info.name;		else
+												str << info.name << " [" << info.arraySize.Size() << "]";
 		
 		str << " = ";
 		
@@ -1790,6 +2091,25 @@ namespace PipelineCompiler
 		}
 
 		RETURN_ERR( "invalid variable type", "unknown" );
+	}
+	
+/*
+=================================================
+	TypenameToStringCL
+=================================================
+*/
+	String CL_DstLanguage::TypenameToStringCL (EShaderVariable::type value, StringCRef typeName)
+	{
+		String	str;
+		if ( EShaderVariable::IsStruct( value ) )
+			str << "struct " << typeName;
+		else
+		if ( value == EShaderVariable::Union )
+			str << "union " << typeName;
+		else
+			RETURN_ERR( "unsupported type!" );
+
+		return str;
 	}
 
 }	// PipelineCompiler

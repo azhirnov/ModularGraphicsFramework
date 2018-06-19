@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -23,10 +23,10 @@ namespace PlatformGL
 	// types
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::ReadRegion,
 											DSMsg::WriteRegion,
-											GpuMsg::GetGpuMemoryDescriptor,
+											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -38,14 +38,14 @@ namespace PlatformGL
 										>;
 
 		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetBufferDescriptor,
-											GpuMsg::SetBufferDescriptor,
+											GpuMsg::GetBufferDescription,
+											GpuMsg::SetBufferDescription,
 											GpuMsg::GetGLBufferID,
 											GpuMsg::GpuMemoryRegionChanged
 										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t::Append< MessageListFrom<
-											GpuMsg::SetBufferDescriptor
+											GpuMsg::SetBufferDescription
 										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
@@ -61,7 +61,7 @@ namespace PlatformGL
 
 	// variables
 	private:
-		BufferDescriptor		_descr;
+		BufferDescription		_descr;
 		ModulePtr				_memObj;
 		gl::GLuint				_bufferId;
 		
@@ -80,18 +80,18 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		bool _GetGLBufferID (const Message< GpuMsg::GetGLBufferID > &);
-		bool _GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &);
-		bool _SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &);
-		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		bool _GetGLBufferID (const GpuMsg::GetGLBufferID &);
+		bool _GetBufferDescription (const GpuMsg::GetBufferDescription &);
+		bool _SetBufferDescription (const GpuMsg::SetBufferDescription &);
+		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
 		
 	// event handlers
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+		bool _OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &);
 
 
 	private:
@@ -132,8 +132,8 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Buffer::_Delete );
 		_SubscribeOnMsg( this, &GL4Buffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetGLBufferID );
-		_SubscribeOnMsg( this, &GL4Buffer::_GetBufferDescriptor );
-		_SubscribeOnMsg( this, &GL4Buffer::_SetBufferDescriptor );
+		_SubscribeOnMsg( this, &GL4Buffer::_GetBufferDescription );
+		_SubscribeOnMsg( this, &GL4Buffer::_SetBufferDescription );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetGLPrivateClasses );
@@ -157,7 +157,7 @@ namespace PlatformGL
 	_Link
 =================================================
 */
-	bool GL4Buffer::_Link (const Message< ModuleMsg::Link > &msg)
+	bool GL4Buffer::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -192,7 +192,7 @@ namespace PlatformGL
 	_Compose
 =================================================
 */
-	bool GL4Buffer::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool GL4Buffer::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) or _IsCreated() )
 			return true;	// already composed
@@ -214,7 +214,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4Buffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4Buffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyAll();
 
@@ -226,11 +226,11 @@ namespace PlatformGL
 	_AttachModule
 =================================================
 */
-	bool GL4Buffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool GL4Buffer::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
+		const bool	is_mem	= msg.newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		if (is_mem )
 		{
@@ -245,11 +245,11 @@ namespace PlatformGL
 	_DetachModule
 =================================================
 */
-	bool GL4Buffer::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool GL4Buffer::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule == _memObj )
+		if ( msg.oldModule == _memObj )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
@@ -259,25 +259,25 @@ namespace PlatformGL
 
 /*
 =================================================
-	_GetBufferDescriptor
+	_GetBufferDescription
 =================================================
 */
-	bool GL4Buffer::_GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &msg)
+	bool GL4Buffer::_GetBufferDescription (const GpuMsg::GetBufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_SetBufferDescriptor
+	_SetBufferDescription
 =================================================
 */
-	bool GL4Buffer::_SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &msg)
+	bool GL4Buffer::_SetBufferDescription (const GpuMsg::SetBufferDescription &msg)
 	{
 		CHECK_ERR( GetState() == EState::Initial );
 
-		_descr = msg->descr;
+		_descr = msg.descr;
 		return true;
 	}
 
@@ -286,11 +286,11 @@ namespace PlatformGL
 	_GetGLBufferID
 =================================================
 */
-	bool GL4Buffer::_GetGLBufferID (const Message< GpuMsg::GetGLBufferID > &msg)
+	bool GL4Buffer::_GetGLBufferID (const GpuMsg::GetGLBufferID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set( _bufferId );
+		msg.result.Set( _bufferId );
 		return true;
 	}
 	
@@ -299,25 +299,25 @@ namespace PlatformGL
 	_OnMemoryBindingChanged
 =================================================
 */
-	bool GL4Buffer::_OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &msg)
+	bool GL4Buffer::_OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &msg)
 	{
 		CHECK_ERR( _IsComposedOrLinkedState( GetState() ) );
 
 		using EBindingTarget = GpuMsg::OnMemoryBindingChanged::EBindingTarget;
 
-		if (  msg->targetObject == this )
+		if (  msg.targetObject == this )
 		{
-			_isBindedToMemory = ( msg->newState == EBindingTarget::Buffer );
+			_isBindedToMemory = ( msg.newState == EBindingTarget::Buffer );
 
 			if ( _isBindedToMemory )
 			{
 				CHECK( _SetState( EState::ComposedMutable ) );
 				
-				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+				_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 			}
 			else
 			{
-				CHECK( _SetState( EState::Linked ) );
+				_SendMsg( ModuleMsg::Delete{} );
 			}
 		}
 		return true;
@@ -399,7 +399,7 @@ namespace PlatformGL
 	_GpuMemoryRegionChanged
 =================================================
 */
-	bool GL4Buffer::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &)
+	bool GL4Buffer::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
 	{
 		// request buffer memory barrier
 		TODO( "" );

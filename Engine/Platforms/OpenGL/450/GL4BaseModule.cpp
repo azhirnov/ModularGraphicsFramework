@@ -29,11 +29,11 @@ namespace PlatformGL
 	_OnManagerChanged
 =================================================
 */
-	bool GL4BaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
+	bool GL4BaseModule::_OnManagerChanged (const ModuleMsg::OnManagerChanged &msg)
 	{
-		if ( msg->oldManager )
+		if ( msg.oldManager )
 		{
-			msg->oldManager->UnsubscribeAll( this );
+			msg.oldManager->UnsubscribeAll( this );
 			
 			if ( _glResourceCache )
 				_glResourceCache->Erase( this );
@@ -42,16 +42,16 @@ namespace PlatformGL
 		_glDevice			= null;
 		_glResourceCache	= null;
 
-		if ( msg->newManager )
+		if ( msg.newManager )
 		{
-			msg->newManager->Subscribe( this, &GL4BaseModule::_DeviceBeforeDestroy );
-			msg->newManager->Subscribe( this, &GL4BaseModule::_DeviceDeleted );
+			msg.newManager->Subscribe( this, &GL4BaseModule::_DeviceBeforeDestroy );
+			msg.newManager->Subscribe( this, &GL4BaseModule::_DeviceDeleted );
 
-			Message< GpuMsg::GetGLPrivateClasses >	req_classes;
-			CHECK( msg->newManager->Send( req_classes ) );
+			GpuMsg::GetGLPrivateClasses		req_classes;
+			CHECK( msg.newManager->Send( req_classes ) );
 
-			_glDevice			= req_classes->result->device;
-			_glResourceCache	= req_classes->result->resourceCache;
+			_glDevice			= req_classes.result->device;
+			_glResourceCache	= req_classes.result->resourceCache;
 		}
 
 		return true;
@@ -62,9 +62,9 @@ namespace PlatformGL
 	_DeviceBeforeDestroy
 =================================================
 */
-	bool GL4BaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool GL4BaseModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		
 		if ( _glResourceCache )
 			_glResourceCache->Erase( this );
@@ -79,7 +79,7 @@ namespace PlatformGL
 	_DeviceDeleted
 =================================================
 */
-	bool GL4BaseModule::_DeviceDeleted (const Message< ModuleMsg::Delete > &msg)
+	bool GL4BaseModule::_DeviceDeleted (const ModuleMsg::Delete &msg)
 	{
 		Send( msg );
 		
@@ -96,7 +96,7 @@ namespace PlatformGL
 	_GetDeviceInfo
 =================================================
 */
-	bool GL4BaseModule::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
+	bool GL4BaseModule::_GetDeviceInfo (const GpuMsg::GetDeviceInfo &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}
@@ -106,7 +106,7 @@ namespace PlatformGL
 	_GetGLDeviceInfo
 =================================================
 */
-	bool GL4BaseModule::_GetGLDeviceInfo (const Message< GpuMsg::GetGLDeviceInfo > &msg)
+	bool GL4BaseModule::_GetGLDeviceInfo (const GpuMsg::GetGLDeviceInfo &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}
@@ -116,7 +116,7 @@ namespace PlatformGL
 	_GetGLPrivateClasses
 =================================================
 */
-	bool GL4BaseModule::_GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &msg)
+	bool GL4BaseModule::_GetGLPrivateClasses (const GpuMsg::GetGLPrivateClasses &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}

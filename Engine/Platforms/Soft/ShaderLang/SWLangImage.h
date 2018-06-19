@@ -45,11 +45,8 @@ namespace Impl
 		BaseImage (MemLayout_t &&memLayout, EOutputFormat outFmt);
 		
 		BaseImage () {}
-		BaseImage (BaseImage &&) = default;
-		BaseImage (const BaseImage &) = default;
-		
-		BaseImage& operator = (BaseImage &&) = default;
-		BaseImage& operator = (const BaseImage &) = default;
+
+		GX_DEFCOPYCTOR_ASSIGN( BaseImage );
 
 		void _Load (const int3 &coord, OUT void *texel) const;
 		void _Store (const int3 &coord, const void* texel);
@@ -98,8 +95,6 @@ namespace Impl
 
 	public:
 		Image2D () {}
-		Image2D (Image2D &&) = default;
-		Image2D (const Image2D &) = default;
 
 		ND_  T	Load (const int2 &point) const;
 		void	Store (const int2 &point, const T &value);
@@ -146,8 +141,6 @@ namespace Impl
 
 	public:
 		Image2DArray () {}
-		Image2DArray (Image2DArray &&) = default;
-		Image2DArray (const Image2DArray &) = default;
 
 		ND_ T	Load (const int3 &point) const;
 		void	Store (const int3 &point, const T &value);
@@ -194,8 +187,6 @@ namespace Impl
 
 	public:
 		Image3D () {}
-		Image3D (Image3D &&) = default;
-		Image3D (const Image3D &) = default;
 
 		ND_ T	Load (const int3 &point) const;
 		void	Store (const int3 &point, const T &value);

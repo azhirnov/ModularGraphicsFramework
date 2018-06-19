@@ -10,12 +10,9 @@ namespace glsl_vfs
 	3D Line.
 	
 	license: free
-
-	depends of:
-		Math/Math
-		Math/Utils
 */
 
+#include <Common/Defines.glsl>
 
 struct Line3
 {
@@ -32,6 +29,8 @@ real	Line_MinDistance (const Line3 line, const real3 point);
 
 //-----------------------------------------------------------------------------
 
+#include <Math/Math.glsl>
+#include <Math/Utils.glsl>
 
 /*
 =================================================

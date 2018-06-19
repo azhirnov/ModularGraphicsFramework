@@ -60,28 +60,32 @@ namespace GpuMsg
 	//
 	// Wait Device Idle (sync with GPU in client side)
 	//
-	struct ClientWaitDeviceIdle
+	struct ClientWaitDeviceIdle : _MessageBase_
 	{};
 
 
 	//
 	// Create / Destroy Fence
 	//
-	struct CreateFence
+	struct CreateFence : _MessageBase_
 	{
 		Out< Platforms::GpuFenceId >	result;
 	};
 
-	struct DestroyFence
+	struct DestroyFence : _MessageBase_
 	{
-		Platforms::GpuFenceId			id	= Uninitialized;
+	// variables
+		Platforms::GpuFenceId			id;
+		
+	// methods
+		explicit DestroyFence (Platforms::GpuFenceId id) : id{id} {}
 	};
 
 
 	//
 	// Wait Fence
 	//
-	struct ClientWaitFence
+	struct ClientWaitFence : _MessageBase_
 	{
 	// types
 		using Time_t	= Platforms::TimeL;
@@ -103,42 +107,61 @@ namespace GpuMsg
 	//
 	// Create / Destroy Event
 	//
-	struct CreateEvent
+	struct CreateEvent : _MessageBase_
 	{
 		Out< Platforms::GpuEventId >	result;
 	};
 
-	struct DestroyEvent
+
+	struct DestroyEvent : _MessageBase_
 	{
-		Platforms::GpuEventId			id	= Uninitialized;
+	// variables
+		Platforms::GpuEventId			id;
+		
+	// methods
+		explicit DestroyEvent (Platforms::GpuEventId id) : id{id} {}
 	};
 	
 
 	//
 	// Set Event State (signaled / non-signaled)
 	//
-	struct SetEvent
+	struct SetEvent : _MessageBase_
 	{
-		Platforms::GpuEventId			id	= Uninitialized;
+	// variables
+		Platforms::GpuEventId			id;
+		
+	// methods
+		explicit SetEvent (Platforms::GpuEventId id) : id{id} {}
 	};
 
-	struct ResetEvent
+
+	struct ResetEvent : _MessageBase_
 	{
-		Platforms::GpuEventId			id	= Uninitialized;
+	// variables
+		Platforms::GpuEventId			id;
+		
+	// methods
+		explicit ResetEvent (Platforms::GpuEventId id) : id{id} {}
 	};
 
 
 	//
 	// Create / Destroy Semaphore
 	//
-	struct CreateSemaphore
+	struct CreateSemaphore : _MessageBase_
 	{
 		Out< Platforms::GpuSemaphoreId >	result;
 	};
 
-	struct DestroySemaphore
+
+	struct DestroySemaphore : _MessageBase_
 	{
-		Platforms::GpuSemaphoreId			id	= Uninitialized;
+	// variables
+		Platforms::GpuSemaphoreId		id;
+
+	// methods
+		explicit DestroySemaphore (Platforms::GpuSemaphoreId id) : id{id} {}
 	};
 
 

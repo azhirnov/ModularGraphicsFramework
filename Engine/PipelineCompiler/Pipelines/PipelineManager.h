@@ -19,6 +19,7 @@ namespace PipelineCompiler
 
 	private:
 		using StructTypes		= BasePipeline::StructTypes;
+		using Varying			= BasePipeline::Varying;
 		using BindableTypes		= BasePipeline::Bindings::_Uniform::TypeList_t;
 		using NamedTypes		= MultiHashMap< String, BasePipeline::Bindings::_Uniform >;
 		using SharedTypes		= StaticArray< NamedTypes, BindableTypes::Count >;
@@ -34,8 +35,10 @@ namespace PipelineCompiler
 	// variables
 	private:
 		Set< BasePipeline* >	_pipelines;		// registered pipelines
-		mutable StructTypes		_structTypes;
-		mutable SharedTypes		_bindings;
+		mutable StructTypes		_sharedStructTypes;
+		mutable SharedTypes		_sharedBindings;
+		mutable Array<Varying>	_sharedVertexInput;
+		mutable Array<Varying>	_sharedFragmentOutput;
 
 
 	// methods
@@ -61,8 +64,9 @@ namespace PipelineCompiler
 		bool _ProcessSharedTypes (const PplnCollection &pipelines, Ptr<ISerializer> ser, OUT String &fileSource, INOUT ConverterConfig &cfg) const;
 
 		bool _SaveSharedTypes (Ptr<ISerializer> ser, StringCRef nameSpace, OUT String &fileSource) const;
-		
-		static bool _StructsToString (const StructTypes &structTypes, Ptr<ISerializer> ser, OUT String &serialized);
+
+		static bool _MergeVertexInput (const ArrayCRef<Varying> &input, INOUT Array<Varying> &output);
+		static bool _MergeFragmentOutput (const ArrayCRef<Varying> &input, INOUT Array<Varying> &output);
 	};
 
 }	// PipelineCompiler

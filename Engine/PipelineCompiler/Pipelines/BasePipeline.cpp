@@ -104,15 +104,35 @@ namespace PipelineCompiler
 
 		for (auto& var : varyings)
 		{
-			if ( EShaderVariable::IsStruct( var.type ) )
+			if ( var.type == EShaderVariable::VaryingsBlock )
 			{
-				if ( var.location != UMax )
-					str << "layout(location=" << var.location << ") ";
+				ASSERT( not var.fields.Empty() );
+				
+				str << ToStringGLSL( var.qualifier ) << " " << var.typeName << " {\n";
+
+				for (auto& fld : var.fields)
+				{
+					ASSERT( fld.typeName.Empty() );
+					ASSERT( not EShaderVariable::IsStruct( fld.type ) );
+
+					str << "\t";
+					if ( fld.location != UMax )
+						str << "layout(location=" << fld.location << ") ";
 			
-				str << ToStringGLSL( var.qualifier ) << " " << var.typeName;
+					str << ToStringGLSL( fld.precision ) << " "
+						<< ToStringGLSL( fld.type ) << " "
+						<< fld.name
+						<< (fld.arraySize.IsNotArray() ? "" : fld.arraySize.IsDynamicArray() ? " []" : " ["_str << fld.arraySize.Size() << "]")
+						<< ";\n";
+				}
+				str << "}";
 			}
 			else
 			{
+				ASSERT( var.fields.Empty() );
+				ASSERT( var.typeName.Empty() );
+				ASSERT( not EShaderVariable::IsStruct( var.type ) );
+
 				if ( var.location != UMax )
 					str << "layout(location=" << var.location << ") ";
 			
@@ -121,15 +141,9 @@ namespace PipelineCompiler
 					<< ToStringGLSL( var.type );
 			}
 
-			str << " " << var.name;
-
-			if ( var.arraySize == 0 )
-				str << "[]";
-			else
-			if ( var.arraySize > 1 )
-				str << "[" << var.arraySize << "]";
-
-			str << ";\n";
+			str << " " << var.name
+				<< (var.arraySize.IsNotArray() ? "" : var.arraySize.IsDynamicArray() ? " []" : " ["_str << var.arraySize.Size() << "]")
+				<< ";\n" << (var.fields.Empty() ? "" : "\n");
 		}
 	}
 	
@@ -151,7 +165,7 @@ namespace PipelineCompiler
 		if ( not currTypes.Find( structType.typeName, OUT iter ) )
 		{
 			_StructField	st_type = structType;
-			st_type.arraySize = 1;
+			st_type.arraySize.MakeNonArray();
 
 			currTypes.Add( structType.typeName, st_type );
 			return true;
@@ -167,8 +181,8 @@ namespace PipelineCompiler
 		iter->second.stride		= Max( structType.stride, iter->second.stride );
 		iter->second.align		= Max( structType.align, iter->second.align );
 		iter->second.packing	|= structType.packing;
-		iter->second.arraySize	= 1;
 		iter->second.memoryModel = EShaderMemoryModel::Default;
+		iter->second.arraySize.MakeNonArray();
 
 		// compare fields
 		if ( structType.fields.Count() == iter->second.fields.Count() )
@@ -338,7 +352,17 @@ namespace PipelineCompiler
 				return	"#define SHADER	SH_TESS_EVALUATION\n";
 
 			case EShader::Geometry :
-				return	"#define SHADER	SH_GEOMETRY\n";
+				return	"#define SHADER	SH_GEOMETRY\n"
+						"in gl_PerVertex {\n"
+						"	vec4 gl_Position;\n"
+						"	float gl_PointSize;\n"
+						"	float gl_ClipDistance[];\n"
+						"} gl_in[];\n"
+						"out gl_PerVertex {\n"
+						"	vec4 gl_Position;\n"
+						"	float gl_PointSize;\n"
+						"	float gl_ClipDistance[];\n"
+						"};\n";
 
 			case EShader::Fragment :
 				return	"#define SHADER	SH_FRAGMENT\n";
@@ -411,7 +435,7 @@ namespace PipelineCompiler
 	Bindings::Sampler
 =================================================
 */
-	BasePipeline::Bindings&  BasePipeline::Bindings::Sampler (StringCRef texName, const SamplerDescriptor &descr, bool canBeOverridden)
+	BasePipeline::Bindings&  BasePipeline::Bindings::Sampler (StringCRef texName, const SamplerDescription &descr, bool canBeOverridden)
 	{
 		for (auto& un : uniforms)
 		{
@@ -495,7 +519,7 @@ namespace PipelineCompiler
 	String  BasePipeline::Location::BindingToStringGLSL (EShaderType shaderApi) const
 	{
 		String	str;
-
+		
 		switch ( shaderApi )
 		{
 			case EShaderType::None :
@@ -774,16 +798,27 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	Varying::operator ==
+	_VaryingField::operator ==
 =================================================
 */
-	bool BasePipeline::Varying::operator == (const Varying &right) const
+	bool BasePipeline::_VaryingField::operator == (const _VaryingField &right) const
 	{
 		return	name		== right.name		and
 				type		== right.type		and
 				precision	== right.precision	and
 				qualifier	== right.qualifier	and
 				location	== right.location;
+	}
+
+/*
+=================================================
+	Varying::operator ==
+=================================================
+*/
+	bool BasePipeline::Varying::operator == (const Varying &right) const
+	{
+		return	_VaryingField::operator== (right) and
+				fields	== right.fields;
 	}
 
 }	// PipelineCompiler

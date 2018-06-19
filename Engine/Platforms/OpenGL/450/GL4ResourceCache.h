@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -12,7 +12,7 @@
 #include "Engine/Platforms/Public/GPU/Pipeline.h"
 #include "Engine/Platforms/Public/GPU/Framebuffer.h"
 #include "Engine/Base/Modules/MessageCache.h"
-#include "Engine/STL/CompileTime/CompileTimeDebug.h"
+#include "Core/STL/CompileTime/CompileTimeDebug.h"
 
 namespace Engine
 {
@@ -27,11 +27,11 @@ namespace PlatformGL
 	{
 	// types
 	private:
-		using ImageCache_t			= MessageCache< GpuMsg::GetGLImageID, GpuMsg::GetImageDescriptor >;
-		using BufferCache_t			= MessageCache< GpuMsg::GetGLBufferID, GpuMsg::GetBufferDescriptor >;
-		using FramebufferCache_t	= MessageCache< GpuMsg::GetGLFramebufferID, GpuMsg::GetFramebufferDescriptor >;
-		using GPipelineCache_t		= MessageCache< GpuMsg::GetGLGraphicsPipelineID, GpuMsg::GetGraphicsPipelineDescriptor >;
-		using CPipelineCache_t		= MessageCache< GpuMsg::GetGLComputePipelineID, GpuMsg::GetComputePipelineDescriptor >;
+		using ImageCache_t			= MessageCache< GpuMsg::GetGLImageID, GpuMsg::GetImageDescription >;
+		using BufferCache_t			= MessageCache< GpuMsg::GetGLBufferID, GpuMsg::GetBufferDescription >;
+		using FramebufferCache_t	= MessageCache< GpuMsg::GetGLFramebufferID, GpuMsg::GetFramebufferDescription >;
+		using GPipelineCache_t		= MessageCache< GpuMsg::GetGLGraphicsPipelineID, GpuMsg::GetGraphicsPipelineDescription >;
+		using CPipelineCache_t		= MessageCache< GpuMsg::GetGLComputePipelineID, GpuMsg::GetComputePipelineDescription >;
 
 
 	// variables

@@ -8,9 +8,9 @@ namespace glsl_vfs
 	{
 		src << R"#(/*
 	Noise Utilites
-
-	depends of: Common/Defines, Math/Math, Hash/Hash2
 */
+
+#include <Common/Defines.glsl>
 
 real MakeInt32Range (const real n);
 real2 MakeInt32Range (const real2 n);
@@ -22,6 +22,8 @@ real GradientCoherentNoise3D (const real3 p, const int seed);
 
 //-----------------------------------------------------------------------------
 
+#include <Math/Math.glsl>
+#include <Hash/Hash2.glsl>
 
 //	This file based on code from "libNoise" project by Jason Bevins http://libnoise.sourceforge.net/
 //	Released under the terms of the GNU Lesser General Public License.

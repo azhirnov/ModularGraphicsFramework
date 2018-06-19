@@ -21,7 +21,7 @@ namespace Base
 											ModuleMsg::Update
 										> >::Append< MessageListFrom< 
 											ModuleMsg::OnManagerChanged,
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::WriteToStream,
 											DSMsg::ReleaseData
 										> >;
@@ -51,13 +51,13 @@ namespace Base
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
 
-		bool _GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &);
-		bool _WriteToStream_Empty (const Message< DSMsg::WriteToStream > &);
-		bool _WriteToStream (const Message< DSMsg::WriteToStream > &);
-		bool _ReleaseData (const Message< DSMsg::ReleaseData > &);
+		bool _GetDataSourceDescription (const DSMsg::GetDataSourceDescription &);
+		bool _WriteToStream_Empty (const DSMsg::WriteToStream &);
+		bool _WriteToStream (const DSMsg::WriteToStream &);
+		bool _ReleaseData (const DSMsg::ReleaseData &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ namespace Base
 		_SubscribeOnMsg( this, &FileOutputStream::_Link_Impl );
 		_SubscribeOnMsg( this, &FileOutputStream::_Compose );
 		_SubscribeOnMsg( this, &FileOutputStream::_Delete );
-		_SubscribeOnMsg( this, &FileOutputStream::_GetDataSourceDescriptor );
+		_SubscribeOnMsg( this, &FileOutputStream::_GetDataSourceDescription );
 		_SubscribeOnMsg( this, &FileOutputStream::_WriteToStream_Empty );
 		_SubscribeOnMsg( this, &FileOutputStream::_ReleaseData );
 
@@ -108,7 +108,7 @@ namespace Base
 	_Compose
 =================================================
 */
-	bool FileOutputStream::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool FileOutputStream::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -117,10 +117,10 @@ namespace Base
 
 		CHECK_COMPOSING( _GetManager() );
 		
-		Message< DSMsg::IsUriExists >	is_exist{ _filename };
+		DSMsg::IsUriExists	is_exist{ _filename };
 		_GetManager()->Send( is_exist );
 
-		CHECK_COMPOSING( is_exist->result.Get(false) );
+		CHECK_COMPOSING( is_exist.result.Get(false) );
 
 		return Module::_DefCompose( true );
 	}
@@ -130,7 +130,7 @@ namespace Base
 	_Delete
 =================================================
 */
-	bool FileOutputStream::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool FileOutputStream::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_ReleaseData( {} );
 
@@ -139,21 +139,21 @@ namespace Base
 
 /*
 =================================================
-	_GetDataSourceDescriptor
+	_GetDataSourceDescription
 =================================================
 */
-	bool FileOutputStream::_GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &msg)
+	bool FileOutputStream::_GetDataSourceDescription (const DSMsg::GetDataSourceDescription &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
 
-		DataSourceDescriptor	descr;
+		DataSourceDescription	descr;
 
 		descr.memoryFlags	|= EMemoryAccess::CpuWrite | EMemoryAccess::SequentialOnly;
 		descr.available		 = BytesUL();	// data is not cached
 		descr.totalSize		 = BytesUL( _file->Size() );
 
-		msg->result.Set( descr );
+		msg.result.Set( descr );
 		return true;
 	}
 	
@@ -162,7 +162,7 @@ namespace Base
 	_WriteToStream_Empty
 =================================================
 */
-	bool FileOutputStream::_WriteToStream_Empty (const Message< DSMsg::WriteToStream > &msg)
+	bool FileOutputStream::_WriteToStream_Empty (const DSMsg::WriteToStream &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
@@ -170,10 +170,10 @@ namespace Base
 		Unsubscribe( this, &FileOutputStream::_WriteToStream_Empty );
 		_SubscribeOnMsg( this, &FileOutputStream::_WriteToStream );
 		
-		Message< DSMsg::OpenFileForWrite >		open_file{ _filename };
+		DSMsg::OpenFileForWrite		open_file{ _filename };
 		CHECK( _GetManager()->Send( open_file ) );
 
-		_file = *open_file->result;
+		_file = *open_file.result;
 		CHECK_ERR( _file );
 
 		return _WriteToStream( msg );
@@ -184,9 +184,9 @@ namespace Base
 	_WriteToStream
 =================================================
 */
-	bool FileOutputStream::_WriteToStream (const Message< DSMsg::WriteToStream > &msg)
+	bool FileOutputStream::_WriteToStream (const DSMsg::WriteToStream &msg)
 	{
-		msg->wasWritten.Set( BytesUL(_file->Write( msg->data )) );
+		msg.wasWritten.Set( BytesUL(_file->Write( msg.data )) );
 
 		return true;
 	}
@@ -196,7 +196,7 @@ namespace Base
 	_ReleaseData
 =================================================
 */
-	bool FileOutputStream::_ReleaseData (const Message< DSMsg::ReleaseData > &)
+	bool FileOutputStream::_ReleaseData (const DSMsg::ReleaseData &)
 	{
 		if ( _file ) {
 			_file->Close();

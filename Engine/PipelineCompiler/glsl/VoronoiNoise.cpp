@@ -10,6 +10,8 @@ namespace glsl_vfs
 	Voronoi noise
 */
 
+#include <Common/Defines.glsl>
+
 // range [0;1]
 real VoronoiNoise (const real2 point, const real cellCenterOffsetScale, const real smoothFactor);
 

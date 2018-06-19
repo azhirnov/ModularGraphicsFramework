@@ -44,8 +44,8 @@ namespace PlatformTools
 		ND_ static BytesUL	GetImageSize (EPixelFormat::type format, EImage::type type, const ulong3 &size, BytesU xAlign, BytesU xyAlign);
 		ND_ static BytesU	GetImageSize (EPixelFormat::type format, EImage::type type, const uint3 &size, BytesU xAlign, BytesU xyAlign);
 		
-		ND_ static bool		IsValidDescriptor (const ImageDescriptor &descr);
-			static void		ValidateDescriptor (INOUT ImageDescriptor &descr);
+		ND_ static bool		IsValidDescription (const ImageDescription &descr);
+			static void		ValidateDescription (INOUT ImageDescription &descr);
 	};
 
 

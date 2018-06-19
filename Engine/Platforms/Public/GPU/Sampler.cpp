@@ -13,7 +13,7 @@ namespace Platforms
 	constructor
 =================================================
 */
-	SamplerDescriptor::SamplerDescriptor (UninitializedType) :
+	SamplerDescription::SamplerDescription (UninitializedType) :
 		_addressMode( EAddressMode::Clamp ),
 		_filter( EFilter::MinMagMipLinear ),
 		_compareOp( ECompareFunc::None )
@@ -26,12 +26,12 @@ namespace Platforms
 	constructor
 =================================================
 */
-	SamplerDescriptor::SamplerDescriptor (EAddressMode::type addressMode,
-										  EFilter::type filter,
-										  ESamplerBorderColor::bits borderColor,
-										  //float mipLodBias = 0.0f,
-										  //const float2 &lodRange = float2(),
-										  ECompareFunc::type compareOp ) :
+	SamplerDescription::SamplerDescription (EAddressMode::type			addressMode,
+											EFilter::type				filter,
+											ESamplerBorderColor::bits	borderColor,
+											//float						mipLodBias = 0.0f,
+											//const float2 &			lodRange = float2(),
+											ECompareFunc::type			compareOp ) :
 		_addressMode( addressMode ),	_filter( filter ),
 		_borderColor( borderColor ),	_compareOp( compareOp )
 		//_mipLodBias( mipLodBias ),	_lodRange( lodRange )
@@ -42,7 +42,7 @@ namespace Platforms
 	operator ==
 =================================================
 */
-	bool SamplerDescriptor::operator == (const Self &right) const
+	bool SamplerDescription::operator == (const Self &right) const
 	{
 		return	this->_hash			== right._hash			and
 				All( _addressMode	== right._addressMode )	and
@@ -56,7 +56,7 @@ namespace Platforms
 	:operator >
 =================================================
 */
-	bool SamplerDescriptor::operator >  (const Self &right) const
+	bool SamplerDescription::operator >  (const Self &right) const
 	{
 		return
 			this->_hash		!= right._hash			?	this->_hash		> right._hash			:
@@ -74,7 +74,7 @@ namespace Platforms
 =================================================
 */
 	DEBUG_ONLY(
-	String  SamplerDescriptor::ToString () const
+	String  SamplerDescription::ToString () const
 	{
 		String	str("Sampler {\n");
 
@@ -101,7 +101,7 @@ namespace Platforms
 	SetAddressMode
 =================================================
 */
-	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetAddressMode (EAddressMode::type u, EAddressMode::type v, EAddressMode::type w)
+	SamplerDescription::Builder&  SamplerDescription::Builder::SetAddressMode (EAddressMode::type u, EAddressMode::type v, EAddressMode::type w)
 	{
 		_state._addressMode.x = u;
 		_state._addressMode.y = v;
@@ -110,19 +110,19 @@ namespace Platforms
 		return *this;
 	}
 
-	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetAddressMode (EAddressMode::type uvw)
+	SamplerDescription::Builder&  SamplerDescription::Builder::SetAddressMode (EAddressMode::type uvw)
 	{
 		return SetAddressMode( uvw, uvw, uvw );
 	}
 	
-	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetAddressMode (uint index, EAddressMode::type value)
+	SamplerDescription::Builder&  SamplerDescription::Builder::SetAddressMode (uint index, EAddressMode::type value)
 	{
 		_state._addressMode[index] = value;
 		_changed = true;
 		return *this;
 	}
 
-	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetAddressMode (const AddressMode_t &uvw)
+	SamplerDescription::Builder&  SamplerDescription::Builder::SetAddressMode (const AddressMode_t &uvw)
 	{
 		return SetAddressMode( uvw.x, uvw.y, uvw.z );
 	}
@@ -132,7 +132,7 @@ namespace Platforms
 	SetFilter
 =================================================
 */
-	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetFilter (EFilter::type value)
+	SamplerDescription::Builder&  SamplerDescription::Builder::SetFilter (EFilter::type value)
 	{
 		_state._filter = value;
 		_changed = true;
@@ -144,7 +144,7 @@ namespace Platforms
 	SetBorderColor
 =================================================
 */
-	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetBorderColor (ESamplerBorderColor::bits value)
+	SamplerDescription::Builder&  SamplerDescription::Builder::SetBorderColor (ESamplerBorderColor::bits value)
 	{
 		_state._borderColor = value;
 		_changed = true;
@@ -156,7 +156,7 @@ namespace Platforms
 	SetCompareOp
 =================================================
 */
-	SamplerDescriptor::Builder&  SamplerDescriptor::Builder::SetCompareOp (ECompareFunc::type value)
+	SamplerDescription::Builder&  SamplerDescription::Builder::SetCompareOp (ECompareFunc::type value)
 	{
 		_state._compareOp = value;
 		_changed = true;
@@ -168,7 +168,7 @@ namespace Platforms
 	Finish
 =================================================
 */
-	SamplerDescriptor const&  SamplerDescriptor::Builder::Finish ()
+	SamplerDescription const&  SamplerDescription::Builder::Finish ()
 	{
 		if ( _changed )
 		{

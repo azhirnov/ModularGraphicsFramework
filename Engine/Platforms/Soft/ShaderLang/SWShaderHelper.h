@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -40,11 +40,9 @@ namespace Impl
 
 		using Atomic_t			= Barrier::Atomic_t;
 
-		template <typename T> using Message = Engine::Base::Message<T>;
-
-		using Fwd_GetSWBufferMemoryLayout		= Message< Engine::GpuMsg::ResourceTableForwardMsg< Message< Engine::GpuMsg::GetSWBufferMemoryLayout > > >;
-		using Fwd_GetSWImageViewMemoryLayout	= Message< Engine::GpuMsg::ResourceTableForwardMsg< Message< Engine::GpuMsg::GetSWImageViewMemoryLayout > > >;
-		using Fwd_GetSWTextureMemoryLayout		= Message< Engine::GpuMsg::ResourceTableForwardMsg< Message< Engine::GpuMsg::GetSWTextureMemoryLayout > > >;
+		using Fwd_GetSWBufferMemoryLayout		= Engine::GpuMsg::ResourceTableForwardMsg< Engine::GpuMsg::GetSWBufferMemoryLayout >;
+		using Fwd_GetSWImageViewMemoryLayout	= Engine::GpuMsg::ResourceTableForwardMsg< Engine::GpuMsg::GetSWImageViewMemoryLayout >;
+		using Fwd_GetSWTextureMemoryLayout		= Engine::GpuMsg::ResourceTableForwardMsg< Engine::GpuMsg::GetSWTextureMemoryLayout >;
 
 		struct VertexShader
 		{
@@ -143,27 +141,9 @@ namespace Impl
 		SWShaderHelper (SWShaderHelper &&) = default;
 		SWShaderHelper (const SWShaderHelper &) = default;
 
+
 	// shader interface
 	public:
-		// vertex shader only
-		/*bool VS_GetVertexBufferPtr (StringCRef bufferName, OUT void *&ptr) const;
-		bool VS_GetVertexBufferPtr (uint bindingIndex, OUT void *&ptr) const;
-		bool VS_GetIndexBufferPtr (OUT void *&ptr) const;
-
-
-		// fragment shader only
-		bool FS_FragmentOutput (uint index, const float4 &value) const;
-		bool FS_FragmentOutput (uint index, const uint4 &value) const;
-		bool FS_FragmentOutput (uint index, const int4 &value) const;
-
-		bool FS_FragmentOutput (StringCRef name, const float4 &value) const;
-		bool FS_FragmentOutput (StringCRef name, const uint4 &value) const;
-		bool FS_FragmentOutput (StringCRef name, const int4 &value) const;
-
-		bool FS_StencilOutput (int value) const;
-		bool FS_DepthOutput (float value) const;*/
-
-		
 		ND_ VertexShader const&		GetVertexShaderState () const		{ return _shaderState.Get< VertexShader >(); }
 		ND_ GeometryShader const&	GetGeometryShaderState () const		{ return _shaderState.Get< GeometryShader >(); }
 		ND_ FragmentShader const&	GetFragmentShaderState () const		{ return _shaderState.Get< FragmentShader >(); }
@@ -242,7 +222,7 @@ namespace Impl
 		Fwd_GetSWBufferMemoryLayout		req_buf{ uniqueIndex, EPipelineAccess::UniformRead, _GetStage() };
 		_shader->GetBufferMemoryLayout( req_buf );
 
-		value = UniformBuffer<T>{ *req_buf->message->result };
+		value = UniformBuffer<T>{ *req_buf.message.result };
 	}
 	
 /*
@@ -260,7 +240,7 @@ namespace Impl
 												 _GetStage() };
 		_shader->GetBufferMemoryLayout( req_buf );
 
-		value = RVREF(StorageBuffer<T,A>{ *req_buf->message->result });
+		value = RVREF(StorageBuffer<T,A>{ *req_buf.message.result });
 	}
 		
 /*
@@ -277,7 +257,7 @@ namespace Impl
 												 _GetStage() };
 		_shader->GetImageViewMemoryLayout( req_img );
 
-		value = RVREF(Image2D<T,A>{ RVREF(*req_img->message->result) });
+		value = RVREF(Image2D<T,A>{ RVREF(*req_img.message.result) });
 	}
 		
 	template <typename T, EStorageAccess::type A>
@@ -289,7 +269,7 @@ namespace Impl
 												 _GetStage() };
 		_shader->GetImageViewMemoryLayout( req_img );
 
-		value = RVREF(Image2DArray<T,A>{ RVREF(*req_img->message->result) });
+		value = RVREF(Image2DArray<T,A>{ RVREF(*req_img.message.result) });
 	}
 
 	template <typename T, EStorageAccess::type A>
@@ -301,7 +281,7 @@ namespace Impl
 												 _GetStage() };
 		_shader->GetImageViewMemoryLayout( req_img );
 
-		value = RVREF(Image3D<T,A>{ RVREF(*req_img->message->result) });
+		value = RVREF(Image3D<T,A>{ RVREF(*req_img.message.result) });
 	}
 	
 /*
@@ -316,7 +296,7 @@ namespace Impl
 
 		_shader->GetTextureMemoryLayout( req_tex );
 
-		value = RVREF(Texture2D<T>{ RVREF(*req_tex->message->result), *req_tex->message->sampler });
+		value = RVREF(Texture2D<T>{ RVREF(*req_tex.message.result), *req_tex.message.sampler });
 	}
 	
 /*

@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "Engine/STL/Engine.STL.h"
 #include "Engine/Platforms/Public/GPU/ShaderEnums.h"
 #include "Engine/Platforms/Public/GPU/PixelFormatEnums.h"
 #include "Engine/Platforms/Public/GPU/ImageEnums.h"

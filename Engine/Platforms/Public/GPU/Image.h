@@ -27,10 +27,10 @@ namespace Platforms
 {
 
 	//
-	// GPU Image Descriptor
+	// GPU Image Description
 	//
 
-	struct ImageDescriptor : CompileTime::PODStruct
+	struct ImageDescription : CompileTime::PODStruct
 	{
 	// variables
 		EImage::type		imageType;
@@ -41,11 +41,11 @@ namespace Platforms
 		MultiSamples		samples;	// if > 1 then enabled multisampling
 
 	// methods
-		ImageDescriptor (GX_DEFCTOR) : imageType( EImage::Unknown ), format( EPixelFormat::Unknown )
+		ImageDescription (GX_DEFCTOR) : imageType( EImage::Unknown ), format( EPixelFormat::Unknown )
 		{}
 		
 		explicit
-		ImageDescriptor  (EImage::type			imageType,
+		ImageDescription (EImage::type			imageType,
 						  const uint4	&		dimension,
 						  EPixelFormat::type	format,
 						  EImageUsage::bits		usage,
@@ -56,10 +56,10 @@ namespace Platforms
 
 	
 	//
-	// GPU Image View Descriptor
+	// GPU Image View Description
 	//
 
-	struct ImageViewDescriptor
+	struct ImageViewDescription
 	{
 	// variables
 		EImage::type			viewType	= EImage::Unknown;
@@ -72,19 +72,19 @@ namespace Platforms
 
 	// methods
 		explicit
-		ImageViewDescriptor (EImage::type		viewType	= EImage::Unknown,
-							 EPixelFormat::type	format		= EPixelFormat::Unknown,
-							 MipmapLevel		baseLevel	= Uninitialized,
-							 uint				levelCount	= 1,
-							 ImageLayer			baseLayer	= Uninitialized,
-							 uint				layerCount	= 1,
-							 Swizzle::type		swizzle		= "RGBA"_Swizzle);
+		ImageViewDescription (EImage::type			viewType	= EImage::Unknown,
+							  EPixelFormat::type	format		= EPixelFormat::Unknown,
+							  MipmapLevel			baseLevel	= Uninitialized,
+							  uint					levelCount	= 1,
+							  ImageLayer			baseLayer	= Uninitialized,
+							  uint					layerCount	= 1,
+							  Swizzle::type			swizzle		= "RGBA"_Swizzle);
 
 		explicit
-		ImageViewDescriptor (const ImageDescriptor &descr);
+		ImageViewDescription (const ImageDescription &descr);
 
-		ND_ bool operator == (const ImageViewDescriptor &right) const;
-		ND_ bool operator >  (const ImageViewDescriptor &right) const;
+		ND_ bool operator == (const ImageViewDescription &right) const;
+		ND_ bool operator >  (const ImageViewDescription &right) const;
 	};
 
 }	// Platforms
@@ -99,14 +99,14 @@ namespace CreateInfo
 	struct GpuImage
 	{
 	// types
-		using ImageDescriptor	= Platforms::ImageDescriptor;
+		using ImageDescription	= Platforms::ImageDescription;
 		using EGpuMemory		= Platforms::EGpuMemory;
 		using EMemoryAccess		= Platforms::EMemoryAccess;
 
 	// variables
 		ModulePtr				gpuThread;			// can be null
 		ModulePtr				memManager;			// can be null
-		ImageDescriptor			descr;
+		ImageDescription		descr;
 		EGpuMemory::bits		memFlags;
 		EMemoryAccess::bits		access;
 		bool					allocMem = true;	// if true then you don't need to attach memory module to image
@@ -114,12 +114,12 @@ namespace CreateInfo
 	// methods
 		GpuImage (GX_DEFCTOR) {}
 		
-		GpuImage (const ImageDescriptor &descr) : descr{descr}, allocMem{false} {}
+		GpuImage (const ImageDescription &descr) : descr{descr}, allocMem{false} {}
 
-		GpuImage (const ImageDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
+		GpuImage (const ImageDescription &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
 			descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
 
-		GpuImage (const ImageDescriptor &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
+		GpuImage (const ImageDescription &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
 			memManager{memMngr}, descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
 	};
 
@@ -129,23 +129,27 @@ namespace CreateInfo
 namespace GpuMsg
 {
 	//
-	// Set / Get Image Descriptor
+	// Set / Get Image Description
 	//
-	struct GetImageDescriptor
+	struct GetImageDescription : _MessageBase_
 	{
-		Out< Platforms::ImageDescriptor >		result;
+		Out< Platforms::ImageDescription >		result;
 	};
 
-	struct SetImageDescriptor
+	struct SetImageDescription : _MessageBase_
 	{
-		Platforms::ImageDescriptor				descr;
+	// variables
+		Platforms::ImageDescription				descr;
+
+	// methods
+		explicit SetImageDescription (const Platforms::ImageDescription &desc) : descr{desc} {}
 	};
 	
 
 	//
 	// Get Image Memory Layout
 	//
-	struct GetImageMemoryLayout
+	struct GetImageMemoryLayout : _MessageBase_
 	{
 	// types
 		struct MemLayout

@@ -50,7 +50,7 @@ namespace OSMsg
 	//
 	// Get Displays
 	//
-	struct GetDisplays
+	struct GetDisplays : _MessageBase_
 	{
 	// types
 		using Displays_t = FixedSizeArray< Platforms::Display, GlobalConst::OS_MaxDisplays >;
@@ -66,7 +66,7 @@ namespace OSMsg
 	//
 	// Get OS Modules
 	//
-	struct GetOSModules
+	struct GetOSModules : _MessageBase_
 	{
 	// variables
 		Out< Platforms::OSModuleIDs >	result;
@@ -79,7 +79,7 @@ namespace OSMsg
 	//
 	// Get CPU Info
 	//
-	struct GetProccessorInfo
+	struct GetProccessorInfo : _MessageBase_
 	{
 	// types
 		enum class EProcessorArch {
@@ -107,7 +107,7 @@ namespace OSMsg
 	//
 	// Get (RAM) Memory Info
 	//
-	struct GetMemoryInfo
+	struct GetMemoryInfo : _MessageBase_
 	{
 	// types
 		struct Info {

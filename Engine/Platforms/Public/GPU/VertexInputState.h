@@ -92,12 +92,6 @@ namespace Platforms
 		VertexInputState (GX_DEFCTOR) {}
 		VertexInputState (const Attribs_t &attribs, const Bindings_t &bindings);
 
-		VertexInputState (Self &&) = default;
-		VertexInputState (const Self &) = default;
-
-		Self& operator = (Self &&) = default;
-		Self& operator = (const Self &) = default;
-
 		template <typename ClassType, typename ValueType>
 		Self & Add (StringCRef name, ValueType ClassType:: *vertex, bool norm = false, StringCRef buffer = StringCRef());
 		Self & Add (StringCRef name, EVertexAttribute::type type, BytesU offset, StringCRef buffer = StringCRef());

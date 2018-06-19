@@ -12,16 +12,41 @@ namespace Base
 	Send
 =================================================
 */
-	template <typename T>
-	GX_NO_INLINE bool Module::Send (const Message<T> &msg) noexcept
+	template <typename MsgT>
+	forceinline bool Module::Send (const MsgT &msg) noexcept
 	{
-		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+	
+		return SendAsync( msg );
+	}
+	
+/*
+=================================================
+	SendAsync
+=================================================
+*/
+	template <typename MsgT>
+	GX_NO_INLINE bool Module::SendAsync (const MsgT &msg) noexcept
+	{
+		STATIC_ASSERT( MsgT::__is_message(true) );
 		
-		GX_PROFILE_MSG( _SendUncheckedEvent(Message< ProfilingMsg::OnSendMsg >{ this, msg }.Async()) );
+		GX_PROFILE_MSG( _SendUncheckedEvent( ProfilingMsg::OnSendMsg{ this, msg }) );
 		
 		VariantCRef		var_msg = VariantCRef::FromConst( msg );
 
 		#include "Module.Send.inl.h"
+	}
+	
+/*
+=================================================
+	Request
+=================================================
+*/
+	template <typename MsgT>
+	forceinline auto  Module::Request (MsgT &&msg) noexcept
+	{
+		CHECK( Send( msg ) and bool(msg.result) );
+		return *msg.result;
 	}
 
 /*
@@ -29,10 +54,10 @@ namespace Base
 	Subscribe
 =================================================
 */
-	template <typename ...Types>
-	forceinline bool Module::Subscribe (Types&& ...args)
+	template <typename Class, typename Func>
+	forceinline bool Module::Subscribe (const Class &obj, Func func, EHandlerPriority priority)
 	{
-		return _SubscribeOnEvent( FW<Types>( args )... );
+		return _SubscribeOnEvent( obj, func, priority );
 	}
 	
 /*
@@ -49,7 +74,7 @@ namespace Base
 		template <typename T, usize Index>
 		void Process ()
 		{
-			bool is_ok = _self->Subscribe( _other, &Module::_SendEvent< typename T::Data_t > );
+			bool is_ok = _self->Subscribe( _other, &Module::_SendEvent<T> );
 			ASSERT( is_ok );
 			ok &= is_ok;
 		}
@@ -79,12 +104,12 @@ namespace Base
 =================================================
 */
 	GX_PROFILE_MSG(
-	template <typename ...Types>
-	forceinline bool Module::_SubscribeDbg (Types&& ...args)
+	template <typename Class, typename Func>
+	forceinline bool Module::_SubscribeDbg (const Class &obj, Func func)
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 
-		_msgHandler.Subscribe( TypeIdList{}, FW<Types>( args )..., /*checked*/false );
+		_msgHandler.Subscribe( TypeIdList{}, obj, func, EHandlerPriority::_Reserved, /*checked*/false );
 		return true;
 	})
 
@@ -93,8 +118,8 @@ namespace Base
 	UnsubscribeAll
 =================================================
 */
-	template <typename T>
-	forceinline void Module::UnsubscribeAll (const T &unit)
+	template <typename Class>
+	forceinline void Module::UnsubscribeAll (const Class &unit)
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent(), void() );
 
@@ -106,12 +131,12 @@ namespace Base
 	Unsubscribe
 =================================================
 */
-	template <typename ...Types>
-	forceinline void Module::Unsubscribe (Types&& ...args)
+	template <typename Class, typename Func>
+	forceinline void Module::Unsubscribe (const Class &obj, Func func)
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent(), void() );
 
-		return _msgHandler.Unsubscribe( FW<Types>( args )... );
+		return _msgHandler.Unsubscribe( obj, func );
 	}
 
 /*
@@ -122,12 +147,15 @@ namespace Base
 	self module.
 =================================================
 */
-	template <typename ...Types>
-	forceinline bool Module::_SubscribeOnEvent (Types&& ...args)
+	template <typename Class, typename Func>
+	forceinline bool Module::_SubscribeOnEvent (const Class &obj, Func func, EHandlerPriority priority)
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+		
+		if ( priority == EHandlerPriority::Auto )
+			priority = (Cast<void const*>(obj) == Cast<void const*>(this) ? EHandlerPriority::High : EHandlerPriority::Normal);
 
-		_msgHandler.Subscribe( GetSupportedEvents(), FW<Types>( args )... );
+		_msgHandler.Subscribe( GetSupportedEvents(), obj, func, priority );
 		return true;
 	}
 
@@ -140,15 +168,15 @@ namespace Base
 	when you send message to oneself.
 =================================================
 */
-	template <typename T>
-	GX_NO_INLINE bool Module::_SendMsg (const Message<T> &msg)
+	template <typename MsgT>
+	GX_NO_INLINE bool Module::_SendMsg (const MsgT &msg)
 	{
-		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
-		
-		if ( not GetSupportedMessages().HasType( TypeIdOf< Message<T> >() ) )
-			RETURN_ERR( "Unsupported message type '" << ToString( TypeIdOf<T>() ) << "'" );
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 
-		VariantCRef		var_msg = VariantCRef::FromConst( msg.From( this ) );
+		if ( not GetSupportedMessages().HasType( TypeIdOf<MsgT>() ) )
+			RETURN_ERR( "Unsupported message type '" << ToString( TypeIdOf<MsgT>() ) << "'" );
+
+		VariantCRef		var_msg = VariantCRef::FromConst( msg );
 		
 		#include "Module.Send.inl.h"
 	}
@@ -160,25 +188,25 @@ namespace Base
 	send message to subscribers (and to oneself if subscribed)
 =================================================
 */
-	template <typename T>
-	GX_NO_INLINE bool Module::_SendEvent (const Message<T> &msg)
+	template <typename MsgT>
+	GX_NO_INLINE bool Module::_SendEvent (const MsgT &msg)
 	{
-		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
+		if ( not GetSupportedEvents().HasType( TypeIdOf<MsgT>() ) )
+			RETURN_ERR( "Unsupported event type '" << ToString( TypeIdOf<MsgT>() ) << "'" );
 		
-		if ( not GetSupportedEvents().HasType( TypeIdOf< Message<T> >() ) )
-			RETURN_ERR( "Unsupported event type '" << ToString( TypeIdOf<T>() ) << "'" );
-		
-		VariantCRef		var_msg = VariantCRef::FromConst( msg.From( this ) );
+		VariantCRef		var_msg = VariantCRef::FromConst( msg );
 		
 		#include "Module.Send.inl.h"
 	}
 	
-	template <typename T>
-	GX_NO_INLINE bool Module::_SendUncheckedEvent (const Message<T> &msg)
+	template <typename MsgT>
+	GX_NO_INLINE bool Module::_SendUncheckedEvent (const MsgT &msg)
 	{
-		CHECK_ERR( msg.IsAsync() or _ownThread == ThreadID::GetCurrent() );
-		
-		VariantCRef		var_msg = VariantCRef::FromConst( msg.From( this ) );
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
+		VariantCRef		var_msg = VariantCRef::FromConst( msg );
 		
 		#include "Module.Send.inl.h"
 	}
@@ -190,12 +218,15 @@ namespace Base
 	subscribe to messages from oneself.
 =================================================
 */
-	template <typename ...Types>
-	forceinline bool Module::_SubscribeOnMsg (Types&& ...args)
+	template <typename Class, typename Func>
+	forceinline bool Module::_SubscribeOnMsg (const Class &obj, Func func, EHandlerPriority priority)
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 
-		_msgHandler.Subscribe( GetSupportedMessages(), FW<Types>( args )... );
+		if ( priority == EHandlerPriority::Auto )
+			priority = (Cast<void const*>(obj) == Cast<void const*>(this) ? EHandlerPriority::High : EHandlerPriority::Normal);
+
+		_msgHandler.Subscribe( GetSupportedMessages(), obj, func, priority );
 		return true;
 	}
 
@@ -205,7 +236,7 @@ namespace Base
 =================================================
 */
 	template <typename DataType>
-	forceinline bool Module::_SendForEachAttachments (const Message<DataType> &msg)
+	forceinline bool Module::_SendForEachAttachments (const DataType &msg)
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 
@@ -213,7 +244,7 @@ namespace Base
 
 		for (auto& attachment : temp)
 		{
-			attachment.second->Send( msg.From( this ) );
+			attachment.second->Send( msg );
 		}
 		return true;
 	}
@@ -224,7 +255,7 @@ namespace Base
 =================================================
 */
 	template <typename Typelist>
-	inline ModulePtr Module::GetModuleByMsg ()
+	forceinline ModulePtr Module::GetModuleByMsg ()
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 		
@@ -239,7 +270,7 @@ namespace Base
 =================================================
 */
 	template <typename Typelist>
-	inline ModulePtr Module::GetModuleByEvent ()
+	forceinline ModulePtr Module::GetModuleByEvent ()
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 		
@@ -254,7 +285,7 @@ namespace Base
 =================================================
 */
 	template <typename MsgList, typename EventsList>
-	inline ModulePtr Module::GetModuleByMsgEvent ()
+	forceinline ModulePtr Module::GetModuleByMsgEvent ()
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 		
@@ -269,7 +300,7 @@ namespace Base
 =================================================
 */
 	template <typename Typelist>
-	inline ModulePtr Module::GetParentByMsg ()
+	forceinline ModulePtr Module::GetParentByMsg ()
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 		
@@ -284,7 +315,7 @@ namespace Base
 =================================================
 */
 	template <typename Typelist>
-	inline ModulePtr Module::GetParentByEvent ()
+	forceinline ModulePtr Module::GetParentByEvent ()
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 		
@@ -299,7 +330,7 @@ namespace Base
 =================================================
 */
 	template <typename MsgList, typename EventsList>
-	inline ModulePtr Module::GetParentByMsgEvent ()
+	forceinline ModulePtr Module::GetParentByMsgEvent ()
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 		
@@ -316,7 +347,13 @@ namespace Base
 =================================================
 */
 	template <typename MsgList>
-	inline bool Module::_CopySubscriptions (const ModulePtr &other, bool removeUnsupported)
+	forceinline bool Module::_CopySubscriptions (const ModulePtr &other, bool removeUnsupported)
+	{
+		return _CopySubscriptions<MsgList>( other, removeUnsupported, EHandlerPriority::Auto );
+	}
+
+	template <typename MsgList>
+	inline bool Module::_CopySubscriptions (const ModulePtr &other, bool removeUnsupported, EHandlerPriority priority)
 	{
 		CHECK_ERR( other );
 
@@ -338,20 +375,9 @@ namespace Base
 			}
 		}
 
-		return _msgHandler.CopySubscriptions( GetSupportedMessages(), other, other->_msgHandler, tlist );
+		return _msgHandler.CopySubscriptions( GetSupportedMessages(), other, other->_msgHandler, tlist, priority );
 	}
 
-/*
-=================================================
-	SendTo
-=================================================
-*/
-	template <typename T>
-	forceinline bool BaseObject::SendTo (const ModulePtr &target, const Message<T> &msg) const
-	{
-		return target->Send( msg.From( WeakPointerType< BaseObject >( const_cast<BaseObject *>(this) ) ) );
-	}
-
-
+	
 }	// Base
 }	// Engine

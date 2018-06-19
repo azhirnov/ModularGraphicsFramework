@@ -10,13 +10,12 @@ namespace glsl_vfs
 	2D Line.
 	
 	license: free
-
-	depends of:
-		Common/Defines
-		Math/Math
-		Math/Utils
-		Math2D/Rect
 */
+
+#include <Common/Defines.glsl>
+#include <Math2D/Rect.glsl>
+#include <Math/Math.glsl>
+#include <Math/Utils.glsl>
 
 struct Line2
 {

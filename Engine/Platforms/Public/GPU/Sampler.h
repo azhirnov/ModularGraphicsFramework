@@ -12,15 +12,15 @@ namespace Platforms
 {
 
 	//
-	// Sampler Descriptor
+	// Sampler Description
 	//
 
-	struct SamplerDescriptor final : CompileTime::PODStruct
+	struct SamplerDescription final : CompileTime::PODStruct
 	{
 	// types
 	public:
 		using AddressMode_t	= Vec< EAddressMode::type, 3 >;
-		using Self			= SamplerDescriptor;
+		using Self			= SamplerDescription;
 
 		struct Builder;
 
@@ -38,14 +38,14 @@ namespace Platforms
 
 	// methods
 	public:
-		SamplerDescriptor (GX_DEFCTOR);
+		SamplerDescription (GX_DEFCTOR);
 
-		SamplerDescriptor (EAddressMode::type addressMode,
-						   EFilter::type filter,
-						   ESamplerBorderColor::bits borderColor = Uninitialized,
-						   //float mipLodBias = 0.0f,
-						   //const float2 &lodRange = float2(),
-						   ECompareFunc::type compareOp = ECompareFunc::None);
+		SamplerDescription (EAddressMode::type			addressMode,
+							EFilter::type				filter,
+							ESamplerBorderColor::bits	borderColor = Uninitialized,
+							//float						mipLodBias = 0.0f,
+							//const float2 &			lodRange = float2(),
+							ECompareFunc::type			compareOp = ECompareFunc::None);
 
 		ND_ bool operator == (const Self &right) const;
 		ND_ bool operator >  (const Self &right) const;
@@ -55,20 +55,20 @@ namespace Platforms
 		ND_ ESamplerBorderColor::bits	BorderColor ()	const	{ return _borderColor; }
 		ND_ ECompareFunc::type			CompareOp ()	const	{ return _compareOp; }
 
-		DEBUG_ONLY( String ToString () const );
+		DEBUG_ONLY( ND_ String ToString () const );
 	};
 	
 
 
 	//
-	// Sampler Descriptor Builder
+	// Sampler Description Builder
 	//
 
-	struct SamplerDescriptor::Builder final
+	struct SamplerDescription::Builder final
 	{
 	// variables
 	private:
-		SamplerDescriptor	_state;
+		SamplerDescription	_state;
 		bool				_changed	= true;
 
 
@@ -76,7 +76,7 @@ namespace Platforms
 	public:
 		Builder () {}
 
-		explicit Builder (const SamplerDescriptor &state) : _state(state) {}
+		explicit Builder (const SamplerDescription &state) : _state(state) {}
 
 		Builder& SetAddressMode (EAddressMode::type u, EAddressMode::type v, EAddressMode::type w);
 		Builder& SetAddressMode (EAddressMode::type uvw);
@@ -103,7 +103,7 @@ namespace Platforms
 		//void ValidateFilter ();
 
 		// validate, calculate hash and return
-		ND_ SamplerDescriptor const& Finish ();
+		ND_ SamplerDescription const& Finish ();
 	};
 
 }	// Platforms
@@ -120,11 +120,11 @@ namespace CreateInfo
 	{
 	// variables
 		ModulePtr						gpuThread;			// can be null
-		Platforms::SamplerDescriptor	descr;
+		Platforms::SamplerDescription	descr;
 
 	// methods
 		GpuSampler () {}
-		explicit GpuSampler (const Platforms::SamplerDescriptor &descr) : descr{descr} {}
+		explicit GpuSampler (const Platforms::SamplerDescription &descr) : descr{descr} {}
 	};
 
 }	// CreateInfo
@@ -133,11 +133,11 @@ namespace CreateInfo
 namespace GpuMsg
 {
 	//
-	// Get Sampler Descriptor
+	// Get Sampler Description
 	//
-	struct GetSamplerDescriptor
+	struct GetSamplerDescription : _MessageBase_
 	{
-		Out< Platforms::SamplerDescriptor >		result;
+		Out< Platforms::SamplerDescription >		result;
 	};
 
 

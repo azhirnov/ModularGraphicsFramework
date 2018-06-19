@@ -3,7 +3,7 @@
 #include "Engine/Base/DataProvider/DataProviderObjectsConstructor.h"
 #include "Engine/Base/DataProvider/DataMessages.h"
 #include "Engine/Base/Main/MainSystem.h"
-#include "Engine/STL/Files/MemFile.h"
+#include "Core/STL/Files/MemFile.h"
 
 namespace Engine
 {
@@ -54,11 +54,11 @@ namespace Base
 
 	// message handlers
 	private:
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &)					{ return false; }
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &)		{ return false; }
-		bool _OpenFileForRead (const Message< DSMsg::OpenFileForRead > &);
-		bool _IsUriExists (const Message< DSMsg::IsUriExists > &);
-		bool _CreateDataInputModule (const Message< DSMsg::CreateDataInputModule > &);
+		bool _AddToManager (const ModuleMsg::AddToManager &)				{ return false; }
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &)		{ return false; }
+		bool _OpenFileForRead (const DSMsg::OpenFileForRead &);
+		bool _IsUriExists (const DSMsg::IsUriExists &);
+		bool _CreateDataInputModule (const DSMsg::CreateDataInputModule &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -112,12 +112,12 @@ namespace Base
 	_OpenFileForRead
 =================================================
 */
-	bool BuiltinStorageDataProvider::_OpenFileForRead (const Message< DSMsg::OpenFileForRead > &msg)
+	bool BuiltinStorageDataProvider::_OpenFileForRead (const DSMsg::OpenFileForRead &msg)
 	{
 		CHECK_ERR( _fileMap );
 
 		BinaryArray	data;
-		LoadFunc_t	func = _fileMap( msg->filename );
+		LoadFunc_t	func = _fileMap( msg.filename );
 		auto		file = GXFile::MemRFile::New();
 
 		CHECK_ERR( func );
@@ -125,7 +125,7 @@ namespace Base
 
 		CHECK_ERR( file->CreateFromArray( data ) );
 
-		msg->result.Set( file );
+		msg.result.Set( file );
 		return true;
 	}
 	
@@ -134,11 +134,11 @@ namespace Base
 	_IsUriExists
 =================================================
 */
-	bool BuiltinStorageDataProvider::_IsUriExists (const Message< DSMsg::IsUriExists > &msg)
+	bool BuiltinStorageDataProvider::_IsUriExists (const DSMsg::IsUriExists &msg)
 	{
 		CHECK_ERR( _fileMap );
 
-		msg->result.Set( _fileMap( msg->uri ) != null );
+		msg.result.Set( _fileMap( msg.uri ) != null );
 		return true;
 	}
 	
@@ -147,10 +147,10 @@ namespace Base
 	_CreateDataInputModule
 =================================================
 */
-	bool BuiltinStorageDataProvider::_CreateDataInputModule (const Message< DSMsg::CreateDataInputModule > &msg)
+	bool BuiltinStorageDataProvider::_CreateDataInputModule (const DSMsg::CreateDataInputModule &msg)
 	{
-		msg->result.Set(
-			DataProviderObjectsConstructor::CreateFileDataInput( FileDataInputModuleID, GlobalSystems(), CreateInfo::DataInput{ msg->uri, this } )
+		msg.result.Set(
+			DataProviderObjectsConstructor::CreateFileDataInput( FileDataInputModuleID, GlobalSystems(), CreateInfo::DataInput{ msg.uri, this } )
 		);
 		return true;
 	}

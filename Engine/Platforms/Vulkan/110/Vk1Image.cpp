@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -27,10 +27,10 @@ namespace PlatformVK
 	// types
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::ReadRegion,
 											DSMsg::WriteRegion,
-											GpuMsg::GetGpuMemoryDescriptor,
+											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -42,8 +42,8 @@ namespace PlatformVK
 										>;
 
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetImageDescriptor,
-											GpuMsg::SetImageDescriptor,
+											GpuMsg::GetImageDescription,
+											GpuMsg::SetImageDescription,
 											GpuMsg::GetVkImageID,
 											GpuMsg::CreateVkImageView,
 											GpuMsg::GpuMemoryRegionChanged,
@@ -51,7 +51,7 @@ namespace PlatformVK
 										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t::Append< MessageListFrom<
-											GpuMsg::SetImageDescriptor
+											GpuMsg::SetImageDescription
 										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
@@ -70,7 +70,7 @@ namespace PlatformVK
 
 	// variables
 	private:
-		ImageDescriptor			_descr;
+		ImageDescription		_descr;
 		ModulePtr				_memObj;
 		ModulePtr				_memManager;	// optional
 		ImageViewMap_t			_viewMap;
@@ -93,20 +93,20 @@ namespace PlatformVK
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		bool _GetVkImageID (const Message< GpuMsg::GetVkImageID > &);
-		bool _CreateVkImageView (const Message< GpuMsg::CreateVkImageView > &);
-		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
-		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
-		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		bool _GetVkImageID (const GpuMsg::GetVkImageID &);
+		bool _CreateVkImageView (const GpuMsg::CreateVkImageView &);
+		bool _GetImageDescription (const GpuMsg::GetImageDescription &);
+		bool _SetImageDescription (const GpuMsg::SetImageDescription &);
+		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
+		bool _GetImageMemoryLayout (const GpuMsg::GetImageMemoryLayout &);
 		
 	// event handlers
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+		bool _OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &);
 
 
 	private:
@@ -156,8 +156,8 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Image::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1Image::_GetVkImageID );
 		_SubscribeOnMsg( this, &Vk1Image::_CreateVkImageView );
-		_SubscribeOnMsg( this, &Vk1Image::_GetImageDescriptor );
-		_SubscribeOnMsg( this, &Vk1Image::_SetImageDescriptor );
+		_SubscribeOnMsg( this, &Vk1Image::_GetImageDescription );
+		_SubscribeOnMsg( this, &Vk1Image::_SetImageDescription );
 		_SubscribeOnMsg( this, &Vk1Image::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Image::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Image::_GetVkPrivateClasses );
@@ -167,8 +167,8 @@ namespace PlatformVK
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 		
 		// descriptor may be invalid for sharing or for delayed initialization
-		if ( Utils::IsValidDescriptor( _descr ) )
-			Utils::ValidateDescriptor( INOUT _descr );
+		if ( Utils::IsValidDescription( _descr ) )
+			Utils::ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -186,7 +186,7 @@ namespace PlatformVK
 	_Link
 =================================================
 */
-	bool Vk1Image::_Link (const Message< ModuleMsg::Link > &msg)
+	bool Vk1Image::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -221,7 +221,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1Image::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool Vk1Image::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) or _IsImageCreated() )
 			return true;	// already composed
@@ -243,7 +243,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1Image::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1Image::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyAll();
 
@@ -255,11 +255,11 @@ namespace PlatformVK
 	_AttachModule
 =================================================
 */
-	bool Vk1Image::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool Vk1Image::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
+		const bool	is_mem	= msg.newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		if ( is_mem )
 		{
@@ -274,11 +274,11 @@ namespace PlatformVK
 	_DetachModule
 =================================================
 */
-	bool Vk1Image::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool Vk1Image::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule == _memObj )
+		if ( msg.oldModule == _memObj )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyViews();
@@ -296,10 +296,10 @@ namespace PlatformVK
 		CHECK_ERR( not _IsImageCreated() );
 		CHECK_ERR( _viewMap.Empty() );
 
-		Message< GpuMsg::GetGpuMemoryDescriptor >	req_mem_descr;
-		SendTo( _memObj, req_mem_descr );
+		GpuMsg::GetGpuMemoryDescription	req_mem_descr;
+		_memObj->Send( req_mem_descr );
 
-		EMemoryAccess::bits	mem_access	= req_mem_descr->result->access;
+		EMemoryAccess::bits	mem_access	= req_mem_descr.result->access;
 		const bool			opt_tiling	= !(mem_access & EMemoryAccess::CpuReadWrite);
 
 		_layout = opt_tiling ? EImageLayout::Undefined : EImageLayout::Preinitialized;
@@ -344,13 +344,13 @@ namespace PlatformVK
 		
 		if ( _CanHaveImageView() )
 		{
-			Message< GpuMsg::CreateVkImageView >	create;
-			create->viewDescr.layerCount	= _descr.dimension.w;
-			create->viewDescr.levelCount	= _descr.maxLevel.Get();
+			GpuMsg::CreateVkImageView	create;
+			create.viewDescr.layerCount	= _descr.dimension.w;
+			create.viewDescr.levelCount	= _descr.maxLevel.Get();
 
 			CHECK_ERR( _CreateVkImageView( create ) );
 
-			_imageView = *create->result;
+			_imageView = *create.result;
 		}
 		return true;
 	}
@@ -410,11 +410,11 @@ namespace PlatformVK
 	_GetVkImageID
 =================================================
 */
-	bool Vk1Image::_GetVkImageID (const Message< GpuMsg::GetVkImageID > &msg)
+	bool Vk1Image::_GetVkImageID (const GpuMsg::GetVkImageID &msg)
 	{
 		ASSERT( _IsImageCreated() );
 
-		msg->result.Set({ _imageId, _imageView });
+		msg.result.Set({ _imageId, _imageView });
 		return true;
 	}
 	
@@ -423,13 +423,13 @@ namespace PlatformVK
 	_CreateVkImageView
 =================================================
 */
-	bool Vk1Image::_CreateVkImageView (const Message< GpuMsg::CreateVkImageView > &msg)
+	bool Vk1Image::_CreateVkImageView (const GpuMsg::CreateVkImageView &msg)
 	{
 		CHECK_ERR( _IsImageCreated() );
 		CHECK_ERR( _isBindedToMemory );
 		CHECK_ERR( _CanHaveImageView() );
 
-		ImageView_t		descr = msg->viewDescr;
+		ImageView_t		descr = msg.viewDescr;
 
 		ImageViewMap_t::Validate( INOUT descr, _descr );
 
@@ -438,7 +438,7 @@ namespace PlatformVK
 		
 		if ( img_view != VK_NULL_HANDLE )
 		{
-			msg->result.Set( img_view );
+			msg.result.Set( img_view );
 			return true;
 		}
 
@@ -477,33 +477,33 @@ namespace PlatformVK
 
 		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(img_view), GetDebugName(), EGpuObject::ImageView );
 
-		msg->result.Set( img_view );
+		msg.result.Set( img_view );
 		return true;
 	}
 
 /*
 =================================================
-	_GetImageDescriptor
+	_GetImageDescription
 =================================================
 */
-	bool Vk1Image::_GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &msg)
+	bool Vk1Image::_GetImageDescription (const GpuMsg::GetImageDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_SetImageDescriptor
+	_SetImageDescription
 =================================================
 */
-	bool Vk1Image::_SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &msg)
+	bool Vk1Image::_SetImageDescription (const GpuMsg::SetImageDescription &msg)
 	{
 		CHECK_ERR( GetState() == EState::Initial );
 
-		_descr = msg->descr;
+		_descr = msg.descr;
 
-		Utils::ValidateDescriptor( INOUT _descr );
+		Utils::ValidateDescription( INOUT _descr );
 		return true;
 	}
 
@@ -512,26 +512,26 @@ namespace PlatformVK
 	_OnMemoryBindingChanged
 =================================================
 */
-	bool Vk1Image::_OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &msg)
+	bool Vk1Image::_OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &msg)
 	{
 		CHECK_ERR( _IsComposedOrLinkedState( GetState() ) );
 
 		using EBindingTarget = GpuMsg::OnMemoryBindingChanged::EBindingTarget;
 
-		if (  msg->targetObject == this )
+		if (  msg.targetObject == this )
 		{
-			_isBindedToMemory = ( msg->newState == EBindingTarget::Image );
+			_isBindedToMemory = ( msg.newState == EBindingTarget::Image );
 
 			if ( _isBindedToMemory )
 			{
 				CHECK( _CreateDefaultView() );
 				CHECK( _SetState( EState::ComposedMutable ) );
 				
-				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+				_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 			}
 			else
 			{
-				CHECK( _SetState( EState::Linked ) );
+				_SendMsg( ModuleMsg::Delete{} );
 			}
 		}
 		return true;
@@ -542,11 +542,11 @@ namespace PlatformVK
 	_GetImageMemoryLayout
 =================================================
 */
-	bool Vk1Image::_GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &msg)
+	bool Vk1Image::_GetImageMemoryLayout (const GpuMsg::GetImageMemoryLayout &msg)
 	{
 		CHECK_ERR( _IsImageCreated() );
-		CHECK_ERR( msg->mipLevel < _descr.maxLevel );
-		CHECK_ERR( msg->layer.Get() < _descr.dimension.w );
+		CHECK_ERR( msg.mipLevel < _descr.maxLevel );
+		CHECK_ERR( msg.layer.Get() < _descr.dimension.w );
 
 		// get subresource layout
 		VkImageSubresource	sub_resource	= {};
@@ -554,12 +554,12 @@ namespace PlatformVK
 
 		const bool			is_color		= EPixelFormat::IsColor( _descr.format );
 		const bool			is_depth		= EPixelFormat::IsDepth( _descr.format );
-		const uint4			lvl_dim			= Max( Utils::LevelDimension( _descr.imageType, _descr.dimension, msg->mipLevel.Get() ), 1u );
+		const uint4			lvl_dim			= Max( Utils::LevelDimension( _descr.imageType, _descr.dimension, msg.mipLevel.Get() ), 1u );
 
 		CHECK_ERR( is_color or is_depth );
 		sub_resource.aspectMask	= is_color ? VK_IMAGE_ASPECT_COLOR_BIT : VK_IMAGE_ASPECT_DEPTH_BIT;
-		sub_resource.mipLevel	= Clamp( msg->mipLevel.Get(), 0u, _descr.maxLevel.Get()-1 );
-		sub_resource.arrayLayer	= Clamp( msg->layer.Get(), 0u, lvl_dim.w-1 );
+		sub_resource.mipLevel	= Clamp( msg.mipLevel.Get(), 0u, _descr.maxLevel.Get()-1 );
+		sub_resource.arrayLayer	= Clamp( msg.layer.Get(), 0u, lvl_dim.w-1 );
 
 		vkGetImageSubresourceLayout( GetVkDevice(), _imageId, &sub_resource, OUT &sub_res_layout );
 
@@ -585,7 +585,7 @@ namespace PlatformVK
 
 		ASSERT( result.slicePitch * result.dimension.z <= result.size );
 
-		msg->result.Set( result );
+		msg.result.Set( result );
 		return true;
 	}
 
@@ -621,7 +621,7 @@ namespace PlatformVK
 	_GpuMemoryRegionChanged
 =================================================
 */
-	bool Vk1Image::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &)
+	bool Vk1Image::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
 	{
 		// request image memory barrier
 		TODO( "" );

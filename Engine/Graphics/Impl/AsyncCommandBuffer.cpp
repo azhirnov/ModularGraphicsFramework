@@ -89,17 +89,17 @@ namespace Graphics
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 
-		bool _CmdBeginAsync (const Message< GraphicsMsg::CmdBeginAsync > &);
-		bool _CmdEndAsync (const Message< GraphicsMsg::CmdEndAsync > &);
+		bool _CmdBeginAsync (const GraphicsMsg::CmdBeginAsync &);
+		bool _CmdEndAsync (const GraphicsMsg::CmdEndAsync &);
 
 		// event handlers
-		bool _OnCmdBeginFrame (const Message< GraphicsMsg::OnCmdBeginFrame > &);
+		bool _OnCmdBeginFrame (const GraphicsMsg::OnCmdBeginFrame &);
 
 	private:
 		bool _SubmitInFrame (const ModulePtr &cmdBuf);
@@ -156,7 +156,7 @@ namespace Graphics
 	_Link
 =================================================
 */
-	bool AsyncCommandBuffer::_Link (const Message< ModuleMsg::Link > &msg)
+	bool AsyncCommandBuffer::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -165,10 +165,10 @@ namespace Graphics
 		CHECK_ERR( _GetManager() );
 
 
-		Message< GpuMsg::GetGraphicsModules >	req_ids;
+		GpuMsg::GetGraphicsModules	req_ids;
 		CHECK( _GetManager()->Send( req_ids ) );
 
-		_cmdBufferId = req_ids->graphics->commandBuffer;
+		_cmdBufferId = req_ids.graphics->commandBuffer;
 
 
 		// create builder
@@ -177,7 +177,7 @@ namespace Graphics
 		if ( not _builder )
 		{
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-										req_ids->graphics->commandBuilder,
+										req_ids.graphics->commandBuilder,
 										GlobalSystems(),
 										CreateInfo::GpuCommandBuilder{ _GetManager() },
 										OUT _builder ) );
@@ -201,16 +201,16 @@ namespace Graphics
 	_Compose
 =================================================
 */
-	bool AsyncCommandBuffer::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool AsyncCommandBuffer::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
 		
-		Message< GpuMsg::GetDeviceInfo >	req_dev;
+		GpuMsg::GetDeviceInfo	req_dev;
 		CHECK( _GetManager()->Send( req_dev ) );
-		CHECK_COMPOSING( _syncManager = req_dev->result->syncManager );
+		CHECK_COMPOSING( _syncManager = req_dev.result->syncManager );
 		
 		_SendForEachAttachments( msg );
 		
@@ -219,7 +219,7 @@ namespace Graphics
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -228,7 +228,7 @@ namespace Graphics
 	_Delete
 =================================================
 */
-	bool AsyncCommandBuffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool AsyncCommandBuffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_SendForEachAttachments( msg );
 
@@ -244,11 +244,11 @@ namespace Graphics
 	_AttachModule
 =================================================
 */
-	bool AsyncCommandBuffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool AsyncCommandBuffer::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_builder	= msg->newModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >();
+		const bool	is_builder	= msg.newModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		if ( is_builder )
 		{
@@ -265,11 +265,11 @@ namespace Graphics
 	_DetachModule
 =================================================
 */
-	bool AsyncCommandBuffer::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool AsyncCommandBuffer::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >() )
+		if ( msg.oldModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >() )
 		{
 			CHECK( _SetState( EState::Initial ) );
 
@@ -284,39 +284,39 @@ namespace Graphics
 	_CmdBeginAsync
 =================================================
 */
-	bool AsyncCommandBuffer::_CmdBeginAsync (const Message< GraphicsMsg::CmdBeginAsync > &msg)
+	bool AsyncCommandBuffer::_CmdBeginAsync (const GraphicsMsg::CmdBeginAsync &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
 		// wait before start recording
-		if ( not msg->waitFences.Empty() ) {
-			CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ msg->waitFences }) );
+		if ( not msg.waitFences.Empty() ) {
+			CHECK( _syncManager->Send( GpuMsg::ClientWaitFence{ msg.waitFences }) );
 		}
 
 		// begin recording
-		Message< GpuMsg::CmdBegin >		begin;
+		GpuMsg::CmdBegin	begin;
 		CHECK( _builder->Send( begin ) );
 
 		// validate
-		switch ( msg->syncMode )
+		switch ( msg.syncMode )
 		{
 			case ESyncMode::Async :
 				// nothing to check
 				break;
 
 			case ESyncMode::Sync :
-				CHECK_ERR( msg->beforeFrameExecuting == GpuSemaphoreId::Unknown and
-						   msg->externalSemaphore == GpuSemaphoreId::Unknown );
+				CHECK_ERR( msg.beforeFrameExecuting == GpuSemaphoreId::Unknown and
+						   msg.externalSemaphore == GpuSemaphoreId::Unknown );
 				break;
 
 			case ESyncMode::InFrame :
 			case ESyncMode::BeforeFrame :
-				CHECK_ERR( msg->waitSemaphores.Empty() );	// may be sync or perfomance issues, so don't use it
-				CHECK_ERR( msg->beforeFrameExecuting == GpuSemaphoreId::Unknown );
+				CHECK_ERR( msg.waitSemaphores.Empty() );	// may be sync or perfomance issues, so don't use it
+				CHECK_ERR( msg.beforeFrameExecuting == GpuSemaphoreId::Unknown );
 				break;
 
 			case ESyncMode::BetweenFrames :
-				CHECK_ERR( msg->beforeFrameExecuting == GpuSemaphoreId::Unknown );
+				CHECK_ERR( msg.beforeFrameExecuting == GpuSemaphoreId::Unknown );
 				break;
 
 			default :
@@ -325,8 +325,8 @@ namespace Graphics
 
 		// setup
 		_pendingCommands.PushBack({});
-		_pendingCommands.Back().waitSemaphores.Append( msg->waitSemaphores );
-		_pendingCommands.Back().syncMode = msg->syncMode;
+		_pendingCommands.Back().waitSemaphores.Append( msg.waitSemaphores );
+		_pendingCommands.Back().syncMode = msg.syncMode;
 
 		return true;
 	}
@@ -336,22 +336,22 @@ namespace Graphics
 	_CmdEndAsync
 =================================================
 */
-	bool AsyncCommandBuffer::_CmdEndAsync (const Message< GraphicsMsg::CmdEndAsync > &)
+	bool AsyncCommandBuffer::_CmdEndAsync (const GraphicsMsg::CmdEndAsync &)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
 		// end recording
-		Message< GpuMsg::CmdEnd >	end;
+		GpuMsg::CmdEnd	end;
 		CHECK( _builder->Send( end ) );
 
 		switch ( _pendingCommands.Back().syncMode )
 		{
-			case ESyncMode::Async :			return _SubmitAsync( *end->result );
-			case ESyncMode::InFrame :		return _SubmitInFrame( *end->result );
-			case ESyncMode::BetweenFrames :	return _SubmitBetweenFrames( *end->result );
-			case ESyncMode::BeforeFrame :	return _SubmitBeforeFrame( *end->result );
+			case ESyncMode::Async :			return _SubmitAsync( *end.result );
+			case ESyncMode::InFrame :		return _SubmitInFrame( *end.result );
+			case ESyncMode::BetweenFrames :	return _SubmitBetweenFrames( *end.result );
+			case ESyncMode::BeforeFrame :	return _SubmitBeforeFrame( *end.result );
 			case ESyncMode::Sync :
-			default :						return _SubmitSync( *end->result );
+			default :						return _SubmitSync( *end.result );
 		}
 	}
 	
@@ -362,14 +362,14 @@ namespace Graphics
 */
 	bool AsyncCommandBuffer::_SubmitInFrame (const ModulePtr &cmdBuf)
 	{
-		CHECK( _cmdBufferMngr->Send< GraphicsMsg::CmdAppend >({ cmdBuf }) );
+		CHECK( _cmdBufferMngr->Send( GraphicsMsg::CmdAppend{ cmdBuf }) );
 
 		auto&	cmd = _pendingCommands.Back();
 
 		if ( cmd.externalSemaphore != GpuSemaphoreId::Unknown )
 		{
-			Message< GraphicsMsg::CmdAddFrameDependency >	deps;
-			deps->signalSemaphores.PushBack( cmd.externalSemaphore );
+			GraphicsMsg::CmdAddFrameDependency	deps;
+			deps.signalSemaphores.PushBack( cmd.externalSemaphore );
 
 			CHECK( _cmdBufferMngr->Send( deps ) );
 		}
@@ -390,22 +390,22 @@ namespace Graphics
 		auto&	cmd = _pendingCommands.Back();
 
 		// create fence
-		Message< GpuMsg::CreateFence >	fence_ctor;
+		GpuMsg::CreateFence		fence_ctor;
 		CHECK( _syncManager->Send( fence_ctor ) );
 
 		// submit commands
-		Message< GpuMsg::SubmitGraphicsQueueCommands >	submit;
-		submit->commands << cmdBuf;
-		submit->fence	 = *fence_ctor->result;
-		submit->waitSemaphores.Append( cmd.waitSemaphores );
+		GpuMsg::SubmitGraphicsQueueCommands		submit;
+		submit.commands << cmdBuf;
+		submit.fence	 = *fence_ctor.result;
+		submit.waitSemaphores.Append( cmd.waitSemaphores );
 		CHECK( _GetManager()->Send( submit ) );
 		
 		cmd.onCompleted.SafeCall(0);
 		_pendingCommands.PopBack();
 
 		// wait until executing completed and delete fence
-		CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ submit->fence }) );
-		CHECK( _syncManager->Send< GpuMsg::DestroyFence >({ submit->fence }) );
+		CHECK( _syncManager->Send( GpuMsg::ClientWaitFence{ submit.fence }) );
+		CHECK( _syncManager->Send( GpuMsg::DestroyFence{ submit.fence }) );
 	
 		return true;
 	}
@@ -420,38 +420,38 @@ namespace Graphics
 		auto&	cmd = _pendingCommands.Back();
 
 		// submit commands
-		Message< GpuMsg::SubmitGraphicsQueueCommands >	submit;
-		
+		GpuMsg::SubmitGraphicsQueueCommands	submit;
+
 		_waitingCommands.PushBack({});
 		_waitingCommands.Back().cmdBuffer	 = cmdBuf;
 		_waitingCommands.Back().frameLatency = 2;	// TODO: must be bufferChainLength+1
 		_waitingCommands.Back().onCompleted	 = RVREF(cmd.onCompleted); 
 
-		submit->commands << cmdBuf;
+		submit.commands << cmdBuf;
 		
 		// add fence
 		{
-			Message< GpuMsg::CreateFence >	fence_ctor;
+			GpuMsg::CreateFence		fence_ctor;
 			CHECK( _syncManager->Send( fence_ctor ) );
 			
-			submit->fence					= *fence_ctor->result;
-			_waitingCommands.Back().fence	= *fence_ctor->result;
+			submit.fence					= *fence_ctor.result;
+			_waitingCommands.Back().fence	= *fence_ctor.result;
 		}
 
 		// add semaphores
 		{
-			submit->waitSemaphores.Append( cmd.waitSemaphores );
+			submit.waitSemaphores.Append( cmd.waitSemaphores );
 
 			if ( cmd.externalSemaphore != GpuSemaphoreId::Unknown ) {
-				submit->signalSemaphores.PushBack( cmd.externalSemaphore );
+				submit.signalSemaphores.PushBack( cmd.externalSemaphore );
 			}
 
 			if ( cmd.beforeFrameExecuting != GpuSemaphoreId::Unknown )
 			{
-				Message< GraphicsMsg::CmdAddFrameDependency >	deps;
+				GraphicsMsg::CmdAddFrameDependency	deps;
 
-				submit->signalSemaphores.PushBack( cmd.beforeFrameExecuting );
-				deps->waitSemaphores.PushBack({ cmd.beforeFrameExecuting, EPipelineStage::AllCommands });	// TODO
+				submit.signalSemaphores.PushBack( cmd.beforeFrameExecuting );
+				deps.waitSemaphores.PushBack({ cmd.beforeFrameExecuting, EPipelineStage::AllCommands });	// TODO
 				
 				CHECK( _cmdBufferMngr->Send( deps ) );
 			}
@@ -472,19 +472,19 @@ namespace Graphics
 	{
 		_pendingCommands.Back().command = cmdBuf;
 
-		Message< GpuMsg::CreateSemaphore >	sem_ctor1;
-		Message< GpuMsg::CreateSemaphore >	sem_ctor2;
+		GpuMsg::CreateSemaphore	sem_ctor1;
+		GpuMsg::CreateSemaphore	sem_ctor2;
 
 		CHECK( _syncManager->Send( sem_ctor1 ) );
 		CHECK( _syncManager->Send( sem_ctor2 ) );
 
-		Message< GraphicsMsg::CmdAddFrameDependency >	deps;
-		deps->signalSemaphores.PushBack( *sem_ctor1->result );
+		GraphicsMsg::CmdAddFrameDependency	deps;
+		deps.signalSemaphores.PushBack( *sem_ctor1.result );
 
 		_cmdBufferMngr->Send( deps );
 
-		_pendingCommands.Back().waitSemaphores.PushBack({ *sem_ctor1->result, EPipelineStage::BottomOfPipe });
-		_pendingCommands.Back().beforeFrameExecuting = *sem_ctor2->result;
+		_pendingCommands.Back().waitSemaphores.PushBack({ *sem_ctor1.result, EPipelineStage::BottomOfPipe });
+		_pendingCommands.Back().beforeFrameExecuting = *sem_ctor2.result;
 		return true;
 	}
 	
@@ -495,12 +495,12 @@ namespace Graphics
 */
 	bool AsyncCommandBuffer::_SubmitBeforeFrame (const ModulePtr &cmdBuf)
 	{
-		Message< GpuMsg::CreateSemaphore >	sem_ctor;
+		GpuMsg::CreateSemaphore		sem_ctor;
 		CHECK( _syncManager->Send( sem_ctor ) );
 
 		ASSERT( _pendingCommands.Back().beforeFrameExecuting == GpuSemaphoreId::Unknown );
 
-		_pendingCommands.Back().beforeFrameExecuting = *sem_ctor->result;
+		_pendingCommands.Back().beforeFrameExecuting = *sem_ctor.result;
 
 		_SubmitAsync( cmdBuf );
 		return true;
@@ -511,7 +511,7 @@ namespace Graphics
 	_OnCmdBeginFrame
 =================================================
 */
-	bool AsyncCommandBuffer::_OnCmdBeginFrame (const Message< GraphicsMsg::OnCmdBeginFrame > &msg)
+	bool AsyncCommandBuffer::_OnCmdBeginFrame (const GraphicsMsg::OnCmdBeginFrame &msg)
 	{
 		FOR( i, _waitingCommands )
 		{
@@ -525,15 +525,15 @@ namespace Graphics
 
 			if ( cmd.fence != GpuFenceId::Unknown )
 			{
-				CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ cmd.fence }) );
-				CHECK( _syncManager->Send< GpuMsg::DestroyFence >({ cmd.fence }) );
+				CHECK( _syncManager->Send( GpuMsg::ClientWaitFence{ cmd.fence }) );
+				CHECK( _syncManager->Send( GpuMsg::DestroyFence{ cmd.fence }) );
 			}
 
 			if ( cmd.cmdBuffer ) {
-				cmd.cmdBuffer->Send< ModuleMsg::Delete >({});
+				cmd.cmdBuffer->Send( ModuleMsg::Delete{});
 			}
 
-			cmd.onCompleted.SafeCall( msg->cmdIndex );
+			cmd.onCompleted.SafeCall( msg.cmdIndex );
 
 			_waitingCommands.Erase( i );
 			--i;
@@ -544,7 +544,7 @@ namespace Graphics
 			CHECK( _SubmitAsync( _pendingCommands.Back().command ) );
 		}
 
-		_currCmdIndex = msg->cmdIndex;
+		_currCmdIndex = msg.cmdIndex;
 		return true;
 	}
 //-----------------------------------------------------------------------------

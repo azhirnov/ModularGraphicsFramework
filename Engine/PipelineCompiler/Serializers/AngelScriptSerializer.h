@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/PipelineCompiler/Serializers/ISerializer.h"
+#include "Core/STL/Containers/Stack.h"
 
 namespace PipelineCompiler
 {
@@ -36,7 +37,7 @@ namespace PipelineCompiler
 		String	ToString (StringCRef name, EPipelineDynamicState::bits value) const override;
 		String  ToString (StringCRef name, const VertexAttribs &value) const override;
 		String  ToString (StringCRef name, const FragmentOutputState &value) const override;
-		String  ToString (StringCRef name, const PipelineLayoutDescriptor &value) const override;
+		String  ToString (StringCRef name, const PipelineLayoutDescription &value) const override;
 		String  ToString (StringCRef name, EPrimitive::bits value) const override;
 		String  ToString (StringCRef name, EShader::bits value) const override;
 		String	ToString (StringCRef name, const uint3 &value) const override;
@@ -60,8 +61,9 @@ namespace PipelineCompiler
 		String  CallFunction (StringCRef name, ArrayCRef<StringCRef> args) const override;
 
 		String	BeginStruct (StringCRef typeName, uint sizeOf, bool isPOD) const override;
-		String	StructField (StringCRef name, StringCRef typeName, uint arraySize, uint offset, uint align, uint sizeOf) const override;
+		String	StructField (StringCRef name, StringCRef typeName, ArraySize arraySize, uint offset, uint align, uint sizeOf) const override;
 		String	StructCtorForInitializerList () const override;
+		String	StructVertexAttribBinding () const override;
 		String	EndStruct () const override;
 		
 		String	Include (StringCRef filename) const override;

@@ -10,11 +10,9 @@ namespace glsl_vfs
 	Other math functions.
 	
 	license: free
-
-	depends of:
-		Math/Math
 */
 
+#include <Common/Defines.glsl>
 
 real2 SphericalCorrection (const real2 snormCoord);
 real3 SphericalToCartesian (const real2 spherical, const real radius);
@@ -29,6 +27,7 @@ real ToNonLinearDepth (const real depth, const real2 clipPlanes);
 
 //-----------------------------------------------------------------------------
 
+#include <Math/Math.glsl>
 
 /*
 =================================================

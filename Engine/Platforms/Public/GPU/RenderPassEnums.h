@@ -20,6 +20,8 @@ namespace Platforms
 			_Count,
 			Unknown	= ~0u,
 		};
+
+		static StringCRef ToString (type value);
 	};
 
 
@@ -33,6 +35,8 @@ namespace Platforms
 			_Count,
 			Unknown	= ~0u,
 		};
+		
+		static StringCRef ToString (type value);
 	};
 
 	
@@ -133,6 +137,9 @@ namespace Platforms
 		};
 
 		GX_ENUM_BITFIELD( ESubpassDependency );
+
+		static StringCRef ToString (type value);
+		static String     ToString (bits values);
 	};
 	
 	

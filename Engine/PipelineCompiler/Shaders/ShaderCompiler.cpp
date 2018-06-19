@@ -2,6 +2,9 @@
 
 #include "Engine/PipelineCompiler/Shaders/glslang_include.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
+#include "Engine/PipelineCompiler/Shaders/ShaderCompiler_Includer.h"
+#include "Core/STL/Algorithms/StringParser.h"
+#include "Core/STL/ThreadSafe/Singleton.h"
 
 #ifdef COMPILER_MSVC
 # pragma warning (push, 1)
@@ -64,8 +67,8 @@ namespace PipelineCompiler
 						CreateInfo::GpuContext{ ComputeSettings{ "GL 4.5"_GAPI } },
 						OUT glcontext ) );
 
-		ms->Send< ModuleMsg::AttachModule >({ glcontext });
-		ms->Send< ModuleMsg::AttachModule >({ clcontext });
+		ms->Send( ModuleMsg::AttachModule{ glcontext });
+		ms->Send( ModuleMsg::AttachModule{ clcontext });
 
 		CHECK_ERR( mf->Create(
 						0,
@@ -79,8 +82,8 @@ namespace PipelineCompiler
 						CreateInfo::GpuThread{ ComputeSettings{ "GL 4.5"_GAPI } },
 						OUT _glthread ) );
 	
-		thread->Send< ModuleMsg::AttachModule >({ _glthread });
-		thread->Send< ModuleMsg::AttachModule >({ _clthread });
+		thread->Send( ModuleMsg::AttachModule{ _glthread });
+		thread->Send( ModuleMsg::AttachModule{ _clthread });
 
 		_glthread->Subscribe( this, &_BaseApp::_GLInit );
 		_clthread->Subscribe( this, &_BaseApp::_CLInit );
@@ -96,7 +99,7 @@ namespace PipelineCompiler
 	_CLInit
 =================================================
 */
-	bool ShaderCompiler::_BaseApp::_CLInit (const Message< GpuMsg::DeviceCreated > &)
+	bool ShaderCompiler::_BaseApp::_CLInit (const GpuMsg::DeviceCreated &)
 	{
 		_clInit = true;
 		return true;
@@ -107,7 +110,7 @@ namespace PipelineCompiler
 	_GLInit
 =================================================
 */
-	bool ShaderCompiler::_BaseApp::_GLInit (const Message< GpuMsg::DeviceCreated > &)
+	bool ShaderCompiler::_BaseApp::_GLInit (const GpuMsg::DeviceCreated &)
 	{
 		_glInit = true;
 		return true;
@@ -145,7 +148,7 @@ namespace PipelineCompiler
 		if ( not _looping )
 			return false;
 
-		GetMainSystemInstance()->Send< ModuleMsg::Update >({});
+		GetMainSystemInstance()->Send( ModuleMsg::Update{} );
 		return true;
 	}
 #endif	// GX_PIPELINECOMPILER_USE_PLATFORMS
@@ -213,7 +216,7 @@ namespace PipelineCompiler
 		_app->Quit();
 		_app = null;
 
-		GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
+		GetMainSystemInstance()->Send( ModuleMsg::Delete{} );
 	#endif
 	}
 
@@ -229,12 +232,113 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	ParseGLSLError
+=================================================
+*/
+	struct GLSLErrorInfo
+	{
+	// variables
+		StringCRef	description;
+		StringCRef	fileName;
+		uint		sourceIndex;
+		usize		line;
+		bool		isError;
+
+	// methods
+		GLSLErrorInfo () : sourceIndex{0}, line{UMax}, isError{false} {}
+	};
+
+	static bool ParseGLSLError (StringCRef line, OUT GLSLErrorInfo &info)
+	{
+		const StringCRef	c_error		= "error";
+		const StringCRef	c_warning	= "warning";
+
+		usize				pos = 0;
+
+		const auto			ReadToken	= LAMBDA( &line, &pos ) (OUT bool &isNumber)
+		{{
+						isNumber= true;
+			const usize	start	= pos;
+
+			for (; pos < line.Length() and line[pos] != ':'; ++pos) {
+				isNumber &= (line[pos] >= '0' and line[pos] <= '9');
+			}
+			return line.SubString( start, pos - start );
+		}};
+
+		const auto			SkipSeparator = LAMBDA( &line, &pos ) ()
+		{{
+			if ( line[pos] == ':' and line[pos+1] == ' ' )
+				pos += 2;
+			else if ( line[pos] == ':' )
+				pos += 1;
+			else
+				return false;
+
+			return true;
+		}};
+
+		
+		// parse error/warning/...
+		if ( line.StartsWithIC( c_error ) )
+		{
+			pos			+= c_error.Length();
+			info.isError = true;
+		}
+		else
+		if ( line.StartsWithIC( c_warning ) )
+		{
+			pos			+= c_warning.Length();
+			info.isError = false;
+		}
+		else
+			return false;
+
+		if ( not SkipSeparator() )
+			return false;
+
+
+		// parse source index or header name
+		{
+			bool				is_number;
+			const StringCRef	src		= ReadToken( OUT is_number );
+
+			if ( not SkipSeparator() )
+				return false;
+
+			if ( not is_number )
+				info.fileName = src;
+			else
+				info.sourceIndex = StringUtils::ToInt32( String(src) );
+		}
+
+
+		// parse line number
+		{
+			bool				is_number;
+			const StringCRef	src		= ReadToken( OUT is_number );
+
+			if ( not SkipSeparator() or not is_number )
+				return false;
+
+			info.line = StringUtils::ToInt32( String(src) );
+		}
+
+		info.description = line.SubString( pos );
+		return true;
+	}
+
+/*
+=================================================
 	_OnCompilationFailed
 =================================================
 */
-	bool ShaderCompiler::_OnCompilationFailed (EShader::type, EShaderSrcFormat::type, ArrayCRef<StringCRef> source, INOUT String &log) const
+	bool ShaderCompiler::_OnCompilationFailed (EShader::type, EShaderSrcFormat::type, ArrayCRef<StringCRef> source,
+											   const ShaderIncluder &includer, INOUT String &log) const
 	{
-		// pattern: <error/warning>: <number:<line>: <description>		// glslang errors format
+		// glslang errors format:
+		// pattern: <error/warning>: <number>:<line>: <description>
+		// pattern: <error/warning>: <file>:<line>: <description>
 		
 		Array< StringCRef >		lines;
 		Array< StringCRef >		tokens;
@@ -246,53 +350,65 @@ namespace PipelineCompiler
 		
 		FOR( i, lines )
 		{
-			StringParser::DivideString_CPP( lines[i], OUT tokens );
-			
-			bool	added = false;
+			bool			added = false;
+			GLSLErrorInfo	error_info;
 
-			if ( tokens.Count() > 8 and
-				 tokens[1] == ":" and
-				 tokens[3] == ":" and
-				 tokens[5] == ":" )
+			if ( ParseGLSLError( lines[i], OUT error_info ) )
 			{
-				const usize	line		= (usize) StringUtils::ToInt32( String(tokens[4]) );
-				const bool	is_err		= tokens[0].EqualsIC( "error" );
-				usize		cur_line	= 0;
-				usize		pos			= 0;
-				StringCRef	line_str;
-				
 				// unite error in same source lines
-				if ( prev_line == line )
+				if ( prev_line == error_info.line )
 				{
 					str << lines[i] << "\n";
 					continue;
 				}
-				
-				prev_line = line;
-				
-				FOR( j, source )
+
+				prev_line = error_info.line;
+
+				if ( error_info.fileName.Empty() )
 				{
-					if ( num_lines[j] == 0 ) {
-						num_lines[j] = StringParser::CalculateNumberOfLines( source[j] ) + 1;
+					// search in sources
+					StringCRef	cur_source	= error_info.sourceIndex < source.Count() ? source[ error_info.sourceIndex ] : "";
+					usize		lines_count	= error_info.sourceIndex < num_lines.Count() ? num_lines[ error_info.sourceIndex ] : 0;
+
+					if ( lines_count == 0 )
+					{
+						lines_count = StringParser::CalculateNumberOfLines( cur_source ) + 1;
+
+						if ( error_info.sourceIndex < num_lines.Count() )
+							num_lines[ error_info.sourceIndex ] = lines_count;
 					}
-
-					cur_line += num_lines[j];
-
-					if ( cur_line <= line )
-						continue;
-
-					usize	local_line	= line - (cur_line - num_lines[j]);
-
-					CHECK( local_line < num_lines[j] );
-
-					CHECK( StringParser::MoveToLine( source[j], INOUT pos, local_line-1 ) );
-
-					StringParser::ReadLineToEnd( source[j], INOUT pos, OUT line_str );
-
-					str << "in source (" << j << ":" << local_line << "):\n\"" << line_str << "\"\n" << lines[i] << "\n";
 					
+					CHECK( error_info.line < lines_count );
+
+					usize		pos = 0;
+					CHECK( StringParser::MoveToLine( cur_source, INOUT pos, error_info.line-1 ) );
+
+					StringCRef	line_str;
+					StringParser::ReadLineToEnd( cur_source, INOUT pos, OUT line_str );
+
+					str << "in source (" << error_info.sourceIndex << ": " << error_info.line << "):\n\"" << line_str << "\"\n" << lines[i] << "\n";
 					added = true;
-					break;
+				}
+				else
+				{
+					// search in header
+					StringCRef	src;
+					if ( includer.GetHeaderSource( error_info.fileName, OUT src ) )
+					{
+						const usize	lines_count = StringParser::CalculateNumberOfLines( src ) + 1;
+						const usize	local_line	= error_info.line;
+						usize		pos			= 0;
+						StringCRef	line_str;
+
+						CHECK( local_line < lines_count );
+
+						CHECK( StringParser::MoveToLine( src, INOUT pos, local_line-1 ) );
+						
+						StringParser::ReadLineToEnd( src, INOUT pos, OUT line_str );
+
+						str << "in source (" << error_info.fileName << ": " << local_line << "):\n\"" << line_str << "\"\n" << lines[i] << "\n";
+						added = true;
+					}
 				}
 			}
 
@@ -414,7 +530,7 @@ namespace PipelineCompiler
 	_GLSLangParse
 =================================================
 */
-	bool ShaderCompiler::_GLSLangParse (const Config &cfg, const _ShaderData &shaderData, OUT String &log, OUT _GLSLangResult &result) const
+	bool ShaderCompiler::_GLSLangParse (const Config &cfg, const _ShaderData &shaderData, StringCRef baseFolder, OUT String &log, OUT _GLSLangResult &result) const
 	{
 		log.Clear();
 		
@@ -491,37 +607,45 @@ namespace PipelineCompiler
 				break;
 		}
 
-		String				src;
+		Array<const char*>	sources;
 		EShMessages			messages	= EShMsgDefault;
 		TBuiltInResource	resources;	_GenerateResources( OUT resources );
 		EShLanguage			stage		= ConvertShaderType( shaderData.type );
 		auto&				shader		= result.shader;
+		bool				has_version	= false;
+		const String		version_str	= "#version "_str << GLSL_VERSION << " core\n";
 
 		shader = new glslang::TShader( stage );
-		src.Clear();
 
-		FOR( i, shaderData.src ) {
-			src << shaderData.src[i] << '\n';
+		for (auto& src : shaderData.src)
+		{
+			sources << (src.Empty() ? "" : src.cstr());
+
+			if ( src.HasSubString( "#version" ) )
+				has_version |= true;
 		}
-			
+		
 		// add version
-		if ( not src.HasSubString( "#version" ) )
-			("#version "_str << GLSL_VERSION << " core\n") >> src;
+		if ( not has_version ) {
+			sources.PushFront( version_str.cstr() );
+		}
 
 		// parse shader
-		const char *	src_ptr		= src.ptr();
 		const char *	entry_point	= shaderData.entry.Empty() ? "main" : shaderData.entry.cstr();
+		ShaderIncluder	includer	{ baseFolder };
 
-		shader->setStrings( &src_ptr, 1 );
+		shader->setStrings( sources.ptr(), int(sources.Count()) );
 		shader->setEntryPoint( entry_point );
 		shader->setEnvInput( sh_source, stage, client, version );
 		shader->setEnvClient( client, client_version );
 		shader->setEnvTarget( target, target_version );
-		
-		if ( not shader->parse( &resources, GLSL_VERSION, false, messages ) )
+		shader->getIntermediate()->addRequestedExtension( "GL_GOOGLE_include_directive" );
+		shader->getIntermediate()->addRequestedExtension( "GL_GOOGLE_cpp_style_line_directive" );
+
+		if ( not shader->parse( &resources, GLSL_VERSION, false, messages, includer ) )
 		{
 			log << shader->getInfoLog();
-			_OnCompilationFailed( shaderData.type, cfg.source, { StringCRef(src) }, INOUT log );
+			_OnCompilationFailed( shaderData.type, cfg.source, shaderData.src, includer, INOUT log );
 			return false;
 		}
 		
@@ -530,7 +654,7 @@ namespace PipelineCompiler
 		if ( not result.prog.link( messages ) )
 		{
 			log << result.prog.getInfoLog();
-			_OnCompilationFailed( shaderData.type, cfg.source, { StringCRef(src) }, INOUT log );
+			_OnCompilationFailed( shaderData.type, cfg.source, shaderData.src, includer, INOUT log );
 			return false;
 		}
 		return true;
@@ -541,7 +665,7 @@ namespace PipelineCompiler
 	Translate
 =================================================
 */
-	bool ShaderCompiler::Translate (EShader::type shaderType, ArrayCRef<StringCRef> source, StringCRef entryPoint,
+	bool ShaderCompiler::Translate (EShader::type shaderType, ArrayCRef<StringCRef> source, StringCRef entryPoint, StringCRef baseFolder,
 									const Config &cfg, OUT String &log, OUT BinaryArray &result)
 	{
 		CHECK_ERR( not source.Empty() and not entryPoint.Empty() );
@@ -577,7 +701,7 @@ namespace PipelineCompiler
 					{
 						_GLSLangResult	glslang_data;
 
-						CHECK_COMP( _GLSLangParse( cfg, data, OUT log, OUT glslang_data ) );
+						CHECK_COMP( _GLSLangParse( cfg, data, baseFolder, OUT log, OUT glslang_data ) );
 						CHECK_COMP( _ReplaceTypes( glslang_data, cfg ) );
 						CHECK_COMP( _TranslateGXSLtoGLSL( cfg, glslang_data, OUT log, OUT result ) );
 						return true;
@@ -589,7 +713,7 @@ namespace PipelineCompiler
 						Config			cfg2 = cfg;
 						
 						cfg2.target = EShaderDstFormat::SPIRV_Source;
-						CHECK_COMP( _GLSLangParse( cfg2, data, OUT log, OUT glslang_data ) );
+						CHECK_COMP( _GLSLangParse( cfg2, data, baseFolder, OUT log, OUT glslang_data ) );
 						CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 						
 						cfg2.target = cfg.target;
@@ -609,7 +733,7 @@ namespace PipelineCompiler
 				cfg2.target			= EShaderDstFormat::GLSL_Source;
 
 				BinaryArray	temp;
-				CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
+				CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
 
 				_ShaderData	data2 = data;
 				data2.src.Clear();
@@ -633,7 +757,7 @@ namespace PipelineCompiler
 				cfg2.typeReplacer	= Uninitialized;
 
 				BinaryArray	temp;
-				CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
+				CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
 				
 				_ShaderData	data2 = data;
 				data2.src.Clear();
@@ -644,7 +768,7 @@ namespace PipelineCompiler
 				cfg2.source	= EShaderSrcFormat::GLSL;
 
 				_GLSLangResult	glslang_data;
-				CHECK_COMP( _GLSLangParse( cfg2, data2, OUT log, OUT glslang_data ) );
+				CHECK_COMP( _GLSLangParse( cfg2, data2, baseFolder, OUT log, OUT glslang_data ) );
 				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 
 				cfg2.typeReplacer = Uninitialized;
@@ -675,7 +799,7 @@ namespace PipelineCompiler
 						cfg2.target			= EShaderDstFormat::GLSL_Source;
 						cfg2.typeReplacer	= Uninitialized;
 
-						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
+						CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
 
 						data2.src.Clear();
 						data2.src << StringCRef::From( temp );
@@ -688,7 +812,7 @@ namespace PipelineCompiler
 				}
 
 				_GLSLangResult	glslang_data;
-				CHECK_COMP( _GLSLangParse( cfg2, data2, OUT log, OUT glslang_data ) );
+				CHECK_COMP( _GLSLangParse( cfg2, data2, baseFolder, OUT log, OUT glslang_data ) );
 				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 				CHECK_COMP( _TranslateGXSLtoCL( cfg2, glslang_data, OUT log, OUT result ) );
 				return true;
@@ -703,7 +827,7 @@ namespace PipelineCompiler
 				cfg2.skipExternals	= false;
 				cfg2.target			= EShaderDstFormat::CL_Source;
 
-				CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
+				CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
 
 				data2.src.Clear();
 				data2.src << StringCRef::From( temp );
@@ -735,7 +859,7 @@ namespace PipelineCompiler
 						cfg2.target			= EShaderDstFormat::GLSL_Source;
 						cfg2.typeReplacer	= Uninitialized;
 
-						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
+						CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
 
 						data2.src.Clear();
 						data2.src << StringCRef::From( temp );
@@ -748,7 +872,7 @@ namespace PipelineCompiler
 				}
 				
 				_GLSLangResult	glslang_data;
-				CHECK_COMP( _GLSLangParse( cfg2, data2, OUT log, OUT glslang_data ) );
+				CHECK_COMP( _GLSLangParse( cfg2, data2, baseFolder, OUT log, OUT glslang_data ) );
 				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 				CHECK_COMP( _TranslateGXSLtoCPP( cfg2, glslang_data, OUT log, OUT result ) );
 				return true;
@@ -774,7 +898,7 @@ namespace PipelineCompiler
 						cfg2.target			= EShaderDstFormat::GLSL_Source;
 						cfg2.typeReplacer	= Uninitialized;
 
-						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
+						CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
 
 						data2.src.Clear();
 						data2.src << StringCRef::From( temp );
@@ -787,7 +911,7 @@ namespace PipelineCompiler
 				}
 				
 				_GLSLangResult	glslang_data;
-				CHECK_COMP( _GLSLangParse( cfg2, data2, OUT log, OUT glslang_data ) );
+				CHECK_COMP( _GLSLangParse( cfg2, data2, baseFolder, OUT log, OUT glslang_data ) );
 				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
 				CHECK_COMP( _TranslateGXSLtoHLSL( cfg2, glslang_data, OUT log, OUT result ) );
 				return true;
@@ -809,7 +933,7 @@ namespace PipelineCompiler
 						cfg2.skipExternals	= false;
 						cfg2.target			= EShaderDstFormat::HLSL_Source;
 
-						CHECK_COMP( Translate( shaderType, source, entryPoint, cfg2, OUT log, OUT temp ) );
+						CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
 
 						data2.src.Clear();
 						data2.src << StringCRef::From( temp );

@@ -48,8 +48,8 @@ namespace Platforms
 		
 	// message handlers
 	private:
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
 		
 	private:
 		static ModulePtr _CreateInputThread (UntypedID_t, GlobalSystemsRef, const CreateInfo::InputThread &);

@@ -8,42 +8,12 @@ namespace cl_vfs
 	{
 		src << R"#(// Functions for GLSL compatibility
 
-#define Gen_IntTemplates( _gen_ ) \
-	_gen_( int ) \
-	_gen_( int2 ) \
-	_gen_( int3 ) \
-	_gen_( int4 )
-
-#define Gen_UIntTemplates( _gen_ ) \
-	_gen_( uint ) \
-	_gen_( uint2 ) \
-	_gen_( uint3 ) \
-	_gen_( uint4 )
-	
-#define Gen_LongTemplates( _gen_ ) \
-	_gen_( long ) \
-	_gen_( long2 ) \
-	_gen_( long3 ) \
-	_gen_( long4 )
-	
-#define Gen_ULongTemplates( _gen_ ) \
-	_gen_( ulong ) \
-	_gen_( ulong2 ) \
-	_gen_( ulong3 ) \
-	_gen_( ulong4 )
-
-#define Gen_FloatTemplates( _gen_ ) \
-	_gen_( float ) \
-	_gen_( float2 ) \
-	_gen_( float3 ) \
-	_gen_( float4 )
-
-#define Gen_DoubleTemplates( _gen_ ) \
-	_gen_( double ) \
-	_gen_( double2 ) \
-	_gen_( double3 ) \
-	_gen_( double4 )
-
+#define Gen_IntTemplates( _gen_ )     _gen_( int )     _gen_( int2 )     _gen_( int3 )     _gen_( int4 )
+#define Gen_UIntTemplates( _gen_ )    _gen_( uint )    _gen_( uint2 )    _gen_( uint3 )    _gen_( uint4 )
+#define Gen_LongTemplates( _gen_ )    _gen_( long )    _gen_( long2 )    _gen_( long3 )    _gen_( long4 )
+#define Gen_ULongTemplates( _gen_ )   _gen_( ulong )   _gen_( ulong2 )   _gen_( ulong3 )   _gen_( ulong4 )
+#define Gen_FloatTemplates( _gen_ )   _gen_( float )   _gen_( float2 )   _gen_( float3 )   _gen_( float4 )
+#define Gen_DoubleTemplates( _gen_ )  _gen_( double )  _gen_( double2 )  _gen_( double3 )  _gen_( double4 )
 
 // Fract
 #define GenTemplate_Fract( _type_ ) \

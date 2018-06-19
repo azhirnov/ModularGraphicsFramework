@@ -8,9 +8,9 @@ namespace glsl_vfs
 	{
 		src << R"#(/*
 	Perlin noise
-
-	depends of: Noise/_NoiseUtils
 */
+
+#include <Common/Defines.glsl>
 
 // range [-1; 1]
 real PerlinNoise2D (in real2 point, const real frequency, const real lacunarity,
@@ -27,7 +27,7 @@ real PerlinNoise3D (in real3 point, const real frequency, const real lacunarity,
 //	https://www.shadertoy.com/view/XslGRr
 //-----------------------------------------------------------------------------
 
-
+#include <Noise/_NoiseUtils.glsl>
 
 //	This file based on code from "libNoise" project by Jason Bevins http://libnoise.sourceforge.net/
 //	Released under the terms of the GNU Lesser General Public License.

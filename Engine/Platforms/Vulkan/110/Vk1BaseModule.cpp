@@ -29,11 +29,11 @@ namespace PlatformVK
 	_OnManagerChanged
 =================================================
 */
-	bool Vk1BaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
+	bool Vk1BaseModule::_OnManagerChanged (const ModuleMsg::OnManagerChanged &msg)
 	{
-		if ( msg->oldManager )
+		if ( msg.oldManager )
 		{
-			msg->oldManager->UnsubscribeAll( this );
+			msg.oldManager->UnsubscribeAll( this );
 
 			if ( _vkResourceCache )
 				_vkResourceCache->Erase( this );
@@ -42,16 +42,16 @@ namespace PlatformVK
 		_vkDevice			= null;
 		_vkResourceCache	= null;
 
-		if ( msg->newManager )
+		if ( msg.newManager )
 		{
-			msg->newManager->Subscribe( this, &Vk1BaseModule::_DeviceBeforeDestroy );
-			msg->newManager->Subscribe( this, &Vk1BaseModule::_DeviceDeleted );
+			msg.newManager->Subscribe( this, &Vk1BaseModule::_DeviceBeforeDestroy );
+			msg.newManager->Subscribe( this, &Vk1BaseModule::_DeviceDeleted );
 
-			Message< GpuMsg::GetVkPrivateClasses >	req_classes;
-			CHECK( msg->newManager->Send( req_classes ) );
+			GpuMsg::GetVkPrivateClasses		req_classes;
+			CHECK( msg.newManager->Send( req_classes ) );
 
-			_vkDevice			= req_classes->result->device;
-			_vkResourceCache	= req_classes->result->resourceCache;
+			_vkDevice			= req_classes.result->device;
+			_vkResourceCache	= req_classes.result->resourceCache;
 		}
 
 		return true;
@@ -62,9 +62,9 @@ namespace PlatformVK
 	_DeviceBeforeDestroy
 =================================================
 */
-	bool Vk1BaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool Vk1BaseModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		
 		if ( _vkResourceCache )
 			_vkResourceCache->Erase( this );
@@ -79,7 +79,7 @@ namespace PlatformVK
 	_DeviceDeleted
 =================================================
 */
-	bool Vk1BaseModule::_DeviceDeleted (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1BaseModule::_DeviceDeleted (const ModuleMsg::Delete &msg)
 	{
 		Send( msg );
 		
@@ -96,7 +96,7 @@ namespace PlatformVK
 	_GetDeviceInfo
 =================================================
 */
-	bool Vk1BaseModule::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
+	bool Vk1BaseModule::_GetDeviceInfo (const GpuMsg::GetDeviceInfo &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}
@@ -106,7 +106,7 @@ namespace PlatformVK
 	_GetVkDeviceInfo
 =================================================
 */
-	bool Vk1BaseModule::_GetVkDeviceInfo (const Message< GpuMsg::GetVkDeviceInfo > &msg)
+	bool Vk1BaseModule::_GetVkDeviceInfo (const GpuMsg::GetVkDeviceInfo &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}
@@ -116,7 +116,7 @@ namespace PlatformVK
 	_GetVkPrivateClasses
 =================================================
 */
-	bool Vk1BaseModule::_GetVkPrivateClasses (const Message< GpuMsg::GetVkPrivateClasses > &msg)
+	bool Vk1BaseModule::_GetVkPrivateClasses (const GpuMsg::GetVkPrivateClasses &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}

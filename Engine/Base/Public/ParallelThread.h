@@ -12,7 +12,7 @@ namespace ModuleMsg
 	//
 	// Add Thread To Manager
 	//
-	struct AddThreadToManager : AddToManager
+	struct AddThreadToManager final : AddToManager
 	{
 	// types
 		using BlockingWaitFunc_t	= Delegate< void () >;

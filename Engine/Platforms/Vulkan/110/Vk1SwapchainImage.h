@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -16,7 +16,7 @@ namespace Engine
 namespace GpuMsg
 {
 	
-	struct SetVkSwapchainImage
+	struct SetVkSwapchainImage : _MessageBase_
 	{
 	// variables
 		vk::VkImage				image	= VK_NULL_HANDLE;
@@ -43,8 +43,8 @@ namespace PlatformVK
 	// types
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetImageDescriptor,
-											GpuMsg::SetImageDescriptor,
+											GpuMsg::GetImageDescription,
+											GpuMsg::SetImageDescription,
 											GpuMsg::GetVkImageID,
 											GpuMsg::CreateVkImageView,
 											GpuMsg::SetVkSwapchainImage
@@ -66,7 +66,7 @@ namespace PlatformVK
 
 	// variables
 	private:
-		ImageDescriptor			_descr;
+		ImageDescription		_descr;
 		ImageViewMap_t			_viewMap;
 		VkImage					_imageId;
 		VkImageView				_imageView;		// default image view, has all mipmaps and all layers
@@ -81,14 +81,14 @@ namespace PlatformVK
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetVkImageID (const Message< GpuMsg::GetVkImageID > &);
-		bool _CreateVkImageView (const Message< GpuMsg::CreateVkImageView > &);
-		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
-		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
-		bool _SetVkSwapchainImage (const Message< GpuMsg::SetVkSwapchainImage > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _GetVkImageID (const GpuMsg::GetVkImageID &);
+		bool _CreateVkImageView (const GpuMsg::CreateVkImageView &);
+		bool _GetImageDescription (const GpuMsg::GetImageDescription &);
+		bool _SetImageDescription (const GpuMsg::SetImageDescription &);
+		bool _SetVkSwapchainImage (const GpuMsg::SetVkSwapchainImage &);
 
 	private:
 		bool _IsImageCreated () const	{ return _imageId != VK_NULL_HANDLE; }
@@ -127,8 +127,8 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetVkImageID );
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_CreateVkImageView );
-		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetImageDescriptor );
-		_SubscribeOnMsg( this, &Vk1SwapchainImage::_SetImageDescriptor );
+		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetImageDescription );
+		_SubscribeOnMsg( this, &Vk1SwapchainImage::_SetImageDescription );
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1SwapchainImage::_GetVkPrivateClasses );
@@ -136,7 +136,7 @@ namespace PlatformVK
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
-		Utils::ValidateDescriptor( INOUT _descr );
+		Utils::ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -154,7 +154,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1SwapchainImage::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1SwapchainImage::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyViews();
 		
@@ -174,13 +174,13 @@ namespace PlatformVK
 		CHECK_ERR( _IsImageCreated() );
 		CHECK_ERR( _imageView == VK_NULL_HANDLE );
 		
-		Message< GpuMsg::CreateVkImageView >	create;
-		create->viewDescr.layerCount	= _descr.dimension.w;
-		create->viewDescr.levelCount	= _descr.maxLevel.Get();
+		GpuMsg::CreateVkImageView	create;
+		create.viewDescr.layerCount	= _descr.dimension.w;
+		create.viewDescr.levelCount	= _descr.maxLevel.Get();
 
 		CHECK_ERR( _CreateVkImageView( create ) );
 
-		_imageView = *create->result;
+		_imageView = *create.result;
 		return true;
 	}
 	
@@ -209,9 +209,9 @@ namespace PlatformVK
 	_GetVkImageID
 =================================================
 */
-	bool Vk1SwapchainImage::_GetVkImageID (const Message< GpuMsg::GetVkImageID > &msg)
+	bool Vk1SwapchainImage::_GetVkImageID (const GpuMsg::GetVkImageID &msg)
 	{
-		msg->result.Set({ _imageId, _imageView });
+		msg.result.Set({ _imageId, _imageView });
 		return true;
 	}
 	
@@ -220,11 +220,11 @@ namespace PlatformVK
 	_CreateVkImageView
 =================================================
 */
-	bool Vk1SwapchainImage::_CreateVkImageView (const Message< GpuMsg::CreateVkImageView > &msg)
+	bool Vk1SwapchainImage::_CreateVkImageView (const GpuMsg::CreateVkImageView &msg)
 	{
 		CHECK_ERR( _IsImageCreated() );
 
-		ImageView_t		descr = msg->viewDescr;
+		ImageView_t		descr = msg.viewDescr;
 
 		ImageViewMap_t::Validate( INOUT descr, _descr );
 
@@ -233,7 +233,7 @@ namespace PlatformVK
 		
 		if ( img_view != VK_NULL_HANDLE )
 		{
-			msg->result.Set( img_view );
+			msg.result.Set( img_view );
 			return true;
 		}
 
@@ -272,7 +272,7 @@ namespace PlatformVK
 
 		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(img_view), GetDebugName(), EGpuObject::ImageView );
 
-		msg->result.Set( img_view );
+		msg.result.Set( img_view );
 		return true;
 	}
 	
@@ -281,41 +281,41 @@ namespace PlatformVK
 	_SetVkSwapchainImage
 =================================================
 */
-	bool Vk1SwapchainImage::_SetVkSwapchainImage (const Message< GpuMsg::SetVkSwapchainImage > &msg)
+	bool Vk1SwapchainImage::_SetVkSwapchainImage (const GpuMsg::SetVkSwapchainImage &msg)
 	{
 		_DestroyViews();
 
-		_imageId = msg->image;
+		_imageId = msg.image;
 
 		CHECK_ERR( _CreateDefaultView() );
 
-		msg->result.Set( _imageView );
+		msg.result.Set( _imageView );
 		return true;
 	}
 
 /*
 =================================================
-	_GetImageDescriptor
+	_GetImageDescription
 =================================================
 */
-	bool Vk1SwapchainImage::_GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &msg)
+	bool Vk1SwapchainImage::_GetImageDescription (const GpuMsg::GetImageDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_SetImageDescriptor
+	_SetImageDescription
 =================================================
 */
-	bool Vk1SwapchainImage::_SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &msg)
+	bool Vk1SwapchainImage::_SetImageDescription (const GpuMsg::SetImageDescription &msg)
 	{
 		CHECK_ERR( GetState() == EState::Initial );
 
-		_descr = msg->descr;
+		_descr = msg.descr;
 
-		Utils::ValidateDescriptor( INOUT _descr );
+		Utils::ValidateDescription( INOUT _descr );
 		return true;
 	}
 

@@ -53,7 +53,7 @@ namespace Base
 		{
 			// send deleting message (and event)
 			rc.Inc();
-			CHECK( _SendMsg< ModuleMsg::Delete >({}) );
+			CHECK( _SendMsg( ModuleMsg::Delete{} ) );
 			rc.Dec();
 		}
 		
@@ -104,7 +104,7 @@ namespace Base
 
 		_attachments.PushBack({ name, unit });
 
-		Message< ModuleMsg::OnModuleAttached >	on_attached{ this, name, unit };
+		ModuleMsg::OnModuleAttached		on_attached{ this, name, unit };
 
 		_SendForEachAttachments( on_attached );
 		_SendUncheckedEvent( on_attached );
@@ -138,7 +138,7 @@ namespace Base
 		{
 			if ( _attachments[i].second == unit )
 			{
-				Message< ModuleMsg::OnModuleDetached >	on_detached{ this, _attachments[i].first, unit, true };
+				ModuleMsg::OnModuleDetached		on_detached{ this, _attachments[i].first, unit, true };
 
 				_SendForEachAttachments( on_detached );
 				_SendUncheckedEvent( on_detached );
@@ -176,7 +176,7 @@ namespace Base
 
 		const auto	Detach = LAMBDA( this ) (usize i, bool isLast)
 		{{
-			Message< ModuleMsg::OnModuleDetached >	on_detached{ this, _attachments[i].first, _attachments[i].second, isLast };
+			ModuleMsg::OnModuleDetached		on_detached{ this, _attachments[i].first, _attachments[i].second, isLast };
 
 			_SendForEachAttachments( on_detached );
 			_SendUncheckedEvent( on_detached );
@@ -220,7 +220,7 @@ namespace Base
 	{
 		if ( parent )
 		{
-			CHECK( SendTo< ModuleMsg::DetachModule >( parent, { this }) );
+			CHECK( parent->Send( ModuleMsg::DetachModule{ this }) );
 		}
 	}
 	
@@ -233,7 +233,7 @@ namespace Base
 	{
 		for (; not _parents.Empty(); )
 		{
-			CHECK( SendTo< ModuleMsg::DetachModule >( _parents.Back(), { this }) );
+			CHECK( _parents.Back()->Send( ModuleMsg::DetachModule{ this }) );
 		}
 	}
 	
@@ -275,17 +275,17 @@ namespace Base
 
 		if ( _manager->GetThreadID() == this->GetThreadID() )
 		{
-			SendTo< ModuleMsg::RemoveFromManager >( _manager, { this } );
+			_manager->Send( ModuleMsg::RemoveFromManager{ this } );
 		}
 		else
 		{
-			CHECK( GlobalSystems()->taskModule->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( GlobalSystems()->taskModule->SendAsync( ModuleMsg::PushAsyncMessage{
 						AsyncMessage{	LAMBDA( mngr = _manager, self = ModuleWPtr(this) ) (GlobalSystemsRef)
 										{
-											mngr->Send< ModuleMsg::RemoveFromManager >({ self });
+											mngr->Send( ModuleMsg::RemoveFromManager{ self });
 										}},
 						_manager->GetThreadID()
-					}.Async())
+					})
 			);
 		}
 
@@ -313,7 +313,7 @@ namespace Base
 			if ( mngr->GetThreadID() == this->GetThreadID() )
 			{
 				// single-thread optimization
-				CHECK( SendTo< ModuleMsg::AddToManager >( mngr, { this } ) );
+				CHECK( mngr->Send( ModuleMsg::AddToManager{ this }) );
 
 				_SetManager( mngr );
 				return true;
@@ -353,7 +353,7 @@ namespace Base
 		// don't forget to remove self from previous manager
 		ASSERT( _manager == null or mngr == null );
 
-		Message< ModuleMsg::OnManagerChanged >	msg{ _manager, mngr };
+		ModuleMsg::OnManagerChanged		msg{ _manager, mngr };
 
 		_manager = mngr;
 
@@ -453,15 +453,15 @@ namespace Base
 	{
 		CHECK_ERR( GetState() == EState::Linked );
 
-		_SendForEachAttachments< ModuleMsg::Compose >({});
-		//_SendEvent< ModuleMsg::Compose >({});
+		_SendForEachAttachments( ModuleMsg::Compose{} );
+		//_SendEvent( ModuleMsg::Compose{} );
 		
 		// very paranoic check
 		CHECK( _ValidateAllSubscriptions() );
 
 		CHECK( _SetState( immutable ? EState::ComposedImmutable : EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -610,9 +610,9 @@ namespace Base
 	_FindModule_Impl
 =================================================
 */
-	bool Module::_FindModule_Impl (const Message< ModuleMsg::FindModule > &msg)
+	bool Module::_FindModule_Impl (const ModuleMsg::FindModule &msg)
 	{
-		msg->result.Set( GetModuleByName( msg->name ) );
+		msg.result.Set( GetModuleByName( msg.name ) );
 		return true;
 	}
 	
@@ -621,7 +621,7 @@ namespace Base
 	_ModulesDeepSearch_Impl
 =================================================
 */
-	bool Module::_ModulesDeepSearch_Impl (const Message< ModuleMsg::ModulesDeepSearch > &)
+	bool Module::_ModulesDeepSearch_Impl (const ModuleMsg::ModulesDeepSearch &)
 	{
 		TODO( "" );
 		return false;
@@ -632,9 +632,9 @@ namespace Base
 	_AttachModule_Impl
 =================================================
 */
-	bool Module::_AttachModule_Impl (const Message< ModuleMsg::AttachModule > &msg)
+	bool Module::_AttachModule_Impl (const ModuleMsg::AttachModule &msg)
 	{
-		CHECK( _Attach( msg->name, msg->newModule, false ) );
+		CHECK( _Attach( msg.name, msg.newModule, false ) );
 		return true;
 	}
 	
@@ -643,9 +643,9 @@ namespace Base
 	_DetachModule_Impl
 =================================================
 */
-	bool Module::_DetachModule_Impl (const Message< ModuleMsg::DetachModule > &msg)
+	bool Module::_DetachModule_Impl (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 		return true;
 	}
 	
@@ -654,22 +654,22 @@ namespace Base
 	_ReplaceModule_Impl
 =================================================
 */
-	bool Module::_ReplaceModule_Impl (const Message< ModuleMsg::ReplaceModule > &msg)
+	bool Module::_ReplaceModule_Impl (const ModuleMsg::ReplaceModule &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
-		ModulePtr	old_mod = msg->oldModule;
+		ModulePtr	old_mod = msg.oldModule;
 
-		if ( not msg->name.Empty() )
+		if ( not msg.name.Empty() )
 		{
-			old_mod = GetModuleByName( msg->name );
-			CHECK_ERR( old_mod.IsNull() or msg->oldModule.IsNull() or old_mod == msg->oldModule );
-			old_mod = old_mod ? old_mod : msg->oldModule;	// module by name has more priority
+			old_mod = GetModuleByName( msg.name );
+			CHECK_ERR( old_mod.IsNull() or msg.oldModule.IsNull() or old_mod == msg.oldModule );
+			old_mod = old_mod ? old_mod : msg.oldModule;	// module by name has more priority
 		}
 		CHECK_ERR( old_mod );
 
-		SendTo< ModuleMsg::DetachModule >( this, { old_mod } );
-		SendTo< ModuleMsg::AttachModule >( this, { msg->name, msg->newModule } );
+		Send( ModuleMsg::DetachModule{ old_mod } );
+		Send( ModuleMsg::AttachModule{ msg.name, msg.newModule } );
 		return true;
 	}
 
@@ -678,7 +678,7 @@ namespace Base
 	_Link_Impl
 =================================================
 */
-	bool Module::_Link_Impl (const Message< ModuleMsg::Link > &msg)
+	bool Module::_Link_Impl (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -689,7 +689,7 @@ namespace Base
 
 		CHECK( _SetState( EState::Linked ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
+		_SendUncheckedEvent( ModuleMsg::AfterLink{} );
 		return true;
 	}
 	
@@ -698,7 +698,7 @@ namespace Base
 	_Compose_Impl
 =================================================
 */
-	bool Module::_Compose_Impl (const Message< ModuleMsg::Compose > &)
+	bool Module::_Compose_Impl (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -712,7 +712,7 @@ namespace Base
 	_Delete_Impl
 =================================================
 */
-	bool Module::_Delete_Impl (const Message< ModuleMsg::Delete > &)
+	bool Module::_Delete_Impl (const ModuleMsg::Delete &)
 	{
 		_DetachAllAttachments();
 		_DetachSelfFromAllParents();
@@ -731,7 +731,7 @@ namespace Base
 	_Update_Impl
 =================================================
 */
-	bool Module::_Update_Impl (const Message< ModuleMsg::Update > &msg)
+	bool Module::_Update_Impl (const ModuleMsg::Update &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
@@ -744,11 +744,11 @@ namespace Base
 	_OnModuleAttached_Impl
 =================================================
 */
-	bool Module::_OnModuleAttached_Impl (const Message< ModuleMsg::OnModuleAttached > &msg)
+	bool Module::_OnModuleAttached_Impl (const ModuleMsg::OnModuleAttached &msg)
 	{
-		if ( msg->attachedModule == this )
+		if ( msg.attachedModule == this )
 		{
-			_OnAttachedToParent( msg->parent );
+			_OnAttachedToParent( msg.parent );
 		}
 		return true;
 	}
@@ -758,17 +758,17 @@ namespace Base
 	_OnModuleDetached_Impl
 =================================================
 */
-	bool Module::_OnModuleDetached_Impl (const Message< ModuleMsg::OnModuleDetached > &msg)
+	bool Module::_OnModuleDetached_Impl (const ModuleMsg::OnModuleDetached &msg)
 	{
-		if ( msg->detachedModule == this )
+		if ( msg.detachedModule == this )
 		{
-			if ( msg->isLast )
-				_OnDetachedFromParent( msg->parent );
+			if ( msg.isLast )
+				_OnDetachedFromParent( msg.parent );
 		}
 		else
 		{
-			// TODO: msg->detachedModule->UnsubscribeAll( this ); ?
-			UnsubscribeAll( msg->detachedModule );
+			// TODO: msg.detachedModule->UnsubscribeAll( this ); ?
+			UnsubscribeAll( msg.detachedModule );
 		}
 		return true;
 	}
@@ -778,7 +778,7 @@ namespace Base
 	_FindModule_Empty
 =================================================
 */
-	bool Module::_FindModule_Empty (const Message< ModuleMsg::FindModule > &)
+	bool Module::_FindModule_Empty (const ModuleMsg::FindModule &)
 	{
 		return false;
 	}
@@ -788,7 +788,7 @@ namespace Base
 	_ModulesDeepSearch_Empty
 =================================================
 */
-	bool Module::_ModulesDeepSearch_Empty (const Message< ModuleMsg::ModulesDeepSearch > &)
+	bool Module::_ModulesDeepSearch_Empty (const ModuleMsg::ModulesDeepSearch &)
 	{
 		return false;
 	}
@@ -798,7 +798,7 @@ namespace Base
 	_AttachModule_Empty
 =================================================
 */
-	bool Module::_AttachModule_Empty (const Message< ModuleMsg::AttachModule > &)
+	bool Module::_AttachModule_Empty (const ModuleMsg::AttachModule &)
 	{
 		return false;
 	}
@@ -808,7 +808,7 @@ namespace Base
 	_DetachModule_Empty
 =================================================
 */
-	bool Module::_DetachModule_Empty (const Message< ModuleMsg::DetachModule > &)
+	bool Module::_DetachModule_Empty (const ModuleMsg::DetachModule &)
 	{
 		return false;
 	}
@@ -818,7 +818,7 @@ namespace Base
 	_DetachModule_Empty
 =================================================
 */
-	bool _ReplaceModule_Empty (const Message< ModuleMsg::ReplaceModule > &)
+	bool _ReplaceModule_Empty (const ModuleMsg::ReplaceModule &)
 	{
 		return false;
 	}
@@ -828,7 +828,7 @@ namespace Base
 	_OnManagerChanged_Empty
 =================================================
 */
-	bool Module::_OnManagerChanged_Empty (const Message< ModuleMsg::OnManagerChanged > &)
+	bool Module::_OnManagerChanged_Empty (const ModuleMsg::OnManagerChanged &)
 	{
 		return true;
 	}
@@ -838,7 +838,7 @@ namespace Base
 	_Update_Empty
 =================================================
 */
-	bool Module::_Update_Empty (const Message< ModuleMsg::Update > &)
+	bool Module::_Update_Empty (const ModuleMsg::Update &)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		return true;
@@ -849,7 +849,7 @@ namespace Base
 	_Compose_Empty
 =================================================
 */
-	bool Module::_Compose_Empty (const Message< ModuleMsg::Compose > &)
+	bool Module::_Compose_Empty (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -858,7 +858,7 @@ namespace Base
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 
@@ -867,14 +867,14 @@ namespace Base
 	_Link_Empty
 =================================================
 */
-	bool Module::_Link_Empty (const Message< ModuleMsg::Link > &)
+	bool Module::_Link_Empty (const ModuleMsg::Link &)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
 		CHECK( _SetState( EState::Linked ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
+		_SendUncheckedEvent( ModuleMsg::AfterLink{} );
 		return true;
 	}
 	
@@ -883,7 +883,7 @@ namespace Base
 	_Delete_Empty
 =================================================
 */
-	bool Module::_Delete_Empty (const Message< ModuleMsg::Delete > &)
+	bool Module::_Delete_Empty (const ModuleMsg::Delete &)
 	{
 		CHECK( _SetState( EState::Deleting ) );
 

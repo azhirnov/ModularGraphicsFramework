@@ -16,6 +16,8 @@ float4 SimpleBlur (sampler2D tex, float2 uv, int radius, float uvScale);
 //-----------------------------------------------------------------------------
 
 
+#include <Math/Math.glsl>
+
 /*
 =================================================
 	SimpleBlur

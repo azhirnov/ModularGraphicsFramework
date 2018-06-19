@@ -24,7 +24,7 @@ namespace Impl
 	protected:
 		using EPixelFormat		= Engine::Platforms::EPixelFormat;
 		using MemLayout_t		= Engine::GpuMsg::GetSWImageMemoryLayout::ImgLayers3D;
-		using Sampler_t			= Engine::Platforms::SamplerDescriptor;
+		using Sampler_t			= Engine::Platforms::SamplerDescription;
 
 		struct ESamplerMode
 		{
@@ -138,11 +138,8 @@ namespace Impl
 		BaseTexture (MemLayout_t &&memLayout, const Sampler_t &sampler, EOutputFormat outFmt);
 		
 		BaseTexture () {}
-		BaseTexture (BaseTexture &&) = default;
-		BaseTexture (const BaseTexture &) = default;
 		
-		BaseTexture& operator = (BaseTexture &&) = default;
-		BaseTexture& operator = (const BaseTexture &) = default;
+		GX_DEFCOPYCTOR_ASSIGN( BaseTexture );
 
 		void _Fetch (const int3 &coord, const int3 &offset, int lod, OUT void *texel) const;
 		void _Sample (const float3 &coord, const int3 &offset, float bias, OUT void *texel) const;

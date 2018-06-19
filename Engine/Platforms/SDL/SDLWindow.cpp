@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Common/Platforms.h"
+#include "Core/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_SDL
 
@@ -30,8 +30,8 @@ namespace PlatformSDL
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											OSMsg::WindowSetDescriptor,
-											OSMsg::WindowGetDescriptor,
+											OSMsg::WindowSetDescription,
+											OSMsg::WindowGetDescription,
 											OSMsg::OnSDLPlatformCreated,
 											OSMsg::GetSDLWindowHandle,
 											OSMsg::GetDisplays,
@@ -40,7 +40,7 @@ namespace PlatformSDL
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Update,
 											ModuleMsg::Delete,
-											OSMsg::WindowDescriptorChanged,
+											OSMsg::WindowDescriptionChanged,
 											OSMsg::WindowVisibilityChanged,
 											OSMsg::WindowBeforeCreate,
 											OSMsg::WindowCreated,
@@ -81,15 +81,15 @@ namespace PlatformSDL
 
 	// message handlers
 	private:
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _OnSDLPlatformCreated (const Message< OSMsg::OnSDLPlatformCreated > &);
-		bool _PlatformDeleted (const Message< ModuleMsg::Delete > &);
-		bool _WindowSetDescriptor (const Message< OSMsg::WindowSetDescriptor > &);
-		bool _WindowGetDescriptor (const Message< OSMsg::WindowGetDescriptor > &);
-		bool _GetSDLWindowHandle (const Message< OSMsg::GetSDLWindowHandle > &);
-		bool _GetDisplays (const Message< OSMsg::GetDisplays > &);
-		bool _GetOSModules (const Message< OSMsg::GetOSModules > &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _OnSDLPlatformCreated (const OSMsg::OnSDLPlatformCreated &);
+		bool _PlatformDeleted (const ModuleMsg::Delete &);
+		bool _WindowSetDescription (const OSMsg::WindowSetDescription &);
+		bool _WindowGetDescription (const OSMsg::WindowGetDescription &);
+		bool _GetSDLWindowHandle (const OSMsg::GetSDLWindowHandle &);
+		bool _GetDisplays (const OSMsg::GetDisplays &);
+		bool _GetOSModules (const OSMsg::GetOSModules &);
 
 
 	private:
@@ -102,7 +102,7 @@ namespace PlatformSDL
 		void _ShowWindow (EVisibility flags);
 
 		void _ProcessEvents ();
-		bool _UpdateDescriptor ();
+		bool _UpdateDescription ();
 		
 		Ptr<const Display> _GetDisplayByCoord (const int2 &point) const;
 	};
@@ -135,8 +135,8 @@ namespace PlatformSDL
 		_SubscribeOnMsg( this, &SDLWindow::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &SDLWindow::_Delete );
 		_SubscribeOnMsg( this, &SDLWindow::_Update );
-		_SubscribeOnMsg( this, &SDLWindow::_WindowSetDescriptor );
-		_SubscribeOnMsg( this, &SDLWindow::_WindowGetDescriptor );
+		_SubscribeOnMsg( this, &SDLWindow::_WindowSetDescription );
+		_SubscribeOnMsg( this, &SDLWindow::_WindowGetDescription );
 		_SubscribeOnMsg( this, &SDLWindow::_OnSDLPlatformCreated );
 		_SubscribeOnMsg( this, &SDLWindow::_GetSDLWindowHandle );
 		_SubscribeOnMsg( this, &SDLWindow::_GetDisplays );
@@ -165,7 +165,7 @@ namespace PlatformSDL
 	_Update
 =================================================
 */
-	bool SDLWindow::_Update (const Message< ModuleMsg::Update > &msg)
+	bool SDLWindow::_Update (const ModuleMsg::Update &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return true;
@@ -181,7 +181,7 @@ namespace PlatformSDL
 	_Delete
 =================================================
 */
-	bool SDLWindow::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SDLWindow::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_requestQuit	= true;
 		_looping		= false;
@@ -197,7 +197,7 @@ namespace PlatformSDL
 	_OnSDLPlatformCreated
 =================================================
 */
-	bool SDLWindow::_OnSDLPlatformCreated (const Message< OSMsg::OnSDLPlatformCreated > &)
+	bool SDLWindow::_OnSDLPlatformCreated (const OSMsg::OnSDLPlatformCreated &)
 	{
 		CHECK_ERR( not _IsComposedState( GetState() ) );
 
@@ -210,10 +210,10 @@ namespace PlatformSDL
 
 			LOG( "window created", ELog::Debug );
 			
-			_SendForEachAttachments< ModuleMsg::Link >({});
-			_SendForEachAttachments< ModuleMsg::Compose >({});
+			_SendForEachAttachments( ModuleMsg::Link{} );
+			_SendForEachAttachments( ModuleMsg::Compose{} );
 			
-			_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+			_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		}
 		else
 		{
@@ -227,7 +227,7 @@ namespace PlatformSDL
 	_PlatformDeleted
 =================================================
 */
-	bool SDLWindow::_PlatformDeleted (const Message< ModuleMsg::Delete > &msg)
+	bool SDLWindow::_PlatformDeleted (const ModuleMsg::Delete &msg)
 	{
 		_Delete( msg );
 		return true;
@@ -235,26 +235,26 @@ namespace PlatformSDL
 
 /*
 =================================================
-	_WindowSetDescriptor
+	_WindowSetDescription
 =================================================
 */
-	bool SDLWindow::_WindowSetDescriptor (const Message< OSMsg::WindowSetDescriptor > &msg)
+	bool SDLWindow::_WindowSetDescription (const OSMsg::WindowSetDescription &msg)
 	{
 		if ( not _IsCreated() )
 		{
 			CHECK_ERR( GetState() != EState::Deleting );
 
-			_createInfo.caption				= msg->descr.caption;
-			_createInfo.flags				= msg->descr.flags;
-			_createInfo.initialVisibility	= msg->descr.visibility;
-			_createInfo.orientation			= msg->descr.orientation;
-			_createInfo.position			= msg->descr.position;
-			_createInfo.surfaceSize			= msg->descr.surfaceSize;
-			// ignored msg->desc.size
+			_createInfo.caption				= msg.descr.caption;
+			_createInfo.flags				= msg.descr.flags;
+			_createInfo.initialVisibility	= msg.descr.visibility;
+			_createInfo.orientation			= msg.descr.orientation;
+			_createInfo.position			= msg.descr.position;
+			_createInfo.surfaceSize			= msg.descr.surfaceSize;
+			// ignored msg.desc.size
 			return true;
 		}
 		
-		Ptr<const Display>	disp = _GetDisplayByCoord( msg->descr.position );
+		Ptr<const Display>	disp = _GetDisplayByCoord( msg.descr.position );
 
 		if ( not disp )
 			disp = &_display.GetDisplays().Front();
@@ -262,13 +262,13 @@ namespace PlatformSDL
 		uint2 const		scr_res = disp->Resolution();
 
 		// set window caption
-		if ( msg->descr.caption != _windowDesc.caption )
+		if ( msg.descr.caption != _windowDesc.caption )
 		{
-			_windowDesc.caption = msg->descr.caption;
+			_windowDesc.caption = msg.descr.caption;
 			SDL_SetWindowTitle( _wnd, _windowDesc.caption.cstr() );
 		}
 		
-		if ( msg->descr.flags[ EWindowFlags::Fullscreen ] )
+		if ( msg.descr.flags[ EWindowFlags::Fullscreen ] )
 		{
 			// setup for fullscreen
 			_windowDesc.position	 = disp->FullArea().LeftBottom();
@@ -282,10 +282,10 @@ namespace PlatformSDL
 		else
 		{
 			// setup windowed
-			_windowDesc.surfaceSize	= msg->descr.surfaceSize;
-			_windowDesc.position	= msg->descr.position;
+			_windowDesc.surfaceSize	= msg.descr.surfaceSize;
+			_windowDesc.position	= msg.descr.position;
 
-			if ( msg->descr.flags[ EWindowFlags::Centered ] )
+			if ( msg.descr.flags[ EWindowFlags::Centered ] )
 			{
 				_windowDesc.position = disp->WorkArea().Center() - int2(_windowDesc.size) / 2;		
 			}
@@ -306,14 +306,14 @@ namespace PlatformSDL
 
 /*
 =================================================
-	_WindowGetDescriptor
+	_WindowGetDescription
 =================================================
 */
-	bool SDLWindow::_WindowGetDescriptor (const Message< OSMsg::WindowGetDescriptor > &msg)
+	bool SDLWindow::_WindowGetDescription (const OSMsg::WindowGetDescription &msg)
 	{
 		CHECK_ERR( _IsCreated() );
 
-		msg->result.Set( _windowDesc );
+		msg.result.Set( _windowDesc );
 		return true;
 	}
 	
@@ -322,9 +322,9 @@ namespace PlatformSDL
 	_GetSDLWindowHandle
 =================================================
 */
-	bool SDLWindow::_GetSDLWindowHandle (const Message< OSMsg::GetSDLWindowHandle > &msg)
+	bool SDLWindow::_GetSDLWindowHandle (const OSMsg::GetSDLWindowHandle &msg)
 	{
-		msg->result.Set( _wnd );
+		msg.result.Set( _wnd );
 		return true;
 	}
 	
@@ -333,11 +333,11 @@ namespace PlatformSDL
 	_GetDisplays
 =================================================
 */
-	bool SDLWindow::_GetDisplays (const Message< OSMsg::GetDisplays > &msg)
+	bool SDLWindow::_GetDisplays (const OSMsg::GetDisplays &msg)
 	{
 		//_display.Update();
 
-		msg->result.Set( _display.GetDisplays() );
+		msg.result.Set( _display.GetDisplays() );
 		return true;
 	}
 	
@@ -346,9 +346,9 @@ namespace PlatformSDL
 	_GetOSModules
 =================================================
 */
-	bool SDLWindow::_GetOSModules (const Message< OSMsg::GetOSModules > &msg)
+	bool SDLWindow::_GetOSModules (const OSMsg::GetOSModules &msg)
 	{
-		msg->result.Set( SDLObjectsConstructor::GetModuleIDs() );
+		msg.result.Set( SDLObjectsConstructor::GetModuleIDs() );
 		return true;
 	}
 	
@@ -371,14 +371,14 @@ namespace PlatformSDL
 	{
 		if ( _IsCreated() )
 		{
-			_SendEvent< OSMsg::WindowBeforeDestroy >({});
+			_SendEvent( OSMsg::WindowBeforeDestroy{} );
 	
 			SDL_DestroyWindow( _wnd );
 			_wnd = null;
 			
 			LOG( "window destroyed", ELog::Debug );
 
-			_SendEvent< OSMsg::WindowAfterDestroy >({});
+			_SendEvent( OSMsg::WindowAfterDestroy{} );
 		}
 	}
 	
@@ -409,8 +409,8 @@ namespace PlatformSDL
 		
 
 		// allow subscribers to change settings
-		auto const					msg		= Message< OSMsg::WindowBeforeCreate >{ _createInfo };
-		CreateInfo::Window const&	info	= *msg->editable;
+		auto const					msg		= OSMsg::WindowBeforeCreate{ _createInfo };
+		CreateInfo::Window const&	info	= *msg.editable;
 
 		_SendEvent( msg );
 
@@ -418,12 +418,12 @@ namespace PlatformSDL
 		// crate window
 		CHECK_ERR( _CreateWindow( *disp, info ) );
 
-		CHECK_ERR( _UpdateDescriptor() );
+		CHECK_ERR( _UpdateDescription() );
 		
 
 		// send event
-		_SendEvent< OSMsg::WindowCreated >({});
-		_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
+		_SendEvent( OSMsg::WindowCreated{} );
+		_SendEvent( OSMsg::WindowDescriptionChanged{ _windowDesc } );
 
 
 		// start window message loop
@@ -523,11 +523,11 @@ namespace PlatformSDL
 		if ( not _looping or _requestQuit )
 			return;
 
-		Message< OSMsg::OnSDLWindowRawMessage >	msg;
+		OSMsg::OnSDLWindowRawMessage	msg;
 
-		while ( SDL_PollEvent( OUT &msg->event ) )
+		while ( SDL_PollEvent( OUT &msg.event ) )
 		{
-			switch ( msg->event.type )
+			switch ( msg.event.type )
 			{
 				// quit //
 				case SDL_QUIT :
@@ -563,34 +563,34 @@ namespace PlatformSDL
 				// window event //
 				case SDL_WINDOWEVENT :
 				{
-					switch ( msg->event.window.event )
+					switch ( msg.event.window.event )
 					{
 						// show //
 						case SDL_WINDOWEVENT_SHOWN :
 						{
-							msg->wasProcessed = true;
+							msg.wasProcessed = true;
 			
 							_windowDesc.visibility = EVisibility::VisibleFocused;
-							_SendEvent< OSMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
+							_SendEvent( OSMsg::WindowVisibilityChanged{ _windowDesc.visibility });
 							break;
 						}
 						// hide //
 						case SDL_WINDOWEVENT_HIDDEN :
 						{
-							msg->wasProcessed = true;
+							msg.wasProcessed = true;
 
 							_windowDesc.visibility = EVisibility::VisibleUnfocused;
-							_SendEvent< OSMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
+							_SendEvent( OSMsg::WindowVisibilityChanged{ _windowDesc.visibility });
 							break;
 						}
 						// resize //
 						case SDL_WINDOWEVENT_RESIZED :
 						case SDL_WINDOWEVENT_MOVED :
 						{
-							msg->wasProcessed = true;
+							msg.wasProcessed = true;
 
-							_UpdateDescriptor();
-							_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
+							_UpdateDescription();
+							_SendEvent( OSMsg::WindowDescriptionChanged{ _windowDesc });
 							break;
 						}
 					}
@@ -604,10 +604,10 @@ namespace PlatformSDL
 
 /*
 =================================================
-	_UpdateDescriptor
+	_UpdateDescription
 =================================================
 */
-	bool SDLWindow::_UpdateDescriptor ()
+	bool SDLWindow::_UpdateDescription ()
 	{
 		CHECK_ERR( _IsCreated() );
 

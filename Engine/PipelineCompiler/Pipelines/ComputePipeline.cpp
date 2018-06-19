@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Pipelines/ComputePipeline.h"
+#include "Core/STL/Algorithms/StringParser.h"
 
 namespace PipelineCompiler
 {
@@ -93,9 +94,9 @@ namespace PipelineCompiler
 		
 
 		// serialize descriptor
-		src << ser->DeclFunction( "void", "Create_"_str << Name(), {{"PipelineTemplateDescriptor&", "descr"}} );
+		src << ser->DeclFunction( "void", "Create_"_str << Name(), {{"PipelineTemplateDescription&", "descr"}} );
 		src << ser->BeginScope();
-		src << ser->AssignVariable( "\tdescr", "PipelineTemplateDescriptor()" );
+		src << ser->AssignVariable( "\tdescr", "PipelineTemplateDescription()" );
 		src << ser->ToString( "\tdescr.supportedShaders", EShader::Compute ) << '\n';
 		src << ser->ToString( "\tdescr.localGroupSize", localGroupSize );
 

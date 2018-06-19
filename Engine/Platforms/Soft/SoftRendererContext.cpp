@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -68,9 +68,9 @@ namespace Platforms
 		
 	// message handlers
 	private:
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
-		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
+		bool _GetGraphicsModules (const GpuMsg::GetGraphicsModules &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -124,14 +124,14 @@ namespace Platforms
 	_AddToManager
 =================================================
 */
-	bool SoftRendererContext::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool SoftRendererContext::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
-		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetSupportedMessages().HasAllTypes< SWThreadMsgList_t >() );
-		CHECK_ERR( msg->module->GetSupportedEvents().HasAllTypes< SWThreadEventList_t >() );
-		ASSERT( not _threads.IsExist( msg->module ) );
+		CHECK_ERR( msg.module );
+		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< SWThreadMsgList_t >() );
+		CHECK_ERR( msg.module->GetSupportedEvents().HasAllTypes< SWThreadEventList_t >() );
+		ASSERT( not _threads.IsExist( msg.module ) );
 
-		_threads.Add( msg->module );
+		_threads.Add( msg.module );
 		return true;
 	}
 	
@@ -140,11 +140,11 @@ namespace Platforms
 	_RemoveFromManager
 =================================================
 */
-	bool SoftRendererContext::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool SoftRendererContext::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
-		CHECK_ERR( msg->module );
+		CHECK_ERR( msg.module );
 
-		ModulePtr	module = msg->module.Lock();
+		ModulePtr	module = msg.module.Lock();
 
 		if ( not module )
 			return false;
@@ -160,10 +160,10 @@ namespace Platforms
 	_GetGraphicsModules
 =================================================
 */	
-	bool SoftRendererContext::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	bool SoftRendererContext::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg->compute.Set( SoftRendererObjectsConstructor::GetComputeModules() );
-		msg->graphics.Set( SoftRendererObjectsConstructor::GetGraphicsModules() );
+		msg.compute.Set( SoftRendererObjectsConstructor::GetComputeModules() );
+		msg.graphics.Set( SoftRendererObjectsConstructor::GetGraphicsModules() );
 		return true;
 	}
 //-----------------------------------------------------------------------------

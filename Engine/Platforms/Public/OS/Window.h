@@ -71,7 +71,7 @@ namespace Platforms
 {
 
 	//
-	// Window Descriptor
+	// Window Description
 	//
 	struct WindowDesc
 	{
@@ -99,53 +99,53 @@ namespace OSMsg
 	//
 	// Window events
 	//
-	struct WindowCreated
+	struct WindowCreated : _MessageBase_
 	{};
 
-	struct WindowBeforeDestroy
+	struct WindowBeforeDestroy : _MessageBase_
 	{};
 
-	struct WindowAfterDestroy
+	struct WindowAfterDestroy : _MessageBase_
 	{};
 
 	
 	//
-	// Set / Get / OnChanged Window Descriptor
+	// Set / Get / OnChanged Window Description
 	//
-	struct WindowSetDescriptor
+	struct WindowSetDescription : _MessageBase_
 	{
 	// variables
 		Platforms::WindowDesc			descr;
 
 	// methods
-		explicit WindowSetDescriptor (const Platforms::WindowDesc &descr) : descr{descr} {}
+		explicit WindowSetDescription (const Platforms::WindowDesc &descr) : descr{descr} {}
 	};
 
 
-	struct WindowGetDescriptor
+	struct WindowGetDescription : _MessageBase_
 	{
 	// variables
 		Out< Platforms::WindowDesc >	result;
 
 	// methods
-		WindowGetDescriptor () {}
+		WindowGetDescription () {}
 	};
 
 
-	struct WindowDescriptorChanged
+	struct WindowDescriptionChanged : _MessageBase_
 	{
 	// variables
 		Platforms::WindowDesc			descr;
 
 	// methods
-		explicit WindowDescriptorChanged (const Platforms::WindowDesc &descr) : descr{descr} {}
+		explicit WindowDescriptionChanged (const Platforms::WindowDesc &descr) : descr{descr} {}
 	};
 	
 
 	//
 	// On Window Visibility / Focus Changed
 	//
-	struct WindowVisibilityChanged
+	struct WindowVisibilityChanged : _MessageBase_
 	{
 	// variables
 		CreateInfo::Window::EVisibility		state;
@@ -158,24 +158,16 @@ namespace OSMsg
 	//
 	// Before Create Window
 	//
-	struct WindowBeforeCreate
+	struct WindowBeforeCreate : _MessageBase_
 	{
 	// variables
 		const     CreateInfo::Window		info;
 		Editable< CreateInfo::Window >		editable;
 
 	// methods
-		WindowBeforeCreate ()
-		{}
-
-		WindowBeforeCreate (const WindowBeforeCreate &msg) :
-			info(msg.info), editable(msg.editable)
-		{}
-
-		explicit
-		WindowBeforeCreate (const CreateInfo::Window &info) :
-			info(info), editable(info)
-		{}
+		WindowBeforeCreate () {}
+		WindowBeforeCreate (const WindowBeforeCreate &msg) : info(msg.info), editable(msg.editable) {}
+		explicit WindowBeforeCreate (const CreateInfo::Window &info) : info(info), editable(info) {}
 	};
 
 

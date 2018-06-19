@@ -68,14 +68,14 @@ namespace Base
 
 	// message handlers
 	private:
-		//bool _FindThread (const Message< ModuleMsg::FindThread > &);
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _AddThreadToManager (const Message< ModuleMsg::AddThreadToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		//bool _FindThread (const ModuleMsg::FindThread &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _AddThreadToManager (const ModuleMsg::AddThreadToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
 
 
 	private:

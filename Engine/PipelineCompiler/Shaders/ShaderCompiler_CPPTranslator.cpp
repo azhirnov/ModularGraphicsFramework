@@ -66,10 +66,14 @@ namespace PipelineCompiler
 		
 		bool TranslateEntry (const TypeInfo &ret, StringCRef sign, ArrayCRef<Symbol> args, StringCRef body, OUT String &entryPoint, INOUT String &src) override;
 		bool TranslateStructAccess (SymbolID id, const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) override;
+
+		bool TranslateBufferLoad (SymbolID, StringCRef, StringCRef, const TypeInfo &, INOUT String &) override { return false; }
+		bool TranslateBufferStore (SymbolID, StringCRef, StringCRef, const TypeInfo &, StringCRef, const TypeInfo &, INOUT String &) override { return false; }
 		
 		bool TranslateValue (VariantCRef value, INOUT String &src) const override;
 
-		bool DeclExternalTypes () const	override	{ return true; }
+		bool DeclExternalTypes () const	override		{ return true; }
+		bool ReplaceStructByBuffer () const override	{ return false; }
 
 	private:
 		String _TranslateFunctionName (StringCRef sign);
@@ -123,7 +127,7 @@ namespace PipelineCompiler
 		CHECK_ERR( intermediate );
 
 		TIntermNode*	root	= intermediate->getTreeRoot();
-		Translator		translator;
+		Translator		translator{ log };
 
 		translator.states.useGXrules	= intermediate->getSource() == glslang::EShSourceGxsl;
 		translator.states.inlineAll		= cfg.inlineAll or (not translator.states.useGXrules);
@@ -150,7 +154,6 @@ namespace PipelineCompiler
 			"}		// SWShaderLang\n"
 			"#endif	// GRAPHICS_API_SOFT\n\n";
 
-		log		<< translator.log;
 		result	= BinArrayCRef::From( translator.src );
 		return true;
 	}
@@ -209,7 +212,7 @@ namespace PipelineCompiler
 	{
 		const bool	is_atomic = t.qualifier[ EVariableQualifier::Volatile ];
 
-		if ( t.arraySize > 0 and t.arraySize != UMax )
+		if ( t.arraySize.IsStaticArray() )
 			res << "SArr<";
 
 		if ( is_atomic )
@@ -225,10 +228,10 @@ namespace PipelineCompiler
 		if ( is_atomic )
 			res << ">";
 		
-		if ( t.arraySize > 0 and t.arraySize != UMax )
-			res << "," << t.arraySize << ">";
+		if ( t.arraySize.IsStaticArray() )
+			res << "," << t.arraySize.Size() << ">";
 
-		res << " " << t.name << (t.arraySize == UMax ? "[]" : "");
+		res << " " << t.name << (t.arraySize.IsDynamicArray() ? "[]" : "");
 		return true;
 	}
 
@@ -267,7 +270,7 @@ namespace PipelineCompiler
 			src << ";\n";
 
 			skip_operators |= RecursiveFindVolatile( fld );
-			skip_operators |= (fld.arraySize == UMax);
+			skip_operators |= fld.arraySize.IsDynamicArray();
 		}
 
 		if ( not skip_operators )
@@ -329,7 +332,7 @@ namespace PipelineCompiler
 
 		const bool	is_atomic = t.qualifier[ EVariableQualifier::Volatile ];
 		
-		if ( t.arraySize > 0 and t.arraySize != UMax )
+		if ( t.arraySize.IsStaticArray() )
 			res << "SArr<";
 
 		if ( is_atomic )
@@ -345,10 +348,10 @@ namespace PipelineCompiler
 		if ( is_atomic )
 			res << ">";
 		
-		if ( t.arraySize == UMax )
+		if ( t.arraySize.IsDynamicArray() )
 			res << "[]";
-		else if ( t.arraySize > 0 )
-			res << "," << t.arraySize << ">";
+		else if ( t.arraySize.IsStaticArray() )
+			res << "," << t.arraySize.Size() << ">";
 
 		return true;
 	}
@@ -692,9 +695,9 @@ namespace PipelineCompiler
 	bool CPP_DstLanguage::_TranslateOperator2 (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args,
 											   ArrayCRef<TypeInfo const*> argTypes, StringCRef all_args, INOUT String &src)
 	{
-		const bool	is_vec	=	(resultType.arraySize == 0 and EShaderVariable::VecSize( resultType.type ) > 1)		and
-								(argTypes[0]->arraySize == 0 and EShaderVariable::VecSize( argTypes[0]->type ) > 1)	and
-								(argTypes[1]->arraySize == 0 and EShaderVariable::VecSize( argTypes[1]->type ) > 1);
+		const bool	is_vec	=	(resultType.arraySize.IsNotArray() and EShaderVariable::VecSize( resultType.type ) > 1)		and
+								(argTypes[0]->arraySize.IsNotArray() and EShaderVariable::VecSize( argTypes[0]->type ) > 1)	and
+								(argTypes[1]->arraySize.IsNotArray() and EShaderVariable::VecSize( argTypes[1]->type ) > 1);
 			
 		const bool	is_float = (EShaderVariable::IsFloat( argTypes[0]->type ) or EShaderVariable::IsFloat( argTypes[1]->type ));
 
@@ -1029,7 +1032,7 @@ namespace PipelineCompiler
 		
 		const bool	is_atomic	= t.qualifier[ EVariableQualifier::Volatile ];
 
-		if ( t.arraySize > 0 and t.arraySize != UMax )
+		if ( t.arraySize.IsStaticArray() )
 			res << "SArr<";
 
 		if ( is_atomic )
@@ -1045,8 +1048,8 @@ namespace PipelineCompiler
 		if ( is_atomic )
 			res << ">";
 
-		if ( t.arraySize > 0 and t.arraySize != UMax )
-			res << "," << t.arraySize << ">";
+		if ( t.arraySize.IsStaticArray() )
+			res << "," << t.arraySize.Size() << ">";
 
 		if ( t.qualifier[ EVariableQualifier::InArg ] and t.qualifier[ EVariableQualifier::OutArg ] )
 			res << " &";
@@ -1061,7 +1064,7 @@ namespace PipelineCompiler
 
 		res << t.name;
 		
-		if ( t.arraySize == UMax )
+		if ( t.arraySize.IsDynamicArray() )
 			res << "[]";
 
 		return true;
@@ -1369,7 +1372,7 @@ namespace PipelineCompiler
 */
 	bool CPP_DstLanguage::_TranslateBuffer (Symbol const& info, OUT String &str)
 	{
-		CHECK_ERR( info.arraySize == 0 );
+		CHECK_ERR( info.arraySize.IsNotArray() );
 		CHECK_ERR( not info.name.Empty() );
 		CHECK_ERR( not info.typeName.Empty() );
 
@@ -1401,7 +1404,7 @@ namespace PipelineCompiler
 */
 	bool CPP_DstLanguage::_TranslateImage (Symbol const& info, OUT String &str)
 	{
-		CHECK_ERR( info.arraySize == 0 );
+		CHECK_ERR( info.arraySize.IsNotArray() );
 		CHECK_ERR( not info.name.Empty() );
 		
 		if ( EShaderVariable::IsImage( info.type ) )
@@ -1440,8 +1443,8 @@ namespace PipelineCompiler
 		str << " >	" << info.name << ";	_helper_.GetShared( "
 			<< _sharedCounter << ", ";
 
-		if ( info.arraySize != 0 and info.arraySize != UMax )
-			str << info.arraySize;
+		if ( info.arraySize.IsStaticArray() )
+			str << info.arraySize.Size();
 		else
 			str << "1";
 
@@ -1472,13 +1475,16 @@ namespace PipelineCompiler
 	{
 		CHECK_ERR( typed->getAsSymbolNode() );
 
-		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
-
 		str << "\t";
-
 		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
 		
-		CHECK_ERR( TranslateConstant( cu_arr, info, INOUT str ) );
+		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
+
+		if ( not cu_arr.empty() )
+		{
+			str << " = ";
+			CHECK_ERR( TranslateConstant( cu_arr, info, INOUT str ) );
+		}
 		
 		str << ";\n";
 		return true;
@@ -1498,10 +1504,10 @@ namespace PipelineCompiler
 		FOR( i, fields )
 		{
 			const auto&	field	= fields[i];
-			const uint	count	= field.arraySize == 0 ? 1 : field.arraySize;
-			const bool	is_arr	= field.arraySize != 0;
+			const uint	count	= field.arraySize.Size();
+			const bool	is_arr	= field.arraySize.IsArray();
 
-			CHECK_ERR( field.arraySize != UMax );
+			CHECK_ERR( not field.arraySize.IsDynamicArray() );
 			
 			src << (i ? ", " : "");
 
@@ -1546,9 +1552,9 @@ namespace PipelineCompiler
 	bool CPP_DstLanguage::TranslateConstant (const glslang::TConstUnionArray &cu_arr, const TypeInfo &info, INOUT String &str)
 	{
 		// array
-		if ( info.arraySize > 0 )
+		if ( info.arraySize.IsArray() )
 		{
-			TypeInfo	scalar_info = info;		scalar_info.arraySize = 0;
+			TypeInfo	scalar_info = info;		scalar_info.arraySize.MakeNonArray();
 
 			str << "{ ";
 			
@@ -1608,6 +1614,7 @@ namespace PipelineCompiler
 		CHECK_ERR( not info.name.Empty() );
 
 		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
+		CHECK_ERR( not cu_arr.empty() );
 
 		str << "\t";
 		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );

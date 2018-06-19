@@ -6,7 +6,7 @@
 #pragma once
 
 #include "Engine/Base/Public/ModuleMessages.h"
-#include "Engine/Base/Modules/Message.h"
+#include "Engine/Base/Common/BaseObject.h"
 
 namespace Engine
 {
@@ -47,12 +47,7 @@ namespace Base
 			_func{std::bind( func, FW<Args>(args)..., std::placeholders::_1 )}
 		{}
 		
-		AsyncMessage (Self &&)			= default;
-		AsyncMessage (const Self &)		= default;
-
-		Self& operator = (Self &&)		= default;
-		Self& operator = (const Self &)	= default;
-
+		GX_DEFCOPYCTOR_ASSIGN( AsyncMessage );
 
 		void Process (GlobalSystemsRef gs) const noexcept
 		{
@@ -70,7 +65,7 @@ namespace ModuleMsg
 	//
 	// Push Async Message
 	//
-	struct PushAsyncMessage
+	struct PushAsyncMessage : _MessageBase_
 	{
 	// variables
 		ReadOnce< Base::AsyncMessage >		asyncMsg;
@@ -87,7 +82,7 @@ namespace ModuleMsg
 		{}
 
 		template <typename T>
-		PushAsyncMessage (const ModulePtr &target, Base::Message<T> &&msg) :
+		PushAsyncMessage (const ModulePtr &target, T &&msg) :
 			asyncMsg{LAMBDA( targ = target, m = RVREF(msg) ) (GlobalSystemsRef) { _Call<T>( targ, m ); }},
 			target{ target->GetThreadID() },
 			altTarget{ target->GetThreadID() }
@@ -96,7 +91,7 @@ namespace ModuleMsg
 
 	private:
 		template <typename T>
-		static void _Call (const ModulePtr &target, const Base::Message<T> &msg)
+		static void _Call (const ModulePtr &target, const T &msg)
 		{
 			target->Send<T>( msg );
 		}
@@ -106,12 +101,15 @@ namespace ModuleMsg
 	//
 	// Add Task Scheduler to Manager
 	//
-	struct AddTaskSchedulerToManager : AddToManager
+	struct AddTaskSchedulerToManager final : AddToManager
 	{
-		using Func_t			= Delegate< usize (Base::AsyncMessage &&) >;		// must be internally synchronized function
-
+	// types
+		using Func_t	= Delegate< usize (Base::AsyncMessage &&) >;		// must be internally synchronized function
+		
+	// variables
 		ReadOnce< Func_t >		asyncPushMsg;
-
+		
+	// methods
 		AddTaskSchedulerToManager (const ModulePtr &mod, Func_t &&func) :
 			AddToManager{ mod }, asyncPushMsg( RVREF(func) )
 		{}

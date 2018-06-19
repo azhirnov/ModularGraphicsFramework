@@ -31,7 +31,6 @@ namespace Scene
 	static constexpr OModID::type  ForwardRendererTechModuleID	= "s.fr-tech"_OModID;
 	static constexpr OModID::type  DeferredRendererTechModuleID	= "s.dr-tech"_OModID;
 	//static constexpr OModID::type  RayTracingTechModuleID		= "s.ray-tech"_OModID;
-	static constexpr OModID::type  FrameGraphModuleID			= "s.framegraph"_OModID;
 
 	// Model
 

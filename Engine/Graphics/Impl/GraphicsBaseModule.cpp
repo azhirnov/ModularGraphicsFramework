@@ -25,13 +25,13 @@ namespace Graphics
 	_OnManagerChanged
 =================================================
 */
-	bool GraphicsBaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
+	bool GraphicsBaseModule::_OnManagerChanged (const ModuleMsg::OnManagerChanged &msg)
 	{
-		if ( msg->newManager )
-			msg->newManager->Subscribe( this, &GraphicsBaseModule::_DeviceBeforeDestroy );
+		if ( msg.newManager )
+			msg.newManager->Subscribe( this, &GraphicsBaseModule::_DeviceBeforeDestroy );
 		
-		if ( msg->oldManager )
-			msg->oldManager->UnsubscribeAll( this );
+		if ( msg.oldManager )
+			msg.oldManager->UnsubscribeAll( this );
 
 		return true;
 	}
@@ -41,9 +41,9 @@ namespace Graphics
 	_DeviceBeforeDestroy
 =================================================
 */
-	bool GraphicsBaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool GraphicsBaseModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		return true;
 	}
 	

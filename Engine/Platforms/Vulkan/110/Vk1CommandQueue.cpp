@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -65,14 +65,14 @@ namespace PlatformVK
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Delete (const ModuleMsg::Delete &);
 		
-		bool _SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &);
-		bool _SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &);
+		bool _SubmitGraphicsQueueCommands (const GpuMsg::SubmitGraphicsQueueCommands &);
+		bool _SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &);
 
 	private:
-		bool _SubmitQueue (const GpuMsg::SubmitGraphicsQueueCommands *msg);
+		bool _SubmitQueue (const GpuMsg::SubmitGraphicsQueueCommands &msg);
 
 		bool _GetCmdBufferIds (const CmdBUffers_t &in, OUT VkCmdBuffers_t &out) const;
 	};
@@ -107,7 +107,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1CommandQueue::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1CommandQueue::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1CommandQueue::_SubmitGraphicsQueueCommands );
-		_SubscribeOnMsg( this, &Vk1CommandQueue::_SubmitComputeQueueCommands );\
+		_SubscribeOnMsg( this, &Vk1CommandQueue::_SubmitComputeQueueCommands );
 
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -128,7 +128,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1CommandQueue::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1CommandQueue::_Delete (const ModuleMsg::Delete &msg)
 	{
 		GetDevice()->DeviceWaitIdle();
 
@@ -140,7 +140,7 @@ namespace PlatformVK
 	_Link
 =================================================
 */
-	bool Vk1CommandQueue::_Link (const Message< ModuleMsg::Link > &msg)
+	bool Vk1CommandQueue::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -158,45 +158,45 @@ namespace PlatformVK
 	_SubmitQueue
 =================================================
 */
-	bool Vk1CommandQueue::_SubmitQueue (const GpuMsg::SubmitGraphicsQueueCommands *msg)
+	bool Vk1CommandQueue::_SubmitQueue (const GpuMsg::SubmitGraphicsQueueCommands &msg)
 	{
 		// commands
 		VkCmdBuffers_t	cmd_ids;
-		CHECK_ERR( _GetCmdBufferIds( msg->commands, OUT cmd_ids ) );
+		CHECK_ERR( _GetCmdBufferIds( msg.commands, OUT cmd_ids ) );
 
 		// wait semaphores
 		Semaphores_t		wait_semaphores;
 		PipelineStages_t	wait_stages;
 
-		FOR( i, msg->waitSemaphores )
+		FOR( i, msg.waitSemaphores )
 		{
-			Message< GpuMsg::GetVkSemaphore >	req_sem{ msg->waitSemaphores[i].first };
+			GpuMsg::GetVkSemaphore	req_sem{ msg.waitSemaphores[i].first };
 			_syncManager->Send( req_sem );
 
-			wait_semaphores.PushBack( *req_sem->result );
-			wait_stages.PushBack( PlatformVK::Vk1Enum( msg->waitSemaphores[i].second ) );
+			wait_semaphores.PushBack( *req_sem.result );
+			wait_stages.PushBack( PlatformVK::Vk1Enum( msg.waitSemaphores[i].second ) );
 		}
 
 		// signal semaphores
 		Semaphores_t	signal_semaphores;
 
-		FOR( i, msg->signalSemaphores )
+		FOR( i, msg.signalSemaphores )
 		{
-			Message< GpuMsg::GetVkSemaphore >	req_sem{ msg->signalSemaphores[i] };
+			GpuMsg::GetVkSemaphore	req_sem{ msg.signalSemaphores[i] };
 			_syncManager->Send( req_sem );
 
-			signal_semaphores.PushBack( *req_sem->result );
+			signal_semaphores.PushBack( *req_sem.result );
 		}
 		
 		// fence
 		VkFence		fence = VK_NULL_HANDLE;
 
-		if ( msg->fence != GpuFenceId::Unknown )
+		if ( msg.fence != GpuFenceId::Unknown )
 		{
-			Message< GpuMsg::GetVkFence >	req_fence{ msg->fence };
+			GpuMsg::GetVkFence	req_fence{ msg.fence };
 			CHECK( _syncManager->Send( req_fence ) );
 
-			fence = *req_fence->result;
+			fence = *req_fence.result;
 			VK_CALL( vkResetFences( GetDevice()->GetLogicalDevice(), 1, &fence ) );
 		}
 		
@@ -215,10 +215,10 @@ namespace PlatformVK
 
 		if ( vk_err == VK_ERROR_DEVICE_LOST )
 		{
-			_SendEvent< GpuMsg::DeviceLost >({});
+			_SendEvent( GpuMsg::DeviceLost{} );
 		}
 		
-		ModuleUtils::Send( msg->commands, Message< GpuMsg::SetCommandBufferState >{ GpuMsg::SetCommandBufferState::EState::Pending });
+		ModuleUtils::Send( msg.commands, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
 		return true;
 	}
 	
@@ -227,13 +227,13 @@ namespace PlatformVK
 	_SubmitGraphicsQueueCommands
 =================================================
 */
-	bool Vk1CommandQueue::_SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &msg)
+	bool Vk1CommandQueue::_SubmitGraphicsQueueCommands (const GpuMsg::SubmitGraphicsQueueCommands &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( GetDevice()->IsDeviceCreated() );
 		CHECK_ERR( GetDevice()->GetQueueFamily()[ EQueueFamily::Graphics ] );
 
-		return _SubmitQueue( msg.operator->() );
+		return _SubmitQueue( msg );
 	}
 	
 /*
@@ -241,13 +241,13 @@ namespace PlatformVK
 	_SubmitComputeQueueCommands
 =================================================
 */
-	bool Vk1CommandQueue::_SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &msg)
+	bool Vk1CommandQueue::_SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( GetDevice()->IsDeviceCreated() );
 		CHECK_ERR( GetDevice()->GetQueueFamily()[ EQueueFamily::Compute ] );
 		
-		return _SubmitQueue( msg.operator->() );
+		return _SubmitQueue( msg );
 	}
 	
 /*
@@ -255,18 +255,18 @@ namespace PlatformVK
 	_GetCmdBufferIds
 =================================================
 */
-	bool Vk1CommandQueue::_GetCmdBufferIds (const CmdBUffers_t &in, OUT VkCmdBuffers_t &out) const
+	bool Vk1CommandQueue::_GetCmdBufferIds (const CmdBUffers_t &inCommands, OUT VkCmdBuffers_t &out) const
 	{
-		FOR( i, in )
+		for (auto& cmd : inCommands)
 		{
-			CHECK_ERR( in[i] );
+			CHECK_ERR( cmd );
 			
-			const auto	cmd_res = GetResourceCache()->GetCommandBufferID( in[i] );
+			const auto	cmd_res = GetResourceCache()->GetCommandBufferID( cmd );
 
 			DEBUG_ONLY(
-				Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
-				in[i]->Send( req_descr );
-				CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
+				GpuMsg::GetCommandBufferDescription	req_descr;
+				cmd->Send( req_descr );
+				CHECK_ERR( req_descr.result and not req_descr.result->flags[ ECmdBufferCreate::Secondary ] );
 			);
 
 			out.PushBack( cmd_res.Get<0>() );

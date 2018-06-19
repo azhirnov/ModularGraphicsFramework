@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -65,30 +65,31 @@ namespace PlatformSW
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
-		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &);
+		bool _GetCommandBufferState (const GpuMsg::GetCommandBufferState &);
 		
-		bool _CmdBegin (const Message< GpuMsg::CmdBegin > &);
-		bool _CmdEnd (const Message< GpuMsg::CmdEnd > &);
-		bool _CmdBindComputePipeline (const Message< GpuMsg::CmdBindComputePipeline > &);
-		bool _CmdDispatch (const Message< GpuMsg::CmdDispatch > &);
-		bool _CmdExecute (const Message< GpuMsg::CmdExecute > &);
-		bool _CmdBindComputeResourceTable (const Message< GpuMsg::CmdBindComputeResourceTable > &);
-		bool _CmdCopyBuffer (const Message< GpuMsg::CmdCopyBuffer > &);
-		bool _CmdCopyImage (const Message< GpuMsg::CmdCopyImage > &);
-		bool _CmdCopyBufferToImage (const Message< GpuMsg::CmdCopyBufferToImage > &);
-		bool _CmdCopyImageToBuffer (const Message< GpuMsg::CmdCopyImageToBuffer > &);
-		bool _CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &);
-		bool _CmdFillBuffer (const Message< GpuMsg::CmdFillBuffer > &);
-		bool _CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &);
-		bool _CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &);
-		bool _CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &);
-		bool _CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &);
-		bool _CmdDebugMarker (const Message< GpuMsg::CmdDebugMarker > &);
-		bool _CmdPushDebugGroup (const Message< GpuMsg::CmdPushDebugGroup > &);
-		bool _CmdPopDebugGroup (const Message< GpuMsg::CmdPopDebugGroup > &);
+		bool _CmdBegin (const GpuMsg::CmdBegin &);
+		bool _CmdEnd (const GpuMsg::CmdEnd &);
+		bool _CmdBindComputePipeline (const GpuMsg::CmdBindComputePipeline &);
+		bool _CmdDispatch (const GpuMsg::CmdDispatch &);
+		bool _CmdDispatchIndirect (const GpuMsg::CmdDispatchIndirect &);
+		bool _CmdExecute (const GpuMsg::CmdExecute &);
+		bool _CmdBindComputeResourceTable (const GpuMsg::CmdBindComputeResourceTable &);
+		bool _CmdCopyBuffer (const GpuMsg::CmdCopyBuffer &);
+		bool _CmdCopyImage (const GpuMsg::CmdCopyImage &);
+		bool _CmdCopyBufferToImage (const GpuMsg::CmdCopyBufferToImage &);
+		bool _CmdCopyImageToBuffer (const GpuMsg::CmdCopyImageToBuffer &);
+		bool _CmdUpdateBuffer (const GpuMsg::CmdUpdateBuffer &);
+		bool _CmdFillBuffer (const GpuMsg::CmdFillBuffer &);
+		bool _CmdClearColorImage (const GpuMsg::CmdClearColorImage &);
+		bool _CmdPipelineBarrier (const GpuMsg::CmdPipelineBarrier &);
+		bool _CmdPushConstants (const GpuMsg::CmdPushConstants &);
+		bool _CmdPushNamedConstants (const GpuMsg::CmdPushNamedConstants &);
+		bool _CmdDebugMarker (const GpuMsg::CmdDebugMarker &);
+		bool _CmdPushDebugGroup (const GpuMsg::CmdPushDebugGroup &);
+		bool _CmdPopDebugGroup (const GpuMsg::CmdPopDebugGroup &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -127,6 +128,7 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdEnd );
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdBindComputePipeline );
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdDispatch );
+		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdDispatchIndirect );
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdExecute );
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdBindComputeResourceTable );
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdCopyBuffer );
@@ -162,7 +164,7 @@ namespace PlatformSW
 	_Compose
 =================================================
 */
-	bool SWCommandBuilder::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool SWCommandBuilder::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -177,7 +179,7 @@ namespace PlatformSW
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -186,7 +188,7 @@ namespace PlatformSW
 	_Delete
 =================================================
 */
-	bool SWCommandBuilder::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SWCommandBuilder::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_resources.Clear();
 		_commands.Clear();
@@ -201,9 +203,9 @@ namespace PlatformSW
 	_SetCommandBufferDependency
 =================================================
 */
-	bool SWCommandBuilder::_SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &msg)
+	bool SWCommandBuilder::_SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &msg)
 	{
-		_resources.AddArray( msg->resources.Get() );
+		_resources.AddArray( msg.resources.Get() );
 		return true;
 	}
 	
@@ -212,7 +214,7 @@ namespace PlatformSW
 	_GetCommandBufferState
 =================================================
 */
-	bool SWCommandBuilder::_GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &msg)
+	bool SWCommandBuilder::_GetCommandBufferState (const GpuMsg::GetCommandBufferState &msg)
 	{
 		if ( not _cmdBuffer )
 			return false;
@@ -225,7 +227,7 @@ namespace PlatformSW
 	_CmdBegin
 =================================================
 */
-	bool SWCommandBuilder::_CmdBegin (const Message< GpuMsg::CmdBegin > &msg)
+	bool SWCommandBuilder::_CmdBegin (const GpuMsg::CmdBegin &msg)
 	{
 		CHECK_ERR( not _cmdBuffer );
 		
@@ -233,11 +235,11 @@ namespace PlatformSW
 		_commands.Clear();		_commands.Reserve( 128 );
 		
 		// use target command buffer
-		if ( msg->targetCmdBuffer )
+		if ( msg.targetCmdBuffer )
 		{
-			CHECK_ERR( msg->targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
+			CHECK_ERR( msg.targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
 
-			_cmdBuffer = msg->targetCmdBuffer;
+			_cmdBuffer = msg.targetCmdBuffer;
 		}
 		else
 		// create new command buffer
@@ -246,20 +248,20 @@ namespace PlatformSW
 							SWCommandBufferModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
-								CommandBufferDescriptor{ msg->flags }
+								CommandBufferDescription{ msg.flags }
 							},
 							OUT _cmdBuffer ) );
 
 			CHECK_ERR( _Attach( "", _cmdBuffer ) );
 		}
 
-		ModuleUtils::Initialize( {_cmdBuffer}, this );
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Recording } );
+		ModuleUtils::Initialize({ _cmdBuffer });
+		_cmdBuffer->Send( GpuMsg::SetCommandBufferState{ ERecordingState::Recording });
 		
 		// check buffer state
-		Message< GpuMsg::GetCommandBufferState >	req_state;
-		SendTo( _cmdBuffer, req_state );
-		CHECK_ERR( req_state->result.Get() == ERecordingState::Recording );
+		GpuMsg::GetCommandBufferState	req_state;
+		_cmdBuffer->Send( req_state );
+		CHECK_ERR( *req_state.result == ERecordingState::Recording );
 
 		return true;
 	}
@@ -269,15 +271,15 @@ namespace PlatformSW
 	_GpuCmdEnd
 =================================================
 */
-	bool SWCommandBuilder::_CmdEnd (const Message< GpuMsg::CmdEnd > &msg)
+	bool SWCommandBuilder::_CmdEnd (const GpuMsg::CmdEnd &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		SendTo( _cmdBuffer, Message< GpuMsg::SetSWCommandBufferQueue >{ RVREF(_commands), RVREF(_bufferData), RVREF(_pushConstData) } );
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferDependency >{ RVREF(_resources) } );
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Executable } );
+		_cmdBuffer->Send( GpuMsg::SetSWCommandBufferQueue{ RVREF(_commands), RVREF(_bufferData), RVREF(_pushConstData) });
+		_cmdBuffer->Send( GpuMsg::SetCommandBufferDependency{ RVREF(_resources) });
+		_cmdBuffer->Send( GpuMsg::SetCommandBufferState{ ERecordingState::Executable });
 
-		msg->result.Set( _cmdBuffer );
+		msg.result.Set( _cmdBuffer );
 
 		_cmdBuffer = null;
 		_resources.Clear();
@@ -291,12 +293,12 @@ namespace PlatformSW
 	_CmdBindComputePipeline
 =================================================
 */
-	bool SWCommandBuilder::_CmdBindComputePipeline (const Message< GpuMsg::CmdBindComputePipeline > &msg)
+	bool SWCommandBuilder::_CmdBindComputePipeline (const GpuMsg::CmdBindComputePipeline &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->pipeline );
+		CHECK_ERR( msg.pipeline );
 
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return false;
 	}
 	
@@ -305,24 +307,37 @@ namespace PlatformSW
 	_CmdDispatch
 =================================================
 */
-	bool SWCommandBuilder::_CmdDispatch (const Message< GpuMsg::CmdDispatch > &msg)
+	bool SWCommandBuilder::_CmdDispatch (const GpuMsg::CmdDispatch &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
-
+	
+/*
+=================================================
+	_CmdDispatchIndirect
+=================================================
+*/
+	bool SWCommandBuilder::_CmdDispatchIndirect (const GpuMsg::CmdDispatchIndirect &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
+		return true;
+	}
+	
 /*
 =================================================
 	_CmdExecute
 =================================================
 */
-	bool SWCommandBuilder::_CmdExecute (const Message< GpuMsg::CmdExecute > &msg)
+	bool SWCommandBuilder::_CmdExecute (const GpuMsg::CmdExecute &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -331,11 +346,11 @@ namespace PlatformSW
 	_CmdBindComputeResourceTable
 =================================================
 */
-	bool SWCommandBuilder::_CmdBindComputeResourceTable (const Message< GpuMsg::CmdBindComputeResourceTable > &msg)
+	bool SWCommandBuilder::_CmdBindComputeResourceTable (const GpuMsg::CmdBindComputeResourceTable &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -344,12 +359,12 @@ namespace PlatformSW
 	_CmdCopyBuffer
 =================================================
 */
-	bool SWCommandBuilder::_CmdCopyBuffer (const Message< GpuMsg::CmdCopyBuffer > &msg)
+	bool SWCommandBuilder::_CmdCopyBuffer (const GpuMsg::CmdCopyBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->srcBuffer and msg->dstBuffer );
+		CHECK_ERR( msg.srcBuffer and msg.dstBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -358,12 +373,12 @@ namespace PlatformSW
 	_CmdCopyImage
 =================================================
 */
-	bool SWCommandBuilder::_CmdCopyImage (const Message< GpuMsg::CmdCopyImage > &msg)
+	bool SWCommandBuilder::_CmdCopyImage (const GpuMsg::CmdCopyImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->srcImage and msg->dstImage );
+		CHECK_ERR( msg.srcImage and msg.dstImage );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -372,12 +387,12 @@ namespace PlatformSW
 	_CmdCopyBufferToImage
 =================================================
 */
-	bool SWCommandBuilder::_CmdCopyBufferToImage (const Message< GpuMsg::CmdCopyBufferToImage > &msg)
+	bool SWCommandBuilder::_CmdCopyBufferToImage (const GpuMsg::CmdCopyBufferToImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->srcBuffer and msg->dstImage );
+		CHECK_ERR( msg.srcBuffer and msg.dstImage );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -386,12 +401,12 @@ namespace PlatformSW
 	_CmdCopyImageToBuffer
 =================================================
 */
-	bool SWCommandBuilder::_CmdCopyImageToBuffer (const Message< GpuMsg::CmdCopyImageToBuffer > &msg)
+	bool SWCommandBuilder::_CmdCopyImageToBuffer (const GpuMsg::CmdCopyImageToBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->srcImage and msg->dstBuffer );
+		CHECK_ERR( msg.srcImage and msg.dstBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -400,12 +415,12 @@ namespace PlatformSW
 	_GpuCmdUpdateBuffer
 =================================================
 */
-	bool SWCommandBuilder::_CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &msg)
+	bool SWCommandBuilder::_CmdUpdateBuffer (const GpuMsg::CmdUpdateBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < BytesU(SWDeviceProperties.limits.maxUpdateBufferSize) );
+		CHECK_ERR( msg.dstBuffer and not msg.data.Empty() and msg.data.Size() < BytesU(SWDeviceProperties.limits.maxUpdateBufferSize) );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -414,12 +429,12 @@ namespace PlatformSW
 	_CmdFillBuffer
 =================================================
 */
-	bool SWCommandBuilder::_CmdFillBuffer (const Message< GpuMsg::CmdFillBuffer > &msg)
+	bool SWCommandBuilder::_CmdFillBuffer (const GpuMsg::CmdFillBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->dstBuffer );
+		CHECK_ERR( msg.dstBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -428,12 +443,12 @@ namespace PlatformSW
 	_CmdClearColorImage
 =================================================
 */
-	bool SWCommandBuilder::_CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &msg)
+	bool SWCommandBuilder::_CmdClearColorImage (const GpuMsg::CmdClearColorImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->image );
+		CHECK_ERR( msg.image );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -442,11 +457,11 @@ namespace PlatformSW
 	_CmdPipelineBarrier
 =================================================
 */
-	bool SWCommandBuilder::_CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &msg)
+	bool SWCommandBuilder::_CmdPipelineBarrier (const GpuMsg::CmdPipelineBarrier &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -455,11 +470,11 @@ namespace PlatformSW
 	_CmdPushConstants
 =================================================
 */
-	bool SWCommandBuilder::_CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &msg)
+	bool SWCommandBuilder::_CmdPushConstants (const GpuMsg::CmdPushConstants &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -468,11 +483,11 @@ namespace PlatformSW
 	_CmdPushNamedConstants
 =================================================
 */
-	bool SWCommandBuilder::_CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &msg)
+	bool SWCommandBuilder::_CmdPushNamedConstants (const GpuMsg::CmdPushNamedConstants &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -481,11 +496,11 @@ namespace PlatformSW
 	_CmdDebugMarker
 =================================================
 */
-	bool SWCommandBuilder::_CmdDebugMarker (const Message< GpuMsg::CmdDebugMarker > &msg)
+	bool SWCommandBuilder::_CmdDebugMarker (const GpuMsg::CmdDebugMarker &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 
@@ -494,11 +509,11 @@ namespace PlatformSW
 	_CmdPushDebugGroup
 =================================================
 */
-	bool SWCommandBuilder::_CmdPushDebugGroup (const Message< GpuMsg::CmdPushDebugGroup > &msg)
+	bool SWCommandBuilder::_CmdPushDebugGroup (const GpuMsg::CmdPushDebugGroup &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 
@@ -507,11 +522,11 @@ namespace PlatformSW
 	_CmdPopDebugGroup
 =================================================
 */
-	bool SWCommandBuilder::_CmdPopDebugGroup (const Message< GpuMsg::CmdPopDebugGroup > &msg)
+	bool SWCommandBuilder::_CmdPopDebugGroup (const GpuMsg::CmdPopDebugGroup &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 

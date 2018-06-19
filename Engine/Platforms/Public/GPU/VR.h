@@ -72,13 +72,15 @@ namespace GpuMsg
 	//
 	// Get VR Device Info
 	//
-	struct GetVRDeviceInfo
+	struct GetVRDeviceInfo : _MessageBase_
 	{
+	// types
 		struct Info {
 			ModulePtr	renderPass;			// this is default render pass used for on screen rendering
 			uint		imageCount;			// count of images in swapchain
 		};
 
+	// variables
 		Out< Info >		result;
 	};
 
@@ -86,8 +88,9 @@ namespace GpuMsg
 	//
 	// Thread Begin / End VR Frame
 	//
-	struct ThreadBeginVRFrame
+	struct ThreadBeginVRFrame : _MessageBase_
 	{
+	// types
 		struct PerEye : CompileTime::FastCopyable
 		{
 		// variables
@@ -110,9 +113,11 @@ namespace GpuMsg
 			PerEye		rightEye;
 			uint		frameIindex	= 0;	// index of image in swapchain
 		};
-
+		
+	// variables
 		Out< Data >		result;
 	};
+
 
 	struct ThreadEndVRFrame : SubmitGraphicsQueueCommands
 	{};

@@ -4,7 +4,7 @@
 
 #ifdef PLATFORM_WINDOWS
 #	include "Engine/Platforms/Windows/WinMessages.h"
-#	include "Engine/STL/OS/Windows/WinHeader.h"
+#	include "Core/STL/OS/Windows/WinHeader.h"
 #endif
 
 #ifdef PLATFORM_SDL
@@ -30,8 +30,8 @@ namespace PlatformTools
 	ModulePtr  WindowHelper::FindWinAPIPlatform (GlobalSystemsRef gs)
 	{
 	#ifdef PLATFORM_WINDOWS
-		using MsgList_t		= CompileTime::TypeListFrom< Message<OSMsg::GetOSModules> >;
-		using EventList_t	= CompileTime::TypeListFrom< Message<OSMsg::OnWinPlatformCreated> >;
+		using MsgList_t		= ModuleMsg::MessageListFrom< OSMsg::GetOSModules >;
+		using EventList_t	= ModuleMsg::MessageListFrom< OSMsg::OnWinPlatformCreated >;
 
 		return gs->mainSystem->GetModuleByMsgEvent< MsgList_t, EventList_t >();
 	#else
@@ -47,8 +47,8 @@ namespace PlatformTools
 	ModulePtr  WindowHelper::FindSDLPlatform (GlobalSystemsRef gs)
 	{
 	#ifdef PLATFORM_SDL
-		using MsgList_t		= CompileTime::TypeListFrom< Message<OSMsg::GetOSModules> >;
-		using EventList_t	= CompileTime::TypeListFrom< Message<OSMsg::OnSDLPlatformCreated> >;
+		using MsgList_t		= ModuleMsg::MessageListFrom< OSMsg::GetOSModules >;
+		using EventList_t	= ModuleMsg::MessageListFrom< OSMsg::OnSDLPlatformCreated >;
 
 		return gs->mainSystem->GetModuleByMsgEvent< MsgList_t, EventList_t >();
 	#else
@@ -82,15 +82,15 @@ namespace PlatformTools
 	ModulePtr  WindowHelper::FindWinAPIWindow (GlobalSystemsRef gs)
 	{
 	#ifdef PLATFORM_WINDOWS
-		using MsgList_t		= CompileTime::TypeListFrom<
-								Message<OSMsg::WindowSetDescriptor>,
-								Message<OSMsg::GetWinWindowHandle>
+		using MsgList_t		= ModuleMsg::MessageListFrom<
+								OSMsg::WindowSetDescription,
+								OSMsg::GetWinWindowHandle
 							>;
-		using EventList_t	= CompileTime::TypeListFrom<
-								Message<OSMsg::WindowCreated>,
-								Message<OSMsg::WindowBeforeDestroy>,
-								Message<OSMsg::WindowAfterDestroy>,
-								Message<OSMsg::OnWinWindowRawMessage>
+		using EventList_t	= ModuleMsg::MessageListFrom<
+								OSMsg::WindowCreated,
+								OSMsg::WindowBeforeDestroy,
+								OSMsg::WindowAfterDestroy,
+								OSMsg::OnWinWindowRawMessage
 							>;
 
 		return gs->parallelThread->GetModuleByMsgEvent< MsgList_t, EventList_t >();
@@ -107,15 +107,15 @@ namespace PlatformTools
 	ModulePtr  WindowHelper::FindSDLWindow (GlobalSystemsRef gs)
 	{
 	#ifdef PLATFORM_SDL
-		using MsgList_t		= CompileTime::TypeListFrom<
-								Message<OSMsg::WindowSetDescriptor>,
-								Message<OSMsg::GetSDLWindowHandle>
+		using MsgList_t		= ModuleMsg::MessageListFrom<
+								OSMsg::WindowSetDescription,
+								OSMsg::GetSDLWindowHandle
 							>;
-		using EventList_t	= CompileTime::TypeListFrom<
-								Message<OSMsg::WindowCreated>,
-								Message<OSMsg::WindowBeforeDestroy>,
-								Message<OSMsg::WindowAfterDestroy>,
-								Message<OSMsg::OnSDLWindowRawMessage>
+		using EventList_t	= ModuleMsg::MessageListFrom<
+								OSMsg::WindowCreated,
+								OSMsg::WindowBeforeDestroy,
+								OSMsg::WindowAfterDestroy,
+								OSMsg::OnSDLWindowRawMessage
 							>;
 
 		return gs->parallelThread->GetModuleByMsgEvent< MsgList_t, EventList_t >();
@@ -141,13 +141,13 @@ namespace PlatformTools
 */
 	ModulePtr  WindowHelper::FindWindowInAttachment (const ModulePtr &mod)
 	{
-		using MsgList_t		= CompileTime::TypeListFrom<
-								Message<OSMsg::WindowSetDescriptor>
+		using MsgList_t		= ModuleMsg::MessageListFrom<
+								OSMsg::WindowSetDescription
 							>;
-		using EventList_t	= CompileTime::TypeListFrom<
-								Message<OSMsg::WindowCreated>,
-								Message<OSMsg::WindowBeforeDestroy>,
-								Message<OSMsg::WindowAfterDestroy>
+		using EventList_t	= ModuleMsg::MessageListFrom<
+								OSMsg::WindowCreated,
+								OSMsg::WindowBeforeDestroy,
+								OSMsg::WindowAfterDestroy
 							>;
 
 		return mod->GetModuleByMsgEvent< MsgList_t, EventList_t >();
@@ -173,17 +173,17 @@ namespace PlatformTools
 	bool WindowHelper::GetWindowHandle (const ModulePtr &window, const Function<bool (const WinAPIWindow &)> &func)
 	{
 	#ifdef PLATFORM_SDL
-		using SDLMsgList_t	= CompileTime::TypeListFrom< Message<OSMsg::GetSDLWindowHandle> >;
+		using SDLMsgList_t	= ModuleMsg::MessageListFrom< OSMsg::GetSDLWindowHandle >;
 
 		if ( window->GetSupportedMessages().HasAllTypes< SDLMsgList_t >() )
 		{
-			Message<OSMsg::GetSDLWindowHandle>	req_wnd;
+			OSMsg::GetSDLWindowHandle	req_wnd;
 			CHECK( window->Send( req_wnd ) );
 
 			SDL_SysWMinfo	info = {};
 			SDL_VERSION( &info.version );
 
-			CHECK_ERR( SDL_GetWindowWMInfo( *req_wnd->result, OUT &info ) == SDL_TRUE );
+			CHECK_ERR( SDL_GetWindowWMInfo( *req_wnd.result, OUT &info ) == SDL_TRUE );
 			CHECK_ERR( info.subsystem == SDL_SYSWM_WINDOWS );
 
 			CHECK_ERR( func( WinAPIWindow( info.info.win.hinstance, info.info.win.window ) ) );
@@ -191,16 +191,16 @@ namespace PlatformTools
 		}
 	#endif
 		
-		using WinMsgList_t	= CompileTime::TypeListFrom< Message<OSMsg::GetWinWindowHandle> >;
+		using WinMsgList_t	= ModuleMsg::MessageListFrom< OSMsg::GetWinWindowHandle >;
 		
 		if ( window->GetSupportedMessages().HasAllTypes< WinMsgList_t >() )
 		{
-			Message<OSMsg::GetWinWindowHandle>	req_wnd;
+			OSMsg::GetWinWindowHandle	req_wnd;
 			CHECK( window->Send( req_wnd ) );
 
-			void* inst = ReferenceCast<void*>(::GetWindowLongPtrA( req_wnd->result->Get<HWND>(), GWLP_HINSTANCE ));
+			void* inst = ReferenceCast<void*>(::GetWindowLongPtrA( req_wnd.result->Get<HWND>(), GWLP_HINSTANCE ));
 
-			CHECK_ERR( func( WinAPIWindow( inst, req_wnd->result->Get<HWND>() ) ) );
+			CHECK_ERR( func( WinAPIWindow( inst, req_wnd.result->Get<HWND>() ) ) );
 			return true;
 		}
 
@@ -229,11 +229,11 @@ namespace PlatformTools
 	bool WindowHelper::GetWindowHandle (const ModulePtr &window, const Function<bool (const AndroidWindow &)> &func)
 	{
 	#ifdef PLATFORM_SDL
-		using SDLMsgList_t	= CompileTime::TypeListFrom< Message<OSMsg::GetSDLWindowHandle> >;
+		using SDLMsgList_t	= CompileTime::TypeListFrom< OSMsg::GetSDLWindowHandle> >;
 
 		if ( window->GetSupportedMessages().HasAllTypes< SDLMsgList_t >() )
 		{
-			Message<OSMsg::GetSDLWindowHandle>	req_wnd;
+			OSMsg::GetSDLWindowHandle>	req_wnd;
 			CHECK( window->Send( req_wnd ) );
 
 			SDL_SysWMinfo	info = {};

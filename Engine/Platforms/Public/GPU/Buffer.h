@@ -12,19 +12,19 @@ namespace Platforms
 {
 
 	//
-	// Buffer Descriptor
+	// Buffer Description
 	//
 
-	struct BufferDescriptor : CompileTime::PODStruct
+	struct BufferDescription : CompileTime::PODStruct
 	{
 	// variables
 		BytesUL				size;
 		EBufferUsage::bits	usage;
 
 	// methods
-		BufferDescriptor (GX_DEFCTOR) {}
-		BufferDescriptor (Bytes<uint> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
-		BufferDescriptor (Bytes<ulong> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
+		BufferDescription (GX_DEFCTOR) {}
+		BufferDescription (Bytes<uint> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
+		BufferDescription (Bytes<ulong> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
 	};
 
 }	// Platforms
@@ -39,27 +39,27 @@ namespace CreateInfo
 	struct GpuBuffer
 	{
 	// types
-		using BufferDescriptor	= Platforms::BufferDescriptor;
+		using BufferDescription	= Platforms::BufferDescription;
 		using EGpuMemory		= Platforms::EGpuMemory;
 		using EMemoryAccess		= Platforms::EMemoryAccess;
 
 	// variables
 		ModulePtr				gpuThread;			// can be null
 		ModulePtr				memManager;			// can be null
-		BufferDescriptor		descr;
+		BufferDescription		descr;
 		EGpuMemory::bits		memFlags;
 		EMemoryAccess::bits		access;
 		bool					allocMem = true;	// if true then you don't need to attach memory module to buffer
 
 	// methods
-		GpuBuffer (GX_DEFCTOR) {}
+		GpuBuffer () {}
 
-		explicit GpuBuffer (const BufferDescriptor &descr) : descr{descr}, allocMem{false} {}
+		explicit GpuBuffer (const BufferDescription &descr) : descr{descr}, allocMem{false} {}
 
-		GpuBuffer (const BufferDescriptor &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
+		GpuBuffer (const BufferDescription &descr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
 			descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
 
-		GpuBuffer (const BufferDescriptor &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
+		GpuBuffer (const BufferDescription &descr, const ModulePtr &memMngr, EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
 			memManager{memMngr}, descr{descr}, memFlags{memFlags}, access{access}, allocMem{true} {}
 	};
 
@@ -70,16 +70,20 @@ namespace GpuMsg
 {
 
 	//
-	// Get Buffer Descriptor
+	// Get Buffer Description
 	//
-	struct GetBufferDescriptor
+	struct GetBufferDescription : _MessageBase_
 	{
-		Out< Platforms::BufferDescriptor >	result;
+		Out< Platforms::BufferDescription >	result;
 	};
 
-	struct SetBufferDescriptor
+	struct SetBufferDescription : _MessageBase_
 	{
-		Platforms::BufferDescriptor			descr;
+	// variables
+		Platforms::BufferDescription			descr;
+
+	// methods
+		explicit SetBufferDescription (const Platforms::BufferDescription &descr) : descr{descr} {}
 	};
 
 

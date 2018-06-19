@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/OpenGL/450/gl4.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinLibrary.h"
-#include "Engine/STL/ThreadSafe/Singleton.h"
+#include "Core/STL/ThreadSafe/Singleton.h"
 
 #ifdef GRAPHICS_API_OPENGL
 

@@ -201,16 +201,16 @@ namespace Platforms
 */
 	static ModulePtr CreateDefaultWindow (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::Window &ci)
 	{
-		ModulePtr	platform = gs->mainSystem->GetModuleByMsg< CompileTime::TypeListFrom< Message<OSMsg::GetOSModules> > >();
+		ModulePtr	platform = gs->mainSystem->GetModuleByMsg< ModuleMsg::MessageListFrom< OSMsg::GetOSModules > >();
 
 		if ( not platform )
 			return null;
 
-		Message<OSMsg::GetOSModules>	req_ids;
+		OSMsg::GetOSModules		req_ids;
 		CHECK( platform->Send( req_ids ) );
 
 		ModulePtr	window;
-		CHECK_ERR( gs->modulesFactory->Create( req_ids->result->window, gs, ci, OUT window ) );
+		CHECK_ERR( gs->modulesFactory->Create( req_ids.result->window, gs, ci, OUT window ) );
 
 		return window;
 	}
@@ -254,16 +254,17 @@ namespace Platforms
 */
 	static ModulePtr CreateDefaultGpuThread (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci)
 	{
-		auto		ctx		= gs->mainSystem->GetModuleByMsg< CompileTime::TypeListFrom< Message<GpuMsg::GetGraphicsModules> > >();
+		auto		ctx		= gs->mainSystem->GetModuleByMsg< ModuleMsg::MessageListFrom< GpuMsg::GetGraphicsModules > >();
 		auto		factory	= gs->modulesFactory;
 		ModulePtr	mod;
 
 		if ( not ctx )
 			return null;
 
-		Message< GpuMsg::GetGraphicsModules >	req_ids;
+		GpuMsg::GetGraphicsModules	req_ids;
 		CHECK( ctx->Send( req_ids ) );
-		CHECK_ERR( factory->Create( req_ids->graphics->thread, gs, ci, OUT mod ) );
+
+		CHECK_ERR( factory->Create( req_ids.graphics->thread, gs, ci, OUT mod ) );
 		return mod;
 	}
 	
@@ -305,12 +306,12 @@ namespace Platforms
 
 		CHECK_ERR( gpuThread );
 
-		Message< GpuMsg::GetGraphicsModules >	req_ids;
+		GpuMsg::GetGraphicsModules	req_ids;
 		gpuThread->Send( req_ids );
 
-		CHECK_ERR( req_ids->compute or req_ids->graphics );
+		CHECK_ERR( req_ids.compute or req_ids.graphics );
 
-		return cb( *req_ids );
+		return cb( req_ids );
 	}
 
 /*

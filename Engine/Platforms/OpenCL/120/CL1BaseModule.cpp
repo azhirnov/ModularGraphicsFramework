@@ -29,11 +29,11 @@ namespace PlatformCL
 	_OnManagerChanged
 =================================================
 */
-	bool CL1BaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
+	bool CL1BaseModule::_OnManagerChanged (const ModuleMsg::OnManagerChanged &msg)
 	{
-		if ( msg->oldManager )
+		if ( msg.oldManager )
 		{
-			msg->oldManager->UnsubscribeAll( this );
+			msg.oldManager->UnsubscribeAll( this );
 			
 			if ( _clResourceCache )
 				_clResourceCache->Erase( this );
@@ -42,15 +42,15 @@ namespace PlatformCL
 		_clDevice			= null;
 		_clResourceCache	= null;
 
-		if ( msg->newManager )
+		if ( msg.newManager )
 		{
-			msg->newManager->Subscribe( this, &CL1BaseModule::_DeviceBeforeDestroy );
+			msg.newManager->Subscribe( this, &CL1BaseModule::_DeviceBeforeDestroy );
 
-			Message< GpuMsg::GetCLPrivateClasses >	req_classes;
-			msg->newManager->Send( req_classes );
+			GpuMsg::GetCLPrivateClasses		req_classes;
+			msg.newManager->Send( req_classes );
 
-			_clDevice			= req_classes->result->device;
-			_clResourceCache	= req_classes->result->resourceCache;
+			_clDevice			= req_classes.result->device;
+			_clResourceCache	= req_classes.result->resourceCache;
 		}
 
 		return true;
@@ -61,9 +61,9 @@ namespace PlatformCL
 	_DeviceBeforeDestroy
 =================================================
 */
-	bool CL1BaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool CL1BaseModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		
 		if ( _clResourceCache )
 			_clResourceCache->Erase( this );
@@ -78,7 +78,7 @@ namespace PlatformCL
 	_DeviceDeleted
 =================================================
 */
-	bool CL1BaseModule::_DeviceDeleted (const Message< ModuleMsg::Delete > &msg)
+	bool CL1BaseModule::_DeviceDeleted (const ModuleMsg::Delete &msg)
 	{
 		Send( msg );
 		
@@ -95,7 +95,7 @@ namespace PlatformCL
 	_GetDeviceInfo
 =================================================
 */
-	bool CL1BaseModule::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
+	bool CL1BaseModule::_GetDeviceInfo (const GpuMsg::GetDeviceInfo &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}
@@ -105,7 +105,7 @@ namespace PlatformCL
 	_GetCLDeviceInfo
 =================================================
 */
-	bool CL1BaseModule::_GetCLDeviceInfo (const Message< GpuMsg::GetCLDeviceInfo > &msg)
+	bool CL1BaseModule::_GetCLDeviceInfo (const GpuMsg::GetCLDeviceInfo &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}
@@ -115,7 +115,7 @@ namespace PlatformCL
 	_GetCLPrivateClasses
 =================================================
 */
-	bool CL1BaseModule::_GetCLPrivateClasses (const Message< GpuMsg::GetCLPrivateClasses > &msg)
+	bool CL1BaseModule::_GetCLPrivateClasses (const GpuMsg::GetCLPrivateClasses &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}

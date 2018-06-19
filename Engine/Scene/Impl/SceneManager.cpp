@@ -69,11 +69,11 @@ namespace Scene
 
 	// message handlers
 	protected:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -125,7 +125,7 @@ namespace Scene
 	_Link
 =================================================
 */
-	bool SceneManager::_Link (const Message< ModuleMsg::Link > &msg)
+	bool SceneManager::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -140,28 +140,28 @@ namespace Scene
 		if ( not platform )
 		{
 			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( 0, GlobalSystems(), CreateInfo::Platform{}, OUT platform ) );
-			GlobalSystems()->mainSystem->Send< ModuleMsg::AttachModule >({ platform });
+			GlobalSystems()->mainSystem->Send( ModuleMsg::AttachModule{ platform });
 			platform->Send( msg );
 		}
 
 		if ( not input_mngr )
 		{
 			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( InputManagerModuleID, GlobalSystems(), CreateInfo::InputManager{}, OUT input_mngr ) );
-			GlobalSystems()->mainSystem->Send< ModuleMsg::AttachModule >({ input_mngr });
+			GlobalSystems()->mainSystem->Send( ModuleMsg::AttachModule{ input_mngr });
 			input_mngr->Send( msg );
 		}
 
 		if ( not data_mngr )
 		{
 			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( DataProviderManagerModuleID, GlobalSystems(), CreateInfo::DataProviderManager{}, OUT data_mngr ) );
-			GlobalSystems()->mainSystem->Send< ModuleMsg::AttachModule >({ data_mngr });
+			GlobalSystems()->mainSystem->Send( ModuleMsg::AttachModule{ data_mngr });
 			data_mngr->Send( msg );
 		}
 
 		if ( not gpu_context )
 		{
 			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( 0, GlobalSystems(), CreateInfo::GpuContext{ _settings }, OUT gpu_context ) );
-			GlobalSystems()->mainSystem->Send< ModuleMsg::AttachModule >({ gpu_context });
+			GlobalSystems()->mainSystem->Send( ModuleMsg::AttachModule{ gpu_context });
 			gpu_context->Send( msg );
 		}
 		
@@ -172,11 +172,11 @@ namespace Scene
 
 		if ( not window )
 		{
-			Message< OSMsg::GetOSModules >	req_ids;
+			OSMsg::GetOSModules		req_ids;
 			platform->Send( req_ids );
 
-			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( req_ids->result->window, GlobalSystems(), CreateInfo::Window{}, OUT window ) );
-			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ window });
+			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( req_ids.result->window, GlobalSystems(), CreateInfo::Window{}, OUT window ) );
+			GlobalSystems()->parallelThread->Send( ModuleMsg::AttachModule{ window });
 			window->Send( msg );
 		}
 		
@@ -185,7 +185,7 @@ namespace Scene
 		if ( not input_thread )
 		{
 			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( InputThreadModuleID, GlobalSystems(), CreateInfo::InputThread{}, OUT input_thread ) );
-			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ input_thread });
+			GlobalSystems()->parallelThread->Send( ModuleMsg::AttachModule{ input_thread });
 			input_thread->Send( msg );
 		}
 		
@@ -197,7 +197,7 @@ namespace Scene
 																GlobalSystems(),
 																CreateInfo::VRThread{ gpu_thread, _vrSettings.eyeTextureDimension, _vrSettings.layered },
 																OUT vr_thread ) );
-			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ vr_thread });
+			GlobalSystems()->parallelThread->Send( ModuleMsg::AttachModule{ vr_thread });
 			vr_thread->Send( msg );
 			gpu_thread = vr_thread;
 			#endif
@@ -205,11 +205,11 @@ namespace Scene
 
 		if ( not gpu_thread )
 		{
-			Message< GpuMsg::GetGraphicsModules >	req_ids;
+			GpuMsg::GetGraphicsModules	req_ids;
 			gpu_context->Send( req_ids );
 
-			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( req_ids->graphics->thread, GlobalSystems(), CreateInfo::GpuThread{ _settings, gpu_context }, OUT gpu_thread ) );
-			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ gpu_thread });
+			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( req_ids.graphics->thread, GlobalSystems(), CreateInfo::GpuThread{ _settings, gpu_context }, OUT gpu_thread ) );
+			GlobalSystems()->parallelThread->Send( ModuleMsg::AttachModule{ gpu_thread });
 			gpu_thread->Send( msg );
 		}
 
@@ -218,21 +218,21 @@ namespace Scene
 		
 		if ( not key_input )
 		{
-			Message< OSMsg::GetOSModules >	req_ids;
+			OSMsg::GetOSModules		req_ids;
 			platform->Send( req_ids );
 
-			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( req_ids->result->keyInput, GlobalSystems(), CreateInfo::RawInputHandler{}, OUT key_input ) );
-			window->Send< ModuleMsg::AttachModule >({ key_input });
+			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( req_ids.result->keyInput, GlobalSystems(), CreateInfo::RawInputHandler{}, OUT key_input ) );
+			window->Send( ModuleMsg::AttachModule{ key_input });
 			key_input->Send( msg );
 		}
 
 		if ( not mouse_input )
 		{
-			Message< OSMsg::GetOSModules >	req_ids;
+			OSMsg::GetOSModules		req_ids;
 			platform->Send( req_ids );
 
-			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( req_ids->result->mouseInput, GlobalSystems(), CreateInfo::RawInputHandler{}, OUT mouse_input ) );
-			window->Send< ModuleMsg::AttachModule >({ mouse_input });
+			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( req_ids.result->mouseInput, GlobalSystems(), CreateInfo::RawInputHandler{}, OUT mouse_input ) );
+			window->Send( ModuleMsg::AttachModule{ mouse_input });
 			mouse_input->Send( msg );
 		}
 
@@ -244,28 +244,28 @@ namespace Scene
 		if ( not scene )
 		{
 			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( SceneModuleID, GlobalSystems(), CreateInfo::SceneMain{}, OUT scene ) );
-			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ scene });
+			GlobalSystems()->parallelThread->Send( ModuleMsg::AttachModule{ scene });
 			scene->Send( msg );
 		}
 
 		if ( not renderer )
 		{
 			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( SceneRendererModuleID, GlobalSystems(), CreateInfo::SceneRenderer{}, OUT renderer ) );
-			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ renderer });
+			GlobalSystems()->parallelThread->Send( ModuleMsg::AttachModule{ renderer });
 			renderer->Send( msg );
 		}
 		
 		if ( not physics )
 		{
 			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( ScenePhysicsModuleID, GlobalSystems(), CreateInfo::ScenePhysics{}, OUT physics ) );
-			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ physics });
+			GlobalSystems()->parallelThread->Send( ModuleMsg::AttachModule{ physics });
 			physics->Send( msg );
 		}
 
 		if ( not logic )
 		{
 			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( SceneLogicModuleID, GlobalSystems(), CreateInfo::SceneLogic{}, OUT logic ) );
-			GlobalSystems()->parallelThread->Send< ModuleMsg::AttachModule >({ logic });
+			GlobalSystems()->parallelThread->Send( ModuleMsg::AttachModule{ logic });
 			logic->Send( msg );
 		}
 
@@ -280,7 +280,7 @@ namespace Scene
 	_Compose
 =================================================
 */
-	bool SceneManager::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool SceneManager::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -297,7 +297,7 @@ namespace Scene
 	_Delete
 =================================================
 */
-	bool SceneManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SceneManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		//TODO( "" );
 		return Module::_Delete_Impl( msg );
@@ -308,13 +308,13 @@ namespace Scene
 	_AddToManager
 =================================================
 */
-	bool SceneManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool SceneManager::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
-		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetThreadID() == GetThreadID() );	// must be in single thread
-		ASSERT( not _threads.IsExist( msg->module ) );
+		CHECK_ERR( msg.module );
+		CHECK_ERR( msg.module->GetThreadID() == GetThreadID() );	// must be in single thread
+		ASSERT( not _threads.IsExist( msg.module ) );
 
-		_threads.Add( msg->module );
+		_threads.Add( msg.module );
 		return true;
 	}
 	
@@ -323,11 +323,11 @@ namespace Scene
 	_RemoveFromManager
 =================================================
 */
-	bool SceneManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool SceneManager::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
-		CHECK_ERR( msg->module );
+		CHECK_ERR( msg.module );
 
-		ModulePtr	module = msg->module.Lock();
+		ModulePtr	module = msg.module.Lock();
 
 		if ( not module )
 			return false;

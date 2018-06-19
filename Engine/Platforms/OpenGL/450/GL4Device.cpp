@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -320,14 +320,14 @@ namespace PlatformGL
 		if ( _vulkanCompatibility )
 		{
 			auto fb = New< GL4FlippedSystemFramebuffer >( GlobalSystems() );
-			fb->Send< ModuleMsg::AttachModule >({ _renderPass });
+			fb->Send( ModuleMsg::AttachModule{ _renderPass });
 			CHECK_ERR( fb->CreateFramebuffer( _surfaceSize, _colorPixelFormat, _depthStencilPixelFormat, _samples ) );
 			_framebuffer = fb;
 		}
 		else
 		{
 			auto fb = New< GL4SystemFramebuffer >( GlobalSystems() );
-			fb->Send< ModuleMsg::AttachModule >({ _renderPass });
+			fb->Send( ModuleMsg::AttachModule{ _renderPass });
 			CHECK_ERR( fb->CreateFramebuffer( _surfaceSize, _colorPixelFormat, _depthStencilPixelFormat, _samples ) );
 			_framebuffer = fb;
 		}

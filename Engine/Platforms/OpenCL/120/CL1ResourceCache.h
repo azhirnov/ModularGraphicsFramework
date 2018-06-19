@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -11,7 +11,7 @@
 #include "Engine/Platforms/Public/GPU/Buffer.h"
 #include "Engine/Platforms/Public/GPU/Pipeline.h"
 #include "Engine/Base/Modules/MessageCache.h"
-#include "Engine/STL/CompileTime/CompileTimeDebug.h"
+#include "Core/STL/CompileTime/CompileTimeDebug.h"
 
 namespace Engine
 {
@@ -26,9 +26,9 @@ namespace PlatformCL
 	{
 	// types
 	private:
-		using ImageCache_t		= MessageCache< GpuMsg::GetCLImageID, GpuMsg::GetImageDescriptor >;
-		using BufferCache_t		= MessageCache< GpuMsg::GetCLBufferID, GpuMsg::GetBufferDescriptor >;
-		using PipelineCache_t	= MessageCache< GpuMsg::GetCLComputePipelineID, GpuMsg::GetComputePipelineDescriptor >;
+		using ImageCache_t		= MessageCache< GpuMsg::GetCLImageID, GpuMsg::GetImageDescription >;
+		using BufferCache_t		= MessageCache< GpuMsg::GetCLBufferID, GpuMsg::GetBufferDescription >;
+		using PipelineCache_t	= MessageCache< GpuMsg::GetCLComputePipelineID, GpuMsg::GetComputePipelineDescription >;
 
 
 	// variables

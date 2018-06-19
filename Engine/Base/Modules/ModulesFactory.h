@@ -79,12 +79,6 @@ namespace Base
 			ConstructorID () {}
 			ConstructorID (UntypedID_t moduleID, TypeId createInfoType) : moduleID(moduleID), createInfoType(createInfoType) {}
 
-			ConstructorID (ConstructorID &&) = default;
-			ConstructorID (const ConstructorID &) = default;
-
-			ConstructorID& operator = (ConstructorID &&) = default;
-			ConstructorID& operator = (const ConstructorID &) = default;
-
 			bool operator == (const ConstructorID &right) const;
 			bool operator >  (const ConstructorID &right) const;
 		};
@@ -252,7 +246,7 @@ namespace Base
 		ModulePtr	unit;
 		CHECK_ERR( GlobalSystems()->modulesFactory->Create( id, GlobalSystems(), createInfo, OUT unit ) );
 
-		CHECK_ERR( _SendMsg< ModuleMsg::AttachModule >({ name, unit }) );
+		CHECK_ERR( _SendMsg( ModuleMsg::AttachModule{ name, unit }) );
 		return true;
 	}
 

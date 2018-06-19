@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Public/Common.h"
-#include "Engine/STL/Dimensions/PowerOfTwoValue.h"
+#include "Core/STL/Dimensions/PowerOfTwoValue.h"
 
 namespace Engine
 {

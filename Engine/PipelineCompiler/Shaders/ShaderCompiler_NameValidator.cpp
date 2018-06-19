@@ -454,6 +454,14 @@ namespace PipelineCompiler
 		{
 			"rsvd_" >> name;
 		}
+		else
+		// prefix '_' is reserved, replace by '__' prefix
+		if ( name.Length() > 1	and
+			 name[0] == '_'		and
+			 name[1] != '_' )
+		{
+			'_' >> name;
+		}
 	}
 	
 /*

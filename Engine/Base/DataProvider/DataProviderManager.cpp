@@ -51,10 +51,10 @@ namespace Base
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
-		bool _GetDataProviderForURI (const Message< DSMsg::GetDataProviderForURI > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
+		bool _GetDataProviderForURI (const DSMsg::GetDataProviderForURI &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ namespace Base
 	constructor
 =================================================
 */
-	DataProviderManager::DataProviderManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::DataProviderManager &ci) :
+	DataProviderManager::DataProviderManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::DataProviderManager &) :
 		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
 	{
 		SetDebugName( "DataProviderManager" );
@@ -105,7 +105,7 @@ namespace Base
 	_Delete
 =================================================
 */
-	bool DataProviderManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool DataProviderManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		return Module::_Delete_Impl( msg );
 	}
@@ -115,14 +115,14 @@ namespace Base
 	_AddToManager
 =================================================
 */
-	bool DataProviderManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool DataProviderManager::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
-		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetSupportedMessages().HasAllTypes< DataProviderMsgList_t >() );
-		//CHECK_ERR( msg->module->GetSupportedEvents().HasAllTypes< DataProviderEventList_t >() );
-		ASSERT( not _providers.IsExist( msg->module ) );
+		CHECK_ERR( msg.module );
+		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< DataProviderMsgList_t >() );
+		//CHECK_ERR( msg.module->GetSupportedEvents().HasAllTypes< DataProviderEventList_t >() );
+		ASSERT( not _providers.IsExist( msg.module ) );
 
-		_providers.Add( msg->module );
+		_providers.Add( msg.module );
 		return true;
 	}
 	
@@ -131,11 +131,11 @@ namespace Base
 	_RemoveFromManager
 =================================================
 */
-	bool DataProviderManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool DataProviderManager::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
-		CHECK_ERR( msg->module );
+		CHECK_ERR( msg.module );
 
-		ModulePtr	module = msg->module.Lock();
+		ModulePtr	module = msg.module.Lock();
 
 		if ( not module )
 			return false;
@@ -151,16 +151,16 @@ namespace Base
 	_GetDataProviderForURI
 =================================================
 */
-	bool DataProviderManager::_GetDataProviderForURI (const Message< DSMsg::GetDataProviderForURI > &msg)
+	bool DataProviderManager::_GetDataProviderForURI (const DSMsg::GetDataProviderForURI &msg)
 	{
 		for (auto& provider : _providers)
 		{
-			Message< DSMsg::IsUriExists >	is_exists{ msg->uri };
+			DSMsg::IsUriExists	is_exists{ msg.uri };
 			provider->Send( is_exists );
 
-			if ( is_exists->result.Get(false) )
+			if ( is_exists.result.Get(false) )
 			{
-				msg->result.Set( provider );
+				msg.result.Set( provider );
 				break;
 			}
 		}

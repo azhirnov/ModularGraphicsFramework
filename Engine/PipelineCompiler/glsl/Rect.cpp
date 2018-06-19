@@ -12,10 +12,6 @@ namespace glsl_vfs
 	TODO: generate RectF, RectD, RectI, RectU...
 	
 	license: free
-
-	depends of:
-		Common/Cmp
-		Math/Math
 */
 
 
@@ -33,6 +29,8 @@ bool	Rect_Intersects (const Rect left, const Rect right);
 
 //-----------------------------------------------------------------------------
 
+#include <Common/Cmp.glsl>
+#include <Math/Math.glsl>
 
 /*
 =================================================

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 

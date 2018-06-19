@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -23,7 +23,7 @@ namespace PlatformSW
 	// types
 	private:
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetSamplerDescriptor
+											GpuMsg::GetSamplerDescription
 										> >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;
@@ -37,7 +37,7 @@ namespace PlatformSW
 
 	// variables
 	private:
-		SamplerDescriptor	_descr;
+		SamplerDescription	_descr;
 
 
 	// methods
@@ -45,14 +45,14 @@ namespace PlatformSW
 		SWSampler (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
 		~SWSampler ();
 
-		SamplerDescriptor const&	GetDescriptor ()	const	{ return _descr; }
+		SamplerDescription const&	GetDescription ()	const	{ return _descr; }
 
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _GetSamplerDescription (const GpuMsg::GetSamplerDescription &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -82,7 +82,7 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWSampler::_Compose );
 		_SubscribeOnMsg( this, &SWSampler::_Delete );
 		_SubscribeOnMsg( this, &SWSampler::_OnManagerChanged );
-		_SubscribeOnMsg( this, &SWSampler::_GetSamplerDescriptor );
+		_SubscribeOnMsg( this, &SWSampler::_GetSamplerDescription );
 		_SubscribeOnMsg( this, &SWSampler::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &SWSampler::_GetSWDeviceInfo );
 		_SubscribeOnMsg( this, &SWSampler::_GetSWPrivateClasses );
@@ -106,7 +106,7 @@ namespace PlatformSW
 	_Compose
 =================================================
 */
-	bool SWSampler::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool SWSampler::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already linked
@@ -120,7 +120,7 @@ namespace PlatformSW
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -129,7 +129,7 @@ namespace PlatformSW
 	_Delete
 =================================================
 */
-	bool SWSampler::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SWSampler::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_descr = Uninitialized;
 
@@ -138,12 +138,12 @@ namespace PlatformSW
 
 /*
 =================================================
-	_GetSamplerDescriptor
+	_GetSamplerDescription
 =================================================
 */
-	bool SWSampler::_GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &msg)
+	bool SWSampler::_GetSamplerDescription (const GpuMsg::GetSamplerDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 //-----------------------------------------------------------------------------
@@ -155,8 +155,8 @@ namespace PlatformSW
 	SearchableSampler
 =================================================
 */
-	inline bool SWSamplerCache::SearchableSampler::operator == (const SearchableSampler &right) const	{ return samp->GetDescriptor() == right.samp->GetDescriptor(); }
-	inline bool SWSamplerCache::SearchableSampler::operator >  (const SearchableSampler &right) const	{ return samp->GetDescriptor() >  right.samp->GetDescriptor(); }
+	inline bool SWSamplerCache::SearchableSampler::operator == (const SearchableSampler &right) const	{ return samp->GetDescription() == right.samp->GetDescription(); }
+	inline bool SWSamplerCache::SearchableSampler::operator >  (const SearchableSampler &right) const	{ return samp->GetDescription() >  right.samp->GetDescription(); }
 		
 //-----------------------------------------------------------------------------
 
@@ -166,8 +166,8 @@ namespace PlatformSW
 	SamplerSearch
 =================================================
 */	
-	inline bool SWSamplerCache::SamplerSearch::operator == (const SearchableSampler &right) const	{ return descr == right.samp->GetDescriptor(); }
-	inline bool SWSamplerCache::SamplerSearch::operator >  (const SearchableSampler &right) const	{ return descr >  right.samp->GetDescriptor(); }
+	inline bool SWSamplerCache::SamplerSearch::operator == (const SearchableSampler &right) const	{ return descr == right.samp->GetDescription(); }
+	inline bool SWSamplerCache::SamplerSearch::operator >  (const SearchableSampler &right) const	{ return descr >  right.samp->GetDescription(); }
 	
 //-----------------------------------------------------------------------------
 
@@ -189,8 +189,8 @@ namespace PlatformSW
 */
 	SWSamplerCache::SWSamplerPtr  SWSamplerCache::Create (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
-		SamplerDescriptor	descr = ci.descr;
-		PlatformTools::SamplerUtils::ValidateDescriptor( INOUT descr, 0 );
+		SamplerDescription	descr = ci.descr;
+		PlatformTools::SamplerUtils::ValidateDescription( INOUT descr, 0 );
 
 		// find cached sampler
 		Samplers_t::const_iterator	iter;
@@ -224,13 +224,13 @@ namespace Platforms
 	ModulePtr SoftRendererObjectsConstructor::CreateSWSampler (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
 		ModulePtr	mod;
-		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetSWPrivateClasses>> >() );
+		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< ModuleMsg::MessageListFrom< GpuMsg::GetSWPrivateClasses >>() );
 
-		Message< GpuMsg::GetSWPrivateClasses >	req_classes;
+		GpuMsg::GetSWPrivateClasses		req_classes;
 		mod->Send( req_classes );
-		CHECK_ERR( req_classes->result.IsDefined() and req_classes->result->samplerCache );
+		CHECK_ERR( req_classes.result and req_classes.result->samplerCache );
 
-		return req_classes->result->samplerCache->Create( id, gs, ci );
+		return req_classes.result->samplerCache->Create( id, gs, ci );
 	}
 
 }	// Platforms

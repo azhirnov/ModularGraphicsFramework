@@ -4,12 +4,12 @@
 
 #include "Engine/Base/Engine.Base.h"
 
-#include "Engine/STL/Math/Mathematics.h"
-#include "Engine/STL/Math/Vec.h"
-#include "Engine/STL/Math/Matrix.h"
-#include "Engine/STL/Math/2D/Rectangle.h"
-#include "Engine/STL/Math/Color/Color.h"
-#include "Engine/STL/Math/MathTypeCast.h"
+#include "Core/STL/Math/Mathematics.h"
+#include "Core/STL/Math/Vec.h"
+#include "Core/STL/Math/Matrix.h"
+#include "Core/STL/Math/2D/Rectangle.h"
+#include "Core/STL/Math/Color/Color.h"
+#include "Core/STL/Math/MathTypeCast.h"
 
 namespace Engine
 {

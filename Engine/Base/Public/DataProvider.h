@@ -13,10 +13,10 @@ namespace Base
 {
 
 	//
-	// Data Source Descriptor
+	// Data Source Description
 	//
 
-	struct DataSourceDescriptor
+	struct DataSourceDescription
 	{
 	// variables
 		BytesUL					totalSize;		// can be 0 if total size is unknown
@@ -25,12 +25,12 @@ namespace Base
 		bool					resizable	= false;
 
 	// methods
-		DataSourceDescriptor () {}
+		DataSourceDescription () {}
 		
-		DataSourceDescriptor (Bytes<ulong> totalSize, Bytes<ulong> available, EMemoryAccess::bits memoryFlags) :
+		DataSourceDescription (Bytes<ulong> totalSize, Bytes<ulong> available, EMemoryAccess::bits memoryFlags) :
 			totalSize{totalSize}, available{available}, memoryFlags{memoryFlags} {}
 		
-		DataSourceDescriptor (Bytes<uint> totalSize, Bytes<uint> available, EMemoryAccess::bits memoryFlags) :
+		DataSourceDescription (Bytes<uint> totalSize, Bytes<uint> available, EMemoryAccess::bits memoryFlags) :
 			totalSize{BytesUL{totalSize}}, available{BytesUL{available}}, memoryFlags{memoryFlags} {}
 	};
 
@@ -199,18 +199,18 @@ namespace DSMsg
 
 
 	//
-	// Get Data Source Descriptor	// TODO: rename
+	// Get Data Source Description	// TODO: rename
 	//
-	struct GetDataSourceDescriptor
+	struct GetDataSourceDescription : _MessageBase_
 	{
-		Out< Base::DataSourceDescriptor >		result;
+		Out< Base::DataSourceDescription >		result;
 	};
 
 
 	//
 	// Release Data
 	//
-	struct ReleaseData
+	struct ReleaseData : _MessageBase_
 	{
 	};
 
@@ -218,7 +218,7 @@ namespace DSMsg
 	//
 	// (Sequential) Read from CPU Visible Memory
 	//
-	struct ReadFromStream
+	struct ReadFromStream : _MessageBase_
 	{
 	// variables
 		BytesUL					offset;
@@ -236,7 +236,7 @@ namespace DSMsg
 	//
 	// (Sequential) Write to CPU Visible Memory
 	//
-	struct WriteToStream
+	struct WriteToStream : _MessageBase_
 	{
 	// variables
 		BinArrayCRef		data;
@@ -253,7 +253,7 @@ namespace DSMsg
 	//
 	// (Random Access) Read from CPU Visible Memory
 	//
-	struct ReadRegion
+	struct ReadRegion : _MessageBase_
 	{
 	// variables
 		BytesUL					position;
@@ -271,7 +271,7 @@ namespace DSMsg
 	//
 	// (Random Access) Write to CPU Visible Memory
 	//
-	struct WriteRegion
+	struct WriteRegion : _MessageBase_
 	{
 	// variables
 		BytesUL					position;
@@ -292,7 +292,7 @@ namespace DSMsg
 	//
 	// (Random Access) Allocate memory for writing and return pointer
 	//
-	struct MapDataSource
+	struct MapDataSource : _MessageBase_
 	{
 	// variables
 		BytesUL					position;
@@ -307,7 +307,7 @@ namespace DSMsg
 	//
 	// Data Region Changed Event
 	//
-	struct DataRegionChanged
+	struct DataRegionChanged : _MessageBase_
 	{
 	// types
 		using EMemoryAccess		= Base::EMemoryAccess;
@@ -331,7 +331,7 @@ namespace DSMsg
 	//
 	// Add / Remove On Data Modified Listener
 	//
-	struct AddOnDataModifiedListener
+	struct AddOnDataModifiedListener : _MessageBase_
 	{
 	// types
 		using Callback_t	= Delegate< void (StringCRef fname) >;
@@ -350,7 +350,7 @@ namespace DSMsg
 	};
 
 	// not needed if 'callback' delegate created from weak pointer
-	struct RemoveOnDataModifiedListener
+	struct RemoveOnDataModifiedListener : _MessageBase_
 	{
 	// variables
 		ModuleWPtr		module;
@@ -363,7 +363,7 @@ namespace DSMsg
 	//
 	// Is URI Exists
 	//
-	struct IsUriExists
+	struct IsUriExists : _MessageBase_
 	{
 	// variables
 		StringCRef		uri;
@@ -377,7 +377,7 @@ namespace DSMsg
 	//
 	// Create Data Input Module
 	//
-	struct CreateDataInputModule
+	struct CreateDataInputModule : _MessageBase_
 	{
 	// variables
 		StringCRef			uri;
@@ -391,7 +391,7 @@ namespace DSMsg
 	//
 	// Create Data Output Module
 	//
-	struct CreateDataOutputModule
+	struct CreateDataOutputModule : _MessageBase_
 	{
 	// variables
 		StringCRef			uri;
@@ -405,7 +405,7 @@ namespace DSMsg
 	//
 	// Get Data Provider For URI
 	//
-	struct GetDataProviderForURI
+	struct GetDataProviderForURI : _MessageBase_
 	{
 	// variables
 		StringCRef			uri;

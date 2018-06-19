@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Common/Platforms.h"
-#include "Engine/Config/Engine.Config.h"
+#include "Core/STL/Common/Platforms.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -10,7 +10,7 @@
 #include "Engine/Platforms/Public/OS/Platform.h"
 #include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/Windows/WinObjectsConstructor.h"
-#include "Engine/STL/OS/Windows/WinHeader.h"
+#include "Core/STL/OS/Windows/WinHeader.h"
 #include "Engine/Platforms/Windows/WinDisplay.h"
 
 namespace Engine
@@ -32,8 +32,8 @@ namespace PlatformWin
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											OSMsg::WindowSetDescriptor,
-											OSMsg::WindowGetDescriptor,
+											OSMsg::WindowSetDescription,
+											OSMsg::WindowGetDescription,
 											OSMsg::OnWinPlatformCreated,
 											OSMsg::GetWinWindowHandle,
 											OSMsg::GetDisplays,
@@ -42,7 +42,7 @@ namespace PlatformWin
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Update,
 											ModuleMsg::Delete,
-											OSMsg::WindowDescriptorChanged,
+											OSMsg::WindowDescriptionChanged,
 											OSMsg::WindowVisibilityChanged,
 											OSMsg::WindowBeforeCreate,
 											OSMsg::WindowCreated,
@@ -86,15 +86,15 @@ namespace PlatformWin
 
 	// message handlers
 	private:
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _OnWinPlatformCreated (const Message< OSMsg::OnWinPlatformCreated > &);
-		bool _PlatformDeleted (const Message< ModuleMsg::Delete > &);
-		bool _WindowSetDescriptor (const Message< OSMsg::WindowSetDescriptor > &);
-		bool _WindowGetDescriptor (const Message< OSMsg::WindowGetDescriptor > &);
-		bool _GetWinWindowHandle (const Message< OSMsg::GetWinWindowHandle > &);
-		bool _GetDisplays (const Message< OSMsg::GetDisplays > &);
-		bool _GetOSModules (const Message< OSMsg::GetOSModules > &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _OnWinPlatformCreated (const OSMsg::OnWinPlatformCreated &);
+		bool _PlatformDeleted (const ModuleMsg::Delete &);
+		bool _WindowSetDescription (const OSMsg::WindowSetDescription &);
+		bool _WindowGetDescription (const OSMsg::WindowGetDescription &);
+		bool _GetWinWindowHandle (const OSMsg::GetWinWindowHandle &);
+		bool _GetDisplays (const OSMsg::GetDisplays &);
+		bool _GetOSModules (const OSMsg::GetOSModules &);
 
 
 	private:
@@ -108,7 +108,7 @@ namespace PlatformWin
 		void _StartMessageProc ();
 		void _WindowTick ();
 
-		bool _UpdateDescriptor ();
+		bool _UpdateDescription ();
 		void _Destroy ();
 
 		Ptr<const Display> _GetDisplayByCoord (const int2 &point) const;
@@ -143,8 +143,8 @@ namespace PlatformWin
 		_SubscribeOnMsg( this, &WinWindow::_ModulesDeepSearch_Impl );
 		_SubscribeOnMsg( this, &WinWindow::_Delete );
 		_SubscribeOnMsg( this, &WinWindow::_Update );
-		_SubscribeOnMsg( this, &WinWindow::_WindowSetDescriptor );
-		_SubscribeOnMsg( this, &WinWindow::_WindowGetDescriptor );
+		_SubscribeOnMsg( this, &WinWindow::_WindowSetDescription );
+		_SubscribeOnMsg( this, &WinWindow::_WindowGetDescription );
 		_SubscribeOnMsg( this, &WinWindow::_OnWinPlatformCreated );
 		_SubscribeOnMsg( this, &WinWindow::_GetWinWindowHandle );
 		_SubscribeOnMsg( this, &WinWindow::_GetDisplays );
@@ -173,7 +173,7 @@ namespace PlatformWin
 	_Update
 =================================================
 */
-	bool WinWindow::_Update (const Message< ModuleMsg::Update > &msg)
+	bool WinWindow::_Update (const ModuleMsg::Update &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return true;
@@ -189,7 +189,7 @@ namespace PlatformWin
 	_Delete
 =================================================
 */
-	bool WinWindow::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool WinWindow::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_requestQuit	= true;
 		_looping		= false;
@@ -205,11 +205,11 @@ namespace PlatformWin
 	_OnWinPlatformCreated
 =================================================
 */
-	bool WinWindow::_OnWinPlatformCreated (const Message< OSMsg::OnWinPlatformCreated > &msg)
+	bool WinWindow::_OnWinPlatformCreated (const OSMsg::OnWinPlatformCreated &msg)
 	{
 		CHECK_ERR( not _IsComposedState( GetState() ) );
 
-		CHECK( _Create( _GetManager(), msg.Data() ) );
+		CHECK( _Create( _GetManager(), msg ) );
 
 		if ( _IsCreated() and _looping )
 		{
@@ -218,10 +218,10 @@ namespace PlatformWin
 
 			LOG( "window created", ELog::Debug );
 			
-			_SendForEachAttachments< ModuleMsg::Link >({});
-			_SendForEachAttachments< ModuleMsg::Compose >({});
+			_SendForEachAttachments( ModuleMsg::Link{} );
+			_SendForEachAttachments( ModuleMsg::Compose{} );
 			
-			_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+			_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		}
 		else
 		{
@@ -235,7 +235,7 @@ namespace PlatformWin
 	_PlatformDeleted
 =================================================
 */
-	bool WinWindow::_PlatformDeleted (const Message< ModuleMsg::Delete > &msg)
+	bool WinWindow::_PlatformDeleted (const ModuleMsg::Delete &msg)
 	{
 		_Delete( msg );
 		return true;
@@ -243,26 +243,26 @@ namespace PlatformWin
 
 /*
 =================================================
-	_WindowSetDescriptor
+	_WindowSetDescription
 =================================================
 */
-	bool WinWindow::_WindowSetDescriptor (const Message< OSMsg::WindowSetDescriptor > &msg)
+	bool WinWindow::_WindowSetDescription (const OSMsg::WindowSetDescription &msg)
 	{
 		if ( not _IsCreated() )
 		{
 			CHECK_ERR( GetState() != EState::Deleting );
 
-			_createInfo.caption				= msg->descr.caption;
-			_createInfo.flags				= msg->descr.flags;
-			_createInfo.initialVisibility	= msg->descr.visibility;
-			_createInfo.orientation			= msg->descr.orientation;
-			_createInfo.position			= msg->descr.position;
-			_createInfo.surfaceSize			= msg->descr.surfaceSize;
-			// ignored msg->desc.size
+			_createInfo.caption				= msg.descr.caption;
+			_createInfo.flags				= msg.descr.flags;
+			_createInfo.initialVisibility	= msg.descr.visibility;
+			_createInfo.orientation			= msg.descr.orientation;
+			_createInfo.position			= msg.descr.position;
+			_createInfo.surfaceSize			= msg.descr.surfaceSize;
+			// ignored msg.desc.size
 			return true;
 		}
 		
-		Ptr<const Display>	disp = _GetDisplayByCoord( msg->descr.position );
+		Ptr<const Display>	disp = _GetDisplayByCoord( msg.descr.position );
 
 		if ( not disp )
 			disp = &_display.GetDisplays().Front();
@@ -271,17 +271,17 @@ namespace PlatformWin
 
 		DWORD		wnd_style		= 0;
 		DWORD		wnd_ext_style	= WS_EX_APPWINDOW;
-		RECT		win_rect		= { 0, 0, int(msg->descr.surfaceSize.x), int(msg->descr.surfaceSize.y) };
+		RECT		win_rect		= { 0, 0, int(msg.descr.surfaceSize.x), int(msg.descr.surfaceSize.y) };
 		uint2 const	scr_res			= disp->Resolution();
 
 		// set window caption
-		if ( msg->descr.caption != _windowDesc.caption )
+		if ( msg.descr.caption != _windowDesc.caption )
 		{
-			_windowDesc.caption = msg->descr.caption;
-			::SetWindowTextA( wnd, msg->descr.caption.cstr() );
+			_windowDesc.caption = msg.descr.caption;
+			::SetWindowTextA( wnd, msg.descr.caption.cstr() );
 		}
 		
-		if ( msg->descr.flags[ EWindowFlags::Fullscreen ] )
+		if ( msg.descr.flags[ EWindowFlags::Fullscreen ] )
 		{
 			// setup for fullscreen
 			wnd_style				|= WS_POPUP;
@@ -294,7 +294,7 @@ namespace PlatformWin
 		else
 		{
 			// setup windowed
-			if ( msg->descr.flags[ EWindowFlags::Resizable ] )
+			if ( msg.descr.flags[ EWindowFlags::Resizable ] )
 				wnd_style = WS_OVERLAPPEDWINDOW;
 			else
 				wnd_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
@@ -302,10 +302,10 @@ namespace PlatformWin
 			::AdjustWindowRectEx( &win_rect, wnd_style, 0, wnd_ext_style );
 
 			_windowDesc.size		= uint2( win_rect.right - win_rect.left, win_rect.bottom - win_rect.top );
-			_windowDesc.surfaceSize	= msg->descr.surfaceSize;
-			_windowDesc.position	= msg->descr.position;
+			_windowDesc.surfaceSize	= msg.descr.surfaceSize;
+			_windowDesc.position	= msg.descr.position;
 
-			if ( msg->descr.flags[ EWindowFlags::Centered ] )
+			if ( msg.descr.flags[ EWindowFlags::Centered ] )
 			{
 				_windowDesc.position = disp->WorkArea().Center() - int2(_windowDesc.size) / 2;		
 			}
@@ -318,34 +318,34 @@ namespace PlatformWin
 					    win_rect.right - win_rect.left, win_rect.bottom - win_rect.top,
 					    SWP_FRAMECHANGED );
 
-		_ShowWindow( msg->descr.visibility );
-		_UpdateDescriptor();
+		_ShowWindow( msg.descr.visibility );
+		_UpdateDescription();
 
-		_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
+		_SendEvent( OSMsg::WindowDescriptionChanged{ _windowDesc });
 		return true;
 	}
 
 /*
 =================================================
-	_WindowGetDescriptor
+	_WindowGetDescription
 =================================================
 */
-	bool WinWindow::_WindowGetDescriptor (const Message< OSMsg::WindowGetDescriptor > &msg)
+	bool WinWindow::_WindowGetDescription (const OSMsg::WindowGetDescription &msg)
 	{
 		CHECK_ERR( _IsCreated() );
 
-		msg->result.Set( _windowDesc );
+		msg.result.Set( _windowDesc );
 		return true;
 	}
 	
 /*
 =================================================
-	_WindowGetDescriptor
+	_WindowGetDescription
 =================================================
 */
-	bool WinWindow::_GetWinWindowHandle (const Message< OSMsg::GetWinWindowHandle > &msg)
+	bool WinWindow::_GetWinWindowHandle (const OSMsg::GetWinWindowHandle &msg)
 	{
-		msg->result.Set( _wnd );
+		msg.result.Set( _wnd );
 		return true;
 	}
 	
@@ -354,9 +354,9 @@ namespace PlatformWin
 	_GetDisplays
 =================================================
 */
-	bool WinWindow::_GetDisplays (const Message< OSMsg::GetDisplays > &msg)
+	bool WinWindow::_GetDisplays (const OSMsg::GetDisplays &msg)
 	{
-		msg->result.Set( _display.GetDisplays() );
+		msg.result.Set( _display.GetDisplays() );
 		return true;
 	}
 	
@@ -365,9 +365,9 @@ namespace PlatformWin
 	_GetOSModules
 =================================================
 */
-	bool WinWindow::_GetOSModules (const Message< OSMsg::GetOSModules > &msg)
+	bool WinWindow::_GetOSModules (const OSMsg::GetOSModules &msg)
 	{
-		msg->result.Set( WinObjectsConstructor::GetModuleIDs() );
+		msg.result.Set( WinObjectsConstructor::GetModuleIDs() );
 		return true;
 	}
 
@@ -398,8 +398,8 @@ namespace PlatformWin
 
 		
 		// allow subscribers to change settings
-		auto const					msg		= Message< OSMsg::WindowBeforeCreate >{ _createInfo };
-		CreateInfo::Window const&	info	= *msg->editable;
+		auto const					msg		= OSMsg::WindowBeforeCreate{ _createInfo };
+		CreateInfo::Window const&	info	= *msg.editable;
 
 		_SendEvent( msg );
 
@@ -407,12 +407,12 @@ namespace PlatformWin
 		// crate window
 		CHECK_ERR( _CreateWindow( *disp, info, platformInfo.className, platformInfo.instance ) );
 
-		CHECK_ERR( _UpdateDescriptor() );
+		CHECK_ERR( _UpdateDescription() );
 
 
 		// send event
-		_SendEvent< OSMsg::WindowCreated >({});
-		_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
+		_SendEvent( OSMsg::WindowCreated{} );
+		_SendEvent( OSMsg::WindowDescriptionChanged{ _windowDesc });
 
 
 		// start window message loop
@@ -569,12 +569,12 @@ namespace PlatformWin
 */
 	isize WinWindow::_ProcessMessage (uint uMsg, usize wParam, isize lParam)
 	{
-		Message< OSMsg::OnWinWindowRawMessage >	msg{ uMsg, wParam, lParam };
+		OSMsg::OnWinWindowRawMessage	msg{ uMsg, wParam, lParam };
 		
 		// WM_PAINT //
 		if ( uMsg == WM_PAINT and _windowDesc.visibility == EVisibility::VisibleFocused )
 		{
-			msg->wasProcessed = true;
+			msg.wasProcessed = true;
 
 			//TODO( "" );
 			//_Update( true );
@@ -584,46 +584,46 @@ namespace PlatformWin
 		// WM_MOVE //
 		if ( uMsg == WM_MOVE )
 		{
-			msg->wasProcessed = true;
+			msg.wasProcessed = true;
 
-			_UpdateDescriptor();
-			_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
+			_UpdateDescription();
+			_SendEvent( OSMsg::WindowDescriptionChanged{ _windowDesc });
 		}
 		else
 
 		// WM_KILLPOCUS //
 		if ( uMsg == WM_KILLFOCUS )
 		{
-			msg->wasProcessed = true;
+			msg.wasProcessed = true;
 
 			_windowDesc.visibility = EVisibility::VisibleUnfocused;
-			_SendEvent< OSMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
+			_SendEvent( OSMsg::WindowVisibilityChanged{ _windowDesc.visibility });
 		}
 		else
 
 		// WM_SETFOCUS //
 		if ( uMsg == WM_SETFOCUS )
 		{
-			msg->wasProcessed = true;
+			msg.wasProcessed = true;
 			
 			_windowDesc.visibility = EVisibility::VisibleFocused;
-			_SendEvent< OSMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
+			_SendEvent( OSMsg::WindowVisibilityChanged{ _windowDesc.visibility });
 		}
 		else
 			
 		// WM_SIZE //
 		if ( uMsg == WM_SIZE )
 		{
-			msg->wasProcessed = true;
+			msg.wasProcessed = true;
 
 			if ( wParam == SIZE_MINIMIZED )
 			{
 				_windowDesc.visibility = EVisibility::Invisible;
-				_SendEvent< OSMsg::WindowVisibilityChanged >({ _windowDesc.visibility });
+				_SendEvent( OSMsg::WindowVisibilityChanged{ _windowDesc.visibility });
 			}
 
-			_UpdateDescriptor();
-			_SendEvent< OSMsg::WindowDescriptorChanged >({ _windowDesc });
+			_UpdateDescription();
+			_SendEvent( OSMsg::WindowDescriptionChanged{ _windowDesc });
 		}
 		else
 
@@ -657,10 +657,10 @@ namespace PlatformWin
 
 /*
 =================================================
-	_UpdateDescriptor
+	_UpdateDescription
 =================================================
 */
-	bool WinWindow::_UpdateDescriptor ()
+	bool WinWindow::_UpdateDescription ()
 	{
 		CHECK_ERR( _IsCreated() );
 
@@ -703,14 +703,14 @@ namespace PlatformWin
 		{
 			::SetWindowLongPtrA( _wnd.Get<HWND>(), GWLP_WNDPROC, ReferenceCast<LONG_PTR>(&::DefWindowProcA) );
 
-			_SendEvent< OSMsg::WindowBeforeDestroy >({});
+			_SendEvent( OSMsg::WindowBeforeDestroy{} );
 
 			::DestroyWindow( _wnd.Get<HWND>() );
 			_wnd = null;
 
 			LOG( "window destroyed", ELog::Debug );
 
-			_SendEvent< OSMsg::WindowAfterDestroy >({});
+			_SendEvent( OSMsg::WindowAfterDestroy{} );
 		}
 	}
 	

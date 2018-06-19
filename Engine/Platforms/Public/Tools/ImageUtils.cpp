@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Public/Tools/ImageUtils.h"
-#include "Engine/STL/Math/Image/ImageUtils.h"
+#include "Core/STL/Math/Image/ImageUtils.h"
 
 namespace Engine
 {
@@ -260,10 +260,10 @@ namespace PlatformTools
 	
 /*
 =================================================
-	IsValidDescriptor
+	IsValidDescription
 =================================================
 */
-	bool ImageUtils::IsValidDescriptor (const ImageDescriptor &descr)
+	bool ImageUtils::IsValidDescription (const ImageDescription &descr)
 	{
 		return	not (descr.format    == EPixelFormat::Unknown and
 					 descr.imageType == EImage::Unknown);
@@ -271,10 +271,10 @@ namespace PlatformTools
 
 /*
 =================================================
-	ValidateDescriptor
+	ValidateDescription
 =================================================
 */
-	void ImageUtils::ValidateDescriptor (INOUT ImageDescriptor &descr)
+	void ImageUtils::ValidateDescription (INOUT ImageDescription &descr)
 	{
 		ASSERT( descr.format != EPixelFormat::Unknown );
 		ASSERT( descr.imageType != EImage::Unknown );

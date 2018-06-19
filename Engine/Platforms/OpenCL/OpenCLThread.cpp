@@ -1,10 +1,10 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
-#include "Engine/STL/Algorithms/StringParser.h"
+#include "Core/STL/Algorithms/StringParser.h"
 #include "Engine/Platforms/Public/GPU/Thread.h"
 #include "Engine/Platforms/Public/GPU/CommandBuffer.h"
 #include "Engine/Platforms/OpenCL/120/CL1BaseModule.h"
@@ -89,22 +89,22 @@ namespace Platforms
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
 
-		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
-		bool _GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &);
-		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
-		bool _GetCLDeviceInfo (const Message< GpuMsg::GetCLDeviceInfo > &);
-		bool _GetCLPrivateClasses (const Message< GpuMsg::GetCLPrivateClasses > &);
-		bool _GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &);
+		bool _GetGraphicsModules (const GpuMsg::GetGraphicsModules &);
+		bool _GetComputeSettings (const GpuMsg::GetComputeSettings &);
+		bool _GetDeviceInfo (const GpuMsg::GetDeviceInfo &);
+		bool _GetCLDeviceInfo (const GpuMsg::GetCLDeviceInfo &);
+		bool _GetCLPrivateClasses (const GpuMsg::GetCLPrivateClasses &);
+		bool _GetDeviceProperties (const GpuMsg::GetDeviceProperties &);
 
 		// event handlers
-		bool _OnSharedThreadComposed (const Message< ModuleMsg::AfterCompose > &);
-		bool _OnSharedThreadDelete (const Message< ModuleMsg::Delete > &);
+		bool _OnSharedThreadComposed (const ModuleMsg::AfterCompose &);
+		bool _OnSharedThreadDelete (const ModuleMsg::Delete &);
 
 	private:
 		bool _CreateDevice ();
@@ -166,7 +166,7 @@ namespace Platforms
 	_Link
 =================================================
 */
-	bool OpenCLThread::_Link (const Message< ModuleMsg::Link > &msg)
+	bool OpenCLThread::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -219,7 +219,7 @@ namespace Platforms
 	_Compose
 =================================================
 */
-	bool OpenCLThread::_Compose (const Message< ModuleMsg::Compose > &)
+	bool OpenCLThread::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -238,7 +238,7 @@ namespace Platforms
 	_OnSharedThreadComposed
 =================================================
 */
-	bool OpenCLThread::_OnSharedThreadComposed (const Message< ModuleMsg::AfterCompose > &)
+	bool OpenCLThread::_OnSharedThreadComposed (const ModuleMsg::AfterCompose &)
 	{
 		CHECK_ERR( GetState() == EState::Linked );
 
@@ -251,7 +251,7 @@ namespace Platforms
 	_OnSharedThreadDelete
 =================================================
 */
-	bool OpenCLThread::_OnSharedThreadDelete (const Message< ModuleMsg::Delete > &)
+	bool OpenCLThread::_OnSharedThreadDelete (const ModuleMsg::Delete &)
 	{
 		// TODO
 
@@ -264,7 +264,7 @@ namespace Platforms
 	_Delete
 =================================================
 */
-	bool OpenCLThread::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool OpenCLThread::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyDevice();
 		
@@ -283,7 +283,7 @@ namespace Platforms
 	_AddToManager
 =================================================
 */
-	bool OpenCLThread::_AddToManager (const Message< ModuleMsg::AddToManager > &)
+	bool OpenCLThread::_AddToManager (const ModuleMsg::AddToManager &)
 	{
 		return true;
 	}
@@ -293,7 +293,7 @@ namespace Platforms
 	_RemoveFromManager
 =================================================
 */
-	bool OpenCLThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &)
+	bool OpenCLThread::_RemoveFromManager (const ModuleMsg::RemoveFromManager &)
 	{
 		return true;
 	}
@@ -303,9 +303,9 @@ namespace Platforms
 	_GetGraphicsModules
 =================================================
 */
-	bool OpenCLThread::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	bool OpenCLThread::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg->compute.Set( OpenCLObjectsConstructor::GetComputeModules() );
+		msg.compute.Set( OpenCLObjectsConstructor::GetComputeModules() );
 		return true;
 	}
 	
@@ -314,9 +314,9 @@ namespace Platforms
 	_GetComputeSettings
 =================================================
 */
-	bool OpenCLThread::_GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &msg)
+	bool OpenCLThread::_GetComputeSettings (const GpuMsg::GetComputeSettings &msg)
 	{
-		msg->result.Set( _settings );
+		msg.result.Set( _settings );
 		return true;
 	}
 
@@ -422,7 +422,7 @@ namespace Platforms
 		
 		CHECK( _DefCompose( false ) );
 
-		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
+		_SendEvent( GpuMsg::DeviceCreated{} );
 		return true;
 	}
 	
@@ -437,18 +437,18 @@ namespace Platforms
 		{
 			_device.Synchronize();
 
-			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
+			_SendEvent( GpuMsg::DeviceBeforeDestroy{} );
 		}
 
 		if ( _cmdQueue )
 		{
-			_cmdQueue->Send< ModuleMsg::Delete >({});
+			_cmdQueue->Send( ModuleMsg::Delete{} );
 			_cmdQueue = null;
 		}
 		
 		if ( _syncManager )
 		{
-			_syncManager->Send< ModuleMsg::Delete >({});
+			_syncManager->Send( ModuleMsg::Delete{} );
 			_syncManager = null;
 		}
 
@@ -460,7 +460,7 @@ namespace Platforms
 	_GetDeviceInfo
 =================================================
 */
-	bool OpenCLThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
+	bool OpenCLThread::_GetDeviceInfo (const GpuMsg::GetDeviceInfo &msg)
 	{
 		GpuMsg::GetDeviceInfo::Info	info;
 		info.gpuThread		= this;
@@ -470,7 +470,7 @@ namespace Platforms
 		info.renderPass		= null;
 		info.imageCount		= 0;
 
-		msg->result.Set( info );
+		msg.result.Set( info );
 		return true;
 	}
 	
@@ -479,9 +479,9 @@ namespace Platforms
 	_GetCLDeviceInfo
 =================================================
 */
-	bool OpenCLThread::_GetCLDeviceInfo (const Message< GpuMsg::GetCLDeviceInfo > &msg)
+	bool OpenCLThread::_GetCLDeviceInfo (const GpuMsg::GetCLDeviceInfo &msg)
 	{
-		msg->result.Set({
+		msg.result.Set({
 			_device.GetDevice(),
 			_device.GetContext()
 		});
@@ -493,9 +493,9 @@ namespace Platforms
 	_GetCLPrivateClasses
 =================================================
 */
-	bool OpenCLThread::_GetCLPrivateClasses (const Message< GpuMsg::GetCLPrivateClasses > &msg)
+	bool OpenCLThread::_GetCLPrivateClasses (const GpuMsg::GetCLPrivateClasses &msg)
 	{
-		msg->result.Set({
+		msg.result.Set({
 			&_device,
 			&_samplerCache,
 			&_resourceCache
@@ -508,9 +508,9 @@ namespace Platforms
 	_GetDeviceProperties
 =================================================
 */
-	bool OpenCLThread::_GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &msg)
+	bool OpenCLThread::_GetDeviceProperties (const GpuMsg::GetDeviceProperties &msg)
 	{
-		msg->result.Set( _device.GetProperties() );
+		msg.result.Set( _device.GetProperties() );
 		return true;
 	}
 //-----------------------------------------------------------------------------

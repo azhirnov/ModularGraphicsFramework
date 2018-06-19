@@ -9,7 +9,7 @@ namespace Engine
 namespace SceneMsg
 {
 
-	struct GetScenePrivateClasses
+	struct GetScenePrivateClasses : _MessageBase_
 	{
 		struct Classes {
 		};
@@ -62,9 +62,9 @@ namespace Scene
 
 	// message handlers
 	protected:
-		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		//bool _OnManagerDestroyed (const Message< ModuleMsg::Delete > &);
-		bool _GetScenePrivateClasses (const Message< SceneMsg::GetScenePrivateClasses > &);
+		bool _OnManagerChanged (const ModuleMsg::OnManagerChanged &);
+		//bool _OnManagerDestroyed (const ModuleMsg::Delete &);
+		bool _GetScenePrivateClasses (const SceneMsg::GetScenePrivateClasses &);
 	};
 
 

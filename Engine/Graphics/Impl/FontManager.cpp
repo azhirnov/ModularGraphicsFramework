@@ -41,11 +41,11 @@ namespace Graphics
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		//bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		//bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		//bool _AttachModule (const ModuleMsg::AttachModule &);
+		//bool _DetachModule (const ModuleMsg::DetachModule &);
 
 	private:
 	};
@@ -96,7 +96,7 @@ namespace Graphics
 	_Delete
 =================================================
 */
-	bool FontManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool FontManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		return _Delete_Impl( msg );
 	}
@@ -106,7 +106,7 @@ namespace Graphics
 	_Link
 =================================================
 */
-	bool FontManager::_Link (const Message< ModuleMsg::Link > &)
+	bool FontManager::_Link (const ModuleMsg::Link &)
 	{
 		return true;
 	}
@@ -116,7 +116,7 @@ namespace Graphics
 	_Compose
 =================================================
 */
-	bool FontManager::_Compose (const Message< ModuleMsg::Compose > &)
+	bool FontManager::_Compose (const ModuleMsg::Compose &)
 	{
 		return true;
 	}

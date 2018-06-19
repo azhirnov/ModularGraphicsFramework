@@ -275,7 +275,7 @@ namespace ResPack
 */
 	void ImageConverter::_BindSelf (ScriptEnginePtr se)
 	{
-		using namespace GX_STL::GXScript;
+		using namespace GXScript;
 		
 		using Self = ImageConverter;
 

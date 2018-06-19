@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -77,56 +77,56 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
-		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &);
+		bool _GetCommandBufferState (const GpuMsg::GetCommandBufferState &);
 		
-		bool _CmdBegin (const Message< GpuMsg::CmdBegin > &);
-		bool _CmdEnd (const Message< GpuMsg::CmdEnd > &);
+		bool _CmdBegin (const GpuMsg::CmdBegin &);
+		bool _CmdEnd (const GpuMsg::CmdEnd &);
 
-		bool _CmdSetViewport (const Message< GpuMsg::CmdSetViewport > &);
-		bool _CmdSetScissor (const Message< GpuMsg::CmdSetScissor > &);
-		bool _CmdSetDepthBounds (const Message< GpuMsg::CmdSetDepthBounds > &);
-		bool _CmdSetBlendColor (const Message< GpuMsg::CmdSetBlendColor > &);
-		bool _CmdSetDepthBias (const Message< GpuMsg::CmdSetDepthBias > &);
-		bool _CmdSetLineWidth (const Message< GpuMsg::CmdSetLineWidth > &);
-		bool _CmdSetStencilCompareMask (const Message< GpuMsg::CmdSetStencilCompareMask > &);
-		bool _CmdSetStencilWriteMask (const Message< GpuMsg::CmdSetStencilWriteMask > &);
-		bool _CmdSetStencilReference (const Message< GpuMsg::CmdSetStencilReference > &);
-		bool _CmdBeginRenderPass (const Message< GpuMsg::CmdBeginRenderPass > &);
-		bool _CmdEndRenderPass (const Message< GpuMsg::CmdEndRenderPass > &);
-		bool _CmdNextSubpass (const Message< GpuMsg::CmdNextSubpass > &);
-		bool _CmdBindGraphicsPipeline (const Message< GpuMsg::CmdBindGraphicsPipeline > &);
-		bool _CmdBindComputePipeline (const Message< GpuMsg::CmdBindComputePipeline > &);
-		bool _CmdBindVertexBuffers (const Message< GpuMsg::CmdBindVertexBuffers > &);
-		bool _CmdBindIndexBuffer (const Message< GpuMsg::CmdBindIndexBuffer > &);
-		bool _CmdDraw (const Message< GpuMsg::CmdDraw > &);
-		bool _CmdDrawIndexed (const Message< GpuMsg::CmdDrawIndexed > &);
-		bool _CmdDrawIndirect (const Message< GpuMsg::CmdDrawIndirect > &);
-		bool _CmdDrawIndexedIndirect (const Message< GpuMsg::CmdDrawIndexedIndirect > &);
-		bool _CmdDispatch (const Message< GpuMsg::CmdDispatch > &);
-		bool _CmdDispatchIndirect (const Message< GpuMsg::CmdDispatchIndirect > &);
-		bool _CmdExecute (const Message< GpuMsg::CmdExecute > &);
-		bool _CmdBindGraphicsResourceTable (const Message< GpuMsg::CmdBindGraphicsResourceTable > &);
-		bool _CmdBindComputeResourceTable (const Message< GpuMsg::CmdBindComputeResourceTable > &);
-		bool _CmdCopyBuffer (const Message< GpuMsg::CmdCopyBuffer > &);
-		bool _CmdCopyImage (const Message< GpuMsg::CmdCopyImage > &);
-		bool _CmdCopyBufferToImage (const Message< GpuMsg::CmdCopyBufferToImage > &);
-		bool _CmdCopyImageToBuffer (const Message< GpuMsg::CmdCopyImageToBuffer > &);
-		bool _CmdBlitImage (const Message< GpuMsg::CmdBlitImage > &);
-		bool _CmdBlitGLFramebuffers (const Message< GpuMsg::CmdBlitGLFramebuffers > &);
-		bool _CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &);
-		bool _CmdFillBuffer (const Message< GpuMsg::CmdFillBuffer > &);
-		bool _CmdClearAttachments (const Message< GpuMsg::CmdClearAttachments > &);
-		bool _CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &);
-		bool _CmdClearDepthStencilImage (const Message< GpuMsg::CmdClearDepthStencilImage > &);
-		bool _CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &);
-		bool _CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &);
-		bool _CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &);
-		bool _CmdDebugMarker (const Message< GpuMsg::CmdDebugMarker > &);
-		bool _CmdPushDebugGroup (const Message< GpuMsg::CmdPushDebugGroup > &);
-		bool _CmdPopDebugGroup (const Message< GpuMsg::CmdPopDebugGroup > &);
+		bool _CmdSetViewport (const GpuMsg::CmdSetViewport &);
+		bool _CmdSetScissor (const GpuMsg::CmdSetScissor &);
+		bool _CmdSetDepthBounds (const GpuMsg::CmdSetDepthBounds &);
+		bool _CmdSetBlendColor (const GpuMsg::CmdSetBlendColor &);
+		bool _CmdSetDepthBias (const GpuMsg::CmdSetDepthBias &);
+		bool _CmdSetLineWidth (const GpuMsg::CmdSetLineWidth &);
+		bool _CmdSetStencilCompareMask (const GpuMsg::CmdSetStencilCompareMask &);
+		bool _CmdSetStencilWriteMask (const GpuMsg::CmdSetStencilWriteMask &);
+		bool _CmdSetStencilReference (const GpuMsg::CmdSetStencilReference &);
+		bool _CmdBeginRenderPass (const GpuMsg::CmdBeginRenderPass &);
+		bool _CmdEndRenderPass (const GpuMsg::CmdEndRenderPass &);
+		bool _CmdNextSubpass (const GpuMsg::CmdNextSubpass &);
+		bool _CmdBindGraphicsPipeline (const GpuMsg::CmdBindGraphicsPipeline &);
+		bool _CmdBindComputePipeline (const GpuMsg::CmdBindComputePipeline &);
+		bool _CmdBindVertexBuffers (const GpuMsg::CmdBindVertexBuffers &);
+		bool _CmdBindIndexBuffer (const GpuMsg::CmdBindIndexBuffer &);
+		bool _CmdDraw (const GpuMsg::CmdDraw &);
+		bool _CmdDrawIndexed (const GpuMsg::CmdDrawIndexed &);
+		bool _CmdDrawIndirect (const GpuMsg::CmdDrawIndirect &);
+		bool _CmdDrawIndexedIndirect (const GpuMsg::CmdDrawIndexedIndirect &);
+		bool _CmdDispatch (const GpuMsg::CmdDispatch &);
+		bool _CmdDispatchIndirect (const GpuMsg::CmdDispatchIndirect &);
+		bool _CmdExecute (const GpuMsg::CmdExecute &);
+		bool _CmdBindGraphicsResourceTable (const GpuMsg::CmdBindGraphicsResourceTable &);
+		bool _CmdBindComputeResourceTable (const GpuMsg::CmdBindComputeResourceTable &);
+		bool _CmdCopyBuffer (const GpuMsg::CmdCopyBuffer &);
+		bool _CmdCopyImage (const GpuMsg::CmdCopyImage &);
+		bool _CmdCopyBufferToImage (const GpuMsg::CmdCopyBufferToImage &);
+		bool _CmdCopyImageToBuffer (const GpuMsg::CmdCopyImageToBuffer &);
+		bool _CmdBlitImage (const GpuMsg::CmdBlitImage &);
+		bool _CmdBlitGLFramebuffers (const GpuMsg::CmdBlitGLFramebuffers &);
+		bool _CmdUpdateBuffer (const GpuMsg::CmdUpdateBuffer &);
+		bool _CmdFillBuffer (const GpuMsg::CmdFillBuffer &);
+		bool _CmdClearAttachments (const GpuMsg::CmdClearAttachments &);
+		bool _CmdClearColorImage (const GpuMsg::CmdClearColorImage &);
+		bool _CmdClearDepthStencilImage (const GpuMsg::CmdClearDepthStencilImage &);
+		bool _CmdPipelineBarrier (const GpuMsg::CmdPipelineBarrier &);
+		bool _CmdPushConstants (const GpuMsg::CmdPushConstants &);
+		bool _CmdPushNamedConstants (const GpuMsg::CmdPushNamedConstants &);
+		bool _CmdDebugMarker (const GpuMsg::CmdDebugMarker &);
+		bool _CmdPushDebugGroup (const GpuMsg::CmdPushDebugGroup &);
+		bool _CmdPopDebugGroup (const GpuMsg::CmdPopDebugGroup &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -226,7 +226,7 @@ namespace PlatformGL
 	_Compose
 =================================================
 */
-	bool GL4CommandBuilder::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool GL4CommandBuilder::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -241,7 +241,7 @@ namespace PlatformGL
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -250,7 +250,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4CommandBuilder::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4CommandBuilder::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_resources.Clear();
 		_commands.Clear();
@@ -265,9 +265,9 @@ namespace PlatformGL
 	_SetCommandBufferDependency
 =================================================
 */
-	bool GL4CommandBuilder::_SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &msg)
+	bool GL4CommandBuilder::_SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &msg)
 	{
-		_resources.AddArray( msg->resources.Get() );
+		_resources.AddArray( msg.resources.Get() );
 		return true;
 	}
 	
@@ -276,7 +276,7 @@ namespace PlatformGL
 	_GetCommandBufferState
 =================================================
 */
-	bool GL4CommandBuilder::_GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &msg)
+	bool GL4CommandBuilder::_GetCommandBufferState (const GpuMsg::GetCommandBufferState &msg)
 	{
 		if ( not _cmdBuffer )
 			return false;
@@ -289,7 +289,7 @@ namespace PlatformGL
 	_CmdBegin
 =================================================
 */
-	bool GL4CommandBuilder::_CmdBegin (const Message< GpuMsg::CmdBegin > &msg)
+	bool GL4CommandBuilder::_CmdBegin (const GpuMsg::CmdBegin &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( not _cmdBuffer );
@@ -299,11 +299,11 @@ namespace PlatformGL
 		_commands.Clear();		_commands.Reserve( 128 );
 		
 		// use target command buffer
-		if ( msg->targetCmdBuffer )
+		if ( msg.targetCmdBuffer )
 		{
-			CHECK_ERR( msg->targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
+			CHECK_ERR( msg.targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
 
-			_cmdBuffer = msg->targetCmdBuffer;
+			_cmdBuffer = msg.targetCmdBuffer;
 		}
 		else
 		// create new command buffer
@@ -312,20 +312,20 @@ namespace PlatformGL
 							GLCommandBufferModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
-								CommandBufferDescriptor{ msg->flags }
+								CommandBufferDescription{ msg.flags }
 							},
 							OUT _cmdBuffer ) );
 
 			CHECK_ERR( _Attach( "", _cmdBuffer ) );
 		}
 
-		ModuleUtils::Initialize( {_cmdBuffer}, this );
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Recording } );
+		ModuleUtils::Initialize({ _cmdBuffer });
+		_cmdBuffer->Send( GpuMsg::SetCommandBufferState{ ERecordingState::Recording });
 		
 		// check buffer state
-		Message< GpuMsg::GetCommandBufferState >	req_state;
-		SendTo( _cmdBuffer, req_state );
-		CHECK_ERR( req_state->result.Get() == ERecordingState::Recording );
+		GpuMsg::GetCommandBufferState	req_state;
+		_cmdBuffer->Send( req_state );
+		CHECK_ERR( *req_state.result == ERecordingState::Recording );
 		
 		_scope = EScope::Command;
 		return true;
@@ -336,16 +336,16 @@ namespace PlatformGL
 	_GpuCmdEnd
 =================================================
 */
-	bool GL4CommandBuilder::_CmdEnd (const Message< GpuMsg::CmdEnd > &msg)
+	bool GL4CommandBuilder::_CmdEnd (const GpuMsg::CmdEnd &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		
-		SendTo( _cmdBuffer, Message< GpuMsg::SetGLCommandBufferQueue >{ RVREF(_commands), RVREF(_bufferData), RVREF(_pushConstData) } );
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferDependency >{ RVREF(_resources) } );
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Executable } );
+		_cmdBuffer->Send( GpuMsg::SetGLCommandBufferQueue{ RVREF(_commands), RVREF(_bufferData), RVREF(_pushConstData) } );
+		_cmdBuffer->Send( GpuMsg::SetCommandBufferDependency{ RVREF(_resources) } );
+		_cmdBuffer->Send( GpuMsg::SetCommandBufferState{ ERecordingState::Executable } );
 
-		msg->result.Set( _cmdBuffer );
+		msg.result.Set( _cmdBuffer );
 
 		_cmdBuffer	= null;
 		_scope		= EScope::None;
@@ -363,12 +363,12 @@ namespace PlatformGL
 	_CmdSetViewport
 =================================================
 */
-	bool GL4CommandBuilder::_CmdSetViewport (const Message< GpuMsg::CmdSetViewport > &msg)
+	bool GL4CommandBuilder::_CmdSetViewport (const GpuMsg::CmdSetViewport &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		// TODO: check dynamic states
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -377,12 +377,12 @@ namespace PlatformGL
 	_CmdSetScissor
 =================================================
 */
-	bool GL4CommandBuilder::_CmdSetScissor (const Message< GpuMsg::CmdSetScissor > &msg)
+	bool GL4CommandBuilder::_CmdSetScissor (const GpuMsg::CmdSetScissor &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		// TODO: check dynamic states
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -391,12 +391,12 @@ namespace PlatformGL
 	_CmdSetDepthBounds
 =================================================
 */
-	bool GL4CommandBuilder::_CmdSetDepthBounds (const Message< GpuMsg::CmdSetDepthBounds > &msg)
+	bool GL4CommandBuilder::_CmdSetDepthBounds (const GpuMsg::CmdSetDepthBounds &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		// TODO: check dynamic states
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -405,12 +405,12 @@ namespace PlatformGL
 	_CmdSetBlendColor
 =================================================
 */
-	bool GL4CommandBuilder::_CmdSetBlendColor (const Message< GpuMsg::CmdSetBlendColor > &msg)
+	bool GL4CommandBuilder::_CmdSetBlendColor (const GpuMsg::CmdSetBlendColor &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		// TODO: check dynamic states
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -419,12 +419,12 @@ namespace PlatformGL
 	_CmdSetDepthBias
 =================================================
 */
-	bool GL4CommandBuilder::_CmdSetDepthBias (const Message< GpuMsg::CmdSetDepthBias > &msg)
+	bool GL4CommandBuilder::_CmdSetDepthBias (const GpuMsg::CmdSetDepthBias &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		// TODO: check dynamic states
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -433,12 +433,12 @@ namespace PlatformGL
 	_CmdSetLineWidth
 =================================================
 */
-	bool GL4CommandBuilder::_CmdSetLineWidth (const Message< GpuMsg::CmdSetLineWidth > &msg)
+	bool GL4CommandBuilder::_CmdSetLineWidth (const GpuMsg::CmdSetLineWidth &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		// TODO: check dynamic states
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -447,12 +447,12 @@ namespace PlatformGL
 	_CmdSetStencilCompareMask
 =================================================
 */
-	bool GL4CommandBuilder::_CmdSetStencilCompareMask (const Message< GpuMsg::CmdSetStencilCompareMask > &msg)
+	bool GL4CommandBuilder::_CmdSetStencilCompareMask (const GpuMsg::CmdSetStencilCompareMask &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		// TODO: check dynamic states
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -461,12 +461,12 @@ namespace PlatformGL
 	_CmdSetStencilWriteMask
 =================================================
 */
-	bool GL4CommandBuilder::_CmdSetStencilWriteMask (const Message< GpuMsg::CmdSetStencilWriteMask > &msg)
+	bool GL4CommandBuilder::_CmdSetStencilWriteMask (const GpuMsg::CmdSetStencilWriteMask &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		// TODO: check dynamic states
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -475,12 +475,12 @@ namespace PlatformGL
 	_CmdSetStencilReference
 =================================================
 */
-	bool GL4CommandBuilder::_CmdSetStencilReference (const Message< GpuMsg::CmdSetStencilReference > &msg)
+	bool GL4CommandBuilder::_CmdSetStencilReference (const GpuMsg::CmdSetStencilReference &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		// TODO: check dynamic states
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -489,16 +489,16 @@ namespace PlatformGL
 	_CmdBeginRenderPass
 =================================================
 */
-	bool GL4CommandBuilder::_CmdBeginRenderPass (const Message< GpuMsg::CmdBeginRenderPass > &msg)
+	bool GL4CommandBuilder::_CmdBeginRenderPass (const GpuMsg::CmdBeginRenderPass &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->framebuffer );
-		CHECK_ERR( msg->renderPass );
+		CHECK_ERR( msg.framebuffer );
+		CHECK_ERR( msg.renderPass );
 		
 		_scope = EScope::RenderPass;
 
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -507,7 +507,7 @@ namespace PlatformGL
 	_CmdEndRenderPass
 =================================================
 */
-	bool GL4CommandBuilder::_CmdEndRenderPass (const Message< GpuMsg::CmdEndRenderPass > &msg)
+	bool GL4CommandBuilder::_CmdEndRenderPass (const GpuMsg::CmdEndRenderPass &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
@@ -515,7 +515,7 @@ namespace PlatformGL
 		_scope			= EScope::Command;
 		_dynamicStates	= Uninitialized;
 
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -524,7 +524,7 @@ namespace PlatformGL
 	_CmdNextSubpass
 =================================================
 */
-	bool GL4CommandBuilder::_CmdNextSubpass (const Message< GpuMsg::CmdNextSubpass > &)
+	bool GL4CommandBuilder::_CmdNextSubpass (const GpuMsg::CmdNextSubpass &)
 	{
 		RETURN_ERR( "not supported" );	// TODO: emulate?
 	}
@@ -534,18 +534,18 @@ namespace PlatformGL
 	_CmdBindGraphicsPipeline
 =================================================
 */
-	bool GL4CommandBuilder::_CmdBindGraphicsPipeline (const Message< GpuMsg::CmdBindGraphicsPipeline > &msg)
+	bool GL4CommandBuilder::_CmdBindGraphicsPipeline (const GpuMsg::CmdBindGraphicsPipeline &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
-		CHECK_ERR( msg->pipeline );
+		CHECK_ERR( msg.pipeline );
 		
-		Message< GpuMsg::GetGraphicsPipelineDescriptor >	req_descr;
-		SendTo( msg->pipeline, req_descr );
+		GpuMsg::GetGraphicsPipelineDescription	req_descr;
+		msg.pipeline->Send( req_descr );
 		
-		_dynamicStates = req_descr->result->dynamicStates;
+		_dynamicStates = req_descr.result->dynamicStates;
 
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -554,15 +554,15 @@ namespace PlatformGL
 	_CmdBindComputePipeline
 =================================================
 */
-	bool GL4CommandBuilder::_CmdBindComputePipeline (const Message< GpuMsg::CmdBindComputePipeline > &msg)
+	bool GL4CommandBuilder::_CmdBindComputePipeline (const GpuMsg::CmdBindComputePipeline &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->pipeline );
+		CHECK_ERR( msg.pipeline );
 		
 		_dynamicStates = Uninitialized;
 
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -571,12 +571,12 @@ namespace PlatformGL
 	_CmdBindVertexBuffers
 =================================================
 */
-	bool GL4CommandBuilder::_CmdBindVertexBuffers (const Message< GpuMsg::CmdBindVertexBuffers > &msg)
+	bool GL4CommandBuilder::_CmdBindVertexBuffers (const GpuMsg::CmdBindVertexBuffers &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -585,13 +585,13 @@ namespace PlatformGL
 	_CmdBindIndexBuffer
 =================================================
 */
-	bool GL4CommandBuilder::_CmdBindIndexBuffer (const Message< GpuMsg::CmdBindIndexBuffer > &msg)
+	bool GL4CommandBuilder::_CmdBindIndexBuffer (const GpuMsg::CmdBindIndexBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
-		CHECK_ERR( msg->indexBuffer );
+		CHECK_ERR( msg.indexBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -600,12 +600,12 @@ namespace PlatformGL
 	_CmdDraw
 =================================================
 */
-	bool GL4CommandBuilder::_CmdDraw (const Message< GpuMsg::CmdDraw > &msg)
+	bool GL4CommandBuilder::_CmdDraw (const GpuMsg::CmdDraw &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -614,12 +614,12 @@ namespace PlatformGL
 	_CmdDrawIndexed
 =================================================
 */
-	bool GL4CommandBuilder::_CmdDrawIndexed (const Message< GpuMsg::CmdDrawIndexed > &msg)
+	bool GL4CommandBuilder::_CmdDrawIndexed (const GpuMsg::CmdDrawIndexed &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -628,13 +628,13 @@ namespace PlatformGL
 	_CmdDrawIndirect
 =================================================
 */
-	bool GL4CommandBuilder::_CmdDrawIndirect (const Message< GpuMsg::CmdDrawIndirect > &msg)
+	bool GL4CommandBuilder::_CmdDrawIndirect (const GpuMsg::CmdDrawIndirect &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
-		CHECK_ERR( msg->indirectBuffer );
+		CHECK_ERR( msg.indirectBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -643,13 +643,13 @@ namespace PlatformGL
 	_CmdDrawIndexedIndirect
 =================================================
 */
-	bool GL4CommandBuilder::_CmdDrawIndexedIndirect (const Message< GpuMsg::CmdDrawIndexedIndirect > &msg)
+	bool GL4CommandBuilder::_CmdDrawIndexedIndirect (const GpuMsg::CmdDrawIndexedIndirect &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
-		CHECK_ERR( msg->indirectBuffer );
+		CHECK_ERR( msg.indirectBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -658,12 +658,12 @@ namespace PlatformGL
 	_CmdDispatch
 =================================================
 */
-	bool GL4CommandBuilder::_CmdDispatch (const Message< GpuMsg::CmdDispatch > &msg)
+	bool GL4CommandBuilder::_CmdDispatch (const GpuMsg::CmdDispatch &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -672,13 +672,13 @@ namespace PlatformGL
 	_CmdDispatchIndirect
 =================================================
 */
-	bool GL4CommandBuilder::_CmdDispatchIndirect (const Message< GpuMsg::CmdDispatchIndirect > &msg)
+	bool GL4CommandBuilder::_CmdDispatchIndirect (const GpuMsg::CmdDispatchIndirect &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
-		CHECK_ERR( msg->indirectBuffer );
+		CHECK_ERR( msg.indirectBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -687,12 +687,12 @@ namespace PlatformGL
 	_CmdExecute
 =================================================
 */
-	bool GL4CommandBuilder::_CmdExecute (const Message< GpuMsg::CmdExecute > &msg)
+	bool GL4CommandBuilder::_CmdExecute (const GpuMsg::CmdExecute &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -701,13 +701,13 @@ namespace PlatformGL
 	_CmdBindGraphicsResourceTable
 =================================================
 */
-	bool GL4CommandBuilder::_CmdBindGraphicsResourceTable (const Message< GpuMsg::CmdBindGraphicsResourceTable > &msg)
+	bool GL4CommandBuilder::_CmdBindGraphicsResourceTable (const GpuMsg::CmdBindGraphicsResourceTable &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
-		CHECK_ERR( msg->resourceTable );
+		CHECK_ERR( msg.resourceTable );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -716,13 +716,13 @@ namespace PlatformGL
 	_CmdBindComputeResourceTable
 =================================================
 */
-	bool GL4CommandBuilder::_CmdBindComputeResourceTable (const Message< GpuMsg::CmdBindComputeResourceTable > &msg)
+	bool GL4CommandBuilder::_CmdBindComputeResourceTable (const GpuMsg::CmdBindComputeResourceTable &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->resourceTable );
+		CHECK_ERR( msg.resourceTable );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -731,13 +731,13 @@ namespace PlatformGL
 	_CmdCopyBuffer
 =================================================
 */
-	bool GL4CommandBuilder::_CmdCopyBuffer (const Message< GpuMsg::CmdCopyBuffer > &msg)
+	bool GL4CommandBuilder::_CmdCopyBuffer (const GpuMsg::CmdCopyBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->srcBuffer and msg->dstBuffer );
+		CHECK_ERR( msg.srcBuffer and msg.dstBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -746,13 +746,13 @@ namespace PlatformGL
 	_CmdCopyImage
 =================================================
 */
-	bool GL4CommandBuilder::_CmdCopyImage (const Message< GpuMsg::CmdCopyImage > &msg)
+	bool GL4CommandBuilder::_CmdCopyImage (const GpuMsg::CmdCopyImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->srcImage and msg->dstImage );
+		CHECK_ERR( msg.srcImage and msg.dstImage );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -761,13 +761,13 @@ namespace PlatformGL
 	_CmdCopyBufferToImage
 =================================================
 */
-	bool GL4CommandBuilder::_CmdCopyBufferToImage (const Message< GpuMsg::CmdCopyBufferToImage > &msg)
+	bool GL4CommandBuilder::_CmdCopyBufferToImage (const GpuMsg::CmdCopyBufferToImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->srcBuffer and msg->dstImage );
+		CHECK_ERR( msg.srcBuffer and msg.dstImage );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -776,13 +776,13 @@ namespace PlatformGL
 	_CmdCopyImageToBuffer
 =================================================
 */
-	bool GL4CommandBuilder::_CmdCopyImageToBuffer (const Message< GpuMsg::CmdCopyImageToBuffer > &msg)
+	bool GL4CommandBuilder::_CmdCopyImageToBuffer (const GpuMsg::CmdCopyImageToBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->srcImage and msg->dstBuffer );
+		CHECK_ERR( msg.srcImage and msg.dstBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -791,13 +791,13 @@ namespace PlatformGL
 	_CmdBlitImage
 =================================================
 */
-	bool GL4CommandBuilder::_CmdBlitImage (const Message< GpuMsg::CmdBlitImage > &msg)
+	bool GL4CommandBuilder::_CmdBlitImage (const GpuMsg::CmdBlitImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->srcImage and msg->dstImage );
+		CHECK_ERR( msg.srcImage and msg.dstImage );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -806,13 +806,13 @@ namespace PlatformGL
 	_CmdBlitGLFramebuffers
 =================================================
 */
-	bool GL4CommandBuilder::_CmdBlitGLFramebuffers (const Message< GpuMsg::CmdBlitGLFramebuffers > &msg)
+	bool GL4CommandBuilder::_CmdBlitGLFramebuffers (const GpuMsg::CmdBlitGLFramebuffers &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->srcFramebuffer and msg->dstFramebuffer );
+		CHECK_ERR( msg.srcFramebuffer and msg.dstFramebuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 
@@ -821,14 +821,14 @@ namespace PlatformGL
 	_CmdUpdateBuffer
 =================================================
 */
-	bool GL4CommandBuilder::_CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &msg)
+	bool GL4CommandBuilder::_CmdUpdateBuffer (const GpuMsg::CmdUpdateBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 
-		_commands.PushBack({ GpuMsg::GLCmdUpdateBuffer{ msg.Data(), _bufferData.Size() }, __FILE__, __LINE__ });
+		_commands.PushBack({ GpuMsg::GLCmdUpdateBuffer{ msg, _bufferData.Size() }, __FILE__, __LINE__ });
 		
-		_bufferData.Append( msg->data );
+		_bufferData.Append( msg.data );
 		return true;
 	}
 	
@@ -837,13 +837,13 @@ namespace PlatformGL
 	_CmdFillBuffer
 =================================================
 */
-	bool GL4CommandBuilder::_CmdFillBuffer (const Message< GpuMsg::CmdFillBuffer > &msg)
+	bool GL4CommandBuilder::_CmdFillBuffer (const GpuMsg::CmdFillBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->dstBuffer );
+		CHECK_ERR( msg.dstBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -852,12 +852,12 @@ namespace PlatformGL
 	_CmdClearAttachments
 =================================================
 */
-	bool GL4CommandBuilder::_CmdClearAttachments (const Message< GpuMsg::CmdClearAttachments > &msg)
+	bool GL4CommandBuilder::_CmdClearAttachments (const GpuMsg::CmdClearAttachments &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -866,13 +866,13 @@ namespace PlatformGL
 	_CmdClearColorImage
 =================================================
 */
-	bool GL4CommandBuilder::_CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &msg)
+	bool GL4CommandBuilder::_CmdClearColorImage (const GpuMsg::CmdClearColorImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->image );
+		CHECK_ERR( msg.image );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -881,13 +881,13 @@ namespace PlatformGL
 	_CmdClearDepthStencilImage
 =================================================
 */
-	bool GL4CommandBuilder::_CmdClearDepthStencilImage (const Message< GpuMsg::CmdClearDepthStencilImage > &msg)
+	bool GL4CommandBuilder::_CmdClearDepthStencilImage (const GpuMsg::CmdClearDepthStencilImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
-		CHECK_ERR( msg->image );
+		CHECK_ERR( msg.image );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -896,12 +896,12 @@ namespace PlatformGL
 	_CmdPipelineBarrier
 =================================================
 */
-	bool GL4CommandBuilder::_CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &msg)
+	bool GL4CommandBuilder::_CmdPipelineBarrier (const GpuMsg::CmdPipelineBarrier &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::Command );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -910,10 +910,10 @@ namespace PlatformGL
 	_CmdPushConstants
 =================================================
 */
-	bool GL4CommandBuilder::_CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &)
+	bool GL4CommandBuilder::_CmdPushConstants (const GpuMsg::CmdPushConstants &)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 		
 		TODO("");
 		return true;
@@ -924,10 +924,10 @@ namespace PlatformGL
 	_CmdPushNamedConstants
 =================================================
 */
-	bool GL4CommandBuilder::_CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &)
+	bool GL4CommandBuilder::_CmdPushNamedConstants (const GpuMsg::CmdPushNamedConstants &)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
 		
 		TODO("");
 		return true;
@@ -938,12 +938,12 @@ namespace PlatformGL
 	_CmdPushNamedConstants
 =================================================
 */
-	bool GL4CommandBuilder::_CmdDebugMarker (const Message< GpuMsg::CmdDebugMarker > &msg)
+	bool GL4CommandBuilder::_CmdDebugMarker (const GpuMsg::CmdDebugMarker &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope != EScope::None );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -952,12 +952,12 @@ namespace PlatformGL
 	_CmdPushNamedConstants
 =================================================
 */
-	bool GL4CommandBuilder::_CmdPushDebugGroup (const Message< GpuMsg::CmdPushDebugGroup > &msg)
+	bool GL4CommandBuilder::_CmdPushDebugGroup (const GpuMsg::CmdPushDebugGroup &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope != EScope::None );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -966,12 +966,12 @@ namespace PlatformGL
 	_CmdPushNamedConstants
 =================================================
 */
-	bool GL4CommandBuilder::_CmdPopDebugGroup (const Message< GpuMsg::CmdPopDebugGroup > &msg)
+	bool GL4CommandBuilder::_CmdPopDebugGroup (const GpuMsg::CmdPopDebugGroup &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope != EScope::None );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 

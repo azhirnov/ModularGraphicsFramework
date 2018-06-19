@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -91,15 +91,15 @@ namespace PlatformSW
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Update (const ModuleMsg::Update &);
 		
-		bool _SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &);
-		bool _SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &);
-		bool _SWPresent (const Message< GpuMsg::SWPresent > &);
-		bool _ClientWaitFence (const Message< GpuMsg::ClientWaitFence > &);
-		bool _ClientWaitDeviceIdle (const Message< GpuMsg::ClientWaitDeviceIdle > &);
+		bool _SubmitGraphicsQueueCommands (const GpuMsg::SubmitGraphicsQueueCommands &);
+		bool _SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &);
+		bool _SWPresent (const GpuMsg::SWPresent &);
+		bool _ClientWaitFence (const GpuMsg::ClientWaitFence &);
+		bool _ClientWaitDeviceIdle (const GpuMsg::ClientWaitDeviceIdle &);
 
 	private:
 		bool _Submit (const GpuMsg::SubmitGraphicsQueueCommands &msg);
@@ -163,7 +163,7 @@ namespace PlatformSW
 	_Delete
 =================================================
 */
-	bool SWCommandQueue::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SWCommandQueue::_Delete (const ModuleMsg::Delete &msg)
 	{
 		CHECK( _Execute() );
 
@@ -175,7 +175,7 @@ namespace PlatformSW
 	_Link
 =================================================
 */
-	bool SWCommandQueue::_Link (const Message< ModuleMsg::Link > &msg)
+	bool SWCommandQueue::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -193,7 +193,7 @@ namespace PlatformSW
 	_Update
 =================================================
 */
-	bool SWCommandQueue::_Update (const Message< ModuleMsg::Update > &)
+	bool SWCommandQueue::_Update (const ModuleMsg::Update &)
 	{
 		if ( _IsComposedState( GetState() ) )
 		{
@@ -208,12 +208,12 @@ namespace PlatformSW
 	_SubmitGraphicsQueueCommands
 =================================================
 */
-	bool SWCommandQueue::_SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &msg)
+	bool SWCommandQueue::_SubmitGraphicsQueueCommands (const GpuMsg::SubmitGraphicsQueueCommands &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( _family[ EQueueFamily::Graphics ] );
 		
-		return _Submit( *msg );
+		return _Submit( msg );
 	}
 	
 /*
@@ -221,12 +221,12 @@ namespace PlatformSW
 	_SubmitComputeQueueCommands
 =================================================
 */
-	bool SWCommandQueue::_SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &msg)
+	bool SWCommandQueue::_SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( _family[ EQueueFamily::Compute ] );
 		
-		return _Submit( *msg );
+		return _Submit( msg );
 	}
 	
 /*
@@ -247,34 +247,34 @@ namespace PlatformSW
 
 			submit.commands.PushBack({ cmd, ExecuteCmdBufferMsg{} });
 			
-			SendTo( cmd, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
+			cmd->Send( GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
 		}
 
 		// copy signal semaphores
 		for (auto& sem : msg.signalSemaphores)
 		{
-			Message< GpuMsg::GetSWSemaphore >	req_sem{ sem };
-			SendTo( _syncManager, req_sem );
+			GpuMsg::GetSWSemaphore	req_sem{ sem };
+			_syncManager->Send( req_sem );
 
-			submit.signalSemaphores.PushBack( *req_sem->result );
+			submit.signalSemaphores.PushBack( *req_sem.result );
 		}
 
 		// copy wait semaphores
 		for (auto& sem : msg.waitSemaphores)
 		{
-			Message< GpuMsg::GetSWSemaphore >	req_sem{ sem.first };
-			SendTo( _syncManager, req_sem );
+			GpuMsg::GetSWSemaphore	req_sem{ sem.first };
+			_syncManager->Send( req_sem );
 
-			submit.waitSemaphores.PushBack({ *req_sem->result, sem.second });
+			submit.waitSemaphores.PushBack({ *req_sem.result, sem.second });
 		}
 
 		// copy fence
 		if ( msg.fence != GpuFenceId::Unknown )
 		{
-			Message< GpuMsg::GetSWFence >	req_fence{ msg.fence };
-			SendTo( _syncManager, req_fence );
+			GpuMsg::GetSWFence	req_fence{ msg.fence };
+			_syncManager->Send( req_fence );
 
-			submit.signalFence = *req_fence->result;
+			submit.signalFence = *req_fence.result;
 			submit.signalFence->Enqueue();
 		}
 
@@ -325,17 +325,14 @@ namespace PlatformSW
 				{
 					auto&	cmd = submited.commands[j];
 
-					Message< GpuMsg::ExecuteSWCommandBuffer >	execute{ cmd.second };
-					SendTo( cmd.first, execute );
-
-					cmd.second	= *execute;
+					cmd.first->Send( cmd.second );
 
 					// TODO: compare lastIndex and set 'changed' to true
 
 					// remove command buffer if completed
 					if ( *cmd.second.completed )
 					{
-						SendTo( cmd.first, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Completed });
+						cmd.first->Send( GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Completed });
 
 						submited.commands.Erase( j );
 						--j;
@@ -379,14 +376,14 @@ namespace PlatformSW
 		// check for deadlock on semaphore or event
 		if ( not changed and not _queue.Empty() )
 		{
-			_SendEvent< GpuMsg::DeviceLost >({});
+			_SendEvent( GpuMsg::DeviceLost{} );
 			return false;
 		}
 
 		// check for deadlock on fence
 		if ( run_to_fence )
 		{
-			_SendEvent< GpuMsg::DeviceLost >({});
+			_SendEvent( GpuMsg::DeviceLost{} );
 			return false;
 		}
 		return true;
@@ -397,7 +394,7 @@ namespace PlatformSW
 	_SWPresent
 =================================================
 */
-	bool SWCommandQueue::_SWPresent (const Message< GpuMsg::SWPresent > &)
+	bool SWCommandQueue::_SWPresent (const GpuMsg::SWPresent &)
 	{
 		TODO( "" );
 		return false;
@@ -408,20 +405,20 @@ namespace PlatformSW
 	_ClientWaitFence
 =================================================
 */
-	bool SWCommandQueue::_ClientWaitFence (const Message< GpuMsg::ClientWaitFence > &msg)
+	bool SWCommandQueue::_ClientWaitFence (const GpuMsg::ClientWaitFence &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
-		CHECK_ERR( not msg->fences.Empty() );
+		CHECK_ERR( not msg.fences.Empty() );
 
 		FencesSet_t		fences;
 
-		for (auto& wfence : msg->fences)
+		for (auto& wfence : msg.fences)
 		{
-			Message< GpuMsg::GetSWFence >	req_fence{ wfence };
-			SendTo( _syncManager, req_fence );
+			GpuMsg::GetSWFence	req_fence{ wfence };
+			_syncManager->Send( req_fence );
 
-			CHECK_ERR( req_fence->result and (*req_fence->result)->IsEnqueued() );
-			fences.Add( *req_fence->result );
+			CHECK_ERR( req_fence.result and (*req_fence.result)->IsEnqueued() );
+			fences.Add( *req_fence.result );
 		}
 
 		if ( fences.Empty() )
@@ -436,7 +433,7 @@ namespace PlatformSW
 	_ClientWaitDeviceIdle
 =================================================
 */
-	bool SWCommandQueue::_ClientWaitDeviceIdle (const Message< GpuMsg::ClientWaitDeviceIdle > &)
+	bool SWCommandQueue::_ClientWaitDeviceIdle (const GpuMsg::ClientWaitDeviceIdle &)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 

@@ -20,7 +20,7 @@ namespace PipelineCompiler
 	{
 		CHECK_ERR( InitializeContext() );
 		
-		Message< GpuMsg::GetCLDeviceInfo >		req_dev;
+		GpuMsg::GetCLDeviceInfo >		req_dev;
 		CHECK( _app->CLThread()->Send( req_dev ) );
 
 		Array<const char*>	parts;
@@ -103,7 +103,7 @@ namespace PipelineCompiler
 
 # else
 
-	bool ShaderCompiler::_CompileCL (const Config &, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result)
+	bool ShaderCompiler::_CompileCL (const Config &, const _ShaderData &, OUT String &, OUT BinaryArray &)
 	{
 		return false;
 	}

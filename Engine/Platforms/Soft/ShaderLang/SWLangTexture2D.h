@@ -29,8 +29,6 @@ namespace Impl
 
 	public:
 		Texture2D () {}
-		Texture2D (Texture2D &&) = default;
-		Texture2D (const Texture2D &) = default;
 
 		ND_ T Sample (const float2 &point) const;
 		ND_ T Sample (const float2 &point, float bias) const;

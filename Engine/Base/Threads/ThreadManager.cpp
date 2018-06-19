@@ -42,9 +42,7 @@ namespace Base
 		CHECK( _ValidateMsgSubscriptions() );
 		
 		_currentThread->_SetManager( this );
-		CHECK( SendTo< ModuleMsg::AddThreadToManager >( this,
-					{ _currentThread, DelegateBuilder( _currentThread, &ParallelThreadImpl::_NoWait ) }
-				));
+		CHECK( _SendMsg( ModuleMsg::AddThreadToManager{ _currentThread, DelegateBuilder( _currentThread, &ParallelThreadImpl::_NoWait )} ));
 	}
 	
 /*
@@ -64,11 +62,11 @@ namespace Base
 	_Delete
 =================================================
 */
-	bool ThreadManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool ThreadManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_SendToAllThreads(
 			LAMBDA() (const ThreadManagerPtr &mngr, const ModulePtr &thread, GlobalSystemsRef) {
-				thread->Send( Message< ModuleMsg::Delete >{}.From( mngr ) );
+				thread->Send( ModuleMsg::Delete{} );
 			},
 			true
 		);
@@ -81,11 +79,11 @@ namespace Base
 			{
 				thread.second.wait();
 				
-				_SendForEachAttachments< ModuleMsg::Update >({ TimeL::FromNanoSeconds(1) });
+				_SendForEachAttachments( ModuleMsg::Update{ TimeL::FromNanoSeconds(1) });
 			}
 		}
 
-		SendTo( _currentThread, msg );
+		_currentThread->Send( msg );
 		_currentThread->_OnExit();
 
 		CHECK_ERR( Module::_Delete_Impl( msg ) );
@@ -115,14 +113,14 @@ namespace Base
 			if ( exceptMain and thread.second.thread == _currentThread )
 				continue;
 
-			CHECK( task_mngr->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( task_mngr->SendAsync( ModuleMsg::PushAsyncMessage{
 					AsyncMessage{
 						LAMBDA( func, mngr = ModulePtr(this), thread = thread.second.thread ) (GlobalSystemsRef gs) {
 							func( mngr, thread, gs );
-					} },
+					}},
 					thread.first
-				}.From( this ).Async()
-			));
+				})
+			);
 		}
 		return true;
 	}
@@ -132,11 +130,11 @@ namespace Base
 	_Link
 =================================================
 */
-	bool ThreadManager::_Link (const Message< ModuleMsg::Link > &msg)
+	bool ThreadManager::_Link (const ModuleMsg::Link &msg)
 	{
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 		
-		SendTo( _currentThread, msg );
+		_currentThread->Send( msg );
 		return true;
 	}
 	
@@ -145,16 +143,16 @@ namespace Base
 	_Compose
 =================================================
 */
-	bool ThreadManager::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool ThreadManager::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
 
 		CHECK_ERR( Module::_DefCompose( false ) );
 		
-		SendTo( _currentThread, msg );
-
+		_currentThread->Send( msg );
 		_currentThread->_OnEnter();
+
 		return true;
 	}
 
@@ -163,7 +161,7 @@ namespace Base
 	_Update
 =================================================
 */
-	bool ThreadManager::_Update (const Message< ModuleMsg::Update > &)
+	bool ThreadManager::_Update (const ModuleMsg::Update &)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
@@ -178,7 +176,7 @@ namespace Base
 	_AddToManager
 =================================================
 */
-	bool ThreadManager::_AddToManager (const Message< ModuleMsg::AddToManager > &)
+	bool ThreadManager::_AddToManager (const ModuleMsg::AddToManager &)
 	{
 		RETURN_ERR( "use 'AddThreadToManager' instead of 'AddToManager'" );
 	}
@@ -188,14 +186,14 @@ namespace Base
 	_AddThreadToManager
 =================================================
 */
-	bool ThreadManager::_AddThreadToManager (const Message< ModuleMsg::AddThreadToManager > &msg)
+	bool ThreadManager::_AddThreadToManager (const ModuleMsg::AddThreadToManager &msg)
 	{
 		SCOPELOCK( _lock );
 
-		CHECK_ERR( msg->module );
-		ASSERT( not _threads.IsExist( msg->module->GetThreadID() ) );
+		CHECK_ERR( msg.module );
+		ASSERT( not _threads.IsExist( msg.module->GetThreadID() ) );
 
-		_threads.Add( msg->module->GetThreadID(), { msg->module, RVREF(msg->wait.Get()) } );
+		_threads.Add( msg.module->GetThreadID(), { msg.module, RVREF(msg.wait.Get()) } );
 		return true;
 	}
 
@@ -204,12 +202,12 @@ namespace Base
 	_RemoveFromManager
 =================================================
 */
-	bool ThreadManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool ThreadManager::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
 		SCOPELOCK( _lock );
-		CHECK_ERR( msg->module );
+		CHECK_ERR( msg.module );
 
-		ModulePtr	module = msg->module.Lock();
+		ModulePtr	module = msg.module.Lock();
 
 		if ( not module )
 			return false;
@@ -231,7 +229,7 @@ namespace Base
 	_FindThread
 =================================================
 *
-	bool ThreadManager::_FindThread (const Message< ModuleMsg::FindThread > &msg)
+	bool ThreadManager::_FindThread (const ModuleMsg::FindThread &msg)
 	{
 		return true;
 	}
@@ -299,7 +297,7 @@ namespace Base
 		// data will changed in other thread, so we can't modify anything, you should wait for signal.
 		CHECK_ERR( data.sync.Wait( TimeL::FromSeconds( 10 ) ) );
 		
-		CHECK( mngr->Send< ModuleMsg::AddThreadToManager >({ data.result, RVREF(data.waitFunc) }) );
+		CHECK( mngr->Send( ModuleMsg::AddThreadToManager{ data.result, RVREF(data.waitFunc) }) );
 		
 		return data.result;
 	}
@@ -371,7 +369,7 @@ namespace Base
 		
 		pt->_OnEnter();
 
-		ModuleUtils::Initialize( {pt}, pt->_GetManager() );
+		ModuleUtils::Initialize({ pt });
 
 		pt->_Loop();
 

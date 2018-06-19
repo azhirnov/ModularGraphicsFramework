@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -24,7 +24,7 @@ namespace GpuMsg
 	//
 	// Get Private Classes
 	//
-	struct GetSWPrivateClasses
+	struct GetSWPrivateClasses : _MessageBase_
 	{
 		struct Classes {
 			PlatformSW::SWDevice *			device			= null;
@@ -91,16 +91,16 @@ namespace PlatformSW
 
 	// message handlers
 	protected:
-		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
-		bool _GetSWDeviceInfo (const Message< GpuMsg::GetSWDeviceInfo > &);
-		bool _GetSWPrivateClasses (const Message< GpuMsg::GetSWPrivateClasses > &);
+		bool _OnManagerChanged (const ModuleMsg::OnManagerChanged &);
+		bool _GetDeviceInfo (const GpuMsg::GetDeviceInfo &);
+		bool _GetSWDeviceInfo (const GpuMsg::GetSWDeviceInfo &);
+		bool _GetSWPrivateClasses (const GpuMsg::GetSWPrivateClasses &);
 		
 
 	// event handlers
 	private:
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
-		bool _DeviceDeleted (const Message< ModuleMsg::Delete > &);
+		bool _DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
+		bool _DeviceDeleted (const ModuleMsg::Delete &);
 
 
 	protected:

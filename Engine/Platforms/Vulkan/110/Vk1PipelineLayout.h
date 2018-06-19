@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -29,14 +29,14 @@ namespace PlatformVK
 	// types
 	private:
 		using PushConstants_t		= GpuMsg::GetVkPipelineLayoutPushConstants::PushConstants_t;
-		using DescriptorBindings_t	= FixedSizeArray< vk::VkDescriptorSetLayoutBinding, 64 >;
+		using DescriptionBindings_t	= FixedSizeArray< vk::VkDescriptorSetLayoutBinding, 64 >;
 		using PushConstantRanges_t	= FixedSizeArray< vk::VkPushConstantRange, 16 >;
-		struct _CreateDescriptor_Func;
+		struct _CreateDescription_Func;
 
 
 	// variables
 	private:
-		PipelineLayoutDescriptor	_layoutDescr;
+		PipelineLayoutDescription	_layoutDescr;
 		vk::VkDescriptorSetLayout	_descriptorId;
 		vk::VkPipelineLayout		_layoutId;
 		PushConstants_t				_pushConstants;
@@ -47,21 +47,21 @@ namespace PlatformVK
 		explicit Vk1PipelineLayout (Ptr<Vk1Device> dev);
 		~Vk1PipelineLayout ();
 
-		bool Create (const PipelineLayoutDescriptor &layout);
+		bool Create (const PipelineLayoutDescription &layout);
 		void Destroy ();
 
-		ND_ PipelineLayoutDescriptor const&	GetDescriptor ()			const	{ return _layoutDescr; }
-		ND_ vk::VkPipelineLayout			GetLayoutID ()				const	{ return _layoutId; }
-		ND_ vk::VkDescriptorSetLayout		GetDescriptorLayouts ()		const	{ return _descriptorId; }
-		ND_ PushConstants_t const&			GetPushConstants ()			const	{ return _pushConstants; }
+		ND_ PipelineLayoutDescription const&	GetDescription ()			const	{ return _layoutDescr; }
+		ND_ vk::VkPipelineLayout				GetLayoutID ()				const	{ return _layoutId; }
+		ND_ vk::VkDescriptorSetLayout			GetDescriptionLayouts ()	const	{ return _descriptorId; }
+		ND_ PushConstants_t const&				GetPushConstants ()			const	{ return _pushConstants; }
 
 	private:
-		void _Init (const PipelineLayoutDescriptor &layout);
+		void _Init (const PipelineLayoutDescription &layout);
 
 		void _DestroyLayout ();
-		void _DestroyLayoutDescriptors ();
+		void _DestroyLayoutDescriptions ();
 			
-		bool _CreateLayoutDescriptors (const PipelineLayoutDescriptor &layout, OUT PushConstantRanges_t &pc);
+		bool _CreateLayoutDescriptions (const PipelineLayoutDescription &layout, OUT PushConstantRanges_t &pc);
 	};
 	
 	
@@ -80,18 +80,18 @@ namespace PlatformVK
 
 			explicit SearchableLayout (const Vk1PipelineLayoutPtr &ptr) : ptr(ptr) {}
 			
-			bool operator == (const SearchableLayout &right) const	{ return ptr->GetDescriptor() == right.ptr->GetDescriptor(); }
-			bool operator >  (const SearchableLayout &right) const	{ return ptr->GetDescriptor() >  right.ptr->GetDescriptor(); }
+			bool operator == (const SearchableLayout &right) const	{ return ptr->GetDescription() == right.ptr->GetDescription(); }
+			bool operator >  (const SearchableLayout &right) const	{ return ptr->GetDescription() >  right.ptr->GetDescription(); }
 		};
 
 		struct LayoutSearch
 		{
-			PipelineLayoutDescriptor const&		descr;
+			PipelineLayoutDescription const&		descr;
 
-			explicit LayoutSearch (const PipelineLayoutDescriptor &d) : descr(d) {}
+			explicit LayoutSearch (const PipelineLayoutDescription &d) : descr(d) {}
 
-			bool operator == (const SearchableLayout &right) const	{ return descr == right.ptr->GetDescriptor(); }
-			bool operator >  (const SearchableLayout &right) const	{ return descr >  right.ptr->GetDescriptor(); }
+			bool operator == (const SearchableLayout &right) const	{ return descr == right.ptr->GetDescription(); }
+			bool operator >  (const SearchableLayout &right) const	{ return descr >  right.ptr->GetDescription(); }
 		};
 
 		using Layouts_t	= Set< SearchableLayout >;
@@ -107,7 +107,7 @@ namespace PlatformVK
 		explicit Vk1PipelineLayoutCache (Ptr<Vk1Device> dev);
 		~Vk1PipelineLayoutCache ();
 
-		ND_ Vk1PipelineLayoutPtr  Create (const PipelineLayoutDescriptor &layout);
+		ND_ Vk1PipelineLayoutPtr  Create (const PipelineLayoutDescription &layout);
 
 		void Destroy ();
 	};

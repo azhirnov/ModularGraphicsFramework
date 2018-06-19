@@ -61,11 +61,11 @@ namespace Base
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
-		bool _AddTaskSchedulerToManager (const Message< ModuleMsg::AddTaskSchedulerToManager > &);
-		bool _PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg) noexcept;
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
+		bool _AddTaskSchedulerToManager (const ModuleMsg::AddTaskSchedulerToManager &);
+		bool _PushAsyncMessage (const ModuleMsg::PushAsyncMessage &msg) noexcept;
 
 	private:
 		static ModulePtr _CreateTaskModule (UntypedID_t, GlobalSystemsRef, const CreateInfo::TaskModule &);

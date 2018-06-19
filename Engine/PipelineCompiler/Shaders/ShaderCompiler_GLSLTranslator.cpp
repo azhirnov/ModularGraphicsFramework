@@ -51,10 +51,14 @@ namespace PipelineCompiler
 		
 		bool TranslateEntry (const TypeInfo &ret, StringCRef sign, ArrayCRef<Symbol> args, StringCRef body, OUT String &entryPoint, INOUT String &src) override;
 		bool TranslateStructAccess (SymbolID id, const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) override;
+
+		bool TranslateBufferLoad (SymbolID, StringCRef, StringCRef, const TypeInfo &, INOUT String &) override { return false; }
+		bool TranslateBufferStore (SymbolID, StringCRef, StringCRef, const TypeInfo &, StringCRef, const TypeInfo &, INOUT String &) override { return false; }
 		
 		bool TranslateValue (VariantCRef value, INOUT String &src) const override;
 		
-		bool DeclExternalTypes () const override	{ return false; }
+		bool DeclExternalTypes () const override		{ return false; }
+		bool ReplaceStructByBuffer () const override	{ return false; }
 
 	private:
 		String _TranslateFunctionName (StringCRef sign);
@@ -62,8 +66,8 @@ namespace PipelineCompiler
 		bool _TranslateField (const TypeInfo &t, INOUT String &res);
 
 		bool _TranslateBuffer (glslang::TType const& type, Symbol const& info, OUT String &str);
-		bool _TranslateImage (glslang::TType const& type, Symbol const& info, OUT String &str);
-		bool _TranslateVarying (glslang::TType const& type, Symbol const& info, OUT String &str);
+		bool _TranslateImage (Symbol const& info, OUT String &str);
+		bool _TranslateVarying (Symbol const& info, OUT String &str);
 		bool _TranslateConst (glslang::TIntermTyped* typed, Symbol const& info, OUT String &str);
 		bool _TranslateGlobal (glslang::TIntermTyped* typed, Symbol const& info, OUT String &str);
 		bool _TranslateShared (Symbol const& info, OUT String &str);
@@ -100,7 +104,7 @@ namespace PipelineCompiler
 		CHECK_ERR( intermediate );
 
 		TIntermNode*	root	= intermediate->getTreeRoot();
-		Translator		translator;
+		Translator		translator{ log };
 
 		translator.states.useGXrules	= intermediate->getSource() == glslang::EShSourceGxsl;
 		translator.states.inlineAll		= cfg.inlineAll;
@@ -111,7 +115,6 @@ namespace PipelineCompiler
 		
 		CHECK_ERR( translator.Main( root, cfg.skipExternals ) );
 
-		log		<< translator.log;
 		result	= BinArrayCRef::From( translator.src );
 		return true;
 	}
@@ -124,6 +127,9 @@ namespace PipelineCompiler
 	TranslateShaderInfo
 =================================================
 */
+	static StringCRef ConvertGeometryInputPrimitive (glslang::TLayoutGeometry value);
+	static StringCRef ConvertGeometryOutputPrimitive (glslang::TLayoutGeometry value);
+
 	static bool TranslateShaderInfo (const glslang::TIntermediate* intermediate, bool skipExternals, Translator &translator)
 	{
 		String &	src = translator.src;
@@ -200,21 +206,22 @@ namespace PipelineCompiler
 				result._tessEvaluation.ccw			= not (intermediate->getVertexOrder() == glslang::TVertexOrder::EvoCw);
 				result._tessEvaluation.primitive	= ConvertTessellationInputPrimitive( intermediate->getInputPrimitive(), intermediate->getPointMode() );
 				break;
-			}
+			}*/
 
 			case EShLanguage::EShLangGeometry :
 			{
-				result._geometry.invocations		= intermediate->getInvocations();
-				result._geometry.maxOutputVertices	= intermediate->getVertices();
-				result._geometry.inputPrimitive		= ConvertGeometryInputPrimitive( intermediate->getInputPrimitive() );
-				result._geometry.outputPrimitive	= ConvertGeometryOutputPrimitive( intermediate->getOutputPrimitive() );
+				if ( intermediate->getInvocations() > 1 ) {
+					src << "layout (invocations = " << intermediate->getInvocations() << ") in;\n";
+				}
+
+				src << "layout (" << ConvertGeometryInputPrimitive( intermediate->getInputPrimitive() ) << ") in;\n";
+				src << "layout (" << ConvertGeometryOutputPrimitive( intermediate->getOutputPrimitive() ) << ", max_vertices = " << intermediate->getVertices() << ") out;\n";
 				break;
 			}
-			*/
+			
 			case EShLanguage::EShLangCompute :
 			{
-				translator.src
-					<< "layout (local_size_x=" << intermediate->getLocalSize(0)
+				src	<< "layout (local_size_x=" << intermediate->getLocalSize(0)
 					<< ", local_size_y=" << intermediate->getLocalSize(1)
 					<< ", local_size_z=" << intermediate->getLocalSize(2) << ") in;\n";
 				break;
@@ -223,6 +230,40 @@ namespace PipelineCompiler
 
 		src << '\n';
 		return true;
+	}
+	
+/*
+=================================================
+	ConvertGeometryInputPrimitive
+=================================================
+*/
+	static StringCRef ConvertGeometryInputPrimitive (glslang::TLayoutGeometry value)
+	{
+		switch ( value )
+		{
+			case glslang::TLayoutGeometry::ElgPoints :				return "points";
+			case glslang::TLayoutGeometry::ElgLines :				return "lines";
+			case glslang::TLayoutGeometry::ElgLinesAdjacency :		return "lines_adjacency";
+			case glslang::TLayoutGeometry::ElgTriangles :			return "triangles";
+			case glslang::TLayoutGeometry::ElgTrianglesAdjacency :	return "triangles_adjacency";
+		}
+		RETURN_ERR( "invalid geometry shader input primitive type!" );
+	}
+	
+/*
+=================================================
+	ConvertGeometryOutputPrimitive
+=================================================
+*/
+	static StringCRef ConvertGeometryOutputPrimitive (glslang::TLayoutGeometry value)
+	{
+		switch ( value )
+		{
+			case glslang::TLayoutGeometry::ElgPoints :			return "points";
+			case glslang::TLayoutGeometry::ElgLineStrip :		return "line_strip";
+			case glslang::TLayoutGeometry::ElgTriangleStrip :	return "triangle_strip";
+		}
+		RETURN_ERR( "invalid geometry shader output primitive type!" );
 	}
 
 /*
@@ -257,7 +298,7 @@ namespace PipelineCompiler
 			res << ToStringGLSL( t.type );
 		}
 
-		res << " " << t.name << (t.arraySize == 0 ? "" : (t.arraySize == UMax ? "[]" : "["_str << t.arraySize << "]"));
+		res << " " << t.name << (t.arraySize.IsNotArray() ? "" : (t.arraySize.IsDynamicArray() ? "[]" : "["_str << t.arraySize.Size() << "]"));
 		return true;
 	}
 	
@@ -274,7 +315,7 @@ namespace PipelineCompiler
 			src << ToStringGLSL( t.type );
 		}
 
-		src << " " << t.name << (t.arraySize == 0 ? "" : (t.arraySize == UMax ? "[]" : "["_str << t.arraySize << "]"));
+		src << " " << t.name << (t.arraySize.IsNotArray() ? "" : (t.arraySize.IsDynamicArray() ? "[]" : "["_str << t.arraySize.Size() << "]"));
 		return true;
 	}
 
@@ -324,7 +365,7 @@ namespace PipelineCompiler
 			res << ToStringGLSL( t.type );
 		}
 
-		res << (t.arraySize == 0 ? "" : (t.arraySize == UMax ? "[]" : "["_str << t.arraySize << "]"));
+		res << (t.arraySize.IsNotArray() ? "" : (t.arraySize.IsDynamicArray() ? "[]" : "["_str << t.arraySize.Size() << "]"));
 		return true;
 	}
 	
@@ -405,7 +446,7 @@ namespace PipelineCompiler
 		}
 		else
 		if ( EShaderVariable::IsImage( info.type ) or EShaderVariable::IsTexture( info.type ) ) {
-			CHECK_ERR( _TranslateImage( type, info, INOUT str ) );
+			CHECK_ERR( _TranslateImage( info, INOUT str ) );
 		}
 		else
 		if ( info.qualifier[ EVariableQualifier::Shared ] ) {
@@ -413,7 +454,7 @@ namespace PipelineCompiler
 		}
 		else
 		if ( info.qualifier[ EVariableQualifier::In ] or info.qualifier[ EVariableQualifier::Out ] ) {
-			CHECK_ERR( _TranslateVarying( type, info, INOUT str ) );
+			CHECK_ERR( _TranslateVarying( info, INOUT str ) );
 		}
 		else
 		if ( info.qualifier[ EVariableQualifier::Constant ] ) {
@@ -647,9 +688,9 @@ namespace PipelineCompiler
 	bool GLSL_DstLanguage::_TranslateOperator2 (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args,
 												ArrayCRef<TypeInfo const*> argTypes, StringCRef all_args, INOUT String &src)
 	{
-		const bool	is_vec	=	(resultType.arraySize == 0 and EShaderVariable::VecSize( resultType.type ) > 1)		and
-								(argTypes[0]->arraySize == 0 and EShaderVariable::VecSize( argTypes[0]->type ) > 1)	and
-								(argTypes[1]->arraySize == 0 and EShaderVariable::VecSize( argTypes[1]->type ) > 1);
+		const bool	is_vec	=	(resultType.arraySize.IsNotArray() and EShaderVariable::VecSize( resultType.type ) > 1)		and
+								(argTypes[0]->arraySize.IsNotArray() and EShaderVariable::VecSize( argTypes[0]->type ) > 1)	and
+								(argTypes[1]->arraySize.IsNotArray() and EShaderVariable::VecSize( argTypes[1]->type ) > 1);
 			
 		const bool	is_float = (EShaderVariable::IsFloat( argTypes[0]->type ) or EShaderVariable::IsFloat( argTypes[1]->type ));
 
@@ -1100,7 +1141,7 @@ namespace PipelineCompiler
 				str << ToStringGLSL( fld.type );
 			}
 
-			str << " " << fld.name << (fld.arraySize == 0 ? "" : (fld.arraySize == UMax ? "[]" : "["_str << fld.arraySize << "]")) << ";\n";
+			str << " " << fld.name << (fld.arraySize.IsNotArray() ? "" : (fld.arraySize.IsDynamicArray() ? "[]" : "["_str << fld.arraySize.Size() << "]")) << ";\n";
 		}
 		str << "} " << info.name << ";\n";
 		return true;
@@ -1111,14 +1152,14 @@ namespace PipelineCompiler
 	_TranslateImage
 =================================================
 */
-	bool GLSL_DstLanguage::_TranslateImage (glslang::TType const& type, Symbol const& info, OUT String &str)
+	bool GLSL_DstLanguage::_TranslateImage (Symbol const& info, OUT String &str)
 	{
 		CHECK_ERR( not info.name.Empty() );
 
 		if ( info.binding != UMax )
 			str << "layout(binding=" << info.binding << ") ";
 
-		if ( type.isImage() )
+		if ( EShaderVariable::IsImage( info.type ) )
 		{
 			str << "layout(" << ToStringGLSL( info.format ) << ") "	// TODO: for writeonly access format you may skip explicit format
 				<< ToStringGLSL( info.memoryModel )
@@ -1140,7 +1181,7 @@ namespace PipelineCompiler
 			str << ToStringGLSL( info.type );
 		}
 
-		str << " " << info.name << (info.arraySize == 0 ? "" : (info.arraySize == UMax ? "[]" : "["_str << info.arraySize << "]")) << ";\n";
+		str << " " << info.name << (info.arraySize.IsNotArray() ? "" : (info.arraySize.IsDynamicArray() ? "[]" : "["_str << info.arraySize.Size() << "]")) << ";\n";
 		return true;
 	}
 
@@ -1162,16 +1203,32 @@ namespace PipelineCompiler
 	_TranslateVarying
 =================================================
 */
-	bool GLSL_DstLanguage::_TranslateVarying (glslang::TType const& type, Symbol const& info, OUT String &str)
+	bool GLSL_DstLanguage::_TranslateVarying (Symbol const& info, OUT String &str)
 	{
-		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqVaryingIn )
+		if ( info.qualifier[ EVariableQualifier::In ] )
 			str << "in ";
 		else
 			str << "out ";
-		
-		ASSERT( info.fields.Empty() );	// TODO
 
-		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
+		if ( info.type == EShaderVariable::VaryingsBlock )
+		{
+			str << info.typeName << " {\n";
+
+			for (auto& fld : info.fields)
+			{
+				str << "\t";
+				CHECK_ERR( _TranslateField( fld, INOUT str ) );
+				str << ";\n";
+			}
+			str << "} " << info.name << (info.arraySize.IsNotArray() ? "" : (info.arraySize.IsDynamicArray() ? "[]" : "["_str << info.arraySize.Size() << "]"));
+		}
+		else
+		{
+			ASSERT( info.fields.Empty() );	// TODO
+
+			CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
+		}
+
 		str << ";\n";
 		return true;
 	}
@@ -1190,10 +1247,10 @@ namespace PipelineCompiler
 		FOR( i, fields )
 		{
 			const auto&	field	= fields[i];
-			const uint	count	= field.arraySize == 0 ? 1 : field.arraySize;
-			const bool	is_arr	= field.arraySize != 0;
+			const uint	count	= field.arraySize.Size();
+			const bool	is_arr	= field.arraySize.IsArray();
 
-			CHECK_ERR( field.arraySize != UMax );
+			CHECK_ERR( not field.arraySize.IsDynamicArray() );
 			
 			src << (i ? ", " : "");
 
@@ -1238,9 +1295,9 @@ namespace PipelineCompiler
 	bool GLSL_DstLanguage::TranslateConstant (const glslang::TConstUnionArray &cu_arr, const TypeInfo &info, INOUT String &str)
 	{
 		// array
-		if ( info.arraySize > 0 )
+		if ( info.arraySize.IsArray() )
 		{
-			TypeInfo	scalar_info = info;		scalar_info.arraySize = 0;
+			TypeInfo	scalar_info = info;		scalar_info.arraySize.MakeNonArray();
 
 			str << "{ ";
 			
@@ -1299,6 +1356,7 @@ namespace PipelineCompiler
 		CHECK_ERR( typed->getAsSymbolNode() );
 
 		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
+		CHECK_ERR( not cu_arr.empty() );
 
 		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
 		str << " = ";
@@ -1318,12 +1376,16 @@ namespace PipelineCompiler
 	{
 		CHECK_ERR( typed->getAsSymbolNode() );
 
+		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
+
 		glslang::TConstUnionArray const&	cu_arr	= typed->getAsSymbolNode()->getConstArray();
 
-		CHECK_ERR( TranslateLocalVar( info, INOUT str ) );
-		
-		CHECK_ERR( TranslateConstant( cu_arr, info, INOUT str ) );
-		
+		if ( not cu_arr.empty() )
+		{
+			str << " = ";
+			CHECK_ERR( TranslateConstant( cu_arr, info, INOUT str ) );
+		}
+
 		str << ";\n";
 		return true;
 	}

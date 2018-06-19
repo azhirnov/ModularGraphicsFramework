@@ -39,8 +39,6 @@ namespace Impl
 
 	public:
 		UniformBuffer () {}
-		UniformBuffer (UniformBuffer &&) = default;
-		UniformBuffer (const UniformBuffer &) = default;
 
 		ND_ T const* operator -> () const;
 	};
@@ -99,8 +97,6 @@ namespace Impl
 
 	public:
 		StorageBuffer () {}
-		StorageBuffer (StorageBuffer &&) = default;
-		StorageBuffer (const StorageBuffer &) = default;
 
 		ND_ decltype(auto)	operator -> ();
 	};

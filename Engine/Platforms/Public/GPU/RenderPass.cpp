@@ -1,6 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Core/STL/Algorithms/StringParser.h"
+#include "Engine/Platforms/Public/GPU/Enums.ToString.h"
 
 namespace Engine
 {
@@ -9,10 +11,163 @@ namespace Platforms
 	
 /*
 =================================================
+	ColorAttachment_t::ToString
+=================================================
+*/
+	DEBUG_ONLY(
+	String  RenderPassDescription::ColorAttachment_t::ToString () const
+	{
+		String	str;
+		str << "ColorAttachment {";
+
+		if ( IsEnabled() ) {
+			str << "\n	name          = " << name
+				<< "\n	format        = " << EPixelFormat::ToString( format )
+				<< "\n	samples       = " << samples.Get()
+				<< "\n	loadOp        = " << EAttachmentLoadOp::ToString( loadOp )
+				<< "\n	storeOp       = " << EAttachmentStoreOp::ToString( storeOp )
+				<< "\n	initialLayout = " << EImageLayout::ToString( initialLayout )
+				<< "\n	finalLayout   = " << EImageLayout::ToString( finalLayout );
+		}
+
+		str << "\n}";
+		return str;
+	})
+//-----------------------------------------------------------------------------
+	
+
+/*
+=================================================
+	DepthStencilAttachment_t::ToString
+=================================================
+*/
+	DEBUG_ONLY(
+	String  RenderPassDescription::DepthStencilAttachment_t::ToString () const
+	{
+		String	str;
+		str << "DepthStencilAttachment {";
+
+		if ( IsEnabled() ) {
+			str << "\n	name           = " << name
+				<< "\n	format         = " << EPixelFormat::ToString( format )
+				<< "\n	samples        = " << samples.Get()
+				<< "\n	loadOp         = " << EAttachmentLoadOp::ToString( loadOp )
+				<< "\n	storeOp        = " << EAttachmentStoreOp::ToString( storeOp )
+				<< "\n	stencilLoadOp  = " << EAttachmentLoadOp::ToString( stencilLoadOp )
+				<< "\n	stencilStoreOp = " << EAttachmentStoreOp::ToString( stencilStoreOp )
+				<< "\n	initialLayout  = " << EImageLayout::ToString( initialLayout )
+				<< "\n	finalLayout    = " << EImageLayout::ToString( finalLayout );
+		}
+
+		str << "\n}";
+		return str;
+	})
+//-----------------------------------------------------------------------------
+	
+
+/*
+=================================================
+	AttachmentRef_t::ToString
+=================================================
+*/
+	DEBUG_ONLY(
+	String  RenderPassDescription::AttachmentRef_t::ToString () const
+	{
+		String	str;
+		str << "AttachmentRef {";
+
+		if ( IsEnabled() ) {
+			str << "\n	name    = " << name
+				<< "\n	layout  = " << EImageLayout::ToString( layout );
+		}
+
+		str	<< "\n}";
+		return str;
+	})
+//-----------------------------------------------------------------------------
+	
+
+/*
+=================================================
+	Subpass_t::ToString
+=================================================
+*/
+	DEBUG_ONLY(
+	String  RenderPassDescription::Subpass_t::ToString () const
+	{
+		const auto	AttachmentsRefs_ToString = LAMBDA() (const AttachmentsRef_t &arr)
+		{{
+			String	str;
+			FOR( i, arr ) {
+				str << (i ? ",\n" : "") << arr[i].ToString();
+			}
+			StringParser::IncreaceIndent( INOUT str, "\t\t" );
+			return str;
+		}};
+
+		String	str;
+		str << "Subpass {"
+			<< "\n	name             = " << name;
+
+		if ( not colors.Empty() ) {
+			str << "\n	colorAttachments = {\n" << AttachmentsRefs_ToString( colors ) << "\n\t}";
+		}
+
+		if ( depthStencil.IsEnabled() ) {
+			str << "\n	depthStencil     = " << depthStencil.ToString();
+		}
+
+		if ( not inputs.Empty() ) {
+			str << "\n	inputs           = " << AttachmentsRefs_ToString( inputs ) << "\n\t}";
+		}
+
+		if ( resolve.IsEnabled() ) {
+			str << "\n	resolve          = " << resolve.ToString();
+		}
+
+		if ( not preserves.Empty() ) {
+			str << "\n	preserves        = { ";
+			FOR( i, preserves ) {
+				str << (i ? ", " : "") << preserves[i];
+			}
+			str << " }";
+		}
+
+		str << "\n}";
+		return str;
+	})
+//-----------------------------------------------------------------------------
+
+
+/*
+=================================================
+	SubpassDependency_t::ToString
+=================================================
+*/
+	DEBUG_ONLY(
+	String  RenderPassDescription::SubpassDependency_t::ToString () const
+	{
+		String	str;
+		str << "SubpassDependency {"
+			<< "\n	srcPass    = " << srcPass
+			<< "\n	srcStage   = " << EPipelineStage::ToString( srcStage )
+			<< "\n	srcAccess  = " << EPipelineAccess::ToString( srcAccess )
+			<< "\n	dstPass    = " << dstPass
+			<< "\n	dstStage   = " << EPipelineStage::ToString( dstStage )
+			<< "\n	dstAccess  = " << EPipelineAccess::ToString( dstAccess )
+			<< "\n	dependency = " << ESubpassDependency::ToString( dependency )
+			<< "\n}";
+		return str;
+	})
+//-----------------------------------------------------------------------------
+
+
+/*
+=================================================
 	operator ==
 =================================================
 */
-	bool RenderPassDescriptor::operator == (const Self &right) const
+	bool RenderPassDescription::operator == (const Self &right) const
 	{
 		return	this->_hash == right._hash																			and
 				BinArrayCRef::From( _colorAttachmens ).BinEquals( BinArrayCRef::From( right._colorAttachmens ) )	and
@@ -26,7 +181,7 @@ namespace Platforms
 	operator >
 =================================================
 */
-	bool RenderPassDescriptor::operator >  (const Self &right) const
+	bool RenderPassDescription::operator >  (const Self &right) const
 	{
 		return
 			this->_hash				 != right._hash						?	this->_hash				 > right._hash						:
@@ -35,6 +190,52 @@ namespace Platforms
 			_subpasses.Count()		 != right._subpasses.Count()		?	_subpasses.Count()		 > right._subpasses.Count()			:
 																	MemCmp( _depthStencilAttachment, right._depthStencilAttachment ) > 0;
 	}
+	
+/*
+=================================================
+	ToString
+=================================================
+*/
+	DEBUG_ONLY(
+	String  RenderPassDescription::ToString () const
+	{
+		String	str = "RenderPass {\n";
+
+		if ( not _colorAttachmens.Empty() )
+		{
+			str << "\tcolorAttachmens = {\n";
+			FOR( i, _colorAttachmens ) {
+				str << (i ? ",\n" : "") << _colorAttachmens[i].ToString();
+			}
+			str << "\t}\n";
+		}
+
+		if ( _depthStencilAttachment.IsEnabled() )
+		{
+			str << "\tdepthStencilAttachment = "
+				<< _depthStencilAttachment.ToString();
+		}
+
+		if ( not _subpasses.Empty() )
+		{
+			str << "\tsubpasses = {\n";
+			FOR( i, _subpasses ) {
+				str << (i ? ",\n" : "") << _subpasses[i].ToString();
+			}
+			str << "\t}\n";
+		}
+
+		if ( not _dependencies.Empty() )
+		{
+			str << "\tdependencies = {\n";
+			FOR( i, _dependencies ) {
+				str << (i ? ",\n" : "") << _dependencies[i].ToString();
+			}
+			str << "\t}\n";
+		}
+
+		return str;
+	})
 //-----------------------------------------------------------------------------
 
 
@@ -277,7 +478,7 @@ namespace Platforms
 	Finish
 =================================================
 */
-	RenderPassDescriptor const&  RenderPassDescrBuilder::Finish ()
+	RenderPassDescription const&  RenderPassDescrBuilder::Finish ()
 	{
 		if ( _changed )
 		{
@@ -301,7 +502,7 @@ namespace Platforms
 	CreateForSurface
 =================================================
 */
-	RenderPassDescriptor  RenderPassDescrBuilder::CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt, EImageLayout::type finalLayout)
+	RenderPassDescription  RenderPassDescrBuilder::CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt, EImageLayout::type finalLayout)
 	{
 		Self		builder;
 		auto		subpass	= builder.AddSubpass("pass");
@@ -426,7 +627,7 @@ namespace Platforms
 	SimpleBuilder::Finish
 =================================================
 */
-	RenderPassDescriptor const&  RenderPassDescrBuilder::SimpleBuilder::Finish ()
+	RenderPassDescription const&  RenderPassDescrBuilder::SimpleBuilder::Finish ()
 	{
 		CHECK( not _builder._state.Subpasses().Empty() );
 

@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -24,10 +24,10 @@ namespace PlatformSW
 	// types
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::ReadRegion,
 											DSMsg::WriteRegion,
-											GpuMsg::GetGpuMemoryDescriptor,
+											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -39,8 +39,8 @@ namespace PlatformSW
 										>;
 
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetBufferDescriptor,
-											GpuMsg::SetBufferDescriptor,
+											GpuMsg::GetBufferDescription,
+											GpuMsg::SetBufferDescription,
 											GpuMsg::GpuMemoryRegionChanged,
 											GpuMsg::GetSWBufferMemoryLayout,
 											GpuMsg::GetSWBufferMemoryRequirements,
@@ -48,7 +48,7 @@ namespace PlatformSW
 										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t::Append< MessageListFrom<
-											GpuMsg::SetBufferDescriptor
+											GpuMsg::SetBufferDescription
 										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
@@ -80,7 +80,7 @@ namespace PlatformSW
 
 	// variables
 	private:
-		BufferDescriptor		_descr;
+		BufferDescription		_descr;
 		ModulePtr				_memObj;
 		BinArrayRef				_memory;
 		Blocks_t				_blocks;
@@ -101,20 +101,20 @@ namespace PlatformSW
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		bool _GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &);
-		bool _SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &);
-		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _GetSWBufferMemoryLayout (const Message< GpuMsg::GetSWBufferMemoryLayout > &);
-		bool _GetSWBufferMemoryRequirements (const Message< GpuMsg::GetSWBufferMemoryRequirements > &);
-		bool _SWBufferBarrier (const Message< GpuMsg::SWBufferBarrier > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		bool _GetBufferDescription (const GpuMsg::GetBufferDescription &);
+		bool _SetBufferDescription (const GpuMsg::SetBufferDescription &);
+		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
+		bool _GetSWBufferMemoryLayout (const GpuMsg::GetSWBufferMemoryLayout &);
+		bool _GetSWBufferMemoryRequirements (const GpuMsg::GetSWBufferMemoryRequirements &);
+		bool _SWBufferBarrier (const GpuMsg::SWBufferBarrier &);
 		
 	// event handlers
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+		bool _OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &);
 
 
 	private:
@@ -162,8 +162,8 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWBuffer::_Compose );
 		_SubscribeOnMsg( this, &SWBuffer::_Delete );
 		_SubscribeOnMsg( this, &SWBuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &SWBuffer::_GetBufferDescriptor );
-		_SubscribeOnMsg( this, &SWBuffer::_SetBufferDescriptor );
+		_SubscribeOnMsg( this, &SWBuffer::_GetBufferDescription );
+		_SubscribeOnMsg( this, &SWBuffer::_SetBufferDescription );
 		_SubscribeOnMsg( this, &SWBuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &SWBuffer::_GetSWDeviceInfo );
 		_SubscribeOnMsg( this, &SWBuffer::_GetSWPrivateClasses );
@@ -190,7 +190,7 @@ namespace PlatformSW
 	_Link
 =================================================
 */
-	bool SWBuffer::_Link (const Message< ModuleMsg::Link > &msg)
+	bool SWBuffer::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -225,7 +225,7 @@ namespace PlatformSW
 	_Compose
 =================================================
 */
-	bool SWBuffer::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool SWBuffer::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) or _IsCreated() )
 			return true;	// already composed
@@ -247,7 +247,7 @@ namespace PlatformSW
 	_Delete
 =================================================
 */
-	bool SWBuffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SWBuffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyAll();
 
@@ -259,11 +259,11 @@ namespace PlatformSW
 	_AttachModule
 =================================================
 */
-	bool SWBuffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool SWBuffer::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
+		const bool	is_mem	= msg.newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		if ( is_mem )
 		{
@@ -278,11 +278,11 @@ namespace PlatformSW
 	_DetachModule
 =================================================
 */
-	bool SWBuffer::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool SWBuffer::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule == _memObj )
+		if ( msg.oldModule == _memObj )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
@@ -292,25 +292,25 @@ namespace PlatformSW
 
 /*
 =================================================
-	_GetBufferDescriptor
+	_GetBufferDescription
 =================================================
 */
-	bool SWBuffer::_GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &msg)
+	bool SWBuffer::_GetBufferDescription (const GpuMsg::GetBufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_SetBufferDescriptor
+	_SetBufferDescription
 =================================================
 */
-	bool SWBuffer::_SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &msg)
+	bool SWBuffer::_SetBufferDescription (const GpuMsg::SetBufferDescription &msg)
 	{
 		CHECK_ERR( GetState() == EState::Initial );
 
-		_descr = msg->descr;
+		_descr = msg.descr;
 		return true;
 	}
 	
@@ -319,26 +319,26 @@ namespace PlatformSW
 	_OnMemoryBindingChanged
 =================================================
 */
-	bool SWBuffer::_OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &msg)
+	bool SWBuffer::_OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &msg)
 	{
 		CHECK_ERR( _IsComposedOrLinkedState( GetState() ) );
 
 		using EBindingTarget = GpuMsg::OnMemoryBindingChanged::EBindingTarget;
 
-		if (  msg->targetObject == this )
+		if (  msg.targetObject == this )
 		{
-			_isBindedToMemory = ( msg->newState == EBindingTarget::Buffer );
+			_isBindedToMemory = ( msg.newState == EBindingTarget::Buffer );
 
 			if ( _isBindedToMemory )
 			{
 				_OnMemoryBinded();
 				CHECK( _SetState( EState::ComposedMutable ) );
 				
-				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+				_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 			}
 			else
 			{
-				CHECK( _SetState( EState::Linked ) );
+				_SendMsg( ModuleMsg::Delete{} );
 			}
 		}
 		return true;
@@ -388,14 +388,14 @@ namespace PlatformSW
 */
 	void SWBuffer::_OnMemoryBinded ()
 	{
-		Message< GpuMsg::GetSWMemoryData >			req_data;
-		Message< GpuMsg::GetGpuMemoryDescriptor >	req_descr;
+		GpuMsg::GetSWMemoryData			req_data;
+		GpuMsg::GetGpuMemoryDescription	req_descr;
 
-		SendTo( _memObj, req_data );
-		SendTo( _memObj, req_descr );
+		_memObj->Send( req_data );
+		_memObj->Send( req_descr );
 
-		_memory		= *req_data->result;
-		_memAccess	= req_descr->result->access;
+		_memory		= *req_data.result;
+		_memAccess	= req_descr.result->access;
 
 		_blocks.Clear();
 		_blocks.PushBack(Block{ 0_b, EPipelineAccess::bits(), EPipelineStage::Unknown });
@@ -428,7 +428,7 @@ namespace PlatformSW
 	_GpuMemoryRegionChanged
 =================================================
 */
-	bool SWBuffer::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &)
+	bool SWBuffer::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
 	{
 		// request buffer memory barrier
 		TODO( "" );
@@ -451,7 +451,7 @@ namespace PlatformSW
 	_GetSWBufferMemoryLayout
 =================================================
 */
-	bool SWBuffer::_GetSWBufferMemoryLayout (const Message< GpuMsg::GetSWBufferMemoryLayout > &msg)
+	bool SWBuffer::_GetSWBufferMemoryLayout (const GpuMsg::GetSWBufferMemoryLayout &msg)
 	{
 		CHECK_ERR( _isBindedToMemory );
 
@@ -461,15 +461,15 @@ namespace PlatformSW
 			auto const&	curr = _blocks[i-1];
 			auto const&	next = _blocks[i];
 
-			if ( _IsIntersects( curr, next, msg->offset, msg->size ) )
+			if ( _IsIntersects( curr, next, msg.offset, msg.size ) )
 			{
-				_CheckAccess( curr, msg->access, msg->stage );
+				_CheckAccess( curr, msg.access, msg.stage );
 			}
 		}
 
-		_MergeBlocks( Block{ msg->offset, msg->access, msg->stage }, msg->size );
+		_MergeBlocks( Block{ msg.offset, msg.access, msg.stage }, msg.size );
 
-		msg->result.Set({ _memory.SubArray( usize(msg->offset), usize(msg->size) ), _align, _memAccess });
+		msg.result.Set({ _memory.SubArray( usize(msg.offset), usize(msg.size) ), _align, _memAccess });
 		return true;
 	}
 
@@ -478,9 +478,9 @@ namespace PlatformSW
 	_GetSWBufferMemoryRequirements
 =================================================
 */
-	bool SWBuffer::_GetSWBufferMemoryRequirements (const Message< GpuMsg::GetSWBufferMemoryRequirements > &msg)
+	bool SWBuffer::_GetSWBufferMemoryRequirements (const GpuMsg::GetSWBufferMemoryRequirements &msg)
 	{
-		msg->result.Set({ BytesU(_descr.size), _align });
+		msg.result.Set({ BytesU(_descr.size), _align });
 		return true;
 	}
 	
@@ -489,15 +489,15 @@ namespace PlatformSW
 	_SWBufferBarrier
 =================================================
 */
-	bool SWBuffer::_SWBufferBarrier (const Message< GpuMsg::SWBufferBarrier > &msg)
+	bool SWBuffer::_SWBufferBarrier (const GpuMsg::SWBufferBarrier &msg)
 	{
-		for (auto& br : msg->barriers)
+		for (auto& br : msg.barriers)
 		{
 			ASSERT( br.buffer == this );
 
 			_MergeBlocks( Block{ BytesU(br.offset), br.dstAccessMask, EPipelineStage::BottomOfPipe }, BytesU(br.size ));
 
-			//_MergeBlocks( Block{ BytesU(br.offset), BytesU(br.size), br.dstAccessMask, msg->dstStageMask }, br.srcAccessMask, msg->srcStageMask );
+			//_MergeBlocks( Block{ BytesU(br.offset), BytesU(br.size), br.dstAccessMask, msg.dstStageMask }, br.srcAccessMask, msg.srcStageMask );
 		}
 		return true;
 	}

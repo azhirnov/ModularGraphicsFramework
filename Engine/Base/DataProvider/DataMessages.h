@@ -12,7 +12,7 @@ namespace DSMsg
 	//
 	// Open File
 	//
-	struct OpenFileForRead
+	struct OpenFileForRead : _MessageBase_
 	{
 	// variables
 		StringCRef					filename;
@@ -22,7 +22,8 @@ namespace DSMsg
 		explicit OpenFileForRead (StringCRef filename) : filename{filename} {}
 	};
 	
-	struct OpenFileForWrite
+
+	struct OpenFileForWrite : _MessageBase_
 	{
 	// variables
 		StringCRef					filename;

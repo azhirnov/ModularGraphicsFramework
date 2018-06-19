@@ -24,7 +24,7 @@ namespace Graphics
 											ModuleMsg::FindModule,
 											ModuleMsg::ModulesDeepSearch,
 											ModuleMsg::Delete,
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::WriteRegion
 										>;
 
@@ -55,10 +55,10 @@ namespace Graphics
 
 	// message handlers
 	private:
-		bool _GetFileStreamDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &);
-		bool _GetMemStreamDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &);
-		bool _WriteToFileStream (const Message< DSMsg::WriteRegion > &);
-		bool _WriteToMemStream (const Message< DSMsg::WriteRegion > &);
+		bool _GetFileStreamDescription (const DSMsg::GetDataSourceDescription &);
+		bool _GetMemStreamDescription (const DSMsg::GetDataSourceDescription &);
+		bool _WriteToFileStream (const DSMsg::WriteRegion &);
+		bool _WriteToMemStream (const DSMsg::WriteRegion &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -82,7 +82,7 @@ namespace Graphics
 		_SubscribeOnMsg( this, &OutputStream::_FindModule_Empty );
 		_SubscribeOnMsg( this, &OutputStream::_ModulesDeepSearch_Empty );
 		_SubscribeOnMsg( this, &OutputStream::_Delete_Impl );
-		_SubscribeOnMsg( this, &OutputStream::_GetFileStreamDescriptor );
+		_SubscribeOnMsg( this, &OutputStream::_GetFileStreamDescription );
 		_SubscribeOnMsg( this, &OutputStream::_WriteToFileStream );
 
 		CHECK( _ValidateMsgSubscriptions() );
@@ -114,7 +114,7 @@ namespace Graphics
 		_SubscribeOnMsg( this, &OutputStream::_FindModule_Empty );
 		_SubscribeOnMsg( this, &OutputStream::_ModulesDeepSearch_Empty );
 		_SubscribeOnMsg( this, &OutputStream::_Delete_Impl );
-		_SubscribeOnMsg( this, &OutputStream::_GetFileStreamDescriptor );
+		_SubscribeOnMsg( this, &OutputStream::_GetFileStreamDescription );
 		_SubscribeOnMsg( this, &OutputStream::_WriteToFileStream );
 		
 		CHECK( _ValidateMsgSubscriptions() );
@@ -142,37 +142,37 @@ namespace Graphics
 
 /*
 =================================================
-	_GetFileStreamDescriptor
+	_GetFileStreamDescription
 =================================================
 */
-	bool OutputStream::_GetFileStreamDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &msg)
+	bool OutputStream::_GetFileStreamDescription (const DSMsg::GetDataSourceDescription &msg)
 	{
 		CHECK_ERR( _file and _file->IsOpened() );
 
-		StreamDescriptor	descr;
+		StreamDescription	descr;
 
 		descr.memoryFlags	|= EMemoryAccess::CpuWrite;
 		descr.available		 = BytesUL();	// data is not cached
 		descr.totalSize		 = BytesUL( _file->Size() );
 
-		msg->result.Set( descr );
+		msg.result.Set( descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_GetMemStreamDescriptor
+	_GetMemStreamDescription
 =================================================
 *
-	bool OutputStream::_GetMemStreamDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &msg)
+	bool OutputStream::_GetMemStreamDescription (const DSMsg::GetDataSourceDescription &msg)
 	{
-		StreamDescriptor	descr;
+		StreamDescription	descr;
 
 		descr.memoryFlags	|= EMemoryAccess::CpuWrite;
 		descr.available		 = BytesUL();
 		descr.totalSize		 = BytesUL( _cache.Size() );
 
-		msg->result.Set( descr );
+		msg.result.Set( descr );
 		return true;
 	}
 	
@@ -181,20 +181,20 @@ namespace Graphics
 	_WriteToFileStream
 =================================================
 */
-	bool OutputStream::_WriteToFileStream (const Message< DSMsg::WriteRegion > &msg)
+	bool OutputStream::_WriteToFileStream (const DSMsg::WriteRegion &msg)
 	{
 		CHECK_ERR( _file and _file->IsOpened() );
 
-		const BytesU	offset	= Min( _file->Size(), BytesU(msg->offset) );
+		const BytesU	offset	= Min( _file->Size(), BytesU(msg.offset) );
 
 		CHECK( _file->SeekSet( offset ) );
 
-		const BytesU	size	= Min( _cache.Size(), msg->data.Size() );
+		const BytesU	size	= Min( _cache.Size(), msg.data.Size() );
 		const BytesU	written	= _file->WriteBuf( _cache.ptr(), size );
 
-		msg->wasWritten.Set( BytesUL( written ) );
+		msg.wasWritten.Set( BytesUL( written ) );
 
-		_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, offset, written });
+		_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuWrite, offset, written });
 		return true;
 	}
 	
@@ -203,13 +203,13 @@ namespace Graphics
 	_WriteToMemStream
 =================================================
 *
-	bool OutputStream::_WriteToMemStream (const Message< DSMsg::WriteRegion > &msg)
+	bool OutputStream::_WriteToMemStream (const DSMsg::WriteRegion &msg)
 	{
 		const BytesU	cache_size	= _cache.Size();
-		const BytesU	offset		= Min( cache_size, BytesUL( msg->offset ) );
-		const BytesU	size		= Min( cache_size - offset, msg->data.Size() );
+		const BytesU	offset		= Min( cache_size, BytesUL( msg.offset ) );
+		const BytesU	size		= Min( cache_size - offset, msg.data.Size() );
 
-		MemCopy( _cache.SubArray( usize(offset), usize(size) ), msg->data );
+		MemCopy( _cache.SubArray( usize(offset), usize(size) ), msg.data );
 		return true;
 	}
 	*/

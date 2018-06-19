@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -24,12 +24,14 @@ namespace PlatformCL
 	{
 	// types
 	private:
+		using ComputeCommands_t		= GpuMsg::DefaultComputeCommands_t::Erase< GpuMsg::CmdDispatchIndirect >;
+
 		using SupportedMessages_t	= CL1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::CmdBegin,
 											GpuMsg::CmdEnd,
 											GpuMsg::SetCommandBufferDependency,
 											GpuMsg::GetCommandBufferState
-										> >::Append< GpuMsg::DefaultComputeCommands_t >;
+										> >::Append< ComputeCommands_t >;
 
 		using SupportedEvents_t		= CL1BaseModule::SupportedEvents_t;
 
@@ -65,30 +67,30 @@ namespace PlatformCL
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
-		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &);
+		bool _GetCommandBufferState (const GpuMsg::GetCommandBufferState &);
 		
-		bool _CmdBegin (const Message< GpuMsg::CmdBegin > &);
-		bool _CmdEnd (const Message< GpuMsg::CmdEnd > &);
-		bool _CmdBindComputePipeline (const Message< GpuMsg::CmdBindComputePipeline > &);
-		bool _CmdDispatch (const Message< GpuMsg::CmdDispatch > &);
-		bool _CmdExecute (const Message< GpuMsg::CmdExecute > &);
-		bool _CmdBindComputeResourceTable (const Message< GpuMsg::CmdBindComputeResourceTable > &);
-		bool _CmdCopyBuffer (const Message< GpuMsg::CmdCopyBuffer > &);
-		bool _CmdCopyImage (const Message< GpuMsg::CmdCopyImage > &);
-		bool _CmdCopyBufferToImage (const Message< GpuMsg::CmdCopyBufferToImage > &);
-		bool _CmdCopyImageToBuffer (const Message< GpuMsg::CmdCopyImageToBuffer > &);
-		bool _CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &);
-		bool _CmdFillBuffer (const Message< GpuMsg::CmdFillBuffer > &);
-		bool _CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &);
-		bool _CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &);
-		bool _CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &);
-		bool _CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &);
-		bool _CmdDebugMarker (const Message< GpuMsg::CmdDebugMarker > &);
-		bool _CmdPushDebugGroup (const Message< GpuMsg::CmdPushDebugGroup > &);
-		bool _CmdPopDebugGroup (const Message< GpuMsg::CmdPopDebugGroup > &);
+		bool _CmdBegin (const GpuMsg::CmdBegin &);
+		bool _CmdEnd (const GpuMsg::CmdEnd &);
+		bool _CmdBindComputePipeline (const GpuMsg::CmdBindComputePipeline &);
+		bool _CmdDispatch (const GpuMsg::CmdDispatch &);
+		bool _CmdExecute (const GpuMsg::CmdExecute &);
+		bool _CmdBindComputeResourceTable (const GpuMsg::CmdBindComputeResourceTable &);
+		bool _CmdCopyBuffer (const GpuMsg::CmdCopyBuffer &);
+		bool _CmdCopyImage (const GpuMsg::CmdCopyImage &);
+		bool _CmdCopyBufferToImage (const GpuMsg::CmdCopyBufferToImage &);
+		bool _CmdCopyImageToBuffer (const GpuMsg::CmdCopyImageToBuffer &);
+		bool _CmdUpdateBuffer (const GpuMsg::CmdUpdateBuffer &);
+		bool _CmdFillBuffer (const GpuMsg::CmdFillBuffer &);
+		bool _CmdClearColorImage (const GpuMsg::CmdClearColorImage &);
+		bool _CmdPipelineBarrier (const GpuMsg::CmdPipelineBarrier &);
+		bool _CmdPushConstants (const GpuMsg::CmdPushConstants &);
+		bool _CmdPushNamedConstants (const GpuMsg::CmdPushNamedConstants &);
+		bool _CmdDebugMarker (const GpuMsg::CmdDebugMarker &);
+		bool _CmdPushDebugGroup (const GpuMsg::CmdPushDebugGroup &);
+		bool _CmdPopDebugGroup (const GpuMsg::CmdPopDebugGroup &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -162,7 +164,7 @@ namespace PlatformCL
 	_Compose
 =================================================
 */
-	bool CL1CommandBuilder::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool CL1CommandBuilder::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -177,7 +179,7 @@ namespace PlatformCL
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -186,7 +188,7 @@ namespace PlatformCL
 	_Delete
 =================================================
 */
-	bool CL1CommandBuilder::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool CL1CommandBuilder::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_resources.Clear();
 		_commands.Clear();
@@ -201,9 +203,9 @@ namespace PlatformCL
 	_SetCommandBufferDependency
 =================================================
 */
-	bool CL1CommandBuilder::_SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &msg)
+	bool CL1CommandBuilder::_SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &msg)
 	{
-		_resources.AddArray( msg->resources.Get() );
+		_resources.AddArray( msg.resources.Get() );
 		return true;
 	}
 	
@@ -212,7 +214,7 @@ namespace PlatformCL
 	_GetCommandBufferState
 =================================================
 */
-	bool CL1CommandBuilder::_GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &msg)
+	bool CL1CommandBuilder::_GetCommandBufferState (const GpuMsg::GetCommandBufferState &msg)
 	{
 		if ( not _cmdBuffer )
 			return false;
@@ -225,7 +227,7 @@ namespace PlatformCL
 	_CmdBegin
 =================================================
 */
-	bool CL1CommandBuilder::_CmdBegin (const Message< GpuMsg::CmdBegin > &msg)
+	bool CL1CommandBuilder::_CmdBegin (const GpuMsg::CmdBegin &msg)
 	{
 		CHECK_ERR( not _cmdBuffer );
 		
@@ -233,11 +235,11 @@ namespace PlatformCL
 		_commands.Clear();		_commands.Reserve( 128 );
 		
 		// use target command buffer
-		if ( msg->targetCmdBuffer )
+		if ( msg.targetCmdBuffer )
 		{
-			CHECK_ERR( msg->targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
+			CHECK_ERR( msg.targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
 
-			_cmdBuffer = msg->targetCmdBuffer;
+			_cmdBuffer = msg.targetCmdBuffer;
 		}
 		else
 		// create new command buffer
@@ -246,20 +248,20 @@ namespace PlatformCL
 							CLCommandBufferModuleID,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
-								CommandBufferDescriptor{ msg->flags }
+								CommandBufferDescription{ msg.flags }
 							},
 							OUT _cmdBuffer ) );
 
 			CHECK_ERR( _Attach( "", _cmdBuffer ) );
 		}
 
-		ModuleUtils::Initialize( {_cmdBuffer}, this );
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Recording } );
+		ModuleUtils::Initialize({ _cmdBuffer });
+		_cmdBuffer->Send( GpuMsg::SetCommandBufferState{ ERecordingState::Recording } );
 		
 		// check buffer state
-		Message< GpuMsg::GetCommandBufferState >	req_state;
-		SendTo( _cmdBuffer, req_state );
-		CHECK_ERR( req_state->result.Get() == ERecordingState::Recording );
+		GpuMsg::GetCommandBufferState	req_state;
+		_cmdBuffer->Send( req_state );
+		CHECK_ERR( *req_state.result == ERecordingState::Recording );
 
 		return true;
 	}
@@ -269,15 +271,15 @@ namespace PlatformCL
 	_GpuCmdEnd
 =================================================
 */
-	bool CL1CommandBuilder::_CmdEnd (const Message< GpuMsg::CmdEnd > &msg)
+	bool CL1CommandBuilder::_CmdEnd (const GpuMsg::CmdEnd &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCLCommandBufferQueue >{ RVREF(_commands), RVREF(_bufferData), RVREF(_pushConstData) } );
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferDependency >{ RVREF(_resources) } );
-		SendTo( _cmdBuffer, Message< GpuMsg::SetCommandBufferState >{ ERecordingState::Executable } );
+		_cmdBuffer->Send( GpuMsg::SetCLCommandBufferQueue{ RVREF(_commands), RVREF(_bufferData), RVREF(_pushConstData) } );
+		_cmdBuffer->Send( GpuMsg::SetCommandBufferDependency{ RVREF(_resources) } );
+		_cmdBuffer->Send( GpuMsg::SetCommandBufferState{ ERecordingState::Executable } );
 
-		msg->result.Set( _cmdBuffer );
+		msg.result.Set( _cmdBuffer );
 
 		_cmdBuffer = null;
 		_resources.Clear();
@@ -291,12 +293,12 @@ namespace PlatformCL
 	_CmdBindComputePipeline
 =================================================
 */
-	bool CL1CommandBuilder::_CmdBindComputePipeline (const Message< GpuMsg::CmdBindComputePipeline > &msg)
+	bool CL1CommandBuilder::_CmdBindComputePipeline (const GpuMsg::CmdBindComputePipeline &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->pipeline );
+		CHECK_ERR( msg.pipeline );
 
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return false;
 	}
 	
@@ -305,11 +307,11 @@ namespace PlatformCL
 	_CmdDispatch
 =================================================
 */
-	bool CL1CommandBuilder::_CmdDispatch (const Message< GpuMsg::CmdDispatch > &msg)
+	bool CL1CommandBuilder::_CmdDispatch (const GpuMsg::CmdDispatch &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 
@@ -318,11 +320,11 @@ namespace PlatformCL
 	_CmdExecute
 =================================================
 */
-	bool CL1CommandBuilder::_CmdExecute (const Message< GpuMsg::CmdExecute > &msg)
+	bool CL1CommandBuilder::_CmdExecute (const GpuMsg::CmdExecute &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -331,11 +333,11 @@ namespace PlatformCL
 	_CmdBindComputeResourceTable
 =================================================
 */
-	bool CL1CommandBuilder::_CmdBindComputeResourceTable (const Message< GpuMsg::CmdBindComputeResourceTable > &msg)
+	bool CL1CommandBuilder::_CmdBindComputeResourceTable (const GpuMsg::CmdBindComputeResourceTable &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -344,12 +346,12 @@ namespace PlatformCL
 	_CmdCopyBuffer
 =================================================
 */
-	bool CL1CommandBuilder::_CmdCopyBuffer (const Message< GpuMsg::CmdCopyBuffer > &msg)
+	bool CL1CommandBuilder::_CmdCopyBuffer (const GpuMsg::CmdCopyBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->srcBuffer and msg->dstBuffer );
+		CHECK_ERR( msg.srcBuffer and msg.dstBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -358,12 +360,12 @@ namespace PlatformCL
 	_CmdCopyImage
 =================================================
 */
-	bool CL1CommandBuilder::_CmdCopyImage (const Message< GpuMsg::CmdCopyImage > &msg)
+	bool CL1CommandBuilder::_CmdCopyImage (const GpuMsg::CmdCopyImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->srcImage and msg->dstImage );
+		CHECK_ERR( msg.srcImage and msg.dstImage );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -372,12 +374,12 @@ namespace PlatformCL
 	_CmdCopyBufferToImage
 =================================================
 */
-	bool CL1CommandBuilder::_CmdCopyBufferToImage (const Message< GpuMsg::CmdCopyBufferToImage > &msg)
+	bool CL1CommandBuilder::_CmdCopyBufferToImage (const GpuMsg::CmdCopyBufferToImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->srcBuffer and msg->dstImage );
+		CHECK_ERR( msg.srcBuffer and msg.dstImage );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -386,12 +388,12 @@ namespace PlatformCL
 	_CmdCopyImageToBuffer
 =================================================
 */
-	bool CL1CommandBuilder::_CmdCopyImageToBuffer (const Message< GpuMsg::CmdCopyImageToBuffer > &msg)
+	bool CL1CommandBuilder::_CmdCopyImageToBuffer (const GpuMsg::CmdCopyImageToBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->srcImage and msg->dstBuffer );
+		CHECK_ERR( msg.srcImage and msg.dstBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -400,14 +402,14 @@ namespace PlatformCL
 	_GpuCmdUpdateBuffer
 =================================================
 */
-	bool CL1CommandBuilder::_CmdUpdateBuffer (const Message< GpuMsg::CmdUpdateBuffer > &msg)
+	bool CL1CommandBuilder::_CmdUpdateBuffer (const GpuMsg::CmdUpdateBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->dstBuffer and not msg->data.Empty() and msg->data.Size() < 65536_b );
+		CHECK_ERR( msg.dstBuffer and not msg.data.Empty() and msg.data.Size() < 65536_b );
 
-		_commands.PushBack({ GpuMsg::CLCmdUpdateBuffer{ msg.Data(), _bufferData.Size() }, __FILE__, __LINE__ });
+		_commands.PushBack({ GpuMsg::CLCmdUpdateBuffer{ msg, _bufferData.Size() }, __FILE__, __LINE__ });
 		
-		_bufferData.Append( msg->data );
+		_bufferData.Append( msg.data );
 		return true;
 	}
 	
@@ -416,12 +418,12 @@ namespace PlatformCL
 	_CmdFillBuffer
 =================================================
 */
-	bool CL1CommandBuilder::_CmdFillBuffer (const Message< GpuMsg::CmdFillBuffer > &msg)
+	bool CL1CommandBuilder::_CmdFillBuffer (const GpuMsg::CmdFillBuffer &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->dstBuffer );
+		CHECK_ERR( msg.dstBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -430,12 +432,12 @@ namespace PlatformCL
 	_CmdClearColorImage
 =================================================
 */
-	bool CL1CommandBuilder::_CmdClearColorImage (const Message< GpuMsg::CmdClearColorImage > &msg)
+	bool CL1CommandBuilder::_CmdClearColorImage (const GpuMsg::CmdClearColorImage &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
-		CHECK_ERR( msg->image );
+		CHECK_ERR( msg.image );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -444,11 +446,11 @@ namespace PlatformCL
 	_CmdPipelineBarrier
 =================================================
 */
-	bool CL1CommandBuilder::_CmdPipelineBarrier (const Message< GpuMsg::CmdPipelineBarrier > &msg)
+	bool CL1CommandBuilder::_CmdPipelineBarrier (const GpuMsg::CmdPipelineBarrier &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -457,11 +459,11 @@ namespace PlatformCL
 	_CmdPushConstants
 =================================================
 */
-	bool CL1CommandBuilder::_CmdPushConstants (const Message< GpuMsg::CmdPushConstants > &msg)
+	bool CL1CommandBuilder::_CmdPushConstants (const GpuMsg::CmdPushConstants &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -470,11 +472,11 @@ namespace PlatformCL
 	_CmdPushNamedConstants
 =================================================
 */
-	bool CL1CommandBuilder::_CmdPushNamedConstants (const Message< GpuMsg::CmdPushNamedConstants > &msg)
+	bool CL1CommandBuilder::_CmdPushNamedConstants (const GpuMsg::CmdPushNamedConstants &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -483,11 +485,11 @@ namespace PlatformCL
 	_CmdDebugMarker
 =================================================
 */
-	bool CL1CommandBuilder::_CmdDebugMarker (const Message< GpuMsg::CmdDebugMarker > &msg)
+	bool CL1CommandBuilder::_CmdDebugMarker (const GpuMsg::CmdDebugMarker &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -496,11 +498,11 @@ namespace PlatformCL
 	_CmdPushDebugGroup
 =================================================
 */
-	bool CL1CommandBuilder::_CmdPushDebugGroup (const Message< GpuMsg::CmdPushDebugGroup > &msg)
+	bool CL1CommandBuilder::_CmdPushDebugGroup (const GpuMsg::CmdPushDebugGroup &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 	
@@ -509,11 +511,11 @@ namespace PlatformCL
 	_CmdPopDebugGroup
 =================================================
 */
-	bool CL1CommandBuilder::_CmdPopDebugGroup (const Message< GpuMsg::CmdPopDebugGroup > &msg)
+	bool CL1CommandBuilder::_CmdPopDebugGroup (const GpuMsg::CmdPopDebugGroup &msg)
 	{
 		CHECK_ERR( _cmdBuffer );
 		
-		_commands.PushBack({ msg.Data(), __FILE__, __LINE__ });
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
 	}
 

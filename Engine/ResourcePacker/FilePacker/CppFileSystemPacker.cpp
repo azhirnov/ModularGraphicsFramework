@@ -1,8 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/ResourcePacker/FilePacker/CppFileSystemPacker.h"
-#include "Engine/STL/Compression/LZ4Compression.h"
-#include "Engine/STL/Compression/MiniZCompression.h"
+#include "Core/STL/Compression/LZ4Compression.h"
+#include "Core/STL/Compression/MiniZCompression.h"
 
 namespace ResPack
 {
@@ -88,9 +88,9 @@ namespace ResPack
 		_buf.Reserve( 2u << 20 );
 		_buf <<	"// This is generated file, don't change anything!\n\n"
 				"#include \"" << nameSpace << "_main.h\"\n"
-				"#include \"Engine/STL/Compression/LZ4Compression.h\"\n"
-				"#include \"Engine/STL/Compression/MiniZCompression.h\"\n"
-				"#include \"Engine/STL/Types/UniquePtr.h\"\n\n"
+				"#include \"Core/STL/Compression/LZ4Compression.h\"\n"
+				"#include \"Core/STL/Compression/MiniZCompression.h\"\n"
+				"#include \"Core/STL/Types/UniquePtr.h\"\n\n"
 				"namespace " << nameSpace << "\n{\n"
 				"\textern void " << funcName << " (OUT BinaryArray &data)\n\t{\n"
 				"\t\tdata << BinArrayCRef{\n";
@@ -300,9 +300,9 @@ namespace ResPack
 			{
 				String	str;
 				str <<	"// This is generated file, don't change anything!\n\n"
-						"#include \"Engine/STL/Containers/StringRef.h\"\n"
-						"#include \"Engine/STL/Containers/Array.h\"\n"
-						"#include \"Engine/STL/Math/BinaryMath.h\"\n\n"
+						"#include \"Core/STL/Containers/StringRef.h\"\n"
+						"#include \"Core/STL/Containers/Array.h\"\n"
+						"#include \"Core/STL/Math/BinaryMath.h\"\n\n"
 						"namespace " << name_space << "\n{\n"
 						"\tusing namespace GX_STL;\n"
 						"\tusing namespace GX_STL::GXTypes;\n\n"
@@ -323,8 +323,8 @@ namespace ResPack
 				String	str;
 				str <<	"// This is generated file, don't change anything!\n\n"
 						"#include \"" << header_name << "\"\n"
-						"#include \"Engine/STL/Containers/HashMap.h\"\n"
-						"#include \"Engine/STL/Math/BinaryMath.h\"\n\n"
+						"#include \"Core/STL/Containers/HashMap.h\"\n"
+						"#include \"Core/STL/Math/BinaryMath.h\"\n\n"
 						"namespace " << name_space << "\n{\n\n";
 
 				FOR( i, _functions ) {

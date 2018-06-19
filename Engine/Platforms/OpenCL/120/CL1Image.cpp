@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -35,24 +35,24 @@ namespace PlatformCL
 	// types
 	private:
 		using SupportedMessages_t	= CL1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											//DSMsg::ReadRegion,
 											//DSMsg::WriteRegion,
-											GpuMsg::GetGpuMemoryDescriptor,
+											GpuMsg::GetGpuMemoryDescription,
 											//GpuMsg::MapImageToCpu,
 											//GpuMsg::FlushMemoryRange,
 											GpuMsg::UnmapMemory,
 											GpuMsg::ReadFromImageMemory,
 											GpuMsg::WriteToImageMemory,
-											GpuMsg::GetImageDescriptor,
-											GpuMsg::SetImageDescriptor,
+											GpuMsg::GetImageDescription,
+											GpuMsg::SetImageDescription,
 											GpuMsg::GetCLImageID,
 											GpuMsg::GetImageMemoryLayout,
 											GpuMsg::GpuMemoryRegionChanged
 										> >;
 
 		using SupportedEvents_t		= CL1BaseModule::SupportedEvents_t::Append< MessageListFrom<
-											GpuMsg::SetImageDescriptor
+											GpuMsg::SetImageDescription
 										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
@@ -78,7 +78,7 @@ namespace PlatformCL
 
 	// variables
 	private:
-		ImageDescriptor			_descr;
+		ImageDescription			_descr;
 		cl_mem					_imageId;
 		EImageLayout::type		_layout;
 		
@@ -97,26 +97,26 @@ namespace PlatformCL
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		bool _GetCLImageID (const Message< GpuMsg::GetCLImageID > &);
-		bool _GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &);
-		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
-		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
-		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _GetGpuMemoryDescriptor (const Message< GpuMsg::GetGpuMemoryDescriptor > &);
-		bool _GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &);
-		bool _ReadFromImageMemory (const Message< GpuMsg::ReadFromImageMemory > &);
-		bool _WriteToImageMemory (const Message< GpuMsg::WriteToImageMemory > &);
-		//bool _FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &);
-		bool _UnmapMemory (const Message< GpuMsg::UnmapMemory > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		bool _GetCLImageID (const GpuMsg::GetCLImageID &);
+		bool _GetImageMemoryLayout (const GpuMsg::GetImageMemoryLayout &);
+		bool _GetImageDescription (const GpuMsg::GetImageDescription &);
+		bool _SetImageDescription (const GpuMsg::SetImageDescription &);
+		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
+		bool _GetGpuMemoryDescription (const GpuMsg::GetGpuMemoryDescription &);
+		bool _GetDataSourceDescription (const DSMsg::GetDataSourceDescription &);
+		bool _ReadFromImageMemory (const GpuMsg::ReadFromImageMemory &);
+		bool _WriteToImageMemory (const GpuMsg::WriteToImageMemory &);
+		//bool _FlushMemoryRange (const GpuMsg::FlushMemoryRange &);
+		bool _UnmapMemory (const GpuMsg::UnmapMemory &);
 
 	// event handlers
-		bool _OnSharedObjectComposed (const Message< ModuleMsg::AfterCompose > &);
-		bool _OnSharedObjectDeleted (const Message< ModuleMsg::Delete > &);
+		bool _OnSharedObjectComposed (const ModuleMsg::AfterCompose &);
+		bool _OnSharedObjectDeleted (const ModuleMsg::Delete &);
 
 	private:
 		bool _IsCreated () const;
@@ -160,11 +160,11 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1Image::_OnManagerChanged );
 		_SubscribeOnMsg( this, &CL1Image::_GetCLImageID );
 		_SubscribeOnMsg( this, &CL1Image::_GetImageMemoryLayout );
-		_SubscribeOnMsg( this, &CL1Image::_SetImageDescriptor );
-		_SubscribeOnMsg( this, &CL1Image::_GetImageDescriptor );
+		_SubscribeOnMsg( this, &CL1Image::_SetImageDescription );
+		_SubscribeOnMsg( this, &CL1Image::_GetImageDescription );
 		_SubscribeOnMsg( this, &CL1Image::_GpuMemoryRegionChanged );
-		_SubscribeOnMsg( this, &CL1Image::_GetDataSourceDescriptor );
-		_SubscribeOnMsg( this, &CL1Image::_GetGpuMemoryDescriptor );
+		_SubscribeOnMsg( this, &CL1Image::_GetDataSourceDescription );
+		_SubscribeOnMsg( this, &CL1Image::_GetGpuMemoryDescription );
 		_SubscribeOnMsg( this, &CL1Image::_ReadFromImageMemory );
 		_SubscribeOnMsg( this, &CL1Image::_WriteToImageMemory );
 		//_SubscribeOnMsg( this, &CL1Image::_FlushMemoryRange );
@@ -176,12 +176,12 @@ namespace PlatformCL
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
 		// descriptor may be invalid for sharing or for delayed initialization
-		if ( Utils::IsValidDescriptor( _descr ) )
+		if ( Utils::IsValidDescription( _descr ) )
 		{
 			ASSERT( (_descr.usage & supportedImageUsage).IsNotZero() and "none of supported flags is used" );
 			ASSERT( (_descr.usage & ~supportedImageUsage).IsZero() and "used unsupported flags" );
 
-			Utils::ValidateDescriptor( INOUT _descr );
+			Utils::ValidateDescription( INOUT _descr );
 		}
 	}
 
@@ -200,7 +200,7 @@ namespace PlatformCL
 	_Link
 =================================================
 */
-	bool CL1Image::_Link (const Message< ModuleMsg::Link > &msg)
+	bool CL1Image::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -260,12 +260,12 @@ namespace PlatformCL
 		
 		_sharedObj->Subscribe( this, &CL1Image::_OnSharedObjectComposed );
 		_sharedObj->Subscribe( this, &CL1Image::_OnSharedObjectDeleted );
-		_sharedObj->Subscribe( this, &CL1Image::_SetImageDescriptor );
+		_sharedObj->Subscribe( this, &CL1Image::_SetImageDescription );
 		
 		// copy descriptor
-		Message< GpuMsg::GetImageDescriptor >	req_descr;
+		GpuMsg::GetImageDescription	req_descr;
 		_sharedObj->Send( req_descr );
-		_descr = *req_descr->result;
+		_descr = *req_descr.result;
 		
 		return true;
 	}
@@ -275,7 +275,7 @@ namespace PlatformCL
 	_Compose
 =================================================
 */
-	bool CL1Image::_Compose (const Message< ModuleMsg::Compose > &)
+	bool CL1Image::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -295,7 +295,7 @@ namespace PlatformCL
 	_OnSharedObjectComposed
 =================================================
 */
-	bool CL1Image::_OnSharedObjectComposed (const Message< ModuleMsg::AfterCompose > &)
+	bool CL1Image::_OnSharedObjectComposed (const ModuleMsg::AfterCompose &)
 	{
 		CHECK_ERR( GetState() == EState::Linked );
 
@@ -309,7 +309,7 @@ namespace PlatformCL
 	_OnSharedObjectDeleted
 =================================================
 */
-	bool CL1Image::_OnSharedObjectDeleted (const Message< ModuleMsg::Delete > &)
+	bool CL1Image::_OnSharedObjectDeleted (const ModuleMsg::Delete &)
 	{
 		_DestroyAll();
 
@@ -322,7 +322,7 @@ namespace PlatformCL
 	_Delete
 =================================================
 */
-	bool CL1Image::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool CL1Image::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyAll();
 
@@ -334,12 +334,12 @@ namespace PlatformCL
 	_AttachModule
 =================================================
 */
-	bool CL1Image::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool CL1Image::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
 		// memory objects is not supported in OpenCL 1.2
-		CHECK_ERR( not msg->newModule->GetSupportedEvents().HasAnyType< MemoryEvents_t >() );
+		CHECK_ERR( not msg.newModule->GetSupportedEvents().HasAnyType< MemoryEvents_t >() );
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		return true;
 	}
@@ -349,11 +349,11 @@ namespace PlatformCL
 	_DetachModule
 =================================================
 */
-	bool CL1Image::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool CL1Image::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule == _sharedObj )
+		if ( msg.oldModule == _sharedObj )
 		{
 			_OnSharedObjectDeleted({});
 		}
@@ -420,22 +420,22 @@ namespace PlatformCL
 		CHECK_ERR( not _IsCreated() );
 		CHECK_ERR( _sharedObj );
 		
-		Utils::ValidateDescriptor( INOUT _descr );
+		Utils::ValidateDescription( INOUT _descr );
 		
 		// update memory flags
-		Message< GpuMsg::GetGpuMemoryDescriptor >	req_descr;
+		GpuMsg::GetGpuMemoryDescription	req_descr;
 		_sharedObj->Send( req_descr );
-		_memFlags	= req_descr->result->flags;
+		_memFlags	= req_descr.result->flags;
 
-		_memMapper.ResetFlags( req_descr->result->flags, req_descr->result->access );
+		_memMapper.ResetFlags( req_descr.result->flags, req_descr.result->access );
 
 
 		#ifdef GRAPHICS_API_OPENGL
 		if ( _sharing == ESharing::OpenGL )
 		{
-			Message< GpuMsg::GetGLImageID >	req_image;
+			GpuMsg::GetGLImageID	req_image;
 			_sharedObj->Send( req_image );
-			CHECK_ERR( req_image->result.Get(0) != 0 );
+			CHECK_ERR( req_image.result.Get(0) != 0 );
 
 			cl_int	cl_err = 0;
 			CL_CHECK( ((_imageId = clCreateFromGLTexture(
@@ -443,7 +443,7 @@ namespace PlatformCL
 								CL1Enum( _memFlags, _memMapper.MemoryAccess() ),
 								PlatformGL::GL4Enum( _descr.imageType ),
 								0,	// mip level
-								*req_image->result,
+								*req_image.result,
 								OUT &cl_err )), cl_err ) );
 		}
 		#endif
@@ -489,11 +489,11 @@ namespace PlatformCL
 	_GetCLImageID
 =================================================
 */
-	bool CL1Image::_GetCLImageID (const Message< GpuMsg::GetCLImageID > &msg)
+	bool CL1Image::_GetCLImageID (const GpuMsg::GetCLImageID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set({ _imageId, _sharing });
+		msg.result.Set({ _imageId, _sharing });
 		return true;
 	}
 	
@@ -502,7 +502,7 @@ namespace PlatformCL
 	_GetImageMemoryLayout
 =================================================
 */
-	bool CL1Image::_GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &msg)
+	bool CL1Image::_GetImageMemoryLayout (const GpuMsg::GetImageMemoryLayout &msg)
 	{
 		CHECK_ERR( _IsCreated() );
 		
@@ -530,50 +530,50 @@ namespace PlatformCL
 		
 		ASSERT( result.slicePitch * result.dimension.z <= result.size );	// on Intel image size may be aligned to 4Kb
 
-		msg->result.Set( result );
+		msg.result.Set( result );
 		return true;
 	}
 
 /*
 =================================================
-	_SetImageDescriptor
+	_SetImageDescription
 =================================================
 */
-	bool CL1Image::_SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &msg)
+	bool CL1Image::_SetImageDescription (const GpuMsg::SetImageDescription &msg)
 	{
 		CHECK_ERR( GetState() == EState::Initial );
 
-		_descr = msg->descr;
+		_descr = msg.descr;
 
-		Utils::ValidateDescriptor( INOUT _descr );
+		Utils::ValidateDescription( INOUT _descr );
 		return true;
 	}
 
 /*
 =================================================
-	_GetImageDescriptor
+	_GetImageDescription
 =================================================
 */
-	bool CL1Image::_GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &msg)
+	bool CL1Image::_GetImageDescription (const GpuMsg::GetImageDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_GetDataSourceDescriptor
+	_GetDataSourceDescription
 =================================================
 */
-	bool CL1Image::_GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &msg)
+	bool CL1Image::_GetDataSourceDescription (const DSMsg::GetDataSourceDescription &msg)
 	{
-		DataSourceDescriptor	descr;
+		DataSourceDescription	descr;
 		
 		descr.memoryFlags	= _memMapper.MappingAccess();
 		descr.available		= _memMapper.MappedSize();
 		//descr.totalSize		= _size;	// TODO
 
-		msg->result.Set( descr );
+		msg.result.Set( descr );
 		return true;
 	}
 	
@@ -582,7 +582,7 @@ namespace PlatformCL
 	_MapImageToCpu
 =================================================
 *
-	bool CL1Image::_MapImageToCpu (const Message< GpuMsg::MapImageToCpu > &)
+	bool CL1Image::_MapImageToCpu (const GpuMsg::MapImageToCpu &)
 	{
 		/*
 		CHECK_ERR( _IsCreated() and not _IsMapped() );
@@ -590,7 +590,7 @@ namespace PlatformCL
 		CHECK_ERR( _access[EMemoryAccess::CpuRead] or _access[EMemoryAccess::CpuWrite] );
 	
 		// validate and map memory
-		CHECK_ERR( All( msg->offset + msg->dimension <= _descr.dimension ) );
+		CHECK_ERR( All( msg.offset + msg.dimension <= _descr.dimension ) );
 		
 		const usize3	origin	= usize3(0);
 		const usize3	region	= Max( ImageUtils::ConvertSize( _descr.imageType, _descr.dimension ), 1u );
@@ -603,7 +603,7 @@ namespace PlatformCL
 									GetCommandQueue(),
 									_imageId,
 									CL_TRUE,	// blocking
-									CL1Enum( _access, msg->flags ),
+									CL1Enum( _access, msg.flags ),
 									origin.ptr(), region.ptr(),
 									&row_pitch, &slice_pitch,
 									0, null,
@@ -611,8 +611,8 @@ namespace PlatformCL
 									&cl_err ), cl_err ));
 
 		// write output
-		msg->pixelAlign.Set({ BytesUL(row_pitch), BytesUL(slice_pitch) });
-		msg->range.Set({ BytesUL(), _size });
+		msg.pixelAlign.Set({ BytesUL(row_pitch), BytesUL(slice_pitch) });
+		msg.range.Set({ BytesUL(), _size });
 
 		_mappedSize			= _size;
 		_mappedOffset		= BytesUL();
@@ -625,9 +625,9 @@ namespace PlatformCL
 	_FlushMemoryRange
 =================================================
 *
-	bool CL1Image::_FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &msg)
+	bool CL1Image::_FlushMemoryRange (const GpuMsg::FlushMemoryRange &msg)
 	{
-		CHECK_ERR( _memMapper.FlushMemoryRange( msg->offset, msg->size ) );
+		CHECK_ERR( _memMapper.FlushMemoryRange( msg.offset, msg.size ) );
 
 		TODO("");
 		return true;
@@ -638,7 +638,7 @@ namespace PlatformCL
 	_UnmapMemory
 =================================================
 */
-	bool CL1Image::_UnmapMemory (const Message< GpuMsg::UnmapMemory > &)
+	bool CL1Image::_UnmapMemory (const GpuMsg::UnmapMemory &)
 	{
 		CL_CHECK( clEnqueueUnmapMemObject( GetCommandQueue(),
 										   _imageId,
@@ -657,43 +657,43 @@ namespace PlatformCL
 	_ReadFromImageMemory
 =================================================
 */
-	bool CL1Image::_ReadFromImageMemory (const Message< GpuMsg::ReadFromImageMemory > &msg)
+	bool CL1Image::_ReadFromImageMemory (const GpuMsg::ReadFromImageMemory &msg)
 	{
 		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
-		CHECK_ERR( msg->memOffset == BytesUL(0) );		// not supported
-		CHECK_ERR( msg->mipLevel == MipmapLevel(0) );	// not supported
-		CHECK_ERR( IsNotZero( msg->dimension ) );
+		CHECK_ERR( msg.memOffset == BytesUL(0) );		// not supported
+		CHECK_ERR( msg.mipLevel == MipmapLevel(0) );	// not supported
+		CHECK_ERR( IsNotZero( msg.dimension ) );
 		
-		Message< GpuMsg::GetImageMemoryLayout >		req_layout;
+		GpuMsg::GetImageMemoryLayout	req_layout;
 		_GetImageMemoryLayout( req_layout );
 
-		CHECK_ERR( All( msg->offset + msg->dimension <= _descr.dimension.xyz() ) );
-		CHECK_ERR( msg->layer.Get() < _descr.dimension.w );
-		CHECK_ERR( BytesUL(msg->rowPitch) == req_layout->result->rowPitch );
+		CHECK_ERR( All( msg.offset + msg.dimension <= _descr.dimension.xyz() ) );
+		CHECK_ERR( msg.layer.Get() < _descr.dimension.w );
+		CHECK_ERR( BytesUL(msg.rowPitch) == req_layout.result->rowPitch );
 		
 		size_t	slice_pitch	= 0;
 		usize	data_size	= 0;
-		usize3	img_offset	= usize3(msg->offset);
+		usize3	img_offset	= usize3(msg.offset);
 
 		if ( _descr.imageType == EImage::Tex3D )
 		{
-			CHECK_ERR( msg->writableBuffer->Size() >= msg->dimension.z * msg->slicePitch );
-			CHECK_ERR( BytesUL(msg->slicePitch) == req_layout->result->slicePitch );
+			CHECK_ERR( msg.writableBuffer->Size() >= msg.dimension.z * msg.slicePitch );
+			CHECK_ERR( BytesUL(msg.slicePitch) == req_layout.result->slicePitch );
 
-			slice_pitch = size_t(msg->slicePitch);
-			data_size	= usize(msg->dimension.z * msg->slicePitch);
+			slice_pitch = size_t(msg.slicePitch);
+			data_size	= usize(msg.dimension.z * msg.slicePitch);
 		}
 		else
 		{
-			CHECK_ERR( msg->dimension.z == 1 );
-			CHECK_ERR( msg->writableBuffer->Size() >= msg->dimension.y * msg->rowPitch );
+			CHECK_ERR( msg.dimension.z == 1 );
+			CHECK_ERR( msg.writableBuffer->Size() >= msg.dimension.y * msg.rowPitch );
 
-			data_size = usize(msg->dimension.y * msg->rowPitch);
+			data_size = usize(msg.dimension.y * msg.rowPitch);
 
 			if ( EImage::IsArray2D( _descr.imageType ) )
 			{
-				img_offset.z = msg->layer.Get();
+				img_offset.z = msg.layer.Get();
 			}
 		}
 		
@@ -705,16 +705,16 @@ namespace PlatformCL
 							_imageId,
 							CL_TRUE,	// blocking
 							img_offset.ptr(),
-							usize3(msg->dimension).ptr(),
-							size_t(msg->rowPitch),
+							usize3(msg.dimension).ptr(),
+							size_t(msg.rowPitch),
 							slice_pitch,
-							OUT msg->writableBuffer->ptr(),
+							OUT msg.writableBuffer->ptr(),
 							0, null,
 							null ) );
 		
 		CHECK( GetDevice()->ReleaseSharedObj( this ) );
 
-		msg->result.Set( msg->writableBuffer->SubArray( 0, data_size ) );
+		msg.result.Set( msg.writableBuffer->SubArray( 0, data_size ) );
 		return true;
 	}
 	
@@ -723,43 +723,43 @@ namespace PlatformCL
 	_WriteToImageMemory
 =================================================
 */
-	bool CL1Image::_WriteToImageMemory (const Message< GpuMsg::WriteToImageMemory > &msg)
+	bool CL1Image::_WriteToImageMemory (const GpuMsg::WriteToImageMemory &msg)
 	{
 		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
-		CHECK_ERR( msg->memOffset == BytesUL(0) );		// not supported
-		CHECK_ERR( msg->mipLevel == MipmapLevel(0) );	// not supported
-		CHECK_ERR( IsNotZero( msg->dimension ) );
+		CHECK_ERR( msg.memOffset == BytesUL(0) );		// not supported
+		CHECK_ERR( msg.mipLevel == MipmapLevel(0) );	// not supported
+		CHECK_ERR( IsNotZero( msg.dimension ) );
 		
-		Message< GpuMsg::GetImageMemoryLayout >		req_layout;
+		GpuMsg::GetImageMemoryLayout	req_layout;
 		_GetImageMemoryLayout( req_layout );
 		
-		CHECK_ERR( All( msg->offset + msg->dimension <= _descr.dimension.xyz() ) );
-		CHECK_ERR( msg->layer.Get() < _descr.dimension.w );
-		CHECK_ERR( BytesUL(msg->rowPitch) ==  req_layout->result->rowPitch );
+		CHECK_ERR( All( msg.offset + msg.dimension <= _descr.dimension.xyz() ) );
+		CHECK_ERR( msg.layer.Get() < _descr.dimension.w );
+		CHECK_ERR( BytesUL(msg.rowPitch) ==  req_layout.result->rowPitch );
 			
 		size_t	slice_pitch = 0;
 		BytesUL	data_size;
-		usize3	img_offset	= usize3(msg->offset);
+		usize3	img_offset	= usize3(msg.offset);
 		
 		if ( _descr.imageType == EImage::Tex3D )
 		{
-			CHECK_ERR( msg->data.Size() == msg->dimension.z * msg->slicePitch );
-			CHECK_ERR( BytesUL(msg->slicePitch) == req_layout->result->slicePitch );
+			CHECK_ERR( msg.data.Size() == msg.dimension.z * msg.slicePitch );
+			CHECK_ERR( BytesUL(msg.slicePitch) == req_layout.result->slicePitch );
 
-			slice_pitch = size_t(msg->slicePitch);
-			data_size	= msg->dimension.z * BytesUL(msg->slicePitch);
+			slice_pitch = size_t(msg.slicePitch);
+			data_size	= msg.dimension.z * BytesUL(msg.slicePitch);
 		}
 		else
 		{
-			CHECK_ERR( msg->dimension.z == 1 );
-			CHECK_ERR( msg->data.Size() >= msg->dimension.y * msg->rowPitch );
+			CHECK_ERR( msg.dimension.z == 1 );
+			CHECK_ERR( msg.data.Size() >= msg.dimension.y * msg.rowPitch );
 			
-			data_size = msg->dimension.y * BytesUL(msg->rowPitch);
+			data_size = msg.dimension.y * BytesUL(msg.rowPitch);
 			
 			if ( EImage::IsArray2D( _descr.imageType ) )
 			{
-				img_offset.z = msg->layer.Get();
+				img_offset.z = msg.layer.Get();
 			}
 		}
 		
@@ -770,17 +770,17 @@ namespace PlatformCL
 							GetCommandQueue(),
 							_imageId,
 							CL_TRUE,	// blocking
-							usize3(msg->offset).ptr(),
-							usize3(msg->dimension).ptr(),
-							size_t(msg->rowPitch),
+							usize3(msg.offset).ptr(),
+							usize3(msg.dimension).ptr(),
+							size_t(msg.rowPitch),
 							slice_pitch,
-							msg->data.ptr(),
+							msg.data.ptr(),
 							0, null,
 							null ) );
 		
 		CHECK( GetDevice()->ReleaseSharedObj( this ) );
 
-		msg->wasWritten.Set( data_size );
+		msg.wasWritten.Set( data_size );
 		return true;
 	}
 
@@ -789,7 +789,7 @@ namespace PlatformCL
 	_GpuMemoryRegionChanged
 =================================================
 */
-	bool CL1Image::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &)
+	bool CL1Image::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
 	{
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::GpuWrite] );	// this message allowed only for gpu-writable memory
 
@@ -800,18 +800,18 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_GetGpuMemoryDescriptor
+	_GetGpuMemoryDescription
 =================================================
 */
-	bool CL1Image::_GetGpuMemoryDescriptor (const Message< GpuMsg::GetGpuMemoryDescriptor > &msg)
+	bool CL1Image::_GetGpuMemoryDescription (const GpuMsg::GetGpuMemoryDescription &msg)
 	{
-		GpuMemoryDescriptor		descr;
+		GpuMemoryDescription		descr;
 
 		descr.flags		= _memFlags;
 		//descr.size		= _size;	// TODO
 		descr.access	= _memMapper.MemoryAccess();
 
-		msg->result.Set( descr );
+		msg.result.Set( descr );
 		return true;
 	}
 

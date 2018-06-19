@@ -25,22 +25,22 @@ namespace Scene
 	_OnManagerChanged
 =================================================
 */
-	bool BaseSceneModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
+	bool BaseSceneModule::_OnManagerChanged (const ModuleMsg::OnManagerChanged &msg)
 	{
 		//_vkDevice = null;
 
-		if ( msg->newManager )
+		if ( msg.newManager )
 		{
-			//msg->newManager->Subscribe( this, &BaseSceneModule::_DeviceBeforeDestroy );
+			//msg.newManager->Subscribe( this, &BaseSceneModule::_DeviceBeforeDestroy );
 
-			Message< SceneMsg::GetScenePrivateClasses >	req_dev;
-			msg->newManager->Send( req_dev );
+			SceneMsg::GetScenePrivateClasses	req_dev;
+			msg.newManager->Send( req_dev );
 
 			//_vkDevice = req_dev->result->device;
 		}
 		
-		if ( msg->oldManager )
-			msg->oldManager->UnsubscribeAll( this );
+		if ( msg.oldManager )
+			msg.oldManager->UnsubscribeAll( this );
 
 		return true;
 	}
@@ -50,9 +50,9 @@ namespace Scene
 	_DeviceBeforeDestroy
 =================================================
 *
-	bool BaseSceneModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool BaseSceneModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 
 		//_vkDevice = null;
 		return true;
@@ -63,7 +63,7 @@ namespace Scene
 	_GetScenePrivateClasses
 =================================================
 */
-	bool BaseSceneModule::_GetScenePrivateClasses (const Message< SceneMsg::GetScenePrivateClasses > &msg)
+	bool BaseSceneModule::_GetScenePrivateClasses (const SceneMsg::GetScenePrivateClasses &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}

@@ -28,23 +28,23 @@ namespace PlatformSW
 	_OnManagerChanged
 =================================================
 */
-	bool SWBaseModule::_OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &msg)
+	bool SWBaseModule::_OnManagerChanged (const ModuleMsg::OnManagerChanged &msg)
 	{
 		_swDevice = null;
 
-		if ( msg->newManager )
+		if ( msg.newManager )
 		{
-			msg->newManager->Subscribe( this, &SWBaseModule::_DeviceBeforeDestroy );
-			msg->newManager->Subscribe( this, &SWBaseModule::_DeviceDeleted );
+			msg.newManager->Subscribe( this, &SWBaseModule::_DeviceBeforeDestroy );
+			msg.newManager->Subscribe( this, &SWBaseModule::_DeviceDeleted );
 
-			Message< GpuMsg::GetSWPrivateClasses >	req_dev;
-			CHECK( msg->newManager->Send( req_dev ) );
+			GpuMsg::GetSWPrivateClasses		req_dev;
+			CHECK( msg.newManager->Send( req_dev ) );
 
-			_swDevice = req_dev->result->device;
+			_swDevice = req_dev.result->device;
 		}
 
-		if ( msg->oldManager )
-			msg->oldManager->UnsubscribeAll( this );
+		if ( msg.oldManager )
+			msg.oldManager->UnsubscribeAll( this );
 
 		return true;
 	}
@@ -54,9 +54,9 @@ namespace PlatformSW
 	_DeviceBeforeDestroy
 =================================================
 */
-	bool SWBaseModule::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool SWBaseModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 
 		_swDevice = null;
 		return true;
@@ -67,7 +67,7 @@ namespace PlatformSW
 	_DeviceDeleted
 =================================================
 */
-	bool SWBaseModule::_DeviceDeleted (const Message< ModuleMsg::Delete > &msg)
+	bool SWBaseModule::_DeviceDeleted (const ModuleMsg::Delete &msg)
 	{
 		Send( msg );
 
@@ -80,7 +80,7 @@ namespace PlatformSW
 	_GetDeviceInfo
 =================================================
 */
-	bool SWBaseModule::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
+	bool SWBaseModule::_GetDeviceInfo (const GpuMsg::GetDeviceInfo &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}
@@ -90,7 +90,7 @@ namespace PlatformSW
 	_GetSWDeviceInfo
 =================================================
 */
-	bool SWBaseModule::_GetSWDeviceInfo (const Message< GpuMsg::GetSWDeviceInfo > &msg)
+	bool SWBaseModule::_GetSWDeviceInfo (const GpuMsg::GetSWDeviceInfo &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}
@@ -100,7 +100,7 @@ namespace PlatformSW
 	_GetSWPrivateClasses
 =================================================
 */
-	bool SWBaseModule::_GetSWPrivateClasses (const Message< GpuMsg::GetSWPrivateClasses > &msg)
+	bool SWBaseModule::_GetSWPrivateClasses (const GpuMsg::GetSWPrivateClasses &msg)
 	{
 		return _GetManager() ? _GetManager()->Send( msg ) : false;
 	}

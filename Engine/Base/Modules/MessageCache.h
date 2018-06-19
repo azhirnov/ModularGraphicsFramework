@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine/Base/Modules/Module.h"
-#include "Engine/STL/Containers/Tuple.h"
+#include "Core/STL/Containers/Tuple.h"
 
 namespace Engine
 {
@@ -14,7 +14,6 @@ namespace Base
 	{
 		template <typename T>	struct ExtractMsgResultType									{ using type = typename ExtractMsgResultType< decltype(T::result) >::type; };
 		template <typename T>	struct ExtractMsgResultType< Engine::ModuleMsg::Out<T> >	{ using type = T; };
-		template <typename T>	struct ExtractMsgResultType< Engine::Base::Message<T> >		{ using type = typename ExtractMsgResultType< decltype(T::result) >::type; };
 
 
 		template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>
@@ -44,7 +43,7 @@ namespace Base
 		using CacheData_t	= Tuple< _engbase_hidden_::MessagesToResultTypes< Messages_t > >;
 
 	private:
-		using CacheMap_t	= Map< const void*, CacheData_t >;
+		using CacheMap_t	= Map< UntypedKey<ModulePtr>, CacheData_t >;
 
 		struct _Init_Func
 		{
@@ -58,11 +57,11 @@ namespace Base
 			template <typename T, usize Index>
 			void Process ()
 			{
-				Message<T>	msg;
+				T	msg;
 				CHECK( _module->Send( msg ) );
-				ASSERT( msg->result.IsDefined() );
+				ASSERT( msg.result.IsDefined() );
 
-				_data.template Set<Index>( msg->result.Get({}) );
+				_data.template Set<Index>( msg.result.Get({}) );
 			}
 		};
 

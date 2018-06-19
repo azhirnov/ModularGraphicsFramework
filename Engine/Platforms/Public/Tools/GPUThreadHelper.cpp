@@ -14,17 +14,17 @@ namespace PlatformTools
 */
 	ModulePtr  GPUThreadHelper::FindGraphicsThread (GlobalSystemsRef gs)
 	{
-		using MsgList_t		= CompileTime::TypeListFrom<
-									Message<GpuMsg::ThreadBeginFrame>,
-									Message<GpuMsg::ThreadEndFrame>,
-									Message<GpuMsg::SubmitGraphicsQueueCommands>,
-									Message<GpuMsg::GetDeviceInfo>,
-									Message<GpuMsg::GetGraphicsModules>,
-									Message<GpuMsg::GetGraphicsSettings>
+		using MsgList_t		= ModuleMsg::MessageListFrom<
+									GpuMsg::ThreadBeginFrame,
+									GpuMsg::ThreadEndFrame,
+									GpuMsg::SubmitGraphicsQueueCommands,
+									GpuMsg::GetDeviceInfo,
+									GpuMsg::GetGraphicsModules,
+									GpuMsg::GetGraphicsSettings
 								>;
-		using EventList_t	= CompileTime::TypeListFrom<
-									Message<GpuMsg::DeviceCreated>,
-									Message<GpuMsg::DeviceBeforeDestroy>
+		using EventList_t	= ModuleMsg::MessageListFrom<
+									GpuMsg::DeviceCreated,
+									GpuMsg::DeviceBeforeDestroy
 								>;
 
 		return gs->parallelThread->GetModuleByMsgEvent< MsgList_t, EventList_t >();
@@ -37,15 +37,15 @@ namespace PlatformTools
 */
 	ModulePtr  GPUThreadHelper::FindComputeThread (GlobalSystemsRef gs)
 	{
-		using MsgList_t		= CompileTime::TypeListFrom<
-									Message<GpuMsg::SubmitComputeQueueCommands>,
-									Message<GpuMsg::GetDeviceInfo>,
-									Message<GpuMsg::GetGraphicsModules>,
-									Message<GpuMsg::GetComputeSettings>
+		using MsgList_t		= ModuleMsg::MessageListFrom<
+									GpuMsg::SubmitComputeQueueCommands,
+									GpuMsg::GetDeviceInfo,
+									GpuMsg::GetGraphicsModules,
+									GpuMsg::GetComputeSettings
 								>;
-		using EventList_t	= CompileTime::TypeListFrom<
-									Message<GpuMsg::DeviceCreated>,
-									Message<GpuMsg::DeviceBeforeDestroy>
+		using EventList_t	= ModuleMsg::MessageListFrom<
+									GpuMsg::DeviceCreated,
+									GpuMsg::DeviceBeforeDestroy
 								>;
 
 		return gs->parallelThread->GetModuleByMsgEvent< MsgList_t, EventList_t >();
@@ -58,17 +58,17 @@ namespace PlatformTools
 */
 	ModulePtr  GPUThreadHelper::FindVRThread (GlobalSystemsRef gs)
 	{
-		using MsgList_t		= CompileTime::TypeListFrom<
-									Message<GpuMsg::ThreadBeginVRFrame>,
-									Message<GpuMsg::ThreadEndVRFrame>,
-									Message<GpuMsg::SubmitGraphicsQueueCommands>,
-									Message<GpuMsg::GetVRDeviceInfo>,
-									Message<GpuMsg::GetGraphicsModules>,
-									Message<GpuMsg::GetGraphicsSettings>
+		using MsgList_t		= ModuleMsg::MessageListFrom<
+									GpuMsg::ThreadBeginVRFrame,
+									GpuMsg::ThreadEndVRFrame,
+									GpuMsg::SubmitGraphicsQueueCommands,
+									GpuMsg::GetVRDeviceInfo,
+									GpuMsg::GetGraphicsModules,
+									GpuMsg::GetGraphicsSettings
 								>;
-		using EventList_t	= CompileTime::TypeListFrom<
-									Message<GpuMsg::DeviceCreated>,
-									Message<GpuMsg::DeviceBeforeDestroy>
+		using EventList_t	= ModuleMsg::MessageListFrom<
+									GpuMsg::DeviceCreated,
+									GpuMsg::DeviceBeforeDestroy
 								>;
 
 		return gs->parallelThread->GetModuleByMsgEvent< MsgList_t, EventList_t >();

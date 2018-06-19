@@ -1,10 +1,10 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
-#include "Engine/STL/Algorithms/StringParser.h"
+#include "Core/STL/Algorithms/StringParser.h"
 #include "Engine/Platforms/Public/Tools/WindowHelper.h"
 #include "Engine/Platforms/Public/GPU/Thread.h"
 #include "Engine/Platforms/Public/GPU/CommandBuffer.h"
@@ -15,7 +15,7 @@
 #include "Engine/Platforms/Vulkan/110/Vk1Device.h"
 #include "Engine/Platforms/Vulkan/110/Vk1PipelineCache.h"
 #include "Engine/Platforms/Vulkan/110/Vk1PipelineLayout.h"
-#include "Engine/Platforms/Vulkan/110/Vk1RenderPass.h"
+#include "Engine/Platforms/Vulkan/110/Vk1RenderPassCache.h"
 
 #include "Engine/Platforms/Vulkan/110/Vk1SamplerCache.h"
 #include "Engine/Platforms/Vulkan/110/Vk1ResourceCache.h"
@@ -110,28 +110,28 @@ namespace Platforms
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
-		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
+		bool _GetGraphicsModules (const GpuMsg::GetGraphicsModules &);
 
-		bool _ThreadBeginFrame (const Message< GpuMsg::ThreadBeginFrame > &);
-		bool _ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &);
-		bool _GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &);
-		bool _GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &);
+		bool _ThreadBeginFrame (const GpuMsg::ThreadBeginFrame &);
+		bool _ThreadEndFrame (const GpuMsg::ThreadEndFrame &);
+		bool _GetGraphicsSettings (const GpuMsg::GetGraphicsSettings &);
+		bool _GetComputeSettings (const GpuMsg::GetComputeSettings &);
 
-		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
-		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
-		bool _WindowVisibilityChanged (const Message< OSMsg::WindowVisibilityChanged > &);
-		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
+		bool _WindowCreated (const OSMsg::WindowCreated &);
+		bool _WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &);
+		bool _WindowVisibilityChanged (const OSMsg::WindowVisibilityChanged &);
+		bool _WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &);
 		
-		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
-		bool _GetVkDeviceInfo (const Message< GpuMsg::GetVkDeviceInfo > &);
-		bool _GetVkPrivateClasses (const Message< GpuMsg::GetVkPrivateClasses > &);
-		bool _GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &);
+		bool _GetDeviceInfo (const GpuMsg::GetDeviceInfo &);
+		bool _GetVkDeviceInfo (const GpuMsg::GetVkDeviceInfo &);
+		bool _GetVkPrivateClasses (const GpuMsg::GetVkPrivateClasses &);
+		bool _GetDeviceProperties (const GpuMsg::GetDeviceProperties &);
 
 	private:
 		bool _CreateDevice ();
@@ -210,7 +210,7 @@ namespace Platforms
 	_Link
 =================================================
 */
-	bool VulkanThread::_Link (const Message< ModuleMsg::Link > &msg)
+	bool VulkanThread::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -226,7 +226,7 @@ namespace Platforms
 			_window->Subscribe( this, &VulkanThread::_WindowCreated );
 			_window->Subscribe( this, &VulkanThread::_WindowBeforeDestroy );
 			_window->Subscribe( this, &VulkanThread::_WindowVisibilityChanged );
-			_window->Subscribe( this, &VulkanThread::_WindowDescriptorChanged );
+			_window->Subscribe( this, &VulkanThread::_WindowDescriptionChanged );
 		}
 
 		CHECK_ERR( Module::_Link_Impl( msg ) );
@@ -262,7 +262,7 @@ namespace Platforms
 		// if window already created
 		if ( with_surface and _IsComposedState( _window->GetState() ) )
 		{
-			_SendMsg< OSMsg::WindowCreated >({});
+			_SendMsg( OSMsg::WindowCreated{} );
 		}
 		return true;
 	}
@@ -272,7 +272,7 @@ namespace Platforms
 	_Compose
 =================================================
 */
-	bool VulkanThread::_Compose (const Message< ModuleMsg::Compose > &)
+	bool VulkanThread::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -291,7 +291,7 @@ namespace Platforms
 	_Update
 =================================================
 */
-	bool VulkanThread::_Update (const Message< ModuleMsg::Update > &msg)
+	bool VulkanThread::_Update (const ModuleMsg::Update &msg)
 	{
 		if ( not _IsComposedState( GetState() ) or
 			 not _isWindowVisible )
@@ -308,7 +308,7 @@ namespace Platforms
 	_Delete
 =================================================
 */
-	bool VulkanThread::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool VulkanThread::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyDevice();
 		_DetachWindow();
@@ -322,7 +322,7 @@ namespace Platforms
 	_AddToManager
 =================================================
 */
-	bool VulkanThread::_AddToManager (const Message< ModuleMsg::AddToManager > &)
+	bool VulkanThread::_AddToManager (const ModuleMsg::AddToManager &)
 	{
 		return true;
 	}
@@ -332,7 +332,7 @@ namespace Platforms
 	_RemoveFromManager
 =================================================
 */
-	bool VulkanThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &)
+	bool VulkanThread::_RemoveFromManager (const ModuleMsg::RemoveFromManager &)
 	{
 		return true;
 	}
@@ -342,10 +342,10 @@ namespace Platforms
 	_GetGraphicsModules
 =================================================
 */	
-	bool VulkanThread::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	bool VulkanThread::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg->compute.Set( VulkanObjectsConstructor::GetComputeModules() );
-		msg->graphics.Set( VulkanObjectsConstructor::GetGraphicsModules() );
+		msg.compute.Set( VulkanObjectsConstructor::GetComputeModules() );
+		msg.graphics.Set( VulkanObjectsConstructor::GetGraphicsModules() );
 		return true;
 	}
 
@@ -354,16 +354,16 @@ namespace Platforms
 	_ThreadBeginFrame
 =================================================
 */
-	bool VulkanThread::_ThreadBeginFrame (const Message< GpuMsg::ThreadBeginFrame > &msg)
+	bool VulkanThread::_ThreadBeginFrame (const GpuMsg::ThreadBeginFrame &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
-		Message< GpuMsg::GetVkSemaphore >	req_sem{ _imageAvailable };
+		GpuMsg::GetVkSemaphore	req_sem{ _imageAvailable };
 		_syncManager->Send( req_sem );
 
-		CHECK_ERR( _device.BeginFrame( *req_sem->result ) );
+		CHECK_ERR( _device.BeginFrame( *req_sem.result ) );
 
-		msg->result.Set({ _device.GetCurrentFramebuffer(), _device.GetImageIndex() });
+		msg.result.Set({ _device.GetCurrentFramebuffer(), _device.GetImageIndex() });
 		return true;
 	}
 
@@ -374,31 +374,31 @@ namespace Platforms
 	this method used for submit command buffers with synchronization between frame changes
 =================================================
 */
-	bool VulkanThread::_ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &msg)
+	bool VulkanThread::_ThreadEndFrame (const GpuMsg::ThreadEndFrame &msg)
 	{
 		CHECK_ERR( _device.IsFrameStarted() );
 
-		if ( msg->framebuffer )
-			CHECK_ERR( msg->framebuffer == _device.GetCurrentFramebuffer() );
+		if ( msg.framebuffer )
+			CHECK_ERR( msg.framebuffer == _device.GetCurrentFramebuffer() );
 
-		if ( not msg->commands.Empty() )
+		if ( not msg.commands.Empty() )
 		{
-			Message< GpuMsg::SubmitGraphicsQueueCommands >	submit{ *msg };
+			GpuMsg::SubmitGraphicsQueueCommands		submit{ msg };
 
-			submit->waitSemaphores.PushBack({ _imageAvailable, EPipelineStage::ColorAttachmentOutput });
-			submit->signalSemaphores.PushBack( _renderFinished );
+			submit.waitSemaphores.PushBack({ _imageAvailable, EPipelineStage::ColorAttachmentOutput });
+			submit.signalSemaphores.PushBack( _renderFinished );
 
 			_cmdQueue->Send( submit );
 		}
 		else
 		{
-			CHECK_ERR( msg->fence == GpuFenceId::Unknown );
+			CHECK_ERR( msg.fence == GpuFenceId::Unknown );
 		}
 		
-		Message< GpuMsg::GetVkSemaphore >	req_sem{ _renderFinished };
+		GpuMsg::GetVkSemaphore	req_sem{ _renderFinished };
 		_syncManager->Send( req_sem );
 
-		CHECK_ERR( _device.EndFrame( *req_sem->result ) );
+		CHECK_ERR( _device.EndFrame( *req_sem.result ) );
 		return true;
 	}
 
@@ -407,7 +407,7 @@ namespace Platforms
 	_WindowCreated
 =================================================
 */
-	bool VulkanThread::_WindowCreated (const Message< OSMsg::WindowCreated > &)
+	bool VulkanThread::_WindowCreated (const OSMsg::WindowCreated &)
 	{
 		CHECK_ERR( GetState() == EState::Linked );
 		
@@ -545,10 +545,10 @@ namespace Platforms
 		{
 			using EFlags = CreateInfo::GpuContext::EFlags;
 			
-			Message< OSMsg::WindowGetDescriptor >	req_descr;
-			SendTo( _window, req_descr );
+			OSMsg::WindowGetDescription	req_descr;
+			_window->Send( req_descr );
 
-			CHECK_ERR( _device.CreateSwapchain( req_descr->result->surfaceSize, _settings.flags[ EFlags::VSync ] ) );
+			CHECK_ERR( _device.CreateSwapchain( req_descr.result->surfaceSize, _settings.flags[ EFlags::VSync ] ) );
 		}
 
 		CHECK_ERR( _device.CreateQueue() );
@@ -563,7 +563,7 @@ namespace Platforms
 		
 		CHECK( _DefCompose( false ) );
 
-		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
+		_SendEvent( GpuMsg::DeviceCreated{} );
 		
 		CHECK_ERR( _CreateSemaphores() );
 		return true;
@@ -574,7 +574,7 @@ namespace Platforms
 	_WindowBeforeDestroy
 =================================================
 */
-	bool VulkanThread::_WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &)
+	bool VulkanThread::_WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &)
 	{
 		_DestroyDevice();
 		_DetachWindow();
@@ -596,18 +596,18 @@ namespace Platforms
 		{
 			_device.DeviceWaitIdle();
 
-			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
+			_SendEvent( GpuMsg::DeviceBeforeDestroy{} );
 		}
 
 		if ( _cmdQueue )
 		{
-			_cmdQueue->Send< ModuleMsg::Delete >({});
+			_cmdQueue->Send( ModuleMsg::Delete{} );
 			_cmdQueue = null;
 		}
 
 		if ( _memManager )
 		{
-			_memManager->Send< ModuleMsg::Delete >({});
+			_memManager->Send( ModuleMsg::Delete{} );
 			_memManager = null;
 		}
 
@@ -615,7 +615,7 @@ namespace Platforms
 
 		if ( _syncManager )
 		{
-			_syncManager->Send< ModuleMsg::Delete >({});
+			_syncManager->Send( ModuleMsg::Delete{} );
 			_syncManager = null;
 		}
 
@@ -644,16 +644,16 @@ namespace Platforms
 
 		_DestroySemaphores();
 
-		Message< GpuMsg::CreateSemaphore >	sem1_ctor;
-		Message< GpuMsg::CreateSemaphore >	sem2_ctor;
+		GpuMsg::CreateSemaphore		sem1_ctor;
+		GpuMsg::CreateSemaphore		sem2_ctor;
 
 		_syncManager->Send( sem1_ctor );
 		_syncManager->Send( sem2_ctor );
 
-		CHECK_ERR( sem1_ctor->result and sem2_ctor->result );
+		CHECK_ERR( sem1_ctor.result and sem2_ctor.result );
 
-		_imageAvailable	= *sem1_ctor->result;
-		_renderFinished	= *sem2_ctor->result;
+		_imageAvailable	= *sem1_ctor.result;
+		_renderFinished	= *sem2_ctor.result;
 
 		return true;
 	}
@@ -667,14 +667,14 @@ namespace Platforms
 	{
 		if ( _syncManager and _imageAvailable != GpuSemaphoreId::Unknown )
 		{
-			_syncManager->Send< GpuMsg::DestroySemaphore >({ _imageAvailable });
+			_syncManager->Send( GpuMsg::DestroySemaphore{ _imageAvailable });
 
 			_imageAvailable = GpuSemaphoreId::Unknown;
 		}
 		
 		if ( _syncManager and _renderFinished != GpuSemaphoreId::Unknown )
 		{
-			_syncManager->Send< GpuMsg::DestroySemaphore >({ _renderFinished });
+			_syncManager->Send( GpuMsg::DestroySemaphore{ _renderFinished });
 
 			_renderFinished = GpuSemaphoreId::Unknown;
 		}
@@ -685,29 +685,29 @@ namespace Platforms
 	_WindowVisibilityChanged
 =================================================
 */
-	bool VulkanThread::_WindowVisibilityChanged (const Message< OSMsg::WindowVisibilityChanged > &msg)
+	bool VulkanThread::_WindowVisibilityChanged (const OSMsg::WindowVisibilityChanged &msg)
 	{
-		_isWindowVisible = (msg->state != WindowDesc::EVisibility::Invisible);
+		_isWindowVisible = (msg.state != WindowDesc::EVisibility::Invisible);
 		return true;
 	}
 
 /*
 =================================================
-	_WindowDescriptorChanged
+	_WindowDescriptionChanged
 =================================================
 */
-	bool VulkanThread::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
+	bool VulkanThread::_WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &msg)
 	{
 		if ( _device.IsDeviceCreated()									and
-			 msg->descr.visibility != WindowDesc::EVisibility::Invisible	and
-			 Any( msg->descr.surfaceSize != _device.GetSurfaceSize() ) )
+			 msg.descr.visibility != WindowDesc::EVisibility::Invisible	and
+			 Any( msg.descr.surfaceSize != _device.GetSurfaceSize() ) )
 		{
 			_device.DeviceWaitIdle();
 
 			// TODO:
 			// destroy command buffers with old framebuffers and images
 
-			CHECK_ERR( _device.RecreateSwapchain( msg->descr.surfaceSize ) );
+			CHECK_ERR( _device.RecreateSwapchain( msg.descr.surfaceSize ) );
 		}
 
 		return true;
@@ -734,7 +734,7 @@ namespace Platforms
 	_GetDeviceInfo
 =================================================
 */
-	bool VulkanThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
+	bool VulkanThread::_GetDeviceInfo (const GpuMsg::GetDeviceInfo &msg)
 	{
 		GpuMsg::GetDeviceInfo::Info	info;
 		info.gpuThread		= this;
@@ -744,7 +744,7 @@ namespace Platforms
 		info.renderPass		= _device.GetDefaultRenderPass();
 		info.imageCount		= _device.GetSwapchainLength();
 
-		msg->result.Set( info );
+		msg.result.Set( info );
 		return true;
 	}
 	
@@ -753,9 +753,9 @@ namespace Platforms
 	_GetVkDeviceInfo
 =================================================
 */
-	bool VulkanThread::_GetVkDeviceInfo (const Message< GpuMsg::GetVkDeviceInfo > &msg)
+	bool VulkanThread::_GetVkDeviceInfo (const GpuMsg::GetVkDeviceInfo &msg)
 	{
-		msg->result.Set({
+		msg.result.Set({
 			_device.GetInstance(),
 			_device.GetPhyiscalDevice(),
 			_device.GetLogicalDevice()
@@ -768,9 +768,9 @@ namespace Platforms
 	_GetVkPrivateClasses
 =================================================
 */
-	bool VulkanThread::_GetVkPrivateClasses (const Message< GpuMsg::GetVkPrivateClasses > &msg)
+	bool VulkanThread::_GetVkPrivateClasses (const GpuMsg::GetVkPrivateClasses &msg)
 	{
-		msg->result.Set({
+		msg.result.Set({
 			&_device,
 			&_samplerCache,
 			&_pipelineCache,
@@ -787,9 +787,9 @@ namespace Platforms
 	_GetGraphicsSettings
 =================================================
 */
-	bool VulkanThread::_GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &msg)
+	bool VulkanThread::_GetGraphicsSettings (const GpuMsg::GetGraphicsSettings &msg)
 	{
-		msg->result.Set({ _settings, _device.GetSurfaceSize() });
+		msg.result.Set({ _settings, _device.GetSurfaceSize() });
 		return true;
 	}
 
@@ -798,14 +798,14 @@ namespace Platforms
 	_GetComputeSettings
 =================================================
 */
-	bool VulkanThread::_GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &msg)
+	bool VulkanThread::_GetComputeSettings (const GpuMsg::GetComputeSettings &msg)
 	{
 		ComputeSettings	cs;
 		cs.device	= _settings.device;
 		cs.isDebug	= _settings.flags[ GraphicsSettings::EFlags::DebugContext ];
 		cs.version	= _settings.version;
 
-		msg->result.Set( RVREF(cs) );
+		msg.result.Set( RVREF(cs) );
 		return true;
 	}
 	
@@ -814,9 +814,9 @@ namespace Platforms
 	_GetDeviceProperties
 =================================================
 */
-	bool VulkanThread::_GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &msg)
+	bool VulkanThread::_GetDeviceProperties (const GpuMsg::GetDeviceProperties &msg)
 	{
-		msg->result.Set( _device.GetProperties() );
+		msg.result.Set( _device.GetProperties() );
 		return true;
 	}
 //-----------------------------------------------------------------------------

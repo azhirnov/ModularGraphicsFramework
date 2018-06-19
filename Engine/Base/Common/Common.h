@@ -2,45 +2,44 @@
 
 #pragma once
 
-//#include "Engine/STL/Engine.STL.h"
+#include "Core/STL/CompileTime/Runtime/TypeIdList.h"
+#include "Core/STL/CompileTime/StringToID.h"
 
-#include "Engine/STL/CompileTime/Runtime/TypeIdList.h"
-#include "Engine/STL/CompileTime/StringToID.h"
+#include "Core/STL/Types/SharedPointer.h"
+#include "Core/STL/Types/WeakPointer.h"
+#include "Core/STL/Types/StaticRefCountedObject.h"
+#include "Core/STL/Types/UniquePtr.h"
 
-#include "Engine/STL/Types/SharedPointer.h"
-#include "Engine/STL/Types/WeakPointer.h"
-#include "Engine/STL/Types/StaticRefCountedObject.h"
-#include "Engine/STL/Types/UniquePtr.h"
+#include "Core/STL/Types/Union.h"
+#include "Core/STL/Types/Optional.h"
+#include "Core/STL/Types/Delegate.h"
+#include "Core/STL/Types/VariantRef.h"
+#include "Core/STL/Types/VariantCRef.h"
+#include "Core/STL/Types/VariantInterface.h"
+#include "Core/STL/Types/ScopeSetter.h"
+#include "Core/STL/Types/UntypedKey.h"
 
-#include "Engine/STL/Types/Union.h"
-#include "Engine/STL/Types/Optional.h"
-#include "Engine/STL/Types/Delegate.h"
-#include "Engine/STL/Types/VariantRef.h"
-#include "Engine/STL/Types/VariantCRef.h"
-#include "Engine/STL/Types/VariantInterface.h"
-#include "Engine/STL/Types/ScopeSetter.h"
+#include "Core/STL/Types/Bitfield.h"
+#include "Core/STL/Types/StaticLimit.h"
 
-#include "Engine/STL/Types/Bitfield.h"
-#include "Engine/STL/Types/StaticLimit.h"
+#include "Core/STL/Containers/String.h"
+#include "Core/STL/Containers/Array.h"
+#include "Core/STL/Containers/Queue.h"
+#include "Core/STL/Containers/Map.h"
+#include "Core/STL/Containers/Set.h"
+#include "Core/STL/Containers/HashMap.h"
+#include "Core/STL/Containers/HashSet.h"
 
-#include "Engine/STL/Containers/String.h"
-#include "Engine/STL/Containers/Array.h"
-#include "Engine/STL/Containers/Queue.h"
-#include "Engine/STL/Containers/Map.h"
-#include "Engine/STL/Containers/Set.h"
-#include "Engine/STL/Containers/HashMap.h"
-#include "Engine/STL/Containers/HashSet.h"
+#include "Core/STL/Files/BaseFile.h"
+#include "Core/STL/Time/TimeProfiler.h"
 
-#include "Engine/STL/Files/BaseFile.h"
-#include "Engine/STL/Time/TimeProfiler.h"
+#include "Core/STL/Log/Logger.h"
+#include "Core/STL/Log/ToString.h"
 
-#include "Engine/STL/Log/Logger.h"
-#include "Engine/STL/Log/ToString.h"
+#include "Core/STL/Math/Interpolations.h"
 
-#include "Engine/STL/Math/Interpolations.h"
-
-#include "Engine/Config/Engine.Config.h"
-#include "Engine/Config/Engine.Version.h"
+#include "Core/Config/Engine.Config.h"
+#include "Core/Config/Engine.Version.h"
 #include "Engine/Base/Common/Defines.h"
 
 namespace Engine
@@ -92,11 +91,7 @@ namespace Engine
 	{
 	}
 	
-	namespace Validators
-	{
-	}
-	
-	namespace Graphics
+	namespace Graphics	// deprecated
 	{
 	}
 	

@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -66,14 +66,14 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Update (const ModuleMsg::Update &);
 		
-		bool _SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &);
-		bool _SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &);
-		bool _SyncGLClientWithDevice (const Message< GpuMsg::SyncGLClientWithDevice > &);
-		bool _GLFlushQueue (const Message< GpuMsg::GLFlushQueue > &);
+		bool _SubmitGraphicsQueueCommands (const GpuMsg::SubmitGraphicsQueueCommands &);
+		bool _SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &);
+		bool _SyncGLClientWithDevice (const GpuMsg::SyncGLClientWithDevice &);
+		bool _GLFlushQueue (const GpuMsg::GLFlushQueue &);
 
 	private:
 		bool _Submit (const GpuMsg::SubmitGraphicsQueueCommands &msg);
@@ -135,7 +135,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4CommandQueue::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4CommandQueue::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_GLFlushQueue( {} );
 
@@ -147,7 +147,7 @@ namespace PlatformGL
 	_Link
 =================================================
 */
-	bool GL4CommandQueue::_Link (const Message< ModuleMsg::Link > &msg)
+	bool GL4CommandQueue::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -165,7 +165,7 @@ namespace PlatformGL
 	_Update
 =================================================
 */
-	bool GL4CommandQueue::_Update (const Message< ModuleMsg::Update > &)
+	bool GL4CommandQueue::_Update (const ModuleMsg::Update &)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
@@ -190,12 +190,12 @@ namespace PlatformGL
 	_SubmitGraphicsQueueCommands
 =================================================
 */
-	bool GL4CommandQueue::_SubmitGraphicsQueueCommands (const Message< GpuMsg::SubmitGraphicsQueueCommands > &msg)
+	bool GL4CommandQueue::_SubmitGraphicsQueueCommands (const GpuMsg::SubmitGraphicsQueueCommands &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( _family[ EQueueFamily::Graphics ] );
 		
-		_commands.Add( *msg );
+		_commands.Add( msg );
 		return true;
 	}
 	
@@ -204,12 +204,12 @@ namespace PlatformGL
 	_SubmitComputeQueueCommands
 =================================================
 */
-	bool GL4CommandQueue::_SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &msg)
+	bool GL4CommandQueue::_SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( _family[ EQueueFamily::Compute ] );
 		
-		_commands.Add( *msg );
+		_commands.Add( msg );
 		return true;
 	}
 	
@@ -218,9 +218,9 @@ namespace PlatformGL
 	_SyncGLClientWithDevice
 =================================================
 */
-	bool GL4CommandQueue::_SyncGLClientWithDevice (const Message< GpuMsg::SyncGLClientWithDevice > &msg)
+	bool GL4CommandQueue::_SyncGLClientWithDevice (const GpuMsg::SyncGLClientWithDevice &msg)
 	{
-		CHECK_ERR( _commands.Run( msg->fenceId, DelegateBuilder( this, &GL4CommandQueue::_SubmitQueue ) ) );
+		CHECK_ERR( _commands.Run( msg.fenceId, DelegateBuilder( this, &GL4CommandQueue::_SubmitQueue ) ) );
 		return true;
 	}
 
@@ -232,11 +232,11 @@ namespace PlatformGL
 	bool GL4CommandQueue::_SubmitQueue (const GpuMsg::SubmitGraphicsQueueCommands &cmd) const
 	{
 		DEBUG_ONLY(
-			FOR( i, cmd.commands )
+			for (auto& com : cmd.commands )
 			{
-				Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
-				cmd.commands[i]->Send( req_descr );
-				CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
+				GpuMsg::GetCommandBufferDescription	req_descr;
+				com->Send( req_descr );
+				CHECK_ERR( req_descr.result and not req_descr.result->flags[ ECmdBufferCreate::Secondary ] );
 			}
 		);
 
@@ -244,24 +244,24 @@ namespace PlatformGL
 		for (auto& sem : cmd.waitSemaphores)
 		{
 			ASSERT(sem.second == EPipelineStage::AllCommands );
-			Message< GpuMsg::WaitGLSemaphore >	wait{ sem.first };
+			GpuMsg::WaitGLSemaphore		wait{ sem.first };
 			CHECK( _syncManager->Send( wait ) );
 		}
 
 		// execute command buffers
-		ModuleUtils::Send( cmd.commands, Message<GpuMsg::ExecuteGLCommandBuffer>{} );
+		ModuleUtils::Send( cmd.commands, GpuMsg::ExecuteGLCommandBuffer{} );
 		
 		// enqueue fence
 		if ( cmd.fence != GpuFenceId::Unknown )
 		{
-			Message< GpuMsg::GLFenceSync >	fence_sync{ cmd.fence };
+			GpuMsg::GLFenceSync		fence_sync{ cmd.fence };
 			CHECK( _syncManager->Send( fence_sync ) );
 		}
 
 		// enqueue semaphores
 		for (auto& sem : cmd.signalSemaphores)
 		{
-			Message< GpuMsg::GLSemaphoreEnqueue >	sem_sync{ sem };
+			GpuMsg::GLSemaphoreEnqueue	sem_sync{ sem };
 			CHECK( _syncManager->Send( sem_sync ) );
 		}
 		return true;
@@ -272,7 +272,7 @@ namespace PlatformGL
 	_GLFlushQueue
 =================================================
 */
-	bool GL4CommandQueue::_GLFlushQueue (const Message< GpuMsg::GLFlushQueue > &)
+	bool GL4CommandQueue::_GLFlushQueue (const GpuMsg::GLFlushQueue &)
 	{
 		CHECK_ERR( _commands.RunAll( DelegateBuilder( this, &GL4CommandQueue::_SubmitQueue ) ) );
 		return true;

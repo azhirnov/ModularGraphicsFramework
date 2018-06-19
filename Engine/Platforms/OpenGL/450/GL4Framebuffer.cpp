@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -29,22 +29,22 @@ namespace PlatformGL
 	// types
 	private:
 		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetFramebufferDescriptor,
+											GpuMsg::GetFramebufferDescription,
 											GpuMsg::GetGLFramebufferID,
 											GpuMsg::FramebufferAttachImage
 										> >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
 		
-		using RenderPassMsgList_t	= MessageListFrom< GpuMsg::GetRenderPassDescriptor, GpuMsg::GetGLRenderPassID >;
-		using ImageMsgList_t		= MessageListFrom< GpuMsg::GetImageDescriptor, GpuMsg::CreateGLImageView >;
+		using RenderPassMsgList_t	= MessageListFrom< GpuMsg::GetRenderPassDescription, GpuMsg::GetGLRenderPassID >;
+		using ImageMsgList_t		= MessageListFrom< GpuMsg::GetImageDescription, GpuMsg::CreateGLImageView >;
 		
 		struct AttachmentInfo : CompileTime::PODStruct
 		{
 		// variables
 			ModuleName_t			name;
 			GLuint					imageId		= 0;
-			ImageViewDescriptor		descr;
+			ImageViewDescription	descr;
 			MultiSamples			samples;
 
 		// methods
@@ -66,7 +66,7 @@ namespace PlatformGL
 	private:
 		GLuint						_framebufferId;
 
-		FramebufferDescriptor		_descr;
+		FramebufferDescription		_descr;
 		
 		Attachments_t				_attachments;
 
@@ -79,25 +79,25 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		bool _GetGLFramebufferID (const Message< GpuMsg::GetGLFramebufferID > &);
-		bool _GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &);
-		bool _FramebufferAttachImage (const Message< GpuMsg::FramebufferAttachImage > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		bool _GetGLFramebufferID (const GpuMsg::GetGLFramebufferID &);
+		bool _GetFramebufferDescription (const GpuMsg::GetFramebufferDescription &);
+		bool _FramebufferAttachImage (const GpuMsg::FramebufferAttachImage &);
 
 	private:
 		bool _IsCreated () const;
 		bool _CreateFramebuffer ();
 		void _DestroyFramebuffer ();
 		
-		bool _CreateRenderPassByAttachment (OUT RenderPassDescriptor &rpDescr);
-		bool _ValidateAttachment (const RenderPassDescriptor &rpDescr) const;
+		bool _CreateRenderPassByAttachment (OUT RenderPassDescription &rpDescr);
+		bool _ValidateAttachment (const RenderPassDescription &rpDescr) const;
 
-		static bool _GetAttachmentTarget (const AttachmentInfo &info, const RenderPassDescriptor &rpDescr, OUT usize &index, OUT GLenum &target);
+		static bool _GetAttachmentTarget (const AttachmentInfo &info, const RenderPassDescription &rpDescr, OUT usize &index, OUT GLenum &target);
 
-		static void _ValidateDescriptor (INOUT FramebufferDescriptor &descr);
+		static void _ValidateDescription (INOUT FramebufferDescription &descr);
 	};
 //-----------------------------------------------------------------------------
 
@@ -129,7 +129,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Framebuffer::_Delete );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetGLFramebufferID );
-		_SubscribeOnMsg( this, &GL4Framebuffer::_GetFramebufferDescriptor );
+		_SubscribeOnMsg( this, &GL4Framebuffer::_GetFramebufferDescription );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetGLPrivateClasses );
@@ -139,7 +139,7 @@ namespace PlatformGL
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
-		_ValidateDescriptor( INOUT _descr );
+		_ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -157,7 +157,7 @@ namespace PlatformGL
 	_Compose
 =================================================
 */
-	bool GL4Framebuffer::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool GL4Framebuffer::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -173,7 +173,7 @@ namespace PlatformGL
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -182,7 +182,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4Framebuffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4Framebuffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyFramebuffer();
 
@@ -197,15 +197,15 @@ namespace PlatformGL
 	_AttachModule
 =================================================
 */
-	bool GL4Framebuffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool GL4Framebuffer::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
 		// render pass must be unique
-		bool	is_render_pass	= msg->newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
-		bool	is_image		= msg->newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+		bool	is_render_pass	= msg.newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_image		= msg.newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
 
-		if ( _Attach( msg->name, msg->newModule ) and (is_image or is_render_pass) )
+		if ( _Attach( msg.name, msg.newModule ) and (is_image or is_render_pass) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyFramebuffer();
@@ -218,9 +218,9 @@ namespace PlatformGL
 	_AttachModule
 =================================================
 */
-	bool GL4Framebuffer::_FramebufferAttachImage (const Message< GpuMsg::FramebufferAttachImage > &msg)
+	bool GL4Framebuffer::_FramebufferAttachImage (const GpuMsg::FramebufferAttachImage &msg)
 	{
-		ModulePtr	mod = GetModuleByName( msg->name );
+		ModulePtr	mod = GetModuleByName( msg.name );
 		if ( mod ) {
 			CHECK( _Detach( mod ) );
 		}
@@ -228,18 +228,18 @@ namespace PlatformGL
 		bool			found = false;
 		AttachmentInfo	new_att;
 		
-		new_att.name			= msg->name;
-		new_att.descr			= msg->viewDescr;
+		new_att.name			= msg.name;
+		new_att.descr			= msg.viewDescr;
 		new_att.descr.swizzle	= ImageSwizzle();
 
-		CHECK( new_att.descr.swizzle == msg->viewDescr.swizzle );
+		CHECK( new_att.descr.swizzle == msg.viewDescr.swizzle );
 
 		FOR( i, _attachments )
 		{
 			auto&	att = _attachments[i];
 
 			// replace
-			if ( att.name == msg->name )
+			if ( att.name == msg.name )
 			{
 				att		= new_att;
 				found	= true;
@@ -252,7 +252,7 @@ namespace PlatformGL
 			_attachments.PushBack( new_att );
 		}
 		
-		if ( _Attach( msg->name, msg->image ) )
+		if ( _Attach( msg.name, msg.image ) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyFramebuffer();
@@ -265,14 +265,14 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4Framebuffer::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool GL4Framebuffer::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK_ERR( msg->oldModule );
+		CHECK_ERR( msg.oldModule );
 
-		bool	is_render_pass	= msg->oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
-		bool	is_image		= msg->oldModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+		bool	is_render_pass	= msg.oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		bool	is_image		= msg.oldModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
 
-		if ( _Detach( msg->oldModule ) and (is_image or is_render_pass) )
+		if ( _Detach( msg.oldModule ) and (is_image or is_render_pass) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyFramebuffer();
@@ -285,22 +285,22 @@ namespace PlatformGL
 	_GetGLFramebufferID
 =================================================
 */
-	bool GL4Framebuffer::_GetGLFramebufferID (const Message< GpuMsg::GetGLFramebufferID > &msg)
+	bool GL4Framebuffer::_GetGLFramebufferID (const GpuMsg::GetGLFramebufferID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set( _framebufferId );
+		msg.result.Set( _framebufferId );
 		return true;
 	}
 
 /*
 =================================================
-	_GetFramebufferDescriptor
+	_GetFramebufferDescription
 =================================================
 */
-	bool GL4Framebuffer::_GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &msg)
+	bool GL4Framebuffer::_GetFramebufferDescription (const GpuMsg::GetFramebufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
@@ -324,10 +324,10 @@ namespace PlatformGL
 		CHECK_ERR( not _IsCreated() );
 		CHECK_ERR( not _attachments.Empty() );
 		
-		using ImageViewMessages_t		= MessageListFrom< GpuMsg::GetImageDescriptor, GpuMsg::GetGLImageID >;
+		using ImageViewMessages_t		= MessageListFrom< GpuMsg::GetImageDescription, GpuMsg::GetGLImageID >;
 		using ColorAttachmentInfos_t	= FixedSizeArray< AttachmentInfo, GlobalConst::GAPI_MaxColorBuffers >;
 		
-		RenderPassDescriptor	render_pass_descr;
+		RenderPassDescription	render_pass_descr;
 		ModulePtr				render_pass;
 		
 		// get render pass
@@ -336,11 +336,11 @@ namespace PlatformGL
 
 			if ( mod )
 			{
-				Message< GpuMsg::GetRenderPassDescriptor >	req_descr;
-				SendTo( mod, req_descr );
+				GpuMsg::GetRenderPassDescription	req_descr;
+				mod->Send( req_descr );
 
 				render_pass			= mod;
-				render_pass_descr	= *req_descr->result;
+				render_pass_descr	= *req_descr.result;
 			}
 		}
 
@@ -406,9 +406,9 @@ namespace PlatformGL
 				GL_CALL( glFramebufferTexture( GL_DRAW_FRAMEBUFFER, target, att.imageId, att.descr.baseLevel.Get() ) );
 
 			if ( is_depth )
-				_descr.depthStencilAttachment = FramebufferDescriptor::AttachmentInfo{ att.name, att.descr.viewType };
+				_descr.depthStencilAttachment = FramebufferDescription::AttachmentInfo{ att.name, att.descr.viewType };
 			else
-				_descr.colorAttachments[index] = FramebufferDescriptor::AttachmentInfo{ att.name, att.descr.viewType };
+				_descr.colorAttachments[index] = FramebufferDescription::AttachmentInfo{ att.name, att.descr.viewType };
 		}
 
 		// check status
@@ -445,7 +445,7 @@ namespace PlatformGL
 	_GetAttachmentTarget
 =================================================
 */
-	bool GL4Framebuffer::_GetAttachmentTarget (const AttachmentInfo &info, const RenderPassDescriptor &rpDescr, OUT usize &index, OUT GLenum &target)
+	bool GL4Framebuffer::_GetAttachmentTarget (const AttachmentInfo &info, const RenderPassDescription &rpDescr, OUT usize &index, OUT GLenum &target)
 	{
 		// depth stencil
 		if ( info.name == rpDescr.DepthStencilAttachment().name )
@@ -491,7 +491,7 @@ namespace PlatformGL
 	_CreateRenderPassByAttachment
 =================================================
 */
-	bool GL4Framebuffer::_CreateRenderPassByAttachment (OUT RenderPassDescriptor &rpDescr)
+	bool GL4Framebuffer::_CreateRenderPassByAttachment (OUT RenderPassDescription &rpDescr)
 	{
 		auto	builder = RenderPassDescrBuilder::CreateForFramebuffer();
 
@@ -515,10 +515,10 @@ namespace PlatformGL
 
 		CHECK_ERR( _Attach( "renderpass", render_pass ) );
 
-		Message< GpuMsg::GetRenderPassDescriptor >	req_descr;
-		SendTo( render_pass, req_descr );
+		GpuMsg::GetRenderPassDescription	req_descr;
+		render_pass->Send( req_descr );
 		
-		rpDescr = RVREF(*req_descr->result);
+		rpDescr = RVREF(*req_descr.result);
 		return true;
 	}
 
@@ -527,7 +527,7 @@ namespace PlatformGL
 	_ValidateAttachment
 =================================================
 */
-	bool GL4Framebuffer::_ValidateAttachment (const RenderPassDescriptor &rpDescr) const
+	bool GL4Framebuffer::_ValidateAttachment (const RenderPassDescription &rpDescr) const
 	{
 		CHECK_ERR( _attachments.Count() == rpDescr.ColorAttachments().Count() + uint(rpDescr.DepthStencilAttachment().IsEnabled()) );
 
@@ -583,10 +583,10 @@ namespace PlatformGL
 
 /*
 =================================================
-	_ValidateDescriptor
+	_ValidateDescription
 =================================================
 */
-	void GL4Framebuffer::_ValidateDescriptor (INOUT FramebufferDescriptor &descr)
+	void GL4Framebuffer::_ValidateDescription (INOUT FramebufferDescription &descr)
 	{
 		CHECK( Any( descr.size != uint2(0) ) );
 

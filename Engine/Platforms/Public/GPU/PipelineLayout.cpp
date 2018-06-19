@@ -12,7 +12,7 @@ namespace Platforms
 	TextureUniform::operator ==
 =================================================
 */
-	bool PipelineLayoutDescriptor::TextureUniform::operator == (const TextureUniform &right) const
+	bool PipelineLayoutDescription::TextureUniform::operator == (const TextureUniform &right) const
 	{
 		return	stageFlags		== right.stageFlags		and
 				binding			== right.binding		and
@@ -27,7 +27,7 @@ namespace Platforms
 	TextureUniform::operator >
 =================================================
 */
-	bool PipelineLayoutDescriptor::TextureUniform::operator >  (const TextureUniform &right) const
+	bool PipelineLayoutDescription::TextureUniform::operator >  (const TextureUniform &right) const
 	{
 		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
 				binding			!= right.binding		?	binding			> right.binding			:
@@ -45,7 +45,7 @@ namespace Platforms
 	SamplerUniform::operator ==
 =================================================
 */
-	bool PipelineLayoutDescriptor::SamplerUniform::operator == (const SamplerUniform &right) const
+	bool PipelineLayoutDescription::SamplerUniform::operator == (const SamplerUniform &right) const
 	{
 		return	stageFlags		== right.stageFlags		and
 				binding			== right.binding		and
@@ -58,7 +58,7 @@ namespace Platforms
 	SamplerUniform::operator >
 =================================================
 */
-	bool PipelineLayoutDescriptor::SamplerUniform::operator >  (const SamplerUniform &right) const
+	bool PipelineLayoutDescription::SamplerUniform::operator >  (const SamplerUniform &right) const
 	{
 		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
 				binding			!= right.binding		?	binding			> right.binding			:
@@ -74,7 +74,7 @@ namespace Platforms
 	SubpassInput::operator ==
 =================================================
 */
-	bool PipelineLayoutDescriptor::SubpassInput::operator == (const SubpassInput &right) const
+	bool PipelineLayoutDescription::SubpassInput::operator == (const SubpassInput &right) const
 	{
 		return	stageFlags		== right.stageFlags		and
 				binding			== right.binding		and
@@ -87,7 +87,7 @@ namespace Platforms
 	SubpassInput::operator >
 =================================================
 */
-	bool PipelineLayoutDescriptor::SubpassInput::operator >  (const SubpassInput &right) const
+	bool PipelineLayoutDescription::SubpassInput::operator >  (const SubpassInput &right) const
 	{
 		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
 				binding			!= right.binding		?	binding			> right.binding			:
@@ -103,7 +103,7 @@ namespace Platforms
 	ImageUniform::operator ==
 =================================================
 */
-	bool PipelineLayoutDescriptor::ImageUniform::operator == (const ImageUniform &right) const
+	bool PipelineLayoutDescription::ImageUniform::operator == (const ImageUniform &right) const
 	{
 		return	stageFlags		== right.stageFlags		and
 				binding			== right.binding		and
@@ -119,7 +119,7 @@ namespace Platforms
 	ImageUniform::operator >
 =================================================
 */
-	bool PipelineLayoutDescriptor::ImageUniform::operator >  (const ImageUniform &right) const
+	bool PipelineLayoutDescription::ImageUniform::operator >  (const ImageUniform &right) const
 	{
 		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
 				binding			!= right.binding		?	binding			> right.binding			:
@@ -138,7 +138,7 @@ namespace Platforms
 	UniformBuffer::operator ==
 =================================================
 */
-	bool PipelineLayoutDescriptor::UniformBuffer::operator == (const UniformBuffer &right) const
+	bool PipelineLayoutDescription::UniformBuffer::operator == (const UniformBuffer &right) const
 	{
 		return	stageFlags		== right.stageFlags		and
 				binding			== right.binding		and
@@ -152,7 +152,7 @@ namespace Platforms
 	UniformBuffer::operator >
 =================================================
 */
-	bool PipelineLayoutDescriptor::UniformBuffer::operator >  (const UniformBuffer &right) const
+	bool PipelineLayoutDescription::UniformBuffer::operator >  (const UniformBuffer &right) const
 	{
 		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
 				binding			!= right.binding		?	binding			> right.binding			:
@@ -169,7 +169,7 @@ namespace Platforms
 	StorageBuffer::operator ==
 =================================================
 */
-	bool PipelineLayoutDescriptor::StorageBuffer::operator == (const StorageBuffer &right) const
+	bool PipelineLayoutDescription::StorageBuffer::operator == (const StorageBuffer &right) const
 	{
 		return	stageFlags		== right.stageFlags		and
 				binding			== right.binding		and
@@ -185,7 +185,7 @@ namespace Platforms
 	StorageBuffer::operator >
 =================================================
 */
-	bool PipelineLayoutDescriptor::StorageBuffer::operator >  (const StorageBuffer &right) const
+	bool PipelineLayoutDescription::StorageBuffer::operator >  (const StorageBuffer &right) const
 	{
 		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
 				binding			!= right.binding		?	binding			> right.binding			:
@@ -204,7 +204,7 @@ namespace Platforms
 	PushConstant::operator ==
 =================================================
 */
-	bool PipelineLayoutDescriptor::PushConstant::operator == (const PushConstant &right) const
+	bool PipelineLayoutDescription::PushConstant::operator == (const PushConstant &right) const
 	{
 		return	stageFlags	== right.stageFlags	and
 				offset		== right.offset		and
@@ -217,7 +217,7 @@ namespace Platforms
 	PushConstant::operator >
 =================================================
 */
-	bool PipelineLayoutDescriptor::PushConstant::operator >  (const PushConstant &right) const
+	bool PipelineLayoutDescription::PushConstant::operator >  (const PushConstant &right) const
 	{
 		return	stageFlags	!= right.stageFlags	?	stageFlags	> right.stageFlags	:
 				offset		!= right.offset		?	offset		> right.offset		:
@@ -233,7 +233,7 @@ namespace Platforms
 	Uniform::operator <
 =================================================
 *
-	bool PipelineLayoutDescriptor::Uniform::operator == (const Uniform &right) const
+	bool PipelineLayoutDescription::Uniform::operator == (const Uniform &right) const
 	{
 		return	stageFlags		== right.stageFlags		and
 				binding			== right.binding		and
@@ -248,7 +248,7 @@ namespace Platforms
 	Uniform::operator <
 =================================================
 *
-	bool PipelineLayoutDescriptor::Uniform::operator >  (const Uniform &right) const
+	bool PipelineLayoutDescription::Uniform::operator >  (const Uniform &right) const
 	{
 		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
 				binding			!= right.binding		?	binding			> right.binding			:
@@ -266,8 +266,8 @@ namespace Platforms
 	AddTexture
 =================================================
 */
-	PipelineLayoutDescriptor::Builder&
-		PipelineLayoutDescriptor::Builder::AddTexture (StringCRef name, EImage::type textureType, EPixelFormatClass::type format,
+	PipelineLayoutDescription::Builder&
+		PipelineLayoutDescription::Builder::AddTexture (StringCRef name, EImage::type textureType, EPixelFormatClass::type format,
 														uint binding, uint uniqueIndex, EShader::bits stageFlags)
 	{
 		TextureUniform	tex;
@@ -288,8 +288,8 @@ namespace Platforms
 	AddImage
 =================================================
 */
-	PipelineLayoutDescriptor::Builder&
-		PipelineLayoutDescriptor::Builder::AddImage (StringCRef name, EImage::type imageType, EPixelFormat::type format,
+	PipelineLayoutDescription::Builder&
+		PipelineLayoutDescription::Builder::AddImage (StringCRef name, EImage::type imageType, EPixelFormat::type format,
 													 EShaderMemoryModel::type access, uint binding, uint uniqueIndex, EShader::bits stageFlags)
 	{
 		ImageUniform	img;
@@ -311,8 +311,8 @@ namespace Platforms
 	AddUniformBuffer
 =================================================
 */
-	PipelineLayoutDescriptor::Builder&
-		PipelineLayoutDescriptor::Builder::AddUniformBuffer (StringCRef name, BytesU size, uint binding, uint uniqueIndex, EShader::bits stageFlags)
+	PipelineLayoutDescription::Builder&
+		PipelineLayoutDescription::Builder::AddUniformBuffer (StringCRef name, BytesU size, uint binding, uint uniqueIndex, EShader::bits stageFlags)
 	{
 		UniformBuffer	buf;
 		buf.name			= name;
@@ -331,8 +331,8 @@ namespace Platforms
 	AddStorageBuffer
 =================================================
 */
-	PipelineLayoutDescriptor::Builder&
-		PipelineLayoutDescriptor::Builder::AddStorageBuffer (StringCRef name, BytesU size, BytesU stride, EShaderMemoryModel::type access,
+	PipelineLayoutDescription::Builder&
+		PipelineLayoutDescription::Builder::AddStorageBuffer (StringCRef name, BytesU size, BytesU stride, EShaderMemoryModel::type access,
 															 uint binding, uint uniqueIndex, EShader::bits stageFlags)
 	{
 		StorageBuffer	buf;
@@ -354,8 +354,8 @@ namespace Platforms
 	AddPushConstant
 =================================================
 */
-	PipelineLayoutDescriptor::Builder&
-		PipelineLayoutDescriptor::Builder::AddPushConstant (StringCRef name, BytesU offset, BytesU size, EShader::bits stageFlags)
+	PipelineLayoutDescription::Builder&
+		PipelineLayoutDescription::Builder::AddPushConstant (StringCRef name, BytesU offset, BytesU size, EShader::bits stageFlags)
 	{
 		PushConstant	pc;
 		pc.name			= name;
@@ -373,8 +373,8 @@ namespace Platforms
 	AddPushConstantsBuffer
 =================================================
 */
-	PipelineLayoutDescriptor::Builder&
-		PipelineLayoutDescriptor::Builder::AddPushConstantsBuffer (StringCRef name, BytesU size, uint binding, uint uniqueIndex, EShader::bits stageFlags)
+	PipelineLayoutDescription::Builder&
+		PipelineLayoutDescription::Builder::AddPushConstantsBuffer (StringCRef name, BytesU size, uint binding, uint uniqueIndex, EShader::bits stageFlags)
 	{
 		PushConstantsBuffer	pcb;
 		pcb.name		= name;
@@ -393,8 +393,8 @@ namespace Platforms
 	Finish
 =================================================
 */
-	PipelineLayoutDescriptor const&
-		PipelineLayoutDescriptor::Builder::Finish ()
+	PipelineLayoutDescription const&
+		PipelineLayoutDescription::Builder::Finish ()
 	{
 		if ( _changed )
 		{
@@ -412,7 +412,7 @@ namespace Platforms
 	operator ==
 =================================================
 */
-	bool PipelineLayoutDescriptor::operator == (const Self &right) const
+	bool PipelineLayoutDescription::operator == (const Self &right) const
 	{
 		return	_hash		== right._hash		and
 				_uniforms	== right._uniforms;
@@ -423,7 +423,7 @@ namespace Platforms
 	operator >
 =================================================
 */
-	bool PipelineLayoutDescriptor::operator >  (const Self &right) const
+	bool PipelineLayoutDescription::operator >  (const Self &right) const
 	{
 		return	_hash != right._hash	?	_hash		> right._hash	:
 											_uniforms	> right._uniforms;

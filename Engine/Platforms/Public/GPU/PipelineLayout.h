@@ -5,7 +5,7 @@
 #include "Engine/Platforms/Public/GPU/ShaderEnums.h"
 #include "Engine/Platforms/Public/GPU/ImageEnums.h"
 #include "Engine/Platforms/Public/GPU/VertexEnums.h"
-#include "Engine/STL/Types/Bool.h"
+#include "Core/STL/Types/Bool.h"
 
 namespace Engine
 {
@@ -19,16 +19,16 @@ namespace Platforms
 
 
 	//
-	// Pipeline Layout Descriptor
+	// Pipeline Layout Description
 	//
 
-	struct PipelineLayoutDescriptor final : CompileTime::PODStruct
+	struct PipelineLayoutDescription final : CompileTime::PODStruct
 	{
 	// types
 	public:
 		struct Builder;
 
-		using Self		= PipelineLayoutDescriptor;
+		using Self		= PipelineLayoutDescription;
 		using Name_t	= StaticString<64>;
 
 		struct BaseUniform : CompileTime::CopyQualifiers< Name_t >
@@ -148,7 +148,7 @@ namespace Platforms
 
 	// methods
 	public:
-		PipelineLayoutDescriptor (GX_DEFCTOR) {}
+		PipelineLayoutDescription (GX_DEFCTOR) {}
 
 		ND_ HashResult				GetHash ()			const	{ return _hash; }
 		ND_ ArrayCRef<Uniform_t>	GetUniforms ()		const	{ return _uniforms; }
@@ -160,14 +160,14 @@ namespace Platforms
 
 
 	//
-	// Pipeline Layout Descriptor Builder
+	// Pipeline Layout Description Builder
 	//
 
-	struct PipelineLayoutDescriptor::Builder
+	struct PipelineLayoutDescription::Builder
 	{
 	// variables
 	private:
-		PipelineLayoutDescriptor	_descr;
+		PipelineLayoutDescription	_descr;
 		bool						_changed	= true;
 
 
@@ -175,7 +175,7 @@ namespace Platforms
 	public:
 		Builder () {}
 
-		explicit Builder (const PipelineLayoutDescriptor &descr) : _descr(descr) {}
+		explicit Builder (const PipelineLayoutDescription &descr) : _descr(descr) {}
 
 		Builder& AddTexture (StringCRef name, EImage::type dimension, EPixelFormatClass::type format,
 							 uint binding, uint uniqueIndex, EShader::bits stageFlags);
@@ -194,7 +194,7 @@ namespace Platforms
 		ND_ ArrayCRef<Uniform_t>	GetUniforms ()	const	{ return _descr.GetUniforms(); }
 
 		// validate, calculate hash and return
-		ND_ PipelineLayoutDescriptor const& Finish ();
+		ND_ PipelineLayoutDescription const& Finish ();
 	};
 
 }	// Platforms
@@ -206,12 +206,12 @@ namespace GX_STL
 namespace GXTypes
 {
 	//
-	// Hash (PipelineLayoutDescriptor)
+	// Hash (PipelineLayoutDescription)
 	//
 	template <>
-	struct Hash< Engine::Platforms::PipelineLayoutDescriptor > final
+	struct Hash< Engine::Platforms::PipelineLayoutDescription > final
 	{
-		ND_ HashResult  operator () (const Engine::Platforms::PipelineLayoutDescriptor &key) const noexcept
+		ND_ HashResult  operator () (const Engine::Platforms::PipelineLayoutDescription &key) const noexcept
 		{
 			HashResult	res;
 

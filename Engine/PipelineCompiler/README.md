@@ -64,9 +64,9 @@ struct DynamicBuffer_SSBO final
 	}
 };
 
-void Create (PipelineTemplateDescriptor& descr)
+void Create (PipelineTemplateDescription& descr)
 {
-	descr = PipelineTemplateDescriptor();
+	descr = PipelineTemplateDescription();
 
 	// set render state
 	descr.renderState = RenderState();
@@ -80,7 +80,7 @@ void Create (PipelineTemplateDescriptor& descr)
 	// set allowed primitives
 	descr.supportedPrimitives = EPrimitive::TriangleStrip | EPrimitive::TriangleList;
 
-	descr.layout = PipelineLayoutDescriptor::Builder()
+	descr.layout = PipelineLayoutDescription::Builder()
 			.AddTexture( "un_ColorTexture", EImage::Tex2D, EPixelFormatClass::Any,
 						 0u,	// binding index for OpenGL
 						 0u,	// unique index for Vulkan, OpenCL, C++

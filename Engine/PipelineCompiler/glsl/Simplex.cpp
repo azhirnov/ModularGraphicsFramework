@@ -6,7 +6,11 @@ namespace glsl_vfs
 {
 	extern void VFS_Noise_Simplex (OUT String &src)
 	{
-		src << R"#(
+		src << R"#(/*
+	Simplex noise
+*/
+
+#include <Common/Defines.glsl>
 
 // range [-1;1]
 real SimplexNoise (const real2 x);

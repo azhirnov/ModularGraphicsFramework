@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -25,10 +25,10 @@ namespace PlatformSW
 	// types
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::ReadRegion,
 											DSMsg::WriteRegion,
-											GpuMsg::GetGpuMemoryDescriptor,
+											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -40,8 +40,8 @@ namespace PlatformSW
 										>;
 
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetImageDescriptor,
-											GpuMsg::SetImageDescriptor,
+											GpuMsg::GetImageDescription,
+											GpuMsg::SetImageDescription,
 											GpuMsg::GpuMemoryRegionChanged,
 											GpuMsg::GetSWImageMemoryLayout,
 											GpuMsg::GetSWImageViewMemoryLayout,
@@ -51,7 +51,7 @@ namespace PlatformSW
 										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t::Append< MessageListFrom<
-											GpuMsg::SetImageDescriptor
+											GpuMsg::SetImageDescription
 										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
@@ -70,7 +70,7 @@ namespace PlatformSW
 
 	// variables
 	private:
-		ImageDescriptor			_descr;
+		ImageDescription		_descr;
 		ModulePtr				_memObj;
 		ImgLayers3D_t			_memLayout;
 		EImageLayout::type		_imageLayout;
@@ -90,23 +90,23 @@ namespace PlatformSW
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 
-		bool _GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &);
-		bool _SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &);
-		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _GetSWImageMemoryLayout (const Message< GpuMsg::GetSWImageMemoryLayout > &);
-		bool _GetSWImageViewMemoryLayout (const Message< GpuMsg::GetSWImageViewMemoryLayout > &);
-		bool _GetSWImageMemoryRequirements (const Message< GpuMsg::GetSWImageMemoryRequirements > &);
-		bool _GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &);
-		bool _SWImageBarrier (const Message< GpuMsg::SWImageBarrier > &);
+		bool _GetImageDescription (const GpuMsg::GetImageDescription &);
+		bool _SetImageDescription (const GpuMsg::SetImageDescription &);
+		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
+		bool _GetSWImageMemoryLayout (const GpuMsg::GetSWImageMemoryLayout &);
+		bool _GetSWImageViewMemoryLayout (const GpuMsg::GetSWImageViewMemoryLayout &);
+		bool _GetSWImageMemoryRequirements (const GpuMsg::GetSWImageMemoryRequirements &);
+		bool _GetImageMemoryLayout (const GpuMsg::GetImageMemoryLayout &);
+		bool _SWImageBarrier (const GpuMsg::SWImageBarrier &);
 		
 	// event handlers
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+		bool _OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &);
 
 
 	private:
@@ -152,8 +152,8 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWImage::_Compose );
 		_SubscribeOnMsg( this, &SWImage::_Delete );
 		_SubscribeOnMsg( this, &SWImage::_OnManagerChanged );
-		_SubscribeOnMsg( this, &SWImage::_GetImageDescriptor );
-		_SubscribeOnMsg( this, &SWImage::_SetImageDescriptor );
+		_SubscribeOnMsg( this, &SWImage::_GetImageDescription );
+		_SubscribeOnMsg( this, &SWImage::_SetImageDescription );
 		_SubscribeOnMsg( this, &SWImage::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &SWImage::_GetSWDeviceInfo );
 		_SubscribeOnMsg( this, &SWImage::_GetSWPrivateClasses );
@@ -167,8 +167,8 @@ namespace PlatformSW
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 		
 		// descriptor may be invalid for sharing or for delayed initialization
-		if ( Utils::IsValidDescriptor( _descr ) )
-			Utils::ValidateDescriptor( INOUT _descr );
+		if ( Utils::IsValidDescription( _descr ) )
+			Utils::ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -186,7 +186,7 @@ namespace PlatformSW
 	_Link
 =================================================
 */
-	bool SWImage::_Link (const Message< ModuleMsg::Link > &msg)
+	bool SWImage::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -221,7 +221,7 @@ namespace PlatformSW
 	_Compose
 =================================================
 */
-	bool SWImage::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool SWImage::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -243,7 +243,7 @@ namespace PlatformSW
 	_Delete
 =================================================
 */
-	bool SWImage::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SWImage::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyAll();
 
@@ -255,11 +255,11 @@ namespace PlatformSW
 	_AttachModule
 =================================================
 */
-	bool SWImage::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool SWImage::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
+		const bool	is_mem	= msg.newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		if ( is_mem )
 		{
@@ -274,11 +274,11 @@ namespace PlatformSW
 	_DetachModule
 =================================================
 */
-	bool SWImage::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool SWImage::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule == _memObj )
+		if ( msg.oldModule == _memObj )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyViews();
@@ -357,13 +357,13 @@ namespace PlatformSW
 	{
 		CHECK_ERR( _IsImageCreated() );
 
-		Message< GpuMsg::GetSWMemoryData >			req_data;
-		Message< GpuMsg::GetGpuMemoryDescriptor >	req_descr;
+		GpuMsg::GetSWMemoryData			req_data;
+		GpuMsg::GetGpuMemoryDescription	req_descr;
 
-		SendTo( _memObj, req_data );
-		SendTo( _memObj, req_descr );
+		_memObj->Send( req_data );
+		_memObj->Send( req_descr );
 
-		void *	ptr = req_data->result->ptr();
+		void *	ptr = req_data.result->ptr();
 		BytesU	off;
 
 		for (auto& layer : _memLayout.layers)
@@ -375,10 +375,10 @@ namespace PlatformSW
 			}
 		}
 
-		_memLayout.memAccess = req_descr->result->access;
+		_memLayout.memAccess = req_descr.result->access;
 
 		CHECK_ERR( off == _memLayout.size );
-		CHECK_ERR( off == req_data->result->Size() );
+		CHECK_ERR( off == req_data.result->Size() );
 		return true;
 	}
 
@@ -415,27 +415,27 @@ namespace PlatformSW
 
 /*
 =================================================
-	_GetImageDescriptor
+	_GetImageDescription
 =================================================
 */
-	bool SWImage::_GetImageDescriptor (const Message< GpuMsg::GetImageDescriptor > &msg)
+	bool SWImage::_GetImageDescription (const GpuMsg::GetImageDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_SetImageDescriptor
+	_SetImageDescription
 =================================================
 */
-	bool SWImage::_SetImageDescriptor (const Message< GpuMsg::SetImageDescriptor > &msg)
+	bool SWImage::_SetImageDescription (const GpuMsg::SetImageDescription &msg)
 	{
 		CHECK_ERR( GetState() == EState::Initial );
 
-		_descr = msg->descr;
+		_descr = msg.descr;
 
-		Utils::ValidateDescriptor( INOUT _descr );
+		Utils::ValidateDescription( INOUT _descr );
 		return true;
 	}
 
@@ -444,26 +444,26 @@ namespace PlatformSW
 	_OnMemoryBindingChanged
 =================================================
 */
-	bool SWImage::_OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &msg)
+	bool SWImage::_OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &msg)
 	{
 		CHECK_ERR( _IsComposedOrLinkedState( GetState() ) );
 
 		using EBindingTarget = GpuMsg::OnMemoryBindingChanged::EBindingTarget;
 
-		if (  msg->targetObject == this )
+		if (  msg.targetObject == this )
 		{
-			_isBindedToMemory = ( msg->newState == EBindingTarget::Image );
+			_isBindedToMemory = ( msg.newState == EBindingTarget::Image );
 
 			if ( _isBindedToMemory )
 			{
 				CHECK( _CreateDefaultView() );
 				CHECK( _SetState( EState::ComposedMutable ) );
 				
-				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+				_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 			}
 			else
 			{
-				CHECK( _SetState( EState::Linked ) );
+				_SendMsg( ModuleMsg::Delete{} );
 			}
 		}
 		return true;
@@ -474,7 +474,7 @@ namespace PlatformSW
 	_GpuMemoryRegionChanged
 =================================================
 */
-	bool SWImage::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &)
+	bool SWImage::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
 	{
 		// request image memory barrier
 		TODO( "" );
@@ -486,7 +486,7 @@ namespace PlatformSW
 	_GetSWImageMemoryLayout
 =================================================
 */
-	bool SWImage::_GetSWImageMemoryLayout (const Message< GpuMsg::GetSWImageMemoryLayout > &msg)
+	bool SWImage::_GetSWImageMemoryLayout (const GpuMsg::GetSWImageMemoryLayout &msg)
 	{
 		CHECK_ERR( _IsImageCreated() );
 		
@@ -494,11 +494,11 @@ namespace PlatformSW
 		{
 			for (auto& mipmap : layer.mipmaps)
 			{
-				_CheckLevelAccess( INOUT mipmap, msg->accessMask, msg->stage );
+				_CheckLevelAccess( INOUT mipmap, msg.accessMask, msg.stage );
 			}
 		}
 
-		msg->result.Set( _memLayout );
+		msg.result.Set( _memLayout );
 		return true;
 	}
 	
@@ -507,43 +507,43 @@ namespace PlatformSW
 	_GetSWImageViewMemoryLayout
 =================================================
 */
-	bool SWImage::_GetSWImageViewMemoryLayout (const Message< GpuMsg::GetSWImageViewMemoryLayout > &msg)
+	bool SWImage::_GetSWImageViewMemoryLayout (const GpuMsg::GetSWImageViewMemoryLayout &msg)
 	{
 		CHECK_ERR( _IsImageCreated() and _isBindedToMemory );
-		CHECK_ERR( _CanHaveImageView() or msg->accessMask[EPipelineAccess::TransferRead] or msg->accessMask[EPipelineAccess::TransferWrite] );
-		CHECK_ERR( EPixelFormat::BitPerPixel( _descr.format ) == EPixelFormat::BitPerPixel( msg->viewDescr.format ) );
+		CHECK_ERR( _CanHaveImageView() or msg.accessMask[EPipelineAccess::TransferRead] or msg.accessMask[EPipelineAccess::TransferWrite] );
+		CHECK_ERR( EPixelFormat::BitPerPixel( _descr.format ) == EPixelFormat::BitPerPixel( msg.viewDescr.format ) );
 
-		CHECK_ERR( msg->viewDescr.baseLevel < _descr.maxLevel and
-				   msg->viewDescr.levelCount > 0 and
-				   msg->viewDescr.baseLevel.Get() + msg->viewDescr.levelCount <= _descr.maxLevel.Get() );
+		CHECK_ERR( msg.viewDescr.baseLevel < _descr.maxLevel and
+				   msg.viewDescr.levelCount > 0 and
+				   msg.viewDescr.baseLevel.Get() + msg.viewDescr.levelCount <= _descr.maxLevel.Get() );
 
-		CHECK_ERR( msg->viewDescr.baseLayer.Get() < _descr.dimension.w and
-				   msg->viewDescr.layerCount > 0 and
-				   msg->viewDescr.baseLayer.Get() + msg->viewDescr.layerCount <= _descr.dimension.w );
+		CHECK_ERR( msg.viewDescr.baseLayer.Get() < _descr.dimension.w and
+				   msg.viewDescr.layerCount > 0 and
+				   msg.viewDescr.baseLayer.Get() + msg.viewDescr.layerCount <= _descr.dimension.w );
 
 		ImgLayers3D_t		layout;
 		layout.align		= _memLayout.align;
 		layout.dimension	= _memLayout.dimension;
 		layout.memAccess	= _memLayout.memAccess;
-		layout.layers.Resize( msg->viewDescr.layerCount );
+		layout.layers.Resize( msg.viewDescr.layerCount );
 
-		for (uint z = 0; z < msg->viewDescr.layerCount; ++z)
+		for (uint z = 0; z < msg.viewDescr.layerCount; ++z)
 		{
-			auto&	src_layer	= _memLayout.layers[msg->viewDescr.baseLayer.Get() + z];
+			auto&	src_layer	= _memLayout.layers[msg.viewDescr.baseLayer.Get() + z];
 			auto&	dst_layer	= layout.layers[z];
 
-			dst_layer.dimension	= Max( 1u, src_layer.dimension >> msg->viewDescr.baseLevel.Get() );
-			dst_layer.mipmaps.Resize( msg->viewDescr.levelCount );
+			dst_layer.dimension	= Max( 1u, src_layer.dimension >> msg.viewDescr.baseLevel.Get() );
+			dst_layer.mipmaps.Resize( msg.viewDescr.levelCount );
 
-			for (uint m = 0; m < msg->viewDescr.levelCount; ++m)
+			for (uint m = 0; m < msg.viewDescr.levelCount; ++m)
 			{
-				auto&	src_level	= src_layer.mipmaps[msg->viewDescr.baseLevel.Get() + m];
+				auto&	src_level	= src_layer.mipmaps[msg.viewDescr.baseLevel.Get() + m];
 				auto&	dst_level	= dst_layer.mipmaps[m];
 				
-				_CheckLevelAccess( INOUT src_level, msg->accessMask, msg->stage );
+				_CheckLevelAccess( INOUT src_level, msg.accessMask, msg.stage );
 
 				dst_level			= src_level;
-				dst_level.format	= msg->viewDescr.format;
+				dst_level.format	= msg.viewDescr.format;
 
 				dst_layer.size		= AlignToLarge( dst_layer.size + dst_level.size, layout.align );
 				
@@ -555,7 +555,7 @@ namespace PlatformSW
 			layout.size = AlignToLarge( layout.size + dst_layer.size, layout.align );
 		}
 
-		msg->result.Set( RVREF(layout) );
+		msg.result.Set( RVREF(layout) );
 		return true;
 	}
 
@@ -564,11 +564,11 @@ namespace PlatformSW
 	_GetSWImageMemoryRequirements
 =================================================
 */
-	bool SWImage::_GetSWImageMemoryRequirements (const Message< GpuMsg::GetSWImageMemoryRequirements > &msg)
+	bool SWImage::_GetSWImageMemoryRequirements (const GpuMsg::GetSWImageMemoryRequirements &msg)
 	{
 		CHECK_ERR( _IsImageCreated() );
 
-		msg->result.Set({ _memLayout.size, _memLayout.align });
+		msg.result.Set({ _memLayout.size, _memLayout.align });
 		return true;
 	}
 	
@@ -577,20 +577,20 @@ namespace PlatformSW
 	_GetImageMemoryLayout
 =================================================
 */
-	bool SWImage::_GetImageMemoryLayout (const Message< GpuMsg::GetImageMemoryLayout > &msg)
+	bool SWImage::_GetImageMemoryLayout (const GpuMsg::GetImageMemoryLayout &msg)
 	{
 		const BytesUL	bpp = BytesUL(EPixelFormat::BitPerPixel( _descr.format ));
 
 		GpuMsg::GetImageMemoryLayout::MemLayout	result;
 		result.offset		= BytesUL(0);
-		result.dimension	= Max( Utils::LevelDimension( _descr.imageType, _descr.dimension, msg->mipLevel.Get() ).xyz(), 1u );
+		result.dimension	= Max( Utils::LevelDimension( _descr.imageType, _descr.dimension, msg.mipLevel.Get() ).xyz(), 1u );
 		result.size			= BytesUL(_memLayout.size);
 		result.rowPitch		= GXImageUtils::AlignedRowSize( result.dimension.x, bpp, BytesUL(_memLayout.align) );
 		result.slicePitch	= GXImageUtils::AlignedRowSize( ulong(result.rowPitch) * result.dimension.y, BytesUL(1), BytesUL(_memLayout.align) );
 
 		ASSERT( result.slicePitch * result.dimension.z <= result.size );
 
-		msg->result.Set( result );
+		msg.result.Set( result );
 		return true;
 	}
 	
@@ -599,11 +599,11 @@ namespace PlatformSW
 	_SWImageBarrier
 =================================================
 */
-	bool SWImage::_SWImageBarrier (const Message< GpuMsg::SWImageBarrier > &msg)
+	bool SWImage::_SWImageBarrier (const GpuMsg::SWImageBarrier &msg)
 	{
 		CHECK_ERR( _IsImageCreated() and _isBindedToMemory );
 
-		for (auto& br : msg->barriers)
+		for (auto& br : msg.barriers)
 		{
 			ASSERT( br.image == this );
 
@@ -620,11 +620,11 @@ namespace PlatformSW
 
 					SW_DEBUG_REPORT2( mipmap.layout == br.oldLayout, EDbgReport::Warning );
 					SW_DEBUG_REPORT2( mipmap.access == br.srcAccessMask, EDbgReport::Warning );
-					//SW_DEBUG_REPORT2( mipmap.stage == msg->srcStageMask, EDbgReport::Warning );
+					//SW_DEBUG_REPORT2( mipmap.stage == msg.srcStageMask, EDbgReport::Warning );
 
 					mipmap.layout = br.newLayout;
 					mipmap.access = br.dstAccessMask;
-					//mipmap.stage = msg->dstStageMask;
+					//mipmap.stage = msg.dstStageMask;
 				}
 			}
 		}
@@ -639,9 +639,9 @@ namespace PlatformSW
 	void SWImage::_CheckLevelAccess (INOUT ImgLayer_t &mipmap, EPipelineAccess::bits accessMask, EPipelineStage::type stage) const
 	{
 		// Check for missing synchronizations
-		/*SW_DEBUG_REPORT( mipmap.layout == msg->layout,
+		/*SW_DEBUG_REPORT( mipmap.layout == msg.layout,
 							"layout missmatch: "_str << EImageLayout::ToString( mipmap.layout ) <<
-							" != " << EImageLayout::ToString( msg->layout ),
+							" != " << EImageLayout::ToString( msg.layout ),
 							EDbgReport::Error );*/
 
 		const bool	was_written		= !!(mipmap.access & EPipelineAccess::WriteMask);
@@ -659,7 +659,7 @@ namespace PlatformSW
 						 "' to stage '" << EPipelineStage::ToString( stage ) << "', with access '" << EPipelineAccess::ToString( accessMask ) << "'",
 						 EDbgReport::Error );*/
 
-		//mipmap.layout = msg->layout;
+		//mipmap.layout = msg.layout;
 		mipmap.access = accessMask;
 		mipmap.stage  = stage;
 	}

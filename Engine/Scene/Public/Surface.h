@@ -34,16 +34,20 @@ namespace SceneMsg
 	//
 	// Surface Resized Event
 	//
-	struct SurfaceOnResize
+	struct SurfaceOnResize : _MessageBase_
 	{
+	// variables
 		GXMath::uint2	newSize;
+
+	// methods
+		explicit SurfaceOnResize (const GXMath::uint2 &size) : newSize{size} {}
 	};
 
 
 	//
-	// Get Surface Descriptor
+	// Get Surface Description
 	//
-	struct SurfaceGetDescriptor
+	struct SurfaceGetDescription : _MessageBase_
 	{
 	// types
 		using EPixelFormat = Platforms::EPixelFormat;
@@ -63,7 +67,7 @@ namespace SceneMsg
 	//
 	// Surface Request Update
 	//
-	struct SurfaceRequestUpdate
+	struct SurfaceRequestUpdate : _MessageBase_
 	{
 	// types
 		using PerEye			= GpuMsg::ThreadBeginVRFrame::PerEye;
@@ -74,6 +78,9 @@ namespace SceneMsg
 		Framebuffers_t		framebuffers;
 
 		ModulePtr			cmdBuilder;
+
+	// methods
+		SurfaceRequestUpdate () {}
 	};
 
 

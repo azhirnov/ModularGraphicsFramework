@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
 #include "Engine/Platforms/Vulkan/110/vulkan1.h"
 #include "Engine/Platforms/Vulkan/110/Vk1Enums.h"
 #include "Engine/Platforms/Public/GPU/Thread.h"
-#include "Engine/STL/Containers/Adaptors.h"
+#include "Core/STL/Containers/Adaptors.h"
 
 namespace Engine
 {

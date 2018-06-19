@@ -22,39 +22,31 @@ namespace PipelineCompiler
 			const bool	is_block	= iter->second.type == EShaderVariable::UniformBlock or
 									  iter->second.type == EShaderVariable::StorageBlock;
 
-			FOR( i, iter->second.fields )
+			for (auto& fld : iter->second.fields)
 			{
-				const auto&		fl = iter->second.fields[i];
-			
 				str << "\t";
 
 				if ( not skipLayouts and is_block )
 				{
-					str << "layout(offset=" << usize(fl.offset)
-						<< ", align=" << usize(fl.align) << ") ";
+					str << "layout(offset=" << usize(fld.offset)
+						<< ", align=" << usize(fld.align) << ") ";
 
-					if ( fl.memoryModel != EShaderMemoryModel::Default )
-						str << ToStringGLSL( fl.memoryModel ) << ' ';
+					if ( fld.memoryModel != EShaderMemoryModel::Default )
+						str << ToStringGLSL( fld.memoryModel ) << ' ';
 				}
 
-				if ( EShaderVariable::IsStruct( fl.type ) )
-					str << fl.typeName;
+				if ( EShaderVariable::IsStruct( fld.type ) )
+					str << fld.typeName;
 				else
-					str << ToStringGLSL( fl.type );
+					str << ToStringGLSL( fld.type );
 
-				str << "  " << fl.name;
-					
-				if ( fl.arraySize > 1 )
-					str << "[" << fl.arraySize << "]";
-				else
-				if ( fl.arraySize == 0 )
-					str << "[]";
-					
-				str << ';';
+				str << "  " << fld.name
+					<< (fld.arraySize.IsNotArray() ? "" : fld.arraySize.IsDynamicArray() ? " []" : " ["_str << fld.arraySize.Size() << "]")
+					<< ';';
 				
 				if ( skipLayouts or not is_block )
 				{
-					str << "	// offset: " << usize(fl.offset) << ", align: " << usize(fl.align);
+					str << "	// offset: " << usize(fld.offset) << ", align: " << usize(fld.align);
 				}
 				str << "\n";
 			}
@@ -136,7 +128,6 @@ namespace PipelineCompiler
 	{
 		_BindingsToString_Func	func( this, shaderType, shaderApi, useOriginTypes, OUT str );
 
-		//TODO("");
 		FOR( i, bindings.uniforms )
 		{
 			const auto&		un = bindings.uniforms[i];
@@ -224,14 +215,13 @@ namespace PipelineCompiler
 			// staticaly sized UB or SSB
 			FOR( j, st.second.fields )
 			{
-				const auto&		fl			= st.second.fields[j];
-				const String	type_name	= EShaderVariable::IsStruct( fl.type ) ? StringCRef(fl.typeName) : ToStringGLSL( fl.type );
-				const uint		array_size	= fl.arraySize;
-				const uint		align		= uint(fl.align);
-				const uint		offset		= uint(fl.offset);
+				const auto&		fld			= st.second.fields[j];
+				const String	type_name	= EShaderVariable::IsStruct( fld.type ) ? StringCRef(fld.typeName) : ToStringGLSL( fld.type );
+				const uint		align		= uint(fld.align);
+				const uint		offset		= uint(fld.offset);
 
-				glslSource	<< "\t" << type_name << "  " << fl.name
-							<< ( array_size > 1 ? ("["_str << array_size << "]") : (array_size == 0 ? "[]" : "") )
+				glslSource	<< "\t" << type_name << "  " << fld.name
+							<< (fld.arraySize.IsNotArray() ? "" : fld.arraySize.IsDynamicArray() ? " []" : " ["_str << fld.arraySize.Size() << "]")
 							<< ";  // offset: " << offset << ", align: " << align << "\n";
 			}
 
@@ -306,35 +296,44 @@ namespace PipelineCompiler
 			// staticaly sized UB or SSB
 			FOR( j, st.second.fields )
 			{
-				const auto&		fl			= st.second.fields[j];
-				const String	type_name	= EShaderVariable::IsStruct( fl.type ) ? fl.typeName : ser->ToString( fl.type );
-				const uint		array_size	= fl.arraySize;
-				const uint		align		= uint(fl.align);
-				const uint		offset		= uint(fl.offset);
+				const auto&		fld			= st.second.fields[j];
+				const String	type_name	= EShaderVariable::IsStruct( fld.type ) ? fld.typeName : ser->ToString( fld.type );
+				const uint		align		= uint(fld.align);
+				const uint		offset		= uint(fld.offset);
+				const uint		size		= j+1 < st.second.fields.Count() ?
+												uint(st.second.fields[j+1].offset - st.second.fields[j].offset) :
+												fld.arraySize.Size() * (EShaderVariable::IsStruct( fld.type ) ?
+													uint(fld.stride) :
+													uint(EShaderVariable::SizeOf( fld.type, 0_b )));
 
-				if ( array_size == 0 ) {
+				if ( fld.arraySize.IsDynamicArray() ) {
 					ASSERT( j == st.second.fields.LastIndex() );
+				} else
+				if ( fld.arraySize.IsNotArray() ) {
+					str << ser->StructField( fld.name, type_name, fld.arraySize, offset, align, size );
 				} else {
-					str << ser->StructField( fl.name, type_name, array_size, offset, align, uint(fl.stride) * fl.arraySize );
+					str << ser->StructField( fld.name, type_name, fld.arraySize, offset, align, size );
 				}
 			}
 				
 			// SSB with dynamic array
-			if ( st.second.fields.Back().arraySize == 0 )
+			if ( st.second.fields.Back().arraySize.IsDynamicArray() )
 			{
 				const auto&		arr			= st.second.fields.Back();
 				const String	type_name	= EShaderVariable::IsStruct( arr.type ) ? arr.typeName : ser->ToString( arr.type );
-				ASSERT( arr.arraySize == 0 and arr.stride > 0_b );
+				ASSERT( arr.arraySize.IsDynamicArray() and arr.stride > 0_b );
 
 				str << "\n\t";
 				str << ser->Comment( "Element  "_str << arr.name << "[];   offset: " << uint(arr.offset) << ", align: " << uint(arr.align) );
 				str << ser->BeginStruct( "Element", uint(arr.stride), true );
-				str << ser->StructField( arr.name, type_name, 1, 0, uint(arr.align), uint(arr.stride) );
+				str << ser->StructField( arr.name, type_name, ArraySize(), 0, uint(arr.align), uint(arr.stride) );
 				str << ser->EndStruct();
 			}
 
-			if ( st.second.packing[ EVariablePacking::VertexAttrib ] ) {
-				str << ser->StructCtorForInitializerList();
+			if ( st.second.packing[ EVariablePacking::VertexAttrib ] )
+			{
+				str << ser->StructCtorForInitializerList()
+					<< ser->StructVertexAttribBinding();
 			}
 			
 			str << ser->EndStruct() << '\n';
@@ -351,15 +350,15 @@ namespace PipelineCompiler
 	struct BasePipeline::_BindingsToLayout_Func
 	{
 	// types
-		using Uniform	= PipelineLayoutDescriptor::Uniform_t;
+		using Uniform	= PipelineLayoutDescription::Uniform_t;
 		
 
 	// variables
-		PipelineLayoutDescriptor::Builder&	layout;
+		PipelineLayoutDescription::Builder&	layout;
 		
 
 	// methods
-		explicit _BindingsToLayout_Func (PipelineLayoutDescriptor::Builder &layout) :
+		explicit _BindingsToLayout_Func (PipelineLayoutDescription::Builder &layout) :
 			layout(layout)
 		{}
 
@@ -384,9 +383,9 @@ namespace PipelineCompiler
 		}
 
 		// TODO:
-		//	PipelineLayoutDescriptor::SamplerUniform
-		//	PipelineLayoutDescriptor::PushConstants
-		//	PipelineLayoutDescriptor::SubpassInput
+		//	PipelineLayoutDescription::SamplerUniform
+		//	PipelineLayoutDescription::PushConstants
+		//	PipelineLayoutDescription::SubpassInput
 	};
 	
 /*
@@ -396,7 +395,7 @@ namespace PipelineCompiler
 */
 	bool BasePipeline::_ConvertLayout (StringCRef name, INOUT String &src, Ptr<ISerializer> ser) const
 	{
-		PipelineLayoutDescriptor::Builder	builder;
+		PipelineLayoutDescription::Builder	builder;
 
 		_BindingsToLayout_Func		func( OUT builder );
 
@@ -458,15 +457,14 @@ namespace PipelineCompiler
 				StructTypes::iterator	iter;
 				CHECK_ERR( structTypes.Find( var.typeName, OUT iter ) );
 				
-				Variable				st_type	= iter->second;
-				BytesU					off		= offset;
-
+				Variable	st_type	= iter->second;
+				BytesU		off		= offset;
 				CHECK_ERR( Self::ProcessStruct( INOUT off, INOUT st_type, packing ) );
 
 				var.offset	= st_type.offset;
 				var.align	= st_type.align;
 				var.stride	= st_type.stride;
-				offset		= var.offset + var.stride * var.arraySize;
+				offset		= var.offset + var.stride * var.arraySize.Size();
 				return true;
 			}
 
@@ -615,7 +613,7 @@ namespace PipelineCompiler
 				source << StringCRef(shader._source[i]);
 			}
 
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, shader.entry, cfg, OUT log, OUT glsl_source ) )
+			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, shader.entry, _path, cfg, OUT log, OUT glsl_source ) )
 			{
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 			}
@@ -651,7 +649,7 @@ namespace PipelineCompiler
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::GLSL_Source;
 			
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.glsl ) )
+			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.glsl ) )
 			{
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 			}
@@ -667,7 +665,7 @@ namespace PipelineCompiler
 				cfg2.source	= EShaderSrcFormat::GLSL;
 				cfg2.target = EShaderDstFormat::GLSL_Binary;
 
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg2, OUT log, OUT compiled.glslBinary ) )
+				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg2, OUT log, OUT compiled.glslBinary ) )
 				{
 					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
 				}
@@ -697,7 +695,7 @@ namespace PipelineCompiler
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::SPIRV_Binary;
 			
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.spirv ) )
+			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.spirv ) )
 			{
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 			}
@@ -707,7 +705,7 @@ namespace PipelineCompiler
 			{
 				cfg.target = EShaderDstFormat::SPIRV_Source;
 
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.spirvAsm ) )
+				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.spirvAsm ) )
 				{
 					CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 				}
@@ -734,7 +732,7 @@ namespace PipelineCompiler
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::CPP_Module;
 			
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.cpp ) )
+			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.cpp ) )
 			{
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 			}
@@ -761,7 +759,7 @@ namespace PipelineCompiler
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::CL_Source;
 			
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.cl ) )
+			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.cl ) )
 			{
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 			}
@@ -777,7 +775,7 @@ namespace PipelineCompiler
 				cfg2.source	= EShaderSrcFormat::CL;
 				cfg2.target = EShaderDstFormat::CL_Binary;
 
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg2, OUT log, OUT compiled.clAsm ) )
+				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg2, OUT log, OUT compiled.clAsm ) )
 				{
 					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
 				}
@@ -807,7 +805,7 @@ namespace PipelineCompiler
 			cfg.source = src_fmt;
 			cfg.target = EShaderDstFormat::HLSL_Source;
 			
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg, OUT log, OUT compiled.hlsl ) )
+			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.hlsl ) )
 			{
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 			}
@@ -823,7 +821,7 @@ namespace PipelineCompiler
 				cfg2.source	= EShaderSrcFormat::HLSL;
 				cfg2.target = EShaderDstFormat::HLSL_Binary;
 
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", cfg2, OUT log, OUT compiled.hlslBinary ) )
+				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg2, OUT log, OUT compiled.hlslBinary ) )
 				{
 					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
 				}

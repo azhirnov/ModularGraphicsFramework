@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -29,7 +29,7 @@ namespace PlatformCL
 	// types
 	private:
 		using SupportedMessages_t	= CL1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetCommandBufferDescriptor,
+											GpuMsg::GetCommandBufferDescription,
 											GpuMsg::SetCommandBufferState,
 											GpuMsg::GetCommandBufferState,
 											GpuMsg::SetCommandBufferDependency,
@@ -61,7 +61,7 @@ namespace PlatformCL
 		ModulePtr					_tempBuffer;		// for UpdateBuffer command
 		ModulePtr					_pushConstBuffer;	// for PushConstant command
 
-		CommandBufferDescriptor		_descr;
+		CommandBufferDescription		_descr;
 		CommandArray_t				_commands;
 		UsedResources_t				_resources;
 		ERecordingState				_recordingState;
@@ -81,14 +81,14 @@ namespace PlatformCL
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _SetCLCommandBufferQueue (const Message< GpuMsg::SetCLCommandBufferQueue > &);
-		bool _GetCommandBufferDescriptor (const Message< GpuMsg::GetCommandBufferDescriptor > &);
-		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
-		bool _SetCommandBufferState (const Message< GpuMsg::SetCommandBufferState > &);
-		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
-		bool _ExecuteCLCommandBuffer (const Message< GpuMsg::ExecuteCLCommandBuffer > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _SetCLCommandBufferQueue (const GpuMsg::SetCLCommandBufferQueue &);
+		bool _GetCommandBufferDescription (const GpuMsg::GetCommandBufferDescription &);
+		bool _SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &);
+		bool _SetCommandBufferState (const GpuMsg::SetCommandBufferState &);
+		bool _GetCommandBufferState (const GpuMsg::GetCommandBufferState &);
+		bool _ExecuteCLCommandBuffer (const GpuMsg::ExecuteCLCommandBuffer &);
 		
 	private:
 		bool _Submit ();
@@ -150,7 +150,7 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1CommandBuffer::_Compose );
 		_SubscribeOnMsg( this, &CL1CommandBuffer::_Delete );
 		_SubscribeOnMsg( this, &CL1CommandBuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &CL1CommandBuffer::_GetCommandBufferDescriptor );
+		_SubscribeOnMsg( this, &CL1CommandBuffer::_GetCommandBufferDescription );
 		_SubscribeOnMsg( this, &CL1CommandBuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &CL1CommandBuffer::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &CL1CommandBuffer::_GetCLPrivateClasses );
@@ -179,7 +179,7 @@ namespace PlatformCL
 	_Compose
 =================================================
 */
-	bool CL1CommandBuffer::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool CL1CommandBuffer::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -195,7 +195,7 @@ namespace PlatformCL
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -215,7 +215,7 @@ namespace PlatformCL
 	_Delete
 =================================================
 */
-	bool CL1CommandBuffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool CL1CommandBuffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_descr = Uninitialized;
 
@@ -234,24 +234,24 @@ namespace PlatformCL
 	_SetCLCommandBufferQueue
 =================================================
 */
-	bool CL1CommandBuffer::_SetCLCommandBufferQueue (const Message< GpuMsg::SetCLCommandBufferQueue > &msg)
+	bool CL1CommandBuffer::_SetCLCommandBufferQueue (const GpuMsg::SetCLCommandBufferQueue &msg)
 	{
-		_commands = RVREF(msg->commands.Get());
+		_commands = RVREF(msg.commands.Get());
 		
 		// TODO: optimize
 		if ( _tempBuffer )
 		{
-			_tempBuffer->Send< ModuleMsg::Delete >({});
+			_tempBuffer->Send( ModuleMsg::Delete{} );
 			_tempBuffer = null;
 		}
 
-		if ( not msg->bufferData.Empty() )
+		if ( not msg.bufferData.Empty() )
 		{
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								CLBufferModuleID,
 								GlobalSystems(),
 								CreateInfo::GpuBuffer{
-									BufferDescriptor{ msg->bufferData.Size(), EBufferUsage::TransferSrc },
+									BufferDescription{ msg.bufferData.Size(), EBufferUsage::TransferSrc },
 									null,
 									EGpuMemory::CoherentWithCPU,
 									EMemoryAccess::GpuRead | EMemoryAccess::CpuWrite
@@ -260,19 +260,19 @@ namespace PlatformCL
 
 			ModuleUtils::Initialize({ _tempBuffer });
 
-			CHECK_ERR( _tempBuffer->Send< GpuMsg::WriteToGpuMemory >({ msg->bufferData }) );
+			CHECK( _tempBuffer->Send( GpuMsg::WriteToGpuMemory{ msg.bufferData }) );
 		}
 		return true;
 	}
 
 /*
 =================================================
-	_GetCommandBufferDescriptor
+	_GetCommandBufferDescription
 =================================================
 */
-	bool CL1CommandBuffer::_GetCommandBufferDescriptor (const Message< GpuMsg::GetCommandBufferDescriptor > &msg)
+	bool CL1CommandBuffer::_GetCommandBufferDescription (const GpuMsg::GetCommandBufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
@@ -281,20 +281,20 @@ namespace PlatformCL
 	_SetCommandBufferDependency
 =================================================
 */
-	bool CL1CommandBuffer::_SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &msg)
+	bool CL1CommandBuffer::_SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &msg)
 	{
-		_resources = RVREF( msg->resources.Get() );
+		_resources = RVREF( msg.resources.Get() );
 		return true;
 	}
 
 /*
 =================================================
-	_GetCommandBufferDescriptor
+	_GetCommandBufferDescription
 =================================================
 */
-	bool CL1CommandBuffer::_SetCommandBufferState (const Message< GpuMsg::SetCommandBufferState > &msg)
+	bool CL1CommandBuffer::_SetCommandBufferState (const GpuMsg::SetCommandBufferState &msg)
 	{
-		switch ( msg->newState )
+		switch ( msg.newState )
 		{
 			case ERecordingState::Initial :		CHECK( _ResetCmdBuffer() );	break;
 			case ERecordingState::Recording :	CHECK( _BeginRecording() );	break;
@@ -308,12 +308,12 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_GetCommandBufferDescriptor
+	_GetCommandBufferDescription
 =================================================
 */
-	bool CL1CommandBuffer::_GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &msg)
+	bool CL1CommandBuffer::_GetCommandBufferState (const GpuMsg::GetCommandBufferState &msg)
 	{
-		msg->result.Set( _recordingState );
+		msg.result.Set( _recordingState );
 		return true;
 	}
 	
@@ -354,7 +354,7 @@ namespace PlatformCL
 	_ExecuteCLCommandBuffer
 =================================================
 */
-	bool CL1CommandBuffer::_ExecuteCLCommandBuffer (const Message< GpuMsg::ExecuteCLCommandBuffer > &)
+	bool CL1CommandBuffer::_ExecuteCLCommandBuffer (const GpuMsg::ExecuteCLCommandBuffer &)
 	{
 		CHECK_ERR( _recordingState == ERecordingState::Pending );
 
@@ -451,7 +451,7 @@ namespace PlatformCL
 
 		_recordingState = newState;
 
-		_SendEvent< GpuMsg::OnCommandBufferStateChanged >({ old_state, newState });
+		_SendEvent( GpuMsg::OnCommandBufferStateChanged{ old_state, newState });
 	}
 	
 /*
@@ -475,7 +475,7 @@ namespace PlatformCL
 	{
 		if ( _tempBuffer )
 		{
-			_tempBuffer->Send< ModuleMsg::Delete >({});
+			_tempBuffer->Send( ModuleMsg::Delete{} );
 			_tempBuffer = null;
 		}
 		return true;
@@ -518,7 +518,7 @@ namespace PlatformCL
 		CHECK_ERR( All( cmd.groupCount <= max_group_count ) );
 
 		if ( _resourceTable )
-			CHECK( _resourceTable->Send< GpuMsg::CLBindPipelineResourceTable >({ _kernelId }) );
+			CHECK( _resourceTable->Send( GpuMsg::CLBindPipelineResourceTable{ _kernelId }) );
 		
 		CHECK( GetDevice()->AcquireSharedObj( _resourceTable ) );
 
@@ -545,9 +545,9 @@ namespace PlatformCL
 	{
 		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdExecute >();
 		
-		ModuleUtils::Send( cmd.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
-		ModuleUtils::Send( cmd.cmdBuffers, Message<GpuMsg::ExecuteCLCommandBuffer>{} );
-		//ModuleUtils::Send( cmd.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Completed });
+		ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
+		ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::ExecuteCLCommandBuffer{} );
+		//ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Completed });
 
 		return true;
 	}

@@ -8,15 +8,17 @@ namespace glsl_vfs
 	{
 		src << R"#(/*
 	Billow
-
-	depends of: Math/Math, Noise/_NoiseUtils
 */
+
+#include <Common/Defines.glsl>
 
 real Billow (in real3 point, const real frequency, const real lacunarity, const real persistence, const int octaveCount, const int seed);
 
 
 //-----------------------------------------------------------------------------
 
+#include <Math/Math.glsl>
+#include <Noise/_NoiseUtils.glsl>
 
 //	This file based on code from "libNoise" project by Jason Bevins http://libnoise.sourceforge.net/
 //	Released under the terms of the GNU Lesser General Public License.

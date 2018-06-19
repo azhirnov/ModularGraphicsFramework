@@ -3,7 +3,7 @@
 #include "Engine/Scene/Public/Camera.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
 #include "Engine/Scene/Impl/BaseSceneModule.h"
-#include "Engine/STL/Math/3D/PerspectiveCamera.h"
+#include "Core/STL/Math/3D/PerspectiveCamera.h"
 
 namespace Engine
 {
@@ -71,17 +71,17 @@ namespace Scene
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _CameraBindKeys (const Message< SceneMsg::CameraBindKeys > &);
-		bool _CameraGetState (const Message< SceneMsg::CameraGetState > &);
-		bool _CameraUpdateSettings (const Message< SceneMsg::CameraUpdateSettings > &);
-		bool _CameraGetSettings (const Message< SceneMsg::CameraGetSettings > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _CameraBindKeys (const SceneMsg::CameraBindKeys &);
+		bool _CameraGetState (const SceneMsg::CameraGetState &);
+		bool _CameraUpdateSettings (const SceneMsg::CameraUpdateSettings &);
+		bool _CameraGetSettings (const SceneMsg::CameraGetSettings &);
 
 	private:
-		bool _SurfaceOnResize (const Message< SceneMsg::SurfaceOnResize > &);
-		bool _SurfaceRequestUpdate (const Message< SceneMsg::SurfaceRequestUpdate > &);
+		bool _SurfaceOnResize (const SceneMsg::SurfaceOnResize &);
+		bool _SurfaceRequestUpdate (const SceneMsg::SurfaceRequestUpdate &);
 
 		void _OnMouseX (const ModuleMsg::InputMotion &);
 		void _OnMouseY (const ModuleMsg::InputMotion &);
@@ -150,7 +150,7 @@ namespace Scene
 	_Link
 =================================================
 */
-	bool FreeCamera::_Link (const Message< ModuleMsg::Link > &msg)
+	bool FreeCamera::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -162,19 +162,19 @@ namespace Scene
 			ModulePtr	input;
 			CHECK_LINKING( input = GlobalSystems()->parallelThread->GetModuleByMsg< InputThreadMsgList_t >() );
 
-			input->Send< ModuleMsg::InputMotionBind >({ this, &FreeCamera::_OnMouseX,		"mouse.x"_MotionID });
-			input->Send< ModuleMsg::InputMotionBind >({ this, &FreeCamera::_OnMouseY,		"mouse.y"_MotionID });
-			input->Send< ModuleMsg::InputMotionBind >({ this, &FreeCamera::_OnMouseWheel,	"mouse.wheel"_MotionID });
+			input->Send( ModuleMsg::InputMotionBind{ this, &FreeCamera::_OnMouseX,		"mouse.x"_MotionID });
+			input->Send( ModuleMsg::InputMotionBind{ this, &FreeCamera::_OnMouseY,		"mouse.y"_MotionID });
+			input->Send( ModuleMsg::InputMotionBind{ this, &FreeCamera::_OnMouseWheel,	"mouse.wheel"_MotionID });
 
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnMouseLBPressed,	"mouse 0"_KeyID,	EKeyState::OnKeyDown });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnMouseLBPressed,	"mouse 0"_KeyID,	EKeyState::OnKeyUp });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeCamera::_OnMouseLBPressed,	"mouse 0"_KeyID,	EKeyState::OnKeyDown });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeCamera::_OnMouseLBPressed,	"mouse 0"_KeyID,	EKeyState::OnKeyUp });
 
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepForward,	"W"_KeyID,			EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepBackward,	"S"_KeyID,			EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepLeft,		"A"_KeyID,			EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepRight,	"D"_KeyID,			EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepDown,		"Ctrl"_KeyID,		EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeCamera::_OnKeyStepUp,		"Space"_KeyID,		EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeCamera::_OnKeyStepForward,	"W"_KeyID,			EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeCamera::_OnKeyStepBackward,	"S"_KeyID,			EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeCamera::_OnKeyStepLeft,		"A"_KeyID,			EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeCamera::_OnKeyStepRight,	"D"_KeyID,			EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeCamera::_OnKeyStepDown,		"Ctrl"_KeyID,		EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeCamera::_OnKeyStepUp,		"Space"_KeyID,		EKeyState::OnKeyPressed });
 		}
 
 		// subscribe to surface events
@@ -194,7 +194,7 @@ namespace Scene
 
 		CHECK( _SetState( EState::Linked ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
+		_SendUncheckedEvent( ModuleMsg::AfterLink{} );
 		return true;
 	}
 	
@@ -203,7 +203,7 @@ namespace Scene
 	_Compose
 =================================================
 */
-	bool FreeCamera::_Compose (const Message< ModuleMsg::Compose > &)
+	bool FreeCamera::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -219,10 +219,10 @@ namespace Scene
 				CHECK_COMPOSING( surface = GetParentByEvent< SurfaceEventList_t >() );
 			}
 			
-			Message< SceneMsg::SurfaceGetDescriptor >	req_size;
+			SceneMsg::SurfaceGetDescription	req_size;
 			surface->Send( req_size );
 			
-			float	aspect = SafeDiv( float(req_size->result->size.x), float(req_size->result->size.y), 1.0f );
+			float	aspect = SafeDiv( float(req_size.result->size.x), float(req_size.result->size.y), 1.0f );
 
 			_camera.Create( Uninitialized, _settings.fovY, aspect, _settings.clipPlanes );
 		}
@@ -235,14 +235,14 @@ namespace Scene
 	_Update
 =================================================
 */
-	bool FreeCamera::_Update (const Message< ModuleMsg::Update > &msg)
+	bool FreeCamera::_Update (const ModuleMsg::Update &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
 		_mouseDelta *= _settings.mouseSens;
 		_zoom		*= _settings.zoomStep;
 
-		_positionDelta.Normalize() *= _settings.velocity * float(msg->timeDelta.Seconds());
+		_positionDelta.Normalize() *= _settings.velocity * float(msg.timeDelta.Seconds());
 		
 
 		if ( IsNotZero( _zoom ) )
@@ -270,9 +270,9 @@ namespace Scene
 	_SurfaceOnResize
 =================================================
 */
-	bool FreeCamera::_SurfaceOnResize (const Message< SceneMsg::SurfaceOnResize > &msg)
+	bool FreeCamera::_SurfaceOnResize (const SceneMsg::SurfaceOnResize &msg)
 	{
-		_camera.Resize( _camera.GetFovY(), SafeDiv( float(msg->newSize.x), float(msg->newSize.y), 1.0f ) );
+		_camera.Resize( _camera.GetFovY(), SafeDiv( float(msg.newSize.x), float(msg.newSize.y), 1.0f ) );
 		return true;
 	}
 	
@@ -281,14 +281,14 @@ namespace Scene
 	_SurfaceRequestUpdate
 =================================================
 */
-	bool FreeCamera::_SurfaceRequestUpdate (const Message< SceneMsg::SurfaceRequestUpdate > &msg)
+	bool FreeCamera::_SurfaceRequestUpdate (const SceneMsg::SurfaceRequestUpdate &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
-		CHECK_ERR( msg->framebuffers.Count() == 1 );
+		CHECK_ERR( msg.framebuffers.Count() == 1 );
 
 		CameraState_t	state{ _camera.GetFrustum(), _camera.Transform(), _camera.ViewMatrix(), _camera.ProjMatrix() };
 
-		CHECK_ERR( _SendEvent< SceneMsg::CameraRequestUpdate >({ ArrayCRef<CameraState_t>{ state }, msg->framebuffers, msg->cmdBuilder }) );
+		CHECK_ERR( _SendEvent( SceneMsg::CameraRequestUpdate{ ArrayCRef<CameraState_t>{ state }, msg.framebuffers, msg.cmdBuilder }) );
 
 		return true;
 	}
@@ -298,7 +298,7 @@ namespace Scene
 	_CameraBindKeys
 =================================================
 */
-	bool FreeCamera::_CameraBindKeys (const Message< SceneMsg::CameraBindKeys > &msg)
+	bool FreeCamera::_CameraBindKeys (const SceneMsg::CameraBindKeys &msg)
 	{
 		// TODO
 		return true;
@@ -309,9 +309,9 @@ namespace Scene
 	_CameraGetState
 =================================================
 */
-	bool FreeCamera::_CameraGetState (const Message< SceneMsg::CameraGetState > &msg)
+	bool FreeCamera::_CameraGetState (const SceneMsg::CameraGetState &msg)
 	{
-		msg->result.Set({{ _camera.GetFrustum(), _camera.Transform(), _camera.ViewMatrix(), _camera.ProjMatrix() }});
+		msg.result.Set({{ _camera.GetFrustum(), _camera.Transform(), _camera.ViewMatrix(), _camera.ProjMatrix() }});
 		return true;
 	}
 	
@@ -320,9 +320,9 @@ namespace Scene
 	_CameraUpdateSettings
 =================================================
 */
-	bool FreeCamera::_CameraUpdateSettings (const Message< SceneMsg::CameraUpdateSettings > &msg)
+	bool FreeCamera::_CameraUpdateSettings (const SceneMsg::CameraUpdateSettings &msg)
 	{
-		_settings = msg->settings;
+		_settings = msg.settings;
 		return true;
 	}
 	
@@ -331,9 +331,9 @@ namespace Scene
 	_CameraGetSettings
 =================================================
 */
-	bool FreeCamera::_CameraGetSettings (const Message< SceneMsg::CameraGetSettings > &msg)
+	bool FreeCamera::_CameraGetSettings (const SceneMsg::CameraGetSettings &msg)
 	{
-		msg->result.Set( _settings );
+		msg.result.Set( _settings );
 		return true;
 	}
 

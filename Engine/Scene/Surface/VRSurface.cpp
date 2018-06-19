@@ -21,7 +21,7 @@ namespace Scene
 		using SupportedMessages_t	= BaseSceneModule::SupportedMessages_t::Erase< MessageListFrom<
 											ModuleMsg::Compose
 										> >::Append< MessageListFrom<
-											SceneMsg::SurfaceGetDescriptor,
+											SceneMsg::SurfaceGetDescription,
 											ModuleMsg::Update
 										> >;
 
@@ -68,14 +68,14 @@ namespace Scene
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _SurfaceGetDescriptor (const Message< SceneMsg::SurfaceGetDescriptor > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _SurfaceGetDescription (const SceneMsg::SurfaceGetDescription &);
 		
 		// event handlers
-		bool _AfterCompose (const Message< ModuleMsg::AfterCompose > &);
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _AfterCompose (const ModuleMsg::AfterCompose &);
+		bool _DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &VRSurface::_Link );
 		_SubscribeOnMsg( this, &VRSurface::_Delete );
 		_SubscribeOnMsg( this, &VRSurface::_Update );
-		_SubscribeOnMsg( this, &VRSurface::_SurfaceGetDescriptor );
+		_SubscribeOnMsg( this, &VRSurface::_SurfaceGetDescription );
 		_SubscribeOnMsg( this, &VRSurface::_OnManagerChanged );
 		_SubscribeOnMsg( this, &VRSurface::_GetScenePrivateClasses );
 
@@ -126,7 +126,7 @@ namespace Scene
 	_Link
 =================================================
 */
-	bool VRSurface::_Link (const Message< ModuleMsg::Link > &msg)
+	bool VRSurface::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -145,7 +145,7 @@ namespace Scene
 
 		CHECK( _SetState( EState::Linked ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
+		_SendUncheckedEvent( ModuleMsg::AfterLink{} );
 		return true;
 	}
 	
@@ -154,7 +154,7 @@ namespace Scene
 	_AfterCompose
 =================================================
 */
-	bool VRSurface::_AfterCompose (const Message< ModuleMsg::AfterCompose > &)
+	bool VRSurface::_AfterCompose (const ModuleMsg::AfterCompose &)
 	{
 		return _DefCompose( false );
 	}
@@ -164,7 +164,7 @@ namespace Scene
 	_Update
 =================================================
 */
-	bool VRSurface::_Update (const Message< ModuleMsg::Update > &msg)
+	bool VRSurface::_Update (const ModuleMsg::Update &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
@@ -172,17 +172,17 @@ namespace Scene
 		// update dependencies
 		Module::_Update_Impl( msg );
 		
-		Message< GraphicsMsg::CmdBeginVRFrame >		begin_frame;
+		GraphicsMsg::CmdBeginVRFrame	begin_frame;
 		_builder->Send( begin_frame );
 		
-		Message< SceneMsg::SurfaceRequestUpdate >	req_upd;
-		req_upd->framebuffers.PushBack( begin_frame->result->leftEye );
-		req_upd->framebuffers.PushBack( begin_frame->result->rightEye );
-		req_upd->cmdBuilder = _builder;
+		SceneMsg::SurfaceRequestUpdate	req_upd;
+		req_upd.framebuffers.PushBack( begin_frame.result->leftEye );
+		req_upd.framebuffers.PushBack( begin_frame.result->rightEye );
+		req_upd.cmdBuilder = _builder;
 
 		CHECK( _SendEvent( req_upd ) );
 
-		_builder->Send< GraphicsMsg::CmdEndVRFrame >({});
+		_builder->Send( GraphicsMsg::CmdEndVRFrame{} );
 		return true;
 	}
 
@@ -191,7 +191,7 @@ namespace Scene
 	_Delete
 =================================================
 */
-	bool VRSurface::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool VRSurface::_Delete (const ModuleMsg::Delete &msg)
 	{
 		if ( _vrthread ) {
 			_vrthread->UnsubscribeAll( this );
@@ -205,18 +205,18 @@ namespace Scene
 
 /*
 =================================================
-	_SurfaceGetDescriptor
+	_SurfaceGetDescription
 =================================================
 */
-	bool VRSurface::_SurfaceGetDescriptor (const Message< SceneMsg::SurfaceGetDescriptor > &msg)
+	bool VRSurface::_SurfaceGetDescription (const SceneMsg::SurfaceGetDescription &msg)
 	{
 		if ( not _vrthread )
 			return false;
 
-		Message< GpuMsg::GetGraphicsSettings >	req_settings;
+		GpuMsg::GetGraphicsSettings		req_settings;
 		CHECK( _vrthread->Send( req_settings ) );
 
-		msg->result.Set({ _size, req_settings->result->colorFmt, req_settings->result->depthStencilFmt });
+		msg.result.Set({ _size, req_settings.result->colorFmt, req_settings.result->depthStencilFmt });
 		return true;
 	}
 	
@@ -225,9 +225,9 @@ namespace Scene
 	_DeviceBeforeDestroy
 =================================================
 */
-	bool VRSurface::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool VRSurface::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		Send< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		return true;
 	}
 //-----------------------------------------------------------------------------

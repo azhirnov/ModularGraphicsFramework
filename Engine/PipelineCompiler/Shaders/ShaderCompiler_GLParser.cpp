@@ -11,7 +11,8 @@ namespace PipelineCompiler
 	DeserializeGLSL
 =================================================
 */
-	bool ShaderCompiler::Deserialize (EShaderSrcFormat::type shaderFmt, EShader::type shaderType, ArrayCRef<StringCRef> source, StringCRef entryPoint,
+	bool ShaderCompiler::Deserialize (EShaderSrcFormat::type shaderFmt, EShader::type shaderType, ArrayCRef<StringCRef> source,
+									  StringCRef entryPoint, StringCRef baseFolder,
 									  OUT String &log, OUT DeserializedShader &result)
 	{
 		result = DeserializedShader();
@@ -29,7 +30,7 @@ namespace PipelineCompiler
 
 		const int		substitution_level	= 1;
 		
-		if ( not _GLSLangParse( cfg, shader_data, OUT log, OUT glslang_data ) )
+		if ( not _GLSLangParse( cfg, shader_data, baseFolder, OUT log, OUT glslang_data ) )
 			return false;
 		
 		const glslang::TIntermediate* intermediate = glslang_data.prog.getIntermediate( glslang_data.shader->getStage() );
@@ -334,7 +335,10 @@ namespace PipelineCompiler
 		// arrays
 		if ( type.isArray() )
 		{
-			arg.arraySize = Max( 0, type.getOuterArraySize() );
+			if ( type.isExplicitlySizedArray() )
+				arg.arraySize.MakeStatic( type.getOuterArraySize() );
+			else
+				arg.arraySize.MakeDynamic();
 		}
 
 		// buffer
@@ -632,7 +636,7 @@ namespace PipelineCompiler
 		{
 			auto const&	type_list = *type.getStruct();
 			
-			var.type		= EShaderVariable::Struct;
+			var.type		= EShaderVariable::VaryingsBlock;
 			var.typeName	= type.getTypeName().c_str();
 			var.fields.Reserve( var.fields.Count() + type_list.size() );
 
@@ -672,7 +676,7 @@ namespace PipelineCompiler
 	bool ShaderCompiler::_DeserializeConstant (TIntermNode* node, glslang::TType const &type, glslang::TSourceLoc const &loc,
 												OUT DeserializedShader::Constant &result)
 	{
-		CHECK_ERR( _DeserializeVariable( node, type, loc, null, OUT result ) );
+		/*CHECK_ERR( _DeserializeVariable( node, type, loc, null, OUT result ) );
 		CHECK_ERR( not type.isStruct() );	// constant must be scalar/vector/matrix type!
 
 		glslang::TIntermSymbol*	symb = node->getAsSymbolNode();
@@ -680,7 +684,7 @@ namespace PipelineCompiler
 		CHECK_ERR( symb );	// must be not null if it is constant
 		ASSERT( not EShaderVariable::IsStruct( result.type ) );		// TODO: support structures
 
-		CHECK_ERR( DeserializeConstant::Process( result.type, symb->getConstArray(), OUT result.values ) );
+		CHECK_ERR( DeserializeConstant::Process( result.type, symb->getConstArray(), OUT result.values ) );*/
 		return true;
 	}
 

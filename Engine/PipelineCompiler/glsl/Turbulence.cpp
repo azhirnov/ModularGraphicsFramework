@@ -6,7 +6,11 @@ namespace glsl_vfs
 {
 	extern void VFS_Noise_Turbulence (OUT String &src)
 	{
-		src << R"#(
+		src << R"#(/*
+	Turbulence
+*/
+
+#include <Noise/Perlin.glsl>
 
 real3 Turbulence (const real3 point, const real power, const real frequency, const real lacunarity,
 				  const real persistence, const int roughness, const int seed);

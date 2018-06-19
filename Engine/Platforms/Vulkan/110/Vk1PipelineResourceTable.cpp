@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -28,8 +28,8 @@ namespace PlatformVK
 	private:
 		using LayoutMsgList_t		= MessageListFrom<
 											GpuMsg::GetVkPipelineLayoutID,
-											GpuMsg::GetVkDescriptorLayouts,
-											GpuMsg::GetPipelineLayoutDescriptor,
+											GpuMsg::GetVkDescriptionLayouts,
+											GpuMsg::GetPipelineLayoutDescription,
 											GpuMsg::GetVkPipelineLayoutPushConstants
 										>;
 
@@ -80,17 +80,17 @@ namespace PlatformVK
 
 		struct ImageAttachment
 		{
-			ImageViewDescriptor		descr;
+			ImageViewDescription	descr;
 			EImageLayout::type		layout	= Uninitialized;
 		};
 
 		using AttachmentInfo_t		= Union< BufferAttachment, ImageAttachment >;
-		using AttachmentInfoMap_t	= Map< const void*, AttachmentInfo_t >;
+		using AttachmentInfoMap_t	= Map< UntypedKey<ModulePtr>, AttachmentInfo_t >;
 
 		using DescriptorPoolSizes_t	= FixedSizeArray< VkDescriptorPoolSize, VK_DESCRIPTOR_TYPE_RANGE_SIZE >;
 		
-		struct _CreateResourceDescriptor_Func;
-		struct _WriteDescriptor_Func;
+		struct _CreateResourceDescription_Func;
+		struct _WriteDescription_Func;
 
 
 	// constants
@@ -116,15 +116,15 @@ namespace PlatformVK
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		bool _PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &);
-		bool _PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &);
-		bool _PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &);
-		bool _GetVkPipelineResourceTableID (const Message< GpuMsg::GetVkPipelineResourceTableID > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		bool _PipelineAttachImage (const GpuMsg::PipelineAttachImage &);
+		bool _PipelineAttachBuffer (const GpuMsg::PipelineAttachBuffer &);
+		bool _PipelineAttachTexture (const GpuMsg::PipelineAttachTexture &);
+		bool _GetVkPipelineResourceTableID (const GpuMsg::GetVkPipelineResourceTableID &);
 
 	private:
 		bool _IsCreated ();
@@ -187,7 +187,7 @@ namespace PlatformVK
 	_Link
 =================================================
 */
-	bool Vk1PipelineResourceTable::_Link (const Message< ModuleMsg::Link > &)
+	bool Vk1PipelineResourceTable::_Link (const ModuleMsg::Link &)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -199,7 +199,7 @@ namespace PlatformVK
 
 		CHECK( _SetState( EState::Linked ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
+		_SendUncheckedEvent( ModuleMsg::AfterLink{} );
 		return true;
 	}
 
@@ -208,7 +208,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1PipelineResourceTable::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool Vk1PipelineResourceTable::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -224,7 +224,7 @@ namespace PlatformVK
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 
@@ -233,7 +233,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1PipelineResourceTable::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1PipelineResourceTable::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_SendForEachAttachments( msg );
 
@@ -249,11 +249,11 @@ namespace PlatformVK
 	_GetVkPipelineResourceTableID
 =================================================
 */
-	bool Vk1PipelineResourceTable::_GetVkPipelineResourceTableID (const Message< GpuMsg::GetVkPipelineResourceTableID > &msg)
+	bool Vk1PipelineResourceTable::_GetVkPipelineResourceTableID (const GpuMsg::GetVkPipelineResourceTableID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set( _descriptorSetId );
+		msg.result.Set( _descriptorSetId );
 		return true;
 	}
 	
@@ -262,11 +262,11 @@ namespace PlatformVK
 	_AttachModule
 =================================================
 */
-	bool Vk1PipelineResourceTable::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool Vk1PipelineResourceTable::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		_DestroyResourceTable();
@@ -278,17 +278,17 @@ namespace PlatformVK
 	_PipelineAttachImage
 =================================================
 */
-	bool Vk1PipelineResourceTable::_PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &msg)
+	bool Vk1PipelineResourceTable::_PipelineAttachImage (const GpuMsg::PipelineAttachImage &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
 		ImageAttachment	img;
-		img.descr	= msg->descr;
-		img.layout	= msg->layout;
+		img.descr	= msg.descr;
+		img.layout	= msg.layout;
 
-		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		_attachmentInfo.Add( msg.newModule.RawPtr(), AttachmentInfo_t{img} );
 		
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -299,27 +299,27 @@ namespace PlatformVK
 	_PipelineAttachTexture
 =================================================
 */
-	bool Vk1PipelineResourceTable::_PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &msg)
+	bool Vk1PipelineResourceTable::_PipelineAttachTexture (const GpuMsg::PipelineAttachTexture &msg)
 	{
-		CHECK_ERR( msg->newModule and msg->sampler );
+		CHECK_ERR( msg.newModule and msg.sampler );
 
 		ImageAttachment	img;
-		img.layout	= msg->layout;
+		img.layout	= msg.layout;
 		
-		if ( not msg->descr.IsDefined() )
+		if ( not msg.descr.IsDefined() )
 		{
-			Message< GpuMsg::GetImageDescriptor >	req_descr;
-			CHECK( msg->newModule->Send( req_descr ) );
+			GpuMsg::GetImageDescription	req_descr;
+			CHECK( msg.newModule->Send( req_descr ) );
 
-			img.descr = ImageViewDescriptor{ *req_descr->result };
+			img.descr = ImageViewDescription{ *req_descr.result };
 		}
 		else
-			img.descr = *msg->descr;
+			img.descr = *msg.descr;
 
-		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		_attachmentInfo.Add( msg.newModule.RawPtr(), AttachmentInfo_t{img} );
 		
-		CHECK( _Attach( msg->name, msg->newModule ) );
-		CHECK( _Attach( msg->name + ".sampler", msg->sampler ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
+		CHECK( _Attach( msg.name + ".sampler", msg.sampler ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -330,17 +330,17 @@ namespace PlatformVK
 	_PipelineAttachBuffer
 =================================================
 */
-	bool Vk1PipelineResourceTable::_PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &msg)
+	bool Vk1PipelineResourceTable::_PipelineAttachBuffer (const GpuMsg::PipelineAttachBuffer &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
 		BufferAttachment	buf;
-		buf.offset	= msg->offset;
-		buf.size	= msg->size;
+		buf.offset	= msg.offset;
+		buf.size	= msg.size;
 
-		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{buf} );
+		_attachmentInfo.Add( msg.newModule.RawPtr(), AttachmentInfo_t{buf} );
 		
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -351,10 +351,11 @@ namespace PlatformVK
 	_DetachModule
 =================================================
 */
-	bool Vk1PipelineResourceTable::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool Vk1PipelineResourceTable::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		if ( _Detach( msg->oldModule ) )
+		if ( _Detach( msg.oldModule ) )
 		{
+			_attachmentInfo.Erase( msg.oldModule.RawPtr() );
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyResourceTable();
 		}
@@ -363,19 +364,19 @@ namespace PlatformVK
 
 /*
 =================================================
-	_CreateResourceDescriptor_Func
+	_CreateResourceDescription_Func
 =================================================
 */
-	struct Vk1PipelineResourceTable::_CreateResourceDescriptor_Func
+	struct Vk1PipelineResourceTable::_CreateResourceDescription_Func
 	{
 	// types
-		using TextureUniform	= PipelineLayoutDescriptor::TextureUniform;
-		using SamplerUniform	= PipelineLayoutDescriptor::SamplerUniform;
-		using ImageUniform		= PipelineLayoutDescriptor::ImageUniform;
-		using UniformBuffer		= PipelineLayoutDescriptor::UniformBuffer;
-		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
-		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
-		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
+		using TextureUniform	= PipelineLayoutDescription::TextureUniform;
+		using SamplerUniform	= PipelineLayoutDescription::SamplerUniform;
+		using ImageUniform		= PipelineLayoutDescription::ImageUniform;
+		using UniformBuffer		= PipelineLayoutDescription::UniformBuffer;
+		using StorageBuffer		= PipelineLayoutDescription::StorageBuffer;
+		using PushConstant		= PipelineLayoutDescription::PushConstant;
+		using SubpassInput		= PipelineLayoutDescription::SubpassInput;
 		using ImageMsgList		= MessageListFrom< GpuMsg::GetVkImageID >;
 		using SamplerMsgList	= MessageListFrom< GpuMsg::GetVkSamplerID >;
 		using BufferMsgList		= MessageListFrom< GpuMsg::GetVkBufferID >;
@@ -391,7 +392,7 @@ namespace PlatformVK
 
 
 	// methods
-		_CreateResourceDescriptor_Func (OUT ResourceDescrArray_t &resources, OUT DescriptorPoolSizes_t &poolSizes, Vk1PipelineResourceTable& self) :
+		_CreateResourceDescription_Func (OUT ResourceDescrArray_t &resources, OUT DescriptorPoolSizes_t &poolSizes, Vk1PipelineResourceTable& self) :
 			self( self ), resources( resources ), poolSizes( poolSizes )
 		{
 			moduleMap.Reserve( self._GetAttachments().Count() );
@@ -403,7 +404,7 @@ namespace PlatformVK
 			}
 		}
 
-		~_CreateResourceDescriptor_Func ()
+		~_CreateResourceDescription_Func ()
 		{
 			DEBUG_ONLY(
 				for (auto& mod : moduleMap) {
@@ -468,8 +469,8 @@ namespace PlatformVK
 				CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT tex_mod ) );
 				CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT samp_mod ) );
 				
-				Message< GpuMsg::GetVkSamplerID >	req_sampler;
-				self.SendTo( samp_mod, req_sampler );
+				GpuMsg::GetVkSamplerID	req_sampler;
+				samp_mod->Send( req_sampler );
 
 				const auto&	img_res = self.GetResourceCache()->GetImageID( tex_mod );	// warning: reference may be invalid after any changes
 
@@ -487,17 +488,17 @@ namespace PlatformVK
 
 				if ( self._attachmentInfo.Find( tex_mod.RawPtr(), OUT info ) )
 				{
-					auto const&								att_info = info->second.Get<ImageAttachment>();
-					Message< GpuMsg::CreateVkImageView >	req_imageview{ att_info.descr };
-					self.SendTo( tex_mod, req_imageview );
+					auto const&					att_info = info->second.Get<ImageAttachment>();
+					GpuMsg::CreateVkImageView	req_imageview{ att_info.descr };
+					tex_mod->Send( req_imageview );
 
-					img_view	= req_imageview->result.Get( VK_NULL_HANDLE );
+					img_view	= req_imageview.result.Get( VK_NULL_HANDLE );
 					layout		= Vk1Enum( att_info.layout );
 				}
 				
 				// create descriptor
 				ImageDescr				descr;
-				descr.info.sampler		= req_sampler->result.Get( VK_NULL_HANDLE );
+				descr.info.sampler		= req_sampler.result.Get( VK_NULL_HANDLE );
 				descr.info.imageView	= img_view;
 				descr.info.imageLayout	= layout;
 				descr.descriptorType	= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -544,11 +545,11 @@ namespace PlatformVK
 
 			if ( self._attachmentInfo.Find( img_mod.RawPtr(), OUT info ) )
 			{
-				auto const&								att_info = info->second.Get<ImageAttachment>();
-				Message< GpuMsg::CreateVkImageView >	req_imageview{ att_info.descr };
-				self.SendTo( img_mod, req_imageview );
+				auto const&					att_info = info->second.Get<ImageAttachment>();
+				GpuMsg::CreateVkImageView	req_imageview{ att_info.descr };
+				img_mod->Send( req_imageview );
 
-				img_view	= req_imageview->result.Get( VK_NULL_HANDLE );
+				img_view	= req_imageview.result.Get( VK_NULL_HANDLE );
 				layout		= Vk1Enum( att_info.layout );
 			}
 
@@ -671,16 +672,16 @@ namespace PlatformVK
 */
 	bool Vk1PipelineResourceTable::_CreateResourceTable ()
 	{
-		Message< GpuMsg::GetPipelineLayoutDescriptor >	req_descr;
-		Message< GpuMsg::GetVkDescriptorLayouts >		req_layouts;
+		GpuMsg::GetPipelineLayoutDescription	req_descr;
+		GpuMsg::GetVkDescriptionLayouts			req_layouts;
 
-		SendTo( _layout, req_descr );
-		SendTo( _layout, req_layouts );
+		_layout->Send( req_descr );
+		_layout->Send( req_layouts );
 
-		PipelineLayoutDescriptor const&		layout_descr = *req_descr->result;
-		VkDescriptorSetLayout				descr_layout = *req_layouts->result;
+		PipelineLayoutDescription const&	layout_descr = *req_descr.result;
+		VkDescriptorSetLayout				descr_layout = *req_layouts.result;
 		DescriptorPoolSizes_t				pool_sizes;
-		_CreateResourceDescriptor_Func		func( OUT _resources, OUT pool_sizes, *this );
+		_CreateResourceDescription_Func		func( OUT _resources, OUT pool_sizes, *this );
 
 		// init pool sizes
 		pool_sizes.Resize( VK_DESCRIPTOR_TYPE_RANGE_SIZE );
@@ -727,17 +728,17 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_WriteDescriptor_Func
+	_WriteDescription_Func
 =================================================
 */
-	struct Vk1PipelineResourceTable::_WriteDescriptor_Func
+	struct Vk1PipelineResourceTable::_WriteDescription_Func
 	{
 	// variables
 		Array< VkWriteDescriptorSet >&	writeDescr;
 		VkDescriptorSet					descriptorSet;
 
 	// methods
-		_WriteDescriptor_Func (Array<VkWriteDescriptorSet> &writeDescr, VkDescriptorSet descriptorSet) :
+		_WriteDescription_Func (Array<VkWriteDescriptorSet> &writeDescr, VkDescriptorSet descriptorSet) :
 			writeDescr( writeDescr ), descriptorSet( descriptorSet )
 		{}
 
@@ -797,7 +798,7 @@ namespace PlatformVK
 		CHECK_ERR( _descriptorSetId != VK_NULL_HANDLE and not _resources.Empty() );
 
 		Array<VkWriteDescriptorSet>	write_descr;
-		_WriteDescriptor_Func		func( OUT write_descr, _descriptorSetId );
+		_WriteDescription_Func		func( OUT write_descr, _descriptorSetId );
 
 		for (auto& res : _resources) {
 			res.Apply( func );

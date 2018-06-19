@@ -45,12 +45,12 @@ namespace Scene
 
 	// message handlers
 	protected:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
-		bool _GetScenePrivateClasses (const Message< SceneMsg::GetScenePrivateClasses > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
+		bool _GetScenePrivateClasses (const SceneMsg::GetScenePrivateClasses &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ namespace Scene
 	_Link
 =================================================
 */
-	bool ScenePhysicsMainThread::_Link (const Message< ModuleMsg::Link > &msg)
+	bool ScenePhysicsMainThread::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -120,7 +120,7 @@ namespace Scene
 	_Compose
 =================================================
 */
-	bool ScenePhysicsMainThread::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool ScenePhysicsMainThread::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -137,7 +137,7 @@ namespace Scene
 	_Delete
 =================================================
 */
-	bool ScenePhysicsMainThread::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool ScenePhysicsMainThread::_Delete (const ModuleMsg::Delete &msg)
 	{
 		//TODO( "" );
 		return Module::_Delete_Impl( msg );
@@ -148,7 +148,7 @@ namespace Scene
 	_AddToManager
 =================================================
 */
-	bool ScenePhysicsMainThread::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool ScenePhysicsMainThread::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
 		// TODO
 		return true;
@@ -159,7 +159,7 @@ namespace Scene
 	_RemoveFromManager
 =================================================
 */
-	bool ScenePhysicsMainThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool ScenePhysicsMainThread::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
 		// TODO
 		return true;
@@ -170,9 +170,9 @@ namespace Scene
 	_GetScenePrivateClasses
 =================================================
 */
-	bool ScenePhysicsMainThread::_GetScenePrivateClasses (const Message< SceneMsg::GetScenePrivateClasses > &msg)
+	bool ScenePhysicsMainThread::_GetScenePrivateClasses (const SceneMsg::GetScenePrivateClasses &msg)
 	{
-		msg->result.Set({ });	// TODO
+		msg.result.Set({ });	// TODO
 		return true;
 	}
 //-----------------------------------------------------------------------------

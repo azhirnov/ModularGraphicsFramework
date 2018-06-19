@@ -21,10 +21,10 @@ namespace Platforms
 {
 
 	//
-	// Graphics Pipeline Descriptor
+	// Graphics Pipeline Description
 	//
 
-	struct GraphicsPipelineDescriptor final : CompileTime::FastCopyable
+	struct GraphicsPipelineDescription final : CompileTime::FastCopyable
 	{
 	// types
 		using ConstantName_t			= StaticString<32>;
@@ -36,55 +36,55 @@ namespace Platforms
 		RenderState						renderState;
 		EPipelineDynamicState::bits		dynamicStates;
 		FragmentOutputState				fragOutput;
-		PipelineLayoutDescriptor		layout;
+		PipelineLayoutDescription		layout;
 		uint							patchControlPoints;
 		uint							subpass;
 		// TODO: viewports
 		// TODO: specialization constants
 
 	// methods
-		GraphicsPipelineDescriptor (GX_DEFCTOR);
+		GraphicsPipelineDescription (GX_DEFCTOR);
 
-		GraphicsPipelineDescriptor (const VertexInputState &vertexInput,
-									const RenderState &renderState,
-									const PipelineLayoutDescriptor &layout,
-									EPipelineDynamicState::bits dynamicStates,
-									const FragmentOutputState &fragOutput,
-									uint patchControlPoints = 0,
-									uint subpass = 0);
+		GraphicsPipelineDescription (const VertexInputState &vertexInput,
+									 const RenderState &renderState,
+									 const PipelineLayoutDescription &layout,
+									 EPipelineDynamicState::bits dynamicStates,
+									 const FragmentOutputState &fragOutput,
+									 uint patchControlPoints = 0,
+									 uint subpass = 0);
 	};
 
 
 
 	//
-	// Compute Pipeline Descriptor
+	// Compute Pipeline Description
 	//
 
-	struct ComputePipelineDescriptor final : CompileTime::FastCopyable
+	struct ComputePipelineDescription final : CompileTime::FastCopyable
 	{
 	// types
-		using SpecializationConstants_t	= GraphicsPipelineDescriptor::SpecializationConstants_t;
+		using SpecializationConstants_t	= GraphicsPipelineDescription::SpecializationConstants_t;
 
 	// variables
-		PipelineLayoutDescriptor		layout;
+		PipelineLayoutDescription		layout;
 		uint3							localGroupSize;
 		// TODO: specialization constants
 
 	// methods
-		ComputePipelineDescriptor (GX_DEFCTOR);
+		ComputePipelineDescription (GX_DEFCTOR);
 
 		explicit
-		ComputePipelineDescriptor (const PipelineLayoutDescriptor &layout,
-								   const uint3 &localGroupSize);
+		ComputePipelineDescription (const PipelineLayoutDescription &layout,
+								    const uint3 &localGroupSize);
 	};
 
 
 
 	//
-	// Pipeline Template Descriptor
+	// Pipeline Template Description
 	//
 
-	struct PipelineTemplateDescriptor final : CompileTime::FastCopyable
+	struct PipelineTemplateDescription final : CompileTime::FastCopyable
 	{
 	// types
 		struct ShaderSource
@@ -165,7 +165,7 @@ namespace Platforms
 		RenderState						renderState;
 		EPipelineDynamicState::bits		dynamicStates;
 		FragmentOutputState				fragOutput;
-		PipelineLayoutDescriptor		layout;
+		PipelineLayoutDescription		layout;
 		uint							patchControlPoints;
 		uint							subpass;
 		uint3							localGroupSize;
@@ -174,7 +174,7 @@ namespace Platforms
 
 
 	// methods
-		PipelineTemplateDescriptor (GX_DEFCTOR);
+		PipelineTemplateDescription (GX_DEFCTOR);
 
 		ND_ ShaderSource&  Vertex ()			{ return shaders[ EShader::Vertex ]; }
 		ND_ ShaderSource&  TessControl ()		{ return shaders[ EShader::TessControl ]; }
@@ -196,11 +196,11 @@ namespace CreateInfo
 	struct GraphicsPipeline
 	{
 	// types
-		using Descriptor	= Platforms::GraphicsPipelineDescriptor;
+		using Description	= Platforms::GraphicsPipelineDescription;
 
 	// variables
 		ModulePtr		gpuThread;			// can be null
-		Descriptor		descr;
+		Description		descr;
 	};
 
 
@@ -210,11 +210,11 @@ namespace CreateInfo
 	struct ComputePipeline
 	{
 	// types
-		using Descriptor	= Platforms::ComputePipelineDescriptor;
+		using Description	= Platforms::ComputePipelineDescription;
 		
 	// variables
 		ModulePtr		gpuThread;			// can be null
-		Descriptor		descr;
+		Description		descr;
 	};
 
 
@@ -224,10 +224,10 @@ namespace CreateInfo
 	struct PipelineTemplate
 	{
 	// types
-		using Descriptor	= Platforms::PipelineTemplateDescriptor;
+		using Description	= Platforms::PipelineTemplateDescription;
 
 	// variables
-		Descriptor		descr;
+		Description		descr;
 	};
 
 
@@ -249,29 +249,29 @@ namespace CreateInfo
 namespace GpuMsg
 {
 	//
-	// Get Graphics Pipeline Descriptor
+	// Get Graphics Pipeline Description
 	//
-	struct GetGraphicsPipelineDescriptor
+	struct GetGraphicsPipelineDescription : _MessageBase_
 	{
-		Out< Platforms::GraphicsPipelineDescriptor >	result;
+		Out< Platforms::GraphicsPipelineDescription >	result;
 	};
 
 
 	//
-	// Get Compute Pipeline Descriptor
+	// Get Compute Pipeline Description
 	//
-	struct GetComputePipelineDescriptor
+	struct GetComputePipelineDescription : _MessageBase_
 	{
-		Out< Platforms::ComputePipelineDescriptor >		result;
+		Out< Platforms::ComputePipelineDescription >	result;
 	};
 
 
 	//
-	// Get Pipeline Layout Descriptor
+	// Get Pipeline Layout Description
 	//
-	struct GetPipelineLayoutDescriptor
+	struct GetPipelineLayoutDescription : _MessageBase_
 	{
-		Out< Platforms::PipelineLayoutDescriptor >	result;
+		Out< Platforms::PipelineLayoutDescription >		result;
 	};
 
 
@@ -299,15 +299,15 @@ namespace GpuMsg
 	struct PipelineAttachImage : ModuleMsg::AttachModule
 	{
 	// types
-		using ImageViewDescriptor	= Platforms::ImageViewDescriptor;
+		using ImageViewDescription	= Platforms::ImageViewDescription;
 		using EImageLayout			= Platforms::EImageLayout;
 
 	// variables
-		ImageViewDescriptor		descr;
+		ImageViewDescription	descr;
 		EImageLayout::type		layout	= Uninitialized;
 
 	// methods
-		PipelineAttachImage (StringCRef name, const ModulePtr &mod, const ImageViewDescriptor &descr, EImageLayout::type layout = EImageLayout::General) :
+		PipelineAttachImage (StringCRef name, const ModulePtr &mod, const ImageViewDescription &descr, EImageLayout::type layout = EImageLayout::General) :
 			AttachModule{name, mod}, descr{descr}, layout{layout} {}
 	};
 
@@ -318,12 +318,12 @@ namespace GpuMsg
 	struct PipelineAttachTexture : ModuleMsg::AttachModule
 	{
 	// types
-		using ImageViewDescriptor	= Platforms::ImageViewDescriptor;
+		using ImageViewDescription	= Platforms::ImageViewDescription;
 		using EImageLayout			= Platforms::EImageLayout;
 
 	// variables
 		ModulePtr						sampler;
-		Optional<ImageViewDescriptor>	descr;
+		Optional<ImageViewDescription>	descr;
 		EImageLayout::type				layout	= Uninitialized;
 
 	// methods
@@ -332,7 +332,7 @@ namespace GpuMsg
 		{}
 
 		PipelineAttachTexture (StringCRef name, const ModulePtr &texture, const ModulePtr &sampler,
-							   const ImageViewDescriptor &descr, EImageLayout::type layout = EImageLayout::General) :
+							   const ImageViewDescription &descr, EImageLayout::type layout = EImageLayout::General) :
 			AttachModule{name, texture}, sampler{sampler}, descr{descr}, layout{layout}
 		{}
 	};
@@ -348,7 +348,7 @@ namespace GpuMsg
 	//
 	// Request Pipeline information
 	//
-	struct GetPipelineTemplateInfo
+	struct GetPipelineTemplateInfo : _MessageBase_
 	{
 	// types
 		struct EGraphicsAPI {
@@ -388,50 +388,51 @@ namespace GpuMsg
 
 	
 	//
-	// Create GraphicsPipelineDescriptor from PipelineTemplate
+	// Create GraphicsPipelineDescription from PipelineTemplate
 	//
-	struct CreateGraphicsPipelineDescriptor
+	struct CreateGraphicsPipelineDescription : _MessageBase_
 	{
 	// types
-		using SpecializationConstants_t	= Platforms::GraphicsPipelineDescriptor::SpecializationConstants_t;
+		using SpecializationConstants_t	= Platforms::GraphicsPipelineDescription::SpecializationConstants_t;
 
 	// variables
 		Platforms::VertexInputState						vertexInput;
 		SpecializationConstants_t						constants;	// optional
 		Platforms::EPrimitive::type						topology	= Uninitialized;
-		Out< Platforms::GraphicsPipelineDescriptor >	result;
+		Out< Platforms::GraphicsPipelineDescription >	result;
 
 	// methods
-		CreateGraphicsPipelineDescriptor (const Platforms::VertexInputState &vertexInput, Platforms::EPrimitive::type topology) :
-			vertexInput(vertexInput), topology(topology)
-		{}
+		CreateGraphicsPipelineDescription (const Platforms::VertexInputState &vertexInput, Platforms::EPrimitive::type topology) :
+			vertexInput(vertexInput), topology(topology) {}
 	};
 
 
 	//
-	// Create ComputePipelineDescriptor from PipelineTemplate
+	// Create ComputePipelineDescription from PipelineTemplate
 	//
-	struct CreateComputePipelineDescriptor
+	struct CreateComputePipelineDescription : _MessageBase_
 	{
 	// types
-		using SpecializationConstants_t	= Platforms::ComputePipelineDescriptor::SpecializationConstants_t;
+		using SpecializationConstants_t	= Platforms::ComputePipelineDescription::SpecializationConstants_t;
 
 	// variables
+		Optional< uint3 >								localGroupSize;
 		SpecializationConstants_t						constants;	// optional
-		Out< Platforms::ComputePipelineDescriptor >		result;
+		Out< Platforms::ComputePipelineDescription >	result;
 
 	// methods
-		CreateComputePipelineDescriptor () {}
+		CreateComputePipelineDescription () {}
+		explicit CreateComputePipelineDescription (const uint3 &localSize) : localGroupSize{ localSize } {}
 	};
 
 
 	//
 	// Create GraphicsPipeline Module from PipelineTemplate
 	//
-	struct CreateGraphicsPipeline
+	struct CreateGraphicsPipeline : _MessageBase_
 	{
 	// types
-		using SpecializationConstants_t	= Platforms::GraphicsPipelineDescriptor::SpecializationConstants_t;
+		using SpecializationConstants_t	= Platforms::GraphicsPipelineDescription::SpecializationConstants_t;
 
 	// variables
 		Out< ModulePtr >				result;
@@ -443,7 +444,7 @@ namespace GpuMsg
 		SpecializationConstants_t		constants;	// optional
 
 	// methods
-		CreateGraphicsPipeline (GX_DEFCTOR) {}
+		CreateGraphicsPipeline () {}
 
 		CreateGraphicsPipeline (UntypedID_t moduleID,
 								const ModulePtr &gpuThread,
@@ -460,23 +461,28 @@ namespace GpuMsg
 	//
 	// Create ComputePipeline Module from PipelineTemplate
 	//
-	struct CreateComputePipeline
+	struct CreateComputePipeline : _MessageBase_
 	{
 	// types
-		using SpecializationConstants_t	= Platforms::ComputePipelineDescriptor::SpecializationConstants_t;
+		using SpecializationConstants_t	= Platforms::ComputePipelineDescription::SpecializationConstants_t;
 
 	// variables
 		Out< ModulePtr >				result;
 		UntypedID_t						moduleID	= 0;
 		ModulePtr						gpuThread;
+		Optional< uint3 >				localGroupSize;
 		SpecializationConstants_t		constants;	// optional
 		
 	// methods
-		CreateComputePipeline (GX_DEFCTOR) {}
+		CreateComputePipeline () {}
 
-		explicit CreateComputePipeline (UntypedID_t moduleID,
-										const ModulePtr &gpuThread = null) :
-			moduleID(moduleID),		gpuThread(gpuThread)
+		explicit CreateComputePipeline (UntypedID_t moduleID, const ModulePtr &gpuThread = null) :
+			moduleID{ moduleID },	gpuThread{ gpuThread }
+		{}
+
+		CreateComputePipeline (UntypedID_t moduleID, const uint3 &localSize, const ModulePtr &gpuThread = null) :
+			moduleID{ moduleID },		gpuThread{ gpuThread },
+			localGroupSize{ localSize }
 		{}
 	};
 

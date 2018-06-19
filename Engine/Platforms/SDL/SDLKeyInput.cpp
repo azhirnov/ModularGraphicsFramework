@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Common/Platforms.h"
+#include "Core/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_SDL
 
@@ -28,7 +28,7 @@ namespace PlatformSDL
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											OSMsg::WindowDescriptorChanged,
+											OSMsg::WindowDescriptionChanged,
 											OSMsg::WindowCreated,
 											OSMsg::WindowBeforeDestroy,
 											OSMsg::OnSDLWindowRawMessage
@@ -63,13 +63,13 @@ namespace PlatformSDL
 
 	// message handlers
 	private:
-		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
-		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
-		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
-		bool _OnSDLWindowRawMessage (const Message< OSMsg::OnSDLWindowRawMessage > &);
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &);
+		bool _WindowCreated (const OSMsg::WindowCreated &);
+		bool _WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &);
+		bool _OnSDLWindowRawMessage (const OSMsg::OnSDLWindowRawMessage &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 
 	private:
 		void _Destroy ();
@@ -103,7 +103,7 @@ namespace PlatformSDL
 		_SubscribeOnMsg( this, &SDLKeyInput::_Update );
 		_SubscribeOnMsg( this, &SDLKeyInput::_Link );
 		_SubscribeOnMsg( this, &SDLKeyInput::_Delete_Impl );
-		_SubscribeOnMsg( this, &SDLKeyInput::_WindowDescriptorChanged );
+		_SubscribeOnMsg( this, &SDLKeyInput::_WindowDescriptionChanged );
 		_SubscribeOnMsg( this, &SDLKeyInput::_WindowCreated );
 		_SubscribeOnMsg( this, &SDLKeyInput::_WindowBeforeDestroy );
 		_SubscribeOnMsg( this, &SDLKeyInput::_OnSDLWindowRawMessage );
@@ -125,10 +125,10 @@ namespace PlatformSDL
 	
 /*
 =================================================
-	_WindowDescriptorChanged
+	_WindowDescriptionChanged
 =================================================
 */
-	bool SDLKeyInput::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &)
+	bool SDLKeyInput::_WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &)
 	{
 		return true;
 	}
@@ -138,7 +138,7 @@ namespace PlatformSDL
 	_WindowCreated
 =================================================
 */
-	bool SDLKeyInput::_WindowCreated (const Message< OSMsg::WindowCreated > &)
+	bool SDLKeyInput::_WindowCreated (const OSMsg::WindowCreated &)
 	{
 		CHECK( _DefCompose( false ) );
 		return true;
@@ -149,11 +149,11 @@ namespace PlatformSDL
 	_WindowBeforeDestroy
 =================================================
 */
-	bool SDLKeyInput::_WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &)
+	bool SDLKeyInput::_WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &)
 	{
 		_Destroy();
 
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		return true;
 	}
 	
@@ -162,16 +162,16 @@ namespace PlatformSDL
 	_OnSDLWindowRawMessage
 =================================================
 */
-	bool SDLKeyInput::_OnSDLWindowRawMessage (const Message< OSMsg::OnSDLWindowRawMessage > &msg)
+	bool SDLKeyInput::_OnSDLWindowRawMessage (const OSMsg::OnSDLWindowRawMessage &msg)
 	{
-		switch ( msg->event.type )
+		switch ( msg.event.type )
 		{
 			// key //
 			case SDL_KEYDOWN :
 			case SDL_KEYUP :
 			{
-				const KeyID::type	key		= _MapKey( msg->event.key.keysym.scancode );
-				const bool			down	= msg->event.type == SDL_KEYDOWN;
+				const KeyID::type	key		= _MapKey( msg.event.key.keysym.scancode );
+				const bool			down	= msg.event.type == SDL_KEYDOWN;
 					
 				if ( not (key == KeyID::Unknown ) )
 					_pendingKeys.PushBack( ModuleMsg::InputKey( key, down ? 1.0f : -1.0f ) );
@@ -182,9 +182,9 @@ namespace PlatformSDL
 			case SDL_MOUSEBUTTONDOWN :
 			case SDL_MOUSEBUTTONUP :
 			{
-				const float		pressure = (msg->event.button.state == SDL_PRESSED ? 1.0f : -1.0f);
+				const float		pressure = (msg.event.button.state == SDL_PRESSED ? 1.0f : -1.0f);
 
-				switch ( msg->event.button.button )
+				switch ( msg.event.button.button )
 				{
 					case SDL_BUTTON_LEFT :		_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 0"_KeyID, pressure ) );	break;
 					case SDL_BUTTON_RIGHT :		_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 1"_KeyID, pressure ) );	break;
@@ -198,7 +198,7 @@ namespace PlatformSDL
 			// mouse wheel //
 			case SDL_MOUSEWHEEL :
 			{
-				const int			wheel_delta = msg->event.wheel.y;
+				const int			wheel_delta = msg.event.wheel.y;
 				const KeyID::type	key			= (wheel_delta > 0 ? "mouse wheel+"_KeyID : "mouse wheel-"_KeyID);
 				
 				for (int i = Min( 3, Abs(wheel_delta) ); i > 0; --i)
@@ -218,7 +218,7 @@ namespace PlatformSDL
 	_Link
 =================================================
 */
-	bool SDLKeyInput::_Link (const Message< ModuleMsg::Link > &msg)
+	bool SDLKeyInput::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -231,10 +231,10 @@ namespace PlatformSDL
 
 			if ( _IsComposedState( _window->GetState() ) )
 			{
-				_SendMsg< OSMsg::WindowCreated >({});
+				_SendMsg( OSMsg::WindowCreated{} );
 			}
 
-			_window->Subscribe( this, &SDLKeyInput::_WindowDescriptorChanged );
+			_window->Subscribe( this, &SDLKeyInput::_WindowDescriptionChanged );
 			_window->Subscribe( this, &SDLKeyInput::_WindowCreated );
 			_window->Subscribe( this, &SDLKeyInput::_WindowBeforeDestroy );
 			_window->Subscribe( this, &SDLKeyInput::_OnSDLWindowRawMessage );
@@ -247,12 +247,12 @@ namespace PlatformSDL
 	_Update
 =================================================
 */
-	bool SDLKeyInput::_Update (const Message< ModuleMsg::Update > &)
+	bool SDLKeyInput::_Update (const ModuleMsg::Update &)
 	{
 		// send events to InputThread
 		FOR( i, _pendingKeys )
 		{
-			_SendEvent< ModuleMsg::InputKey >({ _pendingKeys[i].key, _pendingKeys[i].pressure });
+			_SendEvent( ModuleMsg::InputKey{ _pendingKeys[i].key, _pendingKeys[i].pressure });
 		}
 
 		_pendingKeys.Clear();
@@ -264,9 +264,9 @@ namespace PlatformSDL
 	_DetachModule
 =================================================
 */
-	bool SDLKeyInput::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool SDLKeyInput::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		if ( _Detach( msg->oldModule ) and msg->oldModule == _window )
+		if ( _Detach( msg.oldModule ) and msg.oldModule == _window )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_Destroy();

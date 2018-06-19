@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -11,10 +11,9 @@
 #include "Engine/Platforms/Public/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Public/GPU/Framebuffer.h"
 #include "Engine/Platforms/Public/GPU/Memory.h"
+#include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/Sampler.h"
 #include "Engine/Platforms/Vulkan/110/Vk1Messages.h"
-#include "Engine/Platforms/Vulkan/110/Vk1SamplerCache.h"
-#include "Engine/Platforms/Vulkan/110/Vk1RenderPass.h"
-#include "Engine/Platforms/Vulkan/110/Vk1PipelineCache.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 namespace Engine
@@ -64,9 +63,9 @@ namespace Platforms
 		
 	// message handlers
 	private:
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
-		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
+		bool _GetGraphicsModules (const GpuMsg::GetGraphicsModules &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -120,14 +119,14 @@ namespace Platforms
 	_AddToManager
 =================================================
 */
-	bool VulkanContext::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool VulkanContext::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
-		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetSupportedMessages().HasAllTypes< VkThreadMsgList_t >() );
-		CHECK_ERR( msg->module->GetSupportedEvents().HasAllTypes< VkThreadEventList_t >() );
-		ASSERT( not _threads.IsExist( msg->module ) );
+		CHECK_ERR( msg.module );
+		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< VkThreadMsgList_t >() );
+		CHECK_ERR( msg.module->GetSupportedEvents().HasAllTypes< VkThreadEventList_t >() );
+		ASSERT( not _threads.IsExist( msg.module ) );
 
-		_threads.Add( msg->module );
+		_threads.Add( msg.module );
 		return true;
 	}
 	
@@ -136,11 +135,11 @@ namespace Platforms
 	_RemoveFromManager
 =================================================
 */
-	bool VulkanContext::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool VulkanContext::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
-		CHECK_ERR( msg->module );
+		CHECK_ERR( msg.module );
 
-		ModulePtr	module = msg->module.Lock();
+		ModulePtr	module = msg.module.Lock();
 
 		if ( not module )
 			return false;
@@ -156,10 +155,10 @@ namespace Platforms
 	_GetGraphicsModules
 =================================================
 */	
-	bool VulkanContext::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	bool VulkanContext::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg->compute.Set( VulkanObjectsConstructor::GetComputeModules() );
-		msg->graphics.Set( VulkanObjectsConstructor::GetGraphicsModules() );
+		msg.compute.Set( VulkanObjectsConstructor::GetComputeModules() );
+		msg.graphics.Set( VulkanObjectsConstructor::GetGraphicsModules() );
 		return true;
 	}
 //-----------------------------------------------------------------------------

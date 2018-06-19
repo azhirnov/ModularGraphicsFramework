@@ -53,13 +53,13 @@ namespace Platforms
 	_AddToManager
 =================================================
 */
-	bool InputManager::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool InputManager::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
-		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetModuleID() == InputThreadModuleID );
-		ASSERT( not _threads.IsExist( msg->module ) );
+		CHECK_ERR( msg.module );
+		CHECK_ERR( msg.module->GetModuleID() == InputThreadModuleID );
+		ASSERT( not _threads.IsExist( msg.module ) );
 
-		_threads.Add( msg->module );
+		_threads.Add( msg.module );
 		return true;
 	}
 	
@@ -68,11 +68,11 @@ namespace Platforms
 	_RemoveFromManager
 =================================================
 */
-	bool InputManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool InputManager::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
-		CHECK_ERR( msg->module );
+		CHECK_ERR( msg.module );
 
-		ModulePtr	module = msg->module.Lock();
+		ModulePtr	module = msg.module.Lock();
 
 		if ( not module )
 			return false;

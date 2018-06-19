@@ -13,7 +13,7 @@
 #include "Engine/Platforms/Public/GPU/ImageEnums.h"
 #include "Engine/Platforms/Public/GPU/VertexEnums.h"
 
-#include "Engine/STL/Log/ToString.h"
+#include "Core/STL/Log/ToString.h"
 
 namespace Engine
 {
@@ -23,25 +23,25 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EBlendFunc
 	
-	ND_ inline StringCRef EBlendFunc::ToString (type value)
+	ND_ inline StringCRef  EBlendFunc::ToString (type value)
 	{
 		switch ( value )
 		{
-			case EBlendFunc::Zero					:	return "Zero";
-			case EBlendFunc::One					:	return "One";
-			case EBlendFunc::SrcColor				:	return "SrcColor";
-			case EBlendFunc::OneMinusSrcColor		:	return "OneMinusSrcColor";
-			case EBlendFunc::DstColor				:	return "DstColor";
-			case EBlendFunc::OneMinusDstColor		:	return "OneMinusDstColor";
-			case EBlendFunc::SrcAlpha				:	return "SrcAlpha";
-			case EBlendFunc::OneMinusSrcAlpha		:	return "OneMinusSrcAlpha";
-			case EBlendFunc::DstAlpha				:	return "DstAlpha";
-			case EBlendFunc::OneMinusDstAlpha		:	return "OneMinusDstAlpha";
-			case EBlendFunc::ConstColor				:	return "ConstColor";
-			case EBlendFunc::OneMinusConstColor		:	return "OneMinusConstColor";
-			case EBlendFunc::ConstAlpha				:	return "ConstAlpha";
-			case EBlendFunc::OneMinusConstAlpha		:	return "OneMinusConstAlpha";
-			case EBlendFunc::SrcAlphaSaturate		:	return "SrcAlphaSaturate";
+			case Zero					:	return "Zero";
+			case One					:	return "One";
+			case SrcColor				:	return "SrcColor";
+			case OneMinusSrcColor		:	return "OneMinusSrcColor";
+			case DstColor				:	return "DstColor";
+			case OneMinusDstColor		:	return "OneMinusDstColor";
+			case SrcAlpha				:	return "SrcAlpha";
+			case OneMinusSrcAlpha		:	return "OneMinusSrcAlpha";
+			case DstAlpha				:	return "DstAlpha";
+			case OneMinusDstAlpha		:	return "OneMinusDstAlpha";
+			case ConstColor				:	return "ConstColor";
+			case OneMinusConstColor		:	return "OneMinusConstColor";
+			case ConstAlpha				:	return "ConstAlpha";
+			case OneMinusConstAlpha		:	return "OneMinusConstAlpha";
+			case SrcAlphaSaturate		:	return "SrcAlphaSaturate";
 		}
 		RETURN_ERR( "invalid blend function type", "unknown" );
 	}
@@ -51,15 +51,15 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EBlendEq
 	
-	ND_ inline StringCRef EBlendEq::ToString (type value)
+	ND_ inline StringCRef  EBlendEq::ToString (type value)
 	{
 		switch( value )
 		{
-			case EBlendEq::Add		:	return "Add";
-			case EBlendEq::Sub		:	return "Sub";
-			case EBlendEq::RevSub	:	return "ReverseSub";
-			case EBlendEq::Min		:	return "Min";
-			case EBlendEq::Max		:	return "Max";
+			case Add	:	return "Add";
+			case Sub	:	return "Sub";
+			case RevSub	:	return "ReverseSub";
+			case Min	:	return "Min";
+			case Max	:	return "Max";
 		}
 		RETURN_ERR( "invalid blend equation type", "unknown" );
 	}
@@ -69,27 +69,27 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // ELogicOp
 	
-	ND_ inline StringCRef ELogicOp::ToString (type value)
+	ND_ inline StringCRef  ELogicOp::ToString (type value)
 	{
 		switch( value )
 		{
-			case ELogicOp::None			:	return "None";
-			case ELogicOp::Clear		:	return "Clear";
-			case ELogicOp::Set			:	return "Set";
-			case ELogicOp::Copy			:	return "Copy";
-			case ELogicOp::CopyInverted	:	return "CopyInversed";
-			case ELogicOp::Noop			:	return "Noop";
-			case ELogicOp::Invert		:	return "Invert";
-			case ELogicOp::And			:	return "And";
-			case ELogicOp::NotAnd		:	return "NotAnd";
-			case ELogicOp::Or			:	return "Or";
-			case ELogicOp::NotOr		:	return "NotOr";
-			case ELogicOp::Xor			:	return "Xor";
-			case ELogicOp::Equiv		:	return "Equiv";
-			case ELogicOp::AndReverse	:	return "AndReverse";
-			case ELogicOp::AndInverted	:	return "AndInverted";
-			case ELogicOp::OrReverse	:	return "OrReverse";
-			case ELogicOp::OrInverted	:	return "OrInverted";
+			case None		:	return "None";
+			case Clear		:	return "Clear";
+			case Set		:	return "Set";
+			case Copy		:	return "Copy";
+			case CopyInverted:	return "CopyInversed";
+			case Noop		:	return "Noop";
+			case Invert		:	return "Invert";
+			case And		:	return "And";
+			case NotAnd		:	return "NotAnd";
+			case Or			:	return "Or";
+			case NotOr		:	return "NotOr";
+			case Xor		:	return "Xor";
+			case Equiv		:	return "Equiv";
+			case AndReverse	:	return "AndReverse";
+			case AndInverted:	return "AndInverted";
+			case OrReverse	:	return "OrReverse";
+			case OrInverted	:	return "OrInverted";
 		}
 		RETURN_ERR( "invalid logical operation type", "unknown" );
 	}
@@ -99,19 +99,19 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // ECompareFunc
 	
-	ND_ inline StringCRef ECompareFunc::ToString (type value)
+	ND_ inline StringCRef  ECompareFunc::ToString (type value)
 	{
 		switch ( value )
 		{
-			case ECompareFunc::None		:	return "None";
-			case ECompareFunc::Never	:	return "Never";
-			case ECompareFunc::Less		:	return "Less";
-			case ECompareFunc::Equal	:	return "Equal";
-			case ECompareFunc::LEqual	:	return "LessEqual";
-			case ECompareFunc::Greater	:	return "Greater";
-			case ECompareFunc::NotEqual	:	return "NotEqual";
-			case ECompareFunc::GEqual	:	return "GreaterEqual";
-			case ECompareFunc::Always	:	return "Always";
+			case None		:	return "None";
+			case Never		:	return "Never";
+			case Less		:	return "Less";
+			case Equal		:	return "Equal";
+			case LEqual		:	return "LessEqual";
+			case Greater	:	return "Greater";
+			case NotEqual	:	return "NotEqual";
+			case GEqual		:	return "GreaterEqual";
+			case Always		:	return "Always";
 		}
 		RETURN_ERR( "invalid compare function type", "unknown" );
 	}
@@ -121,18 +121,18 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EStencilOp
 	
-	ND_ inline StringCRef EStencilOp::ToString (type value)
+	ND_ inline StringCRef  EStencilOp::ToString (type value)
 	{
 		switch ( value )
 		{
-			case EStencilOp::Keep		:	return "Keep";
-			case EStencilOp::Zero		:	return "Zero";
-			case EStencilOp::Replace	:	return "Replace";
-			case EStencilOp::Incr		:	return "Increment";
-			case EStencilOp::IncrWrap	:	return "IncrementWrao";
-			case EStencilOp::Decr		:	return "Decrement";
-			case EStencilOp::DecrWrap	:	return "DecrementWrap";
-			case EStencilOp::Invert		:	return "Invert";
+			case Keep		:	return "Keep";
+			case Zero		:	return "Zero";
+			case Replace	:	return "Replace";
+			case Incr		:	return "Increment";
+			case IncrWrap	:	return "IncrementWrao";
+			case Decr		:	return "Decrement";
+			case DecrWrap	:	return "DecrementWrap";
+			case Invert		:	return "Invert";
 		}
 		RETURN_ERR( "invalid stencil operation type", "unknown" );
 	}
@@ -142,13 +142,13 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPolygonMode
 	
-	ND_ inline StringCRef EPolygonMode::ToString (type value)
+	ND_ inline StringCRef  EPolygonMode::ToString (type value)
 	{
 		switch ( value )
 		{
-			case EPolygonMode::Point	:	return "Point";
-			case EPolygonMode::Line		:	return "Line";
-			case EPolygonMode::Fill		:	return "Fill";
+			case Point	:	return "Point";
+			case Line	:	return "Line";
+			case Fill	:	return "Fill";
 		}
 		RETURN_ERR( "invalid polygon mode", "unknown" );
 	}
@@ -158,16 +158,16 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPrimitive
 	
-	ND_ inline StringCRef EPrimitive::ToString (type value)
+	ND_ inline StringCRef  EPrimitive::ToString (type value)
 	{
 		switch ( value )
 		{
-			case EPrimitive::Point			:	return "Point";
-			case EPrimitive::LineList		:	return "LineList";
-			case EPrimitive::LineStrip		:	return "LineStrip";
-			case EPrimitive::TriangleList	:	return "TriangleList";
-			case EPrimitive::TriangleStrip	:	return "TriangleStrip";
-			case EPrimitive::Patch			:	return "Patch";
+			case Point			:	return "Point";
+			case LineList		:	return "LineList";
+			case LineStrip		:	return "LineStrip";
+			case TriangleList	:	return "TriangleList";
+			case TriangleStrip	:	return "TriangleStrip";
+			case Patch			:	return "Patch";
 		}
 		RETURN_ERR( "invalid primitive type", "unknown" );
 	}
@@ -177,14 +177,14 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EPolygonFace
 	
-	ND_ inline StringCRef EPolygonFace::ToString (type value)
+	ND_ inline StringCRef  EPolygonFace::ToString (type value)
 	{
 		switch ( value )
 		{
-			case EPolygonFace::None			:	return "None";
-			case EPolygonFace::Front		:	return "Front";
-			case EPolygonFace::Back			:	return "Back";
-			case EPolygonFace::FontAndBack	:	return "FontAndBack";
+			case None		:	return "None";
+			case Front		:	return "Front";
+			case Back		:	return "Back";
+			case FontAndBack:	return "FontAndBack";
 		}
 		RETURN_ERR( "invalid polygon face", "unknown" );
 	}
@@ -194,23 +194,23 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EFilter
 	
-	ND_ inline StringCRef EFilter::ToString (type value)
+	ND_ inline StringCRef  EFilter::ToString (type value)
 	{
 		switch ( value )
 		{
-			case EFilter::MinMagMipNearest					:	return "MinMagMipNearest";
-			case EFilter::MinMagNearest_MipLinear			:	return "MinMagNearest_MipLinear";
-			case EFilter::MinNearest_MagLinear_MipNearest	:	return "MinNearest_MagLinear_MipNearest";
-			case EFilter::MinNearest_MagMipLinear			:	return "MinNearest_MagMipLinear";
-			case EFilter::MinLinear_MagMipNearest			:	return "MinLinear_MagMipNearest";
-			case EFilter::MinLinear_MagNearest_MipLinear	:	return "MinLinear_MagNearest_MipLinear";
-			case EFilter::MinMagLinear_MipNearest			:	return "MinMagLinear_MipNearest";
-			case EFilter::MinMagMipLinear					:	return "MinMagMipLinear";
-			case EFilter::Anisotropic_2						:	return "Anisotropic_2";
-			case EFilter::Anisotropic_4						:	return "Anisotropic_4";
-			case EFilter::Anisotropic_8						:	return "Anisotropic_8";
-			case EFilter::Anisotropic_12					:	return "Anisotropic_12";
-			case EFilter::Anisotropic_16					:	return "Anisotropic_16";
+			case MinMagMipNearest				:	return "MinMagMipNearest";
+			case MinMagNearest_MipLinear		:	return "MinMagNearest_MipLinear";
+			case MinNearest_MagLinear_MipNearest:	return "MinNearest_MagLinear_MipNearest";
+			case MinNearest_MagMipLinear		:	return "MinNearest_MagMipLinear";
+			case MinLinear_MagMipNearest		:	return "MinLinear_MagMipNearest";
+			case MinLinear_MagNearest_MipLinear	:	return "MinLinear_MagNearest_MipLinear";
+			case MinMagLinear_MipNearest		:	return "MinMagLinear_MipNearest";
+			case MinMagMipLinear				:	return "MinMagMipLinear";
+			case Anisotropic_2					:	return "Anisotropic_2";
+			case Anisotropic_4					:	return "Anisotropic_4";
+			case Anisotropic_8					:	return "Anisotropic_8";
+			case Anisotropic_12					:	return "Anisotropic_12";
+			case Anisotropic_16					:	return "Anisotropic_16";
 		}
 		RETURN_ERR( "invalid filter type", "unknown" );
 	}
@@ -220,16 +220,16 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EAddressMode
 	
-	ND_ inline StringCRef EAddressMode::ToString (type value)
+	ND_ inline StringCRef  EAddressMode::ToString (type value)
 	{
 		switch ( value )
 		{
-			case EAddressMode::ClampToEdge		:	return "ClampToEdge";
-			case EAddressMode::ClampToBorder	:	return "ClampToBorder";
-			case EAddressMode::Repeat			:	return "Repeat";
-			case EAddressMode::MirroredRepeat	:	return "MirroredRepeat";
-			case EAddressMode::MirroredClamp	:	return "MirroredClamp";
-			case EAddressMode::ClampUnnorm		:	return "ClampUnnorm";
+			case ClampToEdge	:	return "ClampToEdge";
+			case ClampToBorder	:	return "ClampToBorder";
+			case Repeat			:	return "Repeat";
+			case MirroredRepeat	:	return "MirroredRepeat";
+			case MirroredClamp	:	return "MirroredClamp";
+			case ClampUnnorm	:	return "ClampUnnorm";
 		}
 		RETURN_ERR( "invalid wrap mode", "unknown" );
 	}
@@ -239,7 +239,7 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // ESamplerBorderColor
 	
-	ND_ inline String ESamplerBorderColor::ToString (bits value)
+	ND_ inline String  ESamplerBorderColor::ToString (bits value)
 	{
 		String	str;
 
@@ -258,22 +258,54 @@ namespace Platforms
 
 		return str;
 	}
+	
+
+
+//-----------------------------------------------------------------------------//
+// ESubpassDependency
+	
+	ND_ inline StringCRef  ESubpassDependency::ToString (type value)
+	{
+		switch ( value )
+		{
+			case ByRegion :		return "ByRegion";
+			case ViewLocal :	return "ViewLocal";
+			case DeviceGroup :	return "DeviceGroup";
+		}
+		RETURN_ERR( "unknown subpass dependency!" );
+	}
+
+	ND_ inline String  ESubpassDependency::ToString (bits values)
+	{
+		String	str;
+
+		FOR( i, values )
+		{
+			const auto t = type(i);
+
+			if ( not values[t] )
+				continue;
+
+			str << (str.Empty() ? "" : " | ") << ToString( t );
+		}
+		return str;
+	}
 
 
 
 //-----------------------------------------------------------------------------//
 // EShader
 	
-	ND_ inline StringCRef EShader::ToString (type value)
+	ND_ inline StringCRef  EShader::ToString (type value)
 	{
 		switch ( value )
 		{
-			case EShader::Vertex			:	return "Vertex";
-			case EShader::TessControl		:	return "TessellationControl";
-			case EShader::TessEvaluation	:	return "TessellationEvaluation";
-			case EShader::Geometry			:	return "Geometry";
-			case EShader::Fragment			:	return "Fragment";
-			case EShader::Compute			:	return "Compute";
+			case Vertex			:	return "Vertex";
+			case TessControl	:	return "TessellationControl";
+			case TessEvaluation	:	return "TessellationEvaluation";
+			case Geometry		:	return "Geometry";
+			case Fragment		:	return "Fragment";
+			case Compute		:	return "Compute";
 		}
 		RETURN_ERR( "invalid shader type", "unknown" );
 	}
@@ -283,16 +315,16 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EShaderMemoryModel
 	
-	ND_ inline StringCRef EShaderMemoryModel::ToString (type value)
+	ND_ inline StringCRef  EShaderMemoryModel::ToString (type value)
 	{
 		switch ( value )
 		{
-			case EShaderMemoryModel::Default :
-			case EShaderMemoryModel::Coherent :		return "Coherent";
-			case EShaderMemoryModel::Volatile :		return "Volatile";
-			case EShaderMemoryModel::Restrict :		return "Restrict";
-			case EShaderMemoryModel::ReadOnly :		return "ReadOnly";
-			case EShaderMemoryModel::WriteOnly :	return "WriteOnly";
+			case Default :
+			case Coherent :		return "Coherent";
+			case Volatile :		return "Volatile";
+			case Restrict :		return "Restrict";
+			case ReadOnly :		return "ReadOnly";
+			case WriteOnly :	return "WriteOnly";
 		}
 		RETURN_ERR( "invalid memory model!", "unknown" );
 	}
@@ -302,20 +334,20 @@ namespace Platforms
 //-----------------------------------------------------------------------------//
 // EImage
 	
-	ND_ inline StringCRef EImage::ToString (type value)
+	ND_ inline StringCRef  EImage::ToString (type value)
 	{
 		switch ( value )
 		{
-			case EImage::Tex1D			: return "Image1D";
-			case EImage::Tex1DArray		: return "Image1DArray";
-			case EImage::Tex2D			: return "Image2D";
-			case EImage::Tex2DArray		: return "Image2DArray";
-			case EImage::Tex2DMS		: return "Image2DMultisample";
-			case EImage::Tex2DMSArray	: return "Image2DArrayMultisample";
-			case EImage::TexCube		: return "ImageCubeMap";
-			case EImage::TexCubeArray	: return "ImageCubeMapArray";
-			case EImage::Tex3D			: return "Image3D";
-			case EImage::Buffer			: return "ImageBuffer";
+			case Tex1D			: return "Image1D";
+			case Tex1DArray		: return "Image1DArray";
+			case Tex2D			: return "Image2D";
+			case Tex2DArray		: return "Image2DArray";
+			case Tex2DMS		: return "Image2DMultisample";
+			case Tex2DMSArray	: return "Image2DArrayMultisample";
+			case TexCube		: return "ImageCubeMap";
+			case TexCubeArray	: return "ImageCubeMapArray";
+			case Tex3D			: return "Image3D";
+			case Buffer			: return "ImageBuffer";
 		}
 		RETURN_ERR( "unknown texture type!" );
 	}
@@ -329,20 +361,51 @@ namespace Platforms
 	{
 		switch ( value )
 		{
-			case EImageLayout::Undefined :						return "Undefined";
-			case EImageLayout::General :						return "General";
-			case EImageLayout::ColorAttachmentOptimal :			return "ColorAttachmentOptimal";
-			case EImageLayout::DepthStencilAttachmentOptimal :	return "DepthStencilAttachmentOptimal";
-			case EImageLayout::DepthStencilReadOnlyOptimal :	return "DepthStencilReadOnlyOptimal";
-			case EImageLayout::ShaderReadOnlyOptimal :			return "ShaderReadOnlyOptimal";
-			case EImageLayout::TransferSrcOptimal :				return "TransferSrcOptimal";
-			case EImageLayout::TransferDstOptimal :				return "TransferDstOptimal";
-			case EImageLayout::Preinitialized :					return "Preinitialized";
-			case EImageLayout::PresentSrc :						return "PresentSrc";
+			case Undefined :					return "Undefined";
+			case General :						return "General";
+			case ColorAttachmentOptimal :		return "ColorAttachmentOptimal";
+			case DepthStencilAttachmentOptimal :return "DepthStencilAttachmentOptimal";
+			case DepthStencilReadOnlyOptimal :	return "DepthStencilReadOnlyOptimal";
+			case ShaderReadOnlyOptimal :		return "ShaderReadOnlyOptimal";
+			case TransferSrcOptimal :			return "TransferSrcOptimal";
+			case TransferDstOptimal :			return "TransferDstOptimal";
+			case Preinitialized :				return "Preinitialized";
+			case PresentSrc :					return "PresentSrc";
 		}
 		RETURN_ERR( "unknown image layout type!" );
 	}
 	
+	
+
+//-----------------------------------------------------------------------------//
+// EAttachmentLoadOp
+
+	ND_ inline StringCRef  EAttachmentLoadOp::ToString (type value)
+	{
+		switch ( value )
+		{
+			case Invalidate :	return "Invalidate";
+			case Load :			return "Load";
+			case Clear :		return "Clear";
+		}
+		RETURN_ERR( "unknown attachment load op!" );
+	}
+	
+	
+
+//-----------------------------------------------------------------------------//
+// EAttachmentStoreOp
+
+	ND_ inline StringCRef  EAttachmentStoreOp::ToString (type value)
+	{
+		switch ( value )
+		{
+			case Invalidate :	return "Invalidate";
+			case Store :		return "Store";
+		}
+		RETURN_ERR( "unknown attachment store op!" );
+	}
+
 
 
 //-----------------------------------------------------------------------------//
@@ -352,21 +415,21 @@ namespace Platforms
 	{
 		switch ( value )
 		{
-			case EPipelineStage::TopOfPipe :				return "TopOfPipe";
-			case EPipelineStage::DrawIndirect :				return "DrawIndirect";
-			case EPipelineStage::VertexInput :				return "VertexInput";
-			case EPipelineStage::VertexShader :				return "VertexShader";
-			case EPipelineStage::TessControlShader :		return "TessControlShader";
-			case EPipelineStage::TessEvaluationShader :		return "TessEvaluationShader";
-			case EPipelineStage::GeometryShader :			return "GeometryShader";
-			case EPipelineStage::FragmentShader :			return "FragmentShader";
-			case EPipelineStage::EarlyFragmentTests :		return "EarlyFragmentTests";
-			case EPipelineStage::LateFragmentTests :		return "LateFragmentTests";
-			case EPipelineStage::ColorAttachmentOutput :	return "ColorAttachmentOutput";
-			case EPipelineStage::ComputeShader :			return "ComputeShader";
-			case EPipelineStage::Transfer :					return "Transfer";
-			case EPipelineStage::BottomOfPipe :				return "BottomOfPipe";
-			case EPipelineStage::Host :						return "Host";
+			case TopOfPipe :				return "TopOfPipe";
+			case DrawIndirect :				return "DrawIndirect";
+			case VertexInput :				return "VertexInput";
+			case VertexShader :				return "VertexShader";
+			case TessControlShader :		return "TessControlShader";
+			case TessEvaluationShader :		return "TessEvaluationShader";
+			case GeometryShader :			return "GeometryShader";
+			case FragmentShader :			return "FragmentShader";
+			case EarlyFragmentTests :		return "EarlyFragmentTests";
+			case LateFragmentTests :		return "LateFragmentTests";
+			case ColorAttachmentOutput :	return "ColorAttachmentOutput";
+			case ComputeShader :			return "ComputeShader";
+			case Transfer :					return "Transfer";
+			case BottomOfPipe :				return "BottomOfPipe";
+			case Host :						return "Host";
 		}
 		RETURN_ERR( "unknown pipeline stage!" );
 	}
@@ -377,7 +440,7 @@ namespace Platforms
 
 		FOR( i, values )
 		{
-			const auto t = EPipelineStage::type(i);
+			const auto t = type(i);
 
 			if ( not values[t] )
 				continue;
@@ -396,23 +459,23 @@ namespace Platforms
 	{
 		switch ( value )
 		{
-			case EPipelineAccess::IndirectCommandRead :			return "IndirectCommandRead";
-			case EPipelineAccess::IndexRead :					return "IndexRead";
-			case EPipelineAccess::VertexAttributeRead :			return "VertexAttributeRead";
-			case EPipelineAccess::UniformRead :					return "UniformRead";
-			case EPipelineAccess::InputAttachmentRead :			return "InputAttachmentRead";
-			case EPipelineAccess::ShaderRead :					return "ShaderRead";
-			case EPipelineAccess::ShaderWrite :					return "ShaderWrite";
-			case EPipelineAccess::ColorAttachmentRead :			return "ColorAttachmentRead";
-			case EPipelineAccess::ColorAttachmentWrite :		return "ColorAttachmentWrite";
-			case EPipelineAccess::DepthStencilAttachmentRead :	return "DepthStencilAttachmentRead";
-			case EPipelineAccess::DepthStencilAttachmentWrite :	return "DepthStencilAttachmentWrite";
-			case EPipelineAccess::TransferRead :				return "TransferRead";
-			case EPipelineAccess::TransferWrite :				return "TransferWrite";
-			case EPipelineAccess::HostRead :					return "HostRead";
-			case EPipelineAccess::HostWrite :					return "HostWrite";
-			case EPipelineAccess::MemoryRead :					return "MemoryRead";
-			case EPipelineAccess::MemoryWrite :					return "MemoryWrite";
+			case IndirectCommandRead :			return "IndirectCommandRead";
+			case IndexRead :					return "IndexRead";
+			case VertexAttributeRead :			return "VertexAttributeRead";
+			case UniformRead :					return "UniformRead";
+			case InputAttachmentRead :			return "InputAttachmentRead";
+			case ShaderRead :					return "ShaderRead";
+			case ShaderWrite :					return "ShaderWrite";
+			case ColorAttachmentRead :			return "ColorAttachmentRead";
+			case ColorAttachmentWrite :			return "ColorAttachmentWrite";
+			case DepthStencilAttachmentRead :	return "DepthStencilAttachmentRead";
+			case DepthStencilAttachmentWrite :	return "DepthStencilAttachmentWrite";
+			case TransferRead :					return "TransferRead";
+			case TransferWrite :				return "TransferWrite";
+			case HostRead :						return "HostRead";
+			case HostWrite :					return "HostWrite";
+			case MemoryRead :					return "MemoryRead";
+			case MemoryWrite :					return "MemoryWrite";
 		}
 		RETURN_ERR( "unknown access type!" );
 	}
@@ -423,7 +486,7 @@ namespace Platforms
 
 		FOR( i, values )
 		{
-			const auto t = EPipelineAccess::type(i);
+			const auto t = type(i);
 
 			if ( not values[t] )
 				continue;

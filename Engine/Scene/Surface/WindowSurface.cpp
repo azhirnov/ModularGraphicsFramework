@@ -24,7 +24,7 @@ namespace Scene
 		using SupportedMessages_t	= BaseSceneModule::SupportedMessages_t::Erase< MessageListFrom<
 											ModuleMsg::Compose
 										> >::Append< MessageListFrom<
-											SceneMsg::SurfaceGetDescriptor,
+											SceneMsg::SurfaceGetDescription,
 											ModuleMsg::Update
 										> >;
 
@@ -65,15 +65,15 @@ namespace Scene
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _SurfaceGetDescriptor (const Message< SceneMsg::SurfaceGetDescriptor > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _SurfaceGetDescription (const SceneMsg::SurfaceGetDescription &);
 		
 		// event handlers
-		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
-		bool _AfterCompose (const Message< ModuleMsg::AfterCompose > &);
+		bool _WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &);
+		bool _DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
+		bool _AfterCompose (const ModuleMsg::AfterCompose &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -101,7 +101,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &WindowSurface::_Link );
 		_SubscribeOnMsg( this, &WindowSurface::_Delete );
 		_SubscribeOnMsg( this, &WindowSurface::_Update );
-		_SubscribeOnMsg( this, &WindowSurface::_SurfaceGetDescriptor );
+		_SubscribeOnMsg( this, &WindowSurface::_SurfaceGetDescription );
 		_SubscribeOnMsg( this, &WindowSurface::_OnManagerChanged );
 		_SubscribeOnMsg( this, &WindowSurface::_GetScenePrivateClasses );
 
@@ -124,7 +124,7 @@ namespace Scene
 	_Link
 =================================================
 */
-	bool WindowSurface::_Link (const Message< ModuleMsg::Link > &msg)
+	bool WindowSurface::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -138,7 +138,7 @@ namespace Scene
 		CHECK_ATTACHMENT( window = PlatformTools::WindowHelper::FindWindow( GlobalSystems() ) );
 		CHECK_ATTACHMENT( _thread = PlatformTools::GPUThreadHelper::FindGraphicsThread( GlobalSystems() ) );
 		
-		window->Subscribe( this, &WindowSurface::_WindowDescriptorChanged );
+		window->Subscribe( this, &WindowSurface::_WindowDescriptionChanged );
 		_thread->Subscribe( this, &WindowSurface::_DeviceBeforeDestroy );
 		_GetManager()->Subscribe( this, &WindowSurface::_AfterCompose );
 
@@ -147,7 +147,7 @@ namespace Scene
 
 		CHECK( _SetState( EState::Linked ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
+		_SendUncheckedEvent( ModuleMsg::AfterLink{} );
 		return true;
 	}
 	
@@ -156,7 +156,7 @@ namespace Scene
 	_AfterCompose
 =================================================
 */
-	bool WindowSurface::_AfterCompose (const Message< ModuleMsg::AfterCompose > &)
+	bool WindowSurface::_AfterCompose (const ModuleMsg::AfterCompose &)
 	{
 		return _DefCompose( false );
 	}
@@ -166,7 +166,7 @@ namespace Scene
 	_Update
 =================================================
 */
-	bool WindowSurface::_Update (const Message< ModuleMsg::Update > &msg)
+	bool WindowSurface::_Update (const ModuleMsg::Update &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
@@ -174,18 +174,18 @@ namespace Scene
 		// update dependencies
 		Module::_Update_Impl( msg );
 
-		Message< GraphicsMsg::CmdBeginFrame >	begin_frame;
+		GraphicsMsg::CmdBeginFrame	begin_frame;
 		_builder->Send( begin_frame );
 		
-		ModulePtr	system_fb	= begin_frame->result->framebuffer;
+		ModulePtr	system_fb	= begin_frame.result->framebuffer;
 
-		Message< SceneMsg::SurfaceRequestUpdate >	req_upd;
-		req_upd->framebuffers.PushBack({ system_fb, float4x4(), float4x4(), 0 });
-		req_upd->cmdBuilder = _builder;
+		SceneMsg::SurfaceRequestUpdate	req_upd;
+		req_upd.framebuffers.PushBack({ system_fb, float4x4(), float4x4(), 0 });
+		req_upd.cmdBuilder = _builder;
 
 		CHECK( _SendEvent( req_upd ) );
 
-		_builder->Send< GraphicsMsg::CmdEndFrame >({});
+		_builder->Send( GraphicsMsg::CmdEndFrame{} );
 		return true;
 	}
 
@@ -194,7 +194,7 @@ namespace Scene
 	_Delete
 =================================================
 */
-	bool WindowSurface::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool WindowSurface::_Delete (const ModuleMsg::Delete &msg)
 	{
 		if ( _thread ) {
 			_thread->UnsubscribeAll( this );
@@ -208,35 +208,35 @@ namespace Scene
 
 /*
 =================================================
-	_SurfaceGetDescriptor
+	_SurfaceGetDescription
 =================================================
 */
-	bool WindowSurface::_SurfaceGetDescriptor (const Message< SceneMsg::SurfaceGetDescriptor > &msg)
+	bool WindowSurface::_SurfaceGetDescription (const SceneMsg::SurfaceGetDescription &msg)
 	{
 		if ( not _thread )
 			return false;
 
-		Message< GpuMsg::GetGraphicsSettings >	req_settings;
+		GpuMsg::GetGraphicsSettings	req_settings;
 		CHECK( _thread->Send( req_settings ) );
 
-		msg->result.Set({ _size, req_settings->result->colorFmt, req_settings->result->depthStencilFmt });
+		msg.result.Set({ _size, req_settings.result->colorFmt, req_settings.result->depthStencilFmt });
 		return true;
 	}
 	
 /*
 =================================================
-	_WindowDescriptorChanged
+	_WindowDescriptionChanged
 =================================================
 */
-	bool WindowSurface::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
+	bool WindowSurface::_WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &msg)
 	{
-		if ( _IsComposedState( GetState() )									and
-			 msg->descr.visibility != WindowDesc::EVisibility::Invisible	and
-			 Any( msg->descr.surfaceSize != _size ) )
+		if ( _IsComposedState( GetState() )								and
+			 msg.descr.visibility != WindowDesc::EVisibility::Invisible	and
+			 Any( msg.descr.surfaceSize != _size ) )
 		{
-			_size = msg->descr.surfaceSize;
+			_size = msg.descr.surfaceSize;
 
-			_SendEvent< SceneMsg::SurfaceOnResize >({ _size });
+			_SendEvent( SceneMsg::SurfaceOnResize{ _size });
 		}
 		return true;
 	}
@@ -246,9 +246,9 @@ namespace Scene
 	_DeviceBeforeDestroy
 =================================================
 */
-	bool WindowSurface::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool WindowSurface::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		Send< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		return true;
 	}
 //-----------------------------------------------------------------------------

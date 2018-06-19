@@ -6,7 +6,11 @@ namespace glsl_vfs
 {
 	extern void VFS_Noise_Cellular (OUT String &src)
 	{
-		src << R"#(
+		src << R"#(/*
+	Cellular noise
+*/
+
+#include <Common/Defines.glsl>
 
 // Worley noise, range [-1;1]
 real2 Cellular2Noise (const real2 p);

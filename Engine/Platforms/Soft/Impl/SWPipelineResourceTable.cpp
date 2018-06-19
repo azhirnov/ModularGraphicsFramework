@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -23,12 +23,12 @@ namespace PlatformSW
 	{
 	// types
 	private:
-		using Fwd_GetSWBufferMemoryLayout		= GpuMsg::ResourceTableForwardMsg< Message< GpuMsg::GetSWBufferMemoryLayout > >;
-		using Fwd_GetSWImageViewMemoryLayout	= GpuMsg::ResourceTableForwardMsg< Message< GpuMsg::GetSWImageViewMemoryLayout > >;
-		using Fwd_GetSWTextureMemoryLayout		= GpuMsg::ResourceTableForwardMsg< Message< GpuMsg::GetSWTextureMemoryLayout > >;
+		using Fwd_GetSWBufferMemoryLayout		= GpuMsg::ResourceTableForwardMsg< GpuMsg::GetSWBufferMemoryLayout >;
+		using Fwd_GetSWImageViewMemoryLayout	= GpuMsg::ResourceTableForwardMsg< GpuMsg::GetSWImageViewMemoryLayout >;
+		using Fwd_GetSWTextureMemoryLayout		= GpuMsg::ResourceTableForwardMsg< GpuMsg::GetSWTextureMemoryLayout >;
 
 		using LayoutMsgList_t		= MessageListFrom<
-											GpuMsg::GetPipelineLayoutDescriptor
+											GpuMsg::GetPipelineLayoutDescription
 										>;
 
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
@@ -43,7 +43,7 @@ namespace PlatformSW
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;
 		
 		using ImageMsgList_t		= MessageListFrom< GpuMsg::GetSWImageViewMemoryLayout >;
-		using SamplerMsgList_t		= MessageListFrom< GpuMsg::GetSamplerDescriptor >;
+		using SamplerMsgList_t		= MessageListFrom< GpuMsg::GetSamplerDescription >;
 		using BufferMsgList_t		= MessageListFrom< GpuMsg::GetSWBufferMemoryLayout >;
 
 		struct ResCache
@@ -64,12 +64,12 @@ namespace PlatformSW
 
 		struct ImageAttachment
 		{
-			ImageViewDescriptor		descr;
+			ImageViewDescription	descr;
 			EImageLayout::type		layout	= Uninitialized;
 		};
 
 		using AttachmentInfo_t		= Union< BufferAttachment, ImageAttachment >;
-		using AttachmentInfoMap_t	= Map< const void*, AttachmentInfo_t >;
+		using AttachmentInfoMap_t	= Map< UntypedKey<ModulePtr>, AttachmentInfo_t >;
 
 
 	// constants
@@ -93,18 +93,18 @@ namespace PlatformSW
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 		
-		bool _PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &);
-		bool _PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &);
-		bool _PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &);
-		bool _GetSWBufferMemoryLayout (const Message< Fwd_GetSWBufferMemoryLayout > &);
-		bool _GetSWTextureMemoryLayout (const Message< Fwd_GetSWTextureMemoryLayout > &);
-		bool _GetSWImageViewMemoryLayout (const Message< Fwd_GetSWImageViewMemoryLayout > &);
+		bool _PipelineAttachImage (const GpuMsg::PipelineAttachImage &);
+		bool _PipelineAttachBuffer (const GpuMsg::PipelineAttachBuffer &);
+		bool _PipelineAttachTexture (const GpuMsg::PipelineAttachTexture &);
+		bool _GetSWBufferMemoryLayout (const Fwd_GetSWBufferMemoryLayout &);
+		bool _GetSWTextureMemoryLayout (const Fwd_GetSWTextureMemoryLayout &);
+		bool _GetSWImageViewMemoryLayout (const Fwd_GetSWImageViewMemoryLayout &);
 
 	private:
 		bool _CreateResourceTable ();
@@ -164,7 +164,7 @@ namespace PlatformSW
 	_Link
 =================================================
 */
-	bool SWPipelineResourceTable::_Link (const Message< ModuleMsg::Link > &)
+	bool SWPipelineResourceTable::_Link (const ModuleMsg::Link &)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -176,7 +176,7 @@ namespace PlatformSW
 		
 		CHECK( _SetState( EState::Linked ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
+		_SendUncheckedEvent( ModuleMsg::AfterLink{} );
 		return true;
 	}
 
@@ -185,7 +185,7 @@ namespace PlatformSW
 	_Compose
 =================================================
 */
-	bool SWPipelineResourceTable::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool SWPipelineResourceTable::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -202,7 +202,7 @@ namespace PlatformSW
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 
@@ -211,7 +211,7 @@ namespace PlatformSW
 	_Delete
 =================================================
 */
-	bool SWPipelineResourceTable::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SWPipelineResourceTable::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_SendForEachAttachments( msg );
 
@@ -227,14 +227,14 @@ namespace PlatformSW
 	_AttachModule
 =================================================
 */
-	bool SWPipelineResourceTable::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool SWPipelineResourceTable::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
 		// pipeline layout must be unique
-		const bool	is_layout = msg->newModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >();
+		const bool	is_layout = msg.newModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		if ( is_layout )
@@ -248,17 +248,17 @@ namespace PlatformSW
 	_PipelineAttachBuffer
 =================================================
 */
-	bool SWPipelineResourceTable::_PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &msg)
+	bool SWPipelineResourceTable::_PipelineAttachBuffer (const GpuMsg::PipelineAttachBuffer &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
 		BufferAttachment	buf;
-		buf.offset	= msg->offset;
-		buf.size	= msg->size;
+		buf.offset	= msg.offset;
+		buf.size	= msg.size;
 
-		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{buf} );
+		_attachmentInfo.Add( msg.newModule.RawPtr(), AttachmentInfo_t{buf} );
 		
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -269,17 +269,17 @@ namespace PlatformSW
 	_PipelineAttachImage
 =================================================
 */
-	bool SWPipelineResourceTable::_PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &msg)
+	bool SWPipelineResourceTable::_PipelineAttachImage (const GpuMsg::PipelineAttachImage &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
 		ImageAttachment	img;
-		img.descr	= msg->descr;
-		img.layout	= msg->layout;
+		img.descr	= msg.descr;
+		img.layout	= msg.layout;
 
-		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		_attachmentInfo.Add( msg.newModule.RawPtr(), AttachmentInfo_t{img} );
 		
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -290,27 +290,27 @@ namespace PlatformSW
 	_PipelineAttachTexture
 =================================================
 */
-	bool SWPipelineResourceTable::_PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &msg)
+	bool SWPipelineResourceTable::_PipelineAttachTexture (const GpuMsg::PipelineAttachTexture &msg)
 	{
-		CHECK_ERR( msg->newModule and msg->sampler );
+		CHECK_ERR( msg.newModule and msg.sampler );
 
 		ImageAttachment	img;
-		img.layout	= msg->layout;
+		img.layout	= msg.layout;
 		
-		if ( not msg->descr.IsDefined() )
+		if ( not msg.descr.IsDefined() )
 		{
-			Message< GpuMsg::GetImageDescriptor >	req_descr;
-			CHECK( msg->newModule->Send( req_descr ) );
+			GpuMsg::GetImageDescription	req_descr;
+			CHECK( msg.newModule->Send( req_descr ) );
 
-			img.descr = ImageViewDescriptor{ *req_descr->result };
+			img.descr = ImageViewDescription{ *req_descr.result };
 		}
 		else
-			img.descr = *msg->descr;
+			img.descr = *msg.descr;
 
-		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		_attachmentInfo.Add( msg.newModule.RawPtr(), AttachmentInfo_t{img} );
 		
-		CHECK( _Attach( msg->name, msg->newModule ) );
-		CHECK( _Attach( msg->name + ".sampler", msg->sampler ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
+		CHECK( _Attach( msg.name + ".sampler", msg.sampler ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -321,13 +321,13 @@ namespace PlatformSW
 	_DetachModule
 =================================================
 */
-	bool SWPipelineResourceTable::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool SWPipelineResourceTable::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		if ( _Detach( msg->oldModule ) )
+		if ( _Detach( msg.oldModule ) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 
-			if ( msg->oldModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >() )
+			if ( msg.oldModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >() )
 				_DestroyResourceTable();
 		}
 		return true;
@@ -341,15 +341,15 @@ namespace PlatformSW
 	struct SWPipelineResourceTable::_CacheResources_Func
 	{
 	// types
-		using TextureUniform	= PipelineLayoutDescriptor::TextureUniform;
-		using SamplerUniform	= PipelineLayoutDescriptor::SamplerUniform;
-		using ImageUniform		= PipelineLayoutDescriptor::ImageUniform;
-		using UniformBuffer		= PipelineLayoutDescriptor::UniformBuffer;
-		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
-		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
-		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
+		using TextureUniform	= PipelineLayoutDescription::TextureUniform;
+		using SamplerUniform	= PipelineLayoutDescription::SamplerUniform;
+		using ImageUniform		= PipelineLayoutDescription::ImageUniform;
+		using UniformBuffer		= PipelineLayoutDescription::UniformBuffer;
+		using StorageBuffer		= PipelineLayoutDescription::StorageBuffer;
+		using PushConstant		= PipelineLayoutDescription::PushConstant;
+		using SubpassInput		= PipelineLayoutDescription::SubpassInput;
 		using ImageMsgList		= MessageListFrom< GpuMsg::GetSWImageViewMemoryLayout >;
-		using SamplerMsgList	= MessageListFrom< GpuMsg::GetSamplerDescriptor >;
+		using SamplerMsgList	= MessageListFrom< GpuMsg::GetSamplerDescription >;
 		using BufferMsgList		= MessageListFrom< GpuMsg::GetSWBufferMemoryLayout >;
 		using ResourceMsgList	= CompileTime::TypeListFrom< ImageMsgList, SamplerMsgList, BufferMsgList >;
 		using ModuleMap			= HashMap< ModuleName_t, ModulePtr >;
@@ -432,16 +432,16 @@ namespace PlatformSW
 			CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT cached.resource ) );
 			CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT cached.sampler ) );
 			
-			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
-			self.SendTo( cached.resource, req_img_descr );
+			GpuMsg::GetImageDescription	req_img_descr;
+			cached.resource->Send( req_img_descr );
 			
-			CHECK( req_img_descr->result->imageType == tex.textureType );
-			CHECK( req_img_descr->result->usage[ EImageUsage::Sampled ] );
-			CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( req_img_descr->result->format ) ) );
+			CHECK( req_img_descr.result->imageType == tex.textureType );
+			CHECK( req_img_descr.result->usage[ EImageUsage::Sampled ] );
+			CHECK( EPixelFormatClass::StrongComparison( tex.format, EPixelFormatClass::From( req_img_descr.result->format ) ) );
 			
 			if ( not self._attachmentInfo.IsExist( cached.resource.RawPtr() ) )
 			{
-				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{ImageAttachment{ ImageViewDescriptor{*req_img_descr->result}, EImageLayout::General }} );
+				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{ImageAttachment{ ImageViewDescription{*req_img_descr.result}, EImageLayout::General }} );
 			}
 			return true;
 		}
@@ -460,14 +460,14 @@ namespace PlatformSW
 
 			CHECK_ERR( FindModule< ImageMsgList >( img.name, OUT cached.resource ) );
 			
-			Message< GpuMsg::GetImageDescriptor >	req_img_descr;
-			self.SendTo( cached.resource , req_img_descr );
+			GpuMsg::GetImageDescription	req_img_descr;
+			cached.resource->Send( req_img_descr );
 			
-			CHECK( req_img_descr->result->usage[ EImageUsage::Storage ] );
+			CHECK( req_img_descr.result->usage[ EImageUsage::Storage ] );
 			
 			if ( not self._attachmentInfo.IsExist( cached.resource.RawPtr() ) )
 			{
-				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{ImageAttachment{ ImageViewDescriptor{*req_img_descr->result}, EImageLayout::General }} );
+				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{ImageAttachment{ ImageViewDescription{*req_img_descr.result}, EImageLayout::General }} );
 			}
 			return true;
 		}
@@ -486,10 +486,10 @@ namespace PlatformSW
 			
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT cached.resource ) );
 			
-			Message< GpuMsg::GetBufferDescriptor >	req_descr;
-			self.SendTo( cached.resource, req_descr );
+			GpuMsg::GetBufferDescription		req_descr;
+			cached.resource->Send( req_descr );
 			
-			CHECK( req_descr->result->usage[ EBufferUsage::Uniform ] );
+			CHECK( req_descr.result->usage[ EBufferUsage::Uniform ] );
 			
 			AttachmentInfoMap_t::iterator	info;
 
@@ -499,9 +499,9 @@ namespace PlatformSW
 			}
 			else
 			{
-				CHECK_ERR( req_descr->result->size >= BytesUL(buf.size) );
+				CHECK_ERR( req_descr.result->size >= BytesUL(buf.size) );
 
-				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{BufferAttachment{ BytesUL(0), req_descr->result->size }} );
+				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{BufferAttachment{ BytesUL(0), req_descr.result->size }} );
 			}
 			return true;
 		}
@@ -520,10 +520,10 @@ namespace PlatformSW
 
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT cached.resource ) );
 			
-			Message< GpuMsg::GetBufferDescriptor >	req_descr;
-			self.SendTo( cached.resource, req_descr );
+			GpuMsg::GetBufferDescription		req_descr;
+			cached.resource->Send( req_descr );
 			
-			CHECK( req_descr->result->usage[ EBufferUsage::Storage ] );
+			CHECK( req_descr.result->usage[ EBufferUsage::Storage ] );
 			
 			AttachmentInfoMap_t::iterator	info;
 
@@ -536,10 +536,10 @@ namespace PlatformSW
 			}
 			else
 			{
-				CHECK_ERR(	(req_descr->result->size >= buf.staticSize) and
-							(buf.arrayStride == 0 or (req_descr->result->size - buf.staticSize) % buf.arrayStride == 0) );
+				CHECK_ERR(	(req_descr.result->size >= buf.staticSize) and
+							(buf.arrayStride == 0 or (req_descr.result->size - buf.staticSize) % buf.arrayStride == 0) );
 
-				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{BufferAttachment{ BytesUL(0), req_descr->result->size }} );
+				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{BufferAttachment{ BytesUL(0), req_descr.result->size }} );
 			}
 			return true;
 		}
@@ -554,10 +554,10 @@ namespace PlatformSW
 	{
 		_cached.Clear();
 
-		Message< GpuMsg::GetPipelineLayoutDescriptor >	req_descr;
-		SendTo( _layout, req_descr );
+		GpuMsg::GetPipelineLayoutDescription	req_descr;
+		_layout->Send( req_descr );
 
-		PipelineLayoutDescriptor const&	layout_descr = *req_descr->result;
+		PipelineLayoutDescription const&	layout_descr = *req_descr.result;
 		_CacheResources_Func			func{ *this };
 
 		FOR( i, layout_descr.GetUniforms() ) {
@@ -582,20 +582,20 @@ namespace PlatformSW
 	_GetSWBufferMemoryLayout
 =================================================
 */
-	bool SWPipelineResourceTable::_GetSWBufferMemoryLayout (const Message< Fwd_GetSWBufferMemoryLayout > &msg)
+	bool SWPipelineResourceTable::_GetSWBufferMemoryLayout (const Fwd_GetSWBufferMemoryLayout &msg)
 	{
-		CHECK_ERR( msg->index < _cached.Count() );
-		auto const&	cached = _cached[ msg->index ];
+		CHECK_ERR( msg.index < _cached.Count() );
+		auto const&	cached = _cached[ msg.index ];
 		
 		AttachmentInfoMap_t::iterator	iter;
 		CHECK_ERR( _attachmentInfo.Find( cached.resource.RawPtr(), OUT iter ) );
 
 		auto const&	range = iter->second.Get< BufferAttachment >();
 
-		msg->message->offset = BytesU(range.offset);
-		msg->message->size	 = BytesU(range.size);
+		msg.message.offset	= BytesU(range.offset);
+		msg.message.size	= BytesU(range.size);
 
-		CHECK( cached.resource->Send( msg->message ) );
+		CHECK( cached.resource->SendAsync( msg.message ) );
 		return true;
 	}
 	
@@ -604,10 +604,10 @@ namespace PlatformSW
 	_GetSWTextureMemoryLayout
 =================================================
 */
-	bool SWPipelineResourceTable::_GetSWTextureMemoryLayout (const Message< Fwd_GetSWTextureMemoryLayout > &msg)
+	bool SWPipelineResourceTable::_GetSWTextureMemoryLayout (const Fwd_GetSWTextureMemoryLayout &msg)
 	{
-		CHECK_ERR( msg->index < _cached.Count() );
-		auto const&	cached = _cached[ msg->index ];
+		CHECK_ERR( msg.index < _cached.Count() );
+		auto const&	cached = _cached[ msg.index ];
 
 		CHECK_ERR( cached.resource and cached.sampler );
 		
@@ -616,14 +616,14 @@ namespace PlatformSW
 		
 		const auto&	img_info = iter->second.Get< ImageAttachment >();
 		
-		Message< GpuMsg::GetSWImageViewMemoryLayout >	req_img{ img_info.descr, msg->message->accessMask, msg->message->stage };
-		CHECK( cached.resource->Send( req_img.Async() ) );
+		GpuMsg::GetSWImageViewMemoryLayout	req_img{ img_info.descr, msg.message.accessMask, msg.message.stage };
+		CHECK( cached.resource->SendAsync( req_img ) );
 		
-		Message< GpuMsg::GetSamplerDescriptor >		req_samp;
-		CHECK( cached.sampler->Send( req_samp.Async() ) );
+		GpuMsg::GetSamplerDescription	req_samp;
+		CHECK( cached.sampler->SendAsync( req_samp ) );
 		
-		msg->message->result.Set( *req_img->result );
-		msg->message->sampler.Set( *req_samp->result );
+		msg.message.result.Set( *req_img.result );
+		msg.message.sampler.Set( *req_samp.result );
 		return true;
 	}
 
@@ -632,10 +632,10 @@ namespace PlatformSW
 	_GetSWImageViewMemoryLayout
 =================================================
 */
-	bool SWPipelineResourceTable::_GetSWImageViewMemoryLayout (const Message< Fwd_GetSWImageViewMemoryLayout > &msg)
+	bool SWPipelineResourceTable::_GetSWImageViewMemoryLayout (const Fwd_GetSWImageViewMemoryLayout &msg)
 	{
-		CHECK_ERR( msg->index < _cached.Count() );
-		auto const&	cached = _cached[ msg->index ];
+		CHECK_ERR( msg.index < _cached.Count() );
+		auto const&	cached = _cached[ msg.index ];
 
 		CHECK_ERR( cached.resource );
 		
@@ -645,9 +645,9 @@ namespace PlatformSW
 		const auto&	img_info = iter->second.Get< ImageAttachment >();
 
 		// TODO: check layout
-		msg->message->viewDescr = img_info.descr;
+		msg.message.viewDescr = img_info.descr;
 
-		CHECK( cached.resource->Send( msg->message ) );
+		CHECK( cached.resource->SendAsync( msg.message ) );
 		return true;
 	}
 

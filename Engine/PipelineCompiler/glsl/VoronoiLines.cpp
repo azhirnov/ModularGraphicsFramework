@@ -10,6 +10,8 @@ namespace glsl_vfs
 	Voronoi lines
 */
 
+#include <Common/Defines.glsl>
+
 // range [0;1]
 real VoronoiLines (const real2 point, real jitter, real thickness);
 

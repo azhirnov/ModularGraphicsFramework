@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -21,7 +21,7 @@ namespace PlatformSW
 	{
 	// types
 	private:
-		using ShaderFunc_t		= PipelineTemplateDescriptor::ShaderSource::SWInvoke;
+		using ShaderFunc_t		= PipelineTemplateDescription::ShaderSource::SWInvoke;
 
 		using Key_t				= Pair<uint, uint>;		// invocation, index
 

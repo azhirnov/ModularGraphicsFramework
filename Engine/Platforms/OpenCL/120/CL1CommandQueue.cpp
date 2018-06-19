@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -56,11 +56,11 @@ namespace PlatformCL
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Update (const ModuleMsg::Update &);
 		
-		bool _SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &);
+		bool _SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &);
 
 	private:
 		bool _Submit (const GpuMsg::SubmitGraphicsQueueCommands &msg);
@@ -117,7 +117,7 @@ namespace PlatformCL
 	_Delete
 =================================================
 */
-	bool CL1CommandQueue::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool CL1CommandQueue::_Delete (const ModuleMsg::Delete &msg)
 	{
 		return Module::_Delete_Impl( msg );
 	}
@@ -127,7 +127,7 @@ namespace PlatformCL
 	_Link
 =================================================
 */
-	bool CL1CommandQueue::_Link (const Message< ModuleMsg::Link > &msg)
+	bool CL1CommandQueue::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -145,7 +145,7 @@ namespace PlatformCL
 	_Update
 =================================================
 */
-	bool CL1CommandQueue::_Update (const Message< ModuleMsg::Update > &)
+	bool CL1CommandQueue::_Update (const ModuleMsg::Update &)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
@@ -158,7 +158,7 @@ namespace PlatformCL
 	_SubmitComputeQueueCommands
 =================================================
 */
-	bool CL1CommandQueue::_SubmitComputeQueueCommands (const Message< GpuMsg::SubmitComputeQueueCommands > &msg)
+	bool CL1CommandQueue::_SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &msg)
 	{
 		using namespace cl;
 		
@@ -166,44 +166,44 @@ namespace PlatformCL
 		CHECK_ERR( GetDevice()->HasCommandQueue() );
 		
 		DEBUG_ONLY(
-			FOR( i, msg->commands )
+			for (auto& cmd : msg.commands)
 			{
-				Message< GpuMsg::GetCommandBufferDescriptor >	req_descr;
-				msg->commands[i]->Send( req_descr );
-				CHECK_ERR( req_descr->result and not req_descr->result->flags[ ECmdBufferCreate::Secondary ] );
+				GpuMsg::GetCommandBufferDescription	req_descr;
+				cmd->Send( req_descr );
+				CHECK_ERR( req_descr.result and not req_descr.result->flags[ ECmdBufferCreate::Secondary ] );
 			}
 		);
 		
-		ModuleUtils::Send( msg->commands, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
+		ModuleUtils::Send( msg.commands, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
 
 		// wait for signal
 		{
-			Message< GpuMsg::WaitCLSemaphore >	wait;
+			GpuMsg::WaitCLSemaphore		wait;
 
-			for (auto& sem : msg->waitSemaphores) {
+			for (auto& sem : msg.waitSemaphores) {
 				ASSERT(sem.second == EPipelineStage::AllCommands );
-				wait->semaphores.PushBack( sem.first );
+				wait.semaphores.PushBack( sem.first );
 			}
 
-			if ( not wait->semaphores.Empty() ) {
+			if ( not wait.semaphores.Empty() ) {
 				CHECK( _syncManager->Send( wait ) );
 			}
 		}
 
 		// execute command buffers
-		ModuleUtils::Send( msg->commands, Message<GpuMsg::ExecuteCLCommandBuffer>{} );
+		ModuleUtils::Send( msg.commands, GpuMsg::ExecuteCLCommandBuffer{} );
 		
 		// enqueue fence
-		if ( msg->fence != GpuFenceId::Unknown )
+		if ( msg.fence != GpuFenceId::Unknown )
 		{
-			Message< GpuMsg::CLFenceSync >	fence_sync{ msg->fence };
+			GpuMsg::CLFenceSync		fence_sync{ msg.fence };
 			CHECK( _syncManager->Send( fence_sync ) );
 		}
 
 		// enqueue semaphores
-		FOR( i, msg->signalSemaphores )
+		FOR( i, msg.signalSemaphores )
 		{
-			Message< GpuMsg::CLSemaphoreEnqueue >	sem_sync{ msg->signalSemaphores[i] };
+			GpuMsg::CLSemaphoreEnqueue	sem_sync{ msg.signalSemaphores[i] };
 			CHECK( _syncManager->Send( sem_sync ) );
 		}
 		return true;

@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -99,27 +99,27 @@ namespace Platforms
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
-		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
+		bool _GetGraphicsModules (const GpuMsg::GetGraphicsModules &);
 		
-		bool _ThreadBeginFrame (const Message< GpuMsg::ThreadBeginFrame > &);
-		bool _ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &);
-		bool _GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &);
-		bool _GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &);
+		bool _ThreadBeginFrame (const GpuMsg::ThreadBeginFrame &);
+		bool _ThreadEndFrame (const GpuMsg::ThreadEndFrame &);
+		bool _GetGraphicsSettings (const GpuMsg::GetGraphicsSettings &);
+		bool _GetComputeSettings (const GpuMsg::GetComputeSettings &);
 
-		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
-		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
-		bool _WindowVisibilityChanged (const Message< OSMsg::WindowVisibilityChanged > &);
-		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
+		bool _WindowCreated (const OSMsg::WindowCreated &);
+		bool _WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &);
+		bool _WindowVisibilityChanged (const OSMsg::WindowVisibilityChanged &);
+		bool _WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &);
 		
-		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
-		bool _GetSWDeviceInfo (const Message< GpuMsg::GetSWDeviceInfo > &);
-		bool _GetSWPrivateClasses (const Message< GpuMsg::GetSWPrivateClasses > &);
-		bool _GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &);
+		bool _GetDeviceInfo (const GpuMsg::GetDeviceInfo &);
+		bool _GetSWDeviceInfo (const GpuMsg::GetSWDeviceInfo &);
+		bool _GetSWPrivateClasses (const GpuMsg::GetSWPrivateClasses &);
+		bool _GetDeviceProperties (const GpuMsg::GetDeviceProperties &);
 
 	private:
 		bool _CreateDevice ();
@@ -195,7 +195,7 @@ namespace Platforms
 	_Link
 =================================================
 */
-	bool SoftRendererThread::_Link (const Message< ModuleMsg::Link > &msg)
+	bool SoftRendererThread::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -207,7 +207,7 @@ namespace Platforms
 		_window->Subscribe( this, &SoftRendererThread::_WindowCreated );
 		_window->Subscribe( this, &SoftRendererThread::_WindowBeforeDestroy );
 		_window->Subscribe( this, &SoftRendererThread::_WindowVisibilityChanged );
-		_window->Subscribe( this, &SoftRendererThread::_WindowDescriptorChanged );
+		_window->Subscribe( this, &SoftRendererThread::_WindowDescriptionChanged );
 		
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 
@@ -242,7 +242,7 @@ namespace Platforms
 		// if window already created
 		if ( _IsComposedState( _window->GetState() ) )
 		{
-			_SendMsg< OSMsg::WindowCreated >({});
+			_SendMsg( OSMsg::WindowCreated{} );
 		}
 		return true;
 	}
@@ -252,7 +252,7 @@ namespace Platforms
 	_Update
 =================================================
 */
-	bool SoftRendererThread::_Update (const Message< ModuleMsg::Update > &msg)
+	bool SoftRendererThread::_Update (const ModuleMsg::Update &msg)
 	{
 		if ( not _IsComposedState( GetState() ) or
 			 not _isWindowVisible )
@@ -271,7 +271,7 @@ namespace Platforms
 	_Delete
 =================================================
 */
-	bool SoftRendererThread::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SoftRendererThread::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyDevice();
 		_DetachWindow();
@@ -285,7 +285,7 @@ namespace Platforms
 	_AddToManager
 =================================================
 */
-	bool SoftRendererThread::_AddToManager (const Message< ModuleMsg::AddToManager > &)
+	bool SoftRendererThread::_AddToManager (const ModuleMsg::AddToManager &)
 	{
 		return true;
 	}
@@ -295,7 +295,7 @@ namespace Platforms
 	_RemoveFromManager
 =================================================
 */
-	bool SoftRendererThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &)
+	bool SoftRendererThread::_RemoveFromManager (const ModuleMsg::RemoveFromManager &)
 	{
 		return true;
 	}
@@ -305,10 +305,10 @@ namespace Platforms
 	_GetGraphicsModules
 =================================================
 */	
-	bool SoftRendererThread::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	bool SoftRendererThread::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg->compute.Set( SoftRendererObjectsConstructor::GetComputeModules() );
-		msg->graphics.Set( SoftRendererObjectsConstructor::GetGraphicsModules() );
+		msg.compute.Set( SoftRendererObjectsConstructor::GetComputeModules() );
+		msg.graphics.Set( SoftRendererObjectsConstructor::GetGraphicsModules() );
 		return true;
 	}
 
@@ -317,14 +317,14 @@ namespace Platforms
 	_ThreadBeginFrame
 =================================================
 */
-	bool SoftRendererThread::_ThreadBeginFrame (const Message< GpuMsg::ThreadBeginFrame > &msg)
+	bool SoftRendererThread::_ThreadBeginFrame (const GpuMsg::ThreadBeginFrame &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( not _isFrameStarted );
 		
 		_isFrameStarted = true;
 
-		msg->result.Set({ _framebuffer, 0u });
+		msg.result.Set({ _framebuffer, 0u });
 		return true;
 	}
 
@@ -333,18 +333,18 @@ namespace Platforms
 	_ThreadEndFrame
 =================================================
 */
-	bool SoftRendererThread::_ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &msg)
+	bool SoftRendererThread::_ThreadEndFrame (const GpuMsg::ThreadEndFrame &msg)
 	{
 		CHECK_ERR( _isFrameStarted );
 
-		if ( msg->framebuffer )
-			CHECK_ERR( msg->framebuffer == _framebuffer );
+		if ( msg.framebuffer )
+			CHECK_ERR( msg.framebuffer == _framebuffer );
 
 		_isFrameStarted = false;
 
-		_cmdQueue->Send< GpuMsg::SubmitGraphicsQueueCommands >({ *msg });
+		_cmdQueue->Send( GpuMsg::SubmitGraphicsQueueCommands{ msg });
 
-		_cmdQueue->Send< GpuMsg::SWPresent >({ LAMBDA(this) () {{ _surface.SwapBuffers(); }} });
+		_cmdQueue->Send( GpuMsg::SWPresent{ LAMBDA(this) () {{ _surface.SwapBuffers(); }} });
 		return true;
 	}
 
@@ -353,7 +353,7 @@ namespace Platforms
 	_WindowCreated
 =================================================
 */
-	bool SoftRendererThread::_WindowCreated (const Message< OSMsg::WindowCreated > &)
+	bool SoftRendererThread::_WindowCreated (const OSMsg::WindowCreated &)
 	{
 		CHECK_ERR( GetState() == EState::Linked );
 		
@@ -368,8 +368,8 @@ namespace Platforms
 */
 	bool SoftRendererThread::_CreateDevice ()
 	{
-		Message< OSMsg::WindowGetDescriptor >	req_descr;
-		SendTo( _window, req_descr );
+		OSMsg::WindowGetDescription	req_descr;
+		_window->Send( req_descr );
 		
 		// choose version
 		switch ( _settings.version )
@@ -397,13 +397,13 @@ namespace Platforms
 							}) );
 		}
 
-		_cmdQueue->Send< ModuleMsg::Compose >({});
+		_cmdQueue->Send( ModuleMsg::Compose{} );
 
 		_WriteDeviceInfo();
 		
 		CHECK( _DefCompose( false ) );
 
-		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
+		_SendEvent( GpuMsg::DeviceCreated{} );
 		return true;
 	}
 	
@@ -429,7 +429,7 @@ namespace Platforms
 	_WindowBeforeDestroy
 =================================================
 */
-	bool SoftRendererThread::_WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &)
+	bool SoftRendererThread::_WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &)
 	{
 		_DestroyDevice();
 		_DetachWindow();
@@ -451,18 +451,18 @@ namespace Platforms
 		{
 			_device.Deinitialize();
 
-			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
+			_SendEvent( GpuMsg::DeviceBeforeDestroy{} );
 		}
 
 		if ( _cmdQueue )
 		{
-			_cmdQueue->Send< ModuleMsg::Delete >({});
+			_cmdQueue->Send( ModuleMsg::Delete{} );
 			_cmdQueue = null;
 		}
 
 		if ( _syncManager )
 		{
-			_syncManager->Send< ModuleMsg::Delete >({});
+			_syncManager->Send( ModuleMsg::Delete{} );
 			_syncManager = null;
 		}
 
@@ -474,23 +474,23 @@ namespace Platforms
 	_WindowVisibilityChanged
 =================================================
 */
-	bool SoftRendererThread::_WindowVisibilityChanged (const Message< OSMsg::WindowVisibilityChanged > &msg)
+	bool SoftRendererThread::_WindowVisibilityChanged (const OSMsg::WindowVisibilityChanged &msg)
 	{
-		_isWindowVisible = (msg->state != WindowDesc::EVisibility::Invisible);
+		_isWindowVisible = (msg.state != WindowDesc::EVisibility::Invisible);
 		return true;
 	}
 	
 /*
 =================================================
-	_WindowDescriptorChanged
+	_WindowDescriptionChanged
 =================================================
 */
-	bool SoftRendererThread::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
+	bool SoftRendererThread::_WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &msg)
 	{
 		if ( _device.IsDeviceCreated()		and
-			 msg->descr.visibility != WindowDesc::EVisibility::Invisible )
+			 msg.descr.visibility != WindowDesc::EVisibility::Invisible )
 		{
-			_device.Resize( msg->descr.surfaceSize );
+			_device.Resize( msg.descr.surfaceSize );
 		}
 		return true;
 	}
@@ -516,7 +516,7 @@ namespace Platforms
 	_GetDeviceInfo
 =================================================
 */
-	bool SoftRendererThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
+	bool SoftRendererThread::_GetDeviceInfo (const GpuMsg::GetDeviceInfo &msg)
 	{
 		GpuMsg::GetDeviceInfo::Info	info;
 		info.gpuThread		= this;
@@ -526,7 +526,7 @@ namespace Platforms
 		info.renderPass		= _renderPass;
 		info.imageCount		= 2;
 
-		msg->result.Set( info );
+		msg.result.Set( info );
 		return true;
 	}
 	
@@ -535,7 +535,7 @@ namespace Platforms
 	_GetSWDeviceInfo
 =================================================
 */
-	bool SoftRendererThread::_GetSWDeviceInfo (const Message< GpuMsg::GetSWDeviceInfo > &)
+	bool SoftRendererThread::_GetSWDeviceInfo (const GpuMsg::GetSWDeviceInfo &)
 	{
 		TODO("");
 		return true;
@@ -546,9 +546,9 @@ namespace Platforms
 	_GetSWPrivateClasses
 =================================================
 */
-	bool SoftRendererThread::_GetSWPrivateClasses (const Message< GpuMsg::GetSWPrivateClasses > &msg)
+	bool SoftRendererThread::_GetSWPrivateClasses (const GpuMsg::GetSWPrivateClasses &msg)
 	{
-		msg->result.Set({ &_device, &_samplerCache });
+		msg.result.Set({ &_device, &_samplerCache });
 		return true;
 	}
 	
@@ -557,9 +557,9 @@ namespace Platforms
 	_GetGraphicsSettings
 =================================================
 */
-	bool SoftRendererThread::_GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &msg)
+	bool SoftRendererThread::_GetGraphicsSettings (const GpuMsg::GetGraphicsSettings &msg)
 	{
-		msg->result.Set({ _settings, _device.SurfaceSize() });
+		msg.result.Set({ _settings, _device.SurfaceSize() });
 		return true;
 	}
 	
@@ -568,14 +568,14 @@ namespace Platforms
 	_GetComputeSettings
 =================================================
 */
-	bool SoftRendererThread::_GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &msg)
+	bool SoftRendererThread::_GetComputeSettings (const GpuMsg::GetComputeSettings &msg)
 	{
 		ComputeSettings	cs;
 		cs.device	= _settings.device;
 		cs.isDebug	= _settings.flags[ GraphicsSettings::EFlags::DebugContext ];
 		cs.version	= _settings.version;
 
-		msg->result.Set( RVREF(cs) );
+		msg.result.Set( RVREF(cs) );
 		return true;
 	}
 	
@@ -584,9 +584,9 @@ namespace Platforms
 	_GetDeviceProperties
 =================================================
 */
-	bool SoftRendererThread::_GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &msg)
+	bool SoftRendererThread::_GetDeviceProperties (const GpuMsg::GetDeviceProperties &msg)
 	{
-		msg->result.Set( _device.GetProperties() );
+		msg.result.Set( _device.GetProperties() );
 		return true;
 	}
 //-----------------------------------------------------------------------------

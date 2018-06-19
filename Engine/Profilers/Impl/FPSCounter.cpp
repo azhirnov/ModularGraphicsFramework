@@ -34,8 +34,8 @@ namespace Profilers
 										>;
 
 		using WindowMsgList_t		= MessageListFrom<
-											OSMsg::WindowGetDescriptor,
-											OSMsg::WindowSetDescriptor >;
+											OSMsg::WindowGetDescription,
+											OSMsg::WindowSetDescription >;
 
 		
 	// constants
@@ -59,12 +59,12 @@ namespace Profilers
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Delete (const ModuleMsg::Delete &);
 
 		// event handlers
-		bool _OnThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &);
-		bool _OnThreadEndVRFrame (const Message< GpuMsg::ThreadEndVRFrame > &);
+		bool _OnThreadEndFrame (const GpuMsg::ThreadEndFrame &);
+		bool _OnThreadEndVRFrame (const GpuMsg::ThreadEndVRFrame &);
 
 		void _Update ();
 	};
@@ -108,7 +108,7 @@ namespace Profilers
 	_Link
 =================================================
 */
-	bool FPSCounter::_Link (const Message< ModuleMsg::Link > &msg)
+	bool FPSCounter::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -140,7 +140,7 @@ namespace Profilers
 	_Delete
 =================================================
 */
-	bool FPSCounter::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool FPSCounter::_Delete (const ModuleMsg::Delete &msg)
 	{
 		return Module::_Delete_Impl( msg );
 	}
@@ -150,13 +150,13 @@ namespace Profilers
 	_OnThreadEndFrame
 =================================================
 */
-	bool FPSCounter::_OnThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &)
+	bool FPSCounter::_OnThreadEndFrame (const GpuMsg::ThreadEndFrame &)
 	{
 		_Update();
 		return true;
 	}
 	
-	bool FPSCounter::_OnThreadEndVRFrame (const Message< GpuMsg::ThreadEndVRFrame > &)
+	bool FPSCounter::_OnThreadEndVRFrame (const GpuMsg::ThreadEndVRFrame &)
 	{
 		_Update();
 		return true;
@@ -177,10 +177,10 @@ namespace Profilers
 		{
 			ModulePtr	window = _GetParents().Front();
 
-			Message< OSMsg::WindowGetDescriptor >	req_descr;
+			OSMsg::WindowGetDescription		req_descr;
 			window->Send( req_descr );
 
-			String&	str = req_descr->result->caption;
+			String&	str = req_descr.result->caption;
 			usize	pos = 0;
 			uint	fps	= uint(GXMath::Round(double(_frameCounter) / dt));
 
@@ -194,7 +194,7 @@ namespace Profilers
 
 			str << " [FPS: " << fps << "]";
 
-			window->Send< OSMsg::WindowSetDescriptor >({ *req_descr->result }); 
+			window->Send( OSMsg::WindowSetDescription{ *req_descr.result }); 
 
 			_timer.Start();
 			_frameCounter = 0;

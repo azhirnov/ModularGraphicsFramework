@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -24,7 +24,7 @@ namespace GpuMsg
 	//
 	// Get Private Classes
 	//
-	struct GetGLPrivateClasses
+	struct GetGLPrivateClasses : _MessageBase_
 	{
 		struct Classes {
 			PlatformGL::GL4Device *			device			= null;
@@ -91,16 +91,16 @@ namespace PlatformGL
 
 	// message handlers
 	protected:
-		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
-		bool _GetGLDeviceInfo (const Message< GpuMsg::GetGLDeviceInfo > &);
-		bool _GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &);
+		bool _OnManagerChanged (const ModuleMsg::OnManagerChanged &);
+		bool _GetDeviceInfo (const GpuMsg::GetDeviceInfo &);
+		bool _GetGLDeviceInfo (const GpuMsg::GetGLDeviceInfo &);
+		bool _GetGLPrivateClasses (const GpuMsg::GetGLPrivateClasses &);
 		
 
 	// event handlers
 	private:
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
-		bool _DeviceDeleted (const Message< ModuleMsg::Delete > &);
+		bool _DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
+		bool _DeviceDeleted (const ModuleMsg::Delete &);
 	};
 
 

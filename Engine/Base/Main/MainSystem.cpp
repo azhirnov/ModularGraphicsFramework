@@ -103,8 +103,8 @@ namespace Base
 		ThreadManager::Register( GlobalSystems() );
 		DataProviderObjectsConstructor::Register( GlobalSystems() );
 
-		_SendMsg< ModuleMsg::AttachModule >({ _taskMngr });
-		_SendMsg< ModuleMsg::AttachModule >({ _threadMngr });
+		_SendMsg( ModuleMsg::AttachModule{ _taskMngr });
+		_SendMsg( ModuleMsg::AttachModule{ _threadMngr });
 		
 		GlobalSystems()->parallelThread->AddModule( StringCRef(), TaskModuleModuleID, CreateInfo::TaskModule{ _taskMngr } );
 	}
@@ -117,9 +117,9 @@ namespace Base
 	void MainSystem::_Destroy () noexcept
 	{
 		// delete thread manager at first
-		_threadMngr->Send< ModuleMsg::Delete >({});
+		_threadMngr->Send( ModuleMsg::Delete{} );
 
-		_SendForEachAttachments< ModuleMsg::Delete >({});
+		_SendForEachAttachments( ModuleMsg::Delete{} );
 
 		_DetachAllAttachments();
 		_ClearMessageHandlers();
@@ -135,10 +135,8 @@ namespace Base
 	_Delete
 =================================================
 */
-	bool MainSystem::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool MainSystem::_Delete (const ModuleMsg::Delete &)
 	{
-		msg.From( null );	// free sender
-
 		_Destroy();
 		_Create();
 		return true;

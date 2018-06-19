@@ -16,6 +16,8 @@ namespace glsl_vfs
 uniform uint2	unScreenResolution = uint2(1,1);
 #endif
 
+#include <Common/Defines.glsl>
+
 
 // global linear index
 int   GetGlobalIndexSize ();

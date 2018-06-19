@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Soft/ShaderLang/SWLangCommon.h"
-#include "Engine/STL/OS/OSLowLevel.h"
+#include "Core/STL/OS/OSLowLevel.h"
 
 #ifdef GRAPHICS_API_SOFT
 

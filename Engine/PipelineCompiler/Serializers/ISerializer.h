@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/PipelineCompiler/Common/ShaderEnums.h"
+#include "Engine/PipelineCompiler/Common/ArraySize.h"
 
 namespace PipelineCompiler
 {
@@ -21,7 +22,7 @@ namespace PipelineCompiler
 		ND_ virtual String	ToString (StringCRef name, EPipelineDynamicState::bits value) const = 0;
 		ND_ virtual String  ToString (StringCRef name, const VertexAttribs &value) const = 0;
 		ND_ virtual String  ToString (StringCRef name, const FragmentOutputState &value) const = 0;
-		ND_ virtual String  ToString (StringCRef name, const PipelineLayoutDescriptor &value) const = 0;
+		ND_ virtual String  ToString (StringCRef name, const PipelineLayoutDescription &value) const = 0;
 		ND_ virtual String  ToString (StringCRef name, EPrimitive::bits value) const = 0;
 		ND_ virtual String  ToString (StringCRef name, EShader::bits value) const = 0;
 		ND_ virtual String	ToString (StringCRef name, const uint3 &value) const = 0;
@@ -45,8 +46,9 @@ namespace PipelineCompiler
 		ND_ virtual String  CallFunction (StringCRef name, ArrayCRef<StringCRef> args) const = 0;
 
 		ND_ virtual String	BeginStruct (StringCRef typeName, uint sizeOf, bool isPOD) const = 0;
-		ND_ virtual String	StructField (StringCRef name, StringCRef typeName, uint arraySize, uint offset, uint align, uint sizeOf) const = 0;
+		ND_ virtual String	StructField (StringCRef name, StringCRef typeName, ArraySize arraySize, uint offset, uint align, uint sizeOf) const = 0;
 		ND_ virtual String	StructCtorForInitializerList () const = 0;
+		ND_ virtual String	StructVertexAttribBinding () const = 0;
 		ND_ virtual String	EndStruct () const = 0;
 
 		ND_ virtual String	Include (StringCRef filename) const = 0;

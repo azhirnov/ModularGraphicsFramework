@@ -15,23 +15,20 @@ namespace Base
 
 	struct ModuleUtils final
 	{
-	// types
-		using Sender_t		= WeakPointerType< BaseObject >;
-
 	// methods
 		template <typename Collection, typename Msg>
-		static void Send (const Collection &list, const Msg &msg, const Sender_t &sender = null);
+		static void Send (const Collection &list, const Msg &msg);
 
 		template <typename Msg>
-		static void Send (InitializerList<ModulePtr> list, const Msg &msg, const Sender_t &sender = null);
+		static void Send (InitializerList<ModulePtr> list, const Msg &msg);
 		
 		template <typename Collection>
-		static bool Initialize (const Collection &list, const Sender_t &sender = null);
-		static bool Initialize (InitializerList<ModulePtr> list, const Sender_t &sender = null);
+		static bool Initialize (const Collection &list);
+		static bool Initialize (InitializerList<ModulePtr> list);
 		
 		template <typename Collection>
-		static void Destroy (const Collection &list, const Sender_t &sender = null);
-		static void Destroy (InitializerList<ModulePtr> list, const Sender_t &sender = null);
+		static void Destroy (const Collection &list);
+		static void Destroy (InitializerList<ModulePtr> list);
 	};
 	
 
@@ -42,17 +39,17 @@ namespace Base
 =================================================
 */
 	template <typename Collection, typename Msg>
-	inline void ModuleUtils::Send (const Collection &list, const Msg &msg, const Sender_t &sender)
+	inline void ModuleUtils::Send (const Collection &list, const Msg &msg)
 	{
 		for (auto& mod : list)
 		{
 			if ( mod )
-				mod->Send( msg.From( sender ) );
+				mod->Send( msg );
 		}
 	}
 
 	template <typename Msg>
-	inline void ModuleUtils::Send (InitializerList<ModulePtr> list, const Msg &msg, const Sender_t &sender)
+	inline void ModuleUtils::Send (InitializerList<ModulePtr> list, const Msg &msg)
 	{
 		return Send( ArrayCRef<ModulePtr>( list ), msg, sender );
 	}
@@ -63,10 +60,10 @@ namespace Base
 =================================================
 */
 	template <typename Collection>
-	inline bool ModuleUtils::Initialize (const Collection &list, const Sender_t &sender)
+	inline bool ModuleUtils::Initialize (const Collection &list)
 	{
-		Message< ModuleMsg::Link >		link_msg;
-		Message< ModuleMsg::Compose >	comp_msg;
+		ModuleMsg::Link		link_msg;
+		ModuleMsg::Compose	comp_msg;
 
 		auto	IsInitialized	= LAMBDA() (Module::EState state)	{ return state == Module::EState::ComposedImmutable or state == Module::EState::ComposedMutable; };
 		bool	result			= true;
@@ -74,13 +71,13 @@ namespace Base
 		for (auto& mod : list)
 		{
 			if ( mod )
-				mod->Send( link_msg.From( sender ) );
+				mod->Send( link_msg );
 		}
 		
 		for (auto& mod : list)
 		{
 			if ( mod )
-				mod->Send( comp_msg.From( sender ) );
+				mod->Send( comp_msg );
 		}
 		
 		// wait when all modules will be composed
@@ -92,9 +89,9 @@ namespace Base
 		return result;
 	}
 
-	inline bool ModuleUtils::Initialize (InitializerList<ModulePtr> list, const Sender_t &sender)
+	inline bool ModuleUtils::Initialize (InitializerList<ModulePtr> list)
 	{
-		return Initialize( ArrayCRef<ModulePtr>( list ), sender );
+		return Initialize( ArrayCRef<ModulePtr>( list ) );
 	}
 	
 /*
@@ -103,20 +100,20 @@ namespace Base
 =================================================
 */
 	template <typename Collection>
-	inline void ModuleUtils::Destroy (const Collection &list, const Sender_t &sender)
+	inline void ModuleUtils::Destroy (const Collection &list)
 	{
-		Message< ModuleMsg::Delete >	del_msg;
+		ModuleMsg::Delete	del_msg;
 		
 		for (auto& mod : list)
 		{
 			if ( mod )
-				mod->Send( del_msg.From( sender ) );
+				mod->Send( del_msg );
 		}
 	}
 
-	inline void ModuleUtils::Destroy (InitializerList<ModulePtr> list, const Sender_t &sender)
+	inline void ModuleUtils::Destroy (InitializerList<ModulePtr> list)
 	{
-		return Destroy( ArrayCRef<ModulePtr>( list ), sender );
+		return Destroy( ArrayCRef<ModulePtr>( list ) );
 	}
 
 }	// Base

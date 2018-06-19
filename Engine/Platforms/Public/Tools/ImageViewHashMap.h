@@ -22,7 +22,7 @@ namespace PlatformTools
 	{
 	// types
 	public:
-		using Key_t = ImageViewDescriptor;
+		using Key_t = ImageViewDescription;
 		
 	private:
 		struct ImageViewHash
@@ -47,7 +47,7 @@ namespace PlatformTools
 
 		void Add (const Key_t &key, ViewType view);
 
-		static void Validate (INOUT Key_t &key, const ImageDescriptor &descr);
+		static void Validate (INOUT Key_t &key, const ImageDescription &descr);
 
 		void				Clear ()						{ _map.Clear(); }
 
@@ -118,7 +118,7 @@ namespace PlatformTools
 =================================================
 */
 	template <typename ViewType>
-	inline void ImageViewHashMap<ViewType>::Validate (INOUT Key_t &key, const ImageDescriptor &descr)
+	inline void ImageViewHashMap<ViewType>::Validate (INOUT Key_t &key, const ImageDescription &descr)
 	{
 		if ( key.viewType == EImage::Unknown )
 			key.viewType = descr.imageType;

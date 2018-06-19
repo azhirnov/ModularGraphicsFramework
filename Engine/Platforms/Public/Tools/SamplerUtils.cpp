@@ -9,12 +9,12 @@ namespace PlatformTools
 
 /*
 =================================================
-	ValidateDescriptor
+	ValidateDescription
 =================================================
 */
-	void SamplerUtils::ValidateDescriptor (INOUT SamplerDescriptor &descr, uint maxAnisotropyLevel)
+	void SamplerUtils::ValidateDescription (INOUT SamplerDescription &descr, uint maxAnisotropyLevel)
 	{
-		SamplerDescriptor::Builder	builder( descr );
+		SamplerDescription::Builder	builder( descr );
 
 		const bool		unnorm_coords = (builder.AddressMode().x == EAddressMode::ClampUnnorm) or
 										(builder.AddressMode().y == EAddressMode::ClampUnnorm);

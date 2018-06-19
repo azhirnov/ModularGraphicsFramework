@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Common/Platforms.h"
-#include "Engine/Config/Engine.Config.h"
+#include "Core/STL/Common/Platforms.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -12,7 +12,7 @@
 #include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/Windows/WinDisplay.h"
 #include "Engine/Platforms/Windows/WinObjectsConstructor.h"
-#include "Engine/STL/OS/Windows/WinHeader.h"
+#include "Core/STL/OS/Windows/WinHeader.h"
 
 namespace Engine
 {
@@ -79,15 +79,15 @@ namespace PlatformWin
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
 
-		bool _GetDisplays (const Message< OSMsg::GetDisplays > &);
-		bool _GetOSModules (const Message< OSMsg::GetOSModules > &);
-		bool _GetProccessorInfo (const Message< OSMsg::GetProccessorInfo > &);
-		bool _GetMemoryInfo (const Message< OSMsg::GetMemoryInfo > &);
+		bool _GetDisplays (const OSMsg::GetDisplays &);
+		bool _GetOSModules (const OSMsg::GetOSModules &);
+		bool _GetProccessorInfo (const OSMsg::GetProccessorInfo &);
+		bool _GetMemoryInfo (const OSMsg::GetMemoryInfo &);
 
 	private:
 		bool _IsCreated () const;
@@ -158,7 +158,7 @@ namespace PlatformWin
 	_Delete
 =================================================
 */
-	bool WinPlatform::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool WinPlatform::_Delete (const ModuleMsg::Delete &msg)
 	{
 		// TODO: delete windows
 		_Destroy();
@@ -172,7 +172,7 @@ namespace PlatformWin
 	_Compose
 =================================================
 */
-	bool WinPlatform::_Compose (const Message< ModuleMsg::Compose > &)
+	bool WinPlatform::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -186,21 +186,21 @@ namespace PlatformWin
 
 		LOG( "platform created", ELog::Debug );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
-		_SendEvent< OSMsg::OnWinPlatformCreated >({ _instance, _className });
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
+		_SendEvent( OSMsg::OnWinPlatformCreated{ _instance, _className });
 
 		// async message
 		for (auto& wnd : _windows)
 		{
-			CHECK( GlobalSystems()->taskModule->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( GlobalSystems()->taskModule->SendAsync( ModuleMsg::PushAsyncMessage{
 						AsyncMessage{ LAMBDA(
 							target = wnd,
-							msg = Message< OSMsg::OnWinPlatformCreated >{ _instance, _className } ) (GlobalSystemsRef)
+							msg = OSMsg::OnWinPlatformCreated{ _instance, _className } ) (GlobalSystemsRef)
 						{
 							target->Send( msg );
 						}},
 						wnd->GetThreadID()
-					}.Async())
+					})
 			);
 		}
 		return true;
@@ -211,25 +211,25 @@ namespace PlatformWin
 	_AddToManager
 =================================================
 */
-	bool WinPlatform::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool WinPlatform::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
-		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetSupportedMessages().HasAllTypes< WinWindowMsgList_t >() );
-		ASSERT( not _windows.IsExist( msg->module ) );
+		CHECK_ERR( msg.module );
+		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< WinWindowMsgList_t >() );
+		ASSERT( not _windows.IsExist( msg.module ) );
 
-		_windows.Add( msg->module );
+		_windows.Add( msg.module );
 
 		if ( _IsCreated() )
 		{
-			CHECK( GlobalSystems()->taskModule->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( GlobalSystems()->taskModule->SendAsync( ModuleMsg::PushAsyncMessage{
 						AsyncMessage{ LAMBDA(
-							target = msg->module,
-							msg = Message< OSMsg::OnWinPlatformCreated >{ _instance, _className } ) (GlobalSystemsRef)
+							target = msg.module,
+							msg = OSMsg::OnWinPlatformCreated{ _instance, _className } ) (GlobalSystemsRef)
 						{
 							target->Send( msg );
 						}},
-						msg->module->GetThreadID()
-					}.Async())
+						msg.module->GetThreadID()
+					})
 			);
 		}
 		return true;
@@ -240,11 +240,11 @@ namespace PlatformWin
 	_RemoveFromManager
 =================================================
 */
-	bool WinPlatform::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool WinPlatform::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
-		CHECK_ERR( msg->module );
+		CHECK_ERR( msg.module );
 
-		ModulePtr	module = msg->module.Lock();
+		ModulePtr	module = msg.module.Lock();
 
 		if ( not module )
 			return false;
@@ -291,11 +291,11 @@ namespace PlatformWin
 	_GetDisplays
 =================================================
 */
-	bool WinPlatform::_GetDisplays (const Message< OSMsg::GetDisplays > &msg)
+	bool WinPlatform::_GetDisplays (const OSMsg::GetDisplays &msg)
 	{
 		_display.Update();
 
-		msg->result.Set( _display.GetDisplays() );
+		msg.result.Set( _display.GetDisplays() );
 		return true;
 	}
 	
@@ -324,9 +324,9 @@ namespace PlatformWin
 	_GetOSModules
 =================================================
 */
-	bool WinPlatform::_GetOSModules (const Message< OSMsg::GetOSModules > &msg)
+	bool WinPlatform::_GetOSModules (const OSMsg::GetOSModules &msg)
 	{
-		msg->result.Set( WinObjectsConstructor::GetModuleIDs() );
+		msg.result.Set( WinObjectsConstructor::GetModuleIDs() );
 		return true;
 	}
 	
@@ -335,7 +335,7 @@ namespace PlatformWin
 	_GetProccessorInfo
 =================================================
 */
-	bool WinPlatform::_GetProccessorInfo (const Message< OSMsg::GetProccessorInfo > &msg)
+	bool WinPlatform::_GetProccessorInfo (const OSMsg::GetProccessorInfo &msg)
 	{
 		using EProcessorArch = OSMsg::GetProccessorInfo::EProcessorArch;
 
@@ -353,7 +353,7 @@ namespace PlatformWin
 			case 12/*PROCESSOR_ARCHITECTURE_ARM64*/ :	info.arch = EProcessorArch::ARM64;	break;
 		}
 
-		msg->result.Set( info );
+		msg.result.Set( info );
 		return true;
 	}
 	
@@ -362,7 +362,7 @@ namespace PlatformWin
 	_GetMemoryInfo
 =================================================
 */
-	bool WinPlatform::_GetMemoryInfo (const Message< OSMsg::GetMemoryInfo > &msg)
+	bool WinPlatform::_GetMemoryInfo (const OSMsg::GetMemoryInfo &msg)
 	{
 		MEMORYSTATUSEX	status = {};
 		CHECK_ERR( ::GlobalMemoryStatusEx( OUT &status ) != FALSE );
@@ -373,7 +373,7 @@ namespace PlatformWin
 		info.totalVirtual		= BytesUL::FromBytes( status.ullTotalVirtual );
 		info.availableVirtual	= BytesUL::FromBytes( status.ullAvailVirtual );	// TODO: ullAvailExtendedVirtual ?
 
-		msg->result.Set( info );
+		msg.result.Set( info );
 		return true;
 	}
 

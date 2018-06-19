@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -24,7 +24,7 @@ namespace GpuMsg
 	//
 	// Get Private Classes
 	//
-	struct GetCLPrivateClasses
+	struct GetCLPrivateClasses : _MessageBase_
 	{
 		struct Classes {
 			PlatformCL::CL1Device *			device			= null;
@@ -92,16 +92,16 @@ namespace PlatformCL
 
 	// message handlers
 	protected:
-		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
-		bool _GetCLDeviceInfo (const Message< GpuMsg::GetCLDeviceInfo > &);
-		bool _GetCLPrivateClasses (const Message< GpuMsg::GetCLPrivateClasses > &);
+		bool _OnManagerChanged (const ModuleMsg::OnManagerChanged &);
+		bool _GetDeviceInfo (const GpuMsg::GetDeviceInfo &);
+		bool _GetCLDeviceInfo (const GpuMsg::GetCLDeviceInfo &);
+		bool _GetCLPrivateClasses (const GpuMsg::GetCLPrivateClasses &);
 		
 
 	// event handlers
 	private:
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
-		bool _DeviceDeleted (const Message< ModuleMsg::Delete > &);
+		bool _DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
+		bool _DeviceDeleted (const ModuleMsg::Delete &);
 	};
 
 

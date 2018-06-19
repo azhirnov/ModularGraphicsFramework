@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/PipelineCompiler/Common/ShaderEnums.h"
+#include "Engine/PipelineCompiler/Common/ArraySize.h"
 
 namespace PipelineCompiler
 {
@@ -61,7 +62,7 @@ namespace PipelineCompiler
 			EShaderMemoryModel::type		memoryModel			= EShaderMemoryModel::Default;	// for image and buffer
 			EPixelFormat::type				format				= EPixelFormat::Unknown;		// for image only
 			uint							specConstID			= UMax;							// specialization const id
-			uint							arraySize			= 1;							// 0 - dynamic array	// TODO: array of array
+			ArraySize						arraySize;
 			
 			ND_ String _ToString () const;
 		};

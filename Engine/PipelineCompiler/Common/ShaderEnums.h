@@ -212,6 +212,7 @@ namespace PipelineCompiler
 			Packed,			// UB
 			Varying,		// io
 			VertexAttrib,	// attrib
+			CLPack,			// OpenCL packing
 
 			_Count,
 			Unknown	= uint(-1),
@@ -449,11 +450,13 @@ namespace PipelineCompiler
 			UIntImageBuffer				= _vtypeinfo::_UINT | ImageBuffer,
 
 			_EXT2_OFF					= _vtypeinfo::_MAX,
-			_EXT2_MASK					= 0x5 << _EXT2_OFF,
+			_EXT2_MASK					= 0x7 << _EXT2_OFF,
 			Struct						= 1 << _EXT2_OFF,
-			UniformBlock				= 2 << _EXT2_OFF,
-			StorageBlock				= 3 << _EXT2_OFF,
-			VertexAttribs				= 4 << _EXT2_OFF,
+			VaryingsBlock				= 2 << _EXT2_OFF,	// shader in/out block
+			UniformBlock				= 3 << _EXT2_OFF,
+			StorageBlock				= 4 << _EXT2_OFF,
+			VertexAttribs				= 5 << _EXT2_OFF,
+			Union						= 6 << _EXT2_OFF,
 			
 			_MAX						= CompileTime::IntLog2< uint, _EXT2_MASK > + 1,
 				

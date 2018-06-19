@@ -1,14 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Common/Platforms.h"
-#include "Engine/Config/Engine.Config.h"
+#include "Core/STL/Common/Platforms.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef PLATFORM_WINDOWS
 
 #include "Engine/Platforms/Public/OS/Input.h"
 #include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/Windows/WinObjectsConstructor.h"
-#include "Engine/STL/OS/Windows/WinHeader.h"
+#include "Core/STL/OS/Windows/WinHeader.h"
 
 namespace Engine
 {
@@ -30,7 +30,7 @@ namespace PlatformWin
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											OSMsg::WindowDescriptorChanged,
+											OSMsg::WindowDescriptionChanged,
 											OSMsg::WindowCreated,
 											OSMsg::WindowBeforeDestroy,
 											OSMsg::OnWinWindowRawMessage
@@ -66,13 +66,13 @@ namespace PlatformWin
 
 	// message handlers
 	private:
-		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
-		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
-		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
-		bool _OnWinWindowRawMessage (const Message< OSMsg::OnWinWindowRawMessage > &);
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &);
+		bool _WindowCreated (const OSMsg::WindowCreated &);
+		bool _WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &);
+		bool _OnWinWindowRawMessage (const OSMsg::OnWinWindowRawMessage &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 
 	private:
 		void _Destroy ();
@@ -106,7 +106,7 @@ namespace PlatformWin
 		_SubscribeOnMsg( this, &WinKeyInput::_Update );
 		_SubscribeOnMsg( this, &WinKeyInput::_Link );
 		_SubscribeOnMsg( this, &WinKeyInput::_Delete_Impl );
-		_SubscribeOnMsg( this, &WinKeyInput::_WindowDescriptorChanged );
+		_SubscribeOnMsg( this, &WinKeyInput::_WindowDescriptionChanged );
 		_SubscribeOnMsg( this, &WinKeyInput::_WindowCreated );
 		_SubscribeOnMsg( this, &WinKeyInput::_WindowBeforeDestroy );
 		_SubscribeOnMsg( this, &WinKeyInput::_OnWinWindowRawMessage );
@@ -128,10 +128,10 @@ namespace PlatformWin
 	
 /*
 =================================================
-	_WindowDescriptorChanged
+	_WindowDescriptionChanged
 =================================================
 */
-	bool WinKeyInput::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &)
+	bool WinKeyInput::_WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &)
 	{
 		return true;
 	}
@@ -141,10 +141,10 @@ namespace PlatformWin
 	_WindowCreated
 =================================================
 */
-	bool WinKeyInput::_WindowCreated (const Message< OSMsg::WindowCreated > &)
+	bool WinKeyInput::_WindowCreated (const OSMsg::WindowCreated &)
 	{
-		Message< OSMsg::GetWinWindowHandle >	req_hwnd;
-		SendTo( _window, req_hwnd );
+		OSMsg::GetWinWindowHandle	req_hwnd;
+		_window->Send( req_hwnd );
 
 		RAWINPUTDEVICE	Rid[1] = {};
 		
@@ -152,7 +152,7 @@ namespace PlatformWin
 		Rid[0].usUsagePage	= 0x01;
 		Rid[0].usUsage		= 0x06;
 		Rid[0].dwFlags		= 0;	// RIDEV_INPUTSINK | RIDEV_NOHOTKEYS | RIDEV_NOLEGACY | RIDEV_REMOVE;
-		Rid[0].hwndTarget	= req_hwnd->result->Get<HWND>();
+		Rid[0].hwndTarget	= req_hwnd.result->Get<HWND>();
 
 		CHECK( RegisterRawInputDevices( &Rid[0], UINT(CountOf( Rid )), sizeof(Rid[0]) ) != FALSE );
 
@@ -165,11 +165,11 @@ namespace PlatformWin
 	_WindowBeforeDestroy
 =================================================
 */
-	bool WinKeyInput::_WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &)
+	bool WinKeyInput::_WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &)
 	{
 		_Destroy();
 
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		return true;
 	}
 	
@@ -178,15 +178,15 @@ namespace PlatformWin
 	_OnWinWindowRawMessage
 =================================================
 */
-	bool WinKeyInput::_OnWinWindowRawMessage (const Message< OSMsg::OnWinWindowRawMessage > &msg)
+	bool WinKeyInput::_OnWinWindowRawMessage (const OSMsg::OnWinWindowRawMessage &msg)
 	{
 		// WM_INPUT //
-		if ( msg->uMsg == WM_INPUT )
+		if ( msg.uMsg == WM_INPUT )
 		{
 			ubyte	input_data[60];
 			uint	data_size = sizeof(input_data);
 
-			if ( ::GetRawInputData( HRAWINPUT(msg->lParam), RID_INPUT, input_data, &data_size, sizeof(RAWINPUTHEADER) ) != UMax )
+			if ( ::GetRawInputData( HRAWINPUT(msg.lParam), RID_INPUT, input_data, &data_size, sizeof(RAWINPUTHEADER) ) != UMax )
 			{
 				RAWINPUT  *	p_data = Cast<RAWINPUT *>(input_data);
 
@@ -219,29 +219,29 @@ namespace PlatformWin
 
 		// WM_LBUTTONUP //
 		// WM_LBUTTONDOWN //
-		if ( msg->uMsg == WM_LBUTTONDOWN or msg->uMsg == WM_LBUTTONUP or
-			 msg->uMsg == WM_RBUTTONDOWN or msg->uMsg == WM_RBUTTONUP or
-			 msg->uMsg == WM_MBUTTONDOWN or msg->uMsg == WM_MBUTTONUP or
-			 msg->uMsg == WM_XBUTTONDOWN or msg->uMsg == WM_XBUTTONUP )
+		if ( msg.uMsg == WM_LBUTTONDOWN or msg.uMsg == WM_LBUTTONUP or
+			 msg.uMsg == WM_RBUTTONDOWN or msg.uMsg == WM_RBUTTONUP or
+			 msg.uMsg == WM_MBUTTONDOWN or msg.uMsg == WM_MBUTTONUP or
+			 msg.uMsg == WM_XBUTTONDOWN or msg.uMsg == WM_XBUTTONUP )
 		{
-			if ( msg->uMsg == WM_LBUTTONDOWN or msg->uMsg == WM_LBUTTONUP )
-				_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 0"_KeyID, msg->uMsg == WM_LBUTTONDOWN ? 1.0f : -1.0f ) );
+			if ( msg.uMsg == WM_LBUTTONDOWN or msg.uMsg == WM_LBUTTONUP )
+				_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 0"_KeyID, msg.uMsg == WM_LBUTTONDOWN ? 1.0f : -1.0f ) );
 			else
-			if ( msg->uMsg == WM_RBUTTONDOWN or msg->uMsg == WM_RBUTTONUP )
-				_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 1"_KeyID, msg->uMsg == WM_RBUTTONDOWN ? 1.0f : -1.0f ) );
+			if ( msg.uMsg == WM_RBUTTONDOWN or msg.uMsg == WM_RBUTTONUP )
+				_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 1"_KeyID, msg.uMsg == WM_RBUTTONDOWN ? 1.0f : -1.0f ) );
 			else
-			if ( msg->uMsg == WM_MBUTTONDOWN or msg->uMsg == WM_MBUTTONUP )
-				_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 2"_KeyID, msg->uMsg == WM_MBUTTONDOWN ? 1.0f : -1.0f ) );
+			if ( msg.uMsg == WM_MBUTTONDOWN or msg.uMsg == WM_MBUTTONUP )
+				_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 2"_KeyID, msg.uMsg == WM_MBUTTONDOWN ? 1.0f : -1.0f ) );
 			else
-			if ( msg->uMsg == WM_XBUTTONDOWN or msg->uMsg == WM_XBUTTONUP )
+			if ( msg.uMsg == WM_XBUTTONDOWN or msg.uMsg == WM_XBUTTONUP )
 			{
-				const uint	btn = GET_XBUTTON_WPARAM( msg->wParam );
+				const uint	btn = GET_XBUTTON_WPARAM( msg.wParam );
 
 				if ( btn & XBUTTON1 )
-					_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 3"_KeyID, msg->uMsg == WM_XBUTTONDOWN ? 1.0f : -1.0f ) );
+					_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 3"_KeyID, msg.uMsg == WM_XBUTTONDOWN ? 1.0f : -1.0f ) );
 				else
 				if ( btn & XBUTTON2 )
-					_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 4"_KeyID, msg->uMsg == WM_XBUTTONDOWN ? 1.0f : -1.0f ) );
+					_pendingKeys.PushBack( ModuleMsg::InputKey( "mouse 4"_KeyID, msg.uMsg == WM_XBUTTONDOWN ? 1.0f : -1.0f ) );
 				else
 					WARNING( "unknown mouse button" );
 			}
@@ -254,7 +254,7 @@ namespace PlatformWin
 	_Link
 =================================================
 */
-	bool WinKeyInput::_Link (const Message< ModuleMsg::Link > &msg)
+	bool WinKeyInput::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -267,10 +267,10 @@ namespace PlatformWin
 
 			if ( _IsComposedState( _window->GetState() ) )
 			{
-				_SendMsg< OSMsg::WindowCreated >({});
+				_SendMsg( OSMsg::WindowCreated{} );
 			}
 
-			_window->Subscribe( this, &WinKeyInput::_WindowDescriptorChanged );
+			_window->Subscribe( this, &WinKeyInput::_WindowDescriptionChanged );
 			_window->Subscribe( this, &WinKeyInput::_WindowCreated );
 			_window->Subscribe( this, &WinKeyInput::_WindowBeforeDestroy );
 			_window->Subscribe( this, &WinKeyInput::_OnWinWindowRawMessage );
@@ -283,12 +283,12 @@ namespace PlatformWin
 	_Update
 =================================================
 */
-	bool WinKeyInput::_Update (const Message< ModuleMsg::Update > &)
+	bool WinKeyInput::_Update (const ModuleMsg::Update &)
 	{
 		// send events to InputThread
 		for (auto& pk : _pendingKeys)
 		{
-			_SendEvent< ModuleMsg::InputKey >({ pk.key, pk.pressure });
+			_SendEvent( ModuleMsg::InputKey{ pk.key, pk.pressure });
 		}
 
 		_pendingKeys.Clear();
@@ -300,9 +300,9 @@ namespace PlatformWin
 	_DetachModule
 =================================================
 */
-	bool WinKeyInput::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool WinKeyInput::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		if ( _Detach( msg->oldModule ) and msg->oldModule == _window )
+		if ( _Detach( msg.oldModule ) and msg.oldModule == _window )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_Destroy();

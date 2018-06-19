@@ -56,7 +56,7 @@ namespace PlatformTools
 */
 	inline void AsyncCommandsEmulator::Add (const SubmitedCommand_t &cmd)
 	{
-		ModuleUtils::Send( cmd.commands, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
+		ModuleUtils::Send( cmd.commands, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
 
 		_pendingCommands.PushBack( cmd );
 	}

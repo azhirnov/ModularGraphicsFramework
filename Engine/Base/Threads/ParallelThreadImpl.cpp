@@ -59,9 +59,9 @@ namespace Base
 	_Link
 =================================================
 */
-	bool ParallelThreadImpl::_Link (const Message< ModuleMsg::Link > &msg)
+	bool ParallelThreadImpl::_Link (const ModuleMsg::Link &msg)
 	{
-		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
+		//CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
 
 		return Module::_Link_Impl( msg );
 	}
@@ -71,12 +71,12 @@ namespace Base
 	_Compose
 =================================================
 */
-	bool ParallelThreadImpl::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool ParallelThreadImpl::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
 
-		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
+		//CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
 
 		CHECK( Module::_DefCompose( false ) );
 		return true;
@@ -87,9 +87,9 @@ namespace Base
 	_Delete
 =================================================
 */
-	bool ParallelThreadImpl::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool ParallelThreadImpl::_Delete (const ModuleMsg::Delete &msg)
 	{
-		CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
+		//CHECK_ERR( msg.Sender() and msg.Sender() == _GetManager() );
 
 		_isLooping = false;
 
@@ -133,7 +133,7 @@ namespace Base
 			const TimeL		dt = _timer.GetTimeDelta();		_timer.Start();
 
 			// update attached modules
-			_SendForEachAttachments< ModuleMsg::Update >({ dt });
+			_SendForEachAttachments( ModuleMsg::Update{ dt } );
 
 			// calc time to sleep
 			const TimeD		upd_dt = TimeD(_timer.GetTimeDelta());
@@ -158,9 +158,9 @@ namespace Base
 		const TimeL		dt = _timer.GetTimeDelta();		_timer.Start();
 
 		// last update to proccess messages
-		_SendForEachAttachments< ModuleMsg::Update >({ dt });
+		_SendForEachAttachments( ModuleMsg::Update{ dt } );
 
-		CHECK( Module::_Delete_Impl( Message< ModuleMsg::Delete >{} ) );
+		CHECK( Module::_Delete_Impl( ModuleMsg::Delete{} ) );
 	}
 	
 /*
@@ -186,7 +186,7 @@ namespace Base
 		const TimeL		dt = _timer.GetTimeDelta();		_timer.Start();
 
 		// update attached modules
-		_SendForEachAttachments< ModuleMsg::Update >({ dt });
+		_SendForEachAttachments( ModuleMsg::Update { dt } );
 	}
 
 /*

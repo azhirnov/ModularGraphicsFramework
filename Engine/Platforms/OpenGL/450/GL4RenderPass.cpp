@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -22,7 +22,7 @@ namespace PlatformGL
 	// types
 	private:
 		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetRenderPassDescriptor,
+											GpuMsg::GetRenderPassDescription,
 											GpuMsg::GetGLRenderPassID
 										> >;
 
@@ -40,7 +40,7 @@ namespace PlatformGL
 
 	// variables
 	private:
-		RenderPassDescriptor	_descr;
+		RenderPassDescription	_descr;
 		RenderPassID_t			_id;
 
 
@@ -52,10 +52,10 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGLRenderPassID (const Message< GpuMsg::GetGLRenderPassID > &);
-		bool _GetRenderPassDescriptor (const Message< GpuMsg::GetRenderPassDescriptor > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _GetGLRenderPassID (const GpuMsg::GetGLRenderPassID &);
+		bool _GetRenderPassDescription (const GpuMsg::GetRenderPassDescription &);
 
 	private:
 		bool _CreateRenderPass ();
@@ -93,7 +93,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4RenderPass::_Delete );
 		_SubscribeOnMsg( this, &GL4RenderPass::_OnManagerChanged );
 		_SubscribeOnMsg( this, &GL4RenderPass::_GetGLRenderPassID );
-		_SubscribeOnMsg( this, &GL4RenderPass::_GetRenderPassDescriptor );
+		_SubscribeOnMsg( this, &GL4RenderPass::_GetRenderPassDescription );
 		_SubscribeOnMsg( this, &GL4RenderPass::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4RenderPass::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4RenderPass::_GetGLPrivateClasses );
@@ -117,7 +117,7 @@ namespace PlatformGL
 	_Compose
 =================================================
 */
-	bool GL4RenderPass::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool GL4RenderPass::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -133,7 +133,7 @@ namespace PlatformGL
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -142,7 +142,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4RenderPass::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4RenderPass::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_descr	= Uninitialized;
 		_id		= Uninitialized;
@@ -155,20 +155,20 @@ namespace PlatformGL
 	_GetGLRenderPassID
 =================================================
 */
-	bool GL4RenderPass::_GetGLRenderPassID (const Message< GpuMsg::GetGLRenderPassID > &msg)
+	bool GL4RenderPass::_GetGLRenderPassID (const GpuMsg::GetGLRenderPassID &msg)
 	{
-		msg->result.Set( _id );
+		msg.result.Set( _id );
 		return true;
 	}
 
 /*
 =================================================
-	_GetRenderPassDescriptor
+	_GetRenderPassDescription
 =================================================
 */
-	bool GL4RenderPass::_GetRenderPassDescriptor (const Message< GpuMsg::GetRenderPassDescriptor > &msg)
+	bool GL4RenderPass::_GetRenderPassDescription (const GpuMsg::GetRenderPassDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	

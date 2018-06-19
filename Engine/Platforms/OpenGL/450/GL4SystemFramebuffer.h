@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -27,7 +27,7 @@ namespace PlatformGL
 											ModuleMsg::Compose
 										> >
 										::Append< MessageListFrom<
-											GpuMsg::GetFramebufferDescriptor,
+											GpuMsg::GetFramebufferDescription,
 											GpuMsg::GetGLFramebufferID
 										> >;
 
@@ -42,7 +42,7 @@ namespace PlatformGL
 
 	// variables
 	private:
-		FramebufferDescriptor		_descr;
+		FramebufferDescription		_descr;
 		gl::GLuint					_framebufferId;
 
 
@@ -59,9 +59,9 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGLFramebufferID (const Message< GpuMsg::GetGLFramebufferID > &);
-		bool _GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _GetGLFramebufferID (const GpuMsg::GetGLFramebufferID &);
+		bool _GetFramebufferDescription (const GpuMsg::GetFramebufferDescription &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -90,7 +90,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_Delete );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetGLFramebufferID );
-		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetFramebufferDescriptor );
+		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetFramebufferDescription );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetGLPrivateClasses );
@@ -140,7 +140,7 @@ namespace PlatformGL
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -160,7 +160,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4Device::GL4SystemFramebuffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4Device::GL4SystemFramebuffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_descr			= Uninitialized;
 		_framebufferId	= 0;
@@ -173,20 +173,20 @@ namespace PlatformGL
 	_GetGLFramebufferID
 =================================================
 */
-	bool GL4Device::GL4SystemFramebuffer::_GetGLFramebufferID (const Message< GpuMsg::GetGLFramebufferID > &msg)
+	bool GL4Device::GL4SystemFramebuffer::_GetGLFramebufferID (const GpuMsg::GetGLFramebufferID &msg)
 	{
-		msg->result.Set( _framebufferId );
+		msg.result.Set( _framebufferId );
 		return true;
 	}
 
 /*
 =================================================
-	_GetFramebufferDescriptor
+	_GetFramebufferDescription
 =================================================
 */
-	bool GL4Device::GL4SystemFramebuffer::_GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &msg)
+	bool GL4Device::GL4SystemFramebuffer::_GetFramebufferDescription (const GpuMsg::GetFramebufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 

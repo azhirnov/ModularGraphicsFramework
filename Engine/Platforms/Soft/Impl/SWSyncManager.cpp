@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -73,21 +73,21 @@ namespace PlatformSW
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &msg);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _OnManagerChanged2 (const ModuleMsg::OnManagerChanged &msg);
 
-		bool _CreateFence (const Message< GpuMsg::CreateFence > &);
-		bool _DestroyFence (const Message< GpuMsg::DestroyFence > &);
-		bool _GetSWFence (const Message< GpuMsg::GetSWFence > &);
-		bool _CreateEvent (const Message< GpuMsg::CreateEvent > &);
-		bool _DestroyEvent (const Message< GpuMsg::DestroyEvent > &);
-		bool _SetEvent (const Message< GpuMsg::SetEvent > &);
-		bool _ResetEvent (const Message< GpuMsg::ResetEvent > &);
-		bool _GetSWEvent (const Message< GpuMsg::GetSWEvent > &);
-		bool _CreateSemaphore (const Message< GpuMsg::CreateSemaphore > &);
-		bool _DestroySemaphore (const Message< GpuMsg::DestroySemaphore > &);
-		bool _GetSWSemaphore (const Message< GpuMsg::GetSWSemaphore > &);
+		bool _CreateFence (const GpuMsg::CreateFence &);
+		bool _DestroyFence (const GpuMsg::DestroyFence &);
+		bool _GetSWFence (const GpuMsg::GetSWFence &);
+		bool _CreateEvent (const GpuMsg::CreateEvent &);
+		bool _DestroyEvent (const GpuMsg::DestroyEvent &);
+		bool _SetEvent (const GpuMsg::SetEvent &);
+		bool _ResetEvent (const GpuMsg::ResetEvent &);
+		bool _GetSWEvent (const GpuMsg::GetSWEvent &);
+		bool _CreateSemaphore (const GpuMsg::CreateSemaphore &);
+		bool _DestroySemaphore (const GpuMsg::DestroySemaphore &);
+		bool _GetSWSemaphore (const GpuMsg::GetSWSemaphore &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -148,7 +148,7 @@ namespace PlatformSW
 	_Delete
 =================================================
 */
-	bool SWSyncManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SWSyncManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_syncs.Clear();
 
@@ -160,7 +160,7 @@ namespace PlatformSW
 	_Link
 =================================================
 */
-	bool SWSyncManager::_Link (const Message< ModuleMsg::Link > &msg)
+	bool SWSyncManager::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -183,13 +183,13 @@ namespace PlatformSW
 	_OnManagerChanged2
 =================================================
 */
-	bool SWSyncManager::_OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &msg)
+	bool SWSyncManager::_OnManagerChanged2 (const ModuleMsg::OnManagerChanged &msg)
 	{
 		_OnManagerChanged( msg );
 		
-		if ( msg->newManager )
+		if ( msg.newManager )
 		{
-			msg->newManager->UnsubscribeAll( this );
+			msg.newManager->UnsubscribeAll( this );
 		}
 		return true;
 	}
@@ -199,7 +199,7 @@ namespace PlatformSW
 	_CreateFence
 =================================================
 */
-	bool SWSyncManager::_CreateFence (const Message< GpuMsg::CreateFence > &msg)
+	bool SWSyncManager::_CreateFence (const GpuMsg::CreateFence &msg)
 	{
 		for (;;)
 		{
@@ -210,7 +210,7 @@ namespace PlatformSW
 		}
 		_syncs.Add( _counter, SyncUnion_t{SWFencePtr{ new SWFence() }} );
 
-		msg->result.Set( GpuFenceId(_counter) );
+		msg.result.Set( GpuFenceId(_counter) );
 		return true;
 	}
 	
@@ -219,11 +219,11 @@ namespace PlatformSW
 	_DestroyFence
 =================================================
 */
-	bool SWSyncManager::_DestroyFence (const Message< GpuMsg::DestroyFence > &msg)
+	bool SWSyncManager::_DestroyFence (const GpuMsg::DestroyFence &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< SWFencePtr >() );
 
@@ -237,13 +237,13 @@ namespace PlatformSW
 	_GetSWFence
 =================================================
 */
-	bool SWSyncManager::_GetSWFence (const Message< GpuMsg::GetSWFence > &msg)
+	bool SWSyncManager::_GetSWFence (const GpuMsg::GetSWFence &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
-			msg->result.Set( iter->second.Get< SWFencePtr >( null ) );
+			msg.result.Set( iter->second.Get< SWFencePtr >( null ) );
 		}
 		return true;
 	}
@@ -253,7 +253,7 @@ namespace PlatformSW
 	_CreateEvent
 =================================================
 */
-	bool SWSyncManager::_CreateEvent (const Message< GpuMsg::CreateEvent > &msg)
+	bool SWSyncManager::_CreateEvent (const GpuMsg::CreateEvent &msg)
 	{
 		for (;;)
 		{
@@ -264,7 +264,7 @@ namespace PlatformSW
 		}
 		_syncs.Add( _counter, SyncUnion_t{SWEventPtr{ new SWEvent() }} );
 
-		msg->result.Set( GpuEventId(_counter) );
+		msg.result.Set( GpuEventId(_counter) );
 		return true;
 	}
 	
@@ -273,11 +273,11 @@ namespace PlatformSW
 	_DestroyEvent
 =================================================
 */
-	bool SWSyncManager::_DestroyEvent (const Message< GpuMsg::DestroyEvent > &msg)
+	bool SWSyncManager::_DestroyEvent (const GpuMsg::DestroyEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< SWEventPtr >() );
 			
@@ -291,7 +291,7 @@ namespace PlatformSW
 	_SetEvent
 =================================================
 */
-	bool SWSyncManager::_SetEvent (const Message< GpuMsg::SetEvent > &)
+	bool SWSyncManager::_SetEvent (const GpuMsg::SetEvent &)
 	{
 		TODO( "" );
 		return false;
@@ -302,7 +302,7 @@ namespace PlatformSW
 	_ResetEvent
 =================================================
 */
-	bool SWSyncManager::_ResetEvent (const Message< GpuMsg::ResetEvent > &)
+	bool SWSyncManager::_ResetEvent (const GpuMsg::ResetEvent &)
 	{
 		TODO( "" );
 		return false;
@@ -313,13 +313,13 @@ namespace PlatformSW
 	_GetSWEvent
 =================================================
 */
-	bool SWSyncManager::_GetSWEvent (const Message< GpuMsg::GetSWEvent > &msg)
+	bool SWSyncManager::_GetSWEvent (const GpuMsg::GetSWEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
-			msg->result.Set( iter->second.Get< SWEventPtr >( null ) );
+			msg.result.Set( iter->second.Get< SWEventPtr >( null ) );
 		}
 		return true;
 	}
@@ -329,7 +329,7 @@ namespace PlatformSW
 	_CreateSemaphore
 =================================================
 */
-	bool SWSyncManager::_CreateSemaphore (const Message< GpuMsg::CreateSemaphore > &msg)
+	bool SWSyncManager::_CreateSemaphore (const GpuMsg::CreateSemaphore &msg)
 	{
 		for (;;)
 		{
@@ -340,7 +340,7 @@ namespace PlatformSW
 		}
 		_syncs.Add( _counter, SyncUnion_t{SWSemaphorePtr{ new SWSemaphore() }} );
 
-		msg->result.Set( GpuSemaphoreId(_counter) );
+		msg.result.Set( GpuSemaphoreId(_counter) );
 		return true;
 	}
 	
@@ -349,11 +349,11 @@ namespace PlatformSW
 	_DestroySemaphore
 =================================================
 */
-	bool SWSyncManager::_DestroySemaphore (const Message< GpuMsg::DestroySemaphore > &msg)
+	bool SWSyncManager::_DestroySemaphore (const GpuMsg::DestroySemaphore &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< SWSemaphorePtr >() );
 
@@ -367,13 +367,13 @@ namespace PlatformSW
 	_DestroySemaphore
 =================================================
 */
-	bool SWSyncManager::_GetSWSemaphore (const Message< GpuMsg::GetSWSemaphore > &msg)
+	bool SWSyncManager::_GetSWSemaphore (const GpuMsg::GetSWSemaphore &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
-			msg->result.Set( iter->second.Get< SWSemaphorePtr >( null ) );
+			msg.result.Set( iter->second.Get< SWSemaphorePtr >( null ) );
 		}
 		return true;
 	}

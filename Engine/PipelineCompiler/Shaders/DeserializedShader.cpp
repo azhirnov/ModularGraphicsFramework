@@ -3,6 +3,7 @@
 #include "Engine/PipelineCompiler/Shaders/DeserializedShader.h"
 #include "Engine/PipelineCompiler/Common/ToGLSL.h"
 #include "Engine/PipelineCompiler/Common/Packing.h"
+#include "Core/STL/Algorithms/StringParser.h"
 
 namespace PipelineCompiler
 {
@@ -70,7 +71,7 @@ namespace PipelineCompiler
 			<< "\n  qualifier:   " << EVariableQualifier::ToString( qualifier )
 			<< "\n  memoryModel: " << EShaderMemoryModel::ToString( memoryModel )
 			<< "\n  format:      " << (format == EPixelFormat::Unknown ? "none" : EPixelFormat::ToString( format ))
-			<< "\n  arraySize:   " << arraySize;
+			<< "\n  arraySize:   " << (arraySize.IsDynamicArray() ? "dynamic"_str : arraySize.IsNotArray() ? ""_str : String().FormatI( arraySize.Size(), 10 ));
 		return str;
 	}
 	
@@ -568,7 +569,7 @@ namespace PipelineCompiler
 				return	l_struct and r_struct ?
 							(left.typeName	!= right.typeName	?	left.typeName > right.typeName	:
 																	left.name	  > right.name)	:
-							(l_size			!= r_size			?	l_size		  > r_size			:
+							(l_size			!= r_size			?	l_size		  < r_size			:
 																	left.name	  > right.name);
 			}
 		};
@@ -585,18 +586,16 @@ namespace PipelineCompiler
 			_tempInput.Clear();
 			_tempOutput.Clear();
 
-			FOR( i, fields )
+			for (const auto& fld : fields)
 			{
-				const auto&		fl = fields[i];
-
-				if ( fl.qualifier[ EVariableQualifier::BuiltIn ] )
+				if ( fld.qualifier[ EVariableQualifier::BuiltIn ] )
 					{}	// skip
 				else
-				if ( fl.qualifier[ EVariableQualifier::In ] )
-					_tempInput << fl;
+				if ( fld.qualifier[ EVariableQualifier::In ] )
+					_tempInput << fld;
 				else
-				if ( fl.qualifier[ EVariableQualifier::Out ] )
-					_tempOutput << fl;
+				if ( fld.qualifier[ EVariableQualifier::Out ] )
+					_tempOutput << fld;
 				else
 					RETURN_ERR( "unknown qualifier type!" );
 			}
@@ -607,18 +606,19 @@ namespace PipelineCompiler
 			fields.Clear();
 			fields << _tempInput << _tempOutput;
 
-			FOR( i, fields )
+			for (auto& fld : fields)
 			{
-				auto&	fl = fields[i];
-				
-				if ( fl.qualifier[ EVariableQualifier::In ] )
-					fl.location = _inLocation++;
+				if ( fld.type == EShaderVariable::VaryingsBlock )
+					{}	// skip
 				else
-				if ( fl.qualifier[ EVariableQualifier::Out ] )
-					fl.location = _outLocation++;
+				if ( fld.qualifier[ EVariableQualifier::In ] )
+					fld.location = _inLocation++;
+				else
+				if ( fld.qualifier[ EVariableQualifier::Out ] )
+					fld.location = _outLocation++;
 
-				if ( not fl.fields.Empty() ) {
-					CHECK_ERR( RecursiveProcess( INOUT fl.fields ) );
+				if ( not fld.fields.Empty() ) {
+					CHECK_ERR( RecursiveProcess( INOUT fld.fields ) );
 				}
 			}
 			return true;

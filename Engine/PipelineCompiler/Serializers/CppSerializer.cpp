@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Serializers/CppSerializer.h"
+#include "Core/STL/Algorithms/StringParser.h"
 
 namespace PipelineCompiler
 {
@@ -633,13 +634,13 @@ namespace PipelineCompiler
 	struct CppSerializer::PipelineLayoutToStringFunc
 	{
 	// types
-		using TextureUniform	= PipelineLayoutDescriptor::TextureUniform;
-		using SamplerUniform	= PipelineLayoutDescriptor::SamplerUniform;
-		using ImageUniform		= PipelineLayoutDescriptor::ImageUniform;
-		using UniformBuffer		= PipelineLayoutDescriptor::UniformBuffer;
-		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
-		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
-		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
+		using TextureUniform	= PipelineLayoutDescription::TextureUniform;
+		using SamplerUniform	= PipelineLayoutDescription::SamplerUniform;
+		using ImageUniform		= PipelineLayoutDescription::ImageUniform;
+		using UniformBuffer		= PipelineLayoutDescription::UniformBuffer;
+		using StorageBuffer		= PipelineLayoutDescription::StorageBuffer;
+		using PushConstant		= PipelineLayoutDescription::PushConstant;
+		using SubpassInput		= PipelineLayoutDescription::SubpassInput;
 
 
 	// variables
@@ -717,12 +718,12 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	ToString (PipelineLayoutDescriptor)
+	ToString (PipelineLayoutDescription)
 =================================================
 */
-	String  CppSerializer::ToString (StringCRef name, const PipelineLayoutDescriptor &value) const
+	String  CppSerializer::ToString (StringCRef name, const PipelineLayoutDescription &value) const
 	{
-		String	str;	str << name << " = PipelineLayoutDescriptor::Builder()";
+		String	str;	str << name << " = PipelineLayoutDescription::Builder()";
 		
 		PipelineLayoutToStringFunc	func( INOUT str, ExtractIndent( name ) );
 
@@ -1328,16 +1329,12 @@ namespace PipelineCompiler
 	StructField
 =================================================
 */
-	String	CppSerializer::StructField (StringCRef name, StringCRef typeName, uint arraySize, uint offset, uint align, uint sizeOf) const
+	String	CppSerializer::StructField (StringCRef name, StringCRef typeName, ArraySize arraySize, uint offset, uint align, uint sizeOf) const
 	{
 		String	indent;		indent.Resize( _structStack.Count()-2, '\t' );
 
-		auto&	curr_st = _structStack.Get();
-
-		curr_st.tests << indent << "\t\tSTATIC_ASSERT( (offsetof( " << _structStack.Get().typeName << ", " << name << " ) == "
-								 << offset << ") and (sizeof( " << name << " ) == " << sizeOf << ") );\n";
-
-		String	type_name = typeName;
+		auto&	curr_st		= _structStack.Get();
+		String	type_name	= typeName;
 
 		if ( typeName.StartsWith("bool") )
 		{
@@ -1350,27 +1347,35 @@ namespace PipelineCompiler
 
 		field_str << indent << "\t" << type_name << "  " << name;
 
-		if ( arraySize == 1 )
+		if ( arraySize.IsNotArray() )
 		{
 			arg_str << "const " << type_name << " &" << name;
 		}
 		else
-		if ( arraySize > 1 )
+		if ( arraySize.IsStaticArray() )
 		{
-			field_str << '[' << arraySize << ']';
+			field_str << '[' << arraySize.Size() << ']';
 			
-			arg_str << "const " << type_name << " (&" << name << ")[" << arraySize << ']';
+			arg_str << "const " << type_name << " (&" << name << ")[" << arraySize.Size() << ']';
 		}
 		else
-		//if ( arraySize == 0 )
+		//if ( arraySize.IsDynamicArray() )
 		{
 			WARNING( "dynamic arrays are not supported!" );
 			field_str << "[]";
 		}
+
+		if ( not name.StartsWith( "_padding" ) )
+		{
+			curr_st.tests << indent << "\t\tSTATIC_ASSERT( (offsetof( " << _structStack.Get().typeName << ", " << name << " ) == "
+						  << offset << ") and (sizeof( " << name << " ) == " << sizeOf << ") );\n";
+
+			curr_st.fieldAsArguments << (curr_st.fieldAsArguments.Empty() ? "" : ", ") << arg_str;
 		
-		curr_st.fieldAsArguments << (curr_st.fieldAsArguments.Empty() ? "" : ", ") << arg_str;
-		
-		curr_st.fieldInitialized << (curr_st.fieldInitialized.Empty() ? "" : ", ") << name << '{' << name << '}';
+			curr_st.fieldInitialized << (curr_st.fieldInitialized.Empty() ? "" : ", ") << name << '{' << name << '}';
+
+			curr_st.vertexAttribs << "\t\t.Add( \"" << name << "\", &" << _structStack.Get().typeName << "::" << name << ", CompileTime::IsFloat<decltype(Self::" << name << ")> )\n";
+		}
 
 		field_str << ";    // offset: " << offset << ", align: " << align << "\n";
 		return field_str;
@@ -1393,6 +1398,35 @@ namespace PipelineCompiler
 		str << "\n\t" << indent << /*"explicit " <<*/ _structStack.Get().typeName << " (" << _structStack.Get().fieldAsArguments << ") :\n"
 			<< indent << "\t\t" << _structStack.Get().fieldInitialized << '\n'
 			<< indent << "\t{}\n";
+
+		return str;
+	}
+	
+/*
+=================================================
+	StructVertexAttribBinding
+=================================================
+*/
+	String  CppSerializer::StructVertexAttribBinding () const
+	{
+		if ( _structStack.Get().vertexAttribs.Empty() )
+			return {};
+		
+		String	indent;		indent.Resize( _structStack.Count()-1, '\t' );
+
+		String	str;
+
+		StringParser::IncreaceIndent( _structStack.Get().vertexAttribs, indent );
+
+		str << "\n"
+			<< indent << "template <typename Vertex>\n"
+			<< indent << "ND_ static VertexInputState  GetAttribs ()\n"
+			<< indent << "{\n"
+			<< indent << "	using Self = NativeVertex_renderdots;\n"
+			<< indent << "	return VertexInputState()\n"
+			<< _structStack.Get().vertexAttribs
+			<< indent << "		.Bind( \"\", SizeOf<Vertex> );\n"
+			<< indent << "}\n";
 
 		return str;
 	}

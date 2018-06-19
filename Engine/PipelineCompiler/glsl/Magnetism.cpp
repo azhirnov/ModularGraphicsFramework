@@ -10,10 +10,9 @@ namespace glsl_vfs
 	Physics functions for magnetism simulations.
 	
 	license: free
-
-	depends of:
-		Math/Math
 */
+
+#include <Math/Math.glsl>
 
 real3 LinearMagneticFieldForce (const real3 velocity, const real3 magneticInduction);
 

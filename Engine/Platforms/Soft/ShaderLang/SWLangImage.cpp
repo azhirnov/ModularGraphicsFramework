@@ -1,14 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
 #include "Engine/Platforms/Soft/ShaderLang/SWLangImage.h"
 #include "Engine/Platforms/Soft/Impl/SWDeviceProperties.h"
 
-#include "Engine/STL/Math/Color/ColorFormats.h"
-#include "Engine/STL/Math/Image/ImageUtils.h"
+#include "Core/STL/Math/Color/ColorFormats.h"
+#include "Core/STL/Math/Image/ImageUtils.h"
 
 namespace SWShaderLang
 {

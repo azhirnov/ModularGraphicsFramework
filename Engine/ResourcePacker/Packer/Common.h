@@ -2,8 +2,11 @@
 
 #pragma once
 
-#include "Engine/STL/Engine.STL.h"
-#include "Engine/Script/Engine.Script.h"
+#include "Core/STL/Types/UniquePtr.h"
+#include "Core/STL/Containers/HashMap.h"
+#include "Core/STL/Containers/Stack.h"
+
+#include "Core/Script/Core.Script.h"
 
 namespace ResPack
 {

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine/Base/Public/ModuleMessages.h"
-#include "Engine/Base/Modules/Message.h"
+#include "Engine/Base/Common/BaseObject.h"
 
 namespace Engine
 {
@@ -15,7 +15,7 @@ namespace ProfilingMsg
 	//
 	// On Send Message
 	//
-	struct OnSendMsg
+	struct OnSendMsg : _MessageBase_
 	{
 	// variables
 		ModulePtr							target;
@@ -24,7 +24,7 @@ namespace ProfilingMsg
 
 	// methods
 		template <typename T>
-		OnSendMsg (const ModulePtr &target, const Base::Message<T> &msg) :
+		OnSendMsg (const ModulePtr &target, const T &msg) :
 			target{target}, sender{msg.Sender()}, msg{ VariantCRef::FromConst(msg) }
 		{}
 	};

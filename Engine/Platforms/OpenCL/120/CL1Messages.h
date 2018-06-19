@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -18,7 +18,7 @@ namespace GpuMsg
 	//
 	// Get Device Info
 	//
-	struct GetCLDeviceInfo
+	struct GetCLDeviceInfo : _MessageBase_
 	{
 	// types
 		struct Info {
@@ -36,7 +36,7 @@ namespace GpuMsg
 	//
 	// Get Buffer ID
 	//
-	struct GetCLBufferID
+	struct GetCLBufferID : _MessageBase_
 	{
 	// types
 		using ESharing	= PlatformCL::ESharing::type;
@@ -79,7 +79,7 @@ namespace GpuMsg
 	//
 	// Get Sampler ID
 	//
-	struct GetCLSamplerID
+	struct GetCLSamplerID : _MessageBase_
 	{
 		Out< cl::cl_sampler >	result;
 	};
@@ -88,7 +88,7 @@ namespace GpuMsg
 	//
 	// Get Compute Pipeline ID
 	//
-	struct GetCLComputePipelineID
+	struct GetCLComputePipelineID : _MessageBase_
 	{
 	// types
 		struct Pipeline {
@@ -107,20 +107,20 @@ namespace GpuMsg
 	//
 	// Pipeline Resource Table ID (program arguments)
 	//
-	struct CLBindPipelineResourceTable
+	struct CLBindPipelineResourceTable : _MessageBase_
 	{
 	// variables
 		cl::cl_kernel	kernelId = null;
 
 	// methods
-		CLBindPipelineResourceTable (cl::cl_kernel kernel) : kernelId{kernel} {}
+		explicit CLBindPipelineResourceTable (cl::cl_kernel kernel) : kernelId{kernel} {}
 	};
 
 
 	//
 	// Get Shader Module IDs
 	//
-	struct GetCLShaderModuleIDs
+	struct GetCLShaderModuleIDs : _MessageBase_
 	{
 	// types
 		struct ShaderModule : CompileTime::PODStruct
@@ -139,7 +139,7 @@ namespace GpuMsg
 	//
 	// Fence Sync
 	//
-	struct CLFenceSync
+	struct CLFenceSync : _MessageBase_
 	{
 	// variables
 		Platforms::GpuFenceId	fenceId;
@@ -153,7 +153,7 @@ namespace GpuMsg
 	//
 	// Get Event
 	//
-	struct GetCLEvent
+	struct GetCLEvent : _MessageBase_
 	{
 	// types
 		using Event_t	= Platforms::GpuEventId;
@@ -170,7 +170,7 @@ namespace GpuMsg
 	//
 	// Semaphore
 	//
-	struct CLSemaphoreEnqueue
+	struct CLSemaphoreEnqueue : _MessageBase_
 	{
 	// variables
 		Platforms::GpuSemaphoreId	semId;
@@ -180,18 +180,25 @@ namespace GpuMsg
 		explicit CLSemaphoreEnqueue (Platforms::GpuSemaphoreId id) : semId{id} {}
 	};
 
-	struct WaitCLSemaphore
+
+	struct WaitCLSemaphore : _MessageBase_
 	{
+	// types
 		using Semaphores_t	= FixedSizeArray< Platforms::GpuSemaphoreId, GpuMsg::SubmitComputeQueueCommands::WaitSemaphores_t::MemoryContainer_t::SIZE + 4 >;
 
+	// variables
 		Semaphores_t		semaphores;
+
+	// methods
+		WaitCLSemaphore () {}
+		explicit WaitCLSemaphore (Platforms::GpuSemaphoreId sem) { semaphores.PushBack( sem ); }
 	};
 
 
 	//
 	// Update Buffer Command
 	//
-	struct CLCmdUpdateBuffer
+	struct CLCmdUpdateBuffer : _MessageBase_
 	{
 	// variables
 		ModulePtr		dstBuffer;
@@ -209,7 +216,7 @@ namespace GpuMsg
 	//
 	// OpenCL Commands
 	//
-	struct SetCLCommandBufferQueue
+	struct SetCLCommandBufferQueue : _MessageBase_
 	{
 	// types
 		using Data_t	= Union< CmdBindComputePipeline,
@@ -244,8 +251,6 @@ namespace GpuMsg
 
 		// methods
 			Command () {}
-			Command (Command &&) = default;
-			Command (const Command &) = default;
 
 			template <typename Data>
 			Command (Data &&data, StringCRef file = StringCRef(), uint line = 0) :
@@ -262,13 +267,17 @@ namespace GpuMsg
 		ReadOnce< Array<Command> >	commands;
 		BinaryArray					bufferData;
 		BinaryArray					pushConstData;
+
+	// methods
+		SetCLCommandBufferQueue (Array<Command> &&commands, BinaryArray &&bufferData, BinaryArray &&pushConstData) :
+			commands{ RVREF(commands) }, bufferData{ RVREF(bufferData) }, pushConstData{ RVREF(pushConstData) } {}
 	};
 	
 
 	//
 	// Execute CL Command Buffer
 	//
-	struct ExecuteCLCommandBuffer
+	struct ExecuteCLCommandBuffer : _MessageBase_
 	{};
 
 

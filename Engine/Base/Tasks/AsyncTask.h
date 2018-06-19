@@ -160,10 +160,10 @@ namespace Base
 		auto	task_mod = _currentThreadModule->GlobalSystems()->taskModule;
 		CHECK_ERR( task_mod, this );
 
-		CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+		CHECK( task_mod->SendAsync( ModuleMsg::PushAsyncMessage{
 					AsyncMessage{ &AsyncTask::_RunAsync, SelfPtr(this) },
 					_targetThreadModule->GetThreadID()
-				}.Async())
+				})
 		);
 		return this;
 	}
@@ -210,10 +210,10 @@ namespace Base
 		auto	task_mod = _targetThreadModule->GlobalSystems()->taskModule;
 		CHECK_ERR( task_mod, );
 
-		CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+		CHECK( task_mod->SendAsync( ModuleMsg::PushAsyncMessage{
 					AsyncMessage{ &AsyncTask::_UpdateProgress, SelfPtr(this), RVREF(value) },
 					_currentThreadModule->GetThreadID()
-				}.Async())
+				})
 		);
 	}
 	
@@ -259,10 +259,10 @@ namespace Base
 
 		if ( IsCanceled() )
 		{
-			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( task_mod->SendAsync( ModuleMsg::PushAsyncMessage{
 						AsyncMessage{ &AsyncTask::_OnCanceled, SelfPtr(this) },
 						_currentThreadModule->GetThreadID()
-					}.Async())
+					})
 			);
 			return;
 		}
@@ -271,18 +271,18 @@ namespace Base
 		
 		if ( IsCanceled() )
 		{
-			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( task_mod->SendAsync( ModuleMsg::PushAsyncMessage{
 						AsyncMessage{ &AsyncTask::_OnCanceled, SelfPtr(this) },
 						_currentThreadModule->GetThreadID()
-					}.Async())
+					})
 			);
 		}
 		else
 		{
-			CHECK( task_mod->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( task_mod->SendAsync( ModuleMsg::PushAsyncMessage{
 						AsyncMessage{ &AsyncTask::_PostExecute, SelfPtr(this) },
 						_currentThreadModule->GetThreadID()
-					}.Async())
+					})
 			);
 		}
 

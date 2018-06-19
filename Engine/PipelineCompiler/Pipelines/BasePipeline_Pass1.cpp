@@ -254,7 +254,7 @@ namespace PipelineCompiler
 
 			if ( src.isShadow ) {
 				// default shadow sampler
-				dst.defaultSampler = SamplerDescriptor( EAddressMode::ClampToEdge, EFilter::MinMagMipLinear,
+				dst.defaultSampler = SamplerDescription( EAddressMode::ClampToEdge, EFilter::MinMagMipLinear,
 														Uninitialized, ECompareFunc::LEqual );
 			}
 
@@ -387,10 +387,10 @@ namespace PipelineCompiler
 	_RecursiveProcessVarying
 =================================================
 */
-	bool BasePipeline::_RecursiveProcessVarying (const Array<DeserializedShader::IOVariable> &fields, StringCRef,
+	bool BasePipeline::_RecursiveProcessVarying (const Array<DeserializedShader::IOVariable> &varyings, StringCRef,
 												 INOUT Array<Varying> &input, INOUT Array<Varying> &output)
 	{
-		for (auto& src : fields)
+		for (auto& src : varyings)
 		{
 			Varying			dst;
 
@@ -404,6 +404,24 @@ namespace PipelineCompiler
 			dst.qualifier.Reset( EVariableQualifier::BuiltIn );
 						 //.Reset( EVariableQualifier::BindlessSampler )
 						 //.Reset( EVariableQualifier::BindlessImage );
+
+			for (auto& src_fld : src.fields)
+			{
+				_VaryingField	dst_fld;
+				
+				dst_fld.name		= src_fld.name;
+				dst_fld.typeName	= src_fld.typeName;
+				dst_fld.type		= src_fld.type;
+				dst_fld.precision	= src_fld.precision;
+				dst_fld.location	= src_fld.location;
+				dst_fld.arraySize	= src_fld.arraySize;
+				dst_fld.qualifier	= src_fld.qualifier;
+				dst_fld.qualifier.Reset( EVariableQualifier::BuiltIn );
+
+				CHECK_ERR( src_fld.fields.Empty() );	// block in block is not supported
+
+				dst.fields.PushBack( RVREF(dst_fld) );
+			}
 
 			if ( src.qualifier[ EVariableQualifier::BuiltIn ] )
 			{}	// skip
@@ -639,7 +657,7 @@ namespace PipelineCompiler
 			field.offset	= offset;
 			st.align		= Max( field.align, st.align );
 
-			offset += EShaderVariable::SizeOf( field.type ) * field.arraySize;
+			offset += EShaderVariable::SizeOf( field.type ) * field.arraySize.Size();
 		}
 
 		st.stride = offset;
@@ -752,7 +770,7 @@ namespace PipelineCompiler
 				src.staticSize  = iter->second.stride;
 				src.arrayStride = 0_b;
 
-				if ( iter->second.fields.Back().arraySize == 0 )
+				if ( iter->second.fields.Back().arraySize.IsDynamicArray() )
 					src.arrayStride = iter->second.fields.Back().stride;
 			}
 		}
@@ -782,7 +800,7 @@ namespace PipelineCompiler
 	{
 	// variables
 		Map<uint, uint>		_descriptors;
-		bool				changeDescriptors	= false;
+		bool				changeDescriptions	= false;
 
 
 	// methods
@@ -791,7 +809,7 @@ namespace PipelineCompiler
 
 		void StartPass2 ()
 		{
-			changeDescriptors = true;
+			changeDescriptions = true;
 
 			FOR( i, _descriptors ) {
 				_descriptors[i].second = uint(i);
@@ -802,7 +820,7 @@ namespace PipelineCompiler
 		template <typename T>
 		void operator () (T &src)
 		{
-			if ( changeDescriptors )
+			if ( changeDescriptions )
 			{
 				Map<uint, uint>::const_iterator	iter;
 
@@ -886,7 +904,7 @@ namespace PipelineCompiler
 
 		// deserialize
 		{
-			if ( not ShaderCompiler::Instance()->Deserialize( shaderFormat, shader.type, source, shader_entry, OUT log, OUT deserialized ) )
+			if ( not ShaderCompiler::Instance()->Deserialize( shaderFormat, shader.type, source, shader_entry, _path, OUT log, OUT deserialized ) )
 			{
 				RETURN_ERR( log );
 			}

@@ -143,7 +143,7 @@ namespace ResPack
 
 		PipelineManager::Instance()->Remove( iter->second.ptr() );
 
-		if ( dynamic_cast< PipelineCompiler::ComputePipeline *>( iter->second.ptr() ) )
+		if ( DynCast< PipelineCompiler::ComputePipeline *>( iter->second ) )
 		{
 			String	signature;
 			GXScript::GlobalFunction< ScriptComputePipeline (*) () >::GetDescriptor( OUT signature, funcName );
@@ -156,7 +156,7 @@ namespace ResPack
 			) );
 		}
 		else
-		if ( dynamic_cast< PipelineCompiler::GraphicsPipeline *>( iter->second.ptr() ) )
+		if ( DynCast< PipelineCompiler::GraphicsPipeline *>( iter->second ) )
 		{
 			String	signature;
 			GXScript::GlobalFunction< ScriptGraphicsPipeline (*) () >::GetDescriptor( OUT signature, funcName );

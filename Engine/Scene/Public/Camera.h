@@ -5,8 +5,8 @@
 #include "Engine/Scene/Public/IDs.h"
 #include "Engine/Scene/Public/Surface.h"
 
-#include "Engine/STL/Math/3D/Frustum.h"
-#include "Engine/STL/Math/3D/Transform.h"
+#include "Core/STL/Math/3D/Frustum.h"
+#include "Core/STL/Math/3D/Transform.h"
 
 namespace Engine
 {
@@ -61,7 +61,7 @@ namespace SceneMsg
 	//
 	// Bind Keys to Actions
 	//
-	struct CameraBindKeys
+	struct CameraBindKeys : _MessageBase_
 	{
 	};
 
@@ -69,12 +69,17 @@ namespace SceneMsg
 	//
 	// Set / Get settings
 	//
-	struct CameraUpdateSettings
+	struct CameraUpdateSettings : _MessageBase_
 	{
+	// variables
 		Scene::CameraSettings			settings;
+
+	// methods
+		explicit CameraUpdateSettings (const Scene::CameraSettings &settings) : settings{settings} {}
 	};
 
-	struct CameraGetSettings
+
+	struct CameraGetSettings : _MessageBase_
 	{
 		Out< Scene::CameraSettings >	result;
 	};
@@ -83,7 +88,7 @@ namespace SceneMsg
 	//
 	// Get Current State
 	//
-	struct CameraGetState
+	struct CameraGetState : _MessageBase_
 	{
 	// types
 		using Frustum_t		= GXMath::Frustum<float>;
@@ -117,7 +122,7 @@ namespace SceneMsg
 	//
 	// Camera Request Update
 	//
-	struct CameraRequestUpdate
+	struct CameraRequestUpdate : _MessageBase_
 	{
 	// types
 		using State_t			= CameraGetState::State;

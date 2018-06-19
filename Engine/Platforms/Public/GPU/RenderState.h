@@ -4,7 +4,7 @@
 
 #include "Engine/Platforms/Public/GPU/RenderStateEnums.h"
 #include "Engine/Platforms/Public/GPU/MultiSamples.h"
-#include "Engine/STL/Containers/StaticBitArray.h"
+#include "Core/STL/Containers/StaticBitArray.h"
 
 namespace Engine
 {

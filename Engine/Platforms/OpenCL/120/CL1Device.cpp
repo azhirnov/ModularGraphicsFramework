@@ -1,17 +1,17 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Common/Platforms.h"
-#include "Engine/Config/Engine.Config.h"
+#include "Core/STL/Common/Platforms.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
 # if defined( PLATFORM_WINDOWS )
-#	include "Engine/STL/OS/Windows/WinHeader.h"
+#	include "Core/STL/OS/Windows/WinHeader.h"
 # endif
 
 #include "Engine/Platforms/OpenCL/120/CL1Device.h"
 #include "Engine/Platforms/OpenCL/120/CL1Messages.h"
-#include "Engine/STL/Log/ToString.h"
+#include "Core/STL/Log/ToString.h"
 
 namespace Engine
 {
@@ -426,22 +426,22 @@ namespace PlatformCL
 		ESharing::type	sharing = ESharing::None;
 		cl_mem			id		= null;
 
-		if ( obj->GetSupportedMessages().HasType<Message< GpuMsg::GetCLBufferID >>() )
+		if ( obj->GetSupportedMessages().HasType< GpuMsg::GetCLBufferID >() )
 		{
-			Message< GpuMsg::GetCLBufferID >	req_id;
+			GpuMsg::GetCLBufferID	req_id;
 			obj->Send( req_id );
 
-			sharing	= req_id->result->sharing;
-			id		= req_id->result->id;
+			sharing	= req_id.result->sharing;
+			id		= req_id.result->id;
 		}
 		else
-		if ( obj->GetSupportedMessages().HasType<Message< GpuMsg::GetCLImageID >>() )
+		if ( obj->GetSupportedMessages().HasType< GpuMsg::GetCLImageID >() )
 		{
-			Message< GpuMsg::GetCLImageID >		req_id;
+			GpuMsg::GetCLImageID	req_id;
 			obj->Send( req_id );
 
-			sharing	= req_id->result->sharing;
-			id		= req_id->result->id;
+			sharing	= req_id.result->sharing;
+			id		= req_id.result->id;
 		}
 
 		return AddSharedObj( owner, id, sharing );

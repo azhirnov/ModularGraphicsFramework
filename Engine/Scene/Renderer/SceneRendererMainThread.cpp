@@ -59,17 +59,17 @@ namespace Scene
 
 	// message handlers
 	protected:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		bool _GetScenePrivateClasses (const Message< SceneMsg::GetScenePrivateClasses > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		bool _GetScenePrivateClasses (const SceneMsg::GetScenePrivateClasses &);
 
 		// event handlers
-		bool _DeviceCreated (const Message< GpuMsg::DeviceCreated > &);
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _DeviceCreated (const GpuMsg::DeviceCreated &);
+		bool _DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -121,7 +121,7 @@ namespace Scene
 	_Link
 =================================================
 */
-	bool SceneRendererMainThread::_Link (const Message< ModuleMsg::Link > &msg)
+	bool SceneRendererMainThread::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -159,7 +159,7 @@ namespace Scene
 		// if gpu device already created
 		if ( _IsComposedState( gthread->GetState() ) )
 		{
-			_SendMsg< GpuMsg::DeviceCreated >({});
+			_SendMsg( GpuMsg::DeviceCreated{} );
 		}
 		return true;
 	}
@@ -169,7 +169,7 @@ namespace Scene
 	_Delete
 =================================================
 */
-	bool SceneRendererMainThread::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SceneRendererMainThread::_Delete (const ModuleMsg::Delete &msg)
 	{
 		//TODO( "" );
 		return Module::_Delete_Impl( msg );
@@ -180,7 +180,7 @@ namespace Scene
 	_DeviceCreated
 =================================================
 */
-	bool SceneRendererMainThread::_DeviceCreated (const Message< GpuMsg::DeviceCreated > &)
+	bool SceneRendererMainThread::_DeviceCreated (const GpuMsg::DeviceCreated &)
 	{
 		CHECK_ERR( GetState() == EState::Linked );
 		
@@ -192,11 +192,11 @@ namespace Scene
 	_DeviceBeforeDestroy
 =================================================
 */
-	bool SceneRendererMainThread::_DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool SceneRendererMainThread::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
 		// TODO: destroy resources and wait for new device creation
 
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		return true;
 	}
 
@@ -205,11 +205,11 @@ namespace Scene
 	_AttachModule
 =================================================
 */
-	bool SceneRendererMainThread::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool SceneRendererMainThread::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_builder	= msg->newModule->GetSupportedEvents().HasAllTypes< CmdBufferMngrMsg_t >();
+		const bool	is_builder	= msg.newModule->GetSupportedEvents().HasAllTypes< CmdBufferMngrMsg_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		if ( is_builder )
 		{
@@ -223,11 +223,11 @@ namespace Scene
 	_DetachModule
 =================================================
 */
-	bool SceneRendererMainThread::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool SceneRendererMainThread::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< CmdBufferMngrMsg_t >() )
+		if ( msg.oldModule->GetSupportedEvents().HasAllTypes< CmdBufferMngrMsg_t >() )
 		{
 			CHECK( _SetState( EState::Initial ) );
 		}
@@ -239,7 +239,7 @@ namespace Scene
 	_AddToManager
 =================================================
 */
-	bool SceneRendererMainThread::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool SceneRendererMainThread::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
 		// TODO
 		return true;
@@ -250,7 +250,7 @@ namespace Scene
 	_RemoveFromManager
 =================================================
 */
-	bool SceneRendererMainThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool SceneRendererMainThread::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
 		// TODO
 		return true;
@@ -261,9 +261,9 @@ namespace Scene
 	_GetScenePrivateClasses
 =================================================
 */
-	bool SceneRendererMainThread::_GetScenePrivateClasses (const Message< SceneMsg::GetScenePrivateClasses > &msg)
+	bool SceneRendererMainThread::_GetScenePrivateClasses (const SceneMsg::GetScenePrivateClasses &msg)
 	{
-		msg->result.Set({ });	// TODO
+		msg.result.Set({ });	// TODO
 		return true;
 	}
 //-----------------------------------------------------------------------------

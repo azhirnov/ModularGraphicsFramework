@@ -66,15 +66,15 @@ namespace GpuMsg
 	//
 	// GPU Device Created / Destroyed
 	//
-	struct DeviceCreated
+	struct DeviceCreated : _MessageBase_
 	{
 	};
 
-	struct DeviceBeforeDestroy
+	struct DeviceBeforeDestroy : _MessageBase_
 	{
 	};
 
-	struct DeviceLost
+	struct DeviceLost : _MessageBase_
 	{
 	};
 
@@ -82,7 +82,7 @@ namespace GpuMsg
 	//
 	// Get Device Info
 	//
-	struct GetDeviceInfo
+	struct GetDeviceInfo : _MessageBase_
 	{
 		struct Info {
 			ModulePtr	gpuThread;			// current gpu thread		// TODO: remove?
@@ -100,7 +100,7 @@ namespace GpuMsg
 	//
 	// Submit Commands
 	//
-	struct SubmitGraphicsQueueCommands
+	struct SubmitGraphicsQueueCommands : _MessageBase_
 	{
 	// types
 		using Commands_t		= FixedSizeArray< ModulePtr, 16 >;
@@ -133,7 +133,7 @@ namespace GpuMsg
 	//
 	// Begin / End Frame
 	//
-	struct ThreadBeginFrame
+	struct ThreadBeginFrame : _MessageBase_
 	{
 		struct Data {
 			ModulePtr	framebuffer;		// returns current framebuffer
@@ -163,7 +163,7 @@ namespace GpuMsg
 	//
 	// Get Compute / Graphics Module IDs
 	//
-	struct GetGraphicsModules
+	struct GetGraphicsModules : _MessageBase_
 	{
 		Out< Platforms::ComputeModuleIDs >		compute;
 		Out< Platforms::GraphicsModuleIDs >		graphics;
@@ -173,7 +173,7 @@ namespace GpuMsg
 	//
 	// Get Graphics Settings
 	//
-	struct GetGraphicsSettings
+	struct GetGraphicsSettings : _MessageBase_
 	{
 	// types
 		struct Settings : Platforms::GraphicsSettings
@@ -195,7 +195,7 @@ namespace GpuMsg
 	//
 	// Get Compute Settings
 	//
-	struct GetComputeSettings
+	struct GetComputeSettings : _MessageBase_
 	{
 		Out< Platforms::ComputeSettings >	result;
 	};
@@ -204,7 +204,7 @@ namespace GpuMsg
 	//
 	// Get Device Properties
 	//
-	struct GetDeviceProperties
+	struct GetDeviceProperties : _MessageBase_
 	{
 	// types
 		using uint3	= GXMath::uint3;

@@ -56,7 +56,7 @@ namespace Base
 	_Delete
 =================================================
 */
-	bool TaskManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool TaskManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_SendForEachAttachments( msg );
 
@@ -73,7 +73,7 @@ namespace Base
 	_AddToManager
 =================================================
 */
-	bool TaskManager::_AddToManager (const Message< ModuleMsg::AddToManager > &)
+	bool TaskManager::_AddToManager (const ModuleMsg::AddToManager &)
 	{
 		RETURN_ERR( "use 'AddTaskSchedulerToManager' message instead of 'AddToManager'" );
 	}
@@ -83,14 +83,14 @@ namespace Base
 	_AddTaskSchedulerToManager
 =================================================
 */
-	bool TaskManager::_AddTaskSchedulerToManager (const Message< ModuleMsg::AddTaskSchedulerToManager > &msg)
+	bool TaskManager::_AddTaskSchedulerToManager (const ModuleMsg::AddTaskSchedulerToManager &msg)
 	{
 		SCOPELOCK( _lock );
 
-		CHECK_ERR( msg->module );
-		ASSERT( not _threads.IsExist( msg->module->GetThreadID() ) );
+		CHECK_ERR( msg.module );
+		ASSERT( not _threads.IsExist( msg.module->GetThreadID() ) );
 
-		_threads.Add( msg->module->GetThreadID(), { msg->module, RVREF(msg->asyncPushMsg.Get()) } );
+		_threads.Add( msg.module->GetThreadID(), { msg.module, RVREF(msg.asyncPushMsg.Get()) } );
 		return true;
 	}
 	
@@ -99,12 +99,12 @@ namespace Base
 	_RemoveFromManager
 =================================================
 */
-	bool TaskManager::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool TaskManager::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
 		SCOPELOCK( _lock );
-		CHECK_ERR( msg->module );
+		CHECK_ERR( msg.module );
 
-		ModulePtr	module = msg->module.Lock();
+		ModulePtr	module = msg.module.Lock();
 
 		if ( not module )
 			return false;
@@ -126,29 +126,28 @@ namespace Base
 	_PushAsyncMessage
 =================================================
 */
-	bool TaskManager::_PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg) noexcept
+	bool TaskManager::_PushAsyncMessage (const ModuleMsg::PushAsyncMessage &msg) noexcept
 	{
 		SCOPELOCK( _lock );
-		ASSERT( msg.IsAsync() );
 
 		TaskThreads_t::iterator	iter;
 
 		// find main target thread
-		if ( msg->target != ThreadID() )
+		if ( msg.target != ThreadID() )
 		{
-			_threads.Find( msg->target, OUT iter );
+			_threads.Find( msg.target, OUT iter );
 		}
 		
 		// find alternative target thread
-		if ( not iter and msg->altTarget != ThreadID() )
+		if ( not iter and msg.altTarget != ThreadID() )
 		{
-			_threads.Find( msg->altTarget, OUT iter );
+			_threads.Find( msg.altTarget, OUT iter );
 		}
 
 		// find low load thread
 		if ( not iter and
 			 not _threads.Empty() and
-			 (msg->target == ThreadID() or msg->altTarget == ThreadID()) )
+			 (msg.target == ThreadID() or msg.altTarget == ThreadID()) )
 		{
 			TODO("");
 			iter = &_threads.Front();
@@ -156,7 +155,7 @@ namespace Base
 
 		if ( iter )
 		{
-			iter->second.asyncPushMsg( RVREF( msg->asyncMsg.Get() ) );
+			iter->second.asyncPushMsg( RVREF( msg.asyncMsg.Get() ) );
 			return true;
 		}
 

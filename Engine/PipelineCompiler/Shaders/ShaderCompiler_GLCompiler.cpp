@@ -606,7 +606,7 @@ namespace PipelineCompiler
 
 # else
 
-	bool ShaderCompiler::_CompileGLSL (const Config &, const _ShaderData &shader, OUT String &log, OUT BinaryArray &result)
+	bool ShaderCompiler::_CompileGLSL (const Config &, const _ShaderData &, OUT String &, OUT BinaryArray &)
 	{
 		return false;
 	}

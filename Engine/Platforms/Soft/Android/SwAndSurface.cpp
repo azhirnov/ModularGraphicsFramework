@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Common/Platforms.h"
-#include "Engine/Config/Engine.Config.h"
+#include "Core/STL/Common/Platforms.h"
+#include "Core/Config/Engine.Config.h"
 
 #if defined( GRAPHICS_API_SOFT ) and defined( PLATFORM_ANDROID )
 

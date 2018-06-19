@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -21,8 +21,8 @@ namespace PlatformSW
 	{
 	// types
 	private:
-		using SWSamplerPtr		= SharedPointerType< class SWSampler >;
-		using SamplerDescriptor	= Platforms::SamplerDescriptor;
+		using SWSamplerPtr			= SharedPointerType< class SWSampler >;
+		using SamplerDescription	= Platforms::SamplerDescription;
 
 		struct SearchableSampler
 		{
@@ -36,9 +36,9 @@ namespace PlatformSW
 
 		struct SamplerSearch
 		{
-			SamplerDescriptor	descr;
+			SamplerDescription	descr;
 
-			explicit SamplerSearch (const SamplerDescriptor &s) : descr(s) {}
+			explicit SamplerSearch (const SamplerDescription &s) : descr(s) {}
 
 			bool operator == (const SearchableSampler &right) const;
 			bool operator >  (const SearchableSampler &right) const;

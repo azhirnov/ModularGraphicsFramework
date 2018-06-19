@@ -10,10 +10,6 @@ namespace glsl_vfs
 	Axis aligned bounding box.
 	
 	license: free
-
-	depends of:
-		Common/Cmp
-		Math/Math
 */
 
 
@@ -37,6 +33,8 @@ bool	AABBox_Rebound (const AABBox box, inout real3 pos, inout real3 vel);
 
 //-----------------------------------------------------------------------------
 
+#include <Common/Cmp.glsl>
+#include <Math/Math.glsl>
 
 /*
 =================================================

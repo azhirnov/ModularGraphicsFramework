@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -31,7 +31,7 @@ namespace PlatformGL
 											ModuleMsg::Compose
 										> >
 										::Append< MessageListFrom<
-											GpuMsg::GetFramebufferDescriptor,
+											GpuMsg::GetFramebufferDescription,
 											GpuMsg::GetGLFramebufferID
 										> >;
 
@@ -46,7 +46,7 @@ namespace PlatformGL
 
 	// variables
 	private:
-		FramebufferDescriptor		_descr;
+		FramebufferDescription		_descr;
 		gl::GLuint					_framebufferId;			// top - y max, bottom - 0
 		gl::GLuint					_flippedFramebufferId;	// top - 0, bottom - y max
 		gl::GLuint					_colorBufferId;
@@ -71,9 +71,9 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetGLFramebufferID (const Message< GpuMsg::GetGLFramebufferID > &);
-		bool _GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _GetGLFramebufferID (const GpuMsg::GetGLFramebufferID &);
+		bool _GetFramebufferDescription (const GpuMsg::GetFramebufferDescription &);
 
 	private:
 		bool _CreateFlippedFramebuffer ();
@@ -110,7 +110,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_Delete );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetGLFramebufferID );
-		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetFramebufferDescriptor );
+		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetFramebufferDescription );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetGLPrivateClasses );
@@ -271,7 +271,7 @@ namespace PlatformGL
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -327,7 +327,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4Device::GL4FlippedSystemFramebuffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4Device::GL4FlippedSystemFramebuffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyFlippedFramebuffer();
 
@@ -345,22 +345,22 @@ namespace PlatformGL
 	_GetGLFramebufferID
 =================================================
 */
-	bool GL4Device::GL4FlippedSystemFramebuffer::_GetGLFramebufferID (const Message< GpuMsg::GetGLFramebufferID > &msg)
+	bool GL4Device::GL4FlippedSystemFramebuffer::_GetGLFramebufferID (const GpuMsg::GetGLFramebufferID &msg)
 	{
 		ASSERT( _flippedFramebufferId != 0 );
 
-		msg->result.Set( _flippedFramebufferId );
+		msg.result.Set( _flippedFramebufferId );
 		return true;
 	}
 
 /*
 =================================================
-	_GetFramebufferDescriptor
+	_GetFramebufferDescription
 =================================================
 */
-	bool GL4Device::GL4FlippedSystemFramebuffer::_GetFramebufferDescriptor (const Message< GpuMsg::GetFramebufferDescriptor > &msg)
+	bool GL4Device::GL4FlippedSystemFramebuffer::_GetFramebufferDescription (const GpuMsg::GetFramebufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 

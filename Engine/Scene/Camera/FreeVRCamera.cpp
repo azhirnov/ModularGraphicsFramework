@@ -3,7 +3,7 @@
 #include "Engine/Scene/Public/Camera.h"
 #include "Engine/Scene/Impl/SceneObjectConstructor.h"
 #include "Engine/Scene/Impl/BaseSceneModule.h"
-#include "Engine/STL/Math/3D/PerspectiveCamera.h"
+#include "Core/STL/Math/3D/PerspectiveCamera.h"
 
 namespace Engine
 {
@@ -78,16 +78,16 @@ namespace Scene
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _CameraBindKeys (const Message< SceneMsg::CameraBindKeys > &);
-		bool _CameraGetState (const Message< SceneMsg::CameraGetState > &);
-		bool _CameraUpdateSettings (const Message< SceneMsg::CameraUpdateSettings > &);
-		bool _CameraGetSettings (const Message< SceneMsg::CameraGetSettings > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _CameraBindKeys (const SceneMsg::CameraBindKeys &);
+		bool _CameraGetState (const SceneMsg::CameraGetState &);
+		bool _CameraUpdateSettings (const SceneMsg::CameraUpdateSettings &);
+		bool _CameraGetSettings (const SceneMsg::CameraGetSettings &);
 
 	private:
-		bool _SurfaceOnResize (const Message< SceneMsg::SurfaceOnResize > &);
-		bool _SurfaceRequestUpdate (const Message< SceneMsg::SurfaceRequestUpdate > &);
+		bool _SurfaceOnResize (const SceneMsg::SurfaceOnResize &);
+		bool _SurfaceRequestUpdate (const SceneMsg::SurfaceRequestUpdate &);
 
 		void _OnKeyStepForward (const ModuleMsg::InputKey &);
 		void _OnKeyStepBackward (const ModuleMsg::InputKey &);
@@ -150,7 +150,7 @@ namespace Scene
 	_Link
 =================================================
 */
-	bool FreeVRCamera::_Link (const Message< ModuleMsg::Link > &msg)
+	bool FreeVRCamera::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -162,12 +162,12 @@ namespace Scene
 			ModulePtr	input;
 			CHECK_LINKING( input = GlobalSystems()->parallelThread->GetModuleByMsg< InputThreadMsgList_t >() );
 
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeVRCamera::_OnKeyStepForward,	"W"_KeyID,		EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeVRCamera::_OnKeyStepBackward,	"S"_KeyID,		EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeVRCamera::_OnKeyStepLeft,		"A"_KeyID,		EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeVRCamera::_OnKeyStepRight,		"D"_KeyID,		EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeVRCamera::_OnKeyStepDown,		"Ctrl"_KeyID,	EKeyState::OnKeyPressed });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &FreeVRCamera::_OnKeyStepUp,			"Space"_KeyID,	EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeVRCamera::_OnKeyStepForward,	"W"_KeyID,		EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeVRCamera::_OnKeyStepBackward,	"S"_KeyID,		EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeVRCamera::_OnKeyStepLeft,		"A"_KeyID,		EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeVRCamera::_OnKeyStepRight,		"D"_KeyID,		EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeVRCamera::_OnKeyStepDown,		"Ctrl"_KeyID,	EKeyState::OnKeyPressed });
+			input->Send( ModuleMsg::InputKeyBind{ this, &FreeVRCamera::_OnKeyStepUp,			"Space"_KeyID,	EKeyState::OnKeyPressed });
 		}
 
 		// subscribe to surface events
@@ -187,7 +187,7 @@ namespace Scene
 
 		CHECK( _SetState( EState::Linked ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
+		_SendUncheckedEvent( ModuleMsg::AfterLink{} );
 		return true;
 	}
 	
@@ -196,11 +196,11 @@ namespace Scene
 	_Update
 =================================================
 */
-	bool FreeVRCamera::_Update (const Message< ModuleMsg::Update > &msg)
+	bool FreeVRCamera::_Update (const ModuleMsg::Update &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
-		_positionDelta.Normalize() *= _settings.velocity * float(msg->timeDelta.Seconds());
+		_positionDelta.Normalize() *= _settings.velocity * float(msg.timeDelta.Seconds());
 
 		if ( IsNotZero( _positionDelta ) )
 			_camera.MoveFPSFree( _positionDelta );
@@ -216,9 +216,9 @@ namespace Scene
 	_SurfaceOnResize
 =================================================
 */
-	bool FreeVRCamera::_SurfaceOnResize (const Message< SceneMsg::SurfaceOnResize > &msg)
+	bool FreeVRCamera::_SurfaceOnResize (const SceneMsg::SurfaceOnResize &msg)
 	{
-		_camera.Resize( _camera.GetFovY(), float(msg->newSize.x) / float(msg->newSize.y) );
+		_camera.Resize( _camera.GetFovY(), float(msg.newSize.x) / float(msg.newSize.y) );
 		return true;
 	}
 	
@@ -227,20 +227,20 @@ namespace Scene
 	_SurfaceRequestUpdate
 =================================================
 */
-	bool FreeVRCamera::_SurfaceRequestUpdate (const Message< SceneMsg::SurfaceRequestUpdate > &msg)
+	bool FreeVRCamera::_SurfaceRequestUpdate (const SceneMsg::SurfaceRequestUpdate &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
-		CHECK_ERR( msg->framebuffers.Count() == CameraStates_t::Count() );
+		CHECK_ERR( msg.framebuffers.Count() == CameraStates_t::Count() );
 
-		_states[0].frustum.Setup( msg->framebuffers[0].projMat * msg->framebuffers[0].viewMat );
-		_states[0].viewMat = msg->framebuffers[0].viewMat;
-		_states[0].projMat = msg->framebuffers[0].projMat;
+		_states[0].frustum.Setup( msg.framebuffers[0].projMat * msg.framebuffers[0].viewMat );
+		_states[0].viewMat = msg.framebuffers[0].viewMat;
+		_states[0].projMat = msg.framebuffers[0].projMat;
 
-		_states[1].frustum.Setup( msg->framebuffers[1].projMat * msg->framebuffers[1].viewMat );
-		_states[1].viewMat = msg->framebuffers[1].viewMat;
-		_states[1].projMat = msg->framebuffers[1].projMat;
+		_states[1].frustum.Setup( msg.framebuffers[1].projMat * msg.framebuffers[1].viewMat );
+		_states[1].viewMat = msg.framebuffers[1].viewMat;
+		_states[1].projMat = msg.framebuffers[1].projMat;
 
-		CHECK_ERR( _SendEvent< SceneMsg::CameraRequestUpdate >({ _states, msg->framebuffers, msg->cmdBuilder }) );
+		CHECK_ERR( _SendEvent( SceneMsg::CameraRequestUpdate{ _states, msg.framebuffers, msg.cmdBuilder }) );
 
 		return true;
 	}
@@ -250,7 +250,7 @@ namespace Scene
 	_CameraBindKeys
 =================================================
 */
-	bool FreeVRCamera::_CameraBindKeys (const Message< SceneMsg::CameraBindKeys > &msg)
+	bool FreeVRCamera::_CameraBindKeys (const SceneMsg::CameraBindKeys &msg)
 	{
 		// TODO
 		return true;
@@ -261,9 +261,9 @@ namespace Scene
 	_CameraGetState
 =================================================
 */
-	bool FreeVRCamera::_CameraGetState (const Message< SceneMsg::CameraGetState > &msg)
+	bool FreeVRCamera::_CameraGetState (const SceneMsg::CameraGetState &msg)
 	{
-		msg->result.Set({ ArrayCRef<CameraState_t>( _states ) });
+		msg.result.Set({ ArrayCRef<CameraState_t>( _states ) });
 		return true;
 	}
 	
@@ -272,9 +272,9 @@ namespace Scene
 	_CameraUpdateSettings
 =================================================
 */
-	bool FreeVRCamera::_CameraUpdateSettings (const Message< SceneMsg::CameraUpdateSettings > &msg)
+	bool FreeVRCamera::_CameraUpdateSettings (const SceneMsg::CameraUpdateSettings &msg)
 	{
-		_settings = msg->settings;
+		_settings = msg.settings;
 		return true;
 	}
 	
@@ -283,9 +283,9 @@ namespace Scene
 	_CameraGetSettings
 =================================================
 */
-	bool FreeVRCamera::_CameraGetSettings (const Message< SceneMsg::CameraGetSettings > &msg)
+	bool FreeVRCamera::_CameraGetSettings (const SceneMsg::CameraGetSettings &msg)
 	{
-		msg->result.Set( _settings );
+		msg.result.Set( _settings );
 		return true;
 	}
 

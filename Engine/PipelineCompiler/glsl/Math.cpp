@@ -10,6 +10,8 @@ namespace glsl_vfs
 	This is generated file, don't change anything!
 */
 
+#include <Common/Cmp.glsl>
+#include <Math/MathDef.glsl>
 
 // Trigonometry
 float2  SinCos (const float x);
@@ -395,9 +397,9 @@ float4 BumpStep (const float4 x, const float edge0, const float edge1);
 double BumpStep (const double x, const double edge0, const double edge1);
 double2 BumpStep (const double2 x, const double2 edge0, const double2 edge1);
 double2 BumpStep (const double2 x, const double edge0, const double edge1);
-double3 BumpStep (const double3 x, const double3 edge0, const dou)#";
+double3 B)#";
 
-		src << R"#(ble3 edge1);
+		src << R"#(umpStep (const double3 x, const double3 edge0, const double3 edge1);
 double3 BumpStep (const double3 x, const double edge0, const double edge1);
 double4 BumpStep (const double4 x, const double4 edge0, const double4 edge1);
 double4 BumpStep (const double4 x, const double edge0, const double edge1);
@@ -784,12 +786,12 @@ int3 Wrap (const int3 x, const int3 minVal, const int3 maxVal)
 	return int3(
 		Wrap( x[0], minVal[0], maxVal[0] ),
 		Wrap( x[1], minVal[1], maxVal[1] ),
-		Wrap( x[2], minVal[2], maxVal[2] ) );
+		Wrap( x[2], minVal)#";
+
+		src << R"#([2], maxVal[2] ) );
 }
 
-int4 Wrap (const int4 x, const in)#";
-
-		src << R"#(t minVal, const int maxVal)  { return Wrap( x, int4( minVal ), int4( maxVal ) ); }
+int4 Wrap (const int4 x, const int minVal, const int maxVal)  { return Wrap( x, int4( minVal ), int4( maxVal ) ); }
 int4 Wrap (const int4 x, const int4 minVal, const int4 maxVal)
 {
 	return int4(
@@ -1180,9 +1182,9 @@ double BiLerp (const double v0, const double v1, const double v2, const double v
 {
 	return Lerp( Lerp( v0, v3, factor.x ), Lerp( v1, v2, factor.x ), factor.y );
 }
-double2 BiLerp (const double2 v0, const double2 v1, const double2 v2, const d)#";
+double2 BiLerp (const)#";
 
-		src << R"#(ouble2 v3, const double2 factor)
+		src << R"#( double2 v0, const double2 v1, const double2 v2, const double2 v3, const double2 factor)
 {
 	return Lerp( Lerp( v0, v3, factor.x ), Lerp( v1, v2, factor.x ), factor.y );
 }

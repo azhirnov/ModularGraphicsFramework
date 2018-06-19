@@ -48,21 +48,23 @@ namespace PipelineCompiler
 					const auto		scalar	 = EShaderVariable::ToScalar( var.type );
 
 					// scalar or vector
-					if ( vec_size > 0 )
+					if ( vec_size > 0 and var.arraySize.IsNotArray() )
+					{
+						// rule 1, 2, 3
+						var.align	= vec_size == 1 ?	EShaderVariable::SizeOf( var.type, 0_b ) :
+									  vec_size == 2 ?	EShaderVariable::SizeOf( var.type, 0_b ) :
+									  /* 3 or 4 */		EShaderVariable::SizeOf( scalar, 0_b ) * 4;
+						var.stride	= var.align;
+						size_of		= EShaderVariable::SizeOf( var.type, 0_b );
+					}
+					else
+					// scalar or vector array
+					if ( vec_size > 0 and var.arraySize.IsArray() )
 					{
 						// rule 4
-						if ( var.arraySize == 1 )
-						{
-							// rule 1, 2, 3
-							var.align =	vec_size == 1 ?	EShaderVariable::SizeOf( var.type, 0_b ) :
-										vec_size == 2 ?	EShaderVariable::SizeOf( var.type, 0_b ) :
-										/* 3 or 4 */	EShaderVariable::SizeOf( scalar, 0_b ) * 4;
-						}
-						else
-							var.align = EShaderVariable::SizeOf( var.type, vec4_align );
-
+						var.align	= EShaderVariable::SizeOf( var.type, vec4_align );
 						var.stride	= var.align;
-						size_of		= var.align * var.arraySize;
+						size_of		= var.align * var.arraySize.Size();
 					}
 					else
 					// matrix
@@ -71,7 +73,7 @@ namespace PipelineCompiler
 						// rules 5..8 equivalent of rule 4
 						var.align	= EShaderVariable::SizeOf( EShaderVariable::ToVec( scalar, mat_size.x ), vec4_align );
 						var.stride	= EShaderVariable::SizeOf( var.type, var.align );
-						size_of		= var.stride * var.arraySize;
+						size_of		= var.stride * var.arraySize.Size();
 					}
 					else
 					// sampler or struct or array of samplers or structs
@@ -90,17 +92,20 @@ namespace PipelineCompiler
 					const uint		vec_size = EShaderVariable::VecSize( var.type );
 					const uint2		mat_size = EShaderVariable::MatSize( var.type );
 					const auto		scalar	 = EShaderVariable::ToScalar( var.type );
-
+					
 					// scalar or vector
 					if ( vec_size > 0 )
 					{
 						// rule 1, 2, 3
-						var.align =	vec_size == 1 ?	EShaderVariable::SizeOf( var.type, 0_b ) :
-									vec_size == 2 ?	EShaderVariable::SizeOf( var.type, 0_b ) :
-									/* 3 or 4 */	EShaderVariable::SizeOf( scalar, 0_b ) * 4;
-
+						var.align	= vec_size == 1 ?	EShaderVariable::SizeOf( var.type, 0_b ) :
+									  vec_size == 2 ?	EShaderVariable::SizeOf( var.type, 0_b ) :
+									  /* 3 or 4 */		EShaderVariable::SizeOf( scalar, 0_b ) * 4;
 						var.stride	= var.align;
-						size_of		= var.align * var.arraySize;
+
+						// rule 4
+						size_of		= var.arraySize.IsNotArray() ?
+										EShaderVariable::SizeOf( var.type, 0_b ) :
+										var.align * var.arraySize.Size();
 					}
 					else
 					// matrix
@@ -109,7 +114,7 @@ namespace PipelineCompiler
 						// rules 5..8 equivalent of rule 4
 						var.align	= EShaderVariable::SizeOf( EShaderVariable::ToVec( scalar, mat_size.x ), vec4_align );
 						var.stride	= EShaderVariable::SizeOf( var.type, var.align );
-						size_of		= var.stride * var.arraySize;
+						size_of		= var.stride * var.arraySize.Size();
 					}
 					else
 					// sampler or struct or array of samplers or structs
@@ -125,9 +130,37 @@ namespace PipelineCompiler
 				{
 					var.align	= 1_b;
 					var.stride	= EShaderVariable::SizeOf( var.type, 0_b );
-					size_of		= var.stride * var.arraySize;
+					size_of		= var.stride * var.arraySize.Size();
 
 					WARNING( "implementation definied packing!" );
+					break;
+				}
+
+				case EVariablePacking::CLPack :
+				{
+					const uint		vec_size = EShaderVariable::VecSize( var.type );
+					const uint2		mat_size = EShaderVariable::MatSize( var.type );
+					const auto		scalar	 = EShaderVariable::ToScalar( var.type );
+
+					// scalar or vector
+					if ( vec_size > 0 )
+					{
+						var.align	= EShaderVariable::SizeOf( var.type, vec4_align );
+						var.stride	= var.align;
+						size_of		= var.align * var.arraySize.Size();
+					}
+					else
+					// matrix
+					if ( All( mat_size > 0 ) )
+					{
+						var.align	= EShaderVariable::SizeOf( EShaderVariable::ToVec( scalar, mat_size.x ), vec4_align );
+						var.stride	= EShaderVariable::SizeOf( var.type, var.align );
+						size_of		= var.stride * var.arraySize.Size();
+					}
+					else
+					{
+						TODO( "" );
+					}
 					break;
 				}
 
@@ -157,6 +190,7 @@ namespace PipelineCompiler
 					break;
 
 				case EVariablePacking::Std140 :
+				case EVariablePacking::CLPack :
 					// rule 9
 					var.align = Max( max_align, vec4_align );
 					break;
@@ -190,11 +224,11 @@ namespace PipelineCompiler
 			ASSERT( max_align <= var.align );
 			ASSERT( offset - var.offset == size );
 
-			if ( var.arraySize > 0 ) {
-				ASSERT( (offset + size * (var.arraySize - 1)) == (var.offset + var.stride * var.arraySize) );
+			if ( not var.arraySize.IsDynamicArray() ) {
+				ASSERT( (offset + size * (var.arraySize.Size() - 1)) == (var.offset + var.stride * var.arraySize.Size()) );
 			}
 
-			offset		= var.offset + var.stride * var.arraySize;
+			offset		= var.offset + var.stride * var.arraySize.Size();
 			return true;
 		}
 
@@ -207,7 +241,7 @@ namespace PipelineCompiler
 				auto&	var = fields[i];
 
 				// if dynamic array
-				if ( var.arraySize == 0 ) {
+				if ( var.arraySize.IsDynamicArray() ) {
 					ASSERT( i == fields.LastIndex() and "dynamic array must be the last element of buffer!" );
 				}
 
@@ -275,13 +309,13 @@ namespace PipelineCompiler
 				Variable		padding;
 				padding.name		= "_padding"_str << (_paddingCount++);
 				padding.type		= EShaderVariable::ToVec( EShaderVariable::Float, padding_vec );
-				padding.arraySize	= 1;
 				padding.offset		= var2.offset + var2.stride + stride;
 				padding.stride		= EShaderVariable::SizeOf( padding.type, 4_b );
 				padding.align		= padding.stride;
 				padding.precision	= var2.precision;
 				padding.qualifier	= var2.qualifier;
 				padding.memoryModel	= var2.memoryModel;
+				padding.arraySize.MakeNonArray();
 
 				stride += padding.stride;
 
@@ -338,7 +372,7 @@ namespace PipelineCompiler
 		virtual void ReplaceArray (INOUT Array<Variable> &fields, INOUT usize &i, BytesU sizeOf)
 		{
 			auto&			var			= fields[i];
-			const BytesU	elem_size	= (i < fields.LastIndex() ? (fields[i+1].offset - var.offset) / var.arraySize : var.stride);
+			const BytesU	elem_size	= (i < fields.LastIndex() ? (fields[i+1].offset - var.offset) / var.arraySize.Size() : var.stride);
 			const uint		vec_size	= EShaderVariable::VecSize( var.type );
 			const uint2		mat_size	= EShaderVariable::MatSize( var.type );
 			const BytesU	scalar_size	= EShaderVariable::SizeOf( EShaderVariable::ToScalar( var.type ), 0_b );
@@ -363,7 +397,7 @@ namespace PipelineCompiler
 					
 			// add padding
 			const BytesU	unaligned		= EShaderVariable::SizeOf( var.type, 0_b );
-			const BytesU	padding_size	= sizeOf - unaligned * var.arraySize;
+			const BytesU	padding_size	= sizeOf - unaligned * var.arraySize.Size();
 
 			if ( padding_size != 0_b )
 			{
@@ -372,13 +406,13 @@ namespace PipelineCompiler
 
 				padding.name		= "_padding"_str << (_paddingCount++);
 				padding.type		= EShaderVariable::ToVec( EShaderVariable::Float, new_vsize );
-				padding.arraySize	= 1;
-				padding.offset		= var.offset + unaligned * var.arraySize;
+				padding.offset		= var.offset + unaligned * var.arraySize.Size();
 				padding.stride		= EShaderVariable::SizeOf( padding.type, 4_b );
 				padding.align		= padding.stride;
 				padding.precision	= var.precision;
 				padding.qualifier	= var.qualifier;
 				padding.memoryModel	= var.memoryModel;
+				padding.arraySize.MakeNonArray();
 
 				ASSERT( padding.stride == EShaderVariable::SizeOf( padding.type, padding.align ) );
 				ASSERT( padding_size == padding.stride );
@@ -405,8 +439,8 @@ namespace PipelineCompiler
 			_processedTypes.Add( typeName );
 
 			// prepare
-			BytesU	min_offset		= ~0_b;
-			BytesU	max_offset		= 0_b;
+			BytesU	min_offset	= ~0_b;
+			BytesU	max_offset	= 0_b;
 			
 			FOR( i, fields )
 			{
@@ -445,14 +479,14 @@ namespace PipelineCompiler
 				else
 				{
 					const auto&		var			= fields[i];
-					const BytesU	unaligned	= EShaderVariable::SizeOf( var.type, 0_b ) * var.arraySize;
-					const BytesU	size_of		= (i < fields.LastIndex() ? fields[i+1].offset - var.offset : var.stride * var.arraySize);
+					const BytesU	unaligned	= EShaderVariable::SizeOf( var.type, 0_b ) * var.arraySize.Size();
+					const BytesU	size_of		= (i < fields.LastIndex() ? fields[i+1].offset - var.offset : var.stride * var.arraySize.Size());
 					const uint2		mat_size	= EShaderVariable::MatSize( var.type );
 					
 					if ( unaligned == size_of )
 						{}	// without padding
 					else
-					if ( var.arraySize > 1 )
+					if ( var.arraySize.IsArray() )
 						ReplaceArray( INOUT fields, INOUT i, size_of );
 					else
 					if ( All( mat_size > 0u ) )
@@ -466,7 +500,7 @@ namespace PipelineCompiler
 
 					var.offset -= min_offset;
 
-					offset	 = var.offset + var.stride * var.arraySize;
+					offset	 = var.offset + var.stride * var.arraySize.Size();
 					maxAlign = Max( var.align, maxAlign );
 				}
 			}

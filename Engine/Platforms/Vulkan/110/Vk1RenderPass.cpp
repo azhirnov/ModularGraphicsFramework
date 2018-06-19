@@ -1,10 +1,10 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
-#include "Engine/Platforms/Vulkan/110/Vk1RenderPass.h"
+#include "Engine/Platforms/Vulkan/110/Vk1RenderPassCache.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
 namespace Engine
@@ -22,7 +22,7 @@ namespace PlatformVK
 	// types
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetRenderPassDescriptor,
+											GpuMsg::GetRenderPassDescription,
 											GpuMsg::GetVkRenderPassID
 										> >;
 
@@ -37,7 +37,7 @@ namespace PlatformVK
 
 	// variables
 	private:
-		RenderPassDescriptor	_descr;
+		RenderPassDescription	_descr;
 
 		vk::VkRenderPass		_renderPassId;
 
@@ -47,15 +47,15 @@ namespace PlatformVK
 		Vk1RenderPass (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci);
 		~Vk1RenderPass ();
 
-		RenderPassDescriptor const&	GetDescriptor ()	const	{ return _descr; }
+		RenderPassDescription const&	GetDescription ()	const	{ return _descr; }
 
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetVkRenderPassID (const Message< GpuMsg::GetVkRenderPassID > &);
-		bool _GetRenderPassDescriptor (const Message< GpuMsg::GetRenderPassDescriptor > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _GetVkRenderPassID (const GpuMsg::GetVkRenderPassID &);
+		bool _GetRenderPassDescription (const GpuMsg::GetRenderPassDescription &);
 
 	private:
 		bool _IsCreated () const;
@@ -92,7 +92,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1RenderPass::_Delete );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkRenderPassID );
-		_SubscribeOnMsg( this, &Vk1RenderPass::_GetRenderPassDescriptor );
+		_SubscribeOnMsg( this, &Vk1RenderPass::_GetRenderPassDescription );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkPrivateClasses );
@@ -117,7 +117,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1RenderPass::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool Vk1RenderPass::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -133,7 +133,7 @@ namespace PlatformVK
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -142,7 +142,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1RenderPass::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1RenderPass::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyRenderPass();
 
@@ -154,22 +154,22 @@ namespace PlatformVK
 	_GetVkRenderPassID
 =================================================
 */
-	bool Vk1RenderPass::_GetVkRenderPassID (const Message< GpuMsg::GetVkRenderPassID > &msg)
+	bool Vk1RenderPass::_GetVkRenderPassID (const GpuMsg::GetVkRenderPassID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set( _renderPassId );
+		msg.result.Set( _renderPassId );
 		return true;
 	}
 
 /*
 =================================================
-	_GetRenderPassDescriptor
+	_GetRenderPassDescription
 =================================================
 */
-	bool Vk1RenderPass::_GetRenderPassDescriptor (const Message< GpuMsg::GetRenderPassDescriptor > &msg)
+	bool Vk1RenderPass::_GetRenderPassDescription (const GpuMsg::GetRenderPassDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
@@ -194,12 +194,12 @@ namespace PlatformVK
 		
 		CHECK_ERR( not _IsCreated() );
 
-		using Attachments		= FixedSizeArray< VkAttachmentDescription, RenderPassDescriptor::MAX_COLOR_ATTACHMENTS+1 >;
-		using AttachmentsRef	= FixedSizeArray< VkAttachmentReference, RenderPassDescriptor::MAX_COLOR_ATTACHMENTS * RenderPassDescriptor::MAX_SUBPASSES >;
-		using AttachmentsRef2	= FixedSizeArray< VkAttachmentReference, RenderPassDescriptor::MAX_SUBPASSES >;
-		using Subpasses			= FixedSizeArray< VkSubpassDescription, RenderPassDescriptor::MAX_SUBPASSES >;
-		using Dependencies		= FixedSizeArray< VkSubpassDependency, RenderPassDescriptor::MAX_DEPENDENCIES >;
-		using Preserves			= FixedSizeArray< uint32_t, RenderPassDescriptor::MAX_COLOR_ATTACHMENTS * RenderPassDescriptor::MAX_SUBPASSES >;
+		using Attachments		= FixedSizeArray< VkAttachmentDescription, RenderPassDescription::MAX_COLOR_ATTACHMENTS+1 >;
+		using AttachmentsRef	= FixedSizeArray< VkAttachmentReference, RenderPassDescription::MAX_COLOR_ATTACHMENTS * RenderPassDescription::MAX_SUBPASSES >;
+		using AttachmentsRef2	= FixedSizeArray< VkAttachmentReference, RenderPassDescription::MAX_SUBPASSES >;
+		using Subpasses			= FixedSizeArray< VkSubpassDescription, RenderPassDescription::MAX_SUBPASSES >;
+		using Dependencies		= FixedSizeArray< VkSubpassDependency, RenderPassDescription::MAX_DEPENDENCIES >;
+		using Preserves			= FixedSizeArray< uint32_t, RenderPassDescription::MAX_COLOR_ATTACHMENTS * RenderPassDescription::MAX_SUBPASSES >;
 
 		Attachments				attachments;
 		AttachmentsRef			color_attach_ref;
@@ -386,8 +386,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */
-	inline bool Vk1RenderPassCache::SearchableRenderPass::operator == (const SearchableRenderPass &right) const	{ return rp->GetDescriptor() == right.rp->GetDescriptor(); }
-	inline bool Vk1RenderPassCache::SearchableRenderPass::operator >  (const SearchableRenderPass &right) const	{ return rp->GetDescriptor() >  right.rp->GetDescriptor(); }
+	inline bool Vk1RenderPassCache::SearchableRenderPass::operator == (const SearchableRenderPass &right) const	{ return rp->GetDescription() == right.rp->GetDescription(); }
+	inline bool Vk1RenderPassCache::SearchableRenderPass::operator >  (const SearchableRenderPass &right) const	{ return rp->GetDescription() >  right.rp->GetDescription(); }
 //-----------------------------------------------------------------------------
 	
 
@@ -396,8 +396,8 @@ namespace PlatformVK
 	constructor
 =================================================
 */		
-	inline bool Vk1RenderPassCache::RenderPassSearch::operator == (const SearchableRenderPass &right) const	{ return descr == right.rp->GetDescriptor(); }
-	inline bool Vk1RenderPassCache::RenderPassSearch::operator >  (const SearchableRenderPass &right) const	{ return descr >  right.rp->GetDescriptor(); }
+	inline bool Vk1RenderPassCache::RenderPassSearch::operator == (const SearchableRenderPass &right) const	{ return descr == right.rp->GetDescription(); }
+	inline bool Vk1RenderPassCache::RenderPassSearch::operator >  (const SearchableRenderPass &right) const	{ return descr >  right.rp->GetDescription(); }
 //-----------------------------------------------------------------------------
 
 	
@@ -433,7 +433,7 @@ namespace PlatformVK
 		// create new render pass
 		auto	result = New< Vk1RenderPass >( id, gs, ci );
 
-		ModuleUtils::Initialize( {result}, null );
+		ModuleUtils::Initialize({ result });
 
 		CHECK_ERR( result->GetState() == Module::EState::ComposedImmutable );
 
@@ -448,10 +448,8 @@ namespace PlatformVK
 */
 	void Vk1RenderPassCache::Destroy ()
 	{
-		Message< ModuleMsg::Delete >	del_msg;
-
 		for (auto& pass : _renderPasses) {
-			pass.rp->Send( del_msg );
+			pass.rp->Send( ModuleMsg::Delete{} );
 		}
 
 		_renderPasses.Clear();
@@ -466,13 +464,13 @@ namespace Platforms
 	ModulePtr VulkanObjectsConstructor::CreateVk1RenderPass (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci)
 	{
 		ModulePtr	mod;
-		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetVkPrivateClasses>> >() );
+		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< ModuleMsg::MessageListFrom< GpuMsg::GetVkPrivateClasses >>() );
 
-		Message< GpuMsg::GetVkPrivateClasses >	req_classes;
+		GpuMsg::GetVkPrivateClasses		req_classes;
 		mod->Send( req_classes );
-		CHECK_ERR( req_classes->result.IsDefined() and req_classes->result->renderPassCache );
+		CHECK_ERR( req_classes.result and req_classes.result->renderPassCache );
 
-		return req_classes->result->renderPassCache->Create( id, gs, ci );
+		return req_classes.result->renderPassCache->Create( id, gs, ci );
 	}
 
 }	// Platforms

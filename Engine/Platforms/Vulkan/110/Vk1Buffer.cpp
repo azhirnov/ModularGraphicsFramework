@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -23,10 +23,10 @@ namespace PlatformVK
 	// types
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::ReadRegion,
 											DSMsg::WriteRegion,
-											GpuMsg::GetGpuMemoryDescriptor,
+											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -38,14 +38,14 @@ namespace PlatformVK
 										>;
 
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetBufferDescriptor,
-											GpuMsg::SetBufferDescriptor,
+											GpuMsg::GetBufferDescription,
+											GpuMsg::SetBufferDescription,
 											GpuMsg::GetVkBufferID,
 											GpuMsg::GpuMemoryRegionChanged
 										> >::Append< ForwardToMem_t >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t::Append< MessageListFrom<
-											GpuMsg::SetBufferDescriptor
+											GpuMsg::SetBufferDescription
 										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
@@ -59,7 +59,7 @@ namespace PlatformVK
 
 	// variables
 	private:
-		BufferDescriptor		_descr;
+		BufferDescription		_descr;
 		ModulePtr				_memObj;
 		ModulePtr				_memManager;	// optional
 		vk::VkBuffer			_bufferId;
@@ -79,18 +79,18 @@ namespace PlatformVK
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		bool _GetVkBufferID (const Message< GpuMsg::GetVkBufferID > &);
-		bool _GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &);
-		bool _SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &);
-		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		bool _GetVkBufferID (const GpuMsg::GetVkBufferID &);
+		bool _GetBufferDescription (const GpuMsg::GetBufferDescription &);
+		bool _SetBufferDescription (const GpuMsg::SetBufferDescription &);
+		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
 		
 	// event handlers
-		bool _OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &);
+		bool _OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &);
 
 
 	private:
@@ -132,8 +132,8 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Buffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1Buffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkBufferID );
-		_SubscribeOnMsg( this, &Vk1Buffer::_GetBufferDescriptor );
-		_SubscribeOnMsg( this, &Vk1Buffer::_SetBufferDescriptor );
+		_SubscribeOnMsg( this, &Vk1Buffer::_GetBufferDescription );
+		_SubscribeOnMsg( this, &Vk1Buffer::_SetBufferDescription );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkPrivateClasses );
@@ -157,7 +157,7 @@ namespace PlatformVK
 	_Link
 =================================================
 */
-	bool Vk1Buffer::_Link (const Message< ModuleMsg::Link > &msg)
+	bool Vk1Buffer::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -192,7 +192,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1Buffer::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool Vk1Buffer::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) or _IsCreated() )
 			return true;	// already composed
@@ -214,7 +214,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1Buffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1Buffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyAll();
 
@@ -226,11 +226,11 @@ namespace PlatformVK
 	_AttachModule
 =================================================
 */
-	bool Vk1Buffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool Vk1Buffer::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_mem	= msg->newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
+		const bool	is_mem	= msg.newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		if ( is_mem )
 		{
@@ -245,11 +245,11 @@ namespace PlatformVK
 	_DetachModule
 =================================================
 */
-	bool Vk1Buffer::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool Vk1Buffer::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule == _memObj )
+		if ( msg.oldModule == _memObj )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_OnMemoryUnbinded();
@@ -259,25 +259,25 @@ namespace PlatformVK
 
 /*
 =================================================
-	_GetBufferDescriptor
+	_GetBufferDescription
 =================================================
 */
-	bool Vk1Buffer::_GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &msg)
+	bool Vk1Buffer::_GetBufferDescription (const GpuMsg::GetBufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_SetBufferDescriptor
+	_SetBufferDescription
 =================================================
 */
-	bool Vk1Buffer::_SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &msg)
+	bool Vk1Buffer::_SetBufferDescription (const GpuMsg::SetBufferDescription &msg)
 	{
 		CHECK_ERR( GetState() == EState::Initial );
 
-		_descr = msg->descr;
+		_descr = msg.descr;
 		return true;
 	}
 
@@ -286,11 +286,11 @@ namespace PlatformVK
 	_GetVkBufferID
 =================================================
 */
-	bool Vk1Buffer::_GetVkBufferID (const Message< GpuMsg::GetVkBufferID > &msg)
+	bool Vk1Buffer::_GetVkBufferID (const GpuMsg::GetVkBufferID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set( _bufferId );
+		msg.result.Set( _bufferId );
 		return true;
 	}
 	
@@ -299,25 +299,25 @@ namespace PlatformVK
 	_OnMemoryBindingChanged
 =================================================
 */
-	bool Vk1Buffer::_OnMemoryBindingChanged (const Message< GpuMsg::OnMemoryBindingChanged > &msg)
+	bool Vk1Buffer::_OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &msg)
 	{
 		CHECK_ERR( _IsComposedOrLinkedState( GetState() ) );
 
 		using EBindingTarget = GpuMsg::OnMemoryBindingChanged::EBindingTarget;
 
-		if (  msg->targetObject == this )
+		if (  msg.targetObject == this )
 		{
-			_isBindedToMemory = ( msg->newState == EBindingTarget::Buffer );
+			_isBindedToMemory = ( msg.newState == EBindingTarget::Buffer );
 
 			if ( _isBindedToMemory )
 			{
 				CHECK( _SetState( EState::ComposedMutable ) );
 				
-				_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+				_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 			}
 			else
 			{
-				CHECK( _SetState( EState::Linked ) );
+				_SendMsg( ModuleMsg::Delete{} );
 			}
 		}
 		return true;
@@ -406,7 +406,7 @@ namespace PlatformVK
 	_GpuMemoryRegionChanged
 =================================================
 */
-	bool Vk1Buffer::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &)
+	bool Vk1Buffer::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
 	{
 		// request buffer memory barrier
 		TODO( "" );

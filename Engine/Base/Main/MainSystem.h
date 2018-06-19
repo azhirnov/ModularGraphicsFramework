@@ -64,7 +64,7 @@ namespace Base
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Delete (const ModuleMsg::Delete &);
 
 	private:
 		void _Create () noexcept;

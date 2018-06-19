@@ -59,8 +59,8 @@ namespace ResPack
 
 }	// ResPack
 
-namespace GX_STL::GXScript
+namespace GXScript
 {
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptGraphicsPipeline,	"GraphicsPipeline" );
 
-}	// GX_STL::GXScript
+}	// GXScript

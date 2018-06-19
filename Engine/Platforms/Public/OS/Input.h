@@ -61,7 +61,7 @@ namespace ModuleMsg
 	//
 	// Input Key / Button Event
 	//
-	struct InputKey
+	struct InputKey : _MessageBase_
 	{
 	// types
 		using KeyID = Platforms::KeyID;
@@ -83,7 +83,7 @@ namespace ModuleMsg
 	//
 	// Input Motion Event
 	//
-	struct InputMotion
+	struct InputMotion : _MessageBase_
 	{
 	// types
 		using MotionID = Platforms::MotionID;
@@ -103,7 +103,7 @@ namespace ModuleMsg
 	//
 	// Bind On Key Event
 	//
-	struct InputKeyBind
+	struct InputKeyBind : _MessageBase_
 	{
 	// types
 		using KeyID			= Platforms::KeyID;
@@ -124,16 +124,20 @@ namespace ModuleMsg
 		{}
 	};
 
-	struct InputKeyUnbindAll
+	struct InputKeyUnbindAll : _MessageBase_
 	{
+	// variables
 		ModuleWPtr		object;
+
+	// methods
+		explicit InputKeyUnbindAll (const ModuleWPtr &obj) : object{obj} {}
 	};
 
 
 	//
 	// Bind On Motion Event
 	//
-	struct InputMotionBind
+	struct InputMotionBind : _MessageBase_
 	{
 	// types
 		using MotionID		= Platforms::MotionID;
@@ -152,9 +156,14 @@ namespace ModuleMsg
 		{}
 	};
 
-	struct InputMotionUnbindAll
+
+	struct InputMotionUnbindAll : _MessageBase_
 	{
+	// variables
 		ModuleWPtr		object;
+
+	// methods
+		explicit InputMotionUnbindAll (const ModuleWPtr &obj) : object{obj} {}
 	};
 
 

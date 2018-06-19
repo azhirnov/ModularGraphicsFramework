@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -23,7 +23,7 @@ namespace PlatformCL
 	// types
 	private:
 		using SupportedMessages_t	= CL1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetSamplerDescriptor,
+											GpuMsg::GetSamplerDescription,
 											GpuMsg::GetCLSamplerID
 										> >;
 
@@ -38,7 +38,7 @@ namespace PlatformCL
 
 	// variables
 	private:
-		SamplerDescriptor	_descr;
+		SamplerDescription	_descr;
 
 		cl::cl_sampler		_samplerId;
 
@@ -48,15 +48,15 @@ namespace PlatformCL
 		CL1Sampler (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
 		~CL1Sampler ();
 
-		SamplerDescriptor const&	GetDescriptor ()	const	{ return _descr; }
+		SamplerDescription const&	GetDescription ()	const	{ return _descr; }
 
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetCLSamplerID (const Message< GpuMsg::GetCLSamplerID > &);
-		bool _GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _GetCLSamplerID (const GpuMsg::GetCLSamplerID &);
+		bool _GetSamplerDescription (const GpuMsg::GetSamplerDescription &);
 
 	private:
 		bool _IsCreated () const;
@@ -92,7 +92,7 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1Sampler::_Delete );
 		_SubscribeOnMsg( this, &CL1Sampler::_OnManagerChanged );
 		_SubscribeOnMsg( this, &CL1Sampler::_GetCLSamplerID );
-		_SubscribeOnMsg( this, &CL1Sampler::_GetSamplerDescriptor );
+		_SubscribeOnMsg( this, &CL1Sampler::_GetSamplerDescription );
 		_SubscribeOnMsg( this, &CL1Sampler::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &CL1Sampler::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &CL1Sampler::_GetCLPrivateClasses );
@@ -117,7 +117,7 @@ namespace PlatformCL
 	_Compose
 =================================================
 */
-	bool CL1Sampler::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool CL1Sampler::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already linked
@@ -133,7 +133,7 @@ namespace PlatformCL
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -142,7 +142,7 @@ namespace PlatformCL
 	_Delete
 =================================================
 */
-	bool CL1Sampler::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool CL1Sampler::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroySampler();
 
@@ -154,22 +154,22 @@ namespace PlatformCL
 	_GetCLSamplerID
 =================================================
 */
-	bool CL1Sampler::_GetCLSamplerID (const Message< GpuMsg::GetCLSamplerID > &msg)
+	bool CL1Sampler::_GetCLSamplerID (const GpuMsg::GetCLSamplerID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set( _samplerId );
+		msg.result.Set( _samplerId );
 		return true;
 	}
 
 /*
 =================================================
-	_GetSamplerDescriptor
+	_GetSamplerDescription
 =================================================
 */
-	bool CL1Sampler::_GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &msg)
+	bool CL1Sampler::_GetSamplerDescription (const GpuMsg::GetSamplerDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
@@ -233,8 +233,8 @@ namespace PlatformCL
 	SearchableSampler
 =================================================
 */
-	inline bool CL1SamplerCache::SearchableSampler::operator == (const SearchableSampler &right) const	{ return samp->GetDescriptor() == right.samp->GetDescriptor(); }
-	inline bool CL1SamplerCache::SearchableSampler::operator >  (const SearchableSampler &right) const	{ return samp->GetDescriptor() >  right.samp->GetDescriptor(); }
+	inline bool CL1SamplerCache::SearchableSampler::operator == (const SearchableSampler &right) const	{ return samp->GetDescription() == right.samp->GetDescription(); }
+	inline bool CL1SamplerCache::SearchableSampler::operator >  (const SearchableSampler &right) const	{ return samp->GetDescription() >  right.samp->GetDescription(); }
 		
 //-----------------------------------------------------------------------------
 
@@ -244,8 +244,8 @@ namespace PlatformCL
 	SamplerSearch
 =================================================
 */	
-	inline bool CL1SamplerCache::SamplerSearch::operator == (const SearchableSampler &right) const	{ return descr == right.samp->GetDescriptor(); }
-	inline bool CL1SamplerCache::SamplerSearch::operator >  (const SearchableSampler &right) const	{ return descr >  right.samp->GetDescriptor(); }
+	inline bool CL1SamplerCache::SamplerSearch::operator == (const SearchableSampler &right) const	{ return descr == right.samp->GetDescription(); }
+	inline bool CL1SamplerCache::SamplerSearch::operator >  (const SearchableSampler &right) const	{ return descr >  right.samp->GetDescription(); }
 	
 //-----------------------------------------------------------------------------
 
@@ -267,8 +267,8 @@ namespace PlatformCL
 */
 	CL1SamplerCache::CL1SamplerPtr  CL1SamplerCache::Create (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
-		SamplerDescriptor	descr = ci.descr;
-		PlatformTools::SamplerUtils::ValidateDescriptor( INOUT descr, 0 );
+		SamplerDescription	descr = ci.descr;
+		PlatformTools::SamplerUtils::ValidateDescription( INOUT descr, 0 );
 
 		// find cached sampler
 		Samplers_t::const_iterator	iter;
@@ -302,13 +302,13 @@ namespace Platforms
 	ModulePtr OpenCLObjectsConstructor::CreateCL1Sampler (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
 		ModulePtr	mod;
-		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetCLPrivateClasses>> >() );
+		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< ModuleMsg::MessageListFrom< GpuMsg::GetCLPrivateClasses >>() );
 
-		Message< GpuMsg::GetCLPrivateClasses >	req_classes;
+		GpuMsg::GetCLPrivateClasses		req_classes;
 		mod->Send( req_classes );
-		CHECK_ERR( req_classes->result.IsDefined() and req_classes->result->samplerCache );
+		CHECK_ERR( req_classes.result and req_classes.result->samplerCache );
 
-		return req_classes->result->samplerCache->Create( id, gs, ci );
+		return req_classes.result->samplerCache->Create( id, gs, ci );
 	}
 
 }	// Platforms

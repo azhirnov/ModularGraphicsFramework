@@ -20,6 +20,7 @@
 #include "Engine/PipelineCompiler/Common/Common.h"
 #include "Engine/PipelineCompiler/Serializers/ISerializer.h"
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler.h"
+#include "Engine/PipelineCompiler/Common/ArraySize.h"
 
 
 #define __DECL_PIPELINE2( _base_, _typeName_, ... ) \
@@ -71,7 +72,7 @@ namespace PipelineCompiler
 			String							name;
 			EImage::type					imageType				= EImage::Tex2D;
 			EPixelFormatClass::type			format					= EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm | EPixelFormatClass::AnyColorChannels;
-			Optional<SamplerDescriptor>		defaultSampler;
+			Optional<SamplerDescription>		defaultSampler;
 			bool							samplerCanBeOverridden	= false;
 			EShader::bits					shaderUsage;
 			Location						location;
@@ -107,7 +108,7 @@ namespace PipelineCompiler
 			EShaderMemoryModel::type		memoryModel		= EShaderMemoryModel::Default;	// for image and buffer
 			EVariablePacking::bits			packing;
 			EPixelFormat::type				format			= EPixelFormat::Unknown;		// for image only
-			uint							arraySize		= 1;							// 0 - dynamic array	// TODO: array of array
+			ArraySize						arraySize;
 			BytesU							offset			= ~0_b;
 			BytesU							align			= 0_b;
 			BytesU							stride			= 0_b;
@@ -163,7 +164,7 @@ namespace PipelineCompiler
 
 			Bindings&  Texture (EImage::type imageType, StringCRef name, EShader::bits shaderUsage, EPixelFormatClass::type format);
 
-			Bindings&  Sampler (StringCRef texName, const SamplerDescriptor &descr, bool canBeOverridden = false);	// set default sampler
+			Bindings&  Sampler (StringCRef texName, const SamplerDescription &descr, bool canBeOverridden = false);	// set default sampler
 
 			Bindings&  Image (EImage::type imageType, StringCRef name, EPixelFormat::type format, EShader::bits shaderUsage,
 							  EShaderMemoryModel::type access = EShaderMemoryModel::Default);
@@ -189,9 +190,8 @@ namespace PipelineCompiler
 			template <typename T> Bindings&  Image3D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
 													  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);*/
 		};
-
-
-		struct Varying
+		
+		struct _VaryingField : CompileTime::FastCopyable
 		{
 		// variables
 			String						name;
@@ -199,8 +199,17 @@ namespace PipelineCompiler
 			EShaderVariable::type		type		= EShaderVariable::Unknown;
 			EPrecision::type			precision	= EPrecision::Default;
 			EVariableQualifier::bits	qualifier;
-			uint						arraySize	= 1;
+			ArraySize					arraySize;
 			uint						location	= UMax;
+			
+		// methods
+			ND_ bool operator == (const _VaryingField &) const;
+		};
+
+		struct Varying : _VaryingField
+		{
+		// variables
+			Array<_VaryingField>		fields;
 			
 		// methods
 			ND_ bool operator == (const Varying &) const;
@@ -296,7 +305,7 @@ namespace PipelineCompiler
 			//bool						updateShaders			= false;
 
 			// set 'false' for run-time shader editing.
-			bool						optimizeSource			= true;
+			bool						optimizeSource			= false;
 
 			// all same structs and blocks in shader will be saved to separate file.
 			bool						searchForSharedTypes	= true;
@@ -306,6 +315,8 @@ namespace PipelineCompiler
 
 			// search for same names and set same locations/binding indices for all shaders.
 			bool						optimizeBindings		= true;
+			bool						optimizeVertexInput		= false;
+			bool						optimizeFragmentOutput	= false;
 
 			// validate comiled shader to check errors
 			bool						validation				= false;

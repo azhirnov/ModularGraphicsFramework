@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -21,8 +21,8 @@ namespace PlatformGL
 	{
 	// types
 	private:
-		using GL4SamplerPtr		= SharedPointerType< class GL4Sampler >;
-		using SamplerDescriptor	= Platforms::SamplerDescriptor;
+		using GL4SamplerPtr			= SharedPointerType< class GL4Sampler >;
+		using SamplerDescription	= Platforms::SamplerDescription;
 
 		struct SearchableSampler
 		{
@@ -36,9 +36,9 @@ namespace PlatformGL
 
 		struct SamplerSearch
 		{
-			SamplerDescriptor	descr;
+			SamplerDescription	descr;
 
-			explicit SamplerSearch (const SamplerDescriptor &s) : descr(s) {}
+			explicit SamplerSearch (const SamplerDescription &s) : descr(s) {}
 
 			bool operator == (const SearchableSampler &right) const;
 			bool operator >  (const SearchableSampler &right) const;

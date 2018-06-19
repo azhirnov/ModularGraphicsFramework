@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/STL/Common/Platforms.h"
+#include "Core/STL/Common/Platforms.h"
 
 #ifdef COMPILER_MSVC
 # pragma warning (push, 1)

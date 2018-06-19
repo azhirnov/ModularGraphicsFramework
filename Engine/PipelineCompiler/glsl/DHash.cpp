@@ -50,6 +50,8 @@ double4 DHash44 (const double4 p);
 
 //---------------------------------------------------------
 
+#include <Math/Math.glsl>
+
 
 // DHash from https://www.shadertoy.com/view/4djSRW 
 

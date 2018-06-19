@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -27,7 +27,7 @@ namespace GpuMsg
 	//
 	// Get Private Classes
 	//
-	struct GetVkPrivateClasses
+	struct GetVkPrivateClasses : _MessageBase_
 	{
 		struct Classes {
 			PlatformVK::Vk1Device *					device			= null;
@@ -105,16 +105,16 @@ namespace PlatformVK
 
 	// message handlers
 	protected:
-		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
-		bool _GetVkDeviceInfo (const Message< GpuMsg::GetVkDeviceInfo > &);
-		bool _GetVkPrivateClasses (const Message< GpuMsg::GetVkPrivateClasses > &);
+		bool _OnManagerChanged (const ModuleMsg::OnManagerChanged &);
+		bool _GetDeviceInfo (const GpuMsg::GetDeviceInfo &);
+		bool _GetVkDeviceInfo (const GpuMsg::GetVkDeviceInfo &);
+		bool _GetVkPrivateClasses (const GpuMsg::GetVkPrivateClasses &);
 		
 
 	// event handlers
 	private:
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
-		bool _DeviceDeleted (const Message< ModuleMsg::Delete > &);
+		bool _DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
+		bool _DeviceDeleted (const ModuleMsg::Delete &);
 	};
 
 

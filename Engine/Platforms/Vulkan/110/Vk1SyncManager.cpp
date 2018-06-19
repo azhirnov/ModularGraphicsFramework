@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -82,22 +82,22 @@ namespace PlatformVK
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _OnManagerChanged2 (const ModuleMsg::OnManagerChanged &);
 
-		bool _ClientWaitDeviceIdle (const Message< GpuMsg::ClientWaitDeviceIdle > &);
-		bool _CreateFence (const Message< GpuMsg::CreateFence > &);
-		bool _DestroyFence (const Message< GpuMsg::DestroyFence > &);
-		bool _ClientWaitFence (const Message< GpuMsg::ClientWaitFence > &);
-		bool _CreateEvent (const Message< GpuMsg::CreateEvent > &);
-		bool _DestroyEvent (const Message< GpuMsg::DestroyEvent > &);
-		bool _SetEvent (const Message< GpuMsg::SetEvent > &);
-		bool _ResetEvent (const Message< GpuMsg::ResetEvent > &);
-		bool _CreateSemaphore (const Message< GpuMsg::CreateSemaphore > &);
-		bool _DestroySemaphore (const Message< GpuMsg::DestroySemaphore > &);
-		bool _GetVkFence (const Message< GpuMsg::GetVkFence > &);
-		bool _GetVkEvent (const Message< GpuMsg::GetVkEvent > &);
-		bool _GetVkSemaphore (const Message< GpuMsg::GetVkSemaphore > &);
+		bool _ClientWaitDeviceIdle (const GpuMsg::ClientWaitDeviceIdle &);
+		bool _CreateFence (const GpuMsg::CreateFence &);
+		bool _DestroyFence (const GpuMsg::DestroyFence &);
+		bool _ClientWaitFence (const GpuMsg::ClientWaitFence &);
+		bool _CreateEvent (const GpuMsg::CreateEvent &);
+		bool _DestroyEvent (const GpuMsg::DestroyEvent &);
+		bool _SetEvent (const GpuMsg::SetEvent &);
+		bool _ResetEvent (const GpuMsg::ResetEvent &);
+		bool _CreateSemaphore (const GpuMsg::CreateSemaphore &);
+		bool _DestroySemaphore (const GpuMsg::DestroySemaphore &);
+		bool _GetVkFence (const GpuMsg::GetVkFence &);
+		bool _GetVkEvent (const GpuMsg::GetVkEvent &);
+		bool _GetVkSemaphore (const GpuMsg::GetVkSemaphore &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -194,7 +194,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1SyncManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1SyncManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		VkDevice	dev = GetVkDevice();
 		
@@ -217,13 +217,13 @@ namespace PlatformVK
 	_OnManagerChanged2
 =================================================
 */
-	bool Vk1SyncManager::_OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &msg)
+	bool Vk1SyncManager::_OnManagerChanged2 (const ModuleMsg::OnManagerChanged &msg)
 	{
 		_OnManagerChanged( msg );
 		
-		if ( msg->newManager )
+		if ( msg.newManager )
 		{
-			msg->newManager->UnsubscribeAll( this );
+			msg.newManager->UnsubscribeAll( this );
 		}
 		return true;
 	}
@@ -233,7 +233,7 @@ namespace PlatformVK
 	_ClientWaitDeviceIdle
 =================================================
 */
-	bool Vk1SyncManager::_ClientWaitDeviceIdle (const Message< GpuMsg::ClientWaitDeviceIdle > &)
+	bool Vk1SyncManager::_ClientWaitDeviceIdle (const GpuMsg::ClientWaitDeviceIdle &)
 	{
 		GetDevice()->DeviceWaitIdle();
 		return true;
@@ -244,7 +244,7 @@ namespace PlatformVK
 	_CreateFence
 =================================================
 */
-	bool Vk1SyncManager::_CreateFence (const Message< GpuMsg::CreateFence > &msg)
+	bool Vk1SyncManager::_CreateFence (const GpuMsg::CreateFence &msg)
 	{
 		for (;;)
 		{
@@ -255,7 +255,7 @@ namespace PlatformVK
 		}
 		_syncs.Add( _counter, SyncUnion_t{ Fence_t() } );
 
-		msg->result.Set( GpuFenceId(_counter) );
+		msg.result.Set( GpuFenceId(_counter) );
 		return true;
 	}
 	
@@ -264,13 +264,13 @@ namespace PlatformVK
 	_DestroyFence
 =================================================
 */
-	bool Vk1SyncManager::_DestroyFence (const Message< GpuMsg::DestroyFence > &msg)
+	bool Vk1SyncManager::_DestroyFence (const GpuMsg::DestroyFence &msg)
 	{
 		SyncArray_t::iterator	iter;
 
 		VkDevice	dev = GetVkDevice();
 		
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< Fence_t >() );
 			
@@ -287,13 +287,13 @@ namespace PlatformVK
 	_ClientWaitFence
 =================================================
 */
-	bool Vk1SyncManager::_ClientWaitFence (const Message< GpuMsg::ClientWaitFence > &msg)
+	bool Vk1SyncManager::_ClientWaitFence (const GpuMsg::ClientWaitFence &msg)
 	{
 		using Fences_t = FixedSizeArray< vk::VkFence, GpuMsg::ClientWaitFence::Fences_t::MemoryContainer_t::SIZE >;
 
 		Fences_t	fence_ids;
 
-		for (auto& wfence : msg->fences)
+		for (auto& wfence : msg.fences)
 		{
 			SyncArray_t::iterator	iter;
 			CHECK_ERR( _syncs.Find( ulong(wfence), OUT iter ) );
@@ -306,7 +306,7 @@ namespace PlatformVK
 
 		if ( not fence_ids.Empty() ) {
 			// TODO: check device lost error
-			VK_CALL( vkWaitForFences( GetVkDevice(), uint32_t(fence_ids.Count()), fence_ids.ptr(), true, msg->timeout.NanoSeconds() ) );
+			VK_CALL( vkWaitForFences( GetVkDevice(), uint32_t(fence_ids.Count()), fence_ids.ptr(), true, msg.timeout.NanoSeconds() ) );
 		}
 		return true;
 	}
@@ -316,10 +316,10 @@ namespace PlatformVK
 	_GetVkFence
 =================================================
 */
-	bool Vk1SyncManager::_GetVkFence (const Message< GpuMsg::GetVkFence > &msg)
+	bool Vk1SyncManager::_GetVkFence (const GpuMsg::GetVkFence &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->fenceId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.fenceId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< Fence_t >() );
 		
 		VkFence &	fence = iter->second.Get< Fence_t >().ptr;
@@ -329,12 +329,12 @@ namespace PlatformVK
 			VkFenceCreateInfo	fence_info	= {};
 
 			fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-			fence_info.flags = /*msg->signaled ? VK_FENCE_CREATE_SIGNALED_BIT :*/ 0;
+			fence_info.flags = /*msg.signaled ? VK_FENCE_CREATE_SIGNALED_BIT :*/ 0;
 
 			VK_CHECK( vkCreateFence( GetVkDevice(), &fence_info, null, OUT &fence ) );
 		}
 
-		msg->result.Set( fence );
+		msg.result.Set( fence );
 		return true;
 	}
 
@@ -343,7 +343,7 @@ namespace PlatformVK
 	_CreateEvent
 =================================================
 */
-	bool Vk1SyncManager::_CreateEvent (const Message< GpuMsg::CreateEvent > &msg)
+	bool Vk1SyncManager::_CreateEvent (const GpuMsg::CreateEvent &msg)
 	{
 		for (;;)
 		{
@@ -354,7 +354,7 @@ namespace PlatformVK
 		}
 		_syncs.Add( _counter, SyncUnion_t{ Event_t() } );
 
-		msg->result.Set( GpuEventId(_counter) );
+		msg.result.Set( GpuEventId(_counter) );
 		return true;
 	}
 	
@@ -363,13 +363,13 @@ namespace PlatformVK
 	_DestroyEvent
 =================================================
 */
-	bool Vk1SyncManager::_DestroyEvent (const Message< GpuMsg::DestroyEvent > &msg)
+	bool Vk1SyncManager::_DestroyEvent (const GpuMsg::DestroyEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
 
 		VkDevice	dev = GetVkDevice();
 		
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< Event_t >() );
 			
@@ -386,10 +386,10 @@ namespace PlatformVK
 	_GetVkEvent
 =================================================
 */
-	bool Vk1SyncManager::_GetVkEvent (const Message< GpuMsg::GetVkEvent > &msg)
+	bool Vk1SyncManager::_GetVkEvent (const GpuMsg::GetVkEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->eventId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.eventId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< Event_t >() );
 		
 		VkEvent &	event = iter->second.Get< Event_t >().ptr;
@@ -404,7 +404,7 @@ namespace PlatformVK
 			VK_CHECK( vkCreateEvent( GetVkDevice(), &event_info, null, OUT &event ) );
 		}
 
-		msg->result.Set( event );
+		msg.result.Set( event );
 		return true;
 	}
 	
@@ -413,12 +413,12 @@ namespace PlatformVK
 	_SetEvent
 =================================================
 */
-	bool Vk1SyncManager::_SetEvent (const Message< GpuMsg::SetEvent > &msg)
+	bool Vk1SyncManager::_SetEvent (const GpuMsg::SetEvent &msg)
 	{
-		Message< GpuMsg::GetVkEvent >	req_event{ msg->id };
+		GpuMsg::GetVkEvent	req_event{ msg.id };
 		_GetVkEvent( req_event );
 
-		VK_CALL( vkSetEvent( GetVkDevice(), *req_event->result ) );
+		VK_CALL( vkSetEvent( GetVkDevice(), *req_event.result ) );
 		return true;
 	}
 	
@@ -427,12 +427,12 @@ namespace PlatformVK
 	_ResetEvent
 =================================================
 */
-	bool Vk1SyncManager::_ResetEvent (const Message< GpuMsg::ResetEvent > &msg)
+	bool Vk1SyncManager::_ResetEvent (const GpuMsg::ResetEvent &msg)
 	{
-		Message< GpuMsg::GetVkEvent >	req_event{ msg->id };
+		GpuMsg::GetVkEvent	req_event{ msg.id };
 		_GetVkEvent( req_event );
 
-		VK_CALL( vkResetEvent( GetVkDevice(), *req_event->result ) );
+		VK_CALL( vkResetEvent( GetVkDevice(), *req_event.result ) );
 		return true;
 	}
 
@@ -441,7 +441,7 @@ namespace PlatformVK
 	_CreateSemaphore
 =================================================
 */
-	bool Vk1SyncManager::_CreateSemaphore (const Message< GpuMsg::CreateSemaphore > &msg)
+	bool Vk1SyncManager::_CreateSemaphore (const GpuMsg::CreateSemaphore &msg)
 	{
 		for (;;)
 		{
@@ -461,7 +461,7 @@ namespace PlatformVK
 
 		_syncs.Add( _counter, SyncUnion_t{ Semaphore_t(semaphore) } );
 
-		msg->result.Set( GpuSemaphoreId(_counter) );
+		msg.result.Set( GpuSemaphoreId(_counter) );
 		return true;
 	}
 	
@@ -470,13 +470,13 @@ namespace PlatformVK
 	_DestroySemaphore
 =================================================
 */
-	bool Vk1SyncManager::_DestroySemaphore (const Message< GpuMsg::DestroySemaphore > &msg)
+	bool Vk1SyncManager::_DestroySemaphore (const GpuMsg::DestroySemaphore &msg)
 	{
 		SyncArray_t::iterator	iter;
 
 		VkDevice	dev = GetVkDevice();
 		
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< Semaphore_t >() );
 			
@@ -493,13 +493,13 @@ namespace PlatformVK
 	_GetVkSemaphore
 =================================================
 */
-	bool Vk1SyncManager::_GetVkSemaphore (const Message< GpuMsg::GetVkSemaphore > &msg)
+	bool Vk1SyncManager::_GetVkSemaphore (const GpuMsg::GetVkSemaphore &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->semId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.semId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< Semaphore_t >() );
 		
-		msg->result.Set( iter->second.Get< Semaphore_t >().ptr );
+		msg.result.Set( iter->second.Get< Semaphore_t >().ptr );
 		return true;
 	}
 

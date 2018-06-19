@@ -10,10 +10,9 @@ namespace glsl_vfs
 	Physics functions for gravity simulations.
 	
 	license: free
-
-	depends of:
-		Math/Math
 */
+
+#include <Math/Math.glsl>
 
 real3 GravityForce (const real3 position, const real3 center, const real gravity);
 real3 GravityForce (const real3 position, const real3 center, const real mass1, const real mass2);

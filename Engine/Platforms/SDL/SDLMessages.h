@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/STL/Common/Platforms.h"
+#include "Core/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_SDL
 
@@ -18,7 +18,7 @@ namespace OSMsg
 	//
 	// Request Window Handle
 	//
-	struct GetSDLWindowHandle
+	struct GetSDLWindowHandle : _MessageBase_
 	{
 		Out< SDL_Window *>	result;
 	};
@@ -27,7 +27,7 @@ namespace OSMsg
 	//
 	// Window Raw Message from OS
 	//
-	struct OnSDLWindowRawMessage
+	struct OnSDLWindowRawMessage : _MessageBase_
 	{
 	// variables
 		SDL_Event		event;
@@ -42,7 +42,7 @@ namespace OSMsg
 	//
 	// Platform Created Message
 	//
-	struct OnSDLPlatformCreated
+	struct OnSDLPlatformCreated : _MessageBase_
 	{
 	// variables
 		// TODO

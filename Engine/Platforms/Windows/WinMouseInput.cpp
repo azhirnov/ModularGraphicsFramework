@@ -1,14 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Common/Platforms.h"
-#include "Engine/Config/Engine.Config.h"
+#include "Core/STL/Common/Platforms.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef PLATFORM_WINDOWS
 
 #include "Engine/Platforms/Public/OS/Input.h"
 #include "Engine/Platforms/Windows/WinMessages.h"
 #include "Engine/Platforms/Windows/WinObjectsConstructor.h"
-#include "Engine/STL/OS/Windows/WinHeader.h"
+#include "Core/STL/OS/Windows/WinHeader.h"
 
 namespace Engine
 {
@@ -30,7 +30,7 @@ namespace PlatformWin
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											OSMsg::WindowDescriptorChanged,
+											OSMsg::WindowDescriptionChanged,
 											OSMsg::WindowCreated,
 											OSMsg::WindowBeforeDestroy,
 											OSMsg::OnWinWindowRawMessage
@@ -67,13 +67,13 @@ namespace PlatformWin
 
 	// message handlers
 	private:
-		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
-		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
-		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
-		bool _OnWinWindowRawMessage (const Message< OSMsg::OnWinWindowRawMessage > &);
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &);
+		bool _WindowCreated (const OSMsg::WindowCreated &);
+		bool _WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &);
+		bool _OnWinWindowRawMessage (const OSMsg::OnWinWindowRawMessage &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 
 	private:
 		void _Destroy ();
@@ -106,7 +106,7 @@ namespace PlatformWin
 		_SubscribeOnMsg( this, &WinMouseInput::_Update );
 		_SubscribeOnMsg( this, &WinMouseInput::_Link );
 		_SubscribeOnMsg( this, &WinMouseInput::_Delete_Impl );
-		_SubscribeOnMsg( this, &WinMouseInput::_WindowDescriptorChanged );
+		_SubscribeOnMsg( this, &WinMouseInput::_WindowDescriptionChanged );
 		_SubscribeOnMsg( this, &WinMouseInput::_WindowCreated );
 		_SubscribeOnMsg( this, &WinMouseInput::_WindowBeforeDestroy );
 		_SubscribeOnMsg( this, &WinMouseInput::_OnWinWindowRawMessage );
@@ -128,12 +128,12 @@ namespace PlatformWin
 
 /*
 =================================================
-	_WindowDescriptorChanged
+	_WindowDescriptionChanged
 =================================================
 */
-	bool WinMouseInput::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
+	bool WinMouseInput::_WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &msg)
 	{
-		_surfaceSize = msg->descr.surfaceSize;
+		_surfaceSize = msg.descr.surfaceSize;
 		return true;
 	}
 	
@@ -142,10 +142,10 @@ namespace PlatformWin
 	_WindowCreated
 =================================================
 */
-	bool WinMouseInput::_WindowCreated (const Message< OSMsg::WindowCreated > &)
+	bool WinMouseInput::_WindowCreated (const OSMsg::WindowCreated &)
 	{
-		Message< OSMsg::GetWinWindowHandle >	req_hwnd;
-		SendTo( _window, req_hwnd );
+		OSMsg::GetWinWindowHandle	req_hwnd;
+		_window->Send( req_hwnd );
 
 		RAWINPUTDEVICE	Rid[1] = {};
 		
@@ -153,7 +153,7 @@ namespace PlatformWin
 		Rid[0].usUsagePage	= 0x01;
 		Rid[0].usUsage		= 0x02;
 		Rid[0].dwFlags		= 0;
-		Rid[0].hwndTarget	= req_hwnd->result->Get<HWND>();
+		Rid[0].hwndTarget	= req_hwnd.result->Get<HWND>();
 
 		CHECK( RegisterRawInputDevices( &Rid[0], UINT(CountOf( Rid )), sizeof(Rid[0]) ) != FALSE );
 
@@ -166,11 +166,11 @@ namespace PlatformWin
 	_WindowBeforeDestroy
 =================================================
 */
-	bool WinMouseInput::_WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &)
+	bool WinMouseInput::_WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &)
 	{
 		_Destroy();
 
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		return true;
 	}
 	
@@ -179,15 +179,15 @@ namespace PlatformWin
 	_OnWinWindowRawMessage
 =================================================
 */
-	bool WinMouseInput::_OnWinWindowRawMessage (const Message< OSMsg::OnWinWindowRawMessage > &msg)
+	bool WinMouseInput::_OnWinWindowRawMessage (const OSMsg::OnWinWindowRawMessage &msg)
 	{
 		// WM_INPUT //
-		if ( msg->uMsg == WM_INPUT )
+		if ( msg.uMsg == WM_INPUT )
 		{
 			ubyte	input_data[60];
 			uint	data_size = sizeof(input_data);
 
-			if ( ::GetRawInputData( HRAWINPUT(msg->lParam), RID_INPUT, input_data, &data_size, sizeof(RAWINPUTHEADER) ) != UMax )
+			if ( ::GetRawInputData( HRAWINPUT(msg.lParam), RID_INPUT, input_data, &data_size, sizeof(RAWINPUTHEADER) ) != UMax )
 			{
 				RAWINPUT  *	p_data = Cast<RAWINPUT *>(input_data);
 				
@@ -225,9 +225,9 @@ namespace PlatformWin
 		else
 
 		// WM_MOUSEMOVE //
-		if ( msg->uMsg == WM_MOUSEMOVE )
+		if ( msg.uMsg == WM_MOUSEMOVE )
 		{
-			_mousePos = float2(int2( LOWORD( msg->lParam ), _surfaceSize.y - HIWORD( msg->lParam ) ));
+			_mousePos = float2(int2( LOWORD( msg.lParam ), _surfaceSize.y - HIWORD( msg.lParam ) ));
 		}
 		return true;
 	}
@@ -237,7 +237,7 @@ namespace PlatformWin
 	_Link
 =================================================
 */
-	bool WinMouseInput::_Link (const Message< ModuleMsg::Link > &msg)
+	bool WinMouseInput::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -250,10 +250,10 @@ namespace PlatformWin
 
 			if ( _IsComposedState( _window->GetState() ) )
 			{
-				_SendMsg< OSMsg::WindowCreated >({});
+				_SendMsg( OSMsg::WindowCreated{} );
 			}
 
-			_window->Subscribe( this, &WinMouseInput::_WindowDescriptorChanged );
+			_window->Subscribe( this, &WinMouseInput::_WindowDescriptionChanged );
 			_window->Subscribe( this, &WinMouseInput::_WindowCreated );
 			_window->Subscribe( this, &WinMouseInput::_WindowBeforeDestroy );
 			_window->Subscribe( this, &WinMouseInput::_OnWinWindowRawMessage );
@@ -266,7 +266,7 @@ namespace PlatformWin
 	_Update
 =================================================
 */
-	bool WinMouseInput::_Update (const Message< ModuleMsg::Update > &)
+	bool WinMouseInput::_Update (const ModuleMsg::Update &)
 	{
 		// send events to InputThread
 
@@ -275,16 +275,16 @@ namespace PlatformWin
 			const float2	diff = _mouseDifference.Get();
 
 			if ( IsNotZero( diff.x ) )
-				_SendEvent< ModuleMsg::InputMotion >({ "mouse.x"_MotionID, diff.x, _mousePos.x });
+				_SendEvent( ModuleMsg::InputMotion{ "mouse.x"_MotionID, diff.x, _mousePos.x });
 			
 			if ( IsNotZero( diff.y ) )
-				_SendEvent< ModuleMsg::InputMotion >({ "mouse.y"_MotionID, diff.y, _mousePos.y });
+				_SendEvent( ModuleMsg::InputMotion{ "mouse.y"_MotionID, diff.y, _mousePos.y });
 			
 			if ( _lbPressed and IsNotZero( diff.x ) )
-				_SendEvent< ModuleMsg::InputMotion >({ "touch.x"_MotionID, diff.x, _mousePos.x });
+				_SendEvent( ModuleMsg::InputMotion{ "touch.x"_MotionID, diff.x, _mousePos.x });
 			
 			if ( _lbPressed and IsNotZero( diff.y ) )
-				_SendEvent< ModuleMsg::InputMotion >({ "touch.y"_MotionID, diff.y, _mousePos.y });
+				_SendEvent( ModuleMsg::InputMotion{ "touch.y"_MotionID, diff.y, _mousePos.y });
 		}
 
 		if ( _wheelDelta )
@@ -292,7 +292,7 @@ namespace PlatformWin
 			const float	delta = _wheelDelta.Get();
 
 			if ( IsNotZero( delta ) )
-				_SendEvent< ModuleMsg::InputMotion >({ "mouse.wheel"_MotionID, delta, 0.0f });
+				_SendEvent( ModuleMsg::InputMotion{ "mouse.wheel"_MotionID, delta, 0.0f });
 		}
 		
 		_mouseDifference.Undefine();
@@ -305,9 +305,9 @@ namespace PlatformWin
 	_DetachModule
 =================================================
 */
-	bool WinMouseInput::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool WinMouseInput::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		if ( _Detach( msg->oldModule ) and msg->oldModule == _window )
+		if ( _Detach( msg.oldModule ) and msg.oldModule == _window )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_Destroy();

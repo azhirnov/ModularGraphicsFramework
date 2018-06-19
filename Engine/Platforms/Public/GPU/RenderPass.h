@@ -14,16 +14,16 @@ namespace Platforms
 {
 	
 	//
-	// Render Pass Descriptor
+	// Render Pass Description
 	//
 	
-	struct RenderPassDescriptor final : CompileTime::FastCopyable
+	struct RenderPassDescription final : CompileTime::FastCopyable
 	{
 		friend struct RenderPassDescrBuilder;
 
 	// types
 	public:
-		using Self		= RenderPassDescriptor;
+		using Self		= RenderPassDescription;
 		using Name_t	= StaticString<64>;
 
 		static const uint	MAX_COLOR_ATTACHMENTS	= GlobalConst::GAPI_MaxColorBuffers;
@@ -51,6 +51,10 @@ namespace Platforms
 				loadOp( EAttachmentLoadOp::Unknown ),		storeOp( EAttachmentStoreOp::Unknown ),
 				initialLayout( EImageLayout::Undefined ),	finalLayout( EImageLayout::Undefined )
 			{}
+
+			ND_ bool IsEnabled () const		{ return format != EPixelFormat::Unknown; }
+
+			DEBUG_ONLY( ND_ String ToString () const );
 		};
 
 
@@ -68,8 +72,8 @@ namespace Platforms
 				ColorAttachment_t(),
 				stencilLoadOp( EAttachmentLoadOp::Unknown ),	stencilStoreOp( EAttachmentStoreOp::Unknown )
 			{}
-
-			ND_ bool IsEnabled () const		{ return format != EPixelFormat::Unknown; }
+			
+			DEBUG_ONLY( ND_ String ToString () const );
 		};
 
 
@@ -84,11 +88,11 @@ namespace Platforms
 
 
 		// methods
-			AttachmentRef_t (GX_DEFCTOR) :
-				layout( EImageLayout::Undefined )
-			{}
+			AttachmentRef_t (GX_DEFCTOR) : layout( EImageLayout::Undefined ) {}
 
 			ND_ bool IsEnabled () const		{ return not name.Empty(); }
+			
+			DEBUG_ONLY( ND_ String ToString () const );
 		};
 
 		using AttachmentsRef_t		= FixedSizeArray< AttachmentRef_t, MAX_COLOR_ATTACHMENTS >;
@@ -109,11 +113,10 @@ namespace Platforms
 			PreserveAttachments_t	preserves;
 			
 		// methods
-			Subpass_t (GX_DEFCTOR)
-			{}
+			Subpass_t (GX_DEFCTOR) {}
+			explicit Subpass_t (StringCRef name) : name(name) {}
 
-			explicit Subpass_t (StringCRef name) : name(name)
-			{}
+			DEBUG_ONLY( ND_ String ToString () const );
 		};
 
 
@@ -134,8 +137,9 @@ namespace Platforms
 			ESubpassDependency::bits	dependency;
 
 		// methods
-			SubpassDependency_t (GX_DEFCTOR)
-			{}
+			SubpassDependency_t (GX_DEFCTOR) {}
+
+			DEBUG_ONLY( ND_ String ToString () const );
 		};
 
 		using ColorAttachments_t	= FixedSizeArray< ColorAttachment_t, MAX_COLOR_ATTACHMENTS >;
@@ -154,7 +158,7 @@ namespace Platforms
 
 	// methods
 	public:
-		RenderPassDescriptor (GX_DEFCTOR) {}
+		RenderPassDescription (GX_DEFCTOR) {}
 
 		ND_ ArrayCRef< ColorAttachment_t >		ColorAttachments ()			const	{ return _colorAttachmens; }
 		ND_ ArrayCRef< Subpass_t >				Subpasses ()				const	{ return _subpasses; }
@@ -168,12 +172,14 @@ namespace Platforms
 		ND_ bool operator != (const Self &right) const		{ return not (*this == right); }
 		ND_ bool operator >= (const Self &right) const		{ return not (*this <  right); }
 		ND_ bool operator <= (const Self &right) const		{ return not (*this >  right); }
+		
+		DEBUG_ONLY( ND_ String ToString () const );
 	};
 
 
 
 	//
-	// Render Pass Descriptor Builder
+	// Render Pass Description Builder
 	//
 
 	struct RenderPassDescrBuilder final
@@ -181,12 +187,12 @@ namespace Platforms
 	// types
 	public:
 		using Self						= RenderPassDescrBuilder;
-		using Name_t					= RenderPassDescriptor::Name_t;
-		using Subpass_t					= RenderPassDescriptor::Subpass_t;
-		using AttachmentRef_t			= RenderPassDescriptor::AttachmentRef_t;
-		using ColorAttachment_t			= RenderPassDescriptor::ColorAttachment_t;
-		using DepthStencilAttachment_t	= RenderPassDescriptor::DepthStencilAttachment_t;
-		using SubpassDependency_t		= RenderPassDescriptor::SubpassDependency_t;
+		using Name_t					= RenderPassDescription::Name_t;
+		using Subpass_t					= RenderPassDescription::Subpass_t;
+		using AttachmentRef_t			= RenderPassDescription::AttachmentRef_t;
+		using ColorAttachment_t			= RenderPassDescription::ColorAttachment_t;
+		using DepthStencilAttachment_t	= RenderPassDescription::DepthStencilAttachment_t;
+		using SubpassDependency_t		= RenderPassDescription::SubpassDependency_t;
 
 		struct SimpleBuilder;
 
@@ -222,7 +228,7 @@ namespace Platforms
 
 	// variables
 	private:
-		RenderPassDescriptor	_state;
+		RenderPassDescription	_state;
 		bool					_changed;
 
 		
@@ -232,7 +238,7 @@ namespace Platforms
 		{}
 
 		explicit
-		RenderPassDescrBuilder (const RenderPassDescriptor &state) : _state(state), _changed(true)
+		RenderPassDescrBuilder (const RenderPassDescription &state) : _state(state), _changed(true)
 		{}
 
 		Self& AddColorAttachment (const ColorAttachment_t &value);
@@ -268,10 +274,10 @@ namespace Platforms
 							 ESubpassDependency::bits	dependency);
 
 		// validate, calculate hash and return
-		ND_ RenderPassDescriptor const& Finish ();
+		ND_ RenderPassDescription const& Finish ();
 
 		// default render pass for presenting to screen
-		ND_ static RenderPassDescriptor CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt, EImageLayout::type finalLayout = EImageLayout::PresentSrc);
+		ND_ static RenderPassDescription CreateForSurface (EPixelFormat::type colorFmt, EPixelFormat::type depthStencilFmt, EImageLayout::type finalLayout = EImageLayout::PresentSrc);
 
 		// simplified builder
 		ND_ static SimpleBuilder CreateForFramebuffer ();
@@ -323,7 +329,7 @@ namespace Platforms
 
 		Self&	Add (StringCRef name, EPixelFormat::type fmt, MultiSamples samp = MultiSamples());
 
-		ND_ RenderPassDescriptor const& Finish ();
+		ND_ RenderPassDescription const& Finish ();
 	};
 
 	inline RenderPassDescrBuilder::SimpleBuilder  RenderPassDescrBuilder::CreateForFramebuffer () {
@@ -344,7 +350,7 @@ namespace CreateInfo
 	struct GpuRenderPass
 	{
 		ModulePtr							gpuThread;			// can be null
-		Platforms::RenderPassDescriptor		descr;
+		Platforms::RenderPassDescription	descr;
 	};
 
 }	// CreateInfo
@@ -354,11 +360,11 @@ namespace GpuMsg
 {
 
 	//
-	// Get Render Pass Descriptor
+	// Get Render Pass Description
 	//
-	struct GetRenderPassDescriptor
+	struct GetRenderPassDescription : _MessageBase_
 	{
-		Out< Platforms::RenderPassDescriptor >	result;
+		Out< Platforms::RenderPassDescription >	result;
 	};
 
 

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -60,7 +60,7 @@ namespace PlatformCL
 			bool			acquired = false;
 		};
 
-		using SharedMemMap_t	= Map< const void*, SharedObjects >;
+		using SharedMemMap_t	= Map< UntypedKey<ModulePtr>, SharedObjects >;
 
 
 	// variables

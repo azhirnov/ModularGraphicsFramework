@@ -658,8 +658,8 @@ namespace PipelineCompiler
 	{
 		CHECK_ERR( replacer.nodes.Count() >= 2 );
 
-		TIntermNode *	root1  = *(replacer.nodes.end() - 1);
-		TIntermNode *	root2 = *(replacer.nodes.end() - 2);
+		TIntermNode *	root1	= *(replacer.nodes.end() - 1);
+		TIntermNode *	root2	= *(replacer.nodes.end() - 2);
 
 		if ( root1 == null or
 			 root2 == null or
@@ -670,8 +670,8 @@ namespace PipelineCompiler
 			RETURN_ERR( "not supported" );
 		}
 
-		glslang::TIntermBinary *	binary	= root1->getAsBinaryNode();
-		TIntermNode *				root	= root2;
+		glslang::TIntermBinary*	binary		= root1->getAsBinaryNode();
+		TIntermNode *			root		= root2;
 		
 		glslang::TType const&	old_type	= binary->getType();
 		glslang::TPublicType	new_type;	new_type.init( binary->getLoc() );

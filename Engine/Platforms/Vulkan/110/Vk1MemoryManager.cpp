@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -64,11 +64,11 @@ namespace PlatformVK
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Delete (const ModuleMsg::Delete &);
 		
-		bool _VkAllocMemForImage (const Message< GpuMsg::VkAllocMemForImage > &);
-		bool _VkAllocMemForBuffer (const Message< GpuMsg::VkAllocMemForBuffer > &);
-		bool _VkFreeMemory (const Message< GpuMsg::VkFreeMemory > &);
+		bool _VkAllocMemForImage (const GpuMsg::VkAllocMemForImage &);
+		bool _VkAllocMemForBuffer (const GpuMsg::VkAllocMemForBuffer &);
+		bool _VkFreeMemory (const GpuMsg::VkFreeMemory &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -123,14 +123,14 @@ namespace PlatformVK
 	_VkAllocMemForImage
 =================================================
 */
-	bool Vk1MemoryManager::_VkAllocMemForImage (const Message< GpuMsg::VkAllocMemForImage > &msg)
+	bool Vk1MemoryManager::_VkAllocMemForImage (const GpuMsg::VkAllocMemForImage &msg)
 	{
-		CHECK_ERR( not _memBlocks.IsExist( msg->module ) );
-		CHECK_ERR( msg->image != VK_NULL_HANDLE );
+		CHECK_ERR( not _memBlocks.IsExist( msg.module ) );
+		CHECK_ERR( msg.image != VK_NULL_HANDLE );
 
 		// allocate memory
 		VkMemoryRequirements	mem_reqs = {};
-		vkGetImageMemoryRequirements( GetVkDevice(), msg->image, &mem_reqs );
+		vkGetImageMemoryRequirements( GetVkDevice(), msg.image, &mem_reqs );
 		
 		VkMemoryAllocateInfo	info = {};
 		info.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -138,7 +138,7 @@ namespace PlatformVK
 		info.allocationSize		= mem_reqs.size;
 		info.memoryTypeIndex	= 0;
 
-		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( mem_reqs.memoryTypeBits, Vk1Enum( msg->flags ), OUT info.memoryTypeIndex ) );
+		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( mem_reqs.memoryTypeBits, Vk1Enum( msg.flags ), OUT info.memoryTypeIndex ) );
 		
 		VkDeviceMemory		mem_id;
 		VK_CHECK( vkAllocateMemory( GetVkDevice(), &info, null, OUT &mem_id ) );
@@ -149,13 +149,13 @@ namespace PlatformVK
 		Memory	block;
 		block.binding	= EBindingTarget::Buffer;
 		block.align		= BytesUL( mem_reqs.alignment );
-		block.flags		= msg->flags;
+		block.flags		= msg.flags;
 		block.mem		= mem_id;
 		block.size		= BytesUL( mem_reqs.size );
 		
-		msg->result.Set({ block.mem, BytesUL(0), block.size });
+		msg.result.Set({ block.mem, BytesUL(0), block.size });
 
-		_memBlocks.Add( msg->module, block );
+		_memBlocks.Add( msg.module, block );
 		return true;
 	}
 	
@@ -164,14 +164,14 @@ namespace PlatformVK
 	_VkAllocMemForBuffer
 =================================================
 */
-	bool Vk1MemoryManager::_VkAllocMemForBuffer (const Message< GpuMsg::VkAllocMemForBuffer > &msg)
+	bool Vk1MemoryManager::_VkAllocMemForBuffer (const GpuMsg::VkAllocMemForBuffer &msg)
 	{
-		CHECK_ERR( not _memBlocks.IsExist( msg->module ) );
-		CHECK_ERR( msg->buffer != VK_NULL_HANDLE );
+		CHECK_ERR( not _memBlocks.IsExist( msg.module ) );
+		CHECK_ERR( msg.buffer != VK_NULL_HANDLE );
 
 		// allocate memory
 		VkMemoryRequirements	mem_reqs = {};
-		vkGetBufferMemoryRequirements( GetVkDevice(), msg->buffer, &mem_reqs );
+		vkGetBufferMemoryRequirements( GetVkDevice(), msg.buffer, &mem_reqs );
 		
 		VkMemoryAllocateInfo	info = {};
 		info.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -179,7 +179,7 @@ namespace PlatformVK
 		info.allocationSize		= mem_reqs.size;
 		info.memoryTypeIndex	= 0;
 
-		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( mem_reqs.memoryTypeBits, Vk1Enum( msg->flags ), OUT info.memoryTypeIndex ) );
+		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( mem_reqs.memoryTypeBits, Vk1Enum( msg.flags ), OUT info.memoryTypeIndex ) );
 		
 		VkDeviceMemory		mem_id;
 		VK_CHECK( vkAllocateMemory( GetVkDevice(), &info, null, OUT &mem_id ) );
@@ -190,13 +190,13 @@ namespace PlatformVK
 		Memory	block;
 		block.binding	= EBindingTarget::Buffer;
 		block.align		= BytesUL( mem_reqs.alignment );
-		block.flags		= msg->flags;
+		block.flags		= msg.flags;
 		block.mem		= mem_id;
 		block.size		= BytesUL( mem_reqs.size );
 		
-		msg->result.Set({ block.mem, BytesUL(0), block.size });
+		msg.result.Set({ block.mem, BytesUL(0), block.size });
 
-		_memBlocks.Add( msg->module, block );
+		_memBlocks.Add( msg.module, block );
 		return true;
 	}
 	
@@ -205,13 +205,13 @@ namespace PlatformVK
 	_VkFreeMemory
 =================================================
 */
-	bool Vk1MemoryManager::_VkFreeMemory (const Message< GpuMsg::VkFreeMemory > &msg)
+	bool Vk1MemoryManager::_VkFreeMemory (const GpuMsg::VkFreeMemory &msg)
 	{
 		auto	dev = GetVkDevice();
 
 		MemoryMap_t::iterator	iter;
 		
-		if ( _memBlocks.Find( msg->module, OUT iter ) )
+		if ( _memBlocks.Find( msg.module, OUT iter ) )
 		{
 			vkFreeMemory( dev, iter->second.mem, null );
 
@@ -225,7 +225,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1MemoryManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1MemoryManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		auto	dev = GetVkDevice();
 

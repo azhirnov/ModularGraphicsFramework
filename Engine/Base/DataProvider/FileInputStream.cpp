@@ -21,7 +21,7 @@ namespace Base
 											ModuleMsg::Update
 										> >::Append< MessageListFrom< 
 											ModuleMsg::OnManagerChanged,
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::ReadFromStream,
 											DSMsg::ReleaseData
 										> >;
@@ -54,13 +54,13 @@ namespace Base
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
 
-		bool _GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &);
-		bool _ReadFromStream_Empty (const Message< DSMsg::ReadFromStream > &);
-		bool _ReadFromStream (const Message< DSMsg::ReadFromStream > &);
-		bool _ReleaseData (const Message< DSMsg::ReleaseData > &);
+		bool _GetDataSourceDescription (const DSMsg::GetDataSourceDescription &);
+		bool _ReadFromStream_Empty (const DSMsg::ReadFromStream &);
+		bool _ReadFromStream (const DSMsg::ReadFromStream &);
+		bool _ReleaseData (const DSMsg::ReleaseData &);
 
 		static BytesU	_MaxCacheSize ()	{ return 1_Kb; }
 	};
@@ -90,7 +90,7 @@ namespace Base
 		_SubscribeOnMsg( this, &FileInputStream::_Link_Impl );
 		_SubscribeOnMsg( this, &FileInputStream::_Compose );
 		_SubscribeOnMsg( this, &FileInputStream::_Delete );
-		_SubscribeOnMsg( this, &FileInputStream::_GetDataSourceDescriptor );
+		_SubscribeOnMsg( this, &FileInputStream::_GetDataSourceDescription );
 		_SubscribeOnMsg( this, &FileInputStream::_ReadFromStream_Empty );
 		_SubscribeOnMsg( this, &FileInputStream::_ReleaseData );
 
@@ -113,7 +113,7 @@ namespace Base
 	_Compose
 =================================================
 */
-	bool FileInputStream::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool FileInputStream::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -122,10 +122,10 @@ namespace Base
 
 		CHECK_COMPOSING( _GetManager() );
 		
-		Message< DSMsg::IsUriExists >	is_exist{ _filename };
+		DSMsg::IsUriExists	is_exist{ _filename };
 		_GetManager()->Send( is_exist );
 
-		CHECK_COMPOSING( is_exist->result.Get(false) );
+		CHECK_COMPOSING( is_exist.result.Get(false) );
 
 		// create cache
 		/*BytesU	fsize		= _file->RemainingSize();
@@ -145,7 +145,7 @@ namespace Base
 	_Delete
 =================================================
 */
-	bool FileInputStream::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool FileInputStream::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_ReleaseData( {} );
 
@@ -154,21 +154,21 @@ namespace Base
 
 /*
 =================================================
-	_GetDataSourceDescriptor
+	_GetDataSourceDescription
 =================================================
 */
-	bool FileInputStream::_GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &msg)
+	bool FileInputStream::_GetDataSourceDescription (const DSMsg::GetDataSourceDescription &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
 
-		DataSourceDescriptor	descr;
+		DataSourceDescription	descr;
 
 		descr.memoryFlags	|= EMemoryAccess::CpuRead | EMemoryAccess::SequentialOnly;
 		descr.available		 = BytesUL();	// data is not cached
 		descr.totalSize		 = BytesUL( _file->Size() );
 
-		msg->result.Set( descr );
+		msg.result.Set( descr );
 		return true;
 	}
 	
@@ -177,7 +177,7 @@ namespace Base
 	_ReadFromStream_Empty
 =================================================
 */
-	bool FileInputStream::_ReadFromStream_Empty (const Message< DSMsg::ReadFromStream > &msg)
+	bool FileInputStream::_ReadFromStream_Empty (const DSMsg::ReadFromStream &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
@@ -185,10 +185,10 @@ namespace Base
 		Unsubscribe( this, &FileInputStream::_ReadFromStream_Empty );
 		_SubscribeOnMsg( this, &FileInputStream::_ReadFromStream );
 
-		Message< DSMsg::OpenFileForRead >	open_file{ _filename };
+		DSMsg::OpenFileForRead	open_file{ _filename };
 		CHECK( _GetManager()->Send( open_file ) );
 
-		_file = *open_file->result;
+		_file = *open_file.result;
 		CHECK_ERR( _file );
 
 		return _ReadFromStream( msg );
@@ -199,23 +199,23 @@ namespace Base
 	_ReadFromStream
 =================================================
 */
-	bool FileInputStream::_ReadFromStream (const Message< DSMsg::ReadFromStream > &msg)
+	bool FileInputStream::_ReadFromStream (const DSMsg::ReadFromStream &msg)
 	{
-		BytesU	readn = _file->ReadBuf( msg->writableBuffer->RawPtr(), msg->writableBuffer->Size() );
+		BytesU	readn = _file->ReadBuf( msg.writableBuffer->RawPtr(), msg.writableBuffer->Size() );
 
-		msg->result.Set( msg->writableBuffer->SubArray( 0, usize(readn) ) );
+		msg.result.Set( msg.writableBuffer->SubArray( 0, usize(readn) ) );
 
-		/*BytesU	size	= msg->writableBuffer->Size();
+		/*BytesU	size	= msg.writableBuffer->Size();
 		BytesU	readn;
 
-		_pos += BytesU(msg->offset);
+		_pos += BytesU(msg.offset);
 
 		// is full or partialy cached
 		if ( _pos < _cachePos + _cache.Size() and _pos > _cachePos )
 		{
 			BinArrayCRef	cached = _cache.SubArray( usize(_pos - _cachePos), usize(size) );
 
-			MemCopy( *msg->writableBuffer, cached );
+			MemCopy( *msg.writableBuffer, cached );
 
 			_pos	+= cached.Size();
 			readn	+= cached.Size();
@@ -230,7 +230,7 @@ namespace Base
 
 			BinArrayCRef	cached	= _cache.SubArray( 0, usize(size) );
 			
-			MemCopy( msg->writableBuffer->SubArray( usize(readn) ), cached );
+			MemCopy( msg.writableBuffer->SubArray( usize(readn) ), cached );
 
 			readn += cached.Size();
 		}
@@ -238,12 +238,12 @@ namespace Base
 		// read to buffer
 		if ( size > 0 )
 		{
-			BinArrayRef		data = msg->writableBuffer->SubArray( usize(readn) );
+			BinArrayRef		data = msg.writableBuffer->SubArray( usize(readn) );
 
 			readn += _file->ReadBuf( data.RawPtr(), data.Size() );
 		}
 
-		msg->result.Set( msg->writableBuffer->SubArray( 0, usize(readn) ) );*/
+		msg.result.Set( msg.writableBuffer->SubArray( 0, usize(readn) ) );*/
 		return true;
 	}
 	
@@ -252,7 +252,7 @@ namespace Base
 	_ReleaseData
 =================================================
 */
-	bool FileInputStream::_ReleaseData (const Message< DSMsg::ReleaseData > &)
+	bool FileInputStream::_ReleaseData (const DSMsg::ReleaseData &)
 	{
 		if ( _file ) {
 			_file->Close();

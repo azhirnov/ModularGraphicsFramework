@@ -39,7 +39,7 @@ namespace GraphicsMsg
 	//
 	// Begin / End Frame
 	//
-	struct CmdBeginFrame
+	struct CmdBeginFrame : _MessageBase_
 	{
 		struct Data {
 			ModulePtr	framebuffer;		// returns current framebuffer, same as in 'ThreadBeginFrame'
@@ -50,16 +50,21 @@ namespace GraphicsMsg
 		Out< Data >		result;
 	};
 
-	struct CmdEndFrame
+	struct CmdEndFrame : _MessageBase_
 	{
+	// variables
 		ModulePtr		framebuffer;		// (optional) must be null or framebuffer returned by 'CmdBeginFrame'
+
+	// methods
+		CmdEndFrame () {}
+		explicit CmdEndFrame (const ModulePtr &fb) : framebuffer{fb} {}
 	};
 	
 
 	//
 	// Begin / End VR Frame
 	//
-	struct CmdBeginVRFrame
+	struct CmdBeginVRFrame : _MessageBase_
 	{
 	// types
 		using PerEye_t	= GpuMsg::ThreadBeginVRFrame::PerEye;
@@ -76,28 +81,36 @@ namespace GraphicsMsg
 		Out< Data >		result;
 	};
 
-	struct CmdEndVRFrame
+	struct CmdEndVRFrame : _MessageBase_
 	{};
 
 
 	//
 	// Frame Begin / End Event
 	//
-	struct OnCmdBeginFrame
+	struct OnCmdBeginFrame : _MessageBase_
 	{
+	// variables
 		uint	cmdIndex;
+
+	// methods
+		explicit OnCmdBeginFrame (uint idx) : cmdIndex{idx} {}
 	};
 
-	struct OnCmdEndFrame
+	struct OnCmdEndFrame : _MessageBase_
 	{
+	// variables
 		uint	cmdIndex;
+
+	// methods
+		explicit OnCmdEndFrame (uint idx) : cmdIndex{idx} {}
 	};
 
 
 	//
 	// Add Frame Dependency
 	//
-	struct CmdAddFrameDependency
+	struct CmdAddFrameDependency : _MessageBase_
 	{
 	// types
 		using Fence_t			= Platforms::GpuFenceId;
@@ -126,7 +139,7 @@ namespace GraphicsMsg
 	//
 	// Append Command Buffers
 	//
-	struct CmdAppend
+	struct CmdAppend : _MessageBase_
 	{
 	// types
 		using Commands_t	= FixedSizeArray< ModulePtr, 16 >;
@@ -145,7 +158,7 @@ namespace GraphicsMsg
 	//
 	// Subscribe On Frame Completed
 	//
-	struct SubscribeOnFrameCompleted
+	struct SubscribeOnFrameCompleted : _MessageBase_
 	{
 	// types
 		using Callback_t	= Function< void (uint) >;
@@ -165,17 +178,17 @@ namespace GraphicsMsg
 	//
 	// Begin / End Commands Recording
 	//
-	struct CmdBegin
+	struct CmdBegin : _MessageBase_
 	{};
 
-	struct CmdEnd
+	struct CmdEnd : _MessageBase_
 	{};
 
 
 	//
 	// Get Current State
 	//
-	struct CmdGetCurrentState
+	struct CmdGetCurrentState : _MessageBase_
 	{
 		enum class EScope {
 			None,
@@ -206,7 +219,7 @@ namespace GraphicsMsg
 	//
 	// Begin / End Async Commands Recording
 	//
-	struct CmdBeginAsync
+	struct CmdBeginAsync : _MessageBase_
 	{
 	// types
 		enum class EMode {
@@ -240,7 +253,7 @@ namespace GraphicsMsg
 	//
 	// End Async Commands Recording
 	//
-	struct CmdEndAsync
+	struct CmdEndAsync : _MessageBase_
 	{};
 
 

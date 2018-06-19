@@ -36,7 +36,7 @@ namespace _BaseMessages_
 		// available only for sender
 		ND_ bool			IsDefined ()		{ return _value.IsDefined(); }
 		ND_ Optional<T> &	GetOptional ()		{ return _value; }
-		ND_ T &				Get ()				{ return _value.Get(); }
+		//ND_ T &			Get ()				{ return _value.Get(); }
 		ND_ T				Get (const T& def)	{ return _value.Get( def ); }
 
 		ND_ T *				operator -> ()		{ return _value.GetPtr(); }
@@ -117,9 +117,7 @@ namespace _BaseMessages_
 		explicit Response (const Callback &cb) : _cb(cb) {}
 		explicit Response (Callback &&cb) : _cb(RVREF(cb)) {}
 
-		Response (const Response &) = default;
-		Response (Response &&) = default;
-		Response () = delete;
+		GX_DEFCOPYCTOR_ONLY( Response );
 
 		void Call (Args&& ...args) const	{ return _cb.SafeCall( FW<Args>( args )... ); }
 	};

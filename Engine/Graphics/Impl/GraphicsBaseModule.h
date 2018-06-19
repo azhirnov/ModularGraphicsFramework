@@ -39,8 +39,8 @@ namespace Graphics
 
 	// message handlers
 	protected:
-		bool _OnManagerChanged (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _DeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _OnManagerChanged (const ModuleMsg::OnManagerChanged &);
+		bool _DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
 		
 	protected:
 		ND_ ModulePtr  _GetGpuThread (const ModulePtr &gpuThread = null) const;

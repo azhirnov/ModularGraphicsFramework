@@ -2,7 +2,7 @@
 
 #include "Engine/ResourcePacker/Pipelines/ScriptGraphicsPipeline.h"
 #include "Engine/ResourcePacker/Packer/ResourcePacker.h"
-#include "Engine/Script/Bindings/DefaultBindings.h"
+#include "Core/Script/Bindings/DefaultBindings.h"
 
 namespace ResPack
 {
@@ -62,7 +62,7 @@ namespace ResPack
 */
 	void ScriptGraphicsPipeline::Bind (ScriptEnginePtr se)
 	{
-		using namespace GX_STL::GXScript;
+		using namespace GXScript;
 		using Self	= ScriptGraphicsPipeline;
 
 		ClassBinder<Self>	binder( se );

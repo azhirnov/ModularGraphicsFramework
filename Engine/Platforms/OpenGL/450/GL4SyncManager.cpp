@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -69,24 +69,24 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &msg);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _OnManagerChanged2 (const ModuleMsg::OnManagerChanged &msg);
 
-		bool _ClientWaitDeviceIdle (const Message< GpuMsg::ClientWaitDeviceIdle > &);
-		bool _CreateFence (const Message< GpuMsg::CreateFence > &);
-		bool _DestroyFence (const Message< GpuMsg::DestroyFence > &);
-		bool _ClientWaitFence (const Message< GpuMsg::ClientWaitFence > &);
-		bool _CreateEvent (const Message< GpuMsg::CreateEvent > &);
-		bool _DestroyEvent (const Message< GpuMsg::DestroyEvent > &);
-		bool _SetEvent (const Message< GpuMsg::SetEvent > &);
-		bool _ResetEvent (const Message< GpuMsg::ResetEvent > &);
-		bool _GetGLEvent (const Message< GpuMsg::GetGLEvent > &);
-		bool _CreateSemaphore (const Message< GpuMsg::CreateSemaphore > &);
-		bool _DestroySemaphore (const Message< GpuMsg::DestroySemaphore > &);
-		bool _GLFenceSync (const Message< GpuMsg::GLFenceSync > &);
-		bool _GLSemaphoreEnqueue (const Message< GpuMsg::GLSemaphoreEnqueue > &);
-		bool _GetGLSemaphore (const Message< GpuMsg::GetGLSemaphore > &);
-		bool _WaitGLSemaphore (const Message< GpuMsg::WaitGLSemaphore > &);
+		bool _ClientWaitDeviceIdle (const GpuMsg::ClientWaitDeviceIdle &);
+		bool _CreateFence (const GpuMsg::CreateFence &);
+		bool _DestroyFence (const GpuMsg::DestroyFence &);
+		bool _ClientWaitFence (const GpuMsg::ClientWaitFence &);
+		bool _CreateEvent (const GpuMsg::CreateEvent &);
+		bool _DestroyEvent (const GpuMsg::DestroyEvent &);
+		bool _SetEvent (const GpuMsg::SetEvent &);
+		bool _ResetEvent (const GpuMsg::ResetEvent &);
+		bool _GetGLEvent (const GpuMsg::GetGLEvent &);
+		bool _CreateSemaphore (const GpuMsg::CreateSemaphore &);
+		bool _DestroySemaphore (const GpuMsg::DestroySemaphore &);
+		bool _GLFenceSync (const GpuMsg::GLFenceSync &);
+		bool _GLSemaphoreEnqueue (const GpuMsg::GLSemaphoreEnqueue &);
+		bool _GetGLSemaphore (const GpuMsg::GetGLSemaphore &);
+		bool _WaitGLSemaphore (const GpuMsg::WaitGLSemaphore &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -172,7 +172,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4SyncManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4SyncManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DeleteSync_Func	func;
 
@@ -190,13 +190,13 @@ namespace PlatformGL
 	_OnManagerChanged2
 =================================================
 */
-	bool GL4SyncManager::_OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &msg)
+	bool GL4SyncManager::_OnManagerChanged2 (const ModuleMsg::OnManagerChanged &msg)
 	{
 		_OnManagerChanged( msg );
 		
-		if ( msg->newManager )
+		if ( msg.newManager )
 		{
-			msg->newManager->UnsubscribeAll( this );
+			msg.newManager->UnsubscribeAll( this );
 		}
 		return true;
 	}
@@ -206,9 +206,9 @@ namespace PlatformGL
 	_ClientWaitDeviceIdle
 =================================================
 */
-	bool GL4SyncManager::_ClientWaitDeviceIdle (const Message< GpuMsg::ClientWaitDeviceIdle > &)
+	bool GL4SyncManager::_ClientWaitDeviceIdle (const GpuMsg::ClientWaitDeviceIdle &)
 	{
-		CHECK( _GetManager()->Send< GpuMsg::SyncGLClientWithDevice >({}) );
+		CHECK( _GetManager()->Send( GpuMsg::SyncGLClientWithDevice{} ));
 
 		GL_CALL( glFinish() );
 		return true;
@@ -219,7 +219,7 @@ namespace PlatformGL
 	_CreateFence
 =================================================
 */
-	bool GL4SyncManager::_CreateFence (const Message< GpuMsg::CreateFence > &msg)
+	bool GL4SyncManager::_CreateFence (const GpuMsg::CreateFence &msg)
 	{
 		for (;;)
 		{
@@ -230,7 +230,7 @@ namespace PlatformGL
 		}
 		_syncs.Add( _counter, SyncUnion_t{ GLsync(null) } );
 
-		msg->result.Set( GpuFenceId(_counter) );
+		msg.result.Set( GpuFenceId(_counter) );
 		return true;
 	}
 	
@@ -239,11 +239,11 @@ namespace PlatformGL
 	_DestroyFence
 =================================================
 */
-	bool GL4SyncManager::_DestroyFence (const Message< GpuMsg::DestroyFence > &msg)
+	bool GL4SyncManager::_DestroyFence (const GpuMsg::DestroyFence &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< GLsync >() );
 			
@@ -263,11 +263,11 @@ namespace PlatformGL
 	_ClientWaitFence
 =================================================
 */
-	bool GL4SyncManager::_ClientWaitFence (const Message< GpuMsg::ClientWaitFence > &msg)
+	bool GL4SyncManager::_ClientWaitFence (const GpuMsg::ClientWaitFence &msg)
 	{
-		const GLuint64	timeout = msg->timeout.NanoSeconds();
+		const GLuint64	timeout = msg.timeout.NanoSeconds();
 
-		for (auto& wfence : msg->fences)
+		for (auto& wfence : msg.fences)
 		{
 			SyncArray_t::iterator	iter;
 			CHECK_ERR( _syncs.Find( ulong(wfence), OUT iter ) );
@@ -278,7 +278,7 @@ namespace PlatformGL
 				GL_CALL( glClientWaitSync( fence, GL_SYNC_FLUSH_COMMANDS_BIT, timeout ) );
 			}
 			else {
-				CHECK( _GetManager()->Send< GpuMsg::SyncGLClientWithDevice >( wfence ) );
+				CHECK( _GetManager()->Send( GpuMsg::SyncGLClientWithDevice{ wfence } ));
 			}
 		}
 		return true;
@@ -289,10 +289,10 @@ namespace PlatformGL
 	_GLFenceSync
 =================================================
 */
-	bool GL4SyncManager::_GLFenceSync (const Message< GpuMsg::GLFenceSync > &msg)
+	bool GL4SyncManager::_GLFenceSync (const GpuMsg::GLFenceSync &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->fenceId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.fenceId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< GLsync >() );
 		
 		GLsync&	fence = iter->second.Get< GLsync >();
@@ -303,7 +303,7 @@ namespace PlatformGL
 			
 		GL_CALL( fence = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 ) );
 
-		msg->result.Set( fence );
+		msg.result.Set( fence );
 		return true;
 	}
 	
@@ -312,13 +312,13 @@ namespace PlatformGL
 	_GetGLFence
 =================================================
 *
-	bool GL4SyncManager::_GetGLFence (const Message< GpuMsg::GetGLFence > &msg)
+	bool GL4SyncManager::_GetGLFence (const GpuMsg::GetGLFence &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->fenceId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.fenceId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< GLsync >() );
 		
-		msg->result.Set( iter->second.Get< GLsync >() );
+		msg.result.Set( iter->second.Get< GLsync >() );
 		return true;
 	}
 
@@ -327,7 +327,7 @@ namespace PlatformGL
 	_CreateEvent
 =================================================
 */
-	bool GL4SyncManager::_CreateEvent (const Message< GpuMsg::CreateEvent > &msg)
+	bool GL4SyncManager::_CreateEvent (const GpuMsg::CreateEvent &msg)
 	{
 		for (;;)
 		{
@@ -338,7 +338,7 @@ namespace PlatformGL
 		}
 		_syncs.Add( _counter, SyncUnion_t{ GLsync(null) } );
 
-		msg->result.Set( GpuEventId(_counter) );
+		msg.result.Set( GpuEventId(_counter) );
 		return true;
 	}
 	
@@ -347,11 +347,11 @@ namespace PlatformGL
 	_DestroyEvent
 =================================================
 */
-	bool GL4SyncManager::_DestroyEvent (const Message< GpuMsg::DestroyEvent > &msg)
+	bool GL4SyncManager::_DestroyEvent (const GpuMsg::DestroyEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< GLsync >() );
 			
@@ -371,10 +371,10 @@ namespace PlatformGL
 	_SetEvent
 =================================================
 */
-	bool GL4SyncManager::_SetEvent (const Message< GpuMsg::SetEvent > &msg)
+	bool GL4SyncManager::_SetEvent (const GpuMsg::SetEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->id), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.id), OUT iter ) );
 		CHECK_ERR( iter->second.Is< GLsync >() );
 
 		GLsync&	event = iter->second.Get< GLsync >();
@@ -401,10 +401,10 @@ namespace PlatformGL
 	_ResetEvent
 =================================================
 */
-	bool GL4SyncManager::_ResetEvent (const Message< GpuMsg::ResetEvent > &msg)
+	bool GL4SyncManager::_ResetEvent (const GpuMsg::ResetEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->id), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.id), OUT iter ) );
 		CHECK_ERR( iter->second.Is< GLsync >() );
 
 		GLsync&	event = iter->second.Get< GLsync >();
@@ -437,13 +437,13 @@ namespace PlatformGL
 	_GetGLEvent
 =================================================
 */
-	bool GL4SyncManager::_GetGLEvent (const Message< GpuMsg::GetGLEvent > &msg)
+	bool GL4SyncManager::_GetGLEvent (const GpuMsg::GetGLEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->eventId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.eventId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< GLsync >() );
 		
-		msg->result.Set( iter->second.Get< GLsync >() );
+		msg.result.Set( iter->second.Get< GLsync >() );
 		return true;
 	}
 
@@ -452,7 +452,7 @@ namespace PlatformGL
 	_CreateSemaphore
 =================================================
 */
-	bool GL4SyncManager::_CreateSemaphore (const Message< GpuMsg::CreateSemaphore > &msg)
+	bool GL4SyncManager::_CreateSemaphore (const GpuMsg::CreateSemaphore &msg)
 	{
 		for (;;)
 		{
@@ -463,7 +463,7 @@ namespace PlatformGL
 		}
 		_syncs.Add( _counter, SyncUnion_t{ GLsync(null) } );
 
-		msg->result.Set( GpuSemaphoreId(_counter) );
+		msg.result.Set( GpuSemaphoreId(_counter) );
 		return true;
 	}
 	
@@ -472,11 +472,11 @@ namespace PlatformGL
 	_DestroySemaphore
 =================================================
 */
-	bool GL4SyncManager::_DestroySemaphore (const Message< GpuMsg::DestroySemaphore > &msg)
+	bool GL4SyncManager::_DestroySemaphore (const GpuMsg::DestroySemaphore &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< GLsync >() );
 			
@@ -496,10 +496,10 @@ namespace PlatformGL
 	_GLSemaphoreEnqueue
 =================================================
 */
-	bool GL4SyncManager::_GLSemaphoreEnqueue (const Message< GpuMsg::GLSemaphoreEnqueue > &msg)
+	bool GL4SyncManager::_GLSemaphoreEnqueue (const GpuMsg::GLSemaphoreEnqueue &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->semId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.semId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< GLsync >() );
 		
 		GLsync&	sem = iter->second.Get< GLsync >();
@@ -510,7 +510,7 @@ namespace PlatformGL
 			
 		GL_CALL( sem = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 ) );
 
-		msg->result.Set( sem );
+		msg.result.Set( sem );
 		return true;
 	}
 	
@@ -519,13 +519,13 @@ namespace PlatformGL
 	_GetGLSemaphore
 =================================================
 */
-	bool GL4SyncManager::_GetGLSemaphore (const Message< GpuMsg::GetGLSemaphore > &msg)
+	bool GL4SyncManager::_GetGLSemaphore (const GpuMsg::GetGLSemaphore &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->semId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.semId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< GLsync >() );
 		
-		msg->result.Set( iter->second.Get< GLsync >() );
+		msg.result.Set( iter->second.Get< GLsync >() );
 		return true;
 	}
 	
@@ -534,13 +534,13 @@ namespace PlatformGL
 	_WaitGLSemaphore
 =================================================
 */
-	bool GL4SyncManager::_WaitGLSemaphore (const Message< GpuMsg::WaitGLSemaphore > &msg)
+	bool GL4SyncManager::_WaitGLSemaphore (const GpuMsg::WaitGLSemaphore &msg)
 	{
-		Message< GpuMsg::GetGLSemaphore >	req_sem{ msg->semId };
+		GpuMsg::GetGLSemaphore	req_sem{ msg.semId };
 		CHECK_ERR( _GetGLSemaphore( req_sem ) );
-		CHECK_ERR( req_sem->result and *req_sem->result != null );
+		CHECK_ERR( req_sem.result and *req_sem.result != null );
 
-		GL_CALL( glWaitSync( *req_sem->result, 0, GLuint64(GL_TIMEOUT_IGNORED) ) );
+		GL_CALL( glWaitSync( *req_sem.result, 0, GLuint64(GL_TIMEOUT_IGNORED) ) );
 		return true;
 	}
 

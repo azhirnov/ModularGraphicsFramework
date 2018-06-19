@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -22,7 +22,7 @@ namespace PlatformVK
 	// types
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetCommandBufferDescriptor,
+											GpuMsg::GetCommandBufferDescription,
 											GpuMsg::GetVkCommandBufferID,
 											GpuMsg::SetCommandBufferState,
 											GpuMsg::GetCommandBufferState,
@@ -47,7 +47,7 @@ namespace PlatformVK
 
 	// variables
 	private:
-		CommandBufferDescriptor		_descr;
+		CommandBufferDescription	_descr;
 		vk::VkCommandBuffer			_cmdId;
 		
 		UsedResources_t				_resources;
@@ -62,15 +62,15 @@ namespace PlatformVK
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _OnModuleAttached (const Message< ModuleMsg::OnModuleAttached > &);
-		bool _OnModuleDetached (const Message< ModuleMsg::OnModuleDetached > &);
-		bool _GetVkCommandBufferID (const Message< GpuMsg::GetVkCommandBufferID > &);
-		bool _GetCommandBufferDescriptor (const Message< GpuMsg::GetCommandBufferDescriptor > &);
-		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
-		bool _SetCommandBufferState (const Message< GpuMsg::SetCommandBufferState > &);
-		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _OnModuleAttached (const ModuleMsg::OnModuleAttached &);
+		bool _OnModuleDetached (const ModuleMsg::OnModuleDetached &);
+		bool _GetVkCommandBufferID (const GpuMsg::GetVkCommandBufferID &);
+		bool _GetCommandBufferDescription (const GpuMsg::GetCommandBufferDescription &);
+		bool _SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &);
+		bool _SetCommandBufferState (const GpuMsg::SetCommandBufferState &);
+		bool _GetCommandBufferState (const GpuMsg::GetCommandBufferState &);
 		
 	private:
 		bool _IsCreated () const;
@@ -85,7 +85,7 @@ namespace PlatformVK
 
 		void _ChangeState (ERecordingState newState);
 
-		static void _ValidateDescriptor (INOUT CommandBufferDescriptor &descr);
+		static void _ValidateDescription (INOUT CommandBufferDescription &descr);
 	};
 //-----------------------------------------------------------------------------
 
@@ -117,7 +117,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_Delete );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetVkCommandBufferID );
-		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetCommandBufferDescriptor );
+		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetCommandBufferDescription );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetVkPrivateClasses );
@@ -129,7 +129,7 @@ namespace PlatformVK
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
-		_ValidateDescriptor( _descr );
+		_ValidateDescription( _descr );
 	}
 	
 /*
@@ -147,7 +147,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1CommandBuffer::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool Vk1CommandBuffer::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -163,7 +163,7 @@ namespace PlatformVK
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -172,7 +172,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1CommandBuffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1CommandBuffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyCmdBuffer();
 
@@ -184,11 +184,11 @@ namespace PlatformVK
 	_OnModuleAttached
 =================================================
 */
-	bool Vk1CommandBuffer::_OnModuleAttached (const Message< ModuleMsg::OnModuleAttached > &msg)
+	bool Vk1CommandBuffer::_OnModuleAttached (const ModuleMsg::OnModuleAttached &msg)
 	{
-		if ( msg->attachedModule == this			and
-			 _OnAttachedToParent( msg->parent )		and
-			 msg->parent->GetSupportedMessages().HasAllTypes< CmdPoolMsgList_t >() )
+		if ( msg.attachedModule == this			and
+			 _OnAttachedToParent( msg.parent )		and
+			 msg.parent->GetSupportedMessages().HasAllTypes< CmdPoolMsgList_t >() )
 		{
 			CHECK( _SetState( EState::Initial ) );
 		}
@@ -200,23 +200,23 @@ namespace PlatformVK
 	_OnModuleDetached
 =================================================
 */
-	bool Vk1CommandBuffer::_OnModuleDetached (const Message< ModuleMsg::OnModuleDetached > &msg)
+	bool Vk1CommandBuffer::_OnModuleDetached (const ModuleMsg::OnModuleDetached &msg)
 	{
-		if ( msg->detachedModule == this )
+		if ( msg.detachedModule == this )
 		{
-			if ( msg->isLast )
+			if ( msg.isLast )
 			{
-				if ( msg->parent->GetSupportedMessages().HasAllTypes< CmdPoolMsgList_t >() )
+				if ( msg.parent->GetSupportedMessages().HasAllTypes< CmdPoolMsgList_t >() )
 				{
 					_DestroyCmdBuffer();
 					CHECK( _SetState( EState::Initial ) );
 				}
-				_OnDetachedFromParent( msg->parent );
+				_OnDetachedFromParent( msg.parent );
 			}
 		}
 		else
 		{
-			UnsubscribeAll( msg->detachedModule );
+			UnsubscribeAll( msg.detachedModule );
 		}
 		return true;
 	}
@@ -226,22 +226,22 @@ namespace PlatformVK
 	_GetVkCommandBufferID
 =================================================
 */
-	bool Vk1CommandBuffer::_GetVkCommandBufferID (const Message< GpuMsg::GetVkCommandBufferID > &msg)
+	bool Vk1CommandBuffer::_GetVkCommandBufferID (const GpuMsg::GetVkCommandBufferID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set({ _cmdId });
+		msg.result.Set({ _cmdId });
 		return true;
 	}
 
 /*
 =================================================
-	_GetCommandBufferDescriptor
+	_GetCommandBufferDescription
 =================================================
 */
-	bool Vk1CommandBuffer::_GetCommandBufferDescriptor (const Message< GpuMsg::GetCommandBufferDescriptor > &msg)
+	bool Vk1CommandBuffer::_GetCommandBufferDescription (const GpuMsg::GetCommandBufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
@@ -250,22 +250,22 @@ namespace PlatformVK
 	_SetCommandBufferDependency
 =================================================
 */
-	bool Vk1CommandBuffer::_SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &msg)
+	bool Vk1CommandBuffer::_SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &msg)
 	{
-		_resources = RVREF( msg->resources.Get() );
+		_resources = RVREF( msg.resources.Get() );
 		return true;
 	}
 
 /*
 =================================================
-	_GetCommandBufferDescriptor
+	_GetCommandBufferDescription
 =================================================
 */
-	bool Vk1CommandBuffer::_SetCommandBufferState (const Message< GpuMsg::SetCommandBufferState > &msg)
+	bool Vk1CommandBuffer::_SetCommandBufferState (const GpuMsg::SetCommandBufferState &msg)
 	{
 		if ( _IsCreated() )
 		{
-			switch ( msg->newState )
+			switch ( msg.newState )
 			{
 				case ERecordingState::Initial :		CHECK( _ResetCmdBuffer() );	break;
 				case ERecordingState::Recording :	CHECK( _BeginRecording() );	break;
@@ -280,12 +280,12 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetCommandBufferDescriptor
+	_GetCommandBufferDescription
 =================================================
 */
-	bool Vk1CommandBuffer::_GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &msg)
+	bool Vk1CommandBuffer::_GetCommandBufferState (const GpuMsg::GetCommandBufferState &msg)
 	{
-		msg->result.Set( _recordingState );
+		msg.result.Set( _recordingState );
 		return true;
 	}
 
@@ -315,14 +315,14 @@ namespace PlatformVK
 			ModulePtr	builder;
 			CHECK_ERR( builder = GetParentByMsg< CmdPoolMsgList_t >() );
 
-			Message< GpuMsg::GetVkCommandPoolID >	req_pool_id;
-			SendTo( builder, req_pool_id );
-			CHECK_ERR( req_pool_id->result and *req_pool_id->result != VK_NULL_HANDLE );
+			GpuMsg::GetVkCommandPoolID		req_pool_id;
+			builder->Send( req_pool_id );
+			CHECK_ERR( req_pool_id.result and *req_pool_id.result != VK_NULL_HANDLE );
 
 			VkCommandBufferAllocateInfo	info = {};
 			info.sType				= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 			info.pNext				= null;
-			info.commandPool		= *req_pool_id->result;
+			info.commandPool		= *req_pool_id.result;
 			info.level				= _descr.flags[ ECmdBufferCreate::Secondary ] ? VK_COMMAND_BUFFER_LEVEL_SECONDARY : VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 			info.commandBufferCount	= 1;
 
@@ -351,10 +351,10 @@ namespace PlatformVK
 			ModulePtr	builder;
 			CHECK_ERR( builder = GetParentByMsg< CmdPoolMsgList_t >(), void() );
 
-			Message< GpuMsg::GetVkCommandPoolID >	req_pool_id;
-			SendTo( builder, req_pool_id );
+			GpuMsg::GetVkCommandPoolID	req_pool_id;
+			builder->Send( req_pool_id );
 
-			VkCommandPool	pool = req_pool_id->result.Get( VK_NULL_HANDLE );
+			VkCommandPool	pool = req_pool_id.result.Get( VK_NULL_HANDLE );
 
 			if ( dev != VK_NULL_HANDLE and pool != VK_NULL_HANDLE )
 			{
@@ -470,15 +470,15 @@ namespace PlatformVK
 
 		_recordingState = newState;
 
-		_SendEvent< GpuMsg::OnCommandBufferStateChanged >({ old_state, newState });
+		_SendEvent( GpuMsg::OnCommandBufferStateChanged{ old_state, newState });
 	}
 	
 /*
 =================================================
-	_ValidateDescriptor
+	_ValidateDescription
 =================================================
 */
-	void Vk1CommandBuffer::_ValidateDescriptor (INOUT CommandBufferDescriptor &)
+	void Vk1CommandBuffer::_ValidateDescription (INOUT CommandBufferDescription &)
 	{
 	}
 

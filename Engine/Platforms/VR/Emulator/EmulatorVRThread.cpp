@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GX_EMULATOR_VR
 
@@ -12,7 +12,7 @@
 #include "Engine/Platforms/Public/OS/Input.h"
 #include "Engine/Platforms/VR/VRObjectsConstructor.h"
 
-#include "Engine/STL/Math/3D/PerspectiveCamera.h"
+#include "Core/STL/Math/3D/PerspectiveCamera.h"
 
 #ifdef GRAPHICS_API_OPENGL
 #	include "Engine/Platforms/OpenGL/450/GL4Messages.h"
@@ -147,27 +147,27 @@ namespace PlatformVR
 		
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
 
-		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
-		bool _GetVRDeviceInfo (const Message< GpuMsg::GetVRDeviceInfo > &);
-		bool _ThreadBeginVRFrame (const Message< GpuMsg::ThreadBeginVRFrame > &);
-		bool _ThreadEndVRFrame (const Message< GpuMsg::ThreadEndVRFrame > &);
+		bool _GetDeviceInfo (const GpuMsg::GetDeviceInfo &);
+		bool _GetVRDeviceInfo (const GpuMsg::GetVRDeviceInfo &);
+		bool _ThreadBeginVRFrame (const GpuMsg::ThreadBeginVRFrame &);
+		bool _ThreadEndVRFrame (const GpuMsg::ThreadEndVRFrame &);
 		
-		bool _GpuDeviceCreated (const Message< GpuMsg::DeviceCreated > &);
-		bool _GpuDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _GpuDeviceCreated (const GpuMsg::DeviceCreated &);
+		bool _GpuDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
 		
 	#ifdef GRAPHICS_API_OPENGL
-		bool _GetGLDeviceInfo_Empty (const Message< GpuMsg::GetGLDeviceInfo > &)			{ return false; }
-		bool _GetGLPrivateClasses_Empty (const Message< GpuMsg::GetGLPrivateClasses > &)	{ return false; }
+		bool _GetGLDeviceInfo_Empty (const GpuMsg::GetGLDeviceInfo &)			{ return false; }
+		bool _GetGLPrivateClasses_Empty (const GpuMsg::GetGLPrivateClasses &)	{ return false; }
 	#endif
 
 	#ifdef GRAPHICS_API_VULKAN
-		bool _GetVkDeviceInfo_Empty (const Message< GpuMsg::GetVkDeviceInfo > &)			{ return false; }
-		bool _GetVkPrivateClasses_Empty (const Message< GpuMsg::GetVkPrivateClasses > &)	{ return false; }
+		bool _GetVkDeviceInfo_Empty (const GpuMsg::GetVkDeviceInfo &)			{ return false; }
+		bool _GetVkPrivateClasses_Empty (const GpuMsg::GetVkPrivateClasses &)	{ return false; }
 	#endif
 
 		// event handlers
@@ -248,7 +248,7 @@ namespace PlatformVR
 	_Delete
 =================================================
 */
-	bool EmulatorVRThread::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool EmulatorVRThread::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyDevice();
 
@@ -261,7 +261,7 @@ namespace PlatformVR
 	_Link
 =================================================
 */
-	bool EmulatorVRThread::_Link (const Message< ModuleMsg::Link > &msg)
+	bool EmulatorVRThread::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -272,8 +272,8 @@ namespace PlatformVR
 		ModulePtr	input;
 		CHECK_LINKING( input = GlobalSystems()->parallelThread->GetModuleByMsg< InputThreadMsgList_t >() );
 
-		input->Send< ModuleMsg::InputMotionBind >({ this, &EmulatorVRThread::_OnTouchX, "touch.x"_MotionID });
-		input->Send< ModuleMsg::InputMotionBind >({ this, &EmulatorVRThread::_OnTouchY, "touch.y"_MotionID });
+		input->Send( ModuleMsg::InputMotionBind{ this, &EmulatorVRThread::_OnTouchX, "touch.x"_MotionID });
+		input->Send( ModuleMsg::InputMotionBind{ this, &EmulatorVRThread::_OnTouchY, "touch.y"_MotionID });
 		
 
 		// create GPU thread
@@ -315,7 +315,7 @@ namespace PlatformVR
 	_AddToManager
 =================================================
 */
-	bool EmulatorVRThread::_AddToManager (const Message< ModuleMsg::AddToManager > &)
+	bool EmulatorVRThread::_AddToManager (const ModuleMsg::AddToManager &)
 	{
 		return true;
 	}
@@ -325,7 +325,7 @@ namespace PlatformVR
 	_RemoveFromManager
 =================================================
 */
-	bool EmulatorVRThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &)
+	bool EmulatorVRThread::_RemoveFromManager (const ModuleMsg::RemoveFromManager &)
 	{
 		return true;
 	}
@@ -335,17 +335,17 @@ namespace PlatformVR
 	_GetDeviceInfo
 =================================================
 */
-	bool EmulatorVRThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
+	bool EmulatorVRThread::_GetDeviceInfo (const GpuMsg::GetDeviceInfo &msg)
 	{
 		if ( not _gpuThread )
 			return false;
 
-		Message< GpuMsg::GetDeviceInfo >	req_dev;
+		GpuMsg::GetDeviceInfo	req_dev;
 		CHECK( _gpuThread->Send( req_dev ) );
 
-		req_dev->result->renderPass = _renderPass;
+		req_dev.result->renderPass = _renderPass;
 
-		msg->result.Set( *req_dev->result );
+		msg.result.Set( *req_dev.result );
 		return true;
 	}
 
@@ -354,7 +354,7 @@ namespace PlatformVR
 	_GetVRDeviceInfo
 =================================================
 */
-	bool EmulatorVRThread::_GetVRDeviceInfo (const Message< GpuMsg::GetVRDeviceInfo > &)
+	bool EmulatorVRThread::_GetVRDeviceInfo (const GpuMsg::GetVRDeviceInfo &)
 	{
 		TODO( "" );
 		return true;
@@ -365,7 +365,7 @@ namespace PlatformVR
 	_ThreadBeginVRFrame
 =================================================
 */
-	bool EmulatorVRThread::_ThreadBeginVRFrame (const Message< GpuMsg::ThreadBeginVRFrame > &msg)
+	bool EmulatorVRThread::_ThreadBeginVRFrame (const GpuMsg::ThreadBeginVRFrame &msg)
 	{
 		CHECK_ERR( _isCreated and not _isFrameStarted );
 		
@@ -385,24 +385,24 @@ namespace PlatformVR
 			_framebuffers[1].viewMat = _camera.ViewMatrix() * _camera.GetModelMatrix();
 		}
 
-		Message< GpuMsg::ThreadBeginFrame >	begin;
+		GpuMsg::ThreadBeginFrame	begin;
 		_gpuThread->Send( begin );
 
 		_lastFrameIndex	= _frameIndex;
-		_frameIndex		= begin->result->frameIndex;
+		_frameIndex		= begin.result->frameIndex;
 
 		if ( _frameIndex >= _perFrame.Count() )
 			_perFrame.Resize( _frameIndex+1 );
 		
-		Message< GpuMsg::CmdBegin >	cmd_begin;
-		cmd_begin->flags			|= ECmdBufferCreate::ImplicitResetable;
-		cmd_begin->targetCmdBuffer	 = _perFrame[ _frameIndex ].command;
+		GpuMsg::CmdBegin	cmd_begin;
+		cmd_begin.flags				|= ECmdBufferCreate::ImplicitResetable;
+		cmd_begin.targetCmdBuffer	 = _perFrame[ _frameIndex ].command;
 		_builder->Send( cmd_begin );
 
 		_isFrameStarted		 = true;
-		_onScreenFramebuffer = begin->result->framebuffer;
+		_onScreenFramebuffer = begin.result->framebuffer;
 
-		msg->result.Set({
+		msg.result.Set({
 			_framebuffers[0],
 			_framebuffers[1],
 			_frameIndex
@@ -415,7 +415,7 @@ namespace PlatformVR
 	_ThreadEndVRFrame
 =================================================
 */
-	bool EmulatorVRThread::_ThreadEndVRFrame (const Message< GpuMsg::ThreadEndVRFrame > &msg)
+	bool EmulatorVRThread::_ThreadEndVRFrame (const GpuMsg::ThreadEndVRFrame &msg)
 	{
 		CHECK_ERR( _isCreated and _isFrameStarted );
 		
@@ -424,30 +424,30 @@ namespace PlatformVR
 		auto&	per_frame	= _perFrame[ _frameIndex ];
 		auto&	last_frame	= _perFrame[ _lastFrameIndex ];
 
-		Message< GpuMsg::CmdEnd >	cmd_end;
+		GpuMsg::CmdEnd	cmd_end;
 		_builder->Send( cmd_end );
-		_InitFrame( per_frame, *cmd_end->result );
+		_InitFrame( per_frame, *cmd_end.result );
 		
 
 		// submit frame rendering commands
-		Message< GpuMsg::SubmitGraphicsQueueCommands >	submit;
-		submit->commands			= msg->commands;
-		submit->waitSemaphores		= msg->waitSemaphores;
-		submit->signalSemaphores	<< per_frame.mainFrameRendered;
+		GpuMsg::SubmitGraphicsQueueCommands		submit;
+		submit.commands			= msg.commands;
+		submit.waitSemaphores	= msg.waitSemaphores;
+		submit.signalSemaphores	<< per_frame.mainFrameRendered;
 		_gpuThread->Send( submit );
 
 
 		// submit blitting commands
-		Message< GpuMsg::ThreadEndFrame >	end;
-		end->commands			<< per_frame.command;
-		end->framebuffer		= _onScreenFramebuffer;
-		end->fence				= msg->fence;
-		end->signalSemaphores	= msg->signalSemaphores;
-		end->signalSemaphores	<< per_frame.lastFrameRendered;
-		end->waitSemaphores.PushBack({ per_frame.mainFrameRendered, EPipelineStage::AllGraphics });
+		GpuMsg::ThreadEndFrame	end;
+		end.commands			<< per_frame.command;
+		end.framebuffer			= _onScreenFramebuffer;
+		end.fence				= msg.fence;
+		end.signalSemaphores	= msg.signalSemaphores;
+		end.signalSemaphores	<< per_frame.lastFrameRendered;
+		end.waitSemaphores.PushBack({ per_frame.mainFrameRendered, EPipelineStage::AllGraphics });
 
 		if ( last_frame.lastFrameRendered != GpuSemaphoreId::Unknown ) {
-			end->waitSemaphores.PushBack({ last_frame.lastFrameRendered, EPipelineStage::AllGraphics });
+			end.waitSemaphores.PushBack({ last_frame.lastFrameRendered, EPipelineStage::AllGraphics });
 		}
 		_gpuThread->Send( end );
 
@@ -459,14 +459,14 @@ namespace PlatformVR
 
 /*
 =================================================
-	_WindowDescriptorChanged
+	_WindowDescriptionChanged
 =================================================
 *
-	bool EmulatorVRThread::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
+	bool EmulatorVRThread::_WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &msg)
 	{
-		if ( msg->desc.visibility != WindowDesc::EVisibility::Invisible )
+		if ( msg.desc.visibility != WindowDesc::EVisibility::Invisible )
 		{
-			_surfaceSize = msg->desc.surfaceSize;
+			_surfaceSize = msg.desc.surfaceSize;
 		}
 		return true;
 	}
@@ -500,7 +500,7 @@ namespace PlatformVR
 		
 		CHECK( _DefCompose( false ) );
 
-		_SendEvent< GpuMsg::DeviceCreated >({});
+		_SendEvent( GpuMsg::DeviceCreated{} );
 		return true;
 	}
 
@@ -509,7 +509,7 @@ namespace PlatformVR
 	_GpuDeviceCreated
 =================================================
 */
-	bool EmulatorVRThread::_GpuDeviceCreated (const Message< GpuMsg::DeviceCreated > &)
+	bool EmulatorVRThread::_GpuDeviceCreated (const GpuMsg::DeviceCreated &)
 	{
 		CHECK_COMPOSING( _CreateDevice() );
 		return true;
@@ -520,7 +520,7 @@ namespace PlatformVR
 	_GpuDeviceBeforeDestroy
 =================================================
 */
-	bool EmulatorVRThread::_GpuDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool EmulatorVRThread::_GpuDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
 		_DestroyDevice();
 
@@ -535,7 +535,7 @@ namespace PlatformVR
 */
 	bool EmulatorVRThread::_DestroyDevice ()
 	{
-		Message< ModuleMsg::Delete >	del_msg;
+		ModuleMsg::Delete	del_msg;
 
 		if ( _gpuThread )
 		{
@@ -550,13 +550,13 @@ namespace PlatformVR
 		if ( _isCreated )
 		{
 			_isCreated = false;
-			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
+			_SendEvent( GpuMsg::DeviceBeforeDestroy{} );
 		}
 
-		FOR( i, _framebuffers )
+		for (auto& fb : _framebuffers)
 		{
-			if ( _framebuffers[i].framebuffer )
-				_framebuffers[i].framebuffer->Send( del_msg );
+			if ( fb.framebuffer )
+				fb.framebuffer->Send( del_msg );
 		}
 		_framebuffers.Clear();
 
@@ -576,36 +576,36 @@ namespace PlatformVR
 */
 	bool EmulatorVRThread::_PresentVR ()
 	{
-		Message< GpuMsg::GetGraphicsSettings >	req_settings;
+		GpuMsg::GetGraphicsSettings		req_settings;
 		_gpuThread->Send( req_settings );
 
-		const uint2		surface_size = req_settings->result->surfaceSize;
-		ModulePtr		col_image	 = _onScreenFramebuffer->GetModuleByMsg<MessageListFrom< GpuMsg::GetImageDescriptor >>();
+		const uint2		surface_size = req_settings.result->surfaceSize;
+		ModulePtr		col_image	 = _onScreenFramebuffer->GetModuleByMsg<MessageListFrom< GpuMsg::GetImageDescription >>();
 
 		FOR( i, _framebuffers )
 		{
 			if ( _isOpenGL )
 			{
 			#ifdef GRAPHICS_API_OPENGL
-				Message< GpuMsg::CmdBlitGLFramebuffers >	blit;
-				blit->srcFramebuffer	= _framebuffers[i].framebuffer;
-				blit->dstFramebuffer	= _onScreenFramebuffer;
-				blit->linearFilter		= true;
-				blit->imageAspect		|= EImageAspect::Color;
-				blit->regions.PushBack({});
-				blit->regions.Back().srcOffset0 = uint2(0);
-				blit->regions.Back().srcOffset1 = _eyeTextureDimension;
+				GpuMsg::CmdBlitGLFramebuffers	blit;
+				blit.srcFramebuffer		= _framebuffers[i].framebuffer;
+				blit.dstFramebuffer		= _onScreenFramebuffer;
+				blit.linearFilter		= true;
+				blit.imageAspect		|= EImageAspect::Color;
+				blit.regions.PushBack({});
+				blit.regions.Back().srcOffset0 = uint2(0);
+				blit.regions.Back().srcOffset1 = _eyeTextureDimension;
 
 				switch ( Eye(i) )
 				{
 				case Eye::Left :
-					blit->regions.Back().dstOffset0 = uint2(0);
-					blit->regions.Back().dstOffset1 = uint2(surface_size.x / 2, surface_size.y);
+					blit.regions.Back().dstOffset0 = uint2(0);
+					blit.regions.Back().dstOffset1 = uint2(surface_size.x / 2, surface_size.y);
 					break;
 
 				case Eye::Right :
-					blit->regions.Back().dstOffset0 = uint2(surface_size.x / 2, 0);
-					blit->regions.Back().dstOffset1 = surface_size;
+					blit.regions.Back().dstOffset0 = uint2(surface_size.x / 2, 0);
+					blit.regions.Back().dstOffset1 = surface_size;
 					break;
 				}
 
@@ -614,29 +614,29 @@ namespace PlatformVR
 			}
 			else
 			{
-				Message< GpuMsg::CmdBlitImage >		blit;
+				GpuMsg::CmdBlitImage	blit;
 				
-				blit->srcImage			= _framebuffers[i].framebuffer->GetModuleByName( "Color0" );
-				blit->srcLayout			= EImageLayout::ColorAttachmentOptimal;
-				blit->dstImage			= col_image;
-				blit->dstLayout			= EImageLayout::ColorAttachmentOptimal;
-				blit->linearFilter		= true;
-				blit->regions.PushBack({});
-				blit->regions.Back().srcOffset0 = uint3(0);
-				blit->regions.Back().srcOffset1 = uint3(_eyeTextureDimension, 0);
-				blit->regions.Back().srcLayers.aspectMask	|= EImageAspect::Color;
-				blit->regions.Back().dstLayers.aspectMask	|= EImageAspect::Color;
+				blit.srcImage			= _framebuffers[i].framebuffer->GetModuleByName( "Color0" );
+				blit.srcLayout			= EImageLayout::ColorAttachmentOptimal;
+				blit.dstImage			= col_image;
+				blit.dstLayout			= EImageLayout::ColorAttachmentOptimal;
+				blit.linearFilter		= true;
+				blit.regions.PushBack({});
+				blit.regions.Back().srcOffset0 = uint3(0);
+				blit.regions.Back().srcOffset1 = uint3(_eyeTextureDimension, 0);
+				blit.regions.Back().srcLayers.aspectMask	|= EImageAspect::Color;
+				blit.regions.Back().dstLayers.aspectMask	|= EImageAspect::Color;
 
 				switch ( Eye(i) )
 				{
 				case Eye::Left :
-					blit->regions.Back().dstOffset0 = uint3(0);
-					blit->regions.Back().dstOffset1 = uint3(surface_size.x / 2, surface_size.y, 0);
+					blit.regions.Back().dstOffset0 = uint3(0);
+					blit.regions.Back().dstOffset1 = uint3(surface_size.x / 2, surface_size.y, 0);
 					break;
 
 				case Eye::Right :
-					blit->regions.Back().dstOffset0 = uint3(surface_size.x / 2, 0, 0);
-					blit->regions.Back().dstOffset1 = uint3(surface_size, 0);
+					blit.regions.Back().dstOffset0 = uint3(surface_size.x / 2, 0, 0);
+					blit.regions.Back().dstOffset1 = uint3(surface_size, 0);
 					break;
 				}
 
@@ -670,17 +670,17 @@ namespace PlatformVR
 	{
 		FOR( i, _framebuffers )
 		{
-			Message< GpuMsg::GetGraphicsModules >	req_ids;
-			Message< GpuMsg::GetGraphicsSettings >	req_settings;
+			GpuMsg::GetGraphicsModules	req_ids;
+			GpuMsg::GetGraphicsSettings	req_settings;
 
 			CHECK( _gpuThread->Send( req_ids ) );
 			CHECK( _gpuThread->Send( req_settings ) );
 
-			const EImage::type	img_type	= req_settings->result->samples.IsEnabled() ? EImage::Tex2DMS : EImage::Tex2D;
+			const EImage::type	img_type	= req_settings.result->samples.IsEnabled() ? EImage::Tex2DMS : EImage::Tex2D;
 
 			ModulePtr	framebuffer;
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-										req_ids->graphics->framebuffer,
+										req_ids.graphics->framebuffer,
 										GlobalSystems(),
 										CreateInfo::GpuFramebuffer{ _eyeTextureDimension },
 										OUT framebuffer ) );
@@ -689,47 +689,47 @@ namespace PlatformVR
 			{
 				ModulePtr	color_image;
 				CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-											req_ids->graphics->image,
+											req_ids.graphics->image,
 											GlobalSystems(),
 											CreateInfo::GpuImage{
-												ImageDescriptor{
+												ImageDescription{
 													img_type,
 													uint4( _eyeTextureDimension, 0, 0 ),
-													req_settings->result->colorFmt,
+													req_settings.result->colorFmt,
 													EImageUsage::ColorAttachment | EImageUsage::TransferSrc | EImageUsage::TransferDst,
 													MipmapLevel(1),
-													req_settings->result->samples
+													req_settings.result->samples
 												},
 												EGpuMemory::LocalInGPU,
 												EMemoryAccess::GpuReadWrite
 											},
 											OUT color_image ) );
 
-				framebuffer->Send< GpuMsg::FramebufferAttachImage >({ "Color0", color_image });
+				framebuffer->Send( GpuMsg::FramebufferAttachImage{ "Color0", color_image });
 			}
 
 			// create depth-stencil target
-			if ( req_settings->result->depthStencilFmt != EPixelFormat::Unknown )
+			if ( req_settings.result->depthStencilFmt != EPixelFormat::Unknown )
 			{
 				ModulePtr	depth_image;
 				CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-											req_ids->graphics->image,
+											req_ids.graphics->image,
 											GlobalSystems(),
 											CreateInfo::GpuImage{
-												ImageDescriptor{
+												ImageDescription{
 													img_type,
 													uint4( _eyeTextureDimension, 0, 0 ),
-													req_settings->result->depthStencilFmt,
+													req_settings.result->depthStencilFmt,
 													EImageUsage::DepthStencilAttachment | EImageUsage::TransferSrc | EImageUsage::TransferDst,
 													MipmapLevel(1),
-													req_settings->result->samples
+													req_settings.result->samples
 												},
 												EGpuMemory::LocalInGPU,
 												EMemoryAccess::GpuReadWrite
 											},
 											OUT depth_image ) );
 
-				framebuffer->Send< GpuMsg::FramebufferAttachImage >({ "Depth", depth_image });
+				framebuffer->Send( GpuMsg::FramebufferAttachImage{ "Depth", depth_image });
 			}
 
 			ModuleUtils::Initialize({ framebuffer });
@@ -742,10 +742,10 @@ namespace PlatformVR
 		CHECK_ERR( _Attach( "right_eye_fb", _framebuffers[1].framebuffer ) );
 
 		#ifdef GRAPHICS_API_OPENGL
-		_isOpenGL = _framebuffers[0].framebuffer->GetSupportedMessages().HasType< Message<GpuMsg::GetGLFramebufferID> >();
+		_isOpenGL = _framebuffers[0].framebuffer->GetSupportedMessages().HasType< GpuMsg::GetGLFramebufferID >();
 		#endif
 
-		_renderPass = _framebuffers[0].framebuffer->GetModuleByMsg< MessageListFrom<GpuMsg::GetRenderPassDescriptor> >();
+		_renderPass = _framebuffers[0].framebuffer->GetModuleByMsg< MessageListFrom<GpuMsg::GetRenderPassDescription> >();
 		CHECK_ERR( _renderPass );
 
 		return true;
@@ -758,11 +758,11 @@ namespace PlatformVR
 */
 	bool EmulatorVRThread::_CreateCommandBuffers ()
 	{
-		Message< GpuMsg::GetGraphicsModules >	req_ids;
+		GpuMsg::GetGraphicsModules	req_ids;
 		_gpuThread->Send( req_ids );
 
 		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-									req_ids->graphics->commandBuilder,
+									req_ids.graphics->commandBuilder,
 									GlobalSystems(),
 									CreateInfo::GpuCommandBuilder{},
 									OUT _builder ) );
@@ -783,23 +783,23 @@ namespace PlatformVR
 		perFrame.command = cmd;
 
 		// TODO: optimize
-		Message< GpuMsg::GetDeviceInfo >	req_dev;
+		GpuMsg::GetDeviceInfo	req_dev;
 		_gpuThread->Send( req_dev );
 
 		if ( perFrame.mainFrameRendered == GpuSemaphoreId::Unknown )
 		{
-			Message< GpuMsg::CreateSemaphore >	sem_ctor;
-			req_dev->result->syncManager->Send( sem_ctor );
+			GpuMsg::CreateSemaphore		sem_ctor;
+			req_dev.result->syncManager->Send( sem_ctor );
 
-			perFrame.mainFrameRendered = *sem_ctor->result;
+			perFrame.mainFrameRendered = *sem_ctor.result;
 		}
 
 		if ( perFrame.lastFrameRendered == GpuSemaphoreId::Unknown )
 		{
-			Message< GpuMsg::CreateSemaphore >	sem_ctor;
-			req_dev->result->syncManager->Send( sem_ctor );
+			GpuMsg::CreateSemaphore		sem_ctor;
+			req_dev.result->syncManager->Send( sem_ctor );
 
-			perFrame.lastFrameRendered = *sem_ctor->result;
+			perFrame.lastFrameRendered = *sem_ctor.result;
 		}
 
 		return true;

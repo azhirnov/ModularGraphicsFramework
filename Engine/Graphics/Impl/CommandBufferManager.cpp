@@ -109,28 +109,28 @@ namespace Graphics
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 
-		bool _CmdBegin (const Message< GraphicsMsg::CmdBegin > &);
-		bool _CmdEnd (const Message< GraphicsMsg::CmdEnd > &);
-		bool _CmdBeginFrame (const Message< GraphicsMsg::CmdBeginFrame > &);
-		bool _CmdEndFrame (const Message< GraphicsMsg::CmdEndFrame > &);
-		bool _CmdBeginVRFrame (const Message< GraphicsMsg::CmdBeginVRFrame > &);
-		bool _CmdEndVRFrame (const Message< GraphicsMsg::CmdEndVRFrame > &);
-		bool _CmdAppend (const Message< GraphicsMsg::CmdAppend > &);
-		bool _CmdGetCurrentState (const Message< GraphicsMsg::CmdGetCurrentState > &);
-		bool _CmdAddFrameDependency (const Message< GraphicsMsg::CmdAddFrameDependency > &);
-		bool _SubscribeOnFrameCompleted (const Message< GraphicsMsg::SubscribeOnFrameCompleted > &);
+		bool _CmdBegin (const GraphicsMsg::CmdBegin &);
+		bool _CmdEnd (const GraphicsMsg::CmdEnd &);
+		bool _CmdBeginFrame (const GraphicsMsg::CmdBeginFrame &);
+		bool _CmdEndFrame (const GraphicsMsg::CmdEndFrame &);
+		bool _CmdBeginVRFrame (const GraphicsMsg::CmdBeginVRFrame &);
+		bool _CmdEndVRFrame (const GraphicsMsg::CmdEndVRFrame &);
+		bool _CmdAppend (const GraphicsMsg::CmdAppend &);
+		bool _CmdGetCurrentState (const GraphicsMsg::CmdGetCurrentState &);
+		bool _CmdAddFrameDependency (const GraphicsMsg::CmdAddFrameDependency &);
+		bool _SubscribeOnFrameCompleted (const GraphicsMsg::SubscribeOnFrameCompleted &);
 
 		// only to change scope
-		bool _Scope_CmdBegin (const Message< GpuMsg::CmdBegin > &);
-		bool _Scope_CmdEnd (const Message< GpuMsg::CmdEnd > &);
-		bool _Scope_CmdBeginRenderPass (const Message< GpuMsg::CmdBeginRenderPass > &);
-		bool _Scope_CmdEndRenderPass (const Message< GpuMsg::CmdEndRenderPass > &);
+		bool _Scope_CmdBegin (const GpuMsg::CmdBegin &);
+		bool _Scope_CmdEnd (const GpuMsg::CmdEnd &);
+		bool _Scope_CmdBeginRenderPass (const GpuMsg::CmdBeginRenderPass &);
+		bool _Scope_CmdEndRenderPass (const GpuMsg::CmdEndRenderPass &);
 
 		// TODO: delete command buffers when swapchain recreated
 
@@ -200,7 +200,7 @@ namespace Graphics
 	_Link
 =================================================
 */
-	bool CommandBufferManager::_Link (const Message< ModuleMsg::Link > &msg)
+	bool CommandBufferManager::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -209,10 +209,10 @@ namespace Graphics
 		CHECK_ERR( _GetManager() /*and _IsComposedState( _GetManager()->GetState() )*/ );
 
 
-		Message< GpuMsg::GetGraphicsModules >	req_ids;
+		GpuMsg::GetGraphicsModules	req_ids;
 		CHECK( _GetManager()->Send( req_ids ) );
 
-		_cmdBufferId	= req_ids->graphics->commandBuffer;
+		_cmdBufferId	= req_ids.graphics->commandBuffer;
 		_isVRCompatible	= _GetManager()->GetSupportedMessages().HasAllTypes< VRThreadMsgList_t >();
 
 
@@ -222,7 +222,7 @@ namespace Graphics
 		if ( not _builder )
 		{
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-										req_ids->graphics->commandBuilder,
+										req_ids.graphics->commandBuilder,
 										GlobalSystems(),
 										CreateInfo::GpuCommandBuilder{ _GetManager() },
 										OUT _builder ) );
@@ -241,23 +241,23 @@ namespace Graphics
 	_Compose
 =================================================
 */
-	bool CommandBufferManager::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool CommandBufferManager::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
 		
-		Message< GpuMsg::GetDeviceInfo >	req_dev;
+		GpuMsg::GetDeviceInfo	req_dev;
 		_GetManager()->Send( req_dev );
-		CHECK_COMPOSING( _syncManager = req_dev->result->syncManager );
+		CHECK_COMPOSING( _syncManager = req_dev.result->syncManager );
 
 		for (auto& frame : _perFrame)
 		{
-			Message< GpuMsg::CreateFence >	req_fence;
+			GpuMsg::CreateFence		req_fence;
 			CHECK( _syncManager->Send( req_fence ) );
 
-			frame.fence = *req_fence->result;
+			frame.fence = *req_fence.result;
 		}
 		
 		_SendForEachAttachments( msg );
@@ -267,7 +267,7 @@ namespace Graphics
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -276,7 +276,7 @@ namespace Graphics
 	_Delete
 =================================================
 */
-	bool CommandBufferManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool CommandBufferManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_SendForEachAttachments( msg );
 		
@@ -284,8 +284,8 @@ namespace Graphics
 		{
 			if ( frame.fence != GpuFenceId::Unknown )
 			{
-				CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ frame.fence }) );
-				CHECK( _syncManager->Send< GpuMsg::DestroyFence >({ frame.fence }) );
+				CHECK( _syncManager->Send( GpuMsg::ClientWaitFence{ frame.fence }) );
+				CHECK( _syncManager->Send( GpuMsg::DestroyFence{ frame.fence }) );
 			}
 
 			ModuleUtils::Send( frame.commands, msg );
@@ -303,11 +303,11 @@ namespace Graphics
 	_AttachModule
 =================================================
 */
-	bool CommandBufferManager::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool CommandBufferManager::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_builder	= msg->newModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >();
+		const bool	is_builder	= msg.newModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		if ( is_builder )
 		{
@@ -322,11 +322,11 @@ namespace Graphics
 	_DetachModule
 =================================================
 */
-	bool CommandBufferManager::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool CommandBufferManager::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >() )
+		if ( msg.oldModule->GetSupportedEvents().HasAllTypes< CmdBufferMsgList_t >() )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_builder = null;
@@ -352,14 +352,14 @@ namespace Graphics
 			{
 				per_frame.waitFences.PushFront( per_frame.fence );
 
-				CHECK( _syncManager->Send< GpuMsg::ClientWaitFence >({ per_frame.waitFences }) );
+				CHECK( _syncManager->Send( GpuMsg::ClientWaitFence{ per_frame.waitFences }) );
 			}
 
-			Message< GpuMsg::SetCommandBufferState >	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
+			GpuMsg::SetCommandBufferState	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
 
 			ModuleUtils::Send( per_frame.commands, completed_state );
 			ModuleUtils::Send( per_frame.externalBuffers, completed_state );
-			ModuleUtils::Send( per_frame.externalBuffers, Message<ModuleMsg::Delete>{} );
+			ModuleUtils::Send( per_frame.externalBuffers, ModuleMsg::Delete{} );
 		
 			for (auto& cb : per_frame.callbacks) {
 				cb( _bufferIndex );
@@ -380,7 +380,7 @@ namespace Graphics
 	_CmdBeginFrame
 =================================================
 */
-	bool CommandBufferManager::_CmdBeginFrame (const Message< GraphicsMsg::CmdBeginFrame > &msg)
+	bool CommandBufferManager::_CmdBeginFrame (const GraphicsMsg::CmdBeginFrame &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( _scope == EScope::None );
@@ -389,16 +389,16 @@ namespace Graphics
 
 		// begin frame
 		{
-			Message< GpuMsg::ThreadBeginFrame >		begin;
+			GpuMsg::ThreadBeginFrame	begin;
 			CHECK( _GetManager()->Send( begin ) );
 
-			msg->result.Set({ begin->result->framebuffer, begin->result->frameIndex, _bufferIndex });
+			msg.result.Set({ begin.result->framebuffer, begin.result->frameIndex, _bufferIndex });
 
-			_framebuffer = begin->result->framebuffer;
-			_frameIndex	 = begin->result->frameIndex;
+			_framebuffer = begin.result->framebuffer;
+			_frameIndex	 = begin.result->frameIndex;
 			_scope		 = EScope::Frame;
 
-			_SendEvent< GraphicsMsg::OnCmdBeginFrame >({ _bufferIndex });
+			_SendEvent( GraphicsMsg::OnCmdBeginFrame{ _bufferIndex });
 		}
 		return true;
 	}
@@ -408,22 +408,22 @@ namespace Graphics
 	_CmdEndFrame
 =================================================
 */
-	bool CommandBufferManager::_CmdEndFrame (const Message< GraphicsMsg::CmdEndFrame > &msg)
+	bool CommandBufferManager::_CmdEndFrame (const GraphicsMsg::CmdEndFrame &msg)
 	{
 		CHECK_ERR( _scope == EScope::Frame and not _isVRFrame );
-		CHECK_ERR( msg->framebuffer == null or msg->framebuffer == _framebuffer );
+		CHECK_ERR( msg.framebuffer == null or msg.framebuffer == _framebuffer );
 		
 		auto&	per_frame = _perFrame[ _bufferIndex ];
 
 		_tempBuffers.Append( per_frame.commands );
 		_tempBuffers.Append( per_frame.externalBuffers );
 
-		Message< GpuMsg::ThreadEndFrame >	end;
-		end->fence			= per_frame.fence;
-		end->commands		= _tempBuffers;
-		end->framebuffer	= _framebuffer;
-		end->waitSemaphores.Append( per_frame.waitSemaphores );
-		end->signalSemaphores.Append( per_frame.signalSemaphores );
+		GpuMsg::ThreadEndFrame	end;
+		end.fence		= per_frame.fence;
+		end.commands	= _tempBuffers;
+		end.framebuffer	= _framebuffer;
+		end.waitSemaphores.Append( per_frame.waitSemaphores );
+		end.signalSemaphores.Append( per_frame.signalSemaphores );
 
 		CHECK( _GetManager()->Send( end ) );
 
@@ -434,7 +434,7 @@ namespace Graphics
 		_frameIndex	 = UMax;
 		_scope		 = EScope::None;
 		
-		_SendEvent< GraphicsMsg::OnCmdEndFrame >({ _bufferIndex });
+		_SendEvent( GraphicsMsg::OnCmdEndFrame{ _bufferIndex });
 		return true;
 	}
 	
@@ -443,7 +443,7 @@ namespace Graphics
 	_CmdBeginVRFrame
 =================================================
 */
-	bool CommandBufferManager::_CmdBeginVRFrame (const Message< GraphicsMsg::CmdBeginVRFrame > &msg)
+	bool CommandBufferManager::_CmdBeginVRFrame (const GraphicsMsg::CmdBeginVRFrame &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( _isVRCompatible );
@@ -453,17 +453,17 @@ namespace Graphics
 
 		// begin frame
 		{
-			Message< GpuMsg::ThreadBeginVRFrame >		begin;
+			GpuMsg::ThreadBeginVRFrame	begin;
 			CHECK( _GetManager()->Send( begin ) );
 
-			msg->result.Set({ *begin->result, _bufferIndex });
+			msg.result.Set({ *begin.result, _bufferIndex });
 
 			//_framebuffer = begin->result->framebuffer;
-			_frameIndex	 = begin->result->frameIindex;
+			_frameIndex	 = begin.result->frameIindex;
 			_scope		 = EScope::Frame;
 			_isVRFrame	 = true;
 
-			_SendEvent< GraphicsMsg::OnCmdBeginFrame >({ _bufferIndex });
+			_SendEvent( GraphicsMsg::OnCmdBeginFrame{ _bufferIndex });
 		}
 		return true;
 	}
@@ -473,7 +473,7 @@ namespace Graphics
 	_CmdEndVRFrame
 =================================================
 */
-	bool CommandBufferManager::_CmdEndVRFrame (const Message< GraphicsMsg::CmdEndVRFrame > &msg)
+	bool CommandBufferManager::_CmdEndVRFrame (const GraphicsMsg::CmdEndVRFrame &msg)
 	{
 		CHECK_ERR( _scope == EScope::Frame and _isVRFrame );
 		
@@ -482,11 +482,11 @@ namespace Graphics
 		_tempBuffers.Append( per_frame.commands );
 		_tempBuffers.Append( per_frame.externalBuffers );
 
-		Message< GpuMsg::ThreadEndVRFrame >		end;
-		end->fence		= per_frame.fence;
-		end->commands	= _tempBuffers;
-		end->waitSemaphores.Append( per_frame.waitSemaphores );
-		end->signalSemaphores.Append( per_frame.signalSemaphores );
+		GpuMsg::ThreadEndVRFrame	end;
+		end.fence		= per_frame.fence;
+		end.commands	= _tempBuffers;
+		end.waitSemaphores.Append( per_frame.waitSemaphores );
+		end.signalSemaphores.Append( per_frame.signalSemaphores );
 		
 		CHECK( _GetManager()->Send( end ) );
 
@@ -498,7 +498,7 @@ namespace Graphics
 		_scope		 = EScope::None;
 		_isVRFrame	 = false;
 
-		_SendEvent< GraphicsMsg::OnCmdEndFrame >({ _bufferIndex });
+		_SendEvent( GraphicsMsg::OnCmdEndFrame{ _bufferIndex });
 		return true;
 	}
 
@@ -507,11 +507,11 @@ namespace Graphics
 	_CmdAppend
 =================================================
 */
-	bool CommandBufferManager::_CmdAppend (const Message< GraphicsMsg::CmdAppend > &msg)
+	bool CommandBufferManager::_CmdAppend (const GraphicsMsg::CmdAppend &msg)
 	{
 		CHECK_ERR( _scope == EScope::Frame );
 
-		_perFrame[ _bufferIndex ].externalBuffers.Append( msg->commands );
+		_perFrame[ _bufferIndex ].externalBuffers.Append( msg.commands );
 		return true;
 	}
 
@@ -520,9 +520,9 @@ namespace Graphics
 	_CmdGetCurrentState
 =================================================
 */
-	bool CommandBufferManager::_CmdGetCurrentState (const Message< GraphicsMsg::CmdGetCurrentState > &msg)
+	bool CommandBufferManager::_CmdGetCurrentState (const GraphicsMsg::CmdGetCurrentState &msg)
 	{
-		msg->result.Set({ _framebuffer, _frameIndex, _bufferIndex, _scope });
+		msg.result.Set({ _framebuffer, _frameIndex, _bufferIndex, _scope });
 		return true;
 	}
 	
@@ -531,16 +531,16 @@ namespace Graphics
 	_CmdAddFrameDependency
 =================================================
 */
-	bool CommandBufferManager::_CmdAddFrameDependency (const Message< GraphicsMsg::CmdAddFrameDependency > &msg)
+	bool CommandBufferManager::_CmdAddFrameDependency (const GraphicsMsg::CmdAddFrameDependency &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
 		const uint	next_idx	= (_bufferIndex+1) % _bufferChainLength;
 		auto &		per_frame	= _perFrame[ next_idx ];
 
-		per_frame.waitFences.Append( msg->waitFences );
-		per_frame.waitSemaphores.Append( msg->waitSemaphores );
-		per_frame.signalSemaphores.Append( msg->signalSemaphores );
+		per_frame.waitFences.Append( msg.waitFences );
+		per_frame.waitSemaphores.Append( msg.waitSemaphores );
+		per_frame.signalSemaphores.Append( msg.signalSemaphores );
 		return true;
 	}
 	
@@ -549,13 +549,13 @@ namespace Graphics
 	_SubscribeOnFrameCompleted
 =================================================
 */
-	bool CommandBufferManager::_SubscribeOnFrameCompleted (const Message< GraphicsMsg::SubscribeOnFrameCompleted > &msg)
+	bool CommandBufferManager::_SubscribeOnFrameCompleted (const GraphicsMsg::SubscribeOnFrameCompleted &msg)
 	{
 		auto &	per_frame	= _perFrame[ _bufferIndex ];
 
-		per_frame.callbacks.PushBack( msg->callback );
+		per_frame.callbacks.PushBack( msg.callback );
 
-		msg->index.Set( _bufferIndex );
+		msg.index.Set( _bufferIndex );
 		return true;
 	}
 	
@@ -564,7 +564,7 @@ namespace Graphics
 	_Scope_CmdBegin
 =================================================
 */
-	bool CommandBufferManager::_Scope_CmdBegin (const Message< GpuMsg::CmdBegin > &)
+	bool CommandBufferManager::_Scope_CmdBegin (const GpuMsg::CmdBegin &)
 	{
 		_scope = EScope::Command;
 		return false;
@@ -575,7 +575,7 @@ namespace Graphics
 	_Scope_CmdEnd
 =================================================
 */
-	bool CommandBufferManager::_Scope_CmdEnd (const Message< GpuMsg::CmdEnd > &)
+	bool CommandBufferManager::_Scope_CmdEnd (const GpuMsg::CmdEnd &)
 	{
 		_scope = EScope::Frame;
 		return false;
@@ -586,7 +586,7 @@ namespace Graphics
 	_Scope_CmdBeginRenderPass
 =================================================
 */
-	bool CommandBufferManager::_Scope_CmdBeginRenderPass (const Message< GpuMsg::CmdBeginRenderPass > &)
+	bool CommandBufferManager::_Scope_CmdBeginRenderPass (const GpuMsg::CmdBeginRenderPass &)
 	{
 		_scope = EScope::RenderPass;
 		return false;
@@ -597,7 +597,7 @@ namespace Graphics
 	_Scope_CmdEndRenderPass
 =================================================
 */
-	bool CommandBufferManager::_Scope_CmdEndRenderPass (const Message< GpuMsg::CmdEndRenderPass > &)
+	bool CommandBufferManager::_Scope_CmdEndRenderPass (const GpuMsg::CmdEndRenderPass &)
 	{
 		_scope = EScope::Command;
 		return false;
@@ -608,7 +608,7 @@ namespace Graphics
 	_CmdBegin
 =================================================
 */
-	bool CommandBufferManager::_CmdBegin (const Message< GraphicsMsg::CmdBegin > &)
+	bool CommandBufferManager::_CmdBegin (const GraphicsMsg::CmdBegin &)
 	{
 		CHECK_ERR( _scope == EScope::Frame );
 
@@ -622,11 +622,11 @@ namespace Graphics
 							_cmdBufferId,
 							GlobalSystems(),
 							CreateInfo::GpuCommandBuffer{
-								CommandBufferDescriptor{ ECmdBufferCreate::ImplicitResetable }
+								CommandBufferDescription{ ECmdBufferCreate::ImplicitResetable }
 							},
 							OUT cmd_buf ) );
 
-			_builder->Send< ModuleMsg::AttachModule >({ "", cmd_buf });
+			_builder->Send( ModuleMsg::AttachModule{ "", cmd_buf });
 
 			per_frame.commands.PushBack( cmd_buf );
 		}
@@ -637,8 +637,8 @@ namespace Graphics
 		}
 
 
-		Message< GpuMsg::CmdBegin >		begin;
-		begin->targetCmdBuffer	= per_frame.commands.Back();
+		GpuMsg::CmdBegin	begin;
+		begin.targetCmdBuffer	= per_frame.commands.Back();
 
 		CHECK( _builder->Send( begin ) );
 
@@ -651,11 +651,11 @@ namespace Graphics
 	_CmdEnd
 =================================================
 */
-	bool CommandBufferManager::_CmdEnd (const Message< GraphicsMsg::CmdEnd > &)
+	bool CommandBufferManager::_CmdEnd (const GraphicsMsg::CmdEnd &)
 	{
 		CHECK_ERR( _scope == EScope::Command );
 
-		CHECK( _builder->Send< GpuMsg::CmdEnd >({}) );
+		CHECK( _builder->Send( GpuMsg::CmdEnd{}) );
 
 		_scope = EScope::Frame;
 		return true;

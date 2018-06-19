@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/STL/Common/Platforms.h"
+#include "Core/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -18,7 +18,7 @@ namespace OSMsg
 	//
 	// Request Window Handle
 	//
-	struct GetWinWindowHandle
+	struct GetWinWindowHandle : _MessageBase_
 	{
 		using HWND_t = DeferredTypeFrom<void*>;
 
@@ -29,7 +29,7 @@ namespace OSMsg
 	//
 	// Window Raw Message from OS
 	//
-	struct OnWinWindowRawMessage
+	struct OnWinWindowRawMessage : _MessageBase_
 	{
 	// variables
 		const uint		uMsg			= 0;
@@ -47,7 +47,7 @@ namespace OSMsg
 	//
 	// Platform Created Message
 	//
-	struct OnWinPlatformCreated
+	struct OnWinPlatformCreated : _MessageBase_
 	{
 	// types
 		using HMODULE_t		= DeferredTypeFrom<void*>;

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -19,7 +19,7 @@ namespace GpuMsg
 	//
 	// Get Device Info
 	//
-	struct GetGLDeviceInfo
+	struct GetGLDeviceInfo : _MessageBase_
 	{
 	};
 
@@ -27,16 +27,21 @@ namespace GpuMsg
 	//
 	// Sync Client With Device
 	//
-	struct SyncGLClientWithDevice
+	struct SyncGLClientWithDevice : _MessageBase_
 	{
-		Platforms::GpuFenceId	fenceId	= Uninitialized;	// if null then wait untill all commands complete
+	// variables
+		Platforms::GpuFenceId	fenceId;	// if null then wait untill all commands complete
+
+	// methods
+		SyncGLClientWithDevice () {}
+		explicit SyncGLClientWithDevice (Platforms::GpuFenceId id) : fenceId{id} {}
 	};
 
 
 	//
 	// Get GPU Buffer ID
 	//
-	struct GetGLBufferID
+	struct GetGLBufferID : _MessageBase_
 	{
 		Out< gl::GLuint >		result;
 	};
@@ -45,7 +50,7 @@ namespace GpuMsg
 	//
 	// Get GPU Framebuffer ID
 	//
-	struct GetGLFramebufferID
+	struct GetGLFramebufferID : _MessageBase_
 	{
 		Out< gl::GLuint >		result;
 	};
@@ -54,7 +59,7 @@ namespace GpuMsg
 	//
 	// Blit Framebuffers
 	//
-	struct CmdBlitGLFramebuffers
+	struct CmdBlitGLFramebuffers : _MessageBase_
 	{
 	// types
 		using EImageAspect	= Platforms::EImageAspect;
@@ -79,7 +84,7 @@ namespace GpuMsg
 
 
 	// methods
-		CmdBlitGLFramebuffers (GX_DEFCTOR) {}
+		CmdBlitGLFramebuffers () {}
 
 		CmdBlitGLFramebuffers (const ModulePtr		&srcFramebuffer,
 							   const ModulePtr		&dstFramebuffer,
@@ -95,7 +100,7 @@ namespace GpuMsg
 	//
 	// Get GPU Render Pass ID
 	//
-	struct GetGLRenderPassID
+	struct GetGLRenderPassID : _MessageBase_
 	{
 	// types
 		enum class EClearValue {
@@ -120,7 +125,7 @@ namespace GpuMsg
 			Buffers_t		invalidateBefore;	// buffers that will be invalidated before rendering
 			Buffers_t		invalidateAfter;	// buffers that will be invalidated after rendering
 
-			RenderPassID (GX_DEFCTOR) {}
+			RenderPassID () {}
 		};
 
 	// variables
@@ -131,7 +136,7 @@ namespace GpuMsg
 	//
 	// Get GPU Sampler ID
 	//
-	struct GetGLSamplerID
+	struct GetGLSamplerID : _MessageBase_
 	{
 		Out< gl::GLuint >		result;
 	};
@@ -140,7 +145,7 @@ namespace GpuMsg
 	//
 	// Get GPU Image ID
 	//
-	struct GetGLImageID
+	struct GetGLImageID : _MessageBase_
 	{
 		Out< gl::GLuint >		result;
 	};
@@ -149,23 +154,24 @@ namespace GpuMsg
 	//
 	// Create GPU Image View
 	//
-	struct CreateGLImageView
+	struct CreateGLImageView : _MessageBase_
 	{
 	// variables
-		Platforms::ImageViewDescriptor		viewDescr;
+		Platforms::ImageViewDescription		viewDescr;
 		Out< gl::GLuint >					result;
 
 	// methods
-		explicit CreateGLImageView (const Platforms::ImageDescriptor &descr) : viewDescr{descr} {}
-		explicit CreateGLImageView (const Platforms::ImageViewDescriptor &descr) : viewDescr{descr} {}
+		explicit CreateGLImageView (const Platforms::ImageDescription &descr) : viewDescr{descr} {}
+		explicit CreateGLImageView (const Platforms::ImageViewDescription &descr) : viewDescr{descr} {}
 	};
 
 
 	//
 	// Get GPU Shader Module IDs
 	//
-	struct GetGLShaderModuleIDs
+	struct GetGLShaderModuleIDs : _MessageBase_
 	{
+	// types
 		struct ShaderModule : CompileTime::PODStruct
 		{
 			StaticString<64>			entry;
@@ -174,6 +180,7 @@ namespace GpuMsg
 		};
 		using Shaders_t		= FixedSizeArray< ShaderModule, Platforms::EShader::_Count >;
 
+	// variables
 		Out< Shaders_t >	result;
 	};
 
@@ -181,15 +188,17 @@ namespace GpuMsg
 	//
 	// Get Graphics Pipeline ID
 	//
-	struct GetGLGraphicsPipelineID
+	struct GetGLGraphicsPipelineID : _MessageBase_
 	{
+	// types
 		using Programs_t	= StaticArray< gl::GLuint, Platforms::EShader::_Count >;
 		struct PipelineIDs {
 			Programs_t	programs;
 			gl::GLuint	pipeline		= 0;	// only graphics programs
 			gl::GLuint	vertexAttribs	= 0;	// only format without buffer bindings
 		};
-
+		
+	// variables
 		Out< PipelineIDs >		result;
 	};
 
@@ -197,13 +206,15 @@ namespace GpuMsg
 	//
 	// Get Compute Pipeline ID
 	//
-	struct GetGLComputePipelineID
+	struct GetGLComputePipelineID : _MessageBase_
 	{
+	// types
 		struct PipelineIDs {
 			gl::GLuint	pipeline	= 0;
 			gl::GLuint	program		= 0;	// only compute program
 		};
-
+		
+	// variables
 		Out< PipelineIDs >		result;
 	};
 
@@ -211,7 +222,7 @@ namespace GpuMsg
 	//
 	// Get Pipeline Layout Push Constants Mapping
 	//
-	struct GetGLPipelineLayoutPushConstants
+	struct GetGLPipelineLayoutPushConstants : _MessageBase_
 	{
 	// types
 		using EShader	= Platforms::EShader;
@@ -225,7 +236,7 @@ namespace GpuMsg
 			PushConstant (EShader::bits stages, BytesU off, BytesU sz) : stages{stages}, offset{ushort(off)}, size{ushort(sz)} {}
 		};
 
-		using Name_t			= Platforms::PipelineLayoutDescriptor::Name_t;
+		using Name_t			= Platforms::PipelineLayoutDescription::Name_t;
 		using PushConstants_t	= FixedSizeMultiHashMap< Name_t, PushConstant, 8 >;
 
 	// variables
@@ -236,7 +247,7 @@ namespace GpuMsg
 	//
 	// GPU Pipeline Resource Table ID (uniforms)
 	//
-	struct GLPipelineResourceTableApply
+	struct GLPipelineResourceTableApply : _MessageBase_
 	{
 	// types
 		using Programs_t	= StaticArray< gl::GLuint, Platforms::EShader::_Count >;
@@ -247,7 +258,7 @@ namespace GpuMsg
 			usize		offset		= 0;
 			usize		size		= 0;
 
-			GLPushConstants (GX_DEFCTOR) {}
+			GLPushConstants () {}
 		};
 
 	// variables
@@ -260,16 +271,15 @@ namespace GpuMsg
 		explicit GLPipelineResourceTableApply (const Programs_t &progs, GLPushConstants pc = Uninitialized) : programs{progs}, pushConstants{pc}
 		{}
 
-		explicit GLPipelineResourceTableApply (gl::GLuint compProg, GLPushConstants pc = Uninitialized) : programs{}, pushConstants{pc} {
-			programs[Platforms::EShader::Compute] = compProg;
-		}
+		explicit GLPipelineResourceTableApply (gl::GLuint compProg, GLPushConstants pc = Uninitialized) : programs{}, pushConstants{pc}
+		{ programs[Platforms::EShader::Compute] = compProg; }
 	};
 
 
 	//
 	// Fence Sync
 	//
-	struct GLFenceSync
+	struct GLFenceSync : _MessageBase_
 	{
 	// variables
 		Platforms::GpuFenceId	fenceId;
@@ -283,7 +293,7 @@ namespace GpuMsg
 	//
 	// Event
 	//
-	struct GetGLEvent
+	struct GetGLEvent : _MessageBase_
 	{
 	// variables
 		Platforms::GpuEventId	eventId;
@@ -297,7 +307,7 @@ namespace GpuMsg
 	//
 	// Semaphore
 	//
-	struct GLSemaphoreEnqueue
+	struct GLSemaphoreEnqueue : _MessageBase_
 	{
 	// variables
 		Platforms::GpuSemaphoreId	semId;
@@ -307,7 +317,8 @@ namespace GpuMsg
 		explicit GLSemaphoreEnqueue (Platforms::GpuSemaphoreId id) : semId{id} {}
 	};
 
-	struct GetGLSemaphore
+
+	struct GetGLSemaphore : _MessageBase_
 	{
 	// variables
 		Platforms::GpuSemaphoreId	semId;
@@ -317,16 +328,21 @@ namespace GpuMsg
 		explicit GetGLSemaphore (Platforms::GpuSemaphoreId id) : semId{id} {}
 	};
 
-	struct WaitGLSemaphore
+
+	struct WaitGLSemaphore : _MessageBase_
 	{
+	// variables
 		Platforms::GpuSemaphoreId	semId;
+		
+	// methods
+		explicit WaitGLSemaphore (Platforms::GpuSemaphoreId id) : semId{id} {}
 	};
 
 
 	//
 	// Flush Queue
 	//
-	struct GLFlushQueue
+	struct GLFlushQueue : _MessageBase_
 	{
 	};
 
@@ -334,7 +350,7 @@ namespace GpuMsg
 	//
 	// Update Buffer Command
 	//
-	struct GLCmdUpdateBuffer
+	struct GLCmdUpdateBuffer : _MessageBase_
 	{
 	// variables
 		ModulePtr		dstBuffer;
@@ -352,7 +368,7 @@ namespace GpuMsg
 	//
 	// Push Constants Command
 	//
-	struct GLCmdPushConstants
+	struct GLCmdPushConstants : _MessageBase_
 	{
 	// types
 		using EShader = Platforms::EShader;
@@ -375,7 +391,7 @@ namespace GpuMsg
 	//
 	// OpenGL Commands
 	//
-	struct SetGLCommandBufferQueue
+	struct SetGLCommandBufferQueue : _MessageBase_
 	{
 	// types
 		using Data_t	= Union< CmdSetViewport,
@@ -431,8 +447,6 @@ namespace GpuMsg
 
 		// methods
 			Command () {}
-			Command (Command &&) = default;
-			Command (const Command &) = default;
 
 			template <typename Data>
 			Command (Data &&data, StringCRef file = StringCRef(), uint line = 0) :
@@ -449,13 +463,17 @@ namespace GpuMsg
 		ReadOnce< Array<Command> >	commands;
 		BinaryArray					bufferData;
 		BinaryArray					pushConstData;
+		
+	// methods
+		SetGLCommandBufferQueue (Array<Command> &&commands, BinaryArray &&bufferData, BinaryArray &&pushConstData) :
+			commands{ RVREF(commands) }, bufferData{ RVREF(bufferData) }, pushConstData{ RVREF(pushConstData) } {}
 	};
 
 
 	//
 	// Execute GL Command Buffer
 	//
-	struct ExecuteGLCommandBuffer
+	struct ExecuteGLCommandBuffer : _MessageBase_
 	{};
 
 

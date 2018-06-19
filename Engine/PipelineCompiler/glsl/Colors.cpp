@@ -10,10 +10,6 @@ namespace glsl_vfs
 	Particles color function.
 	
 	license: free
-
-	depends of:
-		Math/Math
-		Math/Color
 */
 
 
@@ -24,6 +20,8 @@ uint ParticleColor_FromVelocityLength (const float3 velocity);
 
 //-----------------------------------------------------------------------------
 
+#include <Math/Math.glsl>
+#include <Math/Color.glsl>
 
 /*
 =================================================

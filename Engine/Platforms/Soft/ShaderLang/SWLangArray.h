@@ -29,11 +29,7 @@ namespace Impl
 	public:
 		SWArray () {}
 
-		SWArray (SWArray &&) = default;
-		SWArray (const SWArray &) = default;
-
-		SWArray& operator = (SWArray &&) = default;
-		SWArray& operator = (const SWArray &) = default;
+		GX_DEFCOPYCTOR_ASSIGN( SWArray );
 
 		T &  operator [] (const usize index)
 		{

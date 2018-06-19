@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -36,9 +36,9 @@ namespace PlatformVK
 
 		struct SamplerSearch
 		{
-			SamplerDescriptor const&	descr;
+			SamplerDescription const&	descr;
 
-			explicit SamplerSearch (const SamplerDescriptor &s) : descr(s) {}
+			explicit SamplerSearch (const SamplerDescription &s) : descr(s) {}
 
 			bool operator == (const SearchableSampler &right) const;
 			bool operator >  (const SearchableSampler &right) const;

@@ -47,7 +47,7 @@ namespace Base
 				LOG( "Module '"_str << ToString(GModID::type( _mngrID )) << "' not found", ELog::Warning );
 
 			if ( result )
-				CHECK( SendTo< ModuleMsg::AddToManager >( result, { CurrentThreadModule() } ));
+				CHECK( result->Send( ModuleMsg::AddToManager{ CurrentThreadModule() }) );
 		}
 	};
 

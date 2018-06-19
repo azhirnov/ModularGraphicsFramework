@@ -10,14 +10,12 @@ namespace glsl_vfs
 	This is generated file, don't change anything!
 
 	license: free
-
-	depends of:
-		Common/Defines
-		Common/Cmp
 */
 
-#define IntLog2		BitScanReverse
+#include <Common/Cmp.glsl>
+#include <Math/MathDef.glsl>
 
+#define IntLog2		BitScanReverse
 
 // ToMask
 int ToMask (const int x);
@@ -447,10 +445,10 @@ ulong4 BitRotateRight (const ulong4 x, uint4 shift)
 		_type_( Greater( x >> 47, zero ) & Less( x & _type_(0x7FFFFFFFFFFFUL), zero ) ) + \
 		_type_( Greater( x >> 46, zero ) & Less( x & _type_(0x3FFFFFFFFFFFUL), zero ) ) + \
 		_type_( Greater( x >> 45, zero ) & Less( x & _type_(0x1FFFFFFFFFFFUL), zero ) ) + \
-		_type_( Greater( x >> 44, zero ) & Less( x & _type_(0xFFFFFFFFFFFUL), zero ) ) + \
-		_ty)#";
+		_type_( Greater( x >> 44, zero ) & Less( x & _type_(0xFFFFFFFFFFFUL), zero ))#";
 
-		src << R"#(pe_( Greater( x >> 43, zero ) & Less( x & _type_(0x7FFFFFFFFFFUL), zero ) ) + \
+		src << R"#( ) + \
+		_type_( Greater( x >> 43, zero ) & Less( x & _type_(0x7FFFFFFFFFFUL), zero ) ) + \
 		_type_( Greater( x >> 42, zero ) & Less( x & _type_(0x3FFFFFFFFFFUL), zero ) ) + \
 		_type_( Greater( x >> 41, zero ) & Less( x & _type_(0x1FFFFFFFFFFUL), zero ) ) + \
 		_type_( Greater( x >> 40, zero ) & Less( x & _type_(0xFFFFFFFFFFUL), zero ) ) + \

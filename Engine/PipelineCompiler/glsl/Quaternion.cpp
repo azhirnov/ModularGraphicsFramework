@@ -10,11 +10,9 @@ namespace glsl_vfs
 	Quaternion functions.
 	
 	license: free
-
-	depends of:
-		Common/Cmp
-		Math/Math
 */
+
+#include <Common/Defines.glsl>
 
 struct quat
 {
@@ -54,6 +52,8 @@ quat QRotationFromTo (in quat q, in real3 from, in real3 to);
 
 //-----------------------------------------------------------------------------
 
+#include <Common/Cmp.glsl>
+#include <Math/Math.glsl>
 
 /*
 =================================================

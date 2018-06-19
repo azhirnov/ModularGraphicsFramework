@@ -21,7 +21,7 @@ namespace Base
 											ModuleMsg::Update
 										> >::Append< MessageListFrom< 
 											ModuleMsg::OnManagerChanged,
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::WriteRegion,
 											DSMsg::ReleaseData
 										> >;
@@ -51,13 +51,13 @@ namespace Base
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
 
-		bool _GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &);
-		bool _WriteRegion_Empty (const Message< DSMsg::WriteRegion > &);
-		bool _WriteRegion (const Message< DSMsg::WriteRegion > &);
-		bool _ReleaseData (const Message< DSMsg::ReleaseData > &);
+		bool _GetDataSourceDescription (const DSMsg::GetDataSourceDescription &);
+		bool _WriteRegion_Empty (const DSMsg::WriteRegion &);
+		bool _WriteRegion (const DSMsg::WriteRegion &);
+		bool _ReleaseData (const DSMsg::ReleaseData &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ namespace Base
 		_SubscribeOnMsg( this, &FileDataOutput::_Link_Impl );
 		_SubscribeOnMsg( this, &FileDataOutput::_Compose );
 		_SubscribeOnMsg( this, &FileDataOutput::_Delete );
-		_SubscribeOnMsg( this, &FileDataOutput::_GetDataSourceDescriptor );
+		_SubscribeOnMsg( this, &FileDataOutput::_GetDataSourceDescription );
 		_SubscribeOnMsg( this, &FileDataOutput::_WriteRegion_Empty );
 		_SubscribeOnMsg( this, &FileDataOutput::_ReleaseData );
 
@@ -108,7 +108,7 @@ namespace Base
 	_Compose
 =================================================
 */
-	bool FileDataOutput::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool FileDataOutput::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -117,10 +117,10 @@ namespace Base
 
 		CHECK_COMPOSING( _GetManager() );
 		
-		Message< DSMsg::IsUriExists >	is_exist{ _filename };
+		DSMsg::IsUriExists	is_exist{ _filename };
 		_GetManager()->Send( is_exist );
 
-		CHECK_COMPOSING( is_exist->result.Get(false) );
+		CHECK_COMPOSING( is_exist.result.Get(false) );
 
 		return Module::_DefCompose( true );
 	}
@@ -130,7 +130,7 @@ namespace Base
 	_Delete
 =================================================
 */
-	bool FileDataOutput::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool FileDataOutput::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_ReleaseData( {} );
 		return Module::_Delete_Impl( msg );
@@ -138,21 +138,21 @@ namespace Base
 
 /*
 =================================================
-	_GetDataSourceDescriptor
+	_GetDataSourceDescription
 =================================================
 */
-	bool FileDataOutput::_GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &msg)
+	bool FileDataOutput::_GetDataSourceDescription (const DSMsg::GetDataSourceDescription &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
 
-		DataSourceDescriptor	descr;
+		DataSourceDescription	descr;
 
 		descr.memoryFlags	|= EMemoryAccess::CpuWrite;
 		descr.available		 = BytesUL();	// data is not cached
 		descr.totalSize		 = BytesUL( _file->Size() );
 
-		msg->result.Set( descr );
+		msg.result.Set( descr );
 		return true;
 	}
 	
@@ -161,7 +161,7 @@ namespace Base
 	_WriteRegion_Empty
 =================================================
 */
-	bool FileDataOutput::_WriteRegion_Empty (const Message< DSMsg::WriteRegion > &msg)
+	bool FileDataOutput::_WriteRegion_Empty (const DSMsg::WriteRegion &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
@@ -169,10 +169,10 @@ namespace Base
 		Unsubscribe( this, &FileDataOutput::_WriteRegion_Empty );
 		_SubscribeOnMsg( this, &FileDataOutput::_WriteRegion );
 		
-		Message< DSMsg::OpenFileForWrite >		open_file{ _filename };
+		DSMsg::OpenFileForWrite		open_file{ _filename };
 		CHECK( _GetManager()->Send( open_file ) );
 
-		_file = *open_file->result;
+		_file = *open_file.result;
 		CHECK_ERR( _file );
 
 		return _WriteRegion( msg );
@@ -183,11 +183,11 @@ namespace Base
 	_WriteRegion
 =================================================
 */
-	bool FileDataOutput::_WriteRegion (const Message< DSMsg::WriteRegion > &msg)
+	bool FileDataOutput::_WriteRegion (const DSMsg::WriteRegion &msg)
 	{
-		CHECK( _file->SeekSet( BytesU(msg->position) ) );
+		CHECK( _file->SeekSet( BytesU(msg.position) ) );
 
-		msg->wasWritten.Set( BytesUL(_file->Write( msg->data )) );
+		msg.wasWritten.Set( BytesUL(_file->Write( msg.data )) );
 		return true;
 	}
 	
@@ -196,7 +196,7 @@ namespace Base
 	_ReleaseData
 =================================================
 */
-	bool FileDataOutput::_ReleaseData (const Message< DSMsg::ReleaseData > &)
+	bool FileDataOutput::_ReleaseData (const DSMsg::ReleaseData &)
 	{
 		if ( _file ) {
 			_file->Close();

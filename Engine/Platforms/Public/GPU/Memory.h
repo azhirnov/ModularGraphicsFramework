@@ -6,7 +6,7 @@
 #include "Engine/Platforms/Public/GPU/IDs.h"
 #include "Engine/Platforms/Public/GPU/MipmapLevel.h"
 #include "Engine/Platforms/Public/GPU/ImageLayer.h"
-#include "Engine/STL/Math/Image/ImageUtils.h"
+#include "Core/STL/Math/Image/ImageUtils.h"
 
 namespace Engine
 {
@@ -14,10 +14,10 @@ namespace Platforms
 {
 
 	//
-	// GPU Memory Descriptor
+	// GPU Memory Description
 	//
 
-	struct GpuMemoryDescriptor : CompileTime::PODStruct
+	struct GpuMemoryDescription : CompileTime::PODStruct
 	{
 	// variables
 		BytesUL					size;
@@ -25,9 +25,9 @@ namespace Platforms
 		EMemoryAccess::bits		access;
 
 	// methods
-		GpuMemoryDescriptor (GX_DEFCTOR) {}
+		GpuMemoryDescription (GX_DEFCTOR) {}
 
-		GpuMemoryDescriptor (BytesUL size, EGpuMemory::bits flags, EMemoryAccess::bits access) :
+		GpuMemoryDescription (BytesUL size, EGpuMemory::bits flags, EMemoryAccess::bits access) :
 			size(size), flags(flags), access(access) {}
 	};
 
@@ -93,11 +93,11 @@ namespace GpuMsg
 {
 
 	//
-	// Get GPU Memory Descriptor
+	// Get GPU Memory Description
 	//
-	struct GetGpuMemoryDescriptor
+	struct GetGpuMemoryDescription : _MessageBase_
 	{
-		Out< Platforms::GpuMemoryDescriptor >	result;
+		Out< Platforms::GpuMemoryDescription >	result;
 	};
 
 
@@ -113,7 +113,7 @@ namespace GpuMsg
 	//
 	// Make GPU Memory visible by CPU
 	//
-	struct MapMemoryToCpu
+	struct MapMemoryToCpu : _MessageBase_
 	{
 	// variables
 		BytesUL				position;
@@ -123,12 +123,12 @@ namespace GpuMsg
 
 	// methods
 		MapMemoryToCpu () {}
-		MapMemoryToCpu (EMappingFlags flags) : size{BytesUL(~0ull)}, flags{flags} {}
+		explicit MapMemoryToCpu (EMappingFlags flags) : size{BytesUL(~0ull)}, flags{flags} {}
 		MapMemoryToCpu (EMappingFlags flags, Bytes<uint> pos, Bytes<uint> size) : position(BytesUL(pos)), size(BytesUL(size)), flags(flags) {}
 		MapMemoryToCpu (EMappingFlags flags, Bytes<ulong> pos, Bytes<ulong> size) : position(pos), size(size), flags(flags) {}
 	};
 
-	struct MapImageToCpu
+	struct MapImageToCpu : _MessageBase_
 	{
 	// types
 		struct MemoryRange {
@@ -149,7 +149,9 @@ namespace GpuMsg
 
 	// methods
 		MapImageToCpu () {}
-		MapImageToCpu (EMappingFlags flags, MipmapLevel level = Uninitialized, ImageLayer layer = Uninitialized) : mipLevel(level), layer(layer), flags(flags) {}
+		
+		explicit MapImageToCpu (EMappingFlags flags, MipmapLevel level = Uninitialized, ImageLayer layer = Uninitialized) :
+			mipLevel(level), layer(layer), flags(flags) {}
 	};
 
 
@@ -161,14 +163,14 @@ namespace GpuMsg
 	//
 	// Hide GPU Memory
 	//
-	struct UnmapMemory
+	struct UnmapMemory : _MessageBase_
 	{};
 
 
 	//
 	// Flush GPU Memory Range
 	//
-	struct FlushMemoryRange
+	struct FlushMemoryRange : _MessageBase_
 	{
 	// variables
 		BytesUL			offset;		// offset in mapped memory space
@@ -176,8 +178,8 @@ namespace GpuMsg
 
 	// methods
 		FlushMemoryRange () {}
-		explicit FlushMemoryRange (Bytes<uint> offset, Bytes<uint> size) :  offset{BytesUL(offset)}, size{BytesUL(size)} {}
-		explicit FlushMemoryRange (Bytes<ulong> offset, Bytes<ulong> size) :  offset{offset}, size{size} {}
+		FlushMemoryRange (Bytes<uint> offset, Bytes<uint> size) :  offset{BytesUL(offset)}, size{BytesUL(size)} {}
+		FlushMemoryRange (Bytes<ulong> offset, Bytes<ulong> size) :  offset{offset}, size{size} {}
 	};
 
 
@@ -214,7 +216,7 @@ namespace GpuMsg
 	//
 	// Read From Image memory without mapping
 	//
-	struct ReadFromImageMemory
+	struct ReadFromImageMemory : _MessageBase_
 	{
 	// types
 		using MipmapLevel	= Platforms::MipmapLevel;
@@ -245,7 +247,7 @@ namespace GpuMsg
 	//
 	// Write to Image memory without mapping
 	//
-	struct WriteToImageMemory
+	struct WriteToImageMemory : _MessageBase_
 	{
 	// types
 		using MipmapLevel	= Platforms::MipmapLevel;
@@ -276,7 +278,7 @@ namespace GpuMsg
 	//
 	// On GPU Memory Binding State Changed
 	//
-	struct OnMemoryBindingChanged
+	struct OnMemoryBindingChanged : _MessageBase_
 	{
 	// types
 		enum class EBindingTarget
@@ -289,13 +291,16 @@ namespace GpuMsg
 	// variables
 		ModulePtr			targetObject;	// image or buffer
 		EBindingTarget		newState;
+		
+	// methods
+		OnMemoryBindingChanged (const ModulePtr &obj, EBindingTarget newState) : targetObject{obj}, newState{newState} {}
 	};
 
 
 	//
 	// GPU Memory Region Changed Event	// TODO
 	//
-	struct GpuMemoryRegionChanged
+	struct GpuMemoryRegionChanged : _MessageBase_
 	{
 	// variables
 		BytesUL		offset;

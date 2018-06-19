@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -13,7 +13,7 @@
 #include "Engine/Platforms/Public/GPU/Framebuffer.h"
 #include "Engine/Platforms/Public/GPU/RenderPass.h"
 #include "Engine/Base/Modules/MessageCache.h"
-#include "Engine/STL/CompileTime/CompileTimeDebug.h"
+#include "Core/STL/CompileTime/CompileTimeDebug.h"
 
 namespace Engine
 {
@@ -28,14 +28,14 @@ namespace PlatformVK
 	{
 	// types
 	private:
-		using ImageIDCache_t		= MessageCache< GpuMsg::GetVkImageID, GpuMsg::GetImageDescriptor >;
-		using BufferIDCache_t		= MessageCache< GpuMsg::GetVkBufferID, GpuMsg::GetBufferDescriptor >;
-		using FramebufferCache_t	= MessageCache< GpuMsg::GetVkFramebufferID, GpuMsg::GetFramebufferDescriptor >;
-		using GPipelineCache_t		= MessageCache< GpuMsg::GetVkGraphicsPipelineID, GpuMsg::GetGraphicsPipelineDescriptor >;
-		using CPipelineCache_t		= MessageCache< GpuMsg::GetVkComputePipelineID, GpuMsg::GetComputePipelineDescriptor >;
+		using ImageIDCache_t		= MessageCache< GpuMsg::GetVkImageID, GpuMsg::GetImageDescription >;
+		using BufferIDCache_t		= MessageCache< GpuMsg::GetVkBufferID, GpuMsg::GetBufferDescription >;
+		using FramebufferCache_t	= MessageCache< GpuMsg::GetVkFramebufferID, GpuMsg::GetFramebufferDescription >;
+		using GPipelineCache_t		= MessageCache< GpuMsg::GetVkGraphicsPipelineID, GpuMsg::GetGraphicsPipelineDescription >;
+		using CPipelineCache_t		= MessageCache< GpuMsg::GetVkComputePipelineID, GpuMsg::GetComputePipelineDescription >;
 		using CmdBufferCache_t		= MessageCache< GpuMsg::GetVkCommandBufferID >;
 		using ResTableCache_t		= MessageCache< GpuMsg::GetVkPipelineLayoutID, GpuMsg::GetVkPipelineResourceTableID >;
-		using RenderPassCache_t		= MessageCache< GpuMsg::GetVkRenderPassID, GpuMsg::GetRenderPassDescriptor >;
+		using RenderPassCache_t		= MessageCache< GpuMsg::GetVkRenderPassID, GpuMsg::GetRenderPassDescription >;
 
 
 	// variables

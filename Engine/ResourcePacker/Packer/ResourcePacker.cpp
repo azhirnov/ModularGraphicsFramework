@@ -8,7 +8,7 @@
 #include "Engine/ResourcePacker/FilePacker/CppFileSystemPacker.h"
 #include "Engine/ResourcePacker/Images/ImageConverter.h"
 
-#include "Engine/Script/Bindings/DefaultBindings.h"
+#include "Core/Script/Bindings/DefaultBindings.h"
 
 namespace ResPack
 {
@@ -180,7 +180,7 @@ namespace ResPack
 */
 	void ResourcePacker::_Bind (GXScript::ScriptEnginePtr se)
 	{
-		using namespace GX_STL::GXScript;
+		using namespace GXScript;
 
 		DefaultBindings::BindScalarMath( se.ptr() );
 		DefaultBindings::BindVectorMath( se.ptr() );

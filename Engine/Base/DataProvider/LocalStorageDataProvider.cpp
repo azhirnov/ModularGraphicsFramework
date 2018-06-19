@@ -67,18 +67,18 @@ namespace Base
 
 	// message handlers
 	private:
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &)				{ return false; }
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &)	{ return false; }
+		bool _Update (const ModuleMsg::Update &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AddToManager (const ModuleMsg::AddToManager &)				{ return false; }
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &)		{ return false; }
 
-		bool _AddOnDataModifiedListener (const Message< DSMsg::AddOnDataModifiedListener > &);
-		bool _RemoveOnDataModifiedListener (const Message< DSMsg::RemoveOnDataModifiedListener > &);
-		bool _OpenFileForRead (const Message< DSMsg::OpenFileForRead > &);
-		bool _OpenFileForWrite (const Message< DSMsg::OpenFileForWrite > &);
-		bool _IsUriExists (const Message< DSMsg::IsUriExists > &);
-		bool _CreateDataInputModule (const Message< DSMsg::CreateDataInputModule > &);
-		bool _CreateDataOutputModule (const Message< DSMsg::CreateDataOutputModule > &);
+		bool _AddOnDataModifiedListener (const DSMsg::AddOnDataModifiedListener &);
+		bool _RemoveOnDataModifiedListener (const DSMsg::RemoveOnDataModifiedListener &);
+		bool _OpenFileForRead (const DSMsg::OpenFileForRead &);
+		bool _OpenFileForWrite (const DSMsg::OpenFileForWrite &);
+		bool _IsUriExists (const DSMsg::IsUriExists &);
+		bool _CreateDataInputModule (const DSMsg::CreateDataInputModule &);
+		bool _CreateDataOutputModule (const DSMsg::CreateDataOutputModule &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -142,7 +142,7 @@ namespace Base
 	_Delete
 =================================================
 */
-	bool LocalStorageDataProvider::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool LocalStorageDataProvider::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_fileWatch.Clear();
 
@@ -154,7 +154,7 @@ namespace Base
 	_Update
 =================================================
 */
-	bool LocalStorageDataProvider::_Update (const Message< ModuleMsg::Update > &)
+	bool LocalStorageDataProvider::_Update (const ModuleMsg::Update &)
 	{
 		FOR( i, _fileWatch )
 		{
@@ -184,16 +184,16 @@ namespace Base
 	_AddOnDataModifiedListener
 =================================================
 */
-	bool LocalStorageDataProvider::_AddOnDataModifiedListener (const Message< DSMsg::AddOnDataModifiedListener > &msg)
+	bool LocalStorageDataProvider::_AddOnDataModifiedListener (const DSMsg::AddOnDataModifiedListener &msg)
 	{
 		FileWatchList_t::iterator	iter;
 
-		if ( not _fileWatch.Find( msg->filename, OUT iter ) )
+		if ( not _fileWatch.Find( msg.filename, OUT iter ) )
 		{
-			iter = _fileWatch.Add( msg->filename, {} );
+			iter = _fileWatch.Add( msg.filename, {} );
 		}
 
-		iter->second.callbacks.Add( msg->callback );
+		iter->second.callbacks.Add( msg.callback );
 		return true;
 	}
 	
@@ -202,11 +202,11 @@ namespace Base
 	_RemoveOnDataModifiedListener
 =================================================
 */
-	bool LocalStorageDataProvider::_RemoveOnDataModifiedListener (const Message< DSMsg::RemoveOnDataModifiedListener > &msg)
+	bool LocalStorageDataProvider::_RemoveOnDataModifiedListener (const DSMsg::RemoveOnDataModifiedListener &msg)
 	{
 		for (auto& file : _fileWatch)
 		{
-			file.second.callbacks.RemoveAllFor( msg->module.RawPtr() );
+			file.second.callbacks.RemoveAllFor( msg.module.RawPtr() );
 		}
 		return true;
 	}
@@ -216,14 +216,14 @@ namespace Base
 	_OpenFileForRead
 =================================================
 */
-	bool LocalStorageDataProvider::_OpenFileForRead (const Message< DSMsg::OpenFileForRead > &msg)
+	bool LocalStorageDataProvider::_OpenFileForRead (const DSMsg::OpenFileForRead &msg)
 	{
-		String				path = FileAddress::BuildPath( _baseFolder, msg->filename );
+		String				path = FileAddress::BuildPath( _baseFolder, msg.filename );
 		GXFile::RFilePtr	file = GXFile::HddRFile::New( path );
 
 		CHECK_ERR( file );
 
-		msg->result.Set( file );
+		msg.result.Set( file );
 		return true;
 	}
 	
@@ -232,14 +232,14 @@ namespace Base
 	_OpenFileForWrite
 =================================================
 */
-	bool LocalStorageDataProvider::_OpenFileForWrite (const Message< DSMsg::OpenFileForWrite > &msg)
+	bool LocalStorageDataProvider::_OpenFileForWrite (const DSMsg::OpenFileForWrite &msg)
 	{
-		String				path = FileAddress::BuildPath( _baseFolder, msg->filename );
+		String				path = FileAddress::BuildPath( _baseFolder, msg.filename );
 		GXFile::WFilePtr	file = GXFile::HddWFile::New( path );
 
 		CHECK_ERR( file );
 
-		msg->result.Set( file );
+		msg.result.Set( file );
 		return true;
 	}
 	
@@ -248,11 +248,11 @@ namespace Base
 	_IsUriExists
 =================================================
 */
-	bool LocalStorageDataProvider::_IsUriExists (const Message< DSMsg::IsUriExists > &msg)
+	bool LocalStorageDataProvider::_IsUriExists (const DSMsg::IsUriExists &msg)
 	{
-		String	path = FileAddress::BuildPath( _baseFolder, msg->uri );
+		String	path = FileAddress::BuildPath( _baseFolder, msg.uri );
 
-		msg->result.Set( OS::FileSystem::IsFileExist( path ) );
+		msg.result.Set( OS::FileSystem::IsFileExist( path ) );
 		return true;
 	}
 	
@@ -261,10 +261,10 @@ namespace Base
 	_CreateDataInputModule
 =================================================
 */
-	bool LocalStorageDataProvider::_CreateDataInputModule (const Message< DSMsg::CreateDataInputModule > &msg)
+	bool LocalStorageDataProvider::_CreateDataInputModule (const DSMsg::CreateDataInputModule &msg)
 	{
-		msg->result.Set(
-			DataProviderObjectsConstructor::CreateFileDataInput( FileDataInputModuleID, GlobalSystems(), CreateInfo::DataInput{ msg->uri, this } )
+		msg.result.Set(
+			DataProviderObjectsConstructor::CreateFileDataInput( FileDataInputModuleID, GlobalSystems(), CreateInfo::DataInput{ msg.uri, this } )
 		);
 		return true;
 	}
@@ -274,10 +274,10 @@ namespace Base
 	_CreateDataOutputModule
 =================================================
 */
-	bool LocalStorageDataProvider::_CreateDataOutputModule (const Message< DSMsg::CreateDataOutputModule > &msg)
+	bool LocalStorageDataProvider::_CreateDataOutputModule (const DSMsg::CreateDataOutputModule &msg)
 	{
-		msg->result.Set(
-			DataProviderObjectsConstructor::CreateFileDataOutput( FileDataInputModuleID, GlobalSystems(), CreateInfo::DataOutput{ msg->uri, this } )
+		msg.result.Set(
+			DataProviderObjectsConstructor::CreateFileDataOutput( FileDataInputModuleID, GlobalSystems(), CreateInfo::DataOutput{ msg.uri, this } )
 		);
 		return true;
 	}

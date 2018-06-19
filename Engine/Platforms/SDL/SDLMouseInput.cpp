@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Common/Platforms.h"
+#include "Core/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_SDL
 
@@ -28,7 +28,7 @@ namespace PlatformSDL
 										> >
 										::Append< MessageListFrom<
 											ModuleMsg::OnManagerChanged,
-											OSMsg::WindowDescriptorChanged,
+											OSMsg::WindowDescriptionChanged,
 											OSMsg::WindowCreated,
 											OSMsg::WindowBeforeDestroy,
 											OSMsg::OnSDLWindowRawMessage
@@ -75,13 +75,13 @@ namespace PlatformSDL
 
 	// message handlers
 	private:
-		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
-		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
-		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
-		bool _OnSDLWindowRawMessage (const Message< OSMsg::OnSDLWindowRawMessage > &);
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &);
+		bool _WindowCreated (const OSMsg::WindowCreated &);
+		bool _WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &);
+		bool _OnSDLWindowRawMessage (const OSMsg::OnSDLWindowRawMessage &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 
 	private:
 		void _Destroy ();
@@ -113,7 +113,7 @@ namespace PlatformSDL
 		_SubscribeOnMsg( this, &SDLMouseInput::_Update );
 		_SubscribeOnMsg( this, &SDLMouseInput::_Link );
 		_SubscribeOnMsg( this, &SDLMouseInput::_Delete_Impl );
-		_SubscribeOnMsg( this, &SDLMouseInput::_WindowDescriptorChanged );
+		_SubscribeOnMsg( this, &SDLMouseInput::_WindowDescriptionChanged );
 		_SubscribeOnMsg( this, &SDLMouseInput::_WindowCreated );
 		_SubscribeOnMsg( this, &SDLMouseInput::_WindowBeforeDestroy );
 		_SubscribeOnMsg( this, &SDLMouseInput::_OnSDLWindowRawMessage );
@@ -159,12 +159,12 @@ namespace PlatformSDL
 
 /*
 =================================================
-	_WindowDescriptorChanged
+	_WindowDescriptionChanged
 =================================================
 */
-	bool SDLMouseInput::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
+	bool SDLMouseInput::_WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &msg)
 	{
-		_surfaceSize = msg->descr.surfaceSize;
+		_surfaceSize = msg.descr.surfaceSize;
 		return true;
 	}
 	
@@ -173,7 +173,7 @@ namespace PlatformSDL
 	_WindowCreated
 =================================================
 */
-	bool SDLMouseInput::_WindowCreated (const Message< OSMsg::WindowCreated > &)
+	bool SDLMouseInput::_WindowCreated (const OSMsg::WindowCreated &)
 	{
 		CHECK( _DefCompose( false ) );
 		return true;
@@ -184,11 +184,11 @@ namespace PlatformSDL
 	_WindowBeforeDestroy
 =================================================
 */
-	bool SDLMouseInput::_WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &)
+	bool SDLMouseInput::_WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &)
 	{
 		_Destroy();
 
-		_SendMsg< ModuleMsg::Delete >({});
+		_SendMsg( ModuleMsg::Delete{} );
 		return true;
 	}
 	
@@ -197,7 +197,7 @@ namespace PlatformSDL
 	_OnSDLWindowRawMessage
 =================================================
 */
-	bool SDLMouseInput::_OnSDLWindowRawMessage (const Message< OSMsg::OnSDLWindowRawMessage > &msg)
+	bool SDLMouseInput::_OnSDLWindowRawMessage (const OSMsg::OnSDLWindowRawMessage &msg)
 	{
 		const auto	OnTouchMotion = LAMBDA(this) (uint index, const float2 &absolute, const float2 &relative)
 		{{
@@ -205,7 +205,7 @@ namespace PlatformSDL
 			_touches[index].relative += relative;
 		}};
 
-		switch ( msg->event.type )
+		switch ( msg.event.type )
 		{
 			// touch screen //
 			case SDL_FINGERMOTION :
@@ -224,18 +224,18 @@ namespace PlatformSDL
 			// mouse //
 			case SDL_MOUSEMOTION :
 			{
-				const float2	absolute = float2(int2( msg->event.motion.x, _surfaceSize.y - msg->event.motion.y ));
-				const float2	relative = float2(int2( msg->event.motion.xrel, msg->event.motion.yrel ));
+				const float2	absolute = float2(int2( msg.event.motion.x, _surfaceSize.y - msg.event.motion.y ));
+				const float2	relative = float2(int2( msg.event.motion.xrel, msg.event.motion.yrel ));
 
 				_mousePos  = absolute;
 				_mouseDiff = relative;
 
 				// touch emulation
-				if ( msg->event.motion.state & SDL_BUTTON_LMASK )	OnTouchMotion( 0, absolute, relative );
-				if ( msg->event.motion.state & SDL_BUTTON_MMASK )	OnTouchMotion( 1, absolute, relative );
-				if ( msg->event.motion.state & SDL_BUTTON_RMASK )	OnTouchMotion( 2, absolute, relative );
-				if ( msg->event.motion.state & SDL_BUTTON_X1MASK )	OnTouchMotion( 3, absolute, relative );
-				if ( msg->event.motion.state & SDL_BUTTON_X2MASK )	OnTouchMotion( 4, absolute, relative );
+				if ( msg.event.motion.state & SDL_BUTTON_LMASK )	OnTouchMotion( 0, absolute, relative );
+				if ( msg.event.motion.state & SDL_BUTTON_MMASK )	OnTouchMotion( 1, absolute, relative );
+				if ( msg.event.motion.state & SDL_BUTTON_RMASK )	OnTouchMotion( 2, absolute, relative );
+				if ( msg.event.motion.state & SDL_BUTTON_X1MASK )	OnTouchMotion( 3, absolute, relative );
+				if ( msg.event.motion.state & SDL_BUTTON_X2MASK )	OnTouchMotion( 4, absolute, relative );
 				
 				break;
 			}
@@ -243,7 +243,7 @@ namespace PlatformSDL
 			// mouse wheel //
 			case SDL_MOUSEWHEEL :
 			{
-				_wheelDelta += float2(int2( msg->event.wheel.x, msg->event.wheel.y ));
+				_wheelDelta += float2(int2( msg.event.wheel.x, msg.event.wheel.y ));
 				break;
 			}
 		}
@@ -255,7 +255,7 @@ namespace PlatformSDL
 	_Link
 =================================================
 */
-	bool SDLMouseInput::_Link (const Message< ModuleMsg::Link > &msg)
+	bool SDLMouseInput::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -268,10 +268,10 @@ namespace PlatformSDL
 
 			if ( _IsComposedState( _window->GetState() ) )
 			{
-				_SendMsg< OSMsg::WindowCreated >({});
+				_SendMsg( OSMsg::WindowCreated{} );
 			}
 
-			_window->Subscribe( this, &SDLMouseInput::_WindowDescriptorChanged );
+			_window->Subscribe( this, &SDLMouseInput::_WindowDescriptionChanged );
 			_window->Subscribe( this, &SDLMouseInput::_WindowCreated );
 			_window->Subscribe( this, &SDLMouseInput::_WindowBeforeDestroy );
 			_window->Subscribe( this, &SDLMouseInput::_OnSDLWindowRawMessage );
@@ -284,7 +284,7 @@ namespace PlatformSDL
 	_Update
 =================================================
 */
-	bool SDLMouseInput::_Update (const Message< ModuleMsg::Update > &)
+	bool SDLMouseInput::_Update (const ModuleMsg::Update &)
 	{
 		// send events to InputThread
 
@@ -296,10 +296,10 @@ namespace PlatformSDL
 			if ( All( relative.IsZero() ) )
 			{
 				if ( IsNotZero( relative.x ) )
-					_SendEvent< ModuleMsg::InputMotion >({_touches[i].xMotion, relative.x, absolute.x });
+					_SendEvent( ModuleMsg::InputMotion{_touches[i].xMotion, relative.x, absolute.x });
 	
 				if ( IsNotZero( relative.y ) )
-					_SendEvent< ModuleMsg::InputMotion >({_touches[i].yMotion, relative.y, absolute.y });
+					_SendEvent( ModuleMsg::InputMotion{_touches[i].yMotion, relative.y, absolute.y });
 			}
 			relative = float2();
 		}
@@ -307,19 +307,19 @@ namespace PlatformSDL
 		if ( Any( _mouseDiff.IsNotZero() ) )
 		{
 			if ( IsNotZero( _mouseDiff.x ) )
-				_SendEvent< ModuleMsg::InputMotion >({ "mouse.x"_MotionID, _mouseDiff.x, _mousePos.x });
+				_SendEvent( ModuleMsg::InputMotion{ "mouse.x"_MotionID, _mouseDiff.x, _mousePos.x });
 			
 			if ( IsNotZero( _mouseDiff.y ) )
-				_SendEvent< ModuleMsg::InputMotion >({ "mouse.y"_MotionID, _mouseDiff.y, _mousePos.y });
+				_SendEvent( ModuleMsg::InputMotion{ "mouse.y"_MotionID, _mouseDiff.y, _mousePos.y });
 		}
 
 		if ( Any( _wheelDelta.IsNotZero() ) )
 		{
 			if ( IsNotZero( _wheelDelta.x ) )
-				_SendEvent< ModuleMsg::InputMotion >({ "scroll.x"_MotionID, _wheelDelta.x, 0.0f });
+				_SendEvent( ModuleMsg::InputMotion{ "scroll.x"_MotionID, _wheelDelta.x, 0.0f });
 
 			if ( IsNotZero( _wheelDelta.y ) )
-				_SendEvent< ModuleMsg::InputMotion >({ "scroll.y"_MotionID, _wheelDelta.y, 0.0f });
+				_SendEvent( ModuleMsg::InputMotion{ "scroll.y"_MotionID, _wheelDelta.y, 0.0f });
 		}
 		
 		_mouseDiff  = float2();
@@ -332,9 +332,9 @@ namespace PlatformSDL
 	_DetachModule
 =================================================
 */
-	bool SDLMouseInput::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool SDLMouseInput::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		if ( _Detach( msg->oldModule ) and msg->oldModule == _window )
+		if ( _Detach( msg.oldModule ) and msg.oldModule == _window )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_Destroy();

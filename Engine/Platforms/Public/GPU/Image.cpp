@@ -12,12 +12,12 @@ namespace Platforms
 	constructor
 =================================================
 */
-	ImageDescriptor::ImageDescriptor (EImage::type			imageType,
-									  const uint4	&		dimension,
-									  EPixelFormat::type	format,
-									  EImageUsage::bits		usage,
-									  MipmapLevel			maxLevel,
-									  MultiSamples			samples) :
+	ImageDescription::ImageDescription (EImage::type		imageType,
+										const uint4	&		dimension,
+										EPixelFormat::type	format,
+										EImageUsage::bits	usage,
+										MipmapLevel			maxLevel,
+										MultiSamples		samples) :
 		imageType(imageType),	dimension(dimension),
 		format(format),			usage(usage),
 		maxLevel(maxLevel),		samples(samples)
@@ -31,20 +31,20 @@ namespace Platforms
 	constructor
 =================================================
 */
-	ImageViewDescriptor::ImageViewDescriptor (EImage::type			viewType,
-											  EPixelFormat::type	format,
-											  MipmapLevel			baseLevel,
-											  uint					levelCount,
-											  ImageLayer			baseLayer,
-											  uint					layerCount,
-											  Swizzle::type			swizzle) :
+	ImageViewDescription::ImageViewDescription (EImage::type		viewType,
+												EPixelFormat::type	format,
+												MipmapLevel			baseLevel,
+												uint				levelCount,
+												ImageLayer			baseLayer,
+												uint				layerCount,
+												Swizzle::type		swizzle) :
 		viewType{viewType},		format{format},
 		baseLevel{baseLevel},	levelCount{levelCount},
 		baseLayer{baseLayer},	layerCount{layerCount},
 		swizzle{swizzle}
 	{}
 	
-	ImageViewDescriptor::ImageViewDescriptor (const ImageDescriptor &descr) :
+	ImageViewDescription::ImageViewDescription (const ImageDescription &descr) :
 		viewType{ descr.imageType },	format{ descr.format },
 		baseLevel{},					levelCount{ descr.maxLevel.Get() },
 		baseLayer{},					layerCount{ descr.dimension.w },
@@ -56,7 +56,7 @@ namespace Platforms
 	compare operators
 =================================================
 */
-	bool ImageViewDescriptor::operator == (const ImageViewDescriptor &right) const
+	bool ImageViewDescription::operator == (const ImageViewDescription &right) const
 	{
 		return	this->viewType		== right.viewType	and
 				this->format		== right.format		and
@@ -67,7 +67,7 @@ namespace Platforms
 				this->swizzle		== right.swizzle;
 	}
 	
-	bool ImageViewDescriptor::operator >  (const ImageViewDescriptor &right) const
+	bool ImageViewDescription::operator >  (const ImageViewDescription &right) const
 	{
 		return	viewType	!= right.viewType	?	viewType	> right.viewType	:
 				format		!= right.format		?	format		> right.format		:

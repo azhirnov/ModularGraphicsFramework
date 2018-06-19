@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -1128,7 +1128,7 @@ namespace PlatformVK
 		FOR( i, _imageBuffers )
 		{
 			if ( _imageBuffers[i].module ) {
-				_imageBuffers[i].module->Send< ModuleMsg::Delete >({});
+				_imageBuffers[i].module->Send( ModuleMsg::Delete{} );
 			}
 		}
 
@@ -1161,7 +1161,7 @@ namespace PlatformVK
 		CHECK_ERR( count > 0 );
 		_imageBuffers.Resize( count );
 
-		ImageDescriptor		descr;
+		ImageDescription		descr;
 		descr.dimension	= uint4( _surfaceSize, 0, 0 );
 		descr.format	= _colorPixelFormat;
 		descr.imageType	= EImage::Tex2D;
@@ -1175,11 +1175,11 @@ namespace PlatformVK
 			ModulePtr	img = New< Vk1SwapchainImage >( GlobalSystems(), CreateInfo::GpuImage{ descr } );
 			ModuleUtils::Initialize({ img });
 
-			Message< GpuMsg::SetVkSwapchainImage >	msg{ images[i] };
+			GpuMsg::SetVkSwapchainImage		msg{ images[i] };
 			img->Send( msg );
 
 			buf.module	= img;
-			buf.view	= *msg->result;
+			buf.view	= *msg.result;
 		}
 		return true;
 	}
@@ -1201,7 +1201,7 @@ namespace PlatformVK
 									VkImageModuleID,
 									GlobalSystems(),
 									CreateInfo::GpuImage{
-										ImageDescriptor{
+										ImageDescription{
 											EImage::Tex2D,
 											uint4( _surfaceSize, 0, 0 ),
 											depthStencilFormat,
@@ -1214,10 +1214,10 @@ namespace PlatformVK
 
 		ModuleUtils::Initialize({ _depthStencilImage });
 
-		Message< GpuMsg::GetVkImageID >		req_id;
+		GpuMsg::GetVkImageID	req_id;
 		_depthStencilImage->Send( req_id );
 
-		_depthStencilView = req_id->result->defaultView;
+		_depthStencilView = req_id.result->defaultView;
 		return true;
 	}
 	
@@ -1229,7 +1229,7 @@ namespace PlatformVK
 	void Vk1Device::_DeleteDepthStencilAttachment ()
 	{
 		if ( _depthStencilImage ) {
-			_depthStencilImage->Send< ModuleMsg::Delete >({});
+			_depthStencilImage->Send( ModuleMsg::Delete{} );
 		}
 
 		_depthStencilImage			= null;
@@ -1324,8 +1324,8 @@ namespace PlatformVK
 
 		_framebuffers.Resize( _imageBuffers.Count() );
 		
-		Message< GpuMsg::GetVkRenderPassID >	req_id;
-		SendTo( _renderPass, req_id );
+		GpuMsg::GetVkRenderPassID	req_id;
+		_renderPass->Send( req_id );
 
 		FOR( i, _framebuffers )
 		{
@@ -1336,11 +1336,11 @@ namespace PlatformVK
 										CreateInfo::GpuFramebuffer{ _surfaceSize },
 										OUT fb ) );
 
-			fb->Send< ModuleMsg::AttachModule >({ _renderPass });
-			fb->Send< ModuleMsg::AttachModule >({ "Color0", _imageBuffers[i].module });
+			fb->Send( ModuleMsg::AttachModule{ _renderPass });
+			fb->Send( ModuleMsg::AttachModule{ "Color0", _imageBuffers[i].module });
 
 			if ( _depthStencilImage ) {
-				fb->Send< ModuleMsg::AttachModule >({ "Depth", _depthStencilImage });
+				fb->Send( ModuleMsg::AttachModule{ "Depth", _depthStencilImage });
 			}
 
 			_framebuffers[i] = fb;
@@ -1357,10 +1357,8 @@ namespace PlatformVK
 */
 	void Vk1Device::_DeleteFramebuffers ()
 	{
-		Message< ModuleMsg::Delete >	msg;
-
-		FOR( i, _framebuffers ) {
-			SendTo( _framebuffers[i], msg );
+		for (auto& fbo : _framebuffers) {
+			fbo->Send( ModuleMsg::Delete{} );
 		}
 
 		_framebuffers.Clear();

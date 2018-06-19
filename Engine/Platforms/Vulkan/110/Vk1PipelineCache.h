@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -43,7 +43,7 @@ namespace PlatformVK
 		Array< vk::VkSpecializationInfo >				_tempSpecialization;
 		Array< vk::VkVertexInputBindingDescription >	_tempVertexBinding;
 		Array< vk::VkVertexInputAttributeDescription >	_tempVertexAttribs;
-		Array< vk::VkDescriptorSetLayoutBinding >		_tempDescriptorBindings;
+		Array< vk::VkDescriptorSetLayoutBinding >		_tempDescriptionBindings;
 		Viewports_t										_tempViewports;
 		Scissors_t										_tempScissors;
 		Vk1DynamicStates								_tempDynamicStates;
@@ -65,7 +65,7 @@ namespace PlatformVK
 							 const RenderState &renderState,
 							 const EDynamicStates &dynamicStates,
 							 uint patchControlPoints,
-							 const RenderPassDescriptor &rpDescr,
+							 const RenderPassDescription &rpDescr,
 							 vk::VkRenderPass renderPass,
 							 uint subpass);
 
@@ -87,7 +87,7 @@ namespace PlatformVK
 		void _SetColorBlendState (OUT vk::VkPipelineColorBlendStateCreateInfo &outState,
 								  OUT Attachment_t &attachments,
 								  const RenderState::ColorBuffersState &inState,
-								  const RenderPassDescriptor::Subpass_t &subpass) const;
+								  const RenderPassDescription::Subpass_t &subpass) const;
 
 		void _SetColorBlendAttachmentState (OUT vk::VkPipelineColorBlendAttachmentState &outState,
 											const RenderState::ColorBuffer &inState,
@@ -127,7 +127,7 @@ namespace PlatformVK
 		void _SetViewportState (OUT vk::VkPipelineViewportStateCreateInfo &outState,
 								OUT Viewports_t &tmpViewports,
 								OUT Scissors_t &tmpScissors,
-								const RenderPassDescriptor::Subpass_t &subpass) const;
+								const RenderPassDescription::Subpass_t &subpass) const;
 	};
 
 

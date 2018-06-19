@@ -6,8 +6,8 @@
 #include "Engine/Base/Tasks/TaskManager.h"
 #include "Engine/Base/Public/ParallelThread.h"
 
-#include "Engine/STL/Containers/CircularQueue.h"
-#include "Engine/STL/ThreadSafe/MtQueue.h"
+#include "Core/STL/Containers/CircularQueue.h"
+#include "Core/STL/ThreadSafe/MtQueue.h"
 
 namespace Engine
 {
@@ -55,9 +55,9 @@ namespace Base
 
 	// message handlers
 	private:
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &) noexcept;
+		bool _Update (const ModuleMsg::Update &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _PushAsyncMessage (const ModuleMsg::PushAsyncMessage &) noexcept;
 
 
 	private:
@@ -107,23 +107,23 @@ namespace Base
 
 		if ( _GetManager()->GetThreadID() == GetThreadID() )
 		{
-			_GetManager()->Send< ModuleMsg::AddTaskSchedulerToManager >({ this, DelegateBuilder(this, &TaskModuleImpl::_Push) });
+			_GetManager()->Send( ModuleMsg::AddTaskSchedulerToManager{ this, DelegateBuilder(this, &TaskModuleImpl::_Push) });
 		}
 		else
 		{
-			CHECK( _PushAsyncMessage( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( _PushAsyncMessage( ModuleMsg::PushAsyncMessage{
 						AsyncMessage{
 							LAMBDA( mngr = _GetManager(), task = TaskModuleImplPtr(this) ) (GlobalSystemsRef) {
-								mngr->Send< ModuleMsg::AddTaskSchedulerToManager >({ task, DelegateBuilder(task, &TaskModuleImpl::_Push) });
+								mngr->Send( ModuleMsg::AddTaskSchedulerToManager{ task, DelegateBuilder(task, &TaskModuleImpl::_Push) });
 							}
 						}, _GetManager()->GetThreadID()
-					}.Async())
+					})
 			);
 		}
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 
-		//_SendUncheckedEvent< ModuleMsg::AfterCompose >({});	// TODO
+		//_SendUncheckedEvent( ModuleMsg::AfterCompose{} );	// TODO
 	}
 	
 /*
@@ -148,10 +148,10 @@ namespace Base
 	_Update
 =================================================
 */
-	bool TaskModuleImpl::_Update (const Message< ModuleMsg::Update > &msg)
+	bool TaskModuleImpl::_Update (const ModuleMsg::Update &)
 	{
 		//ASSERT( _IsComposedState( GetState() ), void() );
-		ASSERT( msg.Sender() and _GetParents().CustomSearch().IsExist( msg.Sender() ) );
+		//ASSERT( msg.Sender() and _GetParents().CustomSearch().IsExist( msg.Sender() ) );
 
 		_Flush();
 		_ProcessMessages();
@@ -163,15 +163,15 @@ namespace Base
 	_Delete
 =================================================
 */
-	bool TaskModuleImpl::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool TaskModuleImpl::_Delete (const ModuleMsg::Delete &)
 	{
-		ASSERT( msg.Sender() and _GetParents().CustomSearch().IsExist( msg.Sender() ) );
+		//ASSERT( msg.Sender() and _GetParents().CustomSearch().IsExist( msg.Sender() ) );
 		
 		_Push(AsyncMessage{ LAMBDA( this ) (GlobalSystemsRef)
 							{
 								_DetachSelfFromManager();
 
-								CHECK( Module::_Delete_Impl( Message< ModuleMsg::Delete >{} ) );
+								CHECK( Module::_Delete_Impl( ModuleMsg::Delete{} ) );
 		
 								ASSERT( _msgQueue.GetCurrentQueueCount() == 0 );
 								ASSERT( _msgQueue.GetPendingQueueCount() == 0 );
@@ -187,14 +187,12 @@ namespace Base
 	_PushAsyncMessage
 =================================================
 */
-	bool TaskModuleImpl::_PushAsyncMessage (const Message< ModuleMsg::PushAsyncMessage > &msg) noexcept
+	bool TaskModuleImpl::_PushAsyncMessage (const ModuleMsg::PushAsyncMessage &msg) noexcept
 	{
 		CHECK_ERR( GetState() != EState::Deleting );
 		CHECK_ERR( _GetManager() );
-		ASSERT( msg.IsAsync() );
 
-		CHECK( _GetManager()->Send< ModuleMsg::PushAsyncMessage >( msg ) );
-		return true;
+		return _GetManager()->SendAsync( msg );
 	}
 
 /*

@@ -100,7 +100,7 @@ namespace ResPack
 
 }	// ResPack
 
-namespace GX_STL::GXScript
+namespace GXScript
 {
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::ConverterConfig,					"Pipeline_ConverterConfig" );
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::Shaders,							"Pipeline_Shaders" );
@@ -135,4 +135,4 @@ namespace GX_STL::GXScript
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::EBlendEqPair,						"Pipeline_EBlendEqPair" );
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::UNormClampedF,					"UNormClampedF" );
 
-}	// GX_STL::GXScript
+}	// GXScript

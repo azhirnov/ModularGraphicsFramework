@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -156,17 +156,17 @@ namespace PlatformSW
 */
 	bool SWShaderModel::DispatchComputeOffset (const uint3 &groupOffset, const uint3 &workGroups, const ModulePtr &pipeline, const ModulePtr &resourceTable)
 	{
-		Message< GpuMsg::GetSWPipelineStage >			req_shader{ EShader::Compute };
-		Message< GpuMsg::GetComputePipelineDescriptor >	req_descr;
+		GpuMsg::GetSWPipelineStage				req_shader{ EShader::Compute };
+		GpuMsg::GetComputePipelineDescription	req_descr;
 
 		CHECK( pipeline->Send( req_shader ) );
 		CHECK( pipeline->Send( req_descr ) );
 
-		CHECK_ERR( req_shader->result and req_shader->result->func );
+		CHECK_ERR( req_shader.result and req_shader.result->func );
 		
-		ShaderFunc_t	func	= req_shader->result->func;
+		ShaderFunc_t	func	= req_shader.result->func;
 		const uint3		groups	= Max( 1u, workGroups );
-		const uint3		local	= Max( 1u, req_descr->result->localGroupSize );
+		const uint3		local	= Max( 1u, req_descr.result->localGroupSize );
 
 		CHECK_ERR(All( groups + groupOffset <= SWDeviceProperties.limits.maxComputeWorkGroupCount ));
 		CHECK_ERR(All( local <= SWDeviceProperties.limits.maxComputeWorkGroupSize ));
@@ -236,9 +236,7 @@ namespace PlatformSW
 	{
 		SCOPELOCK( _lock );
 
-		msg->message.Async();
-
-		CHECK( _resourceTable->Send( msg.Async() ) );
+		CHECK( _resourceTable->SendAsync( msg ) );
 	}
 	
 /*
@@ -249,10 +247,8 @@ namespace PlatformSW
 	void SWShaderModel::GetImageViewMemoryLayout (Fwd_GetSWImageViewMemoryLayout &msg) const
 	{
 		SCOPELOCK( _lock );
-		
-		msg->message.Async();
 
-		CHECK( _resourceTable->Send( msg.Async() ) );
+		CHECK( _resourceTable->SendAsync( msg ) );
 	}
 	
 /*
@@ -263,10 +259,8 @@ namespace PlatformSW
 	void SWShaderModel::GetTextureMemoryLayout (Fwd_GetSWTextureMemoryLayout &msg) const
 	{
 		SCOPELOCK( _lock );
-		
-		msg->message.Async();
 
-		CHECK( _resourceTable->Send( msg.Async() ) );
+		CHECK( _resourceTable->SendAsync( msg ) );
 	}
 
 }	// PlatformSW

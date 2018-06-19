@@ -144,10 +144,10 @@ namespace PipelineCompiler
 			{
 				Varying&	next = nextInput[j];
 
-				if ( EShaderVariable::IsStruct( prev.type )	and
-					 EShaderVariable::IsStruct( next.type )	and
-					 prev.typeName	== next.typeName		and
-					 //prev.location	== next.location	and
+				if ( prev.type == EShaderVariable::VaryingsBlock	and
+					 next.type == EShaderVariable::VaryingsBlock	and
+					 prev.typeName	== next.typeName				and
+					 //prev.location	== next.location			and
 					 prev.qualifier	== next.qualifier )
 				{
 					found			= true;
@@ -225,9 +225,9 @@ namespace PipelineCompiler
 
 
 		// serialize descriptor
-		src << ser->DeclFunction( "void", "Create_"_str << Name(), {{"PipelineTemplateDescriptor&", "descr"}} );
+		src << ser->DeclFunction( "void", "Create_"_str << Name(), {{"PipelineTemplateDescription&", "descr"}} );
 		src << ser->BeginScope();
-		src << ser->AssignVariable( "\tdescr", "PipelineTemplateDescriptor()" );
+		src << ser->AssignVariable( "\tdescr", "PipelineTemplateDescription()" );
 		src << ser->ToString( "\tdescr.renderState", renderState );
 		src << ser->ToString( "\tdescr.dynamicStates", dynamicStates );
 		src << ser->ToString( "\tdescr.supportedShaders", shader_bits );

@@ -17,7 +17,7 @@ namespace PlatformTools
 
 	struct SamplerUtils final : public Noninstancable
 	{
-		static void ValidateDescriptor (INOUT SamplerDescriptor &descr, uint maxAnisotropyLevel);
+		static void ValidateDescription (INOUT SamplerDescription &descr, uint maxAnisotropyLevel);
 	};
 
 }	// PlatformTools

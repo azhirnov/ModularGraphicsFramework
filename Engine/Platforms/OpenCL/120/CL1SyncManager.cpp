@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -68,23 +68,23 @@ namespace PlatformCL
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &msg);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _OnManagerChanged2 (const ModuleMsg::OnManagerChanged &msg);
 
-		bool _ClientWaitDeviceIdle (const Message< GpuMsg::ClientWaitDeviceIdle > &);
-		bool _CreateFence (const Message< GpuMsg::CreateFence > &);
-		bool _DestroyFence (const Message< GpuMsg::DestroyFence > &);
-		bool _CLFenceSync (const Message< GpuMsg::CLFenceSync > &);
-		bool _ClientWaitFence (const Message< GpuMsg::ClientWaitFence > &);
-		bool _CreateEvent (const Message< GpuMsg::CreateEvent > &);
-		bool _DestroyEvent (const Message< GpuMsg::DestroyEvent > &);
-		bool _GetCLEvent (const Message< GpuMsg::GetCLEvent > &);
-		bool _SetEvent (const Message< GpuMsg::SetEvent > &);
-		bool _ResetEvent (const Message< GpuMsg::ResetEvent > &);
-		bool _CreateSemaphore (const Message< GpuMsg::CreateSemaphore > &);
-		bool _DestroySemaphore (const Message< GpuMsg::DestroySemaphore > &);
-		bool _CLSemaphoreEnqueue (const Message< GpuMsg::CLSemaphoreEnqueue > &);
-		bool _WaitCLSemaphore (const Message< GpuMsg::WaitCLSemaphore > &);
+		bool _ClientWaitDeviceIdle (const GpuMsg::ClientWaitDeviceIdle &);
+		bool _CreateFence (const GpuMsg::CreateFence &);
+		bool _DestroyFence (const GpuMsg::DestroyFence &);
+		bool _CLFenceSync (const GpuMsg::CLFenceSync &);
+		bool _ClientWaitFence (const GpuMsg::ClientWaitFence &);
+		bool _CreateEvent (const GpuMsg::CreateEvent &);
+		bool _DestroyEvent (const GpuMsg::DestroyEvent &);
+		bool _GetCLEvent (const GpuMsg::GetCLEvent &);
+		bool _SetEvent (const GpuMsg::SetEvent &);
+		bool _ResetEvent (const GpuMsg::ResetEvent &);
+		bool _CreateSemaphore (const GpuMsg::CreateSemaphore &);
+		bool _DestroySemaphore (const GpuMsg::DestroySemaphore &);
+		bool _CLSemaphoreEnqueue (const GpuMsg::CLSemaphoreEnqueue &);
+		bool _WaitCLSemaphore (const GpuMsg::WaitCLSemaphore &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -170,7 +170,7 @@ namespace PlatformCL
 	_Delete
 =================================================
 */
-	bool CL1SyncManager::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool CL1SyncManager::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DeleteSync_Func	func;
 
@@ -188,13 +188,13 @@ namespace PlatformCL
 	_OnManagerChanged2
 =================================================
 */
-	bool CL1SyncManager::_OnManagerChanged2 (const Message< ModuleMsg::OnManagerChanged > &msg)
+	bool CL1SyncManager::_OnManagerChanged2 (const ModuleMsg::OnManagerChanged &msg)
 	{
 		_OnManagerChanged( msg );
 		
-		if ( msg->newManager )
+		if ( msg.newManager )
 		{
-			msg->newManager->UnsubscribeAll( this );
+			msg.newManager->UnsubscribeAll( this );
 		}
 		return true;
 	}
@@ -204,7 +204,7 @@ namespace PlatformCL
 	_ClientWaitDeviceIdle
 =================================================
 */
-	bool CL1SyncManager::_ClientWaitDeviceIdle (const Message< GpuMsg::ClientWaitDeviceIdle > &)
+	bool CL1SyncManager::_ClientWaitDeviceIdle (const GpuMsg::ClientWaitDeviceIdle &)
 	{
 		CL_CALL( clFinish( GetCommandQueue() ) );
 		return true;
@@ -215,7 +215,7 @@ namespace PlatformCL
 	_CreateFence
 =================================================
 */
-	bool CL1SyncManager::_CreateFence (const Message< GpuMsg::CreateFence > &msg)
+	bool CL1SyncManager::_CreateFence (const GpuMsg::CreateFence &msg)
 	{
 		for (;;)
 		{
@@ -226,7 +226,7 @@ namespace PlatformCL
 		}
 		_syncs.Add( _counter, SyncUnion_t{ cl_event(null) } );
 
-		msg->result.Set( GpuFenceId(_counter) );
+		msg.result.Set( GpuFenceId(_counter) );
 		return true;
 	}
 	
@@ -235,11 +235,11 @@ namespace PlatformCL
 	_DestroyFence
 =================================================
 */
-	bool CL1SyncManager::_DestroyFence (const Message< GpuMsg::DestroyFence > &msg)
+	bool CL1SyncManager::_DestroyFence (const GpuMsg::DestroyFence &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< cl_event >() );
 			
@@ -259,10 +259,10 @@ namespace PlatformCL
 	_CLFenceSync
 =================================================
 */
-	bool CL1SyncManager::_CLFenceSync (const Message< GpuMsg::CLFenceSync > &msg)
+	bool CL1SyncManager::_CLFenceSync (const GpuMsg::CLFenceSync &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->fenceId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.fenceId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< cl_event >() );
 		
 		cl_event&	fence = iter->second.Get< cl_event >();
@@ -276,7 +276,7 @@ namespace PlatformCL
 
 		CL_CALL( clEnqueueMarkerWithWaitList( GetCommandQueue(), 0, null, OUT &fence ) );
 
-		msg->result.Set( fence );
+		msg.result.Set( fence );
 		return true;
 	}
 
@@ -285,13 +285,13 @@ namespace PlatformCL
 	_ClientWaitFence
 =================================================
 */
-	bool CL1SyncManager::_ClientWaitFence (const Message< GpuMsg::ClientWaitFence > &msg)
+	bool CL1SyncManager::_ClientWaitFence (const GpuMsg::ClientWaitFence &msg)
 	{
 		using CLEvents_t	= FixedSizeArray< cl_event, GpuMsg::ClientWaitFence::Fences_t::MemoryContainer_t::SIZE >;
 
 		CLEvents_t	events;
 
-		for (auto& wfence : msg->fences)
+		for (auto& wfence : msg.fences)
 		{
 			SyncArray_t::iterator	iter;
 			CHECK_ERR( _syncs.Find( ulong(wfence), OUT iter ) );
@@ -313,7 +313,7 @@ namespace PlatformCL
 	_CreateEvent
 =================================================
 */
-	bool CL1SyncManager::_CreateEvent (const Message< GpuMsg::CreateEvent > &msg)
+	bool CL1SyncManager::_CreateEvent (const GpuMsg::CreateEvent &msg)
 	{
 		for (;;)
 		{
@@ -324,7 +324,7 @@ namespace PlatformCL
 		}
 		_syncs.Add( _counter, SyncUnion_t{ cl_event(null) } );
 
-		msg->result.Set( GpuEventId(_counter) );
+		msg.result.Set( GpuEventId(_counter) );
 		return true;
 	}
 	
@@ -333,11 +333,11 @@ namespace PlatformCL
 	_DestroyEvent
 =================================================
 */
-	bool CL1SyncManager::_DestroyEvent (const Message< GpuMsg::DestroyEvent > &msg)
+	bool CL1SyncManager::_DestroyEvent (const GpuMsg::DestroyEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< cl_event >() );
 			
@@ -357,10 +357,10 @@ namespace PlatformCL
 	_GetCLEvent
 =================================================
 */
-	bool CL1SyncManager::_GetCLEvent (const Message< GpuMsg::GetCLEvent > &msg)
+	bool CL1SyncManager::_GetCLEvent (const GpuMsg::GetCLEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->eventId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.eventId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< cl_event >() );
 		
 		cl_event &	event = iter->second.Get< cl_event >();
@@ -371,7 +371,7 @@ namespace PlatformCL
 			CL_CALL(( (event = clCreateUserEvent( GetContext(), OUT &cl_err )), cl_err ));
 		}
 		
-		msg->result.Set( event );
+		msg.result.Set( event );
 		return true;
 	}
 
@@ -380,10 +380,10 @@ namespace PlatformCL
 	_SetEvent
 =================================================
 */
-	bool CL1SyncManager::_SetEvent (const Message< GpuMsg::SetEvent > &msg)
+	bool CL1SyncManager::_SetEvent (const GpuMsg::SetEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->id), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.id), OUT iter ) );
 		CHECK_ERR( iter->second.Is< cl_event >() );
 
 		cl_event&	event = iter->second.Get< cl_event >();
@@ -410,10 +410,10 @@ namespace PlatformCL
 	_ResetEvent
 =================================================
 */
-	bool CL1SyncManager::_ResetEvent (const Message< GpuMsg::ResetEvent > &msg)
+	bool CL1SyncManager::_ResetEvent (const GpuMsg::ResetEvent &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->id), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.id), OUT iter ) );
 		CHECK_ERR( iter->second.Is< cl_event >() );
 
 		cl_event&	event = iter->second.Get< cl_event >();
@@ -437,7 +437,7 @@ namespace PlatformCL
 	_CreateSemaphore
 =================================================
 */
-	bool CL1SyncManager::_CreateSemaphore (const Message< GpuMsg::CreateSemaphore > &msg)
+	bool CL1SyncManager::_CreateSemaphore (const GpuMsg::CreateSemaphore &msg)
 	{
 		for (;;)
 		{
@@ -448,7 +448,7 @@ namespace PlatformCL
 		}
 		_syncs.Add( _counter, SyncUnion_t{ cl_event(null) } );
 
-		msg->result.Set( GpuSemaphoreId(_counter) );
+		msg.result.Set( GpuSemaphoreId(_counter) );
 		return true;
 	}
 	
@@ -457,11 +457,11 @@ namespace PlatformCL
 	_DestroySemaphore
 =================================================
 */
-	bool CL1SyncManager::_DestroySemaphore (const Message< GpuMsg::DestroySemaphore > &msg)
+	bool CL1SyncManager::_DestroySemaphore (const GpuMsg::DestroySemaphore &msg)
 	{
 		SyncArray_t::iterator	iter;
 
-		if ( _syncs.Find( ulong(msg->id), OUT iter ) )
+		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< cl_event >() );
 			
@@ -481,10 +481,10 @@ namespace PlatformCL
 	_CLSemaphoreEnqueue
 =================================================
 */
-	bool CL1SyncManager::_CLSemaphoreEnqueue (const Message< GpuMsg::CLSemaphoreEnqueue > &msg)
+	bool CL1SyncManager::_CLSemaphoreEnqueue (const GpuMsg::CLSemaphoreEnqueue &msg)
 	{
 		SyncArray_t::iterator	iter;
-		CHECK_ERR( _syncs.Find( ulong(msg->semId), OUT iter ) );
+		CHECK_ERR( _syncs.Find( ulong(msg.semId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< cl_event >() );
 
 		cl_event&	sem = iter->second.Get< cl_event >();
@@ -498,7 +498,7 @@ namespace PlatformCL
 
 		CL_CALL( clEnqueueMarkerWithWaitList( GetCommandQueue(), 0, null, OUT &sem ) );
 
-		msg->result.Set( sem );
+		msg.result.Set( sem );
 		return true;
 	}
 	
@@ -507,13 +507,13 @@ namespace PlatformCL
 	_WaitCLSemaphore
 =================================================
 */
-	bool CL1SyncManager::_WaitCLSemaphore (const Message< GpuMsg::WaitCLSemaphore > &msg)
+	bool CL1SyncManager::_WaitCLSemaphore (const GpuMsg::WaitCLSemaphore &msg)
 	{
 		using Semaphores_t	= FixedSizeArray< cl_event, GpuMsg::WaitCLSemaphore::Semaphores_t::MemoryContainer_t::SIZE >;
 
 		Semaphores_t	ids;
 
-		for (auto& wsem : msg->semaphores)
+		for (auto& wsem : msg.semaphores)
 		{
 			SyncArray_t::iterator	iter;
 			CHECK_ERR( _syncs.Find( ulong(wsem), OUT iter ) );

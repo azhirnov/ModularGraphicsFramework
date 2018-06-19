@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -38,7 +38,7 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	bool Vk1PipelineLayout::Create (const PipelineLayoutDescriptor &descr)
+	bool Vk1PipelineLayout::Create (const PipelineLayoutDescription &descr)
 	{
 		Destroy();
 
@@ -46,7 +46,7 @@ namespace PlatformVK
 
 		PushConstantRanges_t	pc_ranges;
 
-		CHECK_ERR( _CreateLayoutDescriptors( descr, OUT pc_ranges ) );
+		CHECK_ERR( _CreateLayoutDescriptions( descr, OUT pc_ranges ) );
 		
 		VkPipelineLayoutCreateInfo			layout_info = {};
 		layout_info.sType					= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -63,29 +63,29 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_CreateDescriptor_Func
+	_CreateDescription_Func
 =================================================
 */
-	struct Vk1PipelineLayout::_CreateDescriptor_Func
+	struct Vk1PipelineLayout::_CreateDescription_Func
 	{
 	// types
-		using TextureUniform	= PipelineLayoutDescriptor::TextureUniform;
-		using SamplerUniform	= PipelineLayoutDescriptor::SamplerUniform;
-		using ImageUniform		= PipelineLayoutDescriptor::ImageUniform;
-		using UniformBuffer		= PipelineLayoutDescriptor::UniformBuffer;
-		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
-		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
-		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
+		using TextureUniform	= PipelineLayoutDescription::TextureUniform;
+		using SamplerUniform	= PipelineLayoutDescription::SamplerUniform;
+		using ImageUniform		= PipelineLayoutDescription::ImageUniform;
+		using UniformBuffer		= PipelineLayoutDescription::UniformBuffer;
+		using StorageBuffer		= PipelineLayoutDescription::StorageBuffer;
+		using PushConstant		= PipelineLayoutDescription::PushConstant;
+		using SubpassInput		= PipelineLayoutDescription::SubpassInput;
 
 
 	// variables
-		DescriptorBindings_t&	bindings;
+		DescriptionBindings_t&	bindings;
 		PushConstantRanges_t&	pushConstRanges;
 		PushConstants_t&		pushConstMap;
 
 
 	// methods
-		_CreateDescriptor_Func (OUT DescriptorBindings_t &bindings, OUT PushConstantRanges_t &pushConstRanges, OUT PushConstants_t &pcMap) :
+		_CreateDescription_Func (OUT DescriptionBindings_t &bindings, OUT PushConstantRanges_t &pushConstRanges, OUT PushConstants_t &pcMap) :
 			bindings( bindings ), pushConstRanges( pushConstRanges ), pushConstMap( pcMap )
 		{}
 
@@ -179,23 +179,23 @@ namespace PlatformVK
 	void Vk1PipelineLayout::Destroy ()
 	{
 		_DestroyLayout();
-		_DestroyLayoutDescriptors();
+		_DestroyLayoutDescriptions();
 
 		_pushConstants.Clear();
 	}
 	
 /*
 =================================================
-	_CreateLayoutDescriptors
+	_CreateLayoutDescriptions
 =================================================
 */
-	bool Vk1PipelineLayout::_CreateLayoutDescriptors (const PipelineLayoutDescriptor &descr, OUT PushConstantRanges_t &pushConstRanges)
+	bool Vk1PipelineLayout::_CreateLayoutDescriptions (const PipelineLayoutDescription &descr, OUT PushConstantRanges_t &pushConstRanges)
 	{
-		CHECK_ERR( descr.GetUniforms().Count() <= DescriptorBindings_t::MemoryContainer_t::SIZE );
+		CHECK_ERR( descr.GetUniforms().Count() <= DescriptionBindings_t::MemoryContainer_t::SIZE );
 		CHECK_ERR( _descriptorId == VK_NULL_HANDLE );
 
-		DescriptorBindings_t	descr_binding;
-		_CreateDescriptor_Func	func( OUT descr_binding, OUT pushConstRanges, OUT _pushConstants );
+		DescriptionBindings_t	descr_binding;
+		_CreateDescription_Func	func( OUT descr_binding, OUT pushConstRanges, OUT _pushConstants );
 
 		FOR( i, descr.GetUniforms() ) {
 			descr.GetUniforms()[i].Apply( func );
@@ -215,10 +215,10 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_DestroyLayoutDescriptors
+	_DestroyLayoutDescriptions
 =================================================
 */
-	void Vk1PipelineLayout::_DestroyLayoutDescriptors ()
+	void Vk1PipelineLayout::_DestroyLayoutDescriptions ()
 	{
 		auto	device = GetVkDevice();
 
@@ -274,7 +274,7 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	Vk1PipelineLayoutPtr  Vk1PipelineLayoutCache::Create (const PipelineLayoutDescriptor &descr)
+	Vk1PipelineLayoutPtr  Vk1PipelineLayoutCache::Create (const PipelineLayoutDescription &descr)
 	{
 		using LayoutIter_t	= Layouts_t::const_iterator;
 

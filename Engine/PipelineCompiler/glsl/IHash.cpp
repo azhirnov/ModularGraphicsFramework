@@ -8,9 +8,6 @@ namespace glsl_vfs
 	{
 		src << R"#(/*
 	Integer hash functions.
-
-	depends of:
-		Math/Math
 */
 
 
@@ -22,6 +19,7 @@ uint IWeylHash2 (const uint2 p);
 
 //---------------------------------------------------------
 
+#include <Math/Math.glsl>
 
 #ifdef ARB_gpu_shader_int64_enabled
 uint IHash (const uint n)

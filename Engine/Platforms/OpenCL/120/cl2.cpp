@@ -1,11 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
 #include "cl2.h"
-#include "Engine/STL/ThreadSafe/Singleton.h"
+#include "Core/STL/ThreadSafe/Singleton.h"
 
 namespace cl
 {

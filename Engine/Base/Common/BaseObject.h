@@ -49,12 +49,6 @@ namespace Base
 			DEBUG_ONLY( _debugName = name );
 			GX_UNUSED( name );
 		}
-
-
-	protected:
-		// helper to capture sender
-		template <typename T>
-		bool SendTo (const ModulePtr &target, const Message<T> &msg) const;
 	};
 
 

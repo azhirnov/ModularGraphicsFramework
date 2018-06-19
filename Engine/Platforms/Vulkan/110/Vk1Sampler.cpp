@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -23,7 +23,7 @@ namespace PlatformVK
 	// types
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetSamplerDescriptor,
+											GpuMsg::GetSamplerDescription,
 											GpuMsg::GetVkSamplerID
 										> >;
 
@@ -38,7 +38,7 @@ namespace PlatformVK
 
 	// variables
 	private:
-		SamplerDescriptor	_descr;
+		SamplerDescription	_descr;
 
 		vk::VkSampler		_samplerId;
 
@@ -48,15 +48,15 @@ namespace PlatformVK
 		Vk1Sampler (UntypedID_t, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci);
 		~Vk1Sampler ();
 
-		SamplerDescriptor const&	GetDescriptor ()	const	{ return _descr; }
+		SamplerDescription const&	GetDescription ()	const	{ return _descr; }
 
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _GetVkSamplerID (const Message< GpuMsg::GetVkSamplerID > &);
-		bool _GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _GetVkSamplerID (const GpuMsg::GetVkSamplerID &);
+		bool _GetSamplerDescription (const GpuMsg::GetSamplerDescription &);
 
 	private:
 		bool _IsCreated () const;
@@ -93,7 +93,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Sampler::_Delete );
 		_SubscribeOnMsg( this, &Vk1Sampler::_OnManagerChanged );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetVkSamplerID );
-		_SubscribeOnMsg( this, &Vk1Sampler::_GetSamplerDescriptor );
+		_SubscribeOnMsg( this, &Vk1Sampler::_GetSamplerDescription );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetVkPrivateClasses );
@@ -118,7 +118,7 @@ namespace PlatformVK
 	_Compose
 =================================================
 */
-	bool Vk1Sampler::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool Vk1Sampler::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -134,7 +134,7 @@ namespace PlatformVK
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -143,7 +143,7 @@ namespace PlatformVK
 	_Delete
 =================================================
 */
-	bool Vk1Sampler::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool Vk1Sampler::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroySampler();
 
@@ -155,22 +155,22 @@ namespace PlatformVK
 	_GetVkSamplerID
 =================================================
 */
-	bool Vk1Sampler::_GetVkSamplerID (const Message< GpuMsg::GetVkSamplerID > &msg)
+	bool Vk1Sampler::_GetVkSamplerID (const GpuMsg::GetVkSamplerID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set( _samplerId );
+		msg.result.Set( _samplerId );
 		return true;
 	}
 
 /*
 =================================================
-	_GetSamplerDescriptor
+	_GetSamplerDescription
 =================================================
 */
-	bool Vk1Sampler::_GetSamplerDescriptor (const Message< GpuMsg::GetSamplerDescriptor > &msg)
+	bool Vk1Sampler::_GetSamplerDescription (const GpuMsg::GetSamplerDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
@@ -264,8 +264,8 @@ namespace PlatformVK
 	SearchableSampler
 =================================================
 */
-	inline bool Vk1SamplerCache::SearchableSampler::operator == (const SearchableSampler &right) const	{ return samp->GetDescriptor() == right.samp->GetDescriptor(); }
-	inline bool Vk1SamplerCache::SearchableSampler::operator >  (const SearchableSampler &right) const	{ return samp->GetDescriptor() >  right.samp->GetDescriptor(); }
+	inline bool Vk1SamplerCache::SearchableSampler::operator == (const SearchableSampler &right) const	{ return samp->GetDescription() == right.samp->GetDescription(); }
+	inline bool Vk1SamplerCache::SearchableSampler::operator >  (const SearchableSampler &right) const	{ return samp->GetDescription() >  right.samp->GetDescription(); }
 //-----------------------------------------------------------------------------
 	
 
@@ -274,8 +274,8 @@ namespace PlatformVK
 	SamplerSearch
 =================================================
 */		
-	inline bool Vk1SamplerCache::SamplerSearch::operator == (const SearchableSampler &right) const	{ return descr == right.samp->GetDescriptor(); }
-	inline bool Vk1SamplerCache::SamplerSearch::operator >  (const SearchableSampler &right) const	{ return descr >  right.samp->GetDescriptor(); }
+	inline bool Vk1SamplerCache::SamplerSearch::operator == (const SearchableSampler &right) const	{ return descr == right.samp->GetDescription(); }
+	inline bool Vk1SamplerCache::SamplerSearch::operator >  (const SearchableSampler &right) const	{ return descr >  right.samp->GetDescription(); }
 //-----------------------------------------------------------------------------
 
 
@@ -297,8 +297,8 @@ namespace PlatformVK
 */
 	Vk1SamplerCache::Vk1SamplerPtr  Vk1SamplerCache::Create (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
-		SamplerDescriptor	descr = ci.descr;
-		PlatformTools::SamplerUtils::ValidateDescriptor( INOUT descr, GetMaxAnisotropyLevel() );
+		SamplerDescription	descr = ci.descr;
+		PlatformTools::SamplerUtils::ValidateDescription( INOUT descr, GetMaxAnisotropyLevel() );
 
 		// find cached sampler
 		Samplers_t::const_iterator	iter;
@@ -316,7 +316,7 @@ namespace PlatformVK
 
 		auto result = New< Vk1Sampler >( id, gs, create_info );
 
-		ModuleUtils::Initialize( {result}, null );
+		ModuleUtils::Initialize({ result });
 
 		CHECK_ERR( result->GetState() == Module::EState::ComposedImmutable );
 
@@ -331,10 +331,8 @@ namespace PlatformVK
 */
 	void Vk1SamplerCache::Destroy ()
 	{
-		Message< ModuleMsg::Delete >	del_msg;
-
 		for (auto& sampler : _samplers) {
-			sampler.samp->Send( del_msg );
+			sampler.samp->Send( ModuleMsg::Delete{} );
 		}
 
 		_samplers.Clear();
@@ -348,13 +346,13 @@ namespace Platforms
 	ModulePtr VulkanObjectsConstructor::CreateVk1Sampler (ModuleMsg::UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci)
 	{
 		ModulePtr	mod;
-		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< CompileTime::TypeListFrom<Message<GpuMsg::GetVkPrivateClasses>> >() );
+		CHECK_ERR( mod = gs->parallelThread->GetModuleByMsg< ModuleMsg::MessageListFrom< GpuMsg::GetVkPrivateClasses >>() );
 
-		Message< GpuMsg::GetVkPrivateClasses >	req_classes;
+		GpuMsg::GetVkPrivateClasses		req_classes;
 		mod->Send( req_classes );
-		CHECK_ERR( req_classes->result.IsDefined() and req_classes->result->samplerCache );
+		CHECK_ERR( req_classes.result and req_classes.result->samplerCache );
 
-		return req_classes->result->samplerCache->Create( id, gs, ci );
+		return req_classes.result->samplerCache->Create( id, gs, ci );
 	}
 
 }	// Platforms

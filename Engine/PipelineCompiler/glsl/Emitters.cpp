@@ -10,11 +10,9 @@ namespace glsl_vfs
 	Particle emitter shapes.
 
 	license: free
-
-	depends of:
-		Math/Math
 */
 
+#include <Math/Math.glsl>
 
 real3 ParticleEmitter_Plane (const real pointIndex, const real pointsCount);
 real3 ParticleEmitter_Plane (const real pointIndex, const real pointsCount, const real ratio);
@@ -25,7 +23,7 @@ real3 ParticleEmitter_FillCircle (const real pointIndex, const real pointsCount)
 real3 ParticleEmitter_Sphere (const real pointIndex, const real pointsCount);
 
 // this is not a cone shape, only direction
-real3 ParticleEmitter_ConeVector (const real pointIndex, const real pointsCount, const real zLength = 1.0);
+real3 ParticleEmitter_ConeVector (const real pointIndex, const real pointsCount, const real zLength);
 
 
 //-----------------------------------------------------------------------------

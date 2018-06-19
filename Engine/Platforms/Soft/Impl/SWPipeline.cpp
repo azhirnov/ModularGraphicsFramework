@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -23,14 +23,14 @@ namespace PlatformSW
 	// types
 	private:
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetGraphicsPipelineDescriptor,
-											GpuMsg::GetPipelineLayoutDescriptor,
+											GpuMsg::GetGraphicsPipelineDescription,
+											GpuMsg::GetPipelineLayoutDescription,
 											GpuMsg::GetSWPipelineStage
 										> >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;
 
-		using Descriptor			= GraphicsPipelineDescriptor;
+		using Description			= GraphicsPipelineDescription;
 
 
 	// constants
@@ -41,7 +41,7 @@ namespace PlatformSW
 
 	// variables
 	private:
-		Descriptor		_descr;
+		Description		_descr;
 
 
 	// methods
@@ -52,13 +52,13 @@ namespace PlatformSW
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 
-		bool _GetGraphicsPipelineDescriptor (const Message< GpuMsg::GetGraphicsPipelineDescriptor > &);
-		bool _GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &);
+		bool _GetGraphicsPipelineDescription (const GpuMsg::GetGraphicsPipelineDescription &);
+		bool _GetPipelineLayoutDescription (const GpuMsg::GetPipelineLayoutDescription &);
 		
 	private:
 		bool _IsCreated () const;
@@ -97,11 +97,11 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWGraphicsPipeline::_Compose );
 		_SubscribeOnMsg( this, &SWGraphicsPipeline::_Delete );
 		_SubscribeOnMsg( this, &SWGraphicsPipeline::_OnManagerChanged );
-		_SubscribeOnMsg( this, &SWGraphicsPipeline::_GetGraphicsPipelineDescriptor );
+		_SubscribeOnMsg( this, &SWGraphicsPipeline::_GetGraphicsPipelineDescription );
 		_SubscribeOnMsg( this, &SWGraphicsPipeline::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &SWGraphicsPipeline::_GetSWDeviceInfo );
 		_SubscribeOnMsg( this, &SWGraphicsPipeline::_GetSWPrivateClasses );
-		_SubscribeOnMsg( this, &SWGraphicsPipeline::_GetPipelineLayoutDescriptor );
+		_SubscribeOnMsg( this, &SWGraphicsPipeline::_GetPipelineLayoutDescription );
 		
 		CHECK( _ValidateMsgSubscriptions() );
 
@@ -123,7 +123,7 @@ namespace PlatformSW
 	_Compose
 =================================================
 *
-	bool SWGraphicsPipeline::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool SWGraphicsPipeline::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -139,7 +139,7 @@ namespace PlatformSW
 		
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -148,7 +148,7 @@ namespace PlatformSW
 	_Delete
 =================================================
 *
-	bool SWGraphicsPipeline::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SWGraphicsPipeline::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyPipeline();
 
@@ -157,23 +157,23 @@ namespace PlatformSW
 	
 /*
 =================================================
-	_GetGraphicsPipelineDescriptor
+	_GetGraphicsPipelineDescription
 =================================================
 *
-	bool SWGraphicsPipeline::_GetGraphicsPipelineDescriptor (const Message< GpuMsg::GetGraphicsPipelineDescriptor > &msg)
+	bool SWGraphicsPipeline::_GetGraphicsPipelineDescription (const GpuMsg::GetGraphicsPipelineDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_GetPipelineLayoutDescriptor
+	_GetPipelineLayoutDescription
 =================================================
 *
-	bool SWGraphicsPipeline::_GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &msg)
+	bool SWGraphicsPipeline::_GetPipelineLayoutDescription (const GpuMsg::GetPipelineLayoutDescription &msg)
 	{
-		msg->result.Set( _descr.layout );
+		msg.result.Set( _descr.layout );
 		return true;
 	}
 
@@ -225,8 +225,8 @@ namespace PlatformSW
 	// types
 	private:
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetComputePipelineDescriptor,
-											GpuMsg::GetPipelineLayoutDescriptor,
+											GpuMsg::GetComputePipelineDescription,
+											GpuMsg::GetPipelineLayoutDescription,
 											GpuMsg::GetSWPipelineStage
 										> >;
 
@@ -234,8 +234,8 @@ namespace PlatformSW
 		
 		using ShadersMsgList_t		= MessageListFrom< GpuMsg::GetSWShaderModuleIDs >;
 
-		using Descriptor			= ComputePipelineDescriptor;
-		using ShaderFunc_t			= PipelineTemplateDescriptor::ShaderSource::SWInvoke;
+		using Description			= ComputePipelineDescription;
+		using ShaderFunc_t			= PipelineTemplateDescription::ShaderSource::SWInvoke;
 
 
 	// constants
@@ -246,7 +246,7 @@ namespace PlatformSW
 
 	// variables
 	private:
-		Descriptor		_descr;
+		Description		_descr;
 		ShaderFunc_t	_func;
 
 
@@ -258,15 +258,15 @@ namespace PlatformSW
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 
-		bool _GetComputePipelineDescriptor (const Message< GpuMsg::GetComputePipelineDescriptor > &);
-		bool _GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &);
-		bool _GetSWPipelineStage (const Message< GpuMsg::GetSWPipelineStage > &);
+		bool _GetComputePipelineDescription (const GpuMsg::GetComputePipelineDescription &);
+		bool _GetPipelineLayoutDescription (const GpuMsg::GetPipelineLayoutDescription &);
+		bool _GetSWPipelineStage (const GpuMsg::GetSWPipelineStage &);
 
 	private:
 		bool _IsCreated () const;
@@ -302,11 +302,11 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWComputePipeline::_Compose );
 		_SubscribeOnMsg( this, &SWComputePipeline::_Delete );
 		_SubscribeOnMsg( this, &SWComputePipeline::_OnManagerChanged );
-		_SubscribeOnMsg( this, &SWComputePipeline::_GetComputePipelineDescriptor );
+		_SubscribeOnMsg( this, &SWComputePipeline::_GetComputePipelineDescription );
 		_SubscribeOnMsg( this, &SWComputePipeline::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &SWComputePipeline::_GetSWDeviceInfo );
 		_SubscribeOnMsg( this, &SWComputePipeline::_GetSWPrivateClasses );
-		_SubscribeOnMsg( this, &SWComputePipeline::_GetPipelineLayoutDescriptor );
+		_SubscribeOnMsg( this, &SWComputePipeline::_GetPipelineLayoutDescription );
 		_SubscribeOnMsg( this, &SWComputePipeline::_GetSWPipelineStage );
 		
 		CHECK( _ValidateMsgSubscriptions() );
@@ -329,7 +329,7 @@ namespace PlatformSW
 	_Link
 =================================================
 */
-	bool SWComputePipeline::_Link (const Message< ModuleMsg::Link > &msg)
+	bool SWComputePipeline::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -344,7 +344,7 @@ namespace PlatformSW
 	_Compose
 =================================================
 */
-	bool SWComputePipeline::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool SWComputePipeline::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -360,7 +360,7 @@ namespace PlatformSW
 		
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -369,14 +369,14 @@ namespace PlatformSW
 	_AttachModule
 =================================================
 */
-	bool SWComputePipeline::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool SWComputePipeline::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
 		// render pass and shader must be unique
-		const bool	is_dependent = msg->newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		const bool	is_dependent = msg.newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		if ( is_dependent )
 		{
@@ -391,13 +391,13 @@ namespace PlatformSW
 	_DetachModule
 =================================================
 */
-	bool SWComputePipeline::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool SWComputePipeline::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK_ERR( msg->oldModule );
+		CHECK_ERR( msg.oldModule );
 		
-		const bool	is_dependent = msg->oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		const bool	is_dependent = msg.oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
 
-		if ( _Detach( msg->oldModule ) and is_dependent )
+		if ( _Detach( msg.oldModule ) and is_dependent )
 		{
 			CHECK( _SetState( EState::Initial ) );
 			_DestroyPipeline();
@@ -410,7 +410,7 @@ namespace PlatformSW
 	_Delete
 =================================================
 */
-	bool SWComputePipeline::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SWComputePipeline::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyPipeline();
 		
@@ -421,23 +421,23 @@ namespace PlatformSW
 	
 /*
 =================================================
-	_GetComputePipelineDescriptor
+	_GetComputePipelineDescription
 =================================================
 */
-	bool SWComputePipeline::_GetComputePipelineDescriptor (const Message< GpuMsg::GetComputePipelineDescriptor > &msg)
+	bool SWComputePipeline::_GetComputePipelineDescription (const GpuMsg::GetComputePipelineDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
 /*
 =================================================
-	_GetPipelineLayoutDescriptor
+	_GetPipelineLayoutDescription
 =================================================
 */
-	bool SWComputePipeline::_GetPipelineLayoutDescriptor (const Message< GpuMsg::GetPipelineLayoutDescriptor > &msg)
+	bool SWComputePipeline::_GetPipelineLayoutDescription (const GpuMsg::GetPipelineLayoutDescription &msg)
 	{
-		msg->result.Set( _descr.layout );
+		msg.result.Set( _descr.layout );
 		return true;
 	}
 
@@ -465,21 +465,21 @@ namespace PlatformSW
 		CHECK_ERR( shaders = GetModuleByMsg< ShadersMsgList_t >() );
 
 		// get shader modules
-		Message< GpuMsg::GetSWShaderModuleIDs >		req_shader_ids;
-		SendTo( shaders, req_shader_ids );
-		CHECK_ERR( req_shader_ids->result and not req_shader_ids->result->Empty() );
+		GpuMsg::GetSWShaderModuleIDs	req_shader_ids;
+		shaders->Send( req_shader_ids );
+		CHECK_ERR( req_shader_ids.result and not req_shader_ids.result->Empty() );
 		
 		usize	cs_index = UMax;
 
-		FOR( i, *req_shader_ids->result ) {
-			if ( (*req_shader_ids->result)[i].type == EShader::Compute ) {
+		FOR( i, *req_shader_ids.result ) {
+			if ( (*req_shader_ids.result)[i].type == EShader::Compute ) {
 				cs_index = i;
 				break;
 			}
 		}
-		CHECK_ERR( cs_index < req_shader_ids->result->Count() );	// compute shader not found
+		CHECK_ERR( cs_index < req_shader_ids.result->Count() );	// compute shader not found
 
-		_func = (*req_shader_ids->result)[cs_index].func;
+		_func = (*req_shader_ids.result)[cs_index].func;
 		CHECK_ERR( _func );
 
 		return true;
@@ -500,9 +500,9 @@ namespace PlatformSW
 	_GetSWPipelineStage
 =================================================
 */
-	bool SWComputePipeline::_GetSWPipelineStage (const Message< GpuMsg::GetSWPipelineStage > &msg)
+	bool SWComputePipeline::_GetSWPipelineStage (const GpuMsg::GetSWPipelineStage &msg)
 	{
-		msg->result.Set({ _func });
+		msg.result.Set({ _func });
 		return true;
 	}
 	

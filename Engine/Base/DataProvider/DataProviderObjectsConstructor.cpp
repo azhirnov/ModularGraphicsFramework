@@ -25,17 +25,17 @@ namespace Base
 			ModulePtr	data_mngr = gs->mainSystem->GetModuleByMsg< ProviderManagerMsgList_t >();
 			CHECK_ERR( data_mngr );
 
-			Message< DSMsg::GetDataProviderForURI >		get_provider{ ci.uri };
+			DSMsg::GetDataProviderForURI	get_provider{ ci.uri };
 			data_mngr->Send( get_provider );
-			CHECK_ERR( get_provider->result );
+			CHECK_ERR( get_provider.result );
 
-			provider = *get_provider->result;
+			provider = *get_provider.result;
 		}
 
-		Message< DSMsg::CreateDataInputModule >		ctor{ ci.uri };
+		DSMsg::CreateDataInputModule	ctor{ ci.uri };
 		CHECK( provider->Send( ctor ) );
 
-		return *ctor->result;
+		return *ctor.result;
 	}
 	
 /*
@@ -52,17 +52,17 @@ namespace Base
 			ModulePtr	data_mngr = gs->mainSystem->GetModuleByMsg< ProviderManagerMsgList_t >();
 			CHECK_ERR( data_mngr );
 
-			Message< DSMsg::GetDataProviderForURI >		get_provider{ ci.uri };
+			DSMsg::GetDataProviderForURI	get_provider{ ci.uri };
 			data_mngr->Send( get_provider );
-			CHECK_ERR( get_provider->result );
+			CHECK_ERR( get_provider.result );
 
-			provider = *get_provider->result;
+			provider = *get_provider.result;
 		}
 
-		Message< DSMsg::CreateDataOutputModule >	ctor{ ci.uri };
+		DSMsg::CreateDataOutputModule	ctor{ ci.uri };
 		CHECK( provider->Send( ctor ) );
 
-		return *ctor->result;
+		return *ctor.result;
 	}
 	
 /*
@@ -79,17 +79,17 @@ namespace Base
 			ModulePtr	data_mngr = gs->mainSystem->GetModuleByMsg< ProviderManagerMsgList_t >();
 			CHECK_ERR( data_mngr );
 
-			Message< DSMsg::GetDataProviderForURI >		get_provider{ ci.uri };
+			DSMsg::GetDataProviderForURI	get_provider{ ci.uri };
 			data_mngr->Send( get_provider );
-			CHECK_ERR( get_provider->result );
+			CHECK_ERR( get_provider.result );
 
-			provider = *get_provider->result;
+			provider = *get_provider.result;
 		}
 
-		Message< DSMsg::CreateDataInputModule >		ctor{ ci.uri };
+		DSMsg::CreateDataInputModule	ctor{ ci.uri };
 		CHECK( provider->Send( ctor ) );
 
-		return *ctor->result;
+		return *ctor.result;
 	}
 	
 /*
@@ -106,17 +106,17 @@ namespace Base
 			ModulePtr	data_mngr = gs->mainSystem->GetModuleByMsg< ProviderManagerMsgList_t >();
 			CHECK_ERR( data_mngr );
 
-			Message< DSMsg::GetDataProviderForURI >		get_provider{ ci.uri };
+			DSMsg::GetDataProviderForURI	get_provider{ ci.uri };
 			data_mngr->Send( get_provider );
-			CHECK_ERR( get_provider->result );
+			CHECK_ERR( get_provider.result );
 
-			provider = *get_provider->result;
+			provider = *get_provider.result;
 		}
 
-		Message< DSMsg::CreateDataOutputModule >	ctor{ ci.uri };
+		DSMsg::CreateDataOutputModule	ctor{ ci.uri };
 		CHECK( provider->Send( ctor ) );
 
-		return *ctor->result;
+		return *ctor.result;
 	}
 
 /*

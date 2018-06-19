@@ -5,7 +5,7 @@
 #include "Engine/Base/Public/CreateInfo.h"
 #include "Engine/Base/Public/ModuleMessages.h"
 #include "Engine/Base/Public/ProfilingMessages.h"
-#include "Engine/Base/Modules/Message.h"
+#include "Engine/Base/Common/BaseObject.h"
 #include "Engine/Base/Modules/MessageHandler.h"
 
 namespace Engine
@@ -49,9 +49,10 @@ namespace Base
 		using ModuleName_t			= ModuleMsg::ModuleName_t;
 		using AttachedModules_t		= Array<Pair< ModuleName_t, ModulePtr >>;
 		using ParentModules_t		= Set< ModulePtr >;	//FixedSizeSet< ModulePtr, 16 >;
+		using EHandlerPriority		= MessageHandler::EPriority;
 
 		template <typename ...Types>
-		using MessageListFrom		= CompileTime::TypeListFrom< Message<Types>... >;
+		using MessageListFrom		= CompileTime::TypeListFrom< Types... >;
 
 		// this messages available to Send()
 		using SupportedMessages_t	= MessageListFrom< 
@@ -114,30 +115,34 @@ namespace Base
 
 	// methods
 	public:
-		template <typename T>
-		bool Send (const Message<T> &msg) noexcept;
+		template <typename MsgT>
+		bool Send (const MsgT &msg) noexcept;
 		
-		template <typename T,
-				  typename = CompileTime::EnableIf< not IsModuleMessage<T> >
-				 >
-		bool Send2 (T &&msgData) noexcept		{ return Send( Message<T>{ RVREF(msgData) } ); }	// experimental
+		template <typename MsgT>
+		bool SendAsync (const MsgT &msg) noexcept;
 
-		template <typename ...Types>
-		bool Subscribe (Types&& ...args);
+		//template <typename MsgT>
+		//auto Request (MsgT &msg) noexcept;
+		
+		template <typename MsgT>
+		auto Request (MsgT &&msg) noexcept;
+
+		template <typename Class, typename Func>
+		bool Subscribe (const Class &obj, Func func, EHandlerPriority prior = EHandlerPriority::Auto);
 
 		template <typename MsgList>
 		bool ReceiveEvents (const ModulePtr &other);
 
 		GX_PROFILE_MSG(
-			template <typename ...Types>
-			bool _SubscribeDbg (Types&& ...args);
+			template <typename Class, typename Func>
+			bool _SubscribeDbg (const Class &obj, Func func);
 		)
-
-		template <typename ...Types>
-		void Unsubscribe (Types&& ...args);
+			
+		template <typename Class, typename Func>
+		void Unsubscribe (const Class &obj, Func func);
 		
-		template <typename T>
-		void UnsubscribeAll (const T &unit);
+		template <typename Class>
+		void UnsubscribeAll (const Class &unit);
 
 		template <typename CreateInfo>
 		bool AddModule (UntypedID_t id, const CreateInfo &createInfo);
@@ -197,14 +202,15 @@ namespace Base
 		void _ClearMessageHandlers ();
 		
 		template <typename MsgList>		bool _CopySubscriptions (const ModulePtr &other, bool removeUnsupported = false);
+		template <typename MsgList>		bool _CopySubscriptions (const ModulePtr &other, bool removeUnsupported, EHandlerPriority priority);
 
-		template <typename T>			bool _SendMsg (const Message<T> &msg);
-		template <typename T>			bool _SendEvent (const Message<T> &msg);
-		template <typename T>			bool _SendUncheckedEvent (const Message<T> &msg);
-		template <typename T>			bool _SendForEachAttachments (const Message<T> &msg);
+		template <typename MsgT>		bool _SendMsg (const MsgT &msg);
+		template <typename MsgT>		bool _SendEvent (const MsgT &msg);
+		template <typename MsgT>		bool _SendUncheckedEvent (const MsgT &msg);
+		template <typename MsgT>		bool _SendForEachAttachments (const MsgT &msg);
 		
-		template <typename ...Types>	bool _SubscribeOnMsg (Types&& ...args);
-		template <typename ...Types>	bool _SubscribeOnEvent (Types&& ...args);
+		template <typename Class, typename Func>	bool _SubscribeOnMsg (const Class &obj, Func func, EHandlerPriority prior = EHandlerPriority::Auto);
+		template <typename Class, typename Func>	bool _SubscribeOnEvent (const Class &obj, Func func, EHandlerPriority prior = EHandlerPriority::Auto);
 		
 		bool _FindAttachment (ArrayCRef<TypeId> messages, ArrayCRef<TypeId> events, OUT ModulePtr &result) const;
 		bool _FindParent (ArrayCRef<TypeId> messages, ArrayCRef<TypeId> events, OUT ModulePtr &result) const;
@@ -232,31 +238,31 @@ namespace Base
 
 	// message handlers with implementation
 	protected:
-		bool _OnModuleAttached_Impl (const Message< ModuleMsg::OnModuleAttached > &);
-		bool _OnModuleDetached_Impl (const Message< ModuleMsg::OnModuleDetached > &);
-		bool _AttachModule_Impl (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule_Impl (const Message< ModuleMsg::DetachModule > &);
-		bool _ReplaceModule_Impl (const Message< ModuleMsg::ReplaceModule > &);
-		bool _FindModule_Impl (const Message< ModuleMsg::FindModule > &);
-		bool _ModulesDeepSearch_Impl (const Message< ModuleMsg::ModulesDeepSearch > &);
-		bool _Update_Impl (const Message< ModuleMsg::Update > &);
-		bool _Link_Impl (const Message< ModuleMsg::Link > &);
-		bool _Compose_Impl (const Message< ModuleMsg::Compose > &);
-		bool _Delete_Impl (const Message< ModuleMsg::Delete > &);
+		bool _OnModuleAttached_Impl (const ModuleMsg::OnModuleAttached &);
+		bool _OnModuleDetached_Impl (const ModuleMsg::OnModuleDetached &);
+		bool _AttachModule_Impl (const ModuleMsg::AttachModule &);
+		bool _DetachModule_Impl (const ModuleMsg::DetachModule &);
+		bool _ReplaceModule_Impl (const ModuleMsg::ReplaceModule &);
+		bool _FindModule_Impl (const ModuleMsg::FindModule &);
+		bool _ModulesDeepSearch_Impl (const ModuleMsg::ModulesDeepSearch &);
+		bool _Update_Impl (const ModuleMsg::Update &);
+		bool _Link_Impl (const ModuleMsg::Link &);
+		bool _Compose_Impl (const ModuleMsg::Compose &);
+		bool _Delete_Impl (const ModuleMsg::Delete &);
 
 
 	// message handlers without implementation
 	protected:
-		bool _AttachModule_Empty (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule_Empty (const Message< ModuleMsg::DetachModule > &);
-		bool _ReplaceModule_Empty (const Message< ModuleMsg::ReplaceModule > &);
-		bool _OnManagerChanged_Empty (const Message< ModuleMsg::OnManagerChanged > &);
-		bool _FindModule_Empty (const Message< ModuleMsg::FindModule > &);
-		bool _ModulesDeepSearch_Empty (const Message< ModuleMsg::ModulesDeepSearch > &);
-		bool _Update_Empty (const Message< ModuleMsg::Update > &);
-		bool _Link_Empty (const Message< ModuleMsg::Link > &);
-		bool _Compose_Empty (const Message< ModuleMsg::Compose > &);
-		bool _Delete_Empty (const Message< ModuleMsg::Delete > &);
+		bool _AttachModule_Empty (const ModuleMsg::AttachModule &);
+		bool _DetachModule_Empty (const ModuleMsg::DetachModule &);
+		bool _ReplaceModule_Empty (const ModuleMsg::ReplaceModule &);
+		bool _OnManagerChanged_Empty (const ModuleMsg::OnManagerChanged &);
+		bool _FindModule_Empty (const ModuleMsg::FindModule &);
+		bool _ModulesDeepSearch_Empty (const ModuleMsg::ModulesDeepSearch &);
+		bool _Update_Empty (const ModuleMsg::Update &);
+		bool _Link_Empty (const ModuleMsg::Link &);
+		bool _Compose_Empty (const ModuleMsg::Compose &);
+		bool _Delete_Empty (const ModuleMsg::Delete &);
 	};
 	
 	

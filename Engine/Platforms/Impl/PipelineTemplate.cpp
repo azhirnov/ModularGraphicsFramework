@@ -104,8 +104,8 @@ namespace Platforms
 											GpuMsg::GetGLShaderModuleIDs,
 											GpuMsg::GetCLShaderModuleIDs,
 											GpuMsg::GetSWShaderModuleIDs,
-											GpuMsg::CreateGraphicsPipelineDescriptor,
-											GpuMsg::CreateComputePipelineDescriptor,
+											GpuMsg::CreateGraphicsPipelineDescription,
+											GpuMsg::CreateComputePipelineDescription,
 											GpuMsg::CreateGraphicsPipeline,
 											GpuMsg::CreateComputePipeline,
 											GpuMsg::GetPipelineTemplateInfo
@@ -118,7 +118,7 @@ namespace Platforms
 		using GL4Shaders			= StaticArray< /*GLuint program*/ uint, EShader::_Count >;
 		using CL1Shaders			= StaticArray< /*cl_program*/ void*, EShader::_Count >;		// compute only
 
-		using SWInvoke				= PipelineTemplateDescriptor::ShaderSource::SWInvoke;
+		using SWInvoke				= PipelineTemplateDescription::ShaderSource::SWInvoke;
 		using SWShaders				= StaticArray< SWInvoke, EShader::_Count >;
 		
 		using VkDeviceMsgList_t		= MessageListFrom< GpuMsg::GetDeviceInfo, GpuMsg::GetVkDeviceInfo >;
@@ -162,7 +162,7 @@ namespace Platforms
 
 	// variables
 	private:
-		PipelineTemplateDescriptor		_descr;
+		PipelineTemplateDescription		_descr;
 
 		VulkanShaders					_vkData;
 		OpenGLShaders					_glData;
@@ -178,22 +178,22 @@ namespace Platforms
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _CreateGraphicsPipelineDescriptor (const Message< GpuMsg::CreateGraphicsPipelineDescriptor > &);
-		bool _CreateComputePipelineDescriptor (const Message< GpuMsg::CreateComputePipelineDescriptor > &);
-		bool _CreateGraphicsPipeline (const Message< GpuMsg::CreateGraphicsPipeline > &);
-		bool _CreateComputePipeline (const Message< GpuMsg::CreateComputePipeline > &);
-		bool _GetPipelineTemplateInfo (const Message< GpuMsg::GetPipelineTemplateInfo > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _CreateGraphicsPipelineDescription (const GpuMsg::CreateGraphicsPipelineDescription &);
+		bool _CreateComputePipelineDescription (const GpuMsg::CreateComputePipelineDescription &);
+		bool _CreateGraphicsPipeline (const GpuMsg::CreateGraphicsPipeline &);
+		bool _CreateComputePipeline (const GpuMsg::CreateComputePipeline &);
+		bool _GetPipelineTemplateInfo (const GpuMsg::GetPipelineTemplateInfo &);
 
-		bool _GetVkShaderModuleIDs (const Message< GpuMsg::GetVkShaderModuleIDs > &);
-		bool _GetGLShaderModuleIDs (const Message< GpuMsg::GetGLShaderModuleIDs > &);
-		bool _GetCLShaderModuleIDs (const Message< GpuMsg::GetCLShaderModuleIDs > &);
-		bool _GetSWShaderModuleIDs (const Message< GpuMsg::GetSWShaderModuleIDs > &);
+		bool _GetVkShaderModuleIDs (const GpuMsg::GetVkShaderModuleIDs &);
+		bool _GetGLShaderModuleIDs (const GpuMsg::GetGLShaderModuleIDs &);
+		bool _GetCLShaderModuleIDs (const GpuMsg::GetCLShaderModuleIDs &);
+		bool _GetSWShaderModuleIDs (const GpuMsg::GetSWShaderModuleIDs &);
 
-		bool _VkDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
-		bool _GLDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
-		bool _CLDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
-		bool _SWDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &);
+		bool _VkDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
+		bool _GLDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
+		bool _CLDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
+		bool _SWDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
 
 	private:
 		bool _AttachToVulkanDevice ();
@@ -216,10 +216,10 @@ namespace Platforms
 		bool _DeleteSWRendererShaders ();
 		bool _HasSWRendererShaders () const;
 
-		bool _GetGraphicsPipelineDescriptor (const VertexInputState &vertexInput, EPrimitive::type topology,
-											 OUT GraphicsPipelineDescriptor &result) const;
+		bool _GetGraphicsPipelineDescription (const VertexInputState &vertexInput, EPrimitive::type topology,
+											 OUT GraphicsPipelineDescription &result) const;
 
-		bool _GetComputePipelineDescriptor (OUT ComputePipelineDescriptor &result) const;
+		bool _GetComputePipelineDescription (OUT ComputePipelineDescription &result) const;
 	};
 //-----------------------------------------------------------------------------
 
@@ -244,8 +244,8 @@ namespace Platforms
 		_SubscribeOnMsg( this, &PipelineTemplate::_GetGLShaderModuleIDs );
 		_SubscribeOnMsg( this, &PipelineTemplate::_GetCLShaderModuleIDs );
 		_SubscribeOnMsg( this, &PipelineTemplate::_GetSWShaderModuleIDs );
-		_SubscribeOnMsg( this, &PipelineTemplate::_CreateGraphicsPipelineDescriptor );
-		_SubscribeOnMsg( this, &PipelineTemplate::_CreateComputePipelineDescriptor );
+		_SubscribeOnMsg( this, &PipelineTemplate::_CreateGraphicsPipelineDescription );
+		_SubscribeOnMsg( this, &PipelineTemplate::_CreateComputePipelineDescription );
 		_SubscribeOnMsg( this, &PipelineTemplate::_CreateGraphicsPipeline );
 		_SubscribeOnMsg( this, &PipelineTemplate::_CreateComputePipeline );
 		_SubscribeOnMsg( this, &PipelineTemplate::_GetPipelineTemplateInfo );
@@ -271,7 +271,7 @@ namespace Platforms
 	_Delete
 =================================================
 */
-	bool PipelineTemplate::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool PipelineTemplate::_Delete (const ModuleMsg::Delete &msg)
 	{
 		if ( _vkData.device )
 			_DeleteVulkanShaders();
@@ -358,7 +358,7 @@ namespace Platforms
 	_GetPipelineTemplateInfo
 =================================================
 */
-	bool PipelineTemplate::_GetPipelineTemplateInfo (const Message< GpuMsg::GetPipelineTemplateInfo > &msg)
+	bool PipelineTemplate::_GetPipelineTemplateInfo (const GpuMsg::GetPipelineTemplateInfo &msg)
 	{
 		using EGraphicsAPI = GpuMsg::GetPipelineTemplateInfo::EGraphicsAPI;
 
@@ -390,7 +390,7 @@ namespace Platforms
 				info.shaders |= EShader::type(i);
 		}
 
-		msg->result.Set( info );
+		msg.result.Set( info );
 		return true;
 	}
 //-----------------------------------------------------------------------------
@@ -413,18 +413,18 @@ namespace Platforms
 		if ( not dev )
 			return false;
 
-		Message< GpuMsg::GetVkDeviceInfo >	req_dev;
-		SendTo( dev, req_dev );
+		GpuMsg::GetVkDeviceInfo		req_dev;
+		dev->Send( req_dev );
 
 		dev->Subscribe( this, &PipelineTemplate::_VkDeviceBeforeDestroy );
 
-		if ( not req_dev->result.IsDefined() or
-			 req_dev->result->logicalDevice == VK_NULL_HANDLE )
+		if ( not req_dev.result.IsDefined() or
+			 req_dev.result->logicalDevice == VK_NULL_HANDLE )
 		{
 			return false;
 		}
 
-		_vkData.device = req_dev->result->logicalDevice;
+		_vkData.device = req_dev.result->logicalDevice;
 		return true;
 	}
 	
@@ -433,7 +433,7 @@ namespace Platforms
 	_VkDeviceBeforeDestroy
 =================================================
 */
-	bool PipelineTemplate::_VkDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool PipelineTemplate::_VkDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
 		ModulePtr	dev;
 		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< VkDeviceMsgList_t, DeviceEventList_t >();
@@ -511,7 +511,7 @@ namespace Platforms
 	_GetVkShaderModuleIDs
 =================================================
 */
-	bool PipelineTemplate::_GetVkShaderModuleIDs (const Message< GpuMsg::GetVkShaderModuleIDs > &msg)
+	bool PipelineTemplate::_GetVkShaderModuleIDs (const GpuMsg::GetVkShaderModuleIDs &msg)
 	{
 		if ( not _HasVulkanShaders() )
 		{
@@ -538,13 +538,13 @@ namespace Platforms
 			result.PushBack( RVREF(module) );
 		}
 
-		msg->result.Set( RVREF(result) );
+		msg.result.Set( RVREF(result) );
 		return true;
 	}
 
 #else
 
-	bool PipelineTemplate::_GetVkShaderModuleIDs (const Message< GpuMsg::GetVkShaderModuleIDs > &) {
+	bool PipelineTemplate::_GetVkShaderModuleIDs (const GpuMsg::GetVkShaderModuleIDs &) {
 		return false;
 	}
 
@@ -584,7 +584,7 @@ namespace Platforms
 	_GLDeviceBeforeDestroy
 =================================================
 */
-	bool PipelineTemplate::_GLDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool PipelineTemplate::_GLDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
 		ModulePtr	dev;
 		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< GLDeviceMsgList_t, DeviceEventList_t >();
@@ -690,7 +690,7 @@ namespace Platforms
 	_GetGLShaderModuleIDs
 =================================================
 */
-	bool PipelineTemplate::_GetGLShaderModuleIDs (const Message< GpuMsg::GetGLShaderModuleIDs > &msg)
+	bool PipelineTemplate::_GetGLShaderModuleIDs (const GpuMsg::GetGLShaderModuleIDs &msg)
 	{
 		if ( not _HasOpenGLShaders() )
 		{
@@ -717,13 +717,13 @@ namespace Platforms
 			result.PushBack( RVREF(module) );
 		}
 
-		msg->result.Set( RVREF(result) );
+		msg.result.Set( RVREF(result) );
 		return true;
 	}
 
 #else
 	
-	bool PipelineTemplate::_GetGLShaderModuleIDs (const Message< GpuMsg::GetGLShaderModuleIDs > &) {
+	bool PipelineTemplate::_GetGLShaderModuleIDs (const GpuMsg::GetGLShaderModuleIDs &) {
 		return false;
 	}
 
@@ -751,20 +751,20 @@ namespace Platforms
 		if ( not dev )
 			return false;
 
-		Message< GpuMsg::GetCLDeviceInfo >	req_dev;
-		SendTo( dev, req_dev );
+		GpuMsg::GetCLDeviceInfo		req_dev;
+		dev->Send( req_dev );
 
 		dev->Subscribe( this, &PipelineTemplate::_CLDeviceBeforeDestroy );
 
-		if ( not req_dev->result.IsDefined()	or
-			 req_dev->result->device == null	or
-			 req_dev->result->context == null )
+		if ( not req_dev.result.IsDefined()	or
+			 req_dev.result->device == null	or
+			 req_dev.result->context == null )
 		{
 			return false;
 		}
 
-		_clData.device	= req_dev->result->device;
-		_clData.context	= req_dev->result->context;
+		_clData.device	= req_dev.result->device;
+		_clData.context	= req_dev.result->context;
 		return true;
 	}
 	
@@ -773,7 +773,7 @@ namespace Platforms
 	_CLDeviceBeforeDestroy
 =================================================
 */
-	bool PipelineTemplate::_CLDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool PipelineTemplate::_CLDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
 		ModulePtr	dev;
 		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< CLDeviceMsgList_t, DeviceEventList_t >();
@@ -880,7 +880,7 @@ namespace Platforms
 	_GetCLShaderModuleIDs
 =================================================
 */
-	bool PipelineTemplate::_GetCLShaderModuleIDs (const Message< GpuMsg::GetCLShaderModuleIDs > &msg)
+	bool PipelineTemplate::_GetCLShaderModuleIDs (const GpuMsg::GetCLShaderModuleIDs &msg)
 	{
 		if ( not _HasOpenCLShaders() )
 		{
@@ -907,13 +907,13 @@ namespace Platforms
 			result.PushBack( RVREF(module) );
 		}
 
-		msg->result.Set( RVREF(result) );
+		msg.result.Set( RVREF(result) );
 		return true;
 	}
 
 #else
 
-	bool PipelineTemplate::_GetCLShaderModuleIDs (const Message< GpuMsg::GetCLShaderModuleIDs > &) {
+	bool PipelineTemplate::_GetCLShaderModuleIDs (const GpuMsg::GetCLShaderModuleIDs &) {
 		return false;
 	}
 
@@ -982,7 +982,7 @@ namespace Platforms
 	_SWDeviceBeforeDestroy
 =================================================
 */
-	bool PipelineTemplate::_SWDeviceBeforeDestroy (const Message< GpuMsg::DeviceBeforeDestroy > &)
+	bool PipelineTemplate::_SWDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
 		ModulePtr	dev;
 		dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< SWDeviceMsgList_t, DeviceEventList_t >();
@@ -1002,7 +1002,7 @@ namespace Platforms
 	_GetSWShaderModuleIDs
 =================================================
 */
-	bool PipelineTemplate::_GetSWShaderModuleIDs (const Message< GpuMsg::GetSWShaderModuleIDs > &msg)
+	bool PipelineTemplate::_GetSWShaderModuleIDs (const GpuMsg::GetSWShaderModuleIDs &msg)
 	{
 		if ( not _HasSWRendererShaders() )
 		{
@@ -1028,12 +1028,12 @@ namespace Platforms
 			result.PushBack( RVREF(module) );
 		}
 
-		msg->result.Set( RVREF(result) );
+		msg.result.Set( RVREF(result) );
 		return true;
 	}
 #else
 
-	bool PipelineTemplate::_GetSWShaderModuleIDs (const Message< GpuMsg::GetSWShaderModuleIDs > &) {
+	bool PipelineTemplate::_GetSWShaderModuleIDs (const GpuMsg::GetSWShaderModuleIDs &) {
 		return false;
 	}
 
@@ -1046,11 +1046,11 @@ namespace Platforms
 
 /*
 =================================================
-	_GetGraphicsPipelineDescriptor
+	_GetGraphicsPipelineDescription
 =================================================
 */
-	bool PipelineTemplate::_GetGraphicsPipelineDescriptor (const VertexInputState &vertexInput, EPrimitive::type topology,
-															OUT GraphicsPipelineDescriptor &result) const
+	bool PipelineTemplate::_GetGraphicsPipelineDescription (const VertexInputState &vertexInput, EPrimitive::type topology,
+															OUT GraphicsPipelineDescription &result) const
 	{
 		// copy from template
 		result.dynamicStates		= _descr.dynamicStates;
@@ -1070,10 +1070,10 @@ namespace Platforms
 	
 /*
 =================================================
-	_GetComputePipelineDescriptor
+	_GetComputePipelineDescription
 =================================================
 */
-	bool PipelineTemplate::_GetComputePipelineDescriptor (OUT ComputePipelineDescriptor &result) const
+	bool PipelineTemplate::_GetComputePipelineDescription (OUT ComputePipelineDescription &result) const
 	{
 		CHECK_ERR( _descr.supportedShaders[ EShader::Compute ] );
 
@@ -1085,29 +1085,34 @@ namespace Platforms
 
 /*
 =================================================
-	_CreateGraphicsPipelineDescriptor
+	_CreateGraphicsPipelineDescription
 =================================================
 */
-	bool PipelineTemplate::_CreateGraphicsPipelineDescriptor (const Message< GpuMsg::CreateGraphicsPipelineDescriptor > &msg)
+	bool PipelineTemplate::_CreateGraphicsPipelineDescription (const GpuMsg::CreateGraphicsPipelineDescription &msg)
 	{
-		GraphicsPipelineDescriptor	result;
-		CHECK_ERR( _GetGraphicsPipelineDescriptor( msg->vertexInput, msg->topology, OUT result ) );
+		GraphicsPipelineDescription	result;
+		CHECK_ERR( _GetGraphicsPipelineDescription( msg.vertexInput, msg.topology, OUT result ) );
 
-		msg->result.Set( result );
+		msg.result.Set( result );
 		return true;
 	}
 	
 /*
 =================================================
-	_CreateComputePipelineDescriptor
+	_CreateComputePipelineDescription
 =================================================
 */
-	bool PipelineTemplate::_CreateComputePipelineDescriptor (const Message< GpuMsg::CreateComputePipelineDescriptor > &msg)
+	bool PipelineTemplate::_CreateComputePipelineDescription (const GpuMsg::CreateComputePipelineDescription &msg)
 	{
-		ComputePipelineDescriptor	result;
-		CHECK_ERR( _GetComputePipelineDescriptor( OUT result ) );
+		ComputePipelineDescription	result;
+		CHECK_ERR( _GetComputePipelineDescription( OUT result ) );
 
-		msg->result.Set( result );
+		CHECK_ERR( not msg.localGroupSize.IsDefined() );	// TODO
+		
+		//if ( msg.localGroupSize.IsDefined() )
+		//	result.localGroupSize = *msg.localGroupSize;
+
+		msg.result.Set( result );
 		return true;
 	}
 	
@@ -1116,29 +1121,29 @@ namespace Platforms
 	_CreateGraphicsPipeline
 =================================================
 */
-	bool PipelineTemplate::_CreateGraphicsPipeline (const Message< GpuMsg::CreateGraphicsPipeline > &msg)
+	bool PipelineTemplate::_CreateGraphicsPipeline (const GpuMsg::CreateGraphicsPipeline &msg)
 	{
-		GraphicsPipelineDescriptor	gpp_descr;
-		CHECK_ERR( _GetGraphicsPipelineDescriptor( msg->vertexInput, msg->topology, OUT gpp_descr ) );
+		GraphicsPipelineDescription	gpp_descr;
+		CHECK_ERR( _GetGraphicsPipelineDescription( msg.vertexInput, msg.topology, OUT gpp_descr ) );
 
 		ModulePtr	pipeline;
 		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-					msg->moduleID,
+					msg.moduleID,
 					GlobalSystems(),
 					CreateInfo::GraphicsPipeline{
-						msg->gpuThread,
+						msg.gpuThread,
 						gpp_descr
 					},
 					OUT pipeline
 		));
 
-		pipeline->Send< ModuleMsg::AttachModule >({ this });
+		pipeline->Send( ModuleMsg::AttachModule{ this });
 
-		if ( msg->renderPass ) {
-			pipeline->Send< ModuleMsg::AttachModule >({ msg->renderPass });
+		if ( msg.renderPass ) {
+			pipeline->Send( ModuleMsg::AttachModule{ msg.renderPass });
 		}
 
-		msg->result.Set( pipeline );
+		msg.result.Set( pipeline );
 		return true;
 	}
 	
@@ -1147,25 +1152,30 @@ namespace Platforms
 	_CreateComputePipeline
 =================================================
 */
-	bool PipelineTemplate::_CreateComputePipeline (const Message< GpuMsg::CreateComputePipeline > &msg)
+	bool PipelineTemplate::_CreateComputePipeline (const GpuMsg::CreateComputePipeline &msg)
 	{
-		ComputePipelineDescriptor	cpp_descr;
-		CHECK_ERR( _GetComputePipelineDescriptor( OUT cpp_descr ) );
+		ComputePipelineDescription	cpp_descr;
+		CHECK_ERR( _GetComputePipelineDescription( OUT cpp_descr ) );
 		
+		CHECK_ERR( not msg.localGroupSize.IsDefined() );	// TODO
+		
+		//if ( msg.localGroupSize.IsDefined() )
+		//	result.localGroupSize = *msg.localGroupSize;
+
 		ModulePtr	pipeline;
 		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-					msg->moduleID,
+					msg.moduleID,
 					GlobalSystems(),
 					CreateInfo::ComputePipeline{
-						msg->gpuThread,
+						msg.gpuThread,
 						cpp_descr
 					},
 					OUT pipeline
 		));
 		
-		pipeline->Send< ModuleMsg::AttachModule >({ this });
+		pipeline->Send( ModuleMsg::AttachModule{ this });
 
-		msg->result.Set( pipeline );
+		msg.result.Set( pipeline );
 		return true;
 	}
 //-----------------------------------------------------------------------------

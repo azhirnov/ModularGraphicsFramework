@@ -2,7 +2,7 @@
 
 #include "Engine/Platforms/OpenGL/300es/gles3.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinLibrary.h"
-#include "Engine/STL/ThreadSafe/Singleton.h"
+#include "Core/STL/ThreadSafe/Singleton.h"
 
 #if defined( GRAPHICS_API_OPENGLES ) and GRAPHICS_API_OPENGLES >= 300
 

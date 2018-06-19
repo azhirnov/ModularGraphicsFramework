@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -32,7 +32,7 @@ namespace PlatformGL
 	// types
 	private:
 		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetCommandBufferDescriptor,
+											GpuMsg::GetCommandBufferDescription,
 											GpuMsg::SetCommandBufferState,
 											GpuMsg::GetCommandBufferState,
 											GpuMsg::SetCommandBufferDependency,
@@ -65,7 +65,7 @@ namespace PlatformGL
 		using VertexBuffers_t		= StaticArray< GLBuffer, GlobalConst::GAPI_MaxAttribs >;
 		using RenderPassData_t		= GpuMsg::GetGLRenderPassID::RenderPassID;
 		using ClearValues_t			= GpuMsg::CmdBeginRenderPass::ClearValues_t;
-		using RenderSubpasses_t		= RenderPassDescriptor::Subpasses_t;
+		using RenderSubpasses_t		= RenderPassDescription::Subpasses_t;
 		using Viewports_t			= StaticArray< GpuMsg::CmdSetViewport::Viewport, GlobalConst::GAPI_MaxColorBuffers >;
 		using Scissors_t			= StaticArray< RectU, GlobalConst::GAPI_MaxColorBuffers >;
 		
@@ -89,7 +89,7 @@ namespace PlatformGL
 		GLuint						_srcBlitFramebuffer;
 		GLuint						_dstBlitFramebuffer;
 
-		CommandBufferDescriptor		_descr;
+		CommandBufferDescription	_descr;
 		CommandArray_t				_commands;
 		UsedResources_t				_resources;
 		ERecordingState				_recordingState;
@@ -98,8 +98,8 @@ namespace PlatformGL
 		PipelineStages_t			_pipelineStages;
 		GLuint						_pipelineObj;
 		ModulePtr					_resourceTable;
-		GraphicsPipelineDescriptor	_graphicsPipelineDescr;
-		ComputePipelineDescriptor	_computePipelineDescr;
+		GraphicsPipelineDescription	_graphicsPipelineDescr;
+		ComputePipelineDescription	_computePipelineDescr;
 		RenderPassData_t			_renderPassData;
 		RenderSubpasses_t			_renderSubpasses;
 
@@ -123,14 +123,14 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _SetGLCommandBufferQueue (const Message< GpuMsg::SetGLCommandBufferQueue > &);
-		bool _GetCommandBufferDescriptor (const Message< GpuMsg::GetCommandBufferDescriptor > &);
-		bool _SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &);
-		bool _SetCommandBufferState (const Message< GpuMsg::SetCommandBufferState > &);
-		bool _GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &);
-		bool _ExecuteGLCommandBuffer (const Message< GpuMsg::ExecuteGLCommandBuffer > &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _SetGLCommandBufferQueue (const GpuMsg::SetGLCommandBufferQueue &);
+		bool _GetCommandBufferDescription (const GpuMsg::GetCommandBufferDescription &);
+		bool _SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &);
+		bool _SetCommandBufferState (const GpuMsg::SetCommandBufferState &);
+		bool _GetCommandBufferState (const GpuMsg::GetCommandBufferState &);
+		bool _ExecuteGLCommandBuffer (const GpuMsg::ExecuteGLCommandBuffer &);
 		
 	private:
 		bool _Submit ();
@@ -204,7 +204,7 @@ namespace PlatformGL
 		bool _CopyImageToBuffer200 (const GpuMsg::CmdCopyImageToBuffer &data);
 		bool _CopyImageToBuffer450 (const GpuMsg::CmdCopyImageToBuffer &data);
 
-		static void _ValidateDescriptor (INOUT CommandBufferDescriptor &descr);
+		static void _ValidateDescription (INOUT CommandBufferDescription &descr);
 	};
 //-----------------------------------------------------------------------------
 
@@ -237,7 +237,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_Compose );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_Delete );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_OnManagerChanged );
-		_SubscribeOnMsg( this, &GL4CommandBuffer::_GetCommandBufferDescriptor );
+		_SubscribeOnMsg( this, &GL4CommandBuffer::_GetCommandBufferDescription );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4CommandBuffer::_GetGLPrivateClasses );
@@ -251,7 +251,7 @@ namespace PlatformGL
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
-		_ValidateDescriptor( _descr );
+		_ValidateDescription( _descr );
 	}
 	
 /*
@@ -268,7 +268,7 @@ namespace PlatformGL
 	_Compose
 =================================================
 */
-	bool GL4CommandBuffer::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool GL4CommandBuffer::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -284,7 +284,7 @@ namespace PlatformGL
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 	
@@ -301,10 +301,10 @@ namespace PlatformGL
 	
 /*
 =================================================
-	_ValidateDescriptor
+	_ValidateDescription
 =================================================
 */
-	void GL4CommandBuffer::_ValidateDescriptor (INOUT CommandBufferDescriptor &)
+	void GL4CommandBuffer::_ValidateDescription (INOUT CommandBufferDescription &)
 	{
 	}
 
@@ -313,7 +313,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4CommandBuffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4CommandBuffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_descr = Uninitialized;
 
@@ -332,24 +332,24 @@ namespace PlatformGL
 	_SetGLCommandBufferQueue
 =================================================
 */
-	bool GL4CommandBuffer::_SetGLCommandBufferQueue (const Message< GpuMsg::SetGLCommandBufferQueue > &msg)
+	bool GL4CommandBuffer::_SetGLCommandBufferQueue (const GpuMsg::SetGLCommandBufferQueue &msg)
 	{
-		_commands = RVREF(msg->commands.Get());
+		_commands = RVREF(msg.commands.Get());
 		
 		// TODO: optimize
 		if ( _tempBuffer )
 		{
-			_tempBuffer->Send< ModuleMsg::Delete >({});
+			_tempBuffer->Send( ModuleMsg::Delete{} );
 			_tempBuffer = null;
 		}
 
-		if ( not msg->bufferData.Empty() )
+		if ( not msg.bufferData.Empty() )
 		{
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								GLBufferModuleID,
 								GlobalSystems(),
 								CreateInfo::GpuBuffer{
-									BufferDescriptor{ msg->bufferData.Size(), EBufferUsage::TransferSrc },
+									BufferDescription{ msg.bufferData.Size(), EBufferUsage::TransferSrc },
 									null,
 									EGpuMemory::CoherentWithCPU,
 									EMemoryAccess::GpuRead | EMemoryAccess::CpuWrite
@@ -358,19 +358,19 @@ namespace PlatformGL
 
 			ModuleUtils::Initialize({ _tempBuffer });
 
-			CHECK_ERR( _tempBuffer->Send< GpuMsg::WriteToGpuMemory >({ msg->bufferData }) );
+			CHECK( _tempBuffer->Send( GpuMsg::WriteToGpuMemory{ msg.bufferData }) );
 		}
 		return true;
 	}
 
 /*
 =================================================
-	_GetCommandBufferDescriptor
+	_GetCommandBufferDescription
 =================================================
 */
-	bool GL4CommandBuffer::_GetCommandBufferDescriptor (const Message< GpuMsg::GetCommandBufferDescriptor > &msg)
+	bool GL4CommandBuffer::_GetCommandBufferDescription (const GpuMsg::GetCommandBufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
@@ -379,20 +379,20 @@ namespace PlatformGL
 	_SetCommandBufferDependency
 =================================================
 */
-	bool GL4CommandBuffer::_SetCommandBufferDependency (const Message< GpuMsg::SetCommandBufferDependency > &msg)
+	bool GL4CommandBuffer::_SetCommandBufferDependency (const GpuMsg::SetCommandBufferDependency &msg)
 	{
-		_resources = RVREF( msg->resources.Get() );
+		_resources = RVREF( msg.resources.Get() );
 		return true;
 	}
 
 /*
 =================================================
-	_GetCommandBufferDescriptor
+	_GetCommandBufferDescription
 =================================================
 */
-	bool GL4CommandBuffer::_SetCommandBufferState (const Message< GpuMsg::SetCommandBufferState > &msg)
+	bool GL4CommandBuffer::_SetCommandBufferState (const GpuMsg::SetCommandBufferState &msg)
 	{
-		switch ( msg->newState )
+		switch ( msg.newState )
 		{
 			case ERecordingState::Initial :		CHECK( _ResetCmdBuffer() );	break;
 			case ERecordingState::Recording :	CHECK( _BeginRecording() );	break;
@@ -406,12 +406,12 @@ namespace PlatformGL
 	
 /*
 =================================================
-	_GetCommandBufferDescriptor
+	_GetCommandBufferDescription
 =================================================
 */
-	bool GL4CommandBuffer::_GetCommandBufferState (const Message< GpuMsg::GetCommandBufferState > &msg)
+	bool GL4CommandBuffer::_GetCommandBufferState (const GpuMsg::GetCommandBufferState &msg)
 	{
-		msg->result.Set( _recordingState );
+		msg.result.Set( _recordingState );
 		return true;
 	}
 	
@@ -420,7 +420,7 @@ namespace PlatformGL
 	_ExecuteGLCommandBuffer
 =================================================
 */
-	bool GL4CommandBuffer::_ExecuteGLCommandBuffer (const Message< GpuMsg::ExecuteGLCommandBuffer > &)
+	bool GL4CommandBuffer::_ExecuteGLCommandBuffer (const GpuMsg::ExecuteGLCommandBuffer &)
 	{
 		CHECK_ERR( _recordingState == ERecordingState::Pending );
 
@@ -572,7 +572,7 @@ namespace PlatformGL
 
 		_recordingState = newState;
 
-		_SendEvent< GpuMsg::OnCommandBufferStateChanged >({ old_state, newState });
+		_SendEvent( GpuMsg::OnCommandBufferStateChanged{ old_state, newState });
 	}
 	
 /*
@@ -608,7 +608,7 @@ namespace PlatformGL
 	{
 		if ( _tempBuffer )
 		{
-			_tempBuffer->Send< ModuleMsg::Delete >({});
+			_tempBuffer->Send( ModuleMsg::Delete{} );
 			_tempBuffer = null;
 		}
 
@@ -674,7 +674,7 @@ namespace PlatformGL
 
 		// set uniforms
 		CHECK_ERR( _resourceTable );
-		SendTo< GpuMsg::GLPipelineResourceTableApply >( _resourceTable, { _pipelineStages });
+		_resourceTable->Send( GpuMsg::GLPipelineResourceTableApply{ _pipelineStages } );
 		return true;
 	}
 	
@@ -1046,7 +1046,7 @@ namespace PlatformGL
 
 		// set uniforms
 		CHECK_ERR( _resourceTable );
-		SendTo< GpuMsg::GLPipelineResourceTableApply >( _resourceTable, { _pipelineStages });
+		_resourceTable->Send( GpuMsg::GLPipelineResourceTableApply{ _pipelineStages });
 		return true;
 	}
 	
@@ -1186,16 +1186,16 @@ namespace PlatformGL
 		
 		const auto&	fb_res = GetResourceCache()->GetFramebufferID( cmd.framebuffer );
 
-		Message< GpuMsg::GetGLRenderPassID >		req_rp;
-		Message< GpuMsg::GetRenderPassDescriptor >	req_rp_descr;
+		GpuMsg::GetGLRenderPassID		req_rp;
+		GpuMsg::GetRenderPassDescription	req_rp_descr;
 
-		SendTo( cmd.renderPass, req_rp );
-		SendTo( cmd.renderPass, req_rp_descr );
+		cmd.renderPass->Send( req_rp );
+		cmd.renderPass->Send( req_rp_descr );
 		
-		_renderPassData		= *req_rp->result;
+		_renderPassData		= *req_rp.result;
 		_framebufferSize	= uint3( fb_res.Get<1>().size, fb_res.Get<1>().layers );
 		_renderPassArea		= cmd.area;
-		_renderSubpasses	= req_rp_descr->result->Subpasses();
+		_renderSubpasses	= req_rp_descr.result->Subpasses();
 
 		GLuint	fb_id		= fb_res.Get<0>();
 
@@ -1409,9 +1409,9 @@ namespace PlatformGL
 	{
 		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdExecute >();
 		
-		ModuleUtils::Send( cmd.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Pending });
-		ModuleUtils::Send( cmd.cmdBuffers, Message<GpuMsg::ExecuteGLCommandBuffer>{} );
-		//ModuleUtils::Send( cmd.cmdBuffers, Message<GpuMsg::SetCommandBufferState>{ GpuMsg::SetCommandBufferState::EState::Completed });
+		ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
+		ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::ExecuteGLCommandBuffer{} );
+		//ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Completed });
 
 		return true;
 	}

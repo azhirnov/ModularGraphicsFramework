@@ -12,11 +12,10 @@ namespace glsl_vfs
 	from http://iquilezles.org/www/articles/distfunctions/distfunctions.htm
 
 	license: ?
-
-	depends of:
-		Math/Quaternion
 */
 
+#include <Math/Quaternion.glsl>
+#include <Math/Math.glsl>
 
 // Shapes
 real SDF_Sphere (const real3 position, const real radius);

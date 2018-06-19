@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -27,7 +27,7 @@ namespace PlatformGL
 	// types
 	private:
 		using LayoutMsgList_t		= MessageListFrom<
-											GpuMsg::GetPipelineLayoutDescriptor,
+											GpuMsg::GetPipelineLayoutDescription,
 											GpuMsg::GetGLPipelineLayoutPushConstants
 										>;
 
@@ -81,15 +81,15 @@ namespace PlatformGL
 
 		struct ImageAttachment
 		{
-			ImageViewDescriptor		descr;
+			ImageViewDescription	descr;
 			EImageLayout::type		layout	= Uninitialized;
 		};
 
 		using AttachmentInfo_t		= Union< BufferAttachment, ImageAttachment >;
-		using AttachmentInfoMap_t	= Map< const void*, AttachmentInfo_t >;
+		using AttachmentInfoMap_t	= Map< UntypedKey<ModulePtr>, AttachmentInfo_t >;
 
-		struct _CreateResourceDescriptor_Func;
-		struct _ApplyDescriptors_Func;
+		struct _CreateResourceDescription_Func;
+		struct _ApplyDescriptions_Func;
 
 
 	// constants
@@ -113,15 +113,15 @@ namespace PlatformGL
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
-		bool _PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &);
-		bool _PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &);
-		bool _PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &);
-		bool _GLPipelineResourceTableApply (const Message< GpuMsg::GLPipelineResourceTableApply > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
+		bool _PipelineAttachImage (const GpuMsg::PipelineAttachImage &);
+		bool _PipelineAttachBuffer (const GpuMsg::PipelineAttachBuffer &);
+		bool _PipelineAttachTexture (const GpuMsg::PipelineAttachTexture &);
+		bool _GLPipelineResourceTableApply (const GpuMsg::GLPipelineResourceTableApply &);
 
 	private:
 		bool _CreateResourceTable ();
@@ -179,7 +179,7 @@ namespace PlatformGL
 	_Link
 =================================================
 */
-	bool GL4PipelineResourceTable::_Link (const Message< ModuleMsg::Link > &)
+	bool GL4PipelineResourceTable::_Link (const ModuleMsg::Link &)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -191,7 +191,7 @@ namespace PlatformGL
 		
 		CHECK( _SetState( EState::Linked ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterLink >({});
+		_SendUncheckedEvent( ModuleMsg::AfterLink{} );
 		return true;
 	}
 
@@ -200,7 +200,7 @@ namespace PlatformGL
 	_Compose
 =================================================
 */
-	bool GL4PipelineResourceTable::_Compose (const Message< ModuleMsg::Compose > &msg)
+	bool GL4PipelineResourceTable::_Compose (const ModuleMsg::Compose &msg)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -217,7 +217,7 @@ namespace PlatformGL
 
 		CHECK( _SetState( EState::ComposedMutable ) );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
 		return true;
 	}
 
@@ -226,7 +226,7 @@ namespace PlatformGL
 	_Delete
 =================================================
 */
-	bool GL4PipelineResourceTable::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GL4PipelineResourceTable::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_SendForEachAttachments( msg );
 
@@ -239,10 +239,10 @@ namespace PlatformGL
 	
 /*
 =================================================
-	_ApplyDescriptors_Func
+	_ApplyDescriptions_Func
 =================================================
 */
-	struct GL4PipelineResourceTable::_ApplyDescriptors_Func
+	struct GL4PipelineResourceTable::_ApplyDescriptions_Func
 	{
 	// types
 		using Programs_t		= GpuMsg::GLPipelineResourceTableApply::Programs_t;
@@ -253,7 +253,7 @@ namespace PlatformGL
 		PushConstants_t const&	pushConstants;
 
 	// methods
-		_ApplyDescriptors_Func (const Programs_t &progs, const PushConstants_t &pc) :
+		_ApplyDescriptions_Func (const Programs_t &progs, const PushConstants_t &pc) :
 			programs{progs}, pushConstants{pc}
 		{}
 
@@ -285,11 +285,11 @@ namespace PlatformGL
 	_GLPipelineResourceTableApply
 =================================================
 */
-	bool GL4PipelineResourceTable::_GLPipelineResourceTableApply (const Message< GpuMsg::GLPipelineResourceTableApply > &msg)
+	bool GL4PipelineResourceTable::_GLPipelineResourceTableApply (const GpuMsg::GLPipelineResourceTableApply &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
-		_ApplyDescriptors_Func	func( msg->programs, msg->pushConstants );
+		_ApplyDescriptions_Func	func( msg.programs, msg.pushConstants );
 
 		FOR( i, _resources ) {
 			_resources[i].Apply( func );
@@ -302,14 +302,14 @@ namespace PlatformGL
 	_AttachModule
 =================================================
 */
-	bool GL4PipelineResourceTable::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool GL4PipelineResourceTable::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
 		// pipeline layout must be unique
-		bool	is_layout = msg->newModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >();
+		bool	is_layout = msg.newModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >();
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		if ( is_layout )
@@ -323,17 +323,17 @@ namespace PlatformGL
 	_PipelineAttachImage
 =================================================
 */
-	bool GL4PipelineResourceTable::_PipelineAttachImage (const Message< GpuMsg::PipelineAttachImage > &msg)
+	bool GL4PipelineResourceTable::_PipelineAttachImage (const GpuMsg::PipelineAttachImage &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
 		ImageAttachment	img;
-		img.descr	= msg->descr;
-		img.layout	= msg->layout;
+		img.descr	= msg.descr;
+		img.layout	= msg.layout;
 
-		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		_attachmentInfo.Add( msg.newModule.RawPtr(), AttachmentInfo_t{img} );
 		
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -344,27 +344,27 @@ namespace PlatformGL
 	_PipelineAttachTexture
 =================================================
 */
-	bool GL4PipelineResourceTable::_PipelineAttachTexture (const Message< GpuMsg::PipelineAttachTexture > &msg)
+	bool GL4PipelineResourceTable::_PipelineAttachTexture (const GpuMsg::PipelineAttachTexture &msg)
 	{
-		CHECK_ERR( msg->newModule and msg->sampler );
+		CHECK_ERR( msg.newModule and msg.sampler );
 
 		ImageAttachment	img;
-		img.layout	= msg->layout;
+		img.layout	= msg.layout;
 		
-		if ( not msg->descr.IsDefined() )
+		if ( not msg.descr.IsDefined() )
 		{
-			Message< GpuMsg::GetImageDescriptor >	req_descr;
-			CHECK( msg->newModule->Send( req_descr ) );
+			GpuMsg::GetImageDescription	req_descr;
+			CHECK( msg.newModule->Send( req_descr ) );
 
-			img.descr = ImageViewDescriptor{ *req_descr->result };
+			img.descr = ImageViewDescription{ *req_descr.result };
 		}
 		else
-			img.descr = *msg->descr;
+			img.descr = *msg.descr;
 
-		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{img} );
+		_attachmentInfo.Add( msg.newModule.RawPtr(), AttachmentInfo_t{img} );
 		
-		CHECK( _Attach( msg->name, msg->newModule ) );
-		CHECK( _Attach( msg->name + ".sampler", msg->sampler ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
+		CHECK( _Attach( msg.name + ".sampler", msg.sampler ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -375,17 +375,17 @@ namespace PlatformGL
 	_PipelineAttachBuffer
 =================================================
 */
-	bool GL4PipelineResourceTable::_PipelineAttachBuffer (const Message< GpuMsg::PipelineAttachBuffer > &msg)
+	bool GL4PipelineResourceTable::_PipelineAttachBuffer (const GpuMsg::PipelineAttachBuffer &msg)
 	{
-		CHECK_ERR( msg->newModule );
+		CHECK_ERR( msg.newModule );
 
 		BufferAttachment	buf;
-		buf.offset	= msg->offset;
-		buf.size	= msg->size;
+		buf.offset	= msg.offset;
+		buf.size	= msg.size;
 
-		_attachmentInfo.Add( msg->newModule.RawPtr(), AttachmentInfo_t{buf} );
+		_attachmentInfo.Add( msg.newModule.RawPtr(), AttachmentInfo_t{buf} );
 		
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
 
 		return true;
@@ -396,13 +396,13 @@ namespace PlatformGL
 	_DetachModule
 =================================================
 */
-	bool GL4PipelineResourceTable::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool GL4PipelineResourceTable::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		if ( _Detach( msg->oldModule ) )
+		if ( _Detach( msg.oldModule ) )
 		{
 			CHECK( _SetState( EState::Initial ) );
 
-			if ( msg->oldModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >() )
+			if ( msg.oldModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >() )
 				_DestroyResourceTable();
 		}
 		return true;
@@ -410,20 +410,20 @@ namespace PlatformGL
 
 /*
 =================================================
-	_CreateResourceDescriptor_Func
+	_CreateResourceDescription_Func
 =================================================
 */
-	struct GL4PipelineResourceTable::_CreateResourceDescriptor_Func
+	struct GL4PipelineResourceTable::_CreateResourceDescription_Func
 	{
 	// types
-		using TextureUniform	= PipelineLayoutDescriptor::TextureUniform;
-		using SamplerUniform	= PipelineLayoutDescriptor::SamplerUniform;
-		using ImageUniform		= PipelineLayoutDescriptor::ImageUniform;
-		using UniformBuffer		= PipelineLayoutDescriptor::UniformBuffer;
-		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
-		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
-		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
-		using PushConstBuffer	= PipelineLayoutDescriptor::PushConstantsBuffer;
+		using TextureUniform	= PipelineLayoutDescription::TextureUniform;
+		using SamplerUniform	= PipelineLayoutDescription::SamplerUniform;
+		using ImageUniform		= PipelineLayoutDescription::ImageUniform;
+		using UniformBuffer		= PipelineLayoutDescription::UniformBuffer;
+		using StorageBuffer		= PipelineLayoutDescription::StorageBuffer;
+		using PushConstant		= PipelineLayoutDescription::PushConstant;
+		using SubpassInput		= PipelineLayoutDescription::SubpassInput;
+		using PushConstBuffer	= PipelineLayoutDescription::PushConstantsBuffer;
 		using ImageMsgList		= MessageListFrom< GpuMsg::GetGLImageID >;
 		using SamplerMsgList	= MessageListFrom< GpuMsg::GetGLSamplerID >;
 		using BufferMsgList		= MessageListFrom< GpuMsg::GetGLBufferID >;
@@ -438,7 +438,7 @@ namespace PlatformGL
 
 
 	// methods
-		_CreateResourceDescriptor_Func (OUT ResourceDescrArray_t &resources, GL4PipelineResourceTable& self) :
+		_CreateResourceDescription_Func (OUT ResourceDescrArray_t &resources, GL4PipelineResourceTable& self) :
 			self( self ), resources( resources )
 		{
 			moduleMap.Reserve( self._GetAttachments().Count() );
@@ -450,7 +450,7 @@ namespace PlatformGL
 			}
 		}
 
-		~_CreateResourceDescriptor_Func ()
+		~_CreateResourceDescription_Func ()
 		{
 			DEBUG_ONLY(
 				FOR( i, moduleMap ) {
@@ -501,8 +501,8 @@ namespace PlatformGL
 			CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT tex_mod ) );
 			CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT samp_mod ) );
 			
-			Message< GpuMsg::GetGLSamplerID >	req_sampler;
-			self.SendTo( samp_mod, req_sampler );
+			GpuMsg::GetGLSamplerID	req_sampler;
+			samp_mod->Send( req_sampler );
 
 			const auto&	img_res = self.GetResourceCache()->GetImageID( tex_mod );	// warning: reference may be invalid after any changes
 
@@ -516,16 +516,16 @@ namespace PlatformGL
 
 			if ( self._attachmentInfo.Find( tex_mod.RawPtr(), OUT info ) )
 			{
-				Message< GpuMsg::CreateGLImageView >	req_imageview{ info->second.Get<ImageAttachment>().descr };
-				self.SendTo( tex_mod, req_imageview );
+				GpuMsg::CreateGLImageView	req_imageview{ info->second.Get<ImageAttachment>().descr };
+				tex_mod->Send( req_imageview );
 
-				img_view = req_imageview->result.Get( 0 );
+				img_view = req_imageview.result.Get( 0 );
 			}
 			
 			// create descriptor
 			TextureDescr	descr;
 			descr.target		= GL4Enum( tex.textureType );
-			descr.sampID		= req_sampler->result.Get(0);
+			descr.sampID		= req_sampler.result.Get(0);
 			descr.texID			= img_view;
 			descr.binding		= tex.binding;
 			descr.stageFlags	= tex.stageFlags;
@@ -554,10 +554,10 @@ namespace PlatformGL
 
 			if ( self._attachmentInfo.Find( img_mod.RawPtr(), OUT info ) )
 			{
-				Message< GpuMsg::CreateGLImageView >	req_imageview{ info->second.Get<ImageAttachment>().descr };
-				self.SendTo( img_mod, req_imageview );
+				GpuMsg::CreateGLImageView	req_imageview{ info->second.Get<ImageAttachment>().descr };
+				img_mod->Send( req_imageview );
 
-				img_view = req_imageview->result.Get( 0 );
+				img_view = req_imageview.result.Get( 0 );
 			}
 
 			// create descriptor
@@ -700,15 +700,14 @@ namespace PlatformGL
 */
 	bool GL4PipelineResourceTable::_CreateResourceTable ()
 	{
-		Message< GpuMsg::GetPipelineLayoutDescriptor >	req_descr;
+		GpuMsg::GetPipelineLayoutDescription	req_descr;
+		_layout->Send( req_descr );
 
-		SendTo( _layout, req_descr );
-
-		_CreateResourceDescriptor_Func		func( OUT _resources, *this );
+		_CreateResourceDescription_Func		func( OUT _resources, *this );
 
 		// initialize table
-		FOR( i, req_descr->result->GetUniforms() ) {
-			req_descr->result->GetUniforms()[i].Apply( func );
+		FOR( i, req_descr.result->GetUniforms() ) {
+			req_descr.result->GetUniforms()[i].Apply( func );
 		}
 
 		return true;

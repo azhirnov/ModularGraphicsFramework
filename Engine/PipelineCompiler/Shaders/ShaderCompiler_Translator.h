@@ -11,19 +11,11 @@
 #pragma once
 
 #include "Engine/PipelineCompiler/Shaders/ShaderCompiler_Utils.h"
+#include "Core/STL/Containers/Stack.h"
+#include "Core/STL/Algorithms/StringParser.h"
 
 namespace PipelineCompiler
 {
-
-	/*struct ConstUnionHash
-	{
-		HashResult operator () (const glslang::TConstUnionArray *key) const;
-		
-		HashResult _CUHash (const glslang::TConstUnionArray *cu) const;
-		HashResult _ArrHash (const glslang::TConstUnionArray &key) const;
-		HashResult _ValHash (const glslang::TConstUnion &key) const;
-	};*/
-
 
 	//
 	// Translator
@@ -45,8 +37,9 @@ namespace PipelineCompiler
 			EShaderVariable::type		type			= EShaderVariable::Unknown;
 			EPrecision::type			precision		= EPrecision::Unknown;
 			EPixelFormat::type			format			= EPixelFormat::Unknown;
-			uint						arraySize		= 0;		// 0 - not array, > 0 - static array, ~0 - dynamic
+			ArraySize					arraySize;
 			bool						isGlobal		= false;	// in some languages globals are forbbiden
+			BytesU						sizeOf;
 
 		// methods
 			TypeInfo () {}
@@ -127,7 +120,7 @@ namespace PipelineCompiler
 
 	// variables
 		String				src;
-		String				log;
+		String &			log;
 		NodeMap_t			nodes;
 
 		// constants
@@ -163,6 +156,7 @@ namespace PipelineCompiler
 			CustomTypes_t		globalTypes;
 			HashSet<String>		definedInExteranal;		// this type must be skiped if 'skipExternals' is true
 			AtomicTypes_t		atomics;
+			Set<TIntermNode*>	bufferNodes;			// used for buffer load/store functions
 
 		}					types;
 
@@ -183,7 +177,7 @@ namespace PipelineCompiler
 
 
 	// methods
-		Translator ()
+		explicit Translator (String &log) : log{log}
 		{
 			inl.prefixStack.SetDefault({ "", {} });
 		}
@@ -206,7 +200,7 @@ namespace PipelineCompiler
 		using TypeInfo	= Translator::TypeInfo;
 		using Symbol	= Translator::Symbol;
 		using SymbolID	= Translator::SymbolID;
-		
+
 
 	// interface
 	public:
@@ -226,8 +220,11 @@ namespace PipelineCompiler
 		virtual bool TranslateSwizzle (const TypeInfo &result, const TypeInfo &valType, StringCRef val, ArrayCRef<uint> swizzle, INOUT String &src) = 0;
 		virtual bool TranslateEntry (const TypeInfo &ret, StringCRef name, ArrayCRef<Symbol> args, StringCRef body, OUT String &entryPoint, INOUT String &src) = 0;
 		virtual bool TranslateStructAccess (SymbolID id, const TypeInfo &stType, StringCRef objName, const TypeInfo &fieldType, INOUT String &src) = 0;
+		virtual bool TranslateBufferLoad (SymbolID id, StringCRef objName, StringCRef fieldOffset, const TypeInfo &fieldType, INOUT String &src) = 0;
+		virtual bool TranslateBufferStore (SymbolID id, StringCRef objName, StringCRef fieldOffset, const TypeInfo &fieldType, StringCRef dataStr, const TypeInfo &dataType, INOUT String &src) = 0;
 		virtual bool TranslateValue (VariantCRef value, INOUT String &src) const = 0;
 		virtual bool DeclExternalTypes () const	= 0;
+		virtual bool ReplaceStructByBuffer () const = 0;
 	};
 	
 	
@@ -307,7 +304,7 @@ namespace PipelineCompiler
 		template <typename T>
 		static void _CreateType (OUT TypeInfo &type)
 		{
-			type.arraySize		= 0;
+			type.arraySize.MakeNonArray();
 			type.isGlobal		= false;
 			type.memoryModel	= Uninitialized;
 			type.precision		= Uninitialized;

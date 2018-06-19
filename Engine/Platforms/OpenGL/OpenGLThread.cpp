@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_OPENGL
 
@@ -97,27 +97,27 @@ namespace Platforms
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Update (const Message< ModuleMsg::Update > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
-		bool _GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Update (const ModuleMsg::Update &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
+		bool _GetGraphicsModules (const GpuMsg::GetGraphicsModules &);
 		
-		bool _ThreadBeginFrame (const Message< GpuMsg::ThreadBeginFrame > &);
-		bool _ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &);
-		bool _GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &);
-		bool _GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &);
+		bool _ThreadBeginFrame (const GpuMsg::ThreadBeginFrame &);
+		bool _ThreadEndFrame (const GpuMsg::ThreadEndFrame &);
+		bool _GetGraphicsSettings (const GpuMsg::GetGraphicsSettings &);
+		bool _GetComputeSettings (const GpuMsg::GetComputeSettings &);
 
-		bool _WindowCreated (const Message< OSMsg::WindowCreated > &);
-		bool _WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &);
-		bool _WindowVisibilityChanged (const Message< OSMsg::WindowVisibilityChanged > &);
-		bool _WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &);
+		bool _WindowCreated (const OSMsg::WindowCreated &);
+		bool _WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &);
+		bool _WindowVisibilityChanged (const OSMsg::WindowVisibilityChanged &);
+		bool _WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &);
 		
-		bool _GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &);
-		bool _GetGLDeviceInfo (const Message< GpuMsg::GetGLDeviceInfo > &);
-		bool _GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &);
-		bool _GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &);
+		bool _GetDeviceInfo (const GpuMsg::GetDeviceInfo &);
+		bool _GetGLDeviceInfo (const GpuMsg::GetGLDeviceInfo &);
+		bool _GetGLPrivateClasses (const GpuMsg::GetGLPrivateClasses &);
+		bool _GetDeviceProperties (const GpuMsg::GetDeviceProperties &);
 
 	private:
 		bool _CreateDevice ();
@@ -189,7 +189,7 @@ namespace Platforms
 	_Link
 =================================================
 */
-	bool OpenGLThread::_Link (const Message< ModuleMsg::Link > &msg)
+	bool OpenGLThread::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -201,7 +201,7 @@ namespace Platforms
 		_window->Subscribe( this, &OpenGLThread::_WindowCreated );
 		_window->Subscribe( this, &OpenGLThread::_WindowBeforeDestroy );
 		_window->Subscribe( this, &OpenGLThread::_WindowVisibilityChanged );
-		_window->Subscribe( this, &OpenGLThread::_WindowDescriptorChanged );
+		_window->Subscribe( this, &OpenGLThread::_WindowDescriptionChanged );
 		
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 
@@ -236,7 +236,7 @@ namespace Platforms
 		// if window already created
 		if ( _IsComposedState( _window->GetState() ) )
 		{
-			_SendMsg< OSMsg::WindowCreated >({});
+			_SendMsg( OSMsg::WindowCreated{} );
 		}
 		return true;
 	}
@@ -246,7 +246,7 @@ namespace Platforms
 	_Update
 =================================================
 */
-	bool OpenGLThread::_Update (const Message< ModuleMsg::Update > &msg)
+	bool OpenGLThread::_Update (const ModuleMsg::Update &msg)
 	{
 		if ( not _IsComposedState( GetState() ) or
 			 not _isWindowVisible )
@@ -266,7 +266,7 @@ namespace Platforms
 	_Delete
 =================================================
 */
-	bool OpenGLThread::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool OpenGLThread::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyDevice();
 		_DetachWindow();
@@ -280,7 +280,7 @@ namespace Platforms
 	_AddToManager
 =================================================
 */
-	bool OpenGLThread::_AddToManager (const Message< ModuleMsg::AddToManager > &)
+	bool OpenGLThread::_AddToManager (const ModuleMsg::AddToManager &)
 	{
 		return true;
 	}
@@ -290,7 +290,7 @@ namespace Platforms
 	_RemoveFromManager
 =================================================
 */
-	bool OpenGLThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &)
+	bool OpenGLThread::_RemoveFromManager (const ModuleMsg::RemoveFromManager &)
 	{
 		return true;
 	}
@@ -300,10 +300,10 @@ namespace Platforms
 	_GetGraphicsModules
 =================================================
 */	
-	bool OpenGLThread::_GetGraphicsModules (const Message< GpuMsg::GetGraphicsModules > &msg)
+	bool OpenGLThread::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg->compute.Set( OpenGLObjectsConstructor::GetComputeModules() );
-		msg->graphics.Set( OpenGLObjectsConstructor::GetGraphicsModules() );
+		msg.compute.Set( OpenGLObjectsConstructor::GetComputeModules() );
+		msg.graphics.Set( OpenGLObjectsConstructor::GetGraphicsModules() );
 		return true;
 	}
 
@@ -312,14 +312,14 @@ namespace Platforms
 	_ThreadBeginFrame
 =================================================
 */
-	bool OpenGLThread::_ThreadBeginFrame (const Message< GpuMsg::ThreadBeginFrame > &msg)
+	bool OpenGLThread::_ThreadBeginFrame (const GpuMsg::ThreadBeginFrame &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( _device.BeginFrame() );
 		
 		_context.MakeCurrent();
 
-		msg->result.Set({ _device.GetCurrentFramebuffer(), _device.GetImageIndex() });
+		msg.result.Set({ _device.GetCurrentFramebuffer(), _device.GetImageIndex() });
 		return true;
 	}
 
@@ -328,15 +328,15 @@ namespace Platforms
 	_ThreadEndFrame
 =================================================
 */
-	bool OpenGLThread::_ThreadEndFrame (const Message< GpuMsg::ThreadEndFrame > &msg)
+	bool OpenGLThread::_ThreadEndFrame (const GpuMsg::ThreadEndFrame &msg)
 	{
 		CHECK_ERR( _device.IsFrameStarted() );
 
-		if ( msg->framebuffer )
-			CHECK_ERR( msg->framebuffer == _device.GetCurrentFramebuffer() );
+		if ( msg.framebuffer )
+			CHECK_ERR( msg.framebuffer == _device.GetCurrentFramebuffer() );
 
-		_cmdQueue->Send< GpuMsg::SubmitGraphicsQueueCommands >({ *msg });
-		_cmdQueue->Send< GpuMsg::GLFlushQueue >({});
+		_cmdQueue->Send( GpuMsg::SubmitGraphicsQueueCommands{ msg });
+		_cmdQueue->Send( GpuMsg::GLFlushQueue{} );
 		
 		CHECK_ERR( _device.EndFrame() );
 		_context.SwapBuffers();
@@ -349,7 +349,7 @@ namespace Platforms
 	_WindowCreated
 =================================================
 */
-	bool OpenGLThread::_WindowCreated (const Message< OSMsg::WindowCreated > &)
+	bool OpenGLThread::_WindowCreated (const OSMsg::WindowCreated &)
 	{
 		CHECK_ERR( GetState() == EState::Linked );
 		
@@ -366,8 +366,8 @@ namespace Platforms
 	{
 		using namespace Engine::PlatformTools;
 
-		Message< OSMsg::WindowGetDescriptor >	req_descr;
-		SendTo( _window, req_descr );
+		OSMsg::WindowGetDescription	req_descr;
+		_window->Send( req_descr );
 
 		if ( _settings.colorFmt == EPixelFormat::Unknown )
 			_settings.colorFmt = EPixelFormat::RGBA8_UNorm;
@@ -378,7 +378,7 @@ namespace Platforms
 							return _context.Create( data.window, INOUT _settings );
 						}) );
 
-		CHECK_ERR( _device.Initialize( req_descr->result->surfaceSize, _settings.colorFmt,
+		CHECK_ERR( _device.Initialize( req_descr.result->surfaceSize, _settings.colorFmt,
 									   _settings.depthStencilFmt, _settings.samples ) );
 
 		if ( _settings.flags[ GraphicsSettings::EFlags::DebugContext ] )
@@ -388,7 +388,7 @@ namespace Platforms
 
 		CHECK( _DefCompose( false ) );
 
-		_SendEvent( Message< GpuMsg::DeviceCreated >{} );
+		_SendEvent( GpuMsg::DeviceCreated{} );
 		return true;
 	}
 
@@ -397,7 +397,7 @@ namespace Platforms
 	_WindowBeforeDestroy
 =================================================
 */
-	bool OpenGLThread::_WindowBeforeDestroy (const Message< OSMsg::WindowBeforeDestroy > &)
+	bool OpenGLThread::_WindowBeforeDestroy (const OSMsg::WindowBeforeDestroy &)
 	{
 		_DestroyDevice();
 		_DetachWindow();
@@ -417,18 +417,18 @@ namespace Platforms
 	{
 		if ( _device.IsDeviceCreated() )
 		{
-			_SendEvent( Message< GpuMsg::DeviceBeforeDestroy >{} );
+			_SendEvent( GpuMsg::DeviceBeforeDestroy{} );
 		}
 
 		if ( _cmdQueue )
 		{
-			_cmdQueue->Send< ModuleMsg::Delete >({});
+			_cmdQueue->Send( ModuleMsg::Delete{} );
 			_cmdQueue = null;
 		}
 
 		if ( _syncManager )
 		{
-			_syncManager->Send< ModuleMsg::Delete >({});
+			_syncManager->Send( ModuleMsg::Delete{} );
 			_syncManager = null;
 		}
 
@@ -441,23 +441,23 @@ namespace Platforms
 	_WindowVisibilityChanged
 =================================================
 */
-	bool OpenGLThread::_WindowVisibilityChanged (const Message< OSMsg::WindowVisibilityChanged > &msg)
+	bool OpenGLThread::_WindowVisibilityChanged (const OSMsg::WindowVisibilityChanged &msg)
 	{
-		_isWindowVisible = (msg->state != WindowDesc::EVisibility::Invisible);
+		_isWindowVisible = (msg.state != WindowDesc::EVisibility::Invisible);
 		return true;
 	}
 	
 /*
 =================================================
-	_WindowDescriptorChanged
+	_WindowDescriptionChanged
 =================================================
 */
-	bool OpenGLThread::_WindowDescriptorChanged (const Message< OSMsg::WindowDescriptorChanged > &msg)
+	bool OpenGLThread::_WindowDescriptionChanged (const OSMsg::WindowDescriptionChanged &msg)
 	{
 		if ( _device.IsDeviceCreated()									and
-			 msg->descr.visibility != WindowDesc::EVisibility::Invisible )
+			 msg.descr.visibility != WindowDesc::EVisibility::Invisible )
 		{
-			CHECK_ERR( _device.OnResize( msg->descr.surfaceSize ) );
+			CHECK_ERR( _device.OnResize( msg.descr.surfaceSize ) );
 		}
 		return true;
 	}
@@ -484,7 +484,7 @@ namespace Platforms
 	_GetDeviceInfo
 =================================================
 */
-	bool OpenGLThread::_GetDeviceInfo (const Message< GpuMsg::GetDeviceInfo > &msg)
+	bool OpenGLThread::_GetDeviceInfo (const GpuMsg::GetDeviceInfo &msg)
 	{
 		GpuMsg::GetDeviceInfo::Info	info;
 		info.gpuThread		= this;
@@ -494,7 +494,7 @@ namespace Platforms
 		info.renderPass		= GetDevice()->GetDefaultRenderPass();
 		info.imageCount		= GetDevice()->GetSwapchainLength();
 
-		msg->result.Set( info );
+		msg.result.Set( info );
 		return true;
 	}
 	
@@ -503,7 +503,7 @@ namespace Platforms
 	_GetGLDeviceInfo
 =================================================
 */
-	bool OpenGLThread::_GetGLDeviceInfo (const Message< GpuMsg::GetGLDeviceInfo > &)
+	bool OpenGLThread::_GetGLDeviceInfo (const GpuMsg::GetGLDeviceInfo &)
 	{
 		TODO("");
 		return true;
@@ -514,9 +514,9 @@ namespace Platforms
 	_GetGLPrivateClasses
 =================================================
 */
-	bool OpenGLThread::_GetGLPrivateClasses (const Message< GpuMsg::GetGLPrivateClasses > &msg)
+	bool OpenGLThread::_GetGLPrivateClasses (const GpuMsg::GetGLPrivateClasses &msg)
 	{
-		msg->result.Set({
+		msg.result.Set({
 			&_device,
 			&_samplerCache,
 			&_resourceCache
@@ -529,9 +529,9 @@ namespace Platforms
 	_GetGraphicsSettings
 =================================================
 */
-	bool OpenGLThread::_GetGraphicsSettings (const Message< GpuMsg::GetGraphicsSettings > &msg)
+	bool OpenGLThread::_GetGraphicsSettings (const GpuMsg::GetGraphicsSettings &msg)
 	{
-		msg->result.Set({ _settings, _device.GetSurfaceSize() });
+		msg.result.Set({ _settings, _device.GetSurfaceSize() });
 		return true;
 	}
 	
@@ -540,14 +540,14 @@ namespace Platforms
 	_GetComputeSettings
 =================================================
 */
-	bool OpenGLThread::_GetComputeSettings (const Message< GpuMsg::GetComputeSettings > &msg)
+	bool OpenGLThread::_GetComputeSettings (const GpuMsg::GetComputeSettings &msg)
 	{
 		ComputeSettings	cs;
 		cs.device	= _settings.device;
 		cs.isDebug	= _settings.flags[ GraphicsSettings::EFlags::DebugContext ];
 		cs.version	= _settings.version;
 
-		msg->result.Set( RVREF(cs) );
+		msg.result.Set( RVREF(cs) );
 		return true;
 	}
 	
@@ -556,9 +556,9 @@ namespace Platforms
 	_GetDeviceProperties
 =================================================
 */
-	bool OpenGLThread::_GetDeviceProperties (const Message< GpuMsg::GetDeviceProperties > &msg)
+	bool OpenGLThread::_GetDeviceProperties (const GpuMsg::GetDeviceProperties &msg)
 	{
-		msg->result.Set( _device.GetProperties() );
+		msg.result.Set( _device.GetProperties() );
 		return true;
 	}
 //-----------------------------------------------------------------------------

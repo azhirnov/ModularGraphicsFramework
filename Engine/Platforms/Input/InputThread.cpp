@@ -70,15 +70,15 @@ namespace Platforms
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
-		bool _InputKey (const Message< ModuleMsg::InputKey > &);
-		bool _InputMotion (const Message< ModuleMsg::InputMotion > &);
-		bool _InputKeyBind (const Message< ModuleMsg::InputKeyBind > &);
-		bool _InputMotionBind (const Message< ModuleMsg::InputMotionBind > &);
-		bool _InputKeyUnbindAll (const Message< ModuleMsg::InputKeyUnbindAll > &);
-		bool _InputMotionUnbindAll (const Message< ModuleMsg::InputMotionUnbindAll > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
+		bool _InputKey (const ModuleMsg::InputKey &);
+		bool _InputMotion (const ModuleMsg::InputMotion &);
+		bool _InputKeyBind (const ModuleMsg::InputKeyBind &);
+		bool _InputMotionBind (const ModuleMsg::InputMotionBind &);
+		bool _InputKeyUnbindAll (const ModuleMsg::InputKeyUnbindAll &);
+		bool _InputMotionUnbindAll (const ModuleMsg::InputMotionUnbindAll &);
 	};
 //-----------------------------------------------------------------------------
 
@@ -138,7 +138,7 @@ namespace Platforms
 	_Delete
 =================================================
 */
-	bool InputThread::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool InputThread::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_keyBinds.Clear();
 		_motionBinds.Clear();
@@ -154,30 +154,30 @@ namespace Platforms
 	_AddToManager
 =================================================
 */
-	bool InputThread::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool InputThread::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
 		using KeyEventsList_t		= MessageListFrom< ModuleMsg::InputKey >;
 		using MotionEventsList_t	= MessageListFrom< ModuleMsg::InputMotion >;
 
-		CHECK_ERR( msg->module );
-		ASSERT( not _inputs.IsExist( msg->module ) );
+		CHECK_ERR( msg.module );
+		ASSERT( not _inputs.IsExist( msg.module ) );
 
-		_inputs.Add( msg->module );
+		_inputs.Add( msg.module );
 
 		bool	subscribed = false;
 
 		// key events
-		if ( msg->module->GetSupportedEvents().HasAllTypes< KeyEventsList_t >() )
+		if ( msg.module->GetSupportedEvents().HasAllTypes< KeyEventsList_t >() )
 		{
 			subscribed |= true;
-			msg->module->Subscribe( this, &InputThread::_InputKey );
+			msg.module->Subscribe( this, &InputThread::_InputKey );
 		}
 
 		// motion events
-		if ( msg->module->GetSupportedEvents().HasAllTypes< MotionEventsList_t >() )
+		if ( msg.module->GetSupportedEvents().HasAllTypes< MotionEventsList_t >() )
 		{
 			subscribed |= true;
-			msg->module->Subscribe( this, &InputThread::_InputMotion );
+			msg.module->Subscribe( this, &InputThread::_InputMotion );
 		}
 
 		// attached module hasn't any known input events
@@ -190,11 +190,11 @@ namespace Platforms
 	_RemoveFromManager
 =================================================
 */
-	bool InputThread::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool InputThread::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
-		CHECK_ERR( msg->module );
+		CHECK_ERR( msg.module );
 
-		ModulePtr	module = msg->module.Lock();
+		ModulePtr	module = msg.module.Lock();
 
 		if ( not module )
 			return false;
@@ -212,7 +212,7 @@ namespace Platforms
 	_InputKey
 =================================================
 */
-	bool InputThread::_InputKey (const Message< ModuleMsg::InputKey > &msg)
+	bool InputThread::_InputKey (const ModuleMsg::InputKey &msg)
 	{
 		_SendEvent( msg );
 
@@ -221,35 +221,35 @@ namespace Platforms
 
 		usize	idx = 0;
 
-		if ( _keyBinds.FindFirstIndex( msg->key, OUT idx ) )
+		if ( _keyBinds.FindFirstIndex( msg.key, OUT idx ) )
 		{
-			for (usize i = idx; i < _keyBinds.Count() and _keyBinds[i].first == msg->key; ++i)
+			for (usize i = idx; i < _keyBinds.Count() and _keyBinds[i].first == msg.key; ++i)
 			{
 				auto&	state = _keyBinds[i].second;
 
 				if ( state.bind.callback.IsValid() )
 				{
-					if ( msg->IsDown() and not state.pressed )
+					if ( msg.IsDown() and not state.pressed )
 					{
 						// first press
 						state.pressed = true;
 						
 						if ( state.bind.state == EKeyState::OnKeyDown )
-							state.bind.callback( *msg );
+							state.bind.callback( msg );
 					}
 					else
-					if ( msg->IsDown() )
+					if ( msg.IsDown() )
 					{
 						// continue pressing
 						if ( state.bind.state == EKeyState::OnKeyPressed )
-							state.bind.callback( *msg );
+							state.bind.callback( msg );
 					}
 					else
 					{
 						state.pressed = false;
 						
 						if ( state.bind.state == EKeyState::OnKeyUp )
-							state.bind.callback( *msg );
+							state.bind.callback( msg );
 					}
 				}
 				else {
@@ -266,7 +266,7 @@ namespace Platforms
 	_InputMotion
 =================================================
 */
-	bool InputThread::_InputMotion (const Message< ModuleMsg::InputMotion > &msg)
+	bool InputThread::_InputMotion (const ModuleMsg::InputMotion &msg)
 	{
 		_SendEvent( msg );
 
@@ -275,14 +275,14 @@ namespace Platforms
 
 		usize	idx = 0;
 
-		if ( _motionBinds.FindFirstIndex( msg->motion, OUT idx ) )
+		if ( _motionBinds.FindFirstIndex( msg.motion, OUT idx ) )
 		{
-			for (usize i = idx; i < _motionBinds.Count() and _motionBinds[i].first == msg->motion; ++i)
+			for (usize i = idx; i < _motionBinds.Count() and _motionBinds[i].first == msg.motion; ++i)
 			{
 				auto&	bind = _motionBinds[i].second;
 
 				if ( bind.callback.IsValid() ) {
-					bind.callback( *msg );
+					bind.callback( msg );
 				}
 				else {
 					_motionBinds.EraseByIndex( i );
@@ -298,11 +298,11 @@ namespace Platforms
 	_InputKeyBind
 =================================================
 */
-	bool InputThread::_InputKeyBind (const Message< ModuleMsg::InputKeyBind > &msg)
+	bool InputThread::_InputKeyBind (const ModuleMsg::InputKeyBind &msg)
 	{
-		CHECK_ERR( msg->callback );
+		CHECK_ERR( msg.callback );
 
-		_keyBinds.Add( msg->key, KeyBindState{*msg} );
+		_keyBinds.Add( msg.key, KeyBindState{msg} );
 		return true;
 	}
 	
@@ -311,11 +311,11 @@ namespace Platforms
 	_InputMotionBind
 =================================================
 */
-	bool InputThread::_InputMotionBind (const Message< ModuleMsg::InputMotionBind > &msg)
+	bool InputThread::_InputMotionBind (const ModuleMsg::InputMotionBind &msg)
 	{
-		CHECK_ERR( msg->callback );
+		CHECK_ERR( msg.callback );
 
-		_motionBinds.Add( msg->motion, *msg );
+		_motionBinds.Add( msg.motion, msg );
 		return true;
 	}
 	
@@ -324,14 +324,14 @@ namespace Platforms
 	_InputMotionBind
 =================================================
 */
-	bool InputThread::_InputKeyUnbindAll (const Message< ModuleMsg::InputKeyUnbindAll > &msg)
+	bool InputThread::_InputKeyUnbindAll (const ModuleMsg::InputKeyUnbindAll &msg)
 	{
 		CHECK_ERR( not _lockBindings );
 		SCOPE_SETTER( _lockBindings = true, false );
 
 		FOR( i, _keyBinds )
 		{
-			if ( _keyBinds[i].second.bind.callback.EqualPointers( msg->object.RawPtr() ) )
+			if ( _keyBinds[i].second.bind.callback.EqualPointers( msg.object.RawPtr() ) )
 			{
 				_keyBinds.EraseByIndex( i );
 				--i;
@@ -345,14 +345,14 @@ namespace Platforms
 	_InputMotionBind
 =================================================
 */
-	bool InputThread::_InputMotionUnbindAll (const Message< ModuleMsg::InputMotionUnbindAll > &msg)
+	bool InputThread::_InputMotionUnbindAll (const ModuleMsg::InputMotionUnbindAll &msg)
 	{
 		CHECK_ERR( not _lockBindings );
 		SCOPE_SETTER( _lockBindings = true, false );
 
 		FOR( i, _motionBinds )
 		{
-			if ( _motionBinds[i].second.callback.EqualPointers( msg->object.RawPtr() ) )
+			if ( _motionBinds[i].second.callback.EqualPointers( msg.object.RawPtr() ) )
 			{
 				_motionBinds.EraseByIndex( i );
 				--i;

@@ -35,7 +35,7 @@ namespace ImportExport
 										>;
 
 		using ImageMsgList_t		= MessageListFrom<
-											GpuMsg::GetImageDescriptor,
+											GpuMsg::GetImageDescription,
 											GpuMsg::WriteToImageMemory
 										>;
 
@@ -75,13 +75,13 @@ namespace ImportExport
 		
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _OnModuleAttached (const Message< ModuleMsg::OnModuleAttached > &msg);
-		bool _OnModuleDetached (const Message< ModuleMsg::OnModuleDetached > &msg);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _OnModuleAttached (const ModuleMsg::OnModuleAttached &msg);
+		bool _OnModuleDetached (const ModuleMsg::OnModuleDetached &msg);
 
 		// event handler
-		bool _OnImageComposed (const Message< ModuleMsg::AfterCompose > &);
+		bool _OnImageComposed (const ModuleMsg::AfterCompose &);
 
 
 	private:
@@ -134,7 +134,7 @@ namespace ImportExport
 	_Link
 =================================================
 */
-	bool GX_ImageLoader::_Link (const Message< ModuleMsg::Link > &msg)
+	bool GX_ImageLoader::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -159,7 +159,7 @@ namespace ImportExport
 	_Delete
 =================================================
 */
-	bool GX_ImageLoader::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool GX_ImageLoader::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_dataInput = null;
 		_levels.Clear();
@@ -172,11 +172,11 @@ namespace ImportExport
 	_OnModuleAttached
 =================================================
 */
-	bool GX_ImageLoader::_OnModuleAttached (const Message< ModuleMsg::OnModuleAttached > &msg)
+	bool GX_ImageLoader::_OnModuleAttached (const ModuleMsg::OnModuleAttached &msg)
 	{
-		if ( msg->attachedModule == this )
+		if ( msg.attachedModule == this )
 		{
-			_OnAttachedToParent( msg->parent );
+			_OnAttachedToParent( msg.parent );
 			CHECK( _SetState( EState::Initial ) );
 		}
 		return true;
@@ -187,19 +187,19 @@ namespace ImportExport
 	_OnModuleDetached
 =================================================
 */
-	bool GX_ImageLoader::_OnModuleDetached (const Message< ModuleMsg::OnModuleDetached > &msg)
+	bool GX_ImageLoader::_OnModuleDetached (const ModuleMsg::OnModuleDetached &msg)
 	{
-		if ( msg->detachedModule == this )
+		if ( msg.detachedModule == this )
 		{
-			if ( msg->isLast )
+			if ( msg.isLast )
 			{
-				_OnDetachedFromParent( msg->parent );
+				_OnDetachedFromParent( msg.parent );
 				CHECK( _UnloadImage() );
 			}
 		}
 		else
 		{
-			UnsubscribeAll( msg->detachedModule );
+			UnsubscribeAll( msg.detachedModule );
 		}
 		return true;
 	}
@@ -209,7 +209,7 @@ namespace ImportExport
 	_OnImageComposed
 =================================================
 */
-	bool GX_ImageLoader::_OnImageComposed (const Message< ModuleMsg::AfterCompose > &)
+	bool GX_ImageLoader::_OnImageComposed (const ModuleMsg::AfterCompose &)
 	{
 		CHECK_ERR( _UpdateTexture() );
 
@@ -229,25 +229,25 @@ namespace ImportExport
 		// read header
 		GXImageFormat::Header	header = {};
 		{
-			_dataInput->Send< DSMsg::ReadRegion >({ BinArrayRef::FromValue( header ) });
+			_dataInput->Send( DSMsg::ReadRegion{ BinArrayRef::FromValue( header ) });
 
 			const usize		num_levels	= header.layers * header.maxLevel;
 			_levels.Resize( num_levels, false );
 
-			_dataInput->Send< DSMsg::ReadRegion >({ BinArrayRef::From( _levels ) });
-			_dataInput->Send< DSMsg::ReleaseData >({});
+			_dataInput->Send( DSMsg::ReadRegion{ BinArrayRef::From( _levels ) });
+			_dataInput->Send( DSMsg::ReleaseData{} );
 
 			_format = header.pixelFormat;
 		}
 
 		// update image descriptor
-		ImageDescriptor		descr;
+		ImageDescription	descr;
 		ModulePtr			image = _GetParents().Front();
 
-		Message< GpuMsg::GetImageDescriptor >	req_descr;
+		GpuMsg::GetImageDescription	req_descr;
 		CHECK( image->Send( req_descr ) );
 
-		descr			= *req_descr->result;
+		descr			= *req_descr.result;
 		descr.dimension	= Max( uint4( header.width, header.height, header.depth, header.layers ), 1u );
 		descr.format	= header.pixelFormat;
 		descr.maxLevel	= MipmapLevel( header.maxLevel );
@@ -284,7 +284,7 @@ namespace ImportExport
 		else
 			CHECK_ERR( img_type == descr.imageType );
 		
-		CHECK( image->Send< GpuMsg::SetImageDescriptor >({ descr }) );
+		CHECK( image->Send( GpuMsg::SetImageDescription{ descr }) );
 
 		CHECK( image->Subscribe( this, &GX_ImageLoader::_OnImageComposed ) );
 		return true;
@@ -298,7 +298,7 @@ namespace ImportExport
 	bool GX_ImageLoader::_UnloadImage ()
 	{
 		if ( _dataInput )
-			_dataInput->Send< DSMsg::ReleaseData >({});
+			_dataInput->Send( DSMsg::ReleaseData{} );
 
 		_format = Uninitialized;
 		_levels.Clear();
@@ -320,71 +320,69 @@ namespace ImportExport
 		BitsU		bpp			= EPixelFormat::BitPerPixel( _format );
 
 		// prepare
-		Message< GpuMsg::GetDeviceInfo >	req_dev;
+		GpuMsg::GetDeviceInfo			req_dev;
 		CHECK( image->Send( req_dev ) );
 
-		Message< GpuMsg::GetGraphicsModules >	req_ids;
-		CHECK( req_dev->result->gpuThread->Send( req_ids ) );
+		GpuMsg::GetGraphicsModules		req_ids;
+		CHECK( req_dev.result->gpuThread->Send( req_ids ) );
 
-		Message< GpuMsg::GetImageDescriptor >	req_descr;
+		GpuMsg::GetImageDescription		req_descr;
 		CHECK( image->Send( req_descr ) );
 
-		Message< GpuMsg::GetImageMemoryLayout >	req_layout;
+		GpuMsg::GetImageMemoryLayout	req_layout;
 		CHECK( image->Send( req_layout ) );
 
 
 		// copy buffer to image
-		Message< GraphicsMsg::CmdBeginAsync >	begin;
-		begin->syncMode = GraphicsMsg::CmdBeginAsync::EMode::BeforeFrame;
+		GraphicsMsg::CmdBeginAsync		begin;
+		begin.syncMode = GraphicsMsg::CmdBeginAsync::EMode::BeforeFrame;
 
 		CHECK( cmd->Send( begin ) );
 		
-		cmd->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::TopOfPipe,
-												  EPipelineStage::Transfer,
-												  EPipelineAccess::bits(),
-												  EPipelineAccess::TransferWrite,
-												  EImageLayout::Undefined,
-												  EImageLayout::TransferDstOptimal,
-												  image,
-												  EImageAspect::Color });
+		cmd->Send( GpuMsg::CmdPipelineBarrier{ EPipelineStage::TopOfPipe, EPipelineStage::Transfer }
+						.AddImage({	image,
+									EPipelineAccess::bits(),
+									EPipelineAccess::TransferWrite,
+									EImageLayout::Undefined,
+									EImageLayout::TransferDstOptimal,
+									EImageAspect::Color }) );
 
 		// load levels
 		for (const auto& level : _levels)
 		{
 			ModulePtr	buffer;
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-										req_ids->graphics->buffer,
+										req_ids.graphics->buffer,
 										GlobalSystems(),
 										CreateInfo::GpuBuffer{
-											BufferDescriptor{ level.slicePitch * level.dimension.z, EBufferUsage::TransferSrc },
+											BufferDescription{ level.slicePitch * level.dimension.z, EBufferUsage::TransferSrc },
 											EGpuMemory::CoherentWithCPU,
 											EMemoryAccess::CpuWrite | EMemoryAccess::GpuRead },
 										OUT buffer ) );
 			ModuleUtils::Initialize({ buffer });
 
-			Message< GpuMsg::MapMemoryToCpu >	map_cmd{ GpuMsg::EMappingFlags::WriteDiscard };
+			GpuMsg::MapMemoryToCpu	map_cmd{ GpuMsg::EMappingFlags::WriteDiscard };
 			buffer->Send( map_cmd );
 
-			_dataInput->Send< DSMsg::ReadRegion >({ *map_cmd->result });
+			_dataInput->Send( DSMsg::ReadRegion{ *map_cmd.result });
 
-			buffer->Send< GpuMsg::UnmapMemory >({});
+			buffer->Send( GpuMsg::UnmapMemory{} );
 			
-			cmd->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::Host,
-													  EPipelineStage::Transfer,
-													  EPipelineAccess::HostWrite,
-													  EPipelineAccess::TransferRead,
-													  buffer,
-													  BytesUL(0), BytesUL(ulong(UMax)) });
+			cmd->Send( GpuMsg::CmdPipelineBarrier{ EPipelineStage::Host, EPipelineStage::Transfer }
+							.AddBuffer({ buffer,
+										 EPipelineAccess::HostWrite,
+										 EPipelineAccess::TransferRead,
+										 BytesUL(0), BytesUL(ulong(UMax)) }) );
 
-			Message< GpuMsg::CmdCopyBufferToImage >	copy;
-			copy->dstImage		= image;
-			copy->srcBuffer		= buffer;
-			copy->dstLayout		= EImageLayout::TransferDstOptimal;
-			copy->regions.PushBack({});
-			copy->regions.Back().bufferRowLength		 = uint(level.rowPitch.ToBits()) / uint(bpp);
-			copy->regions.Back().bufferImageHeight		 = uint(level.slicePitch / level.rowPitch);
-			copy->regions.Back().imageSize				 = level.dimension;
-			copy->regions.Back().imageLayers.aspectMask	|= EImageAspect::Color;
+			GpuMsg::CmdCopyBufferToImage	copy;
+			copy.dstImage		= image;
+			copy.srcBuffer		= buffer;
+			copy.dstLayout		= EImageLayout::TransferDstOptimal;
+			copy.regions.PushBack({});
+			copy.regions.Back().bufferRowLength			= uint(level.rowPitch.ToBits()) / uint(bpp);
+			copy.regions.Back().bufferImageHeight		= uint(level.slicePitch / level.rowPitch);
+			copy.regions.Back().imageSize				= level.dimension;
+			copy.regions.Back().imageLayers.aspectMask	|= EImageAspect::Color;
 
 			CHECK( cmd->Send( copy ) );
 		}
@@ -404,16 +402,15 @@ namespace ImportExport
 				RETURN_ERR( "image layout " << EImageLayout::ToString( _imageLayout ) << " is not supported!" );
 		}
 
-		cmd->Send< GpuMsg::CmdPipelineBarrier >({ EPipelineStage::Transfer,
-												  dst_stage,
-												  EPipelineAccess::TransferWrite,
-												  dst_access,
-												  EImageLayout::TransferDstOptimal,
-												  _imageLayout,
-												  image,
-												  EImageAspect::Color });
+		cmd->Send( GpuMsg::CmdPipelineBarrier{ EPipelineStage::Transfer, dst_stage }
+						.AddImage({	image,
+									EPipelineAccess::TransferWrite,
+									dst_access,
+									EImageLayout::TransferDstOptimal,
+									_imageLayout,
+									EImageAspect::Color }) );
 
-		CHECK( cmd->Send< GraphicsMsg::CmdEndAsync >({}) );
+		CHECK( cmd->Send( GraphicsMsg::CmdEndAsync{} ) );
 		
 		_UnloadImage();
 		return true;

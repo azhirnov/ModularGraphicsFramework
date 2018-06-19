@@ -29,7 +29,7 @@ namespace PipelineCompiler
 	// Shader Program Compiler
 	//
 
-	class ShaderCompiler
+	class ShaderCompiler final
 	{
 	// types
 	public:
@@ -64,6 +64,8 @@ namespace PipelineCompiler
 
 
 	private:
+		class ShaderIncluder;
+
 		struct _GLSLangResult;
 		struct _ShaderData;
 		
@@ -78,8 +80,8 @@ namespace PipelineCompiler
 			bool		_glInit		= false;
 			
 		private:
-			bool _CLInit (const Message< GpuMsg::DeviceCreated > &);
-			bool _GLInit (const Message< GpuMsg::DeviceCreated > &);
+			bool _CLInit (const GpuMsg::DeviceCreated &);
+			bool _GLInit (const GpuMsg::DeviceCreated &);
 
 		public:
 			bool IsContextInit () const;
@@ -101,10 +103,11 @@ namespace PipelineCompiler
 		ShaderCompiler ();
 		~ShaderCompiler ();
 
-		bool Translate (EShader::type shaderType, ArrayCRef<StringCRef> source, StringCRef entryPoint,
+		bool Translate (EShader::type shaderType, ArrayCRef<StringCRef> source, StringCRef entryPoint, StringCRef baseFolder,
 						const Config &cfg, OUT String &log, OUT BinaryArray &result);
 
-		bool Deserialize (EShaderSrcFormat::type shaderFmt, EShader::type shaderType, ArrayCRef<StringCRef> source, StringCRef entryPoint,
+		bool Deserialize (EShaderSrcFormat::type shaderFmt, EShader::type shaderType, ArrayCRef<StringCRef> source,
+						  StringCRef entryPoint, StringCRef baseFolder,
 						  OUT String &log, OUT DeserializedShader &result);
 
 		bool Validate (EShaderDstFormat::type shaderFmt, EShader::type shaderType, BinArrayCRef data);
@@ -116,7 +119,7 @@ namespace PipelineCompiler
 
 
 	private:
-		bool _GLSLangParse (const Config &cfg, const _ShaderData &shader, OUT String &log, OUT _GLSLangResult &result) const;
+		bool _GLSLangParse (const Config &cfg, const _ShaderData &shader, StringCRef baseFolder, OUT String &log, OUT _GLSLangResult &result) const;
 
 		bool _Compile (const glslang::TIntermediate* intermediate, const Config &cfg, OUT String &log, OUT BinaryArray &result) const;
 
@@ -124,7 +127,8 @@ namespace PipelineCompiler
 
 		bool _CheckGLAErrors (OUT String *log = null) const;
 		
-		bool _OnCompilationFailed (EShader::type shaderType, EShaderSrcFormat::type fmt, ArrayCRef<StringCRef> source, INOUT String &log) const;
+		bool _OnCompilationFailed (EShader::type shaderType, EShaderSrcFormat::type fmt, ArrayCRef<StringCRef> source,
+								   const ShaderIncluder &includer, INOUT String &log) const;
 
 		static void _GenerateResources (OUT TBuiltInResource& resources);
 		

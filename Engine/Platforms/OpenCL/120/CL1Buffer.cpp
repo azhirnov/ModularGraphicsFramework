@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -34,27 +34,27 @@ namespace PlatformCL
 	// types
 	private:
 		using SupportedMessages_t	= CL1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											DSMsg::GetDataSourceDescriptor,
+											DSMsg::GetDataSourceDescription,
 											DSMsg::ReadRegion,
 											DSMsg::WriteRegion,
-											GpuMsg::GetGpuMemoryDescriptor,
+											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::FlushMemoryRange,
 											GpuMsg::UnmapMemory,
 											GpuMsg::ReadFromGpuMemory,
 											GpuMsg::WriteToGpuMemory,
-											GpuMsg::GetBufferDescriptor,
-											GpuMsg::SetBufferDescriptor,
+											GpuMsg::GetBufferDescription,
+											GpuMsg::SetBufferDescription,
 											GpuMsg::GetCLBufferID,
 											GpuMsg::CreateCLSubBuffer,
 											GpuMsg::GpuMemoryRegionChanged
 										> >;
 
 		using SupportedEvents_t		= CL1BaseModule::SupportedEvents_t::Append< MessageListFrom<
-											GpuMsg::SetBufferDescriptor
+											GpuMsg::SetBufferDescription
 										> >;
 		
-		using MemoryMsg_t			= MessageListFrom< GpuMsg::GetGpuMemoryDescriptor >;
+		using MemoryMsg_t			= MessageListFrom< GpuMsg::GetGpuMemoryDescription >;
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 
 		using SubBufferMap_t		= HashMap< Pair<BytesUL, BytesUL>, cl_mem >;
@@ -78,7 +78,7 @@ namespace PlatformCL
 
 	// variables
 	private:
-		BufferDescriptor		_descr;
+		BufferDescription		_descr;
 		cl_mem					_bufferId;
 		SubBufferMap_t			_subBuffers;
 		
@@ -97,30 +97,30 @@ namespace PlatformCL
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _AttachModule (const Message< ModuleMsg::AttachModule > &);
-		bool _DetachModule (const Message< ModuleMsg::DetachModule > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _AttachModule (const ModuleMsg::AttachModule &);
+		bool _DetachModule (const ModuleMsg::DetachModule &);
 
-		bool _GetCLBufferID (const Message< GpuMsg::GetCLBufferID > &);
-		bool _CreateCLSubBuffer (const Message< GpuMsg::CreateCLSubBuffer > &);
-		bool _SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &);
-		bool _GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &);
-		bool _GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &);
-		bool _GetGpuMemoryDescriptor (const Message< GpuMsg::GetGpuMemoryDescriptor > &);
-		bool _GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &);
-		bool _ReadFromGpuMemory (const Message< GpuMsg::ReadFromGpuMemory > &);
-		bool _WriteToGpuMemory (const Message< GpuMsg::WriteToGpuMemory > &);
-		bool _ReadRegion (const Message< DSMsg::ReadRegion > &);
-		bool _WriteRegion (const Message< DSMsg::WriteRegion > &);
-		bool _MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &);
-		bool _FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &);
-		bool _UnmapMemory (const Message< GpuMsg::UnmapMemory > &);
+		bool _GetCLBufferID (const GpuMsg::GetCLBufferID &);
+		bool _CreateCLSubBuffer (const GpuMsg::CreateCLSubBuffer &);
+		bool _SetBufferDescription (const GpuMsg::SetBufferDescription &);
+		bool _GetBufferDescription (const GpuMsg::GetBufferDescription &);
+		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
+		bool _GetGpuMemoryDescription (const GpuMsg::GetGpuMemoryDescription &);
+		bool _GetDataSourceDescription (const DSMsg::GetDataSourceDescription &);
+		bool _ReadFromGpuMemory (const GpuMsg::ReadFromGpuMemory &);
+		bool _WriteToGpuMemory (const GpuMsg::WriteToGpuMemory &);
+		bool _ReadRegion (const DSMsg::ReadRegion &);
+		bool _WriteRegion (const DSMsg::WriteRegion &);
+		bool _MapMemoryToCpu (const GpuMsg::MapMemoryToCpu &);
+		bool _FlushMemoryRange (const GpuMsg::FlushMemoryRange &);
+		bool _UnmapMemory (const GpuMsg::UnmapMemory &);
 
 	// event handlers
-		bool _OnSharedObjectComposed (const Message< ModuleMsg::AfterCompose > &);
-		bool _OnSharedObjectDeleted (const Message< ModuleMsg::Delete > &);
+		bool _OnSharedObjectComposed (const ModuleMsg::AfterCompose &);
+		bool _OnSharedObjectDeleted (const ModuleMsg::Delete &);
 
 
 	private:
@@ -165,11 +165,11 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1Buffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &CL1Buffer::_GetCLBufferID );
 		_SubscribeOnMsg( this, &CL1Buffer::_CreateCLSubBuffer );
-		_SubscribeOnMsg( this, &CL1Buffer::_SetBufferDescriptor );
-		_SubscribeOnMsg( this, &CL1Buffer::_GetBufferDescriptor );
+		_SubscribeOnMsg( this, &CL1Buffer::_SetBufferDescription );
+		_SubscribeOnMsg( this, &CL1Buffer::_GetBufferDescription );
 		_SubscribeOnMsg( this, &CL1Buffer::_GpuMemoryRegionChanged );
-		_SubscribeOnMsg( this, &CL1Buffer::_GetDataSourceDescriptor );
-		_SubscribeOnMsg( this, &CL1Buffer::_GetGpuMemoryDescriptor );
+		_SubscribeOnMsg( this, &CL1Buffer::_GetDataSourceDescription );
+		_SubscribeOnMsg( this, &CL1Buffer::_GetGpuMemoryDescription );
 		_SubscribeOnMsg( this, &CL1Buffer::_ReadFromGpuMemory );
 		_SubscribeOnMsg( this, &CL1Buffer::_WriteToGpuMemory );
 		_SubscribeOnMsg( this, &CL1Buffer::_ReadRegion );
@@ -205,7 +205,7 @@ namespace PlatformCL
 	_Link
 =================================================
 */
-	bool CL1Buffer::_Link (const Message< ModuleMsg::Link > &msg)
+	bool CL1Buffer::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
@@ -265,12 +265,12 @@ namespace PlatformCL
 		
 		_sharedObj->Subscribe( this, &CL1Buffer::_OnSharedObjectComposed );
 		_sharedObj->Subscribe( this, &CL1Buffer::_OnSharedObjectDeleted );
-		_sharedObj->Subscribe( this, &CL1Buffer::_SetBufferDescriptor );
+		_sharedObj->Subscribe( this, &CL1Buffer::_SetBufferDescription );
 		
 		// copy descriptor
-		Message< GpuMsg::GetBufferDescriptor >	req_descr;
+		GpuMsg::GetBufferDescription		req_descr;
 		_sharedObj->Send( req_descr );
-		_descr = *req_descr->result;
+		_descr = *req_descr.result;
 		
 		return true;
 	}
@@ -280,7 +280,7 @@ namespace PlatformCL
 	_Compose
 =================================================
 */
-	bool CL1Buffer::_Compose (const Message< ModuleMsg::Compose > &)
+	bool CL1Buffer::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -300,7 +300,7 @@ namespace PlatformCL
 	_OnSharedObjectComposed
 =================================================
 */
-	bool CL1Buffer::_OnSharedObjectComposed (const Message< ModuleMsg::AfterCompose > &)
+	bool CL1Buffer::_OnSharedObjectComposed (const ModuleMsg::AfterCompose &)
 	{
 		CHECK_ERR( GetState() == EState::Linked );
 
@@ -314,7 +314,7 @@ namespace PlatformCL
 	_OnSharedObjectDeleted
 =================================================
 */
-	bool CL1Buffer::_OnSharedObjectDeleted (const Message< ModuleMsg::Delete > &)
+	bool CL1Buffer::_OnSharedObjectDeleted (const ModuleMsg::Delete &)
 	{
 		_DestroyAll();
 
@@ -327,7 +327,7 @@ namespace PlatformCL
 	_Delete
 =================================================
 */
-	bool CL1Buffer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool CL1Buffer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_DestroyAll();
 
@@ -339,12 +339,12 @@ namespace PlatformCL
 	_AttachModule
 =================================================
 */
-	bool CL1Buffer::_AttachModule (const Message< ModuleMsg::AttachModule > &msg)
+	bool CL1Buffer::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
 		// memory objects is not supported in OpenCL 1.2
-		CHECK_ERR( not msg->newModule->GetSupportedEvents().HasAnyType< MemoryEvents_t >() );
+		CHECK_ERR( not msg.newModule->GetSupportedEvents().HasAnyType< MemoryEvents_t >() );
 
-		CHECK( _Attach( msg->name, msg->newModule ) );
+		CHECK( _Attach( msg.name, msg.newModule ) );
 
 		return true;
 	}
@@ -354,11 +354,11 @@ namespace PlatformCL
 	_DetachModule
 =================================================
 */
-	bool CL1Buffer::_DetachModule (const Message< ModuleMsg::DetachModule > &msg)
+	bool CL1Buffer::_DetachModule (const ModuleMsg::DetachModule &msg)
 	{
-		CHECK( _Detach( msg->oldModule ) );
+		CHECK( _Detach( msg.oldModule ) );
 
-		if ( msg->oldModule == _sharedObj )
+		if ( msg.oldModule == _sharedObj )
 		{
 			_OnSharedObjectDeleted({});
 		}
@@ -367,25 +367,25 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_SetBufferDescriptor
+	_SetBufferDescription
 =================================================
 */
-	bool CL1Buffer::_SetBufferDescriptor (const Message< GpuMsg::SetBufferDescriptor > &msg)
+	bool CL1Buffer::_SetBufferDescription (const GpuMsg::SetBufferDescription &msg)
 	{
 		CHECK_ERR( GetState() == EState::Initial );
 
-		_descr = msg->descr;
+		_descr = msg.descr;
 		return true;
 	}
 
 /*
 =================================================
-	_GetBufferDescriptor
+	_GetBufferDescription
 =================================================
 */
-	bool CL1Buffer::_GetBufferDescriptor (const Message< GpuMsg::GetBufferDescriptor > &msg)
+	bool CL1Buffer::_GetBufferDescription (const GpuMsg::GetBufferDescription &msg)
 	{
-		msg->result.Set( _descr );
+		msg.result.Set( _descr );
 		return true;
 	}
 	
@@ -394,11 +394,11 @@ namespace PlatformCL
 	_GetCLBufferID
 =================================================
 */
-	bool CL1Buffer::_GetCLBufferID (const Message< GpuMsg::GetCLBufferID > &msg)
+	bool CL1Buffer::_GetCLBufferID (const GpuMsg::GetCLBufferID &msg)
 	{
 		ASSERT( _IsCreated() );
 
-		msg->result.Set({ _bufferId, _sharing });
+		msg.result.Set({ _bufferId, _sharing });
 		return true;
 	}
 	
@@ -407,19 +407,19 @@ namespace PlatformCL
 	_GetCLBufferID
 =================================================
 */
-	bool CL1Buffer::_CreateCLSubBuffer (const Message< GpuMsg::CreateCLSubBuffer > &msg)
+	bool CL1Buffer::_CreateCLSubBuffer (const GpuMsg::CreateCLSubBuffer &msg)
 	{
 		CHECK_ERR( _IsCreated() );
-		CHECK_ERR( msg->offset < _descr.size and msg->offset + msg->size <= _descr.size );
+		CHECK_ERR( msg.offset < _descr.size and msg.offset + msg.size <= _descr.size );
 
-		if ( msg->offset == BytesUL(0) and msg->size == _descr.size )
+		if ( msg.offset == BytesUL(0) and msg.size == _descr.size )
 		{
-			msg->result.Set({ _bufferId, _sharing });
+			msg.result.Set({ _bufferId, _sharing });
 			return true;
 		}
 
 		SubBufferMap_t::iterator		iter;
-		const SubBufferMap_t::Key_t		key {msg->offset, msg->size};
+		const SubBufferMap_t::Key_t		key {msg.offset, msg.size};
 
 		if ( not _subBuffers.Find( key, OUT iter ) )
 		{
@@ -428,7 +428,7 @@ namespace PlatformCL
 				size_t size;
 			};
 
-			cl_buffer_region	info	= { size_t(msg->offset), size_t(msg->size) };
+			cl_buffer_region	info	= { size_t(msg.offset), size_t(msg.size) };
 			cl_int				cl_err	= 0;
 			cl_mem				sub_buf = null;
 			CL_CALL( (sub_buf = clCreateSubBuffer(	_bufferId,
@@ -440,7 +440,7 @@ namespace PlatformCL
 			iter = _subBuffers.Add( key, sub_buf );
 		}
 
-		msg->result.Set({ iter->second, _sharing });
+		msg.result.Set({ iter->second, _sharing });
 		return true;
 	}
 
@@ -484,25 +484,25 @@ namespace PlatformCL
 		CHECK_ERR( _sharedObj );
 		
 		// update memory flags
-		Message< GpuMsg::GetGpuMemoryDescriptor >	req_descr;
+		GpuMsg::GetGpuMemoryDescription	req_descr;
 		_sharedObj->Send( req_descr );
-		_memFlags	= req_descr->result->flags;
+		_memFlags	= req_descr.result->flags;
 
-		_memMapper.ResetFlags( req_descr->result->flags, req_descr->result->access );
+		_memMapper.ResetFlags( req_descr.result->flags, req_descr.result->access );
 
 
 		#ifdef GRAPHICS_API_OPENGL
 		if ( _sharing == ESharing::OpenGL )
 		{
-			Message< GpuMsg::GetGLBufferID >	req_buf;
+			GpuMsg::GetGLBufferID	req_buf;
 			_sharedObj->Send( req_buf );
-			CHECK_ERR( req_buf->result.Get(0) != 0 );
+			CHECK_ERR( req_buf.result.Get(0) != 0 );
 
 			cl_int	cl_err = 0;
 			CL_CHECK( ((_bufferId = clCreateFromGLBuffer(
 								GetContext(),
 								CL1Enum( _memFlags, _memMapper.MemoryAccess() ),
-								*req_buf->result,
+								*req_buf.result,
 								OUT &cl_err )), cl_err ) );
 		}
 		#endif
@@ -548,18 +548,18 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_GetDataSourceDescriptor
+	_GetDataSourceDescription
 =================================================
 */
-	bool CL1Buffer::_GetDataSourceDescriptor (const Message< DSMsg::GetDataSourceDescriptor > &msg)
+	bool CL1Buffer::_GetDataSourceDescription (const DSMsg::GetDataSourceDescription &msg)
 	{
-		DataSourceDescriptor	descr;
+		DataSourceDescription	descr;
 		
 		descr.memoryFlags	= _memMapper.MappingAccess();
 		descr.available		= _memMapper.MappedSize();
 		descr.totalSize		= _descr.size;
 
-		msg->result.Set( descr );
+		msg.result.Set( descr );
 		return true;
 	}
 	
@@ -568,16 +568,16 @@ namespace PlatformCL
 	_ReadRegion
 =================================================
 */
-	bool CL1Buffer::_ReadRegion (const Message< DSMsg::ReadRegion > &msg)
+	bool CL1Buffer::_ReadRegion (const DSMsg::ReadRegion &msg)
 	{
 		BinArrayCRef	data;
-		CHECK_ERR( _memMapper.Read( msg->position, BytesUL(msg->writableBuffer->Size()), OUT data ) );
+		CHECK_ERR( _memMapper.Read( msg.position, BytesUL(msg.writableBuffer->Size()), OUT data ) );
 
-		MemCopy( *msg->writableBuffer, data );
+		MemCopy( *msg.writableBuffer, data );
 
-		msg->result.Set( msg->writableBuffer->SubArray( 0, data.Count() ) );
+		msg.result.Set( msg.writableBuffer->SubArray( 0, data.Count() ) );
 		
-		//_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuRead, _memMapper.MappedOffset() + msg->offset, BytesUL(data.Size()) });
+		//_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuRead, _memMapper.MappedOffset() + msg.offset, BytesUL(data.Size()) });
 		return true;
 	}
 	
@@ -586,13 +586,13 @@ namespace PlatformCL
 	_WriteRegion
 =================================================
 */
-	bool CL1Buffer::_WriteRegion (const Message< DSMsg::WriteRegion > &msg)
+	bool CL1Buffer::_WriteRegion (const DSMsg::WriteRegion &msg)
 	{
 		BytesUL	written;
-		CHECK_ERR( _memMapper.Write( msg->data, msg->position, OUT written ) );
-		msg->wasWritten.Set( written );
+		CHECK_ERR( _memMapper.Write( msg.data, msg.position, OUT written ) );
+		msg.wasWritten.Set( written );
 
-		//_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, _memMapper.MappedOffset() + msg->offset, written });
+		//_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuWrite, _memMapper.MappedOffset() + msg.offset, written });
 		return true;
 	}
 	
@@ -601,12 +601,12 @@ namespace PlatformCL
 	_MapMemoryToCpu
 =================================================
 */
-	bool CL1Buffer::_MapMemoryToCpu (const Message< GpuMsg::MapMemoryToCpu > &msg)
+	bool CL1Buffer::_MapMemoryToCpu (const GpuMsg::MapMemoryToCpu &msg)
 	{
-		CHECK_ERR( _IsCreated() and _memMapper.IsMappingAllowed( msg->flags ) );
-		CHECK_ERR( msg->position < _descr.size );
+		CHECK_ERR( _IsCreated() and _memMapper.IsMappingAllowed( msg.flags ) );
+		CHECK_ERR( msg.position < _descr.size );
 		
-		const BytesUL	size	= Min( _descr.size, msg->size );
+		const BytesUL	size	= Min( _descr.size, msg.size );
 		void *			ptr		= null;
 
 		CHECK( GetDevice()->AddSharedObj( this, _bufferId, _sharing ) );
@@ -617,16 +617,16 @@ namespace PlatformCL
 									GetCommandQueue(),
 									_bufferId,
 									CL_TRUE, // blocking
-									CL1Enum( _memMapper.MemoryAccess(), msg->flags ),
-									size_t(msg->position),
+									CL1Enum( _memMapper.MemoryAccess(), msg.flags ),
+									size_t(msg.position),
 									size_t(size),
 									0, null,
 									null,
 									&cl_err )), cl_err ));
 		
-		_memMapper.OnMapped( ptr, msg->position, size, msg->flags );
+		_memMapper.OnMapped( ptr, msg.position, size, msg.flags );
 
-		msg->result.Set( BinArrayRef::FromVoid( ptr, BytesU(size) ) );
+		msg.result.Set( BinArrayRef::FromVoid( ptr, BytesU(size) ) );
 		return true;
 	}
 	
@@ -635,9 +635,9 @@ namespace PlatformCL
 	_FlushMemoryRange
 =================================================
 */
-	bool CL1Buffer::_FlushMemoryRange (const Message< GpuMsg::FlushMemoryRange > &msg)
+	bool CL1Buffer::_FlushMemoryRange (const GpuMsg::FlushMemoryRange &msg)
 	{
-		CHECK_ERR( _memMapper.FlushMemoryRange( msg->offset, msg->size ) );
+		CHECK_ERR( _memMapper.FlushMemoryRange( msg.offset, msg.size ) );
 
 		TODO("");
 		return true;
@@ -648,7 +648,7 @@ namespace PlatformCL
 	_UnmapMemory
 =================================================
 */
-	bool CL1Buffer::_UnmapMemory (const Message< GpuMsg::UnmapMemory > &)
+	bool CL1Buffer::_UnmapMemory (const GpuMsg::UnmapMemory &)
 	{
 		CL_CHECK( clEnqueueUnmapMemObject( GetCommandQueue(),
 										   _bufferId,
@@ -667,38 +667,38 @@ namespace PlatformCL
 	_ReadFromGpuMemory
 =================================================
 */
-	bool CL1Buffer::_ReadFromGpuMemory (const Message< GpuMsg::ReadFromGpuMemory > &msg)
+	bool CL1Buffer::_ReadFromGpuMemory (const GpuMsg::ReadFromGpuMemory &msg)
 	{
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
-		CHECK_ERR( msg->writableBuffer->Size() > 0 );
-		CHECK_ERR( msg->position < _descr.size );
+		CHECK_ERR( msg.writableBuffer->Size() > 0 );
+		CHECK_ERR( msg.position < _descr.size );
 		
-		const BytesUL	req_size = BytesUL(msg->writableBuffer->Size());
+		const BytesUL	req_size = BytesUL(msg.writableBuffer->Size());
 
 		// read from mapped memory
 		if ( _memMapper.IsMapped() )
 		{
-			CHECK_ERR( msg->position >= _memMapper.MappedOffset() and
-					   msg->position + req_size <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
+			CHECK_ERR( msg.position >= _memMapper.MappedOffset() and
+					   msg.position + req_size <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
 
 			// read
-			Message< DSMsg::ReadRegion >	read_stream;
-			read_stream->position		= msg->position - _memMapper.MappedOffset();
-			read_stream->writableBuffer	= msg->writableBuffer;
+			DSMsg::ReadRegion	read_stream;
+			read_stream.position		= msg.position - _memMapper.MappedOffset();
+			read_stream.writableBuffer	= msg.writableBuffer;
 
 			CHECK( _ReadRegion( read_stream ) );
 			
 			// copy to writable buffer
-			CHECK( msg->writableBuffer->Size() >= read_stream->result->Size() );
+			CHECK( msg.writableBuffer->Size() >= read_stream.result->Size() );
 
-			MemCopy( *msg->writableBuffer, *read_stream->result );
-			msg->result.Set( msg->writableBuffer->SubArray( 0, usize(read_stream->result->Size()) ) );
+			MemCopy( *msg.writableBuffer, *read_stream.result );
+			msg.result.Set( msg.writableBuffer->SubArray( 0, usize(read_stream.result->Size()) ) );
 			return true;
 		}
 
 		// read without mapping
-		const usize		size = Min( usize(_descr.size - msg->position), usize(req_size) );
+		const usize		size = Min( usize(_descr.size - msg.position), usize(req_size) );
 		
 		CHECK( GetDevice()->AddSharedObj( this, _bufferId, _sharing ) );
 		CHECK( GetDevice()->AcquireSharedObj( this ) );
@@ -706,15 +706,15 @@ namespace PlatformCL
 		CL_CALL( clEnqueueReadBuffer( GetCommandQueue(),
 									  _bufferId,
 									  CL_TRUE,	// blocking
-									  size_t(msg->position),
+									  size_t(msg.position),
 									  size_t(size),
-									  OUT msg->writableBuffer->ptr(),
+									  OUT msg.writableBuffer->ptr(),
 									  0, null,
 									  null ) );
 		
 		CHECK( GetDevice()->ReleaseSharedObj( this ) );
 
-		msg->result.Set( msg->writableBuffer->SubArray( 0, size ) );
+		msg.result.Set( msg.writableBuffer->SubArray( 0, size ) );
 		return true;
 	}
 		
@@ -723,41 +723,41 @@ namespace PlatformCL
 	_WriteToGpuMemory
 =================================================
 */
-	bool CL1Buffer::_WriteToGpuMemory (const Message< GpuMsg::WriteToGpuMemory > &msg)
+	bool CL1Buffer::_WriteToGpuMemory (const GpuMsg::WriteToGpuMemory &msg)
 	{
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
-		CHECK_ERR( msg->position < _descr.size );
+		CHECK_ERR( msg.position < _descr.size );
 		
 		// write to mapped memory
 		if ( _memMapper.IsMapped() )
 		{
-			CHECK_ERR( msg->position >= _memMapper.MappedOffset() and
-					   msg->position + BytesUL(msg->data.Size()) <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
+			CHECK_ERR( msg.position >= _memMapper.MappedOffset() and
+					   msg.position + BytesUL(msg.data.Size()) <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
 
 			// write
-			Message< DSMsg::WriteRegion >		write_stream;
-			write_stream->position	= msg->position - _memMapper.MappedOffset();
-			write_stream->data		= msg->data;
+			DSMsg::WriteRegion	write_stream;
+			write_stream.position	= msg.position - _memMapper.MappedOffset();
+			write_stream.data		= msg.data;
 
 			CHECK( _WriteRegion( write_stream ) );
 
 			// flush
 			if ( not _memFlags[ EGpuMemory::CoherentWithCPU ] )
 			{
-				Message< GpuMsg::FlushMemoryRange >	flush;
-				flush->offset	= write_stream->position;
-				flush->size		= write_stream->wasWritten.Get( UMax );
+				GpuMsg::FlushMemoryRange	flush;
+				flush.offset	= write_stream.position;
+				flush.size		= write_stream.wasWritten.Get( UMax );
 
 				CHECK( _FlushMemoryRange( flush ) );
 			}
 
-			msg->wasWritten.Set( write_stream->wasWritten.Get() );
+			msg.wasWritten.Set( *write_stream.wasWritten );
 			return true;
 		}
 
 		// write without mapping
-		const usize		size = Min( usize(_descr.size - msg->position), usize(msg->data.Size()) );
+		const usize		size = Min( usize(_descr.size - msg.position), usize(msg.data.Size()) );
 		
 		CHECK( GetDevice()->AddSharedObj( this, _bufferId, _sharing ) );
 		CHECK( GetDevice()->AcquireSharedObj( this ) );
@@ -765,17 +765,17 @@ namespace PlatformCL
 		CL_CALL( clEnqueueWriteBuffer( GetCommandQueue(),
 									   _bufferId,
 									   CL_TRUE, // blocking
-									   size_t(msg->position),
+									   size_t(msg.position),
 									   size_t(size),
-									   msg->data.ptr(),
+									   msg.data.ptr(),
 									   0, null,
 									   null ) );
 		
 		CHECK( GetDevice()->ReleaseSharedObj( this ) );
 
-		msg->wasWritten.Set( BytesUL(size) );
+		msg.wasWritten.Set( BytesUL(size) );
 		
-		//_SendEvent< ModuleMsg::DataRegionChanged >({ EMemoryAccess::CpuWrite, msg->offset, BytesUL(size) });
+		//_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuWrite, msg.offset, BytesUL(size) });
 		return true;
 	}
 	
@@ -784,25 +784,25 @@ namespace PlatformCL
 	_ReadFromImageMemory
 =================================================
 *
-	bool CL1Buffer::_ReadFromImageMemory (const Message< GpuMsg::ReadFromImageMemory > &msg)
+	bool CL1Buffer::_ReadFromImageMemory (const GpuMsg::ReadFromImageMemory &msg)
 	{
 		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
-		CHECK_ERR( msg->memOffset == BytesUL(0) );	// not supported
-		CHECK_ERR( msg->mipLevel == MipmapLevel(0) );
+		CHECK_ERR( msg.memOffset == BytesUL(0) );	// not supported
+		CHECK_ERR( msg.mipLevel == MipmapLevel(0) );
 		
 		// read without mapping
 		const uint3		img_size = Max( ImageUtils::ConvertSize( _descr.imageType, _descr.dimension ), 1u );
 		
-		CHECK_ERR( All( msg->offset + msg->dimension <= img_size ) );
-		CHECK_ERR( msg->writableBuffer->Size() >= msg->dimension.z * msg->slicePitch );
+		CHECK_ERR( All( msg.offset + msg.dimension <= img_size ) );
+		CHECK_ERR( msg.writableBuffer->Size() >= msg.dimension.z * msg.slicePitch );
 		
 		CHECK( GetDevice()->AddSharedObj( this, _bufferId, _sharing ) );
 		CHECK( GetDevice()->AcquireSharedObj( this ) );
 
 		const usize		bpp		= (usize) BytesU(EPixelFormat::BitPerPixel( req_descr->result->format ));
-		const usize3	offset	= usize3(msg->offset.x * bpp, msg->offset.y, msg->offset.z);
-		const usize3	region	= Max( usize3(msg->dimension.x * bpp, msg->dimension.y, msg->dimension.z), 1u );
+		const usize3	offset	= usize3(msg.offset.x * bpp, msg.offset.y, msg.offset.z);
+		const usize3	region	= Max( usize3(msg.dimension.x * bpp, msg.dimension.y, msg.dimension.z), 1u );
 
 		CL_CALL( clEnqueueReadBufferRect(
 							GetCommandQueue(),
@@ -813,15 +813,15 @@ namespace PlatformCL
 							region.ptr(),
 							size_t(req_layout->result->rowPitch),
 							size_t(req_layout->result->slicePitch),
-							size_t(msg->rowPitch),
-							size_t(msg->slicePitch),
-							OUT msg->writableBuffer->ptr(),
+							size_t(msg.rowPitch),
+							size_t(msg.slicePitch),
+							OUT msg.writableBuffer->ptr(),
 							0, null,
 							null ) );
 		
 		CHECK( GetDevice()->ReleaseSharedObj( this ) );
 
-		msg->result.Set( msg->writableBuffer->SubArray( 0, usize(msg->dimension.z * msg->slicePitch) ) );
+		msg.result.Set( msg.writableBuffer->SubArray( 0, usize(msg.dimension.z * msg.slicePitch) ) );
 		return true;
 	}
 	
@@ -830,26 +830,26 @@ namespace PlatformCL
 	_WriteToImageMemory
 =================================================
 *
-	bool CL1Buffer::_WriteToImageMemory (const Message< GpuMsg::WriteToImageMemory > &msg)
+	bool CL1Buffer::_WriteToImageMemory (const GpuMsg::WriteToImageMemory &msg)
 	{
 		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
-		CHECK_ERR( msg->memOffset == BytesUL(0) );	// not supported
-		CHECK_ERR( msg->mipLevel == MipmapLevel(0) );
-		CHECK_ERR( msg->data.Size() >= msg->dimension.z * msg->slicePitch );
-		CHECK_ERR( IsNotZero( msg->dimension ) );
+		CHECK_ERR( msg.memOffset == BytesUL(0) );	// not supported
+		CHECK_ERR( msg.mipLevel == MipmapLevel(0) );
+		CHECK_ERR( msg.data.Size() >= msg.dimension.z * msg.slicePitch );
+		CHECK_ERR( IsNotZero( msg.dimension ) );
 
 		const uint3		img_size = Max( ImageUtils::ConvertSize( req_descr->result->imageType, req_descr->result->dimension ), 1u );
 		
-		CHECK_ERR( All( msg->offset + msg->dimension <= img_size ) );
-		CHECK_ERR( msg->data.Size() == msg->dimension.z * msg->slicePitch );
+		CHECK_ERR( All( msg.offset + msg.dimension <= img_size ) );
+		CHECK_ERR( msg.data.Size() == msg.dimension.z * msg.slicePitch );
 		
 		CHECK( GetDevice()->AddSharedObj( this, _bufferId, _sharing ) );
 		CHECK( GetDevice()->AcquireSharedObj( this ) );
 
 		const usize		bpp		= (usize) BytesU(EPixelFormat::BitPerPixel( req_descr->result->format ));
-		const usize3	offset	= usize3(msg->offset.x * bpp, msg->offset.y, msg->offset.z);
-		const usize3	region	= Max( usize3(msg->dimension.x * bpp, msg->dimension.y, msg->dimension.z), 1u );
+		const usize3	offset	= usize3(msg.offset.x * bpp, msg.offset.y, msg.offset.z);
+		const usize3	region	= Max( usize3(msg.dimension.x * bpp, msg.dimension.y, msg.dimension.z), 1u );
 
 		CL_CALL( clEnqueueWriteBufferRect(
 							GetCommandQueue(),
@@ -860,15 +860,15 @@ namespace PlatformCL
 							region.ptr(),
 							size_t(req_layout->result->rowPitch),
 							size_t(req_layout->result->slicePitch),
-							size_t(msg->rowPitch),
-							size_t(msg->slicePitch),
-							msg->data.ptr(),
+							size_t(msg.rowPitch),
+							size_t(msg.slicePitch),
+							msg.data.ptr(),
 							0, null,
 							null ) );
 		
 		CHECK( GetDevice()->ReleaseSharedObj( this ) );
 
-		msg->wasWritten.Set( BytesUL(msg->dimension.z * msg->slicePitch) );
+		msg.wasWritten.Set( BytesUL(msg.dimension.z * msg.slicePitch) );
 		return true;
 	}
 
@@ -877,7 +877,7 @@ namespace PlatformCL
 	_GpuMemoryRegionChanged
 =================================================
 */
-	bool CL1Buffer::_GpuMemoryRegionChanged (const Message< GpuMsg::GpuMemoryRegionChanged > &)
+	bool CL1Buffer::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
 	{
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::GpuWrite] );	// this message allowed only for gpu-writable memory
 
@@ -888,18 +888,18 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_GetGpuMemoryDescriptor
+	_GetGpuMemoryDescription
 =================================================
 */
-	bool CL1Buffer::_GetGpuMemoryDescriptor (const Message< GpuMsg::GetGpuMemoryDescriptor > &msg)
+	bool CL1Buffer::_GetGpuMemoryDescription (const GpuMsg::GetGpuMemoryDescription &msg)
 	{
-		GpuMemoryDescriptor		descr;
+		GpuMemoryDescription		descr;
 
 		descr.flags		= _memFlags;
 		descr.size		= _descr.size;
 		descr.access	= _memMapper.MemoryAccess();
 
-		msg->result.Set( descr );
+		msg.result.Set( descr );
 		return true;
 	}
 

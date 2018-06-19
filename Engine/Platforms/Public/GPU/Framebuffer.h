@@ -10,14 +10,14 @@ namespace Platforms
 {
 
 	//
-	// GPU Framebuffer Descriptor
+	// GPU Framebuffer Description
 	//
 
-	struct FramebufferDescriptor : CompileTime::PODStruct
+	struct FramebufferDescription : CompileTime::PODStruct
 	{
 	// types
 		using Name_t	= StaticString<64>;
-		using Self		= FramebufferDescriptor;
+		using Self		= FramebufferDescription;
 
 		struct AttachmentInfo : CompileTime::PODStruct
 		{
@@ -50,10 +50,10 @@ namespace Platforms
 
 
 	// methods
-		FramebufferDescriptor (GX_DEFCTOR) : size(), layers(0)
+		FramebufferDescription (GX_DEFCTOR) : size(), layers(0)
 		{}
 
-		explicit FramebufferDescriptor (uint2 size, uint layers = 1, MultiSamples samp = MultiSamples()) : size(size), layers(layers), samples(samp)
+		explicit FramebufferDescription (uint2 size, uint layers = 1, MultiSamples samp = MultiSamples()) : size(size), layers(layers), samples(samp)
 		{}
 
 		Self&	ColorImage (StringCRef name, EImage::type imageType = EImage::Tex2D);
@@ -64,22 +64,22 @@ namespace Platforms
 	};
 	
 
-	inline FramebufferDescriptor&  FramebufferDescriptor::ColorImage (StringCRef name, EImage::type imageType) {
+	inline FramebufferDescription&  FramebufferDescription::ColorImage (StringCRef name, EImage::type imageType) {
 		colorAttachments.PushBack({ name, imageType, false });
 		return *this;
 	}
 
-	inline FramebufferDescriptor&  FramebufferDescriptor::ColorRenderbuffer (StringCRef name, EImage::type imageType) {
+	inline FramebufferDescription&  FramebufferDescription::ColorRenderbuffer (StringCRef name, EImage::type imageType) {
 		colorAttachments.PushBack({ name, imageType, true });
 		return *this;
 	}
 
-	inline FramebufferDescriptor&  FramebufferDescriptor::DepthStencilImage (StringCRef name, EImage::type imageType) {
+	inline FramebufferDescription&  FramebufferDescription::DepthStencilImage (StringCRef name, EImage::type imageType) {
 		depthStencilAttachment = { name, imageType, false };
 		return *this;
 	}
 
-	inline FramebufferDescriptor&  FramebufferDescriptor::DepthStencilRenderbuffer (StringCRef name, EImage::type imageType) {
+	inline FramebufferDescription&  FramebufferDescription::DepthStencilRenderbuffer (StringCRef name, EImage::type imageType) {
 		depthStencilAttachment = { name, imageType, true };
 		return *this;
 	}
@@ -112,25 +112,25 @@ namespace GpuMsg
 {
 	
 	//
-	// Get Framebuffer Descriptor
+	// Get Framebuffer Description
 	//
-	struct GetFramebufferDescriptor
+	struct GetFramebufferDescription : _MessageBase_
 	{
-		Out< Platforms::FramebufferDescriptor >		result;
+		Out< Platforms::FramebufferDescription >		result;
 	};
 
 
 	//
 	// Attach Image toframebuffer (use it instead of AttachModule)
 	//
-	struct FramebufferAttachImage
+	struct FramebufferAttachImage : _MessageBase_
 	{
 	// types
 		using ImageLayer		= Platforms::ImageLayer;
 		using MipmapLevel		= Platforms::MipmapLevel;
 		using EImage			= Platforms::EImage;
 		using EPixelFormat		= Platforms::EPixelFormat;
-		using ImageViewDescr	= Platforms::ImageViewDescriptor;
+		using ImageViewDescr	= Platforms::ImageViewDescription;
 
 	// variables
 		ModuleName_t		name;

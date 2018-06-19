@@ -13,6 +13,7 @@ namespace CreateInfo
 	struct BatchRenderer;
 	struct AsyncCommandBuffer;
 	struct CommandBufferManager;
+	struct FrameGraph;
 	struct GpuMemoryInStream;
 	struct GpuMemoryOutStream;
 
@@ -38,6 +39,7 @@ namespace Graphics
 		static ModulePtr CreateBatchRenderer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::BatchRenderer &);
 		static ModulePtr CreateAsyncCommandBuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::AsyncCommandBuffer &);
 		static ModulePtr CreateCommandBufferManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::CommandBufferManager &);
+		static ModulePtr CreateFrameGraph (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::FrameGraph &);
 		static ModulePtr CreateMemoryInputStream (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemoryInStream &);
 		static ModulePtr CreateMemoryOutputStream (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemoryOutStream &);
 	};

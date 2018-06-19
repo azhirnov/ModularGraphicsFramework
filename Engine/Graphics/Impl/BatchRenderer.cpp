@@ -112,15 +112,15 @@ namespace Graphics
 
 	// message handlers
 	private:
-		bool _Link (const Message< ModuleMsg::Link > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _Delete (const Message< ModuleMsg::Delete > &);
+		bool _Link (const ModuleMsg::Link &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _Delete (const ModuleMsg::Delete &);
 
-		bool _AddBatch (const Message< GraphicsMsg::AddBatch > &);
-		bool _BatchRendererSetMaterial (const Message< GraphicsMsg::BatchRendererSetMaterial > &);
-		bool _BatchRendererSetCustomMaterial (const Message< GraphicsMsg::BatchRendererSetCustomMaterial > &);
-		bool _BeginBatchRenderer (const Message< GraphicsMsg::BeginBatchRenderer > &);
-		bool _FlushBatchRenderer (const Message< GraphicsMsg::FlushBatchRenderer > &);
+		bool _AddBatch (const GraphicsMsg::AddBatch &);
+		bool _BatchRendererSetMaterial (const GraphicsMsg::BatchRendererSetMaterial &);
+		bool _BatchRendererSetCustomMaterial (const GraphicsMsg::BatchRendererSetCustomMaterial &);
+		bool _BeginBatchRenderer (const GraphicsMsg::BeginBatchRenderer &);
+		bool _FlushBatchRenderer (const GraphicsMsg::FlushBatchRenderer &);
 
 	// events
 		void _OnFrameCompleted (uint index);
@@ -200,7 +200,7 @@ namespace Graphics
 	_Delete
 =================================================
 */
-	bool BatchRenderer::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool BatchRenderer::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_descr = Uninitialized;
 
@@ -216,17 +216,17 @@ namespace Graphics
 	_Link
 =================================================
 */
-	bool BatchRenderer::_Link (const Message< ModuleMsg::Link > &msg)
+	bool BatchRenderer::_Link (const ModuleMsg::Link &msg)
 	{
 		if ( _IsComposedOrLinkedState( GetState() ) )
 			return true;	// already linked
 
 		CHECK_ERR( _IsInitialState( GetState() ) );
 
-		Message< GpuMsg::GetGraphicsModules >	req_ids;
+		GpuMsg::GetGraphicsModules	req_ids;
 		CHECK( _GetManager()->Send( req_ids ) );
 
-		_moduleIDs = *req_ids->graphics;
+		_moduleIDs = *req_ids.graphics;
 
 		return Module::_Link_Impl( msg );
 	}
@@ -236,7 +236,7 @@ namespace Graphics
 	_Compose
 =================================================
 */
-	bool BatchRenderer::_Compose (const Message< ModuleMsg::Compose > &)
+	bool BatchRenderer::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -314,13 +314,13 @@ namespace Graphics
 		// check material
 		if ( _currMaterial.userDefined )
 		{
-			Message< GpuMsg::GetGraphicsPipelineDescriptor >	req_descr;
+			GpuMsg::GetGraphicsPipelineDescription	req_descr;
 			_currMaterial.pipeline->Send( req_descr );
-			CHECK_ERR( req_descr->result );
+			CHECK_ERR( req_descr.result );
 
 			// user defined pipeline must be compatible with current vertex input state,
 			// names from batch attribs will be ignored
-			CHECK_ERR( req_descr->result->vertexInput.Equals( aligned_attribs, true ) );
+			CHECK_ERR( req_descr.result->vertexInput.Equals( aligned_attribs, true ) );
 		}
 		else
 		{
@@ -498,16 +498,16 @@ namespace Graphics
 	_AddBatch
 =================================================
 */
-	bool BatchRenderer::_AddBatch (const Message< GraphicsMsg::AddBatch > &msg)
+	bool BatchRenderer::_AddBatch (const GraphicsMsg::AddBatch &msg)
 	{
 		Ptr<Batch>				curr;
-		const EPrimitive::type	primitive	= PrimitiveStripToList( msg->primitive );
+		const EPrimitive::type	primitive	= PrimitiveStripToList( msg.primitive );
 
 		// search in existing batches
 		for (auto& batch : _batches)
 		{
 			if ( batch.primitive			== primitive			and
-				 batch.attribs.Attribs()	== msg->attribs.Attribs() )
+				 batch.attribs.Attribs()	== msg.attribs.Attribs() )
 			{
 				if ( batch.material == _currMaterial )
 				{
@@ -530,12 +530,12 @@ namespace Graphics
 
 		// create new batch
 		if ( not curr ) {
-			CHECK_ERR( _CreateBatch( *msg, OUT curr ) );
+			CHECK_ERR( _CreateBatch( msg, OUT curr ) );
 		}
 
 		_AlignVertices( curr );
-		CHECK_ERR( _CopyIndices( curr, *msg ) );
-		CHECK_ERR( _CopyVertices( curr, *msg ) );
+		CHECK_ERR( _CopyIndices( curr, msg ) );
+		CHECK_ERR( _CopyVertices( curr, msg ) );
 
 		return true;
 	}
@@ -548,12 +548,11 @@ namespace Graphics
 	bool BatchRenderer::_CreatePipeline (const GraphicsMsg::BatchRendererSetMaterial &data, const VertexInputState &attribs,
 										 EPrimitive::type primitive, OUT ModulePtr &pipeline)
 	{
-		Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
-
-		create_gpp->topology	= primitive;
-		create_gpp->moduleID	= _moduleIDs.pipeline;
-		create_gpp->vertexInput	= attribs;
-		create_gpp->renderPass	= _currRenderPass;
+		GpuMsg::CreateGraphicsPipeline	create_gpp;
+		create_gpp.topology		= primitive;
+		create_gpp.moduleID		= _moduleIDs.pipeline;
+		create_gpp.vertexInput	= attribs;
+		create_gpp.renderPass	= _currRenderPass;
 
 		pipeline = null;
 
@@ -562,7 +561,7 @@ namespace Graphics
 		{
 			CHECK_ERR( _descr.multitexturedShader );
 			CHECK_ERR( _descr.multitexturedShader->Send( create_gpp ) );
-			pipeline = *create_gpp->result;
+			pipeline = *create_gpp.result;
 			return true;
 		}
 
@@ -571,7 +570,7 @@ namespace Graphics
 		{
 			CHECK_ERR( _descr.texturedShader );
 			CHECK_ERR( _descr.texturedShader->Send( create_gpp ) );
-			pipeline = *create_gpp->result;
+			pipeline = *create_gpp.result;
 			return true;
 		}
 
@@ -579,7 +578,7 @@ namespace Graphics
 		{
 			CHECK_ERR( _descr.coloredShader );
 			CHECK_ERR( _descr.coloredShader->Send( create_gpp ) );
-			pipeline = *create_gpp->result;
+			pipeline = *create_gpp.result;
 			return true;
 		}
 	}
@@ -604,15 +603,15 @@ namespace Graphics
 							CreateInfo::PipelineResourceTable{},
 							OUT resourceTable )
 			);
-			resourceTable->Send< ModuleMsg::AttachModule >({ "pipeline", pipeline });
-			resourceTable->Send< ModuleMsg::AttachModule >({ "image0", data.image0 });
-			resourceTable->Send< ModuleMsg::AttachModule >({ "image1", data.image1 });
+			resourceTable->Send( ModuleMsg::AttachModule{ "pipeline", pipeline });
+			resourceTable->Send( ModuleMsg::AttachModule{ "image0", data.image0 });
+			resourceTable->Send( ModuleMsg::AttachModule{ "image1", data.image1 });
 
 			if ( data.sampler0 )
-				resourceTable->Send< ModuleMsg::AttachModule >({ "image0.sampler", data.sampler0 });
+				resourceTable->Send( ModuleMsg::AttachModule{ "image0.sampler", data.sampler0 });
 
 			if ( data.sampler1 )
-				resourceTable->Send< ModuleMsg::AttachModule >({ "image1.sampler", data.sampler1 });
+				resourceTable->Send( ModuleMsg::AttachModule{ "image1.sampler", data.sampler1 });
 
 			ModuleUtils::Initialize({ resourceTable });
 			return true;
@@ -627,11 +626,11 @@ namespace Graphics
 							CreateInfo::PipelineResourceTable{},
 							OUT resourceTable )
 			);
-			resourceTable->Send< ModuleMsg::AttachModule >({ "pipeline", pipeline });
-			resourceTable->Send< ModuleMsg::AttachModule >({ "image0", data.image0 });
+			resourceTable->Send( ModuleMsg::AttachModule{ "pipeline", pipeline });
+			resourceTable->Send( ModuleMsg::AttachModule{ "image0", data.image0 });
 
 			if ( data.sampler0 )
-				resourceTable->Send< ModuleMsg::AttachModule >({ "image0.sampler", data.sampler0 });
+				resourceTable->Send( ModuleMsg::AttachModule{ "image0.sampler", data.sampler0 });
 
 			ModuleUtils::Initialize({ resourceTable });
 		}
@@ -667,10 +666,10 @@ namespace Graphics
 	_BatchRendererSetMaterial
 =================================================
 */
-	bool BatchRenderer::_BatchRendererSetMaterial (const Message< GraphicsMsg::BatchRendererSetMaterial > &msg)
+	bool BatchRenderer::_BatchRendererSetMaterial (const GraphicsMsg::BatchRendererSetMaterial &msg)
 	{
 		_currMaterial	= Uninitialized;
-		_defMaterial	= *msg;
+		_defMaterial	= msg;
 
 		return true;
 	}
@@ -680,15 +679,15 @@ namespace Graphics
 	_BatchRendererSetCustomMaterial
 =================================================
 */
-	bool BatchRenderer::_BatchRendererSetCustomMaterial (const Message< GraphicsMsg::BatchRendererSetCustomMaterial > &msg)
+	bool BatchRenderer::_BatchRendererSetCustomMaterial (const GraphicsMsg::BatchRendererSetCustomMaterial &msg)
 	{
-		CHECK_ERR( msg->pipeline and msg->resourceTable );
+		CHECK_ERR( msg.pipeline and msg.resourceTable );
 
 		_defMaterial.Undefine();
 
-		_currMaterial.layer			= msg->layer;
-		_currMaterial.pipeline		= msg->pipeline;
-		_currMaterial.resourceTable	= msg->resourceTable;
+		_currMaterial.layer			= msg.layer;
+		_currMaterial.pipeline		= msg.pipeline;
+		_currMaterial.resourceTable	= msg.resourceTable;
 		_currMaterial.userDefined	= true;
 
 		return true;
@@ -699,9 +698,9 @@ namespace Graphics
 	_BeginBatchRenderer
 =================================================
 */
-	bool BatchRenderer::_BeginBatchRenderer (const Message< GraphicsMsg::BeginBatchRenderer > &msg)
+	bool BatchRenderer::_BeginBatchRenderer (const GraphicsMsg::BeginBatchRenderer &msg)
 	{
-		_currRenderPass = msg->renderPass;
+		_currRenderPass = msg.renderPass;
 
 		// get default render pass from device
 		if ( not _currRenderPass )
@@ -709,11 +708,11 @@ namespace Graphics
 			ModulePtr	dev;
 			CHECK_ERR(( dev = GlobalSystems()->parallelThread->GetModuleByMsgEvent< DeviceMsgList_t, DeviceEventList_t >() ));
 
-			Message< GpuMsg::GetDeviceInfo >	req_info;
+			GpuMsg::GetDeviceInfo	req_info;
 			dev->Send( req_info );
-			CHECK_ERR( req_info->result );
+			CHECK_ERR( req_info.result );
 
-			_currRenderPass = req_info->result->renderPass;
+			_currRenderPass = req_info.result->renderPass;
 		}
 		return true;
 	}
@@ -723,9 +722,9 @@ namespace Graphics
 	_FlushBatchRenderer
 =================================================
 */
-	bool BatchRenderer::_FlushBatchRenderer (const Message< GraphicsMsg::FlushBatchRenderer > &msg)
+	bool BatchRenderer::_FlushBatchRenderer (const GraphicsMsg::FlushBatchRenderer &msg)
 	{
-		CHECK_ERR( msg->framebuffer and msg->cmdBuilder );
+		CHECK_ERR( msg.framebuffer and msg.cmdBuilder );
 
 		auto		factory = GlobalSystems()->modulesFactory;
 
@@ -746,7 +745,7 @@ namespace Graphics
 						_moduleIDs.buffer,
 						GlobalSystems(),
 						CreateInfo::GpuBuffer{
-							BufferDescriptor{ _vertices.Size(), EBufferUsage::Vertex },
+							BufferDescription{ _vertices.Size(), EBufferUsage::Vertex },
 							EGpuMemory::CoherentWithCPU },
 						OUT vbuffer ) );
 
@@ -755,7 +754,7 @@ namespace Graphics
 						_moduleIDs.buffer,
 						GlobalSystems(),
 						CreateInfo::GpuBuffer{
-							BufferDescriptor{ indices_size, EBufferUsage::Index },
+							BufferDescription{ indices_size, EBufferUsage::Index },
 							EGpuMemory::CoherentWithCPU },
 						OUT ibuffer ) );
 
@@ -763,56 +762,55 @@ namespace Graphics
 
 		// copy vertices
 		{
-			vbuffer->Send< GpuMsg::MapMemoryToCpu >({ GpuMsg::EMappingFlags::WriteDiscard, 0_b, _vertices.Size() });
-			vbuffer->Send< DSMsg::WriteRegion >({ 0_b, _vertices });
-			vbuffer->Send< GpuMsg::UnmapMemory >({});
+			vbuffer->Send( GpuMsg::MapMemoryToCpu{ GpuMsg::EMappingFlags::WriteDiscard, 0_b, _vertices.Size() });
+			vbuffer->Send( DSMsg::WriteRegion { 0_b, _vertices });
+			vbuffer->Send( GpuMsg::UnmapMemory{} );
 		}
 
 		// copy indices
 		{
 			BytesU	offset;
-			ibuffer->Send< GpuMsg::MapMemoryToCpu >({ GpuMsg::EMappingFlags::WriteDiscard, 0_b, indices_size });
+			ibuffer->Send( GpuMsg::MapMemoryToCpu{ GpuMsg::EMappingFlags::WriteDiscard, 0_b, indices_size });
 
 			for (auto& batch : _batches) {
-				ibuffer->Send< DSMsg::WriteRegion >({ offset, ArrayCRef<uint>( batch.indices ) });
+				ibuffer->Send( DSMsg::WriteRegion{ offset, ArrayCRef<uint>( batch.indices ) });
 				offset += batch.indices.Size();
 			}
-			ibuffer->Send< GpuMsg::UnmapMemory >({});
+			ibuffer->Send( GpuMsg::UnmapMemory{} );
 		}
 
 		// build commands
 		{
-			auto		builder				= msg->cmdBuilder;
-			uint		idx_offset			= 0;
+			auto	builder		= msg.cmdBuilder;
+			uint	idx_offset	= 0;
 
-			builder->Send< GpuMsg::CmdBeginRenderPass >({ _currRenderPass, msg->framebuffer, msg->viewport });
+			builder->Send( GpuMsg::CmdBeginRenderPass{ _currRenderPass, msg.framebuffer, msg.viewport });
 			
-			builder->Send< GpuMsg::CmdBindVertexBuffers >({ vbuffer });
-			builder->Send< GpuMsg::CmdBindIndexBuffer >({ ibuffer, EIndex::UInt });
+			builder->Send( GpuMsg::CmdBindVertexBuffers{ vbuffer });
+			builder->Send( GpuMsg::CmdBindIndexBuffer{ ibuffer, EIndex::UInt });
 
 			for (const auto& batch : _batches)
 			{
-				builder->Send< GpuMsg::CmdBindGraphicsPipeline >({ batch.material.pipeline });
-				builder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ batch.material.resourceTable });
-				builder->Send< GpuMsg::CmdSetViewport >({ msg->viewport, float2(0.0f, 1.0f) });
-				builder->Send< GpuMsg::CmdSetScissor >({ msg->viewport });
-				builder->Send< GpuMsg::CmdDrawIndexed >({ uint(batch.indices.Count()), 1u, idx_offset });
+				builder->Send( GpuMsg::CmdBindGraphicsPipeline{ batch.material.pipeline });
+				builder->Send( GpuMsg::CmdBindGraphicsResourceTable{ batch.material.resourceTable });
+				builder->Send( GpuMsg::CmdSetViewport{ msg.viewport, float2(0.0f, 1.0f) });
+				builder->Send( GpuMsg::CmdSetScissor{ msg.viewport });
+				builder->Send( GpuMsg::CmdDrawIndexed{ uint(batch.indices.Count()), 1u, idx_offset });
 
 				idx_offset += uint(batch.indices.Count());
 			}
 
-			builder->Send< GpuMsg::CmdEndRenderPass >({});
+			builder->Send( GpuMsg::CmdEndRenderPass{} );
 
 		}
 		
 		auto	on_completed =	LAMBDA( vbuffer, ibuffer ) (uint)
 								{
-									Message< ModuleMsg::Delete >	del_msg;
-									vbuffer->Send( del_msg );
-									ibuffer->Send( del_msg );
+									vbuffer->Send( ModuleMsg::Delete{} );
+									ibuffer->Send( ModuleMsg::Delete{} );
 								};
 
-		CHECK( msg->cmdBuilder->Send< GraphicsMsg::SubscribeOnFrameCompleted >( RVREF(on_completed) ) );
+		CHECK( msg.cmdBuilder->Send( GraphicsMsg::SubscribeOnFrameCompleted{ RVREF(on_completed) } ));
 
 		_ClearCurrent();
 		return true;

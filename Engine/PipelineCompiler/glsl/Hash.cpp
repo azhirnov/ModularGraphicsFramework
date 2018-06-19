@@ -8,9 +8,6 @@ namespace glsl_vfs
 	{
 		src << R"#(/*
 	Hash functions.
-
-	depends of:
-		Math/Math
 */
 
 // Weyl hash
@@ -28,6 +25,7 @@ float  HEHash (uint n);				// [0;1]
 
 //---------------------------------------------------------
 
+#include <Math/Math.glsl>
 
 float WeylHash (const int2 c)
 {

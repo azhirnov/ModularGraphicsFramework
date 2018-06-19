@@ -22,21 +22,22 @@ namespace Base
 	_Subscribe2
 =================================================
 */
-	bool MessageHandler::_Subscribe2 (const TypeIdList& validTypes, TypeId id, Handler &&handler, bool checked)
+	bool MessageHandler::_Subscribe2 (const TypeIdList& validTypes, TypeId id, EPriority priority, Handler &&handler, bool checked)
 	{
 		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
 			checked = true;
 		#endif
 
+		ASSERT( priority != EPriority::Auto );
+
 		if ( checked and not validTypes.HasType( id ) )
 			RETURN_ERR( "Can't subscribe for event '" << ToString( id ) << "'" );
-
-		//SCOPELOCK( _lock );
 		
+		// remove existing handler
 		usize	first;
-		if ( _handlers.FindFirstIndex( id, OUT first ) )
+		if ( _handlers.CustomSearch().FindFirstIndex( HandlerSearch{id}, OUT first ) )
 		{
-			for (usize i = first; i < _handlers.Count() and _handlers[i].first == id; ++i)
+			for (usize i = first; i < _handlers.Count() and _handlers[i].first.id == id; ++i)
 			{
 				if ( MemCmp( _handlers[i].second, handler ) == 0 )
 				{
@@ -46,7 +47,7 @@ namespace Base
 			}
 		}
 
-		_handlers.Add( id, RVREF(handler) );
+		_handlers.Add( HandlerKey{ id, priority }, RVREF(handler) );
 		return true;
 	}
 	
@@ -55,22 +56,22 @@ namespace Base
 	_CopySubscriptions
 =================================================
 */
-	bool MessageHandler::_CopySubscriptions (const TypeIdList& validTypes, const ObjectPtr_t &obj, const MessageHandler &other, ArrayCRef<TypeId> ids)
+	bool MessageHandler::_CopySubscriptions (const TypeIdList& validTypes, const Object_t *obj, const MessageHandler &other, ArrayCRef<TypeId> ids, EPriority priority)
 	{
-		//SCOPELOCK( other._lock );
-
 		for (auto id : ids)
 		{
 			uint	copied = 0;
 			usize	first;
 
-			if ( other._handlers.FindFirstIndex( id, OUT first ) )
+			if ( other._handlers.CustomSearch().FindFirstIndex( HandlerSearch{id}, OUT first ) )
 			{
-				for (usize i = first; i < other._handlers.Count() and other._handlers[i].first == id; ++i)
+				for (usize i = first; i < other._handlers.Count() and other._handlers[i].first.id == id; ++i)
 				{
-					if ( other._handlers[i].second.ptr == obj )
+					if ( other._handlers[i].second.ptr.Lock().RawPtr() == obj )
 					{
-						_Subscribe2( validTypes, id, Handler(other._handlers[i].second), false );
+						EPriority	prior = (priority == EPriority::Auto ? other._handlers[i].first.priority : priority);
+
+						_Subscribe2( validTypes, id, prior, Handler(other._handlers[i].second), false );
 						copied++;
 					}
 				}
@@ -81,19 +82,72 @@ namespace Base
 		}
 		return true;
 	}
+	
+/*
+=================================================
+	UnsubscribeDeadHandlers
+=================================================
+*/
+	void MessageHandler::UnsubscribeDeadHandlers ()
+	{
+		FOR( i, _handlers )
+		{
+			if ( _handlers[i].second.ptr.Lock() == null )
+			{
+				_handlers.EraseByIndex( i );
+				--i;
+			}
+		}
+	}
 
 /*
 =================================================
 	_UnsubscribeAll
 =================================================
 */
-	void MessageHandler::_UnsubscribeAll (const ObjectPtr_t &ptr)
+	void MessageHandler::_UnsubscribeAll (const Object_t *obj)
 	{
-		//SCOPELOCK( _lock );
-
 		FOR( i, _handlers )
 		{
-			if ( _handlers[i].second.ptr == ptr )
+			if ( _handlers[i].second.ptr.Lock() == null  or
+				 _handlers[i].second.ptr.RawPtr() == obj )
+			{
+				_handlers.EraseByIndex( i );
+				--i;
+			}
+		}
+	}
+	
+/*
+=================================================
+	_UnsubscribeAll
+=================================================
+*/
+	void MessageHandler::_UnsubscribeAll (TypeId msgID)
+	{
+		usize	first;
+		if ( _handlers.CustomSearch().FindFirstIndex( HandlerSearch{msgID}, OUT first ) )
+		{
+			for (usize i = first; i < _handlers.Count() and _handlers[i].first.id == msgID; ++i)
+			{
+				_handlers.EraseByIndex( i );
+				--i;
+			}
+		}
+	}
+
+/*
+=================================================
+	_Unsubscribe2
+=================================================
+*/
+	void MessageHandler::_Unsubscribe2 (const Object_t* obj, const HandlerData_t &data)
+	{
+		FOR( i, _handlers )
+		{
+			if ( _handlers[i].second.ptr.Lock() == null		or
+				 ( _handlers[i].second.ptr.RawPtr() == obj	and
+				  All( _handlers[i].second.data == data ))	)
 			{
 				_handlers.EraseByIndex( i );
 				--i;
@@ -106,17 +160,19 @@ namespace Base
 	_Unsubscribe2
 =================================================
 */
-	void MessageHandler::_Unsubscribe2 (const ObjectPtr_t &ptr, const HandlerData_t &data)
+	void MessageHandler::_Unsubscribe2 (const Object_t* obj, TypeId msgID)
 	{
-		//SCOPELOCK( _lock );
-
-		FOR( i, _handlers )
+		usize	first;
+		if ( _handlers.CustomSearch().FindFirstIndex( HandlerSearch{msgID}, OUT first ) )
 		{
-			if ( _handlers[i].second.ptr == ptr		and
-				 All( _handlers[i].second.data == data ) )
+			for (usize i = first; i < _handlers.Count() and _handlers[i].first.id == msgID; ++i)
 			{
-				_handlers.EraseByIndex( i );
-				--i;
+				if ( _handlers[i].second.ptr.Lock() == null  or
+					 _handlers[i].second.ptr.RawPtr() == obj )
+				{
+					_handlers.EraseByIndex( i );
+					--i;
+				}
 			}
 		}
 	}
@@ -128,8 +184,6 @@ namespace Base
 */
 	void MessageHandler::Clear ()
 	{
-		//SCOPELOCK( _lock );
-
 		_handlers.Clear();
 	}
 
@@ -142,14 +196,12 @@ namespace Base
 */
 	bool MessageHandler::Validate (const TypeIdList &typelist) const
 	{
-		//SCOPELOCK( _lock );
-
 		// is all handlers presented in typelist?
 		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
 		{
 			FOR( i, _handlers )
 			{
-				const TypeId	id = _handlers[i].first;
+				const TypeId	id = _handlers[i].first.id;
 
 				if ( not typelist.HasType( id ) )
 					RETURN_ERR( "Type '" << ToString( id ) << "' is not exist in typelist" );
@@ -162,7 +214,7 @@ namespace Base
 		{
 			const TypeId	id = typelist.Get(i);
 
-			if ( not _handlers.IsExist( id ) )
+			if ( not _handlers.CustomSearch().IsExist( HandlerSearch{id} ) )
 				RETURN_ERR( "Type '" << ToString( id ) << "' is not exist in message handlers" );
 		}
 		return true;
@@ -177,14 +229,12 @@ namespace Base
 */
 	bool MessageHandler::Validate (const TypeIdList &msgTypes, const TypeIdList &eventTypes) const
 	{
-		//SCOPELOCK( _lock );
-
 		// is all handlers presented in typelist?
 		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
 		{
 			FOR( i, _handlers )
 			{
-				const TypeId	id = _handlers[i].first;
+				const TypeId	id = _handlers[i].first.id;
 
 				if ( not eventTypes.HasType( id ) and not msgTypes.HasType( id ) )
 					RETURN_ERR( "Type '" << ToString( id ) << "' is not exist in typelists" );
@@ -197,7 +247,7 @@ namespace Base
 		{
 			const TypeId	id = msgTypes.Get(i);
 
-			if ( not _handlers.IsExist( id ) )
+			if ( not _handlers.CustomSearch().IsExist( HandlerSearch{id} ) )
 				RETURN_ERR( "Message type '" << ToString( id ) << "' is not exist in message handlers" );
 		}
 

@@ -1,6 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/ResourcePacker/Packer/Common.h"
+#include "Core/STL/Log/ToString.h"
+#include "Core/STL/Algorithms/StringParser.h"
 
 namespace ResPack
 {
@@ -90,7 +92,7 @@ namespace ResPack
 */
 	bool ScriptHelperImpl::RunScript (StringCRef fname)
 	{
-		using namespace GX_STL::GXScript;
+		using namespace GXScript;
 
 		LOG( "RunScript: '"_str << fname << "'", ELog::Debug );
 

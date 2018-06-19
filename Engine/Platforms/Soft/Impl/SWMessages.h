@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_SOFT
 
@@ -32,7 +32,7 @@ namespace GpuMsg
 	//
 	// Get GPU Device Info
 	//
-	struct GetSWDeviceInfo
+	struct GetSWDeviceInfo : _MessageBase_
 	{
 	};
 
@@ -40,7 +40,7 @@ namespace GpuMsg
 	//
 	// Get Image Memory Layout
 	//
-	struct GetSWImageMemoryLayout
+	struct GetSWImageMemoryLayout : _MessageBase_
 	{
 	// types
 		using EPixelFormat		= Platforms::EPixelFormat;
@@ -116,7 +116,7 @@ namespace GpuMsg
 	//
 	// Get Image View Memory Layout
 	//
-	struct GetSWImageViewMemoryLayout
+	struct GetSWImageViewMemoryLayout : _MessageBase_
 	{
 	// types
 		using ImgLayers3D		= GetSWImageMemoryLayout::ImgLayers3D;
@@ -124,7 +124,7 @@ namespace GpuMsg
 		using EPipelineStage	= Platforms::EPipelineStage;
 
 	// variables
-		Platforms::ImageViewDescriptor	viewDescr;
+		Platforms::ImageViewDescription	viewDescr;
 		EPipelineAccess::bits			accessMask;
 		EPipelineStage::type			stage	= EPipelineStage::Unknown;
 		Out< ImgLayers3D >				result;
@@ -133,7 +133,7 @@ namespace GpuMsg
 		GetSWImageViewMemoryLayout (EPipelineAccess::bits access, EPipelineStage::type stage) :
 			viewDescr{}, accessMask{access}, stage{stage} {}
 
-		GetSWImageViewMemoryLayout (const Platforms::ImageViewDescriptor &descr, EPipelineAccess::bits access, EPipelineStage::type stage) :
+		GetSWImageViewMemoryLayout (const Platforms::ImageViewDescription &descr, EPipelineAccess::bits access, EPipelineStage::type stage) :
 			viewDescr{descr}, accessMask{access}, stage{stage} {}
 	};
 
@@ -141,7 +141,7 @@ namespace GpuMsg
 	//
 	// Get Image Memory Requirements
 	//
-	struct GetSWImageMemoryRequirements
+	struct GetSWImageMemoryRequirements : _MessageBase_
 	{
 	// types
 		struct MemReq {
@@ -160,13 +160,13 @@ namespace GpuMsg
 	struct GetSWTextureMemoryLayout : GetSWImageViewMemoryLayout
 	{
 	// variables
-		Out< Platforms::SamplerDescriptor >		sampler;
+		Out< Platforms::SamplerDescription >		sampler;
 
 	// methods
 		explicit GetSWTextureMemoryLayout (EPipelineAccess::bits access, EPipelineStage::type stage) :
 			GetSWImageViewMemoryLayout{access, stage} {}
 
-		explicit GetSWTextureMemoryLayout (const Platforms::ImageViewDescriptor &descr, EPipelineAccess::bits access, EPipelineStage::type stage) :
+		explicit GetSWTextureMemoryLayout (const Platforms::ImageViewDescription &descr, EPipelineAccess::bits access, EPipelineStage::type stage) :
 			GetSWImageViewMemoryLayout{descr, access, stage} {}
 	};
 
@@ -174,7 +174,7 @@ namespace GpuMsg
 	//
 	// Image Barrier
 	//
-	struct SWImageBarrier
+	struct SWImageBarrier : _MessageBase_
 	{
 	// types
 		using Barrier_t			= CmdPipelineBarrier::ImageMemoryBarrier;
@@ -197,7 +197,7 @@ namespace GpuMsg
 	//
 	// Get Buffer Memory Layout
 	//
-	struct GetSWBufferMemoryLayout
+	struct GetSWBufferMemoryLayout : _MessageBase_
 	{
 	// types
 		using EMemoryAccess		= Platforms::EMemoryAccess;
@@ -229,7 +229,7 @@ namespace GpuMsg
 	//
 	// Get Buffer Memory Requirements
 	//
-	struct GetSWBufferMemoryRequirements
+	struct GetSWBufferMemoryRequirements : _MessageBase_
 	{
 	// types
 		struct MemReq {
@@ -245,7 +245,7 @@ namespace GpuMsg
 	//
 	// Buffer Barrier
 	//
-	struct SWBufferBarrier
+	struct SWBufferBarrier : _MessageBase_
 	{
 	// types
 		using Barrier_t			= CmdPipelineBarrier::BufferMemoryBarrier;
@@ -268,7 +268,7 @@ namespace GpuMsg
 	//
 	// Get Memory Data
 	//
-	struct GetSWMemoryData
+	struct GetSWMemoryData : _MessageBase_
 	{
 		Out< BinArrayRef >	result;
 	};
@@ -277,7 +277,7 @@ namespace GpuMsg
 	//
 	// Memory Barrier
 	//
-	struct SWMemoryBarrier
+	struct SWMemoryBarrier : _MessageBase_
 	{
 	// types
 		using Barrier_t			= CmdPipelineBarrier::MemoryBarrier;
@@ -300,10 +300,10 @@ namespace GpuMsg
 	//
 	// Get GPU Shader Module IDs
 	//
-	struct GetSWShaderModuleIDs
+	struct GetSWShaderModuleIDs : _MessageBase_
 	{
 	// types
-		using SWInvoke		= Platforms::PipelineTemplateDescriptor::ShaderSource::SWInvoke;
+		using SWInvoke		= Platforms::PipelineTemplateDescription::ShaderSource::SWInvoke;
 
 		struct ShaderModule : CompileTime::PODStruct
 		{
@@ -320,10 +320,10 @@ namespace GpuMsg
 	//
 	// Get Pipeline Stage
 	//
-	struct GetSWPipelineStage
+	struct GetSWPipelineStage : _MessageBase_
 	{
 	// types
-		using SWInvoke		= Platforms::PipelineTemplateDescriptor::ShaderSource::SWInvoke;
+		using SWInvoke		= Platforms::PipelineTemplateDescription::ShaderSource::SWInvoke;
 		using EShader		= Platforms::EShader;
 
 		struct Stage {
@@ -343,7 +343,7 @@ namespace GpuMsg
 	// Resource Table Forward Message to Resource
 	//
 	template <typename Msg>
-	struct ResourceTableForwardMsg
+	struct ResourceTableForwardMsg : _MessageBase_
 	{
 	// variables
 		mutable Msg		message;
@@ -352,7 +352,7 @@ namespace GpuMsg
 	// methods
 		explicit ResourceTableForwardMsg (uint idx) : index{idx} {}
 		
-		explicit ResourceTableForwardMsg (uint idx, const Msg &msg) : message{msg}, index{idx} {}
+		ResourceTableForwardMsg (uint idx, const Msg &msg) : message{msg}, index{idx} {}
 
 		template <typename ...ArgTypes>
 		explicit ResourceTableForwardMsg (uint idx, ArgTypes&& ...args) : message{ FW<ArgTypes>(args)... }, index{idx} {}
@@ -362,7 +362,7 @@ namespace GpuMsg
 	//
 	// Sync Client With Device
 	//
-	struct SyncSWClientWithDevice
+	struct SyncSWClientWithDevice : _MessageBase_
 	{
 	// variables
 		Platforms::GpuFenceId		fenceId	= Uninitialized;
@@ -375,11 +375,12 @@ namespace GpuMsg
 	//
 	// Software Renderer Commands
 	//
-	struct SetSWCommandBufferQueue
+	struct SetSWCommandBufferQueue : _MessageBase_
 	{
 	// types
 		using Data_t	= Union< CmdBindComputePipeline,
 								 CmdDispatch,
+								 CmdDispatchIndirect,
 								 CmdExecute,
 								 CmdBindComputeResourceTable,
 								 CmdCopyBuffer,
@@ -410,8 +411,6 @@ namespace GpuMsg
 
 		// methods
 			Command () {}
-			Command (Command &&) = default;
-			Command (const Command &) = default;
 
 			template <typename Data>
 			Command (Data &&data, StringCRef file = StringCRef(), uint line = 0) :
@@ -428,13 +427,17 @@ namespace GpuMsg
 		ReadOnce< Array<Command> >	commands;
 		BinaryArray					bufferData;
 		BinaryArray					pushConstData;
+
+	// methods
+		SetSWCommandBufferQueue (Array<Command> &&commands, BinaryArray &&bufferData, BinaryArray &&pushConstData) :
+			commands{ RVREF(commands) }, bufferData{ RVREF(bufferData) }, pushConstData{ RVREF(pushConstData) } {}
 	};
 	
 
 	//
 	// Execute Command Buffer
 	//
-	struct ExecuteSWCommandBuffer : CompileTime::FastCopyable
+	struct ExecuteSWCommandBuffer : _MessageBase_
 	{
 	// variables
 		Editable< bool  >	completed;
@@ -448,16 +451,20 @@ namespace GpuMsg
 	//
 	// Present Frame
 	//
-	struct SWPresent
+	struct SWPresent : _MessageBase_
 	{
+	// variables
 		Function< void () >		callback;
+		
+	// methods
+		explicit SWPresent (Function<void()> &&cb) : callback{ RVREF(cb) } {}
 	};
 
 
 	//
 	// Get Fence
 	//
-	struct GetSWFence
+	struct GetSWFence : _MessageBase_
 	{
 	// variables
 		Platforms::GpuFenceId			id;
@@ -471,7 +478,7 @@ namespace GpuMsg
 	//
 	// Get Event
 	//
-	struct GetSWEvent
+	struct GetSWEvent : _MessageBase_
 	{
 	// variables
 		Platforms::GpuEventId			id;
@@ -485,7 +492,7 @@ namespace GpuMsg
 	//
 	// Get Semaphore
 	//
-	struct GetSWSemaphore
+	struct GetSWSemaphore : _MessageBase_
 	{
 	// variables
 		Platforms::GpuSemaphoreId			id;

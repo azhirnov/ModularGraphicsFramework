@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef GRAPHICS_API_VULKAN
 
@@ -120,14 +120,12 @@ namespace PlatformVK
 */
 	void Vk1PipelineCache::_DestroyPipelines ()
 	{
-		Message< ModuleMsg::Delete >	del_msg;
-
-		FOR( i, _graphicsPipelines ) {
-			_graphicsPipelines[i]->Send( del_msg );
+		for (auto& ppln : _graphicsPipelines) {
+			ppln->Send( ModuleMsg::Delete{} );
 		}
 
-		FOR( i, _computePipelines ) {
-			_computePipelines[i]->Send( del_msg );
+		for (auto& ppln : _computePipelines) {
+			ppln->Send( ModuleMsg::Delete{} );
 		}
 
 		_graphicsPipelines.Clear();
@@ -175,7 +173,7 @@ namespace PlatformVK
 											const RenderState &renderState,
 											const EDynamicStates &dynamicStates,
 											uint patchControlPoints,
-											const RenderPassDescriptor &rpDescr,
+											const RenderPassDescription &rpDescr,
 											VkRenderPass renderPass,
 											uint subpass)
 	{
@@ -264,7 +262,7 @@ namespace PlatformVK
 	void Vk1PipelineCache::_SetViewportState (OUT VkPipelineViewportStateCreateInfo &outState,
 											  OUT Viewports_t &tmpViewports,
 											  OUT Scissors_t &tmpScissors,
-											  const RenderPassDescriptor::Subpass_t &subpass) const
+											  const RenderPassDescription::Subpass_t &subpass) const
 	{
 		tmpViewports.Resize( subpass.colors.Count() );
 		tmpScissors.Resize( subpass.colors.Count() );
@@ -292,7 +290,7 @@ namespace PlatformVK
 	void Vk1PipelineCache::_SetColorBlendState (OUT VkPipelineColorBlendStateCreateInfo &outState,
 												OUT Attachment_t &attachment,
 												const RenderState::ColorBuffersState &inState,
-												const RenderPassDescriptor::Subpass_t &subpass) const
+												const RenderPassDescription::Subpass_t &subpass) const
 	{
 		const bool	logic_op_enabled	= ( inState.logicOp != ELogicOp::None );
 		const usize	count				= Min( subpass.colors.Count(), inState.buffers.Count() );

@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/STL/Common/Platforms.h"
+#include "Core/STL/Common/Platforms.h"
 
 #ifdef PLATFORM_SDL
 
@@ -73,15 +73,15 @@ namespace PlatformSDL
 
 	// message handlers
 	private:
-		bool _Delete (const Message< ModuleMsg::Delete > &);
-		bool _Compose (const Message< ModuleMsg::Compose > &);
-		bool _AddToManager (const Message< ModuleMsg::AddToManager > &);
-		bool _RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &);
+		bool _Delete (const ModuleMsg::Delete &);
+		bool _Compose (const ModuleMsg::Compose &);
+		bool _AddToManager (const ModuleMsg::AddToManager &);
+		bool _RemoveFromManager (const ModuleMsg::RemoveFromManager &);
 
-		bool _GetDisplays (const Message< OSMsg::GetDisplays > &);
-		bool _GetOSModules (const Message< OSMsg::GetOSModules > &);
-		bool _GetProccessorInfo (const Message< OSMsg::GetProccessorInfo > &);
-		bool _GetMemoryInfo (const Message< OSMsg::GetMemoryInfo > &);
+		bool _GetDisplays (const OSMsg::GetDisplays &);
+		bool _GetOSModules (const OSMsg::GetOSModules &);
+		bool _GetProccessorInfo (const OSMsg::GetProccessorInfo &);
+		bool _GetMemoryInfo (const OSMsg::GetMemoryInfo &);
 
 	private:
 		bool _IsCreated () const;
@@ -150,7 +150,7 @@ namespace PlatformSDL
 	_Delete
 =================================================
 */
-	bool SDLPlatform::_Delete (const Message< ModuleMsg::Delete > &msg)
+	bool SDLPlatform::_Delete (const ModuleMsg::Delete &msg)
 	{
 		_Destroy();
 
@@ -163,7 +163,7 @@ namespace PlatformSDL
 	_Compose
 =================================================
 */
-	bool SDLPlatform::_Compose (const Message< ModuleMsg::Compose > &)
+	bool SDLPlatform::_Compose (const ModuleMsg::Compose &)
 	{
 		if ( _IsComposedState( GetState() ) )
 			return true;	// already composed
@@ -177,21 +177,21 @@ namespace PlatformSDL
 
 		LOG( "platform created", ELog::Debug );
 		
-		_SendUncheckedEvent< ModuleMsg::AfterCompose >({});
-		_SendEvent< OSMsg::OnSDLPlatformCreated >({});
+		_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
+		_SendEvent( OSMsg::OnSDLPlatformCreated{} );
 
 		// async message
 		FOR( i, _windows )
 		{
-			CHECK( GlobalSystems()->taskModule->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( GlobalSystems()->taskModule->SendAsync( ModuleMsg::PushAsyncMessage{
 						AsyncMessage{ LAMBDA(
 							target = _windows[i],
-							msg = Message< OSMsg::OnSDLPlatformCreated >{} ) (GlobalSystemsRef)
+							msg = OSMsg::OnSDLPlatformCreated{} ) (GlobalSystemsRef)
 						{
 							target->Send( msg );
 						}},
 						_windows[i]->GetThreadID()
-					}.Async())
+					})
 			);
 		}
 		return true;
@@ -202,25 +202,25 @@ namespace PlatformSDL
 	_AddToManager
 =================================================
 */
-	bool SDLPlatform::_AddToManager (const Message< ModuleMsg::AddToManager > &msg)
+	bool SDLPlatform::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
-		CHECK_ERR( msg->module );
-		CHECK_ERR( msg->module->GetSupportedMessages().HasAllTypes< SDLWindowMsgList_t >() );
-		ASSERT( not _windows.IsExist( msg->module ) );
+		CHECK_ERR( msg.module );
+		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< SDLWindowMsgList_t >() );
+		ASSERT( not _windows.IsExist( msg.module ) );
 
-		_windows.Add( msg->module );
+		_windows.Add( msg.module );
 
 		if ( _IsCreated() )
 		{
-			CHECK( GlobalSystems()->taskModule->Send( Message< ModuleMsg::PushAsyncMessage >{
+			CHECK( GlobalSystems()->taskModule->SendAsync( ModuleMsg::PushAsyncMessage{
 						AsyncMessage{ LAMBDA(
-							target = msg->module,
-							msg = Message< OSMsg::OnSDLPlatformCreated >{} ) (GlobalSystemsRef)
+							target = msg.module,
+							msg = OSMsg::OnSDLPlatformCreated{} ) (GlobalSystemsRef)
 						{
 							target->Send( msg );
 						}},
-						msg->module->GetThreadID()
-					}.Async())
+						msg.module->GetThreadID()
+					})
 			);
 		}
 		return true;
@@ -231,11 +231,11 @@ namespace PlatformSDL
 	_RemoveFromManager
 =================================================
 */
-	bool SDLPlatform::_RemoveFromManager (const Message< ModuleMsg::RemoveFromManager > &msg)
+	bool SDLPlatform::_RemoveFromManager (const ModuleMsg::RemoveFromManager &msg)
 	{
-		CHECK_ERR( msg->module );
+		CHECK_ERR( msg.module );
 
-		ModulePtr	module = msg->module.Lock();
+		ModulePtr	module = msg.module.Lock();
 
 		if ( not module )
 			return false;
@@ -283,11 +283,11 @@ namespace PlatformSDL
 	_GetDisplays
 =================================================
 */
-	bool SDLPlatform::_GetDisplays (const Message< OSMsg::GetDisplays > &msg)
+	bool SDLPlatform::_GetDisplays (const OSMsg::GetDisplays &msg)
 	{
 		_display.Update();
 
-		msg->result.Set( _display.GetDisplays() );
+		msg.result.Set( _display.GetDisplays() );
 		return true;
 	}
 	
@@ -313,9 +313,9 @@ namespace PlatformSDL
 	_GetOSModules
 =================================================
 */
-	bool SDLPlatform::_GetOSModules (const Message< OSMsg::GetOSModules > &msg)
+	bool SDLPlatform::_GetOSModules (const OSMsg::GetOSModules &msg)
 	{
-		msg->result.Set( SDLObjectsConstructor::GetModuleIDs() );
+		msg.result.Set( SDLObjectsConstructor::GetModuleIDs() );
 		return true;
 	}
 	
@@ -324,12 +324,12 @@ namespace PlatformSDL
 	_GetProccessorInfo
 =================================================
 */
-	bool SDLPlatform::_GetProccessorInfo (const Message< OSMsg::GetProccessorInfo > &msg)
+	bool SDLPlatform::_GetProccessorInfo (const OSMsg::GetProccessorInfo &msg)
 	{
 		OSMsg::GetProccessorInfo::Info	info;
 		info.coresCount	= ::SDL_GetCPUCount();
 
-		msg->result.Set( info );
+		msg.result.Set( info );
 		return true;
 	}
 	
@@ -338,12 +338,12 @@ namespace PlatformSDL
 	_GetMemoryInfo
 =================================================
 */
-	bool SDLPlatform::_GetMemoryInfo (const Message< OSMsg::GetMemoryInfo > &msg)
+	bool SDLPlatform::_GetMemoryInfo (const OSMsg::GetMemoryInfo &msg)
 	{
 		OSMsg::GetMemoryInfo::Info	info;
 		info.total	= BytesUL::FromMb( ::SDL_GetSystemRAM() );
 
-		msg->result.Set( info );
+		msg.result.Set( info );
 		return true;
 	}
 

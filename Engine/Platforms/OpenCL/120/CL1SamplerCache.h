@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Engine/Config/Engine.Config.h"
+#include "Core/Config/Engine.Config.h"
 
 #ifdef COMPUTE_API_OPENCL
 
@@ -21,8 +21,8 @@ namespace PlatformCL
 	{
 	// types
 	private:
-		using CL1SamplerPtr		= SharedPointerType< class CL1Sampler >;
-		using SamplerDescriptor	= Platforms::SamplerDescriptor;
+		using CL1SamplerPtr			= SharedPointerType< class CL1Sampler >;
+		using SamplerDescription	= Platforms::SamplerDescription;
 
 		struct SearchableSampler
 		{
@@ -36,9 +36,9 @@ namespace PlatformCL
 
 		struct SamplerSearch
 		{
-			SamplerDescriptor	descr;
+			SamplerDescription	descr;
 
-			explicit SamplerSearch (const SamplerDescriptor &s) : descr(s) {}
+			explicit SamplerSearch (const SamplerDescription &s) : descr(s) {}
 
 			bool operator == (const SearchableSampler &right) const;
 			bool operator >  (const SearchableSampler &right) const;

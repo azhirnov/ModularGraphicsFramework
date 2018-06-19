@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/PipelineCompiler/Serializers/AngelScriptSerializer.h"
+#include "Core/STL/Algorithms/StringParser.h"
 
 namespace PipelineCompiler
 {
@@ -632,13 +633,13 @@ namespace PipelineCompiler
 	struct AngelScriptSerializer::PipelineLayoutToStringFunc
 	{
 	// types
-		using TextureUniform	= PipelineLayoutDescriptor::TextureUniform;
-		using SamplerUniform	= PipelineLayoutDescriptor::SamplerUniform;
-		using ImageUniform		= PipelineLayoutDescriptor::ImageUniform;
-		using UniformBuffer		= PipelineLayoutDescriptor::UniformBuffer;
-		using StorageBuffer		= PipelineLayoutDescriptor::StorageBuffer;
-		using PushConstant		= PipelineLayoutDescriptor::PushConstant;
-		using SubpassInput		= PipelineLayoutDescriptor::SubpassInput;
+		using TextureUniform	= PipelineLayoutDescription::TextureUniform;
+		using SamplerUniform	= PipelineLayoutDescription::SamplerUniform;
+		using ImageUniform		= PipelineLayoutDescription::ImageUniform;
+		using UniformBuffer		= PipelineLayoutDescription::UniformBuffer;
+		using StorageBuffer		= PipelineLayoutDescription::StorageBuffer;
+		using PushConstant		= PipelineLayoutDescription::PushConstant;
+		using SubpassInput		= PipelineLayoutDescription::SubpassInput;
 
 
 	// variables
@@ -716,12 +717,12 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	ToString (PipelineLayoutDescriptor)
+	ToString (PipelineLayoutDescription)
 =================================================
 */
-	String  AngelScriptSerializer::ToString (StringCRef name, const PipelineLayoutDescriptor &value) const
+	String  AngelScriptSerializer::ToString (StringCRef name, const PipelineLayoutDescription &value) const
 	{
-		String	str;	str << name << " = PipelineLayoutDescriptor_Builder()";
+		String	str;	str << name << " = PipelineLayoutDescription_Builder()";
 		
 		PipelineLayoutToStringFunc	func( INOUT str, ExtractIndent( name ) );
 
@@ -1253,7 +1254,7 @@ namespace PipelineCompiler
 	StructField
 =================================================
 */
-	String	AngelScriptSerializer::StructField (StringCRef name, StringCRef typeName, uint arraySize, uint offset, uint align, uint sizeOf) const
+	String	AngelScriptSerializer::StructField (StringCRef name, StringCRef typeName, ArraySize arraySize, uint offset, uint align, uint sizeOf) const
 	{
 		String	indent;		indent.Resize( _structStack.Count()-2, '\t' );
 
@@ -1272,10 +1273,10 @@ namespace PipelineCompiler
 		String	str;
 		str << indent << "\t" << type_name << "  " << name;
 
-		if ( arraySize > 1 )
-			str << "[" << arraySize << "]";
+		if ( arraySize.IsStaticArray() )
+			str << "[" << arraySize.Size() << "]";
 		else
-		if ( arraySize == 0 )
+		if ( arraySize.IsDynamicArray() )
 		{
 			WARNING( "dynamic arrays are not supported!" );
 			str << "[]";
@@ -1291,6 +1292,17 @@ namespace PipelineCompiler
 =================================================
 */
 	String  AngelScriptSerializer::StructCtorForInitializerList () const
+	{
+		TODO( "" );
+		return "";
+	}
+	
+/*
+=================================================
+	StructVertexAttribBinding
+=================================================
+*/
+	String  AngelScriptSerializer::StructVertexAttribBinding () const
 	{
 		TODO( "" );
 		return "";
