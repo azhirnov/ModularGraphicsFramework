@@ -210,8 +210,11 @@ namespace PlatformVK
 		CHECK_ATTACHMENT( _memObj );
 
 		_memObj->Subscribe( this, &Vk1Image::_OnMemoryBindingChanged );
+		_memObj->Subscribe( this, &Vk1Image::_Delete );
 
 		CHECK_LINKING( _CopySubscriptions< ForwardToMem_t >( _memObj ) );
+
+		CHECK_LINKING( _CreateImage() );
 		
 		return Module::_Link_Impl( msg );
 	}
@@ -223,12 +226,10 @@ namespace PlatformVK
 */
 	bool Vk1Image::_Compose (const ModuleMsg::Compose &msg)
 	{
-		if ( _IsComposedState( GetState() ) or _IsImageCreated() )
+		if ( _IsComposedState( GetState() ) /*or _IsImageCreated()*/ )
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
-
-		CHECK_COMPOSING( _CreateImage() );
 
 		_SendForEachAttachments( msg );
 		
@@ -257,15 +258,13 @@ namespace PlatformVK
 */
 	bool Vk1Image::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_mem	= msg.newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
+		if ( msg.newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		{
+			CHECK_ERR( GetState() == EState::Initial	and
+					   not _IsComposedState( msg.newModule->GetState() ) );
+		}
 
 		CHECK( _Attach( msg.name, msg.newModule ) );
-
-		if ( is_mem )
-		{
-			CHECK( _SetState( EState::Initial ) );
-			_DestroyViews();
-		}
 		return true;
 	}
 	
@@ -280,8 +279,7 @@ namespace PlatformVK
 
 		if ( msg.oldModule == _memObj )
 		{
-			CHECK( _SetState( EState::Initial ) );
-			_DestroyViews();
+			_SendMsg( ModuleMsg::Delete{} );
 		}
 		return true;
 	}
@@ -516,22 +514,18 @@ namespace PlatformVK
 	{
 		CHECK_ERR( _IsComposedOrLinkedState( GetState() ) );
 
-		using EBindingTarget = GpuMsg::OnMemoryBindingChanged::EBindingTarget;
-
 		if (  msg.targetObject == this )
 		{
-			_isBindedToMemory = ( msg.newState == EBindingTarget::Image );
-
-			if ( _isBindedToMemory )
+			if ( not _isBindedToMemory )
 			{
+				_isBindedToMemory = true;
+				
+				_memObj->Unsubscribe( this, &Vk1Image::_OnMemoryBindingChanged );
+
 				CHECK( _CreateDefaultView() );
 				CHECK( _SetState( EState::ComposedMutable ) );
 				
 				_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
-			}
-			else
-			{
-				_SendMsg( ModuleMsg::Delete{} );
 			}
 		}
 		return true;

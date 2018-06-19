@@ -508,6 +508,8 @@ namespace PlatformVK
 		_properties.maxComputeWorkGroupInvocations	= _deviceProperties.limits.maxComputeWorkGroupInvocations;
 		_properties.maxComputeWorkGroupSize			= ReferenceCast<uint3>(_deviceProperties.limits.maxComputeWorkGroupSize);
 		_properties.maxComputeWorkGroupCount		= ReferenceCast<uint3>(_deviceProperties.limits.maxComputeWorkGroupCount);
+
+		_properties.explicitMemoryObjects			= true;
 	}
 	
 /*
@@ -1243,26 +1245,43 @@ namespace PlatformVK
 	GetMemoryTypeIndex
 =================================================
 */
-	bool Vk1Device::GetMemoryTypeIndex (uint32_t memoryTypeBits, VkMemoryPropertyFlags flags, OUT uint32_t &index) const
+	bool Vk1Device::GetMemoryTypeIndex (const uint32_t memoryTypeBits, const VkMemoryPropertyFlags flags, OUT uint32_t &index) const
 	{
 		index = UMax;
 
 		for (uint32_t i = 0; i < _deviceMemoryProperties.memoryTypeCount; ++i)
 		{
-			if ( (memoryTypeBits & 1) == 1 )
-			{
-				if ( (_deviceMemoryProperties.memoryTypes[i].propertyFlags & flags) == flags )
-				{
-					index = i;
-					return true;
-				}
-			}
+			const auto&		mem_type = _deviceMemoryProperties.memoryTypes[i];
 
-			memoryTypeBits >>= 1;
+			if ( ((memoryTypeBits >> i) & 1) == 1		and
+				 EnumEq( mem_type.propertyFlags, flags ) )
+			{
+				index = i;
+				return true;
+			}
 		}
 		return false;
 	}
 	
+/*
+=================================================
+	CompareMemoryTypes
+=================================================
+*/
+	bool Vk1Device::CompareMemoryTypes (const uint32_t memoryTypeBits, const VkMemoryPropertyFlags flags, const uint32_t index) const
+	{
+		CHECK_ERR( index < _deviceMemoryProperties.memoryTypeCount );
+
+		const auto&		mem_type = _deviceMemoryProperties.memoryTypes[ index ];
+
+		if ( ((memoryTypeBits >> index) & 1) == 1	and
+			 EnumEq( mem_type.propertyFlags, flags ) )
+		{
+			return true;
+		}
+		return false;
+	}
+
 /*
 =================================================
 	SetObjectName

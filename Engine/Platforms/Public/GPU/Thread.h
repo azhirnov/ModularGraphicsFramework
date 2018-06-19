@@ -100,9 +100,11 @@ namespace GpuMsg
 	//
 	// Submit Commands
 	//
-	struct SubmitGraphicsQueueCommands : _MessageBase_
+	template <typename MsgType>
+	struct _SubmitCommands : _MessageBase_
 	{
 	// types
+		using Base_t			= _SubmitCommands<MsgType>;
 		using Commands_t		= FixedSizeArray< ModulePtr, 16 >;
 		using Fence_t			= Platforms::GpuFenceId;
 		using Semaphore_t		= Platforms::GpuSemaphoreId;
@@ -117,16 +119,29 @@ namespace GpuMsg
 		Semaphores_t		signalSemaphores;	// will be signaleed when command buffers have completed execution.
 
 	// methods
-		SubmitGraphicsQueueCommands () : fence{Uninitialized} {}
-		explicit SubmitGraphicsQueueCommands (const ModulePtr &cmd, Fence_t fence = Uninitialized) : commands({ cmd }), fence( fence ) {}
-		explicit SubmitGraphicsQueueCommands (ArrayCRef< ModulePtr > list, Fence_t fence = Uninitialized) : commands( list ), fence( fence ) {}
+		_SubmitCommands () : fence{Uninitialized} {}
+		explicit _SubmitCommands (const ModulePtr &cmd) : commands({ cmd }) {}
+		explicit _SubmitCommands (ArrayCRef< ModulePtr > list) : commands( list ) {}
+
+		template <typename Other> Other const&  _Cast () const					{ return reinterpret_cast<Other const&>( *this ); }
+
+		MsgType&  SignalSemaphore (Semaphore_t sem)								{ signalSemaphores.PushBack( sem );			return Cast<MsgType &>(*this); }
+		MsgType&  WaitSemaphore (Semaphore_t sem, EPipelineStage::bits stage)	{ waitSemaphores.PushBack({ sem, stage });	return Cast<MsgType &>(*this); }
+		MsgType&  SetFence (Fence_t newFence)									{ fence = newFence;							return Cast<MsgType &>(*this); }
 	};
 
-	struct SubmitComputeQueueCommands : SubmitGraphicsQueueCommands
+	struct SubmitGraphicsQueueCommands : _SubmitCommands<SubmitGraphicsQueueCommands>
+	{
+		SubmitGraphicsQueueCommands () {}
+		explicit SubmitGraphicsQueueCommands (const ModulePtr &cmd) : Base_t( cmd ) {}
+		explicit SubmitGraphicsQueueCommands (ArrayCRef< ModulePtr > list) : Base_t( list ) {}
+	};
+
+	struct SubmitComputeQueueCommands : _SubmitCommands<SubmitComputeQueueCommands>
 	{
 		SubmitComputeQueueCommands () {}
-		explicit SubmitComputeQueueCommands (const ModulePtr &cmd, Fence_t fence = Uninitialized) : SubmitGraphicsQueueCommands( cmd, fence ) {}
-		explicit SubmitComputeQueueCommands (ArrayCRef< ModulePtr > list, Fence_t fence = Uninitialized) : SubmitGraphicsQueueCommands( list, fence ) {}
+		explicit SubmitComputeQueueCommands (const ModulePtr &cmd) : Base_t( cmd ) {}
+		explicit SubmitComputeQueueCommands (ArrayCRef< ModulePtr > list) : Base_t( list ) {}
 	};
 
 
@@ -142,21 +157,17 @@ namespace GpuMsg
 		Out< Data >		result;
 	};
 
-	struct ThreadEndFrame : SubmitGraphicsQueueCommands
+	struct ThreadEndFrame : _SubmitCommands<ThreadEndFrame>
 	{
 	// variables
 		ModulePtr		framebuffer;	// (optional) must be null or framebuffer returned by 'ThreadBeginFrame'
 
 	// methods
 		ThreadEndFrame () {}
+		explicit ThreadEndFrame (const ModulePtr &command) : Base_t( command ), framebuffer( framebuffer ) {}
+		explicit ThreadEndFrame (ArrayCRef<ModulePtr> commands) : Base_t( commands ), framebuffer( framebuffer ) {}
 
-		ThreadEndFrame (const ModulePtr &framebuffer, const ModulePtr &command, Fence_t fence = Uninitialized) :
-			SubmitGraphicsQueueCommands( command, fence ), framebuffer( framebuffer )
-		{}
-
-		ThreadEndFrame (const ModulePtr &framebuffer, ArrayCRef<ModulePtr> commands, Fence_t fence = Uninitialized) :
-			SubmitGraphicsQueueCommands( commands, fence ), framebuffer( framebuffer )
-		{}
+		ThreadEndFrame& SetFramebuffer (const ModulePtr &fb)	{ framebuffer = fb;  return *this; }
 	};
 
 
@@ -215,6 +226,9 @@ namespace GpuMsg
 			uint	maxComputeWorkGroupInvocations	= 0;
 			uint3	maxComputeWorkGroupSize;		// local size
 			uint3	maxComputeWorkGroupCount;
+
+			// features
+			bool	explicitMemoryObjects	= false;
 		};
 
 	// variables

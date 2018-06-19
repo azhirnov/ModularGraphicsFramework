@@ -342,7 +342,7 @@ namespace Platforms
 
 		_isFrameStarted = false;
 
-		_cmdQueue->Send( GpuMsg::SubmitGraphicsQueueCommands{ msg });
+		_cmdQueue->Send( msg._Cast<GpuMsg::SubmitGraphicsQueueCommands>() );
 
 		_cmdQueue->Send( GpuMsg::SWPresent{ LAMBDA(this) () {{ _surface.SwapBuffers(); }} });
 		return true;

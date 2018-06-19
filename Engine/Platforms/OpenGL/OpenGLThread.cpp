@@ -335,7 +335,7 @@ namespace Platforms
 		if ( msg.framebuffer )
 			CHECK_ERR( msg.framebuffer == _device.GetCurrentFramebuffer() );
 
-		_cmdQueue->Send( GpuMsg::SubmitGraphicsQueueCommands{ msg });
+		_cmdQueue->Send( msg._Cast<GpuMsg::SubmitGraphicsQueueCommands>() );
 		_cmdQueue->Send( GpuMsg::GLFlushQueue{} );
 		
 		CHECK_ERR( _device.EndFrame() );

@@ -247,7 +247,7 @@ namespace PlatformVK
 		CHECK_ERR( GetDevice()->IsDeviceCreated() );
 		CHECK_ERR( GetDevice()->GetQueueFamily()[ EQueueFamily::Compute ] );
 		
-		return _SubmitQueue( msg );
+		return _SubmitQueue( msg._Cast<GpuMsg::SubmitGraphicsQueueCommands>() );
 	}
 	
 /*

@@ -24,8 +24,7 @@ namespace PlatformVK
 	// types
 	private:
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::VkAllocMemForImage,
-											GpuMsg::VkAllocMemForBuffer,
+											GpuMsg::VkAllocMemory,
 											GpuMsg::VkFreeMemory
 										> >;
 
@@ -66,8 +65,7 @@ namespace PlatformVK
 	private:
 		bool _Delete (const ModuleMsg::Delete &);
 		
-		bool _VkAllocMemForImage (const GpuMsg::VkAllocMemForImage &);
-		bool _VkAllocMemForBuffer (const GpuMsg::VkAllocMemForBuffer &);
+		bool _VkAllocMemory (const GpuMsg::VkAllocMemory &);
 		bool _VkFreeMemory (const GpuMsg::VkFreeMemory &);
 	};
 //-----------------------------------------------------------------------------
@@ -100,8 +98,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_GetVkPrivateClasses );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_VkAllocMemForImage );
-		_SubscribeOnMsg( this, &Vk1MemoryManager::_VkAllocMemForBuffer );
+		_SubscribeOnMsg( this, &Vk1MemoryManager::_VkAllocMemory );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_VkFreeMemory );
 
 		CHECK( _ValidateMsgSubscriptions() );
@@ -120,25 +117,21 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_VkAllocMemForImage
+	_VkAllocMemory
 =================================================
 */
-	bool Vk1MemoryManager::_VkAllocMemForImage (const GpuMsg::VkAllocMemForImage &msg)
+	bool Vk1MemoryManager::_VkAllocMemory (const GpuMsg::VkAllocMemory &msg)
 	{
 		CHECK_ERR( not _memBlocks.IsExist( msg.module ) );
-		CHECK_ERR( msg.image != VK_NULL_HANDLE );
 
 		// allocate memory
-		VkMemoryRequirements	mem_reqs = {};
-		vkGetImageMemoryRequirements( GetVkDevice(), msg.image, &mem_reqs );
-		
 		VkMemoryAllocateInfo	info = {};
 		info.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		info.pNext				= null;
-		info.allocationSize		= mem_reqs.size;
+		info.allocationSize		= msg.memReqs.size;
 		info.memoryTypeIndex	= 0;
 
-		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( mem_reqs.memoryTypeBits, Vk1Enum( msg.flags ), OUT info.memoryTypeIndex ) );
+		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( msg.memReqs.memoryTypeBits, Vk1Enum( msg.flags ), OUT info.memoryTypeIndex ) );
 		
 		VkDeviceMemory		mem_id;
 		VK_CHECK( vkAllocateMemory( GetVkDevice(), &info, null, OUT &mem_id ) );
@@ -148,51 +141,10 @@ namespace PlatformVK
 
 		Memory	block;
 		block.binding	= EBindingTarget::Buffer;
-		block.align		= BytesUL( mem_reqs.alignment );
+		block.align		= BytesUL( msg.memReqs.alignment );
 		block.flags		= msg.flags;
 		block.mem		= mem_id;
-		block.size		= BytesUL( mem_reqs.size );
-		
-		msg.result.Set({ block.mem, BytesUL(0), block.size });
-
-		_memBlocks.Add( msg.module, block );
-		return true;
-	}
-	
-/*
-=================================================
-	_VkAllocMemForBuffer
-=================================================
-*/
-	bool Vk1MemoryManager::_VkAllocMemForBuffer (const GpuMsg::VkAllocMemForBuffer &msg)
-	{
-		CHECK_ERR( not _memBlocks.IsExist( msg.module ) );
-		CHECK_ERR( msg.buffer != VK_NULL_HANDLE );
-
-		// allocate memory
-		VkMemoryRequirements	mem_reqs = {};
-		vkGetBufferMemoryRequirements( GetVkDevice(), msg.buffer, &mem_reqs );
-		
-		VkMemoryAllocateInfo	info = {};
-		info.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		info.pNext				= null;
-		info.allocationSize		= mem_reqs.size;
-		info.memoryTypeIndex	= 0;
-
-		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( mem_reqs.memoryTypeBits, Vk1Enum( msg.flags ), OUT info.memoryTypeIndex ) );
-		
-		VkDeviceMemory		mem_id;
-		VK_CHECK( vkAllocateMemory( GetVkDevice(), &info, null, OUT &mem_id ) );
-		
-		GetDevice()->SetObjectName( ReferenceCast<uint64_t>(mem_id), GetDebugName(), EGpuObject::DeviceMemory );
-
-
-		Memory	block;
-		block.binding	= EBindingTarget::Buffer;
-		block.align		= BytesUL( mem_reqs.alignment );
-		block.flags		= msg.flags;
-		block.mem		= mem_id;
-		block.size		= BytesUL( mem_reqs.size );
+		block.size		= BytesUL( msg.memReqs.size );
 		
 		msg.result.Set({ block.mem, BytesUL(0), block.size });
 

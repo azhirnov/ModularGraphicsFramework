@@ -9,7 +9,7 @@ Supported output shaders:
 - GLSL Vulkan 1.1
 - OpenCL 1.2 source code and asm
 - C++ shaders for software renderer
-- HLSL (WIP)
+- HLSL - unstable (WIP)
 
 Features:
 - Export buffer types from shader to C++ code.

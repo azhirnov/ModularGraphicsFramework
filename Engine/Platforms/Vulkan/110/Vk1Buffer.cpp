@@ -98,7 +98,6 @@ namespace PlatformVK
 		bool _CreateBuffer ();
 
 		void _DestroyAll ();
-		void _OnMemoryUnbinded ();
 	};
 //-----------------------------------------------------------------------------
 
@@ -181,8 +180,11 @@ namespace PlatformVK
 		CHECK_ATTACHMENT( _memObj );
 
 		_memObj->Subscribe( this, &Vk1Buffer::_OnMemoryBindingChanged );
+		_memObj->Subscribe( this, &Vk1Buffer::_Delete );
 		
 		CHECK_LINKING( _CopySubscriptions< ForwardToMem_t >( _memObj ) );
+
+		CHECK_LINKING( _CreateBuffer() );
 		
 		return Module::_Link_Impl( msg );
 	}
@@ -194,12 +196,10 @@ namespace PlatformVK
 */
 	bool Vk1Buffer::_Compose (const ModuleMsg::Compose &msg)
 	{
-		if ( _IsComposedState( GetState() ) or _IsCreated() )
+		if ( _IsComposedState( GetState() ) /*or _IsCreated()*/ )
 			return true;	// already composed
 
 		CHECK_ERR( GetState() == EState::Linked );
-
-		CHECK_COMPOSING( _CreateBuffer() );
 
 		_SendForEachAttachments( msg );
 		
@@ -228,15 +228,13 @@ namespace PlatformVK
 */
 	bool Vk1Buffer::_AttachModule (const ModuleMsg::AttachModule &msg)
 	{
-		const bool	is_mem	= msg.newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >();
+		if ( msg.newModule->GetSupportedEvents().HasAllTypes< MemoryEvents_t >() )
+		{
+			CHECK_ERR( GetState() == EState::Initial	and
+					   not _IsComposedState( msg.newModule->GetState() ) );
+		}
 
 		CHECK( _Attach( msg.name, msg.newModule ) );
-
-		if ( is_mem )
-		{
-			CHECK( _SetState( EState::Initial ) );
-			_OnMemoryUnbinded();
-		}
 		return true;
 	}
 	
@@ -251,8 +249,7 @@ namespace PlatformVK
 
 		if ( msg.oldModule == _memObj )
 		{
-			CHECK( _SetState( EState::Initial ) );
-			_OnMemoryUnbinded();
+			_SendMsg( ModuleMsg::Delete{} );
 		}
 		return true;
 	}
@@ -303,21 +300,17 @@ namespace PlatformVK
 	{
 		CHECK_ERR( _IsComposedOrLinkedState( GetState() ) );
 
-		using EBindingTarget = GpuMsg::OnMemoryBindingChanged::EBindingTarget;
-
 		if (  msg.targetObject == this )
 		{
-			_isBindedToMemory = ( msg.newState == EBindingTarget::Buffer );
-
-			if ( _isBindedToMemory )
+			if ( not _isBindedToMemory )
 			{
+				_isBindedToMemory = true;
+				
+				_memObj->Unsubscribe( this, &Vk1Buffer::_OnMemoryBindingChanged );
+
 				CHECK( _SetState( EState::ComposedMutable ) );
 				
 				_SendUncheckedEvent( ModuleMsg::AfterCompose{} );
-			}
-			else
-			{
-				_SendMsg( ModuleMsg::Delete{} );
 			}
 		}
 		return true;
@@ -376,20 +369,7 @@ namespace PlatformVK
 		{
 			vkDestroyBuffer( dev, _bufferId, null );
 		}
-
-		_OnMemoryUnbinded();
-
-		_bufferId	= VK_NULL_HANDLE;
-		_descr		= Uninitialized;
-	}
-	
-/*
-=================================================
-	_OnMemoryUnbinded
-=================================================
-*/
-	void Vk1Buffer::_OnMemoryUnbinded ()
-	{
+		
 		if ( _memObj )
 		{
 			this->UnsubscribeAll( _memObj );
@@ -399,6 +379,8 @@ namespace PlatformVK
 		_memObj				= null;
 		_memManager			= null;
 		_isBindedToMemory	= false;
+		_bufferId			= VK_NULL_HANDLE;
+		_descr				= Uninitialized;
 	}
 
 /*

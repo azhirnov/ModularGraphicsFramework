@@ -209,7 +209,7 @@ namespace PlatformGL
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( _family[ EQueueFamily::Compute ] );
 		
-		_commands.Add( msg );
+		_commands.Add( msg._Cast<GpuMsg::SubmitGraphicsQueueCommands>() );
 		return true;
 	}
 	

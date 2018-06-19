@@ -223,7 +223,7 @@ namespace GpuMsg
 	//
 	// Memory Manger Allocate Block for Image / Buffer
 	//
-	struct VkAllocMemForImage : _MessageBase_
+	struct VkAllocMemory : _MessageBase_
 	{
 	// types
 		struct Data {
@@ -234,32 +234,15 @@ namespace GpuMsg
 		using EGpuMemory	= Platforms::EGpuMemory;
 
 	// variables
-		ModuleWPtr			module;
-		vk::VkImage			image	= VK_NULL_HANDLE;
-		EGpuMemory::bits	flags;
-		Out< Data >			result;
+		ModuleWPtr					module;
+		vk::VkMemoryRequirements	memReqs;
+		EGpuMemory::bits			flags;
+		Out< Data >					result;
 
 	// methods
-		VkAllocMemForImage () {}
-		VkAllocMemForImage (const ModuleWPtr &mod, vk::VkImage img, EGpuMemory::bits flags) : module{mod}, image{img}, flags{flags} {}
-	};
-
-
-	struct VkAllocMemForBuffer : _MessageBase_
-	{
-	// types
-		using Data			= VkAllocMemForImage::Data;
-		using EGpuMemory	= Platforms::EGpuMemory;
-
-	// variables
-		ModuleWPtr			module;
-		vk::VkBuffer		buffer	= VK_NULL_HANDLE;
-		EGpuMemory::bits	flags;
-		Out< Data >			result;
-
-	// methods
-		VkAllocMemForBuffer () {}
-		VkAllocMemForBuffer (const ModuleWPtr &mod, vk::VkBuffer buf, EGpuMemory::bits flags) : module{mod}, buffer{buf}, flags{flags} {}
+		VkAllocMemory () {}
+		VkAllocMemory (const ModuleWPtr &mod, EGpuMemory::bits flags) : module{mod}, memReqs{}, flags{flags} {}
+		VkAllocMemory (const ModuleWPtr &mod, const vk::VkMemoryRequirements &req, EGpuMemory::bits flags) : module{mod}, memReqs{req}, flags{flags} {}
 	};
 
 

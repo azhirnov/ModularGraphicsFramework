@@ -139,6 +139,8 @@ namespace PlatformSW
 		_properties.maxComputeWorkGroupInvocations	= SWDeviceProperties.limits.maxComputeWorkGroupInvocations;
 		_properties.maxComputeWorkGroupSize			= SWDeviceProperties.limits.maxComputeWorkGroupSize;
 		_properties.maxComputeWorkGroupCount		= SWDeviceProperties.limits.maxComputeWorkGroupCount;
+
+		_properties.explicitMemoryObjects	= false;	// TODO
 	}
 
 }	// PlatformSW

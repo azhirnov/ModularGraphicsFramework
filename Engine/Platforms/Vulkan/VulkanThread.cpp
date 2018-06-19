@@ -383,7 +383,7 @@ namespace Platforms
 
 		if ( not msg.commands.Empty() )
 		{
-			GpuMsg::SubmitGraphicsQueueCommands		submit{ msg };
+			GpuMsg::SubmitGraphicsQueueCommands		submit = msg._Cast<GpuMsg::SubmitGraphicsQueueCommands>();
 
 			submit.waitSemaphores.PushBack({ _imageAvailable, EPipelineStage::ColorAttachmentOutput });
 			submit.signalSemaphores.PushBack( _renderFinished );

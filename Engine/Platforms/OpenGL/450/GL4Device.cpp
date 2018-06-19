@@ -355,6 +355,8 @@ namespace PlatformGL
 		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, OUT &idata[1] ) );
 		GL_CALL( glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, OUT &idata[2] ) );
 		_properties.maxComputeWorkGroupSize = uint3( idata[0], idata[1], idata[2] );
+
+		_properties.explicitMemoryObjects = false; //IsExtensionSupported( "GL_EXT_memory_object" );
 	}
 	
 /*

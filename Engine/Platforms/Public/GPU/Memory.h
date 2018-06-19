@@ -286,14 +286,17 @@ namespace GpuMsg
 			Unbinded,
 			Image,
 			Buffer,
+			Shared,
 		};
 
 	// variables
 		ModulePtr			targetObject;	// image or buffer
 		EBindingTarget		newState;
+		bool				isDedicated;	// 'true' if memory can not be shared with other image/buffer
 		
 	// methods
-		OnMemoryBindingChanged (const ModulePtr &obj, EBindingTarget newState) : targetObject{obj}, newState{newState} {}
+		OnMemoryBindingChanged (const ModulePtr &obj, EBindingTarget newState) : targetObject{obj}, newState{newState}, isDedicated{true} {}
+		OnMemoryBindingChanged (const ModulePtr &obj, bool isDedicated) : targetObject{obj}, newState{EBindingTarget::Shared}, isDedicated{isDedicated} {}
 	};
 
 

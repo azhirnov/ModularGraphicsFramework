@@ -561,6 +561,8 @@ namespace PlatformCL
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size3), OUT size3.ptr(), null ) );
 		_properties.maxComputeWorkGroupSize = size3.To<uint3>();
 		_properties.maxComputeWorkGroupCount = uint3(~0u) / _properties.maxComputeWorkGroupSize;
+
+		_properties.explicitMemoryObjects = false;
 	}
 	
 /*

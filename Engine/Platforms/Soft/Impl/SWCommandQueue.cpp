@@ -226,7 +226,7 @@ namespace PlatformSW
 		CHECK_ERR( _IsComposedState( GetState() ) );
 		CHECK_ERR( _family[ EQueueFamily::Compute ] );
 		
-		return _Submit( msg );
+		return _Submit( msg._Cast<GpuMsg::SubmitGraphicsQueueCommands>() );
 	}
 	
 /*

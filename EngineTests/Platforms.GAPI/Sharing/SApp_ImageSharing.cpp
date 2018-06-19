@@ -127,7 +127,7 @@ bool SApp::_Test_ImageSharing ()
 
 
 	// submit and sync
-	sharedGpu.gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result, *fence2_ctor.result });
+	sharedGpu.gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence2_ctor.result ));
 
 	sharedGpu.syncManager->Send( GpuMsg::ClientWaitFence{ *fence2_ctor.result });
 

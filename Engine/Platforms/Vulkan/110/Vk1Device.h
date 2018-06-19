@@ -161,6 +161,7 @@ namespace PlatformVK
 		bool IsFrameStarted () const;
 		
 		bool GetMemoryTypeIndex (vk::uint32_t memoryTypeBits, vk::VkMemoryPropertyFlags flags, OUT vk::uint32_t &index) const;
+		bool CompareMemoryTypes (vk::uint32_t memoryTypeBits, vk::VkMemoryPropertyFlags flags, vk::uint32_t index) const;
 
 		bool SetObjectName (vk::uint64_t id, StringCRef name, EGpuObject::type type) const;
 

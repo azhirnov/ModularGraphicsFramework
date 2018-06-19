@@ -119,6 +119,10 @@ namespace Platforms
 		static constexpr bits	WriteMask	= bits() | ShaderWrite | ColorAttachmentWrite | DepthStencilAttachmentWrite |
 											  TransferWrite | HostWrite | MemoryWrite;
 		
+		static constexpr bits	ColorAttachment			= bits() | ColorAttachmentRead | ColorAttachmentWrite;
+		static constexpr bits	DepthStencilAttachment	= bits() | DepthStencilAttachmentRead | DepthStencilAttachmentWrite;
+		static constexpr bits	Transfer				= bits() | TransferRead | TransferWrite;
+		
 		static StringCRef	ToString (type value);
 		static String		ToString (bits values);
 	};

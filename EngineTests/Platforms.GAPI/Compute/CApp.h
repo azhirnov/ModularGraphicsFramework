@@ -65,4 +65,7 @@ private:
 	//bool _Test_CopyImage3D ();
 	bool _Test_Image2DNearestFilter ();
 	bool _Test_Image2DBilinearFilter ();
+
+	// memory
+	bool _Test_ExplicitMemoryObjectSharing ();
 };

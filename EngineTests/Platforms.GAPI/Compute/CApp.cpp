@@ -31,6 +31,7 @@ CApp::CApp ()
 			//<< &CApp::_Test_PushConstants
 			<< &CApp::_Test_Image2DNearestFilter
 			<< &CApp::_Test_Image2DBilinearFilter
+			<< &CApp::_Test_ExplicitMemoryObjectSharing
 		;
 }
 
