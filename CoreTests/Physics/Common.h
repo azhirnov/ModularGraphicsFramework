@@ -2,6 +2,6 @@
 
 #pragma once
 
-#include "Engine/Physics/Engine.Physics.h"
+#include "Core/Physics/Core.Physics.h"
 
 #define TEST	CHECK_FATAL

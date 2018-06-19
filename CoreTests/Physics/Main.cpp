@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Tests/Physics/Common.h"
-#include "Engine/STL/Log/Logger.h"
+#include "CoreTests/Physics/Common.h"
+#include "Core/STL/Log/Logger.h"
 
 extern void Test_Dimensions_PhysicsValue ();
 extern void Test_Algorithms_Orbit ();

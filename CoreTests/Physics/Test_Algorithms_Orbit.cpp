@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Tests/Physics/Common.h"
-#include "Engine/Physics/Dimensions/DefaultTypes.h"
+#include "CoreTests/Physics/Common.h"
+#include "Core/Physics/Dimensions/DefaultTypes.h"
 
 using namespace GXPhysics;
 using namespace GXPhysics::Astrophysics;
