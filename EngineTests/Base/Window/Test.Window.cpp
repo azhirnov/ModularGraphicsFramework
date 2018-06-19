@@ -82,7 +82,7 @@ extern void Test_Window ()
 
 	Platforms::RegisterPlatforms();
 	
-	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Base" ) );
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "EngineTests/Base" ) );
 	
 	ModulePtr	platform;
 	CHECK( mf->Create( 0, ms->GlobalSystems(), CreateInfo::Platform{}, OUT platform ) );

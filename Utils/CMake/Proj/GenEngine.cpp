@@ -122,21 +122,21 @@ CMakeBuilderPtr  GenEngine (Ptr<CMakeBuilder> core)
 		
 		
 	// Tests //
-	auto	test_engine_base = builder->AddExecutable( "Tests.Engine.Base", tests_path + "Engine.Base" );
+	auto	test_engine_base = builder->AddExecutable( "Tests.Engine.Base", tests_path + "Base" );
 	{
 		test_engine_base->AddFoldersRecursive( "" );
 		test_engine_base->ProjFolder( "EngineTests" );
 		test_engine_base->LinkLibrary( engine_platforms )->LinkLibrary( engine_profilers );
 	}
 		
-	auto	test_engine_graphics = builder->AddExecutable( "Tests.Engine.Graphics", tests_path + "Engine.Graphics" );
+	auto	test_engine_graphics = builder->AddExecutable( "Tests.Engine.Graphics", tests_path + "Graphics" );
 	{
 		test_engine_graphics->AddFoldersRecursive( "" );
 		test_engine_graphics->ProjFolder( "EngineTests" );
 		test_engine_graphics->LinkLibrary( engine_importexport )->LinkLibrary( engine_profilers );
 	}
 
-	auto	test_engine_gapi = builder->AddExecutable( "Tests.Engine.Platforms.GAPI", tests_path + "Engine.Platforms.GAPI" );
+	auto	test_engine_gapi = builder->AddExecutable( "Tests.Engine.Platforms.GAPI", tests_path + "Platforms.GAPI" );
 	{
 		test_engine_gapi->AddFoldersRecursive( "" );
 		test_engine_gapi->ProjFolder( "EngineTests" );

@@ -4,7 +4,7 @@
 	
 extern void Test_PipelineCompiler (StringCRef device)
 {
-	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Platforms.GAPI/Compute" ) );
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "EngineTests/Platforms.GAPI/Compute" ) );
 
 	#ifdef GRAPHICS_API_VULKAN
 	{

@@ -4,7 +4,7 @@
 	
 extern void Test_GWindow ()
 {
-	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Base" ) );
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "EngineTests/Base" ) );
 
 	#ifdef GRAPHICS_API_OPENGL
 	{

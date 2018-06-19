@@ -12,7 +12,7 @@ int main ()
 {
 	Logger::GetInstance()->Open( "log", false );
 	
-	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Graphics" ) );
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "EngineTests/Graphics" ) );
 
 	#ifdef GRAPHICS_API_VULKAN
 	{

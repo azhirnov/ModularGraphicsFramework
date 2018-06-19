@@ -795,28 +795,28 @@ endif ()
 # project: Tests.Engine.Base
 #==================================================================================================
 set( SOURCES 
-	"../EngineTests/Engine.Base/Graphics/GApp.cpp"
-	"../EngineTests/Engine.Base/Graphics/GApp.h"
-	"../EngineTests/Engine.Base/Graphics/Test.GWindow.cpp"
-	"../EngineTests/Engine.Base/Pipelines/all_pipelines.h"
-	"../EngineTests/Engine.Base/Pipelines/default.cpp"
-	"../EngineTests/Engine.Base/Pipelines/Default.ppln"
-	"../EngineTests/Engine.Base/Pipelines/default2.cpp"
-	"../EngineTests/Engine.Base/Pipelines/Default2.ppln"
-	"../EngineTests/Engine.Base/Pipelines/resources.as"
-	"../EngineTests/Engine.Base/Pipelines/shared_types.h"
-	"../EngineTests/Engine.Base/Window/Test.Window.cpp"
-	"../EngineTests/Engine.Base/Common.h"
-	"../EngineTests/Engine.Base/Main.cpp" )
+	"../EngineTests/Base/Graphics/GApp.cpp"
+	"../EngineTests/Base/Graphics/GApp.h"
+	"../EngineTests/Base/Graphics/Test.GWindow.cpp"
+	"../EngineTests/Base/Pipelines/all_pipelines.h"
+	"../EngineTests/Base/Pipelines/default.cpp"
+	"../EngineTests/Base/Pipelines/Default.ppln"
+	"../EngineTests/Base/Pipelines/default2.cpp"
+	"../EngineTests/Base/Pipelines/Default2.ppln"
+	"../EngineTests/Base/Pipelines/resources.as"
+	"../EngineTests/Base/Pipelines/shared_types.h"
+	"../EngineTests/Base/Window/Test.Window.cpp"
+	"../EngineTests/Base/Common.h"
+	"../EngineTests/Base/Main.cpp" )
 if (DEFINED ANDROID)
 	add_library( "Tests.Engine.Base" SHARED ${SOURCES} )
 else()
 	add_executable( "Tests.Engine.Base" ${SOURCES} )
 endif()
-source_group( "Graphics" FILES "../EngineTests/Engine.Base/Graphics/GApp.cpp" "../EngineTests/Engine.Base/Graphics/GApp.h" "../EngineTests/Engine.Base/Graphics/Test.GWindow.cpp" )
-source_group( "Pipelines" FILES "../EngineTests/Engine.Base/Pipelines/all_pipelines.h" "../EngineTests/Engine.Base/Pipelines/default.cpp" "../EngineTests/Engine.Base/Pipelines/Default.ppln" "../EngineTests/Engine.Base/Pipelines/default2.cpp" "../EngineTests/Engine.Base/Pipelines/Default2.ppln" "../EngineTests/Engine.Base/Pipelines/resources.as" "../EngineTests/Engine.Base/Pipelines/shared_types.h" )
-source_group( "Window" FILES "../EngineTests/Engine.Base/Window/Test.Window.cpp" )
-source_group( "" FILES "../EngineTests/Engine.Base/Common.h" "../EngineTests/Engine.Base/Main.cpp" )
+source_group( "Graphics" FILES "../EngineTests/Base/Graphics/GApp.cpp" "../EngineTests/Base/Graphics/GApp.h" "../EngineTests/Base/Graphics/Test.GWindow.cpp" )
+source_group( "Pipelines" FILES "../EngineTests/Base/Pipelines/all_pipelines.h" "../EngineTests/Base/Pipelines/default.cpp" "../EngineTests/Base/Pipelines/Default.ppln" "../EngineTests/Base/Pipelines/default2.cpp" "../EngineTests/Base/Pipelines/Default2.ppln" "../EngineTests/Base/Pipelines/resources.as" "../EngineTests/Base/Pipelines/shared_types.h" )
+source_group( "Window" FILES "../EngineTests/Base/Window/Test.Window.cpp" )
+source_group( "" FILES "../EngineTests/Base/Common.h" "../EngineTests/Base/Main.cpp" )
 set_property( TARGET "Tests.Engine.Base" PROPERTY FOLDER "EngineTests" )
 target_include_directories( "Tests.Engine.Base" PUBLIC "C:/Projects/ModularGraphicsFramework/External" )
 target_include_directories( "Tests.Engine.Base" PUBLIC "${EXTERNALS_PATH}" )
@@ -843,21 +843,21 @@ target_compile_options( "Tests.Engine.Base" PRIVATE $<$<CONFIG:Debug>: ${PROJECT
 # project: Tests.Engine.Graphics
 #==================================================================================================
 set( SOURCES 
-	"../EngineTests/Engine.Graphics/Pipelines/all_pipelines.h"
-	"../EngineTests/Engine.Graphics/Pipelines/default3.cpp"
-	"../EngineTests/Engine.Graphics/Pipelines/Default3.ppln"
-	"../EngineTests/Engine.Graphics/Pipelines/resources.as"
-	"../EngineTests/Engine.Graphics/Pipelines/shared_types.h"
-	"../EngineTests/Engine.Graphics/GApp.cpp"
-	"../EngineTests/Engine.Graphics/GApp.h"
-	"../EngineTests/Engine.Graphics/Main.cpp" )
+	"../EngineTests/Graphics/Pipelines/all_pipelines.h"
+	"../EngineTests/Graphics/Pipelines/default3.cpp"
+	"../EngineTests/Graphics/Pipelines/Default3.ppln"
+	"../EngineTests/Graphics/Pipelines/resources.as"
+	"../EngineTests/Graphics/Pipelines/shared_types.h"
+	"../EngineTests/Graphics/GApp.cpp"
+	"../EngineTests/Graphics/GApp.h"
+	"../EngineTests/Graphics/Main.cpp" )
 if (DEFINED ANDROID)
 	add_library( "Tests.Engine.Graphics" SHARED ${SOURCES} )
 else()
 	add_executable( "Tests.Engine.Graphics" ${SOURCES} )
 endif()
-source_group( "Pipelines" FILES "../EngineTests/Engine.Graphics/Pipelines/all_pipelines.h" "../EngineTests/Engine.Graphics/Pipelines/default3.cpp" "../EngineTests/Engine.Graphics/Pipelines/Default3.ppln" "../EngineTests/Engine.Graphics/Pipelines/resources.as" "../EngineTests/Engine.Graphics/Pipelines/shared_types.h" )
-source_group( "" FILES "../EngineTests/Engine.Graphics/GApp.cpp" "../EngineTests/Engine.Graphics/GApp.h" "../EngineTests/Engine.Graphics/Main.cpp" )
+source_group( "Pipelines" FILES "../EngineTests/Graphics/Pipelines/all_pipelines.h" "../EngineTests/Graphics/Pipelines/default3.cpp" "../EngineTests/Graphics/Pipelines/Default3.ppln" "../EngineTests/Graphics/Pipelines/resources.as" "../EngineTests/Graphics/Pipelines/shared_types.h" )
+source_group( "" FILES "../EngineTests/Graphics/GApp.cpp" "../EngineTests/Graphics/GApp.h" "../EngineTests/Graphics/Main.cpp" )
 set_property( TARGET "Tests.Engine.Graphics" PROPERTY FOLDER "EngineTests" )
 target_include_directories( "Tests.Engine.Graphics" PUBLIC "C:/Projects/ModularGraphicsFramework/External" )
 target_include_directories( "Tests.Engine.Graphics" PUBLIC "${EXTERNALS_PATH}" )
@@ -884,99 +884,99 @@ target_compile_options( "Tests.Engine.Graphics" PRIVATE $<$<CONFIG:Debug>: ${PRO
 # project: Tests.Engine.Platforms.GAPI
 #==================================================================================================
 set( SOURCES 
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp.h"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_BufferAlign.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_BufferRange.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_ClearBuffer.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_ConvertFloatImage2D.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_CopyBufferToImage2D.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2D.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2DToBuffer.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_Image2DBilinearFilter.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_Image2DNearestFilter.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_ShaderBarrier.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Sharing/SApp.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Sharing/SApp.h"
-	"../EngineTests/Engine.Platforms.GAPI/Sharing/SApp_BufferSharing.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Sharing/SApp_ImageSharing.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Sharing/Test.Sharing.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/all_pipelines.h"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/bufferalign.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/BufferAlign.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/copyfloatimage2d.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/CopyFloatImage2D.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/dynamicbuffer.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/DynamicBuffer.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/image2dbilinearfilter.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/Image2DBilinearFilter.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/image2dnearestfilter.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/Image2DNearestFilter.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/shaderbarrier.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/ShaderBarrier.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/shared_types.h"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/GApp.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/GApp.h"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/GApp_Texture2DBilinearFilter.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/GApp_Texture2DNearestFilter.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/Test.GraphicsApi.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/all_pipelines.h"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/shared_types.h"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/texture2dbilinearfilter.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/Texture2DBilinearFilter.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/texture2dnearestfilter.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/Texture2DNearestFilter.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/all_pipelines.h"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/atomicadd.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/AtomicAdd.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/findlsb.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/FindLSB.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/findmsb.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/FindMSB.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/globaltolocal.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/GlobalToLocal.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/include.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/Include.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/inlineall.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/InlineAll.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/shared_types.h"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/unnamedbuffer.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/UnnamedBuffer.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/vecswizzle.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/VecSwizzle.ppln"
-	"../EngineTests/Engine.Platforms.GAPI/Common.h"
-	"../EngineTests/Engine.Platforms.GAPI/Main.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/resources.as"
-	"../EngineTests/Engine.Platforms.GAPI/MultiGPU/Test.MultiGPU.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/PApp.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/PApp.h"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_AtomicAdd.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_FindLSB.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_FindMSB.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_GlobalToLocal.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_Include.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_InlineAll.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_UnnamedBuffer.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_VecSwizzle.cpp"
-	"../EngineTests/Engine.Platforms.GAPI/Compiler/Test.PipelineCompiler.cpp" )
+	"../EngineTests/Platforms.GAPI/Compute/CApp.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp.h"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_BufferAlign.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_BufferRange.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_ClearBuffer.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_ConvertFloatImage2D.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_CopyBuffer.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_CopyBufferToImage2D.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_CopyImage2D.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_CopyImage2DToBuffer.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_Image2DBilinearFilter.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_Image2DNearestFilter.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_ShaderBarrier.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/Test.ComputeApi.cpp"
+	"../EngineTests/Platforms.GAPI/Sharing/SApp.cpp"
+	"../EngineTests/Platforms.GAPI/Sharing/SApp.h"
+	"../EngineTests/Platforms.GAPI/Sharing/SApp_BufferSharing.cpp"
+	"../EngineTests/Platforms.GAPI/Sharing/SApp_ImageSharing.cpp"
+	"../EngineTests/Platforms.GAPI/Sharing/Test.Sharing.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/all_pipelines.h"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/bufferalign.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/BufferAlign.ppln"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/copyfloatimage2d.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/CopyFloatImage2D.ppln"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/dynamicbuffer.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/DynamicBuffer.ppln"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/image2dbilinearfilter.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/Image2DBilinearFilter.ppln"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/image2dnearestfilter.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/Image2DNearestFilter.ppln"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/shaderbarrier.cpp"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/ShaderBarrier.ppln"
+	"../EngineTests/Platforms.GAPI/Compute/Pipelines/shared_types.h"
+	"../EngineTests/Platforms.GAPI/Graphics/GApp.cpp"
+	"../EngineTests/Platforms.GAPI/Graphics/GApp.h"
+	"../EngineTests/Platforms.GAPI/Graphics/GApp_Texture2DBilinearFilter.cpp"
+	"../EngineTests/Platforms.GAPI/Graphics/GApp_Texture2DNearestFilter.cpp"
+	"../EngineTests/Platforms.GAPI/Graphics/Test.GraphicsApi.cpp"
+	"../EngineTests/Platforms.GAPI/Graphics/Pipelines/all_pipelines.h"
+	"../EngineTests/Platforms.GAPI/Graphics/Pipelines/shared_types.h"
+	"../EngineTests/Platforms.GAPI/Graphics/Pipelines/texture2dbilinearfilter.cpp"
+	"../EngineTests/Platforms.GAPI/Graphics/Pipelines/Texture2DBilinearFilter.ppln"
+	"../EngineTests/Platforms.GAPI/Graphics/Pipelines/texture2dnearestfilter.cpp"
+	"../EngineTests/Platforms.GAPI/Graphics/Pipelines/Texture2DNearestFilter.ppln"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/all_pipelines.h"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/atomicadd.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/AtomicAdd.ppln"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/findlsb.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/FindLSB.ppln"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/findmsb.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/FindMSB.ppln"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/globaltolocal.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/GlobalToLocal.ppln"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/include.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/Include.ppln"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/inlineall.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/InlineAll.ppln"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/shared_types.h"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/unnamedbuffer.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/UnnamedBuffer.ppln"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/vecswizzle.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/Pipelines/VecSwizzle.ppln"
+	"../EngineTests/Platforms.GAPI/Common.h"
+	"../EngineTests/Platforms.GAPI/Main.cpp"
+	"../EngineTests/Platforms.GAPI/resources.as"
+	"../EngineTests/Platforms.GAPI/MultiGPU/Test.MultiGPU.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/PApp.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/PApp.h"
+	"../EngineTests/Platforms.GAPI/Compiler/PApp_AtomicAdd.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/PApp_FindLSB.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/PApp_FindMSB.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/PApp_GlobalToLocal.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/PApp_Include.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/PApp_InlineAll.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/PApp_UnnamedBuffer.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/PApp_VecSwizzle.cpp"
+	"../EngineTests/Platforms.GAPI/Compiler/Test.PipelineCompiler.cpp" )
 if (DEFINED ANDROID)
 	add_library( "Tests.Engine.Platforms.GAPI" SHARED ${SOURCES} )
 else()
 	add_executable( "Tests.Engine.Platforms.GAPI" ${SOURCES} )
 endif()
-source_group( "Compute" FILES "../EngineTests/Engine.Platforms.GAPI/Compute/CApp.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp.h" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_BufferAlign.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_BufferRange.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_ClearBuffer.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_ConvertFloatImage2D.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_CopyBuffer.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_CopyBufferToImage2D.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2D.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_CopyImage2DToBuffer.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_Image2DBilinearFilter.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_Image2DNearestFilter.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_ShaderBarrier.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/Test.ComputeApi.cpp" )
-source_group( "Sharing" FILES "../EngineTests/Engine.Platforms.GAPI/Sharing/SApp.cpp" "../EngineTests/Engine.Platforms.GAPI/Sharing/SApp.h" "../EngineTests/Engine.Platforms.GAPI/Sharing/SApp_BufferSharing.cpp" "../EngineTests/Engine.Platforms.GAPI/Sharing/SApp_ImageSharing.cpp" "../EngineTests/Engine.Platforms.GAPI/Sharing/Test.Sharing.cpp" )
-source_group( "Compute\\Pipelines" FILES "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/all_pipelines.h" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/bufferalign.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/BufferAlign.ppln" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/copyfloatimage2d.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/CopyFloatImage2D.ppln" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/dynamicbuffer.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/DynamicBuffer.ppln" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/image2dbilinearfilter.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/Image2DBilinearFilter.ppln" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/image2dnearestfilter.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/Image2DNearestFilter.ppln" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/shaderbarrier.cpp" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/ShaderBarrier.ppln" "../EngineTests/Engine.Platforms.GAPI/Compute/Pipelines/shared_types.h" )
-source_group( "Graphics" FILES "../EngineTests/Engine.Platforms.GAPI/Graphics/GApp.cpp" "../EngineTests/Engine.Platforms.GAPI/Graphics/GApp.h" "../EngineTests/Engine.Platforms.GAPI/Graphics/GApp_Texture2DBilinearFilter.cpp" "../EngineTests/Engine.Platforms.GAPI/Graphics/GApp_Texture2DNearestFilter.cpp" "../EngineTests/Engine.Platforms.GAPI/Graphics/Test.GraphicsApi.cpp" )
-source_group( "Graphics\\Pipelines" FILES "../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/all_pipelines.h" "../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/shared_types.h" "../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/texture2dbilinearfilter.cpp" "../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/Texture2DBilinearFilter.ppln" "../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/texture2dnearestfilter.cpp" "../EngineTests/Engine.Platforms.GAPI/Graphics/Pipelines/Texture2DNearestFilter.ppln" )
-source_group( "Compiler\\Pipelines" FILES "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/all_pipelines.h" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/atomicadd.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/AtomicAdd.ppln" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/findlsb.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/FindLSB.ppln" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/findmsb.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/FindMSB.ppln" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/globaltolocal.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/GlobalToLocal.ppln" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/include.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/Include.ppln" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/inlineall.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/InlineAll.ppln" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/shared_types.h" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/unnamedbuffer.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/UnnamedBuffer.ppln" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/vecswizzle.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/Pipelines/VecSwizzle.ppln" )
-source_group( "" FILES "../EngineTests/Engine.Platforms.GAPI/Common.h" "../EngineTests/Engine.Platforms.GAPI/Main.cpp" "../EngineTests/Engine.Platforms.GAPI/resources.as" )
-source_group( "MultiGPU" FILES "../EngineTests/Engine.Platforms.GAPI/MultiGPU/Test.MultiGPU.cpp" )
-source_group( "Compiler" FILES "../EngineTests/Engine.Platforms.GAPI/Compiler/PApp.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/PApp.h" "../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_AtomicAdd.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_FindLSB.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_FindMSB.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_GlobalToLocal.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_Include.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_InlineAll.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_UnnamedBuffer.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/PApp_VecSwizzle.cpp" "../EngineTests/Engine.Platforms.GAPI/Compiler/Test.PipelineCompiler.cpp" )
+source_group( "Compute" FILES "../EngineTests/Platforms.GAPI/Compute/CApp.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp.h" "../EngineTests/Platforms.GAPI/Compute/CApp_BufferAlign.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_BufferRange.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_ClearBuffer.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_ConvertFloatImage2D.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_CopyBuffer.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_CopyBufferToImage2D.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_CopyImage2D.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_CopyImage2DToBuffer.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_DynamicBuffer.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_Image2DBilinearFilter.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_Image2DNearestFilter.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_ShaderBarrier.cpp" "../EngineTests/Platforms.GAPI/Compute/CApp_UpdateBuffer.cpp" "../EngineTests/Platforms.GAPI/Compute/Test.ComputeApi.cpp" )
+source_group( "Sharing" FILES "../EngineTests/Platforms.GAPI/Sharing/SApp.cpp" "../EngineTests/Platforms.GAPI/Sharing/SApp.h" "../EngineTests/Platforms.GAPI/Sharing/SApp_BufferSharing.cpp" "../EngineTests/Platforms.GAPI/Sharing/SApp_ImageSharing.cpp" "../EngineTests/Platforms.GAPI/Sharing/Test.Sharing.cpp" )
+source_group( "Compute\\Pipelines" FILES "../EngineTests/Platforms.GAPI/Compute/Pipelines/all_pipelines.h" "../EngineTests/Platforms.GAPI/Compute/Pipelines/bufferalign.cpp" "../EngineTests/Platforms.GAPI/Compute/Pipelines/BufferAlign.ppln" "../EngineTests/Platforms.GAPI/Compute/Pipelines/copyfloatimage2d.cpp" "../EngineTests/Platforms.GAPI/Compute/Pipelines/CopyFloatImage2D.ppln" "../EngineTests/Platforms.GAPI/Compute/Pipelines/dynamicbuffer.cpp" "../EngineTests/Platforms.GAPI/Compute/Pipelines/DynamicBuffer.ppln" "../EngineTests/Platforms.GAPI/Compute/Pipelines/image2dbilinearfilter.cpp" "../EngineTests/Platforms.GAPI/Compute/Pipelines/Image2DBilinearFilter.ppln" "../EngineTests/Platforms.GAPI/Compute/Pipelines/image2dnearestfilter.cpp" "../EngineTests/Platforms.GAPI/Compute/Pipelines/Image2DNearestFilter.ppln" "../EngineTests/Platforms.GAPI/Compute/Pipelines/shaderbarrier.cpp" "../EngineTests/Platforms.GAPI/Compute/Pipelines/ShaderBarrier.ppln" "../EngineTests/Platforms.GAPI/Compute/Pipelines/shared_types.h" )
+source_group( "Graphics" FILES "../EngineTests/Platforms.GAPI/Graphics/GApp.cpp" "../EngineTests/Platforms.GAPI/Graphics/GApp.h" "../EngineTests/Platforms.GAPI/Graphics/GApp_Texture2DBilinearFilter.cpp" "../EngineTests/Platforms.GAPI/Graphics/GApp_Texture2DNearestFilter.cpp" "../EngineTests/Platforms.GAPI/Graphics/Test.GraphicsApi.cpp" )
+source_group( "Graphics\\Pipelines" FILES "../EngineTests/Platforms.GAPI/Graphics/Pipelines/all_pipelines.h" "../EngineTests/Platforms.GAPI/Graphics/Pipelines/shared_types.h" "../EngineTests/Platforms.GAPI/Graphics/Pipelines/texture2dbilinearfilter.cpp" "../EngineTests/Platforms.GAPI/Graphics/Pipelines/Texture2DBilinearFilter.ppln" "../EngineTests/Platforms.GAPI/Graphics/Pipelines/texture2dnearestfilter.cpp" "../EngineTests/Platforms.GAPI/Graphics/Pipelines/Texture2DNearestFilter.ppln" )
+source_group( "Compiler\\Pipelines" FILES "../EngineTests/Platforms.GAPI/Compiler/Pipelines/all_pipelines.h" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/atomicadd.cpp" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/AtomicAdd.ppln" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/findlsb.cpp" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/FindLSB.ppln" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/findmsb.cpp" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/FindMSB.ppln" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/globaltolocal.cpp" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/GlobalToLocal.ppln" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/include.cpp" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/Include.ppln" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/inlineall.cpp" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/InlineAll.ppln" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/shared_types.h" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/unnamedbuffer.cpp" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/UnnamedBuffer.ppln" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/vecswizzle.cpp" "../EngineTests/Platforms.GAPI/Compiler/Pipelines/VecSwizzle.ppln" )
+source_group( "" FILES "../EngineTests/Platforms.GAPI/Common.h" "../EngineTests/Platforms.GAPI/Main.cpp" "../EngineTests/Platforms.GAPI/resources.as" )
+source_group( "MultiGPU" FILES "../EngineTests/Platforms.GAPI/MultiGPU/Test.MultiGPU.cpp" )
+source_group( "Compiler" FILES "../EngineTests/Platforms.GAPI/Compiler/PApp.cpp" "../EngineTests/Platforms.GAPI/Compiler/PApp.h" "../EngineTests/Platforms.GAPI/Compiler/PApp_AtomicAdd.cpp" "../EngineTests/Platforms.GAPI/Compiler/PApp_FindLSB.cpp" "../EngineTests/Platforms.GAPI/Compiler/PApp_FindMSB.cpp" "../EngineTests/Platforms.GAPI/Compiler/PApp_GlobalToLocal.cpp" "../EngineTests/Platforms.GAPI/Compiler/PApp_Include.cpp" "../EngineTests/Platforms.GAPI/Compiler/PApp_InlineAll.cpp" "../EngineTests/Platforms.GAPI/Compiler/PApp_UnnamedBuffer.cpp" "../EngineTests/Platforms.GAPI/Compiler/PApp_VecSwizzle.cpp" "../EngineTests/Platforms.GAPI/Compiler/Test.PipelineCompiler.cpp" )
 set_property( TARGET "Tests.Engine.Platforms.GAPI" PROPERTY FOLDER "EngineTests" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "C:/Projects/ModularGraphicsFramework/External" )
 target_include_directories( "Tests.Engine.Platforms.GAPI" PUBLIC "${EXTERNALS_PATH}" )

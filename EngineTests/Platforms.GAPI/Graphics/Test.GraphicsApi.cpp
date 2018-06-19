@@ -4,7 +4,7 @@
 	
 extern void Test_GraphicsApi (StringCRef device)
 {
-	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Platforms.GAPI/Graphics" ) );
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "EngineTests/Platforms.GAPI/Graphics" ) );
 
 	#ifdef GRAPHICS_API_OPENGL
 	{

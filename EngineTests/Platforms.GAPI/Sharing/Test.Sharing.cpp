@@ -4,7 +4,7 @@
 	
 extern void Test_Sharing (StringCRef device)
 {
-	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Tests/Engine.Platforms.GAPI/Sharing" ) );
+	CHECK( OS::FileSystem::FindAndSetCurrentDir( "EngineTests/Platforms.GAPI/Sharing" ) );
 
 	#if defined(GRAPHICS_API_OPENGL) and defined(COMPUTE_API_OPENCL)
 	{

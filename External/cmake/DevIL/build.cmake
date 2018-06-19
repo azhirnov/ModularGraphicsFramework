@@ -30,9 +30,9 @@ foreach ( SRC ${DEVIL_DLLS} )
 	get_filename_component( DST_NAME "${SRC}" NAME )
 
 	if ( ${CONFIGURATION_DEPENDENT_PATH} )
-		set( DST "${CMAKE_BINARY_DIR}/$<CONFIG>/${DST_NAME}" )
+		set( DST "${MAIN_BINARY_DIR}/$<CONFIG>/${DST_NAME}" )
 	else ()
-		set( DST "./${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${DST_NAME}" )
+		set( DST "${MAIN_BINARY_DIR}/${DST_NAME}" )
 	endif ()
 
 	add_custom_command (
