@@ -70,7 +70,10 @@ namespace GX_STL
 		static constexpr int	GAPI_MaxWaitFence				= 8;
 		static constexpr int	GAPI_MaxWaitSemaphores			= 8;
 
-		static constexpr int	OS_MaxDisplays						= 8;
+		static constexpr int	OS_MaxDisplays					= 8;
+
+		// Engine.FrameGraph
+		static constexpr int	FG_MaxTaskDependencies			= 8;
 	};
 
 }	// GX_STL
