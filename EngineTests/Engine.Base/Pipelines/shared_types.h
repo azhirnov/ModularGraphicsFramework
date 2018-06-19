@@ -13,6 +13,16 @@ struct NativeVertex_default2 final
 		at_Position{at_Position}, at_Texcoord{at_Texcoord}
 	{}
 
+	template <typename Vertex>
+	ND_ static VertexInputState  GetAttribs ()
+	{
+		using Self = NativeVertex_renderdots;
+		return VertexInputState()
+			.Add( "at_Position", &NativeVertex_default2::at_Position, CompileTime::IsFloat<decltype(Self::at_Position)> )
+			.Add( "at_Texcoord", &NativeVertex_default2::at_Texcoord, CompileTime::IsFloat<decltype(Self::at_Texcoord)> )
+			.Bind( "", SizeOf<Vertex> );
+	}
+
 	NativeVertex_default2 ()
 	{
 		STATIC_ASSERT( sizeof(NativeVertex_default2) == 16 );

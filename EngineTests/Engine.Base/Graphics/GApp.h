@@ -9,16 +9,13 @@ class GApp final : public StaticRefCountedObject
 {
 // types
 private:
-	using RenderPassMsgList_t = CompileTime::TypeListFrom< Message<GpuMsg::GetRenderPassDescriptor> >;
+	using RenderPassMsgList_t = CompileTime::TypeListFrom< GpuMsg::GetRenderPassDescription >;
 
 
 // variables
-public:
-	Ptr< Module >		ms;
-
 private:
+	Ptr< Module >		ms;
 	bool				looping		= true;
-	uint				cmdBufIndex	= 0;
 	GraphicsModuleIDs	gpuIDs;
 	OSModuleIDs			osIDs;
 
@@ -44,6 +41,7 @@ private:
 	ModulePtr			ibuffer;
 	ModulePtr			ubuffer;
 
+	uint				cmdBufIndex	= 0;
 	Array<ModulePtr>	cmdBuffers;
 	Array<GpuFenceId>	cmdFence;
 	ModulePtr			cmdBuilder;
@@ -59,12 +57,12 @@ public:
 
 
 private:
-	bool _OnWindowClosed (const Message<OSMsg::WindowAfterDestroy> &);
-	bool _OnKey (const Message< ModuleMsg::InputKey > &);
-	bool _OnMotion (const Message< ModuleMsg::InputMotion > &);
-	bool _Draw (const Message< ModuleMsg::Update > &);
-	bool _GInit (const Message< GpuMsg::DeviceCreated > &);
-	bool _GDelete (const Message< GpuMsg::DeviceBeforeDestroy > &);
+	bool _OnWindowClosed (const OSMsg::WindowAfterDestroy &);
+	bool _OnKey (const ModuleMsg::InputKey &);
+	bool _OnMotion (const ModuleMsg::InputMotion &);
+	bool _Draw (const ModuleMsg::Update &);
+	bool _GInit (const GpuMsg::DeviceCreated &);
+	bool _GDelete (const GpuMsg::DeviceBeforeDestroy &);
 	
 	bool _CreatePipeline1 ();
 	bool _CreatePipeline2 ();

@@ -16,7 +16,7 @@ extern void Test_GWindow ()
 
 		app.Quit();
 	}
-	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
+	GetMainSystemInstance()->Send( ModuleMsg::Delete{} );
 	#endif
 	
 	#ifdef GRAPHICS_API_VULKAN
@@ -29,6 +29,6 @@ extern void Test_GWindow ()
 
 		app.Quit();
 	}
-	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
+	GetMainSystemInstance()->Send( ModuleMsg::Delete{} );
 	#endif
 }

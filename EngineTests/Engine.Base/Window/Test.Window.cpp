@@ -48,23 +48,23 @@ public:
 	// only for main thread
 	bool Update ()
 	{
-		GetMainSystemInstance()->Send< ModuleMsg::Update >({});
+		GetMainSystemInstance()->Send( ModuleMsg::Update{} );
 		return looping;
 	}
 	
 private:
-	bool _OnWindowClosed (const Message<OSMsg::WindowAfterDestroy> &)
+	bool _OnWindowClosed (const OSMsg::WindowAfterDestroy &)
 	{
 		looping = false;
 		return true;
 	}
 
-	bool _OnWindowUpdate (const Message<ModuleMsg::Update> &)
+	bool _OnWindowUpdate (const ModuleMsg::Update &)
 	{
 		return true;
 	}
 
-	bool _OnKey (const Message< ModuleMsg::InputKey > &)
+	bool _OnKey (const ModuleMsg::InputKey &)
 	{
 		return true;
 	}
@@ -86,9 +86,9 @@ extern void Test_Window ()
 	
 	ModulePtr	platform;
 	CHECK( mf->Create( 0, ms->GlobalSystems(), CreateInfo::Platform{}, OUT platform ) );
-	ms->Send< ModuleMsg::AttachModule >({ platform });
+	ms->Send( ModuleMsg::AttachModule{ platform });
 
-	Message< OSMsg::GetOSModules >	req_ids;
+	OSMsg::GetOSModules	req_ids;
 	CHECK( platform->Send( req_ids ) );
 
 	ms->AddModule( InputManagerModuleID, CreateInfo::InputManager() );
@@ -99,8 +99,8 @@ extern void Test_Window ()
 		auto		task_mngr	= ms->GetModuleByID( TaskManagerModuleID );
 		ModulePtr	thread2;
 
-		WindowAppPtr	app1 = New< WindowApp >( task_mngr, req_ids->result->window, CreateInfo::Window{ "window-0", EFlags::Resizable, uint2(800,600), int2(800,600) } );
-		WindowAppPtr	app2 = New< WindowApp >( task_mngr, req_ids->result->window, CreateInfo::Window{ "window-1", EFlags::bits(), uint2(800,600), int2(-900,400) } );
+		WindowAppPtr	app1 = New< WindowApp >( task_mngr, req_ids.result->window, CreateInfo::Window{ "window-0", EFlags::Resizable, uint2(800,600), int2(800,600) } );
+		WindowAppPtr	app2 = New< WindowApp >( task_mngr, req_ids.result->window, CreateInfo::Window{ "window-1", EFlags::bits(), uint2(800,600), int2(-900,400) } );
 
 		app1->Initialize( thread->GlobalSystems() );
 		
@@ -116,7 +116,7 @@ extern void Test_Window ()
 							app2->Initialize( gs );
 						}
 					},
-					OUT (ModulePtr &) thread2 ) );
+					OUT (ModulePtr &)(thread2) ) );
 
 		thread2 = null;
 
@@ -129,7 +129,7 @@ extern void Test_Window ()
 		app1->Quit();
 	}
 
-	ms->Send< ModuleMsg::Delete >({});
+	ms->Send( ModuleMsg::Delete{} );
 
 	WARNING( "Window test succeeded!" );
 }
