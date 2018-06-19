@@ -1,16 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Script/Bindings/DefaultBindings.h"
-#include "Engine/Script/Impl/ClassBinder.h"
-#include "Engine/Script/Impl/ScriptEngine.inl.h"
+#include "Core/Script/Bindings/DefaultBindings.h"
+#include "Core/Script/Impl/ClassBinder.h"
+#include "Core/Script/Impl/ScriptEngine.inl.h"
 
-#include "Engine/STL/Math/Mathematics.h"
-#include "Engine/STL/Math/Interpolations.h"
-#include "Engine/STL/Math/Trigonometry.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Core/STL/Math/Mathematics.h"
+#include "Core/STL/Math/Interpolations.h"
+#include "Core/STL/Math/Trigonometry.h"
+#include "Core/STL/Math/BinaryMath.h"
 
-namespace GX_STL
-{
 namespace GXScript
 {
 	using namespace GX_STL::GXMath;
@@ -278,4 +276,3 @@ namespace GXScript
 	
 
 }	// GXScript
-}	// GX_STL

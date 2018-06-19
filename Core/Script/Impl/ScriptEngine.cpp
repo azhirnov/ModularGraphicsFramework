@@ -1,13 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Script/Impl/ScriptEngine.h"
-#include "Engine/Script/Impl/ScriptModule.h"
-#include "Engine/STL/Math/BinaryMath.h"
-#include "Engine/STL/Math/Interpolations.h"
-#include "Engine/STL/Log/ToString.h"
+#include "Core/Script/Impl/ScriptEngine.h"
+#include "Core/Script/Impl/ScriptModule.h"
+#include "Core/STL/Math/BinaryMath.h"
+#include "Core/STL/Math/Interpolations.h"
+#include "Core/STL/Log/ToString.h"
 
-namespace GX_STL
-{
 namespace GXScript
 {
 	
@@ -226,4 +224,3 @@ namespace GXScript
 	}
 
 }	// GXScript
-}	// GX_STL

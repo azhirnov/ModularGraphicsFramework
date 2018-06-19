@@ -1,10 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Script/Impl/ScriptModule.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Core/Script/Impl/ScriptModule.h"
+#include "Core/STL/Math/BinaryMath.h"
 
-namespace GX_STL
-{
 namespace GXScript
 {
 
@@ -94,4 +92,3 @@ namespace GXScript
 
 
 }	// GXScript
-}	// GX_STL

@@ -2,11 +2,9 @@
 
 #pragma once
 
-#include "Engine/Script/Impl/ScriptEngine.h"
-#include "Engine/Script/Impl/ScriptTypes.h"
+#include "Core/Script/Impl/ScriptEngine.h"
+#include "Core/Script/Impl/ScriptTypes.h"
 
-namespace GX_STL
-{
 namespace GXScript
 {
 
@@ -185,4 +183,3 @@ namespace GXScript
 	}
 
 }	// GXScript
-}	// GX_STL

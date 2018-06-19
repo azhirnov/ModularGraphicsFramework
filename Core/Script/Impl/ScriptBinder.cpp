@@ -1,10 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Script/Impl/ClassBinder.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Core/Script/Impl/ClassBinder.h"
+#include "Core/STL/Math/BinaryMath.h"
 
-namespace GX_STL
-{
 namespace GXScript
 {
 
@@ -104,4 +102,3 @@ namespace _script_hidden_
 }	// _script_hidden_
 
 }	// GXScript
-}	// GX_STL

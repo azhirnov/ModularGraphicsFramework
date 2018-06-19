@@ -7,21 +7,20 @@
 
 #pragma once
 
-#include "Engine/STL/Containers/String.h"
-#include "Engine/STL/CompileTime/TypeList.h"
-#include "Engine/STL/Types/Ptr.h"
-#include "Engine/STL/Files/HDDFile.h"
-#include "Engine/STL/Log/ELog.h"
-#include "Engine/STL/Types/StaticRefCountedObject.h"
+#include "Core/STL/Containers/String.h"
+#include "Core/STL/CompileTime/TypeList.h"
+#include "Core/STL/Types/Ptr.h"
+#include "Core/STL/Files/HDDFile.h"
+#include "Core/STL/Log/ELog.h"
+#include "Core/STL/Types/StaticRefCountedObject.h"
 
 // AngelScript + Addons //
 #define AS_USE_NAMESPACE
 #include "AngelScript/sdk/angelscript/include/angelscript.h"
 
-namespace GX_STL
-{
 namespace GXScript
 {
+	using namespace GX_STL;
 	using namespace GX_STL::GXTypes;
 
 	class ScriptModule;
@@ -107,16 +106,15 @@ namespace GXScript
 #	define AS_CALL( ... ) \
 	{ \
 		int __as_result = ( __VA_ARGS__ ); \
-		::GX_STL::GXScript::ScriptEngine::_CheckError( __as_result, TOSTRING( __VA_ARGS__ ), GX_FUNCTION_NAME, __FILE__, __LINE__ ); \
+		::GXScript::ScriptEngine::_CheckError( __as_result, TOSTRING( __VA_ARGS__ ), GX_FUNCTION_NAME, __FILE__, __LINE__ ); \
 	}
 	
 #	define AS_CALL_R( ... ) \
 	{ \
 		int __as_result = ( __VA_ARGS__ ); \
-		if ( not ::GX_STL::GXScript::ScriptEngine::_CheckError( __as_result, TOSTRING( __VA_ARGS__ ), GX_FUNCTION_NAME, __FILE__, __LINE__ ) ) \
+		if ( not ::GXScript::ScriptEngine::_CheckError( __as_result, TOSTRING( __VA_ARGS__ ), GX_FUNCTION_NAME, __FILE__, __LINE__ ) ) \
 			return false; \
 	}
 
 
 }	// GXScript
-}	// GX_STL

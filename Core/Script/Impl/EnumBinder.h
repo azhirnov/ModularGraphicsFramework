@@ -2,10 +2,8 @@
 
 #pragma once
 
-#include "Engine/Script/Impl/ClassBinder.h"
+#include "Core/Script/Impl/ClassBinder.h"
 
-namespace GX_STL
-{
 namespace GXScript
 {
 
@@ -224,4 +222,3 @@ namespace GXScript
 	}
 
 }	// GXScript
-}	// GX_STL

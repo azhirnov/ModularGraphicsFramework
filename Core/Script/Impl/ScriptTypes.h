@@ -2,10 +2,8 @@
 
 #pragma once
 
-#include "Engine/Script/Impl/ScriptEngine.h"
+#include "Core/Script/Impl/ScriptEngine.h"
 
-namespace GX_STL
-{
 namespace GXScript
 {
 
@@ -512,4 +510,3 @@ namespace GXScript
 	}	// _script_hidden_
 
 }	// GXScript
-}	// GX_STL

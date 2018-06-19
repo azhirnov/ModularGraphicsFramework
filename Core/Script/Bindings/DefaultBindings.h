@@ -2,14 +2,12 @@
 
 #pragma once
 
-#include "Engine/Script/Impl/ScriptEngine.h"
-#include "Engine/Script/Impl/ScriptTypes.h"
+#include "Core/Script/Impl/ScriptEngine.h"
+#include "Core/Script/Impl/ScriptTypes.h"
 
-#include "Engine/STL/Math/Vec.h"
-#include "Engine/STL/Math/Color/Color.h"
+#include "Core/STL/Math/Vec.h"
+#include "Core/STL/Math/Color/Color.h"
 
-namespace GX_STL
-{
 namespace GXScript
 {
 
@@ -57,4 +55,3 @@ namespace GXScript
 
 
 }	// GXScript
-}	// GX_STL

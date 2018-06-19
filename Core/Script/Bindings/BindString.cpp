@@ -1,13 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Engine/Script/Bindings/DefaultBindings.h"
-#include "Engine/Script/Impl/ClassBinder.h"
-#include "Engine/Script/Impl/ScriptEngine.inl.h"
+#include "Core/Script/Bindings/DefaultBindings.h"
+#include "Core/Script/Impl/ClassBinder.h"
+#include "Core/Script/Impl/ScriptEngine.inl.h"
 
-#include "Engine/STL/Containers/HashMap.h"
-#include "Engine/STL/Math/BinaryMath.h"
-#include "Engine/STL/Math/Interpolations.h"
-#include "Engine/STL/Log/ToString.h"
+#include "Core/STL/Containers/HashMap.h"
+#include "Core/STL/Math/BinaryMath.h"
+#include "Core/STL/Math/Interpolations.h"
+#include "Core/STL/Log/ToString.h"
 
 #include <unordered_map>
 
@@ -24,8 +24,6 @@ namespace std
 
 }	// std
 
-namespace GX_STL
-{
 namespace GXScript
 {
 	
@@ -526,4 +524,3 @@ namespace GXScript
 
 
 }	// GXScript
-}	// GX_STL
