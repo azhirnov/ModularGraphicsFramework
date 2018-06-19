@@ -110,45 +110,45 @@ namespace CMake
 		// declare configurations
 		src << "set( CMAKE_CONFIGURATION_TYPES ";
 
-		FOR( i, _configurations ) {
-			src << _configurations[i].first << " ";
+		for (auto& cfg : _configurations) {
+			src << cfg.first << " ";
 		}
 		src << ")\n"
 			<< "set( CMAKE_CONFIGURATION_TYPES \"${CMAKE_CONFIGURATION_TYPES}\" CACHE STRING \"Configurations\" FORCE )\n\n";
 
 		// include directories
-		FOR( i, _includeDirs )
+		for (auto& dir : _includeDirs)
 		{
-			const bool	has_option = not _includeDirs[i].second.Empty(); 
+			const bool	has_option = not dir.second.Empty(); 
 
-			src << (has_option ? "if ("_str << _includeDirs[i].second << ")\n\t" : "")
-				<< "include_directories( \"" << _includeDirs[i].first << "\" )\n"
+			src << (has_option ? "if ("_str << dir.second << ")\n\t" : "")
+				<< "include_directories( \"" << dir.first << "\" )\n"
 				<< (has_option ? "endif()\n" : "");
 		}
 		
 		// link directories
-		FOR( i, _linkDirs )
+		for (auto& dir : _linkDirs)
 		{
-			const bool	has_option = not _linkDirs[i].second.Empty();
+			const bool	has_option = not dir.second.Empty();
 			
-			src << (has_option ? "if ("_str << _linkDirs[i].second << ")\n\t" : "")
-				<< "link_directories( \"" << _linkDirs[i].first << "\" )\n"
+			src << (has_option ? "if ("_str << dir.second << ")\n\t" : "")
+				<< "link_directories( \"" << dir.first << "\" )\n"
 				<< (has_option ? "endif()\n" : "");
 		}
 		
 		// link libraries
-		FOR( i, _linkLibs )
+		for (auto& lib : _linkLibs)
 		{
-			const bool	has_option = not _linkLibs[i].second.Empty();
+			const bool	has_option = not lib.second.Empty();
 
-			src << (has_option ? "if ("_str << _linkLibs[i].second << ")\n\t" : "")
-				<< "link_libraries( \"" << _linkLibs[i].first << "\" )\n"
+			src << (has_option ? "if ("_str << lib.second << ")\n\t" : "")
+				<< "link_libraries( \"" << lib.first << "\" )\n"
 				<< (has_option ? "endif()\n" : "");
 		}
 
 		// serialize configurations
-		FOR( i, _configurations ) {
-			_configurations[i].second->ToString( _configurations[i].first, OUT src );
+		for (auto& cfg : _configurations) {
+			cfg.second->ToString( cfg.first, OUT src );
 		}
 
 		// set default configuration
@@ -186,8 +186,8 @@ namespace CMake
 	{
 		CHECK_ERR( not _configurations.Empty() );
 
-		FOR( i, _configurations ) {
-			_configurations[i].second->ToString2_Opt_Pass1( _configurations[i].first, OUT defined );
+		for (auto& cfg : _configurations) {
+			cfg.second->ToString2_Opt_Pass1( cfg.first, OUT defined );
 		}
 		return true;
 	}
@@ -202,9 +202,9 @@ namespace CMake
 		CHECK_ERR( not _configurations.Empty() );
 
 		String	temp;
-
-		FOR( i, _configurations ) {
-			_configurations[i].second->ToString2_Opt_Pass2( _configurations[i].first, defined, OUT temp );
+		
+		for (auto& cfg : _configurations) {
+			cfg.second->ToString2_Opt_Pass2( cfg.first, defined, OUT temp );
 		}
 		
 		if ( not temp.Empty() )
@@ -300,8 +300,8 @@ namespace CMake
 	
 	CMakeBuilder::CMakeCompiler*  CMakeBuilder::CMakeCompiler::IncludeDirectory (ArrayCRef<String> folders, StringCRef enableIf)
 	{
-		FOR( i, folders ) {
-			_includeDirs.Add({ folders[i], enableIf });
+		for (auto& folder : folders) {
+			_includeDirs.Add({ folder, enableIf });
 		}
 		return this;
 	}
@@ -319,8 +319,8 @@ namespace CMake
 	
 	CMakeBuilder::CMakeCompiler*  CMakeBuilder::CMakeCompiler::LinkDirectory (ArrayCRef<String> folders, StringCRef enableIf)
 	{
-		FOR( i, folders ) {
-			_linkDirs.Add({ folders[i], enableIf });
+		for (auto& folder : folders) {
+			_linkDirs.Add({ folder, enableIf });
 		}
 		return this;
 	}
@@ -338,8 +338,8 @@ namespace CMake
 	
 	CMakeBuilder::CMakeCompiler*  CMakeBuilder::CMakeCompiler::LinkLibrary (ArrayCRef<String> libs, StringCRef enableIf)
 	{
-		FOR( i, libs ) {
-			_linkLibs.Add({ libs[i], enableIf });
+		for (auto& lib : libs) {
+			_linkLibs.Add({ lib, enableIf });
 		}
 		return this;
 	}
@@ -376,52 +376,43 @@ namespace CMake
 	{
 		String	uc_name;
 
-		FOR( i, name ) {
-			uc_name << StringUtils::ToUpper( name[i] );
+		for (auto& c : name) {
+			uc_name << StringUtils::ToUpper( c );
 		}
 		
 		src << "# " << name << "\n"
 			<< "set_property( DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:" << name << ">:";
-		FOR( i, _defines ) { src << ' ' << _defines[i]; }
+		for (auto& def : _defines) { src << ' ' << def; }
 		src << " > )\n";
 		
 		src << "set( CMAKE_C_FLAGS_" << uc_name << " \"${CMAKE_C_FLAGS}";
-		FOR( i, _cFlags ) { src << ' ' << _cFlags[i]; }
+		for (auto& flag : _cFlags) { src << ' ' << flag; }
 		src << " \" CACHE STRING \"\" FORCE )\n";
 
 		src << "set( CMAKE_CXX_FLAGS_" << uc_name << " \"${CMAKE_CXX_FLAGS}";
-		FOR( i, _cxxFlags ) { src << ' ' << _cxxFlags[i]; }
+		for (auto& flag : _cxxFlags) { src << ' ' << flag; }
 		src << " \" CACHE STRING \"\" FORCE )\n";
 
 		src << "set( CMAKE_EXE_LINKER_FLAGS_" << uc_name << " \"${CMAKE_EXE_LINKER_FLAGS}";
-		FOR( i, _linkerFlags ) { src << ' ' << _linkerFlags[i]; }
+		for (auto& flag : _linkerFlags) { src << ' ' << flag; }
 		src << " \" CACHE STRING \"\" FORCE )\n";
 
 		src << "set( CMAKE_SHARED_LINKER_FLAGS_" << uc_name << " \"${CMAKE_SHARED_LINKER_FLAGS}";
-		FOR( i, _linkerFlags ) { src << ' ' << _linkerFlags[i]; }
+		for (auto& flag : _linkerFlags) { src << ' ' << flag; }
 		src << " \" CACHE STRING \"\" FORCE )\n";
 		
+		src << "set( PROJECTS_SHARED_CXX_FLAGS_" << uc_name << " ";
+		for (auto& flag : _targetCxxFlags) { src << ' ' << flag; }
+		src << " CACHE INTERNAL \"\" FORCE )\n";
+		
+		src << "set( PROJECTS_SHARED_DEFINES_" << uc_name << " ";
+		for (auto& def : _targetDefines) { src << ' ' << def; }
+		src << " CACHE INTERNAL \"\" FORCE )\n";
+		
+		src << "set( PROJECTS_SHARED_LINKER_FLAGS_" << uc_name << " \"";
+		for (auto& flag : _targetLinkerFlags) { src << ' ' << flag; }
+		src << "\" CACHE INTERNAL \"\" FORCE )\n";
 
-		//if ( not _targetCxxFlags.Empty() )
-		{
-			src << "set( PROJECTS_SHARED_CXX_FLAGS_" << uc_name << " ";
-			FOR( i, _targetCxxFlags ) { src << ' ' << _targetCxxFlags[i]; }
-			src << " CACHE INTERNAL \"\" FORCE )\n";
-		}
-		
-		//if ( not _targetDefines.Empty() )
-		{
-			src << "set( PROJECTS_SHARED_DEFINES_" << uc_name << " ";
-			FOR( i, _targetDefines ) { src << ' ' << _targetDefines[i]; }
-			src << " CACHE INTERNAL \"\" FORCE )\n";
-		}
-		
-		//if ( not _targetLinkerFlags.Empty() )
-		{
-			src << "set( PROJECTS_SHARED_LINKER_FLAGS_" << uc_name << " \"";
-			FOR( i, _targetLinkerFlags ) { src << ' ' << _targetLinkerFlags[i]; }
-			src << "\" CACHE INTERNAL \"\" FORCE )\n";
-		}
 		return true;
 	}
 	
@@ -466,8 +457,8 @@ namespace CMake
 	bool CMakeBuilder::CMakeCompiler::Configuration::ToString2_Opt_Pass1 (StringCRef name, OUT HashMap<String, uint> &defined) const
 	{
 		String	uc_name;
-		FOR( i, name ) {
-			uc_name << StringUtils::ToUpper( name[i] );
+		for (auto& c : name) {
+			uc_name << StringUtils::ToUpper( c );
 		}
 
 		auto	iter1 = defined.AddOrSkip( Configuration_CxxFlags( name, uc_name ), 0 );	iter1->second++;
@@ -487,8 +478,8 @@ namespace CMake
 	bool CMakeBuilder::CMakeCompiler::Configuration::ToString2_Opt_Pass2 (StringCRef name, const HashMap<String, uint> &defined, OUT String &src) const
 	{
 		String	uc_name;
-		FOR( i, name ) {
-			uc_name << StringUtils::ToUpper( name[i] );
+		for (auto& c : name) {
+			uc_name << StringUtils::ToUpper( c );
 		}
 
 		String	temp;

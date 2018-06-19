@@ -5,7 +5,15 @@
 
 #pragma once
 
-#include "Engine/STL/Engine.STL.h"
+#include "Core/STL/Types/RefCountedObject.h"
+#include "Core/STL/Files/HDDFile.h"
+#include "Core/STL/Containers/HashSet.h"
+#include "Core/STL/Containers/HashMap.h"
+#include "Core/STL/Containers/Queue.h"
+#include "Core/STL/Types/UniquePtr.h"
+#include "Core/STL/Algorithms/StringParser.h"
+#include "Core/STL/Math/Vec.h"
+#include "Core/STL/Math/BinaryMath.h"
 
 namespace CMake
 {
@@ -20,9 +28,12 @@ namespace CMake
 	// CMake Builder
 	//
 
-	class CMakeBuilder
+	class CMakeBuilder final
 	{
 	// types
+	public:
+		class CMakeProject;
+
 	private:
 		class BaseCMakeObj : public RefCountedObject<>
 		{
@@ -30,10 +41,16 @@ namespace CMake
 			virtual bool ToString (OUT String &src) = 0;
 		};
 
-		class CMakeProject;
 		class CMakeCompiler;
 		class CMakeExternalProjects;
 		class CMakeExternalVSProject;
+		class CMakeExternalInclude;
+		class CMakeSource;
+
+		struct Utils
+		{
+			static bool ContainsMacro (StringCRef str);
+		};
 
 		SHARED_POINTER( BaseCMakeObj );
 
@@ -47,14 +64,14 @@ namespace CMake
 	private:
 		Objects_t		_compilers;
 		Objects_t		_projects;
-		Objects_t		_externalProjects;
-		Objects_t		_externalVSProjects;
 		String			_baseFolder;
 		String			_solutionName;
 		StringSet_t		_userOptions;
 		GXMath::uint2	_version;
 
 		StringMap_t		_sourceBeforeProject;
+		String			_compilerOptions;
+		bool			_isSecondary	= false;
 
 		// for all projects
 		String			_projectOutputDir;
@@ -66,6 +83,7 @@ namespace CMake
 
 	// methods
 	public:
+		CMakeBuilder ();
 		CMakeBuilder (StringCRef baseFolder, StringCRef solutionName);
 		CMakeBuilder (const CMakeBuilder &) = default;
 		CMakeBuilder (CMakeBuilder &&) = default;
@@ -76,6 +94,7 @@ namespace CMake
 
 		CMakeProject* AddLibrary (StringCRef name, StringCRef folder = Uninitialized);
 		CMakeProject* AddExecutable (StringCRef name, StringCRef folder = Uninitialized);
+		CMakeProject const* GetProject (StringCRef name);
 
 		CMakeCompiler*	AddMSVisualStudioCompiler (StringCRef name = "", CMakeCompiler *copyFrom = null);
 		CMakeCompiler*	AddGCCompiler (StringCRef name = "", CMakeCompiler *copyFrom = null);
@@ -91,9 +110,18 @@ namespace CMake
 		Self*	AddOption (StringCRef name, StringCRef info, int value, StringCRef enableIf = Uninitialized);
 		Self*	AddOption (StringCRef name, StringCRef info, StringCRef value, StringCRef enableIf = Uninitialized);
 
+		Self*	SetSolution (StringCRef baseFolder, StringCRef solutionName);
 		Self*	SetVersion (uint major, uint minor);
+		Self*	SetSecondary (bool value = true);
 
-		CMakeExternalProjects* AddExternal (StringCRef path, StringCRef enableIf = Uninitialized);
+		Self*	InheritCompilers (const CMakeBuilder* other);
+		Self*	InheritIncludeDirectories (const CMakeBuilder* other);
+
+		CMakeExternalProjects*	AddExternal (StringCRef path, StringCRef enableIf = Uninitialized);
+		CMakeExternalProjects*	AddExternal (const CMakeBuilder* builder, StringCRef enableIf = Uninitialized);
+		CMakeExternalInclude*	IncludeExternal (StringCRef filename, StringCRef enableIf = Uninitialized);
+		CMakeSource*			AddSource (StringCRef source, StringCRef enableIf = Uninitialized);
+
 		CMakeExternalVSProject* AddVSProject (StringCRef filename, StringCRef enableIf = Uninitialized);
 		Self*	SearchVSProjects (StringCRef path, StringCRef projFolder = Uninitialized, StringCRef enableIf = Uninitialized);
 
@@ -110,7 +138,6 @@ namespace CMake
 		void _OptionsToString (OUT String &src) const;
 		bool _CompilersToString (OUT String &src, OUT String &compilerOpts) const;
 		bool _ProjectsToString (OUT String &src, StringCRef compilerOpts) const;
-		bool _ExternalProjectsToString (OUT String &src) const;
 	};
 
 
@@ -205,7 +232,7 @@ namespace CMake
 		Self*	LinkLibrary (StringCRef lib, StringCRef enableIf = Uninitialized);
 		Self*	LinkLibrary (ArrayCRef<String> libs, StringCRef enableIf = Uninitialized);
 		
-		Self*	LinkLibrary (CMakeProject *lib);
+		Self*	LinkLibrary (const CMakeProject *lib);
 		Self*	LinkLibrary (ArrayCRef<CMakeProject*> libs);
 
 		Self*	LinkLibrary (CMakeExternalVSProject *proj);
@@ -213,7 +240,7 @@ namespace CMake
 
 		Self*	SearchLibraries (StringCRef path, ArrayCRef<String> libs, StringCRef enableIf = Uninitialized);
 		
-		Self*	AddDependency (CMakeProject *lib);
+		Self*	AddDependency (const CMakeProject *lib);
 		Self*	AddDependency (ArrayCRef<CMakeProject*> libs);
 
 		Self*	AddDependency (StringCRef dep, StringCRef enableIf = Uninitialized);
@@ -224,6 +251,7 @@ namespace CMake
 		Self*	MergeCPP (uint numThreads);
 
 		String			GetRelativePath () const;
+		//String		GetAbsolutePath () const;
 		StringCRef		GetName () const			{ return _name; }
 
 		Groups_t const&	GetSources () const			{ return _groups; }
@@ -352,6 +380,7 @@ namespace CMake
 	};
 
 
+
 	//
 	// CMake External Projects
 	//
@@ -453,7 +482,51 @@ namespace CMake
 
 		StringCRef	GetName () const	{ return _name; }
 	};
+	
+	
 
+	//
+	// CMake External Include
+	//
+
+	class CMakeBuilder::CMakeExternalInclude final : public BaseCMakeObj
+	{
+		friend class CMakeBuilder;
+
+	// variables
+	private:
+		CMakeBuilder *		_builder;
+		const String		_enableIf;
+		String				_filename;
+
+	// methods
+	private:
+		CMakeExternalInclude (CMakeBuilder *builder, StringCRef filename, StringCRef enableIf);
+
+		bool ToString (OUT String &src) override;
+	};
+	
+	
+
+	//
+	// CMake Source
+	//
+
+	class CMakeBuilder::CMakeSource final : public BaseCMakeObj
+	{
+		friend class CMakeBuilder;
+
+	// variables
+	private:
+		const String		_enableIf;
+		const String		_source;
+
+	// methods
+	private:
+		CMakeSource (StringCRef source, StringCRef enableIf);
+
+		bool ToString (OUT String &src) override;
+	};
 
 }	// CMake
 

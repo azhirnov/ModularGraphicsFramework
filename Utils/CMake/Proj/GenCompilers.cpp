@@ -1,45 +1,17 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "../Builder/CMakeBuilder.h"
-#include "Engine/Config/Engine.Version.h"
+#include "PipelineBuilding.h"
 
-using namespace CMake;
-
-#define ENABLE_STL
-#define ENABLE_ENGINE
-#define ENABLE_UTILS
-#define ENABLE_ENGINE_SAMPLES
-#define ENABLE_PROJECTS
-#define ENABLE_EXTERNALS
-#define ENABLE_PIPELINE_BUILDING
-
-//#define ENABLE_SCU			// single compilation unit per thread
-#define NUM_THREADS	8
-
-
-extern void GenMGFProject ()
+CMakeBuilderPtr  GenCompilers ()
 {
-	CHECK( OS::FileSystem::FindAndSetCurrentDir( "Utils/CMake/Builder", 5 ) );
-	CHECK( OS::FileSystem::SetCurrentDirectory( "../../.." ) );
+	CMakeBuilderPtr		builder{ new CMakeBuilder{ "", "" } };
 
-	CMakeBuilder	builder{ "", "ModularGraphicsFramework" };
-
-	builder.SetVersion( Engine::_ENGINE_VERSION_MAJ, Engine::_ENGINE_VERSION_MIN );
-	builder.Projects_IncludeDirectory( "Engine/.." )
-			->Projects_IncludeDirectory( "External" )
-			->Projects_IncludeDirectory( "${EXTERNALS_PATH}" );
-
-	// setup graphics api version or disable it (pass 0 to version)
-	builder.AddOption( "OPENGL_VERSION", "Define OpenGL version, supported: 440, 450", 450 );
-	builder.AddOption( "OPENGLES_VERSION", "Define OpenGLES version, supported: 200, 300, 310, 320", 320 );
-	builder.AddOption( "OPENCL_VERSION", "Define OpenCL version, supported: 110, 120, 200", 120 );
-	builder.AddOption( "VULKAN_VERSION", "Define Vulkan version, supported: 100, 110", 100 );
-	builder.AddOption( "SOFTRENDER_VERSION", "Define Software renderer version, 100 is supported", 100 );
+	builder->SetSecondary();
 
 	// compilers
 	{
 		// Visual C++
-		auto	msvc = builder.AddMSVisualStudioCompiler();
+		auto	msvc = builder->AddMSVisualStudioCompiler();
 		{
 			msvc->AddSource( "set( CONFIGURATION_DEPENDENT_PATH ON CACHE INTERNAL \"\" FORCE )" );
 
@@ -162,11 +134,11 @@ extern void GenMGFProject ()
 				release_cfg->AddTargetDefinitions({ /*"__GX_FAST__",*/ "__GX_NO_EXCEPTIONS__" });
 			}
 
-			builder.SetSystemVersion( "8.1", "WIN32" );
+			builder->SetSystemVersion( "8.1", "WIN32" );
 		}
 
 		// GCC
-		auto	gcc = builder.AddGCCompiler();
+		auto	gcc = builder->AddGCCompiler();
 		{
 			gcc->AddSource( "set( CONFIGURATION_DEPENDENT_PATH OFF CACHE INTERNAL \"\" FORCE )" );
 
@@ -237,7 +209,7 @@ extern void GenMGFProject ()
 
 		// Clang (Windows, Linux)
 		#if 0
-		auto	clang = builder.AddClangCompiler()->EnableIf( "WIN32 OR UNIX" );
+		auto	clang = builder->AddClangCompiler()->EnableIf( "WIN32 OR UNIX" );
 		{
 			clang->AddSource( "set( CONFIGURATION_DEPENDENT_PATH OFF CACHE INTERNAL \"\" FORCE )" );
 
@@ -304,7 +276,7 @@ extern void GenMGFProject ()
 		#endif
 
 		// Clang MacOS
-		auto	clang_apple = builder.AddClangCompiler( "CLANG_APPLE" )->EnableIf("APPLE");
+		auto	clang_apple = builder->AddClangCompiler( "CLANG_APPLE" )->EnableIf("APPLE");
 		{
 			clang_apple->AddSource( "set( CONFIGURATION_DEPENDENT_PATH ON CACHE INTERNAL \"\" FORCE )" );
 
@@ -367,14 +339,14 @@ extern void GenMGFProject ()
 		}
 
 		// Clang Android
-		auto	clang_android = builder.AddClangCompiler( "CLANG_ANDROID" )->EnableIf("DEFINED ANDROID");
+		auto	clang_android = builder->AddClangCompiler( "CLANG_ANDROID" )->EnableIf("DEFINED ANDROID");
 		{
 			clang_android->AddSource( "set( CONFIGURATION_DEPENDENT_PATH OFF CACHE INTERNAL \"\" FORCE )" );
 
 			Array<String>	shared_cxx_flags{ Clang::Cpp1z };
 			Array<String>	shared_linked_flags{ ClangLinker::Static };
 
-			//builder.Projects_LinkLibrary( "dl log android EGL OpenSLES", "ANDROID" );
+			//builder->Projects_LinkLibrary( "dl log android EGL OpenSLES", "ANDROID" );
 
 			shared_cxx_flags.Append({ Clang::CharSubscripts, Clang::DoublePromotion, Clang::Format, Clang::Main, Clang::MissingBraces, Clang::MissingIncludeDirs,
 									  Clang::Uninititalized, Clang::UnknownPragmas, Clang::Pragmas, Clang::StrictAliasing, Clang::StrictOverflow,
@@ -435,254 +407,6 @@ extern void GenMGFProject ()
 			}
 		}
 	}	// compilers
-	//----------------------------------------------------------------------------
 
-
-	// projects
-	{
-		// STL //
-	#ifdef ENABLE_STL
-		auto	engine_config = builder.AddLibrary( "Engine.Config", "Engine/Config" );
-		{
-			engine_config->AddFoldersRecursive( "" );
-		}
-
-		auto	engine_stl = builder.AddLibrary( "Engine.STL", "Engine/STL" );
-		{
-			engine_stl->AddFoldersRecursive( "" );
-			engine_stl->LinkLibrary( "SDL2", "ENABLE_SDL" )
-						->LinkLibrary( "LZ4", "ENABLE_LZ4" )
-						->LinkLibrary( "MiniZ", "ENABLE_MINIZ" )
-						->LinkLibrary( "dl;pthread", "UNIX" );
-		}
-		
-		auto	test_stl = builder.AddExecutable( "Tests.STL", "Tests/STL" );
-		{
-			test_stl->AddFoldersRecursive( "" );
-			test_stl->LinkLibrary( engine_stl );
-		}
-
-		auto	engine_physics = builder.AddLibrary( "Engine.Physics", "Engine/Physics" );
-		{
-			engine_physics->AddFoldersRecursive( "" );
-			engine_physics->LinkLibrary( engine_stl );
-		}
-
-		auto	test_physics = builder.AddExecutable( "Tests.Physics", "Tests/Physics" );
-		{
-			test_physics->AddFoldersRecursive( "" );
-			test_physics->LinkLibrary( engine_physics );
-		}
-	#endif	// ENABLE_STL
-	//----------------------------------------------------------------------------
-
-
-		// Engine //
-	#ifdef ENABLE_ENGINE
-		auto	engine_base = builder.AddLibrary( "Engine.Base", "Engine/Base" );
-		{
-			engine_base->AddFoldersRecursive( "" );
-			engine_base->LinkLibrary( engine_stl );
-		}
-
-		auto	engine_platforms = builder.AddLibrary( "Engine.Platforms", "Engine/Platforms" );
-		{
-			engine_platforms->AddFoldersRecursive( "" );
-			engine_platforms->LinkLibrary( engine_base );
-			// OpenGL
-			engine_platforms->LinkLibrary( "opengl32.lib", "WIN32" );
-			// DirectX
-			engine_platforms->LinkLibrary({ "dxguid.lib"_str, "dxgi.lib"_str }, "WIN32");
-			// VR
-			engine_platforms->LinkLibrary( "dxgi.lib", "WIN32" );
-			// Windows Platform
-			engine_platforms->LinkLibrary( "Shcore.lib", "(MSVC AND WIN32)" )->LinkLibrary( "Dxva2.lib", "WIN32" );
-			
-			engine_platforms->AddDefinition( "GRAPHICS_API_OPENGL=${OPENGL_VERSION}", "DEFINED OPENGL_VERSION AND NOT (OPENGL_VERSION EQUAL \"0\")" );
-			engine_platforms->AddDefinition( "GRAPHICS_API_OPENGLES=${OPENGLES_VERSION}", "DEFINED OPENGLES_VERSION AND NOT (OPENGLES_VERSION EQUAL \"0\")" );
-			engine_platforms->AddDefinition( "COMPUTE_API_OPENCL=${OPENCL_VERSION}", "DEFINED OPENCL_VERSION AND NOT (OPENCL_VERSION EQUAL \"0\")" );
-			engine_platforms->AddDefinition( "GRAPHICS_API_VULKAN=${VULKAN_VERSION}", "DEFINED VULKAN_VERSION AND NOT (VULKAN_VERSION EQUAL \"0\")" );
-			engine_platforms->AddDefinition( "GRAPHICS_API_SOFT=${SOFTRENDER_VERSION}", "DEFINED SOFTRENDER_VERSION AND NOT (SOFTRENDER_VERSION EQUAL \"0\")" );
-		}
-		
-		auto	engine_graphics = builder.AddLibrary( "Engine.Graphics", "Engine/Graphics" );
-		{
-			engine_graphics->AddFoldersRecursive( "" );
-			engine_graphics->LinkLibrary( engine_platforms );
-		}
-
-		auto	engine_profilers = builder.AddLibrary( "Engine.Profilers", "Engine/Profilers" );
-		{
-			engine_profilers->AddFoldersRecursive( "" );
-			engine_profilers->LinkLibrary( engine_platforms );
-		}
-
-		// without external dependencies
-		auto	engine_importexport = builder.AddLibrary( "Engine.ImportExport", "Engine/ImportExport" );
-		{
-			engine_importexport->AddFoldersRecursive( "" );
-			engine_importexport->LinkLibrary( engine_graphics );
-		}
-		
-		auto	engine_scene = builder.AddLibrary( "Engine.Scene", "Engine/Scene" );
-		{
-			engine_scene->AddFoldersRecursive( "" );
-			engine_scene->LinkLibrary( engine_graphics );
-		}
-	#endif	// ENABLE_ENGINE
-	//----------------------------------------------------------------------------
-
-
-		// External //
-	#ifdef ENABLE_EXTERNALS
-		builder.AddExternal( "External/cmake" )->AddSource( "include( \"External/cmake/options.cmake\" )" );
-
-		auto	engine_pipeline_compiler = builder.AddLibrary( "Engine.PipelineCompiler", "Engine/PipelineCompiler" );
-		{
-			engine_pipeline_compiler->ProjFolder( "EngineTools" );
-			engine_pipeline_compiler->AddFoldersRecursive( "" );
-			engine_pipeline_compiler->LinkLibrary( engine_stl )
-									->LinkLibrary( "glsl", "ENABLE_GLSLANG" )
-									->LinkLibrary( "${D3DCOMPILER_LIBRARY}", "D3DCOMPILER_LIBRARY" );
-			engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/glslang" );
-		}
-		
-		auto	engine_script = builder.AddLibrary( "Engine.Scipt", "Engine/Script" );
-		{
-			engine_script->AddFoldersRecursive( "" );
-			engine_script->LinkLibrary( engine_stl )->LinkLibrary( "AngelScript" );
-		}
-
-		auto	test_script = builder.AddExecutable( "Tests.Scipt", "Tests/Script" );
-		{
-			test_script->AddFoldersRecursive( "" );
-			test_script->LinkLibrary( engine_script );
-		}
-
-		auto	engine_res_pack = builder.AddExecutable( "Engine.ResourcePacker", "Engine/ResourcePacker" );
-		{
-			engine_res_pack->ProjFolder( "EngineTools" );
-			engine_res_pack->AddFoldersRecursive( "" );
-			engine_res_pack->LinkLibrary( engine_pipeline_compiler )->LinkLibrary( engine_script );
-			engine_res_pack->LinkLibrary( "FreeImage", "ENABLE_FREEIMAGE" )
-							->LinkLibrary( "lodepng", "ENABLE_LODEPNG" )
-							->LinkLibrary( "DevIL", "ENABLE_DEVIL" );
-			engine_res_pack->AddSource(
-				"if ( CONFIGURATION_DEPENDENT_PATH )\n"
-				"	set( RESOURCE_PACKER_EXE \"${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/"_str << engine_res_pack->GetName() << "${CMAKE_EXECUTABLE_SUFFIX}\" )\n"
-				"else ()\n"
-				"	set( RESOURCE_PACKER_EXE \"${CMAKE_CURRENT_BINARY_DIR}/"_str << engine_res_pack->GetName() << "${CMAKE_EXECUTABLE_SUFFIX}\" )\n"
-				"endif ()\n"
-			);
-		}
-	#endif	// ENABLE_EXTERNALS
-	//----------------------------------------------------------------------------
-		
-		
-		// Tests //
-	#ifdef ENABLE_ENGINE
-
-		auto	test_engine_base = builder.AddExecutable( "Tests.Engine.Base", "Tests/Engine.Base" );
-		{
-			test_engine_base->AddFoldersRecursive( "" );
-			test_engine_base->LinkLibrary( engine_platforms )->LinkLibrary( engine_profilers );
-		}
-		
-		auto	test_engine_graphics = builder.AddExecutable( "Tests.Engine.Graphics", "Tests/Engine.Graphics" );
-		{
-			test_engine_graphics->AddFoldersRecursive( "" );
-			test_engine_graphics->LinkLibrary( engine_importexport )->LinkLibrary( engine_profilers );
-		}
-
-		auto	test_engine_gapi = builder.AddExecutable( "Tests.Engine.Platforms.GAPI", "Tests/Engine.Platforms.GAPI" );
-		{
-			test_engine_gapi->AddFoldersRecursive( "" );
-			test_engine_gapi->LinkLibrary( engine_platforms );
-		}
-	#endif	// ENABLE_ENGINE
-	//----------------------------------------------------------------------------
-
-
-		// Projects //
-	#ifdef ENABLE_PROJECTS
-		auto	proj_codegen = builder.AddExecutable( "Projects.CodeGen", "Projects/CodeGen" );
-		{
-			proj_codegen->AddFoldersRecursive( "" );
-			proj_codegen->LinkLibrary( engine_platforms );
-			
-			#ifdef ENABLE_EXTERNALS
-				proj_codegen->LinkLibrary( engine_pipeline_compiler )->LinkLibrary( engine_script );
-			#endif
-		}
-
-		auto	proj_shader_editor = builder.AddExecutable( "Projects.ShaderEditor", "Projects/ShaderEditor" );
-		{
-			proj_shader_editor->AddFoldersRecursive( "" );
-			proj_shader_editor->LinkLibrary( engine_scene )->LinkLibrary( engine_profilers )->LinkLibrary( engine_importexport );
-		}
-	#endif	// ENABLE_PROJECTS
-	//----------------------------------------------------------------------------
-
-
-		// External //
-	#if defined(ENABLE_EXTERNALS) and defined(ENABLE_PIPELINE_BUILDING) and defined(ENABLE_ENGINE)
-		const auto	PackRes =	LAMBDA( engine_res_pack ) (auto* proj, StringCRef resourceScript)
-							{
-								String	res_script;
-								res_script << "\"${CMAKE_SOURCE_DIR}/" << FileAddress::BuildPath( proj->GetRelativePath(), resourceScript ) << '"';
-
-								proj->AddDependency( "Deps_"_str << proj->GetName() );
-								proj->AddSource(
-									"if (NOT DEFINED RESOURCE_PACKER_EXE)\n"
-									"	message( FATAL_ERROR \"RESOURCE_PACKER_EXE is not defined\" )\n"
-									"endif ()\n"_str
-									<<
-									"add_custom_target( \"Deps_" << proj->GetName() << "\"\n"
-									"	COMMAND ${RESOURCE_PACKER_EXE} -R " << res_script << "\n"
-									"	DEPENDS ${RESOURCE_PACKER_EXE} " << res_script << "\n"
-									"	COMMENT \"Pack resources for '" << proj->GetName() << "'...\"\n"
-									"	VERBATIM\n"
-									")\n"
-									"add_dependencies( \"Deps_" << proj->GetName() << "\" \"" << engine_res_pack->GetName() << "\" )\n"
-									"set_property( TARGET \"Deps_" << proj->GetName() << "\" PROPERTY FOLDER \"_deps_\" )\n"
-								);
-							};
-
-		if ( test_engine_base ) {
-			PackRes( test_engine_base, "Pipelines/resources.as" );
-		}
-
-		if ( test_engine_gapi ) {
-			PackRes( test_engine_gapi, "resources.as" );
-		}
-
-		if ( test_engine_graphics ) {
-			PackRes( test_engine_graphics, "Pipelines/resources.as" );
-		}
-
-	# ifdef ENABLE_PROJECTS
-		if ( proj_shader_editor ) {
-			PackRes( proj_shader_editor, "resources.as" );
-		}
-	# endif	// ENABLE_PROJECTS
-	#endif	// ENABLE_EXTERNALS
-	//----------------------------------------------------------------------------
-
-
-		// Utils //
-		auto	util_cmake = builder.AddExecutable( "Utils.CMake", "Utils/CMake" );
-		{
-			util_cmake->EnableIf( "NOT DEFINED ANDROID" );
-			util_cmake->AddFoldersRecursive( "" );
-			util_cmake->LinkLibrary( engine_stl );
-		}
-
-	#ifdef ENABLE_UTILS
-	#endif	// ENABLE_UTILS
-	}
-	//----------------------------------------------------------------------------
-
-
-	// save
-	builder.Save();
+	return builder;
 }

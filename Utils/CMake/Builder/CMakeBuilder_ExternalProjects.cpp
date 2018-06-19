@@ -28,18 +28,30 @@ namespace CMake
 	{
 		CHECK_ERR( OS::FileSystem::IsDirectoryExist( _baseFolder ) );
 
-		String				src;
+		String		src;
+		String		bin_path = _path;
+
+		bin_path.ReplaceChars( '/', '_' );
+		bin_path.ReplaceChars( '\\', '_' );
+		bin_path.ReplaceStrings( "..", "_" );
+		bin_path.ReplaceStrings( "__", "_" );
+
+		for (; not bin_path.Empty() and bin_path.Front() == '_'; ) {
+			bin_path.Erase( 0 );
+		}
+
+		if ( not _enableIf.Empty() )
+			outSrc << "if (" << _enableIf << ")\n";
+
+	#if 0
 		Array<TargetInfo>	targets;
 		Array<String>		dir_stack;	dir_stack.PushBack( _baseFolder );
 
-		//CHECK_ERR( _ReqursiveGetTargets( EKeyType::SubDir, dir_stack, OUT targets ) );
+		CHECK_ERR( _ReqursiveGetTargets( EKeyType::SubDir, dir_stack, OUT targets ) );
 
 		outSrc	<< "#==================================================================================================\n"
 				<< "# External: " << _path << "\n"
 				<< "#==================================================================================================\n";
-
-		if ( not _enableIf.Empty() )
-			outSrc << "if (" << _enableIf << ")\n";
 
 		src	<< "message( STATUS \"-----------------------------------------------------\" )\n"
 			<< "message( STATUS \"external project '" << _path << "' generation started\" )\n";
@@ -48,7 +60,7 @@ namespace CMake
 			src << "set( " << _options[i].first << " " << _options[i].second << " )\n";
 		}
 
-		src << "add_subdirectory( \"" << _path << "\" )\n";
+		src << "add_subdirectory( \"" << _path << "\" \"" << bin_path << "\" )\n";
 
 		// change project folders for targets
 		FOR( i, targets )
@@ -70,6 +82,17 @@ namespace CMake
 		src	<< "\n"
 			<< "message( STATUS \"external project '" << _path << "' generation ended\" )\n"
 			<< "message( STATUS \"-----------------------------------------------------\" )\n";
+	#else
+		
+		src << "add_subdirectory( \"" << _path << "\" \"" << bin_path << "\" )\n";
+		
+		if ( not _source.Empty() )
+		{
+			src << "#-----------------------------------\n"
+				<< _source
+				<< "#-----------------------------------\n";
+		}
+	#endif
 
 		if ( not _enableIf.Empty() )
 		{
@@ -77,7 +100,8 @@ namespace CMake
 			src << "endif()\n";
 		}
 
-		outSrc << src << "\n\n";
+		outSrc << src << "\n";
+
 		return true;
 	}
 	
@@ -471,6 +495,71 @@ namespace CMake
 		return true;
 	}
 //-----------------------------------------------------------------------------
+	
 
+
+/*
+=================================================
+	constructor
+=================================================
+*/
+	CMakeBuilder::CMakeExternalInclude::CMakeExternalInclude (CMakeBuilder *builder, StringCRef filename, StringCRef enableIf) :
+		_builder{ builder }, _enableIf{ enableIf }
+	{
+		if ( OS::FileSystem::IsAbsolutePath( filename ) ) {
+			FileAddress::AbsoluteToRelativePath( filename, _builder->_baseFolder, OUT _filename );
+		} else {
+			_filename = filename;
+		}
+
+		ASSERT( not _filename.Empty() );
+		FileAddress::FormatPath( INOUT _filename );
+	}
+		
+/*
+=================================================
+	ToString
+=================================================
+*/
+	bool CMakeBuilder::CMakeExternalInclude::ToString (OUT String &src)
+	{
+		src << "include( \"" << _filename << "\" )\n";
+		return true;
+	}
+//-----------------------------------------------------------------------------
+	
+
+
+/*
+=================================================
+	constructor
+=================================================
+*/
+	CMakeBuilder::CMakeSource::CMakeSource (StringCRef source, StringCRef enableIf) :
+		_enableIf{ enableIf }, _source{ source }
+	{
+	}
+	
+/*
+=================================================
+	ToString
+=================================================
+*/
+	bool CMakeBuilder::CMakeSource::ToString (OUT String &src)
+	{
+		if ( not _enableIf.Empty() )
+		{
+			src << "if (" << _enableIf << ")\n";
+		
+			String	temp = _source;
+			StringParser::IncreaceIndent( temp );
+
+			src << temp << "endif()\n";
+		}
+		else
+			src << _source;
+		
+		return true;
+	}
 
 }	// CMake

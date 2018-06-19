@@ -10,16 +10,12 @@ namespace CMake
 	constructor
 =================================================
 */
-	CMakeBuilder::CMakeBuilder (StringCRef baseFolder, StringCRef solutionName) :
-		_solutionName( solutionName )
+	CMakeBuilder::CMakeBuilder ()
+	{}
+
+	CMakeBuilder::CMakeBuilder (StringCRef baseFolder, StringCRef solutionName)
 	{
-		String	dir;
-		OS::FileSystem::GetCurrentDirectory( OUT dir );
-
-		_baseFolder = FileAddress::BuildPath( dir, baseFolder );
-
-		if ( _solutionName.Empty() )
-			_solutionName = FileAddress::GetName( _baseFolder );
+		SetSolution( baseFolder, solutionName );
 	}
 	
 /*
@@ -28,8 +24,7 @@ namespace CMake
 =================================================
 */
 	CMakeBuilder::~CMakeBuilder ()
-	{
-	}
+	{}
 	
 /*
 =================================================
@@ -50,35 +45,46 @@ namespace CMake
 
 		String	src;
 		src << "# auto generated file\n"
-			<< "cmake_minimum_required (VERSION 3.6.0)\n\n"
-			<< "message( STATUS \"==========================================================================\\n\" )\n"
-			<< "message( STATUS \"project '" << _solutionName << "' generation started\" )\n";
+			<< "cmake_minimum_required (VERSION 3.6.0)\n\n";
 
+		if ( not _isSecondary ) {
+			src	<< "message( STATUS \"==========================================================================\\n\" )\n"
+				<< "message( STATUS \"project '" << _solutionName << "' generation started\" )\n";
+		}
 		_SetupProject( OUT src );
 		
-		src	<< "\n"
-			<< "project( \"" << _solutionName << "\" LANGUAGES CXX )\n"
-			<< "set_property( GLOBAL PROPERTY USE_FOLDERS ON )\n"
-			<< "set( " << _solutionName << "_VERSION_MAJOR " << _version.x << " )\n"
-			<< "set( " << _solutionName << "_VERSION_MINOR " << _version.y << " )\n\n";
+		if ( not _isSecondary ) {
+			src	<< "\n"
+				<< "project( \"" << _solutionName << "\" LANGUAGES CXX )\n"
+				<< "set_property( GLOBAL PROPERTY USE_FOLDERS ON )\n";
+		}
+
+		if ( IsNotZero( _version ) ) {
+			src	<< "set( " << _solutionName << "_VERSION_MAJOR " << _version.x << " )\n"
+				<< "set( " << _solutionName << "_VERSION_MINOR " << _version.y << " )\n\n";
+		}
 
 		_OptionsToString( OUT src );
 
-		String	compiler_opt;
-		CHECK_ERR( _CompilersToString( OUT src, OUT compiler_opt ) );
+		if ( not _compilers.Empty() )
+		{
+			_compilerOptions.Clear();
+			CHECK_ERR( _CompilersToString( OUT src, OUT _compilerOptions ) );
+		}
 
-		// for debuging
-		src	<< "message( STATUS \"Compiler: ${CMAKE_CXX_COMPILER_ID} (${CMAKE_CXX_COMPILER_VERSION})\" )\n"
-			<< "message( STATUS \"Compiler name: ${DETECTED_COMPILER}\" )\n"
-			<< "message( STATUS \"target system: ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_VERSION})\" )\n"
-			<< "message( STATUS \"host system: ${CMAKE_HOST_SYSTEM_NAME} (${CMAKE_HOST_SYSTEM_VERSION})\" )\n\n";
+		if ( not _isSecondary ) {
+			src	<< "message( STATUS \"Compiler: ${CMAKE_CXX_COMPILER_ID} (${CMAKE_CXX_COMPILER_VERSION})\" )\n"
+				<< "message( STATUS \"Compiler name: ${DETECTED_COMPILER}\" )\n"
+				<< "message( STATUS \"target system: ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_VERSION})\" )\n"
+				<< "message( STATUS \"host system: ${CMAKE_HOST_SYSTEM_NAME} (${CMAKE_HOST_SYSTEM_VERSION})\" )\n\n";
+		}
 
-		CHECK_ERR( _ExternalProjectsToString( OUT src ) );
+		CHECK_ERR( _ProjectsToString( OUT src, _compilerOptions ) );
 
-		CHECK_ERR( _ProjectsToString( OUT src, compiler_opt ) );
-
-		src << "message( STATUS \"project '" << _solutionName << "' generation ended\" )\n"
-			<< "message( STATUS \"\\n==========================================================================\" )\n\n";
+		if ( not _isSecondary ) {
+			src << "message( STATUS \"project '" << _solutionName << "' generation ended\" )\n"
+				<< "message( STATUS \"\\n==========================================================================\" )\n\n";
+		}
 
 		// save project
 		auto	file = GXFile::HddWFile::New( FileAddress::BuildPath( _baseFolder, filename ) );
@@ -113,10 +119,8 @@ namespace CMake
 	void CMakeBuilder::_SetupProject (OUT String &src) const
 	{
 		// system version and other options
-		FOR( i, _sourceBeforeProject )
+		for (auto& opt : _sourceBeforeProject)
 		{
-			auto&	opt = _sourceBeforeProject[i];
-
 			src << (opt.second.Empty() ? "" : "if ( "_str << opt.second << " )\n\t")
 				<< opt.first << "\n"
 				<< (opt.second.Empty() ? "" : "endif()\n");
@@ -131,8 +135,8 @@ namespace CMake
 	void CMakeBuilder::_OptionsToString (OUT String &src) const
 	{
 		// serialize options
-		FOR( i, _userOptions ) {
-			src << _userOptions[i];
+		for (auto& opt : _userOptions) {
+			src << opt;
 		}
 	}
 
@@ -146,9 +150,10 @@ namespace CMake
 		// check compilers
 		{
 			HashSet<String>	unique_names;
-			FOR( i, _compilers )
+
+			for (const auto& comp : _compilers)
 			{
-				String&	name = _compilers[i].ToPtr<CMakeCompiler>()->_name;
+				String&	name = comp.ToPtr<CMakeCompiler>()->_name;
 
 				if ( unique_names.IsExist( name ) )
 				{
@@ -174,28 +179,26 @@ namespace CMake
 
 		// serialize compilers
 		HashMap<String, uint>	defines;
-
-		FOR( i, _compilers )
+		
+		for (const auto& obj : _compilers)
 		{
-			auto comp = _compilers[i].ToPtr<CMakeCompiler>();
+			auto comp = obj.ToPtr<CMakeCompiler>();
 
 			CHECK( comp->ToString( OUT src ) );
 			CHECK( comp->ToString2_Opt_Pass1( OUT defines ) );
 		}
 
-		FOR( i, defines )
+		for (const auto& item : defines)
 		{
-			const auto&	item = defines[i];
-
 			if ( item.second == 1 )
 				continue;
 
 			compilerOpts << item.first << '\n';
 		}
 
-		FOR( i, _compilers )
+		for (const auto& comp : _compilers)
 		{
-			CHECK( _compilers[i].ToPtr<CMakeCompiler>()->ToString2_Opt_Pass2( defines, OUT compilerOpts ) );
+			CHECK( comp.ToPtr<CMakeCompiler>()->ToString2_Opt_Pass2( defines, OUT compilerOpts ) );
 		}
 
 		src << "if ( NOT DEFINED DETECTED_COMPILER )\n"
@@ -212,80 +215,22 @@ namespace CMake
 */
 	bool CMakeBuilder::_ProjectsToString (OUT String &src, StringCRef compilerOpts) const
 	{
-		StringSet_t		existing_proj;
-
-		// external VS projects
-		{
-			String	tmp;
-
-			FOR( i, _externalVSProjects )
-			{
-				CHECK( _externalVSProjects[i]->ToString( OUT tmp ) );
-				
-				existing_proj.Add( _externalVSProjects[i].ToPtr< CMakeExternalVSProject >()->GetName() );
-			}
-
-			if ( not tmp.Empty() )
-			{
-				StringParser::IncreaceIndent( tmp );
-				src << "# External VS projects\n"
-					<< "if (MSVC)\n"
-					<< tmp
-					<< "endif()\n\n";
-			}
-		}
-
-		// validate projects
-		FOR( i, _projects )
-		{
-			Ptr<CMakeProject>	proj = _projects[i].ToPtr< CMakeProject >();
-
-			CHECK_ERR( not existing_proj.IsExist( proj->_name ) );
-			existing_proj.Add( proj->_name );
-		}
-
 		// serialize projects
-		FOR( i, _projects )
+		for (auto& obj : _projects)
 		{
-			Ptr<CMakeProject>	proj = _projects[i].ToPtr< CMakeProject >();
+			if ( auto proj = DynCast< CMakeProject *>( obj ) )
+			{
+				if ( not _projectOutputDir.Empty() and proj->_outputDir.Empty() )
+					proj->_outputDir = _projectOutputDir;
 
-			if ( not _projectOutputDir.Empty() and proj->_outputDir.Empty() )
-				proj->_outputDir = _projectOutputDir;
-
-			proj->_includeDirs.AddArray( _projectIncludeDirs );
-			proj->_linkDirs.AddArray( _projectLinkDirs );
-			proj->_linkLibs.AddArray( _projectLinkLibs );
-			proj->_defines.AddArray( _projectDefines );
-			proj->SetCompilerOptions( compilerOpts );
-
-			// validate dependencies
-			/*FOR( j, proj->_linkLibs ) {
-				CHECK_ERR( existing_proj.IsExist( proj->_linkLibs[j].first ) );
-			}*/
-
-			//FOR( j, proj->_dependencies ) {
-			//	CHECK( existing_proj.IsExist( proj->_dependencies[j].first ) );
-			//}
-
-			CHECK( proj->ToString( OUT src ) );
-		}
-		return true;
-	}
-	
-/*
-=================================================
-	_ExternalProjectsToString
-=================================================
-*/
-	bool CMakeBuilder::_ExternalProjectsToString (OUT String &src) const
-	{
-		if ( not _externalProjects.Empty() )
-		{
-			src << "message( STATUS \"adding external projects\" )\n\n\n";
-
-			FOR( i, _externalProjects ) {
-				CHECK( _externalProjects[i]->ToString( OUT src ) );
+				proj->_includeDirs.AddArray( _projectIncludeDirs );
+				proj->_linkDirs.AddArray( _projectLinkDirs );
+				proj->_linkLibs.AddArray( _projectLinkLibs );
+				proj->_defines.AddArray( _projectDefines );
+				proj->SetCompilerOptions( compilerOpts );
 			}
+
+			CHECK( obj->ToString( OUT src ) );
 		}
 		return true;
 	}
@@ -299,7 +244,6 @@ namespace CMake
 	{
 		_compilers.Clear();
 		_projects.Clear();
-		_externalProjects.Clear();
 		
 		_userOptions.Clear();
 
@@ -334,6 +278,24 @@ namespace CMake
 		return proj;
 	}
 	
+/*
+=================================================
+	GetProject
+=================================================
+*/
+	CMakeBuilder::CMakeProject const*  CMakeBuilder::GetProject (StringCRef name)
+	{
+		for (const auto& proj : _projects)
+		{
+			if ( auto* p = DynCast< CMakeProject const *>(proj) )
+			{
+				if ( p->GetName() == name )
+					return p;
+			}
+		}
+		return null;
+	}
+
 /*
 =================================================
 	AddMSVisualStudioCompiler
@@ -402,7 +364,15 @@ namespace CMake
 */
 	CMakeBuilder* CMakeBuilder::Projects_IncludeDirectory (StringCRef folder, StringCRef enableIf)
 	{
-		_projectIncludeDirs.Add({ folder, enableIf });
+		String	path;
+		if ( OS::FileSystem::IsAbsolutePath( folder ) or Utils::ContainsMacro( folder ) ) {
+			path = folder;
+		} else {
+			path = FileAddress::BuildPath( _baseFolder, folder );
+			FileAddress::FormatPath( INOUT path );
+		}
+
+		_projectIncludeDirs.Add({ path, enableIf });
 		return this;
 	}
 	
@@ -413,7 +383,15 @@ namespace CMake
 */
 	CMakeBuilder* CMakeBuilder::Projects_LinkDirectory (StringCRef folder, StringCRef enableIf)
 	{
-		_projectLinkDirs.Add({ folder, enableIf});
+		String	path;
+		if ( OS::FileSystem::IsAbsolutePath( folder ) or Utils::ContainsMacro( folder ) ) {
+			path = folder;
+		} else {
+			path = FileAddress::BuildPath( _baseFolder, folder );
+			FileAddress::FormatPath( INOUT path );
+		}
+
+		_projectLinkDirs.Add({ path, enableIf});
 		return this;
 	}
 	
@@ -490,6 +468,26 @@ namespace CMake
 		_userOptions.Add( RVREF(str) );
 		return this;
 	}
+	
+/*
+=================================================
+	SetSolution
+=================================================
+*/
+	CMakeBuilder*  CMakeBuilder::SetSolution (StringCRef baseFolder, StringCRef solutionName)
+	{
+		_solutionName = solutionName;
+	
+		String	dir;
+		OS::FileSystem::GetCurrentDirectory( OUT dir );
+
+		_baseFolder = FileAddress::BuildPath( dir, baseFolder );
+
+		if ( _solutionName.Empty() )
+			_solutionName = FileAddress::GetName( _baseFolder );
+
+		return this;
+	}
 
 /*
 =================================================
@@ -504,16 +502,98 @@ namespace CMake
 	
 /*
 =================================================
+	SetSecondary
+=================================================
+*/
+	CMakeBuilder*  CMakeBuilder::SetSecondary (bool value)
+	{
+		_isSecondary = value;
+		return this;
+	}
+
+/*
+=================================================
+	InheritCompilers
+=================================================
+*/
+	CMakeBuilder*  CMakeBuilder::InheritCompilers (const CMakeBuilder* other)
+	{
+		CHECK_ERR( other and (not other->_compilerOptions.Empty() or not other->_compilers.Empty()) );
+
+		if ( other->_compilerOptions.Empty() and not other->_compilers.Empty() )
+		{
+			String	src;
+			_compilerOptions.Clear();
+			
+			CHECK_ERR( other->_CompilersToString( OUT src, OUT _compilerOptions ) );
+		}
+		else
+		{
+			_compilerOptions = other->_compilerOptions;
+		}
+		return this;
+	}
+	
+/*
+=================================================
+	InheritIncludeDirectories
+=================================================
+*/
+	CMakeBuilder*  CMakeBuilder::InheritIncludeDirectories (const CMakeBuilder* other)
+	{
+		_projectIncludeDirs.AddArray( other->_projectIncludeDirs );
+		return this;
+	}
+
+/*
+=================================================
 	AddExternal
 =================================================
 */
 	CMakeBuilder::CMakeExternalProjects*  CMakeBuilder::AddExternal (StringCRef path, StringCRef enableIf)
 	{
 		auto	proj = new CMakeExternalProjects( this, path, enableIf );
-		_externalProjects.PushBack( proj );
+		_projects.PushBack( proj );
 		return proj;
 	}
 	
+/*
+=================================================
+	AddExternal
+=================================================
+*/
+	CMakeBuilder::CMakeExternalProjects*  CMakeBuilder::AddExternal (const CMakeBuilder* builder, StringCRef enableIf)
+	{
+		String	path;
+		CHECK_ERR( FileAddress::AbsoluteToRelativePath( builder->_baseFolder, _baseFolder, OUT path ) );
+
+		return AddExternal( path, enableIf );
+	}
+	
+/*
+=================================================
+	IncludeExternal
+=================================================
+*/
+	CMakeBuilder::CMakeExternalInclude*  CMakeBuilder::IncludeExternal (StringCRef filename, StringCRef enableIf)
+	{
+		auto	proj = new CMakeExternalInclude( this, filename, enableIf );
+		_projects.PushBack( proj );
+		return proj;
+	}
+	
+/*
+=================================================
+	AddSource
+=================================================
+*/
+	CMakeBuilder::CMakeSource*  CMakeBuilder::AddSource (StringCRef source, StringCRef enableIf)
+	{
+		auto	proj = new CMakeSource( source, enableIf );
+		_projects.PushBack( proj );
+		return proj;
+	}
+
 /*
 =================================================
 	AddVSProject
@@ -522,7 +602,7 @@ namespace CMake
 	CMakeBuilder::CMakeExternalVSProject*  CMakeBuilder::AddVSProject (StringCRef path, StringCRef enableIf)
 	{
 		auto	proj = new CMakeExternalVSProject( this, path, enableIf );
-		_externalVSProjects.PushBack( proj );
+		_projects.PushBack( proj );
 		return proj;
 	}
 	
@@ -547,9 +627,9 @@ namespace CMake
 											},
 											20, OUT files );
 
-		FOR( i, files )
+		for (auto& file : files)
 		{
-			auto proj = AddVSProject( files[i], enableIf );
+			auto proj = AddVSProject( file, enableIf );
 			
 			if ( not projFolder.Empty() )
 				proj->ProjFolder( projFolder );
@@ -601,6 +681,25 @@ namespace CMake
 	StringCRef CMakeBuilder::GetTempFolderForFastCpp ()
 	{
 		return "__gxtemp__";
+	}
+//-----------------------------------------------------------------------------
+	
+
+/*
+=================================================
+	ContainsMacro
+=================================================
+*/
+	bool CMakeBuilder::Utils::ContainsMacro (StringCRef str)
+	{
+		usize	pos = 0;
+
+		if ( str.Find( "${", OUT pos ) )
+		{
+			if ( str.Find( '}', OUT pos, pos ) )
+				return true;
+		}
+		return false;
 	}
 //-----------------------------------------------------------------------------
 
