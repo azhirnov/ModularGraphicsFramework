@@ -1,9 +1,9 @@
 // This is generated file, don't change anything!
 
 #include "vfs_images_main.h"
-#include "Engine/STL/Compression/LZ4Compression.h"
-#include "Engine/STL/Compression/MiniZCompression.h"
-#include "Engine/STL/Types/UniquePtr.h"
+#include "Core/STL/Compression/LZ4Compression.h"
+#include "Core/STL/Compression/MiniZCompression.h"
+#include "Core/STL/Types/UniquePtr.h"
 
 namespace vfs_images
 {

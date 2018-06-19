@@ -1,8 +1,8 @@
 // This is generated file, don't change anything!
 
 #include "vfs_images_main.h"
-#include "Engine/STL/Containers/HashMap.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Core/STL/Containers/HashMap.h"
+#include "Core/STL/Math/BinaryMath.h"
 
 namespace vfs_images
 {

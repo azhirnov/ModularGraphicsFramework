@@ -60,6 +60,7 @@ add_library( "External.All" STATIC
 	"AngelScript/build.cmake"
 	"AngelScript/CMakeLists.txt"
 	"glslang/build.cmake"
+	"glslang/build_internal.cmake"
 	"FreeImage/build.cmake"
 	"lz4/build.cmake"
 	"lz4/CMakeLists.txt"
@@ -74,7 +75,7 @@ set_property( TARGET "External.All" PROPERTY FOLDER "External" )
 source_group( "" FILES "CMakeLists.txt" "download.cmake" "options.cmake" )
 source_group( "SDL2" FILES "SDL2/build.cmake" )
 source_group( "AngelScript" FILES "AngelScript/build.cmake" "AngelScript/CMakeLists.txt" )
-source_group( "glslang" FILES "glslang/build.cmake" )
+source_group( "glslang" FILES "glslang/build.cmake" "glslang/build_internal.cmake" )
 source_group( "FreeImage" FILES "FreeImage/build.cmake" )
 source_group( "lz4" FILES "lz4/build.cmake" "lz4/CMakeLists.txt" )
 source_group( "miniz" FILES "miniz/build.cmake" "miniz/CMakeLists.txt" )
@@ -108,6 +109,7 @@ endif ()
 # glslang
 if (${ENABLE_GLSLANG})
 	include( "glslang/build.cmake" )
+	#include( "glslang/build_internal.cmake" )
 	add_dependencies( "External.All" glsl )
 endif ()
 

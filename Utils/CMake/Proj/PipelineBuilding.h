@@ -51,6 +51,5 @@ inline void PackResources (CMakeBuilder::CMakeProject* proj, StringCRef resource
 CMakeBuilderPtr  GenCompilers		 ();
 CMakeBuilderPtr  GenCore			 (Ptr<CMakeBuilder> compilers);
 CMakeBuilderPtr  GenEngine			 (Ptr<CMakeBuilder> core);
-CMakeBuilderPtr  GenEngineSamples	 (Ptr<CMakeBuilder> engine);
 CMakeBuilderPtr  GenUtils			 (Ptr<CMakeBuilder> core);
 CMakeBuilderPtr  GenShaderEditor	 (Ptr<CMakeBuilder> engine);

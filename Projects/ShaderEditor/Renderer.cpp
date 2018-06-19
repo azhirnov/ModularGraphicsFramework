@@ -1,13 +1,13 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Projects/ShaderEditor/Renderer.h"
+#include "Renderer.h"
 #include "Engine/Platforms/Public/Tools/GPUThreadHelper.h"
 #include "Engine/ImportExport/Engine.ImportExport.h"
-#include "Projects/ShaderEditor/images/vfs_images_main.h"
+#include "images/vfs_images_main.h"
 
 namespace ShaderEditor
 {
-	using RenderPassMsgList_t = CompileTime::TypeListFrom< Message<GpuMsg::GetRenderPassDescriptor> >;
+	using RenderPassMsgList_t = CompileTime::TypeListFrom< GpuMsg::GetRenderPassDescription >;
 
 /*
 =================================================
@@ -75,14 +75,14 @@ namespace ShaderEditor
 		clear.attachments.PushBack({ EImageAspect::Color, 0, float4(0.0f) });
 		clear.clearRects.PushBack({ area });
 
-		builder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, pass.framebuffer, area });
-		builder->Send< GpuMsg::CmdClearAttachments >( clear );
-		builder->Send< GpuMsg::CmdBindGraphicsPipeline >({ _pipeline });
-		builder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ pass.resourceTable });
-		builder->Send< GpuMsg::CmdSetViewport >({ area, float2(0.0f, 1.0f) });
-		builder->Send< GpuMsg::CmdSetScissor >({ area });
-		builder->Send< GpuMsg::CmdDraw >({ 4u });
-		builder->Send< GpuMsg::CmdEndRenderPass >({});
+		builder->Send( GpuMsg::CmdBeginRenderPass{ render_pass, pass.framebuffer, area });
+		builder->Send( clear );
+		builder->Send( GpuMsg::CmdBindGraphicsPipeline{ _pipeline });
+		builder->Send( GpuMsg::CmdBindGraphicsResourceTable{ pass.resourceTable });
+		builder->Send( GpuMsg::CmdSetViewport{ area, float2(0.0f, 1.0f) });
+		builder->Send( GpuMsg::CmdSetScissor{ area });
+		builder->Send( GpuMsg::CmdDraw{ 4u });
+		builder->Send( GpuMsg::CmdEndRenderPass{} );
 	
 		return true;
 	}
@@ -96,10 +96,10 @@ namespace ShaderEditor
 	{
 		auto&	pass = _perPass[ passIdx ];
 
-		builder->Send< GpuMsg::CmdClearColorImage >({ pass.image, EImageLayout::General, float4(0.0f) });
-		builder->Send< GpuMsg::CmdBindComputePipeline >({ _pipeline });
-		builder->Send< GpuMsg::CmdBindComputeResourceTable >({ pass.resourceTable });
-		builder->Send< GpuMsg::CmdDispatch >({ uint3( pass.viewport.x, pass.viewport.y, 1 ) });
+		builder->Send( GpuMsg::CmdClearColorImage{ pass.image, EImageLayout::General }.Clear( float4(0.0f) ));
+		builder->Send( GpuMsg::CmdBindComputePipeline{ _pipeline });
+		builder->Send( GpuMsg::CmdBindComputeResourceTable{ pass.resourceTable });
+		builder->Send( GpuMsg::CmdDispatch{ uint3( pass.viewport.x, pass.viewport.y, 1 ) });
 
 		return true;
 	}
@@ -120,10 +120,10 @@ namespace ShaderEditor
 
 			if ( mod )
 			{
-				Message< GpuMsg::GetImageDescriptor >	req_descr;
+				GpuMsg::GetImageDescription	req_descr;
 				mod->Send( req_descr );
 
-				ub_data.iChannelResolution[i]	= float4( req_descr->result->dimension.To<float2>(), float2() );
+				ub_data.iChannelResolution[i]	= float4( req_descr.result->dimension.To<float2>(), float2() );
 				ub_data.iChannelTime[i]			= float4( data.iTime, float3() );
 			}
 		}
@@ -131,7 +131,7 @@ namespace ShaderEditor
 		ub_data.iDate				= data.iDate;
 		ub_data.iFrame				= data.iFrame;
 		ub_data.iMouse				= data.iMouse;
-		ub_data.iResolution			= float4( data.iResolution );
+		ub_data.iResolution			= data.iResolution;
 		ub_data.iSampleRate			= data.iSampleRate;
 		ub_data.iTime				= data.iTime;
 		ub_data.iTimeDelta			= data.iTimeDelta;
@@ -141,7 +141,7 @@ namespace ShaderEditor
 		ub_data.iCameraFrustum[3]	= float4(data.iCameraFrustumRay3);
 		ub_data.iCameraPos			= float4(data.iCameraPos);
 
-		builder->Send< GpuMsg::CmdUpdateBuffer >({ pass.ubuffer, BinArrayCRef::FromValue(ub_data) });
+		builder->Send( GpuMsg::CmdUpdateBuffer{ pass.ubuffer, BinArrayCRef::FromValue(ub_data) });
 		return true;
 	}
 
@@ -192,11 +192,11 @@ namespace ShaderEditor
 		{
 			ModulePtr	gthread = PlatformTools::GPUThreadHelper::FindGraphicsThread( _gs );
 
-			Message< GpuMsg::GetGraphicsModules >	req_ids;
+			GpuMsg::GetGraphicsModules	req_ids;
 			CHECK( gthread->Send( req_ids ) );
 
-			_ids		= *req_ids->graphics;
-			_computeIDs	= *req_ids->compute;
+			_ids		= *req_ids.graphics;
+			_computeIDs	= *req_ids.compute;
 		}
 
 		CHECK_ERR( _CreateSamplers() );
@@ -213,25 +213,25 @@ namespace ShaderEditor
 
 			ModuleUtils::Initialize({ _builtinFileProvider });
 
-			_gs->parallelThread->Send< ModuleMsg::AttachModule >({ _builtinFileProvider });
+			_gs->parallelThread->Send( ModuleMsg::AttachModule{ _builtinFileProvider });
 		}
 
 		// subscribe on input events
 		{
 			using InputThreadMsgList_t	= CompileTime::TypeListFrom< 
-												Message< ModuleMsg::InputKeyBind >,
-												Message< ModuleMsg::InputMotionBind >,
-												Message< ModuleMsg::InputKeyUnbindAll >,
-												Message< ModuleMsg::InputMotionUnbindAll > >;
+												ModuleMsg::InputKeyBind,
+												ModuleMsg::InputMotionBind,
+												ModuleMsg::InputKeyUnbindAll,
+												ModuleMsg::InputMotionUnbindAll >;
 
 			ModulePtr	input;
 			CHECK_ERR( input = _gs->parallelThread->GetModuleByMsg< InputThreadMsgList_t >() );
 
-			input->Send< ModuleMsg::InputMotionBind >({ this, &Renderer::_OnMouseX,	"mouse.x"_MotionID });
-			input->Send< ModuleMsg::InputMotionBind >({ this, &Renderer::_OnMouseY,	"mouse.y"_MotionID });
+			input->Send( ModuleMsg::InputMotionBind{ this, &Renderer::_OnMouseX,	"mouse.x"_MotionID });
+			input->Send( ModuleMsg::InputMotionBind{ this, &Renderer::_OnMouseY,	"mouse.y"_MotionID });
 
-			input->Send< ModuleMsg::InputKeyBind >({ this, &Renderer::_OnMouseLeftButtonDown,	"mouse 0"_KeyID,	EKeyState::OnKeyDown });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &Renderer::_OnMouseLeftButtonUp,		"mouse 0"_KeyID,	EKeyState::OnKeyUp });
+			input->Send( ModuleMsg::InputKeyBind{ this, &Renderer::_OnMouseLeftButtonDown,	"mouse 0"_KeyID,	EKeyState::OnKeyDown });
+			input->Send( ModuleMsg::InputKeyBind{ this, &Renderer::_OnMouseLeftButtonUp,	"mouse 0"_KeyID,	EKeyState::OnKeyUp });
 		}
 		return true;
 	}
@@ -283,14 +283,14 @@ namespace ShaderEditor
 							pp_templ,
 							OUT ppln_template ) );
 
-			Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
+			GpuMsg::CreateGraphicsPipeline	create_gpp;
 
-			create_gpp->gpuThread	= PlatformTools::GPUThreadHelper::FindGraphicsThread( _gs );
-			create_gpp->moduleID	= _ids.pipeline;
-			create_gpp->topology	= EPrimitive::TriangleStrip;
+			create_gpp.gpuThread	= PlatformTools::GPUThreadHelper::FindGraphicsThread( _gs );
+			create_gpp.moduleID		= _ids.pipeline;
+			create_gpp.topology		= EPrimitive::TriangleStrip;
 	
 			ppln_template->Send( create_gpp );
-			_drawTexQuadPipeline = create_gpp->result.Get();
+			_drawTexQuadPipeline = *create_gpp.result;
 
 			CHECK_ERR( _drawTexQuadPipeline );
 			CHECK_ERR( ModuleUtils::Initialize({ _drawTexQuadPipeline }) );
@@ -308,8 +308,8 @@ namespace ShaderEditor
 							CreateInfo::PipelineResourceTable{},
 							OUT _resourceTables[i] ) );
 
-			_resourceTables[i]->Send< ModuleMsg::AttachModule >({ "pipeline", _drawTexQuadPipeline });
-			_resourceTables[i]->Send< GpuMsg::PipelineAttachTexture >({ "un_ColorTexture", iter->second->_perPass[i].image, _nearestClampSampler, EImageLayout::ShaderReadOnlyOptimal });
+			_resourceTables[i]->Send( ModuleMsg::AttachModule{ "pipeline", _drawTexQuadPipeline });
+			_resourceTables[i]->Send( GpuMsg::PipelineAttachTexture{ "un_ColorTexture", iter->second->_perPass[i].image, _nearestClampSampler, EImageLayout::ShaderReadOnlyOptimal });
 		}
 		CHECK_ERR( ModuleUtils::Initialize( _resourceTables ) );
 
@@ -330,7 +330,7 @@ namespace ShaderEditor
 						_ids.sampler,
 						_gs,
 						CreateInfo::GpuSampler{
-							SamplerDescriptor::Builder()
+							SamplerDescription::Builder()
 								.SetAddressMode( EAddressMode::Clamp )
 								.SetFilter( EFilter::MinMagMipNearest )
 								.Finish()
@@ -341,7 +341,7 @@ namespace ShaderEditor
 						_ids.sampler,
 						_gs,
 						CreateInfo::GpuSampler{
-							SamplerDescriptor::Builder()
+							SamplerDescription::Builder()
 								.SetAddressMode( EAddressMode::Clamp )
 								.SetFilter( EFilter::MinMagMipLinear )
 								.Finish()
@@ -352,7 +352,7 @@ namespace ShaderEditor
 						_ids.sampler,
 						_gs,
 						CreateInfo::GpuSampler{
-							SamplerDescriptor::Builder()
+							SamplerDescription::Builder()
 								.SetAddressMode( EAddressMode::Repeat )
 								.SetFilter( EFilter::MinMagMipNearest )
 								.Finish()
@@ -363,7 +363,7 @@ namespace ShaderEditor
 						_ids.sampler,
 						_gs,
 						CreateInfo::GpuSampler{
-							SamplerDescriptor::Builder()
+							SamplerDescription::Builder()
 								.SetAddressMode( EAddressMode::Repeat )
 								.SetFilter( EFilter::MinMagMipLinear )
 								.Finish()
@@ -489,10 +489,10 @@ namespace ShaderEditor
 							pp_templ,
 							OUT shader->_pipelineTemplate ) );
 
-			Message< GpuMsg::GetPipelineTemplateInfo >	req_info;
+			GpuMsg::GetPipelineTemplateInfo	req_info;
 			shader->_pipelineTemplate->Send( req_info );
 
-			shader->_isCompute = req_info->result->shaders[ EShader::Compute ];
+			shader->_isCompute = req_info.result->shaders[ EShader::Compute ];
 		}
 		
 		FOR( i, shader->_perPass )
@@ -505,7 +505,7 @@ namespace ShaderEditor
 							_ids.image,
 							_gs,
 							CreateInfo::GpuImage{
-								ImageDescriptor{
+								ImageDescription{
 									EImage::Tex2D,
 									uint4( newSize, 0, 0 ),
 									EPixelFormat::RGBA8_UNorm,
@@ -520,21 +520,20 @@ namespace ShaderEditor
 		// setup compute pipeline
 		if ( shader->_isCompute )
 		{
-			Message< GpuMsg::CreateComputePipeline >	create_cpp;
-
-			create_cpp->gpuThread	= gthread;
-			create_cpp->moduleID	= _computeIDs.pipeline;
+			GpuMsg::CreateComputePipeline	create_cpp;
+			create_cpp.gpuThread	= gthread;
+			create_cpp.moduleID	= _computeIDs.pipeline;
 	
 			shader->_pipelineTemplate->Send( create_cpp );
-			shader->_pipeline = *create_cpp->result;
+			shader->_pipeline = *create_cpp.result;
 
 			CHECK_ERR( shader->_pipeline );
 			CHECK_ERR( ModuleUtils::Initialize({ shader->_pipeline }) );
 
-			Message< GpuMsg::GetComputePipelineDescriptor >	req_ppln_descr;
+			GpuMsg::GetComputePipelineDescription	req_ppln_descr;
 			shader->_pipeline->Send( req_ppln_descr );
 
-			const uint2	kernel_size = req_ppln_descr->result->localGroupSize.xy();
+			const uint2	kernel_size = req_ppln_descr.result->localGroupSize.xy();
 
 			for (auto& pass : shader->_perPass)
 			{
@@ -557,23 +556,22 @@ namespace ShaderEditor
 								CreateInfo::GpuFramebuffer{ newSize },
 								OUT pass.framebuffer ) );
 			
-				ImageViewDescriptor		view_descr;
-				pass.framebuffer->Send< GpuMsg::FramebufferAttachImage >({ "Color0", pass.image, view_descr });
+				ImageViewDescription		view_descr;
+				pass.framebuffer->Send( GpuMsg::FramebufferAttachImage{ "Color0", pass.image, view_descr });
 
 				CHECK_ERR( ModuleUtils::Initialize({ pass.framebuffer }) );
 			}
 
 			// create pipeline
 			{
-				Message< GpuMsg::CreateGraphicsPipeline >	create_gpp;
-
-				create_gpp->gpuThread	= gthread;
-				create_gpp->moduleID	= _ids.pipeline;
-				create_gpp->topology	= EPrimitive::TriangleStrip;
-				create_gpp->renderPass	= shader->_perPass.Front().framebuffer->GetModuleByMsg< RenderPassMsgList_t >();
+				GpuMsg::CreateGraphicsPipeline	create_gpp;
+				create_gpp.gpuThread	= gthread;
+				create_gpp.moduleID		= _ids.pipeline;
+				create_gpp.topology		= EPrimitive::TriangleStrip;
+				create_gpp.renderPass	= shader->_perPass.Front().framebuffer->GetModuleByMsg< RenderPassMsgList_t >();
 	
 				shader->_pipelineTemplate->Send( create_gpp );
-				shader->_pipeline = *create_gpp->result;
+				shader->_pipeline = *create_gpp.result;
 
 				CHECK_ERR( shader->_pipeline );
 				CHECK_ERR( ModuleUtils::Initialize({ shader->_pipeline }) );
@@ -589,7 +587,7 @@ namespace ShaderEditor
 							_ids.buffer,
 							_gs,
 							CreateInfo::GpuBuffer{
-								BufferDescriptor{ SizeOf<Pipelines::ShadertoyUB>, EBufferUsage::Uniform | EBufferUsage::TransferDst },
+								BufferDescription{ SizeOf<Pipelines::ShadertoyUB>, EBufferUsage::Uniform | EBufferUsage::TransferDst },
 								EGpuMemory::LocalInGPU,
 								EMemoryAccess::GpuReadWrite },
 							OUT pass.ubuffer ) );
@@ -608,13 +606,13 @@ namespace ShaderEditor
 							CreateInfo::PipelineResourceTable{},
 							OUT pass.resourceTable ) );
 
-			pass.resourceTable->Send< ModuleMsg::AttachModule >({ "pipeline", shader->_pipeline });
-			pass.resourceTable->Send< ModuleMsg::AttachModule >({ "", pass.ubuffer });
+			pass.resourceTable->Send( ModuleMsg::AttachModule{ "pipeline", shader->_pipeline });
+			pass.resourceTable->Send( ModuleMsg::AttachModule{ "", pass.ubuffer });
 
 			if ( shader->_isCompute )
 			{
-				ImageViewDescriptor		view_descr;
-				pass.resourceTable->Send< GpuMsg::PipelineAttachImage >({ "un_DstImage", pass.image, view_descr });
+				ImageViewDescription		view_descr;
+				pass.resourceTable->Send( GpuMsg::PipelineAttachImage{ "un_DstImage", pass.image, view_descr });
 			}
 
 			FOR( j, shader->_descr._channels )
@@ -628,10 +626,10 @@ namespace ShaderEditor
 					if ( iter->second == shader )
 					{
 						// use image from previous pass
-						pass.resourceTable->Send< GpuMsg::PipelineAttachTexture >({ "iChannel"_str << j, shader->_perPass[(i-1) & 1].image, _linearClampSampler });	// TODO: sampler
+						pass.resourceTable->Send( GpuMsg::PipelineAttachTexture{ "iChannel"_str << j, shader->_perPass[(i-1) & 1].image, _linearClampSampler });	// TODO: sampler
 					}
 					else
-						pass.resourceTable->Send< GpuMsg::PipelineAttachTexture >({ "iChannel"_str << j, iter->second->_perPass[i].image, _linearClampSampler });	// TODO: sampler
+						pass.resourceTable->Send( GpuMsg::PipelineAttachTexture{ "iChannel"_str << j, iter->second->_perPass[i].image, _linearClampSampler });	// TODO: sampler
 
 					continue;
 				}
@@ -640,7 +638,7 @@ namespace ShaderEditor
 				ModulePtr	image_mod;
 				if ( _LoadImage( ch.first, OUT image_mod ) )
 				{
-					pass.resourceTable->Send< GpuMsg::PipelineAttachTexture >({ "iChannel"_str << j, image_mod, _linearClampSampler });	// TODO: sampler
+					pass.resourceTable->Send( GpuMsg::PipelineAttachTexture{ "iChannel"_str << j, image_mod, _linearClampSampler });	// TODO: sampler
 					continue;
 				}
 				
@@ -684,7 +682,7 @@ namespace ShaderEditor
 						_ids.image,
 						_gs,
 						CreateInfo::GpuImage{
-							ImageDescriptor{ EImage::Tex2D, uint4(1), EPixelFormat::RGBA8_UNorm, EImageUsage::Sampled | EImageUsage::TransferDst },
+							ImageDescription{ EImage::Tex2D, uint4(1), EPixelFormat::RGBA8_UNorm, EImageUsage::Sampled | EImageUsage::TransferDst },
 							EGpuMemory::LocalInGPU,
 							EMemoryAccess::GpuReadWrite },
 						OUT image ) );
@@ -696,8 +694,8 @@ namespace ShaderEditor
 							CreateInfo::ImageLoader{ data_input, EImageLayout::ShaderReadOnlyOptimal },
 							OUT img_loader ) );
 
-		image->Send< ModuleMsg::AttachModule >({ "loader", img_loader });
-		img_loader->Send< ModuleMsg::AttachModule >({ "cmd", _asyncCmdBuilder });
+		image->Send( ModuleMsg::AttachModule{ "loader", img_loader });
+		img_loader->Send( ModuleMsg::AttachModule{ "cmd", _asyncCmdBuilder });
 
 		ModuleUtils::Initialize({ image });
 
@@ -716,7 +714,7 @@ namespace ShaderEditor
 		CHECK_ERR( msg.framebuffers.Count() == 1 or msg.framebuffers.Count() == 2 );
 		CHECK_ERR( msg.framebuffers.Count() == msg.cameras.Count() );
 		
-		Message< GpuMsg::GetFramebufferDescriptor >	req_descr;
+		GpuMsg::GetFramebufferDescription	req_descr;
 		msg.framebuffers.Front().framebuffer->Send( req_descr );
 
 		ModulePtr	builder = msg.cmdBuilder;
@@ -724,14 +722,14 @@ namespace ShaderEditor
 		CHECK_ERR( _CreateCmdBuffer( builder ) );
 
 		// recreate shaders
-		if ( Any( _surfaceSize != req_descr->result->size ) )
+		if ( Any( _surfaceSize != req_descr.result->size ) )
 		{
-			CHECK_ERR( _RecreateAll( req_descr->result->size ) );
+			CHECK_ERR( _RecreateAll( req_descr.result->size ) );
 		}
 		
 		++_passIdx;
 
-		CHECK( builder->Send< GraphicsMsg::CmdBegin >({}) );
+		CHECK( builder->Send( GraphicsMsg::CmdBegin{} ) );
 
 		// draw quad to screen
 		FOR( i, msg.framebuffers )
@@ -751,27 +749,27 @@ namespace ShaderEditor
 			ModulePtr	eye_fb		= msg.framebuffers[i].framebuffer;
 			ModulePtr	render_pass	= eye_fb->GetModuleByMsg< RenderPassMsgList_t >();
 
-			Message< GpuMsg::GetFramebufferDescriptor >	fb_descr_request;
+			GpuMsg::GetFramebufferDescription	fb_descr_request;
 			eye_fb->Send( fb_descr_request );
 
-			auto const&	fb_descr	= fb_descr_request->result.Get();
+			auto const&	fb_descr	= *fb_descr_request.result;
 			RectU		area		= RectU( 0, 0, fb_descr.size.x, fb_descr.size.y );
 			
 			GpuMsg::CmdClearAttachments	clear;
 			clear.attachments.PushBack({ EImageAspect::Color, 0, float4(1.0f) });
 			clear.clearRects.PushBack({ area });
 
-			builder->Send< GpuMsg::CmdBeginRenderPass >({ render_pass, eye_fb, area });
-			builder->Send< GpuMsg::CmdClearAttachments >( clear );
-			builder->Send< GpuMsg::CmdBindGraphicsPipeline >({ _drawTexQuadPipeline });
-			builder->Send< GpuMsg::CmdBindGraphicsResourceTable >({ _resourceTables[pass_idx] });
-			builder->Send< GpuMsg::CmdSetViewport >({ area, float2(0.0f, 1.0f) });
-			builder->Send< GpuMsg::CmdSetScissor >({ area });
-			builder->Send< GpuMsg::CmdDraw >({ 4u });
-			builder->Send< GpuMsg::CmdEndRenderPass >({});
+			builder->Send( GpuMsg::CmdBeginRenderPass{ render_pass, eye_fb, area });
+			builder->Send( clear );
+			builder->Send( GpuMsg::CmdBindGraphicsPipeline{ _drawTexQuadPipeline });
+			builder->Send( GpuMsg::CmdBindGraphicsResourceTable{ _resourceTables[pass_idx] });
+			builder->Send( GpuMsg::CmdSetViewport{ area, float2(0.0f, 1.0f) });
+			builder->Send( GpuMsg::CmdSetScissor{ area });
+			builder->Send( GpuMsg::CmdDraw{ 4u });
+			builder->Send( GpuMsg::CmdEndRenderPass{} );
 		}
 
-		CHECK( builder->Send< GraphicsMsg::CmdEnd >({}) );
+		CHECK( builder->Send( GraphicsMsg::CmdEnd{} ) );
 		return true;
 	}
 

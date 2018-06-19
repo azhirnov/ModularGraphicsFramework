@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Projects/ShaderEditor/Common.h"
-#include "Projects/ShaderEditor/Pipelines/all_pipelines.h"
+#include "Common.h"
+#include "Pipelines/all_pipelines.h"
 
 namespace ShaderEditor
 {
@@ -18,13 +18,13 @@ namespace ShaderEditor
 	public:
 
 		//
-		// Shader Descriptor
+		// Shader Description
 		//
 		struct ShaderDescr
 		{
 		// types
 			using Channels_t	= FixedSizeArray< Pair<String, uint>, 8 >;
-			using PplnCtor_t	= void (*) (OUT PipelineTemplateDescriptor &);
+			using PplnCtor_t	= void (*) (OUT PipelineTemplateDescription &);
 
 		// variables
 			PplnCtor_t		_pplnCtor	= null;

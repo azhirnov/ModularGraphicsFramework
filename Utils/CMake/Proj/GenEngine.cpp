@@ -73,13 +73,6 @@ CMakeBuilderPtr  GenEngine (Ptr<CMakeBuilder> core)
 		engine_profilers->LinkLibrary( engine_platforms );
 	}
 
-	/*auto	engine_debugger = builder->AddLibrary( "Engine.Debugger", "Debugger" );
-	{
-		engine_debugger->AddFoldersRecursive( "" );
-		engine_debugger->ProjFolder( "Engine" );
-		engine_debugger->LinkLibrary( engine_platforms );
-	}*/
-
 	auto	engine_importexport = builder->AddLibrary( "Engine.ImportExport", "ImportExport" );
 	{
 		engine_importexport->AddFoldersRecursive( "" );
@@ -92,20 +85,6 @@ CMakeBuilderPtr  GenEngine (Ptr<CMakeBuilder> core)
 		engine_scene->AddFoldersRecursive( "" );
 		engine_scene->ProjFolder( "Engine" );
 		engine_scene->LinkLibrary( engine_graphics );
-	}
-
-	auto	engine_ui = builder->AddLibrary( "Engine.UI", "UI" );
-	{
-		engine_ui->AddFoldersRecursive( "" );
-		engine_ui->ProjFolder( "Engine" );
-		engine_ui->LinkLibrary( engine_graphics );
-	}
-
-	auto	engine_framegraph = builder->AddLibrary( "Engine.FrameGraph", "FrameGraph" );
-	{
-		engine_framegraph->AddFoldersRecursive( "" );
-		engine_framegraph->ProjFolder( "Engine" );
-		engine_framegraph->LinkLibrary( engine_platforms );
 	}
 	//----------------------------------------------------------------------------
 
@@ -120,14 +99,6 @@ CMakeBuilderPtr  GenEngine (Ptr<CMakeBuilder> core)
 								->LinkLibrary( "glsl", "ENABLE_GLSLANG" )
 								->LinkLibrary( "${D3DCOMPILER_LIBRARY}", "D3DCOMPILER_LIBRARY" );
 		engine_pipeline_compiler->IncludeDirectory( "${EXTERNALS_PATH}/glslang" );
-	}
-
-	auto	test_pipeline_compiler = builder->AddExecutable( "Tests.PipelineCompiler", tests_path + "PipelineCompiler" );
-	{
-		test_pipeline_compiler->AddFolder( "" );
-		test_pipeline_compiler->AddFolder( "Pipelines" );
-		test_pipeline_compiler->ProjFolder( "EngineTests" );
-		test_pipeline_compiler->LinkLibrary( engine_pipeline_compiler );
 	}
 
 	auto	engine_res_pack = builder->AddExecutable( "Engine.ResourcePacker", "ResourcePacker" );
@@ -151,13 +122,6 @@ CMakeBuilderPtr  GenEngine (Ptr<CMakeBuilder> core)
 		
 		
 	// Tests //
-	auto	engine_platforms_nulldriver = builder->AddLibrary( "Engine.Platforms.NullDriver", tests_path + "Engine.Platforms.NullDriver" );
-	{
-		engine_platforms_nulldriver->AddFoldersRecursive( "" );
-		engine_platforms_nulldriver->ProjFolder( "EngineTests" );
-		engine_platforms_nulldriver->LinkLibrary( engine_platforms );
-	}
-
 	auto	test_engine_base = builder->AddExecutable( "Tests.Engine.Base", tests_path + "Engine.Base" );
 	{
 		test_engine_base->AddFoldersRecursive( "" );
@@ -165,32 +129,11 @@ CMakeBuilderPtr  GenEngine (Ptr<CMakeBuilder> core)
 		test_engine_base->LinkLibrary( engine_platforms )->LinkLibrary( engine_profilers );
 	}
 		
-	/*auto	test_engine_debugger = builder->AddExecutable( "Tests.Engine.Debugger", tests_path + "Engine.Debugger" );
-	{
-		test_engine_debugger->AddFoldersRecursive( "" );
-		test_engine_debugger->ProjFolder( "EngineTests" );
-		test_engine_debugger->LinkLibrary( engine_debugger );
-	}*/
-		
 	auto	test_engine_graphics = builder->AddExecutable( "Tests.Engine.Graphics", tests_path + "Engine.Graphics" );
 	{
 		test_engine_graphics->AddFoldersRecursive( "" );
 		test_engine_graphics->ProjFolder( "EngineTests" );
 		test_engine_graphics->LinkLibrary( engine_importexport )->LinkLibrary( engine_profilers );
-	}
-		
-	auto	test_engine_scene = builder->AddExecutable( "Tests.Engine.Scene", tests_path + "Engine.Scene" );
-	{
-		test_engine_scene->AddFoldersRecursive( "" );
-		test_engine_scene->ProjFolder( "EngineTests" );
-		test_engine_scene->LinkLibrary( engine_scene )->LinkLibrary( engine_profilers );
-	}
-
-	auto	test_engine_ui = builder->AddExecutable( "Tests.Engine.UI", tests_path + "Engine.UI" );
-	{
-		test_engine_ui->AddFoldersRecursive( "" );
-		test_engine_ui->ProjFolder( "EngineTests" );
-		test_engine_ui->LinkLibrary( engine_ui )->LinkLibrary( engine_profilers );
 	}
 
 	auto	test_engine_gapi = builder->AddExecutable( "Tests.Engine.Platforms.GAPI", tests_path + "Engine.Platforms.GAPI" );
@@ -198,13 +141,6 @@ CMakeBuilderPtr  GenEngine (Ptr<CMakeBuilder> core)
 		test_engine_gapi->AddFoldersRecursive( "" );
 		test_engine_gapi->ProjFolder( "EngineTests" );
 		test_engine_gapi->LinkLibrary( engine_platforms );
-	}
-
-	auto	test_engine_framegraph = builder->AddExecutable( "Tests.Engine.FrameGraph", tests_path + "Engine.FrameGraph" );
-	{
-		test_engine_framegraph->AddFoldersRecursive( "" );
-		test_engine_framegraph->ProjFolder( "EngineTests" );
-		test_engine_framegraph->LinkLibrary( engine_framegraph )->LinkLibrary( engine_platforms_nulldriver );
 	}
 	//----------------------------------------------------------------------------
 
@@ -214,13 +150,6 @@ CMakeBuilderPtr  GenEngine (Ptr<CMakeBuilder> core)
 	const auto	PackRes =	LAMBDA( engine_res_pack ) (auto* proj, StringCRef resourceScript) {
 								PackResources( proj, resourceScript, engine_res_pack );
 							};
-		
-	auto	test_res_pack = builder->AddExecutable( "Tests.ResourcePacker", tests_path + "ResourcePacker" );
-	{
-		test_res_pack->AddFolder( "" );
-		test_res_pack->ProjFolder( "EngineTests" );
-		PackRes( test_res_pack, "resources.as" );
-	}
 
 	PackRes( test_engine_base, "Pipelines/resources.as" );
 	PackRes( test_engine_gapi, "resources.as" );
@@ -232,10 +161,7 @@ CMakeBuilderPtr  GenEngine (Ptr<CMakeBuilder> core)
 	// SCU //
 #	ifdef ENABLE_SCU
 	builder->AddExecutable( "Tests.Engine.Base.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_base )->MergeCPP( NUM_THREADS );
-	//builder->AddExecutable( "Tests.Engine.Debugger.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_debugger )->MergeCPP( NUM_THREADS );
 	builder->AddExecutable( "Tests.Engine.Graphics.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_graphics )->MergeCPP( NUM_THREADS );
-	builder->AddExecutable( "Tests.Engine.Scene.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_scene )->MergeCPP( NUM_THREADS );
-	builder->AddExecutable( "Tests.Engine.UI.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_ui )->MergeCPP( NUM_THREADS );
 	builder->AddExecutable( "Tests.Platforms.GAPI.SCU" )->ProjFolder("SCU")->LinkLibrary( test_engine_gapi )->MergeCPP( NUM_THREADS );
 #	endif	// ENABLE_SCU
 	//----------------------------------------------------------------------------

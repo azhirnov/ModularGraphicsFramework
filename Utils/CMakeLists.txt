@@ -9,7 +9,6 @@ if (NOT DEFINED ANDROID)
 		"CMake/Proj/GenCompilers.cpp"
 		"CMake/Proj/GenCore.cpp"
 		"CMake/Proj/GenEngine.cpp"
-		"CMake/Proj/GenEngineSamples.cpp"
 		"CMake/Proj/GenShaderEditor.cpp"
 		"CMake/Proj/GenUtils.cpp"
 		"CMake/Proj/Main.cpp"
@@ -27,10 +26,12 @@ if (NOT DEFINED ANDROID)
 	else()
 		add_executable( "Utils.CMake" ${SOURCES} )
 	endif()
+	source_group( "Proj" FILES "CMake/Proj/GenCompilers.cpp" "CMake/Proj/GenCore.cpp" "CMake/Proj/GenEngine.cpp" "CMake/Proj/GenShaderEditor.cpp" "CMake/Proj/GenUtils.cpp" "CMake/Proj/Main.cpp" "CMake/Proj/PipelineBuilding.h" )
+	source_group( "Builder" FILES "CMake/Builder/ClangConstants.h" "CMake/Builder/CMakeBuilder.cpp" "CMake/Builder/CMakeBuilder.h" "CMake/Builder/CMakeBuilder_Compiler.cpp" "CMake/Builder/CMakeBuilder_ExternalProjects.cpp" "CMake/Builder/CMakeBuilder_Project.cpp" "CMake/Builder/GccConstants.h" "CMake/Builder/MSVisualStudioConstants.h" )
 	set_property( TARGET "Utils.CMake" PROPERTY FOLDER "Utils" )
-	target_include_directories( "Utils.CMake" PUBLIC "C:/Projects/graphxgenengine/External" )
+	target_include_directories( "Utils.CMake" PUBLIC "C:/Projects/ModularGraphicsFramework/External" )
 	target_include_directories( "Utils.CMake" PUBLIC "${EXTERNALS_PATH}" )
-	target_include_directories( "Utils.CMake" PUBLIC "C:/Projects/graphxgenengine/Core/.." )
+	target_include_directories( "Utils.CMake" PUBLIC "C:/Projects/ModularGraphicsFramework/Core/.." )
 	target_link_libraries( "Utils.CMake" "Core.STL" )
 	# compiler
 	set_target_properties( "Utils.CMake" PROPERTIES LINK_FLAGS_RELEASE ${PROJECTS_SHARED_LINKER_FLAGS_RELEASE} )
@@ -47,3 +48,5 @@ if (NOT DEFINED ANDROID)
 	target_compile_options( "Utils.CMake" PRIVATE $<$<CONFIG:Debug>: ${PROJECTS_SHARED_CXX_FLAGS_DEBUG}> )
 	
 endif()
+
+

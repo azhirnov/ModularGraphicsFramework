@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Projects/ShaderEditor/Renderer.h"
+#include "Renderer.h"
 
 namespace ShaderEditor
 {
@@ -40,10 +40,10 @@ namespace ShaderEditor
 		bool Update ();
 
 	private:
-		bool _OnWindowClosed (const Message< OSMsg::WindowBeforeDestroy > &);
-		bool _Init (const Message< ModuleMsg::Compose > &);
-		bool _GInit (const Message< GpuMsg::DeviceCreated > &);
-		bool _Draw (const Message< SceneMsg::CameraRequestUpdate > &);
+		bool _OnWindowClosed (const OSMsg::WindowBeforeDestroy &);
+		bool _Init (const ModuleMsg::Compose &);
+		bool _GInit (const GpuMsg::DeviceCreated &);
+		bool _Draw (const SceneMsg::CameraRequestUpdate &);
 
 		void _OnKey (const ModuleMsg::InputKey &);
 

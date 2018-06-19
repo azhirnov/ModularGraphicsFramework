@@ -20,25 +20,25 @@ namespace Pipelines
 
 namespace Pipelines
 {
-// From file 'experimental.cpp'
-void Create_experimental (PipelineTemplateDescriptor& descr);
-
-// From file 'skyline.cpp'
-void Create_skyline (PipelineTemplateDescriptor& descr);
-
 // From file 'drawtexturedquad.cpp'
-void Create_drawtexturedquad (PipelineTemplateDescriptor& descr);
-
-// From file 'glowballs.cpp'
-void Create_glowballs (PipelineTemplateDescriptor& descr);
+void Create_drawtexturedquad (PipelineTemplateDescription& descr);
 
 // From file 'voronnoirecursion.cpp'
-void Create_voronnoirecursion (PipelineTemplateDescriptor& descr);
+void Create_voronnoirecursion (PipelineTemplateDescription& descr);
+
+// From file 'glowballs.cpp'
+void Create_glowballs (PipelineTemplateDescription& descr);
+
+// From file 'experimental.cpp'
+void Create_experimental (PipelineTemplateDescription& descr);
 
 // From file 'sireniandawn2.cpp'
-void Create_sireniandawn2 (PipelineTemplateDescriptor& descr);
+void Create_sireniandawn2 (PipelineTemplateDescription& descr);
+
+// From file 'skyline.cpp'
+void Create_skyline (PipelineTemplateDescription& descr);
 
 // From file 'sireniandawn1.cpp'
-void Create_sireniandawn1 (PipelineTemplateDescriptor& descr);
+void Create_sireniandawn1 (PipelineTemplateDescription& descr);
 
 }	// Pipelines

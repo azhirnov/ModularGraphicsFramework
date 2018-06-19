@@ -4,14 +4,6 @@ void main ()
 {
 	GraphicsPipeline	ppln = ShadertoyTemplate();
 
-	ppln.shaders.fragment.Load( "<Common/Defines.glsl>" );
-	ppln.shaders.fragment.Load( "<Common/Cmp.glsl>" );
-	ppln.shaders.fragment.Load( "<Math/MathDef.glsl>" );
-	ppln.shaders.fragment.Load( "<Math/Math.glsl>" );
-	ppln.shaders.fragment.Load( "<Math/Utils.glsl>" );
-	ppln.shaders.fragment.Load( "<Math/Quaternion.glsl>" );
-	ppln.shaders.fragment.Load( "<Math3D/Line3.glsl>" );
-	ppln.shaders.fragment.Load( "<Math3D/Ray.glsl>" );
 	ppln.shaders.fragment.LoadSelf();
 }
 #endif	// ANGELSCRIPT
@@ -20,6 +12,15 @@ void main ()
 
 #ifdef SHADER
 #if SHADER & SH_FRAGMENT
+
+#include <Common/Defines.glsl>
+#include <Common/Cmp.glsl>
+#include <Math/MathDef.glsl>
+#include <Math/Math.glsl>
+#include <Math/Utils.glsl>
+#include <Math/Quaternion.glsl>
+#include <Math3D/Line3.glsl>
+#include <Math3D/Ray.glsl>
 
 /*--------------------------------------------------------------------------------------
 License CC0 - http://creativecommons.org/publicdomain/zero/1.0/

@@ -15,16 +15,9 @@ int main ()
 
 	CMakeBuilderPtr	core			= GenCore( compilers.ptr() );
 	CMakeBuilderPtr	engine			= GenEngine( core.ptr() );
-	CMakeBuilderPtr	samples			= GenEngineSamples( engine.ptr() );
 	CMakeBuilderPtr	shader_editor	= GenShaderEditor( engine.ptr() );
 	CMakeBuilderPtr	utils			= GenUtils( core.ptr() );
 	
-
-	auto	engine_docs = builder.AddLibrary( "Docs", "docs" );
-	{
-		engine_docs->AddFoldersRecursive( "" );
-		engine_docs->ProjFolder( "" );
-	}
 
 	builder.IncludeExternal( "Core/compilers.cmake" );
 	builder.AddSource(R"#(
@@ -40,7 +33,6 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${MAIN_BINARY_DIR}" )
 	
 	builder.AddExternal( core.ptr() );
 	builder.AddExternal( engine.ptr() );
-	builder.AddExternal( samples.ptr() );
 	builder.AddExternal( shader_editor.ptr() );
 	builder.AddExternal( utils.ptr() );
 

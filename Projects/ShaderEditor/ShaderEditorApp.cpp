@@ -1,6 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Projects/ShaderEditor/ShaderEditorApp.h"
+#include "ShaderEditorApp.h"
 #include "Engine/Profilers/Engine.Profilers.h"
 #include "Engine/ImportExport/Engine.ImportExport.h"
 
@@ -15,8 +15,7 @@ namespace ShaderEditor
 	ShaderEditorApp::ShaderEditorApp () :
 		_renderer( GetMainSystemInstance()->GlobalSystems() ),
 		_currSample{ UMax },	_nextSample{ 0 },
-		_looping{ true },
-		_vrMode{ false }
+		_looping{ true },		_vrMode{ false }
 	{
 		Platforms::RegisterPlatforms();
 		Profilers::RegisterProfilers();
@@ -59,7 +58,7 @@ namespace ShaderEditor
 	_OnWindowClosed
 =================================================
 */
-	bool ShaderEditorApp::_OnWindowClosed (const Message< OSMsg::WindowBeforeDestroy > &)
+	bool ShaderEditorApp::_OnWindowClosed (const OSMsg::WindowBeforeDestroy &)
 	{
 		_looping = false;
 		return true;
@@ -70,7 +69,7 @@ namespace ShaderEditor
 	_Init
 =================================================
 */
-	bool ShaderEditorApp::_Init (const Message< ModuleMsg::Compose > &)
+	bool ShaderEditorApp::_Init (const ModuleMsg::Compose &)
 	{
 		// create camera and surface
 		{
@@ -94,10 +93,10 @@ namespace ShaderEditor
 								CreateInfo::RenderSurface{},
 								OUT _surface ) );
 
-			_camera->Send< ModuleMsg::AttachModule >({ "surface", _surface });
+			_camera->Send( ModuleMsg::AttachModule{ "surface", _surface });
 			_camera->Subscribe( this, &ShaderEditorApp::_Draw );
-			gs->parallelThread->Send< ModuleMsg::AttachModule >({ "surface", _surface });
-			gs->parallelThread->Send< ModuleMsg::AttachModule >({ "camera",  _camera });
+			gs->parallelThread->Send( ModuleMsg::AttachModule{ "surface", _surface });
+			gs->parallelThread->Send( ModuleMsg::AttachModule{ "camera",  _camera });
 
 			ModuleUtils::Initialize({ _camera });
 		}
@@ -107,8 +106,8 @@ namespace ShaderEditor
 			ModulePtr	input = GetMainSystemInstance()->GlobalSystems()->parallelThread->GetModuleByID( InputThreadModuleID );
 			CHECK_ERR( input );
 
-			input->Send< ModuleMsg::InputKeyBind >({ this, &ShaderEditorApp::_OnKey, "["_KeyID, EKeyState::OnKeyDown });
-			input->Send< ModuleMsg::InputKeyBind >({ this, &ShaderEditorApp::_OnKey, "]"_KeyID, EKeyState::OnKeyDown });
+			input->Send( ModuleMsg::InputKeyBind{ this, &ShaderEditorApp::_OnKey, "["_KeyID, EKeyState::OnKeyDown });
+			input->Send( ModuleMsg::InputKeyBind{ this, &ShaderEditorApp::_OnKey, "]"_KeyID, EKeyState::OnKeyDown });
 		}
 		return true;
 	}
@@ -118,7 +117,7 @@ namespace ShaderEditor
 	_GInit
 =================================================
 */
-	bool ShaderEditorApp::_GInit (const Message< GpuMsg::DeviceCreated > &)
+	bool ShaderEditorApp::_GInit (const GpuMsg::DeviceCreated &)
 	{
 		// setup shader
 		{
@@ -134,7 +133,7 @@ namespace ShaderEditor
 	_Draw
 =================================================
 */
-	bool ShaderEditorApp::_Draw (const Message< SceneMsg::CameraRequestUpdate > &msg)
+	bool ShaderEditorApp::_Draw (const SceneMsg::CameraRequestUpdate &msg)
 	{
 		// select sample
 		if ( _currSample != _nextSample )
@@ -146,7 +145,7 @@ namespace ShaderEditor
 			_samples[_currSample].Call( _renderer );
 		}
 
-		CHECK_ERR( _renderer.Update( *msg ) );
+		CHECK_ERR( _renderer.Update( msg ) );
 		return true;
 	}
 	
@@ -184,7 +183,7 @@ namespace ShaderEditor
 		if ( not _looping )
 			return false;
 
-		GetMainSystemInstance()->Send< ModuleMsg::Update >({});
+		GetMainSystemInstance()->Send( ModuleMsg::Update{} );
 		return true;
 	}
 
@@ -214,6 +213,6 @@ int main ()
 
 		app.Quit();
 	}
-	GetMainSystemInstance()->Send< ModuleMsg::Delete >({});
+	GetMainSystemInstance()->Send( ModuleMsg::Delete{} );
 	return 0;
 }

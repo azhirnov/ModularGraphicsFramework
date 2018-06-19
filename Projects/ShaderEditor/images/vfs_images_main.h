@@ -1,8 +1,8 @@
 // This is generated file, don't change anything!
 
-#include "Engine/STL/Containers/StringRef.h"
-#include "Engine/STL/Containers/Array.h"
-#include "Engine/STL/Math/BinaryMath.h"
+#include "Core/STL/Containers/StringRef.h"
+#include "Core/STL/Containers/Array.h"
+#include "Core/STL/Math/BinaryMath.h"
 
 namespace vfs_images
 {
