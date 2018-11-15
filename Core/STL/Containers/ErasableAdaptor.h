@@ -102,10 +102,10 @@ namespace ContainerAdaptors
 		CompileTime::EnableIf<_adaptors_hidden_::Has_Erase<C>>  _Create (C &other)
 		{
 			_arr			= other;
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_eraseByIdx		= LAMBDA() (void *ptr, usize index, OUT ArrayRef<T> &result)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.Erase( index );
 									result = arr;
 								};
@@ -115,10 +115,10 @@ namespace ContainerAdaptors
 		CompileTime::EnableIf<_adaptors_hidden_::Has_EraseByIndex<C>>  _Create (C &other)
 		{
 			_arr			= other;
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_eraseByIdx		= LAMBDA() (void *ptr, usize index, OUT ArrayRef<T> &result)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.EraseByIndex( index );
 									result = arr;
 								};
@@ -128,10 +128,10 @@ namespace ContainerAdaptors
 		CompileTime::EnableIf<_adaptors_hidden_::Has_erase<C>>  _Create (C &other)
 		{
 			_arr			= ArrayRef<T>::FromStd( other );
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_eraseByIdx		= LAMBDA() (void *ptr, usize index, OUT ArrayRef<T> &result)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.erase( arr.begin() + index );
 									result = ArrayRef<T>::FromStd( arr );
 								};

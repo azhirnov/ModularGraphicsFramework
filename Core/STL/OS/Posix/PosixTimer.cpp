@@ -6,7 +6,6 @@
 
 #include "Core/STL/OS/Posix/PosixHeader.h"
 #include "Core/STL/OS/Posix/Timer.h"
-#include "Core/STL/Math/BinaryMath.h"
 #include "Core/STL/OS/Base/Date.h"
 
 namespace GX_STL
@@ -14,7 +13,7 @@ namespace GX_STL
 namespace OS
 {
 
-# if not defined( PLATFORM_SDL ) and not defined( GX_USE_STD )
+# ifdef GX_USE_NATIVE_API
 /*
 =================================================
 	GetTime
@@ -39,7 +38,7 @@ namespace OS
 		return TimeL::FromMicroSeconds( ulong(tv.tv_sec) * 1000000 + tv.tv_usec );
 	}
 
-# endif	// not PLATFORM_SDL
+# endif	// GX_USE_NATIVE_API
 //-----------------------------------------------------------------------------
 	
 

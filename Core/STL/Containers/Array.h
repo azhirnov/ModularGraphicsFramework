@@ -154,8 +154,8 @@ namespace GXTypes
 		template <typename E>
 		bool FindAndFastErase (const E &value);
 
-		void Insert (const T& value, usize pos)						{ _Insert<const T>( &value, 1, pos ); }
-		void Insert (T&& value, usize pos)							{ _Insert<T>( &value, 1, pos ); }
+		void Insert (const T& value, usize pos)						{ _Insert<const T>( AddressOf(value), 1, pos ); }
+		void Insert (T&& value, usize pos)							{ _Insert<T>( AddressOf(value), 1, pos ); }
 
 		void Insert (ArrayCRef<T> other, usize pos)					{ _Insert<const T>( other.RawPtr(), other.Count(), pos ); }
 		void Insert (const Self &other, usize pos)					{ Insert( ArrayCRef<T>{other}, pos ); }
@@ -163,11 +163,9 @@ namespace GXTypes
 
 		void PushBack (const T& value);
 		void PushBack (T&& value);
-		//T&   PushBack ()											{ PushBack( T() );  return Back(); }
 
-		void PushFront (const T& value)								{ _Insert<const T>( &value, 1, 0 ); }
-		void PushFront (T&& value)									{ _Insert<T>( &value, 1, 0 ); }
-		//T&   PushFront ()											{ PushFront( T() );  return Front(); }
+		void PushFront (const T& value)								{ _Insert<const T>( AddressOf(value), 1, 0 ); }
+		void PushFront (T&& value)									{ _Insert<T>( AddressOf(value), 1, 0 ); }
 		
 		void PopBack ();
 		void PopFront ();
@@ -194,8 +192,8 @@ namespace GXTypes
 		ND_ usize				Count ()			const		{ return _count; }
 		ND_ usize				Capacity ()			const		{ return _size; }
 		ND_ constexpr usize		MaxCapacity ()		const		{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		ND_ BytesU				Size ()				const		{ return BytesU( Count() * sizeof(T) ); }
-		ND_ BytesU				FullSize ()			const		{ return BytesU( Capacity() * sizeof(T) ); }
+		ND_ BytesU				Size ()				const		{ return Count() * SizeOf<T>; }
+		ND_ BytesU				FullSize ()			const		{ return Capacity() * SizeOf<T>; }
 		ND_ usize				LastIndex ()		const		{ return Count()-1; }
 
 
@@ -364,17 +362,17 @@ namespace GXTypes
 */
 	template <typename T, typename S, typename MC>
 	template <typename B>
-	inline void Array<T,S,MC>::_Insert (B *pArray, const usize count, const usize pos)
+	inline void Array<T,S,MC>::_Insert (B *data, const usize dataSize, const usize pos)
 	{
-		if ( pArray == null or count == 0 )
+		if ( data == null or dataSize == 0 )
 			return;
 
-		if ( pos > _count or (not Empty() and _CheckIntersection( begin(), end(), pArray, pArray + count )) )
+		if ( pos > _count or (not Empty() and _CheckIntersection( begin(), end(), data, data + dataSize )) )
 			RET_VOID;
 		
-		_count += count;
+		const usize	num_move = _count - pos;
 		
-		const usize	num_move = _count - pos - count;
+		_count += dataSize;
 
 		// initialize
 		if ( _size == 0 )
@@ -394,26 +392,26 @@ namespace GXTypes
 			_count = GXMath::Min( _count, _size );
 
 			Strategy_t::Replace( _memory.Pointer(), old_memcont.Pointer(), pos );
-			Strategy_t::Replace( _memory.Pointer() + pos + count, old_memcont.Pointer() + pos, num_move );
+			Strategy_t::Replace( _memory.Pointer() + pos + dataSize, old_memcont.Pointer() + pos, num_move );
 		}
 		else
 		// move
 		{
 			// if not intersected
-			if ( num_move <= count ) {
-				Strategy_t::Replace( _memory.Pointer() + pos + count, _memory.Pointer() + pos, num_move, true );
+			if ( num_move <= dataSize ) {
+				Strategy_t::Replace( _memory.Pointer() + pos + dataSize, _memory.Pointer() + pos, num_move, true );
 			}
 			else {
 				for (usize i = 0; i < num_move; ++i) {
-					Strategy_t::Replace( _memory.Pointer() + _count-1 - i, _memory.Pointer() + _count-1 - count - i, 1, true );
+					Strategy_t::Replace( _memory.Pointer() + _count-1 - i, _memory.Pointer() + _count-1 - dataSize - i, 1, true );
 				}
 			}
 		}
 
 		if_constexpr( TypeTraits::IsConst<B> )
-			Strategy_t::Copy( _memory.Pointer() + pos, pArray, count );
+			Strategy_t::Copy( _memory.Pointer() + pos, data, dataSize );
 		else
-			Strategy_t::Move( _memory.Pointer() + pos, Cast<T *>(pArray), count );
+			Strategy_t::Move( _memory.Pointer() + pos, Cast<T *>(data), dataSize );
 	}
 	
 /*
@@ -425,7 +423,7 @@ namespace GXTypes
 	inline bool Array<T,S,MC>::At (const usize index, OUT T& value) const
 	{
 		if ( index >= Count() )  return false;
-		Strategy_t::Copy( &value, _memory.Pointer() + index, 1 );
+		Strategy_t::Copy( AddressOf(value), _memory.Pointer() + index, 1 );
 		return true;
 	}
 	
@@ -438,7 +436,7 @@ namespace GXTypes
 	inline bool Array<T,S,MC>::Set (const usize index, const T &value)
 	{
 		if ( index >= Count() ) return false;
-		Strategy_t::Copy( _memory.Pointer() + index, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + index, AddressOf(value), 1 );
 		return true;
 	}
 	
@@ -451,7 +449,7 @@ namespace GXTypes
 	inline bool Array<T,S,MC>::Set (const usize index, T&& value)
 	{
 		if ( index >= Count() ) return false;
-		Strategy_t::Move( _memory.Pointer() + index, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + index, AddressOf(value), 1 );
 		return true;
 	}
 	
@@ -712,7 +710,7 @@ namespace GXTypes
 		else
 		{
 			Strategy_t::Destroy( _memory.Pointer() + pos, 1 );
-			Strategy_t::Replace( _memory.Pointer() + pos, &Back(), 1, true );
+			Strategy_t::Replace( _memory.Pointer() + pos, AddressOf(Back()), 1, true );
 			--_count;
 		}
 	}
@@ -728,7 +726,7 @@ namespace GXTypes
 		if ( _count >= _size )
 			_Reallocate( _count + 1 );
 
-		Strategy_t::Copy( _memory.Pointer() + _count, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + _count, AddressOf(value), 1 );
 		++_count;
 	}
 	
@@ -743,7 +741,7 @@ namespace GXTypes
 		if ( _count >= _size )
 			_Reallocate( _count + 1 );
 
-		Strategy_t::Move( _memory.Pointer() + _count, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + _count, AddressOf(value), 1 );
 		++_count;
 	}
 	
@@ -846,9 +844,9 @@ namespace GXTypes
 			RET_VOID;
 
 		T	temp;
-		Strategy_t::Replace( &temp,							_memory.Pointer() + second,	1 );
+		Strategy_t::Replace( AddressOf(temp),				_memory.Pointer() + second,	1 );
 		Strategy_t::Replace( _memory.Pointer() + second,	_memory.Pointer() + first,	1 );
-		Strategy_t::Replace( _memory.Pointer() + first,		&temp,						1 );
+		Strategy_t::Replace( _memory.Pointer() + first,		AddressOf(temp),			1 );
 	}
 	
 /*

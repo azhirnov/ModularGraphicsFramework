@@ -39,7 +39,7 @@ namespace GXTypes
 		
 		template <typename T>
 		forceinline VariantRef (T &ref, NonVariantRef<T> = 0) :
-			_reference( static_cast<void *>( &ref ) ),
+			_reference( static_cast<void *>(AddressOf( ref )) ),
 			_typeId( TypeIdOf<T>() )
 		{
 			STATIC_ASSERT(( not CompileTime::IsSameTypes< T, VariantRef > ));
@@ -118,46 +118,6 @@ namespace GXTypes
 		}
 	};
 
-
-
-	//
-	// Variant Array Ref		// TODO
-	//
-	/*
-	struct VariantArrayRef
-	{
-	// variables
-	private:
-		void *		_reference;
-		TypeId		_typeId;
-		
-
-	// methods
-	public:
-		VariantArrayRef (GX_DEFCTOR) : _reference(null)
-		{}
-
-		template <typename T>
-		explicit VariantArrayRef (ArrayRef<T> &ref) :
-			_reference( static_cast<void *>( &ref ) ),
-			_typeId( TypeIdOf<T>() )
-		{}
-
-		forceinline TypeId		GetValueTypeId () const
-		{
-			return _typeId;
-		}
-
-
-		template <typename T>
-		forceinline ArrayRef<T> &	Get () const
-		{
-			CHECK( IsType<T>() );
-			return *GetPtr<T>();
-		}
-
-	};
-	*/
 
 
 	//

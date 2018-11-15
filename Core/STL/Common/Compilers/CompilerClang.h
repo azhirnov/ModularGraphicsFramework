@@ -90,6 +90,10 @@
 #define GX_BRANCH_EXPECT( _expr_ )			__builtin_expect( !!(_expr_), 1 )
 #define GX_BRANCH_EXPECT_FALSE( _expr_ )	__builtin_expect( !!(_expr_), 0 )
 
+// calling conventions
+#define GX_CDECL					__attribute__((cdecl))
+#define GX_THISCALL					__attribute__((thiscall))
+#define GX_STDCALL					__attribute__((stdcall))
 //-------------------------------------------------------------------
 
 
@@ -221,12 +225,17 @@
 //#define GX_PRAGMA		_Pragma
 
 #if defined( PLATFORM_ANDROID )
-#	define GX_BREAK_POINT()		{}
+#	define GX_BREAK_POINT()			{}
 #else
 #	include <csignal>
-#	define GX_BREAK_POINT()		std::raise(SIGINT)
-//#	define GX_BREAK_POINT()		__asm__("int3")		// or asm("int $3");
+#	define GX_BREAK_POINT()			std::raise(SIGINT)
+//#	define GX_BREAK_POINT()			__asm__("int3")		// or asm("int $3");
 #endif
+
+
+// TODO
+// compiler barrier to prevent instruction reordering
+//#define GX_COMPILER_BARRIER()
 
 
 // TODO: check

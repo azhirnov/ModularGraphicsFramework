@@ -2,10 +2,9 @@
 
 #include "Core/STL/Common/Platforms.h"
 
-#if defined( PLATFORM_BASE_POSIX ) and not defined( PLATFORM_SDL )
+#if defined( PLATFORM_BASE_POSIX ) and defined( GX_USE_NATIVE_API )
 
 #include "Core/STL/OS/Posix/SyncPrimitives.h"
-#include "Core/STL/Math/BinaryMath.h"
 
 namespace GX_STL
 {
@@ -17,13 +16,20 @@ namespace OS
 	constructor
 =================================================
 */
-	CriticalSection::CriticalSection ()
+	Mutex::Mutex ()
 	{
 		static const pthread_mutex_t	tmp = PTHREAD_MUTEX_INITIALIZER;
 
 		_mutex = tmp;
-
-		_Create();
+		
+#	if 1
+        ::pthread_mutex_init( OUT &_mutex, null ) == 0;
+#	else
+        pthread_mutexattr_t attr;
+        ::pthread_mutexattr_init( &attr );
+        ::pthread_mutexattr_settype( &attr, PTHREAD_MUTEX_RECURSIVE );
+        ::pthread_mutex_init( &_mutex, &attr ) == 0;
+#	endif
 	}
 	
 /*
@@ -31,41 +37,9 @@ namespace OS
 	destructor
 =================================================
 */
-	CriticalSection::~CriticalSection ()
+	Mutex::~Mutex ()
 	{
-		_Delete();
-	}
-	
-/*
-=================================================
-	_Create
-=================================================
-*/
-	bool CriticalSection::_Create ()
-	{
-		_Delete();
-		_inited = ::pthread_mutex_init( OUT &_mutex, null ) == 0;
-		return IsValid();
-	}
-	
-/*
-=================================================
-	_Delete
-=================================================
-*/
-	bool CriticalSection::_Delete ()
-	{
-		bool	ret = true;
-
-		if ( IsValid() )
-		{
-			static const pthread_mutex_t	tmp = PTHREAD_MUTEX_INITIALIZER;
-
-			ret = ::pthread_mutex_destroy( &_mutex ) == 0;
-			_mutex  = tmp;
-			_inited = false;
-		}
-		return ret;
+		::pthread_mutex_destroy( &_mutex );
 	}
 	
 /*
@@ -73,9 +47,8 @@ namespace OS
 	Lock
 =================================================
 */
-	void CriticalSection::Lock ()
+	void Mutex::Lock ()
 	{
-		ASSERT( IsValid() );
 		bool	res = ::pthread_mutex_lock( &_mutex ) == 0;
 		ASSERT( res );
 	}
@@ -85,9 +58,8 @@ namespace OS
 	TryLock
 =================================================
 */
-	bool CriticalSection::TryLock ()
+	bool Mutex::TryLock ()
 	{
-		ASSERT( IsValid() );
 		return ::pthread_mutex_trylock( &_mutex ) == 0;
 	}
 	
@@ -96,9 +68,8 @@ namespace OS
 	Unlock
 =================================================
 */
-	void CriticalSection::Unlock ()
+	void Mutex::Unlock ()
 	{
-		ASSERT( IsValid() );
 		bool	res = ::pthread_mutex_unlock( &_mutex ) == 0;
 		ASSERT( res );
 	}
@@ -111,9 +82,9 @@ namespace OS
 	constructor
 =================================================
 */
-	ReadWriteSync::ReadWriteSync (): _inited(false)
+	ReadWriteSync::ReadWriteSync ()
 	{
-		_Create();
+		::pthread_rwlock_init( OUT &_rwlock, null );
 	}
 	
 /*
@@ -123,33 +94,7 @@ namespace OS
 */
 	ReadWriteSync::~ReadWriteSync ()
 	{
-		_Delete();
-	}
-	
-/*
-=================================================
-	_Create
-=================================================
-*/
-	bool ReadWriteSync::_Create ()
-	{
-		_Delete();
-		_inited = ::pthread_rwlock_init( OUT &_rwlock, null ) == 0;
-		return IsValid();
-	}
-	
-/*
-=================================================
-	_Delete
-=================================================
-*/
-	void ReadWriteSync::_Delete ()
-	{
-		if ( IsValid() )
-		{
-			::pthread_rwlock_destroy( &_rwlock );
-			_inited = false;
-		}
+		::pthread_rwlock_destroy( &_rwlock );
 	}
 	
 /*
@@ -159,7 +104,6 @@ namespace OS
 */
 	void ReadWriteSync::LockWrite ()
 	{
-		ASSERT( IsValid() );
 		bool	res = ::pthread_rwlock_wrlock( &_rwlock ) == 0;
 		ASSERT( res );
 	}
@@ -171,7 +115,6 @@ namespace OS
 */
 	bool ReadWriteSync::TryLockWrite ()
 	{
-		ASSERT( IsValid() );
 		return ::pthread_rwlock_trywrlock( &_rwlock ) == 0;
 	}
 	
@@ -182,7 +125,6 @@ namespace OS
 */
 	void ReadWriteSync::UnlockWrite ()
 	{
-		ASSERT( IsValid() );
 		bool	res = ::pthread_rwlock_unlock( &_rwlock ) == 0;
 		ASSERT( res );
 	}
@@ -194,7 +136,6 @@ namespace OS
 */
 	void ReadWriteSync::LockRead ()
 	{
-		ASSERT( IsValid() );
 		bool	res = ::pthread_rwlock_rdlock( &_rwlock ) == 0;
 		ASSERT( res );
 	}
@@ -206,7 +147,6 @@ namespace OS
 */
 	bool ReadWriteSync::TryLockRead ()
 	{
-		ASSERT( IsValid() );
 		return ::pthread_rwlock_tryrdlock( &_rwlock ) == 0;
 	}
 	
@@ -217,7 +157,6 @@ namespace OS
 */
 	void ReadWriteSync::UnlockRead ()
 	{
-		ASSERT( IsValid() );
 		bool	res = ::pthread_rwlock_unlock( &_rwlock ) == 0;
 		ASSERT( res );
 	}
@@ -230,9 +169,9 @@ namespace OS
 	constructor
 =================================================
 */
-	ConditionVariable::ConditionVariable (): _inited(false)
+	ConditionVariable::ConditionVariable ()
 	{
-		_Create();
+		::pthread_cond_init( OUT &_cv, null );
 	}
 	
 /*
@@ -242,33 +181,7 @@ namespace OS
 */
 	ConditionVariable::~ConditionVariable ()
 	{
-		_Delete();
-	}
-	
-/*
-=================================================
-	_Create
-=================================================
-*/
-	bool ConditionVariable::_Create ()
-	{
-		_Delete();
-		_inited = ::pthread_cond_init( OUT &_cv, null ) == 0;
-		return IsValid();
-	}
-	
-/*
-=================================================
-	_Delete
-=================================================
-*/
-	void ConditionVariable::_Delete ()
-	{
-		if ( IsValid() )
-		{
-			::pthread_cond_destroy( &_cv );
-			_inited = false;
-		}
+		::pthread_cond_destroy( &_cv );
 	}
 	
 /*
@@ -278,7 +191,6 @@ namespace OS
 */
 	void ConditionVariable::Signal ()
 	{
-		ASSERT( IsValid() );
 		bool	res = ::pthread_cond_signal( &_cv ) == 0;
 		ASSERT( res );
 	}
@@ -290,7 +202,6 @@ namespace OS
 */
 	void ConditionVariable::Broadcast ()
 	{
-		ASSERT( IsValid() );
 		bool	res = ::pthread_cond_broadcast( &_cv ) == 0;
 		ASSERT( res );
 	}
@@ -300,9 +211,8 @@ namespace OS
 	Wait
 =================================================
 */
-	bool ConditionVariable::Wait (CriticalSection &cs)
+	bool ConditionVariable::Wait (Mutex &cs)
 	{
-		ASSERT( IsValid() );
 		return ::pthread_cond_wait( &_cv, &cs._mutex ) == 0;
 	}
 	
@@ -311,10 +221,8 @@ namespace OS
 	Wait
 =================================================
 */
-	bool ConditionVariable::Wait (CriticalSection &cs, TimeL time)
+	bool ConditionVariable::Wait (Mutex &cs, TimeL time)
 	{
-		ASSERT( IsValid() );
-
 		struct timespec currTime;
 		::clock_gettime( CLOCK_REALTIME, OUT &currTime );
 
@@ -333,9 +241,9 @@ namespace OS
 	constructor
 =================================================
 */
-	Semaphore::Semaphore (GXTypes::uint initialValue) : _inited(false)
+	Semaphore::Semaphore (GXTypes::uint initialValue)
 	{
-		_Create( initialValue );
+		::sem_init( OUT &_sem, 0, initialValue );
 	}
 	
 /*
@@ -345,32 +253,7 @@ namespace OS
 */
 	Semaphore::~Semaphore ()
 	{
-		_Destroy();
-	}
-	
-/*
-=================================================
-	_Create
-=================================================
-*/
-	bool Semaphore::_Create (GXTypes::uint initialValue)
-	{
-		_inited = ::sem_init( OUT &_sem, 0, initialValue );
-		return IsValid();
-	}
-	
-/*
-=================================================
-	_Destroy
-=================================================
-*/
-	void Semaphore::_Destroy ()
-	{
-		if ( _inited )
-		{
-			::sem_destroy( &_sem );
-			_inited = false;
-		}
+		::sem_destroy( &_sem );
 	}
 	
 /*
@@ -424,4 +307,4 @@ namespace OS
 }	// OS
 }	// GX_STL
 
-#endif	// PLATFORM_BASE_POSIX
+#endif	// PLATFORM_BASE_POSIX and GX_USE_NATIVE_API

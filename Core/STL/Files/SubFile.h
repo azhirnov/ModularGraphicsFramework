@@ -59,9 +59,9 @@ namespace GXFile
 		virtual void Close () noexcept override
 		{
 			_file	= null;
-			_offset	= BytesU();
-			_size	= BytesU();
-			_pos	= BytesU();
+			_offset	= 0_b;
+			_size	= 0_b;
+			_pos	= 0_b;
 		}
 		
 		virtual bool IsOpened () const noexcept override
@@ -131,7 +131,7 @@ namespace GXFile
 			}
 			else
 			{
-				_pos = BytesU();
+				_pos = 0_b;
 				return false;
 			}
 		}
@@ -202,9 +202,9 @@ namespace GXFile
 		virtual void Close () noexcept override
 		{
 			_file	= null;
-			_offset	= BytesU();
-			_size	= BytesU();
-			_pos	= BytesU();
+			_offset	= 0_b;
+			_size	= 0_b;
+			_pos	= 0_b;
 		}
 		
 		virtual bool IsOpened () const noexcept override
@@ -274,7 +274,7 @@ namespace GXFile
 			}
 			else
 			{
-				_pos = BytesU();
+				_pos = 0_b;
 				return false;
 			}
 		}

@@ -31,11 +31,11 @@ namespace GXTypes
 
 	// variables
 	protected:
-		Queue_t		_currentQueue,
-					_pendingQueue;
+		Queue_t		_currentQueue;
+		Queue_t		_pendingQueue;
 
-		OS::Mutex	_lockCurrentQueue,
-					_lockPendingQueue;
+		Mutex		_lockCurrentQueue;
+		Mutex		_lockPendingQueue;
 
 
 	// methods

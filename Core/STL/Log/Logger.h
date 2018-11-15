@@ -30,7 +30,7 @@ namespace GXTypes
 	// variables
 	private:
 		GXFile::WFilePtr		_logFile;
-		OS::Mutex				_lockLog;
+		Mutex					_lockLog;
 		String					_crashFileName;
 		String					_buffer;
 		String					_projectFolder;		// project folder name for cuting full file path to short internal path
@@ -83,6 +83,7 @@ namespace GXTypes
 
 
 	private:
+		void _Close ();
 		void _ClearCache ();
 		bool _CmpWithCache (ELog::type type, StringCRef file, usize threadId, int line);
 		

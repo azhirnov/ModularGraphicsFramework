@@ -125,8 +125,8 @@ namespace GXMath
 		
 
 		// methods
-		T		*	ptr ()							{ _CheckAlign();  return &left; }
-		const T *	ptr () const					{ _CheckAlign();  return &left; }
+		T		*	ptr ()							{ _CheckAlign();  return AddressOf(left); }
+		const T *	ptr () const					{ _CheckAlign();  return AddressOf(left); }
 
 		CVec2_t		LeftBottom () const				{ return Vec2_t( left, bottom ); }
 		Vec2_t &	LeftBottom ();
@@ -388,7 +388,7 @@ namespace GXMath
 	ND_ inline Vec<T,2,U> &  Rectangle<T,U>::LeftBottom ()
 	{
 		STATIC_ASSERT( sizeof(left) == (offsetof(Self, bottom) - offsetof(Self, left)) );
-		return *PointerCast< Vec2_t >( &left );
+		return *Cast< Vec2_t *>( &left );
 	}
 	
 /*
@@ -400,7 +400,7 @@ namespace GXMath
 	ND_ inline Vec<T,2,U> &  Rectangle<T,U>::RightTop ()
 	{
 		STATIC_ASSERT( sizeof(right) == (offsetof(Self, top) - offsetof(Self, right)) );
-		return *PointerCast< Vec2_t >( &right );
+		return *Cast< Vec2_t *>( &right );
 	}
 
 /*

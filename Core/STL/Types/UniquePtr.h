@@ -198,20 +198,27 @@ namespace GXTypes
 		}
 
 		
-		ND_ forceinline bool operator == (const Self &right) const	{ return _ptr == right._ptr; }
-		ND_ forceinline bool operator != (const Self &right) const	{ return _ptr != right._ptr; }
-		ND_ forceinline bool operator >  (const Self &right) const	{ return _ptr >  right._ptr; }
-		ND_ forceinline bool operator <  (const Self &right) const	{ return _ptr <  right._ptr; }
-		ND_ forceinline bool operator >= (const Self &right) const	{ return _ptr >= right._ptr; }
-		ND_ forceinline bool operator <= (const Self &right) const	{ return _ptr <= right._ptr; }
-
-		ND_ forceinline bool operator == (const T *right) const		{ return _ptr == right; }
-		ND_ forceinline bool operator != (const T *right) const		{ return _ptr != right; }
-		ND_ forceinline bool operator >  (const T *right) const		{ return _ptr >  right; }
-		ND_ forceinline bool operator <  (const T *right) const		{ return _ptr <  right; }
-		ND_ forceinline bool operator >= (const T *right) const		{ return _ptr >= right; }
-		ND_ forceinline bool operator <= (const T *right) const		{ return _ptr <= right; }
+		ND_ forceinline bool operator == (const Self &right) const		{ return _ptr == right._ptr; }
+		ND_ forceinline bool operator != (const Self &right) const		{ return _ptr != right._ptr; }
+		ND_ forceinline bool operator >  (const Self &right) const		{ return _ptr >  right._ptr; }
+		ND_ forceinline bool operator <  (const Self &right) const		{ return _ptr <  right._ptr; }
+		ND_ forceinline bool operator >= (const Self &right) const		{ return _ptr >= right._ptr; }
+		ND_ forceinline bool operator <= (const Self &right) const		{ return _ptr <= right._ptr; }
 		
+		template <typename T2>	ND_ bool operator == (const T2 *right) const		{ return _ptr == right; }
+		template <typename T2>	ND_ bool operator != (const T2 *right) const		{ return _ptr != right; }
+		template <typename T2>	ND_ bool operator >  (const T2 *right) const		{ return _ptr >  right; }
+		template <typename T2>	ND_ bool operator <  (const T2 *right) const		{ return _ptr <  right; }
+		template <typename T2>	ND_ bool operator >= (const T2 *right) const		{ return _ptr >= right; }
+		template <typename T2>	ND_ bool operator <= (const T2 *right) const		{ return _ptr <= right; }
+		
+		template <typename T2>	ND_ friend bool operator == (const T2 *left, const Self &right)		{ return left == right._ptr; }
+		template <typename T2>	ND_ friend bool operator != (const T2 *left, const Self &right)		{ return left != right._ptr; }
+		template <typename T2>	ND_ friend bool operator >  (const T2 *left, const Self &right)		{ return left >  right._ptr; }
+		template <typename T2>	ND_ friend bool operator <  (const T2 *left, const Self &right)		{ return left <  right._ptr; }
+		template <typename T2>	ND_ friend bool operator >= (const T2 *left, const Self &right)		{ return left >= right._ptr; }
+		template <typename T2>	ND_ friend bool operator <= (const T2 *left, const Self &right)		{ return left <= right._ptr; }
+
 
 		template <typename T2>
 		ND_ forceinline static Self CreateCopy (const T2& value)

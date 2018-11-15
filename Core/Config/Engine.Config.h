@@ -59,21 +59,21 @@ namespace GX_STL
 		static constexpr int	GAPI_MaxColorBuffers			= 8;
 		static constexpr int	GAPI_MaxAttribs					= 16;
 		static constexpr int	GAPI_MaxViewports				= 16;
-		//static constexpr int	GAPI_MaxTextureSize				= 1<<14;
 		static constexpr int	GAPI_MaxRenderPassSubpasses		= 8;
 		static constexpr int	GAPI_MaxSpecializationConstants	= 16;
 		static constexpr int	GAPI_MaxPushConstants			= 32;
 		static constexpr int	GAPI_MaxCopyRegions				= 8;
 		static constexpr int	GAPI_MaxBlitRegions				= 8;
+		static constexpr int	GAPI_MaxResolveRegions			= 8;
 		static constexpr int	GAPI_MaxClearRects				= 16;
 		static constexpr int	GAPI_MaxWaitEvents				= 8;
 		static constexpr int	GAPI_MaxWaitFence				= 8;
 		static constexpr int	GAPI_MaxWaitSemaphores			= 8;
+		static constexpr int	GAPI_MaxSparseMemoryParts		= 8;
+		static constexpr int	GAPI_MaxSparseResources			= 8;
+		static constexpr int	GAPI_MaxBarriers				= 16;
 
 		static constexpr int	OS_MaxDisplays					= 8;
-
-		// Engine.FrameGraph
-		static constexpr int	FG_MaxTaskDependencies			= 8;
 	};
 
 }	// GX_STL

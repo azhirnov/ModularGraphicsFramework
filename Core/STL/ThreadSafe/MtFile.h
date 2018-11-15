@@ -17,8 +17,8 @@ namespace GXFile
 	{
 	// variables
 	private:
-		RFilePtr			_file;
-		mutable OS::Mutex	_lock;
+		RFilePtr		_file;
+		mutable Mutex	_lock;
 
 
 	// methods
@@ -133,8 +133,8 @@ namespace GXFile
 	{
 	// variables
 	private:
-		WFilePtr			_file;
-		mutable OS::Mutex	_lock;
+		WFilePtr		_file;
+		mutable Mutex	_lock;
 
 
 	// methods

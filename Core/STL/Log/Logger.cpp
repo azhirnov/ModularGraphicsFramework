@@ -5,7 +5,6 @@
 #include "Core/STL/Algorithms/StringParser.h"
 #include "Core/STL/Math/Rand/Pseudorandom.h"
 #include "Core/STL/Math/MathTypeCast.h"
-#include "Core/STL/Math/BinaryMath.h"
 #include "Core/STL/Math/Interpolations.h"
 #include "Core/STL/OS/OSLowLevel.h"
 #include "Core/STL/Types/ScopeSetter.h"
@@ -234,6 +233,16 @@ namespace GXTypes
 	{
 		SCOPELOCK( _lockLog );
 
+		_Close();
+	}
+	
+/*
+=================================================
+	_Close
+=================================================
+*/
+	void Logger::_Close ()
+	{
 		if ( not _logFile )
 			return;
 		
@@ -500,7 +509,7 @@ namespace GXTypes
 		// on failure
 		if ( EnumEqMask( type, ELog::Fatal, ELog::_FlagsMask ) )
 		{
-			Close();
+			_Close();
 			GX_BREAK_POINT();
 
 			::exit( EXIT_FAILURE );

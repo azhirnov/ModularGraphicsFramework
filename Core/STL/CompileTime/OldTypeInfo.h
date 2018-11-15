@@ -290,7 +290,7 @@ namespace CompileTime
 			if ( p == null )
 				return true;
 
-			DESCTOP_ONLY( return dynamic_cast< ToType *>( p ) != null );
+			DESKTOP_ONLY( return dynamic_cast< ToType *>( p ) != null );
 			MOBILE_ONLY( return true );
 		}
 

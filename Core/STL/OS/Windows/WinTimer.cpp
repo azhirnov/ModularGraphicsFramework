@@ -1,12 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Core/STL/Common/Platforms.h"
-#include "Core/Config/Engine.Config.h"
+#include "Core/Config/STL.Config.h"
 
 #if defined( PLATFORM_WINDOWS )
 
-#include "Core/STL/OS/Windows/Timer.h"
-#include "Core/STL/Math/BinaryMath.h"
+#include "Core/STL/OS/Windows/WinTimer.h"
 #include "Core/STL/OS/Base/Date.h"
 #include "Core/STL/OS/Windows/WinHeader.h"
 
@@ -15,7 +14,7 @@ namespace GX_STL
 namespace OS
 {
 	
-# if not defined( PLATFORM_SDL ) and not defined( GX_USE_STD )
+# ifdef GX_USE_NATIVE_API
 
 /*
 =================================================
@@ -49,10 +48,10 @@ namespace OS
 	{
 		LARGE_INTEGER	perf_counter;
 		QueryPerformanceCounter( &perf_counter );
-		return TimeL::FromMicroSeconds( (perf_counter.QuadPart * 1000000) / _liFreq.Get<LARGE_INTEGER>().QuadPart );
+		return TimeL::FromMicroSeconds( (perf_counter.QuadPart * 1000'000) / _liFreq.Get<LARGE_INTEGER>().QuadPart );
 	}
 
-# endif	// not PLATFORM_SDL and not GX_USE_STD
+# endif	// GX_USE_NATIVE_API
 //-----------------------------------------------------------------------------
 	
 

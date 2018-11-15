@@ -113,6 +113,10 @@
 #define GX_BRANCH_EXPECT( _expr_ )			(_expr_)
 #define GX_BRANCH_EXPECT_FALSE( _expr_ )	(_expr_)
 
+// calling conventions
+#define GX_CDECL					__cdecl
+#define GX_THISCALL					__thiscall
+#define GX_STDCALL					__stdcall
 //-------------------------------------------------------------------
 
 
@@ -300,7 +304,23 @@
 #endif
 
 
+// enable/disable checks for enums
+#define ENABLE_ENUM_CHECKS() \
+	__pragma (warning (push)) \
+	__pragma (warning (error: 4061)) /*enumerator 'identifier' in switch of enum 'enumeration' is not explicitly handled by a case label*/ \
+	__pragma (warning (error: 4062)) /*enumerator 'identifier' in switch of enum 'enumeration' is not handled*/ \
+	__pragma (warning (error: 4063)) /*case 'number' is not a valid value for switch of enum 'type'*/
+
+#define DISABLE_ENUM_CHECKS() \
+	__pragma (warning (pop))
+
+
 // Intrin for MSVC and Windows Platform //
 #include <intrin.h>
+
+
+// compiler barrier to prevent instruction reordering
+#define GX_COMPILER_BARRIER()	_ReadWriteBarrier()
+
 
 #endif	// COMPILER_MSVC

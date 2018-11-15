@@ -146,6 +146,7 @@ namespace GXMath
 
 		struct Html
 		{
+			// see https://www.w3schools.com/colors/colors_names.asp
 #			define __DEF_COLOR( _name_, _color_ )	static color4u	_name_ () { return color4u().FromIntRGB( _color_ ); }
 
 			__DEF_COLOR( AliceBlue,				0xF0F8FF )
@@ -308,9 +309,6 @@ namespace GXMath
 		
 		template <typename T>
 		color4f (const Vec<T,4> &v): float4( ColorUtils::Convert<float>( v ) ) {}
-
-		//operator float4 & ()			{ return static_cast< float4& >( *this ); }
-		//operator float4   () const		{ return float4( x, y, z, w ); }
 
 		Value_t		R ()	const		{ return (*this)[0]; }
 		Value_t &	R ()				{ return (*this)[0]; }

@@ -1,14 +1,14 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Core/STL/Common/Platforms.h"
-#include "Core/Config/Engine.Config.h"
+#include "Core/Config/STL.Config.h"
 
-#if defined( PLATFORM_WINDOWS ) and not defined( PLATFORM_SDL )
+#if defined( PLATFORM_WINDOWS ) and defined( GX_USE_NATIVE_API )
 
-#include "Core/STL/OS/Windows/SyncPrimitives.h"
+#include "Core/STL/OS/Windows/WinSyncPrimitives.h"
+#include "Core/STL/OS/Windows/WinThread.h"
 #include "Core/STL/Algorithms/ArrayUtils.h"
-#include "Core/STL/Math/BinaryMath.h"
-#include "Core/STL/OS/Windows/Library.h"
+#include "Core/STL/OS/Windows/WinLibrary.h"
 #include "Core/STL/OS/Base/ReadWriteSyncEmulation.h"
 #include "Core/STL/OS/Base/ConditionVariableEmulation.h"
 #include "Core/STL/OS/Windows/WinHeader.h"
@@ -23,12 +23,11 @@ namespace OS
 	constructor
 =================================================
 */
-	CriticalSection::CriticalSection () :
-		_crSection( UninitializedT<CRITICAL_SECTION>() ),
-		_inited(false)
+	Mutex::Mutex () :
+		_crSection{ UninitializedT<CRITICAL_SECTION>() }
+		DEBUG_ONLY(, _threadId{ UMax } )
 	{
 		::InitializeCriticalSection( &_crSection.Get<CRITICAL_SECTION>() );
-		_inited = true;
 	}
 	
 /*
@@ -36,24 +35,9 @@ namespace OS
 	destructor
 =================================================
 */
-	CriticalSection::~CriticalSection ()
+	Mutex::~Mutex ()
 	{
-		_Delete();
-	}
-	
-/*
-=================================================
-	_Delete
-=================================================
-*/
-	void CriticalSection::_Delete ()
-	{
-		if ( _inited )
-		{
-			::DeleteCriticalSection( &_crSection.Get<CRITICAL_SECTION>() );
-
-			_inited = false;
-		}
+		::DeleteCriticalSection( &_crSection.Get<CRITICAL_SECTION>() );
 	}
 	
 /*
@@ -61,10 +45,14 @@ namespace OS
 	Lock
 =================================================
 */
-	void CriticalSection::Lock ()
+	void Mutex::Lock ()
 	{
-		ASSERT( IsValid() );
 		::EnterCriticalSection( &_crSection.Get<CRITICAL_SECTION>() );
+
+		DEBUG_ONLY(
+			ASSERT( _threadId == UMax );	// check for recursion
+			_threadId = CurrentThread::GetCurrentThreadId()
+		);
 	}
 	
 /*
@@ -72,10 +60,17 @@ namespace OS
 	TryLock
 =================================================
 */
-	bool CriticalSection::TryLock ()
+	bool Mutex::TryLock ()
 	{
-		ASSERT( IsValid() );
-		return ::TryEnterCriticalSection( &_crSection.Get<CRITICAL_SECTION>() ) != 0;
+		bool res = ::TryEnterCriticalSection( &_crSection.Get<CRITICAL_SECTION>() ) != 0;
+
+		DEBUG_ONLY(
+		if ( res ) {
+			ASSERT( _threadId == UMax );	// check for recursion
+			_threadId = CurrentThread::GetCurrentThreadId();
+		})
+
+		return res;
 	}
 	
 /*
@@ -83,9 +78,10 @@ namespace OS
 	Unlock
 =================================================
 */
-	void CriticalSection::Unlock ()
+	void Mutex::Unlock ()
 	{
-		ASSERT( IsValid() );
+		DEBUG_ONLY( _threadId = UMax );
+
 		::LeaveCriticalSection( &_crSection.Get<CRITICAL_SECTION>() );
 	}
 
@@ -113,7 +109,7 @@ namespace OS
 	template <typename T, typename B>
 	inline T * HandleToPointer (const B& h)
 	{
-		return PointerCast< T >( h->Ptr );
+		return Cast< T *>( h->Ptr );
 	}
 
 	template <typename T>
@@ -326,7 +322,7 @@ namespace OS
 	typedef void	(CALLBACK *PWakeConditionVariableProc_t)	  (INOUT PCONDITION_VARIABLE ConditionVariable);
 	typedef void	(CALLBACK *PWakeAllConditionVariableProc_t)	  (INOUT PCONDITION_VARIABLE ConditionVariable);
 	typedef BOOL	(CALLBACK *PSleepConditionVariableCSProc_t)	  (INOUT PCONDITION_VARIABLE ConditionVariable,
-																	INOUT PCRITICAL_SECTION CriticalSection,
+																	INOUT PCRITICAL_SECTION Mutex,
 																	        DWORD dwMilliseconds);
 	typedef BOOL	(CALLBACK *PSleepConditionVariableSRWProc_t)  (INOUT PCONDITION_VARIABLE ConditionVariable,
 																	INOUT PSRWLOCK SRWLock,
@@ -357,7 +353,7 @@ namespace OS
 	static BOOL CALLBACK DefSleepConditionVariableCS (INOUT PCONDITION_VARIABLE /*cv*/,
 									INOUT PCRITICAL_SECTION /*cs*/, DWORD /*dwMilliseconds*/)
 	{
-		//CriticalSection	tmp( *cs );
+		//Mutex	tmp( *cs );
 		//BOOL	res = HandleToPointer< TDefConditionVariable >( cv )->Wait( tmp, dwMilliseconds );
 		//tmp._inited = false;
 		//return res;
@@ -436,13 +432,12 @@ namespace OS
 =================================================
 */
 	ConditionVariable::ConditionVariable () :
-		_cv( UninitializedT<CONDITION_VARIABLE>() ),
-		_inited(false)
+		_cv( UninitializedT<CONDITION_VARIABLE>() )
 	{
 		if ( not _isInitialized )
 			_InitCondVarFuncPointers();
 
-		_Create();
+		_InitializeConditionVariable( &_cv.Get<CONDITION_VARIABLE>() );
 	}
 	
 /*
@@ -452,34 +447,7 @@ namespace OS
 */
 	ConditionVariable::~ConditionVariable ()
 	{
-		_Destroy();
-	}
-	
-/*
-=================================================
-	_Create
-=================================================
-*/
-	bool ConditionVariable::_Create ()
-	{
-		_Destroy();
-		_InitializeConditionVariable( &_cv.Get<CONDITION_VARIABLE>() );
-		_inited = true;
-		return IsValid();
-	}
-	
-/*
-=================================================
-	_Destroy
-=================================================
-*/
-	void ConditionVariable::_Destroy ()
-	{
-		if ( IsValid() )
-		{
-			_inited = false;
-			_DeleteConditionVariable( &_cv.Get<CONDITION_VARIABLE>() );
-		}
+		_DeleteConditionVariable( &_cv.Get<CONDITION_VARIABLE>() );
 	}
 	
 /*
@@ -489,7 +457,6 @@ namespace OS
 */
 	void ConditionVariable::Signal ()
 	{
-		ASSERT( IsValid() );
 		_WakeConditionVariable( &_cv.Get<CONDITION_VARIABLE>() );
 	}
 	
@@ -500,7 +467,6 @@ namespace OS
 */
 	void ConditionVariable::Broadcast ()
 	{
-		ASSERT( IsValid() );
 		_WakeAllConditionVariable( &_cv.Get<CONDITION_VARIABLE>() );
 	}
 	
@@ -509,9 +475,20 @@ namespace OS
 	Wait
 =================================================
 */
-	bool ConditionVariable::Wait (CriticalSection &cs, TimeL time)
+	bool ConditionVariable::Wait (Mutex &cs)
 	{
-		ASSERT( IsValid() );
+		return _SleepConditionVariableCS( &_cv.Get<CONDITION_VARIABLE>(),
+										  &cs._crSection.Get<CRITICAL_SECTION>(),
+										  INFINITE ) != FALSE;
+	}
+	
+/*
+=================================================
+	Wait
+=================================================
+*/
+	bool ConditionVariable::Wait (Mutex &cs, TimeL time)
+	{
 		return _SleepConditionVariableCS( &_cv.Get<CONDITION_VARIABLE>(),
 										  &cs._crSection.Get<CRITICAL_SECTION>(),
 										  (uint) time.MilliSeconds() ) != FALSE;
@@ -529,7 +506,10 @@ namespace OS
 	SyncEvent::SyncEvent (EFlags flags) :
 		_event( UninitializedT<HANDLE>() )
 	{
-		_Create( flags );
+		_event = ::CreateEventA( null,
+								 not EnumEq( flags, AUTO_RESET ),
+								 EnumEq( flags, INIT_STATE_SIGNALED ),
+								 (const char *)null );
 	}
 	
 /*
@@ -539,7 +519,7 @@ namespace OS
 */
 	SyncEvent::~SyncEvent ()
 	{
-		_Delete();
+		::CloseHandle( _event.Get<HANDLE>() );
 	}
 	
 /*
@@ -595,39 +575,6 @@ namespace OS
 
 		return success ? res - WAIT_OBJECT_0 : -1;
 	}
-	
-/*
-=================================================
-	_Create
-=================================================
-*/
-	bool SyncEvent::_Create (EFlags flags)
-	{
-		_Delete();
-		_event = ::CreateEventA( null,
-								 not EnumEq( flags, AUTO_RESET ),
-								 EnumEq( flags, INIT_STATE_SIGNALED ),
-								 (const char *)null );
-		return IsValid();
-	}
-	
-/*
-=================================================
-	_Delete
-=================================================
-*/
-	bool SyncEvent::_Delete()
-	{
-		bool	ret = true;
-
-		if ( IsValid() )
-		{
-			ret		= ::CloseHandle( _event.Get<HANDLE>() ) != FALSE;
-			_event	= null;
-		}
-		return ret;
-	}
-
 //-----------------------------------------------------------------------------
 	
 
@@ -639,7 +586,7 @@ namespace OS
 */
 	Semaphore::Semaphore (uint initialValue) : _sem( UninitializedT<HANDLE>() )
 	{
-		_Create( initialValue );
+		_sem = ::CreateSemaphoreA( null, initialValue, MaxValue<int>(), (const char *)null );
 	}
 	
 /*
@@ -649,7 +596,12 @@ namespace OS
 */
 	Semaphore::~Semaphore ()
 	{
-		_Destroy();
+		if ( _sem.IsNotNull<HANDLE>() )
+		{
+			::CloseHandle( _sem.Get<HANDLE>() );
+
+			_sem.Get<HANDLE>() = null;
+		}
 	}
 	
 /*
@@ -695,37 +647,10 @@ namespace OS
 		TODO( "GetValue" );
 		return 0;
 	}
-	
-/*
-=================================================
-	_Create
-=================================================
-*/
-	bool Semaphore::_Create (uint initialValue)
-	{
-		_sem = ::CreateSemaphoreA( null, initialValue, MaxValue<int>(), (const char *)null );
-		return IsValid();
-	}
-	
-/*
-=================================================
-	_Delete
-=================================================
-*/
-	void Semaphore::_Destroy ()
-	{
-		if ( _sem.IsNotNull<HANDLE>() )
-		{
-			::CloseHandle( _sem.Get<HANDLE>() );
-
-			_sem.Get<HANDLE>() = null;
-		}
-	}
-		
 //-----------------------------------------------------------------------------
 
 
 }	// OS
 }	// GX_STL
 
-#endif	// PLATFORM_WINDOWS
+#endif	// PLATFORM_WINDOWS and GX_USE_NATIVE_API

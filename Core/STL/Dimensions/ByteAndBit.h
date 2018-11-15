@@ -4,26 +4,12 @@
 
 #include "Core/STL/CompileTime/TypeListHelpers.h"
 #include "Core/STL/Common/Cast.h"
+#include "Core/STL/Math/OverflowCheck.h"
 
 namespace GX_STL
 {
 namespace GXTypes
 {
-	
-	template <typename T> struct Bytes;		// literals:	b, Kb, Mb, Gb 
-	template <typename T> struct Bits;		// literals:	bit, Kbit, Mbit, Gbit
-
-	typedef Bytes<usize>	BytesU;
-	typedef Bytes<isize>	BytesI;
-	typedef Bits<usize>		BitsU;
-	typedef Bits<isize>		BitsI;
-
-	typedef Bytes<ulong>	BytesUL;
-	typedef Bytes<ilong>	BytesL;
-	typedef Bits<ulong>		BitsUL;
-	typedef Bits<ilong>		BitsL;
-
-
 
 	//
 	// Bytes
@@ -32,15 +18,14 @@ namespace GXTypes
 	template <typename T>
 	struct Bytes :	public CompileTime::CopyQualifiers< T >
 	{
-		STATIC_ASSERT( CompileTime::IsInteger<T> and
-					   CompileTime::IsScalar<T> );
+		STATIC_ASSERT( CompileTime::IsInteger<T> and CompileTime::IsScalar<T> );
 
 	// types
 	public:
-		typedef Bytes<T>							Self;
-		typedef T									Value_t;
-		typedef CompileTime::NearInt::FromType<T>	Int_t;
-		typedef CompileTime::NearUInt::FromType<T>	UInt_t;
+		using Self		= Bytes<T>;
+		using Value_t	= T;
+		using Int_t		= CompileTime::NearInt::FromType<T>;
+		using UInt_t	= CompileTime::NearUInt::FromType<T>;
 
 
 	// variables
@@ -78,32 +63,22 @@ namespace GXTypes
 		ND_ explicit constexpr operator uint ()		const	{ return Cast<uint>( _value ); }
 		ND_ explicit constexpr operator ulong ()	const	{ return Cast<ulong>( _value ); }
 
-		ND_				void *		ToVoidPtr ()			{ return ReferenceCast<void *>( usize( *this ) ); }
-		ND_ constexpr const void *	ToVoidPtr ()	const	{ return ReferenceCast<const void *>( usize( *this ) ); }
+		ND_ void *	ToVoidPtr ()					const	{ return ReferenceCast<void *>( usize(_value) ); }
+
 
 		// move any pointer
 		template <typename B>
-		ND_ friend B const*	operator + (B const *left, const Bytes<T> &right)
+		ND_ friend B *		operator + (B *left, const Bytes<T> &right)
 		{
-			return PointerCast<B>( PointerCast<byte>(left) + right._value );
+			ASSERT( GXMath::OverflowChecker::AdditionIsSafe( usize(left), right._value ) );
+			return (B*)( usize(left) + right._value );
 		}
 		
 		template <typename B>
-		ND_ friend B *			operator + (B *left, const Bytes<T> &right)
+		ND_ friend B *		operator - (B *left, const Bytes<T> &right)
 		{
-			return PointerCast<B>( PointerCast<byte>(left) + right._value );
-		}
-
-		template <typename B>
-		ND_ friend B const*	operator - (B const *left, const Bytes<T> &right)
-		{
-			return PointerCast<B>( PointerCast<byte>(left) - right._value );
-		}
-		
-		template <typename B>
-		ND_ friend B *			operator - (B *left, const Bytes<T> &right)
-		{
-			return PointerCast<B>( PointerCast<byte>(left) - right._value );
+			ASSERT( GXMath::OverflowChecker::SubtractionIsSafe( usize(left), right._value ) );
+			return (B*)( usize(left) - right._value );
 		}
 
 
@@ -121,9 +96,9 @@ namespace GXTypes
 		ND_ constexpr B		Gb ()	const				{ return B(_value) / (B(1) << 30); }
 
 		Self &	SetBytes (T value)						{ return (*this = FromBytes( value )); }
-		Self &	SetKb (T value)							{ return (*this = FromBytes( value )); }
-		Self &	SetMb (T value)							{ return (*this = FromBytes( value )); }
-		Self &	SetGb (T value)							{ return (*this = FromBytes( value )); }
+		Self &	SetKb (T value)							{ return (*this = FromKb( value )); }
+		Self &	SetMb (T value)							{ return (*this = FromMb( value )); }
+		Self &	SetGb (T value)							{ return (*this = FromGb( value )); }
 
 		ND_ static constexpr Self	FromBytes (T value)	{ return Self( value ); }
 		ND_ static constexpr Self	FromKb (T value)	{ return Self( value << 10 ); }
@@ -153,10 +128,10 @@ namespace GXTypes
 
 	// types
 	public:
-		typedef Bits<T>								Self;
-		typedef T									Value_t;
-		typedef CompileTime::NearInt::FromType<T>	Int_t;
-		typedef CompileTime::NearUInt::FromType<T>	UInt_t;
+		using Self		= Bits<T>;
+		using Value_t	= T;
+		using Int_t		= CompileTime::NearInt::FromType<T>;
+		using UInt_t	= CompileTime::NearUInt::FromType<T>;
 
 
 	// variables
@@ -209,13 +184,13 @@ namespace GXTypes
 
 
 	template <typename T>
-	static constexpr BytesU SizeOf = BytesU::SizeOf<T>();
+	static constexpr BytesU  SizeOf = BytesU::SizeOf<T>();
 	
 	template <typename T>
-	static constexpr BytesU	AlignOf = BytesU::AlignOf<T>();
+	static constexpr BytesU	 AlignOf = BytesU::AlignOf<T>();
 
 	template <typename A, typename B>
-	ND_ constexpr forceinline BytesU OffsetOf (A (B::*member))
+	ND_ constexpr forceinline BytesU  OffsetOf (A (B::*member))
 	{
 		const union U {
 			B		b;
@@ -223,7 +198,7 @@ namespace GXTypes
 			U () : tmp(0) {}
 			~U () {}
 		} u;
-		return BytesU( ReferenceCast<usize>(&(u.b.*member)) - ReferenceCast<usize>(&u.b) );
+		return BytesU( usize(std::addressof(u.b.*member)) - usize(std::addressof(u.b)) );
 	}
 
 
@@ -291,12 +266,12 @@ namespace GXTypes
 
 	
 
-	ND_ constexpr BytesU operator "" _b (unsigned long long value)		{ return BytesU::FromBytes( usize(value) ); }
-	ND_ constexpr BytesU operator "" _Kb (unsigned long long value)		{ return BytesU::FromKb( usize(value) ); }
-	ND_ constexpr BytesU operator "" _Mb (unsigned long long value)		{ return BytesU::FromMb( usize(value) ); }
-	ND_ constexpr BytesU operator "" _Gb (unsigned long long value)		{ return BytesU::FromGb( usize(value) ); }
+	ND_ constexpr BytesU operator "" _b (unsigned long long value)		{ return BytesU::FromBytes( value ); }
+	ND_ constexpr BytesU operator "" _Kb (unsigned long long value)		{ return BytesU::FromKb( value ); }
+	ND_ constexpr BytesU operator "" _Mb (unsigned long long value)		{ return BytesU::FromMb( value ); }
+	ND_ constexpr BytesU operator "" _Gb (unsigned long long value)		{ return BytesU::FromGb( value ); }
 
-	ND_ constexpr BitsU  operator "" _bit (unsigned long long value)	{ return BitsU(usize(value)); }
+	ND_ constexpr BitsU  operator "" _bit (unsigned long long value)	{ return BitsU( value ); }
 
 	
 /*

@@ -42,10 +42,10 @@ namespace GXTypes
 		public:
 			PointerWrapper (const T &ptr) : _ptr(ptr) {}
 
-			bool IsValid () const			{ return _ptr != null; }
+			ND_ bool IsValid () const			{ return _ptr != null; }
 
-			decltype(auto) Ref () const		{ return *_ptr; }
-			void const*    Ptr () const		{ return Cast<void const*>(&(*_ptr)); }
+			ND_ decltype(auto) Ref () const		{ return *_ptr; }
+			ND_ void const*    Ptr () const		{ return Cast<void const*>(&(*_ptr)); }
 		};
 		
 
@@ -64,10 +64,10 @@ namespace GXTypes
 			PointerWrapper (const WP &ptr) : _ptr(ptr) {}
 			PointerWrapper (WP &&ptr) : _ptr(RVREF(ptr)) {}
 
-			bool IsValid () const		{ return _ptr.Lock().IsNotNull(); }
+			ND_ bool IsValid () const		{ return _ptr.Lock().IsNotNull(); }
 
-			T &			Ref () const	{ return *_ptr.Lock(); }
-			void const*	Ptr () const	{ return Cast<void const *>(_ptr.RawPtr()); }
+			ND_ T &			Ref () const	{ return *_ptr.Lock(); }
+			ND_ void const*	Ptr () const	{ return Cast<void const *>(_ptr.RawPtr()); }
 		};
 
 
@@ -89,16 +89,16 @@ namespace GXTypes
 
 		// methods
 			virtual ~DelegateInterface ()				{}
-			virtual bool		IsValid ()				const = 0;
-			virtual Ret			Call (Args&&...)		const = 0;
-			//virtual void		Swap (Interface_t *)	= 0;
-			virtual void		MoveTo (BinArrayRef)	= 0;
-			virtual void		CopyTo (BinArrayRef)	const = 0;
-			virtual TypeId		TypeIdOf ()				const = 0;
-			virtual BytesU		Size ()					const = 0;
-			virtual void const*	ClassPtr ()				const = 0;
+			ND_ virtual bool		IsValid ()				const = 0;
+				virtual Ret			Call (Args&&...)		const = 0;
+				//virtual void		Swap (Interface_t *)	= 0;
+				virtual void		MoveTo (BinArrayRef)	= 0;
+				virtual void		CopyTo (BinArrayRef)	const = 0;
+			ND_ virtual TypeId		TypeIdOf ()				const = 0;
+			ND_ virtual BytesU		Size ()					const = 0;
+			ND_ virtual void const*	ClassPtr ()				const = 0;
 		
-			forceinline bool Cmp (const Interface_t *right) const
+			ND_ forceinline bool Cmp (const Interface_t *right) const
 			{
 				const BytesU size = Size();
 				return	( size == right->Size() ) and
@@ -106,7 +106,7 @@ namespace GXTypes
 						UnsafeMem::MemCmp( Cast<const void *>(this), Cast<const void *>(right), size ) == 0;
 			}
 		
-			forceinline bool Less (const Interface_t *right) const
+			ND_ forceinline bool Less (const Interface_t *right) const
 			{
 				const BytesU	size0 = Size();
 				const BytesU	size1 = right->Size();
@@ -148,16 +148,8 @@ namespace GXTypes
 			TypeId		TypeIdOf ()				const override	{ return GXTypes::TypeIdOf( *this ); }
 			BytesU		Size ()					const override	{ return BytesU::SizeOf( *this ); }
 			void const*	ClassPtr ()				const override	{ return null; }
-			
-			void MoveTo (BinArrayRef buf) override
-			{
-				PlacementNew< Self >( buf, RVREF( *this ) );
-			}
-
-			void CopyTo (BinArrayRef buf) const override
-			{
-				PlacementNew< Self >( buf, *this );
-			}
+			void		MoveTo (BinArrayRef buf) override		{ PlacementNew< Self >( buf, RVREF( *this ) ); }
+			void		CopyTo (BinArrayRef buf) const override	{ PlacementNew< Self >( buf, *this ); }
 		};
 		
 
@@ -188,16 +180,8 @@ namespace GXTypes
 			TypeId		TypeIdOf ()				const override	{ return GXTypes::TypeIdOf( *this ); }
 			BytesU		Size ()					const override	{ return BytesU::SizeOf( *this ); }
 			void const*	ClassPtr ()				const override	{ return _classPtr.Ptr(); }
-			
-			void MoveTo (BinArrayRef buf) override
-			{
-				PlacementNew< Self >( buf, RVREF( *this ) );
-			}
-
-			void CopyTo (BinArrayRef buf) const override
-			{
-				PlacementNew< Self >( buf, *this );
-			}
+			void		MoveTo (BinArrayRef buf) override		{ PlacementNew< Self >( buf, RVREF( *this ) ); }
+			void		CopyTo (BinArrayRef buf) const override	{ PlacementNew< Self >( buf, *this ); }
 		};
 		
 
@@ -228,16 +212,8 @@ namespace GXTypes
 			TypeId		TypeIdOf ()				const override	{ return GXTypes::TypeIdOf( *this ); }
 			BytesU		Size ()					const override	{ return BytesU::SizeOf( *this ); }
 			void const*	ClassPtr ()				const override	{ return _classPtr.Ptr(); }
-			
-			void MoveTo (BinArrayRef buf) override
-			{
-				PlacementNew< Self >( buf, RVREF( *this ) );
-			}
-
-			void CopyTo (BinArrayRef buf) const override
-			{
-				PlacementNew< Self >( buf, *this );
-			}
+			void		MoveTo (BinArrayRef buf) override		{ PlacementNew< Self >( buf, RVREF( *this ) ); }
+			void		CopyTo (BinArrayRef buf) const override	{ PlacementNew< Self >( buf, *this ); }
 		};
 
 	}	// _types_hidden_
@@ -321,10 +297,10 @@ namespace GXTypes
 
 		ND_ forceinline bool		IsValid ()					const	{ return _IsCreated() and _Internal()->IsValid(); }
 
-		forceinline Result_t		operator () (Args... args)	const	{ ASSERT( IsValid() );  return _Internal()->Call( FW<Args>(args)... ); }
+			forceinline Result_t	operator () (Args... args)	const	{ ASSERT( IsValid() );  return _Internal()->Call( FW<Args>(args)... ); }
 		
-		forceinline Result_t		Call (Args... args)			const	{ ASSERT( IsValid() );	return _Internal()->Call( FW<Args>(args)... ); }
-		forceinline Result_t		SafeCall (Args... args)		const	{ return IsValid() ? _Internal()->Call( FW<Args>(args)... ) : Result_t(); }
+			forceinline Result_t	Call (Args... args)			const	{ ASSERT( IsValid() );	return _Internal()->Call( FW<Args>(args)... ); }
+			forceinline Result_t	SafeCall (Args... args)		const	{ return IsValid() ? _Internal()->Call( FW<Args>(args)... ) : Result_t(); }
 
 		ND_ forceinline TypeId		GetType ()					const	{ return IsValid() ? _Internal()->TypeIdOf() : TypeId(); }
 
@@ -503,9 +479,9 @@ namespace GXTypes
 		forceinline void Clear ()													{ _delegates.Clear(); }
 
 
-		forceinline void Call (Args... args)						const			{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
+			forceinline void Call (Args... args)					const			{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
 
-		forceinline void operator () (Args... args)					const			{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
+			forceinline void operator () (Args... args)				const			{ FOR( i, _delegates ) { _delegates[i].Call( FW<Args>(args)... ); } }
 
 		ND_ forceinline bool Empty ()								const			{ return _delegates.Empty(); }
 

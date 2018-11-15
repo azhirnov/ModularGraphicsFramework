@@ -19,7 +19,6 @@
 		using Vec2_t		= Vec<T,2,U>;
 		using Vec3_t		= Vec<T,3,U>;
 		using Vec4_t		= Vec<T,4,U>;
-		using Arr_t			= T[I];
 
 		static constexpr uint	STATIC_COUNT = I;
 		static constexpr ulong	UID			 = U;
@@ -41,7 +40,7 @@
 		template <typename B>
 		constexpr explicit Vec (const Vec<B,1,U> &v): x(T(v.x)) {}
 
-		Self& operator = (T X)								{ x = X; return *this; }
+		Self& operator = (T X)							{ x = X; return *this; }
 
 		ND_ constexpr explicit operator T () const		{ return x; }
 #	endif
@@ -331,8 +330,8 @@
 
 
 		// methods
-		ND_ T *			ptr ()										{ _CheckAlign();  return &x; }
-		ND_ T const *	ptr ()	const								{ _CheckAlign();  return &x; }
+		ND_ T *			ptr ()										{ _CheckAlign();  return AddressOf(x); }
+		ND_ T const *	ptr ()	const								{ _CheckAlign();  return AddressOf(x); }
 
 		ND_ static constexpr usize Count ()							{ return I; }
 

@@ -105,7 +105,7 @@ namespace GXTypes
 
 		ND_ bool		Empty ()		const		{ return _count == 0; }
 		ND_ usize		Count ()		const		{ return _count; }
-		ND_ BytesU		Size ()			const		{ return BytesU( _count * sizeof(T) ); }
+		ND_ BytesU		Size ()			const		{ return _count * SizeOf<T>; }
 		ND_ usize		LastIndex ()	const		{ return Count()-1; }
 
 		template <typename Cmp>
@@ -365,7 +365,7 @@ namespace GXTypes
 		STATIC_ASSERT( sizeof(B) % sizeof(T) == 0 );
 		STATIC_ASSERT( CompileTime::IsMemCopyAvailable<B> );
 
-		return ArrayRef<T>( PointerCast<T>( &ref ), sizeof(B) / sizeof(T) );
+		return ArrayRef<T>( Cast<T *>( AddressOf(ref) ), sizeof(B) / sizeof(T) );
 	}
 	
 /*
@@ -472,7 +472,7 @@ namespace GXTypes
 	inline usize ArrayRef<T>::GetIndex (const T &valueRef) const
 	{
 		ASSERT( IsInArray( valueRef ) );
-		return usize( &valueRef - begin() );
+		return usize( AddressOf(valueRef) - begin() );
 	}
 	
 /*
@@ -483,7 +483,7 @@ namespace GXTypes
 	template <typename T>
 	inline bool ArrayRef<T>::IsInArray (const T &valueRef) const
 	{
-		return ( &valueRef >= begin() and &valueRef < end() );
+		return ( AddressOf(valueRef) >= begin() and AddressOf(valueRef) < end() );
 	}
 	
 /*

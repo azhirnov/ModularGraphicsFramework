@@ -3,12 +3,9 @@
 #include "Core/STL/Common/Platforms.h"
 #include "Core/Config/STL.Config.h"
 
-#if defined( PLATFORM_WINDOWS ) and \
-	not defined( PLATFORM_SDL ) and \
-	not defined( GX_USE_STD )
+#if defined( PLATFORM_WINDOWS ) and defined( GX_USE_NATIVE_API )
 
-#include "Core/STL/OS/Windows/Thread.h"
-#include "Core/STL/Math/BinaryMath.h"
+#include "Core/STL/OS/Windows/WinThread.h"
 #include "Core/STL/Math/Interpolations.h"
 #include "Core/STL/OS/Windows/WinHeader.h"
 #include <process.h>
@@ -85,6 +82,43 @@ namespace OS
 		return ::GetCurrentThreadId();
 	}
 	
+/*
+=================================================
+	SetCurrentThreadName
+----
+	from https://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
+=================================================
+*/
+	void CurrentThread::SetCurrentThreadName (StringCRef name)
+	{
+		const DWORD MS_VC_EXCEPTION = 0x406D1388;
+
+		#pragma pack(push,8)  
+		struct THREADNAME_INFO  
+		{  
+			DWORD dwType; // Must be 0x1000.  
+			LPCSTR szName; // Pointer to name (in user addr space).  
+			DWORD dwThreadID; // Thread ID (-1=caller thread).  
+			DWORD dwFlags; // Reserved for future use, must be zero.  
+		};
+		#pragma pack(pop)
+
+		THREADNAME_INFO info;  
+		info.dwType		= 0x1000;  
+		info.szName		= name.cstr();  
+		info.dwThreadID	= ::GetCurrentThreadId();  
+		info.dwFlags	= 0;  
+		
+		#pragma warning(push)  
+		#pragma warning(disable: 6320 6322)  
+		__try{  
+			::RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info );
+		}  
+		__except (EXCEPTION_EXECUTE_HANDLER){  
+		}  
+		#pragma warning(pop)  
+	}
+
 /*
 =================================================
 	Sleep
@@ -189,7 +223,7 @@ namespace OS
 		uint	tmp	= 0;
 		_parameter	= param;
 		_proc		= proc;
-		_thread		= (HANDLE) ::_beginthreadex( null, 0, &_ThreadProcWrapper, this, 0, &tmp );
+		_thread		= (HANDLE) ::_beginthreadex( null, 0, &_ThreadProcWrapper, this, 0, OUT &tmp );
 		_id			= tmp;
 		return IsValid();
 	}
@@ -199,10 +233,8 @@ namespace OS
 	Delete
 =================================================
 */
-	bool Thread::Delete ()
+	void Thread::Delete ()
 	{
-		bool	ret = true;
-
 		if ( IsValid() and not _Wait(10000) )
 		{
 			WARNING( "not complete the function ThreadProc" );
@@ -211,15 +243,13 @@ namespace OS
 
 		if ( IsValid() )
 		{
-			ret		= ::CloseHandle( _thread.Get<HANDLE>() ) != FALSE;
+			::CloseHandle( _thread.Get<HANDLE>() );
 			_thread = null;
 			_id		= 0;
 		}
 
 		_proc		= null;
 		_parameter	= null;
-
-		return ret;
 	}
 		
 /*
@@ -285,4 +315,4 @@ namespace OS
 }	// OS
 }	// GX_STL
 
-#endif	// PLATFORM_WINDOWS and not PLATFORM_SDL and not GX_USE_STD
+#endif	// PLATFORM_WINDOWS and GX_USE_NATIVE_API

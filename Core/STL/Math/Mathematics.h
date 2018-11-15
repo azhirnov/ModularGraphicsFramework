@@ -985,7 +985,7 @@ namespace GXMath
 
 		typedef typename CompileTime::GenType<T,B>				main_t;
 		typedef typename _math_hidden_::ToNearFloat< main_t >	_float_t;
-		return T(::pow( _float_t( x ), _float_t( y ) ));
+		return T(std::pow( _float_t( x ), _float_t( y ) ));
 	}
 
 	template <typename T, typename B, usize I, ulong U>
@@ -1008,7 +1008,7 @@ namespace GXMath
 		ASSERT( x >= T(0) );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::log( _float_t( x ) ));
+		return T(std::log( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1102,7 +1102,7 @@ namespace GXMath
 		ASSERT( x >= T(0) );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::log10( _float_t( x ) ));
+		return T(std::log10( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1124,7 +1124,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::exp( _float_t( x ) ));
+		return T(std::exp( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1146,7 +1146,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::pow( _float_t( 2 ), _float_t( x ) ));
+		return T(std::pow( _float_t( 2 ), _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1168,7 +1168,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::pow( _float_t( 10 ), _float_t( x ) ));
+		return T(std::pow( _float_t( 10 ), _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1305,7 +1305,7 @@ namespace GXMath
 		ASSERT( x >= T(0) );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::sqrt( _float_t( x ) ));
+		return T(std::sqrt( _float_t( x ) ));
 	}
 
 #ifdef GX_FAST_MATH
@@ -1393,14 +1393,14 @@ namespace GXMath
 			forceinline static main_t  Mod (const A& l, const B& r)
 			{
 				typedef _math_hidden_::ToNearFloat< main_t >	_float_t;
-				return main_t(::fmod( _float_t(l), _float_t(r) ));
+				return main_t(std::fmod( _float_t(l), _float_t(r) ));
 			}
 
 			template <typename C>
 			forceinline static main_t  SafeMod (const A& l, const B& r, const C& def)
 			{
 				typedef _math_hidden_::ToNearFloat< main_t >	_float_t;
-				return IsNotZero( r ) ? main_t(::fmod( _float_t(l), _float_t(r) )) : maint_t(def);
+				return IsNotZero( r ) ? main_t(std::fmod( _float_t(l), _float_t(r) )) : maint_t(def);
 			}
 		};
 
@@ -1483,7 +1483,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::floor( _float_t( x ) ));
+		return T(std::floor( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1506,7 +1506,7 @@ namespace GXMath
 		STATIC_ASSERT( CompileTime::IsFloat<T> );
 
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::ceil( _float_t( x ) ));
+		return T(std::ceil( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -1536,7 +1536,7 @@ namespace GXMath
 	#elif 0
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 		_float_t	tmp;
-		return (T) ::modf( _float_t( x ), &tmp );	// -1..1
+		return T(std::modf( _float_t( x ), OUT &tmp ));	// -1..1
 
 	#elif 0
 
@@ -1565,7 +1565,7 @@ namespace GXMath
 
 	#if 1
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::trunc( _float_t( x ) ));
+		return T(std::trunc( _float_t( x ) ));
 
 	#else
 		return CopySign( x, Floor( Abs(x) ) );	// if trunc not supported
@@ -1610,7 +1610,7 @@ namespace GXMath
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 
 		_float_t	i;
-		_float_t	f = ::modf( _float_t( x ), &i );
+		_float_t	f = std::modf( _float_t( x ), OUT &i );
 
 		return ModF_Result<T>( i, f );
 	}
@@ -1783,7 +1783,7 @@ namespace GXMath
 			{
 				typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 
-				return R(::round( _float_t( val ) ));
+				return R(std::round( _float_t( val ) ));
 				//return R( val + ( val > T(0) ? T(0.5) : T(-0.5) ) );	// if round not supported
 			}
 		};
@@ -1796,7 +1796,7 @@ namespace GXMath
 			{
 				typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
 
-				return R(::round( _float_t( val ) ));
+				return R(std::round( _float_t( val ) ));
 				//return (R) Trunc( val + ( val > T(0) ? T(0.5) : T(-0.5) ) );	// if round not supported
 			}
 		};

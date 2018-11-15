@@ -31,11 +31,6 @@ namespace OS
 		{
 		}
 
-		bool IsValid () const
-		{
-			return _signal.IsValid() and _broadcast.IsValid();
-		}
-
 		void Signal ()
 		{
 			_signal.Signal();
@@ -46,7 +41,7 @@ namespace OS
 			_broadcast.Signal();
 		}
 		
-		bool Wait (CriticalSection &cs, TimeL time)
+		bool Wait (Mutex &cs, TimeL time)
 		{
 			cs.Unlock();
 
@@ -69,7 +64,7 @@ namespace OS
 	{
 	// variables
 	private:
-		CriticalSection	_cs;
+		Mutex	_cs;
 		uint			_waiters;
 		SyncEvent		_signal;
 		SyncEvent		_broadcast;
@@ -86,11 +81,6 @@ namespace OS
 
 		~ConditionVariableEmulation_v2 ()
 		{
-		}
-
-		bool IsValid () const
-		{
-			return _signal.IsValid() and _broadcast.IsValid() and _cs.IsValid();
 		}
 
 		void Signal ()
@@ -113,7 +103,7 @@ namespace OS
 				_broadcast.Signal();
 		}
 		
-		bool Wait (CriticalSection &cs, TimeL time)
+		bool Wait (Mutex &cs, TimeL time)
 		{
 			_cs.Lock();
 			++_waiters;

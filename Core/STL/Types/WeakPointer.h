@@ -22,7 +22,6 @@ namespace GXTypes
 		static void	DecRef (Counter_t &rc);
 		static int  Count  (Counter_t &rc);
 		static bool IncShared (Counter_t &rc);
-		static void DecShared (Counter_t &rc);
 	};
 
 
@@ -78,6 +77,7 @@ namespace GXTypes
 		template <typename ToType, typename FromType>
 		static constexpr void _CheckCast (FromType *)
 		{
+			STATIC_ASSERT(	sizeof(FromType) > 0 and sizeof(ToType) > 0 );
 			STATIC_ASSERT(( CompileTime::IsBaseOf< ToType, FromType > or
 							CompileTime::IsBaseOf< FromType, ToType > or
 						    CompileTime::IsSameTypes< ToType, FromType > ));
@@ -97,10 +97,10 @@ namespace GXTypes
 		forceinline WeakPointer (T2 *ptr)
 		{
 			_CheckCast<T>( ptr );
-			_ptr = PointerCast<T>( ptr );
+			_ptr = Cast<T *>( ptr );
 
 			if ( _ptr ) {
-				_counter = Strategy_t::Create( PointerCast<B>( _ptr ) );
+				_counter = Strategy_t::Create( Cast<B *>( _ptr ) );
 				_Inc();
 			}
 		}
@@ -118,7 +118,7 @@ namespace GXTypes
 		{
 			_CheckCast<T>( other._ptr );
 
-			_ptr = PointerCast<T>(other._ptr);
+			_ptr = Cast<T *>(other._ptr);
 			_Inc();
 		}
 
@@ -142,9 +142,7 @@ namespace GXTypes
 		{
 			if ( _ptr and Strategy_t::IncShared( _counter ) )
 			{
-				RC	result( _ptr );
-				Strategy_t::DecShared( _counter );	// TODO: optimize
-				return result;
+				return RC{ *this };
 			}
 			return null;
 		}
@@ -155,7 +153,7 @@ namespace GXTypes
 		ND_ forceinline bool	IsNotNull ()	const		{ return _ptr != null; }
 		ND_ forceinline bool	IsNull ()		const		{ return _ptr; }
 
-		ND_ forceinline T const* RawPtr ()		const		{ return _ptr; }
+		ND_ forceinline T *		RawPtr ()		const		{ return _ptr; }
 
 		
 		template <typename T2>
@@ -166,9 +164,9 @@ namespace GXTypes
 
 			_CheckCast<T>( ptr );
 			_Dec();
-			_ptr = PointerCast<T>( ptr );
+			_ptr = Cast<T *>( ptr );
 			if ( _ptr ) {
-				_counter = Strategy_t::Create( PointerCast<B>( _ptr ) );
+				_counter = Strategy_t::Create( Cast<B *>( _ptr ) );
 			}
 			_Inc();
 			return *this;
@@ -183,7 +181,7 @@ namespace GXTypes
 
 			_CheckCast<T>( right._ptr );
 			_Dec();
-			_ptr		= PointerCast<T>( right._ptr );
+			_ptr		= Cast<T *>( right._ptr );
 			_counter	= right._counter;
 			_Inc();
 			return *this;
@@ -225,7 +223,15 @@ namespace GXTypes
 		_GX_DIM_CMP_OPERATORS_SELF( RawPtr() );
 		_GX_DIM_CMP_OPERATORS_TYPE( RawPtr(), Value_t const, );
 	};
+	
+	
 
+	template <typename T, typename B, typename S>
+	template <typename WS>
+	forceinline SharedPointer<T,B,S>::SharedPointer (const WeakPointer<T,B,WS,S> &wp) : _ptr{ wp.RawPtr() }
+	{
+		// don't increment ref counter!
+	}
 
 }	// GXTypes
 }	// GX_STL

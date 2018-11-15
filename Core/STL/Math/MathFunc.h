@@ -77,7 +77,7 @@ namespace GXMath
 	template <typename T>				inline T		Exp (const T& x);
 	template <typename T>				inline T		Exp2 (const T& x);
 	template <typename T>				inline T		Exp10 (const T& x);
-	template <typename T>				constexpr uint	IntLog2 (const T &x);
+	template <typename T>				constexpr int	IntLog2 (const T &x);
 	template <typename T>				constexpr T		CeilPowerOfTwo (const T& x);
 	template <typename T>				constexpr T		FloorPowerOfTwo (const T& x);
 	template <typename T>				constexpr T		NearPowerOfTwo (const T& x);
@@ -139,21 +139,21 @@ namespace GXMath
 	// Bit Operators
 	//
 
-	template <typename T>				constexpr T		ToBit (Bits<usize> index);
-	template <typename T>				constexpr T		ToMask (Bits<usize> index);
-	template <typename T>				constexpr T		ToMask (Bits<usize> first, Bits<usize> last);
+	template <typename T>				constexpr T		ToBit (BitsU index);
+	template <typename T>				constexpr T		ToMask (BitsU index);
+	template <typename T>				constexpr T		ToMask (BitsU first, BitsU last);
 	template <typename T>				constexpr T		GetMaskForType (const T &type = T());
 
-	template <typename T>				constexpr T		SafeLeftBitShift (const T& x, Bits<usize> shift);	// <<
-	template <typename T>				constexpr T		SafeRightBitShift (const T& x, Bits<usize> shift);	// >>
+	template <typename T>				constexpr T		SafeLeftBitShift (const T& x, BitsU shift);	// <<
+	template <typename T>				constexpr T		SafeRightBitShift (const T& x, BitsU shift);	// >>
 	
-	template <typename T>				constexpr T		BitRotateLeft (const T& x, Bits<usize> shift);
-	template <typename T>				constexpr T		BitRotateRight (const T& x, Bits<usize> shift);
+	template <typename T>				constexpr T		BitRotateLeft (const T& x, BitsU shift);
+	template <typename T>				constexpr T		BitRotateRight (const T& x, BitsU shift);
 	
 	template <typename T>				constexpr T		ReverseBitOrder (const T& x);
 
-	template <typename T>		constexpr Bits<usize>	BitScanReverse (const T& x);	// findMSB
-	template <typename T>		constexpr Bits<usize>	BitScanForward (const T& x);	// findLSB
+	template <typename T>		constexpr BitsU	BitScanReverse (const T& x);	// findMSB
+	template <typename T>		constexpr BitsU	BitScanForward (const T& x);	// findLSB
 
 
 

@@ -2,6 +2,8 @@
 
 #pragma once
 
+#if 0
+
 #include "Core/STL/Files/SubFile.h"
 #include "Core/STL/Containers/StaticArray.h"
 
@@ -208,3 +210,5 @@ namespace GXFile
 
 }	// GXFile
 }	// GX_STL
+
+#endif

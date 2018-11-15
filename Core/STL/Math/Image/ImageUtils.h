@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Core/STL/Math/Color/ColorFormats.h"
-#include "Core/STL/Memory/MemPointer.h"
 
 namespace GX_STL
 {
@@ -216,9 +215,6 @@ struct GXImageUtils : public Noninstancable
 		const S3		dst_off	= S3(dstOff);
 		const S			src_row	= S(AlignedRowSize( src_dim.x, Bytes<B>::template SizeOf<SrcType>(), srcRowAlignInBytes ));
 		const S			dst_row	= S(AlignedRowSize( dst_dim.x, Bytes<B>::template SizeOf<DstType>(), dstRowAlignInBytes ));
-		const void *	src		= Cast<const void *>(srcImage);
-		void *			dst		= Cast<void *>(dstImage);
-
 		const S3		src_size = src_dim - src_off;
 		const S3		dst_size = dst_dim - dst_off;
 			
@@ -241,8 +237,8 @@ struct GXImageUtils : public Noninstancable
 					const Bytes<S>	i = Bytes<S>( src_y_off + sizeof(SrcType) * (x + src_off.x) );
 					const Bytes<S>	j = Bytes<S>( dst_y_off + sizeof(DstType) * (x + dst_off.x) );
 
-					const SrcType *	s = UnsafeMem::MovePointer< SrcType >( src, i );
-					DstType *		d = UnsafeMem::MovePointer< DstType >( dst, j );
+					const SrcType *	s = srcImage + i;
+					DstType *		d = dstImage + j;
 						
 					ColorFormatUtils::ColorFormatConverter::Convert( *d, *s );
 				}
@@ -267,7 +263,6 @@ struct GXImageUtils : public Noninstancable
 		const uint3		dst_dim	= Max( dstDim, Vec<T,3>(1) ).template To<uint3>();
 		const uint3		dst_off	= dstOff.template To<uint3>();
 		const BytesU	dst_row	= AlignedRowSize( dst_dim.x, BytesU::SizeOf<DstType>(), dstRowAlignInBytes );
-		void *			dst		= Cast<void *>(dstImage);
 			
 		CHECK_ERR( All( src_dim <= dst_dim - dst_off ) );
 
@@ -282,7 +277,7 @@ struct GXImageUtils : public Noninstancable
 				for (uint x = 0; x < src_dim.x; ++x)
 				{
 					const BytesU	j = dst_y_off + SizeOf<DstType> * (x + dst_off.x);
-					DstType *		d = UnsafeMem::MovePointer< DstType >( dst, j );
+					DstType *		d = dstImage + j;
 						
 					ColorFormatUtils::ColorFormatConverter::Convert( *d, color );
 				}
@@ -297,7 +292,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename Iterator, typename T, typename ColorType>
-	static bool ForEach (Iterator &iter, const Vec<T,3> &regionDim, ColorType *image,
+	static bool ForEach (Iterator &iter, const Vec<T,3> &regionDim, ColorType *imageData,
 							const Vec<T,3> &offset, const Vec<T,3> &dim,
 							BytesU dstRowAlignInBytes = 1_b)
 	{
@@ -307,7 +302,6 @@ struct GXImageUtils : public Noninstancable
 		const uint3		dst_dim	= Max( dim, Vec<T,3>(1) ).template To<uint3>();
 		const uint3		dst_off	= offset.template To<uint3>();
 		const BytesU	dst_row	= AlignedRowSize( dst_dim.x, BytesU::SizeOf<ColorType>(), dstRowAlignInBytes );
-		void *			dst		= Cast<void *>(image);
 			
 		CHECK_ERR( All( src_dim <= dst_dim - dst_off ) );
 
@@ -322,7 +316,7 @@ struct GXImageUtils : public Noninstancable
 				for (uint x = 0; x < src_dim.x; ++x)
 				{
 					const BytesU	j = dst_y_off + SizeOf<ColorType> * (x + dst_off.x);
-					ColorType *		d = UnsafeMem::MovePointer< ColorType >( dst, j );
+					ColorType *		d = imageData + j;
 						
 					iter( *d, uint3(x,y,z) );
 				}
@@ -337,7 +331,7 @@ struct GXImageUtils : public Noninstancable
 =================================================
 */
 	template <typename T, typename ColorType>
-	ND_ inline static ColorType &  GetPixel (const Vec<T,3> &imageDim, ColorType *image, const Vec<T,3> &pixelCoord, uint rowAlignInBytes = 1)
+	ND_ inline static ColorType &  GetPixel (const Vec<T,3> &imageDim, ColorType *imageData, const Vec<T,3> &pixelCoord, uint rowAlignInBytes = 1)
 	{
 		ASSUME( image != null );
 			
@@ -348,7 +342,7 @@ struct GXImageUtils : public Noninstancable
 			
 		ASSERT( All( coord < dim ) );
 
-		return *UnsafeMem::MovePointer< ColorType *>( image, i );
+		return *(imageData + i);
 	}
 	
 

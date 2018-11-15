@@ -183,19 +183,19 @@ namespace GXTypes
 =================================================
 */
 		template <typename Arr>
-		forceinline decltype(auto) _Range1 (Arr &container)
+		forceinline decltype(auto) _Range1 (Arr &&container)
 		{
 			return _RangeResult< Arr >( container );
 		}
 
 		template <typename Arr>
-		forceinline decltype(auto) _Range1v (Arr &container)
+		forceinline decltype(auto) _Range1v (Arr &&container)
 		{
 			return container;	// already have 'begin' 'end' methods
 		}
 
 		template <typename Arr>
-		forceinline decltype(auto) _Range1i (Arr &container)
+		forceinline decltype(auto) _Range1i (Arr &&container)
 		{
 			return _IndexRangeResult< Arr >( container, 0, CountOf( container )-1 );
 		}
@@ -206,7 +206,7 @@ namespace GXTypes
 =================================================
 */
 		template <typename Arr>
-		forceinline decltype(auto) _Range3 (Arr &container, const usize inFirst, const usize inCount)
+		forceinline decltype(auto) _Range3 (Arr &&container, const usize inFirst, const usize inCount)
 		{
 			const usize	max_count	= CountOf( container );
 			const usize	first		= inFirst < max_count ? inFirst : max_count-1;
@@ -223,12 +223,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename Arr>
-	ND_ forceinline decltype(auto)  Range (Arr &container)
+	ND_ forceinline decltype(auto)  Range (Arr &&container)
 	{
-		if_constexpr( _types_hidden_::HasBeginEnd<Arr> ) {
+		using A = TypeTraits::RemoveAnyReference<Arr>;
+
+		if_constexpr( _types_hidden_::HasBeginEnd<A> ) {
 			return _types_hidden_::_Range1( container );
 		} else
-		if_constexpr( _types_hidden_::HasBeginEnd2<Arr> ) {
+		if_constexpr( _types_hidden_::HasBeginEnd2<A> ) {
 			return _types_hidden_::_Range1v( container );
 		} else {
 			return _types_hidden_::_Range1i( container );
@@ -236,7 +238,7 @@ namespace GXTypes
 	}
 
 	template <typename Arr>
-	ND_ forceinline decltype(auto)  Range (Arr &container, const usize first, const usize count)
+	ND_ forceinline decltype(auto)  Range (Arr &&container, const usize first, const usize count)
 	{
 		return _types_hidden_::_Range3( container, first, count );
 	}
@@ -247,12 +249,14 @@ namespace GXTypes
 =================================================
 */
 	template <typename Arr>
-	ND_ forceinline decltype(auto)  RevRange (Arr &container)
+	ND_ forceinline decltype(auto)  RevRange (Arr &&container)
 	{
-		if_constexpr( _types_hidden_::HasBeginEnd<Arr> ) {
+		using A = TypeTraits::RemoveAnyReference<Arr>;
+
+		if_constexpr( _types_hidden_::HasBeginEnd<A> ) {
 			return _types_hidden_::_ReverseResult::Make( _types_hidden_::_Range1( container ) );
 		} else {
-		//if_constexpr( _types_hidden_::HasBeginEnd2<Arr> ) {
+		//if_constexpr( _types_hidden_::HasBeginEnd2<A> ) {
 		//	return _types_hidden_::_Range1v( container );
 		//} else {
 			return _types_hidden_::_ReverseResult::Make( _types_hidden_::_Range1i( container ) );
@@ -260,7 +264,7 @@ namespace GXTypes
 	}
 	
 	template <typename Arr>
-	ND_ forceinline decltype(auto)  RevRange (Arr &container, const usize first, const usize count)
+	ND_ forceinline decltype(auto)  RevRange (Arr &&container, const usize first, const usize count)
 	{
 		return _types_hidden_::_ReverseResult::Make( _types_hidden_::_Range3( container, first, count ) );
 	}

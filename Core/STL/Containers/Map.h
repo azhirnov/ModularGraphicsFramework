@@ -184,25 +184,25 @@ namespace _types_hidden_
 		iterator Add (const Key_t &key, const Value_t &value)
 		{
 			const usize	idx = _memory.AddOrReplace( RVREF( Pair_t( key, value ) ) );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 		
 		iterator Add (Key_t &&key, Value_t &&value)
 		{
 			const usize	idx = _memory.AddOrReplace( RVREF( Pair_t( RVREF(key), RVREF(value) ) ) );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 		iterator Add (const Pair_t &value)
 		{
 			const usize	idx = _memory.AddOrReplace( value );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 		iterator Add (Pair_t &&value)
 		{
 			const usize	idx = _memory.AddOrReplace( RVREF( value ) );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 		
 
@@ -211,25 +211,25 @@ namespace _types_hidden_
 		iterator AddOrSkip (const Key_t &key, const Value_t &value)
 		{
 			const usize	idx = _memory.AddOrSkip( RVREF( Pair_t( key, value ) ) );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 		
 		iterator AddOrSkip (Key_t &&key, Value_t &&value)
 		{
 			const usize	idx = _memory.AddOrSkip( RVREF( Pair_t( RVREF(key), RVREF(value) ) ) );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 		iterator AddOrSkip (const Pair_t &value)
 		{
 			const usize	idx = _memory.AddOrSkip( value );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 		iterator AddOrSkip (Pair_t &&value)
 		{
 			const usize	idx = _memory.AddOrSkip( RVREF( value ) );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 
@@ -290,7 +290,7 @@ namespace _types_hidden_
 			if ( not FindIndex( key, OUT idx ) )
 				return false;
 			
-			result = &(*this)[ idx ];
+			result = AddressOf( (*this)[ idx ] );
 			return true;
 		}
 
@@ -301,7 +301,7 @@ namespace _types_hidden_
 			if ( not FindIndex( key, OUT idx ) )
 				return false;
 			
-			result = &(*this)[ idx ];
+			result = AddressOf( (*this)[ idx ] );
 			return true;
 		}
 
@@ -316,7 +316,7 @@ namespace _types_hidden_
 			
 			FindLastIndex( first, OUT last );
 
-			result = values_range_t( &(*this)[first], last - first + 1 );
+			result = values_range_t( AddressOf((*this)[first]), last - first + 1 );
 			return true;
 		}
 
@@ -330,7 +330,7 @@ namespace _types_hidden_
 			
 			FindLastIndex( first, OUT last );
 
-			result = const_values_range_t( &(*this)[first], last - first + 1 );
+			result = const_values_range_t( AddressOf((*this)[first]), last - first + 1 );
 			return true;
 		}
 
@@ -388,7 +388,7 @@ namespace _types_hidden_
 			if ( not _FindFirstIndex2( key, OUT idx ) )
 				return false;
 			
-			result = &(*this)[ idx ];
+			result = AddressOf( (*this)[ idx ] );
 			return true;
 		}
 		
@@ -400,7 +400,7 @@ namespace _types_hidden_
 			if ( not _FindFirstIndex2( key, OUT idx ) )
 				return false;
 			
-			result = &(*this)[ idx ];
+			result = AddressOf( (*this)[ idx ] );
 			return true;
 		}
 		
@@ -415,7 +415,7 @@ namespace _types_hidden_
 			
 			_FindLastIndex2( key, first, last );
 
-			result = values_range_t( &(*this)[first], last - first + 1 );
+			result = values_range_t( AddressOf((*this)[first]), last - first + 1 );
 			return true;
 		}
 

@@ -33,7 +33,7 @@ namespace GXScript
 		template <typename T>	static T Log (T x, T base)					{ return GXMath::Log( x, base ); }
 		template <typename T>	static T Log2 (T x)							{ return GXMath::Log2( x ); }
 		template <typename T>	static T Log10 (T x)						{ return GXMath::Log10( x ); }
-		template <typename T>	static T IntLog2 (T x)						{ return GXMath::IntLog2( x ); }
+		template <typename T>	static int IntLog2 (T x)					{ return GXMath::IntLog2( x ); }
 		template <typename T>	static T Exp (T x)							{ return GXMath::Exp( x ); }
 		template <typename T>	static T Exp2 (T x)							{ return GXMath::Exp2( x ); }
 		template <typename T>	static T Exp10 (T x)						{ return GXMath::Exp10( x ); }

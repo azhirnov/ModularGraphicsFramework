@@ -5,10 +5,8 @@
 
 #if defined( GX_USE_STD ) and not defined( PLATFORM_SDL )
 
-#include "Core/STL/OS/STD/Thread.h"
+#include "Core/STL/OS/STD/STDThread.h"
 #include "Core/STL/Math/Mathematics.h"
-#include "Core/STL/Math/BinaryMath.h"
-#include "Core/STL/Math/Interpolations.h"
 
 namespace GX_STL
 {
@@ -91,6 +89,16 @@ namespace OS
 		return CastThreadId( std::this_thread::get_id() );
 	}
 	
+/*
+=================================================
+	SetCurrentThreadName
+=================================================
+*/
+	void CurrentThread::SetCurrentThreadName (StringCRef name)
+	{
+		// TODO
+	}
+
 /*
 =================================================
 	Sleep
@@ -209,7 +217,7 @@ namespace OS
 	Delete
 =================================================
 */
-	bool Thread::Delete () noexcept
+	void Thread::Delete () noexcept
 	{
 		if ( IsValid() )
 		{
@@ -218,8 +226,6 @@ namespace OS
 
 		_proc		= null;
 		_parameter	= null;
-
-		return true;
 	}
 	
 /*
@@ -239,8 +245,16 @@ namespace OS
 */
 	bool Thread::Wait () noexcept
 	{
-		ASSERT( IsValid() );
-		_thread.join();			// TODO: catch exceptions
+		if ( not IsValid() )
+			return true;
+
+		try {
+			_thread.join();
+		}
+		catch (const std::system_error &e)
+		{
+			return false;
+		}
 		return true;
 	}
 

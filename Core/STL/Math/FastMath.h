@@ -310,7 +310,7 @@ namespace GXMath
 			-3617.0/122400.0
 		};
 
-		double	z	= 1.0 / Square( x );
+		double	z	= 1.0 / (x * x);
 		double	sum	= c[7];
 
 		for (int i = 6; i >= 0; i--)

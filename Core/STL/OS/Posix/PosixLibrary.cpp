@@ -2,11 +2,10 @@
 
 #include "Core/STL/Common/Platforms.h"
 
-#if defined( PLATFORM_BASE_POSIX ) and not defined( PLATFORM_SDL )
+#if defined( PLATFORM_BASE_POSIX ) and defined( GX_USE_NATIVE_API )
 
 #include "Core/STL/OS/Posix/PosixHeader.h"
 #include "Core/STL/OS/Posix/Library.h"
-#include "Core/STL/Math/BinaryMath.h"
 #include "Core/STL/OS/Base/BaseFileSystem.h"
 
 namespace GX_STL
@@ -72,27 +71,7 @@ namespace OS
 			
 		return IsValid();
 	}
-		
-/*
-=================================================
-	Load
-=================================================
-*/
-	bool Library::Load (void * lib, bool canFree)
-	{
-		Unload();
 
-		_freeWhenDelete		= canFree;
-		_library			= lib;
-
-		Dl_info	info;
-
-		if ( ::dladdr( _library, OUT &info ) != 0 )
-			_name = info.dli_fname;
-			
-		return IsValid();
-	}
-		
 /*
 =================================================
 	LoadSelf
@@ -100,7 +79,17 @@ namespace OS
 */
 	bool Library::LoadSelf ()
 	{
-		return Load( ::dlopen( null, RTLD_GLOBAL ) );
+		Unload();
+
+		_freeWhenDelete		= true;
+		_library			= ::dlopen( null, RTLD_GLOBAL );
+
+		Dl_info	info;
+
+		if ( ::dladdr( _library, OUT &info ) != 0 )
+			_name = info.dli_fname;
+			
+		return IsValid();
 	}
 		
 /*
@@ -137,4 +126,4 @@ namespace OS
 }	// OS
 }	// GX_STL
 
-#endif	// PLATFORM_BASE_POSIX
+#endif	// PLATFORM_BASE_POSIX and GX_USE_NATIVE_API

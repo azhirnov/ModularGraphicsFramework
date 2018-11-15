@@ -66,9 +66,9 @@ namespace GXTypes
 			return s_instance;
 		}
 
-		static OS::Mutex& _GetMutex () noexcept
+		static Mutex& _GetMutex () noexcept
 		{
-			static OS::Mutex	s_mutex;
+			static Mutex	s_mutex;
 			return s_mutex;
 		})
 
@@ -132,7 +132,7 @@ namespace GXTypes
 		virtual ~RefCountedObject ()
 		{}
 
-		virtual void _Release (RefCounter_t &)	{ delete this; }
+		virtual void _Release (INOUT RefCounter_t &)	{ delete this; }
 	};
 	
 	
@@ -143,7 +143,7 @@ namespace GXTypes
 		using T = RefCountedObject< RefCounter >;
 
 		forceinline static void IncRef (T *ptr)		{ ptr->_GetCounter().Inc(); }
-		forceinline static void DecRef (T *ptr)		{ if ( ptr->_GetCounter().Dec() == 0 ) { ptr->_Release( ptr->_GetCounter() ); } }
+		forceinline static void DecRef (T *ptr)		{ if ( ptr->_GetCounter().DecAndTest() ) { ptr->_Release( INOUT ptr->_GetCounter() ); } }
 		forceinline static int  Count  (T *ptr)		{ return ptr->_GetCounter().Count(); }
 	};
 	
@@ -153,7 +153,7 @@ namespace GXTypes
 		using T = RefCountedObject< RefCounter2 >;
 
 		forceinline static void IncRef (T *ptr)		{ ptr->_GetCounter().Inc(); }
-		forceinline static void DecRef (T *ptr)		{ if ( ptr->_GetCounter().Dec() == 0 ) { RefCounter2 rc{ ptr->_GetCounter() };  ptr->_Release( ptr->_GetCounter() );  rc.DecWeak(); } }
+		forceinline static void DecRef (T *ptr)		{ if ( ptr->_GetCounter().DecAndTest() ) { RefCounter2 rc{ ptr->_GetCounter() };  ptr->_Release( INOUT ptr->_GetCounter() );  rc.DecWeak(); } }
 		forceinline static int  Count  (T *ptr)		{ return ptr->_GetCounter().Count(); }
 	};
 
@@ -169,7 +169,6 @@ namespace GXTypes
 		forceinline static void	DecRef (Counter_t &rc)		{ rc.DecWeak(); }
 		forceinline static int  Count  (Counter_t &rc)		{ return rc.CountWeak(); }
 		forceinline static bool IncShared (Counter_t &rc)	{ return rc.TryInc(); }
-		forceinline static void DecShared (Counter_t &rc)	{ rc.Dec(); }
 	};
 
 
@@ -184,7 +183,7 @@ namespace GXTypes
 	template <typename R, typename T>
 	ND_ forceinline constexpr R  Cast (const SharedPointerType<T> &value)
 	{
-		return PointerCast< TypeTraits::RemovePointer<R> >( value.RawPtr() );
+		return Cast<R>( value.RawPtr() );
 	}
 	
 	template <typename R, typename T>

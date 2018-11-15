@@ -70,7 +70,7 @@ namespace GXTypes
 	forceinline void PlacementDelete (INOUT T &value) noexcept
 	{
 		value.~T();
-		DEBUG_ONLY( ::memset( &value, 0, sizeof(value) ) );
+        DEBUG_ONLY( ::memset( AddressOf(value), 0, sizeof(value) ) );
 	}
 
 

@@ -440,7 +440,7 @@ namespace _types_hidden_
 		// binary search
 		usize			left  = 0,
 						right = _memory.LastIndex();
-		const SearchCmp	cmp( &key );
+		const SearchCmp	cmp( AddressOf(key) );
 			
 		while ( right - left > 1 )
 		{

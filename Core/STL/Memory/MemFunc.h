@@ -45,7 +45,7 @@ namespace GXTypes
 			ASSERT( not CheckPointersAliasing( Cast<ubyte *>(dst), Cast<ubyte *>(dst) + usize(size),
 											   Cast<const ubyte *>(src), Cast<const ubyte *>(src) + usize(size) ) );
 
-			return ::memcpy( dst, src, usize(size) );
+            return ::memcpy( dst, src, usize(size) );
 		}
 		
 /*
@@ -58,7 +58,7 @@ namespace GXTypes
 		forceinline void * MemMove (void *dst, const void *src, BytesU size) noexcept
 		{
 			// TODO: add checks
-			return ::memmove( dst, src, usize(size) );
+            return ::memmove( dst, src, usize(size) );
 		}
 
 /*
@@ -69,7 +69,7 @@ namespace GXTypes
 		ND_ forceinline int MemCmp (const void *left, const void *right, BytesU size) noexcept
 		{
 			// TODO: add checks
-			return ::memcmp( left, right, usize(size) );
+            return ::memcmp( left, right, usize(size) );
 		}
 
 /*
@@ -79,11 +79,22 @@ namespace GXTypes
 */
 		forceinline void ZeroMem (void *dst, BytesU size) noexcept
 		{
-			::memset( dst, 0, usize(size) );
+            ::memset( dst, 0, usize(size) );
 		}
 
 	}	// UnsafeMem
 	
+
+/*
+=================================================
+	AddressOf
+=================================================
+*/
+	template <typename T>
+	ND_ forceinline constexpr T*  AddressOf (T &ref)
+	{
+		return std::addressof( ref );
+	}
 
 /*
 =================================================
@@ -99,7 +110,7 @@ namespace GXTypes
 		STATIC_ASSERT( CompileTime::IsPOD<T1> );
 		STATIC_ASSERT( sizeof(dst) == sizeof(src) );
 
-		UnsafeMem::MemCopy( &dst, &src, SizeOf<T0> );
+		UnsafeMem::MemCopy( AddressOf(dst), AddressOf(src), SizeOf<T0> );
 	}
 	
 	template <typename T0, typename T1>
@@ -119,7 +130,7 @@ namespace GXTypes
 		STATIC_ASSERT( CompileTime::IsPOD<T1> );
 		STATIC_ASSERT( sizeof(dst) == sizeof(src) );
 
-		UnsafeMem::MemMove( &dst, &src, SizeOf<T0> );
+		UnsafeMem::MemMove( AddressOf(dst), AddressOf(src), SizeOf<T0> );
 	}
 
 	template <typename T0, typename T1>
@@ -135,7 +146,7 @@ namespace GXTypes
 	{
 		STATIC_ASSERT( sizeof(left) == sizeof(right) );
 
-		return UnsafeMem::MemCmp( &left, &right, SizeOf<T0> );
+		return UnsafeMem::MemCmp( AddressOf(left), AddressOf(right), SizeOf<T0> );
 	}
 
 	template <typename T0, typename T1>
@@ -157,12 +168,11 @@ namespace GXTypes
 	inline void ZeroMem (T &val) noexcept
 	{
 		STATIC_ASSERT( CompileTime::IsZeroMemAvailable<T> );
-		UnsafeMem::ZeroMem( &val, SizeOf<T> );
+		UnsafeMem::ZeroMem( AddressOf(val), SizeOf<T> );
 	}
 
 	template <typename T>
 	inline void ZeroMem (ArrayRef<T> buf);
-
 
 }	// GXTypes
 }	// GX_STL

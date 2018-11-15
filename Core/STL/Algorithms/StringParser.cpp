@@ -1,7 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Core/STL/Algorithms/StringParser.h"
-#include "Core/STL/Math/BinaryMath.h"
+#include "Core/STL/Algorithms/StringUtils.h"
 
 namespace GX_STL
 {
@@ -329,7 +329,7 @@ namespace GXTypes
 */
 	void StringParser::ToEndOfLine (StringCRef str, INOUT usize &pos)
 	{
-		if ( str[pos] == '\n' or str[pos] == '\r' )
+		if ( pos < str.Length() and (str[pos] == '\n' or str[pos] == '\r') )
 			return;
 
 		while ( pos < str.Length() )
@@ -350,7 +350,9 @@ namespace GXTypes
 */
 	void StringParser::ToBeginOfLine (StringCRef str, INOUT usize &pos)
 	{
-		while ( pos < str.Length() )
+		pos = GXMath::Min( pos, str.Length() );
+
+		while ( pos <= str.Length() )
 		{
 			//const char	c = str[pos];
 			const char	p = (pos-1) >= str.Length() ? '\0' : str[pos-1];
@@ -421,7 +423,9 @@ namespace GXTypes
 */
 	void StringParser::ToPrevLine (StringCRef str, INOUT usize &pos)
 	{
-		while ( pos < str.Length() )
+		pos = GXMath::Min( pos, str.Length() );
+
+		while ( pos <= str.Length() )
 		{
 			const char	c = str[pos];
 			const char	p = (pos-1) >= str.Length() ? 0 : str[pos-1];
@@ -707,6 +711,13 @@ namespace GXTypes
 		}
 	}
 	
+	String  StringParser::IncreaceIndent (String &&str, StringCRef indent)
+	{
+		String	result = RVREF(str);
+		IncreaceIndent( INOUT result, indent );
+		return result;
+	}
+	
 /*
 =================================================
 	DecreaceIndent
@@ -729,7 +740,14 @@ namespace GXTypes
 			ToNextLine( str, pos );
 		}
 	}
-	
+
+	String  StringParser::DecreaceIndent (String &&str, StringCRef indent)
+	{
+		String	result = RVREF(str);
+		DecreaceIndent( INOUT result, indent );
+		return result;
+	}
+
 /*
 =================================================
 	DivideLines
@@ -756,6 +774,25 @@ namespace GXTypes
 		}
 	}
 	
+/*
+=================================================
+	CompareBySymbols
+=================================================
+*/
+	float StringParser::CompareBySymbols (StringCRef left, StringCRef right)
+	{
+		float		result	= 0.0f;
+		const usize	count	= GXMath::Min( left.Length(), right.Length() );
+
+		for (usize i = 0; i < count; ++i)
+		{
+			if ( StringUtils::ToLower( left[i] ) == StringUtils::ToLower( right[i] ) )
+				result += 1.0f;
+		}
+
+		return result / float(GXMath::Max( left.Length(), right.Length() ));
+	}
+
 /*
 =================================================
 	CompareByWords
@@ -799,6 +836,9 @@ namespace GXTypes
 	bool StringParser::CompareLineByLine (StringCRef left, StringCRef right, OUT StringCRef &leftLine, OUT StringCRef &rightLine,
 										  OUT usize &leftLineNumber, OUT usize &rightLineNumber)
 	{
+		leftLine = rightLine = StringCRef();
+		leftLineNumber = rightLineNumber = 0;
+
 		usize	l_pos	= 0;
 		usize	r_pos	= 0;
 

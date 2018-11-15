@@ -2,6 +2,8 @@
 
 #pragma once
 
+#define ulong linux_uint
+
 //#include <linux/time.h>
 #include <time.h>
 #include <dlfcn.h>
@@ -20,3 +22,5 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
+
+#undef ulong

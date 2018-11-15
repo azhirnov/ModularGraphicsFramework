@@ -18,7 +18,7 @@ namespace GXTypes
 		struct _UntypedKey;
 
 		template <typename T>		struct _UntypedKey< T* >			{ using type = void const *; };
-		template <typename T>		struct _UntypedKey< T const * >	{ using type = void const *; };
+		template <typename T>		struct _UntypedKey< T const * >		{ using type = void const *; };
 
 		template <typename T>		struct _UntypedKey< Ptr<T> >		{ using type = void const *; };
 		

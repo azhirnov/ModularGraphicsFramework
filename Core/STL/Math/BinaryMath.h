@@ -319,9 +319,9 @@ namespace GXMath
 		struct _RecursiveBitScanReverse
 		{
 			template <typename T>
-			forceinline constexpr static uint Get (const T& x)
+			forceinline constexpr static int Get (const T& x)
 			{
-				return uint( !!T(x >> Bit) ) + _RecursiveBitScanReverse< Bit-1 >::Get( x );
+				return int( !!T(x >> Bit) ) + _RecursiveBitScanReverse< Bit-1 >::Get( x );
 			}
 		};
 
@@ -329,16 +329,16 @@ namespace GXMath
 		struct _RecursiveBitScanReverse<0>
 		{
 			template <typename T>
-			forceinline constexpr static uint Get (const T& x)
+			forceinline constexpr static int Get (const T& x)
 			{
-				return uint( !!x );
+				return int( !!x );
 			}
 		};
 	}	// _math_hidden_
 
 
 	template <typename T>
-	ND_ forceinline constexpr uint  IntLog2 (const T& x)
+	ND_ forceinline constexpr int  IntLog2 (const T& x)
 	{
 		STATIC_ASSERT( CompileTime::IsScalarOrEnum<T> );
 		STATIC_ASSERT( CompileTime::IsInteger<T> );
@@ -351,9 +351,9 @@ namespace GXMath
 	}
 
 	template <typename T, usize I, ulong U>
-	ND_ inline Vec<uint,I,U>  IntLog2 (const Vec<T,I,U> &x)
+	ND_ inline Vec<int,I,U>  IntLog2 (const Vec<T,I,U> &x)
 	{
-		Vec<uint,I,U>	ret;
+		Vec<int,I,U>	ret;
 		FOR( i, ret )	ret[i] = IntLog2( x[i] );
 		return ret;
 	}

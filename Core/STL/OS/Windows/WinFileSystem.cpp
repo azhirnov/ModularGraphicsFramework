@@ -1,12 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Core/STL/Common/Platforms.h"
-#include "Core/Config/Engine.Config.h"
+#include "Core/Config/STL.Config.h"
 
 #ifdef PLATFORM_WINDOWS
 
-#include "Core/STL/OS/Windows/FileSystem.h"
-#include "Core/STL/Math/BinaryMath.h"
+#include "Core/STL/OS/Windows/WinFileSystem.h"
 #include "Core/STL/Algorithms/FileAddress.h"
 #include "Core/STL/OS/Base/BaseFileSystem.h"
 #include "Core/STL/OS/Windows/WinHeader.h"
@@ -366,7 +365,7 @@ namespace OS
 	GetFileSize
 =================================================
 */
-	BytesUL WindowsFileSystem::GetFileSize (StringCRef filename)
+	BytesU WindowsFileSystem::GetFileSize (StringCRef filename)
 	{
 		HANDLE	file = ::CreateFileA( filename.cstr(), GENERIC_READ,
 							FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -378,7 +377,7 @@ namespace OS
 		LARGE_INTEGER	size;
 		::GetFileSizeEx( file, OUT &size );
 
-		return BytesUL(size.QuadPart);
+		return BytesU(size.QuadPart);
 	}
 
 

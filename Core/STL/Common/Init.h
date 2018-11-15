@@ -9,6 +9,8 @@
 #	pragma warning (push, 0)
 #endif
 
+#define ulong linux_uint
+
 #include <stdio.h>
 #include <cmath>
 #include <string.h>
@@ -23,6 +25,9 @@
 #include <string>
 #include <cstddef>
 #include <type_traits>
+#include <atomic>
+
+#undef ulong
 
 #if defined(COMPILER_MSVC)
 #   include <xstddef>

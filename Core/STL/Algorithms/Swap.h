@@ -27,8 +27,8 @@ namespace GXTypes
 		b	= RVREF( c );
 	#else
 		T c{ RVREF(a) };
-		PlacementDelete( a );	UnsafeMem::PlacementNew<T>( &a, RVREF(b) );
-		PlacementDelete( b );	UnsafeMem::PlacementNew<T>( &b, RVREF(c) );
+		PlacementDelete( a );	UnsafeMem::PlacementNew<T>( AddressOf(a), RVREF(b) );
+		PlacementDelete( b );	UnsafeMem::PlacementNew<T>( AddressOf(b), RVREF(c) );
 	#endif
 	}
 	

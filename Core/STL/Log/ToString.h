@@ -39,7 +39,7 @@ namespace GXTypes
 =================================================
 */
 	ND_ inline String  ToStringImpl (bool value)		{ return String( value ); }
-	ND_ inline String  ToStringImpl (char value)		{ return String( &value, 1 ); }
+	ND_ inline String  ToStringImpl (char value)		{ return String( AddressOf(value), 1 ); }
 	ND_ inline String  ToStringImpl (byte value)		{ return String( int(value) ); }
 	ND_ inline String  ToStringImpl (ubyte value)		{ return String( uint(value) ); }
 	ND_ inline String  ToStringImpl (short value)		{ return String( int(value) ); }

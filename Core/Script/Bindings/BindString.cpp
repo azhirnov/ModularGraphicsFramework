@@ -5,7 +5,6 @@
 #include "Core/Script/Impl/ScriptEngine.inl.h"
 
 #include "Core/STL/Containers/HashMap.h"
-#include "Core/STL/Math/BinaryMath.h"
 #include "Core/STL/Math/Interpolations.h"
 #include "Core/STL/Log/ToString.h"
 

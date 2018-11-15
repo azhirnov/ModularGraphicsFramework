@@ -282,9 +282,9 @@ namespace GXScript
 
 
 		template <typename Ret, typename ...Types>
-		struct GlobalFunction < Ret (__cdecl *) (Types...) >
+        struct GlobalFunction < Ret (GX_CDECL *) (Types...) >
 		{
-			typedef typename CompileTime::TypeListFrom< Types... >	TypeList_t;
+			using TypeList_t = typename CompileTime::TypeListFrom< Types... >;
 				
 			static void GetDescriptor (OUT String &str, StringCRef name, uint offsetFromStart = 0, uint offsetFromEnd = 0)
 			{
@@ -300,9 +300,9 @@ namespace GXScript
 		};
 
 		template <typename Ret>
-		struct GlobalFunction < Ret (__cdecl *) () >
+        struct GlobalFunction < Ret (GX_CDECL *) () >
 		{
-			typedef typename CompileTime::TypeList< CompileTime::TypeListEnd >	TypeList_t;
+			using TypeList_t = typename CompileTime::TypeList< CompileTime::TypeListEnd >;
 				
 			static void GetDescriptor (OUT String &str, StringCRef name, uint = 0, uint = 0)
 			{
@@ -317,9 +317,9 @@ namespace GXScript
 		};
 			
 		template <typename C, typename Ret, typename ...Types>
-		struct MemberFunction < Ret (__thiscall C:: *) (Types...) >
+        struct MemberFunction < Ret (GX_THISCALL C:: *) (Types...) >
 		{
-			typedef typename CompileTime::TypeListFrom< Types... >	TypeList_t;
+			using TypeList_t = typename CompileTime::TypeListFrom< Types... >;
 				
 			static void GetDescriptor (OUT String &str, StringCRef name, uint offsetFromStart = 0, uint offsetFromEnd = 0)
 			{
@@ -333,9 +333,9 @@ namespace GXScript
 		};
 			
 		template <typename C, typename Ret>
-		struct MemberFunction < Ret (__thiscall C:: *) () >
+        struct MemberFunction < Ret (GX_THISCALL C:: *) () >
 		{
-			typedef typename CompileTime::TypeList< CompileTime::TypeListEnd >	TypeList_t;
+			using TypeList_t = typename CompileTime::TypeList< CompileTime::TypeListEnd >;
 				
 			static void GetDescriptor (OUT String &str, StringCRef name, uint offsetFromStart = 0, uint offsetFromEnd = 0)
 			{
@@ -349,9 +349,9 @@ namespace GXScript
 		};
 			
 		template <typename C, typename Ret, typename ...Types>
-		struct MemberFunction < Ret (__thiscall C:: *) (Types...) const >
+        struct MemberFunction < Ret (GX_THISCALL C:: *) (Types...) const >
 		{
-			typedef typename CompileTime::TypeListFrom< Types... >	TypeList_t;
+			using TypeList_t = typename CompileTime::TypeListFrom< Types... >;
 				
 			static void GetDescriptor (OUT String &str, StringCRef name, uint offsetFromStart = 0, uint offsetFromEnd = 0)
 			{
@@ -366,9 +366,9 @@ namespace GXScript
 		};
 			
 		template <typename C, typename Ret>
-		struct MemberFunction < Ret (__thiscall C:: *) () const >
+        struct MemberFunction < Ret (GX_THISCALL C:: *) () const >
 		{
-			typedef typename CompileTime::TypeList< CompileTime::TypeListEnd >	TypeList_t;
+			using TypeList_t = typename CompileTime::TypeList< CompileTime::TypeListEnd >;
 				
 			static void GetDescriptor (OUT String &str, StringCRef name, uint offsetFromStart = 0, uint offsetFromEnd = 0)
 			{

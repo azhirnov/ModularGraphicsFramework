@@ -99,14 +99,15 @@ namespace GXTypes
 		template <typename T>			Self &		Create2 (T &&value) noexcept;
 		template <typename T>			Self &		Set (const T &value) noexcept;
 
-		template <typename Func>		void		Apply (Func& func) noexcept;
-		template <typename Func>		void		Apply (const Func& func) const noexcept;
+		template <typename Func>		void		Accept (Func&& func) noexcept;
+		template <typename Func>		void		Accept (Func&& func) const noexcept;
 
 		template <typename T>		ND_ bool		Is () const;
 
 		template <typename T>		ND_ T &			Get ();
 		template <typename T>		ND_ T const &	Get () const;
 		template <typename T>		ND_ T			Get (const T &defaultValue) const;
+		template <typename T>		ND_ T &			GetOrCreate ();
 
 		template <typename T>		ND_ T &			Cast ();
 		template <typename T>		ND_ T const &	Cast () const;
@@ -204,10 +205,10 @@ namespace GXTypes
 	struct Union<Types...>::_TypeList_Apply
 	{
 		Data		data;
-		Func		func;
+		Func &		func;
 		const usize	index;
 
-		_TypeList_Apply (Func func, Data data, usize index) :
+		_TypeList_Apply (Func &func, Data data, usize index) :
 			data(data), func(func), index(index)
 		{}
 
@@ -480,6 +481,21 @@ namespace GXTypes
 	
 /*
 =================================================
+	GetOrCreate
+=================================================
+*/
+	template <typename ...Types>
+	template <typename T>
+	forceinline T &  Union<Types...>::GetOrCreate ()
+	{
+		if ( not Is<T>() )
+			Create( T() );
+
+		return Get<T>();
+	}
+	
+/*
+=================================================
 	Get
 =================================================
 */
@@ -488,9 +504,9 @@ namespace GXTypes
 	forceinline T &  Union<Types...>::Get ()
 	{
 		ASSERT( Is<T>() );
-		return *PointerCast< T >( _data );
+		return *GXTypes::Cast< T *>( _data );
 	}
-	
+
 /*
 =================================================
 	Get
@@ -501,7 +517,7 @@ namespace GXTypes
 	forceinline T const &  Union<Types...>::Get () const
 	{
 		ASSERT( Is<T>() );
-		return *PointerCast< T >( _data );
+		return *GXTypes::Cast< T const *>( _data );
 	}
 	
 /*
@@ -513,7 +529,7 @@ namespace GXTypes
 	template <typename T>
 	forceinline T  Union<Types...>::Get (const T &defaultValue) const
 	{
-		return Is<T>() ? *PointerCast< T >( _data ) : defaultValue;
+		return Is<T>() ? *GXTypes::Cast< T const *>( _data ) : defaultValue;
 	}
 	
 /*
@@ -527,7 +543,7 @@ namespace GXTypes
 	{
 		_HasType<T>();
 		ASSERT( IsDefined() );
-		return *PointerCast< T >( _data );
+		return *GXTypes::Cast< T *>( _data );
 	}
 	
 /*
@@ -541,7 +557,7 @@ namespace GXTypes
 	{
 		_HasType<T>();
 		ASSERT( IsDefined() );
-		return *PointerCast< T >( _data );
+		return *GXTypes::Cast< T const *>( _data );
 	}
 	
 /*
@@ -559,12 +575,12 @@ namespace GXTypes
 	
 /*
 =================================================
-	Apply
+	Accept
 =================================================
 */
 	template <typename ...Types>
 	template <typename Func>
-	forceinline void Union<Types...>::Apply (Func& func) noexcept
+	forceinline void Union<Types...>::Accept (Func&& func) noexcept
 	{
 		ASSERT( IsDefined() );
 		_TypeList_Apply< Func&, void* >	iter( func, _data, _currentIndex );
@@ -573,15 +589,15 @@ namespace GXTypes
 	
 /*
 =================================================
-	Apply
+	Accept
 =================================================
 */
 	template <typename ...Types>
 	template <typename Func>
-	forceinline void Union<Types...>::Apply (const Func& func) const noexcept
+	forceinline void Union<Types...>::Accept (Func&& func) const noexcept
 	{
 		ASSERT( IsDefined() );
-		_TypeList_Apply< const Func&, void const * const >	iter( func, _data, _currentIndex );
+		_TypeList_Apply< Func&, void const * const >	iter( func, _data, _currentIndex );
 		TypeList_t::RuntimeForEach( iter );
 	}
 	

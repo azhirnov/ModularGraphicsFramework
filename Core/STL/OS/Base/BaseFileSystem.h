@@ -6,8 +6,8 @@
 #include "Core/STL/Algorithms/StringUtils.h"
 #include "Core/STL/Algorithms/FileAddress.h"
 
-#include "Core/STL/OS/Windows/FileSystem.h"
-#include "Core/STL/OS/Posix/FileSystem.h"
+#include "Core/STL/OS/Windows/WinFileSystem.h"
+#include "Core/STL/OS/Posix/PosixFileSystem.h"
 
 namespace GX_STL
 {

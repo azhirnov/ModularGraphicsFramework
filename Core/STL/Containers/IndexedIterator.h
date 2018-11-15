@@ -49,8 +49,8 @@ namespace GXTypes
 				  typename = CompileTime::DisableIf<CompileTime::IsSameTypes<Self, Container>> >
 		explicit IndexedIterator (const Container &buf, usize index = 0) : _ref{UniBuffer<const T>(buf)}, _index{index} {}
 
-		ND_ T *			operator -> ()					{ return &_ref[_index]; }
-		ND_ T const *	operator -> ()	const			{ return &_ref[_index]; }
+		ND_ T *			operator -> ()					{ return AddressOf( _ref[_index] ); }
+		ND_ T const *	operator -> ()	const			{ return AddressOf( _ref[_index] ); }
 		
 		ND_ T &			operator * ()					{ return _ref[_index]; }
 		ND_ T const &	operator * ()	const			{ return _ref[_index]; }

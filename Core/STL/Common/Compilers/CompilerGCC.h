@@ -99,7 +99,10 @@
 #define GX_BRANCH_EXPECT( _expr_ )			__builtin_expect( !!(_expr_), 1 )
 #define GX_BRANCH_EXPECT_FALSE( _expr_ )	__builtin_expect( !!(_expr_), 0 )
 
-
+// calling conventions
+#define GX_CDECL					__attribute__((cdecl))
+#define GX_THISCALL					__attribute__((thiscall))
+#define GX_STDCALL					__attribute__((stdcall))
 //-------------------------------------------------------------------
 
 
@@ -264,19 +267,24 @@
 //#define GX_PRAGMA		_Pragma
 
 #if defined( PLATFORM_ANDROID )
-#	define GX_BREAK_POINT()		{}
+#	define GX_BREAK_POINT()			{}
 #elif 0
 #	include <csignal>
-#	define GX_BREAK_POINT()		std::raise(SIGINT)
+#	define GX_BREAK_POINT()			std::raise(SIGINT)
 #elif 0
-#	define GX_BREAK_POINT()		__asm__("int3")		// or asm("int $3");
+#	define GX_BREAK_POINT()			__asm__("int3")		// or asm("int $3");
 #elif 1
 #	include <exception>
-#	define GX_BREAK_POINT() 	throw std::runtime_error("breakpoint")
+#	define GX_BREAK_POINT() 		throw std::runtime_error("breakpoint")
 #endif
+
+
+// compiler barrier to prevent instruction reordering
+#define GX_COMPILER_BARRIER()		asm volatile("" ::: "memory")
 
 
 // TODO: check
 #define GX_MAX_STRING_LENGTH_BYTES	(5u << 20)
+
 
 #endif	// COMPILER_GCC

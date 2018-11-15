@@ -105,7 +105,7 @@ namespace GXMath
 
 			ND_ IntFormat  MaxValue () const
 			{
-				return ToMask< IntFormat::Value_t >( Max( sizeInBits - int(isSigned), IntFormat() ).To<BitsVec<usize,4>>() );
+				return ToMask< IntFormat::Value_t >( Max( sizeInBits - int(isSigned), IntFormat() ).To<Vec<BitsU,4>>() );
 			}
 
 			ND_ FloatFormat  MaxValueF () const
@@ -430,7 +430,7 @@ namespace GXMath
 		{
 			/*static void Convert (Dst &dst, const Src &src)
 			{
-				DESCTOP_ONLY( STATIC_WARNING( "not implementation for this formats!" ) );
+				DESKTOP_ONLY( STATIC_WARNING( "not implementation for this formats!" ) );
 			}*/
 		};
 

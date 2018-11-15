@@ -2,7 +2,6 @@
 
 #include "Core/STL/OS/Base/Date.h"
 #include "Core/STL/Algorithms/StringParser.h"
-#include "Core/STL/Math/BinaryMath.h"
 #include "Core/STL/Math/Interpolations.h"
 
 namespace GX_STL

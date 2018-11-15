@@ -5,38 +5,39 @@
 #include "Core/STL/OS/Base/Common.h"
 
 #ifdef PLATFORM_SDL
-#	include "Core/STL/OS/SDL/SyncPrimitives.h"
-#	include "Core/STL/OS/SDL/Thread.h"
-#	include "Core/STL/OS/SDL/Library.h"
-#	include "Core/STL/OS/SDL/Timer.h"
-#	include "Core/STL/OS/SDL/FileSystem.h"
-#	include "Core/STL/OS/SDL/SDLUtils.h"
-#	include "Core/STL/OS/SDL/RandDevice.h"
+#	include "Core/STL/OS/SDL/SDLSyncPrimitives.h"
+#	include "Core/STL/OS/SDL/SDLThread.h"
+#	include "Core/STL/OS/SDL/SDLLibrary.h"
+#	include "Core/STL/OS/SDL/SDLTimer.h"
+#	include "Core/STL/OS/SDL/SDLFileSystem.h"
+#	include "Core/STL/OS/SDL/SDLPlatformUtils.h"
+#	include "Core/STL/OS/SDL/SDLRandDevice.h"
 #else
 
 # ifdef GX_USE_STD
-#	include "Core/STL/OS/STD/Thread.h"
-#	include "Core/STL/OS/STD/Timer.h"
+#	include "Core/STL/OS/STD/STDThread.h"
+#	include "Core/STL/OS/STD/STDTimer.h"
+#	include "Core/STL/OS/STD/STDSyncPrimitives.h"
 # endif
 
 # ifdef PLATFORM_WINDOWS
-#	include "Core/STL/OS/Windows/SyncPrimitives.h"
-#	include "Core/STL/OS/Windows/Thread.h"
-#	include "Core/STL/OS/Windows/Library.h"
-#	include "Core/STL/OS/Windows/Timer.h"
-#	include "Core/STL/OS/Windows/FileSystem.h"
-#	include "Core/STL/OS/Windows/PlatformUtils.h"
-#	include "Core/STL/OS/Windows/RandDevice.h"
+#	include "Core/STL/OS/Windows/WinSyncPrimitives.h"
+#	include "Core/STL/OS/Windows/WinThread.h"
+#	include "Core/STL/OS/Windows/WinLibrary.h"
+#	include "Core/STL/OS/Windows/WinTimer.h"
+#	include "Core/STL/OS/Windows/WinFileSystem.h"
+#	include "Core/STL/OS/Windows/WinPlatformUtils.h"
+#	include "Core/STL/OS/Windows/WinRandDevice.h"
 # endif
 
 # ifdef PLATFORM_BASE_POSIX
-#	include "Core/STL/OS/Posix/SyncPrimitives.h"
-#	include "Core/STL/OS/Posix/Thread.h"
-#	include "Core/STL/OS/Posix/Library.h"
-#	include "Core/STL/OS/Posix/Timer.h"
-#	include "Core/STL/OS/Posix/FileSystem.h"
-#	include "Core/STL/OS/Posix/PlatformUtils.h"
-#	include "Core/STL/OS/Posix/RandDevice.h"
+#	include "Core/STL/OS/Posix/PosixSyncPrimitives.h"
+#	include "Core/STL/OS/Posix/PosixThread.h"
+#	include "Core/STL/OS/Posix/PosixLibrary.h"
+#	include "Core/STL/OS/Posix/PosixTimer.h"
+#	include "Core/STL/OS/Posix/PosixFileSystem.h"
+#	include "Core/STL/OS/Posix/PosixPlatformUtils.h"
+#	include "Core/STL/OS/Posix/PosixRandDevice.h"
 # endif
 
 # ifdef PLATFORM_ANDROID
@@ -53,13 +54,15 @@ namespace GX_STL
 {
 namespace OS
 {
-	using Mutex		= CriticalSection;
 	
 }	// OS
 
 namespace GXTypes
 {
-	using Date		= OS::Date;
+	using Date			= OS::Date;
+	using Mutex			= OS::Mutex;
+	using ReadWriteSync	= OS::ReadWriteSync;
+	using SyncEvent		= OS::SyncEvent;
 
 }	// GXTypes
 }	// GX_STL

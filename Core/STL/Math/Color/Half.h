@@ -121,9 +121,9 @@ namespace GXTypes
 				T,		{ return left  / T(right.Get()); }
 		)
 		_HALF_OPERATOR( %,
-				float,	{ return float(::fmod( Get(), right.Get() )); },
-				float,	{ return float(::fmod( Get(), float(right) )); },
-				T,		{ return float(::fmod( left, T(right.Get()) )); }
+				float,	{ return float(std::fmod( Get(), right.Get() )); },
+				float,	{ return float(std::fmod( Get(), float(right) )); },
+				T,		{ return float(std::fmod( left, T(right.Get()) )); }
 		);
 
 		_HALF_CMP_OPERATOR( == );

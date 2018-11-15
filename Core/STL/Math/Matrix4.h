@@ -142,8 +142,8 @@ namespace GXMath
 				const Col_t &c2, \
 				const Col_t &c3); \
 		\
-		Col3_t const &	Translation () const	{ return *PointerCast< Col3_t >( &((*this)(C-1)) ); } \
-		Col3_t		 &	Translation ()			{ return *PointerCast< Col3_t >( &((*this)(C-1)) ); } \
+		Col3_t const &	Translation () const	{ return *Cast< Col3_t const*>( AddressOf((*this)(C-1)) ); } \
+		Col3_t		 &	Translation ()			{ return *Cast< Col3_t *>( AddressOf((*this)(C-1)) ); } \
 		\
 		Self		Inverse () const; \
 		\

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Allocators.h"
+#include "Core/STL/Memory/Allocators.h"
 #include "Core/STL/Algorithms/Swap.h"
 
 namespace GX_STL
@@ -35,9 +35,6 @@ namespace GXTypes
 
 
 	// methods
-	protected:
-		explicit MemoryContainer (const Self &) {}
-		
 	public:
 		MemoryContainer () : _memory( null )
 		{}
@@ -47,6 +44,9 @@ namespace GXTypes
 		{
 			MoveFrom( other );
 		}
+
+
+		MemoryContainer (const Self &) = delete;
 
 
 		~MemoryContainer ()
@@ -111,9 +111,121 @@ namespace GXTypes
 		}
 
 
-		usize MaxSize () const
+		static constexpr usize MaxSize ()
 		{
 			return UMax;
+		}
+		
+
+		void MoveFrom (INOUT Self &other) noexcept
+		{
+			Deallocate();
+
+			this->_memory	= other._memory;
+			other._memory	= null;
+		}
+
+
+		void SwapMemory (Self &other) noexcept
+		{
+			SwapValues( _memory, other._memory );
+		}
+	};
+	
+
+
+	//
+	// Preallocated Memory Container
+	//
+
+	template <typename T>
+	struct PreallocatedMemoryContainer : public CompileTime::FastCopyable
+	{
+	// types
+	public:
+		using Self			= PreallocatedMemoryContainer< T >;
+		using Allocator_t	= TDefaultAllocator<void>;
+		using Value_t		= T;
+
+
+	// variables
+	private:
+		union {
+			void *				_memory;
+			T *					_memPtr;
+			TMemoryViewer<T>	_memView;
+		};
+
+
+	// methods
+	public:
+		PreallocatedMemoryContainer () : _memory( null )
+		{}
+
+
+		PreallocatedMemoryContainer (Self &&other) : _memory( null )
+		{
+			MoveFrom( other );
+		}
+
+
+		PreallocatedMemoryContainer (const Self &) = delete;
+
+
+		~PreallocatedMemoryContainer ()
+		{
+			Deallocate();
+		}
+
+
+		Self & operator = (Self &&other)
+		{
+			MoveFrom( other );
+			return *this;
+		}
+
+
+		T *				Pointer ()			{ return ReferenceCast<T *>(_Aligned()); }
+		T const *		Pointer ()	const	{ return ReferenceCast<T const*>(_Aligned()); }
+
+		constexpr bool	IsStatic ()	const	{ return false; }
+
+
+		usize _Aligned () const
+		{
+			STATIC_ASSERT(( CompileTime::IsPowerOfTwo< uint, alignof(T) > ));
+
+			if_constexpr( alignof(T) < sizeof(void*) )
+				return ReferenceCast<usize>(_memory);
+			else
+				return (ReferenceCast<usize>(_memory) + alignof(T)-1) & ~(alignof(T)-1);
+		}
+
+
+		bool Allocate (INOUT usize &size, bool = true) noexcept
+		{
+			usize size2 = GlobalConst::STL_MemContainerPreallocSize;
+
+			if ( not Allocator_t::Allocate( INOUT _memory, INOUT size2 ) )
+				return false;
+
+			DEBUG_ONLY( UnsafeMem::ZeroMem( _memory, BytesU(size2) ) );
+
+			size2 -= (_Aligned() - ReferenceCast<usize>(_memory));
+			size = size2 / sizeof(T);
+			return true;
+		}
+
+
+		void Deallocate () noexcept
+		{
+			Allocator_t::Deallocate( _memory );
+		}
+
+
+		static constexpr usize MaxSize ()
+		{
+			return GlobalConst::STL_MemContainerPreallocSize / sizeof(T);
 		}
 		
 
@@ -156,16 +268,12 @@ namespace GXTypes
 	// variables
 	private:
 		union {
-			ubyte	_buf[ sizeof(T) * SIZE ];
+			ubyte	_storage[ sizeof(T) * SIZE ];
 			T		_values[ SIZE ];
 		};
 
 
 	// methods
-	private:
-		StaticMemoryContainer (const Self &) = delete;
-		void operator = (const Self &) = delete;
-
 	public:
 		StaticMemoryContainer ()
 		{}
@@ -181,6 +289,11 @@ namespace GXTypes
 		{
 			Deallocate();
 		}
+
+
+		StaticMemoryContainer (const Self &) = delete;
+
+		void operator = (const Self &) = delete;
 
 
 		Self & operator = (Self &&other)
@@ -207,11 +320,11 @@ namespace GXTypes
 
 		void Deallocate () noexcept
 		{
-			DEBUG_ONLY( ZeroMem( _buf ) );
+			DEBUG_ONLY( ZeroMem( _storage ) );
 		}
 
 
-		constexpr usize MaxSize () const
+		static constexpr usize MaxSize ()
 		{
 			return ArraySize;
 		}
@@ -221,8 +334,8 @@ namespace GXTypes
 		{
 			Deallocate();
 
-			UnsafeMem::MemCopy( Pointer(), other.Pointer(), BytesU::SizeOf(_buf) );
-			DEBUG_ONLY( ZeroMem( other._buf ) );
+			UnsafeMem::MemCopy( Pointer(), other.Pointer(), BytesU::SizeOf(_storage) );
+			DEBUG_ONLY( ZeroMem( other._storage ) );
 		}
 
 
@@ -231,9 +344,9 @@ namespace GXTypes
 			TODO( "SwapMemory" );
 
 			// TODO: optimize
-			for (usize i = 0; i < sizeof(_buf); ++i)
+			for (usize i = 0; i < sizeof(_storage); ++i)
 			{
-				SwapValues( this->_buf[i], other._buf[i] );
+				SwapValues( this->_storage[i], other._storage[i] );
 			}
 		}
 	};
@@ -263,7 +376,7 @@ namespace GXTypes
 	// variables
 	private:
 		union {
-			ubyte	_buf[ sizeof(T) * FIXED_SIZE ];
+			ubyte	_storage[ sizeof(T) * FIXED_SIZE ];
 			T		_values[ FIXED_SIZE ];
 		};
 
@@ -276,12 +389,9 @@ namespace GXTypes
 
 	// methods
 	protected:
-		MixedMemoryContainer (const Self &) = delete;
-		void operator = (const Self &) = delete;
-
 		bool _IsInStaticMemory () const
 		{
-			return _memory == Cast<T const*>(_buf);
+			return _memory == Cast<T const*>(_storage);
 		}
 
 
@@ -300,6 +410,11 @@ namespace GXTypes
 		{
 			Deallocate();
 		}
+
+
+		MixedMemoryContainer (const Self &) = delete;
+
+		void operator = (const Self &) = delete;
 
 
 		Self & operator = (Self &&other)
@@ -333,7 +448,7 @@ namespace GXTypes
 
 			if ( size <= FIXED_SIZE )
 			{
-				_memory = _buf;
+				_memory = _storage;
 				size	= FIXED_SIZE;
 
 				return true;
@@ -364,7 +479,7 @@ namespace GXTypes
 		{
 			if ( _IsInStaticMemory() )
 			{
-				DEBUG_ONLY( ZeroMem( _buf ) );
+				DEBUG_ONLY( ZeroMem( _storage ) );
 				_memory = null;
 				return;
 			}
@@ -373,7 +488,7 @@ namespace GXTypes
 		}
 
 
-		usize MaxSize () const
+		static constexpr usize MaxSize ()
 		{
 			return UMax;
 		}
@@ -385,10 +500,10 @@ namespace GXTypes
 
 			if ( other._IsInStaticMemory() )
 			{
-				this->_memory = _buf;
+				this->_memory = _storage;
 
-				UnsafeMem::MemCopy( this->_buf, other._buf, BytesU::SizeOf(_buf) );
-				DEBUG_ONLY( ZeroMem( other._buf ) );
+				UnsafeMem::MemCopy( this->_storage, other._storage, BytesU::SizeOf(_storage) );
+				DEBUG_ONLY( ZeroMem( other._storage ) );
 			}
 			else
 			{
@@ -407,25 +522,25 @@ namespace GXTypes
 			if ( not this_in_static_mem and not other_in_static_mem )
 			{
 				SwapValues( this->_memory, other._memory );
-				DEBUG_ONLY( ZeroMem( this->_buf ) );
-				DEBUG_ONLY( ZeroMem( other._buf ) );
+				DEBUG_ONLY( ZeroMem( this->_storage ) );
+				DEBUG_ONLY( ZeroMem( other._storage ) );
 				return;
 			}
 
 			// TODO: optimize
-			for (usize i = 0; i < sizeof(_buf); ++i)
+			for (usize i = 0; i < sizeof(_storage); ++i)
 			{
-				SwapValues( this->_buf[i], other._buf[i] );
+				SwapValues( this->_storage[i], other._storage[i] );
 			}
 			
 			if ( this_in_static_mem )
 			{
-				other._memory = other._buf;
+				other._memory = other._storage;
 			}
 
 			if ( other_in_static_mem )
 			{
-				this->_memory = this->_buf;
+				this->_memory = this->_storage;
 			}
 		}
 	};

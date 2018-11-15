@@ -4,8 +4,7 @@
 
 #ifdef PLATFORM_SDL
 
-#include "Core/STL/OS/SDL/Thread.h"
-#include "Core/STL/Math/BinaryMath.h"
+#include "Core/STL/OS/SDL/SDLThread.h"
 
 namespace GX_STL
 {
@@ -94,6 +93,16 @@ namespace OS
 	
 /*
 =================================================
+	GetCurrentThreadId
+=================================================
+*/
+	void CurrentThread::SetCurrentThreadName (StringCRef name)
+	{
+		// TODO
+	}
+
+/*
+=================================================
 	Sleep
 =================================================
 */
@@ -144,6 +153,16 @@ namespace OS
 		other._parameter = null;
 	}
 	
+/*
+=================================================
+	constructor
+=================================================
+*/
+	Thread::~Thread ()
+	{
+		Delete();
+	}
+
 /*
 =================================================
 	operator =
@@ -199,6 +218,13 @@ namespace OS
 */
 	void Thread::Delete ()
 	{
+		if ( IsValid() )
+		{
+			Wait();
+		}
+		
+		_thread		= null;
+		_id			= INVALID_ID;
 		_proc		= null;
 		_parameter	= null;
 	}
@@ -211,26 +237,6 @@ namespace OS
 	bool Thread::IsValid () const
 	{
 		return _thread.IsNotNull();
-	}
-	
-/*
-=================================================
-	Id
-=================================================
-*/
-	usize Thread::Id () const
-	{
-		return _id;
-	}
-	
-/*
-=================================================
-	IsCurrent
-=================================================
-*/
-	bool Thread::IsCurrent () const
-	{
-		return GetCurrentThreadId() == Id();
 	}
 		
 /*
@@ -252,6 +258,10 @@ namespace OS
 	void Thread::Wait ()
 	{
 		ASSERT( IsValid() );
+
+		if ( not IsValid() )
+			return;
+
 		::SDL_WaitThread( _thread, null );
 		_thread = null;
 		_id		= INVALID_ID;

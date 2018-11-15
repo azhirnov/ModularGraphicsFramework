@@ -159,7 +159,7 @@ namespace GXTypes
 
 		void Append (const void *begin, const void *end);
 		void Append (TStringRef<const T> str);
-		void Append (const T value)										{ return Append( TStringRef<const T>( &value, usize(value != 0) ) ); }
+		void Append (const T value)										{ return Append( TStringRef<const T>( AddressOf(value), usize(value != 0) ) ); }
 
 		//template <typename B>
 		//void Append (const B &value);
@@ -173,7 +173,7 @@ namespace GXTypes
 
 		void Insert (const void *begin, const void *end, usize pos);
 		void Insert (TStringRef<const T> str, usize pos);
-		void Insert (const T value, usize pos)							{ return Insert( TStringRef<const T>( &value, usize(value != 0) ), pos ); }
+		void Insert (const T value, usize pos)							{ return Insert( TStringRef<const T>( AddressOf(value), usize(value != 0) ), pos ); }
 
 		void Erase (usize pos, usize count = 1);
 		void Erase (const void *begin, const void *end);
@@ -254,11 +254,11 @@ namespace GXTypes
 		ND_ T const	*		cstr ()							const		{ return ptr(); }
 		ND_ usize			Length ()						const		{ return _length; }
 		ND_ usize			Count ()						const		{ return Length(); }
-		ND_ BytesU			LengthInBytes ()				const		{ return BytesU( sizeof(T) * Length() ); }
-		ND_ BytesU			Size ()							const		{ return BytesU( sizeof(T) * _Count() ); }
+		ND_ BytesU			LengthInBytes ()				const		{ return SizeOf<T> * Length(); }
+		ND_ BytesU			Size ()							const		{ return SizeOf<T> * _Count(); }
 		ND_ usize			Capacity ()						const		{ return _size; }
 		ND_ constexpr usize MaxCapacity ()					const		{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		ND_ BytesU			FullSize ()						const		{ return BytesU( _size * sizeof(T) ); }
+		ND_ BytesU			FullSize ()						const		{ return _size * SizeOf<T>; }
 		ND_ bool			Empty ()						const		{ return Length() == 0; }
 
 		ND_ T		*	begin ()										{ return ptr(); }
@@ -599,10 +599,10 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline usize TString<T,S,MC>::_GetLength (const void *begin, const void *end)
+	inline usize TString<T,S,MC>::_GetLength (const void *beginPtr, const void *endPtr)
 	{
-		ASSERT( begin <= end );
-		return ( ReferenceCast<usize>(end) - ReferenceCast<usize>(begin) ) / sizeof(T);
+		ASSERT( beginPtr <= endPtr );
+		return ( ReferenceCast<usize>(endPtr) - ReferenceCast<usize>(beginPtr) ) / sizeof(T);
 	}
 		
 /*
@@ -674,9 +674,9 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void TString<T,S,MC>::Append (const void *begin, const void *end)
+	inline void TString<T,S,MC>::Append (const void *beginPtr, const void *endPtr)
 	{
-		Append( Cast<const T *>(begin), _GetLength( begin, end ) );
+		Append( Cast<const T *>(beginPtr), _GetLength( beginPtr, endPtr ) );
 	}
 
 /*
@@ -837,9 +837,9 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void TString<T,S,MC>::Insert (const void *begin, const void *end, const usize pos)
+	inline void TString<T,S,MC>::Insert (const void *beginPtr, const void *endPtr, const usize pos)
 	{
-		Insert( TStringRef<const T>( Cast<const T*>(begin), _GetLength( begin, end ) ), pos );
+		Insert( TStringRef<const T>( Cast<const T*>(beginPtr), _GetLength( beginPtr, endPtr ) ), pos );
 	}
 	
 /*
@@ -870,13 +870,13 @@ namespace GXTypes
 =================================================
 */
 	template <typename T, typename S, typename MC>
-	inline void TString<T,S,MC>::Erase (const void *begin, const void *end)
+	inline void TString<T,S,MC>::Erase (const void *beginPtr, const void *endPtr)
 	{
-		ASSERT( begin < end );
-		if ( not Empty() and not _CheckIntersection( begin(), end(), begin, end ) )
+		ASSERT( beginPtr < endPtr );
+		if ( not Empty() and not _CheckIntersection( begin(), end(), beginPtr, endPtr ) )
 			RET_VOID;
 
-		Erase( GetIndex( *Cast<T const*>(begin) ), _GetLength( begin, end ) );
+		Erase( GetIndex( *Cast<T const*>(beginPtr) ), _GetLength( beginPtr, endPtr ) );
 	}
 	
 /*
@@ -1191,7 +1191,7 @@ namespace GXTypes
 
 		Reserve( (sizeof(fValue)<<4) / 10 + 10 );
 		
-		_length = usize(::snprintf( _memory.Pointer(), _size, a_fmt, double(fValue) ));
+		_length = usize(std::snprintf( _memory.Pointer(), _size, a_fmt, double(fValue) ));
 
 		if ( isize(_length) <= 0 ) {
 			WARNING( "can't convert value to string" );
@@ -1238,7 +1238,7 @@ namespace GXTypes
 
 		Reserve( (sizeof(fValue)<<4) / 10 + 12 );
 		
-		_length = usize(::snprintf( _memory.Pointer(), _size, a_fmt, fValue ));
+		_length = usize(std::snprintf( _memory.Pointer(), _size, a_fmt, fValue ));
 
 		if ( isize(_length) <= 0 ) {
 			WARNING( "can't convert value to string" );

@@ -153,13 +153,13 @@ namespace GXTypes
 		ND_ T const *	GetPtr ()		const
 		{
 			ASSERT( IsDefined() );
-			return &_value;
+			return AddressOf( _value );
 		}
 
 		ND_ T *		GetPtr ()
 		{
 			ASSERT( IsDefined() );
-			return &_value;
+			return AddressOf( _value );
 		}
 
 		T &			CreateDefault ()
@@ -195,7 +195,7 @@ namespace GXTypes
 		CompileTime::EnableIf<TypeTraits::IsCopyConstructible<B>>  _Create (const B &value) noexcept
 		{
 			_Destroy();
-			UnsafeMem::PlacementNew<T>( &_value, value );
+			UnsafeMem::PlacementNew<T>( AddressOf(_value), value );
 			_isDefined = true;
 		}
 
@@ -203,7 +203,7 @@ namespace GXTypes
 		CompileTime::EnableIf<TypeTraits::IsMoveConstructible<B>>  _Create (B &&value) noexcept
 		{
 			_Destroy();
-			UnsafeMem::PlacementNew<T>( &_value, FW<T>( value ) );
+			UnsafeMem::PlacementNew<T>( AddressOf(_value), FW<T>( value ) );
 			_isDefined = true;
 		}
 

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Core/STL/ThreadSafe/Atomic.h"
+#include "Core/STL/ThreadSafe/AtomicCounter.h"
 #include "Core/STL/Types/Noncopyable.h"
 
 namespace GX_STL
@@ -23,7 +24,7 @@ namespace GXTypes
 
 	// variables
 	private:
-		Atomic< T >		_counter;
+		AtomicCounter< T >		_counter;
 
 
 	// methods
@@ -31,44 +32,24 @@ namespace GXTypes
 		RefCounter ()
 		{}
 
-		explicit RefCounter (RefCounter &&other) : _counter(other._counter)
-		{
-			other._counter = 0;
-		}
-
-		explicit RefCounter (const RefCounter &) : _counter(1)
-		{}
-
-		void operator = (RefCounter &&other)
-		{
-			_counter = other._counter.Get();
-			other._counter = 0;
-		}
-
-		void operator = (const RefCounter &)
-		{
-			_counter = 1;
-		}
-
 		~RefCounter ()
 		{
-			ASSERT( _counter == 0 );
+			ASSERT( _counter.Load() == 0 );
 		}
 
-		T  Inc ()
+		void Inc ()
 		{
-			return ++_counter;
+			++_counter;
 		}
 
-		T  Dec ()
+		ND_ bool  DecAndTest ()
 		{
-			ASSERT( _counter > 0 );
-			return --_counter;
+			return _counter.DecAndTest();
 		}
 
 		ND_ T  Count () const
 		{
-			return _counter.Get();
+			return _counter.Load();
 		}
 	};
 
@@ -82,13 +63,12 @@ namespace GXTypes
 	{
 	// types
 	private:
-		using Op	= OS::AtomicOp;
 		using T		= int;
 
 		struct _Internal
 		{
-			volatile T	count		= 0;
-			volatile T	weakCount	= 1;
+			AtomicCounter<T>	count		{ 0 };
+			AtomicCounter<T>	weakCount	{ 1 };
 		};
 
 
@@ -121,10 +101,10 @@ namespace GXTypes
 		bool operator == (const RefCounter2 &right) const	{ return _ptr == right._ptr; }
 
 
-		T  Inc ()
+		void  Inc ()
 		{
 			ASSUME( _ptr );
-			return Op::Inc<T>( _ptr->count );
+			++_ptr->count;
 		}
 
 		ND_ bool  TryInc ()
@@ -132,44 +112,43 @@ namespace GXTypes
 			ASSUME( _ptr );
 			for (;;)
 			{
-				T cnt = Op::Get<T>( _ptr->count );
+				const T	cnt = _ptr->count.Load();
 
 				if ( cnt == 0 )
 					return false;
 
-				if ( Op::CmpExch<T>( _ptr->count, cnt+1, cnt ) == cnt )
+				if ( _ptr->count.CmpExch( cnt+1, cnt ) == cnt )
 					return true;
 			}
 		}
 
-		T  Dec ()
+		ND_ bool  DecAndTest ()
 		{
 			ASSUME( _ptr );
-			return Op::Dec<T>( _ptr->count );
+			return _ptr->count.DecAndTest();
 		}
 
 		ND_ T  Count () const
 		{
-			return _ptr ? Op::Get<T>( _ptr->count ) : 0;
+			return _ptr ? _ptr->count.Load() : 0;
 		}
 
-		T  IncWeak ()
+		void  IncWeak ()
 		{
 			ASSUME( _ptr );
-			return Op::Inc<T>( _ptr->weakCount );
+			++_ptr->weakCount;
 		}
 
-		T  DecWeak ()
+		void  DecWeak ()
 		{
 			ASSUME( _ptr );
-			const T res = Op::Dec<T>( _ptr->weakCount );
-			if ( res == 0 ) _Destroy();
-			return res;
+			if ( _ptr->weakCount.DecAndTest() )
+				_Destroy();
 		}
 
 		ND_ T  CountWeak () const
 		{
-			return _ptr ? Op::Get<T>( _ptr->weakCount ) : 0;
+			return _ptr ? _ptr->weakCount.Load() : 0;
 		}
 		
 		DEBUG_ONLY(
@@ -192,7 +171,7 @@ namespace GXTypes
 		void _Destroy ()
 		{
 			ASSUME( _ptr );
-			ASSERT( _ptr->weakCount == 0 );
+			ASSERT( _ptr->weakCount.Load() == 0 );
 			delete _ptr;
 			_ptr = null;
 			DEBUG_ONLY( --_AllocCounter() );

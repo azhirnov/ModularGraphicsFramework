@@ -1,7 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Utf8StringUtils.h"
-#include "Core/STL/Math/BinaryMath.h"
 
 #ifdef GX_SQLITE_DATABASE_ENABLED
 

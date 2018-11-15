@@ -122,10 +122,10 @@ namespace ContainerAdaptors
 			return _ref and _append and _appendMovable;
 		}
 
-		ND_ explicit operator bool () const			{ return IsValid(); }
+		ND_ explicit operator bool () const					{ return IsValid(); }
 
-		void PushBack (const T &value)						{ Append( ArrayCRef<T>( &value, 1 ) ); }
-		void PushBack (T &&value)							{ AppendMovable( ArrayRef<T>( &value, 1 ) ); }
+		void PushBack (const T &value)						{ Append( ArrayCRef<T>( AddressOf(value), 1 ) ); }
+		void PushBack (T &&value)							{ AppendMovable( ArrayRef<T>( AddressOf(value), 1 ) ); }
 
 		void Append (ArrayCRef<T> values)					{ ASSERT( IsValid() ); _append( _ref, values ); }
 		void AppendMovable (ArrayRef<T> values)	noexcept	{ ASSERT( IsValid() ); _appendMovable( _ref, values ); }
@@ -135,15 +135,15 @@ namespace ContainerAdaptors
 		template <typename C>
 		CompileTime::EnableIf<_adaptors_hidden_::Has_PushBack<C>>  _Create (C &other)
 		{
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									FOR( i, elements ) { arr.PushBack( elements[i] ); }
 								};
 			_appendMovable	= LAMBDA() (void *ptr, ArrayRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									FOR( i, elements ) { arr.PushBack( RVREF(elements[i]) ); }
 								};
 		}
@@ -151,16 +151,16 @@ namespace ContainerAdaptors
 		template <typename C>
 		CompileTime::EnableIf<_adaptors_hidden_::Has_PushBack_Reserve<C>>  _Create (C &other)
 		{
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.Reserve( arr.Count() + elements.Count() );
 									FOR( i, elements ) { arr.PushBack( elements[i] ); }
 								};
 			_appendMovable	= LAMBDA() (void *ptr, ArrayRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.Reserve( arr.Count() + elements.Count() );
 									FOR( i, elements ) { arr.PushBack( RVREF(elements[i]) ); }
 								};
@@ -169,15 +169,15 @@ namespace ContainerAdaptors
 		template <typename C>
 		CompileTime::EnableIf<_adaptors_hidden_::Has_Add<C>>  _Create (C &other)
 		{
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									FOR( i, elements ) { arr.Add( elements[i] ); }
 								};
 			_appendMovable	= LAMBDA() (void *ptr, ArrayRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									FOR( i, elements ) { arr.Add( RVREF(elements[i]) ); }
 								};
 		}
@@ -185,16 +185,16 @@ namespace ContainerAdaptors
 		template <typename C>
 		CompileTime::EnableIf<_adaptors_hidden_::Has_Add_Reserve<C>>  _Create (C &other)
 		{
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.Reserve( arr.Count() + elements.Count() );
 									FOR( i, elements ) { arr.Add( elements[i] ); }
 								};
 			_appendMovable	= LAMBDA() (void *ptr, ArrayRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.Reserve( arr.Count() + elements.Count() );
 									FOR( i, elements ) { arr.Add( RVREF(elements[i]) ); }
 								};
@@ -203,15 +203,15 @@ namespace ContainerAdaptors
 		template <typename C>
 		CompileTime::EnableIf<_adaptors_hidden_::Has_pushback<C>>  _Create (C &other)
 		{
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									FOR( i, elements ) { arr.push_back( elements[i] ); }
 								};
 			_appendMovable	= LAMBDA() (void *ptr, ArrayRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									FOR( i, elements ) { arr.push_back( RVREF(elements[i]) ); }
 								};
 		}
@@ -219,16 +219,16 @@ namespace ContainerAdaptors
 		template <typename C>
 		CompileTime::EnableIf<_adaptors_hidden_::Has_pushback_reserve<C>>  _Create (C &other)
 		{
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.reserve( arr.size() + elements.Count() );
 									FOR( i, elements ) { arr.push_back( elements[i] ); }
 								};
 			_appendMovable	= LAMBDA() (void *ptr, ArrayRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.reserve( arr.size() + elements.Count() );
 									FOR( i, elements ) { arr.push_back( RVREF(elements[i]) ); }
 								};
@@ -237,15 +237,15 @@ namespace ContainerAdaptors
 		template <typename C>
 		CompileTime::EnableIf<_adaptors_hidden_::Has_insert<C>>  _Create (C &other)
 		{
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									FOR( i, elements ) { arr.insert( elements[i] ); }
 								};
 			_appendMovable	= LAMBDA() (void *ptr, ArrayRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									FOR( i, elements ) { arr.insert( RVREF(elements[i]) ); }
 								};
 		}
@@ -253,16 +253,16 @@ namespace ContainerAdaptors
 		template <typename C>
 		CompileTime::EnableIf<_adaptors_hidden_::Has_insert_reserve<C>>  _Create (C &other)
 		{
-			_ref			= PointerCast<void>( &other );
+			_ref			= Cast<void *>( AddressOf(other) );
 			_append			= LAMBDA() (void *ptr, ArrayCRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.reserve( arr.size() + elements.Count() );
 									FOR( i, elements ) { arr.insert( elements[i] ); }
 								};
 			_appendMovable	= LAMBDA() (void *ptr, ArrayRef<T> elements)
 								{
-									auto&	arr = *PointerCast<C>( ptr );
+									auto&	arr = *Cast<C *>( ptr );
 									arr.reserve( arr.size() + elements.Count() );
 									FOR( i, elements ) { arr.insert( RVREF(elements[i]) ); }
 								};

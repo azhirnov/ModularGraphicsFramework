@@ -22,6 +22,9 @@ namespace GXTypes
 #	define T	float
 #	include "FloatTimeImpl.h"
 
+#	define T	int
+#	include "IntTimeImpl.h"
+
 #	define T	uint
 #	include "IntTimeImpl.h"
 	
@@ -34,10 +37,11 @@ namespace GXTypes
 #	undef _TIME_PROFILER_IMPL_
 
 
-	using TimeProfilerF	= TimeProfiler<float>;
-	using TimeProfilerD	= TimeProfiler<double>;
-	using TimeProfilerU	= TimeProfiler<uint>;
-	using TimeProfilerL	= TimeProfiler<ilong>;
+	using TimeProfilerF		= TimeProfiler<float>;
+	using TimeProfilerD		= TimeProfiler<double>;
+	using TimeProfilerU		= TimeProfiler<uint>;
+	using TimeProfilerL		= TimeProfiler<ilong>;
+	using TimeProfilerUL	= TimeProfiler<ulong>;
 
 }	// GXTypes
 }	// GX_STL

@@ -20,7 +20,7 @@ namespace OS
 
 	// variables
 	private:
-		CriticalSection		_sCSWrite,
+		Mutex		_sCSWrite,
 							_sCSRead;
 		SyncEvent			_sELocked;
 		int					_iCounter;

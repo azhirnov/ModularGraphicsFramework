@@ -63,7 +63,7 @@ namespace GXTypes
 {
 
 #if not defined( GX_THREADSAFE_STATIC_SUPPORTED )
-	OS::Mutex			SingletonMultiThread::_mutex;
+	Mutex		SingletonMultiThread::_mutex;
 #endif
 
 }	// GXTypes

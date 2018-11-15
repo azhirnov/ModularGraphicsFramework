@@ -157,13 +157,13 @@ namespace _types_hidden_
 		const_iterator Add (const Value &value)
 		{
 			const usize	idx = _memory.AddOrReplace( value );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 		const_iterator Add (Value &&value)
 		{
 			const usize	idx = _memory.AddOrReplace( RVREF( value ) );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 		
 
@@ -172,13 +172,13 @@ namespace _types_hidden_
 		const_iterator AddOrSkip (const Value &value)
 		{
 			const usize	idx = _memory.AddOrSkip( value );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 		const_iterator AddOrSkip (Value &&value)
 		{
 			const usize	idx = _memory.AddOrSkip( RVREF( value ) );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 
@@ -234,7 +234,7 @@ namespace _types_hidden_
 			if ( not FindIndex( key, OUT idx ) )
 				return false;
 			
-			result = &(*this)[ idx ];
+			result = AddressOf( (*this)[ idx ] );
 			return true;
 		}
 
@@ -320,7 +320,7 @@ namespace _types_hidden_
 			if ( not _FindFirstIndex2( key, OUT idx ) )
 				return false;
 			
-			result = &(*this)[ idx ];
+			result = AddressOf( (*this)[ idx ] );
 			return true;
 		}
 

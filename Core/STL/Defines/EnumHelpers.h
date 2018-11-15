@@ -70,6 +70,6 @@
 
 // enum bitfield
 #define GX_ENUM_BITFIELD( _type_ ) \
-	using bits = EnumBitfield< _type_ >; \
+	using bits = GX_STL::GXTypes::EnumBitfield< _type_ >; \
 	ND_ friend constexpr bits operator | (type left, type right)	{ return bits().Set( left ).Set( right ); }
 

@@ -104,8 +104,8 @@ namespace GXTypes
 		ND_ static constexpr usize		Count ()		{ return C; }
 		ND_ static constexpr usize		Capacity ()		{ return C; }
 		ND_ static constexpr usize		MaxCapacity ()	{ return Capacity(); }	// max available for allocation count of elements
-		ND_ static constexpr BytesU		Size ()			{ return BytesU( Count() * sizeof(T) ); }
-		ND_ static constexpr BytesU		FullSize ()		{ return BytesU( Capacity() * sizeof(T) ); }
+		ND_ static constexpr BytesU		Size ()			{ return Count() * SizeOf<T>; }
+		ND_ static constexpr BytesU		FullSize ()		{ return Capacity() * SizeOf<T>; }
 		ND_ static constexpr usize		LastIndex ()	{ return Count()-1; }
 	
 		ND_ ArrayRef<T>		SubArray (usize pos, usize count = UMax)			{ return ArrayRef<T>(*this).SubArray( pos, count ); }
@@ -238,7 +238,7 @@ namespace GXTypes
 	inline StaticArray<T,C,S>::StaticArray (const T& value)
 	{
 		for (usize i = 0; i < Count(); ++i) {
-			Strategy_t::Copy( _memory + i, &value, 1 );
+			Strategy_t::Copy( _memory + i, AddressOf(value), 1 );
 		}
 	}
 	
@@ -281,7 +281,7 @@ namespace GXTypes
 	inline bool StaticArray<T,C,S>::At (const usize index, OUT T & value) const
 	{
 		if ( index >= Count() )  return false;
-		Strategy_t::Copy( &value, &_memory + index, 1 );
+		Strategy_t::Copy( AddressOf(value), _memory + index, 1 );
 		return true;
 	}
 	
@@ -294,7 +294,7 @@ namespace GXTypes
 	inline bool StaticArray<T,C,S>::Set (const usize index, const T &value)
 	{
 		if ( index >= Count() ) return false;
-		Strategy_t::Copy( _memory + index, &value, 1 );
+		Strategy_t::Copy( _memory + index, AddressOf(value), 1 );
 		return true;
 	}
 	
@@ -302,7 +302,7 @@ namespace GXTypes
 	inline bool StaticArray<T,C,S>::Set (const usize index, T&& value)
 	{
 		if ( index >= Count() ) return false;
-		Strategy_t::Move( _memory + index, &value, 1 );
+		Strategy_t::Move( _memory + index, AddressOf(value), 1 );
 		return true;
 	}
 	

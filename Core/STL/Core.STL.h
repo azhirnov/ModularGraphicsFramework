@@ -38,7 +38,6 @@
 #include "Memory/MemoryContainer.h"
 #include "Memory/MemoryViewer.h"
 #include "Memory/MemFunc.h"
-#include "Memory/MemPointer.h"
 #include "Memory/PlacementNew.h"
 
 
@@ -62,6 +61,7 @@
 #include "Containers/IndexedArray.h"
 #include "Containers/Adaptors.h"
 #include "Containers/Tuple.h"
+#include "Containers/Deque.h"
 
 
 // Algorithms/Crypt //
@@ -119,6 +119,9 @@
 // ThreadSafe //
 #include "ThreadSafe/MtQueue.h"
 #include "ThreadSafe/Atomic.h"
+#include "ThreadSafe/AtomicFlag.h"
+#include "ThreadSafe/AtomicBitfield.h"
+#include "ThreadSafe/AtomicCounter.h"
 #include "ThreadSafe/MtFile.h"
 #include "ThreadSafe/Singleton.h"
 
@@ -193,16 +196,6 @@
 
 // DataBase //
 #include "DataBase/SimpleDB.h"
-
-
-// Java //
-#include "Java/JavaEnvironment.h"
-#include "Java/JavaTypeInfo.h"
-#include "Java/JavaArray.h"
-#include "Java/JavaString.h"
-#include "Java/JavaClass.h"
-#include "Java/JavaMethod.h"
-#include "Java/JavaMethodType.h"
 
 
 // Log //

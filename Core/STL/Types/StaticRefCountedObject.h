@@ -15,7 +15,7 @@ namespace GXTypes
 {
 
 	template <typename T, typename ...Args>
-	forceinline SharedPointerType<T> New (Args ...args) noexcept;
+	forceinline SharedPointerType<T> New (Args&& ...args) noexcept;
 
 
 	
@@ -72,7 +72,7 @@ namespace GXTypes
 				// free weak pointer
 				WeakStrategy_t::Counter_t cnt{ WeakStrategy_t::Create( this ) };
 
-				_GetCounter().Dec();
+				(void)_GetCounter().DecAndTest();
 				WeakStrategy_t::DecRef( cnt );
 			}
 			else
@@ -84,7 +84,7 @@ namespace GXTypes
 		
 		// use New<T>( T(args) ) for private/protected constructors
 		template <typename T, typename ...Args>
-		ND_ friend forceinline SharedPointerType<T>  New (Args ...args) noexcept
+		ND_ friend forceinline SharedPointerType<T>  New (Args&& ...args) noexcept
 		{
 			SharedPointerType<T> tmp = new T( FW<Args>(args)... );
 			tmp->_SetDynamicObj( true );
@@ -125,7 +125,7 @@ namespace GXTypes
 
 	// RefCountedObject //
 	protected:
-		void _Release (RefCounter_t &) override
+		void _Release (INOUT RefCounter_t &) override
 		{
 			ASSERT( _isDynamicObj );
 

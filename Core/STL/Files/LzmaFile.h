@@ -92,7 +92,7 @@ namespace GXFile
 
 			_mem.Resize( dst_size );
 			
-			int res = LzmaUncompress( _mem.ptr(), &dst_size, src.ptr(), &src_size, header.props, header.propsSize );
+			int res = LzmaUncompress( _mem.ptr(), &dst_size, src.ptr(), src_size, header.props, header.propsSize );
 
 			_mem.Resize( dst_size );
 			_name = file->Name();

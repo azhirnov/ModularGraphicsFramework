@@ -53,7 +53,11 @@ namespace GXTypes
 	// Bytes and Bits
 	template <typename T> struct Bytes;
 	template <typename T> struct Bits;
-
+	
+	typedef Bytes<ulong>	BytesU;
+	typedef Bytes<ilong>	BytesI;
+	typedef Bits<ulong>		BitsU;
+	typedef Bits<ilong>		BitsI;
 
 }	// GXTypes
 }	// GX_STL

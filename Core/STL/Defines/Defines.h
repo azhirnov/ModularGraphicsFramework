@@ -32,10 +32,10 @@
 
 #if defined( PLATFORM_TYPE_MOBILE )
 #	define MOBILE_ONLY					ARGS
-#	define DESCTOP_ONLY					__GX_EMPTY_ARGS
+#	define DESKTOP_ONLY					__GX_EMPTY_ARGS
 #else
 #	define MOBILE_ONLY					__GX_EMPTY_ARGS
-#	define DESCTOP_ONLY					ARGS
+#	define DESKTOP_ONLY					ARGS
 #endif	// PLATFORM_TYPE_MOBILE
 
 
@@ -80,6 +80,7 @@
 #define WARNING( _message_ )			ASSERT( false, _message_ )
 #define STATIC_WARNING( _message_ )		STATIC_ASSERT( false, _message_ )
 #define CONSOLE_OUTPUT( ... )			::printf( __VA_ARGS__ )
+
 
 // for deferred programming
 #define TODO( _message_ )				ASSERT( false, _message_ )
@@ -129,12 +130,14 @@
 
 
 // Short file name
-#define GX_SHORT_FILENAME				(::GX_STL::GXTypes::FileAddress::ToShortPath( __FILE__, 2 ))
+#define GX_SHORT_FILENAME	(::GX_STL::GXTypes::FileAddress::ToShortPath( __FILE__, 2 ))
 
+// 'new' without exceptions
+#define NOTHROW_NEW			new (std::nothrow)
 
 // helpers for function parameters
-#define OUT			// output argument
-#define INOUT		// input and output argument (not recomended)
+#define OUT					// output argument
+#define INOUT				// input and output argument (not recomended)
 
 
 // convert to right value reference

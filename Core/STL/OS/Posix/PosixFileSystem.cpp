@@ -6,7 +6,6 @@
 
 #include "Core/STL/OS/Posix/PosixHeader.h"
 #include "Core/STL/OS/Posix/FileSystem.h"
-#include "Core/STL/Math/BinaryMath.h"
 
 namespace GX_STL
 {
@@ -241,7 +240,7 @@ namespace OS
 	GetFileSize
 =================================================
 */
-	BytesUL PosixFileSystem::GetFileSize (StringCRef filename)
+	BytesU PosixFileSystem::GetFileSize (StringCRef filename)
 	{
 		TODO("GetFileSize");
 		return Uninitialized;

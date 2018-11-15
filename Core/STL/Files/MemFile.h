@@ -84,12 +84,12 @@ namespace GXFile
 		virtual bool SeekEnd (BytesU offset) noexcept override
 		{
 			ASSERT( offset <= _mem.Size() );
-			return _SetPos( BytesU(_mem.Count()) - offset );
+			return _SetPos( _mem.Size() - offset );
 		}
 
 		virtual BytesU RemainingSize () const noexcept override
 		{
-			return BytesU(_mem.Count()) - _pos;
+			return _mem.Size() - _pos;
 		}
 
 		virtual BytesU Size () const noexcept override
@@ -123,7 +123,7 @@ namespace GXFile
 		{
 			_memBuffer.Clear();
 			_mem	= _memBuffer;
-			_pos	= BytesU();
+			_pos	= 0_b;
 			_opened = false;
 		}
 		
@@ -138,7 +138,7 @@ namespace GXFile
 			}
 			else
 			{
-				_pos = BytesU();
+				_pos = 0_b;
 				return false;
 			}
 		}
@@ -203,7 +203,7 @@ namespace GXFile
 
 			usize	size = usize(file->RemainingSize());
 			
-			_pos	= BytesU();
+			_pos	= 0_b;
 			_opened = true;
 
 			_memBuffer.Resize( size, false );
@@ -238,7 +238,7 @@ namespace GXFile
 					RETURN_ERR( "invalid flag" );
 			}
 
-			_pos	= BytesU();
+			_pos	= 0_b;
 			_opened	= true;
 
 			return true;
@@ -271,7 +271,7 @@ namespace GXFile
 					RETURN_ERR( "invalid flag" );
 			}
 
-			_pos	= BytesU();
+			_pos	= 0_b;
 			_opened	= true;
 
 			return true;
@@ -365,7 +365,7 @@ namespace GXFile
 
 		virtual BytesU RemainingSize () const noexcept override
 		{
-			return BytesU(_mem.Count()) - _pos;
+			return _mem.Size() - _pos;
 		}
 
 		virtual BytesU Size () const noexcept override
@@ -398,7 +398,7 @@ namespace GXFile
 		void _Close ()
 		{
 			_mem.Clear();
-			_pos	= BytesU();
+			_pos	= 0_b;
 			_opened	= false;
 		}
 		
@@ -413,7 +413,7 @@ namespace GXFile
 			}
 			else
 			{
-				_pos = BytesU();
+				_pos = 0_b;
 				return false;
 			}
 		}
@@ -444,7 +444,7 @@ namespace GXFile
 		MemWFile () {}
 
 
-		ND_ static MemWFilePtr New (BytesU reserve = BytesU())
+		ND_ static MemWFilePtr New (BytesU reserve = 0_b)
 		{
 			MemWFilePtr	file = new MemWFile();
 
@@ -460,7 +460,7 @@ namespace GXFile
 			_mem.Clear();
 			_mem.Reserve( usize(reserve) );
 
-			_pos	= BytesU();
+			_pos	= 0_b;
 			_opened	= true;
 
 			return true;

@@ -23,7 +23,7 @@ namespace GXTypes
 		ND_ static Ptr<T> Instance () noexcept
 		{
 			static T inst;
-			return &inst;
+			return AddressOf( inst );
 		}
 	};
 
@@ -32,7 +32,7 @@ namespace GXTypes
 	struct SingletonMultiThread
 	{
 	protected:
-		static OS::Mutex	_mutex;
+		static Mutex	_mutex;
 
 		template <typename T>
 		static T & _Instance () noexcept
@@ -53,7 +53,7 @@ namespace GXTypes
 				T *	temp = null;
 				{
 					SCOPELOCK( _mutex );
-					temp = & _Instance<T>();
+					temp = AddressOf( _Instance<T>() );
 				}
 				inst = temp;
 			}
@@ -78,7 +78,7 @@ namespace GXTypes
 		ND_ static Ptr<T> Instance () noexcept
 		{
 			static thread_local T  inst;
-			return &inst;
+			return AddressOf( inst );
 		}
 	};
 

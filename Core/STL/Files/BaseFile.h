@@ -100,7 +100,7 @@ namespace GXFile
 		{
 			STATIC_ASSERT( not TypeTraits::IsConstOrVolatile<T> );
 			STATIC_ASSERT( CompileTime::IsMemCopyFromFileAvailable<T> );
-			return ReadBuf( &value, BytesU::SizeOf( value ) ) == BytesU::SizeOf(value);
+			return ReadBuf( AddressOf(value), BytesU::SizeOf(value) ) == BytesU::SizeOf(value);
 		}
 
 		template <typename T>
@@ -151,7 +151,7 @@ namespace GXFile
 		bool Write (const T &value)
 		{
 			STATIC_ASSERT( CompileTime::IsMemCopyFromFileAvailable<T> );
-			return WriteBuf( &value, BytesU::SizeOf( value ) ) == BytesU::SizeOf(value);
+			return WriteBuf( AddressOf(value), BytesU::SizeOf(value) ) == BytesU::SizeOf(value);
 		}
 
 		template <typename T>

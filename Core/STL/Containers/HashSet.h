@@ -161,14 +161,14 @@ namespace _types_hidden_
 		{
 			const KeyHash_t	hash = _hasher(value);
 			const usize		idx  = _memory.AddOrReplace( HPair_t{ hash, value } );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 		const_iterator Add (Value &&value)
 		{
 			KeyHash_t		hash = _hasher(value);
 			const usize		idx  = _memory.AddOrReplace( HPair_t{ RVREF(hash), RVREF(value) } );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 		
 
@@ -178,14 +178,14 @@ namespace _types_hidden_
 		{
 			const KeyHash_t	hash = _hasher(value);
 			const usize		idx  = _memory.AddOrSkip( HPair_t{ hash, value } );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 		const_iterator AddOrSkip (Value &&value)
 		{
 			KeyHash_t		hash = _hasher(value);
 			const usize		idx  = _memory.AddOrSkip( HPair_t{ RVREF(hash), RVREF(value) } );
-			return &(*this)[ idx ];
+			return AddressOf( (*this)[ idx ] );
 		}
 
 
@@ -240,7 +240,7 @@ namespace _types_hidden_
 			if ( not FindIndex( key, OUT idx ) )
 				return false;
 
-			result = &(*this)[ idx ];
+			result = AddressOf( (*this)[ idx ] );
 			return true;
 		}
 

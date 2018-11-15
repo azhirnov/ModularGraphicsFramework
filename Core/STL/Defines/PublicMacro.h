@@ -92,10 +92,6 @@
 #	error PLATFORM_BITS
 #endif
 
-#ifndef PLATFORM_BITS_NAME
-#	error PLATFORM_BITS_NAME
-#endif
-
 
 // COMPILER_* //
 #ifndef COMPILER_NAME
@@ -140,8 +136,8 @@
 #	error MOBILE_ONLY
 #endif
 
-#ifndef DESCTOP_ONLY
-#	error DESCTOP_ONLY
+#ifndef DESKTOP_ONLY
+#	error DESKTOP_ONLY
 #endif
 
 #ifndef ASSUME

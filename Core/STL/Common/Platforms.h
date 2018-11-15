@@ -33,7 +33,7 @@
 	  defined( __CYGWIN__ ) || defined( __MINGW32__ ) || defined( __MINGW32__ ) )
 #	define PLATFORM_WINDOWS			1
 #	define PLATFORM_NAME			"Windows"
-#	define PLATFORM_TYPE_DESCTOP	1
+#	define PLATFORM_TYPE_DESKTOP	1
 #	define PLATFORM_BASE_WINDOWS	1
 #endif
 
@@ -50,7 +50,7 @@
 # else
 #	define PLATFORM_MACOSX			1
 #	define PLATFORM_NAME			"Mac OS X"
-#	define PLATFORM_TYPE_DESCTOP	1
+#	define PLATFORM_TYPE_DESKTOP	1
 # endif
 #endif
 
@@ -60,7 +60,7 @@
 	( defined( __linux__ ) || defined( __gnu_linux__ ) )
 #	define PLATFORM_LINUX			1
 #	define PLATFORM_NAME			"Linux"
-#	define PLATFORM_TYPE_DESCTOP	1
+#	define PLATFORM_TYPE_DESKTOP	1
 #	define PLATFORM_BASE_POSIX		1
 #endif
 
@@ -70,7 +70,7 @@
 	( defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__) )
 #	define PLATFORM_FREEBSD			1
 #	define PLATFORM_NAME			"FreeBSD"
-#	define PLATFORM_TYPE_DESCTOP	1
+#	define PLATFORM_TYPE_DESKTOP	1
 #	define PLATFORM_BASE_POSIX		1	// ???
 #endif
 
@@ -78,52 +78,47 @@
 
 //------------------------- Architecture --------------------------//
 
-#if defined( __arm__ ) || defined( __thumb__ ) || defined( _M_ARM ) || defined( _M_ARMT )
+#if !defined(PLATFORM_CPU_NAME) && !defined(PLATFORM_BITS)
+# if defined( __arm__ ) || defined( __thumb__ ) || defined( _M_ARM ) || defined( _M_ARMT )
 #	define PLATFORM_CPU_ARM			1
 #	define PLATFORM_CPU_NAME		"ARM"
 #	define PLATFORM_BITS			32
-#	define PLATFORM_BITS_NAME		"32"
-#endif
+# endif
 
-#if defined( __aarch64__ )
+# if defined( __aarch64__ )
 #	define PLATFORM_CPU_ARM64		1
 #	define PLATFORM_CPU_NAME		"ARM 64"
 #	define PLATFORM_BITS			64
-#	define PLATFORM_BITS_NAME		"64"
-#endif
+# endif
 
-#if defined( __amd64__ ) || defined( __x86_64__ ) || defined( _M_X64 ) || defined( _M_AMD64 )
+# if defined( __amd64__ ) || defined( __x86_64__ ) || defined( _M_X64 ) || defined( _M_AMD64 )
 #	define PLATFORM_CPU_X64			1
 #	define PLATFORM_CPU_AMD64		1
 #	define PLATFORM_CPU_NAME		"AMD 64"
 #	define PLATFORM_BITS			64
-#	define PLATFORM_BITS_NAME		"64"
-#endif
+# endif
 
-#if defined( __i386__ ) || defined( __i486__ ) || defined( __i586__ ) || defined( __i686__ ) || \
-	defined( _M_IX86 ) || defined( _X86_ )
+# if defined( __i386__ ) || defined( __i486__ ) || defined( __i586__ ) || defined( __i686__ ) || \
+	 defined( _M_IX86 ) || defined( _X86_ )
 #	define PLATFORM_CPU_X86			1
 #	define PLATFORM_CPU_INTELX86	1
 #	define PLATFORM_CPU_NAME		"Intel x86"
 #	define PLATFORM_BITS			32
-#	define PLATFORM_BITS_NAME		"32"
-#endif
+# endif
 
-#if defined( __ia64__ ) || defined( __IA64__ ) || defined( _M_IA64 ) || defined( __itanium__ )
+# if defined( __ia64__ ) || defined( __IA64__ ) || defined( _M_IA64 ) || defined( __itanium__ )
 #	define PLATFORM_CPU_X64			1
 #	define PLATFORM_CPU_IA64		1
 #	define PLATFORM_CPU_NAME		"Intel Itanium x64"
 #	define PLATFORM_BITS			64
-#	define PLATFORM_BITS_NAME		"64"
-#endif
+# endif
 
-#if defined( __mips__ )
+# if defined( __mips__ )
 #	define PLATFORM_CPU_MIPS		1
 #	define PLATFORM_CPU_NAME		"MIPS"
 #	define PLATFORM_BITS			32
-#	define PLATFORM_BITS_NAME		"32"
+# endif
 #endif
-
 
 
 //---------------------------- Checks -----------------------------//
@@ -133,13 +128,13 @@
 #	error Unknown platform
 #endif
 
-#ifndef PLATFORM_BITS_NAME
+#ifndef PLATFORM_BITS
 #	error Unknown platform bits
 #endif
 
-#if !defined( PLATFORM_TYPE_DESCTOP ) && !defined( PLATFORM_TYPE_MOBILE )
-#	error Unknown platform type
-#endif
+//#if !defined( PLATFORM_TYPE_DESKTOP ) && !defined( PLATFORM_TYPE_MOBILE )
+//#	error Unknown platform type
+//#endif
 
 #ifndef PLATFORM_CPU_NAME
 #	error Unknown cpu architecture

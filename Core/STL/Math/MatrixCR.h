@@ -262,7 +262,7 @@
 	ND_ inline typename Matrix<T,C,R,U>::Col_t &  Matrix<T,C,R,U>::operator () (usize c)
 	{
 		ASSUME( c < NumColumns() );
-		return *PointerCast< Col_t >( _v[c] );	// TODO: check align
+		return *Cast< Col_t *>( _v[c] );	// TODO: check align
 	}
 
 /*
@@ -274,7 +274,7 @@
 	ND_ inline typename Matrix<T,C,R,U>::Col_t const &  Matrix<T,C,R,U>::operator () (usize c) const
 	{
 		ASSUME( c < NumColumns() );
-		return *PointerCast< Col_t >( _v[c] );	// TODO: check align
+		return *Cast< Col_t const *>( _v[c] );	// TODO: check align
 	}
 		
 /*
@@ -466,14 +466,14 @@
 	ND_ inline T *  Matrix<T,C,R,U>::ptr ()
 	{
 		STATIC_ASSERT( sizeof(_v) == (sizeof(T)*C*R) );
-		return &_v[0][0];
+		return AddressOf( _v[0][0] );
 	}
 	
 	template <typename T, ulong U>
 	ND_ inline T const *  Matrix<T,C,R,U>::ptr () const
 	{
 		STATIC_ASSERT( sizeof(_v) == (sizeof(T)*C*R) );
-		return &_v[0][0];
+		return AddressOf( _v[0][0] );
 	}
 
 /*
@@ -503,7 +503,7 @@
 	ND_ inline typename Matrix<T,C,R,U>::Col_t const &  Matrix<T,C,R,U>::Column (uint c) const
 	{
 		ASSERT( c < C );
-		return *PointerCast< Cols_t >( this )[c];	// TODO: check align
+		return *Cast< Cols_t const *>( this )[c];	// TODO: check align
 	}
 
 /*
@@ -654,7 +654,7 @@
 	ND_ inline Matrix<T,C,R,U>  Matrix<T,C,R,U>::Zero ()
 	{
 		Self	ret;
-		UnsafeMem::ZeroMem( &ret, sizeof(ret) );
+		UnsafeMem::ZeroMem( AddressOf(ret), sizeof(ret) );
 		return ret;
 	}
 	

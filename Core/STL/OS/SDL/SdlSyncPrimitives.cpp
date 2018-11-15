@@ -1,10 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Core/STL/OS/SDL/SyncPrimitives.h"
+#include "Core/STL/OS/SDL/SDLSyncPrimitives.h"
 
 #ifdef PLATFORM_SDL
-
-#include "Core/STL/Math/BinaryMath.h"
 
 namespace GX_STL
 {
@@ -13,22 +11,20 @@ namespace OS
 
 /*
 =================================================
-	_Create
+	constructor
 =================================================
 */
-	bool CriticalSection::_Create ()
+	Mutex::Mutex () :
+		_mutex{ ::SDL_CreateMutex() }
 	{
-		_Delete();
-		_mutex = ::SDL_CreateMutex();
-		return IsValid();
 	}
 	
 /*
 =================================================
-	_Delete
+	destructor
 =================================================
 */
-	void CriticalSection::_Delete ()
+	Mutex::~Mutex ()
 	{
 		if ( _mutex )
 		{
@@ -42,7 +38,7 @@ namespace OS
 	Lock
 =================================================
 */
-	void CriticalSection::Lock ()
+	void Mutex::Lock ()
 	{
 		int result = ::SDL_LockMutex( _mutex );
 		ASSERT( result != -1 );
@@ -54,7 +50,7 @@ namespace OS
 	TryLock
 =================================================
 */
-	bool CriticalSection::TryLock ()
+	bool Mutex::TryLock ()
 	{
 		int result = ::SDL_TryLockMutex( _mutex );
 		ASSERT( result != -1 );
@@ -66,7 +62,7 @@ namespace OS
 	Unlock
 =================================================
 */
-	void CriticalSection::Unlock ()
+	void Mutex::Unlock ()
 	{
 		int result = ::SDL_UnlockMutex( _mutex );
 		ASSERT( result != -1 );
@@ -78,22 +74,20 @@ namespace OS
 
 /*
 =================================================
-	_Create
+	constructor
 =================================================
 */
-	bool Semaphore::_Create (uint initialValue)
+	Semaphore::Semaphore (uint initialValue) :
+		_sem{ ::SDL_CreateSemaphore( initialValue ) }
 	{
-		_Delete();
-		_sem = ::SDL_CreateSemaphore( initialValue );
-		return IsValid();
 	}
 	
 /*
 =================================================
-	_Delete
+	destructor
 =================================================
 */
-	void Semaphore::_Delete ()
+	Semaphore::~Semaphore ()
 	{
 		if ( _sem )
 		{
@@ -143,22 +137,20 @@ namespace OS
 
 /*
 =================================================
-	_Create
+	constructor
 =================================================
 */
-	bool ConditionVariable::_Create ()
+	ConditionVariable::ConditionVariable () :
+		_cv{ ::SDL_CreateCond() }
 	{
-		_Delete();
-		_cv = ::SDL_CreateCond();
-		return IsValid();
 	}
 	
 /*
 =================================================
-	_Delete
+	destructor
 =================================================
 */
-	void ConditionVariable::_Delete ()
+	ConditionVariable::~ConditionVariable ()
 	{
 		if ( _cv )
 		{
@@ -196,7 +188,7 @@ namespace OS
 	Wait
 =================================================
 */
-	bool ConditionVariable::Wait (const CriticalSection &mutex)
+	bool ConditionVariable::Wait (const Mutex &mutex)
 	{
 		int result = ::SDL_CondWait( _cv, mutex._mutex );
 		ASSERT( result != -1 );
@@ -208,7 +200,7 @@ namespace OS
 	Wait
 =================================================
 */
-	bool ConditionVariable::Wait (const CriticalSection &mutex, TimeL time)
+	bool ConditionVariable::Wait (const Mutex &mutex, TimeL time)
 	{
 		int result = ::SDL_CondWaitTimeout( _cv, mutex._mutex, uint(time.MilliSeconds()) );
 		ASSERT( result != -1 );

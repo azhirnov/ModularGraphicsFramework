@@ -20,7 +20,7 @@ namespace OS
 
 	// variables
 	private:
-		CriticalSection		_cs;
+		Mutex		_cs;
 		ConditionVariable	_cv;
 		uint				_count,
 							_waitersCount;

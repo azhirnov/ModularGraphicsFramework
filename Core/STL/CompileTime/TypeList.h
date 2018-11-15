@@ -186,7 +186,7 @@ namespace CompileTime
 		
 		// RuntimeForEach
 		template <typename Func>
-		static void RuntimeForEach (Func &func) noexcept
+		static void RuntimeForEach (Func &&func) noexcept
 		{
 			_ctime_hidden_::TTypeList_ForEach< Self, Func, 0 >::Iterate( func );
 		}

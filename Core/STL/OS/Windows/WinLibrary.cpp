@@ -1,13 +1,11 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Core/STL/Common/Platforms.h"
-#include "Core/Config/Engine.Config.h"
+#include "Core/Config/STL.Config.h"
 
-#if defined( PLATFORM_WINDOWS ) and \
-	not defined( PLATFORM_SDL )
+#if defined( PLATFORM_WINDOWS ) and defined( GX_USE_NATIVE_API )
 
-#include "Core/STL/OS/Windows/Library.h"
-#include "Core/STL/Math/BinaryMath.h"
+#include "Core/STL/OS/Windows/WinLibrary.h"
 #include "Core/STL/Math/Interpolations.h"
 #include "Core/STL/OS/Base/BaseFileSystem.h"
 #include "Core/STL/OS/Windows/WinHeader.h"
@@ -160,9 +158,22 @@ namespace OS
 		Func_t tmp = ReferenceCast<Func_t>( ::GetProcAddress( _library.Get<HMODULE>(), procName.cstr() ) );
 		return tmp != null ? tmp : defProc;
 	}
+	
+/*
+=================================================
+	GetFullPath
+=================================================
+*
+	String   Library::GetFullPath () const
+	{
+		char buf[MAX_PATH] = "";
+		::GetModuleFileNameA( _library.Get<HMODULE>(), buf, MAX_PATH );
 
+		return buf;
+	}
+*/
 	
 }	// OS
 }	// GX_STL
 
-#endif	// PLATFORM_WINDOWS
+#endif	// PLATFORM_WINDOWS and GX_USE_NATIVE_API

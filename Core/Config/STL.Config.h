@@ -20,11 +20,15 @@
 
 // Platforms //
 
-// use SDL
-//#define PLATFORM_SDL
-
 // use STD
-//#define GX_USE_STD
+#ifndef PLATFORM_SDL
+//#	define GX_USE_STD
+#endif
+
+// use native API
+#if !defined(GX_USE_STD) && !defined(PLATFORM_SDL)
+#	define GX_USE_NATIVE_API
+#endif
 
 //-------------------------------------------------------------------
 
@@ -47,10 +51,6 @@
 // all string must be in unicode.
 // (TODO)
 //#define GX_UNICODE
-
-
-// enable temporary code, otherwise enabled static asserts instead of temporary code.
-//#define GX_TEMP_CODE
 
 
 // runtime error checks
@@ -82,18 +82,8 @@
 //#define GX_ZLIB_ENABLED
 
 
-// database
-//#define GX_SQLITE_DATABASE_ENABLED
-
-
 // physics types (this types slow down compilation)
 #define GX_PHYSICS_DIMENSIONS_ENABLED
-
-
-// Java
-#if defined( PLATFORM_ANDROID )
-//#	define GX_JNI_ENABLED
-#endif
 
 //-------------------------------------------------------------------
 
@@ -118,6 +108,8 @@ namespace GlobalConst
 	static const int	STL_MemContainerResizingDenominator	= 2;	// must be > 0
 
 	static const int	STL_MemContainerMaxStaticSize		= 1 << 12;	// 2Kb
+
+	static const int	STL_MemContainerPreallocSize		= 1 << 12;	// 2Kb
 
 }	// GlobalConst
 }	// GX_STL

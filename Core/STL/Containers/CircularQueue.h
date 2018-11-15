@@ -45,7 +45,7 @@ namespace GXTypes
 		
 		//  _____________ __________ _____________
 		// | used memory | reserved | used memory |
-		// 0          _end      _first       _size
+		// 0           _end      _first        _size
 
 
 	// methods
@@ -133,10 +133,10 @@ namespace GXTypes
 		void GetParts (OUT ArrayCRef<T> &part0, OUT ArrayCRef<T> &part1) const;
 
 		ND_ usize			Count ()		const;
-		ND_ BytesU			Size ()			const				{ return BytesU( sizeof(T) * Count() ); }
+		ND_ BytesU			Size ()			const				{ return SizeOf<T> * Count(); }
 		ND_ usize			Capacity ()		const				{ return _size-1; }
 		ND_ constexpr usize MaxCapacity ()	const				{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		ND_ BytesU			FullSize ()		const				{ return BytesU( sizeof(T) * Capacity() ); }
+		ND_ BytesU			FullSize ()		const				{ return SizeOf<T> * Capacity(); }
 		ND_ bool			Empty ()		const				{ return _first == _end; }
 		ND_ usize			LastIndex ()	const				{ return Count()-1; }
 		
@@ -375,7 +375,7 @@ namespace GXTypes
 		if ( cnt+2 >= _size )
 			_Reallocate( _size+1, true );
 		
-		Strategy_t::Copy( _memory.Pointer() + _end, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + _end, AddressOf(value), 1 );
 		_end = _WrapIndex( _end + 1 );
 	}
 	
@@ -390,7 +390,7 @@ namespace GXTypes
 		if ( Count()+2 >= _size )
 			_Reallocate( _size+1, true );
 		
-		Strategy_t::Move( _memory.Pointer() + _end, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + _end, AddressOf(value), 1 );
 		_end = _WrapIndex( _end + 1 );
 	}
 	
@@ -406,7 +406,7 @@ namespace GXTypes
 			_Reallocate( _size+1, true );
 		
 		_first = _WrapIndex( _first - 1 );
-		Strategy_t::Copy( _memory.Pointer() + _first, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + _first, AddressOf(value), 1 );
 	}
 	
 /*
@@ -421,7 +421,7 @@ namespace GXTypes
 			_Reallocate( _size+1, true );
 
 		_first = _WrapIndex( _first - 1 );
-		Strategy_t::Move( _memory.Pointer() + _first, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + _first, AddressOf(value), 1 );
 	}
 		
 /*
@@ -771,7 +771,7 @@ namespace GXTypes
 			}
 			else
 			{
-				Strategy_t::Destroy( _memory.Pointer() + _first, Count() );
+				Strategy_t::Destroy( _memory.Pointer() + _first, _end - _first );
 			}
 			_memory.Deallocate();
 		}

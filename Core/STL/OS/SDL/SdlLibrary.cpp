@@ -1,10 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
-#include "Core/STL/OS/SDL/Library.h"
+#include "Core/STL/OS/SDL/SDLLibrary.h"
 
 #ifdef PLATFORM_SDL
-
-#include "Core/STL/Math/BinaryMath.h"
 
 namespace GX_STL
 {

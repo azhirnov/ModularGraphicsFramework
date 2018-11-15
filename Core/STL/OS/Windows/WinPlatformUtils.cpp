@@ -1,13 +1,12 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Core/STL/Common/Platforms.h"
-#include "Core/Config/Engine.Config.h"
+#include "Core/Config/STL.Config.h"
 
 #ifdef PLATFORM_WINDOWS
 
-#include "Core/STL/OS/Windows/PlatformUtils.h"
-#include "Core/STL/OS/Windows/FileSystem.h"
-#include "Core/STL/Math/BinaryMath.h"
+#include "Core/STL/OS/Windows/WinPlatformUtils.h"
+#include "Core/STL/OS/Windows/WinFileSystem.h"
 #include "Core/STL/Math/Interpolations.h"
 #include "Core/STL/OS/Base/BaseFileSystem.h"
 #include "Core/STL/OS/Windows/WinHeader.h"
@@ -30,12 +29,53 @@ namespace OS
 	
 /*
 =================================================
+	Run
+=================================================
+*/
+	bool PlatformUtils::Run (StringCRef commands, TimeL timeout)
+	{
+		char	buf[MAX_PATH] = {};
+		::GetSystemDirectoryA( buf, UINT(CountOf(buf)) );
+		
+		String		command_line;
+		command_line << '"' << buf << "\\cmd.exe\" /C " << commands;
+
+		STARTUPINFOA			startup_info = {};
+		PROCESS_INFORMATION		proc_info	 = {};
+		
+		bool process_created = ::CreateProcessA(
+			NULL,
+			command_line.ptr(),
+			NULL,
+			NULL,
+			FALSE,
+			CREATE_NO_WINDOW,
+			NULL,
+			NULL,
+			OUT &startup_info,
+			OUT &proc_info
+		);
+
+		if ( not process_created )
+			return false;
+
+		if ( ::WaitForSingleObject( proc_info.hThread, uint(timeout.MilliSeconds()) ) != WAIT_OBJECT_0 )
+			return false;
+		
+		DWORD process_exit;
+		::GetExitCodeProcess( proc_info.hProcess, OUT &process_exit );
+
+		return true;
+	}
+
+/*
+=================================================
 	OpenURL
 =================================================
 */
-	void PlatformUtils::OpenURL (StringCRef url)
+	bool PlatformUtils::OpenURL (StringCRef url)
 	{
-		::ShellExecute( null, "open", url.cstr(), null, null, SW_SHOWNORMAL );
+		return usize(::ShellExecuteA( null, "open", url.cstr(), null, null, SW_SHOWNORMAL )) > 32;
 	}
 	
 /*
@@ -43,9 +83,9 @@ namespace OS
 	OpenFile
 =================================================
 */
-	void PlatformUtils::OpenFile (StringCRef filename)
+	bool PlatformUtils::OpenFile (StringCRef filename)
 	{
-		::ShellExecute( null, null, filename.cstr(), null, null, SW_SHOWNORMAL );
+		return usize(::ShellExecuteA( null, null, filename.cstr(), null, null, SW_SHOWNORMAL )) > 32;
 	}
 
 /*
@@ -196,16 +236,16 @@ namespace OS
 		HRESULT hres;
 		IShellLinkA* psl;
  
-		hres = CoInitialize( null );
+		hres = ::CoInitialize( null );
 		
 		if ( FAILED(hres) )
 			return false;
 
-		hres = CoCreateInstance( isFolder ? CLSID_FolderShortcut : CLSID_ShellLink,
-								 null,
-								 CLSCTX_INPROC_SERVER,
-								 IID_IShellLink,
-								 Cast<LPVOID*>(&psl) );
+		hres = ::CoCreateInstance( isFolder ? CLSID_FolderShortcut : CLSID_ShellLink,
+									null,
+									CLSCTX_INPROC_SERVER,
+									IID_IShellLink,
+									Cast<LPVOID*>(&psl) );
 
 		if ( FAILED(hres) )
 			return false;
@@ -221,14 +261,14 @@ namespace OS
 		{
 			WCHAR wsz[MAX_PATH]; 
  
-			MultiByteToWideChar( CP_ACP, 0, linkFilename, -1, wsz, MAX_PATH ); 
+			::MultiByteToWideChar( CP_ACP, 0, linkFilename, -1, wsz, MAX_PATH ); 
             
 			hres = ppf->Save( wsz, TRUE ); 
 			ppf->Release(); 
 		}
 
 		psl->Release();
-		CoUninitialize();
+		::CoUninitialize();
 
 		if ( FAILED(hres) )
 			return false;

@@ -43,7 +43,7 @@ namespace GXTypes
 
 		//  __________ _____________ __________
 		// | reserved | used memory | reserved |
-		// 0       _first       _last      _size
+		// 0       _first       _last+1      _size
 		
 
 	// methods
@@ -123,10 +123,10 @@ namespace GXTypes
 		void EraseFromBack (usize count);
 
 		ND_ usize			Count ()		const				{ return Empty() ? 0 : _last - _first + 1; }
-		ND_ BytesU			Size ()			const				{ return BytesU( sizeof(T) * Count() ); }
+		ND_ BytesU			Size ()			const				{ return SizeOf<T> * Count(); }
 		ND_ usize			Capacity ()		const				{ return _size; }
 		ND_ constexpr usize MaxCapacity ()	const				{ return _memory.MaxSize(); }	// max available for allocation count of elements
-		ND_ BytesU			FullSize ()		const				{ return BytesU( sizeof(T) * Capacity() ); }
+		ND_ BytesU			FullSize ()		const				{ return SizeOf<T> * Capacity(); }
 		ND_ bool			Empty ()		const				{ return _first > _last; }
 		ND_ usize			LastIndex ()	const				{ return Count()-1; }
 		
@@ -424,14 +424,14 @@ namespace GXTypes
 	inline void Queue<T,S,MC>::PushBack (const T &value)
 	{
 		_ReplaceToLeft();
-		Strategy_t::Copy( _memory.Pointer() + _last, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + _last, AddressOf(value), 1 );
 	}
 	
 	template <typename T, typename S, typename MC>
 	inline void Queue<T,S,MC>::PushBack (T &&value)
 	{
 		_ReplaceToLeft();
-		Strategy_t::Move( _memory.Pointer() + _last, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + _last, AddressOf(value), 1 );
 	}
 	
 /*
@@ -443,14 +443,14 @@ namespace GXTypes
 	inline void Queue<T,S,MC>::PushFront (const T &value)
 	{
 		_ReplaceToRight();
-		Strategy_t::Copy( _memory.Pointer() + _first, &value, 1 );
+		Strategy_t::Copy( _memory.Pointer() + _first, AddressOf(value), 1 );
 	}
 
 	template <typename T, typename S, typename MC>
 	inline void Queue<T,S,MC>::PushFront (T &&value)
 	{
 		_ReplaceToRight();
-		Strategy_t::Move( _memory.Pointer() + _first, &value, 1 );
+		Strategy_t::Move( _memory.Pointer() + _first, AddressOf(value), 1 );
 	}
 	
 /*

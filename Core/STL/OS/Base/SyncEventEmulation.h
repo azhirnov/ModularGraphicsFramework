@@ -28,41 +28,26 @@ namespace OS
 	// variables
 	private:
 		ConditionVariable	_cv;
-		CriticalSection		_cs;
+		Mutex				_cs;
 		bool				_autoReset : 1;
 		bool				_triggered : 1;
 
 
 	// methods
-	private:
-		bool _Create (EFlags flags)
-		{
-			_autoReset = GXTypes::EnumEq( flags, AUTO_RESET );
-			_triggered = GXTypes::EnumEq( flags, INIT_STATE_SIGNALED );
-
-			return IsValid();
-		}
-
 	public:
 		explicit
 		SyncEventEmulation (EFlags flags = AUTO_RESET) : _autoReset(false), _triggered(false)
 		{
-			_Create( flags );
+			_autoReset = GXTypes::EnumEq( flags, AUTO_RESET );
+			_triggered = GXTypes::EnumEq( flags, INIT_STATE_SIGNALED );
 		}
 
 		~SyncEventEmulation ()
 		{
 		}
 
-		bool IsValid () const
-		{
-			return _cv.IsValid() and _cs.IsValid();
-		}
-
 		void Signal ()
 		{
-			ASSERT( IsValid() );
-
 			_cs.Lock();
 			_triggered = true;
 			_autoReset ? _cv.Signal() : _cv.Broadcast();
@@ -78,7 +63,6 @@ namespace OS
 
 		bool Wait ()
 		{
-			ASSERT( IsValid() );
 			bool res = true;
 			
 			_cs.Lock();
@@ -97,7 +81,6 @@ namespace OS
 
 		bool Wait (TimeL time)
 		{
-			ASSERT( IsValid() );
 			bool	res = true;
 			
 			_cs.Lock();

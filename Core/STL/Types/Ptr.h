@@ -105,7 +105,7 @@ namespace GXTypes
 		}
 
 
-		ND_ forceinline T * RawPtr () const
+		ND_ forceinline constexpr T * RawPtr () const
 		{
 			return _ptr;
 		}

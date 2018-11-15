@@ -1,7 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Core/STL/OS/Base/BaseFileSystem.h"
-#include "Core/STL/Math/BinaryMath.h"
 #include "Core/STL/Algorithms/FileAddress.h"
 
 namespace GX_STL
@@ -176,7 +175,7 @@ namespace OS
 		String	tmp		= path;
 		int		depth	= 0;
 
-		while ( FileAddress::PathMoveBack( tmp ) )
+		while ( FileAddress::PathMoveBack( INOUT tmp ) )
 		{
 			if ( IsDirectoryExist( tmp ) )
 				break;
@@ -187,7 +186,7 @@ namespace OS
 		while ( depth >= 0 )
 		{
 			tmp = path;
-			CHECK( FileAddress::RemoveDirectoriesFromRight( tmp, depth-- ) );
+			CHECK( FileAddress::RemoveDirectoriesFromRight( INOUT tmp, depth-- ) );
 			CHECK_ERR( NewDirectory( tmp ) );
 		}
 		

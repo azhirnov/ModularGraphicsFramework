@@ -33,6 +33,9 @@ namespace GXTypes
 	{
 		template <typename T2, typename B2, typename S2>
 		friend class SharedPointer;
+		
+		template <typename T2, typename B2, typename WS2, typename SPS2>
+		friend class WeakPointer;
 
 	// types
 	public:
@@ -54,13 +57,13 @@ namespace GXTypes
 		forceinline void _Inc ()
 		{
 			if ( _ptr != null )
-				S::IncRef( PointerCast<B>(_ptr) );
+				S::IncRef( Cast<B *>(_ptr) );
 		}
 
 		forceinline void _Dec ()
 		{
 			if ( _ptr != null )
-				S::DecRef( PointerCast<B>(_ptr) );
+				S::DecRef( Cast<B *>(_ptr) );
 		}
 
 		template <typename T2>
@@ -78,12 +81,16 @@ namespace GXTypes
 		template <typename ToType, typename FromType>
 		static void _CheckCast (FromType *p)
 		{
+			STATIC_ASSERT(	sizeof(FromType) > 0 and sizeof(ToType) > 0 );
 			STATIC_ASSERT(( CompileTime::IsBaseOf< ToType, FromType > or
 							CompileTime::IsBaseOf< FromType, ToType > or
 						    CompileTime::IsSameTypes< ToType, FromType > ));
 
 			ASSERT( CompileTime::TypeDescriptor::CanCastTo< ToType >( p ) );
 		}
+		
+		template <typename WS>
+		SharedPointer (const WeakPointer<T,B,WS,S> &);
 
 
 	public:
@@ -119,7 +126,7 @@ namespace GXTypes
 		{
 			_CheckCast<T>( right.RawPtr() );
 
-			_ptr = PointerCast<T>( right.RawPtr() );
+			_ptr = Cast<T *>( right.RawPtr() );
 			_Inc();
 		}
 
@@ -139,7 +146,7 @@ namespace GXTypes
 			_CheckCast<T>( right.RawPtr() );
 
 			_Dec();
-			_ptr = PointerCast<T>( right.RawPtr() );
+			_ptr = Cast<T *>( right.RawPtr() );
 			_Inc();
 			return *this;
 		}
@@ -167,7 +174,7 @@ namespace GXTypes
 			_CheckCast<T>( right );
 
 			_Dec();
-			_ptr = PointerCast<T>( right );
+			_ptr = Cast<T *>( right );
 			_Inc();
 			return *this;
 		}

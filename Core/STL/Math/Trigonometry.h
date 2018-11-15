@@ -44,7 +44,7 @@ namespace GXMath
 	ND_ inline T  Sin (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::sin( _float_t( x ) ));
+		return T(std::sin( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -72,7 +72,7 @@ namespace GXMath
 	ND_ inline T  Cos (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::cos( _float_t( x ) ));
+		return T(std::cos( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -176,7 +176,7 @@ namespace GXMath
 	ND_ inline T  SinH (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::sinh( _float_t( x ) ));
+		return T(std::sinh( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -196,7 +196,7 @@ namespace GXMath
 	ND_ inline T  CosH (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::cosh( _float_t( x ) ));
+		return T(std::cosh( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -287,7 +287,7 @@ namespace GXMath
 	ND_ inline T  Tan (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::tan( _float_t( x ) ));
+		return T(std::tan( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>
@@ -326,7 +326,7 @@ namespace GXMath
 	ND_ inline T  TanH (const Radians<T>& x)
 	{
 		typedef typename _math_hidden_::ToNearFloat<T>  _float_t;
-		return T(::tanh( _float_t( x ) ));
+		return T(std::tanh( _float_t( x ) ));
 	}
 
 	template <typename T, usize I, ulong U>

@@ -1,7 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Core/Script/Impl/ClassBinder.h"
-#include "Core/STL/Math/BinaryMath.h"
 
 namespace GXScript
 {

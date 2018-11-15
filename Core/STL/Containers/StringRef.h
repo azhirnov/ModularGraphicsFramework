@@ -101,8 +101,8 @@ namespace GXTypes
 
 		ND_ usize		Length ()				const	{ return _count - usize(_count > 0); }
 		ND_ usize		Count ()				const	{ return Length(); }
-		ND_ BytesU		Size ()					const	{ return BytesU( sizeof(T) * _count ); }
-		ND_ BytesU		LengthInBytes ()		const	{ return BytesU( sizeof(T) * Length() ); }
+		ND_ BytesU		Size ()					const	{ return SizeOf<T> * _count; }
+		ND_ BytesU		LengthInBytes ()		const	{ return SizeOf<T> * Length(); }
 
 		ND_ bool		Empty ()				const	{ return _count <= 1; }
 		
@@ -934,7 +934,7 @@ namespace GXTypes
 		template <>
 		forceinline usize StrLength (const char *str) noexcept
 		{
-			return ::strlen( str );
+            return ::strlen( str );
 		}
 
 	}	// _types_hidden_

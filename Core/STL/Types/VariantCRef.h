@@ -39,7 +39,7 @@ namespace GXTypes
 
 		template <typename T>
 		forceinline VariantCRef (T &ref, NonVariantRef<T> = 0) :
-			_reference( static_cast<void const *>( &ref ) ),
+			_reference( static_cast<void const *>(AddressOf( ref )) ),
 			_typeId( TypeIdOf<T>() )
 		{
 			STATIC_ASSERT(( not CompileTime::IsSameTypes< T, VariantRef > ));
