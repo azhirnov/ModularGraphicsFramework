@@ -36,10 +36,16 @@ static void Array_Test1 ()
 
 	arr.Resize( 12, false );
 	vec.resize( 12 );
+	for (usize i = 0; i < 12; ++i) {
+		vec[i].value = arr[i].value;
+	}
 	TEST( (arr == ArrayRef<Elem_t>( Cast<Elem_t *>(&vec[0]), vec.size() )) );
 	
 	arr.Resize( 36, false );
 	vec.resize( 36 );
+	for (usize i = 12; i < 36; ++i) {
+		vec[i].value = arr[i].value;
+	}
 	TEST( (arr == ArrayRef<Elem_t>( Cast<Elem_t *>(&vec[0]), vec.size() )) );
 	
 	arr.Resize( 6 );

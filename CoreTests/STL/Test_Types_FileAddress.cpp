@@ -35,58 +35,58 @@ extern void Test_Types_FileAddress ()
 	TEST( path_arr[6] == "55.ab" );
 
 	String	without_name = filename;
-	FileAddress::RemoveName( without_name );
+	FileAddress::RemoveName( INOUT without_name );
 	TEST( without_name == "../11/../22/33\\44" );
 	
 	String	without_ext = filename;
-	FileAddress::RemoveExtension( without_ext );
+	FileAddress::RemoveExtension( INOUT without_ext );
 	TEST( without_ext == "../11/../22/33\\44\\55" );
 
 	String formated = filename;
-	FileAddress::FormatPath( formated );
+	FileAddress::FormatPath( INOUT formated );
 	TEST( formated == "../22/33/44/55.ab" );
 	
 	formated = "aa/bb/../../../aa/bb/cc/dd";
-	FileAddress::FormatPath( formated );
+	FileAddress::FormatPath( INOUT formated );
 	TEST( formated == "../aa/bb/cc/dd" );
 
 	String left = filename;
-	FileAddress::RemoveDirectoriesFromLeft( left, 2 );
+	FileAddress::RemoveDirectoriesFromLeft( INOUT left, 2 );
 	TEST( left == "../11" );
 
 	String right = filename;
-	FileAddress::RemoveDirectoriesFromRight( right, 2 );
+	FileAddress::RemoveDirectoriesFromRight( INOUT right, 2 );
 	TEST( right == "../11/../22/33" );
 
 	String dir_path = "path";
-	FileAddress::AddDirectoryToPath( dir_path, "dir" );
+	FileAddress::AddDirectoryToPath( INOUT dir_path, "dir" );
 	TEST( dir_path == "path/dir" );
 	
 	dir_path = "/path/";
-	FileAddress::AddDirectoryToPath( dir_path, "/dir1/" );
-	FileAddress::AddDirectoryToPath( dir_path, "/dir2/" );
+	FileAddress::AddDirectoryToPath( INOUT dir_path, "/dir1/" );
+	FileAddress::AddDirectoryToPath( INOUT dir_path, "/dir2/" );
 	TEST( dir_path == "/path/dir1/dir2/" );
 	
 	dir_path = "path";
-	FileAddress::AddBaseDirectoryToPath( dir_path, "dir" );
+	FileAddress::AddBaseDirectoryToPath( INOUT dir_path, "dir" );
 	TEST( dir_path == "dir/path" );
 	
 	dir_path = "/path/";
-	FileAddress::AddBaseDirectoryToPath( dir_path, "/dir1/" );
-	FileAddress::AddBaseDirectoryToPath( dir_path, "/dir2/" );
+	FileAddress::AddBaseDirectoryToPath( INOUT dir_path, "/dir1/" );
+	FileAddress::AddBaseDirectoryToPath( INOUT dir_path, "/dir2/" );
 	TEST( dir_path == "/dir2/dir1/path/" );
 
 	String name1 = name;
-	FileAddress::AddExtensionToName( name1, ".ext" );		TEST( name1 == name + ".ext" );
+	FileAddress::AddExtensionToName( INOUT name1, ".ext" );		TEST( name1 == name + ".ext" );
 	
 	name1 = name + ".";
-	FileAddress::AddExtensionToName( name1, ".ext" );		TEST( name1 == name + ".ext" );
+	FileAddress::AddExtensionToName( INOUT name1, ".ext" );		TEST( name1 == name + ".ext" );
 	
 	name1 = name;
-	FileAddress::AddExtensionToName( name1, "ext" );		TEST( name1 == name + ".ext" );
+	FileAddress::AddExtensionToName( INOUT name1, "ext" );		TEST( name1 == name + ".ext" );
 	
 	name1 = name + ".";
-	FileAddress::AddExtensionToName( name1, "ext" );		TEST( name1 == name + ".ext" );
+	FileAddress::AddExtensionToName( INOUT name1, "ext" );		TEST( name1 == name + ".ext" );
 
 	String	name2 = FileAddress::GetName( "../out/common" );	TEST( name2 == "common" );
 	String	name3 = FileAddress::GetName( "../out/common" );	TEST( name3 == "common" );

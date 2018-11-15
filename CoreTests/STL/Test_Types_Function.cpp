@@ -10,7 +10,6 @@ using namespace GX_STL::GXMath;
 struct Test1
 {
 	typedef Delegate< void () >		delegate_t;
-	typedef Function< void () >		function_t;
 	typedef Event< delegate_t >		event_t;
 
 	static void Func ()
@@ -21,7 +20,6 @@ struct Test1
 	static void Test ()
 	{
 		delegate_t	d = DelegateBuilder( Func );
-		function_t	f = FunctionBuilder( Func );
 		event_t		e;
 
 		e.Add( d );
@@ -29,14 +27,12 @@ struct Test1
 		e.Call();
 
 		d.Call();
-		f.Call();
 	}
 };
 
 struct Test2
 {
 	typedef Delegate< void (int) >		delegate_t;
-	typedef Function< void () >			function_t;
 	typedef Event< delegate_t >			event_t;
 
 	static void Func (int i)
@@ -47,7 +43,6 @@ struct Test2
 	static void Test ()
 	{
 		delegate_t	d = DelegateBuilder( Func );
-		function_t	f = FunctionBuilder( Func, 2 );
 		event_t		e;
 
 		e.Add( d );
@@ -55,7 +50,6 @@ struct Test2
 		e.Call( 3 );
 
 		d.Call( 1 );
-		f.Call();
 
 		d.SafeCall( 4 );
 	}
@@ -64,7 +58,6 @@ struct Test2
 struct Test3
 {
 	typedef Delegate< void () >		delegate_t;
-	typedef Function< void () >		function_t;
 	typedef Event< delegate_t >		event_t;
 
 	void Func ()
@@ -76,7 +69,6 @@ struct Test3
 	{
 		Test3 t;
 		delegate_t	d = DelegateBuilder( &t, &Test3::Func );
-		function_t	f = FunctionBuilder( &t, &Test3::Func );
 		event_t		e;
 
 		e.Add( d );
@@ -84,14 +76,12 @@ struct Test3
 		e.Call();
 
 		d.Call();
-		f.Call();
 	}
 };
 
 struct Test4
 {
 	typedef Delegate< void (const float &) >	delegate_t;
-	typedef Function< void () >					function_t;
 	typedef Event< delegate_t >					event_t;
 
 	void Func (const float &f) const
@@ -103,8 +93,6 @@ struct Test4
 	{
 		Test4 t;
 		delegate_t	d  = DelegateBuilder( &t, &Test4::Func );
-		function_t	f  = FunctionBuilder( &t, &Test4::Func, 2.0f );
-		function_t	f1 = FunctionBuilder( &t, &Test4::Func, 4.0f );
 		event_t		e;
 
 		e.Add( d );
@@ -112,8 +100,6 @@ struct Test4
 		e.Call( 3.0f );
 
 		d.Call( 1.0f );
-		f.Call();
-		f1.Call();
 	}
 };
 
@@ -122,7 +108,6 @@ class Test5 : public RefCountedObject<>
 {
 public:
 	typedef Delegate< void (int, int) >		delegate_t;
-	typedef Function< void () >				function_t;
 	typedef Event< delegate_t >				event_t;
 
 	SHARED_POINTER( Test5 );
@@ -137,14 +122,12 @@ public:
 	static void Test ()
 	{
 		delegate_t	d;
-		function_t	f;
 		event_t		e;
 
 		{
 			const Test5Ptr t = new Test5();
 
 			d = DelegateBuilder( t, &Test5::Func );
-			f = FunctionBuilder( t, &Test5::Func, 1, 2 );
 			
 			e.Add( d );
 			e.Add( d );
@@ -154,7 +137,6 @@ public:
 		e.Call( 3, 4 );
 
 		d.Call( 5, 6 );
-		f.Call();
 	}
 };
 

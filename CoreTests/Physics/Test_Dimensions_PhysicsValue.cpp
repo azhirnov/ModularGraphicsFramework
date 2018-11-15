@@ -71,8 +71,5 @@ static void TestPhysicsValue ()
 
 extern void Test_Dimensions_PhysicsValue ()
 {
-	//STATIC_ASSERT( sizeof(Bytes<uint>) == sizeof(uint) );
-	//STATIC_ASSERT( sizeof(Bits<uint>) == sizeof(uint) );
-
 	TestPhysicsValue();
 }

@@ -42,32 +42,32 @@ namespace GXTypes
 	{
 		typedef TDebugInstCounter<UID,T>	Self;
 
-		static ilong		counter;
-		static ilong		emptyCtorCnt;
-		static ilong		copyCtorCnt;
-		static ilong		moveCtorCnt;
-		static ilong		dtorCnt;
+		static ilong		_counter;
+		static ilong		_emptyCtorCnt;
+		static ilong		_copyCtorCnt;
+		static ilong		_moveCtorCnt;
+		static ilong		_dtorCnt;
 
 		ilong	value = 0;
 		T		secondVal;
 
-		TDebugInstCounter () : value( counter + (1ll << 62)), secondVal()
+		TDebugInstCounter () : value( _counter + (1ll << 62)), secondVal()
 		{
-			++counter;
-			++emptyCtorCnt;
+			++_counter;
+			++_emptyCtorCnt;
 		}
 
 		explicit
-		TDebugInstCounter (const T &val) : value( counter + (1ll << 62)), secondVal(val)
+		TDebugInstCounter (const T &val) : value( _counter + (1ll << 62)), secondVal(val)
 		{
-			++counter;
-			++emptyCtorCnt;
+			++_counter;
+			++_emptyCtorCnt;
 		}
 
 		TDebugInstCounter (const Self &other) : value( other.value ), secondVal( other.secondVal )
 		{
-			++counter;
-			++copyCtorCnt;
+			++_counter;
+			++_copyCtorCnt;
 		}
 
 	#ifdef GX_DEBUGINSTCOUNTER_NO_MOVECTOR
@@ -75,8 +75,8 @@ namespace GXTypes
 	#else
 		TDebugInstCounter (Self &&other) : value( other.value ), secondVal( RVREF( other.secondVal ) )
 		{
-			++counter;
-			++moveCtorCnt;
+			++_counter;
+			++_moveCtorCnt;
 			//other.value = 0;
 		}
 	#endif
@@ -84,8 +84,8 @@ namespace GXTypes
 		~TDebugInstCounter ()
 		{
 			TEST( value != 0 );	// assert on second dtor call
-			--counter;
-			++dtorCnt;
+			--_counter;
+			++_dtorCnt;
 			value = 0;
 		}
 
@@ -123,31 +123,31 @@ namespace GXTypes
 			String	str;
 
 			str << "\nObjectID:    " << UID
-				<< "\nCounter:     " << counter
-				<< "\nEmpty ctors: " << emptyCtorCnt
-				<< "\nCopy ctors:  " << copyCtorCnt
-				<< "\nMove ctors:  " << moveCtorCnt
-				<< "\nDtors:       " << dtorCnt;
+				<< "\nCounter:     " << _counter
+				<< "\nEmpty ctors: " << _emptyCtorCnt
+				<< "\nCopy ctors:  " << _copyCtorCnt
+				<< "\nMove ctors:  " << _moveCtorCnt
+				<< "\nDtors:       " << _dtorCnt;
 
 			DEBUG_CONSOLE( str.cstr() );
-			return counter == 0;
+			return _counter == 0;
 		}
 
 		static void ClearStatistic ()
 		{
-			counter			= 0;
-			emptyCtorCnt	= 0;
-			copyCtorCnt		= 0;
-			moveCtorCnt		= 0;
-			dtorCnt			= 0;
+			_counter		= 0;
+			_emptyCtorCnt	= 0;
+			_copyCtorCnt	= 0;
+			_moveCtorCnt	= 0;
+			_dtorCnt		= 0;
 		}
 	};
 
-	template <usize UID, typename T>	ilong	TDebugInstCounter<UID, T>::counter		= 0;
-	template <usize UID, typename T>	ilong	TDebugInstCounter<UID, T>::emptyCtorCnt	= 0;
-	template <usize UID, typename T>	ilong	TDebugInstCounter<UID, T>::copyCtorCnt	= 0;
-	template <usize UID, typename T>	ilong	TDebugInstCounter<UID, T>::moveCtorCnt	= 0;
-	template <usize UID, typename T>	ilong	TDebugInstCounter<UID, T>::dtorCnt		= 0;
+	template <usize UID, typename T>	ilong	TDebugInstCounter<UID, T>::_counter			= 0;
+	template <usize UID, typename T>	ilong	TDebugInstCounter<UID, T>::_emptyCtorCnt	= 0;
+	template <usize UID, typename T>	ilong	TDebugInstCounter<UID, T>::_copyCtorCnt		= 0;
+	template <usize UID, typename T>	ilong	TDebugInstCounter<UID, T>::_moveCtorCnt		= 0;
+	template <usize UID, typename T>	ilong	TDebugInstCounter<UID, T>::_dtorCnt			= 0;
 
 
 	

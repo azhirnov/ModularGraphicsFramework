@@ -31,6 +31,7 @@ extern void Test_Containers_HashSet ();
 extern void Test_Containers_IndexedArray ();
 extern void Test_Containers_Adaptors ();
 extern void Test_Containers_Tuple ();
+extern void Test_Containers_Pool ();
 
 extern void Test_Math_Abs ();
 extern void Test_Math_Color ();
@@ -95,6 +96,7 @@ int main ()
 	Test_Containers_IndexedArray();
 	Test_Containers_Adaptors();
 	Test_Containers_Tuple();
+	Test_Containers_Pool();
 
 	Test_Math_Abs();
 	Test_Math_Color();
